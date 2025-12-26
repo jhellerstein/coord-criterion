@@ -56,6 +56,7 @@
   correctness under all causally consistent asynchronous executions, without
   excluding any admissible histories.
   The resulting \emph{Coordination Criterion} provides a \emph{sharp} semantic boundary
+  (a dichotomy at the level of observable outcomes)
   between coordination-free and coordination-requiring specifications, and
   unifies classical results including CAP/linearizability, snapshots, agreement
   tasks, transactional isolation, and invariant confluence, with CALM arising as a
@@ -241,6 +242,15 @@ and tasks without additional encoding.
   receive events.
 \end{definition}
 
+The happens-before relation is the least ordering forced by local program order
+within each process together with message causality (a send precedes its matching
+receive): it introduces no coordination assumptions beyond asynchrony, and it
+captures exactly the constraints that any implementation must respect regardless
+of protocol.
+Crucially, happens-before is \emph{observational} rather than operational: it
+records causal constraints induced by events in an execution, not a coordination
+mechanism or a design choice imposed by a specification.
+
 Histories record only events that actually occur in an execution.
 We do not introduce explicit crash or recovery events; a crash corresponds to a
 prefix after which a process simply performs no further events.
@@ -283,6 +293,11 @@ Intuitively, \(H_2\) extends \(H_1\) by the addition of causally later events.
   \end{itemize}
   with happens-before edges ordering the write before the send, the send before
   the receive, and the receive before the read.
+  
+  Reads and writes are operations on a single logical register; reads are not
+  replica-indexed. Write operations assign a value to the register, and reads
+  return a value.
+
   Let $E_1$ be the subset of events consisting of the write and the send.
   Then $H_1 = (E_1,\rightarrow_2 \cap (E_1 \times E_1))$ is a history and
   $H_1 \hext H_2$: $E_1 \subseteq E_2$, the order on $E_1$ is inherited from
@@ -329,25 +344,22 @@ Intuitively, \(H_2\) extends \(H_1\) by the addition of causally later events.
 \end{definition}
 
 \begin{remark}
-  In many applications there is a natural choice of outcome order,
-  such as prefix extension on execution logs, refinement on abstract states, or
-  set inclusion on visible facts.
-  Coarser orders are also possible, but they generally make the Coordination
-  Criterion less informative, so choosing \(\Obs\) and \(\Ord\) is a key part of the
-  modeling task.
-  Extreme choices can trivialize the criterion in either direction: for
-  instance, if all outcomes are incomparable or all histories share the same
-  observation, then every specification is vacuously monotone, whereas an
-  overly fine-grained observation or order can make every interesting
-  specification non-monotone.
-  Similarly, if $O$ contains a greatest element $\top$ that extends every
-  outcome (a ``anything can happen'' summary), then no two observations ever
-  contradict in our order-theoretic sense, and the notion of consistency
-  degenerates; choosing $\Obs$ and $\Ord$ so that semantically incompatible
-  observations genuinely lack a common extension is therefore an essential part
-  of faithful modeling.
-  We return to these modeling choices in examples throughout
-  Section~\ref{sec:applications} and Appendix~\ref{sec:additional-applications}.
+  In many applications there is a natural choice of outcome order, such as prefix
+  extension on execution logs, refinement on abstract states, or set inclusion on
+  visible facts.
+  Choosing \(\Obs\) and \(\Ord\) is therefore a key part of the modeling task.
+
+  Extreme choices can trivialize the Coordination Criterion in different ways.
+  If the outcome order is too coarse—for example, if all outcomes are identified so
+  that every pair is comparable—then every specification is vacuously monotone.
+  If the outcome space contains a greatest element \(\top\) that extends every
+  outcome (an “anything can happen” summary), then no two observations ever
+  contradict, and the notion of consistency degenerates.
+  Conversely, if the order is too fine—for example, if all distinct outcomes are
+  incomparable—then even intuitively coordination-free specifications may become
+  non-monotone.
+  Faithful modeling requires outcome orders that reflect genuine semantic
+  incompatibility without collapsing or over-refining it.
 \end{remark}
 
 \begin{remark}[Observational Equivalence]
@@ -379,12 +391,17 @@ state updates, or problems over input sets: relational transducer queries are
 monotone with respect to set inclusion on input facts, and in the
 replicated-object setting of Li and Lee a problem \(\mathcal{P} : \mathbb{X}
 \to \mathbb{V}\) is monotone with respect to inclusion on inputs.
+In contrast, happens-before is not a semantic choice like an input-set order or clause lattice, but the weakest causal order shared by all asynchronous implementations.
 Here we instead place monotonicity directly on \emph{history-to-observation
   specifications}: once \(\Obs\) and \(\Ord\) are fixed, we treat a
 specification as an opaque set-valued map \(\Spec : \Hist \to \mathcal{P}(O)\)
 asking only whether it is monotone with respect to history extension.
 This shift keeps specific programming models, object-level execution frameworks,
 and implementation formalisms out of the semantic core.
+
+Formally, monotonicity is defined using the lifted order induced by \(\Ord\):
+for every \(H_1 \hext H_2\) and every \(o_1 \in \Spec(H_1)\), there exists 
+\(o_2 \in \Spec(H_2)\) such that \(o_1 \Ord o_2\).
 
 % Concretely, many outcome orders coincide with familiar refinement or prefix
 % orders from program semantics.
@@ -426,6 +443,8 @@ Throughout this paper, we assume that $\Obs$ and $\Ord$ are chosen to be faithfu
 to the specification under study; the Coordination Criterion is relative to such
 choices.
 
+All notions of outcome consistency in this section are defined relative to this minimal causal structure (Lamport’s happens-before); stronger orderings such as total orders or linearizations are specification choices that may require coordination to realize, not assumptions of the model.
+
 \begin{definition}[Consistency]
   A set of observations is \emph{consistent} if its elements are pairwise
   non-contradicting, i.e., no two observations in the set contradict in the
@@ -460,6 +479,7 @@ wide variety of storage-level guarantees, not just linearizability.
 % ================================================================
 
 \begin{definition}[Distributed Specification]
+  \label{def:distributed-specification}
   A distributed specification is a function
   \(\Spec : \Hist \rightarrow \mathcal{P}(O)\) that maps each history to a
   set of admissible observable outcomes.
@@ -479,7 +499,8 @@ wide variety of storage-level guarantees, not just linearizability.
   The first, $\Spec_{\mathit{avail}}$, describes a highly available register:
   in any history, a read may return either the initial value or any value
   written in the causal past of the read, without imposing a global total
-  order on all operations.
+  order on all operations. Thus, a read is permitted to
+  ignore concurrent or later writes, but not writes that causally precede it.
   The second, $\Spec_{\mathit{lin}}$, describes a linearizable register:
   its observations are exactly those sequences that admit a linearization in
   which every read returns the value of the most recent write in a total order
@@ -491,7 +512,8 @@ wide variety of storage-level guarantees, not just linearizability.
 \end{example}
 
 \begin{definition}[Coordination-Free (Causally Complete) Implementation]
-  Fix a specification $\Spec$ and the asynchronous model above.
+  Fix a specification $\Spec$ (Definition~\ref{def:distributed-specification}) 
+  and the asynchronous model above.
   For each admissible input history $H_{\mathit{in}}$ (a history of external inputs
   at the specified interface), let
   \[
@@ -517,7 +539,21 @@ wide variety of storage-level guarantees, not just linearizability.
   \end{enumerate}
 \end{definition}
 
-Informally, an implementation consists of a collection of (possibly
+\paragraph{Coordination vs.\ nondeterminism.}
+A specification may admit multiple outcomes for the same history, and an
+implementation may nondeterministically choose among them.
+Such choice does not constitute coordination in our sense.
+The distinction is not whether an implementation selects one admissible outcome
+rather than another, but whether it must exclude some \emph{causally admissible
+histories} in order to remain correct.
+
+Underspecification permits choice among outcomes for a fixed history.
+Coordination arises only when correctness requires committing to observations
+that are incompatible with some causally consistent extensions of that history,
+thereby forcing the implementation to prune the space of admissible executions.
+
+Informally, following the standard asynchronous message-passing model in
+distributed computing, an implementation consists of a collection of (possibly
 nondeterministic) state machines representing processes that communicate over
 asynchronous channels.
 An admissible input history $H_{\mathit{in}}$ is any history of external
@@ -530,7 +566,9 @@ In particular, ``causal consistency'' here refers only to this history-level
 condition and does not introduce a separate storage-level consistency model.
 
 \begin{remark}[Coordination vs.\ Protocol Mechanics]
-  Our notion of coordination is semantic rather than operational.
+  Our notion of coordination is semantic rather than operational,
+  and is distinguished from nondeterministic choice or underspecification by whether an
+implementation must exclude causally admissible histories.
   The asynchronous model already fixes which histories are admissible; the
   definition above declares an implementation coordination-free exactly when it
   does not prune this space beyond causal consistency.
@@ -589,8 +627,22 @@ condition and does not introduce a separate storage-level consistency model.
 
 Monotonicity captures the intuition that adding admissible steps to a history
 cannot invalidate previous observations: every observation that a specification
-admits for a prefix history can be extended to a $\Ord$-compatible observation for any
-of its extensions.
+admits for a prefix history can be extended to a $\Ord$-compatible observation
+for any of its extensions.
+
+Equivalently, monotonicity here rules out \emph{semantic regret}:
+extending a history may refine the set of admissible observations, but it cannot
+make a previously admissible observation inconsistent with all admissible
+observations of the extension.
+Formally, this is stronger than monotonicity under the lower powerdomain preorder
+on outcome sets, which permits admissible observations to be discarded so long as
+some dominating outcome remains.
+Our definition forbids such loss: admissible observations for a prefix history
+must remain compatible with at least one admissible observation of every causal
+extension.
+This strengthening is essential for capturing coordination-freedom, since
+discarding a previously admissible observation corresponds exactly to pruning a
+causally consistent execution.
 
 \remark{A specification $\Spec$ is defined on all histories, not only on
   complete executions. Thus for any finite prefix history $H$, the set
@@ -622,6 +674,8 @@ In our framework, such retroactive invalidation witnesses non-monotonicity.
 \section{The Coordination Criterion}
 % ================================================================
 
+We distinguish the causal structure supplied by the environment (happens-before) from any additional structure imposed by a specification, and Theorem~\ref{thm:coordination-criterion} identifies exactly when such additional structure cannot be maintained without pruning some causally admissible histories.
+
 \begin{theorem}[Coordination Criterion]\label{thm:coordination-criterion}
   A distributed specification admits a coordination-free consistent
   implementation if and only if it is monotone with respect to history
@@ -637,6 +691,20 @@ specification $\Spec : \Hist \rightarrow \mathcal{P}(O)$ is total (it is
 defined on every history in $\Hist$).
 No progress or fairness assumptions (such as termination or wait-freedom) are
 required for the theorem itself.
+
+\paragraph{Coordination vs.\ nondeterminism.}
+A specification may permit multiple outcomes for the same history, and an
+implementation may nondeterministically choose among them.
+Such choice does not constitute coordination in our sense.
+The distinction is not whether an implementation selects one admissible outcome
+rather than another, but whether correctness requires \emph{excluding some
+causally admissible histories}.
+
+Underspecification allows choice among outcomes for a fixed history.
+Coordination becomes necessary only when committing to an observation at a
+prefix history makes it inconsistent with observations required by some
+causally consistent extension, forcing an implementation to prune the space of
+admissible executions.
 
 \subsection{Proof Sketch}
 We briefly outline the argument; a full formal proof, including an explicit
@@ -915,7 +983,7 @@ also when and how systems may safely commit to them.
 \section*{Acknowledgments}
 % ================================================================
 
-Thanks to Shulu Li and Edward Lee for helpful discussions.
+Thanks to Edward Lee, Shulu Li and Dan Suciu for helpful discussions.
 We also acknowledge the use of AI-based language tools to assist with
 drafting and revising the exposition; all technical content and claims
 remain the responsibility of the authors.
