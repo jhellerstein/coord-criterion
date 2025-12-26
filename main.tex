@@ -1,5 +1,13 @@
 \documentclass[acmsmall,nonacm]{acmart}
 
+% Ensure the non-ACM draft compiles cleanly under acmart without conference metadata.
+\settopmatter{printacmref=false,printccs=false,printfolios=true}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\acmConference[]{}{}{}
+\acmBooktitle{}
+\acmYear{}
+\copyrightyear{}
+
 \usepackage{microtype}
 \usepackage{enumitem}
 
@@ -283,29 +291,9 @@ separate from the safety-style semantic conditions studied here.
 
 Intuitively, \(H_2\) extends \(H_1\) by the addition of causally later events.
 
-\begin{example}[History Extension for the Replicated Register]
-  Continuing the replicated-register running example, suppose history
-  \(H_2 = (E_2,\rightarrow_2)\) contains the following events:
-  \begin{itemize}[nosep]
-    \item a write by process $p$ storing value $1$ in the register,
-    \item a message from $p$ to $q$ carrying this update, and
-    \item a read by $q$ that returns $1$ after receiving the message,
-  \end{itemize}
-  with happens-before edges ordering the write before the send, the send before
-  the receive, and the receive before the read.
-  
-  Reads and writes are operations on a single logical register; reads are not
-  replica-indexed. Write operations assign a value to the register, and reads
-  return a value.
-
-  Let $E_1$ be the subset of events consisting of the write and the send.
-  Then $H_1 = (E_1,\rightarrow_2 \cap (E_1 \times E_1))$ is a history and
-  $H_1 \hext H_2$: $E_1 \subseteq E_2$, the order on $E_1$ is inherited from
-  \(H_2\), and $E_1$ is downward closed because every predecessor of an event
-  in $E_1$ is also in $E_1$.
-  Intuitively, $H_2$ extends $H_1$ by delivering the message and performing the
-  corresponding read at $q$.
-\end{example}
+% MOVED TO APPENDIX: Example illustrating history extension.
+See Appendix~\ref{sec:additional-applications} for an illustrative instance of
+history extension for the replicated-register running example.
 
 % ================================================================
 \section{Observations and Consistency}
@@ -992,6 +980,32 @@ remain the responsibility of the authors.
 
 \section{Additional Applications of the Coordination Criterion}
 \label{sec:additional-applications}
+
+\subsection{Supplementary Example: History Extension}
+% MOVED FROM MAIN BODY: Previously appeared as an example in Section 2.1.
+\begin{example}[History Extension for the Replicated Register]
+  Continuing the replicated-register running example, suppose history
+  \(H_2 = (E_2,\rightarrow_2)\) contains the following events:
+  \begin{itemize}[nosep]
+    \item a write by process $p$ storing value $1$ in the register,
+    \item a message from $p$ to $q$ carrying this update, and
+    \item a read by $q$ that returns $1$ after receiving the message,
+  \end{itemize}
+  with happens-before edges ordering the write before the send, the send before
+  the receive, and the receive before the read.
+
+  Reads and writes are operations on a single logical register; reads are not
+  replica-indexed. Write operations assign a value to the register, and reads
+  return a value.
+
+  Let $E_1$ be the subset of events consisting of the write and the send.
+  Then $H_1 = (E_1,\rightarrow_2 \cap (E_1 \times E_1))$ is a history and
+  $H_1 \hext H_2$: $E_1 \subseteq E_2$, the order on $E_1$ is inherited from
+  \(H_2\), and $E_1$ is downward closed because every predecessor of an event
+  in $E_1$ is also in $E_1$.
+  Intuitively, $H_2$ extends $H_1$ by delivering the message and performing the
+  corresponding read at $q$.
+\end{example}
 
 \subsection{Snapshots}
 \begin{corollary}[Global Snapshot]
