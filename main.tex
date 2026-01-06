@@ -137,7 +137,8 @@ availability required to maintain strong consistency under partitions, while
 the CALM principle~\cite{hellerstein2010calm} connects coordination-freedom to
 monotonicity in declarative programs.
 Distributed computability theory similarly characterizes which tasks require
-waiting or stronger primitives~\cite{herlihy1991waitfree,herlihy1999topological}.
+waiting or stronger primitives, most notably via object- and task-based
+hierarchies such as consensus numbers~\cite{herlihy1991waitfree,herlihy1999topological}.
 Each of these approaches isolates important aspects of coordination, but does so
 under specific modeling assumptions and for particular classes of specifications.
 
@@ -196,14 +197,18 @@ Our contributions are as follows:
 \end{itemize}
 
 Our focus in this paper is on safety-style semantic conditions on observable
-behaviors---what we will broadly call \emph{consistency} in
-Section~\ref{sec:obs-consistency}---not liveness.
+behaviors—what we will broadly call \emph{consistency} in
+Section~\ref{sec:obs-consistency}—not liveness.
 As such, the Coordination Criterion characterizes when a specification admits a
 coordination-free implementation whose observable behaviors satisfy a given
-consistency requirement under all admissible asynchronous executions; it is
-deliberately agnostic about progress guarantees such as termination or
-wait-freedom. Accordingly, the Coordination Criterion focuses on when coordination is
-semantically unavoidable, not on how non-monotonicity is resolved.
+consistency requirement under all admissible asynchronous executions, including
+executions with failures such as message loss, delay, and process crashes.
+It is deliberately agnostic about progress guarantees such as termination or
+wait-freedom, as well as the details of failure-recovery mechanisms, which are
+orthogonal to the semantic questions studied here.
+Accordingly, the Coordination Criterion focuses on when coordination is
+semantically unavoidable, not on how non-monotonicity is resolved or how
+progress is ensured.
 
 % Our criterion is agnostic about how non-monotonicity is resolved—by
 % protocol, interpretation, or additional semantic structure—focusing only on when
@@ -388,7 +393,7 @@ This shift keeps specific programming models, object-level execution frameworks,
 and implementation formalisms out of the semantic core.
 
 Formally, monotonicity is defined using the lifted order induced by \(\Ord\):
-for every \(H_1 \hext H_2\) and every \(o_1 \in \Spec(H_1)\), there exists 
+for every \(H_1 \hext H_2\) and every \(o_1 \in \Spec(H_1)\), there exists
 \(o_2 \in \Spec(H_2)\) such that \(o_1 \Ord o_2\).
 
 % Concretely, many outcome orders coincide with familiar refinement or prefix
@@ -500,7 +505,7 @@ wide variety of storage-level guarantees, not just linearizability.
 \end{example}
 
 \begin{definition}[Coordination-Free (Causally Complete) Implementation]
-  Fix a specification $\Spec$ (Definition~\ref{def:distributed-specification}) 
+  Fix a specification $\Spec$ (Definition~\ref{def:distributed-specification})
   and the asynchronous model above.
   For each admissible input history $H_{\mathit{in}}$ (a history of external inputs
   at the specified interface), let
@@ -533,7 +538,7 @@ implementation may nondeterministically choose among them.
 Such choice does not constitute coordination in our sense.
 The distinction is not whether an implementation selects one admissible outcome
 rather than another, but whether it must exclude some \emph{causally admissible
-histories} in order to remain correct.
+  histories} in order to remain correct.
 
 Underspecification permits choice among outcomes for a fixed history.
 Coordination arises only when correctness requires committing to observations
@@ -556,7 +561,7 @@ condition and does not introduce a separate storage-level consistency model.
 \begin{remark}[Coordination vs.\ Protocol Mechanics]
   Our notion of coordination is semantic rather than operational,
   and is distinguished from nondeterministic choice or underspecification by whether an
-implementation must exclude causally admissible histories.
+  implementation must exclude causally admissible histories.
   The asynchronous model already fixes which histories are admissible; the
   definition above declares an implementation coordination-free exactly when it
   does not prune this space beyond causal consistency.
@@ -683,7 +688,7 @@ implementation may nondeterministically choose among them.
 Such choice does not constitute coordination in our sense.
 The distinction is not whether an implementation selects one admissible outcome
 rather than another, but whether correctness requires \emph{excluding some
-causally admissible histories}.
+  causally admissible histories}.
 
 Underspecification allows choice among outcomes for a fixed history.
 Coordination becomes necessary only when committing to an observation at a
