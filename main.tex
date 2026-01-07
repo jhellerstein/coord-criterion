@@ -22,6 +22,7 @@
 
 % ---------- Macros ----------
 \newcommand{\Hist}{\mathcal{H}}
+% \newcommand{\ObsDet}{\mathsf{Obs^{\det}}}
 \newcommand{\Obs}{\mathsf{Obs}}
 \newcommand{\Spec}{\mathsf{Spec}}
 \newcommand{\Ord}{\preceq}
@@ -34,10 +35,10 @@
 % - Histories: \Hist is the set of histories; elements are H, H_1, H_2.
 % - Happens-before: e_1 \rightarrow e_2 is Lamport's relation on events.
 % - History extension: H_1 \hext H_2 is the history-extension order.
-% - Observation function: \Obs : \Hist \to O.
-% - Specification: \Spec : \Hist \to \mathcal{P}(O).
+% - Observation function: \Obs : \Hist \to 2^O.
+% - Specification: \Spec : \Hist \to 2^O.
 % - Outcome order: o_1 \Ord o_2 means o_2 does not contradict o_1.
-% - Processes/events/outcomes: p, q (processes), e, e' (events), o, o' (outcomes).
+% - Processes/events/outcomes: p, q (processes), e, e\' (events), o, o\' (outcomes).
 \begin{document}
 
 % ================================================================
@@ -308,15 +309,37 @@ history extension for the replicated-register running example.
 \label{sec:obs-consistency}
 % ================================================================
 
-\begin{definition}[Observation Function]
-  An \emph{observation function} is a mapping
+\begin{definition}[Observations]
+  An \emph{observation function} is a function
   \[
-    \Obs : \Hist \rightarrow O,
+    \Obs : \Hist \rightarrow \mathcal{P}(O),
   \]
   where \(O\) is a set of observable outcomes.
-  An outcome \(o \in O\) is a summary of a history \(H = (E,\rightarrow)\) that
-  represents all information visible at the chosen interface.
+  Intuitively, \(\Obs(H)\) is the set of outcomes that the specification allows
+  to be exposed at the chosen interface after history \(H\).
 \end{definition}
+
+\noindent
+We allow observations to be \emph{set-valued}—that is, elements of
+\(\mathcal{P}(O)\) rather than single outcomes—to capture the fact that a
+specification may permit multiple observable behaviors after the same history.
+Each element of \(\Obs(H)\) represents a behavior that is individually correct
+given the events that have occurred so far.
+
+When \(\Obs(H)\) contains multiple outcomes, the specification permits several
+alternative observable behaviors at that point in the execution.
+When \(\Obs(H)\) is a singleton, the observable behavior is already determined by
+the history.
+As a history is extended, the specification may rule out some previously
+admissible outcomes—for example, because additional events impose new semantic
+constraints.
+
+Whether such semantic exclusions can be realized without coordination depends
+on their structure.
+To reason about this, we compare outcomes using an order that captures when one
+outcome can safely extend or refine another, and we say that two outcomes
+\emph{contradict} when no further extension of the execution can make them
+compatible.
 
 % \begin{definition}[Outcome Order]
 % The outcome domain \(O\) is equipped with a partial order \(\Ord\), called the
@@ -329,7 +352,7 @@ history extension for the replicated-register running example.
 % Two observations contradict in the usual satisfiability sense (cannot both be true) when they have
 % no common extension in this order.
 % \end{definition}
-\begin{definition}[Outcome Order]
+\begin{definition}[Outcome Order and Contradiction]
   The outcome domain $O$ is equipped with a partial order $\Ord$, called the
   outcome order.
   Intuitively, we read $o_1 \Ord o_2$ as saying that $o_2$ is a compatible
@@ -343,7 +366,7 @@ history extension for the replicated-register running example.
   In many applications there is a natural choice of outcome order, such as prefix
   extension on execution logs, refinement on abstract states, or set inclusion on
   visible facts.
-  Choosing \(\Obs\) and \(\Ord\) is therefore a key part of the modeling task.
+  Choosing \(View\) and \(\Ord\) is therefore a key part of the modeling task.
 
   Extreme choices can trivialize the Coordination Criterion in different ways.
   If the outcome order is too coarse—for example, if all outcomes are identified so
@@ -367,7 +390,7 @@ history extension for the replicated-register running example.
 
 \begin{remark}[Faithful Observations]
   \label{rem:faithful-observations}
-  The observation function $\Obs$ must faithfully reflect the semantic obligations
+  The view function $\Obs$ must faithfully reflect the semantic obligations
   of the specification being modeled.
   If $\Obs$ is too coarse, semantically meaningful contradictions may be
   unobservable, artificially rendering a non-monotone problem monotone.
@@ -439,8 +462,6 @@ Throughout this paper, we assume that $\Obs$ and $\Ord$ are chosen to be faithfu
 to the specification under study; the Coordination Criterion is relative to such
 choices.
 
-\jmh{NEED TO DEFINE CONTRADICTION MORE VISIBLY.}
-
 All notions of outcome consistency in this section are defined relative to this minimal causal structure (Lamport’s happens-before); stronger orderings such as total orders or linearizations are specification choices that may require coordination to realize, not assumptions of the model.
 
 \begin{definition}[Consistency]
@@ -479,8 +500,8 @@ wide variety of storage-level guarantees, not just linearizability.
 \begin{definition}[Distributed Specification]
   \label{def:distributed-specification}
   A distributed specification is a function
-  \(\Spec : \Hist \rightarrow \mathcal{P}(O)\) that maps each history to a
-  set of admissible observable outcomes.
+ \(\Spec : \Hist \rightarrow \mathcal{P}(O)\) that maps each history to a
+ set of admissible observable outcomes.
   Intuitively, $\Spec(H)$ collects exactly those observations that the
   specification deems correct for the history $H$.
 \end{definition}
@@ -528,8 +549,8 @@ wide variety of storage-level guarantees, not just linearizability.
   \emph{causally complete}) if, for every admissible input history
   $H_{\mathit{in}}$,
   \begin{enumerate}[nosep]
-    \item (Correctness) for all $H \in \mathcal{R}_I(H_{\mathit{in}})$, the
-          observation $\Obs(H)$ is an element of $\Spec(H)$; and
+    \item (Correctness) for all $H \in \mathcal{R}_I(H_{\mathit{in}})$,
+          $\Obs(H) \subseteq \Spec(H)$; and
     \item (No additional pruning) $\mathcal{R}_I(H_{\mathit{in}}) = \mathcal{A}(H_{\mathit{in}})$,
           i.e., $I$ realizes exactly the causally consistent asynchronous extensions of
           each admissible input history and does not exclude any such histories beyond
@@ -711,7 +732,8 @@ coordination-free implementations.
 For the ``if'' direction, we exhibit an idealized implementation $I_\Spec$ that
 realizes all causally consistent extensions of any admissible input history.
 At each history $H$, the implementation may report \emph{any} observation
-$o \in \Spec(H)$, but crucially it makes no commitment to that choice:
+$o \in \Spec(H)$, i.e., choose $\Obs(H)=\{o\}$, but crucially it makes no
+commitment to that choice:
 observations do not restrict future behavior.
 
 Because $\Spec$ is monotone, every observation admissible at $H$ remains
@@ -1092,7 +1114,7 @@ coordination, independently of progress or failure assumptions.
   input values.
   Model histories so that each process first proposes an input value and, upon
   terminating, performs a decide event recording its decision.
-  Let the observation function $\Obs$ map a history to the partial function that
+  Let the view function $\Obs$ map a history to the partial function that
   associates each process that has decided with its decision value, and let the
   outcome order $\Ord$ be pointwise extension of this decision map: $o_1 \Ord o_2$
   whenever every decision recorded in $o_1$ is also present with the same value
@@ -1199,7 +1221,7 @@ $\mathsf{read}(T,x,v)$ records that transaction $T$, upon committing, returned
 value $v$ for a read of location $x$.
 Each read fact is associated with a specific transaction and location.
 
-The observation function $\Obs(H)$ maps a history $H$ to the set of all such facts
+The view function $\Obs(H)$ maps a history $H$ to the set of all such facts
 induced by the committed transactions in $H$.
 In particular, extending a history can only add new commit or read facts for
 transactions that newly commit; no previously observed fact is ever removed or
@@ -1322,20 +1344,24 @@ databases, while others fundamentally require it~\cite{bailis2015coordination}.
 
 We model such systems as histories whose events include transaction invocations,
 replica-local updates, and merge operations.
-The observation function $\Obs$ maps a history to the set of reachable database
-states, ordered by set inclusion: $o_1 \Ord o_2$ if every state in $o_1$ also
-appears in $o_2$.
-Given an application invariant $I$, the specification $\Spec_I$ selects those
-observations in which all visible states satisfy $I$.
+An observable outcome for a history is the set of database states that may be
+reachable after that history.
+Accordingly, the outcome domain $O$ consists of sets of database states, ordered
+by set inclusion: for outcomes $o_1,o_2 \in O$, we write $o_1 \Ord o_2$ iff
+$o_1 \subseteq o_2$.
+
+Given an application invariant $I$, the specification $\Spec_I$ maps each history
+$H$ to the set of admissible outcomes—those $o \in O$ in which every reachable
+state satisfies $I$.
 
 If $I$ is $I$-confluent, then extending a history with additional locally valid
 transactions and merges cannot introduce a reachable state that violates $I$.
-Accordingly, the induced specification $\Spec_I$ is monotone with respect to
-history extension and, by the Coordination Criterion, admits coordination-free
+Accordingly, the specification $\Spec_I$ is monotone with respect to history
+extension and, by the Coordination Criterion, admits coordination-free
 implementations.
 If $I$ is not $I$-confluent, there exist histories $H_1 \hext H_2$ such that an
-observation admissible under $\Spec_I(H_1)$ is inconsistent with every admissible
-observation under $\Spec_I(H_2)$.
+outcome admissible under $\Spec_I(H_1)$ is inconsistent with every admissible
+outcome under $\Spec_I(H_2)$.
 In this case, $\Spec_I$ is non-monotone and enforcing $I$ necessarily requires
 coordination.
 
@@ -1375,7 +1401,9 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
 \end{theorem}
 
 \begin{proof}
-  We have to prove both directions of the equivalence.
+  We have to prove both directions of the equivalence. Throughout the proof, when we
+  speak of an observation at a history $H$, we mean an outcome chosen by the
+  implementation from the admissible set $\Spec(H)$.
 
   \medskip
   \noindent\textsc{\emph{Sufficiency.}}
@@ -1384,8 +1412,8 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
   To prove sufficiency, we must exhibit an implementation $I_\Spec$ that is
   coordination-free in the sense of the preceding definition: for every
   admissible input history $H_{\mathit{in}}$, its realizable histories satisfy
-  that, for all $H \in \mathcal{R}_{I_\Spec}(H_{\mathit{in}})$, the observation
-  $\Obs(H)$ is compatible with $\Spec(H)$ and
+  that, for all $H \in \mathcal{R}_{I_\Spec}(H_{\mathit{in}})$, the implementation
+  chooses some outcome $o(H) \in \Spec(H)$ and
   $\mathcal{R}_{I_\Spec}(H_{\mathit{in}}) = \mathcal{A}(H_{\mathit{in}})$.
 
   \emph{Construction of $I_\Spec$.}
@@ -1408,15 +1436,16 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
   may delay or drop messages).
   Intuitively, $I_\Spec$ maintains the exact history generated so far and
   allows any single-event asynchronous extension.
-  For each configuration $H$, the implementation's client-visible observation is
-  chosen to be some $\Obs(H) \in \Spec(H)$; monotonicity of $\Spec$ ensures that
-  every such observation remains $\Ord$-compatible with at least one admissible
-  observation of every extension of $H$.
+  For each configuration $H$, the implementation nondeterministically chooses
+some outcome $o_H \in \Spec(H)$ to report to the client.
+Monotonicity of $\Spec$ ensures that every such choice remains $\Ord$-compatible
+with at least one admissible outcome of every extension of $H$.
 
-  \emph{Correctness.}
-  By definition of $\Obs$, for every admissible input history $H_{\mathit{in}}$
-  and every realizable history $H \in \mathcal{R}_{I_\Spec}(H_{\mathit{in}})$ we
-  have $\Obs(H) \in \Spec(H)$, so clause~(i) of coordination-freedom holds.
+\emph{Correctness.}
+By construction, for every admissible input history $H_{\mathit{in}}$ and every
+realizable history $H \in \mathcal{R}_{I_\Spec}(H_{\mathit{in}})$, the
+implementation reports some outcome $o_H \in \Spec(H)$.
+Thus clause~(i) of coordination-freedom holds.
 
   \emph{No additional pruning.}
   Fix an admissible input history $H_{\mathit{in}}$.
@@ -1516,9 +1545,8 @@ observation function, and outcome order.
   Let $\mathcal{C}$ be any class of distributed specifications such that every
   $\Spec \in \mathcal{C}$ admits a coordination-free consistent implementation
   in the asynchronous model.
-  Then for each $\Spec \in \mathcal{C}$ there exists a choice of observation
-  function $\Obs$ and outcome order $\Ord$ for which $\Spec$ is monotone with
-  respect to history extension under $\Ord$.
+  Then for each $\Spec \in \mathcal{C}$ there exists an outcome order $\Ord$
+  such that $\Spec$ is monotone with respect to history extension under $\Ord$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -1528,25 +1556,29 @@ observation function, and outcome order.
   $\mathcal{A}(H_{\mathit{in}})$ of causally consistent asynchronous extensions,
   without excluding any such histories.
 
-  Define an observation function $\Obs_I$ that summarizes the observable behavior
-  of $I$ on all prefixes of $H$, ordered by set inclusion.
+  Define a derived specification $\Spec_I : \Hist \to \mathcal{P}(O)$ by letting
+  $\Spec_I(H)$ be the set of all outcomes that $I$ may produce at history $H$
+  across its admissible executions.
   Because $I$ does not prune any causally consistent extension, extending a
-  history can only add observations produced by $I$, never remove them.
-  Thus the induced specification $\Spec_I(H) = \Obs_I(H)$ is monotone under
-  history extension.
+  history can only add possible outcomes: for $H_1 \hext H_2$,
+  every outcome in $\Spec_I(H_1)$ remains compatible with some outcome in
+  $\Spec_I(H_2)$.
 
-  Finally, since $I$ is correct by assumption, $\Spec_I$ is observationally
-  equivalent to the original specification $\Spec$ with respect to the chosen
-  observation function and order.
-  Hence $\Spec$ is monotone for the triple $(\Spec,\Obs_I,\Ord)$.
+  Ordering outcomes by set inclusion, $\Spec_I$ is therefore monotone with
+  respect to history extension.
+  Since $I$ is correct by assumption, $\Spec_I$ is observationally equivalent
+  to the original specification $\Spec$.
+  Hence $\Spec$ is monotone for an appropriate choice of outcome order.
 \end{proof}
 
 \paragraph{Discussion.}
-The observation function constructed above is intentionally coarse and is used
-only to establish semantic minimality.
-It shows that any refinement of monotonicity sufficient for coordination-freedom
-can be expressed as a change to the $(\Spec,\Obs,\Ord)$ interface rather than as a
-weaker coordination criterion.
+The construction above is intentionally coarse and serves only to establish
+semantic minimality.
+It shows that any semantic condition sufficient to characterize
+coordination-freedom can be re-expressed as monotonicity of a specification
+under an appropriate outcome order.
+Thus refinements of monotonicity arise from changing the semantic interface,
+not from weakening the Coordination Criterion itself.
 
 \section{Extended Related Work}
 \label{sec:extended-related-work}
