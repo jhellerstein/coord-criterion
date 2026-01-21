@@ -48,32 +48,22 @@
 % Note (meta): Ensure all claims of generalization over CALM/CAP/hierarchy have
 % precise statements and proofs or citations.
 \begin{abstract}
-  Coordination mechanisms such as barriers, atomic commit, and agreement protocols
-  are ubiquitous in distributed systems, yet we lack a general semantic account of
-  when coordination is \emph{intrinsically required} by a specification rather than
-  introduced by a programming model or implementation strategy.
-  We show that a simple monotonicity condition on \emph{observable outcomes}
-  exactly characterizes when a distributed specification admits a coordination-free,
-  consistent implementation under asynchrony.
+  When is coordination \emph{intrinsically required} by a distributed specification,
+  rather than an artifact of a programming model or protocol design?
+  We give a general semantic answer using a minimum of machinery.
 
-  Our criterion is phrased directly at the level of history-to-observation
-  specifications and outcome orders, and is therefore independent of any particular
-  programming model.
-  Unlike CALM-style results, which formulate monotonicity at the level of input or
-  program semantics, we place monotonicity on observable outcomes themselves.
-  This shift strictly generalizes program-level monotonicity: even specifications
-  with non-monotone internal behavior may admit natural monotone observations and
-  thus coordination-free implementations.
+  We show that a distributed specification admits a coordination-free implementation
+  under asynchrony if and only if it is monotone with respect to history extension
+  under an appropriate outcome order.
+  This \emph{Coordination Criterion} is stated directly over Lamport histories and
+  observable outcomes, and is independent of any particular programming language,
+  execution model, or protocol structure.
 
-  We model executions as Lamport histories and define coordination-freedom as
-  correctness under all causally consistent asynchronous executions, without
-  excluding any admissible histories.
-  The resulting \emph{Coordination Criterion} provides a \emph{sharp} semantic boundary
-  (a dichotomy at the level of observable outcomes)
-  between coordination-free and coordination-requiring specifications, and
-  unifies classical results including CAP/linearizability, snapshots, agreement
-  tasks, transactional isolation, and invariant confluence, with CALM arising as a
-  special case.
+  The criterion yields a sharp semantic boundary between coordination-free and
+  coordination-requiring specifications, and provides a uniform explanation for
+  a range of classical results—including CAP-style impossibility results,
+  CALM-style coordination-freedom, snapshots, agreement tasks, transactional
+  isolation, and invariant confluence—as instances of the same underlying phenomenon.
 \end{abstract}
 
 
@@ -94,12 +84,124 @@
 \label{sec:introduction}
 % ================================================================
 
+% Coordination is a recurring theme in distributed computing.
+% Protocols such as agreement, atomic commit, synchronous barriers, and termination
+% detection are widely used to ensure correct behavior under asynchrony and
+% partial failure.
+% At the same time, coordination is costly: it introduces latency, complexity,
+% and sensitivity to failures.
+% This motivates a fundamental question:
+
+% \begin{quote}
+%   When is coordination \emph{intrinsically necessary} to implement a distributed
+%   specification?
+% \end{quote}
+
+% The relationship between specification-level correctness requirements and
+% concrete coordination mechanisms has been explored in several lines of work.
+% In the CAP theorem~\cite{gilbert2002cap}, coordination appears as the loss of
+% availability required to maintain strong consistency under partitions, while
+% the CALM principle~\cite{hellerstein2010calm} connects coordination-freedom to
+% monotonicity in declarative programs.
+% Distributed computability theory similarly characterizes which tasks require
+% waiting or stronger primitives, most notably via object- and task-based
+% hierarchies such as consensus numbers~\cite{herlihy1991waitfree,herlihy1999topological}.
+% Each of these approaches isolates important aspects of coordination, but does so
+% under specific modeling assumptions and for particular classes of specifications.
+
+% What is missing is a general semantic account that explains coordination
+% \emph{as a property of the specification itself}, independent of programming
+% model, protocol structure, or particular consistency conditions.
+% Equivalently, we would like a single semantic boundary theorem that says
+% exactly when coordination is intrinsically required by a specification across
+% different models and implementation techniques.
+% Our Coordination Criterion provides such a sharp boundary theorem: it identifies a
+% monotonicity condition on specifications that is necessary and sufficient for
+% coordination-freedom. Because the criterion is phrased directly over observable
+% outcomes and histories, it applies uniformly across distributed objects,
+% agreement tasks, consistency models, and even optimization problems, with CALM-
+% and CAP-style results arising as special cases.
+
+% % MOVE TO RELATED WORK SECTION (WHERE)
+% Historically, results on coordination in distributed systems have been developed
+% at different levels of abstraction, from low-level read/write objects and
+% consistency conditions to higher-level program and problem semantics.
+% Insights at one level have not always transferred cleanly to others.
+% By formulating coordination as a semantic property of specifications over
+% histories and observable outcomes, our framework is agnostic to
+% this choice of level, allowing coordination requirements to be analyzed
+% uniformly across classical object-level semantics and higher-level formulations.
+
+% Conceptually, the key to our results is to shift the focus from monotonicity
+% of input semantics (e.g., a query or update operator in a particular
+% programming model, as in CALM) to monotonicity of the specification map
+% with respect to an outcome order on observable outcomes.
+% Once we choose an observation function and outcome order, our criterion asks
+% only whether the induced specification $\Spec : \Hist \to \mathcal{P}(O)$ is
+% monotone under history extension; any particular programming model then
+% appears merely as an implementation vehicle for realizing such monotone
+% specifications.
+
+% \paragraph{Contribution.}
+% We identify a general semantic boundary between
+% distributed specifications that admit coordination-free implementations and
+% those that do not.
+% Our contributions are as follows:
+% \begin{itemize}[nosep]
+%   \item \textbf{Semantic framework.} We formalize a minimalist, general semantic model
+%         for distributed specifications based on asynchronous histories, an
+%         observation function, and an outcome order capturing non-contradiction
+%         (Section~\ref{sec:obs-consistency}).
+%   \item \textbf{Coordination Criterion.} We prove that a specification admits a
+%         coordination-free consistent implementation if and only if it is monotone
+%         with respect to history extension under the chosen outcome order (our main
+%         theorem).
+%   \item \textbf{Semantic grounding of classical results.} We instantiate the
+%         framework to semantically explain, and in some cases recover as direct
+%         corollaries, a range of
+%         classical results about CAP/linearizability, snapshots, agreement tasks,
+%         transactional isolation levels, and invariant confluence
+%         (Section~\ref{sec:applications} and Appendix~\ref{sec:additional-applications}).
+% \end{itemize}
+
+% Our focus in this paper is on safety-style semantic conditions on observable
+% behaviors—what we will broadly call \emph{consistency} in
+% Section~\ref{sec:obs-consistency}—not liveness.
+% As such, the Coordination Criterion characterizes when a specification admits a
+% coordination-free implementation whose observable behaviors satisfy a given
+% consistency requirement under all admissible asynchronous executions, including
+% executions with failures such as message loss, delay, and process crashes.
+% It is deliberately agnostic about progress guarantees such as termination or
+% wait-freedom, as well as the details of failure-recovery mechanisms, which are
+% orthogonal to the semantic questions studied here.
+% Accordingly, the Coordination Criterion focuses on when coordination is
+% semantically unavoidable, not on how non-monotonicity is resolved or how
+% progress is ensured.
+
+% Throughout, specifications in our framework are compositional and need not
+% correspond to entire distributed services.
+% They may describe the behavior of components, interfaces, or subroutines
+% within a larger system, allowing the Coordination Criterion to be applied
+% at multiple levels of specification.
+% The typical question is not whether an entire system uses coordination at all, but
+% which parts of its logic intrinsically require coordination and which
+% provably do not.
+
+% To make the discussion concrete, we will occasionally refer to a simple
+% running example: a single read--write register replicated at two processes
+% in an asynchronous message-passing system.
+% We will consider two specifications for this object over the same
+% computational model and observations: a highly available, eventually
+% consistent register and a linearizable register.
+% Throughout the paper we use this example to illustrate how choices of
+% observation, outcome order, and specification determine whether
+% coordination is semantically necessary.
+
 Coordination is a recurring theme in distributed computing.
-Protocols such as agreement, atomic commit, synchronous barriers, and termination
-detection are widely used to ensure correct behavior under asynchrony and
-partial failure.
-At the same time, coordination is costly: it introduces latency, complexity,
-and sensitivity to failures.
+Protocols such as agreement, atomic commit, and synchronous barriers are widely
+used to ensure correctness under asynchrony and partial failure.
+At the same time, coordination is costly: it introduces latency, complexity, and
+sensitivity to failures.
 This motivates a fundamental question:
 
 \begin{quote}
@@ -107,143 +209,97 @@ This motivates a fundamental question:
   specification?
 \end{quote}
 
-% This question has appeared in several literatures.
-% In the CAP theorem of Gilbert and Lynch~\cite{gilbert2002cap}, coordination manifests 
-% as the unavailability required to maintain strong consistency during network partitions:
-% to implement a linearizable read--write object, operations must block or abort
-% when cross-partition agreement (e.g., quorum intersection) is impossible.
-% The CALM principle~\cite{hellerstein2010calm} introduced the question above and 
-% conjectured that monotonicity was the semantic differentiator;
-% the CALM Theorem of Ameloot et al.~\cite{ameloot2013relational} 
-% formalized the principle in the frame of logic languages for declarative networking and databases.
-% In distributed computability theory, impossibility and hierarchy results
-% characterize tasks that cannot be solved without waiting or stronger primitives
-% \cite{herlihy1991waitfree,herlihy1999topological}.
+Prior work approached this question from several angles.
+The CAP theorem relates coordination to availability under partitions for strong
+consistency conditions such as linearizability.
+The CALM principle connects coordination-freedom to monotonicity in declarative
+programs.
+Distributed computability theory characterizes which tasks require waiting or
+stronger primitives.
+These results capture key aspects of coordination, but under specific
+models or classes of specifications.
 
-% Each of these approaches addresses coordination under specific modeling
-% assumptions and for particular classes of specifications.
-% CAP-style results focus on a narrow family of strong consistency conditions
-% such as linearizability and reason about availability under partitions, but do
-% not provide a general semantic boundary between coordination-free and
-% coordination-requiring specifications.
-% CALM characterizes when relational transducer programs can be executed
-% coordination-free, but is tied to a specific programming model and definition of 
-% set-based monotonicity rather than arbitrary distributed specifications and outcome
-% orders.
-% Classical computability and hierarchy results analyze which tasks are solvable
-% with particular primitives and progress conditions (e.g., wait-freedom), but
-% do not separate the semantic necessity of coordination from the liveness and
-% implementability assumptions of the underlying model.
+This paper gives a general answer to this question.
+We show that coordination is not an artifact of particular protocols,
+programming models, or consistency conditions, but a property of the
+specification itself.
+Our approach abstracts away from languages, machines, and protocol mechanics by
+formulating specifications directly over Lamport histories and observable
+outcomes.
+The result is a sharp boundary theorem—the \emph{Coordination Criterion}—that
+identifies exactly when coordination is intrinsically required.
 
-The relationship between specification-level correctness requirements and
-concrete coordination mechanisms has been explored in several lines of work.
-In the CAP theorem~\cite{gilbert2002cap}, coordination appears as the loss of
-availability required to maintain strong consistency under partitions, while
-the CALM principle~\cite{hellerstein2010calm} connects coordination-freedom to
-monotonicity in declarative programs.
-Distributed computability theory similarly characterizes which tasks require
-waiting or stronger primitives, most notably via object- and task-based
-hierarchies such as consensus numbers~\cite{herlihy1991waitfree,herlihy1999topological}.
-Each of these approaches isolates important aspects of coordination, but does so
-under specific modeling assumptions and for particular classes of specifications.
+The Coordination Criterion states that a distributed specification admits a
+coordination-free implementation if and only if it is monotone with respect to
+history extension under a chosen outcome order.
+This formulation applies uniformly across settings previously studied in
+isolation.
+CAP-style impossibility results, CALM-style coordination-freedom results,
+classical distributed protocols, and programming language analyses
+all emerge as instances of the same phenomenon.
+By remaining agnostic to the level of abstraction—objects, programs, or
+tasks—the criterion explains when coordination is necessary and when it is not.
 
-What is missing is a general semantic account that explains coordination
-\emph{as a property of the specification itself}, independent of programming
-model, protocol structure, or particular consistency conditions.
-Equivalently, we would like a single semantic boundary theorem that says
-exactly when coordination is intrinsically required by a specification across
-different models and implementation techniques.
-Our Coordination Criterion provides such a sharp boundary theorem: it identifies a
-monotonicity condition on specifications that is necessary and sufficient for
-coordination-freedom. Because the criterion is phrased directly over observable
-outcomes and histories, it applies uniformly across distributed objects,
-agreement tasks, consistency models, and even optimization problems, with CALM-
-and CAP-style results arising as special cases.
+\paragraph{Scope.}
+This paper focuses on safety-style semantic conditions on observable behaviors,
+which we broadly refer to as \emph{consistency}.
+The Coordination Criterion characterizes when a specification admits a
+coordination-free implementation under all admissible asynchronous executions,
+including executions with message delay, loss, and crashes.
+We deliberately abstract away from liveness concerns such as termination or
+wait-freedom, and from failure-recovery mechanisms, which are orthogonal to the
+semantic necessity of coordination.
+Our goal is to identify when coordination is intrinsically required by a
+specification.
 
-Historically, results on coordination in distributed systems have been developed
-at different levels of abstraction, from low-level read/write objects and
-consistency conditions to higher-level program and problem semantics.
-Insights at one level have not always transferred cleanly to others.
-By formulating coordination as a semantic property of specifications over
-histories and observable outcomes, our framework is agnostic to
-this choice of level, allowing coordination requirements to be analyzed
-uniformly across classical object-level semantics and higher-level formulations.
+\subsection{Coordination, Consistency, and Monotonicity: Core Intuitions}
 
-Conceptually, the key to our results is to shift the focus from monotonicity
-of input semantics (e.g., a query or update operator in a particular
-programming model, as in CALM) to monotonicity of the specification map
-with respect to an outcome order on observable outcomes.
-Once we choose an observation function and outcome order, our criterion asks
-only whether the induced specification $\Spec : \Hist \to \mathcal{P}(O)$ is
-monotone under history extension; any particular programming model then
-appears merely as an implementation vehicle for realizing such monotone
-specifications.
+Our Coordination Criterion rests on three related semantic ideas—coordination,
+consistency, and monotonicity—which we summarize informally here.
 
-\paragraph{Contribution.}
-We identify a general semantic boundary between
-distributed specifications that admit coordination-free implementations and
-those that do not.
-Our contributions are as follows:
-\begin{itemize}[nosep]
-  \item \textbf{Semantic framework.} We formalize a minimalist, general semantic model
-        for distributed specifications based on asynchronous histories, an
-        observation function, and an outcome order capturing non-contradiction
-        (Section~\ref{sec:obs-consistency}).
-  \item \textbf{Coordination Criterion.} We prove that a specification admits a
-        coordination-free consistent implementation if and only if it is monotone
-        with respect to history extension under the chosen outcome order (our main
-        theorem).
-  \item \textbf{Semantic grounding of classical results.} We instantiate the
-        framework to semantically explain, and in some cases recover as direct
-        corollaries, a range of
-        classical results about CAP/linearizability, snapshots, agreement tasks,
-        transactional isolation levels, and invariant confluence
-        (Section~\ref{sec:applications} and Appendix~\ref{sec:additional-applications}).
-\end{itemize}
+\paragraph{Coordination.}
+We treat coordination as a semantic phenomenon rather than a protocol mechanism.
+Intuitively, coordination arises when correctness requires an implementation to
+\emph{exclude} some causally possible behaviors.
+In an asynchronous system, many different events may be causally enabled at a
+given point.
+An implementation is coordination-free when it allows all such
+extensions.
 
-Our focus in this paper is on safety-style semantic conditions on observable
-behaviors—what we will broadly call \emph{consistency} in
-Section~\ref{sec:obs-consistency}—not liveness.
-As such, the Coordination Criterion characterizes when a specification admits a
-coordination-free implementation whose observable behaviors satisfy a given
-consistency requirement under all admissible asynchronous executions, including
-executions with failures such as message loss, delay, and process crashes.
-It is deliberately agnostic about progress guarantees such as termination or
-wait-freedom, as well as the details of failure-recovery mechanisms, which are
-orthogonal to the semantic questions studied here.
-Accordingly, the Coordination Criterion focuses on when coordination is
-semantically unavoidable, not on how non-monotonicity is resolved or how
-progress is ensured.
+This is distinct from ordinary data dependence.
+If no causally enabled step exists, execution simply stalls.
+Coordination arises only when enabled steps \emph{do} exist, but must be
+suppressed to preserve correctness.
 
-% Our criterion is agnostic about how non-monotonicity is resolved—by
-% protocol, interpretation, or additional semantic structure—focusing only on when
-% such resolution is unavoidable.
-% Unlike monotonicity results phrased within specific programming or replicated-object
-% models, the Coordination Criterion gives a necessary and sufficient condition for
-% coordination-freedom for specifications defined over standard Lamport histories.
-% When we invoke classical impossibility or hierarchy theorems (e.g., for
-% wait-free consensus and \(k\)-set agreement), we adopt their usual liveness
-% assumptions, but these assumptions come from those external theorems rather
-% than from our semantic notion of monotonicity.
+\paragraph{Consistency.}
+Consistency captures whether observations made so far remain compatible with
+plausible future behavior.
+An observation is consistent if it does not immediately foreclose all causally
+possible continuations.
+This notion is intentionally weak: it does not require convergence or agreement,
+only the absence of semantic dead ends.
 
-Throughout, specifications in our framework are compositional and need not
-correspond to entire distributed services.
-They may describe the behavior of components, interfaces, or subroutines
-within a larger system, allowing the Coordination Criterion to be applied
-at multiple levels of specification.
-The typical question is not whether an entire system uses coordination at all, but
-which parts of its logic intrinsically require coordination and which
-provably do not.
+Intuitively, consistency allows a system to act during partitions and
+still reconcile on reconnection.
 
-To make the discussion concrete, we will occasionally refer to a simple
-running example: a single read--write register replicated at two processes
-in an asynchronous message-passing system.
-We will consider two specifications for this object over the same
-computational model and observations: a highly available, eventually
-consistent register and a linearizable register.
-Throughout the paper we use this example to illustrate how choices of
-observation, outcome order, and specification determine whether
-coordination is semantically necessary.
+\paragraph{Monotonicity.}
+Monotonicity is the semantic property that prevents such dead ends.
+A specification is monotone when extending a history can refine earlier
+observations but cannot invalidate them.
+Non-monotone specifications permit observations that are correct only under a
+restricted set of future extensions.
+
+For example, highly available replicated registers are monotone, while
+linearizability is not: an observation that appears valid at one prefix may
+become invalid under another causal extension.
+
+\paragraph{The connection.}
+Our main result shows that these notions coincide.
+A specification admits a coordination-free implementation if and only if it is
+monotone.
+Non-monotonicity creates unavoidable semantic regret: correctness requires
+excluding causally enabled extensions of the history.
+
 
 % ================================================================
 \section{Computational Model}
@@ -301,10 +357,14 @@ are treated separately from the safety-style semantic conditions studied here.
 History extension preserves all previously observed events and causal relations
 and adds only causally later events.
 
-% MOVED TO APPENDIX: Example illustrating history extension.
-See Appendix~\ref{sec:additional-applications} for an illustrative instance of
-history extension for the replicated-register running example.
-
+% \paragraph{Example (replicated register).}
+% Consider a history \(H_1\) in which process \(p\) performs a write and sends a
+% message to process \(q\), but the message has not yet been delivered.
+% An extension \(H_2\) of \(H_1\) may add the corresponding receive event at \(q\),
+% or may add other local events at either process, so long as all happens-before
+% constraints are respected.
+% Crucially, \(H_2\) cannot remove or reorder events already in \(H_1\), nor can it
+% introduce new causal predecessors of existing events.
 
 % ================================================================
 \section{Observations and Consistency}
@@ -317,8 +377,8 @@ history extension for the replicated-register running example.
     \Obs : \Hist \rightarrow \mathcal{P}(O),
   \]
   where \(O\) is a set of observable outcomes.
-  Intuitively, \(\Obs(H)\) is the set of outcomes that may be exposed at the
-  chosen interface after history \(H\).
+  Intuitively, \(\Obs(H)\) is the set of outcomes that may be exposed
+  by the specification after history \(H\).
 \end{definition}
 
 \noindent
@@ -332,26 +392,35 @@ The framework does not require that distinct outcomes in \(\Obs(H)\) be jointly
 realizable in a single execution, nor that they converge to a common future
 outcome.
 
-As histories are extended, the set $\Obs(H)$ may change: some outcomes that were
-admissible for a prefix history may cease to be admissible once additional events
+\begin{example}[Observations for a replicated register]
+  \label{ex:register-observations}
+  We illustrate these notions with a simple running example that we will return
+  to throughout the paper.
+  Consider a single read--write register replicated at two processes, and let
+  histories record read and write invocations and responses.
+
+  One possible observation function maps a history \(H\) to the set of values that
+  a read operation is permitted to return in \(H\).
+  For a highly available register, \(\Obs(H)\) may contain multiple outcomes:
+  for example, a read may legally return either the initial value or a value written
+  concurrently at another replica.
+  Accordingly, \(\Obs(H)\) is set-valued: each element represents a distinct,
+  individually admissible outcome, even though not all such outcomes can occur in
+  the same execution.
+\end{example}
+Later, we will use different specifications over the same histories and
+observations to illustrate how monotonicity determines whether coordination is
+required.
+
+As histories are extended, the set $\Obs(H)$ may change: outcomes that are
+admissible at a prefix history may cease to be admissible once additional events
 occur.
 Whether such exclusions can be tolerated without coordination depends on whether
 an outcome admitted earlier remains compatible with at least one outcome admitted
 later.
-To make this notion precise, we compare outcomes using an order that captures
-semantic compatibility under extension.
+To make this precise, we compare outcomes using an order that captures semantic
+compatibility under extension.
 
-% \begin{definition}[Outcome Order]
-% The outcome domain \(O\) is equipped with a partial order \(\Ord\), called the
-% outcome order, where \(o_1 \Ord o_2\) means that \(o_2\) does not contradict
-% \(o_1\).
-% As previewed in the introduction, all references to monotonicity in this paper
-% are with respect to this order on observable outcomes.
-% Intuitively, \(\Ord\) captures an information-refinement or compatibility
-% relation between observable outcomes.
-% Two observations contradict in the usual satisfiability sense (cannot both be true) when they have
-% no common extension in this order.
-% \end{definition}
 \begin{definition}[Outcome Order and Contradiction]
   The outcome domain $O$ is equipped with a partial order $\Ord$, called the
   outcome order.
@@ -390,67 +459,44 @@ semantic compatibility under extension.
 
 \begin{remark}[Faithful Observations]
   \label{rem:faithful-observations}
-  The observation function $\Obs$ must faithfully reflect the semantic obligations
-  of the specification being modeled.
+  The observation function $\Obs$ and outcome order $\Ord$ must faithfully reflect
+  the semantic obligations of the specification being modeled.
+  Faithfulness does not redefine correctness: an outcome is correct precisely when
+  it belongs to $\Spec(H)$.
+  Rather, faithfulness concerns modeling adequacy—whether the chosen observation
+  space exposes all semantically meaningful distinctions required by the
+  specification.
+
   If $\Obs$ is too coarse, semantically meaningful contradictions may be
   unobservable, artificially rendering a non-monotone problem monotone.
   For example, observing only the set of values ever returned by reads in a
-  replicated register yields a monotone specification, but fails to capture that each read return the most recent write.
+  replicated register yields a monotone specification, but fails to capture the
+  requirement that each read return the most recent write.
 
-  Throughout this paper, we assume that $\Obs$ and $\Ord$ are chosen to be
-  faithful in this sense: weakening observations corresponds to weakening the
-  specification itself, not to revealing a coordination-free implementation of
-  the original problem.
+  Throughout this paper, we assume that $\Obs$ and $\Ord$ are chosen to be faithful
+  in this sense: weakening observations corresponds to weakening the specification
+  itself, not to revealing a coordination-free implementation of the original
+  problem.
 \end{remark}
-
 
 At this point our framework diverges from prior CALM work.
 CALM and its descendants formulate monotonicity of programs,
-state updates, or problems over input sets: relational transducer queries are
-monotone with respect to set inclusion on input facts, and in the
-replicated-object setting of Li and Lee a problem \(\mathcal{P} : \mathbb{X}
-\to \mathbb{V}\) is monotone with respect to inclusion on inputs.
-In contrast, happens-before is not a semantic choice like an input-set order or clause lattice, but the weakest causal order shared by all asynchronous implementations.
-Here we instead place monotonicity directly on \emph{history-to-observation
-  specifications}: once \(\Obs\) and \(\Ord\) are fixed, we treat a
-specification as an opaque set-valued map \(\Spec : \Hist \to \mathcal{P}(O)\)
-asking only whether it is monotone with respect to history extension.
+state updates, or problems over input sets: for example, whether relational
+transducer queries are monotone with respect to set inclusion on input facts.
+In contrast, the happens-before relation is not a modeling choice introduced to
+define semantics, but the minimal causal structure common to all asynchronous
+executions.
+Here we instead place monotonicity directly on
+\emph{history-to-observation specifications}: once $\Obs$ and $\Ord$ are fixed,
+we treat a specification as a set-valued mapping from histories to admissible
+observable outcomes, formalized in the next section.
 This shift keeps specific programming models, object-level execution frameworks,
-and implementation formalisms out of the semantic core. Specifications are introduced
-formally in the next section.
+and implementation formalisms out of the semantic core.
+Specifications are introduced formally in the next section.
 
 Formally, monotonicity is defined using the lifted order induced by \(\Ord\):
 for every \(H_1 \hext H_2\) and every \(o_1 \in \Spec(H_1)\), there exists
 \(o_2 \in \Spec(H_2)\) such that \(o_1 \Ord o_2\).
-
-% Concretely, many outcome orders coincide with familiar refinement or prefix
-% orders from program semantics.
-% In one faithful instantiation of the replicated-register example, outcomes are sequences of completed
-% operations and $o_1 \Ord o_2$ holds exactly when $o_1$ is a prefix of $o_2$:
-% extending a history appends more operations but does not change the behavior of
-% the prefix.
-% Two observations contradict when they describe incompatible prefixes, in the
-% sense that no longer sequence can extend both without changing some previously
-% recorded return value.
-
-% An alternative faithful choice would be to let an observation consist of a tuple of
-% per-process operation sequences, ordered by pointwise prefix. Such representations
-% preserve causal structure and avoid unnecessary interleaving. We use sequence-based
-% observations here because specifications like linearizability constrain global return
-% values in a way that is most directly exposed by a single ordered outcome: conflicting
-% read results then manifest as incompatible prefixes with no common extension. The 
-% Coordination Criterion applies equally under either representation.
-
-% We emphasize that observations need not resemble executions or traces in any way.
-% In many specifications, Obs deliberately discards causal and temporal structure and
-% records only semantic state. For example, Obs may map a history to an abstract semantic
-% state rather than an execution trace—such as a vector of register values, a map that
-% records the decisions of processes that have decided so far, a set of reachable states,
-% or a numeric quantity like a counter or optimization loss.
-% These outcome domains are typically ordered by refinement or inclusion rather than by
-% prefix. Sequence-based observations are just one faithful choice when the specification 
-% itself constrains the relative order of operations (e.g., linearizability); they are not
-% intrinsic to the framework.
 
 Concretely, many outcome orders coincide with familiar refinement or prefix
 orders from program semantics. For example, for a replicated register, taking
@@ -467,7 +513,8 @@ All notions of outcome consistency in this section are defined relative to this
 minimal causal structure (Lamport’s happens-before); stronger orderings such as
 total orders or linearizations are specification choices that may require
 coordination to realize, not assumptions of the model.
-
+We apply this notion primarily to sets of outcomes admissible at a history,
+such as $\Obs(H)$ or $\Spec(H)$.
 \begin{definition}[Consistency]
   A set of observations is \emph{consistent} if its elements are pairwise
   non-contradicting, i.e., no two observations in the set contradict in the
@@ -517,12 +564,26 @@ this framework by choosing appropriate observations and orders, including
 eventual and causal consistency and a range of transactional isolation
 levels; we illustrate these instantiations in
 Section~\ref{sec:applications} and Appendix~\ref{sec:additional-applications}.
-In this sense, our notion of consistency is a common semantic umbrella for a
-wide variety of storage-level guarantees, not just linearizability.
+In each case, the difference lies in the choice of outcome space $O$ and
+observation function $\Obs$—for example, sequences of completed operations,
+per-object abstract states, or sets of visible facts—together with an outcome
+order $\Ord$ that captures semantic refinement or compatibility.
+For instance, causal consistency may observe per-object version sets ordered by
+inclusion.
+In this sense, our notion of consistency provides a common semantic umbrella for
+a wide variety of storage-level guarantees, not just linearizability.
 
 % ================================================================
 \section{Specifications and Coordination}
 % ================================================================
+Specifications in our framework are compositional and need not
+correspond to entire distributed services.
+They may describe the behavior of components, interfaces, or subroutines
+within a larger system, allowing the Coordination Criterion to be applied
+at multiple levels of specification.
+The typical question is not whether an entire system uses coordination at all, but
+which parts of its logic intrinsically require coordination and which
+provably do not.
 
 \begin{definition}[Distributed Specification]
   \label{def:distributed-specification}
@@ -534,6 +595,7 @@ wide variety of storage-level guarantees, not just linearizability.
 \end{definition}
 
 \begin{example}[Replicated Register Specifications]
+  \label{ex:register-specs}
   Revisiting the running example from the introduction, consider histories in
   which processes issue read and write operations on a single logical register
   replicated at two nodes.
@@ -575,14 +637,20 @@ function $\Obs$ and outcome order $\Ord$ for the specification under study.
     \item for each input history prefix $H_{\mathit{in}}$, a set of realizable
           histories $\mathcal{R}_I(H_{\mathit{in}}) \subseteq \Hist$, and
     \item an outcome-exposure map $\Obs_I : \Hist \to \mathcal{P}(O)$, where
-          $\Obs_I(H)$ is the set of outcomes that $I$ may expose after history $H$
-          at the chosen interface.
+          $\Obs_I(H)$ is the set of outcomes that $I$ may expose after history $H$.
   \end{itemize}
 \end{definition}
 
+\paragraph{Admissible histories.}
+We separate the causal structure supplied by the asynchronous model from the
+behavior of any particular implementation.
+For a fixed input history prefix $H_{\mathit{in}}$, the asynchronous model
+determines a set of causally admissible executions: all histories that extend
+$H_{\mathit{in}}$ and respect Lamport’s happens-before relation.
+This set is defined independently of any specification or implementation and
+serves as the baseline against which coordination is measured.
+
 \begin{definition}[Coordination-Free Implementation]
-  An implementation is \emph{coordination-free} if correctness never requires it
-  to exclude any execution that is permitted by asynchrony and causality alone.
   Fix a specification $\Spec : \Hist \to \mathcal{P}(O)$.
   For any input history prefix $H_{\mathit{in}}$, define the set of
   \emph{admissible histories}
@@ -592,30 +660,23 @@ function $\Obs$ and outcome order $\Ord$ for the specification under study.
     \{\, H \in \Hist \mid H_{\mathit{in}} \hext \In(H) \,\}.
   \]
 
-  Membership in $\mathcal{A}(H_{\mathit{in}})$ is called
-  \emph{causal admissibility}:
-  it requires only that the external inputs extend $H_{\mathit{in}}$ and that the
-  history respect Lamport’s happens-before relation.
-  It is unrelated to any storage-level or object-level consistency model.
-
   An implementation $I$ is \emph{coordination-free} if, for every input history
   $H_{\mathit{in}}$:
   \begin{enumerate}[nosep]
-    \item
+    \item \emph{(Observational correctness)}
           For every $H \in \mathcal{R}_I(H_{\mathit{in}})$,
-          $
-            \Obs_I(H) \subseteq \Spec(H).
-          $ \emph{(Observational correctness)}
-    \item
-          $
-            \mathcal{R}_I(H_{\mathit{in}}) = \mathcal{A}(H_{\mathit{in}}).
-          $ \emph{(Causal completeness / no additional pruning)}
+          $\Obs_I(H) \subseteq \Spec(H)$.
+    \item \emph{(No additional pruning)}
+          $\mathcal{R}_I(H_{\mathit{in}}) = \mathcal{A}(H_{\mathit{in}})$.
   \end{enumerate}
 \end{definition}
 \noindent
-Causal completeness captures the absence of coordination:
+The no-additional-pruning condition captures the absence of coordination:
 a coordination-free implementation excludes no execution permitted by
 asynchrony and causality.
+For example, as we will see, the highly available register specification admits
+a coordination-free implementation, while the linearizable specification does not.
+
 
 \paragraph{Coordination vs.\ nondeterminism.}
 A specification may admit multiple outcomes for the same history, and an
@@ -635,7 +696,7 @@ distributed computing, an implementation consists of a collection of (possibly
 nondeterministic) state machines representing processes that communicate over
 asynchronous channels.
 An admissible input history $H_{\mathit{in}}$ is any history of external
-invocation events at the specified interface.
+invocation events.
 An execution $H$ is causally consistent with $H_{\mathit{in}}$ when
 $H_{\mathit{in}} \hext H$ and the happens-before relation in $H$ extends the
 union of local program order at each process and the send/receive edges on
@@ -644,7 +705,8 @@ In particular, ``causal consistency'' here refers only to this history-level
 condition and does not introduce a separate storage-level consistency model.
 
 \begin{remark}[Coordination vs.\ Protocol Mechanics]
-  The asynchronous model already fixes which histories are admissible; the
+  Given a prefix of external inputs, the asynchronous model fixes which
+  history extensions are admissible under happens-before. The
   definition above declares an implementation coordination-free exactly when it
   does not prune this space beyond causal consistency.
   Our notion of coordination is semantic rather than operational,
@@ -677,31 +739,45 @@ condition and does not introduce a separate storage-level consistency model.
   Under our asynchronous model, retries preserve all admissible observations:
   for any causally consistent execution, the set of observable outcomes allowed
   by the specification is unchanged, regardless of whether the server ever
-  responds.
+  responds. Crucially, the client’s choice to retry or to wait does not exclude any causally
+  admissible history: executions in which the server never responds remain
+  admissible, differing only in which observations are exposed.
 
   By contrast, a barrier that requires all processes to report completion before
-  any may proceed restricts observable outcomes: it rules out executions whose
-  observations reflect partial progress, even though such behaviors are otherwise
-  permitted by asynchrony.
+  any may proceed restricts observable outcomes by excluding histories in which
+  some processes fail to respond indefinitely, even though such histories are
+  admissible under asynchrony.
   Similarly, a quorum protocol restricts observations by excluding outcomes in
   which too many replicas fail to respond.
 
   These latter mechanisms impose semantic commitments to eliminate
   observations that are admissible under causally consistent executions,
-  which constitutes coordination in our sense.
+  which constitutes coordination in our sense. The distinction is not whether progress occurs, but whether correctness depends
+  on ruling out causally admissible executions.
 \end{example}
 
 % ================================================================
 \section{Monotonicity}
 % ================================================================
 
-\begin{definition}[Monotone Specification]
+\begin{definition}[Monotone Spec]
   Fix an outcome order $\Ord$ on $O$.
   A specification \(\Spec\) is \emph{monotone with respect to $\Ord$} if for
   all histories \(H_1 \hext H_2\) and all outcomes $o \in \Spec(H_1)$, there
   exists an outcome $o' \in \Spec(H_2)$ such that $o \Ord o'$.
   When $\Ord$ is clear from context, we simply say that $\Spec$ is monotone.
 \end{definition}
+
+% \paragraph{Example (Replicated register).}
+% For the replicated register introduced earlier, monotonicity depends on the
+% specification.
+% The highly available specification $\Spec_{\mathit{avail}}$ is monotone:
+% any observation admissible for a prefix history remains compatible with at least
+% one admissible observation after further message deliveries or operation
+% completions.
+% By contrast, the linearizable specification $\Spec_{\mathit{lin}}$ is non-monotone:
+% an observation that is admissible at a prefix may be ruled out by a causally
+% admissible extension, such as the arrival of a concurrent write.
 
 Monotonicity captures the intuition that adding admissible steps to a history
 cannot invalidate previous observations: every observation that a specification
@@ -733,26 +809,32 @@ causally consistent execution.
   safety properties as sets of executions closed under finite
   prefixes~\cite{alpern1985liveness}.}
 
-Continuing the replicated-register example above, $\Spec_{\mathit{avail}}$ is
-monotone with respect to the prefix order $\Ord$.
-Extending a history by delivering additional messages or completing
-operations only appends further entries to the observation sequence; any
-observation sequence that is admissible under $\Spec_{\mathit{avail}}(H_1)$
-extends to some admissible sequence in $\Spec_{\mathit{avail}}(H_2)$ for
-every extension $H_1 \hext H_2$.
-By contrast, $\Spec_{\mathit{lin}}$ is non-monotone.
-There exist histories $H_1 \hext H_2$ in which a read returns a value that is
-consistent with some linearization of $H_1$, but extending to $H_2$ by adding
-a concurrent write forces any linearization of $H_2$ to place that write
-before the read, retroactively classifying the earlier return value as
-illegal.
-In our framework, such retroactive invalidation witnesses non-monotonicity.
+% Continuing the replicated-register example above, $\Spec_{\mathit{avail}}$ is
+% monotone with respect to the prefix order $\Ord$.
+% Extending a history by delivering additional messages or completing
+% operations only appends further entries to the observation sequence; any
+% observation sequence that is admissible under $\Spec_{\mathit{avail}}(H_1)$
+% extends to some admissible sequence in $\Spec_{\mathit{avail}}(H_2)$ for
+% every extension $H_1 \hext H_2$.
+% By contrast, $\Spec_{\mathit{lin}}$ is non-monotone.
+% There exist histories $H_1 \hext H_2$ in which a read returns a value that is
+% consistent with some linearization of $H_1$, but extending to $H_2$ by adding
+% a concurrent write forces any linearization of $H_2$ to place that write
+% before the read, retroactively classifying the earlier return value as
+% illegal.
+% In our framework, such retroactive invalidation witnesses non-monotonicity.
 
 % ================================================================
 \section{The Coordination Criterion}
 % ================================================================
 
-We distinguish the causal structure supplied by the environment (happens-before) from any additional structure imposed by a specification, and Theorem~\ref{thm:coordination-criterion} identifies exactly when such additional structure cannot be maintained without pruning some causally admissible histories.
+We distinguish the causal structure supplied by the environment (happens-before)
+from any additional structure imposed by a specification, and
+Theorem~\ref{thm:coordination-criterion} identifies exactly when such additional
+structure cannot be maintained without pruning some causally admissible histories.
+The question we now answer is when such additional semantic structure can be
+realized without coordination—i.e., without excluding any causally admissible
+histories.
 
 \begin{theorem}[Coordination Criterion]\label{thm:coordination-criterion}
   A distributed specification admits a coordination-free
@@ -760,7 +842,38 @@ We distinguish the causal structure supplied by the environment (happens-before)
   extension under the chosen outcome order $\Ord$.
 \end{theorem}
 
-This equivalence is proved in the asynchronous message-passing model of
+\paragraph{Example (Replicated register).}
+Consider the replicated register specifications from
+Example~\ref{ex:register-specs}, with observations taken to be sequences of
+completed operations ordered by prefix extension.
+
+Let $H_1$ be a history in which a process has invoked a read operation, and
+concurrently another replica has invoked a write of value $1$, but neither
+operation has yet completed.
+At this prefix, the observation
+\[
+  o = \langle \mathsf{read}(0) \rangle
+\]
+is admissible under both $\Spec_{\mathit{avail}}$ and $\Spec_{\mathit{lin}}$,
+corresponding to completing the read before observing the write.
+
+Now extend $H_1$ to a history $H_2$ by delivering the write and completing it
+before completing the read.
+Under $\Spec_{\mathit{avail}}$, the earlier observation $o$ remains compatible
+with $H_2$, since reads may ignore concurrent writes.
+Under $\Spec_{\mathit{lin}}$, however, every admissible observation of $H_2$
+requires the read to return $1$, and there is no outcome in
+$\Spec_{\mathit{lin}}(H_2)$ whose sequence of completed operations has $o$ as a
+prefix under $\Ord$.
+This shows that $\Spec_{\mathit{lin}}$ is non-monotone with respect to history
+extension.
+By contrast, $\Spec_{\mathit{avail}}$ admits no such counterexample.
+
+This example isolates the semantic source of coordination: the linearizability
+specification commits to a return value that cannot be extended along all
+causally admissible completions of the same prefix history.
+
+This theorem is proved in the asynchronous message-passing model of
 Section~\ref{sec:obs-consistency}, where histories may be finite or infinite,
 messages may be delayed or lost, and crashes are modeled as processes that take
 no further steps; we assume $\Ord$ is a partial order on outcomes and that
@@ -864,9 +977,10 @@ using a semantic notion of maximal availability under partitions, defined below.
   $H_i \hext H$ that respect $P$.
   An implementation $I$ of $\Spec$ is \emph{maximally available under partitions}
   if for every $H_i$, $P$, and client invocation $e \in H_i$, whenever there
-  exists some $H \in \mathsf{Ext}_P(H_i)$ such that $\Spec(H)$ holds and $e$
-  completes in $H$, there exists an execution $H^* \in \mathsf{Ext}_P(H_i)$ of
-  $I$ such that $\Spec(H^*)$ holds and $e$ completes in $H^*$.
+  exists some $H \in \mathsf{Ext}_P(H_i)$ such that $\Spec(H) \neq \emptyset$ and
+  $e$ completes in $H$, there exists an execution
+  $H^* \in \mathsf{Ext}_P(H_i)$ of $I$ such that $\Spec(H^*) \neq \emptyset$ and
+  $e$ completes in $H^*$.
 \end{definition}
 
 To relate coordination to the CAP tradeoff, we model network partitions as
@@ -1038,6 +1152,8 @@ remain the responsibility of the authors.
 
 \subsection{Supplementary Example: History Extension}
 % MOVED FROM MAIN BODY: Previously appeared as an example in Section 2.1.
+We present the example starting from a complete execution and then
+consider its prefixes, since history extension is defined as prefix preservation.
 \begin{example}[History Extension for the Replicated Register]
   Continuing the replicated-register running example, suppose history
   \(H_2 = (E_2,\rightarrow_2)\) contains the following events:
@@ -1194,7 +1310,7 @@ coordination, independently of progress or failure assumptions.
   Now extend $H_1$ to a history $H_2$ by adding a decide event for $q$ with
   decision value $v_1$.
   Validity permits this extension, since $v_1$ was proposed by $q$.
-  Any observation $o_2$ for $H_2$ that respects the interface must record both
+  Any observation $o_2$ for $H_2$  must record both
   decisions, so $o_2(p) = v_0$ and $o_2(q) = v_1$.
   No such $o_2$ is admissible under the consensus specification, because
   agreement forbids two different decided values.
@@ -1493,9 +1609,9 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
   (in particular, it extends the local program order and send/receive edges and
   may delay or drop messages).
   Intuitively, $I_\Spec$ maintains the exact history generated so far and
-  allows any single-event asynchronous extension.
-  For each configuration $H$, the implementation nondeterministically chooses
-  some outcome $o_H \in \Spec(H)$ to expose at history $H$.
+  allows any single-event causally admissible extension.
+  For each history $H$, the implementation nondeterministically chooses
+  some outcome $o_H \in \Spec(H)$ to expose.
   Monotonicity of $\Spec$ ensures that every such choice remains $\Ord$-compatible
   with at least one admissible outcome of every extension of $H$.
 
@@ -1508,7 +1624,7 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
   \emph{No additional pruning.}
   Fix an admissible input history $H_{\mathit{in}}$.
   By construction, every run of $I_\Spec$ from $H_{\mathit{in}}$ produces a
-  chain of configurations
+  chain of histories
   \[
     H_{\mathit{in}} = H_0 \hext H_1 \hext H_2 \hext \cdots
   \]
@@ -1584,13 +1700,13 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
   This prefix is itself an admissible run of $I$ (our asynchronous model imposes
   no fairness obligations), and its history is exactly $H_1$.
   Thus there exist two runs of $I$ from the same input history $H_{\mathit{in}}$
-  that coincide up to the configuration with history $H_1$ but whose admissible
+  that coincide up to history $H_1$ but whose admissible
   extensions realize $H_1$ and $H_2$ respectively.
 
   Because $\Spec(H_1)$ and $\Spec(H_2)$ contradict, there is no single observation
   $o$ that is compatible with both under $\Ord$.
   Because observations are defined for every history, correctness requires $I$ to
-  emit some observation at the configuration corresponding to history $H_1$.
+  emit some observation at history $H_1$.
   Any such choice will be incompatible with every outcome in $\Spec(H_2)$ along the
   admissible extension to $H_2$.
 
@@ -1659,7 +1775,7 @@ observation function, and outcome order.
   Fix a specification $\Spec$ that admits a coordination-free implementation $I$.
   By definition of coordination-freedom, for every admissible input history
   $H_{\mathit{in}}$, the implementation realizes exactly the set
-  $\mathcal{A}(H_{\mathit{in}})$ of causally consistent asynchronous extensions,
+  $\mathcal{A}(H_{\mathit{in}})$ of causally admissible extensions,
   without excluding any such histories.
 
   Define a derived specification $\Spec_I : \Hist \to \mathcal{P}(O)$ by letting
