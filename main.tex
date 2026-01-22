@@ -8,8 +8,24 @@
 \acmYear{}
 \copyrightyear{}
 
+% ---------- Space saving, etc ----------
 \usepackage{microtype}
 \usepackage{enumitem}
+
+\usepackage{etoolbox}
+
+\makeatletter
+\pretocmd{\@begintheorem}{\setlength{\topsep}{2pt}}{}{}
+\pretocmd{\@endtheorem}{\setlength{\topsep}{2pt}}{}{}
+\makeatother
+
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {-0.5ex \@plus -0.2ex \@minus -0.2ex}%
+  {-0.8em}%
+  {\normalfont\normalsize\itshape}}
+\makeatother
+
 
 % ---------- Theorem environments ----------
 \newtheorem{definition}{Definition}
@@ -51,7 +67,6 @@
   When is coordination \emph{intrinsically required} by a distributed specification,
   rather than an artifact of a programming model or protocol design?
   We give a general semantic answer using a minimum of machinery.
-
   We show that a distributed specification admits a coordination-free implementation
   under asynchrony if and only if it is monotone with respect to history extension
   under an appropriate outcome order.
@@ -219,7 +234,7 @@ stronger primitives.
 These results capture key aspects of coordination, but under specific
 models or classes of specifications.
 
-This paper gives a general answer to this question.
+This paper provides a general answer to this question.
 We show that coordination is not an artifact of particular protocols,
 programming models, or consistency conditions, but a property of the
 specification itself.
@@ -373,9 +388,9 @@ and adds only causally later events.
 
 \begin{definition}[Observations]
   An \emph{observation function} is a function
-  \[
+  $
     \Obs : \Hist \rightarrow \mathcal{P}(O),
-  \]
+  $
   where \(O\) is a set of observable outcomes.
   Intuitively, \(\Obs(H)\) is the set of outcomes that may be exposed
   by the specification after history \(H\).
@@ -704,33 +719,51 @@ channels induced by the implementation.
 In particular, ``causal consistency'' here refers only to this history-level
 condition and does not introduce a separate storage-level consistency model.
 
+% \begin{remark}[Coordination vs.\ Protocol Mechanics]
+%   Given a prefix of external inputs, the asynchronous model fixes which
+%   history extensions are admissible under happens-before. The
+%   definition above declares an implementation coordination-free exactly when it
+%   does not prune this space beyond causal consistency.
+%   Our notion of coordination is semantic rather than operational,
+%   and is distinguished from nondeterministic choice or underspecification by whether an
+%   implementation must exclude causally admissible histories.
+%   Communication---whether reliable or unreliable, timely or delayed---adds events and
+%   causal relationships to an execution history, but by itself does not change
+%   which histories the model deems possible beyond causality itself.
+%   A mechanism constitutes coordination when its correctness relies on
+%   \emph{excluding} some of those admissible histories: mechanisms such as
+%   barriers, termination detection, quorums, or agreement protocols realize only those
+%   histories that satisfy additional global constraints (e.g., a total order on
+%   certain events).
+%   By contrast, low-level protocol devices such as acknowledgments,
+%   retransmissions, or retries merely react to events that have occurred and do
+%   not exclude any causally consistent executions.
+%   An implementation becomes coordinating only when correctness depends on the
+%   exclusion of certain executions—for example, by assuming that a message or
+%   acknowledgment will never arrive, or by requiring responses from all
+%   participants before proceeding and thereby ruling out histories in which some
+%   responses are forever absent.
+%   Several classical results discussed in Section~\ref{sec:applications} and
+%   Appendix~\ref{sec:additional-applications} rely on this distinction between
+%   reacting to events and excluding executions.
+% \end{remark}
+
 \begin{remark}[Coordination vs.\ Protocol Mechanics]
-  Given a prefix of external inputs, the asynchronous model fixes which
-  history extensions are admissible under happens-before. The
-  definition above declares an implementation coordination-free exactly when it
-  does not prune this space beyond causal consistency.
-  Our notion of coordination is semantic rather than operational,
-  and is distinguished from nondeterministic choice or underspecification by whether an
-  implementation must exclude causally admissible histories.
-  Communication---whether reliable or unreliable, timely or delayed---adds events and
-  causal relationships to an execution history, but by itself does not change
-  which histories the model deems possible beyond causality itself.
-  A mechanism constitutes coordination when its correctness relies on
-  \emph{excluding} some of those admissible histories: mechanisms such as
-  barriers, termination detection, quorums, or agreement protocols realize only those
-  histories that satisfy additional global constraints (e.g., a total order on
-  certain events).
-  By contrast, low-level protocol devices such as acknowledgments,
-  retransmissions, or retries merely react to events that have occurred and do
-  not exclude any causally consistent executions.
-  An implementation becomes coordinating only when correctness depends on the
-  exclusion of certain executions—for example, by assuming that a message or
-  acknowledgment will never arrive, or by requiring responses from all
-  participants before proceeding and thereby ruling out histories in which some
-  responses are forever absent.
-  Several classical results discussed in Section~\ref{sec:applications} and
-  Appendix~\ref{sec:additional-applications} rely on this distinction between
-  reacting to events and excluding executions.
+  For a fixed prefix of external inputs, the asynchronous model determines exactly
+  which history extensions are causally admissible.
+  An implementation is coordination-free precisely when it does not exclude any of
+  these histories.
+
+  Communication mechanisms such as acknowledgments, retries, or message reordering
+  merely react to events that occur: they add events and causal relations, but do not
+  restrict which extensions remain possible.
+  By contrast, a mechanism constitutes coordination when its correctness relies on
+  \emph{excluding} some of those admissible histories—for example, by requiring
+  responses from all participants or assuming that certain messages will eventually
+  arrive.
+  Barriers, termination detection, quorums, and agreement protocols all have this
+  character: they rule out executions with unbounded delay or partial participation,
+  even though such executions are permitted by asynchrony.
 \end{remark}
 
 \begin{example}[Observation-Preserving vs. Observation-Restricting Mechanisms]
@@ -851,9 +884,9 @@ Let $H_1$ be a history in which a process has invoked a read operation, and
 concurrently another replica has invoked a write of value $1$, but neither
 operation has yet completed.
 At this prefix, the observation
-\[
+$
   o = \langle \mathsf{read}(0) \rangle
-\]
+$
 is admissible under both $\Spec_{\mathit{avail}}$ and $\Spec_{\mathit{lin}}$,
 corresponding to completing the read before observing the write.
 
@@ -986,11 +1019,10 @@ along at least one causally admissible continuation.
 Any implementation that remains maximally available under partitions must therefore
 violate linearizability in some admissible execution.
 
-\begin{corollary}[CAP]
-  In the asynchronous model above, no implementation of a replicated register can
-  satisfy linearizable read--write consistency while remaining both correct on all
-  causally consistent histories and maximally available under partitions.
-\end{corollary}
+\paragraph{Corollary: CAP}
+In the asynchronous model above, no implementation of a replicated register can
+satisfy linearizable read--write consistency while remaining both correct on all
+causally consistent histories and maximally available under partitions.
 
 Formal definitions of partition patterns and maximal availability, and their
 connection to the above execution pattern, are given in
@@ -999,28 +1031,15 @@ Appendix~\ref{app:cap-formal}.
 \subsection{CALM}
 
 In contrast to the read/write CAP setting, CALM is application-level;
-among declarative logic programs, the monotone programs are exactly those
-that admit coordination-free distributed evaluation.
-To instantiate CALM in our framework we use transducer executions as histories,
-logic programs as specifications, and output \emph{sets} as observations.
-Formal definitions
-and a full proof appear in Appendix~\ref{app:calm-formal}, but the mapping is direct:
-in monotone logic programs, additional input facts (events) produce more output facts
-(observations).
-
-
-\begin{corollary}[CALM]
-  In the relational transducer setting of
-  Ameloot et al.~\cite{ameloot2013relational}, a logic program admits a
-  coordination-free, eventually consistent distributed evaluation if and only if
-  it is monotone with respect to set inclusion on input facts.
-\end{corollary}
-
-\begin{proof}[Proof sketch]
-  This is a direct instantiation of our framework in which histories are transducer
-  executions and observations are eventual outputs ordered by set inclusion, so
-  program monotonicity coincides with specification monotonicity.
-\end{proof}
+among distributed declarative logic programs, the monotone programs are exactly those
+that admit coordination-free distributed evaluation~\cite{ameloot2013relational}.
+To instantiate CALM in our framework, the mapping is direct:
+transducer executions as histories,
+logic programs as specifications, and output sets as observations.
+In monotone logic programs, additional input facts (events) can only cause new facts to be added to output sets
+(observations). Non-monotone programs, such as those with negation or
+aggregation, may need to retract previously derived facts when new input arrives.
+Formal definitions and proofs appear in Appendix~\ref{app:calm-formal}.
 
 
 \paragraph{Summary.}
