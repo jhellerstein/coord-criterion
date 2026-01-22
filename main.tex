@@ -227,14 +227,14 @@ This motivates a fundamental question:
 Prior work approached this question from several angles.
 The CAP theorem relates coordination to availability under partitions for strong
 consistency conditions such as linearizability.
-The CALM principle connects coordination-freedom to monotonicity in declarative
+The CALM theorem connects coordination-freedom to monotonicity in logic
 programs.
 Distributed computability theory characterizes which tasks require waiting or
 stronger primitives.
 These results capture key aspects of coordination, but under specific
 models or classes of specifications.
 
-This paper provides a general answer to this question.
+This paper provides a general, minimalist answer to this question.
 We show that coordination is not an artifact of particular protocols,
 programming models, or consistency conditions, but a property of the
 specification itself.
@@ -244,15 +244,15 @@ outcomes.
 The result is a sharp boundary theorem—the \emph{Coordination Criterion}—that
 identifies exactly when coordination is intrinsically required.
 
-The Coordination Criterion states that a distributed specification admits a
-coordination-free implementation if and only if it is monotone with respect to
-history extension under a chosen outcome order.
+The Coordination Criterion states that \emph{a distributed specification admits a
+  coordination-free implementation if and only if it is monotone with respect to
+  history extension under a chosen outcome order.}
 This formulation applies uniformly across settings previously studied in
 isolation.
 CAP-style impossibility results, CALM-style coordination-freedom results,
 classical distributed protocols, and programming language analyses
 all emerge as instances of the same phenomenon.
-By remaining agnostic to the level of abstraction—objects, programs, or
+By remaining agnostic to the level of abstraction—objects, programs,
 tasks—the criterion explains when coordination is necessary and when it is not.
 
 \paragraph{Scope.}
@@ -269,51 +269,49 @@ specification.
 
 \subsection{Coordination, Consistency, and Monotonicity: Core Intuitions}
 
-Our Coordination Criterion rests on three related semantic ideas—coordination,
-consistency, and monotonicity—which we summarize informally here.
+Our discussion will rest on three related concepts—coordination,
+consistency, and monotonicity. We summarize informally here;
+together they represent the core intuition of the paper.
 
 \paragraph{Coordination.}
 We treat coordination as a semantic phenomenon rather than a protocol mechanism.
 Intuitively, coordination arises when correctness requires an implementation to
-\emph{exclude} some causally possible behaviors.
+\emph{exclude causally possible behaviors}.
 In an asynchronous system, many different events may be causally enabled at a
 given point.
 An implementation is coordination-free when it allows all such
-extensions.
+extensions to history.
 
-This is distinct from ordinary data dependence.
-If no causally enabled step exists, execution simply stalls.
-Coordination arises only when enabled steps \emph{do} exist, but must be
-suppressed to preserve correctness.
+% This is distinct from points in a history where no causally enabled step exists,
+% so execution simply stalls waiting for new events.
+% Coordination excludes steps that \emph{do} exist,
+% but may violate correctness.
 
 \paragraph{Consistency.}
-Consistency captures whether observations made so far remain compatible with
-plausible future behavior.
-An observation is consistent if it does not immediately foreclose all causally
-possible continuations.
+In our setting, consistency concerns observations.
+An observation is consistent if it leaves open at least one causally admissible
+way for the execution to continue within the specification.
 This notion is intentionally weak: it does not require convergence or agreement,
 only the absence of semantic dead ends.
-
-Intuitively, consistency allows a system to act during partitions and
-still reconcile on reconnection.
+Intuitively, consistency allows a system to act during partitions while still
+admitting some way to reconcile within specification when communication resumes.
 
 \paragraph{Monotonicity.}
-Monotonicity is the semantic property that prevents such dead ends.
-A specification is monotone when extending a history can refine earlier
-observations but cannot invalidate them.
-Non-monotone specifications permit observations that are correct only under a
-restricted set of future extensions.
-
-For example, highly available replicated registers are monotone, while
-linearizability is not: an observation that appears valid at one prefix may
-become invalid under another causal extension.
+Monotonicity concerns how observations evolve as histories are extended, and whether
+later observations can become incompatible with earlier ones.
+We capture this using a partial order on observable outcomes, where
+growth in that order represents semantically compatible refinement
+(e.g., adding facts to a set, or increasing a count).
 
 \paragraph{The connection.}
 Our main result shows that these notions coincide.
-A specification admits a coordination-free implementation if and only if it is
-monotone.
-Non-monotonicity creates unavoidable semantic regret: correctness requires
-excluding causally enabled extensions of the history.
+A specification admits a coordination-free implementation exactly when it is
+monotone, in which case observations remain consistent under all causally
+admissible history extensions.
+Non-monotonicity creates the risk of semantic regret: preserving the
+compatibility order between observations is impossible along some causal
+extensions. This forces the use of coordination---that is, the exclusion of those
+extensions.
 
 
 % ================================================================
