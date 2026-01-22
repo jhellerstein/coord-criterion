@@ -939,24 +939,202 @@ For any strictly weaker condition, there exist specifications that satisfy it
 yet admit histories $H_1 \hext H_2$ for which no observation admissible at $H_1$
 is compatible with any admissible observation at $H_2$.
 The formal minimality argument appears in Appendix~\ref{app:minimality}.
+
 % ================================================================
 \section{Applications of the Coordination Criterion}
 \label{sec:applications}
 % ================================================================
 
-
 We illustrate the reach of the Coordination Criterion by instantiating it on
-familiar distributed objects, tasks, and consistency models. Rather than
-reproving classical theorems, we show how a single semantic condition on
-specifications pinpoints where coordination is and is not intrinsically
-required. We present CAP and CALM as core instantiations sufficient to evaluate
-the criterion; additional applications—including snapshots, agreement tasks,
-transactional isolation levels, and invariant confluence—are deferred to
-Appendix~\ref{sec:additional-applications}.
+familiar distributed objects and programming models. Rather than reproving
+classical theorems, we show how a single semantic condition on specifications
+explains when coordination is and is not intrinsically required.
+CAP and CALM serve as core instantiations; further applications—snapshots,
+agreement tasks, transactional isolation levels, and invariant
+confluence—are deferred to Appendix~\ref{sec:additional-applications}.
+
+\paragraph{Unifying pattern.}
+Across all applications we study, the same phenomenon recurs: coordination is
+necessary exactly when a specification admits an observation at some history
+prefix that cannot be extended along one or more causal continuations.
+Non-monotone specifications force implementations to exclude admissible histories
+to remain correct; monotone specifications do not.
 
 \subsection{CAP}
 
-To discuss CAP within our semantic framework, we instantiate consistency as
+In our framework, the CAP tradeoff arises because linearizability is a
+\emph{non-monotone} specification.
+A read outcome that is admissible at a prefix history may be invalidated by a
+causally admissible extension, forcing any correct implementation to exclude some
+admissible executions.
+When combined with a requirement of maximal availability under partitions—i.e.,
+not excluding any partition-respecting executions—this non-monotonicity yields the
+classical impossibility.
+
+Concretely, consider a replicated register.
+Let $H_i$ contain a write of value $1$ at process $p$, followed by a network
+partition isolating $p$ from a process $q$ which then issues a read.
+Any partition-respecting execution in which the read terminates must return either
+the initial value or $1$.
+Returning the initial value violates real-time order; returning $1$ asserts
+visibility of a write that no such execution can realize.
+Thus no terminating read under this partition admits a linearization.
+
+This execution pattern witnesses the semantic source of the CAP tradeoff:
+linearizability permits an observation at a prefix history that cannot be extended
+along at least one causally admissible continuation.
+Any implementation that remains maximally available under partitions must therefore
+violate linearizability in some admissible execution.
+
+\begin{corollary}[CAP]
+  In the asynchronous model above, no implementation of a replicated register can
+  satisfy linearizable read--write consistency while remaining both correct on all
+  causally consistent histories and maximally available under partitions.
+\end{corollary}
+
+Formal definitions of partition patterns and maximal availability, and their
+connection to the above execution pattern, are given in
+Appendix~\ref{app:cap-formal}.
+
+\subsection{CALM}
+
+In contrast to the read/write CAP setting, CALM is application-level;
+among declarative logic programs, the monotone programs are exactly those
+that admit coordination-free distributed evaluation.
+To instantiate CALM in our framework we use transducer executions as histories,
+logic programs as specifications, and output \emph{sets} as observations.
+Formal definitions
+and a full proof appear in Appendix~\ref{app:calm-formal}, but the mapping is direct:
+in monotone logic programs, additional input facts (events) produce more output facts
+(observations).
+
+
+\begin{corollary}[CALM]
+  In the relational transducer setting of
+  Ameloot et al.~\cite{ameloot2013relational}, a logic program admits a
+  coordination-free, eventually consistent distributed evaluation if and only if
+  it is monotone with respect to set inclusion on input facts.
+\end{corollary}
+
+\begin{proof}[Proof sketch]
+  This is a direct instantiation of our framework in which histories are transducer
+  executions and observations are eventual outputs ordered by set inclusion, so
+  program monotonicity coincides with specification monotonicity.
+\end{proof}
+
+
+\paragraph{Summary.}
+Taken together, the CAP and CALM instantiations show that coordination requirements
+across seemingly disparate settings stem from the same semantic source.
+Non-monotone specifications force implementations to exclude causally admissible
+histories, while monotone specifications admit coordination-free,
+partition-tolerant realizations.
+
+% ================================================================
+\section{Related Work}
+% ================================================================
+We build upon prior connections between coordination and monotonicity in the
+CALM line of work~\cite{li2025coordinationfree,ameloot2013relational,ameloot2016weaker,zinn2012weak,
+  hellerstein2010calm}, and in CAP-style availability/consistency tradeoffs~\cite{brewer2000towards,gilbert2002cap}.
+The original CALM proofs characterize coordination-freedom via monotonicity in
+relational transducer models over input
+sets~\cite{ameloot2013relational,ameloot2016weaker}.
+Li and Lee move from specific models to more abstract problems, defining monotonicity
+for input–output specifications ordered by refinement~\cite{li2025coordinationfree}.
+Their formulation relies on
+an explicit mapping from executions to an ordered input space with admissible
+partitions.
+We too adopt a problem-level perspective, but formulate it directly in a
+setting of Lamport histories and outcome orders in a standard
+asynchronous message-passing model. This
+allows the coordination criterion to be naturally instantiated on
+classic consistency conditions and impossibility results, including
+CAP-style registers, snapshots, agreement, and transactional
+guarantees---without recasting them into a specific programming or
+replicated-object formalism (Section~\ref{sec:applications},
+Appendix~\ref{sec:additional-applications}).
+Connections to CRDTs~\cite{shapiro2011crdt}, distributed
+computability~\cite{fischer1985impossibility,herlihy1991waitfree,herlihy1999topological,saks2000set},
+knowledge-based models and failure detectors~\cite{halpern1990knowledge,chandra1996unreliable},
+and transactional semantics~\cite{adya1999weakconsistency,berenson1995critique,crooks2017seeing}
+appear in Appendix~\ref{sec:extended-related-work}.
+
+% ================================================================
+\section{Conclusion}
+% ================================================================
+
+We have shown that, in an asynchronous semantic model, a distributed
+specification admits a coordination-free consistent implementation if and only
+if it is monotone with respect to history extension under a chosen outcome
+order.
+This \emph{Coordination Criterion} unifies classical results across distributed
+systems, recovering the semantic content of CAP tradeoffs, CALM-style
+monotonicity, snapshots, agreement tasks, and transactional and
+invariant-preserving semantics.
+
+In particular, the criterion makes precise how CALM refines CAP.
+Non-monotone specifications, such as linearizable registers, intrinsically
+require sacrificing consistency or availability under partitions, while monotone
+specifications admit coordination-free implementations that are both
+partition-tolerant and maximally available.
+CALM appears as one instance of this broader semantic boundary, characterizing
+those relational programs whose observable behavior is monotone.
+
+The Coordination Criterion is also sharp at the semantic level.
+Monotonicity is defined relative to an explicit choice of specification,
+observations, and outcome order; any refinement sufficient for
+coordination-freedom can be expressed by adjusting this semantic interface rather
+than by weakening the criterion itself.
+Beyond this boundary, coordination becomes semantically unavoidable.
+
+Finally, the criterion determines \emph{whether} coordination is required, but
+not \emph{how much}.
+Some specifications inherently demand multiple, sequential coordination phases,
+as in Paxos, where processes must first establish sufficient shared context
+before safely committing to decisions.
+This points toward a semantic theory of coordination depth and multi-round
+coordination.
+
+Our focus here has been on safety-style conditions on observable behavior.
+Orthogonal work on coordination-free liveness and free termination
+\cite{power2025freetermination} addresses progress guarantees.
+Together, these directions suggest a unified view of coordination as a semantic
+resource governing both admissible outcomes and safe commitment.
+
+
+% ================================================================
+\section*{Acknowledgments}
+% ================================================================
+
+Thanks to Peter Alvaro, Natacha Crooks, Paris Koutris, Edward Lee,
+Shulu Li and Dan Suciu for helpful feedback.
+We also acknowledge the use of AI-based language tools to assist with
+drafting and revising the exposition; all technical content and claims
+remain the responsibility of the authors.
+
+\appendix
+
+\section{Applications of the Coordination Criterion}
+\label{sec:additional-applications}
+% % ================================================================
+% \section{Applications of the Coordination Criterion}
+% \label{sec:applications}
+% % ================================================================
+
+
+% We illustrate the reach of the Coordination Criterion by instantiating it on
+% familiar distributed objects, tasks, and consistency models. Rather than
+% reproving classical theorems, we show how a single semantic condition on
+% specifications pinpoints where coordination is and is not intrinsically
+% required. We present CAP and CALM as core instantiations sufficient to evaluate
+% the criterion; additional applications—including snapshots, agreement tasks,
+% transactional isolation levels, and invariant confluence—are deferred to
+% Appendix~\ref{sec:additional-applications}.
+
+\subsection{CAP Revisited}
+\label{app:cap-formal}
+
+To discuss CAP formally within our semantic framework, we instantiate consistency as
 linearizable read--write behavior for a replicated register, model partitions
 via partition patterns that constrain message delivery, and capture availability
 using a semantic notion of maximal availability under partitions, defined below.
@@ -1032,123 +1210,111 @@ Coordination Criterion.
 %   the semantic content of Gilbert and Lynch’s tradeoff~\cite{gilbert2002cap}.
 % \end{proof}
 
-\subsection{CALM}
+\subsection{CALM Revisited}
+\label{app:calm-formal}
 
-In contrast to the read/write-centric CAP setting, the CALM principle characterizes
-when declarative logic programs admit coordination-free distributed evaluation by
-relating coordination-freedom to rule monotonicity.
-Our CALM instantiation is necessarily more compact than the CAP example:
-once observations are taken to be eventual output relations ordered by set
-inclusion, monotonicity is immediate and the Coordination Criterion applies
-directly, whereas CAP requires exhibiting an explicit witness of
-non-monotonicity under partitions.
+This appendix makes explicit how the CALM principle arises as a special case of
+the Coordination Criterion.
+Our goal is not to reprove CALM, but to show that its core semantic insight—
+coordination-freedom coincides with monotonicity—follows directly from our
+history-based framework under a natural choice of observations and outcome order.
 
-\begin{corollary}[CALM]
-  In the relational transducer setting of
-  Ameloot et al.~\cite{ameloot2013relational}, a logic program admits a
-  coordination-free, eventually consistent distributed evaluation if and only if
-  it is monotone with respect to set inclusion on input facts.
-\end{corollary}
+\subsubsection{Relational Transducers and Histories}
+
+We adopt the relational transducer model of
+Ameloot et al.~\cite{ameloot2013relational}.
+A transducer execution consists of a collection of nodes, each executing the same
+logic program, communicating by asynchronous message passing.
+
+A \emph{history} records:
+(i) local rule firings,
+(ii) message send and receive events, and
+(iii) external input facts injected at nodes.
+The happens-before relation captures local rule order and message causality, as
+in Section~\ref{sec:obs-consistency}.
+We impose no fairness or delivery guarantees: messages may be delayed or lost, and
+nodes may stop taking steps.
+
+\subsubsection{Observations and Outcome Order}
+
+To model eventual consistency, we take observations to be \emph{eventual output
+  relations}.
+Formally, let $O$ be the set of finite or infinite relational instances over the
+output schema of the program.
+For a history $H$, define $\Obs(H)$ to be the set of output relations that may be
+produced at some node in some fair extension of $H$ (or equivalently, the set of
+relations that are not ruled out by $H$).
+
+We equip $O$ with the outcome order $\Ord$ given by set inclusion.
+Intuitively, $R_1 \Ord R_2$ means that $R_2$ is a refinement of $R_1$ obtained by
+adding facts.
+
+This choice reflects the standard CALM interpretation of eventual outputs: once a
+fact appears, it is never retracted.
+
+\subsubsection{Specifications}
+
+A logic program induces a specification
+\[
+  \Spec : \Hist \to \mathcal{P}(O)
+\]
+mapping each history to the set of output relations admissible under the program’s
+semantics.
+Correctness requires that any relation produced by an implementation belong to
+$\Spec(H)$ for the corresponding history $H$.
+
+Under this interpretation, a specification is \emph{monotone} in our sense if and
+only if extending a history cannot invalidate a previously admissible output
+relation—i.e., every output remains extendable by set inclusion along every
+causally consistent extension.
+
+\subsubsection{Equivalence with CALM}
+
+We now relate specification monotonicity to program monotonicity.
+
+\begin{lemma}
+  A relational transducer program is monotone with respect to set inclusion on input
+  facts if and only if the induced specification $\Spec$ is monotone with respect to
+  history extension under the outcome order $(O,\subseteq)$.
+\end{lemma}
 
 \begin{proof}[Proof sketch]
-  This is a direct instantiation of our framework in which histories are transducer
-  executions and observations are eventual outputs ordered by set inclusion, so
-  program monotonicity coincides with specification monotonicity.
+  If the program is monotone, adding input facts or delaying messages can only add
+  derived output facts, never retract them.
+  Thus any output relation admissible at a prefix history remains extendable under
+  set inclusion at all causal extensions, establishing specification monotonicity.
+
+  Conversely, if the program is non-monotone, there exists a history prefix at which
+  some output relation is admissible, but a causally admissible extension (e.g., the
+  arrival of an additional input fact or message) invalidates that output.
+  This yields a history pair $H_1 \hext H_2$ witnessing non-monotonicity of $\Spec$.
 \end{proof}
 
-Taken together, the CAP and CALM corollaries show that monotonicity refines the
-CAP tradeoff: non-monotone specifications require sacrifices of consistency or
-availability under partitions, while monotone specifications admit
-coordination-free, partition-tolerant implementations.
+Applying the Coordination Criterion then yields the CALM equivalence.
 
-% ================================================================
-\section{Related Work}
-% ================================================================
-Our work builds on semantic accounts of coordination and monotonicity in the
-CALM line of work~\cite{ameloot2013relational,ameloot2016weaker,zinn2012weak},
-in Li and Lee's problem-level formulation of coordination-free
-consistency~\cite{li2025coordinationfree}, and in CAP-style availability
-versus consistency tradeoffs~\cite{brewer2000towards,gilbert2002cap}, but
-differs in where monotonicity is placed and how coordination-freedom is
-defined.
-The CALM results characterize coordination-freedom via monotonicity in
-specific declarative or transducer-based models over input sets.
-Li and Lee move from specific models to abstract problems, defining monotonicity
-for input–output specifications ordered by refinement. Their formulation relies on
-an explicit mapping from executions to an ordered input space with admissible
-partitions.
-We adopt the same problem-level perspective, but formulate it directly in a
-history-based setting of Lamport executions and outcome orders in a standard
-asynchronous message-passing model, which allows the criterion to be applied
-directly to standard history-based specifications in distributed computing.
-As a result, the coordination criterion can be instantiated directly on
-classic consistency conditions and impossibility results, including
-CAP-style registers, snapshots, agreement, and transactional
-guarantees---without recasting them into a specific programming or
-replicated-object formalism (Section~\ref{sec:applications},
-Appendix~\ref{sec:additional-applications}).
-Connections to CRDTs~\cite{shapiro2011crdt}, distributed
-computability~\cite{fischer1985impossibility,herlihy1991waitfree,herlihy1999topological,saks2000set},
-knowledge-based models and failure detectors~\cite{halpern1990knowledge,chandra1996unreliable},
-and transactional semantics~\cite{adya1999weakconsistency,berenson1995critique,crooks2017seeing}
-appear in Appendix~\ref{sec:extended-related-work}.
+\begin{theorem}[CALM, via the Coordination Criterion]
+  A relational transducer program admits a coordination-free, eventually consistent
+  distributed evaluation if and only if it is monotone with respect to set inclusion
+  on input facts.
+\end{theorem}
 
-% ================================================================
-\section{Conclusion}
-% ================================================================
+\subsubsection{Relation to CALM and Strict Generalization}
 
-We have shown that, in an asynchronous semantic model, a distributed
-specification admits a coordination-free consistent implementation if and only
-if it is monotone with respect to history extension under a chosen outcome
-order.
-This \emph{Coordination Criterion} unifies classical results across distributed
-systems, recovering the semantic content of CAP tradeoffs, CALM-style
-monotonicity, snapshots, agreement tasks, and transactional and
-invariant-preserving semantics.
+In the CALM setting, program monotonicity and specification monotonicity coincide
+because observations are taken to be eventual outputs ordered by inclusion.
+Our framework makes clear that this coincidence is a modeling choice, not a
+necessity.
 
-In particular, the criterion makes precise how CALM refines CAP.
-Non-monotone specifications, such as linearizable registers, intrinsically
-require sacrificing consistency or availability under partitions, while monotone
-specifications admit coordination-free implementations that are both
-partition-tolerant and maximally available.
-CALM appears as one instance of this broader semantic boundary, characterizing
-those relational programs whose observable behavior is monotone.
+More generally, a specification may admit coordination-free implementations even
+when internal program steps are non-monotone, provided that the observable outcomes
+themselves are monotone.
+This separation between internal computation and observable commitments is
+invisible in CALM’s program-centric formulation but central to the Coordination
+Criterion.
 
-The Coordination Criterion is also sharp at the semantic level.
-Because monotonicity is defined relative to an explicit choice of specification,
-observations, and outcome order, any refinement sufficient for
-coordination-freedom can be expressed by adjusting this semantic interface rather
-than by weakening the criterion itself.
-Beyond this boundary, coordination becomes semantically unavoidable.
-
-Finally, the criterion determines \emph{whether} coordination is required, but
-not \emph{how much}.
-Some specifications inherently demand multiple, sequential coordination phases,
-as in Paxos, where processes must first establish sufficient shared context
-before safely committing to decisions.
-This points toward a semantic theory of coordination depth and multi-round
-coordination.
-
-Our focus here has been on safety-style conditions on observable behavior.
-Orthogonal work on coordination-free liveness and free termination
-\cite{power2025freetermination} addresses progress guarantees.
-Together, these directions suggest a unified view of coordination as a semantic
-resource governing both admissible outcomes and safe commitment.
-
-
-% ================================================================
-\section*{Acknowledgments}
-% ================================================================
-
-Thanks to Edward Lee, Shulu Li and Dan Suciu for helpful discussions.
-We also acknowledge the use of AI-based language tools to assist with
-drafting and revising the exposition; all technical content and claims
-remain the responsibility of the authors.
-
-\appendix
-
-\section{Additional Applications of the Coordination Criterion}
-\label{sec:additional-applications}
+Thus CALM arises as a clean special case of a more general semantic principle:
+coordination is required exactly when observable commitments are non-monotone with
+respect to causal extension.
 
 \subsection{Supplementary Example: History Extension}
 % MOVED FROM MAIN BODY: Previously appeared as an example in Section 2.1.
