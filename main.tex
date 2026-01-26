@@ -1261,16 +1261,30 @@ Formal definitions and proofs appear in Appendix~\ref{app:calm-formal}.
 \section{Related Work}
 % ================================================================
 
-The Coordination Criterion is closest in spirit to the CALM line of work, which
-connects coordination-freedom to monotonicity in declarative distributed programs
-\cite{hellerstein2010calm,ameloot2013relational,li2025coordinationfree}.
-Our formulation shares this goal of a boundary theorem, but gives the
-first semantically minimal account defined directly over Lamport histories in a
-standard asynchronous model.
-This makes the criterion directly applicable to classical PODC objects, tasks,
-and consistency conditions without recasting them into a specific programming or
-replicated-object formalism (Section~\ref{sec:applications}).
-Further discussion of related semantic formulations appears in
+The Coordination Criterion is closest in spirit to the CALM line of work in
+declarative networking, which connects coordination-freedom to monotonicity in
+distributed programs
+\cite{hellerstein2010calm,ameloot2013relational,ameloot2016weaker,baccaert2026spectrum}.
+This literature is developed primarily in the setting of relational transducers,
+with unordered relations as inputs and outputs and correctness defined via logic
+program semantics.
+The most recent work, by Baccaert and Ketsman~\cite{baccaert2026spectrum}, extends this
+line by
+parameterizing coordination-freedom along a spectrum of increasingly strong system
+assumptions, showing how additional epistemic or structural constraints enable
+coordination-free evaluation of progressively larger classes of non-monotone
+programs.
+Li and Lee~\cite{li2025coordinationfree} explore CALM-like boundary results outside
+the declarative transducer framework, formulating coordination-freedom at the level
+of ordered input--output specifications.
+By contrast, our work moves entirely away from program semantics, defining a
+semantically minimal coordination criterion directly over Lamport histories and
+abstract specifications \mbox{$(\Poss,\Ord,\Obs)$}, accommodating arbitrary input and
+output domains and any program or machine model.
+This canonical formulation makes the criterion directly applicable to the full
+range of classical distributed objects, tasks, and consistency conditions studied
+in this paper—without translation into a particular language, logic, or
+replicated-object formalism (Section~\ref{sec:applications}). We discuss how these formulations relate to our framework in
 Appendix~\ref{sec:extended-related-work}.
 
 Brewer’s conjecture and the CAP theorem identify tradeoffs between availability and
@@ -2253,39 +2267,47 @@ not from weakening the Coordination Criterion itself.
 \section{Extended Related Work}
 \label{sec:extended-related-work}
 
-\paragraph{CALM}
-Hellerstein's CALM Conjecture proposes that monotone programs are exactly the
-programs that admit coordination-free distributed evaluation.
-Ameloot et al.~\cite{ameloot2013relational} make this precise for relational
-transducer networks: (1) the semantic domain is sets of input facts ordered by
-inclusion; (2) monotonicity is phrased in a particular query logic
-(relational transducers) as monotonicity of input semantics under set
-containment; and (3) coordination-freedom is characterized operationally via
-the absence of certain communication patterns under a given data placement.
+\paragraph{CALM and Constraint-Based Generalizations.}
+Hellerstein’s CALM Conjecture proposes that monotone programs are exactly those that
+admit coordination-free distributed evaluation.
+Ameloot et al.~\cite{ameloot2013relational} formalize this conjecture for relational
+transducer networks by fixing (1) sets of input facts as the semantic domain, ordered
+by inclusion; (2) monotonicity as preservation under set extension; and (3)
+coordination-freedom operationally via the absence of certain communication patterns
+under a fixed data placement.
 
-Li and Lee's model of coordination-free consistency~\cite{li2025coordinationfree}
-revisits this picture in a replicated-object setting and makes a closely
-related move at the problem level.
-Their formulation abstracts from specific programming models by treating
-problems as functions \(\mathcal{P} : \mathbb{X} \to \mathbb{V}\) between ordered
-domains, and characterizes coordination-freedom semantically in terms of
-monotonicity into an explicitly ordered codomain, together with robustness
-under admissible partitions.
+Subsequent work in this line has explored how relaxing or strengthening system
+assumptions affects the boundary between monotone and coordination-requiring
+programs.
+Most recently, Baccaert and Ketsman~\cite{baccaert2026spectrum} make this explicit by
+parameterizing coordination-freedom by a family of \emph{system constraints}, each
+restricting which executions are admissible.
+They show that different constraint classes induce a spectrum of monotonicity
+conditions, yielding a refined hierarchy between fully coordination-free behavior
+and coordination that is unavoidable even under strong assumptions.
 
-Our Coordination Criterion is closest in spirit to the problem-level formulation
-of Li and Lee~\cite{li2025coordinationfree}.
-Like their work, we make refinement structure explicit by parameterizing
-correctness by an order, rather than assuming a fixed consistency model.
-Where Li and Lee define monotonicity of input–output problems over ordered input
-domains, we instead take Lamport histories as the domain and define monotonicity
-with respect to history extension in a standard asynchronous model.
-This shift allows the criterion to be instantiated directly on classical
-distributed objects and consistency conditions—such as registers, snapshots,
-agreement tasks, and transactional isolation—without translating them into a
-specific query language or replicated-object algebra.
-The two approaches thus share a common semantic goal, while differing primarily
-in the choice of underlying domain and abstraction boundary.
+Li and Lee~\cite{li2025coordinationfree} pursue a complementary abstraction,
+formulating coordination-freedom at the level of ordered input--output
+specifications rather than within a particular programming model.
+Their approach abstracts away from relational transducers but still assumes a fixed
+notion of execution admissibility and partitioning.
 
+Although developed in different system models, the semantic role of both constraint
+classes~\cite{baccaert2026spectrum} and admissible partitions~\cite{li2025coordinationfree}
+aligns directly with our notion of a possibility function.
+Each such assumption can be understood as inducing a restricted possibility
+function \(\Poss_C\), where \(\Poss_C(H)\) ranges only over outcomes realizable by
+constraint-admissible extensions of a prefix history \(H\).
+Under their assumptions of relations as inputs and outputs, these results can thus
+be understood as instantiations of our framework with parameterized possibility
+spaces.
+
+Our Coordination Criterion differs in both scope and abstraction boundary.
+Rather than fixing a programming model or system constraints, we work in a minimal
+asynchronous model based on Lamport histories and allow arbitrary outcome
+structures and refinement orders.
+This isolates coordination as a purely semantic obstruction, independent of
+system constraints or programming formalisms.
 Because the underlying order is the standard happens-before relation familiar
 from distributed computing, the resulting monotonicity-versus-coordination
 criterion can be instantiated directly on classical PODC-style objects,
@@ -2294,6 +2316,9 @@ agreement tasks, and transactional guarantees—starting from standard
 history-based models rather than from a specific programming formalism
 (cf.~Section~\ref{sec:applications} and
 Appendix~\ref{sec:additional-applications}).
+While unifying the full constraint spectrum of~\cite{baccaert2026spectrum} with
+general Lamport histories and outcome orders appears natural, we leave that
+development to future work.
 
 We also note a connection to Gallifrey~\cite{milano2023gallifrey}, a distributed
 programming language that
