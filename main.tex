@@ -68,8 +68,8 @@
 \begin{abstract}
   When is coordination \emph{intrinsically required} by a distributed specification,
   rather than imposed by a particular protocol or implementation strategy?
-  We give a general semantic answer using minimal assumptions.
-  In an asynchronous message-passing model, we show that a distributed specification
+  We give a general answer using minimal assumptions.
+  In an asynchronous message-passing model, we show that a specification
   admits a coordination-free implementation if and only if it is monotone with
   respect to history extension under an appropriate order on observable outcomes.
 
@@ -227,45 +227,47 @@ This motivates a fundamental question:
   specification?
 \end{quote}
 
-Prior work approached this question from several angles.
-The CAP theorem relates coordination to availability under partitions for strong
-consistency conditions such as linearizability.
-The CALM theorem connects coordination-freedom to monotonicity of logic
-programs.
-Distributed computability theory characterizes which tasks require waiting or
-stronger primitives.
-These results capture key aspects of coordination, but under specific
-models or classes of specifications.
+Prior work has approached this question from many angles and levels of
+abstraction.
+At the level of mechanisms and protocols, classical impossibility and hierarchy
+results for consensus and atomic commitment characterize when processes must
+wait, synchronize, or rely on stronger primitives.
+At the level of shared objects and consistency, the CAP theorem relates
+coordination to availability under partitions for strong guarantees such as
+linearizability.
+At the level of programs and applications, the CALM theorem and its successors
+connect coordination-freedom to monotonicity of observable behavior.
+Transactional isolation and invariant-preserving replication introduce another
+perspective, reasoning about coordination through anomalies and
+application-level correctness.
 
-This paper provides a general, minimalist answer to this question.
-We show that coordination is not an artifact of particular protocols,
-programming models, or consistency conditions, but a property of the
-specification itself.
-We formulate specifications directly over Lamport histories and
-a specification-defined notion of observability, abstracting away from
-language- and protocol-level detail.
-The result is a sharp boundary theorem—the \emph{Coordination Criterion}—that
-identifies exactly when coordination is intrinsically required.
+These results capture essential facets of coordination, but they are developed
+within formalisms tailored to particular mechanisms, consistency models, or
+programming abstractions.
+This paper instead characterizes when coordination is \emph{intrinsically required}
+across this spectrum.
+
+We show that coordination is not an artifact of particular protocols, languages,
+or consistency conditions, but a property of a specification itself.
+By formulating specifications directly over Lamport histories and a
+specification-defined notion of observability, we obtain a sharp boundary
+theorem—the \emph{Coordination Criterion}—that applies across settings.
 
 The Coordination Criterion states that \emph{a specification admits a
-  coordination-free implementation if and only if its observable outcomes are
-  monotone under history extension.}
-This formulation applies uniformly across settings previously studied in
-isolation.
+  coordination-free implementation if and only if it is monotone with respect to
+  history extension}. This formulation subsumes settings previously studied in isolation:
 CAP-style impossibility results, CALM-style coordination-freedom results,
-classical distributed protocols, and programming language analyses
-all emerge as instances of the same underlying phenomenon.
-By remaining agnostic to the level of abstraction—objects, programs,
-tasks—the criterion explains when coordination is necessary and when it is not.
+classical distributed protocols, and programming language analyses all emerge as
+instances of a single underlying phenomenon.
+By remaining agnostic to abstraction level—objects, programs, or tasks—the
+criterion explains when coordination is necessary and when it is not.
 
-The payoff of this formulation is not merely unifying, it is diagnostic:
-the criterion determines whether coordination is unavoidable
-directly from the specification itself.
+The payoff of this formulation is not merely unifying, but diagnostic.
 When the criterion fails, coordination cannot be eliminated by alternative
 protocol designs; when it holds, coordination-free implementations exist.
-This allows coordination requirements to be understood \emph{before}
-algorithm design begins, and across settings where prior results had to be
-established separately.
+This allows coordination requirements to be understood \emph{before} algorithm
+design begins, and across settings where prior results had to be established
+separately.
 
 \paragraph{Scope.}
 This paper focuses on safety-style semantic conditions on observable behaviors,
@@ -281,9 +283,9 @@ specification.
 
 \subsection{Coordination, Consistency, and Monotonicity: Core Intuitions}
 
-Our discussion will rest on three related concepts—coordination,
-consistency, and monotonicity. We summarize informally here;
-together they represent the core intuition of the paper.
+Our discussion rests on three related semantic concepts—coordination,
+consistency, and monotonicity—which we summarize informally here to
+orient the formal development that follows.
 
 \paragraph{Coordination.}
 We treat coordination as a semantic phenomenon rather than a protocol mechanism.
@@ -300,13 +302,13 @@ extensions to history.
 % but may violate correctness.
 
 \paragraph{Consistency.}
-In our setting, consistency concerns observations.
-An observation is consistent if it leaves open at least one possible extension of the
-history that is within the specification.
-This notion is intentionally weak: it does not require convergence or agreement,
-only the absence of semantic dead ends.
-Intuitively, consistency allows a system to act during partitions while still
-admitting some way to reconcile within specification when communication resumes.
+In our setting, consistency is a property of \emph{observations}—that is, of what a
+system reveals about an execution so far.
+An observation is consistent if it leaves open at least one possible extension of
+the history that remains within the specification.
+This notion is intentionally weak, requiring only the absence of semantic dead ends.
+Intuitively, consistency means that an observation made under partial information
+(e.g., during a partition) can never \emph{force} a contradiction.
 
 \paragraph{Monotonicity.}
 Monotonicity concerns how observations evolve as histories are extended, and whether
@@ -318,11 +320,9 @@ growth in that order represents semantically compatible refinement
 \paragraph{The connection.}
 Our main result shows that these notions coincide.
 A specification admits a coordination-free implementation exactly when it is
-monotone, in which case observable outcomes remain consistent under all possible history extensions.
-Non-monotonicity creates the risk of semantic regret: preserving the
-compatibility order between observations is impossible along some causal
-extensions. This forces the use of coordination---that is, the exclusion of those
-extensions.
+monotone, so observable outcomes remain consistent under all history extensions.
+When monotonicity fails, consistency cannot be preserved across all causal
+extensions, forcing coordination—the exclusion of admissible histories.
 
 
 % ================================================================
@@ -348,6 +348,13 @@ message-passing system.
 Crucially, happens-before is descriptive rather than operational:
 it records causal constraints induced by events in an execution, not a
 coordination mechanism or a design choice imposed by a specification.
+Moreover, \emph{histories in our model need not be complete.}
+A history may represent an execution prefix with pending operations,
+in-flight messages, or unresolved outcomes.
+Unlike transaction schedules or completed traces, histories do not exclude
+in-progress activity.
+They are evolving objects, which may be extended by additional
+events consistent with causality.
 
 External input events represent activity at the system interface, prior to any
 semantic interpretation by a specification.
@@ -382,16 +389,6 @@ are treated separately from the safety-style semantic conditions studied here.
 \end{definition}
 History extension preserves all previously observed events and causal relations
 and adds only causally later events.
-
-\medskip
-\noindent
-\emph{Importantly, histories in our model need not be complete.}
-A history may represent an execution prefix in which operations are pending,
-messages are in flight, or outcomes remain unresolved.
-Unlike transaction schedules or completed traces, histories do not exclude
-in-progress activity.
-They are \emph{evolving objects}, which may be extended over time by additional
-events consistent with causality.
 
 % \paragraph{Example (replicated register).}
 % Consider a history \(H_1\) in which process \(p\) performs a write and sends a
@@ -433,15 +430,14 @@ outcome.
 \end{definition}
 
 The distinction between possibility and observability is central to our framework.
-The possibility function $\Poss(H)$ characterizes which outcomes executions
-may realize in future history extensions without violating the specification,
-under asynchrony and causality.
-The observability function $\Obs(H)$ instead captures which outcomes the
-specification treats as correct at history $H$ itself (``now'').
-Coordination arises precisely when committing to observable correctness restricts
-which causally admissible extensions remain possible.
-By separating these roles explicitly, the framework isolates coordination as a
-general semantic phenomenon rather than an operational one dependent on implementation details.
+The possibility function $\Poss(H)$ characterizes which outcomes executions may
+still realize in causally admissible extensions of a history.
+The observability function $\Obs(H)$ captures which outcomes the specification
+treats as correct at history $H$ itself.
+This separation allows us to reason explicitly about the relationship between
+future behaviors and present commitments.
+As we show below, coordination arises from how observable commitments interact
+with the space of admissible causal extensions.
 
 \begin{example}[Possibility versus observability]
   \label{ex:counter-poss-obs}
@@ -1261,9 +1257,27 @@ Formal definitions and proofs appear in Appendix~\ref{app:calm-formal}.
 \section{Related Work}
 % ================================================================
 
-The Coordination Criterion is closest in spirit to the CALM line of work in
-declarative networking, which connects coordination-freedom to monotonicity in
-distributed computation.
+A long line of work in distributed computing characterizes coordination in terms
+of epistemic or operational requirements.
+Knowledge-based approaches show that certain coordination tasks require common
+knowledge or its variants~\cite{halpern1990knowledge,neiger1993simultaneous,neiger1999knowledge},
+while task-solvability and hierarchy results characterize which problems can be
+solved under given failure and progress assumptions
+\cite{fischer1985impossibility,herlihy1991waitfree,herlihy1999topological,saks2000set}.
+These frameworks explain when coordination \emph{can be achieved} by strengthening
+assumptions about knowledge, synchrony, or oracles.
+
+Our work addresses a complementary question.
+Rather than varying environmental or epistemic assumptions to recover solvability,
+we fix a minimal asynchronous model and ask whether coordination is
+\emph{intrinsic to a specification itself}.
+The Coordination Criterion isolates coordination as a semantic obstruction: a
+property of observable outcomes under causal history extension, independent of
+protocol design, failure detectors, or computational power.
+
+Within this semantic perspective, our work is closest in spirit to the CALM line of
+research in declarative networking, which connects coordination-freedom to
+monotonicity in distributed computation.
 Across this literature—ranging from logic programs and relational
 transducers~\cite{hellerstein2010calm,ameloot2013relational,ameloot2016weaker},
 through relation-to-relation semantic mappings~\cite{baccaert2026spectrum}, to
@@ -1271,16 +1285,15 @@ ordered input--output specifications~\cite{li2025coordinationfree}—coordinatio
 is characterized relative to semantic domains and admissibility assumptions that
 are stronger than those of a canonical asynchronous system.
 
-By contrast, our work makes only the assumptions common to all distributed systems.
+By contrast, our framework makes only the assumptions common to all distributed
+systems.
 We take Lamport histories as the semantic domain and model specifications
 abstractly as sets of admissible histories with observable outcomes ordered by a
 refinement relation.
-This minimal formulation accommodates arbitrary input and output
+This semantically minimal formulation accommodates arbitrary input and output
 structures and any program or machine model, yielding a general diagnostic
-criterion for when coordination is \emph{intrinsic to a specification itself}.
-Because the criterion relies only on causality and semantic refinement—rather than
-language properties, system models, or execution assumptions—it determines
-when coordination is unavoidable without appeal to exogenous assumptions.
+criterion for when coordination is unavoidable \emph{without appeal to exogenous
+  assumptions}.
 As a result, the Coordination Criterion applies directly to the full range of
 classical distributed objects, tasks, and consistency conditions studied in this
 paper, without translation into a particular language, logic, or
@@ -1289,24 +1302,16 @@ Further discussion of how prior semantic frameworks fit into this model appears 
 Appendix~\ref{sec:extended-related-work}.
 
 Brewer’s conjecture and the CAP theorem identify tradeoffs between availability and
-strong consistency \cite{brewer2000towards,gilbert2002cap}.
+strong consistency~\cite{brewer2000towards,gilbert2002cap}.
 Traditional formulations fix both a notion of availability and a specific
 consistency condition such as linearizability.
 Our framework recovers CAP-style impossibility results as direct consequences of
 the non-monotonicity of the corresponding specifications, rather than from
 availability axioms or failure assumptions.
 
-Classical results in distributed computability characterize task solvability and
-object hierarchies under various progress and failure models
-\cite{fischer1985impossibility,herlihy1991waitfree,herlihy1999topological,saks2000set}.
-These results are complementary to ours:
-they determine which tasks can be solved and with what primitives, whereas the
-Coordination Criterion isolates when coordination is semantically unavoidable,
-independently of solvability or computational power.
-
 Conflict-free replicated data types (CRDTs) provide a disciplined implementation
 approach to highly available replication by restricting updates to monotone,
-inflationary operations \cite{shapiro2011crdt}.
+inflationary operations~\cite{shapiro2011crdt}.
 From our perspective, CRDTs occupy a well-behaved subspace of the monotone
 specifications identified by the Coordination Criterion.
 Our result characterizes the semantic boundary itself, rather than prescribing a
@@ -2268,70 +2273,86 @@ not from weakening the Coordination Criterion itself.
 \section{Extended Related Work}
 \label{sec:extended-related-work}
 
-\paragraph{CALM and Constraint-Based Generalizations.}
-Hellerstein’s CALM Conjecture proposes that monotone programs are exactly those that
-admit coordination-free distributed evaluation.
-Ameloot et al.~\cite{ameloot2013relational} formalize this conjecture for relational
-transducer networks by fixing (1) sets of input facts as the semantic domain, ordered
-by inclusion; (2) monotonicity as preservation under set extension; and (3)
-coordination-freedom operationally via the absence of certain communication patterns
-under a fixed data placement.
+\paragraph{Distributed Computability.}
+Classical results on agreement and wait-free computation characterize task
+solvability and object hierarchies
+\cite{fischer1985impossibility,herlihy1991waitfree,herlihy1999topological,saks2000set}.
+Our Coordination Criterion is complementary to these theories: it isolates when
+coordination is semantically required at the level of observable behaviors,
+while topological and hierarchy results determine which tasks are solvable, and
+with which primitives, under progress assumptions such as wait-freedom.
 
-Subsequent work in this line has explored how relaxing or strengthening system
-assumptions affects the boundary between monotone and coordination-requiring
-behavior.
-Most recently, Baccaert and Ketsman~\cite{baccaert2026spectrum} move beyond
-language-specific analyses by modeling distributed computations as
-\emph{semantic mappings} between relations, without committing to a concrete
-syntax (e.g., Datalog or SQL).
-They parameterize coordination-freedom by a family of \emph{system constraints},
-each restricting which executions are admissible, and show that different
-constraint classes induce a spectrum of monotonicity conditions.
-While this approach abstracts away from particular programming languages, it
-retains a mapping-based view of computation with relations as inputs and outputs.
+\paragraph{Knowledge and Failure Detectors.}
+Knowledge-based approaches characterize coordination in terms of what processes
+know about the global state of the system: for example, common knowledge has
+been shown to be necessary for certain forms of simultaneous coordination
+\cite{halpern1990knowledge,neiger1993simultaneous}.
+Failure-detector frameworks such as that of Chandra and Toueg
+\cite{chandra1996unreliable} parameterize when tasks like consensus are
+solvable by strengthening the environment through oracles that eventually
+convey enough information about crashes.
+These perspectives are complementary to ours: they characterize when coordination
+becomes possible by strengthening agents’ knowledge or the execution environment,
+whereas we fix a minimalist asynchronous model and identify when coordination is
+\emph{semantically unavoidable} because the specification itself is non-monotone.
 
-Li and Lee~\cite{li2025coordinationfree} pursue a complementary abstraction.
-Rather than varying system constraints within a fixed semantic domain, they
-formulate coordination-freedom directly at the level of ordered input--output
-specifications, independent of any particular programming model.
-Their approach likewise abstracts away from relational transducers, but still
-assumes a fixed notion of execution admissibility and partitioning.
 
-Despite differences in system model and semantic domain, the role played by both
-constraint classes~\cite{baccaert2026spectrum} and admissible partitions~\cite{li2025coordinationfree}
-aligns directly with our notion of a possibility function.
-Each such assumption can be understood as inducing a restricted possibility
-function \(\Poss_C\), where \(\Poss_C(H)\) ranges only over outcomes realizable by
-constraint-admissible extensions of a prefix history \(H\).
-Under the assumption of relations as inputs and outputs,
-the results of~\cite{baccaert2026spectrum} can thus be understood as instantiations
-of our framework with parameterized possibility spaces.
-Li and Lee’s admissibility conditions similarly correspond to restricting the
-space of possible outcomes, though defined over abstract ordered domains rather
-than relational semantics.
+\paragraph{CAP}
+Brewer’s conjecture and the CAP theorem establish tradeoffs between availability
+and strong consistency \cite{brewer2000towards,gilbert2002cap}.
+Classical CAP formulations fix both a particular notion of availability (e.g.,
+non-blocking responses during partitions) and a specific class of consistency
+conditions such as linearizability.
+Section~\ref{sec:applications} instantiates our framework with linearizable
+read--write registers to recover this tradeoff as a direct consequence of the
+non-monotonicity of the corresponding specification, rather than from availability
+axioms or failure assumptions.
 
-Our Coordination Criterion differs in both scope and abstraction boundary.
-Rather than fixing a programming model, semantic mapping, or system constraint,
-we take Lamport histories as the semantic domain and allow arbitrary outcome
-structures and refinement orders.
-This isolates coordination as a purely semantic obstruction, independent of
-programming formalism or constraint regime.
-Because the underlying order is the standard happens-before relation familiar
-from distributed computing, the resulting monotonicity-versus-coordination
-criterion applies directly to classical PODC-style objects, tasks, and consistency
-conditions—including CAP-style registers, snapshots, agreement tasks, and
-transactional guarantees—without translation into a specific language or object
-model (cf.~Section~\ref{sec:applications} and
+\paragraph{CALM and Generalizations.}
+The Coordination Criterion is closest in spirit to the CALM line of work, which
+connects coordination-freedom to monotonicity in declarative distributed
+computation.
+This literature—including relational transducers and logic-based models—studies
+coordination relative to semantic domains and execution assumptions that are
+stronger than those of a canonical asynchronous system
+\cite{hellerstein2010calm,ameloot2013relational,ameloot2016weaker}.
+
+The most recent work in this line, by Baccaert and Ketsman~\cite{baccaert2026spectrum},
+moves beyond language-specific analyses by modeling distributed computation as
+semantic mappings between relations and parameterizing coordination-freedom by a
+family of \emph{system constraints}.
+These constraints restrict which executions are admissible, yielding a spectrum
+of monotonicity conditions under increasingly strong assumptions.
+While this advances the CALM program toward a more semantic treatment of
+admissibility, it remains framed within a relation-to-relation computational model
+with fixed input and output structures.
+
+Li and Lee~\cite{li2025coordinationfree} pursue a complementary abstraction,
+formulating coordination-freedom at the level of ordered input--output
+specifications.
+Their formulation abstracts away from particular programming models but still
+assumes a fixed notion of admissible executions and partitioning.
+
+By contrast, our work makes no assumptions beyond standard causality.
+We take Lamport histories as the semantic domain and define specifications
+abstractly via admissible histories and observable outcomes ordered by refinement.
+This semantically minimal formulation accommodates arbitrary input and output
+structures and any program or machine model, yielding a general diagnostic
+criterion for when coordination is \emph{intrinsic to the specification itself}.
+Because it relies only on causality and semantic refinement—rather than on program
+semantics, constraint regimes, or execution assumptions—the Coordination Criterion
+applies directly to the full range of classical distributed objects, tasks, and
+consistency conditions studied in this paper, without translation into a
+particular language, logic, or replicated-object formalism
+(cf.~Section~\ref{sec:applications} and
 Appendix~\ref{sec:additional-applications}).
-While unifying the full constraint spectrum of~\cite{baccaert2026spectrum} with
-general Lamport histories and arbitrary outcome orders appears natural, we leave
-that development to future work.
 
 We also note a connection to Gallifrey~\cite{milano2023gallifrey}, which makes
 monotonicity explicit in the type system by requiring programmers to specify the
 order with respect to which values evolve.
 This design choice influenced our decision to reify observability and outcome
 order as first-class components of a specification.
+
 
 \paragraph{CRDTs.}
 Work on conflict-free replicated data types (CRDTs) provides a programming
@@ -2350,64 +2371,6 @@ specification space identified by the Coordination Criterion: they show how to
 implement certain coordination-free specifications, but do not characterize
 the full semantic boundary between coordination-free and coordination-requiring
 behavior.
-
-\paragraph{CAP}
-Brewer’s conjecture and the CAP theorem establish tradeoffs between availability
-and strong consistency \cite{brewer2000towards,gilbert2002cap}.
-Classical CAP formulations fix both a particular notion of availability (e.g.,
-non-blocking responses during partitions) and a specific class of consistency
-conditions such as linearizability.
-Section~\ref{sec:applications} instantiates our framework with linearizable
-read--write registers to recover this tradeoff as a direct consequence of the
-non-monotonicity of the corresponding specification, rather than from availability
-axioms or failure assumptions.
-
-\paragraph{Distributed Computability.}
-Classical results on agreement and wait-free computation characterize task
-solvability and object hierarchies
-\cite{fischer1985impossibility,herlihy1991waitfree,herlihy1999topological,saks2000set}.
-Our Coordination Criterion is complementary to these theories: it isolates when
-coordination is semantically required at the level of observable behaviors,
-while topological and hierarchy results determine which tasks are solvable, and
-with which primitives, under progress assumptions such as wait-freedom.
-
-\paragraph{Knowledge and Failure Detectors.}
-Knowledge-based approaches characterize coordination in terms of what processes
-know about the global state of the system: for example, common knowledge has
-been shown to be necessary for certain forms of simultaneous coordination
-\cite{halpern1990knowledge}.
-Failure-detector frameworks such as that of Chandra and Toueg
-\cite{chandra1996unreliable} parameterize when tasks like consensus are
-solvable by strengthening the environment through oracles that eventually
-convey enough information about crashes.
-These perspectives are complementary to ours: they vary epistemic or
-environmental assumptions to recover solvability of fixed coordination tasks,
-whereas we fix a minimalist asynchronous model and vary specifications to
-determine when coordination is semantically unavoidable.
-
-\paragraph{Knowledge in Declarative Networking.}
-Within the CALM line of work, Zinn and coauthors study how additional
-global-knowledge assumptions about data distribution affect coordination-freeness.
-For example, Zinn, Green, and Lud\"ascher show that the non-monotone
-\emph{win-move} query can be computed coordination-free when transducers are
-allowed to test whether a fact lies in the local partition or in a globally
-known partitioning of the input \cite{zinn2012winmove}.
-Building on this, Zinn and Ameloot et al.\ investigate weaker forms of
-monotonicity and relate them to increasingly strong knowledge assumptions,
-formalized via distinguished relations such as $\mathit{Id}$ and $\mathit{All}$
-that expose node identifiers and the active domain
-\cite{zinn2012weak,ameloot2016weaker}.
-In these declarative models, coordination-freeness coincides with not
-requiring distributed knowledge of these relations: queries whose correct
-evaluation fundamentally depends on common knowledge of $\mathit{Id}$ or
-$\mathit{All}$ fall outside the CALM fragment.
-These results bring reasoning about knowledge of distribution
-into the declarative networking setting and are closely aligned with our view
-of coordination as the exclusion of admissible histories.
-In our terms, strengthening knowledge assumptions effectively restricts the
-space of observable outcomes a priori at specification time, by refining the
-history-extension relation (and hence the indistinguishability of prefixes),
-rather than by using coordination to prune executions.
 
 \paragraph{Transactional and Weak Consistency Semantics.}
 History- and anomaly-based characterizations of transactional isolation levels
@@ -2430,19 +2393,15 @@ execution follows from semantic restrictions on state, effects, or time.
 
 Gallifrey~\cite{milano2023gallifrey} is a functional language for distributed
 programming that makes temporal structure explicit in the type system.
-As mentioned above, Gallifrey requires programmers to specify \emph{the order with respect
-  to which values evolve}—that is, to state explicitly what it means for one value
-to refine another over time.
-This makes monotonicity a typed semantic obligation rather than an implicit
-property of an implementation.
+Programs are required to specify the order with respect to which values evolve,
+making monotonicity a typed semantic obligation rather than an implicit property
+of an implementation.
 From our perspective, this corresponds directly to making the outcome order
-explicit: programmers must say \emph{monotone with respect to what}.
-Only values that are stable under all causal extensions relative to the chosen
-order may be exposed.
-Gallifrey thus enforces observational stability by construction, placing programs
-on the monotone side of the Coordination Criterion. Gallifrey's explicit treatment of
-refinement structure informed our decision to reify
-observability and outcome order as first-class components of a specification.
+explicit: only values that are stable under all causal extensions relative to the
+chosen order may be exposed.
+Gallifrey thus enforces observational stability by construction and influenced our
+decision to reify observability and outcome order as first-class components of a
+specification.
 
 Flo~\cite{laddad2024flo} takes a complementary approach through reactive
 dataflow.
