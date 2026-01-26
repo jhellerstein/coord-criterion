@@ -403,7 +403,6 @@ and adds only causally later events.
 \section{Possibilities, Observations, Ordering and Consistency}
 \label{sec:obs-consistency}
 % ================================================================
-
 \begin{definition}[Possibility Function]
   A \emph{possibility function} is a function
   $
@@ -414,11 +413,18 @@ and adds only causally later events.
   execution extending history \(H\).
 \end{definition}
 
-\noindent
+One might expect a specification to be defined by the set of causal extensions
+admissible from each history.
+However, for our purposes we abstract away from individual executions.
+Two histories are equivalent when they induce the same observable outcomes.
+The possibility function $\Poss$ is the induced abstraction that records, for each history $H$, which outcomes are realized by \emph{some} admissible extension.
+Making admissible history extensions explicit would not change our results, but would
+complicate the presentation without adding semantic insight.
+
 Possibility is set-valued: $\Poss(H)$ is a set of outcomes rather than a single
 outcome.
 This reflects the fact that an evolving history may admit multiple distinct
-future behaviors under asynchrony.
+extensions---and hence outcomes---under asynchrony.
 The framework does not require that distinct outcomes in $\Poss(H)$ be jointly
 realizable in a single execution, nor that they converge to a common future
 outcome.
@@ -432,12 +438,10 @@ outcome.
 The distinction between possibility and observability is central to our framework.
 The possibility function $\Poss(H)$ characterizes which outcomes executions may
 still realize in causally admissible extensions of a history.
-The observability function $\Obs(H)$ captures which outcomes the specification
-treats as correct at history $H$ itself.
+However, a specification may choose to treat only some of these outcomes as
+correct or observable at history $H$ itself.
 This separation allows us to reason explicitly about the relationship between
 future behaviors and present commitments.
-As we show below, coordination arises from how observable commitments interact
-with the space of admissible causal extensions.
 
 \begin{example}[Possibility versus observability]
   \label{ex:counter-poss-obs}
