@@ -307,8 +307,10 @@ system reveals about an execution so far.
 An observation is consistent if it leaves open at least one possible extension of
 the history that remains within the specification.
 This notion is intentionally weak, requiring only the absence of semantic dead ends.
-Intuitively, consistency means that an observation made under partial information
-(e.g., during a partition) can never \emph{force} a contradiction.
+Intuitively, consistency supports a \emph{no-regret} principle:
+an observation made under partial information (e.g., during a partition) should
+never have to be retracted or invalidated by a causally admissible extension of
+the history.
 
 \paragraph{Monotonicity.}
 Monotonicity concerns how observations evolve as histories are extended, and whether
@@ -403,6 +405,34 @@ and adds only causally later events.
 \section{Possibilities, Observations, Ordering and Consistency}
 \label{sec:obs-consistency}
 % ================================================================
+
+We begin with a simple example that motivates the distinction between what may
+still occur in the future of an execution and what a specification is willing to
+treat as correct at a given point in time.
+
+\begin{example}[Possibility versus observability]
+  \label{ex:counter-poss-obs}
+  Consider a specification whose outcomes record the value of a monotonically
+  increasing counter.
+  At a history $H$ in which two increment events have occurred, future executions
+  may perform additional increments.
+  Accordingly, what's possible is
+  $
+    \Poss(H) = \{2,3,4,\ldots\}.
+  $
+  The specification may nevertheless define only the current value to be
+  observable at $H$, so what's observable is only
+  $
+    \Obs(H) = \{2\}.
+  $
+  Larger values remain possible in future extensions of the history, but are not
+  yet observable at $H$ itself.
+  This distinction—between outcomes that remain possible in future extensions of a
+  history and outcomes that are observable at the present—is central to our
+  framework.
+\end{example}
+
+
 \begin{definition}[Possibility Function]
   A \emph{possibility function} is a function
   $
@@ -413,122 +443,60 @@ and adds only causally later events.
   execution extending history \(H\).
 \end{definition}
 
-One might expect a specification to be defined by the set of causal extensions
-admissible from each history.
+One might expect a specification to be defined directly by the set of causal
+extensions admissible from each history.
 However, for our purposes we abstract away from individual executions.
 Two histories are equivalent when they induce the same observable outcomes.
-The possibility function $\Poss$ is the induced abstraction that records, for each history $H$, which outcomes are realized by \emph{some} admissible extension.
-Making admissible history extensions explicit would not change our results, but would
-complicate the presentation without adding semantic insight.
+The possibility function $\Poss$ is the induced abstraction that records, for each
+history $H$, which outcomes are realized by \emph{some} admissible extension.
+Making admissible history extensions explicit would not change our results, but
+would complicate the presentation without adding semantic insight.
 
-Possibility is set-valued: $\Poss(H)$ is a set of outcomes rather than a single
-outcome.
-This reflects the fact that an evolving history may admit multiple distinct
-extensions---and hence outcomes---under asynchrony.
+Possibility is therefore set-valued: $\Poss(H)$ is a set of outcomes rather than a
+single outcome.
+This reflects that an evolving history may admit multiple distinct
+extensions—and hence multiple outcomes—under asynchrony.
 The framework does not require that distinct outcomes in $\Poss(H)$ be jointly
 realizable in a single execution, nor that they converge to a common future
 outcome.
 
 \begin{definition}[Observability Function]
-  An \emph{observability function} is a function \linebreak
-  $\Obs : \Hist \rightarrow \mathcal{P}(O)$,
+  An \emph{observability function} is a function
+  $
+    \Obs : \Hist \rightarrow \mathcal{P}(O),
+  $
   such that $\Obs(H) \subseteq \Poss(H)$ for all histories $H$.
 \end{definition}
 
-The distinction between possibility and observability is central to our framework.
-The possibility function $\Poss(H)$ characterizes which outcomes executions may
-still realize in causally admissible extensions of a history.
-However, a specification may choose to treat only some of these outcomes as
-correct or observable at history $H$ itself.
+While $\Poss(H)$ characterizes which outcomes may still occur in future extensions
+of a history, $\Obs(H)$ captures which outcomes the specification treats as correct
+at history $H$ itself.
 This separation allows us to reason explicitly about the relationship between
-future behaviors and present commitments.
-
-\begin{example}[Possibility versus observability]
-  \label{ex:counter-poss-obs}
-  Consider a specification whose outcomes record the value of a monotonically
-  increasing counter.
-  At a history $H$ in which two increment events have occurred, future executions
-  may perform additional increments.
-  Accordingly,
-  $
-    \Poss(H) = \{2,3,4,\ldots\}.
-  $
-  The specification may nevertheless define only the current value to be
-  observable at $H$, so that
-  $
-    \Obs(H) = \{2\}.
-  $
-  Larger values remain possible in future extensions of the history, but are not
-  yet observable at $H$ itself.
-\end{example}
+future behaviors and present semantic commitments.
+As we show below, coordination arises precisely when committing to observable
+outcomes rules out other outcomes that would otherwise remain possible.
 
 To reason about whether earlier observable outcomes remain valid as histories
 extend, we compare outcomes using an order that captures semantic refinement.
+
 \begin{definition}[Outcome Order and Contradiction]
   The outcome domain $O$ is equipped with a partial order $\Ord$, called the
-  outcome order.
-  Intuitively, we read $o_1 \Ord o_2$ as saying that $o_2$ is a compatible
-  extension or refinement of $o_1$.
-  Two observations are said to \emph{contradict} if they have no common
-  extension in this order, i.e., if there is no outcome $o$ with
+  \emph{outcome order}.
+  Intuitively, $o_1 \Ord o_2$ means that $o_2$ is a compatible extension or
+  refinement of $o_1$.
+  Two observations are said to \emph{contradict} if they have no common extension
+  in this order, that is, if there is no outcome $o$ such that
   $o_1 \Ord o$ and $o_2 \Ord o$.
 \end{definition}
 
-The outcome order $\Ord$ does not impose a notion of execution order or program
+The outcome order $\Ord$ does not impose an execution order or a notion of program
 state.
-Rather, it captures semantic compatibility under history extension: an outcome
+It captures \emph{semantic compatibility under history extension}: an outcome
 $o_2$ extends $o_1$ when the commitments represented by $o_1$ remain valid after
 those represented by $o_2$.
-Two outcomes contradict exactly when no future behavior can satisfy both.
-This allows the framework to express semantic incompatibility without appealing
-to operational mechanisms such as linearization points, schedules, or traces.
-
-% \begin{remark}
-%   In many applications there is a natural choice of outcome order, such as prefix
-%   extension on execution logs, refinement on abstract states, or set inclusion on
-%   visible facts.
-%   Choosing \(Obs\) and \(\Ord\) is therefore a key part of the modeling task.
-%   Extreme choices can trivialize the Coordination Criterion in different ways.
-%   If the outcome order is too coarse—for example, if all outcomes are identified so
-%   that every pair is comparable—then every specification is vacuously monotone.
-%   If the outcome space contains a greatest element \(\top\) that extends every
-%   outcome (an “anything can happen” summary), then no two observations ever
-%   contradict, and the notion of consistency degenerates.
-%   Conversely, if the order is too fine—for example, if all distinct outcomes are
-%   incomparable—then even intuitively coordination-free specifications may become
-%   non-monotone.
-%   Faithful modeling requires outcome orders that reflect genuine semantic
-%   incompatibility without collapsing or over-refining it.
-% \end{remark}
-
-% \begin{remark}[Observational Equivalence]
-%   Observable outcomes may be quotiented by a semantic equivalence relation that
-%   identifies outcomes indistinguishable under all admissible history extensions.
-%   All results in this paper are invariant under this quotient, so we work
-%   directly with concrete observations for simplicity.
-% \end{remark}
-
-% \begin{remark}[Faithful Observations]
-%   \label{rem:faithful-observations}
-%   The observation function $\Poss$ and outcome order $\Ord$ must faithfully reflect
-%   the semantic obligations of the specification being modeled.
-%   Faithfulness does not redefine correctness: an outcome is correct precisely when
-%   it belongs to $\Obs(H)$.
-%   Rather, faithfulness concerns modeling adequacy—whether the chosen observation
-%   space exposes all semantically meaningful distinctions required by the
-%   specification.
-
-%   If $\Poss$ is too coarse, semantically meaningful contradictions may be
-%   unobservable, artificially rendering a non-monotone problem monotone.
-%   For example, observing only the set of values ever returned by reads in a
-%   replicated register yields a monotone specification, but fails to capture the
-%   requirement that each read return the most recent write.
-
-%   Throughout this paper, we assume that $\Poss$ and $\Ord$ are chosen to be faithful
-%   in this sense: weakening observations corresponds to weakening the specification
-%   itself, not to revealing a coordination-free implementation of the original
-%   problem.
-% \end{remark}
+Two outcomes contradict when no future behavior can satisfy both.
+This allows the framework to express semantic incompatibility without appealing to
+operational mechanisms such as linearization points, schedules, or traces.
 
 \begin{remark}[Faithful Outcome Modeling]
   \label{rem:faithful-observations}
@@ -543,18 +511,19 @@ to operational mechanisms such as linearization points, schedules, or traces.
   specification, such as an automaton or program semantics, by defining which
   behaviors remain possible after a given history, while abstracting away from how
   those behaviors are generated.
-
   The observability function $\Obs$ and outcome order $\Ord$ then restrict this
   space of causally possible outcomes, determining which outcomes are treated as
   correct and when divergent behaviors are deemed incompatible.
 
+  These modeling choices are critical.
   If the outcome space or order is too coarse, semantically incompatible behaviors
-  may be indistinguishable—for example, if all outcomes are identified as
-  equivalent, or if the outcome space contains a greatest element $\top$ that
-  extends every outcome.
-  Conversely, if the order is too fine—so that distinct outcomes have no common
-  extension—then even specifications that intuitively admit concurrency may appear
-  to produce contradictions.
+  may be treated as indistinguishable.
+  For example, if all outcomes are identified as equivalent, or if the outcome
+  space contains a greatest element $\top$ extending every outcome, then every
+  observation becomes vacuously compatible with every future behavior.
+  Conversely, if the order is too fine—so that distinct outcomes admit no common
+  refinement—then even specifications that intuitively tolerate concurrency may
+  appear to reach semantic dead ends prematurely.
 
   Faithful modeling requires choosing $(\Poss,\Ord,\Obs)$ so that
   observable outcomes contradict exactly when they represent genuinely
@@ -574,7 +543,7 @@ future behavior.
   non-contradicting under the outcome order.
 \end{definition}
 
-The role of consistency in our framework is to support a \emph{no-regret}
+The role of consistency in our framework is to formalize the \emph{no-regret}
 property under asynchrony.
 If $o \in \Obs(H)$, then for every extension $H' \hext H$,
 there exists $o' \in \Obs(H')$ such that $o \Ord o'$.
@@ -584,28 +553,29 @@ coordination.
 
 Whether such consistency can be preserved under \emph{all} causally admissible
 history extensions is the key determinant of coordination-freedom.
-In Section~\ref{sec:monotonicity}, we formalize this requirement as a
-monotonicity condition on specifications with respect to the outcome order
-$\Ord$.
+We formalize this requirement as a monotonicity condition on specifications with
+respect to the outcome order $\Ord$ in Section~\ref{sec:monotonicity}.
+% In the next section, we package these components into a formal notion of
+% specification and coordination; we then formalize this requirement as a
+% monotonicity condition on specifications with respect to the outcome order
+% $\Ord$ in Section~\ref{sec:monotonicity}.
 
-At this point our framework diverges from prior CALM work.
-CALM-style results characterize coordination-freedom only after a specification
-has been expressed as a concrete program, with monotonicity defined over program
-rules or state updates.
-By contrast, we place monotonicity directly on black-box
-\emph{history-to-observation specifications}.
-Once $(\Poss,\Ord,\Obs)$ are fixed, the Coordination Criterion can be evaluated
-without committing to any particular programming model or implementation.
+% At this point our framework diverges from the CALM line of work~\cite{ameloot2013relational,ameloot2016weaker}.
+% Those results characterize coordination-freedom only after a specification
+% has been expressed as a concrete program, with monotonicity defined over program
+% rules.
+% By contrast, we place monotonicity directly on black-box
+% \emph{history-to-observation specifications}.
+% Once $(\Poss,\Ord,\Obs)$ are fixed, the Coordination Criterion can be evaluated
+% without committing to any particular programming model or implementation.
 
-Many useful outcome orders coincide with familiar refinement notions.
-For example, for a replicated register, taking observations to be sequences of
-completed operations ordered by prefix extension makes disagreements on read
-values explicit as contradictions.
-However observations need not resemble executions or traces in general:
-$\Poss$ may record abstract semantic state—e.g., values, decision summaries, or
-sets of visible facts—ordered by refinement or inclusion.
-Throughout the paper, we assume that $(\Poss,\Ord,\Obs)$ faithfully
-reflect the specification under study.
+% Many useful outcome orders coincide with familiar refinement notions.
+% For example, for a replicated register, taking observations to be sequences of
+% completed operations ordered by prefix extension makes disagreements on read
+% values explicit as contradictions.
+% More generally, outcomes need not resemble executions or traces:
+% $\Poss$ may record abstract semantic state—such as values, summaries, or sets of
+% visible facts—ordered by refinement or inclusion.
 
 % At this point our framework diverges from prior CALM work.
 % CALM and its descendants characterize coordination-freedom only after a
@@ -796,13 +766,13 @@ $\Spec = (\Poss,\Ord,\Obs)$.
 \end{definition}
 
 \paragraph{Admissible histories.}
-We separate the causal structure supplied by the asynchronous model from the
-behavior of any particular implementation.
+Admissibility is defined solely by causality and input history.
 For a fixed input history prefix $H_{\mathit{in}}$, the asynchronous model
 determines a set of causally admissible executions: all histories that extend
 $H_{\mathit{in}}$ and respect Lamport’s happens-before relation.
 This set is defined independently of any specification or implementation and
 serves as the baseline against which coordination is measured.
+The set of admissible histories is upward-closed under history extension.
 
 \begin{definition}[Coordination-Free Implementation]
   Fix a specification $\Spec = (\Poss, \Ord, \Obs)$.
