@@ -11,7 +11,6 @@
 % ---------- Space saving, etc ----------
 \usepackage{microtype}
 \usepackage{enumitem}
-
 \usepackage{etoolbox}
 
 \makeatletter
@@ -34,7 +33,41 @@
 \newtheorem{corollary}{Corollary}
 \theoremstyle{remark}
 \newtheorem{remark}{Remark}
-\newtheorem{example}{Example}
+% \newtheorem{example}{Example}
+
+% \usepackage{mdframed}
+% \newmdtheoremenv{example}{Example}
+
+% \newtheorem{exampleinner}{Example}
+% \newcommand{\exampleend}{\hfill$\diamond$}
+% \newenvironment{example}
+%   {\begin{exampleinner}}
+%   {\exampleend\end{exampleinner}}
+
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{amsthm}
+
+% Define a very light gray
+\definecolor{examplegray}{gray}{0.85}
+
+\newtheorem{exampleinner}{Example}
+
+\newmdenv[
+  linecolor=examplegray,
+  linewidth=0.6pt,
+  roundcorner=3pt,
+  innertopmargin=0.6\baselineskip,
+  innerbottommargin=0.6\baselineskip,
+  innerleftmargin=1em,
+  innerrightmargin=1em,
+  skipabove=\baselineskip,
+  skipbelow=\baselineskip,
+]{exampleframe}
+
+\newenvironment{example}
+  {\begin{exampleframe}\begin{exampleinner}}
+  {\end{exampleinner}\end{exampleframe}}
 
 % ---------- Macros ----------
 \newcommand{\Hist}{\mathcal{H}}
@@ -45,6 +78,7 @@
 \newcommand{\Ord}{\preceq}
 \newcommand{\hext}{\sqsubseteq_h}
 \newcommand{\In}{\mathsf{In}}
+\newcommand{\Expose}{\mathsf{Expose}}
 
 % ---------- Comments ----------
 \newcommand{\jmh}[1]{\textcolor{red}{[JMH: #1]}}
@@ -296,42 +330,34 @@ given point.
 An implementation is coordination-free when it allows all such
 extensions to history.
 
-% This is distinct from points in a history where no causally enabled step exists,
-% so execution simply stalls waiting for new events.
-% Coordination excludes steps that \emph{do} exist,
-% but may violate correctness.
-
 \paragraph{Consistency.}
-In our setting, consistency is a property of \emph{observations}—that is, of what a
-system reveals about an execution so far.
-An observation is consistent if it leaves open at least one possible extension of
-the history that remains within the specification.
-This notion is intentionally weak, requiring only the absence of semantic dead ends.
-Intuitively, consistency supports a \emph{no-regret} principle:
-an observation made under partial information (e.g., during a partition) should
-never have to be retracted or invalidated by a causally admissible extension of
-the history.
+In our setting, consistency is a \emph{no-regret property of observations}:
+an observation based on partial information (e.g., a history prefix or
+network partition) is consistent if every subsequent causal extension of the
+history has at least one outcome that remains within the specification.
+This minimalist notion captures the semantic core of familiar
+reconciliation-based models of consistency, isolating just what is needed to determine if coordination is intrinsically unavoidable.
 
 \paragraph{Monotonicity.}
 Monotonicity concerns how observations evolve as histories are extended, and whether
-later observations can become incompatible with earlier ones.
-We capture this using a partial order on outcomes, where
-growth in that order represents semantically compatible refinement
-(e.g., adding facts to a set, or increasing a count).
+later observations can become inconsistent with earlier ones.
+We capture this by relating history extension to a partial order on outcomes:
+extending a history should move observations \emph{upward} in the outcome order,
+preserving consistency
+(e.g., adding facts to a set, increasing a count).
 
-\paragraph{The connection.}
-Our main result shows that these notions coincide.
+\medskip
+Our main result characterizes coordination-freedom in terms of monotonicity.
 A specification admits a coordination-free implementation exactly when it is
-monotone, so observable outcomes remain consistent under all history extensions.
+monotone: observable outcomes remain consistent under all history extensions.
 When monotonicity fails, consistency cannot be preserved across all causal
-extensions, forcing coordination—the exclusion of admissible histories.
+extensions, forcing coordination: the exclusion of admissible histories.
 
 
 % ================================================================
 \section{Computational Model}
 % ================================================================
-Executions are modeled as Lamport histories in a standard asynchronous
-message-passing system.
+We model executions as Lamport histories: finite or infinite partially ordered sets of events ordered by happens-before (i.e., event structures, not linear traces).
 
 \begin{definition}[History]
   \label{def:history}
@@ -476,85 +502,81 @@ future behaviors and present semantic commitments.
 As we show below, coordination arises precisely when committing to observable
 outcomes rules out other outcomes that would otherwise remain possible.
 
-To reason about whether earlier observable outcomes remain valid as histories
-extend, we compare outcomes using an order that captures semantic refinement.
+To reason about whether observable outcomes remain valid as histories extend, we
+compare outcomes using an order that captures semantic refinement.
 
-\begin{definition}[Outcome Order and Contradiction]
+\begin{definition}[Outcome Order]
   The outcome domain $O$ is equipped with a partial order $\Ord$, called the
   \emph{outcome order}.
-  Intuitively, $o_1 \Ord o_2$ means that $o_2$ is a compatible extension or
-  refinement of $o_1$.
-  Two observations are said to \emph{contradict} if they have no common extension
-  in this order, that is, if there is no outcome $o$ such that
-  $o_1 \Ord o$ and $o_2 \Ord o$.
+  Intuitively, $o_1 \Ord o_2$ means that $o_2$ is a compatible refinement of $o_1$:
+  the commitments represented by $o_1$ remain valid after those represented by
+  $o_2$.
 \end{definition}
-
+\noindent
 The outcome order $\Ord$ does not impose an execution order or a notion of program
 state.
-It captures \emph{semantic compatibility under history extension}: an outcome
-$o_2$ extends $o_1$ when the commitments represented by $o_1$ remain valid after
-those represented by $o_2$.
-Two outcomes contradict when no future behavior can satisfy both.
-This allows the framework to express semantic incompatibility without appealing to
-operational mechanisms such as linearization points, schedules, or traces.
+Rather, it captures \emph{semantic compatibility under history extension}:
+$o_2$ extends $o_1$ exactly when every behavior consistent with $o_2$
+also respects the commitments made by $o_1$.
+This notion of compatibility lets us define consistency directly at the level of
+observable outcomes, without reference to operational mechanisms such as
+linearization points, schedules, or traces.
 
-\begin{remark}[Faithful Outcome Modeling]
-  \label{rem:faithful-observations}
-  The choices of possibility function $\Poss$, observability function $\Obs$, and
-  outcome order $\Ord$ are all part of the specification and play central semantic
-  roles.
-  Together, they determine which behaviors may still occur, which outcomes are
-  treated as correct at a given history, and how outcomes relate under history
-  extension.
-
-  Intuitively, $\Poss$ plays the role traditionally occupied by an operational
-  specification, such as an automaton or program semantics, by defining which
-  behaviors remain possible after a given history, while abstracting away from how
-  those behaviors are generated.
-  The observability function $\Obs$ and outcome order $\Ord$ then restrict this
-  space of causally possible outcomes, determining which outcomes are treated as
-  correct and when divergent behaviors are deemed incompatible.
-
-  These modeling choices are critical.
-  If the outcome space or order is too coarse, semantically incompatible behaviors
-  may be treated as indistinguishable.
-  For example, if all outcomes are identified as equivalent, or if the outcome
-  space contains a greatest element $\top$ extending every outcome, then every
-  observation becomes vacuously compatible with every future behavior.
-  Conversely, if the order is too fine—so that distinct outcomes admit no common
-  refinement—then even specifications that intuitively tolerate concurrency may
-  appear to reach semantic dead ends prematurely.
-
-  Faithful modeling requires choosing $(\Poss,\Ord,\Obs)$ so that
-  observable outcomes contradict exactly when they represent genuinely
-  incompatible behaviors under the intended specification.
-  Altering this triple changes the specification itself, not the coordination
-  requirements of its implementation.
-\end{remark}
-
-We now define a minimal notion of consistency over outcomes.
-This notion is intentionally weak: it does not require convergence or agreement,
-only the absence of \emph{semantic dead ends}.
-An outcome observed so far must remain compatible with at least one possible
-future behavior.
-
-\begin{definition}[Consistency]
-  A set of observations is \emph{consistent} if its elements are pairwise
-  non-contradicting under the outcome order.
+\begin{definition}[Consistency and Contradiction]
+  A set of observations $S \subseteq O$ is \emph{consistent} if there exists an
+  outcome $o \in O$ such that $s \Ord o$ for all $s \in S$.
+  Two outcomes are said to \emph{contradict} if they do not form a
+  consistent set.
 \end{definition}
 
-The role of consistency in our framework is to formalize the \emph{no-regret}
-property under asynchrony.
+Consistency captures a \emph{no-regret} property under asynchrony.
 If $o \in \Obs(H)$, then for every extension $H' \hext H$,
 there exists $o' \in \Obs(H')$ such that $o \Ord o'$.
-When this property fails, every outcome in $\Obs(H)$ at a prefix history is
-invalidated by some causal extension—precisely the situation that necessitates
-coordination.
+When this property fails, every outcome observable at a prefix history is ruled
+out by some causally admissible extension—precisely the situation that
+necessitates coordination.
 
-Whether such consistency can be preserved under \emph{all} causally admissible
-history extensions is the key determinant of coordination-freedom.
+Whether a specification can preserve observational consistency under \emph{all}
+causally admissible history extensions is the key determinant of
+coordination-freedom.
 We formalize this requirement as a monotonicity condition on specifications with
 respect to the outcome order $\Ord$ in Section~\ref{sec:monotonicity}.
+
+\subsection{Faithful Outcome Modeling}
+\label{rem:faithful-observations}
+The choices of possibility function $\Poss$, observability function $\Obs$, and
+outcome order $\Ord$ are all part of the specification and play central semantic
+roles.
+Together, they determine which behaviors may still occur, which outcomes are
+treated as correct at a given history, and how outcomes relate under history
+extension.
+
+Intuitively, $\Poss$ plays the role traditionally occupied by an operational
+specification, such as an automaton or program semantics, by defining which
+behaviors remain possible after a given history, while abstracting away from how
+those behaviors are generated.
+The observability function $\Obs$ and outcome order $\Ord$ then restrict this
+space of causally possible outcomes, determining which outcomes are treated as
+correct and when divergent behaviors are deemed incompatible.
+
+These modeling choices are critical.
+If the outcome space or order is too coarse, semantically incompatible behaviors
+may be treated as indistinguishable.
+For example, if all outcomes are identified as equivalent, or if the outcome
+space contains a greatest element $\top$ extending every outcome, then every
+observation becomes vacuously compatible with every future behavior.
+Conversely, if the order is too fine—so that distinct outcomes admit no common
+refinement—then even specifications that intuitively tolerate concurrency may
+appear to reach semantic dead ends prematurely.
+
+Faithful modeling requires choosing $(\Poss,\Ord,\Obs)$ so that
+observable outcomes contradict exactly when they represent genuinely
+incompatible behaviors under the intended specification.
+Altering this triple changes the specification itself, not the coordination
+requirements of its implementation.
+% \end{remark}
+
+
 % In the next section, we package these components into a formal notion of
 % specification and coordination; we then formalize this requirement as a
 % monotonicity condition on specifications with respect to the outcome order
@@ -701,22 +723,22 @@ We now bundle the components introduced above into a single semantic object.
   \end{itemize}
 \end{definition}
 
-Note that the relationship between $\Poss(H)$ and $\Obs(H)$ depends on how much
-uncertainty remains at history $H$.
-If $\Poss(H)$ is a singleton, then either the unique possible outcome is already
-observable—so $\Obs(H) = \Poss(H)$—or no outcome is yet observable, in which case
-$\Obs(H)=\emptyset$.
-When $\Poss(H)$ contains multiple outcomes, however, we should not expect
-$\Obs(H)$ to coincide with $\Poss(H)$.
-Outcomes that may still occur in future extensions of $H$ need be ``within
-specification'' at $H$ itself, independent of any subsequent analysis of
-coordination or its requirements.
+% Note that the relationship between $\Poss(H)$ and $\Obs(H)$ depends on how much
+% uncertainty remains at history $H$.
+% If $\Poss(H)$ is a singleton, then either the unique possible outcome is already
+% observable—so $\Obs(H) = \Poss(H)$—or no outcome is yet observable, in which case
+% $\Obs(H)=\emptyset$.
+% When $\Poss(H)$ contains multiple outcomes, however, we should not expect
+% $\Obs(H)$ to coincide with $\Poss(H)$.
+% Outcomes that may still occur in future extensions of $H$ need be ``within
+% specification'' at $H$ itself, independent of any subsequent analysis of
+% coordination or its requirements.
 
 
 
 \begin{example}[Replicated Register Specifications]
   \label{ex:register-specs}
-  Revisiting the running example from the introduction, consider histories in
+  Consider histories in
   which processes issue read and write operations on a single logical register
   replicated at two nodes.
   This example illustrates the distinction between outcomes that remain
@@ -754,15 +776,15 @@ $\Spec = (\Poss,\Ord,\Obs)$.
 \begin{definition}[Implementation]
   An implementation $I$ describes both
   (i) which executions are possible under a given pattern of external inputs and
-  (ii) which observable outcomes it may expose during those executions.
+  (ii) which outcomes it may expose during those executions.
   Formally, $I$ consists of:
   \begin{itemize}[nosep]
     \item for each input history prefix $H_{\mathit{in}}$, a set of realizable
           histories $\mathcal{R}_I(H_{\mathit{in}}) \subseteq \Hist$, and
-    \item an outcome-exposure map $\Poss_I : \Hist \to \mathcal{P}(O)$, where
-          $\Poss_I(H)$ is the set of outcomes that $I$ may expose after history $H$
-          (and need not coincide with $\Obs(H)$).
+    \item an outcome-exposure map $\Expose_I : \Hist \to \mathcal{P}(O)$, where
+          $\Expose_I(H)$ is the set of outcomes that $I$ may expose at history $H$.
   \end{itemize}
+  An implementation is \emph{correct} for $(\Poss, \Ord, \Obs)$ if $\Expose_I(H)\subseteq \Obs(H)$ for all histories $H$.
 \end{definition}
 
 \paragraph{Admissible histories.}
@@ -775,7 +797,7 @@ serves as the baseline against which coordination is measured.
 The set of admissible histories is upward-closed under history extension.
 
 \begin{definition}[Coordination-Free Implementation]
-  Fix a specification $\Spec = (\Poss, \Ord, \Obs)$.
+  Fix a specification \mbox{$\Spec = (\Poss, \Ord, \Obs)$}.
   For any input history prefix $H_{\mathit{in}}$, define the set of
   \emph{admissible histories}
   \[
@@ -783,13 +805,13 @@ The set of admissible histories is upward-closed under history extension.
     \triangleq
     \{\, H \in \Hist \mid H_{\mathit{in}} \hext \In(H) \,\}.
   \]
-
+  This set represents the executions permitted by asynchrony and causality alone.
   An implementation $I$ is \emph{coordination-free} if, for every input history
   $H_{\mathit{in}}$:
   \begin{enumerate}[nosep]
-    \item \emph{(Observational correctness)}
+    \item \emph{(Correctness)}
           For every $H \in \mathcal{R}_I(H_{\mathit{in}})$,
-          $\Poss_I(H) \subseteq \Obs(H)$.
+          $\Expose_I(H) \subseteq \Obs(H)$.
     \item \emph{(No additional pruning)}
           $\mathcal{R}_I(H_{\mathit{in}}) = \mathcal{A}(H_{\mathit{in}})$.
   \end{enumerate}
@@ -798,81 +820,53 @@ The set of admissible histories is upward-closed under history extension.
 The no-additional-pruning condition captures the absence of coordination:
 a coordination-free implementation excludes no execution permitted by
 asynchrony and causality.
-For example, as we will see, the highly available register specification admits
-a coordination-free implementation, while the linearizable specification does not.
+% For example, as we will see, the highly available register specification admits
+% a coordination-free implementation, while the linearizable specification does not.
 
 
-\paragraph{Coordination vs.\ nondeterminism.}
-A specification may admit multiple outcomes for the same history, and an
-implementation may nondeterministically choose among them.
-Such choice does not constitute coordination in our sense.
-The distinction is not whether, for a fixed history $H$, an implementation selects
-one outcome in $\Obs(H)$ rather than another, but whether it must exclude some \emph{causally admissible
-  histories} in order to remain correct.
+\begin{remark}[Coordination vs.\ Nondeterminism]
+  A specification may admit multiple outcomes for the same history, and an
+  implementation may nondeterministically choose among them.
+  Such choice does not constitute coordination in our sense.
+  The distinction is not whether, for a fixed history $H$, an implementation selects
+  one outcome in $\Obs(H)$ rather than another, but whether it must exclude some \emph{causally admissible
+    histories} in order to remain correct.
+\end{remark}
 
-Underspecification permits choice among outcomes in $\Obs(H)$ for a fixed history $H$.
-Coordination arises only when correctness requires committing to observations
-that are incompatible with some causally consistent extensions of that history,
-thereby forcing the implementation to prune the space of admissible executions.
+% Underspecification permits choice among outcomes in $\Obs(H)$ for a fixed history $H$.
+% Coordination arises only when correctness requires committing to observations
+% that are incompatible with some causally consistent extensions of that history,
+% thereby forcing the implementation to prune the space of admissible executions.
 
-Informally, following the standard asynchronous message-passing model in
-distributed computing, an implementation consists of a collection of (possibly
-nondeterministic) state machines representing processes that communicate over
-asynchronous channels.
-An admissible input history $H_{\mathit{in}}$ is any history of external
-invocation events.
-An execution $H$ is causally consistent with $H_{\mathit{in}}$ when
-$H_{\mathit{in}} \hext H$ and the happens-before relation in $H$ extends the
-union of local program order at each process and the send/receive edges on
-channels induced by the implementation.
-In particular, ``causal consistency'' here refers only to this history-level
-condition and does not introduce a separate storage-level consistency model.
-
-% \begin{remark}[Coordination vs.\ Protocol Mechanics]
-%   Given a prefix of external inputs, the asynchronous model fixes which
-%   history extensions are admissible under happens-before. The
-%   definition above declares an implementation coordination-free exactly when it
-%   does not prune this space beyond causal consistency.
-%   Our notion of coordination is semantic rather than operational,
-%   and is distinguished from nondeterministic choice or underspecification by whether an
-%   implementation must exclude causally admissible histories.
-%   Communication---whether reliable or unreliable, timely or delayed---adds events and
-%   causal relationships to an execution history, but by itself does not change
-%   which histories the model deems possible beyond causality itself.
-%   A mechanism constitutes coordination when its correctness relies on
-%   \emph{excluding} some of those admissible histories: mechanisms such as
-%   barriers, termination detection, quorums, or agreement protocols realize only those
-%   histories that satisfy additional global constraints (e.g., a total order on
-%   certain events).
-%   By contrast, low-level protocol devices such as acknowledgments,
-%   retransmissions, or retries merely react to events that have occurred and do
-%   not exclude any causally consistent executions.
-%   An implementation becomes coordinating only when correctness depends on the
-%   exclusion of certain executions—for example, by assuming that a message or
-%   acknowledgment will never arrive, or by requiring responses from all
-%   participants before proceeding and thereby ruling out histories in which some
-%   responses are forever absent.
-%   Several classical results discussed in Section~\ref{sec:applications} and
-%   Appendix~\ref{sec:additional-applications} rely on this distinction between
-%   reacting to events and excluding executions.
-% \end{remark}
+% Informally, following the standard asynchronous message-passing model in
+% distributed computing, an implementation consists of a collection of (possibly
+% nondeterministic) state machines representing processes that communicate over
+% asynchronous channels.
+% An admissible input history $H_{\mathit{in}}$ is any history of external
+% invocation events.
+% An execution $H$ is causally consistent with $H_{\mathit{in}}$ when
+% $H_{\mathit{in}} \hext H$ and the happens-before relation in $H$ extends the
+% union of local program order at each process and the send/receive edges on
+% channels induced by the implementation.
+% In particular, ``causal consistency'' here refers only to this history-level
+% condition and does not introduce a separate storage-level consistency model.
 
 \begin{remark}[Coordination vs.\ Protocol Mechanics]
-  For a fixed prefix of external inputs, the asynchronous model determines exactly
-  which history extensions are causally admissible.
-  An implementation is coordination-free precisely when it does not exclude any of
-  these histories.
-
+  % For a fixed prefix of external inputs, the asynchronous model determines exactly
+  % which history extensions are causally admissible.
+  % An implementation is coordination-free precisely when it does not exclude any of
+  % these histories.
   Communication mechanisms such as acknowledgments, retries, or message reordering
   merely react to events that occur: they add events and causal relations, but do not
   restrict which extensions remain possible.
   By contrast, a mechanism constitutes coordination when its correctness relies on
-  \emph{excluding} some of those admissible histories—for example, by requiring
-  responses from all participants or assuming that certain messages will eventually
-  arrive.
-  Barriers, termination detection, quorums, and agreement protocols all have this
-  character: they rule out executions with unbounded delay or partial participation,
-  even though such executions are permitted by asynchrony.
+  \emph{excluding} some of those admissible histories.
+  % —for example, by requiring
+  % responses from all participants or assuming that certain messages will eventually
+  % arrive.
+  % Barriers, termination detection, quorums, and agreement protocols all have this
+  % character: they rule out executions with unbounded delay or partial participation,
+  % even though such executions are permitted by asynchrony.
 \end{remark}
 
 \begin{example}[Observation-Preserving vs. Observation-Restricting Mechanisms]
@@ -885,17 +879,17 @@ condition and does not introduce a separate storage-level consistency model.
   admissible history: executions in which the server never responds remain
   admissible, differing only in which observations are exposed.
 
-  By contrast, a barrier that requires all processes to report completion before
-  any may proceed restricts observable outcomes by excluding histories in which
-  some processes fail to respond indefinitely, even though such histories are
-  admissible under asynchrony.
-  Similarly, a quorum protocol restricts observations by excluding outcomes in
-  which too many replicas fail to respond.
+  By contrast, a barrier requires that no process proceed until all have reported
+  completion. This rules out causally admissible histories in which some processes
+  continue to act while others have not yet responded—even though such histories
+  are permitted by causality.
+  Similarly, a quorum protocol excludes executions in which decisions are made
+  before responses from a sufficient set of replicas have arrived.
 
-  These latter mechanisms impose semantic commitments to eliminate
-  outcomes that remain in $\Poss(H)$ under causally consistent executions,
-  which constitutes coordination in our sense. The distinction is not whether progress occurs, but whether correctness depends
-  on ruling out causally admissible executions.
+  These excluded histories correspond to executions that \emph{act early}, under
+  partial information.
+  Such behaviors may be forbidden under a given specification—which is precisely
+  why that specification requires coordination to prevent them.
 \end{example}
 
 % ================================================================
@@ -909,18 +903,18 @@ condition and does not introduce a separate storage-level consistency model.
   $o' \in \Obs(H_2)$ such that $o \Ord o'$.
 \end{definition}
 
-Monotonicity can be understood as a no-regret condition on observable behavior\footnote{Formally,
-  this condition is stronger than monotonicity under the lower
-  powerdomain preorder on outcome sets, which would permit outcomes in $\Obs(H)$
-  to be discarded so long as some dominating outcome remains.
-  Our definition forbids such loss: outcomes observable at a prefix history must
-  remain compatible with at least one outcome at every extension.}.
+Monotonicity can be understood as a no-regret condition on observable behavior.
 Once an outcome is treated as correct at some history, extending the execution
 should not later invalidate that outcome.
 When monotonicity does not hold, an outcome that was acceptable at a prefix history
 may be invalidated by a causally admissible extension.
 Avoiding such regret in non-monotone specifications forces implementations to restrict which executions may occur.
-This is exactly why non-monotonic specifications require coordination.
+This is exactly why non-monotonic specifications require coordination\footnote{Formally,
+  this condition is stronger than monotonicity under the lower
+  powerdomain preorder on outcome sets, which would permit outcomes in $\Obs(H)$
+  to be discarded so long as some dominating outcome remains.
+  Our definition forbids such loss: outcomes observable at a prefix history must
+  remain compatible with at least one outcome at every extension.}.
 
 
 % \paragraph{Example (Replicated register).}
@@ -986,36 +980,36 @@ becomes unavoidable.
   extension under the chosen outcome order $\Ord$.
 \end{theorem}
 
-\paragraph{Example (Replicated register).}
-Consider the replicated register specifications from
-Example~\ref{ex:register-specs}, with observations taken to be sequences of
-completed operations ordered by prefix extension.
+\begin{example}[Replicated register revisited]
+  Consider the replicated register specifications from
+  Example~\ref{ex:register-specs}, with observations taken to be sequences of
+  completed operations ordered by prefix extension.
+  Let $H_1$ be a history in which a process has invoked a read operation, and
+  concurrently another replica has invoked a write of value $1$, but neither
+  operation has yet completed.
+  At this prefix, the outcome
+  $
+    o = \langle \mathsf{read}(0) \rangle
+  $
+  lies in both $\Obs_{\mathit{avail}}(H_1)$ and $\Obs_{\mathit{lin}}(H_1)$,
+  corresponding to completing the read before observing the write.
 
-Let $H_1$ be a history in which a process has invoked a read operation, and
-concurrently another replica has invoked a write of value $1$, but neither
-operation has yet completed.
-At this prefix, the outcome
-$
-  o = \langle \mathsf{read}(0) \rangle
-$
-lies in both $\Obs_{\mathit{avail}}(H_1)$ and $\Obs_{\mathit{lin}}(H_1)$,
-corresponding to completing the read before observing the write.
-
-Now extend $H_1$ to a history $H_2$ by delivering the write and completing it
-before completing the read.
-Under $\Spec_{\mathit{avail}}$, the earlier observation $o$ remains compatible
-with $H_2$, since reads may ignore concurrent writes.
-Under $\Spec_{\mathit{lin}}$, however, every outcome in $\Obs_{\mathit{lin}}(H_2)$
-requires the read to return $1$, and there is no outcome in
-$\Obs_{\mathit{lin}}(H_2)$ whose sequence of completed operations has $o$ as a
-prefix under $\Ord$.
-This shows that $\Spec_{\mathit{lin}}$ is non-monotone with respect to history
-extension.
-By contrast, $\Spec_{\mathit{avail}}$ admits no such counterexample.
-This example isolates the semantic source of coordination:
-the linearizability specification treats a return value as observable
-that cannot be extended along all causally admissible completions
-of the same prefix history.
+  Now extend $H_1$ to a history $H_2$ by delivering the write and completing it
+  before completing the read.
+  Under $\Spec_{\mathit{avail}}$, the earlier observation $o$ remains compatible
+  with $H_2$, since reads may ignore concurrent writes.
+  Under $\Spec_{\mathit{lin}}$, however, every outcome in $\Obs_{\mathit{lin}}(H_2)$
+  requires the read to return $1$, and there is no outcome in
+  $\Obs_{\mathit{lin}}(H_2)$ whose sequence of completed operations has $o$ as a
+  prefix under $\Ord$.
+  This shows that $\Spec_{\mathit{lin}}$ is non-monotone with respect to history
+  extension.
+  By contrast, $\Spec_{\mathit{avail}}$ admits no such counterexample.
+  This example isolates the semantic source of coordination:
+  the linearizability specification treats a return value as observable
+  that cannot be extended along all causally admissible extensions
+  of the same prefix history.
+\end{example}
 
 This theorem is proved in the asynchronous message-passing model of
 Section~\ref{sec:obs-consistency}, where histories may be finite or infinite,
@@ -1028,17 +1022,19 @@ assumptions (such as termination or wait-freedom).
 We briefly outline the argument; a full formal proof, including an explicit
 operational construction, appears in Appendix~\ref{app:coordination-criterion-proof}.
 The proof establishes sufficiency and necessity of monotonicity for
-coordination-free implementations.
+coordination-freedom.
 
-In this proof sketch, we write $\Poss_I(H)\subseteq O$ for the set of outcomes
-exposed by implementation $I$ at history $H$, and we require observational
-correctness to mean $\Poss_I(H)\subseteq \Obs(H)$.
+In this proof sketch,
+% we write $\Expose_I(H)\subseteq O$ for the set of outcomes
+% exposed by implementation $I$ at history $H$, and 
+we require
+correctness of implementations: $\Expose_I(H)\subseteq \Obs(H)$.
 
 \paragraph{Sufficiency.}
 For the ``if'' direction, we exhibit an idealized implementation $I_\Spec$ that
 realizes all causally consistent extensions of any admissible input history.
 At each history $H$, the implementation may expose any outcome
-$o \in \Obs(H)$, i.e., choose $\Poss_I(H)=\{o\}$, but crucially it makes no
+$o \in \Obs(H)$, i.e., choose $\Expose_I(H)=\{o\}$, but crucially it makes no
 commitment to that choice:
 observations do not restrict future behavior.
 
@@ -1052,12 +1048,12 @@ Consequently, $I_\Spec$ is correct and does not prune any admissible executions.
 This construction is purely semantic and serves only to establish existence.
 
 
-\paragraph{Intuition.}
-Intuitively, necessity follows because exposing an observation at a prefix history
-constitutes a semantic commitment, and non-monotonicity means that there exists a
-prefix history and an admissible commitment that causes regret:
-it is contradicted by every causally admissible extension, forcing any correct
-implementation to exclude some admissible executions.
+% \paragraph{Intuition.}
+% Intuitively, necessity follows because exposing an observation at a prefix history
+% constitutes a semantic commitment, and non-monotonicity means that there exists a
+% prefix history and an admissible commitment that causes regret:
+% it is contradicted by every causally admissible extension, forcing any correct
+% implementation to exclude some admissible executions.
 
 \paragraph{Necessity.}
 For the ``only if'' direction, suppose $\Spec$ is non-monotone.
@@ -1066,14 +1062,14 @@ such that for every $o_2 \in \Obs(H_2)$, $o_1$ and $o_2$ contradict.
 Choosing an input history whose external inputs match $H_1$, both $H_1$ and
 $H_2$ are admissible extensions.
 Any correct implementation must expose some outcome
-$o_1 \in \Poss_I(H_1) \subseteq \Obs(H_1)$,
+$o_1 \in \Expose_I(H_1) \subseteq \Obs(H_1)$,
 but any such choice is incompatible with correctness
 along the admissible extension $H_2$.
 Hence any correct implementation must exclude at least one causally admissible
 history from $\mathcal{A}(H_{\mathit{in}})$, violating coordination-freedom.
-This necessity argument resonates with the perspective of
-Baccaert et al.~\cite{baccaert2026spectrum}, who study coordination via
-protocol-level restrictions on asynchronous executions.
+% This necessity argument resonates with the perspective of
+% Baccaert et al.~\cite{baccaert2026spectrum}, who study coordination via
+% protocol-level restrictions on asynchronous executions.
 
 \paragraph{Tightness.}
 The Coordination Criterion is tight: monotonicity is the weakest semantic
@@ -2141,7 +2137,7 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
 
   Because $\Obs(H_1)$ and $\Obs(H_2)$ contradict, there is no single observation
   $o$ that is compatible with both under $\Ord$.
-  Because correctness requires $\Poss_I(H_1) \subseteq \Obs(H_1)$, and
+  Because correctness requires $\Expose_I(H_1) \subseteq \Obs(H_1)$, and
   $\Obs(H_1)$ contains at least one admissible outcome, the implementation must
   commit to some outcome in $\Obs(H_1)$ along any run realizing $H_1$.
   Any such choice will be incompatible with every outcome in $\Obs(H_2)$ along the
@@ -2291,8 +2287,7 @@ coordination relative to semantic domains and execution assumptions that are
 stronger than those of a canonical asynchronous system
 \cite{hellerstein2010declarative,ameloot2013relational,ameloot2015weaker}.
 
-The most recent work in this line, by eiifcblvtiltkiiuiuvrgkefjgnlurecbrcllcnejlub
-t and Ketsman~\cite{baccaert2026spectrum},
+The most recent work in this line, by Baccaert and Ketsman~\cite{baccaert2026spectrum},
 moves beyond language-specific analyses by modeling distributed computation as
 semantic mappings between relations and parameterizing coordination-freedom by a
 family of \emph{system constraints}.
