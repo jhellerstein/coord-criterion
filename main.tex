@@ -502,6 +502,9 @@ future behaviors and present semantic commitments.
 As we show below, coordination arises precisely when committing to observable
 outcomes rules out other outcomes that would otherwise remain possible.
 
+\remark[Silence]
+Our framework permits specifications whose observability function remains empty for some histories. Such silence represents the absence of semantic commitment, not a violation of correctness. We return to this design choice in Section~\ref{sec:silence}.
+
 To reason about whether observable outcomes remain valid as histories extend, we
 compare outcomes using an order that captures semantic refinement.
 
@@ -885,12 +888,12 @@ representative instantiations, chosen to reflect the perspectives emphasized in
 the introduction.
 We begin with CAP, a canonical impossibility result, to show how a familiar
 coordination tradeoff follows directly from non-monotonicity of a specification.
-We then turn to snapshot objects, where the criterion draws a sharp boundary
-between closely related specifications that are easily conflated.
-Finally, we consider CALM, showing that the same semantic condition applies beyond
+We then turn to CALM, showing that the same semantic condition applies beyond
 object-level consistency, at the level of declarative program semantics—without
 committing to a concrete implementation.
-Further applications—including agreement tasks, transactional isolation
+Finally, we examine consensus, a classic coordination problem, where coordination can be obscured by suppressing observations, to clarify the boundary of safety-only specifications.
+Further applications—including global and atomic snapshots,
+commit protocols, transactional isolation
 levels, and invariant confluence—are deferred to
 Appendix~\ref{sec:additional-applications}.
 
@@ -937,62 +940,9 @@ both correct on all causally consistent histories and maximally available under
 partitions.
 Formal definitions appear in Appendix~\ref{app:cap-formal}.
 
-\subsection{Snapshots}
-
-Snapshot objects provide a sharp boundary case for the Coordination Criterion.
-Global snapshot and atomic snapshot expose similar interfaces, but differ
-fundamentally in how admissible outcomes behave under history extension.
-
-\paragraph{$\SpecIt$ sketch.}
-Histories are executions of a shared-memory system with read and write operations.
-Outcomes are snapshot results, recording the values of all variables at a single
-logical point.
-
-For global snapshot,
-$
-  \Poss(H) = \Obs(H)
-$
-is the set of all downward-closed cuts of the happens-before relation realizable
-by some causal extension of \(H\).
-Here, the outcome order $\Ord_{\mathit{global}}$ is cut extension.
-
-For atomic snapshot, \(\Poss(H)\) is the set of snapshot results realizable under
-\emph{some} linearization extending \(H\).
-The observability function \(\Obs(H)\) selects snapshot results that the
-specification treats as correct at \(H\), each committing to a particular
-linearization point.
-By contrast, the outcome order $\Ord_{\mathit{atomic}}$ refines linearization-point commitments.
-
-\paragraph{Global snapshot.}
-A global snapshot outcome corresponds to a downward-closed cut of
-happens-before.
-Extending a history can only add events after such a cut, never invalidate it.
-Accordingly, every admissible outcome remains compatible with every causally admissible extension.
-The specification is monotone and admits coordination-free implementations.
-
-\paragraph{Atomic snapshot.}
-In contrast to global snapshot, atomic snapshot commits to a total order rather than a cut.
-Atomic snapshot strengthens the specification by requiring each snapshot to
-correspond to a single linearization point.
-At a prefix history $H$, multiple linearizations of concurrent operations may
-remain possible.
-Thus $\Poss(H)$ may contain several snapshot results, but observing any one of
-them commits to a particular ordering of those operations.
-
-Consider a prefix history $H$ in which a snapshot is concurrent with a write.
-At $H$, $\Poss(H)$ includes outcomes corresponding to different linearizations of
-the snapshot relative to the write.
-Under the linearization-refinement order, these outcomes are incompatible, since
-each commits to a distinct total order.
-Because causality permits extensions that realize either ordering, committing to
-one at $H$ rules out correctness along the other.
-
-Thus atomic snapshot admits observable outcomes at a prefix history that cannot be
-preserved under all causally admissible extensions, making coordination intrinsic.
-
 \subsection{CALM}
 
-In contrast to the object-centric CAP and snapshot settings, CALM operates at the
+In contrast to the object-centric CAP setting, CALM operates at the
 level of declarative programs.
 Among distributed logic programs, the monotone ones are exactly those that admit
 coordination-free distributed evaluation~\cite{ameloot2013relational}.
@@ -1010,6 +960,180 @@ Non-monotone programs—e.g., those with negation or aggregation—may require r
 previously derived facts as histories extend. This corresponds directly to non-monotonicity of
 \(\Obs\) under history extension.
 Formal definitions and proofs appear in Appendix~\ref{app:calm-formal}.
+
+% \subsection{Consensus and Related Agreement Tasks}
+% \label{sec:consensus}
+
+% Agreement tasks such as consensus form a boundary case for the Coordination
+% Criterion.
+% Unlike registers, snapshots, or relational transducer programs, they do not
+% inherently require observations to be produced incrementally as histories evolve.
+% As a result, agreement specifications may appear coordination-free by suppressing
+% all observations until a final decision is inevitable.
+% This section explains why coordination becomes unavoidable once a specification requires
+% observable value commitment, and why suppressing observations does not contradict the Coordination
+% Criterion.
+
+% \begin{definition}[Prefix Exposure]
+%   \label{def:prefix-exposure}
+%   Fix an outcome order $(O,\Ord)$.
+%   An \emph{exposure family} is a function
+%   $
+%     \mathsf{Pre} : O \to \mathcal{P}(O)
+%   $
+%   such that for every $o \in O$:
+%   \begin{enumerate}[nosep]
+%     \item \emph{(Prefixes)} every $p \in \mathsf{Pre}(o)$ satisfies $p \Ord o$;
+%     \item \emph{(Nontriviality)} $\mathsf{Pre}(o)$ contains at least one
+%           \emph{proper} prefix of $o$ whenever $o$ is not $\Ord$-minimal.
+%   \end{enumerate}
+
+%   A specification $\Spec=(\Poss,\Ord,\Obs)$ \emph{has prefix exposure w.r.t.}
+%   $\mathsf{Pre}$ if for every history $H$ and every outcome $o \in \Obs(H)$,
+%   whenever some $p \in \mathsf{Pre}(o)$ is $\Ord$-consistent with $\Obs(H)$
+%   (i.e., there exists $o' \in \Obs(H)$ with $p \Ord o'$),
+%   we have $p \in \Obs(H)$.
+% \end{definition}
+% \noindent
+% Registers, snapshots, and relational transducer programs satisfy prefix exposure
+% under their natural outcome orders.
+% Agreement tasks differ precisely in this respect.
+
+% \paragraph{Consensus under prefix exposure.}
+% We model consensus using standard decision-map outcomes ordered by pointwise
+% extension.
+% Under prefix exposure, partial decision maps—recording decisions of some
+% processes but not others—must be observable whenever they are semantically
+% compatible with the specification.
+% This makes intermediate decision commitments visible at prefix
+% histories.
+
+% \begin{lemma}[Non-Monotonicity of Consensus]
+%   \label{lem:consensus-nonmonotone}
+%   Consider the consensus task over a domain with at least two distinct
+%   input values.
+%   Model histories so that each process first proposes an input value and, upon
+%   terminating, performs a decide event recording its decision.
+
+%   Let outcomes be partial functions mapping each process that has decided to its
+%   decision value, and let the outcome order $\Ord$ be pointwise extension of these
+%   decision maps: $o_1 \Ord o_2$ whenever every decision recorded in $o_1$ also
+%   appears with the same value in $o_2$.
+%   Let $\Obs(H)$ consist of those decision maps admissible under the consensus
+%   specification after history $H$.
+
+%   With this choice of outcomes and outcome order, the consensus specification—
+%   requiring validity and agreement—is non-monotone with respect to history
+%   extension.
+% \end{lemma}
+
+% \begin{proof}[Proof sketch]
+%   Consensus typically progresses from initial disagreement to
+%   unanimous agreement at completion.
+%   Decision maps that record disagreement at a prefix history admit no extension in
+%   the outcome order that satisfies agreement.
+%   Appendix~\ref{app:consensus-detail} provides a detailed proof.
+% \end{proof}
+
+% \begin{lemma}[Silent Consensus is Vacuously Coordination-Free]
+%   \label{lem:silent-consensus}
+%   There exists a consensus specification that is monotone with respect to history
+%   extension and therefore admits a coordination-free implementation.
+% \end{lemma}
+
+% \begin{proof}[Proof sketch]
+%   Let $\Obs(H)=\{\bot\}$ for all prefix histories $H$, and
+%   $\Obs(H)=\{v\}$ only when a decision value $v$ is forced along all causally
+%   admissible extensions.
+%   Observable outcomes move monotonically from $\bot$ to $v$, so no observation can
+%   be invalidated by extension.
+% \end{proof}
+
+% \paragraph{Silence versus coordination.}
+% If prefix exposure is dropped, a specification may remain silent until a single
+% decision value is forced along every causally admissible extension.
+% Such a specification is monotone: with no observable commitments, nothing can be
+% invalidated by extension.
+% This is the familiar FLP-style escape hatch.
+
+% Prefix exposure closes this loophole.
+% By requiring semantically compatible outcome prefixes to be observable, it makes
+% mid-history commitments explicit.
+% It is here—when partial decisions are exposed and later extensions may conflict—
+% that coordination becomes unavoidable.
+
+% Viewed through the lens of
+% Remark~\ref{rem:faithful-observations}, prefix exposure is a criterion for
+% \emph{faithful observation}.
+% Silence may preserve correctness, but it obscures where commitments are made and
+% where coordination pressure arises.
+% For diagnosis rather than permissiveness, observation functions should expose
+% intermediate semantic commitments rather than hide them.
+
+\subsection{Consensus and Related Agreement Tasks}
+\label{sec:consensus}
+
+Agreement tasks such as consensus form a boundary case for the Coordination
+Criterion.
+Unlike registers, snapshots, or relational transducer programs, agreement
+specifications do not inherently require observations to be produced
+incrementally.
+As a result, consensus may appear coordination-free if all observations are
+suppressed until a final decision is inevitable.
+This section explains why such silence does not contradict the Coordination
+Criterion, and how coordination becomes unavoidable once a specification requires
+observable value commitment.
+
+\begin{definition}[Prefix Exposure]
+  \label{def:prefix-exposure}
+  Fix an outcome order $(O,\Ord)$.
+  A specification \mbox{$\Spec=(\Poss,\Ord,\Obs)$} has \emph{prefix exposure} if the
+  following holds:
+
+  For every history $H$ and every outcome $o \in \Obs(H)$, if $o$ is not
+  $\Ord$-minimal, then there exists a strict prefix $p \Ord o$ such that
+  $p \in \Obs(H)$ whenever $p$ is compatible with the specification at $H$
+  (i.e., whenever there exists $o' \in \Obs(H)$ with $p \Ord o'$).
+\end{definition}
+\noindent
+Intuitively, prefix exposure requires that whenever a final outcome is admissible,
+any compatible intermediate commitment toward that outcome must already be
+observable.
+Registers, snapshots, and relational transducer programs satisfy prefix exposure
+under their natural outcome orders.
+Agreement tasks differ precisely in this respect.
+
+\begin{lemma}[Non-Monotonicity of Consensus]
+  \label{lem:consensus-nonmonotone}
+  Consider consensus over a domain with at least two values.
+  Let outcomes be partial decision maps ordered by pointwise extension, and let
+  $\Obs(H)$ contain the decision maps admissible under validity and agreement.
+  With prefix exposure, the consensus specification is non-monotone with respect
+  to history extension.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+  Consensus progresses from partial disagreement to unanimous agreement.
+  A decision map that records disagreement at a prefix history admits no extension
+  in the outcome order that satisfies agreement.
+  See Appendix~\ref{app:consensus-detail} for details.
+\end{proof}
+
+\paragraph{Silence versus coordination.}
+If prefix exposure is dropped, a specification may remain silent until a single
+decision value is forced along all causally admissible extensions.
+Such a specification is monotone: with no observable intermediate commitments, nothing can be
+invalidated by extension.
+This mirrors the classical FLP observation: agreement can preserve safety under
+asynchrony by remaining silent indefinitely, even though progress cannot be
+guaranteed~\cite{fischer1985impossibility}.
+
+Prefix exposure closes this loophole.
+By requiring semantically compatible prefixes to be observable, it exposes
+mid-history commitments, precisely where agreement and validity conflict.
+In the sense of Remark~\ref{rem:faithful-observations}, prefix exposure is thus another
+consideration for faithful diagnosis: silence may preserve correctness, but it hides
+where coordination pressure arises.
 
 % ================================================================
 \section{Related Work}
@@ -1343,8 +1467,123 @@ Thus CALM arises as a clean special case of a more general semantic principle:
 coordination is required exactly when observable commitments are non-monotone with
 respect to causal extension.
 
-\subsection{Strong Renaming}
+\subsection{Snapshots}
 
+Snapshot objects provide a sharp boundary case for the Coordination Criterion.
+Global snapshot and atomic snapshot expose similar interfaces, but differ
+fundamentally in how admissible outcomes behave under history extension.
+
+\paragraph{$\SpecIt$ sketch.}
+Histories are executions of a shared-memory system with read and write operations.
+Outcomes are snapshot results, recording the values of all variables at a single
+logical point.
+
+For global snapshot,
+$
+  \Poss(H) = \Obs(H)
+$
+is the set of all downward-closed cuts of the happens-before relation realizable
+by some causal extension of \(H\).
+Here, the outcome order $\Ord_{\mathit{global}}$ is cut extension.
+
+For atomic snapshot, \(\Poss(H)\) is the set of snapshot results realizable under
+\emph{some} linearization extending \(H\).
+The observability function \(\Obs(H)\) selects snapshot results that the
+specification treats as correct at \(H\), each committing to a particular
+linearization point.
+By contrast, the outcome order $\Ord_{\mathit{atomic}}$ refines linearization-point commitments.
+
+\paragraph{Global snapshot.}
+A global snapshot outcome corresponds to a downward-closed cut of
+happens-before.
+Extending a history can only add events after such a cut, never invalidate it.
+Accordingly, every admissible outcome remains compatible with every causally admissible extension.
+The specification is monotone and admits coordination-free implementations.
+
+\paragraph{Atomic snapshot.}
+In contrast to global snapshot, atomic snapshot commits to a total order rather than a cut.
+Atomic snapshot strengthens the specification by requiring each snapshot to
+correspond to a single linearization point.
+At a prefix history $H$, multiple linearizations of concurrent operations may
+remain possible.
+Thus $\Poss(H)$ may contain several snapshot results, but observing any one of
+them commits to a particular ordering of those operations.
+
+Consider a prefix history $H$ in which a snapshot is concurrent with a write.
+At $H$, $\Poss(H)$ includes outcomes corresponding to different linearizations of
+the snapshot relative to the write.
+Under the linearization-refinement order, these outcomes are incompatible, since
+each commits to a distinct total order.
+Because causality permits extensions that realize either ordering, committing to
+one at $H$ rules out correctness along the other.
+
+Thus atomic snapshot admits observable outcomes at a prefix history that cannot be
+preserved under all causally admissible extensions, making coordination intrinsic.
+
+\subsection{Consensus, Commit and Related Agreement Tasks}
+\label{app:consensus-detail}
+% Clean up... this was cut out from the body and needs framing.
+\begin{proof}[Proof of Lemma~\ref{lem:consensus-nonmonotone}]
+  Let $v_0$ and $v_1$ be two distinct input values, and let processes $p$ and $q$
+  propose $v_0$ and $v_1$, respectively.
+  Consider a history $H_1$ in which $p$ has decided $v_0$, $q$ has not yet
+  decided, and no other process has decided.
+  The outcome $o_1 \in \Obs(H_1)$ maps $p$ to $v_0$ and satisfies both
+  validity (every decided value is a proposed value) and agreement (all decided
+  values are equal).
+
+  Now extend $H_1$ to a history $H_2$ by adding a decide event for $q$ with
+  decision value $v_1$.
+  Validity permits this extension, since $v_1$ was proposed by $q$.
+  Any observation $o_2$ for $H_2$  must record both
+  decisions, so $o_2(p) = v_0$ and $o_2(q) = v_1$.
+  No such $o_2$ is admissible under the consensus specification, because
+  agreement forbids two different decided values.
+  Moreover, any outcome for $H_2$ that extends $o_1$ in the order $\Ord$ must
+  preserve $p$'s decision $v_0$, and therefore cannot satisfy agreement when $q$
+  decides $v_1$.
+  Thus there exist histories $H_1 \hext H_2$ such that an outcome in $\Obs(H_1)$
+  has no admissible extension for $H_2$, so the consensus specification
+  is non-monotone.
+\end{proof}
+
+
+Commit protocols and quorum thresholds may operate over identical executions;
+the distinction lies entirely in what they make observable.
+
+Both can be defined over the same executions: a fixed set of processes cast
+votes, and some quorum of votes is eventually obtained.
+The distinction lies entirely in the observation function and outcome order.
+Atomic commit exposes a binary outcome, $\mathsf{COMMIT}$ or $\mathsf{ABORT}$,
+with no common extension; quorum threshold protocols expose only whether a quorum
+has been reached, yielding outcomes $\mathsf{UNKNOWN} \Ord \mathsf{DONE}$.
+
+%% FIX THIS DISCUSSION: COMMIT IS MONOTONE WRT OBSERVATION OF A CLOSED WORLD
+Under atomic commit, an outcome in $\Obs(H_1)$ for a prefix history can be
+inconsistent with every outcome in $\Obs(H_2)$ for some causally consistent
+extension $H_1 \hext H_2$.
+The specification is therefore non-monotone and cannot admit a
+coordination-free implementation.
+
+Under quorum thresholds, every outcome in $\Obs(H_1)$ for a prefix history is
+consistent with at least one outcome in $\Obs(H_2)$ for every causally consistent
+extension $H_1 \hext H_2$.
+The resulting specification is monotone and coordination-free.
+
+\subsection{$k$-set Agreement}
+\label{app:agreement-extensions}
+%% TODO: reference to Byzantine agreement?
+Analogous to the consensus discussion of Section~\ref{sec:consensus}, the natural
+observation function for \(k\)-set agreement maps each process that has decided to its decision value and the
+corresponding pointwise outcome order. In such a specification, the \(k\)-set agreement specification is
+non-monotone for all \(k \ge 1\)~\cite{saks2000set}.
+More generally, the same decision-map observation and outcome order witness
+non-monotonicity for many other agreement tasks studied in distributed
+computability, including standard multi-valued and Byzantine agreement
+variants.
+
+\subsection{Strong Renaming}
+\label{app:strong-renaming}
 \begin{corollary}[Strong Renaming]
   \label{cor:renaming}
   The strong renaming task~\cite{herlihy1999topological} is non-monotone with
@@ -1377,108 +1616,6 @@ Unlike snapshots or registers, no interpretation of operations is involved; the
 specification itself is sensitive to unresolved membership.
 This membership sensitivity reappears in consensus, where it interacts
 with value commitment.
-
-\subsection{Consensus and Related Agreement Tasks}
-
-We consider consensus in a fixed-population setting, factoring out the
-coordination required to establish participation, leadership, or quorums.
-That membership-sensitive coordination was isolated in the strong renaming
-example above, allowing us to focus here on the additional coordination
-required for value commitment.
-
-Using our semantic framework, we show that agreement specifications are
-non-monotone with respect to history extension.
-Any interpretation that commits to a decision value for a prefix history can be
-made incompatible with some possible causally consistent extension,
-and therefore the specifications are not coordination-free.
-By the Coordination Criterion, agreement therefore intrinsically requires
-coordination, independently of progress or failure assumptions.
-
-\begin{lemma}[Non-Monotonicity of Consensus]
-  \label{lem:consensus-nonmonotone}
-  Consider the consensus task over a domain with at least two distinct
-  input values.
-  Model histories so that each process first proposes an input value and, upon
-  terminating, performs a decide event recording its decision.
-
-  Let outcomes be partial functions mapping each process that has decided to its
-  decision value, and let the outcome order $\Ord$ be pointwise extension of these
-  decision maps: $o_1 \Ord o_2$ whenever every decision recorded in $o_1$ also
-  appears with the same value in $o_2$.
-  Let $\Obs(H)$ consist of those decision maps admissible under the consensus
-  specification after history $H$.
-
-  With this choice of outcomes and outcome order, the consensus specification—
-  requiring validity and agreement—is non-monotone with respect to history
-  extension.
-\end{lemma}
-
-\begin{proof}[Proof sketch]
-  Let $v_0$ and $v_1$ be two distinct input values, and let processes $p$ and $q$
-  propose $v_0$ and $v_1$, respectively.
-  Consider a history $H_1$ in which $p$ has decided $v_0$, $q$ has not yet
-  decided, and no other process has decided.
-  The observation $o_1 = \Poss(H_1)$ maps $p$ to $v_0$ and satisfies both
-  validity (every decided value is a proposed value) and agreement (all decided
-  values are equal).
-
-  Now extend $H_1$ to a history $H_2$ by adding a decide event for $q$ with
-  decision value $v_1$.
-  Validity permits this extension, since $v_1$ was proposed by $q$.
-  Any observation $o_2$ for $H_2$  must record both
-  decisions, so $o_2(p) = v_0$ and $o_2(q) = v_1$.
-  No such $o_2$ is admissible under the consensus specification, because
-  agreement forbids two different decided values.
-  Moreover, any outcome for $H_2$ that extends $o_1$ in the order $\Ord$ must
-  preserve $p$'s decision $v_0$, and therefore cannot satisfy agreement when $q$
-  decides $v_1$.
-  Thus there exist histories $H_1 \hext H_2$ such that an outcome in $\Obs(H_1)$
-  has no admissible extension for $H_2$, so the consensus specification
-  is non-monotone.
-\end{proof}
-
-Lemma~\ref{lem:consensus-nonmonotone} explains the necessity of coordination
-for a globally consistent resolution of decisions, consistent with classical impossibility results
-\cite{fischer1985impossibility}: agreement and validity form a non-monotone
-specification and thus intrinsically require coordination, while topological
-arguments add a separate liveness layer showing that this coordination cannot
-be realized in a wait-free manner.
-
-An analogous observation applies to \(k\)-set agreement: with the natural
-observation mapping each process that has decided to its decision value and the
-corresponding pointwise outcome order, the \(k\)-set agreement specification is
-non-monotone for all \(k \ge 1\)~\cite{saks2000set}.
-More generally, the same decision-map observation and outcome order witness
-non-monotonicity for many other agreement tasks studied in distributed
-computability, including standard multi-valued and Byzantine agreement
-variants.
-
-\subsubsection{Contrast with Quorum Thresholds}
-
-Atomic commit and quorum threshold protocols differ not in their underlying
-histories or quorum conditions, but in what they make observable.
-
-Both can be defined over the same executions: a fixed set of processes cast
-votes, and some quorum of votes is eventually obtained.
-The distinction lies entirely in the observation function and outcome order.
-Atomic commit exposes a binary outcome, $\mathsf{COMMIT}$ or $\mathsf{ABORT}$,
-with no common extension; quorum threshold protocols expose only whether a quorum
-has been reached, yielding outcomes $\mathsf{UNKNOWN} \Ord \mathsf{DONE}$.
-
-Under atomic commit, an outcome in $\Obs(H_1)$ for a prefix history can be
-inconsistent with every outcome in $\Obs(H_2)$ for some causally consistent
-extension $H_1 \hext H_2$.
-The specification is therefore non-monotone and cannot admit a
-coordination-free implementation.
-
-Under quorum thresholds, every outcome in $\Obs(H_1)$ for a prefix history is
-consistent with at least one outcome in $\Obs(H_2)$ for every causally consistent
-extension $H_1 \hext H_2$.
-The resulting specification is monotone and coordination-free.
-
-This concretely illustrates the distinction discussed in
-Section~\ref{sec:obs-consistency}: monotonicity is a property of observable
-outcomes under extension, not of the underlying program or protocol.
 
 \subsection{Transactional Isolation Levels}
 \label{app:isolation}
