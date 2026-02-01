@@ -37,8 +37,8 @@
 % --- tighter theorem spacing (definitions/remarks/examples) ---
 \makeatletter
 \newtheoremstyle{tight}
-  {0.5\baselineskip} % Space above
-  {0.5\baselineskip} % Space below
+  {0.25\baselineskip} % Space above
+  {0.25\baselineskip} % Space below
   {\normalfont}         % Body font (adjust per env via \theoremstyle below)
   {}                 % Indent amount
   {\itshape}        % Head font
@@ -76,8 +76,8 @@
   roundcorner=3pt,
   innertopmargin=0.1\baselineskip,
   innerbottommargin=0.4\baselineskip,
-  innerleftmargin=1em,
-  innerrightmargin=1em,
+  innerleftmargin=0.5em,
+  innerrightmargin=0.5em,
   skipabove=0.5\baselineskip,
   skipbelow=0.5\baselineskip,
 ]{exampleframe}
@@ -210,15 +210,15 @@ design begins, and across settings where prior results had to be established
 separately.
 
 \paragraph{Scope.}
-This paper focuses on safety-style semantic conditions on observable behaviors,
-which we broadly refer to as \emph{consistency}.
+We study safety-style semantic conditions on observable behavior, which we
+collectively refer to as \emph{consistency}.
 The Coordination Criterion characterizes when a specification admits a
 coordination-free implementation under all admissible asynchronous executions,
-including executions with message delay, loss, and crashes.
-We deliberately abstract away from liveness concerns such as termination or
-wait-freedom, and from failure-recovery mechanisms, which are orthogonal to the
+including message delay, loss, and crashes.
+We deliberately abstract away from liveness concerns (e.g., termination or
+wait-freedom) and failure-recovery mechanisms, which are orthogonal to the
 semantic necessity of coordination.
-Our goal is to identify when coordination is intrinsically required by a
+Our goal is to identify exactly when coordination is intrinsic to a
 specification.
 
 \subsection{Coordination, Consistency, and Monotonicity}
@@ -356,26 +356,25 @@ would complicate the presentation without adding semantic insight.
   execution extending history \(H\).
 \end{definition}
 
-\begin{example}[Possibility versus observability]
+\begin{example}[Possibility vs. observability]
   \label{ex:counter-poss-obs}
   Consider a specification whose outcomes record the value of a monotonically
   increasing counter.
-  At a history $H$ in which two increment events have occurred, future executions
+  At a history $H$ containing two increment events, future executions
   may perform additional increments.
   Accordingly, what's possible is
   $
     \Poss(H) = \{2,3,4,\ldots\}.
   $
-  The specification may nevertheless define only the current value to be
+  The specification may however define only the current value to be
   observable at $H$, i.e.,
   $
     \{2\}.
   $
   % Larger values remain possible in future extensions of the history, but are not
   % yet observable at $H$ itself.
-  This distinction—between outcomes that remain possible in future extensions of a
-  history and outcomes that are observable at the present—will be central to our
-  framework.
+  This distinction—between outcomes that are possible in future extensions of a
+  history and outcomes that are immediately observable—will be central to this paper.
 \end{example}
 
 Possibility is set-valued.
@@ -489,18 +488,16 @@ requirements of its implementation.
 % ================================================================
 \section{Specifications and Coordination}
 % ================================================================
-Specifications in our framework are compositional and need not
-correspond to entire distributed services.
-They may describe the behavior of components, interfaces, or subroutines
-within a larger system, allowing the Coordination Criterion to be applied
-at multiple levels of specification.
-The typical question is not whether an entire system uses coordination at all, but
-which parts of its logic intrinsically require coordination and which
-provably do not.
-
 We now bundle the components introduced above into a single semantic object.
 This definition sets up the distinction between what executions remain admissible
 and which semantic commitments an implementation is permitted to make.
+Our specifications are compositional and need not describe an entire
+distributed service.
+They may characterize components or interfaces, allowing the Coordination
+Criterion to apply at multiple levels of a system.
+The question is not whether coordination is used, but where it is intrinsic.
+
+
 \begin{definition}[Specification]
   \label{def:distributed-specification}
   A specification is a triple
@@ -703,14 +700,14 @@ We prove the theorem in the asynchronous message-passing model of
 Section~\ref{sec:obs-consistency}, with finite or infinite histories, unbounded
 message delay or loss, and crash failures modeled as processes that take no
 further steps; no progress or fairness assumptions are made.
+% In this proof sketch,
+% we write $\Expose_I(H)\subseteq O$ for the set of outcomes
+% exposed by implementation $I$ at history $H$, and 
+We require
+correctness of implementations: $\Expose_I(H)\subseteq \Obs(H)$.
 We sketch the argument here; a full proof, including an explicit operational
 construction, appears in Appendix~\ref{app:coordination-criterion-proof}.
 
-In this proof sketch,
-% we write $\Expose_I(H)\subseteq O$ for the set of outcomes
-% exposed by implementation $I$ at history $H$, and 
-we require
-correctness of implementations: $\Expose_I(H)\subseteq \Obs(H)$.
 
 \paragraph{Sufficiency.}
 For the ``if'' direction, we exhibit an idealized implementation $I_\Spec$ that realizes all causally
@@ -760,32 +757,27 @@ The formal argument appears in Appendix~\ref{app:minimality}.
 \label{sec:applications}
 % ================================================================
 
-We illustrate the Coordination Criterion through a sequence of
-specifications.
-The examples are ordered to expose how coordination pressure arises first in an example of
-mutable state, then from replication and network partitions, and finally from agreement
-mechanisms that deliberately control observability.
-We conclude with CALM, showing that the same semantic condition governs
-coordination at the level of declarative programs.
+We illustrate the Coordination Criterion through a sequence of specifications,
+showing how coordination pressure arises from mutable state, replication under
+partition, and agreement mechanisms that control observability.
+We conclude with CALM, where the same semantic condition governs coordination in
+declarative programs.
 
 \paragraph{Unifying pattern.}
-In each example below, the decisive issue is \emph{monotonicity of observable
-  outcomes under history extension}.
-A specification intrinsically requires coordination exactly when this monotonicity
-fails: when there exist histories $H_1 \hext H_2$ and an outcome
-$o \in \Obs(H_1)$ such that no outcome in $\Obs(H_2)$ extends $o$ under the outcome
-order $\Ord$.
-Equivalently, the specification admits an observable outcome that is
-\emph{future-inconsistent}.
-By the Coordination Criterion, this semantic non-monotonicity is precisely what
-precludes coordination-free implementations.
+Across examples, coordination is required exactly when specifications are non-monotone: when there exist histories
+$H_1 \hext H_2$ and an outcome $o \in \Obs(H_1)$ such that no outcome in
+$\Obs(H_2)$ extends $o$ under $\Ord$.
+Such an outcome is \emph{future-inconsistent}.
+By the Coordination Criterion, this semantic non-monotonicity rules out
+coordination-free implementations.
+
+
+We begin with the simplest mutable object: a register with reads and writes, and
+no auxiliary metadata such as versions, timestamps, or logs.
 
 % ------------------------------------------------
 \subsection{Mutable Variables: Registers}
 % ------------------------------------------------
-
-We begin with the simplest mutable object: a register with reads and writes, and
-no auxiliary metadata such as versions, timestamps, or logs.
 
 \paragraph{$\SpecIt$ sketch.}
 Histories consist of read and write operations on a single register.
@@ -811,7 +803,6 @@ $r$, so $\langle \mathsf{read}(0)\rangle$ has \emph{no} $\Ord$-extension in
 $\Obs(H_2)$ (under prefix order on completed-operation sequences).
 Thus $\langle \mathsf{read}(0)\rangle$ is \emph{future-inconsistent}:
 observable at $H_1$ but admitting no $\Ord$-consistent continuation at $H_2$.
-
 This semantic non-monotonicity shows that even a local read performs semantic coordination by committing to a future-inconsistent outcome.
 
 % ------------------------------------------------
@@ -893,7 +884,7 @@ non-monotone internal state. A formal specification appears in Appendix~\ref{app
 \subsection{CALM}
 % ------------------------------------------------
 
-Finally, we turn to CALM, which applies the same semantic criterion at the level of
+CALM applies the same semantic criterion to
 declarative programs rather than shared objects.
 
 \paragraph{$\SpecIt$ sketch.}
