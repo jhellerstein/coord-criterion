@@ -125,14 +125,13 @@
   respect to history extension under an appropriate order on observable outcomes.
 
   This \emph{Coordination Criterion} is stated directly over Lamport histories and
-  specification-level observations, without assuming any particular programming
+  specification-level observations, without assuming a particular programming
   language, object implementation, or protocol structure.
   It yields a sharp boundary between specifications that can be implemented without
   coordination and those for which coordination is unavoidable.
   The criterion provides a uniform explanation for a range of classical results,
-  including CAP-style impossibility results, CALM-style coordination-freedom,
-  agreement tasks, snapshots, transactional isolation, and invariant confluence,
-  all as instances of the same underlying semantic phenomenon.
+  including CAP-style impossibility, CALM-style coordination-freedom, agreement and
+  snapshot tasks, transactional isolation levels, and invariant confluence—all exhibiting the same underlying semantic phenomenon.
 \end{abstract}
 
 
@@ -247,9 +246,9 @@ reconciliation-based models of consistency, isolating just what is needed to det
 \paragraph{Monotonicity.}
 Monotonicity concerns how observations evolve as histories are extended, and whether
 later observations can become inconsistent with earlier ones.
-We capture this by relating history extension to a partial order on outcomes:
-extending a history should move observations \emph{upward} in the outcome order,
-preserving consistency
+We capture this by relating history extension to outcome refinement:
+under history extension, observable outcomes evolve \emph{upward} in the outcome
+order, preserving consistency
 (e.g., adding facts to a set, increasing a count).
 
 Our main result characterizes coordination-freedom in terms of monotonicity.
@@ -320,8 +319,8 @@ are treated separately from the safety-style semantic conditions studied here.
     \item $E_1$ is downward closed under $\rightarrow_2$, i.e., for every
           $e \in E_1$, if $e' \rightarrow_2 e$ then $e' \in E_1$.  \end{itemize}
 \end{definition}
-History extension preserves all previously observed events and causal relations
-and adds only causally later events.
+History extension preserves all previously observed events and causal relations,
+adding only causally later events.
 
 % \paragraph{Example (replicated register).}
 % Consider a history \(H_1\) in which process \(p\) performs a write and sends a
@@ -339,8 +338,8 @@ and adds only causally later events.
 
 One might expect a specification to be defined directly by the set of causal
 extensions admissible from each history.
-However, for our purposes we abstract away from individual executions.
-Two histories are equivalent when they induce the same observable outcomes.
+However, given our minimal semantic goals, we abstract away from individual executions:
+two histories are equivalent when they induce the same observable outcomes.
 The possibility function $\Poss$ is the induced abstraction that records, for each
 history $H$, which outcomes are realized by \emph{some} admissible extension.
 Making admissible history extensions explicit would not change our results, but
@@ -367,14 +366,12 @@ would complicate the presentation without adding semantic insight.
     \Poss(H) = \{2,3,4,\ldots\}.
   $
   The specification may however define only the current value to be
-  observable at $H$, i.e.,
+  observable at $H$, i.e. the set
   $
     \{2\}.
   $
-  % Larger values remain possible in future extensions of the history, but are not
-  % yet observable at $H$ itself.
   This distinction—between outcomes that are possible in future extensions of a
-  history and outcomes that are immediately observable—will be central to this paper.
+  history and outcomes that are correct to observe at this history—will be central to this paper.
 \end{example}
 
 Possibility is set-valued.
@@ -391,14 +388,22 @@ outcome.
   $
   such that $\Obs(H) \subseteq \Poss(H)$ for all histories $H$.
 \end{definition}
+\noindent
+Observability is also set-valued: a specification may admit multiple correct
+outcomes at a given history, even though any concrete execution realizes at most
+one.
+This multiplicity reflects semantic flexibility at a point in history, not
+uncertainty about future events.
 
-In Example~\ref{ex:counter-poss-obs}, $\Obs(H) = \{2\}$. While $\Poss(H)$ characterizes which outcomes may yet occur in future extensions
-of a history, $\Obs(H)$ captures which outcomes the specification already admits at history $H$.
-This separation exposes the relationship between future feasibility and
-present semantic commitment.
-In particular, the Coordination Criterion shows that coordination arises exactly
-when committing to outcomes in $\Obs(H)$ excludes outcomes that remain feasible
-in $\Poss(H)$.
+In Example~\ref{ex:counter-poss-obs}, $\Obs(H)$ is the singleton set $\{2\}$.
+While $\Poss(H)$ characterizes which outcomes may occur in future extensions of a
+history, $\Obs(H)$ captures which outcomes the specification already admits at
+$H$.
+This separation exposes the relationship between future feasibility and present
+semantic commitment.
+The Coordination Criterion shows that coordination is required exactly when
+committing to outcomes in $\Obs(H)$ excludes outcomes that remain feasible in
+$\Poss(H)$.
 
 
 To reason about whether observable outcomes remain valid as histories extend, we
@@ -428,33 +433,29 @@ linearization points, schedules, or traces.
   consistent set.
 \end{definition}
 
-Consistency captures a \emph{no-regret} requirement: an observable outcome must admit
-some refinement along every causally admissible history extension.
-When this fails, an outcome acceptable at a prefix history is ruled out by a later
-extension, forcing implementations to restrict admissible executions.
-This tension is formalized in Section~\ref{sec:monotonicity}.
-
-Future-consistency specializes this notion to the temporal setting, asking whether
-a present observation remains consistent with the observations permitted at all
-future history extensions.
+Consistency is an \emph{atemporal} notion, capturing outcome compatibility under the order $\Ord$: whether multiple
+observations can be jointly refined to a single outcome.
+Contradiction means that no such refinement exists.
+Future-consistency lifts this notion to histories, asking whether an outcome admitted at a given history remains compatible with the
+outcomes permitted under extension.
 
 \begin{definition}[Future-Consistent Outcome]
   Let $H_1 \hext H_2$ be histories.
   An outcome $o \in \Obs(H_1)$ is \emph{future-consistent with respect to $H_2$}
   if there exists $o' \in \Obs(H_2)$ such that $o \Ord o'$.
   An outcome $o \in \Obs(H)$ is \emph{future-consistent} if this holds for every
-  extension $H' \hext H$; otherwise it is \emph{future-inconsistent}.
+  extension $H' \hext H$; else it is \emph{future-inconsistent}.
 \end{definition}
 
 Whether a specification preserves future-consistency under \emph{all}
-causally admissible extensions is therefore the key determinant of
-coordination-freedom.
-In Section~\ref{sec:monotonicity}, we formalize this requirement as monotonicity
-with respect to the outcome order $\Ord$.
+causally admissible extensions is the semantic boundary between coordination-free
+and coordination-requiring behavior.
+In Section~\ref{sec:coordination-criterion}, we formalize this requirement as
+monotonicity with respect to the outcome order $\Ord$.
 
 \subsection{Faithful Outcome Modeling}
 \label{rem:faithful-observations}
-The choices of possibility function $\Poss$, observability function $\Obs$, and
+The choices of $\Poss$, $\Obs$, and
 outcome order $\Ord$ are all part of the specification and play central semantic
 roles.
 Together, they determine which behaviors may still occur, which outcomes are
@@ -469,21 +470,26 @@ The observability function $\Obs$ and outcome order $\Ord$ then restrict this
 space of causally possible outcomes, determining which outcomes are treated as
 correct and when divergent behaviors are deemed incompatible.
 
-These modeling choices are critical.
+These modeling choices should separate
+genuinely different behaviors while preserving the refinements the specification
+intends to allow.
 If the outcome space or order is too coarse, semantically incompatible behaviors
 may be treated as indistinguishable.
-For example, if all outcomes are identified as equivalent, or if the outcome
+For example, if all outcomes are equivalent, or if the outcome
 space contains a greatest element $\top$ extending every outcome, then every
 observation becomes vacuously consistent with all future observations.
 Conversely, if the order is too fine—so that distinct outcomes admit no common
 refinement—then even specifications that intuitively tolerate concurrency may
 appear to reach semantic dead ends prematurely.
 
-Faithful modeling requires choosing $(\Poss,\Ord,\Obs)$ so that
-observable outcomes contradict exactly when they represent genuinely
-incompatible behaviors under the intended specification.
+Faithful modeling amounts to choosing $(\Poss,\Ord,\Obs)$ so that observable
+outcomes contradict exactly when they represent genuinely incompatible behaviors
+under the intended specification.
 Altering this triple changes the specification itself, not the coordination
 requirements of its implementation.
+In Section~\ref{sec:applications} we make these choices explicitly in standard case
+studies (registers, snapshots, agreement, transactions, and CALM), illustrating
+what “faithful” looks like in practice.
 
 % ================================================================
 \section{Specifications and Coordination}
@@ -635,6 +641,7 @@ future-inconsistent observations.
 
 % ================================================================
 \section{The Coordination Criterion}
+\label{sec:coordination-criterion}
 % ================================================================
 
 We distinguish the causal structure supplied by the environment (happens-before)
@@ -759,7 +766,8 @@ The formal argument appears in Appendix~\ref{app:minimality}.
 
 We illustrate the Coordination Criterion through a sequence of specifications,
 showing how coordination pressure arises from mutable state, replication under
-partition, and agreement mechanisms that control observability.
+partition, agreement mechanisms that control observability, and related
+consistency specifications.
 We conclude with CALM, where the same semantic condition governs coordination in
 declarative programs.
 
@@ -1037,7 +1045,7 @@ $\Obs(H)$) and when safe commitment is possible.
 
 Thanks to Peter Alvaro, Natacha Crooks, Tyler Hou, Paris Koutris, Edward Lee,
 Shulu Li, David Chu McElroy, Sarah Morin and Dan Suciu for helpful feedback.
-We also acknowledge the use of AI-based language tools to assist with
+We acknowledge the use of AI-based language tools to assist with
 drafting and revising the exposition; all technical content and claims
 remain the responsibility of the authors.
 
