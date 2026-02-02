@@ -229,7 +229,7 @@ orient the formal development that follows.
 \paragraph{Coordination.}
 We treat coordination as a semantic phenomenon rather than a protocol mechanism.
 Intuitively, coordination arises when correctness requires an implementation to
-\emph{exclude causally possible behaviors}.
+\emph{exclude causally possible behaviors} to preserve correctness.
 In an asynchronous system, many different events may be causally enabled at a
 given point.
 An implementation is coordination-free when it allows all such
@@ -771,13 +771,15 @@ non-monotone: when there exist histories $H_1 \hext H_2$ and an outcome
 $o \in \Obs(H_1)$ such that no outcome in $\Obs(H_2)$ extends $o$ under $\Ord$.
 Such an outcome is \emph{future-inconsistent}.
 By the Coordination Criterion, non-monotonicity precludes
-coordination-free implementations.
+coordination-free implementations. We use future-inconsistent outcomes as a concrete
+witness of non-monotonicity throughout.
 
 % ------------------------------------------------
 \subsection{Mutable Variables: Registers}
 % ------------------------------------------------
 We begin with the simplest mutable object: a register with reads and writes, and
 no auxiliary metadata such as versions, timestamps, or logs.
+% Registers serve as a running witness across multiple coordination phenomena.
 
 \paragraph{$\SpecIt$ sketch.}
 Histories consist of read and write events on a single register.
@@ -871,7 +873,7 @@ Establishing such closure intrinsically requires coordination.
 
 \paragraph{Value selection within a closed world.}
 Once an authority configuration is fixed, all subsequent publicly observable
-behavior is determined by that authority.
+behavior is constrained by that authority.
 Authority selection precedes any value exposure, and value exposure is deferred
 until quorum is reached within that authority.
 Crucially, conditioned on a fixed authority, value exposure is monotone:
@@ -1049,10 +1051,10 @@ We begin by fixing a base specification for read--write registers, which will be
 reused in both the CAP and consensus analyses.
 
 \paragraph{$\SpecIt$ sketch.}
-Histories consist of read and write \emph{events} on a single logical register,
-with real-time order induced by invocation and response events.
-Outcomes are sequences of completed read and write events annotated with return
-values.
+Histories consist of invocation and response events for read and write actions on
+a single logical register, with real-time order induced by these events.
+Outcomes are sequences of actions annotated with return values; an
+action is completed when its response event occurs.
 
 For a history $H$, $\Poss(H)$ is the set of all such completed-event sequences
 realizable by some causally consistent extension of $H$.
@@ -1094,6 +1096,10 @@ now interpreted over histories that include message events.
   A history $H$ is said to \emph{respect} $P$ if it contains no message delivery
   events forbidden by $P$.
 \end{definition}
+\noindent
+Partition patterns restrict the environment’s admissible extensions, thereby
+constraining $\Poss$, while leaving the observation function $\Obs$ and outcome
+order $\Ord$ fixed.
 
 \begin{definition}[Maximal Availability Under Partitions]
   \label{def:maximal-availability}
@@ -1154,73 +1160,6 @@ This recovers the CAP tradeoff as a consequence of the non-monotonicity of
 $\Spec_{\mathit{lin}}$ together with the semantic constraint that partitions
 restrict which extensions remain causally admissible.
 
-% % ================================================================
-% \subsection{Consensus and Agreement: Authority Closure then Value Exposure}
-% \label{app:consensus-detail}
-% % ================================================================
-
-% This appendix instantiates a specification for agreement protocols that matches
-% the body discussion: (i) a \emph{world-closure} step that fixes an authority
-% configuration (who may speak), followed by (ii) a value-selection step whose
-% public behavior is monotone once authority is fixed.
-% The point is not to model Paxos/Raft mechanics, but to isolate where
-% non-monotonicity (hence coordination) lies.
-
-% % ------------------------------------------------
-% \paragraph{$\SpecIt$ sketch.}
-% % ------------------------------------------------
-
-% Fix a finite population $\Pi$ and a value domain $V$ with $|V|\ge 2$.
-% Histories contain the following externally relevant events:
-% (i) $\mathsf{propose}(p,v)$, where $p\in\Pi$ proposes $v\in V$;
-% (ii) \emph{authority events} produced by an external leader-election/membership
-% service, which may emit candidates, endorsements, and/or a final authority
-% selection; and
-% (iii) $\mathsf{decide}(v)$ events exposed by the protocol to clients once a value
-% is chosen.
-
-% We model agreement as a specification over outcomes that expose only:
-% \emph{(a) which authority configuration is in force} and \emph{(b) a final decided value}.
-% Intermediate evidence (messages, votes, acknowledgments) is part of histories but
-% not of outcomes.
-
-% \paragraph{Outcome domain and order.}
-% Let $\mathcal{A}$ be the space of authority configurations (e.g., leader+membership),
-% and let $V$ be the value domain.
-% Let $I$ be an index set of \emph{slots} (log positions).
-
-% Outcomes record (i) which authority is in force, and (ii) which slots have
-% been decided so far:
-% \[
-%   O \triangleq (\{\bot_A\}\cup \mathcal{A}) \times (I \rightharpoonup V),
-% \]
-% where $I \rightharpoonup V$ denotes partial functions from slots to values.
-
-% We order outcomes by
-% \[
-%   (a_1,m_1)\;\Ord\;(a_2,m_2)
-%   \quad\text{iff}\quad
-%   a_1 = a_2 \ \wedge\ \mathrm{dom}(m_1)\subseteq \mathrm{dom}(m_2)\ \wedge\
-%   \forall i\in \mathrm{dom}(m_1).\ m_1(i)=m_2(i),
-% \]
-% together with $\bot_A \preceq_A a$ for all $a\in\mathcal{A}$ and
-% \[
-%   (\bot_A,m)\;\Ord\;(a,m) \quad\text{for all } a\in\mathcal{A}.
-% \]
-
-% Intuitively, the order does \emph{not} compare different authorities.
-% It says: once an authority $a$ is fixed, later outcomes can only add more decided
-% slots under the \emph{same} $a$.
-% This makes Phase~2 a monotone accumulation of decisions that may arrive in any order.
-
-% \paragraph{Observations.}
-% Write $\mathsf{Prop}(H)\subseteq V$ for the set of proposed values in $H$.
-
-% We assume that the model of the environment determines which authority
-% configurations are \emph{still causally admissible} at a history.
-% Let $\mathsf{Auth}(H)\subseteq \mathcal{A}$ be the set of authority
-% configurations compatible with causality at $H$ (e.g., those not ruled out by the
-% authority-election events seen so far).% 
 % ================================================================
 \subsection{Consensus and Agreement: Authority Closure then Value Exposure}
 \label{app:consensus-detail}
@@ -1521,6 +1460,7 @@ $k$-set agreement generalizes consensus by permitting up to $k$ distinct decisio
 values among participating processes.
 From the perspective of the Coordination Criterion, this relaxation weakens the
 safety condition but not the underlying structure.
+This example shows that weakening safety constraints does not restore monotonicity.
 
 \paragraph{$\SpecIt$ sketch.}
 Histories record invocations and decisions by processes.
@@ -1998,21 +1938,30 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
 
 This appendix clarifies the sense in which the Coordination Criterion is
 \emph{minimal}.
-The result does not claim that monotonicity is the only natural semantic
-condition one might impose.
+The result does not assert that monotonicity is the only reasonable semantic
+condition one might study.
 Rather, it shows that monotonicity is unavoidable at the semantic level:
-any specification that admits a coordination-free implementation induces
-a monotone structure on observable outcomes under a suitable outcome order.
-In this sense, monotonicity is not a modeling choice but an intrinsic
-property of coordination-free behavior.
+any specification that admits a coordination-free implementation necessarily
+induces a monotone structure on its observable outcomes under an appropriate
+outcome order.
+In this sense, monotonicity is not a modeling choice, but an intrinsic property
+of coordination-free behavior.
 
 \begin{proposition}[Semantic Minimality]
   Let $\mathcal{C}$ be any class of distributed specifications such that every
   $\Spec \in \mathcal{C}$ admits a coordination-free consistent implementation
   in the asynchronous model.
-  Then for each $\Spec \in \mathcal{C}$ there exists an outcome order $\Ord$
-  under which $\Spec$ is monotone with respect to history extension.
+  Then for each $\Spec \in \mathcal{C}$ there exists an outcome order $\Ord$,
+  induced by the implementation’s observable compatibility—that is, by which
+  outcomes can arise together along some causally admissible execution—under
+  which $\Spec$ is monotone with respect to history extension.
 \end{proposition}
+
+This proposition makes the minimality claim precise.
+Any semantic criterion sufficient to guarantee coordination-freedom must already
+entail monotonicity under some outcome order derived from observable behavior.
+Monotonicity is therefore not an added assumption, but the weakest semantic
+structure that coordination-free implementations inevitably exhibit.
 
 \begin{proof}[Proof sketch]
   Fix a specification $\Spec = (\Poss,\Obs,\Ord)$ that admits a coordination-free
@@ -2039,11 +1988,11 @@ property of coordination-free behavior.
 \paragraph{Discussion.}
 The construction above is intentionally coarse and serves only to establish
 semantic minimality.
-It shows that any semantic condition sufficient to characterize
-coordination-freedom can be re-expressed as monotonicity of a specification
-under an appropriate outcome order.
-Thus refinements of monotonicity arise from changing the semantic interface,
-not from weakening the Coordination Criterion itself.
+It shows that any semantic criterion sufficient to guarantee coordination-freedom
+must already induce monotonicity under some outcome order derived from observable
+behavior.
+Refinements therefore arise from changing the semantic interface, not from
+weakening the Coordination Criterion itself.
 
 \section{Extended Related Work}
 \label{sec:extended-related-work}
