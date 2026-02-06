@@ -220,48 +220,52 @@ semantic necessity of coordination.
 Our goal is to identify exactly when coordination is intrinsic to a
 specification.
 
-\subsection{Coordination, Consistency, and Monotonicity}
+\subsection{When Coordination is Intrinsic}
 
-Our discussion rests on three related semantic concepts—coordination,
-consistency, and monotonicity—which we summarize informally here to
-orient the formal development that follows.
+We give the informal intuition behind the Criterion:
+coordination is intrinsic exactly when correctness forces an implementation to
+exclude causally admissible executions.
 
 \paragraph{Coordination.}
 We treat coordination as a semantic phenomenon rather than a protocol mechanism.
 Intuitively, coordination arises when correctness requires an implementation to
-\emph{exclude causally possible behaviors} to preserve correctness.
-In an asynchronous system, many different events may be causally enabled at a
-given point.
-An implementation is coordination-free when it allows all such
-extensions to history.
+\emph{exclude causally possible behaviors}—that is, to prevent some admissible
+extensions of an execution in order to avoid exposing observations that may later
+become invalid.
+An implementation is coordination-free when it allows all causally admissible
+extensions to occur.
 
-\paragraph{Consistency.}
-In our setting, consistency is a \emph{no-regret property of observations}:
-an observation based on partial information (e.g., a history prefix or
-network partition) is consistent if every subsequent causal extension of the
-history has at least one outcome that remains within the specification.
-This minimalist notion captures the semantic core of familiar
-reconciliation-based models of consistency, isolating just what is needed to determine if coordination is intrinsically unavoidable.
+\paragraph{Consistency and monotonicity.}
+Consistency is a \emph{no-regret property of observations}: an outcome admitted given the history so far should remain compatible with all
+possible extensions of that history.
+A specification has this property exactly when it induces a \emph{monotone} mapping from
+histories to observable outcomes, refining outcomes under extension but never
+retracting them.
+Our main result shows that such monotonicity is necessary and sufficient for a
+coordination-free implementation.
+When it fails, outcomes admissible given the history so far may later
+become incompatible, forcing implementations to exclude executions and thereby
+introduce coordination.
 
-\paragraph{Monotonicity.}
-Monotonicity concerns how observations evolve as histories are extended, and whether
-later observations can become inconsistent with earlier ones.
-We capture this by relating history extension to outcome refinement:
-under history extension, observable outcomes evolve \emph{upward} in the outcome
-order, preserving consistency
-(e.g., adding facts to a set, increasing a count).
-
-Our main result characterizes coordination-freedom in terms of monotonicity.
-A specification admits a coordination-free implementation exactly when it is
-monotone: observable outcomes remain consistent under all history extensions.
-When monotonicity fails, consistency cannot be preserved across all causal
-extensions, forcing coordination: the exclusion of admissible histories.
-
-
+\paragraph{Learning vs.\ commitment.}
+This definition may seem too strong, since familiar mechanisms such as quorum
+collection also appear to rule out outcomes; the key distinction is between
+learning new information and making semantic commitments.
+Receiving new information can rule out outcomes that were only possible before that
+information arrived, because they are no longer causally reachable
+(e.g., an outcome stating “fewer than $f+1$ votes were received” is no longer possible
+once $f+1$ votes have actually arrived).
+Coordination arises only when correctness requires \emph{preventing} outcomes that
+\emph{remain causally possible}—that is, when exposing an outcome would later
+require ruling out another admissible outcome
+(e.g., committing to an exact count while additional increment events remain
+causally possible).
+In this sense, counting votes is learning, while fixing membership is a semantic
+commitment; only the latter constitutes coordination in our sense.
 % ================================================================
 \section{Computational Model}
 % ================================================================
-We model executions as Lamport histories: finite or infinite partially ordered sets of events ordered by happens-before (i.e., event structures, not linear traces).
+We model execution prefixes as Lamport histories: finite or infinite partially ordered sets of events ordered by happens-before (i.e., event structures, not linear traces).
 
 \begin{definition}[History]
   \label{def:history}
@@ -1029,7 +1033,7 @@ resource governing when safe commitment is possible.
 \section*{Acknowledgments}
 % ================================================================
 
-Thanks to Peter Alvaro, Natacha Crooks, Tyler Hou, Paris Koutris, Edward Lee,
+Thanks to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin Kleppmann, Paris Koutris, Edward Lee,
 Shulu Li, David Chu McElroy, Sarah Morin and Dan Suciu for helpful feedback.
 We acknowledge the use of AI-based language tools to assist with
 drafting and revising the exposition; all technical content and claims
