@@ -2175,49 +2175,42 @@ Here we highlight connections to prior work that were not discussed in the main 
 The Coordination Criterion is closest in spirit to the CALM line of work,
 which connects coordination-freedom to monotonicity in declarative distributed
 computation.
-This literature—including relational transducers and logic-based models—studies
-coordination within specific computational abstractions and execution models
-that refine the canonical asynchronous setting
-\cite{hellerstein2010declarative,ameloot2013relational,ameloot2015weaker}.
+Across this literature—ranging from relational transducers
+and logic programs~\cite{hellerstein2010declarative,ameloot2013relational,ameloot2015weaker}
+to relation-to-relation semantic mappings~\cite{baccaert2026spectrum}—
+coordination-freedom is analyzed within a fixed computational abstraction,
+with extension typically defined by set inclusion over structured inputs.
 
-Baccaert and Ketsman~\cite{baccaert2026spectrum} generalize this perspective
-by modeling distributed computation as relation-to-relation mappings
-parameterized by system constraints.
-These constraints restrict which executions are admissible,
-yielding a spectrum of monotonicity conditions under progressively stronger
-assumptions.
-The semantic domain, however, remains fixed to structured inputs and outputs,
-with extension defined by set inclusion over input relations.
+Baccaert and Ketsman~\cite{baccaert2026spectrum} make this parametric by modeling
+distributed computation as relation-to-relation mappings under varying system
+constraints—refining admissible executions in the spirit of epistemic and
+failure-model analyses—and deriving a spectrum of monotonicity conditions.
 
-Li and Lee~\cite{li2025coordinationfree} develop a related theory
-in a replicated-object architecture.
-Their model decomposes implementations into a coordination function
-and a replicated object, with executions built from write and merge steps.
-Coordination-freedom is characterized relative to replica consistency,
-and extension is defined by growing the input set.
-Within this setting they obtain a CALM-style equivalence between
-monotonicity and coordination-free replica consistency.
+Li and Lee~\cite{li2025coordinationfree} develop a related theory in a
+replicated-object architecture.
+Implementations decompose into a coordination layer and a replicated object
+with write and merge steps, and coordination-freedom is characterized in terms
+of replica consistency under growing input sets.
+Within that model they obtain a CALM-style equivalence between monotonicity
+and coordination-free replica consistency.
 
 Our framework differs in scope rather than in spirit.
 We do not fix a relation-to-relation or replicated-object model.
 Instead, we take Lamport histories as the primitive semantic domain and
-define specifications directly in terms of admissible histories and
-observable outcomes ordered by refinement.
-History extension is causal (via happens-before), not set-theoretic.
-Replication and merge semantics arise as special cases,
-but are not assumed.
+define specifications directly via admissible histories and observable outcomes
+ordered by refinement.
+Extension is causal (via happens-before), not set-theoretic.
+Replication and merge semantics arise as special cases rather than assumptions.
 
-This distinction is substantive.
+This distinction matters.
 Most of our case studies—linearizable registers, agreement tasks,
-snapshot specifications, isolation levels, and invariant confluence—
-do not concern replica consistency at all.
-They analyze non-monotonicity in shared objects,
-membership commitments, ordering constraints, and transactional semantics.
-By centering histories and observable outcomes rather than a particular
-programming or storage model, the Coordination Criterion applies uniformly
-across replicated and non-replicated settings.
-Monotonicity of observable outcomes under causal extension
-is the common semantic boundary in each case.
+snapshots, isolation levels, and invariant confluence—do not concern
+replica consistency.
+They expose non-monotonicity in ordering, membership, and transactional
+commitments.
+By centering histories and observable outcomes, the Coordination Criterion
+applies uniformly across replicated and non-replicated settings:
+monotonicity under causal extension is the common semantic boundary.
 
 We also note a connection to Gallifrey~\cite{milano2019tour}, which makes
 monotonicity explicit in the type system by requiring programmers to specify the
