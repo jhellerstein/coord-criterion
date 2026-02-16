@@ -1036,22 +1036,22 @@ design or computational power.
 
 Within this semantic perspective, our work is closest in spirit to the CALM line of
 research in declarative networking, which connects coordination-freedom to
-monotonicity in distributed computation.
+monotonicity.
 Across this literature—ranging from logic programs and relational
 transducers~\cite{hellerstein2010declarative,ameloot2013relational,ameloot2015weaker},
 through relation-to-relation semantic mappings~\cite{baccaert2026spectrum}, to
-ordered input--output specifications~\cite{li2025coordinationfree}—coordination-freedom
-is characterized relative to semantic domains and admissibility assumptions that refine or restrict the standard asynchronous message-passing model.
-By contrast, our framework makes only the assumptions common to all distributed
-systems.
-Using Lamport histories as the semantic domain, we model specifications
-abstractly via admissible histories and observable outcomes ordered by refinement.
-This minimal formulation yields a general diagnostic criterion for when
-coordination is unavoidable, independent of program model, language, or
-exogenous assumptions.
-Consequently, the Coordination Criterion applies directly to classical
-distributed objects, tasks, and consistency conditions
-(\S \ref{sec:applications}, Appendix~\ref{sec:additional-applications}).
+replicated-object models of ordered input–output
+problems~\cite{li2025coordinationfree}—coordination-freedom is characterized within
+some fixed computational abstraction and a corresponding notion of input extension,
+typically set inclusion over relations or writes.
+By contrast, we take Lamport histories themselves as the semantic domain and define
+specifications directly in terms of admissible histories and observable outcomes
+ordered by refinement.
+History extension is causal (via happens-before), not set-theoretic, and
+replication appears as one instance rather than an assumption.
+This yields a general diagnostic criterion that applies directly to classical
+distributed objects, agreement tasks, isolation models, and invariant
+specifications (\S \ref{sec:applications}, Appendix~\ref{sec:additional-applications}).
 
 Brewer’s conjecture and the CAP theorem identify tradeoffs between availability and
 strong consistency~\cite{brewer2000towards,gilbert2002cap}.
@@ -2171,54 +2171,53 @@ coordination-free behavior can exhibit.
 \label{sec:extended-related-work}
 Here we highlight connections to prior work that were not discussed in the main text.
 
-\parhead{CALM Generalizations.}
-The Coordination Criterion is closest in spirit to the CALM line of work, which
-connects coordination-freedom to monotonicity in declarative distributed
+\parhead{CALM and Replicated-Object Models.}
+The Coordination Criterion is closest in spirit to the CALM line of work,
+which connects coordination-freedom to monotonicity in declarative distributed
 computation.
 This literature—including relational transducers and logic-based models—studies
-coordination relative to semantic domains and execution assumptions that are
-stronger than those of a canonical asynchronous system
+coordination within specific computational abstractions and execution models
+that refine the canonical asynchronous setting
 \cite{hellerstein2010declarative,ameloot2013relational,ameloot2015weaker}.
 
-The most recent work in this line, by Baccaert and Ketsman~\cite{baccaert2026spectrum},
-moves beyond language-specific analyses by modeling distributed computation as
-semantic mappings between relations and parameterizing coordination-freedom by a
-family of \emph{system constraints}.
-These constraints restrict which executions are admissible, yielding a spectrum
-of monotonicity conditions under increasingly strong assumptions.
-While this advances the CALM program toward a more semantic treatment of
-admissibility, it remains framed within a relation-to-relation computational
-model with fixed input and output structures, rather than treating histories
-and observable outcomes themselves as the primary semantic objects.
+Baccaert and Ketsman~\cite{baccaert2026spectrum} generalize this perspective
+by modeling distributed computation as relation-to-relation mappings
+parameterized by system constraints.
+These constraints restrict which executions are admissible,
+yielding a spectrum of monotonicity conditions under progressively stronger
+assumptions.
+The semantic domain, however, remains fixed to structured inputs and outputs,
+with extension defined by set inclusion over input relations.
 
-Li and Lee~\cite{li2025coordinationfree} pursue a complementary abstraction.
-They formulate coordination-freedom at the level of ordered input–output problems,
-parameterizing correctness by an explicit refinement order on outputs.
-Their notion of extension is set-theoretic—growing the input domain.
-By contrast, we take Lamport histories as the semantic domain and
-analyze extension via happens-before.
-The two approaches share a semantic goal, but differ fundamentally
-in what it means for a computation to extend:
-input-set inclusion versus causal history extension.
+Li and Lee~\cite{li2025coordinationfree} develop a related theory
+in a replicated-object architecture.
+Their model decomposes implementations into a coordination function
+and a replicated object, with executions built from write and merge steps.
+Coordination-freedom is characterized relative to replica consistency,
+and extension is defined by growing the input set.
+Within this setting they obtain a CALM-style equivalence between
+monotonicity and coordination-free replica consistency.
 
-The key methodological difference is the choice of semantic domain.
-CALM-style results are formulated over relation-to-relation computations
-with set-based input extension and, in many cases, specific language
-semantics.
-Applying those results to other models—shared objects, agreement tasks,
-transactional histories, or application invariants—typically requires
-``porting'' the problem into the relational setting, along with proof
-obligations establishing that the encoding faithfully preserves the
-original notion of correctness.
+Our framework differs in scope rather than in spirit.
+We do not fix a relation-to-relation or replicated-object model.
+Instead, we take Lamport histories as the primitive semantic domain and
+define specifications directly in terms of admissible histories and
+observable outcomes ordered by refinement.
+History extension is causal (via happens-before), not set-theoretic.
+Replication and merge semantics arise as special cases,
+but are not assumed.
 
-By centering instead on Lamport histories and observable outcomes as
-primitive semantic objects, our framework applies directly to
-classical distributed objects, computability tasks, isolation models,
-and application-level invariants in their native form.
-No translation into a particular programming model is required.
-The Coordination Criterion therefore provides a uniform semantic
-explanation of coordination across domains that were previously
-analyzed using distinct formal encodings.
+This distinction is substantive.
+Most of our case studies—linearizable registers, agreement tasks,
+snapshot specifications, isolation levels, and invariant confluence—
+do not concern replica consistency at all.
+They analyze non-monotonicity in shared objects,
+membership commitments, ordering constraints, and transactional semantics.
+By centering histories and observable outcomes rather than a particular
+programming or storage model, the Coordination Criterion applies uniformly
+across replicated and non-replicated settings.
+Monotonicity of observable outcomes under causal extension
+is the common semantic boundary in each case.
 
 We also note a connection to Gallifrey~\cite{milano2019tour}, which makes
 monotonicity explicit in the type system by requiring programmers to specify the
