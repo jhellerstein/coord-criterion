@@ -472,8 +472,6 @@ possibility operator:
   $\Poss(H)$ summarizes which outcomes remain admissible along extensions of $H$.
 \end{example}
 
-\medskip
-
 \begin{definition}[Consistency and Contradiction]
   A set $S \subseteq O$ is \emph{consistent} if its elements admit a common refinement: i.e., there exists
   $o \in O$ such that $s \Ord o$ for all $s \in S$.
@@ -573,6 +571,10 @@ without imposing fairness or progress assumptions.
   $\Expose_I(H)\subseteq \Obs(H)$ for all $H \in \Hist_E$.
 \end{definition}
 \noindent
+Operationally, an execution at history $H$ exposes at most one outcome
+$o \in \Expose_I(H)$; the set $\Expose_I(H)$ captures the
+nondeterministic choices available to the implementation at that history.
+
 The possibility operator of Section~\ref{sec:obs-consistency}
 ranges over all well-formed extensions.
 For coordination, we refine it by fixing the external inputs and
@@ -720,13 +722,12 @@ Monotonicity is a no-regret condition on observable behavior: once an outcome is
 admitted, every extension admits a compatible refinement.
 Non-monotonicity is witnessed by a future-inconsistent outcome—admitted
 at a prefix but incompatible with all outcomes admitted by some extension.
-Such witnesses force ruling out specification-permitted outcomes,
-i.e., coordination.
+Such witnesses force ruling out specification-permitted outcomes. That ruling-out is coordination.
 
 \begin{remark}
-  A specification is defined on all histories, not only complete executions.
-  When it is monotone, extending a history can only refine admissible outcomes
-  in the order $\Ord$, giving stable semantics to early observations.
+  A specification is defined on all well-formed histories.
+  Under monotonicity, extending a history can only refine outcomes
+  via $\Ord$, giving stable semantics to early observations.
 \end{remark}
 
 \begin{theorem}[Coordination Criterion]\label{thm:coordination-criterion}
@@ -739,7 +740,7 @@ i.e., coordination.
   Consider the replicated register specifications from
   Example~\ref{ex:register-specs}, with outcomes taken to be sequences of
   completed reads and writes ordered by prefix extension.
-  Let $H_1$ be a history in which a read is concurrent with a write of value $1$,
+  Let history $H_1$ include a read, concurrent with a write of value $1$,
   with neither event yet completed.
   Completing the read before the write yields
   $
@@ -778,8 +779,8 @@ specification-relative possibility.
 Fix an input prefix $H_{\mathit{in}}$.
 Let
 $\mathcal{R}_I(H_{\mathit{in}})=\mathcal{A}(H_{\mathit{in}})$,
-and for each $H \in \mathcal{A}(H_{\mathit{in}})$ let
-$\Expose_I(H) \subseteq \Obs(H)$ be chosen nondeterministically.
+and for each $H \in \mathcal{A}(H_{\mathit{in}})$ choose
+$\Expose_I(H) \subseteq \Obs(H)$ nondeterministically.
 Correctness holds immediately.
 Because the specification is monotone, every
 $o \in \Obs(H)$ is future-consistent: for every
@@ -820,8 +821,8 @@ $I$ may expose $o_1$ at $H_1$.
 However, along the admissible extension $H_2$,
 every outcome in $\Obs(H_2)$ contradicts $o_1$.
 Preserving all specification-permitted possibilities at $H_1$
-therefore requires allowing outcomes in $\Obs(H_2)$ to remain possible,
-yet none are compatible with $o_1$.
+requires that some outcome in $\Obs(H_2)$ remain possible.
+But none are compatible with $o_1$.
 Thus
 $
   \Poss^{I}_{\In(H_1)}(H_1)
@@ -834,11 +835,11 @@ Hence no coordination-free implementation exists.
 \vspace{0.25em}
 \parhead{Tightness.}
 The criterion is tight.
-Monotonicity is exactly the condition that rules out future-inconsistent
-outcomes.
+Monotonicity is exactly the condition that excludes
+future-inconsistent outcomes.
 If one weakens it, then there exists a specification admitting a future-inconsistent
 outcome, and the necessity argument above applies.
-A formal minimality argument appears in Appendix~\ref{app:minimality}.
+A formal argument appears in Appendix~\ref{app:minimality}.
 
 
 % ================================================================
@@ -1953,7 +1954,7 @@ For completeness we restate and fully prove Theorem~\ref{thm:coordination-criter
     which are orthogonal to the Coordination Criterion.
   \end{remark}
 
-  \medskip
+  \vspace{0.5em}
   \noindent\textsc{\emph{Necessity.}}
   Conversely, suppose $\Spec$ is non-monotone.
   Then there exists a history $H_1$ and an outcome $o_1 \in \Obs(H_1)$ that is
