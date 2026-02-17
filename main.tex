@@ -115,7 +115,7 @@
 % Notation conventions (for internal reference):
 % - Histories: \Hist is the set of histories; elements are H, H_1, H_2.
 % - Happens-before: e_1 \rightarrow e_2 is Lamport's relation on events.
-% - History extension: H_1 \hext H_2 is the history-extension order.
+% - Futures: H_1 \hext H_2 means H_2 is a future of H_1.
 % - Observation function: \Poss : \Hist \to 2^O.
 % - Specification: \Spec = (E, \Obs, \Ord).
 % - Possibility: \Poss is derived from \Obs.
@@ -130,7 +130,7 @@
 % Note (meta): Ensure all claims of generalization over CALM/CAP/hierarchy have
 % precise statements and proofs or citations.
 \begin{abstract}
-  When is coordination \emph{intrinsically required} by a distributed specification, rather than imposed by a particular protocol or implementation strategy? We give a general answer using minimal assumptions. In an asynchronous message-passing model, we represent executions as Lamport histories: collections of events partially ordered under happens-before. We abstract away from implementation mechanics and reason only about the observable outcomes that a specification admits at each history. We show that a specification admits a coordination-free implementation if and only if observable outcomes evolve monotonically as histories grow.
+  When is coordination \emph{intrinsically required} by a distributed specification, rather than imposed by a particular protocol or implementation strategy? We give a general answer using minimal assumptions. In an asynchronous message-passing model, we represent executions as Lamport histories: collections of events partially ordered under happens-before. We abstract away from implementation mechanics and reason only about the observable outcomes that a specification admits at each history. We show that a specification admits a coordination-free implementation if and only if observable outcomes evolve monotonically as the history is causally extended.
 
   This \emph{Coordination Criterion} is stated entirely at the level of specifications, independent of any particular programming language, object implementation, or protocol structure. It yields a sharp boundary between specifications that can be implemented without coordination and those for which coordination is unavoidable. The criterion provides a uniform explanation for a range of classical results, including distributed protocols and impossibility results, CAP-style consistency tradeoffs, CALM-style coordination tests, and programming-language analyses. Each can be viewed as an instance of the same underlying semantic phenomenon.
 \end{abstract}
@@ -159,62 +159,47 @@ This motivates a fundamental question:
 when is coordination \emph{intrinsically necessary} to implement a distributed
 specification?
 
-Prior work has approached this question across multiple abstraction layers.
+Prior work has addressed this question at multiple abstraction layers.
 Protocol and task theory provide impossibility and hierarchy results for consensus
-and atomic commitment, characterizing when processes must wait or synchronize.
-At the level of shared objects, CAP relates availability under partitions to
-strong guarantees such as linearizability.
-At the level of programs, CALM and its successors connect coordination-freedom
-to monotonicity of observable behavior.
-Transactional isolation and invariant-preserving replication add yet another lens,
-reasoning about coordination through anomalies and application-level correctness.
+and atomic commitment.
+CAP relates availability under partitions to strong guarantees such as linearizability.
+CALM and its successors connect coordination-freedom to monotonicity in declarative programs.
+Transactional isolation and invariant-preserving replication provide additional perspectives.
+Each captures an important facet of coordination, but within a formalism tailored
+to a particular mechanism or computational model.
 
-These results capture essential facets of coordination, but they are developed
-within formalisms tailored to particular mechanisms, consistency models, or
-programming abstractions.
-This paper instead characterizes when coordination is intrinsically required
-across this spectrum.
-
+This paper gives a uniform semantic answer.
 We show that coordination is a property of a specification itself,
-independent of particular protocols, languages, or consistency conditions.
-By formulating specifications directly over Lamport histories—sets of events partially ordered by happens-before—and a specification-defined notion of
-observability, we obtain a sharp boundary theorem that applies uniformly
-across settings.
+independent of protocol design, programming language, or consistency model.
+By formulating specifications over Lamport histories—events partially ordered
+by happens-before—and a specification-defined notion of observability,
+we obtain a sharp boundary theorem that applies uniformly across settings.
+This Coordination Criterion (Theorem~\ref{thm:coordination-criterion}) states that \emph{a specification admits a coordination-free implementation if and only if it is future-monotone.}
 
-The Coordination Criterion (Theorem~\ref{thm:coordination-criterion}) states that \emph{a specification admits a
-  coordination-free implementation iff its observable outcomes evolve
-  monotonically under history extension}.
-This single criterion unifies these lines of work under a common semantic
-obstruction: an outcome that is admissible at a history yet incompatible with
-some causally admissible extension.
-When such future-inconsistent outcomes exist, implementations must rule out
-admissible executions to preserve correctness; when they do not, coordination-free
-implementations exist.
+Future-monotonicity requires that as histories grow, admissible outcomes
+refine rather than contradict earlier ones.
+When this condition fails, some causally admissible future makes an earlier
+outcome incompatible with all outcomes in that future.
+To preserve correctness, implementations must suppress such futures.
+That suppression is coordination.
+When the condition holds, coordination-free implementations exist.
+
+The criterion is both unifying and diagnostic.
+It explains classical impossibility results, partition tradeoffs,
+monotonicity-based analyses, and isolation boundaries as instances of a single phenomenon:
+whether observable outcomes remain compatible as histories grow.
+For example, linearizable registers fail the criterion,
+while global snapshots satisfy it.
+Coordination requirements can therefore be identified at the level of specification,
+before algorithm design begins.
+
 
 \parhead{A semantic lens.}
-Our formulation takes a deliberately minimal view of distributed systems.
-We fix only a universe of event types—external inputs, internal steps,
-and message sends and receives—and require histories to be well-formed
-with respect to happens-before and point-to-point messaging.
-No synchrony, failure detectors, or fairness assumptions are introduced.
-We make no additional operational assumptions about implementations or executions.
-Instead, we reason about observability: a specification is characterized
-entirely by which observable outcomes it admits at each history.
-Coordination is then defined not as a mechanism,
-but as the semantic necessity to rule out outcomes
-that remain admissible under causally consistent extensions.
-This separation isolates coordination as a property of observable semantics,
-not of the machinery that realizes them.
-
-The payoff of this formulation is not merely unifying, but diagnostic.
-When the criterion fails, coordination cannot be eliminated by alternative
-protocol designs, because early outcomes may be invalidated by admissible
-extensions.
-When it holds, coordination-free implementations exist.
-For example, we will see that linearizable registers fail the criterion, while global snapshots satisfy it.
-This allows coordination requirements to be understood \emph{before} algorithm
-design begins, and across settings where prior results had to be established
-separately.
+Our formulation assumes only an asynchronous message-passing model with
+well-formed Lamport histories.
+We impose no synchrony, failure detectors, fairness, or operational constraints.
+A specification is characterized solely by which observable outcomes it admits at each history.
+Coordination is defined semantically: the necessity to rule out causally admissible futures in order to preserve correctness.
 
 \parhead{Scope.}
 We study safety-style semantic conditions on observable behavior, which we
@@ -231,43 +216,36 @@ specification.
 
 \subsection{When Coordination is Intrinsic}
 
-Before launching into formal definitions, we clarify the intuition behind the criterion.
+Before launching into definitions, we give an informal overview of our approach.
+
+\parhead{Outcomes and refinement.}
+At each history $H$, a specification admits a set of observable outcomes
+$\Obs(H)$ that an implementation may expose.
+A specification also equips outcomes with a partial order $\Ord$,
+where $o_1 \Ord o_2$ means that $o_2$ adds detail without contradicting $o_1$.
+
+\parhead{Stuck histories.}
+As events occur, a history may grow into a possible future $H_1$.
+A history $H_1$ is \emph{stuck} if all its possible outcomes contradict the past:
+for every outcome $o' \in \Obs(H_1)$,
+there exists some earlier prefix $H_0$ and some outcome
+$o \in \Obs(H_0)$ such that $o$ contradicts $o'$.
+Equivalently, no outcome in $\Obs(H_1)$ is compatible with
+all outcomes previously admissible along the history.
 
 \parhead{Coordination.}
-We treat coordination as a semantic phenomenon rather than a protocol mechanism.
-Intuitively, coordination arises when correctness forces the implementation to rule out a specification-permitted outcome that remains possible under the same inputs.
-An implementation is coordination-free precisely when it does not eliminate any specification-permitted outcome that remains possible under causally admissible extensions.
+If a specification admits a stuck history as a possible future,
+implementations must suppress that future in order to preserve correctness.
+Suppressing causally admissible futures is our semantic notion of coordination.
 
-\parhead{Consistency and monotonicity.}
-Consistency is a \emph{no-regret property of observations}: an outcome admitted given the history so far should remain compatible with all
-possible extensions of that history.
-A specification has this property exactly when it induces a \emph{monotone} mapping from
-histories to observable outcomes, refining outcomes under extension but never
-retracting them.
-Our main result shows that such monotonicity is necessary and sufficient for a
-coordination-free implementation.
-When it fails, outcomes admissible so far may later become incompatible,
-forcing implementations to rule out specification-permitted outcomes that
-remain possible under admissible extensions, and thereby introduce coordination.
-
-\parhead{Learning vs.\ commitment.}
-At first glance, this notion of coordination may seem too strong.
-Many familiar protocols appear to “rule out” outcomes simply by observing
-additional events—e.g., collecting responses or votes.
-The key distinction is between \emph{learning} new information by extending a
-history, and making \emph{semantic commitments} that restrict which extensions
-remain admissible.
-As a history grows, learning may render some outcomes unrealizable—not because
-the implementation forbids them, but because they are no longer consistent with
-the enlarged history.
-For example, once $f{+}1$ votes have arrived, outcomes depending on only $f$
-votes are no longer causally admissible.
-No extension is ruled out; the history itself has grown.
-Coordination arises only when correctness requires ruling out outcomes that
-\emph{remain causally admissible}—for instance, committing to an exact count
-while additional increment events are still possible.
-Counting votes is learning; fixing membership is a semantic commitment.
-Only the latter constitutes coordination in our sense.
+\parhead{Future-monotonicity.}
+A specification has no stuck histories precisely when outcomes can always refine as histories grow; that is,
+for every history $H$, every future $H'$ of $H$,
+and every $o \in \Obs(H)$,
+there exists $o' \in \Obs(H')$ with $o \Ord o'$.
+This condition is \emph{future-monotonicity}.
+The Coordination Criterion shows that a specification admits a
+coordination-free implementation if and only if it is future-monotone.
 
 % ================================================================
 \section{Computational Model}
@@ -293,7 +271,9 @@ To scope the space of histories, we fix disjoint sets of events:\\
     \item $E_{\mathit{recv}}$ — message receive events.
   \end{itemize}
 \end{minipage}}
+\vspace{0.25em}
 
+\noindent
 These sets constitute the event universe of a specification.
 % All histories and implementations are limited to this universe.
 The disjoint sets distinguish interface activity, internal computation,
@@ -350,9 +330,9 @@ differ in asynchronous scheduling:
 \end{definition}
 \noindent
 
-History extension preserves prior events and their causal order,
-adding only causally later events:
-\begin{definition}[History extension]
+A \emph{future} preserves a history's events and causal order, adding only causally later events:
+
+\begin{definition}[Future]
   Given an event universe $E$ and corresponding histories $\Hist_E$,
   consider two histories
   $H_1 = (E_1,\rightarrow_1)$ and
@@ -365,6 +345,7 @@ adding only causally later events:
     \item $E_1$ is downward closed under $\rightarrow_2$, i.e., for every
           $e \in E_1$, if $e' \rightarrow_2 e$ then $e' \in E_1$.
   \end{itemize}
+  When $H_1 \hext H_2$, we say that $H_2$ is a \emph{future} of $H_1$.
 \end{definition}
 
 % \parhead{Example (replicated register).}
@@ -401,7 +382,7 @@ Observability is set-valued: a specification may admit multiple outcomes at a gi
 history, although any concrete execution exposes at most one.
 This multiplicity reflects semantic flexibility, not operational uncertainty.
 
-To reason about compatibility of outcomes across history extension, we equip
+To reason about compatibility of outcomes across futures, we equip
 the outcome domain with a refinement order.
 
 \begin{definition}[Outcome Order]
@@ -436,7 +417,7 @@ outcomes (via $(\Obs,\Ord)$).
 Beyond the structural well-formedness of histories, it imposes no
 operational constraints on execution.
 All coordination requirements arise solely from the evolution of
-observable outcomes under history extension.
+observable outcomes across futures.
 
 To relate present admissibility to future evolution, we derive a
 possibility operator:
@@ -473,12 +454,12 @@ possibility operator:
 \end{definition}
 
 Consistency is atemporal: it asks whether outcomes admit a common refinement.
-Future-consistency lifts this notion to history extension.
+Future-consistency lifts this notion to futures.
 
 \begin{definition}[Future-Consistent Outcome]
   Let $H_1 \in \Hist$ and $o \in \Obs(H_1)$.
-  We say $o$ is \mbox{\emph{future-consistent}} if for every extension
-  $H_1 \hext H'$, there exists $o' \in \Obs(H')$
+  We say $o$ is \mbox{\emph{future-consistent}} if for every future $H'$ of $H_1$
+  (i.e., with $H_1 \hext H'$), there exists $o' \in \Obs(H')$
   with $o \Ord o'$.
   Else it is \mbox{\emph{future-inconsistent}}.
 \end{definition}
@@ -486,7 +467,7 @@ Future-consistency lifts this notion to history extension.
 The boundary between coordination-free and coordination-requiring behavior will
 turn on whether every admitted outcome is future-consistent under all
 extensions.
-Section~\ref{sec:coordination-criterion} formalizes this as monotonicity with
+Section~\ref{sec:coordination-criterion} formalizes this as future-monotonicity with
 respect to $\Ord$.
 
 \subsection{Modeling the Specification}
@@ -541,7 +522,7 @@ without imposing fairness or progress assumptions.
   \]
   These are exactly the well-formed histories over $E$ whose
   input projection extends $H_{\mathit{in}}$, under asynchrony and causality alone.
-  The set $\mathcal{A}(H_{\mathit{in}})$ is upward-closed under history extension:
+  The set $\mathcal{A}(H_{\mathit{in}})$ is upward-closed over futures:
   if $H \in \mathcal{A}(H_{\mathit{in}})$ and $H \hext H'$, then
   $H' \in \mathcal{A}(H_{\mathit{in}})$, since additional inputs remain admissible.
 \end{definition}
@@ -698,8 +679,8 @@ from the semantic constraints a specification imposes on observable outcomes.
 We now characterize exactly when those constraints can be realized without
 coordination.
 
-\begin{definition}[Monotone Specification]
-  A specification $\Spec=(E,\Obs,\Ord)$ is \emph{monotone} if for all
+\begin{definition}[Future-monotonicity]
+  A specification $\Spec=(E,\Obs,\Ord)$ is \emph{future-monotone} if for all
   $H_1,H_2 \in \Hist_E$ with $H_1 \hext H_2$ and all
   $o \in \Obs(H_1)$, there exists $o' \in \Obs(H_2)$
   such that $o \Ord o'$.
@@ -707,19 +688,19 @@ coordination.
 \noindent
 % Monotonicity is a no-regret condition on observable behavior: once an outcome is
 % admitted, every extension admits a compatible refinement.
-Non-monotonicity is witnessed by a future-inconsistent outcome—admitted
+A failure of future-monotonicity is witnessed by a future-inconsistent outcome—admitted
 at a prefix but incompatible with all outcomes admitted by some extension.
 Such witnesses force ruling out specification-permitted outcomes. That ruling-out is coordination.
 
 \begin{remark}
   A specification is defined on all well-formed histories.
-  Under monotonicity, extending a history can only refine outcomes
+  Under future-monotonicity, extending a history can only refine outcomes
   via $\Ord$, giving stable semantics to early observations.
 \end{remark}
 
 \begin{theorem}[Coordination Criterion]\label{thm:coordination-criterion}
   A specification $\Spec=(E,\Obs,\Ord)$ admits a coordination-free
-  implementation if and only if it is monotone.
+  implementation if and only if it is future-monotone.
 \end{theorem}
 
 \begin{example}[Replicated register revisited]
@@ -743,7 +724,7 @@ Such witnesses force ruling out specification-permitted outcomes. That ruling-ou
   Under $\Spec_{\mathit{lin}}$, every
   $o' \in \Obs_{\mathit{lin}}(H_2)$ contradicts $o$,
   since each requires the read to return $1$.
-  Thus $\Spec_{\mathit{lin}}$ is non-monotone: it admits an outcome at $H_1$
+  Thus $\Spec_{\mathit{lin}}$ is not future-monotone: it admits an outcome at $H_1$
   that is future-inconsistent (see Section~\ref{sec:applications} for
   the CAP-style consequences).
 \end{example}
@@ -759,7 +740,7 @@ Appendix~\ref{app:coordination-criterion-proof}.
 
 \par\addvspace{0.25em}
 \parhead{Sufficiency.}
-Assume the specification $\Spec=(E,\Obs,\Ord)$ is monotone.
+Assume the specification $\Spec=(E,\Obs,\Ord)$ is future-monotone.
 We construct an implementation $I$ that is correct and preserves
 specification-relative possibility.
 
@@ -777,7 +758,7 @@ For each such history $H$, choose
 $\Expose_I(H) \subseteq \Obs(H)$ nondeterministically.
 Correctness holds immediately since
 $\Expose_I(H)\subseteq \Obs(H)$ for all $H$.
-Because the specification is monotone, every
+Because the specification is future-monotone, every
 $o \in \Obs(H)$ is future-consistent:
 for every extension $H' \hext H$ there exists
 $o' \in \Obs(H')$ with $o \Ord o'$.
@@ -794,7 +775,7 @@ Thus $I$ satisfies possibility preservation and is coordination-free.
 
 \par\addvspace{0.25em}
 \parhead{Necessity.}
-Assume the specification is non-monotone.
+Assume the specification is not future-monotone.
 Then there exist histories $H_1 \hext H_2$ and an outcome
 $o_1 \in \Obs(H_1)$ such that
 $o_1$ contradicts every $o' \in \Obs(H_2)$.
@@ -923,7 +904,7 @@ Which commitment is invalidated depends on events that $q$ cannot locally
 observe.
 
 \parhead{Diagnosis (CAP).}
-Section~\ref{sec:registers} shows that linearizability is non-monotone,
+Section~\ref{sec:registers} shows that linearizability is not future-monotone,
 and therefore intrinsically requires coordination.
 That conclusion is purely semantic: it follows from the specification itself,
 independent of operational concerns such as availability or partitioning.
@@ -973,7 +954,7 @@ Once authority is fixed, let $\Obs_{\textsf{val}}(H)$ denote admissible value
 observations.
 Before sufficient evidence appears, no value need be exposed.
 When a value is exposed, every admissible extension remains compatible with it.
-Hence $\Obs_{\textsf{val}}$ refines monotonically under history extension.
+Hence $\Obs_{\textsf{val}}$ refines monotonically over futures.
 
 \parhead{Diagnosis.}
 Consensus localizes non-monotonicity at world closure.
@@ -1047,7 +1028,7 @@ typically set inclusion over relations or writes.
 By contrast, we take Lamport histories themselves as the semantic domain and define
 specifications directly in terms of admissible histories and observable outcomes
 ordered by refinement.
-History extension is causal (via happens-before), not set-theoretic, and
+The future relation is causal (via happens-before), not set-theoretic, and
 replication appears as one instance rather than an assumption.
 This yields a general diagnostic criterion that applies directly to classical
 distributed objects, agreement tasks, isolation models, and invariant
@@ -1084,7 +1065,7 @@ independent of protocol structure or failure assumptions.
 The Coordination Criterion provides such a diagnostic.
 Using only Lamport histories and observable outcomes, it characterizes
 coordination as a semantic obstruction: a specification requires coordination
-exactly when its observable outcomes are non-monotone under history extension.
+exactly when its observable outcomes are not future-monotone.
 This forces implementations to avoid realizing causally admissible
 histories to preserve correctness.
 
@@ -1095,14 +1076,14 @@ the same semantic test isolates a single structural obstruction—
 non-monotonicity—behind coordination requirements.
 Impossibility results, partition tradeoffs, and declarative monotonicity
 analyses are not separate phenomena, but manifestations of the same
-boundary: whether observable commitments remain stable under history extension.
+boundary: whether observable commitments remain stable across futures.
 
 Crucially, the Coordination Criterion is exact.
 All semantic freedom resides in the specification
 $\Spec=(E,\Obs,\Ord)$, whose components fix the event universe,
 observability, and outcome order.
 Once these are fixed, monotonicity of observable outcomes under
-history extension completely characterizes coordination.
+futures completely characterizes coordination.
 There is no strictly finer semantic boundary:
 any apparent refinement corresponds to modifying the specification itself,
 not strengthening the criterion.
@@ -1166,7 +1147,7 @@ future-inconsistent under an admissible extension $H_2$.
 % ================================================================
 
 We formalize CAP within our framework by modeling partitions as
-constraints on admissible history extensions and availability as
+constraints on admissible futures and availability as
 a requirement to complete operations whenever some
 partition-respecting extension admits a valid outcome.
 We first illustrate this for replicated registers, then state the
@@ -1477,7 +1458,7 @@ with program monotonicity.
 \begin{lemma}
   A relational transducer program is monotone with respect to set inclusion
   on input facts if and only if the induced specification $\Spec$
-  is monotone under history extension.
+  is future-monotone.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -1485,14 +1466,13 @@ with program monotonicity.
   the least fixpoint:
   $\mathit{LFP}(H_1) \subseteq \mathit{LFP}(H_2)$ whenever
   $H_1 \hext H_2$.
-  Hence $\Obs(H_1) \Ord \Obs(H_2)$, establishing specification
-  monotonicity.
+  Hence $\Obs(H_1) \Ord \Obs(H_2)$, establishing the future-monotonicity of the specification.
 
   If the program is non-monotone, there exist inputs
   $I_1 \subseteq I_2$ with
   $\mathit{LFP}(I_1) \not\subseteq \mathit{LFP}(I_2)$,
   yielding histories $H_1 \hext H_2$
-  that witness non-monotonicity of $\Spec$.
+  that witness failure of future-monotonicity of $\Spec$.
 \end{proof}
 
 Applying the Coordination Criterion yields CALM immediately.
@@ -1506,7 +1486,7 @@ Applying the Coordination Criterion yields CALM immediately.
 \subsubsection{Strict Generalization}
 
 CALM identifies monotonicity at the level of program text.
-The Coordination Criterion identifies monotonicity at the level of
+The Coordination Criterion identifies future-monotonicity at the level of
 observable outcomes.
 
 These coincide only because CALM equates program outputs with observable
@@ -1514,12 +1494,12 @@ commitments.
 This is a modeling choice, not a necessity.
 
 A distributed program may contain non-monotone internal rules while
-inducing a monotone specification.
+inducing a future-monotone specification.
 For example, let $P_1$ be monotone and observable,
 and let $P_2$ be non-monotone but internal, and $P_1$ independent of the
 predicates defined in $P_2$.
 The combined program $P_1 \cup P_2$ is non-monotone syntactically,
-yet the induced specification $\Spec=(E,\Obs,\Ord)$ is monotone
+yet the induced specification $\Spec=(E,\Obs,\Ord)$ is future-monotone
 because $\Obs$ depends only on $P_1$, which is independent of $P_2$.
 
 The Coordination Criterion therefore predicts coordination-freedom,
@@ -1528,7 +1508,7 @@ non-monotone.
 
 This separation is invisible in CALM’s formulation but explicit here:
 coordination is required exactly when observable commitments are
-non-monotone under history extension.
+not future-monotone.
 
 \subsection{Snapshots}
 
@@ -1559,19 +1539,19 @@ logical point.
 \parhead{Global vs.\ atomic snapshot.}
 Global snapshot corresponds to selecting a downward-closed cut of
 happens-before.
-By the argument above, such outcomes are preserved under history extension,
-so the specification is monotone.
+By the argument above, such outcomes are preserved across futures,
+so the specification is future-monotone.
 Atomic snapshot instead commits to a single linearization point.
 At a prefix with a snapshot concurrent with a write, multiple linearizations
 remain admissible.
 Choosing one commits to a total order.
 A causally admissible extension may then introduce an intervening event,
 invalidating that commitment.
-Thus atomic snapshot is non-monotone.
+Thus atomic snapshot is not future-monotone.
 
 \parhead{Consequence.}
 By the Coordination Criterion, a specification admits a coordination-free
-implementation iff it is monotone.
+implementation iff it is future-monotone.
 Hence global snapshot admits coordination-free implementations,
 whereas atomic snapshot intrinsically requires coordination.
 
@@ -1790,13 +1770,13 @@ there exists $o' \in \Obs_L(H')$ with $o \subseteq o'$.
 Extending the history may add further committed transactions,
 but cannot invalidate previously exposed commit or read facts.
 
-Thus $\Spec_L$ is monotone.
+Thus $\Spec_L$ is future-monotone.
 By the Coordination Criterion, such levels admit coordination-free
 implementations.
 
 \parhead{Non-monotone isolation levels.}
 Stronger levels that impose a global serialization or snapshot order—
-including serializability and snapshot isolation—are non-monotone.
+including serializability and snapshot isolation—are not future-monotone.
 There exist histories $H_1 \hext H_2$ and an outcome
 $o_1 \in \Obs_L(H_1)$ such that no $o_2 \in \Obs_L(H_2)$
 extends $o_1$ under $\Ord$.
@@ -1844,7 +1824,7 @@ invalidating earlier serialization commitments.
 
 By the Coordination Criterion,
 specifications that require such total-order commitments
-are non-monotone and therefore intrinsically require coordination.
+are not future-monotone and therefore intrinsically require coordination.
 The boundary between highly available and coordination-requiring
 transactional guarantees thus coincides exactly with
 whether observable outcomes commit only to partial-order structure
@@ -1858,6 +1838,7 @@ Bailis et al.\ introduce \emph{$I$-confluence} and show that some invariants
 can be preserved without coordination in replicated databases, while others
 intrinsically require it~\cite{bailis2014coordination}.
 We recover this boundary directly via monotonicity.
+We recover this boundary directly via future-monotonicity.
 
 \parhead{$\SpecIt$ sketch.}
 Histories include transaction invocations, replica-local updates, and merge
@@ -1900,7 +1881,7 @@ approximation of the reachable-state set.
 
 \parhead{Monotonicity and $I$-confluence.}
 Suppose $H_1 \hext H_2$.
-Because history extension can only enlarge the set of reachable states,
+Because the future relation can only enlarge the set of reachable states,
 $
   \Reach(H_1) \subseteq \Reach(H_2).
 $
@@ -1919,7 +1900,7 @@ Hence $S \Ord S'$.
 Thus for all $S \in \Obs_I(H_1)$
 there exists $S' \in \Obs_I(H_2)$ with
 $S \Ord S'$.
-Therefore $\Spec_I$ is monotone.
+Therefore $\Spec_I$ is future-monotone.
 
 If $I$ is not $I$-confluent, then there exist histories
 $H_1 \hext H_2$ and a reachable state
@@ -1933,6 +1914,7 @@ $
 lies in $\Obs_I(H_1)$
 but admits no $\Ord$-extension in $\Obs_I(H_2)$.
 Thus $\Spec_I$ is non-monotone.
+Thus $\Spec_I$ is not future-monotone.
 
 \parhead{Structural perspective.}
 Invariant confluence fits the same pattern as earlier case studies.
@@ -1948,7 +1930,7 @@ future-inconsistent outcomes arise and coordination becomes intrinsic.
 Thus $I$-confluence is not a separate coordination principle,
 but a direct instance of the same semantic boundary:
 a specification admits coordination-free enforcement
-iff its observable outcomes are monotone under history extension.
+iff its observable outcomes are future-monotone.
 
 %% -------------------------------------------------------------
 \section{Proof of the Coordination Criterion}
@@ -1960,8 +1942,7 @@ Theorem~\ref{thm:coordination-criterion}.
 
 \begin{theorem}[Coordination Criterion, restated]
   A specification $\Spec=(E,\Obs,\Ord)$ admits a coordination-free
-  implementation if and only if it is monotone with respect to
-  history extension.
+  implementation if and only if it is future-monotone.
 \end{theorem}
 
 \begin{proof}
@@ -1980,7 +1961,7 @@ Theorem~\ref{thm:coordination-criterion}.
 
   \par\addvspace{0.5em}
   \noindent\textsc{\emph{Sufficiency.}}
-  Assume $\Spec$ is monotone.
+  Assume $\Spec$ is future-monotone.
 
   We construct an implementation $I$ that is correct and realizes exactly the admissible histories.
   For every input history $H_{\mathit{in}}$, define
@@ -1996,7 +1977,7 @@ Theorem~\ref{thm:coordination-criterion}.
   It remains to show possibility preservation.
   Fix an input history $H_{\mathit{in}}$ and a realizable history
   $H \in \mathcal{R}_I(H_{\mathit{in}})=\mathcal{A}(H_{\mathit{in}})$.
-  Because $\Spec$ is monotone,
+  Because $\Spec$ is future-monotone,
   for every $o \in \Obs(H)$ and every extension
   $H \hext H'$,
   there exists $o' \in \Obs(H')$ such that
@@ -2011,14 +1992,14 @@ Theorem~\ref{thm:coordination-criterion}.
     The construction is purely semantic and existential.
     It does not assert implementability in any realistic
     computational model.
-    It shows only that when a specification is monotone,
+    It shows only that when a specification is future-monotone,
     there is no semantic obstruction to realizing all
     causally admissible histories while remaining correct.
   \end{remark}
 
   \par\addvspace{0.5em}
   \noindent\textsc{\emph{Necessity.}}
-  Assume $\Spec$ is non-monotone.
+  Assume $\Spec$ is not future-monotone.
   Then there exist histories
   $H_1 \hext H_2$
   and an outcome $o_1 \in \Obs(H_1)$
@@ -2074,7 +2055,7 @@ Theorem~\ref{thm:coordination-criterion}.
     two causally admissible extensions of the same prefix
     admit no outcome compatible with both.
     Here this obstruction is isolated semantically
-    as non-monotonicity of $\Obs$ under history extension.
+    as failure of future-monotonicity of $\Obs$.
   \end{remark}
 
 \end{proof}
@@ -2099,8 +2080,8 @@ but an intrinsic consequence of coordination-freedom.
   coordination-free implementation in the asynchronous model.
   Then there exists a partial order $\Ord^*$ on $O$,
   induced by observable compatibility of outcomes under that implementation,
-  such that $\Spec$ is monotone with respect to
-  history extension under $\Ord^*$.
+  such that $\Spec$ is future-monotone with respect to
+  $\hext$ under $\Ord^*$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -2153,7 +2134,7 @@ but an intrinsic consequence of coordination-freedom.
   with $o_1 \Ord^* o_2$.
 
   Thus under $\Ord^*$,
-  the specification is monotone with respect to history extension.
+  the specification is future-monotone with respect to $\hext$.
 \end{proof}
 
 \parhead{Discussion.}
@@ -2162,9 +2143,9 @@ of a coordination-free implementation.
 It captures exactly those outcome refinements that remain compatible
 under causally admissible extension.
 The proposition shows that any semantic criterion sufficient to guarantee
-coordination-freedom must already entail monotonicity under some
+coordination-freedom must already entail future-monotonicity under some
 outcome order induced by observable compatibility.
-Monotonicity is therefore the weakest semantic structure that
+Future-monotonicity is therefore the weakest semantic structure that
 coordination-free behavior can exhibit.
 
 \section{Extended Related Work and Connections}
@@ -2199,7 +2180,7 @@ We do not fix a relation-to-relation or replicated-object model.
 Instead, we take Lamport histories as the primitive semantic domain and
 define specifications directly via admissible histories and observable outcomes
 ordered by refinement.
-Extension is causal (via happens-before), not set-theoretic.
+The future relation is causal (via happens-before), not set-theoretic.
 Replication and merge semantics arise as special cases rather than assumptions.
 
 This distinction matters.
@@ -2210,7 +2191,7 @@ They expose non-monotonicity in ordering, membership, and transactional
 commitments.
 By centering histories and observable outcomes, the Coordination Criterion
 applies uniformly across replicated and non-replicated settings:
-monotonicity under causal extension is the common semantic boundary.
+future-monotonicity is the common semantic boundary.
 
 We also note a connection to Gallifrey~\cite{milano2019tour}, which makes
 monotonicity explicit in the type system by requiring programmers to specify the
@@ -2224,7 +2205,7 @@ and weak consistency models
 \cite{adya2000generalized,berenson1995critique,crooks2017seeing}
 analyze which behaviors client programs can observe under different guarantees.
 Given any such model cast as a specification in our sense,
-monotonicity of its observable outcomes under history extension
+future-monotonicity of its observable outcomes
 determines whether it admits coordination-free implementations; Appendix~\ref{sec:additional-applications} applies this lens
 to the HAT versus non-HAT isolation levels and to invariant-preserving
 replicated transactions.
@@ -2278,7 +2259,7 @@ operations, Lasp ensures that replicas converge without coordination.
 In semantic terms, Lasp enforces monotonicity by construction at the level of
 observable outcomes: updates are inflationary in a join-semilattice,
 so any exposed state remains compatible with all causally admissible
-history extensions.
+futures.
 This places Lasp squarely on the monotone side of the Coordination Criterion.
 
 Across these lines of work, coordination appears exactly when
