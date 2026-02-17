@@ -165,17 +165,18 @@ and atomic commitment.
 CAP relates availability under partitions to strong guarantees such as linearizability.
 CALM and its successors connect coordination-freedom to monotonicity in declarative programs.
 Transactional isolation and invariant-preserving replication provide additional perspectives.
-Each captures an important facet of coordination, but within a formalism tailored
-to a particular mechanism or computational model.
+Each captures an important facet of coordination, but does so within a formalism
+tailored to a particular computational model, set of execution assumptions, or programming abstraction.
+These formalisms are powerful, yet narrow—and typically not directly comparable.
 
-This paper gives a uniform semantic answer.
-We show that coordination is a property of a specification itself,
-independent of protocol design, programming language, or consistency model.
-By formulating specifications over Lamport histories—events partially ordered
+We instead seek a single intrinsic characterization of coordination,
+one that depends only on the specification itself rather than on any
+particular protocol or computational model. By formulating specifications over Lamport histories—events partially ordered
 by happens-before—and a specification-defined notion of observability,
-we obtain a sharp boundary theorem that applies uniformly across settings.
-This Coordination Criterion (Theorem~\ref{thm:coordination-criterion}) states that \emph{a specification admits a coordination-free implementation if and only if it is future-monotone.}
+we obtain a sharp boundary theorem that applies uniformly across domains.
 
+The Coordination Criterion states that
+\emph{a specification admits a coordination-free implementation if and only if it is future-monotone.}
 Future-monotonicity requires that as histories grow, admissible outcomes
 refine rather than contradict earlier ones.
 When this condition fails, some causally admissible future makes an earlier
@@ -193,32 +194,27 @@ while global snapshots satisfy it.
 Coordination requirements can therefore be identified at the level of specification,
 before algorithm design begins.
 
+% This uniform treatment is possible because we strip the model down to its essentials.
+% We fix only a universe of events and represent executions as Lamport histories.
+% A specification then says, for each such history, which observable outcomes are allowed,
+% and how those outcomes may be refined over time.
+% We assume no synchrony, fairness, failure detectors, or liveness guarantees.
+% In this minimal asynchronous setting, coordination becomes a simple semantic fact:
+% it is the need to suppress otherwise admissible futures in order to preserve correctness.
 
-\parhead{A semantic lens.}
-Our formulation assumes only an asynchronous message-passing model with
-well-formed Lamport histories.
-We impose no synchrony, failure detectors, fairness, or operational constraints.
-A specification is characterized solely by which observable outcomes it admits at each history.
-Coordination is defined semantically: the necessity to rule out causally admissible futures in order to preserve correctness.
+We focus on safety-style conditions on observable behavior,
+abstracting away from termination and recovery.
+Within this scope, coordination is intrinsic exactly when
+future-monotonicity fails.
 
-\parhead{Scope.}
-We study safety-style semantic conditions on observable behavior, which we
-collectively refer to as \emph{consistency}.
-The Coordination Criterion characterizes when a specification admits a
-coordination-free implementation under all admissible asynchronous executions,
-including message delay, loss, and crashes.
-Crashes are modeled implicitly by allowing histories in which a process simply stops taking internal steps or sending/receiving messages.
-We deliberately abstract away from liveness concerns (e.g., termination or
-wait-freedom) and failure-recovery mechanisms, which are orthogonal to the
-semantic necessity of coordination.
-Our goal is to identify exactly when coordination is intrinsic to a
-specification.
+%----------------------------------------------------------------
+\subsection{Core Intuition}
+\label{sec:intuition}
+%----------------------------------------------------------------
 
-\subsection{When Coordination is Intrinsic}
+Before launching into definitions, we give a brief overview of our approach.
 
-Before launching into definitions, we give an informal overview of our approach.
-
-\parhead{Outcomes and refinement.}
+\parhead{Outcomes and refinement order.}
 At each history $H$, a specification admits a set of observable outcomes
 $\Obs(H)$ that an implementation may expose.
 A specification also equips outcomes with a partial order $\Ord$,
@@ -228,10 +224,11 @@ where $o_1 \Ord o_2$ means that $o_2$ adds detail without contradicting $o_1$.
 As events occur, a history may grow into a possible future $H_1$.
 A history $H_1$ is \emph{stuck} if all its possible outcomes contradict the past:
 for every outcome $o' \in \Obs(H_1)$,
-there exists some earlier prefix $H_0$ and some outcome
+there exists some earlier prefix $H_0$ with outcome
 $o \in \Obs(H_0)$ such that $o$ contradicts $o'$.
-Equivalently, no outcome in $\Obs(H_1)$ is compatible with
-all outcomes previously admissible along the history.
+In a stuck history,  no implementation can remain within specification.
+% Equivalently, no outcome in $\Obs(H_1)$ is compatible with
+% all outcomes previously admissible along the history.
 
 \parhead{Coordination.}
 If a specification admits a stuck history as a possible future,
@@ -245,7 +242,32 @@ and every $o \in \Obs(H)$,
 there exists $o' \in \Obs(H')$ with $o \Ord o'$.
 This condition is \emph{future-monotonicity}.
 The Coordination Criterion shows that a specification admits a
-coordination-free implementation if and only if it is future-monotone.
+coordination-free implementation iff it is \mbox{future-monotone}.
+
+\subsection*{Contributions}
+This paper makes three contributions.
+First, we introduce a lean semantic model of distributed specifications. We represent executions as Lamport histories and define a
+specification by an event universe together with the observable outcomes it
+admits at each history, ordered by refinement.
+Within this minimalist asynchronous setting—without synchrony, fairness,
+failure detectors, programming models, or execution disciplines—we
+derive semantic notions of \emph{consistency}, \emph{future-consistency},
+and \emph{coordination} directly from observability.
+Coordination emerges as a purely semantic phenomenon: the necessity to
+suppress otherwise admissible futures to preserve correctness.
+
+Second, with this model in hand, we then prove the \emph{Coordination Criterion}:
+a specification admits a coordination-free implementation
+if and only if it is future-monotone.
+This gives a necessary and sufficient condition stated entirely at the
+level of observable semantics.
+
+Third, we demonstrate the breadth of this characterization.
+Classical impossibility theorems, CAP-style tradeoffs,
+CALM-style monotonicity analyses, isolation boundaries,
+agreement tasks, and invariant-confluence results
+all emerge as instances of the same semantic boundary:
+failure of future-monotonicity.
 
 % ================================================================
 \section{Computational Model}
@@ -464,9 +486,13 @@ Future-consistency lifts this notion to futures.
   Else it is \mbox{\emph{future-inconsistent}}.
 \end{definition}
 
+Future-inconsistent outcomes are exactly those that lead to the
+``stuck histories'' of Section~\ref{sec:intuition}: if such an outcome is
+exposed, some admissible future contains no outcome compatible with the past.
+
 The boundary between coordination-free and coordination-requiring behavior will
 turn on whether every admitted outcome is future-consistent under all
-extensions.
+futures.
 Section~\ref{sec:coordination-criterion} formalizes this as future-monotonicity with
 respect to $\Ord$.
 
@@ -1084,9 +1110,7 @@ $\Spec=(E,\Obs,\Ord)$, whose components fix the event universe,
 observability, and outcome order.
 Once these are fixed, monotonicity of observable outcomes under
 futures completely characterizes coordination.
-There is no strictly finer semantic boundary:
-any apparent refinement corresponds to modifying the specification itself,
-not strengthening the criterion.
+In the sense formalized in Appendix~\ref{app:minimality}, the criterion is exact: any strictly finer semantic boundary would correspond to altering the specification rather than strengthening the condition.
 
 Our focus has been on safety-style conditions on observable behavior.
 Orthogonal work on coordination-free liveness and free termination
@@ -1837,7 +1861,6 @@ invariants.
 Bailis et al.\ introduce \emph{$I$-confluence} and show that some invariants
 can be preserved without coordination in replicated databases, while others
 intrinsically require it~\cite{bailis2014coordination}.
-We recover this boundary directly via monotonicity.
 We recover this boundary directly via future-monotonicity.
 
 \parhead{$\SpecIt$ sketch.}
