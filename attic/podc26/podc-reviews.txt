@@ -1,0 +1,243 @@
+PODC 2026 HotCRP <noreply-podc26@hotcrp.com>
+Wed, Apr 29, 9:39 AM (2 days ago)
+to Joseph, eruppert
+
+Dear author,
+
+On behalf of the Program Committee of PODC 2026, I regret to inform you
+that your paper entitled
+The Coordination Criterion
+has not been accepted for presentation at the conference.  The program
+committee received over 200 submissions this year (including brief
+announcements), so it was a very difficult task to choose only a limited
+number of them to be included in the program.  We were forced to reject
+many interesting submissions.
+
+Reviews of your paper appear below and can also be viewed at
+https://podc26.hotcrp.com/paper/191 .  Many submissions were discussed
+in a two-day meeting of the program committee, and some of the
+deliberations of that meeting may not be reflected fully in the reviews.
+
+Thank you for submitting your work to PODC.
+
+Yours sincerely,
+
+Eric Ruppert
+PC Chair for PODC 2026
+
+Review #191A
+===========================================================================
+
+Overall merit
+-------------
+2. Weak reject
+
+Reviewer expertise
+------------------
+4. Expert
+
+Paper summary
+-------------
+This paper investigates when an implementation of a distributed specification necessarily requires coordination. The authors present a generic framework for describing specifications, which decouples executions (histories) and its effects (observations). In such framework they present the coordination criterion, which roughly states an implementation does not require coordination if and only if its associated histories can always be extended in a causal manner. The authors also provide a wide range of examples of its applicability.
+
+Comments for authors
+--------------------
+## Assessment
+
+Strong points:
+
+- S1: the problem is interesting
+- S2: the submission proves the correctness of the coordination criterion in detail 
+- S3: the submission provides a wide range of examples of its applicability 
+
+Weak points:
+
+- W1: the paper could improve the exposition
+- W2: the authors do not provide new examples that can be proven with their criterion
+- W3: the boundaries between contribution and literature overview are not clear
+- W4: some definitions and their consequences are unclear
+
+## Comments for the authors
+
+I think this work opens an interesting research direction. However, at this stage, it needs to be polished. I elaborate on this below:
+
+- One of the issues of the coordination criterion is its applicability: the authors claim that it provides a uniform explanation for a wide range of well-known results. However, each example presented in Section 6 and Appendix A requires its unique, differentiate proof (proof heavily based on the original result's proof). Moreover, the authors do not claim to have proven coordination-freeness/necessary coordination of new objects. It is unclear whether the generalization proposed  by the authors provides new insights on coordination-freeness w.r.t. the existent literature or not. 
+
+- The other main issue of the coordination criterion is its actual definition: it seems to me that the coordination criterion corresponds, both in statement and in its proof, to a generalization of Observation 1 from [A] to general specifications (instead of only read-write observations): on monotonic specs, histories can be extended without coordination as there is always a ``common future'' whereas if there must exist coordination, it means that some history $H_1$ under partition will stall without it ($H_1$ cannot be extended to a history $H_2$ without being inconsistent). With such lenses, several results in section 6 immediately follow through by reproving the result with this new syntax.
+
+    As a paradigmatic example, the authors claim "*The Coordination Criterion diagnoses if coordination is required; CAP characterizes operational impossibility under that requirement. Read this way, the “C” in CAP is best understood as Coordination*". Understanding the coordination criterion as a general version of Observation 1 from [A], CAP theorem equates to Strong Consistency vs. Coordination-Freeness; which coincides with the proof of Theorem 1 in [B]. In fact, a careful analysis of such result shows that the "C" in CAP now corresponds to (Obs, $\preccurlyeq$), not to coordination.
+
+[A] Keeping CALM: when distributed consistency is easy. Joseph M. Hellerstein, Peter Alvaro. https://doi.org/10.48550/arXiv.1901.01930
+
+[B] Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services. Seth Gilbert, Nancy Lynch. https://doi.org/10.1145/564585.564601
+
+- The authors present a concise way to describe semantics, (Obs, $\preccurlyeq$), yet across the paper the notion is not emphasized enough, while coordination is over-emphasized (see above). For example, it seems to me that a more general version of the results in [A,C] could be expressed and proven in your framework; or some other theorem that stress the limits of this new framework. A result of this kind would justify the need of a more general semantics.
+
+[C] Arbitration-Free Consistency Is Available (and Vice Versa). Hagit Attiya, Constantin Enea, Enrique Román-Calvo. https://doi.org/10.1145/377668
+
+- Section 2, 3 and 4 present a wide collection of definitions, and it is unclear which definitions are original and which ones are taken (or inspired) from the literature. For example, Definition 3 (Future) looks very similar to the definition of prefix of a history in [D] or Definition 6 (Specification) seems to be a generalization of the definition of specification from [E]. Other definitions, such as Definition 11 (Implementations) or Definition 13 (Coordination-Free implementations) do not seem to be the "standard" definitions (see [A,C,F]), and hence, it should be noted why and how do they relate to other definitions in the literature.
+
+[D] On the complexity of checking transactional consistency. Ranadeep Biswas and Constantin Enea. https://doi.org/10.1145/3360591
+
+[E] Principles of Eventual Consistency. Sebastian Burckhardt. https://doi.org/10.1561/2500000011
+
+[F] Relational transducers for declarative networking. Tom J. Ameloot, Frank Neven, Jan Van Den Bussche. https://doi.org/10.1145/2450142.2450151
+
+- One of the key notions in this paper, implementation, is abstracted aways as a function that from a given state declares the set of reachable states (realizable histories) and its associated outcomes from a given initial state $H_{in}$. The way it is defined allows:
+
+    1. Implementations that are not computable: assuming that $\mathcal{H}_{in}$, the set of initial histories, is a countable set, then $\mathcal{A}(H_{in})$ is a countable set, and hence, there must exists a non-computable function $f: \mathcal{H}_{in} \to \mathcal{A}(H_{in})$. Taking such function as *realizable* histories, leads to an implementation that is not computable. The same applies to outcome-exposure map. This kind of implementaions should be ruled out.
+
+    2. Implementations that *hide* states: for a real implementation $I$ to reach a history $H_1$ from an initial history $H_0$ it may necessarily need to traverse some intermediate history $H_2$. However, $H_2$ may not be present in $R_I(H_0)$, which is not ideal. In my opinion, there should be some prefix-closure condition on $R_I(H_{in})$ to avoid these situations.
+
+    3. Implementations declared to be incorrect, but only for unreachable histories: to define coordination-freeness, implementations only care about reachable histories. Yet, correctness talks about the behaviors of all possible histories; declaring implementations incorrect unnecessarily.
+
+- Admissible histories (Definition 10) restrict "good histories" to only extensible under causality. It seems unreasonable to forbid implementations (for example of Strong Consistency) to reason about histories with coordination. Definition 11 should allow implementations with coordination, and subsequent theorems prove whether such implementation can or not exist.
+
+- Several definitions/results in the appendix are not properly formalized. That includes Definition 16, where "Partition Pattern" and "Cut" are not formally defined. It also applies to the possibility/impossibility results from A.8, where it is unclear to which set of results apply: only to the mentioned isolation levels? if it is a wider set, how does it compare to isolation levels studied in [C]?
+
+## Minor comments
+
+- Personally, I do recommend the authors to introduce definitions/discussion only when needed. For example, Definition 2 is only needed in section 4, or Definition 3 can be delayed until just before Definition 7 is presented. Also, section 3.1 digress compare specifications (Section 3) with the coordination criterion (Section 5) and examples (Section 6) before introducing them. Instead, the paper could present a running example throughout the exposition, helping the discussion.
+
+- For showcasing the parallelism of all examples in Section 6 and Appendix A, it would be advisable to have a common structure with the exact same names through all examples (such as it was hinted using Spec Sketch, Diagnosis, ...).
+
+- Realizable histories (Definition 11) may be put in italics (and probably explain the term "realizable").
+
+## Questions for author response
+
+Please comment on (a) the applicability of the coordination criterion and (b) the relation of the coordination criterion with previous literature.
+
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+Review #191B
+===========================================================================
+
+Overall merit
+-------------
+2. Weak reject
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Paper summary
+-------------
+This paper proposes a new, very abstract, model of distributed computing.
+In it, problems are specified as Lamport histories, which are sets of
+events that are partially ordered.  The "Coordination Criterion" is proved,
+stating that a specification can be implemented in a coordination-free
+manner if and only if it satisfies a monotone property
+
+Strengths:
+* A new insight comes out of the formalism, that the necessity of
+  coordination in implementations is due to the lack of monotonicity in
+  specifications.
+* The result is applicable to a very wide variety of problems.
+
+Weaknesses:
+* More could be said about the advantages of the new approach. 
+  Does it lead to simpler proofs of existing results?  The paper discusses
+  the existing proofs but doesn't explicitly argue that the new proofs are
+  simpler.  Can it lead to proofs of new results or better algorithms?
+  Will realizing the commonality across domains help going forward?
+
+* The discussion in two places on page 16 gave the impression that the
+  general theorem in this paper supersedes, or implies, the
+  impossibility results for wait-free k-set agreement [27] and for
+  renaming [16,17].  This should be discussed more.  Does your result
+  imply that no wait-free algorithm is possible for any non-monotonic
+  problem, since wait-freedom means that processes might not communicate?
+
+Comments for authors
+--------------------
+page 1:
+* third paragraph of introduction:  claim that the characterization of
+  coordination should not depend on any particular computational model.
+  Your model does depend on sends and receives.
+* fourth paragraph of introduction:  What is "admissible"?  This word is
+  used many times, but not defined until page 5.
+* line -2:  What are the difficulties with extending this work to handle
+  liveness properties?
+
+page 2:
+* Section 1.1 (Core Intuition):  this did not work at all for me, as too
+  many concepts were not yet defined, including history, specification,
+  observable outputs, implementation, events, and causally admissible
+  futures.
+* Section 2:  I was puzzled as to where outputs appear in the model,
+  but after reading further I guessed that they are the "outcomes".
+  It might be worth explaining a bit.
+* Definition 1 (history):  Ther is no requirement that message contents
+  match up between sending and receiving.  Is this a problem?
+
+page 3:
+* line 1:  "class of all well-formed histories".  "Well-formed" is
+  used throughout the paper but is never defined.  This caused a problem
+  for my understanding of the formalism.
+* Definition 3:  What is the intuitive explanation of the third bullet?
+
+page 5:
+* line 3:  How are process crashes modeled?
+* lines 7-8:  "under asynchrony and causality alone" - what does this mean?
+* Definition 11 (Implementation):  "a set of realizable histories" -
+  is R_I(H_{in}) the definition of "realizable" histories?
+
+page 6:
+* Second paragraph of Example 2:  "a linearization respecting real time".
+  How is real time modeled in the formalism?
+
+page 7, Example 4:  I didn't follow this example.  Are the invocations and
+responses of reads and writes separate events?  If so, which is implied by
+the statement that H_1 contains a read and write that are concurrent with
+each other, then the contradiction doesn't hold:  the read can return
+either 0 or 1, since it overlaps with the write.
+
+pages 8-9, Section 6.2-6.4: These examples were hard to understand,
+perhaps because it was truncated due to page limits.  Saying that your
+result "clarifies long-standing debate" about CAP could be expanded upon.
+The terminology related to consensus was particular baffling (world closure?
+admissible authority?).
+
+page 12, second sentence immediately after Corollary 1:  I think a word
+is missing.
+
+page 16, consequence of k-set agreement material:  "The classical
+impossibility of wait-free k-set agreement in asynchronous systems [27]
+is thus witnessed semantically by non-monotonicity."  Non-monotonicity
+means that coordination is required.  Is the point that wait-free
+algorithms must terminate without necessarily having processes communicate?
+
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+
+Review #191C
+===========================================================================
+
+Overall merit
+-------------
+1. Reject
+
+Reviewer expertise
+------------------
+3. Knowledgeable
+
+Paper summary
+-------------
+For any distributed task T, the paper seeks to find a tight characterisation for whether the *specification* of T implies the necessity for coordination. Roughly speaking, no coordination is needed if the task is such that every acceptable behaviour for a finite history $H$ of the specification can be extended into an acceptable behaviour for any extension of $H$. The paper then argues that specifications of some familiar tasks, such as linearisable register or agreement, necessitate coordination.
+
+Comments for authors
+--------------------
+I found the paper hard to comprehend. Some of the reasons are:
+
+--- Given the thrust of the paper, it is very important to present the model and the definitions in a clear and understandable manner. However, the definitions of Sections 2 and 3 are not illustrated with any examples. In particular, it would have been helpful if you picked some well understood specifications (such as a linearisable register or mutex) and used them as running examples for illustrating all your definitions, starting with Definition 1 on page 2. For instance, specify what the four sets of events are for a linearisable register, and state the relation ---> precisely for the examples.
+
+--- It seems you are not distinguishing between the relation ---> and its transitive closure --->*. You use it in the former sense when on page 2 (last two lines) you say "there exists unique send event s ..." and use it in the latter at other places.
+
+--- The lack of examples, together with what to me seemed like imprecision in writing, has made it difficult to follow your definitions in Section 3.
+
+--- In Section 6.1, when you study linearisable register, at least there I would have liked to see all of the definitions explained clearly for that object. For instance, what are $E_int$, $E_in$ etc. are for this object? What is the precise definition of "--->" for this object? What are $O$ and $Obs$ for this object? Without these, I was not convinced of your argument in Section 6.1 (in fact, the argument seems incorrect to me, although I'm not too sure because I am unclear on your definitions).
+
+--- After all the model and definitions sections, you have not crisply stated any theorems in your Applications section (Section 6).
