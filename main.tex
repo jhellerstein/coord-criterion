@@ -242,10 +242,12 @@ only in which outcomes they admit.
 \paragraph{Histories.}
 A history records invocations and responses of reads and writes at each
 node, together with message sends and receives that propagate updates.
+Following the standard model for
+linearizability~\cite{herlihy1990linearizability}, each operation
+consists of an \emph{invocation} event and a \emph{response} event;
+an operation is \emph{complete} when both are present.
 Events are partially ordered by happens-before: program order within each
 node, and send-before-receive for each message.
-A write of value $v$ at node $p$ is an event; a read returning $v$ at
-node $q$ is an event.
 Neither fairness nor delivery guarantees are assumed.
 
 \paragraph{Two specifications.}
@@ -255,32 +257,41 @@ operations annotated with return values, ordered by \emph{prefix extension}
 They differ in which sequences are admissible:
 
 \begin{itemize}[nosep]
-  \item $\Spec_{\mathit{ec}}$ (eventual consistency): a read at node $q$
-        may return the initial value or any value written in the causal
-        past of that read.
+  \item $\Spec_{\mathit{ec}}$ (eventual consistency): a completed read
+        at node $q$ may return the initial value or any value written in
+        the causal past of that read's invocation.
         Multiple return values are admissible at any prefix.
   \item $\Spec_{\mathit{lin}}$ (linearizability): the sequence of
         completed operations must admit a linearization respecting
-        real-time order.
+        real-time order (invocation-to-response intervals).
 \end{itemize}
 
 \paragraph{The witness.}
-Let history $H_1$ contain a write $w(1)$ at node $p$ and a concurrent
-read $r$ at node $q$ (neither $w \rightarrow r$ nor $r \rightarrow w$).
-Both $\langle r \mapsto 0 \rangle$ and $\langle r \mapsto 1 \rangle$
-lie in $\Obs_{\mathit{lin}}(H_1)$: both linearizations are valid.
+Let history $H_1$ contain: a completed write $w(1)$ at node $p$
+(both invocation and response present), a read invocation
+$\mathit{inv}(r)$ at node $q$ (response not yet present), and a
+propagation message $s$ from $p$ (sent but not yet received at $q$).
+The write and read are concurrent: neither's response precedes the
+other's invocation.
+At $H_1$, both $\langle r \mapsto 0 \rangle$ and
+$\langle r \mapsto 1 \rangle$ are admissible completions under
+$\Spec_{\mathit{lin}}$: both linearizations are valid.
 
-Now extend $H_1$ to $H_2$ by delivering $w$'s message to $q$ before $r$
-executes, so that $w \rightarrow r$ in $H_2$.
-Every linearization of $H_2$ places $w$ before $r$, so
+Now extend $H_1$ to $H_2$ by adding the receive of $s$ at $q$, followed
+by the read response $\mathit{resp}(r, 1)$.
+This is a valid future: both new events are causally \emph{after}
+existing events (the receive follows the send; the response follows the
+invocation), so no new predecessor of an existing event is introduced.
+In $H_2$, the write's response precedes the read's response in real
+time, so every linearization places $w$ before $r$:
 $\Obs_{\mathit{lin}}(H_2)$ contains only sequences where $r$ returns $1$.
-The earlier outcome $\langle r \mapsto 0 \rangle$ has no prefix-extension
-in $\Obs_{\mathit{lin}}(H_2)$---it is \emph{future-inconsistent}.
+The earlier admissible outcome $\langle r \mapsto 0 \rangle$ has no
+prefix-extension in $\Obs_{\mathit{lin}}(H_2)$---it is
+\emph{future-inconsistent}.
 
 Under $\Spec_{\mathit{ec}}$, the same extension poses no problem:
-$\langle r \mapsto 0 \rangle$ remains compatible with outcomes at $H_2$
-(the read could have been served from a stale replica before the message
-arrived).
+a read returning $0$ is consistent with having been served from a stale
+replica before the propagation message arrived.
 Every outcome admitted at a prefix has a refinement at every extension.
 
 This single witness separates the two specifications:
@@ -460,6 +471,10 @@ outcome orders.
   all specifications trivially monotone; a too-fine order (recording
   irrelevant implementation details) introduces spurious
   non-monotonicity.
+  The outcome order is part of the specification's semantic
+  contract---it is determined by what the specification \emph{means},
+  not chosen freely by the analyst.
+  Changing the order changes the specification.
   The applications in Section~\ref{sec:applications} illustrate natural
   choices: prefix extension for transaction logs, set inclusion for
   committed facts, and lattice order for CRDT states.
