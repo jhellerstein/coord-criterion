@@ -130,39 +130,38 @@ This model-specificity has two consequences.
 \emph{(a) Lack of generality.}
 To use CALM as a diagnostic, one must encode the system in relational
 transducers; CRDTs require a lattice encoding.
-This encoding is lossy: different Datalog programs for the same system
-can have different monotonicity properties, so the diagnosis depends on
-the encoding, not the system.
+Encodings introduce complications: e.g., different Datalog programs for the same system
+can have different monotonicity propertie. The diagnosis may depend more on
+the encoding than the original system.
 More fundamentally, many coordination questions are not about programs
 at all---they concern \emph{specifications}: is serializability
 inherently coordination-requiring?
 Does invariant confluence characterize coordination-free integrity
 enforcement?
-Such questions are naturally stated at the level of specifications over
-histories, not as properties of programs in a particular language.
+Such questions are naturally stated at the level of specifications,
+not as properties of executable programs in a particular language.
 
 \emph{(b) Failure of a key litmus test.}
 No prior framework can verify that a system is
 \emph{well-coordinated}---that coordination already applied suffices and
 no more is needed.
-Consider a Datalog program $P_{\mathit{ord}}$ that establishes a total
-order $\ell_1, \ell_2, \ldots$ on input commands.
-This program is non-monotone: deriving adjacency
-$\mathit{next}(\ell_k, \ell_{k+1})$ requires enforcing
-$\neg\exists j \neq k{+}1.\; \mathit{next}(\ell_k, j)$---a negation
-over the current command set.
-CALM correctly classifies $P_{\mathit{ord}}$ as requiring coordination.
-Now compose $P_{\mathit{ord}}$ with an arbitrary non-monotone program
-$P$ that consumes the ordered commands.
-The composed system $P \circ P_{\mathit{ord}}$ is non-monotone in its
-program text.
-Yet if $P_{\mathit{ord}}$ has been correctly evaluated (all commands
-ordered), the output of $P$ over the ordered input is
-determined---no further coordination is needed.
-The system is \emph{well-coordinated}.
-Prior frameworks---operating on program syntax---see the non-monotone
-operators in $P \circ P_{\mathit{ord}}$ and cannot distinguish
-``requires coordination'' piecewise from ``well-coordinated'' \emph{in toto}.
+Consider a non-monotone Datalog program $P^{\neg}$ that CALM correctly
+identifies as requiring coordination.
+Now consider the program $P_{\mathit{lin}}(P^{\neg})$, in which all
+inputs and messages to $P^{\neg}$ first pass through a linearization
+layer $P_{\mathit{lin}}$ that totally orders them and broadcasts the
+result to each replica of $P^{\neg}$.
+The replicas will be consistent: each sees the same ordered input and
+produces the same output.
+The overall system is well-coordinated---no further coordination is
+needed beyond what $P_{\mathit{lin}}$ provides.
+But \emph{both} $P^{\neg}$ and $P_{\mathit{lin}}$ are non-monotone
+Datalog programs ($P_{\mathit{lin}}$ establishes a total order, which
+requires negation: adjacency $\mathit{next}(\ell_k, \ell_{k+1})$
+demands $\neg\exists j \neq k{+}1.\; \mathit{next}(\ell_k, j)$).
+CALM, applied to the composed program text, sees non-monotone operators
+throughout and cannot distinguish ``requires coordination'' from
+``well-coordinated.''\!
 
 \medskip
 Our key modeling decision is to characterize coordination in terms of
