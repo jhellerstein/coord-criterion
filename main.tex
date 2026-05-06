@@ -687,13 +687,20 @@ stranded at $H_2$.
   \emph{Sufficiency.}
   If $\Spec$ is monotone, set
   $\mathcal{R}_I(H_{\mathit{in}}) = \mathcal{A}(H_{\mathit{in}})$
-  (realize all admissible histories) and let
-  $\Expose_I(H) \subseteq \Obs(H)$ be any nondeterministic choice.
-  Monotonicity guarantees that exposing any $o \in \Obs(H)$ does
-  not invalidate outcomes along any admissible extension: for every
-  future $H'$, some $o' \in \Obs(H')$ satisfies $o \Ord o'$.
-  Hence no outcome is stranded, $\Poss^I = \Poss$, and the
-  implementation is coordination-free.
+  (realize all admissible histories) and set
+  $\Expose_I(H) = \Obs(H)$ (the implementation may expose any
+  outcome the specification permits at $H$).
+  Correctness holds immediately.
+  For possibility preservation: since $\mathcal{R}_I = \mathcal{A}$,
+  every admissible extension is realized.
+  Since $\Expose_I(H) = \Obs(H)$, every specification-permitted
+  outcome at every realized history is exposable.
+  Hence $\Poss^I_{H_{\mathit{in}}}(H) = \Poss_{H_{\mathit{in}}}(H)$
+  and the implementation is coordination-free.
+  (Monotonicity ensures this implementation is \emph{correct}:
+  exposing $o \in \Obs(H)$ is safe because every future $H'$ admits
+  some $o' \in \Obs(H')$ with $o \Ord o'$---the exposed outcome is
+  never contradicted.)
 
   \emph{Necessity.}
   If $\Spec$ is not monotone, there exist $H_1 \hext H_2$ and
@@ -731,6 +738,16 @@ coordination-freedom (possibility preservation) is the canonical
 semantic notion for asynchronous message-passing.
 Within this setting, no further generalization of the characterization
 is possible.
+
+Because Complete CALM operates on semantic specifications rather than
+program syntax, checking monotonicity of an arbitrary specification is
+not a decidable property in general (analogous to Rice's theorem for
+semantic properties of programs).
+The criterion is an analytic tool for proving coordination bounds---as
+demonstrated by the applications in Section~\ref{sec:applications}---not
+a compiler-checkable syntactic condition.
+For specifications presented in restricted formalisms (e.g., Datalog
+programs, CRDT definitions), decidability depends on the formalism.
 
 \paragraph{CAP and authority.}
 Complete CALM diagnoses that linearizability requires coordination---an
@@ -1541,16 +1558,17 @@ We restate and fully prove Theorem~\ref{thm:complete-calm}.
   \par\medskip\noindent\emph{Sufficiency.}
   Assume $\Spec$ is monotone.
   Define $\mathcal{R}_I(H_{\mathit{in}}) \triangleq
-  \mathcal{A}(H_{\mathit{in}})$ and choose
-  $\Expose_I(H) \subseteq \Obs(H)$ nondeterministically.
-  Correctness holds immediately.
-  For possibility preservation: fix $H \in \mathcal{R}_I(H_{\mathit{in}})$.
-  Because $\Spec$ is monotone, for every $o \in \Obs(H)$ and
+  \mathcal{A}(H_{\mathit{in}})$ and set
+  $\Expose_I(H) = \Obs(H)$ for all $H$.
+  Correctness holds: $\Expose_I(H) = \Obs(H) \subseteq \Obs(H)$.
+  For possibility preservation: since $\mathcal{R}_I = \mathcal{A}$,
+  every admissible extension is realized, and since
+  $\Expose_I(H) = \Obs(H)$, every specification-permitted outcome is
+  exposable.
+  Hence $\Poss^I_{H_{\mathit{in}}}(H) = \Poss_{H_{\mathit{in}}}(H)$.
+  Monotonicity ensures safety: for every exposed $o \in \Obs(H)$ and
   every extension $H \hext H'$, there exists $o' \in \Obs(H')$ with
-  $o \Ord o'$.
-  Hence exposing $o$ at $H$ does not invalidate any outcome along any
-  admissible extension, so
-  $\Poss^I_{H_{\mathit{in}}}(H) = \Poss_{H_{\mathit{in}}}(H)$.
+  $o \Ord o'$, so no exposed outcome is ever contradicted.
 
   \par\medskip\noindent\emph{Necessity.}
   Assume $\Spec$ is not monotone.
