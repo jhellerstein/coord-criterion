@@ -29,11 +29,11 @@
 \newcommand{\Reach}{\mathsf{Reach}}
 
 % ---------- Comments ----------
-\newcommand{\jmh}[1]{\textcolor{red}{[JMH: #1]}}
+\newcommand{\jmh}[1]{{\color{red}\textbf{[JMH:} #1\textbf{]}}}
 
 \begin{document}
 
-\title{The Coordination Criterion: Beyond CALM}
+\title{Complete CALM: A Universal Criterion for Coordination-Freedom}
 
 \author{Joseph M. Hellerstein}
 \affiliation{%
@@ -43,33 +43,55 @@
 }
 
 \begin{abstract}
-  When is coordination \emph{intrinsically required} by a distributed
-  specification?
-  The CALM theorem answers this for monotone Datalog programs: coordination-free
-  distributed evaluation coincides with syntactic monotonicity.
-  But CALM is tied to a specific computational model (relational transducers)
-  and a specific notion of input growth (set inclusion over facts).
-  We give a characterization that applies to \emph{any} specification over
-  Lamport histories with \emph{any} refinement order on outcomes.
+  It is widely understood that monotonically growing outputs require no
+  coordination: CRDTs enforce this by construction, and the CALM theorem
+  proves it for Datalog programs.
+  But these results live in walled gardens---each tied to a specific
+  computational model (relational transducers, replicated objects, clause
+  algebras).
+  This model-specificity has two consequences.
+  First, the results do not transfer across models: a coordination
+  boundary proved for Datalog says nothing about transactional isolation
+  or replicated objects.
+  Second, and more fundamentally, no prior framework can verify that a
+  system is \emph{well-coordinated}---that coordination already applied
+  suffices and no more is needed---because each inspects program
+  internals where non-monotone coordination logic is visible.
 
-  The \emph{Coordination Criterion} states that a specification admits a
-  coordination-free implementation if and only if its observable outcomes are
-  \emph{future-monotone}: as histories grow causally, admissible outcomes refine
-  rather than contradict earlier observations.
-  We prove that this criterion strictly generalizes CALM: there exist
-  specifications that CALM classifies as requiring coordination but that the
-  Coordination Criterion correctly identifies as coordination-free.
-  In particular, a non-monotone program wrapped with coordination (e.g., a
-  Paxos-ordered service) produces future-monotone observable outputs---a fact
-  invisible to syntactic monotonicity analysis but captured by our semantic
-  criterion.
-
-  We instantiate the framework on specifications central to data management:
-  transactional isolation levels, invariant confluence, CRDTs, and replicated
-  objects under various consistency models.
-  In each case, the same semantic test---future-monotonicity---recovers known
-  coordination boundaries and provides a uniform explanation for why they arise.
+  We prove \emph{Complete CALM}: a specification is well-coordinated if
+  and only if its observable outcomes are future-monotone.
+  The criterion operates on output semantics over Lamport histories with
+  any refinement order, independent of programming language or
+  computational model---solving the generality problem.
+  As a natural consequence, it passes the litmus test: a non-monotone
+  program composed with a coordination protocol produces future-monotone
+  output, and Complete CALM verifies this.
+  We prove a universal construction showing that establishing membership
+  suffices to make any specification well-coordinated.
+  We instantiate the criterion on transactional isolation levels,
+  invariant confluence, and CRDTs, recovering known coordination
+  boundaries as instances of a single semantic test.
 \end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10003752.10003790.10003795</concept_id>
+<concept_desc>Theory of computation~Distributed computing models</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10002951.10003317.10003347.10003356</concept_id>
+<concept_desc>Information systems~Database transaction processing</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Theory of computation~Distributed computing models}
+\ccsdesc[300]{Information systems~Database transaction processing}
+
+\keywords{coordination, monotonicity, distributed systems, CALM, specifications}
 
 \maketitle
 
@@ -78,69 +100,639 @@
 \label{sec:introduction}
 % ================================================================
 
-\jmh{TODO: Write introduction. Key points:
-\begin{itemize}
-  \item CALM established monotonicity = coordination-freedom for Datalog
-  \item But CALM is model-specific (relational transducers, set-inclusion extension)
-  \item We generalize: any specification, any refinement order, Lamport histories
-  \item The criterion is semantic (observable outputs) not syntactic (program text)
-  \item Strict separation from CALM: we can verify that coordination \emph{correctly discharges} a non-monotone spec
-  \item Applications to data management: isolation levels, I-confluence, CRDTs
-  \item Running example: replicated database under two isolation levels
-\end{itemize}}
+Coordination---the use of protocols such as consensus, atomic commit,
+and distributed locking to enforce agreement among nodes---is a
+recurring cost in distributed systems.
+It entails latency (nodes must wait for protocol rounds), complexity
+(correct implementations are notoriously subtle), and fragility
+(coordination protocols are typically the first component to fail under
+partitions or load).
+These costs motivate a fundamental question: when is coordination
+\emph{necessary}, and when can it be safely avoided?
+
+A productive line of work has addressed this question by connecting
+coordination-freedom to monotonicity.
+CRDTs~\cite{shapiro2011crdt} enforce monotonicity by construction
+(inflationary updates on a join-semilattice).
+The CALM theorem~\cite{hellerstein2010declarative,ameloot2013relational}
+proves the connection bidirectionally for Datalog: a program admits
+coordination-free distributed evaluation iff it is monotone.
+Baccaert and Ketsman~\cite{baccaert2026spectrum} extend the result to
+non-deterministic behaviors with parameterized system knowledge.
+
+These results live in walled gardens.
+Each is stated within a specific computational model---relational
+transducers, join-semilattices, distributed instances---and each
+diagnoses coordination requirements by analyzing the \emph{program} or
+\emph{problem function} that produces the output.
+This model-specificity has two consequences.
+
+\emph{(a) Lack of generality.}
+To use CALM as a diagnostic, one must encode the system in Datalog (or
+transducers, or a CRDT lattice).
+This encoding is lossy: different Datalog programs for the same system
+can have different monotonicity properties, so the diagnosis depends on
+the encoding, not the system.
+More fundamentally, many coordination questions are not about programs
+at all---they concern \emph{specifications}: is serializability
+inherently coordination-requiring?
+Does invariant confluence characterize coordination-free integrity
+enforcement?
+Such questions are naturally stated at the level of specifications over
+histories, not as properties of programs in a particular language.
+
+\emph{(b) Failure of a key litmus test.}
+No prior framework can verify that a system is
+\emph{well-coordinated}---that coordination already applied suffices and
+no more is needed.
+Consider a Datalog program $P_{\mathit{ord}}$ that establishes a total
+order $\ell_1, \ell_2, \ldots$ on input commands.
+This program is non-monotone: deriving adjacency
+$\mathit{next}(\ell_k, \ell_{k+1})$ requires enforcing
+$\neg\exists j \neq k{+}1.\; \mathit{next}(\ell_k, j)$---a negation
+over the current command set.
+CALM correctly classifies $P_{\mathit{ord}}$ as requiring coordination.
+Now compose $P_{\mathit{ord}}$ with an arbitrary non-monotone program
+$P$ that consumes the ordered commands.
+The composed system $P \circ P_{\mathit{ord}}$ is non-monotone in its
+program text.
+Yet if $P_{\mathit{ord}}$ has been correctly evaluated (all commands
+ordered), the output of $P$ over the ordered input is
+determined---no further coordination is needed.
+The system is \emph{well-coordinated}.
+Prior frameworks---operating on program syntax---see the non-monotone
+operators in $P \circ P_{\mathit{ord}}$ and cannot distinguish
+``requires coordination'' piecewise from ``well-coordinated'' \emph{in toto}.
+
+\medskip
+Our key modeling decision is to characterize coordination in terms of
+\emph{specifications}---relations from histories to sets of admissible
+outcomes---rather than programs.
+No program is required: the criterion applies directly to theoretical
+properties such as isolation levels, consistency models, and invariant
+conditions.
+When a program \emph{is} present, we test its output specification, not
+its syntax.
+
+We prove \emph{Complete CALM}: a specification is well-coordinated if
+and only if its observable outcomes are \emph{future-monotone}---as
+histories grow causally, admissible outcomes refine rather than
+contradict earlier observations.
+Future-monotonicity is the exact semantic characterization of the
+coordination boundary.
+Because it operates on specifications rather than programs, it solves
+problem~(a) (no encoding into any language needed; applicable to
+theoretical properties directly) and passes litmus test~(b) (non-monotone
+program internals are invisible to the output-level test) as a natural
+consequence.
+Applied to the example above: the output specification of
+$P \circ P_{\mathit{ord}}$---command results ordered by prefix
+extension---is future-monotone.
+Complete CALM verifies that the system is well-coordinated.
+CALM and its successors cannot, because they inspect
+program text rather than output semantics.
+
+Coordination-freedom---the property that CALM, CRDTs, and related work
+characterize---is the special case of well-coordination where no
+coordination has been applied at all.
+Complete CALM subsumes this: a coordination-free specification is one
+that is well-coordinated from the start (future-monotone without any
+prior resolution).
+The broader category includes systems where coordination has been
+applied at some layer, and the resolved output requires no more.
+
+Because the criterion operates on output semantics, it applies
+modularly: each module in a composed system can be tested independently
+for well-coordination by examining its output specification.
+If module $A$ produces future-monotone output, downstream module $B$
+can consume it without coordination regardless of $A$'s internal
+complexity.
+
+We instantiate the criterion on specifications central to data
+management.
+The HAT/non-HAT boundary for transactional isolation
+levels~\cite{bailis2013hat}, the $I$-confluence condition for
+invariant-preserving replication~\cite{bailis2014coordination}, and the
+semilattice discipline of CRDTs~\cite{shapiro2011crdt} all emerge as
+instances of the same semantic test.
+
+\paragraph{Contributions.}
+\begin{enumerate}[nosep]
+  \item The \emph{Complete CALM theorem}: future-monotonicity is the
+        exact semantic characterization of well-coordination, aligning
+        the informal intuition with a precise model-independent test
+        (Section~\ref{sec:complete-calm}).
+  \item A \emph{strict separation} from all prior CALM-like results:
+        Complete CALM verifies that coordination correctly discharges
+        non-monotone specifications---the litmus test that prior
+        frameworks~\cite{ameloot2013relational,baccaert2026spectrum}
+        fail (Section~\ref{sec:beyond-calm}).
+  \item A \emph{universal construction}: establishing membership (one
+        round of distributed coordination) suffices to reduce any
+        specification to well-coordinated local evaluation
+        (Section~\ref{sec:universal-construction}).
+  \item \emph{Uniform recovery} of known coordination boundaries for
+        isolation levels, invariant confluence, and CRDTs as instances of
+        future-monotonicity (Section~\ref{sec:applications}).
+\end{enumerate}
 
 
 % ================================================================
-\section{Running Example: A Replicated Database}
+\section{Running Example: A Replicated Register}
 \label{sec:example}
 % ================================================================
 
-\jmh{TODO: Introduce a replicated database with read-committed (coordination-free)
-and serializable (requires coordination) isolation as the running example.
-Use this to illustrate every definition that follows.}
+Consider a single logical register, replicated at two nodes $p$ and $q$,
+supporting read and write operations.
+We define two specifications over the \emph{same} histories that differ
+only in which outcomes they admit.
+
+\paragraph{Histories.}
+A history records invocations and responses of reads and writes at each
+node, together with message sends and receives that propagate updates.
+Events are partially ordered by happens-before: program order within each
+node, and send-before-receive for each message.
+A write of value $v$ at node $p$ is an event; a read returning $v$ at
+node $q$ is an event.
+Neither fairness nor delivery guarantees are assumed.
+
+\paragraph{Two specifications.}
+Both specifications use the same outcome domain: sequences of completed
+operations annotated with return values, ordered by \emph{prefix extension}
+($o_1 \Ord o_2$ iff $o_1$ is a prefix of $o_2$).
+They differ in which sequences are admissible:
+
+\begin{itemize}[nosep]
+  \item $\Spec_{\mathit{ec}}$ (eventual consistency): a read at node $q$
+        may return the initial value or any value written in the causal
+        past of that read.
+        Multiple return values are admissible at any prefix.
+  \item $\Spec_{\mathit{lin}}$ (linearizability): the sequence of
+        completed operations must admit a linearization respecting
+        real-time order.
+\end{itemize}
+
+\paragraph{The witness.}
+Let history $H_1$ contain a write $w(1)$ at node $p$ and a concurrent
+read $r$ at node $q$ (neither $w \rightarrow r$ nor $r \rightarrow w$).
+Both $\langle r \mapsto 0 \rangle$ and $\langle r \mapsto 1 \rangle$
+lie in $\Obs_{\mathit{lin}}(H_1)$: both linearizations are valid.
+
+Now extend $H_1$ to $H_2$ by delivering $w$'s message to $q$ before $r$
+executes, so that $w \rightarrow r$ in $H_2$.
+Every linearization of $H_2$ places $w$ before $r$, so
+$\Obs_{\mathit{lin}}(H_2)$ contains only sequences where $r$ returns $1$.
+The earlier outcome $\langle r \mapsto 0 \rangle$ has no prefix-extension
+in $\Obs_{\mathit{lin}}(H_2)$---it is \emph{future-inconsistent}.
+
+Under $\Spec_{\mathit{ec}}$, the same extension poses no problem:
+$\langle r \mapsto 0 \rangle$ remains compatible with outcomes at $H_2$
+(the read could have been served from a stale replica before the message
+arrived).
+Every outcome admitted at a prefix has a refinement at every extension.
+
+This single witness separates the two specifications:
+$\Spec_{\mathit{ec}}$ is future-monotone; $\Spec_{\mathit{lin}}$ is not.
+As we will show, this is exactly the boundary between coordination-free
+and coordination-requiring behavior.
+Note that the non-monotonicity arises from \emph{concurrency} (the read
+and write are concurrent), not from distribution per se---the same
+phenomenon occurs with concurrent threads on a single machine.
+Replication across nodes makes the coordination cost \emph{operational}
+(messages, partitions), but the \emph{need} for coordination is a
+property of the specification under concurrency.
 
 
 % ================================================================
-\section{Computational Model}
+\section{Framework}
 \label{sec:model}
 % ================================================================
 
-\jmh{TODO: Histories, futures, event universe. Same definitions as PODC
-version but illustrated with the running example at each step.
-Address PODC reviewer concerns: define ``well-formed'' precisely,
-explain the downward-closure condition intuitively, clarify how
-crashes are modeled (or explicitly excluded from scope).}
+We model concurrent executions as Lamport histories and define
+specifications, implementations, and coordination-freedom in terms of
+observable outcomes.
+The goal is to isolate a single semantic question: when does a
+specification force an implementation to suppress otherwise-admissible
+futures?
 
+The framework applies to any concurrent setting---distributed or local.
+Coordination has costs in both: locking and abort in a local database,
+latency and partition vulnerability in a distributed system.
+The criterion characterizes when these costs are \emph{intrinsic} to the
+specification (unavoidable under any implementation) versus
+\emph{incidental} (artifacts of a particular implementation strategy).
+The universal construction (Section~
+ef{sec:universal-construction})
+addresses the distributed case specifically, showing that one round of
+distributed coordination suffices to eliminate all further
+cross-node costs.
 
-% ================================================================
-\section{Specifications and Observability}
-\label{sec:specifications}
-% ================================================================
+We build toward the criterion in three steps: first the execution model
+(histories and their causal growth), then the specification language
+(what outcomes are admissible and how they relate), and finally the
+implementation model (what it means to be coordination-free).
 
-\jmh{TODO: Observability function, outcome order, specification triple,
-consistency and contradiction, future-consistency.
-Running example: define Obs and the outcome order for both isolation levels.}
+%----------------------------------------------------------------
+\subsection{Histories and Futures}
+%----------------------------------------------------------------
 
+We represent concurrent executions as partially ordered sets of events,
+following Lamport~\cite{lamport1978time}.
+The partial order captures causal precedence; concurrent events have no
+ordering.
 
-% ================================================================
-\section{Implementations and Coordination}
+\begin{definition}[Event universe]
+  A specification fixes pairwise disjoint sets of events:
+  $E_{\mathit{in}}$ (external inputs),
+  $E_{\mathit{int}}$ (internal computation),
+  $E_{\mathit{send}}$ (message sends),
+  $E_{\mathit{recv}}$ (message receives).
+\end{definition}
+
+\noindent
+The disjoint sets distinguish interface activity from internal
+computation and message-passing structure.
+In the register example, $E_{\mathit{in}}$ contains client read/write
+invocations; $E_{\mathit{int}}$ contains local state updates;
+$E_{\mathit{send}}$ and $E_{\mathit{recv}}$ contain inter-replica
+propagation messages.
+
+\begin{definition}[History]
+  \label{def:history}
+  A \emph{history} is a pair $H = (E, \rightarrow)$ where
+  $E \subseteq E_{\mathit{in}} \cup E_{\mathit{int}} \cup
+  E_{\mathit{send}} \cup E_{\mathit{recv}}$,
+  $\rightarrow$ is a strict partial order on $E$, and
+  for every receive $r \in E$ there exists a unique send
+  $s \in E$ with $s \rightarrow r$ (each send precedes at most one
+  receive).
+  A history is \emph{well-formed} if it satisfies these constraints.
+  We write $\Hist$ for the set of all well-formed histories over a fixed
+  event universe.
+\end{definition}
+
+\noindent
+A history need not be complete: it may represent a prefix with pending
+operations or in-flight messages.
+Messages may be delayed, reordered, or lost (a send without a matching
+receive denotes a lost or indefinitely delayed message).
+We impose no fairness or progress assumptions.
+
+\begin{example}[Register history $H_1$]
+  \label{ex:h1-formal}
+  The history $H_1$ from Section~\ref{sec:example} contains:
+  a write-invocation event $w$ at node $p$ (in $E_{\mathit{in}}$),
+  a read-invocation event $r$ at node $q$ (in $E_{\mathit{in}}$),
+  and a send event $s$ at $p$ propagating the write (in
+  $E_{\mathit{send}}$), with $w \rightarrow s$.
+  No receive event for $s$ appears in $H_1$---the message is in flight.
+  Since $w$ and $r$ share no causal path, they are concurrent.
+\end{example}
+
+As a distributed execution unfolds, new events occur.
+A \emph{future} of a history preserves all existing events and their
+causal order, adding only causally later events:
+
+\begin{definition}[Future]
+  \label{def:future}
+  For $H_1 = (E_1, \rightarrow_1)$ and $H_2 = (E_2, \rightarrow_2)$,
+  we write $H_1 \hext H_2$ (\emph{$H_2$ is a future of $H_1$}) if:
+  \begin{enumerate}[nosep,label=(\roman*)]
+    \item $E_1 \subseteq E_2$,
+    \item $\rightarrow_1 = \rightarrow_2 \cap (E_1 \times E_1)$, and
+    \item $E_1$ is downward-closed under $\rightarrow_2$: if
+          $e \in E_1$ and $e' \rightarrow_2 e$, then $e' \in E_1$.
+  \end{enumerate}
+\end{definition}
+
+\noindent
+Condition (iii) is the key constraint: a future can add causally
+\emph{later} events but cannot insert new predecessors of existing ones.
+The past is fixed; only the future is open.
+
+\begin{example}[Extending $H_1$ to $H_2$]
+  \label{ex:h2-formal}
+  The extension $H_2$ from Section~\ref{sec:example} adds a receive
+  event $r_s$ at node $q$ (the delivery of message $s$), with
+  $s \rightarrow r_s$ and $r_s \rightarrow r$.
+  This is a valid future: $r_s$ is causally later than $s$ (which is
+  already in $H_1$), and the new edge $r_s \rightarrow r$ does not
+  introduce a predecessor of any event already in $H_1$ (since $r_s$
+  itself is new).
+  The result is that $w \rightarrow r$ holds in $H_2$ (transitively
+  through $s$ and $r_s$), making the write causally prior to the read.
+\end{example}
+
+%----------------------------------------------------------------
+\subsection{Specifications}
+%----------------------------------------------------------------
+
+A specification says which outcomes are admissible at each history and
+how outcomes relate to one another under refinement.
+It is a purely semantic object: it constrains what may be observed, not
+how executions unfold.
+
+\begin{definition}[Specification]
+  \label{def:spec}
+  A \emph{specification} is a triple $\Spec = (E, \Obs, \Ord)$ where:
+  \begin{itemize}[nosep]
+    \item $E$ is an event universe fixing the space of histories $\Hist$,
+    \item $\Obs : \Hist \to \mathcal{P}(O)$ maps each history to a
+          nonempty set of admissible \emph{outcomes},
+    \item $\Ord$ is a partial order on outcomes, where $o_1 \Ord o_2$
+          means $o_2$ \emph{refines} $o_1$ without contradicting it.
+  \end{itemize}
+\end{definition}
+
+\noindent
+The outcome order $\Ord$ is part of the specification---it is not
+derived from execution structure but declared as part of the semantic
+contract.
+It encodes which transitions between outcomes merely add detail (upward
+in $\Ord$, compatible with prior observations) and which exclude
+alternatives (incomparable or downward, contradicting prior
+observations).
+Different specifications over the same histories may use different
+outcome orders.
+
+\begin{remark}[Modeling choices]
+  The specification $\Spec = (E, \Obs, \Ord)$ embodies a modeling
+  choice.
+  If the outcome order is too coarse (e.g., a top element refines
+  everything), genuine conflicts disappear and no specification requires
+  coordination.
+  If it is too fine (e.g., recording irrelevant implementation details),
+  spurious non-monotonicity may arise.
+  A faithful specification captures exactly the semantic commitments of
+  interest.
+  The applications in Section~\ref{sec:applications} develop natural
+  specifications for several settings.
+\end{remark}
+
+\begin{example}[Outcomes and order for the register]
+  \label{ex:register-outcomes}
+  In the register example, outcomes are sequences of completed
+  operations annotated with return values---e.g.,
+  $\langle w(1), r \mapsto 1 \rangle$ records that a write of $1$
+  completed, then a read returned $1$.
+  The outcome order $\Ord$ is prefix extension: $o_1 \Ord o_2$ iff
+  $o_1$ is a prefix of $o_2$.
+  A longer sequence refines a shorter one by recording additional
+  completed operations.
+
+  At history $H_1$ (Example~\ref{ex:h1-formal}), neither the write nor
+  the read has completed, so the empty sequence $\langle\rangle$ is
+  admissible.
+  If the read completes returning $0$, the outcome
+  $\langle r \mapsto 0 \rangle$ is admissible under both
+  $\Spec_{\mathit{ec}}$ and $\Spec_{\mathit{lin}}$.
+  Under $\Spec_{\mathit{lin}}$, this outcome becomes
+  future-inconsistent at $H_2$: no outcome in
+  $\Obs_{\mathit{lin}}(H_2)$ extends it, because every linearization of
+  $H_2$ requires the read to return $1$.
+\end{example}
+
+%----------------------------------------------------------------
+\subsection{Implementations and Coordination-Freedom}
 \label{sec:implementations}
-% ================================================================
+%----------------------------------------------------------------
 
-\jmh{TODO: Admissible histories, implementations, coordination-free
-implementations. Address PODC reviewer concerns: add computability
-requirement, prefix-closure on realizable histories, restrict
-correctness to realizable histories.}
+A specification is passive: it declares which outcomes are admissible but
+says nothing about which histories actually arise or which outcomes are
+actually exposed.
+An \emph{implementation} is active: it determines which histories are
+realized (by choosing how to schedule, route, and deliver messages) and
+which outcomes it exposes at each history.
 
+The central question is: must an implementation ever \emph{suppress}
+histories that the specification would permit?
+If so, it is coordinating---preventing causally admissible futures in
+order to avoid exposing outcomes that would later be contradicted.
+If not, it is coordination-free.
 
-% ================================================================
-\section{The Coordination Criterion}
-\label{sec:criterion}
-% ================================================================
+\begin{definition}[Input projection]
+  For a history $H = (E, \rightarrow)$, the \emph{input projection}
+  $\In(H)$ restricts $H$ to its input events:
+  $\In(H) = (E \cap E_{\mathit{in}},\;
+  \rightarrow \cap (E_{\mathit{in}} \times E_{\mathit{in}}))$.
+\end{definition}
 
-\jmh{TODO: Future-monotonicity definition. Theorem statement and proof.
-Apply to running example: read-committed is future-monotone (passes),
-serializability is not (fails with explicit witness).}
+\begin{definition}[Admissible histories]
+  For an input history $H_{\mathit{in}}$ (consisting only of input
+  events), the \emph{admissible histories} are all well-formed histories
+  whose input projection extends $H_{\mathit{in}}$:
+  \[
+    \mathcal{A}(H_{\mathit{in}}) \triangleq
+    \{H \in \Hist \mid H_{\mathit{in}} \hext \In(H)\}.
+  \]
+  These are the histories that \emph{could} arise under asynchrony and
+  causality alone, given the input prefix $H_{\mathit{in}}$.
+\end{definition}
+
+\begin{definition}[Implementation]
+  \label{def:implementation}
+  An implementation $I$ specifies, for each input history
+  $H_{\mathit{in}}$:
+  \begin{itemize}[nosep]
+    \item a set of \emph{realizable histories}
+          $\mathcal{R}_I(H_{\mathit{in}}) \subseteq
+          \mathcal{A}(H_{\mathit{in}})$, closed under prefixes
+          (if $H \in \mathcal{R}_I$ and $H' \hext H$, then
+          $H' \in \mathcal{R}_I$),
+    \item an outcome-exposure map
+          $\Expose_I : \Hist \to \mathcal{P}(O)$ with
+          $\Expose_I(H) \subseteq \Obs(H)$ for all
+          $H \in \mathcal{R}_I(H_{\mathit{in}})$.
+  \end{itemize}
+  Both $\mathcal{R}_I$ and $\Expose_I$ are required to be
+  \emph{computable}: there exists an effective procedure that, given
+  $H_{\mathit{in}}$ and $H$, decides whether
+  $H \in \mathcal{R}_I(H_{\mathit{in}})$ and enumerates
+  $\Expose_I(H)$.
+\end{definition}
+
+\noindent
+Downward-closure ensures that an implementation cannot ``hide''
+intermediate states: every consistent cut of a realizable history
+(every downward-closed sub-history) is itself realizable.
+This models the physical constraint that a distributed execution passes
+through all consistent intermediate states.
+The computability requirement excludes pathological implementations that
+could not be realized by any effective procedure.
+Correctness ($\Expose_I(H) \subseteq \Obs(H)$) is required only at
+realizable histories---an implementation is not penalized for behavior at
+histories it never produces.
+
+A coordination-free implementation realizes \emph{all} admissible
+histories---it never suppresses a causally admissible future:
+
+\begin{definition}[Coordination-free implementation]
+  \label{def:coordfree}
+  An implementation $I$ is \emph{coordination-free} if for every input
+  history $H_{\mathit{in}}$ and every
+  $H \in \mathcal{R}_I(H_{\mathit{in}})$:
+  \[
+    \Poss^I_{H_{\mathit{in}}}(H) = \Poss_{H_{\mathit{in}}}(H),
+  \]
+  where
+  $\Poss_{H_{\mathit{in}}}(H) \triangleq
+  \bigcup_{\substack{H' \in \mathcal{A}(H_{\mathit{in}})\\
+  H \hext H'}} \Obs(H')$
+  collects all outcomes possible under the specification along admissible
+  extensions, and
+  $\Poss^I_{H_{\mathit{in}}}(H) \triangleq
+  \bigcup_{\substack{H' \in \mathcal{R}_I(H_{\mathit{in}})\\
+  H \hext H'}} \Expose_I(H')$
+  collects those the implementation can still reach.
+\end{definition}
+
+\noindent
+The condition $\Poss^I = \Poss$ says: every outcome that the
+specification permits along some admissible future remains reachable
+under the implementation.
+The implementation may influence \emph{which} outcome is eventually
+exposed (via retries, routing, or internal messages), but it cannot
+\emph{prevent} any outcome that remains specification-permitted.
+
+When this condition fails---when
+$\Poss^I_{H_{\mathit{in}}}(H) \subsetneq
+\Poss_{H_{\mathit{in}}}(H)$---the implementation has ruled out some
+admissible future.
+That ruling-out is coordination: the implementation suppresses a
+causally admissible extension to avoid exposing an outcome that would
+later be contradicted.
+
+\begin{example}[Coordination in the register]
+  Under $\Spec_{\mathit{lin}}$, suppose an implementation exposes
+  $\langle r \mapsto 0 \rangle$ at $H_1$.
+  The extension $H_2$ (where $w \rightarrow r$) admits no outcome
+  compatible with this choice.
+  To remain correct, the implementation must either:
+  (a) avoid exposing $\langle r \mapsto 0 \rangle$ at $H_1$
+  (suppressing a permitted outcome), or
+  (b) avoid realizing $H_2$ (suppressing an admissible future).
+  Either way, $\Poss^I \subsetneq \Poss$: coordination is unavoidable.
+\end{example}
+
+%----------------------------------------------------------------
+\subsection{Complete CALM}
+\label{sec:complete-calm}
+%----------------------------------------------------------------
+
+We can now state the criterion precisely.
+The question is: when does a specification force every correct
+implementation to suppress admissible futures?
+The answer is a single semantic property of the specification.
+
+\begin{definition}[Future-monotonicity]
+  \label{def:future-monotone}
+  A specification $\Spec = (E, \Obs, \Ord)$ is \emph{future-monotone} if
+  for all $H_1, H_2 \in \Hist$ with $H_1 \hext H_2$ and all
+  $o \in \Obs(H_1)$, there exists $o' \in \Obs(H_2)$ with $o \Ord o'$.
+\end{definition}
+
+\noindent
+Future-monotonicity is a no-regret condition on observable behavior:
+once an outcome is admitted at a history, every future of that history
+admits a compatible refinement.
+No outcome, once permitted, can be ``stranded'' by a future extension.
+
+A failure of future-monotonicity is witnessed by a
+\emph{future-inconsistent outcome}: an outcome $o \in \Obs(H_1)$ such
+that some future $H_2$ of $H_1$ admits no $o' \in \Obs(H_2)$ with
+$o \Ord o'$.
+The register witness from Section~\ref{sec:example} is exactly such a
+failure: $\langle r \mapsto 0 \rangle$ is admitted at $H_1$ but
+stranded at $H_2$.
+
+\begin{theorem}[Complete CALM]
+  \label{thm:complete-calm}
+  A specification $\Spec = (E, \Obs, \Ord)$ admits a coordination-free
+  implementation if and only if it is future-monotone.
+\end{theorem}
+
+\begin{example}[Applying Complete CALM to the running example]
+  $\Spec_{\mathit{ec}}$ is future-monotone: every admitted read value
+  remains compatible with all extensions (a stale read is never
+  contradicted by future deliveries---it simply becomes less current).
+  By Complete CALM, eventual consistency admits a coordination-free
+  implementation.
+
+  $\Spec_{\mathit{lin}}$ is not future-monotone (the witness from
+  Section~\ref{sec:example}).
+  By Complete CALM, every correct implementation of linearizability must
+  coordinate---it must suppress some admissible future to avoid
+  stranding an exposed outcome.
+\end{example}
+
+\begin{proof}[Proof sketch]
+  \emph{Sufficiency.}
+  If $\Spec$ is future-monotone, set
+  $\mathcal{R}_I(H_{\mathit{in}}) = \mathcal{A}(H_{\mathit{in}})$
+  (realize all admissible histories) and let
+  $\Expose_I(H) \subseteq \Obs(H)$ be any nondeterministic choice.
+  Future-monotonicity guarantees that exposing any $o \in \Obs(H)$ does
+  not invalidate outcomes along any admissible extension: for every
+  future $H'$, some $o' \in \Obs(H')$ satisfies $o \Ord o'$.
+  Hence no outcome is stranded, $\Poss^I = \Poss$, and the
+  implementation is coordination-free.
+
+  \emph{Necessity.}
+  If $\Spec$ is not future-monotone, there exist $H_1 \hext H_2$ and
+  $o_1 \in \Obs(H_1)$ such that no $o' \in \Obs(H_2)$ satisfies
+  $o_1 \Ord o'$.
+  Both $H_1$ and $H_2$ are admissible (they share the same input
+  projection).
+  Any coordination-free implementation must realize both.
+  But if it exposes $o_1$ at $H_1$, the extension $H_2$ admits no
+  compatible outcome---correctness is violated.
+  To remain correct, the implementation must either suppress $o_1$
+  (ruling out a specification-permitted outcome at $H_1$) or suppress
+  $H_2$ (ruling out an admissible future).
+  Either way, $\Poss^I \subsetneq \Poss$, contradicting
+  coordination-freedom.
+  Hence no coordination-free implementation exists.
+
+  The full proof, including a tightness argument showing that
+  future-monotonicity is the weakest sufficient condition, appears in
+  Appendix~\ref{app:proofs}.
+\end{proof}
+
+\noindent
+The characterization is tight: future-monotonicity is the weakest
+semantic property that guarantees well-coordination.
+Any specification admitting even one future-inconsistent outcome
+requires coordination (by the necessity direction), so no strictly
+weaker condition suffices.
+Conversely, future-monotonicity is the strongest condition implied by
+well-coordination---every well-coordinated specification is
+future-monotone.
+The three components of a specification (event universe, observability
+function, outcome order) are each unconstrained, and the definition of
+coordination-freedom (possibility preservation) is the canonical
+semantic notion for asynchronous message-passing.
+Within this setting, no further generalization of the characterization
+is possible.
+
+\paragraph{CAP and authority.}
+Complete CALM diagnoses that linearizability requires coordination---an
+ordering authority must exist.
+This is a semantic fact about the specification.
+Everything else in the CAP discourse concerns the \emph{failure modes of
+authority mechanisms}, which are operational, not semantic.
+A single-leader authority is available to all nodes that can reach it but
+may crash; a quorum-based authority tolerates individual crashes but may
+become unavailable if no partition contains a majority.
+Both are engineering tradeoffs in how authority is implemented, not
+consequences of the specification's semantic structure.
+Ameloot et al.~\cite{ameloot2013relational} pointed in this direction by
+showing that coordination-freedom in the transducer model depends on what
+system relations nodes can access---a precursor to separating the semantic
+need from the mechanism.
+Complete CALM makes the separation explicit: it diagnoses \emph{whether}
+authority is needed (a property of the specification); CAP-style results
+characterize when particular authority mechanisms become unavailable
+(a property of the failure model and the mechanism design).
 
 
 % ================================================================
@@ -148,32 +740,378 @@ serializability is not (fails with explicit witness).}
 \label{sec:beyond-calm}
 % ================================================================
 
-\jmh{TODO: This is the new headline section for PODS.
+Complete CALM operates on observable output semantics; the original CALM
+operates on program syntax.
+When do these diverge?
+We show that CALM is a direct instance of Complete CALM under a natural
+modeling choice, and then exhibit a strict separation: settings where
+Complete CALM correctly identifies coordination-free behavior that CALM
+cannot recognize.
 
-\begin{enumerate}
-  \item Show CALM is an instance: relational transducer model with
-        set-inclusion order and input-fact extension maps directly
-        into our framework.
-  \item State and prove the separation theorem:
-        \begin{itemize}
-          \item A non-monotone spec P has determination depth $\geq 1$
-                (requires coordination)
-          \item A resolving determination I yields a resolved spec
-                (Spec $|$ I) that is history-monotone
-                (provenance paper Thm 3.1)
-          \item History-monotone + resolved $\Rightarrow$ future-monotone
-          \item Therefore Q(P) --- the program implementing coordination
-                then exposing resolved output --- is coordination-free
-                by the Coordination Criterion
-          \item CALM, applied syntactically to Q(P), sees non-monotone
-                operators and incorrectly classifies Q(P) as requiring
-                coordination
-        \end{itemize}
-  \item Concrete example: Paxos-ordered KVS where the output stream
-        is prefix-monotone despite internal non-monotone coordination logic
-  \item Comparison with Baccaert/Ketsman spectrum paper and Li/Lee
-        replicated-object model
-\end{enumerate}}
+%----------------------------------------------------------------
+\subsection{CALM as an Instance}
+\label{sec:calm-instance}
+%----------------------------------------------------------------
+
+Recall the CALM setting: nodes in a relational transducer
+network~\cite{ameloot2013relational} hold local relations, receive
+input facts over time, exchange messages, and derive output facts.
+A program is \emph{monotone} if its output grows monotonically (under set
+inclusion) as input facts arrive.
+
+This is an instance of the Coordination Criterion under the following
+modeling choice:
+\begin{itemize}[nosep]
+  \item \emph{Histories} are executions of the transducer network: input-fact
+        arrivals are external input events; rule firings and message exchanges
+        are internal events.
+  \item \emph{Outcomes} are output-fact sets, ordered by set inclusion:
+        $o_1 \Ord o_2$ iff $o_1 \subseteq o_2$.
+  \item \emph{Observability:} $\Obs(H) = \{\mathit{LFP}(H)\}$, the least
+        fixpoint of the program over the input facts present in $H$.
+\end{itemize}
+Under this specification, future-monotonicity coincides exactly with
+program monotonicity: extending a history can only add input facts, and a
+monotone program's least fixpoint can only grow under set inclusion.
+Conversely, a non-monotone program admits inputs $I_1 \subseteq I_2$ with
+$\mathit{LFP}(I_1) \not\subseteq \mathit{LFP}(I_2)$, yielding a
+future-inconsistent outcome.
+The Coordination Criterion therefore recovers CALM immediately.
+
+The key observation is that CALM \emph{equates program outputs with
+observable commitments}.
+This is a modeling choice, not a necessity.
+The Coordination Criterion operates on observable output semantics---what
+an implementation exposes---rather than on program text.
+When these diverge, the criterion remains correct while CALM does not.
+
+%----------------------------------------------------------------
+\subsection{The Separation: Coordination Discharges Non-Monotonicity}
+\label{sec:separation}
+%----------------------------------------------------------------
+
+The central insight is simple: coordination is a \emph{means}, not an
+\emph{end}.
+A system may use coordination internally to resolve a non-monotone
+specification, and then expose the resolved output to downstream
+consumers.
+From the consumers' perspective, the output stream is monotone---it only
+grows---even though the internal logic that produced it was not.
+CALM, applied to the combined system, sees non-monotone operators and
+concludes that coordination is required.
+The Coordination Criterion, applied to the observable output, correctly
+identifies it as coordination-free.
+
+We make this precise.
+A coordination mechanism restricts which histories can arise---it
+suppresses some admissible futures to enforce correctness.
+The \emph{resolved specification} is what remains after this restriction:
+
+\begin{definition}[Resolved specification]
+  Let $\Spec = (E, \Obs, \Ord)$ be a specification and let $I$ be a
+  coordination mechanism (an implementation that restricts admissible
+  histories to enforce correctness).
+  The \emph{resolved specification} $\Spec|_I$ is the specification
+  whose histories are those realized by $I$ and whose observability
+  function is $\Obs$ restricted to those histories.
+  Intuitively, $\Spec|_I$ describes the world as seen by a downstream
+  consumer who observes only the outputs that $I$ produces.
+\end{definition}
+
+\begin{theorem}[Separation from CALM]
+  \label{thm:separation}
+  There exist specifications $\Spec$ such that:
+  \begin{enumerate}[nosep]
+    \item $\Spec$ is not future-monotone (coordination is required),
+    \item there exists a correct coordination mechanism $I$ such that
+          the resolved specification $\Spec|_I$ \emph{is} future-monotone,
+    \item CALM, applied syntactically to any program implementing $I$,
+          classifies it as non-monotone (requiring coordination).
+  \end{enumerate}
+\end{theorem}
+
+\noindent
+In other words: the Coordination Criterion can verify that coordination
+\emph{correctly discharges} a non-monotone specification, producing
+coordination-free downstream behavior.
+CALM cannot make this distinction---it sees only program syntax.
+
+\begin{proof}
+  We exhibit a concrete witness.
+  Consider a key-value store replicated at two nodes, with a
+  Paxos-based total-order broadcast ensuring all nodes process updates
+  in the same sequence.
+  The internal specification is linearizability (non-monotone, as shown
+  in Section~\ref{sec:example}).
+  Paxos provides the coordination: it restricts admissible histories to
+  those in which all updates are totally ordered.
+
+  The \emph{exposed output} is the prefix of the ordered update log that
+  each node has processed.
+  Define outcomes as log prefixes, ordered by prefix extension:
+  $o_1 \Ord o_2$ iff $o_1$ is a prefix of $o_2$.
+  Under this observability:
+  \begin{itemize}[nosep]
+    \item At history $H$, $\Obs(H)$ is the set of prefixes of the
+          Paxos-ordered log consistent with $H$.
+    \item For any future $H' \sqsupseteq_h H$: the log can only grow.
+          Any prefix $o \in \Obs(H)$ remains a prefix of every
+          $o' \in \Obs(H')$.
+          Hence $o \Ord o'$.
+  \end{itemize}
+  The resolved specification is future-monotone.
+  By the Coordination Criterion, the output stream admits
+  coordination-free consumption: downstream readers need no additional
+  coordination to observe a consistent, growing log.
+
+  Now consider CALM's analysis.
+  Any program implementing Paxos uses non-monotone operations:
+  leader election requires negation (``no higher ballot has been
+  seen''), and log commitment requires universal quantification over a
+  quorum (``all members of the quorum have acknowledged'').
+  CALM, applied to the combined program text, identifies these
+  non-monotone operators and classifies the system as requiring
+  coordination.
+  This is correct for the \emph{internal} specification
+  (linearizability does require coordination), but incorrect for the
+  \emph{output} specification (the exposed log prefix is
+  coordination-free to consume).
+  The Coordination Criterion distinguishes these; CALM conflates them.
+\end{proof}
+
+\begin{example}[Stratified Datalog: the canonical separation]
+  \label{ex:stratified-separation}
+  The separation is not limited to distributed systems---it arises in
+  CALM's own native setting.
+  Consider a stratified Datalog program with two strata:
+  \begin{align*}
+    \mathit{reachable}(X,Y) &\leftarrow \mathit{edge}(X,Y). \\
+    \mathit{reachable}(X,Z) &\leftarrow \mathit{reachable}(X,Y),\,
+                               \mathit{edge}(Y,Z). \\[3pt]
+    \mathit{unreachable}(X,Y) &\leftarrow \mathit{node}(X),\,
+                                 \mathit{node}(Y),\,
+                                 \neg\,\mathit{reachable}(X,Y).
+  \end{align*}
+  CALM classifies this program as non-monotone: the negation in stratum~2
+  means that adding an edge fact can cause an $\mathit{unreachable}$ tuple
+  to be retracted.
+  Coordination is required to evaluate it---specifically, stratum~1 must
+  be \emph{sealed} (a commitment that no further edge facts will arrive)
+  before stratum~2 can execute.
+  Without this guarantee, a negated literal $\neg\,\mathit{reachable}(X,Y)$
+  might be evaluated prematurely and later invalidated.
+
+  But consider the system that \emph{performs} this coordination and then
+  exposes the result.
+  After sealing, the output of stratum~2 is fixed: no further edge facts
+  will arrive, so no $\mathit{unreachable}$ tuple will ever be retracted.
+  The exposed output---the final $\mathit{unreachable}$ relation---is
+  monotone under set inclusion (it can only grow as the sealed computation
+  completes).
+  The Coordination Criterion correctly identifies this resolved output as
+  future-monotone.
+
+  CALM, applied to the program text, sees $\neg\,\mathit{reachable}$ and
+  reports ``non-monotone, requires coordination.''
+  It cannot distinguish between the program \emph{before} sealing
+  (genuinely non-monotone, coordination needed) and the program
+  \emph{after} sealing (resolved, coordination-free).
+  The Coordination Criterion makes exactly this distinction.
+\end{example}
+
+\noindent
+The pattern is general.
+Hellerstein~\cite{hellerstein2026complexity} defines the
+\emph{determination depth} of a specification as the minimum number of
+sequential coordination layers needed to resolve it.
+A specification with determination depth $k$ requires $k$ layers of
+coordination; after those layers are discharged, the resolved output is
+future-monotone and all downstream computation is coordination-free.
+CALM operates at the boundary $k = 0$ vs.\ $k \geq 1$ but cannot see
+past it: it treats a depth-$k$ specification identically whether the
+coordination has been provided or not.
+Complete CALM operates on the output semantics and
+correctly identifies the post-coordination regime as coordination-free.
+
+\paragraph{The architectural pattern.}
+The separation is not academic---it captures a ubiquitous systems design.
+A coordination layer (Paxos, Raft, ZAB) resolves non-monotonicity
+internally, producing an append-only ordered log.
+A consumption layer (log tailing, CDC, materialized views, stream
+processors) reads from this log without any additional coordination.
+Complete CALM provides the formal basis for this separation: the log's
+prefix-monotone output semantics are future-monotone, certifying that
+downstream consumers need not coordinate, regardless of the non-monotone
+logic that produced the log.
+
+The next subsection shows this is not merely an observation about one
+architecture---it is a universal construction.
+
+%----------------------------------------------------------------
+\subsection{One Round of Coordination Universally Suffices}
+\label{sec:universal-construction}
+%----------------------------------------------------------------
+
+The separation theorem exhibits specifications where coordination
+resolves non-monotonicity and produces future-monotone output.
+We now show this is always possible: for \emph{any} specification, a
+single round of distributed coordination---establishing
+membership---suffices to reduce all remaining computation to
+coordination-free local evaluation.
+
+The key insight is that membership knowledge converts universal
+quantification into existential quantification.
+A non-monotone operation like ``all participants have contributed''
+requires knowing who the participants \emph{are} before it can be
+evaluated.
+Once membership is established, the check becomes monotone: the set of
+received contributions only grows, and once it equals the known
+membership, the condition fires.
+This is the same mechanism underlying the Immerman--Vardi
+theorem~\cite{immerman1986relational}: bounded quantification over a
+known domain is expressible in fixpoint logic.
+
+\begin{theorem}[Universal sufficiency of membership]
+  \label{thm:universal}
+  For any specification $\Spec = (E, \Obs, \Ord)$, there exists a
+  coordination mechanism $I_{\mathit{mem}}$ that establishes membership
+  (makes the participant set common knowledge) such that the resolved
+  specification $\Spec|_{I_{\mathit{mem}}}$ is future-monotone.
+\end{theorem}
+
+\begin{proof}
+  \emph{Construction.}
+  Let $I_{\mathit{mem}}$ establish membership: a designated seed
+  authority (e.g., a configuration service) publishes the set of
+  participants $\mathsf{All}$.
+  Once a node knows $\mathsf{All}$, it can evaluate any specification
+  over the inputs from those participants by monotone accumulation:
+  \begin{itemize}[nosep]
+    \item Each participant sends its input events to all others.
+    \item A node accumulates received inputs monotonically (the set of
+          received messages only grows).
+    \item Once a node has received input from every member of
+          $\mathsf{All}$, it evaluates the specification deterministically
+          over the complete input.
+  \end{itemize}
+  Define the resolved specification's outcomes as the results of this
+  deterministic evaluation, ordered by an information-growth order
+  (e.g., the evaluation is undefined until all inputs arrive, then
+  produces a single determined outcome; the order is
+  $\bot \Ord o$ for the final outcome $o$).
+
+  \emph{Future-monotonicity.}
+  Before all inputs arrive, the outcome is $\bot$ (undetermined).
+  After all inputs arrive, the outcome is the unique result of
+  deterministic evaluation.
+  At any history $H_1 \hext H_2$: if $H_1$ has outcome $\bot$, then
+  $H_2$ has either $\bot$ or the final outcome $o$, both satisfying
+  $\bot \Ord o$.
+  If $H_1$ already has outcome $o$, then $H_2$ has the same $o$
+  (the evaluation is deterministic and all inputs have arrived).
+  Hence the resolved specification is future-monotone.
+
+  \emph{Why membership is the only distributed coordination needed.}
+  The accumulation of inputs from known participants is monotone:
+  messages arrive, the received set grows, and the condition
+  ``received from all members of $\mathsf{All}$'' is a monotone
+  threshold on a growing set.
+  No node needs to suppress any admissible future---it simply waits
+  until the monotone condition fires.
+  By Complete CALM, this accumulation phase is coordination-free.
+\end{proof}
+
+\noindent
+The construction shows that membership is the \emph{universal}
+coordination primitive: once participants are known, all remaining
+non-monotonicity can be resolved by monotone local computation
+(accumulate inputs from known participants, then evaluate
+deterministically).
+No further distributed coordination---no suppression of admissible
+futures---is needed.
+
+\paragraph{Comparison with Ameloot et al.}
+Ameloot et al.~\cite{ameloot2013relational} prove a related result in
+the transducer model: if nodes have access to the system relations
+$\mathsf{All}$ (the set of all node identifiers) and $\mathsf{Id}$
+(the local identifier)---the \emph{non-oblivious} setting---then
+monotone queries can be evaluated coordination-free.
+Our construction improves on this in two ways.
+
+First, it requires no syntactic recognition of special relations.
+Ameloot's proof depends on the program having access to $\mathsf{All}$
+and $\mathsf{Id}$ and on the analysis recognizing these as system
+relations with specific semantics.
+Our construction is purely semantic: it operates on the specification
+$\Spec$ without inspecting any program text.
+Membership is a generic coordination mechanism, not a model-specific
+assumption about available relations.
+
+Second, it is robust to membership change.
+Ameloot's non-obliviousness assumes a fixed, globally known set of
+nodes---the $\mathsf{All}$ relation is static.
+If membership changes (nodes join or depart), the preconditions of the
+theorem fail.
+Our construction accommodates membership change because the authority
+that established membership can extend it: the current authority uses
+its decision-making power to appoint the next authority or to admit new
+members.
+This appointment is itself a monotone extension of the authority
+chain---each membership-change event extends the history without
+retracting prior membership decisions.
+The chain of authorization is constructed incrementally from an original
+seed authority (typically defined offline in a configuration file at
+system setup).
+Downstream coordination-freedom is a property of the \emph{output
+semantics} (monotone accumulation over known membership), not of any
+static membership assumption.
+
+\paragraph{Architectural consequence.}
+Theorem~\ref{thm:universal} formally justifies a common systems
+pattern: establish membership once (via a configuration service,
+bootstrap protocol, or seed authority), then process all subsequent
+computation coordination-free.
+Log-based architectures (Kafka~\cite{kreps2011kafka}, event sourcing,
+change data capture) are one realization: the log's sequencer is the
+membership authority, and downstream consumers accumulate log entries
+monotonically.
+But the theorem is more general---any architecture that establishes
+membership and then accumulates inputs monotonically achieves
+coordination-freedom downstream, regardless of the specification's
+non-monotone structure.
+
+\begin{remark}[Distributed vs.\ local coordination]
+  \label{rem:local-depth}
+  The universal construction resolves all \emph{distributed}
+  coordination---the need for cross-node communication to suppress
+  admissible futures---in one round (membership).
+  However, local evaluation may still require sequential commitment
+  that does not involve distributed coordination.
+
+  Consider a multi-stratum Datalog program evaluated across $n$ nodes.
+  Each stratum must be \emph{sealed} before the next can begin: a node
+  must know that all derivations in stratum $k$ are complete before
+  evaluating negation in stratum $k{+}1$.
+  This sealing requires waiting for end-of-data signals from all
+  participants---but that waiting is \emph{monotone}: the set of
+  received signals only grows, and once all have arrived, the seal
+  commits locally.
+  No distributed coordination is needed beyond knowing who the
+  participants are (membership).
+
+  The distributed coordination depth is therefore just one round:
+  establishing membership.
+  After that, each stratum seal is a local commitment triggered by
+  monotone accumulation of signals from known participants.
+  The $k$ strata require $k$ local sequential commitments, but zero
+  additional rounds of distributed coordination.
+  Hellerstein~\cite{hellerstein2026complexity} characterizes this full
+  sequential cost (including local commitments) as \emph{determination
+  depth}; Complete CALM addresses only the distributed boundary.
+\end{remark}
+
+% Comparison with Baccaert/Ketsman and Li/Lee is in Related Work
+% (Section~\ref{sec:related}).
 
 
 % ================================================================
@@ -181,38 +1119,245 @@ serializability is not (fails with explicit witness).}
 \label{sec:applications}
 % ================================================================
 
-\jmh{TODO: Focus exclusively on PODS-relevant specifications.
-Each application: Spec sketch, monotonicity analysis, consequence.
-State results as formal propositions/corollaries.}
+We instantiate Complete CALM on three families of specifications central
+to data management.
+In each case, the same semantic test---future-monotonicity---recovers a
+known coordination boundary and provides a uniform explanation for why it
+arises.
 
+%----------------------------------------------------------------
 \subsection{Transactional Isolation Levels}
 \label{sec:isolation}
+%----------------------------------------------------------------
 
-\jmh{TODO: The HAT vs. non-HAT boundary (Bailis et al.) recovered as
-the monotonicity boundary. Read committed, read uncommitted, session
-guarantees are future-monotone. Serializability, snapshot isolation
-are not. Explicit witnesses for non-monotonicity.}
+Bailis et al.~\cite{bailis2013hat} identify a sharp boundary between
+isolation levels achievable with high availability (HATs) and those
+requiring coordination.
+We recover this boundary as the future-monotonicity boundary.
 
+\paragraph{Spec sketch.}
+Histories include transaction invocations, read/write events, and commit
+decisions.
+Outcomes are sets of atomic facts
+$\{\mathsf{commit}(T), \mathsf{read}(T, x, v), \ldots\}$
+recording committed transactions and their observed values.
+The outcome order is set inclusion: $o_1 \Ord o_2$ iff $o_1 \subseteq o_2$.
+An isolation level $L$ induces $\Spec_L = (E, \Obs_L, \Ord)$ where
+$\Obs_L(H)$ contains the outcome fact-sets consistent with $L$'s
+correctness constraints.
+
+\begin{proposition}[HAT levels are future-monotone]
+  \label{prop:hat-monotone}
+  Under read uncommitted, read committed, and session guarantees, the
+  constraints are prefix-stable: if $o \in \Obs_L(H)$ and $H \hext H'$,
+  there exists $o' \in \Obs_L(H')$ with $o \subseteq o'$.
+  Extending a history may add committed transactions but cannot
+  invalidate previously exposed commit or read facts.
+  Hence $\Spec_L$ is future-monotone, and by Complete CALM these levels
+  admit coordination-free implementations.
+\end{proposition}
+
+\begin{proposition}[Serializability is not future-monotone]
+  \label{prop:ser-nonmonotone}
+  Under serializability, there exist $H_1 \hext H_2$ and
+  $o_1 \in \Obs_{\mathit{ser}}(H_1)$ with no extension in
+  $\Obs_{\mathit{ser}}(H_2)$.
+\end{proposition}
+
+\begin{proof}[Witness]
+  Let $x = y = 0$ initially.
+  Transaction $T_1$ reads $x$, writes $y := 1$;
+  $T_2$ reads $y$, writes $x := 1$.
+  At $H_1$, $T_1$ commits after reading $x = 0$:
+  $o_1 = \{\mathsf{commit}(T_1), \mathsf{read}(T_1, x, 0)\}
+  \in \Obs_{\mathit{ser}}(H_1)$.
+  Extend to $H_2$ where $T_2$ also commits reading $y = 0$.
+  Any $o_2 \supseteq o_1$ in $\Obs_{\mathit{ser}}(H_2)$ must include
+  both reads, but $\mathsf{read}(T_1, x, 0)$ and
+  $\mathsf{read}(T_2, y, 0)$ together induce a cyclic serialization
+  order.
+  No such $o_2$ exists.
+\end{proof}
+
+\noindent
+The same argument applies to snapshot isolation (write-skew creates the
+cycle).
+By Complete CALM, serializability and snapshot isolation intrinsically
+require coordination.
+This recovers the HAT/non-HAT boundary of~\cite{bailis2013hat} as a
+single semantic test.
+
+The structural explanation is general: specifications that commit only to
+partial-order structure (causal consistency, read committed) are
+future-monotone---a downward-closed cut of happens-before remains valid
+under extension.
+Specifications that commit to total-order structure across concurrency
+(serializability, snapshot isolation) are not---a linearization commits
+to adjacency facts that a concurrent extension can invalidate.
+The HAT/non-HAT boundary is precisely the partial-order/total-order
+boundary.
+
+\paragraph{Why CALM cannot address this directly.}
+Transactional isolation is not naturally expressed as a Datalog program.
+One could encode a transaction scheduler in Datalog, but the encoding is
+not unique: a scheduler that checks serializability via cycle detection
+uses negation (non-monotone), while one that enforces it via two-phase
+locking uses only monotone lock acquisition---yet both implement the same
+specification.
+CALM's diagnosis would depend on which encoding is chosen, not on the
+isolation level itself.
+Complete CALM sidesteps this entirely: it tests the specification
+directly, without any program encoding.
+
+\paragraph{Connection to CAP.}
+The preceding analysis is about concurrency: serializability requires
+coordination whether the database is distributed or not.
+CAP adds the distributional consequence: when the system \emph{is}
+distributed, the required coordination may become unavailable under
+partitions.
+Specifically, the non-monotonicity of serializability means an ordering
+authority is required.
+Under partitions, that authority may become unavailable (depending on its
+implementation mechanism), forcing a choice between blocking and weakening
+the isolation guarantee.
+Complete CALM identifies the \emph{source} of this dilemma---non-monotonicity
+of the specification---while CAP describes its \emph{operational
+manifestation} under particular failure models.
+
+%----------------------------------------------------------------
 \subsection{Invariant Confluence}
 \label{sec:i-confluence}
+%----------------------------------------------------------------
 
-\jmh{TODO: Bailis et al. I-confluence as an instance. I-confluent
-invariants yield future-monotone specifications; non-I-confluent
-invariants yield non-monotone specifications.}
+Bailis et al.~\cite{bailis2014coordination} show that an application
+invariant can be preserved without coordination iff it is
+\emph{$I$-confluent}: merging any two invariant-preserving states yields
+an invariant-preserving state.
+We recover this as an instance of Complete CALM.
 
+\paragraph{Spec sketch.}
+Consider a replicated database where each node applies transactions
+locally and periodically merges with other replicas.
+Outcomes are sets of database states reachable under causally admissible
+extensions, ordered by set inclusion (refinement = ruling out states).
+$\Obs_I(H)$ contains the invariant-preserving subsets of reachable
+states at $H$.
+For example, if the invariant is ``account balances are non-negative,''
+then $\Obs_I(H)$ contains all subsets of reachable states in which every
+account has non-negative balance.
+
+\begin{proposition}[$I$-confluence $\Leftrightarrow$ future-monotonicity]
+  \label{prop:iconfl}
+  $\Spec_I$ is future-monotone iff $I$ is $I$-confluent.
+\end{proposition}
+
+\begin{proof}[Sketch]
+  If $I$ is $I$-confluent: extending a history can only enlarge the
+  reachable-state set, and merging invariant-preserving states preserves
+  the invariant.
+  Hence every outcome at a prefix has a refinement at every extension.
+
+  If $I$ is not $I$-confluent: there exist reachable states $s_1, s_2$
+  both satisfying $I$ whose merge violates $I$.
+  The singleton $\{s_1\}$ is an outcome at some prefix that admits no
+  invariant-preserving extension including the merge---a
+  future-inconsistent outcome.
+\end{proof}
+
+\noindent
+By Complete CALM, $I$-confluent invariants admit coordination-free
+enforcement; non-$I$-confluent invariants require coordination.
+The criterion provides the \emph{why}: non-$I$-confluence is exactly
+non-monotonicity of observable state sets under causal extension.
+
+\paragraph{Why CALM is fragile here.}
+To apply CALM to invariant enforcement, one must encode the invariant
+check as a Datalog program.
+A foreign-key constraint (non-monotone: deletion of a referenced tuple
+violates it) and a uniqueness constraint (non-monotone: insertion of a
+duplicate violates it) would both be classified as requires
+coordination'' by CALM.
+But $I$-confluence distinguishes them: foreign keys are not
+$I$-confluent (merging two valid states can violate the constraint),
+while uniqueness under certain merge strategies is.
+Complete CALM recovers this distinction directly from the specification,
+without encoding invariants as Datalog rules.
+
+%----------------------------------------------------------------
 \subsection{CRDTs and Replicated Objects}
 \label{sec:crdts}
+%----------------------------------------------------------------
 
-\jmh{TODO: CRDTs as monotone specifications by construction.
-The join-semilattice structure guarantees future-monotonicity.
-Connection to Shapiro et al.}
+Conflict-free replicated data types~\cite{shapiro2011crdt} achieve
+coordination-free replication by restricting updates to inflationary
+operations on a join-semilattice.
+Complete CALM explains why this works.
 
-\subsection{Datalog with Negation}
-\label{sec:datalog-negation}
+\paragraph{Spec sketch.}
+A state-based CRDT has state space $(S, \sqcup)$ forming a
+join-semilattice.
+Updates are inflationary: $\mathit{update}(s) \sqsupseteq s$.
+Outcomes are states, ordered by the lattice order:
+$o_1 \Ord o_2$ iff $o_1 \sqsubseteq o_2$.
+$\Obs(H)$ contains the states reachable by applying updates and merges
+consistent with $H$.
 
-\jmh{TODO: Monotone Datalog is future-monotone (the CALM case).
-Stratified negation introduces determination depth equal to the
-number of strata. Connection to provenance paper.}
+\begin{proposition}[CRDTs are future-monotone]
+  \label{prop:crdt-monotone}
+  Any specification whose updates are inflationary in a
+  join-semilattice and whose outcome order is the lattice order is
+  future-monotone.
+\end{proposition}
+
+\begin{proof}
+  Let $o \in \Obs(H)$ and $H \hext H'$.
+  The extension $H'$ may add updates and merges.
+  Since updates are inflationary ($\mathit{update}(s) \sqsupseteq s$)
+  and merge is join ($s_1 \sqcup s_2 \sqsupseteq s_1$), every state
+  reachable at $H'$ is at least as large (in the lattice order) as
+  some state reachable at $H$.
+  In particular, there exists $o' \in \Obs(H')$ with
+  $o \sqsubseteq o'$, i.e., $o \Ord o'$.
+\end{proof}
+
+\noindent
+CRDTs are future-monotone \emph{by construction}: the lattice structure
+guarantees that observable state can only grow.
+Complete CALM certifies that this structural choice is both sufficient
+and, in a precise sense, necessary: any coordination-free replicated
+object must have future-monotone observable semantics, and the
+semilattice discipline is one way to ensure this.
+
+The converse is instructive.
+A replicated counter with a \emph{reset} operation (set to zero) is not
+inflationary: after incrementing to $5$, a reset produces a state
+incomparable to $5$ under any natural order.
+If the outcome order treats $0$ and $5$ as contradictory, the
+specification is not future-monotone and coordination is required to
+implement reset consistently.
+This matches the known result that reset-capable CRDTs require
+additional protocol machinery~\cite{shapiro2011crdt}.
+
+\paragraph{CALM and CRDTs.}
+CRDTs were designed independently of CALM, using lattice theory rather
+than Datalog monotonicity.
+CALM can analyze a CRDT only if its merge and update logic is first
+encoded as a Datalog program---an unnatural exercise that obscures the
+lattice structure.
+Complete CALM applies directly to the CRDT's specification (states
+ordered by the lattice order), recognizing future-monotonicity as a
+consequence of the semilattice structure without any encoding step.
+
+\medskip
+\noindent
+Across all three application families, the same phenomenon recurs:
+coordination is required exactly when observable outcomes commit to
+structure that a future extension can invalidate.
+For isolation levels, the fragile structure is a global serialization
+order; for invariant confluence, it is a reachable-state set closed
+under merge; for CRDTs, it is the lattice order itself.
+Future-monotonicity is the uniform diagnostic that identifies this
+boundary in each case.
 
 
 % ================================================================
@@ -225,9 +1370,9 @@ The CALM theorem, conjectured by Hellerstein~\cite{hellerstein2010declarative}
 and proved by Ameloot et al.~\cite{ameloot2013relational}, establishes that
 monotone queries admit coordination-free distributed evaluation in the
 relational transducer model.
-Our Generalized CALM theorem subsumes this: relational transducers with
+Complete CALM subsumes this: relational transducers with
 set-inclusion order on output facts are one instantiation of our framework
-(Section~\ref{sec:beyond-calm}).
+(Section~\ref{sec:calm-instance}).
 The key advance is that our criterion operates on \emph{observable output
 semantics} rather than program syntax, enabling verification that
 coordination correctly discharges a non-monotone specification---a
@@ -235,47 +1380,83 @@ capability absent from the transducer-based analysis.
 
 \paragraph{Baccaert and Ketsman: coordination spectrum.}
 Baccaert and Ketsman~\cite{baccaert2023dcbq,baccaert2026spectrum} generalize
-CALM in a complementary direction: they extend the transducer model to
-non-deterministic ``behaviors'' (distributed instances $\to$ distributed
-instances) and parameterize the system relations available to nodes, yielding
-a coordination spectrum based on shared information.
+CALM by extending the transducer model to
+non-deterministic ``behaviors'' and parameterizing system relations,
+yielding a coordination spectrum based on shared information.
 Their generalization stays \emph{within} the transducer computational model
 but varies what information nodes possess.
 Ours leaves the transducer model entirely: we characterize coordination
 requirements from the specification alone, independent of any computational
 model.
 The two generalizations are orthogonal:
-their spectrum classifies problems by \emph{information requirements}
-(how much shared state is needed);
-ours classifies specifications by \emph{commitment structure}
-(whether observable outcomes are future-monotone under a given refinement
-order).
-Crucially, their analysis---like the original CALM---operates on program
-text and cannot recognize that a non-monotone program wrapped with
-coordination produces future-monotone outputs (our Beyond CALM result,
-Section~\ref{sec:beyond-calm}).
+their spectrum classifies problems by \emph{information requirements};
+ours classifies specifications by \emph{commitment structure}.
+Crucially, their analysis---like CALM---operates on program text and
+cannot recognize that a non-monotone program wrapped with coordination
+produces future-monotone outputs (Theorem~\ref{thm:separation}).
 
 \paragraph{Li and Lee: replicated-object coordination-freedom.}
 Li and Lee~\cite{li2025coordinationfree} develop a CALM-style equivalence
 in a replicated-object architecture, characterizing coordination-freedom
 in terms of replica consistency under growing input sets.
 Their model assumes replication and merge semantics as primitives.
-Our framework treats replication as one instance rather than an assumption:
-the future relation is causal (via happens-before), not set-theoretic,
-and most of our applications (isolation levels, agreement, snapshots)
-do not concern replica consistency.
+Our framework treats replication as one instance rather than an
+assumption: the future relation is causal (via happens-before), not
+set-theoretic.
+Like Baccaert and Ketsman, their analysis is syntactic and does not
+capture the separation of Theorem~\ref{thm:separation}.
 
-\jmh{TODO: Add paragraphs for:
-\begin{itemize}
-  \item Bailis et al. (HATs, I-confluence)
-  \item Shapiro et al. (CRDTs)
-  \item Attiya/Enea/Rom\'an-Calvo (arbitration-free consistency)
-  \item Burckhardt (Principles of Eventual Consistency)
-  \item Milano et al. (Gallifrey, MixT)
-\end{itemize}
-Light touch on distributed computing results (CAP, consensus, FLP)
---- mention that the framework captures these but defer details to
-appendix.}
+\paragraph{Determination complexity.}
+Hellerstein~\cite{hellerstein2026complexity} introduces \emph{determination
+depth}---the minimum sequential layers of irrevocable commitment needed to
+resolve a specification---and proves exponential depth--width separations
+and a conservation law.
+Complete CALM characterizes the depth-$0$ boundary of that hierarchy:
+a specification has determination depth $0$ iff it is future-monotone
+iff it admits a coordination-free implementation.
+
+\paragraph{Bailis et al.: HATs and I-confluence.}
+Highly Available Transactions~\cite{bailis2013hat} identify isolation levels
+achievable without coordination; I-confluence~\cite{bailis2014coordination}
+characterizes invariants preservable without coordination.
+Both are instances of Complete CALM (Section~\ref{sec:applications}).
+
+\paragraph{CRDTs and eventual consistency.}
+Shapiro et al.~\cite{shapiro2011crdt} ensure coordination-free replication
+by restricting updates to inflationary operations on join-semilattices.
+In our terms, CRDTs inhabit a well-behaved subspace of future-monotone
+specifications (Section~\ref{sec:crdts}).
+Burckhardt~\cite{burckhardt2014principles} provides a comprehensive
+framework for eventual consistency; our criterion provides the sharp
+boundary between specifications that admit it and those that do not.
+
+\paragraph{CAP and partition tolerance.}
+Brewer's conjecture~\cite{brewer2000towards} and the Gilbert--Lynch
+proof~\cite{gilbert2002cap} show that strong consistency, availability,
+and partition tolerance cannot coexist.
+Complete CALM reframes this: the semantic content is that non-monotone
+specifications require an ordering authority (diagnosed by the criterion);
+CAP's operational content is that authority mechanisms have failure modes
+under partitions.
+The two concerns are cleanly separated in our framework.
+
+\paragraph{Arbitration-free consistency.}
+Attiya, Enea, and Rom\'{a}n-Calvo~\cite{attiya2023arbitration} characterize
+consistency conditions achievable without arbitration (a form of
+coordination).
+Their ``arbitration-free'' corresponds to our ``coordination-free'' for
+specifications whose outcome order captures the relevant consistency
+guarantee.
+
+\paragraph{Type-level monotonicity.}
+Milano et al.~\cite{milano2019tour} (Gallifrey) and
+Laddad et al.~\cite{laddad2024flo} (Flo) enforce monotonicity through
+type systems, requiring programmers to specify the order with respect to
+which values evolve.
+This design choice influenced our decision to make the outcome order
+$\Ord$ a first-class component of specifications: the type-level
+discipline ensures future-monotonicity by construction, just as CRDTs do
+at the data-structure level.
 
 
 % ================================================================
@@ -283,12 +1464,39 @@ appendix.}
 \label{sec:conclusion}
 % ================================================================
 
-\jmh{TODO: The Coordination Criterion provides a semantic diagnostic
-for coordination requirements, independent of computational model.
-It strictly generalizes CALM by operating on observable output
-semantics rather than program syntax. This enables verifying that
-coordination correctly discharges non-monotone specifications---a
-capability absent from prior work.}
+Complete CALM provides a universal semantic criterion for
+coordination-freedom: a specification admits a coordination-free
+implementation if and only if its observable outcomes are
+future-monotone.
+The criterion operates on specifications directly---independent of
+programming language, computational model, or protocol structure---and
+strictly generalizes the original CALM theorem.
+
+The separation from CALM is not merely theoretical.
+It captures a pattern that pervades modern data infrastructure:
+coordination layers (consensus protocols, two-phase commit, serializable
+schedulers) resolve non-monotonicity internally, producing monotone
+output streams that downstream systems consume without coordination.
+Complete CALM provides the first formal basis for reasoning about this
+separation---verifying that coordination \emph{correctly discharges} a
+non-monotone specification, rather than merely detecting that
+non-monotonicity exists.
+
+The applications demonstrate that known coordination boundaries---HAT
+isolation levels, $I$-confluence, CRDT semilattice
+discipline---are instances of a single semantic test.
+Future-monotonicity is the common structural property; its failure is
+the universal explanation for why coordination is required.
+
+Hellerstein~\cite{hellerstein2026complexity} develops the quantitative
+theory beyond the boundary: \emph{determination depth} measures how many
+sequential layers of coordination are needed to resolve a non-monotone
+specification, with exponential depth--width separations and a
+conservation law showing that computation cannot reduce this cost.
+Complete CALM characterizes the depth-$0$ boundary of that hierarchy.
+Together, the two results provide a complete picture: Complete CALM
+diagnoses \emph{whether} coordination is needed; determination depth
+measures \emph{how much}.
 
 
 % ================================================================
@@ -296,18 +1504,138 @@ capability absent from prior work.}
 % ================================================================
 \appendix
 
+\section{Proof of Complete CALM}
+\label{app:proofs}
+
+We restate and fully prove Theorem~\ref{thm:complete-calm}.
+
+\begin{theorem}[Complete CALM, restated]
+  A specification $\Spec=(E,\Obs,\Ord)$ admits a coordination-free
+  implementation if and only if it is future-monotone.
+\end{theorem}
+
+\begin{proof}
+  We prove both directions.
+  Throughout, coordination-freedom means that for every input history
+  $H_{\mathit{in}}$ and every $H \in \mathcal{R}_I(H_{\mathit{in}})$,
+  $\Poss^I_{H_{\mathit{in}}}(H) = \Poss_{H_{\mathit{in}}}(H)$.
+
+  \par\medskip\noindent\emph{Sufficiency.}
+  Assume $\Spec$ is future-monotone.
+  Define $\mathcal{R}_I(H_{\mathit{in}}) \triangleq
+  \mathcal{A}(H_{\mathit{in}})$ and choose
+  $\Expose_I(H) \subseteq \Obs(H)$ nondeterministically.
+  Correctness holds immediately.
+  For possibility preservation: fix $H \in \mathcal{R}_I(H_{\mathit{in}})$.
+  Because $\Spec$ is future-monotone, for every $o \in \Obs(H)$ and
+  every extension $H \hext H'$, there exists $o' \in \Obs(H')$ with
+  $o \Ord o'$.
+  Hence exposing $o$ at $H$ does not invalidate any outcome along any
+  admissible extension, so
+  $\Poss^I_{H_{\mathit{in}}}(H) = \Poss_{H_{\mathit{in}}}(H)$.
+
+  \par\medskip\noindent\emph{Necessity.}
+  Assume $\Spec$ is not future-monotone.
+  Then there exist $H_1 \hext H_2$ and $o_1 \in \Obs(H_1)$ such that
+  for every $o' \in \Obs(H_2)$, $o_1$ and $o'$ contradict
+  (no common refinement under $\Ord$).
+
+  Since $\In(H_1) \hext H_1 \hext H_2$, both $H_1$ and $H_2$ lie in
+  $\mathcal{A}(\In(H_1))$, and $o_1 \in \Poss_{\In(H_1)}(H_1)$.
+
+  Suppose for contradiction that a coordination-free implementation $I$
+  exists.
+  Then $\Poss^I_{\In(H_1)}(H_1) = \Poss_{\In(H_1)}(H_1)$.
+  If $H_2 \notin \mathcal{R}_I(\In(H_1))$, then outcomes arising only
+  along $H_2$ would be absent from $\Poss^I_{\In(H_1)}(H_1)$,
+  contradicting $\Poss^I = \Poss$.
+  Hence $H_2 \in \mathcal{R}_I(\In(H_1))$.
+
+  Since $o_1 \in \Obs(H_1) \subseteq \Poss_{\In(H_1)}(H_1)
+  = \Poss^I_{\In(H_1)}(H_1)$, the implementation may expose $o_1$ at
+  some realizable extension of $H_1$.
+  But along the admissible extension $H_2$, no outcome in $\Obs(H_2)$
+  is compatible with $o_1$.
+  To remain correct at $H_2$, the implementation must either:
+  (a)~never expose $o_1$ (suppressing a specification-permitted outcome,
+  so $\Poss^I \subsetneq \Poss$), or
+  (b)~exclude $H_2$ from $\mathcal{R}_I$ (already shown to contradict
+  $\Poss^I = \Poss$).
+  Either way, coordination-freedom is violated.
+\end{proof}
+
+\section{Minimality of the Characterization}
+\label{app:minimality}
+
+The following proposition formalizes the claim that future-monotonicity
+is the weakest semantic property guaranteeing coordination-freedom.
+
+\begin{proposition}[Semantic minimality]
+  \label{prop:minimality}
+  Let $\Spec=(E,\Obs,\Ord)$ admit a coordination-free implementation.
+  Then there exists a partial order $\Ord^*$ on $O$, induced by
+  observable compatibility under that implementation, such that $\Spec$
+  is future-monotone with respect to $\Ord^*$.
+\end{proposition}
+
+\begin{proof}
+  Let $I$ be a coordination-free implementation.
+  Define $o_1 \rightsquigarrow o_2$ iff there exist histories
+  $H_1 \hext H_2$ with $\In(H_1) = \In(H_2)$ such that
+  $o_1 \in \Expose_I(H_1)$ and $o_2 \in \Expose_I(H_2)$.
+  Let $\Ord^*$ be the reflexive--transitive closure of
+  $\rightsquigarrow$, quotiented by mutual reachability.
+
+  Because $I$ is coordination-free, for every $H_1$ and every
+  admissible extension $H_2 \hext H_1$, $\Poss^I = \Poss$.
+  Hence for each $o_1 \in \Expose_I(H_1)$ and each extension $H_2$,
+  there exists $o_2 \in \Expose_I(H_2)$ with $o_1 \Ord^* o_2$.
+  Thus $\Spec$ is future-monotone under $\Ord^*$.
+\end{proof}
+
+\noindent
+The order $\Ord^*$ is derived entirely from observable behavior.
+It captures exactly those outcome transitions that remain compatible
+under extension.
+Any semantic criterion sufficient for coordination-freedom must entail
+future-monotonicity under some such induced order.
+Future-monotonicity is therefore the weakest semantic structure that
+coordination-free behavior can exhibit.
+
 \section{Additional Applications}
 \label{app:additional}
 
-\jmh{TODO: For completeness, include the PODC-flavored applications
-here (CAP, consensus, k-set agreement, snapshots, strong renaming).
-These demonstrate breadth but are not the paper's focus.}
+This appendix includes applications from distributed computing that
+demonstrate the breadth of Complete CALM beyond the data-management
+focus of the body.
 
-\section{Full Proofs}
-\label{app:proofs}
+\subsection{Consensus and Authority}
+Agreement protocols decompose into authority closure (non-monotone:
+committing to a leader may be invalidated by a concurrent extension)
+and value exposure under fixed authority (monotone: decisions only
+accumulate).
+The authority phase requires coordination; the value phase is
+well-coordinated.
+This decomposition directly illustrates the well-coordination concept:
+after authority is established, the system is well-coordinated for
+value decisions.
+A full formalization appears in the extended
+version~\cite{hellerstein2026coordinationcriterion}.
 
-\jmh{TODO: Complete proof of the Coordination Criterion.
-Minimality argument.}
+\subsection{Snapshots}
+Global snapshots (downward-closed cuts of happens-before) are
+future-monotone: new events appear only after the cut.
+Atomic snapshots (committing to a linearization point) are not:
+a concurrent extension can introduce an event that must be placed
+between previously adjacent operations.
+The partial-order/total-order distinction from
+Section~\ref{sec:isolation} applies here as well.
+
+\subsection{Agreement Tasks}
+$k$-set agreement and strong renaming are non-monotone for structural
+reasons (bounding decision diversity, membership-sensitive namespace).
+These demonstrate that weakening a coordination-requiring specification
+does not necessarily restore monotonicity.
 
 
 \bibliographystyle{ACM-Reference-Format}
