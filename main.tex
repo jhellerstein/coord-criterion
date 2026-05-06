@@ -160,8 +160,8 @@ Datalog programs ($P_{\mathit{lin}}$ establishes a total order, which
 requires negation: adjacency $\mathit{next}(\ell_k, \ell_{k+1})$
 demands $\neg\exists j \neq k{+}1.\; \mathit{next}(\ell_k, j)$).
 CALM, applied to the composed program text, sees non-monotone operators
-throughout and cannot distinguish ``requires coordination'' from
-``well-coordinated.''\!
+throughout and cannot distinguish ``requires coordination locally'' from
+``well-coordinated \emph{in toto}.''\!
 
 \medskip
 Our key modeling decision is to characterize coordination in terms of
@@ -185,7 +185,7 @@ theoretical properties directly) and passes litmus test~(b) (non-monotone
 program internals are invisible to the output-level test) as a natural
 consequence.
 Applied to the example above: the output specification of
-$P \circ P_{\mathit{ord}}$---command results ordered by prefix
+$P_{\mathit{lin}}(P^{\neg})$---command results ordered by prefix
 extension---is monotone.
 Complete CALM verifies that the system is well-coordinated.
 CALM and its successors cannot, because they inspect
@@ -199,13 +199,6 @@ that is well-coordinated from the start (monotone without any
 prior resolution).
 The broader category includes systems where coordination has been
 applied at some layer, and the resolved output requires no more.
-
-Because the criterion operates on output semantics, it applies
-modularly: each module in a composed system can be tested independently
-for well-coordination by examining its output specification.
-If module $A$ produces monotone output, downstream module $B$
-can consume it without coordination regardless of $A$'s internal
-complexity.
 
 We instantiate the criterion on specifications central to data
 management.
