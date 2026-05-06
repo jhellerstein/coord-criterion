@@ -794,7 +794,7 @@ input facts over time, exchange messages, and derive output facts.
 A program is \emph{monotone} if its output grows monotonically (under set
 inclusion) as input facts arrive.
 
-This is an instance of the Coordination Criterion under the following
+This is an instance of Complete CALM under the following
 modeling choice:
 \begin{itemize}[nosep]
   \item \emph{Histories} are executions of the transducer network: input-fact
@@ -811,12 +811,12 @@ monotone program's least fixpoint can only grow under set inclusion.
 Conversely, a non-monotone program admits inputs $I_1 \subseteq I_2$ with
 $\mathit{LFP}(I_1) \not\subseteq \mathit{LFP}(I_2)$, yielding a
 future-inconsistent outcome.
-The Coordination Criterion therefore recovers CALM immediately.
+Complete CALM therefore recovers CALM immediately.
 
 The key observation is that CALM \emph{equates program outputs with
 observable commitments}.
 This is a modeling choice, not a necessity.
-The Coordination Criterion operates on observable output semantics---what
+Complete CALM operates on observable output semantics---what
 an implementation exposes---rather than on program text.
 When these diverge, the criterion remains correct while CALM does not.
 
@@ -834,7 +834,7 @@ From the consumers' perspective, the output stream is monotone---it only
 grows---even though the internal logic that produced it was not.
 CALM, applied to the combined system, sees non-monotone operators and
 concludes that coordination is required.
-The Coordination Criterion, applied to the observable output, correctly
+Complete CALM, applied to the observable output, correctly
 identifies it as coordination-free.
 
 We make this precise.
@@ -866,7 +866,7 @@ The \emph{resolved specification} is what remains after this restriction:
 \end{theorem}
 
 \noindent
-In other words: the Coordination Criterion can verify that coordination
+In other words: Complete CALM can verify that coordination
 \emph{correctly discharges} a non-monotone specification, producing
 coordination-free downstream behavior.
 CALM cannot make this distinction---it sees only program syntax.
@@ -895,7 +895,7 @@ CALM cannot make this distinction---it sees only program syntax.
           Hence $o \Ord o'$.
   \end{itemize}
   The resolved specification is monotone.
-  By the Coordination Criterion, the output stream admits
+  By Complete CALM, the output stream admits
   coordination-free consumption: downstream readers need no additional
   coordination to observe a consistent, growing log.
 
@@ -911,7 +911,7 @@ CALM cannot make this distinction---it sees only program syntax.
   (linearizability does require coordination), but incorrect for the
   \emph{output} specification (the exposed log prefix is
   coordination-free to consume).
-  The Coordination Criterion distinguishes these; CALM conflates them.
+  Complete CALM distinguishes these; CALM conflates them.
 \end{proof}
 
 \begin{example}[Stratified Datalog: the canonical separation]
@@ -943,7 +943,7 @@ CALM cannot make this distinction---it sees only program syntax.
   The exposed output---the final $\mathit{unreachable}$ relation---is
   monotone under set inclusion (it can only grow as the sealed computation
   completes).
-  The Coordination Criterion correctly identifies this resolved output as
+  Complete CALM correctly identifies this resolved output as
   monotone.
 
   CALM, applied to the program text, sees $\neg\,\mathit{reachable}$ and
@@ -951,7 +951,7 @@ CALM cannot make this distinction---it sees only program syntax.
   It cannot distinguish between the program \emph{before} sealing
   (genuinely non-monotone, coordination needed) and the program
   \emph{after} sealing (resolved, coordination-free).
-  The Coordination Criterion makes exactly this distinction.
+  Complete CALM makes exactly this distinction.
 \end{example}
 
 \noindent
