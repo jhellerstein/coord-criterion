@@ -784,41 +784,96 @@ Complete CALM correctly identifies coordination-free behavior that CALM
 cannot recognize.
 
 %----------------------------------------------------------------
-\subsection{CALM as an Instance}
+\subsection{Formal Subsumption of CALM}
 \label{sec:calm-instance}
 %----------------------------------------------------------------
 
-Recall the CALM setting: nodes in a relational transducer
-network~\cite{ameloot2013relational} hold local relations, receive
-input facts over time, exchange messages, and derive output facts.
-A program is \emph{monotone} if its output grows monotonically (under set
-inclusion) as input facts arrive.
+We show that CALM is not merely analogous to Complete CALM but a formal
+instance: Ameloot et al.'s operational definition of coordination-freedom
+(heartbeat-only quiescence on some partition) is equivalent to our
+semantic definition (possibility preservation) under the natural
+transducer instantiation.
 
-This is an instance of Complete CALM under the following
-modeling choice:
-\begin{itemize}[nosep]
-  \item \emph{Histories} are executions of the transducer network: input-fact
-        arrivals are external input events; rule firings and message exchanges
-        are internal events.
-  \item \emph{Outcomes} are output-fact sets, ordered by set inclusion:
-        $o_1 \Ord o_2$ iff $o_1 \subseteq o_2$.
-  \item \emph{Observability:} $\Obs(H) = \{\mathit{LFP}(H)\}$, the least
-        fixpoint of the program over the input facts present in $H$.
-\end{itemize}
-Under this specification, monotonicity coincides exactly with
-program monotonicity: extending a history can only add input facts, and a
-monotone program's least fixpoint can only grow under set inclusion.
-Conversely, a non-monotone program admits inputs $I_1 \subseteq I_2$ with
-$\mathit{LFP}(I_1) \not\subseteq \mathit{LFP}(I_2)$, yielding a
-future-inconsistent outcome.
-Complete CALM therefore recovers CALM immediately.
+\begin{definition}[Transducer instantiation]
+  \label{def:transducer-inst}
+  For a relational transducer network computing query $Q$ over input
+  schema $S_{\mathit{in}}$, define the specification
+  $\Spec_Q = (E, \Obs, \subseteq)$ as follows:
+  \begin{itemize}[nosep]
+    \item $E$: input-fact arrivals are external input events; rule
+          firings, message sends/receives, and heartbeat transitions are
+          internal events.
+    \item Histories are prefixes of fair runs of the transducer network.
+    \item $\Obs(H) = \{O_H\}$ where $O_H$ is the set of output facts
+          irretractably produced by history $H$ (outputs cannot be
+          retracted in the transducer
+          model~\cite{ameloot2013relational}).
+    \item $\Ord$ is set inclusion: $o_1 \Ord o_2$ iff
+          $o_1 \subseteq o_2$.
+  \end{itemize}
+\end{definition}
+
+\begin{theorem}[Subsumption of CALM]
+  \label{thm:subsumption}
+  Under the transducer instantiation, the following are equivalent for
+  a query $Q$:
+  \begin{enumerate}[nosep]
+    \item $Q$ is coordination-free in the sense of Ameloot et
+          al.~\cite{ameloot2013relational}: there exists a horizontal
+          partition on which quiescence is reached by heartbeat
+          transitions alone.
+    \item $\Spec_Q$ is monotone in the sense of Complete CALM.
+    \item $Q$ is a monotone query (for all $I \subseteq J$,
+          $Q(I) \subseteq Q(J)$).
+  \end{enumerate}
+\end{theorem}
+
+\begin{proof}
+  $(3) \Rightarrow (2)$:
+  If $Q$ is monotone, then for any $H_1 \hext H_2$, the input facts
+  at $H_2$ are a superset of those at $H_1$ (futures can only add
+  input events).
+  Since outputs are irretractable, $O_{H_1} \subseteq O_{H_2}$, i.e.,
+  $\Obs(H_1) \Ord \Obs(H_2)$.
+  Hence $\Spec_Q$ is monotone.
+
+  $(2) \Rightarrow (3)$:
+  If $\Spec_Q$ is monotone, consider inputs $I \subseteq J$.
+  Let $H_I$ be a complete run on input $I$ (reaching quiescence with
+  output $Q(I)$) and let $H_J$ extend $H_I$ by adding the facts
+  $J \setminus I$ as additional input events.
+  Since $H_I \hext H_J$ and $\Spec_Q$ is monotone,
+  $O_{H_I} \subseteq O_{H_J}$, i.e., $Q(I) \subseteq Q(J)$.
+  Hence $Q$ is monotone.
+
+  $(3) \Leftrightarrow (1)$:
+  This is the original CALM theorem~\cite{ameloot2013relational}:
+  coordination-free transducers compute exactly the monotone queries.
+  The equivalence $(1) \Leftrightarrow (3)$ is Ameloot et al.'s
+  Corollary~13.
+\end{proof}
+
+\noindent
+The theorem shows that Complete CALM, instantiated on the transducer
+model, recovers CALM exactly---not by analogy but by formal equivalence
+of the coordination-freedom definitions.
+The same argument extends to the hierarchy of Ameloot, Ketsman, Neven,
+and Zinn~\cite{ameloot2015weaker}: under models $N_1$, $N_2$, $N_3$
+(with increasing node knowledge), the coordination-free queries are
+exactly those whose induced specification is monotone under the
+corresponding instantiation.
+Baccaert and Ketsman's generalized CALM
+theorem~\cite{baccaert2026spectrum} (parameterized by configuration
+constraints) is likewise subsumed: their $\mathbf{C}$-monotonicity
+coincides with monotonicity of the specification induced by constraint
+$\mathbf{C}$.
 
 The key observation is that CALM \emph{equates program outputs with
-observable commitments}.
-This is a modeling choice, not a necessity.
-Complete CALM operates on observable output semantics---what
-an implementation exposes---rather than on program text.
-When these diverge, the criterion remains correct while CALM does not.
+observable commitments}---a modeling choice, not a necessity.
+Complete CALM operates on observable output semantics (what an
+implementation exposes) rather than on program text.
+When these diverge---as in the separation below---Complete CALM remains
+correct while CALM does not.
 
 %----------------------------------------------------------------
 \subsection{The Separation: Coordination Discharges Non-Monotonicity}
@@ -1186,14 +1241,50 @@ correctness constraints.
 
 \begin{proposition}[HAT levels are monotone]
   \label{prop:hat-monotone}
-  Under read uncommitted, read committed, and session guarantees, the
-  constraints are prefix-stable: if $o \in \Obs_L(H)$ and $H \hext H'$,
-  there exists $o' \in \Obs_L(H')$ with $o \subseteq o'$.
-  Extending a history may add committed transactions but cannot
-  invalidate previously exposed commit or read facts.
-  Hence $\Spec_L$ is monotone, and by Complete CALM these levels
-  admit coordination-free implementations.
+  Under read uncommitted, read committed, and session guarantees
+  (monotonic reads, read-your-writes), the specification $\Spec_L$ is
+  monotone.
 \end{proposition}
+
+\begin{proof}
+  We must show: for all $H \hext H'$ and all $o \in \Obs_L(H)$, there
+  exists $o' \in \Obs_L(H')$ with $o \subseteq o'$.
+  The key structural property shared by all HAT levels is that their
+  correctness constraints are \emph{prefix-stable}: they restrict which
+  read values are admissible at a given history, but never retroactively
+  invalidate a previously admissible read.
+
+  \emph{Read uncommitted:} any value ever written is a valid read
+  result.
+  Extending a history can add writes but never removes them from the
+  written set.
+  Hence any previously admissible read value remains admissible.
+
+  \emph{Read committed:} a read must return a value written by a
+  committed transaction.
+  Extending a history can add committed transactions (enlarging the set
+  of valid return values) but cannot uncommit a previously committed
+  transaction.
+  Hence $\mathsf{read}(T, x, v) \in o$ remains valid in $o'$.
+
+  \emph{Monotonic reads:} successive reads of the same object by the
+  same session must return non-decreasing values (with respect to commit
+  order).
+  Extending a history can add later commits but cannot reorder
+  previously committed transactions.
+  A read value that was consistent with monotonic-reads at $H$ remains
+  so at $H'$.
+
+  \emph{Read-your-writes:} a read in session $s$ must see all prior
+  writes by $s$.
+  Extending a history does not remove writes from $s$'s history, so
+  the constraint remains satisfied.
+
+  In each case, $o \in \Obs_L(H)$ implies the existence of
+  $o' \supseteq o$ in $\Obs_L(H')$ (take $o' = o$ plus any newly
+  committed facts).
+  Hence $\Spec_L$ is monotone.
+\end{proof}
 
 \begin{proposition}[Serializability is not monotone]
   \label{prop:ser-nonmonotone}
