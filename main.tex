@@ -1017,43 +1017,41 @@ known domain is expressible in fixpoint logic.
 \begin{proof}
   \emph{Construction.}
   Let $I_{\mathit{mem}}$ establish membership: a designated seed
-  authority (e.g., a configuration service) publishes the set of
-  participants $\mathsf{All}$.
-  Once a node knows $\mathsf{All}$, it can evaluate any specification
-  over the inputs from those participants by monotone accumulation:
-  \begin{itemize}[nosep]
-    \item Each participant sends its input events to all others.
-    \item A node accumulates received inputs monotonically (the set of
-          received messages only grows).
-    \item Once a node has received input from every member of
-          $\mathsf{All}$, it evaluates the specification deterministically
-          over the complete input.
-  \end{itemize}
-  Define the resolved specification's outcomes as the results of this
-  deterministic evaluation, ordered by an information-growth order
-  (e.g., the evaluation is undefined until all inputs arrive, then
-  produces a single determined outcome; the order is
-  $\bot \Ord o$ for the final outcome $o$).
+  authority publishes the set of participants $\mathsf{All}$.
+  Once membership is known, the mechanism places all input events into
+  a total order consistent with causality and delivers this order
+  identically to every replica.
+  This is an \emph{online} process: events are ordered and delivered
+  incrementally as they arrive, not batched.
+  Any protocol that produces a consistent total extension of the causal
+  partial order suffices (e.g., total-order broadcast, replicated state
+  machines, or any consensus-based sequencer).
+  Different runs may produce different total orders---the choice among
+  valid extensions is nondeterministic---but within a run, all replicas
+  observe the same sequence.
+
+  Each replica evaluates the specification deterministically over the
+  growing prefix of ordered events.
+  Define the resolved specification's outcomes as these prefix-indexed
+  evaluation results, ordered by prefix extension:
+  $o_1 \Ord o_2$ iff $o_1$ corresponds to a prefix of the sequence
+  that $o_2$ corresponds to.
 
   \emph{Monotonicity.}
-  Before all inputs arrive, the outcome is $\bot$ (undetermined).
-  After all inputs arrive, the outcome is the unique result of
-  deterministic evaluation.
-  At any history $H_1 \hext H_2$: if $H_1$ has outcome $\bot$, then
-  $H_2$ has either $\bot$ or the final outcome $o$, both satisfying
-  $\bot \Ord o$.
-  If $H_1$ already has outcome $o$, then $H_2$ has the same $o$
-  (the evaluation is deterministic and all inputs have arrived).
-  Hence the resolved specification is monotone.
+  The ordered sequence only grows (events are appended, never
+  reordered or retracted).
+  Hence the evaluation result at any prefix refines monotonically:
+  for $H_1 \hext H_2$, the prefix at $H_2$ extends the prefix at
+  $H_1$, so $o_1 \Ord o_2$.
+  The resolved specification is monotone.
 
   \emph{Why membership is the only distributed coordination needed.}
-  The accumulation of inputs from known participants is monotone:
-  messages arrive, the received set grows, and the condition
-  ``received from all members of $\mathsf{All}$'' is a monotone
-  threshold on a growing set.
-  No node needs to suppress any admissible future---it simply waits
-  until the monotone condition fires.
-  By Complete CALM, this accumulation phase is coordination-free.
+  Once membership is established, the ordering mechanism operates by
+  monotone accumulation: each replica receives an ever-growing prefix
+  of the agreed sequence.
+  No replica needs to suppress any admissible future---it simply
+  processes events as they arrive in the agreed order.
+  By Complete CALM, this consumption phase is coordination-free.
 \end{proof}
 
 \noindent
