@@ -66,8 +66,6 @@
   As a natural consequence, it passes the litmus test: a non-monotone
   program composed with a coordination protocol produces monotone
   output, and Complete CALM verifies this.
-  We prove a universal construction showing that establishing membership
-  suffices to make any specification well-coordinated.
   We instantiate the criterion on transactional isolation levels,
   invariant confluence, and CRDTs, recovering known coordination
   boundaries as instances of a single semantic test.
@@ -219,10 +217,6 @@ instances of the same semantic test.
         non-monotone specifications---the litmus test that prior
         frameworks~\cite{ameloot2013relational,baccaert2026spectrum}
         fail (Section~\ref{sec:beyond-calm}).
-  \item A \emph{universal construction}: establishing membership (one
-        round of distributed coordination) suffices to reduce any
-        specification to well-coordinated local evaluation
-        (Section~\ref{sec:universal-construction}).
   \item \emph{Uniform recovery} of known coordination boundaries for
         isolation levels, invariant confluence, and CRDTs as instances of
         monotonicity (Section~\ref{sec:applications}).
@@ -324,11 +318,9 @@ latency and partition vulnerability in a distributed system.
 The criterion characterizes when these costs are \emph{intrinsic} to the
 specification (unavoidable under any implementation) versus
 \emph{incidental} (artifacts of a particular implementation strategy).
-The universal construction (Section~
-ef{sec:universal-construction})
-addresses the distributed case specifically, showing that one round of
-distributed coordination suffices to eliminate all further
-cross-node costs.
+In the distributed case, establishing membership and consistent
+input ordering suffices to eliminate all further cross-node
+coordination costs (Appendix~\ref{app:universal}).
 
 We build toward the criterion in three steps: first the execution model
 (histories and their causal growth), then the specification language
@@ -1048,174 +1040,16 @@ prefix-monotone output semantics are monotone, certifying that
 downstream consumers need not coordinate, regardless of the non-monotone
 logic that produced the log.
 
-The next subsection shows this is not merely an observation about one
-architecture---it is a universal construction.
-
-%----------------------------------------------------------------
-\subsection{One Round of Coordination Universally Suffices}
-\label{sec:universal-construction}
-%----------------------------------------------------------------
-
-The separation theorem exhibits specifications where coordination
-resolves non-monotonicity and produces monotone output.
-We now show this is always possible: for \emph{any} specification, a
-single round of distributed coordination---establishing
-membership---suffices to reduce all remaining computation to
-coordination-free local evaluation.
-
-The key insight is that membership knowledge converts universal
-quantification into existential quantification.
-A non-monotone operation like ``all participants have contributed''
-requires knowing who the participants \emph{are} before it can be
-evaluated.
-Once membership is established, the check becomes monotone: the set of
-received contributions only grows, and once it equals the known
-membership, the condition fires.
-This is the same mechanism underlying the Immerman--Vardi
-theorem~\cite{immerman1986relational}: bounded quantification over a
-known domain is expressible in fixpoint logic.
-
-\begin{theorem}[Universal sufficiency of membership]
-  \label{thm:universal}
-  For any specification $\Spec = (E, \Obs, \Ord)$, there exists a
-  coordination mechanism $I_{\mathit{mem}}$ that establishes membership
-  (makes the participant set common knowledge) such that the resolved
-  specification $\Spec|_{I_{\mathit{mem}}}$ is monotone.
-\end{theorem}
-
-\begin{proof}
-  \emph{Construction.}
-  Let $I_{\mathit{mem}}$ establish membership: a designated seed
-  authority publishes the set of participants $\mathsf{All}$.
-  Once membership is known, the mechanism places all input events into
-  a total order consistent with causality and delivers this order
-  identically to every replica.
-  This is an \emph{online} process: events are ordered and delivered
-  incrementally as they arrive, not batched.
-  Any protocol that produces a consistent total extension of the causal
-  partial order suffices (e.g., total-order broadcast, replicated state
-  machines, or any consensus-based sequencer).
-  Different runs may produce different total orders---the choice among
-  valid extensions is nondeterministic---but within a run, all replicas
-  observe the same sequence.
-  This is the standard semantics of replicated state machines:
-  consistency is across replicas (within a run), not across runs.
-  The specification's admissible set captures exactly this
-  nondeterminism---multiple outcomes are valid, and the ordering
-  mechanism selects one per run.
-
-  Each replica evaluates the specification deterministically over the
-  growing prefix of ordered events.
-  Define the resolved specification's outcomes as these prefix-indexed
-  evaluation results, ordered by prefix extension:
-  $o_1 \Ord o_2$ iff $o_1$ corresponds to a prefix of the sequence
-  that $o_2$ corresponds to.
-
-  \emph{Monotonicity.}
-  The ordered sequence only grows (events are appended, never
-  reordered or retracted).
-  Hence the evaluation result at any prefix refines monotonically:
-  for $H_1 \hext H_2$, the prefix at $H_2$ extends the prefix at
-  $H_1$, so $o_1 \Ord o_2$.
-  The resolved specification is monotone.
-
-  \emph{Why membership is the only distributed coordination needed.}
-  Once membership is established, the ordering mechanism operates by
-  monotone accumulation: each replica receives an ever-growing prefix
-  of the agreed sequence.
-  No replica needs to suppress any admissible future---it simply
-  processes events as they arrive in the agreed order.
-  By Complete CALM, this consumption phase is coordination-free.
-\end{proof}
-
-\noindent
-The construction shows that membership is the \emph{universal}
-coordination primitive: once participants are known, all remaining
-non-monotonicity can be resolved by monotone local computation
-(accumulate inputs from known participants, then evaluate
-deterministically).
-No further distributed coordination---no suppression of admissible
-futures---is needed.
-
-\paragraph{Comparison with Ameloot et al.}
-Ameloot et al.~\cite{ameloot2013relational} prove a related result in
-the transducer model: if nodes have access to the system relations
-$\mathsf{All}$ (the set of all node identifiers) and $\mathsf{Id}$
-(the local identifier)---the \emph{non-oblivious} setting---then
-monotone queries can be evaluated coordination-free.
-Our construction improves on this in two ways.
-
-First, it requires no syntactic recognition of special relations.
-Ameloot's proof depends on the program having access to $\mathsf{All}$
-and $\mathsf{Id}$ and on the analysis recognizing these as system
-relations with specific semantics.
-Our construction is purely semantic: it operates on the specification
-$\Spec$ without inspecting any program text.
-Membership is a generic coordination mechanism, not a model-specific
-assumption about available relations.
-
-Second, it accommodates membership change at the mechanism level.
-Ameloot's non-obliviousness assumes a fixed, globally known set of
-nodes---the $\mathsf{All}$ relation is static.
-If membership changes (nodes join or depart), the preconditions of the
-theorem fail and must be re-established.
-Our construction has the same formal requirement (a fixed event universe
-$E$), but the mechanism that establishes membership can be extended
-incrementally: the current authority uses its decision-making power to
-admit new members or appoint successors.
-This appointment is itself a monotone extension of the authority
-chain---each membership-change event extends the history without
-retracting prior membership decisions.
-The chain of authorization is constructed incrementally from an original
-seed authority (typically defined offline in a configuration file at
-system setup).
-Downstream coordination-freedom is a property of the \emph{output
-semantics} (monotone accumulation over known membership), not of any
-static membership assumption.
-
-\paragraph{Architectural consequence.}
-Theorem~\ref{thm:universal} formally justifies a common systems
-pattern: establish membership once (via a configuration service,
-bootstrap protocol, or seed authority), then process all subsequent
-computation coordination-free.
-Log-based architectures (Kafka~\cite{kreps2011kafka}, event sourcing,
-change data capture) are one realization: the log's sequencer is the
-membership authority, and downstream consumers accumulate log entries
-monotonically.
-But the theorem is more general---any architecture that establishes
-membership and then accumulates inputs monotonically achieves
-coordination-freedom downstream, regardless of the specification's
-non-monotone structure.
-
-\begin{remark}[Distributed vs.\ local coordination]
-  \label{rem:local-depth}
-  The universal construction resolves all \emph{distributed}
-  coordination---the need for cross-node communication to suppress
-  admissible futures---in one round (membership).
-  However, local evaluation may still require sequential commitment
-  that does not involve distributed coordination.
-
-  Consider a multi-stratum Datalog program evaluated across $n$ nodes.
-  Each stratum must be \emph{sealed} before the next can begin: a node
-  must know that all derivations in stratum $k$ are complete before
-  evaluating negation in stratum $k{+}1$.
-  This sealing requires waiting for end-of-data signals from all
-  participants---but that waiting is \emph{monotone}: the set of
-  received signals only grows, and once all have arrived, the seal
-  commits locally.
-  No distributed coordination is needed beyond knowing who the
-  participants are (membership).
-
-  The distributed coordination depth is therefore just one round:
-  establishing membership.
-  After that, each stratum seal is a local commitment triggered by
-  monotone accumulation of signals from known participants.
-  The $k$ strata require $k$ local sequential commitments, but zero
-  additional rounds of distributed coordination.
-  Hellerstein~\cite{hellerstein2026complexity} characterizes this full
-  sequential cost (including local commitments) as \emph{determination
-  depth}; Complete CALM addresses only the distributed boundary.
-\end{remark}
+\paragraph{Membership as a universal coordination primitive.}
+The pattern generalizes: for any specification, establishing membership
+(making the participant set known) and delivering inputs in a consistent
+order eliminates all distributed non-determinism.
+Once every replica sees the same ordered input, evaluation is
+deterministic and the output grows monotonically with the input prefix.
+No further distributed coordination is needed---only local sequential
+commitment (if the specification has determination
+depth~\cite{hellerstein2026complexity} greater than zero).
+A full construction appears in Appendix~\ref{app:universal}.
 
 % Comparison with Baccaert/Ketsman and Li/Lee is in Related Work
 % (Section~\ref{sec:related}).
@@ -1748,6 +1582,186 @@ Any semantic criterion sufficient for coordination-freedom must entail
 monotonicity under some such induced order.
 Monotonicity is therefore the weakest semantic structure that
 coordination-free behavior can exhibit.
+
+\section{Universal Construction}
+\label{app:universal}
+
+This appendix contains the full universal construction, showing that
+membership establishment plus consistent ordered delivery suffices to
+make any specification well-coordinated.
+The construction requires that the ordering mechanism delivers a
+sequence of log entries (each containing one or more events) and that
+replicas apply entries sequentially in log order, eliminating both
+ordering and batching non-determinism from the input stream.
+
+
+%----------------------------------------------------------------
+\subsection{One Round of Coordination Universally Suffices}
+\label{sec:universal-construction}
+%----------------------------------------------------------------
+
+The separation theorem exhibits specifications where coordination
+resolves non-monotonicity and produces monotone output.
+We now show this is always possible: for \emph{any} specification, a
+single round of distributed coordination---establishing
+membership---suffices to reduce all remaining computation to
+coordination-free local evaluation.
+
+The key insight is that membership knowledge converts universal
+quantification into existential quantification.
+A non-monotone operation like ``all participants have contributed''
+requires knowing who the participants \emph{are} before it can be
+evaluated.
+Once membership is established, the check becomes monotone: the set of
+received contributions only grows, and once it equals the known
+membership, the condition fires.
+This is the same mechanism underlying the Immerman--Vardi
+theorem~\cite{immerman1986relational}: bounded quantification over a
+known domain is expressible in fixpoint logic.
+
+\begin{theorem}[Universal sufficiency of membership]
+  \label{thm:universal}
+  For any specification $\Spec = (E, \Obs, \Ord)$, there exists a
+  coordination mechanism $I_{\mathit{mem}}$ that establishes membership
+  (makes the participant set common knowledge) such that the resolved
+  specification $\Spec|_{I_{\mathit{mem}}}$ is monotone.
+\end{theorem}
+
+\begin{proof}
+  \emph{Construction.}
+  Let $I_{\mathit{mem}}$ establish membership: a designated seed
+  authority publishes the set of participants $\mathsf{All}$.
+  Once membership is known, the mechanism places all input events into
+  a total order consistent with causality and delivers this order
+  identically to every replica.
+  This is an \emph{online} process: events are ordered and delivered
+  incrementally as they arrive, not batched.
+  Any protocol that produces a consistent total extension of the causal
+  partial order suffices (e.g., total-order broadcast, replicated state
+  machines, or any consensus-based sequencer).
+  Different runs may produce different total orders---the choice among
+  valid extensions is nondeterministic---but within a run, all replicas
+  observe the same sequence.
+  This is the standard semantics of replicated state machines:
+  consistency is across replicas (within a run), not across runs.
+  The specification's admissible set captures exactly this
+  nondeterminism---multiple outcomes are valid, and the ordering
+  mechanism selects one per run.
+
+  Each replica evaluates the specification deterministically over the
+  growing prefix of ordered events.
+  Define the resolved specification's outcomes as these prefix-indexed
+  evaluation results, ordered by prefix extension:
+  $o_1 \Ord o_2$ iff $o_1$ corresponds to a prefix of the sequence
+  that $o_2$ corresponds to.
+
+  \emph{Monotonicity.}
+  The ordered sequence only grows (events are appended, never
+  reordered or retracted).
+  Hence the evaluation result at any prefix refines monotonically:
+  for $H_1 \hext H_2$, the prefix at $H_2$ extends the prefix at
+  $H_1$, so $o_1 \Ord o_2$.
+  The resolved specification is monotone.
+
+  \emph{Why membership is the only distributed coordination needed.}
+  Once membership is established, the ordering mechanism operates by
+  monotone accumulation: each replica receives an ever-growing prefix
+  of the agreed sequence.
+  No replica needs to suppress any admissible future---it simply
+  processes events as they arrive in the agreed order.
+  By Complete CALM, this consumption phase is coordination-free.
+\end{proof}
+
+\noindent
+The construction shows that membership is the \emph{universal}
+coordination primitive: once participants are known, all remaining
+non-monotonicity can be resolved by monotone local computation
+(accumulate inputs from known participants, then evaluate
+deterministically).
+No further distributed coordination---no suppression of admissible
+futures---is needed.
+
+\paragraph{Comparison with Ameloot et al.}
+Ameloot et al.~\cite{ameloot2013relational} prove a related result in
+the transducer model: if nodes have access to the system relations
+$\mathsf{All}$ (the set of all node identifiers) and $\mathsf{Id}$
+(the local identifier)---the \emph{non-oblivious} setting---then
+monotone queries can be evaluated coordination-free.
+Our construction improves on this in two ways.
+
+First, it requires no syntactic recognition of special relations.
+Ameloot's proof depends on the program having access to $\mathsf{All}$
+and $\mathsf{Id}$ and on the analysis recognizing these as system
+relations with specific semantics.
+Our construction is purely semantic: it operates on the specification
+$\Spec$ without inspecting any program text.
+Membership is a generic coordination mechanism, not a model-specific
+assumption about available relations.
+
+Second, it accommodates membership change at the mechanism level.
+Ameloot's non-obliviousness assumes a fixed, globally known set of
+nodes---the $\mathsf{All}$ relation is static.
+If membership changes (nodes join or depart), the preconditions of the
+theorem fail and must be re-established.
+Our construction has the same formal requirement (a fixed event universe
+$E$), but the mechanism that establishes membership can be extended
+incrementally: the current authority uses its decision-making power to
+admit new members or appoint successors.
+This appointment is itself a monotone extension of the authority
+chain---each membership-change event extends the history without
+retracting prior membership decisions.
+The chain of authorization is constructed incrementally from an original
+seed authority (typically defined offline in a configuration file at
+system setup).
+Downstream coordination-freedom is a property of the \emph{output
+semantics} (monotone accumulation over known membership), not of any
+static membership assumption.
+
+\paragraph{Architectural consequence.}
+Theorem~\ref{thm:universal} formally justifies a common systems
+pattern: establish membership once (via a configuration service,
+bootstrap protocol, or seed authority), then process all subsequent
+computation coordination-free.
+Log-based architectures (Kafka~\cite{kreps2011kafka}, event sourcing,
+change data capture) are one realization: the log's sequencer is the
+membership authority, and downstream consumers accumulate log entries
+monotonically.
+But the theorem is more general---any architecture that establishes
+membership and then accumulates inputs monotonically achieves
+coordination-freedom downstream, regardless of the specification's
+non-monotone structure.
+
+\begin{remark}[Distributed vs.\ local coordination]
+  \label{rem:local-depth}
+  The universal construction resolves all \emph{distributed}
+  coordination---the need for cross-node communication to suppress
+  admissible futures---in one round (membership).
+  However, local evaluation may still require sequential commitment
+  that does not involve distributed coordination.
+
+  Consider a multi-stratum Datalog program evaluated across $n$ nodes.
+  Each stratum must be \emph{sealed} before the next can begin: a node
+  must know that all derivations in stratum $k$ are complete before
+  evaluating negation in stratum $k{+}1$.
+  This sealing requires waiting for end-of-data signals from all
+  participants---but that waiting is \emph{monotone}: the set of
+  received signals only grows, and once all have arrived, the seal
+  commits locally.
+  No distributed coordination is needed beyond knowing who the
+  participants are (membership).
+
+  The distributed coordination depth is therefore just one round:
+  establishing membership.
+  After that, each stratum seal is a local commitment triggered by
+  monotone accumulation of signals from known participants.
+  The $k$ strata require $k$ local sequential commitments, but zero
+  additional rounds of distributed coordination.
+  Hellerstein~\cite{hellerstein2026complexity} characterizes this full
+  sequential cost (including local commitments) as \emph{determination
+  depth}; Complete CALM addresses only the distributed boundary.
+\end{remark}
+
+
 
 \section{Additional Applications}
 \label{app:additional}
