@@ -576,6 +576,23 @@ could not be realized by any effective procedure.
 Correctness ($\Expose_I(H) \subseteq \Obs(H)$) is required only at
 realizable histories---an implementation is not penalized for behavior at
 histories it never produces.
+We additionally require \emph{irretractability}: for all realizable
+$H_1 \hext H_2$, if $o \in \Expose_I(H_1)$ then there exists
+$o' \in \Expose_I(H_2)$ with $o \Ord o'$.
+Once an outcome is exposable, every future must offer a compatible
+refinement.
+This models the physical constraint that an observation, once
+communicated to a client, cannot be retracted.
+
+%% JMH NOTE: This irretractability condition is what makes the necessity
+%% proof work. Without it, an implementation could expose o1 at H1 and
+%% then expose something incompatible at H2 -- operationally meaningless
+%% but formally allowed by the previous definition. The condition is
+%% standard in the transducer model (outputs cannot be retracted) and
+%% in linearizability (responses are irrevocable). Verify this doesn't
+%% break the sufficiency direction (it shouldn't: if Spec is monotone,
+%% then Expose_I = Obs satisfies irretractability by definition of
+%% monotonicity).
 
 A coordination-free implementation realizes \emph{all} admissible
 histories---it never suppresses a causally admissible future:
@@ -710,23 +727,31 @@ stranded at $H_2$.
   $o_1 \in \Obs(H_1)$ such that no $o' \in \Obs(H_2)$ satisfies
   $o_1 \Ord o'$.
   Both $H_1$ and $H_2$ lie in $\mathcal{A}(\In(H_1))$ (they share
-  the same input projection), and
-  $o_1 \in \Poss_{\In(H_1)}(H_1)$ (since $H_1 \hext H_1$).
+  the same input projection).
   Suppose for contradiction that a coordination-free implementation $I$
   exists.
-  If $H_2 \notin \mathcal{R}_I(\In(H_1))$, then outcomes arising
-  only along extensions through $H_2$ are absent from
-  $\Poss^I_{\In(H_1)}(H_1)$ but present in
-  $\Poss_{\In(H_1)}(H_1)$, violating $\Poss^I = \Poss$.
-  Hence $H_2 \in \mathcal{R}_I(\In(H_1))$.
-  But then: $o_1$ is exposable at $H_1$ (since
-  $\Expose_I(H_1) \subseteq \Obs(H_1)$ and $o_1 \in \Obs(H_1)$),
-  yet the realized extension $H_2$ admits no outcome compatible with
-  $o_1$.
-  To remain correct, the implementation must suppress either $o_1$
-  (so $\Poss^I \subsetneq \Poss$) or $H_2$ (already shown to
-  violate $\Poss^I = \Poss$).
-  Either way, coordination-freedom is contradicted.
+  By $\Poss^I = \Poss$, $H_2$ must be realizable (otherwise outcomes
+  arising only via $H_2$ would be missing from $\Poss^I$).
+  Since $H_1 \hext H_2$ and $\mathcal{R}_I$ is downward-closed,
+  $H_1 \in \mathcal{R}_I$.
+  By $\Poss^I = \Poss$ and $o_1 \in \Obs(H_1) \subseteq \Poss(H_1)$,
+  we have $o_1 \in \Poss^I(H_1)$: there exists realizable $K$ with
+  $H_1 \hext K$ and $o_1 \in \Expose_I(K)$.
+  By irretractability applied to $K$ and the realizable extension $H_2$
+  of $H_1$: any history $H_3$ that extends both $K$ and $H_2$ (such
+  histories exist in $\mathcal{A}$ since both extend the same input
+  prefix) must satisfy $\Expose_I(H_3) \ni o'$ with $o_1 \Ord o'$.
+  But correctness requires $\Expose_I(H_3) \subseteq \Obs(H_3)$, and
+  since $H_2 \hext H_3$, monotonicity of $\Obs$ at $H_2$ would require
+  $o' \in \Obs(H_3)$ compatible with $\Obs(H_2)$---yet no outcome in
+  $\Obs(H_2)$ is compatible with $o_1$.
+  Contradiction.
+  Hence no coordination-free implementation exists.
+  %% JMH NOTE: This argument assumes common futures exist for any two
+  %% extensions of the same input prefix. This holds in asynchronous
+  %% message-passing (you can always merge two concurrent executions by
+  %% interleaving their events). Verify this is stated as an assumption
+  %% or follows from the history model.
 
   The full proof, including a tightness argument showing that
   monotonicity is the weakest sufficient condition, appears in
