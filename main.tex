@@ -366,9 +366,10 @@ propagation messages.
   $E \subseteq E_{\mathit{in}} \cup E_{\mathit{int}} \cup
   E_{\mathit{send}} \cup E_{\mathit{recv}}$,
   $\rightarrow$ is a strict partial order on $E$, and
-  for every receive $r \in E$ there exists a unique send
-  $s \in E$ with $s \rightarrow r$ (each send precedes at most one
-  receive).
+  there is a matching function $\mu : E \cap E_{\mathit{recv}}
+  \to E \cap E_{\mathit{send}}$ (each receive is matched to a
+  unique send, and each send is matched by at most one receive),
+  with $\mu(r) \rightarrow r$ for every receive $r$.
   A history is \emph{well-formed} if it satisfies these constraints.
   We write $\Hist$ for the set of all well-formed histories over a fixed
   event universe.
@@ -448,6 +449,12 @@ how executions unfold.
 \end{definition}
 
 \noindent
+We require $\Obs(H) \neq \emptyset$ for all $H$: every history admits
+at least one outcome.
+(A history with no admissible outcome would represent an unreachable or
+ill-formed state; such histories are excluded from $\Hist$ by the
+well-formedness conditions.)
+
 The outcome order $\Ord$ is part of the specification---it is not
 derived from execution structure but declared as part of the semantic
 contract.
@@ -706,17 +713,24 @@ stranded at $H_2$.
   If $\Spec$ is not monotone, there exist $H_1 \hext H_2$ and
   $o_1 \in \Obs(H_1)$ such that no $o' \in \Obs(H_2)$ satisfies
   $o_1 \Ord o'$.
-  Both $H_1$ and $H_2$ are admissible (they share the same input
-  projection).
-  Any coordination-free implementation must realize both.
-  But if it exposes $o_1$ at $H_1$, the extension $H_2$ admits no
-  compatible outcome---correctness is violated.
-  To remain correct, the implementation must either suppress $o_1$
-  (ruling out a specification-permitted outcome at $H_1$) or suppress
-  $H_2$ (ruling out an admissible future).
-  Either way, $\Poss^I \subsetneq \Poss$, contradicting
-  coordination-freedom.
-  Hence no coordination-free implementation exists.
+  Both $H_1$ and $H_2$ lie in $\mathcal{A}(\In(H_1))$ (they share
+  the same input projection), and
+  $o_1 \in \Poss_{\In(H_1)}(H_1)$ (since $H_1 \hext H_1$).
+  Suppose for contradiction that a coordination-free implementation $I$
+  exists.
+  If $H_2 \notin \mathcal{R}_I(\In(H_1))$, then outcomes arising
+  only along extensions through $H_2$ are absent from
+  $\Poss^I_{\In(H_1)}(H_1)$ but present in
+  $\Poss_{\In(H_1)}(H_1)$, violating $\Poss^I = \Poss$.
+  Hence $H_2 \in \mathcal{R}_I(\In(H_1))$.
+  But then: $o_1$ is exposable at $H_1$ (since
+  $\Expose_I(H_1) \subseteq \Obs(H_1)$ and $o_1 \in \Obs(H_1)$),
+  yet the realized extension $H_2$ admits no outcome compatible with
+  $o_1$.
+  To remain correct, the implementation must suppress either $o_1$
+  (so $\Poss^I \subsetneq \Poss$) or $H_2$ (already shown to
+  violate $\Poss^I = \Poss$).
+  Either way, coordination-freedom is contradicted.
 
   The full proof, including a tightness argument showing that
   monotonicity is the weakest sufficient condition, appears in
@@ -1140,15 +1154,15 @@ $\Spec$ without inspecting any program text.
 Membership is a generic coordination mechanism, not a model-specific
 assumption about available relations.
 
-Second, it is robust to membership change.
+Second, it accommodates membership change at the mechanism level.
 Ameloot's non-obliviousness assumes a fixed, globally known set of
 nodes---the $\mathsf{All}$ relation is static.
 If membership changes (nodes join or depart), the preconditions of the
-theorem fail.
-Our construction accommodates membership change because the authority
-that established membership can extend it: the current authority uses
-its decision-making power to appoint the next authority or to admit new
-members.
+theorem fail and must be re-established.
+Our construction has the same formal requirement (a fixed event universe
+$E$), but the mechanism that establishes membership can be extended
+incrementally: the current authority uses its decision-making power to
+admit new members or appoint successors.
 This appointment is itself a monotone extension of the authority
 chain---each membership-change event extends the history without
 retracting prior membership decisions.
@@ -1368,7 +1382,10 @@ We recover this as an instance of Complete CALM.
 Consider a replicated database where each node applies transactions
 locally and periodically merges with other replicas.
 Outcomes are sets of database states reachable under causally admissible
-extensions, ordered by set inclusion (refinement = ruling out states).
+extensions, ordered by set inclusion: $o_1 \Ord o_2$ iff
+$o_1 \subseteq o_2$.
+(Here refinement means \emph{enlarging} the known-reachable set---learning
+that more states are possible---not ruling states out.)
 $\Obs_I(H)$ contains the invariant-preserving subsets of reachable
 states at $H$.
 For example, if the invariant is ``account balances are non-negative,''
