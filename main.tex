@@ -538,7 +538,7 @@ observations).
 Different specifications over the same histories may use different
 outcome orders.
 
-We require four well-formedness conditions linking outcomes to
+We require five well-formedness conditions linking outcomes to
 response events in the history:
 \begin{enumerate}[nosep]
   \item \emph{Response soundness:} if $H$ contains a response event
@@ -557,16 +557,35 @@ response events in the history:
         $\Obs(H') \subseteq \Obs(H)$.
         Recording a response can only restrict admissibility, never
         enlarge it.
+  \item \emph{Response observability:} every monotonicity violation
+        is witnessed at a response point. That is, if $o \in
+        \Obs(H_1)$ has no refinement at some extension $H_1 \hext
+        H_2$, then there is a witness pair $(H_1', H_2')$ with
+        $H_1' \hext H_2'$, $H_1'$ contains a pending invocation $e$,
+        and the witness outcome $o' \in \Obs(H_1')$ prescribes a
+        response for $e$ that has no future-consistent refinement
+        at $H_2'$.
+        That is, monotonicity failures are exposable through the
+        interface, not merely properties of abstract internal state.
 \end{enumerate}
+The first four conditions discipline the relationship between
+outcomes and response events; the fifth ensures that
+non-monotonicity is observable at the interface.
 Response soundness says outcomes must agree with recorded facts;
 response preservation says refinement never retracts a committed
 response; response totality says every admissible outcome at a
 response point commits to a response; response monotonicity says
-adding a recorded response only restricts further admissibility.
-We call a specification satisfying all four \emph{well-formed}.
-All specifications in this paper are well-formed, and the operational
-theorem (Section~\ref{sec:operational}) is stated for well-formed
-specifications.
+adding a recorded response only restricts further admissibility;
+response observability says monotonicity failures show up at
+response points.
+We call a specification satisfying all five \emph{well-formed}.
+All specifications in this paper are well-formed---response
+observability is automatic for response-oriented specifications
+where every outcome is itself a response commitment, since any
+violation of monotonicity then immediately implies a response
+prescription that cannot be honored under extension.
+The operational theorem (Section~\ref{sec:operational}) is stated
+for well-formed specifications.
 
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
@@ -722,6 +741,24 @@ automata~\cite{lynch1996distributed}---and prove that the semantic
 condition (monotonicity) exactly characterizes when a correct,
 non-blocking implementation exists.
 
+\paragraph{Interface contract reading.}
+Throughout this section, we read $\Obs(H)$ as an
+\emph{interface contract}: every outcome in $\Obs(H)$ is a behavior
+the specification permits at $H$, and an implementation is correct
+only if every outcome it could expose is consistent with the
+specification.
+A system that systematically restricts itself to a subset
+$\Obs'(H) \subset \Obs(H)$ is implementing a different, restricted
+specification $\Spec'$ (a coordinated variant in the sense of
+Section~\ref{sec:separation})---not $\Spec$ itself.
+This convention separates \emph{environment futures} (invocations,
+deliveries, failures---adversarial inputs) from
+\emph{interface futures} (response events admitted by $\Obs$):
+the adversary forces the former; the specification permits the
+latter.
+Under this reading, coordination-freedom is a property of the
+specification and not of any angelic selection strategy.
+
 \begin{definition}[Process (I/O automaton)]
   \label{def:process}
   Each process $p_i$ is an I/O automaton with:
@@ -828,8 +865,11 @@ generality for safety properties.
 
 \begin{remark}[Joint consistency of independent responses]
   \label{rem:joint-consistency}
-  Joint consistency of independently emitted responses does not
-  require a separate ``response-compositionality'' assumption---it
+  Response compositionality is not an additional algebraic property
+  of outcomes; it is enforced by evaluating $\Obs$ on the full
+  response history.
+  Joint consistency of independently emitted responses therefore does
+  not require a separate ``response-compositionality'' assumption---it
   follows from monotonicity, because responses are events in the
   history and $\Obs$ is defined over the full history.
 
@@ -859,10 +899,6 @@ generality for safety properties.
   response events, enriching local views.
   But even for truly concurrent responses, monotonicity guarantees
   joint consistency---any failure would be a monotonicity violation.
-
-  Response compositionality is not an additional algebraic property of
-  outcomes; it is enforced by evaluating $\Obs$ on the full response
-  history.
 \end{remark}
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
@@ -883,22 +919,26 @@ generality for safety properties.
 
   Formalize this as follows.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
-  $H_1 \hext H_2$, and let $e$ be a pending invocation at process $p$
-  with $o$ prescribing response $v$ for $e$ (response totality
-  guarantees this; if no such invocation exists at $H_1$, pull the
-  witness back to where the relevant response was first exposed).
+  $H_1 \hext H_2$. By response observability, we may assume without
+  loss of generality that $H_1$ contains a pending invocation $e$ at
+  some process $p$, and that $o$ prescribes response $v$ for $e$
+  while $v$ has no future-consistent refinement at $H_2$.
   Process $p$'s local view at the moment of response is its
   projection of $H_1$.
 
-  Consider any coordination-free implementation $I$ that may expose
-  $o$.
+  Consider any coordination-free implementation $I$ of $\Spec$ as the
+  interface contract: every $o \in \Obs(H)$ is potentially
+  exposable, and $I$ must be safe whenever the contract permits an
+  outcome.
   When $p$ receives $e$ at this local view, $I$ must respond
-  deterministically.
+  deterministically using only local state.
   $I$ does not know whether the global history will remain at $H_1$
   (where $v$ is safe) or extend to $H_2$ (where $v$ has no
-  refinement)---both are admissible from $p$'s perspective.
-  An adversarial scheduler chooses the latter: it drives the system
-  to $H_2 \cup \{\mathsf{resp}(e, v)\}$.
+  refinement)---both extensions are admissible from $p$'s perspective.
+  Because $H_1 \hext H_2$ is itself an admissible
+  history (interface and environment futures combined), there is an
+  admissible continuation in which the system reaches
+  $H_2 \cup \{\mathsf{resp}(e, v)\}$ after $p$ commits to $v$.
   By response monotonicity of admissibility,
   $\Obs(H_2 \cup \{\mathsf{resp}(e, v)\}) \subseteq \Obs(H_2)$, and
   no outcome there refines $o$.
@@ -906,8 +946,9 @@ generality for safety properties.
 
   An implementation that \emph{never} chooses outcomes like $o$ is by
   definition a coordinated variant exposing a strict subset of $\Obs$
-  (Section~\ref{sec:separation})---not a coordination-free
-  implementation of $\Spec$ as the interface contract.
+  (Section~\ref{sec:separation})---it implements a different,
+  restricted interface $\Obs' \subset \Obs$, not the full contract
+  $\Spec$.
   Hence no correct coordination-free implementation of $\Spec$
   exists.
 \end{proof}
@@ -1097,20 +1138,26 @@ If not, more restriction is needed.
   Two kinds of Datalog encodings are possible.
 
   \emph{Direct encoding.}
-  Encoding the linearization as a set of position-value facts
-  $\{\mathit{pos}(i, v)\}$ under set inclusion requires a uniqueness
-  constraint (one value per position) that is non-monotone in
-  Datalog (Proposition~\ref{prop:prefix-negation}, formalized in
+  If the program is itself responsible for constructing or validating
+  the linearization relation from concurrent or unordered events,
+  then encoding the linearization as a set of position-value facts
+  $\{\mathit{pos}(i, v)\}$ under set inclusion requires enforcing
+  uniqueness and completeness of positions---one value per
+  position, no gaps---which is non-monotone in Datalog
+  (Proposition~\ref{prop:prefix-negation}, formalized in
   Appendix~\ref{app:hierarchy}).
   Relational-transducer CALM classifies any such program as requiring
   coordination, even though the residual output (the linearization
   prefix) is monotone.
+  (Reading from an already-valid log of $\mathit{pos}$ facts is
+  itself monotone; the non-monotonicity arises only when the program
+  is responsible for constructing or validating the log.)
 
   \emph{Indirect encoding.}
   One could place the serialization outside the analyzed program: an
-  external ``log'' relation provides serialized inputs, and the
-  Datalog program merely reads them.
-  This program is now monotone (it accumulates facts), and CALM
+  external ``log'' relation provides already-validated serialized
+  inputs, and the Datalog program merely reads them.
+  This consumer program is monotone (it accumulates facts), and CALM
   classifies it as coordination-free.
   But this changes which program is being analyzed: the ordering
   authority is no longer in scope.
@@ -1516,19 +1563,22 @@ of~\cite{bailis2013hat} as a semantic test.
 
 Snapshot isolation~\cite{berenson1995critique} likewise requires
 coordination, witnessed by the classic \emph{write-skew} anomaly.
-Consider an invariant $x + y \geq 0$ with $x = y = 0$ initially.
-Transaction $T_1$ reads $x$ and $y$, then writes $y := -1$;
-$T_2$ reads $x$ and $y$, then writes $x := -1$.
+Consider an invariant $x + y \geq 1$ with $x = y = 1$ initially.
+Transaction $T_1$ reads $x$ and $y$, then writes $y := 0$;
+$T_2$ reads $x$ and $y$, then writes $x := 0$.
 Each transaction individually preserves the invariant from its
-snapshot.
+snapshot: after $T_1$ alone the state would be $x=1, y=0$
+(sum~$1$); after $T_2$ alone, $x=0, y=1$ (sum~$1$).
 At $H_1$, $T_1$ commits under SI's first-committer-wins rule (its
 write set $\{y\}$ does not conflict with any concurrent committed
 write):
-$o_1 = \{\mathsf{commit}(T_1), y \mapsto -1\} \in
+$o_1 = \{\mathsf{commit}(T_1), \mathsf{read}(T_1, x, 1),
+\mathsf{read}(T_1, y, 1), \mathsf{write}(T_1, y, 0)\} \in
 \Obs_{\mathit{SI}}(H_1)$.
-Extend to $H_2$ where $T_2$ also commits under SI (its write set
-$\{x\}$ does not conflict with $T_1$'s):
-the resulting state has $x = y = -1$, violating $x + y \geq 0$.
+Extend to $H_2$ where $T_2$ also commits under SI from the same
+snapshot $x=y=1$ (its write set $\{x\}$ does not conflict with
+$T_1$'s):
+the resulting state has $x = y = 0$, violating $x + y \geq 1$.
 For an invariant-preserving SI specification, $\Obs_{\mathit{SI}}(H_2)
 = \emptyset$.
 Hence $o_1$ has no refinement at $H_2$---SI is not monotone.
@@ -1537,11 +1587,14 @@ The structural explanation is general: specifications that commit only to
 partial-order structure (causal consistency, read committed) are
 monotone---a downward-closed cut of happens-before remains valid
 under extension.
-Specifications that commit to total-order structure across concurrency
-(serializability) are not---a linearization commits
-to adjacency facts that a concurrent extension can invalidate.
-The HAT/non-HAT boundary aligns with the partial-order/total-order
-boundary.
+Specifications that commit to global constraints across concurrency
+(serializability, SI's invariant interaction) are not---they
+commit to facts (adjacency in a linearization, or the joint state
+after first-committer-wins reconciliation) that a concurrent
+extension can invalidate.
+In these examples, the HAT/non-HAT boundary reflects whether the
+specification commits only to partial-order-visible facts or to
+globally constraining choices across concurrency.
 
 \paragraph{Why specification-level analysis matters here.}
 Transactional isolation is not naturally expressed as a Datalog program.
