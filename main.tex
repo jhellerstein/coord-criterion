@@ -870,10 +870,9 @@ the process responding without knowing which future will materialize.
 \label{sec:complete-calm}
 %----------------------------------------------------------------
 
-We can now state the criterion precisely.
-The question is: when does a specification force every correct
-implementation to suppress admissible futures?
-The answer is a single semantic property of the specification.
+The operational theorem yields a clean semantic criterion that we use
+throughout the applications: a single property of the specification
+determines whether coordination-free implementation is possible.
 
 \begin{definition}[Monotonicity of a specification]
   \label{def:monotone}
@@ -887,40 +886,26 @@ This generalizes CALM's notion of monotonicity from a specific mapping
 (input facts $\to$ output facts, ordered by set inclusion) to an
 arbitrary one (histories $\to$ outcome sets, ordered by any
 user-defined refinement $\Ord$).
-The definition is the same---outputs refine as inputs grow---but the
-domain, range, and order are all generalized.
-
-Monotonicity is the specification-level characterization of future
-consistency: once an outcome is admitted at a history, every future
-admits a compatible refinement.
-Equivalently: a specification is monotone iff every admissible outcome
-is future-consistent at every history.
-
-A failure of monotonicity is witnessed by a
-\emph{future-inconsistent outcome}: an outcome $o \in \Obs(H_1)$ such
-that some future $H_2$ of $H_1$ admits no $o' \in \Obs(H_2)$ with
-$o \Ord o'$.
+Monotonicity says: once an outcome is admitted at a history, every
+future admits a compatible refinement.
+A failure is witnessed by a \emph{future-inconsistent outcome}:
+$o \in \Obs(H_1)$ with some future $H_2$ admitting no refinement.
 The register witness from Section~\ref{sec:example} is exactly such a
 failure: $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
 r_p{\,\mapsto}2 \rangle$ has no prefix-extension at $H_2$.
 
-Prior work on CALM requires involved proofs mapping from
-programming-model constraints to execution properties.
-Complete CALM separates the semantic characterization from the
-operational content (which requires a protocol construction and an
-impossibility argument, Theorem~\ref{thm:calm-operational} above):
-
 \begin{theorem}[Complete CALM]
   \label{thm:complete-calm}
-  The following are equivalent for a specification
-  $\Spec = (E, \Obs, \Ord)$:
-  \begin{enumerate}[nosep,label=(\roman*)]
-    \item $\Spec$ admits a correct coordination-free implementation
-          (in the I/O automaton model of
-          Section~\ref{sec:operational}).
-    \item $\Spec$ is monotone.
-  \end{enumerate}
+  A specification admits a correct coordination-free implementation
+  iff it is monotone.
 \end{theorem}
+
+\begin{proof}
+  Immediate from Theorem~\ref{thm:calm-operational}: the causal-view
+  protocol is correct iff monotonicity holds, and the
+  indistinguishability argument shows no correct coordination-free
+  implementation exists otherwise.
+\end{proof}
 
 \begin{example}[Applying Complete CALM to the running example]
   $\Spec_{\mathit{cc}}$ is monotone: each process's causal view
