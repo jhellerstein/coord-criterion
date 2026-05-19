@@ -752,8 +752,7 @@ automaton's interface.
 By default, the bridge is minimal: client responses are surfaced as
 outcomes in $\Obs$.
 Concretely, each outcome $o$ assigns a response value $o(e)$ to every
-invocation $e$ in the history---using a designated NULL value when
-the spec does not constrain $e$.
+invocation $e$ in the history.
 This response projection is part of the specification.
 Internal messaging ($\mathsf{send}$/$\mathsf{recv}$) is below the
 interface and is not surfaced.
@@ -777,8 +776,9 @@ We require three conditions:
   \item \emph{Refinement coherence:} refinement preserves responses.
         If $o \Ord o'$ and $o(e) = v$, then $o'(e) = v$.
   \item \emph{Response totality:} for every invocation $e$ in $H$
-        and every $o \in \Obs(H)$, $o(e)$ is defined (possibly as a
-        designated NULL response).
+        and every $o \in \Obs(H)$, $o(e)$ is defined.
+        (If the specification intentionally leaves $e$ unconstrained,
+        $o(e)$ may be a distinguished value such as $\mathsf{ack}$.)
 \end{enumerate}
 We call a specification satisfying these conditions
 \emph{well-formed} for the I/O model.
@@ -787,19 +787,21 @@ All specifications in this paper are well-formed.
 \paragraph{Interface contract: demonic exposure.}
 $\Obs(H)$ is an \emph{interface contract}: every outcome in $\Obs(H)$
 is an admissible interpretation the specification permits at $H$.
-We treat these outcomes demonically, as in model checking: an
-adversary nominates which admissible interpretation the
-implementation is held accountable to, and correctness must hold
-under every nomination.
-A coordination-free process responds from local state alone and
-cannot use distributed knowledge to steer the adversary's choice;
-if $\Obs(H)$ permits an outcome, the safety analysis must assume
-the adversary may pick it.
+We treat these outcomes demonically, as in model checking: safety
+must hold for \emph{all} permitted outcomes, not merely for the ones
+a favored implementation happens to expose.
+This is not a modeling choice but an epistemic necessity: a
+coordination-free process responds from local state alone and lacks
+the information needed to distinguish globally safe outcomes from
+unsafe ones.
+Selecting only safe outcomes requires knowing which futures will
+materialize---which is exactly the knowledge coordination provides.
+Therefore, if $\Obs(H)$ permits an outcome, the safety analysis must
+assume it may be exposed.
 An implementation that systematically excludes some
 $\Obs'(H) \subset \Obs(H)$ is implementing a coordinated variant
-(Section~\ref{sec:separation}), not $\Spec$.
-The reader should keep this convention in mind throughout: angelic
-selection is a coordination strategy, not a free move.
+(Section~\ref{sec:separation}), not $\Spec$: angelic selection is a
+coordination strategy, not a free move.
 
 \begin{definition}[Coordination-free (operational)]
   \label{def:coordfree-op}
@@ -1111,6 +1113,9 @@ can verify that coordination suffices, not merely that it is absent.
 
 Complete CALM characterizes when coordination is required---a semantic
 property independent of deployment model.
+As in the operational theorem, outcomes exposed at a process are
+interpreted demonically: if the interface permits an outcome at $p$,
+the safety analysis assumes $p$ may expose it.
 In the distributed setting, a natural conjecture is that the CAP
 tradeoff coincides with non-monotonicity: a specification forces a
 choice between consistency, availability, and partition tolerance iff
