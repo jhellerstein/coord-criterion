@@ -774,30 +774,10 @@ generality for safety properties.
   to invocation $e$.
 \end{definition}
 
-\begin{definition}[Response-compositional specification]
-  \label{def:resp-comp}
-  A specification is \emph{response-compositional} if whenever
-  individual response facts $(e_1, v_1), \ldots, (e_k, v_k)$ are each
-  explainable at a history $H$ (each appears in some
-  $o_j \in \Obs(H)$), then they are \emph{jointly} explainable: there
-  exists $o^* \in \Obs(H)$ prescribing $v_j$ for each $e_j$.
-\end{definition}
-
-\noindent
-Response-compositionality holds for all specifications in this paper:
-set-inclusion outcomes (HATs, I-confluence), lattice-ordered outcomes
-(CRDTs), and per-process causal views (causal consistency) all compose
-independently valid responses into a jointly valid outcome.
-It fails only for specifications where admissible outcomes impose
-global constraints across responses at different processes---but such
-specifications are non-monotone (the global constraint is exactly the
-non-monotonicity) and coordination-freedom does not apply to them.
-
 \begin{theorem}[Complete CALM, operational]
   \label{thm:calm-operational}
-  For a response-compositional specification $\Spec$:
-  $\Spec$ admits a correct coordination-free distributed
-  implementation iff $\Spec$ is monotone.
+  A specification $\Spec$ admits a correct coordination-free
+  distributed implementation iff $\Spec$ is monotone.
 \end{theorem}
 
 \begin{proof}
@@ -821,13 +801,22 @@ non-monotonicity) and coordination-freedom does not apply to them.
   $o' \in \Obs(H)$ with $o \Ord o'$.
   Since refinement preserves earlier responses, the emitted response
   is consistent with $o'$.
-  For joint consistency of multiple processes' responses:
-  correctness requires that the \emph{set} of all emitted responses
-  is explained by a \emph{single} $o^* \in \Obs(H)$.
-  By response-compositionality
-  (Definition~\ref{def:resp-comp}), since each individual response
-  is explainable at $H$ (via the monotonicity argument above), the
-  full set $\mathsf{Resp}(H)$ is jointly explainable.
+
+\begin{remark}[Joint consistency of independent responses]
+  \label{rem:joint-consistency}
+  Joint consistency of responses emitted by different processes does
+  not require a separate assumption.
+  Once a process emits a response, that response event enters the
+  history and constrains all future admissible outcomes.
+  A later process responding at a history that includes the earlier
+  response must choose an outcome explaining both---and monotonicity
+  guarantees such an outcome exists (the earlier outcome refines into
+  the later history).
+  The causal-view protocol achieves this automatically: gossip
+  propagates response events, so each process's local view includes
+  prior responses from other processes before it responds to new
+  invocations.
+\end{remark}
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
   Contrapositive: if $\Spec$ is not monotone, no correct
@@ -923,8 +912,8 @@ impossibility argument, Theorem~\ref{thm:calm-operational} above):
 
 \begin{theorem}[Complete CALM]
   \label{thm:complete-calm}
-  The following are equivalent for a response-compositional
-  specification $\Spec = (E, \Obs, \Ord)$:
+  The following are equivalent for a specification
+  $\Spec = (E, \Obs, \Ord)$:
   \begin{enumerate}[nosep,label=(\roman*)]
     \item $\Spec$ admits a correct coordination-free implementation
           (in the I/O automaton model of
