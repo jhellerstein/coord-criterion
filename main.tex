@@ -538,7 +538,7 @@ observations).
 Different specifications over the same histories may use different
 outcome orders.
 
-We require three well-formedness conditions linking outcomes to
+We require four well-formedness conditions linking outcomes to
 response events in the history:
 \begin{enumerate}[nosep]
   \item \emph{Response soundness:} if $H$ contains a response event
@@ -547,16 +547,22 @@ response events in the history:
   \item \emph{Response preservation:} if $o \Ord o'$ and $o$
         prescribes response $v$ for $e$, then $o'$ also prescribes
         $v$ for $e$.
-  \item \emph{Response totality:} at every reachable history
-        containing an invocation requiring a response,
-        $\Obs(H) \neq \emptyset$ and some outcome prescribes an
-        allowed response.
+  \item \emph{Response totality:} at every well-formed history $H$
+        containing a pending invocation $e$, every $o \in \Obs(H)$
+        prescribes an allowed response for $e$ (in particular,
+        $\Obs(H) \neq \emptyset$).
+  \item \emph{Response monotonicity of admissibility:} if $H'$
+        extends $H$ by adding only response events consistent with
+        outcomes in $\Obs(H)$, then $\Obs(H') \subseteq \Obs(H)$
+        (recording a response can only restrict admissibility, never
+        enlarge it).
 \end{enumerate}
 Response soundness says outcomes must agree with recorded facts;
 response preservation says refinement never retracts a committed
-response; response totality says an available process can always
-find a valid response.
-We call a specification satisfying all three \emph{well-formed}.
+response; response totality says every admissible outcome at a
+response point commits to a response; response monotonicity says
+adding a recorded response only restricts further admissibility.
+We call a specification satisfying all four \emph{well-formed}.
 All specifications in this paper are well-formed, and the operational
 theorem (Section~\ref{sec:operational}) is stated for well-formed
 specifications.
@@ -804,12 +810,10 @@ generality for safety properties.
   causally reached it) and propagates it via gossip (internal actions
   trigger $\mathsf{send}$).
   On $\mathsf{inv}(e)_i$, the process adds $e$ to $H_i$, computes
-  $\Obs(H_i)$, chooses $o \in \Obs(H_i)$, and immediately performs
+  $\Obs(H_i)$, chooses $o \in \Obs(H_i)$ (which prescribes a response
+  for $e$ by response totality), and immediately performs
   $\mathsf{resp}(e, v)_i$ where $v$ is $o$'s prescription for $e$.
-  No input action intervenes.
-  (Response totality guarantees $\Obs(H_i) \neq \emptyset$ at
-  reachable histories; monotonicity propagates nonemptiness to all
-  futures.)
+  The response is enabled without requiring any further input action.
 
   \emph{Correctness:} At any prefix with global history $H$, each
   local view satisfies $H_i \hext H$.
@@ -854,42 +858,48 @@ generality for safety properties.
   response events, enriching local views.
   But even for truly concurrent responses, monotonicity guarantees
   joint consistency---any failure would be a monotonicity violation.
+
+  Response compositionality is not an additional algebraic property of
+  outcomes; it is enforced by evaluating $\Obs$ on the full response
+  history.
 \end{remark}
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
   Contrapositive: if $\Spec$ is not monotone, no correct
   implementation is coordination-free.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
-  $H_1 \hext H_2$, with $o$ prescribing response $v$ to invocation
-  $e$ at process $p$ (response totality guarantees such an outcome
-  exists).
-  Since coordination-freedom requires $p$ to respond without any
-  further input action (Definition~\ref{def:coordfree-op}), the
-  response is enabled from $p$'s post-invocation state.
-  The additional events in $H_2 \setminus H_1$ can be scheduled
-  \emph{after} $p$'s response: they are either at other processes
-  (which act independently) or are later input actions at $p$ (which
-  arrive after the response is already emitted).
-  In either case, $p$'s response is determined before these events
-  occur.
-  Construct two executions with identical state at $p$ when $e$
-  arrives:
-  \begin{itemize}[nosep]
-    \item Execution $\alpha$: $p$ responds with $v$; no further
-          events extend the history beyond $H_1$ plus $p$'s response.
-    \item Execution $\beta$: $p$ responds with $v$ (same local
-          state, same deterministic response); then the additional
-          events in $H_2 \setminus H_1$ occur, reaching global
-          history $H_2$ (extended with $p$'s response).
-  \end{itemize}
-  Since $p$'s state is identical and the automaton is deterministic
-  on internal/output actions given the state, $p$ produces the same
-  response $v$ in both (coordination-freedom guarantees the response
-  is enabled without further input).
-  In execution $\alpha$, $v$ is correct (consistent with
-  $o \in \Obs(H_1)$).
-  In execution $\beta$, the global history is $H_2$ and no
-  $o' \in \Obs(H_2)$ refines $o$---correctness is violated.
+  $H_1 \hext H_2$.
+  Since the spec is well-formed, $H_1$ contains some pending
+  invocation $e$ at process $p$ (otherwise $\Obs(H_1)$ would be
+  invariant under all extensions and monotonicity would hold);
+  by response totality, $o$ prescribes a response $v$ for $e$.
+
+  Coordination-freedom requires $p$ to respond to $e$ without any
+  further input action.
+  Schedule $p$'s response immediately after the invocation, then
+  schedule the events in $H_2 \setminus H_1$ (which involve no input
+  actions at $p$ before the response, since the response is already
+  enabled).
+  Let $H_2^r$ denote the resulting history: $H_2$ extended with
+  $\mathsf{resp}(e, v)$.
+
+  We show no $o' \in \Obs(H_2^r)$ refines $o$.
+  By response monotonicity of admissibility (well-formedness
+  condition~4), $\Obs(H_2^r) \subseteq \Obs(H_2)$ when $H_2^r$ adds
+  only response events to $H_2$.
+  Since no outcome in $\Obs(H_2)$ refines $o$, neither does any
+  outcome in $\Obs(H_2^r)$.
+  Thus $p$'s response $v$ at $H_2^r$ has no admissible outcome
+  explaining it---correctness is violated.
+
+  Construct two executions: $\alpha$ where the system halts at $H_1$
+  plus $p$'s response, and $\beta$ where the system reaches $H_2^r$.
+  Since $p$'s state is identical at the moment of response (both are
+  $p$'s local view of $H_1$), and the automaton is deterministic, $p$
+  produces $v$ in both.
+  In $\alpha$, $v$ is correct (consistent with $o \in \Obs(H_1)$).
+  In $\beta$, $v$ has no admissible explanation---correctness is
+  violated.
   Hence no correct implementation is coordination-free.
 \end{proof}
 
@@ -1024,15 +1034,16 @@ is how to verify that a \emph{given} variant is properly coordinated.
 
 \begin{definition}[Properly coordinated variant]
   \label{def:coord-variant}
+  Let $\mathsf{Adm}(\Spec') = \{H \mid \Obs'(H) \neq \emptyset\}$
+  denote the \emph{admitted histories} of $\Spec'$.
   A specification $\Spec' = (E, \Obs', \Ord)$ is a \emph{properly
   coordinated variant} of $\Spec = (E, \Obs, \Ord)$ if:
   \begin{enumerate}[nosep,label=(\roman*)]
     \item $\Obs'(H) \subseteq \Obs(H)$ for all $H$
           (no new outcomes admitted), and
-    \item $\Spec'$ is monotone over its admitted histories: for all
-          $H_1 \hext H_2$ with $\Obs'(H_1) \neq \emptyset$ and
-          $\Obs'(H_2) \neq \emptyset$, every $o \in \Obs'(H_1)$ has
-          a refinement in $\Obs'(H_2)$.
+    \item $\Spec'$ is monotone over $\mathsf{Adm}(\Spec')$: for all
+          $H_1 \hext H_2$ with $H_1, H_2 \in \mathsf{Adm}(\Spec')$,
+          every $o \in \Obs'(H_1)$ has a refinement in $\Obs'(H_2)$.
   \end{enumerate}
 \end{definition}
 
