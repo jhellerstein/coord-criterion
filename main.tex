@@ -539,6 +539,23 @@ observations).
 Different specifications over the same histories may use different
 outcome orders.
 
+We require two well-formedness conditions linking outcomes to
+response events in the history:
+\begin{enumerate}[nosep]
+  \item \emph{Response soundness:} if $H$ contains a response event
+        $\mathsf{resp}(e, v)$, then every $o \in \Obs(H)$ prescribes
+        response $v$ for invocation $e$.
+  \item \emph{Response preservation:} if $o \Ord o'$ and $o$
+        prescribes response $v$ for $e$, then $o'$ also prescribes
+        $v$ for $e$.
+\end{enumerate}
+Response soundness says outcomes must agree with recorded facts;
+response preservation says refinement never retracts a committed
+response.
+These conditions are satisfied by all specifications in this paper
+and are essential for the operational theorem
+(Section~\ref{sec:operational}).
+
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
   follows from the structure of the output.
@@ -791,9 +808,13 @@ generality for safety properties.
   $\mathsf{resp}(e, v)_i$ where $v$ is $o$'s prescription for $e$.
   No input action intervenes.
   (If $\Obs(H_i) = \emptyset$---the local history is
-  unrealizable---the process may respond with an error/abort; this
-  case does not arise for monotone specifications at reachable
-  histories, since monotonicity propagates nonemptiness forward.)
+  unrealizable---the process may respond with an error/abort.
+  We assume \emph{response totality}: at every reachable history
+  containing an invocation requiring a response,
+  $\Obs(H) \neq \emptyset$ and some outcome prescribes an allowed
+  response.
+  For monotone specifications, nonemptiness at any reachable prefix
+  propagates to all futures by monotonicity.)
 
   \emph{Correctness:} At any prefix with global history $H$, each
   local view satisfies $H_i \hext H$.
@@ -843,29 +864,20 @@ generality for safety properties.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
   $H_1 \hext H_2$, with $o$ prescribing response $v$ to invocation
   $e$ at process $p$.
-  The proof requires that $H_2$ be realizable as a \emph{$p$-silent
-  future}: one where the events in $H_2 \setminus H_1$ do not include
-  input actions at $p$ (so $p$ cannot distinguish $H_1$ from $H_2$
-  before responding).
-  This holds whenever the non-monotonicity witness involves activity
-  at processes other than $p$---the standard case for distributed
-  specifications.
-  (For purely process-local non-monotonicity, where the dangerous
-  future requires new input at $p$ itself, $p$ can observe the danger
-  and react; such non-monotonicity does not prevent coordination-free
-  implementation.
-  This is the same distinction captured by distributed-monotonicity in
-  Section~\ref{sec:complete-cap}.)
-
+  Since coordination-freedom requires $p$ to respond without any
+  further input action (Definition~\ref{def:coordfree-op}), the
+  response is determined by $p$'s state at invocation time.
   Construct two executions with identical state at $p$ when $e$
   arrives:
   \begin{itemize}[nosep]
     \item Execution $\alpha$: global history is $H_1$; after $e$
-          arrives at $p$, no further input actions occur at $p$
-          (messages delayed, no new invocations).
+          arrives at $p$, no further input actions occur at $p$.
     \item Execution $\beta$: same local state at $p$ when $e$
-          arrives, but other processes advance to produce $H_2$
-          (a $p$-silent future---no input actions at $p$).
+          arrives, but the global history reaches $H_2$ (the
+          additional events in $H_2 \setminus H_1$ occur without
+          input actions at $p$---either at other processes, or as
+          consequences of prior events at $p$ that have already been
+          processed).
   \end{itemize}
   Since $p$'s state is identical and the automaton is deterministic
   on internal/output actions given the state, $p$ produces the same
@@ -1028,20 +1040,25 @@ is how to verify that a \emph{given} variant is properly coordinated.
   \begin{enumerate}[nosep,label=(\roman*)]
     \item $\Obs'(H) \subseteq \Obs(H)$ for all $H$
           (no new outcomes admitted), and
-    \item $\Spec'$ is monotone.
+    \item $\Spec'$ is monotone over its admitted histories: for all
+          $H_1 \hext H_2$ with $\Obs'(H_1) \neq \emptyset$ and
+          $\Obs'(H_2) \neq \emptyset$, every $o \in \Obs'(H_1)$ has
+          a refinement in $\Obs'(H_2)$.
   \end{enumerate}
 \end{definition}
 
 \noindent
 A properly coordinated variant restricts the original spec---fewer
 admissible outcomes, fewer admissible histories, or both---just enough
-to achieve monotonicity.
+to achieve monotonicity within the admitted history space.
 History restriction is modeled by setting $\Obs'(H) = \emptyset$ for
-excluded histories: monotonicity is then vacuous at those histories
-(there are no outcomes to refine), and the variant is effectively
-defined only over the restricted history space.
+excluded histories; monotonicity is checked only between histories
+where $\Obs'$ is non-empty.
+The coordination mechanism ensures that excluded histories (those with
+$\Obs' = \emptyset$) are never reached---e.g., total-order broadcast
+prevents non-serialized histories from arising.
 Complete CALM provides the test: check whether the variant is
-monotone.
+monotone over its admitted histories.
 If it is, the coordination suffices.
 If not, more restriction is needed.
 
