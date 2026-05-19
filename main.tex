@@ -76,9 +76,9 @@
   and deeper analytical power: verification of
   proper coordination, direct analysis of ordered properties like
   linearizability, and a \emph{coordination-free frontier}
-  methodology for exploring the strongest monotone weakenings of a
-  fixed observation interface---illustrated with
-  registers, queues, and search structures.
+  construction that, for a fixed observation interface, characterizes
+  the strongest coordination-free weakenings of any specification---
+  illustrated with registers, queues, and search structures.
   In the distributed setting, a complete version of the CAP theorem
   follows as a corollary: a specification admits a consistent,
   available, partition-tolerant implementation iff it is
@@ -1075,13 +1075,13 @@ monotone over its admitted histories.
 If it is, the coordination suffices.
 If not, more restriction is needed.
 
-\begin{proposition}[Separation from relational-transducer CALM]
-  \label{prop:separation}
+\begin{theorem}[Separation from relational-transducer CALM]
+  \label{thm:separation}
   There exist non-monotone specifications with properly coordinated
   variants that Complete CALM can verify but relational-transducer
   CALM has no mechanism to certify (it lacks a semantic test for
   the output specification of a coordinated variant).
-\end{proposition}
+\end{theorem}
 
 \begin{proof}[Proof sketch]
   Linearizability is non-monotone
@@ -1488,10 +1488,11 @@ correctness constraints.
 By Complete CALM, serializability intrinsically requires coordination.
 This recovers the non-HAT classification
 of~\cite{bailis2013hat} as a semantic test.
-(Snapshot isolation similarly requires coordination---its
-first-committer-wins rule commits to a transaction ordering that
-concurrent extensions can invalidate---but the precise witness differs
-from serializability's and we omit it here.)
+Snapshot isolation~\cite{berenson1995critique} similarly requires
+coordination: its first-committer-wins rule commits to a transaction
+ordering at commit time that a concurrent commit can invalidate, and
+write skew anomalies provide the non-monotonicity witness via the
+same template as serializability's cyclic-read failure.
 
 The structural explanation is general: specifications that commit only to
 partial-order structure (causal consistency, read committed) are
@@ -2107,11 +2108,10 @@ Both use prefix extension as the outcome order.
 
 \begin{proposition}[Queue frontier]
   \label{prop:queue-frontier}
-  Causal FIFO is a natural monotone weakening of the replicated FIFO
-  queue: it preserves causal ordering among enqueues while relaxing
-  the global total-order requirement.
-  Under the stated assumptions, causal FIFO is on the
-  coordination-free frontier.
+  Causal FIFO is on the coordination-free frontier of the replicated
+  FIFO queue: it preserves causal ordering among enqueues while
+  relaxing the global total-order requirement, and no weaker monotone
+  order suffices.
 \end{proposition}
 
 \begin{proof}
@@ -2191,9 +2191,9 @@ The outcome order is set inclusion on valid lookup pairs.
   If structural modifications in the search structure satisfy the
   \emph{link invariant}---whenever a key $k$ moves from position $p$
   to position $p'$, a directed edge from $p$ toward $p'$ exists in
-  $G(H)$ after the modification---then forward-reachability is
-  a natural monotone weakening for lookup, and under the link
-  invariant no weaker order suffices.
+  $G(H)$ after the modification---then forward-reachability is on
+  the coordination-free frontier for lookup: it is monotone, and no
+  weaker order suffices.
 \end{proposition}
 
 \begin{proof}
