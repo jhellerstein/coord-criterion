@@ -77,7 +77,7 @@
   system, any refinement order, abstract properties without programs)
   and deeper analytical power: verification of
   proper coordination, direct analysis of ordered properties like
-  sequential consistency, and a \emph{coordination-free frontier}
+  linearizability, and a \emph{coordination-free frontier}
   construction that derives natural coordination-free
   weakenings for any specification---illustrated with
   registers, queues, and search structures.
@@ -251,100 +251,100 @@ $\mathit{send}(x)$/$\mathit{recv}(x)$ for the send and receive of a
 propagation message carrying $x$.
 
 \paragraph{Two specifications.}
-We write outcomes as edge relations: $(\mathit{op}, \bot)$ records
-that $\mathit{op}$ happened but has no causal successor in the
-outcome; $(\mathit{op}_1, \mathit{op}_2)$ records that
-$\mathit{op}_1$ precedes $\mathit{op}_2$.
+We write outcomes as sequences of completed operations.
 %
 $\Spec_{\mathit{cc}}$ (\textbf{causal
-consistency}~\cite{ahamad1995causal}): outcomes are \emph{partial
-orders} (DAGs) of completed operations respecting happens-before;
-concurrent operations have no edge; a read returns a value consistent
-with some linearization of its causal past.
+consistency}~\cite{ahamad1995causal}): each process observes a
+\emph{causal history}---a partial order on the operations in its
+causal past, consistent with happens-before.
+Different processes may order concurrent writes differently.
+A read returns a value consistent with some linearization of its
+causal past.
 Refinement is \emph{causal-prefix extension}: $o_1 \Ord o_2$ iff
 $o_2$ extends $o_1$ by adding operations while preserving existing
-edges.
+order.
 %
-$\Spec_{\mathit{sc}}$ (\textbf{sequential
-consistency}~\cite{lamport1979sequential}): outcomes are \emph{total
-orders} (chains) of completed operations, consistent with
-happens-before at each history, with reads returning the most recent
-preceding write.
+$\Spec_{\mathit{lin}}$
+(\textbf{linearizability}~\cite{herlihy1990linearizability}): there
+exists a \emph{single} total order on all completed operations,
+consistent with happens-before (i.e., if operation $A$'s response
+causally precedes operation $B$'s invocation, then $A$ precedes $B$
+in the total order), with reads returning the most recent preceding
+write.
+In the asynchronous message-passing model, happens-before subsumes
+real-time precedence: if $A$ completes before $B$ begins at the same
+or a causally connected process, happens-before records this.
+This is the standard atomic-register semantics used by Gilbert and
+Lynch~\cite{gilbert2002cap}.
 Refinement is \emph{prefix extension}: $o_1 \Ord o_2$ iff $o_1$ is a
 prefix of $o_2$.
 
 The two specifications share the same histories but differ in outcome
-structure and refinement order---illustrating that these choices
-jointly determine coordination requirements.
-Outcomes at a history $H$ include response commitments for pending
-operations: $\Obs(H)$ records what an available implementation may
-choose to respond, not only what has already been responded.
-Formally, an outcome containing $\mathsf{r}{\,\mapsto}v$ for a
-pending read represents a \emph{decision} made at the current history;
-the decision's causal past is determined by the history at decision
-time, not by later events that may precede the eventual response.
+structure: CC allows per-process views that disagree on the order of
+concurrent writes; linearizability demands a single global order.
+This choice determines coordination requirements.
 
 \paragraph{Witness.}
-The initial value is $0$.
-Let $H_1$ contain:
-$\mathsf{w}(1)$ complete at node $p$;
-$\mathit{send}(w)$ in flight from $p$ to $q$
-($\mathsf{w}(1) \rightarrow \mathit{send}(w)$);
-and a pending read at $q$, concurrent with the write.
-Two causal futures (read still pending in both):
-$H_2$ adds $\mathit{recv}(w)$
-($\mathit{send}(w) \rightarrow \mathit{recv}(w)$; the write is now
-causally before any future response at $q$);
-$H_3$ = $H_1$ (no new events; the read may respond before the
-message arrives).
+The register initially holds $0$.
+Two nodes $p$ and $q$ each write concurrently:
+$\mathsf{w}_p(1)$ at $p$, $\mathsf{w}_q(2)$ at $q$.
+The writes are concurrent (neither happens-before the other).
+
+History $H_1$: both writes complete; $\mathsf{w}_q$ is delivered to
+$p$ ($\mathit{recv}(\mathsf{w}_q)$ at $p$); $p$ then completes a
+read $r_p \mapsto 2$.
+The delivery creates happens-before:
+$\mathsf{w}_q \rightarrow \mathit{send} \rightarrow
+\mathit{recv} \rightarrow r_p$, so $\mathsf{w}_q$ precedes $r_p$.
+A linearizable outcome at $H_1$:
+\[
+  o_1 = \langle \mathsf{w}_p(1),\; \mathsf{w}_q(2),\;
+  r_p{\,\mapsto}2 \rangle.
+\]
+This respects happens-before ($\mathsf{w}_q$ before $r_p$; the two
+writes are concurrent, so either order is valid) and explains
+$r_p = 2$ (most recent write before $r_p$ is $\mathsf{w}_q$).
+
+Extend to $H_2$: deliver $\mathsf{w}_p$ to $q$
+($\mathit{recv}(\mathsf{w}_p)$ at $q$); $q$ then completes a read
+$r_q \mapsto 1$.
+This is a valid future of $H_1$: only causally later events are
+added.
+Now happens-before at $H_2$ also has
+$\mathsf{w}_p \rightarrow \mathit{send} \rightarrow
+\mathit{recv} \rightarrow r_q$, so $\mathsf{w}_p$ precedes $r_q$.
+
+Under $\Spec_{\mathit{lin}}$, the specification is not monotone.
+Any linearization at $H_2$ explaining $r_p \mapsto 2$ must have
+$\mathsf{w}_p < \mathsf{w}_q$ (so $\mathsf{w}_q$ is the most recent
+write before $r_p$).
+But any linearization explaining $r_q \mapsto 1$ must have
+$\mathsf{w}_q < \mathsf{w}_p$ (so $\mathsf{w}_p$ is the most recent
+write before $r_q$).
+These force $\mathsf{w}_p < \mathsf{w}_q$ and
+$\mathsf{w}_q < \mathsf{w}_p$---a contradiction.
+No linearizable outcome at $H_2$ extends $o_1$.
+Non-monotonicity: $o_1 \in \Obs(H_1)$ but
+$\nexists\, o' \in \Obs(H_2) : o_1 \Ord o'$.
+The operational consequence: before committing to the order
+$\mathsf{w}_p < \mathsf{w}_q$ (by responding $r_p \mapsto 2$),
+process $p$ must ensure that $q$ will not independently commit to the
+opposite order---this requires coordination.
 
 Under $\Spec_{\mathit{cc}}$, the specification is monotone.
-At $H_1$, the write and read are concurrent; CC allows both
-perceptions of this concurrency.
-An implementation may commit to $\mathsf{r}{\,\mapsto}0$ (perceiving
-the read before the write) or $\mathsf{r}{\,\mapsto}1$ (perceiving
-the write before the read):
-$\{(\mathsf{w}(1), \bot),\; (\mathsf{r}{\,\mapsto}0, \bot)\}$ and
-$\{(\mathsf{w}(1), \mathsf{r}{\,\mapsto}1)\}$ are both in
-$\Obs_{\mathit{cc}}(H_1)$.
-At $H_2$ (message arrived): a response commitment is evaluated
-against the causal past at \emph{decision time}---the state when the
-implementation chooses a return value.
-The write and read were concurrent when the commitment was made, so
-both perceptions remain valid; CC does not retroactively invalidate a
-perception of concurrency.
-Every outcome at $H_1$ has a refinement at $H_2$.
-No coordination is needed: the reader can respond without waiting.
-
-Under $\Spec_{\mathit{sc}}$, the specification is not monotone.
-SC requires a single agreed-upon total order consistent with
-happens-before.
-At $H_1$, the outcome
-$o_{H_1} = \{(\mathsf{r}{\,\mapsto}0, \mathsf{w}(1))\}$
-is admissible: the read and write are concurrent, so either total
-order is consistent with happens-before at $H_1$.
-But $H_2$ is a future of $H_1$ in which $\mathit{recv}(w)$ has
-occurred at $q$; happens-before at $H_2$ now orders
-$\mathsf{w} \rightarrow \mathit{send} \rightarrow \mathit{recv}$,
-placing the write causally before any future event at $q$.
-SC requires the total order to respect this: every admissible outcome
-at $H_2$ must order the write before the read.
-But $o_{H_1}$ orders the read before the write---no SC outcome at
-$H_2$ can extend it.
-(Note: the issue is not the read's local causal past but the
-\emph{global} total-order constraint.
-Unlike CC, which evaluates each read against its own causal past at
-decision time, SC requires a single total order consistent with the
-full happens-before relation at the history where the outcome is
-assessed.)
-Non-monotonicity: $o_{H_1} \in \Obs(H_1)$ but
-$\nexists\, o' \in \Obs(H_2) : o_{H_1} \Ord o'$.
-The operational consequence: correct SC requires a system to
-wait to respond $r \mapsto 0$ until it can rule out $H_2$---this requires
-knowledge of the other node's state, i.e., coordination.
+At $H_1$, process $p$ observes the causal view
+$\mathsf{w}_p < \mathsf{w}_q < r_p$, returning $2$.
+At $H_2$, process $q$ observes the causal view
+$\mathsf{w}_q < \mathsf{w}_p < r_q$, returning $1$.
+The two views order the concurrent writes differently---but CC permits
+this: concurrent writes need not be placed in a single global order.
+The outcome at $H_2$ refines the outcome at $H_1$ by adding another
+causally valid view, rather than contradicting the first.
+Every outcome at $H_1$ has a refinement at every future.
+No coordination is needed.
 
 The two specifications separate cleanly: $\Spec_{\mathit{cc}}$ is
-coordination-free; $\Spec_{\mathit{sc}}$ requires coordination.
+coordination-free; $\Spec_{\mathit{lin}}$ requires coordination.
 The same analysis applies to concurrent threads on a single
 machine---the criterion depends on the happens-before structure, not
 the mechanism of concurrency.
@@ -428,12 +428,19 @@ We impose no fairness or progress assumptions.
 \begin{example}[Register history $H_1$]
   \label{ex:h1-formal}
   The history $H_1$ from Section~\ref{sec:example} in the formal
-  model: $\mathit{inv}(w), \mathit{resp}(w) \in E_{\mathit{in}}$
-  (write complete); $\mathit{inv}(r) \in E_{\mathit{in}}$ (read
-  pending, no response); $\mathit{send}(w) \in E_{\mathit{send}}$
-  (propagation in flight, no matching receive).
-  Ordering: $\mathit{inv}(w) \rightarrow \mathit{resp}(w) \rightarrow
-  \mathit{send}(w)$; no path connects $\mathit{inv}(r)$ to any event
+  model: at $p$, $\mathit{inv}(w_p), \mathit{resp}(w_p) \in
+  E_{\mathit{in}}$ (write of $1$ complete);
+  at $q$, $\mathit{inv}(w_q), \mathit{resp}(w_q) \in E_{\mathit{in}}$
+  (write of $2$ complete);
+  $\mathit{send}(w_q) \in E_{\mathit{send}}$ and
+  $\mathit{recv}(w_q) \in E_{\mathit{recv}}$ at $p$ (delivery of
+  $w_q$ to $p$);
+  $\mathit{inv}(r_p), \mathit{resp}(r_p, 2) \in E_{\mathit{in}}$
+  (read at $p$ returning $2$, after receiving $w_q$).
+  Ordering includes
+  $\mathit{resp}(w_q) \rightarrow \mathit{send}(w_q) \rightarrow
+  \mathit{recv}(w_q) \rightarrow \mathit{inv}(r_p)$
+  and program order $\mathit{resp}(w_p) \rightarrow \mathit{inv}(r_p)$
   at $p$.
 \end{example}
 
@@ -461,20 +468,20 @@ The past is fixed; only the future is open.
 
 \begin{example}[Extending $H_1$ to $H_2$]
   \label{ex:h2-formal}
-  Extend $H_1$ by adding a receive event $\mathit{recv}(w)$ at the
-  reader ($\mathit{send}(w) \rightarrow \mathit{recv}(w)$) and a
-  read-response $\mathit{resp}(r, 1)$ with
-  $\mathit{inv}(r) \rightarrow \mathit{resp}(r, 1)$ and
-  $\mathit{recv}(w) \rightarrow \mathit{resp}(r, 1)$.
-  Both new events are causally after existing events only:
-  $\mathit{recv}(w)$ is after $\mathit{send}(w)$, and
-  $\mathit{resp}(r, 1)$ is after $\mathit{inv}(r)$ and
-  $\mathit{recv}(w)$---no new predecessor of any event already in
-  $H_1$ is introduced.
-  The result is that $\mathit{resp}(w) \rightarrow \mathit{resp}(r,1)$
-  holds in $H_2$ (transitively through $\mathit{send}(w)$,
-  $\mathit{recv}(w)$), making the write causally prior to the read
-  response.
+  Extend $H_1$ by delivering $w_p$ to $q$:
+  add $\mathit{send}(w_p) \in E_{\mathit{send}}$ at $p$ and
+  $\mathit{recv}(w_p) \in E_{\mathit{recv}}$ at $q$
+  ($\mathit{resp}(w_p) \rightarrow \mathit{send}(w_p) \rightarrow
+  \mathit{recv}(w_p)$);
+  then add a completed read at $q$:
+  $\mathit{inv}(r_q), \mathit{resp}(r_q, 1) \in E_{\mathit{in}}$
+  with $\mathit{recv}(w_p) \rightarrow \mathit{inv}(r_q)$ and
+  program order $\mathit{resp}(w_q) \rightarrow \mathit{inv}(r_q)$
+  at $q$.
+  All new events are causally after existing events only---no new
+  predecessor of any event in $H_1$ is introduced.
+  The result: $w_p$ is causally prior to $r_q$ (via delivery), and
+  $w_q$ is causally prior to $r_p$ (already in $H_1$).
 \end{example}
 
 %----------------------------------------------------------------
@@ -541,17 +548,18 @@ outcome orders.
 
 \begin{example}[Outcomes and order for the register]
   \label{ex:register-outcomes}
-  Under $\Spec_{\mathit{sc}}$, outcomes are total orders (chains)
-  written as edge relations.
-  At $H_1$ (Section~\ref{sec:example}), the write has completed but
-  the read has not; admissible outcomes include
-  $\{(\mathsf{w}(1), \bot)\}$ as well as
-  $\{(\mathsf{w}(1), \mathsf{r}{\,\mapsto}1)\}$ and
-  $\{(\mathsf{r}{\,\mapsto}0, \mathsf{w}(1))\}$ (valid total orders
-  when the operations are concurrent).
-  The outcome $\{(\mathsf{r}{\,\mapsto}0, \mathsf{w}(1))\}$ has no
-  extension at $H_2$: happens-before at $H_2$ requires $\mathsf{w}$
-  before $\mathsf{r}$, so no admissible chain there refines it.
+  Under $\Spec_{\mathit{lin}}$, outcomes are total orders (sequences)
+  of completed operations.
+  At $H_1$ (Section~\ref{sec:example}), both writes have completed
+  and $r_p$ has returned $2$.
+  The admissible outcome is
+  $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
+  r_p{\,\mapsto}2 \rangle$
+  (the only linearization consistent with happens-before that explains
+  $r_p = 2$).
+  At $H_2$, the additional read $r_q \mapsto 1$ forces the opposite
+  write order; no single linearization can explain both reads, so
+  $o_1$ has no extension at $H_2$.
 \end{example}
 
 %----------------------------------------------------------------
@@ -656,12 +664,13 @@ variant with a smaller $\Obs$ (Section~\ref{sec:separation}).
 \end{remark}
 
 \begin{example}[Coordination in the register]
-  Under $\Spec_{\mathit{sc}}$, the outcome
-  $\{(\mathsf{r}{\,\mapsto}0, \mathsf{w}(1))\}$ is admissible at
-  $H_1$, but $H_2$ is a future of $H_1$ and no outcome in
-  $\Obs_{\mathit{sc}}(H_2)$ refines it under $\Ord$.
-  The $H_1$ outcome is future-inconsistent: the specification forces either
-  outcome suppression or history suppression.
+  Under $\Spec_{\mathit{lin}}$, the outcome
+  $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
+  r_p{\,\mapsto}2 \rangle$ is admissible at $H_1$, but $H_2$ is a
+  future of $H_1$ and no outcome in $\Obs_{\mathit{lin}}(H_2)$
+  refines it under $\Ord$.
+  The $H_1$ outcome is future-inconsistent: the specification forces
+  either outcome suppression or history suppression.
 \end{example}
 
 %----------------------------------------------------------------
@@ -700,26 +709,37 @@ A failure of monotonicity is witnessed by a
 that some future $H_2$ of $H_1$ admits no $o' \in \Obs(H_2)$ with
 $o \Ord o'$.
 The register witness from Section~\ref{sec:example} is exactly such a
-failure: $o_{H_1} = \{(\mathsf{r}{\,\mapsto}0, \mathsf{w}(1))\}$
-has no prefix-extension at $H_2$.
+failure: $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
+r_p{\,\mapsto}2 \rangle$ has no prefix-extension at $H_2$.
 
-\begin{theorem}[Complete CALM]
+Prior work on CALM requires involved proofs mapping from
+programming-model constraints to execution properties.
+By contrast, Complete CALM is nearly a direct consequence of the
+framework's design:
+
+\newtheorem{defnthm}[theorem]{Definition-Theorem}
+\begin{defnthm}[Complete CALM]
   \label{thm:complete-calm}
-  A specification $\Spec = (E, \Obs, \Ord)$ admits a coordination-free
-  implementation if and only if it is monotone.
-\end{theorem}
+  The following are equivalent for a specification
+  $\Spec = (E, \Obs, \Ord)$:
+  \begin{enumerate}[nosep,label=(\roman*)]
+    \item $\Spec$ admits a coordination-free implementation.
+    \item $\Spec$ is monotone.
+  \end{enumerate}
+\end{defnthm}
 
 \begin{example}[Applying Complete CALM to the running example]
-  $\Spec_{\mathit{cc}}$ is monotone: every admitted read value
-  remains compatible with all extensions (a stale read is never
-  contradicted by future deliveries---it simply becomes less current).
+  $\Spec_{\mathit{cc}}$ is monotone: each process's causal view
+  remains valid under all extensions---concurrent writes may be
+  perceived in different orders at different processes, and no future
+  delivery contradicts an earlier perception.
   By Complete CALM, causal consistency admits a coordination-free
   implementation.
 
-  $\Spec_{\mathit{sc}}$ is not monotone (the witness from
+  $\Spec_{\mathit{lin}}$ is not monotone (the witness from
   Section~\ref{sec:example}).
-  By Complete CALM, every correct implementation of sequential
-  consistency must coordinate---it must suppress some admissible
+  By Complete CALM, every correct implementation of linearizability
+  must coordinate---it must suppress some admissible
   future or withhold some future-inconsistent outcome.
   Section~\ref{sec:well-coord-section} characterizes when such
   coordination suffices to restore monotonicity of the resolved
@@ -747,9 +767,13 @@ with even one future-inconsistent outcome requires coordination
 specification admits a coordination-free implementation (no stronger
 condition is implied).
 
-The proof is a \emph{lifting} of Ameloot et al.'s argument from
-relational transducers to a minimalist setting (histories, outcomes,
-refinement order)---CALM's proof needs only these three ingredients.
+The result recovers the structure of Ameloot et al.'s characterization
+in a minimalist setting (histories, outcomes, refinement order)---the
+proof needs only these three ingredients.
+The equivalence is simple by design: the contribution is identifying
+the right semantic object (future-monotonicity of outcomes under a
+declared refinement order) and demonstrating that it faithfully
+explains known coordination boundaries across disparate models.
 This lifting yields three dividends.
 First, \emph{generality}: the criterion applies to any specification
 in any computational model.
@@ -828,7 +852,7 @@ If not, more restriction is needed.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-  Sequential consistency is non-monotone
+  Linearizability is non-monotone
   (Section~\ref{sec:example}).
   Define the variant $\Spec'$ by restricting to histories in which
   $\rightarrow$ totally orders $E_{\mathit{in}}$ (all input operations
@@ -836,12 +860,15 @@ If not, more restriction is needed.
   In such histories, outcomes grow by prefix extension of the
   serialized input sequence, so $\Spec'$ is monotone.
   Complete CALM certifies $\Spec'$ directly.
-  Relational-transducer CALM cannot: standard Datalog encodings of SC
-  require a non-monotone uniqueness constraint to enforce that each
-  position in the sequence has exactly one value
+  Relational-transducer CALM cannot: standard Datalog encodings of
+  linearizability require a non-monotone uniqueness constraint to
+  enforce that each position in the sequence has exactly one value
   (Section~\ref{sec:beyond-calm}), and the transducer model has no
   mechanism to test the output specification of a coordinated variant
   independently of the program that produces it.
+  (The gap is not that CALM gives a wrong answer but that it answers a
+  different question: whether the \emph{program} is monotone, not
+  whether the \emph{output interface} is coordination-free.)
 \end{proof}
 
 \noindent
@@ -982,7 +1009,7 @@ Two-phase commit & Both & Aborts unsafe futures + defers exposure \\
   Consider a key-value store replicated at two nodes, with a
   Paxos-based total-order broadcast ensuring all nodes process updates
   in the same sequence.
-  The internal specification is sequential consistency (non-monotone, as
+  The internal specification is linearizability (non-monotone, as
   shown in Section~\ref{sec:example}).
   Paxos restricts admissible histories to those in which all updates
   are totally ordered.
@@ -1283,8 +1310,9 @@ merge via gossip ($E_{\mathit{in}}$: transactions;
 $E_{\mathit{send}}/E_{\mathit{recv}}$: gossip;
 $E_{\mathit{int}}$: merge events).
 The observable at $H$ is the \emph{converged state}
-$\mathit{conv}(H)$---the merge of all replica states, i.e., the state
-the system will inevitably reach once gossip completes.
+$\mathit{conv}(H)$---the join (merge) of all replica states present
+in $H$, i.e., the unique state obtained by merging all updates that
+have occurred regardless of delivery order.
 Define $\Obs_I(H) = \{\mathit{conv}(H)\}$ when $\mathit{conv}(H)$
 satisfies $I$, and $\Obs_I(H) = \emptyset$ otherwise (the history is
 unrealizable under any invariant-preserving execution).
@@ -1421,7 +1449,7 @@ independent: plain causal consistency~\cite{ahamad1995causal} is
 coordination-free but not convergent (replicas may permanently
 disagree on the ordering of concurrent operations).
 CRDTs~\cite{shapiro2011crdt} achieve both via join-semilattice
-structure; sequential consistency achieves convergence but requires
+structure; linearizability achieves convergence but requires
 coordination.
 
 In our framework, the distinction reduces to a structural property of
@@ -1621,7 +1649,7 @@ strengthen the impossibility direction of the theorem.
   Let $\Spec = (E, \Obs, \Ord)$ be a specification with process
   assignment $\pi$ in the asynchronous message-passing model.
   $\Spec$ admits an implementation that is both correct on all
-  causally consistent histories and maximally available under all
+  well-formed histories and maximally available under all
   partitions if and only if $\Spec$ is distributed-monotone.
 \end{theorem}
 
@@ -1632,20 +1660,27 @@ strengthen the impossibility direction of the theorem.
   $o \in \Obs(H_1)$ at $p$, and a $P$-constrained future $H_2$ with
   no refinement of $o$ in $\Obs(H_2)$.
 
-  Under partition $P$, the future $H_2$ is realizable (it requires no
-  cross-partition delivery).
-  Process $p$ cannot observe the activity in $\bar{S}$ that
-  contributes to $H_2$ (no messages from $\bar{S}$ reach $S$).
-
-  \emph{Case 1 (expose $o$, preserve availability):}
-  Process $p$ exposes $o$ without waiting.
-  If $H_2$ subsequently materializes, $o$ has been exposed but no
-  outcome in $\Obs(H_2)$ refines it---correctness is violated.
-
-  \emph{Case 2 (withhold $o$, preserve correctness):}
-  Process $p$ blocks until the partition heals and it can determine
-  whether $H_2$ will occur.
-  But $P$ may persist indefinitely, so $p$ never responds---availability is violated.
+  Construct two executions indistinguishable to $p$:
+  \begin{itemize}[nosep]
+    \item \emph{Execution $\alpha$}: the system is at $H_1$; no
+          further activity occurs in $\bar{S}$ (the partition holds
+          and $\bar{S}$ is idle).
+          Process $p$'s local view is its projection of $H_1$.
+    \item \emph{Execution $\beta$}: the system is at $H_1$;
+          processes in $\bar{S}$ advance to produce $H_2$ (a
+          $P$-constrained future---no cross-partition delivery).
+          Process $p$'s local view is identical to $\alpha$ (it
+          receives no messages from $\bar{S}$ in either case).
+  \end{itemize}
+  In both executions, $p$ sees the same local state at the decision
+  point.
+  If $p$ exposes $o$ (as required by availability in $\alpha$, where
+  $o$ is valid), then in $\beta$ the system reaches $H_2$ where no
+  outcome refines $o$---correctness is violated.
+  If $p$ withholds $o$ to protect against $\beta$, it blocks
+  indefinitely in $\alpha$ (the partition persists, $\bar{S}$ is
+  idle, and $p$ never learns which execution it is
+  in)---availability is violated.
 
   Hence at least one of correctness or availability must be
   sacrificed.
@@ -1701,7 +1736,7 @@ More generally, a coordination-free weakening may change the
 observation function, the refinement order, or both---yielding a
 weaker \emph{interface} rather than merely a relaxed order.
 The register result below identifies causal consistency as the
-strongest coordination-free interface below sequential consistency
+strongest coordination-free interface below linearizability
 under this broader comparison.
 
 \noindent
@@ -1727,8 +1762,8 @@ A history $H$ determines, for each read $r$, the set of writes in
 $r$'s causal past: $\mathit{past}(r, H) = \{w \mid w \rightarrow^* r
 \text{ in } H\}$.
 
-Under \emph{sequential consistency}, outcomes are sequences of
-committed operations ordered by prefix extension ($\Ord_{\mathit{sc}}$
+Under \emph{linearizability}, outcomes are sequences of
+committed operations ordered by prefix extension ($\Ord_{\mathit{lin}}$
 = prefix).
 Under \emph{causal consistency}, define:
 \[
@@ -1743,7 +1778,7 @@ $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
 
 \begin{proposition}[Register interface frontier]
   \label{prop:register-frontier}
-  Causal consistency is a monotone weakening of sequential consistency
+  Causal consistency is a monotone weakening of linearizability
   for the replicated register: it preserves read/write histories while
   weakening total-order outcomes to causal-prefix outcomes.
   Under this interface comparison, causal consistency is on the
@@ -1771,20 +1806,29 @@ $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
   (i.e., $\Ord' \subsetneq \Ord_{\mathit{causal}}$).
   Then there exist outcomes $o_1, o_2$ with
   $o_1 \Ord_{\mathit{causal}} o_2$ but $o_1 \not\Ord' o_2$.
-  We show this removal breaks monotonicity.
-  Choose $H_1$ realizing $o_1$ and extend to $H_2$ by adding exactly
-  the events producing $o_2 \setminus o_1$ (the new operations in
-  $o_2$), with causal structure such that $o_2$ is the only
-  causally-consistent extension of $o_1$ at $H_2$ (the new operations
-  are causally ordered to admit a unique valid return value).
-  Then $o_1 \in \Obs(H_1)$, and the only outcome in $\Obs(H_2)$
-  extending $o_1$ is $o_2$.
+  Since $o_1 \Ord_{\mathit{causal}} o_2$, outcome $o_2$ extends $o_1$
+  by appending at least one operation---call it $r \mapsto v$ (a read
+  returning $v$).
+  We construct $H_1, H_2$ witnessing that the removal of this
+  refinement edge breaks monotonicity.
+
+  \emph{Construction.}
+  Let $H_1$ contain: a single write $w(v)$ at node $p$, delivered to
+  node $q$ ($\mathit{recv}(w(v))$ at $q$), and all operations in
+  $o_1$ completed.
+  The outcome $o_1 \in \Obs_{\mathit{causal}}(H_1)$ by assumption.
+  Extend to $H_2$ by adding a read invocation $r$ at $q$ with
+  $\mathit{recv}(w(v)) \rightarrow \mathit{inv}(r)$ (the read is
+  causally after the delivery of $w(v)$), and no other write in $r$'s
+  causal past writes a different value.
+  Then $\mathit{past}(r, H_2) = \{w(v)\}$: the only write in $r$'s
+  causal past is $w(v)$, so the unique causally-consistent return
+  value is $v$.
+  Hence the only outcome in $\Obs_{\mathit{causal}}(H_2)$ extending
+  $o_1$ is $o_2 = o_1 \cdot (r \mapsto v)$.
   Since $o_1 \not\Ord' o_2$, the outcome $o_1$ has no
   $\Ord'$-refinement at $H_2$: $(E, \Obs, \Ord')$ is not monotone.
-  Hence no order smaller than $\Ord_{\mathit{causal}}$ is monotone:
-  causal consistency is a natural frontier point---any attempt to
-  preserve more of the total-order commitment must rule out some
-  admissible concurrent extension.
+  Hence no order smaller than $\Ord_{\mathit{causal}}$ is monotone.
 \end{proof}
 
 \noindent
@@ -1849,31 +1893,35 @@ Both use prefix extension as the outcome order.
   $\sigma' \in \Obs_{\mathit{causal\text{-}FIFO}}(H_2)$.
 
   \emph{Maximality.}
-  Let $a, b$ be values enqueued concurrently (neither
-  $\mathit{enq}(a) \rightarrow^* \mathit{enq}(b)$ nor
-  $\mathit{enq}(b) \rightarrow^* \mathit{enq}(a)$ in any history
-  containing both).
-  Construct $H_1$ containing both enqueues with $a$ dequeued first:
-  $\langle a \rangle \in \Obs_{\mathit{causal\text{-}FIFO}}(H_1)$.
-  Construct $H_2 \supseteq H_1$ by adding a dequeue of $b$:
-  $\langle a, b \rangle \in \Obs_{\mathit{causal\text{-}FIFO}}(H_2)$.
-  Separately, construct $H_1'$ containing both enqueues with $b$
-  dequeued first:
-  $\langle b \rangle \in \Obs_{\mathit{causal\text{-}FIFO}}(H_1')$.
-  Both $\langle a, b \rangle$ and $\langle b, a \rangle$ are
-  reachable from histories where only one element has been dequeued:
-  $\langle a \rangle$ extends to $\langle a, b \rangle$ and
-  $\langle b \rangle$ extends to $\langle b, a \rangle$.
+  Let $\Ord'$ be any order smaller than $\Ord_{\mathit{causal-FIFO}}$
+  (i.e., $\Ord' \subsetneq \Ord_{\mathit{causal-FIFO}}$).
+  Then there exist sequences $\sigma_1, \sigma_2$ with
+  $\sigma_1 \Ord_{\mathit{causal-FIFO}} \sigma_2$ (i.e., $\sigma_1$
+  is a prefix of $\sigma_2$) but
+  $\sigma_1 \not\Ord' \sigma_2$.
+  Since $\sigma_2$ extends $\sigma_1$ by appending some value $b$,
+  we have $\sigma_1 \not\Ord' \sigma_1 \cdot b$: the order $\Ord'$
+  does not consider $\sigma_1 \cdot b$ a valid refinement of
+  $\sigma_1$.
 
-  Any order smaller than causal FIFO must declare one of these pairs
-  incompatible---e.g., require that $a$ always precedes $b$.
-  But the history $H_1'$ (where $b$ is dequeued first) is admissible
-  (both enqueues are concurrent, so either order is causally valid).
-  Under the smaller order, $\langle b \rangle$ at $H_1'$ would have no
-  refinement at a future where $a$ is dequeued next (since
-  $\langle b, a \rangle$ is declared incompatible with
-  $\langle a, \ldots \rangle$).
-  Hence the smaller order is not monotone.
+  We construct a witness.
+  Let $a$ be the last element of $\sigma_1$ and let $a, b$ be
+  enqueued concurrently (neither causally precedes the other).
+  Construct $H_1$ containing both enqueues with $a$ dequeued:
+  $\sigma_1 \in \Obs_{\mathit{causal-FIFO}}(H_1)$.
+  Extend to $H_2$ by adding a dequeue of $b$ (causally after the
+  dequeue of $a$):
+  $\sigma_1 \cdot b \in \Obs_{\mathit{causal-FIFO}}(H_2)$.
+  Since $a$ and $b$ are concurrent, causal FIFO admits both
+  $\langle \ldots, a, b \rangle$ and $\langle \ldots, b, a \rangle$
+  as valid dequeue orders.
+  But at $H_2$, the only extension of $\sigma_1$ is
+  $\sigma_1 \cdot b$ (the dequeue event for $b$ is the only new
+  completed dequeue in $H_2$).
+  Since $\sigma_1 \not\Ord' \sigma_1 \cdot b$, the outcome
+  $\sigma_1$ has no $\Ord'$-refinement at $H_2$:
+  $(E, \Obs, \Ord')$ is not monotone.
+  Hence no order smaller than causal FIFO is monotone.
 \end{proof}
 
 \subsection{Search Structures: Forward-Reachability}
@@ -1922,16 +1970,35 @@ The outcome order is set inclusion on valid lookup pairs.
   The outcome $(k, p)$ persists: forward-reachability is monotone.
 
   \emph{Maximality.}
-  Any order smaller than forward-reachability must declare some pair
-  $(k, p)$ invalid even though $k$ is reachable from $p$ via links.
-  That is, it requires the lookup to arrive at the \emph{exact}
-  current position of $k$, not merely a linked predecessor.
-  But a concurrent structural modification can always move $k$ one
-  link away (the link invariant guarantees the edge exists), and the
-  future where this modification occurs is admissible.
-  At that future, $(k, p)$ under exact-location has no refinement
-  (the key is no longer at $p$).
-  Hence the smaller order is not monotone.
+  Let $\Ord'$ be any order smaller than set inclusion on
+  $\Obs_{\mathit{fwd}}$ (i.e., $\Ord' \subsetneq \subseteq$).
+  Then there exists a pair $(k, p)$ with
+  $(k, p) \in \Obs_{\mathit{fwd}}(H)$ for some $H$ but
+  $(k, p) \notin \Ord'$-refinements of some outcome containing it.
+  Concretely: there exist outcomes $o_1 \subseteq o_2$ with
+  $(k, p) \in o_2 \setminus o_1$, $o_1 \subseteq o_2$ under set
+  inclusion, but $o_1 \not\Ord' o_2$.
+
+  \emph{Construction.}
+  Let $H_1$ be a history where $k$ is at position $p_m$ reachable
+  from $p$ via a path $p \to \cdots \to p_m$, and the outcome
+  $o_1 \in \Obs_{\mathit{fwd}}(H_1)$ does not yet include $(k, p)$
+  (e.g., no lookup for $k$ starting at $p$ has completed).
+  Extend to $H_2$ by adding a lookup for $k$ starting at $p$: since
+  $k$ is reachable from $p$, the pair $(k, p)$ enters
+  $\Obs_{\mathit{fwd}}(H_2)$, giving $o_2 = o_1 \cup \{(k, p)\}$.
+  Now extend further to $H_3$ by a structural modification that moves
+  $k$ from $p_m$ to a new position $p'$ (with the link invariant
+  providing edge $p_m \to p'$).
+  Under forward-reachability, $(k, p)$ remains valid at $H_3$ (the
+  path extends: $p \to \cdots \to p_m \to p'$).
+  Under exact-location, $(k, p)$ would be invalid at $H_3$ ($k$ is no
+  longer at $p_m$, and $p \neq p'$).
+  Since $\Ord'$ excludes the refinement $o_1 \Ord' o_2$, the outcome
+  $o_1$ at $H_1$ has no $\Ord'$-refinement at $H_2$---monotonicity
+  fails.
+  Hence no order smaller than forward-reachability (under the link
+  invariant) is monotone.
 \end{proof}
 
 \noindent
@@ -2180,12 +2247,14 @@ non-monotone structure.
   No distributed coordination is needed beyond knowing who the
   participants are (membership).
 
-  The distributed coordination depth is therefore just one round:
-  establishing membership.
+  The distributed coordination depth for stratified evaluation is
+  therefore one act: establishing membership.
   After that, each stratum seal is a local commitment triggered by
   monotone accumulation of signals from known participants.
   The $k$ strata require $k$ local sequential commitments, but zero
   additional rounds of distributed coordination.
+  (The ordering service itself requires ongoing consensus, but that is
+  a generic reusable layer independent of the stratified program.)
 \end{remark}
 
 
