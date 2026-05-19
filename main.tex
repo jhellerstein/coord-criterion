@@ -34,7 +34,6 @@
 
 % ---------- Macros ----------
 \newcommand{\Hist}{\mathcal{H}}
-\newcommand{\Poss}{\mathsf{Poss}}
 \newcommand{\Spec}{\mathsf{Spec}}
 \newcommand{\Obs}{\mathsf{Obs}}
 \newcommand{\Ord}{\preceq}
@@ -79,11 +78,13 @@
   and deeper analytical power: verification of
   proper coordination, direct analysis of ordered properties like
   sequential consistency, and a \emph{coordination-free frontier}
-  construction that derives the strongest coordination-free
-  guarantees for any specification---yielding new characterizations
-  for registers, queues, and search structures.
-  In the distributed setting, an analogously complete version of the CAP theorem
-  follows as a corollary of Complete CALM.
+  construction that derives natural coordination-free
+  weakenings for any specification---illustrated with
+  registers, queues, and search structures.
+  In the distributed setting, a complete version of the CAP theorem
+  follows as a corollary: a specification admits a consistent,
+  available, partition-tolerant implementation iff it is
+  distributed-monotone---monotone with respect to remote-only futures.
 
 \end{abstract}
 
@@ -132,10 +133,10 @@ Each is tied to a particular computational model; none subsumes
 the others.
 The CAP theorem~\cite{brewer2000towards,gilbert2002cap} lacks a
 formal connection to any of them~\cite{hellerstein2020keeping}.
-Moreover, the transducer model underlying CALM conflates
-coordination-freedom with replica consistency, leaving causal
-consistency~\cite{bailis2013hat}---coordination-free but
-non-convergent---outside its scope.
+Moreover, the transducer formulation ties coordination-freedom to
+monotone growth of a common output relation; it does not directly
+express coordination-free but non-convergent interfaces such as causal
+consistency~\cite{bailis2013hat}.
 
 Each prior result started from semantic constraints within a specific
 model---monotone Datalog, join-semilattices, merge-closed
@@ -173,9 +174,9 @@ Because the criterion operates on specifications rather than programs,
 it can verify that a non-monotone specification has been
 \emph{resolved} by coordination---that the residual output interface
 is monotone.
-Model-driven formalisms cannot do this by construction: they analyze
-programs within a fixed model and have no mechanism to certify the
-output of a coordination layer.
+Existing model-specific formalisms do not provide this test: they
+analyze programs within a fixed model rather than arbitrary residual
+output specifications.
 The criterion also handles refinement orders beyond set inclusion
 (prefix extension, lattice orders) and decouples coordination-freedom
 from replica consistency (Section~\ref{sec:replica-consistency}).
@@ -190,9 +191,8 @@ renaming) via the coordination-free frontier
 Its most striking application is \emph{Complete CAP}
 (Section~\ref{sec:complete-cap}): a specification admits a consistent,
 available, partition-tolerant distributed implementation iff it is
-monotone---lifting CAP from a one-directional impossibility about
-linearizability to a bidirectional characterization of all non-monotone
-specifications.
+distributed-monotone---lifting CAP from a one-directional impossibility
+about linearizability to a bidirectional characterization.
 
 \paragraph{Contributions.}
 \begin{enumerate}[nosep]
@@ -204,8 +204,8 @@ specifications.
   \item \emph{Complete CAP} (Section~\ref{sec:complete-cap}):
         in the asynchronous distributed setting, a specification
         admits a consistent, available, partition-tolerant
-        implementation iff it is monotone---a bidirectional
-        generalization of Gilbert--Lynch.
+        implementation iff it is distributed-monotone---a
+        bidirectional generalization of Gilbert--Lynch.
   \item \emph{Proper coordination}
         (Section~\ref{sec:separation}): Complete CALM verifies that
         coordination correctly discharges non-monotone specifications.
@@ -215,9 +215,11 @@ specifications.
         $N_1$/$N_2$/$N_3$ hierarchy) and recovers boundaries for
         isolation levels, I-confluence, and CRDTs.
   \item \emph{The coordination-free frontier}
-        (Appendix~\ref{app:minimality}): minimal monotone
-        enlargements of the declared order characterize the strongest
-        coordination-free guarantees.
+        (Appendix~\ref{app:minimality}): for a fixed observation
+        interface, minimal monotone enlargements of the declared order
+        characterize the strongest coordination-free guarantees.
+        More generally, weakening the interface itself yields
+        coordination-free alternatives.
         Recovers causal consistency for
         registers~\cite{mahajan2011consistency}; yields new results
         for queues (causal FIFO) and search structures
@@ -265,9 +267,9 @@ edges.
 %
 $\Spec_{\mathit{sc}}$ (\textbf{sequential
 consistency}~\cite{lamport1979sequential}): outcomes are \emph{total
-orders} (chains) of completed operations, consistent with program
-order at each node, with reads returning the most recent preceding
-write.
+orders} (chains) of completed operations, consistent with
+happens-before at each history, with reads returning the most recent
+preceding write.
 Refinement is \emph{prefix extension}: $o_1 \Ord o_2$ iff $o_1$ is a
 prefix of $o_2$.
 
@@ -277,6 +279,10 @@ jointly determine coordination requirements.
 Outcomes at a history $H$ include response commitments for pending
 operations: $\Obs(H)$ records what an available implementation may
 choose to respond, not only what has already been responded.
+Formally, an outcome containing $\mathsf{r}{\,\mapsto}v$ for a
+pending read represents a \emph{decision} made at the current history;
+the decision's causal past is determined by the history at decision
+time, not by later events that may precede the eventual response.
 
 \paragraph{Witness.}
 The initial value is $0$.
@@ -301,28 +307,36 @@ the write before the read):
 $\{(\mathsf{w}(1), \bot),\; (\mathsf{r}{\,\mapsto}0, \bot)\}$ and
 $\{(\mathsf{w}(1), \mathsf{r}{\,\mapsto}1)\}$ are both in
 $\Obs_{\mathit{cc}}(H_1)$.
-At $H_2$ (message arrived): the operations were concurrent at the
-time of the read, so both perceptions remain valid---CC does not
-retroactively invalidate a perception of concurrency.
+At $H_2$ (message arrived): a response commitment is evaluated
+against the causal past at \emph{decision time}---the state when the
+implementation chooses a return value.
+The write and read were concurrent when the commitment was made, so
+both perceptions remain valid; CC does not retroactively invalidate a
+perception of concurrency.
 Every outcome at $H_1$ has a refinement at $H_2$.
 No coordination is needed: the reader can respond without waiting.
 
 Under $\Spec_{\mathit{sc}}$, the specification is not monotone.
-SC requires a single agreed-upon total order.
+SC requires a single agreed-upon total order consistent with
+happens-before.
 At $H_1$, the outcome
 $o_{H_1} = \{(\mathsf{r}{\,\mapsto}0, \mathsf{w}(1))\}$
-is admissible (read before write is a valid total order for
-concurrent operations).
+is admissible: the read and write are concurrent, so either total
+order is consistent with happens-before at $H_1$.
 But $H_2$ is a future of $H_1$ in which $\mathit{recv}(w)$ has
-occurred at $q$; any subsequent response at $q$ will have
-$\mathsf{w} \rightarrow \mathit{send} \rightarrow \mathit{recv}
-\rightarrow \mathsf{r}$ in happens-before.
-SC requires the total order to respect this, so every admissible
-outcome at $H_2$ orders $\mathsf{w}$ before $\mathsf{r}$.
-Any extension of $o_{H_1}$ at $H_2$ must contain both
-$(\mathsf{r}{\,\mapsto}0, \mathsf{w}(1))$ (from $o_{H_1}$) and
-$(\mathsf{w}(1), \mathsf{r}{\,\mapsto}0)$ (required by
-happens-before)---a cycle, not a chain.
+occurred at $q$; happens-before at $H_2$ now orders
+$\mathsf{w} \rightarrow \mathit{send} \rightarrow \mathit{recv}$,
+placing the write causally before any future event at $q$.
+SC requires the total order to respect this: every admissible outcome
+at $H_2$ must order the write before the read.
+But $o_{H_1}$ orders the read before the write---no SC outcome at
+$H_2$ can extend it.
+(Note: the issue is not the read's local causal past but the
+\emph{global} total-order constraint.
+Unlike CC, which evaluates each read against its own causal past at
+decision time, SC requires a single total order consistent with the
+full happens-before relation at the history where the outcome is
+assessed.)
 Non-monotonicity: $o_{H_1} \in \Obs(H_1)$ but
 $\nexists\, o' \in \Obs(H_2) : o_{H_1} \Ord o'$.
 The operational consequence: correct SC requires a system to
@@ -626,6 +640,11 @@ no outcome need be withheld to avoid future contradiction.
 Together: a coordination-free implementation can act on any admissible
 outcome at any history without waiting for information about which
 future will materialize.
+Condition~(ii) is deliberately specification-level: it says that the
+interface itself admits no unsafe outcome.
+Implementations enter only through history suppression---if an
+implementation filters outcomes, we model the result as a coordinated
+variant with a smaller $\Obs$ (Section~\ref{sec:separation}).
 
 \begin{remark}[Why every outcome must be future-consistent]
   A weaker definition might require only that \emph{some}
@@ -722,10 +741,11 @@ has no prefix-extension at $H_2$.
 \end{proof}
 
 \noindent
-The characterization is tight: any specification with even one
-future-inconsistent outcome requires coordination, so no weaker
-condition suffices; conversely, every monotone specification admits a
-coordination-free implementation, so no stronger condition is implied.
+The characterization is tight within this model: any specification
+with even one future-inconsistent outcome requires coordination
+(no weaker condition suffices); conversely, every monotone
+specification admits a coordination-free implementation (no stronger
+condition is implied).
 
 The proof is a \emph{lifting} of Ameloot et al.'s argument from
 relational transducers to a minimalist setting (histories, outcomes,
@@ -739,7 +759,8 @@ Second, \emph{expressivity}: refinement orders beyond set inclusion
 Third, \emph{constructive power}: for any non-monotone specification,
 the \emph{coordination-free frontier}---the set of minimal monotone
 enlargements of $\Ord$---characterizes the strongest coordination-free
-guarantees achievable (Appendix~\ref{app:minimality}).
+guarantees achievable for a fixed observation interface
+(Appendix~\ref{app:minimality}).
 The frontier recovers causal consistency for
 registers~\cite{mahajan2011consistency}, derives causal FIFO for
 queues, and derives forward-reachability (B-link
@@ -748,9 +769,7 @@ trees~\cite{lehman1981efficient}) for search structures.
 Since the criterion operates on semantic specifications, checking
 monotonicity is undecidable in general (analogous to Rice's theorem).
 However, conservative (sufficient) checks based on type-level
-monotonicity annotations are practical and effective---the Hydro
-distributed programming framework uses such checks to verify
-coordination-freedom at compile time~\cite{hydro}.
+monotonicity annotations are practical and effective.
 
 
 
@@ -808,7 +827,7 @@ If not, more restriction is needed.
   the output specification of a coordinated variant).
 \end{theorem}
 
-\begin{proof}[Proof sketch (full proof in Appendix~\ref{app:proofs})]
+\begin{proof}[Proof sketch]
   Sequential consistency is non-monotone
   (Section~\ref{sec:example}).
   Define the variant $\Spec'$ by restricting to histories in which
@@ -817,8 +836,8 @@ If not, more restriction is needed.
   In such histories, outcomes grow by prefix extension of the
   serialized input sequence, so $\Spec'$ is monotone.
   Complete CALM certifies $\Spec'$ directly.
-  Relational-transducer CALM cannot: any Datalog encoding of SC
-  requires a non-monotone uniqueness constraint to enforce that each
+  Relational-transducer CALM cannot: standard Datalog encodings of SC
+  require a non-monotone uniqueness constraint to enforce that each
   position in the sequence has exactly one value
   (Section~\ref{sec:beyond-calm}), and the transducer model has no
   mechanism to test the output specification of a coordinated variant
@@ -838,12 +857,93 @@ can verify that coordination suffices, not merely that it is absent.
 
 Complete CALM characterizes when coordination is required---a semantic
 property independent of deployment model.
-In the distributed setting, a stronger consequence holds: non-monotone
-specifications cannot be implemented with consistency, availability,
-and partition tolerance simultaneously.
-Gilbert and Lynch~\cite{gilbert2002cap} proved this for
-linearizability; we generalize to all non-monotone specifications and
-prove the converse (monotone specifications are CAP-free).
+In the distributed setting, a natural conjecture is that the CAP
+tradeoff coincides with non-monotonicity: a specification forces a
+choice between consistency, availability, and partition tolerance iff
+it is non-monotone.
+This is almost right, but requires one refinement: some
+non-monotonicity is process-local and can be resolved without
+communication (e.g., via a local mutex).
+Only non-monotonicity that \emph{spans} a partition---where remote
+activity can invalidate a local outcome---creates the CAP dilemma.
+Getting this exclusion right is the main technical contribution of
+this section.
+
+\paragraph{Process assignment.}
+We extend the framework with a \emph{process assignment}
+$\pi : E \to \{p_1, \ldots, p_n\}$ mapping each event to the process
+at which it occurs.
+This is part of the specification's interface contract (e.g., ``reads
+at the local replica,'' ``writes at the primary'').
+
+\begin{definition}[Partition-constrained future]
+  \label{def:partition-future}
+  Fix a partition $P = (S, \bar{S})$ of the process set with
+  $S \cap \bar{S} = \emptyset$ and
+  $S \cup \bar{S} = \{p_1, \ldots, p_n\}$.
+  A future $H_2 \sqsupseteq H_1$ is \emph{$P$-constrained} if
+  $H_2 \setminus H_1$ contains no message receive whose matching send
+  is on the other side of $P$.
+  Both sides may continue receiving inputs, computing, sending
+  messages, and delivering messages within their own side---only
+  cross-partition delivery is blocked.
+\end{definition}
+
+\begin{definition}[Distributed-monotone]
+  \label{def:dist-monotone}
+  A specification $\Spec = (E, \Obs, \Ord)$ with process assignment
+  $\pi$ is \emph{distributed-monotone} if for every partition
+  $P = (S, \bar{S})$ with $|S| \geq 1$ and $|\bar{S}| \geq 1$,
+  every process $p \in S$, every history $H_1$, every
+  $o \in \Obs(H_1)$ exposed at $p$, and every $P$-constrained future
+  $H_2$ of $H_1$, there exists $o' \in \Obs(H_2)$ with $o \Ord o'$.
+  An outcome is \emph{exposed at $p$} if $p$ is the process that
+  would communicate it to a client---formally, if $o$ determines a
+  response to an invocation event at $p$.
+\end{definition}
+
+\noindent
+Monotonicity implies distributed-monotonicity (all futures includes
+partition-constrained ones), but not conversely: a specification whose
+non-monotonicity witnesses are all process-local is
+distributed-monotone because no partition can produce the dangerous
+future.
+
+\begin{theorem}[Complete CAP]
+  \label{cor:cap}
+  In the asynchronous message-passing model with two or more
+  processes, a specification admits a consistent, available,
+  partition-tolerant implementation if and only if it is
+  distributed-monotone.
+\end{theorem}
+
+\begin{proof}
+  ($\Leftarrow$) If distributed-monotone, every outcome at every
+  process survives all partition-constrained futures.
+  Under a partition, only such futures can occur.
+  Hence every process can safely expose any admissible outcome without
+  waiting---both availability and consistency hold.
+
+  ($\Rightarrow$) If not distributed-monotone, there exists a
+  partition $P = (S, \bar{S})$, a process $p \in S$, an outcome
+  $o \in \Obs(H_1)$ at $p$, and a $P$-constrained future $H_2$ with
+  no refinement of $o$ in $\Obs(H_2)$.
+  Under $P$, the future $H_2$ is realizable and $p$ cannot observe
+  the activity in $\bar{S}$ that contributes to it.
+  If $p$ exposes $o$, consistency may be violated; if $p$ withholds
+  $o$ until the partition heals, availability is violated.
+\end{proof}
+
+\noindent
+The relationship to Complete CALM:
+monotone $\Rightarrow$ distributed-monotone $\Rightarrow$ CAP-free,
+and monotone $\Rightarrow$ coordination-free.
+The gap between monotonicity and distributed-monotonicity is exactly
+the process-local non-monotonicity that coordination can resolve
+without communication.
+Complete CAP is a semantic characterization: it identifies when no
+coordination is required for safety, not how a process algorithmically
+selects an outcome.
 
 \paragraph{How coordination is achieved operationally.}
 Each non-monotonicity witness $(H_1, H_2, o_1)$ must be resolved by
@@ -877,70 +977,6 @@ Two-phase commit & Both & Aborts unsafe futures + defers exposure \\
 \label{tab:mechanisms}
 \end{table}
 
-\paragraph{Why partitions break coordination.}
-Both strategies require inter-node knowledge.
-In the distributed setting, network partitions can make this knowledge
-unavailable---the defining tension of CAP.
-
-\begin{lemma}[Coordination requires cross-partition communication]
-  \label{lem:coord-comm}
-  Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
-  $H_1 \hext H_2$.
-  Safely exposing $o$ requires suppressing $H_2$ or the incompatible
-  outcomes at $H_2$.
-  A partition isolating the exposing process from all processes that
-  could confirm or rule out $H_2$ makes this suppression impossible
-  without cross-partition communication.
-\end{lemma}
-
-\begin{proof}[Proof sketch]
-  The deciding process cannot locally determine whether $H_2$ will
-  materialize---the distinguishing events are on the other side of the
-  partition.
-  Full formalization in Appendix~\ref{app:cap-formal}.
-\end{proof}
-
-\begin{lemma}[Communication fails under partitions]
-  \label{lem:partition}
-  Under a network partition, a node cannot communicate with
-  partitioned peers.
-  Any mechanism requiring such communication must either block
-  (sacrificing availability) or proceed without it (risking
-  consistency violation).
-\end{lemma}
-
-\begin{corollary}[Complete CAP]
-  \label{cor:cap}
-  In the asynchronous message-passing model with two or more
-  processes, a specification admits a consistent, available,
-  partition-tolerant implementation if and only if it is monotone.
-\end{corollary}
-
-\begin{proof}
-  ($\Leftarrow$) If monotone, every outcome is future-consistent;
-  no coordination is needed (Complete CALM), so availability and
-  partition tolerance hold trivially.
-
-  ($\Rightarrow$) If not monotone, some $o \in \Obs(H_1)$ is
-  future-inconsistent, witnessed by $H_1 \hext H_2$.
-  In the asynchronous model, a node cannot locally determine whether
-  the dangerous future $H_2$ will materialize---it cannot rule out
-  that the distinguishing events are at a remote, partitioned
-  process (Lemma~\ref{lem:coord-comm}).
-  Under a partition isolating the exposing node, the required
-  communication is unavailable (Lemma~\ref{lem:partition}), forcing
-  a choice between consistency and availability.
-  Full formalization in Appendix~\ref{app:cap-formal}.
-\end{proof}
-
-\noindent
-Complete CAP generalizes Gilbert--Lynch from linearizability to any
-non-monotone specification, and proves the converse: monotone
-specifications are immune to the CAP dilemma.
-The factoring separates the semantic diagnosis (Complete CALM: which
-specs need coordination) from the operational consequence (partitions
-make coordination unavailable).
-
 \begin{example}[Paxos-based log as a properly coordinated variant]
   \label{ex:paxos-log}
   Consider a key-value store replicated at two nodes, with a
@@ -959,12 +995,11 @@ make coordination unavailable).
   The variant is monotone---by Complete CALM, downstream readers need
   no additional coordination.
 
-  CALM, applied to the combined program text, identifies Paxos's
-  non-monotone operators (leader election, quorum acknowledgment) and
-  classifies the system as requiring coordination.
-  This is correct for the internal specification but incorrect for the
-  output specification.
-  Complete CALM distinguishes these; CALM conflates them.
+  Complete CALM makes this boundary explicit: the coordinated
+  producer may require coordination, while the exposed log-prefix
+  interface is coordination-free for downstream consumers.
+  Relational-transducer CALM can see the latter only after the boundary
+  has been encoded as a separate monotone input relation.
 \end{example}
 
 \begin{example}[Stratified Datalog: the canonical separation]
@@ -1088,8 +1123,8 @@ We use prefix extension as a witness.
 
 \begin{proposition}[Prefix extension requires negation in Datalog]
   \label{prop:prefix-negation}
-  Any encoding of prefix extension as a Datalog program over
-  set-inclusion facts requires negation (a non-monotone operator).
+  Standard encodings of prefix extension as a Datalog program over
+  set-inclusion facts require negation (a non-monotone operator).
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -1221,14 +1256,15 @@ coordination whether the database is distributed or not.
 CAP adds the distributional consequence: when the system \emph{is}
 distributed, the required coordination may become unavailable under
 partitions.
-Specifically, the non-monotonicity of serializability means an ordering
-authority is required.
-Under partitions, that authority may become unavailable (depending on its
-implementation mechanism), forcing a choice between blocking and weakening
-the isolation guarantee.
+Serializability is not distributed-monotone: a partition-constrained
+future (remote transaction commit) can invalidate a local read outcome.
+Under partitions, the exposing process cannot observe the remote
+commit, forcing a choice between blocking and weakening the isolation
+guarantee.
 Complete CALM identifies the \emph{source} of this dilemma---non-monotonicity
-of the specification---while CAP describes its \emph{operational
-manifestation} under particular failure models.
+of the specification---while Complete CAP identifies when that
+non-monotonicity creates a CAP-style obstruction (when it manifests
+as a failure of distributed-monotonicity).
 
 %----------------------------------------------------------------
 \subsection{Invariant Confluence}
@@ -1461,11 +1497,12 @@ with availability and partition tolerance---a one-directional
 impossibility for a single consistency model.
 Complete CAP (Section~\ref{sec:complete-cap}) generalizes this to a
 bidirectional characterization: a specification admits a consistent,
-available, partition-tolerant implementation iff it is monotone.
-The generalization factors CAP into a semantic lemma (non-monotonicity
-requires coordination, via Complete CALM) and an operational lemma
-(distributed coordination fails under partitions), composing them into
-the full iff.
+available, partition-tolerant implementation iff it is
+distributed-monotone.
+The generalization factors CAP into a semantic condition
+(distributed-monotonicity: outcomes survive remote-only futures) and
+an operational observation (partitions produce exactly such futures),
+composing them into the full iff.
 
 \paragraph{Arbitration-free consistency.}
 Attiya et al.~\cite{attiya2023arbitration} prove that a storage
@@ -1488,6 +1525,10 @@ over multiple different orders, with coordination at the transitions
 between them.
 These designs influenced our decision to make the outcome order
 $\Ord$ a first-class component of a specification.
+The Hydro distributed programming framework~\cite{hydro} uses
+type-level monotonicity annotations to conservatively verify
+coordination-freedom at compile time---an instance of the
+sufficient-condition approach to the undecidable general problem.
 
 
 % ================================================================
@@ -1518,10 +1559,11 @@ isolation levels, $I$-confluence, CRDT semilattice
 discipline---are instances of a single semantic test.
 Monotonicity is the common structural property; its failure is
 the universal explanation for why coordination is required.
-In the distributed setting, Complete CAP makes this operational:
-non-monotone specifications cannot be implemented with consistency,
-availability, and partition tolerance simultaneously---and monotone
-specifications can.
+In the distributed setting, Complete CAP refines this:
+specifications that fail distributed-monotonicity---those whose
+outcomes can be invalidated by remote-only futures---cannot be
+implemented with consistency, availability, and partition tolerance
+simultaneously.
 
 \paragraph{Beyond CALM.}
 The methodology demonstrated here---identify the minimal semantic
@@ -1550,97 +1592,83 @@ Complete CALM suggests that the answer is often less than expected.
 \label{app:proofs}
 \label{app:cap-formal}
 
-We formalize CAP within our framework by modeling partitions as
-constraints on admissible futures and availability as a requirement to
-complete operations whenever some partition-respecting extension admits
-a valid outcome.
-
-\begin{definition}[Partition pattern]
-  A \emph{partition pattern} $P$ restricts which send--receive pairs
-  are permitted after a given causal cut.
-  A history $H$ \emph{respects} $P$ if it contains no message
-  deliveries forbidden by $P$.
-\end{definition}
-
-\noindent
-Partition patterns restrict admissible extensions while leaving $\Obs$
-and $\Ord$ unchanged.
+We formalize CAP within our framework using the partition-constrained
+futures from Section~\ref{sec:complete-cap}.
+The appendix provides the availability definition and a detailed proof.
 
 \begin{definition}[Maximal availability under partitions]
   \label{def:maximal-availability}
-  Fix $\Spec = (E, \Obs, \Ord)$.
-  For prefix $H_i$ and partition pattern $P$, let
-  $\mathsf{Ext}_P(H_i)$ be the causally consistent extensions of
-  $H_i$ that respect $P$.
-  An implementation $I$ is \emph{maximally available under partitions}
+  Fix $\Spec = (E, \Obs, \Ord)$ and a partition $P = (S, \bar{S})$.
+  Let $\mathsf{Ext}_P(H_i)$ be the $P$-constrained extensions of
+  $H_i$ (futures with no cross-partition message delivery).
+  An implementation $I$ is \emph{maximally available under $P$}
   if whenever some $H \in \mathsf{Ext}_P(H_i)$ both completes a
   client invocation $e$ and admits a nonempty $\Obs(H)$, there exists
   an execution $H^* \in \mathsf{Ext}_P(H_i)$ of $I$ in which $e$
   completes.
 \end{definition}
 
-\begin{definition}[Cross-partition witness]
-  \label{def:cross-partition}
-  Fix $\Spec = (E, \Obs, \Ord)$ and partition pattern $P$.
-  A future-inconsistent outcome $o \in \Obs(H_1)$ witnessed by
-  $H_1 \hext H_2$ is \emph{cross-partition under $P$} if $H_2$
-  respects $P$ and the events in $H_2 \setminus H_1$ occur outside
-  the partition of the process that would expose $o$.
-\end{definition}
-
 \noindent
-A cross-partition witness captures the essential CAP scenario: the
-events that would invalidate an outcome are on the other side of the
-partition from the process that must decide whether to expose it.
+This is a semantic availability condition: if a valid response is
+possible under the partition, the implementation must have an execution
+that produces one.
+Stronger universal/fairness-based availability notions (``every
+request to a non-failing node eventually receives a response'') only
+strengthen the impossibility direction of the theorem.
 
-\begin{corollary}[Complete CAP, restated]
+\begin{theorem}[Complete CAP, restated]
   \label{cor:cap-formal}
-  Let $\Spec = (E, \Obs, \Ord)$ be a specification in the
-  asynchronous message-passing model.
+  Let $\Spec = (E, \Obs, \Ord)$ be a specification with process
+  assignment $\pi$ in the asynchronous message-passing model.
   $\Spec$ admits an implementation that is both correct on all
-  causally consistent histories and maximally available under
-  partitions if and only if $\Spec$ is monotone.
-\end{corollary}
+  causally consistent histories and maximally available under all
+  partitions if and only if $\Spec$ is distributed-monotone.
+\end{theorem}
 
 \begin{proof}
-  Let $o \in \Obs(H_1)$ be cross-partition under $P$, witnessed by
-  $H_1 \hext H_2$.
-  The process exposing $o$ lies in a partition that does not contain
-  the events in $H_2 \setminus H_1$.
-  Under $P$, this process cannot observe whether $H_2$ will
-  materialize.
+  ($\Rightarrow$, not distributed-monotone implies CAP obstruction.)
+  If $\Spec$ is not distributed-monotone, there exists a partition
+  $P = (S, \bar{S})$, a process $p \in S$, an outcome
+  $o \in \Obs(H_1)$ at $p$, and a $P$-constrained future $H_2$ with
+  no refinement of $o$ in $\Obs(H_2)$.
+
+  Under partition $P$, the future $H_2$ is realizable (it requires no
+  cross-partition delivery).
+  Process $p$ cannot observe the activity in $\bar{S}$ that
+  contributes to $H_2$ (no messages from $\bar{S}$ reach $S$).
 
   \emph{Case 1 (expose $o$, preserve availability):}
-  The process exposes $o$ without waiting.
-  If $H_2$ subsequently materializes (it respects $P$, so it is
-  admissible), then $o$ has been exposed but no outcome in $\Obs(H_2)$
-  refines it---the implementation's possibilities have been narrowed
-  (correctness violated or possibility preservation fails).
+  Process $p$ exposes $o$ without waiting.
+  If $H_2$ subsequently materializes, $o$ has been exposed but no
+  outcome in $\Obs(H_2)$ refines it---correctness is violated.
 
   \emph{Case 2 (withhold $o$, preserve correctness):}
-  The process blocks until the partition heals and it can determine
+  Process $p$ blocks until the partition heals and it can determine
   whether $H_2$ will occur.
-  But $P$ may persist indefinitely, so the process never responds---availability is violated.
+  But $P$ may persist indefinitely, so $p$ never responds---availability is violated.
 
   Hence at least one of correctness or availability must be
   sacrificed.
 
-  \emph{Converse:} if $\Spec$ is monotone, every outcome is
-  future-consistent.
-  No cross-partition witness exists (for any $P$, every $o \in
-  \Obs(H_1)$ has a refinement at every extension, including
-  $P$-respecting ones).
-  The process can expose any admissible outcome immediately---both
-  correctness and availability hold regardless of partition state.
+  ($\Leftarrow$, distributed-monotone implies no CAP obstruction.)
+  If $\Spec$ is distributed-monotone, then for every partition $P$,
+  every process $p \in S$, and every $P$-constrained future $H_2$ of
+  $H_1$, every outcome $o \in \Obs(H_1)$ at $p$ has a refinement in
+  $\Obs(H_2)$.
+  Under any partition, the only realizable futures are
+  $P$-constrained.
+  Since every outcome survives all such futures, $p$ can expose any
+  admissible outcome immediately---both correctness and availability
+  hold regardless of partition state.
 \end{proof}
 
 \noindent
 CAP is not tied to linearizability.
-It applies to any specification admitting a cross-partition
-future-inconsistent outcome---precisely the non-monotone
-specifications whose coordination cannot be localized within a single
-partition.
-For monotone specifications, CAP is vacuous.
+It applies to any specification that fails distributed-monotonicity:
+one whose outcomes can be invalidated by a partition-constrained
+future.
+For distributed-monotone specifications, no partition-constrained
+future can invalidate any outcome, so CAP is vacuous.
 
 \section{The Coordination-Free Frontier}
 \label{app:minimality}
@@ -1713,10 +1741,13 @@ Under \emph{causal consistency}, define:
 The outcome order is prefix extension:
 $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
 
-\begin{proposition}[Register frontier]
+\begin{proposition}[Register interface frontier]
   \label{prop:register-frontier}
-  $\Ord^* = \Ord_{\mathit{causal}}$: causal consistency is
-  on the coordination-free frontier of the replicated register.
+  Causal consistency is a monotone weakening of sequential consistency
+  for the replicated register: it preserves read/write histories while
+  weakening total-order outcomes to causal-prefix outcomes.
+  Under this interface comparison, causal consistency is on the
+  coordination-free frontier.
 \end{proposition}
 
 \begin{proof}
@@ -1740,17 +1771,20 @@ $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
   (i.e., $\Ord' \subsetneq \Ord_{\mathit{causal}}$).
   Then there exist outcomes $o_1, o_2$ with
   $o_1 \Ord_{\mathit{causal}} o_2$ but $o_1 \not\Ord' o_2$.
-  We construct histories witnessing that this removal breaks
-  monotonicity.
+  We show this removal breaks monotonicity.
   Choose $H_1$ realizing $o_1$ and extend to $H_2$ by adding exactly
   the events producing $o_2 \setminus o_1$ (the new operations in
-  $o_2$), with causal structure forcing $o_2$ as the unique extension
-  of $o_1$ at $H_2$.
+  $o_2$), with causal structure such that $o_2$ is the only
+  causally-consistent extension of $o_1$ at $H_2$ (the new operations
+  are causally ordered to admit a unique valid return value).
   Then $o_1 \in \Obs(H_1)$, and the only outcome in $\Obs(H_2)$
   extending $o_1$ is $o_2$.
   Since $o_1 \not\Ord' o_2$, the outcome $o_1$ has no
   $\Ord'$-refinement at $H_2$: $(E, \Obs, \Ord')$ is not monotone.
-  Hence no order smaller than $\Ord_{\mathit{causal}}$ is monotone.
+  Hence no order smaller than $\Ord_{\mathit{causal}}$ is monotone:
+  causal consistency is a natural frontier point---any attempt to
+  preserve more of the total-order commitment must rule out some
+  admissible concurrent extension.
 \end{proof}
 
 \noindent
@@ -1791,8 +1825,11 @@ Both use prefix extension as the outcome order.
 
 \begin{proposition}[Queue frontier]
   \label{prop:queue-frontier}
-  $\Ord^* = \Ord_{\mathit{causal\text{-}FIFO}}$: causal FIFO is
-  on the coordination-free frontier of the replicated FIFO queue.
+  Causal FIFO is a natural monotone weakening of the replicated FIFO
+  queue: it preserves causal ordering among enqueues while relaxing
+  the global total-order requirement.
+  Under the stated assumptions, causal FIFO is on the
+  coordination-free frontier.
 \end{proposition}
 
 \begin{proof}
@@ -1824,10 +1861,9 @@ Both use prefix extension as the outcome order.
   dequeued first:
   $\langle b \rangle \in \Obs_{\mathit{causal\text{-}FIFO}}(H_1')$.
   Both $\langle a, b \rangle$ and $\langle b, a \rangle$ are
-  reachable from histories where only one element has been dequeued.
-  Hence $\langle a \rangle \rightsquigarrow \langle a, b \rangle$ and
-  $\langle b \rangle \rightsquigarrow \langle b, a \rangle$: the
-  frontier relates both orderings.
+  reachable from histories where only one element has been dequeued:
+  $\langle a \rangle$ extends to $\langle a, b \rangle$ and
+  $\langle b \rangle$ extends to $\langle b, a \rangle$.
 
   Any order smaller than causal FIFO must declare one of these pairs
   incompatible---e.g., require that $a$ always precedes $b$.
@@ -1870,7 +1906,8 @@ The outcome order is set inclusion on valid lookup pairs.
   \emph{link invariant}---whenever a key $k$ moves from position $p$
   to position $p'$, a directed edge from $p$ toward $p'$ exists in
   $G(H)$ after the modification---then forward-reachability is
-  on the coordination-free frontier for lookup.
+  a natural monotone weakening for lookup, and under the link
+  invariant no weaker order suffices.
 \end{proposition}
 
 \begin{proof}
@@ -2157,8 +2194,8 @@ non-monotone structure.
 
 \begin{proposition}[Prefix extension requires negation in Datalog,
   restated]
-  Any encoding of prefix extension as a Datalog program over
-  set-inclusion facts requires negation.
+  Standard encodings of prefix extension as a Datalog program over
+  set-inclusion facts require negation.
 \end{proposition}
 
 \begin{proof}
@@ -2176,7 +2213,7 @@ non-monotone structure.
   $v' \neq v$.''
   This is a negation-as-failure check, expressible in stratified
   Datalog only via negation.
-  Hence any Datalog encoding of prefix-extension semantics requires
+  Hence such encodings of prefix-extension semantics require
   at least one non-monotone (negated) subgoal.
 \end{proof}
 
