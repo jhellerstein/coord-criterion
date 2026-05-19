@@ -825,106 +825,50 @@ This is the availability condition of Gilbert and
 Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
 
 \begin{definition}[Correctness (operational)]
-  An implementation is \emph{correct} for $\Spec$ if for every
-  execution prefix with induced history $H$, there exists
+  An implementation \emph{respects the interface contract} $\Spec$ if
+  for every execution prefix with induced history $H$, there exists
   $o \in \Obs(H)$ such that $o(e) = v$ for every response $(e, v)$
   recorded in $H$.
 \end{definition}
 
-\begin{theorem}[Complete CALM, operational]
+\begin{theorem}[Complete CALM, operational adequacy]
   \label{thm:calm-operational}
   A well-formed specification $\Spec$ admits a correct
   coordination-free distributed implementation iff $\Spec$ is
   monotone.
 \end{theorem}
 
-\begin{proof}
-  \emph{Sufficiency (monotone $\Rightarrow$ implementation exists).}
-  Construct the \emph{causal-view protocol}: each process maintains
-  as state its local causal history $H_i$ (the events that have
-  causally reached it) and propagates it via gossip (internal actions
-  trigger $\mathsf{send}$).
-  On $\mathsf{inv}(e)_i$, the process adds $e$ to $H_i$, computes
-  $\Obs(H_i)$, picks any $o \in \Obs(H_i)$, and immediately performs
-  $\mathsf{resp}(e, o(e))_i$.
-  The response is enabled without requiring any further input action.
+\begin{proof}[Proof sketch (full proof in Appendix~\ref{app:operational})]
+  \emph{Sufficiency.}
+  The \emph{causal-view protocol} implements any monotone spec: each
+  process maintains its local causal history $H_i$ and propagates it
+  via gossip.
+  On invocation $e$, the process picks any $o \in \Obs(H_i)$ and
+  immediately responds with $o(e)$.
+  Since $H_i \hext H$ (local views are subhistories of the global
+  history), monotonicity lifts $o$ to a refinement $o' \in \Obs(H)$
+  that explains the full response trace.
+  Joint consistency of concurrent responses follows automatically:
+  $\Obs(H)$ is evaluated over the full history including all response
+  events, so any explaining outcome must agree with all of them.
 
-  \emph{Correctness:} At any prefix with global history $H$, each
-  local view satisfies $H_i \hext H$ (local views are
-  downward-closed subhistories of the global history).
-  By monotonicity, the chosen $o \in \Obs(H_i)$ has a refinement
-  $o' \in \Obs(H)$ with $o \Ord o'$.
-  Refinement coherence gives $o'(e) = o(e)$ for every invocation
-  $e$ in $H_i$, including the one just answered; consistency
-  gives $o'(e) = v$ for every response $(e, v)$ recorded in $H$.
-  Hence $o'$ witnesses correctness at this prefix.
-
-\begin{remark}[Joint consistency of independent responses]
-  \label{rem:joint-consistency}
-  Joint consistency of independently emitted responses does not
-  require a separate assumption---it follows from monotonicity,
-  because responses are events in the history and $\Obs$ is defined
-  over the full history.
-
-  The key point: $\Obs(H)$ is evaluated at a history $H$ that
-  \emph{includes} all response events emitted so far.
-  By consistency, $o(e) = v$ for every $(e, v)$ in $H$ and every
-  $o \in \Obs(H)$.
-  So if $H$ contains responses $(e_p, v_p)$ and $(e_q, v_q)$, then
-  every $o \in \Obs(H)$ satisfies $o(e_p) = v_p$ and $o(e_q) = v_q$.
-
-  Now suppose monotonicity holds and two processes respond
-  concurrently.
-  Process $p$ chose $o_p \in \Obs(H_p)$ with $o_p(e_p) = v_p$;
-  process $q$ chose $o_q \in \Obs(H_q)$ with $o_q(e_q) = v_q$.
-  The global history $H$ contains both response events.
-  By monotonicity, $o_p$ has a refinement $o' \in \Obs(H)$.
-  Since $H$ contains $(e_q, v_q)$, consistency requires
-  $o'(e_q) = v_q$; refinement coherence gives $o'(e_p) = v_p$.
-  Hence $o'$ witnesses correctness for both responses.
-
-  Contrapositive: if no outcome at $H$ satisfies both, then $o_p$
-  has no refinement at $H$---a monotonicity failure.
-  The causal-view protocol makes this concrete: gossip propagates
-  response events, enriching local views.
-  But even for truly concurrent responses, monotonicity guarantees
-  joint consistency---any failure would be a monotonicity violation.
-\end{remark}
-
-  \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
-  Contrapositive: if $\Spec$ is not monotone, no correct
-  coordination-free implementation of $\Spec$ exists.
-
-  Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
-  $H_1 \hext H_2$: no $o' \in \Obs(H_2)$ satisfies $o \Ord o'$.
-  By demonic exposure, a correct implementation must be safe under
-  every admissible interpretation; in particular, an adversary may
-  hold the implementation to $o$ as the operative interpretation at
-  $H_1$.
-  Once $o$ is so held, correctness must persist as the history
-  extends.
-
-  A coordination-free process responds from local state alone; its
-  local view is a causal subhistory of $H_1$ and cannot distinguish
-  $H_1$ from extensions where $o$ remains valid.
-  The environment may schedule the continuation producing $H_2$.
-  Correctness at $H_2$ requires an outcome $o^* \in \Obs(H_2)$ with
-  $o \Ord o^*$ (the operative interpretation must persist under
-  refinement).
-  No such $o^*$ exists.
-  Correctness is violated.
-
-  The only way to escape this argument is to rule $o$ out as a
-  permitted interpretation---to refuse the adversary's nomination.
-  But that means the implementation does not admit $o$ at all: it is
-  realizing a strict subset of $\Obs$, which is a coordinated variant
-  (Section~\ref{sec:separation}), not $\Spec$.
-
-  Hence no correct coordination-free implementation of $\Spec$
-  exists.
+  \emph{Necessity.}
+  If $o \in \Obs(H_1)$ is future-inconsistent (no refinement at some
+  $H_2$), demonic exposure means the adversary may hold the
+  implementation to $o$ as the operative interpretation.
+  A coordination-free process cannot distinguish $H_1$ from
+  extensions where $o$ remains valid; the environment may schedule
+  the continuation producing $H_2$.
+  No refinement of $o$ exists at $H_2$---correctness is violated.
+  Systematically avoiding $o$ means implementing a restricted
+  interface (a coordinated variant, Section~\ref{sec:separation}).
 \end{proof}
 
 \noindent
+This is not merely a definition: in the standard I/O-automaton model,
+monotone response interfaces are implemented by a concrete protocol,
+and non-monotone interfaces admit a standard indistinguishability
+obstruction.
 The semantic characterization (Definition~\ref{def:coordfree}) is a
 corollary: condition~(i) corresponds to the environment's power to
 produce any admissible execution, and condition~(ii) corresponds to
@@ -1082,6 +1026,9 @@ This convention differs from the main Complete CALM theorem, where
 $\Obs(H) = \emptyset$ at a reachable future constitutes a monotonicity
 failure; here, $\Obs'(H) = \emptyset$ marks a history that the
 coordination mechanism is responsible for excluding.
+Thus proper coordination changes the admitted history space; it is not
+an application of ordinary monotonicity to the original unrestricted
+future relation.
 Complete CALM provides the test: check whether the variant is
 monotone over its admitted histories.
 If it is, the coordination suffices.
@@ -1104,7 +1051,8 @@ If not, more restriction is needed.
   operations are serialized---no two are concurrent).
   In such histories, outcomes grow by prefix extension of the
   serialized input sequence; thus $\Spec'$ is monotone over its
-  admitted histories, and Complete CALM certifies $\Spec'$ directly.
+  admitted histories, and Complete CALM certifies the residual
+  interface $\Spec'$ directly.
 
   We show relational-transducer CALM does not provide a
   specification-level judgment for this question.
@@ -1267,8 +1215,8 @@ The gap between monotonicity and distributed-monotonicity is exactly
 the same-side non-monotonicity that coordination within a connected
 component can resolve without cross-partition communication.
 Complete CAP is a semantic characterization: it identifies when no
-coordination is required for safety, not how a process algorithmically
-selects an outcome.
+cross-partition coordination is required for safety, not how a process
+algorithmically selects an outcome.
 
 \paragraph{How coordination is achieved operationally.}
 Each non-monotonicity witness $(H_1, H_2, o_1)$ must be resolved by
@@ -1937,6 +1885,90 @@ Complete CALM suggests that the answer is often less than expected.
 % ================================================================
 \pagebreak
 \appendix
+
+\section{Operational Adequacy: Full Proof}
+\label{app:operational}
+
+This appendix provides the complete proof of
+Theorem~\ref{thm:calm-operational}.
+
+\begin{proof}[Proof of Theorem~\ref{thm:calm-operational}]
+  \emph{Sufficiency (monotone $\Rightarrow$ implementation exists).}
+  Construct the \emph{causal-view protocol}: each process maintains
+  as state its local causal history $H_i$ (the events that have
+  causally reached it) and propagates it via gossip (internal actions
+  trigger $\mathsf{send}$).
+  On $\mathsf{inv}(e)_i$, the process adds $e$ to $H_i$, computes
+  $\Obs(H_i)$, picks any $o \in \Obs(H_i)$, and immediately performs
+  $\mathsf{resp}(e, o(e))_i$.
+  The response is enabled without requiring any further input action.
+
+  \emph{Correctness:} At any prefix with global history $H$, each
+  local view satisfies $H_i \hext H$ (local views are
+  downward-closed subhistories of the global history).
+  By monotonicity, the chosen $o \in \Obs(H_i)$ has a refinement
+  $o' \in \Obs(H)$ with $o \Ord o'$.
+  Refinement coherence gives $o'(e) = o(e)$ for every invocation
+  $e$ in $H_i$, including the one just answered; consistency
+  gives $o'(e) = v$ for every response $(e, v)$ recorded in $H$.
+  Hence $o'$ witnesses correctness at this prefix.
+
+  \emph{Joint consistency of independent responses.}
+  Joint consistency of independently emitted responses does not
+  require a separate assumption---it follows from monotonicity,
+  because responses are events in the history and $\Obs$ is defined
+  over the full history.
+  $\Obs(H)$ is evaluated at a history $H$ that \emph{includes} all
+  response events emitted so far.
+  By consistency, $o(e) = v$ for every $(e, v)$ in $H$ and every
+  $o \in \Obs(H)$.
+  So if $H$ contains responses $(e_p, v_p)$ and $(e_q, v_q)$, then
+  every $o \in \Obs(H)$ satisfies $o(e_p) = v_p$ and $o(e_q) = v_q$.
+
+  Now suppose monotonicity holds and two processes respond
+  concurrently.
+  Process $p$ chose $o_p \in \Obs(H_p)$ with $o_p(e_p) = v_p$;
+  process $q$ chose $o_q \in \Obs(H_q)$ with $o_q(e_q) = v_q$.
+  The global history $H$ contains both response events.
+  By monotonicity, $o_p$ has a refinement $o' \in \Obs(H)$.
+  Since $H$ contains $(e_q, v_q)$, consistency requires
+  $o'(e_q) = v_q$; refinement coherence gives $o'(e_p) = v_p$.
+  Hence $o'$ witnesses correctness for both responses.
+  Contrapositive: if no outcome at $H$ satisfies both, then $o_p$
+  has no refinement at $H$---a monotonicity failure.
+
+  \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
+  Contrapositive: if $\Spec$ is not monotone, no correct
+  coordination-free implementation of $\Spec$ exists.
+
+  Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
+  $H_1 \hext H_2$: no $o' \in \Obs(H_2)$ satisfies $o \Ord o'$.
+  By demonic exposure, a correct implementation must be safe under
+  every admissible interpretation; in particular, an adversary may
+  hold the implementation to $o$ as the operative interpretation at
+  $H_1$.
+  Once $o$ is so held, correctness must persist as the history
+  extends.
+
+  A coordination-free process responds from local state alone; its
+  local view is a causal subhistory of $H_1$ and cannot distinguish
+  $H_1$ from extensions where $o$ remains valid.
+  The environment may schedule the continuation producing $H_2$.
+  Correctness at $H_2$ requires an outcome $o^* \in \Obs(H_2)$ with
+  $o \Ord o^*$ (the operative interpretation must persist under
+  refinement).
+  No such $o^*$ exists.
+  Correctness is violated.
+
+  The only way to escape this argument is to rule $o$ out as a
+  permitted interpretation---to refuse the adversary's nomination.
+  But that means the implementation does not admit $o$ at all: it is
+  realizing a strict subset of $\Obs$, which is a coordinated variant
+  (Section~\ref{sec:separation}), not $\Spec$.
+
+  Hence no correct coordination-free implementation of $\Spec$
+  exists.
+\end{proof}
 
 \section{Complete CAP: Formal Treatment}
 \label{app:proofs}
