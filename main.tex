@@ -1017,6 +1017,10 @@ is how to verify that a \emph{given} variant is properly coordinated.
 A properly coordinated variant restricts the original spec---fewer
 admissible outcomes, fewer admissible histories, or both---just enough
 to achieve monotonicity.
+History restriction is modeled by setting $\Obs'(H) = \emptyset$ for
+excluded histories: monotonicity is then vacuous at those histories
+(there are no outcomes to refine), and the variant is effectively
+defined only over the restricted history space.
 Complete CALM provides the test: check whether the variant is
 monotone.
 If it is, the coordination suffices.
@@ -1214,11 +1218,14 @@ Two-phase commit & Both & Aborts unsafe futures + defers exposure \\
   stratum~1, unreachability via negation in stratum~2).
   CALM classifies it as non-monotone---coordination is required to seal
   stratum~1 before stratum~2 executes.
-  A stratified execution (a barrier between strata) results in a
-  specification that is properly coordinated in our sense: after sealing,
-  the output of stratum~2 is fixed and grows monotonically under set
-  inclusion as the sealed computation completes.
-  Complete CALM correctly identifies this resolved output as monotone.
+  A stratified execution (a barrier between strata) is a properly
+  coordinated variant: the barrier restricts admissible histories to
+  those where stratum~1 is sealed ($\Obs' = \emptyset$ for unsealed
+  histories).
+  Downstream of the barrier, the sealed stratum-1 output is a fixed
+  input, and stratum-2 computation grows monotonically under set
+  inclusion relative to that fixed input.
+  Complete CALM correctly identifies this residual output as monotone.
   CALM, applied to the program text, cannot make this
   distinction---it sees negation and reports ``requires coordination''
   regardless of whether the coordination has been provided.
