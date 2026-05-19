@@ -542,73 +542,39 @@ observations).
 Different specifications over the same histories may use different
 outcome orders.
 
-We require five well-formedness conditions linking outcomes to
-response events in the history:
+We require three well-formedness conditions on $\Obs$ and $\Ord$:
 \begin{enumerate}[nosep]
-  \item \emph{Response soundness:} if $H$ contains a response event
-        $\mathsf{resp}(e, v)$, then every $o \in \Obs(H)$ prescribes
-        response $v$ for invocation $e$.
-  \item \emph{Response preservation:} if $o \Ord o'$ and $o$
-        prescribes response $v$ for $e$, then $o'$ also prescribes
-        $v$ for $e$.
-  \item \emph{Response totality:} at every well-formed history $H$
-        containing a pending invocation $e$, there exists $o \in
-        \Obs(H)$ that prescribes an allowed response for $e$ (in
-        particular, $\Obs(H) \neq \emptyset$).
-        Equivalently, every \emph{response point}---a history with a
-        pending invocation that the implementation must answer---is
-        explained by some admissible outcome.
-  \item \emph{Response monotonicity of admissibility:} for any
-        response-only extension $H'$ of $H$ (i.e., $H'$ is a future
-        of $H$ where $H' \setminus H$ contains only response events),
-        $\Obs(H') \subseteq \Obs(H)$.
-        Recording a response can only restrict admissibility, never
-        enlarge it.
-  \item \emph{Response observability:} every monotonicity violation
-        is witnessed at a response point. That is, if $o \in
-        \Obs(H_1)$ has no refinement at some extension $H_1 \hext
-        H_2$, then there is a witness pair $(H_1', H_2')$ with
-        $H_1' \hext H_2'$, $H_1'$ contains a pending invocation $e$,
-        and the witness outcome $o' \in \Obs(H_1')$ prescribes a
-        response for $e$ that has no future-consistent refinement
-        at $H_2'$.
+  \item \emph{Consistency with history:} $\Obs(H)$ is consistent with
+        the observable facts already recorded in $H$.
+        If $H$ records that invocation $e$ received response $v$,
+        then every $o \in \Obs(H)$ agrees (prescribes $v$ for $e$).
+  \item \emph{Refinement coherence:} refinement never retracts an
+        observation.
+        If $o \Ord o'$ and $o$ prescribes response $v$ for $e$, then
+        $o'$ also prescribes $v$ for $e$.
+        Additionally, recording an observation can only restrict
+        admissibility: if $H'$ extends $H$ by adding only observable
+        events (responses), then $\Obs(H') \subseteq \Obs(H)$.
+  \item \emph{Liveness:} at every history $H$ where the
+        implementation owes a response (a pending invocation exists),
+        there is some $o \in \Obs(H)$ that prescribes a response.
+        The specification always has something to say.
 \end{enumerate}
-The first four conditions discipline the relationship between
-outcomes and response events; the fifth ties non-monotonicity to
-the interface.
-We call a specification satisfying all five \emph{well-formed}.
+These are natural hygiene conditions on any interface contract:
+outcomes agree with recorded facts, refinement is monotone in
+commitment, and the spec never leaves the implementation with
+nothing to do.
+We call a specification satisfying all three \emph{well-formed}.
 
-\paragraph{Response observability is a modeling discipline, not a
-restriction.}
-Response observability looks like a constraint on which
-specifications we can analyze, but in practice it is a discipline on
-how a specification is modeled.
-We adopted the same discipline already for messages: when we wanted
-to constrain inter-process propagation, we elevated message sends
-and receives to first-class events
-(Definition~\ref{def:event-types}) so that any property we cared
-about could be predicated on them.
-The same applies to outcomes: anything that we want to constrain
-semantically must be observable at the interface, hence appear in a
-response event.
-If a candidate ``outcome'' is not exposed through any response, then
-no external party can detect a violation involving it, and there is
-no operational obligation to coordinate over it.
-By design fiat, the modeler decides what is semantically observable:
-to constrain the internal layout of a data structure, expose its API
-calls as responses; to constrain replica state, expose
-read-your-writes through reads.
-Under this discipline, every outcome is, or refines, a response
-commitment, and response observability is automatic.
-The condition is therefore a sanity check on the modeling, not a
-restriction on which specifications admit the theorem: any
-specification whose ``hidden'' outcomes affect external behavior can
-be restated as a response-oriented specification by promoting those
-behaviors to response events.
-
-All specifications in this paper are well-formed under this
-discipline; the operational theorem (Section~\ref{sec:operational})
-is stated for well-formed specifications.
+The modeling discipline is simple: $\Obs$ captures whatever you want
+to constrain.
+If a semantic property matters to you, put it in $\Obs$ and
+accommodate it in $\Ord$.
+If it is not in $\Obs$, no external party can detect a violation, and
+there is no obligation to coordinate over it.
+All specifications in this paper are well-formed; the operational
+theorem (Section~\ref{sec:operational}) is stated for well-formed
+specifications.
 
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
@@ -765,22 +731,16 @@ condition (monotonicity) exactly characterizes when a correct,
 non-blocking implementation exists.
 
 \paragraph{Interface contract reading.}
-Throughout this section, we read $\Obs(H)$ as an
-\emph{interface contract}: every outcome in $\Obs(H)$ is a behavior
-the specification permits at $H$, and an implementation is correct
-only if every outcome it could expose is consistent with the
-specification.
+$\Obs(H)$ is an \emph{interface contract}: every outcome in
+$\Obs(H)$ is a behavior the specification permits at $H$, and an
+implementation is correct only if it is safe for any outcome the
+contract permits.
 A system that systematically restricts itself to a subset
-$\Obs'(H) \subset \Obs(H)$ is implementing a different, restricted
-specification $\Spec'$ (a coordinated variant in the sense of
+$\Obs'(H) \subset \Obs(H)$ is implementing a different specification
+$\Spec'$ (a coordinated variant in the sense of
 Section~\ref{sec:separation})---not $\Spec$ itself.
-This convention separates \emph{environment futures} (invocations,
-deliveries, failures---adversarial inputs) from
-\emph{interface futures} (response events admitted by $\Obs$):
-the adversary forces the former; the specification permits the
-latter.
-Under this reading, coordination-freedom is a property of the
-specification and not of any angelic selection strategy.
+Coordination-freedom is therefore a property of the specification,
+not of any angelic selection strategy.
 
 \begin{definition}[Process (I/O automaton)]
   \label{def:process}
@@ -864,20 +824,6 @@ generality for safety properties.
   monotone.
 \end{theorem}
 
-\noindent
-The theorem applies to \emph{response-oriented} specifications:
-specifications whose semantically observable commitments are exposed
-through the interface as responses.
-As we noted in
-Section~\ref{sec:specification}, this is a modeling discipline rather
-than a restriction---the natural class for consistency, transactions,
-registers, CRDT reads, isolation levels, queues, and search
-structures, and any specification can be brought into the class by
-promoting whatever it constrains to interface events.
-The theorem does not preclude analysis of specifications with purely
-internal commitments; it asks only that whatever the specification
-constrains be visible at the interface.
-
 \begin{proof}
   \emph{Sufficiency (monotone $\Rightarrow$ implementation exists).}
   Construct the \emph{causal-view protocol}: each process maintains
@@ -886,7 +832,7 @@ constrains be visible at the interface.
   trigger $\mathsf{send}$).
   On $\mathsf{inv}(e)_i$, the process adds $e$ to $H_i$, computes
   $\Obs(H_i)$, chooses some $o \in \Obs(H_i)$ that prescribes a
-  response for $e$ (such an $o$ exists by response totality), and
+  response for $e$ (such an $o$ exists by liveness), and
   immediately performs
   $\mathsf{resp}(e, v)_i$ where $v$ is $o$'s prescription for $e$.
   The response is enabled without requiring any further input action.
@@ -895,9 +841,9 @@ constrains be visible at the interface.
   local view satisfies $H_i \hext H$.
   By monotonicity, the chosen $o \in \Obs(H_i)$ has a refinement
   $o' \in \Obs(H)$ with $o \Ord o'$.
-  By response soundness, $o'$ explains every response event recorded
-  in $H$ (including responses emitted by other processes); by response
-  preservation, $o'$ preserves the response emitted from $o$.
+  By consistency with history, $o'$ agrees with every response event
+  recorded in $H$; by refinement coherence, $o'$ preserves the
+  response emitted from $o$.
   Hence $\mathsf{Resp}(H)$ is explained by $o'$, and the prefix is
   correct.
 
@@ -961,7 +907,9 @@ constrains be visible at the interface.
 
   Formalize this as follows.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
-  $H_1 \hext H_2$. By response observability, we may assume without
+  $H_1 \hext H_2$. Since $\Obs$ captures all observable behavior,
+  any monotonicity violation manifests at the interface: we may assume
+  without
   loss of generality that $H_1$ contains a pending invocation $e$ at
   some process $p$, and that $o$ prescribes response $v$ for $e$
   while $v$ has no future-consistent refinement at $H_2$.
@@ -985,7 +933,8 @@ constrains be visible at the interface.
   In particular, the contract permits the continuation
   $H_2 \cup \{\mathsf{resp}(e, v)\}$ that arises when $p$ commits to
   $v$.
-  By response monotonicity of admissibility,
+  By refinement coherence (recording an observation only restricts
+  admissibility),
   $\Obs(H_2 \cup \{\mathsf{resp}(e, v)\}) \subseteq \Obs(H_2)$, and
   no outcome there refines $o$.
   Thus $v$ has no admissible explanation---correctness is violated.
