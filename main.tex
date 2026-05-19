@@ -393,7 +393,7 @@ ordering.
 
 \begin{definition}[Event universe]
   A specification fixes pairwise-disjoint sets of events:
-  $E_{\mathit{in}}$ (client interface: invocations and responses),
+  $E_{\mathit{iface}}$ (client interface: invocations and responses),
   $E_{\mathit{int}}$ (internal computation),
   $E_{\mathit{send}}$ (message sends),
   $E_{\mathit{recv}}$ (message receives).
@@ -402,14 +402,14 @@ ordering.
 \noindent
 The disjoint sets distinguish interface activity from internal
 computation and message-passing structure.
-$E_{\mathit{in}}$ contains client-facing \emph{interface events}:
+$E_{\mathit{iface}}$ contains client-facing \emph{interface events}:
 both invocations and responses (the observable input/output of the
 system as seen by clients).
 In the I/O automaton model of Section~\ref{sec:operational},
 invocations are input actions and responses are output actions; the
 history records both as interface events regardless of which party
 initiates them.
-In the register example, $E_{\mathit{in}}$ contains invocations
+In the register example, $E_{\mathit{iface}}$ contains invocations
 $\mathit{inv}(w)$, $\mathit{inv}(r)$ and responses
 $\mathit{resp}(w)$, $\mathit{resp}(r, v)$;
 $E_{\mathit{int}}$ contains local state updates;
@@ -419,7 +419,7 @@ propagation messages.
 \begin{definition}[History]
   \label{def:history}
   A \emph{history} is a pair $H = (E, \rightarrow)$ where
-  $E \subseteq E_{\mathit{in}} \cup E_{\mathit{int}} \cup
+  $E \subseteq E_{\mathit{iface}} \cup E_{\mathit{int}} \cup
   E_{\mathit{send}} \cup E_{\mathit{recv}}$,
   $\rightarrow$ is a strict partial order on $E$, and
   there is an injective matching function
@@ -442,13 +442,13 @@ We impose no fairness or progress assumptions.
   \label{ex:h1-formal}
   The history $H_1$ from Section~\ref{sec:example} in the formal
   model: at $p$, $\mathit{inv}(w_p), \mathit{resp}(w_p) \in
-  E_{\mathit{in}}$ (write of $1$ complete);
-  at $q$, $\mathit{inv}(w_q), \mathit{resp}(w_q) \in E_{\mathit{in}}$
+  E_{\mathit{iface}}$ (write of $1$ complete);
+  at $q$, $\mathit{inv}(w_q), \mathit{resp}(w_q) \in E_{\mathit{iface}}$
   (write of $2$ complete);
   $\mathit{send}(w_q) \in E_{\mathit{send}}$ and
   $\mathit{recv}(w_q) \in E_{\mathit{recv}}$ at $p$ (delivery of
   $w_q$ to $p$);
-  $\mathit{inv}(r_p), \mathit{resp}(r_p, 2) \in E_{\mathit{in}}$
+  $\mathit{inv}(r_p), \mathit{resp}(r_p, 2) \in E_{\mathit{iface}}$
   (read at $p$ returning $2$, after receiving $w_q$).
   Ordering includes
   $\mathit{resp}(w_q) \rightarrow \mathit{send}(w_q) \rightarrow
@@ -487,7 +487,7 @@ The past is fixed; only the future is open.
   ($\mathit{resp}(w_p) \rightarrow \mathit{send}(w_p) \rightarrow
   \mathit{recv}(w_p)$);
   then add a completed read at $q$:
-  $\mathit{inv}(r_q), \mathit{resp}(r_q, 1) \in E_{\mathit{in}}$
+  $\mathit{inv}(r_q), \mathit{resp}(r_q, 1) \in E_{\mathit{iface}}$
   with $\mathit{recv}(w_p) \rightarrow \mathit{inv}(r_q)$ and
   program order $\mathit{resp}(w_q) \rightarrow \mathit{inv}(r_q)$
   at $q$.
@@ -609,23 +609,24 @@ The central question is: can an implementation preserve all of the
 specification's possibilities---or must it narrow them by suppressing
 futures or withholding outcomes?
 
-\begin{definition}[Input projection]
-  For a history $H = (E, \rightarrow)$, the \emph{input projection}
-  $\In(H)$ restricts $H$ to its input events:
-  $\In(H) = (E \cap E_{\mathit{in}},\;
-  \rightarrow \cap (E_{\mathit{in}} \times E_{\mathit{in}}))$.
+\begin{definition}[Interface projection]
+  For a history $H = (E, \rightarrow)$, the \emph{interface projection}
+  $\In(H)$ restricts $H$ to its interface events:
+  $\In(H) = (E \cap E_{\mathit{iface}},\;
+  \rightarrow \cap (E_{\mathit{iface}} \times E_{\mathit{iface}}))$.
 \end{definition}
 
 \begin{definition}[Admissible histories]
-  For an input history $H_{\mathit{in}}$ (consisting only of input
-  events), the \emph{admissible histories} are all well-formed histories
-  whose input projection extends $H_{\mathit{in}}$:
+  For an interface prefix $H_{\mathit{iface}}$ (consisting only of
+  interface events), the \emph{admissible histories} are all
+  well-formed histories whose interface projection extends
+  $H_{\mathit{iface}}$:
   \[
-    \mathcal{A}(H_{\mathit{in}}) \triangleq
-    \{H \in \Hist \mid H_{\mathit{in}} \hext \In(H)\}.
+    \mathcal{A}(H_{\mathit{iface}}) \triangleq
+    \{H \in \Hist \mid H_{\mathit{iface}} \hext \In(H)\}.
   \]
   These are the histories that \emph{could} arise under asynchrony and
-  causality alone, given the input prefix $H_{\mathit{in}}$.
+  causality alone, given the interface prefix $H_{\mathit{iface}}$.
   They represent the environment's nondeterminism (message timing,
   input arrival order, scheduling) rather than implementation choices.
   Well-formedness (Definition~\ref{def:history}) already excludes
@@ -635,10 +636,10 @@ futures or withholding outcomes?
 
 \begin{definition}[Implementation]
   \label{def:implementation}
-  An implementation $I$ specifies, for each input history
-  $H_{\mathit{in}}$, a set of \emph{realizable histories}
-  $\mathcal{R}_I(H_{\mathit{in}}) \subseteq
-  \mathcal{A}(H_{\mathit{in}})$, downward-closed under $\hext$.
+  An implementation $I$ specifies, for each interface prefix
+  $H_{\mathit{iface}}$, a set of \emph{realizable histories}
+  $\mathcal{R}_I(H_{\mathit{iface}}) \subseteq
+  \mathcal{A}(H_{\mathit{iface}})$, downward-closed under $\hext$.
 \end{definition}
 
 \noindent
@@ -658,32 +659,25 @@ future contradictions.
   admits no such refinement.
 \end{definition}
 
-\begin{definition}[Coordination-free implementation]
+\begin{definition}[Coordination-free specification (semantic)]
   \label{def:coordfree}
-  An implementation $I$ is \emph{coordination-free} if:
+  A specification is \emph{semantically coordination-free} if:
   \begin{enumerate}[nosep,label=(\roman*)]
-    \item $\mathcal{R}_I(H_{\mathit{in}}) =
-          \mathcal{A}(H_{\mathit{in}})$ for all $H_{\mathit{in}}$
+    \item all well-formed histories are admissible
           \hfill(no history suppression), and
-    \item every $o \in \Obs(H)$ is future-consistent at every
-          $H \in \mathcal{A}(H_{\mathit{in}})$
+    \item every $o \in \Obs(H)$ is future-consistent at every $H$
           \hfill(no outcome suppression).
   \end{enumerate}
 \end{definition}
 
 \noindent
-Condition~(i) says the implementation never prevents an admissible
-future from occurring.
+Condition~(i) says the environment can produce any causally coherent
+execution.
 Condition~(ii) says every admissible outcome can be safely exposed:
 no outcome need be withheld to avoid future contradiction.
-Together: a coordination-free implementation can act on any admissible
-outcome at any history without waiting for information about which
-future will materialize.
-Condition~(ii) is deliberately specification-level: it says that the
-interface itself admits no unsafe outcome.
-Implementations enter only through history suppression---if an
-implementation filters outcomes, we model the result as a coordinated
-variant with a smaller $\Obs$ (Section~\ref{sec:separation}).
+The operational theorem (Section~\ref{sec:operational}) proves that
+this semantic property is equivalent to the existence of a correct
+coordination-free I/O-automaton implementation.
 
 \begin{remark}[Why every outcome must be future-consistent]
   A weaker definition might require only that \emph{some}
@@ -1074,8 +1068,8 @@ If not, more restriction is needed.
   Linearizability is non-monotone
   (Section~\ref{sec:example}).
   Define the variant $\Spec'$ by restricting to histories in which
-  $\rightarrow$ totally orders $E_{\mathit{in}}$ (all input operations
-  are serialized---no two are concurrent).
+  $\rightarrow$ totally orders $E_{\mathit{iface}}$ (all interface
+  operations are serialized---no two are concurrent).
   In such histories, outcomes grow by prefix extension of the
   serialized input sequence, so $\Spec'$ is monotone.
   Complete CALM certifies $\Spec'$ directly.
@@ -1528,7 +1522,7 @@ We recover this as an instance of Complete CALM.
 
 \paragraph{Instantiation.}
 Model a replicated database where nodes apply transactions locally and
-merge via gossip ($E_{\mathit{in}}$: transactions;
+merge via gossip ($E_{\mathit{iface}}$: transactions;
 $E_{\mathit{send}}/E_{\mathit{recv}}$: gossip;
 $E_{\mathit{int}}$: merge events).
 The observable at $H$ is the \emph{converged state}
@@ -1978,7 +1972,7 @@ models lie on the frontier of their stronger counterparts.
 \paragraph{Specification.}
 Fix a replicated register at nodes $p_1, \ldots, p_n$.
 Events: write invocations $w(v)$ and read invocations $r$ at each
-node (in $E_{\mathit{in}}$); propagation messages (in
+node (in $E_{\mathit{iface}}$); propagation messages (in
 $E_{\mathit{send}}, E_{\mathit{recv}}$).
 A history $H$ determines, for each read $r$, the set of writes in
 $r$'s causal past: $\mathit{past}(r, H) = \{w \mid w \rightarrow^* r
@@ -2066,7 +2060,7 @@ rather than operational (from a specific protocol).
 Fix a replicated FIFO queue at nodes $p_1, \ldots, p_n$ with
 enqueue($v$) and dequeue operations.
 Events: enqueue and dequeue invocations at each node (in
-$E_{\mathit{in}}$); propagation messages (in
+$E_{\mathit{iface}}$); propagation messages (in
 $E_{\mathit{send}}, E_{\mathit{recv}}$).
 A history $H$ determines a set of enqueued values and a causal order
 among enqueue events.
@@ -2151,7 +2145,7 @@ Both use prefix extension as the outcome order.
 \paragraph{Specification.}
 Fix a search structure (tree, skip list, hash directory) supporting
 insert($k$) and lookup($k$) operations over a key space $K$.
-Events: insert and lookup invocations (in $E_{\mathit{in}}$);
+Events: insert and lookup invocations (in $E_{\mathit{iface}}$);
 structural modifications are internal events (in $E_{\mathit{int}}$).
 A history $H$ determines a \emph{structure graph} $G(H) = (V, E)$:
 nodes are positions in the structure, edges are navigable links.
