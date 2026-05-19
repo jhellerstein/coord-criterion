@@ -868,37 +868,44 @@ generality for safety properties.
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
   Contrapositive: if $\Spec$ is not monotone, no correct
   coordination-free implementation of $\Spec$ exists.
-  Recall that the specification's $\Obs(H)$ is the \emph{interface
-  contract}: any outcome in $\Obs(H)$ is one the implementation may
-  choose to expose.
-  An implementation that exposes only a subset of $\Obs$ is a
-  coordinated variant of $\Spec$ (Section~\ref{sec:separation}), not
-  an implementation of $\Spec$ itself.
 
+  Recall that $\Obs(H)$ is the \emph{interface contract}: any outcome
+  in $\Obs(H)$ is one the implementation may expose.
+  An implementation \emph{could} try to be angelic---always choosing
+  only safe (future-consistent) outcomes from $\Obs(H)$.
+  But coordination-freedom requires the process to respond using only
+  its post-invocation local state, with no further input.
+  At a local view $H_p$, the process cannot distinguish two global
+  scenarios that look identical locally but differ remotely---one in
+  which a candidate outcome is safe, another in which it is not.
+  Telling them apart requires remote information, which is exactly
+  coordination.
+
+  Formalize this as follows.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
-  $H_1 \hext H_2$.
-  Without loss of generality, choose the witness so that $H_1$
-  contains a pending invocation $e$ at process $p$ such that $o$
-  prescribes a response $v$ for $e$ (response totality guarantees
-  this; if no such $e$ exists at $H_1$, the witness can be pulled
-  back to an earlier history where the relevant response was first
-  exposed).
+  $H_1 \hext H_2$, and let $e$ be a pending invocation at process $p$
+  with $o$ prescribing response $v$ for $e$ (response totality
+  guarantees this; if no such invocation exists at $H_1$, pull the
+  witness back to where the relevant response was first exposed).
+  Process $p$'s local view at the moment of response is its
+  projection of $H_1$.
 
-  Suppose for contradiction that $I$ is a correct coordination-free
-  implementation that may expose $o$---that is, on some input
-  schedule, $I$ chooses to commit to $o$ when responding at $H_1$.
-  By coordination-freedom, $I$ commits to $v$ from $p$'s
-  post-invocation state without further input.
-  An adversarial scheduler then drives the system to $H_2$ (scheduling
-  the events in $H_2 \setminus H_1$ after $p$'s response).
-  By response monotonicity of admissibility, $\Obs(H_2 \cup
-  \{\mathsf{resp}(e, v)\}) \subseteq \Obs(H_2)$, and no outcome in
-  $\Obs(H_2)$ refines $o$.
-  Hence $v$ has no admissible explanation at the resulting history---
-  correctness is violated.
+  Consider any coordination-free implementation $I$ that may expose
+  $o$.
+  When $p$ receives $e$ at this local view, $I$ must respond
+  deterministically.
+  $I$ does not know whether the global history will remain at $H_1$
+  (where $v$ is safe) or extend to $H_2$ (where $v$ has no
+  refinement)---both are admissible from $p$'s perspective.
+  An adversarial scheduler chooses the latter: it drives the system
+  to $H_2 \cup \{\mathsf{resp}(e, v)\}$.
+  By response monotonicity of admissibility,
+  $\Obs(H_2 \cup \{\mathsf{resp}(e, v)\}) \subseteq \Obs(H_2)$, and
+  no outcome there refines $o$.
+  Thus $v$ has no admissible explanation---correctness is violated.
 
-  An implementation that \emph{never} chooses outcomes like $o$ is a
-  coordinated variant exposing a strict subset of $\Obs$
+  An implementation that \emph{never} chooses outcomes like $o$ is by
+  definition a coordinated variant exposing a strict subset of $\Obs$
   (Section~\ref{sec:separation})---not a coordination-free
   implementation of $\Spec$ as the interface contract.
   Hence no correct coordination-free implementation of $\Spec$
