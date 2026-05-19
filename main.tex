@@ -559,12 +559,23 @@ We require three well-formedness conditions on $\Obs$ and $\Ord$:
         implementation owes a response (a pending invocation exists),
         there is some $o \in \Obs(H)$ that prescribes a response.
         The specification always has something to say.
+  \item \emph{Observability:} every monotonicity violation is
+        witnessed at a pending invocation.
+        If $o \in \Obs(H_1)$ has no refinement at some future
+        $H_1 \hext H_2$, then there exists a history $H_1'$ with a
+        pending invocation $e$ and an outcome $o' \in \Obs(H_1')$
+        prescribing a response for $e$ that is likewise
+        future-inconsistent.
 \end{enumerate}
-These are natural hygiene conditions on any interface contract:
+These are natural conditions on any interface contract:
 outcomes agree with recorded facts, refinement is monotone in
-commitment, and the spec never leaves the implementation with
-nothing to do.
-We call a specification satisfying all three \emph{well-formed}.
+commitment, the spec never leaves the implementation with
+nothing to do, and non-monotonicity is always detectable at the
+interface.
+The fourth condition is the modeling discipline made formal:
+since $\Obs$ captures all observable behavior, any violation of
+monotonicity must show up as a response that cannot be honored.
+We call a specification satisfying all four \emph{well-formed}.
 
 The modeling discipline is simple: $\Obs$ captures whatever you want
 to constrain.
@@ -907,10 +918,8 @@ generality for safety properties.
 
   Formalize this as follows.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
-  $H_1 \hext H_2$. Since $\Obs$ captures all observable behavior,
-  any monotonicity violation manifests at the interface: we may assume
-  without
-  loss of generality that $H_1$ contains a pending invocation $e$ at
+  $H_1 \hext H_2$. By observability, we may assume that $H_1$
+  contains a pending invocation $e$ at
   some process $p$, and that $o$ prescribes response $v$ for $e$
   while $v$ has no future-consistent refinement at $H_2$.
   Process $p$'s local view at the moment of response is its
@@ -985,8 +994,8 @@ r_p{\,\mapsto}2 \rangle$ has no prefix-extension at $H_2$.
 
 \begin{theorem}[Complete CALM]
   \label{thm:complete-calm}
-  A specification admits a correct coordination-free implementation
-  iff it is monotone.
+  A well-formed specification admits a correct coordination-free
+  implementation iff it is monotone.
 \end{theorem}
 
 \begin{proof}
@@ -1191,8 +1200,9 @@ tradeoff coincides with non-monotonicity: a specification forces a
 choice between consistency, availability, and partition tolerance iff
 it is non-monotone.
 This is almost right, but requires one refinement: some
-non-monotonicity is process-local and can be resolved without
-communication (e.g., via a local mutex).
+non-monotonicity is confined to one side of a partition and can be
+resolved by same-side coordination (e.g., intra-component
+serialization) without cross-partition communication.
 Only non-monotonicity that \emph{spans} a partition---where remote
 activity can invalidate a local outcome---creates the CAP dilemma.
 Getting this exclusion right is the main technical contribution of
@@ -1234,7 +1244,8 @@ at the local replica,'' ``writes at the primary'').
 \noindent
 Monotonicity implies distributed-monotonicity (all futures includes
 partition-constrained ones), but not conversely: a specification whose
-non-monotonicity witnesses are all process-local is
+non-monotonicity witnesses are all confined to one side of every
+partition is
 distributed-monotone because no partition can produce the dangerous
 future.
 
@@ -1251,19 +1262,20 @@ future.
   process survives all partition-constrained futures.
   Under a partition, only such futures can occur.
   We compose the causal-view protocol of
-  Theorem~\ref{thm:calm-operational} with a local-resolution layer
-  at each process.
+  Theorem~\ref{thm:calm-operational} with a same-side resolution
+  layer.
   The causal-view protocol handles cross-partition correctness:
   each process responds from its local view, and
   distributed-monotonicity guarantees that no remote
   partition-constrained future can invalidate a locally exposed
   outcome.
-  Same-process non-monotonicities---those that distributed-monotonicity
-  permits because their witnesses are intra-process---are discharged
-  by a local resolution layer (e.g., a per-process mutex or
-  serializer) before the response is exposed.
-  Such local resolution requires no remote communication and
-  therefore preserves availability under partitions.
+  Non-monotonicities whose witnesses are confined to one side of the
+  partition---those that distributed-monotonicity permits because no
+  cross-partition future is involved---are discharged by coordination
+  within the connected component (e.g., intra-side serialization or
+  mutual exclusion).
+  Such same-side coordination requires no cross-partition
+  communication and therefore preserves availability under partitions.
   Together, the two layers yield a partition-tolerant implementation
   that is consistent for the full spec and available on all sides
   of any partition.
@@ -1284,8 +1296,8 @@ monotone $\Rightarrow$ distributed-monotone $\Rightarrow$
 CAP-implementable (consistent + available + partition-tolerant),
 and monotone $\Rightarrow$ coordination-free.
 The gap between monotonicity and distributed-monotonicity is exactly
-the process-local non-monotonicity that coordination can resolve
-without communication.
+the same-side non-monotonicity that coordination within a connected
+component can resolve without cross-partition communication.
 Complete CAP is a semantic characterization: it identifies when no
 coordination is required for safety, not how a process algorithmically
 selects an outcome.
