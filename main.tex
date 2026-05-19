@@ -151,21 +151,22 @@ sets, and a declared refinement order.
 A \emph{specification} maps histories to outcomes under a partial
 order; we call it \emph{monotone} if every admissible outcome at
 every history has a compatible refinement at every future.
-The main result (\emph{Complete CALM}): a specification admits
-coordination-free implementation if and only if it is monotone.
+The main result (\emph{Complete CALM}): a specification admits a
+correct coordination-free implementation---one in which every process
+responds to every invocation without waiting for any remote
+information---if and only if it is monotone.
+The proof constructs a concrete protocol for the sufficiency direction
+and uses an indistinguishability argument (in the style of
+Fischer--Lynch--Paterson and Gilbert--Lynch) for necessity.
 
-Prior work's main technical burden was proving alignment between
-semantic constraints on programs and operational freedom.
-Our formulation gets this alignment trivially---the semantic
-constraint \emph{is} the operational guarantee, stated at the
-specification level.
-Done carelessly, such an approach could be vacuous.
-The validation is expressive power: does the definition subsume all
-prior programming constraints (CALM, CRDTs, I-confluence, HATs)?
-Does it cover abstract properties beyond any single model
-(serializability, CAP, snapshots)?
-Is it tight---necessary as well as sufficient?
-We answer yes to all three.
+The result is stated and proved in the standard I/O automaton
+model~\cite{lynch1996distributed}: processes are I/O automata under
+adversarial asynchronous scheduling, and coordination-freedom means
+that no input action (message arrival or new invocation) intervenes
+between an invocation and its response.
+This operational grounding distinguishes Complete CALM from a purely
+definitional equivalence: the theorem asserts the existence of a
+distributed protocol that is correct under all adversarial schedules.
 
 This generality yields two classes of new results:
 
@@ -197,8 +198,11 @@ about linearizability to a bidirectional characterization.
 \paragraph{Contributions.}
 \begin{enumerate}[nosep]
   \item \emph{Complete CALM} (Section~\ref{sec:complete-calm}):
-        a specification admits coordination-free implementation iff it
-        is monotone.
+        a specification admits a correct coordination-free
+        implementation (in the I/O automaton model) iff it is
+        monotone.
+        The proof constructs a protocol for sufficiency and uses an
+        indistinguishability argument for necessity.
         The criterion handles any refinement order (prefix extension,
         lattice orders), not only set inclusion.
   \item \emph{Complete CAP} (Section~\ref{sec:complete-cap}):
@@ -674,6 +678,135 @@ variant with a smaller $\Obs$ (Section~\ref{sec:separation}).
 \end{example}
 
 %----------------------------------------------------------------
+\subsection{Operational Characterization}
+\label{sec:operational}
+%----------------------------------------------------------------
+
+The preceding definitions characterize coordination-freedom at the
+specification level.
+We now ground them in a concrete operational model---I/O
+automata~\cite{lynch1996distributed}---and prove that the semantic
+condition (monotonicity) exactly characterizes when a correct,
+non-blocking implementation exists.
+
+\begin{definition}[Process (I/O automaton)]
+  \label{def:process}
+  Each process $p_i$ is an I/O automaton with:
+  \begin{itemize}[nosep]
+    \item \emph{Input actions:} client invocations
+          $\mathsf{inv}(e)_i$ and message arrivals
+          $\mathsf{recv}(m)_i$.
+    \item \emph{Output actions:} client responses
+          $\mathsf{resp}(e, v)_i$ and message sends
+          $\mathsf{send}(m)_i$.
+    \item \emph{Internal actions:} local computation steps
+          $\tau_i$ (state updates, gossip decisions,
+          pre-computation).
+    \item A state space $\Sigma_i$, initial state $\sigma_i^0$,
+          and a transition relation on
+          $\Sigma_i \times \mathit{acts}_i \times \Sigma_i$.
+  \end{itemize}
+  Input actions are always enabled (the automaton cannot refuse an
+  invocation or message).
+  A \emph{distributed implementation} is a composition of $n$ such
+  automata communicating via shared send/receive actions.
+\end{definition}
+
+\noindent
+An \emph{execution} is a (possibly infinite) alternating sequence of
+states and actions, starting from initial states, consistent with the
+transition relations.
+The adversarial asynchronous environment controls when input actions
+occur: it determines message delivery order, timing, and the arrival
+of client invocations.
+Internal and output actions are controlled by the automata themselves.
+
+\begin{definition}[Coordination-free (operational)]
+  \label{def:coordfree-op}
+  A distributed implementation is \emph{coordination-free} if in
+  every execution, for every client invocation $\mathsf{inv}(e)_i$,
+  the corresponding response $\mathsf{resp}(e, v)_i$ occurs with no
+  intervening input action at $p_i$---that is, between the invocation
+  and its response, $p_i$ performs only internal actions (local
+  computation), receiving no messages and no other client invocations.
+\end{definition}
+
+\noindent
+The response is determined entirely by $p_i$'s state at invocation
+time: the process may perform local computation (internal actions)
+but no new external information enters before the response is
+emitted.
+This captures both the distributed case (no waiting for remote
+messages) and the local case (no waiting for other concurrent
+invocations---e.g., no locking that defers one transaction pending
+another).
+Operationally: if the network goes silent and no other client
+requests arrive after the invocation, the process can still respond.
+This is the availability condition of Gilbert and
+Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
+
+\begin{definition}[Correctness (operational)]
+  An implementation is \emph{correct} for $\Spec$ if for every
+  execution prefix whose induced history is $H$, the emitted
+  responses are consistent with some $o \in \Obs(H)$.
+\end{definition}
+
+\begin{theorem}[Complete CALM, operational]
+  \label{thm:calm-operational}
+  A specification $\Spec$ admits a correct coordination-free
+  distributed implementation iff $\Spec$ is monotone.
+\end{theorem}
+
+\begin{proof}
+  \emph{Sufficiency (monotone $\Rightarrow$ implementation exists).}
+  Construct the \emph{causal-view protocol}: each process maintains
+  as state its local causal history $H_i$ (the events that have
+  causally reached it) and propagates it via gossip (internal actions
+  trigger $\mathsf{send}$).
+  On $\mathsf{inv}(e)_i$, the process adds $e$ to $H_i$, computes
+  $\Obs(H_i)$, chooses $o \in \Obs(H_i)$, and immediately performs
+  $\mathsf{resp}(e, v)_i$ where $v$ is $o$'s prescription for $e$.
+  No input action intervenes.
+
+  \emph{Correctness:} At any prefix with global history $H$, each
+  local view satisfies $H_i \hext H$.
+  By monotonicity, the chosen $o \in \Obs(H_i)$ has a refinement
+  $o' \in \Obs(H)$ with $o \Ord o'$.
+  Since refinement preserves earlier responses, the emitted response
+  is consistent with $o'$.
+
+  \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
+  Contrapositive: if $\Spec$ is not monotone, no correct
+  implementation is coordination-free.
+  Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
+  $H_1 \hext H_2$, with $o$ prescribing response $v$ to invocation
+  $e$ at process $p$.
+  Construct two executions with identical state at $p$ when $e$
+  arrives:
+  \begin{itemize}[nosep]
+    \item Execution $\alpha$: global history is $H_1$; after $e$
+          arrives at $p$, no further input actions occur at $p$
+          (messages delayed, no new invocations).
+    \item Execution $\beta$: same local state at $p$ when $e$
+          arrives, but other processes advance to produce $H_2$
+          (their actions do not involve $p$---messages to $p$ are
+          delayed by the environment).
+  \end{itemize}
+  Since $p$'s state is identical and the automaton is deterministic
+  on internal/output actions given the state, $p$ must produce the
+  same response in both.
+  If $p$ responds with $v$ (coordination-free): correct in $\alpha$
+  but not in $\beta$ (no $o' \in \Obs(H_2)$ refines $o$).
+  If $p$ defers (waits for an input action): not coordination-free.
+\end{proof}
+
+\noindent
+The semantic characterization (Definition~\ref{def:coordfree}) is a
+corollary: condition~(i) corresponds to the environment's power to
+produce any admissible execution, and condition~(ii) corresponds to
+the process responding without knowing which future will materialize.
+
+%----------------------------------------------------------------
 \subsection{Complete CALM}
 \label{sec:complete-calm}
 %----------------------------------------------------------------
@@ -714,19 +847,21 @@ r_p{\,\mapsto}2 \rangle$ has no prefix-extension at $H_2$.
 
 Prior work on CALM requires involved proofs mapping from
 programming-model constraints to execution properties.
-By contrast, Complete CALM is nearly a direct consequence of the
-framework's design:
+Complete CALM separates the semantic characterization from the
+operational content (which requires a protocol construction and an
+impossibility argument, Theorem~\ref{thm:calm-operational} above):
 
-\newtheorem{defnthm}[theorem]{Definition-Theorem}
-\begin{defnthm}[Complete CALM]
+\begin{theorem}[Complete CALM]
   \label{thm:complete-calm}
   The following are equivalent for a specification
   $\Spec = (E, \Obs, \Ord)$:
   \begin{enumerate}[nosep,label=(\roman*)]
-    \item $\Spec$ admits a coordination-free implementation.
+    \item $\Spec$ admits a correct coordination-free implementation
+          (in the I/O automaton model of
+          Section~\ref{sec:operational}).
     \item $\Spec$ is monotone.
   \end{enumerate}
-\end{defnthm}
+\end{theorem}
 
 \begin{example}[Applying Complete CALM to the running example]
   $\Spec_{\mathit{cc}}$ is monotone: each process's causal view
@@ -770,10 +905,10 @@ condition is implied).
 The result recovers the structure of Ameloot et al.'s characterization
 in a minimalist setting (histories, outcomes, refinement order)---the
 proof needs only these three ingredients.
-The equivalence is simple by design: the contribution is identifying
-the right semantic object (future-monotonicity of outcomes under a
-declared refinement order) and demonstrating that it faithfully
-explains known coordination boundaries across disparate models.
+The operational content (Theorem~\ref{thm:calm-operational}) is that
+this semantic condition exactly characterizes when a concrete
+distributed protocol exists that is correct under all adversarial
+schedules.
 This lifting yields three dividends.
 First, \emph{generality}: the criterion applies to any specification
 in any computational model.
