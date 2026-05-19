@@ -806,34 +806,35 @@ generality for safety properties.
   \label{rem:joint-consistency}
   Joint consistency of independently emitted responses does not
   require a separate ``response-compositionality'' assumption---it
-  follows from monotonicity itself, because responses are events in
-  the history.
+  follows from monotonicity, because responses are events in the
+  history and $\Obs$ is defined over the full history.
 
-  Suppose two processes $p$ and $q$ respond concurrently with values
-  $v_p$ and $v_q$.
+  The key point: $\Obs(H)$ is evaluated at a history $H$ that
+  \emph{includes} all response events emitted so far.
+  An outcome $o \in \Obs(H)$ must be consistent with every response
+  event in $H$---otherwise $o$ would contradict a recorded fact and
+  could not be admissible.
+  So if $H$ contains responses $(e_p, v_p)$ and $(e_q, v_q)$, then
+  every $o \in \Obs(H)$ explains both.
+
+  Now suppose monotonicity holds and two processes respond
+  concurrently.
+  Process $p$ chose $o_p \in \Obs(H_p)$ prescribing $v_p$; process
+  $q$ chose $o_q \in \Obs(H_q)$ prescribing $v_q$.
   The global history $H$ contains both response events.
-  Correctness at $H$ requires $\Obs(H) \neq \emptyset$ with some
-  outcome explaining both.
-  Could this fail?
-  Only if no outcome in $\Obs(H)$ explains both---i.e.,
-  $\Obs(H) = \emptyset$ for the history containing both responses.
-  But then consider the earlier history $H_p$ (before $q$ responds):
-  $v_p$ is admissible at $H_p$ (the process chose it from
-  $\Obs(H_p)$).
-  The future $H$ (which adds $q$'s response) has
-  $\Obs(H) = \emptyset$---no refinement of $v_p$'s outcome exists.
-  That is a \emph{monotonicity failure}: the outcome at $H_p$ is
-  future-inconsistent.
-  Contrapositive: if the specification is monotone, no such failure
-  can occur, and independently emitted responses are always jointly
-  explainable.
+  By monotonicity, $o_p$ has a refinement $o' \in \Obs(H)$.
+  Since $H$ contains $(e_q, v_q)$ as a recorded event, $o'$ must
+  prescribe $v_q$ for $e_q$ (otherwise $o' \notin \Obs(H)$).
+  And $o'$ prescribes $v_p$ for $e_p$ (by refinement of $o_p$).
+  Hence $o'$ explains both responses.
 
+  Contrapositive: if no outcome at $H$ could explain both responses,
+  then $o_p$ would have no refinement at $H$---a monotonicity
+  failure.
   The causal-view protocol makes this concrete: gossip propagates
-  response events, so each process's local view includes prior
-  responses before it responds to new invocations.
-  But even without gossip (truly concurrent responses), monotonicity
-  guarantees joint consistency---conflicting concurrent responses
-  would constitute a monotonicity violation.
+  response events, enriching local views.
+  But even for truly concurrent responses, monotonicity guarantees
+  joint consistency---any failure would be a monotonicity violation.
 \end{remark}
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
