@@ -39,8 +39,6 @@
 \newcommand{\Ord}{\preceq}
 \newcommand{\hext}{\sqsubseteq_h}
 \newcommand{\In}{\mathsf{In}}
-\newcommand{\Expose}{\mathsf{Expose}}
-\newcommand{\Reach}{\mathsf{Reach}}
 
 % ---------- Comments ----------
 \newcommand{\jmh}[1]{{\color{red}\textbf{[JMH:} #1\textbf{]}}}
@@ -950,22 +948,8 @@ r_p{\,\mapsto}2 \rangle$ has no prefix-extension at $H_2$.
   specification.
 \end{example}
 
-\begin{proof}[Proof sketch]
-  \emph{Sufficiency.}
-  If $\Spec$ is monotone, every outcome is future-consistent
-  (directly from the definitions).
-  Set $\mathcal{R}_I = \mathcal{A}$: both conditions of
-  coordination-freedom are satisfied.
-
-  \emph{Necessity.}
-  If $\Spec$ is not monotone, some $o_1 \in \Obs(H_1)$ is
-  future-inconsistent (witnessed by $H_1 \hext H_2$ with no
-  refinement of $o_1$ at $H_2$).
-  Condition~(ii) fails: the specification is not coordination-free.
-\end{proof}
-
 \noindent
-The characterization is tight within this model: any specification
+The characterization is tight: any specification
 with even one future-inconsistent outcome requires coordination
 (no weaker condition suffices); conversely, every monotone
 specification admits a coordination-free implementation (no stronger
@@ -1161,8 +1145,10 @@ future.
   ($\Leftarrow$) If distributed-monotone, every outcome at every
   process survives all partition-constrained futures.
   Under a partition, only such futures can occur.
-  Hence every process can safely expose any admissible outcome without
-  waiting---both availability and consistency hold.
+  The causal-view protocol of Theorem~\ref{thm:calm-operational}
+  provides the implementation: each process responds from its local
+  view, and distributed-monotonicity guarantees correctness even when
+  cross-partition messages are blocked.
 
   ($\Rightarrow$) If not distributed-monotone, there exists a
   partition $P = (S, \bar{S})$, a process $p \in S$, an outcome
@@ -1176,7 +1162,8 @@ future.
 
 \noindent
 The relationship to Complete CALM:
-monotone $\Rightarrow$ distributed-monotone $\Rightarrow$ CAP-free,
+monotone $\Rightarrow$ distributed-monotone $\Rightarrow$
+CAP-implementable (consistent + available + partition-tolerant),
 and monotone $\Rightarrow$ coordination-free.
 The gap between monotonicity and distributed-monotonicity is exactly
 the process-local non-monotonicity that coordination can resolve
@@ -1536,7 +1523,7 @@ The outcome order is the semilattice order induced by merge.
 
 \begin{proposition}[$I$-confluence $\Leftrightarrow$ monotonicity]
   \label{prop:iconfl}
-  $\Spec_I$ is monotone iff $T$ is $I$-confluent with respect to $I$.
+  $\Spec_I$ is monotone iff the transaction set is $I$-confluent.
 \end{proposition}
 
 \begin{proof}[Sketch]
@@ -1678,7 +1665,7 @@ CALM as a two-part test: (1)~is the specification monotone?
 (2)~does $\Ord$ admit joins?
 If both hold, the specification admits coordination-free convergent
 implementation---recovering the CRDT guarantee as a special case.
-Section~\ref{sec:crdts} develops this connection formally.
+Section~\ref{sec:crdts} above develops this connection formally.
 
 
 % ================================================================
@@ -2109,10 +2096,10 @@ Both use prefix extension as the outcome order.
   $\sigma' \in \Obs_{\mathit{causal\text{-}FIFO}}(H_2)$.
 
   \emph{Maximality.}
-  Let $\Ord'$ be any order smaller than $\Ord_{\mathit{causal-FIFO}}$
-  (i.e., $\Ord' \subsetneq \Ord_{\mathit{causal-FIFO}}$).
+  Let $\Ord'$ be any order smaller than $\Ord_{\mathit{causal\text{-}FIFO}}$
+  (i.e., $\Ord' \subsetneq \Ord_{\mathit{causal\text{-}FIFO}}$).
   Then there exist sequences $\sigma_1, \sigma_2$ with
-  $\sigma_1 \Ord_{\mathit{causal-FIFO}} \sigma_2$ (i.e., $\sigma_1$
+  $\sigma_1 \Ord_{\mathit{causal\text{-}FIFO}} \sigma_2$ (i.e., $\sigma_1$
   is a prefix of $\sigma_2$) but
   $\sigma_1 \not\Ord' \sigma_2$.
   Since $\sigma_2$ extends $\sigma_1$ by appending some value $b$,
@@ -2124,10 +2111,10 @@ Both use prefix extension as the outcome order.
   Let $a$ be the last element of $\sigma_1$ and let $a, b$ be
   enqueued concurrently (neither causally precedes the other).
   Construct $H_1$ containing both enqueues with $a$ dequeued:
-  $\sigma_1 \in \Obs_{\mathit{causal-FIFO}}(H_1)$.
+  $\sigma_1 \in \Obs_{\mathit{causal\text{-}FIFO}}(H_1)$.
   Extend to $H_2$ by adding a dequeue of $b$ (causally after the
   dequeue of $a$):
-  $\sigma_1 \cdot b \in \Obs_{\mathit{causal-FIFO}}(H_2)$.
+  $\sigma_1 \cdot b \in \Obs_{\mathit{causal\text{-}FIFO}}(H_2)$.
   Since $a$ and $b$ are concurrent, causal FIFO admits both
   $\langle \ldots, a, b \rangle$ and $\langle \ldots, b, a \rangle$
   as valid dequeue orders.
