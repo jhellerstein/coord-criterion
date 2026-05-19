@@ -162,8 +162,8 @@ Fischer--Lynch--Paterson and Gilbert--Lynch) for necessity.
 The result is stated and proved in the standard I/O automaton
 model~\cite{lynch1996distributed}: processes are I/O automata under
 adversarial asynchronous scheduling, and coordination-freedom means
-that no input action (message arrival or new invocation) intervenes
-between an invocation and its response.
+that after an invocation, the process can produce a response using
+only internal and output actions, without requiring any further input.
 This operational grounding distinguishes Complete CALM from a purely
 definitional equivalence: the theorem asserts the existence of a
 distributed protocol that is correct under all adversarial schedules.
@@ -393,7 +393,7 @@ ordering.
 
 \begin{definition}[Event universe]
   A specification fixes pairwise-disjoint sets of events:
-  $E_{\mathit{in}}$ (external inputs),
+  $E_{\mathit{in}}$ (client interface: invocations and responses),
   $E_{\mathit{int}}$ (internal computation),
   $E_{\mathit{send}}$ (message sends),
   $E_{\mathit{recv}}$ (message receives).
@@ -774,10 +774,30 @@ generality for safety properties.
   to invocation $e$.
 \end{definition}
 
+\begin{definition}[Response-compositional specification]
+  \label{def:resp-comp}
+  A specification is \emph{response-compositional} if whenever
+  individual response facts $(e_1, v_1), \ldots, (e_k, v_k)$ are each
+  explainable at a history $H$ (each appears in some
+  $o_j \in \Obs(H)$), then they are \emph{jointly} explainable: there
+  exists $o^* \in \Obs(H)$ prescribing $v_j$ for each $e_j$.
+\end{definition}
+
+\noindent
+Response-compositionality holds for all specifications in this paper:
+set-inclusion outcomes (HATs, I-confluence), lattice-ordered outcomes
+(CRDTs), and per-process causal views (causal consistency) all compose
+independently valid responses into a jointly valid outcome.
+It fails only for specifications where admissible outcomes impose
+global constraints across responses at different processes---but such
+specifications are non-monotone (the global constraint is exactly the
+non-monotonicity) and coordination-freedom does not apply to them.
+
 \begin{theorem}[Complete CALM, operational]
   \label{thm:calm-operational}
-  A specification $\Spec$ admits a correct coordination-free
-  distributed implementation iff $\Spec$ is monotone.
+  For a response-compositional specification $\Spec$:
+  $\Spec$ admits a correct coordination-free distributed
+  implementation iff $\Spec$ is monotone.
 \end{theorem}
 
 \begin{proof}
@@ -803,12 +823,11 @@ generality for safety properties.
   is consistent with $o'$.
   For joint consistency of multiple processes' responses:
   correctness requires that the \emph{set} of all emitted responses
-  is consistent with \emph{some} $o^* \in \Obs(H)$---not that each
-  process's chosen outcome is the same.
-  Since each local view $H_i$ is a prefix of $H$, and $\Obs(H)$
-  contains all outcomes admissible at the global history, the
-  existence of a jointly consistent $o^*$ follows from the
-  specification's definition of admissibility at $H$.
+  is explained by a \emph{single} $o^* \in \Obs(H)$.
+  By response-compositionality
+  (Definition~\ref{def:resp-comp}), since each individual response
+  is explainable at $H$ (via the monotonicity argument above), the
+  full set $\mathsf{Resp}(H)$ is jointly explainable.
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
   Contrapositive: if $\Spec$ is not monotone, no correct
@@ -904,8 +923,8 @@ impossibility argument, Theorem~\ref{thm:calm-operational} above):
 
 \begin{theorem}[Complete CALM]
   \label{thm:complete-calm}
-  The following are equivalent for a specification
-  $\Spec = (E, \Obs, \Ord)$:
+  The following are equivalent for a response-compositional
+  specification $\Spec = (E, \Obs, \Ord)$:
   \begin{enumerate}[nosep,label=(\roman*)]
     \item $\Spec$ admits a correct coordination-free implementation
           (in the I/O automaton model of
