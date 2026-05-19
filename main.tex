@@ -64,16 +64,19 @@
   a unifying account.
 
   We show that all four are instances of a single semantic condition.
-  The proof needs only a specification mapping execution histories to
-  outcome sets under a declared refinement order.
+  The semantic criterion needs only a specification mapping execution
+  histories to outcome sets under a declared refinement order.
   This yields \emph{Complete CALM}: a specification admits
   coordination-free implementation iff its outcomes are monotone---iff
   the physical growth of exposed observations (which can only
   accumulate) always aligns with the semantic refinement order on
   outcomes.
+  For faithful response-oriented interfaces, we prove an operational
+  I/O-automaton theorem grounding the criterion in concrete
+  distributed implementations.
   The generalization provides both broader scope (any concurrent
-  system, any refinement order, abstract properties without programs)
-  and deeper analytical power: verification of
+  interface, any refinement order, abstract properties without
+  programs) and deeper analytical power: verification of
   proper coordination, direct analysis of ordered properties like
   linearizability, and a \emph{coordination-free frontier}
   construction that, for a fixed observation interface, characterizes
@@ -524,8 +527,7 @@ how executions unfold.
 
 \noindent
 $\Obs(H)$ is the set of outcomes that the specification permits at
-$H$: what an implementation may expose, including return values for
-operations whose invocation is present but whose response is not yet.
+$H$: what an implementation may expose at the system interface.
 $\Obs(H) = \emptyset$ signals that $H$ is unrealizable---no correct
 implementation may produce it (used for safety specifications such as
 invariant enforcement; see Section~\ref{sec:i-confluence}).
@@ -542,50 +544,15 @@ observations).
 Different specifications over the same histories may use different
 outcome orders.
 
-We require three well-formedness conditions on $\Obs$ and $\Ord$:
-\begin{enumerate}[nosep]
-  \item \emph{Consistency with history:} $\Obs(H)$ is consistent with
-        the observable facts already recorded in $H$.
-        If $H$ records that invocation $e$ received response $v$,
-        then every $o \in \Obs(H)$ agrees (prescribes $v$ for $e$).
-  \item \emph{Refinement coherence:} refinement never retracts an
-        observation.
-        If $o \Ord o'$ and $o$ prescribes response $v$ for $e$, then
-        $o'$ also prescribes $v$ for $e$.
-        Additionally, recording an observation can only restrict
-        admissibility: if $H'$ extends $H$ by adding only observable
-        events (responses), then $\Obs(H') \subseteq \Obs(H)$.
-  \item \emph{Liveness:} at every history $H$ where the
-        implementation owes a response (a pending invocation exists),
-        there is some $o \in \Obs(H)$ that prescribes a response.
-        The specification always has something to say.
-  \item \emph{Observability:} every monotonicity violation is
-        witnessed at a pending invocation.
-        If $o \in \Obs(H_1)$ has no refinement at some future
-        $H_1 \hext H_2$, then there exists a history $H_1'$ with a
-        pending invocation $e$ and an outcome $o' \in \Obs(H_1')$
-        prescribing a response for $e$ that is likewise
-        future-inconsistent.
-\end{enumerate}
-These are natural conditions on any interface contract:
-outcomes agree with recorded facts, refinement is monotone in
-commitment, the spec never leaves the implementation with
-nothing to do, and non-monotonicity is always detectable at the
-interface.
-The fourth condition is the modeling discipline made formal:
-since $\Obs$ captures all observable behavior, any violation of
-monotonicity must show up as a response that cannot be honored.
-We call a specification satisfying all four \emph{well-formed}.
-
 The modeling discipline is simple: $\Obs$ captures whatever you want
-to constrain.
-If a semantic property matters to you, put it in $\Obs$ and
+to constrain---whatever is observable at the system interface.
+If a semantic property matters to you, surface it in $\Obs$ and
 accommodate it in $\Ord$.
 If it is not in $\Obs$, no external party can detect a violation, and
 there is no obligation to coordinate over it.
-All specifications in this paper are well-formed; the operational
-theorem (Section~\ref{sec:operational}) is stated for well-formed
-specifications.
+Distinct outcomes in $\Obs(H)$ are observationally distinguishable at
+the interface; $\Ord$ captures when one outcome subsumes another.
+This is what it means to model a system faithfully.
 
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
@@ -658,8 +625,10 @@ futures or withholding outcomes?
   \]
   These are the histories that \emph{could} arise under asynchrony and
   causality alone, given the interface prefix $H_{\mathit{iface}}$.
-  They represent the environment's nondeterminism (message timing,
-  input arrival order, scheduling) rather than implementation choices.
+  They represent causally coherent interface continuations under
+  asynchrony: invocations and message deliveries are supplied by the
+  environment; response events are permitted interface exposures
+  under the specification's contract.
   Well-formedness (Definition~\ref{def:history}) already excludes
   physically impossible histories (e.g., a receive without a matching
   send); $\mathcal{A}$ contains only causally coherent executions.
@@ -734,24 +703,9 @@ coordination-free I/O-automaton implementation.
 \label{sec:operational}
 %----------------------------------------------------------------
 
-The preceding definitions characterize coordination-freedom at the
-specification level.
-We now ground them in a concrete operational model---I/O
-automata~\cite{lynch1996distributed}---and prove that the semantic
-condition (monotonicity) exactly characterizes when a correct,
-non-blocking implementation exists.
-
-\paragraph{Interface contract reading.}
-$\Obs(H)$ is an \emph{interface contract}: every outcome in
-$\Obs(H)$ is a behavior the specification permits at $H$, and an
-implementation is correct only if it is safe for any outcome the
-contract permits.
-A system that systematically restricts itself to a subset
-$\Obs'(H) \subset \Obs(H)$ is implementing a different specification
-$\Spec'$ (a coordinated variant in the sense of
-Section~\ref{sec:separation})---not $\Spec$ itself.
-Coordination-freedom is therefore a property of the specification,
-not of any angelic selection strategy.
+We adopt I/O automata~\cite{lynch1996distributed} as our operational
+model and prove that monotonicity exactly characterizes when a
+correct, coordination-free implementation exists.
 
 \begin{definition}[Process (I/O automaton)]
   \label{def:process}
@@ -787,6 +741,65 @@ Internal and output actions are controlled by the automata themselves.
 We assume \emph{fair local scheduling}: enabled internal and output
 actions at a process are eventually executed (the environment cannot
 indefinitely suppress a process's local computation).
+We restrict to deterministic automata (internal and output actions are
+determined by the current state); nondeterministic choices can be
+modeled as internal events included in the state without loss of
+generality for safety properties.
+
+\paragraph{Bridging semantics and the I/O interface.}
+The remaining issue is how to connect $(E, \Obs, \Ord)$ to the I/O
+automaton's interface.
+By default, the bridge is minimal: client responses are surfaced as
+outcomes in $\Obs$.
+Concretely, each outcome $o$ assigns a response value $o(e)$ to every
+invocation $e$ in the history---using a designated NULL value when
+the spec does not constrain $e$.
+This response projection is part of the specification.
+Internal messaging ($\mathsf{send}$/$\mathsf{recv}$) is below the
+interface and is not surfaced.
+
+If one wants to coordinate over more than client responses---say
+convergence of internal state $\sigma_i$, or replica-consistency
+invariants---one adds the relevant commitments to $\Obs$ and extends $\Ord$
+accordingly.
+Hygiene: keep response outcomes incomparable to non-response outcomes
+under $\Ord$, so that the response contract is not polluted by
+internal-state refinements.
+
+We require three conditions:
+\begin{enumerate}[nosep]
+  \item \emph{Consistency with observations:} if $H$ records that
+        invocation $e$ received response $v$, then $o(e) = v$ for
+        every $o \in \Obs(H)$.
+        Recording an additional response can only restrict
+        admissibility: if $H'$ extends $H$ by response events,
+        $\Obs(H') \subseteq \Obs(H)$.
+  \item \emph{Refinement coherence:} refinement preserves responses.
+        If $o \Ord o'$ and $o(e) = v$, then $o'(e) = v$.
+  \item \emph{Response totality:} for every invocation $e$ in $H$
+        and every $o \in \Obs(H)$, $o(e)$ is defined (possibly as a
+        designated NULL response).
+\end{enumerate}
+We call a specification satisfying these conditions
+\emph{well-formed} for the I/O model.
+All specifications in this paper are well-formed.
+
+\paragraph{Interface contract: demonic exposure.}
+$\Obs(H)$ is an \emph{interface contract}: every outcome in $\Obs(H)$
+is an admissible interpretation the specification permits at $H$.
+We treat these outcomes demonically, as in model checking: an
+adversary nominates which admissible interpretation the
+implementation is held accountable to, and correctness must hold
+under every nomination.
+A coordination-free process responds from local state alone and
+cannot use distributed knowledge to steer the adversary's choice;
+if $\Obs(H)$ permits an outcome, the safety analysis must assume
+the adversary may pick it.
+An implementation that systematically excludes some
+$\Obs'(H) \subset \Obs(H)$ is implementing a coordinated variant
+(Section~\ref{sec:separation}), not $\Spec$.
+The reader should keep this convention in mind throughout: angelic
+selection is a coordination strategy, not a free move.
 
 \begin{definition}[Coordination-free (operational)]
   \label{def:coordfree-op}
@@ -802,30 +815,20 @@ indefinitely suppress a process's local computation).
 \noindent
 The response is determined entirely by $p_i$'s state at invocation
 time.
-The process may perform local computation (internal actions) before
-emitting the response, but it need not---and does not---wait for any
-message arrival or additional client invocation.
+The process need not wait for any message arrival or additional client
+invocation.
 This captures both the distributed case (no waiting for remote
 messages) and the local case (no waiting for other concurrent
 invocations---e.g., no locking that defers one transaction pending
 another).
-Operationally: if the network goes silent and no other client
-requests arrive after the invocation, the process can still respond.
 This is the availability condition of Gilbert and
 Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
-We restrict to deterministic automata (internal and output actions are
-determined by the current state); nondeterministic choices can be
-modeled as internal events included in the state without loss of
-generality for safety properties.
 
 \begin{definition}[Correctness (operational)]
-  Let $\mathsf{Resp}(H)$ denote the set of (invocation, response
-  value) pairs emitted in execution prefix $H$.
   An implementation is \emph{correct} for $\Spec$ if for every
   execution prefix with induced history $H$, there exists
-  $o \in \Obs(H)$ that \emph{explains} $\mathsf{Resp}(H)$: for every
-  $(e, v) \in \mathsf{Resp}(H)$, outcome $o$ prescribes response $v$
-  to invocation $e$.
+  $o \in \Obs(H)$ such that $o(e) = v$ for every response $(e, v)$
+  recorded in $H$.
 \end{definition}
 
 \begin{theorem}[Complete CALM, operational]
@@ -842,54 +845,46 @@ generality for safety properties.
   causally reached it) and propagates it via gossip (internal actions
   trigger $\mathsf{send}$).
   On $\mathsf{inv}(e)_i$, the process adds $e$ to $H_i$, computes
-  $\Obs(H_i)$, chooses some $o \in \Obs(H_i)$ that prescribes a
-  response for $e$ (such an $o$ exists by liveness), and
-  immediately performs
-  $\mathsf{resp}(e, v)_i$ where $v$ is $o$'s prescription for $e$.
+  $\Obs(H_i)$, picks any $o \in \Obs(H_i)$, and immediately performs
+  $\mathsf{resp}(e, o(e))_i$.
   The response is enabled without requiring any further input action.
 
   \emph{Correctness:} At any prefix with global history $H$, each
-  local view satisfies $H_i \hext H$.
+  local view satisfies $H_i \hext H$ (local views are
+  downward-closed subhistories of the global history).
   By monotonicity, the chosen $o \in \Obs(H_i)$ has a refinement
   $o' \in \Obs(H)$ with $o \Ord o'$.
-  By consistency with history, $o'$ agrees with every response event
-  recorded in $H$; by refinement coherence, $o'$ preserves the
-  response emitted from $o$.
-  Hence $\mathsf{Resp}(H)$ is explained by $o'$, and the prefix is
-  correct.
+  Refinement coherence gives $o'(e) = o(e)$ for every invocation
+  $e$ in $H_i$, including the one just answered; consistency
+  gives $o'(e) = v$ for every response $(e, v)$ recorded in $H$.
+  Hence $o'$ witnesses correctness at this prefix.
 
 \begin{remark}[Joint consistency of independent responses]
   \label{rem:joint-consistency}
-  Response compositionality is not an additional algebraic property
-  of outcomes; it is enforced by evaluating $\Obs$ on the full
-  response history.
-  Joint consistency of independently emitted responses therefore does
-  not require a separate ``response-compositionality'' assumption---it
-  follows from monotonicity, because responses are events in the
-  history and $\Obs$ is defined over the full history.
+  Joint consistency of independently emitted responses does not
+  require a separate assumption---it follows from monotonicity,
+  because responses are events in the history and $\Obs$ is defined
+  over the full history.
 
   The key point: $\Obs(H)$ is evaluated at a history $H$ that
   \emph{includes} all response events emitted so far.
-  An outcome $o \in \Obs(H)$ must be consistent with every response
-  event in $H$---otherwise $o$ would contradict a recorded fact and
-  could not be admissible.
+  By consistency, $o(e) = v$ for every $(e, v)$ in $H$ and every
+  $o \in \Obs(H)$.
   So if $H$ contains responses $(e_p, v_p)$ and $(e_q, v_q)$, then
-  every $o \in \Obs(H)$ explains both.
+  every $o \in \Obs(H)$ satisfies $o(e_p) = v_p$ and $o(e_q) = v_q$.
 
   Now suppose monotonicity holds and two processes respond
   concurrently.
-  Process $p$ chose $o_p \in \Obs(H_p)$ prescribing $v_p$; process
-  $q$ chose $o_q \in \Obs(H_q)$ prescribing $v_q$.
+  Process $p$ chose $o_p \in \Obs(H_p)$ with $o_p(e_p) = v_p$;
+  process $q$ chose $o_q \in \Obs(H_q)$ with $o_q(e_q) = v_q$.
   The global history $H$ contains both response events.
   By monotonicity, $o_p$ has a refinement $o' \in \Obs(H)$.
-  Since $H$ contains $(e_q, v_q)$ as a recorded event, $o'$ must
-  prescribe $v_q$ for $e_q$ (otherwise $o' \notin \Obs(H)$).
-  And $o'$ prescribes $v_p$ for $e_p$ (by refinement of $o_p$).
-  Hence $o'$ explains both responses.
+  Since $H$ contains $(e_q, v_q)$, consistency requires
+  $o'(e_q) = v_q$; refinement coherence gives $o'(e_p) = v_p$.
+  Hence $o'$ witnesses correctness for both responses.
 
-  Contrapositive: if no outcome at $H$ could explain both responses,
-  then $o_p$ would have no refinement at $H$---a monotonicity
-  failure.
+  Contrapositive: if no outcome at $H$ satisfies both, then $o_p$
+  has no refinement at $H$---a monotonicity failure.
   The causal-view protocol makes this concrete: gossip propagates
   response events, enriching local views.
   But even for truly concurrent responses, monotonicity guarantees
@@ -900,59 +895,31 @@ generality for safety properties.
   Contrapositive: if $\Spec$ is not monotone, no correct
   coordination-free implementation of $\Spec$ exists.
 
-  Recall that $\Obs(H)$ is the \emph{interface contract}: any outcome
-  in $\Obs(H)$ is one the implementation may expose.
-  \emph{Implementing $\Spec$ means being safe for every outcome the
-  interface permits; restricting to a safe subset is a different
-  specification, namely a coordinated variant
-  (Section~\ref{sec:separation}).}
-  An implementation \emph{could} try to be angelic---always choosing
-  only safe (future-consistent) outcomes from $\Obs(H)$.
-  But coordination-freedom requires the process to respond using only
-  its post-invocation local state, with no further input.
-  At a local view $H_p$, the process cannot distinguish two global
-  scenarios that look identical locally but differ remotely---one in
-  which a candidate outcome is safe, another in which it is not.
-  Telling them apart requires remote information, which is exactly
-  coordination.
-
-  Formalize this as follows.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
-  $H_1 \hext H_2$. By observability, we may assume that $H_1$
-  contains a pending invocation $e$ at
-  some process $p$, and that $o$ prescribes response $v$ for $e$
-  while $v$ has no future-consistent refinement at $H_2$.
-  Process $p$'s local view at the moment of response is its
-  projection of $H_1$.
+  $H_1 \hext H_2$: no $o' \in \Obs(H_2)$ satisfies $o \Ord o'$.
+  By demonic exposure, a correct implementation must be safe under
+  every admissible interpretation; in particular, an adversary may
+  hold the implementation to $o$ as the operative interpretation at
+  $H_1$.
+  Once $o$ is so held, correctness must persist as the history
+  extends.
 
-  Consider any coordination-free implementation $I$ of $\Spec$ as the
-  interface contract: every $o \in \Obs(H)$ is potentially
-  exposable, and $I$ must be safe whenever the contract permits an
-  outcome.
-  When $p$ receives $e$ at this local view, $I$ must respond
-  deterministically using only local state.
-  $I$ does not know whether the global history will remain at $H_1$
-  (where $v$ is safe) or extend to $H_2$ (where $v$ has no
-  refinement)---both extensions are admissible from $p$'s perspective.
-  Under the interface-contract reading, the specification permits
-  the full interface future $H_2$; thus an implementation of $\Spec$
-  must be correct for that permitted continuation, unless it
-  restricts the interface (i.e., implements a different, coordinated
-  $\Spec'$).
-  In particular, the contract permits the continuation
-  $H_2 \cup \{\mathsf{resp}(e, v)\}$ that arises when $p$ commits to
-  $v$.
-  By refinement coherence (recording an observation only restricts
-  admissibility),
-  $\Obs(H_2 \cup \{\mathsf{resp}(e, v)\}) \subseteq \Obs(H_2)$, and
-  no outcome there refines $o$.
-  Thus $v$ has no admissible explanation---correctness is violated.
+  A coordination-free process responds from local state alone; its
+  local view is a causal subhistory of $H_1$ and cannot distinguish
+  $H_1$ from extensions where $o$ remains valid.
+  The environment may schedule the continuation producing $H_2$.
+  Correctness at $H_2$ requires an outcome $o^* \in \Obs(H_2)$ with
+  $o \Ord o^*$ (the operative interpretation must persist under
+  refinement).
+  No such $o^*$ exists.
+  Correctness is violated.
 
-  An implementation that \emph{never} chooses outcomes like $o$ is by
-  definition a coordinated variant exposing a strict subset of $\Obs$
-  (Section~\ref{sec:separation})---it implements a different,
-  restricted interface $\Obs' \subset \Obs$, not the full contract
-  $\Spec$.
+  The only way to escape this argument is to rule $o$ out as a
+  permitted interpretation---to refuse the adversary's nomination.
+  But that means the implementation does not admit $o$ at all: it is
+  realizing a strict subset of $\Obs$, which is a coordinated variant
+  (Section~\ref{sec:separation}), not $\Spec$.
+
   Hence no correct coordination-free implementation of $\Spec$
   exists.
 \end{proof}
@@ -1139,8 +1106,8 @@ If not, more restriction is needed.
   serialized input sequence; thus $\Spec'$ is monotone over its
   admitted histories, and Complete CALM certifies $\Spec'$ directly.
 
-  We show relational-transducer CALM cannot answer this question at
-  the level of the specification.
+  We show relational-transducer CALM does not provide a
+  specification-level judgment for this question.
   Two kinds of Datalog encodings are possible.
 
   \emph{Direct encoding.}
@@ -1173,7 +1140,8 @@ If not, more restriction is needed.
   consumer program, not the relation between the program and the
   specification.
 
-  In both cases, relational-transducer CALM cannot answer the
+  In both cases, relational-transducer CALM does not provide a
+  specification-level judgment for the
   question Complete CALM does: \emph{is the output specification of
   this coordinated variant monotone?}
   CALM analyzes program syntax under a fixed input model;
@@ -2046,9 +2014,15 @@ strengthen the impossibility direction of the theorem.
   $\Obs(H_2)$.
   Under any partition, the only realizable futures are
   $P$-constrained.
-  Since every outcome survives all such futures, $p$ can expose any
-  admissible outcome immediately---both correctness and availability
-  hold regardless of partition state.
+  Cross-partition non-monotonicities are ruled out by
+  distributed-monotonicity; non-monotonicities confined to one side
+  of the partition are discharged by coordination within the
+  connected component (intra-side serialization or mutual
+  exclusion), which requires no cross-partition communication.
+  CAP availability forbids waiting across partitions, not
+  coordination within a connected component.
+  Hence both correctness and availability hold regardless of
+  partition state.
 \end{proof}
 
 \noindent
