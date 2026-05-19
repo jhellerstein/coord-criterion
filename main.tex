@@ -402,8 +402,17 @@ ordering.
 \noindent
 The disjoint sets distinguish interface activity from internal
 computation and message-passing structure.
-In the register example, $E_{\mathit{in}}$ contains client read/write
-invocations; $E_{\mathit{int}}$ contains local state updates;
+$E_{\mathit{in}}$ contains client-facing \emph{interface events}:
+both invocations and responses (the observable input/output of the
+system as seen by clients).
+In the I/O automaton model of Section~\ref{sec:operational},
+invocations are input actions and responses are output actions; the
+history records both as interface events regardless of which party
+initiates them.
+In the register example, $E_{\mathit{in}}$ contains invocations
+$\mathit{inv}(w)$, $\mathit{inv}(r)$ and responses
+$\mathit{resp}(w)$, $\mathit{resp}(r, v)$;
+$E_{\mathit{int}}$ contains local state updates;
 $E_{\mathit{send}}$ and $E_{\mathit{recv}}$ contain inter-replica
 propagation messages.
 
@@ -574,9 +583,10 @@ outcome orders.
 A specification is passive: it declares which outcomes are admissible but
 says nothing about which histories actually arise or which outcomes are
 actually exposed.
-An \emph{implementation} is active: it determines which histories are
-realized (by choosing how to schedule events and deliver messages) and
-which outcomes it exposes at each history.
+An \emph{implementation} is active: it determines which outcomes are
+exposed at each history (by choosing responses to invocations).
+The environment controls which histories arise (by scheduling inputs
+and message deliveries); the implementation controls how it responds.
 
 The central question is: can an implementation preserve all of the
 specification's possibilities---or must it narrow them by suppressing
@@ -720,22 +730,27 @@ The adversarial asynchronous environment controls when input actions
 occur: it determines message delivery order, timing, and the arrival
 of client invocations.
 Internal and output actions are controlled by the automata themselves.
+We assume \emph{fair local scheduling}: enabled internal and output
+actions at a process are eventually executed (the environment cannot
+indefinitely suppress a process's local computation).
 
 \begin{definition}[Coordination-free (operational)]
   \label{def:coordfree-op}
-  A distributed implementation is \emph{coordination-free} if in
-  every execution, for every client invocation $\mathsf{inv}(e)_i$,
-  the corresponding response $\mathsf{resp}(e, v)_i$ occurs with no
-  intervening input action at $p_i$---that is, between the invocation
-  and its response, $p_i$ performs only internal actions (local
-  computation), receiving no messages and no other client invocations.
+  A distributed implementation is \emph{coordination-free} if for
+  every process $p_i$ and every client invocation
+  $\mathsf{inv}(e)_i$, the response $\mathsf{resp}(e, v)_i$ is
+  \emph{enabled} immediately: there exists an execution fragment from
+  $p_i$'s post-invocation state consisting only of internal and
+  output actions at $p_i$ that produces $\mathsf{resp}(e, v)_i$,
+  without requiring any further input action at $p_i$.
 \end{definition}
 
 \noindent
 The response is determined entirely by $p_i$'s state at invocation
-time: the process may perform local computation (internal actions)
-but no new external information enters before the response is
-emitted.
+time.
+The process may perform local computation (internal actions) before
+emitting the response, but it need not---and does not---wait for any
+message arrival or additional client invocation.
 This captures both the distributed case (no waiting for remote
 messages) and the local case (no waiting for other concurrent
 invocations---e.g., no locking that defers one transaction pending
@@ -744,11 +759,19 @@ Operationally: if the network goes silent and no other client
 requests arrive after the invocation, the process can still respond.
 This is the availability condition of Gilbert and
 Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
+We restrict to deterministic automata (internal and output actions are
+determined by the current state); nondeterministic choices can be
+modeled as internal events included in the state without loss of
+generality for safety properties.
 
 \begin{definition}[Correctness (operational)]
+  Let $\mathsf{Resp}(H)$ denote the set of (invocation, response
+  value) pairs emitted in execution prefix $H$.
   An implementation is \emph{correct} for $\Spec$ if for every
-  execution prefix whose induced history is $H$, the emitted
-  responses are consistent with some $o \in \Obs(H)$.
+  execution prefix with induced history $H$, there exists
+  $o \in \Obs(H)$ that \emph{explains} $\mathsf{Resp}(H)$: for every
+  $(e, v) \in \mathsf{Resp}(H)$, outcome $o$ prescribes response $v$
+  to invocation $e$.
 \end{definition}
 
 \begin{theorem}[Complete CALM, operational]
@@ -767,6 +790,10 @@ Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
   $\Obs(H_i)$, chooses $o \in \Obs(H_i)$, and immediately performs
   $\mathsf{resp}(e, v)_i$ where $v$ is $o$'s prescription for $e$.
   No input action intervenes.
+  (If $\Obs(H_i) = \emptyset$---the local history is
+  unrealizable---the process may respond with an error/abort; this
+  case does not arise for monotone specifications at reachable
+  histories, since monotonicity propagates nonemptiness forward.)
 
   \emph{Correctness:} At any prefix with global history $H$, each
   local view satisfies $H_i \hext H$.
@@ -774,6 +801,14 @@ Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
   $o' \in \Obs(H)$ with $o \Ord o'$.
   Since refinement preserves earlier responses, the emitted response
   is consistent with $o'$.
+  For joint consistency of multiple processes' responses:
+  correctness requires that the \emph{set} of all emitted responses
+  is consistent with \emph{some} $o^* \in \Obs(H)$---not that each
+  process's chosen outcome is the same.
+  Since each local view $H_i$ is a prefix of $H$, and $\Obs(H)$
+  contains all outcomes admissible at the global history, the
+  existence of a jointly consistent $o^*$ follows from the
+  specification's definition of admissibility at $H$.
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
   Contrapositive: if $\Spec$ is not monotone, no correct
@@ -781,6 +816,20 @@ Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
   $H_1 \hext H_2$, with $o$ prescribing response $v$ to invocation
   $e$ at process $p$.
+  The proof requires that $H_2$ be realizable as a \emph{$p$-silent
+  future}: one where the events in $H_2 \setminus H_1$ do not include
+  input actions at $p$ (so $p$ cannot distinguish $H_1$ from $H_2$
+  before responding).
+  This holds whenever the non-monotonicity witness involves activity
+  at processes other than $p$---the standard case for distributed
+  specifications.
+  (For purely process-local non-monotonicity, where the dangerous
+  future requires new input at $p$ itself, $p$ can observe the danger
+  and react; such non-monotonicity does not prevent coordination-free
+  implementation.
+  This is the same distinction captured by distributed-monotonicity in
+  Section~\ref{sec:complete-cap}.)
+
   Construct two executions with identical state at $p$ when $e$
   arrives:
   \begin{itemize}[nosep]
@@ -789,15 +838,17 @@ Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
           (messages delayed, no new invocations).
     \item Execution $\beta$: same local state at $p$ when $e$
           arrives, but other processes advance to produce $H_2$
-          (their actions do not involve $p$---messages to $p$ are
-          delayed by the environment).
+          (a $p$-silent future---no input actions at $p$).
   \end{itemize}
   Since $p$'s state is identical and the automaton is deterministic
-  on internal/output actions given the state, $p$ must produce the
-  same response in both.
-  If $p$ responds with $v$ (coordination-free): correct in $\alpha$
-  but not in $\beta$ (no $o' \in \Obs(H_2)$ refines $o$).
-  If $p$ defers (waits for an input action): not coordination-free.
+  on internal/output actions given the state, $p$ produces the same
+  response $v$ in both (coordination-freedom guarantees the response
+  is enabled without further input).
+  In execution $\alpha$, $v$ is correct (consistent with
+  $o \in \Obs(H_1)$).
+  In execution $\beta$, the global history is $H_2$ and no
+  $o' \in \Obs(H_2)$ refines $o$---correctness is violated.
+  Hence no correct implementation is coordination-free.
 \end{proof}
 
 \noindent
