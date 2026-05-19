@@ -1083,24 +1083,49 @@ If not, more restriction is needed.
   the output specification of a coordinated variant).
 \end{theorem}
 
-\begin{proof}[Proof sketch]
-  Linearizability is non-monotone
-  (Section~\ref{sec:example}).
+\begin{proof}
+  Linearizability is non-monotone (Section~\ref{sec:example}).
   Define the variant $\Spec'$ by restricting to histories in which
   $\rightarrow$ totally orders $E_{\mathit{iface}}$ (all interface
   operations are serialized---no two are concurrent).
   In such histories, outcomes grow by prefix extension of the
-  serialized input sequence, so $\Spec'$ is monotone.
-  Complete CALM certifies $\Spec'$ directly.
-  Relational-transducer CALM cannot: standard Datalog encodings of
-  linearizability require a non-monotone uniqueness constraint to
-  enforce that each position in the sequence has exactly one value
-  (Section~\ref{sec:beyond-calm}), and the transducer model has no
-  mechanism to test the output specification of a coordinated variant
-  independently of the program that produces it.
-  (The gap is not that CALM gives a wrong answer but that it answers a
-  different question: whether the \emph{program} is monotone, not
-  whether the \emph{output interface} is coordination-free.)
+  serialized input sequence; thus $\Spec'$ is monotone over its
+  admitted histories, and Complete CALM certifies $\Spec'$ directly.
+
+  We show relational-transducer CALM cannot verify this monotone
+  output interface.
+  Two kinds of Datalog encodings are possible.
+
+  \emph{Direct encoding.}
+  Encoding the linearization as a set of position-value facts
+  $\{\mathit{pos}(i, v)\}$ under set inclusion requires a uniqueness
+  constraint (one value per position) that is non-monotone in
+  Datalog (Proposition~\ref{prop:prefix-negation}, formalized in
+  Appendix~\ref{app:hierarchy}).
+  Relational-transducer CALM classifies any such program as requiring
+  coordination, even though the residual output (the linearization
+  prefix) is monotone.
+
+  \emph{Indirect encoding.}
+  One could place the serialization outside the analyzed program: an
+  external ``log'' relation provides serialized inputs, and the
+  Datalog program merely reads them.
+  This program is now monotone (it accumulates facts), and CALM
+  classifies it as coordination-free.
+  But this changes which program is being analyzed: the ordering
+  authority is no longer in scope.
+  CALM has no mechanism to verify that the original linearizability
+  specification has been correctly discharged by the externalized
+  ordering---it analyzes only the consumer program, not the relation
+  between the program and the specification.
+
+  In both cases, relational-transducer CALM cannot answer the
+  question Complete CALM does: \emph{is the output specification of
+  this coordinated variant monotone?}
+  CALM analyzes program syntax under a fixed input model;
+  the answer depends on encoding choice.
+  Complete CALM tests the specification itself, independent of any
+  encoding.
 \end{proof}
 
 \noindent
@@ -1488,11 +1513,25 @@ correctness constraints.
 By Complete CALM, serializability intrinsically requires coordination.
 This recovers the non-HAT classification
 of~\cite{bailis2013hat} as a semantic test.
-Snapshot isolation~\cite{berenson1995critique} similarly requires
-coordination: its first-committer-wins rule commits to a transaction
-ordering at commit time that a concurrent commit can invalidate, and
-write skew anomalies provide the non-monotonicity witness via the
-same template as serializability's cyclic-read failure.
+
+Snapshot isolation~\cite{berenson1995critique} likewise requires
+coordination, witnessed by the classic \emph{write-skew} anomaly.
+Consider an invariant $x + y \geq 0$ with $x = y = 0$ initially.
+Transaction $T_1$ reads $x$ and $y$, then writes $y := -1$;
+$T_2$ reads $x$ and $y$, then writes $x := -1$.
+Each transaction individually preserves the invariant from its
+snapshot.
+At $H_1$, $T_1$ commits under SI's first-committer-wins rule (its
+write set $\{y\}$ does not conflict with any concurrent committed
+write):
+$o_1 = \{\mathsf{commit}(T_1), y \mapsto -1\} \in
+\Obs_{\mathit{SI}}(H_1)$.
+Extend to $H_2$ where $T_2$ also commits under SI (its write set
+$\{x\}$ does not conflict with $T_1$'s):
+the resulting state has $x = y = -1$, violating $x + y \geq 0$.
+For an invariant-preserving SI specification, $\Obs_{\mathit{SI}}(H_2)
+= \emptyset$.
+Hence $o_1$ has no refinement at $H_2$---SI is not monotone.
 
 The structural explanation is general: specifications that commit only to
 partial-order structure (causal consistency, read committed) are
