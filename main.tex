@@ -804,18 +804,36 @@ generality for safety properties.
 
 \begin{remark}[Joint consistency of independent responses]
   \label{rem:joint-consistency}
-  Joint consistency of responses emitted by different processes does
-  not require a separate assumption.
-  Once a process emits a response, that response event enters the
-  history and constrains all future admissible outcomes.
-  A later process responding at a history that includes the earlier
-  response must choose an outcome explaining both---and monotonicity
-  guarantees such an outcome exists (the earlier outcome refines into
-  the later history).
-  The causal-view protocol achieves this automatically: gossip
-  propagates response events, so each process's local view includes
-  prior responses from other processes before it responds to new
-  invocations.
+  Joint consistency of independently emitted responses does not
+  require a separate ``response-compositionality'' assumption---it
+  follows from monotonicity itself, because responses are events in
+  the history.
+
+  Suppose two processes $p$ and $q$ respond concurrently with values
+  $v_p$ and $v_q$.
+  The global history $H$ contains both response events.
+  Correctness at $H$ requires $\Obs(H) \neq \emptyset$ with some
+  outcome explaining both.
+  Could this fail?
+  Only if no outcome in $\Obs(H)$ explains both---i.e.,
+  $\Obs(H) = \emptyset$ for the history containing both responses.
+  But then consider the earlier history $H_p$ (before $q$ responds):
+  $v_p$ is admissible at $H_p$ (the process chose it from
+  $\Obs(H_p)$).
+  The future $H$ (which adds $q$'s response) has
+  $\Obs(H) = \emptyset$---no refinement of $v_p$'s outcome exists.
+  That is a \emph{monotonicity failure}: the outcome at $H_p$ is
+  future-inconsistent.
+  Contrapositive: if the specification is monotone, no such failure
+  can occur, and independently emitted responses are always jointly
+  explainable.
+
+  The causal-view protocol makes this concrete: gossip propagates
+  response events, so each process's local view includes prior
+  responses before it responds to new invocations.
+  But even without gossip (truly concurrent responses), monotonicity
+  guarantees joint consistency---conflicting concurrent responses
+  would constitute a monotonicity violation.
 \end{remark}
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
