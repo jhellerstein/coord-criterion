@@ -76,8 +76,8 @@
   and deeper analytical power: verification of
   proper coordination, direct analysis of ordered properties like
   linearizability, and a \emph{coordination-free frontier}
-  construction that derives natural coordination-free
-  weakenings for any specification---illustrated with
+  methodology for exploring the strongest monotone weakenings of a
+  fixed observation interface---illustrated with
   registers, queues, and search structures.
   In the distributed setting, a complete version of the CAP theorem
   follows as a corollary: a specification admits a consistent,
@@ -151,8 +151,9 @@ order; we call it \emph{monotone} if every admissible outcome at
 every history has a compatible refinement at every future.
 The main result (\emph{Complete CALM}): a specification admits a
 correct coordination-free implementation---one in which every process
-responds to every invocation without waiting for any remote
-information---if and only if it is monotone.
+can respond to every invocation using only its local state and
+computation, without requiring any further input action---if and only
+if it is monotone.
 The proof constructs a concrete protocol for the sufficiency direction
 and uses an indistinguishability argument (in the style of
 Fischer--Lynch--Paterson and Gilbert--Lynch) for necessity.
@@ -537,7 +538,7 @@ observations).
 Different specifications over the same histories may use different
 outcome orders.
 
-We require two well-formedness conditions linking outcomes to
+We require three well-formedness conditions linking outcomes to
 response events in the history:
 \begin{enumerate}[nosep]
   \item \emph{Response soundness:} if $H$ contains a response event
@@ -546,13 +547,19 @@ response events in the history:
   \item \emph{Response preservation:} if $o \Ord o'$ and $o$
         prescribes response $v$ for $e$, then $o'$ also prescribes
         $v$ for $e$.
+  \item \emph{Response totality:} at every reachable history
+        containing an invocation requiring a response,
+        $\Obs(H) \neq \emptyset$ and some outcome prescribes an
+        allowed response.
 \end{enumerate}
 Response soundness says outcomes must agree with recorded facts;
 response preservation says refinement never retracts a committed
-response.
-These conditions are satisfied by all specifications in this paper
-and are essential for the operational theorem
-(Section~\ref{sec:operational}).
+response; response totality says an available process can always
+find a valid response.
+We call a specification satisfying all three \emph{well-formed}.
+All specifications in this paper are well-formed, and the operational
+theorem (Section~\ref{sec:operational}) is stated for well-formed
+specifications.
 
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
@@ -785,8 +792,9 @@ generality for safety properties.
 
 \begin{theorem}[Complete CALM, operational]
   \label{thm:calm-operational}
-  A specification $\Spec$ admits a correct coordination-free
-  distributed implementation iff $\Spec$ is monotone.
+  A well-formed specification $\Spec$ admits a correct
+  coordination-free distributed implementation iff $\Spec$ is
+  monotone.
 \end{theorem}
 
 \begin{proof}
@@ -799,21 +807,19 @@ generality for safety properties.
   $\Obs(H_i)$, chooses $o \in \Obs(H_i)$, and immediately performs
   $\mathsf{resp}(e, v)_i$ where $v$ is $o$'s prescription for $e$.
   No input action intervenes.
-  (If $\Obs(H_i) = \emptyset$---the local history is
-  unrealizable---the process may respond with an error/abort.
-  We assume \emph{response totality}: at every reachable history
-  containing an invocation requiring a response,
-  $\Obs(H) \neq \emptyset$ and some outcome prescribes an allowed
-  response.
-  For monotone specifications, nonemptiness at any reachable prefix
-  propagates to all futures by monotonicity.)
+  (Response totality guarantees $\Obs(H_i) \neq \emptyset$ at
+  reachable histories; monotonicity propagates nonemptiness to all
+  futures.)
 
   \emph{Correctness:} At any prefix with global history $H$, each
   local view satisfies $H_i \hext H$.
   By monotonicity, the chosen $o \in \Obs(H_i)$ has a refinement
   $o' \in \Obs(H)$ with $o \Ord o'$.
-  Since refinement preserves earlier responses, the emitted response
-  is consistent with $o'$.
+  By response soundness, $o'$ explains every response event recorded
+  in $H$ (including responses emitted by other processes); by response
+  preservation, $o'$ preserves the response emitted from $o$.
+  Hence $\mathsf{Resp}(H)$ is explained by $o'$, and the prefix is
+  correct.
 
 \begin{remark}[Joint consistency of independent responses]
   \label{rem:joint-consistency}
@@ -855,21 +861,26 @@ generality for safety properties.
   implementation is coordination-free.
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
   $H_1 \hext H_2$, with $o$ prescribing response $v$ to invocation
-  $e$ at process $p$.
+  $e$ at process $p$ (response totality guarantees such an outcome
+  exists).
   Since coordination-freedom requires $p$ to respond without any
   further input action (Definition~\ref{def:coordfree-op}), the
-  response is determined by $p$'s state at invocation time.
+  response is enabled from $p$'s post-invocation state.
+  The additional events in $H_2 \setminus H_1$ can be scheduled
+  \emph{after} $p$'s response: they are either at other processes
+  (which act independently) or are later input actions at $p$ (which
+  arrive after the response is already emitted).
+  In either case, $p$'s response is determined before these events
+  occur.
   Construct two executions with identical state at $p$ when $e$
   arrives:
   \begin{itemize}[nosep]
-    \item Execution $\alpha$: global history is $H_1$; after $e$
-          arrives at $p$, no further input actions occur at $p$.
-    \item Execution $\beta$: same local state at $p$ when $e$
-          arrives, but the global history reaches $H_2$ (the
-          additional events in $H_2 \setminus H_1$ occur without
-          input actions at $p$---either at other processes, or as
-          consequences of prior events at $p$ that have already been
-          processed).
+    \item Execution $\alpha$: $p$ responds with $v$; no further
+          events extend the history beyond $H_1$ plus $p$'s response.
+    \item Execution $\beta$: $p$ responds with $v$ (same local
+          state, same deterministic response); then the additional
+          events in $H_2 \setminus H_1$ occur, reaching global
+          history $H_2$ (extended with $p$'s response).
   \end{itemize}
   Since $p$'s state is identical and the automaton is deterministic
   on internal/output actions given the state, $p$ produces the same
@@ -1035,18 +1046,22 @@ where $\Obs'$ is non-empty.
 The coordination mechanism ensures that excluded histories (those with
 $\Obs' = \emptyset$) are never reached---e.g., total-order broadcast
 prevents non-serialized histories from arising.
+This convention differs from the main Complete CALM theorem, where
+$\Obs(H) = \emptyset$ at a reachable future constitutes a monotonicity
+failure; here, $\Obs'(H) = \emptyset$ marks a history that the
+coordination mechanism is responsible for excluding.
 Complete CALM provides the test: check whether the variant is
 monotone over its admitted histories.
 If it is, the coordination suffices.
 If not, more restriction is needed.
 
-\begin{theorem}[Separation from relational-transducer CALM]
+\begin{proposition}[Separation from relational-transducer CALM]
   \label{thm:separation}
   There exist non-monotone specifications with properly coordinated
   variants that Complete CALM can verify but relational-transducer
   CALM has no mechanism to certify (it lacks a semantic test for
   the output specification of a coordinated variant).
-\end{theorem}
+\end{proposition}
 
 \begin{proof}[Proof sketch]
   Linearizability is non-monotone
