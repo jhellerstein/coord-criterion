@@ -551,11 +551,12 @@ response events in the history:
         containing a pending invocation $e$, every $o \in \Obs(H)$
         prescribes an allowed response for $e$ (in particular,
         $\Obs(H) \neq \emptyset$).
-  \item \emph{Response monotonicity of admissibility:} if $H'$
-        extends $H$ by adding only response events consistent with
-        outcomes in $\Obs(H)$, then $\Obs(H') \subseteq \Obs(H)$
-        (recording a response can only restrict admissibility, never
-        enlarge it).
+  \item \emph{Response monotonicity of admissibility:} for any
+        response-only extension $H'$ of $H$ (i.e., $H'$ is a future
+        of $H$ where $H' \setminus H$ contains only response events),
+        $\Obs(H') \subseteq \Obs(H)$.
+        Recording a response can only restrict admissibility, never
+        enlarge it.
 \end{enumerate}
 Response soundness says outcomes must agree with recorded facts;
 response preservation says refinement never retracts a committed
@@ -866,41 +867,42 @@ generality for safety properties.
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
   Contrapositive: if $\Spec$ is not monotone, no correct
-  implementation is coordination-free.
+  coordination-free implementation of $\Spec$ exists.
+  Recall that the specification's $\Obs(H)$ is the \emph{interface
+  contract}: any outcome in $\Obs(H)$ is one the implementation may
+  choose to expose.
+  An implementation that exposes only a subset of $\Obs$ is a
+  coordinated variant of $\Spec$ (Section~\ref{sec:separation}), not
+  an implementation of $\Spec$ itself.
+
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
   $H_1 \hext H_2$.
-  Since the spec is well-formed, $H_1$ contains some pending
-  invocation $e$ at process $p$ (otherwise $\Obs(H_1)$ would be
-  invariant under all extensions and monotonicity would hold);
-  by response totality, $o$ prescribes a response $v$ for $e$.
+  Without loss of generality, choose the witness so that $H_1$
+  contains a pending invocation $e$ at process $p$ such that $o$
+  prescribes a response $v$ for $e$ (response totality guarantees
+  this; if no such $e$ exists at $H_1$, the witness can be pulled
+  back to an earlier history where the relevant response was first
+  exposed).
 
-  Coordination-freedom requires $p$ to respond to $e$ without any
-  further input action.
-  Schedule $p$'s response immediately after the invocation, then
-  schedule the events in $H_2 \setminus H_1$ (which involve no input
-  actions at $p$ before the response, since the response is already
-  enabled).
-  Let $H_2^r$ denote the resulting history: $H_2$ extended with
-  $\mathsf{resp}(e, v)$.
+  Suppose for contradiction that $I$ is a correct coordination-free
+  implementation that may expose $o$---that is, on some input
+  schedule, $I$ chooses to commit to $o$ when responding at $H_1$.
+  By coordination-freedom, $I$ commits to $v$ from $p$'s
+  post-invocation state without further input.
+  An adversarial scheduler then drives the system to $H_2$ (scheduling
+  the events in $H_2 \setminus H_1$ after $p$'s response).
+  By response monotonicity of admissibility, $\Obs(H_2 \cup
+  \{\mathsf{resp}(e, v)\}) \subseteq \Obs(H_2)$, and no outcome in
+  $\Obs(H_2)$ refines $o$.
+  Hence $v$ has no admissible explanation at the resulting history---
+  correctness is violated.
 
-  We show no $o' \in \Obs(H_2^r)$ refines $o$.
-  By response monotonicity of admissibility (well-formedness
-  condition~4), $\Obs(H_2^r) \subseteq \Obs(H_2)$ when $H_2^r$ adds
-  only response events to $H_2$.
-  Since no outcome in $\Obs(H_2)$ refines $o$, neither does any
-  outcome in $\Obs(H_2^r)$.
-  Thus $p$'s response $v$ at $H_2^r$ has no admissible outcome
-  explaining it---correctness is violated.
-
-  Construct two executions: $\alpha$ where the system halts at $H_1$
-  plus $p$'s response, and $\beta$ where the system reaches $H_2^r$.
-  Since $p$'s state is identical at the moment of response (both are
-  $p$'s local view of $H_1$), and the automaton is deterministic, $p$
-  produces $v$ in both.
-  In $\alpha$, $v$ is correct (consistent with $o \in \Obs(H_1)$).
-  In $\beta$, $v$ has no admissible explanation---correctness is
-  violated.
-  Hence no correct implementation is coordination-free.
+  An implementation that \emph{never} chooses outcomes like $o$ is a
+  coordinated variant exposing a strict subset of $\Obs$
+  (Section~\ref{sec:separation})---not a coordination-free
+  implementation of $\Spec$ as the interface contract.
+  Hence no correct coordination-free implementation of $\Spec$
+  exists.
 \end{proof}
 
 \noindent
@@ -1067,7 +1069,7 @@ If it is, the coordination suffices.
 If not, more restriction is needed.
 
 \begin{proposition}[Separation from relational-transducer CALM]
-  \label{thm:separation}
+  \label{prop:separation}
   There exist non-monotone specifications with properly coordinated
   variants that Complete CALM can verify but relational-transducer
   CALM has no mechanism to certify (it lacks a semantic test for
