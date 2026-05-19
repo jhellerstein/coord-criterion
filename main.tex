@@ -80,7 +80,8 @@
   the strongest coordination-free weakenings of any specification---
   illustrated with registers, queues, and search structures.
   In the distributed setting, a complete version of the CAP theorem
-  follows as a corollary: a specification admits a consistent,
+  follows as a companion theorem: a specification admits a
+  consistent,
   available, partition-tolerant implementation iff it is
   distributed-monotone---monotone with respect to remote-only futures.
 
@@ -220,7 +221,8 @@ about linearizability to a bidirectional characterization.
   \item \emph{The coordination-free frontier}
         (Appendix~\ref{app:minimality}): for a fixed observation
         interface, minimal monotone enlargements of the declared order
-        characterize the strongest coordination-free guarantees.
+        provide a way to characterize the strongest coordination-free
+        guarantees.
         More generally, weakening the interface itself yields
         coordination-free alternatives.
         Recovers causal consistency for
@@ -391,6 +393,7 @@ The partial order captures causal precedence; concurrent events have no
 ordering.
 
 \begin{definition}[Event universe]
+  \label{def:event-types}
   A specification fixes pairwise-disjoint sets of events:
   $E_{\mathit{iface}}$ (client interface: invocations and responses),
   $E_{\mathit{int}}$ (internal computation),
@@ -498,6 +501,7 @@ The past is fixed; only the future is open.
 
 %----------------------------------------------------------------
 \subsection{Specifications}
+\label{sec:specification}
 %----------------------------------------------------------------
 
 A specification says which outcomes are admissible at each history and
@@ -548,9 +552,12 @@ response events in the history:
         prescribes response $v$ for $e$, then $o'$ also prescribes
         $v$ for $e$.
   \item \emph{Response totality:} at every well-formed history $H$
-        containing a pending invocation $e$, every $o \in \Obs(H)$
-        prescribes an allowed response for $e$ (in particular,
-        $\Obs(H) \neq \emptyset$).
+        containing a pending invocation $e$, there exists $o \in
+        \Obs(H)$ that prescribes an allowed response for $e$ (in
+        particular, $\Obs(H) \neq \emptyset$).
+        Equivalently, every \emph{response point}---a history with a
+        pending invocation that the implementation must answer---is
+        explained by some admissible outcome.
   \item \emph{Response monotonicity of admissibility:} for any
         response-only extension $H'$ of $H$ (i.e., $H'$ is a future
         of $H$ where $H' \setminus H$ contains only response events),
@@ -565,27 +572,43 @@ response events in the history:
         and the witness outcome $o' \in \Obs(H_1')$ prescribes a
         response for $e$ that has no future-consistent refinement
         at $H_2'$.
-        That is, monotonicity failures are exposable through the
-        interface, not merely properties of abstract internal state.
 \end{enumerate}
 The first four conditions discipline the relationship between
-outcomes and response events; the fifth ensures that
-non-monotonicity is observable at the interface.
-Response soundness says outcomes must agree with recorded facts;
-response preservation says refinement never retracts a committed
-response; response totality says every admissible outcome at a
-response point commits to a response; response monotonicity says
-adding a recorded response only restricts further admissibility;
-response observability says monotonicity failures show up at
-response points.
+outcomes and response events; the fifth ties non-monotonicity to
+the interface.
 We call a specification satisfying all five \emph{well-formed}.
-All specifications in this paper are well-formed---response
-observability is automatic for response-oriented specifications
-where every outcome is itself a response commitment, since any
-violation of monotonicity then immediately implies a response
-prescription that cannot be honored under extension.
-The operational theorem (Section~\ref{sec:operational}) is stated
-for well-formed specifications.
+
+\paragraph{Response observability is a modeling discipline, not a
+restriction.}
+Response observability looks like a constraint on which
+specifications we can analyze, but in practice it is a discipline on
+how a specification is modeled.
+We adopted the same discipline already for messages: when we wanted
+to constrain inter-process propagation, we elevated message sends
+and receives to first-class events
+(Definition~\ref{def:event-types}) so that any property we cared
+about could be predicated on them.
+The same applies to outcomes: anything that we want to constrain
+semantically must be observable at the interface, hence appear in a
+response event.
+If a candidate ``outcome'' is not exposed through any response, then
+no external party can detect a violation involving it, and there is
+no operational obligation to coordinate over it.
+By design fiat, the modeler decides what is semantically observable:
+to constrain the internal layout of a data structure, expose its API
+calls as responses; to constrain replica state, expose
+read-your-writes through reads.
+Under this discipline, every outcome is, or refines, a response
+commitment, and response observability is automatic.
+The condition is therefore a sanity check on the modeling, not a
+restriction on which specifications admit the theorem: any
+specification whose ``hidden'' outcomes affect external behavior can
+be restated as a response-oriented specification by promoting those
+behaviors to response events.
+
+All specifications in this paper are well-formed under this
+discipline; the operational theorem (Section~\ref{sec:operational})
+is stated for well-formed specifications.
 
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
@@ -841,6 +864,20 @@ generality for safety properties.
   monotone.
 \end{theorem}
 
+\noindent
+The theorem applies to \emph{response-oriented} specifications:
+specifications whose semantically observable commitments are exposed
+through the interface as responses.
+As we noted in
+Section~\ref{sec:specification}, this is a modeling discipline rather
+than a restriction---the natural class for consistency, transactions,
+registers, CRDT reads, isolation levels, queues, and search
+structures, and any specification can be brought into the class by
+promoting whatever it constrains to interface events.
+The theorem does not preclude analysis of specifications with purely
+internal commitments; it asks only that whatever the specification
+constrains be visible at the interface.
+
 \begin{proof}
   \emph{Sufficiency (monotone $\Rightarrow$ implementation exists).}
   Construct the \emph{causal-view protocol}: each process maintains
@@ -848,8 +885,9 @@ generality for safety properties.
   causally reached it) and propagates it via gossip (internal actions
   trigger $\mathsf{send}$).
   On $\mathsf{inv}(e)_i$, the process adds $e$ to $H_i$, computes
-  $\Obs(H_i)$, chooses $o \in \Obs(H_i)$ (which prescribes a response
-  for $e$ by response totality), and immediately performs
+  $\Obs(H_i)$, chooses some $o \in \Obs(H_i)$ that prescribes a
+  response for $e$ (such an $o$ exists by response totality), and
+  immediately performs
   $\mathsf{resp}(e, v)_i$ where $v$ is $o$'s prescription for $e$.
   The response is enabled without requiring any further input action.
 
@@ -907,6 +945,10 @@ generality for safety properties.
 
   Recall that $\Obs(H)$ is the \emph{interface contract}: any outcome
   in $\Obs(H)$ is one the implementation may expose.
+  \emph{Implementing $\Spec$ means being safe for every outcome the
+  interface permits; restricting to a safe subset is a different
+  specification, namely a coordinated variant
+  (Section~\ref{sec:separation}).}
   An implementation \emph{could} try to be angelic---always choosing
   only safe (future-consistent) outcomes from $\Obs(H)$.
   But coordination-freedom requires the process to respond using only
@@ -935,10 +977,14 @@ generality for safety properties.
   $I$ does not know whether the global history will remain at $H_1$
   (where $v$ is safe) or extend to $H_2$ (where $v$ has no
   refinement)---both extensions are admissible from $p$'s perspective.
-  Because $H_1 \hext H_2$ is itself an admissible
-  history (interface and environment futures combined), there is an
-  admissible continuation in which the system reaches
-  $H_2 \cup \{\mathsf{resp}(e, v)\}$ after $p$ commits to $v$.
+  Under the interface-contract reading, the specification permits
+  the full interface future $H_2$; thus an implementation of $\Spec$
+  must be correct for that permitted continuation, unless it
+  restricts the interface (i.e., implements a different, coordinated
+  $\Spec'$).
+  In particular, the contract permits the continuation
+  $H_2 \cup \{\mathsf{resp}(e, v)\}$ that arises when $p$ commits to
+  $v$.
   By response monotonicity of admissibility,
   $\Obs(H_2 \cup \{\mathsf{resp}(e, v)\}) \subseteq \Obs(H_2)$, and
   no outcome there refines $o$.
@@ -1116,12 +1162,14 @@ monotone over its admitted histories.
 If it is, the coordination suffices.
 If not, more restriction is needed.
 
-\begin{theorem}[Separation from relational-transducer CALM]
+\begin{theorem}[Interface separation from relational-transducer
+  CALM]
   \label{thm:separation}
   There exist non-monotone specifications with properly coordinated
-  variants that Complete CALM can verify but relational-transducer
-  CALM has no mechanism to certify (it lacks a semantic test for
-  the output specification of a coordinated variant).
+  variants that Complete CALM can verify, but for which
+  relational-transducer CALM has no specification-level judgment:
+  its verdict is necessarily attached to a chosen program boundary,
+  not to the output specification of the variant.
 \end{theorem}
 
 \begin{proof}
@@ -1133,8 +1181,8 @@ If not, more restriction is needed.
   serialized input sequence; thus $\Spec'$ is monotone over its
   admitted histories, and Complete CALM certifies $\Spec'$ directly.
 
-  We show relational-transducer CALM cannot verify this monotone
-  output interface.
+  We show relational-transducer CALM cannot answer this question at
+  the level of the specification.
   Two kinds of Datalog encodings are possible.
 
   \emph{Direct encoding.}
@@ -1161,10 +1209,11 @@ If not, more restriction is needed.
   classifies it as coordination-free.
   But this changes which program is being analyzed: the ordering
   authority is no longer in scope.
-  CALM has no mechanism to verify that the original linearizability
-  specification has been correctly discharged by the externalized
-  ordering---it analyzes only the consumer program, not the relation
-  between the program and the specification.
+  Relational-transducer CALM has no specification-level judgment
+  corresponding to this verification; its verdict is necessarily
+  attached to a chosen program boundary---it analyzes only the
+  consumer program, not the relation between the program and the
+  specification.
 
   In both cases, relational-transducer CALM cannot answer the
   question Complete CALM does: \emph{is the output specification of
@@ -1241,21 +1290,34 @@ distributed-monotone because no partition can produce the dangerous
 future.
 
 \begin{theorem}[Complete CAP]
-  \label{cor:cap}
+  \label{thm:cap}
   In the asynchronous message-passing model with two or more
-  processes, a specification admits a consistent, available,
-  partition-tolerant implementation if and only if it is
-  distributed-monotone.
+  processes, a well-formed specification with process assignment
+  admits a consistent, available, partition-tolerant implementation
+  if and only if it is distributed-monotone.
 \end{theorem}
 
 \begin{proof}
   ($\Leftarrow$) If distributed-monotone, every outcome at every
   process survives all partition-constrained futures.
   Under a partition, only such futures can occur.
-  The causal-view protocol of Theorem~\ref{thm:calm-operational}
-  provides the implementation: each process responds from its local
-  view, and distributed-monotonicity guarantees correctness even when
-  cross-partition messages are blocked.
+  We compose the causal-view protocol of
+  Theorem~\ref{thm:calm-operational} with a local-resolution layer
+  at each process.
+  The causal-view protocol handles cross-partition correctness:
+  each process responds from its local view, and
+  distributed-monotonicity guarantees that no remote
+  partition-constrained future can invalidate a locally exposed
+  outcome.
+  Same-process non-monotonicities---those that distributed-monotonicity
+  permits because their witnesses are intra-process---are discharged
+  by a local resolution layer (e.g., a per-process mutex or
+  serializer) before the response is exposed.
+  Such local resolution requires no remote communication and
+  therefore preserves availability under partitions.
+  Together, the two layers yield a partition-tolerant implementation
+  that is consistent for the full spec and available on all sides
+  of any partition.
 
   ($\Rightarrow$) If not distributed-monotone, there exists a
   partition $P = (S, \bar{S})$, a process $p \in S$, an outcome
@@ -1976,7 +2038,7 @@ request to a non-failing node eventually receives a response'') only
 strengthen the impossibility direction of the theorem.
 
 \begin{theorem}[Complete CAP, restated]
-  \label{cor:cap-formal}
+  \label{thm:cap-formal}
   Let $\Spec = (E, \Obs, \Ord)$ be a specification with process
   assignment $\pi$ in the asynchronous message-passing model.
   $\Spec$ admits an implementation that is both correct on all
