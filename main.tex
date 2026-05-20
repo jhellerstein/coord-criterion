@@ -679,8 +679,19 @@ knowledge that coordination provides.
   \emph{enabled} immediately: there exists an execution fragment from
   $p_i$'s post-invocation state consisting only of internal and
   output actions at $p_i$ that produces $\mathsf{resp}(e, v)_i$,
-  without requiring any further input action at $p_i$.
+  without requiring any further input action
+  ($E_{\mathit{inv}} \cup E_{\mathit{recv}}$) at $p_i$.
 \end{definition}
+
+\noindent
+This is stronger than Gilbert and Lynch's availability
+condition~\cite{gilbert2002cap}, which forbids waiting only for
+remote messages ($E_{\mathit{recv}}$).
+Our definition additionally forbids waiting for other client
+invocations ($E_{\mathit{inv}}$), capturing single-node coordination
+mechanisms such as mutexes and transaction serialization.
+Complete CAP (Section~\ref{sec:complete-cap}) uses the weaker,
+partition-only notion.
 
 \begin{definition}[Correctness (operational)]
   An implementation \emph{respects the interface contract} $\Spec$ if
