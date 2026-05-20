@@ -1095,6 +1095,9 @@ algorithmically selects an outcome.
 The two theorems use different operational notions: Complete CALM
 requires local immediacy (no waiting for any input); Complete CAP
 requires partition availability (no waiting across a partition).
+Confirming folklore, Complete CAP proves formally that serializability
+also suffers from the availability--partition tradeoff
+(Section~\ref{sec:isolation}): it is not distributed-monotone.
 
 \paragraph{How coordination is achieved operationally.}
 Each non-monotonicity witness $(H_1, H_2, o_1)$ must be resolved by
@@ -1332,13 +1335,6 @@ Transactional isolation is not naturally expressed as a Datalog program,
 and different encodings of the same isolation level yield different
 CALM verdicts.
 Complete CALM sidesteps this: it tests the specification directly.
-
-\paragraph{Connection to CAP.}
-Serializability is not distributed-monotone: a partition-constrained
-future (remote transaction commit) can invalidate a local read outcome.
-Complete CALM identifies the \emph{source} (non-monotonicity);
-Complete CAP identifies when it creates a partition obstruction
-(failure of distributed-monotonicity).
 
 %----------------------------------------------------------------
 \subsection{Invariant Confluence}
