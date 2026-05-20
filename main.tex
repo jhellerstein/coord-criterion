@@ -704,68 +704,26 @@ coordination-free I/O-automaton implementation.
 %----------------------------------------------------------------
 
 We adopt I/O automata~\cite{lynch1996distributed} as our operational
-model and prove that monotonicity exactly characterizes when a
-correct, coordination-free implementation exists.
-
-\begin{definition}[Process (I/O automaton)]
-  \label{def:process}
-  Each process $p_i$ is an I/O automaton with:
-  \begin{itemize}[nosep]
-    \item \emph{Input actions:} client invocations
-          $\mathsf{inv}(e)_i$ and message arrivals
-          $\mathsf{recv}(m)_i$.
-    \item \emph{Output actions:} client responses
-          $\mathsf{resp}(e, v)_i$ and message sends
-          $\mathsf{send}(m)_i$.
-    \item \emph{Internal actions:} local computation steps
-          $\tau_i$ (state updates, gossip decisions,
-          pre-computation).
-    \item A state space $\Sigma_i$, initial state $\sigma_i^0$,
-          and a transition relation on
-          $\Sigma_i \times \mathit{acts}_i \times \Sigma_i$.
-  \end{itemize}
-  Input actions are always enabled (the automaton cannot refuse an
-  invocation or message).
-  A \emph{distributed implementation} is a composition of $n$ such
-  automata communicating via shared send/receive actions.
-\end{definition}
-
-\noindent
-An \emph{execution} is a (possibly infinite) alternating sequence of
-states and actions, starting from initial states, consistent with the
-transition relations.
-The adversarial asynchronous environment controls when input actions
-occur: it determines message delivery order, timing, and the arrival
-of client invocations.
-Internal and output actions are controlled by the automata themselves.
-We assume \emph{fair local scheduling}: enabled internal and output
-actions at a process are eventually executed (the environment cannot
-indefinitely suppress a process's local computation).
-We restrict to deterministic automata (internal and output actions are
-determined by the current state); nondeterministic choices can be
-modeled as internal events included in the state without loss of
-generality for safety properties.
+model (formal definitions in Appendix~\ref{app:operational}).
+Processes are standard asynchronous I/O automata: input actions are
+client invocations and message arrivals; output actions are client
+responses and message sends; internal actions are local computation.
+An execution induces a history $H$ as defined in
+Section~\ref{sec:histories}.
 
 \paragraph{Bridging semantics and the I/O interface.}
-The remaining issue is how to connect $(E, \Obs, \Ord)$ to the I/O
-automaton's interface.
-By default, the bridge is minimal: client responses are surfaced as
-outcomes in $\Obs$.
-Concretely, each outcome $o$ assigns a response value $o(e)$ to every
-invocation $e$ in the history.
-This response projection is part of the specification.
+Client responses are surfaced as outcomes in $\Obs$: each outcome $o$
+assigns a response value $o(e)$ to every invocation $e$ in the
+history.
 Internal messaging ($\mathsf{send}$/$\mathsf{recv}$) is below the
-interface and is not surfaced.
+interface.
+If one wants to coordinate over more than responses (e.g.,
+convergence of internal state), one adds the relevant commitments to
+$\Obs$ and extends $\Ord$ accordingly, keeping response and
+non-response outcomes incomparable under $\Ord$.
 
-If one wants to coordinate over more than client responses---say
-convergence of internal state $\sigma_i$, or replica-consistency
-invariants---one adds the relevant commitments to $\Obs$ and extends $\Ord$
-accordingly.
-Hygiene: keep response outcomes incomparable to non-response outcomes
-under $\Ord$, so that the response contract is not polluted by
-internal-state refinements.
-
-We require three conditions:
+We require three conditions on how $\Obs$ relates to the I/O
+interface:
 \begin{enumerate}[nosep]
   \item \emph{Consistency with observations:} if $H$ records that
         invocation $e$ received response $v$, then $o(e) = v$ for
@@ -773,8 +731,8 @@ We require three conditions:
         Recording an additional response can only restrict
         admissibility: if $H'$ extends $H$ by response events,
         $\Obs(H') \subseteq \Obs(H)$.
-  \item \emph{Refinement coherence:} refinement preserves responses.
-        If $o \Ord o'$ and $o(e) = v$, then $o'(e) = v$.
+  \item \emph{Refinement coherence:} if $o \Ord o'$ and $o(e) = v$,
+        then $o'(e) = v$.
   \item \emph{Response totality:} for every invocation $e$ in $H$
         and every $o \in \Obs(H)$, $o(e)$ is defined.
         (If the specification intentionally leaves $e$ unconstrained,
@@ -812,19 +770,9 @@ coordination strategy, not a free move.
   $p_i$'s post-invocation state consisting only of internal and
   output actions at $p_i$ that produces $\mathsf{resp}(e, v)_i$,
   without requiring any further input action at $p_i$.
+  This is the availability condition of Gilbert and
+  Lynch~\cite{gilbert2002cap} in the I/O automaton framework.
 \end{definition}
-
-\noindent
-The response is determined entirely by $p_i$'s state at invocation
-time.
-The process need not wait for any message arrival or additional client
-invocation.
-This captures both the distributed case (no waiting for remote
-messages) and the local case (no waiting for other concurrent
-invocations---e.g., no locking that defers one transaction pending
-another).
-This is the availability condition of Gilbert and
-Lynch~\cite{gilbert2002cap} expressed in the I/O automaton framework.
 
 \begin{definition}[Correctness (operational)]
   An implementation \emph{respects the interface contract} $\Spec$ if
@@ -1894,8 +1842,47 @@ Complete CALM suggests that the answer is often less than expected.
 \section{Operational Adequacy: Full Proof}
 \label{app:operational}
 
-This appendix provides the complete proof of
-Theorem~\ref{thm:calm-operational}.
+This appendix provides the formal I/O automaton definitions and the
+complete proof of Theorem~\ref{thm:calm-operational}.
+
+\begin{definition}[Process (I/O automaton)]
+  \label{def:process}
+  Each process $p_i$ is an I/O automaton with:
+  \begin{itemize}[nosep]
+    \item \emph{Input actions:} client invocations
+          $\mathsf{inv}(e)_i$ and message arrivals
+          $\mathsf{recv}(m)_i$.
+    \item \emph{Output actions:} client responses
+          $\mathsf{resp}(e, v)_i$ and message sends
+          $\mathsf{send}(m)_i$.
+    \item \emph{Internal actions:} local computation steps
+          $\tau_i$ (state updates, gossip decisions,
+          pre-computation).
+    \item A state space $\Sigma_i$, initial state $\sigma_i^0$,
+          and a transition relation on
+          $\Sigma_i \times \mathit{acts}_i \times \Sigma_i$.
+  \end{itemize}
+  Input actions are always enabled (the automaton cannot refuse an
+  invocation or message).
+  A \emph{distributed implementation} is a composition of $n$ such
+  automata communicating via shared send/receive actions.
+\end{definition}
+
+\noindent
+An \emph{execution} is a (possibly infinite) alternating sequence of
+states and actions, starting from initial states, consistent with the
+transition relations.
+The adversarial asynchronous environment controls when input actions
+occur: it determines message delivery order, timing, and the arrival
+of client invocations.
+Internal and output actions are controlled by the automata themselves.
+We assume \emph{fair local scheduling}: enabled internal and output
+actions at a process are eventually executed (the environment cannot
+indefinitely suppress a process's local computation).
+We restrict to deterministic automata (internal and output actions are
+determined by the current state); nondeterministic choices can be
+modeled as internal events included in the state without loss of
+generality for safety properties.
 
 \begin{proof}[Proof of Theorem~\ref{thm:calm-operational}]
   \emph{Sufficiency (monotone $\Rightarrow$ implementation exists).}
