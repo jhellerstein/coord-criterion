@@ -141,9 +141,7 @@ express coordination-free but non-convergent interfaces such as causal
 consistency~\cite{bailis2013hat}.
 
 Each prior result started from semantic constraints within a specific
-model---monotone Datalog, join-semilattices, merge-closed
-invariants---and proved that those constraints ensure certain
-operational guarantees.
+model and proved operational guarantees.
 We reverse the direction: start by formalizing the operational
 guarantee (safe exposure without waiting), which naturally entails a
 semantic constraint that is fully model-free.
@@ -155,84 +153,46 @@ order; we call it \emph{monotone} if every admissible outcome at
 every history has a compatible refinement at every future.
 The main result (\emph{Complete CALM}): a specification admits a
 correct coordination-free implementation---one in which every process
-can respond to every invocation using only its local state and
-computation, without requiring any further input action---if and only
-if it is monotone.
-The proof constructs a concrete protocol for the sufficiency direction
-and uses an indistinguishability argument (in the style of
-Fischer--Lynch--Paterson and Gilbert--Lynch) for necessity.
+can respond using only its local state, without requiring any further
+input---if and only if it is monotone.
+The result is stated in the standard I/O automaton
+model~\cite{lynch1996distributed}: the proof constructs a concrete
+protocol for sufficiency and uses an indistinguishability argument
+for necessity.
 
-The result is stated and proved in the standard I/O automaton
-model~\cite{lynch1996distributed}: processes are I/O automata under
-adversarial asynchronous scheduling, and coordination-freedom means
-that after an invocation, the process can produce a response using
-only internal and output actions, without requiring any further input.
-This operational grounding distinguishes Complete CALM from a purely
-definitional equivalence: the theorem asserts the existence of a
-distributed protocol that is correct under all adversarial schedules.
-
-This generality yields two classes of new results:
-
-\emph{Verification of proper coordination.}
-Because the criterion operates on specifications rather than programs,
-it can verify that a non-monotone specification has been
-\emph{resolved} by coordination---that the residual output interface
-is monotone.
-Existing model-specific formalisms do not provide this test: they
-analyze programs within a fixed model rather than arbitrary residual
-output specifications.
-The criterion also handles refinement orders beyond set inclusion
-(prefix extension, lattice orders) and decouples coordination-freedom
-from replica consistency (Section~\ref{sec:replica-consistency}).
-
-\emph{A proof technique for abstract properties.}
-The criterion operates on specifications, not programs, directly
-answering questions like ``does serializability require coordination?''
-It unifies the results above under a single test and covers classical
-concurrent specifications (snapshots, $k$-set agreement, strong
-renaming) via the coordination-free frontier
-(Appendix~\ref{app:minimality}).
-Its most striking application is \emph{Complete CAP}
-(Section~\ref{sec:complete-cap}): a specification admits a consistent,
-available, partition-tolerant distributed implementation iff it is
-distributed-monotone---lifting CAP from a one-directional impossibility
-about linearizability to a bidirectional characterization.
+This generality yields two classes of new results.
+First, \emph{verification of proper coordination}: because the
+criterion operates on specifications rather than programs, it can
+verify that a non-monotone specification has been \emph{resolved} by
+coordination---that the residual output interface is monotone.
+Second, \emph{a proof technique for abstract properties}: the
+criterion directly answers questions like ``does serializability
+require coordination?'' and yields \emph{Complete CAP}---a
+specification admits a consistent, available, partition-tolerant
+implementation iff it is distributed-monotone.
 
 \paragraph{Contributions.}
 \begin{enumerate}[nosep]
   \item \emph{Complete CALM} (Section~\ref{sec:complete-calm}):
-        a specification admits a correct coordination-free
-        implementation (in the I/O automaton model) iff it is
-        monotone.
-        The proof constructs a protocol for sufficiency and uses an
-        indistinguishability argument for necessity.
-        The criterion handles any refinement order (prefix extension,
-        lattice orders), not only set inclusion.
+        coordination-free implementation exists iff the specification
+        is monotone.
+        Handles any refinement order, not only set inclusion.
   \item \emph{Complete CAP} (Section~\ref{sec:complete-cap}):
-        in the asynchronous distributed setting, a specification
-        admits a consistent, available, partition-tolerant
-        implementation iff it is distributed-monotone---a
-        bidirectional generalization of Gilbert--Lynch.
+        consistent + available + partition-tolerant implementation
+        exists iff the specification is distributed-monotone.
   \item \emph{Proper coordination}
-        (Section~\ref{sec:separation}): Complete CALM verifies that
-        coordination correctly discharges non-monotone specifications.
+        (Section~\ref{sec:separation}): verifies that coordination
+        correctly discharges non-monotone specifications.
   \item \emph{Instantiation}
         (Sections~\ref{sec:calm-instance} and~\ref{sec:applications}):
-        subsumes relational-transducer CALM (including the
-        $N_1$/$N_2$/$N_3$ hierarchy) and recovers boundaries for
-        isolation levels, I-confluence, and CRDTs.
-  \item \emph{The coordination-free frontier}
-        (Appendix~\ref{app:minimality}): for a fixed observation
-        interface, minimal monotone enlargements of the declared order
-        provide a way to characterize the strongest coordination-free
-        guarantees.
-        More generally, weakening the interface itself yields
-        coordination-free alternatives.
-        Recovers causal consistency for
-        registers~\cite{mahajan2011consistency}; yields new results
-        for queues (causal FIFO) and search structures
-        (forward-reachability / B-link
-        trees~\cite{lehman1981efficient}).
+        subsumes relational-transducer CALM and recovers boundaries
+        for isolation levels, I-confluence, and CRDTs.
+  \item \emph{Coordination-free frontier}
+        (Appendix~\ref{app:minimality}): characterizes the strongest
+        coordination-free weakenings for a fixed observation
+        interface.
+        Recovers causal consistency for registers; yields new results
+        for queues and search structures.
 \end{enumerate}
 
 
