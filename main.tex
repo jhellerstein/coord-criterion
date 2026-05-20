@@ -869,27 +869,20 @@ is how to verify that a \emph{given} variant is properly coordinated.
 \end{definition}
 
 \noindent
-Note: this is \emph{not} ordinary monotonicity.
-Condition~(ii) quantifies only over admitted histories, not all
-futures---the coordination mechanism is responsible for ensuring that
-non-admitted histories never arise.
-
 A properly coordinated variant restricts the original spec---fewer
 admissible outcomes, fewer admissible histories, or both---just enough
-to achieve monotonicity within the admitted history space.
+to achieve monotonicity within its own history space.
 History restriction is modeled by setting $\Obs'(H) = \emptyset$ for
-excluded histories; monotonicity is checked only between histories
-where $\Obs'$ is non-empty.
-The coordination mechanism ensures that excluded histories (those with
-$\Obs' = \emptyset$) are never reached---e.g., total-order broadcast
-prevents non-serialized histories from arising.
-This convention differs from the main Complete CALM theorem, where
-$\Obs(H) = \emptyset$ at a reachable future constitutes a monotonicity
-failure; here, $\Obs'(H) = \emptyset$ marks a history that the
-coordination mechanism is responsible for excluding.
-Thus proper coordination changes the admitted history space; it is not
-an application of ordinary monotonicity to the original unrestricted
-future relation.
+excluded histories; the coordination mechanism ensures these never
+arise (e.g., total-order broadcast prevents non-serialized histories).
+Monotonicity of the variant is ordinary monotonicity over
+$\mathsf{Adm}(\Spec')$: histories outside $\mathsf{Adm}(\Spec')$
+are simply not in scope---they are unreachable by construction.
+This differs from the main Complete CALM theorem only in that the
+original specification's $\Obs(H) = \emptyset$ at a reachable future
+constitutes a monotonicity failure, whereas the variant's
+$\Obs'(H) = \emptyset$ marks a history the coordination mechanism
+excludes.
 Complete CALM provides the test: check whether the variant is
 monotone over its admitted histories.
 If it is, the coordination suffices.
