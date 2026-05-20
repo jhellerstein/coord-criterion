@@ -172,15 +172,17 @@ The framework is minimal, enabling its coverage to be broad. Our contributions i
 % ================================================================
 
 Consider a register replicated at two nodes, each accepting local
-read and write operations and propagating updates via messages.
+read/write operations and propagating updates via messages.
 We analyze two specifications over the same histories---one requiring
-coordination, one not---to illustrate how the choice of outcome
+coordination, one not---illustrating how the choice of outcome
 structure determines the boundary.
 
 \paragraph{Setup.}
 A history is a partially ordered set of events under Lamport's
-happens-before relation~\cite{lamport1978time}: program order within
-a node, send-before-receive across nodes, and transitivity.
+happens-before relation~\cite{lamport1978time}.
+One event happens before another if it precedes it in program order
+at the same node, or if it is a message send whose corresponding
+receive precedes the other event, or by transitivity.
 Events not related by happens-before are \emph{concurrent}.
 
 The register initially holds $0$.
