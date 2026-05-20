@@ -587,8 +587,8 @@ Condition~(i) says the environment can produce any causally coherent
 execution.
 Condition~(ii) says every admissible outcome can be safely exposed:
 no outcome need be withheld to avoid future contradiction.
-The operational theorem (Section~\ref{sec:operational}) proves that
-this semantic property is equivalent to the existence of a correct
+The operational adequacy theorem (Section~\ref{sec:operational}) shows
+that this semantic property corresponds to the existence of a correct
 coordination-free I/O-automaton implementation.
 
 \begin{example}[Coordination in the register]
@@ -602,15 +602,81 @@ coordination-free I/O-automaton implementation.
 \end{example}
 
 %----------------------------------------------------------------
-\subsection{Operational Characterization}
+\subsection{Complete CALM}
+\label{sec:complete-calm}
+%----------------------------------------------------------------
+
+The definitions above yield a clean semantic criterion: a single
+property of the specification determines whether coordination-free
+implementation is possible.
+
+\begin{definition}[Monotonicity of a specification]
+  \label{def:monotone}
+  A specification $\Spec = (E, \Obs, \Ord)$ is \emph{monotone} if
+  for all $H_1, H_2 \in \Hist$ with $H_1 \hext H_2$ and all
+  $o \in \Obs(H_1)$, there exists $o' \in \Obs(H_2)$ with $o \Ord o'$.
+\end{definition}
+
+\noindent
+This generalizes CALM's notion of monotonicity from a specific mapping
+(input facts $\to$ output facts, ordered by set inclusion) to an
+arbitrary one (histories $\to$ outcome sets, ordered by any
+user-defined refinement $\Ord$).
+Monotonicity says: once an outcome is admitted at a history, every
+future admits a compatible refinement.
+A failure is witnessed by a \emph{future-inconsistent outcome}:
+$o \in \Obs(H_1)$ with some future $H_2$ admitting no refinement.
+The register witness from Section~\ref{sec:example} is exactly such a
+failure: $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
+r_p{\,\mapsto}2 \rangle$ has no prefix-extension at $H_2$.
+
+\begin{theorem}[Complete CALM]
+  \label{thm:complete-calm}
+  A specification is semantically coordination-free
+  (Definition~\ref{def:coordfree}) iff it is monotone.
+\end{theorem}
+
+\begin{proof}
+  Immediate: condition~(ii) of Definition~\ref{def:coordfree}
+  requires every outcome to be future-consistent, which is the
+  definition of monotone.
+\end{proof}
+
+\noindent
+The equivalence is definitional---but is it \emph{real}?
+Does this semantic property correspond to the existence of a concrete
+distributed protocol that is correct under all adversarial schedules?
+The next subsection answers yes.
+
+\begin{example}[Applying Complete CALM to the running example]
+  $\Spec_{\mathit{cc}}$ is monotone: each process's causal view
+  remains valid under all extensions---concurrent writes may be
+  perceived in different orders at different processes, and no future
+  delivery contradicts an earlier perception.
+  By Complete CALM, causal consistency admits a coordination-free
+  implementation.
+
+  $\Spec_{\mathit{lin}}$ is not monotone (the witness from
+  Section~\ref{sec:example}).
+  By Complete CALM, every correct implementation of linearizability
+  must coordinate---it must suppress some admissible
+  future or withhold some future-inconsistent outcome.
+  Section~\ref{sec:well-coord-section} characterizes when such
+  coordination suffices to restore monotonicity of the resolved
+  specification.
+\end{example}
+
+%----------------------------------------------------------------
+\subsection{Operational Adequacy}
 \label{sec:operational}
 %----------------------------------------------------------------
 
-We adopt I/O automata~\cite{lynch1996distributed} as our operational
-model (formal definitions in Appendix~\ref{app:operational}).
-Processes are standard asynchronous I/O automata: input actions are
-client invocations and message arrivals; output actions are client
-responses and message sends; internal actions are local computation.
+We ground the semantic criterion in the standard I/O automaton
+model~\cite{lynch1996distributed} (formal definitions in
+Appendix~\ref{app:operational}).
+Processes are asynchronous I/O automata: input actions are client
+invocations and message arrivals; output actions are client responses
+and message sends; internal actions are local computation.
 An execution induces a history $H$ as defined in
 Section~\ref{sec:histories}.
 
@@ -684,7 +750,7 @@ itself a coordination strategy.
   recorded in $H$.
 \end{definition}
 
-\begin{theorem}[Complete CALM, operational adequacy]
+\begin{theorem}[Operational adequacy]
   \label{thm:calm-operational}
   A well-formed specification $\Spec$ admits a correct
   coordination-free distributed implementation iff $\Spec$ is
@@ -718,91 +784,15 @@ itself a coordination strategy.
 \end{proof}
 
 \noindent
-This is not merely a definition: in the standard I/O-automaton model,
-monotone response interfaces are implemented by a concrete protocol,
-and non-monotone interfaces admit a standard indistinguishability
-obstruction.
-The semantic characterization (Definition~\ref{def:coordfree}) is a
-corollary: condition~(i) corresponds to the environment's power to
-produce any admissible execution, and condition~(ii) corresponds to
-the process responding without knowing which future will materialize.
-
-%----------------------------------------------------------------
-\subsection{Complete CALM}
-\label{sec:complete-calm}
-%----------------------------------------------------------------
-
-The operational theorem yields a clean semantic criterion used
-throughout the applications: a single property of the specification
-determines whether coordination-free implementation is possible.
-
-\begin{definition}[Monotonicity of a specification]
-  \label{def:monotone}
-  A specification $\Spec = (E, \Obs, \Ord)$ is \emph{monotone} if
-  for all $H_1, H_2 \in \Hist$ with $H_1 \hext H_2$ and all
-  $o \in \Obs(H_1)$, there exists $o' \in \Obs(H_2)$ with $o \Ord o'$.
-\end{definition}
-
-\noindent
-This generalizes CALM's notion of monotonicity from a specific mapping
-(input facts $\to$ output facts, ordered by set inclusion) to an
-arbitrary one (histories $\to$ outcome sets, ordered by any
-user-defined refinement $\Ord$).
-Monotonicity says: once an outcome is admitted at a history, every
-future admits a compatible refinement.
-A failure is witnessed by a \emph{future-inconsistent outcome}:
-$o \in \Obs(H_1)$ with some future $H_2$ admitting no refinement.
-The register witness from Section~\ref{sec:example} is exactly such a
-failure: $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
-r_p{\,\mapsto}2 \rangle$ has no prefix-extension at $H_2$.
-
-\begin{theorem}[Complete CALM]
-  \label{thm:complete-calm}
-  A well-formed specification admits a correct coordination-free
-  implementation iff it is monotone.
-\end{theorem}
-
-\begin{proof}
-  Monotonicity is exactly semantic coordination-freedom
-  (Definition~\ref{def:coordfree}): condition~(ii) requires every
-  outcome to be future-consistent, which is the definition of
-  monotone.
-  Theorem~\ref{thm:calm-operational} grounds this in the I/O
-  automaton model.
-\end{proof}
-
-\begin{example}[Applying Complete CALM to the running example]
-  $\Spec_{\mathit{cc}}$ is monotone: each process's causal view
-  remains valid under all extensions---concurrent writes may be
-  perceived in different orders at different processes, and no future
-  delivery contradicts an earlier perception.
-  By Complete CALM, causal consistency admits a coordination-free
-  implementation.
-
-  $\Spec_{\mathit{lin}}$ is not monotone (the witness from
-  Section~\ref{sec:example}).
-  By Complete CALM, every correct implementation of linearizability
-  must coordinate---it must suppress some admissible
-  future or withhold some future-inconsistent outcome.
-  Section~\ref{sec:well-coord-section} characterizes when such
-  coordination suffices to restore monotonicity of the resolved
-  specification.
-\end{example}
-
-\noindent
 The characterization is tight: any specification
 with even one future-inconsistent outcome requires coordination
 (no weaker condition suffices); conversely, every monotone
 specification admits a coordination-free implementation (no stronger
 condition is implied).
-
 The result recovers the structure of Ameloot et al.'s characterization
 in a minimalist setting (histories, outcomes, refinement order)---the
 proof needs only these three ingredients.
-The operational content (Theorem~\ref{thm:calm-operational}) is that
-this semantic condition exactly characterizes when a concrete
-distributed protocol exists that is correct under all adversarial
-schedules.
+
 This lifting yields three dividends.
 First, \emph{generality}: the criterion applies to any specification
 in any computational model.
