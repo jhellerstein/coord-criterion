@@ -2471,6 +2471,56 @@ identically: restrict $\mathcal{A}$ to histories consistent with
 configuration constraint $\mathbf{C}$.
 
 
+\section{Explaining Classical Coordination Requirements}
+\label{app:classical}
+
+Table~\ref{tab:classical} illustrates how the monotonicity criterion
+explains coordination requirements across classical distributed
+computing problems.
+In each case, the specification is instantiated as
+$(E, \Obs, \Ord)$ and the source of non-monotonicity (or its absence)
+is identified.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Specification} & \textbf{Outcomes} & \textbf{$\Ord$} &
+\textbf{Non-monotonicity source} \\
+\midrule
+Linearizable register & Op.\ sequences & Prefix ext.\ &
+  Total-order commitment \\
+Atomic snapshot & Value vectors & Prefix ext.\ &
+  Linearization-point commitment \\
+Global snapshot & Downward-closed cuts & Set incl.\ &
+  --- (monotone) \\
+$k$-set agreement & Decision maps & Map ext.\ &
+  Diversity bound exhausted \\
+Strong renaming & Injective name maps & Map ext.\ &
+  Namespace depends on membership \\
+Consensus (authority) & Authority sequences & Prefix ext.\ &
+  Authority invalidated by rival \\
+Consensus (values) & Decision maps & Map ext.\ &
+  --- (monotone under fixed auth.) \\
+\bottomrule
+\end{tabular}
+\caption{Classical coordination requirements explained by monotonicity.}
+\label{tab:classical}
+\end{table}
+
+\noindent
+The pattern is uniform: non-monotonicity arises from committing to
+structure---total orders, cardinality bounds, membership-dependent
+namespaces---that a causally admissible extension can invalidate.
+Monotonicity holds when commitments are partial-order-stable
+(downward-closed cuts, accumulating facts, growing maps under fixed
+authority).
+Each row is a direct instantiation of the framework; no
+problem-specific machinery is required beyond choosing $\Obs$ and
+$\Ord$.
+
+
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
