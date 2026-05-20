@@ -227,15 +227,18 @@ differently; there is no requirement of a single global order.
 Refinement is causal-prefix extension: adding operations while
 preserving existing causal order.
 
-At $H_1$, $p$'s view orders $\mathsf{w}_p < \mathsf{w}_q < r_p$,
-returning $2$.
-At $H_2$, $q$'s view orders $\mathsf{w}_q < \mathsf{w}_p < r_q$,
-returning $1$.
-The two views disagree on the order of the concurrent writes---but
-under CC this is perfectly valid: each view is consistent with its
-own causal past.
-The outcome at $H_2$ extends the outcome at $H_1$ by adding a new
-causally valid view, rather than contradicting the first.
+At $H_1$, the observable partial order records:
+$\mathsf{w}_q \rightarrow r_p$ (delivery creates causality) and
+$r_p \mapsto 2$ (consistent with $\mathsf{w}_q$ preceding the read).
+The two writes remain unordered---they are concurrent.
+At $H_2$, the partial order grows: it adds
+$\mathsf{w}_p \rightarrow r_q$ and $r_q \mapsto 1$.
+This is a valid extension: the new edges are causally later, and the
+concurrent writes \emph{remain} unordered---no earlier commitment is
+contradicted.
+Each process sees a view consistent with its own causal past; the
+views disagree on the relative order of concurrent writes, but CC
+permits this.
 Every outcome has a compatible extension at every future.
 No coordination is needed.
 
