@@ -964,6 +964,11 @@ non-monotonicity witnesses are all confined to one side of every
 partition is
 distributed-monotone because no partition can produce the dangerous
 future.
+A concrete example: collaborative text editing via
+CRDTs~\cite{shapiro2011crdt} is distributed-monotone (remote
+insertions merge without conflict), but simultaneous keystrokes at a
+single keyboard require a local mutex to serialize---a non-monotone
+resolution so routine it goes unmentioned in the CRDT literature.
 
 \begin{theorem}[Complete CAP]
   \label{thm:cap}
@@ -997,11 +1002,6 @@ and monotone $\Rightarrow$ coordination-free.
 The gap between monotonicity and distributed-monotonicity is exactly
 the same-side non-monotonicity that coordination within a connected
 component can resolve without cross-partition communication.
-A concrete example: collaborative text editing via
-CRDTs~\cite{shapiro2011crdt} is distributed-monotone (remote
-insertions merge without conflict), but simultaneous keystrokes at a
-single keyboard require a local mutex to serialize---a non-monotone
-resolution so routine it goes unmentioned in the CRDT literature.
 Complete CAP is a semantic characterization: it identifies when no
 cross-partition coordination is required for safety, not how a process
 algorithmically selects an outcome.
