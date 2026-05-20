@@ -502,15 +502,7 @@ and message deliveries ($E_{\mathit{recv}}$).
 An implementation determines which futures can arise; downward-closure
 means every prefix of a realizable history is itself realizable.
 The central question: can an implementation preserve all of the
-specification's possibilities, or must it narrow them---by suppressing
-futures or withholding outcomes?
-If it must, we say the specification \emph{requires coordination}.
-Coordination takes one of two forms: \emph{history suppression}
-(preventing certain futures from arising---e.g., via locking or
-serialization) or \emph{outcome suppression} (withholding certain
-admissible outcomes to avoid future contradiction---e.g., deferring
-a response until safety is confirmed).
-A specification is coordination-free when neither is necessary:
+specification's possibilities, or must it narrow them?
 
 \begin{definition}[Future-consistent outcome]
   \label{def:future-consistent}
@@ -533,10 +525,10 @@ A specification is coordination-free when neither is necessary:
 \end{definition}
 
 \noindent
-Condition~(i) says the implementation cannot prevent any causally
-coherent future from arising.
-Condition~(ii) says every admissible outcome can be safely exposed:
-no outcome need be withheld to avoid future contradiction.
+If either condition fails, the specification \emph{requires
+coordination}: the implementation must either prevent certain futures
+(history suppression---e.g., locking) or withhold certain outcomes
+(outcome suppression---e.g., deferred response).
 The operational adequacy theorem (Section~\ref{sec:operational}) shows
 that this semantic property corresponds to the existence of a correct
 coordination-free I/O-automaton implementation.
