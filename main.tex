@@ -957,6 +957,28 @@ If not, more restriction is needed.
   encoding.
 \end{proof}
 
+\begin{example}[Consensus as proper coordination]
+  \label{ex:consensus}
+  Agreement protocols decompose into two phases with different
+  monotonicity profiles.
+  \emph{Authority closure} (leader election, view change) selects
+  which process may expose decisions.
+  At $H_1$, multiple authorities may be admissible; committing to
+  authority $a$ yields an outcome $o \in \Obs(H_1)$.
+  But a future $H_2$ may establish a different authority $a'$ as the
+  sole admissible one, leaving $o$ with no refinement---authority
+  closure is non-monotone.
+  \emph{Value exposure} under a fixed authority is monotone: once
+  authority is established, decisions only accumulate (the decision
+  map grows under $\Ord$), and no future extension retracts a
+  previously exposed decision.
+  The coordinated variant restricts admissible histories to those
+  where authority is established (the non-monotone phase is
+  discharged); the residual value-exposure interface is monotone.
+  This explains the structure of Multi-Paxos: leader election
+  coordinates; log append is coordination-free.
+\end{example}
+
 \noindent
 The separation is the shift from coordination-\emph{avoiding}
 programs to properly \emph{coordinated} specifications: Complete CALM
