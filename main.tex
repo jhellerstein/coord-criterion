@@ -233,7 +233,7 @@ $r_p \mapsto 2$ (consistent with $\mathsf{w}_q$ preceding the read).
 The two writes remain unordered---they are concurrent.
 At $H_2$, the partial order grows: it adds
 $\mathsf{w}_p \rightarrow r_q$ and $r_q \mapsto 1$.
-This is a valid extension: the new edges are causally later, and the
+This is a valid extension: the new edges are causally later than $H_1$'s events, and the
 concurrent writes \emph{remain} unordered---no earlier commitment is
 contradicted.
 Each process sees a view consistent with its own causal past; the
@@ -242,13 +242,13 @@ permits this.
 Every outcome has a compatible extension at every future.
 No coordination is needed.
 
-\medskip\noindent
+\smallskip\noindent
 The two specifications share the same histories but differ in outcome
 structure: linearizability demands a single global order (fragile
 under extension); CC permits per-process views (stable under
 extension).
-The same analysis applies to concurrent threads on a single
-machine---the criterion depends on the happens-before structure, not
+The analysis across distributed nodes applies to concurrent threads on a single
+node---the criterion depends on the happens-before structure, not
 the mechanism of concurrency.
 
 
@@ -303,7 +303,7 @@ clients).
 In the register example, $E_{\mathit{iface}}$ includes
 $\mathit{inv}(w)$, $\mathit{resp}(w)$, $\mathit{inv}(r)$,
 $\mathit{resp}(r, v)$; the remaining sets hold local computation and
-inter-replica messages.
+internal messages.
 
 \begin{definition}[History]
   \label{def:history}
@@ -315,7 +315,8 @@ inter-replica messages.
   $\mu : E \cap E_{\mathit{recv}} \hookrightarrow
   E \cap E_{\mathit{send}}$,
   with $\mu(r) \rightarrow r$ for every receive $r$
-  (each send precedes its matching receive).
+  (every receive has a unique matching send that precedes it;
+  sends need not have a matching receive).
   A history is \emph{well-formed} if it satisfies these constraints.
   We write $\Hist$ for the set of well-formed histories over $E$.
 \end{definition}
