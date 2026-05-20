@@ -835,47 +835,34 @@ outcome is needed where no execution can go.
 Complete CALM then applies directly to $\Spec'$: if it is monotone,
 the coordination suffices; otherwise more restriction is needed.
 
-\begin{theorem}[Interface separation from relational-transducer
-  CALM]
+\begin{theorem}[Separation from relational-transducer CALM]
   \label{thm:separation}
-  There exist non-monotone specifications with properly coordinated
-  variants that Complete CALM can verify, but for which
-  relational-transducer CALM has no specification-level judgment:
-  its verdict is necessarily attached to a chosen program boundary,
-  not to the output specification of the variant.
+  Relational-transducer CALM cannot verify proper coordination:
+  determining whether a stratified Datalog program computes a
+  monotone output function is undecidable.
 \end{theorem}
 
 \begin{proof}
-  Linearizability is non-monotone (Section~\ref{sec:example}).
-  Define the variant $\Spec'$ by restricting to histories in which
-  $\rightarrow$ totally orders $E_{\mathit{iface}}$ (all interface
-  operations are serialized---no two are concurrent).
-  In such histories, outcomes grow by prefix extension of the
-  serialized input sequence; thus $\Spec'$ is monotone over its
-  admitted histories, and Complete CALM certifies the residual
-  interface $\Spec'$ directly.
+  Consider a non-monotone specification $\Spec$ implemented by a
+  Datalog program $P$ with negation.
+  Adding coordination rules (e.g., a consensus protocol) yields a
+  program $P'$ that still contains negation---coordination adds
+  rules but does not remove negation symbols.
+  The question ``is the output of $P'$ monotone?'' asks whether the
+  coordinated variant's residual interface is coordination-free.
 
-  We show relational-transducer CALM does not provide a
-  specification-level judgment for this question.
-  Two kinds of Datalog encodings are possible.
+  CALM's syntactic test (presence of negation) answers ``no''---but
+  this is a false negative; the coordination may have discharged the
+  non-monotonicity.
+  Nor can a more sophisticated syntactic analysis help: stratified
+  Datalog with negation computes all PTIME functions on ordered
+  structures~\cite{immerman1986relational}, and determining whether
+  an arbitrary PTIME function is monotone is undecidable (by Rice's
+  theorem applied to the class of PTIME-computable functions).
 
-  \emph{Direct encoding.}
-  If the program is itself responsible for constructing or validating
-  the linearization relation from concurrent or unordered events,
-  then encoding the linearization as a set of position-value facts
-  $\{\mathit{pos}(i, v)\}$ under set inclusion requires enforcing
-  uniqueness and completeness of positions---one value per
-  position, no gaps---which is non-monotone in Datalog
-  (Proposition~\ref{prop:prefix-negation}, formalized in
-  Appendix~\ref{app:hierarchy}).
-  Relational-transducer CALM classifies any such program as requiring
-  coordination, even though the residual output (the linearization
-  prefix) is monotone.
-
-  Complete CALM tests the specification itself: it verifies that
-  $\Spec'$ is monotone, independent of any program encoding.
-  CALM's verdict depends on program syntax; Complete CALM's depends
-  on the output specification.
+  Complete CALM bypasses this barrier by testing the output
+  specification $\Spec'$ directly---a semantic property of
+  $(E, \Obs', \Ord)$, not a syntactic property of any program.
 \end{proof}
 
 \begin{example}[Consensus as proper coordination]
@@ -1117,30 +1104,6 @@ the set of admissible histories to those consistent with each model's
 information assumptions yields the corresponding characterization as
 an instance.
 Formal instantiations appear in Appendix~\ref{app:hierarchy}.
-
-%----------------------------------------------------------------
-\subsection{Expressivity Beyond Set Inclusion}
-%----------------------------------------------------------------
-
-Complete CALM can diagnose coordination-free specifications that
-relational-transducer CALM cannot express.
-We use prefix extension as a witness.
-
-\begin{proposition}[Prefix extension needs negation]
-  \label{prop:prefix-negation}
-  Encoding prefix extension as a Datalog program over set-inclusion
-  facts requires negation.
-\end{proposition}
-
-\begin{proof}[Proof sketch]
-  Encoding a sequence as position-value facts
-  $\{\mathit{pos}(i, v)\}$ under set inclusion admits forks (two
-  values at one position).
-  More generally, any refinement order requiring mutual exclusion
-  between outcomes needs negation in Datalog---set inclusion cannot
-  express such constraints monotonically.
-  Full proof in Appendix~\ref{app:hierarchy}.
-\end{proof}
 
 
 % ================================================================
