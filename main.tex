@@ -309,7 +309,7 @@ local computation and inter-node messages.
 \begin{definition}[History]
   \label{def:history}
   A \emph{history} is a pair $H = (E, \rightarrow)$ where
-  $E \subseteq E_{\mathit{iface}} \cup E_{\mathit{int}} \cup
+  $E \subseteq E_{\mathit{inv}} \cup E_{\mathit{resp}} \cup E_{\mathit{int}} \cup
   E_{\mathit{send}} \cup E_{\mathit{recv}}$,
   $\rightarrow$ is a strict partial order on $E$, and
   there is an injective matching function on recvs
@@ -332,10 +332,10 @@ We impose no fairness or progress assumptions.
   \label{ex:h1-formal}
   Events and their happens-before order:
   \\ \noindent
-  --- Interface: $E_{\mathit{iface}} = \{
-   \mathit{inv}(w_p(1))$, $\mathit{resp}(w_p(1))$,
-  $\mathit{inv}(w_q(2))$, $\mathit{resp}(w_q(2))$,
-  $\mathit{inv}(r_p)$, $\mathit{resp}(r_p, 2)\}$.
+  --- Interface: $E_{\mathit{inv}} = \{\mathit{inv}(w_p(1)),
+  \mathit{inv}(w_q(2)), \mathit{inv}(r_p)\}$,
+  \quad $E_{\mathit{resp}} = \{\mathit{resp}(w_p(1)),
+  \mathit{resp}(w_q(2)), \mathit{resp}(r_p, 2)\}$.
   \\ \noindent
   --- Messages: $E_{\mathit{send}} = \{\mathit{send}(w_q)\}$, 
    \quad $E_{\mathit{recv}} = \{\mathit{recv}(w_q)\}$.
@@ -376,8 +376,8 @@ The past is fixed; only the future is open.
   \label{ex:h2-formal}
   $H_2$ adds the following to $H_1$:
   \\ \noindent
-  --- New interface events: $\{\mathit{inv}(r_q)$,
-  $\mathit{resp}(r_q, 1)\}$.
+  --- New interface events: $E_{\mathit{inv}} \mathrel{+}= \{\mathit{inv}(r_q)\}$,
+  \quad $E_{\mathit{resp}} \mathrel{+}= \{\mathit{resp}(r_q, 1)\}$.
   \\ \noindent
   --- New message events: $\{\mathit{send}(w_p)$\} at $p$,
   $\{\mathit{recv}(w_p)\}$ at $q$.
