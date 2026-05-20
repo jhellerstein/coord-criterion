@@ -185,46 +185,52 @@ Events not related by happens-before are \emph{concurrent}.
 
 The register initially holds $0$.
 Nodes $p$ and $q$ each write concurrently:
-$\mathsf{w}_p(1)$ at $p$, $\mathsf{w}_q(2)$ at $q$.
-History $H_1$: both writes complete; $q$'s write is delivered to $p$;
-$p$ reads and returns $2$.
-Extend to $H_2$: $p$'s write is delivered to $q$; $q$ reads and
-returns $1$.
-$H_2$ is a valid future of $H_1$ (only causally later events added).
+$\mathsf{w}_p(1)$ at $p$, $\mathsf{w}_q(2)$ at $q$ (neither
+happens-before the other).
+In history $H_1$, both writes complete, $q$'s write is delivered to
+$p$, and $p$ then reads the register, returning $2$.
+We extend to $H_2$ by delivering $p$'s write to $q$, after which $q$
+reads and returns $1$.
+Since $H_2$ adds only causally later events, it is a valid future of
+$H_1$.
 
 \paragraph{Linearizability requires coordination.}
 Under linearizability~\cite{herlihy1990linearizability}, outcomes are
 total orders on completed operations consistent with happens-before,
 with reads returning the most recent preceding write.
-Refinement is prefix extension.
+Refinement is prefix extension: a longer sequence refines a shorter
+one.
 
 At $H_1$, the outcome $o_1 = \langle \mathsf{w}_p(1),
 \mathsf{w}_q(2), r_p{\mapsto}2 \rangle$ is admissible: it places
 $\mathsf{w}_q$ before $r_p$ (consistent with delivery) and explains
 $r_p = 2$.
-At $H_2$, explaining $r_q = 1$ requires $\mathsf{w}_q <
-\mathsf{w}_p$, but explaining $r_p = 2$ requires $\mathsf{w}_p <
-\mathsf{w}_q$---a contradiction.
-No outcome at $H_2$ extends $o_1$.
-This is non-monotonicity: an outcome admitted at $H_1$ has no
-compatible extension at $H_2$.
+But at $H_2$, explaining $r_q = 1$ requires $\mathsf{w}_q <
+\mathsf{w}_p$, while explaining $r_p = 2$ still requires
+$\mathsf{w}_p < \mathsf{w}_q$---a contradiction.
+No outcome at $H_2$ extends $o_1$: the outcome admitted at $H_1$ has
+no compatible extension at $H_2$.
+This is non-monotonicity.
 The operational consequence: before responding $r_p \mapsto 2$,
 process $p$ must ensure $q$ will not independently commit to the
 opposite write order---this requires coordination.
 
 \paragraph{Causal consistency does not.}
 Under causal consistency~\cite{ahamad1995causal}, each process
-observes a causal view---a partial order on operations in its causal
-past.
-Different processes may order concurrent writes differently.
-Refinement is causal-prefix extension.
+observes a \emph{causal view}---a partial order on operations in its
+causal past.
+Crucially, different processes may order concurrent writes
+differently; there is no requirement of a single global order.
+Refinement is causal-prefix extension: adding operations while
+preserving existing causal order.
 
 At $H_1$, $p$'s view orders $\mathsf{w}_p < \mathsf{w}_q < r_p$,
 returning $2$.
 At $H_2$, $q$'s view orders $\mathsf{w}_q < \mathsf{w}_p < r_q$,
 returning $1$.
-The two views disagree on the order of concurrent writes---but CC
-permits this.
+The two views disagree on the order of the concurrent writes---but
+under CC this is perfectly valid: each view is consistent with its
+own causal past.
 The outcome at $H_2$ extends the outcome at $H_1$ by adding a new
 causally valid view, rather than contradicting the first.
 Every outcome has a compatible extension at every future.
@@ -232,7 +238,9 @@ No coordination is needed.
 
 \medskip\noindent
 The two specifications share the same histories but differ in outcome
-structure.
+structure: linearizability demands a single global order (fragile
+under extension); CC permits per-process views (stable under
+extension).
 The same analysis applies to concurrent threads on a single
 machine---the criterion depends on the happens-before structure, not
 the mechanism of concurrency.
