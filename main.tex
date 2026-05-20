@@ -573,10 +573,11 @@ suffices to prove that linearizability requires coordination.
 \begin{theorem}[Complete CALM]
   \label{thm:complete-calm}
   A specification is coordination-free
-  (Definition~\ref{def:coordfree}) iff it is monotone.
+  iff it is monotone.
 \end{theorem}
 
 \begin{proof}
+  The proof comes directly from Definition~\ref{def:coordfree}.
   Condition~(ii) requires every outcome to be future-consistent,
   which is the definition of monotone.
   Condition~(i) follows: if every outcome at every history survives
@@ -584,10 +585,11 @@ suffices to prove that linearizability requires coordination.
 \end{proof}
 
 \noindent
-The equivalence is definitional, but
-in keeping with the CALM Theorem~\cite{ameloot2013relational}
+Given our framework, this result is definitional.
+In keeping with the CALM Theorem~\cite{ameloot2013relational}
 we present this much simpler yet more general
-result as a theorem on its own. However, a natural question arises:
+result as a theorem on its own. However, a more involved question arises 
+naturally:
 does this semantic notion faithfully
 capture the standard operational meaning---processes responding from
 local state under adversarial scheduling, with a concrete protocol
@@ -647,6 +649,8 @@ interface:
         Recording an additional response can only restrict
         admissibility: if $H'$ extends $H$ by response events,
         $\Obs(H') \subseteq \Obs(H)$.
+        (This is guaranteed by the I/O automaton model: output
+        actions are irrevocable once emitted.)
   \item \emph{Refinement coherence:} if $o \Ord o'$ and $o(e) = v$,
         then $o'(e) = v$.
   \item \emph{Response totality:} for every invocation $e$ in $H$
