@@ -684,12 +684,14 @@ knowledge that coordination provides.
 \end{definition}
 
 \noindent
-This is stronger than Gilbert and Lynch's availability
-condition~\cite{gilbert2002cap}, which forbids waiting only for
-remote messages ($E_{\mathit{recv}}$).
-Our definition additionally forbids waiting for other client
-invocations ($E_{\mathit{inv}}$), capturing single-node coordination
-mechanisms such as mutexes and transaction serialization.
+In Gilbert and Lynch's distributed model~\cite{gilbert2002cap},
+all inputs (including client requests) arrive over the network, so
+their availability condition---no waiting for messages---already
+covers invocations.
+Our definition generalizes to local concurrency: on a single node,
+a client invocation is a local event, and ``no further input''
+additionally forbids waiting for other concurrent operations
+(e.g., mutex acquisition, transaction serialization).
 Complete CAP (Section~\ref{sec:complete-cap}) uses the weaker,
 partition-only notion.
 
