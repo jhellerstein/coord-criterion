@@ -155,9 +155,8 @@ The framework is minimal, enabling its coverage to be broad. Our contributions i
         (Sections~\ref{sec:calm-instance} and~\ref{sec:applications}):
         subsumes relational-transducer CALM and recovers boundaries
         for isolation levels, I-confluence, and CRDTs.
-        Appendix~\ref{app:classical} explains classical distributed
-        coordination requirements (consensus, snapshots, renaming)
-        as further instances.
+        Classical results from distributed
+        systems fall out naturally as further instances (Appendix~\ref{app:classical}).
   \item \emph{Coordination-free frontier}
         (Appendix~\ref{app:minimality}): characterizes the strongest
         coordination-free weakenings for a fixed observation
@@ -191,8 +190,9 @@ propagation message carrying $x$.
 
 \paragraph{Two specifications.}
 We write outcomes as sequences of completed operations.
-%
-$\Spec_{\mathit{cc}}$ (\textbf{causal
+
+\noindent
+--- $\Spec_{\mathit{cc}}$ (\textbf{causal
 consistency}~\cite{ahamad1995causal}): each process observes a
 \emph{causal history}---a partial order on the operations in its
 causal past, consistent with happens-before.
@@ -202,8 +202,9 @@ causal past.
 Refinement is \emph{causal-prefix extension}: $o_1 \Ord o_2$ iff
 $o_2$ extends $o_1$ by adding operations while preserving existing
 order.
-%
-$\Spec_{\mathit{lin}}$
+
+\noindent
+--- $\Spec_{\mathit{lin}}$
 (\textbf{linearizability}~\cite{herlihy1990linearizability}): there
 exists a \emph{single} total order on all completed operations,
 consistent with happens-before (i.e., if operation $A$'s response
@@ -213,8 +214,8 @@ write.
 In the asynchronous message-passing model, happens-before subsumes
 real-time precedence: if $A$ completes before $B$ begins at the same
 or a causally connected process, happens-before records this.
-This is the standard atomic-register semantics used by Gilbert and
-Lynch~\cite{gilbert2002cap}.
+% This is the standard atomic-register semantics used by Gilbert and
+% Lynch~\cite{gilbert2002cap}.
 Refinement is \emph{prefix extension}: $o_1 \Ord o_2$ iff $o_1$ is a
 prefix of $o_2$.
 
@@ -262,9 +263,9 @@ $\mathsf{w}_q < \mathsf{w}_p$ (so $\mathsf{w}_p$ is the most recent
 write before $r_q$).
 These force $\mathsf{w}_p < \mathsf{w}_q$ and
 $\mathsf{w}_q < \mathsf{w}_p$---a contradiction.
-No linearizable outcome at $H_2$ extends $o_1$.
-Non-monotonicity: $o_1 \in \Obs(H_1)$ but
-$\nexists\, o' \in \Obs(H_2) : o_1 \Ord o'$.
+No linearizable outcome at $H_2$ extends $o_1$: the outcome
+admitted at $H_1$ has no compatible extension at $H_2$.
+This is non-monotonicity.
 The operational consequence: before committing to the order
 $\mathsf{w}_p < \mathsf{w}_q$ (by responding $r_p \mapsto 2$),
 process $p$ must ensure that $q$ will not independently commit to the
