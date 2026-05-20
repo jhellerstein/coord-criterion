@@ -185,12 +185,12 @@ in one node's program order, or if $e_1$ is a message send
 and $e_2$ is the corresponding receive, or transitively.
 Event pairs that are not ordered are \emph{concurrent}.
 
-We consider two histories of this register.
-The register initially holds $0$; nodes $p$ and $q$ each write
+Assume the register initially holds $0$; nodes $p$ and $q$ each write
 concurrently: $\mathsf{w}_p(1)$ at $p$, $\mathsf{w}_q(2)$ at $q$.
+We consider two subsequent histories.
 In history $H_1$, both writes complete, $q$'s write is delivered to
 $p$, and $p$ then reads the register, returning $2$.
-We extend to $H_2$ by delivering $p$'s write to $q$, after which $q$
+History $H_2$ extends $H_1$ by delivering $p$'s write to $q$, after which $q$
 reads and returns $1$.
 Since $H_2$ adds only causally later events, it is a valid future of
 $H_1$.
@@ -206,9 +206,10 @@ At $H_1$, the outcome $o_1 = \langle \mathsf{w}_p(1),
 \mathsf{w}_q(2), r_p{\mapsto}2 \rangle$ is admissible: it places
 $\mathsf{w}_q$ before $r_p$ (consistent with delivery) and explains
 $r_p = 2$.
-But at $H_2$, explaining $r_q = 1$ requires $\mathsf{w}_q <
-\mathsf{w}_p$, while explaining $r_p = 2$ still requires
-$\mathsf{w}_p < \mathsf{w}_q$---a contradiction.
+But at $H_2$, explaining $r_q = 1$ requires placing $\mathsf{w}_p$
+after $\mathsf{w}_q$ in the linearization (so $\mathsf{w}_q$ is the
+most recent write before $r_q$), while explaining $r_p = 2$ requires
+the opposite order---a contradiction.
 No outcome at $H_2$ extends $o_1$: the outcome admitted at $H_1$ has
 no compatible extension at $H_2$.
 This is non-monotonicity.
