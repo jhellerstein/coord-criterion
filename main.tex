@@ -180,15 +180,14 @@ structure determines the boundary.
 \paragraph{Setup.}
 A history is a partially ordered set of events under Lamport's
 happens-before relation~\cite{lamport1978time}.
-One event happens before another if it precedes it in program order
-at the same node, or if it is a message send whose corresponding
-receive precedes the other event, or by transitivity.
-Events not related by happens-before are \emph{concurrent}.
+Event $e_1$ \emph{happens before} $e_2$ if $e_1$ precedes $e_2$
+in one node's program order, or if $e_1$ is a message send
+and $e_2$ is the corresponding receive, or transitively.
+Event pairs that are not ordered are \emph{concurrent}.
 
-The register initially holds $0$.
-Nodes $p$ and $q$ each write concurrently:
-$\mathsf{w}_p(1)$ at $p$, $\mathsf{w}_q(2)$ at $q$ (neither
-happens-before the other).
+We consider two histories of this register.
+The register initially holds $0$; nodes $p$ and $q$ each write
+concurrently: $\mathsf{w}_p(1)$ at $p$, $\mathsf{w}_q(2)$ at $q$.
 In history $H_1$, both writes complete, $q$'s write is delivered to
 $p$, and $p$ then reads the register, returning $2$.
 We extend to $H_2$ by delivering $p$'s write to $q$, after which $q$
