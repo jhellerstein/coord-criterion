@@ -1126,37 +1126,20 @@ future.
   if and only if it is distributed-monotone.
 \end{theorem}
 
-\begin{proof}
+\begin{proof}[Proof sketch (full proof in Appendix~\ref{app:cap-formal})]
   ($\Leftarrow$) If distributed-monotone, every outcome at every
   process survives all partition-constrained futures.
-  Under a partition, only such futures can occur.
-  We compose the causal-view protocol of
-  Theorem~\ref{thm:calm-operational} with a same-side resolution
-  layer.
-  The causal-view protocol handles cross-partition correctness:
-  each process responds from its local view, and
-  distributed-monotonicity guarantees that no remote
-  partition-constrained future can invalidate a locally exposed
-  outcome.
-  Non-monotonicities whose witnesses are confined to one side of the
-  partition---those that distributed-monotonicity permits because no
-  cross-partition future is involved---are discharged by coordination
-  within the connected component (e.g., intra-side serialization or
-  mutual exclusion).
-  Such same-side coordination requires no cross-partition
-  communication and therefore preserves availability under partitions.
-  Together, the two layers yield a partition-tolerant implementation
-  that is consistent for the full spec and available on all sides
-  of any partition.
+  Compose the causal-view protocol with a same-side resolution layer:
+  the protocol handles cross-partition correctness;
+  same-side non-monotonicities are discharged by coordination within
+  the connected component, which requires no cross-partition
+  communication and preserves availability.
 
-  ($\Rightarrow$) If not distributed-monotone, there exists a
-  partition $P = (S, \bar{S})$, a process $p \in S$, an outcome
-  $o \in \Obs(H_1)$ at $p$, and a $P$-constrained future $H_2$ with
-  no refinement of $o$ in $\Obs(H_2)$.
-  Under $P$, the future $H_2$ is realizable and $p$ cannot observe
-  the activity in $\bar{S}$ that contributes to it.
-  If $p$ exposes $o$, consistency may be violated; if $p$ withholds
-  $o$ until the partition heals, availability is violated.
+  ($\Rightarrow$) If not distributed-monotone, some outcome $o$ at
+  process $p$ is invalidated by a $P$-constrained future $H_2$.
+  Under $P$, process $p$ cannot distinguish $H_1$ from $H_2$: if $p$
+  exposes $o$, consistency is violated; if $p$ withholds $o$,
+  availability is violated.
 \end{proof}
 
 \noindent
@@ -1205,46 +1188,22 @@ Two-phase commit & Both & Aborts unsafe futures + defers exposure \\
 
 \begin{example}[Paxos-based log as a properly coordinated variant]
   \label{ex:paxos-log}
-  Consider a key-value store replicated at two nodes, with a
-  Paxos-based total-order broadcast ensuring all nodes process updates
-  in the same sequence.
-  The internal specification is linearizability (non-monotone, as
-  shown in Section~\ref{sec:example}).
-  Paxos restricts admissible histories to those in which all updates
-  are totally ordered.
-
-  The exposed output is the prefix of the ordered update log that
-  each node has processed.
-  Outcomes are log prefixes, ordered by prefix extension.
-  For any future $H \hext H'$: the log can only grow, so any prefix
-  $o \in \Obs(H)$ remains a prefix of every $o' \in \Obs(H')$.
-  The variant is monotone---by Complete CALM, downstream readers need
-  no additional coordination.
-
-  Complete CALM makes this boundary explicit: the coordinated
-  producer may require coordination, while the exposed log-prefix
-  interface is coordination-free for downstream consumers.
-  Relational-transducer CALM can see the latter only after the boundary
-  has been encoded as a separate monotone input relation.
+  A key-value store with Paxos-based total-order broadcast exposes
+  log prefixes ordered by prefix extension---a monotone interface.
+  Complete CALM makes the boundary explicit: the coordinated producer
+  requires coordination; the exposed log-prefix interface is
+  coordination-free for downstream consumers.
 \end{example}
 
 \begin{example}[Stratified Datalog: the canonical separation]
   \label{ex:stratified-separation}
-  Consider a 2-stratum Datalog program (e.g., transitive closure in
-  stratum~1, unreachability via negation in stratum~2).
-  CALM classifies it as non-monotone---coordination is required to seal
-  stratum~1 before stratum~2 executes.
-  A stratified execution (a barrier between strata) is a properly
-  coordinated variant: the barrier restricts admissible histories to
-  those where stratum~1 is sealed ($\Obs' = \emptyset$ for unsealed
+  A 2-stratum Datalog program requires coordination to seal stratum~1
+  before stratum~2 executes (a barrier restricting admissible
   histories).
-  Downstream of the barrier, the sealed stratum-1 output is a fixed
-  input, and stratum-2 computation grows monotonically under set
-  inclusion relative to that fixed input.
-  Complete CALM correctly identifies this residual output as monotone.
-  CALM, applied to the program text, cannot make this
-  distinction---it sees negation and reports ``requires coordination''
-  regardless of whether the coordination has been provided.
+  Downstream of the barrier, stratum-2 computation grows
+  monotonically.
+  Complete CALM correctly identifies this residual output as monotone;
+  CALM sees negation and reports ``requires coordination'' regardless.
 \end{example}
 
 
@@ -1288,36 +1247,19 @@ instantiation, both criteria accept exactly the monotone queries.
   a query $Q$:
   \begin{enumerate}[nosep]
     \item $Q$ is coordination-free in the sense of Ameloot et
-          al.~\cite{ameloot2013relational}: there exists a horizontal
-          partition on which quiescence is reached by heartbeat
-          transitions alone.
+          al.~\cite{ameloot2013relational}.
     \item $\Spec_Q$ is monotone in the sense of Complete CALM.
-    \item $Q$ is a monotone query (for all $I \subseteq J$,
-          $Q(I) \subseteq Q(J)$).
+    \item $Q$ is a monotone query ($I \subseteq J \Rightarrow
+          Q(I) \subseteq Q(J)$).
   \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-  $(3) \Rightarrow (2)$:
-  If $Q$ is monotone, then for any $H_1 \hext H_2$,
-  $I_{H_1} \subseteq I_{H_2}$.
-  By monotonicity of $Q$, $Q(I_{H_1}) \subseteq Q(I_{H_2})$, i.e.,
-  $\Obs(H_1) \Ord \Obs(H_2)$.
-  Hence $\Spec_Q$ is monotone.
-
-  $(2) \Rightarrow (3)$:
-  If $\Spec_Q$ is monotone, consider inputs $I \subseteq J$.
-  Let $H_I$ be the history with input facts $I$, and $H_J$ the history
-  with input facts $J$.
-  Since $I \subseteq J$, $H_I \hext H_J$.
-  By monotonicity of $\Spec_Q$:
-  $Q(I) = Q(I_{H_I}) \subseteq Q(I_{H_J}) = Q(J)$.
-  Hence $Q$ is monotone.
-
-  $(3) \Leftrightarrow (1)$:
-  This is the relational-transducer CALM
-  theorem~\cite{ameloot2013relational}:
-  coordination-free transducers compute exactly the monotone queries
+  The equivalence $(2) \Leftrightarrow (3)$ is immediate from the
+  instantiation: $\Spec_Q$ is monotone iff $Q$ is monotone as a
+  set-valued function.
+  The equivalence $(1) \Leftrightarrow (3)$ is the
+  relational-transducer CALM theorem~\cite{ameloot2013relational}
   (Ameloot et al.'s Corollary~13).
 \end{proof}
 
@@ -1327,9 +1269,6 @@ criteria agree.
 However, the transducer model's definition of coordination-freedom
 bakes in replica consistency---all nodes must eventually produce the
 same output set.
-This conflation means that specifications which are
-coordination-free but not convergent (e.g., causal consistency) cannot
-be expressed as coordination-free transducers.
 Complete CALM decouples the two properties: monotonicity characterizes
 when coordination is avoidable; replica consistency is a separate
 structural property of $\Ord$
@@ -1480,41 +1419,20 @@ partial-order structure (causal consistency, read committed) are
 monotone---a downward-closed cut of happens-before remains valid
 under extension.
 Specifications that commit to global constraints across concurrency
-(serializability, SI's invariant interaction) are not---they
-commit to facts (adjacency in a linearization, or the joint state
-after first-committer-wins reconciliation) that a concurrent
-extension can invalidate.
-In these examples, the HAT/non-HAT boundary reflects whether the
-specification commits only to partial-order-visible facts or to
-globally constraining choices across concurrency.
+(serializability, SI's invariant interaction) are not.
 
 \paragraph{Why specification-level analysis matters here.}
-Transactional isolation is not naturally expressed as a Datalog program.
-One could encode a transaction scheduler in Datalog, but the encoding is
-not unique: a scheduler that checks serializability via cycle detection
-uses negation (non-monotone), while one that enforces it via two-phase
-locking uses only monotone lock acquisition---yet both implement the same
-specification.
-CALM's diagnosis would depend on which encoding is chosen, not on the
-isolation level itself.
-Complete CALM sidesteps this entirely: it tests the specification
-directly, without any program encoding.
+Transactional isolation is not naturally expressed as a Datalog program,
+and different encodings of the same isolation level yield different
+CALM verdicts.
+Complete CALM sidesteps this: it tests the specification directly.
 
 \paragraph{Connection to CAP.}
-The preceding analysis is about concurrency: serializability requires
-coordination whether the database is distributed or not.
-CAP adds the distributional consequence: when the system \emph{is}
-distributed, the required coordination may become unavailable under
-partitions.
 Serializability is not distributed-monotone: a partition-constrained
 future (remote transaction commit) can invalidate a local read outcome.
-Under partitions, the exposing process cannot observe the remote
-commit, forcing a choice between blocking and weakening the isolation
-guarantee.
-Complete CALM identifies the \emph{source} of this dilemma---non-monotonicity
-of the specification---while Complete CAP identifies when that
-non-monotonicity creates a CAP-style obstruction (when it manifests
-as a failure of distributed-monotonicity).
+Complete CALM identifies the \emph{source} (non-monotonicity);
+Complete CAP identifies when it creates a partition obstruction
+(failure of distributed-monotonicity).
 
 %----------------------------------------------------------------
 \subsection{Invariant Confluence}
@@ -1624,26 +1542,13 @@ consistent with $H$.
 CRDTs are monotone \emph{by construction}: the lattice structure
 guarantees that observable state can only grow.
 Complete CALM certifies that this structural choice is both sufficient
-and, in a precise sense, necessary: any coordination-free replicated
-object must have monotone observable semantics, and the
-semilattice discipline is one way to ensure this.
+and necessary: any coordination-free replicated object must have
+monotone observable semantics.
+The converse is instructive: a replicated counter with a
+\emph{reset} operation is not inflationary, hence not monotone---
+coordination is required to implement reset
+consistently~\cite{shapiro2011crdt}.
 
-The converse is instructive.
-A replicated counter with a \emph{reset} operation (set to zero) is not
-inflationary: after incrementing to $5$, a reset produces a state
-incomparable to $5$ under any natural order.
-If the outcome order treats $0$ and $5$ as contradictory, the
-specification is not monotone and coordination is required to
-implement reset consistently.
-This matches the known result that reset-capable CRDTs require
-additional protocol machinery~\cite{shapiro2011crdt}.
-
-\paragraph{CALM and CRDTs.}
-CRDTs were designed independently of CALM, using lattice theory rather
-than Datalog monotonicity.
-CALM can analyze a CRDT only if its merge and update logic is first
-encoded as a Datalog program---an unnatural exercise that obscures the
-lattice structure.
 Complete CALM applies directly to the CRDT's specification (states
 ordered by the lattice order), recognizing monotonicity as a
 consequence of the semilattice structure without any encoding step.
@@ -1716,26 +1621,20 @@ and merge as primitives, whereas ours treats replication as one
 instance of causal history growth.
 
 \paragraph{Free termination.}
-Power et al.~\cite{power2025freetermination} study a complementary
-question: not whether a node can safely \emph{emit} without
-coordination (safety, our concern), but whether it can
-\emph{terminate}---know its output is final---without coordination.
-Their free termination property is strictly stronger than monotonicity:
-a grow-only set CRDT is monotone but cannot detect quiescence.
-The two results are orthogonal but share structural DNA: both show that
-algebraic properties of the outcome/state space (partial orders,
-acyclicity) determine what can be achieved without coordination.
+Power et al.~\cite{power2025freetermination} study whether a node can
+know its output is final without coordination---strictly stronger than
+monotonicity.
+The two results are orthogonal: both show that algebraic properties of
+the outcome space determine what can be achieved without coordination.
 
 \paragraph{HATs and I-confluence.}
-Highly Available Transactions~\cite{bailis2013hat} identify isolation levels
-achievable without coordination; I-confluence~\cite{bailis2014coordination}
-characterizes invariants preservable without coordination.
-Both are instances of Complete CALM (Section~\ref{sec:applications}).
+Highly Available Transactions~\cite{bailis2013hat} and
+I-confluence~\cite{bailis2014coordination} are instances of Complete
+CALM (Section~\ref{sec:applications}).
 
 \paragraph{CRDTs and eventual consistency.}
 Shapiro et al.~\cite{shapiro2011crdt} ensure coordination-free replication
-by restricting updates to inflationary operations on join-semilattices.
-In our terms, CRDTs inhabit a well-behaved subspace of monotone
+via join-semilattices---a well-behaved subspace of monotone
 specifications (Section~\ref{sec:crdts}).
 Burckhardt~\cite{burckhardt2014principles} provides a comprehensive
 framework for eventual consistency; our criterion provides the sharp
@@ -1743,43 +1642,27 @@ boundary between specifications that admit it and those that do not.
 
 \paragraph{CAP and partition tolerance.}
 Brewer's conjecture~\cite{brewer2000towards} and the Gilbert--Lynch
-proof~\cite{gilbert2002cap} show that linearizability cannot coexist
-with availability and partition tolerance---a one-directional
-impossibility for a single consistency model.
-Complete CAP (Section~\ref{sec:complete-cap}) generalizes this to a
-bidirectional characterization: a specification admits a consistent,
-available, partition-tolerant implementation iff it is
-distributed-monotone.
-The generalization factors CAP into a semantic condition
-(distributed-monotonicity: outcomes survive remote-only futures) and
-an operational observation (partitions produce exactly such futures),
-composing them into the full iff.
+proof~\cite{gilbert2002cap} show linearizability cannot coexist with
+availability and partition tolerance.
+Complete CAP generalizes this to a bidirectional characterization for
+arbitrary specifications (Section~\ref{sec:complete-cap}).
 
 \paragraph{Arbitration-free consistency.}
 Attiya et al.~\cite{attiya2023arbitration} prove that a storage
 specification admits an available implementation iff it is
-\emph{arbitration-free} (requires no total order).
+\emph{arbitration-free}.
 Their criterion is a special case of ours: total-order arbitration is
-one form of non-monotonicity. Our framework additionally handles
-non-total-order coordination (quorum reads, locking) and supports 
-general verification of proper coordination: even subtle interleavings of
-coordination into code can be checked.
+one form of non-monotonicity.
 
 \paragraph{Language-level monotonicity.}
-LVars~\cite{kuper2013lvars} introduced
-language-level support for lattice-based monotonic growth, guaranteeing
-determinism via threshold reads.
-The Lasp language~\cite{meiklejohn2015lasp} extends this to
-distributed CRDTs via lattice types.
-The type system of Gallifrey~\cite{milano2019tour} exposes monotonicity
-over multiple different orders, with coordination at the transitions
-between them.
-These designs influenced our decision to make the outcome order
-$\Ord$ a first-class component of a specification.
-The Hydro distributed programming framework~\cite{hydro} uses
-type-level monotonicity annotations to conservatively verify
-coordination-freedom at compile time---an instance of the
-sufficient-condition approach to the undecidable general problem.
+LVars~\cite{kuper2013lvars}, Lasp~\cite{meiklejohn2015lasp}, and
+Gallifrey~\cite{milano2019tour} provide language-level support for
+lattice-based monotonic growth.
+The Hydro framework~\cite{hydro} uses type-level monotonicity
+annotations to conservatively verify coordination-freedom at compile
+time.
+These designs influenced our decision to make $\Ord$ a first-class
+component of a specification.
 
 
 % ================================================================
@@ -1820,17 +1703,10 @@ simultaneously.
 The methodology demonstrated here---identify the minimal semantic
 ingredients of a model-specific result, prove the characterization at
 that level, and recover the original as an instance---may apply to
-other results in database theory that appear to depend on the
-relational model.
-Stratification theory (when is negation safe?) may lift to a semantic
-characterization of sequential commitment layers.
-Datalog boundedness (does a program terminate in bounded iterations?)
-may lift to finite determination depth over specifications.
-Query containment may lift to subsumption of coordination-free
-frontiers.
-In each case, the question is: what does the proof actually need, and
-what is model-specific scaffolding?
-Complete CALM suggests that the answer is often less than expected.
+other results in database theory.
+Stratification theory, Datalog boundedness, and query containment may
+each lift to semantic characterizations once model-specific scaffolding
+is removed.
 
 
 % ================================================================
