@@ -1064,6 +1064,9 @@ resolution so routine it goes unmentioned in the CRDT literature.
 Complete CAP is a semantic characterization: it identifies when no
 cross-partition coordination is required for safety, not how a process
 algorithmically selects an outcome.
+The two theorems use different operational notions: Complete CALM
+requires local immediacy (no waiting for any input); Complete CAP
+requires partition availability (no waiting across a partition).
 
 \paragraph{How coordination is achieved operationally.}
 Each non-monotonicity witness $(H_1, H_2, o_1)$ must be resolved by
@@ -1920,6 +1923,9 @@ $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
   Since $o_1 \Ord_{\mathit{causal}} o_2$, outcome $o_2$ extends $o_1$
   by appending at least one operation---call it $r \mapsto v$ (a read
   returning $v$).
+  (Every edge in the prefix-extension order corresponds to appending
+  operations; writes are always appendable, so the critical case is a
+  read whose return value must be forced.)
   We construct $H_1, H_2$ witnessing that the removal of this
   refinement edge breaks monotonicity.
 
@@ -1931,10 +1937,14 @@ $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
   Extend to $H_2$ by adding a read invocation $r$ at $q$ with
   $\mathit{recv}(w(v)) \rightarrow \mathit{inv}(r)$ (the read is
   causally after the delivery of $w(v)$), and no other write in $r$'s
-  causal past writes a different value.
+  causal past.
   Then $\mathit{past}(r, H_2) = \{w(v)\}$: the only write in $r$'s
   causal past is $w(v)$, so the unique causally-consistent return
   value is $v$.
+  This construction is always possible: for any read $r \mapsto v$
+  appended by the removed edge, we can arrange a history where $w(v)$
+  is the sole write in $r$'s causal past by placing $r$ at a node
+  that has received only $w(v)$ and no other writes.
   Hence the only outcome in $\Obs_{\mathit{causal}}(H_2)$ extending
   $o_1$ is $o_2 = o_1 \cdot (r \mapsto v)$.
   Since $o_1 \not\Ord' o_2$, the outcome $o_1$ has no
@@ -2015,8 +2025,12 @@ Both use prefix extension as the outcome order.
   $\sigma_1$.
 
   We construct a witness.
+  Since every edge in prefix extension corresponds to appending one
+  element, the removed edge appends some value $b$ to $\sigma_1$.
   Let $a$ be the last element of $\sigma_1$ and let $a, b$ be
   enqueued concurrently (neither causally precedes the other).
+  This is always achievable: enqueue $a$ and $b$ at different nodes
+  without causal connection.
   Construct $H_1$ containing both enqueues with $a$ dequeued:
   $\sigma_1 \in \Obs_{\mathit{causal\text{-}FIFO}}(H_1)$.
   Extend to $H_2$ by adding a dequeue of $b$ (causally after the
@@ -2090,10 +2104,13 @@ The outcome order is set inclusion on valid lookup pairs.
   inclusion, but $o_1 \not\Ord' o_2$.
 
   \emph{Construction.}
-  Let $H_1$ be a history where $k$ is at position $p_m$ reachable
+  Every edge in set inclusion corresponds to adding one pair $(k, p)$
+  to the outcome.
+  For any such pair, we can construct a forcing history:
+  let $H_1$ be a history where $k$ is at position $p_m$ reachable
   from $p$ via a path $p \to \cdots \to p_m$, and the outcome
   $o_1 \in \Obs_{\mathit{fwd}}(H_1)$ does not yet include $(k, p)$
-  (e.g., no lookup for $k$ starting at $p$ has completed).
+  (no lookup for $k$ starting at $p$ has completed).
   Extend to $H_2$ by adding a lookup for $k$ starting at $p$: since
   $k$ is reachable from $p$, the pair $(k, p)$ enters
   $\Obs_{\mathit{fwd}}(H_2)$, giving $o_2 = o_1 \cup \{(k, p)\}$.
