@@ -330,20 +330,16 @@ We impose no fairness or progress assumptions.
 \begin{example}[Register history $H_1$]
   \label{ex:h1-formal}
   The history $H_1$ from Section~\ref{sec:example} in the formal
-  model: at $p$, $\mathit{inv}(w_p), \mathit{resp}(w_p) \in
-  E_{\mathit{iface}}$ (write of $1$ complete);
-  at $q$, $\mathit{inv}(w_q), \mathit{resp}(w_q) \in E_{\mathit{iface}}$
-  (write of $2$ complete);
-  $\mathit{send}(w_q) \in E_{\mathit{send}}$ and
-  $\mathit{recv}(w_q) \in E_{\mathit{recv}}$ at $p$ (delivery of
-  $w_q$ to $p$);
-  $\mathit{inv}(r_p), \mathit{resp}(r_p, 2) \in E_{\mathit{iface}}$
-  (read at $p$ returning $2$, after receiving $w_q$).
-  Ordering includes
-  $\mathit{resp}(w_q) \rightarrow \mathit{send}(w_q) \rightarrow
-  \mathit{recv}(w_q) \rightarrow \mathit{inv}(r_p)$
-  and program order $\mathit{resp}(w_p) \rightarrow \mathit{inv}(r_p)$
-  at $p$.
+  model.
+  Interface events ($E_{\mathit{iface}}$): invocations and responses
+  for $w_p$ (write of $1$ at $p$), $w_q$ (write of $2$ at $q$), and
+  $r_p$ (read at $p$ returning $2$).
+  Message events: $\mathit{send}(w_q)$ at $q$ and
+  $\mathit{recv}(w_q)$ at $p$ (delivery of $q$'s write to $p$).
+  Ordering: $\mathit{resp}(w_q) \rightarrow \mathit{send}(w_q)
+  \rightarrow \mathit{recv}(w_q) \rightarrow \mathit{inv}(r_p)$
+  (delivery chain), plus program order
+  $\mathit{resp}(w_p) \rightarrow \mathit{inv}(r_p)$ at $p$.
 \end{example}
 
 As an execution unfolds, new events occur.
