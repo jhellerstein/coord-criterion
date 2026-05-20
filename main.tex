@@ -314,6 +314,11 @@ latency and partition vulnerability in a distributed system.
 The criterion characterizes when these costs are \emph{intrinsic} to the
 specification versus \emph{incidental} to a particular implementation.
 
+We build toward the criterion in three steps: first the execution model
+(histories and their causal growth), then the specification language
+(outcomes and refinement), and finally the implementation model
+(coordination-freedom and its operational grounding).
+
 %----------------------------------------------------------------
 \subsection{Histories and Futures}
 %----------------------------------------------------------------
@@ -340,6 +345,10 @@ $E_{\mathit{iface}}$ contains client-facing \emph{interface events}
 clients).
 In the I/O automaton model of Section~\ref{sec:operational},
 invocations are input actions and responses are output actions.
+In the register example, $E_{\mathit{iface}}$ includes
+$\mathit{inv}(w)$, $\mathit{resp}(w)$, $\mathit{inv}(r)$,
+$\mathit{resp}(r, v)$; the remaining sets hold local computation and
+inter-replica messages.
 
 \begin{definition}[History]
   \label{def:history}
@@ -477,10 +486,11 @@ This is what it means to model a system faithfully.
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
   follows from the structure of the output:
-  prefix containment for ordered streams, set inclusion for
-  unordered collections, lattice order for domain values.
-  The outcome order is part of the specification's semantic
-  contract---changing the order changes the specification.
+  prefix containment for ordered streams,
+  set inclusion for unordered collections,
+  lattice order for domain values.
+  Changing the order changes the specification---it is part of the
+  semantic contract, not a derived quantity.
 \end{remark}
 
 \begin{example}[Outcomes and order for the register]
