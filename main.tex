@@ -640,19 +640,19 @@ convergence of internal state), one adds the relevant commitments to
 $\Obs$ and extends $\Ord$ accordingly, keeping response and
 non-response outcomes incomparable under $\Ord$.
 
-We require three conditions on how $\Obs$ relates to the I/O
-interface:
+The I/O automaton model guarantees one property of the bridge:
+
+\emph{Consistency with observations:} output actions are irrevocable.
+If $H$ records that invocation $e$ received response $v$, then
+$o(e) = v$ for every $o \in \Obs(H)$; recording an additional
+response can only restrict admissibility ($H' \supseteq H$ by
+response events $\Rightarrow \Obs(H') \subseteq \Obs(H)$).
+
+\medskip\noindent
+The specification must ensure two further conditions:
 \begin{enumerate}[nosep]
-  \item \emph{Consistency with observations:} if $H$ records that
-        invocation $e$ received response $v$, then $o(e) = v$ for
-        every $o \in \Obs(H)$.
-        Recording an additional response can only restrict
-        admissibility: if $H'$ extends $H$ by response events,
-        $\Obs(H') \subseteq \Obs(H)$.
-        (This is guaranteed by the I/O automaton model: output
-        actions are irrevocable once emitted.)
-  \item \emph{Refinement coherence:} if $o \Ord o'$ and $o(e) = v$,
-        then $o'(e) = v$.
+  \item \emph{Refinement coherence:} $\Ord$ respects irrevocability.
+        If $o \Ord o'$ and $o(e) = v$, then $o'(e) = v$.
   \item \emph{Response totality:} for every invocation $e$ in $H$
         and every $o \in \Obs(H)$, $o(e)$ is defined.
         (If the specification intentionally leaves $e$ unconstrained,
