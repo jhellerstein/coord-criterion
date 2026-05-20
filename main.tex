@@ -173,118 +173,66 @@ The framework is minimal, enabling its coverage to be broad. Our contributions i
 
 Consider a register replicated at two nodes, each accepting local
 read and write operations and propagating updates via messages.
-We define two specifications over the same histories that differ in
-their outcome structure and refinement order.
+We analyze two specifications over the same histories---one requiring
+coordination, one not---to illustrate how the choice of outcome
+structure determines the boundary.
 
-\paragraph{Histories.}
-A history is a partially ordered set of events ordered by Lamport's
-\emph{happens-before} relation~\cite{lamport1978time}---also called
-\emph{causal precedence}: $e_1$ happens before $e_2$ if $e_1$
-precedes $e_2$ in program order at the same node, or $e_1$ is a
-message send and $e_2$ is the corresponding receive, or transitively.
+\paragraph{Setup.}
+A history is a partially ordered set of events under Lamport's
+happens-before relation~\cite{lamport1978time}: program order within
+a node, send-before-receive across nodes, and transitivity.
 Events not related by happens-before are \emph{concurrent}.
-We write $\mathsf{w}(v)$ for a write of value $v$,
-$\mathsf{r} \mapsto v$ for a read returning $v$, and
-$\mathit{send}(x)$/$\mathit{recv}(x)$ for the send and receive of a
-propagation message carrying $x$.
 
-\paragraph{Two specifications.}
-We write outcomes as sequences of completed operations.
-
-\noindent
---- $\Spec_{\mathit{cc}}$ (\textbf{causal
-consistency}~\cite{ahamad1995causal}): each process observes a
-\emph{causal history}---a partial order on the operations in its
-causal past, consistent with happens-before.
-Different processes may order concurrent writes differently.
-A read returns a value consistent with some linearization of its
-causal past.
-Refinement is \emph{causal-prefix extension}: $o_1 \Ord o_2$ iff
-$o_2$ extends $o_1$ by adding operations while preserving existing
-order.
-
-\noindent
---- $\Spec_{\mathit{lin}}$
-(\textbf{linearizability}~\cite{herlihy1990linearizability}): there
-exists a \emph{single} total order on all completed operations,
-consistent with happens-before (i.e., if operation $A$'s response
-causally precedes operation $B$'s invocation, then $A$ precedes $B$
-in the total order), with reads returning the most recent preceding
-write.
-In the asynchronous message-passing model, happens-before subsumes
-real-time precedence: if $A$ completes before $B$ begins at the same
-or a causally connected process, happens-before records this.
-% This is the standard atomic-register semantics used by Gilbert and
-% Lynch~\cite{gilbert2002cap}.
-Refinement is \emph{prefix extension}: $o_1 \Ord o_2$ iff $o_1$ is a
-prefix of $o_2$.
-
-The two specifications share the same histories but differ in outcome
-structure: CC allows per-process views that disagree on the order of
-concurrent writes; linearizability demands a single global order.
-This choice determines coordination requirements.
-
-\paragraph{Witness.}
 The register initially holds $0$.
-Two nodes $p$ and $q$ each write concurrently:
+Nodes $p$ and $q$ each write concurrently:
 $\mathsf{w}_p(1)$ at $p$, $\mathsf{w}_q(2)$ at $q$.
-The writes are concurrent (neither happens-before the other).
+History $H_1$: both writes complete; $q$'s write is delivered to $p$;
+$p$ reads and returns $2$.
+Extend to $H_2$: $p$'s write is delivered to $q$; $q$ reads and
+returns $1$.
+$H_2$ is a valid future of $H_1$ (only causally later events added).
 
-History $H_1$: both writes complete; $\mathsf{w}_q$ is delivered to
-$p$ ($\mathit{recv}(\mathsf{w}_q)$ at $p$); $p$ then completes a
-read $r_p \mapsto 2$.
-The delivery creates happens-before:
-$\mathsf{w}_q \rightarrow \mathit{send} \rightarrow
-\mathit{recv} \rightarrow r_p$, so $\mathsf{w}_q$ precedes $r_p$.
-A linearizable outcome at $H_1$ is
-$
-  o_1 = \langle \mathsf{w}_p(1),\; \mathsf{w}_q(2),\;
-  r_p{\,\mapsto}2 \rangle.
-$
-This respects happens-before ($\mathsf{w}_q$ before $r_p$; the two
-writes are concurrent, so either order is valid) and explains
-$r_p = 2$ (most recent write before $r_p$ is $\mathsf{w}_q$).
+\paragraph{Linearizability requires coordination.}
+Under linearizability~\cite{herlihy1990linearizability}, outcomes are
+total orders on completed operations consistent with happens-before,
+with reads returning the most recent preceding write.
+Refinement is prefix extension.
 
-Extend to $H_2$: deliver $\mathsf{w}_p$ to $q$
-($\mathit{recv}(\mathsf{w}_p)$ at $q$); $q$ then completes a read
-$r_q \mapsto 1$.
-This is a valid future of $H_1$: only causally later events are
-added.
-Now happens-before at $H_2$ also has
-$\mathsf{w}_p \rightarrow \mathit{send} \rightarrow
-\mathit{recv} \rightarrow r_q$, so $\mathsf{w}_p$ precedes $r_q$.
+At $H_1$, the outcome $o_1 = \langle \mathsf{w}_p(1),
+\mathsf{w}_q(2), r_p{\mapsto}2 \rangle$ is admissible: it places
+$\mathsf{w}_q$ before $r_p$ (consistent with delivery) and explains
+$r_p = 2$.
+At $H_2$, explaining $r_q = 1$ requires $\mathsf{w}_q <
+\mathsf{w}_p$, but explaining $r_p = 2$ requires $\mathsf{w}_p <
+\mathsf{w}_q$---a contradiction.
+No outcome at $H_2$ extends $o_1$.
+This is non-monotonicity: an outcome admitted at $H_1$ has no
+compatible extension at $H_2$.
+The operational consequence: before responding $r_p \mapsto 2$,
+process $p$ must ensure $q$ will not independently commit to the
+opposite write order---this requires coordination.
 
-Under $\Spec_{\mathit{lin}}$, the specification is not monotone.
-Any linearization at $H_2$ explaining $r_p \mapsto 2$ must have
-$\mathsf{w}_p < \mathsf{w}_q$ (so $\mathsf{w}_q$ is the most recent
-write before $r_p$).
-But any linearization explaining $r_q \mapsto 1$ must have
-$\mathsf{w}_q < \mathsf{w}_p$ (so $\mathsf{w}_p$ is the most recent
-write before $r_q$).
-These force $\mathsf{w}_p < \mathsf{w}_q$ and
-$\mathsf{w}_q < \mathsf{w}_p$---a contradiction.
-No linearizable outcome at $H_2$ extends $o_1$: the outcome
-admitted at $H_1$ has no compatible extension at $H_2$.
-This is non-monotonicity.
-The operational consequence: before committing to the order
-$\mathsf{w}_p < \mathsf{w}_q$ (by responding $r_p \mapsto 2$),
-process $p$ must ensure that $q$ will not independently commit to the
-opposite order---this requires coordination.
+\paragraph{Causal consistency does not.}
+Under causal consistency~\cite{ahamad1995causal}, each process
+observes a causal view---a partial order on operations in its causal
+past.
+Different processes may order concurrent writes differently.
+Refinement is causal-prefix extension.
 
-Under $\Spec_{\mathit{cc}}$, the specification is monotone.
-At $H_1$, process $p$ observes the causal view
-$\mathsf{w}_p < \mathsf{w}_q < r_p$, returning $2$.
-At $H_2$, process $q$ observes the causal view
-$\mathsf{w}_q < \mathsf{w}_p < r_q$, returning $1$.
-The two views order the concurrent writes differently---but CC permits
-this: concurrent writes need not be placed in a single global order.
-The outcome at $H_2$ refines the outcome at $H_1$ by adding another
+At $H_1$, $p$'s view orders $\mathsf{w}_p < \mathsf{w}_q < r_p$,
+returning $2$.
+At $H_2$, $q$'s view orders $\mathsf{w}_q < \mathsf{w}_p < r_q$,
+returning $1$.
+The two views disagree on the order of concurrent writes---but CC
+permits this.
+The outcome at $H_2$ extends the outcome at $H_1$ by adding a new
 causally valid view, rather than contradicting the first.
-Every outcome at $H_1$ has a refinement at every future.
+Every outcome has a compatible extension at every future.
 No coordination is needed.
 
-The two specifications separate cleanly: $\Spec_{\mathit{cc}}$ is
-coordination-free; $\Spec_{\mathit{lin}}$ requires coordination.
+\medskip\noindent
+The two specifications share the same histories but differ in outcome
+structure.
 The same analysis applies to concurrent threads on a single
 machine---the criterion depends on the happens-before structure, not
 the mechanism of concurrency.
