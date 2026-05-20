@@ -388,8 +388,7 @@ The past is fixed; only the future is open.
   \rightarrow \mathit{inv}(r_q) \rightarrow \mathit{resp}(r_q, 1)$;
   delivery: $\mathit{send}(w_p) \rightarrow \mathit{recv}(w_p)$.
   \\ \noindent
-  All new events are causally after existing ones---no new predecessor
-  of any $H_1$ event is introduced, so $H_1 \hext H_2$.
+  All new events are causally ordered after existing $H_1$ events, so $H_1 \hext H_2$.
 \end{example}
 
 %----------------------------------------------------------------
@@ -417,7 +416,7 @@ how executions unfold.
 
 \noindent
 $\Obs(H)$ is the set of outcomes that the specification permits at
-$H$: what an implementation may expose at the system interface.
+$H$: what an implementation \emph{may expose} at the system interface.
 $\Obs(H) = \emptyset$ signals that $H$ is unrealizable---no correct
 implementation may produce it (used for safety specifications such as
 invariant enforcement; see Section~\ref{sec:i-confluence}).
@@ -434,14 +433,15 @@ observations).
 Different specifications over the same histories may use different
 outcome orders.
 
-The modeling discipline is simple: $\Obs$ captures whatever you want
-to constrain---whatever is observable at the system interface.
-If a semantic property matters to you, surface it in $\Obs$ and
-accommodate it in $\Ord$.
+The modeling discipline is straightforward.
+$\Obs$ captures whatever you want to constrain at the system
+interface; $\Ord$ declares when one outcome subsumes another.
+If a semantic property matters, surface it in $\Obs$ and accommodate
+it in $\Ord$.
 If it is not in $\Obs$, no external party can detect a violation, and
 there is no obligation to coordinate over it.
-Distinct outcomes in $\Obs(H)$ are observationally distinguishable at
-the interface; $\Ord$ captures when one outcome subsumes another.
+Distinct outcomes in $\Obs(H)$ are observationally distinguishable;
+outcomes related by $\Ord$ are compatible.
 This is what it means to model a system faithfully.
 
 \begin{remark}[Choosing the outcome order]
