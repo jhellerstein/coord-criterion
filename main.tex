@@ -446,11 +446,10 @@ outcomes related by $\Ord$ are compatible.
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
   often follows naturally from the structure of the output:
-  prefix containment for sequential streams,
+  prefix containment for sequences,
   set inclusion for unordered collections,
   lattice order for domain values. These are defaults, not rules.
-  Changing $\Ord$ changes the specification---it is part of the
-  semantic contract, not a derived quantity.
+  Changing $\Ord$ changes the specification---its role is to model the desired outcome semantics.
 \end{remark}
 
 \begin{example}[Outcomes and order for the register]
@@ -478,13 +477,15 @@ outcomes related by $\Ord$ are compatible.
 A specification is passive: it declares which outcomes are admissible but
 says nothing about which histories actually arise or which outcomes are
 actually exposed.
-An \emph{implementation} is active: it determines which outcomes are
-exposed at each history (by choosing responses to invocations).
-The environment controls which histories arise (by scheduling inputs
-and message deliveries); the implementation controls how it responds.
+An \emph{implementation} is active: it determines which outcome from
+$\Obs(H)$ is exposed at each history, and controls internal
+computation ($E_{\mathit{int}}$) and message sends
+($E_{\mathit{send}}$).
+The environment controls client invocations ($E_{\mathit{iface}}$
+inputs) and message deliveries ($E_{\mathit{recv}}$).
 
-The central question is: can an implementation preserve all of the
-specification's possibilities---or must it narrow them by suppressing
+The central question: can an implementation preserve all of the
+specification's possibilities, or must it narrow them---by suppressing
 futures or withholding outcomes?
 
 \begin{definition}[Interface projection]
