@@ -878,27 +878,26 @@ the coordination suffices; otherwise more restriction is needed.
   \emph{Membership establishment} is non-monotone: committing to a
   participant set at $H_1$ can be invalidated by a future $H_2$ that
   admits different participants.
-  But once membership is fixed, vote-counting toward a quorum is
-  monotone (votes accumulate; reaching a threshold is a monotone
-  predicate over a known domain), and value exposure is monotone
-  (decisions only accumulate).
+  But once membership is fixed, vote-counting is monotone (votes
+  accumulate; reaching a threshold is monotone over a known domain),
+  and value exposure is monotone (decisions only accumulate).
   The coordinated variant restricts histories to those where
   membership is established; the residual is monotone.
 \end{example}
 
-\begin{remark}[One round of consensus suffices]
+\begin{remark}[One round of coordination suffices]
   \label{rem:one-round}
-  Authority closure need only happen \emph{once}.
-  Once membership is known, vote-counting toward a quorum is
-  monotone: votes accumulate, and reaching a threshold is a monotone
-  predicate over a known domain.
-  Subsequent view changes are themselves monotone votes under the
-  current authority---after the initial membership bootstrap, the
-  entire chain of authority transitions is monotone.
+  Membership establishment need only happen \emph{once}.
+  Subsequent view changes (leader election, reconfiguration) are
+  themselves monotone votes under the current authority---after the
+  initial bootstrap, the entire chain of authority transitions is
+  monotone.
   This generalizes Ameloot et al.'s ``non-oblivious'' transducer
   result~\cite{ameloot2013relational}: membership knowledge is the
   single non-monotone input that renders all subsequent computation
   monotone.
+  The architecture of Paxos-based systems reflects this: membership
+  is configured once; everything downstream is coordination-free.
 \end{remark}
 
 \noindent
