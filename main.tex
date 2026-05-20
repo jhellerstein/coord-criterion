@@ -242,11 +242,11 @@ read $r_p \mapsto 2$.
 The delivery creates happens-before:
 $\mathsf{w}_q \rightarrow \mathit{send} \rightarrow
 \mathit{recv} \rightarrow r_p$, so $\mathsf{w}_q$ precedes $r_p$.
-A linearizable outcome at $H_1$:
-\[
+A linearizable outcome at $H_1$ is
+$
   o_1 = \langle \mathsf{w}_p(1),\; \mathsf{w}_q(2),\;
   r_p{\,\mapsto}2 \rangle.
-\]
+$
 This respects happens-before ($\mathsf{w}_q$ before $r_p$; the two
 writes are concurrent, so either order is valid) and explains
 $r_p = 2$ (most recent write before $r_p$ is $\mathsf{w}_q$).
@@ -331,7 +331,7 @@ ordering.
 \begin{definition}[Event universe]
   \label{def:event-types}
   A specification fixes pairwise-disjoint sets of events:
-  $E_{\mathit{iface}}$ (client interface: invocations and responses),
+  $E_{\mathit{iface}}$ (client interface),
   $E_{\mathit{int}}$ (internal computation),
   $E_{\mathit{send}}$ (message sends),
   $E_{\mathit{recv}}$ (message receives).
@@ -343,8 +343,6 @@ computation and message-passing structure.
 $E_{\mathit{iface}}$ contains client-facing \emph{interface events}
 (invocations and responses---the observable input/output as seen by
 clients).
-In the I/O automaton model of Section~\ref{sec:operational},
-invocations are input actions and responses are output actions.
 In the register example, $E_{\mathit{iface}}$ includes
 $\mathit{inv}(w)$, $\mathit{resp}(w)$, $\mathit{inv}(r)$,
 $\mathit{resp}(r, v)$; the remaining sets hold local computation and
