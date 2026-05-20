@@ -445,28 +445,29 @@ outcomes related by $\Ord$ are compatible.
 
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
-  follows from the structure of the output:
-  prefix containment for ordered streams,
+  often follows naturally from the structure of the output:
+  prefix containment for sequential streams,
   set inclusion for unordered collections,
-  lattice order for domain values.
-  Changing the order changes the specification---it is part of the
+  lattice order for domain values. These are defaults, not rules.
+  Changing $\Ord$ changes the specification---it is part of the
   semantic contract, not a derived quantity.
 \end{remark}
 
 \begin{example}[Outcomes and order for the register]
   \label{ex:register-outcomes}
-  Under $\Spec_{\mathit{lin}}$, outcomes are total orders (sequences)
-  of completed operations.
-  At $H_1$ (Section~\ref{sec:example}), both writes have completed
-  and $r_p$ has returned $2$.
-  The admissible outcome is
+  Under $\Spec_{\mathit{lin}}$, outcomes are total orders
+  of completed operations; $\Ord$ is prefix extension.
+  At $H_1$, the admissible outcome is
   $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
   r_p{\,\mapsto}2 \rangle$
   (the only linearization consistent with happens-before that explains
-  $r_p = 2$).
-  At $H_2$, the additional read $r_q \mapsto 1$ forces the opposite
-  write order; no single linearization can explain both reads, so
-  $o_1$ has no extension at $H_2$.
+  $r_p = 2$); this commits to the write order
+  $\mathsf{w}_p$ before $\mathsf{w}_q$.
+  At $H_2$, explaining $r_q \mapsto 1$ requires a linearization with
+  $\mathsf{w}_q$ before $\mathsf{w}_p$---the opposite order.
+  Any extension of $o_1$ must preserve its prefix (by $\Ord$), but
+  the only linearization at $H_2$ reverses it: the refinement
+  requirement cycles, and $o_1$ has no $\Ord$-extension at $H_2$.
 \end{example}
 
 %----------------------------------------------------------------
