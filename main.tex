@@ -878,16 +878,6 @@ the coordination suffices; otherwise more restriction is needed.
   \emph{Authority closure} (leader election, view change) is
   non-monotone: committing to authority $a$ at $H_1$ can be
   invalidated by a future $H_2$ that establishes $a'$ instead.
-  But authority closure need only happen \emph{once}: once membership
-  is known, vote-counting toward a quorum is monotone (votes
-  accumulate; reaching a threshold is monotone over a known domain).
-  Subsequent view changes are themselves monotone votes under the
-  current authority---after the initial membership bootstrap, the
-  entire chain of authority transitions is monotone.
-  This generalizes Ameloot et al.'s ``non-oblivious'' transducer
-  result~\cite{ameloot2013relational}: membership knowledge is the
-  single non-monotone input that renders all subsequent computation
-  monotone.
   Once authority is fixed, value exposure is monotone (decisions
   only accumulate).
   The coordinated variant restricts histories to those where
@@ -895,6 +885,21 @@ the coordination suffices; otherwise more restriction is needed.
   Multi-Paxos's structure: membership establishment coordinates;
   log append is coordination-free.
 \end{example}
+
+\begin{remark}[One round of consensus suffices]
+  \label{rem:one-round}
+  Authority closure need only happen \emph{once}.
+  Once membership is known, vote-counting toward a quorum is
+  monotone: votes accumulate, and reaching a threshold is a monotone
+  predicate over a known domain.
+  Subsequent view changes are themselves monotone votes under the
+  current authority---after the initial membership bootstrap, the
+  entire chain of authority transitions is monotone.
+  This generalizes Ameloot et al.'s ``non-oblivious'' transducer
+  result~\cite{ameloot2013relational}: membership knowledge is the
+  single non-monotone input that renders all subsequent computation
+  monotone.
+\end{remark}
 
 \noindent
 The separation is the shift from coordination-\emph{avoiding}
