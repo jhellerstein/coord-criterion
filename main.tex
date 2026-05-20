@@ -1043,7 +1043,10 @@ instantiation, both criteria accept exactly the monotone queries.
   For a query $Q$ over input schema $S_{\mathit{in}}$, define the
   specification $\Spec_Q = (E, \Obs, \subseteq)$ as follows:
   \begin{itemize}[nosep]
-    \item $E$: input-fact arrivals are external input events.
+    \item $E_{\mathit{inv}}$: input-fact arrivals (the growing input
+          instance). $E_{\mathit{resp}}$: query output facts.
+          $E_{\mathit{int}}, E_{\mathit{send}}, E_{\mathit{recv}}$:
+          rule firings, messages, heartbeats (abstracted away).
     \item Histories are input-growth sequences: each history $H$
           determines a set $I_H$ of input facts delivered so far.
     \item $\Obs(H) = \{Q(I_H)\}$---the semantic query result on the
@@ -1051,9 +1054,6 @@ instantiation, both criteria accept exactly the monotone queries.
     \item $\Ord$ is set inclusion: $o_1 \Ord o_2$ iff
           $o_1 \subseteq o_2$.
   \end{itemize}
-  Internal events (rule firings, messages, heartbeats) are abstracted
-  away: the specification concerns only the relationship between input
-  growth and query output.
 \end{definition}
 
 \begin{theorem}[Subsumption of CALM]
