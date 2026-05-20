@@ -815,35 +815,26 @@ provides one for any spec); the question is how to verify that a
 
 \begin{definition}[Properly coordinated variant]
   \label{def:coord-variant}
-  Let $\mathsf{Adm}(\Spec') = \{H \mid \Obs'(H) \neq \emptyset\}$
-  denote the \emph{admitted histories} of $\Spec'$.
   A specification $\Spec' = (E, \Obs', \Ord)$ is a \emph{properly
   coordinated variant} of $\Spec = (E, \Obs, \Ord)$ if:
   \begin{enumerate}[nosep,label=(\roman*)]
     \item $\Obs'(H) \subseteq \Obs(H)$ for all $H$
-          (no new outcomes admitted), and
-    \item $\Spec'$ is monotone over $\mathsf{Adm}(\Spec')$: for all
-          $H_1 \hext H_2$ with $H_1, H_2 \in \mathsf{Adm}(\Spec')$,
-          every $o \in \Obs'(H_1)$ has a refinement in $\Obs'(H_2)$.
+          (no new outcomes), and
+    \item $\Spec'$ is monotone (Definition~\ref{def:monotone}).
   \end{enumerate}
 \end{definition}
 
 \noindent
 A properly coordinated variant restricts the original spec---fewer
 outcomes, fewer histories, or both---just enough to achieve
-monotonicity within its own history space.
-History restriction is modeled by $\Obs'(H) = \emptyset$ for excluded
-histories; the coordination mechanism ensures these never arise.
-Monotonicity of the variant is ordinary monotonicity over
-$\mathsf{Adm}(\Spec')$: histories outside that set are unreachable
-by construction.
-This differs from the main theorem only in that the original
-specification's $\Obs(H) = \emptyset$ at a reachable future is a
-monotonicity failure, whereas the variant's $\Obs'(H) = \emptyset$
-marks a history the mechanism renders unreachable.
-Complete CALM provides the test: if the variant is monotone over its
-admitted histories, the coordination suffices; otherwise more
-restriction is needed.
+monotonicity.
+History restriction is modeled by setting $\Obs'(H) = \emptyset$ for
+excluded histories: since $\Obs'(H) = \emptyset$ means no outcome
+exists at $H$, such histories cannot witness non-monotonicity.
+The coordination mechanism ensures excluded histories never arise
+(e.g., total-order broadcast prevents non-serialized histories).
+Complete CALM then applies directly to $\Spec'$: if it is monotone,
+the coordination suffices; otherwise more restriction is needed.
 
 \begin{theorem}[Interface separation from relational-transducer
   CALM]
