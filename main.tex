@@ -875,15 +875,17 @@ the coordination suffices; otherwise more restriction is needed.
   \label{ex:consensus}
   Agreement protocols decompose into a non-monotone phase and a
   monotone residual.
-  \emph{Authority closure} (leader election, view change) is
-  non-monotone: committing to authority $a$ at $H_1$ can be
-  invalidated by a future $H_2$ that establishes $a'$ instead.
-  Once authority is fixed, value exposure is monotone (decisions
-  only accumulate).
+  \emph{Membership establishment} is non-monotone: committing to a
+  participant set at $H_1$ can be invalidated by a future $H_2$ that
+  admits different participants.
+  But once membership is fixed, vote-counting toward a quorum is
+  monotone (votes accumulate; reaching a threshold is a monotone
+  predicate over a known domain), and value exposure is monotone
+  (decisions only accumulate).
   The coordinated variant restricts histories to those where
-  authority is established; the residual is monotone---explaining
+  membership is established; the residual is monotone---explaining
   Multi-Paxos's structure: membership establishment coordinates;
-  log append is coordination-free.
+  everything downstream is coordination-free.
 \end{example}
 
 \begin{remark}[One round of consensus suffices]
