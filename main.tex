@@ -1159,32 +1159,9 @@ Each non-monotonicity witness $(H_1, H_2, o_1)$ must be resolved by
 either excluding $o_1$ from $\Obs'(H_1)$ (\emph{outcome
 restriction}) or excluding $H_2$ from the variant's history space
 (\emph{future restriction}).
-Roughly speaking, future restriction corresponds to pessimistic
-schemes and outcome restriction to optimistic schemes.
-Table~\ref{tab:mechanisms} classifies well-known mechanisms.
-
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{@{}lll@{}}
-\toprule
-\textbf{Mechanism} & \textbf{Strategy} & \textbf{Effect} \\
-\midrule
-Mutual exclusion (locking) & Future restriction & Blocks conflicting futures \\
-Total-order broadcast & Future restriction & Serializes all inputs \\
-Leader election & Future restriction & Single writer, no conflicts \\
-Barriers (MapReduce) & Future restriction & No future until all reach barrier \\
-Quorum reads & Outcome restriction & Filters stale values \\
-MVCC (snapshots) & Outcome restriction & Readers see consistent cut \\
-Deferred exposure (shadow copies) & Outcome restriction & Withholds until confirmed safe \\
-Optimistic validation (CAS, OCC) & Outcome restriction & Discards on conflict \\
-Multi-Paxos (TOB + quorum read) & Both & Serializes inputs + defers exposure \\
-Two-phase commit & Both & Aborts unsafe futures + defers exposure \\
-\bottomrule
-\end{tabular}
-\caption{Coordination mechanisms classified by resolution strategy.}
-\label{tab:mechanisms}
-\end{table}
+Future restriction corresponds to pessimistic schemes (locking,
+barriers, total-order broadcast); outcome restriction to optimistic
+schemes (quorum reads, MVCC, optimistic validation).
 
 \begin{example}[Paxos-based log as a properly coordinated variant]
   \label{ex:paxos-log}
