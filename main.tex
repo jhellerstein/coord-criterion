@@ -312,12 +312,7 @@ The framework applies to any concurrent setting---distributed or local.
 Coordination has costs in both: locking and abort in a local database,
 latency and partition vulnerability in a distributed system.
 The criterion characterizes when these costs are \emph{intrinsic} to the
-specification (unavoidable under any implementation) versus
-\emph{incidental} (artifacts of a particular implementation strategy).
-In the distributed case, establishing membership and a consistent
-input-ordering authority isolates all coordination into a single
-reusable layer; downstream evaluation of the ordered stream is
-coordination-free (Appendix~\ref{app:universal}).
+specification versus \emph{incidental} to a particular implementation.
 
 We build toward the criterion in three steps: first the execution model
 (histories and their causal growth), then the specification language
@@ -345,19 +340,11 @@ ordering.
 \noindent
 The disjoint sets distinguish interface activity from internal
 computation and message-passing structure.
-$E_{\mathit{iface}}$ contains client-facing \emph{interface events}:
-both invocations and responses (the observable input/output of the
-system as seen by clients).
+$E_{\mathit{iface}}$ contains client-facing \emph{interface events}
+(invocations and responses---the observable input/output as seen by
+clients).
 In the I/O automaton model of Section~\ref{sec:operational},
-invocations are input actions and responses are output actions; the
-history records both as interface events regardless of which party
-initiates them.
-In the register example, $E_{\mathit{iface}}$ contains invocations
-$\mathit{inv}(w)$, $\mathit{inv}(r)$ and responses
-$\mathit{resp}(w)$, $\mathit{resp}(r, v)$;
-$E_{\mathit{int}}$ contains local state updates;
-$E_{\mathit{send}}$ and $E_{\mathit{recv}}$ contain inter-replica
-propagation messages.
+invocations are input actions and responses are output actions.
 
 \begin{definition}[History]
   \label{def:history}
@@ -494,22 +481,11 @@ This is what it means to model a system faithfully.
 
 \begin{remark}[Choosing the outcome order]
   The outcome order $\Ord$ is a modeling choice, but in practice it
-  follows from the structure of the output.
-  Typical choices:
-  if the output is an ordered stream, $\Ord$ is prefix containment;
-  if the output is an unordered collection, $\Ord$ is set or multiset
-  containment;
-  if the output is a value in a domain with a natural partial order
-  (e.g., a lattice), $\Ord$ is that order.
-  An order with a top element (refining everything) makes
-  all specifications trivially monotone; an order recording
-  irrelevant implementation details introduces spurious
-  non-monotonicity.
+  follows from the structure of the output:
+  prefix containment for ordered streams, set inclusion for
+  unordered collections, lattice order for domain values.
   The outcome order is part of the specification's semantic
   contract---changing the order changes the specification.
-  The applications in Section~\ref{sec:applications} illustrate natural
-  choices: prefix extension for transaction logs, set inclusion for
-  committed facts, and lattice order for CRDT states.
 \end{remark}
 
 \begin{example}[Outcomes and order for the register]
@@ -561,15 +537,11 @@ futures or withholding outcomes?
     \mathcal{A}(H_{\mathit{iface}}) \triangleq
     \{H \in \Hist \mid H_{\mathit{iface}} \hext \In(H)\}.
   \]
-  These are the histories that \emph{could} arise under asynchrony and
-  causality alone, given the interface prefix $H_{\mathit{iface}}$.
-  They represent causally coherent interface continuations under
-  asynchrony: invocations and message deliveries are supplied by the
-  environment; response events are permitted interface exposures
-  under the specification's contract.
-  Well-formedness (Definition~\ref{def:history}) already excludes
-  physically impossible histories (e.g., a receive without a matching
-  send); $\mathcal{A}$ contains only causally coherent executions.
+  These are the causally coherent histories that could arise under
+  asynchrony, given the interface prefix $H_{\mathit{iface}}$.
+  Well-formedness (Definition~\ref{def:history}) excludes physically
+  impossible histories; $\mathcal{A}$ contains only causally coherent
+  executions.
 \end{definition}
 
 \begin{definition}[Implementation]
@@ -581,9 +553,8 @@ futures or withholding outcomes?
 \end{definition}
 
 \noindent
-An implementation determines which histories can arise.
-Downward-closure means every prefix of a realizable history is
-realizable.
+An implementation determines which histories can arise
+(downward-closure: every prefix of a realizable history is realizable).
 The key question is whether the implementation must suppress some
 admissible histories---or withhold some admissible outcomes---to avoid
 future contradictions.
