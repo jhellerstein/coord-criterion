@@ -288,22 +288,23 @@ ordering.
 \begin{definition}[Event universe]
   \label{def:event-types}
   A specification fixes pairwise-disjoint sets of events:
-  $E_{\mathit{iface}}$ (client interface),
+  $E_{\mathit{inv}}$ (client invocations),
+  $E_{\mathit{resp}}$ (client responses),
   $E_{\mathit{int}}$ (internal computation),
   $E_{\mathit{send}}$ (message sends),
   $E_{\mathit{recv}}$ (message receives).
+  We write $E_{\mathit{iface}} = E_{\mathit{inv}} \cup
+  E_{\mathit{resp}}$ for the client-facing interface events.
 \end{definition}
 
 \noindent
-The disjoint sets distinguish interface activity from internal
-computation and message-passing structure.
-$E_{\mathit{iface}}$ contains client-facing \emph{interface events}:
-invocations (inputs from clients, controlled by the environment) and
-responses (outputs to clients, controlled by the implementation).
-In the register example, $E_{\mathit{iface}}$ includes
-$\mathit{inv}(w)$, $\mathit{resp}(w)$, $\mathit{inv}(r)$,
-$\mathit{resp}(r, v)$; the remaining sets hold local computation and
-internal messages.
+The split makes the control boundary explicit:
+$E_{\mathit{inv}}$ events are controlled by the environment (clients);
+$E_{\mathit{resp}}$ events are controlled by the implementation.
+In the register example, $E_{\mathit{inv}}$ includes
+$\mathit{inv}(w)$, $\mathit{inv}(r)$; $E_{\mathit{resp}}$ includes
+$\mathit{resp}(w)$, $\mathit{resp}(r, v)$; the remaining sets hold
+local computation and inter-node messages.
 
 \begin{definition}[History]
   \label{def:history}
@@ -478,12 +479,12 @@ A specification is passive: it declares which outcomes are admissible but
 says nothing about which histories actually arise or which outcomes are
 actually exposed.
 An \emph{implementation} is active: it determines which outcome from
-$\Obs(H)$ is exposed at each history by emitting responses
-($E_{\mathit{iface}}$ outputs), and controls internal computation
+$\Obs(H)$ is exposed at each history by emitting response events
+($E_{\mathit{resp}}$), and controls internal computation
 ($E_{\mathit{int}}$) and message sends ($E_{\mathit{send}}$).
 Each emitted response becomes an event in the history, constraining
 which outcomes remain admissible at future histories.
-The environment controls invocations ($E_{\mathit{iface}}$ inputs)
+The environment controls invocations ($E_{\mathit{inv}}$)
 and message deliveries ($E_{\mathit{recv}}$).
 
 The central question: can an implementation preserve all of the
