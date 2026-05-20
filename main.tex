@@ -373,20 +373,23 @@ The past is fixed; only the future is open.
 
 \begin{example}[Extending $H_1$ to $H_2$]
   \label{ex:h2-formal}
-  Extend $H_1$ by delivering $w_p$ to $q$:
-  add $\mathit{send}(w_p) \in E_{\mathit{send}}$ at $p$ and
-  $\mathit{recv}(w_p) \in E_{\mathit{recv}}$ at $q$
-  ($\mathit{resp}(w_p) \rightarrow \mathit{send}(w_p) \rightarrow
-  \mathit{recv}(w_p)$);
-  then add a completed read at $q$:
-  $\mathit{inv}(r_q), \mathit{resp}(r_q, 1) \in E_{\mathit{iface}}$
-  with $\mathit{recv}(w_p) \rightarrow \mathit{inv}(r_q)$ and
-  program order $\mathit{resp}(w_q) \rightarrow \mathit{inv}(r_q)$
-  at $q$.
-  All new events are causally after existing events only---no new
-  predecessor of any event in $H_1$ is introduced.
-  The result: $w_p$ is causally prior to $r_q$ (via delivery), and
-  $w_q$ is causally prior to $r_p$ (already in $H_1$).
+  $H_2$ adds the following to $H_1$:
+  \\ \noindent
+  --- New interface events: $\mathit{inv}(r_q)$,
+  $\mathit{resp}(r_q, 1)$.
+  \\ \noindent
+  --- New message events: $\mathit{send}(w_p)$ at $p$,
+  $\mathit{recv}(w_p)$ at $q$.
+  \\ \noindent
+  --- New ordering at $q$:
+  $\mathit{resp}(w_q) \rightarrow \mathit{send}(w_q)$;
+  $\mathit{recv}(w_p) \rightarrow \mathit{inv}(r_q)
+  \rightarrow \mathit{resp}(r_q, 1)$.
+  Delivery: $\mathit{resp}(w_p) \rightarrow \mathit{send}(w_p)
+  \rightarrow \mathit{recv}(w_p)$.
+  \\ \noindent
+  All new events are causally after existing ones---no new predecessor
+  of any $H_1$ event is introduced, so $H_1 \hext H_2$.
 \end{example}
 
 %----------------------------------------------------------------
