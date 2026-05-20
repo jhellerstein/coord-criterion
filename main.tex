@@ -966,7 +966,7 @@ distributed-monotone because no partition can produce the dangerous
 future.
 A concrete example: collaborative text editing via
 CRDTs~\cite{shapiro2011crdt} is distributed-monotone (remote
-insertions merge without conflict), but simultaneous keystrokes at a
+edits merge without conflict), but simultaneous keystrokes at a
 single keyboard require a local mutex to serialize---a non-monotone
 resolution so routine it goes unmentioned in the CRDT literature.
 
@@ -996,9 +996,11 @@ resolution so routine it goes unmentioned in the CRDT literature.
 
 \noindent
 The relationship to Complete CALM:
-monotone $\Rightarrow$ distributed-monotone $\Rightarrow$
-CAP-implementable (consistent + available + partition-tolerant),
-and monotone $\Rightarrow$ coordination-free.
+monotone $\Leftrightarrow$ coordination-free (Complete CALM), and
+distributed-monotone $\Leftrightarrow$
+CAP-implementable (Complete CAP).
+Monotone $\Rightarrow$ distributed-monotone (all futures includes
+partition-constrained ones), but not conversely.
 The gap between monotonicity and distributed-monotonicity is exactly
 the same-side non-monotonicity that coordination within a connected
 component can resolve without cross-partition communication.
