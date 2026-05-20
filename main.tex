@@ -327,16 +327,19 @@ Messages may be delayed, reordered, or lost (a send without a matching
 receive denotes a lost or indefinitely delayed message).
 We impose no fairness or progress assumptions.
 
-\begin{example}[Register history $H_1$]
+\begin{example}[Register history $H_1$ from Section~\ref{sec:example}]
   \label{ex:h1-formal}
-  The history $H_1$ from Section~\ref{sec:example} in the formal
-  model.
-  Interface events ($E_{\mathit{iface}}$): invocations and responses
-  for $w_p$ (write of $1$ at $p$), $w_q$ (write of $2$ at $q$), and
-  $r_p$ (read at $p$ returning $2$).
-  Message events: $\mathit{send}(w_q)$ at $q$ and
-  $\mathit{recv}(w_q)$ at $p$ (delivery of $q$'s write to $p$).
-  Ordering: $\mathit{resp}(w_q) \rightarrow \mathit{send}(w_q)
+  Two sets of events, and their happens-before order:
+  \\ \noindent
+  --- Interface events ($E_{\mathit{iface}}$):
+  $\mathit{inv}(w_p(1))$, $\mathit{resp}(w_p(1))$,
+  $\mathit{inv}(w_q(2))$, $\mathit{resp}(w_q(2))$,
+  $\mathit{inv}(r_p)$, $\mathit{resp}(r_p, 2)$.
+  \\ \noindent
+  --- Message events ($E_{\mathit{send}} \cup E_{\mathit{recv}}$):
+  $\mathit{send}(w_q)$, $\mathit{recv}(w_q)$.
+  \\ \noindent
+  --- Ordering: $\mathit{resp}(w_q) \rightarrow \mathit{send}(w_q)
   \rightarrow \mathit{recv}(w_q) \rightarrow \mathit{inv}(r_p)$
   (delivery chain), plus program order
   $\mathit{resp}(w_p) \rightarrow \mathit{inv}(r_p)$ at $p$.
