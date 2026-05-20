@@ -329,20 +329,24 @@ We impose no fairness or progress assumptions.
 
 \begin{example}[Register history $H_1$ from Section~\ref{sec:example}]
   \label{ex:h1-formal}
-  Two sets of events, and their happens-before order:
+  Events and their happens-before order:
   \\ \noindent
-  --- Interface events ($E_{\mathit{iface}}$):
-  $\mathit{inv}(w_p(1))$, $\mathit{resp}(w_p(1))$,
+  --- Interface: $E_{\mathit{iface}} = \{
+   \mathit{inv}(w_p(1))$, $\mathit{resp}(w_p(1))$,
   $\mathit{inv}(w_q(2))$, $\mathit{resp}(w_q(2))$,
-  $\mathit{inv}(r_p)$, $\mathit{resp}(r_p, 2)$.
+  $\mathit{inv}(r_p)$, $\mathit{resp}(r_p, 2)\}$.
   \\ \noindent
-  --- Message events ($E_{\mathit{send}} \cup E_{\mathit{recv}}$):
-  $\mathit{send}(w_q)$, $\mathit{recv}(w_q)$.
+  --- Messages: $E_{\mathit{send}} = \{\mathit{send}(w_q)\}$, 
+   \quad $E_{\mathit{recv}} = \{\mathit{recv}(w_q)\}$.
   \\ \noindent
-  --- Ordering: $\mathit{resp}(w_q) \rightarrow \mathit{send}(w_q)
-  \rightarrow \mathit{recv}(w_q) \rightarrow \mathit{inv}(r_p)$
-  (delivery chain), plus program order
-  $\mathit{resp}(w_p) \rightarrow \mathit{inv}(r_p)$ at $p$.
+  --- Ordering: program order
+  $\mathit{inv}(w_p) \rightarrow \mathit{resp}(w_p)
+  \rightarrow \mathit{inv}(r_p) \rightarrow \mathit{resp}(r_p,2)$
+  at $p$;
+  $\mathit{inv}(w_q) \rightarrow \mathit{resp}(w_q)
+  \rightarrow \mathit{send}(w_q)$ at $q$;
+  delivery $\mathit{send}(w_q) \rightarrow \mathit{recv}(w_q)
+  \rightarrow \mathit{inv}(r_p)$ across nodes.
 \end{example}
 
 As an execution unfolds, new events occur.
