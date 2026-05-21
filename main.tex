@@ -719,7 +719,7 @@ knowledge that coordination provides.
   But a coordination-free process cannot foresee $H_2$: it responds
   from local state and cannot distinguish futures where $o$ survives
   from those where it does not.
-  The environment may then schedule the continuation producing $H_2$,
+  An admissible continuation reaches $H_2$,
   where no refinement of $o$ exists---correctness is violated.
   Avoiding $o$ entirely means restricting the interface: a
   coordinated variant (Section~\ref{sec:separation}).
@@ -840,7 +840,10 @@ coordinated.
   \begin{enumerate}[nosep,label=(\roman*)]
     \item $\Obs'(H) \subseteq \Obs(H)$ for all $H$
           (no new outcomes), and
-    \item $\Spec'$ is monotone (Definition~\ref{def:monotone}).
+    \item $\Spec'$ is monotone over its admitted histories: for all
+          $H_1 \hext H_2$ with $\Obs'(H_1) \neq \emptyset$ and
+          $\Obs'(H_2) \neq \emptyset$, every $o \in \Obs'(H_1)$ has
+          a refinement in $\Obs'(H_2)$.
   \end{enumerate}
 \end{definition}
 
@@ -852,8 +855,9 @@ unreachable (e.g., total-order broadcast makes non-serialized
 histories unreachable); the variant's $\Obs'$ reflects this by
 assigning $\Obs'(H) = \emptyset$ to unreachable histories, since no
 outcome is needed where no execution can go.
-Complete CALM then applies directly to $\Spec'$: if it is monotone,
-the coordination suffices; otherwise more restriction is needed.
+Complete CALM then applies directly to $\Spec'$: if it is monotone
+over its admitted histories, the coordination suffices; otherwise more
+restriction is needed.
 
 \begin{theorem}[Separation from relational-transducer CALM]
   \label{thm:separation}
@@ -1344,13 +1348,14 @@ consistent with $H$.
 
 \begin{proof}
   Let $o \in \Obs(H)$ and $H \hext H'$.
-  The extension $H'$ may add updates and merges.
+  The state $o$ was reached by some sequence of updates and merges
+  in $H$.
+  The extension $H'$ may add further updates and merges; applying
+  them starting from $o$ yields a state $o'$ reachable at $H'$.
   Since updates are inflationary ($\mathit{update}(s) \sqsupseteq s$)
-  and merge is join ($s_1 \sqcup s_2 \sqsupseteq s_1$), every state
-  reachable at $H'$ is at least as large (in the lattice order) as
-  some state reachable at $H$.
-  In particular, there exists $o' \in \Obs(H')$ with
+  and merge is join ($s_1 \sqcup s_2 \sqsupseteq s_1$), we have
   $o \sqsubseteq o'$, i.e., $o \Ord o'$.
+  Hence $o' \in \Obs(H')$ with $o \Ord o'$.
 \end{proof}
 
 \noindent
@@ -1398,7 +1403,7 @@ coordination.
 
 In our framework, the distinction reduces to a structural property of
 $\Ord$: if $\Ord$ admits a join-semilattice structure (associative,
-commutative, idempotent me``rge) and the implementation merges
+commutative, idempotent merge) and the implementation merges
 divergent outcomes by join, monotonicity implies convergence
 (divergent replicas can always reconcile); if $\Ord$ lacks joins,
 monotonicity guarantees safe independent action but not convergence.
