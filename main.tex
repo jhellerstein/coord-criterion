@@ -1720,6 +1720,11 @@ generality for safety properties.
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
   Contrapositive: if $\Spec$ is not monotone, no correct
   coordination-free implementation of $\Spec$ exists.
+  Correctness here is the full demonic interface contract
+  (Section~\ref{sec:operational}): every outcome in $\Obs(H)$ is a
+  permitted exposure, and safety must hold for all of them.
+  An implementation that avoids some permitted outcomes is realizing a
+  restricted interface $\Obs' \subset \Obs$, not $\Spec$ itself.
 
   Let $o \in \Obs(H_1)$ be future-inconsistent, witnessed by
   $H_1 \hext H_2$: no $o' \in \Obs(H_2)$ satisfies $o \Ord o'$.
@@ -1733,11 +1738,13 @@ generality for safety properties.
   A coordination-free process responds from local state alone; its
   local view is a causal subhistory of $H_1$ and cannot distinguish
   $H_1$ from extensions where $o$ remains valid.
-  The environment may schedule the continuation producing $H_2$.
-  Correctness at $H_2$ requires an outcome $o^* \in \Obs(H_2)$ with
-  $o \Ord o^*$ (the operative interpretation must persist under
-  refinement).
-  No such $o^*$ exists.
+  An admissible continuation reaches $H_2$.
+  Let $r = \mathsf{resp}(e, v)$ be the response event exposing $o$
+  at $H_1$, and let $H_2^r$ be the history obtained by including $r$
+  in $H_2$.
+  Since adding response events can only restrict admissibility
+  ($\Obs(H_2^r) \subseteq \Obs(H_2)$), no outcome in $\Obs(H_2^r)$
+  refines $o$ either.
   Correctness is violated.
 
   The only way to escape this argument is to rule $o$ out as a
@@ -1793,6 +1800,9 @@ strengthen the impossibility direction of the theorem.
   $P = (S, \bar{S})$, a process $p \in S$, an outcome
   $o \in \Obs(H_1)$ at $p$, and a $P$-constrained future $H_2$ with
   no refinement of $o$ in $\Obs(H_2)$.
+  As in Theorem~\ref{thm:calm-operational}, exposure is demonic: if
+  $o \in \Obs(H_1)$ is permitted at $p$, a CAP-available
+  implementation of the full interface must be safe for exposing it.
 
   Construct two executions indistinguishable to $p$:
   \begin{itemize}[nosep]
@@ -1824,15 +1834,18 @@ strengthen the impossibility direction of the theorem.
   every process $p \in S$, and every $P$-constrained future $H_2$ of
   $H_1$, every outcome $o \in \Obs(H_1)$ at $p$ has a refinement in
   $\Obs(H_2)$.
-  Under any partition, the only realizable futures are
-  $P$-constrained.
-  Cross-partition non-monotonicities are ruled out by
-  distributed-monotonicity; non-monotonicities confined to one side
-  of the partition are discharged by coordination within the
-  connected component (intra-side serialization or mutual
-  exclusion), which requires no cross-partition communication.
-  CAP availability forbids waiting across partitions, not
-  coordination within a connected component.
+
+  \emph{Construction.}
+  Within each connected component, run any coordinated resolver for
+  non-monotonicities whose witnesses lie wholly inside the component
+  (e.g., intra-component serialization or mutual exclusion).
+  Across components, each process exposes outcomes using the
+  causal-view protocol of Theorem~\ref{thm:calm-operational}.
+  Distributed-monotonicity ensures that no $P$-constrained
+  future---consisting only of activity invisible to $p$---can
+  invalidate an outcome exposed at $p$.
+  Because no step waits for messages across the partition, availability
+  is preserved.
   Hence both correctness and availability hold regardless of
   partition state.
 \end{proof}
@@ -1890,6 +1903,10 @@ cannot prevent without coordination.
 We illustrate with three worked instances under their stated
 assumptions, showing that well-known coordination-free consistency
 models lie on the frontier of their stronger counterparts.
+The maximality arguments are relative to the stated interface and
+primitive refinement generators; they should be read as frontier
+results for those interface choices, not as uniqueness theorems over
+all possible weakenings.
 
 \subsection{Register: Causal Consistency}
 
@@ -1933,7 +1950,7 @@ $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
   By Definition~\ref{def:future}(iii), $H_1$ is downward-closed in
   $H_2$: no new event in $H_2$ enters the causal past of any event
   in $H_1$.
-  Hence $\mathit{past}(r, H_2) \supseteq \mathit{past}(r, H_1)$ for
+  Hence $\mathit{past}(r, H_2) = \mathit{past}(r, H_1)$ for
   every read $r$ already in $H_1$, and the return value chosen in
   $o_1$ remains valid.
   New reads in $H_2$ can be appended with any causally-consistent
@@ -2369,16 +2386,16 @@ static membership assumption.
 \paragraph{Architectural consequence.}
 Theorem~\ref{thm:universal} formally justifies a common systems
 pattern: establish membership once (via a configuration service,
-bootstrap protocol, or seed authority), then process all subsequent
-computation coordination-free.
+bootstrap protocol, or seed authority), then consume the ordered
+prefix coordination-free downstream.
 Log-based architectures (Kafka~\cite{kreps2011kafka}, event sourcing,
-change data capture) are one realization: the log's sequencer is
-membership authority, and downstream consumers accumulate log entries
-monotonically.
+change data capture) are one realization: the log's sequencer is the
+ordering authority, and downstream consumers accumulate log entries
+monotonically relative to the ordered-prefix interface.
 But the theorem is more general---any architecture that establishes
 membership and then accumulates inputs monotonically achieves
-coordination-freedom downstream, regardless of the specification's
-non-monotone structure.
+coordination-freedom downstream of the ordering authority, regardless
+of the specification's non-monotone structure.
 
 \begin{remark}[Distributed vs.\ local coordination]
   \label{rem:local-depth}
@@ -2406,7 +2423,9 @@ non-monotone structure.
   After that, each stratum seal is a local commitment triggered by
   monotone accumulation of signals from known participants.
   The $k$ strata require $k$ local sequential commitments, but zero
-  additional rounds of distributed coordination.
+  additional rounds of distributed coordination in the sense of
+  resolving incompatible futures; the barriers are monotone waits
+  over known participants.
   (The ordering service itself requires ongoing consensus, but that is
   a generic reusable layer independent of the stratified program.)
 \end{remark}
@@ -2423,15 +2442,15 @@ CALM~\cite{baccaert2026spectrum}.
 \begin{proposition}[Subsumption of $N_3$-coordination-freedom]
   \label{prop:n3}
   Under the transducer instantiation (Definition~\ref{def:transducer-inst})
-  with $\mathcal{A}$ restricted to histories in which every node's
-  system relation contains the full set of node identifiers from the
-  start, a \emph{domain-independent} query $Q$ is
+  with the admitted history space restricted to histories in which every
+  node's system relation contains the full set of node identifiers from
+  the start, a \emph{domain-independent} query $Q$ is
   $N_3$-coordination-free in the sense of
   Ameloot et al.~\cite{ameloot2015weaker} iff $\Spec_Q$ is monotone.
 \end{proposition}
 
 \begin{proof}[Sketch]
-  The restriction on $\mathcal{A}$ ensures that every admissible history
+  The restriction ensures that every admissible history
   begins with each node knowing all identifiers---the defining property
   of model $N_3$.
   Ameloot et al.~\cite{ameloot2015weaker} (Theorem~20) characterize
@@ -2446,16 +2465,17 @@ CALM~\cite{baccaert2026spectrum}.
   are $N_3$-coordination-free but not monotone in the input---they
   exploit the known-membership assumption rather than input growth.
   Such queries are coordination-free \emph{given} the membership
-  knowledge, which our framework captures by restricting $\mathcal{A}$
-  rather than by relaxing monotonicity.
+  knowledge, which our framework captures by restricting the admitted
+  history space rather than by relaxing monotonicity.
 \end{proof}
 
 \noindent
 The $N_1$ and $N_2$ instantiations are analogous, restricting
-$\mathcal{A}$ to histories consistent with the corresponding
-information model (no system relations, or own-identifier only).
+the admitted history space to histories consistent with the
+corresponding information model (no system relations, or
+own-identifier only).
 Baccaert and Ketsman's $\mathbf{C}$-monotonicity is subsumed
-identically: restrict $\mathcal{A}$ to histories consistent with
+identically: restrict the admitted histories to those consistent with
 configuration constraint $\mathbf{C}$.
 
 
