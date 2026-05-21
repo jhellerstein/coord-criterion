@@ -1395,12 +1395,20 @@ cannot prevent without coordination.
 \end{proposition}
 
 \begin{proof}[Proof sketch (full proof in Appendix~\ref{app:minimality})]
-  \emph{Monotonicity:} a causally-consistent return value remains
-  valid under extension (no new event enters the causal past of an
-  existing event).
-  \emph{Maximality:} for any removed edge, we construct a history
-  where the removed refinement is the only valid extension---breaking
-  monotonicity.
+  \emph{Monotonicity:} Under causal consistency, a read returns a
+  value written in its causal past.
+  Extending a history adds only causally later events
+  (Definition~\ref{def:future}), so no new event enters the causal
+  past of an existing read---its return value remains valid.
+
+  \emph{Maximality:} Suppose we remove any single refinement edge
+  from $\Ord_{\mathit{causal}}$ (i.e., declare that some extension
+  $o_1 \cdot (r \mapsto v)$ no longer refines $o_1$).
+  We construct a history where $v$ is the \emph{only}
+  causally-consistent return value for $r$ (by placing $r$ at a node
+  whose causal past contains only $w(v)$).
+  Then $o_1$ has no valid extension at that history under the
+  weakened order---monotonicity breaks.
 \end{proof}
 
 \noindent
