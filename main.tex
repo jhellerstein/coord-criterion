@@ -1386,29 +1386,36 @@ The gap between $\Ord$ and a frontier element $\Ord'$ represents
 commitments the client considers incompatible but that the system
 cannot prevent without coordination.
 
-\begin{proposition}[Causal consistency is on the register frontier]
+\begin{proposition}[Register frontier]
   \label{prop:register-frontier-body}
-  For the replicated register under linearizability
-  ($\Ord_{\mathit{lin}}$ = prefix extension on total orders),
-  causal consistency ($\Ord_{\mathit{causal}}$ = causal-prefix
-  extension) is monotone, and no weaker order suffices.
+  Starting from linearizability ($\Ord_{\mathit{lin}}$ = prefix
+  extension on total orders, non-monotone), causal-prefix extension
+  ($\Ord_{\mathit{causal}} \supseteq \Ord_{\mathit{lin}}$) is a
+  minimal monotone enlargement: it achieves monotonicity, and no
+  order strictly between $\Ord_{\mathit{lin}}$ and
+  $\Ord_{\mathit{causal}}$ does.
 \end{proposition}
 
 \begin{proof}[Proof sketch (full proof in Appendix~\ref{app:minimality})]
-  \emph{Monotonicity:} Under causal consistency, a read returns a
-  value written in its causal past.
-  Extending a history adds only causally later events
-  (Definition~\ref{def:future}), so no new event enters the causal
-  past of an existing read---its return value remains valid.
+  $\Ord_{\mathit{causal}}$ enlarges $\Ord_{\mathit{lin}}$ by
+  relaxing the total-order requirement to causal order: outcomes that
+  linearizability considers incomparable (different per-process
+  orderings of concurrent writes) become comparable under
+  $\Ord_{\mathit{causal}}$.
 
-  \emph{Maximality:} Suppose we remove any single refinement edge
-  from $\Ord_{\mathit{causal}}$ (i.e., declare that some extension
-  $o_1 \cdot (r \mapsto v)$ no longer refines $o_1$).
-  We construct a history where $v$ is the \emph{only}
-  causally-consistent return value for $r$ (by placing $r$ at a node
-  whose causal past contains only $w(v)$).
-  Then $o_1$ has no valid extension at that history under the
-  weakened order---monotonicity breaks.
+  \emph{Monotonicity:} Under $\Ord_{\mathit{causal}}$, a read
+  returns a value written in its causal past.
+  Extending a history adds only causally later events
+  (Definition~\ref{def:future}), so no existing read's causal past
+  changes---its return value remains valid.
+
+  \emph{Minimality:} If we remove any edge from
+  $\Ord_{\mathit{causal}}$ (tighten back toward
+  $\Ord_{\mathit{lin}}$), we can construct a history where the
+  removed refinement is the only valid extension---monotonicity
+  breaks.
+  Hence no order strictly smaller than $\Ord_{\mathit{causal}}$ that
+  contains $\Ord_{\mathit{lin}}$ is monotone.
 \end{proof}
 
 \noindent
