@@ -752,7 +752,7 @@ Third, \emph{constructive power}: for any non-monotone specification,
 the \emph{coordination-free frontier}---the set of minimal monotone
 enlargements of $\Ord$---characterizes the strongest coordination-free
 guarantees achievable for a fixed observation interface
-(Appendix~\ref{app:minimality}).
+(Section~\ref{sec:frontier}).
 The frontier recovers causal consistency for
 registers~\cite{mahajan2011consistency}, derives causal FIFO for
 queues, and derives forward-reachability (B-link
@@ -1355,6 +1355,63 @@ commutative, idempotent merge) and the implementation merges
 divergent outcomes by join, monotonicity implies convergence
 (divergent replicas can always reconcile); if $\Ord$ lacks joins,
 monotonicity guarantees safe independent action but not convergence.
+
+
+% ================================================================
+\section{The Coordination-Free Frontier}
+\label{sec:frontier}
+% ================================================================
+
+For a given system (fixed $E$ and $\Obs$), different choices of
+outcome order $\Ord$ yield different coordination requirements.
+Given a non-monotone specification, what are the strongest guarantees
+achievable without coordination?
+
+Since enlarging $\Ord$ (adding refinement edges) can only help
+monotonicity, the coordination-free alternatives are the
+\emph{minimal monotone enlargements} of $\Ord$:
+
+\begin{definition}[Coordination-free frontier]
+  \label{def:frontier}
+  For a specification $(E, \Obs, \Ord)$, the \emph{coordination-free
+  frontier} is the set of minimal (by edge-set inclusion) partial
+  orders $\Ord' \supseteq \Ord$ such that $(E, \Obs, \Ord')$ is
+  monotone.
+\end{definition}
+
+\noindent
+Each frontier element preserves all original refinement relationships
+and adds just enough new ones to achieve monotonicity.
+The gap between $\Ord$ and a frontier element $\Ord'$ represents
+commitments the client considers incompatible but that the system
+cannot prevent without coordination.
+
+\begin{proposition}[Causal consistency is on the register frontier]
+  \label{prop:register-frontier-body}
+  For the replicated register under linearizability
+  ($\Ord_{\mathit{lin}}$ = prefix extension on total orders),
+  causal consistency ($\Ord_{\mathit{causal}}$ = causal-prefix
+  extension) is monotone, and no weaker order suffices.
+\end{proposition}
+
+\begin{proof}[Proof sketch (full proof in Appendix~\ref{app:minimality})]
+  \emph{Monotonicity:} a causally-consistent return value remains
+  valid under extension (no new event enters the causal past of an
+  existing event).
+  \emph{Maximality:} for any removed edge, we construct a history
+  where the removed refinement is the only valid extension---breaking
+  monotonicity.
+\end{proof}
+
+\noindent
+This recovers the result of Mahajan et
+al.~\cite{mahajan2011consistency}: causal consistency is the strongest
+coordination-free consistency model for read/write registers.
+Our derivation is purely semantic (from the frontier construction)
+rather than operational (from a specific protocol).
+Appendix~\ref{app:minimality} develops analogous results for queues
+(causal FIFO) and search structures (forward-reachability / B-link
+trees~\cite{lehman1981efficient}).
 
 
 % ================================================================
