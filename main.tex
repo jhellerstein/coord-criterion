@@ -158,7 +158,7 @@ The framework is minimal, enabling its coverage to be broad. Our contributions i
         Classical results from distributed
         systems fall out naturally as further instances (Appendix~\ref{app:classical}).
   \item \emph{Coordination-free frontier}
-        (Appendix~\ref{app:minimality}): characterizes the strongest
+        (Section~\ref{sec:frontier}): characterizes the strongest
         coordination-free weakenings for a fixed observation
         interface.
         Recovers causal consistency for registers; yields new results
@@ -725,6 +725,26 @@ knowledge that coordination provides.
   coordinated variant (Section~\ref{sec:separation}).
 \end{proof}
 
+\begin{remark}[Joint consistency without agreement]
+  \label{rem:joint-consistency}
+  A subtle consequence of the sufficiency argument: independently
+  chosen responses at different processes are \emph{jointly}
+  consistent without any inter-process agreement protocol.
+  Process $p$ picks $o_p \in \Obs(H_p)$ and responds $v_p$;
+  concurrently, $q$ picks $o_q \in \Obs(H_q)$ and responds $v_q$.
+  These choices are made from different causal views with no
+  communication.
+  Yet the global history $H$ contains both response events, and
+  monotonicity guarantees that $o_p$ has a refinement
+  $o' \in \Obs(H)$.
+  Since $H$ records $(e_q, v_q)$, consistency with observations
+  forces $o'(e_q) = v_q$; since $o_p \Ord o'$, refinement coherence
+  gives $o'(e_p) = v_p$.
+  Hence $o'$ witnesses correctness for both responses simultaneously.
+  Joint consistency is not an additional assumption---it is a free
+  consequence of monotonicity applied to the full history.
+\end{remark}
+
 %----------------------------------------------------------------
 \subsection{Discussion}
 \label{sec:discussion}
@@ -809,9 +829,9 @@ The central insight is simple: coordination is a \emph{means}, not an
 A system may use coordination internally to resolve a non-monotone
 specification, producing a monotone output interface for downstream
 consumers.
-A coordinated variant always exists (Appendix~\ref{app:universal}
-provides one for any spec); the question is how to verify that a
-\emph{given} variant is properly coordinated.
+A coordinated variant always exists (Theorem~\ref{thm:universal}); the
+question is how to verify that a \emph{given} variant is properly
+coordinated.
 
 \begin{definition}[Properly coordinated variant]
   \label{def:coord-variant}
@@ -899,6 +919,33 @@ the coordination suffices; otherwise more restriction is needed.
   The architecture of Paxos-based systems reflects this: membership
   is configured once; everything downstream is coordination-free.
 \end{remark}
+
+The consensus example illustrates a general phenomenon: coordination
+can always be factored into a generic ordering layer plus
+coordination-free local evaluation.
+
+\begin{theorem}[Universal sufficiency of ordering authority]
+  \label{thm:universal}
+  For any specification $\Spec = (E, \Obs, \Ord)$, there exists a
+  coordination mechanism $I_{\mathit{ord}}$ consisting of
+  (a)~a membership authority (making the participant set common
+  knowledge) and (b)~an ordering service (delivering a consistent
+  total extension of the causal order to all replicas) such that the
+  resolved specification $\Spec|_{I_{\mathit{ord}}}$ is monotone.
+\end{theorem}
+
+\noindent
+The need for membership is intuitive: concurrent events admit
+multiple valid orderings, and all replicas must agree on which order
+to adopt.
+That agreement requires an authority---a leader or quorum---whose
+identity must itself be established by coordination.
+Once authority is fixed, it can monotonically emit an ordered
+prefix; downstream processes evaluate the specification over this
+growing prefix coordination-free.
+Multi-Paxos~\cite{lamport2001paxos} is the canonical instantiation.
+The proof (Appendix~\ref{app:universal}) constructs the resolved
+specification explicitly and verifies monotonicity.
 
 
 % ================================================================
@@ -1351,7 +1398,7 @@ coordination.
 
 In our framework, the distinction reduces to a structural property of
 $\Ord$: if $\Ord$ admits a join-semilattice structure (associative,
-commutative, idempotent merge) and the implementation merges
+commutative, idempotent me``rge) and the implementation merges
 divergent outcomes by join, monotonicity implies convergence
 (divergent replicas can always reconcile); if $\Ord$ lacks joins,
 monotonicity guarantees safe independent action but not convergence.
@@ -1385,6 +1432,10 @@ and adds just enough new ones to achieve monotonicity.
 The gap between $\Ord$ and a frontier element $\Ord'$ represents
 commitments the client considers incompatible but that the system
 cannot prevent without coordination.
+We illustrate with registers here; Appendix~\ref{app:minimality}
+develops analogous frontier results for queues (causal FIFO) and
+search structures (forward-reachability / B-link
+trees~\cite{lehman1981efficient}).
 
 \begin{proposition}[Register frontier]
   \label{prop:register-frontier-body}
@@ -1397,10 +1448,15 @@ cannot prevent without coordination.
 \end{proposition}
 
 \begin{proof}[Proof sketch (full proof in Appendix~\ref{app:minimality})]
-  $\Ord_{\mathit{causal}}$ enlarges $\Ord_{\mathit{lin}}$ by
-  relaxing the total-order requirement to causal order: outcomes that
-  linearizability considers incomparable (different per-process
-  orderings of concurrent writes) become comparable under
+  $\Ord_{\mathit{causal}}$ enlarges $\Ord_{\mathit{lin}}$:
+  if $o_1$ is a prefix of $o_2$ under a single total order
+  ($o_1 \Ord_{\mathit{lin}} o_2$), then $o_1$ is certainly a
+  causal prefix of $o_2$ ($o_1 \Ord_{\mathit{causal}} o_2$), since
+  a total order is a special case of a causal order.
+  But $\Ord_{\mathit{causal}}$ also relates outcomes that
+  $\Ord_{\mathit{lin}}$ does not: two per-process views that order
+  concurrent writes differently are incomparable under
+  $\Ord_{\mathit{lin}}$ but both extend a common causal prefix under
   $\Ord_{\mathit{causal}}$.
 
   \emph{Monotonicity:} Under $\Ord_{\mathit{causal}}$, a read
@@ -1424,9 +1480,6 @@ al.~\cite{mahajan2011consistency}: causal consistency is the strongest
 coordination-free consistency model for read/write registers.
 Our derivation is purely semantic (from the frontier construction)
 rather than operational (from a specific protocol).
-Appendix~\ref{app:minimality} develops analogous results for queues
-(causal FIFO) and search structures (forward-reachability / B-link
-trees~\cite{lehman1981efficient}).
 
 
 % ================================================================
@@ -1484,10 +1537,15 @@ arbitrary specifications (Section~\ref{sec:complete-cap}).
 
 \paragraph{Arbitration-free consistency.}
 Attiya et al.~\cite{attiya2023arbitration} prove that a storage
-specification admits an available implementation iff it is
-\emph{arbitration-free}.
-Their criterion is a special case of ours: total-order arbitration is
-one form of non-monotonicity.
+specification within a consistency model admits an available
+implementation iff it is \emph{arbitration-free}---it does not require
+a total arbitration order to resolve visibility or read dependencies.
+Their criterion detects one pattern of non-monotonicity (total-order
+commitment); ours detects all patterns uniformly.
+Conversely, total ordering is one resolution mechanism---and a
+universal one (Theorem~\ref{thm:universal})---but the frontier
+(Section~\ref{sec:frontier}) shows that weaker resolutions often
+suffice without imposing a total order.
 
 \paragraph{Language-level monotonicity.}
 LVars~\cite{kuper2013lvars}, Lasp~\cite{meiklejohn2015lasp}, and
@@ -1534,14 +1592,28 @@ outcomes can be invalidated by partition-constrained futures---cannot be
 implemented with consistency, availability, and partition tolerance
 simultaneously.
 
-\paragraph{Beyond CALM.}
-The methodology demonstrated here---identify the minimal semantic
-ingredients of a model-specific result, prove the characterization at
-that level, and recover the original as an instance---may apply to
-other results in database theory.
-Stratification theory, Datalog boundedness, and query containment may
-each lift to semantic characterizations once model-specific scaffolding
-is removed.
+The criterion is exact: all modeling freedom resides in the
+specification $(E, \Obs, \Ord)$.
+Once these three components are fixed, monotonicity completely
+characterizes coordination---no finer semantic boundary exists without
+altering the specification itself.
+Disagreements about whether a system ``needs coordination'' reduce to
+disagreements about what the specification promises.
+
+The coordination-free frontier turns this diagnostic into a
+constructive tool: given a non-monotone specification, it identifies
+the strongest guarantees achievable without coordination by enlarging
+the refinement order to tolerate otherwise-coordinated ambiguity.
+That causal consistency, causal FIFO, and forward-reachability all
+emerge from one construction suggests that ``relaxed'' consistency
+models are optimal points in a well-defined space, not ad hoc
+compromises.
+
+Our overall methodology---identify the minimal semantic ingredients of a
+model-specific result, prove the characterization at that level, and
+recover the original as one of many instances---may apply to other
+model-specific results in database theory and distributed computing
+that currently lack a common formal vocabulary.
 
 
 % ================================================================
@@ -2175,8 +2247,7 @@ fixpoint logic captures PTIME; here, a known membership order
 converts an inherently non-monotone universal check into a monotone
 fixed-point computation.
 
-\begin{theorem}[Universal sufficiency of ordering authority]
-  \label{thm:universal}
+\begin{theorem}[Universal sufficiency of ordering authority, restated]
   For any specification $\Spec = (E, \Obs, \Ord)$, there exists a
   coordination mechanism $I_{\mathit{ord}}$ consisting of
   (a)~a membership authority (making the participant set common
