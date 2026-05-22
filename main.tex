@@ -38,8 +38,6 @@
 \newcommand{\Obs}{\mathsf{Obs}}
 \newcommand{\Ord}{\preceq}
 \newcommand{\hext}{\sqsubseteq_h}
-\newcommand{\Iface}{\mathsf{Iface}}
-
 % ---------- Comments ----------
 \newcommand{\jmh}[1]{{\color{red}\textbf{[JMH:} #1\textbf{]}}}
 
@@ -693,8 +691,8 @@ knowledge that coordination provides.
 \begin{theorem}[Operational Complete CALM]
   \label{thm:calm-operational}
   A well-formed specification $\Spec$ admits a correct
-  coordination-free implementation iff $\Spec$ is
-  monotone.
+  coordination-free implementation of the full interface contract
+  iff $\Spec$ is monotone.
 \end{theorem}
 
 \begin{proof}[Proof sketch (full proof in Appendix~\ref{app:operational})]
@@ -708,9 +706,6 @@ knowledge that coordination provides.
   committing based on partial information---but monotonicity
   guarantees a refinement $o' \in \Obs(H)$ that explains the full
   response trace.
-  Joint consistency of concurrent responses follows automatically:
-  $\Obs(H)$ is evaluated over the full history including all response
-  events, so any explaining outcome must agree with all of them.
 
   \emph{Necessity.}
   If $o \in \Obs(H_1)$ is future-inconsistent (no refinement at some
@@ -880,7 +875,8 @@ restriction is needed.
   this could be a false negative; the coordination may have discharged the
   non-monotonicity.
   Unfortunately, no precise syntactic analysis can exist: stratified
-  Datalog with negation computes all PTIME functions on ordered
+  Datalog with negation in the transducer setting computes all PTIME
+  functions on ordered
   structures~\cite{immerman1986relational}, and determining whether
   an arbitrary PTIME function is monotone is undecidable (by Rice's
   theorem applied to the class of PTIME-computable functions).
@@ -1407,14 +1403,14 @@ commutative, idempotent merge) and the implementation merges
 divergent outcomes by join, monotonicity implies convergence
 (divergent replicas can always reconcile); if $\Ord$ lacks joins,
 monotonicity guarantees safe independent action but not convergence.
-CRDTs---in requiring convergence---are often more restrictive than
-needed to achieve coordination-freedom.
-Monotonicity prevents two outcomes from contradicting each other;
-it does not require replicas to agree.
-Causal consistency for registers (Appendix~\ref{app:minimality})
-witnesses the gap: it is monotone (on the coordination-free
-frontier) but not convergent---replicas may permanently order
-concurrent writes differently.
+% CRDTs---in requiring convergence---are often more restrictive than
+% needed to achieve coordination-freedom.
+% Monotonicity prevents two outcomes from contradicting each other;
+% it does not require replicas to agree.
+% Causal consistency for registers (Appendix~\ref{app:minimality})
+% witnesses the gap: it is monotone (on the coordination-free
+% frontier) but not convergent---replicas may permanently order
+% concurrent writes differently.
 
 
 % ================================================================
@@ -1749,9 +1745,11 @@ modeled as internal events without loss of generality.
   local view is a causal subhistory of $H_1$ and cannot distinguish
   $H_1$ from extensions where $o$ remains valid.
   An admissible continuation reaches $H_2$.
-  Let $r = \mathsf{resp}(e, v)$ be the response event exposing $o$
-  at $H_1$, and let $H_2^r$ be the history obtained by including $r$
-  in $H_2$.
+  Because the operational theorem applies to well-formed response
+  interfaces, future-inconsistent outcomes manifest as response
+  exposures; let $r = \mathsf{resp}(e, v)$ be the response event
+  exposing $o$ at $H_1$, and let $H_2^r$ be the history obtained by
+  including $r$ in $H_2$.
   Since adding response events can only restrict admissibility
   ($\Obs(H_2^r) \subseteq \Obs(H_2)$), no outcome in $\Obs(H_2^r)$
   refines $o$ either.
@@ -1768,7 +1766,6 @@ modeled as internal events without loss of generality.
 \end{proof}
 
 \section{Complete CAP: Formal Treatment}
-\label{app:proofs}
 \label{app:cap-formal}
 
 We formalize CAP within our framework using the partition-constrained
@@ -1888,8 +1885,7 @@ These form a \emph{frontier}---a set of incomparable alternatives,
 each representing a different coordination-free relaxation of the
 original guarantee.
 
-\begin{definition}[Coordination-free frontier]
-  \label{def:frontier}
+\begin{definition}[Coordination-free frontier (restated from Section~\ref{sec:frontier})]
   For a specification $(E, \Obs, \Ord)$, the \emph{coordination-free
   frontier} is the set of minimal (by edge-set inclusion) partial
   orders $\Ord' \supseteq \Ord$ such that $(E, \Obs, \Ord')$ is
@@ -2496,8 +2492,9 @@ problems in Table~\ref{tab:classical}.
 \begin{lemma}[Total-order commitment is non-monotone]
   \label{lem:total-order-nonmono}
   If outcomes are total orders on events, $\Ord$ is prefix extension,
-  and the event universe admits at least two concurrent events, then
-  the specification is not monotone.
+  the event universe admits at least two concurrent events, and the
+  specification admits futures whose observations can force either
+  ordering of those events, then the specification is not monotone.
 \end{lemma}
 \begin{proof}
   Let $e_1, e_2$ be concurrent events in some history $H_1$.
@@ -2514,10 +2511,11 @@ problems in Table~\ref{tab:classical}.
 
 \begin{lemma}[Bounded-cardinality commitment is non-monotone]
   \label{lem:bounded-card-nonmono}
-  If outcomes are assignments from a growing domain to at most $k$
-  distinct values, $\Ord$ is set inclusion on the assignment, and the
-  event universe admits more than $k$ distinguishable candidates, then
-  the specification is not monotone.
+  If outcomes are partial assignments from a growing process set to at
+  most $k$ distinct values, $\Ord$ is set inclusion on the assignment,
+  and the event universe admits a future introducing a $(k{+}1)$-th
+  process that must be assigned a value distinct from all prior
+  assignments, then the specification is not monotone.
 \end{lemma}
 \begin{proof}
   At $H_1$, commit to $k$ distinct values in $o_1 \in \Obs(H_1)$.
