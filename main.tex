@@ -45,7 +45,7 @@
 
 \begin{document}
 
-\title{Complete CALM: Coordination Analysis for Specifications}
+\title{Complete CALM: A Coordination Criterion for Specifications}
 
 \author{Joseph M. Hellerstein}
 \affiliation{%
@@ -159,7 +159,7 @@ The framework is minimal, enabling its coverage to be broad. Our contributions i
         systems fall out naturally as further instances (Appendix~\ref{app:classical}).
   \item \emph{Coordination-free frontier}
         (Section~\ref{sec:frontier}): characterizes the strongest
-        coordination-free weakenings for a fixed observation
+        coordination-free relaxations for a fixed observation
         interface.
         Recovers causal consistency for registers; yields new results
         for queues and search structures.
@@ -734,13 +734,13 @@ knowledge that coordination provides.
   concurrently, $q$ picks $o_q \in \Obs(H_q)$ and responds $v_q$.
   These choices are made from different causal views with no
   communication.
-  Yet the global history $H$ contains both response events, and
-  monotonicity guarantees that $o_p$ has a refinement
-  $o' \in \Obs(H)$.
-  Since $H$ records $(e_q, v_q)$, consistency with observations
-  forces $o'(e_q) = v_q$; since $o_p \Ord o'$, refinement coherence
-  gives $o'(e_p) = v_p$.
-  Hence $o'$ witnesses correctness for both responses simultaneously.
+  Yet the global history $H$ is a future of both views and contains
+  both response events.
+  By monotonicity, both $o_p$ and $o_q$ have refinements in
+  $\Obs(H)$.
+  By consistency with observations, every outcome in $\Obs(H)$ must
+  agree with all responses recorded in $H$---so any refinement of
+  $o_p$ already agrees with $q$'s response, and vice versa.
   Joint consistency is not an additional assumption---it is a free
   consequence of monotonicity applied to the full history.
 \end{remark}
@@ -1407,6 +1407,14 @@ commutative, idempotent merge) and the implementation merges
 divergent outcomes by join, monotonicity implies convergence
 (divergent replicas can always reconcile); if $\Ord$ lacks joins,
 monotonicity guarantees safe independent action but not convergence.
+CRDTs---in requiring convergence---are often more restrictive than
+needed to achieve coordination-freedom.
+Monotonicity prevents two outcomes from contradicting each other;
+it does not require replicas to agree.
+Causal consistency for registers (Appendix~\ref{app:minimality})
+witnesses the gap: it is monotone (on the coordination-free
+frontier) but not convergent---replicas may permanently order
+concurrent writes differently.
 
 
 % ================================================================
@@ -1648,7 +1656,8 @@ complete proof of Theorem~\ref{thm:calm-operational}.
           pre-computation).
     \item A state space $\Sigma_i$, initial state $\sigma_i^0$,
           and a transition relation on
-          $\Sigma_i \times \mathit{acts}_i \times \Sigma_i$.
+          $\Sigma_i \times A_i \times \Sigma_i$, where $A_i$ is the
+          set of all input, output, and internal actions of $p_i$.
   \end{itemize}
   Input actions are always enabled (the automaton cannot refuse an
   invocation or message).
@@ -1669,53 +1678,54 @@ actions at a process are eventually executed (the environment cannot
 indefinitely suppress a process's local computation).
 We restrict to deterministic automata (internal and output actions are
 determined by the current state); nondeterministic choices can be
-modeled as internal events included in the state without loss of
-generality for safety properties.
+modeled as internal events without loss of generality.
 
 \begin{proof}[Proof of Theorem~\ref{thm:calm-operational}]
   \emph{Sufficiency (monotone $\Rightarrow$ implementation exists).}
-  Construct the \emph{causal-view protocol}: each process maintains
-  as state its local causal history $H_i$ (the events that have
-  causally reached it) and propagates it via gossip (internal actions
-  trigger $\mathsf{send}$).
-  On $\mathsf{inv}(e)_i$, the process adds $e$ to $H_i$, computes
-  $\Obs(H_i)$, picks any $o \in \Obs(H_i)$, and immediately performs
-  $\mathsf{resp}(e, o(e))_i$.
+  Construct the \emph{causal-view protocol}: each process $p_i$
+  maintains as part of its state $\sigma_i$ a local history object
+  $\hat{H}_i$ representing its causal view.
+  On every event (invocation, response, or message receipt), the
+  process broadcasts its updated $\hat{H}_i$ to all other processes
+  via $\mathsf{send}$.
+  On $\mathsf{inv}(e)_i$, the process adds $e$ to $\hat{H}_i$,
+  picks any $o \in \Obs(H_i)$ (where $H_i$ is the history
+  represented by $\hat{H}_i$),
+  immediately performs $\mathsf{resp}(e, o(e))_i$, and gossips the
+  updated $\hat{H}_i$.
   The response is enabled without requiring any further input action.
 
-  \emph{Correctness:} At any prefix with global history $H$, each
-  local view satisfies $H_i \hext H$ (local views are
-  downward-closed subhistories of the global history).
-  By monotonicity, the chosen $o \in \Obs(H_i)$ has a refinement
-  $o' \in \Obs(H)$ with $o \Ord o'$.
+  \emph{Correctness:} Let $H$ be the global history at any execution
+  prefix, and let $H_i$ be the abstract causal view of $p_i$---the
+  downward-closed subhistory of $H$ consisting of events that have
+  causally reached $p_i$.
+  By construction, $\hat{H}_i$ faithfully represents $H_i$, and
+  $H_i \hext H$.
+  Monotonicity guarantees that the chosen $o \in \Obs(H_i)$
+  has a refinement $o' \in \Obs(H)$ with $o \Ord o'$.
   Refinement coherence gives $o'(e) = o(e)$ for every invocation
-  $e$ in $H_i$, including the one just answered; consistency
-  gives $o'(e) = v$ for every response $(e, v)$ recorded in $H$.
+  $e$ in $H_i$, including the one just answered; consistency with
+  observations gives $o'(e) = v$ for every response $(e, v)$
+  recorded in $H$.
   Hence $o'$ witnesses correctness at this prefix.
 
   \emph{Joint consistency of independent responses.}
-  Joint consistency of independently emitted responses does not
-  require a separate assumption---it follows from monotonicity,
-  because responses are events in the history and $\Obs$ is defined
-  over the full history.
-  $\Obs(H)$ is evaluated at a history $H$ that \emph{includes} all
-  response events emitted so far.
-  By consistency, $o(e) = v$ for every $(e, v)$ in $H$ and every
-  $o \in \Obs(H)$.
-  So if $H$ contains responses $(e_p, v_p)$ and $(e_q, v_q)$, then
-  every $o \in \Obs(H)$ satisfies $o(e_p) = v_p$ and $o(e_q) = v_q$.
-
-  Now suppose monotonicity holds and two processes respond
-  concurrently.
-  Process $p$ chose $o_p \in \Obs(H_p)$ with $o_p(e_p) = v_p$;
-  process $q$ chose $o_q \in \Obs(H_q)$ with $o_q(e_q) = v_q$.
-  The global history $H$ contains both response events.
-  By monotonicity, $o_p$ has a refinement $o' \in \Obs(H)$.
-  Since $H$ contains $(e_q, v_q)$, consistency requires
-  $o'(e_q) = v_q$; refinement coherence gives $o'(e_p) = v_p$.
-  Hence $o'$ witnesses correctness for both responses.
-  Contrapositive: if no outcome at $H$ satisfies both, then $o_p$
-  has no refinement at $H$---a monotonicity failure.
+  We show that independently chosen responses at different processes
+  are jointly correct without any inter-process agreement.
+  Suppose monotonicity holds and two processes respond concurrently:
+  $p$ chose $o_p \in \Obs(H_p)$ with $o_p(e_p) = v_p$;
+  $q$ chose $o_q \in \Obs(H_q)$ with $o_q(e_q) = v_q$.
+  The global history $H$ is a future of both local views
+  ($H_p \hext H$ and $H_q \hext H$) and contains both response
+  events.
+  By monotonicity, both $o_p$ and $o_q$ have refinements in
+  $\Obs(H)$.
+  By consistency with observations, \emph{every} outcome in $\Obs(H)$
+  must agree with all responses recorded in $H$---in particular with
+  both $(e_p, v_p)$ and $(e_q, v_q)$.
+  Hence any refinement of $o_p$ in $\Obs(H)$ already agrees with
+  $q$'s response, and vice versa: a single outcome witnesses
+  correctness for both.
 
   \emph{Necessity (coordination-free $\Rightarrow$ monotone).}
   Contrapositive: if $\Spec$ is not monotone, no correct
@@ -1771,10 +1781,11 @@ The appendix provides the availability definition and a detailed proof.
   Let $\mathsf{Ext}_P(H_i)$ be the $P$-constrained extensions of
   $H_i$ (futures with no cross-partition message delivery).
   An implementation $I$ is \emph{maximally available under $P$}
-  if whenever some $H \in \mathsf{Ext}_P(H_i)$ both completes a
-  client invocation $e$ and admits a nonempty $\Obs(H)$, there exists
-  an execution $H^* \in \mathsf{Ext}_P(H_i)$ of $I$ in which $e$
-  completes.
+  if whenever some $H \in \mathsf{Ext}_P(H_i)$ contains both an
+  invocation $e$ and a matching response $\mathsf{resp}(e, v)$, and
+  $\Obs(H) \neq \emptyset$, there exists an execution
+  $H^* \in \mathsf{Ext}_P(H_i)$ of $I$ in which a response for $e$
+  is emitted.
 \end{definition}
 
 \noindent
@@ -1834,16 +1845,17 @@ strengthen the impossibility direction of the theorem.
   every process $p \in S$, and every $P$-constrained future $H_2$ of
   $H_1$, every outcome $o \in \Obs(H_1)$ at $p$ has a refinement in
   $\Obs(H_2)$.
-
-  \emph{Construction.}
-  Within each connected component, run any coordinated resolver for
-  non-monotonicities whose witnesses lie wholly inside the component
-  (e.g., intra-component serialization or mutual exclusion).
-  Across components, each process exposes outcomes using the
-  causal-view protocol of Theorem~\ref{thm:calm-operational}.
+  We construct an implementation that is both correct and maximally
+  available under any partition.
+  Each process exposes outcomes using the causal-view protocol of
+  Theorem~\ref{thm:calm-operational}.
   Distributed-monotonicity ensures that no $P$-constrained
   future---consisting only of activity invisible to $p$---can
-  invalidate an outcome exposed at $p$.
+  invalidate an outcome exposed at $p$, so cross-partition
+  correctness holds.
+  If the specification has same-side non-monotonicities (witnesses
+  confined to one component), those are resolved by intra-component
+  coordination, which partitions do not block.
   Because no step waits for messages across the partition, availability
   is preserved.
   Hence both correctness and availability hold regardless of
@@ -1873,7 +1885,7 @@ alternatives are the \emph{minimal monotone enlargements} of $\Ord$:
 orders $\Ord' \supseteq \Ord$ that are monotone, with no proper
 subset of $\Ord'$ that contains $\Ord$ and is also monotone.
 These form a \emph{frontier}---a set of incomparable alternatives,
-each representing a different coordination-free weakening of the
+each representing a different coordination-free relaxation of the
 original guarantee.
 
 \begin{definition}[Coordination-free frontier]
@@ -1885,15 +1897,15 @@ original guarantee.
 \end{definition}
 
 \noindent
-More generally, a coordination-free weakening may change the
+More generally, a coordination-free relaxation may change the
 observation function, the refinement order, or both---yielding a
 weaker \emph{interface} rather than merely a relaxed order.
 The register result below identifies causal consistency as the
-strongest coordination-free interface below linearizability
-under this broader comparison.
+strongest coordination-free interface---a minimal relaxation of
+linearizability---under this broader comparison.
 
 \noindent
-Each point on the frontier is a coordination-free weakening of the
+Each point on the frontier is a coordination-free relaxation of the
 original spec: it preserves all the original refinement relationships
 and adds just enough new ones to achieve monotonicity.
 The gap between $\Ord$ and a frontier element $\Ord'$ represents
@@ -1906,7 +1918,7 @@ models lie on the frontier of their stronger counterparts.
 The maximality arguments are relative to the stated interface and
 primitive refinement generators; they should be read as frontier
 results for those interface choices, not as uniqueness theorems over
-all possible weakenings.
+all possible relaxations.
 
 \subsection{Register: Causal Consistency}
 
@@ -1935,9 +1947,9 @@ $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
 
 \begin{proposition}[Register interface frontier]
   \label{prop:register-frontier}
-  Causal consistency is a monotone weakening of linearizability
+  Causal consistency is a monotone relaxation of linearizability
   for the replicated register: it preserves read/write histories while
-  weakening total-order outcomes to causal-prefix outcomes.
+  relaxing total-order outcomes to causal-prefix outcomes.
   Under this interface comparison, causal consistency is on the
   coordination-free frontier.
 \end{proposition}
@@ -1959,6 +1971,9 @@ $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
   with $o_1 \Ord o_2$.
 
   \emph{Maximality.}
+  We must show that removing \emph{any} edge from
+  $\Ord_{\mathit{causal}}$ breaks monotonicity---a single
+  counterexample suffices for each removed edge.
   Let $\Ord'$ be any order smaller than $\Ord_{\mathit{causal}}$
   (i.e., $\Ord' \subsetneq \Ord_{\mathit{causal}}$).
   Then there exist outcomes $o_1, o_2$ with
@@ -2183,38 +2198,18 @@ requires (forward-reachability under the link invariant); the
 implementation determines \emph{how} the invariant is maintained.
 
 \noindent
-The three frontier elements exhibit a common pattern: each resolves
-non-monotonicity by tolerating \emph{locally valid but globally
-imprecise} observations.
-For registers, a stale read is superseded by eventual delivery.
-For queues, a locally-valid dequeue order among concurrent enqueues
-remains valid---concurrent elements may be ordered differently
-elsewhere without contradiction.
-For search structures, arrival at a stale position is corrected by
-following a navigable path to the current location.
-In each case, the frontier element is the minimal monotone order that makes
-imprecision detectable and recoverable without coordination.
-
-When the specification is defined over a growing graph with
-set-inclusion order on outcomes (e.g., reachability facts accumulate as
-edges are added), the frontier is the specification itself---it is
-already monotone.
-This recovers relational-transducer CALM as the graph-structure
-instance of the frontier construction.
-
-\paragraph{Classical concurrent specifications.}
-The frontier framework also covers classical PODC results as instances.
-Global snapshots (downward-closed cuts of happens-before) are monotone
-under set inclusion---they are already at the frontier.
-Atomic snapshots (committing to a linearization point) are not---they
-are registers under sequential-consistency order.
-$k$-set agreement and strong renaming are non-monotone for structural
-reasons (bounding decision diversity requires total-order commitment).
-Consensus is simply a write-once register under equality order---the
-frontier is trivial (no weakening preserves the single-value
-commitment).
-In each case, the frontier construction gives the same answer as
-bespoke impossibility proofs, but via a single uniform technique.
+The three frontier elements share a common structure: each permits
+observations that are correct given local information but may differ
+from what a globally informed observer would report.
+For registers, a read returns a value from its causal past---possibly
+stale, but never contradicted by later delivery.
+For queues, concurrent enqueues may be dequeued in different orders at
+different replicas---each order is locally valid, and no future event
+reveals a contradiction.
+For search structures, a lookup may arrive at a position the key has
+left---but a forwarding path leads to the current location.
+In each case, the frontier is the weakest order under which such
+imprecision cannot grow into inconsistency.
 
 \section{Universal Construction}
 \label{app:universal}
@@ -2482,55 +2477,92 @@ configuration constraint $\mathbf{C}$.
 \section{Explaining Classical Coordination Requirements}
 \label{app:classical}
 
-Table~\ref{tab:classical} illustrates how the monotonicity criterion
-explains coordination requirements across classical distributed
-computing problems.
-In each case, the specification is instantiated as
-$(E, \Obs, \Ord)$ and the source of non-monotonicity (or its absence)
-is identified.
+We prove three structural lemmas that classify specifications by their
+outcome order, then apply them to classical distributed computing
+problems in Table~\ref{tab:classical}.
+
+\begin{lemma}[Accumulating outcomes are monotone]
+  \label{lem:set-monotone}
+  If outcomes are sets of facts, $\Ord$ is set inclusion, and
+  $\Obs(H) \subseteq \Obs(H')$ whenever $H \hext H'$ (admitted
+  outcomes only accumulate), then the specification is monotone.
+\end{lemma}
+\begin{proof}
+  Let $o \in \Obs(H)$ and $H \hext H'$.
+  Since outcomes accumulate, $o \in \Obs(H')$.
+  Take $o' = o$; then $o \subseteq o'$ trivially.
+\end{proof}
+
+\begin{lemma}[Total-order commitment is non-monotone]
+  \label{lem:total-order-nonmono}
+  If outcomes are total orders on events, $\Ord$ is prefix extension,
+  and the event universe admits at least two concurrent events, then
+  the specification is not monotone.
+\end{lemma}
+\begin{proof}
+  Let $e_1, e_2$ be concurrent events in some history $H_1$.
+  An outcome $o_1 \in \Obs(H_1)$ commits to an ordering, say
+  $e_1 < e_2$.
+  Extend to $H_2$ by adding an event $e_3$ causally after $e_2$ that
+  is only consistent with $e_2 < e_1$ (e.g., a read returning $e_2$'s
+  value, as in the register witness of Section~\ref{sec:example}).
+  Any $o_2 \in \Obs(H_2)$ extending $o_1$ as a prefix must preserve
+  $e_1 < e_2$, but correctness at $H_2$ requires $e_2 < e_1$---a
+  contradiction.
+  No refinement of $o_1$ exists at $H_2$.
+\end{proof}
+
+\begin{lemma}[Bounded-cardinality commitment is non-monotone]
+  \label{lem:bounded-card-nonmono}
+  If outcomes are assignments from a growing domain to at most $k$
+  distinct values, $\Ord$ is set inclusion on the assignment, and the
+  event universe admits more than $k$ distinguishable candidates, then
+  the specification is not monotone.
+\end{lemma}
+\begin{proof}
+  At $H_1$, commit to $k$ distinct values in $o_1 \in \Obs(H_1)$.
+  Extend to $H_2$ by adding an event that introduces a $(k{+}1)$-th
+  candidate requiring a distinct value (e.g., a new process that must
+  decide a value not yet chosen).
+  Any $o_2 \supseteq o_1$ must include all $k$ prior values plus the
+  new one---violating the cardinality bound.
+  No valid refinement of $o_1$ exists at $H_2$.
+\end{proof}
+
+\noindent
+Table~\ref{tab:classical} applies these lemmas to classical problems.
+Each row identifies the specification's $(\Obs, \Ord)$ and the
+applicable lemma; no problem-specific argument is needed.
 
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{@{}llll@{}}
+\begin{tabular}{@{}lllll@{}}
 \toprule
 \textbf{Specification} & \textbf{Outcomes} & \textbf{$\Ord$} &
-\textbf{Non-monotonicity pattern} \\
+\textbf{Lemma} & \textbf{Result} \\
 \midrule
 Linearizable register & Op.\ sequences & Prefix ext.\ &
-  Total-order commitment \\
+  \ref{lem:total-order-nonmono} & Non-monotone \\
 Atomic snapshot & Value vectors & Prefix ext.\ &
-  Total-order commitment \\
-Global snapshot & Downward-closed cuts & Set inclusion &
-  --- (monotone) \\
-$k$-set agreement & Partial decision maps & Set inclusion &
-  Bounded-cardinality commitment \\
-Strong renaming & Injective name assignments & Set inclusion &
-  Bounded-cardinality commitment \\
-Consensus (authority) & Authority sequences & Prefix ext.\ &
-  Unique-choice commitment \\
-Consensus (values) & Decision maps & Set inclusion &
-  --- (monotone under fixed auth.) \\
+  \ref{lem:total-order-nonmono} & Non-monotone \\
+Global snapshot & Downward-closed cuts & Set incl.\ &
+  \ref{lem:set-monotone} & Monotone \\
+$k$-set agreement & Decision maps ($\le k$ values) & Set incl.\ &
+  \ref{lem:bounded-card-nonmono} & Non-monotone \\
+Strong renaming & Injective assignments & Set incl.\ &
+  \ref{lem:bounded-card-nonmono} & Non-monotone \\
+Consensus (authority) & Authority sequence & Prefix ext.\ &
+  \ref{lem:bounded-card-nonmono}\,($k{=}1$) & Non-monotone \\
+Consensus (values) & Decision maps & Set incl.\ &
+  \ref{lem:set-monotone} & Monotone (fixed auth.) \\
 \bottomrule
 \end{tabular}
-\caption{Classical coordination requirements explained by monotonicity.
-  Non-monotonicity arises from three patterns: committing to a total
-  order, committing to a bounded cardinality, or committing to a
-  unique choice---each can be invalidated by a causally admissible
-  extension.}
+\caption{Classical coordination requirements derived from structural
+  lemmas.  Each row instantiates $(E, \Obs, \Ord)$ and cites the
+  applicable lemma.}
 \label{tab:classical}
 \end{table}
-
-\noindent
-The pattern is uniform: non-monotonicity arises from committing to
-structure---total orders, cardinality bounds, membership-dependent
-namespaces---that a causally admissible extension can invalidate.
-Monotonicity holds when commitments are partial-order-stable
-(downward-closed cuts, accumulating facts, growing maps under fixed
-authority).
-Each row is a direct instantiation of the framework; no
-problem-specific machinery is required beyond choosing $\Obs$ and
-$\Ord$.
 
 
 \bibliographystyle{ACM-Reference-Format}
