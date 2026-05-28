@@ -57,11 +57,11 @@
   We generalize it to arbitrary concurrent specifications.
   A specification maps execution histories to outcome sets under a
   declared refinement order; we prove it admits coordination-free
-  implementation iff its outcomes are monotone (\emph{Complete CALM}).
+  implementation if and only if its outcomes are monotone (\emph{Complete CALM}).
   The criterion subsumes CALM, CRDTs, I-confluence, and HATs as
   instances, enables verification of proper coordination, and yields
   a \emph{Complete CAP} companion: a specification admits a
-  consistent, available, partition-tolerant implementation iff it is
+  consistent, available, partition-tolerant implementation if and only if it is
   distributed-monotone.
 \end{abstract}
 
@@ -194,7 +194,9 @@ $H_1$.
 
 \paragraph{Linearizability requires coordination.}
 Under linearizability~\cite{herlihy1990linearizability}, outcomes are
-total orders on completed operations consistent with happens-before,
+total orders on completed operations consistent with real-time order
+between operation intervals (in our histories, represented by the
+happens-before relation among invocation and response events),
 with reads returning the most recent preceding write.
 Refinement is prefix extension: a longer sequence refines a shorter
 one.
@@ -460,7 +462,8 @@ outcomes related by $\Ord$ are compatible.
   At $H_1$, the admissible outcome is
   $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
   r_p{\,\mapsto}2 \rangle$
-  (the only linearization consistent with happens-before that explains
+  (the only linearization consistent with the operation-interval order
+  in this history that explains
   $r_p = 2$); this commits to the write order
   $\mathsf{w}_p$ before $\mathsf{w}_q$.
   At $H_2$, explaining $r_q \mapsto 1$ requires a linearization with
@@ -575,10 +578,11 @@ suffices to prove that linearizability requires coordination.
 
 \begin{proof}
   The proof comes directly from Definition~\ref{def:coordfree}.
-  Condition~(ii) requires every outcome to be future-consistent,
-  which is the definition of monotone.
-  Condition~(i) follows: if every outcome at every history survives
-  all futures, no future need be suppressed.
+  Monotonicity is exactly condition~(ii) of
+  Definition~\ref{def:coordfree}.
+  Since condition~(ii) ensures that no future can invalidate any
+  admitted outcome, no history suppression is needed for
+  correctness---condition~(i) is satisfied vacuously.
 \end{proof}
 
 \noindent
@@ -701,6 +705,9 @@ knowledge that coordination provides.
   the global history, $H_i \hext H$).
   On invocation $e$, the process picks any $o \in \Obs(H_i)$ and
   immediately responds with $o(e)$.
+  (If $\Obs(H_i) = \emptyset$, the history is unrealizable and no
+  correct response is required; the theorem is semantic, not a
+  decidability result.)
   Since $H_i$ may be strictly smaller than $H$, the process is
   committing based on partial information---but monotonicity
   guarantees a refinement $o' \in \Obs(H)$ that explains the full
@@ -879,15 +886,11 @@ restriction is needed.
   This is the key move: not shifting from Datalog to a better
   language, but from programs to specifications.
 
-  Moreover, no precise syntactic analysis can exist: stratified
-  Datalog with negation in the transducer setting computes all PTIME
-  functions on ordered
-  structures~\cite{immerman1986relational}, and determining whether
-  an arbitrary PTIME function is monotone is undecidable (by Rice's
-  theorem applied to the class of PTIME-computable functions).
-  Any sufficiently expressive language is subject to an analogous
-  undecidability barrier; the separation between a spec-based and
-  program-based criterion is fundamental.
+  Moreover, for sufficiently expressive languages, semantic
+  monotonicity is not captured by simple syntactic
+  criteria~\cite{immerman1986relational}; the specification-level
+  test makes the relevant boundary explicit without requiring
+  program analysis.
 \end{proof}
 
 \begin{example}[Consensus as proper coordination]
@@ -907,10 +910,10 @@ restriction is needed.
 \begin{remark}[One round of coordination suffices]
   \label{rem:one-round}
   Membership establishment need only happen \emph{once}.
-  Subsequent view changes (leader election, reconfiguration) are
-  themselves monotone votes under the current authority---after the
-  initial bootstrap, the entire chain of authority transitions is
-  monotone.
+  In many systems, an initial membership authority can turn subsequent
+  authority changes into decisions under an already-established
+  authority---after the initial bootstrap, the chain of authority
+  transitions is monotone (votes accumulate under a known domain).
   This generalizes Ameloot et al.'s ``non-oblivious'' transducer
   result~\cite{ameloot2013relational}: membership knowledge is the
   single non-monotone input that renders all subsequent computation
@@ -982,7 +985,7 @@ at the local replica,'' ``writes at the primary'').
   Fix a partition $P = (S, \bar{S})$ of the process set with
   $S \cap \bar{S} = \emptyset$ and
   $S \cup \bar{S} = \{p_1, \ldots, p_n\}$.
-  A future $H_2 \sqsupseteq H_1$ is \emph{$P$-constrained} if
+  A future $H_1 \hext H_2$ is \emph{$P$-constrained} if
   $H_2 \setminus H_1$ contains no message receive whose matching send
   is on the other side of $P$.
   Both sides may continue receiving inputs, computing, sending
@@ -1032,6 +1035,10 @@ resolution so routine it goes unmentioned in the CRDT literature.
   same-side non-monotonicities are discharged by coordination within
   the connected component, which requires no cross-partition
   communication and preserves availability.
+  (The sufficiency direction is semantic: same-side
+  non-monotonicities may require coordination, but only within a
+  connected component, so they do not create a
+  partition-availability obstruction.)
 
   ($\Rightarrow$) If not distributed-monotone, some outcome $o$ at
   process $p$ is invalidated by a $P$-constrained future $H_2$.
@@ -1127,9 +1134,9 @@ instantiation, both criteria accept exactly the monotone queries.
 \noindent
 The subsumption is exact: under the transducer instantiation, the two
 criteria agree.
-However, the transducer model's definition of coordination-freedom
-bakes in replica consistency---all nodes must eventually produce the
-same output set.
+However, the transducer model studies coordination-free computation
+of a common output set, so replica agreement is built into that
+formulation.
 Complete CALM decouples the two properties: monotonicity characterizes
 when coordination is avoidable; replica consistency is a separate
 structural property of $\Ord$
@@ -1183,7 +1190,7 @@ correctness constraints.
   monotone.
 \end{proposition}
 
-\begin{proof}[Proof (read committed; others in Appendix~\ref{app:hierarchy})]
+\begin{proof}[Proof sketch (read committed; other HAT levels are analogous)]
   We show: for all $H \hext H'$ and all $o \in \Obs_L(H)$, there
   exists $o' \in \Obs_L(H')$ with $o \subseteq o'$.
   Under read committed, a read must return a value written by a
@@ -1248,9 +1255,9 @@ Extend to $H_2$ where $T_2$ also commits under SI from the same
 snapshot $x=y=1$ (its write set $\{x\}$ does not conflict with
 $T_1$'s):
 the resulting state has $x = y = 0$, violating $x + y \geq 1$.
-To keep the invariant, SI ensures
+For the specification combining SI with invariant preservation,
 $\Obs_{\mathit{SI}}(H_2) = \emptyset$; $o_1$ has no refinement
-at $H_2$, so SI is not monotone.
+at $H_2$, so the specification is not monotone.
 
 A common theme: specifications committing only to
 partial-order structure (causal consistency, read committed) are
@@ -1274,9 +1281,8 @@ merge via gossip ($E_{\mathit{inv}}$: transactions;
 $E_{\mathit{send}}/E_{\mathit{recv}}$: gossip;
 $E_{\mathit{int}}$: merge events).
 The observable at $H$ is the \emph{converged state}
-$\mathit{conv}(H)$---the join (merge) of all replica states present
-in $H$, i.e., the unique state obtained by merging all updates that
-have occurred regardless of delivery order.
+$\mathit{conv}(H)$---the unique state obtained by join (merge) of all updates that
+have occurred at $H$, regardless of delivery order.
 Define $\Obs_I(H) = \{\mathit{conv}(H)\}$ when $\mathit{conv}(H)$
 satisfies $I$, and $\Obs_I(H) = \emptyset$ otherwise (the history is
 unrealizable under any invariant-preserving execution).
@@ -1284,9 +1290,9 @@ The outcome order is the merge order on database states:
 $o_1 \Ord o_2$ iff $o_2 = \mathit{merge}(o_1, s)$ for some state
 $s$.
 
-\begin{proposition}[$I$-confluence $\Leftrightarrow$ monotonicity]
+\begin{proposition}[$I$-confluent $\Leftrightarrow$ monotone]
   \label{prop:iconfl}
-  $\Spec_I$ is monotone iff the transaction set is $I$-confluent.
+  $\Spec_I$ is monotone iff the transaction set is \mbox{$I$-confluent.}
 \end{proposition}
 
 \begin{proof}[Sketch]
@@ -1511,10 +1517,12 @@ Li and Lee~\cite{li2025coordinationfree} develop a CALM-style
 equivalence for replicated objects assuming merge as a primitive;
 our framework treats replication as one instance of causal history
 growth.
-A preliminary version of this work appeared as a technical
+An early version of this work appeared as a technical
 report~\cite{anonymous2025coord}; the present paper adds the
 operational adequacy theorem, proper coordination and interface
-separation, formal CALM subsumption, and the database applications.
+separation, formal CALM subsumption, the bidirectional Complete CAP
+theorem, the coordination-free frontier, and database
+applications.
 
 \paragraph{Free termination.}
 Power et al.~\cite{power2025freetermination} study whether a node can
@@ -1544,7 +1552,7 @@ Complete CAP generalizes this to a bidirectional characterization for
 arbitrary specifications (Section~\ref{sec:complete-cap}).
 
 \paragraph{Arbitration-free consistency.}
-Attiya et al.~\cite{attiya2023arbitration} prove that a storage
+Attiya et al.~\cite{attiya2025arbitration} prove that a storage
 specification within a consistency model admits an available
 implementation iff it is \emph{arbitration-free}---it does not require
 a total arbitration order to resolve visibility or read dependencies.
@@ -1579,34 +1587,20 @@ The criterion operates on specifications directly---independent of
 programming language, computational model, or protocol structure---and
 subsumes relational-transducer CALM as a formal instance.
 
-The separation from CALM is not merely theoretical.
-It captures a pattern that pervades modern data infrastructure:
-coordination layers (consensus protocols, two-phase commit, serializable
-schedulers) resolve non-monotonicity internally, producing monotone
-output streams that downstream systems consume without coordination.
-Complete CALM provides the first formal basis for reasoning about this
-separation---verifying that coordination \emph{correctly discharges} a
-non-monotone specification, rather than merely detecting that
-non-monotonicity exists.
-
-The applications demonstrate that known coordination boundaries---HAT
-isolation levels, $I$-confluence, CRDT semilattice
-discipline---are instances of a single semantic test.
-Monotonicity is the common structural property; its failure is
-the universal explanation for why coordination is required.
-In the distributed setting, Complete CAP refines this:
-specifications that fail distributed-monotonicity---those whose
-outcomes can be invalidated by partition-constrained futures---cannot be
-implemented with consistency, availability, and partition tolerance
-simultaneously.
-
-The criterion is exact: all modeling freedom resides in the
-specification $(E, \Obs, \Ord)$.
-Once these three components are fixed, monotonicity completely
-characterizes coordination---no finer semantic boundary exists without
-altering the specification itself.
-Disagreements about whether a system ``needs coordination'' reduce to
-disagreements about what the specification promises.
+The independence from any language or model adds significant
+expressive power.
+Prior work identifies non-monotonicity; Complete CALM also verifies
+that coordination correctly discharges it---that the residual output
+interface is monotone.
+Because the criterion applies to specifications rather than programs,
+it recovers known coordination boundaries (HAT isolation levels,
+$I$-confluence, CRDT semilattice discipline) as instances of a single
+semantic test, and explains uniformly why each arises: failure of
+monotonicity.
+In the distributed setting, Complete CAP sharpens the diagnosis:
+specifications whose outcomes can be invalidated by
+partition-constrained futures cannot be implemented with consistency,
+availability, and partition tolerance simultaneously.
 
 The coordination-free frontier turns this diagnostic into a
 constructive tool: given a non-monotone specification, it identifies
@@ -1617,11 +1611,13 @@ emerge from one construction suggests that ``relaxed'' consistency
 models are optimal points in a well-defined space, not ad hoc
 compromises.
 
-Our overall methodology---identify the minimal semantic ingredients of a
-model-specific result, prove the characterization at that level, and
-recover the original as one of many instances---may apply to other
-model-specific results in database theory and distributed computing
-that currently lack a common formal vocabulary.
+The criterion is exact: all modeling freedom resides in the
+specification $(E, \Obs, \Ord)$.
+Once these three components are fixed, monotonicity completely
+characterizes coordination---no finer semantic boundary exists without
+altering the specification itself.
+Disagreements about whether a system ``needs coordination'' reduce to
+disagreements about what the specification promises.
 
 
 % ================================================================
@@ -1930,13 +1926,13 @@ Under \emph{linearizability}, outcomes are sequences of
 committed operations ordered by prefix extension ($\Ord_{\mathit{lin}}$
 = prefix).
 Under \emph{causal consistency}, define:
-\[
+\begin{multline*}
   \Obs_{\mathit{causal}}(H) = \bigl\{\, o \mid
   \text{every read } r \text{ in } o \text{ returns some }
-  v \text{ with } w(v) \in \mathit{past}(r, H) \text{ or }
-  v = v_0 \text{ (initial value) and no write is in }
+  v \text{ with } w(v) \in \mathit{past}(r, H)\\
+  \text{or } v = v_0 \text{ (initial value) and no write is in }
   \mathit{past}(r, H) \,\bigr\}.
-\]
+\end{multline*}
 The outcome order is prefix extension:
 $o_1 \Ord_{\mathit{causal}} o_2$ iff $o_1$ is a prefix of $o_2$.
 
@@ -2025,28 +2021,30 @@ among enqueue events.
 
 Under \emph{strict FIFO}, outcomes are dequeue sequences consistent
 with a single global total order on enqueues:
-\[
+\begin{multline*}
   \Obs_{\mathit{FIFO}}(H) = \bigl\{\, \sigma \mid
-  \sigma \text{ is a prefix of some total order on enqueued values
+  \sigma \text{ is a prefix of some total order}\\
+  \text{on enqueued values
   consistent with } H\text{'s causal order} \,\bigr\}.
-\]
+\end{multline*}
 Under \emph{causal FIFO}, the total-order requirement is relaxed to
 causal order only:
-\[
+\begin{multline*}
   \Obs_{\mathit{causal\text{-}FIFO}}(H) = \bigl\{\, \sigma \mid
-  \text{for all } a, b \text{ in } \sigma\text{: if }
+  \text{for all } a, b \text{ in } \sigma\text{: if }\\
   \mathit{enq}(a) \rightarrow^* \mathit{enq}(b) \text{ in } H
   \text{ then } a \text{ precedes } b \text{ in } \sigma
   \,\bigr\}.
-\]
+\end{multline*}
 Both use prefix extension as the outcome order.
 
 \begin{proposition}[Queue frontier]
   \label{prop:queue-frontier}
-  Causal FIFO is on the coordination-free frontier of the replicated
-  FIFO queue: it preserves causal ordering among enqueues while
-  relaxing the global total-order requirement, and no weaker monotone
-  order suffices.
+  Causal FIFO is a monotone relaxation of replicated strict FIFO:
+  it preserves causal ordering among enqueues while relaxing the
+  global total-order requirement.
+  Any strengthening that fixes an order among concurrent enqueues
+  creates a non-monotonicity witness.
 \end{proposition}
 
 \begin{proof}
@@ -2098,7 +2096,8 @@ Both use prefix extension as the outcome order.
   Since $\sigma_1 \not\Ord' \sigma_1 \cdot b$, the outcome
   $\sigma_1$ has no $\Ord'$-refinement at $H_2$:
   $(E, \Obs, \Ord')$ is not monotone.
-  Hence no order smaller than causal FIFO is monotone.
+  Thus any strengthening that attempts to preserve a fixed order among
+  concurrent enqueues creates a non-monotonicity witness.
 \end{proof}
 
 \subsection{Search Structures: Forward-Reachability}
@@ -2130,9 +2129,10 @@ The outcome order is set inclusion on valid lookup pairs.
   If structural modifications in the search structure satisfy the
   \emph{link invariant}---whenever a key $k$ moves from position $p$
   to position $p'$, a directed edge from $p$ toward $p'$ exists in
-  $G(H)$ after the modification---then forward-reachability is on
-  the coordination-free frontier for lookup: it is monotone, and no
-  weaker order suffices.
+  $G(H)$ after the modification---then forward-reachability is a
+  monotone relaxation of exact-location lookup.
+  Any semantics that invalidates a lookup solely because the key has
+  moved along a maintained forwarding path is non-monotone.
 \end{proposition}
 
 \begin{proof}
@@ -2177,8 +2177,8 @@ The outcome order is set inclusion on valid lookup pairs.
   Since $\Ord'$ excludes the refinement $o_1 \Ord' o_2$, the outcome
   $o_1$ at $H_1$ has no $\Ord'$-refinement at $H_2$---monotonicity
   fails.
-  Hence no order smaller than forward-reachability (under the link
-  invariant) is monotone.
+  Thus any semantics that invalidates a lookup solely because the key
+  has moved along a maintained forwarding path is non-monotone.
 \end{proof}
 
 \noindent
