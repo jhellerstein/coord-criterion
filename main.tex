@@ -92,51 +92,46 @@
 \label{sec:introduction}
 % ================================================================
 
-Coordination---consensus, atomic commit, locking---adds latency,
-complexity, and fragility to concurrent systems.
-When is it necessary?
-The question is operational, but the answer should be semantic---a
-property of \emph{what the system promises} (its specification),
-not of how it is implemented.
-
-Several disjoint answers exist.
-The CALM theorem characterizes coordination-freedom for
-Datalog~\cite{hellerstein2010declarative,ameloot2013relational};
-I-confluence does so for transactional
-invariants~\cite{bailis2014coordination}; HATs for isolation
-levels~\cite{bailis2013hat}; CRDTs for replicated
+The question of when coordination is required has been answered
+multiple times: by CALM for Datalog
+programs~\cite{hellerstein2010declarative,ameloot2013relational},
+by I-confluence for transactional
+invariants~\cite{bailis2014coordination}, by HATs for isolation
+levels~\cite{bailis2013hat}, by CRDTs for replicated
 objects~\cite{shapiro2011crdt}.
-Each is tied to a particular computational model; none subsumes
-the others. The CAP
-theorem~\cite{brewer2000towards,gilbert2002cap} is yet another
-disconnected yet neighboring result~\cite{hellerstein2020keeping}.
+Each answer is correct within its model, but
+none subsumes the others. The CAP
+theorem~\cite{brewer2000towards,gilbert2002cap} is another neighboring
+but disconnected result~\cite{hellerstein2020keeping}.
 
 We show that all of these are instances of a single semantic
-criterion.
-Three ingredients suffice: execution histories, admissible outcome
-sets, and a declared refinement order.
-A \emph{specification} maps histories to outcomes under a partial
-order; we call it \emph{monotone} if every admissible outcome at
-every history has a compatible refinement at every future.
-The main result (\emph{Complete CALM}): a specification admits a
-correct coordination-free implementation iff it is monotone.
-The criterion is proved in a pure semantic model and validated
-operationally in the I/O automaton framework.
+criterion---and that the criterion, once isolated, is strictly 
+and significantly more powerful than any of them.
+A \emph{specification} is a triple: an event universe (fixing the
+space of execution histories), an observation function (mapping each
+history to its admissible outcomes), and a refinement order (declaring
+when one outcome extends another without contradiction).
+We call a specification \emph{monotone} if every outcome admitted at a
+history has a compatible refinement at every future of that history.
+The main theorem (\emph{Complete CALM}): a specification admits a
+correct coordination-free implementation if and only if it is
+monotone.
+The criterion is proved semantically and validated operationally: it
+corresponds exactly to the existence of a correct coordination-free
+I/O-automaton implementation.
 
-This generality yields two classes of new results.
-First, \emph{verification of proper coordination}: because the
-criterion operates on specifications rather than programs, it can
-verify that a non-monotone specification has been \emph{resolved} by
-coordination---that the residual output interface is monotone.
-Second, \emph{a proof technique for abstract properties}: the
-criterion directly answers questions like ``does serializability
-require coordination?'' and also yields \emph{Complete CAP}---a
-specification admits a consistent, available, partition-tolerant
-implementation iff it is monotone under partitions.
+The power comes from operating on specifications rather than programs.
+A specification-level test doubles as a \emph{proof technique}: instantiate
+the framework for abstract properties like serializability or snapshot
+isolation, check monotonicity, and the coordination requirement follows directly.
+The same move also verifies \emph{proper coordination}: resolve a
+non-monotone specification with coordination and re-test the residual
+for monotonicity.
+Pushed further, it yields a bidirectional \emph{Complete CAP} theorem
+and identifies the \emph{coordination-free frontier}---the strongest
+guarantees achievable without coordination for a given interface.
+These capabilities yield the following contributions:
 
-The framework is minimal, enabling its coverage to be broad. Our contributions include:
-
-% \paragraph{Contributions.}
 \begin{enumerate}[nosep]
   \item \emph{Complete CALM} (Section~\ref{sec:complete-calm}):
         coordination-free implementation exists iff the specification
@@ -153,7 +148,8 @@ The framework is minimal, enabling its coverage to be broad. Our contributions i
         subsumes relational-transducer CALM and recovers boundaries
         for isolation levels, I-confluence, and CRDTs.
         Classical results from distributed
-        systems fall out naturally as further instances (Appendix~\ref{app:classical}).
+        systems fall out naturally as further instances
+        (Appendix~\ref{app:classical}).
   \item \emph{Coordination-free frontier}
         (Section~\ref{sec:frontier}): characterizes the strongest
         coordination-free relaxations for a fixed observation
