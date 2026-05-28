@@ -38,6 +38,8 @@
 \newcommand{\Obs}{\mathsf{Obs}}
 \newcommand{\Ord}{\preceq}
 \newcommand{\hext}{\sqsubseteq_h}
+\newcommand{\vdog}{\texttt{\small dog}}
+\newcommand{\vcat}{\texttt{\small cat}}
 % ---------- Comments ----------
 
 \begin{document}
@@ -178,38 +180,35 @@ in one node's program order, or if $e_1$ is a message send
 and $e_2$ is the corresponding receive, or transitively.
 Event pairs that are not ordered are \emph{concurrent}.
 
-Assume the register initially holds $0$; nodes $p$ and $q$ each write
-concurrently: $\mathsf{w}_p(1)$ at $p$, $\mathsf{w}_q(2)$ at $q$.
-We consider two subsequent histories.
+Assume the register initially holds $\bot$. Nodes $p$ and $q$ write
+concurrently: $\mathsf{w}_p(\vdog)$ at $p$, $\mathsf{w}_q(\vcat)$ at $q$.
+Consider two subsequent histories.
 In history $H_1$, both writes complete, $q$'s write is delivered to
-$p$, and $p$ then reads the register, returning $2$.
-History $H_2$ extends $H_1$ by delivering $p$'s write to $q$, after which $q$
-reads and returns $1$.
+$p$, and $p$ then reads the register, returning $\vcat$.
+$H_2$ extends $H_1$ by delivering $p$'s write to $q$, after which $q$
+reads and returns $\vdog$.
 Since $H_2$ adds only causally later events, it is a valid future of
 $H_1$.
 
 \paragraph{Linearizability requires coordination.}
 Under linearizability~\cite{herlihy1990linearizability}, outcomes are
-total orders on completed operations consistent with real-time order
-between operation intervals (in our histories, represented by the
-happens-before relation among invocation and response events),
-with reads returning the most recent preceding write.
-Refinement is prefix extension: a longer sequence refines a shorter
-one.
+total orders on completed operations consistent with real-time order.
+Reads return the most recent preceding write.
+One output sequence refines another via prefix extension.
 
-At $H_1$, the outcome $o_1 = \langle \mathsf{w}_p(1),
-\mathsf{w}_q(2), r_p{\mapsto}2 \rangle$ is admissible: it places
+At $H_1$, the outcome $o_1 = \langle \mathsf{w}_p(\vdog),
+\mathsf{w}_q(\vcat), r_p{\mapsto}\vcat \rangle$ is admissible: it places
 $\mathsf{w}_q$ before $r_p$ (consistent with delivery) and explains
-$r_p = 2$.
-But at $H_2$, explaining $r_q = 1$ requires placing $\mathsf{w}_p$
+$r_p = \vcat$.
+But at $H_2$, explaining $r_q = \vdog$ requires placing $\mathsf{w}_p$
 after $\mathsf{w}_q$ in the linearization (so $\mathsf{w}_q$ is the
-most recent write before $r_q$), while explaining $r_p = 2$ requires
+most recent write before $r_q$), while explaining $r_p = \vcat$ requires
 the opposite order---a contradiction.
 No linearization at $H_2$ is consistent with the commitment made at
 $H_1$.
 This is non-monotonicity: a commitment that was valid at one point
 cannot survive a causally admissible future.
-The operational consequence: before responding $r_p \mapsto 2$,
+The operational consequence: before responding $r_p \mapsto \vcat$,
 process $p$ must ensure $q$ will not independently commit to the
 opposite write order---this requires coordination.
 
@@ -224,10 +223,10 @@ preserving existing causal order.
 
 At $H_1$, the observable partial order records:
 $\mathsf{w}_q \rightarrow r_p$ (delivery creates causality) and
-$r_p \mapsto 2$ (consistent with $\mathsf{w}_q$ preceding the read).
+$r_p \mapsto \vcat$ (at node $p$, $w_q$ was received before $r_p$ was issued).
 The two writes remain unordered---they are concurrent.
 At $H_2$, the partial order grows: it adds
-$\mathsf{w}_p \rightarrow r_q$ and $r_q \mapsto 1$.
+$\mathsf{w}_p \rightarrow r_q$ and $r_q \mapsto \vdog$.
 This is a valid extension: the new edges are causally later than $H_1$'s events, and the
 concurrent writes \emph{remain} unordered---no earlier commitment is
 contradicted.
@@ -255,9 +254,8 @@ the mechanism of concurrency.
 We model concurrent executions as Lamport histories and define
 specifications, implementations, and coordination-freedom in terms of
 observable outcomes.
-The goal is to isolate a single semantic question: when can the
-physical accumulation of exposed outcomes align with the declared
-refinement order without suppressing admissible futures?
+The goal is to isolate a single semantic question: can
+outcomes accumulate without coordination---i.e., suppressing admissible futures?
 
 The framework applies to any concurrent setting---distributed or local.
 Coordination has costs in both: locking and abort in a local database,
@@ -293,12 +291,12 @@ ordering.
 \end{definition}
 
 \noindent
-The split makes the control boundary explicit:
-$E_{\mathit{inv}}$ events are controlled by the environment (clients);
-$E_{\mathit{resp}}$ events are controlled by the implementation.
+The interface events $E_{\mathit{iface}}$ are what the specification
+constrains: $E_{\mathit{inv}}$ is controlled by the environment
+(clients); $E_{\mathit{resp}}$ is controlled by the implementation.
 In the register example, $E_{\mathit{inv}}$ includes
 $\mathit{inv}(w)$, $\mathit{inv}(r)$; $E_{\mathit{resp}}$ includes
-$\mathit{resp}(w)$, $\mathit{resp}(r, v)$; the remaining sets hold
+$\mathit{resp}(w)$, $\mathit{resp}(r, v)$; the remaining sets capture
 local computation and inter-node messages.
 
 \begin{definition}[History]
@@ -326,23 +324,28 @@ We impose no fairness or progress assumptions.
 \begin{example}[Register history $H_1$ from Section~\ref{sec:example}]
   \label{ex:h1-formal}
   Events and their happens-before order:
-  \\ \noindent
-  --- Interface: $E_{\mathit{inv}} = \{\mathit{inv}(w_p(1)),
-  \mathit{inv}(w_q(2)), \mathit{inv}(r_p)\}$,
-  \quad $E_{\mathit{resp}} = \{\mathit{resp}(w_p(1)),
-  \mathit{resp}(w_q(2)), \mathit{resp}(r_p, 2)\}$.
-  \\ \noindent
-  --- Messages: $E_{\mathit{send}} = \{\mathit{send}(w_q)\}$, 
-   \quad $E_{\mathit{recv}} = \{\mathit{recv}(w_q)\}$.
-  \\ \noindent
-  --- Ordering: program order at $p$:
-  $\mathit{inv}(w_p) \rightarrow \mathit{resp}(w_p)
-  \rightarrow \mathit{recv}(w_q) \rightarrow \mathit{inv}(r_p)
-  \rightarrow \mathit{resp}(r_p,2)$;
-  program order at $q$:
-  $\mathit{inv}(w_q) \rightarrow \mathit{resp}(w_q)
-  \rightarrow \mathit{send}(w_q)$;
-  delivery: $\mathit{send}(w_q) \rightarrow \mathit{recv}(w_q)$.
+  \\[2pt]
+  \noindent
+  \begin{tabular}{@{}l@{\;\;}l@{}}
+    \textbf{Interface:} &
+      $E_{\mathit{inv}} = \{\mathit{inv}(w_p(\vdog)),\;
+       \mathit{inv}(w_q(\vcat)),\; \mathit{inv}(r_p)\}$ \\
+    & $E_{\mathit{resp}} = \{\mathit{resp}(w_p(\vdog)),\;
+       \mathit{resp}(w_q(\vcat)),\; \mathit{resp}(r_p, \vcat)\}$ \\[2pt]
+    \textbf{Messages:} &
+      $E_{\mathit{send}} = \{\mathit{send}(w_q)\}$,\quad
+      $E_{\mathit{recv}} = \{\mathit{recv}(w_q)\}$. \\[2pt]
+    \textbf{Ordering:} &
+      program order at $p$:
+      $\mathit{inv}(w_p) \rightarrow \mathit{resp}(w_p)
+       \rightarrow \mathit{recv}(w_q) \rightarrow \mathit{inv}(r_p)
+       \rightarrow \mathit{resp}(r_p,\vcat)$; \\
+    & program order at $q$:
+      $\mathit{inv}(w_q) \rightarrow \mathit{resp}(w_q)
+       \rightarrow \mathit{send}(w_q)$; \\
+    & delivery:
+      $\mathit{send}(w_q) \rightarrow \mathit{recv}(w_q)$.
+  \end{tabular}
 \end{example}
 
 As an execution unfolds, new events occur.
@@ -370,20 +373,25 @@ The past is fixed; only the future is open.
 \begin{example}[Extending $H_1$ to $H_2$]
   \label{ex:h2-formal}
   $H_2$ adds the following to $H_1$:
-  \\ \noindent
-  --- New interface events: $\{\mathit{inv}(r_q)\}$,
-  \quad $\{\mathit{resp}(r_q, 1)\}$.
-  \\ \noindent
-  --- New messages: $\{\mathit{send}(w_p)\}$,
-  \quad $\{\mathit{recv}(w_p)\}$.
-  \\ \noindent
-  --- New ordering: program order at $p$:
-  $\mathit{resp}(r_p, 2) \rightarrow \mathit{send}(w_p)$;
-  program order at $q$:
-  $\mathit{send}(w_q) \rightarrow \mathit{recv}(w_p)
-  \rightarrow \mathit{inv}(r_q) \rightarrow \mathit{resp}(r_q, 1)$;
-  delivery: $\mathit{send}(w_p) \rightarrow \mathit{recv}(w_p)$.
-  \\ \noindent
+  \\[2pt]
+  \noindent
+  \begin{tabular}{@{}l@{\;\;}l@{}}
+    \textbf{New interface:} &
+      $\{\mathit{inv}(r_q)\}$,\quad
+      $\{\mathit{resp}(r_q, \vdog)\}$. \\[2pt]
+    \textbf{New messages:} &
+      $\{\mathit{send}(w_p)\}$,\quad
+      $\{\mathit{recv}(w_p)\}$. \\[2pt]
+    \textbf{New ordering:} &
+      program order at $p$:
+      $\mathit{resp}(r_p, \vcat) \rightarrow \mathit{send}(w_p)$; \\
+    & program order at $q$:
+      $\mathit{send}(w_q) \rightarrow \mathit{recv}(w_p)
+       \rightarrow \mathit{inv}(r_q) \rightarrow \mathit{resp}(r_q, \vdog)$; \\
+    & delivery:
+      $\mathit{send}(w_p) \rightarrow \mathit{recv}(w_p)$.
+  \end{tabular}
+  \\[2pt] \noindent
   All new events are causally ordered after existing $H_1$ events, so $H_1 \hext H_2$.
 \end{example}
 
@@ -400,7 +408,7 @@ how executions unfold.
 \begin{definition}[Specification]
   \label{def:spec}
   A \emph{specification} is a triple $\Spec = (E, \Obs, \Ord)$ where:
-  \begin{itemize}[nosep]
+  \begin{itemize}[nosep,leftmargin=2.5em]
     \item $E$ is an event universe fixing the space of histories $\Hist$,
     \item $\Obs : \Hist \to \mathcal{P}(O)$ maps each history to a
           set of admissible \emph{outcomes} (possibly empty for
@@ -411,19 +419,19 @@ how executions unfold.
 \end{definition}
 
 \noindent
-$\Obs(H)$ is the set of outcomes that the specification permits ---
-\emph{admits} --- at $H$: what an implementation may expose at the
-system interface.
-An outcome not in $\Obs(H)$ is inadmissible there (the specification
-forbids it); $\Obs(H) = \emptyset$ signals that $H$ itself is
-unrealizable---no correct implementation may produce it (used for
-safety specifications such as invariant enforcement; see
-Section~\ref{sec:i-confluence}).
-Multiple outcomes at a given history reflect semantic flexibility
+$\Obs(H)$ is the set of outcomes the specification \emph{admits}
+at $H$: what an implementation may expose at the system interface.
+An outcome not in $\Obs(H)$ is inadmissible there; it is forbidden by the specification.
+If $\Obs(H) = \emptyset$,  then $H$ itself is
+unrealizable---no correct implementation may produce it. However, an empty $\Obs$ 
+becomes useful for studying safety specifications such as invariant enforcement
+(Section~\ref{sec:i-confluence}).
+Multiple outcomes in $\Obs(H)$ reflect semantic flexibility
 (multiple valid answers); any concrete execution exposes at most one.
 
 The outcome order $\Ord$ is part of the specification---it is not
-derived from execution structure but declared as part of the semantic
+derived from execution structure but declared as part of the 
+explicit semantic
 contract.
 It encodes which transitions between outcomes merely add detail (upward
 in $\Ord$, compatible with prior observations) and which exclude
@@ -455,18 +463,16 @@ outcomes related by $\Ord$ are compatible.
   \label{ex:register-outcomes}
   Under $\Spec_{\mathit{lin}}$, outcomes are total orders
   of completed operations; $\Ord$ is prefix extension.
-  At $H_1$, the admissible outcome is
-  $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
-  r_p{\,\mapsto}2 \rangle$
-  (the only linearization consistent with the operation-interval order
-  in this history that explains
-  $r_p = 2$); this commits to the write order
-  $\mathsf{w}_p$ before $\mathsf{w}_q$.
-  At $H_2$, explaining $r_q \mapsto 1$ requires a linearization with
-  $\mathsf{w}_q$ before $\mathsf{w}_p$---the opposite order.
+  At $H_1$, 
+  $o_1 = \langle \mathsf{w}_p(\vdog), \mathsf{w}_q(\vcat),
+  r_p{\,\mapsto}\vcat \rangle$ is the only admissible outcome:
+  the only linearization consistent with happens-before that explains
+  $r_p = \vcat$. This commits to the write order
+  $\mathsf{w}_p$ happens-before $\mathsf{w}_q$.
+  At $H_2$, explaining $r_q \mapsto \vdog$ requires a linearization with
+  $\mathsf{w}_q$ happens-before $\mathsf{w}_p$---the opposite order.
   Any extension of $o_1$ must preserve its prefix (by $\Ord$), but
-  the only linearization at $H_2$ reverses it: the resulting cycle
-  would break the partial order of $\Ord$, so $o_1$ has no valid extension at $H_2$.
+  no linearization at $H_2$ does so: $o_1$ has no refinement at $H_2$.
 \end{example}
 
 %----------------------------------------------------------------
@@ -511,28 +517,24 @@ specification's possibilities, or must it narrow them?
 
 \begin{definition}[Coordination-free specification (semantic)]
   \label{def:coordfree}
-  A specification is \emph{coordination-free} if:
-  \begin{enumerate}[nosep,label=(\roman*)]
-    \item every well-formed future of every history is realizable
-          \hfill(no history suppression), and
-    \item every $o \in \Obs(H)$ is future-consistent at every $H$
-          \hfill(no outcome suppression).
-  \end{enumerate}
+  A specification is \emph{coordination-free} if
+  every $o \in \Obs(H)$ is future-consistent at every $H$.
 \end{definition}
 
 \noindent
-If either condition fails, the specification \emph{requires
+Future-consistency of all outcomes implies that no future need be
+suppressed: every well-formed extension remains realizable.
+If any outcome is future-inconsistent, the specification \emph{requires
 coordination}: the implementation must either prevent certain futures
-(history suppression---e.g., locking) or withhold certain outcomes
-(outcome suppression---e.g., deferred response).
+or withhold certain outcomes to preserve correctness.
 Theorem~\ref{thm:calm-operational} (Section~\ref{sec:operational}) shows
 that this semantic property corresponds to the existence of a correct
 coordination-free I/O-automaton implementation.
 
 \begin{example}[Coordination in the register]
-  Under $\Spec_{\mathit{lin}}$, the outcome
-  $o_1 = \langle \mathsf{w}_p(1), \mathsf{w}_q(2),
-  r_p{\,\mapsto}2 \rangle$ is admissible at $H_1$, but $H_2$ is a
+  Under $\Spec_{\mathit{lin}}$, outcome
+  $o_1 = \langle \mathsf{w}_p(\vdog), \mathsf{w}_q(\vcat),
+  r_p{\,\mapsto}\vcat \rangle$ is admissible at $H_1$, but $H_2$ is a
   future of $H_1$ and no outcome in $\Obs_{\mathit{lin}}(H_2)$
   refines $o_1$ under $\Ord$.
   The future-inconsistency in the specification
@@ -556,7 +558,7 @@ implementation is possible.
 \end{definition}
 
 \noindent
-This generalizes CALM's notion of monotonicity from a specific mapping
+This generalizes relational-transducer-based CALM's notion of monotonicity from a specific mapping
 (input facts $\to$ output facts, ordered by set inclusion) to an
 arbitrary one (histories $\to$ outcome sets, ordered by any
 user-defined refinement $\Ord$).
@@ -574,17 +576,15 @@ suffices to prove that linearizability requires coordination.
 
 \begin{proof}
   The proof comes directly from Definition~\ref{def:coordfree}.
-  Monotonicity is exactly condition~(ii) of
-  Definition~\ref{def:coordfree}.
-  Since condition~(ii) ensures that no future can invalidate any
-  admitted outcome, no history suppression is needed for
-  correctness---condition~(i) is satisfied vacuously.
+  Monotonicity requires that every outcome at every history has a
+  refinement at every future---which is exactly
+  future-consistency of all outcomes.
 \end{proof}
 
 \noindent
-Given our framework, this result is definitional.
-Its value lies not in the proof but in the framework that makes it
-possible: the same three-component specification subsumes prior results
+Given our framework, the natural CALM "theorem" above is definitional.
+The value lies not in proof depth, but in the framework that makes it
+simple: one three-component specification subsumes prior results
 that required distinct formalisms.
 However, a more involved question arises naturally:
 does this semantic notion faithfully
@@ -758,23 +758,6 @@ The semantic theorem needs only histories, outcomes, and a refinement
 order; the operational theorem adds that this criterion matches the
 standard I/O-automaton notion of coordination-free response.
 
-The minimalism of the semantic criterion---just $\Obs$ and
-$\Ord$---yields three dividends.
-First, \emph{generality}: the criterion applies to any specification
-in any computational model.
-Second, \emph{expressivity}: refinement orders beyond set inclusion
-(prefix extension, lattice orders) are handled directly
-(Section~\ref{sec:beyond-calm}).
-Third, \emph{constructive power}: for any non-monotone specification,
-the \emph{coordination-free frontier}---the set of minimal monotone
-enlargements of $\Ord$---characterizes the strongest coordination-free
-guarantees achievable for a fixed observation interface
-(Section~\ref{sec:frontier}).
-The frontier recovers causal consistency for
-registers~\cite{mahajan2011consistency}, derives causal FIFO for
-queues, and derives forward-reachability (B-link
-trees~\cite{lehman1981efficient}) for search structures.
-
 Since the criterion operates on semantic specifications, checking
 monotonicity is undecidable in general (analogous to Rice's theorem).
 For specific representation languages, classical query-monotonicity
@@ -785,18 +768,19 @@ difference~\cite{abiteboul1995foundations}.
 In practice, conservative syntactic checks are often effective:
 for Datalog, the absence of negation ensures monotonicity with
 respect to set inclusion; for typed functional languages like
-Hydro~\cite{hydro}, restricting to certain well-behaved operators (map, filter,
-join---excluding fold and reduce) ensures monotonicity with respect
-to additional growth orders such as prefix extension on streams or lattice order
-on individual values.
+Flo~\cite{laddad2025flo}, restricting to operators that preserve
+stream monotonicity (e.g., map, filter, join) and excluding those
+that require termination (e.g., fold, reduce) ensures monotonicity
+with respect to growth orders such as prefix extension on
+streams or lattice order on individual values.
 
-The remainder of the paper illustrates this diagnostic reach:
+The remainder of the paper demonstrates the reach of this criterion:
 proper coordination and interface separation
-(Section~\ref{sec:well-coord-section}), a complete CAP theorem
+(Section~\ref{sec:well-coord-section}), Complete CAP
 (Section~\ref{sec:complete-cap}), formal subsumption of CALM
-(Section~\ref{sec:beyond-calm}), and applications to isolation
-levels, I-confluence, and CRDTs
-(Section~\ref{sec:applications}).
+(Section~\ref{sec:beyond-calm}), applications to isolation levels,
+I-confluence, and CRDTs (Section~\ref{sec:applications}), and the
+coordination-free frontier (Section~\ref{sec:frontier}).
 Appendix~\ref{app:classical} extends the analysis to classical
 distributed computing problems (snapshots, $k$-set agreement,
 consensus, renaming), where a recurring observation emerges: the
@@ -835,7 +819,7 @@ coordinated.
   A specification $\Spec' = (E, \Obs', \Ord)$ is a \emph{properly
   coordinated variant} of $\Spec = (E, \Obs, \Ord)$ if:
   \begin{enumerate}[nosep,label=(\roman*)]
-    \item $\Obs'(H) \subseteq \Obs(H)$ for all $H$
+    \item $\Obs'(H) \subseteq \Obs(H)$ for all $H \in \Hist$
           (no new outcomes), and
     \item $\Spec'$ is monotone over its admitted histories: for all
           $H_1 \hext H_2$ with $\Obs'(H_1) \neq \emptyset$ and
@@ -845,13 +829,16 @@ coordinated.
 \end{definition}
 
 \noindent
-A properly coordinated variant restricts the original spec---fewer
-outcomes, fewer histories, or both---enough to achieve monotonicity.
-The coordination mechanism renders certain histories causally
-unreachable (e.g., total-order broadcast makes non-serialized
-histories unreachable); the variant's $\Obs'$ reflects this by
-assigning $\Obs'(H) = \emptyset$ to unreachable histories, since no
-outcome is needed where no execution can go.
+A properly coordinated variant restricts the original spec enough to
+achieve monotonicity.
+$\Obs'$ is the mechanism for reflecting coordination in the
+specification: it may shrink $\Obs(H)$ to suppress certain outcomes
+at a history, or it may set $\Obs(H) = \emptyset$, forbidding the history
+$H$ entirely.
+For example, two-phase locking prevents histories in which
+conflicting transactions interleave; the coordinated variant sets
+$\Obs'(H) = \emptyset$ for such histories, since no execution under
+the protocol can produce them.
 Complete CALM then applies directly to $\Spec'$: if it is monotone
 over its admitted histories, the coordination suffices; otherwise more
 restriction is needed.
@@ -868,25 +855,22 @@ restriction is needed.
   $P$ must contain negation: Datalog without negation cannot express
   non-monotone functions.
   Adding coordination rules (e.g., a consensus protocol) yields a
-  program $P'$ that still contains negation---coordination adds
-  rules but does not remove negation symbols.
+  program $P'$ that still contains negation---adding
+  rules does not remove negation symbols.
   The question ``is the output of $P'$ monotone?'' asks whether the
   coordinated variant's residual interface is coordination-free.
 
-  CALM's syntactic test (presence of negation) answers ``no''---but
+  The conservative syntactic check (presence of negation) answers ``no''---but
   this could be a false negative; the coordination may have discharged the
   non-monotonicity.
-  Complete CALM bypasses this barrier by testing the output
+  However, no better program-level test exists: a coordinated program
+  necessarily uses negation, placing it in a language (stratified
+  Datalog with negation) that captures all PTIME queries on ordered
+  structures~\cite{immerman1986relational}, where deciding
+  monotonicity is undecidable.
+  Complete CALM sidesteps this barrier by testing the output
   specification $\Spec'$ directly---a semantic property of
-  $(E, \Obs', \Ord)$, not a syntactic property of any program.
-  This is the key move: not shifting from Datalog to a better
-  language, but from programs to specifications.
-
-  Moreover, for sufficiently expressive languages, semantic
-  monotonicity is not captured by simple syntactic
-  criteria~\cite{immerman1986relational}; the specification-level
-  test makes the relevant boundary explicit without requiring
-  program analysis.
+  $(E, \Obs', \Ord)$, not a property of any program.
 \end{proof}
 
 \begin{example}[Consensus as proper coordination]
@@ -896,8 +880,8 @@ restriction is needed.
   \emph{Membership establishment} is non-monotone: committing to a
   participant set at $H_1$ can be invalidated by a future $H_2$ that
   admits different participants.
-  But once membership is fixed, vote-counting is monotone (votes
-  accumulate; reaching a threshold is monotone over a known domain),
+  But once membership is fixed, vote-counting is monotone (reaching a
+  fractional threshold is monotone over a known domain),
   and value exposure is monotone (decisions only accumulate).
   The coordinated variant restricts histories to those where
   membership is established; the residual is monotone.
@@ -915,7 +899,7 @@ restriction is needed.
   single non-monotone input that renders all subsequent computation
   monotone.
   The architecture of Paxos-based systems reflects this: membership
-  is configured once; everything downstream is coordination-free.
+  is configured once; everything downstream is actually coordination-free.
 \end{remark}
 
 The consensus example illustrates a general phenomenon: coordination
@@ -933,14 +917,15 @@ coordination-free local evaluation.
 \end{theorem}
 
 \noindent
-The need for membership is intuitive: concurrent events admit
-multiple valid orderings, and all replicas must agree on which order
-to adopt.
-That agreement requires an authority---a leader or quorum---whose
-identity must itself be established by coordination.
-Once authority is fixed, it can monotonically emit an ordered
-prefix; downstream processes evaluate the specification over this
-growing prefix coordination-free.
+If all replicas agree on the ordering (and batching) of interface
+events, they can evaluate the specification deterministically over a
+common prefix---consistency follows.
+Such agreement requires an authority---a leader or a quorum---to make
+and promulgate ordering decisions.
+Quorum authority is itself monotone once membership is known: votes
+accumulate, and a threshold decision, once reached, is irrevocable.
+The one non-monotone act is establishing membership; everything
+downstream is coordination-free.
 Multi-Paxos~\cite{lamport2001paxos} is the canonical instantiation.
 The proof (Appendix~\ref{app:universal}) constructs the resolved
 specification explicitly and verifies monotonicity.
@@ -1563,7 +1548,7 @@ suffice without imposing a total order.
 LVars~\cite{kuper2013lvars}, Lasp~\cite{meiklejohn2015lasp}, and
 Gallifrey~\cite{milano2019tour} provide language-level support for
 lattice-based monotonic growth.
-The Hydro framework~\cite{hydro} uses type-level monotonicity
+The Flo language~\cite{laddad2025flo} uses type-level monotonicity
 annotations to conservatively verify coordination-freedom at compile
 time.
 % These designs influenced our decision to make $\Ord$ a first-class
