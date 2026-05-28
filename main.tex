@@ -9,7 +9,8 @@
 \usepackage{xparse}
 
 % ---------- Spacing ----------
-\setlist{nosep,leftmargin=*}
+% \setlist{nosep,leftmargin=*}
+% \setlist{nosep,leftmargin=1em}
 % Tighten space around theorem environments
 \makeatletter
 \def\thm@space@setup{%
@@ -134,7 +135,7 @@ and identifies the \emph{coordination-free frontier}---the strongest
 guarantees achievable without coordination for a given interface.
 These capabilities yield the following contributions:
 
-\begin{enumerate}[nosep]
+\begin{enumerate} % [nosep]
   \item \emph{Complete CALM} (Section~\ref{sec:complete-calm}):
         coordination-free implementation exists iff the specification
         is monotone.
@@ -408,7 +409,7 @@ how executions unfold.
 \begin{definition}[Specification]
   \label{def:spec}
   A \emph{specification} is a triple $\Spec = (E, \Obs, \Ord)$ where:
-  \begin{itemize}[nosep,leftmargin=2.5em]
+  \begin{itemize} % [nosep,leftmargin=2.5em]
     \item $E$ is an event universe fixing the space of histories $\Hist$,
     \item $\Obs : \Hist \to \mathcal{P}(O)$ maps each history to a
           set of admissible \emph{outcomes} (possibly empty for
@@ -647,7 +648,7 @@ response events $\Rightarrow \Obs(H') \subseteq \Obs(H)$).
 
 \medskip\noindent
 The specification must ensure two further conditions:
-\begin{enumerate}[nosep]
+\begin{enumerate} % [nosep]
   \item \emph{Refinement coherence:} $\Ord$ respects irrevocability.
         If $o \Ord o'$ and $o(e) = v$, then $o'(e) = v$.
   \item \emph{Response totality:} for every invocation $e$ in $H$
@@ -818,7 +819,7 @@ coordinated.
   \label{def:coord-variant}
   A specification $\Spec' = (E, \Obs', \Ord)$ is a \emph{properly
   coordinated variant} of $\Spec = (E, \Obs, \Ord)$ if:
-  \begin{enumerate}[nosep,label=(\roman*)]
+  \begin{enumerate} % [nosep,label=(\roman*)]
     \item $\Obs'(H) \subseteq \Obs(H)$ for all $H \in \Hist$
           (no new outcomes), and
     \item $\Spec'$ is monotone over its admitted histories: for all
@@ -936,43 +937,49 @@ specification explicitly and verifies monotonicity.
 \label{sec:complete-cap}
 % ================================================================
 
-Complete CALM characterizes when coordination is required---a semantic
-property independent of deployment model.
-As in the operational theorem, outcomes exposed at a process are
-interpreted demonically: if the interface permits an outcome at $p$,
-the safety analysis assumes $p$ may expose it.
-In the distributed setting, a natural conjecture is that the CAP
-tradeoff coincides with non-monotonicity: a specification forces a
-choice between consistency, availability, and partition tolerance iff
-it is non-monotone.
-This is almost right, but requires one refinement: some
-non-monotonicity is confined to one side of a partition and can be
-resolved by same-side coordination (e.g., intra-component
-serialization) without cross-partition communication.
+Complete CALM characterizes when coordination is required; Complete
+CAP characterizes when that coordination conflicts with availability
+under partitions.
+The link is demonic exposure: a coordination-free process must be
+safe for \emph{every} outcome the spec permits, since it lacks the
+information to selectively withhold dangerous ones.
+Under a partition, $p$ cannot be sure whether the outcome it exposes
+will lead to an inadmissible future---yet must respond or sacrifice
+availability.
+
+Non-monotonicity is almost the right boundary, but requires one
+refinement: non-monotonicity confined to one side of a partition can
+be resolved by same-side coordination without cross-partition
+communication.
 Only non-monotonicity that \emph{spans} a partition---where remote
 activity can invalidate a local outcome---creates the CAP dilemma.
-Getting this exclusion right is the main technical contribution of
-this section.
+Formalizing this exclusion is the main technical detail in this
+section.
 
 \paragraph{Process assignment.}
-We extend the framework with a \emph{process assignment}
-$\pi : E \to \{p_1, \ldots, p_n\}$ mapping each event to the process
-at which it occurs.
-This is part of the specification's interface contract (e.g., ``reads
-at the local replica,'' ``writes at the primary'').
+Analyzing availability under partitions requires one additional
+modeling commitment: a \emph{process assignment}
+$\pi : E \to \{p_1, \ldots, p_n\}$ declaring which process handles
+each event (e.g., ``reads at the local replica,'' ``writes at the
+primary'').
 
 \begin{definition}[Partition-constrained future]
   \label{def:partition-future}
   Fix a partition $P = (S, \bar{S})$ of the process set with
   $S \cap \bar{S} = \emptyset$ and
   $S \cup \bar{S} = \{p_1, \ldots, p_n\}$.
-  A future $H_1 \hext H_2$ is \emph{$P$-constrained} if
-  $H_2 \setminus H_1$ contains no message receive whose matching send
-  is on the other side of $P$.
+  A future $H_1 \hext H_2$ is \emph{$P$-constrained} if it has
+  no cross-partition delivery:
+  $H_2 \setminus H_1$ contains no message receive $r$ with
+  $\pi(\mu(r)) \in \bar{S}$ and $\pi(r) \in S$, or vice versa.
   Both sides may continue receiving inputs, computing, sending
   messages, and delivering messages within their own side---only
   cross-partition delivery is blocked.
 \end{definition}
+
+Informally, a specification is distributed-monotone if it is monotone
+under every possible partitioning---no partition-constrained future
+can invalidate an outcome exposed at any process.
 
 \begin{definition}[Distributed-monotone]
   \label{def:dist-monotone}
@@ -982,9 +989,6 @@ at the local replica,'' ``writes at the primary'').
   every process $p \in S$, every history $H_1$, every
   $o \in \Obs(H_1)$ exposed at $p$, and every $P$-constrained future
   $H_2$ of $H_1$, there exists $o' \in \Obs(H_2)$ with $o \Ord o'$.
-  An outcome is \emph{exposed at $p$} if $p$ is the process that
-  would communicate it to a client---formally, if $o$ determines a
-  response to an invocation event at $p$.
 \end{definition}
 
 \noindent
@@ -997,7 +1001,7 @@ future.
 A concrete example: collaborative text editing via
 CRDTs~\cite{shapiro2011crdt} is distributed-monotone (remote
 edits merge without conflict), but simultaneous keystrokes at a
-single keyboard require a local mutex to serialize---a non-monotone
+single keyboard require a mutex to serialize---a local non-monotone
 resolution so routine it goes unmentioned in the CRDT literature.
 
 \begin{theorem}[Complete CAP]
@@ -1011,15 +1015,9 @@ resolution so routine it goes unmentioned in the CRDT literature.
 \begin{proof}[Proof sketch (full proof in Appendix~\ref{app:cap-formal})]
   ($\Leftarrow$) If distributed-monotone, every outcome at every
   process survives all partition-constrained futures.
-  Compose the causal-view protocol with a same-side resolution layer:
-  the protocol handles cross-partition correctness;
-  same-side non-monotonicities are discharged by coordination within
-  the connected component, which requires no cross-partition
-  communication and preserves availability.
-  (The sufficiency direction is semantic: same-side
-  non-monotonicities may require coordination, but only within a
-  connected component, so they do not create a
-  partition-availability obstruction.)
+  Same-side non-monotonicities may require coordination, but only
+  within a connected component---they do not require cross-partition
+  communication and therefore do not obstruct availability.
 
   ($\Rightarrow$) If not distributed-monotone, some outcome $o$ at
   process $p$ is invalidated by a $P$-constrained future $H_2$.
@@ -1029,22 +1027,32 @@ resolution so routine it goes unmentioned in the CRDT literature.
 \end{proof}
 
 \noindent
-The relationship to Complete CALM:
-monotone $\Leftrightarrow$ coordination-free (Complete CALM), and
-distributed-monotone $\Leftrightarrow$
-CAP-free (Complete CAP).
-Monotone $\Rightarrow$ distributed-monotone (all futures includes
-partition-constrained ones), but not conversely.
-Complete CAP is a semantic characterization: it identifies when no
-cross-partition coordination is required for safety, not how a process
-algorithmically selects an outcome.
+In summary:
+\[
+  \text{coordination-free}
+  \;\underset{\text{Complete CALM}}{\Longleftrightarrow}\;
+  \text{monotone}
+  \;\Longrightarrow\;
+  \text{distributed-monotone}
+  \;\underset{\text{Complete CAP}}{\Longleftrightarrow}\;
+  \text{CAP-free}.
+\]
+The unidirectional implication is strict but the gap is narrow: a specification is
+distributed-monotone but not monotone only when its non-monotonicity
+is confined to a single node (tolerance to partition includes
+tolerance to a single-node partition).
+Such local non-monotonicity is endemic---most local nodes run 
+operating systems involving
+mutexes or thread scheduling---but does not create partition
+vulnerability.
+For the purposes of distributed systems analysis, Complete CAP and
+Complete CALM therefore coincide in most settings.
 Read this way, the ``C'' in CAP is best understood as
 \emph{Coordination}: if coordination is required, partitions make it
 unavailable.
-Confirming folklore, Complete CAP proves formally that serializability
-and snapshot isolation also suffer from the availability--partition
-tradeoff (Section~\ref{sec:isolation}): neither is
-distributed-monotone.
+Complete CAP confirms formally that serializability
+and snapshot isolation over distributed data suffer from this tradeoff
+(Section~\ref{sec:isolation}): neither is distributed-monotone.
 
 \paragraph{How coordination is achieved operationally.}
 Each non-monotonicity witness $(H_1, H_2, o_1)$ must be resolved by
@@ -1076,25 +1084,28 @@ instantiation, both criteria accept exactly the monotone queries.
   \label{def:transducer-inst}
   For a query $Q$ over input schema $S_{\mathit{in}}$, define the
   specification $\Spec_Q = (E, \Obs, \subseteq)$ as follows:
-  \begin{itemize}[nosep]
-    \item $E_{\mathit{inv}}$: input-fact arrivals (the growing input
-          instance). $E_{\mathit{resp}}$: query output facts.
-          $E_{\mathit{int}}, E_{\mathit{send}}, E_{\mathit{recv}}$:
-          rule firings, messages, heartbeats (abstracted away).
-    \item Histories are input-growth sequences: each history $H$
-          determines a set $I_H$ of input facts delivered so far.
-    \item $\Obs(H) = \{Q(I_H)\}$---the semantic query result on the
-          input facts present at $H$.
-    \item $\Ord$ is set inclusion: $o_1 \Ord o_2$ iff
-          $o_1 \subseteq o_2$.
-  \end{itemize}
+  \\[2pt]
+  \begin{tabular}{@{}l@{\;\;}l@{}}
+    \textbf{Events:} &
+      $E_{\mathit{inv}}$: input-fact arrivals (the growing input instance). \\
+    & $E_{\mathit{resp}}$: query output facts. \\
+    & $E_{\mathit{int}}, E_{\mathit{send}}, E_{\mathit{recv}}$:
+      rule firings, messages, heartbeats (abstracted away). \\[2pt]
+    \textbf{Histories:} &
+      Cumulative sets of input facts (a growing EDB); each $H$
+      determines the set $I_H$ delivered so far. \\[2pt]
+    \textbf{Outcomes:} &
+      $\Obs(H) = \{Q(I_H)\}$---the semantic query result on $I_H$. \\[2pt]
+    \textbf{Order:} &
+      $o_1 \Ord o_2$ iff $o_1 \subseteq o_2$ (set inclusion).
+  \end{tabular}
 \end{definition}
 
 \begin{theorem}[Subsumption of CALM]
   \label{thm:subsumption}
   Under the transducer instantiation, the following are equivalent for
   a query $Q$:
-  \begin{enumerate}[nosep]
+  \begin{enumerate} % [nosep,leftmargin=1.5em]
     \item $Q$ is coordination-free in the sense of Ameloot et
           al.~\cite{ameloot2013relational}.
     \item $\Spec_Q$ is monotone in the sense of Complete CALM.
@@ -1130,6 +1141,15 @@ the set of admissible histories to those consistent with each model's
 information assumptions yields the corresponding characterization as
 an instance.
 Formal instantiations appear in Appendix~\ref{app:hierarchy}.
+
+Beyond subsumption, Complete CALM extends naturally to settings the
+transducer model cannot express: event universes that include EDB
+deletions, non-monotone state evolution over histories, non-monotone
+queries, and specifications where
+coordination is used internally---all of which are covered in the next section.
+In each case the criterion applies directly, and proper coordination
+(Section~\ref{sec:well-coord-section}) can verify that the residual
+interface is monotone.
 
 
 % ================================================================
@@ -1194,16 +1214,16 @@ correctness constraints.
 \end{proposition}
 
 \begin{proof}[Witness]
-  Let $x = y = 0$ initially.
-  Transaction $T_1$ reads $x$, writes $y := 1$;
-  $T_2$ reads $y$, writes $x := 1$.
-  At $H_1$, $T_1$ commits after reading $x = 0$:
-  $o_1 = \{\mathsf{commit}(T_1), \mathsf{read}(T_1, x, 0)\}
+  Let $x = y = \bot$ initially.
+  $T_1$ performs $\mathsf{read}(T_1, x)$ then $\mathsf{write}(T_1, y, \vdog)$;
+  $T_2$ performs $\mathsf{read}(T_2, y)$ then $\mathsf{write}(T_2, x, \vcat)$.
+  At $H_1$, $T_1$ commits after reading $\bot$:
+  $o_1 = \{\mathsf{commit}(T_1), \mathsf{read}(T_1, x, \bot)\}
   \in \Obs_{\mathit{ser}}(H_1)$.
-  Extend to $H_2$ where $T_2$ also commits reading $y = 0$.
+  Extend to $H_2$ where $T_2$ also commits with $\mathsf{read}(T_2, y, \bot)$.
   Any $o_2 \supseteq o_1$ in $\Obs_{\mathit{ser}}(H_2)$ must include
-  both reads, but $\mathsf{read}(T_1, x, 0)$ and
-  $\mathsf{read}(T_2, y, 0)$ together induce a cyclic serialization
+  both reads, but $\mathsf{read}(T_1, x, \bot)$ and
+  $\mathsf{read}(T_2, y, \bot)$ together induce a cyclic serialization
   order.
   No such $o_2$ exists.
 \end{proof}
@@ -1211,21 +1231,21 @@ correctness constraints.
 \noindent
 By Complete CALM, serializability intrinsically requires coordination.
 By Complete CAP (Section~\ref{sec:complete-cap}), it is also not
-CAP-free: a partition-constrained future (remote transaction commit)
-can invalidate a local outcome, so serializability cannot be
-implemented with consistency, availability, and partition tolerance
-simultaneously.
+CAP-free: remote read/write activity that conflicts with a local
+transaction's outcome can invalidate it across a partition, so
+serializability cannot be implemented with consistency, availability,
+and partition tolerance simultaneously.
 This recovers the non-HAT classification
 of~\cite{bailis2013hat} as a semantic test.
 
 Snapshot isolation~\cite{berenson1995critique} likewise requires
 coordination, witnessed by the classic \emph{write-skew} anomaly.
 Consider an invariant $x + y \geq 1$ with $x = y = 1$ initially.
-Transaction $T_1$ reads $x$ and $y$, then writes $y := 0$;
-$T_2$ reads $x$ and $y$, then writes $x := 0$.
-Each transaction individually preserves the invariant from its
-snapshot: after $T_1$ alone the state would be $x=1, y=0$
-(sum~$1$); after $T_2$ alone, $x=0, y=1$ (sum~$1$).
+Transaction $T_1$ reads $x$ and $y$, then writes $y := 0$
+(state: $x{=}1, y{=}0$, sum $1$);
+$T_2$ reads $x$ and $y$, then writes $x := 0$
+(state: $x{=}0, y{=}1$, sum $1$).
+Each individually preserves the invariant from its snapshot.
 At $H_1$, $T_1$ commits under SI's first-committer-wins rule (its
 write set $\{y\}$ does not conflict with any concurrent committed
 write):
@@ -1238,7 +1258,7 @@ $T_1$'s):
 the resulting state has $x = y = 0$, violating $x + y \geq 1$.
 For the specification combining SI with invariant preservation,
 $\Obs_{\mathit{SI}}(H_2) = \emptyset$; $o_1$ has no refinement
-at $H_2$, so the specification is not monotone.
+at $H_2$, i.e., non-monotonicity.
 
 A common theme: specifications committing only to
 partial-order structure (causal consistency, read committed) are
@@ -1351,10 +1371,9 @@ The converse is instructive: a replicated counter with a
 \emph{reset} operation is not inflationary, hence not monotone---
 coordination is required to implement reset
 consistently~\cite{shapiro2011crdt}.
-
-Complete CALM applies directly to the CRDT's specification (states
-ordered by the lattice order), recognizing monotonicity as a
-consequence of the semilattice structure without any encoding step.
+Complete CALM applies directly to a CRDT's specification (states
+ordered by the lattice order), where transducer CALM required a
+faithful relational encoding.
 
 \medskip
 \noindent
@@ -1389,6 +1408,10 @@ commutative, idempotent merge) and the implementation merges
 divergent outcomes by join, monotonicity implies convergence
 (divergent replicas can always reconcile); if $\Ord$ lacks joins,
 monotonicity guarantees safe independent action but not convergence.
+% Convergence is also achievable without joins in $\Ord$, though
+% typically via coordination (e.g., consensus on a total order) or by
+% restricting the specification's decision space to a single
+% deterministic outcome per history (e.g., last-writer-wins).
 % CRDTs---in requiring convergence---are often more restrictive than
 % needed to achieve coordination-freedom.
 % Monotonicity prevents two outcomes from contradicting each other;
@@ -1617,7 +1640,7 @@ complete proof of Theorem~\ref{thm:calm-operational}.
 \begin{definition}[Process (I/O automaton)]
   \label{def:process}
   Each process $p_i$ is an I/O automaton with:
-  \begin{itemize}[nosep]
+  \begin{itemize} % [nosep]
     \item \emph{Input actions:} client invocations
           $\mathsf{inv}(e)_i$ and message arrivals
           $\mathsf{recv}(m)_i$.
@@ -1790,7 +1813,7 @@ strengthen the impossibility direction of the theorem.
   implementation of the full interface must be safe for exposing it.
 
   Construct two executions indistinguishable to $p$:
-  \begin{itemize}[nosep]
+  \begin{itemize} % [nosep]
     \item \emph{Execution $\alpha$}: the system is at $H_1$; no
           further activity occurs in $\bar{S}$ (the partition holds
           and $\bar{S}$ is idle).
@@ -2542,6 +2565,27 @@ Consensus (values) & Decision maps & Set incl.\ &
   applicable lemma.}
 \label{tab:classical}
 \end{table}
+
+\paragraph{Reading a CRDT.}
+There is an ongoing debate about whether CRDTs are ``safe'' for
+clients.
+Shapiro et al.\ and much of the practical CRDT literature treat
+convergent state as sufficient~\cite{shapiro2011crdt};
+LVars~\cite{kuper2013lvars} argues it is not, and restricts reads to
+monotone threshold queries.
+In our framework, the disagreement reduces to a choice of $\Obs$ and
+$\Ord$.
+If $\Obs(H)$ is the CRDT state and $\Ord$ is the lattice order, the
+specification is monotone (Proposition~\ref{prop:crdt-monotone}).
+If $\Obs(H)$ is the set of read-response events and $\Ord$ is set
+inclusion on those events, the specification is \emph{not}
+monotone---a read returning an intermediate lattice value $v$ at
+$H_1$ may find no outcome at a future $H_2$ whose read set includes
+$v$ (because a concurrent merge moved the state past $v$ before the
+read was delivered to another replica).
+Threshold reads restore monotonicity by restricting $\Obs$ to
+responses that, once emitted, cannot be contradicted by further
+merges.
 
 
 \bibliographystyle{ACM-Reference-Format}
