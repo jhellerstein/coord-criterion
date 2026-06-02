@@ -1,4 +1,4 @@
-\documentclass[acmsmall,review,anonymous]{acmart}
+\documentclass[acmsmall]{acmart}
 
 \settopmatter{printacmref=true,printccs=true,printfolios=true}
 
@@ -95,33 +95,30 @@
 \label{sec:introduction}
 % ================================================================
 
-The question of when coordination is required has been answered
-multiple times: by CALM for Datalog
-programs~\cite{hellerstein2010declarative,ameloot2013relational},
-by I-confluence for transactional
-invariants~\cite{bailis2014coordination}, by HATs for isolation
-levels~\cite{bailis2013hat}, by CRDTs for replicated
-objects~\cite{shapiro2011crdt}.
-Each answer is correct within its model, but
-none subsumes the others. The CAP
-theorem~\cite{brewer2000towards,gilbert2002cap} is another neighboring
-but disconnected result~\cite{hellerstein2020keeping}.
+The CALM theorem characterizes coordination-freedom for relational
+transducers: a query admits a coordination-free implementation iff
+it is monotone~\cite{hellerstein2010declarative,ameloot2013relational,ameloot2015weaker,baccaert2026spectrum}.
+Other boundaries have similar shape but live in disjoint formalisms:
+I-confluence for transactional
+invariants~\cite{bailis2014coordination}, HATs for isolation
+levels~\cite{bailis2013hat}, CRDTs for replicated
+objects~\cite{shapiro2011crdt}, CAP for partition
+tolerance~\cite{brewer2000towards,gilbert2002cap,hellerstein2020keeping}.
+Each names a different sufficient property; none reduces to another.
 
-We show that all of these are instances of a single semantic
-criterion---and that the criterion, once isolated, is strictly 
-and significantly more powerful than any of them.
+We prove a single semantic theorem (\emph{Complete CALM}) that
+recovers all of these as instances and operates on a much wider
+class of specifications.
 A \emph{specification} is a triple: an event universe (fixing the
 space of execution histories), an observation function (mapping each
-history to its admissible outcomes), and a refinement order (declaring
-when one outcome extends another without contradiction).
-We call a specification \emph{monotone} if every outcome admitted at a
-history has a compatible refinement at every future of that history.
-The main theorem (\emph{Complete CALM}): a specification admits a
-correct coordination-free implementation if and only if it is
-monotone.
-The criterion is proved semantically and validated operationally: it
-corresponds exactly to the existence of a correct coordination-free
-I/O-automaton implementation.
+history to its admissible outcomes), and a refinement order
+(declaring when one outcome extends another without contradiction).
+A specification is \emph{monotone} if every admissible outcome at a
+history has a compatible refinement at every causal extension.
+Complete CALM states that a specification admits a correct
+coordination-free implementation iff it is monotone---a property
+proved at the semantic level and validated operationally against the
+standard I/O automaton model.
 
 The power comes from operating on specifications rather than programs.
 A specification-level test doubles as a \emph{proof technique}: instantiate
@@ -1574,8 +1571,6 @@ lattice-based monotonic growth.
 The Flo language~\cite{laddad2025flo} uses type-level monotonicity
 annotations to conservatively verify coordination-freedom at compile
 time.
-% These designs influenced our decision to make $\Ord$ a first-class
-% component of a specification.
 
 
 % ================================================================
@@ -1585,40 +1580,34 @@ time.
 
 Complete CALM provides a universal semantic criterion for
 coordination-freedom: a specification admits a coordination-free
-implementation if and only if its observable outcomes are
-monotone.
-The criterion operates on specifications directly---independent of
-programming language, computational model, or protocol structure---and
-subsumes relational-transducer CALM as a formal instance.
+implementation if and only if its observable outcomes are monotone.
+The criterion subsumes relational-transducer CALM as a formal
+instance and operates on a much wider class of specifications.
 
-The independence from any language or model adds significant
-expressive power.
-Prior work identifies non-monotonicity; Complete CALM also verifies
-that coordination correctly discharges it---that the residual output
-interface is monotone.
-Because the criterion applies to specifications rather than programs,
-it recovers known coordination boundaries (HAT isolation levels,
-$I$-confluence, CRDT semilattice discipline) as instances of a single
-semantic test, and explains uniformly why each arises: failure of
-monotonicity.
-In the distributed setting, Complete CAP sharpens the diagnosis:
-specifications whose outcomes can be invalidated by
-partition-constrained futures cannot be implemented with consistency,
-availability, and partition tolerance simultaneously.
+The expressive power follows from a more fundamental shift: moving
+the analysis from programs to specifications.
+Prior characterizations were necessarily entangled with their
+formalisms; Complete CALM lifts the question out of any single
+computational model, exposing monotonicity as the semantic property
+of coordination-freedom and the specification triple $(E, \Obs, \Ord)$
+as the minimal vocabulary for stating it.
 
-The coordination-free frontier turns this diagnostic into a
-constructive tool: given a non-monotone specification, it identifies
-the strongest guarantees achievable without coordination by enlarging
-the refinement order to tolerate otherwise-coordinated ambiguity.
-For registers, the frontier recovers causal
-consistency~\cite{mahajan2011consistency}; for search structures, it
-recovers the forward-reachability invariant underlying B-link
-trees~\cite{lehman1981efficient}; for queues, it derives a new
-causal FIFO relaxation.
+The generality of the framework opens connections to several areas of classical
+theory.
+Complexity theory invites quantitative questions: given a
+non-monotone specification, how much coordination does it require?
+Game theory offers a parallel lens on commitment under partial
+information: equilibrium concepts distinguish forced moves from
+arbitrary tie-breaking, and mechanism design suggests how to
+restructure interactions to reduce that depth.
+Non-convex stochastic optimization addresses a structurally similar
+problem of irreversible decisions under partial information sampled
+from a noisy distribution, using gating mechanisms (line search,
+restarts) that play a semantic role analogous to coordination.
 
-The criterion is exact: all modeling freedom resides in the
-specification $(E, \Obs, \Ord)$.
-Once these three components are fixed, monotonicity completely
+Complete CALM is an exact criterion: all modeling freedom resides in the
+specification.
+Once a specification's three components are fixed, monotonicity completely
 characterizes coordination---no finer semantic boundary exists without
 altering the specification itself.
 Disagreements about whether a system ``needs coordination'' reduce to
@@ -2586,6 +2575,13 @@ read was delivered to another replica).
 Threshold reads restore monotonicity by restricting $\Obs$ to
 responses that, once emitted, cannot be contradicted by further
 merges.
+
+\section*{Acknowledgments}
+Generative AI tools (Claude and ChatGPT) were used as interactive
+writing and reviewing assistants during the preparation of this work,
+including drafting and revising text, checking mathematical arguments,
+and suggesting edits.
+All content was reviewed, validated, and approved by the authors.
 
 
 \bibliographystyle{ACM-Reference-Format}
