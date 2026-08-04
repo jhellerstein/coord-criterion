@@ -1,0 +1,146 @@
+---------------------- REVIEW 1 ---------------------
+
+SUBMISSION: 5077
+TITLE: Complete CALM: A Coordination Criterion for Specifications
+
+----------- Overall evaluation -----------
+SCORE: -1 (weak reject)
+----- TEXT:
+The paper proposes a generalization of the CALM theorem from relational transducers to arbitrary concurrent specifications. A specification is defined as a triple (E, Obs, \preceq) — an event universe, an observation function mapping histories to outcome sets, and a refinement order on outcomes. The main result, "Complete CALM," states that a specification admits a coordination-free implementation if and only if it is monotone (every outcome at every history has a compatible refinement at every future). The paper further develops: a notion of proper coordination (Section 4), a bidirectional Complete CAP theorem (Section 5), formal subsumption of the original CALM theorem (Section 6), applications to isolation levels, I-confluence, and CRDTs (Section 7), and a coordination-free frontier characterization (Section 8).
+
+Strengths
+
+The specification triple (E, Obs, \preceq) is a clean and genuinely useful abstraction. The paper's main conceptual contribution is showing that CALM, CRDTs, I-confluence, and HATs can all be phrased in this common language, with monotonicity as the uniform diagnostic. This is a worthwhile clarification of a landscape that has been fragmented across incompatible formalisms.
+
+The coordination-free frontier is the most technically substantive contribution. The characterization of causal consistency as the minimal monotone enlargement of linearizability for registers, and of causal FIFO as the minimal enlargement for queues, is elegant. The B-link tree result connecting the link invariant to frontier membership is new. The minimality proofs require genuine arguments and are not definitional.
+
+
+Weaknesses
+
+The central result is nearly definitional. The authors themselves acknowledge this in Section 3.4: "Given our framework, the natural CALM 'theorem' above is definitional." Coordination-freedom is defined as future-consistency of all outcomes, and monotonicity is defined as the universal quantification of exactly that property. Theorem 1 is then a one-line proof. The value is supposed to lie in the framework that makes this simple, but this claim needs to be more carefully substantiated. Specifically: what questions can now be asked, and answered, that were provably inaccessible with the prior formalisms? The paper asserts generality but does not demonstrate it with new hardness results, new decidability boundaries, or new impossibility arguments that go beyond recasting known results in the new language.
+
+The relationship to Attiya, Enea, and Román-Calvo (2025) is insufficiently addressed: The paper develops a general framework for storage specifications that combines operation semantics and consistency models, and proves a bidirectional characterization. The frameworks are structurally similar in ambition. The current paper claims in Section 9 that AFC "detects one pattern of non-monotonicity (total-order commitment)" while Complete CALM "detects all patterns uniformly." This claim deserves much more scrutiny: AFC is itself bidirectional and covers the same families of systems. The authors need to give a concrete example of a specification where Complete CALM yields a verdict that AFC cannot, or clarify precisely where the two frameworks diverge in coverage or technique.
+
+The instantiation results are validations, not extensions: Sections 6 and 7 show that known results (CALM, HATs, I-confluence, CRDTs) fall out as instances of the framework. This is useful for validation but does not constitute new results in those areas. In each case the witnesses and the arguments are either known or straightforward given the framework. The paper would be stronger if at least one application produced a result that was not previously known.
+
+Decidability and complexity are left unaddressed: Section 3.6 acknowledges that checking monotonicity is undecidable in general and mentions conservative syntactic checks, but the paper does not develop this at all. For PODS, this is too weak. Does restricting to natural representation languages yield decidable or tractably checkable monotonicity? What is the complexity of the frontier computation for specific classes of specifications?
+
+Questions for the authors
+
+Theorem 1 is acknowledged to be definitional: The paper argues that the value lies in the framework. Can the authors exhibit a concrete result that requires the specification-level framework and cannot be obtained by instantiating the relational-transducer CALM or AFC? In other words: what is a theorem in this paper that is not (a) definitional, (b) a known result in new notation, or (c) a straightforward consequence of the framework design?
+
+The comparison with Attiya et al. is too brief: Both frameworks offer bidirectional characterizations of availability over a wide class of specifications. Please provide a detailed technical comparison: (i) Is there a specification expressible in (E, Obs, \preceq) that is not expressible in the AFC framework, or vice versa? (ii) Is there a specification where Complete CALM and AFC give different verdicts? (iii) What does each framework reveal that the other does not?
+
+For what classes of specifications is monotonicity decidable or tractably checkable? The paper mentions Datalog without negation and Flo as examples where syntactic checks work, but does not develop the complexity landscape.
+
+
+----------------------- REVIEW 2 ---------------------
+
+SUBMISSION: 5077
+TITLE: Complete CALM: A Coordination Criterion for Specifications
+
+----------- Overall evaluation -----------
+SCORE: -2 (reject)
+----- TEXT:
+This paper purports to present a CALM theorem for concurrent specifications.  Unfortunately, the formalism is very unclear with many notions left undefined.  Theorem 1 is trivial: it repeats the exact same statement in two separate definitions, one calling it "coordination-free", the other calling it "monotone", and then claims that monotone is the same as coordination-free!
+
+The more interesting claim is a promised claim about implementations of coordination-free specifications by I/O automata, but there the definitions are so broken that I couldn't get to the statement of the theorem.
+
+The basic set-up of the framework is also puzzling. A "specification" here is extremely fine-grained, assigning possible outcomes to every possible history, and I found that insufficiently motivated from practice, and also very different from related work (which is fine but then the authors should not seemingly sell their work as generalizing all previous results).
+
+There is also no serious comparison with related work.
+
+Detailed comments follow.
+
+Line 29-30: what is a "causal extension"? I know this is only the Intro, I hope this will be better defined in the main body.
+
+Line 32-22: "the power comes from operating on specifications rather than programs", note the original work by Ameloot, Vandenbussche, Neven, operates on queries, so just mappings from database to answer relations, even without specifying how these should be computed (other than that it will be done by a network of relational transducers).  So a more honest comparison with related results is in order.  I don't think your theorem simply implies the result of [4], for example.  The name "Complete CALM" is a bit deceiving as if it is a new result that implies all previous results.
+
+In general, the third paragraph of the Intro reads like a wooly word cloud, it does not really say anything.
+
+In general the writing style in this paper uses a lot of words that are not really defined.  That gives it a very unscientific hollow feeling, a bit like bad humanities papers are written :-)
+
+line 62: the register is replicated, so each node has its own local copy, right?
+
+line 66 spelling "message sent"
+
+lines 70-71, it is not really clear what you mean by "q's write is delivered to p".  does it simply means that q tells p "I wrote cat", or does it mean moreover that p then proceeds to write the same locally?
+
+lines 71-72, what is the definition of causally later?
+
+line 78-79: whether that is a contradiction or not is related to my earlier questions that it is unclear whether the register is replicated or shared, and what you really mean by a write being "delivered".
+
+Page 2, again, it seems like your contrast between linearisation and causal consistency is one between registers being shared or being replicated.  If that is not your intention, then (at least to me) you did not explain things well.
+
+line 120, why not resp(w,v), like resp(r,v)?  Also, in this example, shouldn't the node (p or q) be part of the notation?  In Example 1 I see you do put them in the notation.  Honestly, at this spot (line 120), better drop the notations resp(w) and resp(r,v), they are only confusing.
+
+Definition 2, you define a history as a pair H=(E,\rightarrow) such that \rightarrow is a strict partial order and there exists an injection mu as you describe.  Note there may exist different such \mu for the same H.  Shouldn't you define a history as a pair (H,\mu)?
+
+Also, the notion of "well-formed" history seems void.  What would be an example of a history that is not well-formed?  One where \rightarrow is not a strict partial order?  But that would not even be a history, as define.  Or one where an injection \mu does not exist? Again, that would not be a history.
+
+Definition 2, should E be finite?
+
+It is striking that only E_snd and E_rcv have a special role to play in the definition of history. Events in E_inv, E_resp, and E_int are not distinguished at all in the definition.  What I mean is, if I have a history, but decide to replace all E_inv events by E_int events, it's still a history, since the definition says nothing about it.  I hope they will have a role to play in later definitions, otherwise there seems to be something wrong or redundant.
+
+(Added after having arrived at Section 3.5: here you do distinguish between invocations and responses.  So in implementations these different types of events do seem to matter.)
+
+Definition 4, for clarity I would make O part of the specification, so a 4-tuple (E,O,Obs,\preceq).
+
+Definition 4, explain why it is important that Obs results in a *set* of outcomes.  One could think that just resulting in one outcome is enough, given that you have a refinement relation on outcomes anyway.  Alternatively, one may think, if Obs results in a set of outcomes, then \preceq is not needed; you could just say that a set S2 refines a set S1 if S2 is a subset of S1.  Please discuss.
+
+Line 176, what is a "transition between outcomes"?  When does such a "transition" happen?
+
+The big question is, how is the specification specified (sic)?  Who writes it?  It has to consider exponentially many histories.  For each history, say what is allowed.  It can be extremely fine-grained.  It cannot be a "user", because these are typically not concerned with internal messages and partial orders.  What type of stakeholder specifies the specification?  This merits discussion.
+
+Example 3 continues Examples 2 and 1 but suddenly talk about "completed operations"; I only know what are "events".   I understand that "operations" are only some of the events?  Please explain; perhaps "operations" are "response events", as introduced in the next Section?  Also suddenly the notation "r_p \mapsto cat" is used, is this the same as the event "resp(r_p,cat)"?  Use only one notation for the same thing.
+
+Example 3 leaves to be desired.  You talk a lot, but what is Obs(H2)?  Is it empty?  Also, to complete the example, you should define Obs(H) for all other histories as well.
+
+The explanation before Definition 5 does not match the formalism.  The explanation talks about controlling internal and send events, whereas the environment controls invocations and receive events.  But this is not reflected in the definition which simply restricts the allowed futures of every history.
+
+Line 207, you use here the terminology "H1 is a prefix of H2" which is undefined, I take it you mean that "H2 is a future of H1". Introduce this terminology right after Definition 3.
+
+Definition 7 "at every H" at the end is a bit sloppy, better say: Spec is coordination-free if for every H and every o in Obs(H), o is future-consistent at H.
+
+Theorem 1 is trivial, since Definition 8 simply repeats Definition 7.
+
+line 269, what's "the bridge"???
+
+Line 271 and below suddenly talks about o(e) with o an outcome and e an invocation event.  So, outcomes are now maps from invocations to responses?  That should be defined properly, because, until now, outcomes have been left completely abstract.
+
+Definition 9 talks about "processes" which are completely undefined in the definition of "implementation".  An implementation just restricts each history to a set of allowed futures.  The definition 9 talks about totally different notions, like execution fragments, post-invocation states, which are not defined.
+
+I stopped reading at this point.
+
+
+----------------------- REVIEW 3 ---------------------
+
+SUBMISSION: 5077
+TITLE: Complete CALM: A Coordination Criterion for Specifications
+
+----------- Overall evaluation -----------
+SCORE: 0 (borderline paper)
+----- TEXT:
+Summary:
+
+The paper proposes a semantic framework for coordination-freedom in concurrent systems. A specification is a triple  (E, Obs, \leq) : an event universe over Lamport histories, an observation function mapping each history to a set of admissible outcomes, and a refinement order on outcomes. A spec is monotone  if every admissible outcome at a history has a  \leq -refinement at every causal future. The headline result, Complete CALM (Thm 1), states coordination-free <-> monotone, grounded operationally in the I/O-automaton model (Thm 2). The framework is used to derive a Complete CAP companion (distributed-monotone),  a notion of proper coordination, a universal ordering-authority construction (Thm 4), instantiations recovering relational-transducer CALM, HATs, I-confluence, and CRDTs, and a coordination-free frontier (minimal monotone enlargements of \leq ) that recovers causal consistency as the strongest  coordination-free register semantics.
+
+Review:
+
+The paper has some nice useful ideas. It provides a nice unifying lens by introducing good abstractions by making Obs and \leq as first class primitives. The framework is able to express linearizability, causal consistency, isolation levels etc. in one vocabulary. Framing coordination-free relaxations as minimal monotone enlargements of \leq, and recovering causal consistency (registers), causal FIFO (queues), and forward-reachability/B-link (search structures) is elegant.
+
+This being said, I also think the contribution of the work is oversold. The headline theorem (as the authors say), is definitional. The results are also more 'descriptive' rather than theorem genreating in the sense that each prior result is recovered by hand-crafting the right (Obs, \leq) so that the monotonicity definition fits the known criteria. The results do not find algorithms for new settings. Since the monotonicity of a specification is undecidable in general, operationalizing the tools requires falling back to per-langauge/program syntactic checks using existing CALM.
+
+The paper also has a few technical issues that need fixing. The definitions have several subtle moving parts and the use in proofs is a bit hand-wavy.
+
+1. Given the central importance of demonic exposure, I found it surprising that it has not been defined formally. It uses the word safety on line 281 but what is safety formally? Do you mean that interfact contract is defined to be safe? Are the two terms interchangeable?
+
+2. I felt something is off in Theorem 2. The proof seems to swtich correctness notions. Definition 10 ("respects the interface contract") is existential: at each history there exists o \in Obs(H) matching the recorded responses. The sufficiency proof uses exactly this. The necessity proof instead invokes a    demonic contract — "Correctness here is the full demonic interface contract (Section 3.5): ... safety must hold for all of them. An implementation that avoids some permitted outcomes is ... not Spec" (Appendix A, p.17) — which Section 3.5's Definition 10 does not state. In general, I have difficulty following these moving pieces.
+
+Given these concerns, I don't think the paper is yet ready for publication and at this time, I am unable to recommend acceptance.
+
+Some other minor points.
+
+1. Some sentences in the paper are quite terse and blogpost-y such as line 41 "Handles any refinement order, not only set inclusion.", line58-59 "Recovers causal consistency for registers; yields new results for queues and search structures."
+
+2. I think some trivial single-node specifications are considered requiring coordination. For example, consider the specification always return 0: this is considered non-monotone because a well formed future H_2 + resp(q, 1) has Obs = \emptyset (because it responded 1 instead of 0). yet this specification is obviously coordination-free. This happens because deciding whether a future is bad or not is operational (i.e. based on E_inv/E_recv rather than E_resp). This undercuts the paper's message that monotonicity is a purely semantic criterion.
