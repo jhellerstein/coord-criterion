@@ -40,11 +40,11 @@ legal outcomes has an admissible common refinement in every compatible
 continuation.  Restricting the test to partition-separated states yields
 \emph{Complete CAP}: for a full interface, consistency, availability,
 and partition tolerance coexist exactly for distributed-monotone
-specifications.  The criterion also separates properties often
-conflated across literatures: strong eventual consistency of replicated
-state need not make reads monotone; convergent storage alone does not
-provide a HAT interface; and invariant confluence instantiates
-monotonicity of valid states under prescribed merge.  Finally,
+specifications.  The criterion also answers questions that fragmentation
+made hard to pose: the CRDT merge algebra (``ACID~2.0'') is sufficient
+but not necessary for coordination-freeness; convergent storage alone
+does not provide highly available transactions; and invariant
+confluence is monotonicity of invariant-valid states under merge.  Finally,
 \emph{proper coordination} characterizes a commitment that turns a
 non-monotone specification into a monotone residual specification.
 \end{abstract}
@@ -107,11 +107,12 @@ results plainly rhyme, but their separate objects and formalisms left
 cross-cutting questions difficult even to state.
 
 Is CAP exactly a monotonicity theorem under partitions, rather than
-merely an impossibility for one register?  Does monotonicity of state
-in a strongly eventually consistent CRDT imply monotonicity of its read
-interface when a read may causally influence later updates?  Does
-convergent CRDT storage by itself provide a HAT interface?  Do strong
-eventual consistency and HAT availability together preserve application
+merely an impossibility for one register?  Are the CRDT merge
+laws---associativity, commutativity, and idempotence, celebrated as
+``ACID~2.0''~\cite{helland2009building}---necessary for
+coordination-free consistency, or merely sufficient?  Does convergent
+CRDT storage by itself provide a HAT interface?  Do strong eventual
+consistency and HAT availability together preserve application
 invariants, or is invariant confluence an additional monotonicity
 condition?  Each is the same question at a different layer:
 \emph{is the exposed specification monotone?}
@@ -149,14 +150,12 @@ Gilbert--Lynch theorem for one register specification, this result is
 bidirectional and applies to any ordered relational specification, not just
 linearizable registers.
 Second, translating CRDTs, HATs, and invariant confluence into this
-vocabulary exposes distinctions their separate formalisms obscure.
-Strong eventual consistency of state does not make arbitrary reads
-monotone; convergent storage does not by itself supply a HAT interface;
-and HAT availability plus convergence does not by itself guarantee
-invariant safety.  Under the standard transaction-and-merge model,
-invariant confluence supplies precisely the missing monotonicity
-condition.  CRDT join supplies a constructive ``if'' direction, but is
-not a universal form for every monotone specification.  Third, the
+vocabulary answers the remaining questions.  ACI join is a sufficient
+discipline for monotonicity, not a necessary condition; convergent
+storage does not by itself supply a HAT interface; and availability
+plus convergence does not by itself guarantee invariant safety---under
+the standard transaction-and-merge model, invariant confluence is
+precisely the missing monotonicity condition.  Third, the
 criterion can be re-applied after a system coordinates.  This resolves a useful puzzle: non-monotone tasks need
 coordination, but coordination itself makes a non-monotone choice.  How
 do two wrongs make a right?  \emph{Proper coordination} makes exactly
@@ -218,28 +217,39 @@ Start with the simplest possible declarative specification.  Let $I$ be
 the input domain and $O$ the domain of externally visible outcomes.  A
 deterministic specification is a function $f:I\to O$: each input has
 one correct output.  Concurrent and distributed systems commonly have
-a more permissive specification.
+a more permissive specification: for one input, several outcomes may
+all be within spec.  We therefore start from a relation rather than a
+function, and build the model in small steps---specification, semantic
+state, semantic events, refinement---ending in the monotonicity test.
 
 \begin{definition}[Relational specification]
-A \emph{relational specification} is a relation
-\[
-  S\subseteq I\times O
-\]
-with a nonempty \emph{fiber} of outputs
-$S(i)=\{o:(i,o)\in S\}$ for every input $i$.
+A \emph{relational specification} is a relation $S\subseteq I\times O$.
+For each input $i$, we call the set $S(i)=\{o:(i,o)\in S\}$ the
+\emph{fiber} over $i$: the set of outcomes the specification permits
+for input $i$.  We require every fiber to be nonempty.
 \end{definition}
 
-An input may include whatever application state or context is relevant
-to its result.  The separate state introduced below is \emph{semantic},
-not an implementation's memory: it records which input--output pairs
-remain legal.  When $S(i)$ has more than one member, we call that
-multiplicity an \emph{ambiguity}.
-Such ambiguity is often intentional: a specification may permit many
-serializations, causal views, transaction results, or replicated
-states.  The question is how those possibilities change as the system
-receives input and makes externally visible choices.
+When a fiber has more than one member, we call that multiplicity an
+\emph{ambiguity}.  Ambiguity is usually intentional: a specification
+may permit many serializations, causal views, transaction results, or
+replicated states.  An input may include whatever application state or
+context is relevant to its result.  The question that drives this
+section is how the permitted outcomes change as the system receives
+input and makes externally visible choices.
 
-A \emph{semantic state} records exactly those changes.
+Answering that question requires a notion of the ``state'' a running
+system occupies.  We want a \emph{semantic} state, not an
+implementation state: memory contents and message queues are
+irrelevant here.  Only two bookkeeping facts matter.  First, which
+inputs have arrived?  The specification is a complete, typically
+infinite object: it describes every input the system could ever
+receive, carrying potentially unbounded ambiguity.  At any moment a
+running system has received only a finite set of \emph{active} inputs,
+and only their ambiguity is at stake so far.  Second, which of the
+permitted input--output pairs are still on the table?  As the system
+makes visible choices, some pairs are ruled out; those that remain
+form a \emph{residual specification}, an object of the same shape as
+$S$.  A semantic state packages these two facts.
 
 \begin{definition}[Semantic state]
 A semantic state $\sigma=(I_\sigma,S_\sigma)$ consists of a finite set
@@ -249,10 +259,22 @@ $S_\sigma\subseteq S$ with nonempty fibers.  We call $S_\sigma$ the
 pairs that remain admissible at $\sigma$.
 \end{definition}
 
-The initial state is $\sigma_0=(\varnothing,S)$.  An active input
-$i$ remains ambiguous when $|S_\sigma(i)|>1$.  The state contains all
-semantic consequences relevant to what may happen next; no separate
-account of how it was reached enters the specification.
+The initial state is $\sigma_0=(\varnothing,S)$: nothing has arrived
+and nothing has been ruled out.  An active input $i$ remains ambiguous
+while $|S_\sigma(i)|>1$.  The semantic state is self-contained: it
+carries every semantic consequence relevant to what may happen next,
+so no separate account of how it was reached enters the model.
+
+How does a semantic state change?  An implementation takes many kinds
+of steps---messages, timeouts, retries---but only two kinds matter
+semantically: new input can arrive, growing the active set; or the
+system can rule out previously admissible outcomes, shrinking the
+residual specification.  Fibers may lose members, but no fiber may
+empty out, and nothing excluded ever becomes legal again.  We model
+each such step as a \emph{semantic event}, a function from the current
+semantic state to the next.  An event need not apply in every
+state---closing an auction makes sense only while the auction is
+open---so formally an event is a \emph{partial} function.
 
 \begin{definition}[Semantic events]
 A \emph{semantic event} is a partial function on semantic states.  An
@@ -263,13 +285,16 @@ $S_\sigma$ by a subrelation with nonempty fibers.  It is a
 \emph{commitment event} when the inclusion is strict.
 \end{definition}
 
-The application declares its legal events; whether an event applies
-depends only on the current semantic state.  Input events introduce
-work, while restriction events eliminate alternatives.  A strict
-commitment is semantically observable because an excluded input--output
-pair can never become legal again.  Participants in a distributed
-system hold local semantic states, and communication affects which
-events they can apply.
+The register of Section~\ref{sec:registers} makes this concrete.
+Delivering a write is an input event.  When replica $p$ returns \catv\
+from a read under linearizability, that is a commitment event: it
+permanently strikes every ordering in which the \catv\ write precedes
+the \dog\ write.  A strict commitment is the semantically irreversible
+act in this model, precisely because an excluded pair can never become
+legal again.  The application declares which events are legal, and
+whether an event applies depends only on the current semantic state.
+Participants in a distributed system hold local semantic states, and
+communication affects which events they can apply.
 
 This dynamics exposes the split-brain problem.  Suppose partitioned
 replicas $p$ and $q$ are in compatible local states.  Replica $p$
@@ -288,32 +313,52 @@ partial order on outcomes.  We read $o\Ord o'$ as ``$o'$ refines $o$
 without contradicting it.''
 \end{definition}
 
-We summarize event reachability with one state-based relation.  Write
+The refinement order is part of the specification: declaring which
+outcomes count as compatible extensions of which is a design decision,
+just as the relation $S$ is.  Section~\ref{sec:registers} already used
+one: register read-sets under inclusion, where
+$\{\dog\}\Ord\{\dog,\catv\}$.
+
+The final ingredient names the scenario in which coordination
+questions arise: several participants, each in its own local semantic
+state, each poised to expose an answer for one of its active inputs;
+and, later, a joint semantic state in which their information has been
+pooled.  We package the scenario in one \emph{continuation} relation,
+written
 \[
   \mathsf C((\sigma_1,i_1),\ldots,(\sigma_k,i_k);(\tau,i))
 \]
-when $i_j\in I_{\sigma_j}$ and $i\in I_\tau$, the participants can hold
-the source states simultaneously, and $\tau$ is a joint state obtained
-by exchanging their existing inputs and commitments and then applying
-any additional input events.  No new restriction event may choose among
-the candidate outcomes.  A family is \emph{compatible} when it has at
-least one such continuation.  For a query, $i$ may contain the union of
-the facts in the $i_j$; for the register, it contains both writes.  The
-relation $\mathsf C$ is supplied by the application's semantic events
-and depends only on the displayed states, not on how they were reached.
+and read ``the local states $\sigma_j$, answering inputs $i_j$, can
+continue jointly to state $\tau$ with input $i$.''  The relation holds
+when:
+\begin{itemize}
+  \item each $i_j$ is active at $\sigma_j$, and the $k$ local states
+        can occur together in one run;
+  \item $\tau$ is a joint state reached by exchanging the sources'
+        existing inputs and commitments and applying any further input
+        events, and $i$ is active at $\tau$.  For a query, $i$ may be
+        the union of the facts in the $i_j$; for the register, it
+        contains both writes;
+  \item no \emph{new} restriction event on the way to $\tau$ chooses
+        among the candidate outcomes: $\tau$ reflects pooling and new
+        input, not further decisions.
+\end{itemize}
+A family of pairs is \emph{compatible} when it has at least one
+continuation.  The relation $\mathsf C$ is supplied by the
+application's semantic events, and it depends only on the displayed
+states, not on how they were reached.
 
-Write $\mathord{\uparrow}o=\{u\in O:o\Ord u\}$.  Exposing an active
-outcome $o\in S_\sigma(i)$ is a restriction event, not merely an
-observation.  At a continuation
-$\mathsf C((\sigma_1,i_1),\ldots;(\tau,i))$, independently exposing
-$o_1,\ldots,o_k$ leaves the residual fiber
-\[
-  S_\tau(i)\cap\bigcap_{j=1}^{k}\mathord{\uparrow}o_j.
-\]
-This set is nonempty exactly when one admissible outcome refines every
-exposure.  Because a residual specification is defined on all of $I$,
-a restriction event may record this obligation before the continuation
-input becomes active.
+One more observation sets up the main definition.  Exposing an
+outcome is not a passive read; it is a restriction event.  When a
+participant at state $\sigma$ returns an outcome $o\in S_\sigma(i)$,
+the system becomes obligated to stand by $o$: every outcome that does
+not refine $o$ is struck from the residual specification.  (The
+residual specification is defined on all of $I$, so the obligation is
+recorded even for inputs that have not yet arrived.)  If participants
+independently expose $o_1,\ldots,o_k$, then at any continuation
+$(\tau,i)$ the outcomes still admissible for $i$ are those
+$u\in S_\tau(i)$ that refine every exposed $o_j$.  Everything now
+rests on whether such a $u$ always exists.
 
 \begin{definition}[Monotone specification]
 \label{def:monotone}
@@ -328,15 +373,18 @@ $u\in S_\tau(i)$ such that
 \]
 \end{definition}
 
-With $k=1$, an exposed answer remains refinable after additional input.
-With $k>1$, independently exposed answers have one admissible common
-refinement.  Requiring one refinement for every finite family is
-stronger than pairwise compatibility, which need not imply a joint
-extension.  Correlated interface calls can be represented as one
-product input and outcome, so the definition imposes no independence
-assumption across calls.  We write $\mathsf{Mono}(\rho)$ for the same
-condition restricted to source states and continuations extending a
-semantic state $\rho$.
+Two special cases give the intuition.  With $k=1$, the definition says
+an exposed answer must remain refinable as more input arrives.  With
+$k>1$, it says independently exposed answers must have one admissible
+common refinement.  Requiring one refinement for every finite family
+is deliberately stronger than pairwise compatibility, which need not
+imply a joint extension.  Correlated interface calls can be
+represented as one product input and outcome, so the definition
+imposes no independence assumption across calls.  Finally, we will
+later re-run the test on systems that have already coordinated
+(Section~\ref{sec:proper}); we write $\mathsf{Mono}(\rho)$ for the
+same condition restricted to source states and continuations extending
+a semantic state $\rho$.
 
 Commitment and coordination live at different levels.  A commitment is
 the semantic effect of ruling out alternatives.  \emph{Coordination} is
@@ -348,9 +396,9 @@ coordination in this sense.
 
 A full interface permits every $o\in S_\sigma(i)$ for an active input.
 It is \emph{locally exposable without coordination} when a participant
-may expose any such $o$ from its local state alone and, for every
-$\mathsf C$ continuation, all independently induced restrictions leave
-the displayed residual-fiber intersection nonempty.
+may expose any such $o$ from its local state alone and, at every
+$\mathsf C$ continuation, some admissible outcome refines everything
+independently exposed.
 
 \begin{theorem}[Complete CALM]
 \label{thm:calm}
@@ -361,16 +409,16 @@ coordination if and only if it is monotone.
 \begin{proof}
 If the specification is monotone, Equation~(1) supplies an admissible
 common refinement for every finite collection of locally exposed
-outcomes at every $\mathsf C$ continuation.  That refinement belongs to
-the residual-fiber intersection, so no participant must first rule out
+outcomes at every $\mathsf C$ continuation.  That refinement survives
+all the induced restrictions, so no participant must first rule out
 another participant's locally legal commitment.  They may communicate
 and refine to the common outcome later.
 
 If the specification is not monotone, its witness supplies local
 semantic states, locally admissible outcomes, and a $\mathsf C$
 continuation with no outcome refining all of them.  Independent
-exposure commits the interface to preserve every witness outcome and
-leaves the residual-fiber intersection empty.  A correct realization
+exposure commits the interface to preserve every witness outcome, and
+no admissible outcome refines them all.  A correct realization
 of the full interface must prevent at least one exposure until it has
 learned enough to rule out a conflicting commitment or agree on a
 choice.  That is coordination.
@@ -465,15 +513,19 @@ the specification.
 \end{proof}
 
 Complete CAP answers the first question: the full-interface CAP
-boundary is monotonicity over partition-separated semantic states.  It turns the
-familiar negative shape into a bidirectional criterion for arbitrary
-specifications.  Gilbert and Lynch prove the negative case for a
-linearizable register~\cite{gilbert2002cap}; the two opposite register
-orders in Section~\ref{sec:registers} are its
-non-distributed-monotonicity witness.  Causal consistency passes because
-partitioned semantic states can be combined without choosing a global
-order.  The same monotonicity test applies to any outcome domain, not
-only registers.
+boundary is monotonicity over partition-separated semantic states.  To
+see that it subsumes the classical theorem, encode the Gilbert--Lynch
+register~\cite{gilbert2002cap}: inputs are read and write requests,
+outcomes are operation orders that explain every returned read, and
+refinement extends an order without reordering it.  The two opposite
+orders of Section~\ref{sec:registers} are a $\mathsf C_\Pi$ witness
+against monotonicity, recovering the impossibility.  Now recast the
+same inputs under causal consistency: outcomes become families of
+per-process causal views, refined by adding operations and edges, and
+partition-separated views always combine---distributed-monotone, hence
+available.  What was an impossibility proof for one data type and a
+folklore contrast is a short calculation in a shared vocabulary,
+applicable to any outcome domain, not only registers.
 
 Because every $\mathsf C_\Pi$ continuation is a $\mathsf C$
 continuation, Complete CALM implies Complete CAP's premise:
@@ -493,16 +545,18 @@ refinement.
 \label{sec:instances}
 
 Section~\ref{sec:cap} united CAP and CALM by restricting one
-monotonicity test to partitions.  We now use the same vocabulary to
-cross the remaining boundaries: from CRDT state to observable reads,
-from convergent storage to HAT interfaces, and from highly available
-transactions to invariant safety.  At each boundary the question is
-not merely whether internal state converges, but whether the
-\emph{exposed specification is monotone}.
+monotonicity test to partitions.  This section brings state-based
+CRDTs, HATs, and invariant confluence under the same test, in two
+steps per formalism.  First, \emph{encode}: choose inputs, outcomes,
+and a refinement order, and show that the formalism's defining
+guarantee is monotonicity of that specification.  Second,
+\emph{answer}: with the formalisms in one vocabulary, each remaining
+question from Section~\ref{sec:intro} becomes an instance of the same
+test---is the exposed specification monotone?
 
-Table~\ref{tab:instances} translates five familiar results.  Each row
-chooses outcomes and a refinement order.  A positive result proves
-monotonicity by supplying common refinements; a negative result exhibits
+Table~\ref{tab:instances} summarizes the encodings.  Each row chooses
+outcomes and a refinement order.  A positive result proves monotonicity
+by supplying common refinements; a negative result exhibits
 independently legal commitments with no admissible refinement.
 
 \begin{table*}[t]
@@ -521,7 +575,7 @@ independently legal commitments with no admissible refinement.
     State-based CRDTs
       & Replicated states
       & Join-semilattice order
-      & Inflationary join makes replica state monotone; arbitrary reads must be tested separately. \\
+      & Inflationary ACI join proves state monotonicity; sufficient for Complete CALM, not necessary. \\
     CAP
       & Interface results, e.g., register views
       & Specification-specific extension
@@ -538,8 +592,9 @@ independently legal commitments with no admissible refinement.
   \end{tabular}
 \end{table*}
 
-\subsection{CRDT State Does Not Settle Read Monotonicity}
+\subsection{Warm-Up: CALM Is Query Monotonicity}
 
+The simplest encoding calibrates the method.
 For a deterministic query $Q$, take an input $I$ to be a database
 instance, let $S(I)=\{Q(I)\}$, and order query results by set inclusion.
 Input events activate successively larger instances, with
@@ -554,102 +609,122 @@ exactly these queries have coordination-free transducer programs.  Our
 criterion does not replace that machine theorem.  It shows which part
 of it is semantic and carries that part to other interfaces.
 
-A state-based CRDT starts at the other end.  Its state space is a
-join-semilattice; updates move upward, and replicas merge with join.
-Strong eventual consistency (SEC) requires replicas that have received
-the same updates to reach equivalent states~\cite{shapiro2011crdt}.
-Inflationary updates and associative, commutative, idempotent join thus
-provide a constructive monotonicity result for \emph{replica state}.
+\subsection{CRDTs: Is the Merge Algebra Necessary?}
 
-Does that state result imply a monotone read interface?  No.  Reads are
-exposed outcomes, and, as in standard causal models, a read may
-influence a later update~\cite{lamport1978time}.  Suppose a read
-specification requires one deterministic value for a logical decision,
-while partitioned replicas may locally expose distinct values
-$r_1\ne r_2$, from which clients issue causally dependent updates
-$w_1$ and $w_2$.  The reads are irrevocable exposures; the writes are
-later inputs that every joint continuation must explain.  A subsequent
-join can converge storage after receiving both writes, but it cannot
-retract either read or its causal consequences.  Under equality
-refinement, there is no legal joint outcome preserving both read
-commitments.  SEC therefore guarantees state convergence after the same
-updates; it does not by itself imply monotonicity of such a
-read-and-dependent-update interface.  Monotone read abstractions can be
-designed, but arbitrary exact reads do not inherit monotonicity merely
-from their storage~\cite{laddad2022keep}.
+State-based CRDTs achieve convergence by algebra: replica states form
+a join-semilattice, updates are inflationary, and replicas merge with
+join~\cite{shapiro2011crdt}.
 
-This distinction also locates the role of the CRDT algebra.  Join is an
-explicit least common refinement for every pair, more structure than
-Complete CALM requires, yet it is insufficient for arbitrary reads.
-Conversely, Theorem~\ref{thm:calm} requires only that each $\mathsf C$
-family of reachable exposures have some admissible common upper bound.
-That bound need not be least, computed by one uniform merge operator,
-or part of a global lattice.  Associative, commutative, idempotent join
-is therefore a powerful sufficient construction for monotone state,
-not a necessary semantic normal form for every coordination-free
-specification.
+\paragraph{Encoding.}  An input is the finite set $U$ of update
+operations a replica has received; an outcome is a replica state;
+refinement is the lattice order.  Because join is associative,
+commutative, and idempotent (ACI) and updates only inflate, every
+delivery order of $U$ reaches the same state $s(U)$.  This is Strong
+Eventual Consistency (SEC), and it is what makes the fiber
+$S(U)=\{s(U)\}$ well defined.  Exchanging updates unions the delivered
+sets, so continuations satisfy
+$\mathsf C((\sigma_1,U_1),(\sigma_2,U_2);(\tau,U_1\cup U_2))$, and
+exposed states have the common refinement
+$s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$.  The CRDT construction is a
+monotonicity proof for the state specification, with join as a uniform
+witness for Definition~\ref{def:monotone}.
 
-\subsection{CRDT Storage Does Not Settle HAT Monotonicity}
+\paragraph{Payoff.}  Is that algebra necessary, or merely sufficient?
+The ACI laws, celebrated as ``ACID~2.0''~\cite{helland2009building},
+have been advocated as the design discipline for coordination-free
+systems.  Complete CALM shows the semantic requirement is strictly
+weaker: Definition~\ref{def:monotone} asks only that every finite
+family of exposed outcomes have \emph{some} admissible common
+refinement in each continuation---not a least one, not one computed by
+a uniform binary operator, not one drawn from a global lattice.  A
+sharded log separates the two.  Each item is delivered to exactly one
+shard, each shard exposes its local sequence, and the specification
+admits any total order that preserves every shard's sequence---the
+guarantee familiar from partitioned log systems such as
+Kafka~\cite{kreps2011kafka}, whose consumers may each observe a
+different admissible interleaving.  Every family of
+exposed shard sequences has admissible common refinements, namely the
+interleavings, so the specification is monotone and shards expose
+without coordination.  But sequences under order-preserving extension
+form no semilattice: minimal interleavings are mutually incomparable,
+there is no least common refinement, and a uniform merge operator would
+have to commit to an order the specification never forced.  ACI join is
+a powerful sufficient route to monotonicity, not a necessary condition
+for it.
 
-The next question crosses the storage and transactional formalisms:
-does convergent CRDT storage by itself provide a HAT interface?  No.
-SEC constrains agreement among replica states after updates arrive;
-a transactional guarantee constrains which reads, writes, commits, and
-session observations may be exposed before then.  An arbitrary stale
-read may be legal for one HAT and violate another.  State convergence
-alone selects no isolation or session guarantee.
+One scope note: SEC governs the state interface.  A system that also
+exposes exact reads whose values causally influence later
+updates~\cite{lamport1978time} has enlarged its outcome domain, and
+those reads must pass the same test~\cite{laddad2022keep}.  The
+transactional setting below makes this concrete.
 
-Represent a transactional outcome as a growing set of facts such as
-$\mathsf{commit}(T)$ and $\mathsf{read}(T,x,v)$.  Encode the guarantee's
-replica-contact, failure, and session or stickiness assumptions in
-$\mathsf C_\Pi$.  Relative to those assumptions, Complete CAP says that
-its full transactional interface is highly available exactly when its
-partition-local facts are distributed-monotone.  On the positive side
-of the HAT classification~\cite{bailis2013hat}, every locally exposed
-fact set retains an admissible joint extension.
-On the negative side, partition-separated states admit locally legal
-fact sets $o_1,\ldots,o_k$ and a continuation $(\tau,i)$ for which no
-$u\in S_\tau(i)$ contains them all.  The full interface cannot expose
-every local commit without a cross-partition wait.  If a read causes a
-later write, subsequent CRDT convergence cannot retroactively repair an
-illegal transactional observation.
+\subsection{HATs: Does Convergent Storage Provide Available
+Transactions?}
 
-This conclusion does not rule out carefully designed HAT interfaces
-backed by CRDT storage.  Such an implementation must constrain its read
-and commit interface to the chosen guarantee.  The theorem-level point
-is narrower and cleaner: monotonicity of convergent storage does not
-entail monotonicity of the transactional interface.
+HATs classify transactional guarantees by whether every transaction
+can complete at an available replica~\cite{bailis2013hat}.
 
-\subsection{Invariant Confluence Is Invariant Monotonicity}
+\paragraph{Encoding.}  Inputs are transactional requests---begins,
+reads, writes, commits---with each guarantee's replica-contact,
+session, and failure assumptions encoded in $\mathsf C_\Pi$.  Outcomes
+are growing sets of facts such as $\mathsf{commit}(T)$ and
+$\mathsf{read}(T,x,v)$; refinement is set inclusion.  Relative to those
+assumptions, Theorem~\ref{thm:cap} reads the classification
+bidirectionally: a guarantee is a HAT exactly when its full interface
+is distributed-monotone.  Read committed and the session guarantees
+preserve facts exposed from local semantic states, and any family of
+such fact sets remains jointly extensible.  Unavailable levels fail
+with the shape of Equation~(2): partition-separated states admit
+locally legal fact sets $o_1,\ldots,o_k$ and a continuation $(\tau,i)$
+for which no $u\in S_\tau(i)$ contains them all---serializability's
+incompatible commit orders are the classic witness---so some exposure
+must wait across the cut.
 
-The final question crosses availability and application safety: do SEC
-and HAT availability together guarantee invariant preservation?  No,
-not by themselves.  SEC does not prevent replicas from converging to an
-invalid merged state, while HAT availability says that operations can
-complete without cross-partition coordination; neither says that
-independently valid choices remain valid together.
+\paragraph{Payoff.}  The encoding answers the next cross-formalism
+question: does convergent CRDT storage by itself provide a HAT
+interface?  No.  SEC constrains replica states after updates arrive; a
+transactional guarantee constrains which read, commit, and session
+facts may be exposed before then.  An arbitrary stale read is legal
+under one guarantee and a violation under another, and when a read
+causally produces a later write, subsequent convergence cannot retract
+the illegal observation.  State convergence therefore selects no
+isolation or session guarantee.  None of this rules out carefully
+engineered HAT interfaces over CRDT storage; it says their read and
+commit paths must pass the monotonicity test in the transactional
+outcome domain, not the storage domain.
 
-Invariant confluence chooses invariant-valid database states as
-outcomes and the order induced by the application's prescribed merge as
-refinement.  A transaction set is $I$-confluent exactly when every pair of $I$-valid
-states reachable from a common valid ancestor has an $I$-valid
-merge~\cite{bailis2014coordination}.  In the standard associative merge
-model, with valid merged states remaining reachable, this pairwise
-condition extends inductively to finite families.  Encode the prescribed
-merge as the continuation outcome in $S_\tau(i)$.  Under
-$\mathsf C_\Pi$, the replica states then supply $o_1,\ldots,o_k$, and
-their merge supplies their common refinement $u$.  Thus $I$-confluence
-instantiates distributed monotonicity of the invariant-valid state
-specification under the prescribed merge.  A uniqueness constraint
-gives the negative witness: two separated semantic states may each
-allocate the same supposedly unique value, but their joint continuation
-has no invariant-valid outcome refining both allocations.
+\subsection{Invariant Confluence: Does Availability Preserve
+Invariants?}
 
-In that model, invariant confluence is not merely analogous to CALM;
-it is the missing monotonicity condition at the invariant layer.  CRDT
-state convergence, HAT interface availability, and invariant safety ask
-about different exposed specifications, so each layer must be checked
-in its own outcome domain and refinement order.
+Invariant confluence asks when replicas that transact independently
+can merge without violating an application
+invariant~\cite{bailis2014coordination}.
+
+\paragraph{Encoding.}  Inputs are the transactions applied since a
+common invariant-valid ancestor state; outcomes are invariant-valid
+database states; refinement is the order induced by the application's
+prescribed merge.  A transaction set is $I$-confluent exactly when
+every pair of $I$-valid states reachable from a common valid ancestor
+has an $I$-valid merge.  In the standard associative-merge model, with
+merged states remaining reachable, the pairwise condition extends
+inductively to finite families: under $\mathsf C_\Pi$ the replica
+states supply $o_1,\ldots,o_k$, and their prescribed merge supplies the
+common refinement $u$.  Thus $I$-confluence is distributed monotonicity
+of the invariant-valid specification.  A uniqueness constraint gives
+the standard negative witness: two separated states may each allocate
+the same supposedly unique value, but their joint continuation has no
+invariant-valid outcome refining both allocations.
+
+\paragraph{Payoff.}  The encoding answers a question that spans three
+literatures: do SEC and HAT availability together preserve application
+invariants?  No.  SEC does not prevent replicas from converging to an
+invalid merged state, and HAT availability says only that operations
+complete without cross-partition coordination; neither implies that
+independently valid choices remain valid together.  Invariant
+confluence is the missing monotonicity condition, one layer up.  State
+convergence, interface availability, and invariant safety are
+monotonicity of three different exposed specifications; each must be
+checked in its own outcome domain and refinement order.
 
 \section{Proper Coordination}
 \label{sec:proper}
@@ -788,14 +863,13 @@ interface is safely locally exposable without prior agreement, and
 Complete CAP gives its partition-aware companion: for a full interface,
 C+A+P is possible exactly when the specification is
 distributed-monotone.  The common question across the literature is
-monotonicity, but at distinct layers.  SEC makes CRDT state converge,
-not arbitrary reads monotone; convergent storage does not by itself
-provide a HAT interface; and SEC plus HAT availability does not by
-itself guarantee invariant preservation.  Under the standard
-transaction-and-merge model, invariant confluence supplies that
-additional monotonicity condition.  The practical next step is to make
-this test---and the audit of proper coordination---part of how systems
-interfaces are designed.
+monotonicity, at distinct layers.  ACI join proves CRDT state monotone
+but is not necessary for monotonicity; convergent storage does not by
+itself provide a HAT interface; and SEC plus HAT availability does not
+by itself preserve invariants---invariant confluence supplies the
+missing condition.  The practical next step is to make this test---and
+the audit of proper coordination---part of how systems interfaces are
+designed.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
