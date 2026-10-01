@@ -96,21 +96,22 @@ available, do application invariants follow?  Today these questions cross
 several vocabularies.  We show that they can all be asked using one test.
 
 The test begins with an observation that the individual literatures sometimes
-express in different ways: \emph{difference is not the same as conflict}.  Two
-set replicas may contain different elements and later take their union.  Two
-log shards may expose different local sequences and later interleave them.  Two
-readers of a causally consistent register may return different concurrent
-writes while one later explanation preserves both answers.  None of these
-differences forces coordination.
+make in different ways: \emph{different answers can still fit together}.  Two
+set replicas may hold different elements and later take their union.  Two log
+shards may show different local sequences and later interleave them.  Two
+readers of a causally consistent register may even return different concurrent
+writes, while one later explanation keeps both.  In each case the answers
+differ, yet some later answer keeps them all, so no coordination is needed.
 
-The obstruction is \emph{incompatibility}.  Two sites that independently elect
-different leaders have made promises no later single-leader result can preserve.
-Transactions whose reads imply opposite serialization orders have no common
-serial explanation.  Once such choices become visible, reconciliation is too
-late: at least one participant had to wait before committing.  This gives the
-operational question behind all five traditions:
+Coordination is forced only when answers \emph{cannot} fit together.  Two sites
+that independently elect different leaders have given answers that no single
+later leader keeps.  Transactions whose reads imply opposite orders have no
+single order that keeps both.  Once answers like these are public, it is too
+late to patch things up: at least one site had to wait before it answered.
+This is the operational question behind all five traditions:
 \begin{quote}
-\emph{When do independently allowed outputs have an allowed future in common?}
+\emph{When do independently allowed answers all fit together---when does some
+later allowed answer keep them all?}
 \end{quote}
 
 We answer with the simplest model we know that still states the question
@@ -125,15 +126,15 @@ The second is what matters when a system genuinely has a choice to make.
 At this level, Complete CALM is almost immediate: participants can make the
 choices the interface allows, on their own and without coordinating, exactly
 when the table is monotone.  ``Complete'' means the test works both ways---it is
-necessary as well as sufficient.  A semilattice is one strong way to guarantee a
-common answer, but the test only asks for some common answer, not a canonical
-one.
+necessary as well as sufficient.  A semilattice is one strong way to guarantee
+that answers fit together, but the test only asks that some later answer keep
+them all, not that there be a single canonical one.
 
 Complete CAP is the same result restricted by a \emph{deployment}: a record of
 which participant is allowed to give which answer.  CALM looks at every
 independent choice.  CAP looks only at the choices a partition can push onto
-opposite sides of the cut.  The restriction matters.  Two possible answers to
-one read may conflict, but if only that read's owner can pick between them, a
+opposite sides of the cut.  The restriction matters.  Two answers to one read
+may fail to fit together, but if only that read's owner can pick between them, a
 network cut never splits the choice.  In this precise sense, \emph{CAP is CALM
 restricted by a deployment}.
 
@@ -141,10 +142,10 @@ This paper makes four contributions:
 \begin{enumerate}
   \item a common model for coordination results: an input/output relation with
         separate orders for input growth and output growth;
-  \item a clear account of what forces coordination---not difference, and not
-        even unrelated answers, but answers that nothing can keep together---and
-        the matching split between safely exposing an answer and committing to
-        one;
+  \item a clear account of what forces coordination---not that answers differ,
+        and not even that they are unrelated, but that they cannot fit
+        together---and the matching split between safely exposing an answer and
+        committing to one;
   \item Complete CALM, and Complete CAP as its restriction to the choices a
         deployment can split across a partition; and
   \item a walk through query monotonicity, CRDTs, registers, HATs, and invariant
@@ -209,8 +210,9 @@ order.  They are accumulating evidence, not choosing among futures.
 Now suppose two candidates, $c_1$ and $c_2$, are eligible to lead.  Either is an
 acceptable outcome, but clients require one leader.  Reporting $c_1$ does more
 than reveal a fact: it rules out the still-acceptable outcome $c_2$.  If another
-site can independently report $c_2$, the system has made two promises that no
-later answer can preserve.  Agreement has to happen before the promises escape.
+site can independently report $c_2$, the system has given two answers that no
+single later leader keeps.  Agreement has to happen before those answers get
+out.
 
 Three small output shapes capture the difference:
 \begin{equation}
@@ -222,10 +224,10 @@ Three small output shapes capture the difference:
 \label{eq:three-shapes}
 \end{equation}
 The chain is ordinary accumulation.  In the joined fork, $a$ and $b$ differ and
-neither contains the other, yet $t$ preserves both.  Only the unjoined fork is
-a real conflict, because nothing preserves both $a$ and $b$.  So two answers
-being unrelated is not enough to force coordination; they conflict only when no
-later answer can keep both.
+neither contains the other, yet $t$ keeps both---they fit together.  Only the
+unjoined fork fails to fit together, because nothing keeps both $a$ and $b$.  So
+two answers being unrelated is not enough to force coordination; coordination is
+forced only when no later answer keeps both.
 
 \subsection{Exposure is not commitment}
 \label{sec:exposure}
@@ -277,7 +279,7 @@ reporting $o$ destroys content: it is a commitment.
     Commit to $o$ & Rule out a still-possible outcome that nothing left can
       recover. \\
     Coordinate & Wait for information or agreement before a commitment that
-      might clash with someone else's. \\
+      might not fit with someone else's. \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -315,7 +317,7 @@ Putting the parts together, a specification is
 \end{equation}
 We write $\fiber{i}=\{o:(i,o)\in S\}$ for the answers allowed at $i$.
 
-\subsection{The common-future test}
+\subsection{The test: do answers fit together?}
 
 Imagine several participants working from partial but compatible information.
 Participant $r$ has seen input $i_r$ and reports an allowed answer $o_r$.  Later
@@ -335,10 +337,10 @@ There is an allowed output $u\in\fiber{j}$ that extends every selected output:
 \end{equation}
 \end{definition}
 
-In plain terms: if the inputs can hold together, the answers must have an
-allowed answer in common that keeps them all.  We check finite groups, not just
-pairs, because answers can be pairwise fine yet have no single answer that keeps
-the whole group.
+In plain terms: if the inputs can hold together, the answers must fit together
+too---some allowed answer at $j$ keeps them all.  We check finite groups, not
+just pairs, because answers can be pairwise fine yet have no single answer that
+keeps the whole group.
 
 The definition bundles two familiar checks:
 \begin{description}
