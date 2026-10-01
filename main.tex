@@ -717,15 +717,22 @@ transactional interface has to pass its own common-answer test.
 Invariant confluence asks yet another question: if transactions run on their
 own from a shared valid state, is the merged state still valid for the
 application~\cite{bailis2014coordination}?  Here the input is the set of applied
-transactions.  The output is a reachable, valid database state.  One state
-extends another when the application's merge can get there while keeping the
-earlier effects.
+transactions, and we take each transaction to map a valid state to a valid
+state---the standard assumption, and the one that makes the question about
+merging rather than about any single transaction.  The output is a reachable,
+valid database state.  One state extends another when the application's merge
+can get there while keeping the earlier effects.
 
-Under the usual assumptions---merge is associative, merged states stay
-reachable, and the valid states are closed under merge---the pairwise
-invariant-confluence check builds a common answer for a whole finite group by
-merging over and over.  So invariant confluence is the same test---growth plus
-coherent choice---applied to valid states.
+Two things have to hold for this to be the same test as before.  Growth: adding
+a transaction keeps the state valid, which is exactly the assumption above, so
+an answer at the smaller input still has an answer at the larger one.  Coherent
+choice: merging two valid reachable states leaves a valid state---this is
+invariant confluence itself.  With merge associative, merged states still
+reachable, and the valid states closed under merge, the pairwise check extends
+to a whole finite group by merging over and over.  So invariant confluence is
+the growth-plus-coherent-choice test applied to valid states, and dropping the
+single-transaction assumption would make it fail for a trivial reason---one bad
+transaction---rather than for the merge conflict it is meant to catch.
 
 A uniqueness constraint shows the failure.  Two replicas both see that the
 username \texttt{sam} is free and hand it to different accounts.  Each database
