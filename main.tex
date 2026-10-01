@@ -3,16 +3,21 @@
 \usepackage{microtype}
 \usepackage{enumitem}
 \usepackage{booktabs}
+\usepackage{tikz}
 
 \setlist{nosep,leftmargin=1.25em}
 
 \newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
 \newtheorem{definition}{Definition}
 \theoremstyle{remark}
 \newtheorem{example}{Example}
 \newtheorem{remark}{Remark}
 
-\newcommand{\Ord}{\preceq}
+\newcommand{\InputOrd}{\preceq_I}
+\newcommand{\OutputOrd}{\preceq_O}
+\newcommand{\Spec}{\mathcal{S}}
+\newcommand{\fiber}[1]{S(#1)}
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
 
@@ -35,17 +40,16 @@ conventional wisdom to drift away from what the literature actually proves.
 It also makes intuitive questions spanning these results hard even to state.
 
 We show how to express these results in one small, common model.  A
-specification is simply a relation from inputs to allowed outputs, together
-with an order saying when one output can safely extend another without
-contradiction.  Complete CALM says that participants can expose outputs
-without coordination exactly when the specification is monotone with respect
-to this order.  Applying the same test only to collections for the same
-input that components can expose across a network partition yields Complete
-CAP: consistency,
-availability, and partition tolerance coexist exactly when the specification
-is monotone across partitions.  The shared monotonicity test also clarifies
-questions spanning these previously separate areas; we illustrate it with
-examples covering various pairings.
+specification is a relation from inputs to allowed outputs.  Its input and
+output domains carry separate partial orders: input refinement describes added
+input information, while output refinement describes preservation and extension
+of visible output.  Complete CALM says that participants can act without
+coordination exactly when input growth permits output growth and independently
+allowed outputs have an admitted common refinement.  Applying the same test only to choices that a deployment can
+separate across a network partition yields Complete CAP.  The common model
+clarifies how CALM, CAP, CRDTs, transactional availability, and invariant
+confluence relate without replacing the languages, implementation disciplines,
+or proof techniques developed for each setting.
 \end{abstract}
 
 \begin{CCSXML}
@@ -72,623 +76,931 @@ examples covering various pairings.
 \section{Introduction}
 \label{sec:intro}
 
-Coordination occurs when one participant must wait for communication from
-another before committing to a choice.  That wait adds latency, and it can
-destroy availability when the needed communication must cross a network
-partition.  Avoiding unneeded coordination is therefore a central goal in
-distributed systems, parallel computing, and databases.  This paper asks
-about the intrinsic need for coordination: which specifications allow
-implementations without coordination, and which force every implementation
-to coordinate?
+Coordination occurs when one participant must wait for information or agreement
+from another before making a choice.  The wait adds latency and can destroy
+availability when the needed communication crosses a network partition.
+Avoiding unnecessary coordination is therefore a central goal in distributed
+systems and databases.  This paper asks about the intrinsic need for
+coordination: which specifications permit independent action, and which force
+participants to agree?
 
-The CALM Conjecture proposed a crisp answer: consistency can be achieved
-without coordination exactly when the computation is
-monotone~\cite{hellerstein2010declarative}.  The claim was meant to work in
-both directions.  Monotonicity should identify designs that can proceed
-without coordination, while non-monotonicity should show where coordination
-is unavoidable.  The subsequent CALM theorem~\cite{ameloot2013relational} proved
-this connection for Datalog programs deployed as formal relational
-transducers.  That result is important, but its machine model is narrower
-than the systems principle CALM came to represent~\cite{hellerstein2020keeping}.
+CALM proposed a crisp answer: consistency can be achieved without coordination
+exactly when the computation is monotone~\cite{hellerstein2010declarative}.
+Ameloot et al. proved this connection for Datalog queries evaluated by networks
+of relational transducers~\cite{ameloot2013relational}.  Their theorem gives an
+operational result for a particular language and machine model.  The broader
+systems principle has since been applied well beyond that setting
+~\cite{hellerstein2020keeping}.
 
-CAP followed a similar path.  Brewer stated a broad systems
-observation~\cite{brewer2000towards}, while Gilbert and Lynch proved an
-impossibility result for linearizable registers~\cite{gilbert2002cap}.  The
-gap between the broad observation and the narrow theorem led to years of
-confusion~\cite{brewer2012cap}.  Related work developed in still other
-languages.  CRDTs make replicated state converge by arranging states as a
-join-semilattice and making updates inflationary~\cite{shapiro2011crdt}.
-Highly Available Transactions (HATs) identify transaction guarantees that
-survive partitions~\cite{bailis2013hat}.  Invariant confluence identifies
-when independently executed transactions can merge without breaking an
-application invariant~\cite{bailis2014coordination}.
+CAP followed a similar path.  Brewer stated a broad systems observation
+~\cite{brewer2000towards}; Gilbert and Lynch proved an impossibility result for
+linearizable registers~\cite{gilbert2002cap}.  Other traditions developed
+related answers in different terms.  CRDTs obtain convergent replicated state
+from join-semilattices and inflationary updates~\cite{shapiro2011crdt}.  Highly
+Available Transactions (HATs) classify transaction guarantees that survive
+partitions~\cite{bailis2013hat}.  Invariant confluence identifies when
+independently executed transactions can merge without breaking an application
+invariant~\cite{bailis2014coordination}.
 
-These results clearly share an idea, but their different mathematical
-languages make cross-cutting questions hard to answer.  Does CALM really
-include CAP: are all three CAP properties possible precisely for
-specifications with the right monotonicity property?  Are the associative,
-commutative, and idempotent merge laws used by CRDTs required for consistent
-operation without coordination, or are they simply one reliable but
-restrictive approach?  Does convergent
-CRDT storage automatically provide a HAT interface?  Do strong eventual
-consistency and HAT availability together preserve application invariants?
-We can reduce each question---and other cross-cutting questions---to the
-same test: \emph{is the exposed specification monotone?}
+These results clearly share an idea, but their different formalisms make
+cross-cutting questions hard to answer.  Does CALM encompass the CAP tradeoff?
+Are CRDT join laws necessary for coordination freedom, or one strong sufficient
+discipline?  Does convergent storage automatically provide highly available
+transactions?  Do convergence and transaction availability preserve application
+invariants?  Section~\ref{sec:cap} answers the first question.  The CRDT, HAT,
+and invariant-confluence parts of Section~\ref{sec:instances} answer the next
+three.  The point is not that these properties are identical.  The point is
+that one semantic model lets us state their boundaries in the same terms.
 
-The specification model has only two ingredients:
+The common intuition is simple.  Different outputs need not cause trouble.  Two
+set replicas can hold different elements and later take their union; two log
+shards can expose different local sequences and later interleave them.  In each
+case, some later output preserves both earlier outputs.  By contrast, two sites
+that independently elect different leaders have made choices that no later
+single-leader result can preserve.  Before we introduce notation, we will say
+that the first pair of outputs \emph{fits together} and the second does not.
+After Section~\ref{sec:ordered-specs} defines output refinement, we use the
+formal terms \emph{compatible} and \emph{incompatible}.
+
+We strip the semantic question down to a relation $S$ of allowed input/output
+pairs, pictured as a two-column table.  The rows themselves are not ordered.
+Instead, the input column has an \emph{input-refinement partial order}
+$\InputOrd$, which describes growth in input information.  The output column has
+a separate \emph{output-refinement partial order} $\OutputOrd$, which describes
+when one output preserves and extends another.  For a functional specification,
+the criterion requires the function to be order-preserving from the input
+partial order to the output partial order.  A relational specification adds a
+second condition: the alternatives allowed at one input must be coherent, so
+every finite collection has an admitted common output refinement.  We call the
+conjunction of these conditions monotonicity for an ordered relational
+specification.
+
+This paper makes four contributions:
 \begin{enumerate}
-  \item a relation from system inputs to allowed outputs; and
-  \item a partial order saying when one output safely extends another
-        without contradiction.
+  \item We give a common semantic model for coordination results: an
+        input/output relation whose input and output columns carry separate
+        partial orders.  We define its monotonicity and prove that it decomposes
+        into order-preserving growth and coherent ambiguity.
+  \item We distinguish \emph{exposure}, which preserves every remaining
+        possibility, from \emph{commitment}, which excludes one.  Coordination
+        is required before independently authorized participants make
+        incompatible commitments.
+  \item We state Complete CALM at this interface and derive Complete CAP by
+        restricting the same criterion to choices that a deployment can
+        separate across a partition.
+  \item We instantiate the model for query monotonicity, CRDTs, HATs, and
+        invariant confluence, giving a construction or a concrete failure for
+        each case.
 \end{enumerate}
-Unlike a function, a system specification may allow several outputs for the
-same input.  Leader election may allow any one agreed leader, a transaction
-system may allow any serializable schedule, and deadlock resolution may abort
-any transaction on a cycle.  As a separate matter, the partial order says
-which later outputs can extend earlier ones without contradiction.
 
-The paper's central result is \emph{Complete CALM}: an interface can expose
-every output its specification allows without coordination exactly when the
-specification is monotone.  This establishes monotonicity as the general
-criterion for coordination freedom.  \emph{Complete CAP} is the
-partition-restricted corollary obtained by applying the same criterion only
-to collections for the same input that components can expose on different
-sides of a partition; it
-recovers and generalizes the classical register result.  The mappings to
-CRDTs, HATs, and invariant confluence yield additional results that answer
-the remaining questions above in the same vocabulary.
+``Complete'' describes the scope of the unification: the model captures the
+common semantic issue across these coordination results.  It does not suggest
+that prior formalisms are obsolete.  Relational transducers provide a language
+and an operational theorem; semilattices provide an implementation discipline
+and a canonical merge; transaction and invariant analyses expose their own
+system assumptions.  Our criterion is a semantic safety result, not a protocol
+or a liveness theorem.
 
-\section{Two Registers, One Lesson}
-\label{sec:registers}
+Section~\ref{sec:examples} begins with voting and leader election.
+Sections~\ref{sec:ordered-specs}--\ref{sec:calm} form the technical core: they
+define specifications with input and output refinement orders, exposure,
+commitment, coordination, and Complete CALM.  Section~\ref{sec:registers} uses
+registers to motivate the
+deployment-relative Complete CAP of Section~\ref{sec:cap}.
+Section~\ref{sec:instances} maps the surrounding literature into the common
+model.  We close with scope, related work, and the resulting view of the
+coordination boundary.
 
-A familiar register example shows the main idea without much notation.  The
-same execution can be safe under one specification and unsafe under another.
-The issue is not whether replicas display different outputs.  The issue is
-whether one later allowed output can extend both exposed outputs.
+\section{Two Small Examples}
+\label{sec:examples}
 
-Consider a register replicated at processes $p$ and $q$, initially undefined.
-Process $p$ writes \dog, process $q$ concurrently writes \catv, and the
-replicas exchange the writes later.  The events carry Lamport's familiar
-partial order: local program order, send-to-receive order, and all ordering
-implied by those relations~\cite{lamport1978time}.  The writes are concurrent
-because neither happens before the other.
+Two examples introduce the two parts of the criterion.  Fixed-population voting
+shows safe growth as more input arrives.  Leader election shows that several
+outputs allowed at one input may fail to fit together.
 
-Under linearizability, the system must behave as if all operations occurred
-in one total order~\cite{herlihy1990linearizability}.  Suppose $p$ has
-received $q$'s write and a read returns \catv.  Every total order consistent
-with that result places the \dog\ write before the \catv\ write.  At the same
-time, $q$ can receive $p$'s write and, using only its local information,
-return \dog.  That result requires the opposite write order.  Either result
-is allowed by itself, but no single total order explains both.  Once clients
-have seen both reads, neither can be withdrawn.  The processes must therefore
-agree on a write order before exposing the reads: they must coordinate.
+\subsection{Voting: input growth}
 
-Now replace linearizability with causal consistency~\cite{ahamad1995causal}.
-An output is no longer one total order.  It is a collection of per-process
-\emph{causal views}.  Each view contains operations and everything that
-happens before them.  A read may return any write in its view that no later
-causal write replaces; either concurrent write may be chosen.  All views are
-parts of one causal order, and combining two causally closed parts creates no
-cycle or new ordering requirement.  The two reads can therefore coexist:
-$p$'s view explains \catv, $q$'s view explains \dog, and a later view can
-contain both without revising either.
+Suppose three named voters each cast at most one immutable ballot for $a$ or
+$b$.  A site may know only some ballots, but its knowledge grows as ballots
+arrive.  Before two matching ballots arrive, the only safe output is $\bot$,
+meaning that no winner is yet certified.  A certified winner can never be
+reversed by another valid ballot.
 
-The lesson is simple.  The replicas returned different outputs under both
-specifications, so difference alone does not force coordination.  Under
-causal consistency, neither view extends the other, but a later view extends
-both.  Under linearizability, neither total order extends the other, and no
-allowed total order extends both.  We call the causal outputs
-\emph{compatible} and the linearizable outputs \emph{incompatible}.
-Coordination is forced by incompatibility, not by difference.
+\begin{table}[h]
+  \centering
+  \small
+  \caption{A fixed-population election.  More ballots may certify a result but
+  never revoke one.}
+  \label{tab:voting}
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    Ballots known & Output \\
+    \midrule
+    $\{v_1\!:\!a\}$ & $\bot$ \\
+    $\{v_1\!:\!a,v_2\!:\!a\}$ & $a$ \\
+    $\{v_1\!:\!a,v_2\!:\!b\}$ & $\bot$ \\
+    $\{v_1\!:\!a,v_2\!:\!b,v_3\!:\!b\}$ & $b$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-\section{Specifications, Commitments, and Monotonicity}
-\label{sec:model}
-We define a specification as nothing more than a mapping from inputs to outputs,
-with an ordering on outputs that defines non-contradiction.
+The output order places $\bot$ below either certified result.  The input order
+adds ballots.  Moving upward in the input order never forces the output to move
+downward or switch between certified winners.  This is ordinary monotone
+growth.
 
-Let $I$ be the set of inputs and $O$ the set of outputs visible outside the
-system. The types of inputs and outputs may union together various ``API''s.
-An input may, for example, identify a query, register instance, replicated
-object, or database instance.  Outputs, similarly, may be values, operation orders,
-database states, or sets of facts.
+\subsection{Leader election: allowed choice}
 
-\begin{definition}[Specification]
-A \emph{specification} is a relation $S\subseteq I\times O$.  For each input
-$i$,
-\[
-  S(i)=\{o\in O:(i,o)\in S\}
-\]
-is the nonempty set of outputs allowed for input $i$.  Each $S(i)$ is fixed:
-receiving other inputs does not change it.  We pair $S$ with a partial order
-$\Ord$ on outputs, called the \emph{extension order}.  We read $o\Ord o'$ as
-``$o'$ safely extends $o$ without contradiction.''
+Now suppose the input lists two eligible candidates, $c_1$ and $c_2$, and the
+specification permits either one to be elected.  If the interface promises one
+leader, reporting $c_1$ rules out $c_2$, and reporting $c_2$ rules out $c_1$.
+No allowed output preserves both choices.  If different participants may elect
+a leader independently, they must agree before either choice becomes public.
+
+Figure~\ref{fig:orders} separates three cases that are often conflated.  An
+output may extend another; two outputs may be unrelated but have a common
+extension; or two outputs may have no common extension.  Only the third case
+fails to fit together.
+
+\begin{figure}[h]
+  \centering
+  \begin{tabular}{@{}c@{\qquad}c@{\qquad}c@{}}
+    $\bot\ \longrightarrow\ a\ \longrightarrow\ b$
+      & $\begin{array}{c}t\\[-2pt]\nearrow\!\!\!\!\nwarrow\\[-4pt]a\qquad b\end{array}$
+      & $a\qquad b$ \\
+    chain & common extension & no common extension
+  \end{tabular}
+  \caption{Difference and incomparability do not by themselves force
+  coordination.  The obstruction is the absence of a common extension.}
+  \label{fig:orders}
+\end{figure}
+
+These examples are deliberately informal.  We now define exactly what inputs,
+outputs, extension, and compatibility mean.
+
+\section{Ordered Input/Output Specifications}
+\label{sec:ordered-specs}
+
+A functional specification is the graph of a function from inputs to outputs.
+A relational specification may admit several outputs at one input.  In either
+case, distributed executions refine both inputs and outputs, so we equip the two
+domains with separate partial orders.  These orders compare values within their
+respective columns; they do not order the rows of the relation.
+
+\begin{definition}[Ordered relational specification]
+\label{def:specification}
+An \emph{ordered relational specification} is
+\begin{equation}
+  \Spec=(I,\InputOrd,O,\OutputOrd,S),
+  \qquad S\subseteq I\times O,
+  \label{eq:specification}
+\end{equation}
+where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  We call
+$\InputOrd$ the \emph{input-refinement order} and $\OutputOrd$ the
+\emph{output-refinement order}.  They are separate: $\InputOrd$ compares inputs
+with inputs, $\OutputOrd$ compares outputs with outputs, and neither orders the
+rows of $S$.  A row $(i,o)\in S$ says that output $o$ is admissible at input
+$i$.  The \emph{fiber}
+at $i$ is
+\begin{equation}
+  \fiber{i}=\{o\in O:(i,o)\in S\}.
+  \label{eq:fiber}
+\end{equation}
+We assume every input under discussion has a nonempty fiber.
 \end{definition}
 
-The order says which outputs can safely follow which; it does not rank one
-output as better or worse than another.  For the linearizable register, a
-total operation order extends an earlier one by adding operations without
-reordering those already present.  For causal consistency, a view extends an
-earlier view by adding operations and causal edges without changing earlier
-observations.
+We read $i\InputOrd j$ as ``$j$ contains at least the input information in
+$i$.''  We read $o\OutputOrd u$ as ``$u$ preserves and extends every externally
+visible claim in $o$.''  Both partial orders are part of the specification;
+neither expresses preference or quality.  They need not be set inclusion.  For
+a query, both commonly are inclusion; for a register, the input order extends a
+causal history and the output order extends an explanation of operations; for a
+CRDT, the output order may be a lattice order.
 
-\begin{definition}[Commitment]
-A \emph{commitment} irrevocably rules out one or more input--output pairs in
-$S$ for the current execution.  Exposure of an output $o\in S(i)$ requires
-an \emph{exposure commitment}: it rules out every dominated pair
-$(i,o')\in S$ with $o'\prec o$, where $o'\prec o$ means $o'\Ord o$ and
-$o'\ne o$.
+\begin{definition}[Compatibility]
+\label{def:compatibility}
+Outputs $o_1,\ldots,o_k$ are \emph{compatible at input $j$} if there is an
+admissible common refinement $u\in\fiber{j}$ such that
+$o_r\OutputOrd u$ for every $r$.  Otherwise they are \emph{incompatible at
+$j$}.
 \end{definition}
 
-The only commitments we need consider in this paper are exposure
-commitments.  A participant may expose $o\in S(i)$ only after receiving $i$,
-but receiving an input neither forces an exposure nor rules out any pair.
-When an implementation exposes $o$, its exposure commitment rules out every
-pair $(i,o')$ with $o'\prec o$.  This is the formal sense in which the
-exposure is irrevocable: no pair below $o$ remains available for $i$.  It
-does not rule out outputs incomparable with $o$; such outputs can coexist
-only when $S(i)$ contains a common extension.
+Compatibility is not comparability.  The middle order in
+Figure~\ref{fig:orders} has incomparable outputs $a$ and $b$, but they are
+compatible because $t$ refines both.  The leader outputs are incompatible
+because the specification admits no output that refines both.
 
-For one input $i$, consider participants $p_1,\ldots,p_k$ that each receive
-$i$ and independently expose outputs $o_1,\ldots,o_k\in S(i)$.  Their
-exposure commitments are compatible exactly when the outputs have a common
-extension $u\in S(i)$:
-\[
-  o_j\Ord u
-  \qquad\text{for every }j.
-\]
-Because $u$ extends every $o_j$, none of the exposure commitments rules out
-$(i,u)$.  If no such $u$ exists, at least one participant must wait for
-communication before making its exposure commitment.
+\subsection{The functional case}
+\label{sec:functional}
+
+Let $S$ be the graph of a function $f:I\to O$, so that
+$\fiber{i}=\{f(i)\}$.  In this case, monotonicity first has its familiar
+meaning: $f$ is an order-preserving map from the input poset to the output
+poset:
+\begin{equation}
+  i\InputOrd j \quad\Longrightarrow\quad f(i)\OutputOrd f(j).
+  \label{eq:functional-monotonicity}
+\end{equation}
+This is the usual meaning of a monotone function.  The voting specification is
+functional: adding ballots can refine $\bot$ to a certified winner, but cannot
+invalidate a certified winner.  Query monotonicity in
+Section~\ref{sec:query-instance} is another direct instance.
+
+A relation adds genuine choice.  Order preservation must then say what happens
+to \emph{every} output admitted at the earlier input, not merely choose one
+convenient trajectory.
+
+\begin{definition}[Growth]
+\label{def:growth}
+The specification has \emph{growth} if, whenever $i\InputOrd j$ and
+$o\in\fiber{i}$, there is an $o'\in\fiber{j}$ with $o\OutputOrd o'$.
+\end{definition}
+
+Growth is relational order preservation.  It reduces to
+Equation~\ref{eq:functional-monotonicity} when every fiber is a singleton.  It
+does not constrain two different outputs admitted at the same input.  That is a
+second condition.
+
+\begin{definition}[Coherence]
+\label{def:coherence}
+The specification has \emph{coherence} if every nonempty finite collection
+$o_1,\ldots,o_k\in\fiber{i}$ is compatible at $i$.  Equivalently, every fiber
+is finitely directed under $\OutputOrd$.
+\end{definition}
+
+The order-theoretic term is directedness; we use \emph{coherence} for the
+semantic reading.  Growth concerns refinement between inputs.  Coherence
+concerns the choices admitted at one input.  Functional specifications have
+coherence automatically.  The leader-election specification does not.
+
+\subsection{Monotonicity for a relation}
+
+The single condition used in the rest of the paper combines growth and
+coherence across any finite collection of rows.
 
 \begin{definition}[Monotonicity]
-\label{def:monotone}
-A specification $(S,\Ord)$ is \emph{monotone} when, for every input $i$ and
-every finite collection $o_1,\ldots,o_k\in S(i)$, there is an output $u$
-such that
-\[
-  u\in S(i)
-  \quad\text{and}\quad
-  o_j\Ord u
-  \qquad\text{for every }j.
-  \tag{1}
-\]
+\label{def:monotonicity}
+An ordered relational specification $\Spec$ is \emph{monotone} if, for every
+nonempty finite family of rows
+\begin{equation*}
+  (i_1,o_1),\ldots,(i_k,o_k)\in S
+\end{equation*}
+and every common input refinement $j$ satisfying $i_r\InputOrd j$ for all $r$,
+the outputs $o_1,\ldots,o_k$ are compatible at $j$.  Equivalently, there is a
+$u\in\fiber{j}$ such that
+\begin{equation}
+  o_r\OutputOrd u
+  \qquad\text{for every }r\in\{1,\ldots,k\}.
+  \label{eq:monotonicity}
+\end{equation}
 \end{definition}
 
-Thus $S(i)$ is finitely directed under $\Ord$ for each input $i$.  The finite
-condition matters because pairwise common extensions need not yield one
-output extending every exposure.  Different inputs remain independent: a
-resolved specification may assign a different output to each input.
+The universal quantifier over $j$ is important.  The environment may choose
+which common refinement occurs; the implementation cannot rely on a more
+convenient one.  If the inputs have no common refinement, the definition imposes
+no condition.  We require finite families because pairwise compatibility need
+not imply compatibility of a larger family.
+
+\begin{proposition}[Decomposition]
+\label{prop:decomposition}
+An ordered relational specification is monotone if and only if it has growth
+and coherence.
+\end{proposition}
+
+\begin{proof}
+Assume $\Spec$ is monotone.  Given $i\InputOrd j$ and $o\in\fiber{i}$, apply
+Definition~\ref{def:monotonicity} to the one-row family $(i,o)$ and common input
+refinement $j$.  The resulting $o'\in\fiber{j}$ establishes growth.  Given a
+finite collection $o_1,\ldots,o_k\in\fiber{i}$, apply the definition to the rows
+$(i,o_1),\ldots,(i,o_k)$ with common input refinement $i$.  The resulting
+common output refinement establishes coherence.
+
+Conversely, assume growth and coherence.  Consider rows
+$(i_1,o_1),\ldots,(i_k,o_k)$ and a common input refinement $j$.  Growth gives,
+for every $r$, an output $o'_r\in\fiber{j}$ with
+$o_r\OutputOrd o'_r$.  Coherence of the literal fiber $\fiber{j}$ gives a
+$u\in\fiber{j}$ with $o'_r\OutputOrd u$ for every $r$.  Transitivity yields
+$o_r\OutputOrd u$ for every $r$, which is
+Equation~\ref{eq:monotonicity}.
+\end{proof}
+
+\begin{proposition}[Functional specifications]
+\label{prop:functional}
+If $S$ is the graph of a function $f:I\to O$, then $\Spec$ is monotone if and
+only if $f$ is order-preserving as in
+Equation~\ref{eq:functional-monotonicity}.
+\end{proposition}
+
+\begin{proof}
+Every singleton fiber is coherent.  Proposition~\ref{prop:decomposition}
+therefore reduces monotonicity to growth, which for a function is exactly
+Equation~\ref{eq:functional-monotonicity}.
+\end{proof}
+
+This proposition shows precisely how the relational definition extends
+ordinary monotonicity.  It does not rename directedness as monotonicity:
+monotonicity of a relational specification is the conjunction of relational
+growth and directed fibers.  The second condition becomes visible only when a
+specification admits more than one output.
+
+\section{Exposure, Commitment, and Coordination}
+\label{sec:exposure}
+
+The output order describes irrevocable public information.  Once $o$ is
+exposed, every later output must refine $o$.  We model only the resulting
+restriction on the specification; no protocol state is needed.
+
+Let $R\subseteq S$ be the rows still possible in the current execution.  For a
+selected row $(i,o)\in R$, define
+\begin{equation}
+  R\mathbin{\upharpoonright}(i,o)
+  = R\setminus
+    \{(j,x)\in R:i\InputOrd j\ \land\ o\not\OutputOrd x\}.
+  \label{eq:residual}
+\end{equation}
+The restriction removes each row at a refinement of $i$ whose output does not
+itself refine $o$.  Rows at inputs unrelated to $i$ are unchanged.
+
+\begin{definition}[Exposure and commitment]
+\label{def:exposure}
+An output $o$ is \emph{exposure-ready} in residual $R$ at input $i$ if, for
+every $(j,x)\in R$ with $i\InputOrd j$, there is a row $(j,u)$ retained in
+$R\mathbin{\upharpoonright}(i,o)$ such that
+\begin{equation}
+  x\OutputOrd u.
+  \label{eq:exposure-ready}
+\end{equation}
+Because $(j,u)$ is retained, $o\OutputOrd u$ also holds.  Selecting an
+exposure-ready output is an \emph{exposure}: every removed possibility has a
+retained refinement.  Selecting an output that is not exposure-ready is a
+\emph{commitment}: some removed possibility has no retained refinement.
+\end{definition}
+
+Literal rows may disappear during exposure without changing the specified
+possibilities.  In the middle order of Figure~\ref{fig:orders}, exposing $a$
+removes the row $b$, but retains $t$, which refines both.  In leader election,
+selecting $c_1$ removes $c_2$ and retains no refinement of it, so the selection
+is a commitment.
+
+A residual is \emph{exposure-reachable} if it is obtained from $S$ by a finite
+sequence of exposures.  This accounts for outputs that have already been made
+public.
+
+\begin{definition}[Exposure at will]
+\label{def:exposure-at-will}
+A specification permits \emph{exposure at will} if, in every
+exposure-reachable residual $R$, every row $(i,o)\in R$ is exposure-ready.
+\end{definition}
 
 \begin{definition}[Coordination]
-\emph{Coordination} is waiting for communication before making an exposure
-commitment.  Such waiting is required when participants could otherwise
-expose, for the same input, a finite collection of outputs with no common
-extension in $S(i)$.
+\label{def:coordination}
+\emph{Coordination} is agreement required before a participant makes a
+commitment that could exclude a choice independently authorized to another
+participant.  A declared interface is \emph{coordination-free} if it permits
+exposure at will: every output the interface offers may be selected without
+prior agreement and without excluding any remaining specified possibility.
 \end{definition}
 
-Communication that does not delay an exposure commitment is not coordination.
-In particular, participants may exchange data and extend their outputs after
-exposure.
+Communication that does not delay a commitment is not coordination in this
+sense.  Participants may exchange inputs, gossip state, and propagate output
+refinements asynchronously.  Coordination occurs when one participant must
+learn or constrain another participant's choice before making its own.
+
+The qualifier ``declared interface'' matters.  Every row in $S$ is a behavior
+that the interface offers.  An implementation that always suppresses some rows
+implements a narrower relation; the criterion applies to that relation instead.
+
+\section{Complete CALM}
+\label{sec:calm}
+
+We can now state the coordination boundary.  Consistency here means
+\emph{refinement consistency}: exposed outputs need not be equal, but no later
+selection may contradict one, and independently exposed outputs must retain an
+admitted common refinement when their inputs are combined.
 
 \begin{theorem}[Complete CALM]
 \label{thm:calm}
-Participants can safely expose outputs without coordination exactly when the
-specification $(S,\Ord)$ is monotone.
+An ordered relational specification permits exposure at will---and hence is
+coordination-free at its declared interface---if and only if it satisfies the
+Complete CALM criterion.
 \end{theorem}
 
 \begin{proof}
-Suppose the specification is monotone.  For any input $i$, Equation~(1) gives
-an allowed common extension for every finite collection of outputs exposed
-independently for $i$.  The resulting exposure commitments are compatible,
-so no participant must wait for another participant's choice before making
-its own.
+First suppose $\Spec$ satisfies the Complete CALM criterion.  Let $R$ be the
+residual after exposures $(i_1,o_1),\ldots,(i_m,o_m)$, and consider any
+$(i,o)\in R$.  To show that $o$ is exposure-ready, choose any $(j,x)\in R$ with
+$i\InputOrd j$.  Apply Definition~\ref{def:calm-criterion} to $(i,o)$,
+$(j,x)$, and every earlier exposure $(i_h,o_h)$ with $i_h\InputOrd j$.  It
+gives $u\in\fiber{j}$ refining $o$, $x$, and every such $o_h$.  The last condition means $(j,u)$ survived all
+previous restrictions; $o\OutputOrd u$ means it also survives the new one.
+Thus every removed $x$ has a retained refinement $u$, so $o$ is exposure-ready.
+Every available selection is therefore an exposure.
 
-Now suppose the specification is not monotone.  Then some input $i$ has a
-finite collection of allowed outputs with no common extension in $S(i)$.
-Participants that receive $i$ may expose those outputs independently.  Their
-exposure commitments would be incompatible, so preventing that outcome
-requires at least one participant to wait for communication before making
-its commitment.  That wait is coordination.
+Conversely, suppose exposure at will holds.  Monotonicity follows immediately.
+If $i\InputOrd j$ and $o\in\fiber{i}$, choose any $x\in\fiber{j}$.  Since $o$
+is exposure-ready in the initial residual, some retained $u\in\fiber{j}$
+refines $x$ and $o$; hence $o$ has a refinement at $j$.
+
+It remains to prove finite fiber-directedness.  Assume for contradiction that a
+fiber contains a finite incompatible family, and choose one of least
+cardinality, $o_1,\ldots,o_k$.  We have $k\geq2$.  If $k=2$, then $o_1$ is not
+exposure-ready because $o_2$ has no common refinement with it.
+
+Suppose $k>2$.  By minimality, the proper subfamilies
+$\{o_1,\ldots,o_{k-1}\}$ and
+$\{o_1,\ldots,o_{k-2},o_k\}$ have common refinements $v$ and $w$ in the
+fiber.  Both $v$ and $w$ refine $o_1$, so both remain after exposing $o_1$.
+They are incompatible: a common refinement of $v$ and $w$ would refine all
+$o_1,\ldots,o_k$.  Hence $v$ is not exposure-ready in the resulting residual,
+contradicting exposure at will.  Every fiber is finitely directed.  Monotonicity
+and finite fiber-directedness imply the Complete CALM criterion by
+Proposition~\ref{prop:decomposition}.
 \end{proof}
 
-Complete CALM applies to the interface as declared.  If an implementation
-suppresses some outputs in $S(i)$, it implements a narrower relation, and
-monotonicity must be checked on that relation instead.  The theorem does not
-provide an algorithm or guarantee liveness.
+The proof is short because the model isolates the exact obstruction: a finite
+family of admissible outputs with no admitted common refinement.  The name
+``Complete CALM'' refers to the breadth of the unification across coordination
+results, not to the mere presence of a biconditional.
 
-\section{Complete CAP: Monotonicity Across Partitions}
+The theorem is a semantic safety result.  It does not compute a common
+refinement or guarantee termination, message delivery, or a response-time
+bound.  A language or protocol must still show that its participants can
+compute the required outputs under its execution and failure assumptions.
+
+\section{Registers: Difference Versus Incompatibility}
+\label{sec:registers}
+
+Registers connect the criterion to familiar consistency models and expose a
+subtle distinction between global and deployment-relative monotonicity.
+
+Let an input $h$ be a finite, causally closed operation history.  We write
+$h\InputOrd h'$ when $h$ is a downward-closed induced subhistory of $h'$:
+$h'$ adds operations with all of their causal predecessors and preserves the
+causal order among operations already in $h$.  An output is an explanation
+$(L,\rho)$.  Here $L$ is an operation order admitted by the consistency model,
+and $\rho$ maps each completed read to the write that supplied its response.
+An explanation $(L',\rho')$ refines $(L,\rho)$ when $L'$ extends $L$ without
+reversing an existing order and $\rho'$ extends $\rho$ without changing an
+answered read.
+
+Consider two replicas of a register initially holding no value.  Process $p$
+completes a write of \dog{} while $q$ concurrently completes a write of
+\catv.  Each process learns both writes and then serves a local read; both
+writes complete before either read begins.
+
+\begin{table}[h]
+  \centering
+  \small
+  \caption{Two reads following concurrent writes.}
+  \label{tab:register}
+  \begin{tabular}{@{}p{.43\columnwidth}p{.43\columnwidth}@{}}
+    \toprule
+    Process $p$ & Process $q$ \\
+    \midrule
+    $w_p(x,\dog)$ & $w_q(x,\catv)$ \\
+    receive $w_q$ & receive $w_p$ \\
+    $r_p(x)\mapsto\catv$ & $r_q(x)\mapsto\dog$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Total-order explanations}
+
+For a linearizable register, $L$ is a total order that extends real-time order,
+and each read returns the latest preceding write in $L$
+~\cite{herlihy1990linearizability}.  Because both writes precede both reads,
+$r_p=\catv$ requires
+\begin{equation}
+  w_p(x,\dog)<_L w_q(x,\catv),
+  \label{eq:dog-before-cat}
+\end{equation}
+whereas $r_q=\dog$ requires
+\begin{equation}
+  w_q(x,\catv)<_L w_p(x,\dog).
+  \label{eq:cat-before-dog}
+\end{equation}
+Each explanation is admissible alone.  No total order can satisfy both
+constraints, so the explanations are incompatible.  If opposite replicas are
+authorized to expose these read responses independently, they must agree on a
+write order first.  This is the obstruction used in the classical
+linearizable-register CAP result~\cite{gilbert2002cap}.
+
+\subsection{Causal explanations}
+
+For causal consistency, $L$ is the happens-before relation and a read may return
+an admitted causally visible write not superseded by a later causal write
+~\cite{lamport1978time,ahamad1995causal}.  The two writes above remain
+concurrent.  One explanation can therefore preserve both responses by assigning
+$r_p$ to the \catv{} write and $r_q$ to the \dog{} write.  The read outputs are
+different but compatible.
+
+The causal specification is not necessarily monotone under universal authority.
+The two possible responses \dog{} and \catv{} for the \emph{same} read are
+incompatible because refinement cannot change an existing read assignment.  In
+the actual deployment, however, only the owner of a read chooses its response.
+That local choice cannot be separated across a network partition.  This
+distinction motivates the deployment-relative criterion.
+
+\section{Complete CAP Under a Deployment}
 \label{sec:cap}
 
-CAP asks a more specific coordination question.  Complete CALM asks whether
-participants can make the commitments required for exposure without waiting
-for communication.  Availability during a partition forbids only waiting for
-communication from another connected component.  Participants in one
-component may still communicate and coordinate with one another.  Only
-monotonicity across different components matters.
+Complete CALM tests every family of independently authorized rows.  CAP tests
+only families that a deployment can select on opposite sides of a network cut.
+Participants within one connected component may coordinate; availability
+forbids waiting for information from another component.
 
-Fix a deployment that determines which participants may receive each input.
-A network partition $\Pi$ divides the participants into two or more nonempty
-connected components and delays every message between components.  Each
-component may continue to receive inputs, expose outputs, and exchange
-messages internally.
+\begin{definition}[Deployment and separability]
+\label{def:deployment}
+A \emph{deployment} $\Delta$ assigns each participant $p$ an authority set
+$\Delta_p\subseteq S$ of rows that $p$ may select.  A partition $\Pi$ divides
+the participants into two or more connected components.  A finite family of
+rows is \emph{separable under $\Pi$} if there is a partitioned execution in
+which those rows can be selected jointly by authorized participants, with at
+least two components making a selection.  Participants within each component
+may coordinate before making their component's selections.
+\end{definition}
 
-For a partition $\Pi$ and an input $i$, consider any finite collection
-$o_1,\ldots,o_k\in S(i)$ that participants in at least two components can
-expose before a message crosses the cut.  The specification is
-\emph{monotone across partitions} when every such collection has an output
-$u$ such that
-\[
-  u\in S(i)
-  \quad\text{and}\quad
-  o_j\Ord u
-  \qquad\text{for every }j.
-  \tag{2}
-\]
-Equation~(2) is Equation~(1) restricted to collections that the deployment
-can expose across a partition.
+Joint selectability is essential.  Two mutually exclusive alternatives owned
+by one participant do not become separable merely because an unrelated row is
+selected in another component.  Separability describes a realizable partitioned
+execution, not just membership in authority sets.
 
-At this interface, \emph{consistency} means that, for each input $i$, one
-output in $S(i)$ extends all outputs exposed for $i$.  \emph{Availability}
-means that each nonfailed component may expose any output in $S(i)$ for an
-input $i$ it has received, without waiting for a message across the cut.
-Receiving an input still does not force an immediate output; whenever a
-component chooses to expose one, it need not wait for another component.
-\emph{Partition tolerance} requires consistency and availability for every
-network partition.  An implementation that filters the available choices
-implements a narrower specification, and the test applies to that relation.
+\begin{definition}[Monotonicity across a partition]
+\label{def:partition-monotonicity}
+A deployed specification is \emph{monotone across $\Pi$} if, for every
+$\Pi$-separable family
+$(i_1,o_1),\ldots,(i_k,o_k)$ and every common input refinement $j$, there is a
+$u\in\fiber{j}$ such that
+\begin{equation}
+  o_r\OutputOrd u
+  \qquad\text{for every }r.
+  \label{eq:partition-monotonicity}
+\end{equation}
+It is \emph{monotone across the relevant partitions} if this holds for every
+cut in the declared failure model.
+\end{definition}
 
-\begin{theorem}[Complete CAP]
+At this interface, \emph{cross-partition availability} means that each
+nonfailed component may make every locally feasible selection without waiting
+for a message across the cut.  \emph{Consistency} again means refinement
+consistency: jointly selected rows have an admitted common output refinement
+when their inputs are combined.  We assume each component can resolve its own
+choices correctly using internal coordination.  Partition tolerance quantifies
+these requirements over every relevant partition and schedule.
+
+\begin{theorem}[Complete CAP under a deployment]
 \label{thm:cap}
-For a fixed deployment, consistency, availability, and partition tolerance
-coexist exactly when the specification is monotone across partitions.
+For a fixed deployment and set of relevant partitions, cross-partition
+availability and refinement consistency coexist at the declared selection
+interface if and only if the specification is monotone across those partitions.
 \end{theorem}
 
 \begin{proof}
-Suppose the specification is monotone across partitions.  Each component may
-expose any output allowed for a received input without a cross-partition
-wait.  For every input, Equation~(2) gives an allowed common extension of all
-outputs exposed across the cut.  Consistency is therefore preserved.
+Assume partition monotonicity.  Consider any finite family selected in a
+partitioned execution and any common input refinement.  By
+Equation~\ref{eq:partition-monotonicity}, an admitted output refines every
+selection.  Thus selections made without a cross-partition wait remain
+refinement-consistent when the partition heals.
 
-Now suppose the specification is not monotone across partitions.  Then some
-partition and input $i$ permit components to expose a finite collection of
-outputs in $S(i)$ with no common extension in $S(i)$.  Availability lets
-the components make those choices without learning the choices across the
-cut.  Avoiding incompatible exposure commitments requires either waiting for
-cross-partition communication or allowing fewer outputs.  The first gives up
-availability; the second adopts a narrower specification.
+Conversely, suppose partition monotonicity fails.  Its witness is a jointly
+selectable family, a relevant cut, and a common input refinement with no
+admitted common output refinement.  Cross-partition availability permits the
+authorized components to make the witness selections while communication
+across the cut is delayed.  The system must then either wait across the cut,
+retain selections with no consistent refinement, or suppress a selection
+permitted by the interface.  These respectively lose availability, consistency,
+or the declared specification.
 \end{proof}
 
-Complete CAP generalizes the classical Gilbert--Lynch register
-result~\cite{gilbert2002cap}.  For one register instance $i$, let $S(i)$ contain the explicit operation orders that can
-explain its returned reads, with order-preserving extension as $\Ord$.  The
-opposite write orders in Section~\ref{sec:registers} both belong to $S(i)$
-and can be exposed on different sides of a partition, but no allowed order extends both.  Equation~(2) therefore recovers the impossibility.
-Under causal consistency, the outputs in $S(i)$ are collections of
-per-process causal views.  Views exposed across a partition can be combined
-without undoing either one, so the specification is monotone across
-partitions and can remain available.
+This is a semantic safety result at the declared selection interface.  It does
+not construct a resolver, guarantee that internal coordination terminates, or
+bound healing time.
 
-Every collection considered by Equation~(2) is also a finite collection for
-a single input considered by Equation~(1).  Complete CALM therefore implies
-Complete CAP's condition:
-\[
-  \text{monotone}\quad\Longrightarrow\quad
-  \text{monotone across partitions}.
-\]
-The reverse can fail when incompatible outputs for one input cannot be
-exposed across a partition---for example, when every such choice occurs at one
-participant.  The two conditions coincide when every incompatible
-collection can be placed across some partition.  CAP's obstruction is now
-explicit: consistency requires cross-partition coordination exactly when
-outputs for the same input exposed on different sides have no common allowed
-extension.
+The relationship to CALM is direct.  CALM tests all independently authorized
+families.  CAP tests the jointly selectable families a deployment can separate.
+Under universal authority and realizability, every family can be separated and
+the conditions coincide.  Under a restricted deployment, an incompatibility
+controlled by one participant or one component does not obstruct partition
+availability.  In this precise sense, \emph{CAP is CALM restricted by a
+deployment}.
 
-\section{Monotonicity Across the Literature}
+The register example illustrates both cases.  Opposing total-order explanations
+are jointly selectable across the two replicas and have no common refinement.
+The causal explanations for different reads are compatible.  The incompatible
+answers for one literal read remain under that read owner's authority and are
+not jointly selectable.
+
+\section{Instances Across the Literature}
 \label{sec:instances}
 
-Section~\ref{sec:cap} connected CAP and CALM by applying one test at different
-boundaries.  We now use the same vocabulary for state-based CRDTs, HATs, and
-invariant confluence.  For each line of work, we first choose a shared input
-$i$, its allowed outputs $S(i)$, and an extension order.  We then ask whether
-every independently exposed collection in $S(i)$ has a common allowed
-extension.
-
-Table~\ref{tab:instances} summarizes the encodings.  A positive result shows
-how to construct a common extension in $S(i)$.  A negative result identifies
-outputs allowed for the same input that may be exposed independently but
-have no common allowed extension.
+Table~\ref{tab:instances} summarizes the common model.  Each row identifies the
+changing input, visible output, refinement order, and either a common-refinement
+construction or a concrete failure.  Evolving information belongs in the input
+order; it is not encoded as alternatives inside one fixed fiber.
 
 \begin{table*}[t]
   \centering
-  \small
-  \caption{Five results expressed through one monotonicity test.}
+  \footnotesize
+  \caption{Coordination results expressed as ordered input/output
+  specifications.}
   \label{tab:instances}
-  \begin{tabular}{@{}p{0.105\textwidth}p{0.22\textwidth}
-                  p{0.17\textwidth}p{0.43\textwidth}@{}}
+  \begin{tabular}{@{}p{.10\textwidth}p{.155\textwidth}p{.165\textwidth}
+                  p{.12\textwidth}p{.34\textwidth}@{}}
     \toprule
-    Line of work & Outputs & Extension order & Unified reading \\
+    Setting & Input and order & Visible output & Output order &
+      Common refinement or failure \\
     \midrule
-    CALM
-      & Query output facts
-      & Set inclusion
-      & $I\subseteq J$ implies $Q(I)\subseteq Q(J)$; this is ordinary
-        query monotonicity. \\
-    State-based CRDTs
-      & Replicated states
-      & Join-semilattice order
-      & Inflationary ACI join proves state monotonicity.  It is enough
-        for Complete CALM but is not required. \\
-    CAP
-      & Interface outputs, such as register views
-      & Specification-specific extension
-      & Complete CAP holds exactly when interface outputs possible across
-        partitions satisfy Equation~(2). \\
-    HATs
-      & Commit, read, and session facts
-      & Set inclusion
-      & Under its session and contact assumptions, a guarantee is a HAT
-        exactly when local facts can all be safely extended. \\
+    Query CALM
+      & Finite facts $J$, inclusion
+      & Answer $Q(J)$
+      & Fact inclusion
+      & $Q(J_1\cup J_2)$ refines both partial answers; negation may require a
+        retraction. \\
+    State CRDT
+      & Received state deltas, inclusion
+      & Replica state
+      & Lattice order
+      & Join supplies a least common refinement. \\
+    Register CAP
+      & Causal history, downward-closed extension
+      & Order/read explanation
+      & Explanation extension
+      & Opposing total orders conflict; causal explanations can preserve both
+        reads. \\
+    HAT
+      & Requests received so far, inclusion
+      & Read, commit, and session facts
+      & Fact inclusion
+      & Some facts accumulate; serialization cycles and first-committer-wins
+        supply failures. \\
     Invariant confluence
-      & Invariant-valid database states
-      & Merge order
-      & Under the prescribed merge, $I$-confluence is monotonicity of
-        invariant-valid states across partitions. \\
+      & Applied transactions, inclusion
+      & Reachable invariant-valid state
+      & Prescribed merge refinement
+      & Valid merge is a common refinement; duplicate allocation violates
+        uniqueness. \\
     \bottomrule
   \end{tabular}
 \end{table*}
 
-\subsection{Warm-Up: CALM Is Query Monotonicity}
+\subsection{CALM and query monotonicity}
+\label{sec:query-instance}
 
-A deterministic query gives the simplest example.  Fix a query $Q$.  When a
-site currently knows an EDB fact set $J$, $Q(J)$ is the complete answer for
-those facts; the site may choose to expose it as an output in $S(Q)$.  Set
-inclusion is the extension order.  If the site later knows $J'$ with
-$J\subseteq J'$, the new answer extends the exposed answer exactly when
-\[
-  J\subseteq J'\quad\Longrightarrow\quad Q(J)\subseteq Q(J'),
-\]
-which is the usual definition of a monotone query.  A nonmonotone query may
-instead require retracting a fact that clients have already seen.
+Fix a query $Q$.  An input $J$ is a finite database fact set, ordered by
+inclusion.  The specification is functional:
+\begin{equation}
+  \fiber{J}=\{Q(J)\},
+  \label{eq:query-fiber}
+\end{equation}
+and outputs are ordered by fact inclusion.  By
+Proposition~\ref{prop:functional}, monotonicity is exactly
+\begin{equation}
+  J\subseteq J' \quad\Longrightarrow\quad Q(J)\subseteq Q(J'),
+  \label{eq:query-monotonicity}
+\end{equation}
+the standard definition of a monotone query
+~\cite{abiteboul1995foundations}.  If two sites know $J_1$ and $J_2$, then
+$Q(J_1\cup J_2)$ refines both partial answers.  A nonmonotone query may instead
+need to retract a fact exposed before missing input arrived.
 
-Two partitioned sites evaluating $Q$ may know different fact sets $J_1$ and
-$J_2$.  For a monotone query, $Q(J_1\cup J_2)$ extends both exposed answers.
 The relational-transducer CALM theorem proves the corresponding operational
-result for that language: exactly the monotone queries have transducer
-programs that do not coordinate.  Our criterion isolates the interface
-property used by that theorem and by the other systems below.
+result for its language~\cite{ameloot2013relational,ameloot2015weaker}.  The
+input/output relation and its two refinement orders do not replace that language
+or its analysis.  They isolate the semantic property that the transducer theorem
+realizes and that the following systems share.
 
-\subsection{CRDTs: Is the Merge Algebra Necessary?}
+\subsection{CRDTs: sufficient structure versus the criterion}
+\label{sec:crdt-instance}
 
-State-based CRDTs achieve convergence through algebra.  Replica states form a
-join-semilattice, updates are inflationary, and replicas merge states using
-join~\cite{shapiro2011crdt}.
+For a state-based CRDT, take the input to be the set of joinable state deltas
+(or upward-moving replica states) received so far, ordered by inclusion.  Let
+$s(U)$ be their accumulated state.  The specification is functional, and
+outputs use the CRDT's lattice order.  Under the usual state-based CRDT
+conditions, local states move upward and merge is join
+~\cite{shapiro2011crdt}.  Thus
+\begin{equation}
+  s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)
+  \label{eq:crdt-join}
+\end{equation}
+is a least common refinement.
 
-\paragraph{Encoding.}
-An input $x$ identifies a replicated object.  A replica has received some
-finite set $U$ of updates to $x$, and an output in $S(x)$ is a replica state.
-The extension order is the lattice order.  The set $S(x)$ remains fixed as
-updates arrive.  Because join is associative, commutative, and idempotent
-(ACI), and updates only move upward, every delivery order for $U$ reaches the
-same least state incorporating all of $U$, written $s(U)$.  This is Strong
-Eventual Consistency (SEC).  If two replicas of $x$ choose to expose
-$s(U_1)$ and $s(U_2)$ after receiving update sets $U_1$ and $U_2$, those
-outputs have the common extension
-\[
-  s(U_1)\sqcup s(U_2)=s(U_1\cup U_2).
-\]
-That state belongs to $S(x)$.  The CRDT construction therefore satisfies
-the monotonicity condition for $x$, with join providing the extending output.
+A join-semilattice gives more structure than Definition~\ref{def:monotonicity}
+requires.  It provides a uniform least common refinement for every pair in the
+output domain.  Monotonicity asks only for some admitted common refinement of
+each relevant finite family.  The refinement need not be least or computed by
+one global binary operator.  Semilattices are therefore a powerful sufficient
+discipline, not a necessary condition for coordination freedom.
 
-\paragraph{Payoff.}
-A join-semilattice requires every pair of outputs in $O$ to have a least
-common extension, supplied by the same binary join operation throughout the
-domain.  Equation~(1) asks only for some allowed common extension of each
-finite collection in one set $S(i)$.  That extension need not be least or
-computed by a uniform operator, and outputs for different inputs need no
-common extension.  Hence semilattices are sufficient but not necessary for
-coordination freedom: they do not cover all monotone specifications.
+\paragraph{A sharded log.}
+Let shard $A$ expose the local sequence $[a_1,a_2]$ and shard $B$ expose
+$[b_1,b_2]$.  Sequence refinement is order-preserving subsequence.  At the
+combined input, the specification admits any interleaving that preserves each
+shard's local order.  For example,
+\begin{equation}
+  [a_1,a_2,b_1,b_2]
+  \qquad\text{and}\qquad
+  [b_1,b_2,a_1,a_2]
+  \label{eq:log-interleavings}
+\end{equation}
+are two minimal common refinements.  Neither refines the other, so no least
+common refinement exists.  Under a deployment that authorizes each shard to
+expose only its local sequence, every cross-shard family nevertheless has an
+admitted interleaving.  A global join is unnecessary for that interface.
 
-A sharded log separates the two ideas.  For one log instance $i$, each item
-is delivered to exactly one shard, and each shard exposes its local sequence.
-The set $S(i)$ allows any sequence that preserves the shard orders it
-contains, including global interleavings, as in partitioned log systems such
-as Kafka~\cite{kreps2011kafka}.  Every collection of shard sequences can be
-extended by an allowed interleaving in $S(i)$, so the monotonicity condition
-holds for $i$ and shards can expose outputs without coordination.  But order-preserving
-sequences do not form a semilattice.  Several minimal interleavings may
-exist, neither extends the other, and there is no least output that extends
-both.  A uniform merge operator would choose an order that the specification
-did not require.  ACI join is therefore a powerful route to monotonicity, but
-it is not required.
+This conclusion is deployment-relative.  A specification that exposes
+completed global interleavings would admit incompatible outputs and require a
+separate reconciliation rule.  Similarly, convergence of replicated state says
+nothing by itself about exact reads or transactional observations.  Those
+outputs require their own monotonicity tests
+~\cite{burckhardt2014principles,laddad2022keep}.
 
-\paragraph{Boundary of the result.}
-The CRDT argument concerns only the state interface.  If the same system also
-exposes exact reads whose values influence later updates, those read outcomes
-must pass their own monotonicity test~\cite{lamport1978time,laddad2022keep}.
-The transactional setting makes this distinction concrete.
+\subsection{Highly available transactions}
+\label{sec:hat-instance}
 
-\subsection{HATs: Does Convergent Storage Provide Available
-Transactions?}
+For a transactional interface, an input is the set of begin, read, write, and
+commit requests received so far, ordered by inclusion.  An output is a growing
+set of public facts such as $\mathsf{read}(T,x,v)$,
+$\mathsf{commit}(T)$, and session-order facts, also ordered by inclusion.  The
+isolation or session guarantee determines which fact sets are admissible.  The
+deployment assigns transactions and requests to replicas.  Complete CAP then
+tests the families those authorities can select across a partition.  As in HAT
+work, the result depends on the declared contact, failure, and session
+assumptions~\cite{bailis2013hat,terry1994session}.
 
-HATs classify transaction guarantees by whether every transaction can
-complete at an available replica~\cite{bailis2013hat}.
+\paragraph{Accumulating facts.}
+Suppose two available replicas execute transactions on disjoint keys.  One
+exposes $\mathsf{read}(T_1,x,0)$ and $\mathsf{commit}(T_1)$; the other exposes
+$\mathsf{read}(T_2,y,0)$ and $\mathsf{commit}(T_2)$.  If each read observes a
+committed version at its replica, the union contains no dirty read or write
+conflict.  Under the stated read-committed interface, later delivery preserves
+all four facts.  This is the positive accumulation pattern behind HAT results;
+it is not a claim that every combination of session guarantees is available.
 
-\paragraph{Encoding.}
-An input $i$ identifies a transactional database instance.  Its replicas
-receive begin, read, write, and commit requests.  An output in $S(i)$ is a
-growing set of facts such as $\mathsf{commit}(T)$ and
-$\mathsf{read}(T,x,v)$, ordered by set inclusion.  The transaction guarantee
-determines which fact sets are allowed and which replicas a transaction may
-contact.
+\paragraph{Serializability.}
+Initially $x=y=0$.  On one side, $T_1$ reads $x=0$, writes $y=1$, and commits.
+On the other, $T_2$ reads $y=0$, writes $x=1$, and commits.  Preserving $T_1$'s
+read requires $T_1$ before $T_2$ in any serial explanation; preserving $T_2$'s
+read requires $T_2$ before $T_1$.  The serialization graph contains a cycle, so
+no serial history refines both sets of read and commit facts
+~\cite{adya2000generalized}.
 
-Complete CAP then asks whether independently exposed facts for the same
-instance can be combined.  Availability lets each nonfailed replica expose
-any fact set allowed by the requests it has received, without waiting across
-a partition.  Consistency requires one allowed fact set in $S(i)$ that
-contains all of those exposed facts.  Under the guarantee's contact, session,
-and failure assumptions, the guarantee is a HAT exactly when this condition
-holds for every partition.
+\paragraph{Snapshot isolation.}
+Let overlapping transactions $T_1$ and $T_2$ read the same snapshot and both
+write $x$.  Separate replicas could each expose its local commit.  Snapshot
+isolation's first-committer-wins rule admits no output containing both commit
+facts~\cite{berenson1995critique,bailis2013hat}.  Eventual storage convergence
+may choose a final state; it cannot retract a commit already exposed to a
+client.
 
-Read committed and the session guarantees pass this test: facts exposed at
-available replicas can accumulate in one allowed fact set.  Stronger,
-unavailable levels fail it.  For example, replicas on opposite sides of a
-partition may expose facts that imply conflicting serial orders.  No allowed
-fact set contains both orders, so at least one transaction must wait for
-information from the other side.
+These examples answer the question posed in the introduction.  Convergent
+storage does not automatically provide a highly available transactional
+interface.  Storage convergence constrains states after update delivery;
+isolation constrains irreversible reads and commits before then.
 
-\paragraph{Payoff.}
-Does convergent CRDT storage by itself provide a HAT interface?  No.  SEC
-constrains replica states \emph{after} updates arrive.  A transaction guarantee
-constrains which read, commit, and session facts may be exposed \emph{before} then.
-A stale read may be allowed by one guarantee and forbidden by another.  If a
-read causes a later write, convergence cannot retract the observation that
-produced it.  State convergence therefore chooses no isolation or session
-guarantee.  Carefully designed HAT interfaces can use CRDT storage, but their
-read and commit paths must pass the monotonicity test in the transaction
-output domain, not only in the storage domain.
+\subsection{Invariant confluence}
+\label{sec:iconfluence-instance}
 
-\subsection{Invariant Confluence: Does Availability Preserve
-Invariants?}
+Let the input be a set of applied transactions, ordered by inclusion.  Each
+transaction is assumed to map an invariant-valid state to another
+invariant-valid state; without this assumption, one transaction could violate
+the invariant before any merge occurred.  Outputs are reachable,
+invariant-valid database states.  Output refinement is induced by the
+application's prescribed reconciliation: $s\OutputOrd s'$ when merging $s$ with
+admissible additional effects can produce $s'$ while preserving the effects in
+$s$.
 
-Invariant confluence asks when replicas can execute transactions independently
-and merge without breaking an application invariant~\cite{bailis2014coordination}.
+Invariant confluence asks whether independently reachable valid states merge to
+a valid state~\cite{bailis2014coordination}.  The two parts of
+Proposition~\ref{prop:decomposition} are explicit here.  Individual transaction
+preservation gives growth.  Invariant confluence gives coherence under merge.
+If merge is associative and merged states remain reachable, the pairwise test
+extends inductively to finite families; the iterated merge is the required
+common refinement.
 
-For a database instance $i$, consider replicas that start from the same
-state satisfying application invariant $I$ and then apply transactions
-independently.  Outputs in $S(i)$ are invariant-valid database states, and
-the extension order is induced by the application's prescribed merge.  A
-transaction set is $I$-confluent exactly when every two $I$-valid states
-reachable from their shared starting state have an $I$-valid merge.  The
-published condition checks two states at a time.  In the standard
-associative-merge model, merged states remain reachable, so the same argument
-works for any number of states.
+A uniqueness constraint supplies the standard counterexample.  Two replicas
+each observe that username \texttt{sam} is free and independently allocate it
+to different accounts.  Each local state satisfies uniqueness, but no
+invariant-valid common refinement preserves both allocations.  The system must
+reserve names, reject one allocation, or weaken the invariant.
 
-Equation~(2) asks whether states exposed across a partition have a common
-allowed extension.  Under $I$-confluence, their invariant-valid merge is that
-extension.  Hence $I$-confluence is monotonicity across partitions for the
-invariant-valid outputs in $S(i)$.
+State convergence, transaction availability, and invariant preservation thus
+test three different specifications.  A convergent merge may produce an invalid
+state; an available transaction may expose facts that later violate an
+invariant; an invariant-confluent application need not provide a particular
+isolation level.  The common criterion applies to each output domain without
+collapsing the properties into one.
 
-A uniqueness constraint gives the standard counterexample.  Two separated
-replicas may each allocate the same supposedly unique value.  Each state is
-invariant-valid by itself, but no invariant-valid output extends both
-allocations.
+\section{Discussion}
+\label{sec:discussion}
 
-\paragraph{Payoff.}
-Do SEC and HAT availability together preserve application invariants?  No.
-SEC does not prevent replicas from converging to an invalid merged state, and
-HAT availability says only that operations complete without cross-partition
-coordination.  Neither property says that independently valid choices remain
-valid together.  Invariant confluence supplies the missing monotonicity
-condition.  State convergence, interface availability, and invariant safety
-apply monotonicity to three different specifications.  Each must be checked
-in its own output domain and extension order.
+\subsection{A semantic criterion, not an implementation discipline}
 
-\section{From Criterion to Program Checker}
-\label{sec:practice}
+The input/output relation and its two refinement orders deliberately omit
+internal computation.  This is useful for stating a common boundary and
+insufficient for building a system.  Relational transducers provide a language
+and operational network semantics; semilattices provide a local algebra and
+deterministic merge; transaction protocols provide scheduling, validation, and
+recovery.  Complete CALM identifies a semantic obstruction at the declared
+interface.  It does not say how to represent $S$, choose the two refinement
+orders, compute a common refinement, or do so efficiently.
 
-The next pragmatic step is to turn Complete CALM into a program checker or
-compiler test.  Progress can come from both directions: certifying programs
-that are monotone by construction and finding concrete counterexamples for
-programs that are not.
+A short semantic proof and a model-specific operational proof answer different
+questions.  Once admissible outputs and preservation are explicit, the core
+necessity and sufficiency argument is direct.  Connecting a real programming
+model to those definitions may still require substantial arguments about
+knowledge, expressiveness, and computability.
 
-The positive direction is already visible in existing languages and
-frameworks.  Positive Datalog programs are monotone, and monotonicity analyses
-in Bloom and Hydro identify programs whose outputs can grow without
-coordination~\cite{ameloot2013relational,alvaro2011bloom,hydro}.  State-based
-CRDTs obtain the same guarantee by placing replica states in a
-join-semilattice and requiring updates to be inflationary~\cite{shapiro2011crdt}.  Mapping a program into one of these
-formalisms---or compiling it through a fragment that the formalism
-accepts---provides a certificate of coordination freedom.  These approaches
-do not cover every monotone specification, but they establish useful
-sufficient conditions automatically.
+\subsection{Specification design determines the boundary}
 
-The negative direction is counterexample generation.  A Complete CALM
-counterexample has a precise form: one input $i$ and a finite collection of
-outputs $o_1,\ldots,o_k\in S(i)$ that participants can expose independently,
-but for which no $u\in S(i)$ extends every $o_j$.  This suggests a
-model-checking workflow.  A checker can execute or symbolically explore a
-program over candidate inputs, message schedules, and partitions; collect the
-outputs that may be exposed for each input; and use a declared $S$ and
-$\Ord$ to ask whether each collection has an allowed common extension.  A
-counterexample identifies both the input and the incompatible exposures that
-force coordination.  Open problems include searching large or infinite input
-spaces, choosing useful schedule bounds, and representing $S$ and $\Ord$ so
-that the common-extension test is decidable and efficient.
+Monotonicity is not a permanent label on ``register,'' ``transaction,'' or
+``shopping cart.''  It is a property of
+$(I,\InputOrd,O,\OutputOrd,S)$ under a deployment.  A linearizable register and
+a causal register admit different explanations.  A CRDT state and an exact
+read expose different promises.  A database permitted to abort one transaction
+implements a different relation from one required to commit both.
 
-A complementary challenge is extracting the specification to be checked.
-Recent work studies using LLMs to translate informal statements into
-artifacts for proof assistants such as Lean 4~\cite{gulati2024autoformalization}.  It remains open whether similar tools
-can recover this paper's higher-level objects---the relation $S$, the
-extension order $\Ord$, and the independently exposable outputs---from
-working distributed code.  Such extraction would need a checkable
-justification, not merely a plausible generated specification, and would
-need to surface ambiguities that require a designer to choose the intended
-interface semantics.
+Narrowing $S$ may eliminate an incompatibility.  Broadening $O$ with a new
+output that refines two alternatives may also eliminate it.  Changing authority
+may keep an incompatibility within one component.  Each option changes the
+client-visible specification or the deployment; none is a loophole in the
+criterion.
+
+\subsection{Monotonicity is not convergence}
+
+Monotonicity requires an admitted common refinement, not a unique result and not
+a least one.  The sharded log has several minimal interleavings.  Strong
+eventual consistency adds run insensitivity: replicas that receive the same
+information reach equivalent state.  A semilattice join supplies this stronger
+property elegantly.  Conversely, last-writer-wins can converge by discarding
+one concurrent value, but it does not preserve an interface that promised both
+values.  Convergence and semantic preservation are distinct requirements.
+
+\subsection{Safety is not liveness}
+
+The theorems identify when independent selections remain refinement-consistent.
+They do not force a participant to expose an output, guarantee message delivery,
+bound reconciliation time, or prove that a common refinement is computable.
+Complete CAP's availability premise requires authorized selections to proceed
+without a cross-partition wait; it therefore excludes an implementation that
+never responds.  Full protocol results must add appropriate termination,
+fairness, and failure assumptions.
+
+\section{Related Work}
+\label{sec:related}
+
+The CALM conjecture connected logical monotonicity with coordination freedom
+~\cite{hellerstein2010declarative,hellerstein2020keeping}.  Ameloot et al.
+established the theorem using relational transducers and studied how system
+knowledge changes coordination requirements
+~\cite{ameloot2013relational,ameloot2015weaker}.  We do not replace that
+operational result; we isolate the ordered relational property that it realizes.
+
+Brewer's conjecture and the Gilbert--Lynch theorem focus attention on
+availability during partitions~\cite{brewer2000towards,gilbert2002cap}.
+Complete CAP keeps the consistency contract and deployment authority explicit,
+then restricts monotonicity to choices a network cut can separate.  This
+recovers the linearizable-register obstruction while explaining why a local
+choice need not require cross-partition agreement.
+
+CRDTs derive strong eventual consistency from carefully designed state or
+operation algebras~\cite{shapiro2011crdt}.  The distinction here is between a
+uniform least merge and the weaker existence of some admitted common
+refinement.  Work on consistency semantics similarly distinguishes visibility,
+ordering, availability, and convergence
+~\cite{burckhardt2014principles,mahajan2011consistency}.
+
+HATs classify transactional guarantees realizable without cross-partition
+coordination under stated client and failure assumptions~\cite{bailis2013hat}.
+Invariant confluence characterizes when independently valid transactional
+states preserve an application invariant on merge
+~\cite{bailis2014coordination}.  The ordered specification exposes their common
+refinement structure while preserving their distinct output domains.
 
 \section{Conclusion}
+\label{sec:conclusion}
 
-The key lever in this paper is not additional machinery, but less.  Prior
-work studies coordination through logical languages such as Datalog,
-algebraic structures such as semilattices, and operational formalisms such as
-I/O automata.  Those formalisms are valuable, but each brings its own syntax
-and proof obligations.  By setting that internal structure aside, a
-specification can be reduced to input--output pairs and an order $\Ord$ that
-says when one output safely extends another.
+CALM, CAP, CRDTs, HATs, and invariant confluence use different formalisms, but
+they encounter the same semantic obstruction: independently admissible outputs
+with no admitted common refinement.  An input/output relation with a separate
+partial order on each column is enough to state that obstruction.  Its
+monotonicity has two explicit parts: growth along input refinement and coherence
+of the outputs admitted at one input.
 
-At that level, monotonicity becomes a universal semantic condition rather
-than a property tied to one language or machine model.  Independently exposed
-outputs for the same input must have a common allowed extension.  Datalog
-fragments, CRDT merge algebras, transaction guarantees, and consistency
-models then become different ways to establish---or violate---that one
-condition.  Their differences still matter, but they no longer obscure the
-shared coordination boundary.
+Complete CALM tests all independently authorized families.  Complete CAP tests
+the families a deployment can separate across a network partition.  Query
+monotonicity, semilattice merge, transactional availability, and invariant
+confluence then become directly comparable without being identified with one
+another.
 
-The proof of Complete CALM is consequently almost direct from the
-definitions.  That simplicity is a feature of the abstraction, not a defect
-in the result.  Model-specific proofs remain essential for connecting a
-programming language, protocol, or failure model to its allowed outputs and
-extension order.  Once that connection is made, however, the fundamental
-obstruction is simple: independent commitments that have no common allowed
-extension.  Exposing this obstruction directly sheds broader light than a
-more elaborate proof confined to any one formalism.
+The model is useful because it does not compete with richer implementation and
+verification machinery.  It provides a common semantic boundary for choosing
+and evaluating that machinery: coordination is required precisely when an
+independently authorized commitment would exclude an admissible possibility
+with no common refinement.
 
-This viewpoint changes the first question to ask about a distributed
-program.  Rather than beginning with the formal tradition in which the
-program was written, begin with what its interface may expose and which of
-those exposures can coexist.  That small semantic vocabulary provides a
-common basis for comparing systems, locating unavoidable coordination, and
-building the program checkers suggested in the previous section.
-
-The same abstraction may apply beyond distributed systems and databases.
-Generative AI provides a visible example of an ambiguous specification: one
-prompt may admit many acceptable token streams.  Viewing those streams as
-allowed outputs, exposing each new token is a commitment.  It restricts the
-remaining output to streams that extend the visible prefix and rules out
-alternatives that were sensible before the token appeared.
-
-Consider the prompt ``What is the population of the capital of Georgia?''
-One answer may give the population of Atlanta, interpreting Georgia as the
-U.S. state; another may give the population of Tbilisi, interpreting Georgia
-as the country.  Those answers make incompatible semantic commitments.  A
-third response---``Did you mean the U.S. state or the country?''---preserves
-both interpretations instead of choosing between them.
-
-The relevant cost in this setting is not necessarily communication among
-participants.  A premature interpretation may cause the user to correct or
-repeat the question, spending additional tokens and interaction rounds; a
-clarifying question spends tokens immediately but postpones the semantic
-choice.  Generation also makes commitments repeatedly, as each visible token
-narrows the remaining possibilities.  This suggests a quantitative extension
-of the present theory: beyond asking whether commitment is required, ask how
-many rounds of commitment a specification requires, and what cost different
-commitment strategies incur.
-
-\section*{Acknowledgments}
-Generative AI tools (Claude and ChatGPT) were used as interactive
-writing and reviewing assistants during the preparation of this work,
-including drafting and revising text, checking mathematical arguments,
-and suggesting edits.
-All content was reviewed, validated, and approved by the authors.
+\begin{acks}
+We thank Vincent Liu for helpful feedback on this work.
+\end{acks}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
