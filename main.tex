@@ -32,7 +32,7 @@
 }
 
 \begin{abstract}
-When does a distributed system inherently require coordination?  CALM, CAP,
+When does a distributed system inherently require coordination?  CAP, CALM,
 CRDTs, Highly Available Transactions, and invariant confluence give related
 answers in different mathematical languages.  This fragmentation has allowed
 conventional wisdom to drift away from what the literature actually proves.
@@ -87,7 +87,7 @@ exactly when the computation is monotone~\cite{hellerstein2010declarative}.
 Ameloot et al. proved this connection for Datalog queries evaluated by networks
 of relational transducers~\cite{ameloot2013relational}.  Their theorem gives an
 operational result for a particular language and machine model.  The broader
-systems principle has since been applied well beyond that setting
+systems principle has since been applied beyond that setting
 ~\cite{hellerstein2020keeping}.
 
 CAP followed a similar path.  Brewer stated a broad systems observation
@@ -100,20 +100,22 @@ partitions~\cite{bailis2013hat}.  Invariant confluence identifies when
 independently executed transactions can merge without breaking an application
 invariant~\cite{bailis2014coordination}.
 
-These results clearly share an idea, but their different formalisms make
+These various results clearly share an idea, but their different formalisms make
 cross-cutting questions hard to answer.  Does CALM encompass the CAP tradeoff?
 Are CRDT join laws necessary for coordination freedom, or one strong sufficient
 discipline?  Does convergent storage automatically provide highly available
 transactions?  Do convergence and transaction availability preserve application
 invariants?  Section~\ref{sec:cap} answers the first question.  The CRDT, HAT,
 and invariant-confluence parts of Section~\ref{sec:instances} answer the next
-three.  The point is not that these properties are identical.  The point is
-that one semantic model lets us state their boundaries in the same terms.
+three.  These properties are not identical. However, by identifying a single
+unifying framework that covers all of them, we can state their boundaries in 
+common terms and assess their relationships cleanly.
 
-The common intuition is simple.  Different outputs need not cause trouble.  Two
+The common intuition is simple.  Different choices of output from the same state
+need not cause problems.  Two
 set replicas can hold different elements and later take their union; two log
 shards can expose different local sequences and later interleave them.  In each
-case, some later output preserves both earlier outputs.  By contrast, two sites
+case, some later output can preserve both earlier outputs.  By contrast, two sites
 that independently elect different leaders have made choices that no later
 single-leader result can preserve.  Before we introduce notation, we will say
 that the first pair of outputs \emph{fits together} and the second does not.
