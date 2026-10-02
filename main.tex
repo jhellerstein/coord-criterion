@@ -39,11 +39,12 @@ conventional wisdom to drift away from what the literature actually proves.
 It also makes intuitive questions spanning these results hard even to state.
 
 We show how to express these results in one small, common model.  A
-specification is a relation from inputs to allowed outputs, equipped with
-refinement orders on both inputs and outputs.  Complete CALM says that
-participants can act without coordination exactly when input growth permits
-output growth and independently allowed outputs have an admitted common
-refinement.  Applying the same test only to choices that a deployment can
+specification is a relation from inputs to allowed outputs.  Its input and
+output domains carry separate partial orders: input refinement describes added
+input information, while output refinement describes preservation and extension
+of visible output.  Complete CALM says that participants can act without
+coordination exactly when input growth permits output growth and independently
+allowed outputs have an admitted common refinement.  Applying the same test only to choices that a deployment can
 separate across a network partition yields Complete CAP.  The common model
 clarifies how CALM, CAP, CRDTs, transactional availability, and invariant
 confluence relate without replacing the languages, implementation disciplines,
@@ -123,21 +124,25 @@ order.  By contrast, outputs that independently elect different leaders are
 Section~\ref{sec:ordered-specs} makes compatibility precise using output
 refinement.
 
-We strip the semantic question down to a table of input/output pairs.
-A row says that an output is allowed at an input.  One order says when input
-information grows; the other says when an output preserves an earlier output.
-For a functional specification, the criterion is ordinary order preservation.
-For a relational specification, the alternatives allowed at one input must
-also be coherent: every finite collection must have an admitted common
-refinement.  These are two distinct conditions.  We call their conjunction
-monotonicity for an ordered relational specification.
+We strip the semantic question down to a relation $S$ of allowed input/output
+pairs, pictured as a two-column table.  The rows themselves are not ordered.
+Instead, the input column has an \emph{input-refinement partial order}
+$\InputOrd$, which describes growth in input information.  The output column has
+a separate \emph{output-refinement partial order} $\OutputOrd$, which describes
+when one output preserves and extends another.  For a functional specification,
+the criterion requires the function to be order-preserving from the input
+partial order to the output partial order.  A relational specification adds a
+second condition: the alternatives allowed at one input must be coherent, so
+every finite collection has an admitted common output refinement.  We call the
+conjunction of these conditions monotonicity for an ordered relational
+specification.
 
 This paper makes four contributions:
 \begin{enumerate}
   \item We give a common semantic model for coordination results: an
-        input/output relation with independent input and output refinement
-        orders.  We define its monotonicity and prove that it decomposes into
-        ordinary growth and coherent ambiguity.
+        input/output relation whose input and output columns carry separate
+        partial orders.  We define its monotonicity and prove that it decomposes
+        into order-preserving growth and coherent ambiguity.
   \item We distinguish \emph{exposure}, which preserves every remaining
         possibility, from \emph{commitment}, which excludes one.  Coordination
         is required before independently authorized participants make
@@ -160,9 +165,9 @@ or a liveness theorem.
 
 Section~\ref{sec:examples} begins with voting and leader election.
 Sections~\ref{sec:ordered-specs}--\ref{sec:calm} form the technical core: they
-define ordered specifications, exposure, commitment, coordination, and Complete
-CALM.  Section~\ref{sec:registers} uses registers to motivate the
-deployment-relative Complete CAP of Section~\ref{sec:cap}.
+define specifications with input and output refinement orders, exposure,
+commitment, coordination, and Complete CALM.  Section~\ref{sec:registers} uses
+registers to motivate the deployment-relative Complete CAP of Section~\ref{sec:cap}.
 Section~\ref{sec:instances} maps the surrounding literature into the common
 model.  We close with scope, related work, and the resulting view of the
 coordination boundary.
@@ -237,10 +242,11 @@ outputs, extension, and compatibility mean.
 \section{Ordered Input/Output Specifications}
 \label{sec:ordered-specs}
 
-A deterministic specification is a function from inputs to outputs.  A
-specification that permits several outputs is a relation.  Distributed systems
-need one additional ingredient: orders that describe how inputs and outputs may
-be refined.
+A functional specification is the graph of a function from inputs to outputs.
+A relational specification may admit several outputs at one input.  In either
+case, distributed executions refine both inputs and outputs, so we equip the two
+domains with separate partial orders.  These orders compare values within their
+respective columns; they do not order the rows of the relation.
 
 \begin{definition}[Ordered relational specification]
 \label{def:specification}
@@ -250,8 +256,12 @@ An \emph{ordered relational specification} is
   \qquad S\subseteq I\times O,
   \label{eq:specification}
 \end{equation}
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  A row
-$(i,o)\in S$ says that output $o$ is admissible at input $i$.  The \emph{fiber}
+where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  We call
+$\InputOrd$ the \emph{input-refinement order} and $\OutputOrd$ the
+\emph{output-refinement order}.  They are separate: $\InputOrd$ compares inputs
+with inputs, $\OutputOrd$ compares outputs with outputs, and neither orders the
+rows of $S$.  A row $(i,o)\in S$ says that output $o$ is admissible at input
+$i$.  The \emph{fiber}
 at $i$ is
 \begin{equation}
   \fiber{i}=\{o\in O:(i,o)\in S\}.
@@ -260,12 +270,13 @@ at $i$ is
 We assume every input under discussion has a nonempty fiber.
 \end{definition}
 
-We read $i\InputOrd j$ as ``$j$ refines $i$ with more input information.''  We
-read $o\OutputOrd u$ as ``$u$ preserves and extends every externally visible
-claim in $o$.''  Both orders are part of the specification.  They do not rank
-outputs by quality, and they need not be set inclusion.  For a query they often
-are inclusion; for a register they extend an explanation of operations; for a
-CRDT the output order may be a lattice order.
+We read $i\InputOrd j$ as ``$j$ contains at least the input information in
+$i$.''  We read $o\OutputOrd u$ as ``$u$ preserves and extends every externally
+visible claim in $o$.''  Both partial orders are part of the specification;
+neither expresses preference or quality.  They need not be set inclusion.  For
+a query, both commonly are inclusion; for a register, the input order extends a
+causal history and the output order extends an explanation of operations; for a
+CRDT, the output order may be a lattice order.
 
 \begin{definition}[Compatibility]
 \label{def:compatibility}
@@ -284,7 +295,9 @@ because the specification admits no output that refines both.
 \label{sec:functional}
 
 Let $S$ be the graph of a function $f:I\to O$, so that
-$\fiber{i}=\{f(i)\}$.  The familiar condition is order preservation:
+$\fiber{i}=\{f(i)\}$.  In this case, monotonicity first has its familiar
+meaning: $f$ is an order-preserving map from the input poset to the output
+poset:
 \begin{equation}
   i\InputOrd j \quad\Longrightarrow\quad f(i)\OutputOrd f(j).
   \label{eq:functional-monotonicity}
@@ -751,9 +764,9 @@ need to retract a fact exposed before missing input arrived.
 
 The relational-transducer CALM theorem proves the corresponding operational
 result for its language~\cite{ameloot2013relational,ameloot2015weaker}.  The
-ordered table does not replace that language or its analysis.  It isolates the
-semantic property that the transducer theorem realizes and that the following
-systems share.
+input/output relation and its two refinement orders do not replace that language
+or its analysis.  They isolate the semantic property that the transducer theorem
+realizes and that the following systems share.
 
 \subsection{CRDTs: sufficient structure versus the criterion}
 \label{sec:crdt-instance}
@@ -881,13 +894,15 @@ collapsing the properties into one.
 
 \subsection{A semantic criterion, not an implementation discipline}
 
-The ordered table deliberately omits internal computation.  This is useful for
-stating a common boundary and insufficient for building a system.  Relational
+The input/output relation and its two refinement orders deliberately omit
+internal computation.  This is useful for stating a common boundary and
+insufficient for building a system.  Relational
 transducers provide a language and operational network semantics; semilattices
 provide a local algebra and deterministic merge; transaction protocols provide
 scheduling, validation, and recovery.  Complete CALM identifies a semantic
 obstruction at the declared interface.  It does not say how to represent $S$,
-decide its orders, compute a common refinement, or do so efficiently.
+choose the two refinement orders, compute a common refinement, or do so
+efficiently.
 
 A short semantic proof and a model-specific operational proof answer different
 questions.  Once admissible outputs and preservation are explicit, the core
@@ -966,8 +981,9 @@ refinement structure while preserving their distinct output domains.
 
 CALM, CAP, CRDTs, HATs, and invariant confluence use different formalisms, but
 they encounter the same semantic obstruction: independently admissible outputs
-with no admitted common refinement.  An ordered input/output relation is enough
-to state that obstruction.  Its monotonicity has two explicit parts: growth
+with no admitted common refinement.  An input/output relation with a separate
+partial order on each column is enough to state that obstruction.  Its
+monotonicity has two explicit parts: growth
 along input refinement and coherence of the outputs admitted at one input.
 
 Complete CALM tests all independently authorized families.  Complete CAP tests
