@@ -115,7 +115,9 @@ The common intuition is simple.  Different choices of output from the same state
 need not cause problems.  Two
 set replicas can hold different elements and later take their union; two log
 shards can expose different local sequences and later interleave them.  In each
-case, some later output can preserve both earlier outputs.  By contrast, two sites
+case, the system can later produce an allowed combined output without retracting
+anything already exposed: the union retains every set element, and the
+interleaving retains each shard's local order.  By contrast, two sites
 that independently elect different leaders have made choices that no later
 single-leader result can preserve.  Before we introduce notation, we will say
 that the first pair of outputs \emph{fits together} and the second does not.
