@@ -114,15 +114,13 @@ common terms and assess their relationships cleanly.
 The common intuition is simple.  Different choices of output from the same state
 need not cause problems.  Two
 set replicas can hold different elements and later take their union; two log
-shards can expose different local sequences and later interleave them.  In each
-case, the system can later produce an allowed combined output without retracting
-anything already exposed: the union retains every set element, and the
-interleaving retains each shard's local order.  By contrast, two sites
-that independently elect different leaders have made choices that no later
-single-leader result can preserve.  Before we introduce notation, we will say
-that the first pair of outputs \emph{fits together} and the second does not.
-After Section~\ref{sec:ordered-specs} defines output refinement, we use the
-formal terms \emph{compatible} and \emph{incompatible}.
+shards can expose different local sequences and later interleave them.  In each case, the outputs are \emph{compatible}: the system can produce an
+allowed combined output without retracting anything already exposed.  The union
+retains every set element, and the interleaving retains each shard's local
+order.  By contrast, outputs that independently elect different leaders are
+\emph{incompatible}: no allowed single-leader output preserves both choices.
+Section~\ref{sec:ordered-specs} makes compatibility precise using output
+refinement.
 
 We strip the semantic question down to an ordered table of input/output pairs.
 A row says that an output is allowed at an input.  One order says when input
@@ -173,7 +171,7 @@ coordination boundary.
 
 Two examples introduce the two parts of the criterion.  Fixed-population voting
 shows safe growth as more input arrives.  Leader election shows that several
-outputs allowed at one input may fail to fit together.
+outputs allowed at one input may be incompatible.
 
 \subsection{Voting: input growth}
 
@@ -216,8 +214,8 @@ a leader independently, they must agree before either choice becomes public.
 
 Figure~\ref{fig:orders} separates three cases that are often conflated.  An
 output may extend another; two outputs may be unrelated but have a common
-extension; or two outputs may have no common extension.  Only the third case
-fails to fit together.
+extension; or two outputs may have no common extension.  Only the third case is
+incompatible.
 
 \begin{figure}[h]
   \centering
