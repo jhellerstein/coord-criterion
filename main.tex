@@ -38,31 +38,32 @@
 }
 
 \begin{abstract}
-When does a system inherently require coordination? CAP, CALM, CRDTs, Highly
+When does a system inherently require coordination?  CAP, CALM, CRDTs, Highly
 Available Transactions, and invariant confluence draw related coordination
-boundaries in different mathematical languages. Existing accounts characterize
+boundaries in different mathematical languages.  Existing accounts characterize
 when coordination can be avoided, but do not generally model what coordination
 accomplishes when it is needed.
 
-We complete this semantic picture in two steps. \emph{Complete CALM} lifts the
-classical result from Datalog and fact inclusion to functions between arbitrary
-partially ordered input and output domains, giving the broader folklore
-interpretation a formal semantic basis. Monotonicity of a function---independent
-of implementation language---characterizes exactly when a function's output can be
-freely exposed as distributed input arrives, without first sealing that input.
+We complete this semantic picture in two steps.  \emph{Complete CALM} lifts
+the classical result from Datalog and fact inclusion to functions between
+arbitrary partially ordered input and output domains, giving the broader
+folklore interpretation a formal semantic basis.  Independent of implementation
+language, monotonicity characterizes exactly when a function's output can be
+exposed as distributed input arrives without first sealing that input.
 
-\emph{CALMADO}—Consistency As Lifted Monotonicity And Directed Outputs—extends the
-analysis from functions to relational specifications that allow a choice
-among outputs. Such a specification permits safe exposure without coordination
+\emph{CALMADO}---\emph{Consistency As Lifted Monotonicity And Directed
+Outputs}---extends the analysis from functions to relational specifications
+that allow a choice among outputs.  Such a specification permits \emph{safe
+exposure at will}
 exactly when it is monotone and the outputs allowed for each input are
 \emph{finitely directed}.
 A \emph{safe exposure} retains a refinement of every admissible alternative;
-\emph{commitment} rules at least one out;
-and \emph{coordination} is agreement before participants make incompatible commitments.
+a \emph{commitment} rules at least one out; and \emph{coordination} is
+agreement before participants make incompatible commitments.
 This covers settings such as leader election and transactional commit ordering.
 As a corollary, CALMADO yields a Generalized CAP Theorem that extends classical
 CAP from a one-way impossibility about linearizability to a bidirectional
-dichotomy parameterized by a chosen consistency semantics.
+dichotomy parameterized by the declared consistency semantics.
 \end{abstract}
 
 \begin{CCSXML}
@@ -154,19 +155,18 @@ Our second step addresses a case those interfaces do not expose: the semantic
 specification itself may allow several distinguishable outputs for one input.
 Leader election may permit either eligible leader; a database may permit several
 serial schedules.  We call this extension \emph{CALMADO}: \emph{Consistency As
-Lifted Monotonicity And Directed Outputs}. In order theory, a nonempty partially
-ordered set is directed if every pair of elements has one or more common upper
-bounds.
-Directedness requires neither a unique upper bound nor a least one; a
-join-semilattice provides that stronger structure.
-Here, “directed outputs” is intended \emph{per input}: every nonempty
-finite collection of outputs allowed for one input has one or more admitted
-common refinements. It does not require the entire output domain to be directed.
+Lifted Monotonicity And Directed Outputs}.  In order theory, a nonempty
+partially ordered set is directed if every pair of elements has one or more
+common upper bounds.  Directedness requires neither a unique upper bound nor a
+least one; a join-semilattice provides that stronger structure.  Here,
+``directed outputs'' is intended \emph{per input}: every nonempty finite
+collection of outputs allowed for one input has one or more admitted common
+refinements.  It does not require the entire output domain to be directed.
 
-Why do directed outputs matter?  If multiple outputs allowed for one input are not
-finitely directed, some finite subset of them has no common refinement.  The system
-cannot preserve all of those alternatives: to proceed, it must irrevocably rule at least one
-out.  We call that step a \emph{commitment}.  If different participants can make
+Why do directed outputs matter?  If the outputs allowed for one input are not
+finitely directed, some finite subset has no common refinement.  The system
+cannot preserve every alternative: proceeding must irrevocably rule at least
+one out.  We call that step a \emph{commitment}.  If different participants can make
 incompatible commitments, they must \emph{coordinate} first.  A \emph{safe exposure}
 is the opposite case: it makes an output public while retaining a refinement of
 every allowed alternative.  CALMADO covers both cases---safe exposure when the
@@ -174,19 +174,17 @@ alternatives can coexist, and coordinated commitment when they cannot.
 
 This does not mean that earlier work assumed deterministic executions.
 Relational-transducer CALM allows message timing and local state to vary, and
-CRDTs allow updates and merges to arrive in different orders. At their usual
+CRDTs allow updates and merges to arrive in different orders.  At their usual
 semantic interfaces, however, a fixed input is associated with a single result:
-one query answer or one replicated state. In our terms, the outputs allowed for
+one query answer or one replicated state.  In our terms, the outputs allowed for
 each input form a singleton set and are therefore directed automatically.
 
 CALMADO also yields a Generalized CAP Theorem.  Classical CAP gives an
-impossibility for linearizable registers under partition.  Our result
-goes from impossibility to a dichotomy between possible and impossible cases,
-with linearizability as a special case situated on the impossible side. The
-Generalized CAP Theorem gives both sides of the boundary for a declared
-consistency specification. If every set of choices that a legal placement and
+impossibility for linearizable registers under partition.  The Generalized CAP Theorem extends this impossibility to both sides of the
+boundary for a declared consistency specification, with linearizability as a
+special case on the negative side. If every set of choices that a legal placement and
 partition can separate has an allowed common refinement, consistency and
-availability can coexist through the partition. Otherwise the system must wait
+availability can coexist through the partition.  Otherwise the system must wait
 across the cut and lose availability, or make incompatible commitments and lose
 consistency.
 
@@ -196,7 +194,7 @@ This paper makes five contributions:
         with separate input- and output-refinement partial orders.
   \item CALMADO extends the model to semantic output choice and identifies
         monotonicity plus finite directedness among the outputs allowed for each
-        input as the coordination-free criterion.
+        input as the criterion for safe exposure at will.
   \item A residual semantics for safe exposure and commitment explains what
         coordination accomplishes when either input must be sealed or output
         alternatives must be resolved.
@@ -208,9 +206,9 @@ This paper makes five contributions:
         guarantees that do---and do not---carry between them.
 \end{enumerate}
 
-The result is a semantic safety criterion, not a protocol or a liveness theorem.
-Richer formalisms remain essential for programming, implementation, and
-verification.  Section~\ref{sec:complete-calm} develops Complete CALM.
+These are semantic safety results.  Richer formalisms remain essential for
+programming, implementation, and liveness arguments.
+Section~\ref{sec:complete-calm} develops Complete CALM.
 Section~\ref{sec:calmado} introduces semantic choice, commitment, and CALMADO,
 including the Generalized CAP Theorem.  Section~\ref{sec:instances} maps the
 surrounding literature into the common model, followed by discussion and
@@ -348,17 +346,16 @@ this semantic level, Complete CALM may also be read as \emph{Consistency As
 Lifted Monotonicity}: the coordination-free condition is lifted out of a
 particular language or algebra and stated over declared refinement orders.
 
-Complete CALM handles uncertainty about input arrival.  Its output is fixed once
-the input is fixed.  We next remove that assumption.
+Complete CALM handles uncertainty about input arrival.  We next allow the
+specification itself to offer several outputs for one input.
 
 \section{CALMADO: Semantic Choice and Coordination}
 \label{sec:calmado}
 
 A semantic specification may admit more than one output for the same input.
-Leader election may allow any eligible leader, and serializability may allow
-several transaction orders.  These specifications are relational rather than
-functional.  The next example shows that semantic output choice does not by
-itself require coordination.
+Leader election may allow either eligible leader, and serializability may allow
+several transaction orders.  Such specifications are relational rather than
+functional.  CALMADO extends Complete CALM to this semantic output choice.
 
 \subsection{Relational specifications and output fibers}
 
@@ -371,139 +368,18 @@ An \emph{ordered relational specification} is
   \label{eq:relational-specification}
 \end{equation}
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  A row
-$(i,o)\in S$ says that output $o$ is admissible at input $i$.  The output
-\emph{fiber} at $i$ is
+$(i,o)\in S$ says that output $o$ is admissible at input $i$.  The \emph{output
+fiber} at $i$ is
 \begin{equation}
   \fiber{i}=\{o\in O:(i,o)\in S\}.
   \label{eq:fiber}
 \end{equation}
-We assume each input under discussion has a nonempty fiber.
+We assume every input under discussion has a nonempty output fiber.  A
+functional specification is the special case $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
-A functional specification is the special case
-$\fiber{i}=\{f(i)\}$.  As before, $\InputOrd$ compares inputs and
-$\OutputOrd$ compares outputs; neither order compares rows of $S$.
-
-\begin{definition}[Compatibility]
-\label{def:compatibility}
-Outputs $o_1,\ldots,o_k$ are \emph{compatible at input $j$} if there is an
-admissible common refinement $u\in\fiber{j}$ such that
-$o_r\OutputOrd u$ for every $r$.  Otherwise they are \emph{incompatible at
-$j$}.
-\end{definition}
-
-The relation and its output fibers make semantic ambiguity explicit.  We begin
-with a fiber that is ambiguous but directed.
-
-\subsection{A directed ambiguous specification}
-
-Consider a traceroute-style diagnostic for a service name $\mathsf{svc}$ that
-resolves to two endpoints.  The runtime input is the source--service pair
-$i=(s,\mathsf{svc})$.  The DNS mapping and network in
-Figure~\ref{fig:dns-routes} are fixed configuration.  The network has three
-complete routes from source $s$ to an endpoint of $\mathsf{svc}$:
-\begin{equation}
-\begin{split}
-  p_1&=(s,\texttt{server1}),\\
-  p_a&=(s,a,\texttt{server2}),\\
-  p_b&=(s,b,\texttt{server2}).
-\end{split}
-\label{eq:traceroute-paths}
-\end{equation}
-
-An output is a nonempty prefix-closed set of observed route prefixes: whenever
-it contains a path, it also contains every shorter prefix of that path.  We
-write only the maximal paths when displaying such a set.  Thus
-$\{s{\to}a{\to}\texttt{server2}\}$ also contains the earlier observation
-$s{\to}a$.  Output refinement is ordinary set inclusion on these prefix-closed
-sets, so both kinds of progress are explicit:
-\begin{equation}
-\begin{split}
- \{s{\to}a\}
-   &\OutputOrd \{s{\to}a{\to}\texttt{server2}\},\\
- \{s{\to}\texttt{server1}\}
-   &\OutputOrd
-   \{s{\to}\texttt{server1},s{\to}a{\to}\texttt{server2}\}.
-\end{split}
-\label{eq:traceroute-refinements}
-\end{equation}
-The first line extends one observed path; the second accumulates another route.
-More generally, the union of any finite collection of legal outputs is again
-prefix-closed and legal.  It is an admitted common refinement in the same fiber
-$S(s,\mathsf{svc})$, so that fiber is directed.
-
-\begin{figure}[h]
-  \centering
-  \begin{tikzpicture}[
-      >=stealth,
-      every node/.style={font=\small},
-      x=1cm,y=0.7cm]
-    \node (s) at (0,0) {$s$};
-    \node (a) at (1.8,-0.8) {$a$};
-    \node (b) at (1.8,-1.6) {$b$};
-    \node (one) at (3.6,0) {\texttt{server1}};
-    \node (two) at (3.6,-1.2) {\texttt{server2}};
-
-    \draw[->] (s) -- (one);
-    \draw[->] (s) -- (a);
-    \draw[->] (a) -- (two);
-    \draw[->] (s) -- (b);
-    \draw[->] (b) -- (two);
-  \end{tikzpicture}
-  \caption{A fixed network with a direct route to \texttt{server1} and two
-  two-hop routes to \texttt{server2}.  All endpoints are the same horizontal
-  distance from $s$.}
-  \label{fig:dns-routes}
-\end{figure}
-
-Leader election has the opposite shape.  If $\texttt{server1}$ and $\texttt{server2}$ are
-eligible leaders and the interface permits either one as the sole leader, no allowed output refines
-both.  Selecting one rules out the other.
-
-A serial commit log gives a database example.  Suppose two concurrent
-transactions $T_1$ and $T_2$ both commit.  For the same completed input history,
-the log may admit either $[T_1,T_2]$ or $[T_2,T_1]$.  If output refinement must
-preserve the order already exposed, no log refines both alternatives.  Publishing
-one transaction (a prefix) is therefore a commitment.  Section~\ref{sec:hat-instance} gives a
-stronger transactional witness in which exposed reads force opposite
-serialization orders.
-
-Figure~\ref{fig:orders} separates three cases.  Two outputs may be comparable;
-they may be incomparable but share a common refinement; or they may have no
-common refinement.  Only the last case is incompatible.
-
-\begin{figure}[h]
-  \centering
-  \begin{tikzpicture}[
-      >=stealth,
-      every node/.style={font=\small},
-      labelnode/.style={font=\scriptsize,align=center}]
-    % Chain
-    \node (c0) at (0,0.55) {$\bot$};
-    \node (c1) at (0.65,0.55) {$a$};
-    \node (c2) at (1.30,0.55) {$b$};
-    \draw[->] (c0) -- (c1);
-    \draw[->] (c1) -- (c2);
-    \node[labelnode] at (0.65,-0.05) {chain};
-
-    % Incomparable outputs with a common refinement
-    \node (ja) at (2.35,0.35) {$a$};
-    \node (jb) at (3.25,0.35) {$b$};
-    \node (jt) at (2.80,1.05) {$t$};
-    \draw[->] (ja) -- (jt);
-    \draw[->] (jb) -- (jt);
-    \node[labelnode] at (2.80,-0.05) {common\\refinement};
-
-    % Incompatible outputs
-    \node (ia) at (4.35,0.55) {$a$};
-    \node (ib) at (5.20,0.55) {$b$};
-    \node[labelnode] at (4.78,-0.05) {incompatible};
-  \end{tikzpicture}
-  \caption{Incomparability does not imply incompatibility.  The middle outputs
-  are incomparable but have a common refinement.  Arrows point from an output
-  to a refinement.}
-  \label{fig:orders}
-\end{figure}
+The two partial orders retain their earlier meanings: $\InputOrd$ compares
+inputs, $\OutputOrd$ compares outputs, and neither orders rows of $S$.
 
 The output-refinement order lifts from individual outputs to nonempty sets of
 outputs.  For nonempty $A,B\subseteq O$, define
@@ -513,200 +389,330 @@ outputs.  For nonempty $A,B\subseteq O$, define
   \forall a\in A\;\exists b\in B:\;a\OutputOrd b.
   \label{eq:lifted-output-order}
 \end{equation}
-This lifted relation is a preorder: it compares sets by whether every output in
-the first can continue to some output in the second.  It is often called the
-Hoare preorder.
+This lifted relation is a preorder: every output in the first set can continue
+to some output in the second.  It is often called the Hoare preorder.
 
 \begin{definition}[Relational monotonicity]
 \label{def:relational-monotonicity}
-An ordered relational specification is \emph{monotone} when its fiber map is
-monotone under the lifted output preorder:
+An ordered relational specification is \emph{monotone} when the mapping
+$i\mapsto\fiber{i}$ is monotone under the lifted output preorder:
 \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
   \fiber{i}\LiftedOutputOrd\fiber{j}.
   \label{eq:relational-monotonicity}
 \end{equation}
-Equivalently, whenever $i\InputOrd j$ and $o\in\fiber{i}$, there is an
-$o'\in\fiber{j}$ such that $o\OutputOrd o'$.
+Equivalently, whenever $i\InputOrd j$ and $o\in\fiber{i}$, some
+$o'\in\fiber{j}$ satisfies $o\OutputOrd o'$.
 \end{definition}
 
-This makes ``Lifted Monotonicity'' literal: the element order on outputs is
-lifted to compare the sets of outputs associated with different inputs.  For
-singleton fibers, Equation~\ref{eq:relational-monotonicity} reduces to the
-standard monotonicity condition in Equation~\ref{eq:functional-monotonicity}.
-For relational fibers, it still says nothing about whether two outputs inside
-one fiber have a common refinement; finite fiber-directedness remains a separate
-property.
+For singleton fibers this reduces to functional monotonicity,
+Equation~\ref{eq:functional-monotonicity}.  Relational monotonicity governs how
+outputs continue \emph{between} fibers as input grows.  It says nothing about
+how different outputs relate \emph{within} one fiber.  We now turn to that
+second question.
+
+\begin{definition}[Compatibility]
+\label{def:compatibility}
+Outputs $o_1,\ldots,o_k$ are \emph{compatible at input $i$} if there is an
+admissible common refinement $u\in\fiber{i}$ such that
+$o_r\OutputOrd u$ for every $r$.  Otherwise they are \emph{incompatible at
+$i$}.
+\end{definition}
 
 \begin{definition}[Finite fiber-directedness]
 \label{def:fiber-directedness}
-An ordered relational specification is \emph{finitely fiber-directed} if every
-nonempty finite collection $o_1,\ldots,o_k\in\fiber{i}$ is compatible at $i$.
-Equivalently, some $u\in\fiber{i}$ satisfies $o_r\OutputOrd u$ for every $r$.
+An ordered relational specification has \emph{Directed Outputs} when every
+output fiber is finitely directed: every nonempty finite collection in
+$\fiber{i}$ is compatible at $i$.
 \end{definition}
 
-The traceroute fiber is finitely directed because the union of any finite
-collection of legal outputs is legal and refines every member of the collection.
-The leader-election fiber is not.
+Thus compatibility is the property of one finite collection of outputs;
+Directed Outputs requires compatibility for every finite collection in every
+fiber.  Compatibility is not comparability.  Figure~\ref{fig:orders} shows an
+output chain, two incomparable but compatible outputs, and two incompatible
+outputs.  Only the last pair lacks a common refinement.
 
-\subsection{Why directedness becomes visible}
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[
+      >=stealth,
+      every node/.style={font=\small},
+      labelnode/.style={font=\scriptsize,align=center}]
+    \node (c0) at (0,0.55) {$\bot$};
+    \node (c1) at (0.65,0.55) {$a$};
+    \node (c2) at (1.30,0.55) {$b$};
+    \draw[->] (c0) -- (c1);
+    \draw[->] (c1) -- (c2);
+    \node[labelnode] at (0.65,-0.05) {chain};
 
-Classical CALM does model operational nondeterminism: distribution, message
-timing, and local state may vary.  Its semantic object, however, is a query
-$Q$, and each complete input $J$ has one query result $Q(J)$.  At that semantic
-interface every fiber is a singleton, so finite fiber-directedness is
-automatic.  The transducer theorem gets it for free from the query semantics.
+    \node (ja) at (2.35,0.35) {$a$};
+    \node (jb) at (3.25,0.35) {$b$};
+    \node (jt) at (2.80,1.05) {$t$};
+    \draw[->] (ja) -- (jt);
+    \draw[->] (jb) -- (jt);
+    \node[labelnode] at (2.80,-0.05) {common\\refinement};
 
-CRDTs handle operational nondeterminism algebraically.  At the usual state
-interface, a fixed set of incorporated updates determines one semilattice
-state.  Join supplies a least common refinement of states produced from
-different partial inputs, while associativity, commutativity, and idempotence
-remove sensitivity to merge order, grouping, and duplication.  This is stronger
-structure than finite fiber-directedness.
+    \node (ia) at (4.35,0.55) {$a$};
+    \node (ib) at (5.20,0.55) {$b$};
+    \node[labelnode] at (4.78,-0.05) {incompatible};
+  \end{tikzpicture}
+  \caption{Incomparability does not imply incompatibility.  Arrows point from
+  an output to a refinement.}
+  \label{fig:orders}
+\end{figure}
 
-CALMADO retains semantic output alternatives explicitly.  Directedness then has
-a direct operational meaning: it distinguishes ambiguity that may remain
-unresolved from ambiguity that requires a choice.  To make this precise, we
-model safe exposure separately from commitment.
+\subsection{A directed ambiguous specification}
 
-\subsection{Residuals and retirement}
-
-The specification $S$ lists every row allowed initially.  During an execution,
-some rows no longer need to remain explicit.  We write $R\subseteq S$ for the
-\emph{residual relation}: the rows still admissible at the current point in the
-execution.
-
-A row may disappear for a benign reason.  We call such a deletion
-\emph{retirement}: removing the row rules out no semantic possibility.  Input
-and output refinement each justify retirement in a different way.
-
-\begin{itemize}
-  \item When the current input advances from $i$ to $j$ with $i\InputOrd j$,
-        rows for the superseded input $i$ may be retired.  They describe an
-        earlier input state, not an alternative that the system rejected.
-  \item When output advances from $x$ to a refinement $u$ in the same fiber,
-        the row for $x$ may be retired.  It describes an earlier output state,
-        not an alternative that the system rejected.
-\end{itemize}
-
-A deletion that is not retirement changes the specified possibilities.  If an
-output row $x$ is removed and no retained output refines it, the execution has
-ruled out the alternative represented by $x$.  We call that deletion a
-\emph{commitment}.
-
-\subsection{Safe exposure, commitment, and coordination}
-
-Now consider making an output $o\in R(i)$ public.  Every later output at an
-input refining $i$ must itself refine $o$.  Exposure therefore restricts the
-residual relation fiber by fiber:
+Consider a traceroute-style diagnostic for a service name $\mathsf{svc}$.  The
+runtime input is the source--service pair $i=(s,\mathsf{svc})$.  The DNS mapping
+and network in Figure~\ref{fig:dns-routes} are fixed configuration.  The service
+has three complete routes:
 \begin{equation}
-  \bigl(R\mathbin{\upharpoonright}(i,o)\bigr)(j)
-  =
-  \begin{cases}
-    \{u\in R(j):o\OutputOrd u\}, & i\InputOrd j,\\
-    R(j),                         & \text{otherwise.}
-  \end{cases}
-  \label{eq:residual}
+  (s,\texttt{server1}),
+  \qquad (s,a,\texttt{server2}),
+  \qquad (s,b,\texttt{server2}).
+  \label{eq:traceroute-paths}
 \end{equation}
-The restriction touches only fibers at refinements of $i$.  It retains exactly
-the outputs that can honor the newly public output $o$.
 
-\begin{definition}[Safe exposure and commitment]
-\label{def:exposure-commitment}
-An output $o\in R(i)$ is \emph{safe to expose} when every row removed by
-$R\mathbin{\upharpoonright}(i,o)$ can be retired: for every $j\succeq_I i$ and
-$x\in R(j)$, the retained fiber contains some refinement $u$ of $x$:
-\begin{equation}
-  \forall j\succeq_I i\;\forall x\in R(j)\;\exists u\in
-  \bigl(R\mathbin{\upharpoonright}(i,o)\bigr)(j):
-  \quad x\OutputOrd u.
-  \label{eq:safe-exposure}
-\end{equation}
-Selecting an output that is safe to expose is a \emph{safe exposure}.  If the
-condition fails, the selection is a \emph{commitment}: at least one removed
-output cannot be retired because it has no retained refinement.
-\end{definition}
+An output is a nonempty prefix-closed set of observed routes.  A route begins
+with at least one hop, so $s$ alone is not an output element.  The table shows
+every route in each output, including all required prefixes.  Output refinement
+is set inclusion.
 
-The nontrivial requirement is not that $o$ survives its own exposure---it does,
-by reflexivity.  Safety requires every other removed possibility to be retired
-into a retained refinement.
+Figure~\ref{fig:dns-routes} shows the fixed network and lists all 17 outputs
+in the fiber.  The input does not change.  Finite unions of the underlying
+prefix-closed sets remain prefix-closed and legal, so the fiber is directed.
 
-The traceroute example shows a nontrivial safe exposure.  Exposing one
-prefix-closed trace set may remove a literal row containing different prefixes,
-but their union remains admitted and refines both rows; the removed row is
-retired.  Selecting leader $c_1$, by contrast, removes $c_2$ with no retained
-refinement.  That deletion is a commitment.
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[
+      >=stealth,
+      every node/.style={font=\small},
+      x=0.72cm,y=0.58cm]
+    \node (s) at (0,0) {$s$};
+    \node (a) at (1.65,-0.75) {$a$};
+    \node (b) at (1.65,-1.50) {$b$};
+    \node (one) at (3.30,0) {\texttt{server1}};
+    \node (two) at (3.30,-1.12) {\texttt{server2}};
+    \draw[->] (s) -- (one);
+    \draw[->] (s) -- (a);
+    \draw[->] (a) -- (two);
+    \draw[->] (s) -- (b);
+    \draw[->] (b) -- (two);
+  \end{tikzpicture}
 
-A seal is an input-side commitment: it rules out further input refinements.  A
-selection among incompatible outputs is an output-side commitment: it rules out
-an admissible alternative at a fixed input.  Complete CALM needs agreement only
-for the first kind.  CALMADO models both.
+  \vspace{4pt}
+  \small
+  \begin{tabular}{@{}r@{\hspace{.5pt}}c@{\hspace{.5pt}}l@{}}
+    \toprule
+        & Input $i$ & Output $o$ \\
+    \midrule
+    1 & $(s,\mathsf{svc})$ & $\{s{\to}b\}$ \\
+    2 & $(s,\mathsf{svc})$ & $\{s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
+    3 & $(s,\mathsf{svc})$ & $\{s{\to}a\}$ \\
+    4 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}b\}$ \\
+    5 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
+    6 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}a{\to}\texttt{server2}\}$ \\
+    7 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}a{\to}\texttt{server2},\ s{\to}b\}$ \\
+    8 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}a{\to}\texttt{server2},\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
+    \addlinespace
+    9 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1}\}$ \\
+    10 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}b\}$ \\
+    11 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
+    12 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a\}$ \\
+    13 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}b\}$ \\
+    14 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
+    15 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}a{\to}\texttt{server2}\}$ \\
+    16 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}a{\to}\texttt{server2},\ s{\to}b\}$ \\
+    17 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}a{\to}\texttt{server2},\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{The fixed network and its input--output relation at
+  $i=(s,\mathsf{svc})$.  Each numbered row is one pair $(i,o)$; every nonempty
+  prefix-closed output is written in full.}
+  \label{fig:dns-routes}
+\end{figure}
 
-A residual is \emph{safe-exposure-reachable} if it is obtained from $S$ by a
-finite sequence of safe exposures.
+For this particular output type, output refinement can arise in different ways.
+Rows 3 and 6 are ordered because row 6 adds a continuation of an existing
+route; rows 9 and 15 are ordered because row 15 adds another route.  These are
+features of prefix-closed route sets, not general cases in the theory.  The
+results below depend only on the specified output order $\OutputOrd$.
 
-\begin{definition}[Safe exposure at will]
-\label{def:exposure-at-will}
-A specification permits \emph{safe exposure at will} if, in every
-safe-exposure-reachable residual $R$, every row $(i,o)\in R$ is safe to
-expose.
-\end{definition}
+\subsection{Nondirected ambiguous specifications}
 
-\begin{definition}[Coordination]
-\label{def:coordination}
-\emph{Coordination} is agreement required before a participant makes a
-commitment that could exclude a course independently available to another
-participant.
-\end{definition}
+The traceroute specification admits every finite combination of its compatible
+observations.  Other specifications admit alternatives that cannot be jointly
+refined.  Leader election is a simple example.  If \texttt{server1} and
+\texttt{server2} are eligible and the interface permits either as the sole
+leader, no allowed output refines both choices.  The output fiber is not
+directed.
 
-Safe exposure at will is a property of the semantic specification.  Whether a
-necessary commitment requires agreement between participants also depends on
-placement.  If one participant alone controls a choice, it may commit locally.
-If different participants can make incompatible commitments, they must
-coordinate.  An implementation that never permits some rows implements a
-narrower specification.
+A serial commit log gives a database example.  Suppose concurrent transactions
+$T_1$ and $T_2$ both commit.  For the same completed input history, the log may
+admit either $[T_1,T_2]$ or $[T_2,T_1]$.  Prefix refinement cannot preserve both
+orders, so this fiber is also not directed.  Section~\ref{sec:hat-instance}
+gives a stronger witness in which exposed reads force opposite serialization
+orders.
 
 \subsection{The CALMADO criterion}
 
-The following finite-family condition combines relational monotonicity and
-finite fiber-directedness.
+The name CALMADO---\emph{Consistency As Lifted Monotonicity And Directed
+Outputs}---states its two requirements directly.
 
 \begin{definition}[CALMADO criterion]
 \label{def:calmado-criterion}
-An ordered relational specification satisfies the \emph{CALMADO criterion} if,
-for every nonempty finite family of rows
-$(i_1,o_1),\ldots,(i_k,o_k)\in S$ and every common input refinement $j$ with
-$i_r\InputOrd j$ for all $r$, there is a $u\in\fiber{j}$ such that
+An ordered relational specification satisfies the \emph{CALMADO criterion}
+when it has both of the following properties:
+\begin{enumerate}[label=(\roman*)]
+  \item \emph{Lifted Monotonicity:} the mapping $i\mapsto\fiber{i}$ is
+        monotone under $\LiftedOutputOrd$, as in
+        Equation~\ref{eq:relational-monotonicity}; and
+  \item \emph{Directed Outputs:} every output fiber is finitely directed under
+        $\OutputOrd$, as in Definition~\ref{def:fiber-directedness}.
+\end{enumerate}
+\end{definition}
+
+The first clause concerns refinement across inputs; the second concerns
+outputs admitted at one fixed input.  Neither implies the other.  This
+two-clause form isolates the distinct obligations, but an execution may already
+have exposed several outputs at different earlier inputs.  To continue without
+invalidating any of them, one future output must refine the whole finite family.
+The following equivalent form packages exactly that combined obligation and is
+the form used in the exposure analysis below.
+
+\begin{proposition}[Finite-family form]
+\label{prop:calmado-decomposition}
+The CALMADO criterion is equivalent to the following condition: for every
+nonempty finite family of rows $(i_1,o_1),\ldots,(i_k,o_k)\in S$ and every
+common input refinement $j$ with $i_r\InputOrd j$ for all $r$, there is a
+$u\in\fiber{j}$ such that
 \begin{equation}
   o_r\OutputOrd u
   \qquad\text{for every }r\in\{1,\ldots,k\}.
   \label{eq:calmado-criterion}
 \end{equation}
-\end{definition}
-
-The condition quantifies over every common input refinement because the
-environment determines which input eventually occurs.  It uses finite families
-because pairwise compatibility need not imply compatibility of a larger
-family.
-
-\begin{proposition}[Decomposition]
-\label{prop:calmado-decomposition}
-An ordered relational specification satisfies the CALMADO criterion if and only
-if it is monotone and finitely fiber-directed.
 \end{proposition}
 
 \begin{proof}
-Assume the CALMADO criterion.  A one-row family $(i,o)$ and common input
-refinement $j$ gives relational monotonicity.  A finite family whose rows all
-have input $i$, with common input refinement $i$, gives finite
-fiber-directedness.
+Assume the CALMADO criterion.  Lifted Monotonicity gives, for each row,
+$o'_r\in\fiber{j}$ with $o_r\OutputOrd o'_r$.  Directed Outputs gives
+$u\in\fiber{j}$ refining every $o'_r$, and hence every $o_r$.
 
-Conversely, take rows $(i_r,o_r)$ and a common input refinement $j$.
-Monotonicity gives $o'_r\in\fiber{j}$ with $o_r\OutputOrd o'_r$ for each $r$.
-Finite fiber-directedness of $\fiber{j}$ gives $u\in\fiber{j}$ refining every
-$o'_r$.  By transitivity, $u$ refines every $o_r$.
+Conversely, assume the finite-family condition.  To prove Lifted Monotonicity,
+fix arbitrary $i\InputOrd j$ and $o\in\fiber{i}$.  Apply the condition to the
+singleton family $(i,o)$ and its common input refinement $j$.  It yields
+$u\in\fiber{j}$ with $o\OutputOrd u$, exactly
+$\fiber{i}\LiftedOutputOrd\fiber{j}$.
+
+To prove Directed Outputs, fix arbitrary $i$ and a nonempty finite collection
+$o_1,\ldots,o_k\in\fiber{i}$.  Apply the condition to
+$(i,o_1),\ldots,(i,o_k)$ with common input refinement $j=i$.  It yields
+$u\in\fiber{i}$ refining every $o_r$.
 \end{proof}
+
+The condition ranges over every common input refinement because the environment
+may determine which refinement occurs.  Finite families are required because
+pairwise compatibility need not imply compatibility of a larger family.
+
+\subsection{Residuals, retirement, and commitment}
+
+The specification $S$ lists every row allowed initially.  During an execution,
+some rows no longer need to remain explicit.  We write $R\subseteq S$ for the
+\emph{residual relation}: the rows still admissible at the current point.
+
+\begin{definition}[Retirement]
+\label{def:retirement}
+A \emph{retirement} is the deletion of a superseded input or output justified
+by refinement, so that the larger value semantically preserves all information
+in the deleted value:
+\begin{itemize}
+  \item when the current input advances from $i$ to $j$ with $i\InputOrd j$,
+        rows for the superseded input $i$ may be retired; and
+  \item when, for some input $i$, an output advances from $x\in R(i)$ to a
+        retained $u\in R(i)$ with $x\OutputOrd u$, the row $(i,x)$ may be
+        retired.
+\end{itemize}
+In either case, deletion loses no information and rules out no semantic
+possibility.
+\end{definition}
+
+\begin{definition}[Commitment]
+\label{def:commitment}
+Let $R'\subseteq R$ be a new residual.  The deletion of an output row
+$(i,x)\in R\setminus R'$ is a \emph{commitment} if it is not an input retirement
+and no retained output at that input refines it:
+\begin{equation}
+  \nexists u\in R'(i): x\OutputOrd u.
+  \label{eq:commitment}
+\end{equation}
+Thus a commitment rules out the alternative represented by $x$ instead of
+preserving it in a larger retained value.
+\end{definition}
+
+\subsection{Safe exposure}
+
+Consider making $o\in R(i)$ public.  At every input $j\succeq_I i$, later
+output must refine $o$.  Remove outputs that cannot meet this obligation and
+write the candidate residual as $R\mathbin{\upharpoonright}(i,o)$.  At inputs
+$j\succeq_I i$,
+\begin{equation}
+  \bigl(R\mathbin{\upharpoonright}(i,o)\bigr)(j)
+  =\{u\in R(j):o\OutputOrd u\}
+  \qquad (j\succeq_I i),
+  \label{eq:residual-refining-fibers}
+\end{equation}
+All other inputs remain unchanged:
+\begin{equation}
+  \bigl(R\mathbin{\upharpoonright}(i,o)\bigr)(j)=R(j)
+  \qquad (i\not\InputOrd j).
+  \label{eq:residual-other-fibers}
+\end{equation}
+
+\begin{definition}[Safe exposure]
+\label{def:safe-exposure}
+An output $o\in R(i)$ is \emph{safe to expose} when every row removed by the
+restriction to $R\mathbin{\upharpoonright}(i,o)$ is a retirement, not a
+commitment.  Equivalently,
+\begin{equation}
+  \forall j\succeq_I i\;\forall x\in R(j)\;\exists u\in R(j):
+  \quad x\OutputOrd u\ \land\ o\OutputOrd u.
+  \label{eq:safe-exposure}
+\end{equation}
+Selecting such an output is a \emph{safe exposure}.  If the condition fails,
+exposing $o$ is disallowed at the current residual: doing so would silently
+remove an alternative with no retained refinement.  The execution must instead
+make the required commitment explicitly, thereby reducing $R$ to a new
+residual in which exposing $o$ may become safe.
+\end{definition}
+
+The witness $u$ in Equation~\ref{eq:safe-exposure} is retained because it
+refines $o$, and it justifies retiring $x$ because it also refines $x$.  The
+nontrivial requirement is not that $o$ survives its own exposure---it does by
+reflexivity---but that every other removed row has a retained refinement and can
+therefore be retired.
+
+It is worth following one exposure carefully.  Suppose traceroute first exposes
+$o=\{s{\to}\texttt{server1}\}$.  The output
+$x=\{s{\to}a\}$ is incomparable with $o$: neither refines the other.  The
+restriction therefore removes $(i,x)$.  At first this may look like a choice
+against $x$, but the residual retains
+$u=\{s{\to}\texttt{server1},s{\to}a,
+      s{\to}a{\to}\texttt{server2}\}$.  Because $u$ refines both $o$ and
+$x$, all information in $x$ remains represented; deleting $(i,x)$ is retirement,
+not commitment.  Leader election behaves differently.  Selecting
+\texttt{server1} removes \texttt{server2} with no retained common refinement,
+so that deletion is a commitment.
+
+A residual is \emph{reachable by safe exposure} if it is obtained from $S$ by
+a finite sequence of safe exposures.
+
+\begin{definition}[Safe exposure at will]
+\label{def:exposure-at-will}
+A specification permits \emph{safe exposure at will} if every row $(i,o)$ in
+every residual reachable by safe exposure is safe to expose.
+\end{definition}
 
 \begin{theorem}[CALMADO]
 \label{thm:calmado}
@@ -715,85 +721,107 @@ if it satisfies the CALMADO criterion.
 \end{theorem}
 
 \begin{proof}
-Suppose the CALMADO criterion holds.  Consider any safe-exposure-reachable
-residual
-and a remaining row $(i,o)$.  For any remaining $(j,x)$ with
-$i\InputOrd j$, apply the criterion to $(i,o)$, $(j,x)$, and the earlier
-exposures relevant at $j$.  It supplies a row $(j,u)$ that refines $o$, $x$, and
-every earlier exposure.  Thus $(j,u)$ survives both the earlier restrictions and
-the exposure of $o$.  Every removed possibility has a retained refinement, so
-$o$ is safe to expose.
+Assume the CALMADO criterion.  Let $R$ be the residual after safe exposures
+$(i_1,o_1),\ldots,(i_m,o_m)$, and choose any remaining $(i,o)\in R$.  To show
+that $o$ is safe to expose, fix $(j,x)\in R$ with $i\InputOrd j$.  Apply the
+finite-family form to $(i,o)$, $(j,x)$, and every earlier exposure
+$(i_h,o_h)$ whose input satisfies $i_h\InputOrd j$.  It gives
+$u\in\fiber{j}$ refining $o$, $x$, and every such $o_h$.  The latter
+conditions show that $(j,u)$ survived every earlier exposure; $o\OutputOrd u$
+shows that it survives exposure of $o$.  The retained row $(j,u)$ refines $x$,
+so $x$ can be retired and $o$ is safe to expose.
 
-Conversely, suppose the specification permits safe exposure at will.  Relational
-monotonicity follows by exposing $o\in\fiber{i}$ while a refinement
-$j\succeq_I i$ remains possible: the safe-exposure condition supplies a
-refinement of
-$o$ in $\fiber{j}$.  For finite fiber-directedness, assume a fiber has a finite
-incompatible family of least cardinality.  If it has two members, exposing one
-excludes the other.  If it has more, two proper subfamilies have common
-refinements $v$ and $w$ by minimality.  Both survive exposure of their shared
-first member, but they have no common refinement; one cannot then be exposed.
-Either case contradicts safe exposure at will.
-Proposition~\ref{prop:calmado-decomposition} now gives the CALMADO criterion.
+Conversely, assume safe exposure at will.  For Lifted Monotonicity, fix
+$i\InputOrd j$ and $o\in\fiber{i}$.  Since $\fiber{j}$ is nonempty, choose
+$x\in\fiber{j}$.  Safe exposure of $o$ in the initial residual gives
+$u\in\fiber{j}$ with $o\OutputOrd u$, proving
+$\fiber{i}\LiftedOutputOrd\fiber{j}$.
+
+For Directed Outputs, suppose some fiber contains a finite incompatible family
+$X=\{x_1,\ldots,x_k\}$ of least cardinality.  If $k=2$, exposing $x_1$ is not
+safe because $x_2$ has no common refinement with it.  If $k>2$, minimality gives
+$v$ refining $X\setminus\{x_k\}$ and $w$ refining
+$X\setminus\{x_{k-1}\}$.  Both $v$ and $w$ refine $x_1$, so both remain after
+exposing $x_1$.  They have no common refinement, since one would refine all of
+$X$.  Hence $v$ is not safe to expose in the resulting residual, again a
+contradiction.  Every fiber is finitely directed, so the CALMADO criterion
+holds.
 \end{proof}
 
-The theorem is a semantic safety result.  It does not compute common refinements
-or guarantee termination.  Its contribution is to identify what coordination
-accomplishes when the criterion fails: agreement authorizes an input seal or an
-output-selecting commitment that narrows the residual specification.
+The theorem identifies when safe exposure at will is possible.  Computing a
+common refinement and guaranteeing termination remain protocol questions.
 
-\subsection{Generalized CAP: from impossibility to dichotomy}
+Why did earlier CALM results not state Directed Outputs separately?  Their
+semantic query specification is functional: each input $J$ has one result
+$Q(J)$, so each output fiber is a singleton and directed automatically.
+State-based CRDTs also present a functional state for a fixed set of incorporated
+updates; semilattice join additionally provides least common refinements across
+partial inputs.  CALMADO makes multiple semantic outputs at one input explicit,
+so directedness can no longer be assumed.
+
+\subsection{Coordination, placement, and the Generalized CAP Theorem}
 \label{sec:cap-corollary}
 
-The classical CAP theorem is a one-way impossibility: under partition, a
-linearizable register cannot remain available~\cite{gilbert2002cap}.  CALMADO
+\begin{definition}[Coordination]
+\label{def:coordination}
+\emph{Coordination} is agreement required before a participant makes a
+commitment that could exclude an admissible output alternative available to
+another participant.
+\end{definition}
+
+Safe exposure at will depends only on $S$.  Whether a commitment is necessary
+is therefore a semantic question; whether it requires agreement between
+participants also depends on \emph{placement}: which participant may select each
+row.  A participant that controls an entire choice
+may commit locally; participants that may make incompatible commitments must
+coordinate.  If a system forbids some rows of $S$, its declared interface is a
+proper subrelation $S'\subsetneq S$, and the criterion applies to $S'$.
+
+A seal is an input-side commitment: it rules out further input refinements.
+Selecting among incompatible outputs is an output-side commitment: it rules out
+an alternative at a fixed input.  The functional setting of Complete CALM has
+only the first kind; CALMADO accounts for both.
+
+The classical CAP theorem is a one-way impossibility: a linearizable register
+cannot remain available through arbitrary partitions~\cite{gilbert2002cap}.  CALMADO
 yields a Generalized CAP Theorem that turns this negative result into a
-dichotomy for arbitrary declared specifications.  The positive direction says
-exactly when consistency and availability can coexist through partition; the
-negative direction identifies when they cannot.
+dichotomy for declared consistency specifications.
 
-The generalization applies CALMADO to executions separated by a network
-partition.  As in relational-transducer CALM, a placement determines which
-partial inputs participants may hold.  Here placement also assigns operations
-and authority over output choices.
-
-A placement $\Delta$ assigns each participant $p$ a set $\Delta_p\subseteq S$
-of rows it may select.  A finite family is \emph{separable} by a partition if
-there is a legal execution in which participants in at least two components can
-select those rows jointly while cross-partition messages are delayed.  This
-requires joint realizability: two mutually exclusive choices owned by one
-participant do not become separable merely because another component acts.
+A placement $\Delta$ assigns participant $p$ a set $\Delta_p\subseteq S$ of
+rows it may select.  A finite family is \emph{separable} by a partition if some
+legal execution permits participants in at least two components to select its
+rows jointly while cross-partition messages are delayed.  Joint realizability
+matters: two mutually exclusive choices owned by one participant do not become
+separable merely because another component acts.
 
 At this interface, \emph{consistency} means refinement consistency: outputs
 exposed in different components have an admitted common refinement when their
-inputs are combined.  \emph{availability} means that every nonfailed component
-may make each locally permitted selection without waiting for a message across
-the cut.  \emph{partition tolerance} requires both properties for every network
-partition and legal execution.
+inputs combine.  \emph{Availability} means that each nonfailed component may
+make every locally permitted selection without waiting across the cut.
+\emph{Partition tolerance} requires both properties for every partition and
+legal execution.
 
 \begin{corollary}[Generalized CAP Theorem]
 \label{cor:generalized-cap}
-Across all declared legal placements and network partitions, consistency,
-availability, and partition tolerance coexist exactly when every family of
-CALMADO rows separable by a partition has an admitted common output refinement
-at every common input refinement.
+Across all legal placements and network partitions, consistency, availability,
+and partition tolerance coexist exactly when every family separable by a
+partition has an admitted common output refinement at every common input
+refinement.
 \end{corollary}
 
 \begin{proof}
 Fix a legal placement and partition.  If each separable family has a common
-refinement, every component may make its locally permitted selections and the
-outputs remain compatible when communication resumes.  If a separable family
-has no common refinement, availability permits its selections on different
-sides of the cut, but consistency cannot preserve them all.  The system must
-wait across the cut, retain incompatible commitments, or suppress an allowed
-row.  These lose availability, consistency, or the declared specification,
-respectively.
+refinement, components may make locally permitted selections and their outputs
+remain compatible when communication resumes.  If a separable family has no
+common refinement, availability permits its selections on different sides of
+the cut, but consistency cannot preserve them all.  The system must wait across
+the cut, retain incompatible commitments, or suppress an allowed row.  These
+lose availability, consistency, or the declared specification, respectively.
 \end{proof}
 
-The result ranges over all legal placements and all network partitions.  The
-placement is not a limitation on the failure model; it determines which inputs
-and choices can occur independently, just as data placement does in the
-relational-transducer model.
+The theorem quantifies over all legal placements and partitions.  Placement
+determines which inputs and choices can occur independently, just as data
+placement does in the relational-transducer model.
 
 \paragraph{Registers.}
 Consider two replicas of a register initially holding no value.  Process $p$
@@ -811,30 +839,27 @@ answered read.
 
 For linearizability, $L$ is a total order extending real time
 ~\cite{herlihy1990linearizability}.  If $p$ returns \catv, its explanation
-requires
-\[
-  w_p(x,\dog)<_L w_q(x,\catv).
-\]
-If $q$ returns \dog, its explanation requires the opposite order.  No total
-order refines both explanations.  A partition can separate the two read owners,
-so the responses recover the classical CAP impossibility as the negative
-side of the Generalized CAP dichotomy
+requires $w_p(x,\dog)<_L w_q(x,\catv)$.  If $q$ returns \dog, its explanation
+requires the opposite order.  No total order refines both explanations.  The
+partition separates the read owners, recovering the classical CAP impossibility
+as the negative side of the Generalized CAP theorem
 ~\cite{gilbert2002cap}.
 
 Under causal consistency, the writes remain concurrent and one explanation can
 assign $p$'s read to \catv{} and $q$'s read to \dog{}
-~\cite{lamport1978time,ahamad1995causal}.  The different responses have a common
+~\cite{lamport1978time,ahamad1995causal}.  The responses have a common
 refinement.  Two possible answers for the same read remain incompatible, but
 only that read's owner selects one; no legal placement and partition separate
-one local decision into two independent choices.
+one local decision into two independent choices.  With the central results in
+place, we now compare their consequences across the surrounding literature.
 
 \section{Instances Across the Literature}
 \label{sec:instances}
 
 Table~\ref{tab:instances} summarizes how the two-stage account applies across
 the literature.  Each mapping declares an input, an output, and refinement
-orders before applying Complete CALM or CALMADO.  Changing that interface changes
-the property being tested.
+orders before applying Complete CALM or CALMADO.  Changing the interface
+changes whether monotonicity or Directed Outputs holds.
 
 \begin{table*}[t]
   \centering
@@ -858,7 +883,7 @@ the property being tested.
       & Replica state, lattice order
       & Functional state; canonical merge
       & Join supplies a least common refinement across partial inputs. \\
-    Register CAP
+    Generalized CAP
       & Causal history, induced extension
       & Operation/read explanation
       & Relational
@@ -1007,21 +1032,24 @@ State convergence, transaction availability, and invariant preservation test
 three different specifications.  A convergent merge may produce an invalid
 state; an available transaction may expose facts that later violate an
 invariant; an invariant-confluent application need not provide a particular
-isolation level.  The shared criterion does not collapse these properties.
+isolation level.  The shared model makes these distinctions explicit rather
+than collapsing the properties.  We close by drawing out the resulting design
+lessons and scope limits.
 
 \section{Discussion}
 \label{sec:discussion}
 
 \subsection{Input arrival versus output choice}
 
-Complete CALM and CALMADO separate two reasons for coordination.  A failure of
-monotonicity means that more input can invalidate an exposed output.  Agreement
+Complete CALM and CALMADO separate two reasons a commitment may be necessary.
+A failure of monotonicity means that more input can invalidate an exposed output.  The system
 must close the input---a seal---before that output is safe.  A failure of finite
 fiber-directedness means that outputs admitted at one input cannot all be
-preserved.  Agreement must select which alternative survives.
+preserved; proceeding requires a commitment.  Whether either commitment
+requires agreement among participants depends on placement.
 
-The distinction is semantic, not operational.  CALM and CRDTs already account
-for operational nondeterminism in message delivery, batching, retries, and
+The distinction concerns the semantic interface, not whether executions are
+deterministic.  CALM and CRDTs already account for operational nondeterminism in message delivery, batching, retries, and
 merge order.  Their usual declared outputs are fixed for a given input.  CALMADO
 adds specifications whose semantic interface itself offers several outputs and
 models the commitments that resolve them.
@@ -1034,12 +1062,16 @@ building a system.  Relational transducers provide a language and operational
 network semantics; semilattices provide a local algebra and deterministic
 merge; transaction protocols provide scheduling, validation, and recovery.
 Neither Complete CALM nor CALMADO says how to represent $S$, choose the
-refinement orders, compute a common refinement, or do so efficiently.
+refinement orders, compute a common refinement, or do so efficiently.  Those
+questions belong to the programming language, protocol, and verification
+method used to realize the specification.
 
 \subsection{Specification design determines the boundary}
 
-The CALMADO criterion is a property of the declared specification and placement,
-not a permanent label on ``register,'' ``transaction,'' or ``shopping cart.''
+The CALMADO criterion is a property of the declared specification, not a
+permanent label on ``register,'' ``transaction,'' or ``shopping cart.''
+Placement determines whether a commitment requires agreement between
+participants.
 A linearizable register and a causal register admit different explanations.  A
 CRDT state and an exact read expose different promises.  A database permitted
 to abort one transaction implements a different relation from one required to
@@ -1052,7 +1084,7 @@ changes the interface or system design; none is a loophole in the criterion.
 
 \subsection{CALMADO is not convergence}
 
-CALMADO requires an admitted common refinement, not a unique or least one.  The
+CALMADO requires admitted common refinements, not unique or least ones.  The
 sharded log has several minimal interleavings.  Strong eventual consistency adds
 a stronger promise: replicas that receive the same input reach equivalent
 state.  A semilattice join provides that promise.  Conversely,
@@ -1062,11 +1094,11 @@ preservation are distinct requirements.
 
 \subsection{Safety is not liveness}
 
-The theorems identify when exposed outputs remain refinement-consistent.  They
-do not guarantee message delivery, termination, or that a common refinement is
-computable.  The Generalized CAP Theorem's availability premise excludes an implementation
-that never responds, but a full protocol result must still state appropriate
-fairness, failure, and cost assumptions.
+The theorems identify when exposed outputs remain refinement-consistent; they
+do not guarantee message delivery, termination, or computability of a common
+refinement.  The availability premise of the Generalized CAP Theorem excludes an
+implementation that never responds, but a full protocol result must still
+state appropriate fairness, failure, and cost assumptions.
 
 \section{Related Work}
 \label{sec:related}
@@ -1113,17 +1145,17 @@ orders.
 
 CALMADO extends the model to specifications that offer several outputs for one
 input.  Modeling safe exposure and commitment reveals finite
-fiber-directedness as
-the additional requirement for coordination freedom.  When directedness fails,
-coordination authorizes the commitment that selects which admissible alternative
-survives.
+fiber-directedness as the additional requirement for safe exposure at will.
+When directedness fails, some admissible alternative must be removed by a
+commitment.  If different participants can make incompatible commitments,
+coordination determines which alternative survives.
 
 The Generalized CAP Theorem is the partition corollary.  It recovers the
 classical impossibility when a cut separates incompatible choices and supplies
 the positive side when all separated choices have common refinements.  A cut
 may prevent agreement on input closure or separate participants empowered to
-make incompatible output choices.  Query monotonicity, CRDT merge, transactional availability, and
-invariant confluence then become directly comparable without being identified
+make incompatible output choices.  Query monotonicity, CRDT merge,
+transactional availability, and invariant confluence then become directly comparable without being identified
 with one another.
 
 \begin{acks}
