@@ -28,7 +28,7 @@
 
 \begin{document}
 
-\title{Much ADO About CALM: Completing the Semantics of Coordination}
+\title{Complete CALM: A Unified Criterion for Coordination}
 
 \author{Joseph M. Hellerstein}
 \affiliation{%
@@ -44,25 +44,24 @@ boundaries in different mathematical languages.  Existing accounts characterize
 when coordination can be avoided, but do not generally model what coordination
 accomplishes when it is needed.
 
-We complete this semantic picture in two steps.  \emph{Complete CALM} lifts
+We complete this semantic picture in two steps.  \emph{Functional CALM} generalizes
 the classical result from Datalog and fact inclusion to functions between
 arbitrary partially ordered input and output domains, giving the broader
 folklore interpretation a formal semantic basis.  Independent of implementation
 language, monotonicity characterizes exactly when a function's output can be
 exposed as distributed input arrives without first sealing that input.
 
-\emph{CALMADO}---\emph{Consistency As Lifted Monotonicity And Directed
-Outputs}---extends the analysis from functions to relational specifications
-that allow a choice among outputs.  Such a specification permits \emph{safe
+\emph{Complete CALM} extends the analysis from functions to relational
+specifications that allow a choice among outputs.  Such a specification permits \emph{safe
 exposure at will}
-exactly when it is monotone and the outputs allowed for each input are
-\emph{finitely directed}.
+exactly when it is relationally monotone and the outputs allowed for each input
+are \emph{finitely directed}.
 A \emph{safe exposure} retains a refinement of every admissible alternative;
 a \emph{commitment} rules at least one out; and \emph{coordination} is
 agreement before participants make incompatible commitments.
 This covers settings such as leader election and transactional commit ordering.
-As a corollary, CALMADO yields a Generalized CAP Theorem that extends classical
-CAP from a one-way impossibility about linearizability to a bidirectional
+As a corollary, Complete CALM yields a Complete CAP Theorem that extends
+classical CAP from a one-way impossibility about linearizability to a bidirectional
 dichotomy parameterized by the declared consistency semantics.
 \end{abstract}
 
@@ -122,12 +121,12 @@ different objects and assumptions.  This makes simple cross-cutting questions
 awkward.  Does CALM encompass CAP?  Are CRDT join laws necessary for
 coordination freedom, or one strong sufficient discipline?  Does convergent
 storage provide highly available transactions?  Do convergence and transaction
-availability preserve application invariants?  Section~\ref{sec:cap-corollary}
-answers the first question; the CRDT, HAT, and invariant-confluence parts of
-Section~\ref{sec:instances} answer the others.
+availability preserve application invariants?  Section \S\ref{sec:cap-corollary} answers the first question; the CRDT, HAT, and
+invariant-confluence parts of Section \S\ref{sec:instances} answer the others.
 
-Our account begins by abstracting distribution away.  A functional semantic
-specification is an arbitrary function
+We begin by introducing a general notion of specification, agnostic to any language or
+implementation details.  A \emph{functional semantic
+specification} (\S\ref{sec:functional-specifications}) is an arbitrary function
 \[
   f:(I,\InputOrd)\longrightarrow(O,\OutputOrd)
 \]
@@ -136,69 +135,82 @@ output domain.  It is monotone in the standard mathematical sense when
 \[
   i\InputOrd j \quad\Longrightarrow\quad f(i)\OutputOrd f(j).
 \]
-Distribution makes input arrival uncertain: participants may hold different
+Distributed implementations make input arrival uncertain: participants may hold different
 input refinements, received in different orders and batches.  Monotonicity says
 that output exposed from any one of them remains valid as more input arrives.
 If the function is not monotone, exposing an output may first require agreement
 that the relevant input is complete.  We call that agreement an input
 \emph{seal}.
 
-Our first step, \emph{Complete CALM}, lifts the CALM result from Datalog and fact
-inclusion to these arbitrary functions and refinement partial orders.  This
-suggests a second reading of CALM: historically, \emph{Consistency As Logical
-Monotonicity}; here, also \emph{Consistency As Lifted Monotonicity}.  The lift
-provides a common language for coordination-freedom results whose semantic
-output is fixed for each input, including query evaluation and the usual CRDT
-state interface.
+Our first step, \emph{Functional CALM} (\S\ref{sec:functional-calm-theorem}),
+generalizes the CALM result from Datalog
+and fact inclusion to these arbitrary functions and refinement partial orders.
+This generalization provides a common language for coordination-freedom results
+whose semantic output is fixed for each input, including query evaluation and
+the usual CRDT state interface.  This does not assume deterministic execution:
+message timing, local state, batching, retries, and merge order may vary.
+``Functional'' means only that each fixed semantic input has one specified
+output.
 
 Our second step addresses a case those interfaces do not expose: the semantic
 specification itself may allow several distinguishable outputs for one input.
 Leader election may permit either eligible leader; a database may permit several
-serial schedules.  We call this extension \emph{CALMADO}: \emph{Consistency As
-Lifted Monotonicity And Directed Outputs}.  In order theory, a nonempty
-partially ordered set is directed if every pair of elements has one or more
-common upper bounds.  Directedness requires neither a unique upper bound nor a
-least one; a join-semilattice provides that stronger structure.  Here,
-``directed outputs'' is intended \emph{per input}: every nonempty finite
-collection of outputs allowed for one input has one or more admitted common
-refinements.  It does not require the entire output domain to be directed.
+serial schedules.  The specification is then a relation
+(\S\ref{sec:relational-specifications}):
+\[
+  S\subseteq I\times O,
+  \qquad
+  \fiber{i}=\{o\in O:(i,o)\in S\},
+\]
+where \(\fiber{i}\)---the \emph{fiber} at \(i\)---is the set of outputs admitted at input \(i\).  Moving from
+a function to a relation creates two distinct obligations.
 
-Why do directed outputs matter?  If the outputs allowed for one input are not
-finitely directed, some finite subset has no common refinement.  The system
-cannot preserve every alternative: proceeding must irrevocably rule at least
-one out.  We call that step a \emph{commitment}.  If different participants can make
-incompatible commitments, they must \emph{coordinate} first.  A \emph{safe exposure}
-is the opposite case: it makes an output public while retaining a refinement of
-every allowed alternative.  CALMADO covers both cases---safe exposure when the
-alternatives can coexist, and coordinated commitment when they cannot.
+First, input refinement must now compare \emph{sets} of possible outputs.  We
+lift the notion of monotonicity to these sets: \(\fiber{i}\) refines to
+\(\fiber{j}\) when every output admitted at \(i\) has some refinement admitted
+at \(j\).  Monotonicity of the fiber map under this lifted preorder is
+\emph{Relational Monotonicity} (\S\ref{sec:relational-specifications}).  It
+ensures that each alternative can continue as input grows.
 
-This does not mean that earlier work assumed deterministic executions.
-Relational-transducer CALM allows message timing and local state to vary, and
-CRDTs allow updates and merges to arrive in different orders.  At their usual
-semantic interfaces, however, a fixed input is associated with a single result:
-one query answer or one replicated state.  In our terms, the outputs allowed for
-each input form a singleton set and are therefore directed automatically.
+Second, Relational Monotonicity says nothing about different alternatives
+admitted at the \emph{same} input.  Safely exposing one requires that it can
+coexist with the others through admitted common refinements.  We call this
+within-fiber requirement \emph{Directed Outputs}, based on the order-theoretic notion
+of directedness
+(\S\ref{sec:relational-specifications}).  When it fails, proceeding must rule
+out an alternative; we call that step a \emph{commitment}
+(\S\ref{sec:residuals-commitment}).  If
+different participants can make incompatible commitments, they must coordinate
+first.  Complete CALM combines Relational Monotonicity and Directed Outputs
+(\S\ref{sec:complete-calm-criterion}) to characterize when outputs may instead
+be exposed safely at will (\S\ref{sec:safe-exposure}).
 
-CALMADO also yields a Generalized CAP Theorem.  Classical CAP gives an
-impossibility for linearizable registers under partition.  The Generalized CAP Theorem extends this impossibility to both sides of the
-boundary for a declared consistency specification, with linearizability as a
-special case on the negative side. If every set of choices that a legal placement and
-partition can separate has an allowed common refinement, consistency and
-availability can coexist through the partition.  Otherwise the system must wait
-across the cut and lose availability, or make incompatible commitments and lose
-consistency.
+For singleton fibers---as in functional specifications---Relational Monotonicity reduces to ordinary monotonicity,
+and the Directed Outputs property holds automatically.
 
-This paper makes five contributions:
+Complete CALM also yields a Complete CAP Theorem
+(\S\ref{sec:cap-corollary}).  Classical CAP gives an
+impossibility for linearizable registers under partition.
+The Complete CAP Theorem extends from impossibility to dichotomy, characterizing
+both sides of the boundary: specifications that are subject to CAP tradeoffs and those that are not;
+linearizability becomes a special case on the tradeoff side. This unifies the ideas of CAP impossibility
+and distributed coordination avoidance in a single formalism.
+
+% If every set of choices across a
+% partition has an allowed common refinement, consistency and
+% availability can coexist through the partition.  Otherwise the system must wait
+% across the cut and lose availability, or make incompatible commitments and lose
+% consistency.
+
+This paper makes four contributions:
 \begin{enumerate}
-  \item Complete CALM lifts monotonicity to semantic input/output specifications
+  \item Functional CALM generalizes CALM to semantic input/output specifications
         with separate input- and output-refinement partial orders.
-  \item CALMADO extends the model to semantic output choice and identifies
-        monotonicity plus finite directedness among the outputs allowed for each
-        input as the criterion for safe exposure at will.
-  \item A residual semantics for safe exposure and commitment explains what
-        coordination accomplishes when either input must be sealed or output
-        alternatives must be resolved.
-  \item The Generalized CAP Theorem extends the classical impossibility to a
+  \item Complete CALM extends the model to semantic output choice, defines safe
+        output exposure and commitment through residual specifications, and identifies
+        Relational Monotonicity plus Directed Outputs as the criterion for safe exposure
+        at will.
+  \item The Complete CAP Theorem extends the classical impossibility to a
         bidirectional dichotomy parameterized by the declared consistency
         specification.
   \item Mappings to query monotonicity, CRDTs, HATs, and invariant confluence
@@ -207,15 +219,15 @@ This paper makes five contributions:
 \end{enumerate}
 
 These are semantic safety results.  Richer formalisms remain essential for
-programming, implementation, and liveness arguments.
-Section~\ref{sec:complete-calm} develops Complete CALM.
-Section~\ref{sec:calmado} introduces semantic choice, commitment, and CALMADO,
-including the Generalized CAP Theorem.  Section~\ref{sec:instances} maps the
+programming, implementation, and liveness arguments. Section
+\S\ref{sec:functional-calm} develops Functional CALM.
+Section \S\ref{sec:complete-calm} introduces semantic choice, commitment, and Complete
+CALM, including the Complete CAP Theorem.  Section \S\ref{sec:instances} maps the
 surrounding literature into the common model, followed by discussion and
 related work.
 
-\section{Complete CALM: Lifting Monotonicity}
-\label{sec:complete-calm}
+\section{Functional CALM}
+\label{sec:functional-calm}
 
 A semantic specification describes allowed input/output behavior without
 committing to a placement, protocol, or message schedule.  We begin with the
@@ -223,6 +235,7 @@ case used by classical query semantics and the usual CRDT state interface: each
 input has one specified output.
 
 \subsection{Functional specifications with refinement orders}
+\label{sec:functional-specifications}
 
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
@@ -298,7 +311,8 @@ the standard definition of a monotone query
 condition.  Negation may not: an answer derived from the absence of a fact can
 be invalidated when that fact arrives.
 
-\subsection{The Complete CALM lift}
+\subsection{The Functional CALM theorem}
+\label{sec:functional-calm-theorem}
 
 A distributed implementation assigns partial input and computation to
 participants.  We say that a functional specification permits
@@ -307,8 +321,8 @@ while any input refinement $j\succeq_I i$ remains possible, with every later
 output preserving that exposure.  A \emph{seal} is agreement that rules out
 further relevant input refinement.
 
-\begin{theorem}[Complete CALM]
-\label{thm:complete-calm}
+\begin{theorem}[Functional CALM]
+\label{thm:functional-calm}
 A functional ordered specification permits incremental exposure without
 sealing if and only if it is monotone.
 \end{theorem}
@@ -329,7 +343,7 @@ commitment.
 This is the familiar CALM dichotomy stated at the semantic interface rather than
 inside a particular programming language.  Relational-transducer CALM connects
 query monotonicity to coordination-free programs in its operational model
-~\cite{ameloot2013relational,ameloot2015weaker}.  Complete CALM lifts the
+~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM generalizes the
 semantic statement from fact sets under inclusion to arbitrary input and output
 refinement partial orders.
 
@@ -341,23 +355,25 @@ canonical refinement when replicas have seen different partial inputs
 ~\cite{shapiro2011crdt}.  Section~\ref{sec:crdt-instance} returns to what this
 stronger algebra provides.
 
-Historically, CALM stands for \emph{Consistency As Logical Monotonicity}.  At
-this semantic level, Complete CALM may also be read as \emph{Consistency As
-Lifted Monotonicity}: the coordination-free condition is lifted out of a
-particular language or algebra and stated over declared refinement orders.
+Historically, CALM stands for \emph{Consistency As Logical Monotonicity}.
+Here, ``logical'' refers not to a particular logic or programming language, but
+to preservation of semantic claims under declared information-refinement
+orders.  Functional CALM states that condition for any functional semantic
+specification, regardless of the formalism used to express it.
 
-Complete CALM handles uncertainty about input arrival.  We next allow the
+Functional CALM handles uncertainty about input arrival.  We next allow the
 specification itself to offer several outputs for one input.
 
-\section{CALMADO: Semantic Choice and Coordination}
-\label{sec:calmado}
+\section{Complete CALM: Semantic Choice and Coordination}
+\label{sec:complete-calm}
 
 A semantic specification may admit more than one output for the same input.
 Leader election may allow either eligible leader, and serializability may allow
 several transaction orders.  Such specifications are relational rather than
-functional.  CALMADO extends Complete CALM to this semantic output choice.
+functional.  Complete CALM extends Functional CALM to this semantic output choice.
 
 \subsection{Relational specifications and output fibers}
+\label{sec:relational-specifications}
 
 \begin{definition}[Ordered relational specification]
 \label{def:relational-specification}
@@ -556,17 +572,18 @@ orders, so this fiber is also not directed.  Section~\ref{sec:hat-instance}
 gives a stronger witness in which exposed reads force opposite serialization
 orders.
 
-\subsection{The CALMADO criterion}
+\subsection{The Complete CALM criterion}
+\label{sec:complete-calm-criterion}
 
-The name CALMADO---\emph{Consistency As Lifted Monotonicity And Directed
-Outputs}---states its two requirements directly.
+Complete CALM has two formal requirements: Relational Monotonicity and
+Directed Outputs.
 
-\begin{definition}[CALMADO criterion]
-\label{def:calmado-criterion}
-An ordered relational specification satisfies the \emph{CALMADO criterion}
+\begin{definition}[Complete CALM criterion]
+\label{def:complete-calm-criterion}
+An ordered relational specification satisfies the \emph{Complete CALM criterion}
 when it has both of the following properties:
 \begin{enumerate}[label=(\roman*)]
-  \item \emph{Lifted Monotonicity:} the mapping $i\mapsto\fiber{i}$ is
+  \item \emph{Relational Monotonicity:} the mapping $i\mapsto\fiber{i}$ is
         monotone under $\LiftedOutputOrd$, as in
         Equation~\ref{eq:relational-monotonicity}; and
   \item \emph{Directed Outputs:} every output fiber is finitely directed under
@@ -583,24 +600,24 @@ The following equivalent form packages exactly that combined obligation and is
 the form used in the exposure analysis below.
 
 \begin{proposition}[Finite-family form]
-\label{prop:calmado-decomposition}
-The CALMADO criterion is equivalent to the following condition: for every
+\label{prop:complete-calm-decomposition}
+The Complete CALM criterion is equivalent to the following condition: for every
 nonempty finite family of rows $(i_1,o_1),\ldots,(i_k,o_k)\in S$ and every
 common input refinement $j$ with $i_r\InputOrd j$ for all $r$, there is a
 $u\in\fiber{j}$ such that
 \begin{equation}
   o_r\OutputOrd u
   \qquad\text{for every }r\in\{1,\ldots,k\}.
-  \label{eq:calmado-criterion}
+  \label{eq:complete-calm-criterion}
 \end{equation}
 \end{proposition}
 
 \begin{proof}
-Assume the CALMADO criterion.  Lifted Monotonicity gives, for each row,
+Assume the Complete CALM criterion.  Relational Monotonicity gives, for each row,
 $o'_r\in\fiber{j}$ with $o_r\OutputOrd o'_r$.  Directed Outputs gives
 $u\in\fiber{j}$ refining every $o'_r$, and hence every $o_r$.
 
-Conversely, assume the finite-family condition.  To prove Lifted Monotonicity,
+Conversely, assume the finite-family condition.  To prove Relational Monotonicity,
 fix arbitrary $i\InputOrd j$ and $o\in\fiber{i}$.  Apply the condition to the
 singleton family $(i,o)$ and its common input refinement $j$.  It yields
 $u\in\fiber{j}$ with $o\OutputOrd u$, exactly
@@ -617,6 +634,7 @@ may determine which refinement occurs.  Finite families are required because
 pairwise compatibility need not imply compatibility of a larger family.
 
 \subsection{Residuals, retirement, and commitment}
+\label{sec:residuals-commitment}
 
 The specification $S$ lists every row allowed initially.  During an execution,
 some rows no longer need to remain explicit.  We write $R\subseteq S$ for the
@@ -652,6 +670,7 @@ preserving it in a larger retained value.
 \end{definition}
 
 \subsection{Safe exposure}
+\label{sec:safe-exposure}
 
 Consider making $o\in R(i)$ public.  At every input $j\succeq_I i$, later
 output must refine $o$.  Remove outputs that cannot meet this obligation and
@@ -714,14 +733,14 @@ A specification permits \emph{safe exposure at will} if every row $(i,o)$ in
 every residual reachable by safe exposure is safe to expose.
 \end{definition}
 
-\begin{theorem}[CALMADO]
-\label{thm:calmado}
+\begin{theorem}[Complete CALM]
+\label{thm:complete-calm}
 An ordered relational specification permits safe exposure at will if and only
-if it satisfies the CALMADO criterion.
+if it satisfies the Complete CALM criterion.
 \end{theorem}
 
 \begin{proof}
-Assume the CALMADO criterion.  Let $R$ be the residual after safe exposures
+Assume the Complete CALM criterion.  Let $R$ be the residual after safe exposures
 $(i_1,o_1),\ldots,(i_m,o_m)$, and choose any remaining $(i,o)\in R$.  To show
 that $o$ is safe to expose, fix $(j,x)\in R$ with $i\InputOrd j$.  Apply the
 finite-family form to $(i,o)$, $(j,x)$, and every earlier exposure
@@ -731,7 +750,7 @@ conditions show that $(j,u)$ survived every earlier exposure; $o\OutputOrd u$
 shows that it survives exposure of $o$.  The retained row $(j,u)$ refines $x$,
 so $x$ can be retired and $o$ is safe to expose.
 
-Conversely, assume safe exposure at will.  For Lifted Monotonicity, fix
+Conversely, assume safe exposure at will.  For Relational Monotonicity, fix
 $i\InputOrd j$ and $o\in\fiber{i}$.  Since $\fiber{j}$ is nonempty, choose
 $x\in\fiber{j}$.  Safe exposure of $o$ in the initial residual gives
 $u\in\fiber{j}$ with $o\OutputOrd u$, proving
@@ -744,7 +763,7 @@ $v$ refining $X\setminus\{x_k\}$ and $w$ refining
 $X\setminus\{x_{k-1}\}$.  Both $v$ and $w$ refine $x_1$, so both remain after
 exposing $x_1$.  They have no common refinement, since one would refine all of
 $X$.  Hence $v$ is not safe to expose in the resulting residual, again a
-contradiction.  Every fiber is finitely directed, so the CALMADO criterion
+contradiction.  Every fiber is finitely directed, so the Complete CALM criterion
 holds.
 \end{proof}
 
@@ -756,10 +775,10 @@ semantic query specification is functional: each input $J$ has one result
 $Q(J)$, so each output fiber is a singleton and directed automatically.
 State-based CRDTs also present a functional state for a fixed set of incorporated
 updates; semilattice join additionally provides least common refinements across
-partial inputs.  CALMADO makes multiple semantic outputs at one input explicit,
+partial inputs.  Complete CALM makes multiple semantic outputs at one input explicit,
 so directedness can no longer be assumed.
 
-\subsection{Coordination, placement, and the Generalized CAP Theorem}
+\subsection{Coordination, placement, and the Complete CAP Theorem}
 \label{sec:cap-corollary}
 
 \begin{definition}[Coordination]
@@ -779,12 +798,12 @@ proper subrelation $S'\subsetneq S$, and the criterion applies to $S'$.
 
 A seal is an input-side commitment: it rules out further input refinements.
 Selecting among incompatible outputs is an output-side commitment: it rules out
-an alternative at a fixed input.  The functional setting of Complete CALM has
-only the first kind; CALMADO accounts for both.
+an alternative at a fixed input.  Functional specifications have only the first
+kind; Complete CALM accounts for both.
 
 The classical CAP theorem is a one-way impossibility: a linearizable register
-cannot remain available through arbitrary partitions~\cite{gilbert2002cap}.  CALMADO
-yields a Generalized CAP Theorem that turns this negative result into a
+cannot remain available through arbitrary partitions~\cite{gilbert2002cap}.  Complete CALM
+yields a Complete CAP Theorem that turns this negative result into a
 dichotomy for declared consistency specifications.
 
 A placement $\Delta$ assigns participant $p$ a set $\Delta_p\subseteq S$ of
@@ -801,7 +820,7 @@ make every locally permitted selection without waiting across the cut.
 \emph{Partition tolerance} requires both properties for every partition and
 legal execution.
 
-\begin{corollary}[Generalized CAP Theorem]
+\begin{corollary}[Complete CAP Theorem]
 \label{cor:generalized-cap}
 Across all legal placements and network partitions, consistency, availability,
 and partition tolerance coexist exactly when every family separable by a
@@ -842,7 +861,7 @@ For linearizability, $L$ is a total order extending real time
 requires $w_p(x,\dog)<_L w_q(x,\catv)$.  If $q$ returns \dog, its explanation
 requires the opposite order.  No total order refines both explanations.  The
 partition separates the read owners, recovering the classical CAP impossibility
-as the negative side of the Generalized CAP theorem
+as the negative side of the Complete CAP theorem
 ~\cite{gilbert2002cap}.
 
 Under causal consistency, the writes remain concurrent and one explanation can
@@ -858,7 +877,7 @@ place, we now compare their consequences across the surrounding literature.
 
 Table~\ref{tab:instances} summarizes how the two-stage account applies across
 the literature.  Each mapping declares an input, an output, and refinement
-orders before applying Complete CALM or CALMADO.  Changing the interface
+orders before applying Functional CALM or Complete CALM.  Changing the interface
 changes whether monotonicity or Directed Outputs holds.
 
 \begin{table*}[t]
@@ -883,7 +902,7 @@ changes whether monotonicity or Directed Outputs holds.
       & Replica state, lattice order
       & Functional state; canonical merge
       & Join supplies a least common refinement across partial inputs. \\
-    Generalized CAP
+    Complete CAP
       & Causal history, induced extension
       & Operation/read explanation
       & Relational
@@ -908,11 +927,11 @@ changes whether monotonicity or Directed Outputs holds.
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-Section~\ref{sec:complete-calm} gave the functional encoding
+Section~\ref{sec:functional-calm} gave the functional encoding
 $J\mapsto Q(J)$.  Relational-transducer CALM proves the operational result for
 that language: monotone queries admit coordination-free evaluation under its
 data-placement and execution assumptions
-~\cite{ameloot2013relational,ameloot2015weaker}.  Complete CALM does not replace
+~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
 that theorem.  It isolates the semantic order-preservation property so that it
 can be compared with interfaces outside Datalog.
 
@@ -931,9 +950,9 @@ is a least common refinement.  Treating $U$ as immutable joinable payloads is
 important: arbitrary state-dependent update operations need not commute or be
 idempotent.
 
-The semilattice supplies more than CALMADO requires.  It gives a uniform least
+The semilattice supplies more than Complete CALM requires.  It gives a uniform least
 common refinement throughout the output domain and a fixed operator for
-computing it.  CALMADO asks only for some admitted common refinement for each
+computing it.  Complete CALM asks only for some admitted common refinement for each
 relevant finite family.  The refinement need not be least or produced by one
 global binary operator.
 
@@ -952,7 +971,7 @@ sequences.  A global join is unnecessary for this interface.
 
 The interface boundary matters.  A deterministic global log would need an
 additional rule to select one interleaving.  Exact reads and transactional
-observations likewise require their own CALMADO tests; state convergence alone
+observations likewise require their own Complete CALM tests; state convergence alone
 does not choose their semantics
 ~\cite{burckhardt2014principles,laddad2022keep}.
 
@@ -964,7 +983,7 @@ commit requests received so far, ordered by inclusion.  An output is a growing
 set of public facts such as $\mathsf{read}(T,x,v)$,
 $\mathsf{commit}(T)$, and session-order facts, also ordered by inclusion.  The
 isolation or session guarantee determines which fact sets are admissible.
-Placement assigns transactions and requests to replicas.  The Generalized
+Placement assigns transactions and requests to replicas.  The Complete
 CAP Theorem tests the combinations those replicas can select across a partition,
 under the contact, failure, and session assumptions of the interface
 ~\cite{bailis2013hat,terry1994session}.
@@ -1019,7 +1038,7 @@ individual transaction preservation supplies relational monotonicity, while
 invariant confluence supplies common refinements for independently reached
 states at the combined transaction input.  Associativity and reachability let
 the pairwise merge argument extend inductively to finite families.  Thus the
-prescribed merge witnesses the CALMADO criterion for the deployed transaction
+prescribed merge witnesses the Complete CALM criterion for the deployed transaction
 families.
 
 A uniqueness constraint supplies the standard counterexample.  Two replicas
@@ -1041,7 +1060,7 @@ lessons and scope limits.
 
 \subsection{Input arrival versus output choice}
 
-Complete CALM and CALMADO separate two reasons a commitment may be necessary.
+Functional CALM and Complete CALM separate two reasons a commitment may be necessary.
 A failure of monotonicity means that more input can invalidate an exposed output.  The system
 must close the input---a seal---before that output is safe.  A failure of finite
 fiber-directedness means that outputs admitted at one input cannot all be
@@ -1050,7 +1069,7 @@ requires agreement among participants depends on placement.
 
 The distinction concerns the semantic interface, not whether executions are
 deterministic.  CALM and CRDTs already account for operational nondeterminism in message delivery, batching, retries, and
-merge order.  Their usual declared outputs are fixed for a given input.  CALMADO
+merge order.  Their usual declared outputs are fixed for a given input.  Complete CALM
 adds specifications whose semantic interface itself offers several outputs and
 models the commitments that resolve them.
 
@@ -1061,14 +1080,14 @@ computation.  This is useful for stating a common boundary and insufficient for
 building a system.  Relational transducers provide a language and operational
 network semantics; semilattices provide a local algebra and deterministic
 merge; transaction protocols provide scheduling, validation, and recovery.
-Neither Complete CALM nor CALMADO says how to represent $S$, choose the
+Neither Functional CALM nor Complete CALM says how to represent $S$, choose the
 refinement orders, compute a common refinement, or do so efficiently.  Those
 questions belong to the programming language, protocol, and verification
 method used to realize the specification.
 
 \subsection{Specification design determines the boundary}
 
-The CALMADO criterion is a property of the declared specification, not a
+The Complete CALM criterion is a property of the declared specification, not a
 permanent label on ``register,'' ``transaction,'' or ``shopping cart.''
 Placement determines whether a commitment requires agreement between
 participants.
@@ -1082,9 +1101,9 @@ output that refines two alternatives may also eliminate it.  Changing placement
 may keep an incompatibility under one participant's authority.  Each option
 changes the interface or system design; none is a loophole in the criterion.
 
-\subsection{CALMADO is not convergence}
+\subsection{Complete CALM is not convergence}
 
-CALMADO requires admitted common refinements, not unique or least ones.  The
+Complete CALM requires admitted common refinements, not unique or least ones.  The
 sharded log has several minimal interleavings.  Strong eventual consistency adds
 a stronger promise: replicas that receive the same input reach equivalent
 state.  A semilattice join provides that promise.  Conversely,
@@ -1096,7 +1115,7 @@ preservation are distinct requirements.
 
 The theorems identify when exposed outputs remain refinement-consistent; they
 do not guarantee message delivery, termination, or computability of a common
-refinement.  The availability premise of the Generalized CAP Theorem excludes an
+refinement.  The availability premise of the Complete CAP Theorem excludes an
 implementation that never responds, but a full protocol result must still
 state appropriate fairness, failure, and cost assumptions.
 
@@ -1107,13 +1126,13 @@ The CALM conjecture connected logical monotonicity with coordination freedom
 ~\cite{hellerstein2010declarative,hellerstein2020keeping}.  Ameloot et al.
 established the theorem using relational transducers and studied how data
 placement and system knowledge change coordination requirements
-~\cite{ameloot2013relational,ameloot2015weaker}.  Complete CALM lifts the
-semantic order-preservation result; CALMADO adds semantic output choice and the
+~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM generalizes the
+semantic order-preservation result; Complete CALM adds semantic output choice and the
 effect of coordination on that choice.
 
 Brewer's conjecture and the Gilbert--Lynch theorem focus attention on
 availability during partitions~\cite{brewer2000towards,gilbert2002cap}.
-The Generalized CAP Theorem applies CALMADO to choices that legal placements
+The Complete CAP Theorem applies Complete CALM to choices that legal placements
 and partitions can separate.  It extends the classical impossibility to both
 sides of the specification-level dichotomy: the total-order register recovers
 the negative result, while the common-refinement condition supplies the
@@ -1131,26 +1150,26 @@ HATs classify transactional guarantees realizable without cross-partition
 coordination under stated client and failure assumptions~\cite{bailis2013hat}.
 Invariant confluence characterizes when independently valid transactional
 states preserve an application invariant on merge
-~\cite{bailis2014coordination}.  CALMADO exposes their common-refinement structure
+~\cite{bailis2014coordination}.  Complete CALM exposes their common-refinement structure
 while preserving their different output domains.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-A semantic specification abstracts distribution away.  Complete CALM asks when
+A semantic specification abstracts distribution away.  Functional CALM asks when
 a functional specification can be implemented over distributed input arrival
-without coordination: monotonicity means no seal is needed.  This lifts the
+without coordination: monotonicity means no seal is needed.  This generalizes the
 classic result from logical fact sets to arbitrary input and output refinement
 orders.
 
-CALMADO extends the model to specifications that offer several outputs for one
+Complete CALM extends the model to specifications that offer several outputs for one
 input.  Modeling safe exposure and commitment reveals finite
 fiber-directedness as the additional requirement for safe exposure at will.
 When directedness fails, some admissible alternative must be removed by a
 commitment.  If different participants can make incompatible commitments,
 coordination determines which alternative survives.
 
-The Generalized CAP Theorem is the partition corollary.  It recovers the
+The Complete CAP Theorem is the partition corollary.  It recovers the
 classical impossibility when a cut separates incompatible choices and supplies
 the positive side when all separated choices have common refinements.  A cut
 may prevent agreement on input closure or separate participants empowered to
