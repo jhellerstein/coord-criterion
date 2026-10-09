@@ -65,12 +65,12 @@ sealing that input.
 
 \emph{Complete CALM} extends the analysis from functions to relational
 specifications that allow a choice among outputs.  Such a specification is
-\emph{coordination-free}---any admissible output may be reported at will, and
-independent reports reconcile on merge under every arrival order---exactly
+\emph{coordination-free}---any admissible output may be exposed at will, and
+independent exposures reconcile on merge under every arrival order---exactly
 when it has \emph{lifted monotonicity}, every admitted output surviving as
 input grows, and \emph{directed outputs}, every finite set of outputs admitted
 at one input having a common refinement.
-An \emph{exposure} reports an output while retaining a refinement of every
+An \emph{exposure} makes an output visible while retaining a refinement of every
 admissible alternative; a \emph{commitment} rules at least one out; and \emph{coordination} is
 agreement before participants make incompatible commitments.
 This covers settings such as leader election and transactional commit ordering.
@@ -203,7 +203,7 @@ out an alternative; we call that step a \emph{commitment}
 different participants can make incompatible commitments, they must coordinate
 first.  Complete CALM combines Lifted Monotonicity and Directed Outputs
 (\S\ref{sec:complete-calm-criterion}) to characterize when a specification is
-coordination-free: outputs may be exposed at will, independent reports
+coordination-free: outputs may be exposed at will, independent exposures
 reconcile on merge, and the outcome does not depend on arrival order
 (\S\ref{sec:safe-exposure}).
 
@@ -347,11 +347,11 @@ table of input--output pairs, listing the outputs admissible for each input.
 The specification for squaring has the rows $(2,4)$, $(3,9)$, $(4,16)$, and so
 on forever.  In database terms, squaring's table satisfies a functional
 dependency: the input column determines the output column.  We call such a
-specification \emph{functional}.  The table is a model of what the
-specification allows, not a data structure: no component of a system holds it
-or consults it.  Everything that follows is a matter of removing rows from it,
-and for now we speak of ``the system'' as a single actor; who does what in a
-distributed implementation comes at the end.
+specification \emph{functional}.  A specification is a model of what is
+allowed, not a data structure: no component of a system holds it or consults
+it.  Everything that follows is a matter of removing rows from a
+specification, and for now we speak of ``the system'' as a single machine; who
+does what in a distributed implementation comes at the end.
 
 Figure~\ref{fig:election-frames}(a) is the specification of a small election.
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
@@ -376,7 +376,7 @@ final; we return to that choice below.  Given these orders, one can follow any i
 upward through its refinements, say $a\cdot\cdot$ to $ab\cdot$ to $aba$: the
 output climbs too, from $\bot$ to $a$, and never steps down or sideways.  That
 is what it means for the \emph{specification} to be \emph{monotone}, a property
-of the table together with its orders.
+of the rows together with the orders.
 
 \paragraph{Input arrives.}
 Now $v_2$'s ballot arrives, for $b$; panel (b) shows the result.  The
@@ -400,8 +400,8 @@ Both removals follow from a single rule: keep only the rows at the current
 input and its refinements.  The inputs that still have rows are the
 \emph{valid} ones.  An input event chooses nothing, and the same ballots delivered
 in another order or grouping would reach the same record and retire the same rows.
-The table with these rows removed is a \emph{residual state}: the record of
-what is still possible.
+The specification with these rows removed is a \emph{residual state}: the
+record of what is still possible.
 
 \paragraph{What could still happen.}
 While input may still grow, what matters is not only the current row but what
@@ -515,7 +515,7 @@ first commit to a seal.
     \multicolumn{2}{@{}l}{\footnotesize an exposure}
   \end{tabular}
   \caption{Two specifications with several rows at the current input $i$, each
-  shown after one output has been reported.  In (f) an output is a prefix-closed
+  shown after one output has been exposed.  In (f) an output is a prefix-closed
   set of routes from source $s$, which reaches server \texttt{s1} directly and
   server \texttt{s2} through hop $a$.  Shaded cells are the upper fiber that
   remains.  Legend as in Figure~\ref{fig:election-frames}.}
@@ -535,14 +535,14 @@ diagnostic for a service reachable from source $s$ directly at server
 \texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
 prefix-closed set of routes observed so far, so $\{s{\to}a\}$, a probe that has
 reached the hop but not the server, is a legal output, and so is any union of
-legal outputs.  Reporting $\{s{\to}\texttt{s1}\}$ removes the two rows that
+legal outputs.  Exposing $\{s{\to}\texttt{s1}\}$ removes the two rows that
 do not refine it, yet the remaining rows $\{s{\to}\texttt{s1},\ s{\to}a\}$ and
 $\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$ still say
-everything they said.  Nothing is lost, so the report is an exposure, not a
+everything they said.  Nothing is lost, so this is an exposure, not a
 commitment.
 
 What made the difference between panels (e) and (f)?  In both, the system
-reported one of several admissible outputs.  In leader election the other
+exposed one of several admissible outputs.  In leader election the other
 output had nowhere to go: no admissible output refines both \texttt{server1}
 and \texttt{server2}, so making one exposure-ready required removing the other outright.  In
 traceroute every other output had somewhere to go: whatever two route sets the
@@ -555,7 +555,7 @@ exposes, every other output can still be refined with that value, so nothing is
 lost.  If they are not directed, some exposure removes an
 alternative outright, and that exposure only becomes ready after a commitment to
 remove the alternative.  This removal is not retirement: the input
-did not change; the system reported something.  Complete CALM
+did not change; the system exposed something.  Complete CALM
 (Section~\ref{sec:complete-calm}) isolates exactly these two requirements:
 outputs must continue as input grows, as in the election, and the outputs
 admitted at one input must be directed, as in traceroute but not in leader
@@ -570,38 +570,43 @@ within spec.
 
 Three kinds of transition remove rows.  Input arrival retires the rows the new
 record does not refine (panels (b), (c)); it belongs to the environment.
-Exposure removes the rows that do not refine the report (panel (f)); it
+Exposure removes the rows that do not refine the exposed output (panel (f)); it
 belongs to the system.  Commitment removes rows on the system's own authority
 (panels (d), (e)).  The two CALM conditions say when the first two transitions
 remove only redundant rows: monotonicity says this of input arrival,
 directedness of exposure.  A commitment always narrows; that is its purpose.
 
 When monotonicity or directedness fails, some output is not ready, because a
-later input or another report could contradict it, and the system may expose
+later input or another exposure could contradict it, and the system may expose
 only ready outputs.  To make it ready, the system must commit: seal the input,
 so that no later arrival bears on the promise (panel (d)), or choose the
-output, so that no other report contradicts it (panel (e)).  Everything so far
-is semantic: it concerns the table and the orders, and it would hold of a
+output, so that no other exposure contradicts it (panel (e)).  Everything so far
+is semantic: it concerns the specification and its orders, and it would hold of a
 single-node database choosing a serialization order among concurrent
 transactions just as it holds of the election.
 
 \paragraph{Instantiating the model.}
-Now let the system be distributed.  It consists of \emph{participants}, each
-holding private state and learning what the others hold only by communicating.
-Each participant sees some of the input and acts on what it has seen, so the
-residual state a participant can know about is one of the panels above, drawn
-from the input it holds; the table itself is nobody's state.  Exposure is
-harmless whoever performs it: a participant that exposes a ready output removes
-only redundant rows, so nothing another participant might select is affected.
-A commitment is different.  The alternative it removes is one that another
-participant, acting on its own input, might have selected, and if two
-participants remove each other's selections the table they jointly implement
-is empty.  Commitments therefore require agreement among the participants who
-could have selected the alternatives, and that agreement is coordination.
-Determination that needs a commitment is determination that needs
-coordination.  Section~\ref{sec:functional-calm} makes this precise for
-functions, where only sealing is ever needed; Section~\ref{sec:complete-calm}
-does so for relations.
+Now let the system be distributed.  It consists of \emph{participants}, each of
+which knows the specification, which is fixed and public, but sees only its
+own events: the input that has reached it, the exposures and commitments it
+has itself made.  Each participant therefore has its own residual, obtained
+from the specification by removing the rows its own events removed,
+and two participants that have seen different events hold different
+residuals.  Panels (a) and (b) of Figure~\ref{fig:election-frames} can be read
+this way: one participant has so far received only $v_1$'s ballot, another has
+also received $v_2$'s, and each has removed what its own input retired.
+
+Commitments are precisely the semantic actions that require coordination;
+input events and ready output exposures may be done autonomously.  This
+follows directly from the discussion above.  Input arrives at each participant
+on its own.  A ready exposure removes only redundant rows, so every other
+participant's residual still refines what was exposed, and combining inputs
+later contradicts nothing.  A commitment removes an alternative that another
+participant's residual may still admit, so it is safe only if every such
+participant agrees; that agreement is coordination.  Determination that needs
+a commitment is therefore precisely the determination that needs coordination.
+Section~\ref{sec:functional-calm} formalizes this for functions, where only
+sealing is ever needed; Section~\ref{sec:complete-calm} does so for relations.
 
 \section{Functional CALM}
 \label{sec:functional-calm}
@@ -832,7 +837,7 @@ of applicable commitments.  It is empty when the initial state is already
 determined.
 
 \paragraph{Exposure.}
-A report of $o$ at $i$ promises that whatever is finally produced for $i$, or
+Exposing $o$ at $i$ promises that whatever is finally produced for $i$, or
 for any refinement of $i$, will refine $o$.  The promise is already kept when
 $o$ lies below everything in the upper fiber.
 
@@ -849,7 +854,7 @@ For the current input $i$ of $(i,R)$ and $o\in R(i)$, the output $o$ is
 Equivalently, $o$ is the least element of the upper fiber $R^\uparrow(i)$.
 \end{definition}
 
-A system may report a ready output at any time.  The report changes no state
+A system may expose a ready output at any time.  The exposure changes no state
 and removes no row; input updates and commitments only remove rows, so every
 retained output at $i$ or its valid refinements continues to refine $o$.  In the election
 $\bot$ is ready in every panel and $a$ in panel (c); under the equality order
@@ -887,13 +892,13 @@ If $f$ is not monotone, some $i\InputOrd j$ satisfies
 $f(i)\not\OutputOrd f(j)$.  In the canonical initial state $\sigma_0(i)$,
 the input $j$ is valid, so $f(j)\in R^\uparrow(i)$ and $f(i)$ is not
 exposure-ready.  The fiber at $i$ offers no output choice to resolve: its only
-row is $(i,f(i))$.  Before $f(i)$ can be reported, the implementation must
+row is $(i,f(i))$.  Before $f(i)$ can be exposed, the implementation must
 therefore carry out a determination whose input-closing commitments remove the
 row at $j$ and at every other refinement whose output does not refine $f(i)$.
 A determination that effects a full seal at $i$ is sufficient; closing only the
 offending refinements may also suffice.  If other participants can
 independently admit $j$, making the closure binding requires their agreement.
-Without input-closing authority, $f(i)$ cannot be reported at this point.
+Without input-closing authority, $f(i)$ cannot be exposed at this point.
 \end{proof}
 
 The election's output order is not a lattice: $a$ and $b$ have no common upper
@@ -1278,14 +1283,14 @@ The next subsection shows that such restrictions are not commitments at all.
 \subsection{Exposure}
 \label{sec:safe-exposure}
 
-Consider reporting $o\in R(i)$ to an external observer.  The report promises
+Consider exposing $o\in R(i)$ to an external observer.  The exposure promises
 that later output at $i$ and at every refinement of $i$ will refine $o$.  When
 $o$ is exposure-ready (Definition~\ref{def:exposure-ready}), the promise is
-already entailed by the residual and the report changes nothing.  Readiness
+already entailed by the residual and the exposure changes nothing.  Readiness
 asks that $o$ already lie below everything that remains possible.  A weaker
-condition suffices for a report to be honest: that nothing remaining possible
+condition suffices for an exposure to be honest: that nothing remaining possible
 \emph{contradicts} $o$, in the sense that every remaining possibility shares an
-admitted refinement with it.  A participant that reports such an $o$ undertakes
+admitted refinement with it.  A participant that exposes such an $o$ undertakes
 to refine it, and it can always keep that undertaking, whatever else remains,
 because the undertaking excludes nothing that could not still be reached.
 Keeping the promise means restricting the residual at $i$ and its refinements to
@@ -1342,12 +1347,12 @@ and nothing is removed.
 An exposure event is therefore not a commitment, even though it may remove rows:
 it excludes nothing whose content could not still be reached.  If $o$ is not
 exposable, some $x$ at $i$ or one of its refinements has no admitted refinement in
-common with $o$.  Reporting $o$ would then silently destroy the content of $x$.
+common with $o$.  Exposing $o$ would then silently destroy the content of $x$.
 The system must instead make a content-destroying commitment explicitly,
 reducing $R$ to a residual in which $o$ may become exposable.
 
 When $\OutputOrd$ is equality, an output is exposable only if it is the sole
-possibility, and exposure reduces to reporting a determined result.  When every
+possibility, and exposure reduces to announcing a determined result.  When every
 upper fiber has a least element, that element is exposable and its exposure
 changes nothing; this is the case of a monotone functional specification.  The
 new case is a fiber such as $\{a,b,t\}$ with $a$ and $b$ incomparable and both
@@ -1388,7 +1393,7 @@ initial state by input updates and exposure events alone, with no commitment.
 \paragraph{Coordination-freedom.}
 The CAP intuition has two halves.  Availability: a replica can answer from the
 input it has, without waiting to learn what other replicas have received or
-reported.  Consistency: answers given independently reconcile when the
+exposed.  Consistency: answers given independently reconcile when the
 replicas' inputs are combined.  Both must hold whatever the arrival order.  The
 definition below states the three resulting conditions, each as a property of
 residual states.
@@ -1416,17 +1421,17 @@ following hold.
 \end{enumerate}
 \end{definition}
 
-Condition~1 is the availability half: a participant may report any admissible
-output at its current input, and the report is entirely its own to make.
-Condition~2 is the consistency half: whatever separate participants reported on
+Condition~1 is the availability half: a participant may expose any admissible
+output at its current input, and the exposure is entirely its own to make.
+Condition~2 is the consistency half: whatever separate participants exposed on
 their separate inputs, there remains an admissible output at every legal
-combination of those inputs that refines all of their reports, so that merging
+combination of those inputs that refines all of their exposures, so that merging
 the participants neither empties a fiber nor forbids the combined input.
 Condition~3 restates the second for a single participant that could have seen
 its inputs in another order, grouped differently, or with repeats; it makes the
 outcome a property of the inputs rather than of the schedule.  None of the
-three requires that participants report the \emph{same} output.  They require
-that whatever was reported can stand together.  The definition is semantic: it
+three requires that participants expose the \emph{same} output.  They require
+that whatever was exposed can stand together.  The definition is semantic: it
 describes no protocol and promises no delivery, liveness, or termination
 detection.
 
@@ -1496,12 +1501,12 @@ state.  In every case exposure at will fails.
 \end{proof}
 
 The theorem is direct from the definitions.  Its content is the
-identification: the one semantic obstruction to reporting at will, to
+identification: the one semantic obstruction to exposing at will, to
 reconciliation on merge, and to schedule independence is a finite family of
 admissible rows with no admitted common refinement at a common input
-refinement.  When none exists, replicas may report what they have, in whatever
-order it arrives, and remain reconcilable, though what they reported may
-differ.  When such a family exists, some admissible output cannot be reported
+refinement.  When none exists, replicas may expose what they have, in whatever
+order it arrives, and remain reconcilable, though what they exposed may
+differ.  When such a family exists, some admissible output cannot be exposed
 without excluding another outright, that is, without a commitment.  Computing
 a common refinement and guaranteeing termination remain protocol questions.
 
@@ -1573,9 +1578,9 @@ CAP asks the same question in a more specific setting.  A \emph{network
 partition} divides the participants into two or more groups and stops all
 information from crossing between groups until the partition heals.  During the
 partition each participant continues to receive input from its own
-environment.  \emph{Availability} asks that a participant be able to report an
+environment.  \emph{Availability} asks that a participant be able to expose an
 admissible output at the input it holds without waiting for anything from
-across the cut.  \emph{Consistency} asks that the reports made on different
+across the cut.  \emph{Consistency} asks that the exposures made on different
 sides remain jointly refinable when the partition heals and the inputs are
 combined.  \emph{Partition tolerance} asks for both under every partition and
 every schedule of arrivals on each side.  The classical CAP theorem is a
@@ -1607,7 +1612,7 @@ of Definition~\ref{def:coordination-free}, and Theorem~\ref{thm:complete-calm}
 makes it equivalent to monotonicity.
 \end{proof}
 
-Here consistency means refinement consistency: reports on different sides of
+Here consistency means refinement consistency: exposures on different sides of
 the partition are jointly refinable under $\OutputOrd$, not identical or
 totally ordered.  This is weaker than linearizability and is what makes the
 characterization bidirectional.  Monotone specifications retain availability
@@ -1877,7 +1882,7 @@ Then $U_0\subseteq U_1$, but
   (q_{\mathrm{2P}}\circ s)(U_1)=\{\mathsf{potato}\}.
 \]
 The internal state advanced, but the client-visible claim did not.  An ordinary
-point-in-time read may merely report its chosen local cut.  The bug appears when
+point-in-time read may merely expose its chosen local cut.  The bug appears when
 the program interprets that answer as complete, stable, or sufficient to justify
 an irreversible action.  Such a promise needs a seal on the relevant updates.
 
@@ -2505,14 +2510,14 @@ hierarchy adds model-specific topological and wait-free conclusions
 
 The word ``snapshot'' covers interfaces with very different semantic strength.
 Consider inputs that are finite downward-closed causal histories, ordered by
-induced extension.  A modest \emph{cut-report} interface returns a finite
+induced extension.  A modest \emph{cut} interface exposes a finite
 downward-closed subset of the available history as a lower bound on what has
-happened.  Old reports remain legal as history grows, and the union of finitely
-many reports remains downward closed.  This interface satisfies Relational
+happened.  Old cuts remain legal as history grows, and the union of finitely
+many cuts remains downward closed.  This interface satisfies Lifted
 Monotonicity and Directed Outputs.
 
 That easy positive result should not be mistaken for a conventional snapshot
-implementation.  The cut report promises neither freshness nor completeness;
+implementation.  The cut interface promises neither freshness nor completeness;
 it could legally return an old cut.  A stronger interface may promise that a
 vector or cut is the complete state at a globally finished boundary.  Under
 equality of final answers, another relevant event changes the required result.
