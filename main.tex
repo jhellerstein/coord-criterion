@@ -4,7 +4,7 @@
 \usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{tikz}
-\usepackage[normalem]{ulem}
+\usepackage{colortbl}
 
 \setlist{nosep,leftmargin=1.25em}
 
@@ -23,7 +23,15 @@
 \newcommand{\fiber}[1]{S(#1)}
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
-\newcommand{\struck}[1]{\textcolor{gray}{\sout{#1}}}
+\newcommand{\retired}[1]{\textcolor{gray}{#1}}
+\newcommand{\sh}[1]{\cellcolor{gray!22}#1}
+% Full-width strike line through the row just ended; place after \\.
+\newcommand{\strikerow}{%
+  \noalign{\vskip-0.5\dimexpr\ht\strutbox+\dp\strutbox\relax}%
+  \noalign{\vskip-0.5\arrayrulewidth}%
+  \arrayrulecolor{black!65}\hline\arrayrulecolor{black}%
+  \noalign{\vskip 0.5\dimexpr\ht\strutbox+\dp\strutbox\relax}%
+  \noalign{\vskip-0.5\arrayrulewidth}}
 
 % ---------- Comment macro; NEVER EVER DELETE!!! ----------
 \newcommand{\jmh}[1]{\textcolor{red}{\textit{#1 -- JMH}}}
@@ -59,8 +67,9 @@ sealing that input.
 specifications that allow a choice among outputs.  Such a specification is
 \emph{coordination-free}---any admissible output may be reported at will, and
 independent reports reconcile on merge under every arrival order---exactly
-when it satisfies Lifted Monotonicity and the outputs allowed for each
-input are \emph{directed}.
+when it has \emph{lifted monotonicity}, every admitted output surviving as
+input grows, and \emph{directed outputs}, every finite set of outputs admitted
+at one input having a common refinement.
 An \emph{exposure} reports an output while retaining a refinement of every
 admissible alternative; a \emph{commitment} rules at least one out; and \emph{coordination} is
 agreement before participants make incompatible commitments.
@@ -105,11 +114,11 @@ achieved without coordination exactly when the computation is
 monotone~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it, in
 both directions, for Datalog queries evaluated by networks of relational
 transducers~\cite{ameloot2013relational,hellerstein2020keeping}.  The theorem
-is therefore tied to one formalism. The intuition behind it is often
+is therefore tied to one formalism. The intuition behind the CALM Theorem is often
 invoked in broader contexts, leaving a gap between folklore and what was proven.
 
 Several other traditions draw closely related boundaries, each in its own
-formalism.  CAP proves an impossibility for available linearizable registers
+formalism.  The CAP Theorem proves an impossibility for available linearizable registers
 under partition~\cite{brewer2000towards,gilbert2002cap}.  State-based CRDTs give
 a strong sufficient discipline for coordination-free convergence using
 join-semilattices and inflationary updates~\cite{shapiro2011crdt}, but those
@@ -218,7 +227,7 @@ and coordination avoidance in a single formalism.
 This paper makes five contributions:
 \begin{enumerate}
   \item Functional CALM generalizes and proves the CALM Conjecture in the context of
-        semantic input/output specifications
+        arbitrary functions, represented as semantic input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to semantic output choice, formalizes
         exposure and commitment, and identifies Lifted Monotonicity plus
@@ -239,13 +248,360 @@ This paper makes five contributions:
         acting participants necessarily creates a CAP tradeoff.
 \end{enumerate}
 
-Section~\ref{sec:functional-calm} develops Functional CALM.
+Section~\ref{sec:nutshell} walks through the framework on a running
+example.  Section~\ref{sec:functional-calm} develops Functional CALM.
 Section~\ref{sec:complete-calm} introduces semantic choice, commitment,
 Complete CALM, and Complete CAP.  Section~\ref{sec:instances} applies the
 results to familiar systems, and Section~\ref{sec:discussion} draws out the
 design lessons and scope limits.  Section~\ref{sec:frontiers} then derives
 maximal coordination-free interfaces.  Appendix~\ref{app:additional-applications}
 gives further classical applications.
+
+\section{The Framework in a Nutshell}
+\label{sec:nutshell}
+
+This section introduces the formalism on one example, using the vocabulary the
+rest of the paper will use.  Terms in italics are defined formally in
+Section~\ref{sec:determination}.  Nothing here is needed for the proofs, but
+every notion the Functional CALM and Complete CALM theorems rest on---residual
+states, input events, commitments, upper fibers, sealing, and exposure---is
+exercised on the example.
+
+\begin{figure*}[t]
+  \centering
+  \small
+  \newcommand{\rowhdr}{\toprule Input & Output \\ \midrule}
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}[t]{@{}l c@{}}
+    \multicolumn{2}{@{}l}{(a) Initial state, current input $a\cdot\cdot$}\\
+    \rowhdr
+    \sh{$\mathbf{a\cdot\cdot}$} & \sh{$\bot$} \\
+    $ab\cdot$ & \sh{$\bot$} \\
+    $aba$ & \sh{$a$} \\
+    $abb$ & \sh{$b$} \\
+    $aa\cdot$ & \sh{$a$} \\
+    $aaa$ & \sh{$a$} \\
+    $aab$ & \sh{$a$} \\
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposure-ready}
+  \end{tabular}
+  \hfill
+  \begin{tabular}[t]{@{}l c@{}}
+    \multicolumn{2}{@{}l}{(b) After $\mathsf{update}(\{ab\cdot\})$}\\
+    \rowhdr
+    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+    \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
+    $aba$ & \sh{$a$} \\
+    $abb$ & \sh{$b$} \\
+    \retired{$aa\cdot$} & \retired{$a$} \\
+    \retired{$aaa$} & \retired{$a$} \\
+    \retired{$aab$} & \retired{$a$} \\
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposure-ready}
+  \end{tabular}
+  \hfill
+  \begin{tabular}[t]{@{}l c@{}}
+    \multicolumn{2}{@{}l}{(c) After $\mathsf{update}(\{aa\cdot\})$ instead}\\
+    \rowhdr
+    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+    \retired{$ab\cdot$} & \retired{$\bot$} \\
+    \retired{$aba$} & \retired{$a$} \\
+    \retired{$abb$} & \retired{$b$} \\
+    \sh{$\mathbf{aa\cdot}$} & \sh{$a$} \\
+    $aaa$ & \sh{$a$} \\
+    $aab$ & \sh{$a$} \\
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined,}\\
+    \multicolumn{2}{@{}l}{\footnotesize not sealed; $a$ is exposure-ready}
+  \end{tabular}
+  \hfill
+  \begin{tabular}[t]{@{}l c@{}}
+    \multicolumn{2}{@{}l}{(d) (b), then polls closed}\\
+    \rowhdr
+    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+    \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
+    \retired{$aba$} & \retired{$a$} \\ \strikerow
+    \retired{$abb$} & \retired{$b$} \\ \strikerow
+    \retired{$aa\cdot$} & \retired{$a$} \\
+    \retired{$aaa$} & \retired{$a$} \\
+    \retired{$aab$} & \retired{$a$} \\
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; sealed and}\\
+    \multicolumn{2}{@{}l}{\footnotesize determined; $\bot$ is the result}
+  \end{tabular}
+  \caption{The election specification and three residual states reached from
+  it.  Only rows above the input $a\cdot\cdot$ are shown.  The current input is
+  in bold; shaded cells are the current input and the upper fiber at that
+  input.  Gray: the row has been removed, and a remaining row says everything
+  it said.  Struck through: the row has been removed via a commitment; no remaining row
+  preserves its contents.  Panels (b) and (c) follow input events; panel (d) follows a
+  commitment.}
+  \label{fig:election-frames}
+\end{figure*}
+
+\paragraph{A specification is a table.}
+The centerpiece of the framework is a very simple notion of specification: a
+table of input--output pairs, listing the outputs admissible for each input.
+The specification for squaring has the rows $(2,4)$, $(3,9)$, $(4,16)$, and so
+on forever.  In database terms, squaring's table satisfies a functional
+dependency: the input column determines the output column.  We call such a
+specification \emph{functional}.  The table is a model of what the
+specification allows, not a data structure: no component of a system holds it
+or consults it.  Everything that follows is a matter of removing rows from it,
+and for now we speak of ``the system'' as a single actor; who does what in a
+distributed implementation comes at the end.
+
+Figure~\ref{fig:election-frames}(a) is the specification of a small election.
+Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
+$b$; the result is $\bot$ (no result yet), $a$, or $b$.  An input represents the
+ballots seen so far, written as a three-letter string whose $k$th position holds
+$v_k$'s ballot or a dot if it has not arrived; only rows above $a\cdot\cdot$,
+where $v_1$ has voted $a$, are shown.  The first row says that with $v_1$'s
+ballot alone the result is $\bot$; row $aa\cdot$ says that once $v_2$ also votes
+$a$ the result is $a$; row $abb$ says that if $v_2$ and $v_3$ both vote $b$ the
+result is $b$.
+
+The rows are only part of the specification.  Each column also carries a
+partial order, and both orders are design decisions.  The \emph{input order}
+says what counts as more input: here, more ballots, so $ab\cdot$ \emph{refines}
+$a\cdot\cdot$, while $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output
+order} says when a later output keeps every promise an earlier one made: here
+$\bot$ lies below both $a$ and $b$, so ``no result yet'' can eventually refine
+to a winner,
+but $a$ and $b$ are incomparable, so neither winner refines the other.  A
+different design could make all outputs incomparable, so that every result is
+final; we return to that choice below.  Given these orders, one can follow any input
+upward through its refinements, say $a\cdot\cdot$ to $ab\cdot$ to $aba$: the
+output climbs too, from $\bot$ to $a$, and never steps down or sideways.  That
+is what it means for the \emph{specification} to be \emph{monotone}, a property
+of the table together with its orders.
+
+\paragraph{Input arrives.}
+Now $v_2$'s ballot arrives, for $b$; panel (b) shows the result.  The
+\emph{current input}, the record seen so far, has advanced from $a\cdot\cdot$
+to $ab\cdot$, shown in bold.  Only rows at $ab\cdot$ and its refinements
+remain; every other row is \emph{retired}.  That happens for two different
+reasons.
+
+The row at $a\cdot\cdot$ is retired because it has been superseded: $ab\cdot$
+refines it, so the election will never again be asked about $a\cdot\cdot$
+alone.  Nothing is lost, because the output at $ab\cdot$ is again $\bot$, which
+refines the retired output.  That is monotonicity at work.
+
+The rows at $aa\cdot$, $aaa$, and $aab$ are retired for a different reason:
+they have become unreachable.  Inputs are cumulative records, so the only
+records that can still arrive refine $ab\cdot$, and because a voter can cast
+only one ballot, no legal record refines both $aa\cdot$ and $ab\cdot$.  Those
+rows described futures the election can no longer have.
+
+Both removals follow from a single rule: keep only the rows at the current
+input and its refinements.  The inputs that still have rows are the
+\emph{valid} ones.  An input event chooses nothing, and the same ballots delivered
+in another order or grouping would reach the same record and retire the same rows.
+The table with these rows removed is a \emph{residual state}: the record of
+what is still possible.
+
+\paragraph{What could still happen.}
+While input may still grow, what matters is not only the current row but what
+any continuation could require.  In panel (b) the rows at or above $ab\cdot$
+are the current row and the two valid refinements $aba$ and $abb$ in which
+$v_3$ votes.  Their outputs, shaded, are $\{\bot,a,b\}$, the \emph{upper
+fiber} of $ab\cdot$: either candidate could still win.  Panel (c) shows the
+alternative in which $v_2$ voted $a$.  The rows at or above $aa\cdot$ all say
+$a$, so the upper fiber is a singleton $\{a\}$ and the current input is
+\emph{determined}: the input value now determines the unique output value,
+regardless of what ballot $v_3$ could cast.
+Narrowing the upper fiber until a single output remains is
+\emph{determination}.  In database terms it establishes a functional dependency
+on the residual, one that the original table need not have had: the current
+input, together with every record that could still refine it, now determines
+one output.  Here input arrival achieved a determination on its own; below we meet the case where
+the system must act.
+
+Note that tallying the ballots to notice that the
+result is determined removes no row; that computation has no effect on
+the residual, and hence does not count as determination.
+
+\paragraph{Commitments.}
+Return to panel (b) and let the registrar close the polls: $v_3$'s ballot,
+should it arrive, will not be counted.  Panel (d) shows the result.  The rows
+at $aba$ and $abb$ are removed although no ballot arrived and the current
+input has not changed: those inputs have been \emph{closed}.  This is a
+\emph{commitment}, an act of the system rather than of the environment.  It
+irrevocably disallows refinements the original specification admitted, and only the
+system has the authority to perform it.  Afterward $ab\cdot$ is \emph{sealed}:
+no refinement of it remains valid, and its upper fiber has collapsed to
+$\{\bot\}$, so it too is determined.
+For a functional specification, sealing is the only kind of
+commitment there is.  Each row's input determines its output, so there are
+never choices to be made among outputs; the only thing to commit to is closing input.
+
+\begin{figure}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}[t]{@{}l c@{}}
+    \multicolumn{2}{@{}l}{(g) As (a), all outputs incomparable, polls closed}\\
+    \toprule
+    Input & Output \\ \midrule
+    \sh{$\mathbf{a\cdot\cdot}$} & \sh{$\bot$} \\
+    \retired{$ab\cdot$} & \retired{$\bot$} \\ \strikerow
+    \retired{$aba$} & \retired{$a$} \\ \strikerow
+    \retired{$abb$} & \retired{$b$} \\ \strikerow
+    \retired{$aa\cdot$} & \retired{$a$} \\ \strikerow
+    \retired{$aaa$} & \retired{$a$} \\ \strikerow
+    \retired{$aab$} & \retired{$a$} \\ \strikerow
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; sealed and}\\
+    \multicolumn{2}{@{}l}{\footnotesize determined; $\bot$ is exposure-ready}
+  \end{tabular}
+  \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
+  incomparable, after the registrar closes the polls at $a\cdot\cdot$.  Every
+  refinement of $a\cdot\cdot$ is closed by the commitment.  Legend as in
+  Figure~\ref{fig:election-frames}.}
+  \label{fig:nonmonotone-frame}
+\end{figure}
+
+\paragraph{Exposure.}
+\emph{Exposing} a result beyond the system boundaries is a different act from committing.
+Exposing  $o$ promises that the final result will refine $o$.  The promise is already
+kept whenever $o$ lies below everything in the upper fiber, and such an $o$ is
+\emph{exposure-ready}.  Read the footers of Figure~\ref{fig:election-frames}:
+$\bot$ is ready in every panel, because every shaded output refines it, and $a$
+is ready in panel (c).  A system may expose only ready outputs, and it
+may expose a ready output at any time, removing no row.  Now change one thing:
+make all
+outputs incomparable, dropping $\bot\OutputOrd a,b$.  The rows are the same,
+but in panels (a) and (b) nothing is ready: $\bot$ no longer lies below the $a$
+and $b$ in the upper fiber, so announcing it would promise something a later
+ballot could contradict.  The specification is no longer monotone: as inputs
+grow under $\InputOrd$, outputs change in a way $\OutputOrd$ does not sanction.
+To announce anything, the registrar must first achieve exposure-readiness via sealing.
+Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
+$a\cdot\cdot$: every refinement is closed by the commitment, the upper fiber
+collapses to $\{\bot\}$, and only now is $\bot$ exposure-ready.  That contrast
+is Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
+specification can expose outputs as input arrives; a non-monotone one must
+first commit to a seal.
+
+\begin{figure}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(e) Leader election, after committing to \texttt{server1}}\\
+    \toprule
+    Input & Output \\ \midrule
+    $i$ & \sh{\texttt{server1}} \\
+    \retired{$i$} & \retired{\texttt{server2}} \\ \strikerow
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize no remaining row refines the removed one:}\\
+    \multicolumn{2}{@{}l}{\footnotesize a commitment}
+  \end{tabular}
+  \hfill
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(f) Traceroute, after exposing $\{s{\to}\texttt{s1}\}$}\\
+    \toprule
+    Input & Output \\ \midrule
+    $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
+    \retired{$i$} & \retired{$\{s{\to}a\}$} \\
+    \retired{$i$} & \retired{$\{s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
+    $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a\}$} \\
+    $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize each removed row refines to a remaining one:}\\
+    \multicolumn{2}{@{}l}{\footnotesize an exposure}
+  \end{tabular}
+  \caption{Two specifications with several rows at the current input $i$, each
+  shown after one output has been reported.  In (f) an output is a prefix-closed
+  set of routes from source $s$, which reaches server \texttt{s1} directly and
+  server \texttt{s2} through hop $a$.  Shaded cells are the upper fiber that
+  remains.  Legend as in Figure~\ref{fig:election-frames}.}
+  \label{fig:ambiguity-frames}
+\end{figure}
+
+\paragraph{Ambiguity.}
+Some specifications are \emph{ambiguous}: they admit several results for one
+input, so the input column does not determine the output column and the
+functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(e) is leader
+election with two eligible servers, either permitted as sole leader, so the
+table has two rows at one input.  Committing to \texttt{server1} removes the row for
+\texttt{server2}, and no remaining row says what it said.  This is a second
+kind of commitment, \emph{choosing an output}: a genuine alternative is gone.
+Panel (f) is a traceroute
+diagnostic for a service reachable from source $s$ directly at server
+\texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
+prefix-closed set of routes observed so far, so $\{s{\to}a\}$, a probe that has
+reached the hop but not the server, is a legal output, and so is any union of
+legal outputs.  Reporting $\{s{\to}\texttt{s1}\}$ removes the two rows that
+do not refine it, yet the remaining rows $\{s{\to}\texttt{s1},\ s{\to}a\}$ and
+$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$ still say
+everything they said.  Nothing is lost, so the report is an exposure, not a
+commitment.
+
+What made the difference between panels (e) and (f)?  In both, the system
+reported one of several admissible outputs.  In leader election the other
+output had nowhere to go: no admissible output refines both \texttt{server1}
+and \texttt{server2}, so making one exposure-ready required removing the other outright.  In
+traceroute every other output had somewhere to go: whatever two route sets the
+specification admits, it also admits their union, which refines both.  A set
+of outputs with this property, in which every finite subset has a common
+output-order refinement within the set, is called \emph{directed}.  Directedness is the
+property that makes exposure safe in the presence of ambiguity.  If the
+outputs admitted at an input are directed, then whichever of them the system
+exposes, every other output can still be refined with that value, so nothing is
+lost.  If they are not directed, some exposure removes an
+alternative outright, and that exposure only becomes ready after a commitment to
+remove the alternative.  This removal is not retirement: the input
+did not change; the system reported something.  Complete CALM
+(Section~\ref{sec:complete-calm}) isolates exactly these two requirements:
+outputs must continue as input grows, as in the election, and the outputs
+admitted at one input must be directed, as in traceroute but not in leader
+election.
+
+\paragraph{Two kinds of removal.}
+The legend of Figures~\ref{fig:election-frames} and~\ref{fig:ambiguity-frames}
+distinguishes two kinds of removed row.  A gray row is redundant: some
+remaining row says everything it said, so removing it narrows nothing.  A
+struck row was an alternative in its own right: removing it narrows what is
+within spec.
+
+Three kinds of transition remove rows.  Input arrival retires the rows the new
+record does not refine (panels (b), (c)); it belongs to the environment.
+Exposure removes the rows that do not refine the report (panel (f)); it
+belongs to the system.  Commitment removes rows on the system's own authority
+(panels (d), (e)).  The two CALM conditions say when the first two transitions
+remove only redundant rows: monotonicity says this of input arrival,
+directedness of exposure.  A commitment always narrows; that is its purpose.
+
+When monotonicity or directedness fails, some output is not ready, because a
+later input or another report could contradict it, and the system may expose
+only ready outputs.  To make it ready, the system must commit: seal the input,
+so that no later arrival bears on the promise (panel (d)), or choose the
+output, so that no other report contradicts it (panel (e)).  Everything so far
+is semantic: it concerns the table and the orders, and it would hold of a
+single-node database choosing a serialization order among concurrent
+transactions just as it holds of the election.
+
+\paragraph{Instantiating the model.}
+Now let the system be distributed.  It consists of \emph{participants}, each
+holding private state and learning what the others hold only by communicating.
+Each participant sees some of the input and acts on what it has seen, so the
+residual state a participant can know about is one of the panels above, drawn
+from the input it holds; the table itself is nobody's state.  Exposure is
+harmless whoever performs it: a participant that exposes a ready output removes
+only redundant rows, so nothing another participant might select is affected.
+A commitment is different.  The alternative it removes is one that another
+participant, acting on its own input, might have selected, and if two
+participants remove each other's selections the table they jointly implement
+is empty.  Commitments therefore require agreement among the participants who
+could have selected the alternatives, and that agreement is coordination.
+Determination that needs a commitment is determination that needs
+coordination.  Section~\ref{sec:functional-calm} makes this precise for
+functions, where only sealing is ever needed; Section~\ref{sec:complete-calm}
+does so for relations.
 
 \section{Functional CALM}
 \label{sec:functional-calm}
@@ -261,10 +617,10 @@ input has one specified output.
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
 A \emph{functional ordered specification} is a function
-\begin{equation}
+        \begin{equation}
   f:(I,\InputOrd)\longrightarrow(O,\OutputOrd),
   \label{eq:functional-specification}
-\end{equation}
+        \end{equation}
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  We call
 $\InputOrd$ the \emph{input-refinement order}: $i\InputOrd j$ means that $j$
 contains at least the input information in $i$.  We call $\OutputOrd$ the
@@ -282,12 +638,12 @@ below.
 \begin{definition}[Monotonicity]
 \label{def:functional-monotonicity}
 A functional ordered specification $f$ is \emph{monotone} if
-\begin{equation}
+        \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
   f(i)\OutputOrd f(j).
   \label{eq:functional-monotonicity}
-\end{equation}
+        \end{equation}
 \end{definition}
 
 This is the standard mathematical definition of a monotone function.  In
@@ -300,219 +656,116 @@ arrives.
 A function gives one output for each input, but a refined input may require a
 different output.  Before an execution can say anything binding, we need to
 record which input--output possibilities are still open, which events close
-them, and which of those closings are acts of choice.  We develop this account
-with one running example.  The same account carries over to relational
-specifications in Section~\ref{sec:complete-calm}.
-
-\paragraph{A running example.}
-Three named voters $v_1,v_2,v_3$ each cast at most one immutable ballot for
-$a$ or $b$.  An input records the ballots received so far; a refined input
-retains every recorded ballot and may add ballots from voters not yet heard
-from.  The output is $\bot$ (no result yet), $a$, or $b$, with
-$\bot\OutputOrd a$ and $\bot\OutputOrd b$ and $a,b$ incomparable.  The
-specification is monotone: more ballots may refine $\bot$ to a winner but can
-never turn one winner into the other.  Figure~\ref{fig:election-frames}(a)
-lists the rows of this specification above the input $\{v_1\mapsto a\}$,
-writing an input as a three-letter string whose $k$th position holds $v_k$'s
-ballot or a dot if that ballot has not arrived.
-
-\begin{figure*}[t]
-  \centering
-  \small
-  \newcommand{\rowhdr}{\toprule $R^\uparrow$ & Input & Output \\ \midrule}
-  \setlength{\tabcolsep}{4pt}
-  \begin{tabular}[t]{@{}c l c@{}}
-    \multicolumn{3}{@{}l}{(a) Initial state, frontier $\{a\cdot\cdot\}$}\\
-    \rowhdr
-    $\bullet$ & $\mathbf{a\cdot\cdot}$ & $\bot$ \\
-    $\bullet$ & $aa\cdot$ & $a$ \\
-    $\bullet$ & $ab\cdot$ & $\bot$ \\
-    $\bullet$ & $aaa$ & $a$ \\
-    $\bullet$ & $aab$ & $a$ \\
-    $\bullet$ & $aba$ & $a$ \\
-    $\bullet$ & $abb$ & $b$ \\
-    \bottomrule
-    \multicolumn{3}{@{}l}{\footnotesize $R^\uparrow=\{\bot,a,b\}$: undetermined}\\
-    \multicolumn{3}{@{}l}{\footnotesize $\bot$ is exposure-ready}
-  \end{tabular}
-  \hfill
-  \begin{tabular}[t]{@{}c l c@{}}
-    \multicolumn{3}{@{}l}{(b) After $\mathsf{update}(\{ab\cdot\})$}\\
-    \rowhdr
-     & \struck{$a\cdot\cdot$} & \struck{$\bot$} \\
-     & $aa\cdot$ & $a$ \\
-    $\bullet$ & $\mathbf{ab\cdot}$ & $\bot$ \\
-     & $aaa$ & $a$ \\
-     & $aab$ & $a$ \\
-    $\bullet$ & $aba$ & $a$ \\
-    $\bullet$ & $abb$ & $b$ \\
-    \bottomrule
-    \multicolumn{3}{@{}l}{\footnotesize $R^\uparrow=\{\bot,a,b\}$: undetermined}\\
-    \multicolumn{3}{@{}l}{\footnotesize $\bot$ is exposure-ready}
-  \end{tabular}
-  \hfill
-  \begin{tabular}[t]{@{}c l c@{}}
-    \multicolumn{3}{@{}l}{(c) After $\mathsf{update}(\{aa\cdot\})$ instead}\\
-    \rowhdr
-     & \struck{$a\cdot\cdot$} & \struck{$\bot$} \\
-    $\bullet$ & $\mathbf{aa\cdot}$ & $a$ \\
-     & $ab\cdot$ & $\bot$ \\
-    $\bullet$ & $aaa$ & $a$ \\
-    $\bullet$ & $aab$ & $a$ \\
-     & $aba$ & $a$ \\
-     & $abb$ & $b$ \\
-    \bottomrule
-    \multicolumn{3}{@{}l}{\footnotesize $R^\uparrow=\{a\}$: determined,}\\
-    \multicolumn{3}{@{}l}{\footnotesize not sealed; $a$ is exposure-ready}
-  \end{tabular}
-  \hfill
-  \begin{tabular}[t]{@{}c l c@{}}
-    \multicolumn{3}{@{}l}{(d) (b), then polls closed}\\
-    \rowhdr
-     & \struck{$a\cdot\cdot$} & \struck{$\bot$} \\
-     & $aa\cdot$ & $a$ \\
-    $\bullet$ & $\mathbf{ab\cdot}$ & $\bot$ \\
-     & $aaa$ & $a$ \\
-     & $aab$ & $a$ \\
-     & \struck{$aba$} & \struck{$a$} \\
-     & \struck{$abb$} & \struck{$b$} \\
-    \bottomrule
-    \multicolumn{3}{@{}l}{\footnotesize $R^\uparrow=\{\bot\}$: sealed and}\\
-    \multicolumn{3}{@{}l}{\footnotesize determined; $\bot$ is the result}
-  \end{tabular}
-  \caption{The election specification as a table, and three residual states
-  reached from it.  Rows above the input $a\cdot\cdot$ are shown; the active
-  input is in bold; struck rows have been removed from $R$; a bullet marks the
-  rows of the upper fiber $R^\uparrow(i)$ at the active input.  Panels (b) and
-  (c) follow input-update events, which strike only retired predecessors.
-  Panel (d) follows an input-closing commitment, which strikes rows no input
-  event would have removed.}
-  \label{fig:election-frames}
-\end{figure*}
+them, and which of those closings are acts of choice.  This subsection defines
+the vocabulary of Section~\ref{sec:nutshell}, following the panels of
+Figure~\ref{fig:election-frames}.  The same definitions carry over to
+relational specifications in Section~\ref{sec:complete-calm}.
 
 \paragraph{The specification as a table.}
 View the specification as a table $S\subseteq I\times O$ whose rows are the
 pairs $(i,f(i))$.  For any subrelation $R\subseteq S$ and input $i$, the
 \emph{fiber} of $R$ at $i$ is the set of outputs paired with $i$:
-\begin{equation}
+        \begin{equation}
   R(i)=\{o\in O:(i,o)\in R\}.
   \label{eq:fiber}
-\end{equation}
+        \end{equation}
 For the full specification this is $S(i)$, which for a function is $\{f(i)\}$.
 Execution never adds a row.  Everything that follows is a story about which
-rows have been struck from the table, and by what.
+rows have been removed from the table, and by what.
 
-Write $k\prec_I i$ when $k\InputOrd i$ and $k\neq i$.  For a finite set of
-inputs $K$, write $\operatorname{Max}_{\InputOrd}(K)$ for its maximal elements.
-
-\begin{definition}[Input frontier]
-\label{def:input-frontier}
-A finite set $J\subseteq I$ is an \emph{input frontier} when its members are
-pairwise incomparable under $\InputOrd$.
-\end{definition}
-
-A frontier records the maximal inputs incorporated so far.  Once the two-ballot
-record $ab\cdot$ has been incorporated, the one-ballot record $a\cdot\cdot$ is
-not on the frontier, because the two-ballot record refines it.
+Inputs are \emph{cumulative}: an input is the whole record seen so far, and
+$i\InputOrd j$ means that $j$ contains at least the information in $i$.  The
+domain $I$ contains only legal records, so constraints on input, such as one
+ballot per voter, live in $I$ and its order.  Write $k\prec_I i$ when
+$k\InputOrd i$ and $k\neq i$, and $\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$
+for the refinements of $i$.
 
 \paragraph{Input events.}
-Ballots arrive.  In Figure~\ref{fig:election-frames}(b), the frontier has
-advanced from $a\cdot\cdot$ to $ab\cdot$, and the row at $a\cdot\cdot$ has been
-struck: that input is \emph{retired}, and everything it said is carried by the
-refinement that replaced it.  Rows at $aa\cdot$, $aaa$, and $aab$ are still
-present even though they are incomparable with the active input; nothing has
-ruled them out.  A residual state is a table with a legal pattern of
-strike-throughs.
+In Figure~\ref{fig:election-frames}(b) the current input has advanced to
+$ab\cdot$, and every row whose input does not refine $ab\cdot$ has been
+removed; such inputs are \emph{retired}.  A residual state is a table whose
+removed rows obey the following conditions.
 
 \begin{definition}[Residual state]
 \label{def:residual-state}
-A \emph{residual state} is a pair $\sigma=(J,R)$ such that
+A \emph{residual state} is a pair $\sigma=(i,R)$ such that
 \begin{enumerate}
-  \item $J$ is an input frontier;
+  \item $i\in I$ is the \emph{current input};
   \item $R\subseteq S$;
-  \item every member of $J$ has a row in $R$:
+  \item the current input has a row in $R$:
         \begin{equation}
-          R(i)\neq\varnothing\qquad\text{for every }i\in J;
-          \label{eq:active-input-validity}
+          R(i)\neq\varnothing;
+          \label{eq:current-input-validity}
         \end{equation}
-  \item no strict predecessor of a member of $J$ has a row in $R$:
+  \item only refinements of the current input have rows in $R$:
         \begin{equation}
           R(k)=\varnothing
-          \qquad\text{whenever }k\prec_I i\text{ for some }i\in J.
+          \qquad\text{whenever }i\not\InputOrd k.
           \label{eq:retired-input-absence}
         \end{equation}
 \end{enumerate}
-The members of $J$ are the \emph{active inputs}, and $R$ is the \emph{residual
-specification}.  An input $i$ is \emph{valid} when $R(i)\neq\varnothing$, and
-otherwise \emph{invalid}.
+$R$ is the \emph{residual specification}.  An input $k$ is \emph{valid} when
+$R(k)\neq\varnothing$, and otherwise \emph{invalid}.
 \end{definition}
 
-Condition 3 says that every active input still has an acceptable output;
+Condition 3 says that the current input still has an acceptable output;
 condition 4 says that retirement is complete.  Valid inputs other than the
-active ones are the potential futures: refinements of active inputs, or inputs
-incomparable with them, whose rows have not been struck.
+current one are the potential futures: refinements of $i$ whose rows have not
+been removed.
 
 \begin{definition}[Input-update event]
 \label{def:input-update}
-For a finite batch $B\subseteq I$ of input values, the \emph{input-update
-event} maps $\sigma=(J,R)$ to $\tau=(J',R')$, defined when the displayed pair
-is a residual state, where
-\begin{equation}
-  J'=\operatorname{Max}_{\InputOrd}(J\cup B)
-  \label{eq:input-update-active}
-\end{equation}
-and
-\begin{equation}
-  R'=R\setminus\{(k,o)\in R:\ k\prec_I i\text{ for some }i\in J'\}.
+For $j\in I$ with $i\InputOrd j$, the \emph{input-update event} maps
+$\sigma=(i,R)$ to
+        \begin{equation}
+  \tau=\bigl(j,\ R\cap(\mathord\uparrow_I j\times O)\bigr),
   \label{eq:input-update-residual}
-\end{equation}
-Write $\sigma\xrightarrow{\mathsf{update}(B)}\tau$.
+        \end{equation}
+defined when $\tau$ is a residual state, that is, when $R(j)\neq\varnothing$.
+Write $\sigma\xrightarrow{\mathsf{update}(j)}\tau$.
 \end{definition}
 
 The environment produces input-update events; the system does not choose them.
-An event adds no row and leaves every nonretired fiber unchanged, so it chooses
-nothing.  A batch member that is already retired, or lies below a current
-active input, is \emph{absorbed}: it is not maximal in $J\cup B$ and changes
-nothing, so duplicate and stale arrivals have no semantic effect.  The event is
-undefined when some input of the new frontier has no row left, for instance
-because an earlier commitment closed it: the environment cannot make an
-invalid input active.  Updates compose by batch union, since
-$\operatorname{Max}_{\InputOrd}(\operatorname{Max}_{\InputOrd}(J\cup B)\cup C)
-=\operatorname{Max}_{\InputOrd}(J\cup B\cup C)$ and every input retired by the
-first update is also strictly below the final frontier.  Arrival order,
-batching, and repeated delivery therefore do not affect the state reached by
-updates alone.
+An event adds no row and leaves every surviving fiber unchanged, so it chooses
+nothing.  An update to the current input itself, as from a duplicate delivery,
+changes nothing.  The event is undefined when the new input has no row left,
+for instance because an earlier commitment closed it: the environment cannot
+make an invalid input current.  Updates compose: an update to $j$ followed by
+an update to $k$ has the same effect as a single update to $k$, since
+$\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival order, batching,
+and repeated delivery therefore do not affect the state reached by updates
+alone; only the record reached matters.  Applications that receive changes
+rather than whole records, such as single ballots, may present an update as a
+change $\delta$ applied to the current input, $i\oplus\delta=j$, legal exactly
+when the result is a legal refinement of $i$.  Its semantic effect is the
+update to $j$; the change is a presentation of the transition, not a second
+kind of input.
 
-For a frontier $A$, the \emph{canonical initial state} is
-\begin{equation}
-  \sigma_0(A)=\bigl(A,\ S\setminus\{(k,o)\in S:\ k\prec_I a\text{ for some }a\in A\}\bigr),
+For an input $i$, the \emph{canonical initial state} is
+        \begin{equation}
+  \sigma_0(i)=\bigl(i,\ S\cap(\mathord\uparrow_I i\times O)\bigr),
   \label{eq:canonical-initial-state}
-\end{equation}
-the table with only already-retired predecessors struck.
-Figure~\ref{fig:election-frames}(a) is $\sigma_0(\{a\cdot\cdot\})$.  A
+        \end{equation}
+the table restricted to $i$ and its refinements.
+Figure~\ref{fig:election-frames}(a) is $\sigma_0(a\cdot\cdot)$.  A
 residual state is \emph{reachable} by a given class of transitions when it is
 obtained from some canonical initial state by a finite sequence of transitions
 in that class.
 
 \paragraph{Commitments.}
-Now suppose the registrar declares the polls closed: $v_3$'s ballot, if it
-ever arrives, will not be counted.  Figure~\ref{fig:election-frames}(d) shows
-the effect.  The rows at $aba$ and $abb$ are struck although no input event
-removed them and the frontier has not moved.  This is a different kind of
-transition.  It is an act of the system, it makes futures that the
-specification admitted irrevocably unavailable, and it is the only kind of act
-a functional specification needs: every fiber has one row, so there is never an
-output to choose among, only input to close off.
+Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
+the current input fixed.  No input event does this; it is an act of the system, and
+for a functional specification it is the only kind of commitment needed, since
+every fiber has one row and there is never an output to choose among.
 
 \begin{definition}[Input-closing commitment]
 \label{def:input-closing}
 An \emph{input-closing commitment} is a labeled partial function $p$ on
-residual states that keeps the frontier fixed, strictly restricts the
+residual states that keeps the current input fixed, strictly restricts the
 residual, and makes some valid input invalid: whenever $p(\sigma)$ is defined
-for $\sigma=(J,R)$, its target is a residual state $(J,R')$ with
+for $\sigma=(i,R)$, its target is a residual state $(i,R')$ with
 $R'\subsetneq R$ and $R'(k)=\varnothing$ for some $k$ with
-$R(k)\neq\varnothing$.  Because the target is a residual state, $k$ cannot be
-active.  The commitment is \emph{applicable} at $\sigma$ when $p(\sigma)$ is
+$R(k)\neq\varnothing$.  Because the target is a residual state, $k\neq i$.  The commitment is \emph{applicable} at $\sigma$ when $p(\sigma)$ is
 defined.
 \end{definition}
 
@@ -521,99 +774,87 @@ table.  A system that lacks the authority to close input simply has no
 input-closing commitment to apply, and a system that must still accept a late
 ballot with a rejection or other fallback response keeps that row and has not
 closed the input.  A commitment records the binding act, not the computation
-that selected it: tallying ballots is computation, and it strikes nothing;
-declaring the polls closed is a commitment.  Section~\ref{sec:complete-calm}
-adds the second kind of commitment, choosing among outputs at one input, and
-collects the commitments a system may use into a \emph{commitment basis}.
+that selected it.  Section~\ref{sec:complete-calm} adds the second kind of
+commitment, choosing among outputs at one input, and collects the commitments a
+system may use into a \emph{commitment basis}.
 
 \paragraph{Determination.}
-With retired rows struck, the question that matters while input may still grow
-is: which outputs could this input, or any continuation of it, still require?
-The bulleted rows in Figure~\ref{fig:election-frames} answer it.  For
+The shaded outputs in Figure~\ref{fig:election-frames} are those that the
+current input or any continuation of it could still require.  For
 $R\subseteq S$ and an input $i$, the \emph{upper fiber}
-\begin{equation}
+        \begin{equation}
   R^\uparrow(i)=\{o\in O:\exists j\in I,\ i\InputOrd j\text{ and }(j,o)\in R\}
   \label{eq:upper-fiber}
-\end{equation}
+        \end{equation}
 collects the outputs admitted at $i$ or at any still-valid refinement of $i$.
-We call $i$ together with its valid refinements the \emph{lineage} of $i$.
 
 \begin{definition}[Determined input and determined state]
 \label{def:determination}
-An active input $i$ is \emph{determined} in $(J,R)$ when its upper fiber is a
+The current input $i$ of $(i,R)$ is \emph{determined} when its upper fiber is a
 singleton:
-\begin{equation}
+        \begin{equation}
   |R^\uparrow(i)|=1.
   \label{eq:determined-input}
-\end{equation}
-A residual state is \emph{determined} when every active input is determined.
+        \end{equation}
+A residual state is \emph{determined} when its current input is determined.
 \end{definition}
 
 Determinedness is stronger than having one row at $i$.  Every fiber in the
-election is a singleton, yet in panels (a) and (b) the upper fiber is
-$\{\bot,a,b\}$: the result is not determined, because valid refinements
-disagree about it.  In panel (c) the active input $aa\cdot$ has upper fiber
-$\{a\}$.  It is determined even though $v_3$ has not voted, because no valid
-refinement can change the result.
+election is a singleton, yet panels (a) and (b) are undetermined because valid
+refinements disagree; panel (c) is determined because none does.
 
 \begin{definition}[Input-sealed state]
 \label{def:input-sealing}
-An active input $i$ is \emph{sealed} in $(J,R)$ when no strict refinement of $i$
+The current input $i$ of $(i,R)$ is \emph{sealed} when no strict refinement of $i$
 is valid:
-\begin{equation}
+        \begin{equation}
   R(j)=\varnothing\qquad\text{for every }j\succ_I i.
   \label{eq:sealed-input}
-\end{equation}
-A residual state is \emph{input-sealed} when every active input is sealed.
+        \end{equation}
+A residual state is \emph{input-sealed} when its current input is sealed.
 \end{definition}
 
 When $i$ is sealed, $R^\uparrow(i)=R(i)$: nothing beyond the current fiber can
 be required, and in the functional case $i$ is then determined.  Panel (d) is
-sealed and determined, with result $\bot$.  Panel (c) is determined but not
-sealed.  Sealing and determination are different conditions: one is about
-input, the other about output, and the election shows that determination can
-arrive without any commitment at all.  Inputs incomparable with $i$ are
-unaffected by sealing it; closing one election does not close another.
+sealed and determined; panel (c) is determined but not sealed.  Sealing is a
+condition on input and determinedness a condition on output, and determination
+can arrive without any commitment.  Inputs incomparable with $i$ are unaffected
+by sealing it.
 
 \emph{Determination} is also the name for the process of making possibilities
-unavailable through commitments.  With the frontier fixed, a determination is
-a sequence
+unavailable through commitments.  With the current input fixed, a
+determination is a sequence
 \[
-  (J,R_0)\xrightarrow{p_1}(J,R_1)
-  \xrightarrow{p_2}\cdots\xrightarrow{p_m}(J,R_m)
+  (i,R_0)\xrightarrow{p_1}(i,R_1)
+  \xrightarrow{p_2}\cdots\xrightarrow{p_m}(i,R_m)
 \]
-of applicable commitments.  It may be partial, determining some active inputs
-and not others, and it is empty when the initial state is already determined.
+of applicable commitments.  It is empty when the initial state is already
+determined.
 
 \paragraph{Exposure.}
-Determination and sealing describe what a system may make binding.  Reporting
-an output to an observer is a different act, and it can be safe before anything
-is determined.  A report of $o$ at $i$ promises that whatever is finally
-produced for $i$, or for any refinement of $i$, will refine $o$.  The promise
-is already kept when $o$ lies below everything in the upper fiber.
+A report of $o$ at $i$ promises that whatever is finally produced for $i$, or
+for any refinement of $i$, will refine $o$.  The promise is already kept when
+$o$ lies below everything in the upper fiber.
 
 \begin{definition}[Exposure-ready output]
 \label{def:exposure-ready}
-For an active input $i$ of $(J,R)$ and $o\in R(i)$, the output $o$ is
+For the current input $i$ of $(i,R)$ and $o\in R(i)$, the output $o$ is
 \emph{exposure-ready at $i$} when
-\begin{equation}
+        \begin{equation}
   (j,o')\in R\ \text{and}\ i\InputOrd j
   \quad\Longrightarrow\quad
   o\OutputOrd o'.
   \label{eq:exposure-ready}
-\end{equation}
+        \end{equation}
 Equivalently, $o$ is the least element of the upper fiber $R^\uparrow(i)$.
 \end{definition}
 
 A system may report a ready output at any time.  The report changes no state
-and strikes no row; input updates and commitments only remove rows, so every
-retained output on the lineage of $i$ continues to refine $o$.  In the election
-$\bot$ is ready in panels (a), (b), and (d), and $a$ is ready in panel (c):
-$\bot$ is the safe floor, and a certified winner may be announced the moment
-no valid refinement can revoke it.  Had the output order been equality rather
-than $\bot\OutputOrd a,b$, nothing would be ready in panels (a) and (b), and
-the registrar could announce nothing before closing the polls.  That contrast
-is the content of the next theorem.
+and removes no row; input updates and commitments only remove rows, so every
+retained output at $i$ or its valid refinements continues to refine $o$.  In the election
+$\bot$ is ready in every panel and $a$ in panel (c); under the equality order
+nothing is ready in panels (a) and (b).  That contrast is the content of the
+next theorem.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
@@ -623,27 +864,27 @@ participants.  A participant holding input $i$ has reached a residual state by
 input updates alone, with no commitment made and nothing sealed.  We say that
 a functional specification permits \emph{incremental exposure without
 sealing} when, in every residual state reachable by input updates alone,
-$f(i)$ is exposure-ready at every active input $i$
+$f(i)$ is exposure-ready at every current input $i$
 (Definition~\ref{def:exposure-ready}).
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
 A functional ordered specification permits incremental exposure without
-sealing if and only if it is monotone.  In that case an active input $i$ is
+sealing if and only if it is monotone.  In that case an current input $i$ is
 determined exactly when $f(j)=f(i)$ for every valid refinement $j$ of $i$.
 \end{theorem}
 
 \begin{proof}
-Let $(J,R)$ be reachable by input updates alone and let $i\in J$.  Updates
-remove only rows at retired inputs, so every valid $j\succeq_I i$ retains its
-row $(j,f(j))$, and the upper fiber is $R^\uparrow(i)=\{f(j):j\succeq_I i\}$.
+Let $(i,R)$ be reachable by input updates alone.  Updates remove only rows at
+retired inputs, so every $j\succeq_I i$ retains its row $(j,f(j))$, and the
+upper fiber is $R^\uparrow(i)=\{f(j):j\succeq_I i\}$.
 
 If $f$ is monotone, then $f(i)\OutputOrd f(j)$ for every such $j$, which is
 Equation~\ref{eq:exposure-ready}.  The determinedness claim follows because
 the upper fiber is the set of those $f(j)$.
 
 If $f$ is not monotone, some $i\InputOrd j$ satisfies
-$f(i)\not\OutputOrd f(j)$.  In the canonical initial state $\sigma_0(\{i\})$,
+$f(i)\not\OutputOrd f(j)$.  In the canonical initial state $\sigma_0(i)$,
 the input $j$ is valid, so $f(j)\in R^\uparrow(i)$ and $f(i)$ is not
 exposure-ready.  The fiber at $i$ offers no output choice to resolve: its only
 row is $(i,f(i))$.  Before $f(i)$ can be reported, the implementation must
@@ -655,23 +896,23 @@ independently admit $j$, making the closure binding requires their agreement.
 Without input-closing authority, $f(i)$ cannot be reported at this point.
 \end{proof}
 
-The election is the monotone case: Figure~\ref{fig:election-frames} shows
-$\bot$ or a winner ready at every panel reached by updates alone, and the
-commitment in panel (d) is optional.  The equality-order variant is the other
-case: no output is ready until the polls close, and closing them is the
-commitment the theorem says cannot be avoided.
+The election's output order is not a lattice: $a$ and $b$ have no common upper
+bound.  None is required.  Monotonicity constrains only comparable inputs, and
+$aa\cdot$ and $ab\cdot$ are incomparable with no common refinement, because
+ballots are immutable.  Where two inputs do have a common refinement $j$,
+monotonicity makes $f(j)$ an upper bound of both outputs.
 
 This is the familiar CALM dichotomy stated at the semantic interface rather than
 inside a particular programming language.  Classical CALM fits the pattern with
 a familiar pair of orders: inputs are finite fact sets $J$ ordered by
 inclusion, and outputs are answer sets $Q(J)$, also ordered by inclusion.
 Equation~\ref{eq:functional-monotonicity} becomes
-\begin{equation}
+        \begin{equation}
   J\subseteq J'
   \quad\Longrightarrow\quad
   Q(J)\subseteq Q(J'),
   \label{eq:query-monotonicity}
-\end{equation}
+        \end{equation}
 the standard definition of a monotone query~\cite{abiteboul1995foundations}.
 Positive Datalog queries satisfy this condition.  Negation may not: an answer
 derived from the absence of a fact can be invalidated when that fact arrives.
@@ -714,11 +955,11 @@ functional.  Complete CALM extends Functional CALM to this semantic output choic
 \begin{definition}[Ordered relational specification]
 \label{def:relational-specification}
 An \emph{ordered relational specification} is
-\begin{equation}
+        \begin{equation}
   \Spec=(I,\InputOrd,O,\OutputOrd,S),
   \qquad S\subseteq I\times O,
   \label{eq:relational-specification}
-\end{equation}
+        \end{equation}
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  A row
 $(i,o)\in S$ says that output $o$ is admissible at input $i$.  Its fiber
 $\fiber{i}$, as in Equation~\ref{eq:fiber}, may now contain several outputs.
@@ -731,12 +972,12 @@ inputs, $\OutputOrd$ compares outputs, and neither orders rows of $S$.
 
 The output-refinement order lifts from individual outputs to nonempty sets of
 outputs.  For nonempty $A,B\subseteq O$, define
-\begin{equation}
+        \begin{equation}
   A\LiftedOutputOrd B
   \quad\Longleftrightarrow\quad
   \forall a\in A\;\exists b\in B:\;a\OutputOrd b.
   \label{eq:lifted-output-order}
-\end{equation}
+        \end{equation}
 This lifted relation is a preorder: every output in the first set can continue
 to some output in the second.  It is often called the Hoare preorder.
 
@@ -745,12 +986,12 @@ to some output in the second.  It is often called the Hoare preorder.
 An ordered relational specification satisfies \emph{Lifted Monotonicity},
 the \emph{growth} condition, when the mapping $i\mapsto\fiber{i}$ is monotone
 under the lifted output preorder:
-\begin{equation}
+        \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
   \fiber{i}\LiftedOutputOrd\fiber{j}.
   \label{eq:lifted-monotonicity}
-\end{equation}
+        \end{equation}
 Equivalently, whenever $i\InputOrd j$ and $o\in\fiber{i}$, some
 $o'\in\fiber{j}$ satisfies $o\OutputOrd o'$.
 \end{definition}
@@ -819,12 +1060,12 @@ Consider a traceroute-style diagnostic for a service name $\mathsf{svc}$.  The
 runtime input is the source--service pair $i=(s,\mathsf{svc})$.  The DNS mapping
 and network in Figure~\ref{fig:dns-routes} are fixed configuration.  The service
 has three complete routes:
-\begin{equation}
+        \begin{equation}
   (s,\texttt{server1}),
   \qquad (s,a,\texttt{server2}),
   \qquad (s,b,\texttt{server2}).
   \label{eq:traceroute-paths}
-\end{equation}
+        \end{equation}
 
 An output is a nonempty prefix-closed set of observed routes.  A route begins
 with at least one hop, so $s$ alone is not an output element.  The table shows
@@ -944,11 +1185,11 @@ An ordered relational specification is monotone if and only if, for every
 nonempty finite family of rows $(i_1,o_1),\ldots,(i_k,o_k)\in S$ and every
 common input refinement $j$ of $i_1,\ldots,i_k$, there is a $u\in\fiber{j}$
 such that
-\begin{equation}
+        \begin{equation}
   o_r\OutputOrd u
   \qquad\text{for every }r\in\{1,\ldots,k\}.
   \label{eq:complete-calm-criterion}
-\end{equation}
+        \end{equation}
 \end{proposition}
 
 \begin{proof}
@@ -982,17 +1223,17 @@ function do, widened to sets of mutually compatible alternatives.
 The residual states and input-update events of Section~\ref{sec:determination}
 apply unchanged to a relational specification; the difference is that a fiber
 $R(i)$ may now contain several outputs.  That opens a second kind of
-commitment.  Closing input strikes rows at inputs that will never become
-active.  Choosing an output strikes rows at inputs that remain valid: in leader
-election, publishing \texttt{server1} strikes the row for \texttt{server2} at
+commitment.  Closing input removes rows at inputs that will never become
+current.  Choosing an output removes rows at inputs that remain valid: in leader
+election, committing to \texttt{server1} removes the row for \texttt{server2} at
 the same input.
 
 \begin{definition}[Choice commitment; commitment basis]
 \label{def:commitment}
 A \emph{choice commitment} is a labeled partial function $p$ on residual
-states that keeps the frontier fixed, strictly restricts the residual, and
-preserves the set of valid inputs: whenever $p(\sigma)$ is defined for
-$\sigma=(J,R)$, its target is a residual state $(J,R')$ with $R'\subsetneq R$
+states that keeps the current input fixed, strictly restricts the residual,
+and preserves the set of valid inputs: whenever $p(\sigma)$ is defined for
+$\sigma=(i,R)$, its target is a residual state $(i,R')$ with $R'\subsetneq R$
 and $R'(k)\neq\varnothing$ whenever $R(k)\neq\varnothing$.  A
 \emph{commitment} is a choice commitment or an input-closing commitment
 (Definition~\ref{def:input-closing}).  A \emph{commitment basis} is the set of
@@ -1006,22 +1247,22 @@ use only the commitments it declares.  In particular, the ability to choose
 among outputs does not by itself include the ability to close future inputs;
 that requires an input-closing commitment in the basis, and such a commitment
 must be labeled as input-closing rather than treated as an ordinary choice
-among outputs.  A commitment may strike many rows at once.
+among outputs.  A commitment may remove many rows at once.
 
-Whether striking a row destroys information depends on the output order.
+Whether removing a row destroys information depends on the output order.
 
 \begin{definition}[Content-preserving and content-destroying restrictions]
 \label{def:content-restriction}
-Let $(J,R)$ and $(J,R')$ be residual states with $R'\subsetneq R$, and let $i$
-be valid in both.  The restriction is \emph{content-preserving at $i$} when
+Let $(i,R)$ and $(i,R')$ be residual states with $R'\subsetneq R$, and let $k$
+be valid in both.  The restriction is \emph{content-preserving at $k$} when
 every removed output has a retained refinement:
-\begin{equation}
-  \forall x\in R(i)\setminus R'(i)\quad
-  \exists u\in R'(i),\qquad x\OutputOrd u.
+        \begin{equation}
+  \forall x\in R(k)\setminus R'(k)\quad
+  \exists u\in R'(k),\qquad x\OutputOrd u.
   \label{eq:content-preserving}
-\end{equation}
-It is \emph{content-destroying at $i$} otherwise: some removed $x$ has no
-refinement left in $R'(i)$, and the content of $x$ has become unattainable.  A
+        \end{equation}
+It is \emph{content-destroying at $k$} otherwise: some removed $x$ has no
+refinement left in $R'(k)$, and the content of $x$ has become unattainable.  A
 restriction is content-preserving when it is so at every input valid in both
 states, and content-destroying when it is content-destroying at some such
 input.
@@ -1031,7 +1272,7 @@ Under the equality order on outputs, no distinct output refines another, so
 every strict restriction is content-destroying; so is every strict restriction
 of the leader-election fiber, whose two outputs have no common refinement.  The
 distinction matters in a fiber like traceroute's, where a restriction may
-strike an output while a retained output still carries everything it said.
+remove an output while a retained output still carries everything it said.
 The next subsection shows that such restrictions are not commitments at all.
 
 \subsection{Exposure}
@@ -1047,60 +1288,60 @@ condition suffices for a report to be honest: that nothing remaining possible
 admitted refinement with it.  A participant that reports such an $o$ undertakes
 to refine it, and it can always keep that undertaking, whatever else remains,
 because the undertaking excludes nothing that could not still be reached.
-Keeping the promise means restricting the residual along the lineage of $i$ to
+Keeping the promise means restricting the residual at $i$ and its refinements to
 the outputs that refine $o$.  Write $R\mathbin{\upharpoonright}(i,o)$ for the
 result:
-\begin{equation}
+        \begin{equation}
   \bigl(R\mathbin{\upharpoonright}(i,o)\bigr)(j)
   =\{u\in R(j):o\OutputOrd u\}
   \qquad (i\InputOrd j),
   \label{eq:residual-refining-fibers}
-\end{equation}
+        \end{equation}
 and all other fibers unchanged:
-\begin{equation}
+        \begin{equation}
   \bigl(R\mathbin{\upharpoonright}(i,o)\bigr)(j)=R(j)
   \qquad (i\not\InputOrd j).
   \label{eq:residual-other-fibers}
-\end{equation}
+        \end{equation}
 
 \begin{definition}[Exposable output; exposure event]
 \label{def:safe-exposure}
-For an active input $i$ and $o\in R(i)$, the output $o$ is \emph{exposable at
+For an current input $i$ and $o\in R(i)$, the output $o$ is \emph{exposable at
 $i$} when it is compatible with every possibility at $i$: for every valid $j$
 with $i\InputOrd j$ and every $x\in R(j)$ there is $u\in R(j)$ with
-\begin{equation}
+        \begin{equation}
   o\OutputOrd u
   \qquad\text{and}\qquad
   x\OutputOrd u.
   \label{eq:safe-exposure}
-\end{equation}
-The \emph{exposure event} $\mathsf{expose}_i(o)$ maps $(J,R)$ to
-$(J,R\mathbin{\upharpoonright}(i,o))$.  The system may apply it exactly when
+        \end{equation}
+The \emph{exposure event} $\mathsf{expose}_i(o)$ maps $(i,R)$ to
+$(i,R\mathbin{\upharpoonright}(i,o))$.  The system may apply it exactly when
 $o$ is exposable at $i$.
 \end{definition}
 
 \begin{proposition}[Exposure narrows without committing]
 \label{prop:exposure-narrowing}
-Let $o$ be exposable at $i$ in $(J,R)$ and let $R'=R\mathbin{\upharpoonright}(i,o)$.
-Then $(J,R')$ is a residual state with the same valid inputs as $(J,R)$; the
+Let $o$ be exposable at $i$ in $(i,R)$ and let $R'=R\mathbin{\upharpoonright}(i,o)$.
+Then $(i,R')$ is a residual state with the same valid inputs as $(i,R)$; the
 restriction from $R$ to $R'$ is content-preserving
 (Definition~\ref{def:content-restriction}); and $o$ is exposure-ready at $i$ in
-$(J,R')$.  If $o$ was already exposure-ready in $(J,R)$, then $R'=R$.
+$(i,R')$.  If $o$ was already exposure-ready in $(i,R)$, then $R'=R$.
 \end{proposition}
 
 \begin{proof}
 Let $j$ be valid with $i\InputOrd j$ and let $x\in R(j)$.  Exposability supplies
 $u\in R(j)$ above both $o$ and $x$.  Since $u$ refines $o$, it is retained in
-$R'(j)$.  Thus every fiber along the lineage of $i$ remains nonempty, no input
-becomes invalid, and every removed $x$ has the retained refinement $u$.  Fibers
-off the lineage are untouched.  Every retained output on the lineage refines
+$R'(j)$.  Thus every fiber at or above $i$ remains nonempty, no input becomes
+invalid, and every removed $x$ has the retained refinement $u$.  Fibers not
+above $i$ are untouched.  Every retained output at or above $i$ refines
 $o$, which is readiness.  If $o$ was already least, nothing fails to refine it
 and nothing is removed.
 \end{proof}
 
 An exposure event is therefore not a commitment, even though it may remove rows:
 it excludes nothing whose content could not still be reached.  If $o$ is not
-exposable, some $x$ along the lineage of $i$ has no admitted refinement in
+exposable, some $x$ at $i$ or one of its refinements has no admitted refinement in
 common with $o$.  Reporting $o$ would then silently destroy the content of $x$.
 The system must instead make a content-destroying commitment explicitly,
 reducing $R$ to a residual in which $o$ may become exposable.
@@ -1130,11 +1371,11 @@ refinement, so that removal is a content-destroying commitment.
 A \emph{run} of a participant is a finite sequence of transitions from a
 canonical initial state: input-update events supplied by the environment,
 interleaved with the participant's own exposure events and commitments.  Its
-\emph{schedule} is the sequence of batches the environment supplies.  Two
-schedules are \emph{input-equivalent} when the unions of their batches have the
-same maximal elements; they may differ in the order in which inputs arrive, in
-how inputs are grouped into batches, and in how many times a batch is
-delivered.  By the composition property of updates, runs with input-equivalent
+\emph{schedule} is the sequence of inputs the environment supplies.  Two
+schedules are \emph{input-equivalent} when they end at the same input; they may
+differ in the intermediate records they pass through, which under a change
+presentation means in the order and grouping of arrivals and in repeated
+delivery.  By the composition property of updates, runs with input-equivalent
 schedules that neither expose nor commit reach the same state.  What can
 depend on the schedule is what a participant exposes or commits between its
 updates.  A replica is a participant that sees a shared input stream in its own
@@ -1158,20 +1399,20 @@ An ordered relational specification is \emph{coordination-free} when the
 following hold.
 \begin{enumerate}
   \item \emph{Exposure at will.}  At every reachable state, every output
-        admitted at an active input is exposable there
+        admitted at an current input is exposable there
         (Definition~\ref{def:safe-exposure}).
   \item \emph{Reconciliation on merge.}  Whenever participants hold reachable
-        states $(J_1,R_1),\ldots,(J_k,R_k)$ and $j$ is a legal common
-        refinement of their active inputs, some row at $j$ survives in every
-        state:
+        states $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a legal common
+        refinement of their current inputs $i_1,\ldots,i_k$, some row at $j$
+        survives in every state:
         \begin{equation}
           \bigcap_{r=1}^{k}R_r(j)\neq\varnothing.
           \label{eq:reconciliation}
         \end{equation}
   \item \emph{Run insensitivity.}  For finitely many runs of one participant
         under input-equivalent schedules, each exposing as it pleases and none
-        committing, every scheduled update is defined, and at every input $a$
-        of the shared final frontier some row at $a$ survives in every run.
+        committing, every scheduled update is defined, and at the shared
+        final input $a$ some row survives in every run.
 \end{enumerate}
 \end{definition}
 
@@ -1201,7 +1442,7 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 
 \begin{proof}
 (3$\Rightarrow$1.)  We first establish a claim: at every reachable state
-$(J,R)$, every active input $i$, and every valid $j$ with $i\InputOrd j$, the
+$(i,R)$ and every valid $j$ with $i\InputOrd j$, the
 residual fiber $R(j)$ is a nonempty \emph{upper} subset of $\fiber{j}$---closed
 under taking refinements within $\fiber{j}$---that contains a common refinement
 of any $o\in R(i)$ and any $x\in R(j)$.  Reachable states
@@ -1217,10 +1458,10 @@ upperness puts $u$ in $R(j)$.
 possibilities at $i$.
 
 \emph{Reconciliation on merge.}  Let $j$ be a legal common refinement of the
-active inputs $i_1,\ldots,i_k$.  The input $j$ is valid in every $(J_r,R_r)$:
-it had a row initially, it lies above the frontier and so was never retired by
-an update, and by Proposition~\ref{prop:exposure-narrowing} no exposure closed
-it.  Each participant $r$ has removed rows only along the lineage of $i_r$,
+current inputs $i_1,\ldots,i_k$.  The input $j$ is valid in every $(i_r,R_r)$:
+it had a row initially, it refines $i_r$ and so was never retired by an
+update, and by Proposition~\ref{prop:exposure-narrowing} no exposure closed
+it.  Each participant $r$ has removed rows only at $i_r$ and its refinements,
 and $i_r\InputOrd j$, so $R_r(j)$ is a nonempty upper subset of $\fiber{j}$.
 Choose $x_r\in R_r(j)$ for each $r$.  The finite-family form for
 $(j,x_1),\ldots,(j,x_k)$ supplies $u\in\fiber{j}$ above every $x_r$, and
@@ -1228,22 +1469,22 @@ upperness places $u$ in every $R_r(j)$.  Hence the intersection is nonempty.
 
 \emph{Run insensitivity.}  Each scheduled update is defined because no exposure
 empties a fiber at a valid input.  Runs under input-equivalent schedules end
-at the same frontier $A$, and each $a\in A$ is a common refinement of the
-inputs at which any run exposed, so the reconciliation argument applies with
-the runs in place of the participants.
+at the same input $a$, which is a common refinement of the inputs at which any
+run exposed, so the reconciliation argument applies with the runs in place of
+the participants.
 
 (1$\Rightarrow$2) holds by definition.
 
 (2$\Rightarrow$3.)  By Proposition~\ref{prop:complete-calm-decomposition} it
 suffices to prove growth and coherence.  \emph{Growth.}  Let $i\InputOrd j$
-and $o\in\fiber{i}$.  In the canonical initial state $\sigma_0(\{i\})$, the
+and $o\in\fiber{i}$.  In the canonical initial state $\sigma_0(i)$, the
 input $j$ is valid and $\fiber{j}$ is nonempty; exposure at will makes $o$
 exposable, so any $x\in\fiber{j}$ has a common refinement with $o$ in
 $\fiber{j}$, which in particular lies above $o$.  \emph{Coherence.}  Suppose
 some finite $X\subseteq\fiber{i}$ has no admitted common refinement, and choose
 such an $X=\{x_1,\ldots,x_n\}$ of least size.  If $n=1$ then $x_1$ itself is a
 refinement; so $n\geq2$.  If $n=2$, then $x_1$ is not exposable at
-$\sigma_0(\{i\})$, since $x_2$ is a possibility at $i$ sharing no admitted
+$\sigma_0(i)$, since $x_2$ is a possibility at $i$ sharing no admitted
 refinement with it.  If $n\geq3$, a participant holding $i$ exposes
 $x_1,\ldots,x_{n-2}$ in turn; each is exposable by hypothesis, and the
 resulting state is reachable with residual fiber at $i$ the set of outputs
@@ -1289,9 +1530,9 @@ commitment excludes.
 \begin{theorem}[Commitments require coordination]
 \label{thm:commitments-require-coordination}
 Suppose the participants share a common commitment basis.  Let a basis action
-$d$ be applicable at a reachable state $\sigma=(J,R)$ and content-destroying at
-an active input $i$, excluding some $x\in R(i)$ that has no refinement in
-$R'(i)$, where $(J,R')=d(\sigma)$.  Then there is a participant state $\tau$,
+$d$ be applicable at a reachable state $\sigma=(i,R)$ and content-destroying at
+the current input $i$, excluding some $x\in R(i)$ that has no refinement in
+$R'(i)$, where $(i,R')=d(\sigma)$.  Then there is a participant state $\tau$,
 reachable from the canonical initial state by the same input updates followed
 by exposures or commitments of its own, whose residual at $i$ consists of
 refinements of $x$; and $d(\sigma)$ and $\tau$ have no common row at $i$.
@@ -1301,9 +1542,9 @@ the course leading to $\tau$.
 
 \begin{proof}
 Let a second participant receive the same updates as the first, reaching a
-state with the same frontier and with $x\in\fiber{i}$ still admitted.  If $x$
+state with the same current input and with $x\in\fiber{i}$ still admitted.  If $x$
 is exposable there, it exposes $x$; otherwise it applies a restriction
-retaining exactly the outputs above $x$ along the lineage of $i$---a
+retaining exactly the outputs above $x$ at $i$ and its refinements---a
 commitment, applicable because $x$ itself remains.  This second action is a
 member of the shared basis: the first participant's own action $d$ is a
 content-destroying commitment at $i$ drawn from that basis, and the
@@ -1347,9 +1588,9 @@ dichotomy.
 For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{enumerate}
   \item under every partition and every schedule of inputs on each side, every
-        participant may expose any admissible output at its active input
+        participant may expose any admissible output at its current input
         (\emph{availability}), and for every legal common refinement $j$ of the
-        active inputs on the two sides, some row at $j$ survives in every
+        current inputs on the two sides, some row at $j$ survives in every
         participant's state (\emph{consistency});
   \item $\Spec$ is monotone.
 \end{enumerate}
@@ -1383,15 +1624,16 @@ agreement across a cut also depends on \emph{deployment}: which participant may
 hold which input and select which row.  A participant that controls an entire
 choice may commit locally.  In what follows, a participant \emph{selects} an
 admissible output at the input it holds by exposing it when it is exposable
-and by committing to it---retaining exactly the outputs that refine it along
-the lineage of its input---when it is not.  The second kind of selection is
+and by committing to it---retaining exactly the outputs that refine it at its
+input and that input's refinements---when it is not.  The second kind of
+selection is
 content-destroying; the deployment says who is entitled to make it.
 
 \begin{definition}[Deployment; separable family]
 \label{def:deployment}
 A \emph{deployment} over a participant set $P$ assigns to each participant $p$
 a set $\Delta_p\subseteq S$ of rows it may select; $(i,o)\in\Delta_p$ means
-that $p$ may hold $i$ as an active input and select $o$ there, on its own
+that $p$ may hold $i$ as an current input and select $o$ there, on its own
 authority.  A \emph{partition} $\Pi$ of $P$ divides the participants into two
 or more nonempty components.  A finite family of rows is \emph{separable under
 $\Pi$} when its members can be attributed to participants, each row lying in
@@ -1423,7 +1665,7 @@ Fix a deployment.  The following are equivalent.
         another, but each component selects outputs at the rows its
         participants hold without waiting for information from any other
         component (\emph{availability}); and for every legal common refinement
-        $j$ of the active inputs held in different components, some row at
+        $j$ of the current inputs held in different components, some row at
         $j$ survives in every participant's state, so that the components'
         selections reconcile when the partition heals (\emph{consistency}).
   \item $\Spec$ is monotone across partitions.
@@ -1435,7 +1677,7 @@ Fix a deployment.  The following are equivalent.
 may be resolved by coordination within that component, which the partition does
 not block.  The families that must reconcile without communication are the
 separable ones.  Consider participants in at least two components, each having
-made finitely many selections along the lineage of its active input, and a
+made finitely many selections at its current input or its refinements, and a
 legal common refinement $j$ of those inputs.  The family of all their
 selections is separable, so monotonicity across $\Pi$ supplies $u\in\fiber{j}$
 above every selected output.  Each participant's residual at $j$ is
@@ -1573,21 +1815,21 @@ To place the distinction in our model, separate the CRDT's semantic state
 interface from one way of implementing it.  Let $(D,\sqsubseteq,\sqcup)$ be the
 state join-semilattice.  The semantic input is the replica's current state
 $d\in D$, and the specified state output is that same value:
-\begin{equation}
+        \begin{equation}
   \mathsf{id}_D:(D,\sqsubseteq)\longrightarrow(D,\sqsubseteq),
   \qquad \mathsf{id}_D(d)=d.
   \label{eq:crdt-state-identity}
-\end{equation}
+        \end{equation}
 Merging state $e$ advances the input from $d$ to $d\sqcup e$.  The identity
 specification is monotone because $d\sqsubseteq d\sqcup e$; moreover, the join
 is the least state refining both inputs~\cite{shapiro2011crdt}.
 
 A common implementation represents the current state by the finite set $U$ of
 immutable, joinable payloads received so far:
-\begin{equation}
+        \begin{equation}
   s(U)=s_0\sqcup\bigsqcup U.
   \label{eq:crdt-state-function}
-\end{equation}
+        \end{equation}
 Then $U\subseteq V$ implies $s(U)\sqsubseteq s(V)$, and
 $s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$.
 
@@ -1598,10 +1840,10 @@ A client observation replaces the identity output with a new semantic promise.
 Let $q:(D,\sqsubseteq)\to(R,\preceq_R)$ be a deterministic observation.  Under
 the payload model above, the client-visible interface $F=q\circ s$ permits
 incremental exposure without sealing exactly when
-\begin{equation}
+        \begin{equation}
   U\subseteq V \quad\Longrightarrow\quad q(s(U))\preceq_R q(s(V)).
   \label{eq:crdt-query-monotonicity}
-\end{equation}
+        \end{equation}
 Thus $q$ need only preserve refinements between reachable states; monotonicity
 on all of $D$ is sufficient.
 \end{proposition}
@@ -1614,11 +1856,11 @@ The condition is monotonicity of $q\circ s$, so Functional CALM applies.
 Consider a two-phase set with state $(A,R)$: $A$ records additions and $R$
 records removals.  Both components grow by union, so replica state merges
 perfectly well.  Its user-facing query is
-\begin{equation}
+        \begin{equation}
   q_{\mathrm{2P}}(A,R)=A\setminus R,
   \qquad F_{\mathrm{2P}}=q_{\mathrm{2P}}\circ s.
   \label{eq:crdt-2p-query}
-\end{equation}
+        \end{equation}
 Suppose the payload set $U_0$ yields
 \[
   s(U_0)=(\{\mathsf{potato},\mathsf{Ferrari}\},\varnothing),
@@ -1654,11 +1896,11 @@ application queries that become true when a lattice state crosses a threshold
 ~\cite{kuper2013lvars}.  Order the Boolean codomain by
 $\mathsf{false}\preceq_B\mathsf{true}$.  For example, let a grow-only set $d$
 record distinct failed login attempts and define
-\begin{equation}
+        \begin{equation}
   q_{100}(d)=[\,|d|\geq100\,],
   \qquad Q_{100}=q_{100}\circ s.
   \label{eq:crdt-thresholds}
-\end{equation}
+        \end{equation}
 Suppose $Q_{100}(U)=\mathsf{true}$.  For every possible refinement
 $V\supseteq U$, the grow-only set still contains at least 100 attempts, so
 $Q_{100}(V)=\mathsf{true}$.  This is exactly the exposability test of
@@ -1677,16 +1919,18 @@ operator.  Complete CALM asks only for \emph{some} admitted common refinement of
 each relevant finite family.  For example, suppose two shards expose
 $[a_1,a_2]$ and $[b_1,b_2]$, and the output fiber admits every order-preserving
 interleaving.  Both
-\begin{equation}
+        \begin{equation}
   [a_1,a_2,b_1,b_2]\qquad\text{and}\qquad[b_1,b_2,a_1,a_2]
   \label{eq:log-interleavings}
-\end{equation}
+        \end{equation}
 are minimal common refinements, and neither refines the other.  Consequently,
 the pair has no least common refinement, so this output order is not a
 join-semilattice.  It is nevertheless directed: any finite family of sequences
-has an admitted order-preserving interleaving.  A join-semilattice is therefore
-a restrictive sufficient discipline, not a requirement of the Complete CALM
-criterion.
+has an admitted order-preserving interleaving.  The election of
+Section~\ref{sec:nutshell} goes further: its outcome order has no upper bound
+for $a$ and $b$ at all, and needs none, because the inputs at which they arise
+never merge.  A join-semilattice is therefore a restrictive sufficient
+discipline, not a requirement of the Complete CALM criterion.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
@@ -1867,11 +2111,11 @@ claim for a lookup starting at $b$.  The richer output $o_{a\leadsto b}$ records
 both that $b$ is the current location and that a lookup from $a$ succeeds by
 following its forwarder to $b$.  It therefore preserves both simpler lookup
 claims:
-\begin{equation}
+        \begin{equation}
   o_a\OutputOrd o_{a\leadsto b},
   \qquad o_b\OutputOrd o_{a\leadsto b}.
   \label{eq:lookup-output-dominance}
-\end{equation}
+        \end{equation}
 For $i_0\InputOrd i_1$, the transformation is explicit in
 Table~\ref{tab:lookup-lift}.
 
@@ -1906,17 +2150,17 @@ retained output refined them.
 
 We now state this construction for an arbitrary ordered relational specification
 $S\subseteq I\times O$.  Write its original fiber as
-\begin{equation}
+        \begin{equation}
   X(i)=S(i)=\{o\in O:(i,o)\in S\}.
   \label{eq:hull-original-fiber}
-\end{equation}
+        \end{equation}
 The transformation replaces the output carrier $O$ by $\mathcal P(O)$,
 compared under the lifted preorder of Equation~\ref{eq:lifted-output-order}.
 Its unpruned output is
-\begin{equation}
+        \begin{equation}
   X^\uparrow(i)=\bigcup_{j\InputOrd i}X(j).
   \label{eq:monotone-hull}
-\end{equation}
+        \end{equation}
 Equivalently, each original row $(j,o)$ contributes $o$ to the transformed row
 at every $i\succeq_I j$.  Literal union remembers all rows; the lifted preorder
 captures their semantic coverage.  In particular, one retained output may cover
@@ -1931,11 +2175,11 @@ $i\InputOrd j$ implies $A(i)\LiftedOutputOrd A(j)$.
 \label{thm:monotone-hull}
 The map $X^\uparrow$ is a monotone powerset relaxation.  Moreover, every monotone
 powerset relaxation $A$ semantically covers every output admitted so far:
-\begin{equation}
+        \begin{equation}
   X^\uparrow(i)\LiftedOutputOrd A(i)
   \qquad\text{for every }i.
   \label{eq:hull-coverage}
-\end{equation}
+        \end{equation}
 If $X^\uparrow(i)$ is finite, let $M(i)$ contain its undominated elements.  Then
 $M(i)$ and $X^\uparrow(i)$ are equivalent under $\LiftedOutputOrd$, the map $M$
 is monotone, and $M(i)$ is the unique smallest subset of $X^\uparrow(i)$ that
@@ -2010,10 +2254,10 @@ This positive result meets the remembered-output frontier.  For a fixed key in
 a split-only migration chain, let $X(g)$ be the exact search certificates at
 prefix $g$.  Every historical certificate in $X^\uparrow(h)$ has a refinement
 in $R(h)$, namely its current forwarding path:
-\begin{equation}
+        \begin{equation}
   X^\uparrow(h)\LiftedOutputOrd R(h).
   \label{eq:forwarding-hull}
-\end{equation}
+        \end{equation}
 Theorem~\ref{thm:monotone-hull} says that any monotone relaxation must provide
 this semantic coverage.  Current forwarding paths may compact many obsolete
 certificates by dominating them, just as in Table~\ref{tab:lookup-lift}.  This is deliberately a
@@ -2026,10 +2270,10 @@ search positions are reclaimed.
 A second small example captures the cross-node question.  Suppose replicas $p$
 and $q$ may each expose configuration 0 or 1.  With no cross-replica constraint,
 the four complete outputs are
-\begin{equation}
+        \begin{equation}
   (0,0),\quad(0,1),\quad(1,0),\quad(1,1).
   \label{eq:product-config-example}
-\end{equation}
+        \end{equation}
 Now strengthen the interface by requiring both replicas to expose the same
 configuration.  Only $(0,0)$ and $(1,1)$ remain.  Each replica still appears to
 have both local choices, so the strengthening has changed no one-replica
@@ -2188,12 +2432,12 @@ Suppose the commitment fixes both the initial authority and a rule that uniquely
 determines every certified successor.  The system can then expose three kinds
 of growing evidence: a certified epoch chain $E$, votes or certificates $V$,
 and decisions $D$ indexed by epoch and slot.  Define refinement by
-\begin{equation}
+        \begin{equation}
   (E,V,D)\OutputOrd(E',V',D')
   \quad\Longleftrightarrow\quad
   E\preceq_{\rm pref}E',\quad V\subseteq V',\quad D\subseteq D'.
   \label{eq:authority-refinement}
-\end{equation}
+        \end{equation}
 Protocol safety ensures that a later certificate extends the unique lineage and
 preserves prior decisions.  Public authority changes are therefore refinements,
 not revisions: votes, certificates, epochs, and decisions all accumulate after
@@ -2235,10 +2479,10 @@ Tight strong renaming exposes a different source of incompatibility.  The input
 is the finite participant set $P$, ordered by inclusion.  The common output
 universe contains finite partial naming maps; at input $P$, legal outputs are
 injective maps
-\begin{equation}
+        \begin{equation}
   m:P\longrightarrow\{1,\ldots,|P|\},
   \label{eq:tight-renaming}
-\end{equation}
+        \end{equation}
 ordered by map extension.
 
 Now start two processes independently.  At input $\{p\}$, tightness forces the
