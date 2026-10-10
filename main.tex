@@ -54,8 +54,13 @@ boundaries in different mathematical languages.  This fragmentation has allowed
 conventional wisdom to drift from what the literature actually proves.
 
 Existing accounts characterize when coordination can be avoided, but do not
-generally model what coordination accomplishes when it is needed.
-We complete this semantic picture in two steps.  \emph{Functional CALM} generalizes
+generally model what coordination accomplishes when it is needed.  We give a
+semantic framework in which to do so: a specification is a table of admissible
+input--output pairs with ordered columns, and the state of a computation is
+the \emph{residual} of that table, the rows still admissible.  Residuals are
+provably the semantic quotient of Lamport histories, so every question below
+is a question about executions.  Within this framework we complete the
+picture in two steps.  \emph{Functional CALM} generalizes
 the classical result from Datalog and fact inclusion to functions between
 arbitrary partially ordered input and output domains, giving the broader
 folklore interpretation of CALM a formal semantic basis.  Independent of implementation
@@ -224,8 +229,19 @@ and coordination avoidance in a single formalism.
 % across the cut and lose availability, or make incompatible commitments and lose
 % consistency.
 
-This paper makes five contributions:
+This paper makes four contributions:
 \begin{enumerate}
+  \item A semantic framework for distributed computation.  A specification
+        is a relation with ordered inputs and outputs; a \emph{residual state}
+        records what remains admissible; transitions are input events,
+        exposures, and \emph{commitments}, the last drawn from a declared
+        \emph{commitment basis} that fixes what a system may make binding.
+        Residuals are provably the semantic quotient of Lamport histories:
+        any consistent cut of an execution yields them, and they suffice for
+        every question the paper asks.  Everything below is stated and proved
+        in this framework, and Section~\ref{sec:instances} shows that CRDTs,
+        highly available transactions, and invariant confluence are instances
+        of it.
   \item Functional CALM generalizes and proves the CALM Conjecture in the context of
         arbitrary functions, represented as semantic input/output specifications
         with separate input- and output-refinement partial orders.
@@ -234,13 +250,10 @@ This paper makes five contributions:
         Directed Outputs as the criterion for a coordination-free
         specification: exposure at will, reconciliation on merge, and
         insensitivity to arrival order.  Commitments are shown to require
-        coordination.
-  \item The Complete CAP Theorem extends the classical impossibility to a
-        bidirectional dichotomy parameterized by the declared consistency
-        specification and the deployment.
-  \item   The framework demonstrates broad analytic power: it separates CRDT
-        state convergence from safe reads and read-dependent actions, and
-        recovers transaction and invariant-confluence boundaries in one model.
+        coordination.  In partition form this is the Complete CAP Theorem,
+        which extends the classical impossibility to a bidirectional dichotomy
+        parameterized by the declared consistency specification and the
+        deployment.
   \item Two coordination-free frontier theorems characterize how far an
         interface can be strengthened without requiring coordination.  The first
         identifies exactly which earlier outputs a monotone interface must
@@ -350,8 +363,8 @@ dependency: the input column determines the output column.  We call such a
 specification \emph{functional}.  A specification is a model of what is
 allowed, not a data structure: no component of a system holds it or consults
 it.  Everything that follows is a matter of removing rows from a
-specification, and for now we speak of ``the system'' as a single machine; who
-does what in a distributed implementation comes at the end.
+specification, and for now we speak of ``the system'' as a single machine or actor;
+who does what in a distributed implementation comes at the end.
 
 Figure~\ref{fig:election-frames}(a) is the specification of a small election.
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
@@ -380,49 +393,54 @@ of the rows together with the orders.
 
 \paragraph{Input arrives.}
 Now $v_2$'s ballot arrives, for $b$; panel (b) shows the result.  The
-\emph{current input}, the record seen so far, has advanced from $a\cdot\cdot$
-to $ab\cdot$, shown in bold.  Only rows at $ab\cdot$ and its refinements
-remain; every other row is \emph{retired}.  That happens for two different
-reasons.
+\emph{current input}, the ballots seen so far, has advanced from $a\cdot\cdot$
+to $ab\cdot$, shown in bold.  What an input event does to the specification
+is governed by one rule: only the rows at the current input and its
+refinements remain, and every other row is \emph{retired}.  The specification
+with the retired rows removed is a \emph{residual state}, the account of what
+is still possible, and the inputs that still have rows are the \emph{valid} ones.
 
-The row at $a\cdot\cdot$ is retired because it has been superseded: $ab\cdot$
+Input events are the march of external history.  The environment produces
+them, and the system neither chooses nor pays for them.  They constrain the
+future, as we see next, but they involve no choice by the system, and the
+residual state they produce depends only on the current input reached: the
+same ballots delivered in another order or grouping yield the same residual
+state.
+
+Panel (b) retires rows for both of the reasons the rule allows.  The row at
+$a\cdot\cdot$ is retired because its input has been superseded: $ab\cdot$
 refines it, so the election will never again be asked about $a\cdot\cdot$
-alone.  Nothing is lost, because the output at $ab\cdot$ is again $\bot$, which
-refines the retired output.  That is monotonicity at work.
-
-The rows at $aa\cdot$, $aaa$, and $aab$ are retired for a different reason:
-they have become unreachable.  Inputs are cumulative records, so the only
-records that can still arrive refine $ab\cdot$, and because a voter can cast
-only one ballot, no legal record refines both $aa\cdot$ and $ab\cdot$.  Those
-rows described futures the election can no longer have.
-
-Both removals follow from a single rule: keep only the rows at the current
-input and its refinements.  The inputs that still have rows are the
-\emph{valid} ones.  An input event chooses nothing, and the same ballots delivered
-in another order or grouping would reach the same record and retire the same rows.
-The specification with these rows removed is a \emph{residual state}: the
-record of what is still possible.
+alone.  The rows at
+$aa\cdot$, $aaa$, and $aab$ are retired because their inputs have become
+unreachable: a voter casts only one ballot, so no legal input refines both
+$aa\cdot$ and $ab\cdot$, and those rows described futures the election can no
+longer have.
 
 \paragraph{What could still happen.}
 While input may still grow, what matters is not only the current row but what
-any continuation could require.  In panel (b) the rows at or above $ab\cdot$
-are the current row and the two valid refinements $aba$ and $abb$ in which
-$v_3$ votes.  Their outputs, shaded, are $\{\bot,a,b\}$, the \emph{upper
-fiber} of $ab\cdot$: either candidate could still win.  Panel (c) shows the
-alternative in which $v_2$ voted $a$.  The rows at or above $aa\cdot$ all say
-$a$, so the upper fiber is a singleton $\{a\}$ and the current input is
-\emph{determined}: the input value now determines the unique output value,
-regardless of what ballot $v_3$ could cast.
-Narrowing the upper fiber until a single output remains is
-\emph{determination}.  In database terms it establishes a functional dependency
-on the residual, one that the original table need not have had: the current
-input, together with every record that could still refine it, now determines
-one output.  Here input arrival achieved a determination on its own; below we meet the case where
-the system must act.
+any input that could still arrive might require.  Readers who think in
+Lamport's terms may read the input order as happens-before on inputs: the
+current input's retired predecessors have already happened, its refinements
+are the inputs that some extension of the history can still produce, and
+incomparable inputs are produced by no extension at all.  The future of the
+election is therefore its current input together with the valid refinements,
+and the outputs of those rows form the current input's \emph{upper fiber}.  In
+panel (b) those rows are the current row and the two refinements $aba$ and
+$abb$ in which $v_3$ votes, so the upper fiber, shaded, is $\{\bot,a,b\}$:
+either candidate could still win.
 
-Note that tallying the ballots to notice that the
-result is determined removes no row; that computation has no effect on
-the residual, and hence does not count as determination.
+Panel (c) shows the alternative in which $v_2$ voted $a$.  The rows at or
+above $aa\cdot$ all say $a$, so the upper fiber is the singleton $\{a\}$ and
+the current input is \emph{determined}: it fixes the output regardless of what
+ballot $v_3$ could cast.  Narrowing the upper fiber until a single output
+remains is \emph{determination}.  In database terms it establishes a
+\emph{conditional functional dependency} on the residual: for all input values
+at or above the current input, the output is determined to be the same.  Here
+input arrival
+achieved a determination on its
+own; below we meet the case where the system must act.  Tallying the ballots to
+notice that the result is determined removes no row; that computation has no
+effect on the residual, and so does not count as determination.
 
 \paragraph{Commitments.}
 Return to panel (b) and let the registrar close the polls: $v_3$'s ballot,
@@ -569,12 +587,13 @@ struck row was an alternative in its own right: removing it narrows what is
 within spec.
 
 Three kinds of transition remove rows.  Input arrival retires the rows the new
-record does not refine (panels (b), (c)); it belongs to the environment.
+input does not refine (panels (b), (c)); it belongs to the environment.
 Exposure removes the rows that do not refine the exposed output (panel (f)); it
 belongs to the system.  Commitment removes rows on the system's own authority
 (panels (d), (e)).  The two CALM conditions say when the first two transitions
-remove only redundant rows: monotonicity says this of input arrival,
-directedness of exposure.  A commitment always narrows; that is its purpose.
+remove only redundant rows: monotonicity says this of input arrival, as in
+panel (b), where the retired $\bot$ at $a\cdot\cdot$ is refined by the $\bot$
+at $ab\cdot$; directedness says it of exposure, as in panel (f).  A commitment always narrows; that is its purpose.
 
 When monotonicity or directedness fails, some output is not ready, because a
 later input or another exposure could contradict it, and the system may expose
@@ -594,7 +613,13 @@ from the specification by removing the rows its own events removed,
 and two participants that have seen different events hold different
 residuals.  Panels (a) and (b) of Figure~\ref{fig:election-frames} can be read
 this way: one participant has so far received only $v_1$'s ballot, another has
-also received $v_2$'s, and each has removed what its own input retired.
+also received $v_2$'s, and each has removed what its own input retired.  This
+is the whole connection to executions.  Take any Lamport diagram of the system
+and cut it at any consistent moment; each participant's events below the cut
+determine its residual, and those residuals are all this paper ever consults.
+Two cuts that yield the same residuals are indistinguishable here, however
+their messages were ordered or batched
+(Proposition~\ref{prop:residual-quotient}).
 
 Commitments are precisely the semantic actions that require coordination;
 input events and ready output exposures may be done autonomously.  This
@@ -678,9 +703,9 @@ For the full specification this is $S(i)$, which for a function is $\{f(i)\}$.
 Execution never adds a row.  Everything that follows is a story about which
 rows have been removed from the table, and by what.
 
-Inputs are \emph{cumulative}: an input is the whole record seen so far, and
+Inputs are \emph{cumulative}: an input is everything seen so far, and
 $i\InputOrd j$ means that $j$ contains at least the information in $i$.  The
-domain $I$ contains only legal records, so constraints on input, such as one
+domain $I$ contains only legal inputs, so constraints on input, such as one
 ballot per voter, live in $I$ and its order.  Write $k\prec_I i$ when
 $k\InputOrd i$ and $k\neq i$, and $\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$
 for the refinements of $i$.
@@ -739,8 +764,8 @@ make an invalid input current.  Updates compose: an update to $j$ followed by
 an update to $k$ has the same effect as a single update to $k$, since
 $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival order, batching,
 and repeated delivery therefore do not affect the state reached by updates
-alone; only the record reached matters.  Applications that receive changes
-rather than whole records, such as single ballots, may present an update as a
+alone; only the input reached matters.  Applications that receive changes
+rather than whole inputs, such as single ballots, may present an update as a
 change $\delta$ applied to the current input, $i\oplus\delta=j$, legal exactly
 when the result is a legal refinement of $i$.  Its semantic effect is the
 update to $j$; the change is a presentation of the transition, not a second
@@ -1378,7 +1403,7 @@ canonical initial state: input-update events supplied by the environment,
 interleaved with the participant's own exposure events and commitments.  Its
 \emph{schedule} is the sequence of inputs the environment supplies.  Two
 schedules are \emph{input-equivalent} when they end at the same input; they may
-differ in the intermediate records they pass through, which under a change
+differ in the intermediate inputs they pass through, which under a change
 presentation means in the order and grouping of arrivals and in repeated
 delivery.  By the composition property of updates, runs with input-equivalent
 schedules that neither expose nor commit reach the same state.  What can
@@ -1386,6 +1411,52 @@ depend on the schedule is what a participant exposes or commits between its
 updates.  A replica is a participant that sees a shared input stream in its own
 order, so several replicas and several runs of one participant under
 input-equivalent schedules are the same object seen twice.
+
+\paragraph{Histories.}
+Runs of several participants fit together into a history in Lamport's sense.
+A \emph{distributed history} $H$ is a set of events, each at one participant,
+with each participant's events totally ordered, each receive matched to a
+send, and \emph{happens-before} the transitive closure of local order and
+matching.  A receive that advances the receiving participant's input is an
+input-update event; a receive that does not leaves the residual unchanged.  A
+\emph{consistent cut} $C$ is a subset of events closed under happens-before.
+For each participant $p$, the events of $C$ at $p$, in local order, form a run;
+write $\sigma_p^C$ for its final residual state and
+$\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector of residuals, the
+\emph{semantic endpoint} of the cut.
+
+\begin{proposition}[Residuals are the semantic quotient of histories]
+\label{prop:residual-quotient}
+Fix a specification, a participant set, and a commitment basis.
+\begin{enumerate}
+  \item $\operatorname{end}(H,C)$ is the same for every replay of the events
+        of $C$ in an order that respects happens-before.
+  \item Whether a transition is applicable at participant $p$ after $(H,C)$,
+        and the residual it produces, depend only on $\sigma_p^C$.
+  \item Consequently, pointed histories $(H,C)$ and $(H',C')$ with equal
+        endpoints admit the same semantic continuations, and the endpoint map
+        induces a bijection between its equivalence classes and the reachable
+        residual vectors.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Each coordinate $\sigma_p^C$ is determined by $p$'s events in local order,
+which every happens-before-respecting replay preserves, and events at
+different participants act on different coordinates; receives that advance no
+input change no coordinate.  This gives (1).  Input updates, exposure events,
+and commitments are each partial functions of the local residual, which gives
+(2).  Then (3) is (2) applied coordinate by coordinate, together with the
+observation that any function induces a bijection between the classes of its
+kernel equivalence and its image.
+\end{proof}
+
+The proposition is what licenses the definitions below to speak of residuals
+rather than executions.  Everything the specification cares about in a Lamport
+diagram survives in its cut's residuals; message order, batching, and who has
+learned what are forgotten exactly when they do not advance anyone's input.
+Run insensitivity and reconciliation on merge, stated next over residuals, are
+therefore statements about executions.
 
 In the rest of this section, \emph{reachable} means reachable from a canonical
 initial state by input updates and exposure events alone, with no commitment.
@@ -2110,7 +2181,7 @@ choice that it still offers locally?
 
 A small lookup table illustrates both the construction and its possible
 compaction.
-Suppose a record initially resides at node $a$ and later moves to $b$.  Let
+Suppose a data item initially resides at node $a$ and later moves to $b$.  Let
 $o_a$ claim that a lookup starting at $a$ succeeds, and let $o_b$ make the same
 claim for a lookup starting at $b$.  The richer output $o_{a\leadsto b}$ records
 both that $b$ is the current location and that a lookup from $a$ succeeds by
@@ -2533,7 +2604,14 @@ does not prove a need for coordination; the process, memory, placement, and
 failure model all matter~\cite{afek1993atomic}.
 
 \begin{acks}
-We thank Vincent Liu for helpful feedback on this work.
+We thank Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
+Kleppmann, Paris Koutris, Edward Lee, Shulu Li, Vincent Liu, David Chu McElroy,
+Sarah Morin, and Dan Suciu for helpful feedback on this work.
+
+Generative AI tools (Claude and ChatGPT) were used as interactive writing and
+reviewing assistants during the preparation of this work, including drafting
+and revising text, checking mathematical arguments, and suggesting edits.  All
+content was reviewed, validated, and approved by the author.
 \end{acks}
 
 \bibliographystyle{ACM-Reference-Format}
