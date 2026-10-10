@@ -208,7 +208,7 @@ within-fiber requirement \emph{Directed Outputs}, based on the order-theoretic n
 of directedness
 (\S\ref{sec:relational-specifications}).  When it fails, forward progress must rule
 out an alternative; we call that step a \emph{commitment}
-(Definition~\ref{def:commitment}).  If
+(Definition~\ref{def:transition-system}).  If
 different participants can make incompatible commitments, they must coordinate
 first.  Complete CALM combines Lifted Monotonicity and Directed Outputs
 (\S\ref{sec:complete-calm-criterion}) to characterize when a specification is
@@ -698,15 +698,13 @@ A function gives one output for each input, but a refined input may require a
 different output.  Before an execution can say anything binding, we need to
 keep track of which input--output possibilities remain, which events remove
 them, and which of those removals are acts of choice.  We do this with a
-transition system.  Its \emph{states} are residual states, the specification
-with some rows removed.  Its \emph{transitions} are of three kinds: input
-events, which the environment produces; commitments, which the system makes;
-and exposures, which the system also makes and which Section~\ref{sec:safe-exposure}
-defines once relational specifications make them interesting.  This subsection
-defines the states and the first two kinds of transition, following the
-vocabulary of Section~\ref{sec:nutshell} and the panels of
-Figure~\ref{fig:election-frames}.  The same definitions carry over to
-relational specifications in Section~\ref{sec:complete-calm}.
+transition system, defined in full below, whose states are residual states and
+whose transitions are of three kinds: input events, exposures, and
+commitments.  The definitions follow the vocabulary of Section~\ref{sec:nutshell}
+and the panels of Figure~\ref{fig:election-frames}.  Choice commitments and
+exposure events are defined here but discussed in
+Section~\ref{sec:complete-calm}, where relational specifications make them
+necessary.
 
 \paragraph{The specification as a table.}
 View the specification as a table $S\subseteq I\times O$ whose rows are the
@@ -736,10 +734,11 @@ $k\InputOrd i$ and $k\neq i$, and $\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$
 for the refinements of $i$.
 
 \paragraph{States.}
-Every panel of Figure~\ref{fig:election-frames} is a state: the specification
+The states of our transition system are residuals of the initial specification and input.
+Every panel of Figure~\ref{fig:election-frames} is such a state: the specification
 with some rows removed, one input current.  In panel (b) the current input is
 $ab\cdot$ and every row whose input does not refine it has been removed; such
-inputs are \emph{retired}.  A residual state is a table whose removed rows obey
+inputs are \emph{retired}.  A residual state obeys
 the following conditions.
 
 \begin{definition}[Residual state]
@@ -775,38 +774,82 @@ For an input $i$, the \emph{canonical initial state} is
   \label{eq:canonical-initial-state}
         \end{equation}
 the specification restricted to $i$ and its refinements.
-Figure~\ref{fig:election-frames}(a) is $\sigma_0(a\cdot\cdot)$.  A residual
-state is \emph{reachable} by a given set of transition kinds when it is
-obtained from some canonical initial state by a finite sequence of transitions
-of those kinds.
+Figure~\ref{fig:election-frames}(a) is $\sigma_0(a\cdot\cdot)$.
 
-\paragraph{Transitions: input events.}
-In panel (b) the environment has delivered $v_2$'s ballot and the current
-input has advanced from $a\cdot\cdot$ to $ab\cdot$.
-
-\begin{definition}[Input-update event]
-\label{def:input-update}
-For $j\in I$ with $i\InputOrd j$, the \emph{input-update event} makes $j$ the
-current input and keeps exactly the rows of $R$ whose input refines $j$: it
-maps $\sigma=(i,R)$ to
+\begin{definition}[Semantic transition system]
+\label{def:transition-system}
+The \emph{semantic transition system} of a specification has the residual
+states as its states.  Its transitions are partial functions on residual
+states of exactly three kinds.  Each is defined at a state only when the result
+satisfies Definition~\ref{def:residual-state}, and each removes rows and adds
+none.
+\begin{enumerate}
+  \item \emph{Input event.}  For $j\in I$ with $i\InputOrd j$, the
+        event $\mathsf{update}(j)$, produced by the environment, makes $j$ the
+        current input and keeps exactly the rows whose input refines $j$:
         \begin{equation}
-  \tau=\bigl(j,\ \{(k,o)\in R:\ j\InputOrd k\}\bigr),
-  \label{eq:input-update-residual}
+          (i,R)\xrightarrow{\mathsf{update}(j)}
+          \bigl(j,\ R\mathbin{\upharpoonright_I}j\bigr),
+          \qquad
+          R\mathbin{\upharpoonright_I}j=\{(k,u)\in R:\ j\InputOrd k\},
+          \label{eq:input-update-residual}
         \end{equation}
-defined when $\tau$ is a residual state, that is, when $R(j)\neq\varnothing$.
-Write $\sigma\xrightarrow{\mathsf{update}(j)}\tau$.
+        defined when $R(j)\neq\varnothing$.
+  \item \emph{Exposure event.}  For $o\in R(i)$, the event
+        $\mathsf{expose}(o)$, made by the system, keeps the current input
+        fixed and keeps exactly the rows whose output refines $o$:
+        \begin{equation}
+          (i,R)\xrightarrow{\mathsf{expose}(o)}
+          \bigl(i,\ R\mathbin{\upharpoonright_O}o\bigr),
+          \qquad
+          R\mathbin{\upharpoonright_O}o=\{(k,u)\in R:\ o\OutputOrd u\},
+          \label{eq:residual-refining-fibers}
+        \end{equation}
+        defined exactly when $o$ is \emph{exposable at $i$}: for every valid
+        $j$ with $i\InputOrd j$ and every $x\in R(j)$ there is $u\in R(j)$ with
+        \begin{equation}
+          o\OutputOrd u
+          \qquad\text{and}\qquad
+          x\OutputOrd u.
+          \label{eq:safe-exposure}
+        \end{equation}
+  \item \emph{Commitment.}  A commitment $p$, made by the system, keeps the
+        current input fixed and strictly restricts the residual: $p(i,R)=(i,R')$
+        with $R'\subsetneq R$.  It is an \emph{input-sealing commitment} if it
+        makes some valid input invalid, $R'(k)=\varnothing$ for some $k$ with
+        $R(k)\neq\varnothing$ (necessarily $k\neq i$), and a \emph{choice
+        commitment} otherwise, when every valid input remains valid.  The
+        system's \emph{commitment basis} is the set of commitments it may use.
+        A commitment is \emph{applicable} at $\sigma$ when $p(\sigma)$ is
+        defined.
+\end{enumerate}
+A residual state is \emph{reachable} when it is obtained from some canonical
+initial state by a finite sequence of these transitions.  Where only some
+kinds are allowed, we say so: a state reachable by input events alone, for
+instance, has had no commitment and no exposure.
 \end{definition}
 
-The environment produces input-update events; the system does not choose them.
+Nothing else changes a residual state.  In particular, computation changes
+nothing: it may inform which transition the system takes, but it is not itself
+a transition.  The rest of this subsection discusses input events and
+input-sealing commitments, which are all a functional specification needs;
+Section~\ref{sec:complete-calm} takes up choice commitments and exposure
+events.
+
+\paragraph{Input events.}
+In panel (b) the environment has delivered $v_2$'s ballot and
+$\mathsf{update}(ab\cdot)$ has advanced the current input from $a\cdot\cdot$ to
+$ab\cdot$.  The environment produces input events; the system does not
+choose them.
 An event retires rows, and so narrows the future, but it makes no choice among
 outputs: it adds no row and leaves every surviving fiber unchanged.  The event
 is undefined when the new input has no row left,
 for instance because an earlier commitment sealed it off: the environment cannot
-make an invalid input current.  Updates compose: an update to $j$ followed by
-an update to $k$ has the same effect as a single update to $k$, since
-$\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival order, batching,
-and repeated delivery therefore do not affect the state reached by updates
-alone; only the input reached matters.  In practice the environment usually delivers changes, such as single
+make an invalid input current.  Input events compose: $\mathsf{update}(j)$
+followed by $\mathsf{update}(k)$ has the same effect as $\mathsf{update}(k)$
+alone, since $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival
+order, batching, and repeated delivery therefore do not affect the state
+reached by input events alone; only the input reached matters.  In practice the environment usually delivers changes, such as single
 ballots, rather than whole inputs.  A change $\delta$ applied to the current
 input yields a new input $i\oplus\delta=j$, and is legal exactly when $j$ is a
 legal refinement of $i$.  The model does not treat $\delta$ as a kind of input;
@@ -815,31 +858,18 @@ beyond the $j$ it produces matters.  A change already incorporated gives
 $i\oplus\delta=i$, and $\mathsf{update}(i)$ at $(i,R)$ is the identity, so
 duplicate delivery changes nothing.
 
-\paragraph{Transitions: commitments.}
+\paragraph{Input-sealing commitments.}
 Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
-the current input fixed.  No input event does this; it is an act of the system, and
-for a functional specification it is the only kind of commitment needed, since
-every fiber has one row and there is never an output to choose among.
-
-\begin{definition}[Input-sealing commitment]
-\label{def:input-sealing-commitment}
-An \emph{input-sealing commitment} is a labeled partial function $p$ on
-residual states that keeps the current input fixed, strictly restricts the
-residual, and makes some valid input invalid: whenever $p(\sigma)$ is defined
-for $\sigma=(i,R)$, its target is a residual state $(i,R')$ with
-$R'\subsetneq R$ and $R'(k)=\varnothing$ for some $k$ with
-$R(k)\neq\varnothing$.  Because the target is a residual state, $k\neq i$.  The commitment is \emph{applicable} at $\sigma$ when $p(\sigma)$ is
-defined.
-\end{definition}
-
-Whether such a commitment is available is part of the system model, not of the
-table.  A system that lacks the authority to seal input simply has no
-input-sealing commitment to apply, and a system that must still accept a late
-ballot with a rejection or other fallback response keeps that row and has not
-sealed the input.  A commitment records the binding act, not the computation
-that selected it.  Section~\ref{sec:complete-calm} adds the second kind of
-commitment, choosing among outputs at one input, and collects the commitments a
-system may use into a \emph{commitment basis}.
+the current input fixed.  No input event does this; it is an input-sealing
+commitment, an act of the system, and for a functional specification it is the
+only kind of commitment that can ever be needed, since every fiber has one row
+and there is never an output to choose among.  Whether such a commitment is
+available is part of the system model, not of the specification: it must be in
+the commitment basis.  A system that lacks the authority to seal input simply
+has no input-sealing commitment to apply, and a system that must still accept a
+late ballot with a rejection or other fallback response keeps that row and has
+not sealed the input.  A commitment records the binding act, not the
+computation that selected it.
 
 \paragraph{Determination.}
 The shaded outputs in Figure~\ref{fig:election-frames} are those that the
@@ -911,12 +941,34 @@ For the current input $i$ of $(i,R)$ and $o\in R(i)$, the output $o$ is
   o\OutputOrd o'.
   \label{eq:exposure-ready}
         \end{equation}
-Equivalently, $o$ is the least element of the upper fiber $R^\uparrow(i)$.
+Equivalently, $o$ is admitted at $i$ and is the least element of the upper
+fiber $R^\uparrow(i)$.  The first qualification cannot be dropped: a least
+element of the upper fiber that occurs only at a proper refinement of $i$ is
+not exposable at $i$.
 \end{definition}
 
-A system may expose a ready output at any time.  The exposure changes no state
-and removes no row; input updates and commitments only remove rows, so every
-retained output at $i$ or its valid refinements continues to refine $o$.  In the election
+Readiness is not a second permission to expose.  The one permission is
+exposability (Definition~\ref{def:transition-system}), and readiness is the
+case in which the exposure event changes nothing.
+
+\begin{proposition}[Readiness is identity exposure]
+\label{prop:readiness-identity}
+For the current input $i$ of $(i,R)$ and $o\in R(i)$, the output $o$ is
+exposure-ready at $i$ if and only if $o$ is exposable at $i$ and
+$R\mathbin{\upharpoonright_O}o=R$.
+\end{proposition}
+
+\begin{proof}
+If $o$ is ready, every $x\in R(j)$ with $i\InputOrd j$ satisfies
+$o\OutputOrd x$, so $u=x$ witnesses Equation~\ref{eq:safe-exposure}, and the
+restriction retains every row.  Conversely, if the restriction retains every
+row, then every $x\in R(j)$ refines $o$, and since every valid $j$ refines
+$i$, that is Equation~\ref{eq:exposure-ready}.
+\end{proof}
+
+A ready output may therefore be exposed at any time, removing no row; and
+since input events and commitments only remove rows, every output retained
+later at $i$ or its valid refinements continues to refine $o$.  In the election
 $\bot$ is ready in every panel and $a$ in panel (c); under the equality order
 nothing is ready in panels (a) and (b).  That contrast is the content of the
 next theorem.
@@ -926,21 +978,21 @@ next theorem.
 
 A distributed implementation assigns partial input and computation to
 participants.  A participant holding input $i$ has reached a residual state by
-input updates alone, with no commitment made and nothing sealed.  We say that
+input events alone, with no commitment made and nothing sealed.  We say that
 a functional specification permits \emph{incremental exposure without
-sealing} when, in every residual state reachable by input updates alone,
+sealing} when, in every residual state reachable by input events alone,
 $f(i)$ is exposure-ready at every current input $i$
 (Definition~\ref{def:exposure-ready}).
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
 A functional ordered specification permits incremental exposure without
-sealing if and only if it is monotone.  In that case an current input $i$ is
+sealing if and only if it is monotone.  In that case a current input $i$ is
 determined exactly when $f(j)=f(i)$ for every valid refinement $j$ of $i$.
 \end{theorem}
 
 \begin{proof}
-Let $(i,R)$ be reachable by input updates alone.  Updates remove only rows at
+Let $(i,R)$ be reachable by input events alone.  Input events remove only rows at
 retired inputs, so every $j\succeq_I i$ retains its row $(j,f(j))$, and the
 upper fiber is $R^\uparrow(i)=\{f(j):j\succeq_I i\}$.
 
@@ -1285,34 +1337,23 @@ function do, widened to sets of mutually compatible alternatives.
 \subsection{Commitments under output choice}
 \label{sec:residuals-commitment}
 
-The residual states and input-update events of Section~\ref{sec:determination}
-apply unchanged to a relational specification; the difference is that a fiber
-$R(i)$ may now contain several outputs.  That opens a second kind of
-commitment.  Sealing input removes rows at inputs that will never become
-current.  Choosing an output removes rows at inputs that remain valid: in leader
-election, committing to \texttt{server1} removes the row for \texttt{server2} at
-the same input.
-
-\begin{definition}[Choice commitment; commitment basis]
-\label{def:commitment}
-A \emph{choice commitment} is a labeled partial function $p$ on residual
-states that keeps the current input fixed, strictly restricts the residual,
-and preserves the set of valid inputs: whenever $p(\sigma)$ is defined for
-$\sigma=(i,R)$, its target is a residual state $(i,R')$ with $R'\subsetneq R$
-and $R'(k)\neq\varnothing$ whenever $R(k)\neq\varnothing$.  A
-\emph{commitment} is a choice commitment or an input-sealing commitment
-(Definition~\ref{def:input-sealing-commitment}).  A \emph{commitment basis} is the set of
-choice commitments and explicitly labeled input-sealing commitments that the
-system makes available.
-\end{definition}
+The transition system of Section~\ref{sec:determination} applies unchanged to
+a relational specification; the difference is that a fiber $R(i)$ may now
+contain several outputs, so the second kind of commitment in
+Definition~\ref{def:transition-system}, the choice commitment, has work to do.
+Sealing input removes rows at inputs that will never become current.  Choosing
+an output removes rows at inputs that remain valid: in leader election,
+committing to \texttt{server1} removes the row for \texttt{server2} at the same
+input.
 
 The basis is part of the system model.  Its members are the acts through which
 the system can make possibilities irrevocably unavailable, and the system can
 use only the commitments it declares.  In particular, the ability to choose
-among outputs does not by itself include the ability to close future inputs;
-that requires an input-sealing commitment in the basis, and such a commitment
-must be labeled as input-sealing rather than treated as an ordinary choice
-among outputs.  A commitment may remove many rows at once.
+among outputs does not by itself include the ability to seal input; that
+requires an input-sealing commitment in the basis.  The two exercise different
+authority: a choice commitment speaks only for the system's own output, while
+an input-sealing commitment declares that input the environment could still
+supply will not count.  A commitment may remove many rows at once.
 
 Whether removing a row destroys information depends on the output order.
 
@@ -1346,48 +1387,32 @@ The next subsection shows that such restrictions are not commitments at all.
 Consider exposing $o\in R(i)$ to an external observer.  The exposure promises
 that later output at $i$ and at every refinement of $i$ will refine $o$.  When
 $o$ is exposure-ready (Definition~\ref{def:exposure-ready}), the promise is
-already entailed by the residual and the exposure changes nothing.  Readiness
+already entailed by the residual and the exposure changes nothing
+(Proposition~\ref{prop:readiness-identity}).  Readiness
 asks that $o$ already lie below everything that remains possible.  A weaker
 condition suffices for an exposure to be honest: that nothing remaining possible
 \emph{contradicts} $o$, in the sense that every remaining possibility shares an
 admitted refinement with it.  A participant that exposes such an $o$ undertakes
 to refine it, and it can always keep that undertaking, whatever else remains,
 because the undertaking excludes nothing that could not still be reached.
-Keeping the promise means restricting the residual at $i$ and its refinements to
-the outputs that refine $o$.  Write $R\mathbin{\upharpoonright}(i,o)$ for the
-result:
-        \begin{equation}
-  \bigl(R\mathbin{\upharpoonright}(i,o)\bigr)(j)
-  =\{u\in R(j):o\OutputOrd u\}
-  \qquad (i\InputOrd j),
-  \label{eq:residual-refining-fibers}
-        \end{equation}
-and all other fibers unchanged:
-        \begin{equation}
-  \bigl(R\mathbin{\upharpoonright}(i,o)\bigr)(j)=R(j)
-  \qquad (i\not\InputOrd j).
-  \label{eq:residual-other-fibers}
-        \end{equation}
-
-\begin{definition}[Exposable output; exposure event]
-\label{def:safe-exposure}
-For an current input $i$ and $o\in R(i)$, the output $o$ is \emph{exposable at
-$i$} when it is compatible with every possibility at $i$: for every valid $j$
-with $i\InputOrd j$ and every $x\in R(j)$ there is $u\in R(j)$ with
-        \begin{equation}
-  o\OutputOrd u
-  \qquad\text{and}\qquad
-  x\OutputOrd u.
-  \label{eq:safe-exposure}
-        \end{equation}
-The \emph{exposure event} $\mathsf{expose}_i(o)$ maps $(i,R)$ to
-$(i,R\mathbin{\upharpoonright}(i,o))$.  The system may apply it exactly when
-$o$ is exposable at $i$.
-\end{definition}
+Keeping the promise means restricting the residual at $i$ and its refinements
+to the outputs that refine $o$.  That is the exposure event
+$\mathsf{expose}(o)$ of Definition~\ref{def:transition-system}, which
+produces $R\mathbin{\upharpoonright_O}o$
+(Equation~\ref{eq:residual-refining-fibers}) and is permitted exactly when $o$
+is exposable at $i$ (Equation~\ref{eq:safe-exposure}): compatible with every
+possibility at $i$, in that every remaining output at $i$ or a valid refinement
+shares an admitted refinement with $o$.  Exposability has two requirements, and
+neither implies the other.  Admission at $i$, $o\in R(i)$, rules out exposing
+a value that only some refinement of $i$ admits, before the input that would
+admit it has arrived.  Compatibility rules out exposing an admitted value that
+a still-valid refinement contradicts: under the equality order, $\bot$ is
+admitted in panel (a) of the election but shares no refinement with the $a$
+and $b$ admitted at $aba$ and $abb$.
 
 \begin{proposition}[Exposure narrows without committing]
 \label{prop:exposure-narrowing}
-Let $o$ be exposable at $i$ in $(i,R)$ and let $R'=R\mathbin{\upharpoonright}(i,o)$.
+Let $o$ be exposable at $i$ in $(i,R)$ and let $R'=R\mathbin{\upharpoonright_O}o$.
 Then $(i,R')$ is a residual state with the same valid inputs as $(i,R)$; the
 restriction from $R$ to $R'$ is content-preserving
 (Definition~\ref{def:content-restriction}); and $o$ is exposure-ready at $i$ in
@@ -1398,8 +1423,8 @@ $(i,R')$.  If $o$ was already exposure-ready in $(i,R)$, then $R'=R$.
 Let $j$ be valid with $i\InputOrd j$ and let $x\in R(j)$.  Exposability supplies
 $u\in R(j)$ above both $o$ and $x$.  Since $u$ refines $o$, it is retained in
 $R'(j)$.  Thus every fiber at or above $i$ remains nonempty, no input becomes
-invalid, and every removed $x$ has the retained refinement $u$.  Fibers not
-above $i$ are untouched.  Every retained output at or above $i$ refines
+invalid, and every removed $x$ has the retained refinement $u$.  Every
+retained output refines
 $o$, which is readiness.  If $o$ was already least, nothing fails to refine it
 and nothing is removed.
 \end{proof}
@@ -1434,16 +1459,16 @@ refinement, so that removal is a content-destroying commitment.
 
 \paragraph{Runs and schedules.}
 A \emph{run} of a participant is a finite sequence of transitions from a
-canonical initial state: input-update events supplied by the environment,
+canonical initial state: input events supplied by the environment,
 interleaved with the participant's own exposure events and commitments.  Its
 \emph{schedule} is the sequence of inputs the environment supplies.  Two
 schedules are \emph{input-equivalent} when they end at the same input; they may
 differ in the intermediate inputs they pass through, which under a change
 presentation means in the order and grouping of arrivals and in repeated
-delivery.  By the composition property of updates, runs with input-equivalent
+delivery.  By the composition property of input events, runs with input-equivalent
 schedules that neither expose nor commit reach the same state.  What can
 depend on the schedule is what a participant exposes or commits between its
-updates.  A replica is a participant that sees a shared input stream in its own
+input events.  A replica is a participant that sees a shared input stream in its own
 order, so several replicas and several runs of one participant under
 input-equivalent schedules are the same object seen twice.
 
@@ -1453,7 +1478,8 @@ A \emph{distributed history} $H$ is a set of events, each at one participant,
 with each participant's events totally ordered, each receive matched to a
 send, and \emph{happens-before} the transitive closure of local order and
 matching.  A receive that advances the receiving participant's input is an
-input-update event; a receive that does not leaves the residual unchanged.  A
+input event; a receive that does not leaves the residual unchanged, as
+does the exposure of a ready output (Proposition~\ref{prop:readiness-identity}).  A
 \emph{consistent cut} $C$ is a subset of events closed under happens-before.
 For each participant $p$, the events of $C$ at $p$, in local order, form a run;
 write $\sigma_p^C$ for its final residual state and
@@ -1479,7 +1505,7 @@ Fix a specification, a participant set, and a commitment basis.
 Each coordinate $\sigma_p^C$ is determined by $p$'s events in local order,
 which every happens-before-respecting replay preserves, and events at
 different participants act on different coordinates; receives that advance no
-input change no coordinate.  This gives (1).  Input updates, exposure events,
+input change no coordinate.  This gives (1).  Input events, exposure events,
 and commitments are each partial functions of the local residual, which gives
 (2).  Then (3) is (2) applied coordinate by coordinate, together with the
 observation that any function induces a bijection between the classes of its
@@ -1514,7 +1540,7 @@ proposition licenses, and the election of Section~\ref{sec:nutshell} is the
 result for a vote-counting machine whose state is the set of ballots received.
 
 In the rest of this section, \emph{reachable} means reachable from a canonical
-initial state by input updates and exposure events alone, with no commitment.
+initial state by input events and exposure events alone, with no commitment.
 
 \paragraph{Coordination-freedom.}
 The CAP intuition has two halves.  Availability: a replica can answer from the
@@ -1530,8 +1556,8 @@ An ordered relational specification is \emph{coordination-free} when the
 following hold.
 \begin{enumerate}
   \item \emph{Exposure at will.}  At every reachable state, every output
-        admitted at an current input is exposable there
-        (Definition~\ref{def:safe-exposure}).
+        admitted at a current input is exposable there
+        (Definition~\ref{def:transition-system}).
   \item \emph{Reconciliation on merge.}  Whenever participants hold reachable
         states $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a legal common
         refinement of their current inputs $i_1,\ldots,i_k$, some row at $j$
@@ -1542,7 +1568,7 @@ following hold.
         \end{equation}
   \item \emph{Run insensitivity.}  For finitely many runs of one participant
         under input-equivalent schedules, each exposing as it pleases and none
-        committing, every scheduled update is defined, and at the shared
+        committing, every scheduled input event is defined, and at the shared
         final input $a$ some row survives in every run.
 \end{enumerate}
 \end{definition}
@@ -1578,7 +1604,7 @@ residual fiber $R(j)$ is a nonempty \emph{upper} subset of $\fiber{j}$---closed
 under taking refinements within $\fiber{j}$---that contains a common refinement
 of any $o\in R(i)$ and any $x\in R(j)$.  Reachable states
 arise from a canonical initial state, whose fibers are whole fibers of $S$, by
-input updates, which leave surviving fibers unchanged, and by exposure events,
+input events, which leave surviving fibers unchanged, and by exposure events,
 which retain exactly the outputs above an exposed value.  An intersection of
 upper sets is upper, so $R(j)$ is upper in $\fiber{j}$.  It is nonempty because
 $j$ is valid.  Given $o$ and $x$, the finite-family form applied to
@@ -1591,14 +1617,14 @@ possibilities at $i$.
 \emph{Reconciliation on merge.}  Let $j$ be a legal common refinement of the
 current inputs $i_1,\ldots,i_k$.  The input $j$ is valid in every $(i_r,R_r)$:
 it had a row initially, it refines $i_r$ and so was never retired by an
-update, and by Proposition~\ref{prop:exposure-narrowing} no exposure sealed
+input event, and by Proposition~\ref{prop:exposure-narrowing} no exposure sealed
 it off.  Each participant $r$ has removed rows only at $i_r$ and its refinements,
 and $i_r\InputOrd j$, so $R_r(j)$ is a nonempty upper subset of $\fiber{j}$.
 Choose $x_r\in R_r(j)$ for each $r$.  The finite-family form for
 $(j,x_1),\ldots,(j,x_k)$ supplies $u\in\fiber{j}$ above every $x_r$, and
 upperness places $u$ in every $R_r(j)$.  Hence the intersection is nonempty.
 
-\emph{Run insensitivity.}  Each scheduled update is defined because no exposure
+\emph{Run insensitivity.}  Each scheduled input event is defined because no exposure
 empties a fiber at a valid input.  Runs under input-equivalent schedules end
 at the same input $a$, which is a common refinement of the inputs at which any
 run exposed, so the reconciliation argument applies with the runs in place of
@@ -1664,7 +1690,7 @@ Suppose the participants share a common commitment basis.  Let a basis action
 $d$ be applicable at a reachable state $\sigma=(i,R)$ and content-destroying at
 the current input $i$, excluding some $x\in R(i)$ that has no refinement in
 $R'(i)$, where $(i,R')=d(\sigma)$.  Then there is a participant state $\tau$,
-reachable from the canonical initial state by the same input updates followed
+reachable from the canonical initial state by the same input events followed
 by exposures or commitments of its own, whose residual at $i$ consists of
 refinements of $x$; and $d(\sigma)$ and $\tau$ have no common row at $i$.
 Consequently $d$ cannot be applied without agreement that no participant takes
@@ -1672,7 +1698,7 @@ the course leading to $\tau$.
 \end{theorem}
 
 \begin{proof}
-Let a second participant receive the same updates as the first, reaching a
+Let a second participant receive the same input events as the first, reaching a
 state with the same current input and with $x\in\fiber{i}$ still admitted.  If $x$
 is exposable there, it exposes $x$; otherwise it applies a restriction
 retaining exactly the outputs above $x$ at $i$ and its refinements---a
@@ -1683,7 +1709,7 @@ common-basis hypothesis makes the same commitments available to every
 participant holding the same input.  Either way its residual at $i$ is
 contained in $\{u\in\fiber{i}:x\OutputOrd u\}$.  The first participant's
 residual $R'(i)$ contains no such $u$ by hypothesis.  The intersection at $i$
-is therefore empty: the two states cannot be merged, and no later input update
+is therefore empty: the two states cannot be merged, and no later input event
 or exposure can restore a removed row.  The only way to avoid this outcome is
 for the second participant not to select $x$, which it can be relied upon to
 do only by agreement.
@@ -1764,7 +1790,7 @@ content-destroying; the deployment says who is entitled to make it.
 \label{def:deployment}
 A \emph{deployment} over a participant set $P$ assigns to each participant $p$
 a set $\Delta_p\subseteq S$ of rows it may select; $(i,o)\in\Delta_p$ means
-that $p$ may hold $i$ as an current input and select $o$ there, on its own
+that $p$ may hold $i$ as a current input and select $o$ there, on its own
 authority.  A \emph{partition} $\Pi$ of $P$ divides the participants into two
 or more nonempty components.  A finite family of rows is \emph{separable under
 $\Pi$} when its members can be attributed to participants, each row lying in
@@ -2035,7 +2061,7 @@ record distinct failed login attempts and define
 Suppose $Q_{100}(U)=\mathsf{true}$.  For every possible refinement
 $V\supseteq U$, the grow-only set still contains at least 100 attempts, so
 $Q_{100}(V)=\mathsf{true}$.  This is exactly the exposability test of
-Definition~\ref{def:safe-exposure}: restricting future outputs to those that
+Definition~\ref{def:transition-system}: restricting future outputs to those that
 refine the exposed $\mathsf{true}$ removes no row and requires no commitment.  Indeed, $\mathsf{true}$ is maximal in the Boolean
 output order, so any output refining it must equal $\mathsf{true}$.  Before the
 threshold is reached, $\mathsf{false}$ is also exposable because it may
