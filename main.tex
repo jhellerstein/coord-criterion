@@ -145,8 +145,12 @@ availability preserve application invariants?  Section~\ref{sec:cap-corollary}
 answers the first question; the CRDT, HAT, and invariant-confluence parts of
 Section~\ref{sec:instances} answer the others.
 
-We begin by introducing a general notion of specification, agnostic to any language or
-implementation details.  A \emph{functional semantic
+We begin by introducing a general notion of specification, agnostic to any
+language or implementation details.  It is consistent with state-machine-style
+specifications and can be compiled from them
+(Section~\ref{sec:complete-calm}); what it elides is the incidental detail of
+execution order, keeping only what the specification can ask about.  A
+\emph{functional semantic
 specification} (\S\ref{sec:functional-specifications}) is an arbitrary function
 \[
   f:(I,\InputOrd)\longrightarrow(O,\OutputOrd)
@@ -238,7 +242,9 @@ This paper makes four contributions:
         \emph{commitment basis} that fixes what a system may make binding.
         Residuals are provably the semantic quotient of Lamport histories:
         any consistent cut of an execution yields them, and they suffice for
-        every question the paper asks.  Everything below is stated and proved
+        every question the paper asks.  The framework is consistent with
+        state-machine specifications and can be compiled from them, eliding
+        only incidental execution order.  Everything below is stated and proved
         in this framework, and Section~\ref{sec:instances} shows that CRDTs,
         highly available transactions, and invariant confluence are instances
         of it.
@@ -378,7 +384,9 @@ $a$ the result is $a$; row $abb$ says that if $v_2$ and $v_3$ both vote $b$ the
 result is $b$.
 
 The rows are only part of the specification.  Each column also carries a
-partial order, and both orders are design decisions.  The \emph{input order}
+partial order, and both orders are design decisions.  The input order also
+fixes how much of history the system is obliged to remember: two executions
+that reach the same input are, for the specification, the same.  The \emph{input order}
 says what counts as more input: here, more ballots, so $ab\cdot$ \emph{refines}
 $a\cdot\cdot$, while $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output
 order} says when a later output keeps every promise an earlier one made: here
@@ -413,9 +421,11 @@ $a\cdot\cdot$ is retired because its input has been superseded: $ab\cdot$
 refines it, so the election will never again be asked about $a\cdot\cdot$
 alone.  The rows at
 $aa\cdot$, $aaa$, and $aab$ are retired because their inputs have become
-unreachable: a voter casts only one ballot, so no input in the specification
+unreachable: this specification admits one ballot per voter, so no input in it
 refines both $aa\cdot$ and $ab\cdot$, and those rows described futures the
-election can no longer have.
+election can no longer have.  That is a choice made in the specification, not
+a limit of the model; a specification that admitted a second, conflicting
+ballot would record both and say what the result then is.
 
 \paragraph{What could still happen.}
 While input may still grow, what matters is not only the current row but what
@@ -661,7 +671,7 @@ externally visible claim in $o$ and may add more.
 
 These are two separate partial orders.  The input order compares inputs; the
 output order compares outputs.  Neither orders executions or rows in a table.
-Both are part of the semantic specification.  A specification describes
+A specification describes
 admissible behavior; it is not a data structure that an implementation must
 store or consult.  The same holds for the semantic states derived from it
 below.
@@ -681,14 +691,20 @@ This is the standard mathematical definition of a monotone function.  In
 systems terms, an output exposed from partial input remains valid as more input
 arrives.
 
-\subsection{Residual states: what remains possible}
+\subsection{A semantic transition system}
 \label{sec:determination}
 
 A function gives one output for each input, but a refined input may require a
 different output.  Before an execution can say anything binding, we need to
-record which input--output possibilities are still open, which events close
-them, and which of those closings are acts of choice.  This subsection defines
-the vocabulary of Section~\ref{sec:nutshell}, following the panels of
+keep track of which input--output possibilities remain, which events remove
+them, and which of those removals are acts of choice.  We do this with a
+transition system.  Its \emph{states} are residual states, the specification
+with some rows removed.  Its \emph{transitions} are of three kinds: input
+events, which the environment produces; commitments, which the system makes;
+and exposures, which the system also makes and which Section~\ref{sec:safe-exposure}
+defines once relational specifications make them interesting.  This subsection
+defines the states and the first two kinds of transition, following the
+vocabulary of Section~\ref{sec:nutshell} and the panels of
 Figure~\ref{fig:election-frames}.  The same definitions carry over to
 relational specifications in Section~\ref{sec:complete-calm}.
 
@@ -705,17 +721,26 @@ Execution never adds a row.  Everything that follows is a story about which
 rows have been removed from the table, and by what.
 
 Inputs are \emph{cumulative}: an input is everything seen so far, and
-$i\InputOrd j$ means that $j$ contains at least the information in $i$.  The
-domain $I$ contains only legal inputs, so constraints on input, such as one
-ballot per voter, live in $I$ and its order.  Write $k\prec_I i$ when
+$i\InputOrd j$ means that $j$ contains at least the information in $i$.
+Cumulative means that the input only grows under $\InputOrd$; it does not imply
+that an input is internally consistent in any other, application-specific
+sense.  The input domain $(I,\InputOrd)$ may be designed to accommodate
+multiple possible worlds or probability distributions, corrections,
+retractions, or other application-specific structure.  The specification sees
+none of this internal structure; it sees inputs only through the domain, its
+order, and the outputs it admits for each.  In our election example, the input
+domain admits one ballot per voter by design; an alternate specification that
+admitted a second, conflicting ballot would record both and say which outputs
+are then admissible.  Write $k\prec_I i$ when
 $k\InputOrd i$ and $k\neq i$, and $\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$
 for the refinements of $i$.
 
-\paragraph{Input events.}
-In Figure~\ref{fig:election-frames}(b) the current input has advanced to
-$ab\cdot$, and every row whose input does not refine $ab\cdot$ has been
-removed; such inputs are \emph{retired}.  A residual state is a table whose
-removed rows obey the following conditions.
+\paragraph{States.}
+Every panel of Figure~\ref{fig:election-frames} is a state: the specification
+with some rows removed, one input current.  In panel (b) the current input is
+$ab\cdot$ and every row whose input does not refine it has been removed; such
+inputs are \emph{retired}.  A residual state is a table whose removed rows obey
+the following conditions.
 
 \begin{definition}[Residual state]
 \label{def:residual-state}
@@ -744,12 +769,28 @@ condition 4 says that retirement is complete.  Valid inputs other than the
 current one are the potential futures: refinements of $i$ whose rows have not
 been removed.
 
+For an input $i$, the \emph{canonical initial state} is
+        \begin{equation}
+  \sigma_0(i)=\bigl(i,\ \{(k,o)\in S:\ i\InputOrd k\}\bigr),
+  \label{eq:canonical-initial-state}
+        \end{equation}
+the specification restricted to $i$ and its refinements.
+Figure~\ref{fig:election-frames}(a) is $\sigma_0(a\cdot\cdot)$.  A residual
+state is \emph{reachable} by a given set of transition kinds when it is
+obtained from some canonical initial state by a finite sequence of transitions
+of those kinds.
+
+\paragraph{Transitions: input events.}
+In panel (b) the environment has delivered $v_2$'s ballot and the current
+input has advanced from $a\cdot\cdot$ to $ab\cdot$.
+
 \begin{definition}[Input-update event]
 \label{def:input-update}
-For $j\in I$ with $i\InputOrd j$, the \emph{input-update event} maps
-$\sigma=(i,R)$ to
+For $j\in I$ with $i\InputOrd j$, the \emph{input-update event} makes $j$ the
+current input and keeps exactly the rows of $R$ whose input refines $j$: it
+maps $\sigma=(i,R)$ to
         \begin{equation}
-  \tau=\bigl(j,\ R\cap(\mathord\uparrow_I j\times O)\bigr),
+  \tau=\bigl(j,\ \{(k,o)\in R:\ j\InputOrd k\}\bigr),
   \label{eq:input-update-residual}
         \end{equation}
 defined when $\tau$ is a residual state, that is, when $R(j)\neq\varnothing$.
@@ -757,33 +798,24 @@ Write $\sigma\xrightarrow{\mathsf{update}(j)}\tau$.
 \end{definition}
 
 The environment produces input-update events; the system does not choose them.
-An event adds no row and leaves every surviving fiber unchanged, so it chooses
-nothing.  An update to the current input itself, as from a duplicate delivery,
-changes nothing.  The event is undefined when the new input has no row left,
+An event retires rows, and so narrows the future, but it makes no choice among
+outputs: it adds no row and leaves every surviving fiber unchanged.  The event
+is undefined when the new input has no row left,
 for instance because an earlier commitment sealed it off: the environment cannot
 make an invalid input current.  Updates compose: an update to $j$ followed by
 an update to $k$ has the same effect as a single update to $k$, since
 $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival order, batching,
 and repeated delivery therefore do not affect the state reached by updates
-alone; only the input reached matters.  Applications that receive changes
-rather than whole inputs, such as single ballots, may present an update as a
-change $\delta$ applied to the current input, $i\oplus\delta=j$, legal exactly
-when the result is a legal refinement of $i$.  Its semantic effect is the
-update to $j$; the change is a presentation of the transition, not a second
-kind of input.
+alone; only the input reached matters.  In practice the environment usually delivers changes, such as single
+ballots, rather than whole inputs.  A change $\delta$ applied to the current
+input yields a new input $i\oplus\delta=j$, and is legal exactly when $j$ is a
+legal refinement of $i$.  The model does not treat $\delta$ as a kind of input;
+the event it causes is simply $\mathsf{update}(j)$, and nothing about $\delta$
+beyond the $j$ it produces matters.  A change already incorporated gives
+$i\oplus\delta=i$, and $\mathsf{update}(i)$ at $(i,R)$ is the identity, so
+duplicate delivery changes nothing.
 
-For an input $i$, the \emph{canonical initial state} is
-        \begin{equation}
-  \sigma_0(i)=\bigl(i,\ S\cap(\mathord\uparrow_I i\times O)\bigr),
-  \label{eq:canonical-initial-state}
-        \end{equation}
-the table restricted to $i$ and its refinements.
-Figure~\ref{fig:election-frames}(a) is $\sigma_0(a\cdot\cdot)$.  A
-residual state is \emph{reachable} by a given class of transitions when it is
-obtained from some canonical initial state by a finite sequence of transitions
-in that class.
-
-\paragraph{Commitments.}
+\paragraph{Transitions: commitments.}
 Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
 the current input fixed.  No input event does this; it is an act of the system, and
 for a functional specification it is the only kind of commitment needed, since
@@ -864,7 +896,7 @@ commitment is a sequence
 of applicable commitments, empty when the state is already determined.  Only
 the commitments are the system's doing, and only they will be counted.
 
-\paragraph{Exposure.}
+\paragraph{Exposure readiness.}
 Exposing $o$ at $i$ promises that whatever is finally produced for $i$, or
 for any refinement of $i$, will refine $o$.  The promise is already kept when
 $o$ lies below everything in the upper fiber.
@@ -1460,6 +1492,26 @@ diagram survives in its cut's residuals; message order, batching, and who has
 learned what are forgotten exactly when they do not advance anyone's input.
 Run insensitivity and reconciliation on merge, stated next over residuals, are
 therefore statements about executions.
+
+Read in the other direction, the proposition is a design criterion.  Choosing
+the input domain and its order decides which histories the semantics treats as
+the same: two cuts yield one residual exactly when they reach the same input
+and have removed the same rows.  A finer input order forgets less of the
+execution and obliges the specification to say more; a coarser one forgets
+more.  The specification then states admissible outcomes over residuals,
+without re-encoding the history it was built to forget, and the proposition
+says that nothing it can ask is lost in doing so.
+
+A reader who thinks in state machines can compile one into this form.  At the
+finest grain, an input is the sequence of environment events the machine has
+consumed, ordered by extension, and a row $(i,o)$ is admissible when some run
+of the machine on $i$ produces $o$; the register example of
+Section~\ref{sec:cap-corollary} is of this kind.  If the machine's state
+summarizes its past, so that two event sequences reaching the same state have
+the same futures, the states themselves may serve as inputs, ordered by
+reachability, provided that order is antisymmetric.  That is the coarsening the
+proposition licenses, and the election of Section~\ref{sec:nutshell} is the
+result for a vote-counting machine whose state is the set of ballots received.
 
 In the rest of this section, \emph{reachable} means reachable from a canonical
 initial state by input updates and exposure events alone, with no commitment.
