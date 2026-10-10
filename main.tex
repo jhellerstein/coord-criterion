@@ -383,8 +383,8 @@ says what counts as more input: here, more ballots, so $ab\cdot$ \emph{refines}
 $a\cdot\cdot$, while $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output
 order} says when a later output keeps every promise an earlier one made: here
 $\bot$ lies below both $a$ and $b$, so ``no result yet'' can eventually refine
-to a winner,
-but $a$ and $b$ are incomparable, so neither winner refines the other.  A
+to a winner, but $a$ and $b$ are incomparable, so neither winner refines the
+other.  A
 different design could make all outputs incomparable, so that every result is
 final; we return to that choice below.  Given these orders, one can follow any input
 upward through its refinements, say $a\cdot\cdot$ to $ab\cdot$ to $aba$: the
@@ -413,19 +413,17 @@ $a\cdot\cdot$ is retired because its input has been superseded: $ab\cdot$
 refines it, so the election will never again be asked about $a\cdot\cdot$
 alone.  The rows at
 $aa\cdot$, $aaa$, and $aab$ are retired because their inputs have become
-unreachable: a voter casts only one ballot, so no legal input refines both
-$aa\cdot$ and $ab\cdot$, and those rows described futures the election can no
-longer have.
+unreachable: a voter casts only one ballot, so no input in the specification
+refines both $aa\cdot$ and $ab\cdot$, and those rows described futures the
+election can no longer have.
 
 \paragraph{What could still happen.}
 While input may still grow, what matters is not only the current row but what
-any input that could still arrive might require.  Readers who think in
-Lamport's terms may read the input order as happens-before on inputs: the
-current input's retired predecessors have already happened, its refinements
-are the inputs that some extension of the history can still produce, and
-incomparable inputs are produced by no extension at all.  The future of the
-election is therefore its current input together with the valid refinements,
-and the outputs of those rows form the current input's \emph{upper fiber}.  In
+any input that could still arrive might require.  In Lamport's terms, the
+refinements of the current input are the inputs that some extension of the
+history can still produce.  The future of the election is therefore its
+current input together with the valid refinements, and the outputs of those
+rows form the current input's \emph{upper fiber}.  In
 panel (b) those rows are the current row and the two refinements $aba$ and
 $abb$ in which $v_3$ votes, so the upper fiber, shaded, is $\{\bot,a,b\}$:
 either candidate could still win.
@@ -437,9 +435,8 @@ ballot $v_3$ could cast.  Narrowing the upper fiber until a single output
 remains is \emph{determination}.  In database theory terms it establishes a
 \emph{conditional functional dependency} on the residual: for all input values
 at or above the current input, the output is determined to be the same.  Here
-input arrival
-achieved a determination on its
-own; below we meet the case where the system must act.
+input arrival determined the residual on its own; below we meet the case where
+the system must act.
 
 \paragraph{Commitments.}
 Return to panel (b) and let the registrar close the polls: $v_3$'s ballot,
@@ -448,11 +445,10 @@ at $aba$ and $abb$ are removed although no ballot arrived and the current
 input has not changed: those inputs have been sealed off.  This is a
 \emph{commitment}, specifically an \emph{input-sealing commitment}, and it is
 an act of the system rather than of the environment.  It
-irrevocably disallows refinements the original specification admitted, and only the
-system has the authority to perform it.  Not every act of the system is a
-commitment.  Tallying the ballots in panel (c) to notice that the result is
-determined removes no row; computation has no effect on the residual, and so
-never counts as determination.  Afterward $ab\cdot$ is \emph{sealed}:
+irrevocably disallows refinements the original specification admitted.  Only
+the system may perform it, and only if it is among the commitments the system
+declares in advance, its \emph{commitment basis}.  Afterward $ab\cdot$ is
+\emph{sealed}:
 no refinement of it remains valid, and its upper fiber has collapsed to
 $\{\bot\}$, so it too is determined.
 For a functional specification, input-sealing commitments are the only kind
@@ -464,7 +460,7 @@ never choices to be made among outputs; the only thing to commit to is sealing i
   \small
   \setlength{\tabcolsep}{6pt}
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(g) As (a), all outputs incomparable, polls closed}\\
+    \multicolumn{2}{@{}l}{(e) As (a), all outputs incomparable, polls closed}\\
     \toprule
     Input & Output \\ \midrule
     \sh{$\mathbf{a\cdot\cdot}$} & \sh{$\bot$} \\
@@ -486,15 +482,19 @@ never choices to be made among outputs; the only thing to commit to is sealing i
 \end{figure}
 
 \paragraph{Exposure.}
-\emph{Exposing} a result beyond the system boundaries is a different act from committing.
-Exposing  $o$ promises that the final result will refine $o$.  The promise is already
-kept whenever $o$ lies below everything in the upper fiber, and such an $o$ is
-\emph{exposure-ready}.  Read the footers of Figure~\ref{fig:election-frames}:
-$\bot$ is ready in every panel, because every shaded output refines it, and $a$
-is ready in panel (c).  A system may expose only ready outputs, and it
-may expose a ready output at any time, removing no row.  Now change one thing:
-make all
-outputs incomparable, dropping $\bot\OutputOrd a,b$.  The rows are the same,
+\emph{Exposing} a result to a client is a different act from committing.
+Exposing $o$ promises that the final result will refine $o$.  The promise is
+already kept whenever $o$ lies below everything in the upper fiber, and such an
+$o$ is \emph{exposure-ready}.  Read the footers of
+Figure~\ref{fig:election-frames}: $\bot$ is ready in every panel, because every
+shaded output refines it, and $a$ is ready in panel (c).  A system may expose
+an output only when doing so removes no genuine alternative; for a functional
+specification that means the output is ready.  A ready output may be exposed
+at any time, removing no row.
+
+\paragraph{When monotonicity fails.}
+Now change one thing: make all outputs incomparable, dropping
+$\bot\OutputOrd a,b$.  The rows are the same,
 but in panels (a) and (b) nothing is ready: $\bot$ no longer lies below the $a$
 and $b$ in the upper fiber, so announcing it would promise something a later
 ballot could contradict.  The specification is no longer monotone: as inputs
@@ -513,7 +513,7 @@ first seal input by commitment.
   \small
   \setlength{\tabcolsep}{5pt}
   \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(e) Leader election, after committing to \texttt{server1}}\\
+    \multicolumn{2}{@{}l}{(f) Leader election, after committing to \texttt{server1}}\\
     \toprule
     Input & Output \\ \midrule
     $i$ & \sh{\texttt{server1}} \\
@@ -524,7 +524,7 @@ first seal input by commitment.
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(f) Traceroute, after exposing $\{s{\to}\texttt{s1}\}$}\\
+    \multicolumn{2}{@{}l}{(g) Traceroute, after exposing $\{s{\to}\texttt{s1}\}$}\\
     \toprule
     Input & Output \\ \midrule
     $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
@@ -537,7 +537,7 @@ first seal input by commitment.
     \multicolumn{2}{@{}l}{\footnotesize an exposure}
   \end{tabular}
   \caption{Two specifications with several rows at the current input $i$, each
-  shown after one output has been exposed.  In (f) an output is a prefix-closed
+  shown after one output has been exposed.  In (g) an output is a prefix-closed
   set of routes from source $s$, which reaches server \texttt{s1} directly and
   server \texttt{s2} through hop $a$.  Shaded cells are the upper fiber that
   remains.  Legend as in Figure~\ref{fig:election-frames}.}
@@ -547,12 +547,11 @@ first seal input by commitment.
 \paragraph{Ambiguity.}
 Some specifications are ambiguous: they admit several results for one
 input, so the input column does not determine the output column and the
-functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(e) is leader
+functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(f) is leader
 election with two eligible servers, either permitted as sole leader, so the
-table has two rows at one input.  Committing to \texttt{server1} removes the row for
-\texttt{server2}, and no remaining row says what it said.  This is a second
-kind of commitment, a \emph{choice commitment}: a genuine alternative is gone.
-Panel (f) is a traceroute
+table has two rows at one input.  Committing to \texttt{server1} removes the row
+for \texttt{server2}: a second kind of commitment, a \emph{choice commitment}.
+Panel (g) is a traceroute
 diagnostic for a service reachable from source $s$ directly at server
 \texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
 prefix-closed set of routes observed so far, so $\{s{\to}a\}$, a probe that has
@@ -560,56 +559,53 @@ reached the hop but not the server, is a legal output, and so is any union of
 legal outputs.  Exposing $\{s{\to}\texttt{s1}\}$ removes the two rows that
 do not refine it, yet the remaining rows $\{s{\to}\texttt{s1},\ s{\to}a\}$ and
 $\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$ still say
-everything they said.  Nothing is lost, so this is an exposure, not a
-commitment.
+everything they said.  Nothing is lost: the output is \emph{exposable}, and
+exposing it is not a commitment.
 
-What made the difference between panels (e) and (f)?  In both, the system
-exposed one of several admissible outputs.  In leader election the other
+What made the difference between panels (f) and (g)?  In both, the system
+selected one of several admissible outputs.  In leader election the other
 output had nowhere to go: no admissible output refines both \texttt{server1}
-and \texttt{server2}, so making one exposure-ready required removing the other outright.  In
-traceroute every other output had somewhere to go: whatever two route sets the
-specification admits, it also admits their union, which refines both.  A set
-of outputs with this property, in which every finite subset has a common
-output-order refinement within the set, is called \emph{directed}.  Directedness is the
-property that makes exposure safe in the presence of ambiguity.  If the
-outputs admitted at an input are directed, then whichever of them the system
-exposes, every other output can still be refined with that value, so nothing is
-lost.  If they are not directed, some exposure removes an
-alternative outright, and that exposure only becomes ready after a commitment to
-remove the alternative.  This removal is not retirement: the input
-did not change; the system exposed something.  Complete CALM
+and \texttt{server2}, so neither was exposable without removing the other
+outright.  In traceroute every other output had somewhere to go: whatever two
+route sets the specification admits, it also admits their union, which refines
+both.  A set of outputs with this property, in which every finite subset has a
+common refinement within the set, is called \emph{directed}.  Directedness is
+what makes exposure possible in the presence of ambiguity.  If the outputs
+admitted at an input are directed, then whichever of them the system exposes,
+every other output can still be refined with that value, so nothing is lost.
+If they are not directed, some output becomes exposable only after a
+commitment removes an alternative.  Complete CALM
 (Section~\ref{sec:complete-calm}) isolates exactly these two requirements:
-outputs must continue as input grows, as in the election, and the outputs
-admitted at one input must be directed, as in traceroute but not in leader
-election.
+outputs must continue as input grows, as in the election, which is
+\emph{Lifted Monotonicity}; and the outputs admitted at one input must be
+directed, as in traceroute but not in leader election.
 
-\paragraph{Two kinds of removal.}
+\paragraph{Commitments versus everything else.}
 The legend of Figures~\ref{fig:election-frames} and~\ref{fig:ambiguity-frames}
-distinguishes two kinds of removed row.  A gray row is redundant: some
-remaining row says everything it said, so removing it narrows nothing.  A
-struck row was an alternative in its own right: removing it narrows what is
-within spec.
+distinguishes two kinds of removed row, and the distinction is exactly
+commitment versus not.  A gray row is redundant: some remaining row says
+everything it said, so removing it narrows nothing.  A struck row was an
+alternative in its own right: removing it narrows what is within spec, and
+only a commitment does that.
 
-Three kinds of transition remove rows.  Input arrival retires the rows the new
-input does not refine (panels (b), (c)); it belongs to the environment.
-Exposure removes the rows that do not refine the exposed output (panel (f)); it
-belongs to the system.  Commitment removes rows on the system's own authority
-(panels (d), (e)).  The two CALM conditions say when the first two transitions
-remove only redundant rows: monotonicity says this of input arrival, as in
-panel (b), where the retired $\bot$ at $a\cdot\cdot$ is refined by the $\bot$
-at $ab\cdot$; directedness says it of exposure, as in panel (f).  A commitment always narrows; that is its purpose.
-
-When monotonicity or directedness fails, some output is not ready, because a
-later input or another exposure could contradict it, and the system may expose
-only ready outputs.  To make it ready, the system must commit: seal the input,
-so that no later arrival bears on the promise (panel (d)), or choose the
-output, so that no other exposure contradicts it (panel (e)).  Everything so far
-is semantic: it concerns the specification and its orders, and it would hold of a
-single-node database choosing a serialization order among concurrent
-transactions just as it holds of the election.
+The other two kinds of transition remove rows without committing.  Input
+arrival retires the rows the new input does not refine (panels (b), (c)); it
+belongs to the environment.  Exposure removes the rows that do not refine the
+exposed output (panel (g)); it belongs to the system but is not a commitment.
+The two CALM conditions say when these two transitions remove only redundant
+rows: monotonicity says this of input arrival, as in panel (b), where the
+retired $\bot$ at $a\cdot\cdot$ is refined by the $\bot$ at $ab\cdot$;
+directedness says it of exposure, as in panel (g).  A commitment, by contrast,
+always narrows; that is its purpose (panels (d), (e), (f)).  Computation is not on
+this list at all.  Tallying the ballots in panel (c) to notice that the result
+is determined removes no row; computation has no effect on the residual, and
+so never counts as determination.
 
 \paragraph{Instantiating the model.}
-Now let the system be distributed.  It consists of participants, each of
+Everything so far is semantic: it concerns the specification and its orders,
+and it would hold of a single-node database choosing a serialization order
+among concurrent transactions just as it holds of the election.  Now let the
+system be distributed.  It consists of participants, each of
 which knows the specification, which is fixed and public, but sees only its
 own events: the input that has reached it, the exposures and commitments it
 has itself made.  Each participant therefore has its own residual, obtained
@@ -856,15 +852,17 @@ condition on input and determinedness a condition on output, and determination
 can arrive without any commitment.  Inputs incomparable with $i$ are unaffected
 by sealing it.
 
-\emph{Determination} is also the name for the process of making possibilities
-unavailable through commitments.  With the current input fixed, a
-determination is a sequence
+\emph{Determination} is also the name for the process by which a residual
+becomes determined.  Input events may determine a residual on their own, as in
+Figure~\ref{fig:election-frames}(c); when they do not, the system narrows it
+through commitments.  With the current input fixed, a determination by
+commitment is a sequence
 \[
   (i,R_0)\xrightarrow{p_1}(i,R_1)
   \xrightarrow{p_2}\cdots\xrightarrow{p_m}(i,R_m)
 \]
-of applicable commitments.  It is empty when the initial state is already
-determined.
+of applicable commitments, empty when the state is already determined.  Only
+the commitments are the system's doing, and only they will be counted.
 
 \paragraph{Exposure.}
 Exposing $o$ at $i$ promises that whatever is finally produced for $i$, or
