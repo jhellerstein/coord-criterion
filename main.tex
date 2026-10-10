@@ -304,11 +304,11 @@ exercised on the example.
     $aab$ & \sh{$a$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
-    \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposure-ready}
+    \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(b) After $\mathsf{update}(\{ab\cdot\})$}\\
+    \multicolumn{2}{@{}l}{(b) After $\mathsf{input}(ab\cdot)$}\\
     \rowhdr
     \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
     \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
@@ -319,11 +319,11 @@ exercised on the example.
     \retired{$aab$} & \retired{$a$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
-    \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposure-ready}
+    \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(c) After $\mathsf{update}(\{aa\cdot\})$ instead}\\
+    \multicolumn{2}{@{}l}{(c) After $\mathsf{input}(aa\cdot)$ instead}\\
     \rowhdr
     \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
     \retired{$ab\cdot$} & \retired{$\bot$} \\
@@ -334,7 +334,7 @@ exercised on the example.
     $aab$ & \sh{$a$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined,}\\
-    \multicolumn{2}{@{}l}{\footnotesize not sealed; $a$ is exposure-ready}
+    \multicolumn{2}{@{}l}{\footnotesize not sealed; $a$ is exposable}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
@@ -482,7 +482,7 @@ never choices to be made among outputs; the only thing to commit to is sealing i
     \retired{$aab$} & \retired{$a$} \\ \strikerow
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; sealed and}\\
-    \multicolumn{2}{@{}l}{\footnotesize determined; $\bot$ is exposure-ready}
+    \multicolumn{2}{@{}l}{\footnotesize determined; $\bot$ is exposable}
   \end{tabular}
   \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
   incomparable, after the registrar closes the polls at $a\cdot\cdot$.  Every
@@ -493,27 +493,28 @@ never choices to be made among outputs; the only thing to commit to is sealing i
 
 \paragraph{Exposure.}
 \emph{Exposing} a result to a client is a different act from committing.
-Exposing $o$ promises that the final result will refine $o$.  The promise is
-already kept whenever $o$ lies below everything in the upper fiber, and such an
-$o$ is \emph{exposure-ready}.  Read the footers of
-Figure~\ref{fig:election-frames}: $\bot$ is ready in every panel, because every
-shaded output refines it, and $a$ is ready in panel (c).  A system may expose
-an output only when doing so removes no genuine alternative; for a functional
-specification that means the output is ready.  A ready output may be exposed
-at any time, removing no row.
+Exposing $o$ promises that the final result will refine $o$.  A system may
+expose an output only when doing so removes no genuine alternative: every
+output still possible at some input must have, at that same input, a
+refinement that also refines $o$.  Such an $o$ is \emph{exposable}.  For a
+functional specification, where each input has one output, this says that $o$
+lies below everything in the upper fiber, and exposing it removes no row at
+all.  Read the footers of Figure~\ref{fig:election-frames}: $\bot$ is
+exposable in every panel, because every shaded output refines it, and $a$ is
+exposable in panel (c).
 
 \paragraph{When monotonicity fails.}
 Now change one thing: make all outputs incomparable, dropping
 $\bot\OutputOrd a,b$.  The rows are the same,
-but in panels (a) and (b) nothing is ready: $\bot$ no longer lies below the $a$
-and $b$ in the upper fiber, so announcing it would promise something a later
+but in panels (a) and (b) nothing is exposable: $\bot$ no longer lies below
+the $a$ and $b$ in the upper fiber, so announcing it would promise something a later
 ballot could contradict.  The specification is no longer monotone: as inputs
 grow under $\InputOrd$, outputs change in a way $\OutputOrd$ does not sanction.
 To announce anything, the registrar must first make an input-sealing
 commitment.
 Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
 $a\cdot\cdot$: every refinement is sealed off by the commitment, the upper fiber
-collapses to $\{\bot\}$, and only now is $\bot$ exposure-ready.  That contrast
+collapses to $\{\bot\}$, and only now is $\bot$ exposable.  That contrast
 is Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one must
 first seal input by commitment.
@@ -569,7 +570,7 @@ reached the hop but not the server, is a legal output, and so is any union of
 legal outputs.  Exposing $\{s{\to}\texttt{s1}\}$ removes the two rows that
 do not refine it, yet the remaining rows $\{s{\to}\texttt{s1},\ s{\to}a\}$ and
 $\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$ still say
-everything they said.  Nothing is lost: the output is \emph{exposable}, and
+everything they said.  Nothing is lost: the output is exposable, and
 exposing it is not a commitment.
 
 What made the difference between panels (f) and (g)?  In both, the system
@@ -632,11 +633,11 @@ their messages were ordered or batched
 (Proposition~\ref{prop:residual-quotient}).
 
 Commitments are precisely the semantic actions that require coordination;
-input events and ready output exposures may be done autonomously.  This
+input events and exposures may be done autonomously.  This
 follows directly from the discussion above.  Input arrives at each participant
-on its own.  A ready exposure removes only redundant rows, so every other
-participant's residual still refines what was exposed, and combining inputs
-later contradicts nothing.  A commitment removes an alternative that another
+on its own.  An exposure removes only redundant rows, so every output another
+participant still admits has a refinement consistent with what was exposed,
+and combining inputs later contradicts nothing.  A commitment removes an alternative that another
 participant's residual may still admit, so it is safe only if every such
 participant agrees; that agreement is coordination.  Determination that needs
 a commitment is therefore precisely the determination that needs coordination.
@@ -701,10 +702,10 @@ them, and which of those removals are acts of choice.  We do this with a
 transition system, defined in full below, whose states are residual states and
 whose transitions are of three kinds: input events, exposures, and
 commitments.  The definitions follow the vocabulary of Section~\ref{sec:nutshell}
-and the panels of Figure~\ref{fig:election-frames}.  Choice commitments and
-exposure events are defined here but discussed in
-Section~\ref{sec:complete-calm}, where relational specifications make them
-necessary.
+and the panels of Figure~\ref{fig:election-frames}.  Choice commitments are
+defined here but discussed in Section~\ref{sec:complete-calm}, where
+relational specifications make them necessary, as is exposure in the presence
+of output choice.
 
 \paragraph{The specification as a table.}
 View the specification as a table $S\subseteq I\times O$ whose rows are the
@@ -785,14 +786,14 @@ satisfies Definition~\ref{def:residual-state}, and each removes rows and adds
 none.
 \begin{enumerate}
   \item \emph{Input event.}  For $j\in I$ with $i\InputOrd j$, the
-        event $\mathsf{update}(j)$, produced by the environment, makes $j$ the
+        event $\mathsf{input}(j)$, produced by the environment, makes $j$ the
         current input and keeps exactly the rows whose input refines $j$:
         \begin{equation}
-          (i,R)\xrightarrow{\mathsf{update}(j)}
+          (i,R)\xrightarrow{\mathsf{input}(j)}
           \bigl(j,\ R\mathbin{\upharpoonright_I}j\bigr),
           \qquad
           R\mathbin{\upharpoonright_I}j=\{(k,u)\in R:\ j\InputOrd k\},
-          \label{eq:input-update-residual}
+          \label{eq:input-event}
         \end{equation}
         defined when $R(j)\neq\varnothing$.
   \item \emph{Exposure event.}  For $o\in R(i)$, the event
@@ -831,31 +832,31 @@ instance, has had no commitment and no exposure.
 
 Nothing else changes a residual state.  In particular, computation changes
 nothing: it may inform which transition the system takes, but it is not itself
-a transition.  The rest of this subsection discusses input events and
-input-sealing commitments, which are all a functional specification needs;
-Section~\ref{sec:complete-calm} takes up choice commitments and exposure
-events.
+a transition.  The rest of this subsection discusses input events,
+input-sealing commitments, and exposure for a functional specification, where
+exposure never removes a row; Section~\ref{sec:complete-calm} takes up choice
+commitments and exposure in the presence of output choice.
 
 \paragraph{Input events.}
 In panel (b) the environment has delivered $v_2$'s ballot and
-$\mathsf{update}(ab\cdot)$ has advanced the current input from $a\cdot\cdot$ to
+$\mathsf{input}(ab\cdot)$ has advanced the current input from $a\cdot\cdot$ to
 $ab\cdot$.  The environment produces input events; the system does not
 choose them.
 An event retires rows, and so narrows the future, but it makes no choice among
 outputs: it adds no row and leaves every surviving fiber unchanged.  The event
 is undefined when the new input has no row left,
 for instance because an earlier commitment sealed it off: the environment cannot
-make an invalid input current.  Input events compose: $\mathsf{update}(j)$
-followed by $\mathsf{update}(k)$ has the same effect as $\mathsf{update}(k)$
+make an invalid input current.  Input events compose: $\mathsf{input}(j)$
+followed by $\mathsf{input}(k)$ has the same effect as $\mathsf{input}(k)$
 alone, since $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival
 order, batching, and repeated delivery therefore do not affect the state
 reached by input events alone; only the input reached matters.  In practice the environment usually delivers changes, such as single
 ballots, rather than whole inputs.  A change $\delta$ applied to the current
 input yields a new input $i\oplus\delta=j$, and is legal exactly when $j$ is a
 legal refinement of $i$.  The model does not treat $\delta$ as a kind of input;
-the event it causes is simply $\mathsf{update}(j)$, and nothing about $\delta$
+the event it causes is simply $\mathsf{input}(j)$, and nothing about $\delta$
 beyond the $j$ it produces matters.  A change already incorporated gives
-$i\oplus\delta=i$, and $\mathsf{update}(i)$ at $(i,R)$ is the identity, so
+$i\oplus\delta=i$, and $\mathsf{input}(i)$ at $(i,R)$ is the identity, so
 duplicate delivery changes nothing.
 
 \paragraph{Input-sealing commitments.}
@@ -910,9 +911,8 @@ A residual state is \emph{input-sealed} when its current input is sealed.
 When $i$ is sealed, $R^\uparrow(i)=R(i)$: nothing beyond the current fiber can
 be required, and in the functional case $i$ is then determined.  Panel (d) is
 sealed and determined; panel (c) is determined but not sealed.  Sealing is a
-condition on input and determinedness a condition on output, and determination
-can arrive without any commitment.  Inputs incomparable with $i$ are unaffected
-by sealing it.
+condition on input and determinedness a condition on output.  Inputs
+incomparable with $i$ are unaffected by sealing it.
 
 \emph{Determination} is also the name for the process by which a residual
 becomes determined.  Input events may determine a residual on their own, as in
@@ -923,55 +923,45 @@ commitment is a sequence
   (i,R_0)\xrightarrow{p_1}(i,R_1)
   \xrightarrow{p_2}\cdots\xrightarrow{p_m}(i,R_m)
 \]
-of applicable commitments, empty when the state is already determined.  Only
-the commitments are the system's doing, and only they will be counted.
+of applicable commitments, empty when the state is already determined.
 
-\paragraph{Exposure readiness.}
+\paragraph{Exposure.}
 Exposing $o$ at $i$ promises that whatever is finally produced for $i$, or
-for any refinement of $i$, will refine $o$.  The promise is already kept when
-$o$ lies below everything in the upper fiber.
-
-\begin{definition}[Exposure-ready output]
-\label{def:exposure-ready}
-For the current input $i$ of $(i,R)$ and $o\in R(i)$, the output $o$ is
-\emph{exposure-ready at $i$} when
+for any refinement of $i$, will refine $o$.  The exposure event of
+Definition~\ref{def:transition-system} keeps the promise by retaining only the
+rows that refine $o$, and is permitted exactly when $o$ is exposable.  For a
+functional specification every fiber is a singleton, so $f(i)$ is exposable
+at $i$ exactly when
         \begin{equation}
-  (j,o')\in R\ \text{and}\ i\InputOrd j
-  \quad\Longrightarrow\quad
-  o\OutputOrd o'.
-  \label{eq:exposure-ready}
+  f(i)\OutputOrd f(j)\qquad\text{for every valid }j\succeq_I i,
+  \label{eq:functional-exposable}
         \end{equation}
-Equivalently, $o$ is admitted at $i$ and is the least element of the upper
-fiber $R^\uparrow(i)$.  The first qualification cannot be dropped: a least
-element of the upper fiber that occurs only at a proper refinement of $i$ is
-not exposable at $i$.
-\end{definition}
+that is, when $f(i)$ lies below everything in the upper fiber; the exposure
+then removes no row.  In general the exposure event is the identity exactly
+in that situation.
 
-Readiness is not a second permission to expose.  The one permission is
-exposability (Definition~\ref{def:transition-system}), and readiness is the
-case in which the exposure event changes nothing.
-
-\begin{proposition}[Readiness is identity exposure]
-\label{prop:readiness-identity}
-For the current input $i$ of $(i,R)$ and $o\in R(i)$, the output $o$ is
-exposure-ready at $i$ if and only if $o$ is exposable at $i$ and
-$R\mathbin{\upharpoonright_O}o=R$.
+\begin{proposition}[Identity exposures]
+\label{prop:identity-exposure}
+For the current input $i$ of $(i,R)$ and $o\in R(i)$, the event
+$\mathsf{expose}(o)$ is defined at $(i,R)$ and removes no row if and only if
+$o$ is the least element of the upper fiber $R^\uparrow(i)$.
 \end{proposition}
 
 \begin{proof}
-If $o$ is ready, every $x\in R(j)$ with $i\InputOrd j$ satisfies
+If $o$ is least, every $x\in R(j)$ with $i\InputOrd j$ satisfies
 $o\OutputOrd x$, so $u=x$ witnesses Equation~\ref{eq:safe-exposure}, and the
 restriction retains every row.  Conversely, if the restriction retains every
 row, then every $x\in R(j)$ refines $o$, and since every valid $j$ refines
-$i$, that is Equation~\ref{eq:exposure-ready}.
+$i$, $o$ is a lower bound of $R^\uparrow(i)$ that belongs to it.
 \end{proof}
 
-A ready output may therefore be exposed at any time, removing no row; and
-since input events and commitments only remove rows, every output retained
-later at $i$ or its valid refinements continues to refine $o$.  In the election
-$\bot$ is ready in every panel and $a$ in panel (c); under the equality order
-nothing is ready in panels (a) and (b).  That contrast is the content of the
-next theorem.
+The hypothesis $o\in R(i)$ cannot be dropped: a least element of the upper
+fiber that occurs only at a proper refinement of $i$ is not exposable at $i$.
+Once $o$ is exposed, input events and commitments only remove rows, so every
+output retained later at $i$ or its valid refinements continues to refine
+$o$.  In the election $\bot$ is exposable in every panel and $a$ in panel (c);
+under the equality order nothing is exposable in panels (a) and (b).  That
+contrast is the content of the next theorem.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
@@ -981,8 +971,7 @@ participants.  A participant holding input $i$ has reached a residual state by
 input events alone, with no commitment made and nothing sealed.  We say that
 a functional specification permits \emph{incremental exposure without
 sealing} when, in every residual state reachable by input events alone,
-$f(i)$ is exposure-ready at every current input $i$
-(Definition~\ref{def:exposure-ready}).
+$f(i)$ is exposable at every current input $i$.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
@@ -997,13 +986,13 @@ retired inputs, so every $j\succeq_I i$ retains its row $(j,f(j))$, and the
 upper fiber is $R^\uparrow(i)=\{f(j):j\succeq_I i\}$.
 
 If $f$ is monotone, then $f(i)\OutputOrd f(j)$ for every such $j$, which is
-Equation~\ref{eq:exposure-ready}.  The determinedness claim follows because
+Equation~\ref{eq:functional-exposable}.  The determinedness claim follows because
 the upper fiber is the set of those $f(j)$.
 
 If $f$ is not monotone, some $i\InputOrd j$ satisfies
 $f(i)\not\OutputOrd f(j)$.  In the canonical initial state $\sigma_0(i)$,
 the input $j$ is valid, so $f(j)\in R^\uparrow(i)$ and $f(i)$ is not
-exposure-ready.  The fiber at $i$ offers no output choice to resolve: its only
+exposable.  The fiber at $i$ offers no output choice to resolve: its only
 row is $(i,f(i))$.  Before $f(i)$ can be exposed, the implementation must
 therefore carry out a determination whose input-sealing commitments remove the
 row at $j$ and at every other refinement whose output does not refine $f(i)$.
@@ -1386,10 +1375,9 @@ The next subsection shows that such restrictions are not commitments at all.
 
 Consider exposing $o\in R(i)$ to an external observer.  The exposure promises
 that later output at $i$ and at every refinement of $i$ will refine $o$.  When
-$o$ is exposure-ready (Definition~\ref{def:exposure-ready}), the promise is
-already entailed by the residual and the exposure changes nothing
-(Proposition~\ref{prop:readiness-identity}).  Readiness
-asks that $o$ already lie below everything that remains possible.  A weaker
+$o$ already lies below everything that remains possible, the promise is
+entailed by the residual and the exposure changes nothing
+(Proposition~\ref{prop:identity-exposure}).  A weaker
 condition suffices for an exposure to be honest: that nothing remaining possible
 \emph{contradicts} $o$, in the sense that every remaining possibility shares an
 admitted refinement with it.  A participant that exposes such an $o$ undertakes
@@ -1415,8 +1403,8 @@ and $b$ admitted at $aba$ and $abb$.
 Let $o$ be exposable at $i$ in $(i,R)$ and let $R'=R\mathbin{\upharpoonright_O}o$.
 Then $(i,R')$ is a residual state with the same valid inputs as $(i,R)$; the
 restriction from $R$ to $R'$ is content-preserving
-(Definition~\ref{def:content-restriction}); and $o$ is exposure-ready at $i$ in
-$(i,R')$.  If $o$ was already exposure-ready in $(i,R)$, then $R'=R$.
+(Definition~\ref{def:content-restriction}); and $o$ is the least element of
+the upper fiber of $(i,R')$, so a second $\mathsf{expose}(o)$ is the identity.
 \end{proposition}
 
 \begin{proof}
@@ -1425,8 +1413,7 @@ $u\in R(j)$ above both $o$ and $x$.  Since $u$ refines $o$, it is retained in
 $R'(j)$.  Thus every fiber at or above $i$ remains nonempty, no input becomes
 invalid, and every removed $x$ has the retained refinement $u$.  Every
 retained output refines
-$o$, which is readiness.  If $o$ was already least, nothing fails to refine it
-and nothing is removed.
+$o$, so $o$ is least in the new upper fiber.
 \end{proof}
 
 An exposure event is therefore not a commitment, even though it may remove rows:
@@ -1441,7 +1428,7 @@ possibility, and exposure reduces to announcing a determined result.  When every
 upper fiber has a least element, that element is exposable and its exposure
 changes nothing; this is the case of a monotone functional specification.  The
 new case is a fiber such as $\{a,b,t\}$ with $a$ and $b$ incomparable and both
-below $t$: neither $a$ nor $b$ is ready, but each is exposable, and exposing
+below $t$: neither $a$ nor $b$ is least, but each is exposable, and exposing
 $a$ narrows the fiber to $\{a,t\}$ while leaving the content of $b$ reachable
 at $t$.
 
@@ -1479,7 +1466,7 @@ with each participant's events totally ordered, each receive matched to a
 send, and \emph{happens-before} the transitive closure of local order and
 matching.  A receive that advances the receiving participant's input is an
 input event; a receive that does not leaves the residual unchanged, as
-does the exposure of a ready output (Proposition~\ref{prop:readiness-identity}).  A
+does an exposure that removes no row (Proposition~\ref{prop:identity-exposure}).  A
 \emph{consistent cut} $C$ is a subset of events closed under happens-before.
 For each participant $p$, the events of $C$ at $p$, in local order, form a run;
 write $\sigma_p^C$ for its final residual state and
@@ -2177,7 +2164,7 @@ lessons and scope limits.
 Functional CALM and Complete CALM separate two reasons a commitment may be necessary.
 A failure of growth means that more input can invalidate an exposed output.
 The system must exclude the incompatible future inputs through input-sealing
-commitments from its basis before that output is exposure-ready.  A failure of
+commitments from its basis before that output is exposable.  A failure of
 coherence means that outputs admitted at one input cannot all be preserved;
 proceeding requires a choice commitment.  Whether either commitment
 requires agreement among participants depends on the deployment.
