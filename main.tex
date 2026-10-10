@@ -274,10 +274,11 @@ gives further classical applications.
 \label{sec:nutshell}
 
 This section introduces the formalism on one example, using the vocabulary the
-rest of the paper will use.  Terms in italics are defined formally in
-Section~\ref{sec:determination}.  Nothing here is needed for the proofs, but
+rest of the paper will use.  Terms introduced in italics are defined formally in
+Sections~\ref{sec:functional-calm} and~\ref{sec:complete-calm}; italics also
+mark the occasional standard term borrowed from database theory.  Nothing here is needed for the proofs, but
 every notion the Functional CALM and Complete CALM theorems rest on---residual
-states, input events, commitments, upper fibers, sealing, and exposure---is
+states, input events, commitments, upper fibers, sealed inputs, and exposure---is
 exercised on the example.
 
 \begin{figure*}[t]
@@ -438,23 +439,25 @@ remains is \emph{determination}.  In database theory terms it establishes a
 at or above the current input, the output is determined to be the same.  Here
 input arrival
 achieved a determination on its
-own; below we meet the case where the system must act.  Tallying the ballots to
-notice that the result is determined removes no row; that computation has no
-effect on the residual, and so does not count as determination.
+own; below we meet the case where the system must act.
 
 \paragraph{Commitments.}
 Return to panel (b) and let the registrar close the polls: $v_3$'s ballot,
 should it arrive, will not be counted.  Panel (d) shows the result.  The rows
 at $aba$ and $abb$ are removed although no ballot arrived and the current
-input has not changed: those inputs have been \emph{closed}.  This is a
-\emph{commitment}, an act of the system rather than of the environment.  It
+input has not changed: those inputs have been sealed off.  This is a
+\emph{commitment}, specifically an \emph{input-sealing commitment}, and it is
+an act of the system rather than of the environment.  It
 irrevocably disallows refinements the original specification admitted, and only the
-system has the authority to perform it.  Afterward $ab\cdot$ is \emph{sealed}:
+system has the authority to perform it.  Not every act of the system is a
+commitment.  Tallying the ballots in panel (c) to notice that the result is
+determined removes no row; computation has no effect on the residual, and so
+never counts as determination.  Afterward $ab\cdot$ is \emph{sealed}:
 no refinement of it remains valid, and its upper fiber has collapsed to
 $\{\bot\}$, so it too is determined.
-For a functional specification, sealing is the only kind of
-commitment there is.  Each row's input determines its output, so there are
-never choices to be made among outputs; the only thing to commit to is closing input.
+For a functional specification, input-sealing commitments are the only kind
+of commitment there is.  Each row's input determines its output, so there are
+never choices to be made among outputs; the only thing to commit to is sealing input.
 
 \begin{figure}[t]
   \centering
@@ -477,7 +480,7 @@ never choices to be made among outputs; the only thing to commit to is closing i
   \end{tabular}
   \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
   incomparable, after the registrar closes the polls at $a\cdot\cdot$.  Every
-  refinement of $a\cdot\cdot$ is closed by the commitment.  Legend as in
+  refinement of $a\cdot\cdot$ is sealed off by the commitment.  Legend as in
   Figure~\ref{fig:election-frames}.}
   \label{fig:nonmonotone-frame}
 \end{figure}
@@ -496,13 +499,14 @@ but in panels (a) and (b) nothing is ready: $\bot$ no longer lies below the $a$
 and $b$ in the upper fiber, so announcing it would promise something a later
 ballot could contradict.  The specification is no longer monotone: as inputs
 grow under $\InputOrd$, outputs change in a way $\OutputOrd$ does not sanction.
-To announce anything, the registrar must first achieve exposure-readiness via sealing.
+To announce anything, the registrar must first make an input-sealing
+commitment.
 Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
-$a\cdot\cdot$: every refinement is closed by the commitment, the upper fiber
+$a\cdot\cdot$: every refinement is sealed off by the commitment, the upper fiber
 collapses to $\{\bot\}$, and only now is $\bot$ exposure-ready.  That contrast
 is Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one must
-first commit to a seal.
+first seal input by commitment.
 
 \begin{figure}[t]
   \centering
@@ -541,13 +545,13 @@ first commit to a seal.
 \end{figure}
 
 \paragraph{Ambiguity.}
-Some specifications are \emph{ambiguous}: they admit several results for one
+Some specifications are ambiguous: they admit several results for one
 input, so the input column does not determine the output column and the
 functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(e) is leader
 election with two eligible servers, either permitted as sole leader, so the
 table has two rows at one input.  Committing to \texttt{server1} removes the row for
 \texttt{server2}, and no remaining row says what it said.  This is a second
-kind of commitment, \emph{choosing an output}: a genuine alternative is gone.
+kind of commitment, a \emph{choice commitment}: a genuine alternative is gone.
 Panel (f) is a traceroute
 diagnostic for a service reachable from source $s$ directly at server
 \texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
@@ -605,7 +609,7 @@ single-node database choosing a serialization order among concurrent
 transactions just as it holds of the election.
 
 \paragraph{Instantiating the model.}
-Now let the system be distributed.  It consists of \emph{participants}, each of
+Now let the system be distributed.  It consists of participants, each of
 which knows the specification, which is fixed and public, but sees only its
 own events: the input that has reached it, the exposures and commitments it
 has itself made.  Each participant therefore has its own residual, obtained
@@ -631,7 +635,8 @@ participant's residual may still admit, so it is safe only if every such
 participant agrees; that agreement is coordination.  Determination that needs
 a commitment is therefore precisely the determination that needs coordination.
 Section~\ref{sec:functional-calm} formalizes this for functions, where only
-sealing is ever needed; Section~\ref{sec:complete-calm} does so for relations.
+input-sealing commitments are ever needed; Section~\ref{sec:complete-calm}
+does so for relations.
 
 \section{Functional CALM}
 \label{sec:functional-calm}
@@ -759,7 +764,7 @@ The environment produces input-update events; the system does not choose them.
 An event adds no row and leaves every surviving fiber unchanged, so it chooses
 nothing.  An update to the current input itself, as from a duplicate delivery,
 changes nothing.  The event is undefined when the new input has no row left,
-for instance because an earlier commitment closed it: the environment cannot
+for instance because an earlier commitment sealed it off: the environment cannot
 make an invalid input current.  Updates compose: an update to $j$ followed by
 an update to $k$ has the same effect as a single update to $k$, since
 $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival order, batching,
@@ -788,9 +793,9 @@ the current input fixed.  No input event does this; it is an act of the system, 
 for a functional specification it is the only kind of commitment needed, since
 every fiber has one row and there is never an output to choose among.
 
-\begin{definition}[Input-closing commitment]
-\label{def:input-closing}
-An \emph{input-closing commitment} is a labeled partial function $p$ on
+\begin{definition}[Input-sealing commitment]
+\label{def:input-sealing-commitment}
+An \emph{input-sealing commitment} is a labeled partial function $p$ on
 residual states that keeps the current input fixed, strictly restricts the
 residual, and makes some valid input invalid: whenever $p(\sigma)$ is defined
 for $\sigma=(i,R)$, its target is a residual state $(i,R')$ with
@@ -800,10 +805,10 @@ defined.
 \end{definition}
 
 Whether such a commitment is available is part of the system model, not of the
-table.  A system that lacks the authority to close input simply has no
-input-closing commitment to apply, and a system that must still accept a late
+table.  A system that lacks the authority to seal input simply has no
+input-sealing commitment to apply, and a system that must still accept a late
 ballot with a rejection or other fallback response keeps that row and has not
-closed the input.  A commitment records the binding act, not the computation
+sealed the input.  A commitment records the binding act, not the computation
 that selected it.  Section~\ref{sec:complete-calm} adds the second kind of
 commitment, choosing among outputs at one input, and collects the commitments a
 system may use into a \emph{commitment basis}.
@@ -918,12 +923,12 @@ $f(i)\not\OutputOrd f(j)$.  In the canonical initial state $\sigma_0(i)$,
 the input $j$ is valid, so $f(j)\in R^\uparrow(i)$ and $f(i)$ is not
 exposure-ready.  The fiber at $i$ offers no output choice to resolve: its only
 row is $(i,f(i))$.  Before $f(i)$ can be exposed, the implementation must
-therefore carry out a determination whose input-closing commitments remove the
+therefore carry out a determination whose input-sealing commitments remove the
 row at $j$ and at every other refinement whose output does not refine $f(i)$.
 A determination that effects a full seal at $i$ is sufficient; closing only the
 offending refinements may also suffice.  If other participants can
 independently admit $j$, making the closure binding requires their agreement.
-Without input-closing authority, $f(i)$ cannot be exposed at this point.
+Without input-sealing authority, $f(i)$ cannot be exposed at this point.
 \end{proof}
 
 The election's output order is not a lattice: $a$ and $b$ have no common upper
@@ -1253,7 +1258,7 @@ function do, widened to sets of mutually compatible alternatives.
 The residual states and input-update events of Section~\ref{sec:determination}
 apply unchanged to a relational specification; the difference is that a fiber
 $R(i)$ may now contain several outputs.  That opens a second kind of
-commitment.  Closing input removes rows at inputs that will never become
+commitment.  Sealing input removes rows at inputs that will never become
 current.  Choosing an output removes rows at inputs that remain valid: in leader
 election, committing to \texttt{server1} removes the row for \texttt{server2} at
 the same input.
@@ -1265,9 +1270,9 @@ states that keeps the current input fixed, strictly restricts the residual,
 and preserves the set of valid inputs: whenever $p(\sigma)$ is defined for
 $\sigma=(i,R)$, its target is a residual state $(i,R')$ with $R'\subsetneq R$
 and $R'(k)\neq\varnothing$ whenever $R(k)\neq\varnothing$.  A
-\emph{commitment} is a choice commitment or an input-closing commitment
-(Definition~\ref{def:input-closing}).  A \emph{commitment basis} is the set of
-choice commitments and explicitly labeled input-closing commitments that the
+\emph{commitment} is a choice commitment or an input-sealing commitment
+(Definition~\ref{def:input-sealing-commitment}).  A \emph{commitment basis} is the set of
+choice commitments and explicitly labeled input-sealing commitments that the
 system makes available.
 \end{definition}
 
@@ -1275,8 +1280,8 @@ The basis is part of the system model.  Its members are the acts through which
 the system can make possibilities irrevocably unavailable, and the system can
 use only the commitments it declares.  In particular, the ability to choose
 among outputs does not by itself include the ability to close future inputs;
-that requires an input-closing commitment in the basis, and such a commitment
-must be labeled as input-closing rather than treated as an ordinary choice
+that requires an input-sealing commitment in the basis, and such a commitment
+must be labeled as input-sealing rather than treated as an ordinary choice
 among outputs.  A commitment may remove many rows at once.
 
 Whether removing a row destroys information depends on the output order.
@@ -1536,8 +1541,8 @@ possibilities at $i$.
 \emph{Reconciliation on merge.}  Let $j$ be a legal common refinement of the
 current inputs $i_1,\ldots,i_k$.  The input $j$ is valid in every $(i_r,R_r)$:
 it had a row initially, it refines $i_r$ and so was never retired by an
-update, and by Proposition~\ref{prop:exposure-narrowing} no exposure closed
-it.  Each participant $r$ has removed rows only at $i_r$ and its refinements,
+update, and by Proposition~\ref{prop:exposure-narrowing} no exposure sealed
+it off.  Each participant $r$ has removed rows only at $i_r$ and its refinements,
 and $i_r\InputOrd j$, so $R_r(j)$ is a nonempty upper subset of $\fiber{j}$.
 Choose $x_r\in R_r(j)$ for each $r$.  The finite-family form for
 $(j,x_1),\ldots,(j,x_k)$ supplies $u\in\fiber{j}$ above every $x_r$, and
@@ -1638,7 +1643,7 @@ Together the two theorems make the division exact.  A monotone specification is
 one in which exposure is all that is ever needed.  A commitment excludes
 content that some other participant could admissibly have selected, and it can
 never be made unilaterally.  A determination that effects a seal uses
-input-closing commitments to rule out further input refinements; selecting
+input-sealing commitments to rule out further input refinements; selecting
 among incompatible outputs uses choice commitments to rule out alternatives at
 a fixed input.  Functional specifications need only the first kind; Complete
 CALM accounts for both.  If a system forbids some rows of $S$, its declared
@@ -2095,7 +2100,7 @@ lessons and scope limits.
 
 Functional CALM and Complete CALM separate two reasons a commitment may be necessary.
 A failure of growth means that more input can invalidate an exposed output.
-The system must exclude the incompatible future inputs through input-closing
+The system must exclude the incompatible future inputs through input-sealing
 commitments from its basis before that output is exposure-ready.  A failure of
 coherence means that outputs admitted at one input cannot all be preserved;
 proceeding requires a choice commitment.  Whether either commitment
@@ -2484,7 +2489,7 @@ coordination determines which alternative survives.
 The Complete CAP Theorem is the partition form of the same equivalence.  It recovers the
 classical impossibility when a cut separates incompatible choices and supplies
 the positive side when all separated choices have common refinements.  A cut
-may prevent agreement on input closure or separate participants empowered to
+may prevent agreement on input sealing or separate participants empowered to
 make incompatible output choices.  Query monotonicity, CRDT merge,
 transactional availability, and invariant confluence then become directly comparable without being identified
 with one another.
