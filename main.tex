@@ -929,8 +929,8 @@ of applicable commitments, empty when the state is already determined.
 Exposing $o$ at $i$ promises that whatever is finally produced for $i$, or
 for any refinement of $i$, will refine $o$.  The exposure event of
 Definition~\ref{def:transition-system} keeps the promise by retaining only the
-rows that refine $o$, and is permitted exactly when $o$ is exposable.  For a
-functional specification every fiber is a singleton, so $f(i)$ is exposable
+rows that refine $o$, and is permitted exactly when $o$ is exposable
+(Equation~\ref{eq:safe-exposure}).  For a functional specification every fiber is a singleton, so $f(i)$ is exposable
 at $i$ exactly when
         \begin{equation}
   f(i)\OutputOrd f(j)\qquad\text{for every valid }j\succeq_I i,
@@ -948,36 +948,42 @@ $o$ is the least element of the upper fiber $R^\uparrow(i)$.
 \end{proposition}
 
 \begin{proof}
-If $o$ is least, every $x\in R(j)$ with $i\InputOrd j$ satisfies
-$o\OutputOrd x$, so $u=x$ witnesses Equation~\ref{eq:safe-exposure}, and the
-restriction retains every row.  Conversely, if the restriction retains every
-row, then every $x\in R(j)$ refines $o$, and since every valid $j$ refines
-$i$, $o$ is a lower bound of $R^\uparrow(i)$ that belongs to it.
+Least implies identity: if $o$ is least in $R^\uparrow(i)$, every $x\in R(j)$
+with $i\InputOrd j$ satisfies $o\OutputOrd x$, so $u=x$ witnesses
+Equation~\ref{eq:safe-exposure}, making $o$ exposable and the event defined;
+and $R\mathbin{\upharpoonright_O}o$ keeps every row, since each refines $o$.
+Identity implies least: if the event is defined and removes no row, then
+$R\mathbin{\upharpoonright_O}o=R$, so every row $(j,x)\in R$ has
+$o\OutputOrd x$.  Since every valid $j$ refines $i$, these $x$ are exactly the
+members of $R^\uparrow(i)$, so $o$ is a lower bound of $R^\uparrow(i)$, and it
+belongs to $R^\uparrow(i)$ because $o\in R(i)$.
 \end{proof}
 
-The hypothesis $o\in R(i)$ cannot be dropped: a least element of the upper
-fiber that occurs only at a proper refinement of $i$ is not exposable at $i$.
 Once $o$ is exposed, input events and commitments only remove rows, so every
 output retained later at $i$ or its valid refinements continues to refine
-$o$.  In the election $\bot$ is exposable in every panel and $a$ in panel (c);
-under the equality order nothing is exposable in panels (a) and (b).  That
-contrast is the content of the next theorem.
+$o$.  In the election every fiber is a singleton, so exposure is always the
+identity: $\bot$ is exposable in every panel and $a$ in panel (c), each least
+in its upper fiber; under the equality order nothing is exposable in panels
+(a) and (b).  That contrast is the content of the next theorem.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
 A distributed implementation assigns partial input and computation to
-participants.  A participant holding input $i$ has reached a residual state by
-input events alone, with no commitment made and nothing sealed.  We say that
-a functional specification permits \emph{incremental exposure without
-sealing} when, in every residual state reachable by input events alone,
-$f(i)$ is exposable at every current input $i$.
+participants.  The question is whether a participant holding input $i$ can
+expose $f(i)$ without ever committing.  A participant that has not committed
+has reached its residual state by input events and exposures; for a functional
+specification exposures change nothing
+(Proposition~\ref{prop:identity-exposure}), so that state is reachable by
+input events alone, and nothing in it is sealed.  We say that a functional
+specification permits \emph{incremental exposure without sealing} when, in
+every residual state reachable by input events alone, $f(i)$ is exposable at
+the current input $i$.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
 A functional ordered specification permits incremental exposure without
-sealing if and only if it is monotone.  In that case a current input $i$ is
-determined exactly when $f(j)=f(i)$ for every valid refinement $j$ of $i$.
+sealing if and only if it is monotone.
 \end{theorem}
 
 \begin{proof}
@@ -986,27 +992,20 @@ retired inputs, so every $j\succeq_I i$ retains its row $(j,f(j))$, and the
 upper fiber is $R^\uparrow(i)=\{f(j):j\succeq_I i\}$.
 
 If $f$ is monotone, then $f(i)\OutputOrd f(j)$ for every such $j$, which is
-Equation~\ref{eq:functional-exposable}.  The determinedness claim follows because
-the upper fiber is the set of those $f(j)$.
+Equation~\ref{eq:functional-exposable}.
 
-If $f$ is not monotone, some $i\InputOrd j$ satisfies
-$f(i)\not\OutputOrd f(j)$.  In the canonical initial state $\sigma_0(i)$,
-the input $j$ is valid, so $f(j)\in R^\uparrow(i)$ and $f(i)$ is not
-exposable.  The fiber at $i$ offers no output choice to resolve: its only
-row is $(i,f(i))$.  Before $f(i)$ can be exposed, the implementation must
-therefore carry out a determination whose input-sealing commitments remove the
-row at $j$ and at every other refinement whose output does not refine $f(i)$.
-A determination that effects a full seal at $i$ is sufficient; closing only the
-offending refinements may also suffice.  If other participants can
-independently admit $j$, making the closure binding requires their agreement.
-Without input-sealing authority, $f(i)$ cannot be exposed at this point.
+If $f$ is not monotone, some valid $j\succ_I i$ has
+$f(i)\not\OutputOrd f(j)$.  Then $f(j)$ is in the upper fiber of
+$\sigma_0(i)$, so $f(i)$ is not exposable there, and only a commitment removing
+the row at $j$ can make it so.
 \end{proof}
 
-The election's output order is not a lattice: $a$ and $b$ have no common upper
-bound.  None is required.  Monotonicity constrains only comparable inputs, and
-$aa\cdot$ and $ab\cdot$ are incomparable with no common refinement, because
-ballots are immutable.  Where two inputs do have a common refinement $j$,
-monotonicity makes $f(j)$ an upper bound of both outputs.
+In the election, $a$ and $b$ have no common upper bound: nothing in the
+output order reconciles the two results.  None is required.  Monotonicity
+constrains only comparable inputs, and $aa\cdot$ and $ab\cdot$ are incomparable
+with no common refinement, because ballots are immutable.  Where two inputs do
+have a common refinement $j$, monotonicity makes $f(j)$ an upper bound of both
+outputs.
 
 This is the familiar CALM dichotomy stated at the semantic interface rather than
 inside a particular programming language.  Classical CALM fits the pattern with
@@ -1040,7 +1039,7 @@ Here, ``logical'' refers not to a particular logic or programming language, but
 to preservation of semantic claims under declared information-refinement
 orders.  Functional CALM states that condition for any functional semantic
 specification, regardless of the formalism used to express it.  Once
-specifications become relational, the monotonicity in question is monotonicity
+specifications become relational in the next section, the monotonicity in question is monotonicity
 under an order lifted from outputs to sets of outputs, and the acronym can be
 read as \emph{Consistency As Lifted Monotonicity}.
 
@@ -1051,7 +1050,7 @@ specification itself to offer several outputs for one input.
 \label{sec:complete-calm}
 
 A semantic specification may admit more than one output for the same input.
-Leader election may allow either eligible leader, and serializability may allow
+Leader election may allow any eligible leader, and serializability may allow
 several transaction orders.  Such specifications are relational rather than
 functional.  Complete CALM extends Functional CALM to this semantic output choice.
 
@@ -1089,8 +1088,8 @@ to some output in the second.  It is often called the Hoare preorder.
 
 \begin{definition}[Lifted Monotonicity]
 \label{def:lifted-monotonicity}
-An ordered relational specification satisfies \emph{Lifted Monotonicity},
-the \emph{growth} condition, when the mapping $i\mapsto\fiber{i}$ is monotone
+An ordered relational specification satisfies \emph{Lifted Monotonicity}
+when the mapping $i\mapsto\fiber{i}$ is monotone
 under the lifted output preorder:
         \begin{equation}
   i\InputOrd j
@@ -1103,25 +1102,24 @@ $o'\in\fiber{j}$ satisfies $o\OutputOrd o'$.
 \end{definition}
 
 For singleton fibers this reduces to functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  Growth governs how outputs continue
-\emph{between} fibers as input grows.  It says nothing about how different
+Equation~\ref{eq:functional-monotonicity}.  Lifted Monotonicity governs how
+outputs continue \emph{between} fibers as input grows.  It says nothing about how different
 outputs relate \emph{within} one fiber.  We now turn to that second question.
 
 \begin{definition}[Compatibility]
 \label{def:compatibility}
-Outputs $o_1,\ldots,o_k$ are \emph{compatible at input $i$} if there is an
-admitted common refinement $u\in\fiber{i}$ such that $o_r\OutputOrd u$ for
-every $r$.  Otherwise they are \emph{incompatible at $i$}.
+Let $F\subseteq O$ be a set of outputs.  Outputs $o_1,\ldots,o_k$ are
+\emph{compatible in $F$} if some $u\in F$ refines all of them,
+$o_r\OutputOrd u$ for every $r$, and \emph{incompatible in $F$} otherwise.
+They are \emph{compatible at input $i$} when they are compatible in the fiber
+$\fiber{i}$.
 \end{definition}
 
 \begin{definition}[Directed fiber; Directed Outputs]
 \label{def:fiber-directedness}
 A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
-$X\subseteq F$ has an admitted common refinement: some $u\in F$ with
-$x\OutputOrd u$ for all $x\in X$.  An ordered relational specification has
-\emph{Directed Outputs}, the \emph{coherence} condition, when every fiber
-$\fiber{i}$ is directed; that is, every nonempty finite collection in
-$\fiber{i}$ is compatible at $i$.
+$X\subseteq F$ is compatible in $F$.  An ordered relational specification has
+\emph{Directed Outputs} when every fiber $\fiber{i}$ is directed.
 \end{definition}
 
 A singleton fiber is directed.  So is any fiber closed under a join operation,
@@ -1136,27 +1134,30 @@ last pair lacks a common refinement.
   \begin{tikzpicture}[
       >=stealth,
       every node/.style={font=\small},
-      labelnode/.style={font=\scriptsize,align=center}]
+      labelnode/.style={font=\scriptsize,align=center,anchor=north}]
     \node (c0) at (0,0.55) {$\bot$};
     \node (c1) at (0.65,0.55) {$a$};
     \node (c2) at (1.30,0.55) {$b$};
     \draw[->] (c0) -- (c1);
     \draw[->] (c1) -- (c2);
-    \node[labelnode] at (0.65,-0.05) {chain};
+    \node[labelnode] at (0.65,0.0) {chain:\\directed};
 
     \node (ja) at (2.35,0.35) {$a$};
     \node (jb) at (3.25,0.35) {$b$};
     \node (jt) at (2.80,1.05) {$t$};
     \draw[->] (ja) -- (jt);
     \draw[->] (jb) -- (jt);
-    \node[labelnode] at (2.80,-0.05) {common\\refinement};
+    \node[labelnode] at (2.80,0.0) {common\\refinement:\\directed};
 
     \node (ia) at (4.35,0.55) {$a$};
     \node (ib) at (5.20,0.55) {$b$};
-    \node[labelnode] at (4.78,-0.05) {incompatible};
+    \node[labelnode] at (4.78,0.0) {incompatible:\\not directed};
   \end{tikzpicture}
-  \caption{Incomparability does not imply incompatibility.  Arrows point from
-  an output to a refinement.}
+  \caption{Three fibers; arrows point from an output to a refinement.  In the
+  first two, every subset is compatible, so the fiber is directed; in the
+  third, $a$ and $b$ are incomparable with no common refinement, so it is not.
+  Incomparability does not imply incompatibility: $a$ and $b$ are incomparable
+  in the second fiber too.}
   \label{fig:orders}
 \end{figure}
 
@@ -1266,10 +1267,10 @@ An ordered relational specification satisfies the \emph{Complete CALM
 criterion}, and is called \emph{monotone}, when it has both of the following
 properties:
 \begin{enumerate}[label=(\roman*)]
-  \item \emph{Lifted Monotonicity (growth):} the mapping $i\mapsto\fiber{i}$
+  \item \emph{Lifted Monotonicity:} the mapping $i\mapsto\fiber{i}$
         is monotone under $\LiftedOutputOrd$, as in
         Equation~\ref{eq:lifted-monotonicity}; and
-  \item \emph{Directed Outputs (coherence):} every output fiber is directed
+  \item \emph{Directed Outputs:} every output fiber is directed
         under $\OutputOrd$, as in Definition~\ref{def:fiber-directedness}.
 \end{enumerate}
 \end{definition}
@@ -1388,9 +1389,11 @@ to the outputs that refine $o$.  That is the exposure event
 $\mathsf{expose}(o)$ of Definition~\ref{def:transition-system}, which
 produces $R\mathbin{\upharpoonright_O}o$
 (Equation~\ref{eq:residual-refining-fibers}) and is permitted exactly when $o$
-is exposable at $i$ (Equation~\ref{eq:safe-exposure}): compatible with every
-possibility at $i$, in that every remaining output at $i$ or a valid refinement
-shares an admitted refinement with $o$.  Exposability has two requirements, and
+is exposable at $i$ (Equation~\ref{eq:safe-exposure}): for every valid
+$j\succeq_I i$, the output $o$ is compatible in $R(j)$ with every $x\in R(j)$
+(Definition~\ref{def:compatibility}).  This is the relation of
+Definition~\ref{def:fiber-directedness} read against the residual rather than
+the specification.  Exposability has two requirements, and
 neither implies the other.  Admission at $i$, $o\in R(i)$, rules out exposing
 a value that only some refinement of $i$ admits, before the input that would
 admit it has arrived.  Compatibility rules out exposing an admitted value that
@@ -1620,11 +1623,13 @@ the participants.
 (1$\Rightarrow$2) holds by definition.
 
 (2$\Rightarrow$3.)  By Proposition~\ref{prop:complete-calm-decomposition} it
-suffices to prove growth and coherence.  \emph{Growth.}  Let $i\InputOrd j$
+suffices to prove Lifted Monotonicity and Directed Outputs.  \emph{Lifted
+Monotonicity.}  Let $i\InputOrd j$
 and $o\in\fiber{i}$.  In the canonical initial state $\sigma_0(i)$, the
 input $j$ is valid and $\fiber{j}$ is nonempty; exposure at will makes $o$
 exposable, so any $x\in\fiber{j}$ has a common refinement with $o$ in
-$\fiber{j}$, which in particular lies above $o$.  \emph{Coherence.}  Suppose
+$\fiber{j}$, which in particular lies above $o$.  \emph{Directed Outputs.}
+Suppose
 some finite $X\subseteq\fiber{i}$ has no admitted common refinement, and choose
 such an $X=\{x_1,\ldots,x_n\}$ of least size.  If $n=1$ then $x_1$ itself is a
 refinement; so $n\geq2$.  If $n=2$, then $x_1$ is not exposable at
@@ -2162,10 +2167,12 @@ lessons and scope limits.
 \subsection{Input arrival versus output choice}
 
 Functional CALM and Complete CALM separate two reasons a commitment may be necessary.
-A failure of growth means that more input can invalidate an exposed output.
+A failure of Lifted Monotonicity means that more input can invalidate an
+exposed output.
 The system must exclude the incompatible future inputs through input-sealing
 commitments from its basis before that output is exposable.  A failure of
-coherence means that outputs admitted at one input cannot all be preserved;
+Directed Outputs means that outputs admitted at one input cannot all be
+preserved;
 proceeding requires a choice commitment.  Whether either commitment
 requires agreement among participants depends on the deployment.
 
