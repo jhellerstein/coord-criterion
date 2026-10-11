@@ -1631,12 +1631,12 @@ observation that any function induces a bijection between the classes of its
 kernel equivalence and its image.
 \end{proof}
 
-The proposition is what licenses the definitions below to speak of residuals
-rather than executions.  Everything the specification cares about in a Lamport
+The proposition is what licenses the definitions of this paper to speak of
+residuals rather than executions.  Everything the specification cares about in a Lamport
 diagram survives in its cut's residuals; message order, batching, and who has
 learned what are forgotten exactly when they do not advance anyone's input.
-Consistency, stated next over residuals, is therefore a statement about
-executions.
+Consistency (Definition~\ref{def:consistency}), stated over residuals, is
+therefore a statement about executions.
 
 Read in the other direction, the proposition is a design criterion.  Choosing
 the input domain and its order decides which histories the semantics treats as
@@ -1664,7 +1664,7 @@ initial state by input events and exposure events alone, with no commitment.
 \paragraph{Complete CALM.}
 Consistency (Definition~\ref{def:consistency}) was stated for any
 specification.  For a relational one, both of its conditions have content:
-condition~1 because a loquacious schedule may expose any of several admitted
+condition~1 because a loquacious run may expose any of several admitted
 outputs, and condition~2 because different runs may have exposed different
 ones.
 
@@ -1698,7 +1698,7 @@ input.
 \emph{Condition~2.}  Let $j$ be a common refinement of the final inputs
 $i_1,\ldots,i_k$.  The input $j$ is valid in every $(i_r,R_r)$: it had a row
 initially, it refines $i_r$ and so was never retired by an input event, and by
-Proposition~\ref{prop:exposure-narrowing} no exposure sealed it off.  Each run
+Proposition~\ref{prop:exposure-narrowing} no exposure made it invalid.  Each run
 $r$ has removed rows only at $i_r$ and its refinements, and $i_r\InputOrd j$,
 so $R_r(j)$ is a nonempty upper subset of $\fiber{j}$.  Choose $x_r\in R_r(j)$
 for each $r$.  Proposition~\ref{prop:complete-calm-criterion} for
@@ -1752,7 +1752,11 @@ so directedness can no longer be assumed.
 
 Exposure narrows without excluding and can be done by every participant at
 will.  A commitment excludes content, and the next result says what that costs
-when several participants hold the same input.
+when several participants hold the same input.  In what follows, a participant
+\emph{selects} an admissible output at the input it holds by exposing it when
+it is exposable, and by a commitment to it---retaining exactly the outputs that
+refine it at its input and that input's refinements---when it is not.  The
+second kind of selection is content-destroying.
 
 \begin{definition}[Coordination]
 \label{def:coordination}
@@ -1763,8 +1767,9 @@ commitment excludes.
 
 \begin{theorem}[Commitments require coordination]
 \label{thm:commitments-require-coordination}
-Suppose the participants share a common commitment basis.  Let a basis action
-$d$ be applicable at a reachable state $\sigma=(i,R)$ and content-destroying at
+Suppose the participants share a common commitment basis.  Let a commitment
+$d$ in the basis be applicable at a reachable state $\sigma=(i,R)$ and
+content-destroying at
 the current input $i$, excluding some $x\in R(i)$ that has no refinement in
 $R'(i)$, where $(i,R')=d(\sigma)$.  Then there is a participant state $\tau$,
 reachable from the canonical initial state by the same input events followed
@@ -1792,7 +1797,9 @@ for the second participant not to select $x$, which it can be relied upon to
 do only by agreement.
 \end{proof}
 
-Together the two theorems make the division exact.  A monotone specification is
+Together, Theorems~\ref{thm:complete-calm}
+and~\ref{thm:commitments-require-coordination} make the division exact.  A
+monotone specification is
 one in which exposure is all that is ever needed.  A commitment excludes
 content that some other participant could admissibly have selected, and it can
 never be made unilaterally.  A determination that effects a seal uses
@@ -1803,8 +1810,8 @@ CALM accounts for both.  If a system forbids some rows of $S$, its declared
 interface is a proper subrelation $S'\subsetneq S$, and the criterion applies
 to $S'$.
 
-CAP asks the same question in a more specific setting.  A \emph{network
-partition} divides the participants into two or more groups and stops all
+CAP asks the same question in a more specific setting.  A \emph{partition}
+divides the participants into two or more groups and stops all
 information from crossing between groups until the partition heals.  During the
 partition each participant continues to receive input from its own
 environment.  \emph{Availability} asks that a participant be able to expose an
@@ -1856,20 +1863,27 @@ Theorem~\ref{thm:complete-cap} quantifies over all participants and inputs.
 Whether a commitment is necessary is a semantic question; whether it requires
 agreement across a cut also depends on \emph{deployment}: which participant may
 hold which input and select which row.  A participant that controls an entire
-choice may make the commitment locally.  In what follows, a participant
-\emph{selects} an admissible output at the input it holds by exposing it when
-it is exposable and by a commitment to it---retaining exactly the outputs that
-refine it at its input and that input's refinements---when it is not.  The second kind of
-selection is
-content-destroying; the deployment says who is entitled to make it.
+choice may make the commitment locally.  The deployment says who is entitled
+to make a content-destroying selection.
+
+Return to leader election, with \texttt{server1} and \texttt{server2} both
+eligible.  If one participant alone is entitled to name the leader, a
+partition changes nothing: the two rows are an incompatible family, but both
+belong to that participant, and it selects between them without consulting
+anyone.  If instead one participant may name \texttt{server1} and another may
+name \texttt{server2}, a partition that separates them lets each select its
+row alone, and the two selections have no common refinement when the partition
+heals.  The same specification is safe under the first deployment and not
+under the second; what differs is which incompatible families a partition can
+split between its sides.
 
 \begin{definition}[Deployment; separable family]
 \label{def:deployment}
 A \emph{deployment} over a participant set $P$ assigns to each participant $p$
 a set $\Delta_p\subseteq S$ of rows it may select; $(i,o)\in\Delta_p$ means
 that $p$ may hold $i$ as a current input and select $o$ there, on its own
-authority.  A \emph{partition} $\Pi$ of $P$ divides the participants into two
-or more nonempty components.  A finite family of rows is \emph{separable under
+authority.  A partition $\Pi$ of $P$, as above, divides the participants into
+two or more nonempty components.  A finite family of rows is \emph{separable under
 $\Pi$} when its members can be attributed to participants, each row lying in
 its participant's $\Delta_p$, with at least two components represented.
 \end{definition}
@@ -1940,8 +1954,8 @@ Deployment determines which inputs and choices can occur independently, just
 as data placement does in the relational-transducer model.
 
 \paragraph{Registers.}
-Consider two replicas of a register initially holding no value.  Process $p$
-completes a write of \dog{} while $q$ concurrently completes a write of
+Consider two replicas of a register initially holding no value.  Participant
+$p$ completes a write of \dog{} while $q$ concurrently completes a write of
 \catv.  The replicas exchange both writes, after which a partition separates
 them.  Each then serves a local read; both writes complete before either read
 begins.
