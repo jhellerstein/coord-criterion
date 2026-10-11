@@ -51,39 +51,25 @@
 
 \begin{abstract}
 When does a system inherently require coordination?  CAP, CALM, CRDTs, Highly
-Available Transactions, and invariant confluence draw related coordination
-boundaries in different mathematical languages.  This fragmentation has allowed
-conventional wisdom to drift from what the literature actually proves.
-
-Existing accounts characterize when coordination can be avoided, but do not
-generally model what coordination accomplishes when it is needed.  We give a
-semantic framework in which to do so: a specification is a table of admissible
-input--output pairs with ordered columns, and the state of a computation is
-the \emph{residual} of that table, the rows still admissible.  Residuals are
-provably the semantic quotient of Lamport histories, so every question below
-is a question about executions.  Within this framework we complete the
-picture in two steps.  \emph{Functional CALM} generalizes
-the classical result from Datalog and fact inclusion to functions between
-arbitrary partially ordered input and output domains, giving the broader
-folklore interpretation of CALM a formal semantic basis.  Independent of implementation
-language, monotonicity characterizes exactly when a function's output can be
-exposed consistently as distributed input arrives, without sealing that input.
-
-\emph{Complete CALM} extends the analysis from functions to relational
-specifications that allow a choice among outputs.  Such a specification is
-\emph{consistent}---whatever participants expose, in whatever order input
-arrives, one admitted outcome refines all of it---exactly
-when it has \emph{relational monotonicity}, every admitted output surviving as
-input grows, and \emph{directed outputs}, every finite set of outputs admitted
-at one input having a common refinement; together these say the specification
-is monotone under a single order lifted to sets of outputs.
-An \emph{exposure} makes an output visible while retaining a refinement of every
-admissible alternative; a \emph{commitment} rules at least one out; and \emph{coordination} is
-agreement before participants make incompatible commitments.
-This covers settings such as leader election and transactional commit ordering.
-Complete CALM yields a Complete CAP Theorem that extends classical CAP from a
-one-way impossibility about linearizability to a bidirectional dichotomy
-parameterized by the declared consistency semantics and the deployment.
+Available Transactions, and invariant confluence each draw a coordination
+boundary in a different mathematical language, and conventional wisdom has
+drifted from what the literature proves.  We give one semantic framework for
+all of them: a specification is a table of admissible input--output pairs with
+ordered columns, and the state of a computation is the \emph{residual} of that
+table, the rows still admissible.  Residuals are provably the semantic
+quotient of Lamport histories.  \emph{Functional CALM} generalizes the
+classical theorem from Datalog to functions between arbitrary partially
+ordered input and output domains: monotonicity characterizes exactly when
+output can be exposed consistently as distributed input arrives.
+\emph{Complete CALM} extends it to specifications that admit several outputs
+for one input, as leader election and transaction ordering do.  Such a
+specification is consistent exactly when it satisfies \emph{Lifted
+Monotonicity}, monotonicity under an order lifted from outputs to sets of
+outputs; where it fails, progress requires a \emph{commitment}, and only
+commitments require coordination.  Complete CALM yields a Complete CAP
+Theorem that extends classical CAP from a one-way impossibility about
+linearizability to a dichotomy parameterized by the declared specification
+and the deployment.
 \end{abstract}
 
 \begin{CCSXML}
@@ -197,12 +183,6 @@ impossibility for linearizable registers under partition.
 The Complete CAP Theorem extends from impossibility to dichotomy, characterizing
 both sides of the boundary: specifications that are subject to CAP tradeoffs and those that are not.
 Linearizability becomes a special case on the tradeoff side.
-
-% If every set of choices across a
-% partition has an allowed common refinement, consistency and
-% availability can coexist through the partition.  Otherwise the system must wait
-% across the cut and lose availability, or make incompatible commitments and lose
-% consistency.
 
 This paper makes four contributions:
 \begin{enumerate}
