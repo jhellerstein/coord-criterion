@@ -228,16 +228,20 @@ applications.
 \section{Functional CALM}
 \label{sec:functional-calm}
 
-A semantic specification describes allowed input/output behavior without
-committing to a language, placement, protocol, or message schedule.  This
-section treats the case that CALM addressed for its first decade, and that the
-CRDT state interface shares: each input has one specified output.  We first
-walk through the framework on an election, then state it formally and prove
-Functional CALM.
+The CALM Theorem was proved for queries in a logic programming language,
+evaluated by relational transducers, and its applicability outside that
+setting was never made precise.  Here we use a simpler model that applies to
+any specification.  A semantic specification describes allowed input/output
+behavior without committing to a language, placement, protocol, or message
+schedule.  This section addresses the case that prior work on both CALM and
+state-based CRDTs shared: specifications that are functions, in which each
+input has a single specified output.  We first walk through the framework on
+an election, then state it formally and prove Functional CALM.
 
 \subsection{The framework on an election}
 \label{sec:election-story}
 
+We begin with an informal, example-driven treatment.
 Terms introduced in italics are defined formally in the rest of this section
 and in Section~\ref{sec:complete-calm}; italics also mark the occasional
 standard term borrowed from database theory.  Nothing here is needed for the
@@ -504,8 +508,8 @@ so never counts as determination.
 \paragraph{Consistency.}
 Both CALM theorems have the same shape: a monotonicity condition on the
 specification is equivalent to a precise form of what the CALM literature
-calls consistency, or confluence.  Consider a run of the system that exposes at every input it
-holds: at each current input it exposes some output admitted there, and it
+calls consistency, or confluence.  Consider a run of the system that exposes
+outputs maximally: at each current input it exposes some output admitted there, and it
 makes no commitment.  The specification is \emph{consistent} when every such
 run can expose whichever admitted outputs it chooses, each exposure retiring
 only covered rows, and when, for any several such runs, whatever inputs they
@@ -769,7 +773,7 @@ perform output retirements and nothing else
 that the removed output is covered: when $f$ is not monotone, the
 environment's next input may retire a row whose output nothing refines.  It is
 a retirement nonetheless, because the environment made that input history
-counterfactual; what distinguishes a commitment is that the system excluded
+unreachable; what distinguishes a commitment is that the system excluded
 something no event had ruled out.
 
 The rest of this subsection discusses input events, determination,
@@ -1042,13 +1046,12 @@ specifications become relational in the next section, the monotonicity in questi
 under an order lifted from outputs to sets of outputs, and the acronym can be
 read as \emph{Consistency As Lifted Monotonicity}.
 
-Functional CALM handles uncertainty about input arrival, and for a decade that
+Functional CALM handles uncertainty about input arrival, and prior to this work, that
 was the whole of CALM: one input, one answer, and monotonicity decides whether
-the answer can be exposed early.  Many specifications are not like that.  A
-database may admit several serialization orders for the same transactions; an
-election protocol may admit any eligible leader.  The functional dependency
-fails, the system must choose, and nothing so far says whether choosing
-requires coordination.  The next section answers that, and the answer is
+the answer can be exposed early.  Many specifications are not like that:
+the functional dependency
+fails, the system must choose among alternative outputs, and nothing so far says
+whether choosing requires coordination.  The next section answers that, and the answer is
 again a monotonicity condition.
 
 \section{Complete CALM: Semantic Choice and Coordination}
@@ -1558,6 +1561,9 @@ removal is an output retirement, not a commitment.  Transaction ordering
 (panel (f)) behaves differently.  Selecting $[A,B]$ removes $[B,A]$ with no
 retained common refinement, so that row is removed by commitment.
 
+\subsection{Participants, runs, and histories}
+\label{sec:runs-histories}
+
 \paragraph{Runs and schedules.}
 A \emph{participant} is a holder of a residual state that changes only by its
 own transitions: input events supplied by its environment, and the exposures
@@ -1642,10 +1648,11 @@ reachability, provided that order is antisymmetric.  That is the coarsening the
 proposition licenses, and the election of Section~\ref{sec:election-story} is the
 result for a vote-counting machine whose state is the set of ballots received.
 
+\subsection{The Complete CALM theorem}
+\label{sec:complete-calm-theorem}
+
 In the rest of this section, \emph{reachable} means reachable from a canonical
 initial state by input events and exposure events alone, with no commitment.
-
-\paragraph{Complete CALM.}
 Consistency (Definition~\ref{def:consistency}) was stated for any
 specification.  For a relational one, both of its conditions have content:
 condition~1 because a loquacious run may expose any of several admitted
