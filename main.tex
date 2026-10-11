@@ -590,10 +590,6 @@ output order compares outputs.  Neither orders executions or rows in a table.
 Either may be the \emph{equality order}, under which an element refines only
 itself; on outputs this is the case in which no output can be extended, only
 replaced.
-A specification describes
-admissible behavior; it is not a data structure that an implementation must
-store or consult.  The same holds for the semantic states derived from it
-below.
 
 \begin{definition}[Monotonicity]
 \label{def:functional-monotonicity}
@@ -621,10 +617,10 @@ transition system, defined in full below, whose states are residual states and
 whose transitions are of three kinds: input events, exposures, and
 commitments.  The definitions follow the vocabulary of
 Section~\ref{sec:election-story} and the panels of
-Figure~\ref{fig:election-frames}.  Choice commitments are
-defined here but discussed in Section~\ref{sec:complete-calm}, where
-relational specifications make them necessary, as is exposure in the presence
-of output choice.
+Figure~\ref{fig:election-frames}.  Choice commitments and exposure in the
+presence of output choice are defined here but discussed in
+Section~\ref{sec:complete-calm}, where relational specifications make them
+necessary.
 
 \paragraph{The specification as a table.}
 View the specification as a table $S\subseteq I\times O$ whose rows are the
@@ -639,19 +635,12 @@ Execution never adds a row.  Everything that follows is a story about which
 rows have been removed from the table, and by what.
 
 Inputs are \emph{cumulative}: an input is everything seen so far, and
-$i\InputOrd j$ means that $j$ contains at least the information in $i$.
-Cumulative means that the input only grows under $\InputOrd$; it does not imply
-that an input is internally consistent in any other, application-specific
-sense.  The input domain $(I,\InputOrd)$ may be designed to accommodate
-multiple possible worlds or probability distributions, corrections,
-retractions, or other application-specific structure.  The specification sees
-none of this internal structure; it sees inputs only through the domain, its
-order, and the outputs it admits for each.  In our election example, the input
-domain admits one ballot per voter by design; an alternate specification that
-admitted a second, conflicting ballot would record both and say which outputs
-are then admissible.  Write $k\prec_I i$ when
-$k\InputOrd i$ and $k\neq i$, and $\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$
-for the refinements of $i$.
+$i\InputOrd j$ means that $j$ contains at least the information in $i$.  The
+specification sees inputs only through the domain, its order, and the outputs
+it admits for each; corrections, retractions, or conflicting ballots are
+accommodated by designing the input domain to record them.  Write
+$k\prec_I i$ when $k\InputOrd i$ and $k\neq i$, and
+$\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$ for the refinements of $i$.
 
 \paragraph{States.}
 The states of our transition system are residuals of the initial specification and input.
@@ -683,10 +672,8 @@ $R$ is the \emph{residual specification}.  An input $k$ is \emph{valid} when
 $R(k)\neq\varnothing$, and otherwise \emph{invalid}.
 \end{definition}
 
-Condition 3 says that the current input still has an acceptable output;
-condition 4 says that retirement is complete.  Valid inputs other than the
-current one are the potential futures: refinements of $i$ whose rows have not
-been removed.
+Valid inputs other than the current one are the potential futures:
+refinements of $i$ whose rows have not been removed.
 
 For an input $i$, the \emph{canonical initial state} is
         \begin{equation}
@@ -746,15 +733,12 @@ none.
         defined.
 \end{enumerate}
 A residual state is \emph{reachable} when it is obtained from some canonical
-initial state by a finite sequence of these transitions.  Where only some
-kinds are allowed, we say so: a state reachable by input events alone, for
-instance, has had no commitment and no exposure.
+initial state by a finite sequence of these transitions.
 \end{definition}
 
-Nothing else changes a residual state.  In particular, computation changes
-nothing: it may inform which transition the system takes, but it is not itself
-a transition.  Every transition removes rows, and taken row by row a removal
-is one of three things.
+Nothing else changes a residual state; computation may inform which
+transition the system takes, but is not itself a transition.  Every transition
+removes rows, and taken row by row a removal is one of three things.
 
 \begin{definition}[Retirement]
 \label{def:retirement}
@@ -768,22 +752,14 @@ that is, some retained $u\in R'(k)$ has $x\OutputOrd u$.  Otherwise the row is
 retained output covers, has been excluded, which only a commitment does.
 \end{definition}
 
-Every removal is thus a retirement or a removal by commitment, and the two
-are the gray and struck rows of the figures.  Input events perform input
-retirements and nothing else, since they leave surviving fibers unchanged.
-Commitments remove at least one row by commitment, by definition.  Exposures
-perform output retirements and nothing else
-(Proposition~\ref{prop:exposure-narrowing}).  Input retirement does not promise
-that the removed output is covered: when $f$ is not monotone, the
-environment's next input may retire a row whose output nothing refines.  It is
-a retirement nonetheless, because the environment made that input history
-unreachable; what distinguishes a commitment is that the system excluded
+Retirements are the gray rows of the figures and removals by commitment the
+struck rows.  Input events perform input retirements and nothing else, since
+they leave surviving fibers unchanged; exposures perform output retirements
+and nothing else (Proposition~\ref{prop:exposure-narrowing}).  An input
+retirement need not be covered: when $f$ is not monotone, the next input may
+retire a row whose output nothing refines, but the environment made that input
+unreachable.  What distinguishes a commitment is that the system excluded
 something no event had ruled out.
-
-The rest of this subsection discusses input events, determination,
-input-sealing commitments, and exposure for a functional specification, where
-exposure never removes a row; Section~\ref{sec:complete-calm} takes up choice
-commitments and exposure in the presence of output choice.
 
 \paragraph{Input events.}
 In panel (b) the environment has delivered $v_2$'s ballot and
@@ -792,20 +768,16 @@ $ab\cdot$.  The environment produces input events; the system does not
 choose them.
 An event retires rows, and so narrows the future, but it makes no choice among
 outputs: it adds no row and leaves every surviving fiber unchanged.  The event
-is undefined when the new input has no row left,
-for instance because an earlier commitment removed its rows: the environment
-cannot make an invalid input current.  Input events compose: $\mathsf{input}(j)$
-followed by $\mathsf{input}(k)$ has the same effect as $\mathsf{input}(k)$
-alone, since $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival
-order, batching, and repeated delivery therefore do not affect the state
-reached by input events alone; only the input reached matters.  In practice the environment usually delivers changes, such as single
-ballots, rather than whole inputs.  A change $\delta$ applied to the current
-input yields a new input $i\oplus\delta=j$, and the event $\mathsf{input}(j)$
-is defined exactly when $j$ is a valid refinement of $i$.  The model does not treat $\delta$ as a kind of input;
-the event it causes is simply $\mathsf{input}(j)$, and nothing about $\delta$
-beyond the $j$ it produces matters.  A change already incorporated gives
-$i\oplus\delta=i$, and $\mathsf{input}(i)$ at $(i,R)$ is the identity, so
-duplicate delivery changes nothing.
+is undefined when the new input has no row left, for instance because an
+earlier commitment removed its rows: the environment cannot make an invalid
+input current.  Input events compose: $\mathsf{input}(j)$ followed by
+$\mathsf{input}(k)$ has the same effect as $\mathsf{input}(k)$ alone, since
+$\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$, and $\mathsf{input}(i)$
+at $(i,R)$ is the identity.  Arrival order, batching, and repeated delivery
+therefore do not affect the state reached by input events alone; only the
+input reached matters.  In practice the environment delivers changes, such as
+single ballots, rather than whole inputs; the model sees only the input
+$j$ that a change produces, and the event it causes is $\mathsf{input}(j)$.
 
 \paragraph{Determination.}
 The shaded outputs in Figure~\ref{fig:election-frames} are those that the
@@ -848,35 +820,14 @@ Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
 the current input fixed.  No input event does this; it is an input-sealing
 commitment, an act of the system, and for a functional specification it is the
 only kind of commitment that can ever be needed, since every fiber has one row
-and there is never an output to choose among.  In panel (d) it seals the
-current input completely.
-
-\begin{definition}[Input-sealed state]
-\label{def:input-sealing}
-The current input $i$ of $(i,R)$ is \emph{sealed} when no strict refinement of $i$
-is valid:
-        \begin{equation}
-  R(j)=\varnothing\qquad\text{for every }j\succ_I i.
-  \label{eq:sealed-input}
-        \end{equation}
-A residual state is \emph{input-sealed} when its current input is sealed.
-\end{definition}
-
-When $i$ is sealed, $R^\uparrow(i)=R(i)$: nothing beyond the current fiber can
-be required, and in the functional case $i$ is then determined.  Panel (d) is
-sealed and determined; panel (c) is determined but not sealed.  Sealing is a
-condition on input and determinedness a condition on output.  Inputs
-incomparable with $i$ are unaffected by sealing it.
-
+and there is never an output to choose among.  Once no strict refinement of
+the current input is valid, $R^\uparrow(i)=R(i)$, which for a functional
+specification is a singleton: the state is determined.
 Whether an input-sealing commitment is available is part of the system model,
-not of the specification: it must be in the commitment basis.  A system that lacks the authority to seal input simply
-has no input-sealing commitment to apply, and a system that must still accept a
-late ballot with a rejection or other fallback response keeps that row and has
-not sealed the input.  The two kinds of commitment exercise different
-authority: a choice commitment speaks only for the system's own output, while
-an input-sealing commitment declares that input the environment could still
-supply will not count.  A commitment records the binding act, not the
-computation that selected it.
+not of the specification: it must be in the commitment basis.  A system that
+must still accept a late ballot, with a rejection or other fallback response,
+keeps that row and has no such commitment to apply.  A commitment records the
+binding act, not the computation that selected it.
 
 \paragraph{Exposure.}
 Exposing $o$ at $i$ promises that whatever is finally produced for $i$, or
@@ -901,23 +852,17 @@ $o$ is the least element of the upper fiber $R^\uparrow(i)$.
 \end{proposition}
 
 \begin{proof}
-Least implies identity: if $o$ is least in $R^\uparrow(i)$, every $x\in R(j)$
-with $i\InputOrd j$ satisfies $o\OutputOrd x$, so $u=x$ witnesses
-Equation~\ref{eq:safe-exposure}, making $o$ exposable and the event defined;
-and $R\mathbin{\upharpoonright_O}o$ keeps every row, since each refines $o$.
-Identity implies least: if the event is defined and removes no row, then
-$R\mathbin{\upharpoonright_O}o=R$, so every row $(j,x)\in R$ has
-$o\OutputOrd x$.  Since every valid $j$ refines $i$, these $x$ are exactly the
-members of $R^\uparrow(i)$, so $o$ is a lower bound of $R^\uparrow(i)$, and it
-belongs to $R^\uparrow(i)$ because $o\in R(i)$.
+If $o$ is least in $R^\uparrow(i)$, then $u=x$ witnesses
+Equation~\ref{eq:safe-exposure} for every $x$, and
+$R\mathbin{\upharpoonright_O}o$ keeps every row.  Conversely, if the event
+removes no row then every $(j,x)\in R$ has $o\OutputOrd x$, and these $x$ are
+exactly the members of $R^\uparrow(i)$, to which $o$ belongs since
+$o\in R(i)$.
 \end{proof}
 
 Once $o$ is exposed, input events and commitments only remove rows, so every
 output retained later at $i$ or its valid refinements continues to refine
-$o$.  In the election every fiber is a singleton, so exposure is always the
-identity: $\bot$ is exposable in every panel and $a$ in panel (c), each least
-in its upper fiber; under the equality order nothing is exposable in panels
-(a) and (b).  That contrast is the content of the next theorem.
+$o$.
 
 \paragraph{Consistency.}
 The CALM literature's consistency is confluence: the outcome of a computation
@@ -960,19 +905,12 @@ Condition~1 says that every output admitted at the current input of a
 reachable state is exposable there: exposing it removes no alternative
 outright.  Condition~2 says that whatever several runs exposed on their
 separate inputs, in whatever order those inputs arrived, one admitted output
-at every common refinement of their final inputs refines all of it; combining
-the runs neither empties a fiber nor forbids the combined input.  For runs that
-end at the same input, it says the residual there does not depend on the order
-in which that input arrived, how it was grouped, or whether parts of it were
-delivered twice.  None of this requires that the runs expose the \emph{same}
-output.  It requires that every exposed output have a common admitted
-refinement with the others: the residual at the combined input is a function
-of that input, not of the runs.  Which outputs have common refinements is
-fixed by the specification and its output order.  Two specifications over the
-same inputs, one admitting more rows or a coarser output order than the other,
-can therefore differ in whether they are consistent.  The definition is
-semantic: it describes no protocol
-and promises no delivery, liveness, or termination detection.
+at every common refinement of their final inputs refines all of it.  The runs
+need not expose the \emph{same} output; every exposed output must have a
+common admitted refinement with the others, so that the residual at the
+combined input is a function of that input, not of the runs.  The definition
+is semantic: it describes no protocol and promises no delivery, liveness, or
+termination detection.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
@@ -1007,12 +945,9 @@ $\sigma_0(i)$, so $f(i)$ is not exposable there, and only a commitment removing
 the row at $j$ can make it so.
 \end{proof}
 
-In the election, $a$ and $b$ have no common upper bound: nothing in the
-output order reconciles the two results.  None is required.  Monotonicity
-constrains only comparable inputs, and $aa\cdot$ and $ab\cdot$ are incomparable
-with no common refinement, because ballots are immutable.  Where two inputs do
-have a common refinement $j$, monotonicity makes $f(j)$ an upper bound of both
-outputs.
+In the election, $a$ and $b$ have no common upper bound, and none is
+required: monotonicity constrains only comparable inputs, and $aa\cdot$ and
+$ab\cdot$ have no common refinement because ballots are immutable.
 
 This is the familiar CALM dichotomy stated at the semantic interface rather than
 inside a particular programming language.  Classical CALM fits the pattern with
@@ -1025,26 +960,20 @@ Equation~\ref{eq:functional-monotonicity} becomes
   Q(J)\subseteq Q(J'),
   \label{eq:query-monotonicity}
         \end{equation}
-the standard definition of a monotone query~\cite{abiteboul1995foundations}.
-Positive Datalog queries satisfy this condition.  Negation may not: an answer
-derived from the absence of a fact can be invalidated when that fact arrives.
-Relational-transducer CALM connects query monotonicity to coordination-free
-programs in its operational model~\cite{ameloot2013relational,ameloot2015weaker}.
-Functional CALM generalizes the semantic statement from fact sets under
-inclusion to arbitrary input and output refinement partial orders.
+the standard definition of a monotone query~\cite{abiteboul1995foundations},
+which positive Datalog satisfies and negation may not.  Functional CALM
+generalizes the semantic statement from fact sets under inclusion to arbitrary
+input and output refinement partial orders.  The state-based CRDT interface
+has the same functional shape, with received payloads ordered by inclusion as
+input and the semilattice order as output order~\cite{shapiro2011crdt};
+Sections~\ref{sec:query-instance} and~\ref{sec:crdt-instance} take up both
+instances.
 
-The usual state-based CRDT interface has the same functional shape.  Let $U$ be
-the immutable joinable delta or state payloads received so far, ordered by
-inclusion, and define $s(U)=s_0\sqcup\bigsqcup U$.  The semilattice order is
-the output-refinement order.  This function is monotone, while lattice-join provides a
-canonical refinement when replicas have seen different partial inputs
-~\cite{shapiro2011crdt}.  Section~\ref{sec:crdt-instance} returns  to what this
-stronger algebra provides.
-
-Historically, CALM stands for \emph{Consistency As Logical Monotonicity}.
-Here, ``logical'' refers not to a particular logic or programming language, but
-to preservation of semantic claims under declared information-refinement
-orders.  Functional CALM states that condition for any functional semantic
+Historically, CALM stands for \emph{Consistency As Logical Monotonicity},
+and its C has been read both as consistency and as confluence;
+Definition~\ref{def:consistency} is both.  Here, ``logical'' refers not to a
+particular logic or programming language, but to preservation of semantic
+claims under declared information-refinement orders.  Functional CALM states that condition for any functional semantic
 specification, regardless of the formalism used to express it.  Once
 specifications become relational in the next section, the monotonicity in question is monotonicity
 under an order lifted from outputs to sets of outputs, and the acronym can be
@@ -1266,9 +1195,6 @@ The original specification has a nonempty fiber at every input under discussion.
 A functional specification is the special case $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
-The two partial orders retain their earlier meanings: $\InputOrd$ compares
-inputs, $\OutputOrd$ compares outputs, and neither orders rows of $S$.
-
 The output-refinement order lifts from individual outputs to nonempty sets of
 outputs.  For nonempty $A,B\subseteq O$, define
         \begin{equation}
@@ -1291,8 +1217,6 @@ under the pointwise lift:
   \fiber{i}\LiftedOutputOrd\fiber{j}.
   \label{eq:relational-monotonicity}
         \end{equation}
-Equivalently, whenever $i\InputOrd j$ and $o\in\fiber{i}$, some
-$o'\in\fiber{j}$ satisfies $o\OutputOrd o'$.
 \end{definition}
 
 For singleton fibers this reduces to functional monotonicity,
@@ -1331,17 +1255,10 @@ both, so every finite set of admitted outputs is compatible and the fiber is
 directed; exposing $\{s{\to}\texttt{s1}\}$ removed two rows, and both removals
 were output retirements.  In the transaction ordering of panel (f), no
 admitted output refines both $[A,B]$ and $[B,A]$, so the fiber is not
-directed, and removing either row is a commitment.
-
-Transaction ordering is nondirected partly because of its output format: a
-serial order must pick one order even when nothing a client observed
-distinguishes the two.  Section~\ref{sec:hat-instance} gives an example that
-does not depend on the format, with outputs that are sets of facts ordered by
-inclusion, in which exposed reads still force opposite serialization orders;
-it is postponed because it needs the transactional vocabulary introduced
-there.  Leader election is nondirected for the plainest reason: if
-\texttt{server1} and \texttt{server2} are both eligible and the interface
-permits either as sole leader, no admitted output refines both choices.
+directed, and removing either row is a commitment.  Leader election is
+nondirected for the same reason: if \texttt{server1} and \texttt{server2} are
+both eligible and the interface permits either as sole leader, no admitted
+output refines both choices.
 
 \paragraph{Lifted Monotonicity.}
 \label{sec:complete-calm-criterion}
@@ -1358,10 +1275,8 @@ lift of the output order.  For nonempty $A,B\subseteq O$, define
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-the \emph{joint lift} of $\OutputOrd$.  Where the pointwise lift asks that each
-output of $A$ continue in $B$, the joint lift asks that every finite set of
-them continue together.  The relation is transitive, and $A\JointOutputOrd A$
-holds exactly when $A$ is directed.
+the \emph{joint lift} of $\OutputOrd$.  The relation is transitive, and
+$A\JointOutputOrd A$ holds exactly when $A$ is directed.
 
 \begin{definition}[Lifted Monotonicity; monotone specification]
 \label{def:lifted-monotonicity}
@@ -1425,16 +1340,13 @@ $\{(i,x):x\in X\}$ has common refinement $j$, so some $u\in\fiber{j}$
 refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
 
-Two features of the criterion deserve a word.  Finite families of every size
-are needed because pairwise compatibility does not imply compatibility of a
-larger family: let a fiber admit every set of at most two of three values $a$,
-$b$, $c$, ordered by inclusion; any two singletons have their pair as a common
-refinement, but the three together have none.  And the inputs $i_r$ need not be
+Finite families of every size are needed because pairwise compatibility does
+not imply compatibility of a larger family
+(Appendix~\ref{app:additional-applications}).  The inputs $i_r$ need not be
 comparable: inputs within one run form a chain, so incomparable $i_r$ belong
-to different runs that end at the same $j$, as when two runs receive the same
-ballots in different orders.  The criterion is read at $j$, looking back:
-regardless of how $j$ was reached, the outputs exposed along the way have a
-common refinement admitted there.
+to different runs that end at the same $j$.  The criterion is read at $j$,
+looking back: regardless of how $j$ was reached, the outputs exposed along the
+way have a common refinement admitted there.
 
 Taken together, the criterion is ordinary monotonicity lifted twice.  For a
 monotone function, as the input grows from $i$ to $j$ the single output at $i$
@@ -1453,40 +1365,25 @@ The transition system of Section~\ref{sec:determination} applies unchanged to
 a relational specification; the difference is that a fiber $R(i)$ may now
 contain several outputs, so choice commitments and exposures that remove rows
 become relevant.  This subsection takes up exposure first, then the runs of
-several participants and the Lamport histories they form.
+several participants.
 
 \paragraph{Exposure.}
-Which rows a commitment must remove depends on the output
-order
-(Definition~\ref{def:retirement}).  Under the equality order on outputs, no
-distinct output refines another, so no output is ever covered, and every strict
-restriction with the current input fixed removes rows by commitment; the same
-holds in the leader-election fiber, whose two outputs have no common
-refinement.  Output retirement is possible in a fiber like traceroute's, where
-a restriction may remove an output while a retained output still carries
-everything it said.  This subsection shows that such restrictions are exactly
-the exposures.
-
-Consider exposing $o\in R(i)$ to an external observer.  The exposure promises
-that later output at $i$ and at every refinement of $i$ will refine $o$.  When
-$o$ already lies below everything that remains possible, the promise is
-entailed by the residual and the exposure changes nothing
-(Proposition~\ref{prop:identity-exposure}).  A weaker
-condition suffices for an exposure to be honest: that nothing remaining possible
-\emph{contradicts} $o$, in the sense that every remaining possibility shares an
-admitted refinement with it.  Exposing such an $o$ promises that the final
-output will refine it, and the promise can always be kept, whatever else
-remains, because every remaining possibility has a refinement that also
-refines $o$.  Keeping the promise means restricting the residual at $i$ and
-its refinements to the outputs that refine $o$.  That is the exposure event
-$\mathsf{expose}(o)$ of Definition~\ref{def:transition-system}, which
-produces $R\mathbin{\upharpoonright_O}o$
-(Equation~\ref{eq:residual-refining-fibers}) and is permitted exactly when $o$
-is exposable at $i$ (Equation~\ref{eq:safe-exposure}): for every valid
-$j\succeq_I i$, the output $o$ is compatible in $R(j)$ with every $x\in R(j)$
-(Definition~\ref{def:compatibility}).  This is the relation of
-Definition~\ref{def:fiber-directedness} read against the residual rather than
-the specification.
+Under the equality order on outputs no output is ever covered, so every
+restriction with the current input fixed removes rows by commitment
+(Definition~\ref{def:retirement}); the same holds in the leader-election
+fiber.  In a fiber like traceroute's, a restriction may remove an output while
+a retained output still carries everything it said, and exposures are
+restrictions of this kind.  Exposing $o\in R(i)$ promises that later output at
+$i$ and at every refinement of $i$ will refine $o$.  The event
+$\mathsf{expose}(o)$ keeps the promise by producing
+$R\mathbin{\upharpoonright_O}o$ (Equation~\ref{eq:residual-refining-fibers}),
+and is permitted exactly when $o$ is exposable at $i$
+(Equation~\ref{eq:safe-exposure}): for every valid $j\succeq_I i$, the output
+$o$ is compatible in $R(j)$ with every $x\in R(j)$
+(Definition~\ref{def:compatibility}).  This is directedness
+(Definition~\ref{def:fiber-directedness}) read against the residual rather
+than the specification.  When $o$ already lies below everything that remains
+possible, the exposure changes nothing (Proposition~\ref{prop:identity-exposure}).
 
 \begin{proposition}[Exposure narrows without commitment]
 \label{prop:exposure-narrowing}
@@ -1506,23 +1403,16 @@ retained output refines
 $o$, so $o$ is least in the new upper fiber.
 \end{proof}
 
-An exposure event is therefore not a commitment, even though it may remove rows:
-it excludes nothing whose content could not still be reached.  If $o$ is not
-exposable, some $x$ at $i$ or one of its refinements has no admitted refinement in
-common with $o$.  Exposing $o$ would then silently destroy the content of $x$.
-The system must instead first make a commitment explicitly, reducing $R$ to a
-residual in which $o$ may become exposable.
-
-It is worth following one exposure carefully.  Suppose traceroute
-(Figure~\ref{fig:ambiguity-frames}(g)) first exposes
-$o=\{s{\to}\texttt{s1}\}$.  The output $x=\{s{\to}a\}$ is incomparable with
-$o$: neither refines the other.  The restriction therefore removes $(i,x)$.
-At first this may look like a choice against $x$, but the residual retains
-$u=\{s{\to}\texttt{s1},s{\to}a,s{\to}a{\to}\texttt{s2}\}$.  Because $u$
-refines both $o$ and $x$, all information in $x$ remains represented; the
-removal is an output retirement, not a commitment.  Transaction ordering
-(panel (f)) behaves differently.  Selecting $[A,B]$ removes $[B,A]$ with no
-retained common refinement, so that row is removed by commitment.
+An exposure event is therefore not a commitment, even though it may remove
+rows: it excludes nothing whose content could not still be reached.  If $o$ is
+not exposable, some $x$ at $i$ or one of its refinements has no admitted
+refinement in common with $o$, and exposing $o$ would silently destroy the
+content of $x$; the system must instead first make a commitment, reducing $R$
+to a residual in which $o$ may become exposable.  In
+Figure~\ref{fig:ambiguity-frames}, exposing $\{s{\to}\texttt{s1}\}$ in panel
+(g) removes $\{s{\to}a\}$ but retains a refinement of both, an output
+retirement; selecting $[A,B]$ in panel (f) removes $[B,A]$ with no retained
+common refinement, a removal by commitment.
 
 \paragraph{Participants and runs.}
 A \emph{participant} is a holder of a residual state that changes only by its
@@ -1535,54 +1425,10 @@ exposures and commitments a participant makes along the way.  Replicas, in
 the usual sense, are participants that receive the same input in different
 orders; their runs end at the same input, so condition~2 of consistency
 already covers them, with no need for a separate notion of replica
-consistency.
-
-\paragraph{Histories.}
-Runs of several participants fit together into a history in Lamport's sense.
-A \emph{distributed history} $H$ is a set of events, each at one participant,
-with each participant's events totally ordered, each receive matched to a
-send, and \emph{happens-before} the transitive closure of local order and
-matching.  A receive that advances the receiving participant's input is an
-input event; a receive that does not leaves the residual unchanged, as
-does an exposure that removes no row (Proposition~\ref{prop:identity-exposure}).  A
-\emph{consistent cut} $C$ is a subset of events closed under happens-before.
-For each participant $p$, the events of $C$ at $p$, in local order, form a run;
-write $\sigma_p^C$ for its final residual state and
-$\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector of residuals, the
-\emph{semantic endpoint} of the cut.
-
-\begin{proposition}[Residuals are the semantic quotient of histories]
-\label{prop:residual-quotient}
-Fix a specification, a participant set, and a commitment basis.
-\begin{enumerate}
-  \item $\operatorname{end}(H,C)$ is the same for every replay of the events
-        of $C$ in an order that respects happens-before.
-  \item Whether a transition is applicable at participant $p$ after $(H,C)$,
-        and the residual it produces, depend only on $\sigma_p^C$.
-  \item Consequently, pointed histories $(H,C)$ and $(H',C')$ with equal
-        endpoints admit the same semantic continuations, and the endpoint map
-        induces a bijection between its equivalence classes and the reachable
-        residual vectors.
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-Each coordinate $\sigma_p^C$ is determined by $p$'s events in local order,
-which every happens-before-respecting replay preserves, and events at
-different participants act on different coordinates; receives that advance no
-input change no coordinate.  This gives (1).  Input events, exposure events,
-and commitments are each partial functions of the local residual, which gives
-(2).  Then (3) is (2) applied coordinate by coordinate, together with the
-observation that any function induces a bijection between the classes of its
-kernel equivalence and its image.
-\end{proof}
-
-The proposition is what licenses the definitions of this paper to speak of
-residuals rather than executions.  Everything the specification cares about in a Lamport
-diagram survives in its cut's residuals; message order, batching, and who has
-learned what are forgotten exactly when they do not advance anyone's input.
-Consistency (Definition~\ref{def:consistency}), stated over residuals, is
-therefore a statement about executions.
+consistency.  Runs of several participants fit together into a history in
+Lamport's sense, and Appendix~\ref{app:histories} shows that the vector of
+their residuals is the semantic quotient of such histories: consistency, stated
+over residuals, is a statement about executions.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -1655,16 +1501,10 @@ refinement.  When none exists, participants may expose what they have, in
 whatever order it arrives, and remain reconcilable, though what they exposed
 may differ.  When such a family exists, some admissible output cannot be
 exposed without excluding another outright, that is, without a commitment.
-Computing a common refinement and guaranteeing termination remain protocol
-questions.
-
-A consistent specification therefore needs no coordination: every
-loquacious run is made of input events and exposures alone, and the next
-subsection shows that only commitments require agreement among participants
+A consistent specification therefore needs no coordination: every loquacious
+run is made of input events and exposures alone, and the next subsection shows
+that only commitments require agreement among participants
 (Definition~\ref{def:coordination}).
-Historically the C in CALM has been read as consistency and as confluence;
-Definition~\ref{def:consistency} is both, and the theorem says it is Lifted
-Monotonicity.
 
 \subsection{Coordination and the Complete CAP Theorem}
 \label{sec:cap-corollary}
@@ -1702,12 +1542,8 @@ Let a second participant receive the same input events as the first, reaching a
 state with the same current input and with $x\in\fiber{i}$ still admitted.  If $x$
 is exposable there, it exposes $x$; otherwise it applies a restriction
 retaining exactly the outputs above $x$ at $i$ and its refinements---a
-commitment, applicable because $x$ itself remains.  This second action is a
-member of the shared basis: the first participant's own action $d$ is a
-commitment removing a row at $i$, drawn from that basis, and the
-common-basis hypothesis makes the same commitments available to every
-participant holding the same input.  Either way its residual at $i$ is
-contained in $\{u\in\fiber{i}:x\OutputOrd u\}$.  The first participant's
+commitment, applicable because $x$ itself remains, and available to it by the
+common-basis hypothesis.  Either way its residual at $i$ is contained in $\{u\in\fiber{i}:x\OutputOrd u\}$.  The first participant's
 residual $R'(i)$ contains no such $u$ by hypothesis.  The intersection at $i$
 is therefore empty: the two states cannot be merged, and no later input event
 or exposure can restore a removed row.  The only way to avoid this outcome is
@@ -1719,32 +1555,23 @@ Together, Theorems~\ref{thm:complete-calm}
 and~\ref{thm:commitments-require-coordination} make the division exact: a
 monotone specification is one in which exposure is all that is ever needed,
 and a commitment excludes content some other participant could admissibly have
-selected, so it can never be made unilaterally.  If a system forbids some rows
-of $S$, its declared interface is a proper subrelation $S'\subsetneq S$, and
-the criterion applies to $S'$.
+selected, so it can never be made unilaterally.
 
 CAP asks the same question in a more specific setting.  A \emph{partition}
-divides the participants into two or more groups and stops all
-information from crossing between groups until the partition heals.  During the
-partition each participant continues to receive input from its own
-environment.  \emph{Availability} asks that a participant be able to expose an
-admissible output at the input it holds without waiting for anything from
-across the cut.  \emph{Reconciliation} asks that the exposures made on different
-sides remain jointly refinable when the partition heals and the inputs are
-combined.  \emph{Partition tolerance} asks for both under every partition and
-every schedule of arrivals on each side.  Consistency in the sense of
-Definition~\ref{def:consistency} is availability and reconciliation under
-every partition at once.  The classical CAP theorem is a
-one-way impossibility: a linearizable register cannot remain available through
-arbitrary partitions~\cite{gilbert2002cap}.  Complete CALM turns it into a
-dichotomy.
+divides the participants into two or more groups and stops all information
+from crossing between groups until the partition heals; during the partition
+each participant continues to receive input from its own environment.  The
+classical CAP theorem is a one-way impossibility: a linearizable register
+cannot remain available through arbitrary partitions~\cite{gilbert2002cap}.
+Complete CALM turns it into a dichotomy.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
 For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{enumerate}
-  \item under every partition and every schedule of inputs on each side, every
-        participant may expose any admissible output at its current input
+  \item under every partition and every order of input arrival on each side,
+        every participant may expose any admissible output at its current
+        input without waiting for anything from across the partition
         (\emph{availability}), and for every common refinement $j$ of the
         current inputs on the two sides, some row at $j$ survives in every
         participant's state (\emph{reconciliation});
@@ -1754,7 +1581,7 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 
 \begin{proof}
 Condition~1 asks for the two conditions of Definition~\ref{def:consistency},
-restricted to the participants and schedules that a partition can produce.
+restricted to the participants and arrival orders that a partition can produce.
 Every finite family of loquacious runs can be so produced: place the
 participants on either side of a cut and let each side's environment deliver
 its inputs in the chosen order.  Condition~1 is therefore consistency, and
@@ -1772,17 +1599,16 @@ Theorem~\ref{thm:commitments-require-coordination} it must either wait to agree
 with the other side, giving up availability, or make the commitment alone and
 risk an unreconcilable merge, giving up reconciliation.
 
-A linearizable register is the classical instance of the tradeoff side.  Two
-reads of concurrent writes may be explained by opposite serial orders, and no
-total order refines both, so the specification is not monotone and the theorem
-withholds availability under partition, which is the classical CAP
-impossibility~\cite{gilbert2002cap}.  Whether a commitment requires agreement
-across a cut also depends on which participant may hold which input and make
-which choice.  Appendix~\ref{app:deployment} refines the theorem by such a
-\emph{deployment} and shows that a causal register, though not monotone,
-needs no coordination when each participant answers only its own reads.  With
-the central results in place, we now compare their consequences across the
-surrounding literature.
+A linearizable register is the classical instance of the tradeoff side: two
+reads of concurrent writes may be explained by opposite serial orders, no
+total order refines both, and the theorem withholds availability under
+partition.  Whether a commitment requires agreement across a partition also
+depends on which participant may hold which input and make which choice;
+Appendix~\ref{app:deployment} refines the theorem by such a \emph{deployment}
+and shows that a causal register, though not monotone, needs no coordination
+when each participant answers only its own reads.  With the central results
+in place, we now compare their consequences across the surrounding
+literature.
 
 \section{Instances Across the Literature}
 \label{sec:instances}
@@ -2218,6 +2044,56 @@ transactional availability, and invariant confluence then become directly compar
 with one another.
 
 \appendix
+\section{Histories and Residuals}
+\label{app:histories}
+
+Runs of several participants (Section~\ref{sec:safe-exposure}) fit together
+into a history in Lamport's sense.
+A \emph{distributed history} $H$ is a set of events, each at one participant,
+with each participant's events totally ordered, each receive matched to a
+send, and \emph{happens-before} the transitive closure of local order and
+matching.  A receive that advances the receiving participant's input is an
+input event; a receive that does not leaves the residual unchanged, as
+does an exposure that removes no row (Proposition~\ref{prop:identity-exposure}).  A
+\emph{consistent cut} $C$ is a subset of events closed under happens-before.
+For each participant $p$, the events of $C$ at $p$, in local order, form a run;
+write $\sigma_p^C$ for its final residual state and
+$\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector of residuals, the
+\emph{semantic endpoint} of the cut.
+
+\begin{proposition}[Residuals are the semantic quotient of histories]
+\label{prop:residual-quotient}
+Fix a specification, a participant set, and a commitment basis.
+\begin{enumerate}
+  \item $\operatorname{end}(H,C)$ is the same for every replay of the events
+        of $C$ in an order that respects happens-before.
+  \item Whether a transition is applicable at participant $p$ after $(H,C)$,
+        and the residual it produces, depend only on $\sigma_p^C$.
+  \item Consequently, pointed histories $(H,C)$ and $(H',C')$ with equal
+        endpoints admit the same semantic continuations, and the endpoint map
+        induces a bijection between its equivalence classes and the reachable
+        residual vectors.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Each coordinate $\sigma_p^C$ is determined by $p$'s events in local order,
+which every happens-before-respecting replay preserves, and events at
+different participants act on different coordinates; receives that advance no
+input change no coordinate.  This gives (1).  Input events, exposure events,
+and commitments are each partial functions of the local residual, which gives
+(2).  Then (3) is (2) applied coordinate by coordinate, together with the
+observation that any function induces a bijection between the classes of its
+kernel equivalence and its image.
+\end{proof}
+
+The proposition is what licenses the definitions of the paper to speak of
+residuals rather than executions.  Everything the specification cares about in a Lamport
+diagram survives in its cut's residuals; message order, batching, and who has
+learned what are forgotten exactly when they do not advance anyone's input.
+Consistency (Definition~\ref{def:consistency}), stated over residuals, is
+therefore a statement about executions.
+
 \section{Complete CAP under a Deployment}
 \label{app:deployment}
 
@@ -2274,8 +2150,8 @@ acts.
 \label{thm:complete-cap-deployment}
 Fix a deployment.  The following are equivalent.
 \begin{enumerate}
-  \item Under every partition $\Pi$ and every schedule of inputs within each
-        component: participants in one component may coordinate with one
+  \item Under every partition $\Pi$ and every order of input arrival within
+        each component: participants in one component may coordinate with one
         another, but each component selects outputs at the rows its
         participants hold without waiting for information from any other
         component (\emph{availability}); and for every common refinement
@@ -2297,7 +2173,7 @@ selections is separable, so monotonicity across $\Pi$ supplies $u\in\fiber{j}$
 above every selected output.  Each participant's residual at $j$ is
 $\fiber{j}$ intersected with the outputs above its own selections, and $u$
 belongs to every such set.  Hence some row at $j$ survives in every state,
-under every schedule on each side.
+under every arrival order on each side.
 
 (1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable family
 $(i_1,o_1),\ldots,(i_k,o_k)$ and a common refinement $j$ admit no common
