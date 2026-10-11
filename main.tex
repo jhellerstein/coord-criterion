@@ -272,25 +272,34 @@ This paper makes four contributions:
         acting participants necessarily creates a CAP tradeoff.
 \end{enumerate}
 
-Section~\ref{sec:nutshell} walks through the framework on a running
-example.  Section~\ref{sec:functional-calm} develops Functional CALM.
-Section~\ref{sec:complete-calm} introduces semantic choice, commitment,
-Complete CALM, and Complete CAP.  Section~\ref{sec:instances} applies the
+Section~\ref{sec:functional-calm} introduces the framework on an election
+and develops Functional CALM.  Section~\ref{sec:complete-calm} introduces
+semantic choice on two further examples and develops commitment, Complete
+CALM, and Complete CAP.  Section~\ref{sec:instances} applies the
 results to familiar systems, and Section~\ref{sec:discussion} draws out the
 design lessons and scope limits.  Section~\ref{sec:frontiers} then derives
 maximal coordination-free interfaces.  Appendix~\ref{app:additional-applications}
 gives further classical applications.
 
-\section{The Framework in a Nutshell}
-\label{sec:nutshell}
+\section{Functional CALM}
+\label{sec:functional-calm}
 
-This section introduces the formalism on one example, using the vocabulary the
-rest of the paper will use.  Terms introduced in italics are defined formally in
-Sections~\ref{sec:functional-calm} and~\ref{sec:complete-calm}; italics also
-mark the occasional standard term borrowed from database theory.  Nothing here is needed for the proofs, but
-every notion the Functional CALM and Complete CALM theorems rest on---residual
-states, input events, commitments, upper fibers, sealed inputs, and exposure---is
-exercised on the example.
+A semantic specification describes allowed input/output behavior without
+committing to a language, placement, protocol, or message schedule.  This
+section treats the case that CALM addressed for its first decade, and that the
+CRDT state interface shares: each input has one specified output.  We first
+walk through the framework on an election, then state it formally and prove
+Functional CALM.
+
+\subsection{The framework on an election}
+\label{sec:election-story}
+
+Terms introduced in italics are defined formally in the rest of this section
+and in Section~\ref{sec:complete-calm}; italics also mark the occasional
+standard term borrowed from database theory.  Nothing here is needed for the
+proofs, but every notion the Functional CALM theorem rests on---residual
+states, input events, retirement, commitments, upper fibers, sealed inputs,
+exposure, and consistency---is exercised on the example.
 
 \begin{figure*}[t]
   \centering
@@ -526,90 +535,8 @@ is Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one must
 first seal input by commitment.
 
-\begin{figure}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(f) Transaction ordering, after the commitment to $[A,B]$}\\
-    \toprule
-    Input & Output \\ \midrule
-    $\{A,B\}$ & \sh{$[A,B]$} \\
-    \retired{$\{A,B\}$} & \retired{$[B,A]$} \\ \strikerow
-    \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize no remaining row refines the removed one:}\\
-    \multicolumn{2}{@{}l}{\footnotesize a commitment}
-  \end{tabular}
-  \hfill
-  \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(g) Traceroute, after exposing $\{s{\to}\texttt{s1}\}$}\\
-    \toprule
-    Input & Output \\ \midrule
-    $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
-    \retired{$i$} & \retired{$\{s{\to}a\}$} \\
-    \retired{$i$} & \retired{$\{s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
-    $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a\}$} \\
-    $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
-    \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize each removed row refines to a remaining one:}\\
-    \multicolumn{2}{@{}l}{\footnotesize an exposure}
-  \end{tabular}
-  \caption{Two specifications with several rows at one current input, each
-  shown after one output has been selected.  In (f) the input is a pair of
-  concurrent transactions and an output is a serial order of them.  In (g) an
-  output is a prefix-closed set of routes from source $s$, which reaches server
-  \texttt{s1} directly and server \texttt{s2} through hop $a$.  Shaded cells
-  are the upper fiber that remains.  Legend as in
-  Figure~\ref{fig:election-frames}.}
-  \label{fig:ambiguity-frames}
-\end{figure}
-
-\paragraph{Ambiguity.}
-Some specifications are ambiguous: they admit several results for one
-input, so the input column does not determine the output column and the
-functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(f) is the
-ordering of two concurrent transactions $A$ and $B$: the input is the pair,
-the output is a serial order, and either order is admitted, so the table has
-two rows at one input.  A commitment to $[A,B]$ removes the row for $[B,A]$: a
-second kind of commitment, a \emph{choice commitment}.
-Panel (g) is a traceroute
-diagnostic for a service reachable from source $s$ directly at server
-\texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
-prefix-closed set of routes observed so far, so $\{s{\to}a\}$, a probe that has
-reached the hop but not the server, is an admitted output, and so is any union
-of admitted outputs.  Exposing $\{s{\to}\texttt{s1}\}$ removes the two rows that
-do not refine it, yet the remaining rows $\{s{\to}\texttt{s1},\ s{\to}a\}$ and
-$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$ still say
-everything they said.  Nothing is lost: the output is exposable, and
-exposing it is not a commitment.
-
-What made the difference between panels (f) and (g)?  In both, the system
-selected one of several admissible outputs.  In transaction ordering the other
-output had nowhere to go: no admissible output refines both $[A,B]$ and
-$[B,A]$, so neither was exposable without removing the other outright.  In traceroute every other output had somewhere to go: whatever two
-route sets the specification admits, it also admits their union, which refines
-both.  A set of outputs with this property, in which every finite subset has a
-common refinement within the set, is called \emph{directed}.  Directedness is
-what makes exposure possible in the presence of ambiguity.  If the outputs
-admitted at an input are directed, then whichever of them the system exposes,
-every other output can still be refined with that value, so nothing is lost.
-If they are not directed, some output becomes exposable only after a
-commitment removes an alternative.
-
-Two things can therefore go wrong as a relational specification runs.  Input
-can grow in a way that leaves an admitted output with no refinement, as in the
-election under the equality order.  Or the outputs admitted at one input can
-fail to be directed, as in transaction ordering.  Complete CALM
-(Section~\ref{sec:complete-calm}) rules out both with one condition, \emph{Lifted
-Monotonicity}: whenever input grows from $i$ to $j$, every finite set of
-outputs admitted at $i$ has a common refinement admitted at $j$.  Taking a
-single output, this says every admitted output continues as input grows.
-Taking $j=i$, it says the outputs admitted at one input are directed.  The
-condition is a monotonicity condition: it says that the set of outputs
-admitted grows, in the appropriate sense, as the input grows.
-
 \paragraph{Commitments versus everything else.}
-The legend of Figures~\ref{fig:election-frames} and~\ref{fig:ambiguity-frames}
+The legend of Figures~\ref{fig:election-frames} and~\ref{fig:nonmonotone-frame}
 distinguishes two kinds of removed row, and the distinction is exactly
 commitment versus not.  A gray row has been \emph{retired}, and in every panel
 here it is \emph{covered}: some remaining row says everything it said, so
@@ -617,71 +544,18 @@ removing it narrows nothing.  A struck row was an
 alternative in its own right: removing it narrows what is within spec, and
 only a commitment does that.
 
-The other two kinds of transition retire rows rather than committing
-against them.  Input arrival retires the rows the new input does not refine
-(panels (b), (c)); it belongs to the environment.  Exposure retires the rows
-that do not refine the exposed output (panel (g)); it belongs to the system but
-is not a commitment.  The two CALM conditions say when these two transitions
-retire only covered rows: monotonicity says this of input arrival, as in panel
-(b), where the retired $\bot$ at $a\cdot\cdot$ is refined by the $\bot$ at
-$ab\cdot$; directedness says it of exposure, as in panel (g).  A commitment, by contrast,
-always narrows; that is its purpose (panels (d), (e), (f)).  Computation is not on
+The other two kinds of event retire rows and make no commitment.  Input
+arrival retires the rows the new input does not refine (panels (b), (c)); it
+belongs to the environment.  Exposure retires the rows that do not refine the
+exposed output; for a functional specification there are none, and
+Section~\ref{sec:complete-calm} shows the case where there are.  Monotonicity
+says when input arrival retires only covered rows, as in panel (b), where the
+retired $\bot$ at $a\cdot\cdot$ is refined by the $\bot$ at $ab\cdot$.  A
+commitment, by contrast, always narrows; that is its purpose (panels (d),
+(e)).  Computation is not on
 this list at all.  Tallying the ballots in panel (c) to notice that the result
 is determined removes no row; computation has no effect on the residual, and
 so never counts as determination.
-
-\paragraph{The commitment basis.}
-The commitment basis is part of a system's design, alongside the
-specification, and the choice of basis is a real one.  Familiar concurrency
-control protocols differ exactly here.  Figure~\ref{fig:cc-commitments} returns to
-transaction ordering with a third transaction $C$, so that six serial orders
-are admitted.  Under two-phase locking, $A$ acquiring a lock ahead of $B$ commits $A$
-before $B$ and nothing more; $C$'s position stays open until it contends for a
-lock.  Under multiversion timestamp ordering, $B$ receiving the first timestamp
-commits $B$ to first place and nothing more; $A$ and $C$ remain unordered.
-Both protocols proceed by a sequence of such commitments.  The two bases
-differ in the shape of a commitment, a relative order between two conflicting
-transactions or an absolute position in the final order, and neither shape is
-dictated by the specification.  Section~\ref{sec:design-boundary} returns to
-basis design, and Appendix~\ref{app:additional-applications} works through a
-basis with a single commitment, after which every remaining act is an
-exposure.
-
-\begin{figure}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(h) 2PL: $A$ locks ahead of $B$}\\
-    \toprule
-    Input & Output \\ \midrule
-    $\{A,B,C\}$ & \sh{$[A,B,C]$} \\
-    $\{A,B,C\}$ & \sh{$[A,C,B]$} \\
-    $\{A,B,C\}$ & \sh{$[C,A,B]$} \\
-    \retired{$\{A,B,C\}$} & \retired{$[B,A,C]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[B,C,A]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
-    \bottomrule
-  \end{tabular}
-  \hfill
-  \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(i) MVTO: $B$ receives the first timestamp}\\
-    \toprule
-    Input & Output \\ \midrule
-    $\{A,B,C\}$ & \sh{$[B,A,C]$} \\
-    $\{A,B,C\}$ & \sh{$[B,C,A]$} \\
-    \retired{$\{A,B,C\}$} & \retired{$[A,B,C]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[A,C,B]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,A,B]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
-    \bottomrule
-  \end{tabular}
-  \caption{Serialization orders for three concurrent transactions, after one
-  commitment under two protocols.  In (h) two-phase locking has ordered $A$
-  before $B$; in (i) multiversion timestamp ordering has placed $B$ first.
-  Legend as in Figure~\ref{fig:election-frames}.}
-  \label{fig:cc-commitments}
-\end{figure}
 
 \paragraph{Consistency.}
 Both CALM theorems have the same shape: a monotonicity condition on the
@@ -694,52 +568,55 @@ only covered rows, and when, for any several such runs, whatever inputs they
 reached and in whatever order those inputs arrived, one admitted output at
 every common refinement of their inputs refines everything they exposed.  The
 residual then depends on the input reached, not on the order of arrival or on
-what was exposed along the way.  Functional CALM says that a functional
-specification is consistent exactly when it is monotone; Complete CALM says
-that an ambiguous one is consistent exactly when it has Lifted Monotonicity.
+what was exposed along the way.  Functional CALM, proved below, says that a functional specification is
+consistent exactly when it is monotone.
 
-\paragraph{Instantiating the model.}
-Everything so far is semantic: it concerns the specification and its orders,
-and it holds of a single-node database ordering transactions just as it holds
-of the election.  Now let the system be distributed.  It consists of participants, each of
-which knows the specification, which is fixed and public, but sees only its
-own events: the input that has reached it, the exposures and commitments it
-has itself made.  Each participant therefore has its own residual, obtained
-from the specification by removing the rows its own events removed,
-and two participants that have seen different events hold different
-residuals.  Panels (a) and (b) of Figure~\ref{fig:election-frames} can be read
-this way: one participant has so far received only $v_1$'s ballot, another has
-also received $v_2$'s, and each has removed what its own input retired.  This
-is the whole connection to executions.  Take any Lamport diagram of the system
-and cut it at any consistent moment; each participant's events below the cut
-determine its residual, and those residuals are all this paper ever consults.
-Two cuts that yield the same residuals are indistinguishable here, however
-their messages were ordered or batched
-(Proposition~\ref{prop:residual-quotient}).
 
-Commitments are precisely the semantic actions that require coordination;
-input events and exposures may be done autonomously.  This
-follows directly from the discussion above.  Input arrives at each participant
-on its own.  An exposure retires only covered rows, so every output another
-participant still admits has a refinement consistent with what was exposed,
-and combining inputs later contradicts nothing.  A commitment removes an alternative that another
-participant's residual may still admit, so it is safe only if every such
-participant agrees; that agreement is coordination.  Determination that needs
-a commitment is therefore precisely the determination that needs coordination.
-Section~\ref{sec:functional-calm} formalizes this for functions, where only
-input-sealing commitments are ever needed; Section~\ref{sec:complete-calm}
-does so for relations.
-
-\section{Functional CALM}
-\label{sec:functional-calm}
-
-A semantic specification describes allowed input/output behavior without
-committing to a language, placement, protocol, or message schedule.  We begin with the
-case addressed in both the original CALM and the CRDT state interface: each
-input has one specified output.
-
+\begin{figure*}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{6pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{@{}l l l@{}}
+    \toprule
+    \textbf{Specification} & & \\
+    \midrule
+    specification & $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, \quad $S\subseteq I\times O$ & Defs.~\ref{def:functional-specification}, \ref{def:relational-specification} \\
+    fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$; \quad functional when $S(i)=\{f(i)\}$ & Eq.~\ref{eq:fiber} \\
+    monotone (functional) & $i\InputOrd j\ \Longrightarrow\ f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity} \\
+    Lifted Monotonicity & $i\InputOrd j\ \Longrightarrow\ S(i)\JointOutputOrd S(j)$ \quad (every finite $X\subseteq S(i)$ has a common refinement in $S(j)$) & Def.~\ref{def:lifted-monotonicity} \\
+    \addlinespace
+    \textbf{Transition system} & & \\
+    \midrule
+    residual state & $(i,R)$: \ $R\subseteq S$, \ $R(i)\neq\varnothing$, \ $R(k)=\varnothing$ unless $i\InputOrd k$ & Def.~\ref{def:residual-state} \\
+    initial state; upper fiber & $\sigma_0(i)=(i,\{(k,o)\in S: i\InputOrd k\})$; \quad $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$ & Eqs.~\ref{eq:canonical-initial-state}, \ref{eq:upper-fiber} \\
+    input event (environment) & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,\ R\mathbin{\upharpoonright_I}j)$, \quad $R\mathbin{\upharpoonright_I}j=\{(k,u)\in R: j\InputOrd k\}$ & Def.~\ref{def:transition-system} \\
+    exposure (system) & $(i,R)\xrightarrow{\mathsf{expose}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ defined iff $o$ exposable & Eq.~\ref{eq:safe-exposure} \\
+    commitment (system) & $(i,R)\xrightarrow{p}(i,R')$, \ $R'\subsetneq R$, \ some removed $(k,x)$ has no $u\in R'(k)$ with $x\OutputOrd u$ & Def.~\ref{def:transition-system} \\
+    \addlinespace
+    \textbf{Commitments} & & \\
+    \midrule
+    input-sealing / choice & makes a valid input invalid \ / \ keeps every valid input valid & Def.~\ref{def:transition-system} \\
+    commitment basis & the set of commitments the system may use; a design input alongside $\Spec$ & Def.~\ref{def:transition-system} \\
+    removed row $(k,x)$ & input retirement if $k\not\succeq_I i'$; \ output retirement if $\exists u\in R'(k),\,x\OutputOrd u$; \ else removed by commitment & Def.~\ref{def:retirement} \\
+    \addlinespace
+    \textbf{Results} & & \\
+    \midrule
+    consistent & every loquacious run defined; \quad $\bigcap_r R_r(j)\neq\varnothing$ at every common refinement $j$ & Def.~\ref{def:consistency} \\
+    Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
+    Complete CALM & consistent $\iff$ Lifted Monotonicity & Thm.~\ref{thm:complete-calm} \\
+    coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
+    \bottomrule
+  \end{tabular}
+  \caption{The formal objects of Sections~\ref{sec:functional-calm}
+  and~\ref{sec:complete-calm}, for reference.}
+  \label{fig:formalism-summary}
+\end{figure*}
 \subsection{Functional specifications with refinement orders}
 \label{sec:functional-specifications}
+
+Figure~\ref{fig:formalism-summary} collects the formal objects of this section
+and the next in one place, with references to where each is defined.
 
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
@@ -789,8 +666,9 @@ keep track of which input--output possibilities remain, which events remove
 them, and which of those removals are acts of choice.  We do this with a
 transition system, defined in full below, whose states are residual states and
 whose transitions are of three kinds: input events, exposures, and
-commitments.  The definitions follow the vocabulary of Section~\ref{sec:nutshell}
-and the panels of Figure~\ref{fig:election-frames}.  Choice commitments are
+commitments.  The definitions follow the vocabulary of
+Section~\ref{sec:election-story} and the panels of
+Figure~\ref{fig:election-frames}.  Choice commitments are
 defined here but discussed in Section~\ref{sec:complete-calm}, where
 relational specifications make them necessary, as is exposure in the presence
 of output choice.
@@ -949,7 +827,7 @@ a retirement nonetheless, because the environment made that input history
 counterfactual; what distinguishes a commitment is that the system excluded
 something no event had ruled out.
 
-The rest of this subsection discusses input events,
+The rest of this subsection discusses input events, determination,
 input-sealing commitments, and exposure for a functional specification, where
 exposure never removes a row; Section~\ref{sec:complete-calm} takes up choice
 commitments and exposure in the presence of output choice.
@@ -976,36 +854,6 @@ beyond the $j$ it produces matters.  A change already incorporated gives
 $i\oplus\delta=i$, and $\mathsf{input}(i)$ at $(i,R)$ is the identity, so
 duplicate delivery changes nothing.
 
-\paragraph{Input-sealing commitments.}
-Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
-the current input fixed.  No input event does this; it is an input-sealing
-commitment, an act of the system, and for a functional specification it is the
-only kind of commitment that can ever be needed, since every fiber has one row
-and there is never an output to choose among.  In panel (d) it seals the
-current input completely.
-
-\begin{definition}[Input-sealed state]
-\label{def:input-sealing}
-The current input $i$ of $(i,R)$ is \emph{sealed} when no strict refinement of $i$
-is valid:
-        \begin{equation}
-  R(j)=\varnothing\qquad\text{for every }j\succ_I i.
-  \label{eq:sealed-input}
-        \end{equation}
-A residual state is \emph{input-sealed} when its current input is sealed.
-\end{definition}
-
-Whether such a commitment is
-available is part of the system model, not of the specification: it must be in
-the commitment basis.  A system that lacks the authority to seal input simply
-has no input-sealing commitment to apply, and a system that must still accept a
-late ballot with a rejection or other fallback response keeps that row and has
-not sealed the input.  The two kinds of commitment exercise different
-authority: a choice commitment speaks only for the system's own output, while
-an input-sealing commitment declares that input the environment could still
-supply will not count.  A commitment records the binding act, not the
-computation that selected it.
-
 \paragraph{Determination.}
 The shaded outputs in Figure~\ref{fig:election-frames} are those that the
 current input or any continuation of it could still require.  For
@@ -1031,12 +879,6 @@ Determinedness is stronger than having one row at $i$.  Every fiber in the
 election is a singleton, yet panels (a) and (b) are undetermined because valid
 refinements disagree; panel (c) is determined because none does.
 
-When $i$ is sealed, $R^\uparrow(i)=R(i)$: nothing beyond the current fiber can
-be required, and in the functional case $i$ is then determined.  Panel (d) is
-sealed and determined; panel (c) is determined but not sealed.  Sealing is a
-condition on input and determinedness a condition on output.  Inputs
-incomparable with $i$ are unaffected by sealing it.
-
 \emph{Determination} is also the name for the process by which a residual
 becomes determined.  Input events may determine a residual on their own, as in
 Figure~\ref{fig:election-frames}(c); when they do not, the system narrows it
@@ -1047,6 +889,42 @@ commitment is a sequence
   \xrightarrow{p_2}\cdots\xrightarrow{p_m}(i,R_m)
 \]
 of applicable commitments, empty when the state is already determined.
+
+\paragraph{Input-sealing commitments.}
+Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
+the current input fixed.  No input event does this; it is an input-sealing
+commitment, an act of the system, and for a functional specification it is the
+only kind of commitment that can ever be needed, since every fiber has one row
+and there is never an output to choose among.  In panel (d) it seals the
+current input completely.
+
+\begin{definition}[Input-sealed state]
+\label{def:input-sealing}
+The current input $i$ of $(i,R)$ is \emph{sealed} when no strict refinement of $i$
+is valid:
+        \begin{equation}
+  R(j)=\varnothing\qquad\text{for every }j\succ_I i.
+  \label{eq:sealed-input}
+        \end{equation}
+A residual state is \emph{input-sealed} when its current input is sealed.
+\end{definition}
+
+When $i$ is sealed, $R^\uparrow(i)=R(i)$: nothing beyond the current fiber can
+be required, and in the functional case $i$ is then determined.  Panel (d) is
+sealed and determined; panel (c) is determined but not sealed.  Sealing is a
+condition on input and determinedness a condition on output.  Inputs
+incomparable with $i$ are unaffected by sealing it.
+
+Whether such a commitment is
+available is part of the system model, not of the specification: it must be in
+the commitment basis.  A system that lacks the authority to seal input simply
+has no input-sealing commitment to apply, and a system that must still accept a
+late ballot with a rejection or other fallback response keeps that row and has
+not sealed the input.  The two kinds of commitment exercise different
+authority: a choice commitment speaks only for the system's own output, while
+an input-sealing commitment declares that input the environment could still
+supply will not count.  A commitment records the binding act, not the
+computation that selected it.
 
 \paragraph{Exposure.}
 Exposing $o$ at $i$ promises that whatever is finally produced for $i$, or
@@ -1220,16 +1098,195 @@ specifications become relational in the next section, the monotonicity in questi
 under an order lifted from outputs to sets of outputs, and the acronym can be
 read as \emph{Consistency As Lifted Monotonicity}.
 
-Functional CALM handles uncertainty about input arrival.  We next allow the
-specification itself to offer several outputs for one input.
+Functional CALM handles uncertainty about input arrival, and for a decade that
+was the whole of CALM: one input, one answer, and monotonicity decides whether
+the answer can be exposed early.  Many specifications are not like that.  A
+database may admit several serialization orders for the same transactions; an
+election protocol may admit any eligible leader.  The functional dependency
+fails, the system must choose, and nothing so far says whether choosing
+requires coordination.  The next section answers that, and the answer is
+again a monotonicity condition.
 
 \section{Complete CALM: Semantic Choice and Coordination}
 \label{sec:complete-calm}
 
 A semantic specification may admit more than one output for the same input.
-Leader election may allow any eligible leader, and serializability may allow
-several transaction orders.  Such specifications are relational rather than
-functional.  Complete CALM extends Functional CALM to this semantic output choice.
+Serializability may allow several transaction orders, and leader election may
+allow any eligible leader.  Such specifications are relational rather than
+functional, and we call them ambiguous.  Complete CALM extends Functional CALM
+to this semantic output choice.  As before, we first walk through the ideas on
+examples, then state and prove them.
+
+\subsection{Ambiguity on two examples}
+\label{sec:ambiguity-story}
+
+\begin{figure}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(f) Transaction ordering, after the commitment to $[A,B]$}\\
+    \toprule
+    Input & Output \\ \midrule
+    $\{A,B\}$ & \sh{$[A,B]$} \\
+    \retired{$\{A,B\}$} & \retired{$[B,A]$} \\ \strikerow
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize no remaining row refines the removed one:}\\
+    \multicolumn{2}{@{}l}{\footnotesize a commitment}
+  \end{tabular}
+  \hfill
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(g) Traceroute, after exposing $\{s{\to}\texttt{s1}\}$}\\
+    \toprule
+    Input & Output \\ \midrule
+    $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
+    \retired{$i$} & \retired{$\{s{\to}a\}$} \\
+    \retired{$i$} & \retired{$\{s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
+    $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a\}$} \\
+    $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
+    \bottomrule
+    \multicolumn{2}{@{}l}{\footnotesize each removed row refines to a remaining one:}\\
+    \multicolumn{2}{@{}l}{\footnotesize an exposure}
+  \end{tabular}
+  \caption{Two specifications with several rows at one current input, each
+  shown after one output has been selected.  In (f) the input is a pair of
+  concurrent transactions and an output is a serial order of them.  In (g) an
+  output is a prefix-closed set of routes from source $s$, which reaches server
+  \texttt{s1} directly and server \texttt{s2} through hop $a$.  Shaded cells
+  are the upper fiber that remains.  Legend as in
+  Figure~\ref{fig:election-frames}.}
+  \label{fig:ambiguity-frames}
+\end{figure}
+
+\paragraph{Ambiguity.}
+Some specifications are ambiguous: they admit several results for one
+input, so the input column does not determine the output column and the
+functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(f) is the
+ordering of two concurrent transactions $A$ and $B$: the input is the pair,
+the output is a serial order, and either order is admitted, so the table has
+two rows at one input.  A commitment to $[A,B]$ removes the row for $[B,A]$: a
+second kind of commitment, a \emph{choice commitment}.
+Panel (g) is a traceroute
+diagnostic for a service reachable from source $s$ directly at server
+\texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
+prefix-closed set of routes observed so far, so $\{s{\to}a\}$, a probe that has
+reached the hop but not the server, is an admitted output, and so is any union
+of admitted outputs.  Exposing $\{s{\to}\texttt{s1}\}$ removes the two rows that
+do not refine it, yet the remaining rows $\{s{\to}\texttt{s1},\ s{\to}a\}$ and
+$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$ still say
+everything they said.  Nothing is lost: the output is exposable, and
+exposing it is not a commitment.
+
+What made the difference between panels (f) and (g)?  In both, the system
+selected one of several admissible outputs.  In transaction ordering the other
+output had nowhere to go: no admissible output refines both $[A,B]$ and
+$[B,A]$, so neither was exposable without removing the other outright.  In traceroute every other output had somewhere to go: whatever two
+route sets the specification admits, it also admits their union, which refines
+both.  A set of outputs with this property, in which every finite subset has a
+common refinement within the set, is called \emph{directed}.  Directedness is
+what makes exposure possible in the presence of ambiguity.  If the outputs
+admitted at an input are directed, then whichever of them the system exposes,
+every other output can still be refined with that value, so nothing is lost.
+If they are not directed, some output becomes exposable only after a
+commitment removes an alternative.
+
+Two things can therefore go wrong as a relational specification runs.  Input
+can grow in a way that leaves an admitted output with no refinement, as in the
+election under the equality order.  Or the outputs admitted at one input can
+fail to be directed, as in transaction ordering.  Complete CALM
+(Section~\ref{sec:complete-calm}) rules out both with one condition, \emph{Lifted
+Monotonicity}: whenever input grows from $i$ to $j$, every finite set of
+outputs admitted at $i$ has a common refinement admitted at $j$.  Taking a
+single output, this says every admitted output continues as input grows.
+Taking $j=i$, it says the outputs admitted at one input are directed.  The
+condition is a monotonicity condition: it says that the set of outputs
+admitted grows, in the appropriate sense, as the input grows.
+
+\paragraph{The commitment basis.}
+The commitment basis is part of a system's design, alongside the
+specification, and the choice of basis is a real one.  Familiar concurrency
+control protocols differ exactly here.  Figure~\ref{fig:cc-commitments} returns to
+transaction ordering with a third transaction $C$, so that six serial orders
+are admitted.  Under two-phase locking, $A$ acquiring a lock ahead of $B$ commits $A$
+before $B$ and nothing more; $C$'s position stays open until it contends for a
+lock.  Under multiversion timestamp ordering, $B$ receiving the first timestamp
+commits $B$ to first place and nothing more; $A$ and $C$ remain unordered.
+Both protocols proceed by a sequence of such commitments.  The two bases
+differ in the shape of a commitment, a relative order between two conflicting
+transactions or an absolute position in the final order, and neither shape is
+dictated by the specification.  Section~\ref{sec:design-boundary} returns to
+basis design, and Appendix~\ref{app:additional-applications} works through a
+basis with a single commitment, after which every remaining act is an
+exposure.
+
+\begin{figure}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(h) 2PL: $A$ locks ahead of $B$}\\
+    \toprule
+    Input & Output \\ \midrule
+    $\{A,B,C\}$ & \sh{$[A,B,C]$} \\
+    $\{A,B,C\}$ & \sh{$[A,C,B]$} \\
+    $\{A,B,C\}$ & \sh{$[C,A,B]$} \\
+    \retired{$\{A,B,C\}$} & \retired{$[B,A,C]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[B,C,A]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \bottomrule
+  \end{tabular}
+  \hfill
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(i) MVTO: $B$ receives the first timestamp}\\
+    \toprule
+    Input & Output \\ \midrule
+    $\{A,B,C\}$ & \sh{$[B,A,C]$} \\
+    $\{A,B,C\}$ & \sh{$[B,C,A]$} \\
+    \retired{$\{A,B,C\}$} & \retired{$[A,B,C]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[A,C,B]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,A,B]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \bottomrule
+  \end{tabular}
+  \caption{Serialization orders for three concurrent transactions, after one
+  commitment under two protocols.  In (h) two-phase locking has ordered $A$
+  before $B$; in (i) multiversion timestamp ordering has placed $B$ first.
+  Legend as in Figure~\ref{fig:election-frames}.}
+  \label{fig:cc-commitments}
+\end{figure}
+
+\paragraph{Instantiating the model.}
+Everything so far is semantic: it concerns the specification and its orders,
+and it holds of a single-node database ordering transactions just as it holds
+of the election.  Now let the system be distributed.  It consists of participants, each of
+which knows the specification, which is fixed and public, but sees only its
+own events: the input that has reached it, the exposures and commitments it
+has itself made.  Each participant therefore has its own residual, obtained
+from the specification by removing the rows its own events removed,
+and two participants that have seen different events hold different
+residuals.  Panels (a) and (b) of Figure~\ref{fig:election-frames} can be read
+this way: one participant has so far received only $v_1$'s ballot, another has
+also received $v_2$'s, and each has removed what its own input retired.  This
+is the whole connection to executions.  Take any Lamport diagram of the system
+and cut it at any consistent moment; each participant's events below the cut
+determine its residual, and those residuals are all this paper ever consults.
+Two cuts that yield the same residuals are indistinguishable here, however
+their messages were ordered or batched
+(Proposition~\ref{prop:residual-quotient}).
+
+Commitments are precisely the semantic actions that require coordination;
+input events and exposures may be done autonomously.  This
+follows directly from the discussion above.  Input arrives at each participant
+on its own.  An exposure retires only covered rows, so every output another
+participant still admits has a refinement consistent with what was exposed,
+and combining inputs later contradicts nothing.  A commitment removes an alternative that another
+participant's residual may still admit, so it is safe only if every such
+participant agrees; that agreement is coordination.  Determination that needs
+a commitment is therefore precisely the determination that needs coordination.
+Section~\ref{sec:functional-calm} formalizes this for functions, where only
+input-sealing commitments are ever needed; Section~\ref{sec:complete-calm}
+does so for relations.
+
 
 \subsection{Relational specifications and output fibers}
 \label{sec:relational-specifications}
@@ -1338,106 +1395,28 @@ last pair lacks a common refinement.
   \label{fig:orders}
 \end{figure}
 
-\subsection{A directed ambiguous specification}
+\subsection{Directed and nondirected specifications}
+\label{sec:directed-examples}
 
-Consider a traceroute-style diagnostic for a service name $\mathsf{svc}$.  The
-runtime input is the source--service pair $i=(s,\mathsf{svc})$.  The DNS mapping
-and network in Figure~\ref{fig:dns-routes} are fixed configuration.  The service
-has three complete routes:
-        \begin{equation}
-  (s,\texttt{server1}),
-  \qquad (s,a,\texttt{server2}),
-  \qquad (s,b,\texttt{server2}).
-  \label{eq:traceroute-paths}
-        \end{equation}
+Return to the traceroute of Figure~\ref{fig:ambiguity-frames}(g).  Any two
+admitted route sets have their union admitted, and the union refines both; so
+every finite set of admitted outputs is compatible, and the fiber is directed.
+Exposing $\{s{\to}\texttt{s1}\}$ removed two rows, and both removals were
+output retirements.
 
-An output is a nonempty prefix-closed set of observed routes.  A route begins
-with at least one hop, so $s$ alone is not an output element.  The table shows
-every route in each output, including all required prefixes.  Output refinement
-is set inclusion.
+As Section~\ref{sec:ambiguity-story} observed, the traceroute fiber is
+directed and the transaction-ordering fiber is not: no admissible output
+refines both $[A,B]$ and $[B,A]$.
 
-Figure~\ref{fig:dns-routes} shows the static network and lists all 17 outputs
-in the fiber.  The input in this example is fixed.  Any two outputs have a
-common refinement in the fiber, namely their union: combining two sets of
-observed routes gives another set of observed routes, and every intermediate
-route each set required is still present.  So the fiber is directed.
-
-\begin{figure}[t]
-  \centering
-  \begin{tikzpicture}[
-      >=stealth,
-      every node/.style={font=\small},
-      x=0.72cm,y=0.58cm]
-    \node (s) at (0,0) {$s$};
-    \node (a) at (1.65,-0.75) {$a$};
-    \node (b) at (1.65,-1.50) {$b$};
-    \node (one) at (3.30,0) {\texttt{server1}};
-    \node (two) at (3.30,-1.12) {\texttt{server2}};
-    \draw[->] (s) -- (one);
-    \draw[->] (s) -- (a);
-    \draw[->] (a) -- (two);
-    \draw[->] (s) -- (b);
-    \draw[->] (b) -- (two);
-  \end{tikzpicture}
-
-  \vspace{4pt}
-  \small
-  \begin{tabular}{@{}r@{\hspace{.5pt}}c@{\hspace{.5pt}}l@{}}
-    \toprule
-        & Input $i$ & Output $o$ \\
-    \midrule
-    1 & $(s,\mathsf{svc})$ & $\{s{\to}b\}$ \\
-    2 & $(s,\mathsf{svc})$ & $\{s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
-    3 & $(s,\mathsf{svc})$ & $\{s{\to}a\}$ \\
-    4 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}b\}$ \\
-    5 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
-    6 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}a{\to}\texttt{server2}\}$ \\
-    7 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}a{\to}\texttt{server2},\ s{\to}b\}$ \\
-    8 & $(s,\mathsf{svc})$ & $\{s{\to}a,\ s{\to}a{\to}\texttt{server2},\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
-    \addlinespace
-    9 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1}\}$ \\
-    10 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}b\}$ \\
-    11 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
-    12 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a\}$ \\
-    13 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}b\}$ \\
-    14 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
-    15 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}a{\to}\texttt{server2}\}$ \\
-    16 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}a{\to}\texttt{server2},\ s{\to}b\}$ \\
-    17 & $(s,\mathsf{svc})$ & $\{s{\to}\texttt{server1},\ s{\to}a,\ s{\to}a{\to}\texttt{server2},\ s{\to}b,\ s{\to}b{\to}\texttt{server2}\}$ \\
-    \bottomrule
-  \end{tabular}
-  \caption{The fixed network and its input--output relation at
-  $i=(s,\mathsf{svc})$.  Each numbered row is one pair $(i,o)$; every nonempty
-  prefix-closed output is written in full.}
-  \label{fig:dns-routes}
-\end{figure}
-
-For this particular output type, output refinement can arise in different ways.
-Rows 3 and 6 are ordered because row 6 adds a continuation of an existing
-route; rows 9 and 15 are ordered because row 15 adds another route.  The
-distinction belongs to the example, not to the theory, which sees only whether
-one output refines another under $\OutputOrd$.
-
-\subsection{Nondirected ambiguous specifications}
-
-The traceroute specification admits every finite combination of its compatible
-observations.  Other specifications admit alternatives that cannot be jointly
-refined.  Leader election is a simple example.  If \texttt{server1} and
-\texttt{server2} are eligible and the interface permits either as the sole
-leader, no allowed output refines both choices.  The output fiber is not
-directed.
-
-A serial commit log gives a database example.  Clients read the log as it
-grows, so an output refines another when it extends it: the output order is
-prefix extension.  Suppose concurrent transactions $T_1$ and $T_2$ both commit.
-For the same completed input history, the log may admit either $[T_1,T_2]$ or
-$[T_2,T_1]$, and no log extends both, so this fiber is also not directed.  Here
-the failure owes something to the output format: a log must pick one order even
-when nothing a client observed distinguishes the two.
-Section~\ref{sec:hat-instance} gives an example that does not depend on the
-format, with outputs that are sets of facts ordered by inclusion, in which
-exposed reads still force opposite serialization orders.  It is postponed
-because it needs the transactional vocabulary introduced there.
+Transaction ordering is nondirected partly because of its output format: a
+serial order must pick one order even when nothing a client observed
+distinguishes the two.  Section~\ref{sec:hat-instance} gives an example that
+does not depend on the format, with outputs that are sets of facts ordered by
+inclusion, in which exposed reads still force opposite serialization orders;
+it is postponed because it needs the transactional vocabulary introduced
+there.  Leader election is nondirected for the plainest reason: if
+\texttt{server1} and \texttt{server2} are both eligible and the interface
+permits either as sole leader, no admitted output refines both choices.
 
 \subsection{Lifted Monotonicity}
 \label{sec:complete-calm-criterion}
@@ -1624,17 +1603,16 @@ below $t$: neither $a$ nor $b$ is least, but each is exposable, and exposing
 $a$ narrows the fiber to $\{a,t\}$; the content of $b$ is subsumed by $t$
 according to $\OutputOrd$, and $t$ remains reachable from $a$.
 
-It is worth following one exposure carefully.  Suppose traceroute first exposes
-$o=\{s{\to}\texttt{server1}\}$.  The output
-$x=\{s{\to}a\}$ is incomparable with $o$: neither refines the other.  The
-restriction therefore removes $(i,x)$.  At first this may look like a choice
-against $x$, but the residual retains
-$u=\{s{\to}\texttt{server1},s{\to}a,
-      s{\to}a{\to}\texttt{server2}\}$.  Because $u$ refines both $o$ and
-$x$, all information in $x$ remains represented; the removal is an output
-retirement, not a commitment.  Leader election behaves differently.
-Selecting \texttt{server1} removes \texttt{server2} with no retained common
-refinement, so that row is removed by commitment.
+It is worth following one exposure carefully.  Suppose traceroute
+(Figure~\ref{fig:ambiguity-frames}(g)) first exposes
+$o=\{s{\to}\texttt{s1}\}$.  The output $x=\{s{\to}a\}$ is incomparable with
+$o$: neither refines the other.  The restriction therefore removes $(i,x)$.
+At first this may look like a choice against $x$, but the residual retains
+$u=\{s{\to}\texttt{s1},s{\to}a,s{\to}a{\to}\texttt{s2}\}$.  Because $u$
+refines both $o$ and $x$, all information in $x$ remains represented; the
+removal is an output retirement, not a commitment.  Transaction ordering
+(panel (f)) behaves differently.  Selecting $[A,B]$ removes $[B,A]$ with no
+retained common refinement, so that row is removed by commitment.
 
 \paragraph{Runs and schedules.}
 A \emph{participant} is a holder of a residual state that changes only by its
@@ -1717,7 +1695,7 @@ Section~\ref{sec:cap-corollary} is of this kind.  If the machine's state
 summarizes its past, so that two event sequences reaching the same state have
 the same futures, the states themselves may serve as inputs, ordered by
 reachability, provided that order is antisymmetric.  That is the coarsening the
-proposition licenses, and the election of Section~\ref{sec:nutshell} is the
+proposition licenses, and the election of Section~\ref{sec:election-story} is the
 result for a vote-counting machine whose state is the set of ballots received.
 
 In the rest of this section, \emph{reachable} means reachable from a canonical
@@ -2235,7 +2213,7 @@ are minimal common refinements, and neither refines the other.  Consequently,
 the pair has no least common refinement, so this output order is not a
 join-semilattice.  It is nevertheless directed: any finite family of sequences
 has an admitted order-preserving interleaving.  The election of
-Section~\ref{sec:nutshell} goes further: its outcome order has no upper bound
+Section~\ref{sec:election-story} goes further: its outcome order has no upper bound
 for $a$ and $b$ at all, and needs none, because the inputs at which they arise
 never merge.  A join-semilattice is therefore a restrictive sufficient
 discipline, not a requirement of the Complete CALM criterion.
