@@ -1234,7 +1234,7 @@ The rest of this section makes these claims precise: relational
 specifications and Lifted Monotonicity first, then exposure, consistency, and
 Complete CALM, and finally participants, coordination, and Complete CAP.
 
-\subsection{Relational specifications and output fibers}
+\subsection{Relational specifications and Lifted Monotonicity}
 \label{sec:relational-specifications}
 
 \begin{definition}[Ordered relational specification]
@@ -1305,44 +1305,10 @@ $X\subseteq F$ is compatible in $F$.  An ordered relational specification has
 A singleton fiber is directed.  So is any fiber closed under a join operation,
 such as a set of fact sets closed under union.  A fiber containing two
 incomparable outputs with nothing admitted above both is not.  Compatibility is
-not comparability: Figure~\ref{fig:orders} shows an output chain, two
-incomparable but compatible outputs, and two incompatible outputs.  Only the
-last pair lacks a common refinement.
+not comparability: two incomparable outputs are compatible whenever some third
+admitted output refines both, as in traceroute.
 
-\begin{figure}[h]
-  \centering
-  \begin{tikzpicture}[
-      >=stealth,
-      every node/.style={font=\small},
-      labelnode/.style={font=\scriptsize,align=center,anchor=north}]
-    \node (c0) at (0,0.55) {$\bot$};
-    \node (c1) at (0.65,0.55) {$a$};
-    \node (c2) at (1.30,0.55) {$b$};
-    \draw[->] (c0) -- (c1);
-    \draw[->] (c1) -- (c2);
-    \node[labelnode] at (0.65,0.0) {chain:\\directed};
-
-    \node (ja) at (2.35,0.35) {$a$};
-    \node (jb) at (3.25,0.35) {$b$};
-    \node (jt) at (2.80,1.05) {$t$};
-    \draw[->] (ja) -- (jt);
-    \draw[->] (jb) -- (jt);
-    \node[labelnode] at (2.80,0.0) {common\\refinement:\\directed};
-
-    \node (ia) at (4.35,0.55) {$a$};
-    \node (ib) at (5.20,0.55) {$b$};
-    \node[labelnode] at (4.78,0.0) {incompatible:\\not directed};
-  \end{tikzpicture}
-  \caption{Three fibers; arrows point from an output to a refinement.  In the
-  first two, every subset is compatible, so the fiber is directed; in the
-  third, $a$ and $b$ are incomparable with no common refinement, so it is not.
-  Incomparability does not imply incompatibility: $a$ and $b$ are incomparable
-  in the second fiber too.}
-  \label{fig:orders}
-\end{figure}
-
-\subsection{Directed and nondirected specifications}
-\label{sec:directed-examples}
+\paragraph{Directed and nondirected specifications.}
 
 The two examples of Section~\ref{sec:ambiguity-story} sit on either side of
 this definition.  In the traceroute of Figure~\ref{fig:ambiguity-frames}(g),
@@ -1363,7 +1329,7 @@ there.  Leader election is nondirected for the plainest reason: if
 \texttt{server1} and \texttt{server2} are both eligible and the interface
 permits either as sole leader, no admitted output refines both choices.
 
-\subsection{Lifted Monotonicity}
+\paragraph{Lifted Monotonicity.}
 \label{sec:complete-calm-criterion}
 
 Section~\ref{sec:ambiguity-story} named two things that can go wrong as an
@@ -1445,22 +1411,16 @@ $\{(i,x):x\in X\}$ has common refinement $j$, so some $u\in\fiber{j}$
 refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
 
-Each quantifier in the criterion answers a question.  Why finite families of
-every size, and not pairwise compatibility?  Pairwise compatibility need not
-imply compatibility of a larger family.  Let a fiber admit every set of at most
-two of three values $a$, $b$, $c$, ordered by inclusion: any two of the
-singletons $\{a\}$, $\{b\}$, $\{c\}$ have an admitted common refinement, their
-pair, but the three together have none, since $\{a,b,c\}$ is not admitted.
-Why inputs that need not be comparable?  Because we are interested in showing that
-all possible runs lead to a confluent outcome. Inputs within one
-run form a chain; the incomparable $i_r$ allow us to analyze different runs that
-end at the same $j$, as when two runs receive the same ballots in different
-orders. In essence, the criterion is read at $j$, looking back, and asks that regardless of
-how $j$ was reached, the outputs exposed along the way have a common refinement
-admitted there.  Why every common refinement $j$?  Because the environment,
-not the specification, determines which refinement occurs.  Whether two inputs
-ever reach a common $j$ at all is settled by the input domain, not by the
-criterion; $aa\cdot$ and $ab\cdot$ never do, and nothing is required of them.
+Two features of the criterion deserve a word.  Finite families of every size
+are needed because pairwise compatibility does not imply compatibility of a
+larger family: let a fiber admit every set of at most two of three values $a$,
+$b$, $c$, ordered by inclusion; any two singletons have their pair as a common
+refinement, but the three together have none.  And the inputs $i_r$ need not be
+comparable: inputs within one run form a chain, so incomparable $i_r$ belong
+to different runs that end at the same $j$, as when two runs receive the same
+ballots in different orders.  The criterion is read at $j$, looking back:
+regardless of how $j$ was reached, the outputs exposed along the way have a
+common refinement admitted there.
 
 Taken together, the criterion is ordinary monotonicity lifted twice.  For a
 monotone function, as the input grows from $i$ to $j$ the single output at $i$
@@ -1472,8 +1432,10 @@ to finite sets of alternate outputs, as different runs might expose, Lifted
 Monotonicity asks that \emph{every finite set} of outputs admitted at $i$ be
 \emph{jointly} refined by \emph{a single} output admitted at $j$.
 
-\subsection{Exposure}
+\subsection{Exposure, runs, and histories}
 \label{sec:safe-exposure}
+
+\paragraph{Exposure.}
 
 The transition system of Section~\ref{sec:determination} applies unchanged to
 a relational specification; the difference is that a fiber $R(i)$ may now
@@ -1508,13 +1470,7 @@ is exposable at $i$ (Equation~\ref{eq:safe-exposure}): for every valid
 $j\succeq_I i$, the output $o$ is compatible in $R(j)$ with every $x\in R(j)$
 (Definition~\ref{def:compatibility}).  This is the relation of
 Definition~\ref{def:fiber-directedness} read against the residual rather than
-the specification.  Exposability has two requirements, and
-neither implies the other.  Admission at $i$, $o\in R(i)$, rules out exposing
-a value that only some refinement of $i$ admits, before the input that would
-admit it has arrived.  Compatibility rules out exposing an admitted value that
-a still-valid refinement contradicts: under the equality order, $\bot$ is
-admitted in panel (a) of the election but shares no refinement with the $a$
-and $b$ admitted at $aba$ and $abb$.
+the specification.
 
 \begin{proposition}[Exposure narrows without commitment]
 \label{prop:exposure-narrowing}
@@ -1541,15 +1497,6 @@ common with $o$.  Exposing $o$ would then silently destroy the content of $x$.
 The system must instead first make a commitment explicitly, reducing $R$ to a
 residual in which $o$ may become exposable.
 
-When $\OutputOrd$ is equality, an output is exposable only if it is the sole
-possibility, so exposure reduces to announcing a determined result.  When every
-upper fiber has a least element, that element is exposable and its exposure
-changes nothing; this is the case of a monotone functional specification.  The
-new case is a fiber such as $\{a,b,t\}$ with $a$ and $b$ incomparable and both
-below $t$: neither $a$ nor $b$ is least, but each is exposable, and exposing
-$a$ narrows the fiber to $\{a,t\}$; the content of $b$ is subsumed by $t$
-according to $\OutputOrd$, and $t$ remains reachable from $a$.
-
 It is worth following one exposure carefully.  Suppose traceroute
 (Figure~\ref{fig:ambiguity-frames}(g)) first exposes
 $o=\{s{\to}\texttt{s1}\}$.  The output $x=\{s{\to}a\}$ is incomparable with
@@ -1561,25 +1508,18 @@ removal is an output retirement, not a commitment.  Transaction ordering
 (panel (f)) behaves differently.  Selecting $[A,B]$ removes $[B,A]$ with no
 retained common refinement, so that row is removed by commitment.
 
-\subsection{Participants, runs, and histories}
-\label{sec:runs-histories}
-
-\paragraph{Runs and schedules.}
+\paragraph{Participants and runs.}
 A \emph{participant} is a holder of a residual state that changes only by its
 own transitions: input events supplied by its environment, and the exposures
 and commitments it makes.  A run (Definition~\ref{def:loquacious}) is thus a
-participant's history, and its \emph{schedule} is the sequence of inputs the
-environment supplies.  Two
-schedules are \emph{input-equivalent} when they end at the same input; they may
-differ in the intermediate inputs they pass through; when the environment
-delivers changes rather than whole inputs, this means they may differ in the
-order and grouping of arrivals and in repeated delivery.  By the composition property of input events, runs with input-equivalent
-schedules with no exposures or commitments reach the same state.  What can
-depend on the schedule is which exposures and commitments a participant makes
-between its input events.  Replicas, in the usual sense, are participants that
-receive the same input in different orders; their runs have input-equivalent
-schedules, so condition~2 of consistency already covers them, with no need for
-a separate notion of replica consistency.
+participant's history.  By the composition property of input events, two runs
+that receive the same input in different orders or groupings, with no
+exposures or commitments, reach the same state; what can differ is which
+exposures and commitments a participant makes along the way.  Replicas, in
+the usual sense, are participants that receive the same input in different
+orders; their runs end at the same input, so condition~2 of consistency
+already covers them, with no need for a separate notion of replica
+consistency.
 
 \paragraph{Histories.}
 Runs of several participants fit together into a history in Lamport's sense.
@@ -1627,26 +1567,6 @@ diagram survives in its cut's residuals; message order, batching, and who has
 learned what are forgotten exactly when they do not advance anyone's input.
 Consistency (Definition~\ref{def:consistency}), stated over residuals, is
 therefore a statement about executions.
-
-Read in the other direction, the proposition is a design criterion.  Choosing
-the input domain and its order decides which histories the semantics treats as
-the same: two cuts yield one residual exactly when they reach the same input
-and have removed the same rows.  A finer input order forgets less of the
-execution and obliges the specification to say more; a coarser one forgets
-more.  The specification then states admissible outcomes over residuals,
-without re-encoding the history it was built to forget, and the proposition
-says that nothing it can ask is lost in doing so.
-
-A reader who thinks in state machines can compile one into this form.  At the
-finest grain, an input is the sequence of environment events the machine has
-consumed, ordered by extension, and a row $(i,o)$ is admissible when some run
-of the machine on $i$ produces $o$; the register example of
-Section~\ref{sec:cap-corollary} is of this kind.  If the machine's state
-summarizes its past, so that two event sequences reaching the same state have
-the same futures, the states themselves may serve as inputs, ordered by
-reachability, provided that order is antisymmetric.  That is the coarsening the
-proposition licenses, and the election of Section~\ref{sec:election-story} is the
-result for a vote-counting machine whose state is the set of ballots received.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -1730,15 +1650,7 @@ Historically the C in CALM has been read as consistency and as confluence;
 Definition~\ref{def:consistency} is both, and the theorem says it is Lifted
 Monotonicity.
 
-Why did earlier CALM results not state Directed Outputs separately?  Their
-semantic query specification is functional: each input $J$ has one result
-$Q(J)$, so each output fiber is a singleton and directed automatically.
-State-based CRDTs also present a functional state for a fixed set of incorporated
-updates; semilattice join additionally provides least common refinements across
-partial inputs.  Complete CALM makes multiple semantic outputs at one input explicit,
-so directedness can no longer be assumed.
-
-\subsection{Coordination, deployment, and the Complete CAP Theorem}
+\subsection{Coordination and the Complete CAP Theorem}
 \label{sec:cap-corollary}
 
 Exposure narrows without excluding and can be done by every participant at
@@ -1788,17 +1700,12 @@ do only by agreement.
 \end{proof}
 
 Together, Theorems~\ref{thm:complete-calm}
-and~\ref{thm:commitments-require-coordination} make the division exact.  A
-monotone specification is
-one in which exposure is all that is ever needed.  A commitment excludes
-content that some other participant could admissibly have selected, and it can
-never be made unilaterally.  A determination that effects a seal uses
-input-sealing commitments to rule out further input refinements; selecting
-among incompatible outputs uses choice commitments to rule out alternatives at
-a fixed input.  Functional specifications need only the first kind; Complete
-CALM accounts for both.  If a system forbids some rows of $S$, its declared
-interface is a proper subrelation $S'\subsetneq S$, and the criterion applies
-to $S'$.
+and~\ref{thm:commitments-require-coordination} make the division exact: a
+monotone specification is one in which exposure is all that is ever needed,
+and a commitment excludes content some other participant could admissibly have
+selected, so it can never be made unilaterally.  If a system forbids some rows
+of $S$, its declared interface is a proper subrelation $S'\subsetneq S$, and
+the criterion applies to $S'$.
 
 CAP asks the same question in a more specific setting.  A \emph{partition}
 divides the participants into two or more groups and stops all
@@ -1849,131 +1756,17 @@ Theorem~\ref{thm:commitments-require-coordination} it must either wait to agree
 with the other side, giving up availability, or make the commitment alone and
 risk an unreconcilable merge, giving up reconciliation.
 
-Theorem~\ref{thm:complete-cap} quantifies over all participants and inputs.
-Whether a commitment is necessary is a semantic question; whether it requires
-agreement across a cut also depends on \emph{deployment}: which participant may
-hold which input and select which row.  A participant that controls an entire
-choice may make the commitment locally.  The deployment says who is entitled
-to make a selection by commitment.
-
-Return to leader election, with \texttt{server1} and \texttt{server2} both
-eligible.  If one participant alone is entitled to name the leader, a
-partition changes nothing: the two rows are an incompatible family, but both
-belong to that participant, and it selects between them without consulting
-anyone.  If instead one participant may name \texttt{server1} and another may
-name \texttt{server2}, a partition that separates them lets each select its
-row alone, and the two selections have no common refinement when the partition
-heals.  The same specification is safe under the first deployment and not
-under the second; what differs is which incompatible families a partition can
-split between its sides.
-
-\begin{definition}[Deployment; separable family]
-\label{def:deployment}
-A \emph{deployment} over a participant set $P$ assigns to each participant $p$
-a set $\Delta_p\subseteq S$ of rows it may select; $(i,o)\in\Delta_p$ means
-that $p$ may hold $i$ as a current input and select $o$ there, on its own
-authority.  A partition $\Pi$ of $P$, as above, divides the participants into
-two or more nonempty components.  A finite family of rows is \emph{separable under
-$\Pi$} when its members can be attributed to participants, each row lying in
-its participant's $\Delta_p$, with at least two components represented.
-\end{definition}
-
-\begin{definition}[Monotone across partitions]
-\label{def:monotone-across-partitions}
-Relative to a deployment, $\Spec$ is \emph{monotone across $\Pi$} when every
-family separable under $\Pi$, together with every common refinement $j$
-of its inputs, has an admitted common refinement in $\fiber{j}$.  It is
-\emph{monotone across partitions} when it is monotone across every partition of
-$P$.
-\end{definition}
-
-This is the Complete CALM criterion
-(Proposition~\ref{prop:complete-calm-criterion}) restricted to the families a partition can separate.  Monotonicity implies monotonicity across partitions, since separable
-families are families.  The converse fails whenever every incompatible family
-lies within one participant's $\Delta_p$.  Two mutually exclusive choices owned
-by one participant do not become separable merely because another component
-acts.
-
-\begin{theorem}[Complete CAP under a deployment]
-\label{thm:complete-cap-deployment}
-Fix a deployment.  The following are equivalent.
-\begin{enumerate}
-  \item Under every partition $\Pi$ and every schedule of inputs within each
-        component: participants in one component may coordinate with one
-        another, but each component selects outputs at the rows its
-        participants hold without waiting for information from any other
-        component (\emph{availability}); and for every common refinement
-        $j$ of the current inputs held in different components, some row at
-        $j$ survives in every participant's state, so that the components'
-        selections reconcile when the partition heals (\emph{reconciliation}).
-  \item $\Spec$ is monotone across partitions.
-\end{enumerate}
-\end{theorem}
-
-\begin{proof}
-(2$\Rightarrow$1.)  Fix $\Pi$.  Families whose members all lie in one component
-may be resolved by coordination within that component, which the partition does
-not block.  The families that must reconcile without communication are the
-separable ones.  Consider participants in at least two components, each having
-made finitely many selections at its current input or its refinements, and a
-common refinement $j$ of those inputs.  The family of all their
-selections is separable, so monotonicity across $\Pi$ supplies $u\in\fiber{j}$
-above every selected output.  Each participant's residual at $j$ is
-$\fiber{j}$ intersected with the outputs above its own selections, and $u$
-belongs to every such set.  Hence some row at $j$ survives in every state,
-under every schedule on each side.
-
-(1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable family
-$(i_1,o_1),\ldots,(i_k,o_k)$ and a common refinement $j$ admit no common
-refinement in $\fiber{j}$.  Its participants lie in at least two components,
-and availability lets each select $o_r$ at $i_r$ without learning the others'
-selections.  Each participant's residual at $j$ then lies within the outputs
-above its $o_r$, and no output of $\fiber{j}$ is above all of them, so no row
-at $j$ survives in every state.  Avoiding this requires either a wait across
-the cut, which surrenders availability, or refusing some of the rows, which
-implements a narrower specification $S'\subsetneq S$.
-\end{proof}
-
-The difference from Theorem~\ref{thm:complete-cap} is that participants on the
-same side of a cut are allowed to coordinate.  Only the families that a
-partition separates must reconcile without communication, and only those
-families are tested.  When the deployment lets every participant hold every
-row, every family is separable under some partition, monotonicity across
-partitions is monotonicity, and the theorem is Theorem~\ref{thm:complete-cap}.
-Deployment determines which inputs and choices can occur independently, just
-as data placement does in the relational-transducer model.
-
-\paragraph{Registers.}
-Consider two replicas of a register initially holding no value.  Participant
-$p$ completes a write of \dog{} while $q$ concurrently completes a write of
-\catv.  The replicas exchange both writes, after which a partition separates
-them.  Each then serves a local read; both writes complete before either read
-begins.
-
-An input is a finite causally closed operation history, ordered by
-induced-subhistory extension.  An output is an explanation $(L,\rho)$, where
-$L$ is an operation order admitted by the consistency model and $\rho$ maps each
-completed read to the write supplying its response.  Refinement extends $L$
-without reversing an existing order and extends $\rho$ without changing an
-answered read.
-
-For linearizability, $L$ is a total order extending real time
-~\cite{herlihy1990linearizability}.  If $p$ returns \catv, its explanation
-requires $w_p(x,\dog)<_L w_q(x,\catv)$.  If $q$ returns \dog, its explanation
-requires the opposite order.  No total order refines both explanations.  The
-partition separates the read owners, recovering the classical CAP impossibility
-as the negative side of the Complete CAP theorem
-~\cite{gilbert2002cap}.
-
-Under causal consistency, the writes remain concurrent and one explanation can
-assign $p$'s read to \catv{} and $q$'s read to \dog{}
-~\cite{lamport1978time,ahamad1995causal}.  The responses have a common
-refinement.  Two possible answers for the same read remain incompatible, but
-only that read's owner selects one; under a deployment in which each
-participant holds its own views, no partition separates one local decision
-into two independent choices, and the causal register is monotone across
-partitions.  With the central results in
-place, we now compare their consequences across the surrounding literature.
+A linearizable register is the classical instance of the tradeoff side.  Two
+reads of concurrent writes may be explained by opposite serial orders, and no
+total order refines both, so the specification is not monotone and the theorem
+withholds availability under partition, which is the classical CAP
+impossibility~\cite{gilbert2002cap}.  Whether a commitment requires agreement
+across a cut also depends on which participant may hold which input and make
+which choice.  Appendix~\ref{app:deployment} refines the theorem by such a
+\emph{deployment} and shows that a causal register, though not monotone,
+needs no coordination when each participant answers only its own reads.  With
+the central results in place, we now compare their consequences across the
+surrounding literature.
 
 \section{Instances Across the Literature}
 \label{sec:instances}
@@ -2037,6 +1830,14 @@ data-placement and execution assumptions
 ~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
 that theorem.  It isolates the semantic order-preservation property so that it
 can be compared with interfaces outside Datalog.
+
+Why did earlier CALM results not state Directed Outputs separately?  Their
+semantic query specification is functional: each input $J$ has one result
+$Q(J)$, so each output fiber is a singleton and directed automatically.
+State-based CRDTs also present a functional state for a fixed set of incorporated
+updates; semilattice join additionally provides least common refinements across
+partial inputs.  Complete CALM makes multiple semantic outputs at one input explicit,
+so directedness can no longer be assumed.
 
 \subsection{CRDTs: from convergent state to safe observations}
 \label{sec:crdt-instance}
@@ -2299,6 +2100,27 @@ output that refines two alternatives may also eliminate it.  Changing the
 deployment may keep an incompatibility under one participant's authority.  Each option
 changes the interface or system design; none is a loophole in the criterion.
 
+Read in the other direction, Proposition~\ref{prop:residual-quotient} is a
+design criterion.  Choosing
+the input domain and its order decides which histories the semantics treats as
+the same: two cuts yield one residual exactly when they reach the same input
+and have removed the same rows.  A finer input order forgets less of the
+execution and obliges the specification to say more; a coarser one forgets
+more.  The specification then states admissible outcomes over residuals,
+without re-encoding the history it was built to forget, and the proposition
+says that nothing it can ask is lost in doing so.
+
+A reader who thinks in state machines can compile one into this form.  At the
+finest grain, an input is the sequence of environment events the machine has
+consumed, ordered by extension, and a row $(i,o)$ is admissible when some run
+of the machine on $i$ produces $o$; the register example of
+Appendix~\ref{app:deployment} is of this kind.  If the machine's state
+summarizes its past, so that two event sequences reaching the same state have
+the same futures, the states themselves may serve as inputs, ordered by
+reachability, provided that order is antisymmetric.  That is the coarsening the
+proposition licenses, and the election of Section~\ref{sec:election-story} is the
+result for a vote-counting machine whose state is the set of ballots received.
+
 \subsection{Complete CALM is not convergence}
 
 Complete CALM requires admitted common refinements, not unique or least ones.  The
@@ -2380,6 +2202,137 @@ transactional availability, and invariant confluence then become directly compar
 with one another.
 
 \appendix
+\section{Complete CAP under a Deployment}
+\label{app:deployment}
+
+Theorem~\ref{thm:complete-cap} (Complete CAP) quantifies over all participants
+and inputs.  This appendix refines it by deployment: which participant may
+hold which input and select which row.
+
+Whether a commitment is necessary is a semantic question; whether it requires
+agreement across a cut also depends on \emph{deployment}: which participant may
+hold which input and select which row.  A participant that controls an entire
+choice may make the commitment locally.  The deployment says who is entitled
+to make a selection by commitment.
+
+Return to leader election, with \texttt{server1} and \texttt{server2} both
+eligible.  If one participant alone is entitled to name the leader, a
+partition changes nothing: the two rows are an incompatible family, but both
+belong to that participant, and it selects between them without consulting
+anyone.  If instead one participant may name \texttt{server1} and another may
+name \texttt{server2}, a partition that separates them lets each select its
+row alone, and the two selections have no common refinement when the partition
+heals.  The same specification is safe under the first deployment and not
+under the second; what differs is which incompatible families a partition can
+split between its sides.
+
+\begin{definition}[Deployment; separable family]
+\label{def:deployment}
+A \emph{deployment} over a participant set $P$ assigns to each participant $p$
+a set $\Delta_p\subseteq S$ of rows it may select; $(i,o)\in\Delta_p$ means
+that $p$ may hold $i$ as a current input and select $o$ there, on its own
+authority.  A partition $\Pi$ of $P$, as above, divides the participants into
+two or more nonempty components.  A finite family of rows is \emph{separable under
+$\Pi$} when its members can be attributed to participants, each row lying in
+its participant's $\Delta_p$, with at least two components represented.
+\end{definition}
+
+\begin{definition}[Monotone across partitions]
+\label{def:monotone-across-partitions}
+Relative to a deployment, $\Spec$ is \emph{monotone across $\Pi$} when every
+family separable under $\Pi$, together with every common refinement $j$
+of its inputs, has an admitted common refinement in $\fiber{j}$.  It is
+\emph{monotone across partitions} when it is monotone across every partition of
+$P$.
+\end{definition}
+
+This is the Complete CALM criterion
+(Proposition~\ref{prop:complete-calm-criterion}) restricted to the families a partition can separate.  Monotonicity implies monotonicity across partitions, since separable
+families are families.  The converse fails whenever every incompatible family
+lies within one participant's $\Delta_p$.  Two mutually exclusive choices owned
+by one participant do not become separable merely because another component
+acts.
+
+\begin{theorem}[Complete CAP under a deployment]
+\label{thm:complete-cap-deployment}
+Fix a deployment.  The following are equivalent.
+\begin{enumerate}
+  \item Under every partition $\Pi$ and every schedule of inputs within each
+        component: participants in one component may coordinate with one
+        another, but each component selects outputs at the rows its
+        participants hold without waiting for information from any other
+        component (\emph{availability}); and for every common refinement
+        $j$ of the current inputs held in different components, some row at
+        $j$ survives in every participant's state, so that the components'
+        selections reconcile when the partition heals (\emph{reconciliation}).
+  \item $\Spec$ is monotone across partitions.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(2$\Rightarrow$1.)  Fix $\Pi$.  Families whose members all lie in one component
+may be resolved by coordination within that component, which the partition does
+not block.  The families that must reconcile without communication are the
+separable ones.  Consider participants in at least two components, each having
+made finitely many selections at its current input or its refinements, and a
+common refinement $j$ of those inputs.  The family of all their
+selections is separable, so monotonicity across $\Pi$ supplies $u\in\fiber{j}$
+above every selected output.  Each participant's residual at $j$ is
+$\fiber{j}$ intersected with the outputs above its own selections, and $u$
+belongs to every such set.  Hence some row at $j$ survives in every state,
+under every schedule on each side.
+
+(1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable family
+$(i_1,o_1),\ldots,(i_k,o_k)$ and a common refinement $j$ admit no common
+refinement in $\fiber{j}$.  Its participants lie in at least two components,
+and availability lets each select $o_r$ at $i_r$ without learning the others'
+selections.  Each participant's residual at $j$ then lies within the outputs
+above its $o_r$, and no output of $\fiber{j}$ is above all of them, so no row
+at $j$ survives in every state.  Avoiding this requires either a wait across
+the cut, which surrenders availability, or refusing some of the rows, which
+implements a narrower specification $S'\subsetneq S$.
+\end{proof}
+
+The difference from Theorem~\ref{thm:complete-cap} is that participants on the
+same side of a cut are allowed to coordinate.  Only the families that a
+partition separates must reconcile without communication, and only those
+families are tested.  When the deployment lets every participant hold every
+row, every family is separable under some partition, monotonicity across
+partitions is monotonicity, and the theorem is Theorem~\ref{thm:complete-cap}.
+Deployment determines which inputs and choices can occur independently, just
+as data placement does in the relational-transducer model.
+
+\subsection{Registers}
+Consider two replicas of a register initially holding no value.  Participant
+$p$ completes a write of \dog{} while $q$ concurrently completes a write of
+\catv.  The replicas exchange both writes, after which a partition separates
+them.  Each then serves a local read; both writes complete before either read
+begins.
+
+An input is a finite causally closed operation history, ordered by
+induced-subhistory extension.  An output is an explanation $(L,\rho)$, where
+$L$ is an operation order admitted by the consistency model and $\rho$ maps each
+completed read to the write supplying its response.  Refinement extends $L$
+without reversing an existing order and extends $\rho$ without changing an
+answered read.
+
+For linearizability, $L$ is a total order extending real time
+~\cite{herlihy1990linearizability}.  If $p$ returns \catv, its explanation
+requires $w_p(x,\dog)<_L w_q(x,\catv)$.  If $q$ returns \dog, its explanation
+requires the opposite order.  No total order refines both explanations.  The
+partition separates the read owners, recovering the classical CAP impossibility
+as the negative side of the Complete CAP theorem
+~\cite{gilbert2002cap}.
+
+Under causal consistency, the writes remain concurrent and one explanation can
+assign $p$'s read to \catv{} and $q$'s read to \dog{}
+~\cite{lamport1978time,ahamad1995causal}.  The responses have a common
+refinement.  Two possible answers for the same read remain incompatible, but
+only that read's owner selects one; under a deployment in which each
+participant holds its own views, no partition separates one local decision
+into two independent choices, and the causal register is monotone across
+partitions.
+
 \section{Coordination-Free Frontiers}
 \label{sec:frontiers}
 
@@ -2640,7 +2593,7 @@ read has a unique owner.
 
 Linearizability keeps every one-process behavior but adds one cross-process
 requirement: all views must be projections of a single global total order.  In
-the execution from \S\ref{sec:cap-corollary}, one read forces
+the execution from Appendix~\ref{app:deployment}, one read forces
 $\dog<\catv$ and the other forces $\catv<\dog$.  Each local view is legal alone,
 but their pair has no global explanation.  Linearizability therefore removes a
 product tuple and crosses the frontier.
