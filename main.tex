@@ -287,61 +287,44 @@ gives further classical applications.
 \begin{figure*}[t]
   \centering
   \small
-  \setlength{\tabcolsep}{8pt}
-  \renewcommand{\arraystretch}{1.15}
-  \begin{tabular}{@{}p{0.30\textwidth} p{0.33\textwidth} p{0.30\textwidth}@{}}
+  \setlength{\tabcolsep}{6pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{@{}l l l@{}}
     \toprule
-    \textbf{Specification} (Defs.~\ref{def:functional-specification},
-    \ref{def:relational-specification}) &
-    \textbf{Transition system} (Defs.~\ref{def:residual-state},
-    \ref{def:transition-system}) &
-    \textbf{Commitments} (Defs.~\ref{def:transition-system},
-    \ref{def:retirement}) \\
+    \textbf{Specification} & & \\
     \midrule
-    $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, $S\subseteq I\times O$.
-    Row $(i,o)\in S$: output $o$ is admitted at input $i$.
-    Fiber $S(i)=\{o:(i,o)\in S\}$; functional when every fiber is a
-    singleton $\{f(i)\}$.
-    &
-    State $(i,R)$: current input $i$, residual $R\subseteq S$ with
-    $R(i)\neq\varnothing$ and $R(k)=\varnothing$ unless $i\InputOrd k$.
-    Initial state $\sigma_0(i)$ keeps the rows at $i$ and its refinements.
-    Upper fiber $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$.
-    &
-    A \emph{commitment} removes at least one row that no retained row covers.
-    Input-sealing: makes a valid input invalid.  Choice: keeps every valid
-    input valid.  The \emph{commitment basis} is the set of commitments the
-    system may use; it is part of the system's design. \\
+    specification & $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, \quad $S\subseteq I\times O$ & Defs.~\ref{def:functional-specification}, \ref{def:relational-specification} \\
+    fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$; \quad functional when $S(i)=\{f(i)\}$ & Eq.~\ref{eq:fiber} \\
+    monotone (functional) & $i\InputOrd j\ \Longrightarrow\ f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity} \\
+    Lifted Monotonicity & $i\InputOrd j\ \Longrightarrow\ S(i)\JointOutputOrd S(j)$ \quad (every finite $X\subseteq S(i)$ has a common refinement in $S(j)$) & Def.~\ref{def:lifted-monotonicity} \\
     \addlinespace
-    $\InputOrd$: $j$ refines $i$ when $j$ has at least the input in $i$.
-    $\OutputOrd$: $u$ refines $o$ when $u$ keeps every claim in $o$.
-    Monotone (functional): $i\InputOrd j\Rightarrow f(i)\OutputOrd f(j)$
-    (Def.~\ref{def:functional-monotonicity}).
-    Lifted Monotonicity: $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$
-    (Def.~\ref{def:lifted-monotonicity}).
-    &
-    $\mathsf{input}(j)$, by the environment: $(i,R)\to(j,\ R\mathbin{\upharpoonright_I}j)$,
-    keeping rows whose input refines $j$.
-    $\mathsf{expose}(o)$, by the system: $(i,R)\to(i,\ R\mathbin{\upharpoonright_O}o)$,
-    keeping rows whose output refines $o$; defined when $o$ is exposable.
-    Commitment $p$, by the system: $(i,R)\to(i,R')$ with $R'\subsetneq R$.
-    &
-    Every removed row is a \emph{retirement} (input: its input no longer
-    refines the current one; output: a retained output covers it) or is
-    \emph{removed by commitment}.  Input events and exposures only retire;
-    only commitments remove by commitment, and only commitments require
-    coordination (Thm.~\ref{thm:commitments-require-coordination}). \\
+    \textbf{Transition system} & & \\
+    \midrule
+    residual state & $(i,R)$: \ $R\subseteq S$, \ $R(i)\neq\varnothing$, \ $R(k)=\varnothing$ unless $i\InputOrd k$ & Def.~\ref{def:residual-state} \\
+    initial state; upper fiber & $\sigma_0(i)=(i,\{(k,o)\in S: i\InputOrd k\})$; \quad $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$ & Eqs.~\ref{eq:canonical-initial-state}, \ref{eq:upper-fiber} \\
+    input event (environment) & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,\ R\mathbin{\upharpoonright_I}j)$, \quad $R\mathbin{\upharpoonright_I}j=\{(k,u)\in R: j\InputOrd k\}$ & Def.~\ref{def:transition-system} \\
+    exposure (system) & $(i,R)\xrightarrow{\mathsf{expose}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ defined iff $o$ exposable & Eq.~\ref{eq:safe-exposure} \\
+    commitment (system) & $(i,R)\xrightarrow{p}(i,R')$, \ $R'\subsetneq R$, \ some removed $(k,x)$ has no $u\in R'(k)$ with $x\OutputOrd u$ & Def.~\ref{def:transition-system} \\
+    \addlinespace
+    \textbf{Commitments} & & \\
+    \midrule
+    input-sealing / choice & makes a valid input invalid \ / \ keeps every valid input valid & Def.~\ref{def:transition-system} \\
+    commitment basis & the set of commitments the system may use; a design input alongside $\Spec$ & Def.~\ref{def:transition-system} \\
+    removed row $(k,x)$ & input retirement if $k\not\succeq_I i'$; \ output retirement if $\exists u\in R'(k),\,x\OutputOrd u$; \ else removed by commitment & Def.~\ref{def:retirement} \\
+    \addlinespace
+    \textbf{Results} & & \\
+    \midrule
+    consistent & every loquacious run defined; \quad $\bigcap_r R_r(j)\neq\varnothing$ at every common refinement $j$ & Def.~\ref{def:consistency} \\
+    Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
+    Complete CALM & consistent $\iff$ Lifted Monotonicity & Thm.~\ref{thm:complete-calm} \\
+    coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
   \caption{The formal objects of Sections~\ref{sec:functional-calm}
-  and~\ref{sec:complete-calm}, for reference.  A specification is
-  \emph{consistent} (Def.~\ref{def:consistency}) when runs that expose at every
-  input are always defined and jointly refinable; Functional CALM
-  (Thm.~\ref{thm:functional-calm}) and Complete CALM
-  (Thm.~\ref{thm:complete-calm}) say this holds exactly when the
-  specification is monotone.}
+  and~\ref{sec:complete-calm}, for reference.}
   \label{fig:formalism-summary}
 \end{figure*}
+
 
 A semantic specification describes allowed input/output behavior without
 committing to a language, placement, protocol, or message schedule.  The
