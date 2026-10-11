@@ -235,8 +235,14 @@ any specification.  A semantic specification describes allowed input/output
 behavior without committing to a language, placement, protocol, or message
 schedule.  This section addresses the case that prior work on both CALM and
 state-based CRDTs shared: specifications that are functions, in which each
-input has a single specified output.  We first walk through the framework on
-an election, then state it formally and prove Functional CALM.
+input has a single specified output.  Section~\ref{sec:election-story} walks
+through the framework informally on an election.
+Section~\ref{sec:functional-specifications} defines functional specifications
+and monotonicity, Section~\ref{sec:determination} defines the transition
+system that tracks what a run has settled, and
+Section~\ref{sec:functional-calm-theorem} proves Functional CALM.
+Section~\ref{sec:complete-calm} will follow the same plan for specifications
+with output choice.
 
 \subsection{The framework on an election}
 \label{sec:election-story}
@@ -564,7 +570,7 @@ and the next in one place, with references to where each is defined.
   \label{fig:formalism-summary}
 \end{figure*}
 
-\subsection{Functional specifications with refinement orders}
+\subsection{Functional specifications and monotonicity}
 \label{sec:functional-specifications}
 
 \begin{definition}[Functional ordered specification]
@@ -1061,11 +1067,21 @@ A semantic specification may admit more than one output for the same input.
 Serializability may allow several transaction orders, and leader election may
 allow any eligible leader.  Such specifications are relational rather than
 functional, and we call them ambiguous.  Complete CALM extends Functional CALM
-to this semantic output choice.  As before, we first walk through the ideas on
-examples, then state and prove them.
+to this semantic output choice, and this section follows the plan of
+Section~\ref{sec:functional-calm}.  Section~\ref{sec:ambiguity-story} walks
+through the framework informally on two ambiguous examples.
+Section~\ref{sec:relational-specifications} defines relational specifications
+and Lifted Monotonicity, Section~\ref{sec:safe-exposure} extends the
+transition system to output choice and to several participants, and
+Section~\ref{sec:complete-calm-theorem} proves Complete CALM.
+Section~\ref{sec:cap-corollary} then turns to coordination and Complete CAP.
 
-\subsection{Ambiguity on two examples}
+\subsection{The framework on two ambiguous examples}
 \label{sec:ambiguity-story}
+
+As in Section~\ref{sec:election-story}, terms introduced in italics are
+defined formally in the rest of this section, and nothing here is needed for
+the proofs.
 
 \begin{figure}[t]
   \centering
@@ -1230,9 +1246,9 @@ and combining inputs later contradicts nothing.  A commitment removes an alterna
 participant's residual may still admit, so it is safe only if every such
 participant agrees; that agreement is coordination.  Determination that needs
 a commitment is therefore precisely the determination that needs coordination.
-The rest of this section makes these claims precise: relational
-specifications and Lifted Monotonicity first, then exposure, consistency, and
-Complete CALM, and finally participants, coordination, and Complete CAP.
+The rest of this section makes these claims precise, in the order of
+Section~\ref{sec:functional-calm}: definitions, the transition system, the
+theorem, and then coordination.
 
 \subsection{Relational specifications and Lifted Monotonicity}
 \label{sec:relational-specifications}
@@ -1432,15 +1448,17 @@ to finite sets of alternate outputs, as different runs might expose, Lifted
 Monotonicity asks that \emph{every finite set} of outputs admitted at $i$ be
 \emph{jointly} refined by \emph{a single} output admitted at $j$.
 
-\subsection{Exposure, runs, and histories}
+\subsection{The transition system under output choice}
 \label{sec:safe-exposure}
-
-\paragraph{Exposure.}
 
 The transition system of Section~\ref{sec:determination} applies unchanged to
 a relational specification; the difference is that a fiber $R(i)$ may now
 contain several outputs, so choice commitments and exposures that remove rows
-become relevant.  Which rows a commitment must remove depends on the output
+become relevant.  This subsection takes up exposure first, then the runs of
+several participants and the Lamport histories they form.
+
+\paragraph{Exposure.}
+Which rows a commitment must remove depends on the output
 order
 (Definition~\ref{def:retirement}).  Under the equality order on outputs, no
 distinct output refines another, so no output is ever covered, and every strict
@@ -2231,7 +2249,8 @@ split between its sides.
 A \emph{deployment} over a participant set $P$ assigns to each participant $p$
 a set $\Delta_p\subseteq S$ of rows it may select; $(i,o)\in\Delta_p$ means
 that $p$ may hold $i$ as a current input and select $o$ there, on its own
-authority.  A partition $\Pi$ of $P$, as above, divides the participants into
+authority.  A partition $\Pi$ of $P$ (Section~\ref{sec:cap-corollary}) divides
+the participants into
 two or more nonempty components.  A finite family of rows is \emph{separable under
 $\Pi$} when its members can be attributed to participants, each row lying in
 its participant's $\Delta_p$, with at least two components represented.
