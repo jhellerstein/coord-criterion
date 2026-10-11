@@ -194,34 +194,25 @@ serial schedules.  The specification for many such systems is then a relation
 where \(\fiber{i}\)---the \emph{fiber} at \(i\)---is the set of outputs
 that are admitted as ``within spec'' at input \(i\).
 
-Moving from
-a function to a relation creates two distinct obligations.
-First, input refinement must now compare \emph{sets} of possible outputs.  We
-lift the output order to these sets: \(\fiber{i}\) refines to \(\fiber{j}\)
-when every output admitted at \(i\) has some refinement admitted at \(j\).
-Monotonicity of the fiber map under this pointwise lift is \emph{Relational
-Monotonicity} (\S\ref{sec:relational-specifications}).  It ensures that each
-alternative output will remain valid as input grows.
-
-Second, Relational Monotonicity says nothing about ambiguity---different alternatives
-admitted at the \emph{same} input.  Safely exposing one requires that it can
-coexist with the others through admitted common refinements.  We call this
-within-fiber requirement \emph{Directed Outputs}, based on the order-theoretic notion
-of directedness
-(\S\ref{sec:relational-specifications}).  When it fails, forward progress must rule
-out an alternative; we call that step a \emph{commitment}
-(Definition~\ref{def:transition-system}).  If
-different participants can make incompatible commitments, they must coordinate
-first.  Complete CALM combines Relational Monotonicity and Directed Outputs
-into a single monotonicity condition, \emph{Lifted Monotonicity}
-(\S\ref{sec:complete-calm-criterion}), and shows that it characterizes when a
-specification is consistent: whatever participants expose, in whatever order
-input arrives, one admitted outcome refines all of it
-(\S\ref{sec:safe-exposure}).  A consistent specification needs no
-coordination.
-
-For singleton fibers---as in functional specifications---Relational Monotonicity reduces to ordinary monotonicity,
-and the Directed Outputs property holds automatically.
+Moving from a function to a relation, the question is still monotonicity, but
+of sets of outputs rather than single outputs.  We lift the output order to
+sets: \(\fiber{i}\) refines to \(\fiber{j}\) when every finite set of outputs
+admitted at \(i\) has a common refinement admitted at \(j\).  Monotonicity of
+the fiber map under this lift is \emph{Lifted Monotonicity}
+(\S\ref{sec:complete-calm-criterion}).  It carries two obligations at once.
+Read one output at a time, it says that each alternative admitted at \(i\)
+remains valid as input grows.  Read at a single input, it says that the
+alternatives admitted there can coexist: any finite set of them has an
+admitted common refinement, so exposing one rules out none of the others.
+When the second obligation fails, forward progress must rule out an
+alternative; we call that step a \emph{commitment}
+(Definition~\ref{def:transition-system}).  If different participants can make
+incompatible commitments, they must coordinate first.  Complete CALM shows
+that Lifted Monotonicity characterizes when a specification is consistent:
+whatever participants expose, in whatever order input arrives, one admitted
+outcome refines all of it (\S\ref{sec:safe-exposure}).  A consistent
+specification needs no coordination.  For singleton fibers, as in functional
+specifications, Lifted Monotonicity is ordinary monotonicity.
 
 Complete CALM also yields a Complete CAP Theorem
 (\S\ref{sec:cap-corollary}).  Classical CAP gives an
@@ -256,8 +247,7 @@ This paper makes four contributions:
         arbitrary functions, represented as semantic input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to semantic output choice, formalizes
-        exposure and commitment, and identifies Lifted Monotonicity, the
-        conjunction of Relational Monotonicity and Directed Outputs, as the
+        exposure and commitment, and identifies Lifted Monotonicity as the
         criterion for consistency: whatever participants expose, in whatever
         order input arrives, one admitted outcome refines all of it.
         Consistent specifications need no coordination; commitments are shown
