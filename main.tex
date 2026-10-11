@@ -442,8 +442,10 @@ different output.  Before an execution can say anything binding, we need to
 keep track of which input--output possibilities remain, which events remove
 them, and which of those removals are acts of choice.  We do this with a
 transition system, defined in full below, whose states are residual states and
-whose transitions are of three kinds: input events, exposures, and
-commitments.  The panels of Figure~\ref{fig:election-frames} illustrate each.
+whose transitions are of three kinds: input events, supplied by the system's
+environment, and exposures and commitments, made by the system.  Panels (b)
+through (d) of Figure~\ref{fig:election-frames} illustrate input events and a
+commitment; the panel footers use the terms defined in this subsection.
 Choice commitments are defined here but discussed in
 Section~\ref{sec:complete-calm}, where relational specifications make them
 necessary, as is exposure in the presence of output choice.
@@ -579,8 +581,8 @@ instance, has had no commitment and no exposure.
 
 Nothing else changes a residual state.  In particular, computation changes
 nothing: it may inform which transition the system takes, but it is not itself
-a transition.  Tallying the ballots in panel (c) to notice that the result is
-settled removes no row.  Every transition removes rows, and taken row by row a
+a transition.  Tallying the ballots in panel (c) to notice that $a$ has won
+removes no row.  Every transition removes rows, and taken row by row a
 removal is one of three things.
 
 \begin{definition}[Retirement]
@@ -597,24 +599,17 @@ retained output covers, has been excluded, which only a commitment does.
 
 Every removal is thus a retirement or a removal by commitment, and the two
 are the gray and struck rows of the figures.  Input events perform input
-retirements and nothing else, since they leave surviving fibers unchanged.
-Commitments remove at least one row by commitment, by definition.  Exposures
-perform output retirements and nothing else
-(Proposition~\ref{prop:exposure-narrowing}).  Input retirement does not promise
-that the removed output is covered: when $f$ is not monotone, the
-environment's next input may retire a row whose output nothing refines.  It is
-a retirement nonetheless, because the environment made that input history
-counterfactual; what distinguishes a commitment is that the system excluded
-something no event had ruled out.
-
-The legend of Figure~\ref{fig:election-frames} shows the
-distinction: a gray row has been retired, and in every panel of this section
-it is covered, so removing it narrows nothing; a struck row was an alternative
-in its own right, and only a commitment removes one.  Input arrival retires
-the rows the new input does not refine (panels (b), (c)); it belongs to the
-environment.  Exposure retires rows that do not refine the exposed output; it
-belongs to the system but is not a commitment.  A commitment, by contrast,
-always narrows; that is its purpose (panel (d)).
+retirements and nothing else, since they leave surviving fibers unchanged
+(panels (b), (c)).  Exposures perform output retirements and nothing else
+(Proposition~\ref{prop:exposure-narrowing}).  Commitments remove at least one
+row by commitment, by definition: a struck row was an alternative in its own
+right, and removing it narrows what the specification allows (panel (d)).
+Input retirement does not promise that the removed output is covered: when
+$f$ is not monotone, the environment's next input may retire a row whose
+output nothing refines.  It is a retirement nonetheless, because the
+environment made that input history counterfactual; what distinguishes a
+commitment is that the system excluded something no event had ruled out.  In
+every panel of this section the gray rows happen to be covered as well.
 
 The rest of this subsection discusses input events,
 input-sealing commitments, and exposure for a functional specification, where
@@ -651,7 +646,8 @@ $i\oplus\delta=i$, and $\mathsf{input}(i)$ at $(i,R)$ is the identity, so
 duplicate delivery changes nothing.
 
 \paragraph{Input-sealing commitments.}
-Return to panel (b) and let the registrar close the polls: $v_3$'s ballot,
+Return to panel (b) and let the registrar, the system in this example, close
+the polls: $v_3$'s ballot,
 should it arrive, will not be counted.  Figure~\ref{fig:election-frames}(d)
 shows the result.  The rows at $aba$ and $abb$ are removed although no ballot
 arrived and the current input has not changed.  No input event does this; it
@@ -686,9 +682,8 @@ computation that selected it.
 
 \paragraph{Determination.}
 While input may still grow, what matters is not only the current row but what
-any input that could still arrive might require.  The shaded outputs in
-Figure~\ref{fig:election-frames} are those that the current input or any
-continuation of it could still require.  For
+any input that could still arrive might require; these are the shaded outputs
+in Figure~\ref{fig:election-frames}.  For
 $R\subseteq S$ and an input $i$, the \emph{upper fiber}
         \begin{equation}
   R^\uparrow(i)=\{o\in O:\exists j\in I,\ i\InputOrd j\text{ and }(j,o)\in R\}
@@ -742,10 +737,9 @@ Exposing $o$ at $i$ promises that whatever is finally produced for $i$, or
 for any refinement of $i$, will refine $o$.  A system may expose an output
 only when doing so removes no alternative outright: every output still
 possible at some input must have, at that same input, a refinement that also
-refines $o$.  The exposure event of
-Definition~\ref{def:transition-system} keeps the promise by retaining only the
-rows that refine $o$, and is permitted exactly when $o$ is exposable
-(Equation~\ref{eq:safe-exposure}).  For a functional specification every fiber is a singleton, so $f(i)$ is exposable
+refines $o$.  Such an $o$ is exposable (Equation~\ref{eq:safe-exposure}), and
+the exposure event of Definition~\ref{def:transition-system} keeps the promise
+by retaining only the rows that refine $o$.  For a functional specification every fiber is a singleton, so $f(i)$ is exposable
 at $i$ exactly when
         \begin{equation}
   f(i)\OutputOrd f(j)\qquad\text{for every valid }j\succeq_I i,
@@ -784,8 +778,9 @@ exposable in panel (c), each least in its upper fiber.
 \paragraph{Consistency.}
 Both CALM theorems have the same shape: a monotonicity condition on the
 specification is equivalent to what the CALM literature calls consistency, or
-confluence: the outcome of a computation is the same whatever the order in
-which input arrives and whatever was exposed along the way.  The notion is semantic, and we state it over runs of the
+confluence.  Consistency in this sense means that the outcome of a computation
+is the same whatever the order in which input arrives and whatever was exposed
+along the way.  The notion is semantic, and we state it over runs of the
 transition system.  A specification that permits no exposure at all would
 satisfy any such condition vacuously, so we quantify over runs that expose at
 every input they hold.  The definitions are stated for any specification table
@@ -962,8 +957,8 @@ specification itself to offer several outputs for one input.
 A semantic specification may admit more than one output for the same input:
 the input column no longer determines the output column, and the functional
 dependency fails.  Serializability may allow several transaction orders, and
-leader election may allow any eligible leader.  Such specifications are
-\emph{ambiguous}, or relational rather than functional.  Complete CALM extends
+leader election may allow any eligible leader.  We call such specifications
+ambiguous; formally they are relational rather than functional.  Complete CALM extends
 Functional CALM to this semantic output choice.
 
 \subsection{Relational specifications and output fibers}
@@ -1137,7 +1132,7 @@ everything they said.  Nothing is lost: both removals are output retirements,
 and the exposure is not a commitment.
 
 What made the difference between panels (f) and (g)?  In both, the system
-selected one of several admissible outputs.  In transaction ordering the other
+singled out one of several admissible outputs.  In transaction ordering the other
 output had nowhere to go: no admissible output refines both $[A,B]$ and
 $[B,A]$, so neither could be exposed without removing the other outright.  In
 traceroute every other output had somewhere to go: whatever two route sets the
@@ -1160,9 +1155,9 @@ there.  Leader election is nondirected for the plainest reason: if
 permits either as sole leader, no admitted output refines both choices.
 
 \paragraph{The commitment basis.}
-Which commitments a nondirected specification's system can make is part of
-the system's design, alongside the specification, and the choice of basis is
-a real one.  Familiar concurrency control protocols differ exactly here.
+A nondirected specification needs commitments, and which commitments a system
+can make is part of its design, alongside the specification.  The choice of
+basis is a real one.  Familiar concurrency control protocols differ exactly here.
 Figure~\ref{fig:cc-commitments} returns to transaction ordering with a third
 transaction $C$, so that six serial orders are admitted.  Under two-phase
 locking (2PL), $A$ acquiring a lock ahead of $B$ commits $A$ before $B$ and
@@ -1218,7 +1213,8 @@ exposure.
 
 Two things can go wrong as an ambiguous specification runs.  Input can grow in
 a way that leaves an admitted output with no refinement, as in the election
-under the equality order; Relational Monotonicity rules this out.  Or the
+under the equality order (Figure~\ref{fig:nonmonotone-frame}); Relational
+Monotonicity rules this out.  Or the
 outputs admitted at one input can fail to be directed, as in transaction
 ordering; Directed Outputs rules this out.  Relational Monotonicity concerns
 refinement across inputs, and Directed Outputs concerns the outputs admitted
@@ -1597,14 +1593,15 @@ so directedness can no longer be assumed.
 \subsection{Coordination, deployment, and the Complete CAP Theorem}
 \label{sec:cap-corollary}
 
-Commitments are precisely the semantic actions that require coordination;
-input events and exposures may be done autonomously.  Input arrives at each
-participant on its own.  An exposure retires only covered rows, so every
-output another participant still admits has a refinement consistent with what
-was exposed, and combining inputs later contradicts nothing.  A commitment
-removes an alternative that another participant's residual may still admit, so
-it is safe only if every such participant agrees, and the next result says
-what that costs when several participants hold the same input.  In what follows, a participant
+Input events and exposures may be done by a participant on its own.  Input
+arrives at each participant from its environment.  An exposure retires only
+covered rows, so every output another participant still admits has a
+refinement consistent with what was exposed, and combining inputs later
+contradicts nothing.  A commitment removes an alternative that another
+participant's residual may still admit, so it is safe only if every such
+participant agrees.  That agreement is what we call coordination, and the next
+result says what it costs when several participants hold the same input.  In
+what follows, a participant
 \emph{selects} an admissible output at the input it holds by exposing it when
 it is exposable, and by a commitment to it---retaining exactly the outputs that
 refine it at its input and that input's refinements---when it is not.  The
