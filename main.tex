@@ -284,10 +284,72 @@ gives further classical applications.
 \section{Functional CALM}
 \label{sec:functional-calm}
 
+\begin{figure*}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{8pt}
+  \renewcommand{\arraystretch}{1.15}
+  \begin{tabular}{@{}p{0.30\textwidth} p{0.33\textwidth} p{0.30\textwidth}@{}}
+    \toprule
+    \textbf{Specification} (Defs.~\ref{def:functional-specification},
+    \ref{def:relational-specification}) &
+    \textbf{Transition system} (Defs.~\ref{def:residual-state},
+    \ref{def:transition-system}) &
+    \textbf{Commitments} (Defs.~\ref{def:transition-system},
+    \ref{def:retirement}) \\
+    \midrule
+    $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, $S\subseteq I\times O$.
+    Row $(i,o)\in S$: output $o$ is admitted at input $i$.
+    Fiber $S(i)=\{o:(i,o)\in S\}$; functional when every fiber is a
+    singleton $\{f(i)\}$.
+    &
+    State $(i,R)$: current input $i$, residual $R\subseteq S$ with
+    $R(i)\neq\varnothing$ and $R(k)=\varnothing$ unless $i\InputOrd k$.
+    Initial state $\sigma_0(i)$ keeps the rows at $i$ and its refinements.
+    Upper fiber $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$.
+    &
+    A \emph{commitment} removes at least one row that no retained row covers.
+    Input-sealing: makes a valid input invalid.  Choice: keeps every valid
+    input valid.  The \emph{commitment basis} is the set of commitments the
+    system may use; it is part of the system's design. \\
+    \addlinespace
+    $\InputOrd$: $j$ refines $i$ when $j$ has at least the input in $i$.
+    $\OutputOrd$: $u$ refines $o$ when $u$ keeps every claim in $o$.
+    Monotone (functional): $i\InputOrd j\Rightarrow f(i)\OutputOrd f(j)$
+    (Def.~\ref{def:functional-monotonicity}).
+    Lifted Monotonicity: $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$
+    (Def.~\ref{def:lifted-monotonicity}).
+    &
+    $\mathsf{input}(j)$, by the environment: $(i,R)\to(j,\ R\mathbin{\upharpoonright_I}j)$,
+    keeping rows whose input refines $j$.
+    $\mathsf{expose}(o)$, by the system: $(i,R)\to(i,\ R\mathbin{\upharpoonright_O}o)$,
+    keeping rows whose output refines $o$; defined when $o$ is exposable.
+    Commitment $p$, by the system: $(i,R)\to(i,R')$ with $R'\subsetneq R$.
+    &
+    Every removed row is a \emph{retirement} (input: its input no longer
+    refines the current one; output: a retained output covers it) or is
+    \emph{removed by commitment}.  Input events and exposures only retire;
+    only commitments remove by commitment, and only commitments require
+    coordination (Thm.~\ref{thm:commitments-require-coordination}). \\
+    \bottomrule
+  \end{tabular}
+  \caption{The formal objects of Sections~\ref{sec:functional-calm}
+  and~\ref{sec:complete-calm}, for reference.  A specification is
+  \emph{consistent} (Def.~\ref{def:consistency}) when runs that expose at every
+  input are always defined and jointly refinable; Functional CALM
+  (Thm.~\ref{thm:functional-calm}) and Complete CALM
+  (Thm.~\ref{thm:complete-calm}) say this holds exactly when the
+  specification is monotone.}
+  \label{fig:formalism-summary}
+\end{figure*}
+
 A semantic specification describes allowed input/output behavior without
 committing to a language, placement, protocol, or message schedule.  The
 centerpiece of the framework is a very simple notion of specification: a table
-of input--output pairs, listing the outputs admissible for each input.  The
+of input--output pairs, listing the outputs admissible for each input.
+Figure~\ref{fig:formalism-summary} collects the formal objects of this section
+and the next in one place, with references to where each is defined; the
+reader may wish to return to it.  The
 specification for squaring has the rows $(2,4)$, $(3,9)$, $(4,16)$, and so on
 forever.  In database terms, squaring's table satisfies a \emph{functional
 dependency}: the input column determines the output column.  We begin with
