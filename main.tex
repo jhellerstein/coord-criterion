@@ -468,7 +468,7 @@ no refinement of it remains valid, and its upper fiber has collapsed to
 $\{\bot\}$, so it too is determined.
 For a functional specification, input-sealing commitments are the only kind
 of commitment there is.  Each row's input determines its output, so there are
-never choices to be made among outputs; the only thing to commit to is sealing input.
+never choices to be made among outputs; the only commitment available is to seal input.
 
 \begin{figure}[t]
   \centering
@@ -497,7 +497,7 @@ never choices to be made among outputs; the only thing to commit to is sealing i
 \end{figure}
 
 \paragraph{Exposure.}
-\emph{Exposing} a result to a client is a different act from committing.
+\emph{Exposing} a result to a client is a different act from making a commitment.
 Exposing $o$ promises that the final result will refine $o$.  A system may
 expose an output only when doing so removes no genuine alternative: every
 output still possible at some input must have, at that same input, a
@@ -510,7 +510,8 @@ exposable in panel (c).
 
 \paragraph{When monotonicity fails.}
 Now change one thing: make all outputs incomparable, dropping
-$\bot\OutputOrd a,b$.  The rows are the same,
+$\bot\OutputOrd a,b$, so that an output refines only itself; this is the
+equality order.  The rows are the same,
 but in panels (a) and (b) nothing is exposable: $\bot$ no longer lies below
 the $a$ and $b$ in the upper fiber, so announcing it would promise something a later
 ballot could contradict.  The specification is no longer monotone: as inputs
@@ -529,7 +530,7 @@ first seal input by commitment.
   \small
   \setlength{\tabcolsep}{5pt}
   \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(f) Leader election, after committing to \texttt{server1}}\\
+    \multicolumn{2}{@{}l}{(f) Leader election, after the commitment to \texttt{server1}}\\
     \toprule
     Input & Output \\ \midrule
     $i$ & \sh{\texttt{server1}} \\
@@ -565,8 +566,9 @@ Some specifications are ambiguous: they admit several results for one
 input, so the input column does not determine the output column and the
 functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(f) is leader
 election with two eligible servers, either permitted as sole leader, so the
-table has two rows at one input.  Committing to \texttt{server1} removes the row
-for \texttt{server2}: a second kind of commitment, a \emph{choice commitment}.
+table has two rows at one input.  A commitment to \texttt{server1} removes the
+row for \texttt{server2}: a second kind of commitment, a \emph{choice
+commitment}.
 Panel (g) is a traceroute
 diagnostic for a service reachable from source $s$ directly at server
 \texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
@@ -612,7 +614,7 @@ everything it said, so removing it narrows nothing.  A struck row was an
 alternative in its own right: removing it narrows what is within spec, and
 only a commitment does that.
 
-The other two kinds of transition remove rows without committing.  Input
+The other two kinds of transition remove rows without any commitment.  Input
 arrival retires the rows the new input does not refine (panels (b), (c)); it
 belongs to the environment.  Exposure removes the rows that do not refine the
 exposed output (panel (g)); it belongs to the system but is not a commitment.
@@ -629,7 +631,7 @@ so never counts as determination.
 The CALM conditions have one consequence, and it is the one the CALM
 literature calls consistency, or confluence.  Consider a participant that
 exposes at every input it holds: at each current input it exposes some output
-admitted there, and it never commits.  The specification is \emph{consistent}
+admitted there, and it makes no commitment.  The specification is \emph{consistent}
 when every such participant can expose whichever admitted outputs it chooses,
 each exposure removing only redundant rows, and when, for any several such
 participants, whatever their inputs and in whatever order those inputs
@@ -700,6 +702,9 @@ externally visible claim in $o$ and may add more.
 
 These are two separate partial orders.  The input order compares inputs; the
 output order compares outputs.  Neither orders executions or rows in a table.
+Either may be the \emph{equality order}, under which an element refines only
+itself; on outputs this is the case in which no output can be extended, only
+replaced.
 A specification describes
 admissible behavior; it is not a data structure that an implementation must
 store or consult.  The same holds for the semantic states derived from it
@@ -1010,20 +1015,19 @@ theorems.
 \begin{definition}[Run; loquacious run]
 \label{def:loquacious}
 A \emph{run} is a finite sequence of transitions from a canonical initial
-state.  A \emph{loquacious schedule} is a sequence of inputs
-$i_0\InputOrd i_1\InputOrd\cdots\InputOrd i_m$ together with, for each $i_t$,
-a nonempty finite sequence of outputs admitted at $i_t$.  Its run starts at
-$\sigma_0(i_0)$, exposes the chosen outputs at each $i_t$ in order, and advances
-to $i_{t+1}$ by an input event; it never commits.  The run is defined when
-every chosen exposure is exposable at the state where it is made.  A
-\emph{loquacious run} is the run of a loquacious schedule.
+state.  A \emph{loquacious run} is specified by inputs
+$i_0\InputOrd i_1\InputOrd\cdots\InputOrd i_m$ and an output $o_t$ admitted
+at each $i_t$: it starts at $\sigma_0(i_0)$ and, for each $t$ in turn, exposes
+$o_t$ and then advances to $i_{t+1}$ by an input event.  It makes no
+commitment, and it exposes exactly one output at every input it holds.  It is \emph{defined}
+when each of its exposures is exposable at the state where it is made.
 \end{definition}
 
 \begin{definition}[Consistency]
 \label{def:consistency}
 An ordered specification is \emph{consistent} when
 \begin{enumerate}
-  \item every loquacious schedule has a defined run, and
+  \item every loquacious run is defined, and
   \item for every finite family of loquacious runs with final residuals
         $(i_1,R_1),\ldots,(i_k,R_k)$ and every \emph{common refinement} $j$
         of $i_1,\ldots,i_k$, an input with $i_r\InputOrd j$ for every $r$,
@@ -1047,15 +1051,17 @@ delivered twice.  None of this requires that the runs expose the \emph{same}
 output.  It requires that every exposed output have a common admitted
 refinement with the others: the residual at the combined input is a function
 of that input, not of the runs.  Which outputs have common refinements is
-fixed by the specification and its output order, which is where a consistency
-model plugs in.  The definition is semantic: it describes no protocol and
-promises no delivery, liveness, or termination detection.
+fixed by the specification and its output order.  Two specifications over the
+same inputs, one admitting more rows or a coarser output order than the other,
+can therefore differ in whether they are consistent.  The definition is
+semantic: it describes no protocol
+and promises no delivery, liveness, or termination detection.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
 For a functional specification, consistency reduces to its first condition.
-A loquacious schedule exposes $f(i)$ at each input $i$ it holds, and these
+A loquacious run exposes $f(i)$ at each input $i$ it holds, and these
 exposures change nothing (Proposition~\ref{prop:identity-exposure}), so every
 state a loquacious run reaches is reachable by input events alone, with
 nothing sealed; condition~1 asks that $f(i)$ be exposable at every such state.
@@ -1426,14 +1432,27 @@ $\{(i,x):x\in X\}$ has common refinement $j$, so some $u\in\fiber{j}$
 refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
 
-The criterion ranges over every common refinement because the
-environment may determine which refinement occurs.  Finite families are
-required because pairwise compatibility need not imply compatibility of a
-larger family.  Growth in $\InputOrd$ leads to extension in $\OutputOrd$:
-whatever was admissible on the parts remains jointly refinable on the whole.
-The fibers of a monotone specification grow with the input the way the values
-of a monotone function do, widened to sets of mutually compatible
-alternatives.
+Each quantifier in the criterion answers a question.  Why finite families of
+every size, and not pairwise compatibility?  Pairwise compatibility need not
+imply compatibility of a larger family.  Let a fiber admit every set of at most
+two of three values $a$, $b$, $c$, ordered by inclusion: any two of the
+singletons $\{a\}$, $\{b\}$, $\{c\}$ have an admitted common refinement, their
+pair, but the three together have none, since $\{a,b,c\}$ is not admitted.
+Why inputs that need not be comparable?  Because we are interested in showing that
+all possible runs lead to a confluent outcome. Inputs within one
+run form a chain; the incomparable $i_r$ allow us to analyze different runs that
+end at the same $j$, as when two runs receive the same ballots in different
+orders. In essence, the criterion is read at $j$, looking back, and asks that regardless of
+how $j$ was reached, the outputs exposed along the way have a common refinement
+admitted there.  Why every common refinement $j$?  Because the environment,
+not the specification, determines which refinement occurs.  Whether two inputs
+ever reach a common $j$ at all is settled by the input domain, not by the
+criterion; $aa\cdot$ and $ab\cdot$ never do, and nothing is required of them.
+
+Taken together, the criterion says that the fibers of a monotone
+specification grow with the input the way the values of a monotone function
+do, widened to sets of mutually compatible alternatives: whatever was
+admissible on the parts remains jointly refinable on the whole.
 
 \subsection{Commitments under output choice}
 \label{sec:residuals-commitment}
@@ -1443,8 +1462,8 @@ a relational specification; the difference is that a fiber $R(i)$ may now
 contain several outputs, so the second kind of commitment in
 Definition~\ref{def:transition-system}, the choice commitment, has work to do.
 Sealing input removes rows at inputs that will never become current.  Choosing
-an output removes rows at inputs that remain valid: in leader election,
-committing to \texttt{server1} removes the row for \texttt{server2} at the same
+an output removes rows at inputs that remain valid: in leader election, the
+commitment to \texttt{server1} removes the row for \texttt{server2} at the same
 input.
 
 The basis is part of the system model.  Its members are the acts through which
@@ -1469,10 +1488,7 @@ every removed output has a retained refinement:
   \label{eq:content-preserving}
         \end{equation}
 It is \emph{content-destroying at $k$} otherwise: some removed $x$ has no
-refinement left in $R'(k)$, and the content of $x$ has become unattainable.  A
-restriction is content-preserving when it is so at every input valid in both
-states, and content-destroying when it is content-destroying at some such
-input.
+refinement left in $R'(k)$, and the content of $x$ has become unattainable.
 \end{definition}
 
 Under the equality order on outputs, no distinct output refines another, so
@@ -1492,11 +1508,11 @@ entailed by the residual and the exposure changes nothing
 (Proposition~\ref{prop:identity-exposure}).  A weaker
 condition suffices for an exposure to be honest: that nothing remaining possible
 \emph{contradicts} $o$, in the sense that every remaining possibility shares an
-admitted refinement with it.  A system that exposes such an $o$ undertakes
-to refine it, and it can always keep that undertaking, whatever else remains,
-because the undertaking excludes nothing that could not still be reached.
-Keeping the promise means restricting the residual at $i$ and its refinements
-to the outputs that refine $o$.  That is the exposure event
+admitted refinement with it.  Exposing such an $o$ promises that the final
+output will refine it, and the promise can always be kept, whatever else
+remains, because every remaining possibility has a refinement that also
+refines $o$.  Keeping the promise means restricting the residual at $i$ and
+its refinements to the outputs that refine $o$.  That is the exposure event
 $\mathsf{expose}(o)$ of Definition~\ref{def:transition-system}, which
 produces $R\mathbin{\upharpoonright_O}o$
 (Equation~\ref{eq:residual-refining-fibers}) and is permitted exactly when $o$
@@ -1512,11 +1528,11 @@ a still-valid refinement contradicts: under the equality order, $\bot$ is
 admitted in panel (a) of the election but shares no refinement with the $a$
 and $b$ admitted at $aba$ and $abb$.
 
-\begin{proposition}[Exposure narrows without committing]
+\begin{proposition}[Exposure narrows without commitment]
 \label{prop:exposure-narrowing}
 Let $o$ be exposable at $i$ in $(i,R)$ and let $R'=R\mathbin{\upharpoonright_O}o$.
 Then $(i,R')$ is a residual state with the same valid inputs as $(i,R)$; the
-restriction from $R$ to $R'$ is content-preserving
+restriction from $R$ to $R'$ is content-preserving at every valid input
 (Definition~\ref{def:content-restriction}); and $o$ is the least element of
 the upper fiber of $(i,R')$, so a second $\mathsf{expose}(o)$ is the identity.
 \end{proposition}
@@ -1534,17 +1550,17 @@ An exposure event is therefore not a commitment, even though it may remove rows:
 it excludes nothing whose content could not still be reached.  If $o$ is not
 exposable, some $x$ at $i$ or one of its refinements has no admitted refinement in
 common with $o$.  Exposing $o$ would then silently destroy the content of $x$.
-The system must instead make a content-destroying commitment explicitly,
+The system must instead first make a content-destroying commitment explicitly,
 reducing $R$ to a residual in which $o$ may become exposable.
 
 When $\OutputOrd$ is equality, an output is exposable only if it is the sole
-possibility, and exposure reduces to announcing a determined result.  When every
+possibility, so exposure reduces to announcing a determined result.  When every
 upper fiber has a least element, that element is exposable and its exposure
 changes nothing; this is the case of a monotone functional specification.  The
 new case is a fiber such as $\{a,b,t\}$ with $a$ and $b$ incomparable and both
 below $t$: neither $a$ nor $b$ is least, but each is exposable, and exposing
-$a$ narrows the fiber to $\{a,t\}$ while leaving the content of $b$ reachable
-at $t$.
+$a$ narrows the fiber to $\{a,t\}$; the content of $b$ is subsumed by $t$
+according to $\OutputOrd$, and $t$ remains reachable from $a$.
 
 It is worth following one exposure carefully.  Suppose traceroute first exposes
 $o=\{s{\to}\texttt{server1}\}$.  The output
@@ -1565,14 +1581,15 @@ and commitments it makes.  A run (Definition~\ref{def:loquacious}) is thus a
 participant's history, and its \emph{schedule} is the sequence of inputs the
 environment supplies.  Two
 schedules are \emph{input-equivalent} when they end at the same input; they may
-differ in the intermediate inputs they pass through, which under a change
-presentation means in the order and grouping of arrivals and in repeated
-delivery.  By the composition property of input events, runs with input-equivalent
-schedules that neither expose nor commit reach the same state.  What can
-depend on the schedule is what a participant exposes or commits between its
-input events.  A replica is a participant that sees a shared input stream in its own
-order, so several replicas and several runs of one participant under
-input-equivalent schedules are the same object seen twice.
+differ in the intermediate inputs they pass through; when the environment
+delivers changes rather than whole inputs, this means they may differ in the
+order and grouping of arrivals and in repeated delivery.  By the composition property of input events, runs with input-equivalent
+schedules with no exposures or commitments reach the same state.  What can
+depend on the schedule is which exposures and commitments a participant makes
+between its input events.  Replicas, in the usual sense, are participants that
+receive the same input in different orders; their runs have input-equivalent
+schedules, so condition~2 of consistency already covers them, with no need for
+a separate notion of replica consistency.
 
 \paragraph{Histories.}
 Runs of several participants fit together into a history in Lamport's sense.
@@ -1674,9 +1691,9 @@ upperness puts $u$ in $R(j)$.
 
 \emph{Condition~1.}  The claim, read with $j$ and $x$ ranging over the
 possibilities at $i$, says that every $o\in R(i)$ is exposable at every
-reachable state; so every exposure a loquacious schedule calls for is defined,
-and every input event it calls for is defined because no exposure empties a
-fiber at a valid input.
+reachable state; so every exposure in a loquacious run is defined, and every
+input event in it is defined because no exposure empties a fiber at a valid
+input.
 
 \emph{Condition~2.}  Let $j$ be a common refinement of the final inputs
 $i_1,\ldots,i_k$.  The input $j$ is valid in every $(i_r,R_r)$: it had a row
@@ -1691,24 +1708,17 @@ upperness places $u$ in every $R_r(j)$.  Hence the intersection is nonempty.
 Conversely, assume consistency.  By
 Proposition~\ref{prop:lifted-monotonicity-decomposition} it suffices to prove
 Relational Monotonicity and Directed Outputs.
-\emph{Relational Monotonicity.}  Let $i\InputOrd j$
-and $o\in\fiber{i}$.  A loquacious schedule that holds $i$ and exposes $o$
-first has a defined run, so $o$ is exposable at $\sigma_0(i)$; the input $j$ is
-valid there and $\fiber{j}$ is nonempty, so any $x\in\fiber{j}$ has a common
-refinement with $o$ in $\fiber{j}$, which in particular lies above $o$.
-\emph{Directed Outputs.}  Suppose
-some finite $X\subseteq\fiber{i}$ has no admitted common refinement, and choose
-such an $X=\{x_1,\ldots,x_n\}$ of least size.  If $n=1$ then $x_1$ itself is a
-refinement; so $n\geq2$.  If $n=2$, then $x_1$ is not exposable at
-$\sigma_0(i)$, since $x_2$ is a possibility at $i$ sharing no admitted
-refinement with it.  If $n\geq3$, a loquacious schedule holding $i$ exposes
-$x_1,\ldots,x_{n-2}$ in turn; each is exposable by condition~1, and the
-resulting state has residual fiber at $i$ the set of outputs
-above all of $x_1,\ldots,x_{n-2}$.  By minimality of $X$ this fiber contains a
-common refinement $w'$ of $x_1,\ldots,x_{n-1}$ and a common refinement $w''$
-of $x_1,\ldots,x_{n-2},x_n$.  A common refinement of $w'$ and $w''$ would
-refine all of $X$, so none is admitted, and $w'$ is not exposable in that
-state.  In every case some loquacious schedule has no defined run.
+\emph{Relational Monotonicity.}  Let $i\InputOrd j$ and $o\in\fiber{i}$.  The
+loquacious run that starts at $\sigma_0(i)$ and exposes $o$ is defined by
+condition~1, so $o$ is exposable at $\sigma_0(i)$; the input $j$ is valid there
+and $\fiber{j}$ is nonempty, so any $x\in\fiber{j}$ has a common refinement
+with $o$ in $\fiber{j}$, which in particular lies above $o$.
+\emph{Directed Outputs.}  Let $x_1,\ldots,x_k\in\fiber{i}$.  For each $r$, the
+loquacious run that starts at $\sigma_0(i)$ and exposes $x_r$ is defined, and
+its final residual has fiber $\{u\in\fiber{i}:x_r\OutputOrd u\}$ at $i$.  The
+input $i$ is a common refinement of the final inputs of these $k$ runs, so
+condition~2 gives $u$ in every one of these fibers: an admitted common
+refinement of $x_1,\ldots,x_k$.
 \end{proof}
 
 The theorem is direct from the definitions.  Its content is the
@@ -1837,19 +1847,19 @@ is weaker than linearizability and is what makes the characterization
 bidirectional.  Monotone specifications retain availability and reconciliation
 under partition.  Non-monotone ones must surrender one, and the theorem
 identifies the family of rows responsible: a participant that would select one
-of its members must commit, and by
+of its members must make a commitment, and by
 Theorem~\ref{thm:commitments-require-coordination} it must either wait to agree
-with the other side, giving up availability, or commit alone and risk an
-unreconcilable merge, giving up reconciliation.
+with the other side, giving up availability, or make the commitment alone and
+risk an unreconcilable merge, giving up reconciliation.
 
 Theorem~\ref{thm:complete-cap} quantifies over all participants and inputs.
 Whether a commitment is necessary is a semantic question; whether it requires
 agreement across a cut also depends on \emph{deployment}: which participant may
 hold which input and select which row.  A participant that controls an entire
-choice may commit locally.  In what follows, a participant \emph{selects} an
-admissible output at the input it holds by exposing it when it is exposable
-and by committing to it---retaining exactly the outputs that refine it at its
-input and that input's refinements---when it is not.  The second kind of
+choice may make the commitment locally.  In what follows, a participant
+\emph{selects} an admissible output at the input it holds by exposing it when
+it is exposable and by a commitment to it---retaining exactly the outputs that
+refine it at its input and that input's refinements---when it is not.  The second kind of
 selection is
 content-destroying; the deployment says who is entitled to make it.
 
