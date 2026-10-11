@@ -128,9 +128,7 @@ Several other traditions draw closely related boundaries, each in its own
 formalism.  The CAP Theorem proves an impossibility for available linearizable registers
 under partition~\cite{brewer2000towards,gilbert2002cap}.  State-based CRDTs give
 a strong sufficient discipline for coordination-free convergence using
-join-semilattices and inflationary updates~\cite{shapiro2011crdt}, but those
-state-convergence guarantees do not by themselves constrain reads or downstream
-client behavior~\cite{laddad2022keep}.  Highly
+join-semilattices and inflationary updates~\cite{shapiro2011crdt}.  Highly
 Available Transactions (HATs) classify transaction guarantees that survive
 partitions~\cite{bailis2013hat}.  Invariant confluence gives a necessary and
 sufficient condition for independently executed transactions to merge without
@@ -152,75 +150,53 @@ language or implementation details.  It is consistent with state-machine-style
 specifications and can be compiled from them
 (Section~\ref{sec:complete-calm}); what it elides is the incidental detail of
 execution order, keeping only what the specification can ask about.  A
-\emph{functional semantic
-specification} (\S\ref{sec:functional-specifications}) is an arbitrary function
-\[
-  f:(I,\InputOrd)\longrightarrow(O,\OutputOrd)
-\]
-between a partially ordered input domain and a separately partially ordered
-output domain.  It is monotone in the standard mathematical sense when
-\[
-  i\InputOrd j \quad\Longrightarrow\quad f(i)\OutputOrd f(j).
-\]
-Distributed implementations make input arrival uncertain: participants may hold different
-input refinements, received in different orders and batches.  Monotonicity says
-that output exposed from any one of them remains valid as more input arrives.
-If the function is not monotone, exposing an output may first require closing
-off the input refinements that could contradict it.  We call the resulting
-condition an input \emph{seal} (\S\ref{sec:determination}); establishing one
-may require agreement among the participants who could supply those inputs.
+\emph{functional semantic specification}
+(\S\ref{sec:functional-specifications}) is an arbitrary function
+\(f:(I,\InputOrd)\to(O,\OutputOrd)\) between a partially ordered input domain
+and a separately partially ordered output domain, monotone in the standard
+sense when \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\).  Distributed
+implementations make input arrival uncertain: participants hold different
+input refinements, received in different orders and batches.  Monotonicity
+says that output exposed from any one of them remains valid as more input
+arrives; without it, exposing an output first requires sealing off the inputs
+that could contradict it.
 
 Our first step, \emph{Functional CALM} (\S\ref{sec:functional-calm-theorem}),
-generalizes the CALM result from relational logic languages
-and fact inclusion to these arbitrary functions and refinement partial orders.
-This generalization provides a common language for coordination-freedom results
-over functional specifications, including query evaluation and
-the usual CRDT state interface.  This does not assume deterministic execution:
-message timing, local state, batching, retries, and merge order may vary.
-``Functional'' means only that each fixed semantic input has one specified
-output.
+generalizes the CALM result from relational logic languages and fact inclusion
+to these arbitrary functions and refinement partial orders, giving a common
+language for coordination-freedom results over functional specifications,
+including query evaluation and the usual CRDT state interface.  ``Functional''
+means only that each semantic input has one specified output; execution may
+be as nondeterministic as it likes.
 
 Our second step addresses a case those interfaces do not expose: the semantic
-specification itself may be intentionally \emph{ambiguous}. By this we do not mean it is
-informal, but rather that it formally allows several distinguishable outputs for one input.
-As examples, leader election may allow any participant to be eligible; a database may permit several
-serial schedules.  The specification for many such systems is then a relation
-(\S\ref{sec:relational-specifications}):
-\[
-  S\subseteq I\times O,
-  \qquad
-  \fiber{i}=\{o\in O:(i,o)\in S\},
-\]
-where \(\fiber{i}\)---the \emph{fiber} at \(i\)---is the set of outputs
-that are admitted as ``within spec'' at input \(i\).
+specification itself may be \emph{ambiguous}, not informal but formally
+allowing several distinguishable outputs for one input.  Leader election may
+allow any participant to be eligible; a database may permit several serial
+schedules.  The specification is then a relation \(S\subseteq I\times O\)
+(\S\ref{sec:relational-specifications}), and the \emph{fiber}
+\(\fiber{i}=\{o:(i,o)\in S\}\) is the set of outputs admitted at input \(i\).
 
-Moving from a function to a relation, the question is still monotonicity, but
-of sets of outputs rather than single outputs.  We lift the output order to
-sets: \(\fiber{i}\) refines to \(\fiber{j}\) when every finite set of outputs
-admitted at \(i\) has a common refinement admitted at \(j\).  Monotonicity of
-the fiber map under this lift is \emph{Lifted Monotonicity}
-(\S\ref{sec:complete-calm-criterion}).  It carries two obligations at once.
-Read one output at a time, it says that each alternative admitted at \(i\)
-remains valid as input grows.  Read at a single input, it says that the
-alternatives admitted there can coexist: any finite set of them has an
-admitted common refinement, so exposing one rules out none of the others.
-When the second obligation fails, forward progress must rule out an
-alternative; we call that step a \emph{commitment}
-(Definition~\ref{def:transition-system}).  If different participants can make
-incompatible commitments, they must coordinate first.  Complete CALM shows
-that Lifted Monotonicity characterizes when a specification is consistent:
-whatever participants expose, in whatever order input arrives, one admitted
-outcome refines all of it (\S\ref{sec:safe-exposure}).  A consistent
-specification needs no coordination.  For singleton fibers, as in functional
-specifications, Lifted Monotonicity is ordinary monotonicity.
+Moving from a function to a relation, the question is still monotonicity, now
+of the sets of admitted outputs: \(\fiber{i}\) refines to \(\fiber{j}\) when
+every finite set of outputs admitted at \(i\) lies below a single output
+admitted at \(j\).  Monotonicity of the fiber map under this lift is
+\emph{Lifted Monotonicity} (\S\ref{sec:complete-calm-criterion}).  It asks
+both that outputs keep growing as input grows and that the alternatives
+admitted at one input can coexist.  Where it fails, progress must rule out an
+alternative, a step we call a \emph{commitment}
+(Definition~\ref{def:transition-system}), and participants who could commit
+incompatibly must coordinate first.  Complete CALM shows that Lifted
+Monotonicity is equivalent to consistency: whatever participants expose, in
+whatever order input arrives, one admitted outcome refines all of it
+(\S\ref{sec:safe-exposure}).
 
 Complete CALM also yields a Complete CAP Theorem
 (\S\ref{sec:cap-corollary}).  Classical CAP gives an
 impossibility for linearizable registers under partition.
 The Complete CAP Theorem extends from impossibility to dichotomy, characterizing
 both sides of the boundary: specifications that are subject to CAP tradeoffs and those that are not.
-Linearizability becomes a special case on the tradeoff side. This unifies the ideas of CAP (im)possibility
-and coordination avoidance in a single formalism.
+Linearizability becomes a special case on the tradeoff side.
 
 % If every set of choices across a
 % partition has an allowed common refinement, consistency and
@@ -230,28 +206,21 @@ and coordination avoidance in a single formalism.
 
 This paper makes four contributions:
 \begin{enumerate}
-  \item A semantic framework for distributed computation.  A specification
-        is a relation with ordered inputs and outputs; a \emph{residual state}
-        records what remains admissible; transitions are input events,
-        exposures, and \emph{commitments}, the last drawn from a declared
-        \emph{commitment basis} that fixes what a system may make binding.
-        Residuals are provably the semantic quotient of Lamport histories:
-        any consistent cut of an execution yields them, and they suffice for
-        every question the paper asks.  The framework is consistent with
-        state-machine specifications and can be compiled from them, eliding
-        only incidental execution order.  Everything below is stated and proved
-        in this framework, and Section~\ref{sec:instances} shows that CRDTs,
-        highly available transactions, and invariant confluence are instances
-        of it.
+  \item A semantic framework for distributed computation: specifications as
+        relations with ordered inputs and outputs, \emph{residual states}
+        recording what remains admissible, and three transitions, input events,
+        exposures, and \emph{commitments}.  Residuals are provably the semantic
+        quotient of Lamport histories, and Section~\ref{sec:instances} shows
+        that CRDTs, highly available transactions, and invariant confluence are
+        instances of the framework.
   \item Functional CALM generalizes and proves the CALM Conjecture in the context of
         arbitrary functions, represented as semantic input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to semantic output choice, formalizes
-        exposure and commitment, and identifies Lifted Monotonicity as the
-        criterion for consistency: whatever participants expose, in whatever
-        order input arrives, one admitted outcome refines all of it.
-        Consistent specifications need no coordination; commitments are shown
-        to require it.  In partition form this is the Complete CAP Theorem,
+        exposure and commitment, and proves that Lifted Monotonicity is
+        equivalent to consistency.  Consistent specifications need no
+        coordination; commitments are shown to require it.  In partition form
+        this is the Complete CAP Theorem,
         which extends the classical impossibility to a bidirectional dichotomy
         parameterized by the declared consistency specification and the
         deployment.
