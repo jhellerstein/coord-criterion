@@ -359,8 +359,8 @@ exercised on the example.
   \caption{The election specification and three residual states reached from
   it.  Only rows above the input $a\cdot\cdot$ are shown.  The current input is
   in bold; shaded cells are the current input and the upper fiber at that
-  input.  Gray: the row has been removed, and a remaining row says everything
-  it said.  Struck through: the row has been removed via a commitment; no remaining row
+  input.  Gray: the row has been retired by an input event or an exposure.
+  Struck through: the row has been removed by a commitment; no remaining row
   preserves its contents.  Panels (b) and (c) follow input events; panel (d) follows a
   commitment.}
   \label{fig:election-frames}
@@ -609,19 +609,20 @@ admitted grows, in the appropriate sense, as the input grows.
 \paragraph{Commitments versus everything else.}
 The legend of Figures~\ref{fig:election-frames} and~\ref{fig:ambiguity-frames}
 distinguishes two kinds of removed row, and the distinction is exactly
-commitment versus not.  A gray row is redundant: some remaining row says
-everything it said, so removing it narrows nothing.  A struck row was an
+commitment versus not.  A gray row has been \emph{retired}, and in every panel
+here it is \emph{covered}: some remaining row says everything it said, so
+removing it narrows nothing.  A struck row was an
 alternative in its own right: removing it narrows what is within spec, and
 only a commitment does that.
 
-The other two kinds of transition remove rows without any commitment.  Input
-arrival retires the rows the new input does not refine (panels (b), (c)); it
-belongs to the environment.  Exposure removes the rows that do not refine the
-exposed output (panel (g)); it belongs to the system but is not a commitment.
-The two CALM conditions say when these two transitions remove only redundant
-rows: monotonicity says this of input arrival, as in panel (b), where the
-retired $\bot$ at $a\cdot\cdot$ is refined by the $\bot$ at $ab\cdot$;
-directedness says it of exposure, as in panel (g).  A commitment, by contrast,
+The other two kinds of transition retire rows rather than committing
+against them.  Input arrival retires the rows the new input does not refine
+(panels (b), (c)); it belongs to the environment.  Exposure retires the rows
+that do not refine the exposed output (panel (g)); it belongs to the system but
+is not a commitment.  The two CALM conditions say when these two transitions
+retire only covered rows: monotonicity says this of input arrival, as in panel
+(b), where the retired $\bot$ at $a\cdot\cdot$ is refined by the $\bot$ at
+$ab\cdot$; directedness says it of exposure, as in panel (g).  A commitment, by contrast,
 always narrows; that is its purpose (panels (d), (e), (f)).  Computation is not on
 this list at all.  Tallying the ballots in panel (c) to notice that the result
 is determined removes no row; computation has no effect on the residual, and
@@ -633,7 +634,7 @@ literature calls consistency, or confluence.  Consider a participant that
 exposes at every input it holds: at each current input it exposes some output
 admitted there, and it makes no commitment.  The specification is \emph{consistent}
 when every such participant can expose whichever admitted outputs it chooses,
-each exposure removing only redundant rows, and when, for any several such
+each exposure retiring only covered rows, and when, for any several such
 participants, whatever their inputs and in whatever order those inputs
 arrived, one admitted output at every common refinement of their current
 inputs refines everything they exposed.  The residual then depends on the
@@ -665,7 +666,7 @@ their messages were ordered or batched
 Commitments are precisely the semantic actions that require coordination;
 input events and exposures may be done autonomously.  This
 follows directly from the discussion above.  Input arrives at each participant
-on its own.  An exposure removes only redundant rows, so every output another
+on its own.  An exposure retires only covered rows, so every output another
 participant still admits has a refinement consistent with what was exposed,
 and combining inputs later contradicts nothing.  A commitment removes an alternative that another
 participant's residual may still admit, so it is safe only if every such
@@ -820,7 +821,7 @@ none.
 \begin{enumerate}
   \item \emph{Input event.}  For $j\in I$ with $i\InputOrd j$, the
         event $\mathsf{input}(j)$, produced by the environment, makes $j$ the
-        current input and keeps exactly the rows whose input refines $j$:
+        current input and retires every row whose input does not refine $j$:
         \begin{equation}
           (i,R)\xrightarrow{\mathsf{input}(j)}
           \bigl(j,\ R\mathbin{\upharpoonright_I}j\bigr),
@@ -831,7 +832,7 @@ none.
         defined when $R(j)\neq\varnothing$.
   \item \emph{Exposure event.}  For $o\in R(i)$, the event
         $\mathsf{expose}(o)$, made by the system, keeps the current input
-        fixed and keeps exactly the rows whose output refines $o$:
+        fixed and retires every row whose output does not refine $o$:
         \begin{equation}
           (i,R)\xrightarrow{\mathsf{expose}(o)}
           \bigl(i,\ R\mathbin{\upharpoonright_O}o\bigr),
@@ -848,8 +849,10 @@ none.
           \label{eq:safe-exposure}
         \end{equation}
   \item \emph{Commitment.}  A commitment $p$, made by the system, keeps the
-        current input fixed and strictly restricts the residual: $p(i,R)=(i,R')$
-        with $R'\subsetneq R$.  It is an \emph{input-sealing commitment} if it
+        current input fixed and strictly restricts the residual, $p(i,R)=(i,R')$
+        with $R'\subsetneq R$, removing at least one row $(k,x)$ such that no
+        retained output at $k$ refines $x$.  It is an \emph{input-sealing
+        commitment} if it
         makes some valid input invalid, $R'(k)=\varnothing$ for some $k$ with
         $R(k)\neq\varnothing$ (necessarily $k\neq i$), and a \emph{choice
         commitment} otherwise, when every valid input remains valid.  The
@@ -1449,10 +1452,15 @@ not the specification, determines which refinement occurs.  Whether two inputs
 ever reach a common $j$ at all is settled by the input domain, not by the
 criterion; $aa\cdot$ and $ab\cdot$ never do, and nothing is required of them.
 
-Taken together, the criterion says that the fibers of a monotone
-specification grow with the input the way the values of a monotone function
-do, widened to sets of mutually compatible alternatives: whatever was
-admissible on the parts remains jointly refinable on the whole.
+Taken together, the criterion is ordinary monotonicity lifted twice.  For a
+monotone function, as the input grows from $i$ to $j$ the single output at $i$
+is refined by the single output at $j$.  Lifting from functions with a single
+output per input to relations offering a set of outputs, Relational
+Monotonicity asks that \emph{each} output admitted at $i$ be refined by
+\emph{some} output admitted at $j$.  Lifting again from single output choices
+to finite sets of alternate outputs, as different runs might expose, Lifted
+Monotonicity asks that \emph{every finite set} of outputs admitted at $i$ be
+\emph{jointly} refined by \emph{a single} output admitted at $j$.
 
 \subsection{Commitments under output choice}
 \label{sec:residuals-commitment}
@@ -1460,43 +1468,112 @@ admissible on the parts remains jointly refinable on the whole.
 The transition system of Section~\ref{sec:determination} applies unchanged to
 a relational specification; the difference is that a fiber $R(i)$ may now
 contain several outputs, so the second kind of commitment in
-Definition~\ref{def:transition-system}, the choice commitment, has work to do.
-Sealing input removes rows at inputs that will never become current.  Choosing
-an output removes rows at inputs that remain valid: in leader election, the
-commitment to \texttt{server1} removes the row for \texttt{server2} at the same
-input.
+Definition~\ref{def:transition-system}, the choice commitment, becomes
+relevant, and with it the question of which commitments a system has.
 
-The basis is part of the system model.  Its members are the acts through which
-the system can make possibilities irrevocably unavailable, and the system can
-use only the commitments it declares.  In particular, the ability to choose
-among outputs does not by itself include the ability to seal input; that
-requires an input-sealing commitment in the basis.  The two exercise different
-authority: a choice commitment speaks only for the system's own output, while
-an input-sealing commitment declares that input the environment could still
-supply will not count.  A commitment may remove many rows at once.
+A commitment basis is part of the design of a system model, along with the
+specification.  Its members are the acts through which the system can make
+possibilities irrevocably unavailable, and the system can use only the
+commitments it declares.  The choice is critical to both faithful modeling of a real system,
+and to the semantic possibilties of the spec. Familiar concurrency
+control protocols differ exactly here.  Figure~\ref{fig:cc-commitments} shows
+the six serialization orders admitted for three concurrent transactions $A$,
+$B$, and $C$.  Under two-phase locking, $A$ acquiring a lock ahead of $B$
+commits $A$ before $B$ and nothing more; $C$'s position stays open until it
+contends for a lock.  Under multiversion timestamp ordering, $B$ receiving the
+first timestamp commits $B$ to first place and nothing more; $A$ and $C$ remain
+unordered.  Both protocols proceed by a sequence of such commitments (among others).  The two
+bases differ in the shape of these commitments---a relative order between two
+conflicting transactions or an absolute position in the final order.
+Section~\ref{sec:design-boundary} returns to basis design, and
+Appendix~\ref{app:additional-applications} works through a basis with a single
+commitment, after which every remaining act is an exposure.
 
-Whether removing a row destroys information depends on the output order.
+The basis also fixes what authority the system has.  Sealing input removes
+rows at inputs that will never become current; choosing among outputs removes
+rows at inputs that remain valid.  The ability to choose among outputs does
+not by itself include the ability to seal input; that requires an
+input-sealing commitment in the basis.  A choice commitment speaks only for the
+system's own output, while an input-sealing commitment declares that input the
+environment could still supply will not count.
 
-\begin{definition}[Content-preserving and content-destroying restrictions]
+\begin{figure}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(h) 2PL: $A$ locks ahead of $B$}\\
+    \toprule
+    Input & Output \\ \midrule
+    $\{A,B,C\}$ & \sh{$[A,B,C]$} \\
+    $\{A,B,C\}$ & \sh{$[A,C,B]$} \\
+    $\{A,B,C\}$ & \sh{$[C,A,B]$} \\
+    \retired{$\{A,B,C\}$} & \retired{$[B,A,C]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[B,C,A]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \bottomrule
+  \end{tabular}
+  \hfill
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(i) MVTO: $B$ receives the first timestamp}\\
+    \toprule
+    Input & Output \\ \midrule
+    $\{A,B,C\}$ & \sh{$[B,A,C]$} \\
+    $\{A,B,C\}$ & \sh{$[B,C,A]$} \\
+    \retired{$\{A,B,C\}$} & \retired{$[A,B,C]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[A,C,B]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,A,B]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \bottomrule
+  \end{tabular}
+  \caption{Serialization orders for three concurrent transactions, after one
+  commitment under two protocols.  In (h) two-phase locking has ordered $A$
+  before $B$; in (i) multiversion timestamp ordering has placed $B$ first.
+  Legend as in Figure~\ref{fig:election-frames}.}
+  \label{fig:cc-commitments}
+\end{figure}
+
+Not every removal of a row is a commitment.  Taken row by row, a removal is
+one of three things.
+
+\begin{definition}[Retirement; commitment witness]
 \label{def:content-restriction}
-Let $(i,R)$ and $(i,R')$ be residual states with $R'\subsetneq R$, and let $k$
-be valid in both.  The restriction is \emph{content-preserving at $k$} when
-every removed output has a retained refinement:
+Let a transition take $(i,R)$ to $(i',R')$ and remove the row $(k,x)$.  The
+removal is an \emph{input retirement} if $k$ does not refine $i'$: the input
+has been superseded or made unreachable.  It is an \emph{output retirement} if
+$k$ remains valid and $x$ is \emph{covered}, that is, some retained
+$u\in R'(k)$ has $x\OutputOrd u$.  Otherwise the row is a \emph{commitment
+witness}: a still-valid input, or an output that no retained output covers,
+has been excluded.  A restriction with the current input fixed is
+\emph{content-preserving at $k$} when every row it removes at $k$ is an output
+retirement,
         \begin{equation}
   \forall x\in R(k)\setminus R'(k)\quad
-  \exists u\in R'(k),\qquad x\OutputOrd u.
+  \exists u\in R'(k),\qquad x\OutputOrd u,
   \label{eq:content-preserving}
         \end{equation}
-It is \emph{content-destroying at $k$} otherwise: some removed $x$ has no
-refinement left in $R'(k)$, and the content of $x$ has become unattainable.
+and \emph{content-destroying at $k$} when it removes a commitment witness at
+$k$.
 \end{definition}
 
+Every removal is thus a retirement or a commitment witness, and the two are
+the gray and struck rows of the figures.  Input events perform input
+retirements and nothing else, since they leave surviving fibers unchanged.
+Commitments remove at least one witness, by
+Definition~\ref{def:transition-system}.  Exposures perform output retirements
+and nothing else, as the next subsection shows.  Input retirement does not
+promise that the removed output is covered: when $f$ is not monotone, the
+environment's next input may retire a row whose output nothing refines.  It is
+a retirement nonetheless, because the environment made that input history
+counterfactual; what distinguishes a commitment is that the system excluded
+something no event had ruled out.
+
 Under the equality order on outputs, no distinct output refines another, so
-every strict restriction is content-destroying; so is every strict restriction
-of the leader-election fiber, whose two outputs have no common refinement.  The
-distinction matters in a fiber like traceroute's, where a restriction may
-remove an output while a retained output still carries everything it said.
-The next subsection shows that such restrictions are not commitments at all.
+every strict restriction with the current input fixed is content-destroying;
+so is every strict restriction of the leader-election fiber, whose two outputs
+have no common refinement.  The distinction matters in a fiber like
+traceroute's, where a restriction may remove an output while a retained output
+still carries everything it said.
 
 \subsection{Exposure}
 \label{sec:safe-exposure}
@@ -2293,6 +2370,7 @@ questions belong to the programming language, protocol, and verification
 method used to realize the specification.
 
 \subsection{Specification design determines the boundary}
+\label{sec:design-boundary}
 
 The Complete CALM criterion is a property of the declared specification, not a
 permanent label on ``register,'' ``transaction,'' or ``shopping cart.''
