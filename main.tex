@@ -19,6 +19,8 @@
 \newcommand{\InputOrd}{\preceq_I}
 \newcommand{\OutputOrd}{\preceq_O}
 \newcommand{\LiftedOutputOrd}{\preceq_O^{\mathcal P}}
+\newcommand{\JointOutputOrd}{\trianglelefteq}
+\setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
 \newcommand{\fiber}[1]{S(#1)}
 \newcommand{\dog}{\texttt{dog}}
@@ -65,16 +67,16 @@ the classical result from Datalog and fact inclusion to functions between
 arbitrary partially ordered input and output domains, giving the broader
 folklore interpretation of CALM a formal semantic basis.  Independent of implementation
 language, monotonicity characterizes exactly when a function's output can be
-exposed as distributed input arrives without
-sealing that input.
+exposed consistently as distributed input arrives, without sealing that input.
 
 \emph{Complete CALM} extends the analysis from functions to relational
 specifications that allow a choice among outputs.  Such a specification is
-\emph{coordination-free}---any admissible output may be exposed at will, and
-independent exposures reconcile on merge under every arrival order---exactly
-when it has \emph{lifted monotonicity}, every admitted output surviving as
+\emph{consistent}---whatever participants expose, in whatever order input
+arrives, one admitted outcome refines all of it---exactly
+when it has \emph{relational monotonicity}, every admitted output surviving as
 input grows, and \emph{directed outputs}, every finite set of outputs admitted
-at one input having a common refinement.
+at one input having a common refinement; together these say the specification
+is monotone under a single order lifted to sets of outputs.
 An \emph{exposure} makes an output visible while retaining a refinement of every
 admissible alternative; a \emph{commitment} rules at least one out; and \emph{coordination} is
 agreement before participants make incompatible commitments.
@@ -197,11 +199,11 @@ a function to a relation creates two distinct obligations.
 First, input refinement must now compare \emph{sets} of possible outputs.  We
 lift the output order to these sets: \(\fiber{i}\) refines to \(\fiber{j}\)
 when every output admitted at \(i\) has some refinement admitted at \(j\).
-Monotonicity of the fiber map under this lifted preorder is \emph{Lifted
+Monotonicity of the fiber map under this pointwise lift is \emph{Relational
 Monotonicity} (\S\ref{sec:relational-specifications}).  It ensures that each
 alternative output will remain valid as input grows.
 
-Second, Lifted Monotonicity says nothing about ambiguity---different alternatives
+Second, Relational Monotonicity says nothing about ambiguity---different alternatives
 admitted at the \emph{same} input.  Safely exposing one requires that it can
 coexist with the others through admitted common refinements.  We call this
 within-fiber requirement \emph{Directed Outputs}, based on the order-theoretic notion
@@ -210,13 +212,15 @@ of directedness
 out an alternative; we call that step a \emph{commitment}
 (Definition~\ref{def:transition-system}).  If
 different participants can make incompatible commitments, they must coordinate
-first.  Complete CALM combines Lifted Monotonicity and Directed Outputs
-(\S\ref{sec:complete-calm-criterion}) to characterize when a specification is
-coordination-free: outputs may be exposed at will, independent exposures
-reconcile on merge, and the outcome does not depend on arrival order
-(\S\ref{sec:safe-exposure}).
+first.  Complete CALM combines Relational Monotonicity and Directed Outputs
+into a single monotonicity condition, \emph{Lifted Monotonicity}
+(\S\ref{sec:complete-calm-criterion}), and shows that it characterizes when a
+specification is consistent: whatever participants expose, in whatever order
+input arrives, one admitted outcome refines all of it
+(\S\ref{sec:safe-exposure}).  A consistent specification needs no
+coordination.
 
-For singleton fibers---as in functional specifications---Lifted Monotonicity reduces to ordinary monotonicity,
+For singleton fibers---as in functional specifications---Relational Monotonicity reduces to ordinary monotonicity,
 and the Directed Outputs property holds automatically.
 
 Complete CALM also yields a Complete CAP Theorem
@@ -252,11 +256,12 @@ This paper makes four contributions:
         arbitrary functions, represented as semantic input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to semantic output choice, formalizes
-        exposure and commitment, and identifies Lifted Monotonicity plus
-        Directed Outputs as the criterion for a coordination-free
-        specification: exposure at will, reconciliation on merge, and
-        insensitivity to arrival order.  Commitments are shown to require
-        coordination.  In partition form this is the Complete CAP Theorem,
+        exposure and commitment, and identifies Lifted Monotonicity, the
+        conjunction of Relational Monotonicity and Directed Outputs, as the
+        criterion for consistency: whatever participants expose, in whatever
+        order input arrives, one admitted outcome refines all of it.
+        Consistent specifications need no coordination; commitments are shown
+        to require it.  In partition form this is the Complete CAP Theorem,
         which extends the classical impossibility to a bidirectional dichotomy
         parameterized by the declared consistency specification and the
         deployment.
@@ -585,11 +590,19 @@ what makes exposure possible in the presence of ambiguity.  If the outputs
 admitted at an input are directed, then whichever of them the system exposes,
 every other output can still be refined with that value, so nothing is lost.
 If they are not directed, some output becomes exposable only after a
-commitment removes an alternative.  Complete CALM
-(Section~\ref{sec:complete-calm}) isolates exactly these two requirements:
-outputs must continue as input grows, as in the election, which is
-\emph{Lifted Monotonicity}; and the outputs admitted at one input must be
-directed, as in traceroute but not in leader election.
+commitment removes an alternative.
+
+Two things can therefore go wrong as a relational specification runs.  Input
+can grow in a way that leaves an admitted output with no refinement, as in the
+election under the equality order.  Or the outputs admitted at one input can
+fail to be directed, as in leader election.  Complete CALM
+(Section~\ref{sec:complete-calm}) rules out both with one condition, \emph{Lifted
+Monotonicity}: whenever input grows from $i$ to $j$, every finite set of
+outputs admitted at $i$ has a common refinement admitted at $j$.  Taking a
+single output, this says every admitted output continues as input grows.
+Taking $j=i$, it says the outputs admitted at one input are directed.  The
+condition is a monotonicity condition: it says that the set of outputs
+admitted grows, in the appropriate sense, as the input grows.
 
 \paragraph{Commitments versus everything else.}
 The legend of Figures~\ref{fig:election-frames} and~\ref{fig:ambiguity-frames}
@@ -611,6 +624,21 @@ always narrows; that is its purpose (panels (d), (e), (f)).  Computation is not 
 this list at all.  Tallying the ballots in panel (c) to notice that the result
 is determined removes no row; computation has no effect on the residual, and
 so never counts as determination.
+
+\paragraph{Consistency.}
+The CALM conditions have one consequence, and it is the one the CALM
+literature calls consistency, or confluence.  Consider a participant that
+exposes at every input it holds: at each current input it exposes some output
+admitted there, and it never commits.  The specification is \emph{consistent}
+when every such participant can expose whichever admitted outputs it chooses,
+each exposure removing only redundant rows, and when, for any several such
+participants, whatever their inputs and in whatever order those inputs
+arrived, one admitted output at every common refinement of their current
+inputs refines everything they exposed.  The residual then depends on the
+input reached, not on the order of arrival or on which participant exposed
+first.  Functional CALM says that a functional specification is consistent
+exactly when it is monotone; Complete CALM says that a relational one is
+consistent exactly when it has Lifted Monotonicity.
 
 \paragraph{Instantiating the model.}
 Everything so far is semantic: it concerns the specification and its orders,
@@ -845,15 +873,15 @@ choose them.
 An event retires rows, and so narrows the future, but it makes no choice among
 outputs: it adds no row and leaves every surviving fiber unchanged.  The event
 is undefined when the new input has no row left,
-for instance because an earlier commitment sealed it off: the environment cannot
-make an invalid input current.  Input events compose: $\mathsf{input}(j)$
+for instance because an earlier commitment removed its rows: the environment
+cannot make an invalid input current.  Input events compose: $\mathsf{input}(j)$
 followed by $\mathsf{input}(k)$ has the same effect as $\mathsf{input}(k)$
 alone, since $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$.  Arrival
 order, batching, and repeated delivery therefore do not affect the state
 reached by input events alone; only the input reached matters.  In practice the environment usually delivers changes, such as single
 ballots, rather than whole inputs.  A change $\delta$ applied to the current
-input yields a new input $i\oplus\delta=j$, and is legal exactly when $j$ is a
-legal refinement of $i$.  The model does not treat $\delta$ as a kind of input;
+input yields a new input $i\oplus\delta=j$, and the event $\mathsf{input}(j)$
+is defined exactly when $j$ is a valid refinement of $i$.  The model does not treat $\delta$ as a kind of input;
 the event it causes is simply $\mathsf{input}(j)$, and nothing about $\delta$
 beyond the $j$ it produces matters.  A change already incorporated gives
 $i\oplus\delta=i$, and $\mathsf{input}(i)$ at $(i,R)$ is the identity, so
@@ -864,7 +892,21 @@ Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
 the current input fixed.  No input event does this; it is an input-sealing
 commitment, an act of the system, and for a functional specification it is the
 only kind of commitment that can ever be needed, since every fiber has one row
-and there is never an output to choose among.  Whether such a commitment is
+and there is never an output to choose among.  In panel (d) it seals the
+current input completely.
+
+\begin{definition}[Input-sealed state]
+\label{def:input-sealing}
+The current input $i$ of $(i,R)$ is \emph{sealed} when no strict refinement of $i$
+is valid:
+        \begin{equation}
+  R(j)=\varnothing\qquad\text{for every }j\succ_I i.
+  \label{eq:sealed-input}
+        \end{equation}
+A residual state is \emph{input-sealed} when its current input is sealed.
+\end{definition}
+
+Whether such a commitment is
 available is part of the system model, not of the specification: it must be in
 the commitment basis.  A system that lacks the authority to seal input simply
 has no input-sealing commitment to apply, and a system that must still accept a
@@ -896,17 +938,6 @@ A residual state is \emph{determined} when its current input is determined.
 Determinedness is stronger than having one row at $i$.  Every fiber in the
 election is a singleton, yet panels (a) and (b) are undetermined because valid
 refinements disagree; panel (c) is determined because none does.
-
-\begin{definition}[Input-sealed state]
-\label{def:input-sealing}
-The current input $i$ of $(i,R)$ is \emph{sealed} when no strict refinement of $i$
-is valid:
-        \begin{equation}
-  R(j)=\varnothing\qquad\text{for every }j\succ_I i.
-  \label{eq:sealed-input}
-        \end{equation}
-A residual state is \emph{input-sealed} when its current input is sealed.
-\end{definition}
 
 When $i$ is sealed, $R^\uparrow(i)=R(i)$: nothing beyond the current fiber can
 be required, and in the functional case $i$ is then determined.  Panel (d) is
@@ -966,27 +997,80 @@ identity: $\bot$ is exposable in every panel and $a$ in panel (c), each least
 in its upper fiber; under the equality order nothing is exposable in panels
 (a) and (b).  That contrast is the content of the next theorem.
 
+\paragraph{Consistency.}
+The CALM literature's consistency is confluence: the outcome of a computation
+is the same whatever the order in which input arrives and whatever was exposed
+along the way.  The notion is semantic, and we state it over runs of the
+transition system.  A specification that permits no exposure at all would
+satisfy any such condition vacuously, so we quantify over runs that expose at
+every input they hold.  The definitions are stated for any specification table
+$S\subseteq I\times O$, functional or not, and are used for both CALM
+theorems.
+
+\begin{definition}[Run; loquacious run]
+\label{def:loquacious}
+A \emph{run} is a finite sequence of transitions from a canonical initial
+state.  A \emph{loquacious schedule} is a sequence of inputs
+$i_0\InputOrd i_1\InputOrd\cdots\InputOrd i_m$ together with, for each $i_t$,
+a nonempty finite sequence of outputs admitted at $i_t$.  Its run starts at
+$\sigma_0(i_0)$, exposes the chosen outputs at each $i_t$ in order, and advances
+to $i_{t+1}$ by an input event; it never commits.  The run is defined when
+every chosen exposure is exposable at the state where it is made.  A
+\emph{loquacious run} is the run of a loquacious schedule.
+\end{definition}
+
+\begin{definition}[Consistency]
+\label{def:consistency}
+An ordered specification is \emph{consistent} when
+\begin{enumerate}
+  \item every loquacious schedule has a defined run, and
+  \item for every finite family of loquacious runs with final residuals
+        $(i_1,R_1),\ldots,(i_k,R_k)$ and every \emph{common refinement} $j$
+        of $i_1,\ldots,i_k$, an input with $i_r\InputOrd j$ for every $r$,
+        some row at $j$ survives in every one of them:
+        \begin{equation}
+          \bigcap_{r=1}^{k}R_r(j)\neq\varnothing.
+          \label{eq:reconciliation}
+        \end{equation}
+\end{enumerate}
+\end{definition}
+
+Condition~1 says that every output admitted at the current input of a
+reachable state is exposable there: exposing it removes no alternative
+outright.  Condition~2 says that whatever several runs exposed on their
+separate inputs, in whatever order those inputs arrived, one admitted output
+at every common refinement of their final inputs refines all of it; combining
+the runs neither empties a fiber nor forbids the combined input.  For runs that
+end at the same input, it says the residual there does not depend on the order
+in which that input arrived, how it was grouped, or whether parts of it were
+delivered twice.  None of this requires that the runs expose the \emph{same}
+output.  It requires that every exposed output have a common admitted
+refinement with the others: the residual at the combined input is a function
+of that input, not of the runs.  Which outputs have common refinements is
+fixed by the specification and its output order, which is where a consistency
+model plugs in.  The definition is semantic: it describes no protocol and
+promises no delivery, liveness, or termination detection.
+
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
-A distributed implementation assigns partial input and computation to
-participants.  The question is whether a participant holding input $i$ can
-expose $f(i)$ without ever committing.  A participant that has not committed
-has reached its residual state by input events and exposures; for a functional
-specification exposures change nothing
-(Proposition~\ref{prop:identity-exposure}), so that state is reachable by
-input events alone, and nothing in it is sealed.  We say that a functional
-specification permits \emph{incremental exposure without sealing} when, in
-every residual state reachable by input events alone, $f(i)$ is exposable at
-the current input $i$.
+For a functional specification, consistency reduces to its first condition.
+A loquacious schedule exposes $f(i)$ at each input $i$ it holds, and these
+exposures change nothing (Proposition~\ref{prop:identity-exposure}), so every
+state a loquacious run reaches is reachable by input events alone, with
+nothing sealed; condition~1 asks that $f(i)$ be exposable at every such state.
+Condition~2 is then automatic: a common refinement $j$ keeps its single row
+$(j,f(j))$ in every run.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
-A functional ordered specification permits incremental exposure without
-sealing if and only if it is monotone.
+A functional ordered specification is consistent if and only if it is
+monotone.
 \end{theorem}
 
 \begin{proof}
+By the remarks above, it suffices to show that $f(i)$ is exposable at every
+state reachable by input events alone exactly when $f$ is monotone.
 Let $(i,R)$ be reachable by input events alone.  Input events remove only rows at
 retired inputs, so every $j\succeq_I i$ retains its row $(j,f(j))$, and the
 upper fiber is $R^\uparrow(i)=\{f(j):j\succeq_I i\}$.
@@ -1083,26 +1167,26 @@ outputs.  For nonempty $A,B\subseteq O$, define
   \forall a\in A\;\exists b\in B:\;a\OutputOrd b.
   \label{eq:lifted-output-order}
         \end{equation}
-This lifted relation is a preorder: every output in the first set can continue
+This pointwise lift is a preorder: every output in the first set can continue
 to some output in the second.  It is often called the Hoare preorder.
 
-\begin{definition}[Lifted Monotonicity]
-\label{def:lifted-monotonicity}
-An ordered relational specification satisfies \emph{Lifted Monotonicity}
+\begin{definition}[Relational Monotonicity]
+\label{def:relational-monotonicity}
+An ordered relational specification satisfies \emph{Relational Monotonicity}
 when the mapping $i\mapsto\fiber{i}$ is monotone
-under the lifted output preorder:
+under the pointwise lift:
         \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
   \fiber{i}\LiftedOutputOrd\fiber{j}.
-  \label{eq:lifted-monotonicity}
+  \label{eq:relational-monotonicity}
         \end{equation}
 Equivalently, whenever $i\InputOrd j$ and $o\in\fiber{i}$, some
 $o'\in\fiber{j}$ satisfies $o\OutputOrd o'$.
 \end{definition}
 
 For singleton fibers this reduces to functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  Lifted Monotonicity governs how
+Equation~\ref{eq:functional-monotonicity}.  Relational Monotonicity governs how
 outputs continue \emph{between} fibers as input grows.  It says nothing about how different
 outputs relate \emph{within} one fiber.  We now turn to that second question.
 
@@ -1179,9 +1263,11 @@ with at least one hop, so $s$ alone is not an output element.  The table shows
 every route in each output, including all required prefixes.  Output refinement
 is set inclusion.
 
-Figure~\ref{fig:dns-routes} shows the fixed network and lists all 17 outputs
-in the fiber.  The input does not change.  Finite unions of the underlying
-prefix-closed sets remain prefix-closed and legal, so the fiber is directed.
+Figure~\ref{fig:dns-routes} shows the static network and lists all 17 outputs
+in the fiber.  The input in this example is fixed.  Any two outputs have a
+common refinement in the fiber, namely their union: combining two sets of
+observed routes gives another set of observed routes, and every intermediate
+route each set required is still present.  So the fiber is directed.
 
 \begin{figure}[t]
   \centering
@@ -1235,9 +1321,9 @@ prefix-closed sets remain prefix-closed and legal, so the fiber is directed.
 
 For this particular output type, output refinement can arise in different ways.
 Rows 3 and 6 are ordered because row 6 adds a continuation of an existing
-route; rows 9 and 15 are ordered because row 15 adds another route.  These are
-features of prefix-closed route sets, not general cases in the theory.  The
-results below depend only on the specified output order $\OutputOrd$.
+route; rows 9 and 15 are ordered because row 15 adds another route.  The
+distinction belongs to the example, not to the theory, which sees only whether
+one output refines another under $\OutputOrd$.
 
 \subsection{Nondirected ambiguous specifications}
 
@@ -1248,50 +1334,80 @@ refined.  Leader election is a simple example.  If \texttt{server1} and
 leader, no allowed output refines both choices.  The output fiber is not
 directed.
 
-A serial commit log gives a database example.  Suppose concurrent transactions
-$T_1$ and $T_2$ both commit.  For the same completed input history, the log may
-admit either $[T_1,T_2]$ or $[T_2,T_1]$.  Prefix refinement cannot preserve both
-orders, so this fiber is also not directed.  Section~\ref{sec:hat-instance}
-gives a stronger witness in which exposed reads force opposite serialization
-orders.
+A serial commit log gives a database example.  Clients read the log as it
+grows, so an output refines another when it extends it: the output order is
+prefix extension.  Suppose concurrent transactions $T_1$ and $T_2$ both commit.
+For the same completed input history, the log may admit either $[T_1,T_2]$ or
+$[T_2,T_1]$, and no log extends both, so this fiber is also not directed.  Here
+the failure owes something to the output format: a log must pick one order even
+when nothing a client observed distinguishes the two.
+Section~\ref{sec:hat-instance} gives an example that does not depend on the
+format, with outputs that are sets of facts ordered by inclusion, in which
+exposed reads still force opposite serialization orders.  It is postponed
+because it needs the transactional vocabulary introduced there.
 
-\subsection{The Complete CALM criterion}
+\subsection{Lifted Monotonicity}
 \label{sec:complete-calm-criterion}
 
-Complete CALM has two formal requirements: Lifted Monotonicity and
-Directed Outputs.  A specification satisfying both is called monotone.
+Relational Monotonicity concerns refinement across inputs, and Directed
+Outputs concerns the outputs admitted at one fixed input.  Neither implies the
+other.  The two combine into a single monotonicity condition under a second
+lift of the output order.  For nonempty $A,B\subseteq O$, define
+        \begin{equation}
+  A\JointOutputOrd B
+  \;\Longleftrightarrow\;
+  \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
+  \label{eq:joint-output-order}
+        \end{equation}
+the \emph{joint lift} of $\OutputOrd$.  Where the pointwise lift asks that each
+output of $A$ continue in $B$, the joint lift asks that every finite set of
+them continue together.  The relation is transitive, and $A\JointOutputOrd A$
+holds exactly when $A$ is directed.
 
-\begin{definition}[Complete CALM criterion; monotone specification]
-\label{def:complete-calm-criterion}
-An ordered relational specification satisfies the \emph{Complete CALM
-criterion}, and is called \emph{monotone}, when it has both of the following
-properties:
-\begin{enumerate}[label=(\roman*)]
-  \item \emph{Lifted Monotonicity:} the mapping $i\mapsto\fiber{i}$
-        is monotone under $\LiftedOutputOrd$, as in
-        Equation~\ref{eq:lifted-monotonicity}; and
-  \item \emph{Directed Outputs:} every output fiber is directed
-        under $\OutputOrd$, as in Definition~\ref{def:fiber-directedness}.
-\end{enumerate}
+\begin{definition}[Lifted Monotonicity; monotone specification]
+\label{def:lifted-monotonicity}
+An ordered relational specification satisfies \emph{Lifted Monotonicity}, and
+is called \emph{monotone}, when the mapping $i\mapsto\fiber{i}$ is monotone
+under the joint lift:
+        \begin{equation}
+  i\InputOrd j
+  \quad\Longrightarrow\quad
+  \fiber{i}\JointOutputOrd\fiber{j}.
+  \label{eq:lifted-monotonicity}
+        \end{equation}
 \end{definition}
 
-The first clause concerns refinement across inputs; the second concerns
-outputs admitted at one fixed input.  Neither implies the other.  This
-two-clause form isolates the distinct obligations, but an execution may already
-have exposed several outputs at different earlier inputs.  To continue without
-invalidating any of them, one future output must refine the whole finite family.
-The following equivalent form packages exactly that combined obligation and is
-the form used in the exposure analysis below.  A \emph{common input
-refinement} of inputs $i_1,\ldots,i_k$ is an input $j$ with $i_r\InputOrd j$
-for every $r$; it is \emph{legal} when $\fiber{j}\neq\varnothing$, which every
-input under discussion is by Definition~\ref{def:relational-specification}.
+\begin{proposition}[Lifted Monotonicity decomposes]
+\label{prop:lifted-monotonicity-decomposition}
+An ordered relational specification satisfies Lifted Monotonicity if and only
+if it satisfies Relational Monotonicity and Directed Outputs.
+\end{proposition}
 
-\begin{proposition}[Finite-family form]
-\label{prop:complete-calm-decomposition}
-An ordered relational specification is monotone if and only if, for every
-nonempty finite family of rows $(i_1,o_1),\ldots,(i_k,o_k)\in S$ and every
-common input refinement $j$ of $i_1,\ldots,i_k$, there is a $u\in\fiber{j}$
-such that
+\begin{proof}
+Assume Relational Monotonicity and Directed Outputs, and let $i\InputOrd j$ and
+$X\subseteq\fiber{i}$ be nonempty and finite.  Relational Monotonicity gives,
+for each $x\in X$, an $x'\in\fiber{j}$ with $x\OutputOrd x'$; Directed Outputs
+gives $u\in\fiber{j}$ refining every $x'$, hence every $x$.  So
+$\fiber{i}\JointOutputOrd\fiber{j}$.
+
+Conversely, assume Lifted Monotonicity.  Taking $j=i$,
+$\fiber{i}\JointOutputOrd\fiber{i}$ says that $\fiber{i}$ is directed.  Taking
+$X=\{o\}$ for $o\in\fiber{i}$ and $i\InputOrd j$ gives $u\in\fiber{j}$ with
+$o\OutputOrd u$, which is Relational Monotonicity.
+\end{proof}
+
+For singleton fibers Lifted Monotonicity is functional monotonicity,
+Equation~\ref{eq:functional-monotonicity}.  The exposure analysis below needs
+it in a form that speaks of several inputs at once: an execution may already
+have exposed outputs at different earlier inputs, and to continue without
+invalidating any of them, one future output must refine them all.
+
+\begin{proposition}[Complete CALM criterion]
+\label{prop:complete-calm-criterion}
+An ordered relational specification is monotone if and only if it satisfies the
+\emph{Complete CALM criterion}: for every nonempty finite family of rows
+$(i_r,o_r)\in S$, $r=1,\ldots,k$, and every common refinement $j$ of
+the $i_r$, there is a $u\in\fiber{j}$ such that
         \begin{equation}
   o_r\OutputOrd u
   \qquad\text{for every }r\in\{1,\ldots,k\}.
@@ -1300,29 +1416,24 @@ such that
 \end{proposition}
 
 \begin{proof}
-Assume the Complete CALM criterion.  Lifted Monotonicity gives, for each row,
-$o'_r\in\fiber{j}$ with $o_r\OutputOrd o'_r$.  Directed Outputs gives
-$u\in\fiber{j}$ refining every $o'_r$, and hence every $o_r$.
-
-Conversely, assume the finite-family condition.  To prove Lifted Monotonicity,
-fix arbitrary $i\InputOrd j$ and $o\in\fiber{i}$.  Apply the condition to the
-singleton family $(i,o)$ and its common input refinement $j$.  It yields
-$u\in\fiber{j}$ with $o\OutputOrd u$, exactly
-$\fiber{i}\LiftedOutputOrd\fiber{j}$.
-
-To prove Directed Outputs, fix arbitrary $i$ and a nonempty finite collection
-$o_1,\ldots,o_k\in\fiber{i}$.  Apply the condition to
-$(i,o_1),\ldots,(i,o_k)$ with common input refinement $j=i$.  It yields
-$u\in\fiber{i}$ refining every $o_r$.
+Assume Lifted Monotonicity.  For each $r$,
+$\fiber{i_r}\JointOutputOrd\fiber{j}$ gives $u_r\in\fiber{j}$ with
+$o_r\OutputOrd u_r$, and $\fiber{j}$ is directed by
+Proposition~\ref{prop:lifted-monotonicity-decomposition}, so some
+$u\in\fiber{j}$ refines every $u_r$.  Conversely, assume the criterion, and let
+$i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty and finite.  The family
+$\{(i,x):x\in X\}$ has common refinement $j$, so some $u\in\fiber{j}$
+refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
 
-The condition ranges over every common input refinement because the environment
-may determine which refinement occurs.  Finite families are required because
-pairwise compatibility need not imply compatibility of a larger family.
-Growth in $\InputOrd$ leads to extension in $\OutputOrd$: whatever was
-admissible on the parts remains jointly refinable on the whole.  The fibers of
-a monotone specification grow with the input the way the values of a monotone
-function do, widened to sets of mutually compatible alternatives.
+The criterion ranges over every common refinement because the
+environment may determine which refinement occurs.  Finite families are
+required because pairwise compatibility need not imply compatibility of a
+larger family.  Growth in $\InputOrd$ leads to extension in $\OutputOrd$:
+whatever was admissible on the parts remains jointly refinable on the whole.
+The fibers of a monotone specification grow with the input the way the values
+of a monotone function do, widened to sets of mutually compatible
+alternatives.
 
 \subsection{Commitments under output choice}
 \label{sec:residuals-commitment}
@@ -1381,7 +1492,7 @@ entailed by the residual and the exposure changes nothing
 (Proposition~\ref{prop:identity-exposure}).  A weaker
 condition suffices for an exposure to be honest: that nothing remaining possible
 \emph{contradicts} $o$, in the sense that every remaining possibility shares an
-admitted refinement with it.  A participant that exposes such an $o$ undertakes
+admitted refinement with it.  A system that exposes such an $o$ undertakes
 to refine it, and it can always keep that undertaking, whatever else remains,
 because the undertaking excludes nothing that could not still be reached.
 Keeping the promise means restricting the residual at $i$ and its refinements
@@ -1448,10 +1559,11 @@ Selecting \texttt{server1} removes \texttt{server2} with no retained common
 refinement, so that removal is a content-destroying commitment.
 
 \paragraph{Runs and schedules.}
-A \emph{run} of a participant is a finite sequence of transitions from a
-canonical initial state: input events supplied by the environment,
-interleaved with the participant's own exposure events and commitments.  Its
-\emph{schedule} is the sequence of inputs the environment supplies.  Two
+A \emph{participant} is a holder of a residual state that changes only by its
+own transitions: input events supplied by its environment, and the exposures
+and commitments it makes.  A run (Definition~\ref{def:loquacious}) is thus a
+participant's history, and its \emph{schedule} is the sequence of inputs the
+environment supplies.  Two
 schedules are \emph{input-equivalent} when they end at the same input; they may
 differ in the intermediate inputs they pass through, which under a change
 presentation means in the order and grouping of arrivals and in repeated
@@ -1506,8 +1618,8 @@ The proposition is what licenses the definitions below to speak of residuals
 rather than executions.  Everything the specification cares about in a Lamport
 diagram survives in its cut's residuals; message order, batching, and who has
 learned what are forgotten exactly when they do not advance anyone's input.
-Run insensitivity and reconciliation on merge, stated next over residuals, are
-therefore statements about executions.
+Consistency, stated next over residuals, is therefore a statement about
+executions.
 
 Read in the other direction, the proposition is a design criterion.  Choosing
 the input domain and its order decides which histories the semantics treats as
@@ -1532,63 +1644,22 @@ result for a vote-counting machine whose state is the set of ballots received.
 In the rest of this section, \emph{reachable} means reachable from a canonical
 initial state by input events and exposure events alone, with no commitment.
 
-\paragraph{Coordination-freedom.}
-The CAP intuition has two halves.  Availability: a replica can answer from the
-input it has, without waiting to learn what other replicas have received or
-exposed.  Consistency: answers given independently reconcile when the
-replicas' inputs are combined.  Both must hold whatever the arrival order.  The
-definition below states the three resulting conditions, each as a property of
-residual states.
-
-\begin{definition}[Coordination-free specification]
-\label{def:coordination-free}
-An ordered relational specification is \emph{coordination-free} when the
-following hold.
-\begin{enumerate}
-  \item \emph{Exposure at will.}  At every reachable state, every output
-        admitted at a current input is exposable there
-        (Definition~\ref{def:transition-system}).
-  \item \emph{Reconciliation on merge.}  Whenever participants hold reachable
-        states $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a legal common
-        refinement of their current inputs $i_1,\ldots,i_k$, some row at $j$
-        survives in every state:
-        \begin{equation}
-          \bigcap_{r=1}^{k}R_r(j)\neq\varnothing.
-          \label{eq:reconciliation}
-        \end{equation}
-  \item \emph{Run insensitivity.}  For finitely many runs of one participant
-        under input-equivalent schedules, each exposing as it pleases and none
-        committing, every scheduled input event is defined, and at the shared
-        final input $a$ some row survives in every run.
-\end{enumerate}
-\end{definition}
-
-Condition~1 is the availability half: a participant may expose any admissible
-output at its current input, and the exposure is entirely its own to make.
-Condition~2 is the consistency half: whatever separate participants exposed on
-their separate inputs, there remains an admissible output at every legal
-combination of those inputs that refines all of their exposures, so that merging
-the participants neither empties a fiber nor forbids the combined input.
-Condition~3 restates the second for a single participant that could have seen
-its inputs in another order, grouped differently, or with repeats; it makes the
-outcome a property of the inputs rather than of the schedule.  None of the
-three requires that participants expose the \emph{same} output.  They require
-that whatever was exposed can stand together.  The definition is semantic: it
-describes no protocol and promises no delivery, liveness, or termination
-detection.
+\paragraph{Complete CALM.}
+Consistency (Definition~\ref{def:consistency}) was stated for any
+specification.  For a relational one, both of its conditions have content:
+condition~1 because a loquacious schedule may expose any of several admitted
+outputs, and condition~2 because different runs may have exposed different
+ones.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-For an ordered relational specification $\Spec$, the following are equivalent:
-\begin{enumerate}
-  \item $\Spec$ is coordination-free;
-  \item $\Spec$ satisfies exposure at will;
-  \item $\Spec$ satisfies the Complete CALM criterion.
-\end{enumerate}
+An ordered relational specification is consistent if and only if
+it satisfies Lifted Monotonicity:
+$i\InputOrd j$ implies $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{theorem}
 
 \begin{proof}
-(3$\Rightarrow$1.)  We first establish a claim: at every reachable state
+Assume Lifted Monotonicity.  We establish a claim: at every reachable state
 $(i,R)$ and every valid $j$ with $i\InputOrd j$, the
 residual fiber $R(j)$ is a nonempty \emph{upper} subset of $\fiber{j}$---closed
 under taking refinements within $\fiber{j}$---that contains a common refinement
@@ -1597,62 +1668,66 @@ arise from a canonical initial state, whose fibers are whole fibers of $S$, by
 input events, which leave surviving fibers unchanged, and by exposure events,
 which retain exactly the outputs above an exposed value.  An intersection of
 upper sets is upper, so $R(j)$ is upper in $\fiber{j}$.  It is nonempty because
-$j$ is valid.  Given $o$ and $x$, the finite-family form applied to
-$(i,o),(j,x)$ with common refinement $j$ gives $u\in\fiber{j}$ above both, and
+$j$ is valid.  Given $o$ and $x$, Proposition~\ref{prop:complete-calm-criterion}
+applied to $(i,o),(j,x)$ with common refinement $j$ gives $u\in\fiber{j}$ above both, and
 upperness puts $u$ in $R(j)$.
 
-\emph{Exposure at will} is the claim read with $j$ and $x$ ranging over the
-possibilities at $i$.
+\emph{Condition~1.}  The claim, read with $j$ and $x$ ranging over the
+possibilities at $i$, says that every $o\in R(i)$ is exposable at every
+reachable state; so every exposure a loquacious schedule calls for is defined,
+and every input event it calls for is defined because no exposure empties a
+fiber at a valid input.
 
-\emph{Reconciliation on merge.}  Let $j$ be a legal common refinement of the
-current inputs $i_1,\ldots,i_k$.  The input $j$ is valid in every $(i_r,R_r)$:
-it had a row initially, it refines $i_r$ and so was never retired by an
-input event, and by Proposition~\ref{prop:exposure-narrowing} no exposure sealed
-it off.  Each participant $r$ has removed rows only at $i_r$ and its refinements,
-and $i_r\InputOrd j$, so $R_r(j)$ is a nonempty upper subset of $\fiber{j}$.
-Choose $x_r\in R_r(j)$ for each $r$.  The finite-family form for
+\emph{Condition~2.}  Let $j$ be a common refinement of the final inputs
+$i_1,\ldots,i_k$.  The input $j$ is valid in every $(i_r,R_r)$: it had a row
+initially, it refines $i_r$ and so was never retired by an input event, and by
+Proposition~\ref{prop:exposure-narrowing} no exposure sealed it off.  Each run
+$r$ has removed rows only at $i_r$ and its refinements, and $i_r\InputOrd j$,
+so $R_r(j)$ is a nonempty upper subset of $\fiber{j}$.  Choose $x_r\in R_r(j)$
+for each $r$.  Proposition~\ref{prop:complete-calm-criterion} for
 $(j,x_1),\ldots,(j,x_k)$ supplies $u\in\fiber{j}$ above every $x_r$, and
 upperness places $u$ in every $R_r(j)$.  Hence the intersection is nonempty.
 
-\emph{Run insensitivity.}  Each scheduled input event is defined because no exposure
-empties a fiber at a valid input.  Runs under input-equivalent schedules end
-at the same input $a$, which is a common refinement of the inputs at which any
-run exposed, so the reconciliation argument applies with the runs in place of
-the participants.
-
-(1$\Rightarrow$2) holds by definition.
-
-(2$\Rightarrow$3.)  By Proposition~\ref{prop:complete-calm-decomposition} it
-suffices to prove Lifted Monotonicity and Directed Outputs.  \emph{Lifted
-Monotonicity.}  Let $i\InputOrd j$
-and $o\in\fiber{i}$.  In the canonical initial state $\sigma_0(i)$, the
-input $j$ is valid and $\fiber{j}$ is nonempty; exposure at will makes $o$
-exposable, so any $x\in\fiber{j}$ has a common refinement with $o$ in
-$\fiber{j}$, which in particular lies above $o$.  \emph{Directed Outputs.}
-Suppose
+Conversely, assume consistency.  By
+Proposition~\ref{prop:lifted-monotonicity-decomposition} it suffices to prove
+Relational Monotonicity and Directed Outputs.
+\emph{Relational Monotonicity.}  Let $i\InputOrd j$
+and $o\in\fiber{i}$.  A loquacious schedule that holds $i$ and exposes $o$
+first has a defined run, so $o$ is exposable at $\sigma_0(i)$; the input $j$ is
+valid there and $\fiber{j}$ is nonempty, so any $x\in\fiber{j}$ has a common
+refinement with $o$ in $\fiber{j}$, which in particular lies above $o$.
+\emph{Directed Outputs.}  Suppose
 some finite $X\subseteq\fiber{i}$ has no admitted common refinement, and choose
 such an $X=\{x_1,\ldots,x_n\}$ of least size.  If $n=1$ then $x_1$ itself is a
 refinement; so $n\geq2$.  If $n=2$, then $x_1$ is not exposable at
 $\sigma_0(i)$, since $x_2$ is a possibility at $i$ sharing no admitted
-refinement with it.  If $n\geq3$, a participant holding $i$ exposes
-$x_1,\ldots,x_{n-2}$ in turn; each is exposable by hypothesis, and the
-resulting state is reachable with residual fiber at $i$ the set of outputs
+refinement with it.  If $n\geq3$, a loquacious schedule holding $i$ exposes
+$x_1,\ldots,x_{n-2}$ in turn; each is exposable by condition~1, and the
+resulting state has residual fiber at $i$ the set of outputs
 above all of $x_1,\ldots,x_{n-2}$.  By minimality of $X$ this fiber contains a
 common refinement $w'$ of $x_1,\ldots,x_{n-1}$ and a common refinement $w''$
 of $x_1,\ldots,x_{n-2},x_n$.  A common refinement of $w'$ and $w''$ would
 refine all of $X$, so none is admitted, and $w'$ is not exposable in that
-state.  In every case exposure at will fails.
+state.  In every case some loquacious schedule has no defined run.
 \end{proof}
 
 The theorem is direct from the definitions.  Its content is the
-identification: the one semantic obstruction to exposing at will, to
-reconciliation on merge, and to schedule independence is a finite family of
-admissible rows with no admitted common refinement at a common input
-refinement.  When none exists, replicas may expose what they have, in whatever
-order it arrives, and remain reconcilable, though what they exposed may
-differ.  When such a family exists, some admissible output cannot be exposed
-without excluding another outright, that is, without a commitment.  Computing
-a common refinement and guaranteeing termination remain protocol questions.
+identification: the one semantic obstruction to consistency is a finite family
+of admissible rows with no admitted common refinement at a common input
+refinement.  When none exists, participants may expose what they have, in
+whatever order it arrives, and remain reconcilable, though what they exposed
+may differ.  When such a family exists, some admissible output cannot be
+exposed without excluding another outright, that is, without a commitment.
+Computing a common refinement and guaranteeing termination remain protocol
+questions.
+
+A consistent specification therefore needs no coordination: every
+loquacious run is made of input events and exposures alone, and the next
+subsection shows that only commitments require agreement among participants
+(Definition~\ref{def:coordination}).
+Historically the C in CALM has been read as consistency and as confluence;
+Definition~\ref{def:consistency} is both, and the theorem says it is Lifted
+Monotonicity.
 
 Why did earlier CALM results not state Directed Outputs separately?  Their
 semantic query specification is functional: each input $J$ has one result
@@ -1724,10 +1799,12 @@ information from crossing between groups until the partition heals.  During the
 partition each participant continues to receive input from its own
 environment.  \emph{Availability} asks that a participant be able to expose an
 admissible output at the input it holds without waiting for anything from
-across the cut.  \emph{Consistency} asks that the exposures made on different
+across the cut.  \emph{Reconciliation} asks that the exposures made on different
 sides remain jointly refinable when the partition heals and the inputs are
 combined.  \emph{Partition tolerance} asks for both under every partition and
-every schedule of arrivals on each side.  The classical CAP theorem is a
+every schedule of arrivals on each side.  Consistency in the sense of
+Definition~\ref{def:consistency} is availability and reconciliation under
+every partition at once.  The classical CAP theorem is a
 one-way impossibility: a linearizable register cannot remain available through
 arbitrary partitions~\cite{gilbert2002cap}.  Complete CALM turns it into a
 dichotomy.
@@ -1738,34 +1815,32 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{enumerate}
   \item under every partition and every schedule of inputs on each side, every
         participant may expose any admissible output at its current input
-        (\emph{availability}), and for every legal common refinement $j$ of the
+        (\emph{availability}), and for every common refinement $j$ of the
         current inputs on the two sides, some row at $j$ survives in every
-        participant's state (\emph{consistency});
+        participant's state (\emph{reconciliation});
   \item $\Spec$ is monotone.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-Condition~1 asks for exposure at will, reconciliation on merge, and run
-insensitivity, restricted to the participants and schedules that a partition
-can produce.  Every finite family of participants and every finite set of
-input-equivalent schedules can be so produced: place the participants on
-either side of a cut and let each side's environment deliver its inputs in the
-chosen order.  Condition~1 is therefore the conjunction of the three conditions
-of Definition~\ref{def:coordination-free}, and Theorem~\ref{thm:complete-calm}
-makes it equivalent to monotonicity.
+Condition~1 asks for the two conditions of Definition~\ref{def:consistency},
+restricted to the participants and schedules that a partition can produce.
+Every finite family of loquacious runs can be so produced: place the
+participants on either side of a cut and let each side's environment deliver
+its inputs in the chosen order.  Condition~1 is therefore consistency, and
+Theorem~\ref{thm:complete-calm} makes it equivalent to monotonicity.
 \end{proof}
 
-Here consistency means refinement consistency: exposures on different sides of
-the partition are jointly refinable under $\OutputOrd$, not identical or
-totally ordered.  This is weaker than linearizability and is what makes the
-characterization bidirectional.  Monotone specifications retain availability
-and refinement consistency under partition.  Non-monotone ones must surrender
-one, and the theorem identifies the family of rows responsible: a participant
-that would select one of its members must commit, and by
+Reconciliation is refinement under $\OutputOrd$: exposures on different sides
+of the partition are jointly refinable, not identical or totally ordered.  This
+is weaker than linearizability and is what makes the characterization
+bidirectional.  Monotone specifications retain availability and reconciliation
+under partition.  Non-monotone ones must surrender one, and the theorem
+identifies the family of rows responsible: a participant that would select one
+of its members must commit, and by
 Theorem~\ref{thm:commitments-require-coordination} it must either wait to agree
 with the other side, giving up availability, or commit alone and risk an
-unreconcilable merge, giving up consistency.
+unreconcilable merge, giving up reconciliation.
 
 Theorem~\ref{thm:complete-cap} quantifies over all participants and inputs.
 Whether a commitment is necessary is a semantic question; whether it requires
@@ -1792,14 +1867,14 @@ its participant's $\Delta_p$, with at least two components represented.
 \begin{definition}[Monotone across partitions]
 \label{def:monotone-across-partitions}
 Relative to a deployment, $\Spec$ is \emph{monotone across $\Pi$} when every
-family separable under $\Pi$, together with every common input refinement $j$
+family separable under $\Pi$, together with every common refinement $j$
 of its inputs, has an admitted common refinement in $\fiber{j}$.  It is
 \emph{monotone across partitions} when it is monotone across every partition of
 $P$.
 \end{definition}
 
-This is the finite-family form restricted to the families a partition can
-separate.  Monotonicity implies monotonicity across partitions, since separable
+This is the Complete CALM criterion
+(Proposition~\ref{prop:complete-calm-criterion}) restricted to the families a partition can separate.  Monotonicity implies monotonicity across partitions, since separable
 families are families.  The converse fails whenever every incompatible family
 lies within one participant's $\Delta_p$.  Two mutually exclusive choices owned
 by one participant do not become separable merely because another component
@@ -1813,10 +1888,10 @@ Fix a deployment.  The following are equivalent.
         component: participants in one component may coordinate with one
         another, but each component selects outputs at the rows its
         participants hold without waiting for information from any other
-        component (\emph{availability}); and for every legal common refinement
+        component (\emph{availability}); and for every common refinement
         $j$ of the current inputs held in different components, some row at
         $j$ survives in every participant's state, so that the components'
-        selections reconcile when the partition heals (\emph{consistency}).
+        selections reconcile when the partition heals (\emph{reconciliation}).
   \item $\Spec$ is monotone across partitions.
 \end{enumerate}
 \end{theorem}
@@ -1827,7 +1902,7 @@ may be resolved by coordination within that component, which the partition does
 not block.  The families that must reconcile without communication are the
 separable ones.  Consider participants in at least two components, each having
 made finitely many selections at its current input or its refinements, and a
-legal common refinement $j$ of those inputs.  The family of all their
+common refinement $j$ of those inputs.  The family of all their
 selections is separable, so monotonicity across $\Pi$ supplies $u\in\fiber{j}$
 above every selected output.  Each participant's residual at $j$ is
 $\fiber{j}$ intersected with the outputs above its own selections, and $u$
@@ -1987,8 +2062,7 @@ A client observation replaces the identity output with a new semantic promise.
 \begin{proposition}[CRDT observation criterion]
 \label{prop:crdt-observation}
 Let $q:(D,\sqsubseteq)\to(R,\preceq_R)$ be a deterministic observation.  Under
-the payload model above, the client-visible interface $F=q\circ s$ permits
-incremental exposure without sealing exactly when
+the payload model above, the client-visible interface $F=q\circ s$ is consistent exactly when
         \begin{equation}
   U\subseteq V \quad\Longrightarrow\quad q(s(U))\preceq_R q(s(V)).
   \label{eq:crdt-query-monotonicity}
@@ -2140,7 +2214,7 @@ states with identical effects if necessary to obtain a partial order).
 
 Invariant confluence asks whether independently reachable valid states merge to
 a valid state~\cite{bailis2014coordination}.  Under the assumptions above,
-individual transaction preservation supplies Lifted Monotonicity, while
+individual transaction preservation supplies Relational Monotonicity, while
 invariant confluence supplies common refinements for independently reached
 states at the combined transaction input.  Associativity and reachability let
 the pairwise merge argument extend inductively to finite families.  Thus the
@@ -2167,7 +2241,7 @@ lessons and scope limits.
 \subsection{Input arrival versus output choice}
 
 Functional CALM and Complete CALM separate two reasons a commitment may be necessary.
-A failure of Lifted Monotonicity means that more input can invalidate an
+A failure of Relational Monotonicity means that more input can invalidate an
 exposed output.
 The system must exclude the incompatible future inputs through input-sealing
 commitments from its basis before that output is exposable.  A failure of
@@ -2306,14 +2380,14 @@ $S\subseteq I\times O$.  Write its original fiber as
   \label{eq:hull-original-fiber}
         \end{equation}
 The transformation replaces the output carrier $O$ by $\mathcal P(O)$,
-compared under the lifted preorder of Equation~\ref{eq:lifted-output-order}.
+compared under the pointwise lift of Equation~\ref{eq:lifted-output-order}.
 Its unpruned output is
         \begin{equation}
   X^\uparrow(i)=\bigcup_{j\InputOrd i}X(j).
   \label{eq:monotone-hull}
         \end{equation}
 Equivalently, each original row $(j,o)$ contributes $o$ to the transformed row
-at every $i\succeq_I j$.  Literal union remembers all rows; the lifted preorder
+at every $i\succeq_I j$.  Literal union remembers all rows; the pointwise lift
 captures their semantic coverage.  In particular, one retained output may cover
 many remembered rows by refining them.
 
@@ -2390,8 +2464,7 @@ can violate them.
 \label{prop:persistent-forwarding}
 If the three obligations hold, then $h\InputOrd h'$ implies
 $R(h)\subseteq R(h')$.  Positive forward-reachability claims are therefore
-monotone, and Functional CALM permits their incremental exposure without
-sealing.
+monotone, and by Functional CALM the specification is consistent.
 \end{proposition}
 
 \begin{proof}
@@ -2615,8 +2688,8 @@ $\{p_r\mapsto v_r\}$ is admissible.  The union of all proposal inputs is a commo
 input refinement.  Each local decision can continue there by itself, and any
 family of at most $k$ distinct decisions can coexist.  The family of all $k+1$
 cannot: every common refinement would preserve $k+1$ values and violate the
-specification.  This is exactly the obstruction detected by Complete CALM's
-finite-family form.  If a partition lets the owners decide independently, the
+specification.  This is exactly the obstruction detected by Lifted
+Monotonicity.  If a partition lets the owners decide independently, the
 same family witnesses the negative side of Complete CAP.  Consensus is the
 special case $k=1$.
 
@@ -2639,8 +2712,8 @@ ordered by map extension.
 Now start two processes independently.  At input $\{p\}$, tightness forces the
 only name $p\mapsto1$; at input $\{q\}$ it likewise forces $q\mapsto1$.  The
 combined input $\{p,q\}$ refines both singleton inputs.  Either assignment can
-continue alone by giving the other process name 2, so Lifted Monotonicity is
-not the problem.  They cannot continue together: an injective map cannot
+continue alone by giving the other process name 2, so Relational Monotonicity
+is not the problem.  They cannot continue together: an injective map cannot
 preserve both assignments to name 1.  Complete CALM fails on this two-row family,
 and a deployment that places $p$ and $q$ in different components gives the
 corresponding Complete CAP obstruction.
