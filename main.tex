@@ -58,18 +58,21 @@ all of them: a specification is a table of admissible input--output pairs with
 ordered columns, and the state of a computation is the \emph{residual} of that
 table, the rows still admissible.  Residuals are provably the semantic
 quotient of Lamport histories.  \emph{Functional CALM} generalizes the
-classical theorem from Datalog to functions between arbitrary partially
-ordered input and output domains: monotonicity characterizes exactly when
-output can be exposed consistently as distributed input arrives.
-\emph{Complete CALM} extends it to specifications that admit several outputs
+original CALM Theorem, replacing Datalog queries with arbitrary functions
+between partially ordered input and output domains: monotonicity
+characterizes exactly when output can be exposed consistently as distributed
+input arrives.
+\emph{Complete CALM} extends this to \emph{ambiguous} specifications that admit several outputs
 for one input, as leader election and transaction ordering do.  Such a
-specification is consistent exactly when it satisfies \emph{Lifted
-Monotonicity}, monotonicity under an order lifted from outputs to sets of
+specification is consistent, in a sense we make precise, exactly when it
+satisfies \emph{Lifted Monotonicity}, monotonicity under an order lifted from outputs to sets of
 outputs; where it fails, progress requires a \emph{commitment}, and only
 commitments require coordination.  Complete CALM yields a Complete CAP
 Theorem that extends classical CAP from a one-way impossibility about
 linearizability to a dichotomy parameterized by the declared specification
-and the deployment.
+and the deployment.  The remaining sections place CRDTs, Highly Available
+Transactions, invariant confluence, and classical distributed  agreement problems in this
+framework as instances of the two theorems.
 \end{abstract}
 
 \begin{CCSXML}
@@ -156,7 +159,7 @@ means only that each semantic input has one specified output; execution may
 be as nondeterministic as it likes.
 
 Our second step addresses a case those interfaces do not expose: the semantic
-specification itself may be \emph{ambiguous}, not informal but formally
+specification itself may be \emph{ambiguous}---formally
 allowing several distinguishable outputs for one input.  Leader election may
 allow any participant to be eligible; a database may permit several serial
 schedules.  The specification is then a relation \(S\subseteq I\times O\)
@@ -173,8 +176,8 @@ admitted at one input can coexist.  Where it fails, progress must rule out an
 alternative, a step we call a \emph{commitment}
 (Definition~\ref{def:transition-system}), and participants who could commit
 incompatibly must coordinate first.  Complete CALM shows that Lifted
-Monotonicity is equivalent to consistency: whatever participants expose, in
-whatever order input arrives, one admitted outcome refines all of it
+Monotonicity is a clean definition for consistency: whatever participants expose, in
+whatever order input arrives, some admitted outcome can always refine all of it
 (\S\ref{sec:safe-exposure}).
 
 Complete CALM also yields a Complete CAP Theorem
@@ -188,8 +191,8 @@ This paper makes four contributions:
 \begin{enumerate}
   \item A semantic framework for distributed computation: specifications as
         relations with ordered inputs and outputs, \emph{residual states}
-        recording what remains admissible, and three transitions, input events,
-        exposures, and \emph{commitments}.  Residuals are provably the semantic
+        recording what remains admissible, and three transitions: input events,
+        output exposures, and \emph{commitments}.  Residuals are provably the semantic
         quotient of Lamport histories, and Section~\ref{sec:instances} shows
         that CRDTs, highly available transactions, and invariant confluence are
         instances of the framework.
@@ -197,18 +200,19 @@ This paper makes four contributions:
         arbitrary functions, represented as semantic input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to semantic output choice, formalizes
-        exposure and commitment, and proves that Lifted Monotonicity is
-        equivalent to consistency.  Consistent specifications need no
+        exposure and commitment, defines consistency as confluence over runs
+        of the framework, and proves that Lifted Monotonicity characterizes
+        it.  Consistent specifications need no
         coordination; commitments are shown to require it.  In partition form
         this is the Complete CAP Theorem,
         which extends the classical impossibility to a bidirectional dichotomy
         parameterized by the declared consistency specification and the
         deployment.
-  \item Two coordination-free frontier theorems characterize how far an
-        interface can be strengthened without requiring coordination.  The first
-        identifies exactly which earlier outputs a monotone interface must
-        preserve; the second shows when adding constraints across independently
-        acting participants necessarily creates a CAP tradeoff.
+  \item Two frontier theorems (Appendix~\ref{sec:frontiers}) characterize how
+        far an interface can be strengthened before coordination becomes
+        unavoidable: which earlier outputs a monotone interface must preserve,
+        and when constraints across independently acting participants create a
+        CAP tradeoff.
 \end{enumerate}
 
 Section~\ref{sec:functional-calm} introduces the framework on an election
@@ -216,9 +220,10 @@ and develops Functional CALM.  Section~\ref{sec:complete-calm} introduces
 semantic choice on two further examples and develops commitment, Complete
 CALM, and Complete CAP.  Section~\ref{sec:instances} applies the
 results to familiar systems, and Section~\ref{sec:discussion} draws out the
-design lessons and scope limits.  Section~\ref{sec:frontiers} then derives
-maximal coordination-free interfaces.  Appendix~\ref{app:additional-applications}
-gives further classical applications.
+design lessons and scope limits.  Appendix~\ref{sec:frontiers} derives
+maximal coordination-free interfaces, and
+Appendix~\ref{app:additional-applications} gives further classical
+applications.
 
 \section{Functional CALM}
 \label{sec:functional-calm}
@@ -498,8 +503,8 @@ so never counts as determination.
 
 \paragraph{Consistency.}
 Both CALM theorems have the same shape: a monotonicity condition on the
-specification is equivalent to what the CALM literature calls consistency, or
-confluence.  Consider a run of the system that exposes at every input it
+specification is equivalent to a precise form of what the CALM literature
+calls consistency, or confluence.  Consider a run of the system that exposes at every input it
 holds: at each current input it exposes some output admitted there, and it
 makes no commitment.  The specification is \emph{consistent} when every such
 run can expose whichever admitted outputs it chooses, each exposure retiring
@@ -2305,6 +2310,69 @@ refinement.  The availability premise of the Complete CAP Theorem excludes an
 implementation that never responds, but a full protocol result must still
 state appropriate fairness, failure, and cost assumptions.
 
+\section{Related Work}
+\label{sec:related}
+
+The CALM conjecture connected logical monotonicity with coordination freedom
+~\cite{hellerstein2010declarative,hellerstein2020keeping}.  Ameloot et al.
+established the theorem using relational transducers and studied how data
+placement and system knowledge change coordination requirements
+~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM generalizes the
+semantic order-preservation result; Complete CALM adds semantic output choice and the
+effect of coordination on that choice.
+
+Brewer's conjecture and the Gilbert--Lynch theorem focus attention on
+availability during partitions~\cite{brewer2000towards,gilbert2002cap}.
+The Complete CAP Theorem applies Complete CALM to choices that deployments
+and partitions can separate.  It extends the classical impossibility to both
+sides of the specification-level dichotomy: the total-order register recovers
+the negative result, while the common-refinement condition supplies the
+positive result.  Local choices controlled by one participant do not require
+cross-partition agreement.
+
+CRDTs derive strong eventual consistency from carefully designed state or
+operation algebras~\cite{shapiro2011crdt}.  Keep CALM and CRDT On argued that
+these algebraic guarantees stop at the query boundary and proposed monotonicity
+as the criterion for safe coordination-free observations~\cite{laddad2022keep}.
+Functional CALM formalizes that semantic criterion for arbitrary ordered result
+domains, while Complete CALM additionally handles nondeterministic observations.
+The distinction from CRDT merge is between a uniform least merge and the weaker
+existence of some admitted common refinement.  Work on consistency semantics likewise distinguishes visibility,
+ordering, availability, and convergence
+~\cite{burckhardt2014principles,mahajan2011consistency}.
+
+HATs classify transactional guarantees realizable without cross-partition
+coordination under stated client and failure assumptions~\cite{bailis2013hat}.
+Invariant confluence characterizes when independently valid transactional
+states preserve an application invariant on merge
+~\cite{bailis2014coordination}.  Complete CALM exposes their common-refinement structure
+while preserving their different output domains.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+A semantic specification abstracts distribution away.  Functional CALM asks when
+a functional specification can be implemented over distributed input arrival
+without coordination: monotonicity means no seal is needed.  This generalizes the
+classic result from logical fact sets to arbitrary input and output refinement
+orders.
+
+Complete CALM extends the model to specifications that offer several outputs for one
+input.  Modeling exposure and commitment reveals Directed Outputs as the
+additional requirement for a coordination-free specification.
+When directedness fails, some admissible alternative must be removed by a
+commitment.  If different participants can make incompatible commitments,
+coordination determines which alternative survives.
+
+The Complete CAP Theorem is the partition form of the same equivalence.  It recovers the
+classical impossibility when a cut separates incompatible choices and supplies
+the positive side when all separated choices have common refinements.  A cut
+may prevent agreement on input sealing or separate participants empowered to
+make incompatible output choices.  Query monotonicity, CRDT merge,
+transactional availability, and invariant confluence then become directly comparable without being identified
+with one another.
+
+\appendix
 \section{Coordination-Free Frontiers}
 \label{sec:frontiers}
 
@@ -2578,69 +2646,6 @@ The theorem does not rank every consistency model.  It identifies the exact
 cost of adding cross-participant constraints while promising to preserve all
 local behavior.
 
-\section{Related Work}
-\label{sec:related}
-
-The CALM conjecture connected logical monotonicity with coordination freedom
-~\cite{hellerstein2010declarative,hellerstein2020keeping}.  Ameloot et al.
-established the theorem using relational transducers and studied how data
-placement and system knowledge change coordination requirements
-~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM generalizes the
-semantic order-preservation result; Complete CALM adds semantic output choice and the
-effect of coordination on that choice.
-
-Brewer's conjecture and the Gilbert--Lynch theorem focus attention on
-availability during partitions~\cite{brewer2000towards,gilbert2002cap}.
-The Complete CAP Theorem applies Complete CALM to choices that deployments
-and partitions can separate.  It extends the classical impossibility to both
-sides of the specification-level dichotomy: the total-order register recovers
-the negative result, while the common-refinement condition supplies the
-positive result.  Local choices controlled by one participant do not require
-cross-partition agreement.
-
-CRDTs derive strong eventual consistency from carefully designed state or
-operation algebras~\cite{shapiro2011crdt}.  Keep CALM and CRDT On argued that
-these algebraic guarantees stop at the query boundary and proposed monotonicity
-as the criterion for safe coordination-free observations~\cite{laddad2022keep}.
-Functional CALM formalizes that semantic criterion for arbitrary ordered result
-domains, while Complete CALM additionally handles nondeterministic observations.
-The distinction from CRDT merge is between a uniform least merge and the weaker
-existence of some admitted common refinement.  Work on consistency semantics likewise distinguishes visibility,
-ordering, availability, and convergence
-~\cite{burckhardt2014principles,mahajan2011consistency}.
-
-HATs classify transactional guarantees realizable without cross-partition
-coordination under stated client and failure assumptions~\cite{bailis2013hat}.
-Invariant confluence characterizes when independently valid transactional
-states preserve an application invariant on merge
-~\cite{bailis2014coordination}.  Complete CALM exposes their common-refinement structure
-while preserving their different output domains.
-
-\section{Conclusion}
-\label{sec:conclusion}
-
-A semantic specification abstracts distribution away.  Functional CALM asks when
-a functional specification can be implemented over distributed input arrival
-without coordination: monotonicity means no seal is needed.  This generalizes the
-classic result from logical fact sets to arbitrary input and output refinement
-orders.
-
-Complete CALM extends the model to specifications that offer several outputs for one
-input.  Modeling exposure and commitment reveals Directed Outputs as the
-additional requirement for a coordination-free specification.
-When directedness fails, some admissible alternative must be removed by a
-commitment.  If different participants can make incompatible commitments,
-coordination determines which alternative survives.
-
-The Complete CAP Theorem is the partition form of the same equivalence.  It recovers the
-classical impossibility when a cut separates incompatible choices and supplies
-the positive side when all separated choices have common refinements.  A cut
-may prevent agreement on input sealing or separate participants empowered to
-make incompatible output choices.  Query monotonicity, CRDT merge,
-transactional availability, and invariant confluence then become directly comparable without being identified
-with one another.
-
-\appendix
 \section{Additional Applications}
 \label{app:additional-applications}
 
