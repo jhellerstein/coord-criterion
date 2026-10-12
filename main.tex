@@ -267,6 +267,16 @@ proofs, but every notion the Functional CALM theorem rests on---residual
 states, input events, retirement, commitments, upper fibers, determination,
 exposure, runs, and consistency---is exercised on the example.
 
+Two mathematical objects are in play.  The first is a \emph{semantic
+specification} $\Spec=(I,\InputOrd,O,\OutputOrd,S)$: a table
+$S\subseteq I\times O$ of admissible input--output pairs, with a partial order
+on each column.  The specification stands alone, and the theorems are about
+it.  The second is needed to model many systems faithfully: a
+\emph{commitment basis} $\Phi=\{p_1,p_2,\ldots\}$ of partial functions on
+the states defined below, the irrevocable acts the system is permitted to
+take on its own authority.  The election introduces the specification first
+and reaches the basis when the registrar closes the polls.
+
 \begin{figure*}[t]
   \centering
   \small
@@ -342,15 +352,13 @@ exposure, runs, and consistency---is exercised on the example.
 \end{figure*}
 
 \paragraph{A specification is a table.}
-Three design decisions capture a system's semantics: a table of
-input--output pairs, listing the outputs admissible for each input; a partial
-order on each column; and the set of irrevocable acts the system may take on
-its own authority, its \emph{commitment basis}.  We take them in turn.  When
-the input column of the table determines the output column, as for squaring
-with rows $(2,4)$, $(3,9)$, $(4,16),\ldots$, the specification is
-\emph{functional}.  Everything that follows is a matter of removing rows from
-a specification, and for now ``the system'' is a single actor; who does what
-in a distributed implementation comes in Section~\ref{sec:complete-calm}.
+A specification is a table of input--output pairs, listing the outputs
+admissible for each input; when the input column determines the output
+column, as for squaring with rows $(2,4)$, $(3,9)$, $(4,16),\ldots$, the
+specification is \emph{functional}.  Everything that follows is a matter of
+removing rows from a specification, and for now ``the system'' is a single
+actor; who does what in a distributed implementation comes in
+Section~\ref{sec:complete-calm}.
 
 Figure~\ref{fig:election-frames}(a) is the specification of a small election.
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
@@ -364,7 +372,7 @@ $a$ the result is $a$; row $abb$ says that if $v_2$ and $v_3$ both vote $b$ the
 result is $b$.
 
 The rows are only part of the specification.  Each column also carries a
-partial order, the second design decision.  The \emph{input order}
+partial order, and both orders are design decisions.  The \emph{input order}
 says what counts as more input: here, more ballots, so $ab\cdot$ \emph{refines}
 $a\cdot\cdot$, while $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output
 order} says when a later output keeps every promise an earlier one made: here
@@ -419,11 +427,12 @@ at $aba$ and $abb$ are removed although no ballot arrived and the current
 input has not changed: those inputs have been rendered invalid.  This is a
 \emph{commitment}, specifically an \emph{input-sealing commitment}, and it is
 an act of the system rather than of the environment.  It
-irrevocably disallows refinements the original specification admitted.  Only
-the system may perform it, and only if it is in the commitment basis, the
-third design decision: closing the polls is an authority the election's
-designer gave the registrar, and a different design could withhold it.
-Afterward no refinement of
+irrevocably disallows refinements the original specification admitted.
+Nothing in the specification says whether the registrar may do this.  That is
+the second object: a faithful model of an election whose polls can close
+includes, alongside $\Spec$, a commitment basis $\Phi$ containing this act,
+and a model of one whose polls cannot close omits it.  Only the system may
+perform a commitment, and only one in $\Phi$.  Afterward no refinement of
 $ab\cdot$ remains valid, and its upper fiber has collapsed to $\{\bot\}$, so
 it too is determined.
 For a functional specification, input-sealing commitments are the only kind
