@@ -250,7 +250,7 @@ Terms introduced in italics are defined formally in the rest of this section
 and in Section~\ref{sec:complete-calm}; italics also mark the occasional
 standard term borrowed from database theory.  Nothing here is needed for the
 proofs, but every notion the Functional CALM theorem rests on---residual
-states, input events, retirement, commitments, upper fibers, sealed inputs,
+states, input events, retirement, commitments, upper fibers, determination,
 exposure, and consistency---is exercised on the example.
 
 \begin{figure*}[t]
@@ -328,16 +328,13 @@ exposure, and consistency---is exercised on the example.
 \end{figure*}
 
 \paragraph{A specification is a table.}
-The centerpiece of the framework is a very simple notion of specification: a
-table of input--output pairs, listing the outputs admissible for each input.
-The specification for squaring has the rows $(2,4)$, $(3,9)$, $(4,16)$, and so
-on forever.  In database terms, squaring's table satisfies a functional
-dependency: the input column determines the output column.  We call such a
-specification \emph{functional}.  A specification is a model of what is
-allowed, not a data structure: no component of a system holds it or consults
-it.  Everything that follows is a matter of removing rows from a
-specification, and for now we speak of ``the system'' as a single machine or actor;
-who does what in a distributed implementation comes at the end.
+A specification is a table of input--output pairs, listing the outputs
+admissible for each input; when the input column determines the output
+column, as for squaring with rows $(2,4)$, $(3,9)$, $(4,16),\ldots$, the
+specification is \emph{functional}.  Everything that follows is a matter of
+removing rows from a specification, and for now ``the system'' is a single
+actor; who does what in a distributed implementation comes in
+Section~\ref{sec:complete-calm}.
 
 Figure~\ref{fig:election-frames}(a) is the specification of a small election.
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
@@ -351,9 +348,7 @@ $a$ the result is $a$; row $abb$ says that if $v_2$ and $v_3$ both vote $b$ the
 result is $b$.
 
 The rows are only part of the specification.  Each column also carries a
-partial order, and both orders are design decisions.  The input order also
-fixes how much of history the system is obliged to remember: two executions
-that reach the same input are, for the specification, the same.  The \emph{input order}
+partial order, and both orders are design decisions.  The \emph{input order}
 says what counts as more input: here, more ballots, so $ab\cdot$ \emph{refines}
 $a\cdot\cdot$, while $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output
 order} says when a later output keeps every promise an earlier one made: here
@@ -375,32 +370,19 @@ is governed by one rule: only the rows at the current input and its
 refinements remain, and every other row is \emph{retired}.  The specification
 with the retired rows removed is a \emph{residual state}, the account of what
 is still possible, and the inputs that still have rows are the \emph{valid} ones.
-
-Input events are the march of external history.  The environment produces
-them, and the system neither chooses nor pays for them.  They constrain the
-future, as we see next, but they involve no choice by the system, and the
-residual state they produce depends only on the current input reached: the
-same ballots delivered in another order or grouping yield the same residual
-state.
-
-Panel (b) retires rows for both of the reasons the rule allows.  The row at
-$a\cdot\cdot$ is retired because its input has been superseded: $ab\cdot$
-refines it, so the election will never again be asked about $a\cdot\cdot$
-alone.  The rows at
-$aa\cdot$, $aaa$, and $aab$ are retired because their inputs have become
-unreachable: this specification admits one ballot per voter, so no input in it
-refines both $aa\cdot$ and $ab\cdot$, and those rows described futures the
-election can no longer have.  That is a choice made in the specification, not
-a limit of the model; a specification that admitted a second, conflicting
-ballot would record both and say what the result then is.
+The environment produces input events; the system does not choose them, and
+the residual state depends only on the input reached, not on the order or
+grouping in which the ballots arrived.  In panel (b) the row at $a\cdot\cdot$
+is retired because $ab\cdot$ supersedes it, and the rows at $aa\cdot$, $aaa$,
+and $aab$ because no input refines both $aa\cdot$ and $ab\cdot$.  The retired
+$\bot$ at $a\cdot\cdot$ is refined by the $\bot$ at $ab\cdot$; monotonicity
+says that a superseded row is always refined by the row that supersedes it.
 
 \paragraph{What could still happen.}
 While input may still grow, what matters is not only the current row but what
-any input that could still arrive might require.  In Lamport's terms, the
-refinements of the current input are the inputs that some extension of the
-history can still produce.  The future of the election is therefore its
-current input together with the valid refinements, and the outputs of those
-rows form the current input's \emph{upper fiber}.  In
+any input that could still arrive might require.  The future of the election
+is its current input together with the valid refinements, and the outputs of
+those rows form the current input's \emph{upper fiber}.  In
 panel (b) those rows are the current row and the two refinements $aba$ and
 $abb$ in which $v_3$ votes, so the upper fiber, shaded, is $\{\bot,a,b\}$:
 either candidate could still win.
@@ -409,11 +391,8 @@ Panel (c) shows the alternative in which $v_2$ voted $a$.  The rows at or
 above $aa\cdot$ all say $a$, so the upper fiber is the singleton $\{a\}$ and
 the current input is \emph{determined}: it fixes the output regardless of what
 ballot $v_3$ could cast.  Narrowing the upper fiber until a single output
-remains is \emph{determination}.  In database theory terms it establishes a
-\emph{conditional functional dependency} on the residual: for all input values
-at or above the current input, the output is determined to be the same.  Here
-input arrival determined the residual on its own; below we meet the case where
-the system must act.
+remains is \emph{determination}.  Here input arrival determined the residual
+on its own; below we meet the case where the system must act.
 
 \paragraph{Commitments.}
 Return to panel (b) and let the registrar close the polls: $v_3$'s ballot,
@@ -475,10 +454,8 @@ $\bot\OutputOrd a,b$, so that an output refines only itself; this is the
 equality order.  The rows are the same,
 but in panels (a) and (b) nothing is exposable: $\bot$ no longer lies below
 the $a$ and $b$ in the upper fiber, so announcing it would promise something a later
-ballot could contradict.  The specification is no longer monotone: as inputs
-grow under $\InputOrd$, outputs change in a way $\OutputOrd$ does not sanction.
-To announce anything, the registrar must first make an input-sealing
-commitment.
+ballot could contradict.  To announce anything, the registrar must first make
+an input-sealing commitment.
 Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
 $a\cdot\cdot$: every refinement is sealed off by the commitment, the upper fiber
 collapses to $\{\bot\}$, and only now is $\bot$ exposable.  That contrast
@@ -486,40 +463,16 @@ is Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one must
 first seal input by commitment.
 
-\paragraph{Commitments versus everything else.}
-The legend of Figures~\ref{fig:election-frames} and~\ref{fig:nonmonotone-frame}
-distinguishes two kinds of removed row, and the distinction is exactly
-commitment versus not.  A gray row has been \emph{retired}, and in every panel
-here it is \emph{covered}: some remaining row says everything it said, so
-removing it narrows nothing.  A struck row was an
-alternative in its own right: removing it narrows what is within spec, and
-only a commitment does that.
-
-The other two kinds of event retire rows and make no commitment.  Input
-arrival retires the rows the new input does not refine (panels (b), (c)); it
-belongs to the environment.  Exposure retires the rows that do not refine the
-exposed output; for a functional specification there are none, and
-Section~\ref{sec:complete-calm} shows the case where there are.  Monotonicity
-says when input arrival retires only covered rows, as in panel (b), where the
-retired $\bot$ at $a\cdot\cdot$ is refined by the $\bot$ at $ab\cdot$.  A
-commitment, by contrast, always narrows; that is its purpose (panels (d),
-(e)).  Computation is not on
-this list at all.  Tallying the ballots in panel (c) to notice that the result
-is determined removes no row; computation has no effect on the residual, and
-so never counts as determination.
-
 \paragraph{Consistency.}
 Both CALM theorems have the same shape: a monotonicity condition on the
 specification is equivalent to a precise form of what the CALM literature
-calls consistency, or confluence.  Consider a run of the system that exposes
-outputs maximally: at each current input it exposes some output admitted there, and it
-makes no commitment.  The specification is \emph{consistent} when every such
-run can expose whichever admitted outputs it chooses, each exposure retiring
-only covered rows, and when, for any several such runs, whatever inputs they
-reached and in whatever order those inputs arrived, one admitted output at
-every common refinement of their inputs refines everything they exposed.  The
-residual then depends on the input reached, not on the order of arrival or on
-what was exposed along the way.  Functional CALM, proved below, says that a
+calls consistency, or confluence.  Consider runs of the system that expose
+outputs maximally, exposing some admitted output at each current input and
+making no commitment.  The specification is \emph{consistent} when every such
+exposure is exposable and, for any several such runs, one admitted output at
+every common refinement of their inputs refines everything they exposed: the
+residual depends on the input reached, not on the order of arrival or on what
+was exposed along the way.  Functional CALM, proved below, says that a
 functional specification is consistent exactly when it is monotone.
 
 The rest of this section states these notions formally.
