@@ -729,8 +729,8 @@ Let a transition take $(i,R)$ to $(i',R')$ and remove the row $(k,x)$.  The
 removal is an \emph{input retirement} if $k$ does not refine $i'$: either $k$
 lies strictly below $i'$, as the previous current input $i$ does, and has been
 superseded, or $k$ is incomparable with $i'$ and can no longer be reached.
-Otherwise the row is \emph{removed by commitment}: a still-valid input has
-lost its row.
+Otherwise the row is \emph{removed by commitment}: an input that still
+refines the current input has lost its row.
 \end{definition}
 
 Retirements are the gray rows of the figures and removals by commitment the
@@ -739,9 +739,10 @@ they remove rows only at inputs that do not refine the new current input.  An in
 that the removed output is refined by a remaining one: when $f$ is not
 monotone, the next input may retire a row whose output nothing refines, but
 the environment made that input unreachable.  What distinguishes a removal by
-commitment is that the system excluded something no event had ruled out.  An
-output event keeps the current input, so whatever it removes is removed by
-commitment.
+commitment is that the system excluded something no event had ruled out, and
+only commitments do so: an output event keeps the current input, so it
+performs no input retirement, and a system exposes only outputs whose output
+event removes no row at all, as the next definition says.
 
 \begin{definition}[Exposable]
 \label{def:exposable}
