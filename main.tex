@@ -130,7 +130,7 @@ breaking an application invariant~\cite{bailis2014coordination}.
 
 The results plainly share an idea, but their mathematical frameworks do not
 compose: logic programs and transducers, register executions, semilattices,
-transaction histories, and invariant-preserving database states expose
+transaction histories, and invariant-preserving database states rest on
 different objects and assumptions.  This makes simple cross-cutting questions
 awkward.  Does CALM encompass CAP?  Are CRDT join laws necessary for
 coordination freedom, or one strong sufficient discipline?  Does convergent
@@ -163,7 +163,7 @@ including query evaluation and the usual CRDT state interface.  ``Functional''
 means only that each semantic input has one specified output; execution may
 be as nondeterministic as it likes.
 
-Our second step addresses a case those interfaces do not expose: the semantic
+Our second step addresses a case those interfaces do not raise: the semantic
 specification itself may be \emph{ambiguous}---formally
 allowing several distinguishable outputs for one input.  Leader election may
 allow any participant to be eligible; a database may permit several serial
@@ -182,7 +182,7 @@ alternative, a step we call a \emph{commitment}
 (Definition~\ref{def:transition-system}), and participants who could commit
 incompatibly must coordinate first.  Complete CALM shows that Lifted
 Monotonicity is exactly confluence of the system's Lamport histories: whatever
-participants expose, in whatever order input arrives, they can always be
+outputs participants expose, in whatever order input arrives, they can always be
 brought to a common state at any input combining theirs
 (\S\ref{sec:complete-calm-theorem}).
 
@@ -490,7 +490,7 @@ the output event makes valid inputs invalid: it is an input-sealing commitment,
 and requires the authority a commitment requires.  That contrast is
 Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one can
-expose only by commitment.
+expose an output only by commitment.
 
 \paragraph{A semantic transition system.}
 We now have all the moves.  Residual states are the states of a transition
@@ -811,8 +811,8 @@ binding act, not the computation that selected it.
 
 \paragraph{Consistency.}
 The CALM literature's consistency is confluence: the outcome of a computation
-is the same whatever the order in which input arrives and whatever was exposed
-along the way.  We state it as confluence of runs of the transition system,
+is the same whatever the order in which input arrives and whatever outputs
+were exposed along the way.  We state it as confluence of runs of the transition system,
 for any specification table $S\subseteq I\times O$, functional or not.
 
 \begin{definition}[Run]
@@ -876,8 +876,8 @@ Confluence is asked at every common refinement of the final inputs, not
 merely at some later input, and families of one run are included: a run must
 remain able to advance to every refinement of its current input, which fails
 exactly when one of its output events has emptied a fiber there.  The runs need
-not have exposed the same outputs; whatever they exposed, in whatever order
-input arrived, one output admitted at the combined input refines all of it,
+not have exposed the same outputs; whatever outputs they exposed, in whatever
+order input arrived, one output admitted at the combined input refines all of it,
 so the residual at $j$ is a function of $j$ and not of the runs.  The
 definition is semantic: it describes no protocol and promises no delivery,
 liveness, or termination detection.
@@ -1126,7 +1126,7 @@ Two cuts that yield the same residuals are indistinguishable here, however
 their messages were ordered or batched
 (Proposition~\ref{prop:residual-quotient}).  Complete CALM is stated at this
 level: every Lamport history in which participants only receive input and
-expose is confluent, in that its participants can always be brought to one
+expose outputs is confluent, in that its participants can always be brought to one
 residual at any input combining theirs, exactly when the specification is
 monotone.
 
@@ -1135,7 +1135,7 @@ input events and exposing exposable outputs may be done autonomously.
 This follows directly from the discussion above.  Input arrives at each
 participant on its own.  Exposing an exposable output retires only covered
 rows, so every output
-another participant still admits has a refinement consistent with what was
+another participant still admits has a refinement consistent with the output
 exposed, and combining inputs later contradicts nothing.  A commitment removes an alternative that another
 participant's residual may still admit, so it is safe only if every such
 participant agrees; that agreement is coordination.  Determination that needs
@@ -1507,9 +1507,9 @@ every run's final state.
 The theorem is direct from the definitions.  Its content is the
 identification: the one semantic obstruction to confluence is a finite family
 of admissible rows with no admitted common refinement at a common input
-refinement.  When none exists, participants may expose what they have, in
-whatever order it arrives, and remain reconcilable, though what they exposed
-may differ.  When such a family exists, some admissible output cannot be
+refinement.  When none exists, participants may expose the outputs they
+have, in whatever order input arrives, and remain reconcilable, though the
+outputs they exposed may differ.  When such a family exists, some admissible output cannot be
 exposed without excluding another outright, that is, without a commitment.
 
 Exposability follows rather than being assumed.  In a consistent
@@ -2487,7 +2487,7 @@ failure assumptions, and progress requirements~\cite{saks2000set}.
 
 \subsection{Membership-sensitive naming}
 
-Tight strong renaming exposes a different source of incompatibility.  The input
+Tight strong renaming presents a different source of incompatibility.  The input
 is the finite participant set $P$, ordered by inclusion.  The common output
 universe contains finite partial naming maps; at input $P$, legal outputs are
 injective maps
@@ -2517,7 +2517,7 @@ hierarchy adds model-specific topological and wait-free conclusions
 
 The word ``snapshot'' covers interfaces with very different semantic strength.
 Consider inputs that are finite downward-closed causal histories, ordered by
-induced extension.  A modest \emph{cut} interface exposes a finite
+induced extension.  A modest \emph{cut} interface outputs a finite
 downward-closed subset of the available history as a lower bound on what has
 happened.  Old cuts remain legal as history grows, and the union of finitely
 many cuts remains downward closed.  This interface satisfies Lifted
