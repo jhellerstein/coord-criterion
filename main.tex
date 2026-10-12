@@ -425,20 +425,19 @@ when an input can be associated with many outputs.
     \toprule
     Input & Output \\ \midrule
     \sh{$\mathbf{a\cdot\cdot}$} & \sh{$\bot$} \\
-    \retired{$ab\cdot$} & \retired{$\bot$} \\ \strikerow
+    $ab\cdot$ & \sh{$\bot$} \\
     \retired{$aba$} & \retired{$a$} \\ \strikerow
     \retired{$abb$} & \retired{$b$} \\ \strikerow
     \retired{$aa\cdot$} & \retired{$a$} \\ \strikerow
     \retired{$aaa$} & \retired{$a$} \\ \strikerow
     \retired{$aab$} & \retired{$a$} \\ \strikerow
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; sealed and}\\
-    \multicolumn{2}{@{}l}{\footnotesize determined; $\bot$ is exposable}
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined;}\\
+    \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
   \end{tabular}
   \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
-  incomparable, after $\bot$ is exposed at $a\cdot\cdot$; the registrar
-  closing the polls reaches the same state.  Every refinement of
-  $a\cdot\cdot$ is removed by commitment.  Legend as in
+  incomparable, after $\bot$ is exposed at $a\cdot\cdot$.  Every row whose
+  output is not $\bot$ is removed by commitment.  Legend as in
   Figure~\ref{fig:election-frames}.}
   \label{fig:nonmonotone-frame}
 \end{figure}
@@ -460,11 +459,11 @@ Now change one thing: make all outputs incomparable, dropping
 $\bot\OutputOrd a,b$, so that an output refines only itself; this is the
 \emph{equality order}.  The rows are the same, but in panels (a) and (b)
 nothing is exposable: $\bot$ no longer lies below the $a$ and $b$ in the upper
-fiber, so exposing it removes every row whose output is $a$ or $b$, which is
-every refinement of the current input.  Figure~\ref{fig:nonmonotone-frame}
-shows the result of exposing $\bot$ at $a\cdot\cdot$: it is the state the
-registrar reaches by closing the polls, and the exposure is an input-sealing
-commitment, with the authority a commitment requires.  That contrast is
+fiber, so exposing it removes every row whose output is $a$ or $b$, and with
+them every input at which a result is reached.  Figure~\ref{fig:nonmonotone-frame}
+shows the result of exposing $\bot$ at $a\cdot\cdot$.  Like closing the polls,
+the exposure makes valid inputs invalid: it is an input-sealing commitment,
+and requires the authority a commitment requires.  That contrast is
 Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one can
 expose only by commitment.
@@ -608,7 +607,7 @@ The states of our transition system are residuals of the initial specification a
 Every panel of Figure~\ref{fig:election-frames} is such a state: the specification
 with some rows removed, one input current.  In panel (b) the current input is
 $ab\cdot$ and every row whose input does not refine it has been removed; such
-inputs are \emph{retired}.  A residual state obeys
+rows are \emph{retired}.  A residual state obeys
 the following conditions.
 
 \begin{definition}[Residual state]
@@ -703,7 +702,7 @@ superseded, or $k$ is incomparable with $i'$ and can no longer be reached.  It
 is an \emph{output retirement} if $k$ remains valid and $x$ is \emph{covered},
 that is, some retained $u\in R'(k)$ has $x\OutputOrd u$.  Otherwise the row is
 \emph{removed by commitment}: a still-valid input, or an output that no
-retained output covers, has been excluded, which only a commitment does.
+retained output covers, has been excluded.
 \end{definition}
 
 Retirements are the gray rows of the figures and removals by commitment the
@@ -725,8 +724,7 @@ An exposure that is not exposable removes a row by commitment, and
 Section~\ref{sec:cap-corollary} treats it as the commitment it is.  For a
 functional specification every fiber is a singleton, so a removed row is never
 covered: $f(i)$ is exposable at $(i,R)$ exactly when exposing it removes no
-row, that is, when $f(i)$ lies below every output in the upper fiber defined
-below.
+row, that is, when $f(i)\OutputOrd f(j)$ for every valid $j\succeq_I i$.
 
 \paragraph{Input events.}
 Input events compose: $\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has
@@ -813,8 +811,9 @@ restrictions compose to the restriction at the final input $i$.
 An ordered specification is \emph{consistent} when its runs are confluent:
 for every finite family of runs with final states $(i_1,R_1),\ldots,(i_k,R_k)$
 and every \emph{common refinement} $j$ of $i_1,\ldots,i_k$, an input with
-$i_r\InputOrd j$ for every $r$, some state with current input $j$ is reachable
-from every $(i_r,R_r)$ by input events and exposures.
+$i_r\InputOrd j$ for every $r$, a single state with current input $j$ is
+reachable from every $(i_r,R_r)$ by input events and exposures; the runs are
+then \emph{confluent at} $j$.
 \end{definition}
 
 \begin{proposition}[Confluence at a common refinement]
@@ -861,7 +860,7 @@ monotone.
 
 \begin{proof}
 Every fiber is a singleton, so a run exposes outputs $f(i_1),\ldots,f(i_m)$
-at inputs $i_\ell$ below its final current input $i$, and by
+at inputs $i_\ell\InputOrd i$, where $i$ is its final current input, and by
 Lemma~\ref{lem:run-residual} its fiber at $k\succeq_I i$ is $\{f(k)\}$ if
 $f(i_\ell)\OutputOrd f(k)$ for every $\ell$ and empty otherwise.  By
 Proposition~\ref{prop:confluence}, runs are confluent at a common refinement
@@ -930,7 +929,8 @@ Section~\ref{sec:functional-calm}.  Section~\ref{sec:ambiguity-story} walks
 through the framework informally on two ambiguous examples.
 Section~\ref{sec:relational-specifications} defines relational specifications
 and Lifted Monotonicity, Section~\ref{sec:safe-exposure} extends the
-transition system to output choice and to several participants, and
+transition system to output choice and to Lamport histories of several
+participants, and
 Section~\ref{sec:complete-calm-theorem} proves Complete CALM.
 Section~\ref{sec:cap-corollary} then turns to coordination and Complete CAP.
 
@@ -986,7 +986,8 @@ functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(f) is the
 ordering of two concurrent transactions $A$ and $B$: the input is the pair,
 the output is a serial order, and either order is admitted, so the table has
 two rows at one input.  A commitment to $[A,B]$ removes the row for $[B,A]$: a
-second kind of commitment, a \emph{choice commitment}.
+second kind of commitment, a \emph{choice commitment}.  Exposing $[A,B]$ has
+the same effect, and is this commitment.
 Panel (g) is a traceroute
 diagnostic for a service reachable from source $s$ directly at server
 \texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
@@ -1015,7 +1016,7 @@ Two things can therefore go wrong as a relational specification runs.  Input
 can grow in a way that leaves an admitted output with no refinement, as in the
 election under the equality order.  Or the outputs admitted at one input can
 fail to be directed, as in transaction ordering.  Complete CALM
-(Section~\ref{sec:complete-calm}) rules out both with one condition, \emph{Lifted
+(Section~\ref{sec:complete-calm-theorem}) rules out both with one condition, \emph{Lifted
 Monotonicity}: whenever input grows from $i$ to $j$, every finite set of
 outputs admitted at $i$ has a common refinement admitted at $j$.  Taking a
 single output, this says every admitted output continues as input grows.
@@ -1100,7 +1101,7 @@ residual at any input combining theirs, exactly when the specification is
 monotone.
 
 Commitments are precisely the semantic actions that require coordination;
-input events and exposures may be done autonomously.  This
+input events and exposable exposures may be done autonomously.  This
 follows directly from the discussion above.  Input arrives at each participant
 on its own.  An exposable exposure retires only covered rows, so every output
 another participant still admits has a refinement consistent with what was
@@ -1353,8 +1354,8 @@ common refinement, a removal by commitment.
 \paragraph{Participants and runs.}
 A \emph{participant} is a holder of a residual state that changes only by its
 own transitions: input events supplied by its environment, and the exposures
-and commitments it makes.  A run (Definition~\ref{def:run}) is thus a
-participant's history without commitments from the basis.  By the composition property of input events, two runs
+and commitments it makes.  A participant that uses no commitment from the
+basis performs a run (Definition~\ref{def:run}).  By the composition property of input events, two runs
 that receive the same input in different orders or groupings, with no
 exposures or commitments, reach the same state; what can differ is which
 exposures and commitments a participant makes along the way.  Replicas, in
@@ -1366,14 +1367,17 @@ with no need for a separate notion of replica consistency.
 Runs of several participants fit together into a history in Lamport's sense.
 A \emph{distributed history} $H$ is a set of events, each at one participant,
 with each participant's events totally ordered, each receive matched to a
-send, and \emph{happens-before} the transitive closure of local order and
-matching.  A receive that advances the receiving participant's input is an
-input event; a receive that does not leaves the residual unchanged, as does an
-exposure that removes no row.  A \emph{consistent cut} $C$ is a subset of
-events closed under happens-before.  For each participant $p$, the events of
-$C$ at $p$, in local order, form a run; write $\sigma_p^C$ for its final
-residual state and $\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector
-of residuals, the \emph{semantic endpoint} of the cut.
+send from another participant or from the environment, and
+\emph{happens-before} the transitive closure of local order and matching.  A
+receive that advances the receiving participant's input is an input event; a
+receive that does not leaves the residual unchanged, as does an exposure that
+removes no row.  A \emph{consistent cut} $C$ is a subset of events closed
+under happens-before, and $(H,C)$ is a \emph{pointed history}.  For each
+participant $p$, the events of $C$ at $p$, in local order, form a run when
+they include no commitment from the basis; in general they form a sequence of
+transitions.  Write $\sigma_p^C$ for its final residual state and
+$\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector of residuals, the
+\emph{semantic endpoint} of the cut.
 
 \begin{proposition}[Residuals are the semantic quotient of histories]
 \label{prop:residual-quotient}
@@ -1437,20 +1441,8 @@ For an ordered relational specification, the following are equivalent:
 \end{theorem}
 
 \begin{proof}
-\emph{(2) and (3).}  By Proposition~\ref{prop:residual-quotient}, the
-endpoint of $(H,C)$ is the vector of final states of the participants' runs,
-and what each participant can do next depends only on its coordinate.  If
-runs are confluent, Proposition~\ref{prop:confluence} gives $u$ in the
-intersection of the participants' fibers at $j$, and extending $H$ by an
-input event to $j$ and $\mathsf{expose}(u)$ at each participant brings them
-all to $\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
-Conversely, any finite family of runs is realized by a history in which one
-participant performs each run and no messages are exchanged; a common
-extension at $j$ shows a common state with current input $j$ reachable from
-every run's final state.
-
-\emph{(1) and (2).}  By Proposition~\ref{prop:confluence}, consistency says that for every finite
-family of runs with final states $(i_r,R_r)$ and every common refinement $j$
+\emph{(1) and (2).}  By Proposition~\ref{prop:confluence}, consistency says
+that for every finite family of runs with final states $(i_r,R_r)$ and every common refinement $j$
 of the $i_r$, the intersection $\bigcap_r R_r(j)$ is nonempty.  By
 Lemma~\ref{lem:run-residual}, $u\in\fiber{j}$ lies in this intersection
 exactly when it refines every output exposed on any of the runs; each such
@@ -1466,6 +1458,18 @@ a common refinement $j$.  For each $r$, the run that starts at $\sigma_0(i_r)$
 and exposes $o_r$ ends with $R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.
 Consistency gives $u$ in every $R_r(j)$, an admitted common refinement of the
 $o_r$, which is the Complete CALM criterion.
+
+\emph{(2) and (3).}  By Proposition~\ref{prop:residual-quotient}, the
+endpoint of $(H,C)$ is the vector of final states of the participants' runs,
+and what each participant can do next depends only on its coordinate.  If
+runs are confluent, Proposition~\ref{prop:confluence} gives $u$ in the
+intersection of the participants' fibers at $j$, and extending $H$ by an
+input event to $j$ and $\mathsf{expose}(u)$ at each participant brings them
+all to $\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
+Conversely, any finite family of runs is realized by a history in which one
+participant performs each run and no messages are exchanged; a common
+extension at $j$ shows a common state with current input $j$ reachable from
+every run's final state.
 \end{proof}
 
 The theorem is direct from the definitions.  Its content is the
@@ -1491,9 +1495,10 @@ commitments require agreement among participants
 \subsection{Coordination and the Complete CAP Theorem}
 \label{sec:cap-corollary}
 
-Exposure narrows without excluding and can be done by every participant at
-will.  A commitment excludes content, and the next result says what that costs
-when several participants hold the same input.  In what follows, a participant
+An exposable exposure narrows without excluding and can be made by every
+participant at will.  A commitment, from the basis or an exposure that is not
+exposable, excludes content, and the next result says what that costs when
+several participants hold the same input.  In what follows, a participant
 \emph{selects} an admissible output at the input it holds by exposing it; the
 selection is a commitment when the exposure is not exposable.
 
