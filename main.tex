@@ -818,11 +818,20 @@ is the same whatever the order in which input arrives and whatever outputs
 were exposed along the way.  We state it as confluence of runs of the transition system,
 for any specification table $S\subseteq I\times O$, functional or not.
 
-\begin{definition}[Run]
+\begin{definition}[Run; system run; witness run]
 \label{def:run}
 A \emph{run} is a finite sequence of input and output events from a canonical
-initial state.  It uses no commitment from the basis.
+initial state, using no commitment from the basis.  It is a \emph{system run}
+if the output of each of its output events is exposable at the state where
+the event occurs, and a \emph{witness run} otherwise.
 \end{definition}
+
+A system run is one a system may perform.  A witness run exposes, at some
+point, an output that is not exposable, which no system does; it has removed
+a row by commitment without any commitment from the basis.  Witness runs are
+admitted below as evidence against a specification, and the theorems show
+that exactly they fail to be confluent.
+
 
 \begin{lemma}[Residual of a run]
 \label{lem:run-residual}
@@ -874,14 +883,9 @@ leaves exactly the rows of $S$ above $j$ and $u$, whichever run we started
 from.
 \end{proof}
 
-One exception to the rule that a system exposes only exposable outputs is
-made here, deliberately.  The runs quantified over include output events
-whose outputs are not exposable, which no system performs; they are admitted
-as witnesses.  Such a run has removed a row by commitment without any
-commitment from the basis, and the theorems below show that exactly such runs
-fail to be confluent.  Restricting runs to exposable outputs would make a
-specification that can expose nothing vacuously consistent.  Confluence is
-asked at every common refinement of the final inputs, not merely at some
+The runs quantified over include witness runs; quantifying over system runs
+alone would make a specification that can expose nothing vacuously
+consistent.  Confluence is asked at every common refinement of the final inputs, not merely at some
 later input, and families of one run are included: a run must remain able to
 advance to every refinement of its current input, which fails exactly when one
 of its output events has emptied a fiber there.  The runs need
