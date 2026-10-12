@@ -445,11 +445,11 @@ when an input can be associated with many outputs.
   \small
   \setlength{\tabcolsep}{6pt}
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(e) As (a), all outputs incomparable, $\bot$ exposed}\\
+    \multicolumn{2}{@{}l}{(e) As (a), all outputs incomparable, polls closed}\\
     \toprule
     Input & Output \\ \midrule
     \sh{$\mathbf{a\cdot\cdot}$} & \sh{$\bot$} \\
-    $ab\cdot$ & \sh{$\bot$} \\
+    \retired{$ab\cdot$} & \retired{$\bot$} \\ \strikerow
     \retired{$aba$} & \retired{$a$} \\ \strikerow
     \retired{$abb$} & \retired{$b$} \\ \strikerow
     \retired{$aa\cdot$} & \retired{$a$} \\ \strikerow
@@ -460,8 +460,8 @@ when an input can be associated with many outputs.
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
   \end{tabular}
   \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
-  incomparable, after $\bot$ is exposed at $a\cdot\cdot$.  Every row whose
-  output is not $\bot$ is removed by commitment.  Legend as in
+  incomparable, after the registrar closes the polls at $a\cdot\cdot$.  Every
+  refinement of $a\cdot\cdot$ is removed by commitment.  Legend as in
   Figure~\ref{fig:election-frames}.}
   \label{fig:nonmonotone-frame}
 \end{figure}
@@ -483,14 +483,15 @@ Now change one thing: make all outputs incomparable, dropping
 $\bot\OutputOrd a,b$, so that an output refines only itself; this is the
 \emph{equality order}.  The rows are the same, but in panels (a) and (b)
 nothing is exposable: $\bot$ no longer lies below the $a$ and $b$ in the upper
-fiber, so exposing it removes every row whose output is $a$ or $b$, and with
-them every input at which a result is reached.  Figure~\ref{fig:nonmonotone-frame}
-shows the result of exposing $\bot$ at $a\cdot\cdot$.  Like closing the polls,
-the output event makes valid inputs invalid: it is an input-sealing commitment,
-and requires the authority a commitment requires.  That contrast is
+fiber, so exposing it would remove every row whose output is $a$ or $b$, and
+with them every input at which a result is reached.  To expose anything, the
+registrar must first make an input-sealing commitment.
+Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
+$a\cdot\cdot$: every refinement is removed by commitment, the upper fiber
+collapses to $\{\bot\}$, and only now is $\bot$ exposable.  That contrast is
 Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
-specification can expose outputs as input arrives; a non-monotone one can
-expose an output only by commitment.
+specification can expose outputs as input arrives; a non-monotone one must
+first make a commitment.
 
 \paragraph{A semantic transition system.}
 We now have all the moves.  Residual states are the states of a transition
@@ -753,11 +754,16 @@ An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when every row that
 $\mathsf{output}(o)$ removes is an output retirement.
 \end{definition}
 
-An output event whose output is not exposable removes a row by commitment,
-and Section~\ref{sec:cap-corollary} treats it as the commitment it is.  For a
-functional specification every fiber is a singleton, so a removed row is never
-covered: $f(i)$ is exposable at $(i,R)$ exactly when exposing it removes no
-row, that is, when $f(i)\OutputOrd f(j)$ for every valid $j\succeq_I i$.
+An output event whose output is not exposable removes a row by commitment.
+A system may expose only exposable outputs: when $o$ is not exposable, the
+system must first apply a commitment from its basis that removes the
+alternatives, after which $o$ may be exposable.  The transition system
+nevertheless defines $\mathsf{output}(o)$ for every $o\in R(i)$, because runs
+that contain such events are how the theorems below detect that a
+specification is not confluent.  For a functional specification every fiber
+is a singleton, so a removed row is never covered: $f(i)$ is exposable at
+$(i,R)$ exactly when exposing it removes no row, that is, when
+$f(i)\OutputOrd f(j)$ for every valid $j\succeq_I i$.
 
 \paragraph{Input events.}
 Input events compose: $\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has
@@ -906,8 +912,9 @@ refinement $k$.
 \end{proof}
 
 In the non-monotone case $\mathsf{output}(f(i))$ empties the fiber at $k$:
-$f(i)$ is not exposable, and it is in effect an input-sealing commitment, which is
-what Figure~\ref{fig:nonmonotone-frame} shows.  In the election, $a$ and $b$
+$f(i)$ is not exposable, and a system must first make an input-sealing
+commitment, as in Figure~\ref{fig:nonmonotone-frame}, before it may expose
+$f(i)$.  In the election, $a$ and $b$
 have no common upper bound, and none is required: monotonicity constrains only
 comparable inputs, and $aa\cdot$ and $ab\cdot$ have no common refinement
 because ballots are immutable.
@@ -1015,9 +1022,9 @@ input, so the input column does not determine the output column and the
 functional dependency fails.  Figure~\ref{fig:ambiguity-frames}(f) is the
 ordering of two concurrent transactions $A$ and $B$: the input is the pair,
 the output is a serial order, and either order is admitted, so the table has
-two rows at one input.  A commitment to $[A,B]$ removes the row for $[B,A]$: a
-second kind of commitment, a \emph{choice commitment}.  Exposing $[A,B]$ has
-the same effect, and is this commitment.
+two rows at one input.  Before $[A,B]$ can be exposed, a commitment must
+remove the row for $[B,A]$: a second kind of commitment, a \emph{choice
+commitment}.
 Panel (g) is a traceroute
 diagnostic for a service reachable from source $s$ directly at server
 \texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
@@ -1376,12 +1383,13 @@ Equation~\ref{eq:safe-exposure} is directedness
 than the specification.  Exposing an exposable output excludes nothing whose
 content could not still be reached.  If $o$ is not exposable, some $x$ at $i$
 or one of its refinements has no admitted refinement in common with $o$, and
-exposing $o$ destroys the content of $x$: the output event is a commitment, and
-Section~\ref{sec:cap-corollary} says what that costs.  In
+exposing $o$ would destroy the content of $x$; the system must instead first
+apply a commitment from its basis that removes $x$, after which $o$ may be
+exposable, and Section~\ref{sec:cap-corollary} says what that costs.  In
 Figure~\ref{fig:ambiguity-frames}, exposing $\{s{\to}\texttt{s1}\}$ in panel
 (g) removes $\{s{\to}a\}$ but retains a refinement of both, an output
-retirement; exposing $[A,B]$ in panel (f) removes $[B,A]$ with no retained
-common refinement, a removal by commitment.
+retirement; the commitment to $[A,B]$ in panel (f) removes $[B,A]$ with no
+retained common refinement.
 
 \paragraph{Participants and runs.}
 A \emph{participant} is a holder of a residual state that changes only by its
@@ -1528,11 +1536,12 @@ commitments require agreement among participants
 \label{sec:cap-corollary}
 
 Exposing an exposable output narrows without excluding and can be done by
-every participant at will.  A commitment, from the basis or an output event
-whose output is not exposable, excludes content, and the next result says what
-that costs when several participants hold the same input.  In what follows, a
-participant \emph{selects} an admissible output at the input it holds by
-exposing it; the selection is a commitment when the output is not exposable.
+every participant at will.  A commitment excludes content, and the next result
+says what that costs when several participants hold the same input.  In what
+follows, a participant \emph{selects} an admissible output at the input it
+holds by exposing it when it is exposable, and otherwise by first applying a
+commitment that retains exactly the outputs refining it at its input and that
+input's refinements.
 
 \begin{definition}[Coordination]
 \label{def:coordination}
@@ -1543,20 +1552,23 @@ commitment excludes.
 
 \begin{theorem}[Commitments require coordination]
 \label{thm:commitments-require-coordination}
-Let a transition $d$, a commitment from the basis or an output event, be
-applicable at a reachable state $\sigma=(i,R)$ and remove a row at the current
-input $i$ by commitment: some $x\in R(i)$ with no refinement in $R'(i)$, where
-$(i,R')=d(\sigma)$.  Then there is a participant state $\tau$, reachable from
-the canonical initial state by the same input events followed by one output event,
-whose residual at $i$ consists of refinements of $x$; and $d(\sigma)$ and
-$\tau$ have no common row at $i$.  Consequently $d$ cannot be applied without
-agreement that no participant takes the course leading to $\tau$.
+Suppose the participants share a common commitment basis.  Let a commitment
+$d$ in the basis be applicable at a reachable state $\sigma=(i,R)$ and remove
+a row at the current input $i$ by commitment: some $x\in R(i)$ with no
+refinement in $R'(i)$, where $(i,R')=d(\sigma)$.  Then there is a participant
+state $\tau$, reachable from the canonical initial state by the same input
+events followed by the selection of $x$, whose residual at $i$ consists of
+refinements of $x$; and $d(\sigma)$ and $\tau$ have no common row at $i$.
+Consequently $d$ cannot be applied without agreement that no participant takes
+the course leading to $\tau$.
 \end{theorem}
 
 \begin{proof}
 Let a second participant receive the same input events as the first, reaching
 a state with the same current input and with $x\in\fiber{i}$ still admitted,
-and let it expose $x$.  Its residual at $i$ is then contained in
+and let it select $x$: by exposing it if it is exposable, and otherwise by a
+commitment retaining exactly the outputs above $x$, which the common basis
+makes available to it.  Its residual at $i$ is then contained in
 $\{u\in\fiber{i}:x\OutputOrd u\}$, while the first participant's residual
 $R'(i)$ contains no such $u$ by hypothesis.  The intersection at $i$ is
 therefore empty: the two states cannot be merged, and no later input or output
