@@ -1163,18 +1163,21 @@ Everything so far is semantic: it concerns the specification and its orders,
 and it holds of a single-node database ordering transactions just as it holds
 of the election.  Now let the system be distributed.  It consists of participants, each of
 which knows the specification, which is fixed and public, but sees only its
-own events: the input that has reached it, the output events and commitments
-it has itself made.  Each participant therefore has its own residual, obtained
-from the specification by removing the rows its own events removed,
-and two participants that have seen different events hold different
-residuals.  Panels (a) and (b) of Figure~\ref{fig:election-frames} can be read
-this way: one participant has so far received only $v_1$'s ballot, another has
-also received $v_2$'s, and each has removed what its own input retired.  This
-is the whole connection to executions.  Take any Lamport diagram of the system
-and cut it at any consistent moment; each participant's events below the cut
-determine its residual, and those residuals are all this paper ever consults.
-Two cuts that yield the same residuals are indistinguishable here, however
-their messages were ordered or batched
+own events: the input that has reached it, whether from its environment or by
+message from another participant, and the output events and commitments it
+has itself made.  Each participant therefore has its own residual, obtained
+from the specification by removing the rows its own events removed, and two
+participants that have seen different events hold different residuals.
+Panels (a) and (b) of Figure~\ref{fig:election-frames} can be read this way:
+one participant has so far received only $v_1$'s ballot, another has also
+received $v_2$'s, and each has removed what its own input retired.  This is
+the whole connection to executions.  Draw the execution as a Lamport diagram:
+one line per participant carrying its events in order, and an arrow from each
+message's send to its receipt.  A \emph{consistent cut} is a set of events
+that includes, with every receipt, the send it came from.  Each participant's
+events within the cut determine its residual, and those residuals are all this
+paper ever consults.  Two cuts that yield the same residuals are
+indistinguishable here, however their messages were ordered or batched
 (Proposition~\ref{prop:residual-quotient}).  Complete CALM is stated at this
 level: every Lamport history in which participants only receive input and
 expose outputs is confluent, in that its participants can always be brought to one
