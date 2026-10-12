@@ -622,14 +622,8 @@ the definitions to specifications with several outputs at one input.
 
 \paragraph{The specification as a table.}
 View the specification as a table $S\subseteq I\times O$ whose rows are the
-pairs $(i,f(i))$.  For any subrelation $R\subseteq S$ and input $i$, the
-\emph{fiber} of $R$ at $i$ is the set of outputs paired with $i$:
-        \begin{equation}
-  R(i)=\{o\in O:(i,o)\in R\}.
-  \label{eq:fiber}
-        \end{equation}
-For the full specification this is $S(i)$, which for a function is $\{f(i)\}$.
-Execution never adds a row.  Everything that follows is a story about which
+pairs $(i,f(i))$, one row at each input.  A subrelation $R\subseteq S$ has a
+row at $i$ when $(i,f(i))\in R$.  Execution never adds a row.  Everything that follows is a story about which
 rows have been removed from the table, and by what.
 
 Inputs are \emph{cumulative}: an input is everything seen so far, and
@@ -654,20 +648,20 @@ A \emph{residual state} is a pair $\sigma=(i,R)$ such that
 \begin{enumerate}
   \item $i\in I$ is the \emph{current input};
   \item $R\subseteq S$;
-  \item the current input has a row in $R$:
+  \item $R$ has a row at the current input:
         \begin{equation}
-          R(i)\neq\varnothing;
+          (i,o)\in R\ \text{for some }o;
           \label{eq:current-input-validity}
         \end{equation}
   \item only refinements of the current input have rows in $R$:
         \begin{equation}
-          R(k)=\varnothing
-          \qquad\text{whenever }i\not\InputOrd k.
+          (k,o)\in R
+          \quad\Longrightarrow\quad i\InputOrd k.
           \label{eq:retired-input-absence}
         \end{equation}
 \end{enumerate}
 $R$ is the \emph{residual specification}.  An input $k$ is \emph{valid} when
-$R(k)\neq\varnothing$, and otherwise \emph{invalid}.
+$R$ has a row at $k$, and otherwise \emph{invalid}.
 \end{definition}
 
 Valid inputs other than the current one are the potential futures:
@@ -699,8 +693,9 @@ none.
           R\mathbin{\upharpoonright_I}j=\{(k,u)\in R:\ j\InputOrd k\},
           \label{eq:input-event}
         \end{equation}
-        defined when $R(j)\neq\varnothing$.
-  \item \emph{Output event.}  For $o\in R(i)$, the event
+        defined when $R$ has a row at $j$.
+  \item \emph{Output event.}  For a row $(i,o)\in R$ at the current input,
+        the event
         $\mathsf{output}(o)$, made by the system, exposes $o$: it keeps the
         current input fixed and removes every row whose output does not
         refine $o$,
@@ -740,7 +735,7 @@ lost its row.
 
 Retirements are the gray rows of the figures and removals by commitment the
 struck rows.  Input events perform input retirements and nothing else, since
-they leave surviving fibers unchanged.  An input retirement does not promise
+they remove rows only at inputs that do not refine the new current input.  An input retirement does not promise
 that the removed output is refined by a remaining one: when $f$ is not
 monotone, the next input may retire a row whose output nothing refines, but
 the environment made that input unreachable.  What distinguishes a removal by
@@ -750,8 +745,8 @@ commitment.
 
 \begin{definition}[Exposable]
 \label{def:exposable}
-An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when $\mathsf{output}(o)$
-removes no row.
+An output $o$ with $(i,o)\in R$ is \emph{exposable} at $(i,R)$ when
+$\mathsf{output}(o)$ removes no row.
 \end{definition}
 
 For a functional specification, $f(i)$ is exposable at $(i,R)$ exactly when
@@ -790,8 +785,8 @@ singleton:
 A residual state is \emph{determined} when its current input is determined.
 \end{definition}
 
-Determinedness is stronger than having one row at $i$: every fiber in the
-election is a singleton, yet panels (a) and (b) are undetermined because valid
+Determinedness is stronger than having one row at $i$: every input in the
+election has one row, yet panels (a) and (b) are undetermined because valid
 refinements disagree.  \emph{Determination} is also the name for the process
 by which a residual becomes determined, by input events alone as in panel (c)
 or, when they do not suffice, by commitments.
@@ -801,10 +796,9 @@ Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
 the current input fixed.  No input event does this; it is a commitment, an act
 of the system.  A commitment that makes some valid input invalid is an
 \emph{input-sealing commitment}, and for a functional specification every
-commitment is one, since every fiber has one row and there is never an output
-to choose among.  Once no strict refinement of
-the current input is valid, $R^\uparrow(i)=R(i)$, which for a functional
-specification is a singleton: the state is determined.
+commitment is one, since every input has one row and there is never an output
+to choose among.  Once no strict refinement of the current input is valid,
+$R^\uparrow(i)=\{f(i)\}$: the state is determined.
 Whether an input-sealing commitment is available is part of the system model,
 not of the specification: it must be in the commitment basis.  A system that
 must still accept a late ballot, with a rejection or other fallback response,
@@ -824,7 +818,7 @@ initial state, using no commitment from the basis.
 \end{definition}
 
 A run is a path in the transition system as defined, in which
-$\mathsf{output}(o)$ is available for every $o\in R(i)$; which of its output
+$\mathsf{output}(o)$ is available for every row $(i,o)\in R$; which of its output
 events a system may perform is taken up in
 Section~\ref{sec:functional-calm-theorem}.
 
@@ -859,30 +853,29 @@ then \emph{confluent at} $j$.
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
 Runs with final states $(i_1,R_1),\ldots,(i_k,R_k)$ reach a common state with
-current input $j$ if and only if
+current input $j$ if and only if some row at $j$ survives in all of them,
         \begin{equation}
-  \bigcap_{r=1}^{k}R_r(j)\neq\varnothing,
+  (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O,
   \label{eq:reconciliation}
         \end{equation}
-and then, for any $u$ in the intersection, $\mathsf{input}(j)$ followed by
+and then, for any such $u$, $\mathsf{input}(j)$ followed by
 $\mathsf{output}(u)$ takes every $(i_r,R_r)$ to
 $\bigl(j,\{(k,x)\in S: j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
 \end{proposition}
 
 \begin{proof}
-A common state with current input $j$ has a nonempty fiber at $j$, and its
-rows belong to every $R_r$.  Conversely let $u$ be in the intersection.  Then
-$\mathsf{input}(j)$ is defined at every $(i_r,R_r)$, and
-by Lemma~\ref{lem:run-residual} $u\in R_r(j)$ says that every output exposed
-on run $r$ lies below $u$, so after $\mathsf{output}(u)$ the same lemma
-leaves exactly the rows of $S$ above $j$ and $u$, whichever run we started
-from.
+A common state with current input $j$ has a row at $j$, and that row belongs
+to every $R_r$.  Conversely let $(j,u)$ belong to every $R_r$.  Then
+$\mathsf{input}(j)$ is defined at every $(i_r,R_r)$, and by
+Lemma~\ref{lem:run-residual} $(j,u)\in R_r$ says that every output exposed on
+run $r$ lies below $u$, so after $\mathsf{output}(u)$ the same lemma leaves
+exactly the rows of $S$ above $j$ and $u$, whichever run we started from.
 \end{proof}
 
 Confluence is asked at every common refinement of the final inputs, not merely at some
 later input, and families of one run are included: a run must remain able to
 advance to every refinement of its current input, which fails exactly when one
-of its output events has emptied a fiber there.  The runs need
+of its output events has removed every row there.  The runs need
 not have exposed the same outputs; whatever outputs they exposed, in whatever
 order input arrived, one output admitted at the combined input refines all of it,
 so the residual at $j$ is a function of $j$ and not of the runs.  The
@@ -914,16 +907,15 @@ event is safe is confluent at every common refinement of its final inputs.
 \begin{proof}
 Let $j$ be a common refinement of the final inputs and consider the output
 events of all the runs in any order that respects the order within each run.
-We maintain an $x\in\fiber{j}$ that refines every output event processed so
-far, starting from any element of the nonempty fiber $\fiber{j}$.  Let the
-next event expose $o$ on run $r$ at state $\sigma$.  By
-Lemma~\ref{lem:run-residual}, $x$ lies in $\sigma$'s fiber at $j$, since it
-refines every output exposed earlier on run $r$; and $j$ refines
-$\sigma$'s current input.  Because $o$ is exposable at $\sigma$, some $x'$ in
-that fiber refines both $o$ and $x$; continue with $x'$.  The final $x$
-refines every output exposed on every run, so by the lemma it lies in every
-run's fiber at $j$, and Proposition~\ref{prop:confluence} gives a common
-state.
+We maintain a row $(j,x)\in S$ whose output refines every output processed
+so far, starting from any row of $S$ at $j$.  Let the next event expose $o$
+on run $r$ at state $\sigma$.  By Lemma~\ref{lem:run-residual}, $(j,x)$
+survives in $\sigma$, since $x$ refines every output exposed earlier on run
+$r$ and $j$ refines $\sigma$'s current input.  Because $o$ is exposable at
+$\sigma$, some row $(j,x')$ retained by $\mathsf{output}(o)$ has $x'$
+refining both $o$ and $x$; continue with $x'$.  The final $x$ refines every
+output exposed on every run, so by the lemma $(j,x)$ survives in every run,
+and Proposition~\ref{prop:confluence} gives a common state.
 \end{proof}
 
 Consistency therefore has content only because unsafe runs are included; the
@@ -937,20 +929,20 @@ monotone.
 \end{theorem}
 
 \begin{proof}
-Every fiber is a singleton, so a run exposes outputs $f(i_1),\ldots,f(i_m)$
-at inputs $i_\ell\InputOrd i$, where $i$ is its final current input, and by
-Lemma~\ref{lem:run-residual} its fiber at $k\succeq_I i$ is $\{f(k)\}$ if
-$f(i_\ell)\OutputOrd f(k)$ for every $\ell$ and empty otherwise.  By
+Every input has one row, so a run exposes outputs $f(i_1),\ldots,f(i_m)$ at
+inputs $i_\ell\InputOrd i$, where $i$ is its final current input, and by
+Lemma~\ref{lem:run-residual} it retains the row $(k,f(k))$ at $k\succeq_I i$
+exactly when $f(i_\ell)\OutputOrd f(k)$ for every $\ell$.  By
 Proposition~\ref{prop:confluence}, runs are confluent at a common refinement
 $k$ exactly when every output exposed on any of them lies below $f(k)$.  If
 $f$ is monotone this holds, since each exposed $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
 $f(i)\not\OutputOrd f(k)$; the unsafe run that starts at $\sigma_0(i)$ and
-exposes $f(i)$, which is not exposable there, has an empty fiber at $k$ and
-cannot be advanced to its own refinement $k$.
+exposes $f(i)$, which is not exposable there, has no row at $k$ and cannot be
+advanced to its own refinement $k$.
 \end{proof}
 
-In the non-monotone case $\mathsf{output}(f(i))$ empties the fiber at $k$:
+In the non-monotone case $\mathsf{output}(f(i))$ removes the row at $k$:
 $f(i)$ is not exposable, and a system must first make an input-sealing
 commitment, as in Figure~\ref{fig:nonmonotone-frame}, before it may expose
 $f(i)$.  In the election, $a$ and $b$
@@ -1202,10 +1194,18 @@ An \emph{ordered relational specification} is
   \label{eq:relational-specification}
         \end{equation}
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  A row
-$(i,o)\in S$ says that output $o$ is admissible at input $i$.  Its fiber
-$\fiber{i}$, as in Equation~\ref{eq:fiber}, may now contain several outputs.
-The original specification has a nonempty fiber at every input under discussion.
-A functional specification is the special case $\fiber{i}=\{f(i)\}$.
+$(i,o)\in S$ says that output $o$ is admissible at input $i$.  The
+\emph{fiber} of $S$, or of any $R\subseteq S$, at $i$ is the set of outputs
+paired with $i$,
+        \begin{equation}
+  R(i)=\{o\in O:(i,o)\in R\},
+  \label{eq:fiber}
+        \end{equation}
+and may now contain several outputs; the upper fiber of
+Section~\ref{sec:determination} is the union of the fibers at $i$ and its
+valid refinements.  The original specification has a nonempty fiber at every
+input under discussion.  A functional specification is the special case
+$\fiber{i}=\{f(i)\}$.
 \end{definition}
 
 The output-refinement order lifts from individual outputs to nonempty sets of
@@ -1548,7 +1548,8 @@ For an ordered relational specification, the following are equivalent:
 \begin{proof}
 \emph{(1) and (2).}  By Proposition~\ref{prop:confluence}, consistency says
 that for every finite family of runs with final states $(i_r,R_r)$ and every common refinement $j$
-of the $i_r$, the intersection $\bigcap_r R_r(j)$ is nonempty.  By
+of the $i_r$, some row at $j$ survives in every run, that is, in fiber
+notation, $\bigcap_r R_r(j)\neq\varnothing$.  By
 Lemma~\ref{lem:run-residual}, $u\in\fiber{j}$ lies in this intersection
 exactly when it refines every output exposed on any of the runs; each such
 output $o$ was exposed at some input $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
