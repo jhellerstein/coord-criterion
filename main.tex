@@ -757,10 +757,7 @@ $\mathsf{output}(o)$ removes is an output retirement.
 An output event whose output is not exposable removes a row by commitment.
 A system may expose only exposable outputs: when $o$ is not exposable, the
 system must first apply a commitment from its basis that removes the
-alternatives, after which $o$ may be exposable.  The transition system
-nevertheless defines $\mathsf{output}(o)$ for every $o\in R(i)$, because runs
-that contain such events are how the theorems below detect that a
-specification is not confluent.  For a functional specification every fiber
+alternatives, after which $o$ may be exposable.  For a functional specification every fiber
 is a singleton, so a removed row is never covered: $f(i)$ is exposable at
 $(i,R)$ exactly when exposing it removes no row, that is, when
 $f(i)\OutputOrd f(j)$ for every valid $j\succeq_I i$.
@@ -824,8 +821,7 @@ for any specification table $S\subseteq I\times O$, functional or not.
 \begin{definition}[Run]
 \label{def:run}
 A \emph{run} is a finite sequence of input and output events from a canonical
-initial state.  It uses no commitment from the basis; the outputs of its
-output events need not be exposable.
+initial state.  It uses no commitment from the basis.
 \end{definition}
 
 \begin{lemma}[Residual of a run]
@@ -878,10 +874,17 @@ leaves exactly the rows of $S$ above $j$ and $u$, whichever run we started
 from.
 \end{proof}
 
-Confluence is asked at every common refinement of the final inputs, not
-merely at some later input, and families of one run are included: a run must
-remain able to advance to every refinement of its current input, which fails
-exactly when one of its output events has emptied a fiber there.  The runs need
+One exception to the rule that a system exposes only exposable outputs is
+made here, deliberately.  The runs quantified over include output events
+whose outputs are not exposable, which no system performs; they are admitted
+as witnesses.  Such a run has removed a row by commitment without any
+commitment from the basis, and the theorems below show that exactly such runs
+fail to be confluent.  Restricting runs to exposable outputs would make a
+specification that can expose nothing vacuously consistent.  Confluence is
+asked at every common refinement of the final inputs, not merely at some
+later input, and families of one run are included: a run must remain able to
+advance to every refinement of its current input, which fails exactly when one
+of its output events has emptied a fiber there.  The runs need
 not have exposed the same outputs; whatever outputs they exposed, in whatever
 order input arrived, one output admitted at the combined input refines all of it,
 so the residual at $j$ is a function of $j$ and not of the runs.  The
@@ -906,9 +909,9 @@ Proposition~\ref{prop:confluence}, runs are confluent at a common refinement
 $k$ exactly when every output exposed on any of them lies below $f(k)$.  If
 $f$ is monotone this holds, since each exposed $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
-$f(i)\not\OutputOrd f(k)$; the run that starts at $\sigma_0(i)$ and exposes
-$f(i)$ then has an empty fiber at $k$ and cannot be advanced to its own
-refinement $k$.
+$f(i)\not\OutputOrd f(k)$; the witness run that starts at $\sigma_0(i)$ and
+exposes $f(i)$, which is not exposable there, has an empty fiber at $k$ and
+cannot be advanced to its own refinement $k$.
 \end{proof}
 
 In the non-monotone case $\mathsf{output}(f(i))$ empties the fiber at $k$:
@@ -1494,8 +1497,9 @@ Proposition~\ref{prop:complete-calm-criterion} supplies $u\in\fiber{j}$
 refining them all, and $u$ lies in the intersection.
 
 Conversely, assume consistency, and let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have
-a common refinement $j$.  For each $r$, the run that starts at $\sigma_0(i_r)$
-and exposes $o_r$ ends with $R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.
+a common refinement $j$.  For each $r$, the witness run that starts at
+$\sigma_0(i_r)$ and exposes $o_r$ ends with
+$R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.
 Consistency gives $u$ in every $R_r(j)$, an admitted common refinement of the
 $o_r$, which is the Complete CALM criterion.
 
