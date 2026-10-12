@@ -547,14 +547,14 @@ and the next in one place, with references to where each is defined.
     residual state & $(i,R)$: \ $R\subseteq S$, \ $R(i)\neq\varnothing$, \ $R(k)=\varnothing$ unless $i\InputOrd k$ & Def.~\ref{def:residual-state} \\
     initial state; upper fiber & $\sigma_0(i)=(i,\{(k,o)\in S: i\InputOrd k\})$; \quad $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$ & Eqs.~\ref{eq:canonical-initial-state}, \ref{eq:upper-fiber} \\
     input event (environment) & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,\ R\mathbin{\upharpoonright_I}j)$, \quad $R\mathbin{\upharpoonright_I}j=\{(k,u)\in R: j\InputOrd k\}$ & Def.~\ref{def:transition-system} \\
-    output event (system) & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ exposable iff every removed row is covered & Defs.~\ref{def:transition-system}, \ref{def:exposable} \\
+    output event (system) & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ exposable iff every removed row is covered & Defs.~\ref{def:transition-system}, \ref{def:exposable}, \ref{def:exposable-relational} \\
     commitment (system) & $(i,R)\xrightarrow{p}(i,R')$, \ $R'\subsetneq R$, \ some removed $(k,x)$ has no $u\in R'(k)$ with $x\OutputOrd u$ & Def.~\ref{def:transition-system} \\
     \addlinespace
     \textbf{Commitments} & & \\
     \midrule
-    input-sealing / choice & makes a valid input invalid \ / \ keeps every valid input valid & Def.~\ref{def:transition-system} \\
+    input-sealing / choice & makes a valid input invalid \ / \ keeps every valid input valid & Secs.~\ref{sec:determination}, \ref{sec:safe-exposure} \\
     commitment basis & the set of commitments the system may use; a design input alongside $\Spec$ & Def.~\ref{def:transition-system} \\
-    removed row $(k,x)$ & input retirement if $k\not\succeq_I i'$; \ output retirement if $\exists u\in R'(k),\,x\OutputOrd u$; \ else removed by commitment & Def.~\ref{def:retirement} \\
+    removed row $(k,x)$ & input retirement if $k\not\succeq_I i'$; \ output retirement if $\exists u\in R'(k),\,x\OutputOrd u$; \ else removed by commitment & Defs.~\ref{def:retirement}, \ref{def:output-retirement} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
@@ -617,10 +617,8 @@ states; its transitions are input events, output events, and commitments; a
 run is a sequence of input and output events; and consistency is confluence
 of runs.  The definitions follow the vocabulary of
 Section~\ref{sec:election-story} and the panels of
-Figure~\ref{fig:election-frames}.  Choice commitments and output events in the
-presence of output choice are defined here but discussed in
-Section~\ref{sec:complete-calm}, where relational specifications make them
-necessary.
+Figure~\ref{fig:election-frames}.  Section~\ref{sec:safe-exposure} extends
+the definitions to specifications with several outputs at one input.
 
 \paragraph{The specification as a table.}
 View the specification as a table $S\subseteq I\times O$ whose rows are the
@@ -717,12 +715,8 @@ none.
   \item \emph{Commitment.}  A commitment $p$, made by the system, keeps the
         current input fixed and strictly restricts the residual, $p(i,R)=(i,R')$
         with $R'\subsetneq R$, removing at least one row $(k,x)$ such that no
-        retained output at $k$ refines $x$.  It is an \emph{input-sealing
-        commitment} if it
-        makes some valid input invalid, $R'(k)=\varnothing$ for some $k$ with
-        $R(k)\neq\varnothing$ (necessarily $k\neq i$), and a \emph{choice
-        commitment} otherwise, when every valid input remains valid.  The
-        system's \emph{commitment basis} is the set of commitments it may use.
+        retained output at $k$ refines $x$.  The system's \emph{commitment
+        basis} is the set of commitments it may use.
         A commitment is \emph{applicable} at $\sigma$ when $p(\sigma)$ is
         defined.
 \end{enumerate}
@@ -739,35 +733,32 @@ removes rows, and taken row by row a removal is one of three things.
 Let a transition take $(i,R)$ to $(i',R')$ and remove the row $(k,x)$.  The
 removal is an \emph{input retirement} if $k$ does not refine $i'$: either $k$
 lies strictly below $i'$, as the previous current input $i$ does, and has been
-superseded, or $k$ is incomparable with $i'$ and can no longer be reached.  It
-is an \emph{output retirement} if $k$ remains valid and $x$ is \emph{covered},
-that is, some retained $u\in R'(k)$ has $x\OutputOrd u$.  Otherwise the row is
-\emph{removed by commitment}: a still-valid input, or an output that no
-retained output covers, has been excluded.
+superseded, or $k$ is incomparable with $i'$ and can no longer be reached.
+Otherwise the row is \emph{removed by commitment}: a still-valid input has
+lost its row.
 \end{definition}
 
 Retirements are the gray rows of the figures and removals by commitment the
 struck rows.  Input events perform input retirements and nothing else, since
-they leave surviving fibers unchanged.  An input retirement need not be
-covered: when $f$ is not monotone, the next input may retire a row whose
-output nothing refines, but the environment made that input unreachable.
-What distinguishes a removal by commitment is that the system excluded
-something no event had ruled out.  An output event keeps the current input, so
-it performs no input retirement; what it removes is either covered or not.
+they leave surviving fibers unchanged.  An input retirement does not promise
+that the removed output is refined by a remaining one: when $f$ is not
+monotone, the next input may retire a row whose output nothing refines, but
+the environment made that input unreachable.  What distinguishes a removal by
+commitment is that the system excluded something no event had ruled out.  An
+output event keeps the current input, so whatever it removes is removed by
+commitment.
 
 \begin{definition}[Exposable]
 \label{def:exposable}
-An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when every row that
-$\mathsf{output}(o)$ removes is an output retirement.
+An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when $\mathsf{output}(o)$
+removes no row.
 \end{definition}
 
-An output event whose output is not exposable removes a row by commitment.
-A system may expose only exposable outputs: when $o$ is not exposable, the
-system must first apply a commitment from its basis that removes the
-alternatives, after which $o$ may be exposable.  For a functional specification every fiber
-is a singleton, so a removed row is never covered: $f(i)$ is exposable at
-$(i,R)$ exactly when exposing it removes no row, that is, when
-$f(i)\OutputOrd f(j)$ for every valid $j\succeq_I i$.
+For a functional specification, $f(i)$ is exposable at $(i,R)$ exactly when
+$f(i)\OutputOrd f(j)$ for every valid $j\succeq_I i$.  A system may expose only
+exposable outputs: when $o$ is not exposable, the system must first apply a
+commitment from its basis that removes the alternatives, after which $o$ may
+be exposable.
 
 \paragraph{Input events.}
 Input events compose: $\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has
@@ -807,10 +798,11 @@ or, when they do not suffice, by commitments.
 
 \paragraph{Input-sealing commitments.}
 Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
-the current input fixed.  No input event does this; it is an input-sealing
-commitment, an act of the system, and for a functional specification it is the
-only kind of commitment that can ever be needed, since every fiber has one row
-and there is never an output to choose among.  Once no strict refinement of
+the current input fixed.  No input event does this; it is a commitment, an act
+of the system.  A commitment that makes some valid input invalid is an
+\emph{input-sealing commitment}, and for a functional specification every
+commitment is one, since every fiber has one row and there is never an output
+to choose among.  Once no strict refinement of
 the current input is valid, $R^\uparrow(i)=R(i)$, which for a functional
 specification is a singleton: the state is determined.
 Whether an input-sealing commitment is available is part of the system model,
@@ -1382,20 +1374,38 @@ Monotonicity asks that \emph{every finite set} of outputs admitted at $i$ be
 \subsection{The transition system under output choice}
 \label{sec:safe-exposure}
 
-The transition system of Section~\ref{sec:determination} applies unchanged to
-a relational specification; the difference is that a fiber $R(i)$ may now
-contain several outputs, so choice commitments, and output events that remove
-rows without being commitments, become relevant.  This subsection takes up
-output events first, then the runs of several participants and the histories
-they form.
+The transition system of Section~\ref{sec:determination} applies to a
+relational specification as it stands, but with several outputs in a fiber
+three of its notions acquire content.  A removed row may now be refined by a
+retained one; an output event may remove rows without excluding anything; and
+a commitment may choose among outputs without making any input invalid.  This
+subsection generalizes retirement, exposability, and commitments accordingly,
+then takes up the runs of several participants and the histories they form.
 
 \paragraph{Output events.}
 Exposing $o\in R(i)$ promises that later output at $i$ and at every
 refinement of $i$ will refine $o$, and $\mathsf{output}(o)$ keeps the promise
 by producing $R\mathbin{\upharpoonright_O}o$
-(Equation~\ref{eq:residual-refining-fibers}).  With several outputs in a
-fiber, an output event can remove rows while its output remains exposable
-(Definition~\ref{def:exposable}); the following characterizes when.
+(Equation~\ref{eq:residual-refining-fibers}).  The rows it removes are those
+whose outputs do not refine $o$; some of them may lose nothing.
+
+\begin{definition}[Output retirement]
+\label{def:output-retirement}
+Let a transition take $(i,R)$ to $(i',R')$ and remove a row $(k,x)$ whose
+input $k$ refines $i'$.  The removal is an \emph{output retirement} if $k$
+remains valid and $x$ is \emph{covered}: some retained $u\in R'(k)$ has
+$x\OutputOrd u$.  A row that is neither an input nor an output retirement is
+removed by commitment, as in Definition~\ref{def:retirement}.
+\end{definition}
+
+\begin{definition}[Exposable, under output choice]
+\label{def:exposable-relational}
+An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when every row that
+$\mathsf{output}(o)$ removes is an output retirement.
+\end{definition}
+
+For singleton fibers a removed row is never covered, so this agrees with
+Definition~\ref{def:exposable}.  The following characterizes it.
 
 \begin{proposition}[Exposability]
 \label{prop:exposability}
@@ -1424,6 +1434,14 @@ nonempty, and every retained output refines $o$.  A removal that is not an
 output retirement is not an input retirement either, since the current input
 is unchanged, so it is a removal by commitment.
 \end{proof}
+
+Proposition~\ref{prop:safe-runs} holds under this definition with the same
+proof: exposability of $o$ at $\sigma$ supplies, for the $x$ in $\sigma$'s
+fiber at $j$, an $x'$ refining both $o$ and $x$.  Commitments also split.  A
+commitment that makes some valid input invalid is input-sealing
+(Section~\ref{sec:determination}); one that keeps every valid input valid is a
+\emph{choice commitment}, which removes some of the outputs at a valid input
+and keeps others, as in Figure~\ref{fig:ambiguity-frames}(f).
 
 Equation~\ref{eq:safe-exposure} is directedness
 (Definition~\ref{def:fiber-directedness}) read against the residual rather
