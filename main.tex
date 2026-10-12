@@ -1174,7 +1174,10 @@ received $v_2$'s, and each has removed what its own input retired.  This is
 the whole connection to executions.  Draw the execution as a Lamport diagram:
 one line per participant carrying its events in order, and an arrow from each
 message's send to its receipt.  A \emph{consistent cut} is a set of events
-that includes, with every receipt, the send it came from.  Each participant's
+that includes, with every receipt, the send it came from: a global state the
+execution could have passed through~\cite{chandy1985distributed}.  The word
+is the standard one and is unrelated to consistency as confluence, which is a
+property of specifications.  Each participant's
 events within the cut determine its residual, and those residuals are all this
 paper ever consults.  Two cuts that yield the same residuals are
 indistinguishable here, however their messages were ordered or batched
@@ -1492,7 +1495,8 @@ send from another participant or from the environment, and
 receive that advances the receiving participant's input is an input event; a
 receive that does not leaves the residual unchanged, as does an output event
 that removes no row.  A \emph{consistent cut} $C$ is a subset of events closed
-under happens-before, and $(H,C)$ is a \emph{pointed history}.  For each
+under happens-before~\cite{chandy1985distributed}, and $(H,C)$ is a
+\emph{pointed history}.  For each
 participant $p$, the events of $C$ at $p$, in local order, form a run when
 they include no commitment from the basis; in general they form a sequence of
 transitions.  Write $\sigma_p^C$ for its final residual state and
