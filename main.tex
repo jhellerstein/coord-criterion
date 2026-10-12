@@ -891,10 +891,10 @@ each uses a device that should be named before it is used.  Call an output
 event \emph{unsafe} when its output is not exposable at the state where the
 event occurs, and a run \emph{unsafe} when it contains one.  Unsafe does not
 mean undefined: the event is a transition of the system of
-Definition~\ref{def:transition-system}.  It means that the event removes a row
-by commitment, so a system may not perform it as an output event; where its
-basis permits, the system first makes the commitment that removes the
-alternatives, after which the output is exposable
+Definition~\ref{def:transition-system}.  It means that the transition would
+remove a row that only a commitment may remove, so a system does not perform
+it; where its basis permits, the system first makes the commitment that
+removes the alternatives, after which the output is exposable
 (Section~\ref{sec:determination}).  Definition~\ref{def:consistency}
 quantifies over all runs, unsafe ones included, and the following shows that
 it must.
@@ -1422,7 +1422,7 @@ that is, $o$ is compatible in $R(j)$ with every $x\in R(j)$
 (Definition~\ref{def:compatibility}).  When $o$ is exposable,
 $\mathsf{output}(o)$ leaves every valid input valid, and $o$ is the least
 element of the upper fiber of the resulting state.  When $o$ is not exposable,
-$\mathsf{output}(o)$ removes a row by commitment.
+$\mathsf{output}(o)$ would remove a row that only a commitment may remove.
 \end{proposition}
 
 \begin{proof}
@@ -1433,7 +1433,8 @@ both $o$ and $x$; for a retained $x$, $u=x$ serves.  When
 Equation~\ref{eq:safe-exposure} holds, each $R'(j)$ contains such a $u$ and is
 nonempty, and every retained output refines $o$.  A removal that is not an
 output retirement is not an input retirement either, since the current input
-is unchanged, so it is a removal by commitment.
+is unchanged, so by Definition~\ref{def:retirement} it is a removal by
+commitment, which only a commitment makes.
 \end{proof}
 
 Proposition~\ref{prop:safe-runs} holds under this definition with the same
