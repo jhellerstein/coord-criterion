@@ -120,7 +120,7 @@ invoked in broader contexts, leaving a gap between folklore and what was proven.
 
 Several other traditions draw closely related boundaries, each in its own
 formalism.  The CAP Theorem proves an impossibility for available linearizable registers
-under partition~\cite{brewer2000towards,gilbert2002cap}.  State-based CRDTs give
+under partition~\cite{brewer2000towards,gilbert2002cap}.  CRDTs give
 a strong sufficient discipline for coordination-free convergence using
 join-semilattices and inflationary updates~\cite{shapiro2011crdt}.  Highly
 Available Transactions (HATs) classify transaction guarantees that survive
@@ -248,7 +248,7 @@ setting was never made precise.  Here we use a simpler model that applies to
 any specification.  A semantic specification describes allowed input/output
 behavior without committing to a language, placement, protocol, or message
 schedule.  This section addresses the case that prior work on both CALM and
-state-based CRDTs shared: specifications that are functions, in which each
+CRDTs shared: specifications that are functions, in which each
 input has a single specified output.  Section~\ref{sec:election-story} walks
 through the framework informally on an election.
 Section~\ref{sec:functional-specifications} defines functional specifications
@@ -906,7 +906,7 @@ Equation~\ref{eq:functional-monotonicity} becomes
 the standard definition of a monotone query~\cite{abiteboul1995foundations},
 which positive Datalog satisfies and negation may not.  Functional CALM
 generalizes the semantic statement from fact sets under inclusion to arbitrary
-input and output refinement partial orders.  The state-based CRDT interface
+input and output refinement partial orders.  The CRDT state interface
 has the same functional shape, with received payloads ordered by inclusion as
 input and the semilattice order as output order~\cite{shapiro2011crdt};
 Sections~\ref{sec:query-instance} and~\ref{sec:crdt-instance} take up both
@@ -1625,8 +1625,8 @@ changes whether monotonicity or Directed Outputs holds.
       & Functional
       & Monotonicity preserves answer facts as input grows; negation may require
         sealing. \\
-    State CRDT
-      & Received state deltas, inclusion
+    CRDT
+      & Received payloads, inclusion
       & Replica state, lattice order
       & Functional state; canonical merge
       & Join supplies a least common refinement across partial inputs. \\
@@ -1666,7 +1666,7 @@ can be compared with interfaces outside Datalog.
 Why did earlier CALM results not state Directed Outputs separately?  Their
 semantic query specification is functional: each input $J$ has one result
 $Q(J)$, so each output fiber is a singleton and directed automatically.
-State-based CRDTs also present a functional state for a fixed set of incorporated
+CRDTs also present a functional state for a fixed set of incorporated
 updates; semilattice join additionally provides least common refinements across
 partial inputs.  Complete CALM makes multiple semantic outputs at one input explicit,
 so directedness can no longer be assumed.
@@ -1700,7 +1700,12 @@ $q\circ s$ is consistent exactly when
   \label{eq:crdt-query-monotonicity}
         \end{equation}
 Monotonicity of $q$ on all of $D$ is sufficient but not required; $q$ need
-only preserve refinements between reachable states.
+only preserve refinements between reachable states.  Operation-based CRDTs
+have the same form.  Their payloads are operations delivered in causal order,
+and the set of operations a replica has received, closed under causal
+predecessors, grows by union; the causal-delivery discipline is the state
+lattice, and the replica's state is a function of that
+set~\cite{hellerstein2024turtles}.
 
 \paragraph{A safe merge can have an unsafe observation.}
 Consider a two-phase set with state $(A,R)$: $A$ records additions and $R$
