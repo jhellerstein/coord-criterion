@@ -186,6 +186,11 @@ participants expose, in whatever order input arrives, they can always be
 brought to a common state at any input combining theirs
 (\S\ref{sec:complete-calm-theorem}).
 
+We take this as what consistency should mean for a distributed system: not a
+particular consistency model, but confluence of whatever the specification
+admits.  The acronym then reads \emph{Consistency As Lifted Monotonicity}, and
+the original CALM Theorem is its functional case.
+
 Complete CALM also yields a Complete CAP Theorem
 (\S\ref{sec:cap-corollary}).  Classical CAP gives an
 impossibility for linearizable registers under partition.
@@ -909,13 +914,10 @@ instances.
 
 Historically, CALM stands for \emph{Consistency As Logical Monotonicity},
 and its C has been read both as consistency and as confluence;
-Definition~\ref{def:consistency} is both.  Here, ``logical'' refers not to a
-particular logic or programming language, but to preservation of semantic
-claims under declared information-refinement orders.  Functional CALM states that condition for any functional semantic
-specification, regardless of the formalism used to express it.  Once
-specifications become relational in the next section, the monotonicity in question is monotonicity
-under an order lifted from outputs to sets of outputs, and the acronym can be
-read as \emph{Consistency As Lifted Monotonicity}.
+Definition~\ref{def:consistency} is both.  Functional CALM states the result
+for any functional specification, regardless of the formalism used to express
+it; once specifications become relational in the next section, the
+monotonicity in question is Lifted Monotonicity.
 
 Functional CALM handles uncertainty about input arrival, and prior to this work, that
 was the whole of CALM: one input, one answer, and monotonicity decides whether
@@ -1907,6 +1909,33 @@ the same futures, the states themselves may serve as inputs, ordered by
 reachability, provided that order is antisymmetric.  That is the coarsening the
 proposition licenses, and the election of Section~\ref{sec:election-story} is the
 result for a vote-counting machine whose state is the set of ballots received.
+
+\subsection{Consistency as confluence}
+\label{sec:consistency-as-confluence}
+
+The word consistency names two different things in the literature, and the
+framework separates them.  A consistency model---linearizability, causal
+consistency, snapshot isolation, read committed---is a specification: it says
+which outputs are admissible for a given history of operations.  Consistency
+in CALM's sense is a property of a specification: its histories are
+confluent.  Written as a table with orders, every traditional model therefore
+falls on one side of the dichotomy.  Linearizability and serializability
+admit total orders that cannot refine two concurrent explanations, so they
+are not monotone (Appendix~\ref{app:deployment},
+Section~\ref{sec:hat-instance}).  Causal consistency admits one explanation
+for concurrent reads and is monotone under the deployment in which each
+participant answers its own reads (Appendix~\ref{app:deployment}).  Read
+committed and the other HAT guarantees accumulate facts and are monotone
+(Section~\ref{sec:hat-instance}).  Strong eventual consistency asks more
+than confluence, a least common refinement that every replica reaches, and
+last-writer-wins eventual consistency asks less, converging by discarding
+content (Section~\ref{sec:crdt-instance}).  What the traditional definitions
+leave implicit, and the framework requires, is the output order: the same
+operation history yields a monotone or a non-monotone specification depending
+on what an exposed read is taken to promise
+(Section~\ref{sec:design-boundary}).  Confluence is thus not one more
+consistency model; it is the question each model answers one way or the
+other, whether what it admits can be provided without coordination.
 
 \subsection{Safety is not liveness}
 
