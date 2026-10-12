@@ -384,9 +384,6 @@ is governed by one rule: only the rows at the current input and its
 refinements remain, and every other row is \emph{retired}.  The specification
 with the retired rows removed is a \emph{residual state}, the account of what
 is still possible, and the inputs that still have rows are the \emph{valid} ones.
-Residual states are the states of a transition system whose transitions are
-input events and the exposures and commitments introduced below; a \emph{run}
-is a sequence of them.
 The environment produces input events; the system does not choose them, and
 the residual state depends only on the input reached, not on the order or
 grouping in which the ballots arrived.  In panel (b) the input has grown
@@ -481,12 +478,20 @@ Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one can
 expose only by commitment.
 
+\paragraph{A semantic transition system.}
+We now have all the moves.  Residual states are the states of a transition
+system, and its transitions are of three kinds: input events, made by the
+environment, and exposures and commitments, made by the system.  Every panel
+of Figures~\ref{fig:election-frames} and~\ref{fig:nonmonotone-frame} is a
+state, and each panel after (a) is reached from (a) by one or two
+transitions.  A \emph{run} is a sequence of input events and exposures from a
+starting input; it makes no commitment beyond what its exposures remove.
+
 \paragraph{Consistency.}
 Both CALM theorems have the same shape: a monotonicity condition on the
 specification is equivalent to \emph{confluence}, which is what the CALM literature
-uses for application-level consistency.  Consider runs made of input events
-and exposures, with no other commitments.  The specification is
-\emph{consistent} when such runs are confluent: two runs with current inputs
+uses for application-level consistency.  The specification is
+\emph{consistent} when its runs are confluent: two runs with current inputs
 $i$ and $j$, and any input $k$ refining both, can each be advanced to $k$ and
 then, by exposing an output there, to one and the same residual state.  In the
 election, runs with current inputs $a\cdot\cdot$ and $ab\cdot$ have each
