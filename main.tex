@@ -506,24 +506,18 @@ transitions.  A \emph{run} is a sequence of input and output events from a
 starting input; it makes no commitment beyond what its output events remove.
 
 \paragraph{Consistency.}
-Functional CALM can now be stated in the terms of the transition system: the
-runs of a functional specification are \emph{confluent} exactly when the
-specification is monotone.  Runs are confluent when any two of them, with
-current inputs $i$ and $j$, can be brought back together at every input $k$
-refining both: each can be advanced to $k$ by an input event and then, by
-exposing an output there, to one and the same residual state.  In the
-election, runs with current inputs $a\cdot\cdot$ and $ab\cdot$ have each
-exposed $\bot$; advancing both to $aba$ and exposing $a$ brings them to the
-same state.  Under the equality order the specification is not monotone, and
-the run that exposes $\bot$ at $a\cdot\cdot$, an output that is not exposable
-there, removes the row at $aba$, so no input event can advance it to $aba$:
-the runs are not confluent.  Confluence of runs is what the CALM literature
-means by consistency, and we take it as the definition: a specification is
-\emph{consistent} when its runs are confluent.  Functional CALM, proved
-below, is then the statement that a functional specification is consistent
-exactly when it is monotone, and Complete CALM extends the same statement to
-specifications with several outputs per input and to the Lamport histories of
-many participants.
+Runs are \emph{confluent} when any two of them, with current inputs $i$ and
+$j$, can be brought back together at every input $k$ refining both: each can
+be advanced to $k$ by an input event and then, by exposing an output there, to
+one and the same residual state.  In the election, runs with current inputs
+$a\cdot\cdot$ and $ab\cdot$ have each exposed $\bot$; advancing both to $aba$
+and exposing $a$ brings them to the same state.  Under the equality order, the
+run that exposes $\bot$ at $a\cdot\cdot$, an output that is not exposable
+there, removes the row at $aba$, so no input event can advance it to $aba$.
+Confluence of runs is what the CALM literature means by consistency, and we
+take it as the definition: a specification is \emph{consistent} when its runs
+are confluent.  Functional CALM, proved below, says that a functional
+specification is consistent exactly when it is monotone.
 
 The rest of this section states these notions formally.
 Figure~\ref{fig:formalism-summary} collects the formal objects of this section
