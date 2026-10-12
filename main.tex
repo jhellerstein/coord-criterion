@@ -506,10 +506,12 @@ transitions.  A \emph{run} is a sequence of input and output events from a
 starting input; it makes no commitment beyond what its output events remove.
 
 \paragraph{Consistency.}
-Runs are \emph{confluent} when any two of them, with current inputs $i$ and
-$j$, can be brought back together at every input $k$ refining both: each can
-be advanced to $k$ by an input event and then, by exposing an output there, to
-one and the same residual state.  In the election, runs with current inputs
+Two residual states reached by runs are \emph{confluent} when, at every input
+$k$ refining both of their current inputs, a single residual state with
+current input $k$ is reachable from both: each is advanced to $k$ by an input
+event and then, by exposing an output there, to the same state.  The
+quantifier over $k$ is the environment's: whatever input arrives next, the two
+can still be brought together.  In the election, runs with current inputs
 $a\cdot\cdot$ and $ab\cdot$ have each exposed $\bot$; advancing both to $aba$
 and exposing $a$ brings them to the same state.  Under the equality order, the
 run that exposes $\bot$ at $a\cdot\cdot$, an output that is not exposable
