@@ -469,17 +469,14 @@ specification is equivalent to \emph{confluence}, which is what the CALM literat
 uses for application-level consistency.  Consider runs of the system that
 expose an output at each current input while making no commitments.  The
 specification is \emph{consistent} when two things hold.  First, every such
-exposure is exposable: whatever input a run has seen, it can announce an
-output admitted there.  Second, runs are confluent: take two such runs that
-have seen different inputs $i$ and $j$, announcing as they went, and any input
-$k$ refining both.  The row at $k$ must survive in both residual states, so
-that the environment can extend either run to $k$ and both then announce
-$f(k)$.  In the election, runs at $a\cdot\cdot$ and $ab\cdot$ have each
-announced $\bot$, and both retain the row $(aba,a)$.  Under the equality
-order, a run that announced $\bot$ at $a\cdot\cdot$ would have removed every
-row whose output is not $\bot$, including the row at $aba$, and could not be
-extended there.  What a run has announced along the way therefore never
-prevents it from reaching, and agreeing at, any input it could still see.
+exposure is exposable.  Second, two such runs with current inputs $i$ and $j$
+can always be brought together: at every input $k$ that refines both $i$ and
+$j$, the row at $k$ survives in both residual states, so an input event can
+advance either run to $k$.  In the election, runs with current inputs
+$a\cdot\cdot$ and $ab\cdot$ have each exposed $\bot$, and both retain the row
+$(aba,a)$.  Under the equality order, a run that exposed $\bot$ at
+$a\cdot\cdot$ would have removed every row whose output is not $\bot$,
+including the row at $aba$, and no input event could advance it there.
 Functional CALM, proved below, says that a functional specification is
 consistent exactly when it is monotone.
 
