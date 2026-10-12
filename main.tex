@@ -56,19 +56,23 @@ boundary in a different mathematical language, and conventional wisdom has
 drifted from what the literature proves.  We give one semantic framework for
 all of them: a specification is a table of admissible input--output pairs with
 ordered columns, and the state of a computation is the \emph{residual} of that
-table, the rows still admissible.  Residuals are provably the semantic
-quotient of Lamport histories.  \emph{Functional CALM} generalizes the
+table---the rows still admissible.
+% Residuals are provably the semantic
+% quotient of Lamport histories.
+\emph{Functional CALM} generalizes the
 original CALM Theorem, replacing Datalog queries with arbitrary functions
 between partially ordered input and output domains: monotonicity
 characterizes exactly when output can be exposed consistently as distributed
 input arrives.
 \emph{Complete CALM} extends this to \emph{ambiguous} specifications that admit several outputs
-for one input, as leader election and transaction ordering do.  Its Lamport
-histories are confluent---participants that have exposed outputs on
-different inputs can always be brought to a common state---exactly when it
-satisfies \emph{Lifted Monotonicity}, monotonicity under an order lifted from
-outputs to sets of outputs; where it fails, progress requires a
-\emph{commitment}, and only commitments require coordination.  Complete CALM yields a Complete CAP
+for one input, as leader election and transaction ordering do.  Complete CALM
+shows that the Lamport histories of a system implementing such a
+specification are confluent---participants that have exposed outputs on
+different inputs can always be brought to a common state---exactly when the
+specification satisfies \emph{Lifted Monotonicity}, monotonicity under an
+order lifted from outputs to sets of outputs.  Where Lifted Monotonicity
+fails, progress requires an irrevocable \emph{commitment}, and only
+commitments require coordination.  Complete CALM yields a Complete CAP
 Theorem that extends classical CAP from a one-way impossibility about
 linearizability to a dichotomy parameterized by the declared specification
 and the deployment.  The remaining sections place CRDTs, Highly Available
