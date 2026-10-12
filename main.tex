@@ -1168,11 +1168,15 @@ residual changes only by its own transitions, which are those of
 Section~\ref{sec:election-story}: input events, output events, and
 commitments.  Two further kinds of event connect participants without being
 transitions of their own: a participant may \emph{send} a message and may
-\emph{receive} one.  A message carries whatever the protocol puts in it, both
-information the specification can see (ballots, exposed outputs, commitments
-made elsewhere) and state that serves only the computation (locks, timestamps,
-acknowledgments).  A send changes no residual.  A receive is an input event at
-the receiver when what it carries advances the receiver's input; otherwise it
+\emph{receive} one.  A message carries whatever the protocol puts in it.  Some
+of its contents may be input in the specification's sense, as a forwarded
+ballot is in the election; the rest is state that serves the protocol's
+computation and that the specification does not see.  Which is which depends
+on the specification: a timestamp is computational state to the transaction
+ordering of Figure~\ref{fig:ambiguity-frames}(f) and would be input to a
+specification whose inputs carried timestamps.  A send changes no residual.  A
+receive is an input event at the receiver when what it carries advances the
+receiver's input; otherwise it
 changes the receiver's residual not at all, however much it may inform the
 protocol.  Each participant's residual is therefore the specification with the
 rows removed by its own input events, output events, and commitments, and two
