@@ -372,14 +372,17 @@ with the retired rows removed is a \emph{residual state}, the account of what
 is still possible, and the inputs that still have rows are the \emph{valid} ones.
 The environment produces input events; the system does not choose them, and
 the residual state depends only on the input reached, not on the order or
-grouping in which the ballots arrived.  In panel (b) the row at $a\cdot\cdot$
-is retired because $ab\cdot$ supersedes it, and the rows at $aa\cdot$, $aaa$,
-and $aab$ because no input refines both $aa\cdot$ and $ab\cdot$.  Retiring
-the row at $a\cdot\cdot$ loses nothing, because its output $\bot$ is refined
-by the $\bot$ at $ab\cdot$.  This is where monotonicity, defined above, does
-its work: in a monotone specification the row that supersedes another always
-refines its output, so superseding never loses anything.  We will see below
-what happens when it fails.
+grouping in which the ballots arrived.  In panel (b) the input $a\cdot\cdot$
+has been superseded by its refinement $ab\cdot$, so its row is retired; the
+inputs $aa\cdot$, $aaa$, and $aab$ can no longer be reached, since no input
+refines both $aa\cdot$ and $ab\cdot$, so their rows are retired too.  When
+an input is superseded, its output goes with it, and the question is whether
+anything is lost.  Here nothing is: the output $\bot$ at $a\cdot\cdot$ is
+refined by the output $\bot$ at $ab\cdot$.  This is what monotonicity, defined
+above, guarantees in general: whenever one input refines another, the output
+at the refinement refines the output at the original, so superseding an input
+never loses anything its output claimed.  We will see below what happens when
+it fails.
 
 \paragraph{What could still happen.}
 While input may still grow, what matters is not only the current row but what
