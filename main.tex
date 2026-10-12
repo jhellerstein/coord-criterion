@@ -1700,12 +1700,16 @@ $q\circ s$ is consistent exactly when
   \label{eq:crdt-query-monotonicity}
         \end{equation}
 Monotonicity of $q$ on all of $D$ is sufficient but not required; $q$ need
-only preserve refinements between reachable states.  Operation-based CRDTs
-have the same form.  Their payloads are operations delivered in causal order,
-and the set of operations a replica has received, closed under causal
-predecessors, grows by union; the causal-delivery discipline is the state
-lattice, and the replica's state is a function of that
-set~\cite{hellerstein2025turtles}.
+only preserve refinements between reachable states.  Operation-based CRDTs have the same form.  Their payloads
+are operations delivered in causal order, and the set of operations a replica
+has received, closed under causal predecessors, grows by union; the causal
+order, once made explicit in the payload, is the state lattice, and the
+replica's state is a function of that set.  This is the emulation of
+operation-based by state-based CRDTs in the original CRDT
+paper~\cite{shapiro2011crdt}, the operation-context semantics of replicated
+data types~\cite{burckhardt2014replicated}, and the partially ordered log of
+pure operation-based CRDTs~\cite{baquero2014operation}; see
+also~\cite{hellerstein2025turtles}.
 
 \paragraph{A safe merge can have an unsafe observation.}
 Consider a two-phase set with state $(A,R)$: $A$ records additions and $R$
