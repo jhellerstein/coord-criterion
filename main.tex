@@ -1863,40 +1863,25 @@ state appropriate fairness, failure, and cost assumptions.
 \section{Related Work}
 \label{sec:related}
 
-The CALM conjecture connected logical monotonicity with coordination freedom
-~\cite{hellerstein2010declarative,hellerstein2020keeping}.  Ameloot et al.
-established the theorem using relational transducers and studied how data
-placement and system knowledge change coordination requirements
-~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM generalizes the
-semantic order-preservation result; Complete CALM adds semantic output choice and the
-effect of coordination on that choice.
-
-Brewer's conjecture and the Gilbert--Lynch theorem focus attention on
-availability during partitions~\cite{brewer2000towards,gilbert2002cap}.
-The Complete CAP Theorem applies Complete CALM to choices that deployments
-and partitions can separate.  It extends the classical impossibility to both
-sides of the specification-level dichotomy: the total-order register recovers
-the negative result, while the common-refinement condition supplies the
-positive result.  Local choices controlled by one participant do not require
-cross-partition agreement.
-
-CRDTs derive strong eventual consistency from carefully designed state or
-operation algebras~\cite{shapiro2011crdt}.  Keep CALM and CRDT On argued that
-these algebraic guarantees stop at the query boundary and proposed monotonicity
-as the criterion for safe coordination-free observations~\cite{laddad2022keep}.
-Functional CALM formalizes that semantic criterion for arbitrary ordered result
-domains, while Complete CALM additionally handles nondeterministic observations.
-The distinction from CRDT merge is between a uniform least merge and the weaker
-existence of some admitted common refinement.  Work on consistency semantics likewise distinguishes visibility,
-ordering, availability, and convergence
-~\cite{burckhardt2014principles,mahajan2011consistency}.
-
-HATs classify transactional guarantees realizable without cross-partition
-coordination under stated client and failure assumptions~\cite{bailis2013hat}.
-Invariant confluence characterizes when independently valid transactional
-states preserve an application invariant on merge
-~\cite{bailis2014coordination}.  Complete CALM exposes their common-refinement structure
-while preserving their different output domains.
+The CALM conjecture connected logical monotonicity with coordination
+freedom~\cite{hellerstein2010declarative,hellerstein2020keeping}, and Ameloot
+et al.\ proved it for relational transducers, studying how data placement and
+system knowledge change coordination
+requirements~\cite{ameloot2013relational,ameloot2015weaker};
+Sections~\ref{sec:functional-calm-theorem} and~\ref{sec:query-instance}
+relate Functional CALM to that result.  Brewer's conjecture and the
+Gilbert--Lynch theorem~\cite{brewer2000towards,gilbert2002cap} are taken up in
+Section~\ref{sec:cap-corollary} and Appendix~\ref{app:deployment}.  CRDTs
+derive strong eventual consistency from state or operation
+algebras~\cite{shapiro2011crdt}, and Keep CALM and CRDT On first proposed
+monotonicity as the criterion for safe observations of a
+replica~\cite{laddad2022keep}; Section~\ref{sec:crdt-instance} places both in
+the model.  Work on consistency semantics likewise distinguishes visibility,
+ordering, availability, and
+convergence~\cite{burckhardt2014principles,mahajan2011consistency}.
+Highly available transactions~\cite{bailis2013hat} and invariant
+confluence~\cite{bailis2014coordination} are Sections~\ref{sec:hat-instance}
+and~\ref{sec:iconfluence-instance}.
 
 \section{Conclusion}
 \label{sec:conclusion}
