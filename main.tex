@@ -342,13 +342,15 @@ exposure, runs, and consistency---is exercised on the example.
 \end{figure*}
 
 \paragraph{A specification is a table.}
-A specification is a table of input--output pairs, listing the outputs
-admissible for each input; when the input column determines the output
-column, as for squaring with rows $(2,4)$, $(3,9)$, $(4,16),\ldots$, the
-specification is \emph{functional}.  Everything that follows is a matter of
-removing rows from a specification, and for now ``the system'' is a single
-actor; who does what in a distributed implementation comes in
-Section~\ref{sec:complete-calm}.
+Three design decisions capture a system's semantics: a table of
+input--output pairs, listing the outputs admissible for each input; a partial
+order on each column; and the set of irrevocable acts the system may take on
+its own authority, its \emph{commitment basis}.  We take them in turn.  When
+the input column of the table determines the output column, as for squaring
+with rows $(2,4)$, $(3,9)$, $(4,16),\ldots$, the specification is
+\emph{functional}.  Everything that follows is a matter of removing rows from
+a specification, and for now ``the system'' is a single actor; who does what
+in a distributed implementation comes in Section~\ref{sec:complete-calm}.
 
 Figure~\ref{fig:election-frames}(a) is the specification of a small election.
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
@@ -362,7 +364,7 @@ $a$ the result is $a$; row $abb$ says that if $v_2$ and $v_3$ both vote $b$ the
 result is $b$.
 
 The rows are only part of the specification.  Each column also carries a
-partial order, and both orders are design decisions.  The \emph{input order}
+partial order, the second design decision.  The \emph{input order}
 says what counts as more input: here, more ballots, so $ab\cdot$ \emph{refines}
 $a\cdot\cdot$, while $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output
 order} says when a later output keeps every promise an earlier one made: here
@@ -397,7 +399,7 @@ observed above.
 \paragraph{What could still happen.}
 While input may still grow, what matters is not only the current row but what
 any input that could still arrive might require.  The future of the election
-is its current input together with the valid refinements, and the outputs of
+is its current input together with its valid input refinements, and the outputs of
 those rows form the current input's \emph{upper fiber}.  In
 panel (b) those rows are the current row and the two refinements $aba$ and
 $abb$ in which $v_3$ votes, so the upper fiber, shaded, is $\{\bot,a,b\}$:
@@ -418,8 +420,10 @@ input has not changed: those inputs have been rendered invalid.  This is a
 \emph{commitment}, specifically an \emph{input-sealing commitment}, and it is
 an act of the system rather than of the environment.  It
 irrevocably disallows refinements the original specification admitted.  Only
-the system may perform it, and only if it is among the commitments the system
-declares in advance, its \emph{commitment basis}.  Afterward no refinement of
+the system may perform it, and only if it is in the commitment basis, the
+third design decision: closing the polls is an authority the election's
+designer gave the registrar, and a different design could withhold it.
+Afterward no refinement of
 $ab\cdot$ remains valid, and its upper fiber has collapsed to $\{\bot\}$, so
 it too is determined.
 For a functional specification, input-sealing commitments are the only kind
