@@ -832,6 +832,11 @@ A \emph{run} is a finite sequence of input and output events from a canonical
 initial state, using no commitment from the basis.
 \end{definition}
 
+A run is a path in the transition system as defined, in which
+$\mathsf{output}(o)$ is available for every $o\in R(i)$; which of its output
+events a system may perform is taken up in
+Section~\ref{sec:functional-calm-theorem}.
+
 
 \begin{lemma}[Residual of a run]
 \label{lem:run-residual}
@@ -899,14 +904,40 @@ liveness, or termination detection.
 Both CALM theorems are proved in the same way, and the only-if direction of
 each uses a device that should be named before it is used.  Call an output
 event \emph{unsafe} when its output is not exposable at the state where the
-event occurs, and a run \emph{unsafe} when it contains one.  A system never
-performs an unsafe output event (Section~\ref{sec:determination}), but
-Definition~\ref{def:consistency} quantifies over all runs, unsafe ones
-included, and must: restricted to safe runs it would be satisfied vacuously
-by a specification none of whose outputs is ever exposable.  An unsafe run has
-removed a row by commitment without any commitment from the basis, and the
-proofs below exhibit a specification's inconsistency by producing one that
-cannot be rejoined.
+event occurs, and a run \emph{unsafe} when it contains one.  Unsafe does not
+mean undefined: the event is a transition of the system of
+Definition~\ref{def:transition-system}.  It means that the event removes a row
+by commitment, so a system may not perform it as an output event; where its
+basis permits, the system first makes the commitment that removes the
+alternatives, after which the output is exposable
+(Section~\ref{sec:determination}).  Definition~\ref{def:consistency}
+quantifies over all runs, unsafe ones included, and the following shows that
+it must.
+
+\begin{proposition}[Safe runs are confluent]
+\label{prop:safe-runs}
+For any ordered specification, a finite family of runs in which every output
+event is safe is confluent at every common refinement of its final inputs.
+\end{proposition}
+
+\begin{proof}
+Let $j$ be a common refinement of the final inputs and consider the output
+events of all the runs in any order that respects the order within each run.
+We maintain an $x\in\fiber{j}$ that refines every output event processed so
+far, starting from any element of the nonempty fiber $\fiber{j}$.  Let the
+next event expose $o$ on run $r$ at state $\sigma$.  By
+Lemma~\ref{lem:run-residual}, $x$ lies in $\sigma$'s fiber at $j$, since it
+refines every output exposed earlier on run $r$; and $j$ refines
+$\sigma$'s current input.  Because $o$ is exposable at $\sigma$, some $x'$ in
+that fiber refines both $o$ and $x$; continue with $x'$.  The final $x$
+refines every output exposed on every run, so by the lemma it lies in every
+run's fiber at $j$, and Proposition~\ref{prop:confluence} gives a common
+state.
+\end{proof}
+
+Consistency therefore has content only because unsafe runs are included; the
+only-if proofs below exhibit an inconsistent specification's unsafe run and
+show that it cannot be rejoined.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
@@ -1511,8 +1542,8 @@ Proposition~\ref{prop:complete-calm-criterion} supplies $u\in\fiber{j}$
 refining them all, and $u$ lies in the intersection.
 
 Conversely, assume consistency, and let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have
-a common refinement $j$.  For each $r$, the run, unsafe in general, that
-starts at $\sigma_0(i_r)$ and exposes $o_r$ ends with
+a common refinement $j$.  For each $r$, the run that starts at
+$\sigma_0(i_r)$ and exposes $o_r$ ends with
 $R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.
 Consistency gives $u$ in every $R_r(j)$, an admitted common refinement of the
 $o_r$, which is the Complete CALM criterion.
