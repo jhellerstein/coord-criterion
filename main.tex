@@ -400,7 +400,7 @@ on its own; below we meet the case where the system must act.
 Return to panel (b) and let the registrar close the polls: $v_3$'s ballot,
 should it arrive, will not be counted.  Panel (d) shows the result.  The rows
 at $aba$ and $abb$ are removed although no ballot arrived and the current
-input has not changed: those inputs have been sealed off.  This is a
+input has not changed: those inputs have been rendered invalid.  This is a
 \emph{commitment}, specifically an \emph{input-sealing commitment}, and it is
 an act of the system rather than of the environment.  It
 irrevocably disallows refinements the original specification admitted.  Only
@@ -409,8 +409,8 @@ declares in advance, its \emph{commitment basis}.  Afterward no refinement of
 $ab\cdot$ remains valid, and its upper fiber has collapsed to $\{\bot\}$, so
 it too is determined.
 For a functional specification, input-sealing commitments are the only kind
-of commitment there is.  Each row's input determines its output, so there are
-never choices to be made among outputs; the only commitment available is to seal input.
+of commitment there is.  The next section considers additional commitments that arise
+when an input can be associated with many outputs.
 
 \begin{figure}[t]
   \centering
@@ -440,15 +440,13 @@ never choices to be made among outputs; the only commitment available is to seal
 
 \paragraph{Exposure.}
 \emph{Exposing} a result to a client is a different act from making a commitment.
-Exposing $o$ promises that the final result will refine $o$.  A system may
-expose an output only when doing so removes no genuine alternative: every
-output still possible at some input must have, at that same input, a
-refinement that also refines $o$.  Such an $o$ is \emph{exposable}.  For a
-functional specification, where each input has one output, this says that $o$
-lies below everything in the upper fiber, and exposing it removes no row at
-all.  Read the footers of Figure~\ref{fig:election-frames}: $\bot$ is
-exposable in every panel, because every shaded output refines it, and $a$ is
-exposable in panel (c).
+Exposing $o$ promises that the final result will refine $o$.  An output $o$
+is \emph{exposable} at the current input when it is smaller than everything
+in the upper fiber: every input that may still arrive then has an output
+larger than $o$, which preserves its content, so exposing $o$ removes no row.
+Read the footers of Figure~\ref{fig:election-frames}: $\bot$ is exposable in
+every panel, because every shaded output refines it, and $a$ is exposable in
+panel (c).
 
 \paragraph{When monotonicity fails.}
 Now change one thing: make all outputs incomparable, dropping
