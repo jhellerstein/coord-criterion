@@ -200,9 +200,10 @@ This paper makes four contributions:
         arbitrary functions, represented as semantic input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to semantic output choice, formalizes
-        exposure and commitment, defines consistency as confluence over runs
+        exposure and commitment, defines consistency as confluence of runs
         of the framework, and proves that Lifted Monotonicity characterizes
-        it.  Consistent specifications need no
+        it, equivalently that every Lamport history of the system is
+        confluent.  Consistent specifications need no
         coordination; commitments are shown to require it.  In partition form
         this is the Complete CAP Theorem,
         which extends the classical impossibility to a bidirectional dichotomy
@@ -519,7 +520,7 @@ and the next in one place, with references to where each is defined.
     \midrule
     consistent & runs confluent: \ $\bigcap_r R_r(j)\neq\varnothing$ at every common refinement $j$ of their current inputs & Def.~\ref{def:consistency}, Prop.~\ref{prop:confluence} \\
     Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
-    Complete CALM & consistent $\iff$ Lifted Monotonicity & Thm.~\ref{thm:complete-calm} \\
+    Complete CALM & Lifted Monotonicity $\iff$ runs confluent $\iff$ histories confluent & Thm.~\ref{thm:complete-calm} \\
     coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
@@ -1092,14 +1093,18 @@ and cut it at any consistent moment; each participant's events below the cut
 determine its residual, and those residuals are all this paper ever consults.
 Two cuts that yield the same residuals are indistinguishable here, however
 their messages were ordered or batched
-(Proposition~\ref{prop:residual-quotient}).
+(Proposition~\ref{prop:residual-quotient}).  Complete CALM is stated at this
+level: every Lamport history in which participants only receive input and
+expose is confluent, in that its participants can always be brought to one
+residual at any input combining theirs, exactly when the specification is
+monotone.
 
 Commitments are precisely the semantic actions that require coordination;
 input events and exposures may be done autonomously.  This
 follows directly from the discussion above.  Input arrives at each participant
-on its own.  An exposure retires only covered rows, so every output another
-participant still admits has a refinement consistent with what was exposed,
-and combining inputs later contradicts nothing.  A commitment removes an alternative that another
+on its own.  An exposable exposure retires only covered rows, so every output
+another participant still admits has a refinement consistent with what was
+exposed, and combining inputs later contradicts nothing.  A commitment removes an alternative that another
 participant's residual may still admit, so it is safe only if every such
 participant agrees; that agreement is coordination.  Determination that needs
 a commitment is therefore precisely the determination that needs coordination.
@@ -1295,7 +1300,7 @@ The transition system of Section~\ref{sec:determination} applies unchanged to
 a relational specification; the difference is that a fiber $R(i)$ may now
 contain several outputs, so choice commitments, and exposures that remove rows
 without being commitments, become relevant.  This subsection takes up exposure
-first, then the runs of several participants.
+first, then the runs of several participants and the histories they form.
 
 \paragraph{Exposure.}
 Exposing $o\in R(i)$ promises that later output at $i$ and at every
@@ -1354,12 +1359,58 @@ that receive the same input in different orders or groupings, with no
 exposures or commitments, reach the same state; what can differ is which
 exposures and commitments a participant makes along the way.  Replicas, in
 the usual sense, are participants that receive the same input in different
-orders; their runs end at the same input, so condition~2 of consistency
-already covers them, with no need for a separate notion of replica
-consistency.  Runs of several participants fit together into a history in
-Lamport's sense, and Appendix~\ref{app:histories} shows that the vector of
-their residuals is the semantic quotient of such histories: consistency, stated
-over residuals, is a statement about executions.
+orders; their runs end at the same input, so consistency already covers them,
+with no need for a separate notion of replica consistency.
+
+\paragraph{Histories.}
+Runs of several participants fit together into a history in Lamport's sense.
+A \emph{distributed history} $H$ is a set of events, each at one participant,
+with each participant's events totally ordered, each receive matched to a
+send, and \emph{happens-before} the transitive closure of local order and
+matching.  A receive that advances the receiving participant's input is an
+input event; a receive that does not leaves the residual unchanged, as does an
+exposure that removes no row.  A \emph{consistent cut} $C$ is a subset of
+events closed under happens-before.  For each participant $p$, the events of
+$C$ at $p$, in local order, form a run; write $\sigma_p^C$ for its final
+residual state and $\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector
+of residuals, the \emph{semantic endpoint} of the cut.
+
+\begin{proposition}[Residuals are the semantic quotient of histories]
+\label{prop:residual-quotient}
+Fix a specification, a participant set, and a commitment basis.
+\begin{enumerate}
+  \item $\operatorname{end}(H,C)$ is the same for every replay of the events
+        of $C$ in an order that respects happens-before.
+  \item Whether a transition is applicable at participant $p$ after $(H,C)$,
+        and the residual it produces, depend only on $\sigma_p^C$.
+  \item Consequently, pointed histories $(H,C)$ and $(H',C')$ with equal
+        endpoints admit the same semantic continuations, and the endpoint map
+        induces a bijection between its equivalence classes and the reachable
+        residual vectors.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Each coordinate $\sigma_p^C$ is determined by $p$'s events in local order,
+which every happens-before-respecting replay preserves, and events at
+different participants act on different coordinates; receives that advance no
+input change no coordinate.  This gives (1).  Input events, exposures, and
+commitments are each partial functions of the local residual, which gives
+(2).  Then (3) is (2) applied coordinate by coordinate, together with the
+observation that any function induces a bijection between the classes of its
+kernel equivalence and its image.
+\end{proof}
+
+Everything the specification cares about in a Lamport diagram survives in its
+cut's residuals; message order, batching, and who has learned what are
+forgotten exactly when they do not advance anyone's input.  Confluence
+therefore has a meaning for histories.  Let $j$ be a common refinement of the
+participants' current inputs at $C$.  The pointed history $(H,C)$ is
+\emph{confluent at $j$} when $H$ can be extended past $C$, by input events
+and exposures at the participants, so that every participant has current input
+$j$ and all participants hold the same residual.  The extension is a semantic
+object, as runs are: it says that the participants' states can be so
+continued, not that any protocol delivers $j$ or communicates anything.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -1372,13 +1423,33 @@ input, and an exposure may have removed rows.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-An ordered relational specification is consistent if and only if
-it satisfies Lifted Monotonicity:
-$i\InputOrd j$ implies $\fiber{i}\JointOutputOrd\fiber{j}$.
+For an ordered relational specification, the following are equivalent:
+\begin{enumerate}
+  \item it satisfies Lifted Monotonicity:
+        $i\InputOrd j$ implies $\fiber{i}\JointOutputOrd\fiber{j}$;
+  \item it is consistent: its runs are confluent
+        (Definition~\ref{def:consistency});
+  \item for every finite set of participants, every distributed history in
+        which each participant's events form a run---no commitment from the
+        basis is used---is confluent, at every consistent cut, at every
+        common refinement of the participants' current inputs.
+\end{enumerate}
 \end{theorem}
 
 \begin{proof}
-By Proposition~\ref{prop:confluence}, consistency says that for every finite
+\emph{(2) and (3).}  By Proposition~\ref{prop:residual-quotient}, the
+endpoint of $(H,C)$ is the vector of final states of the participants' runs,
+and what each participant can do next depends only on its coordinate.  If
+runs are confluent, Proposition~\ref{prop:confluence} gives $u$ in the
+intersection of the participants' fibers at $j$, and extending $H$ by an
+input event to $j$ and $\mathsf{expose}(u)$ at each participant brings them
+all to $\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
+Conversely, any finite family of runs is realized by a history in which one
+participant performs each run and no messages are exchanged; a common
+extension at $j$ shows a common state with current input $j$ reachable from
+every run's final state.
+
+\emph{(1) and (2).}  By Proposition~\ref{prop:confluence}, consistency says that for every finite
 family of runs with final states $(i_r,R_r)$ and every common refinement $j$
 of the $i_r$, the intersection $\bigcap_r R_r(j)$ is nonempty.  By
 Lemma~\ref{lem:run-residual}, $u\in\fiber{j}$ lies in this intersection
@@ -1459,8 +1530,9 @@ only by agreement.
 
 CAP asks the same question in a more specific setting.  A \emph{partition}
 divides the participants into two or more groups and stops all information
-from crossing between groups until the partition heals; during the partition
-each participant continues to receive input from its own environment.  The
+from crossing between groups until the partition heals: in a history, no
+message sent on one side is received on another while it lasts, while each
+participant continues to receive input from its own environment.  The
 classical CAP theorem is a one-way impossibility: a linearizable register
 cannot remain available through arbitrary partitions~\cite{gilbert2002cap}.
 Complete CALM turns it into a dichotomy.
@@ -1481,13 +1553,13 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 \end{theorem}
 
 \begin{proof}
-Reconciliation is confluence (Proposition~\ref{prop:confluence}) for the
-runs that a partition can produce, and every finite family of runs can be so
-produced: place the participants on either side of a cut and let each side's
-environment deliver its inputs in the chosen order.  Reconciliation is
-therefore consistency, which Theorem~\ref{thm:complete-calm} makes equivalent
-to monotonicity, and which implies availability by the remark following that
-theorem.
+Reconciliation is confluence of the histories a partition permits, at the
+cut where it heals and at the common refinements of the two sides' current
+inputs.  Every finite family of runs is realized by a history in which no
+messages are exchanged, which every partition permits; so reconciliation under
+every partition is condition~(3) of Theorem~\ref{thm:complete-calm}, hence
+monotonicity, and monotonicity implies availability by the remark following
+that theorem.
 \end{proof}
 
 Reconciliation is refinement under $\OutputOrd$: exposures on different sides
@@ -1879,56 +1951,6 @@ transactional availability, and invariant confluence then become directly compar
 with one another.
 
 \appendix
-\section{Histories and Residuals}
-\label{app:histories}
-
-Runs of several participants (Section~\ref{sec:safe-exposure}) fit together
-into a history in Lamport's sense.
-A \emph{distributed history} $H$ is a set of events, each at one participant,
-with each participant's events totally ordered, each receive matched to a
-send, and \emph{happens-before} the transitive closure of local order and
-matching.  A receive that advances the receiving participant's input is an
-input event; a receive that does not leaves the residual unchanged, as
-does an exposure that removes no row.  A
-\emph{consistent cut} $C$ is a subset of events closed under happens-before.
-For each participant $p$, the events of $C$ at $p$, in local order, form a run;
-write $\sigma_p^C$ for its final residual state and
-$\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector of residuals, the
-\emph{semantic endpoint} of the cut.
-
-\begin{proposition}[Residuals are the semantic quotient of histories]
-\label{prop:residual-quotient}
-Fix a specification, a participant set, and a commitment basis.
-\begin{enumerate}
-  \item $\operatorname{end}(H,C)$ is the same for every replay of the events
-        of $C$ in an order that respects happens-before.
-  \item Whether a transition is applicable at participant $p$ after $(H,C)$,
-        and the residual it produces, depend only on $\sigma_p^C$.
-  \item Consequently, pointed histories $(H,C)$ and $(H',C')$ with equal
-        endpoints admit the same semantic continuations, and the endpoint map
-        induces a bijection between its equivalence classes and the reachable
-        residual vectors.
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-Each coordinate $\sigma_p^C$ is determined by $p$'s events in local order,
-which every happens-before-respecting replay preserves, and events at
-different participants act on different coordinates; receives that advance no
-input change no coordinate.  This gives (1).  Input events, exposures,
-and commitments are each partial functions of the local residual, which gives
-(2).  Then (3) is (2) applied coordinate by coordinate, together with the
-observation that any function induces a bijection between the classes of its
-kernel equivalence and its image.
-\end{proof}
-
-The proposition is what licenses the definitions of the paper to speak of
-residuals rather than executions.  Everything the specification cares about in a Lamport
-diagram survives in its cut's residuals; message order, batching, and who has
-learned what are forgotten exactly when they do not advance anyone's input.
-Consistency (Definition~\ref{def:consistency}), stated over residuals, is
-therefore a statement about executions.
-
 \section{Complete CAP under a Deployment}
 \label{app:deployment}
 
