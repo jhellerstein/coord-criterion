@@ -451,7 +451,7 @@ panel (c).
 \paragraph{When monotonicity fails.}
 Now change one thing: make all outputs incomparable, dropping
 $\bot\OutputOrd a,b$, so that an output refines only itself; this is the
-equality order.  The rows are the same,
+\emph{equality order}.  The rows are the same,
 but in panels (a) and (b) nothing is exposable: $\bot$ no longer lies below
 the $a$ and $b$ in the upper fiber, so announcing it would promise something a later
 ballot could contradict.  To announce anything, the registrar must first make
@@ -465,15 +465,21 @@ first seal input by commitment.
 
 \paragraph{Consistency.}
 Both CALM theorems have the same shape: a monotonicity condition on the
-specification is equivalent to a precise form of what the CALM literature
-calls consistency, or confluence.  Consider runs of the system that expose
-outputs maximally, exposing some admitted output at each current input and
-making no commitment.  The specification is \emph{consistent} when every such
-exposure is exposable and, for any several such runs, one admitted output at
-every common refinement of their inputs refines everything they exposed: the
-residual depends on the input reached, not on the order of arrival or on what
-was exposed along the way.  Functional CALM, proved below, says that a
-functional specification is consistent exactly when it is monotone.
+specification is equivalent to \emph{confluence}, which is what the CALM literature
+uses for application-level consistency.  Consider runs of the system that
+expose an output at each current input while making no commitments.  The
+specification is \emph{consistent} when two things hold.  First, every such
+exposure is exposable: whatever input a run has seen, it can announce an
+output admitted there.  Second, the announcements of different runs never
+conflict: for any several such runs, and any input that refines all of the
+inputs they have seen, some output admitted at that input refines everything
+they announced.  In the election, a run that has seen $a\cdot\cdot$ and one
+that has seen $ab\cdot$ both announce $\bot$, and at $aba$ the output $a$
+refines both; runs at $aa\cdot$ and $ab\cdot$ have no common input, so nothing
+is asked of them.  The residual at an input therefore depends only on that
+input, not on the order of arrival or on what was announced along the way.
+Functional CALM, proved below, says that a functional specification is
+consistent exactly when it is monotone.
 
 The rest of this section states these notions formally.
 Figure~\ref{fig:formalism-summary} collects the formal objects of this section
