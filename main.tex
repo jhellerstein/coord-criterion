@@ -63,11 +63,12 @@ between partially ordered input and output domains: monotonicity
 characterizes exactly when output can be exposed consistently as distributed
 input arrives.
 \emph{Complete CALM} extends this to \emph{ambiguous} specifications that admit several outputs
-for one input, as leader election and transaction ordering do.  Such a
-specification is consistent, in a sense we make precise, exactly when it
-satisfies \emph{Lifted Monotonicity}, monotonicity under an order lifted from outputs to sets of
-outputs; where it fails, progress requires a \emph{commitment}, and only
-commitments require coordination.  Complete CALM yields a Complete CAP
+for one input, as leader election and transaction ordering do.  Its Lamport
+histories are confluent---participants that have exposed outputs on
+different inputs can always be brought to a common state---exactly when it
+satisfies \emph{Lifted Monotonicity}, monotonicity under an order lifted from
+outputs to sets of outputs; where it fails, progress requires a
+\emph{commitment}, and only commitments require coordination.  Complete CALM yields a Complete CAP
 Theorem that extends classical CAP from a one-way impossibility about
 linearizability to a dichotomy parameterized by the declared specification
 and the deployment.  The remaining sections place CRDTs, Highly Available
@@ -176,9 +177,10 @@ admitted at one input can coexist.  Where it fails, progress must rule out an
 alternative, a step we call a \emph{commitment}
 (Definition~\ref{def:transition-system}), and participants who could commit
 incompatibly must coordinate first.  Complete CALM shows that Lifted
-Monotonicity is a clean definition for consistency: whatever participants expose, in
-whatever order input arrives, some admitted outcome can always refine all of it
-(\S\ref{sec:safe-exposure}).
+Monotonicity is exactly confluence of the system's Lamport histories: whatever
+participants expose, in whatever order input arrives, they can always be
+brought to a common state at any input combining theirs
+(\S\ref{sec:complete-calm-theorem}).
 
 Complete CALM also yields a Complete CAP Theorem
 (\S\ref{sec:cap-corollary}).  Classical CAP gives an
@@ -200,11 +202,11 @@ This paper makes four contributions:
         arbitrary functions, represented as semantic input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to semantic output choice, formalizes
-        exposure and commitment, defines consistency as confluence of runs
-        of the framework, and proves that Lifted Monotonicity characterizes
-        it, equivalently that every Lamport history of the system is
-        confluent.  Consistent specifications need no
-        coordination; commitments are shown to require it.  In partition form
+        exposure and commitment, and proves that three conditions coincide:
+        Lifted Monotonicity of the specification, confluence of the runs of
+        the framework, and confluence of every Lamport history of the system.
+        Consistent specifications need no coordination; commitments are shown
+        to require it.  In partition form
         this is the Complete CAP Theorem,
         which extends the classical impossibility to a bidirectional dichotomy
         parameterized by the declared consistency specification and the
