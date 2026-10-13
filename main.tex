@@ -1364,19 +1364,21 @@ $o\OutputOrd u$, which is Relational Monotonicity.
 \end{proof}
 
 For singleton fibers Lifted Monotonicity is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  The proof of Complete CALM
-(Section~\ref{sec:complete-calm-theorem}) will reduce confluence to a
-condition on finitely many rows at different inputs: an execution may have
-exposed outputs at several earlier inputs, and for none of them to be
-invalidated, one output admitted at the combined input must refine them all.
-The next proposition shows that this condition on rows is Lifted Monotonicity
-itself, so the theorem will need nothing beyond the definition.
+Equation~\ref{eq:functional-monotonicity}.  Lifted Monotonicity compares the
+outputs admitted at one input with those admitted at a refinement of it.
+Runs expose outputs at several inputs, possibly incomparable ones, and the
+proof of Complete CALM (Section~\ref{sec:complete-calm-theorem}) will need to
+know that outputs exposed at different inputs below $j$ have a common
+refinement at $j$.  The next proposition says that Lifted Monotonicity already
+gives this: each output is lifted to $j$ on its own by Relational
+Monotonicity, and the lifted outputs are joined there by Directed Outputs.
 
 \begin{proposition}[Row form of Lifted Monotonicity]
 \label{prop:complete-calm-criterion}
-An ordered relational specification is monotone if and only if the outputs
-of every finite set of rows of $S$ are compatible at every common refinement
-of the rows' inputs.
+An ordered relational specification is monotone if and only if, for every
+finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$, at inputs that need
+not be comparable, the outputs $o_1,\ldots,o_k$ are compatible at every common
+refinement of $i_1,\ldots,i_k$.
 \end{proposition}
 
 \begin{proof}
