@@ -1554,21 +1554,6 @@ $\sigma_p^C$ for the final residual of $p$'s projection.  The
 The projection is a run when it contains no commitment from the basis.
 \end{definition}
 
-\begin{lemma}[Local projection]
-\label{lem:local-projection}
-In a well-formed pointed history, the cut determines one semantic projection
-and one final residual $\sigma_p^C$ for each participant, independent of how
-concurrent events are replayed.  Extending the cut changes $p$'s residual only through transitions
-added to its semantic projection.
-\end{lemma}
-
-\begin{proof}
-Every replay preserves $p$'s local order.  Events at other participants and
-sends do not act on $p$'s residual, and a receive acts on it exactly through
-the input event, if any, assigned by the projection.  The claim follows
-because every transition is a partial function of the local residual.
-\end{proof}
-
 \paragraph{The semantic quotient.}
 The construction separates protocol detail from semantic state.  Call two
 pointed histories \emph{semantically equivalent} when they have the same
@@ -1590,11 +1575,13 @@ residual states.
 \end{proposition}
 
 \begin{proof}
-By Lemma~\ref{lem:local-projection}, which transitions are applicable at a participant, and their results,
-depend only on its residual.  The same is therefore true at
-each participant, step by step.  Every equivalence class has one endpoint
-vector by definition, and every reachable vector is the endpoint of some
-pointed history.
+Each participant's projection is fixed by its local event order.  Events at
+other participants, sends, and receives dropped by the projection do not
+affect its residual.  Because every retained transition is a partial function
+of that residual, pointed histories with the same endpoint admit the same
+subsequent semantic transitions, with the same results.  Every equivalence
+class has one endpoint vector by definition, and every reachable vector is
+the endpoint of some pointed history.
 \end{proof}
 
 Thus everything the specification can ask about a Lamport history at a cut is
