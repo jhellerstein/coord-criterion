@@ -1067,7 +1067,8 @@ the output is a serial order, and either order is admitted, so the table has
 two rows at one input.  Before $[A,B]$ can be exposed, a commitment must
 remove the row for $[B,A]$: this is the second kind of commitment, a \emph{choice
 commitment}.
-Panel (g) is a traceroute
+
+As a contrast, consider Panel (g), showing a traceroute
 diagnostic for a service reachable from source $s$ directly at server
 \texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
 prefix-closed set of routes observed so far, so $\{s{\to}a\}$, a probe that has
@@ -1104,8 +1105,8 @@ conjunction of the two requirements.
 
 \paragraph{The commitment basis.}
 The commitment basis is part of a system's design, alongside the
-specification, and the choice of basis is a real one.  Familiar concurrency
-control protocols differ exactly here.  Figure~\ref{fig:cc-commitments} returns to
+specification, and the choice of basis is significant.  Familiar concurrency
+control protocols differ here.  Figure~\ref{fig:cc-commitments} returns to
 transaction ordering with a third transaction $C$, so that six serial orders
 are admitted.  Under two-phase locking, $A$ acquiring a lock ahead of $B$ commits $A$
 before $B$ and nothing more; $C$'s position stays open until it contends for a
@@ -1171,11 +1172,11 @@ of its contents may be input in the specification's sense, as a forwarded
 ballot is in the election; the rest is state that serves the protocol's
 computation and that the specification does not see.  Which is which depends
 on the specification: a timestamp is computational state to the transaction
-ordering of Figure~\ref{fig:ambiguity-frames}(f) and would be input to a
+ordering of Figure~\ref{fig:ambiguity-frames}(f) but would be input to a
 specification whose inputs carried timestamps.  A send changes no residual.  A
 receive is an input event at the receiver when what it carries advances the
-receiver's input; otherwise it
-changes the receiver's residual not at all, however much it may inform the
+receiver's input; otherwise it too does not
+change the receiver's residual, however much it may inform the
 protocol.  Each participant's residual is therefore the specification with the
 rows removed by its own input events, output events, and commitments, and two
 participants that have seen different events hold different residuals.
@@ -1184,23 +1185,23 @@ one participant has so far received only $v_1$'s ballot, another has also
 received $v_2$'s, and each has removed what its own input retired.
 
 \paragraph{Histories and cuts.}
-Draw an execution as a Lamport diagram: one line per participant carrying its
-events in order, and an arrow from each message's send to its receipt.  One
-event \emph{happens before} another when a path of line segments and arrows
-leads from the first to the second.  A \emph{consistent cut} is a set of
-events closed under happens-before, so that it includes, with every receipt,
-the send it came from: a global state the execution could have passed
-through~\cite{chandy1985distributed}.  The word is the standard one and is
-unrelated to consistency as confluence, which is a property of specifications.
-Within a cut, each participant's events in order are a sequence of its
-transitions, a run when they include no commitment, and determine its
-residual.  Those residuals, one per participant, are all this paper ever
-consults about an execution.  Two cuts that yield the same residuals are
+We model an execution as a Lamport diagram.  Each participant's events form a
+chain in local order, an edge runs from each message's send to its receipt,
+and one event \emph{happens before} another when a path of edges leads from
+the first to the second.  A \emph{consistent cut} is a set of events closed
+under happens-before, so that it contains the send of every receipt it
+contains: a global state the execution could have passed
+through~\cite{chandy1985distributed}.  This textbook use of ``consistent'' is
+unrelated to this paper's consistency as confluence, which is a property of
+specifications.  Within a cut, each participant's events in local order are a
+sequence of its transitions, a run when none is a commitment, and so determine
+its residual.  These residuals, one per participant, are all this paper
+consults about an execution; two cuts that yield the same residuals are
 indistinguishable here, however their messages were ordered or batched
 (Proposition~\ref{prop:residual-quotient}).  Complete CALM is stated at this
-level: every Lamport history in which participants only receive input and
-expose outputs is confluent, in that its participants can always be brought to
-one residual at any input combining theirs, exactly when the specification is
+level.  When participants only receive input and expose outputs, every
+history is confluent, in that its participants can always be brought to one
+residual at any input combining theirs, exactly when the specification is
 monotone.
 
 Commitments are precisely the semantic actions that require coordination;
