@@ -1365,11 +1365,11 @@ it in a form that speaks of several inputs at once: an execution may already
 have exposed outputs at different earlier inputs, and for none of them to be
 invalidated, one output admitted at the combined input must refine them all.
 
-\begin{proposition}[Complete CALM criterion]
+\begin{proposition}[Row form of Lifted Monotonicity]
 \label{prop:complete-calm-criterion}
-An ordered relational specification is monotone if and only if it satisfies
-the \emph{Complete CALM criterion}: the outputs of every finite set of rows
-of $S$ are compatible at every common refinement of the rows' inputs.
+An ordered relational specification is monotone if and only if the outputs
+of every finite set of rows of $S$ are compatible at every common refinement
+of the rows' inputs.
 \end{proposition}
 
 \begin{proof}
@@ -1378,7 +1378,7 @@ Lifted Monotonicity.  For each $r$, $\fiber{i_r}\JointOutputOrd\fiber{j}$
 gives $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$, and $\fiber{j}$ is directed
 by Proposition~\ref{prop:lifted-monotonicity-decomposition}, so some
 $u\in\fiber{j}$ refines every $u_r$, hence every $o_r$.  Conversely, assume
-the criterion, and let $i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty
+the row form, and let $i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty
 and finite.  The rows $\{(i,x):x\in X\}$ have common refinement $j$, so some
 $u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
@@ -1387,11 +1387,11 @@ Finite families of every size are needed because pairwise compatibility does
 not imply compatibility of a larger family
 (Appendix~\ref{app:additional-applications}).  The inputs $i_r$ need not be
 comparable: inputs within one run form a chain, so incomparable $i_r$ belong
-to different runs that end at the same $j$.  The criterion is read at $j$,
+to different runs that end at the same $j$.  The row form is read at $j$,
 looking back: regardless of how $j$ was reached, the outputs exposed along the
 way have a common refinement admitted there.
 
-Taken together, the criterion is ordinary monotonicity lifted twice.  For a
+Taken together, Lifted Monotonicity is ordinary monotonicity lifted twice.  For a
 monotone function, as the input grows from $i$ to $j$ the single output at $i$
 is refined by the single output at $j$.  Lifting from functions with a single
 output per input to relations offering a set of outputs, Relational
@@ -1595,7 +1595,7 @@ a common refinement $j$.  For each $r$, the run that starts at
 $\sigma_0(i_r)$ and exposes $o_r$ ends with
 $R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.
 Consistency gives $u$ in every $R_r(j)$, an admitted common refinement of the
-$o_r$, which is the Complete CALM criterion.
+$o_r$: the row form of Lifted Monotonicity.
 
 \emph{(2) and (3).}  By Proposition~\ref{prop:residual-quotient}, the
 endpoint of $(H,C)$ is the vector of final states of the participants' runs,
@@ -1905,8 +1905,8 @@ are minimal common refinements, and neither refines the other.  Consequently,
 the pair has no least common refinement, so this output order is not a
 join-semilattice.  It is nevertheless directed: any finite family of sequences
 has an admitted order-preserving interleaving.  A join-semilattice is
-therefore a sufficient discipline, not a requirement of the Complete CALM
-criterion; strong eventual consistency, which it provides, is a stronger
+therefore a sufficient discipline, not a requirement of Lifted
+Monotonicity; strong eventual consistency, which it provides, is a stronger
 promise than consistency in our sense, and last-writer-wins shows that
 convergence can also be weaker, discarding one concurrent value that an
 interface promised to preserve.
@@ -1973,8 +1973,8 @@ individual transaction preservation supplies Relational Monotonicity, while
 invariant confluence supplies common refinements for independently reached
 states at the combined transaction input.  Associativity and reachability let
 the pairwise merge argument extend inductively to finite families.  Thus the
-prescribed merge witnesses the Complete CALM criterion for the deployed transaction
-families.
+prescribed merge witnesses Lifted Monotonicity, in its row form, for the
+deployed transaction families.
 
 A uniqueness constraint supplies the standard counterexample.  Two replicas
 each observe that username \texttt{sam} is free and allocate it to different
@@ -2016,7 +2016,7 @@ method used to realize the specification.
 \subsection{Specification design determines the boundary}
 \label{sec:design-boundary}
 
-The Complete CALM criterion is a property of the declared specification, not a
+Lifted Monotonicity is a property of the declared specification, not a
 permanent label on ``register,'' ``transaction,'' or ``shopping cart.''
 The deployment determines whether a commitment requires agreement between
 participants.
@@ -2176,8 +2176,9 @@ of its inputs, has an admitted common refinement in $\fiber{j}$.  It is
 $P$.
 \end{definition}
 
-This is the Complete CALM criterion
-(Proposition~\ref{prop:complete-calm-criterion}) restricted to the families a partition can separate.  Monotonicity implies monotonicity across partitions, since separable
+This is the row form of Lifted Monotonicity
+(Proposition~\ref{prop:complete-calm-criterion}) restricted to the families a
+partition can separate.  Monotonicity implies monotonicity across partitions, since separable
 families are families.  The converse fails whenever every incompatible family
 lies within one participant's $\Delta_p$.  Two mutually exclusive choices owned
 by one participant do not become separable merely because another component
