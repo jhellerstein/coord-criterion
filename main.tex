@@ -1501,10 +1501,11 @@ replica consistency.
 
 \paragraph{Histories and consistent cuts.}
 A Lamport history records the participants' local events and the message edges
-that order events across participants.  Messages may carry input in the
-specification's sense, protocol state, or both.  The definition records all
-of these events; the semantic projection that follows keeps only their effect
-on residual states.
+that order events across participants.  Besides its residual, a participant
+may keep arbitrary \emph{strategy state} used to decide which event to perform
+next.  Messages may carry input in the specification's sense, strategy state,
+or both.  The definition records all of these events; the semantic projection
+that follows keeps only their effect on residual states.
 
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
@@ -1541,8 +1542,8 @@ The \emph{semantic projection} of a consistent cut $C$ at participant $p$
 is the sequence of transitions that affects $p$'s residual.  Read $p$'s
 events in local order: keep transition events, drop sends, map a receive to
 $\mathsf{input}(j)$ when its message advances the current input to $j$, and
-drop any other receive.  Dropped events may change protocol state, but not the
-residual.  A pointed history $(H,C)$ is \emph{well formed} when each
+drop any other receive.  Dropped events may change strategy state, but not
+the residual.  A pointed history $(H,C)$ is \emph{well formed} when each
 participant's projection is a defined transition sequence from
 $\sigma_0(i_p^0)$.  Write
 $\sigma_p^C$ for the final residual of $p$'s projection.  The
@@ -1555,10 +1556,11 @@ The projection is a run when it contains no commitment from the basis.
 \end{definition}
 
 \paragraph{The semantic quotient.}
-The construction separates protocol detail from semantic state.  Call two
+The construction separates strategy state and message detail from semantic
+state.  Call two
 pointed histories \emph{semantically equivalent} when they have the same
 semantic endpoint.  This partitions histories into equivalence classes whose
-members may differ in message order, batching, and protocol state but agree on
+members may differ in message order, batching, and strategy state but agree on
 every participant's residual.  Taking the \emph{quotient} means treating each
 class as one semantic state, represented here by its endpoint vector.  The
 next proposition says this forgets nothing that can affect later residuals.
@@ -1585,8 +1587,11 @@ the endpoint of some pointed history.
 \end{proof}
 
 Thus everything the specification can ask about a Lamport history at a cut is
-contained in its semantic endpoint; message order, batching, and protocol
-state are forgotten exactly when they do not change a residual.
+contained in its semantic endpoint; message order, batching, and strategy
+state are forgotten exactly when they do not change a residual.  Two
+semantically equivalent histories may still lead an implementation strategy
+to choose different next events; the proposition says that the same semantic
+transitions remain applicable, not that the strategy will choose them.
 
 \paragraph{Confluence of a history.}
 At a consistent cut, the endpoint vector may contain a different residual for
