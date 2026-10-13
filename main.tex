@@ -1185,24 +1185,30 @@ one participant has so far received only $v_1$'s ballot, another has also
 received $v_2$'s, and each has removed what its own input retired.
 
 \paragraph{Histories and cuts.}
-We model an execution as a Lamport diagram.  Each participant's events form a
+Section~\ref{sec:election-story} defined consistency as confluence of the
+runs of one transition system.  We want the same statement about executions
+of the distributed system, in which many participants run and exchange
+messages, and for that we need a model of an execution and a way to read a
+participant's residual out of it.  We model an execution as a Lamport
+diagram.  Each participant's events form a
 chain in local order, an edge runs from each message's send to its receipt,
 and one event \emph{happens before} another when a path of edges leads from
 the first to the second.  A \emph{consistent cut} is a set of events closed
 under happens-before, so that it contains the send of every receipt it
 contains: a global state the execution could have passed
-through~\cite{chandy1985distributed}.  This textbook use of ``consistent'' is
+through~\cite{chandy1985distributed}.  (This textbook use of ``consistent'' is
 unrelated to this paper's consistency as confluence, which is a property of
-specifications.  Within a cut, each participant's events in local order are a
-sequence of its transitions, a run when none is a commitment, and so determine
+specifications.)  Within a cut, each participant's events in local order are a
+sequence of its transitions---a run when none is a commitment---and determine
 its residual.  These residuals, one per participant, are all this paper
 consults about an execution; two cuts that yield the same residuals are
 indistinguishable here, however their messages were ordered or batched
-(Proposition~\ref{prop:residual-quotient}).  Complete CALM is stated at this
-level.  When participants only receive input and expose outputs, every
-history is confluent, in that its participants can always be brought to one
-residual at any input combining theirs, exactly when the specification is
-monotone.
+(Proposition~\ref{prop:residual-quotient}).  This is what lets Complete CALM
+be stated about executions.  Confluence of an execution means that, at any
+consistent cut, the participants can be brought to one residual at any input
+combining theirs, whatever each has exposed so far; and the theorem says that
+when participants only receive input and expose outputs, every execution is
+confluent exactly when the specification is monotone.
 
 Commitments are precisely the semantic actions that require coordination;
 input events and exposing exposable outputs may be done autonomously.
