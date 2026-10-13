@@ -1582,13 +1582,19 @@ its cut's residuals; message order, batching, and who has learned what are
 forgotten exactly when they do not advance anyone's input.
 
 \paragraph{Confluence of a history.}
-Confluence now has a meaning for histories.  Let $j$ be a common refinement
-of the participants' current inputs at $C$.  The pointed history $(H,C)$ is
-\emph{confluent at $j$} when $H$ can be extended past $C$, by input and
-output events at the participants, so that every participant has current input
-$j$ and all participants hold the same residual.  The extension is a semantic
-object, as runs are: it says that the participants' states can be so
-continued, not that any protocol delivers $j$ or communicates anything.
+From a cut $C$ there are many ways the history could continue: participants
+exchange any messages, and each advances its input and exposes its outputs in
+any order its protocol permits.  Each continuation is itself a Lamport
+history, extending $H$, and has its own later cuts, each with a semantic
+endpoint.  Confluence asks that some one semantic endpoint be reachable from
+$C$ along all of these continuations, at any common refinement of the
+participants' current inputs at $C$.  Formally, let $j$ be such a common
+refinement.  The pointed history $(H,C)$ is \emph{confluent at $j$} when
+$(H,C)$ has an extension, by input and output events at the participants, in
+which every participant has current input $j$ and all participants hold the
+same residual.  The extension is a semantic object, as runs are: it says that
+the participants' states can be so continued, not that any protocol delivers
+$j$ or communicates anything.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
