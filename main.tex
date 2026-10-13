@@ -718,10 +718,12 @@ A residual state is \emph{reachable} when it is obtained from some canonical
 initial state by a finite sequence of these transitions.
 \end{definition}
 
-Nothing else changes a residual state; computation may inform which
-transition the system takes, but is not itself a transition.  A transition
-may remove rows or none at all, and taken row by row a removal is one of two
-things.
+Nothing else changes a residual state.  A system's \emph{strategy} chooses
+which output event or commitment to make, using the residual and any
+additional \emph{strategy state} it maintains.  Strategy state is not part of
+the semantic state: it affects the residual only through the transition the
+strategy selects.  A transition may remove rows or none at all, and taken row
+by row a removal is one of two things.
 
 \begin{definition}[Retirement]
 \label{def:retirement}
@@ -1501,11 +1503,11 @@ replica consistency.
 
 \paragraph{Histories and consistent cuts.}
 A Lamport history records the participants' local events and the message edges
-that order events across participants.  Besides its residual, a participant
-may keep arbitrary \emph{strategy state} used to decide which event to perform
-next.  Messages may carry input in the specification's sense, strategy state,
-or both.  The definition records all of these events; the semantic projection
-that follows keeps only their effect on residual states.
+that order events across participants.  Each participant has the strategy and
+strategy state introduced in Section~\ref{sec:determination}; messages may
+carry input in the specification's sense, strategy state, or both.  The
+definition records all of these events, while the semantic projection that
+follows keeps only their effect on residual states.
 
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
