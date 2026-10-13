@@ -1443,9 +1443,12 @@ $\mathsf{output}(o)$ removes is an output retirement.
 \end{definition}
 
 For singleton fibers a removed row is never covered, so this agrees with
-Definition~\ref{def:exposable}.  The following gives the condition on the
-residual that the proofs use in place of the definition, and records what an
-exposable output event does and does not change.
+Definition~\ref{def:exposable} and with the condition
+$f(i)\OutputOrd f(j)$ for every valid $j\succeq_I i$ that
+Section~\ref{sec:determination} gave there.  As stated, exposability speaks
+of the rows the event removes; the proofs below need it in a form that
+speaks of the residual directly, and the next proposition supplies it, along
+with three properties of exposable output events the proofs use repeatedly.
 
 \begin{proposition}[Exposability]
 \label{prop:exposability}
@@ -1495,19 +1498,32 @@ Figure~\ref{fig:ambiguity-frames}, exposing $\{s{\to}\texttt{s1}\}$ in panel
 retirement; the commitment to $[A,B]$ in panel (f) removes $[B,A]$ with no
 retained common refinement.
 
+\subsubsection*{Participants, Lamport histories, and confluence}
+
+Section~\ref{sec:ambiguity-story} previewed how the framework is instantiated
+in a distributed setting.  This part makes it precise in three steps.
+First, a \emph{participant} is a holder of a residual state that changes only
+by its own transitions; its sequence of events, when it uses no commitment
+from the basis, is a run.  Second, several participants' events fit together
+into a Lamport history, and the state of such a history at a consistent cut
+is a vector of residuals, one per participant.  Third, confluence has a
+meaning for histories, and Theorem~\ref{thm:complete-calm} will say that a
+specification is monotone exactly when its histories are confluent.
+
 \paragraph{Participants and runs.}
 A \emph{participant} is a holder of a residual state that changes only by its
 own transitions: input events supplied by its environment, and the output
-events and commitments it makes.  A participant that uses no commitment from the
-basis performs a run (Definition~\ref{def:run}).  By the composition property of input events, two runs
-that receive the same input in different orders or groupings, with no
-output events or commitments, reach the same state; what can differ is which
-output events and commitments a participant makes along the way.  Replicas, in
-the usual sense, are participants that receive the same input in different
-orders; their runs eventually end at the same input, so consistency already covers them,
-with no need for a separate notion of replica consistency.
+events and commitments it makes.  A participant that uses no commitment from
+the basis performs a run (Definition~\ref{def:run}).  By the composition
+property of input events, two runs that receive the same input in different
+orders or groupings, with no output events or commitments, reach the same
+state; what can differ is which output events and commitments a participant
+makes along the way.  Replicas, in the usual sense, are participants that
+receive the same input in different orders; their runs eventually end at the
+same input, so consistency already covers them, with no need for a separate
+notion of replica consistency.
 
-\paragraph{Histories.}
+\paragraph{Histories and consistent cuts.}
 Runs of several participants fit together into a history in Lamport's sense.
 A \emph{distributed history} $H$ is a set of events, each at one participant,
 with each participant's events totally ordered, each receive matched to a
@@ -1523,9 +1539,12 @@ participant $p$, the events of $C$ at $p$, in local order, form a run when
 they include no commitment from the basis; in general they form a sequence of
 transitions.  Write $\sigma_p^C$ for its final residual state and
 $\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector of residuals, the
-\emph{semantic endpoint} of the cut.  The next proposition is what entitles
-the theorems to speak of residuals rather than histories: nothing a history
-records beyond its endpoint affects what can happen next.
+\emph{semantic endpoint} of the cut.
+
+\paragraph{The semantic quotient.}
+The next proposition is what entitles the theorems to speak of residuals
+rather than histories: nothing a history records beyond its endpoint affects
+what can happen next.
 
 \begin{proposition}[Residuals are the semantic quotient of histories]
 \label{prop:residual-quotient}
@@ -1553,11 +1572,13 @@ observation that any function induces a bijection between the classes of its
 kernel equivalence and its image.
 \end{proof}
 
-Everything the specification cares about in a Lamport diagram survives in its
-cut's residuals; message order, batching, and who has learned what are
-forgotten exactly when they do not advance anyone's input.  Confluence
-therefore has a meaning for histories.  Let $j$ be a common refinement of the
-participants' current inputs at $C$.  The pointed history $(H,C)$ is
+Everything the specification cares about in a Lamport diagram survives in
+its cut's residuals; message order, batching, and who has learned what are
+forgotten exactly when they do not advance anyone's input.
+
+\paragraph{Confluence of a history.}
+Confluence now has a meaning for histories.  Let $j$ be a common refinement
+of the participants' current inputs at $C$.  The pointed history $(H,C)$ is
 \emph{confluent at $j$} when $H$ can be extended past $C$, by input and
 output events at the participants, so that every participant has current input
 $j$ and all participants hold the same residual.  The extension is a semantic
