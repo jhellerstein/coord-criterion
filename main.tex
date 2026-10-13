@@ -1591,22 +1591,29 @@ because every transition is a partial function of the local residual.
 
 \paragraph{The semantic quotient.}
 The construction separates a history's protocol detail from its semantic
-state.  The next proposition says that the semantic endpoint retains exactly
-the information needed to determine the available continuations.
+state.  Two pointed histories are \emph{semantically equivalent} when they
+have the same semantic endpoint.  This partitions pointed histories into
+equivalence classes: within a class, the participants have the same residual
+states even if messages were sent, received, or batched differently.  Taking
+the \emph{quotient} means replacing each such class by one representative
+object.  Here that object is its endpoint vector.  The next proposition says
+this replacement loses no information about semantic continuations.
 
 \begin{proposition}[Residuals are the semantic quotient of histories]
 \label{prop:residual-quotient}
 Fix a specification, a participant set, and a commitment basis.  Pointed
 histories $(H,C)$ and $(H',C')$ with equal semantic endpoints admit the same
-coordinatewise semantic continuations.  The endpoint map therefore induces a
-bijection between its equivalence classes and the reachable residual vectors.
+coordinatewise semantic continuations.  The endpoint map therefore gives a
+bijection between the equivalence classes of pointed histories and the
+reachable residual vectors.
 \end{proposition}
 
 \begin{proof}
 By Lemma~\ref{lem:local-projection}, what transition a participant may take
 next, and the residual it produces, depend only on its coordinate of the
-endpoint.  Apply this coordinatewise.  The last statement is the bijection
-between the equivalence classes of a function's kernel and its image.
+endpoint.  Apply this coordinatewise.  Every equivalence class has one
+endpoint vector by definition, and every reachable residual vector is the
+endpoint of some pointed history, giving the bijection.
 \end{proof}
 
 Thus everything the specification can ask about a Lamport history at a cut is
