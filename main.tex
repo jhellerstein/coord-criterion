@@ -1340,6 +1340,10 @@ under the joint lift:
         \end{equation}
 \end{definition}
 
+The next proposition recovers the two requirements of
+Section~\ref{sec:ambiguity-story} from the single condition; the proofs below
+cite it whenever they need Directed Outputs on its own.
+
 \begin{proposition}[Lifted Monotonicity decomposes]
 \label{prop:lifted-monotonicity-decomposition}
 An ordered relational specification satisfies Lifted Monotonicity if and only
@@ -1360,10 +1364,13 @@ $o\OutputOrd u$, which is Relational Monotonicity.
 \end{proof}
 
 For singleton fibers Lifted Monotonicity is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  The analysis of output events below needs
-it in a form that speaks of several inputs at once: an execution may already
-have exposed outputs at different earlier inputs, and for none of them to be
+Equation~\ref{eq:functional-monotonicity}.  The proof of Complete CALM
+(Section~\ref{sec:complete-calm-theorem}) will reduce confluence to a
+condition on finitely many rows at different inputs: an execution may have
+exposed outputs at several earlier inputs, and for none of them to be
 invalidated, one output admitted at the combined input must refine them all.
+The next proposition shows that this condition on rows is Lifted Monotonicity
+itself, so the theorem will need nothing beyond the definition.
 
 \begin{proposition}[Row form of Lifted Monotonicity]
 \label{prop:complete-calm-criterion}
@@ -1435,7 +1442,9 @@ $\mathsf{output}(o)$ removes is an output retirement.
 \end{definition}
 
 For singleton fibers a removed row is never covered, so this agrees with
-Definition~\ref{def:exposable}.  The following characterizes it.
+Definition~\ref{def:exposable}.  The following gives the condition on the
+residual that the proofs use in place of the definition, and records what an
+exposable output event does and does not change.
 
 \begin{proposition}[Exposability]
 \label{prop:exposability}
@@ -1513,7 +1522,9 @@ participant $p$, the events of $C$ at $p$, in local order, form a run when
 they include no commitment from the basis; in general they form a sequence of
 transitions.  Write $\sigma_p^C$ for its final residual state and
 $\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector of residuals, the
-\emph{semantic endpoint} of the cut.
+\emph{semantic endpoint} of the cut.  The next proposition is what entitles
+the theorems to speak of residuals rather than histories: nothing a history
+records beyond its endpoint affects what can happen next.
 
 \begin{proposition}[Residuals are the semantic quotient of histories]
 \label{prop:residual-quotient}
@@ -1559,7 +1570,9 @@ In the rest of this section, \emph{reachable} means reachable from a canonical
 initial state by a run, with no commitment from the basis.  Consistency
 (Definition~\ref{def:consistency}) was stated for any specification; for a
 relational one, different runs may have exposed different outputs at the same
-input, and an output event may have removed rows.
+input, and an output event may have removed rows.  The theorem states the
+paper's main result in three equivalent forms: on the specification, on runs
+of the transition system, and on histories of a distributed system.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
