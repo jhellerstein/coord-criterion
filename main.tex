@@ -1555,20 +1555,23 @@ and the edges from sends to their matching receives.  A
 ~\cite{chandy1985distributed}, and $(H,C)$ is a \emph{pointed history}.
 (This textbook use of ``consistent'' is unrelated to consistency as
 confluence, which is a property of specifications.)
+\end{definition}
 
-The \emph{semantic projection} of $C$ at participant $p$ scans $p$'s events
-in local order, keeps its transition events, and drops its sends.  It maps a
-receive to $\mathsf{input}(j)$ when the received message advances the
-receiver's input to $j$, and otherwise drops it; a dropped receive may still
-change arbitrary protocol state.  The history is well formed when each such
-projection is a defined sequence of transitions from $\sigma_0(i_p^0)$.
-Write $\sigma_p^C$ for its final residual state and
+\begin{definition}[Semantic projection and endpoint]
+\label{def:semantic-projection}
+The \emph{semantic projection} of a consistent cut $C$ at participant $p$
+scans $p$'s events in local order, keeps its transition events, and drops its
+sends.  It maps a receive to $\mathsf{input}(j)$ when the received message
+advances the receiver's input to $j$, and otherwise drops it; a dropped
+receive may still change arbitrary protocol state.  A distributed history is
+\emph{well formed} when every such projection is a defined sequence of
+transitions from $\sigma_0(i_p^0)$.  Write $\sigma_p^C$ for the projection's
+final residual state.  Its \emph{semantic endpoint} is the vector
         \begin{equation}
-  \operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}
+  \operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}.
   \label{eq:semantic-endpoint}
         \end{equation}
-for the vector of residuals, the \emph{semantic endpoint} of the cut.  The
-projection is a run when it contains no commitment from the basis.
+The projection is a run when it contains no commitment from the basis.
 \end{definition}
 
 \begin{lemma}[Local projection]
