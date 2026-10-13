@@ -1340,65 +1340,54 @@ under the joint lift:
         \end{equation}
 \end{definition}
 
-The next proposition recovers the two requirements of
-Section~\ref{sec:ambiguity-story} from the single condition; the proofs below
-cite it whenever they need Directed Outputs on its own.
+The next proposition gives Lifted Monotonicity two equivalent shapes.  The
+first recovers the two requirements of Section~\ref{sec:ambiguity-story}.  The
+second is the shape the proof of Complete CALM
+(Section~\ref{sec:complete-calm-theorem}) needs: in the definition, the set
+of outputs to be jointly refined is drawn from a single fiber $\fiber{i}$ and
+refined at a refinement $j$ of $i$, whereas runs expose outputs at several
+inputs, possibly incomparable ones, and what confluence requires is that
+outputs drawn from several fibers $\fiber{i_1},\ldots,\fiber{i_k}$ have a
+common refinement at any common refinement $j$ of the $i_r$.  Lifted
+Monotonicity gives this because Relational Monotonicity lifts each output to
+$j$ on its own and Directed Outputs joins the lifted outputs there.
 
-\begin{proposition}[Lifted Monotonicity decomposes]
+\begin{proposition}[Equivalent forms of Lifted Monotonicity]
 \label{prop:lifted-monotonicity-decomposition}
-An ordered relational specification satisfies Lifted Monotonicity if and only
-if it satisfies Relational Monotonicity and Directed Outputs.
+For an ordered relational specification, the following are equivalent:
+\begin{enumerate}
+  \item Lifted Monotonicity: $i\InputOrd j$ implies
+        $\fiber{i}\JointOutputOrd\fiber{j}$;
+  \item Relational Monotonicity and Directed Outputs;
+  \item for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$, at
+        inputs that need not be comparable, the outputs $o_1,\ldots,o_k$ are
+        compatible at every common refinement of $i_1,\ldots,i_k$.
+\end{enumerate}
 \end{proposition}
 
 \begin{proof}
-Assume Relational Monotonicity and Directed Outputs, and let $i\InputOrd j$ and
-$X\subseteq\fiber{i}$ be nonempty and finite.  Relational Monotonicity gives,
-for each $x\in X$, an $x'\in\fiber{j}$ with $x\OutputOrd x'$; Directed Outputs
-gives $u\in\fiber{j}$ refining every $x'$, hence every $x$.  So
-$\fiber{i}\JointOutputOrd\fiber{j}$.
+(1) implies (2).  Taking $j=i$, $\fiber{i}\JointOutputOrd\fiber{i}$ says that
+$\fiber{i}$ is directed.  Taking $X=\{o\}$ for $o\in\fiber{i}$ and
+$i\InputOrd j$ gives $u\in\fiber{j}$ with $o\OutputOrd u$, which is Relational
+Monotonicity.
 
-Conversely, assume Lifted Monotonicity.  Taking $j=i$,
-$\fiber{i}\JointOutputOrd\fiber{i}$ says that $\fiber{i}$ is directed.  Taking
-$X=\{o\}$ for $o\in\fiber{i}$ and $i\InputOrd j$ gives $u\in\fiber{j}$ with
-$o\OutputOrd u$, which is Relational Monotonicity.
-\end{proof}
+(2) implies (3).  Let rows $(i_r,o_r)$ have common refinement $j$.  Relational
+Monotonicity gives, for each $r$, a $u_r\in\fiber{j}$ with
+$o_r\OutputOrd u_r$, and Directed Outputs gives $u\in\fiber{j}$ refining every
+$u_r$, hence every $o_r$.
 
-For singleton fibers Lifted Monotonicity is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  In Lifted Monotonicity the set
-of outputs to be jointly refined is drawn from a single fiber $\fiber{i}$,
-and refined at a single refinement $j$ of $i$.  Runs expose outputs at
-several inputs, possibly incomparable ones, and the proof of Complete CALM
-(Section~\ref{sec:complete-calm-theorem}) will need to know that outputs
-drawn from several fibers $\fiber{i_1},\ldots,\fiber{i_k}$ have a common
-refinement at any common refinement $j$ of the $i_r$.  The next proposition
-says that Lifted Monotonicity already gives this: Relational Monotonicity
-lifts each output to $j$ on its own, and Directed Outputs joins the lifted
-outputs there.
-
-\begin{proposition}[Row form of Lifted Monotonicity]
-\label{prop:complete-calm-criterion}
-An ordered relational specification is monotone if and only if, for every
-finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$, at inputs that need
-not be comparable, the outputs $o_1,\ldots,o_k$ are compatible at every common
-refinement of $i_1,\ldots,i_k$.
-\end{proposition}
-
-\begin{proof}
-Let rows $(i_r,o_r)$, $r=1,\ldots,k$, have common refinement $j$.  Assume
-Lifted Monotonicity.  For each $r$, $\fiber{i_r}\JointOutputOrd\fiber{j}$
-gives $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$, and $\fiber{j}$ is directed
-by Proposition~\ref{prop:lifted-monotonicity-decomposition}, so some
-$u\in\fiber{j}$ refines every $u_r$, hence every $o_r$.  Conversely, assume
-the row form, and let $i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty
-and finite.  The rows $\{(i,x):x\in X\}$ have common refinement $j$, so some
+(3) implies (1).  Let $i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty and
+finite.  The rows $\{(i,x):x\in X\}$ have common refinement $j$, so some
 $u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
 
+For singleton fibers Lifted Monotonicity is functional monotonicity,
+Equation~\ref{eq:functional-monotonicity}.
 Finite families of every size are needed because pairwise compatibility does
 not imply compatibility of a larger family
 (Appendix~\ref{app:additional-applications}).  The inputs $i_r$ need not be
 comparable: inputs within one run form a chain, so incomparable $i_r$ belong
-to different runs that end at the same $j$.  The row form is read at $j$,
+to different runs that end at the same $j$.  Form~(3) is read at $j$,
 looking back: regardless of how $j$ was reached, the outputs exposed along the
 way have a common refinement admitted there.
 
@@ -1604,15 +1593,16 @@ output $o$ was exposed at some input $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
 
 Assume Lifted Monotonicity.  The rows $(i_o,o)$, over all outputs exposed on
 the family, are finitely many and have common refinement $j$, so
-Proposition~\ref{prop:complete-calm-criterion} supplies $u\in\fiber{j}$
-refining them all, and $u$ lies in the intersection.
+Proposition~\ref{prop:lifted-monotonicity-decomposition}(3) supplies
+$u\in\fiber{j}$ refining them all, and $u$ lies in the intersection.
 
 Conversely, assume consistency, and let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have
 a common refinement $j$.  For each $r$, the run that starts at
 $\sigma_0(i_r)$ and exposes $o_r$ ends with
 $R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.
 Consistency gives $u$ in every $R_r(j)$, an admitted common refinement of the
-$o_r$: the row form of Lifted Monotonicity.
+$o_r$: form~(3) of Proposition~\ref{prop:lifted-monotonicity-decomposition},
+hence Lifted Monotonicity.
 
 \emph{(2) and (3).}  By Proposition~\ref{prop:residual-quotient}, the
 endpoint of $(H,C)$ is the vector of final states of the participants' runs,
@@ -1990,8 +1980,9 @@ individual transaction preservation supplies Relational Monotonicity, while
 invariant confluence supplies common refinements for independently reached
 states at the combined transaction input.  Associativity and reachability let
 the pairwise merge argument extend inductively to finite families.  Thus the
-prescribed merge witnesses Lifted Monotonicity, in its row form, for the
-deployed transaction families.
+prescribed merge witnesses Lifted Monotonicity, in the form of
+Proposition~\ref{prop:lifted-monotonicity-decomposition}(3), for the deployed
+transaction families.
 
 A uniqueness constraint supplies the standard counterexample.  Two replicas
 each observe that username \texttt{sam} is free and allocate it to different
@@ -2193,9 +2184,9 @@ of its inputs, has an admitted common refinement in $\fiber{j}$.  It is
 $P$.
 \end{definition}
 
-This is the row form of Lifted Monotonicity
-(Proposition~\ref{prop:complete-calm-criterion}) restricted to the families a
-partition can separate.  Monotonicity implies monotonicity across partitions, since separable
+This is Lifted Monotonicity in the form of
+Proposition~\ref{prop:lifted-monotonicity-decomposition}(3), restricted to the
+families a partition can separate.  Monotonicity implies monotonicity across partitions, since separable
 families are families.  The converse fails whenever every incompatible family
 lies within one participant's $\Delta_p$.  Two mutually exclusive choices owned
 by one participant do not become separable merely because another component
