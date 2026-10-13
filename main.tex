@@ -1530,70 +1530,98 @@ notion of replica consistency.
 
 \paragraph{Histories and consistent cuts.}
 Runs of several participants fit together into a history in Lamport's sense.
-A \emph{distributed history} $H$ is a set of events, each at one participant,
-with each participant's events totally ordered, each receive matched to a
-send from another participant or from the environment, and
-\emph{happens-before} the transitive closure of local order and matching.  A
-receive that advances the receiving participant's input is an input event; a
-receive that does not leaves the residual unchanged, as does an output event
-that removes no row.  A \emph{consistent cut} $C$ is a subset of events closed
-under happens-before~\cite{chandy1985distributed}, and $(H,C)$ is a
-\emph{pointed history}.  (This textbook use of ``consistent'' is unrelated to
-consistency as confluence, which is a property of specifications.)  For each
-participant $p$, the events of $C$ at $p$, in local order, form a run when
-they include no commitment from the basis; in general they form a sequence of
-transitions.  Write $\sigma_p^C$ for its final residual state and
-$\operatorname{end}(H,C)=(\sigma_p^C)_{p}$ for the vector of residuals, the
-\emph{semantic endpoint} of the cut.
+Messages may carry both input in the specification's sense and arbitrary
+state used only by the protocol.  The following construction records both,
+then projects away everything that does not change a residual.
+
+\begin{definition}[Lamport history of the transition system]
+\label{def:distributed-history}
+Fix a finite participant set $P$, an initial input $i_p^0$ for each
+$p\in P$, and a commitment basis.  A \emph{distributed history} $H$ consists
+of a finite set of events with:
+\begin{enumerate}
+  \item a participant $p\in P$ and a total local order for the events at each
+        participant;
+  \item a label on each event: a transition
+        $\mathsf{input}(j)$, $\mathsf{output}(o)$, or a commitment from the
+        basis, or a message event $\mathsf{send}(m)$ or
+        $\mathsf{receive}(m)$; and
+  \item a matching send for each receive, at another participant or the
+        environment.
+\end{enumerate}
+The \emph{happens-before} order is the transitive closure of the local orders
+and the edges from sends to their matching receives.  A
+\emph{consistent cut} $C$ is a subset of events closed under happens-before
+~\cite{chandy1985distributed}, and $(H,C)$ is a \emph{pointed history}.
+(This textbook use of ``consistent'' is unrelated to consistency as
+confluence, which is a property of specifications.)
+
+The \emph{semantic projection} of $C$ at participant $p$ scans $p$'s events
+in local order, keeps its transition events, and drops its sends.  It maps a
+receive to $\mathsf{input}(j)$ when the received message advances the
+receiver's input to $j$, and otherwise drops it; a dropped receive may still
+change arbitrary protocol state.  The history is well formed when each such
+projection is a defined sequence of transitions from $\sigma_0(i_p^0)$.
+Write $\sigma_p^C$ for its final residual state and
+        \begin{equation}
+  \operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}
+  \label{eq:semantic-endpoint}
+        \end{equation}
+for the vector of residuals, the \emph{semantic endpoint} of the cut.  The
+projection is a run when it contains no commitment from the basis.
+\end{definition}
+
+\begin{lemma}[Local projection]
+\label{lem:local-projection}
+The semantic projection at $p$ and its final residual $\sigma_p^C$ are
+independent of any replay of $C$ that respects happens-before.  Extending the
+cut changes $p$'s residual only through transition events added to its
+semantic projection.
+\end{lemma}
+
+\begin{proof}
+Every replay preserves $p$'s local order.  Events at other participants and
+sends do not act on $p$'s residual, and a receive acts on it exactly through
+the input event, if any, assigned by the projection.  The claim follows
+because every transition is a partial function of the local residual.
+\end{proof}
 
 \paragraph{The semantic quotient.}
-The next proposition is what entitles the theorems to speak of residuals
-rather than histories: nothing a history records beyond its endpoint affects
-what can happen next.
+The construction separates a history's protocol detail from its semantic
+state.  The next proposition says that the semantic endpoint retains exactly
+the information needed to determine the available continuations.
 
 \begin{proposition}[Residuals are the semantic quotient of histories]
 \label{prop:residual-quotient}
-Fix a specification, a participant set, and a commitment basis.
-\begin{enumerate}
-  \item $\operatorname{end}(H,C)$ is the same for every replay of the events
-        of $C$ in an order that respects happens-before.
-  \item Whether a transition is applicable at participant $p$ after $(H,C)$,
-        and the residual it produces, depend only on $\sigma_p^C$.
-  \item Consequently, pointed histories $(H,C)$ and $(H',C')$ with equal
-        endpoints admit the same semantic continuations, and the endpoint map
-        induces a bijection between its equivalence classes and the reachable
-        residual vectors.
-\end{enumerate}
+Fix a specification, a participant set, and a commitment basis.  Pointed
+histories $(H,C)$ and $(H',C')$ with equal semantic endpoints admit the same
+coordinatewise semantic continuations.  The endpoint map therefore induces a
+bijection between its equivalence classes and the reachable residual vectors.
 \end{proposition}
 
 \begin{proof}
-Each coordinate $\sigma_p^C$ is determined by $p$'s events in local order,
-which every happens-before-respecting replay preserves, and events at
-different participants act on different coordinates; receives that advance no
-input change no coordinate.  This gives (1).  Input events, output events, and
-commitments are each partial functions of the local residual, which gives
-(2).  Then (3) is (2) applied coordinate by coordinate, together with the
-observation that any function induces a bijection between the classes of its
-kernel equivalence and its image.
+By Lemma~\ref{lem:local-projection}, what transition a participant may take
+next, and the residual it produces, depend only on its coordinate of the
+endpoint.  Apply this coordinatewise.  The last statement is the bijection
+between the equivalence classes of a function's kernel and its image.
 \end{proof}
 
-Everything the specification cares about in a Lamport diagram survives in
-its cut's residuals; message order, batching, and who has learned what are
-forgotten exactly when they do not advance anyone's input.
+Thus everything the specification can ask about a Lamport history at a cut is
+contained in its semantic endpoint; message order, batching, and protocol
+state are forgotten exactly when they do not change a residual.
 
 \paragraph{Confluence of a history.}
-From a cut $C$ there are many ways the history could continue: participants
-exchange any messages, and each advances its input and exposes its outputs in
-any order its protocol permits.  Each continuation is itself a Lamport
-history, extending $H$, and has its own later cuts, each with a semantic
-endpoint.  Confluence asks that some one semantic endpoint be reachable from
-$C$ along all of these continuations, at any common refinement of the
-participants' current inputs at $C$.  Formally, let $j$ be such a common
-refinement.  The pointed history $(H,C)$ is \emph{confluent at $j$} when
-$(H,C)$ has an extension, by input and output events at the participants,
-whose semantic endpoint is $(\sigma_j,\ldots,\sigma_j)$ for some single
-residual state $\sigma_j=(j,R)$: every participant has reached the same state,
-with current input $j$.  The extension is a semantic object, as runs are: it
+Different interleavings of input, output, send, and receive events can lead to
+different consistent cuts and hence different semantic endpoints.  Confluence
+asks whether the participants at any such endpoint can be brought to one
+later semantic state at each input that combines their current inputs.
+Formally, fix a pointed history $(H,C)$ and let $j$ be such a common
+refinement.  The pointed history $(H,C)$ is \emph{confluent at $j$} when it
+has a well-formed history extension whose new semantic events are input and
+output events and whose semantic endpoint is the uniform tuple
+$(\sigma_j)_{p\in P}$ for some single residual state
+$\sigma_j=(j,R)$: every participant has reached the same state, with current
+input $j$.  The extension is a semantic object, as runs are: it
 says that the participants' states can be so continued, not that any protocol
 delivers $j$ or communicates anything.
 
