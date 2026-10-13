@@ -1252,8 +1252,9 @@ outputs.  For nonempty $A,B\subseteq O$, define
   \forall a\in A\;\exists b\in B:\;a\OutputOrd b.
   \label{eq:lifted-output-order}
         \end{equation}
-This pointwise lift is a preorder: every output in the first set is refined
-by some output in the second.  It is often called the Hoare preorder.
+This relation is often called the Hoare preorder.  It compares sets
+pointwise: $A\LiftedOutputOrd B$ means that every output admitted by $A$ is
+refined by some output admitted by $B$.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -1268,10 +1269,11 @@ under the pointwise lift:
         \end{equation}
 \end{definition}
 
-For singleton fibers this reduces to functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  Relational Monotonicity relates
-outputs \emph{between} fibers as input grows.  It says nothing about how
-different outputs relate \emph{within} one fiber.  We now turn to that second question.
+For singleton fibers this is functional monotonicity,
+Equation~\ref{eq:functional-monotonicity}.  In general it says that each
+output admitted before more input arrives has some refinement afterward.  It
+does not say whether several outputs admitted at one input can be preserved
+together; Directed Outputs addresses that question.
 
 \begin{definition}[Compatibility]
 \label{def:compatibility}
@@ -1312,20 +1314,20 @@ permits either as sole leader, the two choices are incompatible.
 \paragraph{Lifted Monotonicity.}
 \label{sec:complete-calm-criterion}
 
-Section~\ref{sec:ambiguity-story} named two things that can go wrong as an
-ambiguous specification runs; Relational Monotonicity rules out the first and
-Directed Outputs the second.  Relational Monotonicity concerns refinement
-across inputs, and Directed Outputs concerns the outputs admitted at one fixed
-input.  Neither implies the other.  The two combine into a single monotonicity condition under a second
-lift of the output order.  For nonempty $A,B\subseteq O$, define
+Section~\ref{sec:ambiguity-story} identified two failures: more input can
+invalidate an output, or several outputs admitted at one input can be
+incompatible.  Relational Monotonicity rules out the first; Directed Outputs
+rules out the second.  Neither implies the other.  Lift the output order once
+more to express both as one condition.  For nonempty $A,B\subseteq O$, define
         \begin{equation}
   A\JointOutputOrd B
   \;\Longleftrightarrow\;
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-the \emph{joint lift} of $\OutputOrd$.  The relation is transitive, and
-$A\JointOutputOrd A$ holds exactly when $A$ is directed.
+the \emph{joint lift} of $\OutputOrd$.  Unlike the Hoare preorder, it
+preserves finite sets of outputs together rather than each output separately.
+It is transitive, and $A\JointOutputOrd A$ holds exactly when $A$ is directed.
 
 \begin{definition}[Lifted Monotonicity; monotone specification]
 \label{def:lifted-monotonicity}
@@ -1340,18 +1342,11 @@ under the joint lift:
         \end{equation}
 \end{definition}
 
-In the next proposition, form~(1) is the definition just given, and forms~(2)
-and~(3) are two equivalent restatements of it.  Form~(2) recovers the two requirements of
-Section~\ref{sec:ambiguity-story}.  Form~(3) is the shape the proof of
-Complete CALM (Section~\ref{sec:complete-calm-theorem}) needs: in the
-definition, the set of outputs to be jointly refined is drawn from a single
-fiber $\fiber{i}$ and refined at a refinement $j$ of $i$, whereas runs expose
-outputs at several inputs, possibly incomparable ones, and what confluence
-requires is that outputs drawn from several fibers
-$\fiber{i_1},\ldots,\fiber{i_k}$ have a common refinement at any common
-refinement $j$ of the $i_r$.  Form~(2) is what connects the other two:
-Relational Monotonicity lifts each output to $j$ on its own, and Directed
-Outputs joins the lifted outputs there.
+The next proposition records the three forms used later.  Form~(1) is the
+definition.  Form~(2) separates its across-input and within-fiber obligations.
+Form~(3), used in the Complete CALM proof, lets outputs come from several,
+possibly incomparable, inputs: they must be compatible at every input that
+refines all of those inputs.
 
 \begin{proposition}[Equivalent forms of Lifted Monotonicity]
 \label{prop:lifted-monotonicity-decomposition}
@@ -1384,47 +1379,34 @@ $u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
 
 For singleton fibers Lifted Monotonicity is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.
-Form~(2) can also be read as a construction: Lifted Monotonicity is ordinary
-monotonicity lifted twice.  For a monotone function, as the input grows from
-$i$ to $j$ the single output at $i$ is refined by the single output at $j$.
-Lifting from functions with a single output per input to relations offering a
-set of outputs, Relational Monotonicity asks that \emph{each} output admitted
-at $i$ be refined by \emph{some} output admitted at $j$.  Lifting again from
-single outputs to the finite sets of alternatives that different runs might
-expose, Directed Outputs asks that \emph{every finite set} of outputs admitted
-at one input be \emph{jointly} refined by \emph{a single} output admitted
-there.  Together the two lifts ask that every finite set of outputs admitted
-at $i$ be jointly refined by a single output admitted at $j$.
+Equation~\ref{eq:functional-monotonicity}.  Form~(2) explains the two lifts in
+the name: Relational Monotonicity preserves each output as input grows, and
+Directed Outputs preserves finite sets of alternatives together.
 
-Finite families of every size are needed as in Form~(3) because pairwise compatibility does
-not imply compatibility of a larger family
-(Appendix~\ref{app:additional-applications}).  The inputs $i_r$ need not be
-comparable: inputs within one run form a chain, so incomparable $i_r$ belong
-to different runs that end at the same $j$.  Form~(3) is read at $j$,
-looking back: regardless of how $j$ was reached, the outputs exposed along the
-way have a common refinement admitted there.
+Form~(3) must quantify over finite sets of every size because pairwise
+compatibility does not imply compatibility of a larger set
+(Appendix~\ref{app:additional-applications}).  Its inputs need not be
+comparable because different runs may have received different input.  It says
+that whenever those inputs can be combined at $j$, all outputs exposed along
+the runs have a common refinement admitted at $j$.  This is the form of Lifted
+Monotonicity that connects directly to confluence.
 
 \subsection{The transition system under output choice}
 \label{sec:safe-exposure}
 
-The transition system of Section~\ref{sec:determination}, with its three
-transitions, is unchanged for a relational specification; what changes is
-what two of them can do when a fiber holds several outputs.  Input events are
-as before.  Output events may now retire rows.  Commitment event types grow:
-in addition to input-sealing commitments, relational specifications admit choice
-commitments, which remove
-selected outputs at a valid input without making any input invalid.
-This subsection extends retirement, exposability, and the classification of
-commitments to cover these cases; several participants and their histories
-are the subject of Section~\ref{sec:histories}.
+The same three transitions apply to a relational specification, but output
+choice gives two of them a new role.  Input events are unchanged.  Output
+events may now retire rows.  Commitments may now choose among outputs at a
+valid input, rather than only make inputs invalid; these are the choice
+commitments previewed in Section~\ref{sec:ambiguity-story}.  This subsection
+defines these cases precisely.  Section~\ref{sec:histories} then assembles
+several participants into a distributed execution.
 
 \paragraph{Output events.}
-Exposing $o\in R(i)$ promises that later output at $i$ and at every
-refinement of $i$ will refine $o$, and $\mathsf{output}(o)$ keeps the promise
-by producing $R\mathbin{\upharpoonright_O}o$
-(Equation~\ref{eq:residual-refining-fibers}).  The rows it removes are those
-whose outputs do not refine $o$; some of them may lose nothing.
+The event $\mathsf{output}(o)$ exposes $o$ and retains only rows whose outputs
+refine it (Equation~\ref{eq:residual-refining-fibers}).  A removed row need
+not represent a lost alternative: a row retained at the same input may refine
+its output.  We call such a removal an output retirement.
 
 \begin{definition}[Output retirement]
 \label{def:output-retirement}
@@ -1441,28 +1423,26 @@ An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when every row that
 $\mathsf{output}(o)$ removes is an output retirement.
 \end{definition}
 
-For singleton fibers a removed row is never covered, so this agrees with
-Definition~\ref{def:exposable} and with the condition
-$f(i)\OutputOrd f(j)$ for every valid $j\succeq_I i$ that
-Section~\ref{sec:determination} gave there.  As stated, exposability speaks
-of the rows the event removes; the proofs below need it in a form that
-speaks of the residual directly, and the next proposition supplies it, along
-with three properties of exposable output events the proofs use repeatedly.
+For singleton fibers a removed row is never covered, so this reduces to
+Definition~\ref{def:exposable}: an exposable output event removes no row.  The
+next proposition turns the row-by-row definition into one test on each
+possible future fiber, then states two consequences used below.
 
 \begin{proposition}[Exposability]
 \label{prop:exposability}
 Let $o\in R(i)$.
 \begin{enumerate}
   \item\label{prop:exposability-residual}
-        $o$ is exposable at $(i,R)$ if and only if for every valid $j$ with
-        $i\InputOrd j$ and every $x\in R(j)$ there is $u\in R(j)$ with
+        $o$ is exposable at $(i,R)$ if and only if, at every valid future
+        input $j\succeq_I i$, each remaining output $x\in R(j)$ has a common
+        refinement $u\in R(j)$ with $o$:
         \begin{equation}
           o\OutputOrd u
           \qquad\text{and}\qquad
-          x\OutputOrd u,
+          x\OutputOrd u.
           \label{eq:safe-exposure}
         \end{equation}
-        that is, $o$ is compatible in $R(j)$ with every $x\in R(j)$
+        Equivalently, $o$ is compatible in $R(j)$ with every $x\in R(j)$
         (Definition~\ref{def:compatibility}).
   \item\label{prop:exposability-valid}
         When $o$ is exposable, $\mathsf{output}(o)$ leaves every valid input
@@ -1476,68 +1456,62 @@ a commitment may remove, which no system performs.
 \end{proposition}
 
 \begin{proof}
-The event retains $R'(j)=\{u\in R(j):o\OutputOrd u\}$ at each valid
-$j\succeq_I i$.  A removed $(j,x)$ is an output retirement exactly when some
-retained $u$ has $x\OutputOrd u$, that is, when some $u\in R(j)$ lies above
-both $o$ and $x$; for a retained $x$, $u=x$ serves.  When
-Equation~\ref{eq:safe-exposure} holds, each $R'(j)$ contains such a $u$ and is
-nonempty, and every retained output refines $o$.  A removal that is not an
-output retirement is not an input retirement either, since the current input
-is unchanged, so by Definition~\ref{def:retirement} it is a removal by
-commitment, which only a commitment makes.
+At every valid $j\succeq_I i$, the event retains
+$R'(j)=\{u\in R(j):o\OutputOrd u\}$.  A removed output $x$ is retired exactly
+when $R'(j)$ contains some $u$ above $x$, which is precisely the test in~(1);
+when $x$ is retained, take $u=x$.  The same witness $u$ shows that $R'(j)$ is
+nonempty, proving~(2).  Every member of every retained fiber refines $o$, and
+$o$ itself is retained at $i$, proving~(3).  If the test fails, the event would
+remove a row that is neither an input nor an output retirement, hence a row
+that only a commitment may remove.
 \end{proof}
 
-Proposition~\ref{prop:safe-runs} holds under this definition with the same
-proof: exposability of $o$ at $\sigma$ supplies, for the $x$ in $\sigma$'s
-fiber at $j$, an $x'$ refining both $o$ and $x$.  Choice commitments
-(Section~\ref{sec:determination}) now occur: Figure~\ref{fig:ambiguity-frames}(f)
-removes one of the outputs at a valid input and keeps the other.
+This generalized definition also extends
+Proposition~\ref{prop:safe-runs}: in its proof, item~(1) supplies the common
+refinement needed after each safe output event.
 
-Equation~\ref{eq:safe-exposure} is directedness
-(Definition~\ref{def:fiber-directedness}) read against the residual rather
-than the specification.  Exposing an exposable output excludes nothing whose
-content could not still be reached.  If $o$ is not exposable, some $x$ at $i$
-or one of its refinements has no admitted refinement in common with $o$, and
-exposing $o$ would destroy the content of $x$; the system must instead first
-apply a commitment from its basis that removes $x$, after which $o$ may be
-exposable, and Section~\ref{sec:cap-corollary} says what that costs.  In
-Figure~\ref{fig:ambiguity-frames}, exposing $\{s{\to}\texttt{s1}\}$ in panel
-(g) removes $\{s{\to}a\}$ but retains a refinement of both, an output
-retirement; the commitment to $[A,B]$ in panel (f) removes $[B,A]$ with no
-retained common refinement.
+\paragraph{Choice commitments.}
+A choice commitment (Section~\ref{sec:determination}) removes some outputs at
+a valid input while keeping that input valid.  Figure~\ref{fig:ambiguity-frames}(f)
+removes $[B,A]$ and retains $[A,B]$; no retained output refines the removed
+one.  By contrast, exposing $\{s{\to}\texttt{s1}\}$ in panel (g) retires
+$\{s{\to}a\}$ because a retained output refines both.  More generally, if
+$o$ fails the test in Proposition~\ref{prop:exposability}(1), the system must
+first use a commitment from its basis to remove the conflicting rows; only
+then may $o$ become exposable.  Section~\ref{sec:cap-corollary} states the
+coordination cost of doing so.
 
 \subsection{Lamport histories}
 \label{sec:histories}
 
-Section~\ref{sec:safe-exposure} defined the transition system a single
-participant performs.  This subsection builds on it in three steps: it
-isolates the participant, assembles several participants' events into a
-Lamport history, and defines confluence of a history, the condition the next
-subsection will prove equivalent to Lifted Monotonicity.
+Section~\ref{sec:safe-exposure} treated one participant.  We now combine
+participants and their messages into a Lamport history, reduce a cut of that
+history to one residual per participant, and define confluence of the history.
+The next subsection proves that history confluence is equivalent to Lifted
+Monotonicity.
 
 \paragraph{Participants and runs.}
-A \emph{participant} is a holder of a residual state that changes only by its
-own transitions: input events supplied by its environment, and the output
-events and commitments it makes.  A participant that uses no commitment from
-the basis performs a run (Definition~\ref{def:run}).  By the composition
-property of input events, two runs that receive the same input in different
-orders or groupings, with no output events or commitments, reach the same
-state; what can differ is which output events and commitments a participant
-makes along the way.  Replicas, in the usual sense, are participants that
-receive the same input in different orders; their runs eventually end at the
-same input, so consistency already covers them, with no need for a separate
-notion of replica consistency.
+A \emph{participant} holds one residual state, changed only by its own input
+events, output events, and commitments.  Its semantic transitions form a run
+(Definition~\ref{def:run}) when no commitment from the basis occurs.  Input
+events compose, so participants that receive the same cumulative input reach
+the same residual if neither makes an output event or commitment, regardless
+of delivery order or batching.  Replicas are the usual case: participants
+receiving the same input in different orders.  Consistency already compares
+their runs, so the framework needs no separate definition of replica
+consistency.
 
 \paragraph{Histories and consistent cuts.}
-Runs of several participants fit together into a history in Lamport's sense.
-Messages may carry both input in the specification's sense and arbitrary
-state used only by the protocol.  The following construction records both,
-then projects away everything that does not change a residual.
+A Lamport history records the participants' local events and the message edges
+that order events across participants.  Messages may carry input in the
+specification's sense, protocol state, or both.  The definition records all
+of these events; the semantic projection that follows keeps only their effect
+on residual states.
 
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
-Fix a finite participant set $P$, an initial input $i_p^0$ for each
-$p\in P$, and a commitment basis.  A \emph{distributed history} $H$ consists
+Fix an ordered specification, a finite participant set $P$, an initial input
+$i_p^0$ for each $p\in P$, and a commitment basis.  A \emph{distributed history} $H$ consists
 of a finite set of events, together with:
 \begin{enumerate}
   \item an assignment of each event to a participant $p\in P$, and a total
@@ -1546,10 +1520,11 @@ of a finite set of events, together with:
         $\mathsf{input}(j)$, $\mathsf{output}(o)$, or a commitment from the
         basis, or a message event $\mathsf{send}(m)$ or
         $\mathsf{receive}(m)$; and
-  \item for each receive, a matching send at another participant or the
-        environment.
+  \item for each receive, a matching send at another participant.
 \end{enumerate}
-The \emph{happens-before} order is the transitive closure of the local orders
+Input delivered directly by the environment is represented by an
+$\mathsf{input}(j)$ event rather than a message event.  The
+\emph{happens-before} order is the transitive closure of the local orders
 and the edges from sends to their matching receives.  A
 \emph{consistent cut} $C$ is a subset of events closed under happens-before
 ~\cite{chandy1985distributed}, and $(H,C)$ is a \emph{pointed history}.
@@ -1560,13 +1535,15 @@ confluence, which is a property of specifications.)
 \begin{definition}[Semantic projection and endpoint]
 \label{def:semantic-projection}
 The \emph{semantic projection} of a consistent cut $C$ at participant $p$
-scans $p$'s events in local order, keeps its transition events, and drops its
-sends.  It maps a receive to $\mathsf{input}(j)$ when the received message
-advances the receiver's input to $j$, and otherwise drops it; a dropped
-receive may still change arbitrary protocol state.  A distributed history is
-\emph{well formed} when every such projection is a defined sequence of
-transitions from $\sigma_0(i_p^0)$.  Write $\sigma_p^C$ for the projection's
-final residual state.  Its \emph{semantic endpoint} is the vector
+is the sequence of transitions that affects $p$'s residual.  Read $p$'s
+events in local order: keep transition events, drop sends, map a receive to
+$\mathsf{input}(j)$ when its message advances the current input to $j$, and
+drop any other receive.  Dropped events may change protocol state, but not the
+residual.  A pointed history $(H,C)$ is \emph{well formed} when each
+participant's projection is a defined transition sequence from
+$\sigma_0(i_p^0)$.  Write
+$\sigma_p^C$ for the final residual of $p$'s projection.  The
+\emph{semantic endpoint} of the cut is the vector
         \begin{equation}
   \operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}.
   \label{eq:semantic-endpoint}
@@ -1576,10 +1553,10 @@ The projection is a run when it contains no commitment from the basis.
 
 \begin{lemma}[Local projection]
 \label{lem:local-projection}
-The semantic projection at $p$ and its final residual $\sigma_p^C$ are
-independent of any replay of $C$ that respects happens-before.  Extending the
-cut changes $p$'s residual only through transition events added to its
-semantic projection.
+In a well-formed pointed history, the cut determines one semantic projection
+and one final residual $\sigma_p^C$ for each participant, independent of how
+concurrent events are replayed.  Extending the cut changes $p$'s residual only through transitions
+added to its semantic projection.
 \end{lemma}
 
 \begin{proof}
@@ -1590,32 +1567,31 @@ because every transition is a partial function of the local residual.
 \end{proof}
 
 \paragraph{The semantic quotient.}
-The construction separates a history's protocol detail from its semantic
-state.  Two pointed histories are \emph{semantically equivalent} when they
-have the same semantic endpoint.  This partitions pointed histories into
-equivalence classes: within a class, the participants have the same residual
-states even if messages were sent, received, or batched differently.  Taking
-the \emph{quotient} means replacing each such class by one representative
-object.  Here that object is its endpoint vector: the function
-$(H,C)\mapsto\operatorname{end}(H,C)$ assigns the same vector to every
-history in the class.  The next proposition says this replacement loses no
-information about semantic continuations.
+The construction separates protocol detail from semantic state.  Call two
+pointed histories \emph{semantically equivalent} when they have the same
+semantic endpoint.  This partitions histories into equivalence classes whose
+members may differ in message order, batching, and protocol state but agree on
+every participant's residual.  Taking the \emph{quotient} means treating each
+class as one semantic state, represented here by its endpoint vector.  The
+next proposition says this forgets nothing that can affect later residuals.
 
 \begin{proposition}[Residuals are the semantic quotient of histories]
 \label{prop:residual-quotient}
-Fix a specification, a participant set, and a commitment basis.  Pointed
-histories $(H,C)$ and $(H',C')$ with equal semantic endpoints admit the same
-coordinatewise semantic continuations.  The function
-$(H,C)\mapsto\operatorname{end}(H,C)$ therefore gives a bijection between the
-equivalence classes of pointed histories and the reachable residual vectors.
+Fix a specification, a participant set, and a commitment basis.  Well-formed
+pointed histories with the same semantic endpoint admit the same sequences of
+applicable transitions at corresponding participants, with the same resulting
+residuals.
+The function $(H,C)\mapsto\operatorname{end}(H,C)$ therefore gives a bijection
+between equivalence classes of pointed histories and reachable vectors of
+residual states.
 \end{proposition}
 
 \begin{proof}
-By Lemma~\ref{lem:local-projection}, what transition a participant may take
-next, and the residual it produces, depend only on its coordinate of the
-endpoint.  Apply this coordinatewise.  Every equivalence class has one
-endpoint vector by definition, and every reachable residual vector is the
-endpoint of some pointed history, giving the bijection.
+By Lemma~\ref{lem:local-projection}, which transitions are applicable at a participant, and their results,
+depend only on its residual.  The same is therefore true at
+each participant, step by step.  Every equivalence class has one endpoint
+vector by definition, and every reachable vector is the endpoint of some
+pointed history.
 \end{proof}
 
 Thus everything the specification can ask about a Lamport history at a cut is
@@ -1623,19 +1599,16 @@ contained in its semantic endpoint; message order, batching, and protocol
 state are forgotten exactly when they do not change a residual.
 
 \paragraph{Confluence of a history.}
-Different interleavings of input, output, send, and receive events can lead to
-different consistent cuts and hence different semantic endpoints.  Confluence
-asks whether the participants at any such endpoint can be brought to one
-later semantic state at each input that combines their current inputs.
-Formally, fix a pointed history $(H,C)$ and let $j$ be such a common
-refinement.  The pointed history $(H,C)$ is \emph{confluent at $j$} when it
-has a well-formed history extension whose new semantic events are input and
-output events and whose semantic endpoint is the uniform tuple
-$(\sigma_j)_{p\in P}$ for some single residual state
-$\sigma_j=(j,R)$: every participant has reached the same state, with current
-input $j$.  The extension is a semantic object, as runs are: it
-says that the participants' states can be so continued, not that any protocol
-delivers $j$ or communicates anything.
+At a consistent cut, the endpoint vector may contain a different residual for
+each participant.  Confluence asks whether the participant-local paths from
+those residuals can meet in one later residual, at every input that combines
+their current inputs.  Formally, fix a pointed history $(H,C)$ and a common
+refinement $j$ of those inputs.  The history is \emph{confluent at $j$} when
+it has a well-formed extension using input and output events whose endpoint is
+the uniform vector $(\sigma_j)_{p\in P}$ for one residual state
+$\sigma_j=(j,R)$.  Thus every participant reaches the same semantic state at
+$j$.  This is an existence claim about semantic continuations, not a claim
+that a protocol delivers $j$, communicates, or terminates.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -1656,10 +1629,10 @@ For an ordered relational specification, the following are equivalent:
         $i\InputOrd j$ implies $\fiber{i}\JointOutputOrd\fiber{j}$;
   \item it is consistent: its runs are confluent
         (Definition~\ref{def:consistency});
-  \item for every finite set of participants, every distributed history in
-        which each participant's events form a run---no commitment from the
-        basis is used---is confluent, at every consistent cut, at every
-        common refinement of the participants' current inputs.
+  \item for every finite participant set, every well-formed pointed history
+        $(H,C)$ whose semantic projections are runs---no commitment from the
+        basis occurs before the cut---is confluent at every common refinement
+        of the participants' current inputs.
 \end{enumerate}
 \end{theorem}
 
@@ -1686,7 +1659,8 @@ $o_r$: form~(3) of Proposition~\ref{prop:lifted-monotonicity-decomposition},
 hence Lifted Monotonicity.
 
 \emph{(2) and (3).}  By Proposition~\ref{prop:residual-quotient}, the
-endpoint of $(H,C)$ is the vector of final states of the participants' runs,
+endpoint of $(H,C)$ is the vector of final states of the participants'
+semantic projections, each a run,
 and what each participant can do next depends only on its coordinate.  If
 runs are confluent, Proposition~\ref{prop:confluence} gives $u$ in the
 intersection of the participants' fibers at $j$, and extending $H$ by an
