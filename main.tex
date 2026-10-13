@@ -1008,8 +1008,8 @@ Section~\ref{sec:functional-calm}.  Section~\ref{sec:ambiguity-story} walks
 through the framework informally on two ambiguous examples.
 Section~\ref{sec:relational-specifications} defines relational specifications
 and Lifted Monotonicity, Section~\ref{sec:safe-exposure} extends the
-transition system to output choice and to Lamport histories of several
-participants, and
+transition system to output choice, Section~\ref{sec:histories} assembles
+several participants into Lamport histories, and
 Section~\ref{sec:complete-calm-theorem} proves Complete CALM.
 Section~\ref{sec:cap-corollary} then turns to coordination and Complete CAP.
 
@@ -1192,9 +1192,9 @@ across participants may be non-deterministically interleaved. Whatever each part
 exposed based on the input it has seen,
 confluence holds when all of them can be brought to one residual at any input combining theirs.
 We would like to prove this about a textbook model of distributed execution, and
-Section~\ref{sec:safe-exposure} does so for Lamport histories, in which each
-participant's local events are a sequence of its transitions, and messages partially
-order events across participants~\cite{chandy1985distributed}.
+Section~\ref{sec:histories} does so for Lamport histories, in which each
+participant's local events are a sequence of its transitions and messages
+partially order events across participants~\cite{chandy1985distributed}.
 % Each
 % participant's events up to any \emph{consistent cut} in Lamport history
 % form a run and determine its residual, and those residuals are all this
@@ -1411,13 +1411,13 @@ way have a common refinement admitted there.
 The transition system of Section~\ref{sec:determination}, with its three
 transitions, is unchanged for a relational specification; what changes is
 what two of them can do when a fiber holds several outputs.  Input events are
-as before.  Output events may now retire rows.  In addition
-to the input-sealing commitments of the functional
-case, relational specifications admit choice commitments, which remove
+as before.  Output events may now retire rows.  Commitment event types grow:
+in addition to input-sealing commitments, relational specifications admit choice
+commitments, which remove
 selected outputs at a valid input without making any input invalid.
-This subsection first extends retirement, exposability, and the
-classification of commitments to cover these cases, and then takes up the
-runs of several participants and the histories they form.
+This subsection extends retirement, exposability, and the classification of
+commitments to cover these cases; several participants and their histories
+are the subject of Section~\ref{sec:histories}.
 
 \paragraph{Output events.}
 Exposing $o\in R(i)$ promises that later output at $i$ and at every
@@ -1506,17 +1506,14 @@ Figure~\ref{fig:ambiguity-frames}, exposing $\{s{\to}\texttt{s1}\}$ in panel
 retirement; the commitment to $[A,B]$ in panel (f) removes $[B,A]$ with no
 retained common refinement.
 
-\subsubsection*{Participants, Lamport histories, and confluence}
+\subsection{Lamport histories}
+\label{sec:histories}
 
-Section~\ref{sec:ambiguity-story} previewed how the framework is instantiated
-in a distributed setting.  This part makes it precise in three steps.
-First, a \emph{participant} is a holder of a residual state that changes only
-by its own transitions; its sequence of events, when it uses no commitment
-from the basis, is a run.  Second, several participants' events fit together
-into a Lamport history, and the state of such a history at a consistent cut
-is a vector of residuals, one per participant.  Third, confluence has a
-meaning for histories, and Theorem~\ref{thm:complete-calm} will say that a
-specification is monotone exactly when its histories are confluent.
+Section~\ref{sec:safe-exposure} defined the transition system a single
+participant performs.  This subsection builds on it in three steps: it
+isolates the participant, assembles several participants' events into a
+Lamport history, and defines confluence of a history, the condition the next
+subsection will prove equivalent to Lifted Monotonicity.
 
 \paragraph{Participants and runs.}
 A \emph{participant} is a holder of a residual state that changes only by its
