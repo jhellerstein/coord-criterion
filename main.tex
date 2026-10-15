@@ -395,8 +395,11 @@ is a pair containing a residual specification and the current input: the account
 what is still possible and of how far input has come.  Each panel shows one
 residual state, the residual specification as its rows and the current input
 in bold.  The inputs that still have rows are the \emph{valid} ones.
-The environment produces input events; the system does not choose them, and
-the residual state depends only on the input reached, not on the order or
+The environment produces input events; the system does not choose them.  The
+system combines an arriving cumulative input $a$ with its current input $i$
+using a system-defined operation $\mathsf{advance}(i,a)=j$, and records the
+result as $\mathsf{input}(j)$, whether $a$ arrived directly or in a message.
+The residual state depends only on the input reached, not on the order or
 grouping in which the ballots arrived.  In panel (b) the input has grown
 from $a\cdot\cdot$ to $ab\cdot$, so the row at $a\cdot\cdot$ is retired; the
 rows at $aa\cdot$, $aaa$, and $aab$ are retired because no input refines both
@@ -544,6 +547,7 @@ and the next in one place, with references to where each is defined.
     \midrule
     residual state & $(i,R)$: \ $R\subseteq S$, \ $R(i)\neq\varnothing$, \ $R(k)=\varnothing$ unless $i\InputOrd k$ & Def.~\ref{def:residual-state} \\
     initial state; upper fiber & $\sigma_0(i)=(i,\{(k,o)\in S: i\InputOrd k\})$; \quad $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$ & Eqs.~\ref{eq:canonical-initial-state}, \ref{eq:upper-fiber} \\
+    input advance & $\mathsf{advance}(i,a)=j$: combine current input $i$ with arriving cumulative input $a$ & Eq.~\ref{eq:cumulative-advance} \\
     input event (environment) & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,\ R\mathbin{\upharpoonright_I}j)$, \quad $R\mathbin{\upharpoonright_I}j=\{(k,u)\in R: j\InputOrd k\}$ & Def.~\ref{def:transition-system} \\
     output event (system) & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ exposable iff every removed row is covered & Defs.~\ref{def:transition-system}, \ref{def:exposable}, \ref{def:exposable-relational} \\
     commitment (system) & $(i,R)\xrightarrow{p}(i,R')$, \ $R'\subsetneq R$, \ some removed $(k,x)$ has no $u\in R'(k)$ with $x\OutputOrd u$ & Def.~\ref{def:transition-system} \\
