@@ -1032,10 +1032,10 @@ through the framework informally on two ambiguous examples.
 Section~\ref{sec:relational-specifications} defines relational specifications
 and Lifted Monotonicity, Section~\ref{sec:safe-exposure} extends the
 transition system to output choice, Section~\ref{sec:histories} assembles
-several participants into Lamport histories, and
-Section~\ref{sec:complete-calm-theorem} proves Complete CALM,
+several participants into Lamport histories,
 Section~\ref{sec:coordination} identifies coordination as the cost of
-commitments, and Section~\ref{sec:cap-corollary} states Complete CAP.
+commitments, Section~\ref{sec:complete-calm-theorem} proves Complete CALM, and
+Section~\ref{sec:cap-corollary} states Complete CAP.
 
 \subsection{The framework on two ambiguous examples}
 \label{sec:ambiguity-story}
@@ -1234,8 +1234,8 @@ participant's residual may still admit, so it is safe only if every such
 participant agrees; that agreement is coordination.  Determination that needs
 a commitment is therefore precisely the determination that needs coordination.
 The rest of this section makes these claims precise, in the order of
-Section~\ref{sec:functional-calm}: definitions, the transition system, the
-theorem, and then coordination.
+Section~\ref{sec:functional-calm}: definitions, the transition system,
+histories, coordination, the theorem, and then Complete CAP.
 
 Figure~\ref{fig:complete-formalism-summary} summarizes the objects added for
 output choice and distributed histories.
@@ -1762,12 +1762,58 @@ set of runs in a message-free history, one run per participant.  Distributed
 Consistency at its cut gives run confluence.
 \end{proof}
 
+\subsection{Coordination}
+\label{sec:coordination}
+
+In the rest of this section, \emph{reachable} means reachable from a canonical
+initial state by a run, with no commitment from the basis.
+
+Exposing an exposable output narrows without excluding and can be done by
+every participant at will.  A commitment excludes content, and the next result
+says what that costs when several participants hold the same input.  In what
+follows, a participant \emph{selects} an admissible output at the input it
+holds by exposing it when it is exposable, and otherwise by first applying a
+commitment that retains exactly the outputs refining it at its input and that
+input's refinements.
+
+\begin{definition}[Coordination]
+\label{def:coordination}
+\emph{Coordination} is agreement among participants, obtained before a
+commitment is made, that no participant will select an alternative the
+commitment excludes.
+\end{definition}
+
+\begin{theorem}[Commitments require coordination]
+\label{thm:commitments-require-coordination}
+Suppose the participants share a common commitment basis.  Let a commitment
+$d$ in the basis be applicable at a reachable state $\sigma=(i,R)$ and remove
+a row at the current input $i$ by commitment: some $x\in R(i)$ with no
+refinement in $R'(i)$, where $(i,R')=d(\sigma)$.  Then there is a participant
+state $\tau$, reachable from the canonical initial state by the same input
+events followed by the selection of $x$, whose residual at $i$ consists of
+refinements of $x$; and $d(\sigma)$ and $\tau$ have no common row at $i$.
+Consequently $d$ cannot be applied without agreement that no participant takes
+the course leading to $\tau$.
+\end{theorem}
+
+\begin{proof}
+Let a second participant receive the same input events as the first, reaching
+a state with the same current input and with $x\in\fiber{i}$ still admitted,
+and let it select $x$: by exposing it if it is exposable, and otherwise by a
+commitment retaining exactly the outputs above $x$, which the common basis
+makes available to it.  Its residual at $i$ is then contained in
+$\{u\in\fiber{i}:x\OutputOrd u\}$, while the first participant's residual
+$R'(i)$ contains no such $u$ by hypothesis.  The intersection at $i$ is
+therefore empty: the two states cannot be merged, and no later input or output
+event can restore a removed row.  The only way to avoid this outcome is for
+the second participant not to select $x$, which it can be relied upon to do
+only by agreement.
+\end{proof}
+
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
-In the rest of this section, \emph{reachable} means reachable from a canonical
-initial state by a run, with no commitment from the basis.  Complete CALM adds
-two things to Functional CALM: relational specifications with output choice,
+Complete CALM adds two things to Functional CALM: relational specifications with output choice,
 and Distributed Consistency over Lamport histories.  The theorem states all
 three equivalent views: Consistency of runs, Lifted Monotonicity of the
 specification, and Distributed Consistency.
@@ -1827,56 +1873,12 @@ a valid $j\succeq_I i$ and $x\in R(j)$, the run reaching $(i,R)$ extended by
 $\mathsf{output}(o)$ and the same run extended by $\mathsf{input}(j)$ and
 $\mathsf{output}(x)$ must be confluent at $j$, which by
 Lemma~\ref{lem:run-residual} supplies $u\in R(j)$ above both $o$ and $x$,
-and Proposition~\ref{prop:exposability} applies.  A consistent specification
-therefore needs no coordination: its runs are made of input events and
-output events with exposable outputs alone, and the next subsection shows that only
-commitments require agreement among participants
-(Definition~\ref{def:coordination}).
-
-\subsection{Coordination}
-\label{sec:coordination}
-
-Exposing an exposable output narrows without excluding and can be done by
-every participant at will.  A commitment excludes content, and the next result
-says what that costs when several participants hold the same input.  In what
-follows, a participant \emph{selects} an admissible output at the input it
-holds by exposing it when it is exposable, and otherwise by first applying a
-commitment that retains exactly the outputs refining it at its input and that
-input's refinements.
-
-\begin{definition}[Coordination]
-\label{def:coordination}
-\emph{Coordination} is agreement among participants, obtained before a
-commitment is made, that no participant will select an alternative the
-commitment excludes.
-\end{definition}
-
-\begin{theorem}[Commitments require coordination]
-\label{thm:commitments-require-coordination}
-Suppose the participants share a common commitment basis.  Let a commitment
-$d$ in the basis be applicable at a reachable state $\sigma=(i,R)$ and remove
-a row at the current input $i$ by commitment: some $x\in R(i)$ with no
-refinement in $R'(i)$, where $(i,R')=d(\sigma)$.  Then there is a participant
-state $\tau$, reachable from the canonical initial state by the same input
-events followed by the selection of $x$, whose residual at $i$ consists of
-refinements of $x$; and $d(\sigma)$ and $\tau$ have no common row at $i$.
-Consequently $d$ cannot be applied without agreement that no participant takes
-the course leading to $\tau$.
-\end{theorem}
-
-\begin{proof}
-Let a second participant receive the same input events as the first, reaching
-a state with the same current input and with $x\in\fiber{i}$ still admitted,
-and let it select $x$: by exposing it if it is exposable, and otherwise by a
-commitment retaining exactly the outputs above $x$, which the common basis
-makes available to it.  Its residual at $i$ is then contained in
-$\{u\in\fiber{i}:x\OutputOrd u\}$, while the first participant's residual
-$R'(i)$ contains no such $u$ by hypothesis.  The intersection at $i$ is
-therefore empty: the two states cannot be merged, and no later input or output
-event can restore a removed row.  The only way to avoid this outcome is for
-the second participant not to select $x$, which it can be relied upon to do
-only by agreement.
-\end{proof}
+and Proposition~\ref{prop:exposability} applies.  Complete CALM and
+Theorem~\ref{thm:commitments-require-coordination} now give the exact
+coordination boundary.  When Lifted Monotonicity holds, all outputs at
+reachable states are exposable and no commitment is needed.  When it fails,
+selecting an offending output requires a commitment, which requires
+coordination among participants that could select incompatible alternatives.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:cap-corollary}
