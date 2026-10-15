@@ -1506,11 +1506,12 @@ covering sharded and more general distributed deployments as well as replicas.
 
 \paragraph{Histories and consistent cuts.}
 A Lamport history records the participants' local events and the message edges
-that order events across participants.  Each participant has its own strategy and
-strategy state, as introduced in Section~\ref{sec:determination}; messages may
-carry input in the specification's sense, strategy state, or both.  The
-definition records all of these events, while the semantic projection that
-follows keeps only their effect on residual states.
+that order events across participants.  Each participant has its own strategy
+and strategy state, as introduced in Section~\ref{sec:determination}.  We view
+a message as having an \emph{input component}, which may advance the receiver's
+semantic input, and a \emph{strategy component}, which may update its strategy
+state.  Either component may be empty.  The history records both; the semantic
+projection that follows retains only the input component.
 
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
@@ -1524,12 +1525,9 @@ with:
   \item a label on each event, either a transition
         $\mathsf{input}(j)$, $\mathsf{output}(o)$, or a commitment from the
         basis; a send $\mathsf{send}(m)$ for $m\in M$; or a receive
-        $\mathsf{receive}(m;a)$, where the \emph{semantic annotation} $a$ is
-        either an input event $\mathsf{input}(j)$ induced by the message or
-        the empty symbol $\epsilon$ when the message changes no semantic
-        input; and
-  \item for each $\mathsf{receive}(m;a)$, a matching
-        $\mathsf{send}(m)$ at another participant.
+        $\mathsf{receive}(m)$; and
+  \item for each $\mathsf{receive}(m)$, a matching $\mathsf{send}(m)$ at
+        another participant.
 \end{enumerate}
 Input delivered directly by the environment is represented by an
 $\mathsf{input}(j)$ transition rather than a message event.  The
@@ -1551,9 +1549,10 @@ residual.
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
 to $p$ in local order.  Its \emph{semantic projection} $\pi_p^C$ is the
 transition sequence obtained by keeping transition labels, replacing each
-$\mathsf{receive}(m;\mathsf{input}(j))$ by $\mathsf{input}(j)$, and deleting
-sends and receives whose semantic annotation is $\epsilon$.  Deleted events may change
-strategy state, but not the residual.  A pointed history $(H,C)$ is
+$\mathsf{receive}(m)$ whose input component advances the input to $j$ by
+$\mathsf{input}(j)$, and deleting sends and receives with an empty input
+component.  A deleted receive may still update strategy state through the
+message's strategy component, but it does not change the residual.  A pointed history $(H,C)$ is
 \emph{well formed} when each $\pi_p^C$ is a defined transition sequence from
 $\sigma_0(i_p^0)$.  Write $\sigma_p^C$ for the final residual of
 $\pi_p^C$.  The
