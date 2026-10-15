@@ -201,8 +201,9 @@ This paper makes four contributions:
   \item A framework for distributed computation: specifications as
         relations with ordered inputs and outputs, \emph{residual states}
         recording what remains admissible, and three transitions: input events,
-        output events, and \emph{commitments}.  Residual vectors are provably the residual
-        quotient of Lamport histories, and Section~\ref{sec:instances} shows
+        output events, and \emph{commitments}.  Transition projections reduce
+        Lamport histories to vectors of residual states, and
+        Section~\ref{sec:instances} shows
         that CRDTs, highly available transactions, and invariant confluence are
         instances of the framework.
   \item Functional CALM generalizes and proves the CALM Conjecture in the context of
@@ -1217,11 +1218,6 @@ We would like to prove this about a textbook model of distributed execution, and
 Section~\ref{sec:histories} does so for Lamport histories, in which each
 participant's local events are a sequence of its transitions and messages
 partially order events across participants~\cite{chandy1985distributed}.
-% Each
-% participant's events up to any \emph{consistent cut} in Lamport history
-% form a run and determine its residual, and those residuals are all this
-% paper consults about an execution
-% (Proposition~\ref{prop:residual-quotient}).
 Theorem~\ref{thm:complete-calm} then says that when participants only receive
 input and expose outputs, every Lamport history is confluent exactly when the
 specification is monotone.
@@ -1596,9 +1592,9 @@ with:
 \emph{happens-before} order is the transitive closure of the local orders
 and the edges from sends to their matching receives.  A
 \emph{consistent cut} $C$ is a subset of events closed under happens-before
-~\cite{chandy1985distributed}, and $(H,C)$ is a \emph{pointed history}.
-(This textbook use of ``consistent'' is unrelated to consistency as
-confluence, which is a property of specifications.)
+~\cite{chandy1985distributed}.  (This textbook use of ``consistent'' is
+unrelated to consistency as confluence, which is a property of
+specifications.)
 \end{definition}
 
 \paragraph{Example: direct and forwarded input.}
@@ -1672,14 +1668,12 @@ Figure~\ref{fig:election-frames}(b).
     \node[anchor=west] at (8.35,.65) {$\sigma_b$};
     \node[anchor=west] at (8.35,-.95) {$\sigma_b$};
   \end{tikzpicture}
-  \caption{Two histories from $\sigma_a=(a\cdot\cdot,R_a)$ to
-  $\sigma_b=(ab\cdot,R_b)$.  The relations $R_a$ and $R_b$ are the seven and
-  three rows, respectively, in panels (a) and (b) of
-  Figure~\ref{fig:election-frames}.  The environment is outside the history
-  and supplies cumulative input $i_{\mathrm{in}}=ab\cdot$.  The strategy
+  \caption{Two distinct histories from $\sigma_a=(a\cdot\cdot,R_a)$ to
+  $\sigma_b=(ab\cdot,R_b)$.  The relations $R_a$ and $R_b$ are, respectively, the tables in panels (a) and (b) of
+  Figure~\ref{fig:election-frames}.  The environment supplies cumulative input $i_{\mathrm{in}}=ab\cdot$.  The strategy
   computes $\mathsf{advance}(a\cdot\cdot,ab\cdot)=ab\cdot$; the resulting
   $\mathsf{input}(ab\cdot)$ is the participant event.  In (b), $q$ computes
-  it after receiving $m=(ab\cdot,s_m)$.  Dashed lines are consistent cuts.}
+  the $\mathsf{advance}$ upon receiving $m=(ab\cdot,s_m)$.  Vertical dashed lines are consistent cuts.}
   \label{fig:history-projection}
 \end{figure}
 
@@ -1695,11 +1689,10 @@ to $p$ in local order.  Its \emph{transition projection} $\pi_p^C$ keeps the
 input events, output events, and commitments in that order, and deletes sends
 and receives.  A receive may update strategy state and lead the strategy to
 compute a later input event, but it does not directly change the residual.
-A pointed history $(H,C)$ is \emph{well formed} when each $\pi_p^C$ is a
-defined transition sequence from $\sigma_0(i_p^0)$ and every input event
-caused by an arrival or receive has the target computed by
-$\mathsf{advance}$.  Write $\sigma_p^C$ for the final residual of
-$\pi_p^C$.  The
+We consider only pairs $(H,C)$ for which each $\pi_p^C$ is a defined
+transition sequence from $\sigma_0(i_p^0)$ and every input event caused by an
+arrival or receive has the target computed by $\mathsf{advance}$.  Write
+$\sigma_p^C$ for the final residual of $\pi_p^C$.  The
 \emph{residual endpoint} of the cut is the vector
         \begin{equation}
   \operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}.
@@ -1722,52 +1715,26 @@ and hence the two histories have the same residual endpoint:
 The transition projection has erased the difference between direct and
 forwarded delivery while retaining its effect on the residuals.
 
-\paragraph{The residual quotient.}
-The construction separates strategy state and message detail from residual
-state.  Call two pointed histories \emph{residual-equivalent} when their
-pasts produce the same residual endpoint.  Histories in one equivalence class
-may differ in message order, batching, and strategy state but agree on every
-participant's residual.  Taking the \emph{quotient} means treating each class
-as one residual state, represented here by its endpoint vector.  This is a
-backward-looking classification of histories; the next proposition is
-forward-looking, saying that the endpoint determines every possible future
-transition and its result.
-
-\begin{proposition}[Residual endpoints determine continuations]
-\label{prop:residual-quotient}
-Fix a specification, a participant set, and a commitment basis.  From any two
-well-formed pointed histories with the same residual endpoint, a given future
-sequence of participant-local transitions is applicable after one
-history if and only if it is applicable after the other, and it produces the
-same residual states after both.
-\end{proposition}
-
-\begin{proof}
-Each participant's projection is fixed by its local event order.  Events at
-other participants and events deleted by the projection do not affect its
-residual.  Because every retained transition is a partial function of that
-residual, pointed histories with the same endpoint have the same subsequent
-transitions available, with the same results.
-\end{proof}
-
-Thus everything the specification can ask about a Lamport history at a cut is
-contained in its residual endpoint; message order, batching, and strategy
-state are forgotten exactly when they do not change a residual.  Two
-residual-equivalent histories may still lead an implementation strategy
-to choose different next events; the proposition says that the same
-transitions remain applicable, not that the strategy will choose them.
+\paragraph{Residual endpoints determine what can happen next.}
+The transition projection removes message order, batching, and strategy state
+while retaining each participant's residual.  If two cuts have the same
+residual endpoint, the same transitions are applicable at corresponding
+participants and produce the same residuals, because each transition is a
+partial function of the participant's current residual.  Thus the residual
+endpoint contains everything the specification needs from the history.  The
+implementation strategies may still choose different events; only the
+available transitions and their effects are the same.
 
 \paragraph{Confluence of a history.}
-At a consistent cut, the endpoint vector may contain a different residual for
-each participant.  Confluence asks whether the participant-local paths from
-those residuals can meet in one later residual, at every input that combines
-their current inputs.  Formally, fix a pointed history $(H,C)$ and a common
-refinement $j$ of those inputs.  The history is \emph{confluent at $j$} when
-it has a well-formed extension using input and output events whose endpoint is
-the uniform vector $(\sigma_j)_{p\in P}$ for one residual state
-$\sigma_j=(j,R)$.  Thus every participant reaches the same residual state at
-$j$.  This is an existence claim about transition continuations, not a claim
-that a protocol delivers $j$, communicates, or terminates.
+At a consistent cut $C$, the participants may hold different residuals
+$(\sigma_p^C)_{p\in P}$.  Confluence asks whether their local paths can meet
+in one later residual, at every input that combines their current inputs.
+Formally, let $j$ be such a common refinement.  The history $H$ is
+\emph{confluent at $C$ and $j$} when it has an extension using input and
+output events in which every participant reaches the same residual state
+$\sigma_j=(j,R)$; equivalently, the new cut has residual endpoint
+$(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
+claim that a protocol delivers $j$, communicates, or terminates.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -1788,10 +1755,10 @@ For an ordered relational specification, the following are equivalent:
         $i\InputOrd j$ implies $\fiber{i}\JointOutputOrd\fiber{j}$;
   \item it is consistent: its runs are confluent
         (Definition~\ref{def:consistency});
-  \item for every finite participant set, every well-formed pointed history
-        $(H,C)$ whose transition projections are runs---no commitment from the
-        basis occurs before the cut---is confluent at every common refinement
-        of the participants' current inputs.
+  \item for every finite participant set, history $H$, and consistent cut $C$
+        whose transition projections are runs---no commitment from the basis
+        occurs before the cut---$H$ is confluent at $C$ and every common
+        refinement of the participants' current inputs.
 \end{enumerate}
 \end{theorem}
 
@@ -1817,11 +1784,9 @@ Consistency gives $u$ in every $R_r(j)$, an admitted common refinement of the
 $o_r$: form~(3) of Proposition~\ref{prop:lifted-monotonicity-decomposition},
 hence Lifted Monotonicity.
 
-\emph{(2) and (3).}  By Proposition~\ref{prop:residual-quotient}, the
-endpoint of $(H,C)$ is the vector of final states of the participants'
-transition projections, each a run,
-and what each participant can do next depends only on its coordinate.  If
-runs are confluent, Proposition~\ref{prop:confluence} gives $u$ in the
+\emph{(2) and (3).}  At cut $C$, the transition projections are runs
+whose final states form the residual endpoint.  What each participant can do
+next depends only on its residual.  If runs are confluent, Proposition~\ref{prop:confluence} gives $u$ in the
 intersection of the participants' fibers at $j$, and extending $H$ by an
 input event to $j$ and $\mathsf{output}(u)$ at each participant brings them
 all to $\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
@@ -2252,15 +2217,13 @@ output that refines two alternatives may also eliminate it.  Changing the
 deployment may keep an incompatibility under one participant's authority.  Each option
 changes the interface or system design; none is a loophole in the criterion.
 
-Read in the other direction, Proposition~\ref{prop:residual-quotient} is a
-design criterion.  Choosing
-the input domain and its order decides which histories the specification treats
-as the same: two cuts yield one residual exactly when they reach the same input
-and have removed the same rows.  A finer input order forgets less of the
-execution and obliges the specification to say more; a coarser one forgets
-more.  The specification then states admissible outcomes over residuals,
-without re-encoding the history it was built to forget, and the proposition
-says that nothing it can ask is lost in doing so.
+The transition projection is also a design criterion.  Choosing the input
+domain and its order decides which histories the specification treats as the
+same: two cuts yield one residual exactly when they reach the same input and
+have removed the same rows.  A finer input order forgets less of the execution
+and obliges the specification to say more; a coarser one forgets more.  The
+specification then states admissible outcomes over residuals without
+re-encoding the history it was built to forget.
 
 A reader who thinks in state machines can compile one into this form.  At the
 finest grain, an input is the sequence of environment events the machine has
