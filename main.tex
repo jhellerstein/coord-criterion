@@ -757,6 +757,21 @@ commitment from its basis that removes the alternatives, after which $o$ may
 be exposable.
 
 \paragraph{Input events.}
+An input event records the new cumulative input, not the value that caused it.
+The system model supplies a partial function
+        \begin{equation}
+  \mathsf{advance}:I\times I\rightharpoonup I,
+  \qquad
+  \mathsf{advance}(i,a)=j\ \Longrightarrow\ i\InputOrd j\ \text{and}\ a\InputOrd j,
+  \label{eq:cumulative-advance}
+        \end{equation}
+where $i$ is the current input and $a$ is an arriving cumulative input.  The
+arrival, whether directly from the environment or later in a message, induces
+$\mathsf{input}(j)$.  For set-valued inputs advance is union; for a
+join-semilattice it is join.  The function is partial because two inputs need
+not have a common refinement, and it belongs to the system model because the
+input order need not select a unique one.
+
 Input events compose: $\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has
 the same effect as $\mathsf{input}(k)$ alone, since
 $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$, and $\mathsf{input}(i)$
@@ -1505,30 +1520,32 @@ covering sharded and more general distributed deployments as well as replicas.
 \paragraph{Histories and consistent cuts.}
 A Lamport history records the participants' local events and the message edges
 that order events across participants.  Each participant has its own strategy
-and strategy state, as introduced in Section~\ref{sec:determination}.  We view
-a message as having an \emph{input component}, which may advance the receiver's
-input, and a \emph{strategy component}, which may update its strategy
-state.  Either component may be empty.  The history records both; the transition
-projection that follows retains only the input component.
+and strategy state, as introduced in Section~\ref{sec:determination}.  A
+message is a pair $m=(i_m,s_m)$: its \emph{input component}
+$i_m\in I\cup\{\epsilon\}$ is a cumulative input value or is empty, and its
+\emph{strategy component} $s_m$ is arbitrary strategy data or is empty.  The
+history records both; the transition projection combines $i_m$ with the
+receiver's input using $\mathsf{advance}$ and ignores $s_m$.
 
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
 Fix an ordered specification, a finite participant set $P$, a message set
-$M$, an initial input $i_p^0$ for each $p\in P$, and a commitment basis.  A
+$M\subseteq(I\cup\{\epsilon\})\times(D\cup\{\epsilon\})$ for some set $D$
+of strategy data, an
+initial input $i_p^0$ for each $p\in P$, a cumulative-advance function
+(Equation~\ref{eq:cumulative-advance}), and a commitment basis.  A
 \emph{distributed history} $H$ consists of a finite set of events, together
 with:
 \begin{enumerate}
   \item an assignment of each event to a participant $p\in P$, and a total
         local order on the events assigned to each participant;
-  \item a label on each event, either a transition
-        $\mathsf{input}(j)$, $\mathsf{output}(o)$, or a commitment from the
-        basis; a send $\mathsf{send}(m)$ for $m\in M$; or a receive
-        $\mathsf{receive}(m)$; and
+  \item a label on each event, either an output event
+        $\mathsf{output}(o)$ or a commitment from the basis; an environment
+        arrival $\mathsf{arrive}(a)$ for $a\in I$; a send
+        $\mathsf{send}(m)$; or a receive $\mathsf{receive}(m)$; and
   \item for each $\mathsf{receive}(m)$, a matching $\mathsf{send}(m)$ at
         another participant.
-\end{enumerate}
-Input delivered directly by the environment is represented by an
-$\mathsf{input}(j)$ transition rather than a message event.  The
+\end{enumerate}  The
 \emph{happens-before} order is the transitive closure of the local orders
 and the edges from sends to their matching receives.  A
 \emph{consistent cut} $C$ is a subset of events closed under happens-before
@@ -1542,9 +1559,10 @@ Let $R_a$ be the seven rows shown in Figure~\ref{fig:election-frames}(a), so
 $\sigma_a=(a\cdot\cdot,R_a)=\sigma_0(a\cdot\cdot)$.  Participants $p$ and $q$
 both start at $\sigma_a$.  Figure~\ref{fig:history-projection} shows two
 histories in which
-both receive $v_2$'s vote for $b$.  In the first, the environment delivers the
-vote directly to each participant.  In the second, the environment delivers
-it to $p$, which forwards it to $q$.  The histories contain different events,
+both receive the cumulative input $ab\cdot$, which includes $v_2$'s vote for
+$b$.  In the first, the environment delivers it directly to each participant.
+In the second, the environment delivers it to $p$, which forwards
+$m=(ab\cdot,s_m)$ to $q$.  The histories contain different events,
 but both participants reach the state $\sigma_b$ of
 Figure~\ref{fig:election-frames}(b).
 
@@ -1561,8 +1579,8 @@ Figure~\ref{fig:election-frames}(b).
     \node[anchor=east] at (1.5,4.4) {$\sigma_a$};
     \fill (3.3,5.5) circle (1.7pt);
     \fill (3.3,4.0) circle (1.7pt);
-    \node[above] at (3.3,5.5) {$\mathsf{input}(ab\cdot)$};
-    \node[below] at (3.3,4.0) {$\mathsf{input}(ab\cdot)$};
+    \node[above] at (3.3,5.5) {$\mathsf{arrive}(ab\cdot)$};
+    \node[below] at (3.3,4.0) {$\mathsf{arrive}(ab\cdot)$};
     \draw[dashed] (5.2,3.55) -- (5.2,6.1);
     \node[above] at (5.2,6.1) {$C_d$};
     \node[anchor=west] at (5.35,5.5) {$\sigma_b=(ab\cdot,R_b)$};
@@ -1576,11 +1594,11 @@ Figure~\ref{fig:election-frames}(b).
     \node[anchor=east] at (1.5,2.0) {$\sigma_a$};
     \node[anchor=east] at (1.5,.5) {$\sigma_a$};
     \fill (2.7,1.6) circle (1.7pt);
-    \node[above] at (2.7,1.6) {$\mathsf{input}(ab\cdot)$};
+    \node[above] at (2.7,1.6) {$\mathsf{arrive}(ab\cdot)$};
     \fill (4.2,1.6) circle (1.7pt);
-    \node[above] at (4.2,1.6) {$\mathsf{send}(m)$};
+    \node[above] at (4.2,1.6) {$\mathsf{send}(ab\cdot,s_m)$};
     \fill (5.2,.1) circle (1.7pt);
-    \node[below] at (5.2,.1) {$\mathsf{receive}(m)$};
+    \node[below] at (5.2,.1) {$\mathsf{receive}(ab\cdot,s_m)$};
     \draw[->] (4.2,1.48) -- (5.15,.24);
     \draw[dashed] (6.1,-.35) -- (6.1,2.2);
     \node[above] at (6.1,2.2) {$C_f$};
@@ -1590,10 +1608,11 @@ Figure~\ref{fig:election-frames}(b).
   \caption{Two histories from $\sigma_a=(a\cdot\cdot,R_a)$ to
   $\sigma_b=(ab\cdot,R_b)$.  The relations $R_a$ and $R_b$ are the seven and
   three rows, respectively, in panels (a) and (b) of
-  Figure~\ref{fig:election-frames}(b).  In (a), the environment delivers the
-  vote directly to both participants.  In (b), $p$ forwards it in message
-  $m$; the input component of $m$ advances $q$ to $ab\cdot$.  Dashed lines
-  are consistent cuts.}
+  Figure~\ref{fig:election-frames}(b).  In (a), the environment delivers
+  $ab\cdot$ directly to both participants.  In (b), $p$ forwards
+  $m=(ab\cdot,s_m)$; direct arrival and receipt both induce
+  $\mathsf{input}(ab\cdot)$ through $\mathsf{advance}$.  Dashed lines are
+  consistent cuts.}
   \label{fig:history-projection}
 \end{figure}
 
@@ -1605,12 +1624,13 @@ transitions that determine that residual.
 \begin{definition}[Transition projection and residual endpoint]
 \label{def:semantic-projection}
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
-to $p$ in local order.  Its \emph{transition projection} $\pi_p^C$ is the
-transition sequence obtained by keeping transition labels, replacing each
-$\mathsf{receive}(m)$ whose input component advances the input to $j$ by
-$\mathsf{input}(j)$, and deleting sends and receives with an empty input
-component.  A deleted receive may still update strategy state through the
-message's strategy component, but it does not change the residual.  A pointed history $(H,C)$ is
+to $p$ in local order.  Its \emph{transition projection} $\pi_p^C$ is obtained
+recursively from the current input $i$.  Keep output events and commitments;
+delete sends; and replace either $\mathsf{arrive}(a)$ or
+$\mathsf{receive}(a,s_m)$ by $\mathsf{input}(j)$ when
+$\mathsf{advance}(i,a)=j$.  A receive with input component $\epsilon$ adds no
+transition.  Its strategy component may update strategy state, but does not
+directly change the residual.  A pointed history $(H,C)$ is
 \emph{well formed} when each $\pi_p^C$ is a defined transition sequence from
 $\sigma_0(i_p^0)$.  Write $\sigma_p^C$ for the final residual of
 $\pi_p^C$.  The
