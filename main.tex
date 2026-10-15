@@ -1023,26 +1023,22 @@ again a monotonicity condition.
 \section{Complete CALM: Output Choice and Coordination}
 \label{sec:complete-calm}
 
-A specification may admit more than one output for the same input.
-Such specifications are relational rather than functional, and we call them
-\emph{ambiguous}.  Complete CALM extends Functional CALM
-to this output choice, and this section mirrors the structure of
-Section~\ref{sec:functional-calm}.  Section~\ref{sec:ambiguity-story} walks
-through the framework informally on two ambiguous examples.
-Section~\ref{sec:relational-specifications} defines relational specifications
-and Lifted Monotonicity, Section~\ref{sec:safe-exposure} extends the
-transition system to output choice, Section~\ref{sec:histories} assembles
-several participants into Lamport histories,
-Section~\ref{sec:coordination} identifies coordination as the cost of
-commitments, Section~\ref{sec:complete-calm-theorem} proves Complete CALM, and
-Section~\ref{sec:cap-corollary} states Complete CAP.
+An \emph{ambiguous} specification admits more than one output for an input.
+Complete CALM extends Functional CALM to this output choice.  We begin with two
+examples, then define Lifted Monotonicity and the relational transition system,
+model distributed executions as Lamport histories, project their cuts to
+residuals and define confluence, state Distributed Consistency, and identify
+the coordination boundary before proving Complete CALM and Complete CAP.
 
 \subsection{The framework on two ambiguous examples}
 \label{sec:ambiguity-story}
 
-As in Section~\ref{sec:election-story}, terms introduced in italics are
-defined formally in the rest of this section, and nothing here is needed for
-the proofs.
+We begin, as in Section~\ref{sec:election-story}, with an informal,
+example-driven treatment.  Terms introduced in italics are defined formally
+below, and nothing here is needed for the proofs.  Section~\ref{sec:election-story}
+exercised the shared transition system; these examples exercise only the
+additions for ambiguous and distributed specifications: directedness, choice
+commitments, participants and messages, and history confluence.
 
 \begin{figure}[t]
   \centering
@@ -1083,67 +1079,29 @@ the proofs.
 \end{figure}
 
 \paragraph{Ambiguity.}
-Some specifications are ambiguous: they admit several results for one
-input, so the input column does not determine the output column.
-Figure~\ref{fig:ambiguity-frames}(f) is the
-ordering of two concurrent transactions $A$ and $B$: the input is the pair,
-the output is a serial order, and either order is admitted, so the table has
-two rows at one input.  Before $[A,B]$ can be exposed, a commitment must
-remove the row for $[B,A]$: this is the second kind of commitment, a \emph{choice
-commitment}.
+Figure~\ref{fig:ambiguity-frames}(f) admits either serial order of concurrent
+transactions $A$ and $B$.  No output refines both orders, so exposing one first
+requires a \emph{choice commitment} that removes the other.  In the traceroute
+of panel (g), by contrast, outputs are prefix-closed route sets and their
+unions are admitted.  Exposing $\{s{\to}\texttt{s1}\}$ removes rows whose
+outputs do not refine it, but a retained union refines each removed output;
+nothing is lost, so the output is exposable.
 
-As a contrast, consider Panel (g), showing a traceroute
-diagnostic for a service reachable from source $s$ directly at server
-\texttt{s1} or through hop $a$ at server \texttt{s2}.  An output is the
-prefix-closed set of routes observed so far, so $\{s{\to}a\}$, a probe that has
-reached the hop but not the server, is an admitted output, and so is any union
-of admitted outputs.  Exposing $\{s{\to}\texttt{s1}\}$ removes the two rows that
-do not refine it, yet the remaining rows $\{s{\to}\texttt{s1},\ s{\to}a\}$ and
-$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$ still say
-everything they said.  Nothing is lost: the output is exposable, and
-exposing it is not a commitment.
-
-What made the difference between panels (f) and (g)?  In both, the system
-selected one of several admissible outputs.  In transaction ordering, no row
-of the table refines both $[A,B]$ and $[B,A]$, so exposing either removes the
-other's row and no remaining row preserves it.  In traceroute, for any two
-route sets the table admits, it also admits their union, which refines both;
-so exposing one removes the other's row while retaining a row that refines
-both.  A set of outputs in which every finite subset has a common refinement
-within the set is called \emph{directed}.  If the outputs admitted at an input
-are directed, then whichever of them the system exposes, every removed row is
-refined by a retained one, and the output is exposable.  If they are not
-directed, some output becomes exposable only after a commitment removes an
-alternative.
-
-Two things can therefore go wrong as a relational specification runs.  Input
-can grow in a way that leaves an admitted output with no refinement, as in the
-election under the equality order.  Or the outputs admitted at one input can
-fail to be directed, as in transaction ordering.  Complete CALM
-(Section~\ref{sec:complete-calm-theorem}) rules out both with one condition,
-\emph{Lifted Monotonicity}: whenever input grows from $i$ to $j$, every finite
-set of outputs admitted at $i$ has a common refinement admitted at $j$.  It is
-a monotonicity condition on the set of admitted outputs, and
-Section~\ref{sec:relational-specifications} shows that it is exactly the
-conjunction of the two requirements.
+The distinction is \emph{directedness}: every finite set of admitted outputs
+must have an admitted common refinement.  A directed fiber permits any output
+to be exposed without losing an alternative; a nondirected fiber may require
+a choice commitment.  Lifted Monotonicity combines this requirement with the
+requirement from Functional CALM that more input not invalidate an admitted
+output: every finite set of outputs admitted at $i$ must have a common
+refinement admitted at every $j\succeq_I i$.
 
 \paragraph{The commitment basis.}
-The commitment basis is part of a system's design, alongside the
-specification, and the choice of basis is significant.  Familiar concurrency
-control protocols differ here.  Figure~\ref{fig:cc-commitments} returns to
-transaction ordering with a third transaction $C$, so that six serial orders
-are admitted.  Under two-phase locking, $A$ acquiring a lock ahead of $B$ commits $A$
-before $B$ and nothing more; $C$'s position stays open until it contends for a
-lock.  Under multiversion timestamp ordering, $B$ receiving the first timestamp
-commits $B$ to first place and nothing more; $A$ and $C$ remain unordered.
-Both protocols proceed by a sequence of such commitments.  The two bases
-differ in the shape of a commitment, a relative order between two conflicting
-transactions or an absolute position in the final order, and neither shape is
-dictated by the specification.  Appendix~\ref{app:cc-bases} writes out both
-bases, including the abort that each protocol needs.
-Section~\ref{sec:design-boundary} returns to basis design, and
-Appendix~\ref{app:additional-applications} works through a basis with a
-single commitment, after which every remaining output is exposable.
+The specification does not dictate which alternatives a commitment removes;
+the system's commitment basis does.  In Figure~\ref{fig:cc-commitments},
+two-phase locking commits only $A$ before $B$, whereas multiversion timestamp
+ordering commits $B$ to first place.  Appendix~\ref{app:cc-bases} gives both
+bases, including their abort commitments, and
+Section~\ref{sec:design-boundary} returns to this design choice.
 
 \begin{figure}[t]
   \centering
@@ -1181,61 +1139,24 @@ single commitment, after which every remaining output is exposable.
   \label{fig:cc-commitments}
 \end{figure}
 
-\paragraph{Participants and messages.}
-Everything so far concerns the specification and its orders,
-and it holds of a single-node database ordering transactions just as it holds
-of the election.  Now let the system be distributed.  It consists of
-\emph{participants}, each of which knows the specification, which is fixed and
-public, and each of which holds its own residual state.  A participant's
-residual changes only by its own transitions, which are those of
-Section~\ref{sec:election-story}: input events, output events, and
-commitments.  Two further kinds of event connect participants without being
-transitions of their own: a participant may \emph{send} a message and may
-\emph{receive} one.  A message carries whatever the protocol puts in it.  Some
-of its contents may be input in the specification's sense, as a forwarded
-ballot is in the election; the rest is state that serves the protocol's
-computation and that the specification does not see.  Which is which depends
-on the specification: a timestamp is computational state to the transaction
-ordering of Figure~\ref{fig:ambiguity-frames}(f) but would be input to a
-specification whose inputs carried timestamps.  A send changes no residual.  A
-receive is an input event at the receiver when what it carries advances the
-receiver's input; otherwise it too does not
-change the receiver's residual, however much it may inform the
-protocol.  Each participant's residual is therefore the specification with the
-rows removed by its own input events, output events, and commitments, and two
-participants that have seen different events hold different residuals.
-Panels (a) and (b) of Figure~\ref{fig:election-frames} can be read this way:
-one participant has so far received only $v_1$'s ballot, another has also
-received $v_2$'s, and each has removed what its own input retired.
+\paragraph{Participants, messages, and consistency.}
+Everything above concerns one residual and applies equally on a single node.
+Distribution enters when several participants can take different transitions.
+Each holds a residual changed only by its own input events, output events, and
+commitments.  Sends and receives
+connect participants but do not themselves change residuals; received message
+input may cause a later input event, while other message content affects only
+strategy state.  Thus participants that have seen different events may hold
+different residuals.
 
-\paragraph{Consistency of a distributed execution.}
-Section~\ref{sec:election-story} defined consistency as confluence of the
-runs of one transition system.  For a distributed system the intuition is the
-same, with participants in place of runs; the added complication is that events
-across participants may be non-deterministically interleaved. Whatever each participant has
-exposed based on the input it has seen,
-confluence holds when all of them can be brought to one residual at any input combining theirs.
-We would like to prove this about a textbook model of distributed execution, and
-Section~\ref{sec:histories} does so for Lamport histories, in which each
-participant's local events are a sequence of its transitions and messages
-partially order events across participants~\cite{chandy1985distributed}.
-Theorem~\ref{thm:complete-calm} then says that when participants only receive
-input and expose outputs, every Lamport history is confluent exactly when the
-specification is monotone.
-
-Commitments are precisely the actions that require coordination;
-input events and exposing exposable outputs may be done autonomously.
-This follows directly from the discussion above.  Input arrives at each
-participant on its own.  Exposing an exposable output retires only covered
-rows, so every output
-another participant still admits has a refinement consistent with the output
-exposed, and combining inputs later contradicts nothing.  A commitment removes an alternative that another
-participant's residual may still admit, so it is safe only if every such
-participant agrees; that agreement is coordination.  Determination that needs
-a commitment is therefore precisely the determination that needs coordination.
-The rest of this section makes these claims precise, in the order of
-Section~\ref{sec:functional-calm}: definitions, the transition system,
-histories, coordination, the theorem, and then Complete CAP.
+A Lamport history records these local event sequences and the message edges
+between them~\cite{chandy1985distributed}.  Confluence asks whether, whatever
+participants have exposed from the input they have seen, they can reach one
+residual at any input combining theirs.  Complete CALM will equate confluence
+of all such histories with Lifted Monotonicity.  Exposable outputs can be made
+autonomously because they retire only covered rows; commitments exclude
+alternatives and therefore require agreement from participants that could
+select them.
 
 Figure~\ref{fig:complete-formalism-summary} summarizes the objects added for
 output choice and distributed histories.
@@ -1260,7 +1181,7 @@ output choice and distributed histories.
     participant; message & participant holds one residual; \ $m=(i_m,s_m)$ carries input and strategy components & Sec.~\ref{sec:histories} \\
     history; consistent cut & locally ordered events plus matched sends and receives; \ cut closed under happens-before & Def.~\ref{def:distributed-history} \\
     projection; endpoint & $\pi_p^C$: transitions affecting $p$'s residual; \ $\operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
-    history confluence & at every common input $j$, all participants can reach one residual state $\sigma_j=(j,R)$ & Sec.~\ref{sec:histories} \\
+    history confluence & at every common input $j$, all participants can reach one residual state $\sigma_j=(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
@@ -1274,6 +1195,10 @@ output choice and distributed histories.
 
 \subsection{Relational specifications and Lifted Monotonicity}
 \label{sec:relational-specifications}
+
+The examples pose the specification-level question: when can every finite set
+of admitted outputs survive together as input grows?  We first define the two
+ways this can fail, then combine them in Lifted Monotonicity.
 
 \begin{definition}[Ordered relational specification]
 \label{def:relational-specification}
@@ -1345,39 +1270,20 @@ $X\subseteq F$ is compatible in $F$.  An ordered relational specification has
 \emph{Directed Outputs} when every fiber $\fiber{i}$ is directed.
 \end{definition}
 
-A singleton fiber is directed.  Closure under a join operation, as for fact
-sets closed under union, is sufficient but not necessary.  Directedness asks
-only that each finite set have \emph{some} admitted upper bound; it does not
-require a least one or a fixed merge operator, and so is strictly weaker than
-being a join-semilattice.  Section~\ref{sec:crdt-instance} gives a directed
-fiber of order-preserving interleavings with several minimal upper bounds.
-At the other extreme, a fiber containing two outputs with no admitted upper
-bound is not directed.  Compatibility is not comparability: two incomparable
-outputs are compatible whenever some third admitted output refines both, as
-in traceroute.
-
-\paragraph{Directed and nondirected specifications.}
-
-The two examples of Section~\ref{sec:ambiguity-story} sit on either side of
-this definition.  In the traceroute of Figure~\ref{fig:ambiguity-frames}(g),
-any two admitted route sets have their union admitted, and the union refines
-both, so every finite set of admitted outputs is compatible and the fiber is
-directed; exposing $\{s{\to}\texttt{s1}\}$ removed two rows, and both removals
-were output retirements.  In the transaction ordering of panel (f), no
-admitted output refines both $[A,B]$ and $[B,A]$: the two are incompatible at
-input $\{A,B\}$, so the fiber is not directed, and removing either row is a
-commitment.  Leader election is nondirected for the same reason: if
-\texttt{server1} and \texttt{server2} are both eligible and the interface
-permits either as sole leader, the two choices are incompatible.
+A singleton fiber is directed, and closure under a join is sufficient but not
+necessary.  Directedness requires some admitted upper bound for each finite
+set, not a least one or a fixed merge operator, so it is weaker than a
+join-semilattice.  Compatibility likewise does not require comparability: two
+incomparable outputs may have a third admitted output above both.  Thus the
+traceroute fiber is directed by union, whereas the two transaction orders in
+Figure~\ref{fig:ambiguity-frames}(f) are incompatible.
 
 \paragraph{Lifted Monotonicity.}
 \label{sec:complete-calm-criterion}
 
-Section~\ref{sec:ambiguity-story} identified two failures: more input can
-invalidate an output, or several outputs admitted at one input can be
-incompatible.  Relational Monotonicity rules out the first; Directed Outputs
-rules out the second.  Neither implies the other.  Lift the output order once
-more to express both as one condition.  For nonempty $A,B\subseteq O$, define
+Relational Monotonicity preserves each output across input refinement;
+Directed Outputs preserves finite choices within a fiber.  The joint lift
+expresses both.  For nonempty $A,B\subseteq O$, define
         \begin{equation}
   A\JointOutputOrd B
   \;\Longleftrightarrow\;
@@ -1435,37 +1341,26 @@ finite.  The rows $\{(i,x):x\in X\}$ have common refinement $j$, so some
 $u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
 
-For singleton fibers, Lifted Monotonicity is simply functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  Form~(3) needs finite sets of every
-size because pairwise compatibility does not imply compatibility of a larger
-set (Appendix~\ref{app:additional-applications}).  Its inputs may be
-incomparable because they may belong to different runs; their common
-refinement is where those runs must be reconciled.
+For singleton fibers this is functional monotonicity.  Form~(3) quantifies over
+all finite sizes because pairwise compatibility is insufficient
+(Appendix~\ref{app:additional-applications}), and over incomparable inputs
+because different runs meet only at a common refinement.
 
 \subsection{The transition system under output choice}
 \label{sec:safe-exposure}
 
-The same three transitions apply to a relational specification, but output
-choice gives two of them a new role.  Input events are unchanged.  Output
-events may now retire rows.  Commitments may now choose among outputs at a
-valid input, rather than only make inputs invalid; these are the choice
-commitments previewed in Section~\ref{sec:ambiguity-story}.  This subsection
-defines these cases precisely.  Section~\ref{sec:histories} then assembles
-several participants into a distributed execution.
-
-\paragraph{Output events.}
-The event $\mathsf{output}(o)$ exposes $o$ and retains only rows whose outputs
-refine it (Equation~\ref{eq:residual-refining-fibers}).  A removed row need
-not represent a lost alternative: a row retained at the same input may refine
-its output.  We call such a removal an output retirement.
+Lifted Monotonicity is a property of the specification.  To connect it to
+execution, we must determine when exposing one admitted output preserves the
+alternatives represented by the residual.  Input events are unchanged.  Output
+events may now retire covered rows, while only commitments may remove an
+unrefined alternative at a still-valid input.
 
 \begin{definition}[Output retirement]
 \label{def:output-retirement}
-Let a transition take $(i,R)$ to $(i',R')$ and remove a row $(k,x)$ whose
-input $k$ refines $i'$.  The removal is an \emph{output retirement} if $k$
-remains valid and $x$ is \emph{covered}: some retained $u\in R'(k)$ has
-$x\OutputOrd u$.  A row that is neither an input nor an output retirement is
-removed by commitment, as in Definition~\ref{def:retirement}.
+Let a transition from $(i,R)$ to $(i',R')$ remove $(k,x)$, where
+$i'\InputOrd k$.  The removal is an \emph{output retirement} if some retained
+$u\in R'(k)$ covers it, $x\OutputOrd u$.  Every removal that is neither an
+input retirement nor an output retirement is removed by commitment.
 \end{definition}
 
 \begin{definition}[Exposable, under output choice]
@@ -1474,104 +1369,61 @@ An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when every row that
 $\mathsf{output}(o)$ removes is an output retirement.
 \end{definition}
 
-For singleton fibers a removed row is never covered, so this reduces to
-Definition~\ref{def:exposable}: an exposable output event removes no row.  The
-next proposition turns the row-by-row definition into one test on each
-possible future fiber, then states two consequences used below.
+For singleton fibers no removed row is covered, so this reduces to
+Definition~\ref{def:exposable}.
 
 \begin{proposition}[Exposability]
 \label{prop:exposability}
-Let $o\in R(i)$.
-\begin{enumerate}
-  \item\label{prop:exposability-residual}
-        $o$ is exposable at $(i,R)$ if and only if, at every valid future
-        input $j\succeq_I i$, $o$ is compatible in $R(j)$ with every
-        $x\in R(j)$ (Definition~\ref{def:compatibility}).  Equivalently, for
-        each such $j$ and $x$, some $u\in R(j)$ refines both:
-        \begin{equation}
-          o\OutputOrd u
-          \qquad\text{and}\qquad
-          x\OutputOrd u.
-          \label{eq:safe-exposure}
-        \end{equation}
-  \item\label{prop:exposability-valid}
-        When $o$ is exposable, $\mathsf{output}(o)$ leaves every valid input
-        valid.
-  \item\label{prop:exposability-least}
-        When $o$ is exposable, $o$ is the least element of the upper fiber of
-        the resulting state.
-\end{enumerate}
-When $o$ is not exposable, $\mathsf{output}(o)$ would remove a row that only
-a commitment may remove, which no system performs.
+An output $o\in R(i)$ is exposable at $(i,R)$ if and only if, for every valid
+$j\succeq_I i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
+\begin{equation}
+  o\OutputOrd u
+  \qquad\text{and}\qquad
+  x\OutputOrd u.
+  \label{eq:safe-exposure}
+\end{equation}
+When $o$ is exposable, $\mathsf{output}(o)$ leaves every valid input valid.
 \end{proposition}
 
 \begin{proof}
-At every valid $j\succeq_I i$, the event retains
-$R'(j)=\{u\in R(j):o\OutputOrd u\}$.  A removed output $x$ is retired exactly
-when $R'(j)$ contains some $u$ above $x$, which is precisely the test in~(1);
-when $x$ is retained, take $u=x$.  The same witness $u$ shows that $R'(j)$ is
-nonempty, proving~(2).  Every member of every retained fiber refines $o$, and
-$o$ itself is retained at $i$, proving~(3).  If the test fails, the event would
-remove a row that is neither an input nor an output retirement, hence a row
-that only a commitment may remove.
+At a valid $j$, the event retains
+$R'(j)=\{u\in R(j):o\OutputOrd u\}$.  A removed $x$ is retired exactly when
+some $u\in R'(j)$ refines it, which is the stated test; the same witness makes
+$R'(j)$ nonempty.
 \end{proof}
 
-This generalized definition also extends
-Proposition~\ref{prop:safe-runs}: in its proof, item~(1) supplies the common
-refinement needed after each safe output event.
-
-\paragraph{Choice commitments.}
-A choice commitment (Section~\ref{sec:determination}) removes some outputs at
-a valid input while keeping that input valid.  Figure~\ref{fig:ambiguity-frames}(f)
-removes $[B,A]$ and retains $[A,B]$; no retained output refines the removed
-one.  By contrast, exposing $\{s{\to}\texttt{s1}\}$ in panel (g) retires
-$\{s{\to}a\}$ because a retained output refines both.  More generally, if
-$o$ fails the test in Proposition~\ref{prop:exposability}(1), the system must
-first use a commitment from its basis to remove the conflicting rows; only
-then may $o$ become exposable.  Section~\ref{sec:coordination} states the
-coordination cost of doing so.
+This test also extends Proposition~\ref{prop:safe-runs}: it supplies the common
+refinement needed after each safe output event.  It also marks the local
+boundary: if the test fails, the system must first use a basis commitment to
+remove the conflicting rows.  To state the consequence when participants act
+independently, we next place their runs in Lamport histories.
 
 \subsection{Lamport histories}
 \label{sec:histories}
 
-Section~\ref{sec:safe-exposure} treated one participant.  We now combine
-participants and their messages into a Lamport history, reduce a cut of that
-history to one residual per participant, and define confluence of the history.
-The next subsection proves the equivalence between history confluence
-and Lifted Monotonicity.
+So far, output choice has been described at one participant.  We now combine
+participants and their messages into a Lamport history.  This subsection defines
+the events and cuts; the next projects each cut to the residuals relevant to the
+specification.
 
 \paragraph{Participants and runs.}
-A \emph{participant} holds one residual state, changed only by its own input
-events, output events, and commitments.  Its transitions form a run
-(Definition~\ref{def:run}) when no commitment from the basis occurs.  Input
-events compose, so participants that receive the same cumulative input reach
-the same residual if neither makes an output event or commitment, regardless
-of delivery order or batching.  Our concern in this section is therefore not
-the ordering of input events, but rather which output events different participants
-make, and whether their effects can be reconciled.  Replicas are the standard
-case: participants receiving the same input in different orders.  The model
-is not limited to full data or code replication, however.  Participants may
-receive different inputs, use different strategies, and expose different
-outputs; each holds the residual produced by its own events.  Consistency
-compares any such runs whenever their current inputs have a common refinement,
-covering sharded and more general distributed deployments as well as replicas.
+A participant holds one residual, changed only by its own input events, output
+events, and commitments; without a commitment, these transitions form a run.
+Participants may receive different inputs and expose different outputs.
+Consistency compares their runs whenever the current inputs have a common
+refinement, covering sharded systems as well as replicas.  Because input events
+compose, delivery order and batching do not affect a residual reached by input
+events alone.
 
 \paragraph{Histories and consistent cuts.}
-A Lamport history records the participants' local events and the message edges
-that order events across participants.  Each participant has its own strategy
-and strategy state, as introduced in Section~\ref{sec:determination}.  A
-message is a pair $m=(i_m,s_m)$: its \emph{input component}
-$i_m\in I\cup\{\epsilon\}$ is a cumulative input value or is empty, and its
-\emph{strategy component} $s_m$ is arbitrary strategy data or is empty.  The
-history records both.  On receipt, the receiver's strategy uses
-$\mathsf{advance}$ to compute the target of a later input event; the
-calculation is not itself a history event.
-
-The environment is external to the participant set and has no local timeline
-in $H$.  When it supplies cumulative input $i_{\mathrm{in}}$, the participant's
-strategy computes $\mathsf{advance}(i,i_{\mathrm{in}})=j$, and the history
-records the resulting $\mathsf{input}(j)$ at the participant.  Message input
-is handled identically after the receive event.
+A Lamport history records local events and the message edges between them.  A
+message $m=(i_m,s_m)$ has an optional cumulative-input component and arbitrary
+strategy data.  After a receive, the strategy may use $\mathsf{advance}$ to
+compute a later input event; neither the calculation nor the receive is that
+input event.  The external environment has no timeline in $H$: when it supplies
+$i_{\mathrm{in}}$, the strategy computes
+$\mathsf{advance}(i,i_{\mathrm{in}})=j$ and the participant records
+$\mathsf{input}(j)$.
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
 Fix an ordered specification, a finite participant set $P$, a message set
@@ -1598,17 +1450,21 @@ unrelated to consistency as confluence, which is a property of
 specifications.)
 \end{definition}
 
+Histories retain delivery and strategy details that the specification does not
+need.  We next project those details away and ask whether the resulting
+participant residuals can meet.
+
+\subsection{Transition projection and confluence}
+\label{sec:projection-confluence}
+
+The projection is easiest to see by comparing two histories with the same
+effect on their participants.
+
 \paragraph{Example: direct and forwarded input.}
-Let $R_a$ be the seven rows shown in Figure~\ref{fig:election-frames}(a), so
-$\sigma_a=(a\cdot\cdot,R_a)=\sigma_0(a\cdot\cdot)$.  Participants $p$ and $q$
-both start at $\sigma_a$.  Figure~\ref{fig:history-projection} shows two
-histories in which
-both receive the cumulative input $ab\cdot$, which includes $v_2$'s vote for
-$b$.  In the first, the environment delivers it directly to each participant.
-In the second, the environment delivers it to $p$, which forwards
-$m=(ab\cdot,s_m)$ to $q$.  The histories contain different events,
-but both participants reach the state $\sigma_b$ of
-Figure~\ref{fig:election-frames}(b).
+In Figure~\ref{fig:history-projection}, $p$ and $q$ start at
+$\sigma_a=(a\cdot\cdot,R_a)$ and receive cumulative input $ab\cdot$ directly
+from the environment or through a forwarded message.  The histories differ,
+but both participants reach $\sigma_b=(ab\cdot,R_b)$.
 
 \begin{figure}[t]
   \centering
@@ -1702,29 +1558,16 @@ $\sigma_p^C$ for the final residual of $\pi_p^C$.  The
 The projection is a run when it contains no commitment from the basis.
 \end{definition}
 
-In Figure~\ref{fig:history-projection}, the local projections are
-\begin{align*}
-  \pi_p^{C_d}=\pi_q^{C_d}&=\mathsf{input}(ab\cdot),\\
-  \pi_p^{C_f}=\pi_q^{C_f}&=\mathsf{input}(ab\cdot),
-\end{align*}
-and hence the two histories have the same residual endpoint:
-\[
-  \operatorname{end}(H_d,C_d)
-  =\operatorname{end}(H_f,C_f)
-  =(\sigma_b,\sigma_b).
-\]
-The transition projection has erased the difference between direct and
-forwarded delivery while retaining its effect on the residuals.
+At both cuts in Figure~\ref{fig:history-projection}, each local projection is
+$\mathsf{input}(ab\cdot)$, so
+$\operatorname{end}(H_d,C_d)=\operatorname{end}(H_f,C_f)
+=(\sigma_b,\sigma_b)$.  Projection erases the delivery path while retaining
+its effect on the residuals.
 
-\paragraph{Residual endpoints determine what can happen next.}
-The transition projection removes message order, batching, and strategy state
-while retaining each participant's residual.  If two cuts have the same
-residual endpoint, the same transitions are applicable at corresponding
-participants and produce the same residuals, because each transition is a
-partial function of the participant's current residual.  Thus the residual
-endpoint contains everything the specification needs from the history.  The
-implementation strategies may still choose different events; only the
-available transitions and their effects are the same.
+Residual endpoints determine what can happen next.  Equal endpoints have the
+same applicable transitions and effects at corresponding participants because
+each transition is a partial function of the current residual.  Strategies
+may still choose different events.
 
 \paragraph{Confluence of a history.}
 At a consistent cut $C$, the participants may hold different residuals
@@ -1736,6 +1579,12 @@ output events in which every participant reaches the same residual state
 $\sigma_j=(j,R)$; equivalently, the new cut has residual endpoint
 $(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
 claim that a protocol delivers $j$, communicates, or terminates.
+
+\subsection{Distributed Consistency}
+\label{sec:distributed-consistency}
+
+Confluence is a property at one cut and common input refinement.  Distributed
+Consistency requires it at every cut reached without a commitment.
 
 \begin{definition}[Distributed Consistency]
 \label{def:distributed-consistency}
@@ -1765,21 +1614,14 @@ Consistency at its cut gives run confluence.
 \subsection{Coordination}
 \label{sec:coordination}
 
-The history model turns consistency into a question about whether independently
-evolving participants can still reach a common residual.  We now ask when
-progress requires those participants to agree before proceeding.  The
-distinction between exposable outputs and commitments gives the answer.
-
-In the rest of this section, \emph{reachable} means reachable from a canonical
-initial state by a run, with no commitment from the basis.
-
-Exposing an exposable output narrows without excluding and can be done by
-every participant at will.  A commitment excludes content, and the next result
-says what that costs when several participants hold the same input.  In what
-follows, a participant \emph{selects} an admissible output at the input it
-holds by exposing it when it is exposable, and otherwise by first applying a
-commitment that retains exactly the outputs refining it at its input and that
-input's refinements.
+Distributed Consistency says when independently evolving participants can
+still reach a common residual.  Coordination asks when they must agree before
+proceeding.  An exposable output narrows without excluding, whereas a
+commitment excludes content.  Hereafter, \emph{reachable} means reachable from
+a canonical initial state by a run, with no basis commitment.  A participant
+\emph{selects} an admissible output by exposing it when exposable, and otherwise
+by first applying a commitment that, at the current input and its refinements,
+retains exactly the outputs refining the selected output.
 
 \begin{definition}[Coordination]
 \label{def:coordination}
@@ -1818,14 +1660,11 @@ only by agreement.
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
-Complete CALM now connects this operational coordination boundary to a property
-of the specification.  It adds two things to Functional CALM: relational
-specifications with output choice, and Distributed Consistency over Lamport
-histories.  The theorem states all three equivalent views: Consistency of runs,
-Lifted Monotonicity of the specification, and Distributed Consistency.  Together
-with Theorem~\ref{thm:commitments-require-coordination}, the equivalence
-identifies whether progress can rely on exposable outputs alone or requires
-coordination before a commitment.
+Complete CALM turns this operational coordination boundary into a property of
+the specification.  It equates Consistency, Lifted Monotonicity, and
+Distributed Consistency; with
+Theorem~\ref{thm:commitments-require-coordination}, the equivalence determines
+whether progress requires a commitment and hence coordination.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -1867,90 +1706,57 @@ Monotonicity.
 
 
 
-The bridge from Consistency to Distributed Consistency is immediate; the
-content of the theorem is the identification of their criterion.  The one
-obstruction to confluence is a finite set
-of admissible rows with no admitted common refinement at a common input
-refinement.  When none exists, participants may expose the outputs they
-have, in whatever order input arrives, and remain reconcilable, though the
-outputs they exposed may differ.  When such a family exists, some admissible output cannot be
-exposed without excluding another outright, that is, without a commitment.
-
-Exposability follows rather than being assumed.  In a consistent
-specification, every $o\in R(i)$ is exposable at every reachable $(i,R)$: for
-a valid $j\succeq_I i$ and $x\in R(j)$, the run reaching $(i,R)$ extended by
-$\mathsf{output}(o)$ and the same run extended by $\mathsf{input}(j)$ and
-$\mathsf{output}(x)$ must be confluent at $j$, which by
-Lemma~\ref{lem:run-residual} supplies $u\in R(j)$ above both $o$ and $x$,
-and Proposition~\ref{prop:exposability} applies.  Complete CALM and
-Theorem~\ref{thm:commitments-require-coordination} now give the exact
-coordination boundary.  When Lifted Monotonicity holds, all outputs at
-reachable states are exposable and no commitment is needed.  When it fails,
-selecting an offending output requires a commitment, which requires
-coordination among participants that could select incompatible alternatives.
+The theorem gives a specification-level test for history confluence and closes
+the operational loop.  Exposability follows rather than being assumed.  In a
+consistent specification, every $o\in R(i)$ is exposable at every reachable
+$(i,R)$: for
+valid $j\succeq_I i$ and $x\in R(j)$, confluence of the run extended by
+$\mathsf{output}(o)$ with the run extended by $\mathsf{input}(j)$ and
+$\mathsf{output}(x)$ supplies $u\in R(j)$ above both outputs; then
+Proposition~\ref{prop:exposability} applies.  Thus Lifted Monotonicity makes all
+reachable outputs exposable.  Its failure exhibits a finite family without a
+common refinement, so selecting an offending output requires a commitment and,
+by Theorem~\ref{thm:commitments-require-coordination}, coordination.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:cap-corollary}
 
-CAP asks whether consistency can coexist with availability during a
-partition.  Here we take the C to be Distributed Consistency: confluence of
-participant runs under the declared specification.  The specification
-parameterizes what must remain consistent---total-order explanations for
-linearizability, causal explanations for causal consistency, or any other
-admissible outputs and refinement order.  A \emph{partition} divides the
-participants into two or more components.  In a \emph{partitioned history},
-no message sent in one component is received in another while the partition
-lasts, but each participant may continue to receive input from its environment
-and expose outputs.  Classical CAP gives a one-way impossibility for available
-linearizable registers~\cite{gilbert2002cap}; Complete CAP gives a dichotomy
-for the declared specification.
+The coordination boundary becomes an availability boundary during a
+partition: participants in different components cannot obtain the agreement a
+commitment requires.  Complete CAP states this consequence with Distributed
+Consistency as its consistency condition.  A \emph{partitioned history}
+divides participants into two or more components and has no cross-component
+message receive while the partition lasts, though participants may still
+receive environment input and expose outputs.  At a cut, \emph{Availability}
+means that every output admitted at a participant's current input is exposable
+without waiting for another component.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
 For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{enumerate}
-  \item at every consistent cut of every partitioned history:
-        \begin{enumerate}
-          \item every output admitted at a participant's current input is
-                exposable without waiting for communication from another
-                component (\emph{availability}); and
-          \item the participant runs are confluent at every common refinement
-                of their current inputs: some row there survives in every
-                participant's residual (\emph{Distributed Consistency});
-        \end{enumerate}
+  \item every consistent cut of every partitioned history satisfies
+        Availability and Distributed Consistency;
   \item $\Spec$ satisfies Lifted Monotonicity.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-Assume $\Spec$ satisfies Lifted Monotonicity.  Complete CALM gives
-Distributed Consistency, so
-at every cut of every partitioned history the participant runs are confluent;
-Proposition~\ref{prop:confluence} gives the surviving row at every common
-refinement.  The exposability result following Complete CALM says that every
-output admitted at a reachable state is exposable, which gives availability.
-
-Conversely, assume availability and Distributed Consistency.  Let any finite set of
-rows $(i_r,o_r)$ have a common refinement $j$.  Give one participant initial
-input $i_r$ for each row and separate the participants into partition
-components, with no messages delivered between them.  Availability lets each
-participant expose $o_r$ without cross-component communication.
-Distributed Consistency then gives a row $(j,u)$ that survives in every residual, so
-$o_r\OutputOrd u$ for every $r$.  This is form~(3) of
-Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence $\Spec$
-satisfies Lifted Monotonicity.
+Lifted Monotonicity gives Distributed Consistency by Complete CALM and
+Availability by the exposability result above.  Conversely, let any finite
+rows $(i_r,o_r)$ have a common refinement $j$, place one participant with
+initial input $i_r$ in each partition component, and deliver no messages
+between them.  Availability permits each to expose $o_r$; Distributed
+Consistency supplies a row $(j,u)$ surviving in every residual, so
+$o_r\OutputOrd u$ for every $r$.  Proposition~\ref{prop:lifted-monotonicity-decomposition}(3)
+then gives Lifted Monotonicity.
 \end{proof}
 
-Distributed Consistency requires refinement under $\OutputOrd$: outputs
-exposed in different partition components must be jointly refinable, not
-identical or totally ordered.  This is weaker than linearizability and is what
-makes the characterization bidirectional.  Together with
-Theorem~\ref{thm:commitments-require-coordination}, the division is exact.  In
-a specification satisfying Lifted Monotonicity, availability and Distributed
-Consistency both hold under partition.  When Lifted Monotonicity fails, a participant selecting a row from
-the offending family must either wait to agree with the other components,
-giving up availability, or act alone and risk nonconfluent participant runs,
-giving up Distributed Consistency.
+Distributed Consistency requires outputs from different components to be
+jointly refinable, not identical or totally ordered; this is why the
+characterization is bidirectional.  When Lifted Monotonicity fails, a
+participant must either wait to coordinate across the partition, sacrificing
+Availability, or proceed alone and risk violating Distributed Consistency.
 
 A linearizable register is the classical instance of the tradeoff side: two
 reads of concurrent writes may be explained by opposite serial orders, no
