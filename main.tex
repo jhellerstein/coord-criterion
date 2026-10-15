@@ -1895,9 +1895,9 @@ For an ordered relational specification $\Spec$, the following are equivalent:
           \item every output admitted at a participant's current input is
                 exposable without waiting for communication from another
                 component (\emph{availability}); and
-          \item at every common refinement $j$ of the participants' current
-                inputs, some row at $j$ survives in every participant's
-                residual (\emph{reconciliation});
+          \item the participant runs are confluent at every common refinement
+                of their current inputs: some row there survives in every
+                participant's residual (\emph{Distributed Consistency});
         \end{enumerate}
   \item $\Spec$ is monotone.
 \end{enumerate}
@@ -1906,32 +1906,31 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{proof}
 Assume $\Spec$ is monotone.  Complete CALM gives Distributed Consistency, so
 at every cut of every partitioned history the participant runs are confluent;
-Proposition~\ref{prop:confluence} gives reconciliation at every common
+Proposition~\ref{prop:confluence} gives the surviving row at every common
 refinement.  The exposability result following Complete CALM says that every
 output admitted at a reachable state is exposable, which gives availability.
 
-Conversely, assume availability and reconciliation.  Let any finite set of
+Conversely, assume availability and Distributed Consistency.  Let any finite set of
 rows $(i_r,o_r)$ have a common refinement $j$.  Give one participant initial
 input $i_r$ for each row and separate the participants into partition
 components, with no messages delivered between them.  Availability lets each
 participant expose $o_r$ without cross-component communication.
-Reconciliation then gives a row $(j,u)$ that survives in every residual, so
+Distributed Consistency then gives a row $(j,u)$ that survives in every residual, so
 $o_r\OutputOrd u$ for every $r$.  This is form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence $\Spec$ is
 monotone.
 \end{proof}
 
-Reconciliation is refinement under $\OutputOrd$: outputs exposed in different
-components of the partition are jointly refinable, not identical or totally ordered.  This
-is weaker than linearizability and is what makes the characterization
-bidirectional.  Together with Theorem~\ref{thm:commitments-require-coordination}
-the division is exact.  In a monotone specification exposing outputs is all
-that is ever needed, and availability and reconciliation both hold under partition.
-In a non-monotone one the theorem identifies the family of rows responsible:
-a participant that would select one of its members must make a commitment,
-and must either wait to agree with the other components, giving up availability, or
-make the commitment alone and risk an unreconcilable merge, giving up
-reconciliation.
+Distributed Consistency requires refinement under $\OutputOrd$: outputs
+exposed in different partition components must be jointly refinable, not
+identical or totally ordered.  This is weaker than linearizability and is what
+makes the characterization bidirectional.  Together with
+Theorem~\ref{thm:commitments-require-coordination}, the division is exact.  In
+a monotone specification, availability and Distributed Consistency both hold
+under partition.  In a non-monotone one, a participant selecting a row from
+the offending family must either wait to agree with the other components,
+giving up availability, or act alone and risk nonconfluent participant runs,
+giving up Distributed Consistency.
 
 A linearizable register is the classical instance of the tradeoff side: two
 reads of concurrent writes may be explained by opposite serial orders, no
@@ -2403,10 +2402,10 @@ Fix a deployment.  The following are equivalent.
         each component: participants in one component may coordinate with one
         another, but each component selects outputs at the rows its
         participants hold without waiting for information from any other
-        component (\emph{availability}); and for every common refinement
-        $j$ of the current inputs held in different components, some row at
-        $j$ survives in every participant's state, so that the components'
-        selections reconcile when the partition heals (\emph{reconciliation}).
+        component (\emph{availability}); and at every common refinement
+        $j$ of current inputs held in different components, the participant
+        runs are confluent---some row at $j$ survives in every participant's
+        residual (\emph{Distributed Consistency}).
   \item $\Spec$ is monotone across partitions.
 \end{enumerate}
 \end{theorem}
@@ -2414,7 +2413,7 @@ Fix a deployment.  The following are equivalent.
 \begin{proof}
 (2$\Rightarrow$1.)  Fix $\Pi$.  Families whose members all lie in one component
 may be resolved by coordination within that component, which the partition does
-not block.  The families that must reconcile without communication are the
+not block.  The families that must remain confluent without communication are the
 separable ones.  Consider participants in at least two components, each having
 made finitely many selections at its current input or its refinements, and a
 common refinement $j$ of those inputs.  The family of all their
@@ -2422,7 +2421,7 @@ selections is separable, so monotonicity across $\Pi$ supplies $u\in\fiber{j}$
 above every selected output.  Each participant's residual at $j$ is
 $\fiber{j}$ intersected with the outputs above its own selections, and $u$
 belongs to every such set.  Hence some row at $j$ survives in every state,
-under every arrival order on each side.
+under every arrival order in each component.
 
 (1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable family
 $(i_1,o_1),\ldots,(i_k,o_k)$ and a common refinement $j$ admit no common
@@ -2436,9 +2435,9 @@ implements a narrower specification $S'\subsetneq S$.
 \end{proof}
 
 The difference from Theorem~\ref{thm:complete-cap} is that participants on the
-same side of a cut are allowed to coordinate.  Only the families that a
-partition separates must reconcile without communication, and only those
-families are tested.  When the deployment lets every participant hold every
+same component are allowed to coordinate.  Only families that a partition
+separates must remain confluent without communication, and only those
+families are tested for Distributed Consistency.  When the deployment lets every participant hold every
 row, every family is separable under some partition, monotonicity across
 partitions is monotonicity, and the theorem is Theorem~\ref{thm:complete-cap}.
 Deployment determines which inputs and choices can occur independently, just
