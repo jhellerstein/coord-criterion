@@ -210,10 +210,10 @@ This paper makes four contributions:
         arbitrary functions, represented as ordered input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to output choice, formalizes
-        output events and commitments, and proves that consistency---confluence
-        of runs---is equivalent to Lifted Monotonicity of the specification.
-        Confluence of Lamport histories follows as a corollary.  A monotone
-        specification therefore needs no coordination, since
+        output events and commitments, defines Distributed Consistency as
+        confluence of Lamport histories, and proves that it is equivalent to
+        Lifted Monotonicity of the specification.  A monotone specification
+        therefore needs no coordination, since
         exposing outputs alone keeps its histories confluent; where monotonicity
         fails, progress requires a commitment, and commitments are shown to
         require coordination.  In partition form
@@ -1263,8 +1263,7 @@ output choice and distributed histories.
     \addlinespace
     \textbf{Results} & & \\
     \midrule
-    Complete CALM & consistent $\iff$ Lifted Monotonicity & Thm.~\ref{thm:complete-calm} \\
-    history corollary & consistent $\iff$ histories confluent & Cor.~\ref{cor:history-confluence} \\
+    Complete CALM & Distributed Consistency $\iff$ Lifted Monotonicity & Thm.~\ref{thm:complete-calm} \\
     coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
@@ -1737,62 +1736,73 @@ $\sigma_j=(j,R)$; equivalently, the new cut has residual endpoint
 $(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
 claim that a protocol delivers $j$, communicates, or terminates.
 
-This is the distributed-execution reading of run confluence.  The next
-subsection derives it as a corollary of Complete CALM.
+\begin{definition}[Distributed Consistency]
+\label{def:distributed-consistency}
+An ordered specification has \emph{Distributed Consistency} when, for every
+finite participant set, history $H$, and consistent cut $C$ whose transition
+projections are runs, $H$ is confluent at $C$ and every common refinement of
+the participants' current inputs.
+\end{definition}
+
+Distributed Consistency is the history-level reading of consistency.  The
+next proposition states their exact relationship; its short proof is also why
+the run formulation remains useful.
+
+\begin{proposition}[Run Consistency and Distributed Consistency]
+\label{prop:distributed-consistency}
+An ordered specification is consistent if and only if it has Distributed
+Consistency.
+\end{proposition}
+
+\begin{proof}
+At any cut, the participants' transition projections are one finite set of
+runs, so consistency implies their confluence.  Conversely, place any finite
+set of runs in a message-free history, one run per participant.  Distributed
+Consistency at its cut gives run confluence.
+\end{proof}
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
 In the rest of this section, \emph{reachable} means reachable from a canonical
-initial state by a run, with no commitment from the basis.  Complete CALM is
-the paper's central equivalence: consistency of runs if and only if Lifted
-Monotonicity of the specification.  The history formulation then follows as
-an immediate corollary.
+initial state by a run, with no commitment from the basis.  Complete CALM adds
+two things to Functional CALM: relational specifications with output choice,
+and Distributed Consistency over Lamport histories.  Its proof uses the
+equivalent run formulation of Proposition~\ref{prop:distributed-consistency}.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-An ordered relational specification is consistent if and only if it satisfies
-Lifted Monotonicity.
+An ordered relational specification has Distributed Consistency if and only if
+it satisfies Lifted Monotonicity.
 \end{theorem}
 
 \begin{proof}
-First observe from Proposition~\ref{prop:confluence} that consistency means:
+By Proposition~\ref{prop:distributed-consistency}, Distributed Consistency is
+equivalent to consistency of runs.  Proposition~\ref{prop:confluence} says
+that run consistency means:
 for every finite set of runs ending at $(i_r,R_r)$ and every common refinement
 $j$ of the $i_r$, some output $u\in\fiber{j}$ survives in every run,
 $u\in\bigcap_rR_r(j)$.  By Lemma~\ref{lem:run-residual}, this holds exactly
 when $u$ refines every output exposed on those runs; each such output $o$ was
 exposed at some $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
 
-\emph{Lifted Monotonicity implies consistency.}
+\emph{Lifted Monotonicity implies Distributed Consistency.}
 Assume Lifted Monotonicity.  The finitely many rows $(i_o,o)$ exposed on the
 runs have common refinement $j$, so
 Proposition~\ref{prop:lifted-monotonicity-decomposition}(3) supplies
 $u\in\fiber{j}$ refining them all.  Thus $u$ survives every run.
 
-\emph{Consistency implies Lifted Monotonicity.}
+\emph{Distributed Consistency implies Lifted Monotonicity.}
 Let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have a common refinement $j$.  For each
 $r$, start a run at $\sigma_0(i_r)$ and expose $o_r$; then
-$R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Consistency supplies an output
+$R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Run consistency supplies an output
 $u$ that survives every run, so it refines every $o_r$.  This is form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence Lifted
 Monotonicity.
 
 \end{proof}
 
-\begin{corollary}[Confluence of Lamport histories]
-\label{cor:history-confluence}
-An ordered relational specification is consistent if and only if, for every
-finite participant set, history $H$, and consistent cut $C$ whose transition
-projections are runs, $H$ is confluent at $C$ and every common refinement of
-the participants' current inputs.
-\end{corollary}
 
-\begin{proof}
-At any cut, the participants' transition projections are one finite set of
-runs, so consistency implies their confluence.  Conversely, place any finite
-set of runs in a message-free history, one run per participant.  History
-confluence at its cut gives run confluence.
-\end{proof}
 
 The theorem is direct from the definitions.  Its content is the
 identification: the one obstruction to confluence is a finite family
