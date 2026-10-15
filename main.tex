@@ -1763,37 +1763,38 @@ For an ordered relational specification, the following are equivalent:
 \end{theorem}
 
 \begin{proof}
-\emph{(1) and (2).}  By Proposition~\ref{prop:confluence}, consistency says
-that for every finite family of runs with final states $(i_r,R_r)$ and every common refinement $j$
-of the $i_r$, some row at $j$ survives in every run, that is, in fiber
-notation, $\bigcap_r R_r(j)\neq\varnothing$.  By
-Lemma~\ref{lem:run-residual}, $u\in\fiber{j}$ lies in this intersection
-exactly when it refines every output exposed on any of the runs; each such
-output $o$ was exposed at some input $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
+First observe from Proposition~\ref{prop:confluence} that consistency means:
+for every finite set of runs ending at $(i_r,R_r)$ and every common refinement
+$j$ of the $i_r$, some output $u\in\fiber{j}$ survives in every run,
+$u\in\bigcap_rR_r(j)$.  By Lemma~\ref{lem:run-residual}, this holds exactly
+when $u$ refines every output exposed on those runs; each such output $o$ was
+exposed at some $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
 
-Assume Lifted Monotonicity.  The rows $(i_o,o)$, over all outputs exposed on
-the family, are finitely many and have common refinement $j$, so
+\emph{Lifted Monotonicity implies consistency.}
+Assume Lifted Monotonicity.  The finitely many rows $(i_o,o)$ exposed on the
+runs have common refinement $j$, so
 Proposition~\ref{prop:lifted-monotonicity-decomposition}(3) supplies
-$u\in\fiber{j}$ refining them all, and $u$ lies in the intersection.
+$u\in\fiber{j}$ refining them all.  Thus $u$ survives every run.
 
-Conversely, assume consistency, and let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have
-a common refinement $j$.  For each $r$, the run that starts at
-$\sigma_0(i_r)$ and exposes $o_r$ ends with
-$R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.
-Consistency gives $u$ in every $R_r(j)$, an admitted common refinement of the
-$o_r$: form~(3) of Proposition~\ref{prop:lifted-monotonicity-decomposition},
-hence Lifted Monotonicity.
+\emph{Consistency implies Lifted Monotonicity.}
+Let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have a common refinement $j$.  For each
+$r$, start a run at $\sigma_0(i_r)$ and expose $o_r$; then
+$R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Consistency supplies an output
+$u$ that survives every run, so it refines every $o_r$.  This is form~(3) of
+Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence Lifted
+Monotonicity.
 
-\emph{(2) and (3).}  At cut $C$, the transition projections are runs
-whose final states form the residual endpoint.  What each participant can do
-next depends only on its residual.  If runs are confluent, Proposition~\ref{prop:confluence} gives $u$ in the
-intersection of the participants' fibers at $j$, and extending $H$ by an
-input event to $j$ and $\mathsf{output}(u)$ at each participant brings them
-all to $\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
-Conversely, any finite family of runs is realized by a history in which one
-participant performs each run and no messages are exchanged; a common
-extension at $j$ shows a common state with current input $j$ reachable from
-every run's final state.
+\emph{Consistency and history confluence.}
+At cut $C$, the transition projections are runs whose final states form the
+residual endpoint, and what each participant can do next depends only on its
+residual.  If the runs are confluent, Proposition~\ref{prop:confluence}
+supplies $u$ in the intersection of their fibers at $j$.  Extending each
+participant by $\mathsf{input}(j)$ and $\mathsf{output}(u)$ brings all of them
+to $\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$, proving
+history confluence.  Conversely, realize any finite set of runs as a
+message-free history, one participant per run.  History confluence at $j$
+gives a state with current input $j$ reachable from every run's final state,
+which is run confluence.
 \end{proof}
 
 The theorem is direct from the definitions.  Its content is the
