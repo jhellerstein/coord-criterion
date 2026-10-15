@@ -1537,10 +1537,64 @@ and the edges from sends to their matching receives.  A
 confluence, which is a property of specifications.)
 \end{definition}
 
-A Lamport history records operational details that may have no effect on a
-residual state.  We elide them with a \emph{transition projection}, which
-filters each participant's history to the transitions that change its
-residual.
+\paragraph{Example: direct and forwarded input.}
+Let participants $p$ and $q$ both start at $\sigma_0(a\cdot\cdot)$ in the
+election.  Figure~\ref{fig:history-projection} shows two histories in which
+both receive $v_2$'s vote for $b$.  In the first, the environment delivers the
+vote directly to each participant.  In the second, the environment delivers
+it to $p$, which forwards it to $q$.  The histories contain different events,
+but both participants reach the state $\sigma_b$ of
+Figure~\ref{fig:election-frames}(b).
+
+\begin{figure*}[t]
+  \centering
+  \begin{tikzpicture}[x=.83cm,y=.62cm,>=stealth, every node/.style={font=\footnotesize}]
+    \node[anchor=west,font=\small] at (0,3.2) {(a) Direct delivery $H_d$};
+    \node[anchor=east] at (0,2.1) {$p$};
+    \node[anchor=east] at (0,.4) {$q$};
+    \draw[->] (0.2,2.1) -- (7.2,2.1);
+    \draw[->] (0.2,.4) -- (7.2,.4);
+    \node[anchor=east] at (1.5,2.5) {$\sigma_0(a\cdot\cdot)$};
+    \node[anchor=east] at (1.5,.8) {$\sigma_0(a\cdot\cdot)$};
+    \fill (3.3,2.1) circle (1.7pt);
+    \fill (3.3,.4) circle (1.7pt);
+    \node[above] at (3.3,2.1) {$\mathsf{input}(ab\cdot)$};
+    \node[below] at (3.3,.4) {$\mathsf{input}(ab\cdot)$};
+    \draw[dashed] (5.2,-.15) -- (5.2,2.7);
+    \node[above] at (5.2,2.7) {$C_d$};
+    \node[anchor=west] at (5.35,2.1) {$\sigma_b$};
+    \node[anchor=west] at (5.35,.4) {$\sigma_b$};
+
+    \node[anchor=west,font=\small] at (9,3.2) {(b) Forwarded delivery $H_f$};
+    \node[anchor=east] at (9,2.1) {$p$};
+    \node[anchor=east] at (9,.4) {$q$};
+    \draw[->] (9.2,2.1) -- (16.8,2.1);
+    \draw[->] (9.2,.4) -- (16.8,.4);
+    \node[anchor=east] at (10.5,2.5) {$\sigma_0(a\cdot\cdot)$};
+    \node[anchor=east] at (10.5,.8) {$\sigma_0(a\cdot\cdot)$};
+    \fill (11.6,2.1) circle (1.7pt);
+    \node[above] at (11.6,2.1) {$\mathsf{input}(ab\cdot)$};
+    \fill (13.5,2.1) circle (1.7pt);
+    \node[above] at (13.5,2.1) {$\mathsf{send}(m)$};
+    \fill (14.7,.4) circle (1.7pt);
+    \node[below] at (14.7,.4) {$\mathsf{receive}(m)$};
+    \draw[->] (13.5,1.98) -- (14.65,.54);
+    \draw[dashed] (15.6,-.15) -- (15.6,2.7);
+    \node[above] at (15.6,2.7) {$C_f$};
+    \node[anchor=west] at (15.75,2.1) {$\sigma_b$};
+    \node[anchor=west] at (15.75,.4) {$\sigma_b$};
+  \end{tikzpicture}
+  \caption{Two histories that leave both participants in the same residual state.  In (a), the
+  environment delivers the vote directly to both participants.  In (b), $p$
+  forwards it in message $m$; the input component of $m$ advances $q$ to
+  $ab\cdot$.  Dashed lines are consistent cuts.}
+  \label{fig:history-projection}
+\end{figure*}
+
+The figure shows why we need a transition projection.  A Lamport history
+records sends, receives, and strategy state even when they make no difference
+to a residual.  The projection filters each participant's history to the
+transitions that determine that residual.
 
 \begin{definition}[Transition projection and residual endpoint]
 \label{def:semantic-projection}
@@ -1562,20 +1616,17 @@ $\pi_p^C$.  The
 The projection is a run when it contains no commitment from the basis.
 \end{definition}
 
-\paragraph{Example: direct and forwarded input.}
-Let participants $p$ and $q$ both start at $\sigma_0(a\cdot\cdot)$ in the
-election, and let $\sigma_b$ be the residual state in
-Figure~\ref{fig:election-frames}(b).  In one history, the environment delivers
-$v_2$'s vote for $b$ directly to both participants, producing
-$\mathsf{input}(ab\cdot)$ at each.  In another, the environment delivers the
-vote to $p$, which forwards it in a message to $q$; the input component of
-$q$'s receive produces the same $\mathsf{input}(ab\cdot)$.  At cuts after
-these events, both transition projections are $\mathsf{input}(ab\cdot)$ and
-both residual endpoints are $(\sigma_b,\sigma_b)$.  The histories may differ
-in their send and receive events, message batching, and strategy components,
-but those differences do not appear in the residual endpoint.  From either
-cut, the same later input and output events are applicable and have the same
-effects.
+In Figure~\ref{fig:history-projection}, the direct and forwarded histories
+have the same projections and endpoint:
+\[
+  \pi_p^{C_d}=\pi_q^{C_d}=\pi_p^{C_f}=\pi_q^{C_f}
+    =\mathsf{input}(ab\cdot),
+  \qquad
+  \operatorname{end}(H_d,C_d)=\operatorname{end}(H_f,C_f)
+    =(\sigma_b,\sigma_b).
+\]
+The transition projection has erased the difference between direct and
+forwarded delivery while retaining its effect on the residuals.
 
 \paragraph{The residual quotient.}
 The construction separates strategy state and message detail from residual
