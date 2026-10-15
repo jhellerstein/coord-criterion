@@ -1736,16 +1736,26 @@ $\sigma_j=(j,R)$; equivalently, the new cut has residual endpoint
 $(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
 claim that a protocol delivers $j$, communicates, or terminates.
 
+This differs from the consistency definition only in which runs are being
+compared.  Consistency quantifies over any finite set of runs admitted by the
+specification.  History confluence compares the participant runs occurring
+together at one cut of one distributed history.  The second set is a special
+case of the first; conversely, any finite set of runs can be placed together
+in a message-free history.  The history formulation therefore adds no new
+criterion.  It states the same condition on a standard model of distributed
+execution.
+
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
 In the rest of this section, \emph{reachable} means reachable from a canonical
-initial state by a run, with no commitment from the basis.  Consistency
-(Definition~\ref{def:consistency}) was stated for any specification; for a
-relational one, different runs may have exposed different outputs at the same
-input.  The theorem states the
-paper's main result in three equivalent forms: on the specification, on runs
-of the transition system, and on histories of a distributed system.
+initial state by a run, with no commitment from the basis.  The theorem states
+the main result at three levels: consistency quantifies over all finite sets
+of runs; Lifted Monotonicity is the criterion on the specification; and item~(3)
+restates run confluence for the participant runs found together at a cut of a
+distributed history.  The third item is included to connect the abstract run
+criterion to a standard execution model, not because it adds another
+condition.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -1785,16 +1795,12 @@ Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence Lifted
 Monotonicity.
 
 \emph{(1) $\Leftrightarrow$ (3): Consistency and history confluence.}
-At cut $C$, the transition projections are runs whose final states form the
-residual endpoint, and what each participant can do next depends only on its
-residual.  If the runs are confluent, Proposition~\ref{prop:confluence}
-supplies $u$ in the intersection of their fibers at $j$.  Extending each
-participant by $\mathsf{input}(j)$ and $\mathsf{output}(u)$ brings all of them
-to $\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$, proving
-history confluence.  Conversely, realize any finite set of runs as a
-message-free history, one participant per run.  History confluence at $j$
-gives a state with current input $j$ reachable from every run's final state,
-which is run confluence.
+At cut $C$, the participants' transition projections are one finite set of
+runs, so consistency immediately implies their confluence.  Conversely,
+given any finite set of runs, make a message-free history with one participant
+performing each run.  Item~(3) applied to its cut gives run confluence.  Thus
+items~(1) and~(3) quantify over the same finite sets of runs in two different
+forms.
 \end{proof}
 
 The theorem is direct from the definitions.  Its content is the
