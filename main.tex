@@ -210,10 +210,10 @@ This paper makes four contributions:
         arbitrary functions, represented as ordered input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to output choice, formalizes
-        output events and commitments, and proves that three conditions coincide:
-        Lifted Monotonicity of the specification, confluence of the runs of
-        the framework, and confluence of every Lamport history of the system.
-        A monotone specification therefore needs no coordination, since
+        output events and commitments, and proves that consistency---confluence
+        of runs---is equivalent to Lifted Monotonicity of the specification.
+        Confluence of Lamport histories follows as a corollary.  A monotone
+        specification therefore needs no coordination, since
         exposing outputs alone keeps its histories confluent; where monotonicity
         fails, progress requires a commitment, and commitments are shown to
         require coordination.  In partition form
@@ -1263,7 +1263,8 @@ output choice and distributed histories.
     \addlinespace
     \textbf{Results} & & \\
     \midrule
-    Complete CALM & Lifted Monotonicity $\iff$ runs confluent $\iff$ histories confluent & Thm.~\ref{thm:complete-calm} \\
+    Complete CALM & consistent $\iff$ Lifted Monotonicity & Thm.~\ref{thm:complete-calm} \\
+    history corollary & consistent $\iff$ histories confluent & Cor.~\ref{cor:history-confluence} \\
     coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
@@ -1736,40 +1737,27 @@ $\sigma_j=(j,R)$; equivalently, the new cut has residual endpoint
 $(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
 claim that a protocol delivers $j$, communicates, or terminates.
 
-This differs from the consistency definition only in which runs are being
-compared.  Consistency quantifies over any finite set of runs admitted by the
-specification.  History confluence compares the participant runs occurring
-together at one cut of one distributed history.  The second set is a special
-case of the first; conversely, any finite set of runs can be placed together
-in a message-free history.  The history formulation therefore adds no new
-criterion.  It states the same condition on a standard model of distributed
-execution.
+This is the distributed-execution reading of run confluence.  The next
+subsection derives it as a corollary of Complete CALM.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
 In the rest of this section, \emph{reachable} means reachable from a canonical
-initial state by a run, with no commitment from the basis.  The theorem states
-the main result at three levels: consistency quantifies over all finite sets
-of runs; Lifted Monotonicity is the criterion on the specification; and item~(3)
-restates run confluence for the participant runs found together at a cut of a
-distributed history.  The third item is included to connect the abstract run
-criterion to a standard execution model, not because it adds another
-condition.
+initial state by a run, with no commitment from the basis.  Complete CALM is
+the paper's central equivalence: consistency of runs if and only if Lifted
+Monotonicity of the specification.  The history formulation then follows as
+an immediate corollary.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-For an ordered relational specification, the following are equivalent:
-\begin{enumerate}
-  \item it is consistent: its runs are confluent
-        (Definition~\ref{def:consistency});
-  \item it satisfies Lifted Monotonicity:
-        $i\InputOrd j$ implies $\fiber{i}\JointOutputOrd\fiber{j}$;
-  \item for every finite participant set, history $H$, and consistent cut $C$
-        whose transition projections are runs---no commitment from the basis
-        occurs before the cut---$H$ is confluent at $C$ and every common
-        refinement of the participants' current inputs.
-\end{enumerate}
+An ordered relational specification is consistent if and only if it satisfies
+Lifted Monotonicity:
+        \begin{equation}
+  i\InputOrd j
+  \quad\Longrightarrow\quad
+  \fiber{i}\JointOutputOrd\fiber{j}.
+        \end{equation}
 \end{theorem}
 
 \begin{proof}
@@ -1780,13 +1768,13 @@ $u\in\bigcap_rR_r(j)$.  By Lemma~\ref{lem:run-residual}, this holds exactly
 when $u$ refines every output exposed on those runs; each such output $o$ was
 exposed at some $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
 
-\emph{(2) $\Rightarrow$ (1): Lifted Monotonicity implies consistency.}
+\emph{Lifted Monotonicity implies consistency.}
 Assume Lifted Monotonicity.  The finitely many rows $(i_o,o)$ exposed on the
 runs have common refinement $j$, so
 Proposition~\ref{prop:lifted-monotonicity-decomposition}(3) supplies
 $u\in\fiber{j}$ refining them all.  Thus $u$ survives every run.
 
-\emph{(1) $\Rightarrow$ (2): Consistency implies Lifted Monotonicity.}
+\emph{Consistency implies Lifted Monotonicity.}
 Let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have a common refinement $j$.  For each
 $r$, start a run at $\sigma_0(i_r)$ and expose $o_r$; then
 $R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Consistency supplies an output
@@ -1794,13 +1782,21 @@ $u$ that survives every run, so it refines every $o_r$.  This is form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence Lifted
 Monotonicity.
 
-\emph{(1) $\Leftrightarrow$ (3): Consistency and history confluence.}
-At cut $C$, the participants' transition projections are one finite set of
-runs, so consistency immediately implies their confluence.  Conversely,
-given any finite set of runs, make a message-free history with one participant
-performing each run.  Item~(3) applied to its cut gives run confluence.  Thus
-items~(1) and~(3) quantify over the same finite sets of runs in two different
-forms.
+\end{proof}
+
+\begin{corollary}[Confluence of Lamport histories]
+\label{cor:history-confluence}
+An ordered relational specification is consistent if and only if, for every
+finite participant set, history $H$, and consistent cut $C$ whose transition
+projections are runs, $H$ is confluent at $C$ and every common refinement of
+the participants' current inputs.
+\end{corollary}
+
+\begin{proof}
+At any cut, the participants' transition projections are one finite set of
+runs, so consistency implies their confluence.  Conversely, place any finite
+set of runs in a message-free history, one run per participant.  History
+confluence at its cut gives run confluence.
 \end{proof}
 
 The theorem is direct from the definitions.  Its content is the
