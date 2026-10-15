@@ -1877,49 +1877,59 @@ the second participant not to select $x$, which it can be relied upon to do
 only by agreement.
 \end{proof}
 
-CAP asks the same question in a more specific setting.  A \emph{partition}
-divides the participants into two or more groups and stops all information
-from crossing between groups until the partition heals: in a history, no
-message sent on one side is received on another while it lasts, while each
-participant continues to receive input from its own environment.  The
-classical CAP theorem is a one-way impossibility: a linearizable register
-cannot remain available through arbitrary partitions~\cite{gilbert2002cap}.
-Complete CALM turns it into a dichotomy.
+CAP asks the same question of histories constrained by a partition.  A
+\emph{partition} divides the participants into two or more components.  In a
+\emph{partitioned history}, no message sent in one component is received in
+another while the partition lasts, but each participant may continue to
+receive input from its environment and expose outputs.  The classical CAP
+theorem is a one-way impossibility: a linearizable register cannot remain
+available through arbitrary partitions~\cite{gilbert2002cap}.  Complete CALM
+turns this into a dichotomy.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
 For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{enumerate}
-  \item under every partition and every order of input arrival on each side,
-        every admissible output at a participant's current input is exposable
-        there, so that the participant may expose it without a commitment and
-        without waiting for anything from across the partition
-        (\emph{availability}), and for every common refinement $j$ of the
-        current inputs on the two sides, some row at $j$ survives in every
-        participant's state (\emph{reconciliation});
+  \item at every consistent cut of every partitioned history:
+        \begin{enumerate}
+          \item every output admitted at a participant's current input is
+                exposable without waiting for communication from another
+                component (\emph{availability}); and
+          \item at every common refinement $j$ of the participants' current
+                inputs, some row at $j$ survives in every participant's
+                residual (\emph{reconciliation});
+        \end{enumerate}
   \item $\Spec$ is monotone.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-Reconciliation is confluence of the histories a partition permits, at the
-cut where it heals and at the common refinements of the two sides' current
-inputs.  Every finite family of runs is realized by a history in which no
-messages are exchanged, which every partition permits; so reconciliation under
-every partition is condition~(3) of Theorem~\ref{thm:complete-calm}, hence
-monotonicity, and monotonicity implies availability by the remark following
-that theorem.
+Assume $\Spec$ is monotone.  Complete CALM gives Distributed Consistency, so
+at every cut of every partitioned history the participant runs are confluent;
+Proposition~\ref{prop:confluence} gives reconciliation at every common
+refinement.  The exposability result following Complete CALM says that every
+output admitted at a reachable state is exposable, which gives availability.
+
+Conversely, assume availability and reconciliation.  Let any finite set of
+rows $(i_r,o_r)$ have a common refinement $j$.  Give one participant initial
+input $i_r$ for each row and separate the participants into partition
+components, with no messages delivered between them.  Availability lets each
+participant expose $o_r$ without cross-component communication.
+Reconciliation then gives a row $(j,u)$ that survives in every residual, so
+$o_r\OutputOrd u$ for every $r$.  This is form~(3) of
+Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence $\Spec$ is
+monotone.
 \end{proof}
 
-Reconciliation is refinement under $\OutputOrd$: outputs exposed on different
-sides of the partition are jointly refinable, not identical or totally ordered.  This
+Reconciliation is refinement under $\OutputOrd$: outputs exposed in different
+components of the partition are jointly refinable, not identical or totally ordered.  This
 is weaker than linearizability and is what makes the characterization
 bidirectional.  Together with Theorem~\ref{thm:commitments-require-coordination}
 the division is exact.  In a monotone specification exposing outputs is all
 that is ever needed, and availability and reconciliation both hold under partition.
 In a non-monotone one the theorem identifies the family of rows responsible:
 a participant that would select one of its members must make a commitment,
-and must either wait to agree with the other side, giving up availability, or
+and must either wait to agree with the other components, giving up availability, or
 make the commitment alone and risk an unreconcilable merge, giving up
 reconciliation.
 
