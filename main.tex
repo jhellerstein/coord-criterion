@@ -210,10 +210,10 @@ This paper makes four contributions:
         arbitrary functions, represented as ordered input/output specifications
         with separate input- and output-refinement partial orders.
   \item Complete CALM extends the model to output choice, formalizes
-        output events and commitments, defines Distributed Consistency as
-        confluence of Lamport histories, and proves that it is equivalent to
-        Lifted Monotonicity of the specification.  A monotone specification
-        therefore needs no coordination, since
+        output events and commitments, and proves that three conditions are
+        equivalent: Consistency, Lifted Monotonicity, and Distributed
+        Consistency over Lamport histories.  A monotone specification therefore
+        needs no coordination, since
         exposing outputs alone keeps its histories confluent; where monotonicity
         fails, progress requires a commitment, and commitments are shown to
         require coordination.  In partition form
@@ -1263,7 +1263,7 @@ output choice and distributed histories.
     \addlinespace
     \textbf{Results} & & \\
     \midrule
-    Complete CALM & Distributed Consistency $\iff$ Lifted Monotonicity & Thm.~\ref{thm:complete-calm} \\
+    Complete CALM & Consistency $\iff$ Lifted Monotonicity $\iff$ Distributed Consistency & Thm.~\ref{thm:complete-calm} \\
     coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
@@ -1767,35 +1767,42 @@ Consistency at its cut gives run confluence.
 In the rest of this section, \emph{reachable} means reachable from a canonical
 initial state by a run, with no commitment from the basis.  Complete CALM adds
 two things to Functional CALM: relational specifications with output choice,
-and Distributed Consistency over Lamport histories.  Its proof uses the
-equivalent run formulation of Proposition~\ref{prop:distributed-consistency}.
+and Distributed Consistency over Lamport histories.  The theorem states all
+three equivalent views: Consistency of runs, Lifted Monotonicity of the
+specification, and Distributed Consistency.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-An ordered relational specification has Distributed Consistency if and only if
-it satisfies Lifted Monotonicity.
+For an ordered relational specification, the following are equivalent:
+\begin{enumerate}
+  \item Consistency;
+  \item Lifted Monotonicity;
+  \item Distributed Consistency.
+\end{enumerate}
 \end{theorem}
 
 \begin{proof}
-By Proposition~\ref{prop:distributed-consistency}, Distributed Consistency is
-equivalent to consistency of runs.  Proposition~\ref{prop:confluence} says
-that run consistency means:
-for every finite set of runs ending at $(i_r,R_r)$ and every common refinement
+Items~(1) and~(3) are equivalent by
+Proposition~\ref{prop:distributed-consistency}.  It remains to prove the
+substantive equivalence of items~(1) and~(2).
+
+Proposition~\ref{prop:confluence} says that Consistency means: for every
+finite set of runs ending at $(i_r,R_r)$ and every common refinement
 $j$ of the $i_r$, some output $u\in\fiber{j}$ survives in every run,
 $u\in\bigcap_rR_r(j)$.  By Lemma~\ref{lem:run-residual}, this holds exactly
 when $u$ refines every output exposed on those runs; each such output $o$ was
 exposed at some $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
 
-\emph{Lifted Monotonicity implies Distributed Consistency.}
+\emph{(2) $\Rightarrow$ (1): Lifted Monotonicity implies Consistency.}
 Assume Lifted Monotonicity.  The finitely many rows $(i_o,o)$ exposed on the
 runs have common refinement $j$, so
 Proposition~\ref{prop:lifted-monotonicity-decomposition}(3) supplies
 $u\in\fiber{j}$ refining them all.  Thus $u$ survives every run.
 
-\emph{Distributed Consistency implies Lifted Monotonicity.}
+\emph{(1) $\Rightarrow$ (2): Consistency implies Lifted Monotonicity.}
 Let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have a common refinement $j$.  For each
 $r$, start a run at $\sigma_0(i_r)$ and expose $o_r$; then
-$R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Run consistency supplies an output
+$R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Consistency supplies an output
 $u$ that survives every run, so it refines every $o_r$.  This is form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence Lifted
 Monotonicity.
@@ -1804,8 +1811,9 @@ Monotonicity.
 
 
 
-The theorem is direct from the definitions.  Its content is the
-identification: the one obstruction to confluence is a finite family
+The bridge from Consistency to Distributed Consistency is immediate; the
+content of the theorem is the identification of their criterion.  The one
+obstruction to confluence is a finite set
 of admissible rows with no admitted common refinement at a common input
 refinement.  When none exists, participants may expose the outputs they
 have, in whatever order input arrives, and remain reconcilable, though the
