@@ -397,7 +397,7 @@ residual state, the residual specification as its rows and the current input
 in bold.  The inputs that still have rows are the \emph{valid} ones.
 The environment produces input events; the system does not choose them.  The
 system combines an arriving cumulative input $a$ with its current input $i$
-using a system-defined operation $\mathsf{advance}(i,a)=j$, and records the
+using a system-defined operation $\mathsf{advance}(i,i_{\mathrm{in}})=j$, and records the
 result as $\mathsf{input}(j)$, whether $a$ arrived directly or in a message.
 The residual state depends only on the input reached, not on the order or
 grouping in which the ballots arrived.  In panel (b) the input has grown
@@ -546,7 +546,7 @@ for Complete CALM.
     \midrule
     residual state & $(i,R)$: \ $R\subseteq S$, \ $R(i)\neq\varnothing$, \ $R(k)=\varnothing$ unless $i\InputOrd k$ & Def.~\ref{def:residual-state} \\
     initial state; upper fiber & $\sigma_0(i)=(i,\{(k,o)\in S: i\InputOrd k\})$; \quad $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$ & Eqs.~\ref{eq:canonical-initial-state}, \ref{eq:upper-fiber} \\
-    input advance & $\mathsf{advance}(i,a)=j$: combine current input $i$ with arriving cumulative input $a$ & Eq.~\ref{eq:cumulative-advance} \\
+    input advance & $\mathsf{advance}(i,i_{\mathrm{in}})=j$: combine current input $i$ with arriving input $i_{\mathrm{in}}$ & Eq.~\ref{eq:cumulative-advance} \\
     input event (environment) & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,\ R\mathbin{\upharpoonright_I}j)$, \quad $R\mathbin{\upharpoonright_I}j=\{(k,u)\in R: j\InputOrd k\}$ & Def.~\ref{def:transition-system} \\
     output event (system) & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ exposable iff it removes no row & Defs.~\ref{def:transition-system}, \ref{def:exposable} \\
     commitment (system) & $(i,R)\xrightarrow{p}(i,R')$, \ $R'\subsetneq R$, \ some removed $(k,x)$ has no $u\in R'(k)$ with $x\OutputOrd u$ & Def.~\ref{def:transition-system} \\
@@ -762,12 +762,15 @@ The system model supplies a partial function
         \begin{equation}
   \mathsf{advance}:I\times I\rightharpoonup I,
   \qquad
-  \mathsf{advance}(i,a)=j\ \Longrightarrow\ i\InputOrd j\ \text{and}\ a\InputOrd j,
+  \mathsf{advance}(i,i_{\mathrm{in}})=j
+  \ \Longrightarrow\ i\InputOrd j\ \text{and}\ i_{\mathrm{in}}\InputOrd j,
   \label{eq:cumulative-advance}
         \end{equation}
-where $i$ is the current input and $a$ is an arriving cumulative input.  The
-arrival, whether directly from the environment or later in a message, induces
-$\mathsf{input}(j)$.  For set-valued inputs advance is union; for a
+where $i$ is the current input and $i_{\mathrm{in}}$ is an arriving
+cumulative input.  The strategy computes $j$; this computation is not an
+event and does not itself change the residual.  The resulting
+$\mathsf{input}(j)$ is the input event, whether $i_{\mathrm{in}}$ came directly
+from the environment or in a message.  For set-valued inputs advance is union; for a
 join-semilattice it is join.  The function is partial because two inputs need
 not have a common refinement, and it belongs to the system model because the
 input order need not select a unique one.
@@ -1559,9 +1562,15 @@ and strategy state, as introduced in Section~\ref{sec:determination}.  A
 message is a pair $m=(i_m,s_m)$: its \emph{input component}
 $i_m\in I\cup\{\epsilon\}$ is a cumulative input value or is empty, and its
 \emph{strategy component} $s_m$ is arbitrary strategy data or is empty.  The
-history records both; the transition projection combines $i_m$ with the
-receiver's input using $\mathsf{advance}$ and ignores $s_m$.
+history records both.  On receipt, the receiver's strategy uses
+$\mathsf{advance}$ to compute the target of a later input event; the
+calculation is not itself a history event.
 
+The environment is external to the participant set and has no local timeline
+in $H$.  When it supplies cumulative input $i_{\mathrm{in}}$, the participant's
+strategy computes $\mathsf{advance}(i,i_{\mathrm{in}})=j$, and the history
+records the resulting $\mathsf{input}(j)$ at the participant.  Message input
+is handled identically after the receive event.
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
 Fix an ordered specification, a finite participant set $P$, a message set
@@ -1574,10 +1583,9 @@ with:
 \begin{enumerate}
   \item an assignment of each event to a participant $p\in P$, and a total
         local order on the events assigned to each participant;
-  \item a label on each event: an input event $\mathsf{input}(j)$ caused by
-        direct environment input, an output event $\mathsf{output}(o)$, a
-        commitment from the basis, a send $\mathsf{send}(m)$, or a receive
-        $\mathsf{receive}(m)$; and
+  \item a label on each event: an input event $\mathsf{input}(j)$, an output
+        event $\mathsf{output}(o)$, a commitment from the basis, a send
+        $\mathsf{send}(m)$, or a receive $\mathsf{receive}(m)$; and
   \item for each $\mathsf{receive}(m)$, a matching $\mathsf{send}(m)$ at
         another participant.
 \end{enumerate}  The
@@ -1603,78 +1611,73 @@ Figure~\ref{fig:election-frames}(b).
 
 \begin{figure*}[t]
   \centering
-  \begin{tikzpicture}[x=.88cm,y=.72cm,>=stealth,
+  \begin{tikzpicture}[x=.9cm,y=.68cm,>=stealth,
                       every node/.style={font=\footnotesize}]
-    % Direct delivery: one full-width panel.
-    \node[anchor=west,font=\small] at (0,8.5) {(a) Direct delivery $H_d$};
-    \node[anchor=east] at (0,6.2) {$p$};
-    \node[anchor=east] at (0,3.3) {$q$};
-    \node[anchor=west] at (.25,6.2) {$\sigma_a$};
-    \node[anchor=west] at (.25,3.3) {$\sigma_a$};
-    \draw[->] (1.0,6.2) -- (17.25,6.2);
-    \draw[->] (1.0,3.3) -- (17.25,3.3);
-    \fill (10.2,6.2) circle (1.7pt);
-    \fill (10.2,3.3) circle (1.7pt);
-    \node[below,fill=white,inner sep=1pt] at (10.2,6.2)
+    % Direct delivery.
+    \node[anchor=west,font=\small] at (0,5.9) {(a) Direct delivery $H_d$};
+    \node[anchor=east] at (0,4.5) {$p$};
+    \node[anchor=east] at (0,2.8) {$q$};
+    \node[anchor=west] at (.3,4.5) {$\sigma_a$};
+    \node[anchor=west] at (.3,2.8) {$\sigma_a$};
+    \draw[->] (1.1,4.5) -- (17.0,4.5);
+    \draw[->] (1.1,2.8) -- (17.0,2.8);
+    \fill (9.4,4.5) circle (1.7pt);
+    \fill (9.4,2.8) circle (1.7pt);
+    \node[above,fill=white,inner sep=1pt] at (9.4,4.5)
       {$\mathsf{input}(ab\cdot)$};
-    \node[above,fill=white,inner sep=1pt] at (10.2,3.3)
+    \node[below,fill=white,inner sep=1pt] at (9.4,2.8)
       {$\mathsf{input}(ab\cdot)$};
-    \node[anchor=east] at (2.0,7.35) {$\mathsf{env}$};
-    \node[anchor=east] at (2.0,2.15) {$\mathsf{env}$};
-    \draw[->] (2.2,7.28) -- node[midway,above,sloped,fill=white,inner sep=1pt]
-      {$a=ab\cdot$} (10.02,6.38);
-    \draw[->] (2.2,2.22) -- node[midway,below,sloped,fill=white,inner sep=1pt]
-      {$a=ab\cdot$} (10.02,3.12);
-    \node[font=\scriptsize,fill=white,inner sep=1pt] at (6.2,7.8)
-      {$\mathsf{advance}(a\cdot\cdot,a)=ab\cdot$};
-    \node[font=\scriptsize,fill=white,inner sep=1pt] at (6.2,1.7)
-      {$\mathsf{advance}(a\cdot\cdot,a)=ab\cdot$};
-    \draw[dashed] (17.3,2.7) -- (17.3,6.8);
-    \node[above] at (17.3,6.8) {$C_d$};
-    \node[anchor=west] at (17.5,6.2) {$\sigma_b$};
-    \node[anchor=west] at (17.5,3.3) {$\sigma_b$};
+    \node[anchor=east] at (3.1,5.35) {$\mathsf{environment}$};
+    \node[anchor=east] at (3.1,1.95) {$\mathsf{environment}$};
+    \draw[->] (3.3,5.28) -- node[midway,above,sloped,fill=white,inner sep=1pt]
+      {$i_{\mathrm{in}}=ab\cdot$} (9.25,4.65);
+    \draw[->] (3.3,2.02) -- node[midway,below,sloped,fill=white,inner sep=1pt]
+      {$i_{\mathrm{in}}=ab\cdot$} (9.25,2.65);
+    \draw[dashed] (17.05,2.3) -- (17.05,5.0);
+    \node[above] at (17.05,5.0) {$C_d$};
+    \node[anchor=west] at (17.25,4.5) {$\sigma_b$};
+    \node[anchor=west] at (17.25,2.8) {$\sigma_b$};
 
-    % Forwarded delivery: one full-width panel.
-    \node[anchor=west,font=\small] at (0,.45) {(b) Forwarded delivery $H_f$};
-    \node[anchor=east] at (0,-1.7) {$p$};
-    \node[anchor=east] at (0,-5.0) {$q$};
-    \node[anchor=west] at (.25,-1.7) {$\sigma_a$};
-    \node[anchor=west] at (.25,-5.0) {$\sigma_a$};
-    \draw[->] (1.0,-1.7) -- (18.0,-1.7);
-    \draw[->] (1.0,-5.0) -- (18.0,-5.0);
-    \node[anchor=east] at (2.0,-.45) {$\mathsf{env}$};
-    \draw[->] (2.2,-.52) -- node[midway,above,sloped,fill=white,inner sep=1pt]
-      {$a=ab\cdot$} (6.02,-1.52);
-    \node[font=\scriptsize,fill=white,inner sep=1pt] at (4.4,-.25)
-      {$\mathsf{advance}(a\cdot\cdot,a)=ab\cdot$};
-    \fill (6.2,-1.7) circle (1.7pt);
-    \node[below,fill=white,inner sep=1pt] at (6.2,-1.7)
+    % Forwarded delivery.
+    \node[anchor=west,font=\small] at (0,1.0) {(b) Forwarded delivery $H_f$};
+    \node[anchor=east] at (0,-.35) {$p$};
+    \node[anchor=east] at (0,-2.05) {$q$};
+    \node[anchor=west] at (.3,-.35) {$\sigma_a$};
+    \node[anchor=west] at (.3,-2.05) {$\sigma_a$};
+    \draw[->] (1.1,-.35) -- (17.0,-.35);
+    \draw[->] (1.1,-2.05) -- (17.0,-2.05);
+    \node[anchor=east] at (2.8,.48) {$\mathsf{environment}$};
+    \draw[->] (3.0,.4) -- node[midway,above,sloped,fill=white,inner sep=1pt]
+      {$i_{\mathrm{in}}=ab\cdot$} (6.0,-.2);
+    \fill (6.15,-.35) circle (1.7pt);
+    \node[below,fill=white,inner sep=1pt] at (6.15,-.35)
       {$\mathsf{input}(ab\cdot)$};
-    \fill (10.8,-1.7) circle (1.7pt);
-    \node[above,fill=white,inner sep=1pt] at (10.8,-1.7)
+    \fill (10.25,-.35) circle (1.7pt);
+    \node[above,fill=white,inner sep=1pt] at (10.25,-.35)
       {$\mathsf{send}(m)$};
-    \fill (12.9,-5.0) circle (1.7pt);
-    \node[below,fill=white,inner sep=1pt] at (12.9,-5.0)
+    \fill (12.0,-2.05) circle (1.7pt);
+    \node[below,fill=white,inner sep=1pt] at (12.0,-2.05)
       {$\mathsf{receive}(m)$};
-    \draw[->] (10.8,-1.82) -- node[midway,right,fill=white,inner sep=1pt]
-      {$m=(ab\cdot,s_m)$} (12.84,-4.84);
-    \node[font=\scriptsize,fill=white,inner sep=1pt] at (14.65,-4.55)
-      {$\mathsf{advance}(a\cdot\cdot,ab\cdot)=ab\cdot$};
-    \fill (16.35,-5.0) circle (1.7pt);
-    \node[below,fill=white,inner sep=1pt] at (16.35,-5.0)
+    \draw[->] (10.25,-.47) -- node[midway,right,fill=white,inner sep=1pt]
+      {$m=(ab\cdot,s_m)$} (11.93,-1.89);
+    \fill (15.6,-2.05) circle (1.7pt);
+    \node[below,fill=white,inner sep=1pt] at (15.6,-2.05)
       {$\mathsf{input}(ab\cdot)$};
-    \draw[dashed] (18.05,-5.6) -- (18.05,-1.1);
-    \node[above] at (18.05,-1.1) {$C_f$};
-    \node[anchor=west] at (18.25,-1.7) {$\sigma_b$};
-    \node[anchor=west] at (18.25,-5.0) {$\sigma_b$};
+    \draw[dashed] (17.05,-2.55) -- (17.05,.15);
+    \node[above] at (17.05,.15) {$C_f$};
+    \node[anchor=west] at (17.25,-.35) {$\sigma_b$};
+    \node[anchor=west] at (17.25,-2.05) {$\sigma_b$};
   \end{tikzpicture}
   \caption{Two histories from $\sigma_a=(a\cdot\cdot,R_a)$ to
   $\sigma_b=(ab\cdot,R_b)$.  The relations $R_a$ and $R_b$ are the seven and
   three rows, respectively, in panels (a) and (b) of
-  Figure~\ref{fig:election-frames}.  Each dot on a participant line is one
-  history event.  Environment and message arrows carry arriving cumulative
-  inputs; separate $\mathsf{advance}$ labels show how each arrival forms the
-  following input event.  Dashed lines are consistent cuts.}
+  Figure~\ref{fig:election-frames}.  The environment is external to the
+  history and appears only as the source of direct input.  In each case the
+  participant's strategy computes
+  $\mathsf{advance}(a\cdot\cdot,ab\cdot)=ab\cdot$, and the resulting
+  $\mathsf{input}(ab\cdot)$ is the participant event.  In (b), $q$ performs
+  that computation after receiving $m=(ab\cdot,s_m)$.  Dashed lines are
+  consistent cuts.}
   \label{fig:history-projection}
 \end{figure*}
 
@@ -1686,16 +1689,14 @@ transitions that determine that residual.
 \begin{definition}[Transition projection and residual endpoint]
 \label{def:semantic-projection}
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
-to $p$ in local order.  Its \emph{transition projection} $\pi_p^C$ is obtained
-recursively from the current input $i$.  Keep input events, output events,
-and commitments; delete sends; and replace
-$\mathsf{receive}(a,s_m)$ by $\mathsf{input}(j)$ when
-$\mathsf{advance}(i,a)=j$.  Both direct environment input and message input
-use this same rule to form $j$.  A receive with input component $\epsilon$
-adds no transition.  Its strategy component may update strategy state, but does not
-directly change the residual.  A pointed history $(H,C)$ is
-\emph{well formed} when every required $\mathsf{advance}(i,a)$ is defined and
-each $\pi_p^C$ is a defined transition sequence from $\sigma_0(i_p^0)$.  Write $\sigma_p^C$ for the final residual of
+to $p$ in local order.  Its \emph{transition projection} $\pi_p^C$ keeps the
+input events, output events, and commitments in that order, and deletes sends
+and receives.  A receive may update strategy state and lead the strategy to
+compute a later input event, but it does not directly change the residual.
+A pointed history $(H,C)$ is \emph{well formed} when each $\pi_p^C$ is a
+defined transition sequence from $\sigma_0(i_p^0)$ and every input event
+caused by an arrival or receive has the target computed by
+$\mathsf{advance}$.  Write $\sigma_p^C$ for the final residual of
 $\pi_p^C$.  The
 \emph{residual endpoint} of the cut is the vector
         \begin{equation}
