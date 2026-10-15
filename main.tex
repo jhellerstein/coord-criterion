@@ -1877,14 +1877,18 @@ the second participant not to select $x$, which it can be relied upon to do
 only by agreement.
 \end{proof}
 
-CAP asks the same question of histories constrained by a partition.  A
-\emph{partition} divides the participants into two or more components.  In a
-\emph{partitioned history}, no message sent in one component is received in
-another while the partition lasts, but each participant may continue to
-receive input from its environment and expose outputs.  The classical CAP
-theorem is a one-way impossibility: a linearizable register cannot remain
-available through arbitrary partitions~\cite{gilbert2002cap}.  Complete CALM
-turns this into a dichotomy.
+CAP asks whether consistency can coexist with availability during a
+partition.  Here we take the C to be Distributed Consistency: confluence of
+participant runs under the declared specification.  The specification
+parameterizes what must remain consistent---total-order explanations for
+linearizability, causal explanations for causal consistency, or any other
+admissible outputs and refinement order.  A \emph{partition} divides the
+participants into two or more components.  In a \emph{partitioned history},
+no message sent in one component is received in another while the partition
+lasts, but each participant may continue to receive input from its environment
+and expose outputs.  Classical CAP gives a one-way impossibility for available
+linearizable registers~\cite{gilbert2002cap}; Complete CAP gives a dichotomy
+for the declared specification.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
@@ -1899,12 +1903,13 @@ For an ordered relational specification $\Spec$, the following are equivalent:
                 of their current inputs: some row there survives in every
                 participant's residual (\emph{Distributed Consistency});
         \end{enumerate}
-  \item $\Spec$ is monotone.
+  \item $\Spec$ satisfies Lifted Monotonicity.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
-Assume $\Spec$ is monotone.  Complete CALM gives Distributed Consistency, so
+Assume $\Spec$ satisfies Lifted Monotonicity.  Complete CALM gives
+Distributed Consistency, so
 at every cut of every partitioned history the participant runs are confluent;
 Proposition~\ref{prop:confluence} gives the surviving row at every common
 refinement.  The exposability result following Complete CALM says that every
@@ -1917,8 +1922,8 @@ components, with no messages delivered between them.  Availability lets each
 participant expose $o_r$ without cross-component communication.
 Distributed Consistency then gives a row $(j,u)$ that survives in every residual, so
 $o_r\OutputOrd u$ for every $r$.  This is form~(3) of
-Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence $\Spec$ is
-monotone.
+Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence $\Spec$
+satisfies Lifted Monotonicity.
 \end{proof}
 
 Distributed Consistency requires refinement under $\OutputOrd$: outputs
@@ -1926,8 +1931,8 @@ exposed in different partition components must be jointly refinable, not
 identical or totally ordered.  This is weaker than linearizability and is what
 makes the characterization bidirectional.  Together with
 Theorem~\ref{thm:commitments-require-coordination}, the division is exact.  In
-a monotone specification, availability and Distributed Consistency both hold
-under partition.  In a non-monotone one, a participant selecting a row from
+a specification satisfying Lifted Monotonicity, availability and Distributed
+Consistency both hold under partition.  When Lifted Monotonicity fails, a participant selecting a row from
 the offending family must either wait to agree with the other components,
 giving up availability, or act alone and risk nonconfluent participant runs,
 giving up Distributed Consistency.
@@ -1938,7 +1943,8 @@ total order refines both, and the theorem withholds availability under
 partition.  Whether a commitment requires agreement across a partition also
 depends on which participant may hold which input and make which choice;
 Appendix~\ref{app:deployment} refines the theorem by such a \emph{deployment}
-and shows that a causal register, though not monotone, needs no coordination
+and shows that a causal register, though it fails Lifted Monotonicity without
+deployment restrictions, needs no coordination
 when each participant answers only its own reads.  With the central results
 in place, we now compare their consequences across the surrounding
 literature.
