@@ -1485,8 +1485,8 @@ coordination cost of doing so.
 Section~\ref{sec:safe-exposure} treated one participant.  We now combine
 participants and their messages into a Lamport history, reduce a cut of that
 history to one residual per participant, and define confluence of the history.
-The next subsection proves that history confluence is equivalent to Lifted
-Monotonicity.
+The next subsection proves the equivalence between history confluence
+and Lifted Monotonicity.
 
 \paragraph{Participants and runs.}
 A \emph{participant} holds one residual state, changed only by its own input
@@ -1495,11 +1495,14 @@ events, output events, and commitments.  Its semantic transitions form a run
 events compose, so participants that receive the same cumulative input reach
 the same residual if neither makes an output event or commitment, regardless
 of delivery order or batching.  Our concern in this section is therefore not
-the ordering of input events, but which output events different participants
-make and whether their effects can be reconciled.  Replicas are the usual
-case: participants receiving the same input in different orders.  Consistency
-already compares their runs, so the framework needs no separate definition of
-replica consistency.
+the ordering of input events, but rather which output events different participants
+make, and whether their effects can be reconciled.  Replicas are the standard
+case: participants receiving the same input in different orders.  The model
+is not limited to full data or code replication, however.  Participants may
+receive different inputs, use different strategies, and expose different
+outputs; each holds the residual produced by its own events.  Consistency
+compares any such runs whenever their current inputs have a common refinement,
+covering sharded and more general distributed deployments as well as replicas.
 
 \paragraph{Histories and consistent cuts.}
 A Lamport history records the participants' local events and the message edges
