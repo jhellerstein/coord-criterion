@@ -1514,20 +1514,24 @@ follows keeps only their effect on residual states.
 
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
-Fix an ordered specification, a finite participant set $P$, an initial input
-$i_p^0$ for each $p\in P$, and a commitment basis.  A \emph{distributed history} $H$ consists
-of a finite set of events, together with:
+Fix an ordered specification, a finite participant set $P$, a message set
+$M$, an initial input $i_p^0$ for each $p\in P$, and a commitment basis.  A
+\emph{distributed history} $H$ consists of a finite set of events, together
+with:
 \begin{enumerate}
   \item an assignment of each event to a participant $p\in P$, and a total
         local order on the events assigned to each participant;
   \item a label on each event, either a transition
         $\mathsf{input}(j)$, $\mathsf{output}(o)$, or a commitment from the
-        basis, or a message event $\mathsf{send}(m)$ or
-        $\mathsf{receive}(m)$; and
-  \item for each receive, a matching send at another participant.
+        basis; a send $\mathsf{send}(m)$ for $m\in M$; or a receive
+        $\mathsf{receive}(m;a)$, where $a$ is either an input event
+        $\mathsf{input}(j)$ induced by the message or the empty symbol
+        $\epsilon$ when the message changes no semantic input; and
+  \item for each $\mathsf{receive}(m;a)$, a matching
+        $\mathsf{send}(m)$ at another participant.
 \end{enumerate}
 Input delivered directly by the environment is represented by an
-$\mathsf{input}(j)$ event rather than a message event.  The
+$\mathsf{input}(j)$ transition rather than a message event.  The
 \emph{happens-before} order is the transitive closure of the local orders
 and the edges from sends to their matching receives.  A
 \emph{consistent cut} $C$ is a subset of events closed under happens-before
@@ -1543,15 +1547,15 @@ residual.
 
 \begin{definition}[Semantic projection and endpoint]
 \label{def:semantic-projection}
-The \emph{semantic projection} of a consistent cut $C$ at participant $p$
-is the sequence of transitions that affects $p$'s residual.  Read $p$'s
-events in local order: keep transition events, drop sends, map a receive to
-$\mathsf{input}(j)$ when its message advances the current input to $j$, and
-drop any other receive.  Dropped events may change strategy state, but not
-the residual.  A pointed history $(H,C)$ is \emph{well formed} when each
-participant's projection is a defined transition sequence from
-$\sigma_0(i_p^0)$.  Write
-$\sigma_p^C$ for the final residual of $p$'s projection.  The
+For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
+to $p$ in local order.  Its \emph{semantic projection} $\pi_p^C$ is the
+transition sequence obtained by keeping transition labels, replacing each
+$\mathsf{receive}(m;\mathsf{input}(j))$ by $\mathsf{input}(j)$, and deleting
+sends and receives labeled with $\epsilon$.  Deleted events may change
+strategy state, but not the residual.  A pointed history $(H,C)$ is
+\emph{well formed} when each $\pi_p^C$ is a defined transition sequence from
+$\sigma_0(i_p^0)$.  Write $\sigma_p^C$ for the final residual of
+$\pi_p^C$.  The
 \emph{semantic endpoint} of the cut is the vector
         \begin{equation}
   \operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}.
@@ -1582,12 +1586,10 @@ same residual states after both.
 
 \begin{proof}
 Each participant's projection is fixed by its local event order.  Events at
-other participants, sends, and receives dropped by the projection do not
-affect its residual.  Because every retained transition is a partial function
-of that residual, pointed histories with the same endpoint admit the same
-subsequent semantic transitions, with the same results.  Every equivalence
-class has one endpoint vector by definition, and every reachable vector is
-the endpoint of some pointed history.
+other participants and events deleted by the projection do not affect its
+residual.  Because every retained transition is a partial function of that
+residual, pointed histories with the same endpoint have the same subsequent
+semantic transitions available, with the same results.
 \end{proof}
 
 Thus everything the specification can ask about a Lamport history at a cut is
