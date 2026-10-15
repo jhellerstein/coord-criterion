@@ -1574,10 +1574,10 @@ with:
 \begin{enumerate}
   \item an assignment of each event to a participant $p\in P$, and a total
         local order on the events assigned to each participant;
-  \item a label on each event, either an output event
-        $\mathsf{output}(o)$ or a commitment from the basis; an environment
-        arrival $\mathsf{arrive}(a)$ for $a\in I$; a send
-        $\mathsf{send}(m)$; or a receive $\mathsf{receive}(m)$; and
+  \item a label on each event: an input event $\mathsf{input}(j)$ caused by
+        direct environment input, an output event $\mathsf{output}(o)$, a
+        commitment from the basis, a send $\mathsf{send}(m)$, or a receive
+        $\mathsf{receive}(m)$; and
   \item for each $\mathsf{receive}(m)$, a matching $\mathsf{send}(m)$ at
         another participant.
 \end{enumerate}  The
@@ -1614,8 +1614,8 @@ Figure~\ref{fig:election-frames}(b).
     \node[anchor=east] at (1.5,4.4) {$\sigma_a$};
     \fill (3.3,5.5) circle (1.7pt);
     \fill (3.3,4.0) circle (1.7pt);
-    \node[above] at (3.3,5.5) {$\mathsf{arrive}(ab\cdot)$};
-    \node[below] at (3.3,4.0) {$\mathsf{arrive}(ab\cdot)$};
+    \node[above] at (3.3,5.5) {$\mathsf{input}(ab\cdot)$};
+    \node[below] at (3.3,4.0) {$\mathsf{input}(ab\cdot)$};
     \draw[dashed] (5.2,3.55) -- (5.2,6.1);
     \node[above] at (5.2,6.1) {$C_d$};
     \node[anchor=west] at (5.35,5.5) {$\sigma_b=(ab\cdot,R_b)$};
@@ -1629,7 +1629,7 @@ Figure~\ref{fig:election-frames}(b).
     \node[anchor=east] at (1.5,2.0) {$\sigma_a$};
     \node[anchor=east] at (1.5,.5) {$\sigma_a$};
     \fill (2.7,1.6) circle (1.7pt);
-    \node[above] at (2.7,1.6) {$\mathsf{arrive}(ab\cdot)$};
+    \node[above] at (2.7,1.6) {$\mathsf{input}(ab\cdot)$};
     \fill (4.2,1.6) circle (1.7pt);
     \node[above] at (4.2,1.6) {$\mathsf{send}(ab\cdot,s_m)$};
     \fill (5.2,.1) circle (1.7pt);
@@ -1645,8 +1645,9 @@ Figure~\ref{fig:election-frames}(b).
   three rows, respectively, in panels (a) and (b) of
   Figure~\ref{fig:election-frames}(b).  In (a), the environment delivers
   $ab\cdot$ directly to both participants.  In (b), $p$ forwards
-  $m=(ab\cdot,s_m)$; direct arrival and receipt both induce
-  $\mathsf{input}(ab\cdot)$ through $\mathsf{advance}$.  Dashed lines are
+  $m=(ab\cdot,s_m)$.  Direct environment input and receipt of $m$ both
+  produce $\mathsf{input}(ab\cdot)$ through $\mathsf{advance}$.  Dashed lines
+  are
   consistent cuts.}
   \label{fig:history-projection}
 \end{figure}
@@ -1660,11 +1661,12 @@ transitions that determine that residual.
 \label{def:semantic-projection}
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
 to $p$ in local order.  Its \emph{transition projection} $\pi_p^C$ is obtained
-recursively from the current input $i$.  Keep output events and commitments;
-delete sends; and replace either $\mathsf{arrive}(a)$ or
+recursively from the current input $i$.  Keep input events, output events,
+and commitments; delete sends; and replace
 $\mathsf{receive}(a,s_m)$ by $\mathsf{input}(j)$ when
-$\mathsf{advance}(i,a)=j$.  A receive with input component $\epsilon$ adds no
-transition.  Its strategy component may update strategy state, but does not
+$\mathsf{advance}(i,a)=j$.  Both direct environment input and message input
+use this same rule to form $j$.  A receive with input component $\epsilon$
+adds no transition.  Its strategy component may update strategy state, but does not
 directly change the residual.  A pointed history $(H,C)$ is
 \emph{well formed} when every required $\mathsf{advance}(i,a)$ is defined and
 each $\pi_p^C$ is a defined transition sequence from $\sigma_0(i_p^0)$.  Write $\sigma_p^C$ for the final residual of
