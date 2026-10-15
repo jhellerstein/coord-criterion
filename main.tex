@@ -526,8 +526,9 @@ are confluent.  Functional CALM, proved below, says that a functional
 specification is consistent exactly when it is monotone.
 
 The rest of this section states these notions formally.
-Figure~\ref{fig:formalism-summary} collects the formal objects of this section
-and the next in one place, with references to where each is defined.
+Figure~\ref{fig:formalism-summary} collects the formal objects of Functional
+CALM; Figure~\ref{fig:complete-formalism-summary} will collect the additions
+for Complete CALM.
 
 \begin{figure*}[t]
   \centering
@@ -538,10 +539,8 @@ and the next in one place, with references to where each is defined.
     \toprule
     \textbf{Specification} & & \\
     \midrule
-    specification & $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, \quad $S\subseteq I\times O$ & Defs.~\ref{def:functional-specification}, \ref{def:relational-specification} \\
-    fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$; \quad functional when $S(i)=\{f(i)\}$ & Eq.~\ref{eq:fiber} \\
+    specification & $f:(I,\InputOrd)\to(O,\OutputOrd)$; \quad $S=\{(i,f(i)):i\in I\}$ & Def.~\ref{def:functional-specification} \\
     monotone (functional) & $i\InputOrd j\ \Longrightarrow\ f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity} \\
-    Lifted Monotonicity & $i\InputOrd j\ \Longrightarrow\ S(i)\JointOutputOrd S(j)$ \quad (every finite $X\subseteq S(i)$ has a common refinement in $S(j)$) & Def.~\ref{def:lifted-monotonicity} \\
     \addlinespace
     \textbf{Transition system} & & \\
     \midrule
@@ -549,25 +548,21 @@ and the next in one place, with references to where each is defined.
     initial state; upper fiber & $\sigma_0(i)=(i,\{(k,o)\in S: i\InputOrd k\})$; \quad $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$ & Eqs.~\ref{eq:canonical-initial-state}, \ref{eq:upper-fiber} \\
     input advance & $\mathsf{advance}(i,a)=j$: combine current input $i$ with arriving cumulative input $a$ & Eq.~\ref{eq:cumulative-advance} \\
     input event (environment) & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,\ R\mathbin{\upharpoonright_I}j)$, \quad $R\mathbin{\upharpoonright_I}j=\{(k,u)\in R: j\InputOrd k\}$ & Def.~\ref{def:transition-system} \\
-    output event (system) & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ exposable iff every removed row is covered & Defs.~\ref{def:transition-system}, \ref{def:exposable}, \ref{def:exposable-relational} \\
+    output event (system) & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ exposable iff it removes no row & Defs.~\ref{def:transition-system}, \ref{def:exposable} \\
     commitment (system) & $(i,R)\xrightarrow{p}(i,R')$, \ $R'\subsetneq R$, \ some removed $(k,x)$ has no $u\in R'(k)$ with $x\OutputOrd u$ & Def.~\ref{def:transition-system} \\
     \addlinespace
     \textbf{Commitments} & & \\
     \midrule
-    input-sealing / choice & makes a valid input invalid \ / \ keeps every valid input valid & Secs.~\ref{sec:determination}, \ref{sec:safe-exposure} \\
+    input-sealing commitment & makes a valid input invalid & Sec.~\ref{sec:determination} \\
     commitment basis & the set of commitments the system may use; a design input alongside $\Spec$ & Def.~\ref{def:transition-system} \\
-    removed row $(k,x)$ & input retirement if $k\not\succeq_I i'$; \ output retirement if $\exists u\in R'(k),\,x\OutputOrd u$; \ else removed by commitment & Defs.~\ref{def:retirement}, \ref{def:output-retirement} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
     consistent & runs confluent: \ $\bigcap_r R_r(j)\neq\varnothing$ at every common refinement $j$ of their current inputs & Def.~\ref{def:consistency}, Prop.~\ref{prop:confluence} \\
     Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
-    Complete CALM & Lifted Monotonicity $\iff$ runs confluent $\iff$ histories confluent & Thm.~\ref{thm:complete-calm} \\
-    coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
-  \caption{The formal objects of Sections~\ref{sec:functional-calm}
-  and~\ref{sec:complete-calm}, for reference.}
+  \caption{The formal objects of Functional CALM, for reference.}
   \label{fig:formalism-summary}
 \end{figure*}
 
@@ -1236,6 +1231,41 @@ a commitment is therefore precisely the determination that needs coordination.
 The rest of this section makes these claims precise, in the order of
 Section~\ref{sec:functional-calm}: definitions, the transition system, the
 theorem, and then coordination.
+
+Figure~\ref{fig:complete-formalism-summary} summarizes the objects added for
+output choice and distributed histories.
+
+\begin{figure*}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{6pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{@{}l l l@{}}
+    \toprule
+    \textbf{Output choice} & & \\
+    \midrule
+    fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$ & Eq.~\ref{eq:fiber} \\
+    Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$; finite sets in $S(i)$ have common refinements in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
+    output retirement & removed $(k,x)$ is covered by retained $(k,u)$ with $x\OutputOrd u$ & Def.~\ref{def:output-retirement} \\
+    exposable output & every row removed by $\mathsf{output}(o)$ is an output retirement & Def.~\ref{def:exposable-relational} \\
+    choice commitment & removes outputs at a valid input without making it invalid & Sec.~\ref{sec:safe-exposure} \\
+    \addlinespace
+    \textbf{Distributed histories} & & \\
+    \midrule
+    participant; message & participant holds one residual; \ $m=(i_m,s_m)$ carries input and strategy components & Sec.~\ref{sec:histories} \\
+    history; consistent cut & locally ordered events plus matched sends and receives; \ cut closed under happens-before & Def.~\ref{def:distributed-history} \\
+    projection; endpoint & $\pi_p^C$: transitions affecting $p$'s residual; \ $\operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
+    history confluence & at every common input $j$, all participants can reach one residual state $\sigma_j=(j,R)$ & Sec.~\ref{sec:histories} \\
+    \addlinespace
+    \textbf{Results} & & \\
+    \midrule
+    Complete CALM & Lifted Monotonicity $\iff$ runs confluent $\iff$ histories confluent & Thm.~\ref{thm:complete-calm} \\
+    coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
+    \bottomrule
+  \end{tabular}
+  \caption{The additions for Complete CALM, for reference.}
+  \label{fig:complete-formalism-summary}
+\end{figure*}
 
 \subsection{Relational specifications and Lifted Monotonicity}
 \label{sec:relational-specifications}
