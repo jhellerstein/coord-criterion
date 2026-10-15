@@ -53,12 +53,10 @@
 When does a system inherently require coordination?  CAP, CALM, CRDTs, Highly
 Available Transactions, and invariant confluence each draw a coordination
 boundary in a different mathematical language, and conventional wisdom has
-drifted from what the literature proves.  We give one semantic framework for
+drifted from what the literature proves.  We give one framework for
 all of them: a specification is a table of admissible input--output pairs with
 ordered columns, and the state of a computation is the \emph{residual} of that
 table---the rows still admissible.
-% Residuals are provably the semantic
-% quotient of Lamport histories.
 \emph{Functional CALM} generalizes the
 original CALM Theorem, replacing Datalog queries with arbitrary functions
 between partially ordered input and output domains: monotonicity
@@ -144,7 +142,7 @@ language or implementation details.  It is consistent with state-machine-style
 specifications and can be compiled from them
 (Section~\ref{sec:complete-calm}); what it elides is the incidental detail of
 execution order, keeping only what the specification can ask about.  A
-\emph{functional semantic specification}
+\emph{functional ordered specification}
 (\S\ref{sec:functional-specifications}) is an arbitrary function
 \(f:(I,\InputOrd)\to(O,\OutputOrd)\) between a partially ordered input domain
 and a separately partially ordered output domain, monotone in the standard
@@ -160,10 +158,10 @@ generalizes the CALM result from relational logic languages and fact inclusion
 to these arbitrary functions and refinement partial orders, giving a common
 language for coordination-freedom results over functional specifications,
 including query evaluation and the usual CRDT state interface.  ``Functional''
-means only that each semantic input has one specified output; execution may
+means only that each input has one specified output; execution may
 be as nondeterministic as it likes.
 
-Our second step addresses a case those interfaces do not raise: the semantic
+Our second step addresses a case those interfaces do not raise: the
 specification itself may be \emph{ambiguous}---formally
 allowing several distinguishable outputs for one input.  Leader election may
 allow any participant to be eligible; a database may permit several serial
@@ -200,17 +198,17 @@ Linearizability becomes a special case on the tradeoff side.
 
 This paper makes four contributions:
 \begin{enumerate}
-  \item A semantic framework for distributed computation: specifications as
+  \item A framework for distributed computation: specifications as
         relations with ordered inputs and outputs, \emph{residual states}
         recording what remains admissible, and three transitions: input events,
-        output events, and \emph{commitments}.  Residuals are provably the semantic
+        output events, and \emph{commitments}.  Residual vectors are provably the residual
         quotient of Lamport histories, and Section~\ref{sec:instances} shows
         that CRDTs, highly available transactions, and invariant confluence are
         instances of the framework.
   \item Functional CALM generalizes and proves the CALM Conjecture in the context of
-        arbitrary functions, represented as semantic input/output specifications
+        arbitrary functions, represented as ordered input/output specifications
         with separate input- and output-refinement partial orders.
-  \item Complete CALM extends the model to semantic output choice, formalizes
+  \item Complete CALM extends the model to output choice, formalizes
         output events and commitments, and proves that three conditions coincide:
         Lifted Monotonicity of the specification, confluence of the runs of
         the framework, and confluence of every Lamport history of the system.
@@ -231,7 +229,7 @@ This paper makes four contributions:
 
 Section~\ref{sec:functional-calm} introduces the framework on an election
 and develops Functional CALM.  Section~\ref{sec:complete-calm} introduces
-semantic choice on two further examples and develops commitment, Complete
+output choice on two further examples and develops commitment, Complete
 CALM, and Complete CAP.  Section~\ref{sec:instances} applies the
 results to familiar systems, and Section~\ref{sec:discussion} draws out the
 design lessons and scope limits.  Appendix~\ref{sec:frontiers} derives
@@ -245,7 +243,7 @@ applications.
 The CALM Theorem was proved for queries in a logic programming language,
 evaluated by relational transducers, and its applicability outside that
 setting was never made precise.  Here we use a simpler model that applies to
-any specification.  A semantic specification describes allowed input/output
+any specification.  A specification describes allowed input/output
 behavior without committing to a language, placement, protocol, or message
 schedule.  This section addresses the case that prior work on both CALM and
 CRDTs shared: specifications that are functions, in which each
@@ -267,7 +265,7 @@ proofs, but every notion the Functional CALM theorem rests on---residual
 states, input events, retirement, commitments, upper fibers, determination,
 output events, runs, and consistency---is exercised on the example.
 
-Two mathematical objects are in play.  The first is a \emph{semantic
+Two mathematical objects are in play.  The first is an \emph{ordered
 specification} $\Spec=(I,\InputOrd,O,\OutputOrd,S)$: a table
 $S\subseteq I\times O$ of admissible input--output pairs, with a partial order
 on each column.  The specification stands alone, and the theorems are about
@@ -496,7 +494,7 @@ Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one must
 first make a commitment.
 
-\paragraph{A semantic transition system.}
+\paragraph{A transition system on residuals.}
 We now have all the moves.  Residual states are the states of a transition
 system, and its transitions are of three kinds: input events, made by the
 environment, and output events and commitments, made by the system.  Every panel
@@ -607,7 +605,7 @@ This is the standard mathematical definition of a monotone function.  In
 systems terms, an output exposed from partial input remains valid as more input
 arrives.
 
-\subsection{A semantic transition system}
+\subsection{A transition system on residuals}
 \label{sec:determination}
 
 Functional CALM is a statement about the runs of a transition system on
@@ -675,9 +673,9 @@ For an input $i$, the \emph{canonical initial state} is
 the specification restricted to $i$ and its refinements.
 Figure~\ref{fig:election-frames}(a) is $\sigma_0(a\cdot\cdot)$.
 
-\begin{definition}[Semantic transition system]
+\begin{definition}[Transition system on residuals]
 \label{def:transition-system}
-The \emph{semantic transition system} of a specification has the residual
+The \emph{transition system on residuals} of a specification has the residual
 states as its states.  Its transitions are partial functions on residual
 states of exactly three kinds.  Each is defined at a state only when the result
 satisfies Definition~\ref{def:residual-state}, and none adds a row.
@@ -721,7 +719,7 @@ initial state by a finite sequence of these transitions.
 Nothing else changes a residual state.  A system's \emph{strategy} chooses
 which output event or commitment to make, using the residual and any
 additional \emph{strategy state} it maintains.  Strategy state is not part of
-the semantic state: it affects the residual only through the transition the
+the residual state: it affects the residual only through the transition the
 strategy selects.  A transition may remove rows or none at all, and taken row
 by row a removal is one of two things.
 
@@ -964,7 +962,7 @@ have no common upper bound, and none is required: monotonicity constrains only
 comparable inputs, and $aa\cdot$ and $ab\cdot$ have no common refinement
 because ballots are immutable.
 
-This is the familiar CALM dichotomy stated at the semantic interface rather than
+This is the familiar CALM dichotomy stated at the specification interface rather than
 inside a particular programming language.  Classical CALM fits the pattern with
 a familiar pair of orders: inputs are finite fact sets $J$ ordered by
 inclusion, and outputs are answer sets $Q(J)$, also ordered by inclusion.
@@ -977,7 +975,7 @@ Equation~\ref{eq:functional-monotonicity} becomes
         \end{equation}
 the standard definition of a monotone query~\cite{abiteboul1995foundations},
 which positive Datalog satisfies and negation may not.  Functional CALM
-generalizes the semantic statement from fact sets under inclusion to arbitrary
+generalizes the statement from fact sets under inclusion to arbitrary
 input and output refinement partial orders.  The CRDT state interface
 has the same functional shape, with received payloads ordered by inclusion as
 input and the semilattice order as output order~\cite{shapiro2011crdt};
@@ -999,13 +997,13 @@ fails, the system must choose among alternative outputs, and nothing so far says
 whether choosing requires coordination.  The next section answers that, and the answer is
 again a monotonicity condition.
 
-\section{Complete CALM: Semantic Choice and Coordination}
+\section{Complete CALM: Output Choice and Coordination}
 \label{sec:complete-calm}
 
-A semantic specification may admit more than one output for the same input.
+A specification may admit more than one output for the same input.
 Such specifications are relational rather than functional, and we call them
 \emph{ambiguous}.  Complete CALM extends Functional CALM
-to this semantic output choice, and this section mirrors the structure of
+to this output choice, and this section mirrors the structure of
 Section~\ref{sec:functional-calm}.  Section~\ref{sec:ambiguity-story} walks
 through the framework informally on two ambiguous examples.
 Section~\ref{sec:relational-specifications} defines relational specifications
@@ -1160,7 +1158,7 @@ single commitment, after which every remaining output is exposable.
 \end{figure}
 
 \paragraph{Participants and messages.}
-Everything so far is semantic: it concerns the specification and its orders,
+Everything so far concerns the specification and its orders,
 and it holds of a single-node database ordering transactions just as it holds
 of the election.  Now let the system be distributed.  It consists of
 \emph{participants}, each of which knows the specification, which is fixed and
@@ -1206,7 +1204,7 @@ Theorem~\ref{thm:complete-calm} then says that when participants only receive
 input and expose outputs, every Lamport history is confluent exactly when the
 specification is monotone.
 
-Commitments are precisely the semantic actions that require coordination;
+Commitments are precisely the actions that require coordination;
 input events and exposing exposable outputs may be done autonomously.
 This follows directly from the discussion above.  Input arrives at each
 participant on its own.  Exposing an exposable output retires only covered
@@ -1490,7 +1488,7 @@ and Lifted Monotonicity.
 
 \paragraph{Participants and runs.}
 A \emph{participant} holds one residual state, changed only by its own input
-events, output events, and commitments.  Its semantic transitions form a run
+events, output events, and commitments.  Its transitions form a run
 (Definition~\ref{def:run}) when no commitment from the basis occurs.  Input
 events compose, so participants that receive the same cumulative input reach
 the same residual if neither makes an output event or commitment, regardless
@@ -1509,8 +1507,8 @@ A Lamport history records the participants' local events and the message edges
 that order events across participants.  Each participant has its own strategy
 and strategy state, as introduced in Section~\ref{sec:determination}.  We view
 a message as having an \emph{input component}, which may advance the receiver's
-semantic input, and a \emph{strategy component}, which may update its strategy
-state.  Either component may be empty.  The history records both; the semantic
+input, and a \emph{strategy component}, which may update its strategy
+state.  Either component may be empty.  The history records both; the transition
 projection that follows retains only the input component.
 
 \begin{definition}[Lamport history of the transition system]
@@ -1539,15 +1537,15 @@ and the edges from sends to their matching receives.  A
 confluence, which is a property of specifications.)
 \end{definition}
 
-A Lamport history records operational details that may have no effect on the
-semantic state.  We elide them with a \emph{semantic projection}, which
-filters each participant's history to the semantic events that change its
+A Lamport history records operational details that may have no effect on a
+residual state.  We elide them with a \emph{transition projection}, which
+filters each participant's history to the transitions that change its
 residual.
 
-\begin{definition}[Semantic projection and endpoint]
+\begin{definition}[Transition projection and residual endpoint]
 \label{def:semantic-projection}
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
-to $p$ in local order.  Its \emph{semantic projection} $\pi_p^C$ is the
+to $p$ in local order.  Its \emph{transition projection} $\pi_p^C$ is the
 transition sequence obtained by keeping transition labels, replacing each
 $\mathsf{receive}(m)$ whose input component advances the input to $j$ by
 $\mathsf{input}(j)$, and deleting sends and receives with an empty input
@@ -1556,7 +1554,7 @@ message's strategy component, but it does not change the residual.  A pointed hi
 \emph{well formed} when each $\pi_p^C$ is a defined transition sequence from
 $\sigma_0(i_p^0)$.  Write $\sigma_p^C$ for the final residual of
 $\pi_p^C$.  The
-\emph{semantic endpoint} of the cut is the vector
+\emph{residual endpoint} of the cut is the vector
         \begin{equation}
   \operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}.
   \label{eq:semantic-endpoint}
@@ -1564,22 +1562,22 @@ $\pi_p^C$.  The
 The projection is a run when it contains no commitment from the basis.
 \end{definition}
 
-\paragraph{The semantic quotient.}
-The construction separates strategy state and message detail from semantic
-state.  Call two pointed histories \emph{semantically equivalent} when their
-pasts produce the same semantic endpoint.  Histories in one equivalence class
+\paragraph{The residual quotient.}
+The construction separates strategy state and message detail from residual
+state.  Call two pointed histories \emph{residual-equivalent} when their
+pasts produce the same residual endpoint.  Histories in one equivalence class
 may differ in message order, batching, and strategy state but agree on every
 participant's residual.  Taking the \emph{quotient} means treating each class
-as one semantic state, represented here by its endpoint vector.  This is a
+as one residual state, represented here by its endpoint vector.  This is a
 backward-looking classification of histories; the next proposition is
 forward-looking, saying that the endpoint determines every possible future
-semantic transition and its result.
+transition and its result.
 
-\begin{proposition}[Residuals determine semantic continuations]
+\begin{proposition}[Residual endpoints determine continuations]
 \label{prop:residual-quotient}
 Fix a specification, a participant set, and a commitment basis.  From any two
-well-formed pointed histories with the same semantic endpoint, a given future
-sequence of participant-local semantic transitions is applicable after one
+well-formed pointed histories with the same residual endpoint, a given future
+sequence of participant-local transitions is applicable after one
 history if and only if it is applicable after the other, and it produces the
 same residual states after both.
 \end{proposition}
@@ -1589,14 +1587,14 @@ Each participant's projection is fixed by its local event order.  Events at
 other participants and events deleted by the projection do not affect its
 residual.  Because every retained transition is a partial function of that
 residual, pointed histories with the same endpoint have the same subsequent
-semantic transitions available, with the same results.
+transitions available, with the same results.
 \end{proof}
 
 Thus everything the specification can ask about a Lamport history at a cut is
-contained in its semantic endpoint; message order, batching, and strategy
+contained in its residual endpoint; message order, batching, and strategy
 state are forgotten exactly when they do not change a residual.  Two
-semantically equivalent histories may still lead an implementation strategy
-to choose different next events; the proposition says that the same semantic
+residual-equivalent histories may still lead an implementation strategy
+to choose different next events; the proposition says that the same
 transitions remain applicable, not that the strategy will choose them.
 
 \paragraph{Confluence of a history.}
@@ -1607,8 +1605,8 @@ their current inputs.  Formally, fix a pointed history $(H,C)$ and a common
 refinement $j$ of those inputs.  The history is \emph{confluent at $j$} when
 it has a well-formed extension using input and output events whose endpoint is
 the uniform vector $(\sigma_j)_{p\in P}$ for one residual state
-$\sigma_j=(j,R)$.  Thus every participant reaches the same semantic state at
-$j$.  This is an existence claim about semantic continuations, not a claim
+$\sigma_j=(j,R)$.  Thus every participant reaches the same residual state at
+$j$.  This is an existence claim about transition continuations, not a claim
 that a protocol delivers $j$, communicates, or terminates.
 
 \subsection{The Complete CALM theorem}
@@ -1631,7 +1629,7 @@ For an ordered relational specification, the following are equivalent:
   \item it is consistent: its runs are confluent
         (Definition~\ref{def:consistency});
   \item for every finite participant set, every well-formed pointed history
-        $(H,C)$ whose semantic projections are runs---no commitment from the
+        $(H,C)$ whose transition projections are runs---no commitment from the
         basis occurs before the cut---is confluent at every common refinement
         of the participants' current inputs.
 \end{enumerate}
@@ -1661,7 +1659,7 @@ hence Lifted Monotonicity.
 
 \emph{(2) and (3).}  By Proposition~\ref{prop:residual-quotient}, the
 endpoint of $(H,C)$ is the vector of final states of the participants'
-semantic projections, each a run,
+transition projections, each a run,
 and what each participant can do next depends only on its coordinate.  If
 runs are confluent, Proposition~\ref{prop:confluence} gives $u$ in the
 intersection of the participants' fibers at $j$, and extending $H$ by an
@@ -1674,7 +1672,7 @@ every run's final state.
 \end{proof}
 
 The theorem is direct from the definitions.  Its content is the
-identification: the one semantic obstruction to confluence is a finite family
+identification: the one obstruction to confluence is a finite family
 of admissible rows with no admitted common refinement at a common input
 refinement.  When none exists, participants may expose the outputs they
 have, in whatever order input arrives, and remain reconcilable, though the
@@ -1806,12 +1804,12 @@ changes whether monotonicity or Directed Outputs holds.
 \begin{table*}[t]
   \centering
   \footnotesize
-  \caption{Coordination results in the common semantic model.}
+  \caption{Coordination results in the common model.}
   \label{tab:instances}
   \begin{tabular}{@{}p{.105\textwidth}p{.17\textwidth}p{.17\textwidth}
                   p{.15\textwidth}p{.315\textwidth}@{}}
     \toprule
-    Setting & Input and order & Visible output & Semantic shape &
+    Setting & Input and order & Visible output & Specification shape &
       Common refinement or failure \\
     \midrule
     Query CALM
@@ -1855,15 +1853,15 @@ $J\mapsto Q(J)$.  Relational-transducer CALM proves the operational result for
 that language: monotone queries admit coordination-free evaluation under its
 data-placement and execution assumptions
 ~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
-that theorem.  It isolates the semantic order-preservation property so that it
+that theorem.  It isolates the order-preservation property so that it
 can be compared with interfaces outside Datalog.
 
 Why did earlier CALM results not state Directed Outputs separately?  Their
-semantic query specification is functional: each input $J$ has one result
+query specification is functional: each input $J$ has one result
 $Q(J)$, so each output fiber is a singleton and directed automatically.
 CRDTs also present a functional state for a fixed set of incorporated
 updates; semilattice join additionally provides least common refinements across
-partial inputs.  Complete CALM makes multiple semantic outputs at one input explicit,
+partial inputs.  Complete CALM makes multiple outputs at one input explicit,
 so directedness can no longer be assumed.
 
 \subsection{CRDTs: from convergent state to safe observations}
@@ -2057,15 +2055,15 @@ lessons and scope limits.
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Semantic choice versus operational nondeterminism}
+\subsection{Output choice versus operational nondeterminism}
 
-Output choice in Complete CALM concerns the semantic interface, not whether
+Output choice in Complete CALM concerns the declared interface, not whether
 executions are deterministic.  CALM and CRDTs already account for operational nondeterminism in message delivery, batching, retries, and
 merge order.  Their usual declared outputs are fixed for a given input.  Complete CALM
-adds specifications whose semantic interface itself offers several outputs and
+adds specifications whose declared interface itself offers several outputs and
 models the commitments that resolve them.
 
-\subsection{A semantic criterion, not an implementation discipline}
+\subsection{A criterion on specifications, not an implementation discipline}
 
 The input/output relation and its two refinement orders omit internal
 computation.  This is useful for stating a common boundary and insufficient for
@@ -2096,8 +2094,8 @@ changes the interface or system design; none is a loophole in the criterion.
 
 Read in the other direction, Proposition~\ref{prop:residual-quotient} is a
 design criterion.  Choosing
-the input domain and its order decides which histories the semantics treats as
-the same: two cuts yield one residual exactly when they reach the same input
+the input domain and its order decides which histories the specification treats
+as the same: two cuts yield one residual exactly when they reach the same input
 and have removed the same rows.  A finer input order forgets less of the
 execution and obliges the specification to say more; a coarser one forgets
 more.  The specification then states admissible outcomes over residuals,
@@ -2176,7 +2174,7 @@ and~\ref{sec:iconfluence-instance}.
 \section{Conclusion}
 \label{sec:conclusion}
 
-A semantic specification abstracts distribution away.  Functional CALM asks when
+A specification abstracts distribution away.  Functional CALM asks when
 a functional specification can be implemented over distributed input arrival
 without coordination: monotonicity means no seal is needed.  This generalizes the
 classic result from logical fact sets to arbitrary input and output refinement
@@ -2202,7 +2200,7 @@ with one another.
 \label{app:deployment}
 
 Theorem~\ref{thm:complete-cap} (Complete CAP) quantifies over all participants
-and inputs.  Whether a commitment is necessary is a semantic question; whether
+and inputs.  Whether a commitment is necessary is a question about the specification; whether
 it requires agreement across a partition also depends on \emph{deployment}:
 which participant may hold which input and select which row.  A participant
 that controls an entire choice may make the commitment locally.  This appendix
@@ -2372,7 +2370,7 @@ The basis of 2PL is $\Phi_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{commit},
 $\Phi_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{commit},\mathsf{abort}\}$, each
 ranging over all transactions.  A protocol is a policy for applying its basis;
 computation decides which commitment to apply, and the commitment is the
-semantic act.
+irrevocable act.
 
 \paragraph{Two-phase locking.}
 When $B$ requests a lock on an item that $A$ holds in a conflicting mode, $B$
@@ -2511,7 +2509,7 @@ Its unpruned output is
         \end{equation}
 Equivalently, each original row $(j,o)$ contributes $o$ to the transformed row
 at every $i\succeq_I j$.  Literal union remembers all rows; the pointwise lift
-captures their semantic coverage.  In particular, one retained output may cover
+captures which outputs they cover.  In particular, one retained output may cover
 many remembered rows by refining them.
 
 Call $A:I\to\mathcal P(O)$ a \emph{powerset relaxation} of $X$ when
@@ -2522,7 +2520,7 @@ $i\InputOrd j$ implies $A(i)\LiftedOutputOrd A(j)$.
 \begin{theorem}[Remembered-output frontier]
 \label{thm:monotone-hull}
 The map $X^\uparrow$ is a monotone powerset relaxation.  Moreover, every monotone
-powerset relaxation $A$ semantically covers every output admitted so far:
+powerset relaxation $A$ covers every output admitted so far:
         \begin{equation}
   X^\uparrow(i)\LiftedOutputOrd A(i)
   \qquad\text{for every }i.
@@ -2556,7 +2554,7 @@ which proves minimality and uniqueness.
 
 The theorem's perhaps surprising content is minimality.  Remembering all prior
 outputs is an obvious safe construction, but every monotone relaxation must
-preserve their semantic content.  Dominance is the only free pruning available
+preserve their content under the output order.  Dominance is the only free pruning available
 when representatives must come from the remembered outputs; further pruning
 requires introducing some other admitted output that refines what was removed.
 
@@ -2606,7 +2604,7 @@ in $R(h)$, namely its current forwarding path:
   \label{eq:forwarding-hull}
         \end{equation}
 Theorem~\ref{thm:monotone-hull} says that any monotone relaxation must provide
-this semantic coverage.  Current forwarding paths may compact many obsolete
+this coverage.  Current forwarding paths may compact many obsolete
 certificates by dominating them, just as in Table~\ref{tab:lookup-lift}.  This is deliberately a
 split-only statement.  Full implementations with deletion, merging, or memory
 reclamation must prove stronger lifetime invariants or coordinate before old
@@ -2703,7 +2701,7 @@ local behavior.
 
 The examples below show how the same two questions recur in classical
 distributed tasks: can each choice survive more input, and can independent
-choices survive together?  We isolate those semantic obstructions here.  The
+choices survive together?  We isolate those obstructions here.  The
 results do not replace model-specific theorems about failures, computability, or
 termination.
 
@@ -2725,13 +2723,13 @@ and decisions $D$ indexed by epoch and slot.  Define refinement by
 Protocol safety ensures that a later certificate extends the unique lineage and
 preserves prior decisions.  Public authority changes are therefore refinements,
 not revisions: votes, certificates, epochs, and decisions all accumulate after
-the initial semantic commitment.
+the initial commitment.
 
 This statement does not claim that later certificates are free.  Producing one
 may require communication and agreement.  It says something more specific:
-later protocol work does not choose among remaining semantic branches or
+later protocol work does not choose among remaining output alternatives or
 retract a public result.  If the first commitment did not fix a unique
-succession rule, competing next epochs would present another semantic choice
+succession rule, competing next epochs would present another output choice
 and require another commitment.
 
 \subsection{Why $k$-set agreement needs finite families}
@@ -2753,7 +2751,7 @@ Monotonicity.  If a partition lets the owners decide independently, the
 same family witnesses the negative side of Complete CAP.  Consensus is the
 special case $k=1$.
 
-This argument identifies the semantic incompatibility.  Classical wait-free and
+This argument identifies the incompatibility in the specification.  Classical wait-free and
 topological impossibility theorems additionally depend on a computation model,
 failure assumptions, and progress requirements~\cite{saks2000set}.
 
@@ -2787,7 +2785,7 @@ hierarchy adds model-specific topological and wait-free conclusions
 
 \subsection{What does a snapshot promise?}
 
-The word ``snapshot'' covers interfaces with very different semantic strength.
+The word ``snapshot'' covers interfaces with very different interface strength.
 Consider inputs that are finite downward-closed causal histories, ordered by
 induced extension.  A modest \emph{cut} interface outputs a finite
 downward-closed subset of the available history as a lower bound on what has
