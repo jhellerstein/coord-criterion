@@ -50,33 +50,35 @@
 }
 
 \begin{abstract}
-When does a concurrent system require coordination?  Prior results such
-as CAP, CALM, HATS and Invariant Confluence each answer a version of this question in
-a different model. Meanwhile, conventional
-wisdom has extracted conclusions that drift beyond the results the papers prove.
-We close this gap with a unified specification framework.  We model a specification as
-a table that captures exactly which outputs are within spec at each input,
-with separate partial orders for the inputs and outputs.  A computation state
-records the rows of that table that remain.  \emph{Functional
-CALM} first treats specifications with one output per input.  It generalizes
-the original CALM Theorem from Datalog queries to arbitrary ordered input and
-output domains: Consistency is equivalent to monotonicity.  We then realize
-runs as participants in Lamport histories and define \emph{Distributed
-Consistency} as confluence of their states.
+When does a concurrent system inherently require coordination?  CAP, CALM,
+CRDTs, Highly Available Transactions, and Invariant Confluence each draw a
+coordination boundary in a different mathematical language, and conventional
+wisdom has drifted from what the literature proves.  We give one framework for
+all of them: a specification is a table that says exactly which outputs are
+within spec at each input, with a separate refinement order on each column.  A
+computation state pairs the current input with the rows that remain.
 
-For \emph{ambiguous} specifications, which allow several outputs at one input,
-we lift the output order to sets.  \emph{Complete CALM} gives the general
-criterion: Consistency as confluence is equivalent to Lifted Monotonicity.
-Through transition projection, both are also equivalent to Distributed
-Consistency.  Under Lifted Monotonicity, every output at a reachable state is
-exposable without a commitment.  When it fails, selecting
-an offending output requires a commitment---our definition of coordination.
-In distributed executions, such a commitment requires agreement when another
-participant could select an excluded alternative.  \emph{Complete CAP} turns
-that distributed boundary into a dichotomy
-between Availability and Distributed Consistency under partitions.  CRDTs,
-Highly Available Transactions, and invariant confluence follow as instances of
-the framework.
+\emph{Functional CALM} generalizes the original CALM Theorem, replacing Datalog
+queries with arbitrary functions between ordered input and output domains:
+monotonicity characterizes exactly when output can be exposed consistently as
+input arrives.  We define Consistency as confluence of executions---different
+paths can still meet---and give it a distributed reading by projecting Lamport
+histories to participant states.  Distributed Consistency requires the
+participant paths to remain confluent at every cut.
+
+\emph{Complete CALM} extends Functional CALM to \emph{ambiguous} specifications
+that allow several outputs for one input, as leader election and transaction
+ordering do.  Complete CALM proves that Consistency is equivalent to
+\emph{Lifted Monotonicity}, monotonicity under an order lifted from outputs to
+sets of outputs; both are equivalent to Distributed Consistency.  Where Lifted
+Monotonicity holds, progress needs no commitment.  Where it fails, progress
+requires an irrevocable \emph{commitment}---our specification-level definition
+of coordination.  Such a commitment may be established by single-node
+mechanisms such as locks and atomics or by distributed protocols.  When
+participants can select conflicting alternatives, we show that it requires
+prior agreement.  Complete CALM yields a Complete CAP Theorem that extends
+classical CAP from a one-way impossibility about linearizability to a dichotomy
+parameterized by the declared specification and deployment.
 \end{abstract}
 
 \begin{CCSXML}
@@ -862,11 +864,15 @@ Section~\ref{sec:functional-calm-theorem}.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
-A run from $\sigma_0(i_0)$ whose final current input is $i$ and whose
-output events are $\mathsf{output}(o_1),\ldots,\mathsf{output}(o_m)$ ends at
+A run starts at $\sigma_0(i_0)$, ends with current input $i$, and exposes
+outputs $o_1,\ldots,o_m$.  Its final state is
         \begin{equation}
-  \bigl(i,\ \{(k,x)\in S:\ i\InputOrd k\ \text{and}\ o_\ell\OutputOrd x
-  \text{ for every }\ell\}\bigr).
+  \left(i,\ \left\{(k,x)\in S:
+    \begin{array}{l}
+      i\InputOrd k,\ \text{and}\\
+      o_\ell\OutputOrd x\ \text{for every }\ell
+    \end{array}
+  \right\}\right).
   \label{eq:run-residual}
         \end{equation}
 \end{lemma}
