@@ -18,7 +18,7 @@
 
 \newcommand{\InputOrd}{\preceq_I}
 \newcommand{\OutputOrd}{\preceq_O}
-\newcommand{\LiftedOutputOrd}{\preceq_O^{\mathcal P}}
+\newcommand{\LiftedOutputOrd}{\preceq_H}
 \newcommand{\JointOutputOrd}{\trianglelefteq}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
@@ -50,32 +50,33 @@
 }
 
 \begin{abstract}
-When does a system inherently require coordination?  CAP, CALM, CRDTs, Highly
-Available Transactions, and invariant confluence each draw a coordination
-boundary in a different mathematical language, and conventional wisdom has
-drifted from what the literature proves.  We give one framework for
-all of them: a specification is a table of admissible input--output pairs with
-ordered columns, and the state of a computation is the \emph{residual} of that
-table---the rows still admissible.
-\emph{Functional CALM} generalizes the
-original CALM Theorem, replacing Datalog queries with arbitrary functions
-between partially ordered input and output domains: monotonicity
-characterizes exactly when output can be exposed consistently as distributed
-input arrives.
-\emph{Complete CALM} extends this to \emph{ambiguous} specifications that admit several outputs
-for one input, as leader election and transaction ordering do.  Complete CALM
-shows that the Lamport histories of a system implementing such a
-specification are consistent, in the sense of confluence---participants that
-have exposed outputs on different inputs can always be brought to a common
-state---exactly when the specification satisfies \emph{Lifted Monotonicity},
-monotonicity under an order lifted from outputs to sets of outputs.  Where Lifted Monotonicity
-fails, progress requires an irrevocable \emph{commitment}, and only
-commitments require coordination.  Complete CALM yields a Complete CAP
-Theorem that extends classical CAP from a one-way impossibility about
-linearizability to a dichotomy parameterized by the declared specification
-and the deployment.  The remaining sections place CRDTs, Highly Available
-Transactions, invariant confluence, and classical distributed  agreement problems in this
-framework as instances of the two theorems.
+When does a concurrent system require coordination?  Prior results such
+as CAP, CALM, HATS and Invariant Confluence each answer a version of this question in
+a different model. Meanwhile, conventional
+wisdom has extracted conclusions that drift beyond the results the papers prove.
+We close this gap with a unified specification framework.  We model a specification as
+a table that captures exactly which outputs are within spec at each input,
+with separate partial orders for the inputs and outputs.  A computation state
+records the rows of that table that remain.  \emph{Functional
+CALM} first treats specifications with one output per input.  It generalizes
+the original CALM Theorem from Datalog queries to arbitrary ordered input and
+output domains: Consistency is equivalent to monotonicity.  We then realize
+runs as participants in Lamport histories and define \emph{Distributed
+Consistency} as confluence of their states.
+
+For \emph{ambiguous} specifications, which allow several outputs at one input,
+we lift the output order to sets.  \emph{Complete CALM} gives the general
+criterion: Consistency as confluence is equivalent to Lifted Monotonicity.
+Through transition projection, both are also equivalent to Distributed
+Consistency.  Under Lifted Monotonicity, every output at a reachable state is
+exposable without a commitment.  When it fails, selecting
+an offending output requires a commitment---our definition of coordination.
+In distributed executions, such a commitment requires agreement when another
+participant could select an excluded alternative.  \emph{Complete CAP} turns
+that distributed boundary into a dichotomy
+between Availability and Distributed Consistency under partitions.  CRDTs,
+Highly Available Transactions, and invariant confluence follow as instances of
+the framework.
 \end{abstract}
 
 \begin{CCSXML}
@@ -102,11 +103,14 @@ framework as instances of the two theorems.
 \section{Introduction}
 \label{sec:intro}
 
-Coordination occurs when one participant must wait for decisions or agreement
-from another before acting.  The wait adds latency and can destroy availability
-when the needed communication crosses a network partition.  Avoiding
-unnecessary coordination is therefore a central goal in distributed systems
-and databases.  This paper asks which specifications intrinsically require it.
+Concurrent systems coordinate when they make a binding choice that rules out
+behavior still within spec.  A mutex can establish which thread acts first; a
+lock can order conflicting transactions; atomic commit or consensus can choose
+among distributed outcomes.  These mechanisms differ, but each can serve the
+same specification-level role: making an irrevocable \emph{commitment}.
+Coordination adds synchronization, blocking, or aborts; across a network
+partition it can also destroy availability.  This paper asks which
+specifications intrinsically require any such commitment.
 
 The CALM Conjecture proposed a crisp, bidirectional answer: consistency can be
 achieved without coordination exactly when the computation is
@@ -140,17 +144,16 @@ Section~\ref{sec:instances} answer the others.
 We begin by introducing a general notion of specification, agnostic to any
 language or implementation details.  It is consistent with state-machine-style
 specifications and can be compiled from them
-(Section~\ref{sec:complete-calm}); what it elides is the incidental detail of
+(Section~\ref{sec:design-boundary}); what it elides is the incidental detail of
 execution order, keeping only what the specification can ask about.  A
 \emph{functional ordered specification}
 (\S\ref{sec:functional-specifications}) is an arbitrary function
 \(f:(I,\InputOrd)\to(O,\OutputOrd)\) between a partially ordered input domain
 and a separately partially ordered output domain, monotone in the standard
-sense when \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\).  Distributed
-implementations make input arrival uncertain: participants hold different
-input refinements, received in different orders and batches.  Monotonicity
-says that output exposed from any one of them remains valid as more input
-arrives; without it, exposing an output first requires sealing off the inputs
+sense when \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\).  Concurrent
+executions make input arrival uncertain: different paths may see different
+input refinements, in different orders and batches.  Monotonicity says that an
+output exposed on any path remains valid as more input arrives; without it, exposing an output first requires sealing off the inputs
 that could contradict it.
 
 Our first step, \emph{Functional CALM} (\S\ref{sec:functional-calm-theorem}),
@@ -161,32 +164,42 @@ including query evaluation and the usual CRDT state interface.  ``Functional''
 means only that each input has one specified output; execution may
 be as nondeterministic as it likes.
 
-Our second step addresses a case those interfaces do not raise: the
-specification itself may be \emph{ambiguous}---formally
-allowing several distinguishable outputs for one input.  Leader election may
+We then develop two orthogonal extensions.  First, we give Consistency its
+distributed reading (Section~\ref{sec:distributed-execution}).  Lamport
+histories place one run at each participant; transition projection removes
+delivery and strategy details, and Distributed Consistency asks whether the
+resulting participant states can meet.  This step applies to functional and ambiguous
+specifications alike.
+
+Second, we address a case functional interfaces do not raise: the specification
+itself may be \emph{ambiguous}---formally allowing several distinguishable
+outputs for one input.  Leader election may
 allow any participant to be eligible; a database may permit several serial
 schedules.  The specification is then a relation \(S\subseteq I\times O\)
 (\S\ref{sec:relational-specifications}), and the \emph{fiber}
-\(\fiber{i}=\{o:(i,o)\in S\}\) is the set of outputs admitted at input \(i\).
+\(\fiber{i}=\{o:(i,o)\in S\}\) is the set of outputs within spec at input \(i\).
 
 Moving from a function to a relation, the question is still monotonicity, now
-of the sets of admitted outputs: \(\fiber{i}\) refines to \(\fiber{j}\) when
-every finite set of outputs admitted at \(i\) lies below a single output
-admitted at \(j\).  Monotonicity of the fiber map under this lift is
+of these output sets: \(\fiber{i}\) refines to \(\fiber{j}\) when
+every finite set of outputs within spec at \(i\) lies below a single output
+within spec at \(j\).  Monotonicity of the fiber map under this lift is
 \emph{Lifted Monotonicity} (\S\ref{sec:complete-calm-criterion}).  It asks
-both that outputs keep growing as input grows and that the alternatives
-admitted at one input can coexist.  Where it fails, progress must rule out an
-alternative, a step we call a \emph{commitment}
-(Definition~\ref{def:transition-system}), and participants who could commit
-incompatibly must coordinate first.  Complete CALM shows that Lifted
-Monotonicity is exactly confluence of the system's Lamport histories: whatever
-outputs participants expose, in whatever order input arrives, they can always be
-brought to a common state at any input combining theirs
+both that outputs keep growing as input grows and that the alternatives at one
+input can coexist.  Where it fails, progress must rule out an alternative, a step we call a
+\emph{commitment} (Definition~\ref{def:transition-system}) and take as the
+specification-level definition of coordination.  In a distributed execution,
+participants who could select incompatible alternatives must agree before one
+makes that commitment.  Complete CALM equates Consistency with Lifted
+Monotonicity.  Through the distributed reading, it also says that the system's
+Lamport histories are confluent: whatever outputs participants expose, in
+whatever order input arrives, they can always be brought to a common state at
+any input combining theirs
 (\S\ref{sec:complete-calm-theorem}).
 
-We take this as what consistency should mean for a distributed system: not a
-particular consistency model, but confluence of whatever the specification
-admits.  The acronym then reads \emph{Consistency As Lifted Monotonicity}, and
+We take confluence as the general definition of Consistency: not a particular
+consistency model, but the property that whatever the specification allows can
+still reach a common state.  Distributed Consistency is its realization over
+participant histories.  The acronym then reads \emph{Consistency As Lifted Monotonicity}, and
 the original CALM Theorem is its functional case over relations and queries.
 
 Complete CALM also yields a Complete CAP Theorem
@@ -198,25 +211,26 @@ Linearizability becomes a special case on the tradeoff side.
 
 This paper makes four contributions:
 \begin{enumerate}
-  \item A framework for distributed computation: specifications as
-        relations with ordered inputs and outputs, \emph{residual states}
-        recording what remains admissible, and three transitions: input events,
+  \item A framework for concurrent computation: specifications as
+        relations with ordered inputs and outputs, specification states
+        recording what remains possible, and three transitions: input events,
         output events, and \emph{commitments}.  Transition projections reduce
-        Lamport histories to vectors of residual states, and
+        Lamport histories to vectors of participant states, and
         Section~\ref{sec:instances} shows
         that CRDTs, highly available transactions, and invariant confluence are
         instances of the framework.
   \item Functional CALM generalizes and proves the CALM Conjecture in the context of
         arbitrary functions, represented as ordered input/output specifications
         with separate input- and output-refinement partial orders.
-  \item Complete CALM extends the model to output choice, formalizes
-        output events and commitments, and proves that three conditions are
-        equivalent: Consistency, Lifted Monotonicity, and Distributed
-        Consistency over Lamport histories.  A monotone specification therefore
+  \item Complete CALM extends the model to output choice and identifies
+        coordination with commitment.  It proves that Consistency as confluence
+        is equivalent to Lifted Monotonicity; through transition projection,
+        both are equivalent to Distributed Consistency over Lamport histories.  A monotone specification therefore
         needs no coordination, since
         exposing outputs alone keeps its histories confluent; where monotonicity
-        fails, progress requires a commitment, and commitments are shown to
-        require coordination.  In partition form
+        fails, progress requires a commitment and therefore coordination.
+        When participants can select conflicting alternatives, that commitment
+        is shown to require agreement.  In partition form
         this is the Complete CAP Theorem,
         which extends the classical impossibility to a bidirectional dichotomy
         parameterized by the declared specification and the
@@ -229,11 +243,12 @@ This paper makes four contributions:
 \end{enumerate}
 
 Section~\ref{sec:functional-calm} introduces the framework on an election
-and develops Functional CALM.  Section~\ref{sec:complete-calm} introduces
-output choice on two further examples and develops commitment, Complete
-CALM, and Complete CAP.  Section~\ref{sec:instances} applies the
-results to familiar systems, and Section~\ref{sec:discussion} draws out the
-design lessons and scope limits.  Appendix~\ref{sec:frontiers} derives
+and develops Functional CALM.  Section~\ref{sec:distributed-execution} gives
+Consistency its distributed reading.  Section~\ref{sec:ambiguous-specifications}
+extends the framework to output choice, and Section~\ref{sec:complete-calm}
+combines the two extensions in Complete CALM and Complete CAP.
+Section~\ref{sec:instances} applies the results to familiar systems, and
+Section~\ref{sec:discussion} draws out the design lessons and scope limits.  Appendix~\ref{sec:frontiers} derives
 maximal coordination-free interfaces, and
 Appendix~\ref{app:additional-applications} gives further classical
 applications.
@@ -260,18 +275,19 @@ Section~\ref{sec:functional-calm-theorem} proves Functional CALM.
 
 We begin with an informal, example-driven treatment.
 Terms introduced in italics are defined formally in the rest of this section
-and in Section~\ref{sec:complete-calm}; italics also mark the occasional
+and in Sections~\ref{sec:distributed-execution}--\ref{sec:complete-calm};
+italics also mark the occasional
 standard term borrowed from database theory.  Nothing here is needed for the
-proofs, but every notion the Functional CALM theorem rests on---residual
+proofs, but every notion the Functional CALM theorem rests on---specification
 states, input events, retirement, commitments, upper fibers, determination,
 output events, runs, and consistency---is exercised on the example.
 
 Two mathematical objects are in play.  The first is an \emph{ordered
 specification} $\Spec=(I,\InputOrd,O,\OutputOrd,S)$: a table
-$S\subseteq I\times O$ of admissible input--output pairs, with a partial order
-on each column.  The specification stands alone, and the theorems are about
-it.  The second is needed to model many systems faithfully: a
-\emph{commitment basis} $\Phi=\{p_1,p_2,\ldots\}$ of partial functions on
+$S\subseteq I\times O$ that captures exactly which outputs are within spec at
+each input, with a partial order on each column.  The specification stands
+alone, and the theorems are about it.  The second is needed to model many systems faithfully: a
+\emph{commitment basis} $\mathcal B=\{c_1,c_2,\ldots\}$ of partial functions on
 the states defined below, the irrevocable acts the system is permitted to
 take on its own authority.  The election introduces the specification first;
 the commitment basis first appears when we want to allow the registrar to close the polls.
@@ -282,45 +298,45 @@ the commitment basis first appears when we want to allow the registrar to close 
   \newcommand{\rowhdr}{\toprule Input & Output \\ \midrule}
   \setlength{\tabcolsep}{6pt}
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(a) Initial state, current input $a\cdot\cdot$}\\
+    \multicolumn{2}{@{}l}{(a) Initial state, current input $x\cdot\cdot$}\\
     \rowhdr
-    \sh{$\mathbf{a\cdot\cdot}$} & \sh{$\bot$} \\
-    $ab\cdot$ & \sh{$\bot$} \\
-    $aba$ & \sh{$a$} \\
-    $abb$ & \sh{$b$} \\
-    $aa\cdot$ & \sh{$a$} \\
-    $aaa$ & \sh{$a$} \\
-    $aab$ & \sh{$a$} \\
+    \sh{$\mathbf{x\cdot\cdot}$} & \sh{$\bot$} \\
+    $xy\cdot$ & \sh{$\bot$} \\
+    $xyx$ & \sh{$a$} \\
+    $xyy$ & \sh{$b$} \\
+    $xx\cdot$ & \sh{$a$} \\
+    $xxx$ & \sh{$a$} \\
+    $xxy$ & \sh{$a$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,x,y\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(b) After $\mathsf{input}(ab\cdot)$}\\
+    \multicolumn{2}{@{}l}{(b) After $\mathsf{input}(xy\cdot)$}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
-    \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
-    $aba$ & \sh{$a$} \\
-    $abb$ & \sh{$b$} \\
-    \retired{$aa\cdot$} & \retired{$a$} \\
-    \retired{$aaa$} & \retired{$a$} \\
-    \retired{$aab$} & \retired{$a$} \\
+    \retired{$x\cdot\cdot$} & \retired{$\bot$} \\
+    \sh{$\mathbf{xy\cdot}$} & \sh{$\bot$} \\
+    $xyx$ & \sh{$a$} \\
+    $xyy$ & \sh{$b$} \\
+    \retired{$xx\cdot$} & \retired{$a$} \\
+    \retired{$xxx$} & \retired{$a$} \\
+    \retired{$xxy$} & \retired{$a$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,x,y\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(c) After $\mathsf{input}(aa\cdot)$ instead}\\
+    \multicolumn{2}{@{}l}{(c) After $\mathsf{input}(xx\cdot)$ instead}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
-    \retired{$ab\cdot$} & \retired{$\bot$} \\
-    \retired{$aba$} & \retired{$a$} \\
-    \retired{$abb$} & \retired{$b$} \\
-    \sh{$\mathbf{aa\cdot}$} & \sh{$a$} \\
-    $aaa$ & \sh{$a$} \\
-    $aab$ & \sh{$a$} \\
+    \retired{$x\cdot\cdot$} & \retired{$\bot$} \\
+    \retired{$xy\cdot$} & \retired{$\bot$} \\
+    \retired{$xyx$} & \retired{$a$} \\
+    \retired{$xyy$} & \retired{$b$} \\
+    \sh{$\mathbf{xx\cdot}$} & \sh{$a$} \\
+    $xxx$ & \sh{$a$} \\
+    $xxy$ & \sh{$a$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined,}\\
     \multicolumn{2}{@{}l}{\footnotesize not sealed; $a$ is exposable}
@@ -329,19 +345,18 @@ the commitment basis first appears when we want to allow the registrar to close 
   \begin{tabular}[t]{@{}l c@{}}
     \multicolumn{2}{@{}l}{(d) (b), then polls closed}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
-    \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
-    \retired{$aba$} & \retired{$a$} \\ \strikerow
-    \retired{$abb$} & \retired{$b$} \\ \strikerow
-    \retired{$aa\cdot$} & \retired{$a$} \\
-    \retired{$aaa$} & \retired{$a$} \\
-    \retired{$aab$} & \retired{$a$} \\
+    \retired{$x\cdot\cdot$} & \retired{$\bot$} \\
+    \sh{$\mathbf{xy\cdot}$} & \sh{$\bot$} \\
+    \retired{$xyx$} & \retired{$a$} \\ \strikerow
+    \retired{$xyy$} & \retired{$b$} \\ \strikerow
+    \retired{$xx\cdot$} & \retired{$a$} \\
+    \retired{$xxx$} & \retired{$a$} \\
+    \retired{$xxy$} & \retired{$a$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; sealed and}\\
     \multicolumn{2}{@{}l}{\footnotesize determined; $\bot$ is the result}
   \end{tabular}
-  \caption{The election specification and three residual states reached from
-  it.  Only rows above the input $a\cdot\cdot$ are shown.  The current input is
+  \caption{The election specification and three states reached from it.  Only rows above the input $x\cdot\cdot$ are shown.  The current input is
   in bold; shaded cells are the current input and the upper fiber at that
   input.  Gray: the row has been retired by an input or output event.
   Struck through: the row has been removed by a commitment; no remaining row
@@ -351,61 +366,58 @@ the commitment basis first appears when we want to allow the registrar to close 
 \end{figure*}
 
 \paragraph{A specification is a table.}
-A specification is a table of input--output pairs, listing the outputs
-admissible for each input; when the input column determines the output
+A specification is a table of input--output pairs, listing the possible outputs
+for each input; when the input column determines the output
 column, as for squaring with rows $(2,4)$, $(3,9)$, $(4,16),\ldots$, the
 specification is \emph{functional}.  Everything that follows is a matter of
 removing rows from a specification, and for now ``the system'' is a single
-actor; who does what in a distributed implementation comes in
-Section~\ref{sec:complete-calm}.
+actor; Section~\ref{sec:distributed-execution} assigns these actions to
+participants.
 
 Figure~\ref{fig:election-frames}(a) is the specification of a small election.
-Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
-$b$; the result is whichever candidate has two ballots, and $\bot$ (no result
+Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
+$y$; the result is whichever candidate has two ballots, and $\bot$ (no result
 yet) until one does.  An input represents the
 ballots seen so far, written as a three-letter string whose $k$th position holds
-$v_k$'s ballot or a dot if it has not arrived; only rows above $a\cdot\cdot$,
-where $v_1$ has voted $a$, are shown.  The first row says that with $v_1$'s
-ballot alone the result is $\bot$; row $aa\cdot$ says that once $v_2$ also votes
-$a$ the result is $a$; row $abb$ says that if $v_2$ and $v_3$ both vote $b$ the
-result is $b$.
+$v_k$'s ballot or a dot if it has not arrived; only rows above $x\cdot\cdot$,
+where $v_1$ has voted $x$, are shown.  The first row says that with $v_1$'s
+ballot alone the result is $\bot$; row $xx\cdot$ says that once $v_2$ also votes
+$a$ the result is $x$; row $xyy$ says that if $v_2$ and $v_3$ both vote $b$ the
+result is $y$.
 
 The rows are only part of the specification.  Each column also carries a
 partial order, and both orders are design decisions.  The \emph{input order}
-says what counts as more input: here, more ballots, so $ab\cdot$ \emph{refines}
-$a\cdot\cdot$, while $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output
+says what counts as more input: here, more ballots, so $xy\cdot$ \emph{refines}
+$x\cdot\cdot$, while $xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output
 order} says when a later output keeps every promise an earlier one made: here
 $\bot$ lies below both $a$ and $b$, so ``no result yet'' can eventually refine
-to a winner, but $a$ and $b$ are incomparable, so neither winner refines the
+to a winner, but $x$ and $y$ are incomparable, so neither winner refines the
 other.  A
 different design could make all outputs incomparable, so that every result is
 final; we return to that choice below.  Given these orders, one can follow any input
-upward through its refinements, say $a\cdot\cdot$ to $ab\cdot$ to $aba$: the
+upward through its refinements, say $x\cdot\cdot$ to $xy\cdot$ to $xyx$: the
 output climbs too, from $\bot$ to $a$, and never steps down or sideways.  That
 is what it means for the \emph{specification} to be \emph{monotone}, a property
 of the rows together with the orders.
 
 \paragraph{Input arrives.}
 Now $v_2$'s ballot arrives, for $b$; panel (b) shows the result.  The
-\emph{current input}, the ballots seen so far, has advanced from $a\cdot\cdot$
-to $ab\cdot$, shown in bold.  What an input event does to the specification
+\emph{current input}, the ballots seen so far, has advanced from $x\cdot\cdot$
+to $xy\cdot$, shown in bold.  What an input event does to the specification
 is governed by one rule: only the rows at the current input and its
-refinements remain, and every other row is \emph{retired}.  The specification
-with the retired rows removed is the \emph{residual specification}. A \emph{residual state}
-is a pair containing a residual specification and the current input: the account of
-what is still possible and of how far input has come.  Each panel shows one
-residual state, the residual specification as its rows and the current input
-in bold.  The inputs that still have rows are the \emph{valid} ones.
+refinements remain, and every other row is \emph{retired}.  Each state pairs the current input with the rows that remain: it records what
+is still possible and how far input has come.  Each panel shows one such state,
+with its remainder table and current input in bold.  The inputs that still have rows are the \emph{valid} ones.
 The environment produces input events; the system does not choose them.  The
 system combines an arriving cumulative input $a$ with its current input $i$
-using a system-defined operation $\mathsf{advance}(i,i_{\mathrm{in}})=j$, and records the
+using a system-defined operation $\mathsf{advance}(i,a)=j$, and records the
 result as $\mathsf{input}(j)$, whether $a$ arrived directly or in a message.
-The residual state depends only on the input reached, not on the order or
+The state depends only on the input reached, not on the order or
 grouping in which the ballots arrived.  In panel (b) the input has grown
-from $a\cdot\cdot$ to $ab\cdot$, so the row at $a\cdot\cdot$ is retired; the
-rows at $aa\cdot$, $aaa$, and $aab$ are retired because no input refines both
-$aa\cdot$ and $ab\cdot$.  The retired output $\bot$ at $a\cdot\cdot$ is
-refined by the $\bot$ at $ab\cdot$, so growing the input lost nothing the
+from $x\cdot\cdot$ to $xy\cdot$, so the row at $x\cdot\cdot$ is retired; the
+rows at $xx\cdot$, $xxx$, and $xxy$ are retired because no input refines both
+$xx\cdot$ and $xy\cdot$.  The retired output $\bot$ at $x\cdot\cdot$ is
+refined by the $\bot$ at $xy\cdot$, so growing the input lost nothing the
 smaller input's output claimed; this is a consequence of the monotonicity
 observed above.
 
@@ -414,36 +426,35 @@ While input may still grow, what matters is not only the current row but what
 any input that could still arrive might require.  The future of the election
 is its current input together with its valid input refinements, and the outputs of
 those rows form the current input's \emph{upper fiber}.  In
-panel (b) those rows are the current row and the two refinements $aba$ and
-$abb$ in which $v_3$ votes, so the upper fiber, shaded, is $\{\bot,a,b\}$:
+panel (b) those rows are the current row and the two refinements $xyx$ and
+$xyy$ in which $v_3$ votes, so the upper fiber, shaded, is $\{\bot,x,y\}$:
 either candidate could still win.
 
-Panel (c) shows the alternative in which $v_2$ voted $a$.  The rows at or
-above $aa\cdot$ all say $a$, so the upper fiber is the singleton $\{a\}$ and
+Panel (c) shows the alternative in which $v_2$ voted $x$.  The rows at or
+above $xx\cdot$ all say $a$, so the upper fiber is the singleton $\{x\}$ and
 the current input is \emph{determined}: it fixes the output regardless of what
 ballot $v_3$ could cast.  Narrowing the upper fiber until a single output
-remains is what we call \emph{determination}.  Here input arrival determined the residual
-on its own; below we meet the case where the system must act.
+remains is what we call \emph{determination}.  Here input arrival determined the state on its own; below we meet the case where the system must act.
 
 \paragraph{Commitments.}
 Return to panel (b) and let the registrar close the polls: $v_3$'s ballot,
 should it arrive, will not be counted.  Panel (d) shows the result.  The rows
-at $aba$ and $abb$ are removed although no ballot arrived and the current
+at $xyx$ and $xyy$ are removed although no ballot arrived and the current
 input has not changed: those inputs have been rendered invalid.  This is a
 \emph{commitment}, specifically an \emph{input-sealing commitment}, and it is
 an act of the system rather than of the environment.  It
-irrevocably disallows refinements the original specification admitted.
+irrevocably rules out refinements that were within spec.
 Nothing in the specification says whether the registrar may do this.  That is
 part of the second mathematical object mentioned above: the commitment basis.
 A faithful model of an election whose polls can close
-includes, alongside $\Spec$, a commitment basis $\Phi$ containing this act,
+includes, alongside $\Spec$, a commitment basis $\mathcal B$ containing this act,
 and a model of one whose polls cannot close omits it.  Only the system may
-perform a commitment, and only one in $\Phi$.  Afterward no refinement of
-$ab\cdot$ remains valid, and its upper fiber has collapsed to $\{\bot\}$, so
+perform a commitment, and only one in $\mathcal B$.  Afterward no refinement of
+$xy\cdot$ remains valid, and its upper fiber has collapsed to $\{\bot\}$, so
 it too is determined.
-For a functional specification, input-sealing commitments like this one are the only kind
-of commitment there is.  The next section considers additional commitments that arise
-when an input can be associated with many outputs.
+For a functional specification, input-sealing commitments like this one are
+the only kind of commitment there is.  Section~\ref{sec:ambiguous-specifications}
+adds choice commitments when an input can be associated with many outputs.
 
 \begin{figure}[t]
   \centering
@@ -453,20 +464,20 @@ when an input can be associated with many outputs.
     \multicolumn{2}{@{}l}{(e) As (a), all outputs incomparable, polls closed}\\
     \toprule
     Input & Output \\ \midrule
-    \sh{$\mathbf{a\cdot\cdot}$} & \sh{$\bot$} \\
-    \retired{$ab\cdot$} & \retired{$\bot$} \\ \strikerow
-    \retired{$aba$} & \retired{$a$} \\ \strikerow
-    \retired{$abb$} & \retired{$b$} \\ \strikerow
-    \retired{$aa\cdot$} & \retired{$a$} \\ \strikerow
-    \retired{$aaa$} & \retired{$a$} \\ \strikerow
-    \retired{$aab$} & \retired{$a$} \\ \strikerow
+    \sh{$\mathbf{x\cdot\cdot}$} & \sh{$\bot$} \\
+    \retired{$xy\cdot$} & \retired{$\bot$} \\ \strikerow
+    \retired{$xyx$} & \retired{$a$} \\ \strikerow
+    \retired{$xyy$} & \retired{$b$} \\ \strikerow
+    \retired{$xx\cdot$} & \retired{$a$} \\ \strikerow
+    \retired{$xxx$} & \retired{$a$} \\ \strikerow
+    \retired{$xxy$} & \retired{$a$} \\ \strikerow
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined;}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
   \end{tabular}
   \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
-  incomparable, after the registrar closes the polls at $a\cdot\cdot$.  Every
-  refinement of $a\cdot\cdot$ is removed by commitment.  Legend as in
+  incomparable, after the registrar closes the polls at $x\cdot\cdot$.  Every
+  refinement of $x\cdot\cdot$ is removed by commitment.  Legend as in
   Figure~\ref{fig:election-frames}.}
   \label{fig:nonmonotone-frame}
 \end{figure}
@@ -485,22 +496,21 @@ and $a$ is exposable in panel (c).
 
 \paragraph{When monotonicity fails.}
 Now change one thing: make all outputs incomparable, dropping
-$\bot\OutputOrd a,b$, so that an output refines only itself; this is the
+$\bot\OutputOrd x,y$, so that an output refines only itself; this is the
 \emph{equality order}.  The rows are the same, but in panels (a) and (b)
-nothing is exposable: $\bot$ no longer lies below the $a$ and $b$ in the upper
+nothing is exposable: $\bot$ no longer lies below the $x$ and $y$ in the upper
 fiber, so exposing it would remove every row whose output is $a$ or $b$, and
 with them every input at which a result is reached.  To expose anything, the
 registrar must first make an input-sealing commitment.
 Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
-$a\cdot\cdot$: every refinement is removed by commitment, the upper fiber
+$x\cdot\cdot$: every refinement is removed by commitment, the upper fiber
 collapses to $\{\bot\}$, and only now is $\bot$ exposable.  That contrast is
 Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
 specification can expose outputs as input arrives; a non-monotone one must
 first make a commitment.
 
-\paragraph{A transition system on residuals.}
-We now have all the moves.  Residual states are the states of a transition
-system, and its transitions are of three kinds: input events, made by the
+\paragraph{A transition system.}
+We now have all the moves.  The states above form a transition system, and its transitions are of three kinds: input events, made by the
 environment, and output events and commitments, made by the system.  Every panel
 of Figures~\ref{fig:election-frames} and~\ref{fig:nonmonotone-frame} is a
 state, and panels (b) through (e) are reached from (a) by one or two
@@ -508,18 +518,18 @@ transitions.  A \emph{run} is a sequence of input and output events from a
 starting input; it makes no commitment beyond what its output events remove.
 
 \paragraph{Consistency.}
-Two residual states reached by runs are \emph{confluent} when, at every input
-$k$ refining both of their current inputs, a single residual state with
+Two states reached by runs are \emph{confluent} when, at every input $k$
+refining both of their current inputs, a single state with
 current input $k$ is reachable from both: each is advanced to $k$ by an input
 event and then, by exposing an output there, to the same state.  The
 environment, not the system, decides which input $k$ arrives, so the two
 states must be able to meet at any of them.  In the election, runs with
 current inputs
-$a\cdot\cdot$ and $ab\cdot$ have each exposed $\bot$; advancing both to $aba$
+$x\cdot\cdot$ and $xy\cdot$ have each exposed $\bot$; advancing both to $xyx$
 and exposing $a$ brings them to the same state.  Under the equality order, a
-run that exposes $\bot$ at $a\cdot\cdot$---an output that is not exposable
-there---would remove the row at $aba$, so no input event could advance it to
-$aba$, and it could never meet the run that received $v_2$'s ballot there:
+run that exposes $\bot$ at $x\cdot\cdot$---an output that is not exposable
+there---would remove the row at $xyx$, so no input event could advance it to
+$xyx$, and it could never meet the run that received $v_2$'s ballot there:
 the two states would not be confluent.
 Confluence of runs is what the CALM literature means by consistency, and we
 take it as the definition: a specification is \emph{consistent} when its runs
@@ -545,9 +555,9 @@ for Complete CALM.
     \addlinespace
     \textbf{Transition system} & & \\
     \midrule
-    residual state & $(i,R)$: \ $R\subseteq S$, \ $R(i)\neq\varnothing$, \ $R(k)=\varnothing$ unless $i\InputOrd k$ & Def.~\ref{def:residual-state} \\
+    specification state & $(i,R)$: \ current input $i$ and remainder table $R\subseteq S$ & Def.~\ref{def:residual-state} \\
     initial state; upper fiber & $\sigma_0(i)=(i,\{(k,o)\in S: i\InputOrd k\})$; \quad $R^\uparrow(i)=\bigcup_{j\succeq_I i}R(j)$ & Eqs.~\ref{eq:canonical-initial-state}, \ref{eq:upper-fiber} \\
-    input advance & $\mathsf{advance}(i,i_{\mathrm{in}})=j$: combine current input $i$ with arriving input $i_{\mathrm{in}}$ & Eq.~\ref{eq:cumulative-advance} \\
+    input advance & $\mathsf{advance}(i,a)=j$: combine current input $i$ with arriving input $a$ & Eq.~\ref{eq:cumulative-advance} \\
     input event (environment) & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,\ R\mathbin{\upharpoonright_I}j)$, \quad $R\mathbin{\upharpoonright_I}j=\{(k,u)\in R: j\InputOrd k\}$ & Def.~\ref{def:transition-system} \\
     output event (system) & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,\ R\mathbin{\upharpoonright_O}o)$, \quad $R\mathbin{\upharpoonright_O}o=\{(k,u)\in R: o\OutputOrd u\}$; \ exposable iff it removes no row & Defs.~\ref{def:transition-system}, \ref{def:exposable} \\
     commitment (system) & $(i,R)\xrightarrow{p}(i,R')$, \ $R'\subsetneq R$, \ some removed $(k,x)$ has no $u\in R'(k)$ with $x\OutputOrd u$ & Def.~\ref{def:transition-system} \\
@@ -564,7 +574,7 @@ for Complete CALM.
     \bottomrule
   \end{tabular}
   \caption{Reference for Functional CALM: the functional specification,
-  transition system on residuals, commitments, and confluence result.}
+  transition system on specification states, commitments, and confluence result.}
   \label{fig:formalism-summary}
 \end{figure*}
 
@@ -606,12 +616,12 @@ This is the standard mathematical definition of a monotone function.  In
 systems terms, an output exposed from partial input remains valid as more input
 arrives.
 
-\subsection{A transition system on residuals}
+\subsection{A transition system on specification states}
 \label{sec:determination}
 
 Functional CALM is a statement about the runs of a transition system on
-residual states: they are confluent exactly when the specification is
-monotone.  This subsection defines that system.  Its states are residual
+specification states: they are confluent exactly when the specification is
+monotone.  This subsection defines that system.  Its states are specification
 states; its transitions are input events, output events, and commitments; a
 run is a sequence of input and output events; and consistency is confluence
 of runs.  The definitions follow the vocabulary of
@@ -619,31 +629,30 @@ Section~\ref{sec:election-story} and the panels of
 Figure~\ref{fig:election-frames}.  Section~\ref{sec:safe-exposure} extends
 the definitions to specifications with several outputs at one input.
 
-\paragraph{The specification as a table.}
-View the specification as a table $S\subseteq I\times O$ whose rows are the
-pairs $(i,f(i))$, one row at each input.  A subrelation $R\subseteq S$ has a
-row at $i$ when $(i,f(i))\in R$.  Execution never adds a row.  Everything that follows is a story about which
+\paragraph{The specification and remainder tables.}
+The graph $S\subseteq I\times O$ is the \emph{specification table}; its rows
+are the pairs $(i,f(i))$, one at each input.  During execution, $R\subseteq S$
+is the \emph{remainder table}; it has a row at $i$ when $(i,f(i))\in R$.  Execution never adds a row.  Everything that follows is a story about which
 rows have been removed from the table, and by what.
 
 Inputs are \emph{cumulative}: an input is everything seen so far, and
 $i\InputOrd j$ means that $j$ contains at least the information in $i$.  The
 specification sees inputs only through the domain, its order, and the outputs
-it admits for each; corrections, retractions, or conflicting ballots are
+it allows for each; corrections, retractions, or conflicting ballots are
 accommodated by designing the input domain to record them.  Write
 $k\prec_I i$ when $k\InputOrd i$ and $k\neq i$, and
 $\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$ for the refinements of $i$.
 
 \paragraph{States.}
-The states of our transition system are residuals of the initial specification and input.
-Every panel of Figure~\ref{fig:election-frames} is such a state: the specification
-with some rows removed, one input current.  In panel (b) the current input is
-$ab\cdot$ and every row whose input does not refine it has been removed; such
-rows are \emph{retired}.  A residual state obeys
+Each state pairs a current input with a table obtained by removing rows from
+$S$.  Every panel of Figure~\ref{fig:election-frames} is such a state.  In panel (b) the current input is
+$xy\cdot$ and every row whose input does not refine it has been removed; such
+rows are \emph{retired}.  A specification state obeys
 the following conditions.
 
-\begin{definition}[Residual state]
+\begin{definition}[Specification state]
 \label{def:residual-state}
-A \emph{residual state} is a pair $\sigma=(i,R)$ such that
+A \emph{specification state} is a pair $\sigma=(i,R)$ such that
 \begin{enumerate}
   \item $i\in I$ is the \emph{current input};
   \item $R\subseteq S$;
@@ -659,7 +668,7 @@ A \emph{residual state} is a pair $\sigma=(i,R)$ such that
           \label{eq:retired-input-absence}
         \end{equation}
 \end{enumerate}
-$R$ is the \emph{residual specification}.  An input $k$ is \emph{valid} when
+$R$ is the remainder table.  An input $k$ is \emph{valid} when
 $R$ has a row at $k$, and otherwise \emph{invalid}.
 \end{definition}
 
@@ -672,13 +681,12 @@ For an input $i$, the \emph{canonical initial state} is
   \label{eq:canonical-initial-state}
         \end{equation}
 the specification restricted to $i$ and its refinements.
-Figure~\ref{fig:election-frames}(a) is $\sigma_0(a\cdot\cdot)$.
+Figure~\ref{fig:election-frames}(a) is $\sigma_0(x\cdot\cdot)$.
 
-\begin{definition}[Transition system on residuals]
+\begin{definition}[Transition system on specification states]
 \label{def:transition-system}
-The \emph{transition system on residuals} of a specification has the residual
-states as its states.  Its transitions are partial functions on residual
-states of exactly three kinds.  Each is defined at a state only when the result
+The \emph{transition system on specification states} has specification states
+as its states.  Its transitions are partial functions of exactly three kinds.  Each is defined at a state only when the result
 satisfies Definition~\ref{def:residual-state}, and none adds a row.
 \begin{enumerate}
   \item \emph{Input event.}  For $j\in I$ with $i\InputOrd j$, the
@@ -705,22 +713,23 @@ satisfies Definition~\ref{def:residual-state}, and none adds a row.
           \label{eq:residual-refining-fibers}
         \end{equation}
         always defined, since $o$ itself remains at $i$.
-  \item \emph{Commitment.}  A commitment $p$, made by the system, keeps the
-        current input fixed and strictly restricts the residual, $p(i,R)=(i,R')$
+  \item \emph{Commitment.}  A commitment $c$, made by the system, keeps the
+        current input fixed and strictly restricts the remainder table,
+        $c(i,R)=(i,R')$
         with $R'\subsetneq R$, removing at least one row $(k,x)$ such that no
         retained output at $k$ refines $x$.  The system's \emph{commitment
         basis} is the set of commitments it may use.
-        A commitment is \emph{applicable} at $\sigma$ when $p(\sigma)$ is
+        A commitment is \emph{applicable} at $\sigma$ when $c(\sigma)$ is
         defined.
 \end{enumerate}
-A residual state is \emph{reachable} when it is obtained from some canonical
+A specification state is \emph{reachable} when it is obtained from some canonical
 initial state by a finite sequence of these transitions.
 \end{definition}
 
-Nothing else changes a residual state.  A system's \emph{strategy} chooses
-which output event or commitment to make, using the residual and any
+Nothing else changes a specification state.  A system's \emph{strategy} chooses
+which output event or commitment to make, using the specification state and any
 additional \emph{strategy state} it maintains.  Strategy state is not part of
-the residual state: it affects the residual only through the transition the
+the specification state: it affects the remainder table only through the transition the
 strategy selects.  A transition may remove rows or none at all, and taken row
 by row a removal is one of two things.
 
@@ -763,18 +772,18 @@ The system model supplies a partial function
         \begin{equation}
   \mathsf{advance}:I\times I\rightharpoonup I,
   \qquad
-  \mathsf{advance}(i,i_{\mathrm{in}})=j
+  \mathsf{advance}(i,a)=j
   \ \Longrightarrow\
   \begin{cases}
     i\InputOrd j,\\
-    i_{\mathrm{in}}\InputOrd j,
+    a\InputOrd j,
   \end{cases}
   \label{eq:cumulative-advance}
         \end{equation}
-where $i$ is the current input and $i_{\mathrm{in}}$ is an arriving
+where $i$ is the current input and $a$ is an arriving
 cumulative input.  The strategy computes $j$; this computation is not an
-event and does not itself change the residual.  The resulting
-$\mathsf{input}(j)$ is the input event, whether $i_{\mathrm{in}}$ came directly
+event and does not itself change the specification state.  The resulting
+$\mathsf{input}(j)$ is the input event, whether $a$ came directly
 from the environment or in a message.  For set-valued inputs advance is union; for a
 join-semilattice it is join.  The function is partial because two inputs need
 not have a common refinement, and it belongs to the system model because the
@@ -786,7 +795,7 @@ $\mathord\uparrow_I k\subseteq\mathord\uparrow_I j$, and $\mathsf{input}(i)$
 at $(i,R)$ is the identity.  Arrival order, batching, and repeated delivery
 therefore do not affect the state reached by input events alone; only the
 input reached matters.  Panel (b) is reached from panel (a) by
-$\mathsf{input}(ab\cdot)$ however $v_2$'s ballot was delivered.
+$\mathsf{input}(xy\cdot)$ however $v_2$'s ballot was delivered.
 
 \paragraph{Determination.}
 The shaded outputs in Figure~\ref{fig:election-frames} are those that the
@@ -796,7 +805,7 @@ $R\subseteq S$ and an input $i$, the \emph{upper fiber}
   R^\uparrow(i)=\{o\in O:\exists j\in I,\ i\InputOrd j\text{ and }(j,o)\in R\}
   \label{eq:upper-fiber}
         \end{equation}
-collects the outputs admitted at $i$ or at any still-valid refinement of $i$.
+collects the outputs that remain possible at $i$ or at any still-valid refinement of $i$.
 
 \begin{definition}[Determined input and determined state]
 \label{def:determination}
@@ -806,24 +815,25 @@ singleton:
   |R^\uparrow(i)|=1.
   \label{eq:determined-input}
         \end{equation}
-A residual state is \emph{determined} when its current input is determined.
+A specification state is \emph{determined} when its current input is determined.
 \end{definition}
 
 Determinedness is stronger than having one row at $i$: every input in the
 election has one row, yet panels (a) and (b) are undetermined because valid
 refinements disagree.  \emph{Determination} is also the name for the process
-by which a residual becomes determined, by input events alone as in panel (c)
+by which a state becomes determined, by input events alone as in panel (c)
 or, when they do not suffice, by commitments.
 
 \paragraph{Input-sealing commitments.}
-Figure~\ref{fig:election-frames}(d) removes the rows at $aba$ and $abb$ with
+Figure~\ref{fig:election-frames}(d) removes the rows at $xyx$ and $xyy$ with
 the current input fixed.  No input event does this; it is a commitment, an act
 of the system.  Every commitment is of one of two kinds: an
 \emph{input-sealing commitment} makes some valid input invalid, and a
 \emph{choice commitment} keeps every valid input valid and removes some of the
 rows at a valid input.  For a functional specification every commitment is
 input-sealing, since every input has one row and there is never an output to
-choose among; choice commitments appear with Section~\ref{sec:complete-calm}.  Once no strict refinement of the current input is valid,
+choose among; choice commitments appear in
+Section~\ref{sec:ambiguous-specifications}.  Once no strict refinement of the current input is valid,
 $R^\uparrow(i)=\{f(i)\}$: the state is determined.
 Whether an input-sealing commitment is available is part of the system model,
 not of the specification: it must be in the commitment basis.  A system that
@@ -832,10 +842,11 @@ keeps that row and has no such commitment to apply.  A commitment records the
 binding act, not the computation that selected it.
 
 \paragraph{Consistency.}
-The CALM literature's consistency is confluence: the outcome of a computation
-is the same whatever the order in which input arrives and whatever outputs
-were exposed along the way.  We state it as confluence of runs of the transition system,
-for any specification table $S\subseteq I\times O$, functional or not.
+We use Consistency in the general sense of confluence: states reached by
+different paths can still meet, whatever the order in which input arrives and
+whatever outputs were exposed along the way.  We state it as confluence of runs
+of the transition system, for any specification table $S\subseteq I\times O$,
+functional or not.
 
 \begin{definition}[Run]
 \label{def:run}
@@ -849,7 +860,7 @@ events a system may perform is taken up in
 Section~\ref{sec:functional-calm-theorem}.
 
 
-\begin{lemma}[Residual of a run]
+\begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
 A run from $\sigma_0(i_0)$ whose final current input is $i$ and whose
 output events are $\mathsf{output}(o_1),\ldots,\mathsf{output}(o_m)$ ends at
@@ -982,7 +993,7 @@ $f(i)$ is not exposable, and a system must first make an input-sealing
 commitment, as in Figure~\ref{fig:nonmonotone-frame}, before it may expose
 $f(i)$.  In the election, $a$ and $b$
 have no common upper bound, and none is required: monotonicity constrains only
-comparable inputs, and $aa\cdot$ and $ab\cdot$ have no common refinement
+comparable inputs, and $xx\cdot$ and $xy\cdot$ have no common refinement
 because ballots are immutable.
 
 This is the familiar CALM dichotomy stated at the specification interface rather than
@@ -1009,26 +1020,246 @@ Historically, CALM stands for \emph{Consistency As Logical Monotonicity},
 and its C has been read both as consistency and as confluence;
 Definition~\ref{def:consistency} is both.  Functional CALM states the result
 for any functional specification, regardless of the formalism used to express
-it; once specifications become relational in the next section, the
-monotonicity in question is Lifted Monotonicity.
+it.  Before dropping the functional dependency, we give this consistency
+condition a distributed interpretation.  Section~\ref{sec:distributed-execution}
+realizes runs as participant executions; the construction does not change the
+result and will apply unchanged when
+Section~\ref{sec:ambiguous-specifications} introduces output choice.
 
-Functional CALM handles uncertainty about input arrival, and prior to this work, that
-was the whole of CALM: one input, one answer, and monotonicity decides whether
-the answer can be exposed early.  Many specifications are not like that:
-the functional dependency
-fails, the system must choose among alternative outputs, and nothing so far says
-whether choosing requires coordination.  The next section answers that, and the answer is
-again a monotonicity condition.
+\section{Distributed Execution}
+\label{sec:distributed-execution}
 
-\section{Complete CALM: Output Choice and Coordination}
-\label{sec:complete-calm}
+Functional CALM defines Consistency as confluence of finite sets of runs.  We
+now realize those runs as participant executions in a distributed system.  The
+transition system does not change: Lamport histories add messages and cuts,
+transition projection reduces a cut to one specification state per participant, and
+Distributed Consistency asks whether those states can meet.
 
-An \emph{ambiguous} specification admits more than one output for an input.
-Complete CALM extends Functional CALM to this output choice.  We begin with two
-examples, then define Lifted Monotonicity and the relational transition system,
-model distributed executions as Lamport histories, project their cuts to
-residuals and define confluence, state Distributed Consistency, and identify
-the coordination boundary before proving Complete CALM and Complete CAP.
+\subsection{Lamport histories}
+\label{sec:histories}
+
+We begin by realizing runs as the local executions of participants.  This
+subsection adds messages and consistent cuts; the next projects each cut to the
+specification states relevant to the specification.
+
+\paragraph{Participants and runs.}
+A participant holds one specification state, changed only by its own input events, output
+events, and commitments; without a commitment, these transitions form a run.
+Participants may receive different inputs and expose different outputs.
+Consistency compares their runs whenever the current inputs have a common
+refinement, covering sharded systems as well as replicas.  Because input events
+compose, delivery order and batching do not affect a state reached by input
+events alone.
+
+\paragraph{Histories and consistent cuts.}
+A Lamport history records local events and the message edges between them.  A
+message $m=(i_m,s_m)$ has an optional cumulative-input component and arbitrary
+strategy data.  After a receive, the strategy may use $\mathsf{advance}$ to
+compute a later input event; neither the calculation nor the receive is that
+input event.  The external environment has no timeline in $H$: when it supplies
+$a$, the strategy computes
+$\mathsf{advance}(i,a)=j$ and the participant records
+$\mathsf{input}(j)$.
+\begin{definition}[Lamport history of the transition system]
+\label{def:distributed-history}
+Fix an ordered specification, a finite participant set $P$, a message set
+$M\subseteq(I\cup\{\mathsf{none}\})\times(D\cup\{\mathsf{none}\})$ for some set $D$
+of strategy data, an
+initial input $i_p$ for each $p\in P$, a cumulative-advance function
+(Equation~\ref{eq:cumulative-advance}), and a commitment basis.  A
+\emph{distributed history} $H$ consists of a finite set of events, together
+with:
+\begin{enumerate}
+  \item an assignment of each event to a participant $p\in P$, and a total
+        local order on the events assigned to each participant;
+  \item a label on each event: an input event $\mathsf{input}(j)$, an output
+        event $\mathsf{output}(o)$, a commitment from the basis, a send
+        $\mathsf{send}(m)$, or a receive $\mathsf{receive}(m)$; and
+  \item for each $\mathsf{receive}(m)$, a matching $\mathsf{send}(m)$ at
+        another participant.
+\end{enumerate}  The
+\emph{happens-before} order is the transitive closure of the local orders
+and the edges from sends to their matching receives.  A
+\emph{consistent cut} $C$ is a subset of events closed under happens-before
+~\cite{chandy1985distributed}.  (This textbook use of ``consistent'' is
+unrelated to consistency as confluence, which is a property of
+specifications.)
+\end{definition}
+
+Histories retain delivery and strategy details that the specification does not
+need.  We next project those details away and ask whether the resulting
+participant states can meet.
+
+\subsection{Transition projection and confluence}
+\label{sec:projection-confluence}
+
+The projection is easiest to see by comparing two histories with the same
+effect on their participants.
+
+\paragraph{Example: direct and forwarded input.}
+In Figure~\ref{fig:history-projection}, $p$ and $q$ start at
+$\sigma_0=(x\cdot\cdot,R_0)$ and receive cumulative input $xy\cdot$ directly
+from the environment or through a forwarded message.  The histories differ,
+but both participants reach $\sigma_1=(xy\cdot,R_1)$.
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[x=.82cm,y=.58cm,>=stealth,
+                      every node/.style={font=\footnotesize}]
+    % Direct delivery.
+    \node[anchor=west,font=\small] at (-1,7.2) {(a) Direct delivery $H_d$};
+    \node[anchor=east] at (.35,5.5) {$p$};
+    \node[anchor=east] at (.35,3.9) {$q$};
+    \node[anchor=west] at (.6,5.5) {$\sigma_0$};
+    \node[anchor=west] at (.6,3.9) {$\sigma_0$};
+    \draw[->] (1.4,5.5) -- (6.4,5.5);
+    \draw[->] (1.4,3.9) -- (6.4,3.9);
+    \fill (4.15,5.5) circle (1.7pt);
+    \fill (4.15,3.9) circle (1.7pt);
+    \node[below,fill=white,inner sep=.5pt] at (4.15,5.5)
+      {$\mathsf{input}(xy\cdot)$};
+    \node[above,fill=white,inner sep=.5pt] at (4.15,3.9)
+      {$\mathsf{input}(xy\cdot)$};
+    \node[anchor=east] at (1.8,6.2) {$\mathsf{env}$};
+    \node[anchor=east] at (1.8,3.2) {$\mathsf{env}$};
+    \draw[->] (1.95,6.14) -- node[midway,above,sloped,fill=white,inner sep=.5pt]
+      {$a=xy\cdot$} (4.03,5.65);
+    \draw[->] (1.95,3.26) -- node[midway,below,sloped,fill=white,inner sep=.5pt]
+      {$a=xy\cdot$} (4.03,3.75);
+    \draw[dashed] (6.45,3.55) -- (6.45,5.85);
+    \node[above] at (6.45,5.85) {$C_d$};
+    \node[anchor=west] at (6.6,5.5) {$\sigma_1$};
+    \node[anchor=west] at (6.6,3.9) {$\sigma_1$};
+
+    % Forwarded delivery.
+    \node[anchor=west,font=\small] at (-1,2.3) {(b) Forwarded delivery $H_f$};
+    \node[anchor=east] at (.35,.65) {$p$};
+    \node[anchor=east] at (.35,-.95) {$q$};
+    \node[anchor=west] at (.6,.65) {$\sigma_0$};
+    \node[anchor=west] at (.6,-.95) {$\sigma_0$};
+    \draw[->] (1.4,.65) -- (8.15,.65);
+    \draw[->] (1.4,-.95) -- (8.15,-.95);
+    \node[anchor=east] at (1.75,1.35) {$\mathsf{env}$};
+    \draw[->] (1.9,1.29) -- node[midway,above,sloped,fill=white,inner sep=.5pt]
+      {$a=xy\cdot$} (3.35,.8);
+    \fill (3.5,.65) circle (1.7pt);
+    \node[below,fill=white,inner sep=.5pt] at (3.5,.65)
+      {$\mathsf{input}(xy\cdot)$};
+    \fill (5.25,.65) circle (1.7pt);
+    \node[above,fill=white,inner sep=.5pt] at (5.25,.65)
+      {$\mathsf{send}(m)$};
+    \fill (6.0,-.95) circle (1.7pt);
+    \node[below,fill=white,inner sep=.5pt] at (6.0,-.95)
+      {$\mathsf{receive}(m)$};
+    \draw[->] (5.25,.53) -- node[midway,right,fill=white,inner sep=.5pt]
+      {$m=(xy\cdot,s_m)$} (5.95,-.8);
+    \fill (7.55,-.95) circle (1.7pt);
+    \node[below,fill=white,inner sep=.5pt] at (7.55,-.95)
+      {$\mathsf{input}(xy\cdot)$};
+    \draw[dashed] (8.2,-1.3) -- (8.2,1.0);
+    \node[above] at (8.2,1.0) {$C_f$};
+    \node[anchor=west] at (8.35,.65) {$\sigma_1$};
+    \node[anchor=west] at (8.35,-.95) {$\sigma_1$};
+  \end{tikzpicture}
+  \caption{Two distinct histories from $\sigma_0=(x\cdot\cdot,R_0)$ to
+  $\sigma_1=(xy\cdot,R_1)$.  The relations $R_0$ and $R_1$ are, respectively, the tables in panels (a) and (b) of
+  Figure~\ref{fig:election-frames}.  The environment supplies cumulative input $a=xy\cdot$.  The strategy
+  computes $\mathsf{advance}(x\cdot\cdot,xy\cdot)=xy\cdot$; the resulting
+  $\mathsf{input}(xy\cdot)$ is the participant event.  In (b), $q$ computes
+  the $\mathsf{advance}$ upon receiving $m=(xy\cdot,s_m)$.  Vertical dashed lines are consistent cuts.}
+  \label{fig:history-projection}
+\end{figure}
+
+The figure shows why we need a transition projection.  A Lamport history
+records sends, receives, and strategy state even when they make no difference
+to the specification state.  The projection filters each participant's history
+to the transitions that determine that state.
+
+\begin{definition}[Transition projection and state endpoint]
+\label{def:semantic-projection}
+For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
+to $p$ in local order.  Its \emph{transition projection} $\pi_p(C)$ keeps the
+input events, output events, and commitments in that order, and deletes sends
+and receives.  A receive may update strategy state and lead the strategy to
+compute a later input event, but it does not directly change the specification state.
+We consider only pairs $(H,C)$ for which each $\pi_p(C)$ is a defined
+transition sequence from $\sigma_0(i_p)$ and every input event caused by an
+arrival or receive has the target computed by $\mathsf{advance}$.  Write
+$\sigma_p(C)$ for the final specification state of $\pi_p(C)$.  The
+\emph{state endpoint} of the cut is the vector
+        \begin{equation}
+  \operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}.
+  \label{eq:semantic-endpoint}
+        \end{equation}
+The projection is a run when it contains no commitment from the basis.
+\end{definition}
+
+At both cuts in Figure~\ref{fig:history-projection}, each local projection is
+$\mathsf{input}(xy\cdot)$, so
+$\operatorname{end}(H_d,C_d)=\operatorname{end}(H_f,C_f)
+=(\sigma_1,\sigma_1)$.  Projection erases the delivery path while retaining
+its effect on the participant states.
+
+State endpoints determine what can happen next.  Equal endpoints have the
+same applicable transitions and effects at corresponding participants because
+each transition is a partial function of the current specification state.  Strategies
+may still choose different events.
+
+\paragraph{Confluence of a history.}
+At a consistent cut $C$, the participants may hold different specification states
+$(\sigma_p(C))_{p\in P}$.  Confluence asks whether their local paths can meet
+in one later state, at every input that combines their current inputs.
+Formally, let $j$ be such a common refinement.  The history $H$ is
+\emph{confluent at $C$ and $j$} when it has an extension using input and
+output events in which every participant reaches the same specification state
+$\sigma_j=(j,R)$; equivalently, the new cut has state endpoint
+$(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
+claim that a protocol delivers $j$, communicates, or terminates.
+
+\subsection{Distributed Consistency}
+\label{sec:distributed-consistency}
+
+Confluence is a property at one cut and common input refinement.  Distributed
+Consistency requires it at every cut reached without a commitment.
+
+\begin{definition}[Distributed Consistency]
+\label{def:distributed-consistency}
+An ordered specification has \emph{Distributed Consistency} when, for every
+finite participant set, history $H$, and consistent cut $C$ whose transition
+projections are runs, $H$ is confluent at $C$ and every common refinement of
+the participants' current inputs.
+\end{definition}
+
+Distributed Consistency is the history-level reading of consistency.  The
+next proposition states their exact relationship; its short proof is also why
+the run formulation remains useful.
+
+\begin{proposition}[Run Consistency and Distributed Consistency]
+\label{prop:distributed-consistency}
+An ordered specification is consistent if and only if it has Distributed
+Consistency.
+\end{proposition}
+
+\begin{proof}
+At any cut, the participants' transition projections are one finite set of
+runs, so consistency implies their confluence.  Conversely, place any finite
+set of runs in a message-free history, one run per participant.  Distributed
+Consistency at its cut gives run confluence.
+\end{proof}
+
+Combining Proposition~\ref{prop:distributed-consistency} with Functional CALM,
+a functional specification has Distributed Consistency exactly when it is
+monotone.  This distributed reading does not depend on output choice.  We next
+make that orthogonal extension to ambiguous specifications.
+
+\section{Ambiguous Specifications and Lifted Monotonicity}
+\label{sec:ambiguous-specifications}
+
+A functional specification fixes one output at each input.  We now allow a
+fiber to contain several outputs and ask when they can be preserved together
+as input grows.  Two examples introduce the issue; the formal development then
+extends the specification, monotonicity condition, and transition system from
+Section~\ref{sec:functional-calm}.
 
 \subsection{The framework on two ambiguous examples}
 \label{sec:ambiguity-story}
@@ -1036,9 +1267,9 @@ the coordination boundary before proving Complete CALM and Complete CAP.
 We begin, as in Section~\ref{sec:election-story}, with an informal,
 example-driven treatment.  Terms introduced in italics are defined formally
 below, and nothing here is needed for the proofs.  Section~\ref{sec:election-story}
-exercised the shared transition system; these examples exercise only the
-additions for ambiguous and distributed specifications: directedness, choice
-commitments, participants and messages, and history confluence.
+exercised the shared transition system; these examples exercise the additions
+for ambiguous specifications: directedness, choice commitments, output
+retirement, and Lifted Monotonicity.
 
 \begin{figure}[t]
   \centering
@@ -1079,21 +1310,21 @@ commitments, participants and messages, and history confluence.
 \end{figure}
 
 \paragraph{Ambiguity.}
-Figure~\ref{fig:ambiguity-frames}(f) admits either serial order of concurrent
+Figure~\ref{fig:ambiguity-frames}(f) allows either serial order of concurrent
 transactions $A$ and $B$.  No output refines both orders, so exposing one first
 requires a \emph{choice commitment} that removes the other.  In the traceroute
 of panel (g), by contrast, outputs are prefix-closed route sets and their
-unions are admitted.  Exposing $\{s{\to}\texttt{s1}\}$ removes rows whose
+unions are within spec.  Exposing $\{s{\to}\texttt{s1}\}$ removes rows whose
 outputs do not refine it, but a retained union refines each removed output;
 nothing is lost, so the output is exposable.
 
-The distinction is \emph{directedness}: every finite set of admitted outputs
-must have an admitted common refinement.  A directed fiber permits any output
+The distinction is \emph{directedness}: every finite set of outputs in a fiber
+must have a common refinement in that fiber.  A directed fiber allows any output
 to be exposed without losing an alternative; a nondirected fiber may require
 a choice commitment.  Lifted Monotonicity combines this requirement with the
-requirement from Functional CALM that more input not invalidate an admitted
-output: every finite set of outputs admitted at $i$ must have a common
-refinement admitted at every $j\succeq_I i$.
+requirement from Functional CALM that more input not invalidate an output:
+every finite set of outputs within spec at $i$ must have a common refinement
+within spec at every $j\succeq_I i$.
 
 \paragraph{The commitment basis.}
 The specification does not dictate which alternatives a commitment removes;
@@ -1139,65 +1370,15 @@ Section~\ref{sec:design-boundary} returns to this design choice.
   \label{fig:cc-commitments}
 \end{figure}
 
-\paragraph{Participants, messages, and consistency.}
-Everything above concerns one residual and applies equally on a single node.
-Distribution enters when several participants can take different transitions.
-Each holds a residual changed only by its own input events, output events, and
-commitments.  Sends and receives
-connect participants but do not themselves change residuals; received message
-input may cause a later input event, while other message content affects only
-strategy state.  Thus participants that have seen different events may hold
-different residuals.
-
-A Lamport history records these local event sequences and the message edges
-between them~\cite{chandy1985distributed}.  Confluence asks whether, whatever
-participants have exposed from the input they have seen, they can reach one
-residual at any input combining theirs.  Complete CALM will equate confluence
-of all such histories with Lifted Monotonicity.  Exposable outputs can be made
-autonomously because they retire only covered rows; commitments exclude
-alternatives and therefore require agreement from participants that could
-select them.
-
-Figure~\ref{fig:complete-formalism-summary} summarizes the objects added for
-output choice and distributed histories.
-
-\begin{figure*}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{6pt}
-  \renewcommand{\arraystretch}{1.25}
-  \begin{tabular}{@{}l l l@{}}
-    \toprule
-    \textbf{Output choice} & & \\
-    \midrule
-    fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$ & Eq.~\ref{eq:fiber} \\
-    Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$; finite sets in $S(i)$ have common refinements in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
-    output retirement & removed $(k,x)$ is covered by retained $(k,u)$ with $x\OutputOrd u$ & Def.~\ref{def:output-retirement} \\
-    exposable output & every row removed by $\mathsf{output}(o)$ is an output retirement & Def.~\ref{def:exposable-relational} \\
-    choice commitment & removes outputs at a valid input without making it invalid & Sec.~\ref{sec:safe-exposure} \\
-    \addlinespace
-    \textbf{Distributed histories} & & \\
-    \midrule
-    participant; message & participant holds one residual; \ $m=(i_m,s_m)$ carries input and strategy components & Sec.~\ref{sec:histories} \\
-    history; consistent cut & locally ordered events plus matched sends and receives; \ cut closed under happens-before & Def.~\ref{def:distributed-history} \\
-    projection; endpoint & $\pi_p^C$: transitions affecting $p$'s residual; \ $\operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
-    history confluence & at every common input $j$, all participants can reach one residual state $\sigma_j=(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
-    \addlinespace
-    \textbf{Results} & & \\
-    \midrule
-    Complete CALM & Consistency $\iff$ Lifted Monotonicity $\iff$ Distributed Consistency & Thm.~\ref{thm:complete-calm} \\
-    coordination & only commitments require it & Thm.~\ref{thm:commitments-require-coordination} \\
-    \bottomrule
-  \end{tabular}
-  \caption{The additions for Complete CALM, for reference.}
-  \label{fig:complete-formalism-summary}
-\end{figure*}
+These examples isolate the new specification-level issue: several outputs may
+remain possible at one input, and a system may have to choose among them.  We
+now formalize when those alternatives can be preserved together.
 
 \subsection{Relational specifications and Lifted Monotonicity}
 \label{sec:relational-specifications}
 
 The examples pose the specification-level question: when can every finite set
-of admitted outputs survive together as input grows?  We first define the two
+of possible outputs survive together as input grows?  We first define the two
 ways this can fail, then combine them in Lifted Monotonicity.
 
 \begin{definition}[Ordered relational specification]
@@ -1209,7 +1390,7 @@ An \emph{ordered relational specification} is
   \label{eq:relational-specification}
         \end{equation}
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  A row
-$(i,o)\in S$ says that output $o$ is admissible at input $i$.  The
+$(i,o)\in S$ says that output $o$ is within spec at input $i$.  The
 \emph{fiber} of $S$, or of any $R\subseteq S$, at $i$ is the set of outputs
 paired with $i$,
         \begin{equation}
@@ -1232,8 +1413,8 @@ outputs.  For nonempty $A,B\subseteq O$, define
   \label{eq:lifted-output-order}
         \end{equation}
 This relation is often called the Hoare preorder.  It compares sets
-pointwise: $A\LiftedOutputOrd B$ means that every output admitted by $A$ is
-refined by some output admitted by $B$.
+pointwise: $A\LiftedOutputOrd B$ means that every output in $A$ is
+refined by some output in $B$.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -1249,9 +1430,9 @@ under the pointwise lift:
 \end{definition}
 
 For singleton fibers this is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  In general it says that each
-output admitted before more input arrives has some refinement afterward.  It
-does not say whether several outputs admitted at one input can be preserved
+Equation~\ref{eq:functional-monotonicity}.  In general it says that each output within spec before more input arrives has
+some refinement afterward.  It does not say whether several outputs within
+spec at one input can be preserved
 together; Directed Outputs addresses that question.
 
 \begin{definition}[Compatibility]
@@ -1271,10 +1452,10 @@ $X\subseteq F$ is compatible in $F$.  An ordered relational specification has
 \end{definition}
 
 A singleton fiber is directed, and closure under a join is sufficient but not
-necessary.  Directedness requires some admitted upper bound for each finite
+necessary.  Directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
 join-semilattice.  Compatibility likewise does not require comparability: two
-incomparable outputs may have a third admitted output above both.  Thus the
+incomparable outputs may have a third output in the fiber above both.  Thus the
 traceroute fiber is directed by union, whereas the two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f) are incompatible.
 
@@ -1350,8 +1531,8 @@ because different runs meet only at a common refinement.
 \label{sec:safe-exposure}
 
 Lifted Monotonicity is a property of the specification.  To connect it to
-execution, we must determine when exposing one admitted output preserves the
-alternatives represented by the residual.  Input events are unchanged.  Output
+execution, we must determine when exposing one possible output preserves the
+alternatives represented by the remainder table.  Input events are unchanged.  Output
 events may now retire covered rows, while only commitments may remove an
 unrefined alternative at a still-valid input.
 
@@ -1395,261 +1576,108 @@ $R'(j)$ nonempty.
 This test also extends Proposition~\ref{prop:safe-runs}: it supplies the common
 refinement needed after each safe output event.  It also marks the local
 boundary: if the test fails, the system must first use a basis commitment to
-remove the conflicting rows.  To state the consequence when participants act
-independently, we next place their runs in Lamport histories.
+remove the conflicting rows.  Section~\ref{sec:complete-calm} combines this
+boundary with the distributed execution model.
 
-\subsection{Lamport histories}
-\label{sec:histories}
+\section{Complete CALM and Complete CAP}
+\label{sec:complete-calm}
 
-So far, output choice has been described at one participant.  We now combine
-participants and their messages into a Lamport history.  This subsection defines
-the events and cuts; the next projects each cut to the residuals relevant to the
-specification.
+The previous two sections developed orthogonal extensions of Functional CALM:
+Lamport histories give Consistency a distributed reading, while relational
+specifications add output choice.  We now combine them.  First we identify
+coordination with commitment and state when a distributed commitment requires
+agreement; then Complete CALM equates Consistency, Lifted Monotonicity, and
+Distributed Consistency, and Complete CAP states the resulting partition
+boundary.
 
-\paragraph{Participants and runs.}
-A participant holds one residual, changed only by its own input events, output
-events, and commitments; without a commitment, these transitions form a run.
-Participants may receive different inputs and expose different outputs.
-Consistency compares their runs whenever the current inputs have a common
-refinement, covering sharded systems as well as replicas.  Because input events
-compose, delivery order and batching do not affect a residual reached by input
-events alone.
+Figure~\ref{fig:complete-formalism-summary} recaps the distributed and
+relational extensions combined here.
 
-\paragraph{Histories and consistent cuts.}
-A Lamport history records local events and the message edges between them.  A
-message $m=(i_m,s_m)$ has an optional cumulative-input component and arbitrary
-strategy data.  After a receive, the strategy may use $\mathsf{advance}$ to
-compute a later input event; neither the calculation nor the receive is that
-input event.  The external environment has no timeline in $H$: when it supplies
-$i_{\mathrm{in}}$, the strategy computes
-$\mathsf{advance}(i,i_{\mathrm{in}})=j$ and the participant records
-$\mathsf{input}(j)$.
-\begin{definition}[Lamport history of the transition system]
-\label{def:distributed-history}
-Fix an ordered specification, a finite participant set $P$, a message set
-$M\subseteq(I\cup\{\epsilon\})\times(D\cup\{\epsilon\})$ for some set $D$
-of strategy data, an
-initial input $i_p^0$ for each $p\in P$, a cumulative-advance function
-(Equation~\ref{eq:cumulative-advance}), and a commitment basis.  A
-\emph{distributed history} $H$ consists of a finite set of events, together
-with:
-\begin{enumerate}
-  \item an assignment of each event to a participant $p\in P$, and a total
-        local order on the events assigned to each participant;
-  \item a label on each event: an input event $\mathsf{input}(j)$, an output
-        event $\mathsf{output}(o)$, a commitment from the basis, a send
-        $\mathsf{send}(m)$, or a receive $\mathsf{receive}(m)$; and
-  \item for each $\mathsf{receive}(m)$, a matching $\mathsf{send}(m)$ at
-        another participant.
-\end{enumerate}  The
-\emph{happens-before} order is the transitive closure of the local orders
-and the edges from sends to their matching receives.  A
-\emph{consistent cut} $C$ is a subset of events closed under happens-before
-~\cite{chandy1985distributed}.  (This textbook use of ``consistent'' is
-unrelated to consistency as confluence, which is a property of
-specifications.)
-\end{definition}
-
-Histories retain delivery and strategy details that the specification does not
-need.  We next project those details away and ask whether the resulting
-participant residuals can meet.
-
-\subsection{Transition projection and confluence}
-\label{sec:projection-confluence}
-
-The projection is easiest to see by comparing two histories with the same
-effect on their participants.
-
-\paragraph{Example: direct and forwarded input.}
-In Figure~\ref{fig:history-projection}, $p$ and $q$ start at
-$\sigma_a=(a\cdot\cdot,R_a)$ and receive cumulative input $ab\cdot$ directly
-from the environment or through a forwarded message.  The histories differ,
-but both participants reach $\sigma_b=(ab\cdot,R_b)$.
-
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \begin{tikzpicture}[x=.82cm,y=.58cm,>=stealth,
-                      every node/.style={font=\footnotesize}]
-    % Direct delivery.
-    \node[anchor=west,font=\small] at (-1,7.2) {(a) Direct delivery $H_d$};
-    \node[anchor=east] at (.35,5.5) {$p$};
-    \node[anchor=east] at (.35,3.9) {$q$};
-    \node[anchor=west] at (.6,5.5) {$\sigma_a$};
-    \node[anchor=west] at (.6,3.9) {$\sigma_a$};
-    \draw[->] (1.4,5.5) -- (6.4,5.5);
-    \draw[->] (1.4,3.9) -- (6.4,3.9);
-    \fill (4.15,5.5) circle (1.7pt);
-    \fill (4.15,3.9) circle (1.7pt);
-    \node[below,fill=white,inner sep=.5pt] at (4.15,5.5)
-      {$\mathsf{input}(ab\cdot)$};
-    \node[above,fill=white,inner sep=.5pt] at (4.15,3.9)
-      {$\mathsf{input}(ab\cdot)$};
-    \node[anchor=east] at (1.8,6.2) {$\mathsf{env}$};
-    \node[anchor=east] at (1.8,3.2) {$\mathsf{env}$};
-    \draw[->] (1.95,6.14) -- node[midway,above,sloped,fill=white,inner sep=.5pt]
-      {$i_{\mathrm{in}}=ab\cdot$} (4.03,5.65);
-    \draw[->] (1.95,3.26) -- node[midway,below,sloped,fill=white,inner sep=.5pt]
-      {$i_{\mathrm{in}}=ab\cdot$} (4.03,3.75);
-    \draw[dashed] (6.45,3.55) -- (6.45,5.85);
-    \node[above] at (6.45,5.85) {$C_d$};
-    \node[anchor=west] at (6.6,5.5) {$\sigma_b$};
-    \node[anchor=west] at (6.6,3.9) {$\sigma_b$};
-
-    % Forwarded delivery.
-    \node[anchor=west,font=\small] at (-1,2.3) {(b) Forwarded delivery $H_f$};
-    \node[anchor=east] at (.35,.65) {$p$};
-    \node[anchor=east] at (.35,-.95) {$q$};
-    \node[anchor=west] at (.6,.65) {$\sigma_a$};
-    \node[anchor=west] at (.6,-.95) {$\sigma_a$};
-    \draw[->] (1.4,.65) -- (8.15,.65);
-    \draw[->] (1.4,-.95) -- (8.15,-.95);
-    \node[anchor=east] at (1.75,1.35) {$\mathsf{env}$};
-    \draw[->] (1.9,1.29) -- node[midway,above,sloped,fill=white,inner sep=.5pt]
-      {$i_{\mathrm{in}}=ab\cdot$} (3.35,.8);
-    \fill (3.5,.65) circle (1.7pt);
-    \node[below,fill=white,inner sep=.5pt] at (3.5,.65)
-      {$\mathsf{input}(ab\cdot)$};
-    \fill (5.25,.65) circle (1.7pt);
-    \node[above,fill=white,inner sep=.5pt] at (5.25,.65)
-      {$\mathsf{send}(m)$};
-    \fill (6.0,-.95) circle (1.7pt);
-    \node[below,fill=white,inner sep=.5pt] at (6.0,-.95)
-      {$\mathsf{receive}(m)$};
-    \draw[->] (5.25,.53) -- node[midway,right,fill=white,inner sep=.5pt]
-      {$m=(ab\cdot,s_m)$} (5.95,-.8);
-    \fill (7.55,-.95) circle (1.7pt);
-    \node[below,fill=white,inner sep=.5pt] at (7.55,-.95)
-      {$\mathsf{input}(ab\cdot)$};
-    \draw[dashed] (8.2,-1.3) -- (8.2,1.0);
-    \node[above] at (8.2,1.0) {$C_f$};
-    \node[anchor=west] at (8.35,.65) {$\sigma_b$};
-    \node[anchor=west] at (8.35,-.95) {$\sigma_b$};
-  \end{tikzpicture}
-  \caption{Two distinct histories from $\sigma_a=(a\cdot\cdot,R_a)$ to
-  $\sigma_b=(ab\cdot,R_b)$.  The relations $R_a$ and $R_b$ are, respectively, the tables in panels (a) and (b) of
-  Figure~\ref{fig:election-frames}.  The environment supplies cumulative input $i_{\mathrm{in}}=ab\cdot$.  The strategy
-  computes $\mathsf{advance}(a\cdot\cdot,ab\cdot)=ab\cdot$; the resulting
-  $\mathsf{input}(ab\cdot)$ is the participant event.  In (b), $q$ computes
-  the $\mathsf{advance}$ upon receiving $m=(ab\cdot,s_m)$.  Vertical dashed lines are consistent cuts.}
-  \label{fig:history-projection}
-\end{figure}
-
-The figure shows why we need a transition projection.  A Lamport history
-records sends, receives, and strategy state even when they make no difference
-to a residual.  The projection filters each participant's history to the
-transitions that determine that residual.
-
-\begin{definition}[Transition projection and residual endpoint]
-\label{def:semantic-projection}
-For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
-to $p$ in local order.  Its \emph{transition projection} $\pi_p^C$ keeps the
-input events, output events, and commitments in that order, and deletes sends
-and receives.  A receive may update strategy state and lead the strategy to
-compute a later input event, but it does not directly change the residual.
-We consider only pairs $(H,C)$ for which each $\pi_p^C$ is a defined
-transition sequence from $\sigma_0(i_p^0)$ and every input event caused by an
-arrival or receive has the target computed by $\mathsf{advance}$.  Write
-$\sigma_p^C$ for the final residual of $\pi_p^C$.  The
-\emph{residual endpoint} of the cut is the vector
-        \begin{equation}
-  \operatorname{end}(H,C)=(\sigma_p^C)_{p\in P}.
-  \label{eq:semantic-endpoint}
-        \end{equation}
-The projection is a run when it contains no commitment from the basis.
-\end{definition}
-
-At both cuts in Figure~\ref{fig:history-projection}, each local projection is
-$\mathsf{input}(ab\cdot)$, so
-$\operatorname{end}(H_d,C_d)=\operatorname{end}(H_f,C_f)
-=(\sigma_b,\sigma_b)$.  Projection erases the delivery path while retaining
-its effect on the residuals.
-
-Residual endpoints determine what can happen next.  Equal endpoints have the
-same applicable transitions and effects at corresponding participants because
-each transition is a partial function of the current residual.  Strategies
-may still choose different events.
-
-\paragraph{Confluence of a history.}
-At a consistent cut $C$, the participants may hold different residuals
-$(\sigma_p^C)_{p\in P}$.  Confluence asks whether their local paths can meet
-in one later residual, at every input that combines their current inputs.
-Formally, let $j$ be such a common refinement.  The history $H$ is
-\emph{confluent at $C$ and $j$} when it has an extension using input and
-output events in which every participant reaches the same residual state
-$\sigma_j=(j,R)$; equivalently, the new cut has residual endpoint
-$(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
-claim that a protocol delivers $j$, communicates, or terminates.
-
-\subsection{Distributed Consistency}
-\label{sec:distributed-consistency}
-
-Confluence is a property at one cut and common input refinement.  Distributed
-Consistency requires it at every cut reached without a commitment.
-
-\begin{definition}[Distributed Consistency]
-\label{def:distributed-consistency}
-An ordered specification has \emph{Distributed Consistency} when, for every
-finite participant set, history $H$, and consistent cut $C$ whose transition
-projections are runs, $H$ is confluent at $C$ and every common refinement of
-the participants' current inputs.
-\end{definition}
-
-Distributed Consistency is the history-level reading of consistency.  The
-next proposition states their exact relationship; its short proof is also why
-the run formulation remains useful.
-
-\begin{proposition}[Run Consistency and Distributed Consistency]
-\label{prop:distributed-consistency}
-An ordered specification is consistent if and only if it has Distributed
-Consistency.
-\end{proposition}
-
-\begin{proof}
-At any cut, the participants' transition projections are one finite set of
-runs, so consistency implies their confluence.  Conversely, place any finite
-set of runs in a message-free history, one run per participant.  Distributed
-Consistency at its cut gives run confluence.
-\end{proof}
+  \small
+  \setlength{\tabcolsep}{6pt}
+  \renewcommand{\arraystretch}{1.25}
+  \begin{tabular}{@{}l l l@{}}
+    \toprule
+    \textbf{Distributed histories} & & \\
+    \midrule
+    participant; message & participant holds one specification state; \ $m=(i_m,s_m)$ carries input and strategy components & Sec.~\ref{sec:histories} \\
+    history; consistent cut & locally ordered events plus matched sends and receives; \ cut closed under happens-before & Def.~\ref{def:distributed-history} \\
+    projection; endpoint & $\pi_p(C)$: transitions affecting $p$'s specification state; \ $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
+    history confluence & at every common input $j$, all participants can reach one specification state $\sigma_j=(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
+    \addlinespace
+    \textbf{Output choice} & & \\
+    \midrule
+    fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$ & Eq.~\ref{eq:fiber} \\
+    Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$; finite sets in $S(i)$ have common refinements in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
+    output retirement & removed $(k,x)$ is covered by retained $(k,u)$ with $x\OutputOrd u$ & Def.~\ref{def:output-retirement} \\
+    exposable output & every row removed by $\mathsf{output}(o)$ is an output retirement & Def.~\ref{def:exposable-relational} \\
+    choice commitment & removes outputs at a valid input without making it invalid & Sec.~\ref{sec:safe-exposure} \\
+    \addlinespace
+    \textbf{Results} & & \\
+    \midrule
+    Complete CALM & Consistency $\iff$ Lifted Monotonicity $\iff$ Distributed Consistency & Thm.~\ref{thm:complete-calm} \\
+    coordination & application of a commitment & Def.~\ref{def:coordination} \\
+    distributed agreement & required before a conflicting commitment & Thm.~\ref{thm:commitments-require-coordination} \\
+    \bottomrule
+  \end{tabular}
+  \caption{The distributed and relational extensions combined by Complete
+  CALM, for reference.}
+  \label{fig:complete-formalism-summary}
+\end{figure*}
 
 \subsection{Coordination}
 \label{sec:coordination}
 
-Distributed Consistency says when independently evolving participants can
-still reach a common residual.  Coordination asks when they must agree before
-proceeding.  An exposable output narrows without excluding, whereas a
-commitment excludes content.  Hereafter, \emph{reachable} means reachable from
-a canonical initial state by a run, with no basis commitment.  A participant
-\emph{selects} an admissible output by exposing it when exposable, and otherwise
-by first applying a commitment that, at the current input and its refinements,
-retains exactly the outputs refining the selected output.
+Consistency is confluence: independently evolving states can still meet.
+Coordination is its operational counterpart: the system makes a binding choice
+that removes some otherwise possible behavior.  In our transition system, that
+act is exactly a commitment.  A mutex, lock, atomic ordering mechanism, or
+agreement protocol is in scope when it serves this role.  Computation or
+communication that removes no such alternative is not coordination merely
+because it uses one of these mechanisms.
 
 \begin{definition}[Coordination]
 \label{def:coordination}
-\emph{Coordination} is agreement among participants, obtained before a
-commitment is made, that no participant will select an alternative the
-commitment excludes.
+A system execution \emph{coordinates} when it applies a commitment: it
+irrevocably removes a row by commitment from the remainder table.  It is
+\emph{coordination-free} when it uses only input events and exposable output
+events.
 \end{definition}
 
-\begin{theorem}[Commitments require coordination]
+A coordination-free execution therefore induces a safe run.  Unsafe output
+events remain in the analytical transition system only as witnesses of
+nonconfluence; a system does not perform them.  Hereafter, \emph{reachable}
+means reachable from a canonical initial state by a safe run.  A system
+\emph{selects} an output by exposing it when exposable, and otherwise by first
+applying a commitment that, at the current input and its refinements, retains
+exactly the outputs refining the selected output.
+
+In a shared-memory system, a mutex or atomic instruction can establish a
+commitment by fixing an order or choice.  In a distributed system, a commitment
+that conflicts with an independently selectable alternative requires agreement
+before it is applied.
+
+\begin{theorem}[Distributed commitments require agreement]
 \label{thm:commitments-require-coordination}
 Suppose the participants share a common commitment basis.  Let a commitment
-$d$ in the basis be applicable at a reachable state $\sigma=(i,R)$ and remove
+$c$ in the basis be applicable at a reachable state $\sigma=(i,R)$ and remove
 a row at the current input $i$ by commitment: some $x\in R(i)$ with no
-refinement in $R'(i)$, where $(i,R')=d(\sigma)$.  Then there is a participant
-state $\tau$, reachable from the canonical initial state by the same input
-events followed by the selection of $x$, whose residual at $i$ consists of
-refinements of $x$; and $d(\sigma)$ and $\tau$ have no common row at $i$.
-Consequently $d$ cannot be applied without agreement that no participant takes
-the course leading to $\tau$.
+refinement in $R'(i)$, where $(i,R')=c(\sigma)$.  A second participant can
+receive the same input events and then select $x$, obtaining a state $t$ whose
+fiber at $i$ consists of refinements of $x$; and $c(\sigma)$ and $t$ have no
+common row at $i$.  Consequently $c$ cannot be applied safely without prior
+agreement that no participant takes the course leading to $t$.
 \end{theorem}
 
 \begin{proof}
 Let a second participant receive the same input events as the first, reaching
-a state with the same current input and with $x\in\fiber{i}$ still admitted,
+a state with the same current input and with $x\in\fiber{i}$ still possible,
 and let it select $x$: by exposing it if it is exposable, and otherwise by a
 commitment retaining exactly the outputs above $x$, which the common basis
-makes available to it.  Its residual at $i$ is then contained in
-$\{u\in\fiber{i}:x\OutputOrd u\}$, while the first participant's residual
+makes available to it.  Its fiber at $i$ is then contained in
+$\{u\in\fiber{i}:x\OutputOrd u\}$, while the first participant's fiber
 $R'(i)$ contains no such $u$ by hypothesis.  The intersection at $i$ is
 therefore empty: the two states cannot be merged, and no later input or output
 event can restore a removed row.  The only way to avoid this outcome is for
@@ -1660,11 +1688,10 @@ only by agreement.
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
-Complete CALM turns this operational coordination boundary into a property of
-the specification.  It equates Consistency, Lifted Monotonicity, and
-Distributed Consistency; with
-Theorem~\ref{thm:commitments-require-coordination}, the equivalence determines
-whether progress requires a commitment and hence coordination.
+Complete CALM turns the coordination boundary into a property of the
+specification.  It equates Consistency---confluence of runs---with Lifted
+Monotonicity.  The distributed execution model supplies the equivalent third
+view, Distributed Consistency.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -1714,9 +1741,12 @@ valid $j\succeq_I i$ and $x\in R(j)$, confluence of the run extended by
 $\mathsf{output}(o)$ with the run extended by $\mathsf{input}(j)$ and
 $\mathsf{output}(x)$ supplies $u\in R(j)$ above both outputs; then
 Proposition~\ref{prop:exposability} applies.  Thus Lifted Monotonicity makes all
-reachable outputs exposable.  Its failure exhibits a finite family without a
-common refinement, so selecting an offending output requires a commitment and,
-by Theorem~\ref{thm:commitments-require-coordination}, coordination.
+reachable outputs exposable, so progress needs no commitment and is
+coordination-free.  Its failure exhibits a finite family without a common
+refinement, so selecting an offending output requires a commitment and hence
+coordination.  When different participants can select the conflicting
+alternatives, Theorem~\ref{thm:commitments-require-coordination} additionally
+requires prior agreement.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:cap-corollary}
@@ -1728,7 +1758,7 @@ Consistency as its consistency condition.  A \emph{partitioned history}
 divides participants into two or more components and has no cross-component
 message receive while the partition lasts, though participants may still
 receive environment input and expose outputs.  At a cut, \emph{Availability}
-means that every output admitted at a participant's current input is exposable
+means that every output in the participant's current fiber is exposable
 without waiting for another component.
 
 \begin{theorem}[Complete CAP]
@@ -1747,7 +1777,7 @@ Availability by the exposability result above.  Conversely, let any finite
 rows $(i_r,o_r)$ have a common refinement $j$, place one participant with
 initial input $i_r$ in each partition component, and deliver no messages
 between them.  Availability permits each to expose $o_r$; Distributed
-Consistency supplies a row $(j,u)$ surviving in every residual, so
+Consistency supplies a row $(j,u)$ surviving in every remainder table, so
 $o_r\OutputOrd u$ for every $r$.  Proposition~\ref{prop:lifted-monotonicity-decomposition}(3)
 then gives Lifted Monotonicity.
 \end{proof}
@@ -1827,7 +1857,7 @@ changes whether monotonicity or Directed Outputs holds.
 
 Section~\ref{sec:functional-calm} gave the functional encoding
 $J\mapsto Q(J)$.  Relational-transducer CALM proves the operational result for
-that language: monotone queries admit coordination-free evaluation under its
+that language: monotone queries allow coordination-free evaluation under its
 data-placement and execution assumptions
 ~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
 that theorem.  It isolates the order-preservation property so that it
@@ -1931,9 +1961,9 @@ the state itself is complete.
 
 \paragraph{Beyond least merges.}
 A join-semilattice provides a uniform \emph{least} refinement and a fixed merge
-operator.  Complete CALM asks only for \emph{some} admitted common refinement of
+operator.  Complete CALM asks only for \emph{some} common refinement of
 each relevant finite family.  For example, suppose two shards expose
-$[a_1,a_2]$ and $[b_1,b_2]$, and the output fiber admits every order-preserving
+$[a_1,a_2]$ and $[b_1,b_2]$, and the output fiber contains every order-preserving
 interleaving.  Both
         \begin{equation}
   [a_1,a_2,b_1,b_2]\qquad\text{and}\qquad[b_1,b_2,a_1,a_2]
@@ -1942,7 +1972,7 @@ interleaving.  Both
 are minimal common refinements, and neither refines the other.  Consequently,
 the pair has no least common refinement, so this output order is not a
 join-semilattice.  It is nevertheless directed: any finite family of sequences
-has an admitted order-preserving interleaving.  A join-semilattice is
+has an order-preserving interleaving in the fiber.  A join-semilattice is
 therefore a sufficient discipline, not a requirement of Lifted
 Monotonicity; strong eventual consistency, which it provides, is a stronger
 promise than consistency in our sense, and last-writer-wins shows that
@@ -1956,7 +1986,7 @@ For a transactional interface, an input is the set of begin, read, write, and
 commit requests received so far, ordered by inclusion.  An output is a growing
 set of public facts such as $\mathsf{read}(T,x,v)$,
 $\mathsf{commit}(T)$, and session-order facts, also ordered by inclusion.  The
-isolation or session guarantee determines which fact sets are admissible.
+isolation or session guarantee determines which fact sets are within spec.
 A deployment assigns transactions and requests to replicas.  The Complete
 CAP Theorem tests the combinations those replicas can select across a partition,
 under the contact, failure, and session assumptions of the interface
@@ -1983,7 +2013,7 @@ no serial history refines both sets of facts~\cite{adya2000generalized}.
 \paragraph{Snapshot isolation.}
 Let overlapping transactions $T_1$ and $T_2$ read the same snapshot and both
 write $x$.  Separate replicas could each expose its local commit.  Snapshot
-isolation's first-committer-wins rule admits no output containing both commit
+isolation's first-committer-wins rule allows no output containing both commit
 facts~\cite{berenson1995critique,bailis2013hat}.  Eventual storage convergence
 may choose a final state; it cannot retract a commit already exposed to a
 client.
@@ -1997,12 +2027,12 @@ isolation constrains reads and commits exposed before then.
 
 Let the input be a set of applied transactions, ordered by inclusion.  We use
 the standard invariant-confluence assumptions: each transaction remains
-applicable where the specification admits it and maps an invariant-valid state
+applicable where the specification allows it and maps an invariant-valid state
 to another invariant-valid state; independently reached states share the
 required ancestor; the prescribed merge is associative and preserves all
 included effects; and merged states remain reachable.  Outputs are reachable,
 invariant-valid states.  We order outputs by merge refinement: $s\OutputOrd s'$
-when $s'$ is an admitted merge that preserves every effect in $s$ (quotienting
+when $s'$ is a merge within spec that preserves every effect in $s$ (quotienting
 states with identical effects if necessary to obtain a partial order).
 
 Invariant confluence asks whether independently reachable valid states merge to
@@ -2042,7 +2072,10 @@ models the commitments that resolve them.
 
 \subsection{A criterion on specifications, not an implementation discipline}
 
-The input/output relation and its two refinement orders omit internal
+Coordination names a specification-level effect, not a particular mechanism.
+A lock, mutex, transaction protocol, or agreement protocol coordinates here
+only when it applies a commitment; synchronization that removes no row does
+not.  The input/output relation and its two refinement orders omit internal
 computation.  This is useful for stating a common boundary and insufficient for
 building a system.  Relational transducers provide a language and operational
 network semantics; semilattices provide a local algebra and deterministic
@@ -2059,7 +2092,7 @@ Lifted Monotonicity is a property of the declared specification, not a
 permanent label on ``register,'' ``transaction,'' or ``shopping cart.''
 The deployment determines whether a commitment requires agreement between
 participants.
-A linearizable register and a causal register admit different explanations.  A
+A linearizable register and a causal register allow different explanations.  A
 CRDT state and an exact read expose different promises.  A database permitted
 to abort one transaction implements a different relation from one required to
 commit both.
@@ -2071,15 +2104,15 @@ changes the interface or system design; none is a loophole in the criterion.
 
 The transition projection is also a design criterion.  Choosing the input
 domain and its order decides which histories the specification treats as the
-same: two cuts yield one residual exactly when they reach the same input and
+same: two cuts yield one specification state exactly when they reach the same input and
 have removed the same rows.  A finer input order forgets less of the execution
 and obliges the specification to say more; a coarser one forgets more.  The
-specification then states admissible outcomes over residuals without
+specification then states its possible outcomes over specification states without
 re-encoding the history it was built to forget.
 
 A reader who thinks in state machines can compile one into this form.  At the
 finest grain, an input is the sequence of environment events the machine has
-consumed, ordered by extension, and a row $(i,o)$ is admissible when some run
+consumed, ordered by extension, and a row $(i,o)$ is within spec when some run
 of the machine on $i$ produces $o$; the register example of
 Appendix~\ref{app:deployment} is of this kind.  If the machine's state
 summarizes its past, so that two event sequences reaching the same state have
@@ -2094,13 +2127,13 @@ result for a vote-counting machine whose state is the set of ballots received.
 The word consistency names two different things in the literature, and the
 framework separates them.  A consistency model---linearizability, causal
 consistency, snapshot isolation, read committed---is a specification: it says
-which outputs are admissible for a given history of operations.  Consistency
+which outputs are allowed for a given history of operations.  Consistency
 in CALM's sense is a property of a specification: its histories are
 confluent.  Written as a table with orders, every traditional model therefore
 falls on one side of the dichotomy.  Linearizability and serializability
-admit total orders that cannot refine two concurrent explanations, so they
+allow total orders that cannot refine two concurrent explanations, so they
 are not monotone (Appendix~\ref{app:deployment},
-Section~\ref{sec:hat-instance}).  Causal consistency admits one explanation
+Section~\ref{sec:hat-instance}).  Causal consistency allows one explanation
 for concurrent reads and is monotone under the deployment in which each
 participant answers its own reads (Appendix~\ref{app:deployment}).  Read
 committed and the other HAT guarantees accumulate facts and are monotone
@@ -2113,7 +2146,7 @@ operation history yields a monotone or a non-monotone specification depending
 on what an exposed read is taken to promise
 (Section~\ref{sec:design-boundary}).  Confluence is thus not one more
 consistency model; it is the question each model answers one way or the
-other, whether what it admits can be provided without coordination.
+other, whether what it allows can be provided without coordination.
 
 \subsection{Safety is not liveness}
 
@@ -2149,18 +2182,18 @@ and~\ref{sec:iconfluence-instance}.
 \section{Conclusion}
 \label{sec:conclusion}
 
-A specification abstracts distribution away.  Functional CALM asks when
-a functional specification can be implemented over distributed input arrival
-without coordination: monotonicity means no seal is needed.  This generalizes the
-classic result from logical fact sets to arbitrary input and output refinement
-orders.
+A specification abstracts execution details away.  Functional CALM asks when
+a functional specification remains confluent as input arrives: monotonicity
+means no input-sealing commitment is needed.  This generalizes the classic
+result from logical fact sets to arbitrary input and output refinement orders.
 
-Complete CALM extends the model to specifications that offer several outputs for one
-input.  Modeling output events and commitments reveals Directed Outputs as the
-additional requirement for a coordination-free specification.
-When directedness fails, some admissible alternative must be removed by a
-commitment.  If different participants can make incompatible commitments,
-coordination determines which alternative survives.
+Complete CALM extends the model to specifications that offer several outputs
+for one input.  Modeling output events and commitments reveals Directed Outputs
+as the additional requirement for confluence without coordination.  When
+Lifted Monotonicity fails, progress requires a commitment and hence
+coordination, whether implemented by a mutex, lock, atomic ordering mechanism,
+or distributed agreement.  Distributed histories and Complete CAP specialize
+this boundary to participants and partitions.
 
 The Complete CAP Theorem is the partition form of the same equivalence.  It recovers the
 classical impossibility when a cut separates incompatible choices and supplies
@@ -2195,20 +2228,20 @@ split between its sides.
 \begin{definition}[Deployment; separable family]
 \label{def:deployment}
 A \emph{deployment} over a participant set $P$ assigns to each participant $p$
-a set $\Delta_p\subseteq S$ of rows it may select; $(i,o)\in\Delta_p$ means
+a set $A_p\subseteq S$ of rows it may select; $(i,o)\in A_p$ means
 that $p$ may hold $i$ as a current input and select $o$ there, on its own
 authority.  A partition $\Pi$ of $P$ (Section~\ref{sec:cap-corollary}) divides
 the participants into
 two or more nonempty components.  A finite family of rows is \emph{separable under
 $\Pi$} when its members can be attributed to participants, each row lying in
-its participant's $\Delta_p$, with at least two components represented.
+its participant's $A_p$, with at least two components represented.
 \end{definition}
 
 \begin{definition}[Monotone across partitions]
 \label{def:monotone-across-partitions}
 Relative to a deployment, $\Spec$ is \emph{monotone across $\Pi$} when every
 family separable under $\Pi$, together with every common refinement $j$
-of its inputs, has an admitted common refinement in $\fiber{j}$.  It is
+of its inputs, has a common refinement in $\fiber{j}$.  It is
 \emph{monotone across partitions} when it is monotone across every partition of
 $P$.
 \end{definition}
@@ -2217,7 +2250,7 @@ This is Lifted Monotonicity in the form of
 Proposition~\ref{prop:lifted-monotonicity-decomposition}(3), restricted to the
 families a partition can separate.  Monotonicity implies monotonicity across partitions, since separable
 families are families.  The converse fails whenever every incompatible family
-lies within one participant's $\Delta_p$.  Two mutually exclusive choices owned
+lies within one participant's $A_p$.  Two mutually exclusive choices owned
 by one participant do not become separable merely because another component
 acts.
 
@@ -2232,7 +2265,7 @@ Fix a deployment.  The following are equivalent.
         component (\emph{availability}); and at every common refinement
         $j$ of current inputs held in different components, the participant
         runs are confluent---some row at $j$ survives in every participant's
-        residual (\emph{Distributed Consistency}).
+        remainder table (\emph{Distributed Consistency}).
   \item $\Spec$ is monotone across partitions.
 \end{enumerate}
 \end{theorem}
@@ -2245,16 +2278,16 @@ separable ones.  Consider participants in at least two components, each having
 made finitely many selections at its current input or its refinements, and a
 common refinement $j$ of those inputs.  The family of all their
 selections is separable, so monotonicity across $\Pi$ supplies $u\in\fiber{j}$
-above every selected output.  Each participant's residual at $j$ is
+above every selected output.  Each participant's fiber at $j$ is
 $\fiber{j}$ intersected with the outputs above its own selections, and $u$
 belongs to every such set.  Hence some row at $j$ survives in every state,
 under every arrival order in each component.
 
 (1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable family
-$(i_1,o_1),\ldots,(i_k,o_k)$ and a common refinement $j$ admit no common
+$(i_1,o_1),\ldots,(i_k,o_k)$ and a common refinement $j$ have no common
 refinement in $\fiber{j}$.  Its participants lie in at least two components,
 and availability lets each select $o_r$ at $i_r$ without learning the others'
-selections.  Each participant's residual at $j$ then lies within the outputs
+selections.  Each participant's fiber at $j$ then lies within the outputs
 above its $o_r$, and no output of $\fiber{j}$ is above all of them, so no row
 at $j$ survives in every state.  Avoiding this requires either a wait across
 the cut, which surrenders availability, or refusing some of the rows, which
@@ -2279,7 +2312,7 @@ begins.
 
 An input is a finite causally closed operation history, ordered by
 induced-subhistory extension.  An output is an explanation $(L,\rho)$, where
-$L$ is an operation order admitted by the consistency model and $\rho$ maps each
+$L$ is an operation order allowed by the consistency model and $\rho$ maps each
 completed read to the write supplying its response.  Refinement extends $L$
 without reversing an existing order and extends $\rho$ without changing an
 answered read.
@@ -2316,15 +2349,15 @@ the committed ones, $T\setminus X$, the serialization order.  Outputs are
 ordered by extension, $(L,X)\OutputOrd(L',X')$ when $X\subseteq X'$ and $L'$
 agrees with $L$ on the domain of $L$: an abort is never undone and an order,
 once fixed between two committed transactions, is never reversed.  A row
-$(T,(L,X))$ is admissible when $X$ and the domain of $L$ partition $T$.  The
+$(T,(L,X))$ is within spec when $X$ and the domain of $L$ partition $T$.  The
 rows $(\{A,B\},([A,B],\varnothing))$ and $(\{A,B\},([B,A],\varnothing))$ of
 Figure~\ref{fig:ambiguity-frames}(f) have no common refinement, so the
 specification is not monotone, and a system needs commitments.  A
-specification that admits no aborts has the same rows with $X=\varnothing$;
+specification that allows no aborts has the same rows with $X=\varnothing$;
 we return to it below.
 
 \paragraph{Commitments.}
-Each commitment below is a partial function on residual states $(i,R)$ that
+Each commitment below is a partial function on specification states $(i,R)$ that
 retains, at $i$ and at every refinement $k$ of $i$, the rows meeting a
 condition, and is applicable when a row at $i$ meets it.  Because refinement
 never reverses an order or undoes an abort, no retained row refines a removed
@@ -2340,9 +2373,9 @@ Definition~\ref{def:transition-system} whenever it removes a row.
         $z\in Z$, $z<_L A$ or one of $z,A$ is in $X$, and for every
         $D\in k\setminus(Z\cup\{A\})$, $A<_L D$ or one of $A,D$ is in $X$.
 \end{itemize}
-The basis of 2PL is $\Phi_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{commit},
+The basis of 2PL is $\mathcal B_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{commit},
 \mathsf{abort}\}$ and that of MVTO is
-$\Phi_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{commit},\mathsf{abort}\}$, each
+$\mathcal B_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{commit},\mathsf{abort}\}$, each
 ranging over all transactions.  A protocol is a policy for applying its basis;
 computation decides which commitment to apply, and the commitment is the
 irrevocable act.
@@ -2357,7 +2390,7 @@ a cycle of waits, in the simplest case $A$ waiting for $B$ and $B$ for $A$,
 which arises when $A$ locked one item ahead of $B$ and $B$ locked another
 ahead of $A$; the scheduler has then applied both $\mathsf{order}(A,B)$ and
 $\mathsf{order}(B,A)$.  Both are applicable only because the specification
-admits aborts: after both, the rows that remain at $i$ are exactly those in
+allows aborts: after both, the rows that remain at $i$ are exactly those in
 which $A$ or $B$ is aborted, so no row in which both commit survives.  Deadlock
 resolution is the choice between them, $\mathsf{abort}(A)$ or
 $\mathsf{abort}(B)$, after which the survivor's rows are unconstrained by the
@@ -2407,11 +2440,11 @@ before coordination becomes unavoidable?  The answer depends on what must stay
 fixed.  Here we fix the inputs, visible claims, refinement orders, and---when
 partitions matter---the deployment.
 
-We compare interface strength by the behaviors a specification admits.  An
-interface $T$ is \emph{stronger} than $S$ when every behavior admitted by $T$ is
-also admitted by $S$, but not conversely.  The stronger interface rules out more
+We compare interface strength by the behaviors within a specification.  An
+interface $T$ is \emph{stronger} than $S$ when every behavior within $T$ is
+also within $S$, but not conversely.  The stronger interface rules out more
 implementations and gives clients a tighter guarantee.  For example,
-linearizability is stronger than causal consistency because it admits fewer
+linearizability is stronger than causal consistency because it allows fewer
 histories.  Thus ``stronger'' corresponds to a smaller set of allowed behaviors.
 This is a separate order from output refinement: $o\OutputOrd u$ says that one
 particular output $u$ preserves the information already exposed by $o$.
@@ -2443,7 +2476,7 @@ Table~\ref{tab:lookup-lift}.
 \begin{table}[t]
   \centering
   \small
-  \caption{Remembering every output a lookup relation has admitted so far.
+  \caption{Remembering every output a lookup relation has allowed so far.
   Dominated outputs can then be dropped without loss of content.}
   \label{tab:lookup-lift}
   \begin{tabular}{@{}c l l l@{}}
@@ -2463,7 +2496,7 @@ Table~\ref{tab:lookup-lift}.
 
 The middle column is the original specification table, grouped into one fiber
 per input.  The next column remembers: at each input it collects every
-output admitted by the original table at that input or any preceding input.
+output in the original table at that input or any preceding input.
 The last column removes $o_a$ and $o_b$ because the retained
 $o_{a\leadsto b}$ refines both.  Nothing they said has been forgotten.  If two
 remembered outputs were incomparable, both would have to remain unless another
@@ -2488,14 +2521,14 @@ captures which outputs they cover.  In particular, one retained output may cover
 many remembered rows by refining them.
 
 Call $A:I\to\mathcal P(O)$ a \emph{powerset relaxation} of $X$ when
-$X(i)\LiftedOutputOrd A(i)$ at every input: every currently admitted output has
+$X(i)\LiftedOutputOrd A(i)$ at every input: every currently possible output has
 a retained refinement.  Such a relaxation is monotone when
 $i\InputOrd j$ implies $A(i)\LiftedOutputOrd A(j)$.
 
 \begin{theorem}[Remembered-output frontier]
 \label{thm:monotone-hull}
 The map $X^\uparrow$ is a monotone powerset relaxation.  Moreover, every monotone
-powerset relaxation $A$ covers every output admitted so far:
+powerset relaxation $A$ covers every output seen so far:
         \begin{equation}
   X^\uparrow(i)\LiftedOutputOrd A(i)
   \qquad\text{for every }i.
@@ -2531,7 +2564,7 @@ The theorem's perhaps surprising content is minimality.  Remembering all prior
 outputs is an obvious safe construction, but every monotone relaxation must
 preserve their content under the output order.  Dominance is the only free pruning available
 when representatives must come from the remembered outputs; further pruning
-requires introducing some other admitted output that refines what was removed.
+requires introducing some other output in the specification that refines what was removed.
 
 \subsection{Persistent forwarding in search structures}
 
@@ -2604,7 +2637,7 @@ agreement or sacrifices one of the advertised local choices.
 
 The theorem generalizes this example.  Fix a finite participant set $P$.  At
 input $i$, let $V_p(i)$ be the complete views locally available to participant
-$p$.  The baseline \emph{product interface} admits every combination of local
+$p$.  The baseline \emph{product interface} contains every combination of local
 views.  A stronger interface may remove combinations.  We call it locally
 conservative when it leaves each one-participant interface unchanged and adds
 only cross-participant constraints.
@@ -2615,14 +2648,13 @@ refinement; and locally co-occurring claims of one owner have a common local
 refinement.  The product interface consists of every tuple in
 $\prod_{p\in P}V_p(i)$ and every partial tuple obtained by omitting coordinates.
 A \emph{normalized strengthening} $T$ selects some complete product tuples and
-admits exactly their partial restrictions.  Local conservativity means that, at
+contains exactly their partial restrictions.  Local conservativity means that, at
 every input, the projection of $T$ onto coordinate $p$ remains all of $V_p(i)$.
 
 \begin{theorem}[Independent-product frontier]
 \label{thm:product-frontier}
 Suppose each coordinate has one owner, every relevant group of owners can be
-separated by a legal partition, and availability permits every locally admitted
-choice.  The product interface is monotone across partitions, so by
+separated by a legal partition, and availability permits every local choice.  The product interface is monotone across partitions, so by
 Theorem~\ref{thm:complete-cap-deployment} it remains available and consistent
 under every partition.  Every proper normalized, locally conservative
 strengthening is not monotone across partitions.
@@ -2638,12 +2670,10 @@ requires.
 
 Now let $T$ be a proper strengthening.  Some complete product tuple $x$ is
 missing from $T$.  Local conservativity says that every coordinate $x_p$ is
-still locally available to its owner, perhaps as part of a different admitted
-tuple.  A partition can separate those owners, and availability lets each choose
+still locally available to its owner, perhaps as part of a different tuple in $T$.  A partition can separate those owners, and availability lets each choose
 its coordinate.  If their selections had a common $T$-refinement, normalize and
 complete it.  Maximality of the coordinates forces the result to be exactly
-$x$, the tuple that $T$ forbids.  Hence the separated family has no admitted
-common refinement.
+$x$, the tuple that $T$ forbids.  Hence the separated family has no common refinement in $T$.
 \end{proof}
 
 \paragraph{A register frontier.}
@@ -2682,7 +2712,7 @@ termination.
 
 \subsection{One commitment, then monotone authority}
 
-Agreement protocols illustrate what coordination can accomplish.  Before an
+Agreement protocols illustrate one distributed form of coordination.  Before an
 authority is established, several incompatible authority lineages may remain
 possible.  Publishing one lineage rules the others out: that is a commitment.
 Suppose the commitment fixes both the initial authority and a rule that uniquely
@@ -2717,7 +2747,7 @@ decision maps $m:P\rightharpoonup V$, ordered by extension, with at most $k$
 values in their range.
 
 At participant $p_r$'s local proposal input, the decision
-$\{p_r\mapsto v_r\}$ is admissible.  The union of all proposal inputs is a common
+$\{p_r\mapsto v_r\}$ is within spec.  The union of all proposal inputs is a common
 input refinement.  Each local decision can continue there by itself, and any
 family of at most $k$ distinct decisions can coexist.  The family of all $k+1$
 cannot: every common refinement would preserve $k+1$ values and violate the
