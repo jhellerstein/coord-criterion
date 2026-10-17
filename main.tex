@@ -52,33 +52,30 @@
 \begin{abstract}
 When does a concurrent system inherently require coordination?  CAP, CALM,
 CRDTs, Highly Available Transactions, and Invariant Confluence each draw a
-coordination boundary in a different mathematical language, and conventional
+coordination boundary in a different formal model, and conventional
 wisdom has drifted from what the literature proves.  We give one framework for
 all of them: a specification is a table that says exactly which outputs are
-within spec at each input, with a separate refinement order on each column.  A
-computation state pairs the current input with the rows that remain.
+within spec at each input, with separate partial orders for input growth and for
+output refinement.  A computation state is simply a pair of the current input with
+the specification rows that remain.
 
-\emph{Functional CALM} generalizes the original CALM Theorem, replacing Datalog
-queries with arbitrary functions between ordered input and output domains:
-monotonicity characterizes exactly when output can be exposed consistently as
-input arrives.  We define Consistency as confluence of executions---different
-paths can still meet---and give it a distributed reading by projecting Lamport
-histories to participant states.  Distributed Consistency requires the
-participant paths to remain confluent at every cut.
+At the specification level, the inherent reason for coordination is an
+irrevocable \emph{commitment} that rules out behavior still within spec; locks,
+atomics, and distributed agreement are mechanisms for establishing such
+commitments.  \emph{Functional CALM} generalizes the original CALM Theorem from
+Datalog queries to arbitrary functions between ordered input and output
+domains.  It defines consistency as confluence of executions and proves that a
+functional specification supports consistency without commitment exactly when
+it is monotone, independent of programming language or execution model.
 
-\emph{Complete CALM} extends Functional CALM to \emph{ambiguous} specifications
-that allow several outputs for one input, as leader election and transaction
-ordering do.  Complete CALM proves that Consistency is equivalent to
+\emph{Complete CALM} extends this equivalence to \emph{ambiguous}
+specifications that allow several outputs for one input.  Its criterion is
 \emph{Lifted Monotonicity}, monotonicity under an order lifted from outputs to
-sets of outputs; both are equivalent to Distributed Consistency.  Where Lifted
-Monotonicity holds, progress needs no commitment.  Where it fails, progress
-requires an irrevocable \emph{commitment}---our specification-level definition
-of coordination.  Such a commitment may be established by single-node
-mechanisms such as locks and atomics or by distributed protocols.  When
-participants can select conflicting alternatives, we show that it requires
-prior agreement.  Complete CALM yields a Complete CAP Theorem that extends
-classical CAP from a one-way impossibility about linearizability to a dichotomy
-parameterized by the declared specification and deployment.
+sets of outputs.  Lifted Monotonicity holds exactly when consistency requires
+no commitment.  For distributed executions, the same criterion is equivalent
+to distributed consistency and yields a Complete CAP dichotomy under arbitrary
+partitions.  The specification captures the chosen consistency model: the
+CAP tradeoff applies exactly when that specification is non-monotone.
 \end{abstract}
 
 \begin{CCSXML}
@@ -105,22 +102,23 @@ parameterized by the declared specification and deployment.
 \section{Introduction}
 \label{sec:intro}
 
-Concurrent systems coordinate when they make a binding choice that rules out
-behavior still within spec.  A mutex can establish which thread acts first; a
-lock can order conflicting transactions; atomic commit or consensus can choose
-among distributed outcomes.  These mechanisms differ, but each can serve the
-same specification-level role: making an irrevocable \emph{commitment}.
-Coordination adds synchronization, blocking, or aborts; across a network
-partition it can also destroy availability.  This paper asks which
-specifications intrinsically require any such commitment.
+Concurrent systems rely on coordination mechanisms ranging from mutexes and
+atomic instructions to database locks and distributed agreement protocols.
+These mechanisms prevent concurrent actions from producing incompatible
+outcomes, but add synchronization, blocking, or aborts; when coordination
+crosses a network partition, it can also destroy availability.  Avoiding
+unnecessary coordination is therefore a central goal in concurrent systems and
+databases.  This paper asks what coordination mechanisms accomplish at the
+specification level, and when that effect is intrinsically required.
 
 The CALM Conjecture proposed a crisp, bidirectional answer: consistency can be
 achieved without coordination exactly when the computation is
 monotone~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it, in
 both directions, for Datalog queries evaluated by networks of relational
-transducers~\cite{ameloot2013relational,hellerstein2020keeping}.  The theorem
-is therefore tied to one formalism. The intuition behind the CALM Theorem is often
-invoked in broader contexts, leaving a gap between folklore and what was proven.
+transducers~\cite{ameloot2013relational,hellerstein2020keeping}.  That CALM
+Theorem is therefore tied to one formalism, while its intuition is often
+invoked much more broadly.  This has left a gap between folklore and formal
+results.
 
 Several other traditions draw closely related boundaries, each in its own
 formalism.  The CAP Theorem proves an impossibility for available linearizable registers
@@ -143,84 +141,85 @@ availability preserve application invariants?  Section~\ref{sec:cap-corollary}
 answers the first question; the CRDT, HAT, and invariant-confluence parts of
 Section~\ref{sec:instances} answer the others.
 
-We begin by introducing a general notion of specification, agnostic to any
-language or implementation details.  It is consistent with state-machine-style
-specifications and can be compiled from them
-(Section~\ref{sec:design-boundary}); what it elides is the incidental detail of
-execution order, keeping only what the specification can ask about.  A
-\emph{functional ordered specification}
-(\S\ref{sec:functional-specifications}) is an arbitrary function
-\(f:(I,\InputOrd)\to(O,\OutputOrd)\) between a partially ordered input domain
-and a separately partially ordered output domain, monotone in the standard
-sense when \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\).  Concurrent
+We develop a unified criterion from a simple specification model: a
+conceptual relational table whose rows pair each input with the outputs that
+are within spec.  One partial order describes how input grows; another says
+when a later output preserves an earlier claim.  This model can encode
+state-machine-style specifications (Section~\ref{sec:design-boundary}), but
+omits incidental execution order and keeps only what the specification can ask
+about.  The table can express a classical consistency model, such as
+linearizability or causal consistency, or an application-specific requirement,
+such as an invariant.  We call any such specification \emph{consistent} when
+its executions are \emph{confluent}: states reached along different paths can
+still be brought to a common state.  The declared model determines which
+outputs are within spec; confluence asks whether those requirements can be
+maintained across concurrent executions.
+
+We begin with tables having a functional dependency from input to output
+(\S\ref{sec:functional-specifications}).  These \emph{functional ordered
+specifications} capture arbitrary functions
+\(f:(I,\InputOrd)\to(O,\OutputOrd)\) between separately ordered input and
+output domains.  Such a function is monotone when \(i\InputOrd j\) implies
+\(f(i)\OutputOrd f(j)\).  Concurrent
 executions make input arrival uncertain: different paths may see different
 input refinements, in different orders and batches.  Monotonicity says that an
-output exposed on any path remains valid as more input arrives; without it, exposing an output first requires sealing off the inputs
-that could contradict it.
+output exposed on any path remains valid as more input arrives.  Without it,
+the system must make an irrevocable \emph{commitment} that rules out behavior
+still within spec.  The framework identifies this need for commitment as the
+underlying reason to employ operational coordination mechanisms.  For a functional
+specification, commitment means sealing off inputs that could contradict the
+output.
 
-Our first step, \emph{Functional CALM} (\S\ref{sec:functional-calm-theorem}),
-generalizes the CALM result from relational logic languages and fact inclusion
+The first result is \emph{Functional CALM}
+(\S\ref{sec:functional-calm-theorem}).  It generalizes the CALM result from
+relational logic languages and fact inclusion
 to these arbitrary functions and refinement partial orders, giving a common
 language for coordination-freedom results over functional specifications,
-including query evaluation and the usual CRDT state interface.  ``Functional''
-means only that each input has one specified output; execution may
-be as nondeterministic as it likes.
+including query evaluation and the usual CRDT state interface.  It proves that
+Consistency is equivalent to monotonicity.  ``Functional'' means only that each
+input has one specified output; execution may be as nondeterministic as it
+likes.
 
 We then develop two orthogonal extensions.  First, we give Consistency its
 distributed reading (Section~\ref{sec:distributed-execution}).  Lamport
 histories place one run at each participant; transition projection removes
 delivery and strategy details, and Distributed Consistency asks whether the
-resulting participant states can meet.  This step applies to functional and ambiguous
-specifications alike.
+resulting participant states can still be brought to the same state.  This step applies to functional
+specifications and the extensions that follow.
 
-Second, we address a case functional interfaces do not raise: the specification
-itself may be \emph{ambiguous}---formally allowing several distinguishable
-outputs for one input.  Leader election may
-allow any participant to be eligible; a database may permit several serial
-schedules.  The specification is then a relation \(S\subseteq I\times O\)
-(\S\ref{sec:relational-specifications}), and the \emph{fiber}
-\(\fiber{i}=\{o:(i,o)\in S\}\) is the set of outputs within spec at input \(i\).
-
-Moving from a function to a relation, the question is still monotonicity, now
-of these output sets: \(\fiber{i}\) refines to \(\fiber{j}\) when
-every finite set of outputs within spec at \(i\) lies below a single output
-within spec at \(j\).  Monotonicity of the fiber map under this lift is
-\emph{Lifted Monotonicity} (\S\ref{sec:complete-calm-criterion}).  It asks
-both that outputs keep growing as input grows and that the alternatives at one
-input can coexist.  Where it fails, progress must rule out an alternative, a step we call a
-\emph{commitment} (Definition~\ref{def:transition-system}) and take as the
-specification-level definition of coordination.  In a distributed execution,
-participants who could select incompatible alternatives must agree before one
-makes that commitment.  Complete CALM equates Consistency with Lifted
-Monotonicity.  Through the distributed reading, it also says that the system's
-Lamport histories are confluent: whatever outputs participants expose, in
-whatever order input arrives, they can always be brought to a common state at
-any input combining theirs
+Second, we drop the functional dependency from input to output.  The resulting
+\emph{ambiguous} specifications allow several distinguishable outputs for one
+input, as in leader election and transaction ordering.  Multiple outputs
+require extending standard monotonicity to sets of outputs, a condition we call
+\emph{Lifted Monotonicity} (\S\ref{sec:complete-calm-criterion}).  Complete CALM
+equates this condition with Consistency.  Ambiguity adds another form of
+commitment: progress may require ruling out an alternative output.  In a
+distributed execution, participants that can select incompatible alternatives
+must agree first
 (\S\ref{sec:complete-calm-theorem}).
 
-We take confluence as the general definition of Consistency: not a particular
-consistency model, but the property that whatever the specification allows can
-still reach a common state.  Distributed Consistency is its realization over
-participant histories.  The acronym then reads \emph{Consistency As Lifted Monotonicity}, and
+The acronym Complete CALM reads \emph{Consistency As Lifted Monotonicity}, and
 the original CALM Theorem is its functional case over relations and queries.
 
 Complete CALM also yields a Complete CAP Theorem
-(\S\ref{sec:cap-corollary}).  Classical CAP gives an
-impossibility for linearizable registers under partition.
-The Complete CAP Theorem extends from impossibility to dichotomy, characterizing
-both sides of the boundary: specifications that are subject to CAP tradeoffs and those that are not.
-Linearizability becomes a special case on the tradeoff side.
+(\S\ref{sec:cap-corollary}).  Classical CAP gives an impossibility for
+linearizable registers under partition.  Complete CAP turns that one negative
+result into a dichotomy for any consistency model expressed by a specification:
+it identifies both specifications that face a CAP tradeoff and those that do
+not.  Linearizability is one instance on the tradeoff side.
 
-This paper makes four contributions:
+This paper makes five contributions:
 \begin{enumerate}
   \item A framework for concurrent computation: specifications as
         relations with ordered inputs and outputs, specification states
         recording what remains possible, and three transitions: input events,
-        output events, and \emph{commitments}.  Transition projections reduce
-        Lamport histories to vectors of participant states, and
-        Section~\ref{sec:instances} shows
-        that CRDTs, highly available transactions, and invariant confluence are
-        instances of the framework.
+        output events, and \emph{commitments}.
+  \item A general definition of Consistency as confluence, applicable whether
+        the specification expresses a classical consistency model or an
+        application-specific requirement.  Transition projections give this
+        definition a distributed reading over Lamport histories, and
+        Section~\ref{sec:instances} applies it to CRDTs, highly available
+        transactions, and invariant confluence.
   \item Functional CALM generalizes and proves the CALM Conjecture in the context of
         arbitrary functions, represented as ordered input/output specifications
         with separate input- and output-refinement partial orders.
@@ -1039,7 +1038,7 @@ Functional CALM defines Consistency as confluence of finite sets of runs.  We
 now realize those runs as participant executions in a distributed system.  The
 transition system does not change: Lamport histories add messages and cuts,
 transition projection reduces a cut to one specification state per participant, and
-Distributed Consistency asks whether those states can meet.
+Distributed Consistency asks whether those states can still be brought to the same state.
 
 \subsection{Lamport histories}
 \label{sec:histories}
@@ -1094,7 +1093,7 @@ specifications.)
 
 Histories retain delivery and strategy details that the specification does not
 need.  We next project those details away and ask whether the resulting
-participant states can meet.
+participant states can still be brought to the same state.
 
 \subsection{Transition projection and confluence}
 \label{sec:projection-confluence}
@@ -1213,8 +1212,9 @@ may still choose different events.
 
 \paragraph{Confluence of a history.}
 At a consistent cut $C$, the participants may hold different specification states
-$(\sigma_p(C))_{p\in P}$.  Confluence asks whether their local paths can meet
-in one later state, at every input that combines their current inputs.
+$(\sigma_p(C))_{p\in P}$.  Confluence asks whether their local paths can be
+brought to the same later state at every input that combines their current
+inputs.
 Formally, let $j$ be such a common refinement.  The history $H$ is
 \emph{confluent at $C$ and $j$} when it has an extension using input and
 output events in which every participant reaches the same specification state
@@ -2130,13 +2130,15 @@ result for a vote-counting machine whose state is the set of ballots received.
 \subsection{Consistency as confluence}
 \label{sec:consistency-as-confluence}
 
-The word consistency names two different things in the literature, and the
-framework separates them.  A consistency model---linearizability, causal
-consistency, snapshot isolation, read committed---is a specification: it says
-which outputs are allowed for a given history of operations.  Consistency
-in CALM's sense is a property of a specification: its histories are
-confluent.  Written as a table with orders, every traditional model therefore
-falls on one side of the dichotomy.  Linearizability and serializability
+The word consistency names two levels in the literature, and the framework
+connects them.  A consistency model---linearizability, causal consistency,
+snapshot isolation, read committed---is encoded as a specification: it says
+which outputs are allowed for a given history of operations.  Consistency in
+our cross-cutting sense is confluence of that specification's executions.  The
+same definition also applies when the table instead captures an
+application-specific requirement, such as an invariant.  Written as a table
+with orders, each declared model or requirement therefore falls on one side of
+the confluence boundary.  Linearizability and serializability
 allow total orders that cannot refine two concurrent explanations, so they
 are not monotone (Appendix~\ref{app:deployment},
 Section~\ref{sec:hat-instance}).  Causal consistency allows one explanation
@@ -2150,9 +2152,9 @@ content (Section~\ref{sec:crdt-instance}).  What the traditional definitions
 leave implicit, and the framework requires, is the output order: the same
 operation history yields a monotone or a non-monotone specification depending
 on what an exposed read is taken to promise
-(Section~\ref{sec:design-boundary}).  Confluence is thus not one more
-consistency model; it is the question each model answers one way or the
-other, whether what it allows can be provided without coordination.
+(Section~\ref{sec:design-boundary}).  Confluence therefore does not replace the
+declared consistency model or application requirement; it supplies a common
+test of whether that requirement can be maintained without coordination.
 
 \subsection{Safety is not liveness}
 
