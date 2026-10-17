@@ -283,15 +283,13 @@ proofs, but every notion the Functional CALM theorem rests on---specification
 states, input events, retirement, commitments, upper fibers, determination,
 output events, runs, and consistency---is exercised on the example.
 
-Two mathematical objects are in play.  The first is an \emph{ordered
-specification} $\Spec=(I,\InputOrd,O,\OutputOrd,S)$: a table
-$S\subseteq I\times O$ that captures exactly which outputs are within spec at
-each input, with a partial order on each column.  The specification stands
-alone, and the theorems are about it.  The second is needed to model many systems faithfully: a
-\emph{commitment basis} $\mathcal B=\{c_1,c_2,\ldots\}$ of partial functions on
-the states defined below, the irrevocable acts the system is permitted to
-take on its own authority.  The election introduces the specification first;
-the commitment basis first appears when we want to allow the registrar to close the polls.
+The framework begins with an \emph{ordered specification}
+$\Spec=(I,\InputOrd,O,\OutputOrd,S)$: a table $S\subseteq I\times O$ that
+captures exactly which outputs are within spec at each input, with a partial
+order on each column.  In this section, input functionally determines output:
+every input is paired with exactly one output.
+Section~\ref{sec:ambiguous-specifications} later drops this functional
+dependency.
 
 \begin{figure*}[t]
   \centering
@@ -303,11 +301,11 @@ the commitment basis first appears when we want to allow the registrar to close 
     \rowhdr
     \sh{$\mathbf{x\cdot\cdot}$} & \sh{$\bot$} \\
     $xy\cdot$ & \sh{$\bot$} \\
-    $xyx$ & \sh{$a$} \\
-    $xyy$ & \sh{$b$} \\
-    $xx\cdot$ & \sh{$a$} \\
-    $xxx$ & \sh{$a$} \\
-    $xxy$ & \sh{$a$} \\
+    $xyx$ & \sh{$x$} \\
+    $xyy$ & \sh{$y$} \\
+    $xx\cdot$ & \sh{$x$} \\
+    $xxx$ & \sh{$x$} \\
+    $xxy$ & \sh{$x$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,x,y\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
@@ -318,11 +316,11 @@ the commitment basis first appears when we want to allow the registrar to close 
     \rowhdr
     \retired{$x\cdot\cdot$} & \retired{$\bot$} \\
     \sh{$\mathbf{xy\cdot}$} & \sh{$\bot$} \\
-    $xyx$ & \sh{$a$} \\
-    $xyy$ & \sh{$b$} \\
-    \retired{$xx\cdot$} & \retired{$a$} \\
-    \retired{$xxx$} & \retired{$a$} \\
-    \retired{$xxy$} & \retired{$a$} \\
+    $xyx$ & \sh{$x$} \\
+    $xyy$ & \sh{$y$} \\
+    \retired{$xx\cdot$} & \retired{$x$} \\
+    \retired{$xxx$} & \retired{$x$} \\
+    \retired{$xxy$} & \retired{$x$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,x,y\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
@@ -333,14 +331,14 @@ the commitment basis first appears when we want to allow the registrar to close 
     \rowhdr
     \retired{$x\cdot\cdot$} & \retired{$\bot$} \\
     \retired{$xy\cdot$} & \retired{$\bot$} \\
-    \retired{$xyx$} & \retired{$a$} \\
-    \retired{$xyy$} & \retired{$b$} \\
-    \sh{$\mathbf{xx\cdot}$} & \sh{$a$} \\
-    $xxx$ & \sh{$a$} \\
-    $xxy$ & \sh{$a$} \\
+    \retired{$xyx$} & \retired{$x$} \\
+    \retired{$xyy$} & \retired{$y$} \\
+    \sh{$\mathbf{xx\cdot}$} & \sh{$x$} \\
+    $xxx$ & \sh{$x$} \\
+    $xxy$ & \sh{$x$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined,}\\
-    \multicolumn{2}{@{}l}{\footnotesize not sealed; $a$ is exposable}
+    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{x\}$; determined,}\\
+    \multicolumn{2}{@{}l}{\footnotesize not sealed; $x$ is exposable}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
@@ -348,11 +346,11 @@ the commitment basis first appears when we want to allow the registrar to close 
     \rowhdr
     \retired{$x\cdot\cdot$} & \retired{$\bot$} \\
     \sh{$\mathbf{xy\cdot}$} & \sh{$\bot$} \\
-    \retired{$xyx$} & \retired{$a$} \\ \strikerow
-    \retired{$xyy$} & \retired{$b$} \\ \strikerow
-    \retired{$xx\cdot$} & \retired{$a$} \\
-    \retired{$xxx$} & \retired{$a$} \\
-    \retired{$xxy$} & \retired{$a$} \\
+    \retired{$xyx$} & \retired{$x$} \\ \strikerow
+    \retired{$xyy$} & \retired{$y$} \\ \strikerow
+    \retired{$xx\cdot$} & \retired{$x$} \\
+    \retired{$xxx$} & \retired{$x$} \\
+    \retired{$xxy$} & \retired{$x$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; sealed and}\\
     \multicolumn{2}{@{}l}{\footnotesize determined; $\bot$ is the result}
@@ -367,15 +365,11 @@ the commitment basis first appears when we want to allow the registrar to close 
 \end{figure*}
 
 \paragraph{A specification is a table.}
-A specification is a table of input--output pairs, listing the possible outputs
-for each input; when the input column determines the output
-column, as for squaring with rows $(2,4)$, $(3,9)$, $(4,16),\ldots$, the
-specification is \emph{functional}.  Everything that follows is a matter of
-removing rows from a specification, and for now ``the system'' is a single
-actor; Section~\ref{sec:distributed-execution} assigns these actions to
-participants.
+A specification table lists the output paired with each input.  Squaring, for example,
+has rows $(2,4)$, $(3,9)$, $(4,16),\ldots$.  Everything that follows is a
+matter of removing rows from a specification.
 
-Figure~\ref{fig:election-frames}(a) is the specification of a small election.
+Figure~\ref{fig:election-frames}(a) shows a set of rows taken from the specification of a small election.
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
 $y$; the result is whichever candidate has two ballots, and $\bot$ (no result
 yet) until one does.  An input represents the
@@ -383,7 +377,7 @@ ballots seen so far, written as a three-letter string whose $k$th position holds
 $v_k$'s ballot or a dot if it has not arrived; only rows above $x\cdot\cdot$,
 where $v_1$ has voted $x$, are shown.  The first row says that with $v_1$'s
 ballot alone the result is $\bot$; row $xx\cdot$ says that once $v_2$ also votes
-$a$ the result is $x$; row $xyy$ says that if $v_2$ and $v_3$ both vote $b$ the
+$x$ the result is $x$; row $xyy$ says that if $v_2$ and $v_3$ both vote $y$ the
 result is $y$.
 
 The rows are only part of the specification.  Each column also carries a
@@ -391,28 +385,28 @@ partial order, and both orders are design decisions.  The \emph{input order}
 says what counts as more input: here, more ballots, so $xy\cdot$ \emph{refines}
 $x\cdot\cdot$, while $xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output
 order} says when a later output keeps every promise an earlier one made: here
-$\bot$ lies below both $a$ and $b$, so ``no result yet'' can eventually refine
+$\bot$ lies below both $x$ and $y$, so ``no result yet'' can eventually refine
 to a winner, but $x$ and $y$ are incomparable, so neither winner refines the
 other.  A
 different design could make all outputs incomparable, so that every result is
 final; we return to that choice below.  Given these orders, one can follow any input
 upward through its refinements, say $x\cdot\cdot$ to $xy\cdot$ to $xyx$: the
-output climbs too, from $\bot$ to $a$, and never steps down or sideways.  That
+output climbs too, from $\bot$ to $x$, and never steps down or sideways.  That
 is what it means for the \emph{specification} to be \emph{monotone}, a property
 of the rows together with the orders.
 
 \paragraph{Input arrives.}
-Now $v_2$'s ballot arrives, for $b$; panel (b) shows the result.  The
+Now $v_2$'s ballot arrives, for $y$; panel (b) shows the result.  The
 \emph{current input}, the ballots seen so far, has advanced from $x\cdot\cdot$
 to $xy\cdot$, shown in bold.  What an input event does to the specification
 is governed by one rule: only the rows at the current input and its
 refinements remain, and every other row is \emph{retired}.  Each state pairs the current input with the rows that remain: it records what
 is still possible and how far input has come.  Each panel shows one such state,
 with its remainder table and current input in bold.  The inputs that still have rows are the \emph{valid} ones.
-The environment produces input events; the system does not choose them.  The
-system combines an arriving cumulative input $a$ with its current input $i$
-using a system-defined operation $\mathsf{advance}(i,a)=j$, and records the
-result as $\mathsf{input}(j)$, whether $a$ arrived directly or in a message.
+The environment, not the system, supplies new input.  Here $v_2$'s ballot
+extends the cumulative input from $x\cdot\cdot$ to $xy\cdot$, and the system
+records that change as $\mathsf{input}(xy\cdot)$ whether the ballot arrived
+directly or in a message.
 The state depends only on the input reached, not on the order or
 grouping in which the ballots arrived.  In panel (b) the input has grown
 from $x\cdot\cdot$ to $xy\cdot$, so the row at $x\cdot\cdot$ is retired; the
@@ -432,7 +426,7 @@ $xyy$ in which $v_3$ votes, so the upper fiber, shaded, is $\{\bot,x,y\}$:
 either candidate could still win.
 
 Panel (c) shows the alternative in which $v_2$ voted $x$.  The rows at or
-above $xx\cdot$ all say $a$, so the upper fiber is the singleton $\{x\}$ and
+above $xx\cdot$ all say $x$, so the upper fiber is the singleton $\{x\}$ and
 the current input is \emph{determined}: it fixes the output regardless of what
 ballot $v_3$ could cast.  Narrowing the upper fiber until a single output
 remains is what we call \emph{determination}.  Here input arrival determined the state on its own; below we meet the case where the system must act.
@@ -445,12 +439,11 @@ input has not changed: those inputs have been rendered invalid.  This is a
 \emph{commitment}, specifically an \emph{input-sealing commitment}, and it is
 an act of the system rather than of the environment.  It
 irrevocably rules out refinements that were within spec.
-Nothing in the specification says whether the registrar may do this.  That is
-part of the second mathematical object mentioned above: the commitment basis.
-A faithful model of an election whose polls can close
-includes, alongside $\Spec$, a commitment basis $\mathcal B$ containing this act,
-and a model of one whose polls cannot close omits it.  Only the system may
-perform a commitment, and only one in $\mathcal B$.  Afterward no refinement of
+Nothing in the specification says whether the registrar may do this.  The
+system's \emph{commitment basis} lists the irrevocable acts it is authorized to
+perform.  A model of an election whose polls can close includes this act in its
+basis $\mathcal B$; a model of one whose polls cannot close omits it.  Afterward
+no refinement of
 $xy\cdot$ remains valid, and its upper fiber has collapsed to $\{\bot\}$, so
 it too is determined.
 For a functional specification, input-sealing commitments like this one are
@@ -467,11 +460,11 @@ adds choice commitments when an input can be associated with many outputs.
     Input & Output \\ \midrule
     \sh{$\mathbf{x\cdot\cdot}$} & \sh{$\bot$} \\
     \retired{$xy\cdot$} & \retired{$\bot$} \\ \strikerow
-    \retired{$xyx$} & \retired{$a$} \\ \strikerow
-    \retired{$xyy$} & \retired{$b$} \\ \strikerow
-    \retired{$xx\cdot$} & \retired{$a$} \\ \strikerow
-    \retired{$xxx$} & \retired{$a$} \\ \strikerow
-    \retired{$xxy$} & \retired{$a$} \\ \strikerow
+    \retired{$xyx$} & \retired{$x$} \\ \strikerow
+    \retired{$xyy$} & \retired{$y$} \\ \strikerow
+    \retired{$xx\cdot$} & \retired{$x$} \\ \strikerow
+    \retired{$xxx$} & \retired{$x$} \\ \strikerow
+    \retired{$xxy$} & \retired{$x$} \\ \strikerow
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined;}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is exposable}
@@ -493,14 +486,14 @@ each input has one row, that means the event removes no row at all, which is
 the case exactly when $o$ is smaller than everything in the upper fiber: every
 input that may still arrive then has an output larger than $o$.  Read the footers of Figure~\ref{fig:election-frames}:
 $\bot$ is exposable in every panel, because every shaded output refines it,
-and $a$ is exposable in panel (c).
+and $x$ is exposable in panel (c).
 
 \paragraph{When monotonicity fails.}
 Now change one thing: make all outputs incomparable, dropping
 $\bot\OutputOrd x,y$, so that an output refines only itself; this is the
 \emph{equality order}.  The rows are the same, but in panels (a) and (b)
 nothing is exposable: $\bot$ no longer lies below the $x$ and $y$ in the upper
-fiber, so exposing it would remove every row whose output is $a$ or $b$, and
+fiber, so exposing it would remove every row whose output is $x$ or $y$, and
 with them every input at which a result is reached.  To expose anything, the
 registrar must first make an input-sealing commitment.
 Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
@@ -527,7 +520,7 @@ environment, not the system, decides which input $k$ arrives, so the two
 states must be able to meet at any of them.  In the election, runs with
 current inputs
 $x\cdot\cdot$ and $xy\cdot$ have each exposed $\bot$; advancing both to $xyx$
-and exposing $a$ brings them to the same state.  Under the equality order, a
+and exposing $x$ brings them to the same state.  Under the equality order, a
 run that exposes $\bot$ at $x\cdot\cdot$---an output that is not exposable
 there---would remove the row at $xyx$, so no input event could advance it to
 $xyx$, and it could never meet the run that received $v_2$'s ballot there:
