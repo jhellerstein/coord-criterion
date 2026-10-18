@@ -776,10 +776,13 @@ The system model supplies a partial function
 where $i$ is current and $a$ is arriving cumulative input.  We require
 $\mathsf{advance}(i,a)=a$ whenever $i\InputOrd a$, so an already cumulative
 arrival is recorded directly.  The computation is not an event; the resulting
-$\mathsf{input}(j)$ is.  For set-valued inputs,
-advance is union; for a join-semilattice, it is join.  The function is partial
-because two inputs need not have a common refinement, and the input order need
-not select a unique one.
+$\mathsf{input}(j)$ is.  For set-valued inputs, advance may be union; for a
+join-semilattice, it may be join.  Neither structure is assumed.  In particular,
+two inputs may have no common refinement, or several incomparable common
+refinements, and the framework requires neither a least common refinement nor a
+lattice.  The function is partial because advance need not be defined for every
+pair; where several results are possible, it records the one chosen by the
+system model.
 
 Input events compose: $\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has
 the same effect as $\mathsf{input}(k)$ alone, and $\mathsf{input}(i)$ at
