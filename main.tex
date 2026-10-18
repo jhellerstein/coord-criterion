@@ -564,7 +564,9 @@ meet.  Appendix~\ref{app:registers} instead instantiates the framework with
 linearizability and causal consistency, two application-independent consistency
 models that license different register behaviors and therefore yield different
 confluence results; Section~\ref{sec:consistency-as-confluence} develops this
-distinction generally.
+distinction generally.  Specifications can also be composed: joining component
+tables on their shared interface yields an end-to-end specification
+(Appendix~\ref{app:composition}).
 
 Monotonicity gives a condition directly on the specification table: whenever
 input grows from $i$ to $k$, the output at $k$ refines the output at $i$.
@@ -2229,7 +2231,9 @@ Let
   \quad\text{and}\quad
   \Spec_2=(M,\preceq_M,O,\OutputOrd,S_2)
 \]
-be ordered relational specifications with the same ordered middle domain.  Their
+be ordered relational specifications with the same ordered middle domain.  This
+is a type constraint on both the carrier $M$ and its order $\preceq_M$: the
+output type of $\Spec_1$ is exactly the input type of $\Spec_2$.  Their
 \emph{sequential composition} is the projection of their equijoin on $M$,
 \begin{equation}
   S_2\circ S_1
@@ -2276,17 +2280,62 @@ Lemma~\ref{lem:composition}.
 
 \subsection{Composition with independent inputs}
 
-Two components may also have separate configuration or environment inputs.
-Let $\Spec_F$ have table $F\subseteq(I\times A)\times B$ and let $\Spec_G$
-have table $G\subseteq(J\times B)\times C$, using product orders on their
-input domains.  Their \emph{independently parameterized composition} has table
-\begin{equation}
+Two components may also have separate configuration or environment inputs.  Let
+\begin{align*}
+  \Spec_F&=\bigl(I\times A,\preceq_I\times\preceq_A,
+                  B,\preceq_B,F\bigr),\\
+  \Spec_G&=\bigl(J\times B,\preceq_J\times\preceq_B,
+                  C,\preceq_C,G\bigr)
+\end{align*}
+be ordered relational specifications, with tables
+$F(I,A,B)\subseteq(I\times A)\times B$ and
+$G(J,B,C)\subseteq(J\times B)\times C$.  The type boundary is the ordered domain
+$(B,\preceq_B)$: it is both the output type of $\Spec_F$ and the second input
+type of $\Spec_G$, with the same carrier and the same refinement order.  The
+shared order is what lets a refinement produced by $\Spec_F$ serve as an input
+refinement to $\Spec_G$.
+
+Their \emph{independently parameterized composition} is the global query plan
+\begin{align}
   G\star F
-  =\{((i,j,a),c):\exists b.\ ((i,a),b)\in F
+  &=\pi_{I,J,A,C}\bigl(F\Join_{B}G\bigr) \notag\\
+  &=\{((i,j,a),c):\exists b.\ ((i,a),b)\in F
                          \land ((j,b),c)\in G\},
   \label{eq:parameterized-composition}
+\end{align}
+with the product order on $I\times J\times A$.  As elsewhere, we retain only
+composed inputs with a nonempty output fiber.
+
+The same query can be planned in curried form.  For fixed parameter values,
+let
+\begin{equation}
+  F_i=\pi_{A,B}(\sigma_{I=i}F),
+  \qquad
+  G_j=\pi_{B,C}(\sigma_{J=j}G).
+  \label{eq:curried-fibers}
 \end{equation}
-with the product order on $I\times J\times A$.
+The curried plan first forms the cross-product of parameter inputs $I\times J$,
+then equijoins the corresponding component fibers on their ordered $B$ column.
+
+\begin{proposition}[Curried equijoin plan]
+\label{prop:curried-query-plan}
+The global plan in Equation~\ref{eq:parameterized-composition} equals
+\begin{equation}
+  \bigcup_{(i,j)\in I\times J}
+  \left\{((i,j,a),c):
+    (a,c)\in\pi_{A,C}\bigl(F_i\Join_B G_j\bigr)\right\}.
+  \label{eq:curried-query-plan}
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+A row $((i,j,a),c)$ is produced by the global plan exactly when some $b$
+satisfies $(i,a,b)\in F$ and $(j,b,c)\in G$.  By
+Equation~\ref{eq:curried-fibers}, these two conditions are equivalent to
+$(a,b)\in F_i$ and $(b,c)\in G_j$.  That is exactly the condition that
+$(a,c)$ appear in $\pi_{A,C}(F_i\Join_B G_j)$ for the pair $(i,j)$ selected
+from $I\times J$.  Thus each plan contains exactly the same rows.
+\end{proof}
 
 \begin{lemma}[Independently parameterized composition]
 \label{lem:parameterized-composition}
@@ -2305,17 +2354,29 @@ $c\in G(j,b)$ refining every $c_r$.  Hence $((i,j,a),c)$ is a row of
 $G\star F$ and is their required common refinement.
 \end{proof}
 
-For monotone functions $f:I\times A\to B$ and $g:J\times B\to C$, the
-graph-table instance gives the monotone function
+For monotone functions
+\begin{align*}
+  f&:(I,\preceq_I)\times(A,\preceq_A)\to(B,\preceq_B),\\
+  g&:(J,\preceq_J)\times(B,\preceq_B)\to(C,\preceq_C),
+\end{align*}
+the graph-table instance gives the monotone function
 \begin{equation}
   h(i,j,a)=g\bigl(j,f(i,a)\bigr).
   \label{eq:curried-composition}
 \end{equation}
 Equivalently, curry the components as
-$f^\sharp:I\to(A\to B)$ and $g^\sharp:J\to(B\to C)$, with pointwise orders on
-the function spaces; then
-$h^\sharp(i,j)(a)=g^\sharp(j)(f^\sharp(i)(a))$.  Thus monotone components
-remain monotone when wired together even when each has its own input.
+\begin{align*}
+  f^\sharp&:(I,\preceq_I)
+       \to\bigl((A,\preceq_A)\to(B,\preceq_B)\bigr),\\
+  g^\sharp&:(J,\preceq_J)
+       \to\bigl((B,\preceq_B)\to(C,\preceq_C)\bigr),
+\end{align*}
+with pointwise orders on the function spaces.  Then
+$h^\sharp(i,j)(a)=g^\sharp(j)(f^\sharp(i)(a))$.  Proposition~\ref{prop:curried-query-plan}
+shows that this curried rewrite is precisely the relational plan that takes the
+cross-product of parameter inputs and equijoins the selected graph fibers on
+the typed $B$ column.  Thus monotone components remain monotone when wired
+together even when each has its own input.
 
 \subsection{Proper Coordination}
 
