@@ -232,8 +232,8 @@ This paper makes six contributions:
 \begin{enumerate}
   \item A framework for concurrent computation: specifications as
         relations with ordered inputs and outputs, specification states
-        recording what remains possible, and three transitions: input events,
-        output events, and \emph{commitments}.
+        recording what remains possible, and one transition system with input,
+        preparation (including any required commitments), and exposure actions.
   \item A general definition of Consistency as confluence, applicable whether
         the specification expresses a classical consistency model or an
         application-specific requirement.  Transition projections give this
@@ -247,11 +247,11 @@ This paper makes six contributions:
         coordination with commitment.  It proves that Consistency as confluence
         is equivalent to Lifted Monotonicity; through transition projection,
         both are equivalent to Distributed Consistency over Lamport histories.  A monotone specification therefore
-        needs no coordination, since
-        exposing outputs alone keeps its histories confluent; where monotonicity
+        needs no coordination, since preparing outputs requires only retirement
+        and exposure preserves confluence; where monotonicity
         fails, progress requires a commitment and therefore coordination.
           When participants must retain independently selectable conflicting
-          alternatives, those courses are shown to require mutual exclusion.
+          alternatives, those sequences are shown to require mutual exclusion.
           Distributed agreement is one mechanism; static authority is another.
           In partition form
         this is the Complete CAP Theorem,
@@ -299,10 +299,10 @@ CRDTs shared: specifications that are functions, in which each
 input has a single specified output.  Section~\ref{sec:election-story} walks
 through the framework informally on an election.
 Section~\ref{sec:functional-specifications} defines functional specifications
-and monotonicity, Section~\ref{sec:determination} defines the I/O transition
-system and Consistency, Section~\ref{sec:functional-calm-theorem} proves
-Functional CALM, and Section~\ref{sec:canonical-transition-system} factors
-unrestricted output into commitment and exposable output events.
+and monotonicity, Section~\ref{sec:determination} defines the transition system
+and Consistency, Section~\ref{sec:functional-calm-theorem} proves Functional
+CALM, and Section~\ref{sec:canonical-transition-system} identifies when an
+output can be prepared without commitment.
 
 \subsection{The framework on an election}
 \label{sec:election-story}
@@ -314,7 +314,7 @@ italics also mark the occasional
 standard term borrowed from database theory.  Nothing here is needed for the
 proofs, but every notion the Functional CALM theorem rests on---specification
 states, input events, retirement, commitments, upper fibers, determination,
-output events, runs, and consistency---is exercised on the example.
+preparation, exposure, runs, and consistency---is exercised on the example.
 
 The framework begins with an \emph{ordered specification}
 $\Spec=(I,\InputOrd,O,\OutputOrd,S)$: a table $S\subseteq I\times O$ that
@@ -390,7 +390,7 @@ dependency.
   \end{tabular}
   \caption{The election specification and three states reached from it.  Only rows above the input $x\cdot\cdot$ are shown.  The current input is
   in bold; shaded cells are the current input and the upper fiber at that
-  input.  Gray: the row has been retired by an input or output event.
+  input.  Gray: the row has been retired by an input event or preparation.
   Struck through: the row has been removed by a commitment; no remaining row
   preserves its contents.  Panels (b) and (c) follow input events; panel (d) follows a
   commitment.}
@@ -511,47 +511,52 @@ specifications with several outputs at one input.
   \label{fig:nonmonotone-frame}
 \end{figure}
 
-\paragraph{Output events.}
-Up to this point we have not discussed how outputs are represented in our model.
-An \emph{output event} \emph{exposes} a result $o$ to a client; this is a
-distinct act from input events and commitments.  In a functional specification,
-$o$ is \emph{exposable} exactly when every possible future output---the values
-in the upper fiber---refines $o$.  If this test fails, an authorized commitment
-can remove the conflicting rows and thereby make $o$ exposable.  In
-Figure~\ref{fig:election-frames}, $\bot$ is exposable in every panel because
-every shaded output refines it, and $x$ is exposable in panel (c).
+\paragraph{Preparing and exposing outputs.}
+Output handling has two actions.  First, $\mathsf{prepare}(o)$ removes rows
+whose outputs do not refine $o$; this prepares the promise that the eventual
+result will refine $o$.  Preparation is a macro: removed alternatives that are
+not preserved by remaining rows require commitments authorized by the system's
+basis.  Then $\mathsf{expose}(o)$ reveals the prepared result to a client but
+removes no further row.  Keeping exposure explicit matters because what a
+client learns may influence later input.
+
+In a functional specification, $o$ is \emph{exposable} exactly when preparation
+requires no commitment: every possible future output---the values in the upper
+fiber---refines $o$.  If this test fails, an authorized commitment in the
+preparation expansion can remove the conflicting rows and thereby make $o$
+exposable.  In Figure~\ref{fig:election-frames}, $\bot$ is exposable in every
+panel because every shaded output refines it, and $x$ is exposable in panel (c).
 
 \paragraph{When monotonicity fails.}
 Now change one thing in our example: make all outputs incomparable, dropping
 $\bot\OutputOrd x,y$, so that an output refines only itself; this is the
 \emph{equality order}.  The rows are the same, but in panels (a) and (b)
 nothing is exposable: $\bot$ no longer lies below the $x$ and $y$ in the upper
-fiber.  To expose anything, the registrar must first make an input-sealing
-commitment.
+fiber.  To expose anything, the registrar's preparation expansion must include
+an input-sealing commitment.
 Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
 $x\cdot\cdot$: every refinement is removed by commitment, the upper fiber
 collapses to $\{\bot\}$, and only now is $\bot$ exposable.  That contrast is
 Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
-specification can expose outputs as input arrives; a non-monotone one must
-first make a commitment.
+specification can prepare and expose outputs without commitment; a non-monotone
+one requires commitment in some preparation expansion.
 
 \paragraph{A transition system.}
 We now have the ingredients for a state transition model.  A state consists of
 two things: the current input and the rows of the specification that remain.
 Each panel above depicts one such state, and each action moves from one state to
 another.  An input event grows the current input and retires rows that are no longer
-reachable.  An output event keeps the input fixed and exposes an exposable
-result.  A commitment also
-keeps the input fixed, but removes alternatives authorized by the commitment
-basis.  Input events come from the environment; output events and commitments
-come from the system.  Panels (b) through (e) are reached from panel (a) by one
-or two transitions.  For the confluence test, the formal development first lets
-an I/O transition system select any current output; it then separates
-commitments from exposable output events in the canonical transition system.
+reachable.  Preparation keeps the input fixed and removes the alternatives inconsistent
+with its output; its expansion may use commitments authorized by the commitment
+basis.  Exposure then reveals the prepared output without changing the table.
+Input events come from the environment; preparation and exposure come from the
+system.  Panels (b) through (e) are reached from panel (a) by input or
+preparation actions.  The formal development uses this one transition system
+throughout.
 
 \paragraph{Consistency.}
 Our goal is \emph{confluence}: any finite collection of input/output paths
-through the I/O transition system can be brought to one common state, whatever
+through the transition system can be brought to one common state, whatever
 further input arrives.  We call a specification \emph{consistent} when all
 such paths are confluent.
 
@@ -596,16 +601,13 @@ for Complete CALM.
     initial state & $\sigma_0(i)=(i,\{(k,o)\in S:i\InputOrd k\})$ & Eq.~\ref{eq:canonical-initial-state} \\
     input event & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,R\mathbin{\upharpoonright_I}j)$ & Def.~\ref{def:io-transition-system} \\
     \addlinespace
-    \textbf{I/O system} & & \\
+    \textbf{Output handling} & & \\
     \midrule
-    unrestricted output & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,R\mathbin{\upharpoonright_O}o)$ & Def.~\ref{def:io-transition-system} \\
-    I/O run & input and unrestricted output events & Def.~\ref{def:run} \\
-    \addlinespace
-    \textbf{Canonical system} & & \\
-    \midrule
-    commitment & $(i,R)\xrightarrow{c}(i,R')$, \ $c\in\mathcal B$ & Def.~\ref{def:transition-system} \\
-    exposable output & output event defined without a preceding commitment & Def.~\ref{def:exposable} \\
-    input-sealing commitment & makes a valid input invalid & Sec.~\ref{sec:canonical-transition-system} \\
+    prepare & $(i,R)\xrightarrow{\mathsf{prepare}(o)}(i,R\mathbin{\upharpoonright_O}o)$ & Sec.~\ref{sec:determination} \\
+    expose & reveals prepared $o$; no state change & Eq.~\ref{eq:output-stage} \\
+    canonical exposure basis & supports preparation of every permitted output & Sec.~\ref{sec:determination} \\
+    exposable output & preparation expansion uses no commitment & Def.~\ref{def:exposable} \\
+    run & finite input, preparation, and exposure events & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
@@ -613,9 +615,8 @@ for Complete CALM.
     Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
     \bottomrule
   \end{tabular}
-  \caption{Reference for Functional CALM: the I/O system used to test
-  confluence and the canonical system that separates commitments from output
-  exposure.}
+  \caption{Reference for Functional CALM: one transition system separates
+  preparation, including any required commitments, from observable exposure.}
   \label{fig:formalism-summary}
 \end{figure*}
 
@@ -657,37 +658,28 @@ This is the standard mathematical definition of a monotone function.  In
 systems terms, an output exposed from partial input remains valid as more input
 arrives.
 
-\subsection{The I/O transition system}
+\subsection{The transition system}
 \label{sec:determination}
 
-Section~\ref{sec:election-story} previewed the full transition model: input
-events, output events, and system actions that remove alternatives.  We called
-the last kind \emph{commitments} informally; their formal definition comes in
-Section~\ref{sec:canonical-transition-system}.  We now step back and begin
-with a simpler model containing only input and output events.  Its output events
-are unrestricted: they may select any output at the current input and remove
-the rows that do not refine it.  This intentionally combines exposure with any
-restriction needed to honor the exposed output.  That conflation is deliberate:
-it lets non-monotonicity appear as a failure of confluence.  Section~\ref{sec:election-story}
-used \emph{exposable} informally for an output that needs no restriction of the
-remaining rows.  If this model allowed only such outputs, monotonicity would be
-enforced by its transition rule rather than studied, and the CALM equivalence
-would be built into the model.  Section~\ref{sec:canonical-transition-system}
-will define exposability formally.  The simpler model instead asks whether all
-input/output paths are confluent without yet classifying the restrictions they
-make.
+Section~\ref{sec:election-story} previewed one transition model with input,
+commitment, and output handling.  We now define it.  Output handling has two
+stages.  First, $\mathsf{prepare}(o)$ restricts the remaining table to rows
+whose outputs refine $o$; this is a macro whose implementation may require
+commitments.  Then $\mathsf{expose}(o)$ reveals $o$ to the environment but does
+not further change the specification state.  Keeping exposure explicit matters:
+the environment may learn from $o$ and choose subsequent input accordingly.
 
-This subsection defines that I/O transition system, its runs, and Consistency.
-Section~\ref{sec:canonical-transition-system} then returns to the model
-previewed in Section~\ref{sec:election-story}, formally defining commitments
-and factoring each unrestricted output event into any required commitments
-followed by an exposable output event.
+The CALM proofs use a canonical exposure basis that can prepare every output
+the specification permits.  This is the right basis for testing the full
+specification: a weaker basis could hide non-monotonicity merely by making a
+problematic output unavailable.  The basis is nevertheless output-directed;
+it removes only rows that conflict with the output being prepared.
 
 \paragraph{The specification and remainder tables.}
 The graph $S\subseteq I\times O$ is the \emph{specification table}; its rows
 are the pairs $(i,f(i))$, one at each input.  During a run, $R\subseteq S$ is
-the \emph{remainder table}; it records the rows not yet removed.  Neither kind
-of event adds a row.
+the \emph{remainder table}; it records the rows not yet removed.  No action
+adds a row.
 
 Inputs are \emph{cumulative}: an input is everything seen so far, and
 $i\InputOrd j$ means that $j$ contains at least the information in $i$.  The
@@ -733,44 +725,18 @@ initial state} is
 the specification table restricted to $i$ and its refinements.
 Figure~\ref{fig:election-frames}(a) is $\sigma_0(x\cdot\cdot)$.
 
-\begin{definition}[I/O transition system]
-\label{def:io-transition-system}
-The \emph{I/O transition system} has specification states as its states and
-partial functions of two kinds as its transitions.  Each transition is defined
-only when its result is a specification state.
-\begin{enumerate}
-  \item \emph{Input event.}  For $j\in I$ with $i\InputOrd j$,
-        $\mathsf{input}(j)$ makes $j$ current and removes every row whose input
-        does not refine $j$:
-        \begin{equation}
-          (i,R)\xrightarrow{\mathsf{input}(j)}
-          \bigl(j,\ R\mathbin{\upharpoonright_I}j\bigr),
-          \qquad
-          R\mathbin{\upharpoonright_I}j=\{(k,u)\in R:\ j\InputOrd k\},
-          \label{eq:input-event}
-        \end{equation}
-        defined when $R$ has a row at $j$.
-  \item \emph{Unrestricted output event.}  For $(i,o)\in R$,
-        $\mathsf{output}(o)$ exposes $o$ and removes every row whose output does
-        not refine it:
-        \begin{equation}
-          (i,R)\xrightarrow{\mathsf{output}(o)}
-          \bigl(i,\ R\mathbin{\upharpoonright_O}o\bigr),
-          \qquad
-          R\mathbin{\upharpoonright_O}o=\{(k,u)\in R:\ o\OutputOrd u\}.
-          \label{eq:residual-refining-fibers}
-        \end{equation}
-        This event is always defined because $(i,o)$ remains.
-\end{enumerate}
-\end{definition}
-
-The output event is \emph{unrestricted} because it may select any output paired
-with the current input.  As motivated above, it treats exposure and the row
-restriction needed to honor that exposure as one action so confluence can test
-whether the restriction was necessary.  The canonical transition system will
-separate them.
-
 \paragraph{Input events.}
+For $j\in I$ with $i\InputOrd j$, an input event makes $j$ current and removes
+every row whose input does not refine $j$:
+        \begin{equation}
+  (i,R)\xrightarrow{\mathsf{input}(j)}
+  \bigl(j,\ R\mathbin{\upharpoonright_I}j\bigr),
+  \qquad
+  R\mathbin{\upharpoonright_I}j=\{(k,u)\in R:\ j\InputOrd k\},
+  \label{eq:input-event}
+        \end{equation}
+defined when $R$ has a row at $j$.
+
 An input event records the new cumulative input, not the value that caused it.
 The system model supplies a partial function
         \begin{equation}
@@ -800,20 +766,76 @@ the same effect as $\mathsf{input}(k)$ alone, and $\mathsf{input}(i)$ at
 $(i,R)$ is the identity.  Thus input order, batching, and repeated delivery do
 not affect the state reached by input events alone.
 
-\begin{definition}[I/O run and I/O-generated state]
+\paragraph{Commitments and output handling.}
+A \emph{commitment basis} $\mathcal B$ is the set of commitments a system is
+authorized to apply.  A commitment $c\in\mathcal B$ is a partial function on
+specification states with $c(i,R)=(i,R')$, where $R'\subsetneq R$, that removes
+at least one row $(k,x)$ for which no retained output at $k$ refines $x$.  A
+preparation expansion is atomic at the level of the transition system:
+histories record the logical $\mathsf{prepare}(o)$ action, while an
+implementation trace may replace it by a finite sequence of retirements and
+basis-supported commitments with the same aggregate effect.
+
+For an output $(i,o)\in R$, define its \emph{preparation target}
+        \begin{equation}
+  R\mathbin{\upharpoonright_O}o=\{(k,u)\in R:o\OutputOrd u\}.
+  \label{eq:residual-refining-fibers}
+        \end{equation}
+In a functional specification, if this target is smaller than $R$, the partial
+function
+        \begin{equation}
+  \kappa_{(i,R),o}(i,R)
+    =\bigl(i,R\mathbin{\upharpoonright_O}o\bigr)
+  \label{eq:canonical-preparation-commitment}
+        \end{equation}
+is a commitment: every removed row is the only row at its input, so no retained
+row there refines it.  The \emph{canonical exposure basis}
+$\mathcal B_{\!S}^{\mathrm{exp}}$ contains every such nonidentity
+$\kappa_{(i,R),o}$, for every specification state and every $(i,o)\in R$.
+
+The macro $\mathsf{prepare}(o)$ takes $(i,R)$ to
+$\bigl(i,R\mathbin{\upharpoonright_O}o\bigr)$.  Under the canonical exposure
+basis it expands to the identity when the target is already $R$, and otherwise
+to $\kappa_{(i,R),o}$.  Under another basis it is executable only when a finite
+sequence of basis commitments has exactly the same aggregate effect.  Section~\ref{sec:safe-exposure}
+extends the expansion under output choice, where it may also retire dominated
+rows without commitment.
+
+The event $\mathsf{expose}(o)$ reveals $o$ to the environment and leaves the
+specification state unchanged.  A well-formed run may expose $o$ only in the
+\emph{exposure sequence}
+        \begin{equation}
+  \mathsf{prepare}(o);\mathsf{expose}(o),
+  \label{eq:output-stage}
+        \end{equation}
+with no intervening local event.  A finite prefix may end after preparation, so
+a cut may observe the prepared state before exposure.  An implementation trace
+replaces the preparation macro by its preparation expansion but retains the
+exposure event.  Consequently exposure may influence every later input even
+though it does not change $(i,R)$.
+
+\begin{definition}[Transition system and run]
+\label{def:io-transition-system}
+\label{def:transition-system}
+The \emph{transition system} has specification states as its states, input
+events as in Equation~\ref{eq:input-event}, logical preparation actions
+supported by its commitment basis, and state-preserving exposure events.  A
+\emph{run} is any finite sequence of these actions from a canonical initial
+state whose exposure events obey Equation~\ref{eq:output-stage}; it may end
+after a preparation.  Each preparation may be refined to its preparation
+expansion in an implementation trace.  Unless stated otherwise, runs of a
+specification use its canonical exposure basis.
 \label{def:run}
-An \emph{I/O run} is a finite sequence of input and unrestricted output events
-from a canonical initial state.  A specification state is \emph{I/O-generated}
-when it is reachable via an I/O run.
 \end{definition}
 
-Thus I/O-generated is a provenance condition, not another local invariant on a
-remainder table.  It excludes structurally valid states whose missing rows
-cannot be explained by input or unrestricted output events.
+A specification state is \emph{run-generated} when it is reachable via a run.
+This is a provenance condition, not another local invariant on a remainder
+table.  It excludes structurally valid states whose missing rows cannot be
+explained by input and preparation events.
 
-\begin{lemma}[Rows remaining after an I/O run]
+\begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
-An I/O run starts at $\sigma_0(i_0)$, ends with current input $i$, and exposes
+A run starts at $\sigma_0(i_0)$, ends with current input $i$, and prepares
 outputs $o_1,\ldots,o_m$.  Its final state is
         \begin{equation}
   \left(i,\ \left\{(k,x)\in S:
@@ -827,9 +849,11 @@ outputs $o_1,\ldots,o_m$.  Its final state is
 \end{lemma}
 
 \begin{proof}
-Each input event intersects $R$ with $\{(k,x):j\InputOrd k\}$ and each output
-event with $\{(k,x):o\OutputOrd x\}$.  Intersections commute, and the input
-restrictions compose to the restriction at the final input $i$.
+Each input event intersects $R$ with $\{(k,x):j\InputOrd k\}$ and each
+preparation with $\{(k,x):o\OutputOrd x\}$.  Commitments in a canonical
+preparation expansion have exactly this aggregate effect, while exposure does
+not change $R$.  These intersections commute, and the input restrictions
+compose to the restriction at the final input $i$.
 \end{proof}
 
 A \emph{common refinement} of inputs $i_1,\ldots,i_k$ is an input $j$ with
@@ -837,30 +861,34 @@ $i_r\InputOrd j$ for every $r$.
 
 \begin{definition}[Consistency]
 \label{def:consistency}
-An ordered specification is \emph{consistent} when every finite family of I/O
-runs is confluent: if the runs end at
+An ordered specification is \emph{consistent} when every finite family of runs
+under its canonical exposure basis is confluent: if the runs end at
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of their current
-inputs, a single state with current input $j$ is reachable by I/O events from
-each $(i_r,R_r)$.  The runs are then \emph{confluent at} $j$.
+inputs, a single state with current input $j$ is reachable by input and
+preparation events from each $(i_r,R_r)$.  The runs are then \emph{confluent
+at} $j$.
 \end{definition}
 
-Equivalently, Consistency quantifies over every finite family of I/O-generated
-endpoints.  This covers every I/O-generated starting state, since any path from
+Equivalently, Consistency quantifies over every finite family of run-generated
+endpoints.  This covers every run-generated starting state, since any path from
 one extends the run that generated it.  It does not quantify over arbitrary
-specification states: their remainder tables may encode row removals that no
-I/O event produced.  An interface obtained after such additional row removal
-is tested separately as a specification in Appendix~\ref{app:composition}.
+specification states or arbitrary commitments.  The canonical exposure basis
+includes exactly the output-directed commitments needed to exercise every
+output permitted by the specification; a weaker basis could make a
+non-monotone specification appear consistent by disabling its conflicting
+outputs.  A coordinating component's exported interface is tested separately
+as a specification in Appendix~\ref{app:composition}.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
-I/O runs ending at $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent at $j$ if and
-only if some row at $j$ survives in every final state,
+Runs ending at $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent at $j$ if and only
+if some row at $j$ survives in every final state,
         \begin{equation}
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
         \end{equation}
-For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
-every final state to
+For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{prepare}(u)$
+takes every final state to
 $\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
 \end{proposition}
 
@@ -869,12 +897,12 @@ A common state with current input $j$ has a row at $j$, and that row belongs to
 every $R_r$.  Conversely, let $(j,u)$ belong to every $R_r$.  Then
 $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ refines every output
-exposed on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
-same lemma leaves exactly the rows of $S$ above $j$ and $u$, independent of the
-starting run.
+prepared on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{prepare}(u)$,
+the same lemma leaves exactly the rows of $S$ above $j$ and $u$, independent
+of the starting run.
 \end{proof}
 
-A single I/O run can witness inconsistency: an unrestricted output event may
+A single run can witness inconsistency: preparing one permitted output may
 remove every row at a refinement of its current input.  Consistency describes
 no protocol and promises no delivery or termination;
 Section~\ref{sec:discussion} returns to this.
@@ -889,15 +917,15 @@ monotone.
 \end{theorem}
 
 \begin{proof}
-Every input has one row.  By Lemma~\ref{lem:run-residual}, an I/O run ending at
+Every input has one row.  By Lemma~\ref{lem:run-residual}, a run ending at
 input $i$ retains $(k,f(k))$ at $k\succeq_I i$ exactly when every output
-$f(i_\ell)$ exposed on the run satisfies $f(i_\ell)\OutputOrd f(k)$.  By
-Proposition~\ref{prop:confluence}, a finite family of I/O runs is confluent at
-a common refinement $k$ exactly when every output exposed on any run lies below
-$f(k)$.  If $f$ is monotone this holds because each exposed $f(i_\ell)$ has
+$f(i_\ell)$ prepared on the run satisfies $f(i_\ell)\OutputOrd f(k)$.  By
+Proposition~\ref{prop:confluence}, a finite family of runs is confluent at a
+common refinement $k$ exactly when every output prepared on any run lies below
+$f(k)$.  If $f$ is monotone this holds because each prepared $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
-$f(i)\not\OutputOrd f(k)$; the I/O run that starts at $\sigma_0(i)$ and exposes
-$f(i)$ has no row at $k$ and cannot advance to its own refinement $k$.
+$f(i)\not\OutputOrd f(k)$; the run that starts at $\sigma_0(i)$ and prepares $f(i)$ has no row at $k$ and cannot advance to its own
+refinement $k$.
 \end{proof}
 
 This is the familiar CALM dichotomy stated at the specification interface
@@ -919,16 +947,15 @@ the semilattice order~\cite{shapiro2011crdt};
 Sections~\ref{sec:query-instance} and~\ref{sec:crdt-instance} take up both
 instances.
 
-\subsection{The canonical transition system}
+\subsection{Preparing and exposing outputs}
 \label{sec:canonical-transition-system}
 
-The I/O transition system deliberately bundles two effects into an unrestricted
-output event: restricting the table to honor an output and exposing that
-output.  The \emph{canonical transition system} separates restriction from
-exposure.  Input events reflect information supplied by the environment; the
-system actions informally called commitments above explicitly rule out
-behavior and are defined below; output events expose only outputs that require
-no such action.
+The canonical exposure basis exists to exercise every output the specification
+permits, not to claim that every implementation supports every preparation.
+An implementation supplies its own basis; it can realize an exposure sequence
+only when that basis supports a preparation expansion with the required
+aggregate effect.  The following definitions identify when no commitment is
+required.
 
 For $R\subseteq S$, the \emph{upper fiber} at $i$ collects outputs at $i$ and
 its still-valid refinements:
@@ -942,43 +969,16 @@ is determined when its current input is.
 \begin{definition}[Exposable output, functional case]
 \label{def:exposable}
 For a functional specification, $(i,o)\in R$ is \emph{exposable} at $(i,R)$
-when the unrestricted event $\mathsf{output}(o)$ removes no row.  Equivalently,
-$o\OutputOrd f(j)$ at every valid $j\succeq_I i$.
+when $\mathsf{prepare}(o)$ requires no commitment.  Equivalently, its
+preparation target is already $R$, or $o\OutputOrd f(j)$ at every valid
+$j\succeq_I i$.
 \end{definition}
-
-A \emph{commitment basis} $\mathcal B$ is the set of commitments a system is
-authorized to apply.  A commitment $c\in\mathcal B$ is a partial function on
-specification states with $c(i,R)=(i,R')$, where $R'\subsetneq R$, that removes
-at least one row $(k,x)$ for which no retained output at $k$ refines $x$.
-
-\begin{definition}[Canonical transition system]
-\label{def:transition-system}
-The \emph{canonical transition system} has specification states as its states
-and exactly three kinds of transition:
-\begin{enumerate}
-  \item input events, as in Equation~\ref{eq:input-event};
-  \item commitments from the system's commitment basis; and
-  \item output events $\mathsf{output}(o)$, as in
-        Equation~\ref{eq:residual-refining-fibers}, defined only when $o$ is
-        exposable.
-\end{enumerate}
-A state is \emph{reachable in the canonical system} when it is obtained from a
-canonical initial state by these transitions.
-\end{definition}
-
-The same notation $\mathsf{output}(o)$ is intentional.  In the I/O system it is
-an unrestricted output event that may hide a restriction of the table.  In the
-canonical system the output is already exposable, so the event performs no
-hidden commitment.  If an output is not exposable, a system must first apply
-commitments from its basis until the output becomes exposable; an appropriate
-commitment need not exist in every basis.
 
 \begin{definition}[Retirement]
 \label{def:retirement}
 Let a transition take $(i,R)$ to $(i',R')$ and remove $(k,x)$.  The removal is
-an \emph{input retirement} if $k$ does not refine $i'$.  For a canonical
-transition of a functional specification, every other removal is \emph{removed
-by commitment}.
+an \emph{input retirement} if $k$ does not refine $i'$.  For a functional
+preparation expansion, every other removal is by commitment.
 \end{definition}
 
 An \emph{input-sealing commitment} makes at least one valid input invalid.  A
@@ -990,33 +990,34 @@ functional dependency.  A state is \emph{sealed} when no strict refinement of
 its current input remains valid.  A sealed functional state is determined, but
 an input-sealing commitment need not seal the state.
 
-A system's \emph{strategy} chooses which canonical output event or commitment
-to make, using the specification state and any additional strategy state.
-Strategy state is not part of the specification state and affects the remainder
-table only through the selected transition.
+A system's \emph{strategy} chooses input events and exposure sequences, and
+chooses a valid preparation expansion from its basis, using the specification
+and any additional strategy state.  Strategy state is not part of the
+specification state and affects the remainder table only through the selected
+transitions.
 
 \begin{proposition}[Functional exposure boundary]
 \label{prop:functional-exposure-boundary}
 A functional ordered specification is monotone if and only if every output at
-every state reachable without commitment in the canonical system is exposable.
+every state reachable without commitment is exposable.
 \end{proposition}
 
 \begin{proof}
-If $f$ is monotone, a commitment-free canonical state has lost rows only to
-input events, since its output events remove none.  If its current input is $i$,
-then the only output paired with $i$ is $f(i)$, and every valid
-$j\succeq_I i$ has $f(i)\OutputOrd f(j)$, so $f(i)$ is exposable.  Conversely,
-suppose every output at every commitment-free state reachable in the canonical
-system is exposable.  At $\sigma_0(i)$, exposability of
-$f(i)$ preserves the row $(j,f(j))$ for each $j\succeq_I i$, so
-$f(i)\OutputOrd f(j)$ and $f$ is monotone.
+If $f$ is monotone, a commitment-free state has lost rows only to input events,
+since its preparations require no commitment and exposure changes no rows.  If
+its current input is $i$, then the only output paired with $i$ is $f(i)$, and
+every valid $j\succeq_I i$ has $f(i)\OutputOrd f(j)$, so $f(i)$ is exposable.
+Conversely, suppose every output at every commitment-free reachable state is
+exposable.  At $\sigma_0(i)$, exposability of $f(i)$ preserves the row
+$(j,f(j))$ for each $j\succeq_I i$, so $f(i)\OutputOrd f(j)$ and $f$ is
+monotone.
 \end{proof}
 
 Functional CALM and this proposition give the operational boundary.  A
-monotone functional specification can expose every current output without a
-commitment.  If monotonicity fails at $i\prec_I k$, exposing $f(i)$ requires a
-commitment that removes the conflicting row at $k$ before the canonical output
-event can occur.
+monotone functional specification can prepare and expose every current output
+without a commitment.  If monotonicity fails at $i\prec_I k$, preparing
+$f(i)$ invokes the canonical commitment that removes the conflicting row at
+$k$ before $\mathsf{expose}(f(i))$ occurs.
 
 Historically, CALM stands for \emph{Consistency As Logical Monotonicity}, and
 its C has been read both as consistency and as confluence;
@@ -1024,32 +1025,32 @@ Definition~\ref{def:consistency} is both.  Functional CALM states the result
 for any functional specification, regardless of the formalism used to express
 it.  Before dropping the functional dependency, we give this consistency
 condition a distributed interpretation.  Section~\ref{sec:distributed-execution}
-realizes I/O runs as participant runs; the construction will apply unchanged
-when Section~\ref{sec:ambiguous-specifications} introduces output choice.
+realizes runs as participant runs; the construction will apply unchanged when
+Section~\ref{sec:ambiguous-specifications} introduces output choice.
 
 \section{Distributed Execution}
 \label{sec:distributed-execution}
 
-Functional CALM defines Consistency as confluence of finite sets of I/O runs.
-We now add a distributed setting for both transition systems.  Lamport histories
-add participants, messages, and cuts; transition projection reduces a cut to one
-specification state per participant.  A commitment-free canonical projection is
-also an I/O run, so the same confluence test applies.
+Functional CALM defines Consistency as confluence of finite sets of runs under
+the canonical exposure basis.  We now add participants, messages, and cuts.
+Transition projection reduces a cut to one specification state per participant,
+while retaining exposure events in the history that the environment can
+observe.
 
 \subsection{Lamport histories}
 \label{sec:histories}
 
-A Lamport history can label participant actions from either transition system.
-I/O histories use only I/O-system events and support the confluence test;
-canonical histories additionally record explicit commitments and restrict
-output events to exposable outputs.  This subsection adds messages and
-consistent cuts; the next projects each cut to specification states.
+A Lamport history labels participant actions from the one transition system.
+Its exposure sequences retain both the logical preparation and the explicit
+exposure event.  An implementation trace may refine preparation to its
+preparation expansion.  This subsection adds messages and consistent cuts; the
+next projects each cut to specification states.
 
 \paragraph{Participants and local execution.}
-A participant holds one specification state, changed only by its own input
-events, output events, and commitments.  Participants may receive different
-inputs and expose different outputs.  In an I/O history, each participant's
-local transition sequence is an I/O run.  Consistency compares these runs
+A participant holds one specification state, changed by input and preparation
+events; exposure itself changes no row.  Participants may receive different
+inputs and expose different outputs.  Each participant's local transition
+sequence is a run.  Consistency compares these runs
 whenever their current inputs have a common refinement, covering sharded
 systems as well as replicas.  Because input events
 compose, delivery order and batching do not affect a state reached by input
@@ -1076,15 +1077,17 @@ with:
 \begin{enumerate}
   \item an assignment of each event to a participant $p\in P$, and a total
         local order on the events assigned to each participant;
-  \item a label on each event: an input event $\mathsf{input}(j)$, an output
-        event $\mathsf{output}(o)$, a commitment from the basis, a send
-        $\mathsf{send}(m)$, or a receive $\mathsf{receive}(m)$; and
+  \item a label on each event: an input event $\mathsf{input}(j)$, a preparation
+        event $\mathsf{prepare}(o)$, an exposure event $\mathsf{expose}(o)$, a
+        send $\mathsf{send}(m)$, or a receive $\mathsf{receive}(m)$; and
   \item for each $\mathsf{receive}(m)$, a matching $\mathsf{send}(m)$ at
         another participant.
 \end{enumerate}
-A history is an \emph{I/O history} when its participant transitions are input
-and unrestricted output events of the I/O system and an \emph{canonical
-history} when they are transitions of the canonical system.  The
+Every preparation event is supported by the history's commitment basis, and
+every exposure event immediately follows its matching preparation in local
+order.  A consistent cut may contain the preparation without the exposure.
+Unless another basis is named, the history uses the canonical exposure basis.
+The
 \emph{happens-before} order is the transitive closure of the local orders
 and the edges from sends to their matching receives.  A
 \emph{consistent cut} $C$ is a subset of events closed under happens-before
@@ -1185,9 +1188,9 @@ to the transitions that determine that state.
 \begin{definition}[Transition projection and state endpoint]
 \label{def:semantic-projection}
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
-to $p$ in local order.  Its \emph{transition projection} $\pi_p(C)$ keeps the
-input events, output events, and commitments in that order, and deletes sends
-and receives.  A receive may update strategy state and lead the strategy to
+to $p$ in local order.  Its \emph{transition projection} $\pi_p(C)$ keeps input,
+preparation, and exposure events in that order and deletes sends and receives.
+A receive may update strategy state and lead the strategy to
 compute a later input event, but it does not directly change the specification state.
 We consider only pairs $(H,C)$ for which each $\pi_p(C)$ is a defined
 transition sequence from $\sigma_0(i_p)$ and every input event caused by an
@@ -1198,8 +1201,7 @@ $\sigma_p(C)$ for the final specification state of $\pi_p(C)$.  The
   \operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}.
   \label{eq:semantic-endpoint}
         \end{equation}
-In an I/O history, every transition projection is an I/O run.  In a canonical
-history, it is a canonical transition sequence and may include commitments.
+Every transition projection is a run under the history's commitment basis.
 \end{definition}
 
 At both cuts in Figure~\ref{fig:history-projection}, each local projection is
@@ -1208,10 +1210,12 @@ $\operatorname{end}(H_d,C_d)=\operatorname{end}(H_f,C_f)
 =(\sigma_1,\sigma_1)$.  Projection erases the delivery path while retaining
 its effect on the participant states.
 
-State endpoints determine what can happen next.  Equal endpoints have the
-same applicable transitions and effects at corresponding participants because
-each transition is a partial function of the current specification state.  Strategies
-may still choose different events.
+State endpoints determine which state transformations are enabled next.  Equal
+endpoints have the same applicable transformations and effects because each is
+a partial function of the specification state.  They need not determine the
+same future history: participants and the environment may have observed
+different exposures, and those observations may influence later inputs or
+strategy choices.
 
 \paragraph{Confluence of a history.}
 At a consistent cut $C$, the participants may hold different specification states
@@ -1219,9 +1223,9 @@ $(\sigma_p(C))_{p\in P}$.  Confluence asks whether their local paths can be
 brought to the same later state at every input that combines their current
 inputs.
 Formally, let $j$ be such a common refinement.  The history $H$ is
-\emph{confluent at $C$ and $j$} when it has an extension using I/O-system input
-and unrestricted output events in which every participant reaches the same
-specification state
+\emph{confluent at $C$ and $j$} when it has an extension using input and
+preparation events in which every participant reaches the same specification
+state
 $\sigma_j=(j,R)$; equivalently, the new cut has state endpoint
 $(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
 claim that a protocol delivers $j$, communicates, or terminates.
@@ -1230,19 +1234,21 @@ claim that a protocol delivers $j$, communicates, or terminates.
 \label{sec:distributed-consistency}
 
 Confluence is a property at one cut and common input refinement.  Distributed
-Consistency requires it at every cut of every I/O history.
+Consistency requires it at every cut of every history under the canonical
+exposure basis.
 
 \begin{definition}[Distributed Consistency]
 \label{def:distributed-consistency}
 An ordered specification has \emph{Distributed Consistency} when, for every
-finite participant set, I/O history $H$, and consistent cut $C$, $H$ is
+finite participant set, history $H$ under the canonical exposure basis, and
+consistent cut $C$, $H$ is
 confluent at $C$ and every common refinement of
 the participants' current inputs.
 \end{definition}
 
 Distributed Consistency is the history-level reading of consistency.  The
 next proposition states their exact relationship; its short proof is also why
-the I/O-run formulation remains useful.
+the run formulation remains useful.
 
 \begin{proposition}[Consistency and Distributed Consistency]
 \label{prop:distributed-consistency}
@@ -1252,11 +1258,12 @@ Consistency.
 
 \begin{proof}
 At any cut, the participants' transition projections are one finite set of
-I/O runs, so Consistency implies their confluence.  Conversely, place any finite
-set of I/O runs in a message-free history, one per participant, supplying each
+runs under the canonical exposure basis, so Consistency implies their
+confluence.  Conversely, place any finite set of such runs in a message-free
+history, one per participant, supplying each
 input target $j$ as the cumulative arrival $a=j$.
 Equation~\ref{eq:cumulative-advance} records each such step.  Distributed
-Consistency at the final cut gives I/O-run confluence.
+Consistency at the final cut gives run confluence.
 \end{proof}
 
 Combining Proposition~\ref{prop:distributed-consistency} with Functional CALM,
@@ -1299,7 +1306,7 @@ retirement, and Lifted Monotonicity.
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(g) Traceroute, after exposing $\{s{\to}\texttt{s1}\}$}\\
+      \multicolumn{2}{@{}l}{(g) Traceroute, after preparing $\{s{\to}\texttt{s1}\}$}\\
     \toprule
     Input & Output \\ \midrule
     $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
@@ -1321,24 +1328,25 @@ retirement, and Lifted Monotonicity.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{Output events under choice.}
-As in the functional case, $\mathsf{output}(o)$ exposes output $o$ and promises
-that the final result will refine it.  The event removes every row whose output
-does not refine $o$.  With several rows at one input, however, removing a row
-need not lose an alternative: a retained row at the same input may refine both
-$o$ and the removed output.  We call this an \emph{output retirement}.  Output
-$o$ is \emph{exposable} when every row its event removes is an output
-retirement.  Thus, unlike in a functional specification, an exposable output
-event may remove rows while preserving what they said.
+\paragraph{Preparing outputs under choice.}
+As in the functional case, $\mathsf{prepare}(o)$ promises that the exposed
+result will be refined by the final result and restricts the table accordingly;
+$\mathsf{expose}(o)$ then reveals the prepared output without changing the
+table.  With several rows at one input, preparation may remove a row without
+losing an alternative: a retained row at the same input may refine both $o$ and
+the removed output.  We call this an \emph{output retirement}.  Output $o$ is
+\emph{exposable} when its preparation expansion needs only output retirements
+and no commitment.
 
 \paragraph{Ambiguity.}
 Figure~\ref{fig:ambiguity-frames}(f) allows either serial order of concurrent
-transactions $A$ and $B$.  No output refines both orders, so exposing one first
-requires a \emph{choice commitment} that removes the other.  In the traceroute
-of panel (g), by contrast, outputs are prefix-closed route sets and their
-unions are within spec.  Exposing $\{s{\to}\texttt{s1}\}$ removes rows whose
-outputs do not refine it, but a retained union refines each removed output;
-nothing is lost, so the output is exposable.
+transactions $A$ and $B$.  No output refines both orders, so preparing one
+requires a \emph{choice commitment} that removes the other before exposure.  In
+the traceroute of panel (g), by contrast, outputs are prefix-closed route sets
+and their unions are within spec.  Preparing $\{s{\to}\texttt{s1}\}$ removes
+rows whose outputs do not refine it, but a retained union refines each removed
+output; nothing is lost, so preparation needs no commitment and the output is
+exposable.
 
 The distinction is \emph{directedness}: every finite set of outputs in a fiber
 must have a common refinement in that fiber.  A directed fiber allows any output
@@ -1426,11 +1434,11 @@ input under discussion.  A functional specification is the special case
 $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
-The specification-state and I/O-system definitions of
+The specification-state, transition-system, and run definitions of
 Section~\ref{sec:determination} were stated for a table $S$ and apply unchanged
 to relational tables.  So do Lemma~\ref{lem:run-residual}, Consistency, and
-Proposition~\ref{prop:confluence}; an unrestricted output event may now select
-any row in the current fiber.
+Proposition~\ref{prop:confluence}; preparation may now select any row in the
+current fiber.
 
 The output-refinement order lifts from individual outputs to nonempty sets of
 outputs.  For nonempty $A,B\subseteq O$, define
@@ -1553,34 +1561,49 @@ $u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 For singleton fibers this is functional monotonicity.  Form~(3) quantifies over
 all finite sizes because pairwise compatibility is insufficient
 (Appendix~\ref{app:additional-applications}), and over incomparable inputs
-because different I/O runs meet only at a common refinement.
+because different runs meet only at a common refinement.
 
-\subsection{The canonical system under output choice}
+\subsection{Preparation under output choice}
 \label{sec:safe-exposure}
 
-The I/O transition system needs no change: unrestricted output events already
-allow any row in the current fiber, and Complete CALM will study confluence of
-those I/O runs.  What changes under output choice is the canonical
-factorization.  With several rows at one input, an output event may
-remove covered rows without losing their claims.  We call those removals output
-retirements; only uncovered removals require commitment.
+The preparation target is unchanged: $\mathsf{prepare}(o)$ retains exactly the
+rows whose outputs refine $o$.  What changes under output choice is its
+preparation expansion.  With several rows at one input, preparation may remove
+covered rows without losing their claims.  Those removals are output
+retirements; only uncovered removals require commitment.  Accordingly, the
+canonical exposure basis supplies the uncovered output-directed commitments
+for every permitted preparation.
 
-\begin{definition}[Output retirement]
+\begin{definition}[Output retirement and canonical preparation expansion]
 \label{def:output-retirement}
-Let a transition from $(i,R)$ to $(i',R')$ remove $(k,x)$, where
-$i'\InputOrd k$.  The removal is an \emph{output retirement} if some retained
-$u\in R'(k)$ covers it, $x\OutputOrd u$.  Every removal that is neither an
-input retirement nor an output retirement is removed by commitment.
+For $\mathsf{prepare}(o)$ at $(i,R)$, let
+$R_o=R\mathbin{\upharpoonright_O}o$ be its target.  A removed row $(k,x)$ is
+an \emph{output retirement} if some $u\in R_o(k)$ covers it,
+$x\OutputOrd u$.  Let $D_o$ contain these covered rows and let
+$U_o=(R\setminus R_o)\setminus D_o$ contain the uncovered rows.  The canonical
+preparation expansion first retires $D_o$.  If $U_o$ is nonempty, define the
+partial function
+\begin{equation}
+  \kappa^{\mathrm{rel}}_{(i,R),o}
+    \bigl(i,R\setminus D_o\bigr)=(i,R_o).
+  \label{eq:relational-preparation-commitment}
+\end{equation}
+It removes exactly $U_o$; by definition no removed row is covered by a retained
+row at its input, so it is a commitment.  The canonical exposure basis contains
+every such nonidentity commitment.  Thus every row removed by preparation is
+classified exactly once as an output retirement or as removed by commitment.
 \end{definition}
 
 \begin{definition}[Exposable, under output choice]
 \label{def:exposable-relational}
 An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when every row that
-$\mathsf{output}(o)$ removes is an output retirement.
+$\mathsf{prepare}(o)$ removes is an output retirement, so its preparation
+expansion uses no commitment.
 \end{definition}
 
-For singleton fibers no removed row is covered, so this reduces to
-Definition~\ref{def:exposable}.
+For singleton fibers no removed row is covered, so the expansion reduces to the
+functional commitment of Equation~\ref{eq:canonical-preparation-commitment} and
+exposability reduces to Definition~\ref{def:exposable}.
 
 \begin{proposition}[Exposability]
 \label{prop:exposability}
@@ -1592,18 +1615,19 @@ $j\succeq_I i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
   x\OutputOrd u.
   \label{eq:safe-exposure}
 \end{equation}
-When $o$ is exposable, $\mathsf{output}(o)$ leaves every valid input valid.
+When $o$ is exposable, its preparation leaves every valid input valid and
+$\mathsf{expose}(o)$ may follow without commitment.
 \end{proposition}
 
 \begin{proof}
-At a valid $j$, the event retains
-$R'(j)=\{u\in R(j):o\OutputOrd u\}$.  A removed $x$ is retired exactly when
-some $u\in R'(j)$ refines it, which is the stated test; the same witness makes
-$R'(j)$ nonempty.
+At a valid $j$, preparation retains
+$R_o(j)=\{u\in R(j):o\OutputOrd u\}$.  A removed $x$ is retired exactly when
+some $u\in R_o(j)$ refines it, which is the stated test; the same witness makes
+$R_o(j)$ nonempty.
 \end{proof}
 
-This test marks the canonical boundary: if it fails, the system must first
-use a basis commitment to remove the conflicting rows.  Section~\ref{sec:complete-calm}
+This test marks the coordination boundary: if it fails, every preparation
+expansion uses a commitment to remove conflicting rows.  Section~\ref{sec:complete-calm}
 combines this boundary with the distributed execution model.
 
 \section{Complete CALM and Complete CAP}
@@ -1612,7 +1636,7 @@ combines this boundary with the distributed execution model.
 The previous two sections developed orthogonal extensions of Functional CALM:
 Lamport histories give Consistency a distributed reading, while relational
 specifications add output choice.  We now combine them.  First we identify
-coordination with commitment and state when conflicting commitment courses
+coordination with commitment and state when conflicting commitment sequences
 cannot coexist; then Complete CALM equates Consistency, Lifted Monotonicity, and
 Distributed Consistency, and Complete CAP states the resulting partition
 boundary.
@@ -1639,14 +1663,14 @@ relational extensions combined here.
     fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$ & Eq.~\ref{eq:fiber} \\
     Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$; finite sets in $S(i)$ have common refinements in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
     output retirement & removed $(k,x)$ is covered by retained $(k,u)$ with $x\OutputOrd u$ & Def.~\ref{def:output-retirement} \\
-    exposable output & every row removed by $\mathsf{output}(o)$ is an output retirement & Def.~\ref{def:exposable-relational} \\
+    exposable output & every row removed by $\mathsf{prepare}(o)$ is an output retirement & Def.~\ref{def:exposable-relational} \\
     choice commitment & removes outputs at a valid input without making it invalid & Sec.~\ref{sec:safe-exposure} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
     Complete CALM & Consistency $\iff$ Lifted Monotonicity $\iff$ Distributed Consistency & Thm.~\ref{thm:complete-calm} \\
     coordination & application of a commitment & Def.~\ref{def:coordination} \\
-    conflicting courses & cannot coexist without mutual exclusion & Thm.~\ref{thm:commitments-require-coordination} \\
+    conflicting sequences & cannot coexist without mutual exclusion & Thm.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
   \caption{The distributed and relational extensions combined by Complete
@@ -1668,16 +1692,15 @@ because it uses one of these mechanisms.
 \begin{definition}[Coordination]
 \label{def:coordination}
 A system execution \emph{coordinates} when it applies a commitment: it
-irrevocably removes a row by commitment from the remainder table.  It is
-\emph{coordination-free} when it uses only input events and exposable output
-events.
+irrevocably removes a row by commitment from the remainder table.  It is \emph{coordination-free} when every preparation expansion in the
+execution uses only output retirements and no commitment; exposure events remain
+explicit.
 \end{definition}
 
-Hereafter, \emph{reachable} means reachable without commitment in the
-canonical system.  A system
-\emph{selects} an output by exposing it when exposable, and otherwise by first
-applying a commitment that, at the current input and its refinements, retains
-exactly the outputs refining the selected output.
+Hereafter, \emph{reachable} means reachable without commitment.  A system
+selects an output through its exposure sequence.  When the output is exposable,
+preparation uses only retirement; otherwise its preparation expansion includes
+a commitment before exposing the prepared output.
 
 In a shared-memory system, a mutex or atomic instruction can establish a
 commitment by fixing an order or choice.  In a distributed system, a commitment
@@ -1685,7 +1708,7 @@ that conflicts with an alternative that must remain independently selectable
 requires mutual exclusion before it is applied; agreement is one way to
 establish that exclusion.
 
-\begin{theorem}[Conflicting commitment courses cannot coexist]
+\begin{theorem}[Conflicting commitment sequences cannot coexist]
 \label{thm:commitments-require-coordination}
 Suppose one participant can apply a commitment $c$ at a reachable state
 $\sigma=(i,R)$, producing $(i,R')=c(\sigma)$ and removing some $x\in R(i)$ by
@@ -1698,24 +1721,25 @@ and $t$ cannot be brought to a common state with current input $i$.
 \begin{proof}
 By hypothesis, the second participant can reach $t$, whose fiber at $i$ is
 contained in $\{u\in\fiber{i}:x\OutputOrd u\}$.  The first participant's fiber
-$R'(i)$ contains no such $u$.  Their fibers at $i$ are therefore disjoint, so the two states cannot be brought
-to a common state whose current input is $i$.  Output events cannot restore a
-removed row, and an input event cannot return to $i$.
+$R'(i)$ contains no such $u$.  Their fibers at $i$ are therefore disjoint, so
+the two states cannot be brought to a common state whose current input is $i$.
+Neither preparation nor an input event can restore a removed row or return to
+$i$.
 \end{proof}
 
-If both courses must remain independently available, a system must mutually
+If both sequences must remain independently available, a system must mutually
 exclude them before either participant commits; distributed agreement is one
 way to do so.  Static authority or a predetermined strategy can instead make
-one course unavailable, in which case no runtime agreement follows from the
+one sequence unavailable, in which case no runtime agreement follows from the
 theorem.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
 Complete CALM turns the coordination boundary into a property of the
-specification.  It equates Consistency---confluence of I/O runs---with Lifted
-Monotonicity.  The distributed execution model supplies the equivalent third
-view, Distributed Consistency.
+specification.  It equates Consistency---confluence of runs under the canonical
+exposure basis---with Lifted Monotonicity.  The distributed execution model
+supplies the equivalent third view, Distributed Consistency.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -1733,23 +1757,24 @@ Proposition~\ref{prop:distributed-consistency}.  It remains to prove the
 substantive equivalence of items~(1) and~(2).
 
 Proposition~\ref{prop:confluence} says that Consistency means: for every
-finite set of I/O runs ending at $(i_r,R_r)$ and every common refinement
-$j$ of the $i_r$, some output $u\in\fiber{j}$ survives in every I/O run,
+finite set of runs ending at $(i_r,R_r)$ and every common refinement
+$j$ of the $i_r$, some output $u\in\fiber{j}$ survives in every run,
 $u\in\bigcap_rR_r(j)$.  By Lemma~\ref{lem:run-residual}, this holds exactly
-when $u$ refines every output exposed on those I/O runs; each such output $o$ was
-exposed at some $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
+when $u$ refines every output prepared on those runs; each such output $o$ was
+prepared at some $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
 
 \emph{(2) $\Rightarrow$ (1): Lifted Monotonicity implies Consistency.}
-Assume Lifted Monotonicity.  The finitely many rows $(i_o,o)$ exposed on the
-I/O runs have common refinement $j$, so
+Assume Lifted Monotonicity.  The finitely many rows $(i_o,o)$ prepared on the
+runs have common refinement $j$, so
 Proposition~\ref{prop:lifted-monotonicity-decomposition}(3) supplies
-$u\in\fiber{j}$ refining them all.  Thus $u$ survives every I/O run.
+$u\in\fiber{j}$ refining them all.  Thus $u$ survives every run.
 
 \emph{(1) $\Rightarrow$ (2): Consistency implies Lifted Monotonicity.}
 Let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have a common refinement $j$.  For each
-$r$, start an I/O run at $\sigma_0(i_r)$ and expose $o_r$; then
+$r$, start a run at $\sigma_0(i_r)$ and apply $\mathsf{prepare}(o_r)$ under the
+canonical exposure basis; then
 $R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Consistency supplies an output
-$u$ that survives every I/O run, so it refines every $o_r$.  This is form~(3) of
+$u$ that survives every run, so it refines every $o_r$.  This is form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence Lifted
 Monotonicity.
 
@@ -1760,17 +1785,17 @@ Monotonicity.
 The theorem gives a specification-level test for history confluence and closes
 the operational loop.  Exposability follows rather than being assumed.  In a
 consistent specification, every $o\in R(i)$ is exposable at every reachable
-$(i,R)$: for
-valid $j\succeq_I i$ and $x\in R(j)$, confluence of the I/O run extended by
-$\mathsf{output}(o)$ with the I/O run extended by $\mathsf{input}(j)$ and
-$\mathsf{output}(x)$ supplies $u\in R(j)$ above both outputs; then
+$(i,R)$: for valid $j\succeq_I i$ and $x\in R(j)$, confluence of the run
+extended by $\mathsf{prepare}(o)$ with the run extended by
+$\mathsf{input}(j)$ and $\mathsf{prepare}(x)$ supplies $u\in R(j)$ above both
+outputs; then
 Proposition~\ref{prop:exposability} applies.  Thus Lifted Monotonicity makes all
 reachable outputs exposable, so progress needs no commitment and is
 coordination-free.  Its failure exhibits a finite family without a common
 refinement, so selecting an offending output requires a commitment and hence
 coordination.  When different participants must retain independently
 selectable conflicting alternatives,
-Theorem~\ref{thm:commitments-require-coordination} shows that their courses
+Theorem~\ref{thm:commitments-require-coordination} shows that their sequences
 must be mutually excluded; distributed agreement is one mechanism for doing so.
 
 \subsection{The Complete CAP Theorem}
@@ -1784,14 +1809,13 @@ lasts, though participants may still receive environment input and expose
 outputs.  At a cut, \emph{Availability} means that every output in a
 participant's current fiber is exposable without a cross-component wait.  The
 history has \emph{Partition Consistency} when its commitment-free participant
-projections, viewed as I/O runs, are confluent at every common refinement of
-their current inputs.
+projections are confluent at every common refinement of their current inputs.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
 For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{enumerate}
-  \item every consistent cut of every commitment-free canonical partitioned
+  \item every consistent cut of every commitment-free partitioned
         history has Availability and Partition Consistency;
   \item $\Spec$ satisfies Lifted Monotonicity.
 \end{enumerate}
@@ -1799,15 +1823,16 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 
 \begin{proof}
 Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Every output at every
-commitment-free canonical state is exposable by the consequence of Complete
-CALM above, giving Availability.  Each participant projection is also an I/O
-run, so Complete CALM gives their confluence and hence Partition Consistency.
+commitment-free state is exposable by the consequence of Complete
+CALM above, giving Availability.  Each participant projection is a run, so
+Complete CALM gives their confluence and hence Partition Consistency.
 
 Conversely, let any finite rows $(i_r,o_r)$ have a common refinement $j$.
 Place their participants in separate partition components.  If there is only
 one row, add a second participant initialized at $j$ and make no selection
-there.  Availability lets each original participant expose $o_r$ from
-$\sigma_0(i_r)$ without a commitment.  Partition Consistency then supplies a
+there.  Availability lets each original participant prepare and expose $o_r$
+from $\sigma_0(i_r)$ without a commitment.  Partition Consistency then supplies
+a
 row $(j,u)$ surviving in every remainder table, so
 $o_r\OutputOrd u$ for every $r$.  Form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition} gives Lifted
@@ -1818,8 +1843,8 @@ Partition Consistency requires outputs from different components to be jointly
 refinable, not identical or totally ordered; this is why the characterization
 is bidirectional.  When Lifted Monotonicity fails, some permitted output either
 cannot be exposed without first establishing a commitment, sacrificing
-Availability, or can be selected through the unrestricted I/O view only at the
-cost of Partition Consistency.
+Availability, or can complete its canonical-basis exposure sequence only at the cost of
+Partition Consistency.
 
 A linearizable register is the classical instance of the tradeoff side: two
 reads of concurrent writes may be explained by opposite serial orders, no
@@ -1836,7 +1861,7 @@ literature.
 \section{Instances Across the Literature}
 \label{sec:instances}
 
-Table~\ref{tab:instances} summarizes how the two-stage account applies across
+Table~\ref{tab:instances} summarizes how preparation and exposure apply across
 the literature.  Each mapping declares an input, an output, and refinement
 orders before applying Functional CALM or Complete CALM.  Changing the interface
 changes whether monotonicity or Directed Outputs holds.
@@ -2224,7 +2249,8 @@ means no input-sealing commitment is needed.  This generalizes the classic
 result from logical fact sets to arbitrary input and output refinement orders.
 
 Complete CALM extends the model to specifications that offer several outputs
-for one input.  Modeling output events and commitments reveals Directed Outputs
+for one input.  Modeling preparation, exposure, and commitments reveals Directed
+Outputs
 as the additional requirement for confluence without coordination.  When
 Lifted Monotonicity fails, progress requires a commitment and hence
 coordination, whether implemented by a mutex, lock, atomic ordering mechanism,
@@ -2416,17 +2442,18 @@ together even when each has its own input.
 
 Classical CALM can classify a specification as monotone or non-monotone, but it
 cannot represent the commitments made by a coordination mechanism.  The
-canonical transition system can, which permits a second question: after
-coordination acts, has it removed enough alternatives that the remainder of the
-system needs no more coordination?
+transition system here can, which permits a second question: after coordination
+acts, has it removed enough alternatives that the remainder of the system needs
+no more coordination?
 
 Suppose a coordination layer applies commitments to a source specification and
 exports an ordered relational specification $\Spec_C$.  Its internal
 commitments may repeatedly remove alternatives; $\Spec_C$ records only the
 interface it presents to downstream components.  For a downstream specification
 $\Spec_T$, call the layer \emph{proper coordination for $\Spec_T$} when their
-sequential or independently parameterized composition is consistent and its
-downstream canonical execution requires no further commitment.
+sequential or independently parameterized composition is consistent and every
+preparation along commitment-free downstream execution requires no further
+commitment.
 
 \begin{theorem}[Proper Coordination]
 \label{thm:proper-coordination}
@@ -2441,8 +2468,9 @@ Lemma~\ref{lem:composition} or
 Lemma~\ref{lem:parameterized-composition}, respectively, gives Lifted
 Monotonicity of the composed specification, so Complete CALM gives Consistency.
 The exposability consequence following Theorem~\ref{thm:complete-calm} then
-makes every output at every commitment-free reachable state exposable.  The
-downstream canonical execution therefore needs no further commitment.
+makes every output at every commitment-free reachable state exposable.  Hence
+every preparation along commitment-free downstream execution uses only
+retirement and needs no further commitment.
 \end{proof}
 
 The result is asymmetric.  The coordination layer's commitments remove rows
@@ -2502,27 +2530,29 @@ heals.  The same specification is safe under the first deployment and not
 under the second; what differs is which incompatible families a partition can
 split between its sides.
 
-\begin{definition}[Deployment; separable course]
+\begin{definition}[Deployment; separable run family]
 \label{def:deployment}
 A \emph{deployment} over a participant set $P$ assigns to each participant $p$
-a set $A_p\subseteq S$ of rows it may select; $(i,o)\in A_p$ means
-that $p$ may hold $i$ as a current input and select $o$ there, on its own
-authority.  A partition $\Pi$ of $P$ (Section~\ref{sec:cap-corollary}) divides
+a set $A_p\subseteq S$ of rows it may prepare and expose; $(i,o)\in A_p$ means
+that $p$ may hold $i$ as a current input and prepare and expose $o$ there on its
+own authority.  A partition $\Pi$ of $P$ (Section~\ref{sec:cap-corollary})
+divides
 the participants into two or more nonempty components.
 
-A finite \emph{course} assigns to each of finitely many participants $p$ an
-initial input and an I/O run whose selected rows all lie in $A_p$; the run may
-make no selection.  It is \emph{separable under $\Pi$} when either its selected
-rows occur in at least two components, or it has exactly one selected row and a
-silent participant in another component.  The second case tests whether that
-one output survives at the silent participant's current input.
+A finite \emph{participant run family} assigns to each of finitely many
+participants $p$ an initial input and a run whose prepared rows all lie in
+$A_p$; the run may make no preparation.  The family is \emph{separable under
+$\Pi$} when either its prepared rows occur in at least two components, or it has
+exactly one prepared row and a silent participant in another component.  The
+second case tests whether that one output survives at the silent participant's
+current input.
 \end{definition}
 
 \begin{definition}[Monotone across partitions]
 \label{def:monotone-across-partitions}
 Relative to a deployment, $\Spec$ is \emph{monotone across $\Pi$} when, for
-every course separable under $\Pi$ and every common refinement $j$ of its
-participants' current inputs, the outputs in all selected rows have a common
+every participant run family separable under $\Pi$ and every common refinement $j$ of its
+participants' current inputs, the outputs in all prepared rows have a common
 refinement in $\fiber{j}$.  It is
 \emph{monotone across partitions} when it is monotone across every partition of
 $P$.
@@ -2530,20 +2560,20 @@ $P$.
 
 This is the common-refinement condition of
 Proposition~\ref{prop:lifted-monotonicity-decomposition}(3), restricted to
-courses a partition can separate.  Monotonicity implies monotonicity across
-partitions, since the selected rows of a course form a finite family.  The
-converse fails whenever every incompatible family of two or more selections is
+participant run families a partition can separate.  Monotonicity implies monotonicity across
+partitions, since the prepared rows of a participant run family form a finite family.  The
+converse fails whenever every incompatible family of two or more preparations is
 confined to one participant's authority.  Two mutually exclusive choices owned
 by one participant do not become separable merely because a silent participant
 exists in another component: the silent-participant exception applies only to
-a single selected row.
+a single prepared row.
 
 \begin{theorem}[Complete CAP under a deployment]
 \label{thm:complete-cap-deployment}
 Fix a deployment.  The following are equivalent.
 \begin{enumerate}
   \item Under every partition $\Pi$ and every order of input arrival within
-        each component, the participant I/O runs of every course separable under
+        each component, the participant runs of every run family separable under
         $\Pi$ are confluent at every common refinement $j$ of their current
         inputs: some row at $j$ survives in every remainder table.
   \item $\Spec$ is monotone across partitions.
@@ -2551,30 +2581,32 @@ Fix a deployment.  The following are equivalent.
 \end{theorem}
 
 \begin{proof}
-(2$\Rightarrow$1.)  Fix $\Pi$ and any separable course.  All rows selected on
-participant $p$'s I/O run lie in $A_p$ by definition.  Monotonicity across
-$\Pi$ supplies $u\in\fiber{j}$ above every selected output.  Each participant's
+(2$\Rightarrow$1.)  Fix $\Pi$ and any separable participant run family.  Every
+row prepared on participant $p$'s run lies in $A_p$ by definition.  Monotonicity
+across $\Pi$ supplies $u\in\fiber{j}$ above every prepared output.  Each
+participant's
 fiber at $j$ is $\fiber{j}$ intersected with the outputs above its own
-selections, and $u$ belongs to every such set.  Hence some row at $j$ survives
+preparations, and $u$ belongs to every such set.  Hence some row at $j$ survives
 in every state, under every arrival order in each component.
 
-(1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable course
-and a common refinement $j$ have no output in $\fiber{j}$ above all its selected
-rows.  Use the I/O runs assigned by the course; every selected row belongs to
-its participant's $A_p$.  Each participant's fiber at $j$ then contains only
-outputs above all of its own selections, and no output of $\fiber{j}$ is above
-all selections in the course, so no row at $j$ survives in every state.
+(1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable
+participant run family and a common refinement $j$ have no output in
+$\fiber{j}$ above all its prepared rows.  Use the runs assigned by the family;
+every prepared row belongs to its participant's $A_p$.  Each participant's
+fiber at $j$ then contains only
+outputs above all of its own preparations, and no output of $\fiber{j}$ is above
+all prepared outputs in the family, so no row at $j$ survives in every state.
 Avoiding this requires either a wait across the cut or refusing some authorized
 row, which implements a narrower deployment or specification.
 \end{proof}
 
-The theorem concerns cross-component I/O courses; it does not claim that an
-arbitrary commitment within one component preserves confluence with other
-components.  Courses whose two or more selections are contained wholly in one
-component create no cross-component condition.  If a local commitment affects
-rows another component may select, its cross-component consequences must
-themselves satisfy the theorem's condition.  Only courses that a partition
-separates are tested.
+The theorem concerns cross-component participant run families; it does not
+claim that an arbitrary commitment within one component preserves confluence
+with other components.  Run families whose two or more preparations are
+contained wholly in one component create no cross-component condition.  If a
+local commitment affects rows another component may prepare, its
+cross-component consequences must themselves satisfy the theorem's condition.
+Only run families that a partition separates are tested.
 When the deployment lets every participant hold every
 row, every family is separable under some partition, monotonicity across
 partitions is monotonicity, and the theorem is Theorem~\ref{thm:complete-cap}.
@@ -2707,8 +2739,8 @@ commits an absolute position for each transaction on arrival, against every
 transaction present or future, and pays for the early commitment with aborts
 when execution turns out not to match it.  In both, once every remaining row
 at the current input has $A$ committed and in the same position relative to
-the other committed transactions, that much of the output is exposable, and
-exposing it is an output event, not a further commitment.
+the other committed transactions, that much of the output is exposable: its
+preparation needs only retirement, and the subsequent exposure removes no row.
 
 \section{Coordination-Free Frontiers}
 \label{sec:frontiers}
