@@ -661,7 +661,9 @@ arrives.
 \label{sec:determination}
 
 Section~\ref{sec:election-story} previewed the full transition model: input
-events, exposable output events, and commitments.  We now step back and begin
+events, output events, and system actions that remove alternatives.  We called
+the last kind \emph{commitments} informally; their formal definition comes in
+Section~\ref{sec:canonical-transition-system}.  We now step back and begin
 with a simpler model containing only input and output events.  Its output events
 are unrestricted: they may select any output at the current input and remove
 the rows that do not refine it.  This intentionally combines exposure with any
@@ -672,13 +674,14 @@ remaining rows.  If this model allowed only such outputs, monotonicity would be
 enforced by its transition rule rather than studied, and the CALM equivalence
 would be built into the model.  Section~\ref{sec:canonical-transition-system}
 will define exposability formally.  The simpler model instead asks whether all
-input/output paths are confluent without yet deciding which restrictions
-require commitment.
+input/output paths are confluent without yet classifying the restrictions they
+make.
 
 This subsection defines that I/O transition system, its runs, and Consistency.
 Section~\ref{sec:canonical-transition-system} then returns to the model
-previewed in Section~\ref{sec:election-story}, factoring an unrestricted output
-event into explicit commitments followed by an exposable output event.
+previewed in Section~\ref{sec:election-story}, formally defining commitments
+and factoring each unrestricted output event into any required commitments
+followed by an exposable output event.
 
 \paragraph{The specification and remainder tables.}
 The graph $S\subseteq I\times O$ is the \emph{specification table}; its rows
@@ -801,12 +804,12 @@ not affect the state reached by input events alone.
 \label{def:run}
 An \emph{I/O run} is a finite sequence of input and unrestricted output events
 from a canonical initial state.  A specification state is \emph{I/O-generated}
-when it is the final state of an I/O run.
+when it is reachable via an I/O run.
 \end{definition}
 
 Thus I/O-generated is a provenance condition, not another local invariant on a
 remainder table.  It excludes structurally valid states whose missing rows
-could only have been removed by an arbitrary commitment.
+cannot be explained by input or unrestricted output events.
 
 \begin{lemma}[Rows remaining after an I/O run]
 \label{lem:run-residual}
@@ -834,25 +837,24 @@ $i_r\InputOrd j$ for every $r$.
 
 \begin{definition}[Consistency]
 \label{def:consistency}
-An ordered specification is \emph{consistent} when its I/O-generated states are
-confluent: for every finite family $(i_1,R_1),\ldots,(i_k,R_k)$ of such states
-and every common refinement $j$ of their current inputs, a single state with
-current input $j$ is reachable by I/O events from each $(i_r,R_r)$.  The states
-are then \emph{confluent at} $j$.
+An ordered specification is \emph{consistent} when every finite family of I/O
+runs is confluent: if the runs end at
+$(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of their current
+inputs, a single state with current input $j$ is reachable by I/O events from
+each $(i_r,R_r)$.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
-Equivalently, Consistency quantifies over final states of finite families of
-I/O runs.  This covers every I/O-generated starting state, since any path from
+Equivalently, Consistency quantifies over every finite family of I/O-generated
+endpoints.  This covers every I/O-generated starting state, since any path from
 one extends the run that generated it.  It does not quantify over arbitrary
 specification states: their remainder tables may encode row removals that no
-I/O event produced, including commitments.  A coordinating layer's exported
-post-commit interface is tested separately as a specification in
-Appendix~\ref{app:composition}.
+I/O event produced.  An interface obtained after such additional row removal
+is tested separately as a specification in Appendix~\ref{app:composition}.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
-I/O-generated states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent at current
-input $j$ if and only if some row at $j$ survives in all of them,
+I/O runs ending at $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent at $j$ if and
+only if some row at $j$ survives in every final state,
         \begin{equation}
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
@@ -923,9 +925,10 @@ instances.
 The I/O transition system deliberately bundles two effects into an unrestricted
 output event: restricting the table to honor an output and exposing that
 output.  The \emph{canonical transition system} separates restriction from
-exposure.  Input events reflect information supplied by the environment;
-commitments explicitly rule out behavior; output events expose only outputs
-that require no further commitment.
+exposure.  Input events reflect information supplied by the environment; the
+system actions informally called commitments above explicitly rule out
+behavior and are defined below; output events expose only outputs that require
+no such action.
 
 For $R\subseteq S$, the \emph{upper fiber} at $i$ collects outputs at $i$ and
 its still-valid refinements:
