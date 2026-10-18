@@ -665,9 +665,15 @@ events, exposable output events, and commitments.  We now step back and begin
 with a simpler model containing only input and output events.  Its output events
 are unrestricted: they may select any output at the current input and remove
 the rows that do not refine it.  This intentionally combines exposure with any
-restriction needed to honor the exposed output.  The simpler model isolates the
-question Functional CALM answers---whether all input/output paths are
-confluent---without yet asking which restrictions require commitment.
+restriction needed to honor the exposed output.  That conflation is deliberate:
+it lets non-monotonicity appear as a failure of confluence.  Section~\ref{sec:election-story}
+used \emph{exposable} informally for an output that needs no restriction of the
+remaining rows.  If this model allowed only such outputs, monotonicity would be
+enforced by its transition rule rather than studied, and the CALM equivalence
+would be built into the model.  Section~\ref{sec:canonical-transition-system}
+will define exposability formally.  The simpler model instead asks whether all
+input/output paths are confluent without yet deciding which restrictions
+require commitment.
 
 This subsection defines that I/O transition system, its runs, and Consistency.
 Section~\ref{sec:canonical-transition-system} then returns to the model
@@ -756,8 +762,10 @@ only when its result is a specification state.
 \end{definition}
 
 The output event is \emph{unrestricted} because it may select any output paired
-with the current input.  It treats exposure and the row restriction needed to honor that
-exposure as one action.  The canonical transition system will separate them.
+with the current input.  As motivated above, it treats exposure and the row
+restriction needed to honor that exposure as one action so confluence can test
+whether the restriction was necessary.  The canonical transition system will
+separate them.
 
 \paragraph{Input events.}
 An input event records the new cumulative input, not the value that caused it.
