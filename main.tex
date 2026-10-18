@@ -797,11 +797,16 @@ the same effect as $\mathsf{input}(k)$ alone, and $\mathsf{input}(i)$ at
 $(i,R)$ is the identity.  Thus input order, batching, and repeated delivery do
 not affect the state reached by input events alone.
 
-\begin{definition}[I/O run]
+\begin{definition}[I/O run and I/O-generated state]
 \label{def:run}
 An \emph{I/O run} is a finite sequence of input and unrestricted output events
-from a canonical initial state.
+from a canonical initial state.  A specification state is \emph{I/O-generated}
+when it is the final state of an I/O run.
 \end{definition}
+
+Thus I/O-generated is a provenance condition, not another local invariant on a
+remainder table.  It excludes structurally valid states whose missing rows
+could only have been removed by an arbitrary commitment.
 
 \begin{lemma}[Rows remaining after an I/O run]
 \label{lem:run-residual}
@@ -829,18 +834,25 @@ $i_r\InputOrd j$ for every $r$.
 
 \begin{definition}[Consistency]
 \label{def:consistency}
-An ordered specification is \emph{consistent} when its I/O runs are confluent:
-for every finite family of I/O runs and every common refinement $j$ of their
-current inputs, a single state with current input $j$ is reachable from each
-of their final states.  The I/O runs are then \emph{confluent at} $j$.
+An ordered specification is \emph{consistent} when its I/O-generated states are
+confluent: for every finite family $(i_1,R_1),\ldots,(i_k,R_k)$ of such states
+and every common refinement $j$ of their current inputs, a single state with
+current input $j$ is reachable by I/O events from each $(i_r,R_r)$.  The states
+are then \emph{confluent at} $j$.
 \end{definition}
 
-The next proposition turns this path condition into a test on final states.
+Equivalently, Consistency quantifies over final states of finite families of
+I/O runs.  This covers every I/O-generated starting state, since any path from
+one extends the run that generated it.  It does not quantify over arbitrary
+specification states: their remainder tables may encode row removals that no
+I/O event produced, including commitments.  A coordinating layer's exported
+post-commit interface is tested separately as a specification in
+Appendix~\ref{app:composition}.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
-I/O runs with final states $(i_1,R_1),\ldots,(i_k,R_k)$ reach a common state
-with current input $j$ if and only if some row at $j$ survives in all of them,
+I/O-generated states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent at current
+input $j$ if and only if some row at $j$ survives in all of them,
         \begin{equation}
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
