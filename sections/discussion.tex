@@ -1,0 +1,110 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Output choice versus operational nondeterminism}
+
+Output choice in Complete CALM concerns the declared interface, not whether
+executions are deterministic.  CALM and CRDTs already account for operational nondeterminism in message delivery, batching, retries, and
+merge order.  Their usual declared outputs are fixed for a given input.  Complete CALM
+adds specifications whose declared interface itself offers several outputs and
+models the commitments that resolve them.
+
+\subsection{A criterion on specifications, not an implementation discipline}
+
+Coordination names a specification-level effect, not a particular mechanism.
+A lock, mutex, transaction protocol, or agreement protocol coordinates here
+only when it applies a commitment; synchronization that removes no row does
+not.  The input/output relation and its two refinement orders omit internal
+computation.  This is useful for stating a common boundary and insufficient for
+building a system.  Relational transducers provide a language and operational
+network semantics; semilattices provide a local algebra and deterministic
+merge; transaction protocols provide scheduling, validation, and recovery.
+Neither Functional CALM nor Complete CALM says how to represent $S$, choose the
+refinement orders, compute a common refinement, or do so efficiently.  Those
+questions belong to the programming language, protocol, and verification
+method used to realize the specification.
+
+\subsection{Specification design determines the boundary}
+\label{sec:design-boundary}
+
+Lifted Monotonicity is a property of the declared specification, not a
+permanent label on ``register,'' ``transaction,'' or ``shopping cart.''
+The deployment determines whether a commitment requires agreement between
+participants.
+A linearizable register and a causal register allow different explanations.  A
+CRDT state and an exact read expose different promises.  A database permitted
+to abort one transaction implements a different relation from one required to
+commit both.
+
+Narrowing $S$ may eliminate an incompatibility.  Broadening $O$ with a new
+output that refines two alternatives may also eliminate it.  Changing the
+deployment may keep an incompatibility under one participant's authority.  Each option
+changes the interface or system design; none is a loophole in the criterion.
+
+The transition projection is also a design criterion.  Choosing the input
+domain and its order decides which histories the specification treats as the
+same: two cuts yield one specification state exactly when they reach the same input and
+have removed the same rows.  A finer input order forgets less of the execution
+and obliges the specification to say more; a coarser one forgets more.  The
+specification then states its possible outcomes over specification states without
+re-encoding the history it was built to forget.
+
+A reader who thinks in state machines can compile one into this form.  At the
+finest grain, an input is the sequence of environment events the machine has
+consumed, ordered by extension, and a row $(i,o)$ is within spec when some run
+of the machine on $i$ produces $o$; the register example of
+Appendix~\ref{app:deployment} is of this kind.  If the machine's state
+summarizes its past, so that two event sequences reaching the same state have
+the same futures, the states themselves may serve as inputs, ordered by
+reachability, provided that order is antisymmetric.  That is the coarsening the
+proposition licenses, and the election of Section~\ref{sec:election-story} is the
+result for a vote-counting machine whose state is the set of ballots received.
+
+\subsection{Consistency as confluence}
+\label{sec:consistency-as-confluence}
+
+The word consistency names two levels in the literature, and the framework
+connects them.  A consistency model---linearizability, causal consistency,
+snapshot isolation, read committed---is encoded as a specification: it says
+which outputs are allowed for a given history of operations.  Consistency in
+our cross-cutting sense is confluence of that specification's executions.  The
+same definition also applies when the table instead captures an
+application-specific requirement, such as an invariant.  Written as a table
+with orders, each declared model or requirement therefore falls on one side of
+the confluence boundary.  Linearizability and serializability
+allow total orders that cannot refine two concurrent explanations, so they
+are not monotone (Appendix~\ref{app:deployment},
+Section~\ref{sec:hat-instance}).  Causal consistency allows one explanation
+for concurrent reads and is monotone under the deployment in which each
+participant answers its own reads (Appendix~\ref{app:deployment}).  The
+disjoint-key read-committed example of Section~\ref{sec:hat-instance}
+accumulates compatible facts and illustrates the positive pattern behind HAT
+availability.  This does not make the full read-committed interface monotone:
+if one read may return either of two committed versions, immutable facts for
+the two answers need not have a common refinement.  Strong eventual
+consistency states a convergence condition: replicas that have incorporated
+the same updates reach equivalent states.  Join-semilattice merge and
+last-writer-wins can both provide that convergence.  SEC therefore permits the observable equivalent of
+retraction: convergence may replace or discard an earlier visible answer even
+when internal replica state only grows.  SEC alone neither requires a least
+refinement in the declared output order nor determines which concurrent
+client-visible claims must survive (Section~\ref{sec:crdt-instance}).  What the
+traditional definitions leave implicit, and the framework requires, is the
+output order: the same operation history yields a monotone or a non-monotone
+specification depending on what an exposed read is taken to promise
+(Section~\ref{sec:design-boundary}).  Confluence therefore does not replace the
+declared consistency model or application requirement; it supplies a common
+test of whether that requirement can be maintained without coordination.
+
+\subsection{Safety is not liveness}
+
+The theorems identify when emitted outputs remain refinement-consistent; they
+do not guarantee message delivery, termination, or computability of a common
+refinement.  Complete CAP's interface-wide Availability predicate requires
+each permitted output action to be commitment-free and avoid a cross-component
+wait; it is a semantic nonblocking condition, not a full
+liveness model.  The deployment-relative variant in
+Appendix~\ref{app:deployment} instead counts commitments made wholly within a
+component's preexisting authority as available, while still excluding
+cross-component waits.  A protocol result must still state appropriate
+fairness, failure, and cost assumptions.
