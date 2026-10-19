@@ -385,16 +385,20 @@ refine $o$.  Keeping exposure explicit matters: the environment may learn from
 $o$ and choose subsequent input accordingly.
 
 \paragraph{The specification and remainder tables.}
-The graph $S\subseteq I\times O$ is the \emph{specification table}; its rows
+The relation $S\subseteq I\times O$, with the functional dependency that
+inputs determine outputs, is the \emph{specification table}; its rows
 are the pairs $(i,f(i))$, one at each input.  During a run, $R\subseteq S$ is
 the \emph{remainder table}; it records the rows not yet removed.  No action
 adds a row.
 
 Inputs are \emph{cumulative}: an input is everything seen so far, and
 $i\InputOrd j$ means that $j$ contains at least the information in $i$.  The
-specification sees inputs only through the domain, its order, and the outputs
-it allows for each; corrections, retractions, or conflicting ballots are
-accommodated by designing the input domain to record them.  Write
+framework imposes no other structure on inputs.  It uses only which elements
+belong to $I$, which pairs satisfy $i\InputOrd j$, and which outputs the
+specification pairs with each input.  To model corrections, retractions, or
+conflicting ballots, the specification design must choose elements of $I$ that
+record those events and order
+them by accumulated information.  Write
 $k\prec_I i$ when $k\InputOrd i$ and $k\neq i$, and
 $\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$ for the refinements of $i$.
 
