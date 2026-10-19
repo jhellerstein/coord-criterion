@@ -186,7 +186,7 @@ the polls, so any later ballot from $v_3$ will not count.  Panel (d) removes the
 leaving the current input $xy\cdot$ unchanged.  The system has thereby made
 those input refinements invalid.  This irrevocable act is a \emph{commitment},
 specifically a \emph{seal commitment}: the system, rather than new input from
-the environment, has ruled out behavior that was within spec. 
+the environment, has ruled out behavior that was within spec.
 % CALM asks whether progress can avoid that act.
 
 The specification itself does not authorize closing the polls.  That authority
@@ -661,10 +661,11 @@ $i_r\InputOrd j$ for every $r$.
 \begin{definition}[Consistency]
 \label{def:consistency}
 An ordered specification is \emph{consistent} when every finite family of runs
-under its canonical commitment basis is confluent: if the runs end at
-$(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of their current
-inputs, a single state with current input $j$ is reachable by input events and
-complete exposure sequences from each $(i_r,R_r)$.  The runs are then
+under its canonical commitment basis is confluent: if the runs end at stable
+execution states $((i_1,R_1),\mathsf{none}),\ldots,
+((i_k,R_k),\mathsf{none})$ and $j$ is a common refinement of their current
+inputs, one stable execution state with current input $j$ is reachable by input
+events and complete exposure sequences from each endpoint.  The runs are then
 \emph{confluent at} $j$.
 \end{definition}
 
@@ -680,15 +681,16 @@ as a specification in Appendix~\ref{app:composition}.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
-Runs ending at $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent at $j$ if and only
-if some row at $j$ survives in every final state,
+Runs ending at stable execution states
+$((i_1,R_1),\mathsf{none}),\ldots,((i_k,R_k),\mathsf{none})$ are confluent at
+$j$ if and only if some row at $j$ survives in every final specification state,
         \begin{equation}
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
         \end{equation}
 For any such $u$, $\mathsf{input}(j)$ followed by the exposure sequence for
-$u$ takes every final state to
-$\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
+$u$ takes every endpoint to the stable execution state
+$\bigl((j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}),\mathsf{none}\bigr)$.
 \end{proposition}
 
 \begin{proof}
