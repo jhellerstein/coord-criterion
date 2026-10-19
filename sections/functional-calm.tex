@@ -228,19 +228,19 @@ is a seal commitment; it may invalidate one future input or many.
 \end{figure}
 
 \paragraph{Preparing and exposing outputs.}
-Output handling has two actions.  First, $\mathsf{prepare}(o)$ makes any seal
-commitment needed to rule out future inputs whose outputs conflict
-with $o$---outputs that are incomparable with $o$ under the output order.
+In a functional specification, $o$ is \emph{exposable} when
+every possible future output---every value in the upper
+fiber---refines $o$ in the output order.  If this test fails, an authorized commitment in the
+preparation expansion can remove the conflicting rows and thereby enable
+exposure of $o$.  In Figure~\ref{fig:election-frames}, $\bot$ is exposable in every
+panel because every shaded output refines it, and $x$ is exposable in panel (c).
+
+To capture the possible need for commitments, output handling involves two actions. 
+First, $\mathsf{prepare}(o)$ makes any seal commitment needed to make $o$ exposable.
 Then $\mathsf{expose}(o)$ reveals the prepared result to the environment without
 changing the remainder table.  Keeping exposure explicit matters because what
 the environment learns may influence later input.
 
-In a functional specification, $o$ is \emph{exposable} exactly when preparation
-requires no commitment: every possible future output---the values in the upper
-fiber---refines $o$.  If this test fails, an authorized commitment in the
-preparation expansion can remove the conflicting rows and thereby enable
-exposure of $o$; the preparation itself is still a coordinating act.  In Figure~\ref{fig:election-frames}, $\bot$ is exposable in every
-panel because every shaded output refines it, and $x$ is exposable in panel (c).
 
 \paragraph{When monotonicity fails.}
 Now change one thing in our example: make all outputs incomparable, dropping
