@@ -50,40 +50,32 @@
 }
 
 \begin{abstract}
-When does a concurrent system inherently require coordination?  CAP, CALM,
-CRDTs, Highly Available Transactions, and Invariant Confluence each draw a
-coordination boundary in a different formal model, and conventional
-wisdom has drifted from what the literature proves.  We give one framework for
-all of them: a specification is a table that says exactly which outputs are
-within spec at each input, with separate partial orders for input growth and for
-output refinement.  A computation state is simply a pair of the current input with
-the specification rows that remain.
+When does a concurrent system inherently require coordination?  CALM, CAP,
+CRDTs, Highly Available Transactions, and Invariant Confluence explore versions
+of this question in different formal models, making their conclusions hard to compare
+or reuse.  We give them a common declarative specification framework and a
+universal definition of consistency: confluence of executions admitted by a
+specification.  Coordination appears in this declarative model as a
+\emph{commitment}: an irrevocable removal of possibilities from the current
+specification.
 
-At the specification level, the inherent reason for coordination is an
-irrevocable \emph{commitment} that rules out behavior still within spec; locks,
-atomics, and distributed agreement are mechanisms for establishing such
-commitments.  \emph{Functional CALM} generalizes the original CALM Theorem from
-Datalog queries to arbitrary functions between ordered input and output
-domains.  It defines consistency as confluence of executions and proves that a
-functional specification supports consistency without commitment exactly when
-it is monotone, independent of programming language or execution model.
+\emph{Functional CALM} generalizes the original CALM Theorem from Datalog
+queries to arbitrary functions between ordered domains.  This makes the familiar
+monotonicity test independent of the language or formalism used to express the
+function: every functional specification is consistent without commitment
+exactly when it is monotone.
+\emph{Complete CALM} handles specifications that offer several outputs for one
+input, including choices such as transaction order or leader selection.  Its
+criterion, \emph{Lifted Monotonicity}, says that as input grows, the possible
+outputs can grow together without conflict.  Complete CALM proves that a
+specification is consistent exactly when it satisfies this criterion.
 
-\emph{Complete CALM} extends this equivalence to \emph{ambiguous}
-specifications that allow several outputs for one input.  Its criterion is
-\emph{Lifted Monotonicity}: as input grows, the possible outputs can grow
-together without conflict.  The \emph{Complete CALM Theorem} states that a
-specification is consistent exactly when it satisfies this criterion.  Its
-operational consequence is that consistency requires no commitment exactly in
-that case.
-
-Classical CALM does not represent commitments; Complete CALM does, so it
-can verify \emph{Proper Coordination}: whether commitments resolve a
-non-monotone composition into a consistent one.  We define sequential and
-independently parameterized composition of specifications.  At their ordinary
-interfaces, log ordering and a register or key-value store are both
-non-monotone; committing the shared log order alone makes their composition
-monotone.  Complete CALM also yields a Complete CAP corollary,
-showing exactly when a specification faces a CAP tradeoff.
+Representing commitments also lets us verify \emph{Proper Coordination}: whether
+a chosen use of coordination is sufficient.  Totally ordered logging and
+key-value stores are both non-monotone, yet committing to their shared log order
+makes the composed system monotone and consistent.  Finally, Complete CALM
+yields a Complete CAP theorem, turning CAP's register impossibility into a
+general classification of which specifications face a CAP tradeoff.
 \end{abstract}
 
 \begin{CCSXML}
