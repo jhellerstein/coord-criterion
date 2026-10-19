@@ -103,7 +103,7 @@ dependency.
   \end{tabular}
   \caption{The election specification and three states reached from it.  Only rows above the input $x\cdot\cdot$ are shown.  The current input is
   in bold; shaded cells are the current input and outputs still possible at it.
-  Gray: the row has been retired by an input or exposure event.
+  Gray: the row has been retired by an input event.
   Struck through: the row has been removed by a commitment; no remaining row
   preserves its contents.  Panels (b) and (c) follow input events; panel (d)
   follows preparation of $\bot$, whose expansion contains a seal commitment.}
@@ -152,8 +152,8 @@ only the rows at the current input and its refinements remain; every other row i
 with the rows that remain: it records what
 is still possible and how far input has come.  Each panel shows one such state,
 with its remainder table and current input in bold.  The inputs that still have rows are the \emph{valid} ones.
-Note that the environment supplies new input; the system passively retires the dominated rows.
-Here $v_2$'s ballot
+The environment supplies new input; the system passively retires rows that are no
+longer reachable.  Here $v_2$'s ballot
 extends the cumulative input from $x\cdot\cdot$ to $xy\cdot$, and the system
 records that change as $\mathsf{input}(xy\cdot)$.
 The state depends only on the input reached, not on the order or
@@ -190,17 +190,15 @@ specifically a \emph{seal commitment}: the system, rather than new input from
 the environment, has ruled out behavior that was within spec.
 
 The specification does not define a notion of commitments; that authority belongs to a second
-component of our model: the system's \emph{commitment basis} $\mathcal B$, which defines 
+component of our model: the system's \emph{commitment basis} $\mathcal B$, which defines
 how the system may irrevocably remove rows.  A system whose polls can close includes this commitment in
 its basis; one whose polls cannot close does not.  After
 this preparation, no refinement of $xy\cdot$ remains valid, its upper fiber is
 $\{\bot\}$, and the state is determined.
 
 Because a functional specification has one row per input, any commitment that
-removes a row makes that input invalid.  This is a seal commitment; it may
-invalidate one future input or many.  Section~\ref{sec:ambiguous-specifications}
-adds output-prepare commitments, which remove conflicting outputs while leaving
-their input valid.
+removes a row makes that input invalid.  Thus every commitment in this section
+is a seal commitment; it may invalidate one future input or many.
 
 \begin{figure}[t]
   \centering
@@ -230,13 +228,11 @@ their input valid.
 \end{figure}
 
 \paragraph{Preparing and exposing outputs.}
-Output handling has two actions.  First, $\mathsf{prepare}(o)$ makes any
-commitments needed to remove conflicting alternatives that no remaining row
-preserves; this prepares the promise that the eventual result will refine $o$.
-Then $\mathsf{expose}(o)$
-reveals the prepared result to a client and retires rows whose claims are
-preserved by remaining rows.  Keeping exposure explicit matters because what a
-client learns may influence later input.
+Output handling has two actions.  First, $\mathsf{prepare}(o)$ makes any seal
+commitment needed to rule out future inputs whose outputs conflict with $o$.
+Then $\mathsf{expose}(o)$ reveals the prepared result to a client without
+changing the remainder table.  Keeping exposure explicit matters because what
+a client learns may influence later input.
 
 In a functional specification, $o$ is \emph{exposable} exactly when preparation
 requires no commitment: every possible future output---the values in the upper
@@ -264,14 +260,13 @@ one requires commitment in some preparation expansion.
 We now have the ingredients for a state transition model.  A state consists of
 two things: the current input and the rows of the specification that remain.
 Each panel above depicts one such state, and each action moves from one state to
-another.  An input event grows the current input and retires rows that are no longer
-reachable.  Preparation keeps the input fixed and makes the commitments needed
-to remove conflicting alternatives that no remaining row preserves.  Exposure
-reveals the prepared output and retires dominated rows.  Input events come from
-the environment;
-preparation and exposure come from the system.  Panels (b) through (e) are
-reached from panel (a) by input or preparation actions.  The formal development
-uses this one transition system throughout.
+another.  An input event grows the current input and retires rows that are no
+longer reachable.  Preparation keeps the input fixed and makes any seal
+commitment needed to remove conflicting future inputs.  Exposure reveals the
+prepared output without changing the remainder table.  Input events come from
+the environment; preparation and exposure come from the system.  Panels (b)
+through (e) are reached from panel (a) by input or preparation actions.  The
+formal development uses this one transition system throughout.
 
 \paragraph{Consistency.}
 Our goal is \emph{confluence}: any finite collection of input/output paths
@@ -322,8 +317,8 @@ for Complete CALM.
     \addlinespace
     \textbf{Output handling} & & \\
     \midrule
-    prepare & applies the seal and output-prepare commitments needed for $o$ & Sec.~\ref{sec:determination} \\
-    expose & reveals $o$ and performs dominated-output retirements & Eq.~\ref{eq:output-stage} \\
+    prepare & applies any seal commitment needed for $o$ & Sec.~\ref{sec:determination} \\
+    expose & reveals $o$ without changing the remainder table & Eq.~\ref{eq:output-stage} \\
     canonical commitment basis & supports preparation of every permitted output & Sec.~\ref{sec:determination} \\
     exposable output & preparation expansion uses no commitment & Def.~\ref{def:exposable} \\
     run & finite input, preparation, and exposure events & Def.~\ref{def:run} \\
@@ -382,19 +377,19 @@ arrives.
 
 Section~\ref{sec:election-story} previewed one transition model with input,
 commitment, and output handling.  We now define it.  Output handling has two
-stages.  First, $\mathsf{prepare}(o)$ atomically makes any commitments needed
-to remove undominated conflicts with $o$.  Then $\mathsf{expose}(o)$ reveals
-$o$ to the environment and retires dominated rows.  The complete sequence
-retains exactly the rows whose outputs refine $o$.  Keeping exposure explicit
-matters: the environment may learn from $o$ and choose subsequent input
-accordingly.
+stages.  First, $\mathsf{prepare}(o)$ atomically makes any seal commitment
+needed to remove future inputs whose outputs conflict with $o$.  Then
+$\mathsf{expose}(o)$ reveals $o$ to the environment without changing the
+remainder table.  The complete sequence retains exactly the rows whose outputs
+refine $o$.  Keeping exposure explicit matters: the environment may learn from
+$o$ and choose subsequent input accordingly.
 
 The CALM proofs use a canonical commitment basis that can prepare every output
 the specification permits.  This is the right basis for testing the full
 specification: a weaker basis could hide non-monotonicity merely by making a
-problematic output unavailable.  Its commitments are nevertheless
-output-directed or seal future inputs; the normal-form lemma below shows that
-arbitrary additional removal only narrows the specification.
+problematic output unavailable.  In the functional case, this basis contains
+only seal commitments.  Section~\ref{sec:safe-exposure} extends it when one
+input may have several outputs.
 
 \paragraph{The specification and remainder tables.}
 The graph $S\subseteq I\times O$ is the \emph{specification table}; its rows
@@ -497,127 +492,59 @@ $(i,R)$ is the identity.  Thus input order, batching, and repeated delivery do
 not affect the state reached by input events alone.
 
 \paragraph{Commitments and output handling.}
-For any remainder table, write
-\[
-  R(k)=\{u\in O:(k,u)\in R\}.
-\]
 For $(i,o)\in R$, the final table needed to honor exposure of $o$ is
 \begin{equation}
   R_o=R\mathbin{\upharpoonright_O}o
       =\{(k,u)\in R:o\OutputOrd u\}.
   \label{eq:residual-refining-fibers}
 \end{equation}
-The rows in $R\setminus R_o$ fall into three classes.  First, let
-\begin{align}
-  K_o&=\{k:R(k)\neq\varnothing\text{ and }R_o(k)=\varnothing\},
-      \label{eq:seal-inputs}\\
-  D_o&=\{(k,x)\in R\setminus R_o:
-          \exists u\in R_o(k).\ x\OutputOrd u\},
-      \label{eq:output-retirements}\\
-  P_o&=(R\setminus R_o)
-       \setminus\bigl(D_o\cup\{(k,x):k\in K_o\}\bigr).
-      \label{eq:prepare-removals}
-\end{align}
-Rows at inputs in $K_o$ must all disappear, making those inputs invalid.  Rows
-in $D_o$ are dominated by rows that remain at the same input, so they can be
-retired without losing their claims.  Rows in $P_o$ are the remaining,
-undominated conflicts with $o$.
+In a functional specification each input has one row.  Consequently every row
+in $R\setminus R_o$ lies at a future input whose only output conflicts with
+$o$.  Preparing $o$ must make each such input invalid.
 
 A \emph{commitment basis} $\mathcal B$ is a set of partial functions on
 specification states.  Each commitment keeps the current input fixed and
-strictly decreases the remainder table.  It may remove one canonical set of
-rows or bundle several canonical sets atomically.  A \emph{seal commitment}
-removes every row at one or more valid noncurrent inputs, making those inputs
-invalid.  An \emph{output-prepare commitment for $o$} removes undominated rows
-that conflict with $o$, such as the rows in $P_o$.  These are the only two
-canonical forms of commitment.
+strictly decreases the remainder table.  A \emph{seal commitment} removes every
+row at one or more valid noncurrent inputs, making those inputs invalid.  For a
+functional specification, these are the only commitments needed to prepare an
+output.
 
-The canonical commitments for preparing $o$ at $(i,R)$ are concrete partial
-functions.  Let
-\[
-  C_o^{\mathrm{seal}}=\{(k,x)\in R:k\in K_o\},
-  \qquad R_o^{\mathrm{seal}}=R\setminus C_o^{\mathrm{seal}}.
-\]
-When $K_o\neq\varnothing$, the canonical seal commitment is
+For every specification state and $(i,o)\in R$, the canonical seal commitment
+is the partial function
 \begin{equation}
-  s_{(i,R),o}(i,R)=(i,R_o^{\mathrm{seal}}).
+  s_{(i,R),o}(i,R)=(i,R_o),
   \label{eq:canonical-seal-commitment}
 \end{equation}
-When $P_o\neq\varnothing$, the canonical output-prepare commitment is
-\begin{equation}
-  p_{(i,R),o}\bigl(i,R_o^{\mathrm{seal}}\bigr)
-    =\bigl(i,R_o^{\mathrm{seal}}\setminus P_o\bigr).
-  \label{eq:canonical-output-prepare-commitment}
-\end{equation}
-Identity cases are omitted.  The \emph{canonical commitment basis}
-$\mathcal B_S^{\mathrm{can}}$ contains these commitments for every specification
-state and every $(i,o)\in R$.
+when $R_o\neq R$; identity cases are omitted.  The \emph{canonical commitment
+basis} $\mathcal B_S^{\mathrm{can}}$ contains every such commitment.
 
-The macro $\mathsf{prepare}(o)$ atomically applies the corresponding seal and
-output-prepare commitments, in that order, to a stable execution state.  This
-finite sequence is its \emph{preparation expansion}; no cut or participant
-action occurs inside it.  It then sets the pending output to $q=o$.
-Preparation does not retire $D_o$ and does not reveal $o$.  Under another basis,
-a preparation for $o$ is \emph{legal} when it retains $(i,o)$ and, after its
-commitments, every remaining row excluded by $o$ is dominated at the same input
-by a retained row that refines $o$.  The matching exposure can then retire all
-such excluded rows, leaving a subset of $R_o$.  A basis supports an exposure
-sequence when it provides a legal preparation for it.
-
-The matching event $\mathsf{expose}(o)$ is enabled when $q=o$.  It reveals $o$
-to the environment, retires every remaining row excluded by $o$, and clears $q$
-to $\mathsf{none}$.  For the canonical preparation, those rows are exactly
-$D_o$, so the canonical \emph{exposure sequence}
+The macro $\mathsf{prepare}(o)$ atomically applies the corresponding seal
+commitment to a stable execution state, then records $q=o$ as the output pending
+exposure.  The matching event $\mathsf{expose}(o)$ reveals $o$ to the
+environment and clears $q$ to $\mathsf{none}$.  In the functional case exposure
+retires no row.  Thus the complete \emph{exposure sequence}
 \begin{equation}
   \mathsf{prepare}(o);\mathsf{expose}(o)
   \label{eq:output-stage}
 \end{equation}
-takes the stable execution state $((i,R),\mathsf{none})$ to
-$((i,R_o),\mathsf{none})$.  A finite history may have a cut at the intermediate
-execution state with $q=o$, but no participant action other than the matching
-exposure is enabled there.  Exposure remains explicit because what the
-environment learns may influence later input.
+takes $((i,R),\mathsf{none})$ to $((i,R_o),\mathsf{none})$.  A finite history
+may have a cut between the two events, but no participant action other than the
+matching exposure is enabled there.  Exposure remains explicit because what
+the environment learns may influence later input.
 
 The canonical basis supports every output permitted by the specification.  This
-completeness is essential for CALM: a weaker basis could hide non-monotonicity
-merely by making a conflicting output unavailable.  Other bases may omit
-canonical commitments or package several into one atomic bundle.  A basis
-\emph{covers} the canonical preparation for $o$ when one of its bundles, or an
-atomic sequence of its commitments, removes exactly the canonical seal and
-output-prepare rows.  Coverage is sufficient for legal preparation; a legal
-preparation may remove additional rows.
-
-\begin{lemma}[Canonical commitment normal form]
-\label{lem:canonical-commitment-normal-form}
-The canonical basis can legally prepare every permitted output.  Every legal
-preparation for $o$ removes the canonical seal and output-prepare rows for $o$.
-The canonical exposure sequence therefore exposes the same $o$ while retaining
-every row not required to honor that exposure.  At this state, any additional
-row removal only narrows the resulting remainder table.
-\end{lemma}
-
-\begin{proof}
-Every row at an input in $K_o$ conflicts with $o$, so a preparation that leaves
-that input valid cannot expose $o$; those fibers must be sealed.  At every
-remaining input, each row in $P_o$ conflicts with $o$ and is not dominated by a
-row in $R_o$, so it cannot be retired and must be removed by commitment.  The rows in
-$D_o$ are dominated by retained rows and are retired by the canonical exposure.
-These three sets partition $R\setminus R_o$, so the canonical exposure sequence
-ends at exactly $R_o$.  Any completed exposure sequence whose preparation
-removes more rows ends at a subset of $R_o$ and therefore exposes no output
-unavailable to the canonical basis; it
-only excludes additional behavior at this state.  Treating that exclusion as a
-permanent interface rule amounts to declaring a narrower specification
-$S'\subsetneq S$; history-dependent extra removal remains an implementation
-choice, not another canonical form of commitment.
-\end{proof}
+is essential for CALM: a weaker basis could hide non-monotonicity merely by
+making a conflicting output unavailable.  Another basis supports preparation
+of $o$ when one of its atomic commitments, or an atomic sequence of them, has
+the same effect as the canonical seal commitment.  Section~\ref{sec:safe-exposure}
+extends preparation to specifications with several outputs at one input.
 
 \begin{definition}[Transition system and run]
 \label{def:io-transition-system}
 \label{def:transition-system}
-The \emph{transition system} has execution states as its states, with
-input events as in Equation~\ref{eq:input-event}, atomic preparations supported
-by its commitment basis, and exposure events with their output retirements.  A
+The \emph{transition system} has execution states as its states, with input
+events as in Equation~\ref{eq:input-event}, atomic preparations supported by
+its commitment basis, and exposure events.  A
 \emph{run} is any finite transition sequence from a canonical initial
 execution state $\gamma_0(i)$ to a stable execution state.  A \emph{run prefix} may
 additionally end with a pending output.  Unless stated otherwise, runs use the
@@ -627,8 +554,9 @@ canonical commitment basis.
 
 A specification state is \emph{run-generated} when it is reachable via a run.
 This is a provenance condition, not another local invariant on a remainder
-table.  It excludes structurally valid states whose missing rows cannot be
-explained by input retirements, canonical commitments, and output retirements.
+table.  In this functional section, missing rows arise from input retirements
+and seal commitments.  Section~\ref{sec:safe-exposure} revisits this account for
+specifications with several outputs at one input.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -648,11 +576,10 @@ $o_1,\ldots,o_m$.  Its final specification state is
 
 \begin{proof}
 Each input event intersects $R$ with $\{(k,x):j\InputOrd k\}$ and each complete
-exposure sequence with $\{(k,x):o\OutputOrd x\}$.  Its preparation commitments
-remove the canonical seal and output-prepare rows, and its exposure retires the
-dominated rows, giving exactly this aggregate effect.  These intersections
-commute, and the input restrictions compose to the restriction at the final
-input $i$.
+exposure sequence with $\{(k,x):o\OutputOrd x\}$.  In the functional case, the
+preparation's seal commitment has exactly this effect and exposure removes no
+row.  These intersections commute, and the input restrictions compose to the
+restriction at the final input $i$.
 \end{proof}
 
 A \emph{common refinement} of inputs $i_1,\ldots,i_k$ is an input $j$ with
@@ -794,8 +721,8 @@ every state reachable without commitment is exposable.
 \end{proposition}
 
 \begin{proof}
-If $f$ is monotone, a commitment-free state has lost rows only to input events
-and output retirements, since its preparations are the identity.  If
+If $f$ is monotone, a commitment-free state has lost rows only to input events,
+since its preparations are the identity and its exposures remove no rows.  If
 its current input is $i$, then the only output paired with $i$ is $f(i)$, and
 every valid $j\succeq_I i$ has $f(i)\OutputOrd f(j)$, so $f(i)$ is exposable.
 Conversely, suppose every output at every commitment-free reachable state is
