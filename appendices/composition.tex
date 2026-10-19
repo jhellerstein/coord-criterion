@@ -223,12 +223,31 @@ composition $G\star F$.
 A log authority commits to one next command at each position, restricting $F$
 to a table $C$ containing one append-only lineage.  This single upstream choice
 also restricts the store specification from $G\star F$ to $G\star C$.
-Deterministic state-machine execution along the committed lineage extends the
-cumulative response history without changing an earlier response, so the
-resolved end-to-end specification is monotone.  Thus neither log ordering nor
-the ordinary store interface is monotone, but committing the shared log order
-alone is sufficient to make their composition consistent.  No independent
-commitment at the register or key-value-store interface is required.
+
+\begin{proposition}[Committed-log composition]
+\label{prop:committed-log-composition}
+Order finite logs by prefix and cumulative response histories by extension.
+Suppose $C$ is functional and prefix-preserving: as proposal history grows, its
+committed log only extends.  Suppose deterministic store evaluation is
+prefix-preserving in both its request-history and log inputs.  Then the resolved
+store specification $G\star C$ is monotone and consistent.  This conclusion
+does not require the unresolved log specification $F$ or ordinary store
+specification $G\star F$ to be monotone.
+\end{proposition}
+
+\begin{proof}
+The graph table of $C$ is monotone by prefix preservation.  Deterministic
+evaluation is monotone under the product order on request histories and logs.
+Lemma~\ref{lem:parameterized-composition} therefore makes $G\star C$ Lifted
+Monotone; Complete CALM makes it consistent.
+\end{proof}
+
+The premise has the usual state-machine interpretation: extending a committed
+log or request history extends the cumulative response history without changing
+an earlier response.  Thus neither log ordering nor the ordinary store interface
+need be monotone, but committing the shared log order alone is sufficient to
+make their composition consistent.  No independent commitment at the register
+or key-value-store interface is required.
 
 By Theorem~\ref{thm:proper-coordination}, the log commitments are proper.
 MultiConsensus replaces the single authority with distributed agreement on the

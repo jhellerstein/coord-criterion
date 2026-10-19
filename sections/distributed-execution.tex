@@ -3,9 +3,9 @@
 
 Functional CALM defines Consistency as confluence of finite sets of runs under
 the canonical commitment basis.  We now add participants, messages, and cuts.
-Transition projection reduces a cut to one specification state per participant,
-while retaining exposure events in the history that the environment can
-observe.
+Transition projection reduces a cut to one execution state per
+participant, while retaining exposure events in the history that the environment
+can observe.
 
 \subsection{Lamport histories}
 \label{sec:histories}
@@ -14,13 +14,14 @@ A Lamport history labels participant actions from the one transition system.
 Its exposure sequences retain both the logical preparation and the explicit
 exposure event.  An implementation trace may refine preparation to its
 preparation expansion.  This subsection adds messages and consistent cuts; the
-next projects each cut to specification states.
+next projects each cut to execution states.
 
 \paragraph{Participants and local execution.}
-A participant holds one specification state.  Input events perform input
-retirements, preparation applies commitments, and exposure performs output
-retirements.  Participants may receive different inputs and expose different
-outputs.  A participant's complete local transition sequence is a run; a cut
+A participant holds one execution state.  Input events perform input
+retirements, preparation applies commitments and records the pending output,
+and exposure performs output retirements and clears it.  Participants may
+receive different inputs and expose different outputs.  A participant's
+complete local transition sequence is a run; a cut
 may leave a run prefix ending after preparation.  Consistency compares the
 completed runs
 whenever their current inputs have a common refinement, covering sharded
@@ -68,9 +69,10 @@ unrelated to consistency as confluence, which is a property of
 specifications.)
 \end{definition}
 
-Histories retain delivery and strategy details that the specification does not
-need.  We next project those details away and ask whether the resulting
-participant states can still be brought to the same state.
+Histories retain delivery and strategy details that the execution state
+does not need.  We next project those details away and ask whether the resulting
+participant states can still be brought to the same stable
+execution state.
 
 \subsection{Transition projection and confluence}
 \label{sec:projection-confluence}
@@ -154,8 +156,8 @@ but both participants reach $\sigma_1=(xy\cdot,R_1)$.
 
 The figure shows why we need a transition projection.  A Lamport history
 records sends, receives, and strategy state even when they make no difference
-to the specification state.  The projection filters each participant's history
-to the transitions that determine that state.
+to the execution state.  The projection filters each participant's history to
+the transitions that determine that state.
 
 \begin{definition}[Transition projection and state endpoint]
 \label{def:semantic-projection}
@@ -163,14 +165,14 @@ For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
 to $p$ in local order.  Its \emph{transition projection} $\pi_p(C)$ keeps input,
 preparation, and exposure events in that order and deletes sends and receives.
 A receive may update strategy state and lead the strategy to
-compute a later input event, but it does not directly change the specification state.
-We consider only pairs $(H,C)$ for which each $\pi_p(C)$ is a defined
-transition sequence from $\sigma_0(i_p)$ and every input event caused by an
-arrival or receive has the target computed by $\mathsf{advance}$.  Write
-$\sigma_p(C)$ for the final specification state of $\pi_p(C)$.  The
-\emph{state endpoint} of the cut is the vector
+compute a later input event, but it does not directly change the execution
+state.  We consider only pairs $(H,C)$ for which each $\pi_p(C)$ is a
+defined transition sequence from $\gamma_0(i_p)$ and every input event caused
+by an arrival or receive has the target computed by $\mathsf{advance}$.  Write
+$\gamma_p(C)=(\sigma_p(C),q_p(C))$ for the final execution state of
+$\pi_p(C)$.  The \emph{state endpoint} of the cut is the vector
         \begin{equation}
-  \operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}.
+  \operatorname{end}(H,C)=(\gamma_p(C))_{p\in P}.
   \label{eq:semantic-endpoint}
         \end{equation}
 Every transition projection is a run or a run prefix under the history's
@@ -179,30 +181,31 @@ by the history definition before applying a run-confluence result.
 \end{definition}
 
 At both cuts in Figure~\ref{fig:history-projection}, each local projection is
-$\mathsf{input}(xy\cdot)$, so
+$\mathsf{input}(xy\cdot)$, so every participant has the stable execution state
+$\gamma_1=(\sigma_1,\mathsf{none})$ and
 $\operatorname{end}(H_d,C_d)=\operatorname{end}(H_f,C_f)
-=(\sigma_1,\sigma_1)$.  Projection erases the delivery path while retaining
+=(\gamma_1,\gamma_1)$.  Projection erases the delivery path while retaining
 its effect on the participant states.
 
 State endpoints determine which state transformations are enabled next.  Equal
 endpoints have the same applicable transformations and effects because each is
-a partial function of the specification state.  They need not determine the
-same future history: participants and the environment may have observed
+a partial function of the execution state.  They need not determine the same
+future history: participants and the environment may have observed
 different exposures, and those observations may influence later inputs or
 strategy choices.
 
 \paragraph{Confluence of a history.}
-At a consistent cut $C$, the participants may hold different specification states
-$(\sigma_p(C))_{p\in P}$.  Confluence asks whether their local paths can be
-brought to the same later state at every input that combines their current
-inputs.
+At a consistent cut $C$, the participants may hold different execution
+states $(\gamma_p(C))_{p\in P}$.  Confluence asks whether their local
+paths can be brought to the same later stable execution state at every input that
+combines their current inputs.
 Formally, first complete every pending exposure at $C$.  Let $j$ be a common
 refinement of the resulting participant inputs.  The history $H$ is
 \emph{confluent at $C$ and $j$} when it has a further extension using input
 events and complete exposure sequences in which every participant reaches the
-same specification state
-$\sigma_j=(j,R)$; equivalently, the new cut has state endpoint
-$(\sigma_j)_{p\in P}$.  This is an existence claim about transitions, not a
+same stable execution state
+$\gamma_j=((j,R),\mathsf{none})$; equivalently, the new cut has state endpoint
+$(\gamma_j)_{p\in P}$.  This is an existence claim about transitions, not a
 claim that a protocol delivers $j$, communicates, or terminates.
 
 \subsection{Distributed Consistency}
@@ -221,9 +224,11 @@ confluent at $C$ and every common refinement of
 the participants' current inputs.
 \end{definition}
 
-Distributed Consistency is the history-level reading of consistency.  The
-next proposition states their exact relationship; its short proof is also why
-the run formulation remains useful.
+Distributed Consistency is the history-level reading of consistency.  It is a
+representation theorem: histories add participants, messages, and cuts, but do
+not by themselves assert communication, delivery, or termination.  The next
+proposition states the exact relationship; its short proof is also why the run
+formulation remains useful.
 
 \begin{proposition}[Consistency and Distributed Consistency]
 \label{prop:distributed-consistency}

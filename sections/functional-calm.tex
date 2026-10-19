@@ -435,15 +435,23 @@ An input $k$ is \emph{valid} when $R$ has a row at $k$, and otherwise
 \emph{invalid}.
 \end{definition}
 
+A \emph{execution state} is $\gamma=(\sigma,q)$, where $\sigma=(i,R)$
+is a specification state and $q\in O\cup\{\mathsf{none}\}$ records the output
+pending exposure.  An execution state is \emph{stable} when
+$q=\mathsf{none}$.  Input and preparation events are enabled only in stable
+execution states; an exposure event is enabled only when $q$ contains its matching
+output.
+
 Valid inputs other than the current one are possible futures: refinements of
-$i$ whose rows have not been removed.  For an input $i$, the \emph{canonical
-initial state} is
+$i$ whose rows have not been removed.  For an input $i$, the \emph{canonical initial specification state} is
         \begin{equation}
   \sigma_0(i)=\bigl(i,\ \{(k,o)\in S:\ i\InputOrd k\}\bigr),
   \label{eq:canonical-initial-state}
         \end{equation}
-the specification table restricted to $i$ and its refinements.
-Figure~\ref{fig:election-frames}(a) is $\sigma_0(x\cdot\cdot)$.
+the specification table restricted to $i$ and its refinements.  The canonical
+initial execution state is
+$\gamma_0(i)=(\sigma_0(i),\mathsf{none})$.
+Figure~\ref{fig:election-frames}(a) shows $\sigma_0(x\cdot\cdot)$.
 
 \paragraph{Input events.}
 For $j\in I$ with $i\InputOrd j$, an input event makes $j$ current and removes
@@ -545,50 +553,58 @@ $\mathcal B_S^{\mathrm{can}}$ contains these commitments for every specification
 state and every $(i,o)\in R$.
 
 The macro $\mathsf{prepare}(o)$ atomically applies the corresponding seal and
-output-prepare commitments, in that order.  This finite sequence is its
-\emph{preparation expansion}; no cut or participant action occurs inside it.
+output-prepare commitments, in that order, to a stable execution state.  This
+finite sequence is its \emph{preparation expansion}; no cut or participant
+action occurs inside it.  It then sets the pending output to $q=o$.
 Preparation does not retire $D_o$ and does not reveal $o$.  Under another basis,
-$\mathsf{prepare}(o)$ is executable only when an atomic bundle or sequence of
-basis commitments has exactly the same aggregate effect.
+a preparation for $o$ is \emph{legal} when it retains $(i,o)$ and, after its
+commitments, every remaining row excluded by $o$ is dominated at the same input
+by a retained row that refines $o$.  The matching exposure can then retire all
+such excluded rows, leaving a subset of $R_o$.  A basis supports an exposure
+sequence when it provides a legal preparation for it.
 
-The event $\mathsf{expose}(o)$ must immediately follow its preparation in local
-order.  It reveals $o$ to the environment and atomically retires exactly $D_o$.
-Thus the complete \emph{exposure sequence}
+The matching event $\mathsf{expose}(o)$ is enabled when $q=o$.  It reveals $o$
+to the environment, retires every remaining row excluded by $o$, and clears $q$
+to $\mathsf{none}$.  For the canonical preparation, those rows are exactly
+$D_o$, so the canonical \emph{exposure sequence}
 \begin{equation}
   \mathsf{prepare}(o);\mathsf{expose}(o)
   \label{eq:output-stage}
 \end{equation}
-takes $(i,R)$ to $(i,R_o)$.  A finite history may have a cut after preparation
-and before exposure, but no participant action can intervene.  Exposure remains
-explicit because what the environment learns may influence later input.
+takes the stable execution state $((i,R),\mathsf{none})$ to
+$((i,R_o),\mathsf{none})$.  A finite history may have a cut at the intermediate
+execution state with $q=o$, but no participant action other than the matching
+exposure is enabled there.  Exposure remains explicit because what the
+environment learns may influence later input.
 
 The canonical basis supports every output permitted by the specification.  This
 completeness is essential for CALM: a weaker basis could hide non-monotonicity
-merely by making a conflicting output unavailable.  Other bases may omit canonical commitments or package several into one atomic
-bundle.  A basis \emph{covers} a canonical preparation when one of its atomic
-bundles, or an atomic sequence of its commitments, has the same effect.  Such a
-basis supports exactly the exposure sequences whose canonical preparations it
-covers.
+merely by making a conflicting output unavailable.  Other bases may omit
+canonical commitments or package several into one atomic bundle.  A basis
+\emph{covers} the canonical preparation for $o$ when one of its bundles, or an
+atomic sequence of its commitments, removes exactly the canonical seal and
+output-prepare rows.  Coverage is sufficient for legal preparation; a legal
+preparation may remove additional rows.
 
 \begin{lemma}[Canonical commitment normal form]
 \label{lem:canonical-commitment-normal-form}
-The canonical basis can prepare every permitted output.  Any preparation using
-arbitrary row-removing commitments that enables exposure of $o$ removes at
-least the canonical seal and output-prepare rows for $o$.  Replacing it by the
-canonical exposure sequence exposes the same $o$ while retaining every row not
-required to honor that exposure.  At this state, any additional row removal
-only narrows the resulting remainder table.
+The canonical basis can legally prepare every permitted output.  Every legal
+preparation for $o$ removes the canonical seal and output-prepare rows for $o$.
+The canonical exposure sequence therefore exposes the same $o$ while retaining
+every row not required to honor that exposure.  At this state, any additional
+row removal only narrows the resulting remainder table.
 \end{lemma}
 
 \begin{proof}
 Every row at an input in $K_o$ conflicts with $o$, so a preparation that leaves
 that input valid cannot expose $o$; those fibers must be sealed.  At every
 remaining input, each row in $P_o$ conflicts with $o$ and is not dominated by a
-row in $R_o$, so it cannot be retired and must be removed by commitment.  The
-rows in $D_o$ are dominated by retained rows and are retired by exposure.  These
-three sets partition $R\setminus R_o$, so the canonical exposure sequence ends
-at exactly $R_o$.  Any preparation that removes more rows reaches a subset of
-$R_o$ and therefore exposes no output unavailable to the canonical basis; it
+row in $R_o$, so it cannot be retired and must be removed by commitment.  The rows in
+$D_o$ are dominated by retained rows and are retired by the canonical exposure.
+These three sets partition $R\setminus R_o$, so the canonical exposure sequence
+ends at exactly $R_o$.  Any completed exposure sequence whose preparation
+removes more rows ends at a subset of $R_o$ and therefore exposes no output
+unavailable to the canonical basis; it
 only excludes additional behavior at this state.  Treating that exclusion as a
 permanent interface rule amounts to declaring a narrower specification
 $S'\subsetneq S$; history-dependent extra removal remains an implementation
@@ -598,12 +614,12 @@ choice, not another canonical form of commitment.
 \begin{definition}[Transition system and run]
 \label{def:io-transition-system}
 \label{def:transition-system}
-The \emph{transition system} has specification states as its states, input
-events as in Equation~\ref{eq:input-event}, atomic preparations supported by
-its commitment basis, and exposure events with their output retirements.  A
-\emph{run} is any finite sequence of input events and complete exposure
-sequences from a canonical initial state.  A \emph{run prefix} may additionally
-end after an atomic preparation.  Unless stated otherwise, runs use the
+The \emph{transition system} has execution states as its states, with
+input events as in Equation~\ref{eq:input-event}, atomic preparations supported
+by its commitment basis, and exposure events with their output retirements.  A
+\emph{run} is any finite transition sequence from a canonical initial
+execution state $\gamma_0(i)$ to a stable execution state.  A \emph{run prefix} may
+additionally end with a pending output.  Unless stated otherwise, runs use the
 canonical commitment basis.
 \label{def:run}
 \end{definition}
@@ -615,8 +631,9 @@ explained by input retirements, canonical commitments, and output retirements.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
-A run starts at $\sigma_0(i_0)$, ends with current input $i$, and completes
-exposure sequences for outputs $o_1,\ldots,o_m$.  Its final state is
+A run starts at $\gamma_0(i_0)$, ends with stable execution state
+$((i,R),\mathsf{none})$, and completes exposure sequences for outputs
+$o_1,\ldots,o_m$.  Its final specification state is
         \begin{equation}
   \left(i,\ \left\{(k,x)\in S:
     \begin{array}{l}
@@ -706,7 +723,7 @@ Proposition~\ref{prop:confluence}, a finite family of runs is confluent at a
 common refinement $k$ exactly when every output exposed on any run lies below
 $f(k)$.  If $f$ is monotone this holds because each exposed $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
-$f(i)\not\OutputOrd f(k)$; the run that starts at $\sigma_0(i)$ and completes
+$f(i)\not\OutputOrd f(k)$; the run that starts at $\gamma_0(i)$ and completes
 the exposure sequence for $f(i)$ has no row at $k$ and cannot advance to its own
 refinement $k$.
 \end{proof}

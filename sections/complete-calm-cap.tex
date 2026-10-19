@@ -21,10 +21,13 @@ relational extensions combined here.
     \toprule
     \textbf{Distributed histories} & & \\
     \midrule
-    participant; message & participant holds one specification state; \ $m=(i_m,s_m)$ carries input and strategy components & Sec.~\ref{sec:histories} \\
-    history; consistent cut & locally ordered events plus matched sends and receives; \ cut closed under happens-before & Def.~\ref{def:distributed-history} \\
-    projection; endpoint & $\pi_p(C)$: transitions affecting $p$'s specification state; \ $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
-    history confluence & at every common input $j$, all participants can reach one specification state $\sigma_j=(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
+    participant; message & participant holds one execution state;
+      $m=(i_m,s_m)$ carries input and strategy components & Sec.~\ref{sec:histories} \\
+    history; consistent cut & locally ordered events plus matched sends and receives;
+      cut closed under happens-before & Def.~\ref{def:distributed-history} \\
+    projection; endpoint & $\pi_p(C)$: transitions affecting $p$;
+      $\operatorname{end}(H,C)=(\gamma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
+    history confluence & at every common input $j$, all participants can reach one stable execution state $((j,R),\mathsf{none})$ & Sec.~\ref{sec:projection-confluence} \\
     \addlinespace
     \textbf{Output choice} & & \\
     \midrule
@@ -139,7 +142,7 @@ $u\in\fiber{j}$ refining them all.  Thus $u$ survives every run.
 
 \emph{(1) $\Rightarrow$ (2): Consistency implies Lifted Monotonicity.}
 Let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have a common refinement $j$.  For each
-$r$, start a run at $\sigma_0(i_r)$ and complete
+$r$, start a run at $\gamma_0(i_r)$ and complete
 $\mathsf{prepare}(o_r);\mathsf{expose}(o_r)$ under the canonical commitment
 basis; then
 $R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Consistency supplies an output
@@ -175,8 +178,10 @@ partition: participants in different components cannot establish a new shared
 commitment.  A \emph{partitioned history} divides participants into two or more
 components and has no cross-component message receive while the partition
 lasts, though participants may still receive environment input and expose
-outputs.  We use an interface-wide form of \emph{Availability}: every output in
-a participant's current fiber can complete its exposure sequence with identity
+outputs.  At a cut, first complete any pending exposure; this yields one stable
+execution state per participant.  We use an interface-wide form of
+\emph{Availability}: every output in a participant's current fiber at that
+stable state can complete its exposure sequence with identity
 preparation---that is, without commitment or a cross-component wait.  This is
 stronger than requiring some response to one operation, because the full
 declared interface treats every permitted output as available.
@@ -196,17 +201,17 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 \end{theorem}
 
 \begin{proof}
-Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Every output at every
-commitment-free state is exposable by the consequence of Complete
-CALM above, giving Availability.  Complete each pending exposure at the cut;
-the resulting participant projections are runs, so Complete CALM gives their
-confluence and hence Partition Consistency.
+Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Complete each pending
+exposure at the cut.  Every output at each resulting commitment-free stable
+state is exposable by the consequence of Complete CALM above, giving
+Availability.  The resulting participant projections are runs, so Complete
+CALM gives their confluence and hence Partition Consistency.
 
 Conversely, let any finite rows $(i_r,o_r)$ have a common refinement $j$.
 Place their participants in separate partition components.  If there is only
 one row, add a second participant initialized at $j$ and make no preparation
 there.  Availability lets each original participant prepare and expose $o_r$
-from $\sigma_0(i_r)$ without a commitment.  Partition Consistency then supplies
+from $\gamma_0(i_r)$ without a commitment.  Partition Consistency then supplies
 a
 row $(j,u)$ surviving in every remainder table, so
 $o_r\OutputOrd u$ for every $r$.  Form~(3) of
