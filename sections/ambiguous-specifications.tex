@@ -14,7 +14,7 @@ We begin, as in Section~\ref{sec:election-story}, with an informal,
 example-driven treatment.  Terms introduced in italics are defined formally
 below, and nothing here is needed for the proofs.  Section~\ref{sec:election-story}
 exercised the shared transition system; these examples exercise the additions
-for ambiguous specifications: directedness, output-prepare commitments, output
+for ambiguous specifications: directedness, output-choice commitments, output
 retirement, and Lifted Monotonicity.
 
 \begin{figure}[t]
@@ -56,37 +56,35 @@ retirement, and Lifted Monotonicity.
 \end{figure}
 
 \paragraph{Output actions under choice.}
-As in the functional case, outputting $o$ promises that the emitted result
-will be refined by the final result.  The single atomic action
-$\mathsf{output}(o)$ first applies any commitments required by a legal
-preparation of $o$, then emits $o$ and retires dominated rows.  Preparation is
-thus the action's internal commitment phase, not a separate event.  With
-several rows at one input, the retirement phase may remove a row without losing
-an alternative: a retained row at the same input may refine both $o$ and the
-removed output.  We call this an \emph{output retirement}.  Output $o$ is
-\emph{exposable} when its preparation needs no commitment.
+As in the functional case, outputting $o$ promises that the emitted result will
+be refined by the final result.  The single atomic action
+$\mathsf{output}(o)$ applies any required commitments, retires dominated rows,
+and emits $o$.  With several rows at one input, retirement may remove a row
+without losing an alternative: a retained row at the same input may refine both
+$o$ and the removed output.  Output $o$ is \emph{exposable} when its action needs
+no commitment.
 
 \paragraph{Ambiguity.}
 Figure~\ref{fig:ambiguity-frames}(f) allows either serial order of concurrent
-transactions $A$ and $B$.  No output refines both orders, so preparing one
-requires an \emph{output-prepare commitment} that removes the other within
-the atomic output action.  In the traceroute of panel (g), by contrast, outputs
-are prefix-closed route sets and their unions are within spec.  Outputting
-$\{s{\to}\texttt{s1}\}$ requires no preparation commitment; the action
-retires rows whose outputs do not refine it, but a retained union refines each
-retired output.  Nothing is lost, so the output is exposable.
+transactions $A$ and $B$.  No output refines both orders, so outputting one
+requires an \emph{output-choice commitment} that removes the other.  In the
+traceroute of panel (g), by contrast, outputs are prefix-closed route sets and
+their unions are within spec.  Outputting $\{s{\to}\texttt{s1}\}$ requires no
+commitment; the action retires rows whose outputs do not refine it, but a
+retained union refines each retired output.  Nothing is lost, so the output is
+exposable.
 
 The distinction is \emph{directedness}: every finite set of outputs in a fiber
 must have a common refinement in that fiber.  A directed fiber allows any output
 to be output without losing an alternative; a nondirected fiber may require
-an output-prepare commitment.  Lifted Monotonicity combines this requirement with the
+an output-choice commitment.  Lifted Monotonicity combines this requirement with the
 requirement from Functional CALM that more input not invalidate an output:
 every finite set of outputs within spec at $i$ must have a common refinement
 within spec at every $j\succeq_I i$.
 
 \paragraph{The commitment basis.}
 The specification fixes which rows conflict with an output, while the system's
-commitment basis determines which required seal and output-prepare commitments
+commitment basis determines which required seal and output-choice commitments
 it can perform and how it bundles them.  In Figure~\ref{fig:cc-commitments},
 two-phase locking commits only $A$ before $B$, whereas multiversion timestamp
 ordering commits $B$ to first place.  Appendix~\ref{app:cc-bases} gives both
@@ -164,9 +162,9 @@ $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
 The specification-state and input-event definitions of
-Section~\ref{sec:determination} apply unchanged to relational tables.
-Preparation, output actions, and runs are extended after the Lifted Monotonicity
-criterion is defined below.
+Section~\ref{sec:determination} apply unchanged to relational tables.  Output
+actions and runs are extended after the Lifted Monotonicity criterion is defined
+below.
 
 The output-refinement order lifts from individual outputs to nonempty sets of
 outputs.  For nonempty $A,B\subseteq O$, define
@@ -291,15 +289,13 @@ all finite sizes because pairwise compatibility is insufficient
 (Appendix~\ref{app:additional-applications}), and over incomparable inputs
 because different runs meet only at a common refinement.
 
-\subsection{Preparation under output choice}
+\subsection{Output actions under choice}
 \label{sec:safe-exposure}
 
-The functional case has one row per input, so preparing an output either does
-nothing or seals a future input.  With several rows at one input, an atomic
-output action can also discard a dominated output while retaining another row
-that preserves its claim.  We now extend preparation and output actions to this
-case.  Preparation remains the internal commitment phase used to determine
-which outputs require coordination; it is not itself an event.
+The functional case has one row per input, so an output action either removes
+nothing or seals a valid input.  With several rows at one input, it can also
+retire a dominated output while retaining another row that preserves its
+claim.  We now extend output actions to this case.
 
 For any remainder table, write
 $R(k)=\{u\in O:(k,u)\in R\}$.  For $o\in R(i)$, let
@@ -316,19 +312,18 @@ $R\setminus R_o$ fall into three classes:
   D_o&=\{(k,x)\in R\setminus R_o:
           \exists u\in R_o(k).\ x\OutputOrd u\},
       \label{eq:output-retirements}\\
-  P_o&=(R\setminus R_o)
+  U_o&=(R\setminus R_o)
        \setminus\bigl(D_o\cup\{(k,x):k\in K_o\}\bigr).
-      \label{eq:prepare-removals}
+      \label{eq:choice-removals}
 \end{align}
 Rows at inputs in $K_o$ require seal commitments.  Rows in $D_o$ are dominated
 by rows retained at the same input and are retired by the output action.  Rows
-in $P_o$ are undominated conflicts with $o$; the preparation phase removes them
-with an \emph{output-prepare commitment}.  Unlike a seal commitment, an
-output-prepare commitment may remove some outputs while leaving their input
-valid.
+in $U_o$ are undominated conflicts with $o$ and require an
+\emph{output-choice commitment}.  Unlike a seal commitment, an output-choice
+commitment may remove some outputs while leaving their input valid.
 
-The canonical relational preparation first seals the inputs in $K_o$, then
-removes $P_o$.  Concretely, let
+The canonical output action first seals the inputs in $K_o$, then removes
+$U_o$.  Concretely, let
 \[
   C_o^{\mathrm{seal}}=\{(k,x)\in R:k\in K_o\},
   \qquad R_o^{\mathrm{seal}}=R\setminus C_o^{\mathrm{seal}}.
@@ -338,13 +333,13 @@ The canonical seal commitment is
   s_{(i,R),o}(i,R)=(i,R_o^{\mathrm{seal}}),
   \label{eq:canonical-seal-commitment-relational}
 \end{equation}
-when $K_o\neq\varnothing$.  The canonical output-prepare commitment is
+when $K_o\neq\varnothing$.  The canonical output-choice commitment is
 \begin{equation}
-  p_{(i,R),o}\bigl(i,R_o^{\mathrm{seal}}\bigr)
-    =\bigl(i,R_o^{\mathrm{seal}}\setminus P_o\bigr),
-  \label{eq:canonical-output-prepare-commitment}
+  c_{(i,R),o}\bigl(i,R_o^{\mathrm{seal}}\bigr)
+    =\bigl(i,R_o^{\mathrm{seal}}\setminus U_o\bigr),
+  \label{eq:canonical-output-choice-commitment}
 \end{equation}
-when $P_o\neq\varnothing$.  The canonical commitment basis contains these
+when $U_o\neq\varnothing$.  The canonical commitment basis contains these
 nonidentity commitments for every state and permitted output.  After applying
 them internally, $\mathsf{output}(o)$ emits $o$ and retires $D_o$, so the atomic
 action ends at $(i,R_o)$.
@@ -355,57 +350,53 @@ The \emph{output retirements} for outputting $o$ at $(i,R)$ are the rows in
 $D_o$: rows excluded by $o$ but covered by a retained row at the same input.
 \end{definition}
 
-Under another basis, a preparation for $o$ is \emph{legal} when it retains
-$(i,o)$ and, after its commitments, every remaining row excluded by $o$ is
-dominated at the same input by a retained row that refines $o$.  The retirement
-phase of the same atomic output action can then remove those rows.  The
-canonical basis is maximally preserving:
+An output action under another basis is \emph{legal} when its commitments retain
+$(i,o)$ and, after those commitments, every remaining row excluded by $o$ is
+dominated at the same input by a retained row that refines $o$; the action then
+retires those dominated rows.  The canonical basis is maximally preserving:
 
 \begin{lemma}[Canonical commitment normal form]
 \label{lem:canonical-commitment-normal-form}
-The canonical basis supplies a legal preparation for every permitted output.
-Every legal preparation for $o$ removes the canonical seal and output-prepare
-rows for $o$.  The canonical action $\mathsf{output}(o)$ therefore emits $o$
-and retains every row not required to honor that output.  Any additional row
-removal only narrows the resulting remainder table.
+The canonical basis supports an output action for every permitted output.  Every
+legal output action for $o$ removes the canonical seal and output-choice rows
+for $o$.  The canonical action $\mathsf{output}(o)$ therefore emits $o$ and
+retains every row not required to honor that output.  Any additional row removal
+only narrows the resulting remainder table.
 \end{lemma}
 
 \begin{proof}
 Every row at an input in $K_o$ conflicts with $o$, so that input must be sealed.
-At every remaining input, each row in $P_o$ conflicts with $o$ and is not
+At every remaining input, each row in $U_o$ conflicts with $o$ and is not
 covered by a row in $R_o$, so it cannot be retired and must be removed by a
-commitment in the preparation phase.  The rows in $D_o$ are covered and are
-retired in the action's retirement phase.  These three sets partition
-$R\setminus R_o$, so the canonical action ends at exactly $R_o$.  Any action
-whose preparation removes more rows ends at a subset of $R_o$ and only excludes
+commitment.  The rows in $D_o$ are covered and retired.  These three sets
+partition $R\setminus R_o$, so the canonical action ends at exactly $R_o$.  Any
+action that removes more rows ends at a subset of $R_o$ and only excludes
 additional behavior.
 \end{proof}
 
-The canonical seal and output-prepare commitments above extend the commitment
+The canonical seal and output-choice commitments above extend the commitment
 basis in Definition~\ref{def:transition-system}.  The only specification state
 is $\sigma=(i,R)$; there is no pending-output marker.  A relational run uses one
 atomic event
 \[
   (i,R)\xrightarrow{\mathsf{output}(o)}(i,R'),
 \]
-which atomically applies the commitments of a legal preparation as its internal
-commitment phase, then emits $o$ and retires the remaining covered rows.
-Preparation is a logical phase used to define legality, exposability, and the
-need for coordination, not a separate transition.  Under the canonical basis
-$R'=R_o$.  The transition-system and run definitions,
+which atomically applies its commitments, retires the remaining covered rows,
+and emits $o$.  Under the canonical basis $R'=R_o$.  The transition-system and
+run definitions,
 Lemma~\ref{lem:run-residual}, Consistency, and
 Proposition~\ref{prop:confluence} therefore extend unchanged to relational
 specifications.
 
 \begin{definition}[Exposable, under output choice]
 \label{def:exposable-relational}
-An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when the identity is a
-legal preparation for $o$, so $\mathsf{output}(o)$ requires no commitment before
-its retirement phase.
+An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when a legal
+$\mathsf{output}(o)$ action requires no commitment; it may still retire
+dominated rows.
 \end{definition}
 
-For singleton fibers $D_o$ and $P_o$ are empty, so this reduces to the
-functional preparation and Definition~\ref{def:exposable}.
+For singleton fibers $D_o$ and $U_o$ are empty, so this reduces to
+Definition~\ref{def:exposable}.
 
 \begin{proposition}[Exposability]
 \label{prop:exposability}
@@ -417,18 +408,18 @@ $j\succeq_I i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
   x\OutputOrd u.
   \label{eq:safe-exposure}
 \end{equation}
-When $o$ is exposable, $\mathsf{output}(o)$ uses identity preparation and
-retires only dominated rows.
+When $o$ is exposable, $\mathsf{output}(o)$ uses no commitment and retires only
+dominated rows.
 \end{proposition}
 
 \begin{proof}
 At a valid $j$, the canonical output action retains
 $R_o(j)=\{u\in R(j):o\OutputOrd u\}$.  A removed $x$ can be retired exactly when
 some $u\in R_o(j)$ refines it, which is the stated test; the same witness makes
-$R_o(j)$ nonempty.  Hence identity preparation is legal exactly under that
-test.
+$R_o(j)$ nonempty.  Hence a commitment-free output action is legal exactly under
+that test.
 \end{proof}
 
-This test marks the coordination boundary: if it fails, every legal preparation
-uses a commitment to remove conflicting rows.  Section~\ref{sec:complete-calm}
+This test marks the coordination boundary: if it fails, every legal output
+action uses a commitment to remove conflicting rows.  Section~\ref{sec:complete-calm}
 combines this boundary with the distributed execution model.

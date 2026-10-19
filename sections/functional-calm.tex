@@ -15,7 +15,7 @@ Section~\ref{sec:functional-specifications} defines functional specifications
 and monotonicity, Section~\ref{sec:determination} defines the transition system
 and Consistency, Section~\ref{sec:functional-calm-theorem} proves Functional
 CALM, and Section~\ref{sec:canonical-transition-system} identifies when an
-output can be prepared without commitment.
+output can be emitted without commitment.
 
 \subsection{The framework on an election}
 \label{sec:election-story}
@@ -106,8 +106,7 @@ dependency.
   Gray: the row has been retired by an input event.
   Struck through: the row has been removed by a commitment; no remaining row
   preserves its contents.  Panels (b) and (c) follow input events; panel (d)
-  follows an output action for $\bot$ whose internal preparation contains a
-  seal commitment.}
+  follows an output action for $\bot$ that contains a seal commitment.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -195,7 +194,7 @@ The specification does not define a notion of commitments; that authority belong
 component of our model: the system's \emph{commitment basis} $\mathcal B$, which defines
 how the system may irrevocably remove rows.  A system whose polls can close includes this commitment in
 its basis; one whose polls cannot close does not.  After
-this preparation, no refinement of $xy\cdot$ remains valid, its upper fiber is
+this output action, no refinement of $xy\cdot$ remains valid, its upper fiber is
 $\{\bot\}$, and the state is determined.
 
 Because a functional specification has one row per input, any commitment that
@@ -237,10 +236,10 @@ the conflicting rows.  In Figure~\ref{fig:election-frames}, $\bot$ is
 exposable in panels (a), (b), and (d), while $x$ is exposable in panel (c).
 
 The transition system records one atomic $\mathsf{output}(o)$ action.  The
-action first performs its chosen internal preparation, including any required
-commitments, then emits $o$ and retires rows that the emitted result supersedes.
-Its internal stages are not separate transitions: no event can intervene and no
-history can cut between them.  The output action itself remains explicit
+action prepares $o$ for exposure by issuing any required
+commitments and retiring rows that $o$ supersedes, then emits $o$.
+The internal stages of this atomic action are not separate transitions: no event
+can intervene.  The output emission itself remains explicit
 because the environment may use the emitted result to choose later input.
 
 \paragraph{When monotonicity fails.}
@@ -248,8 +247,7 @@ Now change one thing in our example: make all outputs incomparable, dropping
 $\bot\OutputOrd x,y$, so that an output refines only itself; this is the
 \emph{equality order}.  The rows are the same, but in panels (a) and (b)
 nothing is exposable: $\bot$ no longer lies below the $x$ and $y$ in the upper
-fiber.  Emitting any output requires an internal preparation with a seal
-commitment.  Figure~\ref{fig:nonmonotone-frame} shows the result of the output
+fiber.  Emitting any output requires a seal commitment.  Figure~\ref{fig:nonmonotone-frame} shows the result of the output
 action for $\bot$ at $x\cdot\cdot$: its commitment removes every refinement,
 and the upper fiber collapses to $\{\bot\}$.  That contrast is Functional
 CALM (Section~\ref{sec:functional-calm}): a monotone functional specification
@@ -317,9 +315,9 @@ for Complete CALM.
     \addlinespace
     \textbf{Output handling} & & \\
     \midrule
-    output action & internal preparation; emit $o$; output retirement & Eq.~\ref{eq:output-action} \\
+    output action & commitments and retirements, then emit $o$ & Eq.~\ref{eq:output-action} \\
     canonical commitment basis & supports every permitted output action & Sec.~\ref{sec:determination} \\
-    exposable output & some legal preparation uses no commitment & Def.~\ref{def:exposable} \\
+    exposable output & output action uses no commitment & Def.~\ref{def:exposable} \\
     run & finite input and output actions & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Results} & & \\
@@ -377,11 +375,10 @@ arrives.
 Section~\ref{sec:election-story} previewed the transition model that embeds
 the declarative specification and a system commitment basis in a simple I/O
 automaton.  Its state is a specification state.  An input action records a
-cumulative input supplied by the environment.  An atomic output action performs
-its internal preparation, emits its result, and applies output retirement.  The
-action records the emitted result and the preparation chosen by the system, so
-an execution retains whether that choice used a commitment.  The environment
-may use an emitted output to choose a later input.
+cumulative input supplied by the environment.  An atomic output action prepares
+its result by removing rows for reasons of commitment or retirement, then emits
+that result.  The action records whether it used a commitment, and the
+environment may use its emitted output to choose a later input.
 
 \paragraph{The specification and remainder tables.}
 The relation $S\subseteq I\times O$, with the functional dependency that
@@ -473,13 +470,13 @@ For $(i,o)\in R$, the final table needed to honor emission of $o$ is
 \end{equation}
 In a functional specification each input has one row.  Consequently every row
 in $R\setminus R_o$ lies at a valid refinement whose only output conflicts with
-$o$.  The output action's preparation must make each such input invalid.
+$o$.  Emitting $o$ must make each such input invalid.
 
 A \emph{commitment basis} $\mathcal B$ is a set of partial functions on
 specification states.  Each commitment keeps the current input fixed and
 strictly decreases the remainder table.  A \emph{seal commitment} removes every
 row at one or more valid noncurrent inputs, making those inputs invalid.  For a
-functional specification, these are the only commitments needed to prepare an
+functional specification, these are the only commitments needed to emit an
 output.
 
 For every specification state and $(i,o)\in R$, the canonical seal commitment
@@ -491,29 +488,24 @@ is the partial function
 when $R_o\neq R$; identity cases are omitted.  The \emph{canonical commitment
 basis} $\mathcal B_S^{\mathrm{can}}$ contains every such commitment.
 
-An output action carries a legal \emph{preparation} $\pi$: either the identity or
-an atomic commitment, or sequence of commitments, supported by the system's
-basis.  In the functional case, $\pi$ must have the aggregate effect of the
-canonical seal commitment.  The action then emits $o$ and, atomically with that
-emission, applies output retirement; in the functional case this retirement
-removes no additional row.  Thus under the canonical basis
+An output action for $o$ applies a finite, possibly empty sequence of commitments
+from the system's basis, retires any remaining rows superseded by $o$, and emits
+$o$; these effects are atomic.  The action itself records which commitments it
+applied, although its interface label is simply $\mathsf{output}(o)$.  In the
+functional case there are no output retirements, so the applied commitments
+must take $(i,R)$ to $(i,R_o)$.  Under the canonical basis,
 \begin{equation}
-    (i,R)\xrightarrow{\mathsf{output}(o;\pi)}(i,R_o)
-    \label{eq:output-action}
+  (i,R)\xrightarrow{\mathsf{output}(o)}(i,R_o).
+  \label{eq:output-action}
 \end{equation}
-The preparation annotation is part of the action, so the execution records
-whether emitting $o$ used a commitment; only $\mathsf{output}(o)$ is visible at
-the specification interface.  We omit $\pi$ from the label when that distinction
-is immaterial.  Preparation, emission, and retirement are the logical parts of
-one transition, not separately interleavable events.
 
 The canonical basis supports every output permitted by the specification.  This
 is essential for CALM: a weaker basis could hide non-monotonicity merely by
 making a conflicting output unavailable.  Another basis supports the output
-action for $o$ when one of its commitments, or an atomic sequence of them, has
-the same aggregate effect as the canonical seal commitment.
-Section~\ref{sec:safe-exposure} extends legal preparation and output retirement
-to specifications with several outputs at one input.
+action for $o$ when a commitment or finite sequence of commitments in that
+basis has the same aggregate effect as the canonical seal commitment.
+Section~\ref{sec:safe-exposure} extends output actions and retirement to
+specifications with several outputs at one input.
 
 \begin{definition}[Transition system and run]
 \label{def:io-transition-system}
@@ -550,8 +542,8 @@ emitting $o_1,\ldots,o_m$.  Its final state is
 \begin{proof}
 Each input event intersects $R$ with $\{(k,x):j\InputOrd k\}$ and each
 canonical output action with $\{(k,x):o\OutputOrd x\}$.  In the functional
-case, the action's preparation has exactly this effect and output retirement
-removes no additional row.  These intersections commute, and the input
+case, its commitments have exactly this effect and output retirement removes no
+additional row.  These intersections commute, and the input
 restrictions compose to the restriction at the final input $i$.
 \end{proof}
 
@@ -652,8 +644,9 @@ instances.
 The canonical commitment basis exists to exercise every output the specification
 permits, not to claim that every implementation supports every output action.
 An implementation supplies its own basis; it can take an output action only
-when that basis supports a legal preparation with the required aggregate
-effect.  The following definitions identify when no commitment is required.
+when commitments in that basis, together with permitted retirements, produce
+the required effect.  The following definitions identify when no commitment is
+required.
 
 For $R\subseteq S$, the \emph{upper fiber} at $i$ collects outputs at $i$ and
 its still-valid refinements:
@@ -667,18 +660,17 @@ is determined when its current input is.
 \begin{definition}[Exposable output, functional case]
 \label{def:exposable}
 For a functional specification, $(i,o)\in R$ is \emph{exposable} at $(i,R)$
-when its output action has a legal preparation that requires no commitment.
-Equivalently, the output action removes no row: $o\OutputOrd f(j)$ at every
-valid $j\succeq_I i$.
+when its output action requires no commitment.  Equivalently, the output action
+removes no row: $o\OutputOrd f(j)$ at every valid $j\succeq_I i$.
 \end{definition}
 
 A state is \emph{sealed} when no strict refinement of its current input remains
 valid.  A sealed functional state is determined, but a seal commitment need not
 seal every strict refinement at once.
 
-A system's \emph{strategy} chooses input and output actions, including a legal
-preparation from its basis for each output action, using the specification and
-any additional strategy state.  Strategy state is not part of the
+A system's \emph{strategy} chooses input and output actions, including which
+commitments from its basis an output action applies, using the specification
+and any additional strategy state.  Strategy state is not part of the
 specification state and affects the remainder table only through the selected
 transitions.
 
@@ -690,7 +682,7 @@ every state reachable without commitment is exposable.
 
 \begin{proof}
 If $f$ is monotone, a commitment-free state has lost rows only to input events,
-since its output actions use identity preparation and retire no rows.  If
+since its output actions use no commitments and retire no rows.  If
 its current input is $i$, then the only output paired with $i$ is $f(i)$, and
 every valid $j\succeq_I i$ has $f(i)\OutputOrd f(j)$, so $f(i)$ is exposable.
 Conversely, suppose every output at every commitment-free reachable state is

@@ -18,9 +18,9 @@ and consistent cuts; the next projects each cut to specification states.
 \paragraph{Participants and local execution.}
 A participant holds one specification state $\sigma=(i,R)$.  An input event
 records a later cumulative input and performs its input retirements.  A single
-atomic $\mathsf{output}(o)$ event emits $o$, applies any legal preparation
-commitments supported by the basis, and performs the output retirements, ending
-in the resulting remainder table.  In the functional case considered here,
+atomic $\mathsf{output}(o)$ event emits $o$, applies any commitments supported
+by the basis, and performs the output retirements, ending in the resulting
+remainder table.  In the functional case considered here,
 the commitments are seals and output retirement removes no additional rows.
 Participants may receive different inputs and emit different outputs.  The
 local transition sequence at every cut is a run: because output is one atomic
@@ -51,16 +51,16 @@ with:
   \item an assignment of each event to a participant $p\in P$, and a total
         local order on the events assigned to each participant;
   \item a label on each event: an input event $\mathsf{input}(j)$, an atomic
-        output event $\mathsf{output}(o;\pi)$ carrying its legal preparation, a
-        send $\mathsf{send}(m)$, or a receive $\mathsf{receive}(m)$; and
+        output event $\mathsf{output}(o)$, a send $\mathsf{send}(m)$, or a
+        receive $\mathsf{receive}(m)$;
+  \item for each output event, the finite sequence of commitments from the
+        basis that it applies, possibly empty; and
   \item for each $\mathsf{receive}(m)$, a matching $\mathsf{send}(m)$ at
         another participant.
 \end{enumerate}
-Each output event is one transition: it emits $o$ and atomically applies the
-legal preparation $\pi$ followed by the prescribed output retirements.  The
-annotation retains whether this execution used a commitment and may be omitted
-when immaterial.  A cut cannot separate an output's commitments, emission, and
-retirements.  Unless
+Each output event is one transition: it atomically applies its recorded
+commitments and output retirements and emits $o$.  A cut cannot separate those
+effects from the emission.  Unless
 another basis is named, the history uses the canonical commitment basis.  The
 \emph{happens-before} order is the transitive closure of the local orders
 and the edges from sends to their matching receives.  A

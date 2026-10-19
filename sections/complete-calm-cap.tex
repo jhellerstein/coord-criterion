@@ -35,8 +35,8 @@ relational extensions combined here.
     fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$ & Eq.~\ref{eq:fiber} \\
     Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$; finite sets in $S(i)$ have common refinements in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
     output retirement & removed $(k,x)$ is covered by retained $(k,u)$ with $x\OutputOrd u$ & Def.~\ref{def:output-retirement} \\
-    exposable output & the preparation component of $\mathsf{output}(o)$ is the identity; the action may retire dominated rows & Def.~\ref{def:exposable-relational} \\
-    output preparation commitment & removes undominated conflicts while leaving their input valid & Sec.~\ref{sec:safe-exposure} \\
+    exposable output & $\mathsf{output}(o)$ needs no commitment; it may retire dominated rows & Def.~\ref{def:exposable-relational} \\
+    output-choice commitment & removes undominated conflicts while leaving their input valid & Sec.~\ref{sec:safe-exposure} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
@@ -63,18 +63,17 @@ because it uses one of these mechanisms.
 
 \begin{definition}[Coordination]
 \label{def:coordination}
-A system execution \emph{coordinates} if and only if the preparation component
-of an output action applies a commitment: it irrevocably removes a row that neither
-input nor output retirement accounts for.  It is \emph{coordination-free} when
-every output action has identity preparation; the action may still perform
-output retirements.
+A system execution \emph{coordinates} if and only if an output action applies a
+commitment: it irrevocably removes a row that neither input nor output retirement
+accounts for.  It is \emph{coordination-free} when its output actions apply no
+commitments; they may still perform output retirements.
 \end{definition}
 
 Hereafter, \emph{reachable} means reachable without commitment.  A system
 selects and emits an output in one atomic $\mathsf{output}(o)$ event.  When the
-output is exposable, that action's preparation is the identity; otherwise its
-preparation applies a commitment as part of the same transition that emits the
-output and performs any output retirements.
+output is exposable, that action applies no commitment; otherwise it applies a
+commitment as part of the same transition that emits the output and performs any
+output retirements.
 
 In a shared-memory system, a mutex or atomic instruction can establish a
 commitment by fixing an order or choice.  In a distributed system, a commitment
@@ -85,7 +84,7 @@ establish that exclusion.
 \begin{theorem}[Conflicting output actions cannot coexist]
 \label{thm:commitments-require-coordination}
 Suppose one participant can perform an output action at a reachable state
-$\sigma=(i,R)$ whose preparation applies a commitment, producing a state
+$\sigma=(i,R)$ that applies a commitment, producing a state
 $\sigma'=(i,R')$ in which some $x\in R(i)$ has been removed by commitment and
 no output in $R'(i)$ refines $x$.  Suppose a second participant can
 independently emit $x$ after receiving the same input events, obtaining a state
@@ -183,8 +182,8 @@ components and has no cross-component message receive while the partition
 lasts, though participants may still receive environment input and emit
 outputs.  Each participant has one state at a cut.  We use an interface-wide
 form of \emph{Availability}: every output in a participant's current fiber can
-be emitted by an output action with identity preparation---that is, without a
-commitment or a cross-component wait.  This is
+be emitted by an output action without commitment or a cross-component wait.
+This is
 stronger than requiring some response to one operation, because the full
 declared interface treats every permitted output as available.
 Appendix~\ref{app:deployment} instead restricts the interface by participant
