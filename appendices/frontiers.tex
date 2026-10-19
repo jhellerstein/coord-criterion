@@ -264,13 +264,20 @@ real-time legality: adding a write that completed before an old read could
 invalidate an initial-value response without adding a causal predecessor, so
 causal closure alone would not preserve a real-time-respecting view.
 
-Linearizability retains the ordinary one-process behaviors but adds one
-cross-process requirement: all views must be projections of a single global
-total order that also respects real time.  In the post-reconciliation execution
-from Appendix~\ref{app:deployment}, one read forces $\dog<\catv$ and the other
-forces $\catv<\dog$.  Each local causal view is legal alone, but their pair has
-no global explanation.  Linearizability therefore removes a product tuple and
-crosses the frontier.
+Linearizability is not, in general, a locally conservative strengthening of
+this causal product: a remote write can precede a read in real time without
+belonging to its causal past, so linearizability may also remove a
+one-coordinate causal behavior.  The independent-product theorem therefore
+does not compare linearizability with the causal product over arbitrary
+histories.
+
+A restricted family still exhibits the cross-process obstruction.  In the
+post-reconciliation execution from Appendix~\ref{app:deployment}, both writes
+are already known and each local response is individually linearizable, but
+one read forces $\dog<\catv$ while the other forces $\catv<\dog$.  Their pair
+has no single global total-order explanation.  This witnesses the cost of that
+cross-process requirement within the restricted family; it is not an
+application of the frontier theorem to all causal histories.
 
 The qualification is important.  A system can avoid this obstruction by
 removing a local choice, assigning the choice to one authority, restricting

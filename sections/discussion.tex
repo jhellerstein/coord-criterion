@@ -76,12 +76,15 @@ allow total orders that cannot refine two concurrent explanations, so they
 are not monotone (Appendix~\ref{app:deployment},
 Section~\ref{sec:hat-instance}).  Causal consistency allows one explanation
 for concurrent reads and is monotone under the deployment in which each
-participant answers its own reads (Appendix~\ref{app:deployment}).  Read
-committed and the other HAT guarantees accumulate facts and are monotone
-(Section~\ref{sec:hat-instance}).  Strong eventual consistency states a
-convergence condition: replicas that have incorporated the same updates reach
-equivalent states.  Join-semilattice merge and last-writer-wins can both provide
-that convergence.  SEC therefore permits the observable equivalent of
+participant answers its own reads (Appendix~\ref{app:deployment}).  The
+disjoint-key read-committed example of Section~\ref{sec:hat-instance}
+accumulates compatible facts and illustrates the positive pattern behind HAT
+availability.  This does not make the full read-committed interface monotone:
+if one read may return either of two committed versions, immutable facts for
+the two answers need not have a common refinement.  Strong eventual
+consistency states a convergence condition: replicas that have incorporated
+the same updates reach equivalent states.  Join-semilattice merge and
+last-writer-wins can both provide that convergence.  SEC therefore permits the observable equivalent of
 retraction: convergence may replace or discard an earlier visible answer even
 when internal replica state only grows.  SEC alone neither requires a least
 refinement in the declared output order nor determines which concurrent

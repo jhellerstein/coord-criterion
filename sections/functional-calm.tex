@@ -483,10 +483,14 @@ lattice.  The function is partial because advance need not be defined for every
 pair; where several results are possible, it records the one chosen by the
 system model.
 
-Input events compose: $\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has
-the same effect as $\mathsf{input}(k)$ alone, and $\mathsf{input}(i)$ at
-$(i,R)$ is the identity.  Thus input order, batching, and repeated delivery do
-not affect the state reached by input events alone.
+Input events compose once their final target is fixed:
+$\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has the same effect as
+$\mathsf{input}(k)$ alone, and $\mathsf{input}(i)$ at $(i,R)$ is the identity.
+Thus batching or intermediate input events do not affect the state when they
+produce the same final cumulative input.  The contract on $\mathsf{advance}$
+does not require different delivery orders to choose that same final input; a
+system that needs delivery-order independence must impose the corresponding
+algebraic law on its advance function.
 
 \paragraph{Commitments and output handling.}
 For $(i,o)\in R$, the final table needed to honor exposure of $o$ is

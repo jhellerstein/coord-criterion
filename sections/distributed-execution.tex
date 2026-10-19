@@ -27,9 +27,10 @@ complete local transition sequence is a run; a cut
 may leave a run prefix ending after preparation.  Consistency compares the
 completed runs
 whenever their current inputs have a common refinement, covering sharded
-systems as well as replicas.  Because input events
-compose, delivery order and batching do not affect a state reached by input
-events alone.
+systems as well as replicas.  Once a final cumulative input is fixed,
+intermediate input events and batching do not affect the resulting state.
+Different delivery orders need not compute the same final input unless the
+system's $\mathsf{advance}$ function supplies that additional property.
 
 \paragraph{Histories and consistent cuts.}
 A Lamport history records local events and the message edges between them.  A

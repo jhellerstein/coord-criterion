@@ -71,18 +71,21 @@ so far, and the scheduler applies $\mathsf{stamp}(A)$: $A$ is committed to
 follow every transaction stamped before it and to precede every transaction
 stamped after it, including transactions that have not yet arrived.  Panel (i)
 of Figure~\ref{fig:cc-commitments} is $\mathsf{stamp}(B)$ with
-$Z=\varnothing$.  Reads never cause a commitment: $A$ reads the version of an
-item written by the committed transaction with the largest timestamp below
-its own, and if that writer has not yet committed, $A$'s commit waits for it, a
-dependency rather than a commitment.  Writes can.  If $A$ writes an item that
-some transaction with a larger timestamp has already read, the version $A$
-would create should have been visible to that read under the order the stamps
-committed; MVTO rejects the write and the scheduler applies
-$\mathsf{abort}(A)$.  Our specification records orders and aborts, not read
-results, so it does not itself say that the late write is invalid; a
-specification whose outputs include read facts, as in
-Section~\ref{sec:hat-instance}, would.  When $A$ commits, the scheduler
-applies $\mathsf{commit}(A)$.
+$Z=\varnothing$.  Use the conventional committed-version read rule here.  If
+$A$ has already buffered its own write to an item, it reads that value;
+otherwise it reads the committed version whose writer has the largest
+timestamp below $A$'s.  Reads do not themselves add a commitment.
+
+Writes can force an abort.  Let $v$ be the latest committed predecessor version
+that $A$'s new version would follow.  If a transaction stamped after $A$ has already
+read $v$, inserting $A$'s version between $v$ and that reader would invalidate
+the recorded response under the timestamp order.  MVTO therefore rejects the
+write and the scheduler applies $\mathsf{abort}(A)$.  A later transaction that
+read some newer version of the item does not by itself force this rejection.
+Our specification records orders and aborts, not read results, so it does not
+itself say that the late write is invalid; a specification whose outputs
+include read facts, as in Section~\ref{sec:hat-instance}, would.  When $A$
+commits, the scheduler applies $\mathsf{commit}(A)$.
 
 \paragraph{Comparison.}
 The two bases commit different things at different times.  2PL commits a
@@ -90,7 +93,10 @@ relative order between two transactions, only when they conflict, and
 discovers deadlock as a pair of commitments that leaves only abort rows.  MVTO
 commits an absolute position for each transaction on arrival, against every
 transaction present or future, and pays for the early commitment with aborts
-when execution turns out not to match it.  In both, once every remaining row
-at the current input has $A$ committed and in the same position relative to
-the other committed transactions, that much of the output is exposable:
-preparation is the identity, and exposure performs only output retirements.
+when execution turns out not to match it.  These commitments can make a
+\emph{complete} output $(L,X)$ exposable when its preparation is the identity;
+Definition~\ref{def:exposable-relational} supplies the test.  Merely fixing
+$A$'s status or its position relative to some transactions is not itself an
+exposable output in the carrier declared above, because that carrier contains
+only complete serialization-and-abort outcomes.  An interface intended to
+expose such partial facts would need to include them explicitly as outputs.
