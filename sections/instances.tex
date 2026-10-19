@@ -159,23 +159,30 @@ the state itself is complete.
 
 \paragraph{Beyond least merges.}
 A join-semilattice provides a uniform \emph{least} refinement and a fixed merge
-operator.  Complete CALM asks only for \emph{some} common refinement of
-each relevant finite family.  For example, suppose two shards expose
-$[a_1,a_2]$ and $[b_1,b_2]$, and the output fiber contains every order-preserving
-interleaving.  Both
+operator.  Complete CALM asks only for \emph{some} common refinement of each
+relevant finite family.  For example, consider the finite output poset with
+incomparable elements $p$ and $q$, incomparable minimal common upper bounds
+$r$ and $s$, and a top element $t$ above both $r$ and $s$:
         \begin{equation}
-  [a_1,a_2,b_1,b_2]\qquad\text{and}\qquad[b_1,b_2,a_1,a_2]
-  \label{eq:log-interleavings}
+  p,q \prec r,s \prec t,
+  \qquad r\not\OutputOrd s,
+  \qquad s\not\OutputOrd r.
+  \label{eq:directed-nonlattice}
         \end{equation}
-are minimal common refinements, and neither refines the other.  Consequently,
-the pair has no least common refinement, so this output order is not a
-join-semilattice.  It is nevertheless directed: any finite family of sequences
-has an order-preserving interleaving in the fiber.  A join-semilattice is
-therefore a sufficient discipline, not a requirement of Lifted
-Monotonicity; strong eventual consistency, which it provides, is a stronger
-promise than consistency in our sense, and last-writer-wins shows that
-convergence can also be weaker, discarding one concurrent value that an
-interface promised to preserve.
+Every finite family has a common refinement---$t$ always suffices---so the
+poset is directed.  But $p$ and $q$ have no least common refinement: either
+$r$ or $s$ would have to be least, and they are incomparable.  A
+join-semilattice is therefore a sufficient discipline, not a requirement of
+Lifted Monotonicity.
+
+Strong eventual consistency is a separate convergence property: replicas that
+have incorporated the same updates reach equivalent states.  A join-semilattice
+merge is one way to provide it, but SEC itself does not require a least element
+in this paper's declared output order, and last-writer-wins designs may satisfy
+SEC as well.  Whether such convergence preserves an exposed client claim is an
+additional question determined by that output order; an LWW interface that
+promises to retain both concurrent values differs from one that permits its
+resolution rule to discard one.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}

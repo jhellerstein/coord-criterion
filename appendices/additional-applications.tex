@@ -7,13 +7,13 @@ choices survive together?  We isolate those obstructions here.  The
 results do not replace model-specific theorems about failures, computability, or
 termination.
 
-\subsection{One commitment, then monotone authority}
+\subsection{Committed authority, then monotone evidence}
 
 Agreement protocols illustrate one distributed form of coordination.  Before an
 authority is established, several incompatible authority lineages may remain
 possible.  Publishing one lineage rules the others out: that is a commitment.
-Suppose the commitment fixes both the initial authority and a rule that uniquely
-determines every certified successor.  The system can then expose three kinds
+Suppose this commitment fixes the initial authority and a rule that uniquely
+determines each certified successor.  The system can then expose three kinds
 of growing evidence: a certified epoch chain $E$, votes or certificates $V$,
 and decisions $D$ indexed by epoch and slot.  Define refinement by
         \begin{equation}
@@ -22,17 +22,19 @@ and decisions $D$ indexed by epoch and slot.  Define refinement by
   E\preceq_{\rm pref}E',\quad V\subseteq V',\quad D\subseteq D'.
   \label{eq:authority-refinement}
         \end{equation}
-Protocol safety ensures that a later certificate extends the unique lineage and
-preserves prior decisions.  Public authority changes are therefore refinements,
-not revisions: votes, certificates, epochs, and decisions all accumulate after
-the initial commitment.
+Protocol safety ensures that a later certificate extends the unique lineage
+and preserves prior certified decisions.  Public authority changes and
+already-certified decisions are therefore refinements, not revisions: their
+evidence accumulates.
 
-This statement does not claim that later certificates are free.  Producing one
-may require communication and agreement.  It says something more specific:
-later protocol work does not choose among remaining output alternatives or
-retract a public result.  If the first commitment did not fix a unique
-succession rule, competing next epochs would present another output choice
-and require another commitment.
+Fixing authority does not fix the value of every future decision slot.
+Competing proposals can still yield incompatible extensions of $D$, so
+selecting and certifying a value may require a new commitment or agreement.
+Once selected, however, that decision is preserved by every later output.  The
+commitment-free claim thus applies only to following the fixed authority
+succession rule, not to producing arbitrary future decisions.  If the initial
+commitment did not fix a unique succession rule, competing next epochs would
+present an additional authority choice and require another commitment.
 
 \subsection{Why $k$-set agreement needs finite families}
 

@@ -75,9 +75,15 @@ $S\subseteq I\times O$.  Write its original fiber as
   X(i)=S(i)=\{o\in O:(i,o)\in S\}.
   \label{eq:hull-original-fiber}
         \end{equation}
-The transformation replaces the output carrier $O$ by $\mathcal P(O)$,
-compared under the pointwise lift of Equation~\ref{eq:lifted-output-order}.
-Its unpruned output is
+The transformation replaces the output carrier $O$ by equivalence classes of
+nonempty subsets of $O$.  For sets $A,B$, write
+$A\equiv_H B$ when both $A\LiftedOutputOrd B$ and
+$B\LiftedOutputOrd A$, using the Hoare preorder of
+Equation~\ref{eq:lifted-output-order}; the transformed carrier is
+$(\mathcal P(O)\setminus\{\varnothing\})/{\equiv_H}$.  The preorder induces a
+partial order on these classes, as the specification model requires.  Below we
+continue to write set representatives and $\LiftedOutputOrd$ for the induced
+order.  The unpruned output is
         \begin{equation}
   X^\uparrow(i)=\bigcup_{j\InputOrd i}X(j).
   \label{eq:monotone-hull}
@@ -221,10 +227,12 @@ every input, the projection of $T$ onto coordinate $p$ remains all of $V_p(i)$.
 \begin{theorem}[Independent-product frontier]
 \label{thm:product-frontier}
 Suppose each coordinate has one owner, every relevant group of owners can be
-separated by a legal partition, and availability permits every local choice.  The product interface is monotone across partitions, so by
-Theorem~\ref{thm:complete-cap-deployment} it remains available and consistent
-under every partition.  Every proper normalized, locally conservative
-strengthening is not monotone across partitions.
+separated by a legal partition, and every local choice is
+deployment-available.  The product interface is monotone across partitions,
+so Theorem~\ref{thm:complete-cap-deployment} gives partition confluence; together
+with the availability assumption, the product remains deployment-available and
+consistent under every partition.  Every proper normalized, locally
+conservative strengthening is not monotone across partitions.
 \end{theorem}
 
 \begin{proof}
@@ -243,22 +251,26 @@ complete it.  Maximality of the coordinates forces the result to be exactly
 $x$, the tuple that $T$ forbids.  Hence the separated family has no common refinement in $T$.
 \end{proof}
 
-\paragraph{A register frontier.}
+\paragraph{A causal-register frontier.}
 The abstract product has a direct consistency interpretation.  For each process
 $p$, let $V_p(i)$ contain the register views that are individually explainable
-by some legal real-time-respecting execution.  A view records the source write
-for $p$'s reads, but it need not order concurrent writes in the same way as
-another process.  The product interface allows all combinations of these
-individually legal views.  Downward-closed history extension preserves old
-views, so this causal-view interface is monotone across partitions when each
-read has a unique owner.
+by some legal causal execution.  A view records the source write for $p$'s
+reads, but concurrent writes need not be ordered in the same way as in another
+process's view.  Inputs are causally closed histories, and input extension must
+preserve the causal past of completed reads.  Under this causal legality, an old
+view remains explainable after extension, so the product interface is monotone
+across partitions when each read has a unique owner.  This claim does not use
+real-time legality: adding a write that completed before an old read could
+invalidate an initial-value response without adding a causal predecessor, so
+causal closure alone would not preserve a real-time-respecting view.
 
-Linearizability keeps every one-process behavior but adds one cross-process
-requirement: all views must be projections of a single global total order.  In
-the execution from Appendix~\ref{app:deployment}, one read forces
-$\dog<\catv$ and the other forces $\catv<\dog$.  Each local view is legal alone,
-but their pair has no global explanation.  Linearizability therefore removes a
-product tuple and crosses the frontier.
+Linearizability retains the ordinary one-process behaviors but adds one
+cross-process requirement: all views must be projections of a single global
+total order that also respects real time.  In the post-reconciliation execution
+from Appendix~\ref{app:deployment}, one read forces $\dog<\catv$ and the other
+forces $\catv<\dog$.  Each local causal view is legal alone, but their pair has
+no global explanation.  Linearizability therefore removes a product tuple and
+crosses the frontier.
 
 The qualification is important.  A system can avoid this obstruction by
 removing a local choice, assigning the choice to one authority, restricting

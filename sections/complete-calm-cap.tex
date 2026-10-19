@@ -185,10 +185,12 @@ stable state can complete its exposure sequence with identity
 preparation---that is, without commitment or a cross-component wait.  This is
 stronger than requiring some response to one operation, because the full
 declared interface treats every permitted output as available.
-Appendix~\ref{app:deployment} restricts the condition to outputs a
-participant is authorized to expose.  The history has \emph{Partition
-Consistency} when its commitment-free participant
-projections are confluent at every common refinement of their current inputs.
+Appendix~\ref{app:deployment} instead restricts the interface by participant
+authority and counts commitments wholly local to a partition component as
+deployment-available; its result therefore characterizes confluence assuming
+that weaker, placement-relative availability condition.  The history has
+\emph{Partition Consistency} when its commitment-free participant projections
+are confluent at every common refinement of their current inputs.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
@@ -226,14 +228,15 @@ sequence either requires a commitment that cannot be established without a
 cross-component wait, sacrificing Availability, or completes independently at
 the cost of Partition Consistency.
 
-A linearizable register is the classical instance of the tradeoff side: two
-reads of concurrent writes may be explained by opposite serial orders, no
-total order refines both, and the theorem withholds availability under
-partition.  Whether a commitment requires agreement across a partition also
-depends on which participant may hold which input and make which choice;
-Appendix~\ref{app:deployment} refines the theorem by such a \emph{deployment}
-and shows that a causal register, though it fails Lifted Monotonicity without
-deployment restrictions, needs no coordination
-when each participant answers only its own reads.  With the central results
-in place, we now compare their consequences across the surrounding
-literature.
+A linearizable register is the classical instance of the tradeoff side: a
+write completed in one partition component is hidden from a read in another,
+so indistinguishable local executions force the reader either to wait or to
+violate real-time order.  Whether a commitment requires agreement across a
+partition also depends on which participant may hold which input and make which
+choice.  Appendix~\ref{app:deployment} introduces a weaker, deployment-relative
+availability condition that counts partition-independent local commitments as
+available, sets aside the degenerate case in which one participant holds all
+relevant authority, and shows that a causal register needs no cross-component
+coordination when each participant answers only its own reads.  With the
+central results in place, we now compare their consequences across the
+surrounding literature.

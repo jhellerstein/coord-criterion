@@ -78,13 +78,15 @@ Section~\ref{sec:hat-instance}).  Causal consistency allows one explanation
 for concurrent reads and is monotone under the deployment in which each
 participant answers its own reads (Appendix~\ref{app:deployment}).  Read
 committed and the other HAT guarantees accumulate facts and are monotone
-(Section~\ref{sec:hat-instance}).  Strong eventual consistency asks more
-than confluence, a least common refinement that every replica reaches, and
-last-writer-wins eventual consistency asks less, converging by discarding
-content (Section~\ref{sec:crdt-instance}).  What the traditional definitions
-leave implicit, and the framework requires, is the output order: the same
-operation history yields a monotone or a non-monotone specification depending
-on what an exposed read is taken to promise
+(Section~\ref{sec:hat-instance}).  Strong eventual consistency states a
+convergence condition: replicas that have incorporated the same updates reach
+equivalent states.  Join-semilattice merge and last-writer-wins can both provide
+that convergence, so SEC alone neither requires a least refinement in the
+declared output order nor determines which concurrent client-visible claims
+must survive (Section~\ref{sec:crdt-instance}).  What the traditional
+definitions leave implicit, and the framework requires, is the output order:
+the same operation history yields a monotone or a non-monotone specification
+depending on what an exposed read is taken to promise
 (Section~\ref{sec:design-boundary}).  Confluence therefore does not replace the
 declared consistency model or application requirement; it supplies a common
 test of whether that requirement can be maintained without coordination.
@@ -93,8 +95,11 @@ test of whether that requirement can be maintained without coordination.
 
 The theorems identify when exposed outputs remain refinement-consistent; they
 do not guarantee message delivery, termination, or computability of a common
-refinement.  Complete CAP's Availability predicate requires each permitted
-output to complete with identity preparation and without a cross-component
-wait; it is a semantic nonblocking condition, not a full liveness model.  A
-protocol result
-must still state appropriate fairness, failure, and cost assumptions.
+refinement.  Complete CAP's interface-wide Availability predicate requires
+each permitted output to complete with identity preparation and without a
+cross-component wait; it is a semantic nonblocking condition, not a full
+liveness model.  The deployment-relative variant in
+Appendix~\ref{app:deployment} instead counts commitments made wholly within a
+component's preexisting authority as available, while still excluding
+cross-component waits.  A protocol result must still state appropriate
+fairness, failure, and cost assumptions.
