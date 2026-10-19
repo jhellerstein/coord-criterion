@@ -76,83 +76,63 @@ This covers both relational query languages and the usual CRDT state interface.
 Functional CALM proves that
 Consistency is equivalent to monotonicity of the specification.
 
-We then develop two orthogonal extensions.  First, we give Consistency its
-distributed reading (\S\ref{sec:distributed-execution}).  We use standard
-Lamport histories with one local execution at each participant and project away
-delivery and strategy details that do not change the specification state.
-Distributed Consistency asks whether the resulting participant states can still
-be brought to the same state.  This step applies to functional specifications
-and to the extensions that follow.
+We extend this result in two independent directions.  The first adds distributed
+execution without changing the specification model
+(\S\ref{sec:distributed-execution}).  We place one local execution at each
+participant in a Lamport history, then project away delivery and strategy
+details that do not change the specification state.  \emph{Distributed
+Consistency} asks whether the resulting participant states can still be brought
+to the same state.
 
-Second, we relax the functional dependency from input to output.  The resulting
-\emph{ambiguous} specifications allow one input to have several possible
-outputs, as in leader election and transaction ordering.  This ambiguity
-requires extending standard monotonicity to sets of outputs, a condition we call
+The second extension changes the specification model without requiring
+distribution.  We relax the functional dependency and allow one input to have
+several possible outputs, as in leader election and transaction ordering.
+Standard monotonicity is no longer enough: independently chosen outputs must be
+able to grow together without conflict.  We capture this requirement with
 \emph{Lifted Monotonicity} (\S\ref{sec:complete-calm-criterion}).  Complete CALM
-shows that Consistency is equivalent to Lifted Monotonicity.  Ambiguous specifications
-add another form of commitment: progress may require ruling out an alternative
-output.  In a distributed execution, participants may independently prepare
-incompatible outputs; those preparations must be mutually excluded before both
-are exposed (\S\ref{sec:complete-calm-theorem}).  The CALM acronym can now be
-read as \emph{Consistency As Lifted Monotonicity}; Ameloot et al.'s theorem is
-the special case of functional query results over relations.
+combines the two extensions, proving that Consistency, Lifted Monotonicity, and
+Distributed Consistency are equivalent.  When participants can independently
+prepare incompatible outputs, their preparations must be mutually excluded
+before both are exposed (\S\ref{sec:complete-calm-theorem}).
 
-Earlier CALM work provides a coordination criterion but no way to analyze what
-happens after the criterion fails.  Complete CALM fills this gap with commitments.
-As an example, both total log ordering and a key-value store have non-monotone
-specifications.  When they are composed through a shared log
-order, however, committing that order alone is sufficient to make the
-end-to-end specification monotone and consistent.  Once ordered, the key-value
-store can execute commands without making further commitments.  We call this
-analysis \emph{Proper Coordination}, and Appendix~\ref{app:composition} makes
-it precise for both local and distributed settings.
+Classical CALM tells us when coordination is unnecessary, but not whether a
+chosen use of coordination is sufficient.  Complete CALM can answer the second
+question because it represents commitments explicitly.  For example, total log
+ordering and a key-value store are both non-monotone.  When they are composed
+through a shared log order, however, committing that order is sufficient to make
+the end-to-end specification monotone and consistent.  The store can then
+execute the committed order without making further commitments.  We call this
+analysis \emph{Proper Coordination} and formalize it in
+Appendix~\ref{app:composition}.
 
-Complete CALM also yields a Complete CAP Theorem as a corollary
-(\S\ref{sec:cap-corollary}).  Classical CAP gives an impossibility for
-linearizable registers under partition.  Complete CAP turns that one negative
-result into a dichotomy for any consistency model expressed by a specification,
-strictly separating specifications that face a CAP tradeoff from those that do
-not.  Linearizability is one instance on the tradeoff side.
+Complete CALM also yields a Complete CAP Theorem
+(\S\ref{sec:cap-corollary}).  For any consistency guarantee expressed as a
+specification, monotonicity identifies which side of the CAP boundary it
+occupies.  A monotone specification can keep its full interface available and
+confluent during a partition; a non-monotone one cannot.  Classical
+linearizability is one instance on the negative side.
 
 This paper makes six contributions:
 \begin{enumerate}
-  \item A declarative framework for concurrent computation: specifications as
-        relations with ordered inputs and outputs, specification states
-        recording what remains possible, and a transition system with input,
-        preparation (including any required commitments), and output actions.
-  \item A general definition of Consistency as confluence, applicable whether
-        the specification expresses a classical consistency model or an
-        application-specific requirement.  \emph{Transition projections} give this
-        definition a distributed reading over Lamport histories, and
-        Section~\ref{sec:instances} applies it to CRDTs, highly available
-        transactions, and invariant confluence.
-  \item Functional CALM generalizes and proves the CALM Conjecture in the context of
-        arbitrary functions, represented via the minimalist specifications above.
-  \item Complete CALM extends the model to ambiguous specifications, and identifies
-        coordination with commitment.  It proves that Consistency
-        is equivalent to Lifted Monotonicity, and
-        both are equivalent to Distributed Consistency over Lamport histories.
-        A monotone specification needs no coordination; where
-        monotonicity fails, progress requires a commitment and therefore coordination.
-        A Complete CAP Theorem follows as a corollary: under partition, a
-        non-monotone specification cannot provide its full interface while
-        preserving confluence without coordination; a monotone specification
-        can.  This extends the CAP impossibility result to a bidirectional
-        dichotomy parameterized by a consistency specification.
-  \item Composition and Proper Coordination
-        (Appendix~\ref{app:composition}).  We define sequential and independently
-        parameterized composition as equijoins of specification tables.  Proper
-        Coordination tests the composition after upstream commitments.  At
-        their ordinary interfaces, total log ordering and a register or key-value
-        store are both non-monotone; after composition, committing the shared
-        log order alone is sufficient to make the end-to-end table Lifted
-        Monotone and consistent.  MultiConsensus implements those log
-        commitments with distributed authority.
-  \item Two frontier theorems (Appendix~\ref{sec:frontiers}) characterize how
-        far an interface can be strengthened before coordination becomes
-        unavoidable: which earlier outputs a monotone interface must preserve,
-        and when constraints across independently acting participants create a
-        CAP tradeoff.
+  \item \emph{A common specification model.} Ordered relational tables describe
+        permitted input/output behavior; commitments record irrevocable choices
+        among that behavior.
+  \item \emph{Consistency as confluence.} One definition applies to general
+        consistency models and application-specific requirements, with a
+        distributed interpretation over Lamport histories.
+  \item \emph{Functional CALM.} For arbitrary functions between ordered
+        domains, Consistency is equivalent to monotonicity.
+  \item \emph{Complete CALM and CAP.} With multiple outputs per input,
+        Consistency and Distributed Consistency are equivalent to Lifted
+        Monotonicity.  Complete CAP gives the corresponding availability
+        boundary under partition.
+  \item \emph{Composition and Proper Coordination.} Specifications compose by
+        equijoin.  Committing a shared log order can make a non-monotone
+        log/store composition consistent without further store commitments
+        (Appendix~\ref{app:composition}).
+  \item \emph{Coordination-free frontiers.} Two theorems characterize how much
+        an interface can promise before coordination becomes necessary
+        (Appendix~\ref{sec:frontiers}).
 \end{enumerate}
 
 Section~\ref{sec:functional-calm} introduces the framework on an election
