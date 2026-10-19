@@ -81,12 +81,14 @@ committed and the other HAT guarantees accumulate facts and are monotone
 (Section~\ref{sec:hat-instance}).  Strong eventual consistency states a
 convergence condition: replicas that have incorporated the same updates reach
 equivalent states.  Join-semilattice merge and last-writer-wins can both provide
-that convergence, so SEC alone neither requires a least refinement in the
-declared output order nor determines which concurrent client-visible claims
-must survive (Section~\ref{sec:crdt-instance}).  What the traditional
-definitions leave implicit, and the framework requires, is the output order:
-the same operation history yields a monotone or a non-monotone specification
-depending on what an exposed read is taken to promise
+that convergence.  SEC therefore permits the observable equivalent of
+retraction: convergence may replace or discard an earlier visible answer even
+when internal replica state only grows.  SEC alone neither requires a least
+refinement in the declared output order nor determines which concurrent
+client-visible claims must survive (Section~\ref{sec:crdt-instance}).  What the
+traditional definitions leave implicit, and the framework requires, is the
+output order: the same operation history yields a monotone or a non-monotone
+specification depending on what an exposed read is taken to promise
 (Section~\ref{sec:design-boundary}).  Confluence therefore does not replace the
 declared consistency model or application requirement; it supplies a common
 test of whether that requirement can be maintained without coordination.

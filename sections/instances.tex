@@ -179,10 +179,14 @@ Strong eventual consistency is a separate convergence property: replicas that
 have incorporated the same updates reach equivalent states.  A join-semilattice
 merge is one way to provide it, but SEC itself does not require a least element
 in this paper's declared output order, and last-writer-wins designs may satisfy
-SEC as well.  Whether such convergence preserves an exposed client claim is an
-additional question determined by that output order; an LWW interface that
-promises to retain both concurrent values differs from one that permits its
-resolution rule to discard one.
+SEC as well.  In particular, SEC permits the observable equivalent of
+\emph{retraction}: a replica may expose one value and later converge to a state
+whose visible value replaces or discards that earlier answer.  This need not
+retract internal CRDT state, but it does retract the client-visible claim if
+outputs mean irrevocable observations.  Whether convergence is monotone
+therefore depends on the declared output order; an LWW interface that promises
+to retain both concurrent values differs from one that permits its resolution
+rule to discard one.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
