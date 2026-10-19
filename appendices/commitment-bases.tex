@@ -77,15 +77,21 @@ otherwise it reads the committed version whose writer has the largest
 timestamp below $A$'s.  Reads do not themselves add a commitment.
 
 Writes can force an abort.  Let $v$ be the latest committed predecessor version
-that $A$'s new version would follow.  If a transaction stamped after $A$ has already
-read $v$, inserting $A$'s version between $v$ and that reader would invalidate
-the recorded response under the timestamp order.  MVTO therefore rejects the
-write and the scheduler applies $\mathsf{abort}(A)$.  A later transaction that
-read some newer version of the item does not by itself force this rejection.
-Our specification records orders and aborts, not read results, so it does not
-itself say that the late write is invalid; a specification whose outputs
-include read facts, as in Section~\ref{sec:hat-instance}, would.  When $A$
-commits, the scheduler applies $\mathsf{commit}(A)$.
+that $A$'s new version would follow.  If a transaction stamped after $A$ has
+already read $v$, inserting $A$'s version between $v$ and that reader would
+invalidate the recorded response under the timestamp order.  MVTO therefore
+rejects the write and the scheduler applies $\mathsf{abort}(A)$.  A later
+transaction that read some newer version of the item does not by itself force
+this rejection.  Because a conflicting read may occur after $A$ buffers its
+write, $A$ repeats this version-specific check when it commits; validation and
+publication of the new version are atomic with respect to competing reads and
+commits.  Thus a transaction stamped after $A$ cannot commit a read of $v$ in
+the gap between validation and publication.  Our specification records orders
+and aborts, not read results, so it does not itself say that the late write is
+invalid; a specification whose outputs include read facts, as in
+Section~\ref{sec:hat-instance}, would.  If validation succeeds, the scheduler
+publishes the version and applies $\mathsf{commit}(A)$ atomically; otherwise it
+applies $\mathsf{abort}(A)$.
 
 \paragraph{Comparison.}
 The two bases commit different things at different times.  2PL commits a

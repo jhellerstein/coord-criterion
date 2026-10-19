@@ -86,17 +86,18 @@ we set it aside below.  The substantive case has authority in multiple
 components and asks whether each component's local commitments remain mutually
 consistent without communication.
 
-\begin{theorem}[Partition confluence under a deployment]
+\begin{theorem}[Partition compatibility under a deployment]
 \label{thm:complete-cap-deployment}
 Fix a deployment for which Deployment Availability holds.  The following are
 equivalent.
 \begin{enumerate}
   \item Under every partition $\Pi$ and every order of input arrival within
-        each component, the participant runs of every run family separable under
-        $\Pi$ are confluent at every common refinement $j$ of their current
-        inputs: some row at $j$ survives in every remainder table.  Together
-        with the assumed Deployment Availability, this gives available,
-        partition-consistent execution relative to the deployment.
+        each component, every run family separable under $\Pi$ is
+        \emph{compatible} at every common refinement $j$ of its participants'
+        current inputs: some row at $j$ survives in every remainder table.
+        Together with the assumed Deployment Availability, this gives
+        available execution whose independently emitted outputs have an
+        abstract common refinement.
   \item $\Spec$ is monotone across partitions.
 \end{enumerate}
 \end{theorem}
@@ -121,9 +122,17 @@ Avoiding this requires either a wait across the cut or refusing some authorized
 row, which implements a narrower deployment or specification.
 \end{proof}
 
+The theorem establishes abstract compatibility, not deployment-authorized
+confluence to an identical state.  A common surviving row $u$ shows that the
+emitted outputs can be jointly refined in the specification, but some
+participant may lack authority for $\mathsf{output}(u)$.  Confluence through
+legal actions of the deployment additionally requires enough authority to take
+a common-refining output action from every endpoint.  We do not impose that
+condition here.
+
 The theorem concerns cross-component participant run families and assumes,
 rather than derives, Deployment Availability.  It therefore characterizes
-partition confluence under the authorized placement; it is not by itself an
+partition compatibility under the authorized placement; it is not by itself an
 interface-wide, commitment-free availability theorem.  Run families whose two
 or more emissions are contained wholly in one component create no
 cross-component condition.  If a local commitment affects rows another
@@ -134,9 +143,11 @@ output action is required to be commitment-free, Deployment Availability is
 exactly the Availability condition of
 Section~\ref{sec:cap-corollary}, every family is separable under some partition,
 and monotonicity across partitions is
-monotonicity.  Under those restrictions, this theorem's confluence equivalence
-is the Partition Consistency part of Theorem~\ref{thm:complete-cap}; Complete
-CAP additionally derives Availability from Lifted Monotonicity.  Deployment
+monotonicity.  Under those restrictions, this theorem's compatibility
+equivalence supplies the common-survivor condition used by the Partition
+Consistency part of Theorem~\ref{thm:complete-cap}; Complete CAP additionally
+derives Availability from Lifted Monotonicity, and its unrestricted canonical
+basis supplies the output actions used for confluence.  Deployment
 determines which inputs and choices can occur independently, just as data
 placement does in the relational-transducer model.
 
@@ -169,7 +180,7 @@ For linearizability, $L$ is a total order extending real time
 ~\cite{herlihy1990linearizability}.  If $p$ returns \catv, its explanation
 requires $w_p(x,\dog)<_L w_q(x,\catv)$.  If $q$ returns \dog, its explanation
 requires the opposite order.  No total order refines both explanations.  This
-post-reconciliation execution exhibits failure of partition confluence under
+post-reconciliation execution exhibits failure of partition compatibility under
 the broad deployment that authorizes those opposite read choices; unlike the
 hidden-write argument above, it is not by itself the classical CAP
 indistinguishability witness.
