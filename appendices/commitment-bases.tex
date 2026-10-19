@@ -1,0 +1,96 @@
+\section{Commitment Bases for Two-Phase Locking and Multiversion Timestamp Ordering}
+\label{app:cc-bases}
+
+Section~\ref{sec:ambiguity-story} described two-phase locking (2PL) and
+multiversion timestamp ordering (MVTO) as two commitment bases for one
+specification.  This appendix writes the specification and both bases down.
+
+\paragraph{The specification.}
+An input is a finite set $T$ of transactions, each with its operations;
+inputs are ordered by inclusion, as transactions arrive.  An output is a pair
+$(L,X)$: a set $X\subseteq T$ of aborted transactions and a total order $L$ on
+the committed ones, $T\setminus X$, the serialization order.  Outputs are
+ordered by extension, $(L,X)\OutputOrd(L',X')$ when $X\subseteq X'$ and $L'$
+agrees with $L$ on the domain of $L$: an abort is never undone and an order,
+once fixed between two committed transactions, is never reversed.  A row
+$(T,(L,X))$ is within spec when $X$ and the domain of $L$ partition $T$.  The
+rows $(\{A,B\},([A,B],\varnothing))$ and $(\{A,B\},([B,A],\varnothing))$ of
+Figure~\ref{fig:ambiguity-frames}(f) have no common refinement, so the
+specification is not monotone, and a system needs commitments.  A
+specification that allows no aborts has the same rows with $X=\varnothing$;
+we return to it below.
+
+\paragraph{Commitments.}
+Each commitment below is a partial function on specification states $(i,R)$ that
+retains, at $i$ and at every refinement $k$ of $i$, the rows meeting a
+condition, and is applicable when a row at $i$ meets it.  Because refinement
+never reverses an order or undoes an abort, no retained row refines a removed
+one, so each is a commitment in the sense of
+Definition~\ref{def:transition-system} whenever it removes a row.
+\begin{itemize}
+  \item $\mathsf{order}(A,B)$, for distinct $A,B\in i$: retain the rows in
+        which $A\in X$, or $B\in X$, or $A<_L B$.
+  \item $\mathsf{commit}(A)$: retain the rows in which $A\notin X$.
+  \item $\mathsf{abort}(A)$: retain the rows in which $A\in X$.
+  \item $\mathsf{stamp}(A)$, given the set $Z\subseteq i$ of transactions
+        stamped before $A$: retain the rows $(k,(L,X))$ in which, for every
+        $z\in Z$, $z<_L A$ or one of $z,A$ is in $X$, and for every
+        $D\in k\setminus(Z\cup\{A\})$, $A<_L D$ or one of $A,D$ is in $X$.
+\end{itemize}
+The basis of 2PL is $\mathcal B_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{commit},
+\mathsf{abort}\}$ and that of MVTO is
+$\mathcal B_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{commit},\mathsf{abort}\}$, each
+ranging over all transactions.  A protocol is a policy for applying its basis;
+computation decides which commitment to apply, and the commitment is the
+irrevocable act.
+
+\paragraph{Two-phase locking.}
+When $B$ requests a lock on an item that $A$ holds in a conflicting mode, $B$
+waits and the scheduler applies $\mathsf{order}(A,B)$: panel (h) of
+Figure~\ref{fig:cc-commitments}.  Nothing is committed about transactions
+that have not conflicted; $C$'s position stays open.  When $A$ commits, the
+scheduler applies $\mathsf{commit}(A)$ and releases $A$'s locks.  A deadlock is
+a cycle of waits, in the simplest case $A$ waiting for $B$ and $B$ for $A$,
+which arises when $A$ locked one item ahead of $B$ and $B$ locked another
+ahead of $A$; the scheduler has then applied both $\mathsf{order}(A,B)$ and
+$\mathsf{order}(B,A)$.  Both are applicable only because the specification
+allows aborts: after both, the rows that remain at $i$ are exactly those in
+which $A$ or $B$ is aborted, so no row in which both commit survives.  Deadlock
+resolution is the choice between them, $\mathsf{abort}(A)$ or
+$\mathsf{abort}(B)$, after which the survivor's rows are unconstrained by the
+cycle.  Under the specification without aborts, $\mathsf{order}(B,A)$ is not
+applicable once $\mathsf{order}(A,B)$ has been made, since it would leave no
+row at $i$; the scheduler cannot make the second commitment and $B$ waits
+forever.  Whether a system handles deadlock is therefore the choice between
+the two specifications, and the abort is a commitment in the basis of the
+first.
+
+\paragraph{Multiversion timestamp ordering.}
+When $A$ arrives it receives a timestamp larger than every timestamp issued
+so far, and the scheduler applies $\mathsf{stamp}(A)$: $A$ is committed to
+follow every transaction stamped before it and to precede every transaction
+stamped after it, including transactions that have not yet arrived.  Panel (i)
+of Figure~\ref{fig:cc-commitments} is $\mathsf{stamp}(B)$ with
+$Z=\varnothing$.  Reads never cause a commitment: $A$ reads the version of an
+item written by the committed transaction with the largest timestamp below
+its own, and if that writer has not yet committed, $A$'s commit waits for it, a
+dependency rather than a commitment.  Writes can.  If $A$ writes an item that
+some transaction with a larger timestamp has already read, the version $A$
+would create should have been visible to that read under the order the stamps
+committed; MVTO rejects the write and the scheduler applies
+$\mathsf{abort}(A)$.  Our specification records orders and aborts, not read
+results, so it does not itself say that the late write is invalid; a
+specification whose outputs include read facts, as in
+Section~\ref{sec:hat-instance}, would.  When $A$ commits, the scheduler
+applies $\mathsf{commit}(A)$.
+
+\paragraph{Comparison.}
+The two bases commit different things at different times.  2PL commits a
+relative order between two transactions, only when they conflict, and
+discovers deadlock as a pair of commitments that leaves only abort rows.  MVTO
+commits an absolute position for each transaction on arrival, against every
+transaction present or future, and pays for the early commitment with aborts
+when execution turns out not to match it.  In both, once every remaining row
+at the current input has $A$ committed and in the same position relative to
+the other committed transactions, that much of the output is exposable:
+preparation is the identity, and exposure performs only output retirements.

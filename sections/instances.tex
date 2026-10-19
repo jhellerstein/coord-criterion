@@ -1,0 +1,258 @@
+\section{Instances Across the Literature}
+\label{sec:instances}
+
+Table~\ref{tab:instances} summarizes how preparation and exposure apply across
+the literature.  Each mapping declares an input, an output, and refinement
+orders before applying Functional CALM or Complete CALM.  Changing the interface
+changes whether monotonicity or Directed Outputs holds.
+
+\begin{table*}[t]
+  \centering
+  \footnotesize
+  \caption{Coordination results in the common model.}
+  \label{tab:instances}
+  \begin{tabular}{@{}p{.105\textwidth}p{.17\textwidth}p{.17\textwidth}
+                  p{.15\textwidth}p{.315\textwidth}@{}}
+    \toprule
+    Setting & Input and order & Visible output & Specification shape &
+      Common refinement or failure \\
+    \midrule
+    Query CALM
+      & Finite facts $J$, inclusion
+      & Answer $Q(J)$, inclusion
+      & Functional
+      & Monotonicity preserves answer facts as input grows; negation may require
+        sealing. \\
+    CRDT
+      & Received payloads, inclusion
+      & Replica state, lattice order
+      & Functional state; canonical merge
+      & Join supplies a least common refinement across partial inputs. \\
+    Complete CAP
+      & Causal history, induced extension
+      & Operation/read explanation
+      & Relational
+      & Opposing total orders are incompatible; causal explanations can refine
+        both reads. \\
+    HAT
+      & Requests received so far, inclusion
+      & Read, commit, and session facts
+      & Relational
+      & Some facts accumulate; serialization cycles and first-committer-wins
+        require commitment. \\
+    Invariant confluence
+      & Applied transactions, inclusion
+      & Reachable invariant-valid state
+      & Relational under merge
+      & Valid merge is a common refinement; duplicate allocation violates
+        uniqueness. \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\subsection{Query monotonicity}
+\label{sec:query-instance}
+
+Section~\ref{sec:functional-calm} gave the functional encoding
+$J\mapsto Q(J)$.  Relational-transducer CALM proves the operational result for
+that language: monotone queries allow coordination-free evaluation under its
+data-placement and execution assumptions
+~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
+that theorem.  It isolates the order-preservation property so that it
+can be compared with interfaces outside Datalog.
+
+Why did earlier CALM results not state Directed Outputs separately?  Their
+query specification is functional: each input $J$ has one result
+$Q(J)$, so each output fiber is a singleton and directed automatically.
+CRDTs also present a functional state for a fixed set of incorporated
+updates; semilattice join additionally provides least common refinements across
+partial inputs.  Complete CALM makes multiple outputs at one input explicit,
+so directedness can no longer be assumed.
+
+\subsection{CRDTs: from convergent state to safe observations}
+\label{sec:crdt-instance}
+
+  A CRDT answers one important question: if replicas receive the same updates,
+will they converge to equivalent states despite differences in update delivery
+and merge order?  Applications immediately ask a second question: what may a
+client safely conclude from one replica's current state?  The CRDT merge theorem does not answer this second
+question.  Keep CALM and CRDT On called out this gap and proposed monotonicity as
+the test for safe queries~\cite{laddad2022keep}.  Functional CALM makes that
+test precise for the whole client-visible interface.
+
+Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice, and let the input
+be the finite set $U$ of immutable, joinable payloads received so far, ordered
+by inclusion.  The replica's state is
+        \begin{equation}
+  s(U)=s_0\sqcup\bigsqcup U,
+  \label{eq:crdt-state-function}
+        \end{equation}
+so $U\subseteq V$ implies $s(U)\sqsubseteq s(V)$, and
+$s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$: the state interface is monotone, and
+join is the least state refining both inputs~\cite{shapiro2011crdt}.  A
+client observation $q:(D,\sqsubseteq)\to(R,\preceq_R)$ replaces the state
+output with a new promise, and by Functional CALM the client-visible interface
+$q\circ s$ is consistent exactly when
+        \begin{equation}
+  U\subseteq V \quad\Longrightarrow\quad q(s(U))\preceq_R q(s(V)).
+  \label{eq:crdt-query-monotonicity}
+        \end{equation}
+Monotonicity of $q$ on all of $D$ is sufficient but not required; $q$ need
+only preserve refinements between reachable states.  Operation-based CRDTs have the same form.  Their payloads
+are operations delivered in causal order, and the set of operations a replica
+has received, closed under causal predecessors, grows by union; the causal
+order, once made explicit in the payload, is the state lattice, and the
+replica's state is a function of that set.  This is the emulation of
+operation-based by state-based CRDTs in the original CRDT
+paper~\cite{shapiro2011crdt}, the operation-context semantics of replicated
+data types~\cite{burckhardt2014replicated}, and the partially ordered log of
+pure operation-based CRDTs~\cite{baquero2014operation}; see
+also~\cite{hellerstein2025turtles}.
+
+\paragraph{A safe merge can have an unsafe observation.}
+Consider a two-phase set with state $(A,R)$: $A$ records additions and $R$
+records removals.  Both components grow by union, so replica state merges
+perfectly well.  Its user-facing query is
+        \begin{equation}
+  q_{\mathrm{2P}}(A,R)=A\setminus R,
+  \qquad F_{\mathrm{2P}}=q_{\mathrm{2P}}\circ s.
+  \label{eq:crdt-2p-query}
+        \end{equation}
+Suppose the payload set $U_0$ yields
+\[
+  s(U_0)=(\{\mathsf{potato},\mathsf{Ferrari}\},\varnothing),
+  \qquad
+  (q_{\mathrm{2P}}\circ s)(U_0)
+    =\{\mathsf{potato},\mathsf{Ferrari}\}.
+\]
+If the application treats membership in this result as a lasting claim, it may
+ship the Ferrari.  Now let $U_1$ add a delayed payload removing the Ferrari.
+Then $U_0\subseteq U_1$, but
+\[
+  s(U_1)=(\{\mathsf{potato},\mathsf{Ferrari}\},\{\mathsf{Ferrari}\}),
+  \qquad
+  (q_{\mathrm{2P}}\circ s)(U_1)=\{\mathsf{potato}\}.
+\]
+The internal state advanced, but the client-visible claim did not.  An ordinary
+point-in-time read may merely expose its chosen local cut.  The bug appears when
+the program interprets that answer as complete, stable, or sufficient to justify
+an irreversible action.  Such a promise needs a seal on the relevant updates.
+State convergence does not establish monotonicity of an application query.
+
+\paragraph{Threshold queries.}
+Kuper and Newton's LVars introduced \emph{threshold queries}: Boolean-valued
+application queries that become true when a lattice state crosses a threshold
+~\cite{kuper2013lvars}.  Order the Boolean codomain by
+$\mathsf{false}\preceq_B\mathsf{true}$.  For example, let a grow-only set $d$
+record distinct failed login attempts and define
+        \begin{equation}
+  q_{100}(d)=[\,|d|\geq100\,],
+  \qquad Q_{100}=q_{100}\circ s.
+  \label{eq:crdt-thresholds}
+        \end{equation}
+Once $Q_{100}(U)=\mathsf{true}$, every refinement $V\supseteq U$ still
+contains at least 100 attempts, so $Q_{100}(V)=\mathsf{true}$, and before the
+threshold $\mathsf{false}$ is exposable because it may refine to
+$\mathsf{true}$.  The query is monotone, so Functional CALM says that it
+extracts a stable fact from an incomplete replica state without claiming that
+the state itself is complete.
+
+\paragraph{Beyond least merges.}
+A join-semilattice provides a uniform \emph{least} refinement and a fixed merge
+operator.  Complete CALM asks only for \emph{some} common refinement of
+each relevant finite family.  For example, suppose two shards expose
+$[a_1,a_2]$ and $[b_1,b_2]$, and the output fiber contains every order-preserving
+interleaving.  Both
+        \begin{equation}
+  [a_1,a_2,b_1,b_2]\qquad\text{and}\qquad[b_1,b_2,a_1,a_2]
+  \label{eq:log-interleavings}
+        \end{equation}
+are minimal common refinements, and neither refines the other.  Consequently,
+the pair has no least common refinement, so this output order is not a
+join-semilattice.  It is nevertheless directed: any finite family of sequences
+has an order-preserving interleaving in the fiber.  A join-semilattice is
+therefore a sufficient discipline, not a requirement of Lifted
+Monotonicity; strong eventual consistency, which it provides, is a stronger
+promise than consistency in our sense, and last-writer-wins shows that
+convergence can also be weaker, discarding one concurrent value that an
+interface promised to preserve.
+
+\subsection{Highly available transactions}
+\label{sec:hat-instance}
+
+For a transactional interface, an input is the set of begin, read, write, and
+commit requests received so far, ordered by inclusion.  An output is a growing
+set of public facts such as $\mathsf{read}(T,x,v)$,
+$\mathsf{commit}(T)$, and session-order facts, also ordered by inclusion.  The
+isolation or session guarantee determines which fact sets are within spec.
+A deployment assigns transactions and requests to replicas.  The Complete
+CAP Theorem tests the combinations those replicas can select across a partition,
+under the contact, failure, and session assumptions of the interface
+~\cite{bailis2013hat,terry1994session}.
+
+\paragraph{Accumulating facts.}
+Suppose two replicas execute transactions on disjoint keys.  One exposes
+$\mathsf{read}(T_1,x,0)$ and $\mathsf{commit}(T_1)$; the other exposes
+$\mathsf{read}(T_2,y,0)$ and $\mathsf{commit}(T_2)$.  If each read observes a
+committed version at its replica, the union contains no dirty read or write
+conflict.  Under the stated read-committed interface, later delivery preserves
+all four facts.  This is the positive accumulation pattern behind HAT results;
+it is not a claim that every combination of session guarantees is available.
+
+\paragraph{Serializability and transaction ordering.}
+The ordering issue becomes a distributed obstruction when exposed reads force
+opposite serialization orders.  Initially $x=y=0$.  On one side, $T_1$ reads
+$x=0$, writes $y=1$, and commits.
+On the other, $T_2$ reads $y=0$, writes $x=1$, and commits.  Preserving $T_1$'s
+read requires $T_1$ before $T_2$ in any serial explanation; preserving $T_2$'s
+read requires $T_2$ before $T_1$.  The serialization graph contains a cycle, so
+no serial history refines both sets of facts~\cite{adya2000generalized}.
+
+\paragraph{Snapshot isolation.}
+Let overlapping transactions $T_1$ and $T_2$ read the same snapshot and both
+write $x$.  Separate replicas could each expose its local commit.  Snapshot
+isolation's first-committer-wins rule allows no output containing both commit
+facts~\cite{berenson1995critique,bailis2013hat}.  Eventual storage convergence
+may choose a final state; it cannot retract a commit already exposed to a
+client.
+
+Convergent storage does not automatically provide a highly available
+transactional interface.  Storage convergence constrains states after update delivery;
+isolation constrains reads and commits exposed before then.
+
+\subsection{Invariant confluence}
+\label{sec:iconfluence-instance}
+
+Let the input be a set of applied transactions, ordered by inclusion.  We use
+the standard invariant-confluence assumptions: each transaction remains
+applicable where the specification allows it and maps an invariant-valid state
+to another invariant-valid state; independently reached states share the
+required ancestor; the prescribed merge is associative and preserves all
+included effects; and merged states remain reachable.  Outputs are reachable,
+invariant-valid states.  We order outputs by merge refinement: $s\OutputOrd s'$
+when $s'$ is a merge within spec that preserves every effect in $s$ (quotienting
+states with identical effects if necessary to obtain a partial order).
+
+Invariant confluence asks whether independently reachable valid states merge to
+a valid state~\cite{bailis2014coordination}.  Under the assumptions above,
+individual transaction preservation supplies Relational Monotonicity, while
+invariant confluence supplies common refinements for independently reached
+states at the combined transaction input.  Associativity and reachability let
+the pairwise merge argument extend inductively to finite families.  Thus the
+prescribed merge witnesses Lifted Monotonicity, in the form of
+Proposition~\ref{prop:lifted-monotonicity-decomposition}(3), for the deployed
+transaction families.
+
+A uniqueness constraint supplies the standard counterexample.  Two replicas
+each observe that username \texttt{sam} is free and allocate it to different
+accounts.  Each local state satisfies uniqueness, but no invariant-valid common
+refinement preserves both allocations.  The system must reserve names, reject
+one allocation, or weaken the invariant.
+
+State convergence, transaction availability, and invariant preservation test
+three different specifications.  A convergent merge may produce an invalid
+state; an available transaction may expose facts that later violate an
+invariant; an invariant-confluent application need not provide a particular
+isolation level.  The shared model makes these distinctions explicit rather
+than collapsing the properties.  We close by drawing out the resulting design
+lessons and scope limits.

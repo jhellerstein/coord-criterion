@@ -1,0 +1,135 @@
+\section{Complete CAP under a Deployment}
+\label{app:deployment}
+
+Theorem~\ref{thm:complete-cap} (Complete CAP) quantifies over all participants
+and inputs.  Whether a commitment is necessary is a question about the specification; whether
+it requires agreement across a partition also depends on \emph{deployment}:
+which participant may hold which input and select which row.  A participant
+that controls an entire choice may make the commitment locally.  This appendix
+refines the theorem accordingly.
+
+Return to leader election, with \texttt{server1} and \texttt{server2} both
+eligible.  If one participant alone is entitled to name the leader, a
+partition changes nothing: the two rows are an incompatible family, but both
+belong to that participant, and it selects between them without consulting
+anyone.  If instead one participant may name \texttt{server1} and another may
+name \texttt{server2}, a partition that separates them lets each select its
+row alone, and the two selections have no common refinement when the partition
+heals.  The same specification is safe under the first deployment and not
+under the second; what differs is which incompatible families a partition can
+split between its sides.
+
+\begin{definition}[Deployment; separable run family]
+\label{def:deployment}
+A \emph{deployment} over a participant set $P$ assigns to each participant $p$
+a set $A_p\subseteq S$ of rows it may prepare and expose; $(i,o)\in A_p$ means
+that $p$ may hold $i$ as a current input and prepare and expose $o$ there on its
+own authority.  A partition $\Pi$ of $P$ (Section~\ref{sec:cap-corollary})
+divides
+the participants into two or more nonempty components.
+
+A finite \emph{participant run family} assigns to each of finitely many
+participants $p$ an initial input and a run whose exposed rows all lie in
+$A_p$; the run may expose no output.  The family is \emph{separable under
+$\Pi$} when either its exposed rows occur in at least two components, or it has
+exactly one exposed row and a silent participant in another component.  The
+second case tests whether that one output survives at the silent participant's
+current input.
+\end{definition}
+
+\begin{definition}[Monotone across partitions]
+\label{def:monotone-across-partitions}
+Relative to a deployment, $\Spec$ is \emph{monotone across $\Pi$} when, for
+every participant run family separable under $\Pi$ and every common refinement $j$ of its
+participants' current inputs, the outputs in all exposed rows have a common
+refinement in $\fiber{j}$.  It is
+\emph{monotone across partitions} when it is monotone across every partition of
+$P$.
+\end{definition}
+
+This is the common-refinement condition of
+Proposition~\ref{prop:lifted-monotonicity-decomposition}(3), restricted to
+participant run families a partition can separate.  Monotonicity implies monotonicity across
+partitions, since the exposed rows of a participant run family form a finite family.  The
+converse fails whenever every incompatible family of two or more exposures is
+confined to one participant's authority.  Two mutually exclusive choices owned
+by one participant do not become separable merely because a silent participant
+exists in another component: the silent-participant exception applies only to
+a single exposed row.
+
+\begin{theorem}[Complete CAP under a deployment]
+\label{thm:complete-cap-deployment}
+Fix a deployment.  The following are equivalent.
+\begin{enumerate}
+  \item Under every partition $\Pi$ and every order of input arrival within
+        each component, the participant runs of every run family separable under
+        $\Pi$ are confluent at every common refinement $j$ of their current
+        inputs: some row at $j$ survives in every remainder table.
+  \item $\Spec$ is monotone across partitions.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(2$\Rightarrow$1.)  Fix $\Pi$ and any separable participant run family.  Every
+row exposed on participant $p$'s run lies in $A_p$ by definition.  Monotonicity
+across $\Pi$ supplies $u\in\fiber{j}$ above every exposed output.  Each
+participant's
+fiber at $j$ is $\fiber{j}$ intersected with the outputs above its own
+exposures, and $u$ belongs to every such set.  Hence some row at $j$ survives
+in every state, under every arrival order in each component.
+
+(1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable
+participant run family and a common refinement $j$ have no output in
+$\fiber{j}$ above all its exposed rows.  Use the runs assigned by the family;
+every exposed row belongs to its participant's $A_p$.  Each participant's
+fiber at $j$ then contains only
+outputs above all of its own exposures, and no output of $\fiber{j}$ is above
+all exposed outputs in the family, so no row at $j$ survives in every state.
+Avoiding this requires either a wait across the cut or refusing some authorized
+row, which implements a narrower deployment or specification.
+\end{proof}
+
+The theorem concerns cross-component participant run families; it does not
+claim that an arbitrary commitment within one component preserves confluence
+with other components.  Run families whose two or more exposures are
+contained wholly in one component create no cross-component condition.  If a
+local commitment affects rows another component may prepare, its
+cross-component consequences must themselves satisfy the theorem's condition.
+Only run families that a partition separates are tested.
+When the deployment lets every participant hold every
+row, every family is separable under some partition, monotonicity across
+partitions is monotonicity, and the theorem is Theorem~\ref{thm:complete-cap}.
+Deployment determines which inputs and choices can occur independently, just
+as data placement does in the relational-transducer model.
+
+\subsection{Registers}
+\label{app:registers}
+Consider two replicas of a register initially holding no value.  Participant
+$p$ completes a write of \dog{} while $q$ concurrently completes a write of
+\catv.  The replicas exchange both writes, after which a partition separates
+them.  Each then serves a local read; both writes complete before either read
+begins.
+
+An input is a finite causally closed operation history, ordered by
+induced-subhistory extension.  An output is an explanation $(L,\rho)$, where
+$L$ is an operation order allowed by the consistency model and $\rho$ maps each
+completed read to the write supplying its response.  Refinement extends $L$
+without reversing an existing order and extends $\rho$ without changing an
+answered read.
+
+For linearizability, $L$ is a total order extending real time
+~\cite{herlihy1990linearizability}.  If $p$ returns \catv, its explanation
+requires $w_p(x,\dog)<_L w_q(x,\catv)$.  If $q$ returns \dog, its explanation
+requires the opposite order.  No total order refines both explanations.  The
+partition separates the read owners, recovering the classical CAP impossibility
+as the negative side of the Complete CAP theorem
+~\cite{gilbert2002cap}.
+
+Under causal consistency, the writes remain concurrent and one explanation can
+assign $p$'s read to \catv{} and $q$'s read to \dog{}
+~\cite{lamport1978time,ahamad1995causal}.  The responses have a common
+refinement.  Two possible answers for the same read remain incompatible, but
+only that read's owner selects one; under a deployment in which each
+participant holds its own views, no partition separates one local decision
+into two independent choices, and the causal register is monotone across
+partitions.
