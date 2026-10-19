@@ -27,7 +27,7 @@ italics also mark the occasional
 standard term borrowed from database theory.  Nothing here is needed for the
 proofs, but every notion the Functional CALM theorem rests on---specification
 states, input events, retirement, commitments, upper fibers, determination,
-preparation, exposure, runs, and consistency---is exercised on the example.
+output actions, runs, and consistency---is exercised on the example.
 
 The framework begins with an \emph{ordered specification}
 $\Spec=(I,\InputOrd,O,\OutputOrd,S)$: a table $S\subseteq I\times O$ that
@@ -106,7 +106,8 @@ dependency.
   Gray: the row has been retired by an input event.
   Struck through: the row has been removed by a commitment; no remaining row
   preserves its contents.  Panels (b) and (c) follow input events; panel (d)
-  follows preparation of $\bot$, whose expansion contains a seal commitment.}
+  follows an output action for $\bot$ whose internal preparation contains a
+  seal commitment.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -221,52 +222,51 @@ is a seal commitment; it may invalidate one future input or many.
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no further commitment}
   \end{tabular}
   \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
-  incomparable, after the registrar prepares $\bot$ by closing the polls at
-  $x\cdot\cdot$.  Every refinement of $x\cdot\cdot$ is removed by the
-  preparation's seal commitment.  Legend as in
+  incomparable, after the registrar emits $\bot$ while closing the polls at
+  $x\cdot\cdot$.  Every refinement of $x\cdot\cdot$ is removed by the output
+  action's seal commitment.  Legend as in
   Figure~\ref{fig:election-frames}.}
   \label{fig:nonmonotone-frame}
 \end{figure}
 
-\paragraph{Preparing and exposing outputs.}
-In a functional specification, $o$ is \emph{exposable} when
-every possible future output---every value in the upper
-fiber---refines $o$ in the output order.  If this test fails, an authorized
-commitment can remove the conflicting rows and thereby reach a state where $o$
-is exposable.  In Figure~\ref{fig:election-frames}, $\bot$ is exposable in
-panels (a), (b), and (d), while $x$ is exposable in panel (c).
+\paragraph{Output actions.}
+In a functional specification, $o$ is \emph{exposable} when every output still
+allowed at the current input or one of its valid refinements preserves $o$.  If
+this test fails, emitting $o$ requires an authorized commitment that removes
+the conflicting rows.  In Figure~\ref{fig:election-frames}, $\bot$ is
+exposable in panels (a), (b), and (d), while $x$ is exposable in panel (c).
 
-To capture the possible need for commitments, output handling involves two
-actions.  First, $\mathsf{prepare}(o)$ makes any seal commitment needed to make
-$o$ exposable.  Then $\mathsf{expose}(o)$ reveals the prepared result to the
-environment without changing the remainder table.  Keeping exposure explicit
-matters because what the environment learns may influence later input.
+The transition system records one atomic $\mathsf{output}(o)$ action.  The
+action first performs its chosen internal preparation, including any required
+commitments, then emits $o$ and retires rows that the emitted result supersedes.
+Its internal stages are not separate transitions: no event can intervene and no
+history can cut between them.  The output action itself remains explicit
+because the environment may use the emitted result to choose later input.
 
 \paragraph{When monotonicity fails.}
 Now change one thing in our example: make all outputs incomparable, dropping
 $\bot\OutputOrd x,y$, so that an output refines only itself; this is the
 \emph{equality order}.  The rows are the same, but in panels (a) and (b)
 nothing is exposable: $\bot$ no longer lies below the $x$ and $y$ in the upper
-fiber.  To expose anything, preparation must include a seal commitment.
-Figure~\ref{fig:nonmonotone-frame} shows the result of closing the polls at
-$x\cdot\cdot$: every refinement is removed by commitment, the upper fiber
-collapses to $\{\bot\}$, and exposure of $\bot$ is now enabled---but only
-because preparation made a commitment.  That contrast is
-Functional CALM (Section~\ref{sec:functional-calm}): a monotone functional
-specification can prepare and expose outputs without commitment; a non-monotone
-one requires commitment in some preparation expansion.
+fiber.  Emitting any output requires an internal preparation with a seal
+commitment.  Figure~\ref{fig:nonmonotone-frame} shows the result of the output
+action for $\bot$ at $x\cdot\cdot$: its commitment removes every refinement,
+and the upper fiber collapses to $\{\bot\}$.  That contrast is Functional
+CALM (Section~\ref{sec:functional-calm}): a monotone functional specification
+can emit its outputs without commitment; a non-monotone one requires a
+commitment in some output action.
 
 \paragraph{A transition system.}
 We now have the ingredients for a state transition model.  A state consists of
 two things: the current input and the rows of the specification that remain.
 Each panel above depicts one such state, and each action moves from one state to
-another.  An input event grows the current input and retires rows that are no
-longer reachable.  Preparation keeps the input fixed and removes rows whose
-outputs conflict.  Exposure reveals the prepared output without changing the
-remainder table.  Input events come from
-the environment; preparation and exposure come from the system.  Panels (b)
-through (e) are reached from panel (a) by input or preparation actions.  The
-formal development uses this one transition system throughout.
+another.  An input event records a larger cumulative input and retires rows
+that it has passed.  An output action keeps the input fixed, performs any
+required commitment, emits its result, and retires rows superseded by that
+result.  Inputs cross the interface from the environment; outputs cross it from
+the system.  Panels (b) through (e) are reached from panel (a) by input or
+output actions.  The formal development uses this one transition system
+throughout.
 
 \paragraph{Consistency.}
 Our goal is \emph{confluence}: any finite collection of input/output paths
@@ -317,11 +317,10 @@ for Complete CALM.
     \addlinespace
     \textbf{Output handling} & & \\
     \midrule
-    prepare & applies any seal commitment needed for $o$ & Sec.~\ref{sec:determination} \\
-    expose & reveals $o$ without changing the remainder table & Eq.~\ref{eq:output-stage} \\
-    canonical commitment basis & supports preparation of every permitted output & Sec.~\ref{sec:determination} \\
-    exposable output & preparation expansion uses no commitment & Def.~\ref{def:exposable} \\
-    run & finite input, preparation, and exposure events & Def.~\ref{def:run} \\
+    output action & internal preparation; emit $o$; output retirement & Eq.~\ref{eq:output-action} \\
+    canonical commitment basis & supports every permitted output action & Sec.~\ref{sec:determination} \\
+    exposable output & some legal preparation uses no commitment & Def.~\ref{def:exposable} \\
+    run & finite input and output actions & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
@@ -329,8 +328,8 @@ for Complete CALM.
     Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
     \bottomrule
   \end{tabular}
-  \caption{Reference for Functional CALM: one transition system separates
-  preparation, including any required commitments, from observable exposure.}
+  \caption{Reference for Functional CALM: one transition system embeds the
+  declarative specification and commitment basis in atomic input/output actions.}
   \label{fig:formalism-summary}
 \end{figure*}
 
@@ -375,14 +374,14 @@ arrives.
 \subsection{The transition system}
 \label{sec:determination}
 
-Section~\ref{sec:election-story} previewed one transition model with input,
-commitment, and output handling.  We now define it.  Output handling has two
-stages.  First, $\mathsf{prepare}(o)$ atomically makes any seal commitment
-needed to remove future inputs whose outputs conflict with $o$.  Then
-$\mathsf{expose}(o)$ reveals $o$ to the environment without changing the
-remainder table.  The complete sequence retains exactly the rows whose outputs
-refine $o$.  Keeping exposure explicit matters: the environment may learn from
-$o$ and choose subsequent input accordingly.
+Section~\ref{sec:election-story} previewed the transition model that embeds
+the declarative specification and a system commitment basis in a simple I/O
+automaton.  Its state is a specification state.  An input action records a
+cumulative input supplied by the environment.  An atomic output action performs
+its internal preparation, emits its result, and applies output retirement.  The
+action records the emitted result and the preparation chosen by the system, so
+an execution retains whether that choice used a commitment.  The environment
+may use an emitted output to choose a later input.
 
 \paragraph{The specification and remainder tables.}
 The relation $S\subseteq I\times O$, with the functional dependency that
@@ -392,13 +391,14 @@ the \emph{remainder table}; it records the rows not yet removed.  No action
 adds a row.
 
 Inputs are \emph{cumulative}: an input is everything seen so far, and
-$i\InputOrd j$ means that $j$ contains at least the information in $i$.  The
-framework imposes no other structure on inputs.  It uses only which elements
-belong to $I$, which pairs satisfy $i\InputOrd j$, and which outputs the
-specification pairs with each input.  To model corrections, retractions, or
-conflicting ballots, the specification design must choose elements of $I$ that
-record those events and order
-them by accumulated information.  Write
+$i\InputOrd j$ means that $j$ contains at least the information in $i$.  This
+is a requirement on representation, not on application-level effect.  Every
+change must be represented by adding information to the input, even when its
+meaning invalidates an earlier conclusion.  Thus a correction records both the
+original assertion and its correction, a retraction records the assertion and
+its withdrawal, and a conflict records both sides.  The framework otherwise
+uses only the elements of $I$, their refinement order, and the outputs paired
+with each input.  Write
 $k\prec_I i$ when $k\InputOrd i$ and $k\neq i$, and
 $\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$ for the refinements of $i$.
 
@@ -428,22 +428,13 @@ An input $k$ is \emph{valid} when $R$ has a row at $k$, and otherwise
 \emph{invalid}.
 \end{definition}
 
-A \emph{execution state} is $\gamma=(\sigma,q)$, where $\sigma=(i,R)$
-is a specification state and $q\in O\cup\{\mathsf{none}\}$ records the output
-pending exposure.  An execution state is \emph{stable} when
-$q=\mathsf{none}$.  Input and preparation events are enabled only in stable
-execution states; an exposure event is enabled only when $q$ contains its matching
-output.
-
-Valid inputs other than the current one are possible futures: refinements of
-$i$ whose rows have not been removed.  For an input $i$, the \emph{canonical initial specification state} is
+Valid inputs above the current input are its still-admissible refinements.  For
+an input $i$, the \emph{canonical initial state} is
         \begin{equation}
   \sigma_0(i)=\bigl(i,\ \{(k,o)\in S:\ i\InputOrd k\}\bigr),
   \label{eq:canonical-initial-state}
         \end{equation}
-the specification table restricted to $i$ and its refinements.  The canonical
-initial execution state is
-$\gamma_0(i)=(\sigma_0(i),\mathsf{none})$.
+the specification table restricted to $i$ and its refinements.
 Figure~\ref{fig:election-frames}(a) shows $\sigma_0(x\cdot\cdot)$.
 
 \paragraph{Input events.}
@@ -456,52 +447,33 @@ every row whose input does not refine $j$:
   R\mathbin{\upharpoonright_I}j=\{(k,u)\in R:\ j\InputOrd k\},
   \label{eq:input-event}
         \end{equation}
-defined when $R$ has a row at $j$.  Every row this event removes is an
-\emph{input retirement}: its input does not refine the new current input $j$.
+defined when $R$ has a row at $j$.  The event retires every row whose input
+does not refine the new current input $j$.
 
-An input event records the new cumulative input, not the value that caused it.
-The system model supplies a partial function
-        \begin{equation}
-  \mathsf{advance}:I\times I\rightharpoonup I,
-  \qquad
-  \mathsf{advance}(i,a)=j
-  \ \Longrightarrow\
-  \begin{cases}
-    i\InputOrd j,\\
-    a\InputOrd j,
-  \end{cases}
-  \label{eq:cumulative-advance}
-        \end{equation}
-where $i$ is current and $a$ is arriving cumulative input.  We require
-$\mathsf{advance}(i,a)=a$ whenever $i\InputOrd a$, so an already cumulative
-arrival is recorded directly.  The computation is not an event; the resulting
-$\mathsf{input}(j)$ is.  For set-valued inputs, advance may be union; for a
-join-semilattice, it may be join.  Neither structure is assumed.  In particular,
-two inputs may have no common refinement, or several incomparable common
-refinements, and the framework requires neither a least common refinement nor a
-lattice.  The function is partial because advance need not be defined for every
-pair; where several results are possible, it records the one chosen by the
-system model.
+The event label is already cumulative: it supplies the new representation $j$,
+not a raw fragment that this transition system must fold into $i$.  How an
+environment or implementation computes $j$ lies outside the specification.  It
+may use union, a semilattice join, or another rule.  If two pieces of input have
+no common refinement, this input domain cannot represent their joint receipt;
+the interface must exclude that combination or use a richer cumulative
+representation.  If several common refinements exist, the surrounding system
+may choose one and supply it as the next input.  The framework requires neither
+a least common refinement nor a lattice.
 
 Input events compose once their final target is fixed:
 $\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has the same effect as
 $\mathsf{input}(k)$ alone, and $\mathsf{input}(i)$ at $(i,R)$ is the identity.
-Thus batching or intermediate input events do not affect the state when they
-produce the same final cumulative input.  The contract on $\mathsf{advance}$
-does not require different delivery orders to choose that same final input; a
-system that needs delivery-order independence must impose the corresponding
-algebraic law on its advance function.
 
 \paragraph{Commitments and output handling.}
-For $(i,o)\in R$, the final table needed to honor exposure of $o$ is
+For $(i,o)\in R$, the final table needed to honor emission of $o$ is
 \begin{equation}
   R_o=R\mathbin{\upharpoonright_O}o
       =\{(k,u)\in R:o\OutputOrd u\}.
   \label{eq:residual-refining-fibers}
 \end{equation}
 In a functional specification each input has one row.  Consequently every row
-in $R\setminus R_o$ lies at a future input whose only output conflicts with
-$o$.  Preparing $o$ must make each such input invalid.
+in $R\setminus R_o$ lies at a valid refinement whose only output conflicts with
+$o$.  The output action's preparation must make each such input invalid.
 
 A \emph{commitment basis} $\mathcal B$ is a set of partial functions on
 specification states.  Each commitment keeps the current input fixed and
@@ -519,37 +491,38 @@ is the partial function
 when $R_o\neq R$; identity cases are omitted.  The \emph{canonical commitment
 basis} $\mathcal B_S^{\mathrm{can}}$ contains every such commitment.
 
-The macro $\mathsf{prepare}(o)$ atomically applies the corresponding seal
-commitment to a stable execution state, then records $q=o$ as the output pending
-exposure.  The matching event $\mathsf{expose}(o)$ reveals $o$ to the
-environment and clears $q$ to $\mathsf{none}$.  In the functional case exposure
-retires no row.  Thus the complete \emph{exposure sequence}
+An output action carries a legal \emph{preparation} $\pi$: either the identity or
+an atomic commitment, or sequence of commitments, supported by the system's
+basis.  In the functional case, $\pi$ must have the aggregate effect of the
+canonical seal commitment.  The action then emits $o$ and, atomically with that
+emission, applies output retirement; in the functional case this retirement
+removes no additional row.  Thus under the canonical basis
 \begin{equation}
-  \mathsf{prepare}(o);\mathsf{expose}(o)
-  \label{eq:output-stage}
+    (i,R)\xrightarrow{\mathsf{output}(o;\pi)}(i,R_o)
+    \label{eq:output-action}
 \end{equation}
-takes $((i,R),\mathsf{none})$ to $((i,R_o),\mathsf{none})$.  A finite history
-may have a cut between the two events, but no participant action other than the
-matching exposure is enabled there.  Exposure remains explicit because what
-the environment learns may influence later input.
+The preparation annotation is part of the action, so the execution records
+whether emitting $o$ used a commitment; only $\mathsf{output}(o)$ is visible at
+the specification interface.  We omit $\pi$ from the label when that distinction
+is immaterial.  Preparation, emission, and retirement are the logical parts of
+one transition, not separately interleavable events.
 
 The canonical basis supports every output permitted by the specification.  This
 is essential for CALM: a weaker basis could hide non-monotonicity merely by
-making a conflicting output unavailable.  Another basis supports preparation
-of $o$ when one of its atomic commitments, or an atomic sequence of them, has
-the same effect as the canonical seal commitment.  Section~\ref{sec:safe-exposure}
-extends preparation to specifications with several outputs at one input.
+making a conflicting output unavailable.  Another basis supports the output
+action for $o$ when one of its commitments, or an atomic sequence of them, has
+the same aggregate effect as the canonical seal commitment.
+Section~\ref{sec:safe-exposure} extends legal preparation and output retirement
+to specifications with several outputs at one input.
 
 \begin{definition}[Transition system and run]
 \label{def:io-transition-system}
 \label{def:transition-system}
-The \emph{transition system} has execution states as its states, with input
-events as in Equation~\ref{eq:input-event}, atomic preparations supported by
-its commitment basis, and exposure events.  A
-\emph{run} is any finite transition sequence from a canonical initial
-execution state $\gamma_0(i)$ to a stable execution state.  A \emph{run prefix} may
-additionally end with a pending output.  Unless stated otherwise, runs use the
-canonical commitment basis.
+The \emph{transition system} has specification states as its states, input
+events as in Equation~\ref{eq:input-event}, and atomic output actions as in
+Equation~\ref{eq:output-action}.  A \emph{run} is any finite transition sequence
+from a canonical initial state $\sigma_0(i)$.  Unless stated otherwise, runs use
+the canonical commitment basis.
 \label{def:run}
 \end{definition}
 
@@ -561,9 +534,8 @@ specifications with several outputs at one input.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
-A run starts at $\gamma_0(i_0)$, ends with stable execution state
-$((i,R),\mathsf{none})$, and completes exposure sequences for outputs
-$o_1,\ldots,o_m$.  Its final specification state is
+A run starts at $\sigma_0(i_0)$, ends at $(i,R)$, and contains output actions
+emitting $o_1,\ldots,o_m$.  Its final state is
         \begin{equation}
   \left(i,\ \left\{(k,x)\in S:
     \begin{array}{l}
@@ -576,11 +548,11 @@ $o_1,\ldots,o_m$.  Its final specification state is
 \end{lemma}
 
 \begin{proof}
-Each input event intersects $R$ with $\{(k,x):j\InputOrd k\}$ and each complete
-exposure sequence with $\{(k,x):o\OutputOrd x\}$.  In the functional case, the
-preparation's seal commitment has exactly this effect and exposure removes no
-row.  These intersections commute, and the input restrictions compose to the
-restriction at the final input $i$.
+Each input event intersects $R$ with $\{(k,x):j\InputOrd k\}$ and each
+canonical output action with $\{(k,x):o\OutputOrd x\}$.  In the functional
+case, the action's preparation has exactly this effect and output retirement
+removes no additional row.  These intersections commute, and the input
+restrictions compose to the restriction at the final input $i$.
 \end{proof}
 
 A \emph{common refinement} of inputs $i_1,\ldots,i_k$ is an input $j$ with
@@ -589,12 +561,10 @@ $i_r\InputOrd j$ for every $r$.
 \begin{definition}[Consistency]
 \label{def:consistency}
 An ordered specification is \emph{consistent} when every finite family of runs
-under its canonical commitment basis is confluent: if the runs end at stable
-execution states $((i_1,R_1),\mathsf{none}),\ldots,
-((i_k,R_k),\mathsf{none})$ and $j$ is a common refinement of their current
-inputs, one stable execution state with current input $j$ is reachable by input
-events and complete exposure sequences from each endpoint.  The runs are then
-\emph{confluent at} $j$.
+under its canonical commitment basis is confluent: if the runs end at states
+$(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of their current
+inputs, one state with current input $j$ is reachable by input and output
+actions from each endpoint.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
 Equivalently, Consistency quantifies over every finite family of run-generated
@@ -609,16 +579,15 @@ as a specification in Appendix~\ref{app:composition}.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
-Runs ending at stable execution states
-$((i_1,R_1),\mathsf{none}),\ldots,((i_k,R_k),\mathsf{none})$ are confluent at
-$j$ if and only if some row at $j$ survives in every final specification state,
+Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent at $j$ if and
+only if some row at $j$ survives in every final state,
         \begin{equation}
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
         \end{equation}
-For any such $u$, $\mathsf{input}(j)$ followed by the exposure sequence for
-$u$ takes every endpoint to the stable execution state
-$\bigl((j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}),\mathsf{none}\bigr)$.
+For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
+every endpoint to the state
+$\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
 \end{proposition}
 
 \begin{proof}
@@ -626,13 +595,13 @@ A common state with current input $j$ has a row at $j$, and that row belongs to
 every $R_r$.  Conversely, let $(j,u)$ belong to every $R_r$.  Then
 $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ refines every output
-exposed on run $r$.  After $\mathsf{input}(j)$ and the exposure sequence for
-$u$, the same lemma leaves exactly the rows of $S$ above $j$ and $u$, independent
-of the starting run.
+emitted on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
+same lemma leaves exactly the rows of $S$ above $j$ and $u$, independent of the
+starting run.
 \end{proof}
 
-A single run can witness inconsistency: completing an exposure sequence for one
-permitted output may remove every row at a refinement of its current input.
+A single run can witness inconsistency: an output action for one permitted
+output may remove every row at a refinement of its current input.
 Consistency describes
 no protocol and promises no delivery or termination;
 Section~\ref{sec:discussion} returns to this.
@@ -649,14 +618,13 @@ monotone.
 \begin{proof}
 Every input has one row.  By Lemma~\ref{lem:run-residual}, a run ending at
 input $i$ retains $(k,f(k))$ at $k\succeq_I i$ exactly when every output
-$f(i_\ell)$ exposed on the run satisfies $f(i_\ell)\OutputOrd f(k)$.  By
+$f(i_\ell)$ emitted on the run satisfies $f(i_\ell)\OutputOrd f(k)$.  By
 Proposition~\ref{prop:confluence}, a finite family of runs is confluent at a
-common refinement $k$ exactly when every output exposed on any run lies below
-$f(k)$.  If $f$ is monotone this holds because each exposed $f(i_\ell)$ has
+common refinement $k$ exactly when every output emitted on any run lies below
+$f(k)$.  If $f$ is monotone this holds because each emitted $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
-$f(i)\not\OutputOrd f(k)$; the run that starts at $\gamma_0(i)$ and completes
-the exposure sequence for $f(i)$ has no row at $k$ and cannot advance to its own
-refinement $k$.
+$f(i)\not\OutputOrd f(k)$; the run that starts at $\sigma_0(i)$ and emits
+$f(i)$ has no row at $k$ and cannot advance to its own refinement $k$.
 \end{proof}
 
 This is the familiar CALM dichotomy stated at the specification interface
@@ -678,15 +646,14 @@ the semilattice order~\cite{shapiro2011crdt};
 Sections~\ref{sec:query-instance} and~\ref{sec:crdt-instance} take up both
 instances.
 
-\subsection{Preparing and exposing outputs}
+\subsection{Output actions and exposability}
 \label{sec:canonical-transition-system}
 
 The canonical commitment basis exists to exercise every output the specification
-permits, not to claim that every implementation supports every preparation.
-An implementation supplies its own basis; it can realize an exposure sequence
-only when that basis supports a preparation expansion with the required
-aggregate effect.  The following definitions identify when no commitment is
-required.
+permits, not to claim that every implementation supports every output action.
+An implementation supplies its own basis; it can take an output action only
+when that basis supports a legal preparation with the required aggregate
+effect.  The following definitions identify when no commitment is required.
 
 For $R\subseteq S$, the \emph{upper fiber} at $i$ collects outputs at $i$ and
 its still-valid refinements:
@@ -700,18 +667,18 @@ is determined when its current input is.
 \begin{definition}[Exposable output, functional case]
 \label{def:exposable}
 For a functional specification, $(i,o)\in R$ is \emph{exposable} at $(i,R)$
-when $\mathsf{prepare}(o)$ requires no commitment.  Equivalently, the exposure
-sequence removes no row: $o\OutputOrd f(j)$ at every valid
-$j\succeq_I i$.
+when its output action has a legal preparation that requires no commitment.
+Equivalently, the output action removes no row: $o\OutputOrd f(j)$ at every
+valid $j\succeq_I i$.
 \end{definition}
 
 A state is \emph{sealed} when no strict refinement of its current input remains
 valid.  A sealed functional state is determined, but a seal commitment need not
 seal every strict refinement at once.
 
-A system's \emph{strategy} chooses input events and exposure sequences, and
-chooses a valid preparation expansion from its basis, using the specification
-and any additional strategy state.  Strategy state is not part of the
+A system's \emph{strategy} chooses input and output actions, including a legal
+preparation from its basis for each output action, using the specification and
+any additional strategy state.  Strategy state is not part of the
 specification state and affects the remainder table only through the selected
 transitions.
 
@@ -723,7 +690,7 @@ every state reachable without commitment is exposable.
 
 \begin{proof}
 If $f$ is monotone, a commitment-free state has lost rows only to input events,
-since its preparations are the identity and its exposures remove no rows.  If
+since its output actions use identity preparation and retire no rows.  If
 its current input is $i$, then the only output paired with $i$ is $f(i)$, and
 every valid $j\succeq_I i$ has $f(i)\OutputOrd f(j)$, so $f(i)$ is exposable.
 Conversely, suppose every output at every commitment-free reachable state is
@@ -733,10 +700,9 @@ monotone.
 \end{proof}
 
 Functional CALM and this proposition give the operational boundary.  A
-monotone functional specification can prepare and expose every current output
-without a commitment.  If monotonicity fails at $i\prec_I k$, preparing
-$f(i)$ invokes the canonical commitment that removes the conflicting row at
-$k$ before $\mathsf{expose}(f(i))$ occurs.
+monotone functional specification can emit every current output without a
+commitment.  If monotonicity fails at $i\prec_I k$, the canonical output action
+for $f(i)$ includes a commitment that removes the conflicting row at $k$.
 
 Historically, CALM stands for \emph{Consistency As Logical Monotonicity}, and
 its C has been read both as consistency and as confluence;
