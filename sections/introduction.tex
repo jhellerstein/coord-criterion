@@ -6,16 +6,16 @@ atomic instructions to database locks and distributed consensus protocols.
 These mechanisms prevent concurrent actions from producing undesirable
 outcomes, but add significant synchronization overheads; when coordination
 crosses a network partition, it can also prevent availability.  Avoiding
-unnecessary coordination is therefore a central goal in concurrent systems and
+unnecessary coordination is therefore a central goal in distributed systems and
 databases.  This paper asks what coordination mechanisms accomplish at the
 specification level, and when that effect is intrinsically required.
 
 The CALM Conjecture
 proposed a crisp, bidirectional answer: consistency can be achieved without
 coordination exactly when the specification is monotone
-~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it, in both
-directions, for Datalog queries evaluated by networks of relational
-transducers~\cite{ameloot2013relational,hellerstein2020keeping}. In a related vein, the CAP
+~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it in both
+directions, but only for Datalog queries evaluated by relational
+transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}. In a related vein, the CAP
 Theorem proved that an available linearizable register cannot tolerate a
 network partition~\cite{brewer2000towards,gilbert2002cap}.  These results are often
 invoked more broadly than the formalisms support: CALM as a general
@@ -37,7 +37,7 @@ Do convergence and transaction availability preserve application invariants?
 We develop a unified coordination criterion that spans this space,
 including the translation questions above
 (\S\ref{sec:cap-corollary}, \S\ref{sec:instances}).  We begin with a minimalist
-specification model: a two-column relational schema pairs input values with the
+specification model: a two-column relational schema pairing input values with the
 corresponding outputs that are within spec.  The model is purely declarative: it
 describes what can be observed about a system, without reference to any
 imperative procedure.  The input domain $(I,\InputOrd)$ includes a partial order
@@ -47,21 +47,21 @@ State-machine-style specifications can be compiled into this form
 (\S\ref{sec:design-boundary}); the table elides operational details that are not
 externally observable.  Despite its simplicity, the model captures both general
 concurrency and consistency models that span applications---including
-linearizability and causal consistency (Appendix~\ref{app:registers})---and
-application-specific requirements such as program invariants.  We call a
-specification \emph{consistent} when the executions it admits are
+linearizability and causal consistency (\S\ref{app:registers})---and
+application-specific requirements such as program invariants.  A
+specification is \emph{consistent} when the executions it admits are
 \emph{confluent}: states reached along different paths can still be brought to
-a common state.  The declared model determines which outputs are within spec;
-confluence asks whether those requirements can be maintained across concurrent
-executions.
+a common state.  This unifies classical definitions of consistency: a specification
+limits acceptable outcomes, while confluence asks whether those requirements
+can be maintained across concurrent executions.
 
-Our first results focus on tables with a functional dependency from input to
+We begin by focusing on tables with a functional dependency from input to
 output (\S\ref{sec:functional-specifications}).  These \emph{functional ordered
 specifications} capture arbitrary functions
 $ f:(I,\InputOrd)\to(O,\OutputOrd) $.  A function is monotone when
 $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.  Concurrent executions may see
 different input refinements, in different orders and batches.  Monotonicity says
-that an output exposed on any path remains valid as more input arrives.  Without
+that an output exposed via any execution remains valid as more input arrives.  Without
 it, the system must make an irrevocable \emph{commitment} that rules out
 behavior still within spec.  The framework identifies this need for commitment
 as the intrinsic reason to employ operational coordination mechanisms.  For a
@@ -69,8 +69,7 @@ functional specification, commitment means sealing off inputs that could lead
 to contradictory outputs.
 
 The first result is \emph{Functional CALM}
-(\S\ref{sec:functional-calm-theorem}).  It generalizes the CALM result from
-logic languages with relations ordered by set containment
+(\S\ref{sec:functional-calm-theorem}).  It generalizes the CALM result 
 to arbitrary functions and partial orders, giving a common
 language for coordination-freedom results over functional specifications.
 This covers both relational query languages and the usual CRDT state interface.
@@ -90,8 +89,8 @@ Second, we relax the functional dependency from input to output.  The resulting
 outputs, as in leader election and transaction ordering.  This ambiguity
 requires extending standard monotonicity to sets of outputs, a condition we call
 \emph{Lifted Monotonicity} (\S\ref{sec:complete-calm-criterion}).  Complete CALM
-shows that Consistency is equivalent to Lifted Monotonicity.  Ambiguity adds
-another form of commitment: progress may require ruling out an alternative
+shows that Consistency is equivalent to Lifted Monotonicity.  Ambiguous specifications
+add another form of commitment: progress may require ruling out an alternative
 output.  In a distributed execution, participants may independently prepare
 incompatible outputs; those preparations must be mutually excluded before both
 are exposed (\S\ref{sec:complete-calm-theorem}).  The CALM acronym can now be
@@ -99,15 +98,14 @@ read as \emph{Consistency As Lifted Monotonicity}; Ameloot et al.'s theorem is
 the special case of functional query results over relations.
 
 Earlier CALM work provides a coordination criterion but no way to analyze what
-happens after the criterion fails.  Complete CALM does so through commitments.
-At their ordinary interfaces, both total log ordering and a register or
-key-value store are non-monotone.  When they are composed through a shared log
+happens after the criterion fails.  Complete CALM fills this gap with commitments.
+As an example, both total log ordering and a key-value store have non-monotone
+specifications.  When they are composed through a shared log
 order, however, committing that order alone is sufficient to make the
-end-to-end specification monotone and consistent; no separate store commitment
-is needed.  Appendix~\ref{app:composition} makes this \emph{Proper
-Coordination} analysis precise.  A single log authority gives the basic
-construction; MultiConsensus implements the same log commitments with
-distributed authority.
+end-to-end specification monotone and consistent; no separate commitments
+are required for the key-value store.  We call this analysis \emph{Proper
+Coordination}, and Appendix~\ref{app:composition} makes it precise for both
+local and distributed settings.
 
 Complete CALM also yields a Complete CAP Theorem as a corollary
 (\S\ref{sec:cap-corollary}).  Classical CAP gives an impossibility for
