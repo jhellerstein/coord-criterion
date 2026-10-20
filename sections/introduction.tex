@@ -55,50 +55,47 @@ a common state.  This unifies classical definitions of consistency: a specificat
 table captures the space of acceptable outcomes, while confluence asks whether
 those requirements are maintained across concurrent executions.
 
-We begin by focusing on specification tables with a functional dependency from input to
-output (\S\ref{sec:functional-specifications}).  These \emph{functional ordered
-specifications} capture arbitrary functions
-$ f:(I,\InputOrd)\to(O,\OutputOrd) $.  A function is monotone when
-$i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.  Concurrent executions may see
-different input refinements, in different orders and batches.  Monotonicity says
-that an output exposed via any execution remains valid as more input arrives.  Without
-it, the system must make an irrevocable \emph{commitment} that rules out
-behavior still within spec.  The framework identifies this need for commitment
-as the intrinsic reason to employ operational coordination mechanisms.  For a
-functional specification, commitment means sealing off inputs that could lead
-to contradictory outputs.
+We begin by focusing on specification tables with a functional dependency from
+input to output (\S\ref{sec:functional-specifications}). These \emph{functional
+ordered specifications} capture arbitrary functions
+\(f:(I,\InputOrd)\to(O,\OutputOrd)\). Although each input has one output, a system
+may emit output before all input has arrived, and different executions may
+receive input in different orders. We call this \emph{execution ambiguity}. A
+function is monotone when \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\): an
+output emitted at \(i\) remains valid at \(j\).
 
-The first result is \emph{Functional CALM}
-(\S\ref{sec:functional-calm-theorem}).  It generalizes the CALM result
-to arbitrary functions and partial orders, giving a common
-language for coordination-freedom results over functional specifications.
-This covers both relational query languages and the usual CRDT state interface.
-Functional CALM proves that
-Consistency is equivalent to monotonicity of the specification.
+Our first result is \emph{Functional CALM}
+(\S\ref{sec:functional-calm-theorem}). It generalizes CALM to arbitrary
+functions and partial orders, proving that Consistency is equivalent to
+monotonicity. When monotonicity fails, the system must irrevocably rule out
+inputs that could lead to contradictory outputs before emitting a result. We
+call such an act a \emph{commitment}. Functional CALM characterizes
+exactly when execution ambiguity can be handled consistently without commitment.
+This captures relational query languages and the usual CRDT state interface.
 
-We then extend this result to capture distributed
-execution without changing the specification model
-(\S\ref{sec:distributed-execution}).  We place one local execution at each
-participant in a Lamport history, then project away delivery and strategy
-details that do not change the specification state.  \emph{Distributed
-Consistency} asks whether the resulting participant states can still be brought
-to the same state.
+We then give Consistency a distributed interpretation without changing the
+specification model (\S\ref{sec:distributed-execution}). We place one local
+execution at each participant in a Lamport history, then project away delivery
+and strategy details that do not change specification state.
+\emph{Distributed Consistency} asks whether the resulting participant states can
+still be brought to the same state. We prove that a specification has
+Distributed Consistency if and only if it is consistent in the sense above.
 
-Building on that basis, we enrich the model by relaxing the
-functional dependency to admit \emph{ambiguous} specifications: one input can have
-several possible outputs, as in leader election and transaction ordering.
-We call the narrowing of this ambiguity \emph{determination}; determination is
-complete when only one possible output remains, leaving a \emph{determined}
-state.  Determination occurs via two kinds of events: inputs may make some
-alternatives unreachable; commitments exclude alternatives that would otherwise
-remain possible.
-Standard monotonicity only characterizes unambiguous functions; we define
-\emph{Lifted Monotonicity} to capture the ambiguous regime and characterize
-exactly whether outputs can be emitted consistently without commitment.
-Complete CALM proves that Consistency, Lifted Monotonicity, and Distributed
-Consistency are equivalent (\S\ref{sec:complete-calm-theorem}).  When
-participants can independently emit incompatible outputs, the system must
-prevent the corresponding commitments from both taking effect.
+The functional specifications above cannot capture settings like leader election
+or transaction ordering, where many outputs are within spec for a given input. In the
+absence of a functional dependency determining the output for each input, a second source of
+ambiguity arises: \emph{semantic ambiguity}. We call the resolution of either type of
+ambiguity \emph{determination}; it is complete when only one output remains
+within spec. Determination may occur through input, which may make alternatives
+unreachable, or through commitments, which exclude alternatives that would
+otherwise remain possible. To model semantic ambiguity, we must move beyond standard
+monotonicity of functions. For the case of general relations we define an extension called
+\emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
+consistent with one another as input grows. Complete CALM proves that
+Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
+(\S\ref{sec:complete-calm-theorem}). Participants must make the same commitments
+to avoid emitting conflicting outputs. Coordination mechanisms operationalize
+this requirement.
 
 Classical CALM tells us when coordination is unnecessary, but not whether a
 chosen use of coordination is sufficient.  Complete CALM can answer the second
