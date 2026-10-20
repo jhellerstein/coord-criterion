@@ -286,24 +286,15 @@ write
 
 \begin{definition}[Specification state]
 \label{def:residual-state}
-For any relation $R\subseteq I\times O$, let
-\[
-  \operatorname{dom}(R)=\{i\in I:(i,o)\in R\text{ for some }o\in O\}.
-\]
-The specification-state space is
-\begin{equation}
-  \Sigma_S=
-  \left\{(i,R)\in I\times\mathcal P(S):
-    i\in\operatorname{dom}(R)
-    \ \land\
-    \operatorname{dom}(R)\subseteq\mathord\uparrow_I i
-  \right\}.
-  \label{eq:specification-state-space}
-\end{equation}
-A \emph{specification state} is a pair $\sigma=(i,R)\in\Sigma_S$.  Its first
-component $i$ is the \emph{current input}; its second component $R$ is the
-\emph{remainder table}.  An input $k$ is \emph{valid} in $\sigma$ when
-$k\in\operatorname{dom}(R)$, and otherwise \emph{invalid}.
+Given $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, a \emph{specification state} is a
+pair $\sigma=(i,R)$, where $i\in I$ is the \emph{current input} and
+$R\subseteq S$ is the \emph{remainder table}, such that:
+\begin{enumerate}
+  \item $R$ contains a row at $i$; and
+  \item every row $(k,o)\in R$ satisfies $i\InputOrd k$.
+\end{enumerate}
+An input $k$ is \emph{valid} in $\sigma$ when $R$ contains a row at $k$, and
+otherwise \emph{invalid}.
 \end{definition}
 
 Thus a remainder table is a subrelation of $S$ with a row at its current input
