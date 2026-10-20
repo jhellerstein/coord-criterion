@@ -53,33 +53,44 @@ contrast, can be preserved together in a larger route set.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{Output choice and directedness.}
-The atomic $\mathsf{output}(o)$ action from Section~\ref{sec:election-story}
-applies any required commitments, retires dominated rows, and emits $o$.  With
-several rows at one input, retirement can discard an output without losing its
-claim when a retained output refines both it and $o$.
+\paragraph{Output choice and directedness.} The examples differ in what happens
+to the other alternatives when one output is emitted. In panel~(f), neither
+serialization order preserves the other, so emitting one requires a commitment
+that removes the other. In panel~(g), larger route sets preserve both the
+emitted observation and the rows it removes. We call such content-preserving
+removal an \emph{output retirement}; because no alternative is lost, the route
+observation is \emph{exposable} without commitment. The atomic
+\(\mathsf{output}(o)\) action performs any required commitments and retirements,
+then emits \(o\).
 
 Panel~(f) permits either serial order of concurrent transactions $A$ and $B$.
 No output refines both, so emitting one requires an \emph{output-choice
-commitment} that removes the other.  In panel~(g), outputs are prefix-closed
+commitment} that removes the other; one such commitment is illustrated via the
+horizontal stroke.  In panel~(g), outputs are prefix-closed
 route sets and their unions are within spec.  Emitting
 $\{s{\to}\texttt{s1}\}$ needs no commitment: retained union rows preserve every
 retired route set, so the output is \emph{exposable}.
 
-This difference is \emph{directedness}: every finite set of outputs in a fiber
+The difference in the two examples is the order-theoretic notion of a fiber being \emph{directed}:
+every finite set of outputs in a fiber
 has a common refinement in that fiber.  A directed fiber preserves every
 alternative after any output; a nondirected fiber may require an output-choice
-commitment.  \emph{Lifted Monotonicity} combines directedness with Functional
-CALM's requirement that input growth preserve outputs: every finite set of
-outputs within spec at $i$ must have a common refinement within spec at every
-$j\succeq_I i$.
+commitment.  \emph{Lifted Monotonicity} combines directedness with a multi-output
+extension to Functional
+CALM's requirement that input growth preserve outputs: at a given input \(i\),
+every finite \emph{subset} its possible outputs must have a common refinement value
+in the fiber of every larger input $j\succeq_I i$. \jmh{Is it worth saying that semi-formally here?
+It's hard to read the quantifiers in english.}
 
 \paragraph{Different commitment bases.}
 The specification says which serialization orders are permitted; the
 \emph{commitment basis} says which binding choices a system can make.
-Figure~\ref{fig:cc-commitments} applies two bases to the same three-transaction
-fiber.  Two-phase locking commits only to $A$ before $B$, leaving $C$'s position
-open.  Multiversion timestamp ordering commits $B$ to first place.  Both remove
+Figure~\ref{fig:cc-commitments} applies two different bases to the same three-transaction
+fiber---one captures two-phase locking (2PL), the other multi-version timestamp ordering (MVTO). 
+In 2PL, racing for a lock commits orderings among a subset of transactions:
+in this case it commits only to $A$ before $B$, leaving $C$'s position
+open.  By contrast, timestamp assignment in MVTO orders a transaction with respect to all others:
+in this case, $B$ is assigned first place.  Both remove
 serialization orders, but leave different sets of choices available.
 Appendix~\ref{app:cc-bases} gives the full bases, including abort commitments.
 
