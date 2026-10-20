@@ -67,10 +67,10 @@ output emitted at \(i\) remains valid at \(j\).
 Our first result is \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}). It generalizes CALM to arbitrary
 functions and partial orders, proving that Consistency is equivalent to
-monotonicity. When monotonicity fails, the system must irrevocably rule out
-inputs that could lead to contradictory outputs before emitting a result. We
-call such an act a \emph{commitment}. Functional CALM characterizes
-exactly when execution ambiguity can be handled consistently without commitment.
+monotonicity.  When monotonicity fails, emitting some output requires
+irrevocably restricting subsequent results to those that preserve it.  We call
+this restriction a \emph{commitment}.  Functional CALM characterizes exactly
+when execution ambiguity can be handled consistently without commitment.
 This captures relational query languages and the usual CRDT state interface.
 
 We then give Consistency a distributed interpretation without changing the
@@ -86,15 +86,15 @@ or transaction ordering, where many outputs are within spec for a given input. I
 absence of a functional dependency determining the output for each input, a second source of
 ambiguity arises: \emph{semantic ambiguity}. We call the resolution of either type of
 ambiguity \emph{determination}; it is complete when only one output remains
-within spec. Determination may occur through input, which may make alternatives
+possible. Determination may occur through input, which may make alternatives
 unreachable, or through commitments, which exclude alternatives that would
 otherwise remain possible. To model semantic ambiguity, we must move beyond standard
 monotonicity of functions. For the case of general relations we define an extension called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
 Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
-(\S\ref{sec:complete-calm-theorem}). Participants must make the same commitments
-to avoid emitting conflicting outputs. Coordination mechanisms operationalize
+(\S\ref{sec:complete-calm-theorem}).  The participants' commitments must rule
+out the same conflicting alternatives.  Coordination mechanisms operationalize
 this requirement.
 
 Classical CALM tells us when coordination is unnecessary, but not whether a
