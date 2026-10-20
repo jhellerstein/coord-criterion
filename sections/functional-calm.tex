@@ -84,7 +84,7 @@ dependency.
     $xxy$ & \sh{$x$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize possible outputs $\{x\}$; determined,}\\
-    \multicolumn{2}{@{}l}{\footnotesize not sealed; $x$ needs no commitment}
+    \multicolumn{2}{@{}l}{\footnotesize input-resolved; $x$ needs no commitment}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
@@ -99,7 +99,7 @@ dependency.
     \retired{$xxy$} & \retired{$x$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize possible outputs $\{\bot\}$; sealed and}\\
-    \multicolumn{2}{@{}l}{\footnotesize determined; $\bot$ is the result}
+    \multicolumn{2}{@{}l}{\footnotesize determined by commitment; $\bot$ is the result}
   \end{tabular}
   \caption{The election specification and three states reached from it.  Only rows above the input $x\cdot\cdot$ are shown.  The current input is
   in bold; shaded cells are the current input and outputs still possible at it.
@@ -176,10 +176,11 @@ either candidate could still win.
 
 Panel (c) shows the alternative in which $v_2$ voted $x$.  The rows at or
 above $xx\cdot$ all say $x$, so the upper fiber is the singleton $\{x\}$ and
-the current input is \emph{determined}: it fixes the output regardless of what
-ballot $v_3$ could cast.  Narrowing the upper fiber until a single output
-remains is what we call \emph{determination}.  Here input arrival determined the
-state on its own; below we meet the case where the system must act.
+the current state is \emph{determined}: the arriving input resolves the
+remaining ambiguity by making the other ballot histories counterfactual.  No
+commitment was needed; the result is input-resolved.  Below we return to panel
+(b), where several possible outputs remain and the system must commit to reduce
+them.
 
 \paragraph{Commitments.}
 Return to panel (b).  Consider a registrar who closes the polls before
@@ -193,9 +194,8 @@ the environment, has ruled out behavior that was within spec.
 The specification does not define a notion of commitments; that authority belongs to a second
 component of our model: the system's \emph{commitment basis} $\mathcal B$, which defines
 how the system may irrevocably remove rows.  A system whose polls can close includes this commitment in
-its basis; one whose polls cannot close does not.  After
-this output action, no refinement of $xy\cdot$ remains valid, its upper fiber is
-$\{\bot\}$, and the state is determined.
+its basis; one whose polls cannot close does not.  After this output action, no refinement of $xy\cdot$ remains valid, its upper
+fiber is $\{\bot\}$, and the commitments have determined the result.
 
 Because a functional specification has one row per input, any commitment that
 removes a row makes that input invalid.  Thus every commitment in this section
@@ -217,8 +217,8 @@ is a seal commitment; it may invalidate one future input or many.
     \retired{$xxx$} & \retired{$x$} \\ \strikerow
     \retired{$xxy$} & \retired{$x$} \\ \strikerow
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize possible outputs $\{\bot\}$; determined;}\\
-    \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no further commitment}
+    \multicolumn{2}{@{}l}{\footnotesize possible outputs $\{\bot\}$; determined}\\
+    \multicolumn{2}{@{}l}{\footnotesize by commitment; $\bot$ needs no further commitment}
   \end{tabular}
   \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
   incomparable, after the registrar emits $\bot$ while closing the polls at
@@ -655,8 +655,12 @@ its still-valid refinements:
   R^\uparrow(i)=\{o\in O:\exists j\in I,\ i\InputOrd j\text{ and }(j,o)\in R\}.
   \label{eq:upper-fiber}
         \end{equation}
-The current input is \emph{determined} when $|R^\uparrow(i)|=1$, and a state
-is determined when its current input is.
+A state is \emph{determined} when $|R^\uparrow(i)|=1$, regardless of how it was
+reached.  \emph{Determination} is movement toward or arrival at that condition.
+A commitment may advance determination by excluding a still-live alternative;
+an input event may instead resolve ambiguity by retiring counterfactual input
+histories.  We call the resulting outcomes \emph{commitment-resolved} and
+\emph{input-resolved}, respectively.
 
 \begin{definition}[Exposable output, functional case]
 \label{def:exposable}
@@ -666,8 +670,9 @@ removes no row: $o\OutputOrd f(j)$ at every valid $j\succeq_I i$.
 \end{definition}
 
 A state is \emph{sealed} when no strict refinement of its current input remains
-valid.  A sealed functional state is determined, but a seal commitment need not
-seal every strict refinement at once.
+valid.  A sealed functional state is determined.  Commitments that produce such
+a state make it commitment-resolved, although determination need not seal every
+strict refinement at once.
 
 A system's \emph{strategy} chooses input and output actions, including which
 commitments from its basis an output action applies, using the specification
