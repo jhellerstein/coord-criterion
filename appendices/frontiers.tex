@@ -48,7 +48,7 @@ Table~\ref{tab:lookup-lift}.
   \label{tab:lookup-lift}
   \begin{tabular}{@{}c l l l@{}}
     \toprule
-    Input & Original fiber $X(i)$ & Remembered $X^\uparrow(i)$
+    Input & Original fiber $X(i)$ & Remembered $\widehat X(i)$
           & Pruned $M(i)$ \\
     \midrule
     $i_0$ & $\{o_a\}$
@@ -85,7 +85,7 @@ partial order on these classes, as the specification model requires.  Below we
 continue to write set representatives and $\LiftedOutputOrd$ for the induced
 order.  The unpruned output is
         \begin{equation}
-  X^\uparrow(i)=\bigcup_{j\InputOrd i}X(j).
+  \widehat X(i)=\bigcup_{j\InputOrd i}X(j).
   \label{eq:monotone-hull}
         \end{equation}
 Equivalently, each original row $(j,o)$ contributes $o$ to the transformed row
@@ -100,35 +100,35 @@ $i\InputOrd j$ implies $A(i)\LiftedOutputOrd A(j)$.
 
 \begin{theorem}[Remembered-output frontier]
 \label{thm:monotone-hull}
-The map $X^\uparrow$ is a monotone powerset relaxation.  Moreover, every monotone
+The map $\widehat X$ is a monotone powerset relaxation.  Moreover, every monotone
 powerset relaxation $A$ covers every output seen so far:
         \begin{equation}
-  X^\uparrow(i)\LiftedOutputOrd A(i)
+  \widehat X(i)\LiftedOutputOrd A(i)
   \qquad\text{for every }i.
   \label{eq:hull-coverage}
         \end{equation}
-If $X^\uparrow(i)$ is finite, let $M(i)$ contain its undominated elements.  Then
-$M(i)$ and $X^\uparrow(i)$ are equivalent under $\LiftedOutputOrd$, the map $M$
-is monotone, and $M(i)$ is the unique smallest subset of $X^\uparrow(i)$ that
-covers all of $X^\uparrow(i)$.
+If $\widehat X(i)$ is finite, let $M(i)$ contain its undominated elements.  Then
+$M(i)$ and $\widehat X(i)$ are equivalent under $\LiftedOutputOrd$, the map $M$
+is monotone, and $M(i)$ is the unique smallest subset of $\widehat X(i)$ that
+covers all of $\widehat X(i)$.
 \end{theorem}
 
 \begin{proof}
-The union includes $X(i)$, so $X^\uparrow$ is a relaxation.  If
+The union includes $X(i)$, so $\widehat X$ is a relaxation.  If
 $i\InputOrd k$, every predecessor of $i$ is also a predecessor of $k$; hence
-$X^\uparrow(i)\subseteq X^\uparrow(k)$, which implies monotonicity under
+$\widehat X(i)\subseteq \widehat X(k)$, which implies monotonicity under
 $\LiftedOutputOrd$.
 
 Now let $A$ be any monotone powerset relaxation and take
-$o\in X^\uparrow(i)$.  Some $j\InputOrd i$ has $o\in X(j)$.  Relaxation gives
+$o\in \widehat X(i)$.  Some $j\InputOrd i$ has $o\in X(j)$.  Relaxation gives
 an $a\in A(j)$ with $o\OutputOrd a$, and monotonicity gives a
 $b\in A(i)$ with $a\OutputOrd b$.  Thus $b$ refines $o$, proving
 Equation~\ref{eq:hull-coverage}.
 
 For a finite set, every element is below an undominated element.  Therefore
-$X^\uparrow(i)\LiftedOutputOrd M(i)$; the reverse direction follows from
-$M(i)\subseteq X^\uparrow(i)$.  The same observation proves monotonicity of $M$.
-Finally, any subset of $X^\uparrow(i)$ that covers an undominated element must
+$\widehat X(i)\LiftedOutputOrd M(i)$; the reverse direction follows from
+$M(i)\subseteq \widehat X(i)$.  The same observation proves monotonicity of $M$.
+Finally, any subset of $\widehat X(i)$ that covers an undominated element must
 contain that element itself.  Every covering subset therefore contains $M(i)$,
 which proves minimality and uniqueness.
 \end{proof}
@@ -178,10 +178,10 @@ claim.
 
 This positive result meets the remembered-output frontier.  For a fixed key in
 a split-only migration chain, let $X(g)$ be the exact search certificates at
-prefix $g$.  Every historical certificate in $X^\uparrow(h)$ has a refinement
+prefix $g$.  Every historical certificate in $\widehat X(h)$ has a refinement
 in $R(h)$, namely its current forwarding path:
         \begin{equation}
-  X^\uparrow(h)\LiftedOutputOrd R(h).
+  \widehat X(h)\LiftedOutputOrd R(h).
   \label{eq:forwarding-hull}
         \end{equation}
 Theorem~\ref{thm:monotone-hull} says that any monotone relaxation must provide
