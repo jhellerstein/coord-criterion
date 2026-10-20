@@ -573,11 +573,16 @@ same lemma leaves exactly $S[\mathrm{in}\succeq_I j,\ \mathrm{out}\succeq_O u]$,
 independent of the starting run.
 \end{proof}
 
-Inconsistency does not require concurrency; a family of one run suffices.
-Suppose a run at input $i$ emits $f(i)$, and some valid refinement $k$ of $i$
-has $f(i)\not\OutputOrd f(k)$.  The canonical output event seals $k$, and the
-run can no longer reach its own refinement $k$.  The proof of Functional CALM
-uses exactly this case.
+Inconsistency does not require concurrency.  Consider two runs from the same
+canonical state $\sigma_S(i)$, which might be two replicas or two replays of one
+system.  The first emits $f(i)$ at once; the second first accepts a refinement
+$k$ of $i$ with $f(i)\not\OutputOrd f(k)$.  To honor its promise, the first
+run's canonical output event seals $k$, as the registrar does by closing the
+polls in Figure~\ref{fig:nonmonotone-frame}.  The seal is a commitment; the
+inconsistency is what follows from it.  The two runs now disagree about whether
+$k$ is valid, and no extension reconciles them at $k$.  They differ only in
+whether the output came before the input, and Consistency requires that such
+timing not matter.  The proof of Functional CALM uses exactly this pair.
 
 Consistency is a property of the specification.  It describes no protocol and
 promises no delivery or termination; Section~\ref{sec:discussion} returns to
@@ -605,9 +610,9 @@ Proposition~\ref{prop:confluence}, a finite family of canonical runs is
 confluent at a common refinement $k$ exactly when every output emitted on any
 run lies below $f(k)$.  If $f$ is monotone this holds because each emitted $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
-$f(i)\not\OutputOrd f(k)$; the canonical run that starts at
-$\sigma_S(i)$ and emits $f(i)$ has no row at $k$ and cannot advance to its
-own refinement $k$.
+$f(i)\not\OutputOrd f(k)$.  Of two canonical runs from $\sigma_S(i)$, one that
+emits $f(i)$ has no row at $k$, while one that accepts $k$ retains $(k,f(k))$;
+no row at $k$ survives in both, so they are not confluent at $k$.
 \end{proof}
 
 This is the familiar CALM dichotomy stated at the specification interface
