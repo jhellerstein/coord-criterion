@@ -199,7 +199,7 @@ serves as a reference.
     \toprule
     \textbf{Specification} & & \\
     \midrule
-    specification & $f:(I,\InputOrd)\to(O,\OutputOrd)$; \quad $S=\{(i,f(i)):i\in I\}$ & Def.~\ref{def:functional-specification} \\
+    specification & $\Spec=(I,\InputOrd,O,\OutputOrd,S)$; induced $f:(I,\InputOrd)\to(O,\OutputOrd)$ & Def.~\ref{def:functional-specification} \\
     monotone (functional) & $i\InputOrd j\ \Longrightarrow\ f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity} \\
     \addlinespace
     \textbf{Shared state and input} & & \\
@@ -231,20 +231,23 @@ serves as a reference.
 
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
-A \emph{functional ordered specification} is equivalently a function
-        \begin{equation}
-  f:(I,\InputOrd)\longrightarrow(O,\OutputOrd),
+A \emph{functional ordered specification} is a tuple
+\[
+  \Spec=(I,\InputOrd,O,\OutputOrd,S),
+\]
+where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
+output types, and $S\subseteq I\times O$ is a typed relation that is total on
+$I$ and satisfies the functional dependency from input to output:
+\begin{equation}
+  \forall i\in I\;\exists!o\in O.\ (i,o)\in S.
   \label{eq:functional-specification}
-        \end{equation}
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets, or the
-ordered relational table
-$\Spec=(I,\InputOrd,O,\OutputOrd,S)$ with
-$S=\{(i,f(i)):i\in I\}$.  Thus $S\subseteq I\times O$ contains one permitted
-output for every input.  We call
-$\InputOrd$ the \emph{input-refinement order}: $i\InputOrd j$ means that $j$
-contains at least the input information in $i$.  We call $\OutputOrd$ the
-\emph{output-refinement order}: $o\OutputOrd u$ means that $u$ preserves every
-externally visible claim in $o$ and may add more.
+\end{equation}
+The unique output paired with $i$ defines the function
+$f:(I,\InputOrd)\to(O,\OutputOrd)$, with $S=\{(i,f(i)):i\in I\}$.
+We call $\InputOrd$ the \emph{input-refinement order}: $i\InputOrd j$ means
+that $j$ contains at least the input information in $i$.  We call $\OutputOrd$
+the \emph{output-refinement order}: $o\OutputOrd u$ means that $u$ preserves
+every externally visible claim in $o$ and may add more.
 \end{definition}
 
 These are two separate partial orders.  The input order compares inputs; the
@@ -255,7 +258,8 @@ replaced.
 
 \begin{definition}[Monotonicity]
 \label{def:functional-monotonicity}
-A functional ordered specification $f$ is \emph{monotone} if
+A functional ordered specification $\Spec$, with induced function $f$, is
+\emph{monotone} if
         \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
@@ -272,13 +276,7 @@ arrives.
 \label{sec:determination}
 
 Fix a functional ordered specification
-$\Spec=(I,\InputOrd,O,\OutputOrd,S)$, where $I$ and $O$ are the input and output
-types and $S\subseteq I\times O$ is a typed relation.  It is total on $I$ and
-its input coordinate functionally determines its output coordinate:
-\[
-  \forall i\in I\;\exists!o\in O.\ (i,o)\in S.
-\]
-For $i,k\in I$, write $i\prec_I k$ when $i\InputOrd k$ and $i\neq k$, and
+$\Spec=(I,\InputOrd,O,\OutputOrd,S)$.  For $i,k\in I$, write $i\prec_I k$ when $i\InputOrd k$ and $i\neq k$, and
 write
 \[
   \mathord\uparrow_I i=\{k\in I:i\InputOrd k\}.
@@ -345,7 +343,7 @@ $\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has the same effect as
 $\mathsf{input}(k)$ alone, and $\mathsf{input}(i)$ at $(i,R)$ is the identity.
 
 \paragraph{Commitments and output handling.}
-For $(i,o)\in R$, the final table needed to honor emission of $o$ is
+For $(i,o)\in R$, the canonical output action retains exactly
 \begin{equation}
   R_o=R\mathbin{\upharpoonright_O}o
       =\{(k,u)\in R:o\OutputOrd u\}.
@@ -436,7 +434,8 @@ $i_r\InputOrd j$ for every $r$.
 
 \begin{definition}[Consistency]
 \label{def:consistency}
-An ordered specification is \emph{consistent} when every finite family of runs
+A functional ordered specification is \emph{consistent} when every finite
+family of runs
 under its canonical commitment basis is confluent: if the runs end at states
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of their current
 inputs, one state with current input $j$ is reachable by input and output
