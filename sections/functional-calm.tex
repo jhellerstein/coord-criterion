@@ -317,18 +317,21 @@ specification, removing a row invalidates its input; we call such an action a
 \emph{seal commitment}.
 \end{definition}
 
-Commitments are partial: a system may authorize a commitment only at states
-satisfying an application-specific precondition.  In
+Note that commitments are partial functions: a system design may choose to authorize a commitment
+only at states satisfying an application-specific precondition.  In
 Figure~\ref{fig:election-frames}(d), we defined the poll-closing commitment at
 every state; a different system might authorize it only after some candidate
 has a majority.
 
 A commitment basis therefore describes the authority of a particular system.
-To characterize the behaviors permitted by the specification independently of
+To characterize the behaviors permitted by the specification independent of
 any particular system, we derive a canonical basis from $S$.  It supports every
 permitted output and, when an output requires a commitment, removes only the
 rows incompatible with that output's promise.
 
+
+\begin{definition}[Canonical seal commitment, canonical basis]
+\label{def:canonical-commitment-basis}
 For a state $(i,R)$ and its current row $(i,o)$, retaining the promise made by
 $o$ permits exactly the rows
 \begin{equation}
@@ -337,7 +340,8 @@ $o$ permits exactly the rows
   \label{eq:residual-refining-fibers}
 \end{equation}
 If $R_o\neq R$, reaching $R_o$ removes the sole row at one or more inputs and
-therefore requires a seal commitment.  The \emph{canonical seal commitment}
+therefore requires a seal commitment.  
+The \emph{canonical seal commitment}
 for $(i,R)$ and $o$ is the partial function defined at that state by
 \begin{equation}
   s_{(i,R),o}(i,R)=(i,R_o),
@@ -347,12 +351,13 @@ when $R_o\neq R$.  The \emph{canonical commitment basis}
 $\mathcal B_S^{\mathrm{can}}$ contains every such commitment.  It supplies the
 least restrictive commitment needed to retain the promise made by each
 permitted current output.
-
-The states and commitment bases define the objects and authority of the model.
-We now define the events that change state and emit results.
+\end{definition}
 
 \subsection{Input and output events}
 \label{sec:functional-events}
+
+Given the definitions of our core objects---states and commitment bases---we are
+ready to define the events that change state and emit results.
 
 \paragraph{Input events.}
 For a state $(i,R)$ and valid input $j$ with $i\InputOrd j$, the input event is
