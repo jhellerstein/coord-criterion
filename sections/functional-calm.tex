@@ -389,53 +389,39 @@ $\mathsf{input}(j)$ and then $\mathsf{input}(k)$ has the same effect as applying
 $\mathsf{input}(k)$ directly; $\mathsf{input}(i)$ at $(i,R)$ has no effect.
 
 \paragraph{Output events.}
-A system controls what it tells the outside world.  We want to understand what
-it can safely promise without assuming that clients can tolerate later
-retractions.  We therefore treat an emitted output as something the system
-must stand behind: later outputs may add information, but they must preserve
-its claims according to $\OutputOrd$.  This gives us a clear account of what
-the system can guarantee at each point in an execution.
+A system controls what it tells the outside world.  We study what it can safely
+promise without assuming that clients tolerate retractions.  An emitted output
+must therefore be preserved by later outputs according to $\OutputOrd$.
 
-What does it take for the system to stand behind an output $o$?  At state
-$(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only output
-the system may emit.  Each valid future input $k$ also has a unique output.  If
-that output refines $o$, it honors the promise; otherwise, accepting $k$ would
-violate it.  Before emitting $o$, the system must therefore invalidate every
-such conflicting input using seal commitments.  An output event
+At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
+output the system may emit.  Before doing so, it must invalidate every valid
+future input whose output does not refine $o$.  The output event
 $\mathsf{output}(o)$ applies a finite, possibly empty sequence of seal
-commitments from the system's basis and then emits $o$.  The system may emit
-$o$ only if those commitments leave no behavior that would violate its
-promise.  If applying them transforms $(i,R)$ into $(i,R')$, every remaining
-row $(k,u)\in R'$ must satisfy $o\OutputOrd u$, or equivalently
+commitments from the system's basis and then emits $o$, all atomically.  If the
+commitments leave remainder table $R'$, every remaining row must preserve $o$:
 \begin{equation}
-  R'\subseteq R_o.
+  (k,u)\in R' \quad\Longrightarrow\quad o\OutputOrd u,
+  \qquad\text{or equivalently}\qquad R'\subseteq R_o.
   \label{eq:supported-output-action}
 \end{equation}
-Commitments preserve the current input and map specification states to
-specification states, so $(i,R')$ automatically retains the unique current row
-$(i,o)$.  The commitments and emission occur in one atomic event, and the
-execution records which commitments it applies.
+The execution records which commitments the event applies.
 
-The canonical basis makes the required restriction explicit.  It applies $s_o$
-when $R_o\neq R$ and no commitment when $R_o=R$.  In either case, the event
-reaches exactly $R_o$:
+The canonical event retains exactly the compatible rows:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}(i,R_o).
   \label{eq:output-action}
 \end{equation}
-When $R_o=R$, the output needs no commitment.  We call such an output
-\emph{exposable}.
+It applies $s_o$ when $R_o\neq R$, and no commitment otherwise.
 
 \begin{definition}[Exposable output, functional case]
 \label{def:exposable}
-For a functional specification, the current output $o$ is \emph{exposable} at
-$(i,R)$ when it can be emitted without commitment.  Equivalently, $R_o=R$, or
-$o\OutputOrd f(j)$ at every valid $j\succeq_I i$.
+The current output $o$ is \emph{exposable} at $(i,R)$ when $R_o=R$.
+Equivalently, its output event needs no commitment, or $o\OutputOrd f(j)$ at
+every valid $j\succeq_I i$.
 \end{definition}
 
-The canonical basis does more than give one way to emit each output: it
-supports every output event that any other basis could support, without
-imposing that basis's additional restrictions.
+Finally, the canonical event supports anything a system-specific basis could
+support:
 
 \begin{proposition}[Canonical basis supports every output]
 \label{prop:canonical-output-preservation}
@@ -451,9 +437,7 @@ Equation~\ref{eq:supported-output-action} for every valid output event.
 \end{proof}
 
 Section~\ref{sec:safe-exposure} extends this account with output retirement when
-the functional dependency is removed.  With input and output events now
-defined, we can assemble them into executions and ask whether different paths
-can be reconciled.
+the functional dependency is removed.
 
 \subsection{Executions and consistency}
 \label{sec:determination}
