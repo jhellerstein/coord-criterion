@@ -338,16 +338,21 @@ $o$ permits exactly the rows
       =\{(k,u)\in R:o\OutputOrd u\}.
   \label{eq:residual-refining-fibers}
 \end{equation}
-If $R_o\neq R$, reaching $R_o$ removes the sole row at one or more inputs and
-therefore requires a seal commitment.
-The \emph{canonical seal commitment}
-for $(i,R)$ and $o$ is the partial function defined at that state by
+For each $o\in O$, the \emph{canonical seal commitment} $s_o$ is the partial
+function
 \begin{equation}
-  s_{\sigma,o}(\sigma)=(i,R_o),
+  s_o(i,R)=(i,R_o),
   \label{eq:canonical-seal-commitment}
 \end{equation}
-when $R_o\neq R$.  The \emph{canonical commitment basis} \(\mathcal
-B_S\) is the set of all such commitments.
+defined at every specification state $(i,R)$ where $(i,o)\in R$ and
+$R_o\neq R$.  At such a state, reaching $R_o$ removes the sole row at one or
+more inputs and therefore requires a seal commitment.  The \emph{canonical
+commitment basis} is exactly
+\begin{equation}
+  \mathcal B_S
+    =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}.
+  \label{eq:canonical-commitment-basis}
+\end{equation}
 \end{definition}
 
 \subsection{Input and output events}
@@ -399,7 +404,7 @@ commitments reach $(i,R')$, the event is valid when
 The first condition preserves the current row; the second ensures that every
 remaining future output preserves $o$.
 
-Under the canonical basis, the event applies $s_{\sigma,o}$ when $R_o\neq R$
+Under the canonical basis, the event applies $s_o$ when $R_o\neq R$
 and no commitment when $R_o=R$.  In either case its target is exactly $R_o$:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}(i,R_o).
