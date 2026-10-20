@@ -324,12 +324,10 @@ poll-closing commitment at every state; a different system might authorize it
 only after some candidate has a majority.
 
 A commitment basis therefore describes the authority of a particular system.
-In our proofs, we will also want to characterize the full breadth of commitments
-that \emph{any} application could exert within the constraints of a
-specific specification $S$. To this end, we derive a canonical basis from $S$.  It supports every
-permitted output and, when an output requires a commitment, removes only the
-rows incompatible with that output's promise.
-
+In our proofs, we also need a basis that supports every output permitted by
+$S$, independently of the authority granted to any particular system.  We
+therefore derive a canonical basis from $S$.  For each permitted output, it
+removes exactly the rows incompatible with that output's promise.
 
 \begin{definition}[Canonical seal commitment, canonical basis]
 \label{def:canonical-commitment-basis}
@@ -341,7 +339,7 @@ $o$ permits exactly the rows
   \label{eq:residual-refining-fibers}
 \end{equation}
 If $R_o\neq R$, reaching $R_o$ removes the sole row at one or more inputs and
-therefore requires a seal commitment.  
+therefore requires a seal commitment.
 The \emph{canonical seal commitment}
 for $(i,R)$ and $o$ is the partial function defined at that state by
 \begin{equation}
@@ -349,9 +347,7 @@ for $(i,R)$ and $o$ is the partial function defined at that state by
   \label{eq:canonical-seal-commitment}
 \end{equation}
 when $R_o\neq R$.  The \emph{canonical commitment basis}
-$\mathcal B_S^{\mathrm{can}}$ contains every such commitment.  It supplies the
-least restrictive commitment needed to retain the promise made by each
-permitted current output.
+$\mathcal B_S^{\mathrm{can}}$ contains every such commitment.
 \end{definition}
 
 \subsection{Input and output events}
@@ -401,8 +397,7 @@ commitments reach $(i,R')$, the event is valid when
   \label{eq:supported-output-action}
 \end{equation}
 The first condition preserves the current row; the second ensures that every
-remaining future output preserves $o$.  A noncanonical basis may remove more
-rows than this promise requires.
+remaining future output preserves $o$.
 
 Under the canonical basis, the event applies $s_{(i,R),o}$ when $R_o\neq R$
 and no commitment when $R_o=R$.  In either case its target is exactly $R_o$:
@@ -410,6 +405,21 @@ and no commitment when $R_o=R$.  In either case its target is exactly $R_o$:
   (i,R)\xrightarrow{\mathsf{output}(o)}(i,R_o).
   \label{eq:output-action}
 \end{equation}
+
+\begin{proposition}[Canonical output preservation]
+\label{prop:canonical-output-preservation}
+At every functional specification state $(i,R)$, the canonical basis supports
+an output event for the unique current output $o$, reaching $(i,R_o)$.  If an
+output event for $o$ under any commitment basis reaches $(i,R')$, then
+$R'\subseteq R_o$.  Thus the canonical event preserves every row that any valid
+output event for $o$ could preserve; another basis may only remove additional
+rows.
+\end{proposition}
+
+\begin{proof}
+The canonical transition is defined above, and $R'\subseteq R_o$ is required by
+Equation~\ref{eq:supported-output-action} for every valid output event.
+\end{proof}
 
 \begin{definition}[Exposable output, functional case]
 \label{def:exposable}
