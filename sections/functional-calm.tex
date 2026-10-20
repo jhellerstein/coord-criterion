@@ -172,20 +172,20 @@ retire rows superseded by $o$, and emit $o$.  They occur in one transition.  The
 emission remains explicit in the history because the uncontrolled environment
 may use it when choosing later input.
 
-Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that changes only the output order:
-all outputs are considered incomparable, including $\bot$ representing that no winner emerged.
-At $x\cdot\cdot$, $\bot$ is then incompatible with the
-possible future winners and cannot be emitted without sealing every refinement.
-The figure shows the resulting commitment.  This isolates the Functional CALM
-boundary: under the original monotone order, outputs remain valid as input
-grows; under the equality order, some outputs require commitment before they
-can be emitted.
+Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
+changes only the output order: all outputs are incomparable, including $\bot$
+for no winner.  At $x\cdot\cdot$, $\bot$ is then incompatible with future
+winners.  Emitting it requires sealing those winner-producing refinements; the
+figure shows the stronger, optional action of closing the polls and sealing all
+refinements, including $xy\cdot$, which also outputs $\bot$.  This isolates the
+Functional CALM boundary: under the original monotone order, outputs remain
+valid as input grows; under the equality order, some outputs require commitment
+before they can be emitted.
 
-Input and output actions form a transition system between system states.  A specification
-is \emph{consistent} when paths that receive compatible inputs can still
-converge to the same state.
-Functional CALM proves that a functional specification is consistent exactly
-when it is monotone.
+Input and output actions form a transition system between system states.  A
+specification is \emph{consistent} when paths with compatible inputs can still
+converge after any way of extending all of those inputs.  Functional CALM proves
+that a functional specification is consistent exactly when it is monotone.
 
 The rest of this section formalizes these notions; Figure~\ref{fig:formalism-summary}
 serves as a reference.
