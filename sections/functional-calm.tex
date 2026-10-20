@@ -466,29 +466,27 @@ reconciled?
 \label{def:io-transition-system}
 \label{def:transition-system}
 The \emph{transition system} consists of specification states and the input and
-output events above.  Given a commitment basis $\mathcal B$, a \emph{run under
+output events above.  Fix a commitment basis $\mathcal B$.  A \emph{run under
 $\mathcal B$} is any finite transition sequence from the canonical state
-$\sigma_S(i)$ at some input $i$, whose output events use commitments from
-$\mathcal B$.  We say simply \emph{run} when the basis is clear from context.  A
-\emph{canonical run} is a run whose output events are canonical: each reaches
-$R_o$ as in Equation~\ref{eq:output-action}.
+$\sigma_S(i)$ at some input $i$; its output events may use only commitments
+from $\mathcal B$.  We say simply \emph{run} when the basis is clear.  A
+\emph{canonical run} is a run under $\mathcal B_S$ in which every output event
+takes the canonical transition of Equation~\ref{eq:output-action} and hence
+reaches $R_o$.
 \label{def:run}
 \end{definition}
 
-Proposition~\ref{prop:canonical-output-preservation} extends event by event:
-every finite run under any commitment basis can be replayed as a canonical run
-with the same input and output labels.  After each corresponding event, the
-canonical run retains every row retained by the original run.  Input
-events preserve inclusion between remainder tables; for output events, the
-original target is contained in $R_o$, which is in turn contained in the
-canonical target computed from the larger remainder table.
+The preceding proposition extends event by event.  Every finite run under any
+commitment basis can be replayed as a canonical run with the same input and
+output labels.
+After each corresponding event, the canonical run retains every row retained
+by the original run.  Input events preserve inclusion between remainder
+tables; an output target is contained in $R_o$, which is in turn contained in
+the canonical target computed from the larger remainder table.
 
-A specification state is \emph{run-generated under $\mathcal B$} when it is
-reachable by a run under $\mathcal B$.  This is a provenance condition, not
-another local invariant on a remainder table.  For canonical runs, the effect
-of an entire run has a simple form: input events discard incompatible
-histories, while output events retain only rows whose outputs preserve what has
-been emitted.
+For canonical runs, the effect of an entire run has a simple form: input
+events discard incompatible histories, while output events retain only rows
+whose outputs preserve what has been emitted.
 
 \begin{lemma}[Rows remaining after a canonical run]
 \label{lem:run-residual}
@@ -520,11 +518,10 @@ an input $j$ with $i_r\InputOrd j$ for every $r$.
 \begin{definition}[Consistency]
 \label{def:consistency}
 A functional ordered specification is \emph{consistent} when every finite
-family of canonical runs is confluent under the canonical basis: if the runs
-end at states $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of
-their current inputs, one state with current input $j$ is reachable by
-canonical continuations from each endpoint.  The runs are then \emph{confluent
-at} $j$.
+family of canonical runs is confluent: if the runs end at states
+$(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of their current
+inputs, canonical continuations from every endpoint reach one state with
+current input $j$.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
 Consistency quantifies over endpoints of canonical runs, not arbitrary
@@ -558,16 +555,16 @@ starting run.
 
 A single canonical run can witness inconsistency: an output event for one
 permitted output may remove every row at a refinement of its current input.
-Consistency describes
-no protocol and promises no delivery or termination; Section~\ref{sec:discussion}
+Consistency describes no protocol and promises no delivery or termination;
+Section~\ref{sec:discussion}
 returns to this.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
-Consistency is a property of entire runs, while monotonicity is a local
-condition on pairs of inputs.  Functional CALM shows that these two views
-coincide.
+Consistency is a property of families of canonical runs, while monotonicity
+is a local condition on pairs of inputs.  Functional CALM shows that these two
+views coincide.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
@@ -581,8 +578,7 @@ ending at input $i$ retains $(k,f(k))$ at $k\succeq_I i$ exactly when every outp
 $f(i_\ell)$ emitted on the run satisfies $f(i_\ell)\OutputOrd f(k)$.  By
 Proposition~\ref{prop:confluence}, a finite family of canonical runs is
 confluent at a common refinement $k$ exactly when every output emitted on any
-run lies below
-$f(k)$.  If $f$ is monotone this holds because each emitted $f(i_\ell)$ has
+run lies below $f(k)$.  If $f$ is monotone this holds because each emitted $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
 $f(i)\not\OutputOrd f(k)$; the canonical run that starts at
 $\sigma_S(i)$ and emits $f(i)$ has no row at $k$ and cannot advance to its

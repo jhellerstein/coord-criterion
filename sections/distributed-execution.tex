@@ -19,15 +19,14 @@ Their transitive closure is the familiar \emph{happens-before} relation.
 A \emph{consistent cut} is a snapshot of this history that never includes a
 receive without the events that causally precede it.  Because the input and
 output events of Section~\ref{sec:functional-events} are atomic, the events at any
-such cut project to one run for each participant under the history's commitment
-basis.  Messages explain
-how a participant learned something; its projected run records only how that
-information changed the specification state.
+such cut project to one run per participant under the history's commitment
+basis.  Messages explain how a participant learned something; its projected
+run records only how that information changed the specification state.
 
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
 Fix an ordered specification, a finite participant set $P$, initial input $i_p$
-for each participant, a commitment basis, and a message set
+for each participant, a commitment basis $\mathcal B$, and a message set
 $M\subseteq(I\cup\{\mathsf{none}\})\times(D\cup\{\mathsf{none}\})$, where $D$
 is arbitrary strategy data.  A \emph{distributed history} $H$ consists of a
 finite set of events with:
@@ -40,7 +39,9 @@ finite set of events with:
   \item for each receive, a matching send at another participant.
 \end{enumerate}
 An output event atomically applies its commitments and retirements and emits its
-label.  A \emph{consistent cut} $C$ is a subset of events closed under
+label.  The history is \emph{canonical} when its commitment basis is
+$\mathcal B_S$ and all of its output events are canonical.  A \emph{consistent
+cut} $C$ is a subset of events closed under
 happens-before~\cite{chandy1985distributed}.  (This standard use of
 ``consistent'' is unrelated to consistency as confluence.)
 \end{definition}
@@ -151,9 +152,8 @@ $\pi_p(C)$.  The \emph{state endpoint} of the cut is the vector
   \label{eq:semantic-endpoint}
         \end{equation}
 Because input and output events are atomic transitions, every transition
-projection is a run under the history's commitment basis.  We call a history
-\emph{canonical} when all of its output events are canonical; its transition
-projections are then canonical runs.
+projection is a run under $\mathcal B$.  If the history is canonical, its
+projections are canonical runs.
 \end{definition}
 
 At both cuts in Figure~\ref{fig:history-projection}, each local projection is
@@ -176,11 +176,12 @@ states $(\sigma_p(C))_{p\in P}$.  Confluence asks whether their local paths can
 be brought to the same later specification state at every input that combines
 their current inputs.  Formally, let $j$ be a common refinement of the
 participant inputs at $C$.  The history $H$ is \emph{confluent at $C$ and $j$}
-when it has a further extension using input and output events in which every
+when it has a further extension under the same basis in which every
 participant reaches the same specification state $\sigma_j=(j,R)$;
-equivalently, the new cut has state endpoint $(\sigma_j)_{p\in P}$.  This is
-an existence claim about transitions, not a claim that a protocol delivers
-$j$, communicates, or terminates.
+equivalently, the new cut has state endpoint $(\sigma_j)_{p\in P}$.  If $H$
+is canonical, this extension must remain canonical.  This is an existence
+claim about transitions, not a claim that a protocol delivers $j$,
+communicates, or terminates.
 
 \subsection{Distributed Consistency}
 \label{sec:distributed-consistency}
@@ -213,8 +214,8 @@ At any cut of a canonical history, the projections are a finite set of
 canonical runs, so Consistency implies their confluence from those endpoints.
 Conversely, place any finite set of canonical runs in a message-free history,
 one per participant; every input event in a run is already a cumulative
-$\mathsf{input}(j)$ event.  Distributed Consistency at the final cut gives run
-confluence.
+$\mathsf{input}(j)$ event.  Distributed Consistency at the final cut gives
+their confluence.
 \end{proof}
 
 Combining Proposition~\ref{prop:distributed-consistency} with Functional CALM,
