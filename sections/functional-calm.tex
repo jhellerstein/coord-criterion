@@ -206,7 +206,7 @@ serves as a reference.
     \textbf{Shared state and input} & & \\
     \midrule
     specification state & $(i,R)$: \ current input $i$ and remainder table $R\subseteq S$ & Def.~\ref{def:residual-state} \\
-    initial state & $\sigma_0(i)=(i,\{(k,o)\in S:i\InputOrd k\})$ & Eq.~\ref{eq:canonical-initial-state} \\
+    canonical state & $\sigma_S(i)=(i,\{(k,o)\in S:i\InputOrd k\})$ & Eq.~\ref{eq:canonical-state} \\
     input event & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,R\mathbin{\upharpoonright_I}j)$ & Def.~\ref{def:io-transition-system} \\
     \addlinespace
     \textbf{Output handling} & & \\
@@ -296,11 +296,11 @@ An input $k$ is \emph{valid} in $\sigma$ when $R$ contains a row at $k$, and
 otherwise \emph{invalid}.
 \end{definition}
 
-Rows are never added during execution.  For each input $i$, the \emph{canonical initial
-state} retains all rows at $i$ and its refinements:
+Rows are never added during execution.  For each input $i$, the \emph{canonical
+state at $i$} retains all rows at $i$ and its refinements:
 \begin{equation}
-  \sigma_0(i)=\bigl(i,\ \{(k,o)\in S:\ i\InputOrd k\}\bigr).
-  \label{eq:canonical-initial-state}
+  \sigma_S(i)=\bigl(i,\ \{(k,o)\in S:\ i\InputOrd k\}\bigr).
+  \label{eq:canonical-state}
 \end{equation}
 
 The specification and its states say which behaviors are possible, but not
@@ -394,8 +394,8 @@ whether paths through the specification can be reconciled.
 \label{def:io-transition-system}
 \label{def:transition-system}
 The \emph{transition system} consists of specification states and the input and
-output events above.  A \emph{run} is any finite transition sequence from a
-canonical initial state $\sigma_0(i)$.  Unless stated otherwise, runs use the
+output events above.  A \emph{run} is any finite transition sequence from the canonical state
+$\sigma_S(i)$ at some input $i$.  Unless stated otherwise, runs use the
 canonical commitment basis.
 \label{def:run}
 \end{definition}
@@ -406,7 +406,7 @@ table.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
-A run starts at $\sigma_0(i_0)$, ends at $(i,R)$, and contains output events
+A run starts at the canonical state $\sigma_S(i_0)$, ends at $(i,R)$, and contains output events
 emitting $o_1,\ldots,o_m$.  Its final state is
 \begin{equation}
   \left(i,\ \left\{(k,x)\in S:
@@ -488,7 +488,7 @@ Proposition~\ref{prop:confluence}, a finite family of runs is confluent at a
 common refinement $k$ exactly when every output emitted on any run lies below
 $f(k)$.  If $f$ is monotone this holds because each emitted $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
-$f(i)\not\OutputOrd f(k)$; the run that starts at $\sigma_0(i)$ and emits
+$f(i)\not\OutputOrd f(k)$; the run that starts at $\sigma_S(i)$ and emits
 $f(i)$ has no row at $k$ and cannot advance to its own refinement $k$.
 \end{proof}
 
@@ -565,7 +565,7 @@ since its output actions use no commitments and retire no rows.  If
 its current input is $i$, then the only output paired with $i$ is $f(i)$, and
 every valid $j\succeq_I i$ has $f(i)\OutputOrd f(j)$, so $f(i)$ is exposable.
 Conversely, suppose every output at every commitment-free reachable state is
-exposable.  At $\sigma_0(i)$, exposability of $f(i)$ preserves the row
+exposable.  At $\sigma_S(i)$, exposability of $f(i)$ preserves the row
 $(j,f(j))$ for each $j\succeq_I i$, so $f(i)\OutputOrd f(j)$ and $f$ is
 monotone.
 \end{proof}
