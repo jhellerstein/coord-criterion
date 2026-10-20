@@ -268,7 +268,9 @@ $R\subseteq I\times O$, we select rows by writing a predicate on its two
 columns in square brackets: $R[\mathrm{in}\succeq_I j]$ is the table of rows
 whose input refines $j$, $R[\mathrm{out}\succeq_O o]$ is the table of rows
 whose output refines $o$, and $R[\mathrm{in}=k]$ and $R[\mathrm{in}\in K]$ are
-the tables of rows at $k$ and at inputs in $K$.  A selection is again a table.
+the tables of rows at $k$ and at inputs in $K$.  Commas separate conjuncts:
+$R[\mathrm{in}\succeq_I j,\ \mathrm{out}\succeq_O o]$ is the table of rows
+satisfying both predicates.  A selection is again a table.
 To project onto a single column, we write $\mathrm{in}(R)$ and
 $\mathrm{out}(R)$ for the sets of inputs and outputs that appear in $R$, and
 $R(k)=\mathrm{out}(R[\mathrm{in}=k])$ for the \emph{fiber} of $R$ at $k$.
@@ -469,31 +471,30 @@ reaches $R[\mathrm{out}\succeq_O o]$.
 \label{def:run}
 \end{definition}
 
-For canonical runs, the effect of an entire run has a simple form: input
-events discard incompatible histories, while output events retain only rows
-whose outputs preserve what has been emitted.
+Under the canonical basis, a run's state has a simple description.  Input
+events keep only rows at or above the current input, and output events keep
+only rows that preserve what has been emitted.  Both steps are selections, and
+selections commute.  So the remainder table depends only on the current input
+and the outputs emitted so far, not on the order of events or the inputs
+passed through along the way.
 
 \begin{lemma}[Rows remaining after a canonical run]
 \label{lem:run-residual}
-A canonical run starts at the canonical state $\sigma_S(i_0)$, ends at
-$(i,R)$, and contains output events emitting $o_1,\ldots,o_m$.  Its final state
-is
+If a canonical run ends at current input $i$ after emitting
+$o_1,\ldots,o_m$, its remainder table is
 \begin{equation}
-  \left(i,\ \left\{(k,x)\in S:
-    \begin{array}{l}
-      i\InputOrd k,\ \text{and}\\
-      o_\ell\OutputOrd x\ \text{for every }\ell=1,\ldots,m
-    \end{array}
-  \right\}\right).
+  S[\mathrm{in}\succeq_I i,\ \mathrm{out}\succeq_O o_1,\ \ldots,\
+    \mathrm{out}\succeq_O o_m],
   \label{eq:run-residual}
 \end{equation}
+the rows at or above $i$ whose outputs refine every emitted output.
 \end{lemma}
 
 \begin{proof}
-Each input event intersects $R$ with $\{(k,x):j\InputOrd k\}$ and each
-canonical output event with $\{(k,x):o\OutputOrd x\}$.  These intersections
-commute, and the input restrictions compose to the restriction at the final
-input $i$.
+The run starts at $S[\mathrm{in}\succeq_I i_0]$.  Each input event adds a
+conjunct $\mathrm{in}\succeq_I j$ and each canonical output event a conjunct
+$\mathrm{out}\succeq_O o$; since inputs only grow, the input conjuncts reduce to
+the last one, $\mathrm{in}\succeq_I i$.
 \end{proof}
 
 To compare runs that end at different inputs, we extend those inputs to a
@@ -547,7 +548,7 @@ at $j$ if and only if some row at $j$ survives in every final state,
 \end{equation}
 For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
 every endpoint to the state
-$\bigl(j,\{(k,x)\in S:j\InputOrd k,\ u\OutputOrd x\}\bigr)$.
+$\bigl(j,\ S[\mathrm{in}\succeq_I j,\ \mathrm{out}\succeq_O u]\bigr)$.
 \end{proposition}
 
 \begin{proof}
