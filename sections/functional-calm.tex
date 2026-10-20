@@ -90,7 +90,7 @@ emitted without commitment.
   Gray: the row has been retired by an input event.
   Struck through: the row has been removed by a commitment; no remaining row
   preserves its contents.  Panels (b) and (c) follow input events; panel (d)
-  follows an output action for $\bot$ that contains a seal commitment.}
+  follows an output event for $\bot$ that contains a seal commitment.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -183,7 +183,7 @@ Functional CALM boundary: under the original monotone order, outputs remain
 valid as input grows; under the equality order, some outputs require commitment
 before they can be emitted.
 
-Input and output actions form a transition system between system states.  A
+Input and output events form a transition system between system states.  A
 specification is \emph{consistent} when paths with compatible inputs can still
 converge after any way of extending all of those inputs.  Functional CALM proves
 that a functional specification is consistent exactly when it is monotone.
@@ -211,10 +211,10 @@ serves as a reference.
     \addlinespace
     \textbf{Output handling} & & \\
     \midrule
-    output action & commitments and retirements, then emit $o$ & Eq.~\ref{eq:output-action} \\
-    canonical commitment basis & supports every permitted output action & Sec.~\ref{sec:functional-specifications} \\
-    exposable output & output action uses no commitment & Def.~\ref{def:exposable} \\
-    run & finite input and output actions & Def.~\ref{def:run} \\
+    output event & commitments and retirements, then emit $o$ & Eq.~\ref{eq:output-action} \\
+    canonical commitment basis & supports every permitted output event & Sec.~\ref{sec:functional-specifications} \\
+    exposable output & output event uses no commitment & Def.~\ref{def:exposable} \\
+    run & finite input and output events & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
@@ -223,7 +223,7 @@ serves as a reference.
     \bottomrule
   \end{tabular}
   \caption{Reference for Functional CALM: one transition system embeds the
-  declarative specification and commitment basis in atomic input/output actions.}
+  declarative specification and commitment basis in atomic input/output events.}
   \label{fig:formalism-summary}
 \end{figure*}
 
@@ -491,7 +491,9 @@ $R_o\subseteq\widehat R_o$; the canonical event reaches $\widehat R_o$.
 
 A specification state is \emph{run-generated} when it is reachable by a run.
 This is a provenance condition, not another local invariant on a remainder
-table.
+table.  Under the canonical basis, the effect of an entire run has a simple
+form: input events discard incompatible histories, while output events retain
+only rows whose outputs preserve what has been emitted.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -515,8 +517,9 @@ commute, and the input restrictions compose to the restriction at the final
 input $i$.
 \end{proof}
 
-A \emph{common refinement} of inputs $i_1,\ldots,i_k$ is an input $j$ with
-$i_r\InputOrd j$ for every $r$.
+To compare runs that end at different inputs, we extend those inputs to a
+common refinement.  A \emph{common refinement} of inputs $i_1,\ldots,i_k$ is
+an input $j$ with $i_r\InputOrd j$ for every $r$.
 
 \begin{definition}[Consistency]
 \label{def:consistency}
@@ -564,6 +567,10 @@ returns to this.
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
+Consistency is a property of entire runs, while monotonicity is a local
+condition on pairs of inputs.  Functional CALM shows that these two views
+coincide.
+
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
 A functional ordered specification is consistent if and only if it is
@@ -601,15 +608,14 @@ the semilattice order~\cite{shapiro2011crdt};
 Sections~\ref{sec:query-instance} and~\ref{sec:crdt-instance} take up both
 instances.
 
-\subsection{Output actions and exposability}
+\subsection{Output events and exposability}
 \label{sec:canonical-transition-system}
 
-The canonical commitment basis used above exercises every output the
-specification permits; it does not claim that every implementation supports
-every output event.  An implementation supplies its own basis and can take an
-output event only when commitments in that basis produce the required effect.
-We now relate commitment-free exposure to determination, strategy, and
-monotonicity.
+Having defined exposability for output events, we now relate it to
+determination and monotonicity, while separating the specification-level
+boundary from the strategy of a particular system.  The canonical basis
+exercises every output the specification permits; an implementation supplies
+its own basis and may support fewer output events.
 
 For $R\subseteq S$, the \emph{upper fiber} at $i$ collects outputs at $i$ and
 its still-valid refinements:
@@ -633,8 +639,8 @@ valid.  A sealed functional state is determined.  Commitments that produce such
 a state make it commitment-resolved, although determination need not seal every
 strict refinement at once.
 
-A system's \emph{strategy} chooses input and output actions, including which
-commitments from its basis an output action applies, using the specification
+A system's \emph{strategy} chooses input and output events, including which
+commitments from its basis an output event applies, using the specification
 and any additional strategy state.  Strategy state is not part of the
 specification state and affects the remainder table only through the selected
 transitions.
@@ -647,7 +653,7 @@ every state reachable without commitment is exposable.
 
 \begin{proof}
 If $f$ is monotone, a commitment-free state has lost rows only to input events,
-since its output actions use no commitments and retire no rows.  If
+since its output events use no commitments and retire no rows.  If
 its current input is $i$, then the only output paired with $i$ is $f(i)$, and
 every valid $j\succeq_I i$ has $f(i)\OutputOrd f(j)$, so $f(i)$ is exposable.
 Conversely, suppose every output at every commitment-free reachable state is
@@ -658,7 +664,7 @@ monotone.
 
 Functional CALM and this proposition give the operational boundary.  A
 monotone functional specification can emit every current output without a
-commitment.  If monotonicity fails at $i\prec_I k$, the canonical output action
+commitment.  If monotonicity fails at $i\prec_I k$, the canonical output event
 for $f(i)$ includes a commitment that removes the conflicting row at $k$.
 
 Historically, CALM stands for \emph{Consistency As Logical Monotonicity}, and
