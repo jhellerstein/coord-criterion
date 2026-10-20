@@ -317,11 +317,11 @@ specification, removing a row invalidates its input; we call such an action a
 \emph{seal commitment}.
 \end{definition}
 
-Note that commitments are partial functions: a system design may choose to authorize a commitment
-only at states satisfying an application-specific precondition.  In
-Figure~\ref{fig:election-frames}(d), we defined the poll-closing commitment at
-every state; a different system might authorize it only after some candidate
-has a majority.
+Note that commitments are partial functions:  a system may be designed to
+authorize a commitment only at states satisfying an application-specific
+precondition.  For example, in Figure~\ref{fig:election-frames}(d), we defined the
+poll-closing commitment at every state; a different system might authorize it
+only after some candidate has a majority.
 
 A commitment basis therefore describes the authority of a particular system.
 To characterize the behaviors permitted by the specification independent of
@@ -356,7 +356,7 @@ permitted current output.
 \subsection{Input and output events}
 \label{sec:functional-events}
 
-Given the definitions of our core objects---states and commitment bases---we are
+With the definitions of our core objects now in hand, we are
 ready to define the events that change state and emit results.
 
 \paragraph{Input events.}
@@ -368,11 +368,18 @@ For a state $(i,R)$ and valid input $j$ with $i\InputOrd j$, the input event is
   R\mathbin{\upharpoonright_I}j=\{(k,u)\in R:\ j\InputOrd k\}.
   \label{eq:input-event}
 \end{equation}
-It makes $j$ current and retires every row whose input does not refine $j$.
+It makes $j$ current and \emph{retires} every row whose input does not refine $j$.
 
 An input event records a new cumulative input $j$, not how $j$ was assembled.
-The framework does not require cumulative inputs to come from a least common
-refinement or a lattice, only that they grow according to $\InputOrd$.  Applying
+The accumulation of inputs is handled outside the scope of our discussion.
+Our framework does not require cumulative inputs to come from a least common
+refinement or a lattice, only that they grow according to $\InputOrd$.  For example,
+interleavings of two sequences (e.g., schedules from two independent transactions sharing
+no variables) form a partial order, but not a lattice---they have many incomparable
+refinements, rather than one distinguished least common refinement. This poses no
+difficulty in our framework.
+
+Because inputs are cumulative, applying
 $\mathsf{input}(j)$ and then $\mathsf{input}(k)$ has the same effect as applying
 $\mathsf{input}(k)$ directly; $\mathsf{input}(i)$ at $(i,R)$ has no effect.
 
