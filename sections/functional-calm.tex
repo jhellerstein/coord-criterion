@@ -271,37 +271,18 @@ arrives.
 \subsection{The transition system}
 \label{sec:determination}
 
-Section~\ref{sec:election-story} previewed the model that embeds the declarative
-specification and a system commitment basis in one transition system with input
-and output actions.  Its state is a specification state.  An input action
-records a
-cumulative input supplied by the environment.  An atomic output action prepares
-its result by removing rows for reasons of commitment or retirement, then emits
-that result.  The action records whether it used a commitment, and the
-environment may use its emitted output to choose a later input.
-
-\paragraph{The specification and remainder tables.}
-The relation $S\subseteq I\times O$, with the functional dependency that
-inputs determine outputs, is the \emph{specification table}; its rows
-are the pairs $(i,f(i))$, one at each input.  During a run, $R\subseteq S$ is
-the \emph{remainder table}; it records the rows not yet removed.  No action
-adds a row.
-
-Inputs are \emph{cumulative}: an input is everything seen so far, and
-$i\InputOrd j$ means that $j$ contains at least the information in $i$.  This
-is a requirement on representation, not on application-level effect.  Every
-change must be represented by adding information to the input, even when its
-meaning invalidates an earlier conclusion.  Thus a correction records both the
-original assertion and its correction, a retraction records the assertion and
-its withdrawal, and a conflict records both sides.  The framework otherwise
-uses only the elements of $I$, their refinement order, and the outputs paired
-with each input.  Write
-$k\prec_I i$ when $k\InputOrd i$ and $k\neq i$, and
-$\mathord\uparrow_I i=\{j\in I:i\InputOrd j\}$ for the refinements of $i$.
-
-\paragraph{States.}
-A state pairs the current input with a remainder table.  Every panel of
-Figure~\ref{fig:election-frames} is such a state.
+Fix a functional ordered specification
+$\Spec=(I,\InputOrd,O,\OutputOrd,S)$, where $I$ and $O$ are the input and output
+types and $S\subseteq I\times O$ is a typed relation.  It is total on $I$ and
+its input coordinate functionally determines its output coordinate:
+\[
+  \forall i\in I\;\exists!o\in O.\ (i,o)\in S.
+\]
+For $i,k\in I$, write $i\prec_I k$ when $i\InputOrd k$ and $i\neq k$, and
+write
+\[
+  \mathord\uparrow_I i=\{k\in I:i\InputOrd k\}.
+\]
 
 \begin{definition}[Specification state]
 \label{def:residual-state}
@@ -316,29 +297,25 @@ The specification-state space is
   \right\}.
   \label{eq:specification-state-space}
 \end{equation}
-A \emph{specification state} is an element $\sigma=(i,R)\in\Sigma_S$.
-The first condition requires a row at the \emph{current input} $i$,
-\begin{equation}
-  (i,o)\in R\quad\text{for some }o,
-  \label{eq:current-input-validity}
-\end{equation}
-and the second requires every remaining row to lie at a refinement of $i$,
-\begin{equation}
-  (k,o)\in R\quad\Longrightarrow\quad i\InputOrd k.
-  \label{eq:retired-input-absence}
-\end{equation}
-An input $k$ is \emph{valid} when $R$ has a row at $k$, and otherwise
-\emph{invalid}.
+For $\sigma=(i,R)\in\Sigma_S$, $i$ is the \emph{current input} and $R$ is the
+\emph{remainder table}.  An input $k$ is \emph{valid} in $\sigma$ when
+$(k,o)\in R$ for some $o$, and otherwise \emph{invalid}.
 \end{definition}
 
-Valid inputs above the current input are its still-admissible refinements.  For
-an input $i$, the \emph{canonical initial state} is
+Thus a remainder table is a subrelation of $S$ with a row at its current input
+and rows only at refinements of that input.  No transition adds a row.  The
+input order is interpreted cumulatively: $i\InputOrd j$ means that $j$ contains
+at least the input information in $i$.  This is a requirement on representation,
+not on application-level effect; a representation may accumulate corrections,
+retractions, or conflicts even when their interpretation revises an earlier
+conclusion.
+
+For each input $i$, the \emph{canonical initial state} is
         \begin{equation}
-  \sigma_0(i)=\bigl(i,\ \{(k,o)\in S:\ i\InputOrd k\}\bigr),
+  \sigma_0(i)=\bigl(i,\ \{(k,o)\in S:\ i\InputOrd k\}\bigr).
   \label{eq:canonical-initial-state}
         \end{equation}
-the specification table restricted to $i$ and its refinements.
-Figure~\ref{fig:election-frames}(a) shows $\sigma_0(x\cdot\cdot)$.
+It retains the rows of $S$ at $i$ and its refinements.
 
 \paragraph{Input events.}
 For $j\in I$ with $i\InputOrd j$, an input event makes $j$ current and removes
