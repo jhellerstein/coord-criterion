@@ -471,10 +471,9 @@ reaches $R[\mathrm{out}\succeq_O o]$.
 \label{def:run}
 \end{definition}
 
-Under the canonical basis, a run's state has a simple description.  Input
-events keep only rows at or above the current input, and output events keep
-only rows that preserve what has been emitted.  Both steps are selections, and
-selections commute.  So the remainder table depends only on the current input
+A canonical run's state has a simple description.  Input events keep only rows
+at or above the current input, and output events keep only rows that preserve
+what has been emitted.  Both steps are selections, and selections commute.  So the remainder table depends only on the current input
 and the outputs emitted so far, not on the order of events or the inputs
 passed through along the way.
 
@@ -491,7 +490,8 @@ the rows at or above $i$ whose outputs refine every emitted output.
 \end{lemma}
 
 \begin{proof}
-The run starts at $S[\mathrm{in}\succeq_I i_0]$.  Each input event adds a
+The run starts at a canonical state $\sigma_S(i_0)$, whose remainder table is
+$S[\mathrm{in}\succeq_I i_0]$.  Each input event adds a
 conjunct $\mathrm{in}\succeq_I j$ and each canonical output event a conjunct
 $\mathrm{out}\succeq_O o$; since inputs only grow, the input conjuncts reduce to
 the last one: $\mathrm{in}\succeq_I i$.
@@ -506,8 +506,8 @@ an input $j$ with $i_r\InputOrd j$ for every $r$.
 A functional ordered specification is \emph{consistent} when every finite
 family of canonical runs is confluent: if the runs end at states
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of their current
-inputs, canonical continuations from every endpoint reach one state with
-current input $j$.  The runs are then \emph{confluent at} $j$.
+inputs, each run can be extended by further canonical events to one common
+state with current input $j$.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
 Consistency quantifies only over canonical runs.  To see that this restriction
@@ -526,17 +526,22 @@ each event, the canonical run's remainder table contains the original run's.
 \end{lemma}
 
 \begin{proof}
-By induction on the events. Before each event, let \(R\) be the original run's
-remainder table and \(\widehat R\) the canonical run's, and assume
-\(R\subseteq\widehat R\). An input event valid at \(R\) is valid at \(\widehat R\),
-and selecting rows preserves the inclusion.   For an output event taking $R$ to
-$R'$, Equation~\ref{eq:supported-output-action} gives $R'\subseteq
-R[\mathrm{out}\succeq_O o]\subseteq\widehat R[\mathrm{out}\succeq_O o]$, which
-is where the canonical event takes $\widehat R$.
+By induction on the events.  Both runs start at the same canonical state, so
+their remainder tables are initially equal.  Suppose that before some event the
+original run's table $R$ and the canonical run's table $\widehat R$ satisfy
+$R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input
+event valid at $R$ is valid at $\widehat R$, and selecting rows preserves the
+inclusion.  For an output event taking $R$ to $R'$,
+Equation~\ref{eq:supported-output-action} gives
+$R'\subseteq R[\mathrm{out}\succeq_O o]\subseteq\widehat R[\mathrm{out}\succeq_O o]$,
+which is where the canonical event takes $\widehat R$.
 \end{proof}
 
 This is why Consistency uses the canonical basis rather than a system's own: a
 weaker basis could hide non-monotonicity by disabling a conflicting output.
+
+Confluence itself has a simple test: the runs must share a surviving row at the
+common refinement.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
@@ -557,15 +562,14 @@ every $R_r$.  Conversely, let $(j,u)$ belong to every $R_r$.  Then
 $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ refines every output
 emitted on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
-same lemma leaves exactly the rows of $S$ above $j$ and $u$, independent of the
-starting run.
+same lemma leaves exactly $S[\mathrm{in}\succeq_I j,\ \mathrm{out}\succeq_O u]$,
+independent of the starting run.
 \end{proof}
 
 A single canonical run can witness inconsistency: an output event for one
 permitted output may remove every row at a refinement of its current input.
 Consistency describes no protocol and promises no delivery or termination;
-Section~\ref{sec:discussion}
-returns to this.
+Section~\ref{sec:discussion} returns to this.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
