@@ -300,6 +300,10 @@ state} retains all rows at $i$ and its refinements:
   \label{eq:canonical-initial-state}
 \end{equation}
 
+The specification and its states say which behaviors are possible, but not
+which possibilities the system is authorized to rule out.  That authority is a
+separate part of the model.
+
 \begin{definition}[Commitment basis]
 \label{def:commitment-basis}
 A \emph{commitment} is a partial function on specification states that preserves
@@ -309,6 +313,10 @@ $\mathcal B$ is a set of commitments available to a system.  In a functional
 specification, removing a row invalidates its input; we call such an action a
 \emph{seal commitment}.
 \end{definition}
+
+To define a standard transition system for the specification, we use a
+canonical basis that can support every permitted output while removing no more
+rows than its promise requires.
 
 For a state $(i,R)$ and its current row $(i,o)$, retaining the promise made by
 $o$ permits exactly the rows
@@ -328,6 +336,9 @@ when $R_o\neq R$.  The \emph{canonical commitment basis}
 $\mathcal B_S^{\mathrm{can}}$ contains every such commitment.  It supplies the
 least restrictive commitment needed to retain the promise made by each
 permitted current output.
+
+The states and commitment bases define the objects and authority of the model.
+We now define the events that change state and emit results.
 
 \subsection{Input and output events}
 \label{sec:functional-events}
@@ -369,6 +380,9 @@ and no commitment when $R_o=R$.  In either case its target is exactly $R_o$:
 The event and its row removals are atomic, and the execution records the
 commitments it applies.  Section~\ref{sec:safe-exposure} extends output events
 with output retirement when the functional dependency is removed.
+
+With states, authority, and events defined, we can assemble executions and ask
+whether paths through the specification can be reconciled.
 
 \subsection{Executions and consistency}
 \label{sec:determination}
