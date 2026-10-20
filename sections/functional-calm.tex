@@ -261,16 +261,17 @@ order compares outputs.  Either may be the \emph{equality order}, under which an
 element refines only itself.
 
 \paragraph{Relational notation.}
-Because a specification is a table, we read it, and the smaller tables derived
-from it below, with a compact relational notation.  For any table
-$T\subseteq I\times O$, we select rows by writing a predicate on its two
-columns in square brackets: $T[\mathrm{in}\succeq_I j]$ is the table of rows
-whose input refines $j$, $T[\mathrm{out}\succeq_O o]$ is the table of rows
-whose output refines $o$, and $T[\mathrm{in}=k]$ and $T[\mathrm{in}\in K]$ are
+Specifications are relations, and we will benefit from a compact relational notation
+in our discussion.
+For any relation
+$R\subseteq I\times O$, we select rows by writing a predicate on its two
+columns in square brackets: $R[\mathrm{in}\succeq_I j]$ is the table of rows
+whose input refines $j$, $R[\mathrm{out}\succeq_O o]$ is the table of rows
+whose output refines $o$, and $R[\mathrm{in}=k]$ and $R[\mathrm{in}\in K]$ are
 the tables of rows at $k$ and at inputs in $K$.  A selection is again a table.
-To project onto a single column, we write $\mathrm{in}(T)$ and
-$\mathrm{out}(T)$ for the sets of inputs and outputs that appear in $T$, and
-$T(k)=\mathrm{out}(T[\mathrm{in}=k])$ for the \emph{fiber} of $T$ at $k$.
+To project onto a single column, we write $\mathrm{in}(R)$ and
+$\mathrm{out}(R)$ for the sets of inputs and outputs that appear in $R$, and
+$R(k)=\mathrm{out}(R[\mathrm{in}=k])$ for the \emph{fiber} of $R$ at $k$.
 
 \begin{definition}[Monotonicity]
 \label{def:functional-monotonicity}
@@ -405,8 +406,8 @@ $\mathsf{output}(o)$ applies a finite, possibly empty sequence of seal
 commitments from the system's basis and then emits $o$, all atomically.  If the
 commitments leave remainder table $R'$, every remaining row must preserve $o$:
 \begin{equation}
-  (k,u)\in R' \quad\Longrightarrow\quad o\OutputOrd u,
-  \qquad\text{or equivalently}\qquad R'\subseteq R[\mathrm{out}\succeq_O o].
+  (k,u)\in R' \Longrightarrow o\OutputOrd u,
+  \quad\text{or equivalently}\quad R'\subseteq R[\mathrm{out}\succeq_O o].
   \label{eq:supported-output-action}
 \end{equation}
 The execution records which commitments the event applies.
