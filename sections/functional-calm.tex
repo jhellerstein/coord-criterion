@@ -317,14 +317,17 @@ specification, removing a row invalidates its input; we call such an action a
 \emph{seal commitment}.
 \end{definition}
 
-Note that commitments are \emph{partial} functions: application logic may require commitments
-that are undefined at some states. In the example of Figure~{fig:election-frames} panel~(d), 
-we defined the poll-closing commitment to be defined at every state; however, a different 
-commitment basis might only define poll-closing commitments at states with a majority.
+Commitments are partial: a system may authorize a commitment only at states
+satisfying an application-specific precondition.  In
+Figure~\ref{fig:election-frames}(d), we defined the poll-closing commitment at
+every state; a different system might authorize it only after some candidate
+has a majority.
 
-To define a standard transition system for the specification, we use a
-canonical basis that can support every permitted output while removing no more
-rows than its promise requires.
+A commitment basis therefore describes the authority of a particular system.
+To characterize the behaviors permitted by the specification independently of
+any particular system, we derive a canonical basis from $S$.  It supports every
+permitted output and, when an output requires a commitment, removes only the
+rows incompatible with that output's promise.
 
 For a state $(i,R)$ and its current row $(i,o)$, retaining the promise made by
 $o$ permits exactly the rows
