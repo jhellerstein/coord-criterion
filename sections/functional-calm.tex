@@ -409,11 +409,11 @@ reach $(i,R')$, the event is valid when
   R'\subseteq R_o.
   \label{eq:supported-output-action}
 \end{equation}
-Because the target is a functional specification state with current input $i$,
-it automatically retains the unique current row $(i,o)$.  The condition
-$R'\subseteq R_o$ ensures that every remaining row preserves $o$.  The
-commitments and emission occur in one atomic event, and the execution records
-which commitments it applies.
+Commitments preserve the current input and map specification states to
+specification states, so $(i,R')$ automatically retains the unique current row
+$(i,o)$.  The condition $R'\subseteq R_o$ ensures that every remaining row
+preserves $o$.  The commitments and emission occur in one atomic event, and the
+execution records which commitments it applies.
 
 The canonical basis makes the required restriction explicit.  It applies $s_o$
 when $R_o\neq R$ and no commitment when $R_o=R$.  In either case, the event
@@ -456,6 +456,11 @@ can be reconciled.
 
 \subsection{Executions and consistency}
 \label{sec:determination}
+
+Individual events describe one state change at a time.  We now assemble them
+into runs and ask the central consistency question: when different runs follow
+different paths through the specification, can their resulting states still be
+reconciled?
 
 \begin{definition}[Transition system and run]
 \label{def:io-transition-system}
