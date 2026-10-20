@@ -387,9 +387,12 @@ $\mathsf{input}(j)$ and then $\mathsf{input}(k)$ has the same effect as applying
 $\mathsf{input}(k)$ directly; $\mathsf{input}(i)$ at $(i,R)$ has no effect.
 
 \paragraph{Output events.}
-Once an output is visible, the environment may act on it, so the system cannot
-make that observation ``unhappen''; later outputs must preserve its promise
-according to $\OutputOrd$.
+A system controls what it tells the outside world.  We want to understand what
+it can safely promise without assuming that clients can tolerate later
+retractions.  We therefore treat an emitted output as something the system
+must stand behind: later outputs may add information, but they must preserve
+its claims according to $\OutputOrd$.  This gives us a clear account of what
+the system can guarantee at each point in an execution.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
 output the system may emit.  Every valid refinement whose output does not
