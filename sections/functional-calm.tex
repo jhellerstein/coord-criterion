@@ -394,14 +394,15 @@ must stand behind: later outputs may add information, but they must preserve
 its claims according to $\OutputOrd$.  This gives us a clear account of what
 the system can guarantee at each point in an execution.
 
-What does it take for the system to stand behind an output \(o\)? At state \((i,R)\),
-the current input has a unique row \((i,o)\), so \(o\) is the only output the system
-may emit. Each valid future input \(k\) also has a unique output. If that output
-refines \(o\), it honors the promise; otherwise, accepting \(k\) would violate it.
-Before emitting \(o\), the system must therefore remove every such conflicting
-input using seal commitments. An output event \(\mathsf{output}(o)\) applies a
-finite, possibly empty sequence of seal commitments from the system's basis and
-then emits \(o\). If those commitments reach \((i,R')\), the event is valid when 
+What does it take for the system to stand behind an output $o$?  At state
+$(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only output
+the system may emit.  Each valid future input $k$ also has a unique output.  If
+that output refines $o$, it honors the promise; otherwise, accepting $k$ would
+violate it.  Before emitting $o$, the system must therefore invalidate every
+such conflicting input using seal commitments.  An output event
+$\mathsf{output}(o)$ applies a finite, possibly empty sequence of seal
+commitments from the system's basis and then emits $o$.  If those commitments
+reach $(i,R')$, the event is valid when
 \begin{equation}
   (i,o)\in R'\subseteq R_o.
   \label{eq:supported-output-action}
@@ -416,12 +417,17 @@ and no commitment when $R_o=R$.  In either case its target is exactly $R_o$:
   \label{eq:output-action}
 \end{equation}
 
-Proposition (Canonical-basis coverage). Suppose an output event for (o) under
-any commitment basis takes \((i,R)\) to \((i,R')\). The canonical basis supports an
-output event for the same \(o\), taking \((i,R)\) to \((i,R_o)\), with \(R'\subseteq
-R_o.\) Consequently, every finite run under any commitment basis can be replayed
-under the canonical basis with the same input and output labels. After every
-prefix, the canonical run retains every row retained by the original run.
+Why is this one basis enough for proofs that consider all possible input and
+output behavior?  Any output supported by another basis is also supported by
+the canonical basis:
+
+\begin{proposition}[Canonical basis supports every output]
+\label{prop:canonical-output-preservation}
+Suppose an output event for $o$ under any commitment basis takes $(i,R)$ to
+$(i,R')$.  The canonical basis supports an output event for the same $o$ from
+$(i,R)$, taking it to $(i,R_o)$, with $R'\subseteq R_o$.  Thus the canonical
+event retains every row retained by the original event, and possibly more.
+\end{proposition}
 
 \begin{proof}
 The canonical transition is defined above, and $R'\subseteq R_o$ is required by
@@ -454,6 +460,23 @@ $\sigma_S(i)$ at some input $i$.  Unless stated otherwise, runs use the
 canonical commitment basis.
 \label{def:run}
 \end{definition}
+
+\begin{corollary}[Canonical replay]
+\label{cor:canonical-replay}
+Every finite run under any commitment basis can be replayed under the canonical
+basis with the same input and output labels.  After every corresponding event,
+the canonical run retains every row retained by the original run.
+\end{corollary}
+
+\begin{proof}
+Proceed by induction over the events of the run.  Both runs begin at the same
+canonical state.  Input events preserve inclusion between remainder tables.
+For an output event, let $R$ and $\widehat R$ be the original and canonical
+remainder tables before the event, with $R\subseteq\widehat R$.  The original
+target is contained in $R_o$ by
+Proposition~\ref{prop:canonical-output-preservation}, while
+$R_o\subseteq\widehat R_o$; the canonical event reaches $\widehat R_o$.
+\end{proof}
 
 A specification state is \emph{run-generated} when it is reachable by a run.
 This is a provenance condition, not another local invariant on a remainder
@@ -494,8 +517,9 @@ output events from each endpoint.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
 Consistency quantifies over run-generated endpoints, not arbitrary specification
-states or commitments.  The canonical basis exercises every output permitted by
-the specification; a weaker basis could hide non-monotonicity by disabling a
+states or commitments.  Corollary~\ref{cor:canonical-replay} shows that the
+canonical basis includes every input/output sequence admitted by another
+basis, while a weaker basis could hide non-monotonicity by disabling a
 conflicting output.
 
 \begin{proposition}[Confluence at a common refinement]
