@@ -230,6 +230,7 @@ serves as a reference.
 \subsection{Specifications, states, and commitments}
 \label{sec:functional-specifications}
 
+We begin by defining the core structures of our framework: specifications and commitment bases.
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
 A \emph{functional ordered specification} is a tuple
@@ -247,13 +248,15 @@ appears in at least one row, and
 \end{definition}
 
 The unique output paired with $i$ induces the function
-$f:(I,\InputOrd)\to(O,\OutputOrd)$, with $S=\{(i,f(i)):i\in I\}$.  We call
+\[f:(I,\InputOrd)\to(O,\OutputOrd)\] 
+with $S=\{(i,f(i)):i\in I\}.$
+We call
 $\InputOrd$ the \emph{input-refinement order}: $i\InputOrd j$ means that $j$
 contains at least the input information in $i$.  We call $\OutputOrd$ the
 \emph{output-refinement order}: $o\OutputOrd u$ means that $u$ preserves every
 externally visible claim in $o$ and may add more.
 
-The two orders are independent.  The input order compares inputs; the output
+The two orders are independent: the input order compares inputs; the output
 order compares outputs.  Either may be the \emph{equality order}, under which an
 element refines only itself.
 
@@ -278,11 +281,11 @@ write
 
 A specification describes every permitted input/output pair.  During execution,
 input arrives and choices become binding, so only some of those pairs remain
-possible.  A specification state records this evolving residual.
+possible.  The evolving state of the specification is defined as follows.
 
 \begin{definition}[Specification state]
 \label{def:residual-state}
-Given $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, a \emph{specification state} is a
+Given a specification $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, a \emph{specification state} is a
 pair $\sigma=(i,R)$, where $i\in I$ is the \emph{current input} and
 $R\subseteq S$ is the \emph{remainder table}, such that:
 \begin{enumerate}
@@ -293,7 +296,7 @@ An input $k$ is \emph{valid} in $\sigma$ when $R$ contains a row at $k$, and
 otherwise \emph{invalid}.
 \end{definition}
 
-No transition adds a row.  For each input $i$, the \emph{canonical initial
+Rows are never added during execution.  For each input $i$, the \emph{canonical initial
 state} retains all rows at $i$ and its refinements:
 \begin{equation}
   \sigma_0(i)=\bigl(i,\ \{(k,o)\in S:\ i\InputOrd k\}\bigr).
