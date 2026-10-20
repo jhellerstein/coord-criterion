@@ -404,11 +404,12 @@ $\mathsf{output}(o)$ applies a finite, possibly empty sequence of seal
 commitments from the system's basis and then emits $o$.  If those commitments
 reach $(i,R')$, the event is valid when
 \begin{equation}
-  (i,o)\in R'\subseteq R_o.
+  R'\subseteq R_o.
   \label{eq:supported-output-action}
 \end{equation}
-The first condition preserves the current row; the second ensures that every
-remaining future output preserves $o$.
+Because the target is a functional specification state with current input \(i\),
+it automatically retains the unique current row \((i,o)\). The condition
+\(R'\subseteq R_o\) ensures that every remaining row preserves \(o\).
 
 Under the canonical basis, the event applies $s_o$ when $R_o\neq R$
 and no commitment when $R_o=R$.  In either case its target is exactly $R_o$:
@@ -434,6 +435,7 @@ The canonical transition is defined above, and $R'\subseteq R_o$ is required by
 Equation~\ref{eq:supported-output-action} for every valid output event.
 \end{proof}
 
+This leads us to the key definition for emitting outputs:
 \begin{definition}[Exposable output, functional case]
 \label{def:exposable}
 For a functional specification, the current output $o$ is \emph{exposable} at
