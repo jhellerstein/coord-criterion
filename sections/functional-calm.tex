@@ -472,22 +472,13 @@ canonical commitment basis.
 \label{def:run}
 \end{definition}
 
-\begin{corollary}[Canonical replay]
-\label{cor:canonical-replay}
-Every finite run under any commitment basis can be replayed under the canonical
-basis with the same input and output labels.  After every corresponding event,
-the canonical run retains every row retained by the original run.
-\end{corollary}
-
-\begin{proof}
-Proceed by induction over the events of the run.  Both runs begin at the same
-canonical state.  Input events preserve inclusion between remainder tables.
-For an output event, let $R$ and $\widehat R$ be the original and canonical
-remainder tables before the event, with $R\subseteq\widehat R$.  The original
-target is contained in $R_o$ by
-Proposition~\ref{prop:canonical-output-preservation}, while
-$R_o\subseteq\widehat R_o$; the canonical event reaches $\widehat R_o$.
-\end{proof}
+Proposition~\ref{prop:canonical-output-preservation} extends event by event:
+every finite run under any commitment basis can be replayed under the canonical
+basis with the same input and output labels.  After each corresponding event,
+the canonical run retains every row retained by the original run.  Input
+events preserve inclusion between remainder tables; for output events, the
+original target is contained in $R_o$, which is in turn contained in the
+canonical target computed from the larger remainder table.
 
 A specification state is \emph{run-generated} when it is reachable by a run.
 This is a provenance condition, not another local invariant on a remainder
@@ -531,10 +522,9 @@ output events from each endpoint.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
 Consistency quantifies over run-generated endpoints, not arbitrary specification
-states or commitments.  Corollary~\ref{cor:canonical-replay} shows that the
-canonical basis includes every input/output sequence admitted by another
-basis, while a weaker basis could hide non-monotonicity by disabling a
-conflicting output.
+states or commitments.  The replay property above shows that the canonical
+basis includes every input/output sequence admitted by another basis, while a
+weaker basis could hide non-monotonicity by disabling a conflicting output.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
