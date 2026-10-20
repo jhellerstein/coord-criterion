@@ -7,15 +7,13 @@ as input grows.  Two examples introduce the issue; the formal development then
 extends the specification, monotonicity condition, and transition system from
 Section~\ref{sec:functional-calm}.
 
-\subsection{The framework on two ambiguous examples}
+\subsection{Output choice by example}
 \label{sec:ambiguity-story}
 
-We begin, as in Section~\ref{sec:election-story}, with an informal,
-example-driven treatment.  Terms introduced in italics are defined formally
-below, and nothing here is needed for the proofs.  Section~\ref{sec:election-story}
-exercised the shared transition system; these examples exercise the additions
-for ambiguous specifications: directedness, output-choice commitments, output
-retirement, and Lifted Monotonicity.
+Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
+several outputs at the same input.  Transaction ordering requires a choice
+between incompatible serialization orders.  Traceroute observations, by
+contrast, can be preserved together in a larger route set.
 
 \begin{figure}[t]
   \centering
@@ -55,41 +53,35 @@ retirement, and Lifted Monotonicity.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{Output actions under choice.}
-As in the functional case, outputting $o$ promises that the emitted result will
-be refined by the final result.  The single atomic action
-$\mathsf{output}(o)$ applies any required commitments, retires dominated rows,
-and emits $o$.  With several rows at one input, retirement may remove a row
-without losing an alternative: a retained row at the same input may refine both
-$o$ and the removed output.  Output $o$ is \emph{exposable} when its action needs
-no commitment.
+\paragraph{Output choice and directedness.}
+The atomic $\mathsf{output}(o)$ action from Section~\ref{sec:election-story}
+applies any required commitments, retires dominated rows, and emits $o$.  With
+several rows at one input, retirement can discard an output without losing its
+claim when a retained output refines both it and $o$.
 
-\paragraph{Ambiguity.}
-Figure~\ref{fig:ambiguity-frames}(f) allows either serial order of concurrent
-transactions $A$ and $B$.  No output refines both orders, so outputting one
-requires an \emph{output-choice commitment} that removes the other.  In the
-traceroute of panel (g), by contrast, outputs are prefix-closed route sets and
-their unions are within spec.  Outputting $\{s{\to}\texttt{s1}\}$ requires no
-commitment; the action retires rows whose outputs do not refine it, but a
-retained union refines each retired output.  Nothing is lost, so the output is
-exposable.
+Panel~(f) permits either serial order of concurrent transactions $A$ and $B$.
+No output refines both, so emitting one requires an \emph{output-choice
+commitment} that removes the other.  In panel~(g), outputs are prefix-closed
+route sets and their unions are within spec.  Emitting
+$\{s{\to}\texttt{s1}\}$ needs no commitment: retained union rows preserve every
+retired route set, so the output is \emph{exposable}.
 
-The distinction is \emph{directedness}: every finite set of outputs in a fiber
-must have a common refinement in that fiber.  A directed fiber allows any output
-to be output without losing an alternative; a nondirected fiber may require
-an output-choice commitment.  Lifted Monotonicity combines this requirement with the
-requirement from Functional CALM that more input not invalidate an output:
-every finite set of outputs within spec at $i$ must have a common refinement
-within spec at every $j\succeq_I i$.
+This difference is \emph{directedness}: every finite set of outputs in a fiber
+has a common refinement in that fiber.  A directed fiber preserves every
+alternative after any output; a nondirected fiber may require an output-choice
+commitment.  \emph{Lifted Monotonicity} combines directedness with Functional
+CALM's requirement that input growth preserve outputs: every finite set of
+outputs within spec at $i$ must have a common refinement within spec at every
+$j\succeq_I i$.
 
-\paragraph{The commitment basis.}
-The specification fixes which rows conflict with an output, while the system's
-commitment basis determines which required seal and output-choice commitments
-it can perform and how it bundles them.  In Figure~\ref{fig:cc-commitments},
-two-phase locking commits only $A$ before $B$, whereas multiversion timestamp
-ordering commits $B$ to first place.  Appendix~\ref{app:cc-bases} gives both
-bases, including their abort commitments, and
-Section~\ref{sec:design-boundary} returns to this design choice.
+\paragraph{Different commitment bases.}
+The specification says which serialization orders are permitted; the
+\emph{commitment basis} says which binding choices a system can make.
+Figure~\ref{fig:cc-commitments} applies two bases to the same three-transaction
+fiber.  Two-phase locking commits only to $A$ before $B$, leaving $C$'s position
+open.  Multiversion timestamp ordering commits $B$ to first place.  Both remove
+serialization orders, but leave different sets of choices available.
+Appendix~\ref{app:cc-bases} gives the full bases, including abort commitments.
 
 \begin{figure}[t]
   \centering
@@ -127,9 +119,9 @@ Section~\ref{sec:design-boundary} returns to this design choice.
   \label{fig:cc-commitments}
 \end{figure}
 
-These examples isolate the new specification-level issue: several outputs may
-remain possible at one input, and a system may have to choose among them.  We
-now formalize when those alternatives can be preserved together.
+The examples isolate the new issue: one input may admit several outputs.  We
+now formalize when independently emitted alternatives remain consistent and
+when choosing one requires commitment.
 
 \subsection{Relational specifications and Lifted Monotonicity}
 \label{sec:relational-specifications}
