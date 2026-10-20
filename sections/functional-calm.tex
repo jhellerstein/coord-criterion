@@ -490,12 +490,16 @@ each event, the canonical run's remainder table contains the original run's.
 By induction on the events.  Both runs start at the same canonical state, so
 their remainder tables are initially equal.  Suppose that before some event the
 original run's table $R$ and the canonical run's table $\widehat R$ satisfy
-$R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input event
-$\mathsf{input}(j)$ valid at $R$ is valid at $\widehat R$, and it takes the two
-tables to $R[\mathrm{in}\succeq_I j]\subseteq\widehat R[\mathrm{in}\succeq_I j]$.  For an output event taking $R$ to $R'$,
-Equation~\ref{eq:supported-output-action} gives
-$R'\subseteq R[\mathrm{out}\succeq_O o]\subseteq\widehat R[\mathrm{out}\succeq_O o]$,
-which is where the canonical event takes $\widehat R$.
+$R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input event $\mathsf{input}(j)$ that is valid at $R$ is also valid at
+$\widehat R$.  It retires every row whose input does not refine $j$, keeping
+$R[\mathrm{in}\succeq_I j]$ in the original run and
+$\widehat R[\mathrm{in}\succeq_I j]$ in the canonical run.  Since
+$R\subseteq\widehat R$, the first remains contained in the second.  For an
+output event taking $R$ to $R'$, the original run keeps only rows whose outputs
+refine $o$, so $R'\subseteq R[\mathrm{out}\succeq_O o]$
+(Equation~\ref{eq:supported-output-action}).  The canonical event takes
+$\widehat R$ to $\widehat R[\mathrm{out}\succeq_O o]$, which contains
+$R[\mathrm{out}\succeq_O o]$ because $R\subseteq\widehat R$.
 \end{proof}
 
 The converse fails: a weaker basis may disable an output, and so could hide
