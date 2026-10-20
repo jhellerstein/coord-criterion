@@ -271,9 +271,10 @@ arrives.
 \subsection{The transition system}
 \label{sec:determination}
 
-Section~\ref{sec:election-story} previewed the transition model that embeds
-the declarative specification and a system commitment basis in a simple I/O
-automaton.  Its state is a specification state.  An input action records a
+Section~\ref{sec:election-story} previewed the model that embeds the declarative
+specification and a system commitment basis in one transition system with input
+and output actions.  Its state is a specification state.  An input action
+records a
 cumulative input supplied by the environment.  An atomic output action prepares
 its result by removing rows for reasons of commitment or retirement, then emits
 that result.  The action records whether it used a commitment, and the
@@ -304,22 +305,28 @@ Figure~\ref{fig:election-frames} is such a state.
 
 \begin{definition}[Specification state]
 \label{def:residual-state}
-A \emph{specification state} is a pair $\sigma=(i,R)$ such that
-\begin{enumerate}
-  \item $i\in I$ is the \emph{current input};
-  \item $R\subseteq S$;
-  \item $R$ has a row at the current input:
-        \begin{equation}
-          (i,o)\in R\ \text{for some }o;
-          \label{eq:current-input-validity}
-        \end{equation}
-  \item only refinements of the current input have rows in $R$:
-        \begin{equation}
-          (k,o)\in R
-          \quad\Longrightarrow\quad i\InputOrd k.
-          \label{eq:retired-input-absence}
-        \end{equation}
-\end{enumerate}
+The specification-state space is
+\begin{equation}
+  \Sigma_S=
+  \left\{(i,R)\in I\times\mathcal P(S):
+    \begin{array}{l}
+      \exists o\in O.\ (i,o)\in R,\\
+      \forall(k,o)\in R.\ i\InputOrd k
+    \end{array}
+  \right\}.
+  \label{eq:specification-state-space}
+\end{equation}
+A \emph{specification state} is an element $\sigma=(i,R)\in\Sigma_S$.
+The first condition requires a row at the \emph{current input} $i$,
+\begin{equation}
+  (i,o)\in R\quad\text{for some }o,
+  \label{eq:current-input-validity}
+\end{equation}
+and the second requires every remaining row to lie at a refinement of $i$,
+\begin{equation}
+  (k,o)\in R\quad\Longrightarrow\quad i\InputOrd k.
+  \label{eq:retired-input-absence}
+\end{equation}
 An input $k$ is \emph{valid} when $R$ has a row at $k$, and otherwise
 \emph{invalid}.
 \end{definition}
