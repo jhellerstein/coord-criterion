@@ -403,16 +403,17 @@ that output refines $o$, it honors the promise; otherwise, accepting $k$ would
 violate it.  Before emitting $o$, the system must therefore invalidate every
 such conflicting input using seal commitments.  An output event
 $\mathsf{output}(o)$ applies a finite, possibly empty sequence of seal
-commitments from the system's basis and then emits $o$.  If those commitments
-reach $(i,R')$, the event is valid when
+commitments from the system's basis and then emits $o$.  The system may emit
+$o$ only if those commitments leave no behavior that would violate its
+promise.  If applying them transforms $(i,R)$ into $(i,R')$, every remaining
+row $(k,u)\in R'$ must satisfy $o\OutputOrd u$, or equivalently
 \begin{equation}
   R'\subseteq R_o.
   \label{eq:supported-output-action}
 \end{equation}
 Commitments preserve the current input and map specification states to
 specification states, so $(i,R')$ automatically retains the unique current row
-$(i,o)$.  The condition $R'\subseteq R_o$ ensures that every remaining row
-preserves $o$.  The commitments and emission occur in one atomic event, and the
+$(i,o)$.  The commitments and emission occur in one atomic event, and the
 execution records which commitments it applies.
 
 The canonical basis makes the required restriction explicit.  It applies $s_o$
