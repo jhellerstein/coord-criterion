@@ -1,128 +1,148 @@
 \section{Discussion}
 \label{sec:discussion}
 
-The CALM agenda is to separate what a specification intrinsically requires
-from properties of one implementation, deployment, or execution.  The model's
-small vocabulary makes several distinctions explicit.
+The formal development isolates a small semantic core beneath several familiar
+systems models.  This section collects the payoff.  For readers who followed the
+theorems, it explains what their distinctions buy; for readers who skipped
+ahead, it gives a practical guide to applying the criterion.  The recurring
+method is diagnostic: before asking which coordination mechanism to use, first
+ask what varies, why an alternative disappears, and what the interface promises
+to preserve.
 
 \subsection{Did executions differ, or were multiple answers allowed?}
 
-A functional specification assigns one output to each input, yet executions
-may emit different outputs because input arrives incompletely, in different
-orders, or in different batches.  This is execution ambiguity.  Semantic
-ambiguity is different: the specification permits several outputs at the same
-input.  Classical CALM addresses the first setting; Complete CALM adds the
-second.
+Two traces can emit different outputs for two fundamentally different reasons.
+A functional specification fixes one output for each input, but input may arrive
+incompletely, in different orders, or in different batches.  This is execution
+ambiguity.  A relational specification adds semantic ambiguity: even at the
+same input, several outputs are within spec.
 
-The distinction locates the intrinsic question.  A particular schedule explains
-why one execution emitted an output, but cannot establish that the output is
-safe under every admitted schedule.  Ordinary monotonicity answers that question
-for functions.  Lifted Monotonicity answers it when the interface itself offers
-output choice.
+The distinction determines which test applies.  Ordinary monotonicity asks
+whether varying functional executions can safely emit results as input grows.
+Lifted Monotonicity must additionally account for choices that the interface
+itself permits.  Adding nondeterminism to an implementation does not model this
+second case; the alternatives must appear as rows in the specification.
+
+Both forms of ambiguity can narrow toward determination, but useful output need
+not wait for that process to finish.  The election can emit $\bot$ while either
+candidate may still win, and traceroute can emit one observed route while larger
+route sets remain possible.  Determination reduces the possibilities that
+remain; output reports information that all surviving possibilities can
+preserve.  These are separate forms of progress.
 
 \subsection{Was an alternative discovered impossible, or made impossible?}
 
-Both input and commitment can advance determination, but they exercise different
-authority.  An input event may make an alternative unreachable: the execution
-has learned which cumulative history occurred.  A commitment instead excludes
-an alternative that the available input still permits.  Receiving a decisive
-ballot and closing the polls can both leave one result, but only the latter is a
-binding system choice.
+Whenever a remainder table shrinks, the reason matters.  An input event removes
+histories that no longer extend the input received.  An output retirement
+removes a row whose output is preserved by a surviving refinement.  Neither
+makes a binding choice among otherwise live alternatives.  A commitment does:
+it excludes an alternative that input still permits and no surviving output
+preserves.
 
-Output retirement is a third case.  It removes a row only when a surviving row
-preserves that row's output.  Input retirement, output retirement, and commitment
-therefore all narrow a remainder table, but only commitment removes an otherwise
-live claim without preserving it.  This semantic effect is the intrinsic source
-of coordination in the model.
+The distinction is visible even when the endpoint looks the same.  Receiving a
+decisive ballot and closing the polls can both leave one election result.  The
+first learns which input occurred; the second exercises authority over inputs
+that could still occur.  Only the second is intrinsically a commitment.  This
+classification by semantic effect, rather than by the operation's name, is what
+lets one criterion apply across different system models.
 
 \subsection{Did replicas converge, or did they preserve what they reported?}
 
-Convergence concerns replicas after they incorporate the same updates.  Output
-refinement concerns whether later observations preserve claims already emitted.
-Neither implies the other without an interface connecting internal state to
-observations.  A last-writer-wins object can converge while replacing a value
-previously shown to a client; this is the observable equivalent of retraction.
-Conversely, a safe lower-bound observation may remain valid even while replicas
-have different internal states.
+A convergent object eventually gives equivalent state to replicas that have
+incorporated the same updates.  That says nothing by itself about an observation
+already returned to a client.  A last-writer-wins object can converge while
+replacing an earlier visible value---the observable equivalent of retraction.
+Conversely, a lower-bound observation can remain valid while replicas still
+hold different internal states.
 
-Join-semilattices are consequently a strong sufficient discipline, not an
-intrinsic requirement of consistency.  They provide a uniform least merge for
-states.  Complete CALM asks only for an allowed common refinement of the outputs
-that the declared interface promises to preserve; Section~\ref{sec:crdt-instance}
-shows why the observation function and output order matter.
+The output order makes the missing contract explicit: it says which later
+observations preserve earlier ones.  A join-semilattice is one strong way to
+supply convergence and a uniform least merge, but neither is intrinsically
+required by Complete CALM.  The criterion requires an allowed common refinement
+only for the outputs the interface promises to preserve.  Consequently a CRDT
+state, a point read on that state, and an application query over it can lie on
+different sides of the coordination boundary
+(Section~\ref{sec:crdt-instance}).
 
 \subsection{Was a coordination mechanism used, or was a commitment made?}
 
-Locks, validators, timestamp services, mutexes, and agreement protocols are
-mechanisms.  They coordinate in this model exactly when they implement a
-commitment.  An uncontended lock may exclude no behavior, while a single local
-controller may make a binding commitment without communicating.  Mechanism names
-therefore do not determine the intrinsic coordination requirement; their effect
-on the remainder table does.
+Locks, mutexes, validators, timestamp services, and agreement protocols are
+mechanisms.  Their use is not itself the intrinsic event of interest.  An
+uncontended lock may exclude no behavior, while one local controller may make a
+binding choice without communicating.  In this model an execution coordinates
+exactly when it makes a commitment, regardless of the mechanism that realizes
+it.
 
-This separation also supports Proper Coordination.  A mechanism may be
-sufficient without being necessary or unique.  By representing the commitments
-it produces, we can test the resulting end-to-end specification for
-monotonicity.  In Appendix~\ref{app:composition}, committing the shared log order
-makes the composed log/store interface monotone, showing that the chosen
-coordination is sufficient.
+This separation supports a question that the usual CALM test does not ask.  A
+mechanism may be sufficient without being necessary or unique.  \emph{Proper
+Coordination} tests the specification produced by its commitments.  In
+Appendix~\ref{app:composition}, committing the shared log order makes the
+composed log/store interface monotone.  The result validates what the mechanism
+accomplished without claiming that this mechanism is the only way to accomplish
+it.
 
 \subsection{Does a common answer exist, or can the deployed system reach it?}
 
-A common output refinement proves semantic compatibility.  It does not supply
-an algorithm to compute that output, authority for every participant to emit it,
-messages across a partition, or termination.  Those properties belong to a
-deployment and operational model.  Appendix~\ref{app:deployment}, for example,
-distinguishes abstract partition compatibility from reconciliation through
-deployment-authorized output actions.
+An allowed common refinement proves that independently emitted outputs are
+semantically compatible.  It does not give every participant authority to emit
+that refinement, an algorithm to compute it, messages across a partition, or a
+termination argument.  Appendix~\ref{app:deployment} exposes this gap directly:
+partition compatibility can hold even when the declared deployment cannot carry
+out reconciliation through its authorized output actions.
 
-The Complete CAP theorem makes one particular operational requirement explicit:
-interface-wide Availability requires every permitted output action to avoid both
-commitment and a cross-component wait.  Its deployment-relative variant instead
+Complete CAP adds one particular operational requirement.  Its interface-wide
+Availability condition requires every permitted output action to avoid both
+commitment and a cross-component wait.  The deployment-relative variant instead
 allows commitments made wholly within a component's existing authority.  These
-are semantic nonblocking conditions, not full liveness models; protocol results
-must separately state fairness, failure, delivery, and cost assumptions.
+conditions identify semantic nonblocking boundaries; a protocol result must
+still state its delivery, fairness, failure, and cost assumptions.
 
 \subsection{What behavior is promised, and can concurrent executions preserve it?}
 \label{sec:consistency-as-confluence}
-
-Linearizability, causal consistency, isolation levels, and application
-invariants promise different behaviors.  The framework does not identify these
-guarantees with one another.  It represents each as an ordered specification,
-then asks one common question: can independently reached states continue to a
-common state without invalidating emitted outputs?  Consistency as confluence is
-this test, not another protocol or consistency model.
-
-The answer depends on the declared interface.  A CRDT state and an exact read
-make different promises; permitting a transaction to abort gives a different
-specification from requiring both transactions to commit.  Changing the output
-order, adding an allowed common-refining output, narrowing the table, or changing
-the deployment can move the boundary.  Each changes the contract or system
-design rather than evading the criterion.
-
-\subsection{How does the declarative model connect to execution?}
 \label{sec:design-boundary}
 
-The two-column relation is deliberately smaller than a programming or protocol
-model.  It can represent an implementation-independent property, such as an
-invariant, as readily as a protocol-level consistency guarantee.  Its input
-order records how observations accumulate, its output order records which
-visible claims persist, and equijoin composes typed component interfaces.  These
-choices make the model language-independent without limiting it to protocol
-specifications.
+Linearizability, causal consistency, isolation levels, and application
+invariants make different promises.  Consistency as confluence does not replace
+or equate them.  Each becomes a specification of permitted observations, and
+confluence asks the same question of each: can independently reached states
+continue together without invalidating what they emitted?  The promise comes
+from the specification; confluence is the common test.
 
-Operational models still determine which executions occur.  At the finest
-grain, a state machine induces a table whose inputs are environment-event
-histories and whose rows pair each history with its possible observable outputs.
-When machine state is a sufficient summary of history, those states can instead
-serve as inputs.  The abstraction is sound only when histories represented by
-the same input have the same relevant continuations; choosing the input domain
-is therefore part of specification design.
+This separation is a source of generality.  The two-column relation can encode a
+property such as an invariant as readily as a protocol-level consistency model.
+Its input order says how observations accumulate, and its output order says what
+later results preserve.  Changing either order changes the interface being
+tested.  Because specifications remain typed relations, equijoin also composes
+component properties into an end-to-end contract.  The model can therefore ask
+whether a local coordination decision is sufficient after composition, rather
+than examining components in isolation.
 
-Lamport histories ground this abstraction without choosing a particular
-protocol language.  They retain participant order, message causality, and
-observable output events.  Transition projection removes delivery and strategy
-details that do not change the specification state, and the equivalence of
-Consistency with Distributed Consistency shows that this projection preserves
-the confluence question.  It does not preserve or establish every operational
-property: implementation, liveness, and complexity remain separate obligations.
+There is a useful historical turn here.  \emph{The Declarative Imperative}
+proposed that declarative database languages could provide a foundation for
+distributed programming, and stated CALM in terms of expressibility in monotonic
+Datalog~\cite{hellerstein2010declarative}.  That formulation still left the
+coordination question entangled with a program: its rules, language extensions,
+time and location constructs, and operational semantics.  Our specification
+table is declarative at a lower layer.  It says only which input/output behaviors
+are permitted and which observations refine others.  Monotonic Datalog remains
+one way to realize such a specification, but is no longer the object that defines
+the intrinsic boundary.  In retrospect, the durable part of the original thesis
+was not that the right distributed programs must be written in one declarative
+language; it was that the coordination boundary should be stated on a monotone
+declarative object.  Here that object is the specification table.
+
+The simplicity does not detach the model from execution.  A state machine
+induces a table by pairing environment histories with their observable outputs.
+If machine state is a sufficient summary of history---equal states have the same
+relevant continuations---those states can serve as the inputs instead.  Choosing this summary is part of specification design: the table may
+forget operational detail only when that detail cannot change its future
+obligations.
+
+Lamport histories provide the corresponding distributed grounding.  They retain
+participant order, message causality, and observable output events; transition
+projection discards delivery and strategy details that do not change the
+specification state.  The equivalence of Consistency and Distributed
+Consistency shows that this projection preserves the confluence question.  It
+does not claim that the projection preserves every implementation property or
+supply a language, protocol, liveness proof, or complexity bound.  Those remain
+the work of the operational model in which the specification is realized.
