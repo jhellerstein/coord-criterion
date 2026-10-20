@@ -286,20 +286,24 @@ write
 
 \begin{definition}[Specification state]
 \label{def:residual-state}
+For any relation $R\subseteq I\times O$, let
+\[
+  \operatorname{dom}(R)=\{i\in I:(i,o)\in R\text{ for some }o\in O\}.
+\]
 The specification-state space is
 \begin{equation}
   \Sigma_S=
   \left\{(i,R)\in I\times\mathcal P(S):
-    \begin{array}{l}
-      \exists o\in O.\ (i,o)\in R,\\
-      \forall(k,o)\in R.\ i\InputOrd k
-    \end{array}
+    i\in\operatorname{dom}(R)
+    \ \land\
+    \operatorname{dom}(R)\subseteq\mathord\uparrow_I i
   \right\}.
   \label{eq:specification-state-space}
 \end{equation}
-For $\sigma=(i,R)\in\Sigma_S$, $i$ is the \emph{current input} and $R$ is the
+A \emph{specification state} is a pair $\sigma=(i,R)\in\Sigma_S$.  Its first
+component $i$ is the \emph{current input}; its second component $R$ is the
 \emph{remainder table}.  An input $k$ is \emph{valid} in $\sigma$ when
-$(k,o)\in R$ for some $o$, and otherwise \emph{invalid}.
+$k\in\operatorname{dom}(R)$, and otherwise \emph{invalid}.
 \end{definition}
 
 Thus a remainder table is a subrelation of $S$ with a row at its current input
