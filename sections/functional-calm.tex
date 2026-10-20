@@ -93,15 +93,14 @@ output can be emitted without commitment.
   \label{fig:election-frames}
 \end{figure*}
 
-An \emph{ordered specification}
-$\Spec=(I,\InputOrd,O,\OutputOrd,S)$ is a table $S\subseteq I\times O$ of
-permitted input/output pairs, with a partial order on each column.  Here each
-input has exactly one output; Section~\ref{sec:ambiguous-specifications} later
-removes this functional dependency.
+Before the full formalism, Figure~\ref{fig:election-frames} introduces the
+framework through a small election.  Each row of its specification table pairs
+the ballots received so far with the permitted result; orders on the columns
+describe how inputs grow and which later outputs preserve earlier ones.  This
+section considers tables in which each input has exactly one output;
+Section~\ref{sec:ambiguous-specifications} later removes that functional
+dependency.
 
-Before presenting the full formalism, we introduce the framework via an an example
-of a small election, illustrated
-in Figure~\ref{fig:election-frames}. 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
 $y$.  The result is whichever candidate has two ballots, or $\bot$ while there
 is no winner.  An input is the ballots received so far, written as a
@@ -166,10 +165,11 @@ specification itself; a system whose polls cannot close does not have this commi
 \paragraph{Output and consistency.}
 An output $o$ is \emph{exposable} when every output still possible at the
 current input or a valid refinement can preserve it.  Hence $\bot$ is exposable
-in panels~(a) and~(b), and $x$ in panel~(c).  The transition system records one
-atomic $\mathsf{output}(o)$ action with three steps: it applies any required commitments, retires
-rows superseded by $o$, and emits $o$.  The emission must be explicit for causality:
-the environment may silently use it to choose later inputs.
+in panels~(a) and~(b), and $x$ in panel~(c).  The atomic
+$\mathsf{output}(o)$ action has three parts: apply any required commitments,
+retire rows superseded by $o$, and emit $o$.  They occur in one transition.  The
+emission remains explicit in the history because the uncontrolled environment
+may use it when choosing later input.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that changes only the output order:
 all outputs are considered incomparable, including $\bot$ representing that no winner emerged.
@@ -177,12 +177,12 @@ At $x\cdot\cdot$, $\bot$ is then incompatible with the
 possible future winners and cannot be emitted without sealing every refinement.
 The figure shows the resulting commitment.  This isolates the Functional CALM
 boundary: under the original monotone order, outputs remain valid as input
-grows; under the equality order, every output action requires commitment.
+grows; under the equality order, some outputs require commitment before they
+can be emitted.
 
-Input and output actions form a transition system used below.  A specification
-is \emph{consistent} when any finite collection of its paths is confluent: 
-A specification is consistent when paths that receive compatible inputs can
-still converge to the same state.
+Input and output actions form the transition system used below.  A specification
+is \emph{consistent} when paths that receive compatible inputs can still
+converge to the same state.
 Functional CALM proves that a functional specification is consistent exactly
 when it is monotone.
 
@@ -230,12 +230,16 @@ serves as a reference.
 
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
-A \emph{functional ordered specification} is a function
+A \emph{functional ordered specification} is equivalently a function
         \begin{equation}
   f:(I,\InputOrd)\longrightarrow(O,\OutputOrd),
   \label{eq:functional-specification}
         \end{equation}
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  We call
+where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets, or the
+ordered relational table
+$\Spec=(I,\InputOrd,O,\OutputOrd,S)$ with
+$S=\{(i,f(i)):i\in I\}$.  Thus $S\subseteq I\times O$ contains one permitted
+output for every input.  We call
 $\InputOrd$ the \emph{input-refinement order}: $i\InputOrd j$ means that $j$
 contains at least the input information in $i$.  We call $\OutputOrd$ the
 \emph{output-refinement order}: $o\OutputOrd u$ means that $u$ preserves every
