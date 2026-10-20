@@ -9,11 +9,19 @@ while retaining the output events that the environment can observe.
 \subsection{Lamport histories}
 \label{sec:histories}
 
-Each participant follows the transition system of Section~\ref{sec:determination}.
-A distributed history adds participant-local order and matched message events,
-whose transitive closure gives the usual happens-before relation.  Input and
-output events remain atomic, so every consistent cut projects to one run per
-participant.
+A distributed execution adds one complication to the transition system of
+Section~\ref{sec:determination}: participants may learn the same input through
+different message paths and at different times.  We retain those paths in a
+Lamport history.  Each participant's events are totally ordered; a send precedes
+its matching receive; events not ordered by these constraints are concurrent.
+Their transitive closure is the familiar \emph{happens-before} relation.
+
+A \emph{consistent cut} is a snapshot of this history that never includes a
+receive without the events that causally precede it.  Because the input and
+output actions of Section~\ref{sec:determination} are atomic, the events at any
+such cut project to one ordinary run for each participant.  Messages explain
+how a participant learned something; its projected run records only how that
+information changed the specification state.
 
 \begin{definition}[Lamport history of the transition system]
 \label{def:distributed-history}
@@ -31,14 +39,14 @@ finite set of events with:
   \item for each receive, a matching send at another participant.
 \end{enumerate}
 An output event atomically applies its commitments and retirements and emits its
-label.  The \emph{happens-before} order is the transitive closure of participant
-local orders and send--receive edges.  A \emph{consistent cut} $C$ is a subset
-of events closed under happens-before~\cite{chandy1985distributed}.  (This
-standard use of ``consistent'' is unrelated to consistency as confluence.)
+label.  A \emph{consistent cut} $C$ is a subset of events closed under
+happens-before~\cite{chandy1985distributed}.  (This standard use of
+``consistent'' is unrelated to consistency as confluence.)
 \end{definition}
 
-Sends, receives, and strategy data retain delivery causality that need not affect
-the specification state.  Transition projection removes those details next.
+Sends, receives, and strategy data preserve delivery causality without
+complicating the specification state.  The next subsection shows how transition
+projection removes those details.
 
 \subsection{Transition projection and confluence}
 \label{sec:projection-confluence}
