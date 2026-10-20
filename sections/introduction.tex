@@ -84,21 +84,19 @@ details that do not change the specification state.  \emph{Distributed
 Consistency} asks whether the resulting participant states can still be brought
 to the same state.
 
-Building on that basis, we enrich the specification model by relaxing the
-functional dependency and allowing one input to have several possible outputs,
-as in leader election and transaction ordering.  Such specifications are
-ambiguous: many outcomes are acceptable.  As execution narrows the possible
-outputs, it moves toward \emph{determination}; the result is \emph{determined}
-when only one possible output remains.  Additional input may rule out
-alternatives that no longer extend what was received, while commitments exclude
-alternatives that otherwise remain possible.  We define \emph{Lifted
-Monotonicity} to capture this
-regime and characterize exactly whether outputs can be emitted consistently
-without commitment.  Complete CALM proves that Consistency, Lifted Monotonicity,
-and Distributed Consistency are equivalent
-(\S\ref{sec:complete-calm-theorem}).  When participants can independently emit
-incompatible outputs, the commitments that exclude those alternatives must be
-mutually excluded; distributed agreement is one way to do so.
+Building on that basis, we enrich the model by relaxing the
+functional dependency to admit \emph{ambiguous} specifications: one input can have
+several possible outputs, as in leader election and transaction ordering.  
+Execution must narrow the ambiguity to a \emph{determined} state, where only one
+possible output remains. Determination occurs via two kinds of events: inputs
+may make some alternatives unreachable; commitments exclude alternatives that
+would otherwise remain possible.  Monotonicity only characterizes unambiguous
+functions; we define \emph{Lifted Monotonicity} to capture the ambiguous regime
+and characterize exactly whether outputs can be emitted consistently without
+commitment.  Complete CALM proves that Consistency, Lifted Monotonicity, and
+Distributed Consistency are equivalent (\S\ref{sec:complete-calm-theorem}).
+When participants can independently emit incompatible outputs, the system must
+prevent the corresponding commitments from both taking effect.
 
 Classical CALM tells us when coordination is unnecessary, but not whether a
 chosen use of coordination is sufficient.  Complete CALM can answer the second
@@ -123,14 +121,16 @@ This paper makes six contributions:
         permitted input/output behavior; commitments record irrevocable choices
         among that behavior.
   \item \emph{Consistency as confluence.} One definition applies to general
-        consistency models and application-specific requirements, with a
-        distributed interpretation over Lamport histories.
-  \item \emph{Functional CALM.} For arbitrary functions between ordered
-        domains, Consistency is equivalent to monotonicity.
-  \item \emph{Complete CALM and CAP.} With multiple outputs per input,
-        Consistency and Distributed Consistency are equivalent to Lifted
-        Monotonicity.  Complete CAP gives the corresponding availability
-        boundary under partition.
+      consistency models and application-specific requirements.
+      This run-level property is shown to be equivalent to Distributed
+      Consistency over Lamport histories.
+\item \emph{Functional CALM.} For arbitrary functions between ordered
+      domains, Consistency---and hence Distributed Consistency---is equivalent
+      to monotonicity.
+\item \emph{Complete CALM and CAP.} With multiple outputs per input,
+      Consistency---and hence Distributed Consistency---is equivalent to
+      Lifted Monotonicity.  Complete CAP gives the corresponding availability
+      boundary under partition.
   \item \emph{Composition and Proper Coordination.} Specifications compose by
         equijoin.  Committing a shared log order can make a non-monotone
         log/store composition consistent without further store commitments
@@ -143,7 +143,7 @@ This paper makes six contributions:
 Section~\ref{sec:functional-calm} introduces the framework on an election
 and develops Functional CALM.  Section~\ref{sec:distributed-execution} gives
 Consistency its distributed reading.  Section~\ref{sec:ambiguous-specifications}
-extends the framework to output choice, and Section~\ref{sec:complete-calm}
+extends the framework to ambiguous specifications, and Section~\ref{sec:complete-calm}
 combines the two extensions in Complete CALM and Complete CAP.
 Section~\ref{sec:instances} applies the results to familiar systems, and
 Section~\ref{sec:discussion} draws out the design lessons and scope limits.
