@@ -20,22 +20,18 @@ output can be emitted without commitment.
 \subsection{The framework on an election}
 \label{sec:election-story}
 
-We begin with an informal, example-driven treatment.
-Terms introduced in italics are defined formally in the rest of this section
-and in Sections~\ref{sec:distributed-execution}--\ref{sec:complete-calm};
-italics also mark the occasional
-standard term borrowed from database theory.  Nothing here is needed for the
-proofs, but every notion the Functional CALM theorem rests on---specification
-states, input events, retirement, commitments, upper fibers, determination,
-output actions, runs, and consistency---is exercised on the example.
+Figure~\ref{fig:election-frames} introduces the framework through one small
+election.  An \emph{ordered specification}
+$\Spec=(I,\InputOrd,O,\OutputOrd,S)$ is a table $S\subseteq I\times O$ of
+permitted input/output pairs, with a partial order on each column.  Here each
+input has exactly one output; Section~\ref{sec:ambiguous-specifications} later
+removes this functional dependency.
 
-The framework begins with an \emph{ordered specification}
-$\Spec=(I,\InputOrd,O,\OutputOrd,S)$: a table $S\subseteq I\times O$ that
-captures exactly which outputs are within spec at each input, with a partial
-order on each column.  In this section, input functionally determines output:
-every input is paired with exactly one output.
-Section~\ref{sec:ambiguous-specifications} later drops this functional
-dependency.
+Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
+$y$.  The result is whichever candidate has two ballots, or $\bot$ while there
+is no winner.  An input is the ballots received so far, written as a
+three-character string with a dot for a ballot not yet received.  The figure
+shows only inputs extending $x\cdot\cdot$.
 
 \begin{figure*}[t]
   \centering
@@ -110,97 +106,33 @@ dependency.
   \label{fig:election-frames}
 \end{figure*}
 
-\paragraph{A specification is a table.}
-A specification table lists the output paired with each input.  It need not be finite. Squaring, for example,
-has rows $(2,4)$, $(3,9)$, $(4,16),\ldots$.  Everything that follows is a
-matter of removing rows from an initial specification.
+The two orders express different interface decisions.  The \emph{input order}
+records accumulated ballots: $xy\cdot$ refines $x\cdot\cdot$, while
+$xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output order} records
+preservation of visible claims: $\bot$ lies below either winner, while $x$ and
+$y$ are incomparable.  In general, the functional table is \emph{monotone}
+when
+\[
+  i\InputOrd j\quad\Longrightarrow\quad f(i)\OutputOrd f(j).
+\]
+Here, for example, $x\cdot\cdot\InputOrd xy\cdot\InputOrd xyx$ produces
+$\bot\OutputOrd\bot\OutputOrd x$.
 
-Figure~\ref{fig:election-frames}(a) shows a set of rows taken from the specification of a small election.
-Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
-$y$; the result is whichever candidate has two ballots, and $\bot$ (no result
-yet) until one does.  An input represents the
-ballots seen so far, written as a three-letter string whose $k$th position holds
-$v_k$'s ballot or a dot if it has not arrived; only rows above $x\cdot\cdot$,
-where $v_1$ has voted $x$, are shown.  The first row says that with $v_1$'s
-ballot alone the result is $\bot$; row $xx\cdot$ says that once $v_2$ also votes
-$x$ the result is $x$; row $xyy$ says that if $v_2$ and $v_3$ both vote $y$ the
-result is $y$.
+\paragraph{Input and determination.}
+Each panel pairs a \emph{current input} with a \emph{remainder table}: the rows
+still possible from that input.  When $v_2$'s ballot for $y$ arrives, the event
+$\mathsf{input}(xy\cdot)$ produces panel~(b), retiring rows whose inputs no
+longer extend the ballots received.  The \emph{upper fiber} is the set of
+outputs in the remaining current and refining rows; in panel~(b) it is
+$\{\bot,x,y\}$.
 
-The rows are only part of the specification.  Each column also carries a
-partial order, and both orders are design decisions.  The \emph{input order}
-says what counts as more input: here, more ballots, so $xy\cdot$ \emph{refines}
-$x\cdot\cdot$, while $xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output
-order} says when a later output keeps every promise an earlier one made: here
-$\bot$ lies below both $x$ and $y$, so ``no result yet'' can eventually refine
-to a winner, but $x$ and $y$ are incomparable, so neither winner refines the
-other.  (A
-different design could make all outputs incomparable, so that every result is
-final; we return to that choice below.)  Given these orders, one can follow any input
-upward through its refinements, say $x\cdot\cdot$ to $xy\cdot$ to $xyx$: the
-output climbs too, from $\bot$ to $x$, and never steps down or sideways.  That
-is what it means for the \emph{specification} to be \emph{monotone}, a property
-of the rows together with the orders.  Viewing the specification as a function
-$f:I\to O$, monotonicity says that
-$i\InputOrd j\Longrightarrow f(i)\OutputOrd f(j)$.
-
-\paragraph{Input arrives.}
-Now $v_2$'s ballot arrives, for $y$; panel (b) shows the result.  The
-\emph{current input}, the ballots seen so far, has advanced from $x\cdot\cdot$
-to $xy\cdot$, shown in bold.  One rule governs what an input event does to the specification:
-only the rows at the current input and its refinements remain; every other row is
-\emph{retired}---removed from the resulting remainder table.  Each state pairs the current input
-with the rows that remain: it records what
-is still possible and how far input has come.  Each panel shows one such state,
-with its remainder table and current input in bold.  The inputs that still have rows are the \emph{valid} ones.
-The environment supplies new input; the system passively retires rows that are no
-longer reachable.  Here $v_2$'s ballot
-extends the cumulative input from $x\cdot\cdot$ to $xy\cdot$, and the system
-records that change as $\mathsf{input}(xy\cdot)$.
-The state depends only on the input reached, not on the order or
-grouping in which the ballots arrived.  In panel (b) the input has grown
-from $x\cdot\cdot$ to $xy\cdot$, so the row at $x\cdot\cdot$ is retired; the
-rows at $xx\cdot$, $xxx$, and $xxy$ are retired because no input refines both
-$xx\cdot$ and $xy\cdot$.  The retired output $\bot$ at $x\cdot\cdot$ is
-refined by the $\bot$ at $xy\cdot$, so growing the input lost nothing the
-smaller input's output claimed; this is a consequence of the monotonicity
-observed above.
-
-\paragraph{What could still happen.}
-While input may still grow, what matters is not only the current row but what
-any input that could still arrive might require.  The future of the election
-is its current input together with its valid input refinements, and the outputs of
-those rows form the current input's \emph{upper fiber}.  In
-panel (b) those rows are the current row and the two refinements $xyx$ and
-$xyy$ in which $v_3$ votes, so the upper fiber, shaded, is $\{\bot,x,y\}$:
-either candidate could still win.
-
-Panel (c) shows the alternative in which $v_2$ voted $x$.  The rows at or
-above $xx\cdot$ all say $x$, so the upper fiber is the singleton $\{x\}$ and
-the current state is \emph{determined}: the arriving input resolves the
-remaining ambiguity by ruling out ballot histories that do not extend the
-ballots received.  No commitment was needed; the result is input-resolved.
-Below we return to panel
-(b), where several possible outputs remain and the system must commit to reduce
-them.
-
-\paragraph{Commitments.}
-Return to panel (b).  Consider a registrar who closes the polls before
-exposing $\bot$, so any later ballot from $v_3$ will not count.  Panel (d)
-removes the rows at $xyx$ and $xyy$ while
-leaving the current input $xy\cdot$ unchanged.  The system has thereby made
-those input refinements invalid.  This irrevocable act is a \emph{commitment},
-specifically a \emph{seal commitment}: the system, rather than new input from
-the environment, has ruled out behavior that was within spec.
-
-The specification does not define a notion of commitments; that authority belongs to a second
-component of our model: the system's \emph{commitment basis} $\mathcal B$, which defines
-how the system may irrevocably remove rows.  A system whose polls can close includes this commitment in
-its basis; one whose polls cannot close does not.  After this output action, no refinement of $xy\cdot$ remains valid, its upper
-fiber is $\{\bot\}$, and the commitments have determined the result.
-
-Because a functional specification has one row per input, any commitment that
-removes a row makes that input invalid.  Thus every commitment in this section
-is a seal commitment; it may invalidate one future input or many.
+If $v_2$ instead votes for $x$, panel~(c) has upper fiber $\{x\}$.  The state
+is \emph{determined}: input has resolved the ambiguity without commitment.  In
+panel~(d), by contrast, the registrar closes the polls at $xy\cdot$, removing
+the still-valid $xyx$ and $xyy$ rows while leaving the current input unchanged.
+This irrevocable \emph{seal commitment} determines $\bot$.  Commitments belong
+to a system's declared \emph{commitment basis} $\mathcal B$, not to the
+specification itself; a system whose polls cannot close omits this action.
 
 \begin{figure}[t]
   \centering
@@ -229,72 +161,29 @@ is a seal commitment; it may invalidate one future input or many.
   \label{fig:nonmonotone-frame}
 \end{figure}
 
-\paragraph{Output actions.}
-In a functional specification, $o$ is \emph{exposable} when every output still
-allowed at the current input or one of its valid refinements preserves $o$.  If
-this test fails, emitting $o$ requires an authorized commitment that removes
-the conflicting rows.  In Figure~\ref{fig:election-frames}, $\bot$ is
-exposable in panels (a), (b), and (d), while $x$ is exposable in panel (c).
+\paragraph{Output and consistency.}
+An output $o$ is \emph{exposable} when every output still possible at the
+current input or a valid refinement can preserve it.  Hence $\bot$ is exposable
+in panels~(a) and~(b), and $x$ in panel~(c).  The transition system records one
+atomic $\mathsf{output}(o)$ action: it applies any required commitments, retires
+rows superseded by $o$, and emits $o$.  The emission remains explicit because
+the environment may use it to choose later input.
 
-The transition system records one atomic $\mathsf{output}(o)$ action.  The
-action prepares $o$ for exposure by issuing any required
-commitments and retiring rows that $o$ supersedes, then emits $o$.
-The internal stages of this atomic action are not separate transitions: no event
-can intervene.  The output emission itself remains explicit
-because the environment may use the emitted result to choose later input.
+Figure~\ref{fig:nonmonotone-frame} changes only the output order, making all
+outputs incomparable.  At $x\cdot\cdot$, $\bot$ is then incompatible with the
+possible future winners and cannot be emitted without sealing every refinement.
+The figure shows the resulting commitment.  This isolates the Functional CALM
+boundary: under the original monotone order, outputs remain valid as input
+grows; under the equality order, some output action requires commitment.
 
-\paragraph{When monotonicity fails.}
-Now change one thing in our example: make all outputs incomparable, dropping
-$\bot\OutputOrd x,y$, so that an output refines only itself; this is the
-\emph{equality order}.  The rows are the same, but in panels (a) and (b)
-nothing is exposable: $\bot$ no longer lies below the $x$ and $y$ in the upper
-fiber.  Emitting any output requires a seal commitment.  Figure~\ref{fig:nonmonotone-frame} shows the result of the output
-action for $\bot$ at $x\cdot\cdot$: its commitment removes every refinement,
-and the upper fiber collapses to $\{\bot\}$.  That contrast is Functional
-CALM (Section~\ref{sec:functional-calm}): a monotone functional specification
-can emit its outputs without commitment; a non-monotone one requires a
-commitment in some output action.
+Input and output actions form the transition system used below.  A specification
+is \emph{consistent} when any finite collection of its paths is confluent: at
+every common input refinement, the paths can continue to a common state.
+Functional CALM proves that a functional specification is consistent exactly
+when it is monotone.
 
-\paragraph{A transition system.}
-We now have the ingredients for a state transition model.  A state consists of
-two things: the current input and the rows of the specification that remain.
-Each panel above depicts one such state, and each action moves from one state to
-another.  An input event records a larger cumulative input and retires rows
-that it has passed.  An output action keeps the input fixed, performs any
-required commitment, emits its result, and retires rows superseded by that
-result.  Inputs cross the interface from the environment; outputs cross it from
-the system.  Panels (b) through (e) are reached from panel (a) by input or
-output actions.  The formal development uses this one transition system
-throughout.
-
-\paragraph{Consistency.}
-Our goal is \emph{confluence}: any finite collection of input/output paths
-through the transition system can be brought to one common state, whatever
-further input arrives.  We call a specification \emph{consistent} when all
-such paths are confluent.
-
-Our framework can encode either a general consistency model that spans many
-applications or an application-specific requirement such as an invariant.  In
-the election, the table and its orders license the application's legal
-behaviors: which results it permits, and which later results preserve earlier
-ones.  Consistency then asks whether paths through those behaviors can still
-meet.  Appendix~\ref{app:registers} applies the framework to linearizability
-and causal consistency.  These application-independent consistency models
-license different register behaviors and therefore yield different confluence
-results.  Section~\ref{sec:consistency-as-confluence} develops this distinction
-generally.  Specifications can also be composed: joining component
-tables on their shared interface yields an end-to-end specification
-(Appendix~\ref{app:composition}).
-
-Monotonicity gives a condition directly on the specification table: whenever
-input grows from $i$ to $k$, the output at $k$ refines the output at $i$.
-Functional CALM proves that this condition is equivalent to confluence: a
-functional specification is consistent exactly when it is monotone.
-
-The rest of this section states these notions formally.
-Figure~\ref{fig:formalism-summary} collects the formal objects of Functional
-CALM; Figure~\ref{fig:complete-formalism-summary} will collect the additions
-for Complete CALM.
+The rest of this section formalizes these notions; Figure~\ref{fig:formalism-summary}
+serves as a reference.
 
 \begin{figure*}[t]
   \centering
