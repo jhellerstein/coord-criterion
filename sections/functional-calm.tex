@@ -17,7 +17,7 @@ and Consistency, Section~\ref{sec:functional-calm-theorem} proves Functional
 CALM, and Section~\ref{sec:canonical-transition-system} identifies when an
 output can be emitted without commitment.
 
-\subsection{The framework on an election}
+\subsection{The framework by example}
 \label{sec:election-story}
 
 \begin{figure*}[t]
@@ -93,8 +93,8 @@ output can be emitted without commitment.
   \label{fig:election-frames}
 \end{figure*}
 
-Before the full formalism, Figure~\ref{fig:election-frames} introduces the
-framework through a small election.  Each row of its specification table pairs
+Before the full formalism, we explain the framework by example. We consider a small election,
+illustrated in Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
 the ballots received so far with the permitted result; orders on the columns
 describe how inputs grow and which later outputs preserve earlier ones.  This
 section considers tables in which each input has exactly one output;
@@ -102,10 +102,10 @@ Section~\ref{sec:ambiguous-specifications} later removes that functional
 dependency.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
-$y$.  The result is whichever candidate has two ballots, or $\bot$ while there
+$y$.  The output is whichever candidate has two ballots, or $\bot$ while there
 is no winner.  An input is the ballots received so far, written as a
-three-character string with a dot for a ballot not yet received.  The figure
-shows only inputs extending $x\cdot\cdot$.
+three-character string with a dot for a ballot not yet received.  For brevity,
+the figure shows only inputs extending $x\cdot\cdot$.
 
 The two orders express different interface decisions.  The \emph{input order}
 records accumulated ballots: $xy\cdot$ refines $x\cdot\cdot$, while
@@ -120,7 +120,8 @@ Here, for example, the input sequence $x\cdot\cdot\InputOrd xy\cdot\InputOrd xyx
 monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd x$.
 
 \paragraph{Input and determination.}
-Each panel pairs a \emph{current input} with a \emph{remainder table}: the rows
+Each panel captures the state of the system: a pair of a \emph{current input}
+and a \emph{remainder table} of rows
 still possible from that input.  When $v_2$'s ballot for $y$ arrives, the event
 $\mathsf{input}(xy\cdot)$ produces panel~(b), retiring rows whose inputs no
 longer extend the ballots received.  The \emph{upper fiber} is the set of
@@ -129,8 +130,8 @@ $\{\bot,x,y\}$.
 
 If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
 is \emph{determined}: input has resolved the ambiguity alone, without commitment.  In
-panel~(d), by contrast, the registrar chooses to close the polls at $xy\cdot$, removing
-the still-valid $xyx$ and $xyy$ rows while leaving the current input unchanged.
+panel~(d), by contrast, a registrar closes the polls at $xy\cdot$, removing
+the still-valid $xyx$ and $xyy$ rows but leaving the current input unchanged.
 This is an irrevocable \emph{seal commitment}, which determines $\bot$.  Commitments belong
 to a system's declared \emph{commitment basis} $\mathcal B$, not to the
 specification itself; a system whose polls cannot close does not have this commitment in its basis.
@@ -180,7 +181,7 @@ boundary: under the original monotone order, outputs remain valid as input
 grows; under the equality order, some outputs require commitment before they
 can be emitted.
 
-Input and output actions form the transition system used below.  A specification
+Input and output actions form a transition system between system state.  A specification
 is \emph{consistent} when paths that receive compatible inputs can still
 converge to the same state.
 Functional CALM proves that a functional specification is consistent exactly
