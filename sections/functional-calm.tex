@@ -394,12 +394,14 @@ must stand behind: later outputs may add information, but they must preserve
 its claims according to $\OutputOrd$.  This gives us a clear account of what
 the system can guarantee at each point in an execution.
 
-At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Every valid refinement whose output does not
-refine $o$ must first be invalidated by seal commitments.  An output event
-$\mathsf{output}(o)$ therefore applies a finite, possibly empty sequence of
-seal commitments from the system's basis and then emits $o$.  If those
-commitments reach $(i,R')$, the event is valid when
+What does it take for the system to stand behind an output \(o\)? At state \((i,R)\),
+the current input has a unique row \((i,o)\), so \(o\) is the only output the system
+may emit. Each valid future input \(k\) also has a unique output. If that output
+refines \(o\), it honors the promise; otherwise, accepting \(k\) would violate it.
+Before emitting \(o\), the system must therefore remove every such conflicting
+input using seal commitments. An output event \(\mathsf{output}(o)\) applies a
+finite, possibly empty sequence of seal commitments from the system's basis and
+then emits \(o\). If those commitments reach \((i,R')\), the event is valid when 
 \begin{equation}
   (i,o)\in R'\subseteq R_o.
   \label{eq:supported-output-action}
@@ -414,15 +416,12 @@ and no commitment when $R_o=R$.  In either case its target is exactly $R_o$:
   \label{eq:output-action}
 \end{equation}
 
-\begin{proposition}[Canonical output preservation]
-\label{prop:canonical-output-preservation}
-At every functional specification state $(i,R)$, the canonical basis supports
-an output event for the unique current output $o$, reaching $(i,R_o)$.  If an
-output event for $o$ under any commitment basis reaches $(i,R')$, then
-$R'\subseteq R_o$.  Thus the canonical event preserves every row that any valid
-output event for $o$ could preserve; another basis may only remove additional
-rows.
-\end{proposition}
+Proposition (Canonical-basis coverage). Suppose an output event for (o) under
+any commitment basis takes \((i,R)\) to \((i,R')\). The canonical basis supports an
+output event for the same \(o\), taking \((i,R)\) to \((i,R_o)\), with \(R'\subseteq
+R_o.\) Consequently, every finite run under any commitment basis can be replayed
+under the canonical basis with the same input and output labels. After every
+prefix, the canonical run retains every row retained by the original run.
 
 \begin{proof}
 The canonical transition is defined above, and $R'\subseteq R_o$ is required by
