@@ -358,8 +358,10 @@ commitment basis} is exactly
 \subsection{Input and output events}
 \label{sec:functional-events}
 
-With the definitions of our core objects now in hand, we are
-ready to define the events that change state and emit results.
+States and commitment bases tell us what remains possible and what a system may
+rule out.  We now define the two events that change state: input events
+incorporate new information, while output events record promises to the outside
+world.
 
 \paragraph{Input events.}
 For a state $(i,R)$ and valid input $j$ with $i\InputOrd j$, the input event is
@@ -407,20 +409,32 @@ reach $(i,R')$, the event is valid when
   R'\subseteq R_o.
   \label{eq:supported-output-action}
 \end{equation}
-Because the target is a functional specification state with current input \(i\),
-it automatically retains the unique current row \((i,o)\). The condition
-\(R'\subseteq R_o\) ensures that every remaining row preserves \(o\).
+Because the target is a functional specification state with current input $i$,
+it automatically retains the unique current row $(i,o)$.  The condition
+$R'\subseteq R_o$ ensures that every remaining row preserves $o$.  The
+commitments and emission occur in one atomic event, and the execution records
+which commitments it applies.
 
-Under the canonical basis, the event applies $s_o$ when $R_o\neq R$
-and no commitment when $R_o=R$.  In either case its target is exactly $R_o$:
+The canonical basis makes the required restriction explicit.  It applies $s_o$
+when $R_o\neq R$ and no commitment when $R_o=R$.  In either case, the event
+reaches exactly $R_o$:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}(i,R_o).
   \label{eq:output-action}
 \end{equation}
+When $R_o=R$, the output needs no commitment.  We call such an output
+\emph{exposable}.
 
-Why is this one basis enough for proofs that consider all possible input and
-output behavior?  Any output supported by another basis is also supported by
-the canonical basis:
+\begin{definition}[Exposable output, functional case]
+\label{def:exposable}
+For a functional specification, the current output $o$ is \emph{exposable} at
+$(i,R)$ when it can be emitted without commitment.  Equivalently, $R_o=R$, or
+$o\OutputOrd f(j)$ at every valid $j\succeq_I i$.
+\end{definition}
+
+The canonical basis does more than give one way to emit each output: it
+supports every output event that any other basis could support, without
+imposing that basis's additional restrictions.
 
 \begin{proposition}[Canonical basis supports every output]
 \label{prop:canonical-output-preservation}
@@ -435,20 +449,10 @@ The canonical transition is defined above, and $R'\subseteq R_o$ is required by
 Equation~\ref{eq:supported-output-action} for every valid output event.
 \end{proof}
 
-This leads us to the key definition for emitting outputs:
-\begin{definition}[Exposable output, functional case]
-\label{def:exposable}
-For a functional specification, the current output $o$ is \emph{exposable} at
-$(i,R)$ when it can be emitted without commitment.  Equivalently, $R_o=R$, or
-$o\OutputOrd f(j)$ at every valid $j\succeq_I i$.
-\end{definition}
-
-The event and its row removals are atomic, and the execution records the
-commitments it applies.  Section~\ref{sec:safe-exposure} extends output events
-with output retirement when the functional dependency is removed.
-
-With states, authority, and events defined, we can assemble executions and ask
-whether paths through the specification can be reconciled.
+Section~\ref{sec:safe-exposure} extends this account with output retirement when
+the functional dependency is removed.  With input and output events now
+defined, we can assemble them into executions and ask whether different paths
+can be reconciled.
 
 \subsection{Executions and consistency}
 \label{sec:determination}
