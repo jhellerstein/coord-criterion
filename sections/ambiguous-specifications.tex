@@ -299,22 +299,22 @@ claim.  We now extend output events to this case.
 For any remainder table, write
 $R(k)=\{u\in O:(k,u)\in R\}$.  For $o\in R(i)$, let
 \begin{equation}
-  R_o=R\mathbin{\upharpoonright_O}o
+  R^{\uparrow o}=R\mathbin{\upharpoonright_O}o
       =\{(k,u)\in R:o\OutputOrd u\}
   \label{eq:relational-exposure-target}
 \end{equation}
 be the target of the canonical output event.  Emitting $o$ excludes every
-row outside $R_o$, but those rows need not all be handled in the same way.
+row outside $R^{\uparrow o}$, but those rows need not all be handled in the same way.
 Some require sealing an entire input, some can be retired because another
 output preserves their claim, and the rest require a binding choice among
-outputs.  Accordingly, the rows in $R\setminus R_o$ fall into three classes:
+outputs.  Accordingly, the rows in $R\setminus R^{\uparrow o}$ fall into three classes:
 \begin{align}
-  K_o&=\{k:R(k)\neq\varnothing\text{ and }R_o(k)=\varnothing\},
+  K_o&=\{k:R(k)\neq\varnothing\text{ and }R^{\uparrow o}(k)=\varnothing\},
       \label{eq:seal-inputs}\\
-  D_o&=\{(k,x)\in R\setminus R_o:
-          \exists u\in R_o(k).\ x\OutputOrd u\},
+  D_o&=\{(k,x)\in R\setminus R^{\uparrow o}:
+          \exists u\in R^{\uparrow o}(k).\ x\OutputOrd u\},
       \label{eq:output-retirements}\\
-  U_o&=(R\setminus R_o)
+  U_o&=(R\setminus R^{\uparrow o})
        \setminus\bigl(D_o\cup\{(k,x):k\in K_o\}\bigr).
       \label{eq:choice-removals}
 \end{align}
@@ -356,7 +356,7 @@ for a relational specification is exactly
 These two commitments remove exactly the rows that cannot be retired.  When
 both kinds are needed, applying $s_o$ first produces a state with no input in
 $K_o$; at that state, $c_o$ removes the original $U_o$.  The output event then
-retires $D_o$ and emits $o$, ending at $(i,R_o)$.
+retires $D_o$ and emits $o$, ending at $(i,R^{\uparrow o})$.
 
 \begin{definition}[Output retirement, under output choice]
 \label{def:output-retirement}
@@ -382,10 +382,10 @@ only narrows the resulting remainder table.
 \begin{proof}
 Every row at an input in $K_o$ conflicts with $o$, so that input must be sealed.
 At every remaining input, each row in $U_o$ conflicts with $o$ and is not
-covered by a row in $R_o$, so it cannot be retired and must be removed by a
+covered by a row in $R^{\uparrow o}$, so it cannot be retired and must be removed by a
 commitment.  The rows in $D_o$ are covered and retired.  These three sets
-partition $R\setminus R_o$, so the canonical event ends at exactly $R_o$.  Any
-event that removes more rows ends at a subset of $R_o$ and only excludes
+partition $R\setminus R^{\uparrow o}$, so the canonical event ends at exactly $R^{\uparrow o}$.  Any
+event that removes more rows ends at a subset of $R^{\uparrow o}$ and only excludes
 additional behavior.
 \end{proof}
 
@@ -397,7 +397,7 @@ output event
   (i,R)\xrightarrow{\mathsf{output}(o)}(i,R')
 \]
 atomically applies its commitments, retires the remaining covered rows, and
-emits $o$.  In a canonical relational run, $R'=R_o$.  With that interpretation,
+emits $o$.  In a canonical relational run, $R'=R^{\uparrow o}$.  With that interpretation,
 Lemma~\ref{lem:run-residual}, Consistency, and
 Proposition~\ref{prop:confluence} extend unchanged to relational
 specifications.
@@ -428,9 +428,9 @@ dominated rows.
 
 \begin{proof}
 At a valid $j$, the canonical output event retains
-$R_o(j)=\{u\in R(j):o\OutputOrd u\}$.  A removed $x$ can be retired exactly when
-some $u\in R_o(j)$ refines it, which is the stated test; the same witness makes
-$R_o(j)$ nonempty.  Hence a commitment-free output event is legal exactly under
+$R^{\uparrow o}(j)=\{u\in R(j):o\OutputOrd u\}$.  A removed $x$ can be retired exactly when
+some $u\in R^{\uparrow o}(j)$ refines it, which is the stated test; the same witness makes
+$R^{\uparrow o}(j)$ nonempty.  Hence a commitment-free output event is legal exactly under
 that test.
 \end{proof}
 

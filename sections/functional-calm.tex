@@ -332,20 +332,20 @@ removes exactly the rows incompatible with that output's promise.
 \begin{definition}[Canonical seal commitment, canonical basis]
 \label{def:canonical-commitment-basis}
 For a state $(i,R)$ and its current row $(i,o)$, retaining the promise made by
-$o$ permits exactly the rows
+$o$ permits exactly the rows above $o$, the \emph{up-set} of $o$ in $R$:
 \begin{equation}
-  R_o=R\mathbin{\upharpoonright_O}o
+  R^{\uparrow o}=R\mathbin{\upharpoonright_O}o
       =\{(k,u)\in R:o\OutputOrd u\}.
   \label{eq:residual-refining-fibers}
 \end{equation}
 For each $o\in O$, the \emph{canonical seal commitment} $s_o$ is the partial
 function
 \begin{equation}
-  s_o(i,R)=(i,R_o),
+  s_o(i,R)=(i,R^{\uparrow o}),
   \label{eq:canonical-seal-commitment}
 \end{equation}
 defined at every specification state $(i,R)$ where $(i,o)\in R$ and
-$R_o\neq R$.  At such a state, reaching $R_o$ removes the sole row at one or
+$R^{\uparrow o}\neq R$.  At such a state, reaching $R^{\uparrow o}$ removes the sole row at one or
 more inputs and therefore requires a seal commitment.  The \emph{canonical
 commitment basis} is exactly
 \begin{equation}
@@ -401,21 +401,21 @@ commitments from the system's basis and then emits $o$, all atomically.  If the
 commitments leave remainder table $R'$, every remaining row must preserve $o$:
 \begin{equation}
   (k,u)\in R' \quad\Longrightarrow\quad o\OutputOrd u,
-  \qquad\text{or equivalently}\qquad R'\subseteq R_o.
+  \qquad\text{or equivalently}\qquad R'\subseteq R^{\uparrow o}.
   \label{eq:supported-output-action}
 \end{equation}
 The execution records which commitments the event applies.
 
 The canonical event retains exactly the compatible rows:
 \begin{equation}
-  (i,R)\xrightarrow{\mathsf{output}(o)}(i,R_o).
+  (i,R)\xrightarrow{\mathsf{output}(o)}(i,R^{\uparrow o}).
   \label{eq:output-action}
 \end{equation}
-It applies $s_o$ when $R_o\neq R$, and no commitment otherwise.
+It applies $s_o$ when $R^{\uparrow o}\neq R$, and no commitment otherwise.
 
 \begin{definition}[Exposable output, functional case]
 \label{def:exposable}
-The current output $o$ is \emph{exposable} at $(i,R)$ when $R_o=R$.
+The current output $o$ is \emph{exposable} at $(i,R)$ when $R^{\uparrow o}=R$.
 Equivalently, its output event needs no commitment, or $o\OutputOrd f(j)$ at
 every valid $j\succeq_I i$.
 \end{definition}
@@ -427,12 +427,12 @@ support:
 \label{prop:canonical-output-preservation}
 Suppose an output event for $o$ under any commitment basis takes $(i,R)$ to
 $(i,R')$.  The canonical basis supports an output event for the same $o$ from
-$(i,R)$, taking it to $(i,R_o)$, with $R'\subseteq R_o$.  Thus the canonical
+$(i,R)$, taking it to $(i,R^{\uparrow o})$, with $R'\subseteq R^{\uparrow o}$.  Thus the canonical
 event retains every row retained by the original event, and possibly more.
 \end{proposition}
 
 \begin{proof}
-The canonical transition is defined above, and $R'\subseteq R_o$ is required by
+The canonical transition is defined above, and $R'\subseteq R^{\uparrow o}$ is required by
 Equation~\ref{eq:supported-output-action} for every valid output event.
 \end{proof}
 
@@ -457,7 +457,7 @@ $\sigma_S(i)$ at some input $i$; its output events may use only commitments
 from $\mathcal B$.  We say simply \emph{run} when the basis is clear.  A
 \emph{canonical run} is a run under $\mathcal B_S$ in which every output event
 takes the canonical transition of Equation~\ref{eq:output-action} and hence
-reaches $R_o$.
+reaches $R^{\uparrow o}$.
 \label{def:run}
 \end{definition}
 
@@ -466,7 +466,7 @@ commitment basis can be replayed as a canonical run with the same input and
 output labels.
 After each corresponding event, the canonical run retains every row retained
 by the original run.  Input events preserve inclusion between remainder
-tables; an output target is contained in $R_o$, which is in turn contained in
+tables; an output target is contained in $R^{\uparrow o}$, which is in turn contained in
 the canonical target computed from the larger remainder table.
 
 For canonical runs, the effect of an entire run has a simple form: input
