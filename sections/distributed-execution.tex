@@ -1,8 +1,8 @@
 \section{Distributed Execution}
 \label{sec:distributed-execution}
 
-Functional CALM defines Consistency as confluence of finite sets of runs under
-the canonical commitment basis.  We now add participants, messages, and cuts.
+Functional CALM defines Consistency as confluence of finite sets of canonical
+runs.  We now add participants, messages, and cuts.
 Transition projection reduces a cut to one specification state per participant,
 while retaining the output events that the environment can observe.
 
@@ -19,7 +19,8 @@ Their transitive closure is the familiar \emph{happens-before} relation.
 A \emph{consistent cut} is a snapshot of this history that never includes a
 receive without the events that causally precede it.  Because the input and
 output events of Section~\ref{sec:functional-events} are atomic, the events at any
-such cut project to one ordinary run for each participant.  Messages explain
+such cut project to one run for each participant under the history's commitment
+basis.  Messages explain
 how a participant learned something; its projected run records only how that
 information changed the specification state.
 
@@ -150,7 +151,9 @@ $\pi_p(C)$.  The \emph{state endpoint} of the cut is the vector
   \label{eq:semantic-endpoint}
         \end{equation}
 Because input and output events are atomic transitions, every transition
-projection is a run under the history's commitment basis.
+projection is a run under the history's commitment basis.  We call a history
+\emph{canonical} when all of its output events are canonical; its transition
+projections are then canonical runs.
 \end{definition}
 
 At both cuts in Figure~\ref{fig:history-projection}, each local projection is
@@ -183,16 +186,14 @@ $j$, communicates, or terminates.
 \label{sec:distributed-consistency}
 
 Confluence is a property at one cut and common input refinement.  Distributed
-Consistency requires it at every cut of every history under the canonical
-commitment basis.
+Consistency requires it at every cut of every canonical history.
 
 \begin{definition}[Distributed Consistency]
 \label{def:distributed-consistency}
 An ordered specification has \emph{Distributed Consistency} when, for every
-finite participant set, history $H$ under the canonical commitment basis, and
-consistent cut $C$, $H$ is
-confluent at $C$ and every common refinement of
-the participants' current inputs.
+finite participant set, canonical history $H$, and consistent cut $C$, $H$ is
+confluent at $C$ and every common refinement of the participants' current
+inputs.
 \end{definition}
 
 Distributed Consistency is the history-level reading of consistency.  It is a
@@ -208,10 +209,10 @@ Consistency.
 \end{proposition}
 
 \begin{proof}
-At any cut, the projections are a finite set of runs under the canonical
-commitment basis, so Consistency implies their confluence from those endpoints.
-Conversely, place any finite set of such runs in a message-free history, one per
-participant; every input action in a run is already a cumulative
+At any cut of a canonical history, the projections are a finite set of
+canonical runs, so Consistency implies their confluence from those endpoints.
+Conversely, place any finite set of canonical runs in a message-free history,
+one per participant; every input event in a run is already a cumulative
 $\mathsf{input}(j)$ event.  Distributed Consistency at the final cut gives run
 confluence.
 \end{proof}

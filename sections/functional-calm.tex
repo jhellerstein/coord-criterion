@@ -466,30 +466,35 @@ reconciled?
 \label{def:io-transition-system}
 \label{def:transition-system}
 The \emph{transition system} consists of specification states and the input and
-output events above.  A \emph{run} is any finite transition sequence from the canonical state
-$\sigma_S(i)$ at some input $i$.  Unless stated otherwise, runs use the
-canonical commitment basis.
+output events above.  Given a commitment basis $\mathcal B$, a \emph{run under
+$\mathcal B$} is any finite transition sequence from the canonical state
+$\sigma_S(i)$ at some input $i$, whose output events use commitments from
+$\mathcal B$.  We say simply \emph{run} when the basis is clear from context.  A
+\emph{canonical run} is a run whose output events are canonical: each reaches
+$R_o$ as in Equation~\ref{eq:output-action}.
 \label{def:run}
 \end{definition}
 
 Proposition~\ref{prop:canonical-output-preservation} extends event by event:
-every finite run under any commitment basis can be replayed under the canonical
-basis with the same input and output labels.  After each corresponding event,
-the canonical run retains every row retained by the original run.  Input
+every finite run under any commitment basis can be replayed as a canonical run
+with the same input and output labels.  After each corresponding event, the
+canonical run retains every row retained by the original run.  Input
 events preserve inclusion between remainder tables; for output events, the
 original target is contained in $R_o$, which is in turn contained in the
 canonical target computed from the larger remainder table.
 
-A specification state is \emph{run-generated} when it is reachable by a run.
-This is a provenance condition, not another local invariant on a remainder
-table.  Under the canonical basis, the effect of an entire run has a simple
-form: input events discard incompatible histories, while output events retain
-only rows whose outputs preserve what has been emitted.
+A specification state is \emph{run-generated under $\mathcal B$} when it is
+reachable by a run under $\mathcal B$.  This is a provenance condition, not
+another local invariant on a remainder table.  For canonical runs, the effect
+of an entire run has a simple form: input events discard incompatible
+histories, while output events retain only rows whose outputs preserve what has
+been emitted.
 
-\begin{lemma}[Rows remaining after a run]
+\begin{lemma}[Rows remaining after a canonical run]
 \label{lem:run-residual}
-A run starts at the canonical state $\sigma_S(i_0)$, ends at $(i,R)$, and contains output events
-emitting $o_1,\ldots,o_m$.  Its final state is
+A canonical run starts at the canonical state $\sigma_S(i_0)$, ends at
+$(i,R)$, and contains output events emitting $o_1,\ldots,o_m$.  Its final state
+is
 \begin{equation}
   \left(i,\ \left\{(k,x)\in S:
     \begin{array}{l}
@@ -515,21 +520,23 @@ an input $j$ with $i_r\InputOrd j$ for every $r$.
 \begin{definition}[Consistency]
 \label{def:consistency}
 A functional ordered specification is \emph{consistent} when every finite
-family of runs under its canonical commitment basis is confluent: if the runs
+family of canonical runs is confluent under the canonical basis: if the runs
 end at states $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common refinement of
-their current inputs, one state with current input $j$ is reachable by input and
-output events from each endpoint.  The runs are then \emph{confluent at} $j$.
+their current inputs, one state with current input $j$ is reachable by
+canonical continuations from each endpoint.  The runs are then \emph{confluent
+at} $j$.
 \end{definition}
 
-Consistency quantifies over run-generated endpoints, not arbitrary specification
-states or commitments.  The replay property above shows that the canonical
-basis includes every input/output sequence admitted by another basis, while a
-weaker basis could hide non-monotonicity by disabling a conflicting output.
+Consistency quantifies over endpoints of canonical runs, not arbitrary
+specification states or commitments.  The replay property above shows that the
+canonical basis includes every input/output sequence admitted by another
+basis, while a weaker basis could hide non-monotonicity by disabling a
+conflicting output.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
-Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent at $j$ if and
-only if some row at $j$ survives in every final state,
+Canonical runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent
+at $j$ if and only if some row at $j$ survives in every final state,
 \begin{equation}
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
@@ -549,8 +556,9 @@ same lemma leaves exactly the rows of $S$ above $j$ and $u$, independent of the
 starting run.
 \end{proof}
 
-A single run can witness inconsistency: an output event for one permitted output
-may remove every row at a refinement of its current input.  Consistency describes
+A single canonical run can witness inconsistency: an output event for one
+permitted output may remove every row at a refinement of its current input.
+Consistency describes
 no protocol and promises no delivery or termination; Section~\ref{sec:discussion}
 returns to this.
 
@@ -568,15 +576,17 @@ monotone.
 \end{theorem}
 
 \begin{proof}
-Every input has one row.  By Lemma~\ref{lem:run-residual}, a run ending at
-input $i$ retains $(k,f(k))$ at $k\succeq_I i$ exactly when every output
+Every input has one row.  By Lemma~\ref{lem:run-residual}, a canonical run
+ending at input $i$ retains $(k,f(k))$ at $k\succeq_I i$ exactly when every output
 $f(i_\ell)$ emitted on the run satisfies $f(i_\ell)\OutputOrd f(k)$.  By
-Proposition~\ref{prop:confluence}, a finite family of runs is confluent at a
-common refinement $k$ exactly when every output emitted on any run lies below
+Proposition~\ref{prop:confluence}, a finite family of canonical runs is
+confluent at a common refinement $k$ exactly when every output emitted on any
+run lies below
 $f(k)$.  If $f$ is monotone this holds because each emitted $f(i_\ell)$ has
 $i_\ell\InputOrd k$.  If $f$ is not monotone, some $i\prec_I k$ has
-$f(i)\not\OutputOrd f(k)$; the run that starts at $\sigma_S(i)$ and emits
-$f(i)$ has no row at $k$ and cannot advance to its own refinement $k$.
+$f(i)\not\OutputOrd f(k)$; the canonical run that starts at
+$\sigma_S(i)$ and emits $f(i)$ has no row at $k$ and cannot advance to its
+own refinement $k$.
 \end{proof}
 
 This is the familiar CALM dichotomy stated at the specification interface
