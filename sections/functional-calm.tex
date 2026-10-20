@@ -20,19 +20,6 @@ output can be emitted without commitment.
 \subsection{The framework on an election}
 \label{sec:election-story}
 
-Figure~\ref{fig:election-frames} introduces the framework through one small
-election.  An \emph{ordered specification}
-$\Spec=(I,\InputOrd,O,\OutputOrd,S)$ is a table $S\subseteq I\times O$ of
-permitted input/output pairs, with a partial order on each column.  Here each
-input has exactly one output; Section~\ref{sec:ambiguous-specifications} later
-removes this functional dependency.
-
-Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
-$y$.  The result is whichever candidate has two ballots, or $\bot$ while there
-is no winner.  An input is the ballots received so far, written as a
-three-character string with a dot for a ballot not yet received.  The figure
-shows only inputs extending $x\cdot\cdot$.
-
 \begin{figure*}[t]
   \centering
   \small
@@ -106,6 +93,21 @@ shows only inputs extending $x\cdot\cdot$.
   \label{fig:election-frames}
 \end{figure*}
 
+An \emph{ordered specification}
+$\Spec=(I,\InputOrd,O,\OutputOrd,S)$ is a table $S\subseteq I\times O$ of
+permitted input/output pairs, with a partial order on each column.  Here each
+input has exactly one output; Section~\ref{sec:ambiguous-specifications} later
+removes this functional dependency.
+
+Before presenting the full formalism, we introduce the framework via an an example
+of a small election, illustrated
+in Figure~\ref{fig:election-frames}. 
+Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
+$y$.  The result is whichever candidate has two ballots, or $\bot$ while there
+is no winner.  An input is the ballots received so far, written as a
+three-character string with a dot for a ballot not yet received.  The figure
+shows only inputs extending $x\cdot\cdot$.
+
 The two orders express different interface decisions.  The \emph{input order}
 records accumulated ballots: $xy\cdot$ refines $x\cdot\cdot$, while
 $xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output order} records
@@ -115,8 +117,8 @@ when
 \[
   i\InputOrd j\quad\Longrightarrow\quad f(i)\OutputOrd f(j).
 \]
-Here, for example, $x\cdot\cdot\InputOrd xy\cdot\InputOrd xyx$ produces
-$\bot\OutputOrd\bot\OutputOrd x$.
+Here, for example, the input sequence $x\cdot\cdot\InputOrd xy\cdot\InputOrd xyx$ 
+monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd x$.
 
 \paragraph{Input and determination.}
 Each panel pairs a \emph{current input} with a \emph{remainder table}: the rows
@@ -126,13 +128,13 @@ longer extend the ballots received.  The \emph{upper fiber} is the set of
 outputs in the remaining current and refining rows; in panel~(b) it is
 $\{\bot,x,y\}$.
 
-If $v_2$ instead votes for $x$, panel~(c) has upper fiber $\{x\}$.  The state
-is \emph{determined}: input has resolved the ambiguity without commitment.  In
-panel~(d), by contrast, the registrar closes the polls at $xy\cdot$, removing
+If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
+is \emph{determined}: input has resolved the ambiguity alone, without commitment.  In
+panel~(d), by contrast, the registrar chooses to close the polls at $xy\cdot$, removing
 the still-valid $xyx$ and $xyy$ rows while leaving the current input unchanged.
-This irrevocable \emph{seal commitment} determines $\bot$.  Commitments belong
+This is an irrevocable \emph{seal commitment}, which determines $\bot$.  Commitments belong
 to a system's declared \emph{commitment basis} $\mathcal B$, not to the
-specification itself; a system whose polls cannot close omits this action.
+specification itself; a system whose polls cannot close does not have this commitment in its basis.
 
 \begin{figure}[t]
   \centering
@@ -165,20 +167,22 @@ specification itself; a system whose polls cannot close omits this action.
 An output $o$ is \emph{exposable} when every output still possible at the
 current input or a valid refinement can preserve it.  Hence $\bot$ is exposable
 in panels~(a) and~(b), and $x$ in panel~(c).  The transition system records one
-atomic $\mathsf{output}(o)$ action: it applies any required commitments, retires
-rows superseded by $o$, and emits $o$.  The emission remains explicit because
-the environment may use it to choose later input.
+atomic $\mathsf{output}(o)$ action with three steps: it applies any required commitments, retires
+rows superseded by $o$, and emits $o$.  The emission must be explicit for causality:
+the environment may silently use it to choose later inputs.
 
-Figure~\ref{fig:nonmonotone-frame} changes only the output order, making all
-outputs incomparable.  At $x\cdot\cdot$, $\bot$ is then incompatible with the
+Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that changes only the output order:
+all outputs are considered incomparable, including $\bot$ representing that no winner emerged.
+At $x\cdot\cdot$, $\bot$ is then incompatible with the
 possible future winners and cannot be emitted without sealing every refinement.
 The figure shows the resulting commitment.  This isolates the Functional CALM
 boundary: under the original monotone order, outputs remain valid as input
-grows; under the equality order, some output action requires commitment.
+grows; under the equality order, every output action requires commitment.
 
-Input and output actions form the transition system used below.  A specification
-is \emph{consistent} when any finite collection of its paths is confluent: at
-every common input refinement, the paths can continue to a common state.
+Input and output actions form a transition system used below.  A specification
+is \emph{consistent} when any finite collection of its paths is confluent: 
+A specification is consistent when paths that receive compatible inputs can
+still converge to the same state.
 Functional CALM proves that a functional specification is consistent exactly
 when it is monotone.
 
