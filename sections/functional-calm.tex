@@ -469,15 +469,6 @@ reaches $R[\mathrm{out}\succeq_O o]$.
 \label{def:run}
 \end{definition}
 
-We lift Proposition~\ref{prop:canonical-output-preservation} to whole runs by applying it event by event:
-every finite run under any commitment basis can be
-replayed as a canonical run with the same input and output labels, and after
-each corresponding event the canonical run retains every row the original run
-retains. Input events preserve inclusion between remainder tables. For an output
-event, the original target is contained in \(R[\mathrm{out}\succeq_O o]\), which
-is in turn contained in the canonical target computed from the larger remainder
-table.
-
 For canonical runs, the effect of an entire run has a simple form: input
 events discard incompatible histories, while output events retain only rows
 whose outputs preserve what has been emitted.
@@ -518,11 +509,33 @@ inputs, canonical continuations from every endpoint reach one state with
 current input $j$.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
-Consistency quantifies over endpoints of canonical runs, not arbitrary
-specification states or commitments.  The replay property above shows that the
-canonical basis includes every input/output sequence admitted by another
-basis, while a weaker basis could hide non-monotonicity by disabling a
-conflicting output.
+Consistency quantifies only over canonical runs.  To see that this restriction
+excludes no system's behavior, call two runs \emph{equivalent} when they start
+at the same canonical state and have the same sequence of event labels: they
+accept the same inputs and emit the same outputs, in the same order.
+Equivalent runs may differ in the commitments their output events apply, and
+hence in their remainder tables.  We lift
+Proposition~\ref{prop:canonical-output-preservation} from single output events
+to runs:
+
+\begin{lemma}[Canonical equivalents]
+\label{lem:canonical-equivalent}
+Every run under any commitment basis is equivalent to a canonical run.  After
+each event, the canonical run's remainder table contains the original run's.
+\end{lemma}
+
+\begin{proof}
+By induction on the events.  Suppose the original and canonical remainder
+tables before an event are $R\subseteq\widehat R$.  An input event valid at $R$
+is valid at $\widehat R$, and selecting rows preserves containment.  For an
+output event taking $R$ to $R'$,
+Equation~\ref{eq:supported-output-action} gives
+$R'\subseteq R[\mathrm{out}\succeq_O o]\subseteq\widehat R[\mathrm{out}\succeq_O o]$,
+which is where the canonical event takes $\widehat R$.
+\end{proof}
+
+This is why Consistency uses the canonical basis rather than a system's own: a
+weaker basis could hide non-monotonicity by disabling a conflicting output.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
