@@ -300,10 +300,10 @@ otherwise \emph{invalid}.
 Thus a remainder table is a subrelation of $S$ with a row at its current input
 and rows only at refinements of that input.  No transition adds a row.  The
 input order is interpreted cumulatively: $i\InputOrd j$ means that $j$ contains
-at least the input information in $i$.  This is a requirement on representation,
-not on application-level effect; a representation may accumulate corrections,
-retractions, or conflicts even when their interpretation revises an earlier
-conclusion.
+at least the input information in $i$.  Note that the input domain $I$ is opaque,
+and can accumulate application-level notions of corrections, retractions or
+conflicts; our notion of it being cumulative is solely based on the partial order
+$\InputOrd$.
 
 For each input $i$, the \emph{canonical initial state} is
         \begin{equation}
@@ -325,19 +325,14 @@ every row whose input does not refine $j$:
 defined when $R$ has a row at $j$.  The event retires every row whose input
 does not refine the new current input $j$.
 
-The event label is already cumulative: it supplies the new representation $j$,
-not a raw fragment that this transition system must fold into $i$.  How an
-environment or implementation computes $j$ lies outside the specification.  It
-may use union, a semilattice join, or another rule.  If two pieces of input have
-no common refinement, this input domain cannot represent their joint receipt;
-the interface must exclude that combination or use a richer cumulative
-representation.  If several common refinements exist, the surrounding system
-may choose one and supply it as the next input.  The framework requires neither
-a least common refinement nor a lattice.
+An input event records a new cumulative input \(j\), not how \(j\) was assembled.
+The framework does not require cumulative inputs to come from a least common
+refinement or a lattice, only that they are cumulative—that is, growing
+according to \(\InputOrd\).
 
-Input events compose once their final target is fixed:
-$\mathsf{input}(j)$ followed by $\mathsf{input}(k)$ has the same effect as
-$\mathsf{input}(k)$ alone, and $\mathsf{input}(i)$ at $(i,R)$ is the identity.
+Intermediate input events do not affect the result: applying \(\mathsf{input}(j)\)
+and then \(\mathsf{input}(k)\) has the same effect as applying \(\mathsf{input}(k)\)
+directly. Applying \(\mathsf{input}(i)\) at state \((i,R)\) has no effect.
 
 \paragraph{Commitments and output handling.}
 For $(i,o)\in R$, the canonical output action retains exactly
