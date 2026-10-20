@@ -240,18 +240,18 @@ where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
 output types, and $S\subseteq I\times O$ is a typed relation that is total on
 $I$ and satisfies the functional dependency from input to output: every input
 appears in at least one row, and
-\begin{equation}
+\[
   (i,o)\in S\ \land\ (i,o')\in S
   \quad\Longrightarrow\quad o=o'.
-  \label{eq:functional-specification}
-\end{equation}
-The unique output paired with $i$ defines the function
-$f:(I,\InputOrd)\to(O,\OutputOrd)$, with $S=\{(i,f(i)):i\in I\}$.
-We call $\InputOrd$ the \emph{input-refinement order}: $i\InputOrd j$ means
-that $j$ contains at least the input information in $i$.  We call $\OutputOrd$
-the \emph{output-refinement order}: $o\OutputOrd u$ means that $u$ preserves
-every externally visible claim in $o$ and may add more.
+\]
 \end{definition}
+
+The unique output paired with $i$ induces the function
+$f:(I,\InputOrd)\to(O,\OutputOrd)$, with $S=\{(i,f(i)):i\in I\}$.  We call
+$\InputOrd$ the \emph{input-refinement order}: $i\InputOrd j$ means that $j$
+contains at least the input information in $i$.  We call $\OutputOrd$ the
+\emph{output-refinement order}: $o\OutputOrd u$ means that $u$ preserves every
+externally visible claim in $o$ and may add more.
 
 The two orders are independent.  The input order compares inputs; the output
 order compares outputs.  Either may be the \emph{equality order}, under which an
@@ -275,6 +275,10 @@ write
 \[
   \mathord\uparrow_I i=\{k\in I:i\InputOrd k\}.
 \]
+
+A specification describes every permitted input/output pair.  During execution,
+input arrives and choices become binding, so only some of those pairs remain
+possible.  A specification state records this evolving residual.
 
 \begin{definition}[Specification state]
 \label{def:residual-state}
