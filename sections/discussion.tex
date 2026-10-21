@@ -90,11 +90,17 @@ termination argument.  Appendix~\ref{app:deployment} exposes this gap directly:
 partition compatibility can hold even when the declared deployment cannot carry
 out reconciliation through its authorized output events.
 
-Complete CAP adds one particular operational requirement.  Its interface-wide
-Availability condition requires every permitted output event to avoid both
-commitment and a cross-component wait.  The deployment-relative variant instead
-allows commitments made wholly within a component's existing authority.  These
-conditions identify semantic nonblocking boundaries; a protocol result must
+Complete CAP adds an operational requirement at two strengths.  Its interface
+form asks that every permitted output be emittable without waiting on another
+component; its response form (Appendix~\ref{app:cap-response}) asks only that
+every operation be answered, where a declared response obligation says which
+outputs count as answers.  A store that may serve stale reads always has an
+answer, so it meets the response form, but it cannot offer every answer its
+interface permits, so it fails the interface form.  The response form is only as
+strong as its obligation: an interface that counts an abort or a null result as
+an answer is trivially available.  The deployment-relative variant
+(Appendix~\ref{app:deployment}) further fixes who may serve which operations.
+These conditions identify semantic nonblocking boundaries; a protocol result must
 still state its delivery, fairness, failure, and cost assumptions.
 
 \subsection{What behavior is promised, and can concurrent executions preserve it?}

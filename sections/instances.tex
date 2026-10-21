@@ -32,8 +32,9 @@ changes whether monotonicity or Directed Outputs holds.
       & Causal history, induced extension
       & Operation/read explanation
       & Relational
-      & Opposing total orders are incompatible; causal explanations can refine
-        both reads. \\
+        & Opposing total orders are incompatible; a read forced before a hidden
+          write recovers Gilbert--Lynch; causal explanations can refine both
+          reads. \\
     HAT
       & Requests received so far, inclusion
       & Read, commit, and session facts
@@ -200,7 +201,11 @@ A deployment assigns transactions and requests to replicas.  The
 deployment-relative form of Complete CAP
 (Theorem~\ref{thm:complete-cap-deployment}) tests the combinations those replicas can select across a partition,
 under the contact, failure, and session assumptions of the interface
-~\cite{bailis2013hat,terry1994session}.
+~\cite{bailis2013hat,terry1994session}.  In the response form of Complete CAP
+(Appendix~\ref{app:cap-response}), HAT's ingredients separate: the isolation
+level fixes the specification, the rule that transactions eventually commit
+rather than suffer system-initiated aborts fixes what counts as an answer, and
+sticky availability fixes the deployment.
 
 \paragraph{Accumulating facts.}
 Suppose two replicas execute transactions on disjoint keys.  One exposes

@@ -69,9 +69,9 @@ monotone, and then no output ever requires a commitment.
 outputs for one input, including choices such as transaction order or leader
 selection.  As execution narrows the possible outputs, the result moves toward
 \emph{determination}; it is \emph{determined} when only one possibility remains.
-Determination occurs via two kinds of events: inputs may make some alternatives
-unreachable; commitments exclude alternatives that would otherwise remain
-possible.  Complete CALM proves that such a specification is consistent
+Determination has two sources: input events may make some alternatives
+unreachable, and output events may carry commitments that exclude alternatives
+that would otherwise remain possible.  Complete CALM proves that such a specification is consistent
 exactly when it satisfies \emph{Lifted Monotonicity}, which, like functional
 monotonicity, requires outputs permitted at inputs with a common refinement to
 share a refinement permitted there.
@@ -80,8 +80,12 @@ Representing commitments also lets us verify \emph{Proper Coordination}: whether
 a chosen use of coordination is sufficient.  Totally ordered logging and
 key-value stores are both non-monotone, yet committing to their shared log order
 makes the composed system monotone and consistent.  Finally, Complete CALM
-yields a Complete CAP theorem, extending CAP's register impossibility to classify
-specifications under the paper's interface-wide availability criterion.
+yields a Complete CAP theorem that makes Brewer's intuition precise for any
+declared consistency guarantee: a system can keep its interface available and
+consistent through partitions exactly when the specification passes the same
+common-refinement test.  Gilbert and Lynch's register impossibility appears as
+the special case in which a partition forces a replica to answer before it can
+see a conflicting write.
 \end{abstract}
 
 \begin{CCSXML}

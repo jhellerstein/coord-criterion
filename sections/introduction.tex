@@ -103,9 +103,10 @@ outputs.  For one output per input this is ordinary monotonicity; for many, it
 is Lifted Monotonicity.
 
 Output choice has two further consequences.  When participants could make
-conflicting commitments,
-their output events must be mutually excluded, and coordination mechanisms
-provide that exclusion.  Confluence is a safety guarantee: a reconciling state
+conflicting commitments, their output events cannot both complete in a
+confluent execution; a system that requires Consistency must therefore
+mutually exclude them, and coordination mechanisms provide that exclusion.
+Confluence is a safety guarantee: a reconciling state
 always exists.  With output choice, reaching it is a matter of strategy, and
 deterministic reconciliation is one strategy that terminates.
 
@@ -120,11 +121,19 @@ commitments.  We call this analysis \emph{Proper Coordination} and formalize it
 in Appendix~\ref{app:composition}.
 
 Complete CALM also yields a Complete CAP Theorem
-(\S\ref{sec:cap-corollary}).  For any consistency guarantee expressed as a
-specification, monotonicity identifies which side of the CAP boundary it
-occupies.  A monotone specification can keep its full interface available and
-confluent during a partition; a non-monotone one cannot.  Classical
-linearizability is one instance on the negative side.
+(\S\ref{sec:cap-corollary}).  Brewer conjectured that a partitioned system
+cannot be both consistent and available; Gilbert and Lynch proved this for one
+guarantee, the linearizable register.  Complete CAP makes the conjecture
+precise for any consistency guarantee expressed as a specification, and in both
+directions: it identifies which guarantees face the tradeoff and which escape
+it.
+A specification satisfying Lifted Monotonicity can keep its whole interface
+available and confluent during a partition; any other cannot.  A weaker,
+response form asks only that every operation be answered, where the interface
+declares which outputs count as answers, and characterizes exactly when that is
+possible (Appendix~\ref{app:cap-response}).  The Gilbert--Lynch theorem is the
+special case in which one replica's only permitted answer is invalidated by
+input it cannot see.
 
 This paper makes six contributions:
 \begin{enumerate}
@@ -141,8 +150,10 @@ This paper makes six contributions:
   \item \emph{Complete CALM and CAP.} With multiple outputs per input,
         Consistency---and hence Distributed Consistency---is equivalent to
         Lifted Monotonicity, the same common-refinement condition that
-        underlies Functional CALM.  Complete CAP gives the corresponding availability
-        boundary under partition.
+          underlies Functional CALM.  Complete CAP gives the corresponding
+          partition boundary in two forms, for the whole interface and for
+          answering every operation; the Gilbert--Lynch theorem is recovered as
+          a special case.
   \item \emph{Composition and Proper Coordination.} Specifications compose by
         equijoin.  Committing a shared log order can make a non-monotone
         log/store composition consistent without further store commitments
@@ -163,6 +174,8 @@ assembles Complete CALM and Complete CAP from the same parts.
 Section~\ref{sec:instances} applies the results to familiar systems, and
 Section~\ref{sec:discussion} draws out the design lessons and scope limits.
 Appendix~\ref{app:composition} proves the composition and Proper Coordination
-results, Appendix~\ref{sec:frontiers} derives maximal coordination-free
+results, Appendix~\ref{app:cap-response} develops the response form of
+Complete CAP and recovers Gilbert--Lynch, Appendix~\ref{sec:frontiers} derives
+maximal coordination-free
 interfaces, and Appendix~\ref{app:additional-applications} gives further
 classical applications.
