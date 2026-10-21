@@ -1,7 +1,7 @@
 \section{Instances Across the Literature}
 \label{sec:instances}
 
-Table~\ref{tab:instances} summarizes how atomic output actions apply across the
+Table~\ref{tab:instances} summarizes how atomic output events apply across the
 literature.  Each mapping declares an input, an output, and refinement
 orders before applying Functional CALM or Complete CALM.  Changing the interface
 changes whether monotonicity or Directed Outputs holds.
@@ -28,7 +28,7 @@ changes whether monotonicity or Directed Outputs holds.
       & Replica state, lattice order
       & Functional state; canonical merge
       & Join supplies a least common refinement across partial inputs. \\
-    Complete CAP
+    Registers
       & Causal history, induced extension
       & Operation/read explanation
       & Relational
@@ -89,7 +89,7 @@ by inclusion.  The replica's state is
         \end{equation}
 so $U\subseteq V$ implies $s(U)\sqsubseteq s(V)$, and
 $s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$: the state interface is monotone, and
-join is the least state refining both inputs~\cite{shapiro2011crdt}.  A
+join is the least state refining both states~\cite{shapiro2011crdt}.  A
 client observation $q:(D,\sqsubseteq)\to(R,\preceq_R)$ replaces the state
 output with a new promise, and by Functional CALM the client-visible interface
 $q\circ s$ is consistent exactly when
@@ -195,9 +195,10 @@ For a transactional interface, an input is the set of begin, read, write, and
 commit requests received so far, ordered by inclusion.  An output is a growing
 set of public facts such as $\mathsf{read}(T,x,v)$,
 $\mathsf{commit}(T)$, and session-order facts, also ordered by inclusion.  The
-isolation or session guarantee determines which fact sets are within spec.
-A deployment assigns transactions and requests to replicas.  The Complete
-CAP Theorem tests the combinations those replicas can select across a partition,
+isolation or session guarantee determines which fact sets are permitted.
+A deployment assigns transactions and requests to replicas.  The
+deployment-relative form of Complete CAP
+(Theorem~\ref{thm:complete-cap-deployment}) tests the combinations those replicas can select across a partition,
 under the contact, failure, and session assumptions of the interface
 ~\cite{bailis2013hat,terry1994session}.
 
@@ -241,7 +242,7 @@ to another invariant-valid state; independently reached states share the
 required ancestor; the prescribed merge is associative and preserves all
 included effects; and merged states remain reachable.  Outputs are reachable,
 invariant-valid states.  We order outputs by merge refinement: $s\OutputOrd s'$
-when $s'$ is a merge within spec that preserves every effect in $s$ (quotienting
+when $s'$ is a permitted merge that preserves every effect in $s$ (quotienting
 states with identical effects if necessary to obtain a partial order).
 
 Invariant confluence asks whether independently reachable valid states merge to

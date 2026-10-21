@@ -3,7 +3,7 @@
 
 Theorem~\ref{thm:complete-cap} (Complete CAP) quantifies over all participants
 and inputs and uses interface-wide Availability, which requires every output
-action to be commitment-free.
+event to be commitment-free.
 Whether a commitment is necessary is a question about the specification;
 whether it requires agreement across a partition also depends on
 \emph{deployment}: which participant may hold which input and select which row.
@@ -68,14 +68,14 @@ a single emitted row.
 At a state $(i,R)$ during a partition, a surviving authorized row
 $(i,o)\in A_p\cap R$ is \emph{deployment-available} when its participant can
 perform $\mathsf{output}(o)$ without a cross-component receive.  The output
-action may apply commitments whose authority is entirely within the
+event may apply commitments whose authority is entirely within the
 participant's component.  A deployment has \emph{Deployment
 Availability} when every surviving authorized row at each participant's
 current input is deployment-available.
 \end{definition}
 
 This differs deliberately from the interface-wide Availability of
-Section~\ref{sec:cap-corollary}, which requires every output action to be
+Section~\ref{sec:cap-corollary}, which requires every output event to be
 commitment-free.  Here a local commitment counts as available; a commitment whose authority is split by
 the partition does not.  Call a deployment \emph{single-authority} when one
 participant holds all relevant input state and output choices and every other
@@ -118,7 +118,7 @@ every emitted row belongs to its participant's $A_p$.  Each participant's
 fiber at $j$ then contains only
 outputs above all of its own emissions, and no output of $\fiber{j}$ is above
 all emitted outputs in the family, so no row at $j$ survives in every state.
-Avoiding this requires either a wait across the cut or refusing some authorized
+Avoiding this requires either a wait across the partition or refusing some authorized
 row, which implements a narrower deployment or specification.
 \end{proof}
 
@@ -126,8 +126,8 @@ The theorem establishes abstract compatibility, not deployment-authorized
 confluence to an identical state.  A common surviving row $u$ shows that the
 emitted outputs can be jointly refined in the specification, but some
 participant may lack authority for $\mathsf{output}(u)$.  Confluence through
-legal actions of the deployment additionally requires enough authority to take
-a common-refining output action from every endpoint.  We do not impose that
+legal output events of the deployment additionally requires enough authority to take
+a common-refining output event from every endpoint.  We do not impose that
 condition here.
 
 The theorem concerns cross-component families of canonical runs and assumes,
@@ -138,16 +138,18 @@ or more emissions are contained wholly in one component create no
 cross-component condition.  If a local commitment affects rows another
 component may emit, its cross-component consequences must themselves
 satisfy the theorem's condition.  Only run families that a partition separates
-are tested.  If the deployment lets every participant hold every row and every
-output action is required to be commitment-free, Deployment Availability is
-exactly the Availability condition of
-Section~\ref{sec:cap-corollary}, every family is separable under some partition,
-and monotonicity across partitions is
-monotonicity.  Under those restrictions, this theorem's compatibility
+are tested.  If there are at least two participants, the deployment lets every
+participant hold every row, and every output event is required to be
+commitment-free, then Deployment Availability is exactly the Availability
+condition of Section~\ref{sec:cap-corollary}.  Moreover, every pair of rows
+can then be split across a partition and every single row paired with a silent
+participant; since pairs of rows suffice for the common-refinement condition
+(Section~\ref{sec:relational-specifications}), monotonicity across partitions
+is monotonicity.  Under those restrictions, this theorem's compatibility
 equivalence supplies the common-survivor condition used by the Partition
 Consistency part of Theorem~\ref{thm:complete-cap}; Complete CAP additionally
 derives Availability from Lifted Monotonicity, and its unrestricted canonical
-basis supplies the output actions used for confluence.  Deployment
+basis supplies the output events used for confluence.  Deployment
 determines which inputs and choices can occur independently, just as data
 placement does in the relational-transducer model.
 

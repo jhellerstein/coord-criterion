@@ -2,7 +2,7 @@
 \label{sec:complete-calm}
 
 The previous two sections developed orthogonal extensions of Functional CALM:
-Lamport histories give Consistency a distributed reading, while relational
+distributed histories give Consistency a distributed reading, while relational
 specifications add output choice.  We now combine them.  First we identify
 coordination with commitment and state when conflicting output events cannot
 coexist; then Complete CALM equates Consistency, Lifted Monotonicity, and
@@ -28,7 +28,6 @@ relational extensions combined here.
     projection; endpoint & $\pi_p(C)$: transitions affecting $p$;
       $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
     history confluence & at every common input $j$, all participants can reach one state $(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
-    run & finite input/output-event sequence; $\mathsf{input}(j)$ directly accepts cumulative input $j$ & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Output choice} & & \\
     \midrule
@@ -69,13 +68,10 @@ accounts for.  It is \emph{coordination-free} when its output events apply no
 commitments; they may still perform output retirements.
 \end{definition}
 
-Throughout this section, \emph{reachable} means reachable without commitment
-(Section~\ref{sec:determination}).
-
 \begin{theorem}[Conflicting output events cannot coexist]
 \label{thm:commitments-require-coordination}
-Suppose one participant can perform an output event at a reachable state
-$\sigma=(i,R)$ that applies a commitment, producing a state
+Suppose that, at a state $\sigma=(i,R)$ reachable without commitment, one
+participant can perform an output event that applies a commitment, producing a state
 $\sigma'=(i,R')$ in which some $x\in R(i)$ has been removed by commitment and
 no output in $R'(i)$ refines $x$.  Suppose a second participant can
 independently emit $x$ after receiving the same input events, obtaining a state
@@ -107,12 +103,6 @@ specification.  It equates Consistency---confluence of canonical runs---with
 Lifted Monotonicity.  The distributed execution model
 supplies the equivalent third view, Distributed Consistency.
 
-Its proof is assembled from parts already in hand: the common-refinement
-characterization of Consistency, which lifts unchanged to output choice
-(Section~\ref{sec:relational-executions}); the identification of Lifted
-Monotonicity with the common-refinement condition; and the distributed reading
-of Consistency.
-
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
 For an ordered relational specification, the following are equivalent:
@@ -134,15 +124,13 @@ to Lifted Monotonicity.
 
 
 
-The theorem gives a specification-level test for history confluence.  It also
-derives exposability rather than assuming it: by the exposure boundary
+The theorem gives a specification-level test for history confluence, and it
+derives exposability rather than assuming it.  By the exposure boundary
 (Proposition~\ref{prop:functional-exposure-boundary}), Lifted Monotonicity holds
-exactly when every output at every reachable state is exposable.
-
-Thus Lifted Monotonicity makes all reachable outputs exposable, so output
-progress needs no commitment and is coordination-free.  Its failure exhibits
-a finite family without a common refinement, so selecting an offending output
-requires a commitment and hence coordination.  When different participants
+exactly when every output at every state reachable without commitment is
+exposable, so output progress needs no commitment and is coordination-free.
+When it fails, some finite family has no common refinement, and selecting an
+offending output requires a commitment and hence coordination.  When different participants
 must retain independently selectable conflicting alternatives,
 Theorem~\ref{thm:commitments-require-coordination} applies.
 
@@ -166,24 +154,29 @@ commitment.  Section~\ref{sec:discussion} returns to this distinction.
 
 The coordination boundary becomes an availability boundary during a
 partition: participants in different components cannot establish a new shared
-commitment.  A \emph{partitioned history} divides participants into two or more
-components and has no cross-component message receive while the partition
-lasts, though participants may still receive environment input and emit
-outputs.  Each participant has one state at a cut.
+commitment.
 
-We use an interface-wide form of \emph{Availability}: every output in a
-participant's current fiber can be emitted by an output event without
-commitment and without waiting for a message from another component.  This is
-stronger than requiring some response to one operation, because the full
-declared interface treats every permitted output as available.  The history has
-\emph{Partition Consistency} when its participant projections are confluent,
-through commitment-free extensions, at every common refinement of their current
-inputs.
+\begin{definition}[Partitioned history; Availability; Partition Consistency]
+\label{def:partition-notions}
+A \emph{partitioned history} divides participants into two or more components
+and has no cross-component message receive while the partition lasts, though
+participants may still receive environment input and emit outputs.  A
+consistent cut of it, at which each participant has one state, has
+\emph{Availability} when every output in each participant's current fiber can
+be emitted by an output event without commitment and without waiting for a
+message from another component.  It has \emph{Partition Consistency} when its
+participant projections are confluent, through commitment-free extensions, at
+every common refinement of their current inputs.
+\end{definition}
 
-The partition's only effect is to forbid new shared commitments across
-components.  Availability therefore reduces to exposability, and Complete CAP
-follows from Complete CALM and the exposure boundary; its content is that the
-boundary is exact.
+This Availability is interface-wide.  It is stronger than requiring some
+response to one operation, because the full declared interface treats every
+permitted output as available.  The partition's only effect is to forbid new
+shared commitments across components, so Availability reduces to
+exposability.  The forward direction of Complete CAP then follows from
+Complete CALM and the exposure boundary.  The converse shows that the boundary
+is exact: whenever Lifted Monotonicity fails, some consistent cut of some partitioned
+history lacks Availability or Partition Consistency.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
@@ -205,9 +198,12 @@ surviving in every projection.  After $\mathsf{input}(j)$, each participant's
 state is again reachable without commitment, so $u$ is exposable there and its
 output event needs no commitment; this gives Partition Consistency.
 
-Conversely, let any finite rows $(i_r,o_r)$ have a common refinement $j$.
-Place their participants in separate partition components.  If there is only
-one row, add a second participant initialized at $j$ and emit no output there.
+Conversely, let any finite rows $(i_r,o_r)$ have a common refinement $j$.  For
+the empty family, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, place
+one participant per row, initialized at $\sigma_S(i_r)$, in separate partition
+components.  A partition needs at least two components, so if there is only
+one row, add a second participant initialized at $\sigma_S(j)$ that emits no
+output.
 Availability lets each original participant perform $\mathsf{output}(o_r)$
 from $\sigma_S(i_r)$ without a commitment.  Partition Consistency and the
 survivor test then supply a row $(j,u)$ surviving in every remainder table,
@@ -226,7 +222,7 @@ the cost of Partition Consistency.
 A linearizable register is the classical instance of the tradeoff side: a
 write completed in one partition component is hidden from a read in another,
 so indistinguishable local executions force the reader either to wait or to
-violate real-time order.  Whether a commitment requires agreement across a
+violate real-time order (Appendix~\ref{app:registers}).  Whether a commitment requires agreement across a
 partition also depends on which participant may hold which input and make which
 choice.  Appendix~\ref{app:deployment} introduces a weaker, deployment-relative
 availability condition that counts partition-independent local commitments as

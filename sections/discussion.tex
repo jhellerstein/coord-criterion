@@ -15,7 +15,7 @@ Two traces can emit different outputs for two fundamentally different reasons.
 A functional specification fixes one output for each input, but input may arrive
 incompletely, in different orders, or in different batches.  This is execution
 ambiguity.  A relational specification adds semantic ambiguity: even at the
-same input, several outputs are within spec.
+same input, several outputs are permitted.
 
 The distinction determines which test applies.  Ordinary monotonicity asks
 whether varying functional executions can safely emit results as input grows.
@@ -88,10 +88,10 @@ semantically compatible.  It does not give every participant authority to emit
 that refinement, an algorithm to compute it, messages across a partition, or a
 termination argument.  Appendix~\ref{app:deployment} exposes this gap directly:
 partition compatibility can hold even when the declared deployment cannot carry
-out reconciliation through its authorized output actions.
+out reconciliation through its authorized output events.
 
 Complete CAP adds one particular operational requirement.  Its interface-wide
-Availability condition requires every permitted output action to avoid both
+Availability condition requires every permitted output event to avoid both
 commitment and a cross-component wait.  The deployment-relative variant instead
 allows commitments made wholly within a component's existing authority.  These
 conditions identify semantic nonblocking boundaries; a protocol result must
@@ -138,7 +138,7 @@ relevant continuations---those states can serve as the inputs instead.  Choosing
 forget operational detail only when that detail cannot change its future
 obligations.
 
-Lamport histories provide the corresponding distributed grounding.  They retain
+Distributed histories provide the corresponding grounding.  They retain
 participant order, message causality, and observable output events; transition
 projection discards delivery and strategy details that do not change the
 specification state.  The equivalence of Consistency and Distributed

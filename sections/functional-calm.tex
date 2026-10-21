@@ -85,11 +85,13 @@ when an output can be emitted without commitment.
     \multicolumn{2}{@{}l}{\footnotesize possible outputs $\{\bot\}$; sealed and}\\
     \multicolumn{2}{@{}l}{\footnotesize commitment-resolved; $\bot$ is the result}
   \end{tabular}
-  \caption{The election specification and three states reached from it.  Only rows above the input $x\cdot\cdot$ are shown.  The current input is
+  \caption{The election specification and three states reached from it.  Only
+  rows whose input refines $x\cdot\cdot$ are shown.  The current input is
   in bold; shaded cells are the current input and outputs still possible at it.
-  Gray: the row has been retired by an input event.
-  Struck through: the row has been removed by a commitment; no remaining row
-  preserves its contents.  Panels (b) and (c) follow input events; panel (d)
+  Gray: the row has been removed from the remainder table.  Gray and struck
+  through: it was removed by a commitment; gray alone: it was retired, by an
+  input event or (Figure~\ref{fig:ambiguity-frames}) an output retirement.
+  Panels (b) and (c) follow input events; panel (d)
   follows an output event for $\bot$ that contains a seal commitment.}
   \label{fig:election-frames}
 \end{figure*}
@@ -381,19 +383,6 @@ outputs do not refine $o$.  The \emph{canonical commitment basis} is exactly
 \end{equation}
 \end{definition}
 
-\paragraph{Determination.}
-For a state $(i,R)$, the \emph{upper fiber} $\mathrm{out}(R[\mathrm{in}\succeq_I i])$
-collects the outputs at $i$ and its still-valid refinements.  The state is
-\emph{determined} when its upper fiber has one element, regardless of how it
-was reached, and \emph{sealed} when no strict refinement of $i$ remains valid.
-A sealed functional state is determined.  \emph{Determination} is movement
-toward or arrival at a determined state.  An input event may resolve
-ambiguity by retiring rows that no longer extend the input received; a
-commitment may instead exclude an alternative that otherwise remains possible.
-We call the resulting outcomes \emph{input-resolved} and
-\emph{commitment-resolved}, respectively, as in panels (c) and (d) of
-Figure~\ref{fig:election-frames}.
-
 \subsection{Input and output events}
 \label{sec:functional-events}
 
@@ -460,9 +449,11 @@ An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when some valid output
 event for $o$ applies no commitment.
 \end{definition}
 
-No system-specific basis retains more rows than the canonical event.  The
-results that follow depend on output events only through four facts, which we
-collect as the \emph{event contract}.
+Systems differ in which commitments they hold, so one output can be emitted by
+many different events.  To reason about all of them at once, we isolate what
+they share.  No system-specific basis retains more rows than the canonical
+event, and the results that follow depend on output events only through four
+facts, which we collect as the \emph{event contract}.
 
 \begin{proposition}[Event contract]
 \label{prop:canonical-output-preservation}
@@ -495,21 +486,29 @@ $u=x=f(j)$ shows that it is the condition of clause~4.
 
 In a functional specification, then, $o$ is exposable exactly when
 $R[\mathrm{out}\succeq_O o]=R$, or equivalently $o\OutputOrd f(j)$ at every
-valid $j\succeq_I i$.  We state clause~4 in the form
-Section~\ref{sec:safe-exposure} reuses.  That section lifts output events to
-specifications with several outputs per input and shows that the lifted events
-satisfy the same contract.
+valid $j\succeq_I i$.
+
+\paragraph{Determination.}
+Both kinds of event can narrow what remains possible.  For a state $(i,R)$, the
+\emph{upper fiber} $\mathrm{out}(R[\mathrm{in}\succeq_I i])$ collects the
+outputs at $i$ and its still-valid refinements.  The state is
+\emph{determined} when its upper fiber has one element, regardless of how it
+was reached, and \emph{sealed} when every strict refinement of $i$ has been
+sealed, so that none remains valid.  A sealed functional state is determined.
+\emph{Determination} is movement toward or arrival at a determined state.  An
+input event may resolve ambiguity by retiring rows that no longer extend the
+input received; a commitment may instead exclude an alternative that otherwise
+remains possible.  We call the resulting outcomes \emph{input-resolved} and
+\emph{commitment-resolved}, respectively, as in panels (c) and (d) of
+Figure~\ref{fig:election-frames}.
 
 \subsection{Executions and consistency}
 \label{sec:determination}
 
-Individual events describe one state change at a time.  We now assemble them
-into runs and ask the central consistency question: when different runs follow
-different paths through the specification, can their resulting states still be
-reconciled?
-
-\paragraph{Roadmap.}
-Consistency quantifies over all runs of all systems.  We reduce it to a check
+We now assemble events into runs and ask the central consistency question:
+when different runs follow different paths through the specification, can
+their resulting states still be reconciled?  Consistency quantifies over all
+runs of all systems.  We reduce it to a check
 on the specification table in three steps.  First, any system's run can be
 replaced by a canonical run that keeps at least as many rows
 (Lemma~\ref{lem:canonical-equivalent}).  Second, a canonical run's remaining
@@ -657,9 +656,7 @@ starting run.
 In a functional specification the only row at $j$ is $(j,f(j))$, so the test
 asks whether that row survives in every run, and $u=f(j)$; in the
 equality-order election of Section~\ref{sec:election-story}, the row
-$(xxx,x)$ does not survive the run that emits $\bot$ at $x\cdot\cdot$.  We
-state the general form because Section~\ref{sec:ambiguous-specifications}
-reuses it.
+$(xxx,x)$ does not survive the run that emits $\bot$ at $x\cdot\cdot$.
 
 Consistency guarantees that runs never diverge irreparably.  Whatever input
 and output events a finite collection of runs has taken, any input refining all
@@ -715,6 +712,11 @@ Proposition~\ref{prop:confluence} supply a row $(j,u)$ surviving in every one
 of these runs, so $u\in S(j)$ refines every $o_r$.
 \end{proof}
 
+In the equality-order election, the rows $(x\cdot\cdot,\bot)$ and $(xx\cdot,x)$
+have common refinement $xxx$, but $S(xxx)=\{x\}$ and $x$ does not refine
+$\bot$.  The condition fails, and so does Consistency: these are the two runs of
+Section~\ref{sec:election-story} that can never meet.
+
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
 A functional ordered specification is consistent if and only if it is
@@ -740,7 +742,8 @@ along the way.
 \end{corollary}
 
 \begin{proof}
-By Lemma~\ref{lem:run-residual}, the run's remainder table is
+By Functional CALM (Theorem~\ref{thm:functional-calm}), the specification is
+monotone.  By Lemma~\ref{lem:run-residual}, the run's remainder table is
 $S[\mathrm{in}\succeq_I i,\ \mathrm{out}\succeq_O o_1,\ \ldots,\
 \mathrm{out}\succeq_O o_m]$, where each $o_\ell=f(i_\ell)$ for some
 $i_\ell\InputOrd i$.  Every row at or above $i$ has the form $(k,f(k))$ with

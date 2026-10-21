@@ -7,9 +7,9 @@ before coordination becomes unavoidable?  The answer depends on what must stay
 fixed.  Here we fix the inputs, visible claims, refinement orders, and---when
 partitions matter---the deployment.
 
-We compare interface strength by the behaviors within a specification.  An
-interface $T$ is \emph{stronger} than $S$ when every behavior within $T$ is
-also within $S$, but not conversely.  The stronger interface rules out more
+We compare interface strength by the behaviors a specification permits.  An
+interface $T$ is \emph{stronger} than $S$ when every behavior $T$ permits is
+also permitted by $S$, but not conversely.  The stronger interface rules out more
 implementations and gives clients a tighter guarantee.  For example,
 linearizability is stronger than causal consistency because it allows fewer
 histories.  Thus ``stronger'' corresponds to a smaller set of allowed behaviors.
@@ -76,10 +76,17 @@ $S\subseteq I\times O$.  Write its original fiber as
   \label{eq:hull-original-fiber}
         \end{equation}
 The transformation replaces the output carrier $O$ by equivalence classes of
-nonempty subsets of $O$.  For sets $A,B$, write
-$A\equiv_H B$ when both $A\LiftedOutputOrd B$ and
-$B\LiftedOutputOrd A$, using the Hoare preorder of
-Equation~\ref{eq:lifted-output-order}; the transformed carrier is
+nonempty subsets of $O$, compared pointwise by the \emph{Hoare preorder}:
+for nonempty $A,B\subseteq O$,
+        \begin{equation}
+  A\LiftedOutputOrd B
+  \quad\Longleftrightarrow\quad
+  \forall a\in A\;\exists b\in B:\;a\OutputOrd b,
+  \label{eq:lifted-output-order}
+        \end{equation}
+so every output in $A$ is refined by some output in $B$.  Write $A\equiv_H B$
+when both $A\LiftedOutputOrd B$ and $B\LiftedOutputOrd A$; the transformed
+carrier is
 $(\mathcal P(O)\setminus\{\varnothing\})/{\equiv_H}$.  The preorder induces a
 partial order on these classes, as the specification model requires.  Below we
 continue to write set representatives and $\LiftedOutputOrd$ for the induced
@@ -170,16 +177,20 @@ monotone, and by Functional CALM the specification is consistent.
 \end{proposition}
 
 \begin{proof}
-Take a search path valid at $h$.  At $h'$, replace each old edge by the path that
+By induction on the restructuring steps from $h$ to $h'$, it suffices to treat
+a single step.  Take a search path valid before the step.  After it, replace each old edge by the path that
 simulates it.  From the old terminal occurrence, follow the preserved path to a
 current occurrence.  The concatenated path validates the original search
 claim.
 \end{proof}
 
 This positive result meets the remembered-output frontier.  For a fixed key in
-a split-only migration chain, let $X(g)$ be the exact search certificates at
-prefix $g$.  Every historical certificate in $\widehat X(h)$ has a refinement
-in $R(h)$, namely its current forwarding path:
+a split-only migration chain, let $X(g)\subseteq R(g)$ be the claims $(k,p)$
+whose search from $p$ is exact (direct, without forwarding) at prefix $g$.
+Order claims by equality, so that a claim refines only itself.  Every
+historical claim in $\widehat X(h)$ was exact at some $g\InputOrd h$, so
+Proposition~\ref{prop:persistent-forwarding} keeps it in $R(h)$, now witnessed
+by its current forwarding path:
         \begin{equation}
   \widehat X(h)\LiftedOutputOrd R(h).
   \label{eq:forwarding-hull}
@@ -234,7 +245,7 @@ together with the availability assumption, every local choice remains
 available and independently emitted choices have an abstract common refinement.
 If the deployment additionally authorizes every participant to emit the same
 common-refining tuple from its endpoint, the participants can reconcile through
-deployment-authorized output actions.  Authority to emit only one's own
+deployment-authorized output events.  Authority to emit only one's own
 coordinate is not sufficient, because coordinate-wise actions need not make
 the remainder tables equal.  Every proper normalized, locally conservative strengthening is not
 monotone across partitions.

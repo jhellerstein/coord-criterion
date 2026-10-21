@@ -179,9 +179,14 @@ $S_2\circ S_1$ to $S_2\circ C$.
 \label{def:proper-coordination}
 The commitments producing $C$ are \emph{proper for the composition} when the
 resolved end-to-end specification $S_2\circ C$ is consistent and every output
-at every commitment-free reachable state of that specification is exposable.
+at every state of that specification reachable without commitment is
+exposable.
 For independently parameterized composition, the resolved table is $G\star C$.
 \end{definition}
+
+The second clause follows from the first by the exposure boundary
+(Proposition~\ref{prop:functional-exposure-boundary}); we state it because it
+is the property a downstream implementer relies on.
 
 The definition tests the joined behavior after coordination.  It does not
 require $S_1$, $S_2$, or their unresolved composition to be monotone.
@@ -195,16 +200,17 @@ Lifted Monotonicity.
 
 \begin{proof}
 If the resolved composition satisfies Lifted Monotonicity, Complete CALM gives
-Consistency, and the exposability consequence following
-Theorem~\ref{thm:complete-calm} makes every output at every commitment-free
-reachable state exposable.  Conversely, Proper Coordination includes
+Consistency, and the exposure boundary
+(Proposition~\ref{prop:functional-exposure-boundary}) makes every output at
+every state reachable without commitment exposable.  Conversely, Proper Coordination includes
 Consistency of the resolved composition, so Complete CALM gives Lifted
 Monotonicity.
 \end{proof}
 
 Lemma~\ref{lem:composition} and
 Lemma~\ref{lem:parameterized-composition} give one easy sufficient case: if the
-resolved upstream table and downstream specification are each Lifted Monotone,
+resolved upstream table and downstream specification each satisfy Lifted
+Monotonicity,
 their composition is proper.  The theorem is strictly more general: it requires
 only the resolved join to be monotone.
 
@@ -238,8 +244,8 @@ specification $G\star F$ to be monotone.
 \begin{proof}
 The graph table of $C$ is monotone by prefix preservation.  Deterministic
 evaluation is monotone under the product order on request histories and logs.
-Lemma~\ref{lem:parameterized-composition} therefore makes $G\star C$ Lifted
-Monotone; Complete CALM makes it consistent.
+Lemma~\ref{lem:parameterized-composition} therefore makes $G\star C$ satisfy
+Lifted Monotonicity; Complete CALM makes it consistent.
 \end{proof}
 
 The premise has the usual state-machine interpretation: extending a committed
@@ -250,7 +256,7 @@ make their composition consistent.  No independent commitment at the register
 or key-value-store interface is required.
 
 By Theorem~\ref{thm:proper-coordination}, the log commitments are proper.
-MultiConsensus replaces the single authority with distributed agreement on the
+Multi-Paxos replaces the single authority with distributed agreement on the
 same sequence of commitments.  Because it produces the same restricted log
 table $C$, the argument is unchanged; only the mechanism that establishes the
 upstream commitments becomes distributed~\cite{lamport2001paxos}.

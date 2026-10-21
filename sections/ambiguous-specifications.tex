@@ -131,23 +131,13 @@ abort commitments.
   \label{fig:cc-commitments}
 \end{figure}
 
-The examples isolate the one new ingredient: output events that can retire
-dominated rows or make output choices.  Section~\ref{sec:functional-calm}'s
-results used output events only through the event contract, so once the lifted
-events satisfy it, Consistency, the survivor test, and the exposure boundary
-carry over unchanged.
-
 \subsection{Relational specifications and Lifted Monotonicity}
 \label{sec:relational-specifications}
 
 The examples pose the specification-level question: when can every finite set
-of possible outputs survive together as input grows?  Once
-Section~\ref{sec:safe-exposure} verifies the lifted event contract,
-Theorem~\ref{thm:common-refinement} answers it: exactly when the
-common-refinement condition holds, a condition that never mentions the
-functional dependency.  Lifted Monotonicity is that condition written as
-monotonicity of fibers.  We first define the two ways it can fail, then combine
-them.
+of possible outputs survive together as input grows?  Lifted Monotonicity
+answers it by requiring monotonicity of fibers.  We first define the two ways
+it can fail, then combine them.
 
 \begin{definition}[Ordered relational specification]
 \label{def:relational-specification}
@@ -174,35 +164,21 @@ Specification states, commitment bases, and input events
 apply unchanged to relational tables; Section~\ref{sec:safe-exposure} lifts
 output events.
 
-The output-refinement order lifts from individual outputs to nonempty sets of
-outputs.  For nonempty $A,B\subseteq O$, define
-        \begin{equation}
-  A\LiftedOutputOrd B
-  \quad\Longleftrightarrow\quad
-  \forall a\in A\;\exists b\in B:\;a\OutputOrd b.
-  \label{eq:lifted-output-order}
-        \end{equation}
-This relation is often called the Hoare preorder.  It compares sets
-pointwise: $A\LiftedOutputOrd B$ means that every output in $A$ is
-refined by some output in $B$.
-
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
 An ordered relational specification satisfies \emph{Relational Monotonicity}
-when the mapping $i\mapsto\fiber{i}$ is monotone
-under the pointwise lift:
+when every output keeps some refinement as input grows:
         \begin{equation}
-  i\InputOrd j
+  i\InputOrd j,\ o\in\fiber{i}
   \quad\Longrightarrow\quad
-  \fiber{i}\LiftedOutputOrd\fiber{j}.
+  \exists u\in\fiber{j}.\ o\OutputOrd u.
   \label{eq:relational-monotonicity}
         \end{equation}
 \end{definition}
 
 For singleton fibers this is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  In general it says that each
-output permitted before more input arrives has some refinement afterward.  It
-does not say whether several outputs permitted at one input can be preserved
+Equation~\ref{eq:functional-monotonicity}.  It treats each output separately
+and does not say whether several outputs permitted at one input can be preserved
 together; Directed Outputs addresses that question.
 
 \begin{definition}[Compatibility]
@@ -240,9 +216,9 @@ expresses both.  For nonempty $A,B\subseteq O$, define
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-the \emph{joint lift} of $\OutputOrd$.  Unlike the Hoare preorder, it
-preserves finite sets of outputs together rather than each output separately.
-It is transitive, and $A\JointOutputOrd A$ holds exactly when $A$ is directed.
+the \emph{joint lift} of $\OutputOrd$.  Unlike Relational Monotonicity, it
+preserves finite sets of outputs together rather than each output separately,
+and $A\JointOutputOrd A$ holds exactly when $A$ is directed.
 
 \begin{definition}[Lifted Monotonicity; monotone specification]
 \label{def:lifted-monotonicity}
@@ -282,7 +258,8 @@ $\fiber{i}$ is directed.  Taking $X=\{o\}$ for $o\in\fiber{i}$ and
 $i\InputOrd j$ gives $u\in\fiber{j}$ with $o\OutputOrd u$, which is Relational
 Monotonicity.
 
-(2) implies (3).  Let rows $(i_r,o_r)$ have common refinement $j$.  Since
+(2) implies (3).  Let rows $(i_r,o_r)$ have common refinement $j$.  For the
+empty family, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, since
 $i_r\InputOrd j$, Relational Monotonicity gives, for each $r$, a
 $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ now all lie in the one
 fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ refines every
@@ -293,10 +270,12 @@ finite.  The rows $\{(i,x):x\in X\}$ have common refinement $j$, so some
 $u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
 \end{proof}
 
-Checking pairs of rows suffices for form~(3): pairwise common refinements
-within a fiber extend inductively to every finite family.  The $k$-set example
-of Appendix~\ref{app:additional-applications} shows why checking only the
-participants' initial single decisions does not.
+Checking pairs of rows suffices for form~(3), provided the pairs range over
+all rows of $S$, including those at the common refinement: combine two rows
+into one row at $j$, then pair it with the next.  Pairs drawn only from
+participants' initial decisions do not suffice; in the $k$-set agreement
+example of Appendix~\ref{app:additional-applications}, every $k$ of $k+1$
+initial decisions are compatible, but not all of them.
 
 \subsection{Lifted output events}
 \label{sec:safe-exposure}
@@ -304,10 +283,8 @@ participants' initial single decisions does not.
 The functional case has one row per input, so an output event either removes
 nothing or seals a valid input.  With several rows at one input, it can also
 retire a dominated output while retaining another row that preserves its
-claim.  We now lift output events to this case.  The goal is narrow: the lifted
-events must satisfy the event contract of
-Proposition~\ref{prop:canonical-output-preservation}.  Once they do, every
-step of Section~\ref{sec:determination} carries over.
+claim.  We now lift output events to this case and check that they satisfy
+the event contract of Proposition~\ref{prop:canonical-output-preservation}.
 
 \begin{definition}[Lifted output event]
 \label{def:lifted-output-event}
@@ -361,10 +338,6 @@ excluded by $o$ but dominated by a row at the same input that refines $o$.
 Rows at inputs in $K_o$ require seal commitments.  Rows in $U_o$ are
 undominated conflicts with $o$ and require an \emph{output-choice commitment},
 which, unlike a seal, may remove some outputs while leaving their input valid.
-In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
-$U_o$: no row at $\{A,B\}$ refines both.  In panel~(g), the two removed route
-sets are in $D_o$, each dominated by a retained route set, so the event retires
-them without commitment.
 
 For each $o\in O$, the \emph{canonical seal commitment} $s_o$ and the
 \emph{canonical output-choice commitment} $c_o$ are the partial functions
@@ -388,8 +361,16 @@ exactly
 With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
 are those of Definition~\ref{def:canonical-commitment-basis}; canonical runs
 now use this lifted basis.  The \emph{canonical event} for $o$ applies $s_o$ when
-$K_o\neq\varnothing$, which leaves $U_o$ unchanged and no input in $K_o$; then
-$c_o$ when $U_o\neq\varnothing$; and then retires $D_o$ and emits $o$.
+$K_o\neq\varnothing$, then $c_o$ when $U_o\neq\varnothing$, and then retires
+$D_o$ and emits $o$.  Here $K_o$, $D_o$, and $U_o$ are computed at the state
+where the event starts.  Since $s_o$ removes only rows at inputs in $K_o$,
+recomputing them after $s_o$ gives $K_o=\varnothing$ and the same $D_o$ and
+$U_o$, so $c_o$ is defined there whenever $U_o\neq\varnothing$.
+
+In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
+$U_o$: no row at $\{A,B\}$ refines both.  In panel~(g), the two removed route
+sets are in $D_o$, each dominated by a retained route set, so the event retires
+them without commitment.
 
 \begin{lemma}[Lifted containment, canonical support, and commitment-free events]
 \label{lem:canonical-commitment-normal-form}

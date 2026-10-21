@@ -38,7 +38,7 @@ We develop a unified coordination criterion that spans this space,
 including the translation questions above
 (\S\ref{sec:cap-corollary}, \S\ref{sec:instances}).  We begin with a minimalist
 specification model: a two-column relational table pairing input values with the
-corresponding outputs that are within spec.  The model is purely declarative: it
+corresponding outputs that it permits.  The model is purely declarative: it
 describes what can be observed about a system, without reference to any
 imperative procedure.  The input domain $(I,\InputOrd)$ includes a partial order
 describing how input grows; the output domain $(O,\OutputOrd)$ has its own
@@ -69,13 +69,13 @@ Our first result is \emph{Functional CALM}
 functions and partial orders, proving that Consistency is equivalent to
 monotonicity.  When monotonicity fails, emitting some output requires
 irrevocably restricting subsequent results to those that preserve it.  We call
-this restriction a \emph{commitment}.  Together with an exposure boundary, it
-shows that monotone specifications never need a commitment to emit output.
+this restriction a \emph{commitment}.  Conversely, a monotone specification can
+emit every output it permits without one.
 This captures relational query languages and the usual CRDT state interface.
 
 We then give Consistency a distributed interpretation without changing the
 specification model (\S\ref{sec:distributed-execution}). We place one local
-execution at each participant in a Lamport history, then project away delivery
+execution at each participant in a distributed history, then project away delivery
 and strategy details that do not change specification state.
 \emph{Distributed Consistency} asks whether the resulting participant states can
 still be brought to the same state. We prove that a specification has
@@ -89,11 +89,9 @@ operator.
 The functional specifications above cannot capture settings like leader election
 or transaction ordering, where many outputs are permitted for a given input. In the
 absence of a functional dependency determining the output for each input, a second source of
-ambiguity arises: \emph{semantic ambiguity}. We call the resolution of either type of
-ambiguity \emph{determination}; it is complete when only one output remains
-possible. Determination may occur through input, which may make alternatives
-unreachable, or through commitments, which exclude alternatives that would
-otherwise remain possible. To model semantic ambiguity, we must move beyond standard
+ambiguity arises: \emph{semantic ambiguity}. We call the resolution of either
+kind \emph{determination}: input may make alternatives unreachable, or a
+commitment may exclude them. To model semantic ambiguity, we must move beyond standard
 monotonicity of functions. For the case of general relations we define an extension called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
@@ -102,7 +100,10 @@ Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
 condition on the specification table: whenever permitted rows have inputs with
 a common refinement $j$, some output permitted at $j$ refines all of their
 outputs.  For one output per input this is ordinary monotonicity; for many, it
-is Lifted Monotonicity.  When participants could make conflicting commitments,
+is Lifted Monotonicity.
+
+Output choice has two further consequences.  When participants could make
+conflicting commitments,
 their output events must be mutually excluded, and coordination mechanisms
 provide that exclusion.  Confluence is a safety guarantee: a reconciling state
 always exists.  With output choice, reaching it is a matter of strategy, and
@@ -133,7 +134,7 @@ This paper makes six contributions:
   \item \emph{Consistency as confluence.} One definition applies to general
         consistency models and application-specific requirements.
         This run-level property is shown to be equivalent to Distributed
-        Consistency over Lamport histories.
+        Consistency over distributed histories.
   \item \emph{Functional CALM.} For arbitrary functions between ordered
         domains, Consistency---and hence Distributed Consistency---is equivalent
         to monotonicity.

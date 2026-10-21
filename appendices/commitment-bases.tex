@@ -10,10 +10,11 @@ An input is a finite set $T$ of transactions, each with its operations;
 inputs are ordered by inclusion, as transactions arrive.  An output is a pair
 $(L,X)$: a set $X\subseteq T$ of aborted transactions and a total order $L$ on
 the committed ones, $T\setminus X$, the serialization order.  Outputs are
-ordered by extension, $(L,X)\OutputOrd(L',X')$ when $X\subseteq X'$ and $L'$
-agrees with $L$ on the domain of $L$: an abort is never undone and an order,
-once fixed between two committed transactions, is never reversed.  A row
-$(T,(L,X))$ is within spec when $X$ and the domain of $L$ partition $T$.  The
+ordered by extension, $(L,X)\OutputOrd(L',X')$ when $X\subseteq X'$, the
+domain of $L$ is contained in that of $L'$, and $L'$ agrees with $L$ on the
+domain of $L$: neither an abort nor a commit is ever undone, and an order, once
+fixed between two committed transactions, is never reversed.  A row
+$(T,(L,X))$ is permitted when $X$ and the domain of $L$ partition $T$.  The
 rows $(\{A,B\},([A,B],\varnothing))$ and $(\{A,B\},([B,A],\varnothing))$ of
 Figure~\ref{fig:ambiguity-frames}(f) have no common refinement, so the
 specification is not monotone, and a system needs commitments.  A
@@ -24,9 +25,9 @@ we return to it below.
 Each commitment below is a partial function on specification states $(i,R)$ that
 retains, at $i$ and at every refinement $k$ of $i$, the rows meeting a
 condition, and is applicable when a row at $i$ meets it.  Because refinement
-never reverses an order or undoes an abort, no retained row refines a removed
+never reverses an order or undoes an abort or a commit, no retained row refines a removed
 one, so each is a commitment in the sense of
-Definition~\ref{def:transition-system} whenever it removes a row.
+Definition~\ref{def:commitment-basis} whenever it removes a row.
 \begin{itemize}
   \item $\mathsf{order}(A,B)$, for distinct $A,B\in i$: retain the rows in
         which $A\in X$, or $B\in X$, or $A<_L B$.
@@ -100,7 +101,7 @@ discovers deadlock as a pair of commitments that leaves only abort rows.  MVTO
 commits an absolute position for each transaction on arrival, against every
 transaction present or future, and pays for the early commitment with aborts
 when execution turns out not to match it.  These commitments can make a
-\emph{complete} output $(L,X)$ exposable when its output action needs no further
+\emph{complete} output $(L,X)$ exposable when its output event needs no further
 commitment; Proposition~\ref{prop:exposability} supplies the test.  Merely fixing
 $A$'s status or its position relative to some transactions is not itself an
 exposable output in the carrier declared above, because that carrier contains

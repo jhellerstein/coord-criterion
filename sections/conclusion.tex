@@ -2,30 +2,32 @@
 \label{sec:conclusion}
 
 A specification abstracts execution details away.  Functional CALM asks when
-a functional specification remains confluent as input arrives: monotonicity
-means no seal commitment is needed in an output action.  This generalizes the
-classic
-result from logical fact sets to arbitrary input and output refinement orders.
+a functional specification remains confluent as input arrives: it does exactly
+when it is monotone, and then no output event needs a seal commitment.  This
+generalizes the classic result from logical fact sets to arbitrary input and
+output refinement orders.
 
 Complete CALM extends the model to specifications that offer several outputs
-for one input.  Modeling atomic output actions, retirement, and commitments
-reveals Directed Outputs
-as the additional requirement for confluence without coordination.  When
-Lifted Monotonicity fails, progress requires a commitment and hence
+for one input.  Lifting output events to retire dominated rows and make output
+choices leaves the event contract, and with it the whole argument, intact:
+Consistency is again the common-refinement condition, now read as Lifted
+Monotonicity, which combines Relational Monotonicity with Directed Outputs.
+When Lifted Monotonicity fails, progress requires a commitment and hence
 coordination, whether implemented by a mutex, lock, atomic ordering mechanism,
-or distributed agreement.  Unlike classical CALM, the model can then verify whether that coordination is
-proper.  Sequential and independently parameterized composition are equijoins
-of specification tables; commitments restrict the joined table.  At their
-ordinary interfaces, total log ordering and a register or key-value store are
-both non-monotone.  Once composed through a shared order, committing that log
-order alone makes the end-to-end specification Lifted Monotone and consistent.
-MultiConsensus distributes those log commitments.  Distributed histories and
-Complete CAP specialize the same boundary to participants and partitions.
+or distributed agreement.  Unlike classical CALM, the model can then verify
+whether that coordination is proper.  Sequential and independently
+parameterized composition are equijoins of specification tables; commitments
+restrict the joined table.  At their ordinary interfaces, total log ordering
+and a register or key-value store are both non-monotone.  Once composed through
+a shared order, committing that log order alone makes the end-to-end
+specification satisfy Lifted Monotonicity and hence consistent.  Multi-Paxos
+distributes those log commitments.  Distributed histories and Complete CAP
+specialize the same boundary to participants and partitions.
 
-The Complete CAP Theorem is the partition form of the same equivalence.  It recovers the
-classical impossibility when a cut separates incompatible choices and supplies
-the positive side when all separated choices have common refinements.  A cut
-may prevent agreement on input sealing or separate participants empowered to
-make incompatible output choices.  Query monotonicity, CRDT merge,
-transactional availability, and invariant confluence then become directly comparable without being identified
-with one another.
+The Complete CAP Theorem is the partition form of the same equivalence.  It
+recovers the classical impossibility when a partition separates incompatible
+choices and supplies the positive side when all separated choices have common
+refinements.  A partition may prevent agreement on input sealing or separate
+participants empowered to make incompatible output choices.  Query
+monotonicity, CRDT merge, transactional availability, and invariant confluence
+then become directly comparable without being identified with one another.

@@ -46,7 +46,7 @@ decision maps $m:P\rightharpoonup V$, ordered by extension, with at most $k$
 values in their range.
 
 At participant $p_r$'s local proposal input, the decision
-$\{p_r\mapsto v_r\}$ is within spec.  The union of all proposal inputs is a common
+$\{p_r\mapsto v_r\}$ is permitted.  The union of all proposal inputs is a common
 input refinement.  Each local decision can continue there by itself, and any
 family of at most $k$ distinct decisions can coexist.  The family of all $k+1$
 cannot: every common refinement would preserve $k+1$ values and violate the
@@ -76,7 +76,10 @@ only name $p\mapsto1$; at input $\{q\}$ it likewise forces $q\mapsto1$.  The
 combined input $\{p,q\}$ refines both singleton inputs.  Either assignment can
 continue alone by giving the other process name 2, so Relational Monotonicity
 is not the problem.  They cannot continue together: an injective map cannot
-preserve both assignments to name 1.  Complete CALM fails on this two-row family,
+preserve both assignments to name 1.  Directed Outputs fails at $\{p,q\}$ as
+well: the complete namings $\{p\mapsto1,q\mapsto2\}$ and
+$\{p\mapsto2,q\mapsto1\}$ have no common extension.  Complete CALM fails on
+the two-row family above,
 and a deployment that places $p$ and $q$ in different components gives the
 corresponding Complete CAP obstruction.
 
@@ -95,7 +98,7 @@ induced extension.  A modest \emph{cut} interface outputs a finite
 downward-closed subset of the available history as a lower bound on what has
 happened.  Old cuts remain legal as history grows, and the union of finitely
 many cuts remains downward closed.  This interface satisfies Lifted
-Monotonicity and Directed Outputs.
+Monotonicity.
 
 That easy positive result should not be mistaken for a conventional snapshot
 implementation.  The cut interface promises neither freshness nor completeness;
