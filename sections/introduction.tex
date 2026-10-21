@@ -39,7 +39,7 @@ We develop a unified coordination criterion that spans this space,
 including the translation questions above
 (\S\ref{sec:cap-corollary}, \S\ref{sec:instances}).  We begin with a minimalist
 specification model: a two-column relational table pairing input values with the
-corresponding outputs that it permits.  The model is purely declarative: it
+corresponding outputs that are within spec.  The model is purely declarative: it
 describes what can be observed about a system, without reference to any
 imperative procedure.  The input domain $(I,\InputOrd)$ includes a partial order
 describing how input grows; the output domain $(O,\OutputOrd)$ has its own
@@ -50,76 +50,61 @@ externally observable.  Despite its simplicity, the model captures both general
 concurrency and consistency models that span applications---including
 linearizability and causal consistency (\S\ref{app:registers})---and
 application-specific requirements such as program invariants.  A
-specification is \emph{consistent}---it has \emph{Consistency}---when the
-executions it admits are \emph{confluent}: states (the current input together
-with what can still happen) reached along different paths can still be brought
-to a common state.  This unifies classical definitions of consistency: a specification
+specification is \emph{consistent} when the executions it admits are
+\emph{confluent}: states reached along different paths can still be brought to
+a common state.  This unifies classical definitions of consistency: a specification
 table captures the space of acceptable outcomes, while confluence asks whether
 those requirements are maintained across concurrent executions.
 
-We first focus on specification tables with a functional dependency from
+We begin by focusing on specification tables with a functional dependency from
 input to output (\S\ref{sec:functional-specifications}). These \emph{functional
 ordered specifications} capture arbitrary functions
 \(f:(I,\InputOrd)\to(O,\OutputOrd)\). Although each input has one output, a system
 may emit output before all input has arrived, and different executions may
 receive input in different orders. We call this \emph{execution ambiguity}. A
 function is monotone when \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\): an
-output emitted at \(i\) remains correct at \(j\).
+output emitted at \(i\) remains valid at \(j\).
 
 Our first result is \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}). It generalizes CALM to arbitrary
 functions and partial orders, proving that Consistency is equivalent to
 monotonicity.  When monotonicity fails, emitting some output requires
-irrevocably ruling out later input that would contradict it, as an election
-official does by closing the polls before announcing a result that later
-ballots could overturn.  We call such an act a \emph{commitment}, and this kind
-a \emph{seal}.  Functional CALM is a theorem about sealing: a functional
-specification is consistent exactly when no output it permits needs a seal,
-and a monotone specification can emit every output it permits without one.
-This captures relational query languages and the usual CRDT state interface,
-in which replica states are merged by a join.
+irrevocably restricting subsequent results to those that preserve it.  We call
+this restriction a \emph{commitment}.  For a function, every commitment
+\emph{seals} input, ruling out later input that could contradict an output, as
+an election official does by closing the polls before announcing a result.
+Functional CALM characterizes exactly
+when execution ambiguity can be handled consistently without commitment.
+This captures relational query languages and the usual CRDT state interface.
 
 We then give Consistency a distributed interpretation without changing the
 specification model (\S\ref{sec:distributed-execution}). We place one local
-execution at each participant of a distributed system, then set aside what does
-not change specification state: message delivery, and each participant's
-private logic for deciding what to do next (its \emph{strategy}).
+execution at each participant in a distributed history, then project away delivery
+and strategy details that do not change specification state.
 \emph{Distributed Consistency} asks whether the resulting participant states can
 still be brought to the same state. We prove that a specification has
 Distributed Consistency if and only if it is consistent in the sense above.
-For a consistent functional specification, state is then determined by input
-alone, so participants with the same input agree regardless of delivery order
-or emitted outputs: the convergence that strong eventual consistency asks of
-replicated state, derived from the specification rather than from a merge
-operator.
 
 The functional specifications above cannot capture settings like leader election
-or transaction ordering, where many outputs are permitted for a given input. In the
+or transaction ordering, where many outputs are within spec for a given input. In the
 absence of a functional dependency determining the output for each input, a second source of
-ambiguity arises, \emph{semantic ambiguity}, and with it a second job for
-commitments: \emph{choosing}.  Picking one of two eligible leaders, or one
-serial order for concurrent transactions, removes outputs that the input still
-permits.  We show that sealing and choosing are the only two jobs: the effect
-of any coordination mechanism on the specification is a combination of them.
-To model semantic ambiguity, we must move beyond standard
+ambiguity arises: \emph{semantic ambiguity}. We call the resolution of either type of
+ambiguity \emph{determination}; it is complete when only one output remains
+possible. Determination may occur through input, which may make alternatives
+unreachable, or through commitments, which exclude alternatives that would
+otherwise remain possible. With semantic ambiguity, commitments gain a second
+job besides sealing: \emph{choosing} among permitted outputs, as when a system
+picks one leader or one serial order.  We show these are the only two: the
+effect of any coordination mechanism on the specification is a combination of
+seals and choices. To model semantic ambiguity, we must move beyond standard
 monotonicity of functions. For the case of general relations we define an extension called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
 Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
-(\S\ref{sec:complete-calm-theorem}), so a specification is consistent exactly
-when no output it permits needs a seal or a choice.  Both CALM theorems
-characterize the same condition on the specification table: whenever permitted
-rows have inputs with a common refinement $j$ (an input that extends all of
-them), some output permitted at $j$
-refines all of their outputs.  For one output per input this is ordinary
-monotonicity; for many, it is Lifted Monotonicity.
-
-Choice also explains mutual exclusion: when participants could make
-conflicting choices, a system that requires Consistency must keep both from
-completing, and coordination mechanisms are how it does so.  Consistency
-itself guarantees only that a reconciling state always exists; reaching it is
-up to the system, for instance by having every participant apply the same
-tie-breaking rule (\S\ref{sec:complete-calm}).
+(\S\ref{sec:complete-calm-theorem}).  For a system to be consistent when
+participants could choose differently, their commitments must rule out the
+same conflicting alternatives.  Coordination mechanisms operationalize this
+requirement.
 
 Classical CALM tells us when coordination is unnecessary, but not whether a
 chosen use of coordination is sufficient.  Complete CALM can answer the second
@@ -132,44 +117,31 @@ commitments.  We call this analysis \emph{Proper Coordination} and formalize it
 in Appendix~\ref{app:composition}.
 
 Complete CALM also yields a Complete CAP Theorem
-(\S\ref{sec:cap-corollary}).  Brewer conjectured that a partitioned system
-cannot be both consistent and available; Gilbert and Lynch proved this for one
-guarantee, the linearizable register.  Complete CAP makes the conjecture
-precise for any consistency guarantee expressed as a specification, and in both
-directions: it identifies which guarantees face the tradeoff and which escape
-it.
-A specification satisfying Lifted Monotonicity can keep its whole
-\emph{interface}---every output it permits---available and confluent during a
-partition; any other cannot.  A weaker \emph{response form} of Complete CAP
-asks only that every operation be answered, where the interface
-declares which outputs count as answers, and characterizes exactly when that is
-possible (Appendix~\ref{app:cap-response}).  The Gilbert--Lynch theorem is the
-special case in which one replica's only permitted answer is invalidated by
-input it cannot see: answering would seal input that the other side of the
-partition accepts.
+(\S\ref{sec:cap-corollary}).  For any consistency guarantee expressed as a
+specification, Lifted Monotonicity identifies which side of the CAP boundary it
+occupies.  A specification with Lifted Monotonicity can keep its full interface
+available and confluent during a partition; any other cannot.  A weaker form
+that asks only that every operation be answered recovers the Gilbert--Lynch
+theorem for linearizable registers as a special case
+(Appendix~\ref{app:cap-response}).
 
 This paper makes six contributions:
 \begin{enumerate}
   \item \emph{A common specification model.} Ordered relational tables describe
-        permitted input/output behavior; commitments record the irrevocable
-        acts that remove alternatives from it, and each one seals input or
-        chooses among outputs.
+        permitted input/output behavior; commitments record irrevocable decisions
+        among that behavior, each sealing input or choosing among outputs.
   \item \emph{Consistency as confluence.} One definition applies to general
         consistency models and application-specific requirements.
-        This property of runs (sequences of input and output events) is shown
-        to be equivalent to Distributed
+        This run-level property is shown to be equivalent to Distributed
         Consistency over distributed histories.
   \item \emph{Functional CALM.} For arbitrary functions between ordered
         domains, Consistency---and hence Distributed Consistency---is equivalent
-        to monotonicity, and to no output needing a seal.
+        to monotonicity.
   \item \emph{Complete CALM and CAP.} With multiple outputs per input,
         Consistency---and hence Distributed Consistency---is equivalent to
-        Lifted Monotonicity, the same common-refinement condition that
-          underlies Functional CALM, and to no output needing a seal or a
-          choice.  Complete CAP gives the corresponding
-          partition boundary in two forms, for the whole interface and for
-          answering every operation; the Gilbert--Lynch theorem is recovered as
-          a special case.
+        Lifted Monotonicity.  Complete CAP gives the corresponding availability
+        boundary under partition, and recovers the Gilbert--Lynch theorem as a
+        special case.
   \item \emph{Composition and Proper Coordination.} Specifications compose by
         equijoin.  Committing a shared log order can make a non-monotone
         log/store composition consistent without further store commitments
@@ -179,22 +151,15 @@ This paper makes six contributions:
         (Appendix~\ref{sec:frontiers}).
 \end{enumerate}
 
-Section~\ref{sec:functional-calm} introduces the framework on an election and
-proves a chain of results, ending in the common-refinement characterization of
-Consistency, that depend on output events only through a small \emph{event
-contract}: four properties every output event satisfies.
-Functional CALM then follows in a few lines.
-Section~\ref{sec:distributed-execution} gives Consistency its distributed
-reading.  Section~\ref{sec:ambiguous-specifications} lifts output events to
-specifications with several outputs per input, verifies the same contract, and
-shows that commitments only seal
-or choose, so Section~\ref{sec:complete-calm}
-assembles Complete CALM and Complete CAP from the same parts.
+Section~\ref{sec:functional-calm} introduces the framework on an election
+and develops Functional CALM.  Section~\ref{sec:distributed-execution} gives
+Consistency its distributed reading.  Section~\ref{sec:ambiguous-specifications}
+extends the framework to ambiguous specifications, and Section~\ref{sec:complete-calm}
+combines the two extensions in Complete CALM and Complete CAP.
 Section~\ref{sec:instances} applies the results to familiar systems, and
 Section~\ref{sec:discussion} draws out the design lessons and scope limits.
 Appendix~\ref{app:composition} proves the composition and Proper Coordination
-results, Appendix~\ref{app:cap-response} develops the response form of
-Complete CAP and recovers Gilbert--Lynch, Appendix~\ref{sec:frontiers} derives
-maximal coordination-free
+results, Appendix~\ref{app:cap-response} develops the response form of Complete
+CAP, Appendix~\ref{sec:frontiers} derives maximal coordination-free
 interfaces, and Appendix~\ref{app:additional-applications} gives further
 classical applications.
