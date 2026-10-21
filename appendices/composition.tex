@@ -174,15 +174,16 @@ ordered type $(M,\preceq_M)$ shared at their boundary.  Commitments act on
 states, not on $S_1$ itself, so we record their combined effect as a table.  A
 \emph{commitment strategy} for $S_1$ fixes, for each input $i$, the upstream
 outputs the system has committed to at $i$; its \emph{committed table} is the
-set $C\subseteq S_1$ of those rows.  We require $C$ to be \emph{total}, with a
-row at every input of the relevant domain, so that no downstream input is left
-without an upstream value.  Run-time commitments yield such a table whenever the
-upstream protocol guarantees them at every input.  Those commitments restrict
-the end-to-end behavior from $S_2\circ S_1$ to $S_2\circ C$.
+set $C\subseteq S_1$ of those rows.  The strategy is
+\emph{totality-preserving} when $C$, like $S_1$, has a row at every input of the
+relevant domain, so that committing never leaves a downstream input without an
+upstream value.  Those commitments restrict the end-to-end behavior from
+$S_2\circ S_1$ to $S_2\circ C$.
 
 \begin{definition}[Proper Coordination]
 \label{def:proper-coordination}
-The commitment strategy producing a total committed table $C$ is \emph{proper for the composition} when the
+A totality-preserving commitment strategy with committed table $C$ is
+\emph{proper for the composition} when the
 resolved end-to-end specification $S_2\circ C$ is consistent and every output
 at every state of that specification reachable without commitment is
 exposable.
@@ -239,7 +240,8 @@ also restricts the store specification from $G\star F$ to $G\star C$.
 \begin{proposition}[Committed-log composition]
 \label{prop:committed-log-composition}
 Order finite logs by prefix and cumulative response histories by extension.
-Suppose the committed table $C$ is total, functional, and prefix-preserving:
+Suppose the log commitment strategy is totality-preserving and its committed
+table $C$ is functional and prefix-preserving:
 every proposal history has exactly one committed log, and as proposal history
 grows, that log only extends.  Suppose deterministic store evaluation is
 prefix-preserving in both its request-history and log inputs.  Then the resolved
@@ -264,8 +266,7 @@ make their composition consistent.  No independent commitment at the register
 or key-value-store interface is required.
 
 By Theorem~\ref{thm:proper-coordination}, the log commitments are proper.
-Multi-Paxos replaces the single authority with distributed agreement on the
-same sequence of commitments.  Agreement guarantees one committed log per
-proposal history that only extends, so it produces a committed table with the
-same three properties and the argument is unchanged; only the mechanism that
-establishes the upstream commitments becomes distributed~\cite{lamport2001paxos}.
+Multi-Paxos is a natural example of such an upstream component: distributed
+agreement on the same sequence of commitments yields one committed log per
+proposal history that only extends, so its committed table has the same three
+properties and the argument is unchanged~\cite{lamport2001paxos}.
