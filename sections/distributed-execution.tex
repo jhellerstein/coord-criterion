@@ -2,8 +2,9 @@
 \label{sec:distributed-execution}
 
 Consistency already compares independent canonical runs.  This
-section shows that those runs are exactly the participants' projected runs in a
-distributed history once message plumbing is projected away.  Transition projection reduces a cut
+section shows that those runs are exactly what the participants of a
+distributed history do, once sends and receives are set aside.  Keeping only
+each participant's input and output events reduces a snapshot of the history
 to one specification state per participant, while retaining the output events
 that the environment can observe.  The payoff is that consistency results read
 directly as statements about distributed executions, including a convergence
@@ -20,11 +21,24 @@ its matching receive; events not ordered by these constraints are concurrent.
 Their transitive closure is the familiar \emph{happens-before} relation.
 
 A snapshot of such a history that never includes a receive without the events
-that causally precede it is a consistent cut.  Because input and output events
-are atomic, the events at any such cut project to one run per participant under
-the history's commitment basis.  Messages explain how a participant learned
+that causally precede it is a consistent cut.  (This standard use of
+``consistent'' is unrelated to consistency as confluence.)  Because input and
+output events are atomic, the events at any such cut project to one run per
+participant under the history's commitment basis
+(Definition~\ref{def:semantic-projection}).  Messages explain how a participant learned
 something; its projected run records only how that information changed the
 specification state.
+
+A participant's \emph{strategy} chooses its input and output events,
+including which commitments from the basis an output event applies, using the
+specification, the messages it has received, and any other strategy state.
+A \emph{system} consists of one commitment basis, shared by all participants,
+and a strategy for each participant.
+Strategy state is not part of the specification state and affects the
+remainder table only through the selected transitions.  Sends, receives, and
+strategy data preserve delivery causality without complicating the
+specification state; the next subsection shows how transition projection
+removes them.
 
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
@@ -42,21 +56,11 @@ history} $H$ consists of a finite set of events with:
 \end{enumerate}
 An output event atomically applies its commitments and emits its label; in the
 relational case of Section~\ref{sec:safe-exposure}, it also performs any output
-retirements.  The history is \emph{canonical} when its commitment basis is
+retirements, removing rows \outrelpast by a retained row at the same input.  The history is \emph{canonical} when its commitment basis is
 $\mathcal B_S$ and all of its output events are canonical.  A \emph{consistent
 cut} $C$ is a subset of events closed under
-happens-before~\cite{chandy1985distributed}.  (This standard use of
-``consistent'' is unrelated to consistency as confluence.)
+happens-before~\cite{chandy1985distributed}.
 \end{definition}
-
-A participant's \emph{strategy} chooses its input and output events,
-including which commitments from its basis an output event applies, using the
-specification, the messages it has received, and any other strategy state.
-Strategy state is not part of the specification state and affects the
-remainder table only through the selected transitions.  Sends, receives, and
-strategy data preserve delivery causality without complicating the
-specification state; the next subsection shows how transition projection
-removes them.
 
 \subsection{Transition projection and confluence}
 \label{sec:projection-confluence}
@@ -120,7 +124,7 @@ but both participants reach $\sigma_1=(xy\cdot,R_1)$.
     \node[below,fill=white,inner sep=.5pt] at (6.0,-.95)
       {$\mathsf{receive}(m)$};
     \draw[->] (5.25,.53) -- node[midway,right,fill=white,inner sep=.5pt]
-      {$m=(xy\cdot,s_m)$} (5.95,-.8);
+      {$m=(xy\cdot,d_m)$} (5.95,-.8);
     \fill (7.55,-.95) circle (1.7pt);
     \node[below,fill=white,inner sep=.5pt] at (7.55,-.95)
       {$\mathsf{input}(xy\cdot)$};
@@ -134,7 +138,7 @@ but both participants reach $\sigma_1=(xy\cdot,R_1)$.
   the tables in panels (a) and (b) of Figure~\ref{fig:election-frames}.  The
     environment supplies cumulative input $xy\cdot$, which each participant
     records directly as $\mathsf{input}(xy\cdot)$.  In (b), participant $q$
-    records that input after receiving $m=(xy\cdot,s_m)$.  Vertical dashed
+    records that input after receiving $m=(xy\cdot,d_m)$.  Vertical dashed
     lines are consistent cuts.}
   \label{fig:history-projection}
 \end{figure}
@@ -152,7 +156,7 @@ and output events in that order and deletes sends and receives.  A receive may
 update strategy state and influence a later input event, but it does not
 directly change the specification state.  We consider only pairs $(H,C)$ for
 which each $\pi_p(C)$ is a defined transition sequence from $\sigma_S(i_p)$;
-each recorded $\mathsf{input}(j)$ must itself be enabled at the state where it
+each recorded $\mathsf{input}(j)$ must itself be legal at the state where it
 occurs.  Write $\sigma_p(C)$ for the final specification state of
 $\pi_p(C)$.  The \emph{state endpoint} of the cut is the vector
         \begin{equation}
@@ -179,12 +183,12 @@ influence later inputs or strategy choices.
 At a consistent cut $C$, the participants may hold different specification
 states $(\sigma_p(C))_{p\in P}$.  Confluence asks whether their local paths can
 be brought to the same later specification state at every input that combines
-their current inputs.  Formally, let $j$ be a common refinement of the
+their current inputs.  Formally, let $j$ be a common \indesc of the
 participant inputs at $C$.  The history $H$ is \emph{confluent at $C$ and $j$}
-when the sub-history consisting of the events of $C$ has a further extension
-under the same basis in which every participant reaches the same
+when the sub-history consisting of the events of $C$ has a further \emph{continuation}---additional events after those of
+$C$---under the same basis in which every participant reaches the same
 specification state $\sigma_j=(j,R)$; equivalently, the new cut has state
-endpoint $(\sigma_j)_{p\in P}$.  If $H$ is canonical, this extension must
+endpoint $(\sigma_j)_{p\in P}$.  If $H$ is canonical, this continuation must
 remain canonical.  This is an existence
 claim about transitions, not a claim that a protocol delivers $j$,
 communicates, or terminates.
@@ -192,14 +196,14 @@ communicates, or terminates.
 \subsection{Distributed Consistency}
 \label{sec:distributed-consistency}
 
-Confluence is a property at one cut and common input refinement.  Distributed
+Confluence is a property at one cut and common \indesc.  Distributed
 Consistency requires it at every cut of every canonical history.
 
 \begin{definition}[Distributed Consistency]
 \label{def:distributed-consistency}
 An ordered specification has \emph{Distributed Consistency} when, for every
 finite participant set, canonical history $H$, and consistent cut $C$, $H$ is
-confluent at $C$ and every common refinement of the participants' current
+confluent at $C$ and every common \indesc of the participants' current
 inputs.
 \end{definition}
 
@@ -242,8 +246,10 @@ Each participant's transition projection is a canonical run; apply
 Corollary~\ref{cor:state-by-input}.
 \end{proof}
 
-This is the convergence that strong eventual consistency asks of replicated
-state, derived here from the specification rather than from a merge operator.
+This is the convergence that strong eventual
+consistency~\cite{shapiro2011crdt} asks of replicated state---replicas that
+have received the same updates are in equivalent states---derived here from the specification rather than from a merge operator.
 With several outputs per input, this uniqueness fails, as
-Section~\ref{sec:complete-calm} discusses.  The distributed reading itself does not depend on output choice,
-and we next make that orthogonal extension to ambiguous specifications.
+Section~\ref{sec:complete-calm} discusses.  The distributed reading itself does not depend on how many outputs an
+input permits, and we next make that orthogonal generalization to ambiguous
+specifications.

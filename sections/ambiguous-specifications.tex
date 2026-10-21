@@ -3,8 +3,8 @@
 
 A functional specification fixes one output at each input, so its commitments
 do one job: they seal inputs that could still arrive.  We now allow a fiber to
-contain several outputs and ask when they can be preserved together as input
-grows.  Several outputs per input bring a second job, \emph{choosing} among
+contain several outputs and ask when one output can \outrelbase them all as
+input \ingrows.  Several outputs per input bring a second job, \emph{choosing} among
 permitted outputs, and this section shows that sealing and choosing are the
 only two.  Section~\ref{sec:ambiguity-story} introduces the issue by
 example.  Section~\ref{sec:relational-specifications} defines relational
@@ -20,7 +20,7 @@ Section~\ref{sec:functional-calm} then carry over.
 Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
 several outputs at the same input.  Transaction ordering requires a choice
 between incompatible serialization orders.  Traceroute observations, by
-contrast, can be preserved together in a larger route set.
+contrast, can all be \outrelpast by a larger route set.
 
 \begin{figure}[t]
   \centering
@@ -33,7 +33,7 @@ contrast, can be preserved together in a larger route set.
     $\{A,B\}$ & \sh{$[A,B]$} \\
     \retired{$\{A,B\}$} & \retired{$[B,A]$} \\ \strikerow
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize no remaining row refines the removed one:}\\
+    \multicolumn{2}{@{}l}{\footnotesize no remaining row \outrel the removed one:}\\
     \multicolumn{2}{@{}l}{\footnotesize a commitment}
   \end{tabular}
   \hfill
@@ -52,9 +52,11 @@ contrast, can be preserved together in a larger route set.
   \end{tabular}
   \caption{Two specifications with several rows at one current input, each
   shown after one output event.  In (f) the input is a pair of
-  concurrent transactions and an output is a serial order of them.  In (g) an
-  output is a prefix-closed set of routes from source $s$, which reaches server
-  \texttt{s1} directly and server \texttt{s2} through hop $a$.  Shaded cells
+  concurrent transactions and an output is a serial order of them, under the
+  equality order.  In (g) the input $i$ is a source--service pair and an
+  output is a prefix-closed set of routes from source $s$, ordered by
+  inclusion, which reaches server \texttt{s1} directly and server \texttt{s2}
+  through hop $a$.  Shaded cells
   are the upper fiber that remains.  Legend as in
   Figure~\ref{fig:election-frames}, except that gray alone may also mark an
   output retirement.}
@@ -63,24 +65,26 @@ contrast, can be preserved together in a larger route set.
 
 \paragraph{Output choice and directedness.} The examples differ in what happens
 to alternative outputs when one is emitted.  In panel~(f), neither
-serialization order preserves the other, so emitting one requires a
-\emph{choice commitment} that removes the other while the input stays valid:
-the system chooses.  In panel~(g), larger route sets preserve both the
-emitted observation and the outputs of the rows it removes.  We call such content-preserving
-removal an \emph{output retirement}; because every removed claim is preserved,
-the route observation is \emph{exposable} without commitment.  The atomic
+serialization order \outrel the other, so emitting one requires a
+\emph{choice commitment} that removes the other while the input stays legal:
+the system chooses.  In panel~(g), larger route sets \outrelbase both the
+emitted observation and the outputs of the rows it removes.  We call such
+removal an \emph{output retirement}
+(Definition~\ref{def:output-retirement}); because every removed output is
+\outrelpast by a remaining one, emitting the route observation needs no
+commitment: it is \emph{exposable}.  The atomic
 $\mathsf{output}(o)$ event performs any required commitments and retirements,
 then emits $o$.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
 The difference is the order-theoretic concept of a \emph{directed} fiber:
-every finite set of outputs in the fiber has a common refinement there.
+every finite set of outputs in the fiber has a common \outnoun there.
 Directedness at a single input is not sufficient, however;
-we must also preserve prior outputs as input grows. \emph{Lifted Monotonicity}
+we must also \outrelbase prior outputs as input \ingrows. \emph{Lifted Monotonicity}
 combines the requirements: every finite set of outputs possible at an input
-must have a common refinement in every later fiber.  Equivalently, outputs
-emitted at inputs with a common refinement $j$ must share a refinement
-permitted at $j$: the same test as in Section~\ref{sec:election-story}, read
+must have a common \outnoun in the fiber of every \indesc.  Equivalently,
+outputs emitted at inputs with a common \indesc $j$ must have a common
+\outnoun permitted at $j$: the same test as in Section~\ref{sec:election-story}, read
 with many outputs per input.  Two runs that emit $[A,B]$ and $[B,A]$ fail it;
 two traceroute runs that emit different route sets pass it, since their union
 survives in both.
@@ -94,13 +98,13 @@ In 2PL, racing for a lock commits orderings among a subset of transactions:
 in this case it commits only to $A$ before $B$, leaving $C$'s position
 open.  By contrast, timestamp assignment in MVTO orders a transaction with respect to all others:
 in this case, $B$ is assigned first place.  Both are choices: they remove
-serialization orders while the input stays valid, but leave different
+serialization orders while the input stays legal, but leave different
 alternatives open.
-Each is one step in the commitments of an output event that eventually emits a
-full serial order.  Whatever the protocol, its runs are equivalent to
+Each is one of the commitments an output event applies in emitting a full
+serial order.  Whatever the protocol, its runs are equivalent to
 canonical runs (Lemma~\ref{lem:canonical-equivalent}), and Consistency is
 judged on those.  Appendix~\ref{app:cc-bases} gives the full bases, including
-abort commitments.
+abort commitments, which fix a transaction as aborted.
 
 \begin{figure}[t]
   \centering
@@ -142,7 +146,7 @@ abort commitments.
 \label{sec:relational-specifications}
 
 The examples pose the specification-level question: when can every finite set
-of possible outputs survive together as input grows?  Lifted Monotonicity
+of possible outputs survive together as input \ingrows?  Lifted Monotonicity
 answers it by requiring monotonicity of fibers.  We first define the two ways
 it can fail, then combine them.
 
@@ -155,7 +159,8 @@ An \emph{ordered relational specification} is
   \label{eq:relational-specification}
         \end{equation}
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and $S$
-is total on $I$: every input appears in at least one row.  A row $(i,o)\in S$
+is total on $I$: every input appears in at least one row.  The specification
+is \emph{ambiguous} when some fiber contains more than one output.  A row $(i,o)\in S$
 says that output $o$ is permitted at input $i$.  The fiber
         \begin{equation}
   \fiber{i}=\{o\in O:(i,o)\in S\}
@@ -174,7 +179,7 @@ output events.
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
 An ordered relational specification satisfies \emph{Relational Monotonicity}
-when every output keeps some refinement as input grows:
+when every output keeps some \outnoun as input \ingrows:
         \begin{equation}
   i\InputOrd j,\ o\in\fiber{i}
   \quad\Longrightarrow\quad
@@ -185,13 +190,14 @@ when every output keeps some refinement as input grows:
 
 For singleton fibers this is functional monotonicity,
 Equation~\ref{eq:functional-monotonicity}.  It treats each output separately
-and does not say whether several outputs permitted at one input can be preserved
-together; Directed Outputs addresses that question.
+and does not say whether several outputs permitted at one input have a
+common \outnoun; Directed Outputs (Definition~\ref{def:fiber-directedness})
+addresses that question.
 
 \begin{definition}[Compatibility]
 \label{def:compatibility}
 Let $F\subseteq O$ be a set of outputs.  Outputs $o_1,\ldots,o_k$ are
-\emph{compatible in $F$} if some $u\in F$ refines all of them,
+\emph{compatible in $F$} if some $u\in F$ \outrel all of them,
 $o_r\OutputOrd u$ for every $r$, and \emph{incompatible in $F$} otherwise.
 They are \emph{compatible at input $i$} when they are compatible in the fiber
 $\fiber{i}$.
@@ -208,14 +214,14 @@ A singleton fiber is directed, and closure under a join is sufficient but not
 necessary.  Directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
 join-semilattice.  Compatibility likewise does not require comparability: two
-incomparable outputs may have a third output in the fiber above both.  Thus the
+incomparable outputs may have a third output in the fiber that \outrel both.  Thus the
 traceroute fiber is directed by union, whereas the two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f) are incompatible.
 
 \paragraph{Lifted Monotonicity.}
 
-Relational Monotonicity preserves each output across input refinement;
-Directed Outputs preserves finite choices within a fiber.  The joint lift
+Relational Monotonicity gives each output a \outnoun at every \indesc of its
+input; Directed Outputs gives each finite set within a fiber a common \outnoun.  The joint lift
 expresses both.  For nonempty $A,B\subseteq O$, define
         \begin{equation}
   A\LiftedOrd B
@@ -224,7 +230,7 @@ expresses both.  For nonempty $A,B\subseteq O$, define
   \label{eq:joint-output-order}
         \end{equation}
 the \emph{joint lift} of $\OutputOrd$.  Unlike Relational Monotonicity, it
-preserves finite sets of outputs together rather than each output separately,
+treats finite sets of outputs together rather than each output separately,
 and $A\LiftedOrd A$ holds exactly when $A$ is directed.
 
 \begin{definition}[Lifted Monotonicity, monotone specification]
@@ -240,7 +246,9 @@ under the joint lift:
         \end{equation}
 \end{definition}
 
-The next proposition supplies two forms used later: form~(2) separates the
+With singleton fibers it is functional monotonicity
+(Definition~\ref{def:functional-monotonicity}).  The next proposition supplies
+two forms used later: form~(2) separates the
 across-input and within-fiber requirements, and form~(3) matches confluence by
 allowing outputs from several inputs.
 
@@ -254,8 +262,8 @@ For an ordered relational specification, the following are equivalent:
   \item the common-\indesc condition
         (Definition~\ref{def:common-refinement-condition}): for every finite
         set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$, the outputs
-        $o_1,\ldots,o_k$ are compatible at every common refinement of
-        $i_1,\ldots,i_k$.
+        $o_1,\ldots,o_k$ are compatible at every common \indesc of
+          $i_1,\ldots,i_k$.
 \end{enumerate}
 \end{proposition}
 
@@ -265,30 +273,30 @@ $\fiber{i}$ is directed.  Taking $X=\{o\}$ for $o\in\fiber{i}$ and
 $i\InputOrd j$ gives $u\in\fiber{j}$ with $o\OutputOrd u$, which is Relational
 Monotonicity.
 
-(2) implies (3).  Let rows $(i_r,o_r)$ have common refinement $j$.  For the
+(2) implies (3).  Let rows $(i_r,o_r)$ have common \indesc $j$.  For the
 empty family, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, since
 $i_r\InputOrd j$, Relational Monotonicity gives, for each $r$, a
 $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ now all lie in the one
-fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ refines every
+fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ \outrel every
 $u_r$, hence every $o_r$.
 
 (3) implies (1).  Let $i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty and
-finite.  The rows $\{(i,x):x\in X\}$ have common refinement $j$, so some
-$u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\LiftedOrd\fiber{j}$.
+finite.  The rows $\{(i,x):x\in X\}$ have common \indesc $j$, so some
+$u\in\fiber{j}$ \outrel all of $X$; that is $\fiber{i}\LiftedOrd\fiber{j}$.
 \end{proof}
 
 Checking pairs of rows suffices for form~(3), provided the pairs range over
-all rows of $S$, including those at the common refinement: combine two rows
+all rows of $S$, including those at the common \indesc: combine two rows
 into one row at $j$, then pair it with the next.  Pairs drawn only from
 participants' initial decisions do not suffice; in the $k$-set agreement
-example of Appendix~\ref{app:additional-applications}, every $k$ of $k+1$
+example (participants must decide at most $k$ distinct values) of Appendix~\ref{app:additional-applications}, every $k$ of $k+1$
 initial decisions are compatible, but not all of them.
 
 \subsection{Lifted output events}
 \label{sec:safe-exposure}
 
 The functional case has one row per input, so an output event either removes
-nothing or seals a valid input.  With several rows at one input, it can also
+nothing or seals a legal input.  With several rows at one input, it can also
 retire a \outrelpast row while retaining the row that \outrel it.  We now lift output events to this case and check that they satisfy
 the event contract of Proposition~\ref{prop:canonical-output-preservation}.
 
@@ -298,8 +306,8 @@ Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\mathsf{output}(o)$
 under a basis $\mathcal B$ applies a finite, possibly empty sequence of
 commitments from $\mathcal B$, leaving a table $R_c$, and then retires rows and
 emits $o$, all atomically.  Call a row \emph{ruled out by} $o$ when its output
-does not refine $o$.  The event is \emph{valid} when $(i,o)\in R_c$ and every
-row of $R_c$ ruled out by $o$ is \outrelpast by a retained row that refines $o$:
+does not \outrelbase $o$.  The event is \emph{legal} when $(i,o)\in R_c$ and every
+row of $R_c$ ruled out by $o$ is \outrelpast by a retained row that \outrel $o$:
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
   \quad\Longrightarrow\quad
@@ -311,17 +319,17 @@ $(i,R_c[\mathrm{out}\OutputGe o])$.
 \end{definition}
 
 This lifts Definition~\ref{def:output-event}.  With one row per input, a
-ruled-out row has no other row at its input to \outrelbase it, so validity requires
-that the commitments themselves leave only rows refining $o$, which is
+ruled-out row has no other row at its input to \outrelbase it, so legality requires
+that the commitments themselves leave only rows \outrelpart $o$, which is
 Equation~\ref{eq:supported-output-action}.  With several rows per input, the
 current row must now be retained explicitly, since other rows at $i$ may
 remain.
 
-Which rows must a valid event remove by commitment?  Emitting $o$ rules out
+Which rows must a legal event remove by commitment?  Emitting $o$ rules out
 every row outside $R[\mathrm{out}\OutputGe o]$, but those rows need not all be
-handled in the same way.  Some lie at inputs with no row refining $o$ and
+handled in the same way.  Some lie at inputs with no row \outrelpart $o$ and
 require sealing the input, some can be retired because another row at the same
-input preserves their claim, and the rest require a binding choice among
+input \outrel them, and the rest require a binding choice among
 outputs.  Accordingly, the ruled-out rows fall into three classes: the rows at
 the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
 \begin{align}
@@ -338,12 +346,12 @@ the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
 \begin{definition}[Output retirement]
 \label{def:output-retirement}
 The \emph{output retirements} for $o$ at $(i,R)$ are the rows in $D_o$: rows
-ruled out by $o$ but \outrelpast by a row that refines $o$.
+ruled out by $o$ but \outrelpast by a row that \outrel $o$.
 \end{definition}
 
 Rows at inputs in $K_o$ require a \emph{seal}, which removes every row at those
 inputs.  Rows in $U_o$ are conflicts with $o$ that no row \outrel and require a
-\emph{choice}, which removes some outputs at an input while leaving it valid.
+\emph{choice}, which removes some outputs at an input while leaving it legal.
 Every removed row thus has one of three causes: an input event removes rows that
 can no longer happen, an output retirement removes rows \outrelpast by a row the
 event keeps, and a commitment removes rows that could still happen and that no
@@ -351,7 +359,8 @@ remaining row \outrel.  Equation~\ref{eq:commitment-excludes} is judged at the
 table a commitment leaves, so a row removed together with every row that
 \outrel it counts as a commitment's removal, not a retirement.
 
-For each $o\in O$, the \emph{canonical seal commitment} $s_o$ and the
+For each $o\in O$, the \emph{canonical seal commitment} $s_o$, lifting
+Definition~\ref{def:canonical-commitment-basis}, and the
 \emph{canonical choice commitment} $c_o$ are the partial functions
 \begin{equation}
   s_o(i,R)=\bigl(i,\ R\setminus R[\mathrm{in}\in K_o]\bigr),
@@ -372,12 +381,12 @@ exactly
 \end{equation}
 Both are commitments: no row either removes is \outrelpast by a row it keeps
 (Equation~\ref{eq:commitment-excludes}).  The seal $s_o$ removes every row at
-the inputs in $K_o$, so nothing remains there to refine a removed row.  For
-$c_o$, suppose some $x\in U_o$ at input $k$ were refined by a row $y$ that
-$c_o$ leaves at $k$.  Either $y$ refines $o$, or $y\in D_o$ and is \outrelpast by
-a row refining $o$; by transitivity $x$ is then \outrelpast by a row refining
+the inputs in $K_o$, so nothing remains there to \outrelbase a removed row.  For
+$c_o$, suppose some $x\in U_o$ at input $k$ were \outrelpast by a row $y$ that
+$c_o$ leaves at $k$.  Either $y$ \outrel $o$, or $y\in D_o$ and is \outrelpast by
+a row \outrelpart $o$; by transitivity $x$ is then \outrelpast by a row \outrelpart
 $o$, so $x\in D_o$, a contradiction.  Moreover, $c_o$ only chooses: a row of
-$U_o$ at $k$ lies outside $K_o$, so some row at $k$ refines $o$ and survives.
+$U_o$ at $k$ lies outside $K_o$, so some row at $k$ \outrel $o$ and survives.
 With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
 are those of Definition~\ref{def:canonical-commitment-basis}; canonical runs
 now use this lifted basis.  The \emph{canonical event} for $o$ applies $s_o$ when
@@ -388,7 +397,7 @@ recomputing them after $s_o$ gives $K_o=\varnothing$ and the same $D_o$ and
 $U_o$, so $c_o$ is defined there whenever $U_o\neq\varnothing$.
 
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
-$U_o$: no row at $\{A,B\}$ refines both, so the event makes a choice.  In
+$U_o$: no row at $\{A,B\}$ \outrel both, so the event makes a choice.  In
 panel~(g), the two removed route
 sets are in $D_o$, each \outrelpast by a retained route set, so the event retires
 them without commitment.
@@ -397,28 +406,28 @@ them without commitment.
 \label{lem:canonical-commitment-normal-form}
 Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{enumerate}
-  \item Every valid output event for $o$ takes $(i,R)$ to some $(i,R')$ with
+  \item Every legal output event for $o$ takes $(i,R)$ to some $(i,R')$ with
         $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows at
         inputs in $K_o$ and the rows in $U_o$ by commitment.
-  \item The canonical event for $o$ is valid and takes $(i,R)$ to
+  \item The canonical event for $o$ is legal and takes $(i,R)$ to
         $(i,R[\mathrm{out}\OutputGe o])$.
-  \item A valid output event for $o$ that applies no commitment takes $(i,R)$
+  \item A legal output event for $o$ that applies no commitment takes $(i,R)$
         to $(i,R[\mathrm{out}\OutputGe o])$.
 \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-(1) A valid event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
+(1) A legal event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
 R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row at
 $k\in K_o$, or in $U_o$, has no \outrelpart row in $R[\mathrm{out}\OutputGe
 o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
-retired, so a valid event must remove it by commitment.  (2) The canonical
+retired, so a legal event must remove it by commitment.  (2) The canonical
 commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
 of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
 o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
 \outrelpart row lies at an input outside $K_o$ and is not in $U_o$, so it
-survives the commitments.  The event is therefore valid and ends at
-$R[\mathrm{out}\OutputGe o]$.  (3) With no commitment, $R_c=R$, and a valid
+survives the commitments.  The event is therefore legal and ends at
+$R[\mathrm{out}\OutputGe o]$.  (3) With no commitment, $R_c=R$, and a legal
 event ends at $R[\mathrm{out}\OutputGe o]$.
 \end{proof}
 
@@ -449,9 +458,9 @@ so removing a row at $k$ removes every row there.
 
 So the effect of any coordination mechanism---a lock, a timestamp, an agreement
 protocol---is contained in a combination of seals and choices.  One subtlety:
-$c_o$ acts at every refinement of the current input, not only at it, so a choice
+$c_o$ acts at every \indesc of the current input, not only at it, so a choice
 made now also constrains the choices still open at later inputs.  That is what a
-promise is: once $o$ is emitted, later outputs must refine it.
+promise is: once $o$ is emitted, later outputs must \outrelbase it.
 
 Because each commitment acts on a given state, the classification is
 unambiguous.  A seal may remove the last rows that earlier choices left at an
@@ -459,13 +468,13 @@ input; attributing the seal across that sequence is a question of provenance,
 which this paper does not pursue.
 
 Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when some
-valid output event for $o$ applies no commitment, though it may still retire
+legal output event for $o$ applies no commitment, though it may still retire
 \outrelpast rows.  The fourth clause of the contract lifts as well:
 
 \begin{proposition}[Lifted exposure test]
 \label{prop:exposability}
-An output $o\in R(i)$ is exposable at $(i,R)$ if and only if, for every valid
-$j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
+An output $o\in R(i)$ is exposable at $(i,R)$ if and only if, for every legal
+$j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ \outrel both:
 \begin{equation}
   o\OutputOrd u
   \qquad\text{and}\qquad
@@ -476,13 +485,13 @@ $j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
 
 \begin{proof}
 A commitment-free event has $R_c=R$, which contains $(i,o)$.  By
-Equation~\ref{eq:lifted-validity} it is valid exactly when every ruled-out row
-$(j,x)$ is \outrelpast by some row $(j,u)$ refining $o$.  Rows that already
-refine $o$ satisfy the stated test with $u=x$, so validity is exactly the
+Equation~\ref{eq:lifted-validity} it is legal exactly when every ruled-out row
+$(j,x)$ is \outrelpast by some row $(j,u)$ \outrelpart $o$.  Rows that already
+\outrelbase $o$ satisfy the stated test with $u=x$, so legality is exactly the
 stated test.
 \end{proof}
 
-This test marks the coordination boundary: if it fails, every valid output
+This test marks the commitment boundary: if it fails, every legal output
 event uses a commitment to remove conflicting rows.
 
 \subsection{Lifted executions and consistency}
