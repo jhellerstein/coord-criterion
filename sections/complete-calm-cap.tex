@@ -178,20 +178,20 @@ Theorem~\ref{thm:commitments-require-coordination} shows that their output
 events must be mutually excluded; distributed agreement is one mechanism for
 doing so.
 
-Output choice also changes what reconciliation looks like.  In the functional
-case, a participant's state is determined by its input
-(Corollary~\ref{cor:state-by-input}), so knowing the global input determines
-both the reconciled state and the output.  With several outputs per input,
-Lemma~\ref{lem:run-residual} shows that the state is determined by the input
-together with the set of outputs emitted.  Participants at a common input $j$
-reconcile by emitting some $u\in\fiber{j}$ above everything any of them has
-emitted, and Lifted Monotonicity guarantees that such a $u$ exists.  If they
-share the same knowledge of inputs and emitted outputs, any deterministic rule
-for choosing $u$ brings them to the same state without coordination.  If they
-choose independently, their new outputs must themselves be reconciled.
-Lifted Monotonicity again guarantees that this is possible, but the reconciled
-state is not unique, and whether the process settles is a protocol question
-outside the specification.
+Output choice also separates safety from liveness.  Confluence guarantees that
+for any finite history, some extension brings every participant to a common
+state.  In the functional case, finding that extension is trivial: the state is
+determined by the input (Corollary~\ref{cor:state-by-input}), so delivering the
+full input suffices.  With several outputs per input, the state also depends on
+which outputs have been emitted (Lemma~\ref{lem:run-residual}).  Participants at
+a common input $j$ must emit some $u\in\fiber{j}$ above everything any of them
+has emitted, and Lifted Monotonicity guarantees that such a $u$ exists.
+Whether they reach it is a matter of strategy.  Participants that choose
+independently may keep emitting new outputs, each needing its own
+reconciliation.  One strategy that terminates is deterministic reconciliation:
+participants that share knowledge of the inputs and emitted outputs apply the
+same rule for choosing $u$, and arrive at the same state without any
+commitment.  Section~\ref{sec:discussion} returns to this distinction.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:cap-corollary}
