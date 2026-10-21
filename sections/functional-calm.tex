@@ -87,11 +87,11 @@ when an output can be emitted without commitment.
   \end{tabular}
   \caption{The election specification and three states reached from it.  Only
   rows whose input refines $x\cdot\cdot$ are shown.  The current input is
-  in bold; shaded cells are the current input and its \emph{upper fiber}, the
-  outputs still possible at it or at a refinement.  Gray: the row has been
-  removed from the \emph{remainder table} of rows still possible.  Gray and
-  struck through: it was removed by a commitment; gray alone: it was retired by
-  an input event.  Panels (b) and (c) follow input events; panel (d)
+  in bold; shaded cells are the current input and its upper fiber (outputs still possible).
+  Gray: the row has been removed from the remainder table.  Gray and struck
+  through: it was removed by a commitment; gray alone: it was retired by an
+  input event.
+  Panels (b) and (c) follow input events; panel (d)
   follows an output event for $\bot$ that contains a seal commitment.}
   \label{fig:election-frames}
 \end{figure*}
@@ -114,10 +114,8 @@ The two orders express different interface decisions.  The \emph{input order}
 records accumulated ballots: $xy\cdot$ refines $x\cdot\cdot$, while
 $xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output order} records
 preservation of visible claims: $\bot$ lies below either winner, while $x$ and
-$y$ are incomparable.  A \emph{common refinement} of several inputs is an input
-that refines each of them; for example, $xxx$ is a common refinement of the
-incomparable inputs $xx\cdot$ and $x\cdot x$.  In general, the functional table
-is \emph{monotone} when
+$y$ are incomparable.  In general, the functional table is \emph{monotone}
+when
 \[
   i\InputOrd j\quad\Longrightarrow\quad f(i)\OutputOrd f(j).
 \]
@@ -172,33 +170,31 @@ have this commitment in its basis.
 
 \paragraph{Output and consistency.}
 In a functional table, an output $o$ is \emph{exposable} when every output
-still possible at the current input or at a refinement still in the table
-refines it.  Hence $\bot$ is exposable
+still possible at the current input or a refinement still in the table refines it.  Hence $\bot$ is exposable
 in panels~(a) and~(b), and $x$ in panel~(c).  The atomic $\mathsf{output}(o)$
 event applies any seal commitments needed so that every remaining row's output
 refines $o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
-from then on, only rows whose outputs refine $o$ remain.  The emission is
-recorded as an event because whoever supplies input, the \emph{environment},
-may react to it when choosing later input.
+from then on, only rows whose outputs refine $o$ remain.  The emission stays
+explicit in the history because the uncontrolled environment may use it when
+choosing later input.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
-for no winner.  This is the \emph{equality order}, under which each output
-refines only itself.  At $x\cdot\cdot$, $\bot$ is then incompatible with future
+for no winner (the \emph{equality order}, under which an element refines only
+itself).  At $x\cdot\cdot$, $\bot$ is then incompatible with future
 winners.  Emitting it requires sealing those winner-producing refinements; the
 figure shows the stronger, optional action of closing the polls and sealing all
 refinements, including $xy\cdot$, which also outputs $\bot$.  This isolates the
 Functional CALM boundary: under the original monotone order, outputs remain
-correct as input grows; under the equality order, some outputs require
-commitment before they can be emitted.
+valid as input grows; under the equality order, some outputs require commitment
+before they can be emitted.
 
 The obstruction is a property of the table alone.  Rows $(x\cdot\cdot,\bot)$ and
-$(xx\cdot,x)$ have the common refinement $xxx$, but under the equality order no
+$(xx\cdot,x)$ have the common refinement $xxx$ (an input refining both), but under the equality order no
 output at $xxx$ refines both.  A run that emits $\bot$ at $x\cdot\cdot$ and one
 that receives $xx\cdot$ can therefore never meet at $xxx$.
 
-Input and output events take one state to another, and a \emph{run} is a
-finite sequence of them from an initial state.  A
+Input and output events form a transition system between system states.  A
 specification is \emph{consistent} when runs whose inputs have a common
 refinement can always be extended to one common state there.
 Section~\ref{sec:functional-calm-theorem} shows that the test above is exactly
@@ -233,11 +229,11 @@ serves as a reference.
     canonical commitment basis & supports every permitted output event & Def.~\ref{def:canonical-commitment-basis} \\
     event contract & containment, canonical support, commitment-free events, exposure test & Prop.~\ref{prop:canonical-output-preservation} \\
     exposable output & some legal output event uses no commitment & Def.~\ref{def:exposable} \\
-    run & finite sequence of input and output events from a canonical state & Def.~\ref{def:run} \\
+    run & finite input and output events & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
-    consistent & runs confluent: \ some $(j,u)\in R_r$ for every $r$, at every common refinement $j$ of their current inputs & Def.~\ref{def:consistency}, Prop.~\ref{prop:confluence} \\
+    consistent & runs confluent: \ $\bigcap_r R_r(j)\neq\varnothing$ at every common refinement $j$ of their current inputs & Def.~\ref{def:consistency}, Prop.~\ref{prop:confluence} \\
     common-refinement char. & consistent $\iff$ common-refinement condition & Thm.~\ref{thm:common-refinement} \\
     Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
     exposure boundary & common-refinement condition $\iff$ every reachable output exposable & Prop.~\ref{prop:functional-exposure-boundary} \\
@@ -314,7 +310,7 @@ A functional ordered specification $\Spec$, with induced function $f$, is
 \end{equation}
 \end{definition}
 
-Thus an output emitted from partial input remains correct as more input arrives.
+Thus an output emitted from partial input remains valid as more input arrives.
 
 A specification describes every permitted input/output pair.  During execution,
 input arrives and choices become binding, so only some of those pairs remain
@@ -356,26 +352,22 @@ whose output refines its own:
   u\not\OutputOrd w.
   \label{eq:commitment-excludes}
 \end{equation}
-A \emph{commitment basis} $\mathcal B$ is a set of commitments available to a
-system.  A commitment that removes every row at a legal input \emph{seals} that
-input.
+A \emph{commitment basis}
+$\mathcal B$ is a set of commitments available to a system.  A commitment that
+removes every row at a legal input \emph{seals} that input.  In a functional
+specification every commitment seals the inputs whose rows it removes, and we
+call it a \emph{seal commitment}.
 \end{definition}
 
 A commitment makes an allowed future unreachable: it removes alternatives that
-the input still permits and that no remaining row dominates.  The
-condition is judged at the resulting state, so a row removed together with
-every row that dominates it counts as excluded.  Every row an event removes
-thus has one of three causes.  An input event removes rows that can no longer
-happen; an output retirement (Section~\ref{sec:safe-exposure}) removes rows
-dominated by a row the event keeps; a commitment removes rows that could still
-happen and that no remaining row dominates.  With one row per input,
-Equation~\ref{eq:commitment-excludes} holds automatically and every removal
-empties a fiber, so every commitment of a functional specification seals the
-inputs whose rows it removes; we call it a \emph{seal commitment}.  With several
-outputs per input, a commitment can instead remove some outputs at an input and
-keep others, \emph{choosing} among them; Section~\ref{sec:ambiguous-specifications}
-shows that sealing and choosing are the only two jobs commitments ever do
-(Proposition~\ref{prop:seal-or-choose}).
+the input still permits and that no remaining row dominates.  An input event
+removes rows that can no longer happen, an output retirement
+(Section~\ref{sec:safe-exposure}) removes rows dominated by a row the event
+keeps, and a commitment removes rows that could still happen and that no
+remaining row dominates.  With several outputs per input, a commitment can
+instead \emph{choose} among the outputs at an input;
+Proposition~\ref{prop:seal-or-choose} shows that sealing and choosing are the
+only two jobs commitments do.
 
 Note that commitments are \emph{partial} functions:  a system may be designed to
 authorize a commitment only at states satisfying an application-specific
@@ -391,8 +383,8 @@ removes exactly the rows incompatible with that output's promise.
 
 \begin{definition}[Canonical seal commitment, canonical basis]
 \label{def:canonical-commitment-basis}
-For a state $(i,R)$ and a row $(i,o)$ at its current input, retaining the
-promise made by $o$ permits exactly the rows whose outputs refine $o$:
+For a state $(i,R)$ and its current row $(i,o)$, retaining the promise made by
+$o$ permits exactly the rows whose outputs refine $o$:
 \begin{equation}
   R[\mathrm{out}\succeq_O o]=\{(k,u)\in R:o\OutputOrd u\}.
   \label{eq:residual-refining-fibers}
@@ -405,8 +397,8 @@ function
 \end{equation}
 defined at every specification state $(i,R)$ where $(i,o)\in R$ and
 $R[\mathrm{out}\succeq_O o]\neq R$.  In a functional specification it seals
-exactly the legal inputs whose outputs do not refine $o$.  The \emph{canonical
-commitment basis} is exactly
+exactly the legal inputs whose
+outputs do not refine $o$.  The \emph{canonical commitment basis} is exactly
 \begin{equation}
   \mathcal B_S
     =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}.
@@ -448,8 +440,8 @@ promise without assuming that clients tolerate retractions.  An emitted output
 must therefore be preserved by later outputs according to $\OutputOrd$.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Before doing so, it must seal every legal future
-input whose output does not refine $o$.
+output the system may emit.  Before doing so, it must seal every legal
+future input whose output does not refine $o$.
 
 \begin{definition}[Output event]
 \label{def:output-event}
@@ -457,7 +449,7 @@ Let $(i,R)$ be a state and $o\in R(i)$.  An \emph{output event}
 $\mathsf{output}(o)$ under a basis $\mathcal B$ applies a finite, possibly
 empty sequence of commitments from $\mathcal B$ and then emits $o$, all
 atomically.  If the commitments leave remainder table $R'$, the event is
-\emph{legal} at $(i,R)$ when every remaining row's output refines $o$:
+\emph{legal} at $(i,R)$ when every remaining row preserves $o$:
 \begin{equation}
   (k,u)\in R' \Longrightarrow o\OutputOrd u,
   \quad\text{or equivalently}\quad R'\subseteq R[\mathrm{out}\succeq_O o].
@@ -512,8 +504,7 @@ Containment is Equation~\ref{eq:supported-output-action}, and canonical
 support is Equation~\ref{eq:output-action}.  An output event that applies no
 commitment leaves $R$ unchanged, so it is legal exactly when
 $R\subseteq R[\mathrm{out}\succeq_O o]$, in which case
-$R=R[\mathrm{out}\succeq_O o]$; this gives clause~3.  In a functional
-specification, that condition says
+$R=R[\mathrm{out}\succeq_O o]$; this gives clause~3.  That condition says
 $o\OutputOrd f(j)$ at every legal $j\succeq_I i$; since $R(j)=\{f(j)\}$, taking
 $u=x=f(j)$ shows that it is the condition of clause~4.
 \end{proof}
@@ -522,15 +513,17 @@ In a functional specification, then, $o$ is exposable exactly when
 $R[\mathrm{out}\succeq_O o]=R$, or equivalently $o\OutputOrd f(j)$ at every
 legal $j\succeq_I i$.
 
-\paragraph{Upper fiber and determination.}
+\paragraph{Determination.}
 Both kinds of event can narrow what remains possible.  For a state $(i,R)$, the
 \emph{upper fiber} $\mathrm{out}(R[\mathrm{in}\succeq_I i])$ collects the
 outputs at $i$ and its legal refinements.  The state is
 \emph{determined} when its upper fiber has one element, regardless of how it
-was reached.  Input can determine a state by retiring rows that no longer
-extend the input received, as in panel~(c) of
-Figure~\ref{fig:election-frames}; a commitment can determine it instead by
-excluding alternatives that otherwise remain possible, as in panel~(d).
+was reached.
+\emph{Determination} is movement toward or arrival at a determined state.  An
+input event may resolve ambiguity by retiring rows that no longer extend the
+input received; a commitment may instead exclude an alternative that otherwise
+remains possible, as in panels (c) and (d) of
+Figure~\ref{fig:election-frames}.
 
 \subsection{Executions and consistency}
 \label{sec:determination}
@@ -816,12 +809,10 @@ exactly when, at every state reachable without commitment, no output requires
 sealing input.  A monotone functional specification can emit every current
 output without a commitment; if monotonicity fails at $i\InputOrd k$ with
 $f(i)\not\OutputOrd f(k)$, the canonical output event for $f(i)$ seals $k$.
-This is CALM's original intuition---a non-monotone result needs to know that
-no more input is coming---stated as a theorem.
 
 This is the familiar CALM dichotomy stated at the specification interface
-rather than inside a particular programming language.  The C in CALM has been
-read both as consistency and as confluence; Definition~\ref{def:consistency} is
+rather than inside a particular programming language.  The C in CALM has been read
+both as consistency and as confluence; Definition~\ref{def:consistency} is
 both.  Classical CALM fits the pattern with inputs $J$ ordered by fact
 inclusion and outputs $Q(J)$ ordered by answer inclusion.  Functional
 monotonicity becomes
@@ -843,4 +834,4 @@ and~\ref{sec:crdt-instance} take up both instances.
 Before dropping the functional dependency, we give this consistency condition
 a distributed interpretation.  Section~\ref{sec:distributed-execution}
 realizes runs as participant runs; the construction will apply unchanged when
-Section~\ref{sec:ambiguous-specifications} allows several outputs per input.
+Section~\ref{sec:ambiguous-specifications} introduces output choice.
