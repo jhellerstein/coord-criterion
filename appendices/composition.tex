@@ -264,12 +264,9 @@ the resolved store specification $G\star C$ is monotone and consistent.
 Thus neither log ordering nor the ordinary store interface need be monotone;
 committing the shared log order alone makes their composition consistent, and
 no independent commitment at the register or key-value-store interface is
-required.  The premise that matters is that the committed log be a monotone
-function of the input.  Multi-Paxos establishes the same kind of commitments
-without a single authority, but its decided log is not a function of the
-proposals alone: different schedules can decide $[A,B]$ or
-$[B,A]$~\cite{lamport2001paxos}.  The argument applies once the decided slots
-are themselves part of the input, as in state-machine replication: the
-committed log is then the decided prefix, which is total and only extends as
-decisions accrue.
+required.  Multi-Paxos is a natural distributed realization of the log
+authority: state-machine replication implements a single totally ordered log
+across replicas~\cite{schneider1990smr,lamport2001paxos}, so the example
+applies with the authority's proposal stream read as the order in which
+commands are decided.
 \end{example}
