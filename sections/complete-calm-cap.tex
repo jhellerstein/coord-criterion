@@ -22,13 +22,13 @@ relational extensions combined here.
     \textbf{Distributed histories} & & \\
     \midrule
     participant; message & participant holds one state $\sigma=(i,R)$;
-      $m=(i_m,s_m)$ carries cumulative input and strategy components & Sec.~\ref{sec:histories} \\
+      messages carry cumulative input, strategy data, or both & Sec.~\ref{sec:histories} \\
     history; consistent cut & locally ordered events plus matched sends and receives;
       cut closed under happens-before & Def.~\ref{def:distributed-history} \\
     projection; endpoint & $\pi_p(C)$: transitions affecting $p$;
       $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
     history confluence & at every common input $j$, all participants can reach one state $(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
-    run & finite input/output-event sequence; $\mathsf{input}(j)$ directly accepts cumulative target $j$ & Def.~\ref{def:run} \\
+    run & finite input/output-event sequence; $\mathsf{input}(j)$ directly accepts cumulative input $j$ & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Output choice} & & \\
     \midrule
@@ -69,17 +69,8 @@ accounts for.  It is \emph{coordination-free} when its output events apply no
 commitments; they may still perform output retirements.
 \end{definition}
 
-Hereafter, \emph{reachable} means reachable without commitment.  A system
-selects and emits an output in one atomic $\mathsf{output}(o)$ event.  When the
-output is exposable, that action applies no commitment; otherwise it applies a
-commitment as part of the same transition that emits the output and performs any
-output retirements.
-
-In a shared-memory system, a mutex or atomic instruction can establish a
-commitment by fixing an order or choice.  In a distributed system, a commitment
-that conflicts with an alternative that must remain independently selectable
-requires mutual exclusion before it is applied; agreement is one way to
-establish that exclusion.
+Throughout this section, \emph{reachable} means reachable without commitment
+(Section~\ref{sec:determination}).
 
 \begin{theorem}[Conflicting output events cannot coexist]
 \label{thm:commitments-require-coordination}
@@ -102,10 +93,11 @@ to $i$.
 \end{proof}
 
 If both output events must remain independently available, a system must
-mutually exclude them before either participant commits; distributed agreement
-is one way to do so.  Static authority or a predetermined strategy can instead make
-one event unavailable, in which case no runtime agreement follows from the
-theorem.
+mutually exclude them before either participant commits.  In a shared-memory
+system a mutex or atomic instruction provides that exclusion; in a distributed
+system, agreement is one way to establish it.  Static authority or a
+predetermined strategy can instead make one event unavailable, in which case no
+runtime agreement follows from the theorem.
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -142,20 +134,17 @@ to Lifted Monotonicity.
 
 
 
-The theorem gives a specification-level test for history confluence and closes
-the operational loop.  Exposability follows rather than being assumed: by the
-exposure boundary (Proposition~\ref{prop:functional-exposure-boundary}), Lifted
-Monotonicity holds exactly when every output at every commitment-free
-reachable state is exposable.
+The theorem gives a specification-level test for history confluence.  It also
+derives exposability rather than assuming it: by the exposure boundary
+(Proposition~\ref{prop:functional-exposure-boundary}), Lifted Monotonicity holds
+exactly when every output at every reachable state is exposable.
 
 Thus Lifted Monotonicity makes all reachable outputs exposable, so output
 progress needs no commitment and is coordination-free.  Its failure exhibits
 a finite family without a common refinement, so selecting an offending output
 requires a commitment and hence coordination.  When different participants
 must retain independently selectable conflicting alternatives,
-Theorem~\ref{thm:commitments-require-coordination} shows that their output
-events must be mutually excluded; distributed agreement is one mechanism for
-doing so.
+Theorem~\ref{thm:commitments-require-coordination} applies.
 
 Output choice also separates safety from liveness.  Confluence guarantees that
 for any finite history, some extension brings every participant to a common
@@ -184,16 +173,17 @@ outputs.  Each participant has one state at a cut.
 
 We use an interface-wide form of \emph{Availability}: every output in a
 participant's current fiber can be emitted by an output event without
-commitment or a cross-component wait.  This is stronger than requiring some
-response to one operation, because the full declared interface treats every
-permitted output as available.  The history has \emph{Partition Consistency}
-when its commitment-free participant projections are confluent at every common
-refinement of their current inputs.
+commitment and without waiting for a message from another component.  This is
+stronger than requiring some response to one operation, because the full
+declared interface treats every permitted output as available.  The history has
+\emph{Partition Consistency} when its participant projections are confluent,
+through commitment-free extensions, at every common refinement of their current
+inputs.
 
-Appendix~\ref{app:deployment} uses a weaker, placement-relative condition.  It
-restricts the interface by participant authority and counts commitments wholly
-local to a partition component as deployment-available; its result therefore
-characterizes confluence under that different availability assumption.
+The partition's only effect is to forbid new shared commitments across
+components.  Availability therefore reduces to exposability, and Complete CAP
+follows from Complete CALM and the exposure boundary; its content is that the
+boundary is exact.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
@@ -206,21 +196,22 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 \end{theorem}
 
 \begin{proof}
-Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Every output at
-each commitment-free participant state at the cut is exposable by the
-exposure boundary (Proposition~\ref{prop:functional-exposure-boundary}), giving
-Availability.  The resulting
-participant projections are canonical runs, so Complete CALM gives their
-confluence and hence Partition Consistency.
+Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Each
+participant's projection is commitment-free and hence a canonical run
+(Section~\ref{sec:determination}), so every output at its state is exposable by
+the exposure boundary (Proposition~\ref{prop:functional-exposure-boundary}),
+giving Availability.  Complete CALM and the survivor test supply a row $(j,u)$
+surviving in every projection.  After $\mathsf{input}(j)$, each participant's
+state is again reachable without commitment, so $u$ is exposable there and its
+output event needs no commitment; this gives Partition Consistency.
 
 Conversely, let any finite rows $(i_r,o_r)$ have a common refinement $j$.
 Place their participants in separate partition components.  If there is only
 one row, add a second participant initialized at $j$ and emit no output there.
 Availability lets each original participant perform $\mathsf{output}(o_r)$
-from $\sigma_S(i_r)$ without a commitment.  Partition Consistency then supplies
-a
-row $(j,u)$ surviving in every remainder table, so
-$o_r\OutputOrd u$ for every $r$.  Form~(3) of
+from $\sigma_S(i_r)$ without a commitment.  Partition Consistency and the
+survivor test then supply a row $(j,u)$ surviving in every remainder table,
+so containment gives $o_r\OutputOrd u$ for every $r$.  Form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition} gives Lifted
 Monotonicity.
 \end{proof}
@@ -228,8 +219,8 @@ Monotonicity.
 Partition Consistency requires outputs from different components to be jointly
 refinable, not identical or totally ordered; this is why the characterization
 is bidirectional.  When Lifted Monotonicity fails, some permitted output event
-either requires a commitment that cannot be established without a
-cross-component wait, sacrificing Availability, or completes independently at
+either requires a commitment that cannot be established without waiting for
+another component, sacrificing Availability, or completes independently at
 the cost of Partition Consistency.
 
 A linearizable register is the classical instance of the tradeoff side: a
