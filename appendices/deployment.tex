@@ -3,15 +3,15 @@
 
 Theorem~\ref{thm:complete-cap} (Complete CAP) quantifies over all participants
 and inputs, and its Availability lets every participant emit every output in
-its current fiber.
+its current fiber $R(i)$.
 Whether a commitment is necessary is a question about the specification;
 whether it requires agreement across a partition also depends on
 \emph{deployment}: which participant may hold which input and select which row.
 A participant that controls an entire choice may make the commitment locally.
-We count such partition-independent local work as available and refine the
+We count such partition-independent local work as available and adjust the
 theorem accordingly.
 
-Return to leader election, with \texttt{server1} and \texttt{server2} both
+Consider leader election, with \texttt{server1} and \texttt{server2} both
 eligible.  If one participant alone holds all election state and is entitled
 to name the leader, a partition changes nothing: the two rows are an
 incompatible family, but both belong to that participant, and it selects
@@ -20,7 +20,7 @@ named below, which we permit but regard as degenerate.  The substantive case
 begins when relevant authority is distributed.  If one participant may name
 \texttt{server1} and another may name \texttt{server2}, a partition that
 separates them lets each select its row alone, and the two selections have no
-common refinement when the partition heals.  The same specification is safe
+common \outnoun when the partition heals.  The same specification is safe
 under the first deployment and not under the second; what differs is which
 incompatible families a partition can split between its sides.
 
@@ -29,15 +29,16 @@ incompatible families a partition can split between its sides.
 A \emph{deployment} over a participant set $P$ assigns to each participant $p$
 a set $A_p\subseteq S$ of rows it may emit; $(i,o)\in A_p$ means that $p$
 may hold $i$ as a current input and perform $\mathsf{output}(o)$ there on its
-own authority.  A partition $\Pi$ of $P$ (Section~\ref{sec:cap-corollary})
-divides
+own authority.  A partition $\Pi$ of $P$, the component split of a partitioned history
+(Section~\ref{sec:cap-corollary}), divides
 the participants into two or more nonempty components.
 
 A finite \emph{participant run family} assigns to each of finitely many
 participants $p$ an initial input and a canonical run whose emitted rows all
 lie in $A_p$; the run may emit no output.  The family is \emph{separable under
 $\Pi$} when either its emitted rows occur in at least two components, or it has
-exactly one emitted row and a silent participant in another component.  The
+exactly one emitted row and a \emph{silent} participant, one whose run emits
+no output, in another component.  The
 second case tests whether that one output survives at the silent participant's
 current input.
 \end{definition}
@@ -45,9 +46,9 @@ current input.
 \begin{definition}[Monotone across partitions]
 \label{def:monotone-across-partitions}
 Relative to a deployment, $\Spec$ is \emph{monotone across $\Pi$} when, for
-every participant run family separable under $\Pi$ and every common refinement
+every participant run family separable under $\Pi$ and every common \indesc
 $j$ of its participants' current inputs, the outputs in all emitted rows have a
-common refinement in $\fiber{j}$.  It is
+common \outnoun in $\fiber{j}$.  It is
 \emph{monotone across partitions} when it is monotone across every partition of
 $P$.
 \end{definition}
@@ -93,12 +94,13 @@ Fix a deployment for which Deployment Availability holds.  The following are
 equivalent.
 \begin{enumerate}
   \item Under every partition $\Pi$ and every order of input arrival within
-        each component, every run family separable under $\Pi$ is
-        \emph{compatible} at every common refinement $j$ of its participants'
-        current inputs: some row at $j$ survives in every remainder table.
+        each component, every run family separable under $\Pi$ passes the survivor test
+        (Proposition~\ref{prop:confluence}) at every common \indesc $j$ of its
+        participants' current inputs: some row at $j$ survives in every
+        remainder table.
         Together with the assumed Deployment Availability, this gives
         available execution whose independently emitted outputs have an
-        abstract common refinement.
+        abstract common \outnoun.
   \item $\Spec$ is monotone across partitions.
 \end{enumerate}
 \end{theorem}
@@ -106,29 +108,29 @@ equivalent.
 \begin{proof}
 (2$\Rightarrow$1.)  Fix $\Pi$ and any separable participant run family.  Every
 row emitted on participant $p$'s run lies in $A_p$ by definition.  Monotonicity
-across $\Pi$ supplies $u\in\fiber{j}$ above every emitted output.  Each
+across $\Pi$ supplies $u\in\fiber{j}$ \outrelpart every emitted output.  Each
 participant's
-fiber at $j$ is $\fiber{j}$ intersected with the outputs above its own
+fiber at $j$ is $\fiber{j}$ intersected with the outputs \outrelpart its own
 emissions, and $u$ belongs to every such set.  Hence some row at $j$ survives
 in every state, under every arrival order in each component.
 
 (1$\Rightarrow$2.)  If monotonicity across some $\Pi$ fails, a separable
-participant run family and a common refinement $j$ have no output in
-$\fiber{j}$ above all its emitted rows.  Use the runs assigned by the family;
+participant run family and a common \indesc $j$ have no output in
+$\fiber{j}$ \outrelpart the outputs of all its emitted rows.  Use the runs assigned by the family;
 every emitted row belongs to its participant's $A_p$.  Each participant's
 fiber at $j$ then contains only
-outputs above all of its own emissions, and no output of $\fiber{j}$ is above
-all emitted outputs in the family, so no row at $j$ survives in every state.
+outputs \outrelpart all of its own emissions, and no output of $\fiber{j}$
+\outrel all emitted outputs in the family, so no row at $j$ survives in every state.
 Avoiding this requires either a wait across the partition or refusing some authorized
 row, which implements a narrower deployment or specification.
 \end{proof}
 
 The theorem establishes abstract compatibility, not deployment-authorized
 confluence to an identical state.  A common surviving row $u$ shows that the
-emitted outputs can be jointly refined in the specification, but some
+emitted outputs have a common \outnoun in the specification, but some
 participant may lack authority for $\mathsf{output}(u)$.  Confluence through
 legal output events of the deployment additionally requires enough authority to take
-a common-refining output event from every endpoint.  We do not impose that
+an output event for a common \outnoun from every endpoint.  We do not impose that
 condition here.
 
 The theorem concerns cross-component families of canonical runs and assumes,
@@ -146,7 +148,8 @@ can then be split across a partition and every single row paired with a silent
 participant; since pairs of rows suffice for the common-\indesc condition
 (Section~\ref{sec:relational-specifications}), monotonicity across partitions
 is monotonicity.  Under those restrictions, this theorem's compatibility
-equivalence supplies the common-survivor condition behind
+equivalence supplies the common-survivor condition
+(Proposition~\ref{prop:confluence}) behind
 Theorem~\ref{thm:complete-cap}; Complete CAP additionally shows that a
 monotone specification needs no commitment, so its canonical basis supplies
 commitment-free output events for confluence.  Deployment
@@ -162,21 +165,26 @@ it.  Under a deployment, the authority needed to answer that read is split by
 the partition, rather than merely being a choice local to one replica.
 
 For comparison with causal consistency, consider two replicas initially
-holding no value.  Participant $p$ completes a write of \dog{} while $q$
+holding no value.  Participant $p$ completes a write of \dog{} to register $x$ while $q$
 concurrently completes a write of \catv.  The replicas exchange both writes,
 after which a partition separates them and each serves a local read.
 
-An input is a finite causally closed operation history, ordered by
-induced-subhistory extension.  An output is an explanation $(L,\rho)$, where
+This register specification, the response-map form of
+Appendix~\ref{app:cap-response}, and the per-process views of
+Appendix~\ref{sec:frontiers} are variants of one register that differ in what
+an output records.  An input is a finite causally closed operation history,
+ordered by induced-subhistory extension: $h\InputOrd h'$ when restricting $h'$
+to the operations of $h$ gives $h$.  An output is an explanation $(L,\rho)$, where
 $L$ is an operation order allowed by the consistency model and $\rho$ maps each
-completed read to the write supplying its response.  Refinement extends $L$
+completed read to the write supplying its response.  One explanation \outrel
+another when it extends $L$
 without reversing an existing order and extends $\rho$ without changing an
 answered read.
 
 For linearizability, $L$ is a total order extending real time
 ~\cite{herlihy1990linearizability}.  If $p$ returns \catv, its explanation
 requires $w_p(x,\dog)<_L w_q(x,\catv)$.  If $q$ returns \dog, its explanation
-requires the opposite order.  No total order refines both explanations.  This
+requires the opposite order.  No total-order explanation \outrel both.  This
 post-reconciliation execution exhibits failure of partition compatibility under
 the broad deployment that authorizes those opposite read choices; unlike the
 hidden-write witness of Corollary~\ref{cor:gilbert-lynch}, both writes are
@@ -185,9 +193,9 @@ already known to both replicas.
 Under causal consistency, the writes remain concurrent and one explanation can
 assign $p$'s read to \catv{} and $q$'s read to \dog{}
 ~\cite{lamport1978time,ahamad1995causal}.  The responses have a common
-refinement.  Two possible answers for the same read remain incompatible, but
+\outnoun.  Two possible answers for the same read remain incompatible, but
 only that read's owner selects one; under a deployment in which each
-participant holds its own views, no partition separates one local decision
+participant answers its own reads, no partition separates one local decision
 into two independent choices, and the causal register is monotone across
 partitions.  Any commitment selecting that participant's response is local and
 therefore counts as deployment-available.
