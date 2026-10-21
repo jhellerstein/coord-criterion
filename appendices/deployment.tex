@@ -3,13 +3,14 @@
 
 Theorem~\ref{thm:complete-cap} (Complete CAP) quantifies over all participants
 and inputs, and its Availability lets every participant emit every output in
-its current fiber $R(i)$.
+its fiber $R(i)$.
 Whether a commitment is necessary is a question about the specification;
 whether it requires agreement across a partition also depends on
 \emph{deployment}: which participant may hold which input and select which row.
-A participant that controls an entire choice may make the commitment locally.
-We count such partition-independent local work as available and adjust the
-theorem accordingly.
+A participant that controls an entire choice may make the commitment locally,
+and Complete CAP's Availability already counts such work as available.  What a
+deployment adds is which participant may emit which row; we restrict
+Availability to authorized rows and adjust the theorem accordingly.
 
 Consider leader election, with \texttt{server1} and \texttt{server2} both
 eligible.  If one participant alone holds all election state and is entitled
@@ -75,11 +76,11 @@ Availability} when every surviving authorized row at each participant's
 current input is deployment-available.
 \end{definition}
 
-This differs deliberately from the interface-wide Availability of
-Section~\ref{sec:cap-corollary}, which lets every participant emit every output
-in its fiber.  Here only authorized rows must be available; a local commitment
-counts as available, and a commitment whose authority is split by
-the partition does not.  Call a deployment \emph{single-authority} when one
+Like the Availability of Section~\ref{sec:cap-corollary}, this lets an output
+event apply commitments local to the participant's component, and not one
+whose authority the partition splits.  It differs in scope: that Availability
+lets every participant emit every output in its fiber, while here only
+authorized rows must be available.  Call a deployment \emph{single-authority} when one
 participant holds all relevant input state and output choices and every other
 participant is silent.  Such a deployment is a degenerate special case: the
 formalism permits it, consistently with placement-sensitive models such as
@@ -142,7 +143,7 @@ cross-component condition.  If a local commitment affects rows another
 component may emit, its cross-component consequences must themselves
 satisfy the theorem's condition.  Only run families that a partition separates
 are tested.  If there are at least two participants and the deployment lets
-every participant hold every row, then Deployment Availability is exactly the
+every participant hold every row, then Deployment Availability matches the
 Availability condition of Section~\ref{sec:cap-corollary}.  Moreover, every pair of rows
 can then be split across a partition and every single row paired with a silent
 participant; since pairs of rows suffice for the common-\indesc condition
@@ -150,9 +151,9 @@ participant; since pairs of rows suffice for the common-\indesc condition
 is monotonicity.  Under those restrictions, this theorem's compatibility
 equivalence supplies the common-survivor condition
 (Proposition~\ref{prop:confluence}) behind
-Theorem~\ref{thm:complete-cap}; Complete CAP additionally shows that a
-monotone specification needs no commitment, so its canonical basis supplies
-commitment-free output events for confluence.  Deployment
+Theorem~\ref{thm:complete-cap}; Complete CAP additionally shows that local
+commitments cannot enlarge the available class, and that for a monotone
+specification a commitment-free system suffices.  Deployment
 determines which inputs and choices can occur independently, just as data
 placement does in the relational-transducer model.
 
