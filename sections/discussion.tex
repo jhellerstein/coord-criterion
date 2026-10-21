@@ -99,18 +99,61 @@ partition compatibility---a common \outnoun for outputs emitted in
 different components---can hold even when the declared deployment cannot carry
 out reconciliation through its authorized output events.
 
-Complete CAP adds an operational requirement at two strengths.  Its interface
-form asks that every permitted output be emittable without waiting on another
-component; its response form (Appendix~\ref{app:cap-response}) asks only that
-every operation be answered, where a declared response obligation says which
-outputs count as answers.  A store that may serve stale reads always has an
-answer, so it meets the response form, but it cannot offer every answer its
-interface permits, so it fails the interface form.  The response form is only as
-strong as its obligation: an interface that counts an abort or a null result as
-an answer is trivially available.  The deployment-relative variant
-(Appendix~\ref{app:deployment}) further fixes who may serve which operations.
-These conditions identify semantic nonblocking boundaries; a protocol result must
-still state its delivery, fairness, failure, and cost assumptions.
+The deployment-relative variant of Complete CAP (Appendix~\ref{app:deployment})
+further fixes who may serve which operations.  These conditions identify
+semantic nonblocking boundaries; a protocol result must still state its
+delivery, fairness, failure, and cost assumptions.
+
+\subsection{What do the generalizations keep from their sources?}
+\label{sec:sources}
+
+Each result we generalize fixed an object, a guarantee, and an operational
+model: Datalog programs on relational transducers, a linearizable register
+under message loss, transactions under named isolation levels, database states
+under an invariant.  Underneath, they ask the same question---can a participant
+act on what it knows without being contradicted by what it learns later?---and
+give the same answer: yes, when more input never revokes what it reports.  We
+keep that question and that answer, and let the specification supply the
+object, the guarantee, and what counts as an answer.  We call a generalization
+faithful when specializing it returns the boundary its source drew; where our
+statement looks different, the difference is usually a choice the source made
+implicitly.
+
+CALM and the theorems of Ameloot et al.\ classify programs: which queries a
+network of transducers can evaluate without coordination.  Functional CALM
+classifies the specification a program computes.  Program-level questions---which
+programs compute monotone specifications, and whether monotonicity is
+decidable---stay with the program-level results.  What carries over is the
+boundary, now independent of the language used to state it.
+
+Brewer's conjecture left consistency informal.  Gilbert and Lynch fixed it to
+linearizability, and availability to every request eventually being answered.
+Our interface form asks for more: every output the specification permits must
+stay available.  A system that always has a conservative answer meets the
+weaker response form even when it cannot offer every answer its interface
+permits.  The response form asks what Gilbert and Lynch ask, once a
+response obligation declares which outputs count as answers.  That declaration
+is not a technicality: if a null result counts as an answer, every
+specification is trivially available.  With reads owing values and writes owing
+acknowledgments, the linearizable register recovers their theorem as a special
+case (Appendix~\ref{app:cap-response}); the one modeling step is to record
+real-time precedence in the input.
+
+The other sources fit the same pattern.  For Highly Available Transactions,
+the isolation level is the specification, the rule that a transaction commits
+unless its client aborts is the response obligation, and sticky availability is
+a deployment; we recover the boundary, not the protocols.  Invariant confluence
+merges database states; our test compares exposed outputs, and the two coincide
+when the output is the state.  CRDT join laws are one sufficient discipline for
+state convergence, which differs from consistency of what the system exposes
+(Section~\ref{sec:crdt-instance}); for functional specifications, convergence
+follows from consistency (Corollary~\ref{cor:convergence}).  Mahajan et al.\
+prove an optimality result for one family of consistency models; it meets ours
+on the response side, but we do not derive their bound.
+
+In each case the boundary carries over and the vocabulary changes.  Naming the
+specification, the response obligation, and the deployment separately is what
+lets one test reach all of these settings.
 
 \subsection{What behavior is promised, and can concurrent executions preserve it?}
 \label{sec:consistency-as-confluence}
