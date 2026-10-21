@@ -10,7 +10,7 @@ whether it requires agreement across a partition also depends on
 A participant that controls an entire choice may make the commitment locally,
 and Complete CAP's Availability already counts such work as available.  What a
 deployment adds is which participant may emit which row; we restrict
-Availability to authorized rows and adjust the theorem accordingly.
+Availability to authorized rows and state the corresponding characterization.
 
 Consider leader election, with \texttt{server1} and \texttt{server2} both
 eligible.  If one participant alone holds all election state and is entitled
@@ -89,22 +89,18 @@ we set it aside below.  The substantive case has authority in multiple
 components and asks whether each component's local commitments remain mutually
 consistent without communication.
 
-\begin{theorem}[Partition compatibility under a deployment]
+\begin{proposition}[Partition compatibility under a deployment]
 \label{thm:complete-cap-deployment}
-Fix a deployment for which Deployment Availability holds.  The following are
-equivalent.
+Fix a deployment.  The following are equivalent.
 \begin{enumerate}
   \item Under every partition $\Pi$ and every order of input arrival within
         each component, every run family separable under $\Pi$ passes the survivor test
         (Proposition~\ref{prop:confluence}) at every common \indesc $j$ of its
         participants' current inputs: some row at $j$ survives in every
         remainder table.
-        Together with the assumed Deployment Availability, this gives
-        available execution whose independently emitted outputs have an
-        abstract common \outnoun.
   \item $\Spec$ is monotone across partitions.
 \end{enumerate}
-\end{theorem}
+\end{proposition}
 
 \begin{proof}
 (2$\Rightarrow$1.)  Fix $\Pi$ and any separable participant run family.  Every
@@ -126,7 +122,9 @@ Avoiding this requires either a wait across the partition or refusing some autho
 row, which implements a narrower deployment or specification.
 \end{proof}
 
-The theorem establishes abstract compatibility, not deployment-authorized
+With Deployment Availability, the condition describes what available systems
+achieve: their independently emitted outputs have a common \outnoun in the
+specification.  The proposition establishes abstract compatibility, not deployment-authorized
 confluence to an identical state.  A common surviving row $u$ shows that the
 emitted outputs have a common \outnoun in the specification, but some
 participant may lack authority for $\mathsf{output}(u)$.  Confluence through
@@ -134,21 +132,21 @@ legal output events of the deployment additionally requires enough authority to 
 an output event for a common \outnoun from every endpoint.  We do not impose that
 condition here.
 
-The theorem concerns cross-component families of canonical runs and assumes,
-rather than derives, Deployment Availability.  It therefore characterizes
+The proposition concerns cross-component families of canonical runs and does
+not use Deployment Availability.  It therefore characterizes
 partition compatibility under the authorized placement; it is not by itself an
 interface-wide availability theorem.  Run families whose two
 or more emissions are contained wholly in one component create no
 cross-component condition.  If a local commitment affects rows another
 component may emit, its cross-component consequences must themselves
-satisfy the theorem's condition.  Only run families that a partition separates
+satisfy the proposition's condition.  Only run families that a partition separates
 are tested.  If there are at least two participants and the deployment lets
 every participant hold every row, then Deployment Availability matches the
 Availability condition of Section~\ref{sec:cap-corollary}.  Moreover, every pair of rows
 can then be split across a partition and every single row paired with a silent
 participant; since pairs of rows suffice for the common-\indesc condition
 (Section~\ref{sec:relational-specifications}), monotonicity across partitions
-is monotonicity.  Under those restrictions, this theorem's compatibility
+is monotonicity.  Under those restrictions, this proposition's compatibility
 equivalence supplies the common-survivor condition
 (Proposition~\ref{prop:confluence}) behind
 Theorem~\ref{thm:complete-cap}; Complete CAP additionally shows that local

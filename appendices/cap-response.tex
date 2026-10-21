@@ -306,8 +306,12 @@ changes, so $j$ still \inrel all of them, and no output of $\fiber{j}$
 
 For the register, an input is a finite operation history: a set of read and
 write invocations at replicas, with a strict partial order of real-time
-precedence among them, where $a$ precedes $b$ when $a$'s response was emitted
-before $b$ was invoked.  One history \inrel another when it contains all of its
+precedence among them.  As in Gilbert and Lynch's asynchronous model, real time
+is the order of events in an execution: the environment's execution is an
+\emph{interleaving} of the distributed history, a linear order of its events
+consistent with happens-before, and $a$ precedes $b$ when $a$'s response comes
+before $b$'s invocation in that interleaving.  There are no clocks, and no
+strategy observes the interleaving.  One history \inrel another when it contains all of its
 operations and all of its precedence edges; it may add both operations and
 edges among existing operations, since a replica need not know every
 precedence.  An output is a response map $\rho$ that assigns values to reads
@@ -325,7 +329,8 @@ completion is the writer's own answer.
 
 At each consistent cut $C$, the \emph{realized history} $h_C$ is the operation
 history the environment has produced so far: every invocation, with an edge
-from $a$ to $b$ whenever $a$'s response was emitted before $b$ was invoked.  It
+from $a$ to $b$ whenever $a$'s response precedes $b$'s invocation in the
+interleaving.  It
 is a common \indesc of every participant's current input, and it \inrel
 $h_{C'}$ whenever $C'\subseteq C$.
 
@@ -337,10 +342,12 @@ consistent cut $C$ of every partitioned history.
 \end{corollary}
 
 \begin{proof}
-Separate replicas $p$ and $q$ into two components, and let the environment
+Separate replicas $p$ and $q$ into two components from the start, and let
+the environment
 invoke a write of \dog{} at $p$.  Answering supplies a continuation, with no
 receive, in which $p$ emits a map in $Q_p$ that acknowledges the write.  The
-environment then invokes a read $r_q$ at $q$.  Since no message crosses the
+environment then invokes a read $r_q$ at $q$, after the acknowledgment in the
+interleaving.  Since no message crosses the
 partition, $q$'s current input is $i_q=\{r_q\}$, and the realized history $j$
 contains the write, $r_q$, and an edge from the write to $r_q$.  Every map in
 $Q_q(i_q)$ answers $r_q$ by a linearization of $r_q$ alone, so it returns
@@ -364,19 +371,16 @@ modeling steps.
   \item \emph{Algorithms are strategies.}  A replica's local state is strategy
         state, its messages are messages, an invocation is environment input,
         and a response is an output event; nondeterministic algorithms are
-        allowed, and we take the canonical basis.  A replica records as input
-        every operation it learns of, including through messages, so strategy
-        data carries no environment information beyond its recorded input.
-        Our output events emit only outputs permitted at the local view, and
-        this loses no algorithm that is atomic in every execution.  Truncate
-        every other replica to its events in the replica's causal past.  The
-        replica cannot distinguish the result from the actual execution, and
-        its realized history has the view's operations with possibly more
-        precedence edges, since the view records only edges the replica knows.
-        A linearization of that history is a linearization of the view, so
-        atomicity in that execution already places the response in the fiber
-        at the view.  This step is where Gilbert and Lynch's
-        indistinguishability argument lives.
+        allowed, and we take the canonical basis.  As in Gilbert and Lynch's
+        witness executions, the partition holds from the start: every message
+        between components is lost.  A replica alone in its component then has
+        no event of another component in its causal past, and it cannot
+        distinguish the actual execution from one in which the other component
+        receives no invocations.  That execution's realized history is the
+        replica's own view, so atomicity there already places each response in
+        the fiber at the view.  Our output events emit only such outputs, and
+        this loses no algorithm that is atomic in every execution.  This step
+        is where Gilbert and Lynch's indistinguishability argument lives.
   \item \emph{Availability.}  Every request to a non-failed node eventually
         receives a response, and messages across the partition are lost, so a
         response never waits for one.  This is Answering.  A write's
