@@ -547,30 +547,31 @@ inputs, each run can be extended by further canonical events to one common
 state with current input $j$.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
-Confluence has a simple test: the runs must share a surviving row at the
-common refinement.
+Confluence has a simple test: the row at the common refinement must survive in
+every run.
 
 \begin{proposition}[Confluence at a common refinement]
 \label{prop:confluence}
 Canonical runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent
-at $j$ if and only if some row at $j$ survives in every final state,
+at $j$ if and only if the row $(j,f(j))$ survives in every final state:
 \begin{equation}
-  (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
+  (j,f(j))\in R_r\quad\text{for every }r.
   \label{eq:reconciliation}
 \end{equation}
-For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
+When it does, $\mathsf{input}(j)$ followed by $\mathsf{output}(f(j))$ takes
 every endpoint to the state
-$\bigl(j,\ S[\mathrm{in}\succeq_I j,\ \mathrm{out}\succeq_O u]\bigr)$.
+$\bigl(j,\ S[\mathrm{in}\succeq_I j,\ \mathrm{out}\succeq_O f(j)]\bigr)$.
 \end{proposition}
 
 \begin{proof}
-A common state with current input $j$ has a row at $j$, and that row belongs to
-every $R_r$.  Conversely, let $(j,u)$ belong to every $R_r$.  Then
-$\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
-Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ refines every output
-emitted on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
-same lemma leaves exactly $S[\mathrm{in}\succeq_I j,\ \mathrm{out}\succeq_O u]$,
-independent of the starting run.
+A common state with current input $j$ contains the row at $j$, which is
+$(j,f(j))$, and that row belongs to every $R_r$.  Conversely, let $(j,f(j))$
+belong to every $R_r$.  Then $\mathsf{input}(j)$ is defined at every
+$(i_r,R_r)$.  By Lemma~\ref{lem:run-residual}, $(j,f(j))\in R_r$ says that
+$f(j)$ refines every output emitted on run $r$.  After $\mathsf{input}(j)$ and
+$\mathsf{output}(f(j))$, the same lemma leaves exactly
+$S[\mathrm{in}\succeq_I j,\ \mathrm{out}\succeq_O f(j)]$, independent of the
+starting run.
 \end{proof}
 
 Consistency guarantees that runs never diverge irreparably.  Whatever input
