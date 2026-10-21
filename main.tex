@@ -57,8 +57,10 @@ of this question in different formal models, making their conclusions hard to co
 or reuse.  We give them a common declarative specification framework and a
 single definition of consistency: confluence of executions admitted by a
 specification.  Coordination appears in this declarative model as a
-\emph{commitment}: an irrevocable removal of possibilities from the current
-specification.
+\emph{commitment}: an irrevocable removal of alternatives that the input still
+permits and nothing remaining preserves.  Coordination does two jobs, sealing
+input and choosing among permitted outputs; Functional CALM characterizes when
+sealing is needed and Complete CALM when either is.
 
 \emph{Functional CALM} uses this framework to generalize the original CALM Theorem from Datalog
 queries to arbitrary functions between ordered domains.  This makes the familiar
@@ -67,11 +69,7 @@ function: a functional specification is consistent exactly when it is
 monotone, and then no output ever requires a commitment.
 \emph{Complete CALM} handles \emph{ambiguous} specifications that offer several
 outputs for one input, including choices such as transaction order or leader
-selection.  As execution narrows the possible outputs, the result moves toward
-\emph{determination}; it is \emph{determined} when only one possibility remains.
-Determination has two sources: input events may make some alternatives
-unreachable, and output events may carry commitments that exclude alternatives
-that would otherwise remain possible.  Complete CALM proves that such a specification is consistent
+selection.  Complete CALM proves that such a specification is consistent
 exactly when it satisfies \emph{Lifted Monotonicity}, which, like functional
 monotonicity, requires outputs permitted at inputs with a common refinement to
 share a refinement permitted there.

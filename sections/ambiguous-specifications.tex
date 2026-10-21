@@ -1,14 +1,18 @@
 \section{Ambiguous Specifications and Lifted Monotonicity}
 \label{sec:ambiguous-specifications}
 
-A functional specification fixes one output at each input.  We now allow a
-fiber to contain several outputs and ask when they can be preserved together
-as input grows.  Section~\ref{sec:ambiguity-story} introduces the issue by
+A functional specification fixes one output at each input, so its commitments
+do one job: they seal inputs that could still arrive.  We now allow a fiber to
+contain several outputs and ask when they can be preserved together as input
+grows.  Several outputs per input bring a second job, \emph{choosing} among
+permitted outputs, and this section shows that sealing and choosing are the
+only two.  Section~\ref{sec:ambiguity-story} introduces the issue by
 example.  Section~\ref{sec:relational-specifications} defines relational
 specifications and Lifted Monotonicity.  Section~\ref{sec:safe-exposure} lifts
-output events and verifies the event contract of
-Section~\ref{sec:functional-events}, and Section~\ref{sec:relational-executions}
-records which results of Section~\ref{sec:functional-calm} then carry over.
+output events, verifies the event contract of
+Section~\ref{sec:functional-events}, and classifies commitments, and
+Section~\ref{sec:relational-executions} records which results of
+Section~\ref{sec:functional-calm} then carry over.
 
 \subsection{Output choice by example}
 \label{sec:ambiguity-story}
@@ -58,8 +62,9 @@ contrast, can be preserved together in a larger route set.
 
 \paragraph{Output choice and directedness.} The examples differ in what happens
 to alternative outputs when one is emitted.  In panel~(f), neither
-serialization order preserves the other so emitting one requires an
-\emph{output-choice commitment} that removes the other by fiat.  In panel~(g), larger route sets preserve both the
+serialization order preserves the other, so emitting one requires a
+\emph{choice commitment} that removes the other while the input stays valid:
+the system chooses.  In panel~(g), larger route sets preserve both the
 emitted observation and the outputs of the rows it removes.  We call such content-preserving
 removal an \emph{output retirement}; because every removed claim is preserved,
 the route observation is \emph{exposable} without commitment.  The atomic
@@ -87,8 +92,9 @@ fiber---one captures two-phase locking (2PL), the other multi-version timestamp 
 In 2PL, racing for a lock commits orderings among a subset of transactions:
 in this case it commits only to $A$ before $B$, leaving $C$'s position
 open.  By contrast, timestamp assignment in MVTO orders a transaction with respect to all others:
-in this case, $B$ is assigned first place.  Both remove
-serialization orders, but leave different sets of choices available.
+in this case, $B$ is assigned first place.  Both are choices: they remove
+serialization orders while the input stays valid, but leave different
+alternatives open.
 Each is one step in the commitments of an output event that eventually emits a
 full serial order.  Whatever the protocol, its runs are equivalent to
 canonical runs (Lemma~\ref{lem:canonical-equivalent}), and Consistency is
@@ -291,8 +297,9 @@ the event contract of Proposition~\ref{prop:canonical-output-preservation}.
 Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\mathsf{output}(o)$
 under a basis $\mathcal B$ applies a finite, possibly empty sequence of
 commitments from $\mathcal B$, leaving a table $R_c$, and then retires rows and
-emits $o$, all atomically.  It is \emph{valid} when $(i,o)\in R_c$ and every row
-of $R_c$ excluded by $o$ is dominated at its input by a retained row that
+emits $o$, all atomically.  Call a row \emph{ruled out by} $o$ when its output
+does not refine $o$.  The event is \emph{valid} when $(i,o)\in R_c$ and every
+row of $R_c$ ruled out by $o$ is dominated at its input by a retained row that
 refines $o$:
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\succeq_O o]
@@ -304,19 +311,19 @@ The event then retires those dominated rows and ends at
 $(i,R_c[\mathrm{out}\succeq_O o])$.
 \end{definition}
 
-This lifts Definition~\ref{def:output-event}.  With one row per input, an
-excluded row has no other row at its input to dominate it, so validity requires
+This lifts Definition~\ref{def:output-event}.  With one row per input, a
+ruled-out row has no other row at its input to dominate it, so validity requires
 that the commitments themselves leave only rows refining $o$, which is
 Equation~\ref{eq:supported-output-action}.  With several rows per input, the
 current row must now be retained explicitly, since other rows at $i$ may
 remain.
 
-Which rows must a valid event remove by commitment?  Emitting $o$ excludes
+Which rows must a valid event remove by commitment?  Emitting $o$ rules out
 every row outside $R[\mathrm{out}\succeq_O o]$, but those rows need not all be
 handled in the same way.  Some lie at inputs with no row refining $o$ and
 require sealing the input, some can be retired because another row at the same
 input preserves their claim, and the rest require a binding choice among
-outputs.  Accordingly, the excluded rows fall into three classes: the rows at
+outputs.  Accordingly, the ruled-out rows fall into three classes: the rows at
 the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
 \begin{align}
   K_o&=\mathrm{in}(R)\setminus\mathrm{in}(R[\mathrm{out}\succeq_O o]),
@@ -332,15 +339,15 @@ the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
 \begin{definition}[Output retirement]
 \label{def:output-retirement}
 The \emph{output retirements} for $o$ at $(i,R)$ are the rows in $D_o$: rows
-excluded by $o$ but dominated by a row at the same input that refines $o$.
+ruled out by $o$ but dominated by a row at the same input that refines $o$.
 \end{definition}
 
-Rows at inputs in $K_o$ require seal commitments.  Rows in $U_o$ are
-undominated conflicts with $o$ and require an \emph{output-choice commitment},
-which, unlike a seal, may remove some outputs while leaving their input valid.
+Rows at inputs in $K_o$ require a \emph{seal}, which removes every row at those
+inputs.  Rows in $U_o$ are undominated conflicts with $o$ and require a
+\emph{choice}, which removes some outputs at an input while leaving it valid.
 
 For each $o\in O$, the \emph{canonical seal commitment} $s_o$ and the
-\emph{canonical output-choice commitment} $c_o$ are the partial functions
+\emph{canonical choice commitment} $c_o$ are the partial functions
 \begin{equation}
   s_o(i,R)=\bigl(i,\ R\setminus R[\mathrm{in}\in K_o]\bigr),
   \qquad
@@ -358,6 +365,14 @@ exactly
      \{c_o:o\in O,\ \operatorname{dom}(c_o)\neq\varnothing\}.
   \label{eq:canonical-commitment-basis-relational}
 \end{equation}
+Both are commitments: they remove only excluded rows
+(Equation~\ref{eq:commitment-excludes}).  The seal $s_o$ removes every row at
+the inputs in $K_o$, so nothing remains there to refine a removed row.  For
+$c_o$, suppose some $x\in U_o$ at input $k$ were refined by a row $y$ that
+$c_o$ leaves at $k$.  Either $y$ refines $o$, or $y\in D_o$ and is dominated by
+a row refining $o$; by transitivity $x$ is then dominated by a row refining
+$o$, so $x\in D_o$, a contradiction.  Moreover, $c_o$ only chooses: a row of
+$U_o$ at $k$ lies outside $K_o$, so some row at $k$ refines $o$ and survives.
 With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
 are those of Definition~\ref{def:canonical-commitment-basis}; canonical runs
 now use this lifted basis.  The \emph{canonical event} for $o$ applies $s_o$ when
@@ -368,7 +383,8 @@ recomputing them after $s_o$ gives $K_o=\varnothing$ and the same $D_o$ and
 $U_o$, so $c_o$ is defined there whenever $U_o\neq\varnothing$.
 
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
-$U_o$: no row at $\{A,B\}$ refines both.  In panel~(g), the two removed route
+$U_o$: no row at $\{A,B\}$ refines both, so the event makes a choice.  In
+panel~(g), the two removed route
 sets are in $D_o$, each dominated by a retained route set, so the event retires
 them without commitment.
 
@@ -393,13 +409,44 @@ $k\in K_o$, or in $U_o$, has no dominating row in $R[\mathrm{out}\succeq_O
 o](k)$, and hence none in $R_c[\mathrm{out}\succeq_O o](k)$; it cannot be
 retired, so a valid event must remove it by commitment.  (2) The canonical
 commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
-of them excluded by $o$, so $R_c[\mathrm{out}\succeq_O o]=R[\mathrm{out}\succeq_O
-o]$, which contains $(i,o)$.  Every remaining excluded row is in $D_o$, and its
+of them ruled out by $o$, so $R_c[\mathrm{out}\succeq_O o]=R[\mathrm{out}\succeq_O
+o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
 dominating row lies at an input outside $K_o$ and is not in $U_o$, so it
 survives the commitments.  The event is therefore valid and ends at
 $R[\mathrm{out}\succeq_O o]$.  (3) With no commitment, $R_c=R$, and a valid
 event ends at $R[\mathrm{out}\succeq_O o]$.
 \end{proof}
+
+The canonical basis uses only seals and choices.  That is not a design decision:
+no commitment can do anything else, and every system's runs are contained in
+canonical runs that use only the canonical seals and choices.
+
+\begin{proposition}[Commitments seal inputs or choose outputs]
+\label{prop:seal-or-choose}
+\leavevmode
+\begin{enumerate}
+  \item At each input where a commitment removes rows, it either removes every
+        row, \emph{sealing} that input, or removes some outputs and keeps
+        others, \emph{choosing} among them.
+  \item Every run under any commitment basis is equivalent to a canonical run
+        that keeps at least as many rows after each event and whose only
+        commitments are the seals $s_o$ and the choices $c_o$.
+  \item In a functional specification every commitment only seals.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) At an input $k$, either no row remains or some does.  (2) Canonical
+equivalents (Lemma~\ref{lem:canonical-equivalent}) give the run, and by the
+check above $s_o$ only seals and $c_o$ only chooses.  (3) Each fiber has one row,
+so removing a row at $k$ removes every row there.
+\end{proof}
+
+So the effect of any coordination mechanism---a lock, a timestamp, an agreement
+protocol---is contained in a combination of seals and choices.  One subtlety:
+$c_o$ acts at every refinement of the current input, not only at it, so a choice
+made now also constrains the choices still open at later inputs.  That is what a
+promise is: once $o$ is emitted, later outputs must refine it.
 
 Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when some
 valid output event for $o$ applies no commitment, though it may still retire
@@ -419,7 +466,7 @@ $j\succeq_I i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
 
 \begin{proof}
 A commitment-free event has $R_c=R$, which contains $(i,o)$.  By
-Equation~\ref{eq:lifted-validity} it is valid exactly when every excluded row
+Equation~\ref{eq:lifted-validity} it is valid exactly when every ruled-out row
 $(j,x)$ is dominated by some $u\in R(j)$ refining $o$.  Rows that already
 refine $o$ satisfy the stated test with $u=x$, so validity is exactly the
 stated test.

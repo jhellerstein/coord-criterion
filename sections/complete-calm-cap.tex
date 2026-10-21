@@ -35,13 +35,14 @@ relational extensions combined here.
     Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$; finite sets in $S(i)$ have common refinements in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
     output retirement & removed $(k,x)$ is covered by retained $(k,u)$ with $x\OutputOrd u$ & Def.~\ref{def:output-retirement} \\
     exposable output & $\mathsf{output}(o)$ needs no commitment; it may retire dominated rows & Def.~\ref{def:exposable} \\
-    output-choice commitment & removes undominated conflicts while leaving their input valid & Sec.~\ref{sec:safe-exposure} \\
+    choice commitment & removes undominated conflicts while leaving their input valid & Sec.~\ref{sec:safe-exposure} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
     Complete CALM & Consistency $\iff$ Lifted Monotonicity $\iff$ Distributed Consistency & Thm.~\ref{thm:complete-calm} \\
-    coordination & application of a commitment & Def.~\ref{def:coordination} \\
-    conflicting output events & a commitment and the output it excludes leave states that cannot meet & Prop.~\ref{thm:commitments-require-coordination} \\
+    seal or choice & every commitment seals inputs or chooses outputs & Prop.~\ref{prop:seal-or-choose} \\
+    coordination & an output event that seals or chooses & Def.~\ref{def:coordination} \\
+    conflicting output events & a choice and the output it rules out leave states that cannot meet & Prop.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
   \caption{The distributed and relational extensions combined by Complete
@@ -53,23 +54,26 @@ relational extensions combined here.
 \label{sec:coordination}
 
 Consistency is confluence: independently evolving states can still meet.
-Coordination is its operational counterpart: the system makes a binding choice
+Coordination is its operational counterpart: the system makes a binding decision
 that removes some otherwise possible behavior.  In our transition system, that
-act is exactly a commitment.  A mutex, lock, atomic ordering mechanism, or
-agreement protocol is in scope when it serves this role.  Computation or
-communication that removes no such alternative is not coordination merely
-because it uses one of these mechanisms.
+act is exactly a commitment, and by Proposition~\ref{prop:seal-or-choose} it
+does one of two jobs: it seals input or chooses among outputs.  A mutex, lock,
+atomic ordering mechanism, or agreement protocol is in scope when it serves
+this role.  Computation or communication that removes no such alternative is
+not coordination merely because it uses one of these mechanisms.
 
 \begin{definition}[Coordination]
 \label{def:coordination}
 A system execution \emph{coordinates} if and only if an output event applies a
-commitment.  A commitment may remove rows that neither input nor output
-retirement would remove.  An execution is \emph{coordination-free} when its
-output events apply no commitments; they may still perform output retirements.
+commitment, that is, seals an input or chooses among outputs, removing an
+alternative that the current input still permits and that no remaining row
+preserves.  An execution is \emph{coordination-free} when its output events
+apply no commitments; they may still perform output retirements.
 \end{definition}
 
 The next result explains why commitments are where coordination lives: a
-commitment and an output it excludes leave states that can never meet.
+choice and an output it rules out leave states that can never meet at the
+current input.
 
 \begin{proposition}[Conflicting output events cannot coexist]
 \label{thm:commitments-require-coordination}
@@ -88,17 +92,18 @@ input $i$ has a row at $i$, and since events never add rows, that row would
 belong to both.
 \end{proof}
 
-The proposition is a witness of non-confluence at the current input itself.
+The proposition is a witness of non-confluence at the current input itself: the
+first participant's commitment is a choice at $i$ that rules out $x$.
 Mutual exclusion follows once Consistency is required: if a system must be
 consistent while both events remain available to different participants, it
-must exclude one of them before the other participant commits.  In a
+must exclude one of them.  In a
 shared-memory system a mutex or atomic instruction provides that exclusion; in
 a distributed system, agreement is one way to establish it.  Static authority
 or a predetermined strategy can instead make one event unavailable, in which
-case no runtime agreement is needed.  The same reasoning applies when the
-commitment is a seal: a participant whose output seals a refinement of its
-input conflicts with any participant that accepts that refinement.  This is the
-conflict behind the Gilbert--Lynch theorem (Appendix~\ref{app:cap-response}).
+case no runtime agreement is needed.  Seals conflict in a related way: a
+participant whose output seals a refinement of its input conflicts with any
+participant that accepts that refinement.  This is the conflict behind the
+Gilbert--Lynch theorem (Appendix~\ref{app:cap-response}).
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -166,7 +171,8 @@ needs coordination cannot survive a partition, and one that needs none can.
 Complete CALM lets us state that intuition for any declared guarantee and
 prove it in both directions.  A partition does not change which commitments a
 specification needs; it removes the ability to make them jointly, since
-participants in different components cannot agree on anything new.
+participants in different components cannot agree to seal an input or to make
+a choice.
 
 \begin{definition}[Partitioned history; Availability; Partition Consistency]
 \label{def:partition-notions}

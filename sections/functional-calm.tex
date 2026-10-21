@@ -339,13 +339,35 @@ separate part of the model, as follows.
 \begin{definition}[Commitment basis]
 \label{def:commitment-basis}
 A \emph{commitment} is a partial function on specification states that preserves
-the current input and strictly reduces the remainder table: whenever
-$c(i,R)=(i,R')$, we have $R'\subsetneq R$.  A \emph{commitment basis}
-$\mathcal B$ is a set of commitments available to a system.  A commitment that
-removes every row at a valid input \emph{seals} that input.  In a functional
-specification every commitment seals the inputs whose rows it removes, and we
-call it a \emph{seal commitment}.
+the current input and removes a nonempty set of \emph{excluded} rows: whenever
+$c(i,R)=(i,R')$, we have $R'\subsetneq R$, and no removed row is refined by a
+row of $R'$ at the same input,
+\begin{equation}
+  (k,u)\in R\setminus R',\ (k,w)\in R'
+  \quad\Longrightarrow\quad
+  u\not\OutputOrd w.
+  \label{eq:commitment-excludes}
+\end{equation}
+A \emph{commitment basis} $\mathcal B$ is a set of commitments available to a
+system.  A commitment that removes every row at a valid input \emph{seals} that
+input.
 \end{definition}
+
+A commitment makes an allowed future unreachable: it removes alternatives that
+the input still permits and that no remaining possibility preserves.  The
+condition is judged at the resulting state, so a row removed together with its
+only refinement counts as excluded.  Every row an event removes thus has one of
+three causes.  An input event removes rows that can no longer happen; an output
+retirement (Section~\ref{sec:safe-exposure}) removes rows already covered by a
+row the event keeps; a commitment removes rows that could still happen and that
+nothing remaining covers.  With one row per input,
+Equation~\ref{eq:commitment-excludes} holds automatically and every removal
+empties a fiber, so every commitment of a functional specification seals the
+inputs whose rows it removes; we call it a \emph{seal commitment}.  With several
+outputs per input, a commitment can instead remove some outputs at an input and
+keep others, \emph{choosing} among them; Section~\ref{sec:ambiguous-specifications}
+shows that sealing and choosing are the only two jobs commitments ever do
+(Proposition~\ref{prop:seal-or-choose}).
 
 Note that commitments are \emph{partial} functions:  a system may be designed to
 authorize a commitment only at states satisfying an application-specific
@@ -781,9 +803,14 @@ $o_r$ and $u_{r-1}$.  Then $u_k$ refines every $o_r$.
 \end{proof}
 
 For a functional specification, Functional CALM turns the condition into
-monotonicity.  A monotone functional specification can emit every current
+monotonicity.  Since every commitment of a functional specification is a seal,
+the two results together say that a functional specification is consistent
+exactly when, at every state reachable without commitment, no output requires
+sealing input.  A monotone functional specification can emit every current
 output without a commitment; if monotonicity fails at $i\InputOrd k$ with
 $f(i)\not\OutputOrd f(k)$, the canonical output event for $f(i)$ seals $k$.
+This is CALM's original intuition---a non-monotone result needs to know that
+no more input is coming---stated as a theorem.
 
 This is the familiar CALM dichotomy stated at the specification interface
 rather than inside a particular programming language.  Historically, CALM

@@ -68,9 +68,12 @@ Our first result is \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}). It generalizes CALM to arbitrary
 functions and partial orders, proving that Consistency is equivalent to
 monotonicity.  When monotonicity fails, emitting some output requires
-irrevocably restricting subsequent results to those that preserve it.  We call
-this restriction a \emph{commitment}.  Conversely, a monotone specification can
-emit every output it permits without one.
+irrevocably ruling out later input that would contradict it, as an election
+official does by closing the polls before announcing a result that later
+ballots could overturn.  We call such an act a \emph{commitment}, and this kind
+a \emph{seal}.  Functional CALM is a theorem about sealing: a functional
+specification is consistent exactly when no output it permits needs a seal,
+and a monotone specification can emit every output it permits without one.
 This captures relational query languages and the usual CRDT state interface.
 
 We then give Consistency a distributed interpretation without changing the
@@ -89,21 +92,25 @@ operator.
 The functional specifications above cannot capture settings like leader election
 or transaction ordering, where many outputs are permitted for a given input. In the
 absence of a functional dependency determining the output for each input, a second source of
-ambiguity arises: \emph{semantic ambiguity}. We call the resolution of either
-kind \emph{determination}: input may make alternatives unreachable, or a
-commitment may exclude them. To model semantic ambiguity, we must move beyond standard
+ambiguity arises, \emph{semantic ambiguity}, and with it a second job for
+commitments: \emph{choosing}.  Picking one of two eligible leaders, or one
+serial order for concurrent transactions, removes outputs that the input still
+permits.  We show that sealing and choosing are the only two jobs: the effect
+of any coordination mechanism on the specification is a combination of them.
+To model semantic ambiguity, we must move beyond standard
 monotonicity of functions. For the case of general relations we define an extension called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
 Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
-(\S\ref{sec:complete-calm-theorem}).  Both CALM theorems characterize the same
-condition on the specification table: whenever permitted rows have inputs with
-a common refinement $j$, some output permitted at $j$ refines all of their
-outputs.  For one output per input this is ordinary monotonicity; for many, it
-is Lifted Monotonicity.
+(\S\ref{sec:complete-calm-theorem}), so a specification is consistent exactly
+when no output it permits needs a seal or a choice.  Both CALM theorems
+characterize the same condition on the specification table: whenever permitted
+rows have inputs with a common refinement $j$, some output permitted at $j$
+refines all of their outputs.  For one output per input this is ordinary
+monotonicity; for many, it is Lifted Monotonicity.
 
-Output choice has two further consequences.  When participants could make
-conflicting commitments, their output events cannot both complete in a
+Choice has two further consequences.  When participants could make
+conflicting choices, their output events cannot both complete in a
 confluent execution; a system that requires Consistency must therefore
 mutually exclude them, and coordination mechanisms provide that exclusion.
 Confluence is a safety guarantee: a reconciling state
@@ -133,24 +140,27 @@ response form asks only that every operation be answered, where the interface
 declares which outputs count as answers, and characterizes exactly when that is
 possible (Appendix~\ref{app:cap-response}).  The Gilbert--Lynch theorem is the
 special case in which one replica's only permitted answer is invalidated by
-input it cannot see.
+input it cannot see: answering would seal input that the other side of the
+partition accepts.
 
 This paper makes six contributions:
 \begin{enumerate}
   \item \emph{A common specification model.} Ordered relational tables describe
-        permitted input/output behavior; commitments record irrevocable choices
-        among that behavior.
+        permitted input/output behavior; commitments record the irrevocable
+        acts that remove alternatives from it, and each one seals input or
+        chooses among outputs.
   \item \emph{Consistency as confluence.} One definition applies to general
         consistency models and application-specific requirements.
         This run-level property is shown to be equivalent to Distributed
         Consistency over distributed histories.
   \item \emph{Functional CALM.} For arbitrary functions between ordered
         domains, Consistency---and hence Distributed Consistency---is equivalent
-        to monotonicity.
+        to monotonicity, and to no output needing a seal.
   \item \emph{Complete CALM and CAP.} With multiple outputs per input,
         Consistency---and hence Distributed Consistency---is equivalent to
         Lifted Monotonicity, the same common-refinement condition that
-          underlies Functional CALM.  Complete CAP gives the corresponding
+          underlies Functional CALM, and to no output needing a seal or a
+          choice.  Complete CAP gives the corresponding
           partition boundary in two forms, for the whole interface and for
           answering every operation; the Gilbert--Lynch theorem is recovered as
           a special case.
@@ -169,7 +179,8 @@ Consistency, that depend on output events only through a small event contract;
 Functional CALM then follows in a few lines.
 Section~\ref{sec:distributed-execution} gives Consistency its distributed
 reading.  Section~\ref{sec:ambiguous-specifications} lifts output events to
-output choice and verifies the same contract, so Section~\ref{sec:complete-calm}
+output choice, verifies the same contract, and shows that commitments only seal
+or choose, so Section~\ref{sec:complete-calm}
 assembles Complete CALM and Complete CAP from the same parts.
 Section~\ref{sec:instances} applies the results to familiar systems, and
 Section~\ref{sec:discussion} draws out the design lessons and scope limits.

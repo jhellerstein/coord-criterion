@@ -36,7 +36,7 @@ Whenever a remainder table shrinks, the reason matters.  An input event removes
 histories that no longer extend the input received.  An output retirement
 removes a row whose output is preserved by a surviving refinement.  Neither
 makes a binding choice among otherwise live alternatives.  A commitment does:
-it excludes an alternative that input still permits and no surviving output
+it excludes an alternative that input still permits and no remaining row
 preserves.
 
 The distinction is visible even when the endpoint looks the same.  Receiving a
@@ -44,7 +44,10 @@ decisive ballot and closing the polls can both leave one election result.  The
 first learns which input occurred; the second exercises authority over inputs
 that could still occur.  Only the second is intrinsically a commitment.  This
 classification by semantic effect, rather than by the operation's name, is what
-lets one criterion apply across different system models.
+lets one criterion apply across different system models.  It also leaves only
+two jobs for coordination: closing the polls \emph{seals} input that could
+still arrive, and ordering two transactions \emph{chooses} among outputs the
+specification permits (Proposition~\ref{prop:seal-or-choose}).
 
 \subsection{Did replicas converge, or did they preserve what they reported?}
 
@@ -71,7 +74,12 @@ mechanisms.  Their use is not itself the intrinsic event of interest.  An
 uncontended lock may exclude no behavior, while one local controller may make a
 binding choice without communicating.  In this model an execution coordinates
 exactly when it makes a commitment, regardless of the mechanism that realizes
-it.
+it.  Classified by their effect on the specification, familiar mechanisms fall
+on one side or the other of the seal/choice line.  Barriers, end-of-input
+markers, and closing a round seal input.  Locks, timestamp assignment, leader
+election, and consensus choose among outputs.  A mechanism can do both, and its
+implementation can involve much more; the classification concerns only what it
+removes from the specification.
 
 This separation supports a question that the usual CALM test does not ask.  A
 mechanism may be sufficient without being necessary or unique.  \emph{Proper
