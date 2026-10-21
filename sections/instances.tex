@@ -42,8 +42,8 @@ changes whether monotonicity or Directed Outputs holds.
       & Some facts accumulate; serialization cycles and first-committer-wins
         require commitment. \\
     Invariant confluence
-      & Applied transactions, inclusion
-      & Reachable invariant-valid state
+      & Transaction histories, expansion
+      & Valid exposed state
       & Relational under merge
       & Valid merge is a common \outnoun; duplicate allocation violates
         uniqueness. \\
@@ -245,71 +245,98 @@ isolation constrains reads and commits exposed before then.
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
 
-An invariant is a predicate that every state must satisfy.  We use the setting
-of Bailis et al.~\cite{bailis2014coordination}: states form a join-semilattice
-$(D,\sqcup)$ whose merge is associative, commutative, and idempotent, as for
-version sets merged by union; an initial state $s_0$ satisfies the invariant
-$\mathcal I$; and each transaction $t\in T$ maps states to states.  We track
-which transactions a state has applied.  The \emph{reachable} pairs $(X,s)$,
-with $X\subseteq T$ finite, form the least set that contains
-$(\varnothing,s_0)$ and is closed under two steps that keep $\mathcal I$:
-applying $t\notin X$ when $\mathcal I(t(s))$, giving $(X\cup\{t\},t(s))$, and
-merging $(X_1,s_1)$ and $(X_2,s_2)$ when $\mathcal I(s_1\sqcup s_2)$, giving
-$(X_1\cup X_2,s_1\sqcup s_2)$.  $T$ is \emph{invariant confluent} when any two
-reachable states merge to a valid state: $\mathcal I(s_1\sqcup s_2)$ for all
-reachable $(X_1,s_1)$ and $(X_2,s_2)$.
+An invariant is a predicate that every state must satisfy.  We follow the model
+of Bailis et al.~\cite{bailis2014coordination}.  A database state is a set of
+versions, and replicas merge states by union.  Each transaction $t\in T$ runs
+on the state of the replica that executes it and adds the versions it writes,
+so $t(s)\supseteq s$.  An initial state $s_0$ satisfies the invariant
+$\mathcal I$.  A state is \emph{reachable} when it can be derived from $s_0$ by
+applying transactions and merging states, with every state along the way
+satisfying $\mathcal I$.  Every reachable state descends from $s_0$, so $T$ is
+\emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
+reachable $s_1$ and $s_2$.
 
-The specification $S_{\mathcal I}$ takes the reachable pairs as its rows.  An
-input is a set of applied transactions, ordered by inclusion and restricted to
-sets that appear in some row.  An output is a state, ordered by the
-semilattice: $s\OutputOrd s'$ when $s\sqcup s'=s'$, so $s'$ keeps every effect
-of $s$.
+The input records which transactions ran and what each one saw.  A
+\emph{history} $h$ is a finite partial order of transaction events, each
+labeled by a transaction in $T$; $e'<e$ means that $e'$ was visible to the
+replica that ran $e$.  History $h'$ \inrel $h$ when $h$ is a downward-closed
+sub-order of $h'$, so an event keeps exactly the predecessors it had.  The
+state of a history is computed event by event: $e$ runs on
+$\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
+$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, and
+$\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  Because
+transactions only add versions, the state of a union of downward-closed
+sub-histories is the union of their states.  A history is \emph{locally valid}
+when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ satisfies $\mathcal I$, as
+when replicas abort transactions that would violate the invariant on their own
+state.  It is \emph{valid} when every downward-closed sub-history $c$ has
+$\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
+state.
+
+The specification $S_{\mathcal I}$ has the locally valid histories as inputs.
+An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
+the system may expose the state of any valid sub-history:
+\[
+  S_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
+  sub-history of }h\}.
+\]
+A replica may hold some transactions back, but whatever it exposes must be a
+valid state together with everything it contains.  Taking $g$ empty gives
+$s_0$, so the specification is total.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
-\leavevmode
-\begin{enumerate}
-  \item If $T$ is invariant confluent, $S_{\mathcal I}$ satisfies Lifted
-        Monotonicity.
-  \item Conversely, suppose every finite set of transactions appears in some
-        row of $S_{\mathcal I}$ and $\mathcal I$ is downward closed
-        ($\mathcal I(u)$ and $s\OutputOrd u$ imply $\mathcal I(s)$).  If
-        $S_{\mathcal I}$ satisfies Lifted Monotonicity, $T$ is invariant
-        confluent.
-\end{enumerate}
+$T$ is invariant confluent if and only if $S_{\mathcal I}$ satisfies Lifted
+Monotonicity.
 \end{proposition}
 
 \begin{proof}
 We use the common-\indesc form of Lifted Monotonicity
-(Proposition~\ref{prop:lifted-monotonicity-decomposition}(3)).
-(1) Let rows $(X_1,s_1),\ldots,(X_k,s_k)$ have a common \indesc $Y$, and let
-$(Y,s_Y)$ be a row.  Merging $s_Y$ with $s_1,\ldots,s_k$ one at a time keeps
-every intermediate pair reachable: each merge is valid by invariant confluence,
-and its transaction set stays $Y$ because every $X_r\subseteq Y$.  The result
-$u=s_Y\sqcup s_1\sqcup\cdots\sqcup s_k$ lies in $S_{\mathcal I}(Y)$ and
-\outrel every $s_r$; for $k=0$, take $u=s_Y$.
-(2) Let $(X_1,s_1)$ and $(X_2,s_2)$ be reachable.  By hypothesis
-$X_1\cup X_2$ appears in some row, so it is a common \indesc, and Lifted
-Monotonicity gives a reachable, hence valid, $u$ that \outrel both.  Then
-$s_1\sqcup s_2\OutputOrd u$, and downward closure gives
-$\mathcal I(s_1\sqcup s_2)$.
+(Proposition~\ref{prop:lifted-monotonicity-decomposition}(3)).  First, the
+state of a valid history $g$ is reachable, by induction on $g$: if $e$ is
+maximal in $g$, then $\mathrm{pre}(e)$ and $\mathrm{eval}(g\setminus\{e\})$
+are states of smaller valid histories, $\mathrm{post}(e)$ is a valid
+transaction step from $\mathrm{pre}(e)$, and
+$\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
+valid merge.
+
+($\Rightarrow$) Let rows $(h_r,\mathrm{eval}(g_r))$, $r=1,\ldots,k$, have a
+common \indesc $j$, so each $g_r$ is a downward-closed sub-history of $j$.  Let
+$g=g_1\cup\cdots\cup g_k$.  Every downward-closed sub-history $c$ of $g$ is the
+union of the pieces $c\cap g_r$, each a downward-closed sub-history of the valid
+$g_r$, so by the first step $\mathrm{eval}(c)$ is a union of reachable states.  Invariant
+confluence makes each successive union valid, and a valid merge of reachable
+states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Thus $g$ is valid, and
+$\mathrm{eval}(g)\in S_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
+For $k=0$, take $g$ empty.
+
+($\Leftarrow$) First let $g_1$ and $g_2$ be valid histories, and let $j$ be
+their disjoint union, with no order between the two parts.  It is locally valid
+and \inrel both, and $(g_r,\mathrm{eval}(g_r))$ are rows.  Lifted Monotonicity
+gives a valid sub-history $g$ of $j$ whose state contains
+$\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)$; since
+$\mathrm{eval}(g)\subseteq\mathrm{eval}(j)$, the two are equal and
+$\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Applying this to
+every pair of downward-closed sub-histories shows that $j$ is itself valid.
+Valid histories are therefore closed under disjoint union, and under adding an
+event above all others when its transaction step is valid.  By induction on
+derivations, every reachable state is the state of a valid history, and the
+pairwise argument then gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
 \end{proof}
 
-By Complete CALM, part~(1) makes the specification of an invariant-confluent
-transaction set consistent.  Neither hypothesis of part~(2) can be dropped.  A
-uniqueness constraint violates the first.  Two replicas each observe that
-username \texttt{sam} is free and allocate it to different accounts.  Each
-state is valid, but no valid state applies both allocations, so no row has
-both transactions: the specification refuses that combination of input rather
-than reconciling it.  The system must reserve names, reject one allocation, or
-weaken the invariant.  Without downward closure, the test can succeed through
-a state other than the merge.  Let $t_a$ add fact $a$, let $t_b$ add $b$, and
-also $c$ when $a$ is present, and let $\mathcal I$ forbid $a$ and $b$ without
-$c$.  The merge $\{a\}\sqcup\{b\}$ is invalid, so $\{t_a,t_b\}$ is not
-invariant confluent; yet applying $t_b$ after $t_a$ reaches the valid
-$\{a,b,c\}$, which \outrel both, and $S_{\mathcal I}$ satisfies Lifted
-Monotonicity.  Invariant confluence insists on the prescribed merge; our test
-asks only that some permitted state reconcile what was exposed.
+By Complete CALM, the specification of an invariant-confluent transaction set
+is consistent, and conversely.  A uniqueness constraint shows the failure
+directly.  Two replicas each observe that username \texttt{sam} is free and
+allocate it to different accounts.  The history in which neither allocation
+saw the other is locally valid and \inrel both one-allocation histories, but
+its state has two owners, so no state it permits \outrel both.  The system must
+reserve names, reject one allocation, or weaken the invariant.  Concurrency is
+what matters.  If $t_a$ adds fact $a$, $t_b$ adds $b$ and also $c$ when $a$ is
+present, and $\mathcal I$ forbids $a$ and $b$ without $c$, then running $t_b$
+after $t_a$ is valid.  But the history in which $t_a$ and $t_b$ ran
+concurrently permits no state containing both $a$ and $b$, so the test fails
+there, exactly as invariant confluence does: the sequential history does not
+\inrelbase the one where $t_b$ ran without seeing $t_a$.
 
 State convergence, transaction availability, and invariant preservation test
 three different specifications.  A convergent merge may produce an invalid
