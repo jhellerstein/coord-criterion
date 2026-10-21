@@ -18,7 +18,7 @@ ambiguity.  A relational specification adds semantic ambiguity: even at the
 same input, several outputs are permitted.
 
 The distinction determines which test applies.  Ordinary monotonicity asks
-whether varying functional executions can safely emit results as input grows.
+whether varying functional executions can safely emit results as input \ingrows.
 Lifted Monotonicity must additionally account for choices that the interface
 itself permits.  Adding nondeterminism to an implementation does not model this
 second case; the alternatives must appear as rows in the specification.
@@ -27,17 +27,17 @@ Both forms of ambiguity can narrow toward determination, but useful output need
 not wait for that process to finish.  The election can emit $\bot$ while either
 candidate may still win, and traceroute can emit one observed route while larger
 route sets remain possible.  Determination reduces the possibilities that
-remain; output reports information that all surviving possibilities can
-preserve.  These are separate forms of progress.
+remain; output reports information that all surviving possibilities
+\outrelbase.  These are separate forms of progress.
 
 \subsection{Was an alternative discovered impossible, or made impossible?}
 
 Whenever a remainder table shrinks, the reason matters.  An input event removes
-histories that no longer extend the input received.  An output retirement
-removes a row whose output is preserved by a surviving refinement.  Neither
+rows whose inputs no longer \inrelbase the input received.  An output retirement
+removes a row \outrelpast by a surviving row at the same input.  Neither
 makes a binding choice among otherwise live alternatives.  A commitment does:
 it excludes an alternative that input still permits and no remaining row
-preserves.
+\outrel.
 
 The distinction is visible even when the endpoint looks the same.  Receiving a
 decisive ballot and closing the polls can both leave one election result.  The
@@ -59,9 +59,9 @@ Conversely, a lower-bound observation can remain valid while replicas still
 hold different internal states.
 
 The output order makes the missing contract explicit: it says which later
-observations preserve earlier ones.  A join-semilattice is one strong way to
+observations \outrelbase earlier ones.  A join-semilattice is one strong way to
 supply convergence and a uniform least merge, but neither is intrinsically
-required by Complete CALM.  The criterion requires an allowed common refinement
+required by Complete CALM.  The criterion requires an allowed common \outnoun
 only for the outputs the interface promises to preserve.  Consequently a CRDT
 state, a point read on that state, and an application query over it can lie on
 different sides of the coordination boundary
@@ -91,11 +91,12 @@ it.
 
 \subsection{Does a common answer exist, or can the deployed system reach it?}
 
-An allowed common refinement proves that independently emitted outputs are
+An allowed common \outnoun proves that independently emitted outputs are
 semantically compatible.  It does not give every participant authority to emit
-that refinement, an algorithm to compute it, messages across a partition, or a
+that \outnoun, an algorithm to compute it, messages across a partition, or a
 termination argument.  Appendix~\ref{app:deployment} exposes this gap directly:
-partition compatibility can hold even when the declared deployment cannot carry
+partition compatibility---a common \outnoun for outputs emitted in
+different components---can hold even when the declared deployment cannot carry
 out reconciliation through its authorized output events.
 
 Complete CAP adds an operational requirement at two strengths.  Its interface
@@ -124,8 +125,8 @@ from the specification; confluence is the common test.
 
 This separation is a source of generality.  The two-column relation can encode a
 property such as an invariant as readily as a protocol-level consistency model.
-Its input order says how observations accumulate, and its output order says what
-later results preserve.  Changing either order changes the interface being
+Its input order says how inputs \ingrow, and its output order says which
+later results \outrelbase earlier ones.  Changing either order changes the interface being
 tested.  Because specifications remain typed relations, equijoin also composes
 component properties into an end-to-end contract.  The model can therefore ask
 whether a local coordination decision is sufficient after composition, rather
@@ -138,7 +139,7 @@ Datalog~\cite{hellerstein2010declarative}.  That formulation still left the
 coordination question entangled with a program: its rules, language extensions,
 time and location constructs, and operational semantics.  Our specification
 table is declarative at a lower layer.  It says only which input/output behaviors
-are permitted and which observations refine others.  Monotonic Datalog remains
+are permitted and which observations \outrel others.  Monotonic Datalog remains
 one way to realize such a specification, but is no longer the object that defines
 the intrinsic boundary.  In retrospect, the durable part of the original thesis
 was not that the right distributed programs must be written in one declarative
