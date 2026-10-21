@@ -47,7 +47,7 @@ contrast, can be preserved together in a larger route set.
     $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a\}$} \\
     $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize each removed row is dominated by a}\\
+    \multicolumn{2}{@{}l}{\footnotesize each removed row is subsumed by a}\\
     \multicolumn{2}{@{}l}{\footnotesize remaining one: an output retirement}
   \end{tabular}
   \caption{Two specifications with several rows at one current input, each
@@ -289,8 +289,7 @@ initial decisions are compatible, but not all of them.
 
 The functional case has one row per input, so an output event either removes
 nothing or seals a valid input.  With several rows at one input, it can also
-retire a dominated output while retaining another row that preserves its
-claim.  We now lift output events to this case and check that they satisfy
+retire a subsumed row while retaining the row that subsumes it.  We now lift output events to this case and check that they satisfy
 the event contract of Proposition~\ref{prop:canonical-output-preservation}.
 
 \begin{definition}[Lifted output event]
@@ -300,20 +299,19 @@ under a basis $\mathcal B$ applies a finite, possibly empty sequence of
 commitments from $\mathcal B$, leaving a table $R_c$, and then retires rows and
 emits $o$, all atomically.  Call a row \emph{ruled out by} $o$ when its output
 does not refine $o$.  The event is \emph{valid} when $(i,o)\in R_c$ and every
-row of $R_c$ ruled out by $o$ is dominated at its input by a retained row that
-refines $o$:
+row of $R_c$ ruled out by $o$ is subsumed by a retained row that refines $o$:
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\succeq_O o]
   \quad\Longrightarrow\quad
   \exists u\in R_c[\mathrm{out}\succeq_O o](k).\ x\OutputOrd u.
   \label{eq:lifted-validity}
 \end{equation}
-The event then retires those dominated rows and ends at
+The event then retires those subsumed rows and ends at
 $(i,R_c[\mathrm{out}\succeq_O o])$.
 \end{definition}
 
 This lifts Definition~\ref{def:output-event}.  With one row per input, a
-ruled-out row has no other row at its input to dominate it, so validity requires
+ruled-out row has no other row at its input to subsume it, so validity requires
 that the commitments themselves leave only rows refining $o$, which is
 Equation~\ref{eq:supported-output-action}.  With several rows per input, the
 current row must now be retained explicitly, since other rows at $i$ may
@@ -340,12 +338,18 @@ the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
 \begin{definition}[Output retirement]
 \label{def:output-retirement}
 The \emph{output retirements} for $o$ at $(i,R)$ are the rows in $D_o$: rows
-ruled out by $o$ but dominated by a row at the same input that refines $o$.
+ruled out by $o$ but subsumed by a row that refines $o$.
 \end{definition}
 
 Rows at inputs in $K_o$ require a \emph{seal}, which removes every row at those
-inputs.  Rows in $U_o$ are undominated conflicts with $o$ and require a
+inputs.  Rows in $U_o$ are conflicts with $o$ that no row subsumes and require a
 \emph{choice}, which removes some outputs at an input while leaving it valid.
+Every removed row thus has one of three causes: an input event removes rows that
+can no longer happen, an output retirement removes rows subsumed by a row the
+event keeps, and a commitment removes rows that could still happen and that no
+remaining row subsumes.  Equation~\ref{eq:commitment-excludes} is judged at the
+table a commitment leaves, so a row removed together with every row that
+subsumes it counts as a commitment's removal, not a retirement.
 
 For each $o\in O$, the \emph{canonical seal commitment} $s_o$ and the
 \emph{canonical choice commitment} $c_o$ are the partial functions
@@ -370,8 +374,8 @@ Both are commitments: they remove only excluded rows
 (Equation~\ref{eq:commitment-excludes}).  The seal $s_o$ removes every row at
 the inputs in $K_o$, so nothing remains there to refine a removed row.  For
 $c_o$, suppose some $x\in U_o$ at input $k$ were refined by a row $y$ that
-$c_o$ leaves at $k$.  Either $y$ refines $o$, or $y\in D_o$ and is dominated by
-a row refining $o$; by transitivity $x$ is then dominated by a row refining
+$c_o$ leaves at $k$.  Either $y$ refines $o$, or $y\in D_o$ and is subsumed by
+a row refining $o$; by transitivity $x$ is then subsumed by a row refining
 $o$, so $x\in D_o$, a contradiction.  Moreover, $c_o$ only chooses: a row of
 $U_o$ at $k$ lies outside $K_o$, so some row at $k$ refines $o$ and survives.
 With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
@@ -386,7 +390,7 @@ $U_o$, so $c_o$ is defined there whenever $U_o\neq\varnothing$.
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
 $U_o$: no row at $\{A,B\}$ refines both, so the event makes a choice.  In
 panel~(g), the two removed route
-sets are in $D_o$, each dominated by a retained route set, so the event retires
+sets are in $D_o$, each subsumed by a retained route set, so the event retires
 them without commitment.
 
 \begin{lemma}[Lifted containment, canonical support, and commitment-free events]
@@ -406,13 +410,13 @@ Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{proof}
 (1) A valid event ends at $R_c[\mathrm{out}\succeq_O o]\subseteq
 R[\mathrm{out}\succeq_O o]$, since its commitments only remove rows.  A row at
-$k\in K_o$, or in $U_o$, has no dominating row in $R[\mathrm{out}\succeq_O
+$k\in K_o$, or in $U_o$, has no subsuming row in $R[\mathrm{out}\succeq_O
 o](k)$, and hence none in $R_c[\mathrm{out}\succeq_O o](k)$; it cannot be
 retired, so a valid event must remove it by commitment.  (2) The canonical
 commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
 of them ruled out by $o$, so $R_c[\mathrm{out}\succeq_O o]=R[\mathrm{out}\succeq_O
 o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
-dominating row lies at an input outside $K_o$ and is not in $U_o$, so it
+subsuming row lies at an input outside $K_o$ and is not in $U_o$, so it
 survives the commitments.  The event is therefore valid and ends at
 $R[\mathrm{out}\succeq_O o]$.  (3) With no commitment, $R_c=R$, and a valid
 event ends at $R[\mathrm{out}\succeq_O o]$.
@@ -456,7 +460,7 @@ which this paper does not pursue.
 
 Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when some
 valid output event for $o$ applies no commitment, though it may still retire
-dominated rows.  The fourth clause of the contract lifts as well:
+subsumed rows.  The fourth clause of the contract lifts as well:
 
 \begin{proposition}[Lifted exposure test]
 \label{prop:exposability}
@@ -473,7 +477,7 @@ $j\succeq_I i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
 \begin{proof}
 A commitment-free event has $R_c=R$, which contains $(i,o)$.  By
 Equation~\ref{eq:lifted-validity} it is valid exactly when every ruled-out row
-$(j,x)$ is dominated by some $u\in R(j)$ refining $o$.  Rows that already
+$(j,x)$ is subsumed by some row $(j,u)$ refining $o$.  Rows that already
 refine $o$ satisfy the stated test with $u=x$, so validity is exactly the
 stated test.
 \end{proof}

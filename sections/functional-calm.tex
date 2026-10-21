@@ -275,7 +275,9 @@ contains at least the input information in $i$.  We call $\OutputOrd$ the
 \emph{output-refinement order}: $o\OutputOrd u$ means that $u$ preserves every
 externally visible claim in $o$ and may add more.  We write $\succeq_I$ and
 $\succeq_O$ for the converse orders.  A \emph{common refinement} of inputs
-$i_1,\ldots,i_k$ is an input $j$ with $i_r\InputOrd j$ for every $r$.
+$i_1,\ldots,i_k$ is an input $j$ with $i_r\InputOrd j$ for every $r$.  A row
+$(k,u)$ is \emph{subsumed} by another row $(k,w)$ at the same input when
+$u\OutputOrd w$.
 Section~\ref{sec:ambiguous-specifications}
 drops the functional dependency; we say \emph{ordered specification} for
 either kind.
@@ -342,34 +344,24 @@ separate part of the model, as follows.
 \begin{definition}[Commitment, commitment basis, seal]
 \label{def:commitment-basis}
 A \emph{commitment} is a partial function on specification states that preserves
-the current input and removes a nonempty set of \emph{excluded} rows: whenever
-$c(i,R)=(i,R')$, we have $R'\subsetneq R$, and no removed row is
-\emph{dominated} by a row of $R'$, that is, by another row at the same input
-whose output refines its own:
+the current input and removes a nonempty set of rows, each with no remaining
+row that subsumes it: whenever $c(i,R)=(i,R')$, we have $R'\subsetneq R$ and
 \begin{equation}
   (k,u)\in R\setminus R',\ (k,w)\in R'
   \quad\Longrightarrow\quad
   u\not\OutputOrd w.
   \label{eq:commitment-excludes}
 \end{equation}
-The condition is judged at the resulting table $R'$, so a row removed together
-with every row that dominates it counts as excluded.
 A \emph{commitment basis}
-$\mathcal B$ is a set of commitments available to a system.  A commitment that
-removes every row at a legal input \emph{seals} that input.  In a functional
-specification every commitment seals the inputs whose rows it removes, and we
-call it a \emph{seal commitment}.
+$\mathcal B$ is a set of commitments available to a system.  A commitment
+\emph{seals} a legal input $k$ when it empties the fiber at $k$.
 \end{definition}
 
-A commitment makes an allowed future unreachable: it removes alternatives that
-the input still permits and that no remaining row dominates.  An input event
-removes rows that can no longer happen, an output retirement
-(Section~\ref{sec:safe-exposure}) removes rows dominated by a row the event
-keeps, and a commitment removes rows that could still happen and that no
-remaining row dominates.  With several outputs per input, a commitment can
-instead \emph{choose} among the outputs at an input;
-Proposition~\ref{prop:seal-or-choose} shows that sealing and choosing are the
-only two jobs commitments do.
+In a functional specification each input has one row, so no row is subsumed,
+and every commitment seals the inputs whose rows it removes; we call it a
+\emph{seal commitment}.  A commitment makes an allowed future unreachable.
+Section~\ref{sec:safe-exposure} shows what the condition adds when an input has
+several outputs.
 
 Note that commitments are \emph{partial} functions:  a system may be designed to
 authorize a commitment only at states satisfying an application-specific
