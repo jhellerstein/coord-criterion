@@ -79,45 +79,45 @@ The transformation replaces the output carrier $O$ by equivalence classes of
 nonempty subsets of $O$, compared pointwise by the \emph{Hoare preorder}:
 for nonempty $A,B\subseteq O$,
         \begin{equation}
-  A\LiftedOutputOrd B
+  A\HoareOrd B
   \quad\Longleftrightarrow\quad
   \forall a\in A\;\exists b\in B:\;a\OutputOrd b,
   \label{eq:lifted-output-order}
         \end{equation}
 so every output in $A$ is refined by some output in $B$.  Write $A\equiv_H B$
-when both $A\LiftedOutputOrd B$ and $B\LiftedOutputOrd A$; the transformed
+when both $A\HoareOrd B$ and $B\HoareOrd A$; the transformed
 carrier is
 $(\mathcal P(O)\setminus\{\varnothing\})/{\equiv_H}$.  The preorder induces a
 partial order on these classes, as the specification model requires.  Below we
-continue to write set representatives and $\LiftedOutputOrd$ for the induced
+continue to write set representatives and $\HoareOrd$ for the induced
 order.  The unpruned output is
         \begin{equation}
   \widehat X(i)=\bigcup_{j\InputOrd i}X(j).
   \label{eq:monotone-hull}
         \end{equation}
 Equivalently, each original row $(j,o)$ contributes $o$ to the transformed row
-at every $i\succeq_I j$.  Literal union remembers all rows; the pointwise lift
+at every $i\InputGe j$.  Literal union remembers all rows; the pointwise lift
 captures which outputs they cover.  In particular, one retained output may cover
 many remembered rows by refining them.
 
 Call $A:I\to\mathcal P(O)$ a \emph{powerset relaxation} of $X$ when
-$X(i)\LiftedOutputOrd A(i)$ at every input: every currently possible output has
+$X(i)\HoareOrd A(i)$ at every input: every currently possible output has
 a retained refinement.  Such a relaxation is monotone when
-$i\InputOrd j$ implies $A(i)\LiftedOutputOrd A(j)$.
+$i\InputOrd j$ implies $A(i)\HoareOrd A(j)$.
 
 \begin{theorem}[Remembered-output frontier]
 \label{thm:monotone-hull}
 The map $\widehat X$ is a monotone powerset relaxation.  Moreover, every monotone
 powerset relaxation $A$ covers every output seen so far:
         \begin{equation}
-  \widehat X(i)\LiftedOutputOrd A(i)
+  \widehat X(i)\HoareOrd A(i)
   \qquad\text{for every }i.
   \label{eq:hull-coverage}
         \end{equation}
 Suppose further that $\widehat X(i)$ is finite for every input $i$, as in
 every example in this paper, and let $M(i)$ contain its undominated elements.
 Then
-$M(i)$ and $\widehat X(i)$ are equivalent under $\LiftedOutputOrd$, the map $M$
+$M(i)$ and $\widehat X(i)$ are equivalent under $\HoareOrd$, the map $M$
 is monotone, and $M(i)$ is the unique smallest subset of $\widehat X(i)$ that
 covers all of $\widehat X(i)$.
 \end{theorem}
@@ -126,7 +126,7 @@ covers all of $\widehat X(i)$.
 The union includes $X(i)$, so $\widehat X$ is a relaxation.  If
 $i\InputOrd k$, every predecessor of $i$ is also a predecessor of $k$; hence
 $\widehat X(i)\subseteq \widehat X(k)$, which implies monotonicity under
-$\LiftedOutputOrd$.
+$\HoareOrd$.
 
 Now let $A$ be any monotone powerset relaxation and take
 $o\in \widehat X(i)$.  Some $j\InputOrd i$ has $o\in X(j)$.  Relaxation gives
@@ -135,10 +135,10 @@ $b\in A(i)$ with $a\OutputOrd b$.  Thus $b$ refines $o$, proving
 Equation~\ref{eq:hull-coverage}.
 
 For a finite set, every element is below an undominated element.  Since every
-$\widehat X(i)$ is finite, $\widehat X(i)\LiftedOutputOrd M(i)$ at every input; the reverse direction follows from
+$\widehat X(i)$ is finite, $\widehat X(i)\HoareOrd M(i)$ at every input; the reverse direction follows from
 $M(i)\subseteq \widehat X(i)$.  Monotonicity of $M$ follows: for
-$i\InputOrd k$, $M(i)\LiftedOutputOrd\widehat X(i)\LiftedOutputOrd\widehat
-X(k)\LiftedOutputOrd M(k)$.
+$i\InputOrd k$, $M(i)\HoareOrd\widehat X(i)\HoareOrd\widehat
+X(k)\HoareOrd M(k)$.
 Finally, any subset of $\widehat X(i)$ that covers an undominated element must
 contain that element itself.  Every covering subset therefore contains $M(i)$,
 which proves minimality and uniqueness.
@@ -196,7 +196,7 @@ historical claim in $\widehat X(h)$ was exact at some $g\InputOrd h$, so
 Proposition~\ref{prop:persistent-forwarding} keeps it in $R(h)$, now witnessed
 by its current forwarding path:
         \begin{equation}
-  \widehat X(h)\LiftedOutputOrd R(h).
+  \widehat X(h)\HoareOrd R(h).
   \label{eq:forwarding-hull}
         \end{equation}
 Theorem~\ref{thm:monotone-hull} says that any monotone relaxation must provide

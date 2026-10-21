@@ -44,6 +44,8 @@ describes what can be observed about a system, without reference to any
 imperative procedure.  The input domain $(I,\InputOrd)$ includes a partial order
 describing how input grows; the output domain $(O,\OutputOrd)$ has its own
 partial order characterizing when a later output preserves an earlier claim.
+We say that the larger input \extends the smaller, and that the later output
+\subsumes the earlier.
 State-machine-style specifications can be compiled into this form
 (\S\ref{sec:design-boundary}); the table elides operational details that are not
 externally observable.  Despite its simplicity, the model captures both general
@@ -69,7 +71,7 @@ Our first result is \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}). It generalizes CALM to arbitrary
 functions and partial orders, proving that Consistency is equivalent to
 monotonicity.  When monotonicity fails, emitting some output requires
-irrevocably restricting subsequent results to those that preserve it.  We call
+irrevocably restricting subsequent results to those that \subsume it.  We call
 this restriction a \emph{commitment}.  For a function, every commitment
 \emph{seals} input, ruling out later input that could contradict an output, as
 an election official does by closing the polls before announcing a result.
@@ -97,7 +99,7 @@ job besides sealing: \emph{choosing} among permitted outputs, as when a system
 picks one leader or one serial order.  We show these are the only classes of commitments: the
 effect of any coordination mechanism on the specification is a combination of
 input seals and output choices.  For the case of general relations we must move beyond standard
-monotonicity of functions; we define an extension called
+monotonicity of functions; we define a generalization called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
 Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
@@ -153,8 +155,8 @@ This paper makes six contributions:
 Section~\ref{sec:functional-calm} introduces the framework on an election
 and develops Functional CALM.  Section~\ref{sec:distributed-execution} gives
 Consistency its distributed reading.  Section~\ref{sec:ambiguous-specifications}
-extends the framework to ambiguous specifications, and Section~\ref{sec:complete-calm}
-combines the two extensions in Complete CALM and Complete CAP.
+generalizes the framework to ambiguous specifications, and Section~\ref{sec:complete-calm}
+combines the two generalizations in Complete CALM and Complete CAP.
 Section~\ref{sec:instances} applies the results to familiar systems, and
 Section~\ref{sec:discussion} draws out the design lessons and scope limits.
 Appendix~\ref{app:composition} proves the composition and Proper Coordination

@@ -2,6 +2,7 @@
 
 \usepackage{microtype}
 \usepackage{enumitem}
+\usepackage{xspace}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{colortbl}
@@ -19,8 +20,26 @@
 
 \newcommand{\InputOrd}{\preceq_I}
 \newcommand{\OutputOrd}{\preceq_O}
-\newcommand{\LiftedOutputOrd}{\preceq_H}
-\newcommand{\JointOutputOrd}{\trianglelefteq}
+\newcommand{\InputGe}{\succeq_I}
+\newcommand{\OutputGe}{\succeq_O}
+\newcommand{\HoareOrd}{\preceq_H}
+\newcommand{\LiftedOrd}{\trianglelefteq}
+% Order vocabulary: "j extends i" means i \InputOrd j;
+% "u subsumes o" means o \OutputOrd u.  Change the verbs here.
+\newcommand{\extends}{extends\xspace}
+\newcommand{\extend}{extend\xspace}
+\newcommand{\extending}{extending\xspace}
+\newcommand{\extended}{extended\xspace}
+\newcommand{\extension}{extension\xspace}
+\newcommand{\extensions}{extensions\xspace}
+\newcommand{\Extension}{Extension\xspace}
+\newcommand{\subsumes}{subsumes\xspace}
+\newcommand{\subsume}{subsume\xspace}
+\newcommand{\subsuming}{subsuming\xspace}
+\newcommand{\subsumed}{subsumed\xspace}
+\newcommand{\subsumer}{subsumer\xspace}
+\newcommand{\subsumers}{subsumers\xspace}
+\newcommand{\Subsumes}{Subsumes\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
 \newcommand{\fiber}[1]{S(#1)}
@@ -57,9 +76,9 @@ of this question, but in different formal models, so their answers are hard to
 compare or combine.  We put them on common ground.  We provide a minimalist
 relational definition of a specification: a table that includes, for each input,
 all outputs a system may produce.  Each column carries its own partial order,
-representing what it means for one value to refine another.  A system is
+saying when one input \extends another and when one output \subsumes another.  A system is
 \emph{consistent} when it is confluent: runs whose inputs have a common
-refinement can always catch up to a common state.  Coordination shows up as an
+\extension can always catch up to a common state.  Coordination shows up as an
 irrevocable \emph{commitment} to constrain the system by removing one or more
 rows from the specification table.  Commitments come in two kinds: they either
 \emph{seal} input, deciding that potential future inputs will be ignored, as

@@ -218,14 +218,14 @@ Relational Monotonicity preserves each output across input refinement;
 Directed Outputs preserves finite choices within a fiber.  The joint lift
 expresses both.  For nonempty $A,B\subseteq O$, define
         \begin{equation}
-  A\JointOutputOrd B
+  A\LiftedOrd B
   \;\Longleftrightarrow\;
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
 the \emph{joint lift} of $\OutputOrd$.  Unlike Relational Monotonicity, it
 preserves finite sets of outputs together rather than each output separately,
-and $A\JointOutputOrd A$ holds exactly when $A$ is directed.
+and $A\LiftedOrd A$ holds exactly when $A$ is directed.
 
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
@@ -235,7 +235,7 @@ under the joint lift:
         \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
-  \fiber{i}\JointOutputOrd\fiber{j}.
+  \fiber{i}\LiftedOrd\fiber{j}.
   \label{eq:lifted-monotonicity}
         \end{equation}
 \end{definition}
@@ -249,9 +249,9 @@ allowing outputs from several inputs.
 For an ordered relational specification, the following are equivalent:
 \begin{enumerate}
   \item Lifted Monotonicity: $i\InputOrd j$ implies
-        $\fiber{i}\JointOutputOrd\fiber{j}$;
+        $\fiber{i}\LiftedOrd\fiber{j}$;
   \item Relational Monotonicity and Directed Outputs;
-  \item the common-refinement condition
+  \item the common-\extension condition
         (Definition~\ref{def:common-refinement-condition}): for every finite
         set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$, the outputs
         $o_1,\ldots,o_k$ are compatible at every common refinement of
@@ -260,7 +260,7 @@ For an ordered relational specification, the following are equivalent:
 \end{proposition}
 
 \begin{proof}
-(1) implies (2).  Taking $j=i$, $\fiber{i}\JointOutputOrd\fiber{i}$ says that
+(1) implies (2).  Taking $j=i$, $\fiber{i}\LiftedOrd\fiber{i}$ says that
 $\fiber{i}$ is directed.  Taking $X=\{o\}$ for $o\in\fiber{i}$ and
 $i\InputOrd j$ gives $u\in\fiber{j}$ with $o\OutputOrd u$, which is Relational
 Monotonicity.
@@ -274,7 +274,7 @@ $u_r$, hence every $o_r$.
 
 (3) implies (1).  Let $i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty and
 finite.  The rows $\{(i,x):x\in X\}$ have common refinement $j$, so some
-$u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\JointOutputOrd\fiber{j}$.
+$u\in\fiber{j}$ refines all of $X$; that is $\fiber{i}\LiftedOrd\fiber{j}$.
 \end{proof}
 
 Checking pairs of rows suffices for form~(3), provided the pairs range over
@@ -301,13 +301,13 @@ emits $o$, all atomically.  Call a row \emph{ruled out by} $o$ when its output
 does not refine $o$.  The event is \emph{valid} when $(i,o)\in R_c$ and every
 row of $R_c$ ruled out by $o$ is subsumed by a retained row that refines $o$:
 \begin{equation}
-  (k,x)\in R_c\setminus R_c[\mathrm{out}\succeq_O o]
+  (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
   \quad\Longrightarrow\quad
-  \exists u\in R_c[\mathrm{out}\succeq_O o](k).\ x\OutputOrd u.
+  \exists u\in R_c[\mathrm{out}\OutputGe o](k).\ x\OutputOrd u.
   \label{eq:lifted-validity}
 \end{equation}
 The event then retires those subsumed rows and ends at
-$(i,R_c[\mathrm{out}\succeq_O o])$.
+$(i,R_c[\mathrm{out}\OutputGe o])$.
 \end{definition}
 
 This lifts Definition~\ref{def:output-event}.  With one row per input, a
@@ -318,19 +318,19 @@ current row must now be retained explicitly, since other rows at $i$ may
 remain.
 
 Which rows must a valid event remove by commitment?  Emitting $o$ rules out
-every row outside $R[\mathrm{out}\succeq_O o]$, but those rows need not all be
+every row outside $R[\mathrm{out}\OutputGe o]$, but those rows need not all be
 handled in the same way.  Some lie at inputs with no row refining $o$ and
 require sealing the input, some can be retired because another row at the same
 input preserves their claim, and the rest require a binding choice among
 outputs.  Accordingly, the ruled-out rows fall into three classes: the rows at
 the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
 \begin{align}
-  K_o&=\mathrm{in}(R)\setminus\mathrm{in}(R[\mathrm{out}\succeq_O o]),
+  K_o&=\mathrm{in}(R)\setminus\mathrm{in}(R[\mathrm{out}\OutputGe o]),
       \label{eq:seal-inputs}\\
-  D_o&=\{(k,x)\in R\setminus R[\mathrm{out}\succeq_O o]:
-          \exists u\in R[\mathrm{out}\succeq_O o](k).\ x\OutputOrd u\},
+  D_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:
+          \exists u\in R[\mathrm{out}\OutputGe o](k).\ x\OutputOrd u\},
       \label{eq:output-retirements}\\
-  U_o&=(R\setminus R[\mathrm{out}\succeq_O o])
+  U_o&=(R\setminus R[\mathrm{out}\OutputGe o])
        \setminus\bigl(D_o\cup R[\mathrm{in}\in K_o]\bigr).
       \label{eq:choice-removals}
 \end{align}
@@ -398,28 +398,28 @@ them without commitment.
 Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{enumerate}
   \item Every valid output event for $o$ takes $(i,R)$ to some $(i,R')$ with
-        $R'\subseteq R[\mathrm{out}\succeq_O o]$, and removes the rows at
+        $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows at
         inputs in $K_o$ and the rows in $U_o$ by commitment.
   \item The canonical event for $o$ is valid and takes $(i,R)$ to
-        $(i,R[\mathrm{out}\succeq_O o])$.
+        $(i,R[\mathrm{out}\OutputGe o])$.
   \item A valid output event for $o$ that applies no commitment takes $(i,R)$
-        to $(i,R[\mathrm{out}\succeq_O o])$.
+        to $(i,R[\mathrm{out}\OutputGe o])$.
 \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-(1) A valid event ends at $R_c[\mathrm{out}\succeq_O o]\subseteq
-R[\mathrm{out}\succeq_O o]$, since its commitments only remove rows.  A row at
-$k\in K_o$, or in $U_o$, has no subsuming row in $R[\mathrm{out}\succeq_O
-o](k)$, and hence none in $R_c[\mathrm{out}\succeq_O o](k)$; it cannot be
+(1) A valid event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
+R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row at
+$k\in K_o$, or in $U_o$, has no subsuming row in $R[\mathrm{out}\OutputGe
+o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
 retired, so a valid event must remove it by commitment.  (2) The canonical
 commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
-of them ruled out by $o$, so $R_c[\mathrm{out}\succeq_O o]=R[\mathrm{out}\succeq_O
+of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
 o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
 subsuming row lies at an input outside $K_o$ and is not in $U_o$, so it
 survives the commitments.  The event is therefore valid and ends at
-$R[\mathrm{out}\succeq_O o]$.  (3) With no commitment, $R_c=R$, and a valid
-event ends at $R[\mathrm{out}\succeq_O o]$.
+$R[\mathrm{out}\OutputGe o]$.  (3) With no commitment, $R_c=R$, and a valid
+event ends at $R[\mathrm{out}\OutputGe o]$.
 \end{proof}
 
 The canonical basis uses only seals and choices.  That is not a design decision:
@@ -465,7 +465,7 @@ subsumed rows.  The fourth clause of the contract lifts as well:
 \begin{proposition}[Lifted exposure test]
 \label{prop:exposability}
 An output $o\in R(i)$ is exposable at $(i,R)$ if and only if, for every valid
-$j\succeq_I i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
+$j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
 \begin{equation}
   o\OutputOrd u
   \qquad\text{and}\qquad
@@ -496,7 +496,7 @@ result of Sections~\ref{sec:determination} and~\ref{sec:functional-calm-theorem}
 that relies only on the contract therefore lifts unchanged: canonical
 equivalents (Lemma~\ref{lem:canonical-equivalent}), the rows remaining after a
 canonical run (Lemma~\ref{lem:run-residual}), the survivor test
-(Proposition~\ref{prop:confluence}), the common-refinement characterization
+(Proposition~\ref{prop:confluence}), the common-\extension characterization
 (Theorem~\ref{thm:common-refinement}), and the exposure boundary
 (Proposition~\ref{prop:functional-exposure-boundary}).  So does the distributed
 reading of Consistency (Proposition~\ref{prop:distributed-consistency}).
@@ -508,6 +508,6 @@ Section~\ref{sec:complete-calm} returns to this.  In place of Functional CALM,
 Proposition~\ref{prop:lifted-monotonicity-decomposition} identifies the
 common-refinement condition with Lifted Monotonicity: it is form~(3).  Lifted
 Monotonicity is therefore the lifted form of functional monotonicity in a
-precise sense: both are the common-refinement condition, read for one output
+precise sense: both are the common-\extension condition, read for one output
 per input or for many.  Section~\ref{sec:complete-calm} assembles Complete
 CALM from these parts.
