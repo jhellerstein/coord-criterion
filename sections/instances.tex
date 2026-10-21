@@ -247,33 +247,71 @@ isolation constrains reads and commits exposed before then.
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
 
-An invariant is a predicate that every state must satisfy.  Let the input be a
-set of applied transactions, ordered by inclusion.  We use
-the standard invariant-confluence assumptions: each transaction remains
-applicable where the specification allows it and maps an invariant-valid state
-to another invariant-valid state; independently reached states share the
-required ancestor; the prescribed merge is associative and preserves all
-included effects; and merged states remain reachable.  Outputs are reachable,
-invariant-valid states.  We order outputs by merge \outnoun: $s\OutputOrd s'$
-when $s'$ is a permitted merge that preserves every effect in $s$ (quotienting
-states with identical effects if necessary to obtain a partial order).
+An invariant is a predicate that every state must satisfy.  We use the setting
+of Bailis et al.~\cite{bailis2014coordination}: states form a join-semilattice
+$(D,\sqcup)$ whose merge is associative, commutative, and idempotent, as for
+version sets merged by union; an initial state $s_0$ satisfies the invariant
+$\mathcal I$; and each transaction $t\in T$ maps states to states.  We track
+which transactions a state has applied.  The \emph{reachable} pairs $(X,s)$,
+with $X\subseteq T$ finite, form the least set that contains
+$(\varnothing,s_0)$ and is closed under two steps that keep $\mathcal I$:
+applying $t\notin X$ when $\mathcal I(t(s))$, giving $(X\cup\{t\},t(s))$, and
+merging $(X_1,s_1)$ and $(X_2,s_2)$ when $\mathcal I(s_1\sqcup s_2)$, giving
+$(X_1\cup X_2,s_1\sqcup s_2)$.  $T$ is \emph{invariant confluent} when any two
+reachable states merge to a valid state: $\mathcal I(s_1\sqcup s_2)$ for all
+reachable $(X_1,s_1)$ and $(X_2,s_2)$.
 
-Invariant confluence asks whether independently reachable valid states merge to
-a valid state~\cite{bailis2014coordination}.  Under the assumptions above,
-individual transaction preservation (each transaction maps invariant-valid
-states to invariant-valid states) supplies Relational Monotonicity, while
-invariant confluence supplies common \outnouns for independently reached
-states at the combined transaction input.  Associativity and reachability let
-the pairwise merge argument extend inductively to finite families.  Thus the
-prescribed merge witnesses Lifted Monotonicity, in the form of
-Proposition~\ref{prop:lifted-monotonicity-decomposition}(3), for the deployed
-transaction families.
+The specification $S_{\mathcal I}$ takes the reachable pairs as its rows.  An
+input is a set of applied transactions, ordered by inclusion and restricted to
+sets that appear in some row.  An output is a state, ordered by the
+semilattice: $s\OutputOrd s'$ when $s\sqcup s'=s'$, so $s'$ keeps every effect
+of $s$.
 
-A uniqueness constraint supplies the standard counterexample.  Two replicas
-each observe that username \texttt{sam} is free and allocate it to different
-accounts.  Each local state satisfies uniqueness, but no invariant-valid common
-\outnoun keeps both allocations.  The system must reserve names, reject
-one allocation, or weaken the invariant.
+\begin{proposition}[Invariant confluence and Lifted Monotonicity]
+\label{prop:iconfluence-lm}
+\leavevmode
+\begin{enumerate}
+  \item If $T$ is invariant confluent, $S_{\mathcal I}$ satisfies Lifted
+        Monotonicity.
+  \item Conversely, suppose every finite set of transactions appears in some
+        row of $S_{\mathcal I}$ and $\mathcal I$ is downward closed
+        ($\mathcal I(u)$ and $s\OutputOrd u$ imply $\mathcal I(s)$).  If
+        $S_{\mathcal I}$ satisfies Lifted Monotonicity, $T$ is invariant
+        confluent.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+We use the common-\indesc form of Lifted Monotonicity
+(Proposition~\ref{prop:lifted-monotonicity-decomposition}(3)).
+(1) Let rows $(X_1,s_1),\ldots,(X_k,s_k)$ have a common \indesc $Y$, and let
+$(Y,s_Y)$ be a row.  Merging $s_Y$ with $s_1,\ldots,s_k$ one at a time keeps
+every intermediate pair reachable: each merge is valid by invariant confluence,
+and its transaction set stays $Y$ because every $X_r\subseteq Y$.  The result
+$u=s_Y\sqcup s_1\sqcup\cdots\sqcup s_k$ lies in $S_{\mathcal I}(Y)$ and
+\outrel every $s_r$; for $k=0$, take $u=s_Y$.
+(2) Let $(X_1,s_1)$ and $(X_2,s_2)$ be reachable.  By hypothesis
+$X_1\cup X_2$ appears in some row, so it is a common \indesc, and Lifted
+Monotonicity gives a reachable, hence valid, $u$ that \outrel both.  Then
+$s_1\sqcup s_2\OutputOrd u$, and downward closure gives
+$\mathcal I(s_1\sqcup s_2)$.
+\end{proof}
+
+By Complete CALM, part~(1) makes the specification of an invariant-confluent
+transaction set consistent.  Neither hypothesis of part~(2) can be dropped.  A
+uniqueness constraint violates the first.  Two replicas each observe that
+username \texttt{sam} is free and allocate it to different accounts.  Each
+state is valid, but no valid state applies both allocations, so no row has
+both transactions: the specification refuses that combination of input rather
+than reconciling it.  The system must reserve names, reject one allocation, or
+weaken the invariant.  Without downward closure, the test can succeed through
+a state other than the merge.  Let $t_a$ add fact $a$, let $t_b$ add $b$, and
+also $c$ when $a$ is present, and let $\mathcal I$ forbid $a$ and $b$ without
+$c$.  The merge $\{a\}\sqcup\{b\}$ is invalid, so $\{t_a,t_b\}$ is not
+invariant confluent; yet applying $t_b$ after $t_a$ reaches the valid
+$\{a,b,c\}$, which \outrel both, and $S_{\mathcal I}$ satisfies Lifted
+Monotonicity.  Invariant confluence insists on the prescribed merge; our test
+asks only that some permitted state reconcile what was exposed.
 
 State convergence, transaction availability, and invariant preservation test
 three different specifications.  A convergent merge may produce an invalid
