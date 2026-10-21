@@ -10,7 +10,7 @@ unnecessary coordination is therefore a central goal in distributed systems and
 databases.  This paper asks what coordination mechanisms accomplish at the
 specification level, and when that effect is intrinsically required.
 
-The CALM (Consistency As Logical Monotonicity) Conjecture
+The CALM Conjecture
 proposed a crisp, bidirectional answer: consistency can be achieved without
 coordination exactly when the specification is monotone
 ~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it in both
@@ -94,10 +94,10 @@ possible. Determination may occur through input, which may make alternatives
 unreachable, or through commitments, which exclude alternatives that would
 otherwise remain possible. With semantic ambiguity, commitments gain a second
 job besides sealing: \emph{choosing} among permitted outputs, as when a system
-picks one leader or one serial order.  We show these are the only two: the
+picks one leader or one serial order.  We show these are the only classes of commitments: the
 effect of any coordination mechanism on the specification is a combination of
-seals and choices. To model semantic ambiguity, we must move beyond standard
-monotonicity of functions. For the case of general relations we define an extension called
+input seals and output choices.  For the case of general relations we must move beyond standard
+monotonicity of functions; we define an extension called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
 Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
@@ -106,9 +106,8 @@ participants could choose differently, their commitments must rule out the
 same conflicting alternatives.  Coordination mechanisms operationalize this
 requirement.
 
-Classical CALM tells us when coordination is unnecessary, but not whether a
-chosen use of coordination is sufficient.  Complete CALM can answer the second
-question because it represents commitments explicitly.  For example, total log
+By explicitly modeling commitments, Complete CALM can also assess whether coordination
+is being used in a manner that achieves consistency.  For example, total log
 ordering and a key-value store are both non-monotone.  When they are composed
 through a shared log order, however, committing to a single order is sufficient
 to make the end-to-end specification monotone and consistent.  The key-value
