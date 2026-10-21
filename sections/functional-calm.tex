@@ -130,14 +130,14 @@ $\mathsf{input}(xy\cdot)$ produces panel~(b), retiring rows whose inputs no
 longer extend the ballots received.  The \emph{upper fiber} is the set of
 outputs in the remaining current and refining rows; in panel~(b) it is
 $\{\bot,x,y\}$.
-
 If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
-is \emph{determined}: input has resolved the ambiguity alone, without commitment.  In
-panel~(d), by contrast, a registrar emits $\bot$ and closes the polls at
+is \emph{determined}: input has resolved the ambiguity alone, without commitment.  
+
+In panel~(d), by contrast, a "registrar" within the system emits $\bot$ and closes the polls at
 $xy\cdot$ in the same output event.  Its irrevocable \emph{seal commitment}
 removes the still-possible $xyx$ and $xyy$ rows but leaves the current input
 unchanged, and so determines $\bot$.  Here $\bot$ needed no commitment; the
-seal is the registrar's choice, not a requirement of the specification.
+seal is the system's choice, not a requirement of the specification.
 Commitments belong to a system's declared \emph{commitment basis} $\mathcal B$,
 not to the specification itself; a system whose polls cannot close does not
 have this commitment in its basis.
@@ -172,8 +172,8 @@ have this commitment in its basis.
 In a functional table, an output $o$ is \emph{exposable} when every output
 still possible at the current input or a refinement still in the table refines it.  Hence $\bot$ is exposable
 in panels~(a) and~(b), and $x$ in panel~(c).  The atomic $\mathsf{output}(o)$
-event applies any seal commitments needed so that every remaining row's output
-refines $o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
+event applies any seal commitments needed so that $o$ becomes exposable,
+then emits $o$, in one transition.  Emitting $o$ is a promise:
 from then on, only rows whose outputs refine $o$ remain.  The emission stays
 explicit in the history because the uncontrolled environment may use it when
 choosing later input.
@@ -190,12 +190,12 @@ valid as input grows; under the equality order, some outputs require commitment
 before they can be emitted.
 
 The obstruction is a property of the table alone.  Rows $(x\cdot\cdot,\bot)$ and
-$(xx\cdot,x)$ have the common refinement $xxx$ (an input refining both), but under the equality order no
-output at $xxx$ refines both.  A run that emits $\bot$ at $x\cdot\cdot$ and one
-that receives $xx\cdot$ can therefore never meet at $xxx$.
+$(xx\cdot,x)$ have the common input refinement $xxx$, but under the equality
+order no output at $xxx$ refines both outputs $\bot$ and $x$.  A run that emits $\bot$ at $x\cdot\cdot$ and one
+that receives $xx\cdot$ cannot be reconciled at $xxx$.
 
 Input and output events form a transition system between system states.  A
-specification is \emph{consistent} when runs whose inputs have a common
+specification is \emph{consistent} when its runs are confluent: two runs whose inputs have a common
 refinement can always be extended to one common state there.
 Section~\ref{sec:functional-calm-theorem} shows that the test above is exactly
 what consistency requires: outputs at inputs with a common refinement $j$ must
