@@ -2,6 +2,7 @@
 
 \usepackage{microtype}
 \usepackage{enumitem}
+\usepackage{xspace}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{colortbl}
@@ -10,6 +11,7 @@
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
 \newtheorem{corollary}{Corollary}
 \newtheorem{definition}{Definition}
 \theoremstyle{remark}
@@ -18,8 +20,30 @@
 
 \newcommand{\InputOrd}{\preceq_I}
 \newcommand{\OutputOrd}{\preceq_O}
-\newcommand{\LiftedOutputOrd}{\preceq_H}
-\newcommand{\JointOutputOrd}{\trianglelefteq}
+\newcommand{\InputGe}{\succeq_I}
+\newcommand{\OutputGe}{\succeq_O}
+\newcommand{\HoareOrd}{\preceq_H}
+\newcommand{\LiftedOrd}{\trianglelefteq}
+% Order vocabulary (role-based names; change the words here).
+% Input order:  "j \inrel i" means i \InputOrd j (non-strict); inputs \ingrow;
+%   a common \indesc of inputs \inrel each of them (articles: "an \indesc").
+% Output order: "u \outrel o" means o \OutputOrd u; a common \outnoun of
+%   outputs refines each of them.
+\newcommand{\inrel}{expands\xspace}     % relation, 3rd person
+\newcommand{\inrelbase}{expand\xspace}  % relation, base form
+\newcommand{\inrelpart}{expanding\xspace}% relation, participle
+\newcommand{\ingrows}{expands\xspace}        % growth, 3rd person
+\newcommand{\ingrow}{expand\xspace}          % growth, base form
+\newcommand{\inmore}{more expanded\xspace}    % informal comparative
+\newcommand{\indesc}{expansion\xspace}      % noun
+\newcommand{\indescs}{expansions\xspace}
+\newcommand{\Indesc}{Expansion\xspace}
+\newcommand{\outrel}{refines\xspace}         % relation, 3rd person
+\newcommand{\outrelbase}{refine\xspace}      % relation, base form
+\newcommand{\outrelpart}{refining\xspace}    % relation, participle
+\newcommand{\outrelpast}{refined\xspace}     % relation, past participle
+\newcommand{\outnoun}{refinement\xspace}     % noun
+\newcommand{\outnouns}{refinements\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
 \newcommand{\fiber}[1]{S(#1)}
@@ -50,37 +74,40 @@
 }
 
 \begin{abstract}
-When does a concurrent system inherently require coordination?  CALM, CAP,
-CRDTs, Highly Available Transactions, and Invariant Confluence explore versions
-of this question in different formal models, making their conclusions hard to compare
-or reuse.  We give them a common declarative specification framework and a
-universal definition of consistency: confluence of executions admitted by a
-specification.  Coordination appears in this declarative model as a
-\emph{commitment}: an irrevocable removal of possibilities from the current
-specification.
+When does a distributed system intrinsically need coordination? CALM, CAP,
+CRDTs, Highly Available Transactions, and Invariant Confluence each answer part
+of this question, but in different formal models, so their answers are hard to
+compare or combine.  We put them on common ground.  We provide a minimalist
+relational definition of a specification: a table that includes, for each input,
+all outputs a system may produce.  Each column carries its own partial order,
+saying when one input \inrel another and when one output \outrel another.  A system is
+\emph{consistent} when it is confluent: runs whose inputs have a common
+\indesc can always catch up to a common state.  Coordination shows up as an
+irrevocable \emph{commitment} to constrain the system by removing one or more
+rows from the specification table.  At each input it touches, a commitment
+either \emph{seals} input, deciding that potential future inputs will be ignored, as
+when a vote is closed to late ballots; or it \emph{chooses} among multiple
+allowed outputs, as when a system elects a leader or orders transactions.
 
-\emph{Functional CALM} uses this framework to generalize the original CALM Theorem from Datalog
-queries to arbitrary functions between ordered domains.  This makes the familiar
-monotonicity test independent of the language or formalism used to express the
-function: every functional specification is consistent without commitment
-exactly when it is monotone.
-\emph{Complete CALM} handles \emph{ambiguous} specifications that offer several
-outputs for one input, including choices such as transaction order or leader
-selection.  As execution narrows the possible outputs, the result moves toward
-\emph{determination}; it is \emph{determined} when only one possibility remains.
-Determination occurs via two kinds of events: inputs may make some alternatives
-unreachable; commitments exclude alternatives that would otherwise remain
-possible.  The \emph{Lifted
-Monotonicity} criterion characterizes when outputs can be emitted consistently
-without commitment.  Complete CALM proves that a specification is consistent
-exactly when it satisfies this criterion.
+When each input has only one output, only sealing arises. \emph{Functional CALM}
+generalizes the original CALM Theorem from Datalog queries to any function
+between ordered domains: such a specification is consistent exactly when it is
+monotone, so that more input never retracts an earlier answer, and then no
+output ever needs coordination. \emph{Complete CALM} covers ambiguous
+specifications that allow several outputs for the same input, where choice
+commitments arise too.  There the test becomes \emph{Lifted Monotonicity}: as
+inputs \ingrow, the outputs already emitted can always be \outrelpast to a
+single output still allowed.
 
-Representing commitments also lets us verify \emph{Proper Coordination}: whether
-a chosen use of coordination is sufficient.  Totally ordered logging and
-key-value stores are both non-monotone, yet committing to their shared log order
-makes the composed system monotone and consistent.  Finally, Complete CALM
-yields a Complete CAP theorem, extending CAP's register impossibility to classify
-specifications under the paper's interface-wide availability criterion.
+Commitments are explicit in our model, allowing it to check for \emph{Proper
+Coordination}: whether a particular use of coordination provides consistency.  A
+totally ordered log and a key-value store are each non-monotone, yet agreeing on
+the log order makes the combined system monotone and hence consistent without
+changing the store. Finally, we turn Brewer's CAP intuition into a theorem for
+any consistency guarantee you can write down: a system that works for any
+number of participants can keep every allowed output available and consistent through a network partition exactly when its
+specification passes the same test.  Gilbert and Lynch's CAP Theorem follows
+as a corollary of the same machinery.
 \end{abstract}
 
 \begin{CCSXML}
@@ -117,6 +144,7 @@ specifications under the paper's interface-wide availability criterion.
 \appendix
 \input{appendices/composition.tex}
 \input{appendices/deployment.tex}
+\input{appendices/cap-response.tex}
 \input{appendices/commitment-bases.tex}
 \input{appendices/frontiers.tex}
 \input{appendices/additional-applications.tex}

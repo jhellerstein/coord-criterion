@@ -1,25 +1,24 @@
 \section{Coordination-Free Frontiers}
 \label{sec:frontiers}
 
-So far we have taken each interface as given and tested the CALM criteria.  A
-designer often faces the inverse question: how much can the interface promise
+So far we have taken each specification as given and tested the CALM criteria.  A
+designer often faces the inverse question: how much can the specification promise
 before coordination becomes unavoidable?  The answer depends on what must stay
-fixed.  Here we fix the inputs, visible claims, refinement orders, and---when
+fixed.  Here we fix the inputs, visible claims, input and output orders, and---when
 partitions matter---the deployment.
 
-We compare interface strength by the behaviors within a specification.  An
-interface $T$ is \emph{stronger} than $S$ when every behavior within $T$ is
-also within $S$, but not conversely.  The stronger interface rules out more
+We compare specification strength by the rows a specification permits.  A specification $T$ is \emph{stronger} than $S$ when $T\subsetneq S$: every row $T$
+permits is also permitted by $S$, but not conversely.  The stronger specification rules out more
 implementations and gives clients a tighter guarantee.  For example,
 linearizability is stronger than causal consistency because it allows fewer
-histories.  Thus ``stronger'' corresponds to a smaller set of allowed behaviors.
-This is a separate order from output refinement: $o\OutputOrd u$ says that one
-particular output $u$ preserves the information already exposed by $o$.
+histories.  Thus ``stronger'' corresponds to a smaller set of allowed rows.
+This is a separate order from $\OutputOrd$, which compares individual
+outputs.
 
 We obtain two frontier results.  The first concerns information arriving over
-time: how precisely can an interface answer while preserving every answer it
+time: how precisely can a specification answer while \outrelpart every answer it
 has already exposed?  The second concerns information arriving independently:
-how much cross-node agreement can an interface require without withdrawing any
+how much cross-node agreement can a specification require without withdrawing any
 choice that it still offers locally?
 
 \subsection{Remembering exactly what may remain true}
@@ -30,7 +29,7 @@ Suppose a data item initially resides at node $a$ and later moves to $b$.  Let
 $o_a$ claim that a lookup starting at $a$ succeeds, and let $o_b$ make the same
 claim for a lookup starting at $b$.  The richer output $o_{a\leadsto b}$ records
 both that $b$ is the current location and that a lookup from $a$ succeeds by
-following its forwarder to $b$.  It therefore preserves both simpler lookup
+following its forwarder to $b$.  It therefore \outrel both simpler lookup
 claims:
         \begin{equation}
   o_a\OutputOrd o_{a\leadsto b},
@@ -44,11 +43,12 @@ Table~\ref{tab:lookup-lift}.
   \centering
   \small
   \caption{Remembering every output a lookup relation has allowed so far.
-  Dominated outputs can then be dropped without loss of content.}
+  Outputs \outrelpast by another remembered output can then be dropped without
+  loss of content.}
   \label{tab:lookup-lift}
   \begin{tabular}{@{}c l l l@{}}
     \toprule
-    Input & Original fiber $X(i)$ & Remembered $X^\uparrow(i)$
+    Input & Original fiber $X(i)$ & Remembered $\widehat X(i)$
           & Pruned $M(i)$ \\
     \midrule
     $i_0$ & $\{o_a\}$
@@ -65,9 +65,9 @@ The middle column is the original specification table, grouped into one fiber
 per input.  The next column remembers: at each input it collects every
 output in the original table at that input or any preceding input.
 The last column removes $o_a$ and $o_b$ because the retained
-$o_{a\leadsto b}$ refines both.  Nothing they said has been forgotten.  If two
+$o_{a\leadsto b}$ \outrel both.  Nothing they said has been forgotten.  If two
 remembered outputs were incomparable, both would have to remain unless another
-retained output refined them.
+retained output \outrelpast them.
 
 We now state this construction for an arbitrary ordered relational specification
 $S\subseteq I\times O$.  Write its original fiber as
@@ -76,68 +76,84 @@ $S\subseteq I\times O$.  Write its original fiber as
   \label{eq:hull-original-fiber}
         \end{equation}
 The transformation replaces the output carrier $O$ by equivalence classes of
-nonempty subsets of $O$.  For sets $A,B$, write
-$A\equiv_H B$ when both $A\LiftedOutputOrd B$ and
-$B\LiftedOutputOrd A$, using the Hoare preorder of
-Equation~\ref{eq:lifted-output-order}; the transformed carrier is
+nonempty subsets of $O$, compared pointwise by the \emph{Hoare preorder}:
+for nonempty $A,B\subseteq O$,
+        \begin{equation}
+  A\HoareOrd B
+  \quad\Longleftrightarrow\quad
+  \forall a\in A\;\exists b\in B:\;a\OutputOrd b,
+  \label{eq:lifted-output-order}
+        \end{equation}
+so every output in $A$ is \outrelpast by some output in $B$.  Write $A\equiv_H B$
+when both $A\HoareOrd B$ and $B\HoareOrd A$; the transformed
+carrier is
 $(\mathcal P(O)\setminus\{\varnothing\})/{\equiv_H}$.  The preorder induces a
 partial order on these classes, as the specification model requires.  Below we
-continue to write set representatives and $\LiftedOutputOrd$ for the induced
+continue to write set representatives and $\HoareOrd$ for the induced
 order.  The unpruned output is
         \begin{equation}
-  X^\uparrow(i)=\bigcup_{j\InputOrd i}X(j).
+  \widehat X(i)=\bigcup_{j\InputOrd i}X(j).
   \label{eq:monotone-hull}
         \end{equation}
 Equivalently, each original row $(j,o)$ contributes $o$ to the transformed row
-at every $i\succeq_I j$.  Literal union remembers all rows; the pointwise lift
-captures which outputs they cover.  In particular, one retained output may cover
-many remembered rows by refining them.
+at every $i\InputGe j$.  Literal union remembers all rows; the pointwise lift
+captures which of their outputs are \outrelpast by retained ones.  In
+particular, one retained output may \outrelbase many remembered outputs.
 
 Call $A:I\to\mathcal P(O)$ a \emph{powerset relaxation} of $X$ when
-$X(i)\LiftedOutputOrd A(i)$ at every input: every currently possible output has
-a retained refinement.  Such a relaxation is monotone when
-$i\InputOrd j$ implies $A(i)\LiftedOutputOrd A(j)$.
+$X(i)\HoareOrd A(i)$ at every input: every currently possible output has
+a retained \outnoun.  Such a relaxation satisfies Relational Monotonicity
+(Definition~\ref{def:relational-monotonicity}) when $i\InputOrd j$ implies
+$A(i)\HoareOrd A(j)$.
 
 \begin{theorem}[Remembered-output frontier]
 \label{thm:monotone-hull}
-The map $X^\uparrow$ is a monotone powerset relaxation.  Moreover, every monotone
-powerset relaxation $A$ covers every output seen so far:
+The map $\widehat X$ is a powerset relaxation satisfying Relational
+Monotonicity.  Moreover, every such relaxation $A$ contains a \outnoun of every
+output seen so far:
         \begin{equation}
-  X^\uparrow(i)\LiftedOutputOrd A(i)
+  \widehat X(i)\HoareOrd A(i)
   \qquad\text{for every }i.
   \label{eq:hull-coverage}
         \end{equation}
-If $X^\uparrow(i)$ is finite, let $M(i)$ contain its undominated elements.  Then
-$M(i)$ and $X^\uparrow(i)$ are equivalent under $\LiftedOutputOrd$, the map $M$
-is monotone, and $M(i)$ is the unique smallest subset of $X^\uparrow(i)$ that
-covers all of $X^\uparrow(i)$.
+Suppose further that $\widehat X(i)$ is finite for every input $i$, as in
+every example in this paper, and let $M(i)$ contain its maximal elements.
+Then
+$M(i)$ and $\widehat X(i)$ are equivalent under $\HoareOrd$, the map $M$
+satisfies Relational Monotonicity, and $M(i)$ is the unique smallest subset
+$Y\subseteq\widehat X(i)$ with $\widehat X(i)\HoareOrd Y$.
 \end{theorem}
 
 \begin{proof}
-The union includes $X(i)$, so $X^\uparrow$ is a relaxation.  If
+The union includes $X(i)$, so $\widehat X$ is a relaxation.  If
 $i\InputOrd k$, every predecessor of $i$ is also a predecessor of $k$; hence
-$X^\uparrow(i)\subseteq X^\uparrow(k)$, which implies monotonicity under
-$\LiftedOutputOrd$.
+$\widehat X(i)\subseteq \widehat X(k)$, which implies Relational Monotonicity.
 
-Now let $A$ be any monotone powerset relaxation and take
-$o\in X^\uparrow(i)$.  Some $j\InputOrd i$ has $o\in X(j)$.  Relaxation gives
-an $a\in A(j)$ with $o\OutputOrd a$, and monotonicity gives a
-$b\in A(i)$ with $a\OutputOrd b$.  Thus $b$ refines $o$, proving
+Now let $A$ be any powerset relaxation satisfying Relational Monotonicity and
+take
+$o\in \widehat X(i)$.  Some $j\InputOrd i$ has $o\in X(j)$.  Relaxation gives
+an $a\in A(j)$ with $o\OutputOrd a$, and Relational Monotonicity gives a
+$b\in A(i)$ with $a\OutputOrd b$.  Thus $b$ \outrel $o$, proving
 Equation~\ref{eq:hull-coverage}.
 
-For a finite set, every element is below an undominated element.  Therefore
-$X^\uparrow(i)\LiftedOutputOrd M(i)$; the reverse direction follows from
-$M(i)\subseteq X^\uparrow(i)$.  The same observation proves monotonicity of $M$.
-Finally, any subset of $X^\uparrow(i)$ that covers an undominated element must
-contain that element itself.  Every covering subset therefore contains $M(i)$,
+In a finite set, every element is \outrelpast by a maximal element, possibly
+itself.  Since every
+$\widehat X(i)$ is finite, $\widehat X(i)\HoareOrd M(i)$ at every input; the reverse direction follows from
+$M(i)\subseteq \widehat X(i)$.  Relational Monotonicity of $M$ follows: for
+$i\InputOrd k$, $M(i)\HoareOrd\widehat X(i)\HoareOrd\widehat
+X(k)\HoareOrd M(k)$.
+Finally, a maximal element is \outrelpast by no other element, so any
+$Y\subseteq\widehat X(i)$ with $\widehat X(i)\HoareOrd Y$ contains it.  Every
+such $Y$ therefore contains $M(i)$,
 which proves minimality and uniqueness.
 \end{proof}
 
 The theorem's perhaps surprising content is minimality.  Remembering all prior
-outputs is an obvious safe construction, but every monotone relaxation must
-preserve their content under the output order.  Dominance is the only free pruning available
-when representatives must come from the remembered outputs; further pruning
-requires introducing some other output in the specification that refines what was removed.
+outputs is an obvious safe construction, but every relaxation satisfying Relational Monotonicity must
+\outrelbase them.  Dropping outputs \outrelpast by others is the only free pruning
+available when representatives must come from the remembered outputs; further
+pruning requires introducing some other output in the specification that
+\outrel what was removed.
 
 \subsection{Persistent forwarding in search structures}
 
@@ -170,23 +186,28 @@ monotone, and by Functional CALM the specification is consistent.
 \end{proposition}
 
 \begin{proof}
-Take a search path valid at $h$.  At $h'$, replace each old edge by the path that
+By induction on the restructuring steps from $h$ to $h'$, it suffices to treat
+a single step.  Take a search path valid before the step.  After it, replace each old edge by the path that
 simulates it.  From the old terminal occurrence, follow the preserved path to a
 current occurrence.  The concatenated path validates the original search
 claim.
 \end{proof}
 
 This positive result meets the remembered-output frontier.  For a fixed key in
-a split-only migration chain, let $X(g)$ be the exact search certificates at
-prefix $g$.  Every historical certificate in $X^\uparrow(h)$ has a refinement
-in $R(h)$, namely its current forwarding path:
+a split-only migration chain, let $X(g)\subseteq R(g)$ be the claims $(k,p)$
+whose search from $p$ is exact (direct, without forwarding) at prefix $g$.
+Order claims by equality, so that a claim \outrel only itself.  Every
+historical claim in $\widehat X(h)$ was exact at some $g\InputOrd h$, so
+Proposition~\ref{prop:persistent-forwarding} keeps it in $R(h)$, now witnessed
+by its current forwarding path:
         \begin{equation}
-  X^\uparrow(h)\LiftedOutputOrd R(h).
+  \widehat X(h)\HoareOrd R(h).
   \label{eq:forwarding-hull}
         \end{equation}
-Theorem~\ref{thm:monotone-hull} says that any monotone relaxation must provide
-this coverage.  Current forwarding paths may compact many obsolete
-certificates by dominating them, just as in Table~\ref{tab:lookup-lift}.  This is deliberately a
+Theorem~\ref{thm:monotone-hull} says that any relaxation satisfying Relational Monotonicity
+must provide this.  Current forwarding paths are the witnesses that retain
+these claims; since claims are ordered by equality, compacting them by
+refinement would need a different output order on certificates.  This is deliberately a
 split-only statement.  Full implementations with deletion, merging, or memory
 reclamation must prove stronger lifetime invariants or coordinate before old
 search positions are reclaimed.
@@ -200,26 +221,30 @@ the four complete outputs are
   (0,0),\quad(0,1),\quad(1,0),\quad(1,1).
   \label{eq:product-config-example}
         \end{equation}
-Now strengthen the interface by requiring both replicas to expose the same
+Now strengthen the specification by requiring both replicas to expose the same
 configuration.  Only $(0,0)$ and $(1,1)$ remain.  Each replica still appears to
 have both local choices, so the strengthening has changed no one-replica
-interface.  During a partition, however, $p$ may choose 0 while $q$ chooses 1.
+specification.  During a partition, however, $p$ may choose 0 while $q$ chooses 1.
 The mixed pair $(0,1)$ is locally legal but globally forbidden, and no output
 can preserve both choices.  The new global constraint therefore requires
 agreement or sacrifices one of the advertised local choices.
 
-The theorem generalizes this example.  Fix a finite participant set $P$.  At
-input $i$, let $V_p(i)$ be the complete views locally available to participant
-$p$.  The baseline \emph{product interface} contains every combination of local
-views.  A stronger interface may remove combinations.  We call it locally
-conservative when it leaves each one-participant interface unchanged and adds
+The theorem generalizes this example.  Fix a finite participant set $P$ and a
+deployment (Appendix~\ref{app:deployment}) in which each coordinate has one
+\emph{owner}, the participant whose authority set $A_p$ lets it emit that
+coordinate.  At input $i$, let $V_p(i)$, the participant's complete
+\emph{views}, be the values of its coordinate that it may emit.  The baseline
+specification contains every combination of local views.  A stronger specification may remove combinations.  We call it locally
+conservative when it leaves each one-participant specification unchanged and adds
 only cross-participant constraints.
 
 For the formal result, assume three local properties:
-views can continue when input grows; complete views are maximal under local
-refinement; and locally co-occurring claims of one owner have a common local
-refinement.  The product interface consists of every tuple in
-$\prod_{p\in P}V_p(i)$ and every partial tuple obtained by omitting coordinates.
+views can continue as input \ingrows; complete views are maximal under their
+coordinate's output order; and locally co-occurring claims of one owner have a
+common \outnoun within that coordinate.  The \emph{product interface} consists
+of every tuple in $\prod_{p\in P}V_p(i)$ and every partial tuple obtained by
+omitting coordinates, ordered coordinate-wise; a partial tuple is \outrelpast
+by every tuple that agrees with it on its coordinates.
 A \emph{normalized strengthening} $T$ selects some complete product tuples and
 contains exactly their partial restrictions.  Local conservativity means that, at
 every input, the projection of $T$ onto coordinate $p$ remains all of $V_p(i)$.
@@ -229,41 +254,47 @@ every input, the projection of $T$ onto coordinate $p$ remains all of $V_p(i)$.
 Suppose each coordinate has one owner, every relevant group of owners can be
 separated by a legal partition, and every local choice is
 deployment-available.  The product interface is monotone across partitions,
-so Theorem~\ref{thm:complete-cap-deployment} gives partition compatibility;
+so Proposition~\ref{thm:complete-cap-deployment} gives partition compatibility;
 together with the availability assumption, every local choice remains
-available and independently emitted choices have an abstract common refinement.
-If the deployment additionally authorizes every participant to emit the same
-common-refining tuple from its endpoint, the participants can reconcile through
-deployment-authorized output actions.  Authority to emit only one's own
-coordinate is not sufficient, because coordinate-wise actions need not make
-the remainder tables equal.  Every proper normalized, locally conservative strengthening is not
+available and independently emitted choices have an abstract common \outnoun.
+Every strict normalized, locally conservative strengthening is not
 monotone across partitions.
 \end{theorem}
 
 \begin{proof}
 For the product interface, take any family of choices that a partition can
-separate.  Claims made by one owner have a common local refinement by assumption;
+separate.  Claims made by one owner have a common \outnoun within the coordinate by
+assumption;
 claims of different owners occupy different coordinates and can simply be put
-in the same tuple.  Continue each coordinate at the common refined input.  The
-resulting tuple preserves the whole family, as monotonicity across partitions
+in the same tuple.  Continue each coordinate at a common \indesc of their inputs.  The
+resulting tuple \outrel the whole family, as monotonicity across partitions
 requires.
 
-Now let $T$ be a proper strengthening.  Some complete product tuple $x$ is
+Now let $T$ be a strict strengthening.  Some complete product tuple $x$ is
 missing from $T$.  Local conservativity says that every coordinate $x_p$ is
 still locally available to its owner, perhaps as part of a different tuple in $T$.  A partition can separate those owners, and availability lets each choose
-its coordinate.  If their selections had a common $T$-refinement, normalize and
+its coordinate.  If their selections had a common \outnoun in $T$, normalize and
 complete it.  Maximality of the coordinates forces the result to be exactly
-$x$, the tuple that $T$ forbids.  Hence the separated family has no common refinement in $T$.
+$x$, the tuple that $T$ forbids.  Hence the separated family has no common \outnoun in $T$.
 \end{proof}
+
+\begin{remark}
+Reaching that common \outnoun is a separate question.  If the deployment
+authorizes every participant to emit the same \outrelpart tuple from its
+endpoint, the participants can presumably reconcile through
+deployment-authorized output events; authority to emit only one's own
+coordinate need not suffice, because coordinate-wise actions need not make the
+remainder tables equal.  We do not prove these claims here.
+\end{remark}
 
 \paragraph{A causal-register frontier.}
 The abstract product has a direct consistency interpretation.  For each process
 $p$, let $V_p(i)$ contain the register views that are individually explainable
 by some legal causal execution.  A view records the source write for $p$'s
 reads, but concurrent writes need not be ordered in the same way as in another
-process's view.  Inputs are causally closed histories, and input extension must
-preserve the causal past of completed reads.  Under this causal legality, an old
-view remains explainable after extension, so the product interface is monotone
+process's view.  Inputs are causally closed histories, and an input that \inrel another must
+preserve the causal past of its completed reads.  Under this causal legality, an
+old view remains explainable as input \ingrows, so the product interface is monotone
 across partitions when each read has a unique owner.  This claim does not use
 real-time legality: adding a write that completed before an old read could
 invalidate an initial-value response without adding a causal predecessor, so

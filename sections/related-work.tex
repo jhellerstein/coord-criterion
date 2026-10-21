@@ -1,22 +1,57 @@
 \section{Related Work}
 \label{sec:related}
 
+\paragraph{Coordination and monotonicity.}
 The CALM conjecture connected logical monotonicity with coordination
-freedom~\cite{hellerstein2010declarative,hellerstein2020keeping}, and Ameloot
-et al.\ proved it for relational transducers, studying how data placement and
-system knowledge change coordination
-requirements~\cite{ameloot2013relational,ameloot2015weaker};
-Sections~\ref{sec:functional-calm-theorem} and~\ref{sec:query-instance}
-relate Functional CALM to that result.  Brewer's conjecture and the
-Gilbert--Lynch theorem~\cite{brewer2000towards,gilbert2002cap} are taken up in
-Section~\ref{sec:cap-corollary} and Appendix~\ref{app:deployment}.  CRDTs
-derive strong eventual consistency from state or operation
-algebras~\cite{shapiro2011crdt}, and Keep CALM and CRDT On first proposed
-monotonicity as the criterion for safe observations of a
-replica~\cite{laddad2022keep}; Section~\ref{sec:crdt-instance} places both in
-the model.  Work on consistency semantics likewise distinguishes visibility,
-ordering, availability, and
-convergence~\cite{burckhardt2014principles,mahajan2011consistency}.
-Highly available transactions~\cite{bailis2013hat} and invariant
-confluence~\cite{bailis2014coordination} are Sections~\ref{sec:hat-instance}
-and~\ref{sec:iconfluence-instance}.
+freedom~\cite{hellerstein2010declarative,hellerstein2020keeping}.  Ameloot et
+al.\ proved the correspondence for relational transducers and showed how data
+placement and system knowledge change coordination
+requirements~\cite{ameloot2013relational,ameloot2015weaker}.  That work supplies a language
+and network model for computing queries.  Functional CALM instead isolates the
+monotonicity statement for arbitrary functional specifications; Complete
+CALM adds semantic output choice and the commitments that resolve it.  Keep CALM
+and CRDT On applies the monotonicity perspective to safe observations of
+replicated state~\cite{laddad2022keep}; Section~\ref{sec:crdt-instance}
+distinguishes convergence of that state from preservation of the observations
+made from it.
+
+\paragraph{Availability and application guarantees.}
+Brewer conjectured that a partitioned system cannot be both consistent and
+available~\cite{brewer2000towards}; Gilbert and Lynch proved the conjecture for
+a linearizable register, with availability meaning that every request
+eventually receives a response~\cite{gilbert2002cap}.  Mahajan et al.\ showed
+that no consistency semantics stronger than real-time causal consistency can be
+enforced in an always-available, one-way convergent
+system~\cite{mahajan2011consistency}.  Highly
+available transactions classify which transactional guarantees can remain
+available under partition~\cite{bailis2013hat}, while invariant confluence
+characterizes when independently valid database states can merge without
+violating an application invariant~\cite{bailis2014coordination}.  Complete CAP gives one
+characterization for any declared guarantee: its interface form asks that every
+permitted output stay available, and its response form matches the
+Gilbert--Lynch notion of answering every operation, and the same machinery
+recovers their theorem as a corollary.  Section~\ref{sec:sources} explains how each of these results
+maps into our terms and what each source keeps that we do not model.
+
+\paragraph{Convergence and consistency semantics.}
+CRDTs derive strong eventual consistency from state- or operation-based
+algebras~\cite{shapiro2011crdt}.  General consistency semantics distinguish
+visibility, ordering, convergence, and
+availability~\cite{burckhardt2014principles,mahajan2011consistency}.  Our ordered output
+specification makes one additional distinction explicit: convergence of internal
+state need not yield outputs that \outrelbase earlier client-visible ones.  Conversely, confluence requires
+an admitted common \outnoun, not necessarily a least merge or one fixed
+algebraic operator.
+
+\paragraph{General operational specification models.}
+Labeled transition systems and I/O automata provide general operational models
+of components, including input, output, and internal actions, composition, and
+implementation (simulation) relations~\cite{lynch1987io,lynch1996distributed}.  They answer how a declared
+machine may execute and how one machine implements another.  Our goal is
+narrower: the ordered relation and its remainder tables expose which observable
+alternatives remain, which removals preserve prior information, and which are
+binding commitments.  Distributed histories connect that abstraction back to
+participant-local executions and message causality.  Thus the relational model
+is not proposed as a replacement for an operational formalism; it is a semantic
+projection designed to make the intrinsic coordination question comparable
+across such formalisms.

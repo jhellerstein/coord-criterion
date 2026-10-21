@@ -15,22 +15,25 @@ possible.  Publishing one lineage rules the others out: that is a commitment.
 Suppose this commitment fixes the initial authority and a rule that uniquely
 determines each certified successor.  The system can then expose three kinds
 of growing evidence: a certified epoch chain $E$, votes or certificates $V$,
-and decisions $D$ indexed by epoch and slot.  Define refinement by
+and decisions $D$ indexed by epoch and slot.  (In Paxos and Raft terms, an
+epoch is a leader's term, a slot is a log position, and a certificate is a
+quorum of votes for a value.)  Define the output order by
         \begin{equation}
   (E,V,D)\OutputOrd(E',V',D')
   \quad\Longleftrightarrow\quad
   E\preceq_{\rm pref}E',\quad V\subseteq V',\quad D\subseteq D'.
   \label{eq:authority-refinement}
         \end{equation}
-Protocol safety ensures that a later certificate extends the unique lineage
-and preserves prior certified decisions.  Public authority changes and
-already-certified decisions are therefore refinements, not revisions: their
+Protocol safety ensures that later evidence \outrel earlier evidence: a later
+certificate extends the unique lineage and keeps prior certified decisions.
+Public authority changes and already-certified decisions are therefore
+\outnouns, not revisions: their
 evidence accumulates.
 
 Fixing authority does not fix the value of every future decision slot.
 Competing proposals can still yield incompatible extensions of $D$, so
 selecting and certifying a value may require a new commitment or agreement.
-Once selected, however, that decision is preserved by every later output.  The
+Once selected, however, that decision is kept by every later output.  The
 commitment-free claim thus applies only to following the fixed authority
 succession rule, not to producing arbitrary future decisions.  If the initial
 commitment did not fix a unique succession rule, competing next epochs would
@@ -46,10 +49,10 @@ decision maps $m:P\rightharpoonup V$, ordered by extension, with at most $k$
 values in their range.
 
 At participant $p_r$'s local proposal input, the decision
-$\{p_r\mapsto v_r\}$ is within spec.  The union of all proposal inputs is a common
-input refinement.  Each local decision can continue there by itself, and any
+$\{p_r\mapsto v_r\}$ is permitted.  The union of all proposal inputs is a common
+\indesc.  Each local decision can continue there by itself, and any
 family of at most $k$ distinct decisions can coexist.  The family of all $k+1$
-cannot: every common refinement would preserve $k+1$ values and violate the
+cannot: every common \outnoun would contain $k+1$ values and violate the
 specification.  This is exactly the obstruction detected by Lifted
 Monotonicity.  If a partition lets the owners decide independently, the
 same family witnesses the negative side of Complete CAP.  Consensus is the
@@ -73,39 +76,41 @@ ordered by map extension.
 
 Now start two processes independently.  At input $\{p\}$, tightness forces the
 only name $p\mapsto1$; at input $\{q\}$ it likewise forces $q\mapsto1$.  The
-combined input $\{p,q\}$ refines both singleton inputs.  Either assignment can
+combined input $\{p,q\}$ \inrel both singleton inputs.  Either assignment can
 continue alone by giving the other process name 2, so Relational Monotonicity
 is not the problem.  They cannot continue together: an injective map cannot
-preserve both assignments to name 1.  Complete CALM fails on this two-row family,
-and a deployment that places $p$ and $q$ in different components gives the
-corresponding Complete CAP obstruction.
+\outrelbase both assignments to name 1.  Directed Outputs fails at $\{p,q\}$ as
+well: the complete namings $\{p\mapsto1,q\mapsto2\}$ and
+$\{p\mapsto2,q\mapsto1\}$ have no common \outnoun.  Complete CALM fails on
+the two-row family above,
+and a partition that separates $p$ and $q$ gives the corresponding obstruction
+to monotonicity across partitions (Proposition~\ref{thm:complete-cap-deployment}).
 
 Notice why simply extending one completed naming is not a witness.  If $n$
 processes already use names $1$ through $n$, a new process can receive $n+1$
 without changing an old assignment.  The obstruction comes from independent
 partial memberships making incompatible early choices.  The classical renaming
-hierarchy adds model-specific topological and wait-free conclusions
-~\cite{herlihy1991waitfree,herlihy1999topological}.
+hierarchy adds model-specific topological and wait-free conclusions~\cite{herlihy1991waitfree,herlihy1999topological}.
 
 \subsection{What does a snapshot promise?}
 
-The word ``snapshot'' covers interfaces with very different interface strength.
+The word ``snapshot'' covers specifications of very different strength.
 Consider inputs that are finite downward-closed causal histories, ordered by
-induced extension.  A modest \emph{cut} interface outputs a finite
+induced extension.  A modest \emph{prefix} specification outputs a finite
 downward-closed subset of the available history as a lower bound on what has
-happened.  Old cuts remain legal as history grows, and the union of finitely
-many cuts remains downward closed.  This interface satisfies Lifted
-Monotonicity and Directed Outputs.
+happened.  Old prefixes remain legal as history \ingrows, and the union of finitely
+many prefixes remains downward closed.  This specification satisfies Lifted
+Monotonicity.
 
 That easy positive result should not be mistaken for a conventional snapshot
-implementation.  The cut interface promises neither freshness nor completeness;
-it could legally return an old cut.  A stronger interface may promise that a
-vector or cut is the complete state at a globally finished boundary.  Under
+implementation.  The prefix specification promises neither freshness nor completeness;
+it could legally return an old prefix.  A stronger specification may promise that a
+vector or prefix is the complete state at a globally finished boundary.  Under
 equality of final answers, another relevant event changes the required result.
 Functional CALM then says that the boundary must be sealed before the
 completeness claim is exposed.
 
-These are safety statements about two declared interfaces.  A distributed
+These are safety statements about two declared specifications.  A distributed
 snapshot protocol must also collect a consistent cut and terminate under its
 channel and failure assumptions~\cite{chandy1985distributed}.  An atomic
 snapshot records values at a chosen linearization point instead.  Classic

@@ -12,23 +12,24 @@ specification level, and when that effect is intrinsically required.
 
 The CALM Conjecture
 proposed a crisp, bidirectional answer: consistency can be achieved without
-coordination exactly when the specification is monotone
-~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it in both
+coordination exactly when the specification is
+monotone~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it in both
 directions, but only for Datalog queries evaluated by relational
 transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}. In a related vein, the CAP
 Theorem proved that an available linearizable register cannot tolerate a
 network partition~\cite{brewer2000towards,gilbert2002cap}.  These results are often
 invoked more broadly than the formalisms support: CALM as a general
 monotonicity boundary for coordination, CAP as a general constraint on distributed
-systems.  The folklore expanded beyond what the literature proves.
+systems.  The folklore outgrew what the literature proves.
 
-Related results reach similar conclusions from different starting points.  CRDTs
+Related results reach similar conclusions from different starting points.
+Conflict-free Replicated Data Types (CRDTs)
 use inflationary updates over join-semilattices to guarantee coordination-free
-convergence~\cite{shapiro2011crdt}.  Highly Available Transactions analyze
+convergence~\cite{shapiro2011crdt}.  Highly Available Transactions (HATs) analyze
 transaction histories to identify guarantees that remain available under
 partition~\cite{bailis2013hat}.  Invariant confluence asks whether independently
-reached, invariant-preserving database states can merge safely
-~\cite{bailis2014coordination}.  Because these results speak different formal
+reached, invariant-preserving database states can merge
+safely~\cite{bailis2014coordination}.  Because these results speak different formal
 languages, they do not translate directly.  Does CALM encompass CAP?  Are CRDT
 join laws necessary for coordination freedom, or merely one strong sufficient
 discipline?  Does convergent storage provide highly available transactions?
@@ -43,6 +44,8 @@ describes what can be observed about a system, without reference to any
 imperative procedure.  The input domain $(I,\InputOrd)$ includes a partial order
 describing how input grows; the output domain $(O,\OutputOrd)$ has its own
 partial order characterizing when a later output preserves an earlier claim.
+We say that the larger input is an \indesc of the smaller, and that the later
+output is a \outnoun of the earlier.
 State-machine-style specifications can be compiled into this form
 (\S\ref{sec:design-boundary}); the table elides operational details that are not
 externally observable.  Despite its simplicity, the model captures both general
@@ -68,14 +71,17 @@ Our first result is \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}). It generalizes CALM to arbitrary
 functions and partial orders, proving that Consistency is equivalent to
 monotonicity.  When monotonicity fails, emitting some output requires
-irrevocably restricting subsequent results to those that preserve it.  We call
-this restriction a \emph{commitment}.  Functional CALM characterizes exactly
+irrevocably restricting subsequent results to those that \outrelbase it.  We call
+this restriction a \emph{commitment}.  For a function, every commitment
+\emph{seals} input, ruling out later input that could contradict an output, as
+an election official does by closing the polls before announcing a result.
+Functional CALM characterizes exactly
 when execution ambiguity can be handled consistently without commitment.
-This captures relational query languages and the usual CRDT state interface.
+This captures relational query languages and the usual CRDT state specification.
 
 We then give Consistency a distributed interpretation without changing the
 specification model (\S\ref{sec:distributed-execution}). We place one local
-execution at each participant in a Lamport history, then project away delivery
+execution at each participant in a distributed history, then project away delivery
 and strategy details that do not change specification state.
 \emph{Distributed Consistency} asks whether the resulting participant states can
 still be brought to the same state. We prove that a specification has
@@ -88,18 +94,22 @@ ambiguity arises: \emph{semantic ambiguity}. We call the resolution of either ty
 ambiguity \emph{determination}; it is complete when only one output remains
 possible. Determination may occur through input, which may make alternatives
 unreachable, or through commitments, which exclude alternatives that would
-otherwise remain possible. To model semantic ambiguity, we must move beyond standard
-monotonicity of functions. For the case of general relations we define an extension called
+otherwise remain possible. With semantic ambiguity, commitments gain a second
+job besides sealing: \emph{choosing} among permitted outputs, as when a system
+picks one leader or one serial order.  We show that at each input a commitment does one or the other: the
+effect of any coordination mechanism on the specification is a combination of
+input seals and output choices.  For the case of general relations we must move beyond standard
+monotonicity of functions; we define a generalization called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
 Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
-(\S\ref{sec:complete-calm-theorem}).  The participants' commitments must rule
-out the same conflicting alternatives.  Coordination mechanisms operationalize
-this requirement.
+(\S\ref{sec:complete-calm-theorem}).  For a system to be consistent when
+participants could choose differently, their commitments must rule out the
+same conflicting alternatives.  Coordination mechanisms operationalize this
+requirement.
 
-Classical CALM tells us when coordination is unnecessary, but not whether a
-chosen use of coordination is sufficient.  Complete CALM can answer the second
-question because it represents commitments explicitly.  For example, total log
+By explicitly modeling commitments, Complete CALM can also assess whether coordination
+is being used in a manner that achieves consistency.  For example, total log
 ordering and a key-value store are both non-monotone.  When they are composed
 through a shared log order, however, committing to a single order is sufficient
 to make the end-to-end specification monotone and consistent.  The key-value
@@ -109,44 +119,48 @@ in Appendix~\ref{app:composition}.
 
 Complete CALM also yields a Complete CAP Theorem
 (\S\ref{sec:cap-corollary}).  For any consistency guarantee expressed as a
-specification, monotonicity identifies which side of the CAP boundary it
-occupies.  A monotone specification can keep its full interface available and
-confluent during a partition; a non-monotone one cannot.  Classical
-linearizability is one instance on the negative side.
+specification, Lifted Monotonicity identifies which side of the CAP boundary it
+occupies.  A specification with Lifted Monotonicity can keep every output it permits
+available and confluent during a partition; any other cannot.  A weaker form
+that asks only that every operation be answered yields the Gilbert--Lynch
+theorem for linearizable registers as a corollary of the same machinery
+(Appendix~\ref{app:cap-response}).
 
 This paper makes six contributions:
 \begin{enumerate}
   \item \emph{A common specification model.} Ordered relational tables describe
-        permitted input/output behavior; commitments record irrevocable choices
-        among that behavior.
+        permitted input/output behavior; commitments record irrevocable decisions
+        among that behavior, each sealing input or choosing among outputs.
   \item \emph{Consistency as confluence.} One definition applies to general
         consistency models and application-specific requirements.
         This run-level property is shown to be equivalent to Distributed
-        Consistency over Lamport histories.
+        Consistency over distributed histories.
   \item \emph{Functional CALM.} For arbitrary functions between ordered
         domains, Consistency---and hence Distributed Consistency---is equivalent
         to monotonicity.
   \item \emph{Complete CALM and CAP.} With multiple outputs per input,
         Consistency---and hence Distributed Consistency---is equivalent to
         Lifted Monotonicity.  Complete CAP gives the corresponding availability
-        boundary under partition.
+        boundary under partition, and the same machinery recovers the
+        Gilbert--Lynch theorem as a corollary.
   \item \emph{Composition and Proper Coordination.} Specifications compose by
         equijoin.  Committing a shared log order can make a non-monotone
         log/store composition consistent without further store commitments
         (Appendix~\ref{app:composition}).
   \item \emph{Coordination-free frontiers.} Two theorems characterize how much
-        an interface can promise before coordination becomes necessary
+        a specification can promise before coordination becomes necessary
         (Appendix~\ref{sec:frontiers}).
 \end{enumerate}
 
 Section~\ref{sec:functional-calm} introduces the framework on an election
 and develops Functional CALM.  Section~\ref{sec:distributed-execution} gives
 Consistency its distributed reading.  Section~\ref{sec:ambiguous-specifications}
-extends the framework to ambiguous specifications, and Section~\ref{sec:complete-calm}
-combines the two extensions in Complete CALM and Complete CAP.
+generalizes the framework to ambiguous specifications, and Section~\ref{sec:complete-calm}
+combines the two generalizations in Complete CALM and Complete CAP.
 Section~\ref{sec:instances} applies the results to familiar systems, and
 Section~\ref{sec:discussion} draws out the design lessons and scope limits.
 Appendix~\ref{app:composition} proves the composition and Proper Coordination
-results, Appendix~\ref{sec:frontiers} derives maximal coordination-free
-interfaces, and Appendix~\ref{app:additional-applications} gives further
+results, Appendix~\ref{app:cap-response} develops the response form of Complete
+CAP, Appendix~\ref{sec:frontiers} derives maximal coordination-free
+specifications, and Appendix~\ref{app:additional-applications} gives further
 classical applications.
