@@ -6,7 +6,7 @@ systems models.  This section collects the payoff.  For readers who followed the
 theorems, it explains what their distinctions buy; for readers who skipped
 ahead, it gives a practical guide to applying the criterion.  The recurring
 method is diagnostic: before asking which coordination mechanism to use, first
-ask what varies, why an alternative disappears, and what the interface promises
+ask what varies, why an alternative disappears, and what the specification promises
 to preserve.
 
 \subsection{Did executions differ, or were multiple answers allowed?}
@@ -19,7 +19,7 @@ same input, several outputs are permitted.
 
 The distinction determines which test applies.  Ordinary monotonicity asks
 whether varying functional executions can safely emit results as input \ingrows.
-Lifted Monotonicity must additionally account for choices that the interface
+Lifted Monotonicity must additionally account for choices that the specification
 itself permits.  Adding nondeterminism to an implementation does not model this
 second case; the alternatives must appear as rows in the specification.
 
@@ -36,8 +36,8 @@ Whenever a remainder table shrinks, the reason matters.  An input event removes
 rows whose inputs no longer \inrelbase the input received.  An output retirement
 removes a row \outrelpast by a surviving row at the same input.  Neither
 makes a binding choice among otherwise live alternatives.  A commitment does:
-it excludes an alternative that input still permits and no remaining row
-\outrel.
+it excludes an alternative that input still permits and no remaining row at
+the same input \outrel.
 
 The distinction is visible even when the endpoint looks the same.  Receiving a
 decisive ballot and closing the polls can both leave one election result.  The
@@ -62,7 +62,7 @@ The output order makes the missing contract explicit: it says which later
 observations \outrelbase earlier ones.  A join-semilattice is one strong way to
 supply convergence and a uniform least merge, but neither is intrinsically
 required by Complete CALM.  The criterion requires an allowed common \outnoun
-only for the outputs the interface promises to preserve.  Consequently a CRDT
+only for the outputs the specification promises to preserve.  Consequently a CRDT
 state, a point read on that state, and an application query over it can lie on
 different sides of the coordination boundary
 (Section~\ref{sec:crdt-instance}).
@@ -85,7 +85,7 @@ This separation supports a question that the usual CALM test does not ask.  A
 mechanism may be sufficient without being necessary or unique.  \emph{Proper
 Coordination} tests the specification produced by its commitments.  In
 Appendix~\ref{app:composition}, committing the shared log order makes the
-composed log/store interface monotone.  The result validates what the mechanism
+composed log/store specification monotone.  The result validates what the mechanism
 accomplished without claiming that this mechanism is the only way to accomplish
 it.
 
@@ -130,14 +130,15 @@ Brewer's conjecture left consistency informal.  Gilbert and Lynch fixed it to
 linearizability, and availability to every request eventually being answered.
 Our interface form asks for more: every output the specification permits must
 stay available.  A system that always has a conservative answer meets the
-weaker response form even when it cannot offer every answer its interface
+weaker response form even when it cannot offer every answer its specification
 permits.  The response form asks what Gilbert and Lynch ask, once a
 response obligation declares which outputs count as answers.  That declaration
-is not a technicality: if a null result counts as an answer, every
-specification is trivially available.  With reads owing values and writes owing
-acknowledgments, the linearizable register recovers their theorem as a special
-case (Appendix~\ref{app:cap-response}); the one modeling step is to record
-real-time precedence in the input.
+is not a technicality: if a null result that the specification permits at
+every input counts as an answer, the specification is trivially available.  With reads owing values and writes owing
+acknowledgments, their theorem for the linearizable register follows as a
+corollary of the same machinery (Appendix~\ref{app:cap-response}); the
+appendix states the modeling steps, which include recording real-time
+precedence in the input.
 
 The other sources fit the same pattern.  For Highly Available Transactions,
 the isolation level is the specification, the rule that a transaction commits
@@ -152,8 +153,10 @@ transactions can commit and the invariant is downward closed
 state convergence, which differs from consistency of what the system exposes
 (Section~\ref{sec:crdt-instance}); for functional specifications, convergence
 follows from consistency (Corollary~\ref{cor:convergence}).  Mahajan et al.\
-prove an optimality result for one family of consistency models; it meets ours
-on the response side, but we do not derive their bound.
+show that no guarantee stronger than real-time causal consistency survives in an
+always-available, convergent system~\cite{mahajan2011consistency}; availability
+there means every operation is answered, which is our response side, but we do
+not derive their bound.
 
 In each case the boundary carries over and the vocabulary changes.  Naming the
 specification, the response obligation, and the deployment separately is what
@@ -173,7 +176,7 @@ from the specification; confluence is the common test.
 This separation is a source of generality.  The two-column relation can encode a
 property such as an invariant as readily as a protocol-level consistency model.
 Its input order says how inputs \ingrow, and its output order says which
-later results \outrelbase earlier ones.  Changing either order changes the interface being
+later results \outrelbase earlier ones.  Changing either order changes the specification being
 tested.  Because specifications remain typed relations, equijoin also composes
 component properties into an end-to-end contract.  The model can therefore ask
 whether a local coordination decision is sufficient after composition, rather
@@ -186,7 +189,7 @@ Datalog~\cite{hellerstein2010declarative}.  That formulation still left the
 coordination question entangled with a program: its rules, language extensions,
 time and location constructs, and operational semantics.  Our specification
 table is declarative at a lower layer.  It says only which input/output behaviors
-are permitted and which observations \outrel others.  Monotonic Datalog remains
+are permitted and which observations \outrelbase others.  Monotonic Datalog remains
 one way to realize such a specification, but is no longer the object that defines
 the intrinsic boundary.  In retrospect, the durable part of the original thesis
 was not that the right distributed programs must be written in one declarative

@@ -181,7 +181,8 @@ outputs the system has committed to at $i$; its \emph{committed table} is the
 set $K\subseteq S_1$ of those rows.  The strategy is
 \emph{totality-preserving} when $K$, like $S_1$, has a row at every input of the
 relevant domain, so that committing never leaves a downstream input without an
-upstream value.  Those commitments restrict the end-to-end behavior from
+upstream value.  Those commitments, and the retirements they enable, restrict
+the end-to-end behavior from
 $S_2\circ S_1$ to $S_2\circ K$.  We treat $K$ as a \emph{declared resolution}
 rather than deriving it from runs of the composed transition system.  For an
 input-determined strategy, whose commitment at each input depends only on that
@@ -198,19 +199,20 @@ exposable.
 For independently parameterized composition, the resolved table is $G\star K$.
 \end{definition}
 
-The second clause follows from the first by the exposure boundary
+The second clause is implied by the first, by the exposure boundary
 (Proposition~\ref{prop:functional-exposure-boundary}); we state it because it
-is the property a downstream implementer relies on.
+is the property a downstream implementer relies on.  The characterization below
+is a corollary of Complete CALM applied to the resolved specification.
 
 The definition tests the joined behavior after coordination.  It does not
 require $S_1$, $S_2$, or their unresolved composition to be monotone.
 
-\begin{theorem}[Proper Coordination]
+\begin{corollary}[Proper Coordination]
 \label{thm:proper-coordination}
 A totality-preserving commitment strategy is proper for a sequential or
 independently parameterized composition if and only if the resolved end-to-end
 specification satisfies Lifted Monotonicity.
-\end{theorem}
+\end{corollary}
 
 \begin{proof}
 The strategy is totality-preserving by hypothesis, so properness reduces to the
@@ -238,11 +240,12 @@ unresolved composition need be monotone.
 The graph of a monotone function satisfies Lifted Monotonicity.
 Lemma~\ref{lem:composition} or Lemma~\ref{lem:parameterized-composition} makes
 the resolved composition satisfy Lifted Monotonicity, and
-Theorem~\ref{thm:proper-coordination} makes the commitments proper.
+Corollary~\ref{thm:proper-coordination} makes the commitments proper.
 \end{proof}
 
-The theorem is strictly more general than the corollary: it requires only the
-resolved join to be monotone.
+Corollary~\ref{thm:proper-coordination} is strictly more general than
+Corollary~\ref{cor:monotone-commitment}: it requires only the resolved join to
+be monotone.
 
 \begin{example}[A committed log composed with a register or key-value store]
 \label{ex:committed-log-composition}
@@ -260,8 +263,9 @@ the externally visible store specification is the composition $G\star F$.
 In the notation of the previous subsection, $I$ is the set of proposal
 streams, $A$ is a one-point parameter (the log has no configuration), $B$ is
 the set of logs, $J$ is the client request history, and $C$ is the set of
-cumulative response histories; each proposed command comes from a request in
-$J$.
+cumulative response histories.  The composed input pairs a proposal stream
+with a request history, and $I$ stays part of it; we consider only coherent
+pairs, in which every proposed command comes from a request in $J$.
 
 The authority commits to one next command at each position, in the order
 proposals reach it.  Because that order is part of the input, its commitment
@@ -279,9 +283,9 @@ order as input places the one binding choice, the order of the commands, at
 the authority, and the strategy records it.  The example therefore does not
 show that ordering needs no coordination; it shows that once the log order is
 fixed upstream, nothing further is needed downstream.  Neither log ordering nor
-the ordinary store interface need be monotone; committing the shared log order
+the ordinary store specification need be monotone; committing the shared log order
 alone makes their composition consistent, and no independent commitment at
-the register or key-value-store interface is required.  Multi-Paxos is a
+the register or key-value-store specification is required.  Multi-Paxos is a
 natural distributed realization of the log authority: state-machine
 replication implements a single totally ordered log across
 replicas~\cite{schneider1990smr,lamport2001paxos}, so the example applies with

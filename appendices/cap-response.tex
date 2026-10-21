@@ -5,7 +5,7 @@ Complete CAP (Theorem~\ref{thm:complete-cap}) asks that every permitted output
 remain available during a partition.  The Gilbert--Lynch theorem asks only that
 every request receive some response~\cite{gilbert2002cap}.  This appendix
 develops the second notion in our model, proves the corresponding form of
-Complete CAP, and recovers Gilbert and Lynch's result as a special case.
+Complete CAP, and recovers Gilbert and Lynch's result as a corollary.
 
 \subsection{Two notions of availability}
 
@@ -13,15 +13,16 @@ The notions answer different questions.  Gilbert and Lynch fix one object and
 ask whether any algorithm implements it; availability is a liveness property
 of that algorithm, and the object's consistency condition decides which
 response is correct.  For a linearizable read the full history usually leaves
-one correct answer, so choice never arises.  We start from a specification
+one correct answer, so choice rarely arises.  We start from a specification
 that may permit many outputs per input and ask what the specification itself
 forces.  With no algorithm fixed, the natural question is whether the whole
-declared interface can stay available, and that question has an exact answer
+declared specification can stay available, and that question has an exact answer
 in Lifted Monotonicity.
 
 Response availability is the classical notion and gives the stronger
 impossibility results, but it is only as strong as its notion of an answer: if
-an abort counts, every specification is available.  The interface form has no
+an abort that the specification permits at every input counts as an answer, the
+specification is trivially available.  The interface form has no
 such loophole and matches Complete CALM exactly; Section~\ref{sec:discussion}
 compares the two.
 
@@ -38,10 +39,10 @@ $(i,o)\in Q_p$, $(i,u)\in S$, and $o\OutputOrd u$, then $(i,u)\in Q_p$.  An
 output in $Q_p(i)$ \emph{answers} at $i$ for $p$.
 \end{definition}
 
-The obligation is part of the declared interface, alongside $\Spec$.  For a
+The obligation is declared alongside $\Spec$.  For a
 register, $Q_p(i)$ consists of the outputs that answer every read invoked at
 $p$ in $i$; a participant answers the operations it owns, not those it hears
-about from others.  An interface that counts an abort as an answer declares a
+about from others.  A specification that counts an abort as an answer declares a
 weaker obligation.
 
 \begin{definition}[Response Availability]
@@ -272,8 +273,7 @@ and a participant that emits either seals one of $k_1$ and $k_2$.
 
 \paragraph{The obligation decides what availability means.}
 The response form is only as strong as $Q$.  Highly Available Transactions
-illustrate how the three ingredients of a CAP question separate
-~\cite{bailis2013hat}.  The isolation level is the specification $\Spec$.
+illustrate how the three ingredients of a CAP question separate~\cite{bailis2013hat}.  The isolation level is the specification $\Spec$.
 The rule that a transaction may abort only at the client's request, and must
 otherwise eventually commit, is the obligation: $Q$ excludes system-chosen
 aborts.  Sticky availability and session guarantees say which replica must
@@ -281,6 +281,8 @@ serve which operations, which is a deployment (Appendix~\ref{app:deployment}).
 A CAP question has a definite answer once all three are fixed.
 
 \subsection{Recovering Gilbert--Lynch}
+
+\jmh{Consider option (b): promote the footnote's per-replica (non-uniform obligation) version of the response-form theorem to a theorem with proof, and derive Gilbert--Lynch from it, so that GL is a special case of a CAP theorem rather than a corollary of Lemma forced-answer.}
 
 The obstruction behind Gilbert and Lynch's theorem needs only one participant's
 answer.

@@ -346,18 +346,39 @@ the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
 \begin{definition}[Output retirement]
 \label{def:output-retirement}
 The \emph{output retirements} for $o$ at $(i,R)$ are the rows in $D_o$: rows
-ruled out by $o$ but \outrelpast by a row that \outrel $o$.
+ruled out by $o$ but \outrelpast by a row at the same input that \outrel $o$.
 \end{definition}
 
 Rows at inputs in $K_o$ require a \emph{seal}, which removes every row at those
-inputs.  Rows in $U_o$ are conflicts with $o$ that no row \outrel and require a
+inputs.  Rows in $U_o$ are conflicts with $o$ that no row \outrelpart $o$ at
+their input \outrel, and require a
 \emph{choice}, which removes some outputs at an input while leaving it legal.
 Every removed row thus has one of three causes: an input event removes rows that
 can no longer happen, an output retirement removes rows \outrelpast by a row the
-event keeps, and a commitment removes rows that could still happen and that no
-remaining row \outrel.  Equation~\ref{eq:commitment-excludes} is judged at the
+event keeps at the same input, and a commitment removes rows that could still
+happen and that no remaining row at the same input \outrel.  Equation~\ref{eq:commitment-excludes} is judged at the
 table a commitment leaves, so a row removed together with every row that
 \outrel it counts as a commitment's removal, not a retirement.
+Table~\ref{tab:removal-classes} summarizes the three classes.
+
+\begin{table}[t]
+  \centering
+  \footnotesize
+  \begin{tabular}{@{}p{.17\columnwidth}p{.42\columnwidth}p{.33\columnwidth}@{}}
+    \toprule
+    Rows & Cause & Example \\
+    \midrule
+    $R[\mathrm{in}\in K_o]$ & seal: no row at the input \outrel $o$ &
+      closing the polls (Fig.~\ref{fig:election-frames}(d)) \\
+    $D_o$ & output retirement: \outrelpast by a kept row at the same input &
+      traceroute (Fig.~\ref{fig:ambiguity-frames}(g)) \\
+    $U_o$ & choice: no row \outrelpart $o$ at the input \outrel it &
+      $[B,A]$ after $[A,B]$ (Fig.~\ref{fig:ambiguity-frames}(f)) \\
+    \bottomrule
+  \end{tabular}
+  \caption{The rows ruled out by an output $o$, by cause.}
+  \label{tab:removal-classes}
+\end{table}
 
 For each $o\in O$, the \emph{canonical seal commitment} $s_o$, lifting
 Definition~\ref{def:canonical-commitment-basis}, and the
@@ -391,10 +412,10 @@ With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
 are those of Definition~\ref{def:canonical-commitment-basis}; canonical runs
 now use this lifted basis.  The \emph{canonical event} for $o$ applies $s_o$ when
 $K_o\neq\varnothing$, then $c_o$ when $U_o\neq\varnothing$, and then retires
-$D_o$ and emits $o$.  Here $K_o$, $D_o$, and $U_o$ are computed at the state
-where the event starts.  Since $s_o$ removes only rows at inputs in $K_o$,
-recomputing them after $s_o$ gives $K_o=\varnothing$ and the same $D_o$ and
-$U_o$, so $c_o$ is defined there whenever $U_o\neq\varnothing$.
+$D_o$ and emits $o$.\footnote{Here $K_o$, $D_o$, and $U_o$ are computed at the
+state where the event starts.  Since $s_o$ removes only rows at inputs in
+$K_o$, recomputing them after $s_o$ gives $K_o=\varnothing$ and the same $D_o$
+and $U_o$, so $c_o$ is defined there whenever $U_o\neq\varnothing$.}
 
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
 $U_o$: no row at $\{A,B\}$ \outrel both, so the event makes a choice.  In

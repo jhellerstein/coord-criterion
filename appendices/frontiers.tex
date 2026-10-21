@@ -1,15 +1,14 @@
 \section{Coordination-Free Frontiers}
 \label{sec:frontiers}
 
-So far we have taken each interface as given and tested the CALM criteria.  A
-designer often faces the inverse question: how much can the interface promise
+So far we have taken each specification as given and tested the CALM criteria.  A
+designer often faces the inverse question: how much can the specification promise
 before coordination becomes unavoidable?  The answer depends on what must stay
 fixed.  Here we fix the inputs, visible claims, input and output orders, and---when
 partitions matter---the deployment.
 
-We compare interface strength by the rows a specification permits.  An
-interface $T$ is \emph{stronger} than $S$ when $T\subsetneq S$: every row $T$
-permits is also permitted by $S$, but not conversely.  The stronger interface rules out more
+We compare specification strength by the rows a specification permits.  A specification $T$ is \emph{stronger} than $S$ when $T\subsetneq S$: every row $T$
+permits is also permitted by $S$, but not conversely.  The stronger specification rules out more
 implementations and gives clients a tighter guarantee.  For example,
 linearizability is stronger than causal consistency because it allows fewer
 histories.  Thus ``stronger'' corresponds to a smaller set of allowed rows.
@@ -17,9 +16,9 @@ This is a separate order from $\OutputOrd$, which compares individual
 outputs.
 
 We obtain two frontier results.  The first concerns information arriving over
-time: how precisely can an interface answer while \outrelpart every answer it
+time: how precisely can a specification answer while \outrelpart every answer it
 has already exposed?  The second concerns information arriving independently:
-how much cross-node agreement can an interface require without withdrawing any
+how much cross-node agreement can a specification require without withdrawing any
 choice that it still offers locally?
 
 \subsection{Remembering exactly what may remain true}
@@ -110,8 +109,8 @@ $A(i)\HoareOrd A(j)$.
 \begin{theorem}[Remembered-output frontier]
 \label{thm:monotone-hull}
 The map $\widehat X$ is a powerset relaxation satisfying Relational
-Monotonicity.  Moreover, every such relaxation $A$ \outrel every output seen so
-far:
+Monotonicity.  Moreover, every such relaxation $A$ contains a \outnoun of every
+output seen so far:
         \begin{equation}
   \widehat X(i)\HoareOrd A(i)
   \qquad\text{for every }i.
@@ -221,10 +220,10 @@ the four complete outputs are
   (0,0),\quad(0,1),\quad(1,0),\quad(1,1).
   \label{eq:product-config-example}
         \end{equation}
-Now strengthen the interface by requiring both replicas to expose the same
+Now strengthen the specification by requiring both replicas to expose the same
 configuration.  Only $(0,0)$ and $(1,1)$ remain.  Each replica still appears to
 have both local choices, so the strengthening has changed no one-replica
-interface.  During a partition, however, $p$ may choose 0 while $q$ chooses 1.
+specification.  During a partition, however, $p$ may choose 0 while $q$ chooses 1.
 The mixed pair $(0,1)$ is locally legal but globally forbidden, and no output
 can preserve both choices.  The new global constraint therefore requires
 agreement or sacrifices one of the advertised local choices.
@@ -234,8 +233,8 @@ deployment (Appendix~\ref{app:deployment}) in which each coordinate has one
 \emph{owner}, the participant whose authority set $A_p$ lets it emit that
 coordinate.  At input $i$, let $V_p(i)$, the participant's complete
 \emph{views}, be the values of its coordinate that it may emit.  The baseline
-interface contains every combination of local views.  A stronger interface may remove combinations.  We call it locally
-conservative when it leaves each one-participant interface unchanged and adds
+specification contains every combination of local views.  A stronger specification may remove combinations.  We call it locally
+conservative when it leaves each one-participant specification unchanged and adds
 only cross-participant constraints.
 
 For the formal result, assume three local properties:
@@ -257,11 +256,7 @@ deployment-available.  The product interface is monotone across partitions,
 so Theorem~\ref{thm:complete-cap-deployment} gives partition compatibility;
 together with the availability assumption, every local choice remains
 available and independently emitted choices have an abstract common \outnoun.
-If the deployment additionally authorizes every participant to emit the same
-tuple \outrelpart them from its endpoint, the participants can reconcile through
-deployment-authorized output events.  Authority to emit only one's own
-coordinate is not sufficient, because coordinate-wise actions need not make
-the remainder tables equal.  Every strict normalized, locally conservative strengthening is not
+Every strict normalized, locally conservative strengthening is not
 monotone across partitions.
 \end{theorem}
 
@@ -281,6 +276,15 @@ its coordinate.  If their selections had a common \outnoun in $T$, normalize and
 complete it.  Maximality of the coordinates forces the result to be exactly
 $x$, the tuple that $T$ forbids.  Hence the separated family has no common \outnoun in $T$.
 \end{proof}
+
+\begin{remark}
+Reaching that common \outnoun is a separate question.  If the deployment
+authorizes every participant to emit the same \outrelpart tuple from its
+endpoint, the participants can presumably reconcile through
+deployment-authorized output events; authority to emit only one's own
+coordinate need not suffice, because coordinate-wise actions need not make the
+remainder tables equal.  We do not prove these claims here.
+\end{remark}
 
 \paragraph{A causal-register frontier.}
 The abstract product has a direct consistency interpretation.  For each process

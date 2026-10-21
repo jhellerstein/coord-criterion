@@ -1,5 +1,6 @@
 \section{Functional CALM}
 \label{sec:functional-calm}
+\jmh{CIDR length: consider keeping statements of the event contract and Lemmas canonical-equivalent and run-residual here and moving their proofs to an appendix.}
 
 The CALM Theorem was proved for queries in a logic programming language,
 evaluated by relational transducers, and its applicability outside that
@@ -110,7 +111,7 @@ is no winner.  An input is the ballots received so far, written as a
 three-character string with a dot for a ballot not yet received.  For brevity,
 the figure shows only inputs \inrelpart $x\cdot\cdot$.
 
-The two orders express different interface decisions.  The \emph{input order}
+The two orders express different specification decisions.  The \emph{input order}
 records accumulated ballots: $xy\cdot$ \inrel $x\cdot\cdot$, while
 $xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output order} records
 preservation of visible claims: either winner \outrel $\bot$, while $x$ and
@@ -123,7 +124,7 @@ Here, for example, the input sequence $x\cdot\cdot\InputOrd xy\cdot\InputOrd xyx
 monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd x$.
 
 \paragraph{Input and determination.}
-Each panel captures the state of the system: a pair of a \emph{current input}
+Each panel captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
 still possible from that input.  When $v_2$'s ballot for $y$ arrives, the event
 $\mathsf{input}(xy\cdot)$ produces panel~(b), retiring rows whose inputs no
@@ -138,7 +139,9 @@ $xy\cdot$ in the same output event.  Its irrevocable \emph{seal commitment}
 removes the still-possible $xyx$ and $xyy$ rows but leaves the current input
 unchanged, and so determines $\bot$.  Here $\bot$ needed no commitment; the
 seal is the system's choice, not a requirement of the specification.
-Commitments belong to a system's declared \emph{commitment basis} $\mathcal B$,
+A \emph{system} is what implements the specification
+(Section~\ref{sec:histories} makes this precise); commitments belong to a
+system's declared \emph{commitment basis} $\mathcal B$,
 not to the specification itself; a system whose polls cannot close does not
 have this commitment in its basis.
 
@@ -349,7 +352,7 @@ separate part of the model, as follows.
 \label{def:commitment-basis}
 A \emph{commitment} is a partial function on specification states that leaves
 the current input unchanged and removes a nonempty set of rows, each with no remaining
-row that \outrel it: whenever $c(i,R)=(i,R')$, we have $R'\subsetneq R$ and
+row at the same input that \outrel it: whenever $c(i,R)=(i,R')$, we have $R'\subsetneq R$ and
 \begin{equation}
   (k,u)\in R\setminus R',\ (k,w)\in R'
   \quad\Longrightarrow\quad
@@ -361,8 +364,9 @@ $\mathcal B$ is a set of commitments available to a system.  A commitment
 \emph{seals} a legal input $k$ when it empties the fiber at $k$.
 \end{definition}
 
-In a functional specification each input has one row, so no row is \outrelpast,
-and every commitment seals the inputs whose rows it removes; we call it a
+In a functional specification each input has one row, so no other row shares
+a removed row's input and Equation~\ref{eq:commitment-excludes} holds
+vacuously; every commitment seals the inputs whose rows it removes; we call it a
 \emph{seal commitment}.  A commitment makes an allowed future unreachable.
 Section~\ref{sec:safe-exposure} shows what the condition adds when an input has
 several outputs.
@@ -809,7 +813,7 @@ sealing input.  A monotone functional specification can emit every current
 output without a commitment; if monotonicity fails at $i\InputOrd k$ with
 $f(i)\not\OutputOrd f(k)$, the canonical output event for $f(i)$ seals $k$.
 
-This is the familiar CALM dichotomy stated at the specification interface
+This is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read
 both as consistency and as confluence; Definition~\ref{def:consistency} is
 both.  Classical CALM fits the pattern with inputs $J$ ordered by fact
@@ -825,7 +829,7 @@ the standard definition of a monotone query~\cite{abiteboul1995foundations},
 which positive Datalog satisfies and negation may not.  Functional CALM
 generalizes the statement from fact sets under inclusion to arbitrary input and
 output orders, regardless of the formalism used to express the
-specification.  The usual CRDT state interface has the same functional shape,
+specification.  The usual CRDT state specification has the same functional shape,
 with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} take up both instances.

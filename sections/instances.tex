@@ -3,7 +3,7 @@
 
 Table~\ref{tab:instances} summarizes how atomic output events apply across the
 literature.  Each mapping declares an input, an output, and their
-orders before applying Functional CALM or Complete CALM.  Changing the interface
+orders before applying Functional CALM or Complete CALM.  Changing the specification
 changes whether monotonicity or Directed Outputs holds.
 
 \begin{table*}[t]
@@ -58,10 +58,9 @@ Section~\ref{sec:functional-calm} gave the functional encoding
 $J\mapsto Q(J)$.  Relational-transducer CALM (CALM for Datalog programs run on networks of
 relational transducers) proves the operational result for
 that language: monotone queries allow coordination-free evaluation under its
-data-placement and execution assumptions
-~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
+data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
 that theorem.  It isolates the monotonicity property so that it
-can be compared with interfaces outside Datalog.
+can be compared with specifications outside Datalog.
 
 Why did earlier CALM results not state Directed Outputs separately?  Their
 query specification is functional: each input $J$ has one result
@@ -80,7 +79,7 @@ and merge order?  Applications immediately ask a second question: what may a
 client safely conclude from one replica's current state?  The CRDT merge theorem does not answer this second
 question.  Keep CALM and CRDT On called out this gap and proposed monotonicity as
 the test for safe queries~\cite{laddad2022keep}.  Functional CALM makes that
-test precise for the whole client-visible interface.
+test precise for the whole client-visible specification.
 
 Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice, and let the input
 be the finite set $U$ of immutable, joinable payloads received so far, ordered
@@ -90,10 +89,10 @@ by inclusion.  The replica's state is
   \label{eq:crdt-state-function}
         \end{equation}
 so $U\subseteq V$ implies $s(U)\sqsubseteq s(V)$, and
-$s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$: the state interface is monotone, and
+$s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$: the state specification is monotone, and
 join is the least state \outrelpart both states~\cite{shapiro2011crdt}.  A
 client observation $q:(D,\sqsubseteq)\to(Y,\preceq_Y)$ replaces the state
-output with a new promise, and by Functional CALM the client-visible interface
+output with a new promise, and by Functional CALM the client-visible specification
 $q\circ s$ is consistent exactly when
         \begin{equation}
   U\subseteq V \quad\Longrightarrow\quad q(s(U))\preceq_Y q(s(V)).
@@ -144,8 +143,7 @@ State convergence does not establish monotonicity of an application query.
 
 \paragraph{Threshold queries.}
 Kuper and Newton's LVars introduced \emph{threshold queries}: Boolean-valued
-application queries that become true when a lattice state crosses a threshold
-~\cite{kuper2013lvars}.  Order the Boolean codomain by
+application queries that become true when a lattice state crosses a threshold~\cite{kuper2013lvars}.  Order the Boolean codomain by
 $\mathsf{false}\preceq_B\mathsf{true}$.  For example, let a grow-only set $d$
 record distinct failed login attempts and define
         \begin{equation}
@@ -187,14 +185,14 @@ SEC as well.  In particular, SEC permits the observable equivalent of
 whose visible value replaces or discards that earlier answer.  This need not
 retract internal CRDT state, but it does retract the client-visible claim if
 outputs mean irrevocable observations.  Whether convergence is monotone
-therefore depends on the declared output order; an LWW interface that promises
+therefore depends on the declared output order; an LWW specification that promises
 to retain both concurrent values differs from one that permits its resolution
 rule to discard one.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-For a transactional interface, an input is the set of begin, read, write, and
+For a transactional specification, an input is the set of begin, read, write, and
 commit requests received so far, ordered by inclusion.  An output is a growing
 set of public facts such as $\mathsf{read}(T,x,v)$,
 $\mathsf{commit}(T)$, and session-order facts, also ordered by inclusion.  The
@@ -204,8 +202,7 @@ determines which fact sets are permitted.
 A deployment assigns transactions and requests to replicas.  Partition
 compatibility under a deployment
 (Theorem~\ref{thm:complete-cap-deployment}) tests the combinations those replicas can select across a partition,
-under the contact, failure, and session assumptions of the interface
-~\cite{bailis2013hat,terry1994session}.  In the response form of Complete CAP
+under the contact, failure, and session assumptions of the specification~\cite{bailis2013hat,terry1994session}.  In the response form of Complete CAP
 (Appendix~\ref{app:cap-response}), HAT's ingredients separate: the isolation
 level fixes the specification, the rule that transactions eventually commit
 rather than suffer system-initiated aborts fixes what counts as an answer, and
@@ -217,7 +214,7 @@ Suppose two replicas execute transactions on disjoint keys.  One exposes
 $\mathsf{read}(T_1,x,0)$ and $\mathsf{commit}(T_1)$; the other exposes
 $\mathsf{read}(T_2,y,0)$ and $\mathsf{commit}(T_2)$.  If each read observes a
 committed version at its replica, the union contains no dirty read or write
-conflict.  Under the stated read-committed interface (a transaction reads only committed
+conflict.  Under the stated read-committed specification (a transaction reads only committed
 versions), later delivery keeps all four facts.  This is the positive accumulation pattern behind HAT results;
 it is not a claim that every combination of session guarantees is available.
 
@@ -241,7 +238,7 @@ may choose a final state; it cannot retract a commit already exposed to a
 client.
 
 Convergent storage does not automatically provide a highly available
-transactional interface.  Storage convergence constrains states after update delivery;
+transactional specification.  Storage convergence constrains states after update delivery;
 isolation constrains reads and commits exposed before then.
 
 \subsection{Invariant confluence}

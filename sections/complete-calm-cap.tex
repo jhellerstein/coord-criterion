@@ -38,7 +38,7 @@ relational generalizations combined here.
     Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\LiftedOrd S(j)$; finite sets in $S(i)$ have common \outnouns in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
     output retirement & removed $(k,x)$ is \outrelpast by a retained $(k,u)$ that \outrel $o$ & Def.~\ref{def:output-retirement} \\
     exposable output & $\mathsf{output}(o)$ needs no commitment; it may retire \outrelpast rows & Def.~\ref{def:exposable} \\
-    choice commitment & removes conflicts no row \outrel, leaving their input legal & Sec.~\ref{sec:safe-exposure} \\
+    choice commitment & removes conflicts no row at the same input \outrel, leaving their input legal & Sec.~\ref{sec:safe-exposure} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
@@ -59,8 +59,8 @@ relational generalizations combined here.
 Consistency is confluence: independently reached states can still meet.
 Coordination is its operational counterpart: the system makes a binding decision
 that removes some otherwise possible behavior.  In our transition system, that
-act is exactly a commitment, and by Proposition~\ref{prop:seal-or-choose} it
-does one of two jobs: it seals input or chooses among outputs.  A mutex, lock,
+act is exactly a commitment, which seals or chooses
+(Proposition~\ref{prop:seal-or-choose}).  A mutex, lock,
 atomic ordering mechanism, or agreement protocol is in scope when it serves
 this role.  Computation or communication that removes no such alternative is
 not coordination merely because it uses one of these mechanisms.
@@ -70,7 +70,7 @@ not coordination merely because it uses one of these mechanisms.
 A run or history \emph{coordinates} if and only if one of its output events
 applies a commitment, that is, seals an input or chooses among outputs,
 removing an alternative that the current input still permits and that no
-remaining row \outrel.  It is \emph{coordination-free}, equivalently
+remaining row at the same input \outrel.  It is \emph{coordination-free}, equivalently
 commitment-free, when its output events apply no commitments; they may still
 perform output retirements.
 \end{definition}
@@ -167,10 +167,10 @@ everything any of them has emitted, and Lifted Monotonicity guarantees that
 such a $u$ exists.
 Whether they reach it is a matter of strategy.  Participants that choose
 independently may keep emitting new outputs, each needing its own
-reconciliation.  One strategy that terminates is deterministic reconciliation:
-participants that share knowledge of the inputs and emitted outputs apply the
-same rule for choosing $u$, and arrive at the same state without any
-commitment.  Section~\ref{sec:discussion} returns to this distinction.
+reconciliation.  One strategy that terminates, once participants stop emitting other outputs,
+is deterministic reconciliation: participants that share knowledge of the
+inputs and emitted outputs apply the same rule for choosing $u$, and arrive at
+the same state without any commitment.  Section~\ref{sec:discussion} returns to this distinction.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:cap-corollary}
@@ -188,22 +188,31 @@ a choice.
 
 \begin{definition}[Partitioned history, Availability, Partition Consistency]
 \label{def:partition-notions}
-A \emph{partitioned history} divides the participants into two or more
-components and contains no receive whose matching send lies in another
-component; participants still receive environment input and emit outputs.
-Fix a system (Section~\ref{sec:histories}), with a strategy for each
-participant of every finite participant set and every choice of initial
-inputs; each strategy depends only on its participant's local history.  The
-environment is adversarial: it may supply any legal input event to any
-participant.  The system has \emph{Availability} when, at every consistent cut
-of every partitioned history it produces, each participant in state $(i,R)$
-can emit every output in its fiber $R(i)$ in some continuation, produced by
-the system, that adds only events of its own component and no input event.  No output waits for a message from
-another component, though an output event may apply commitments locally,
-within the participant's component.  The system has
-\emph{Partition Consistency} when every such history is confluent at every
-consistent cut and every common \indesc of the participants' current
-inputs.
+\leavevmode
+\begin{enumerate}
+  \item \emph{Partitioned history.}  A \emph{partitioned history} divides the
+        participants into two or more components and contains no receive whose
+        matching send lies in another component; participants still receive
+        environment input and emit outputs.
+  \item \emph{System.}  Fix a system (Section~\ref{sec:histories}), with a
+        strategy for each participant of every finite participant set and
+        every choice of initial inputs; each strategy depends only on its
+        participant's local history.
+  \item \emph{Environment.}  The environment is adversarial: it may supply any
+        legal input event to any participant.
+  \item \emph{Availability.}  The system has \emph{Availability} when, at every
+        consistent cut of every partitioned history it produces, each
+        participant in state $(i,R)$ can emit every output in its fiber $R(i)$
+        in some continuation, produced by the system, that adds only events of
+        its own component and no input event.  No output waits for a message
+        from another component, though an output event may apply commitments
+        locally, within the participant's component.
+  \item \emph{Partition Consistency.}  The system has \emph{Partition
+        Consistency} when every such history is confluent at every consistent
+        cut and every common \indesc of the participants' current inputs.  The
+        continuation that confluence asks for need not stay partitioned and
+        need not be produced by the system.
+\end{enumerate}
 \end{definition}
 
 This is the \emph{interface form} of Availability: every output the
@@ -265,17 +274,18 @@ or completes independently at the cost of Partition Consistency.
 \paragraph{Answering every operation.}
 Gilbert and Lynch ask for less than the interface form: every request
 must receive \emph{some} response.  Asking for some response is meaningful only
-once the interface says which outputs count as answers, since an interface
-that accepts an abort or a null result is trivially available.
+once the specification says which outputs count as answers, since a specification
+that accepts an abort or a null result at every input is trivially available.
 Appendix~\ref{app:cap-response} makes that obligation part of the declared
-interface and proves a \emph{response form} of Complete CAP: a system can
+specification and proves a \emph{response form} of Complete CAP: a system can
 answer every operation through any partition, with responses that have a
 common \outnoun, exactly when the specification is consistent on some \emph{response
 interface}, a total choice of answers that can always continue its own earlier
 answers (Theorem~\ref{thm:complete-cap-response}).  Lifted Monotonicity implies
 the response form, and for functional specifications the two forms coincide.
 
-The Gilbert--Lynch theorem is a special case of the response form.  A
+The Gilbert--Lynch theorem follows as a corollary of the same machinery as
+the response form.  A
 \emph{replica} is a participant holding a copy of the register, and the theorem
 is the case where a replica's only permitted answer is invalidated by input it
 cannot see (Lemma~\ref{lem:forced-answer}).  A replica cut off
