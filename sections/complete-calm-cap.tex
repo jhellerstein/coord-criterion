@@ -41,7 +41,7 @@ relational extensions combined here.
     \midrule
     Complete CALM & Consistency $\iff$ Lifted Monotonicity $\iff$ Distributed Consistency & Thm.~\ref{thm:complete-calm} \\
     coordination & application of a commitment & Def.~\ref{def:coordination} \\
-    conflicting output events & cannot coexist without mutual exclusion & Thm.~\ref{thm:commitments-require-coordination} \\
+    conflicting output events & a commitment and the output it excludes leave states that cannot meet & Prop.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
   \caption{The distributed and relational extensions combined by Complete
@@ -63,37 +63,42 @@ because it uses one of these mechanisms.
 \begin{definition}[Coordination]
 \label{def:coordination}
 A system execution \emph{coordinates} if and only if an output event applies a
-commitment: it irrevocably removes a row that neither input nor output retirement
-accounts for.  It is \emph{coordination-free} when its output events apply no
-commitments; they may still perform output retirements.
+commitment.  A commitment may remove rows that neither input nor output
+retirement would remove.  An execution is \emph{coordination-free} when its
+output events apply no commitments; they may still perform output retirements.
 \end{definition}
 
-\begin{theorem}[Conflicting output events cannot coexist]
+The next result explains why commitments are where coordination lives: a
+commitment and an output it excludes leave states that can never meet.
+
+\begin{proposition}[Conflicting output events cannot coexist]
 \label{thm:commitments-require-coordination}
-Suppose that, at a state $\sigma=(i,R)$ reachable without commitment, one
-participant can perform an output event that applies a commitment, producing a state
-$\sigma'=(i,R')$ in which some $x\in R(i)$ has been removed by commitment and
-no output in $R'(i)$ refines $x$.  Suppose a second participant can
-independently emit $x$ after receiving the same input events, obtaining a state
-$t$ whose fiber at $i$ contains only refinements of $x$.  Then $\sigma'$ and
-$t$ cannot be brought to a common state with current input $i$.
-\end{theorem}
+Let $\sigma=(i,R)$ be a state and $x\in R(i)$.  Suppose one participant's
+output event takes $\sigma$ to $\sigma'=(i,R')$ by applying a commitment, and
+no output in $R'(i)$ refines $x$.  Suppose a second participant emits $x$ from
+$\sigma$, reaching $t=(i,R_t)$.  Then $\sigma'$ and $t$ cannot be brought to a
+common state with current input $i$.
+\end{proposition}
 
 \begin{proof}
-By hypothesis, the second participant can reach $t$, whose fiber at $i$ is
-contained in $\{u\in\fiber{i}:x\OutputOrd u\}$.  The first participant's fiber
-$R'(i)$ contains no such $u$.  Their fibers at $i$ are therefore disjoint, so
-the two states cannot be brought to a common state whose current input is $i$.
-Neither an output event nor an input event can restore a removed row or return
-to $i$.
+By containment (Lemma~\ref{lem:canonical-commitment-normal-form}), every
+output in $R_t(i)$ refines $x$, and no output in $R'(i)$ does.  The fibers
+$R'(i)$ and $R_t(i)$ are therefore disjoint.  A common state with current
+input $i$ has a row at $i$, and since events never add rows, that row would
+belong to both.
 \end{proof}
 
-If both output events must remain independently available, a system must
-mutually exclude them before either participant commits.  In a shared-memory
-system a mutex or atomic instruction provides that exclusion; in a distributed
-system, agreement is one way to establish it.  Static authority or a
-predetermined strategy can instead make one event unavailable, in which case no
-runtime agreement follows from the theorem.
+The proposition is a witness of non-confluence at the current input itself.
+Mutual exclusion follows once Consistency is required: if a system must be
+consistent while both events remain available to different participants, it
+must exclude one of them before the other participant commits.  In a
+shared-memory system a mutex or atomic instruction provides that exclusion; in
+a distributed system, agreement is one way to establish it.  Static authority
+or a predetermined strategy can instead make one event unavailable, in which
+case no runtime agreement is needed.  The same reasoning applies when the
+commitment is a seal: a participant whose output seals a refinement of its
+input conflicts with any participant that accepts that refinement.  This is the
+conflict behind the Gilbert--Lynch theorem (Appendix~\ref{app:cap-response}).
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -132,7 +137,7 @@ exposable, so output progress needs no commitment and is coordination-free.
 When it fails, some finite family has no common refinement, and selecting an
 offending output requires a commitment and hence coordination.  When different participants
 must retain independently selectable conflicting alternatives,
-Theorem~\ref{thm:commitments-require-coordination} applies.
+Proposition~\ref{thm:commitments-require-coordination} applies.
 
 Output choice also separates safety from liveness.  Confluence guarantees that
 for any finite history, some extension brings every participant to a common
@@ -140,8 +145,9 @@ state.  In the functional case, finding that extension is trivial: the state is
 determined by the input (Corollary~\ref{cor:state-by-input}), so delivering the
 full input suffices.  With several outputs per input, the state also depends on
 which outputs have been emitted (Lemma~\ref{lem:run-residual}).  Participants at
-a common input $j$ must emit some $u\in\fiber{j}$ above everything any of them
-has emitted, and Lifted Monotonicity guarantees that such a $u$ exists.
+a common input $j$ can reconcile by emitting some $u\in\fiber{j}$ above
+everything any of them has emitted, and Lifted Monotonicity guarantees that
+such a $u$ exists.
 Whether they reach it is a matter of strategy.  Participants that choose
 independently may keep emitting new outputs, each needing its own
 reconciliation.  One strategy that terminates is deterministic reconciliation:
@@ -152,82 +158,111 @@ commitment.  Section~\ref{sec:discussion} returns to this distinction.
 \subsection{The Complete CAP Theorem}
 \label{sec:cap-corollary}
 
-The coordination boundary becomes an availability boundary during a
-partition: participants in different components cannot establish a new shared
-commitment.
+Brewer conjectured that a distributed system cannot be consistent, available,
+and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
+proved it for a linearizable register~\cite{gilbert2002cap}.  The intuition
+behind the conjecture is broader than any one guarantee: a guarantee that
+needs coordination cannot survive a partition, and one that needs none can.
+Complete CALM lets us state that intuition for any declared guarantee and
+prove it in both directions.  A partition does not change which commitments a
+specification needs; it removes the ability to make them jointly, since
+participants in different components cannot agree on anything new.
 
 \begin{definition}[Partitioned history; Availability; Partition Consistency]
 \label{def:partition-notions}
-A \emph{partitioned history} divides participants into two or more components
-and has no cross-component message receive while the partition lasts, though
-participants may still receive environment input and emit outputs.  A
-consistent cut of it, at which each participant has one state, has
-\emph{Availability} when every output in each participant's current fiber can
-be emitted by an output event without commitment and without waiting for a
-message from another component.  It has \emph{Partition Consistency} when its
-participant projections are confluent, through commitment-free extensions, at
-every common refinement of their current inputs.
+A \emph{partitioned history} divides the participants into two or more
+components and contains no receive whose matching send lies in another
+component; participants still receive environment input and emit outputs.
+Fix a \emph{system}: a commitment basis and a strategy for each participant.
+The system has \emph{Availability} when, at every consistent cut of every
+partitioned history it produces, each participant can emit every output in its
+current fiber in some extension that adds only events of its own component and
+no input event.  No output waits for a message from another component, though
+an output event may apply the participant's own commitments.  The system has
+\emph{Partition Consistency} when every such history is confluent at every
+consistent cut and every common refinement of the participants' current
+inputs.
 \end{definition}
 
-This Availability is interface-wide.  It is stronger than requiring some
-response to one operation, because the full declared interface treats every
-permitted output as available.  The partition's only effect is to forbid new
-shared commitments across components, so Availability reduces to
-exposability.  The forward direction of Complete CAP then follows from
-Complete CALM and the exposure boundary.  The converse shows that the boundary
-is exact: whenever Lifted Monotonicity fails, some consistent cut of some partitioned
-history lacks Availability or Partition Consistency.
+This Availability is interface-wide: every output the specification permits
+must remain available, not merely some response to each operation.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
 For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{enumerate}
-  \item every consistent cut of every commitment-free partitioned
-        history has Availability and Partition Consistency;
+  \item some system has Availability and Partition Consistency;
   \item $\Spec$ satisfies Lifted Monotonicity.
 \end{enumerate}
+Moreover, when they hold, a system whose output events apply no commitments
+has both properties.
 \end{theorem}
 
 \begin{proof}
-Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Each
-participant's projection is commitment-free and hence a canonical run
-(Section~\ref{sec:determination}), so every output at its state is exposable by
-the exposure boundary (Proposition~\ref{prop:functional-exposure-boundary}),
-giving Availability.  Complete CALM and the survivor test supply a row $(j,u)$
-surviving in every projection.  After $\mathsf{input}(j)$, each participant's
-state is again reachable without commitment, so $u$ is exposable there and its
-output event needs no commitment; this gives Partition Consistency.
+Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Take the canonical
+basis and strategies that may emit any exposable output at any time.  Every
+history of this system is commitment-free, so each projection is a canonical
+run (Section~\ref{sec:determination}) and every state it reaches is reachable
+without commitment.  By the exposure boundary
+(Proposition~\ref{prop:functional-exposure-boundary}), every output in each
+current fiber is exposable, and emitting it needs neither a commitment nor a
+message: this gives Availability.  The history is canonical, so Distributed
+Consistency, which Complete CALM supplies, gives Partition Consistency.
 
-Conversely, let any finite rows $(i_r,o_r)$ have a common refinement $j$.  For
-the empty family, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, place
-one participant per row, initialized at $\sigma_S(i_r)$, in separate partition
-components.  A partition needs at least two components, so if there is only
-one row, add a second participant initialized at $\sigma_S(j)$ that emits no
-output.
-Availability lets each original participant perform $\mathsf{output}(o_r)$
-from $\sigma_S(i_r)$ without a commitment.  Partition Consistency and the
-survivor test then supply a row $(j,u)$ surviving in every remainder table,
-so containment gives $o_r\OutputOrd u$ for every $r$.  Form~(3) of
+Conversely, let finite rows $(i_r,o_r)$ have a common refinement $j$.  For the
+empty family, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, place one
+participant $p_r$ per row, with initial input $i_r$, each in its own
+component, and one more participant with initial input $j$ in a further
+component, so that there are at least two.  At the cut containing no events,
+$p_r$ is at $\sigma_S(i_r)$ and $o_r$ is in its current fiber, so Availability
+supplies an extension within its component in which $p_r$ emits $o_r$.  No
+message crosses components and strategies depend only on local history, so
+these extensions combine into one partitioned history.  At its final cut,
+Partition Consistency brings all participants to a common state with current
+input $j$.  That state has a row $(j,u)$, and since events never add rows,
+$(j,u)$ already lies in each $p_r$'s remainder table.  Containment
+(Lemma~\ref{lem:canonical-commitment-normal-form}) gives $o_r\OutputOrd u$ for
+every $r$.  Form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition} gives Lifted
 Monotonicity.
 \end{proof}
 
-Partition Consistency requires outputs from different components to be jointly
-refinable, not identical or totally ordered; this is why the characterization
-is bidirectional.  When Lifted Monotonicity fails, some permitted output event
-either requires a commitment that cannot be established without waiting for
-another component, sacrificing Availability, or completes independently at
-the cost of Partition Consistency.
+The converse never assumes that the system is commitment-free; it follows from
+the exposure boundary that a monotone specification needs no commitment.
+Partition Consistency asks that outputs from different components be jointly
+refinable, not identical or totally ordered, and this is why the
+characterization runs in both directions.  When Lifted Monotonicity fails, some
+permitted output either waits for another component, sacrificing Availability,
+or completes independently at the cost of Partition Consistency.
 
-A linearizable register is the classical instance of the tradeoff side: a
-write completed in one partition component is hidden from a read in another,
-so indistinguishable local executions force the reader either to wait or to
-violate real-time order (Appendix~\ref{app:registers}).  Whether a commitment requires agreement across a
-partition also depends on which participant may hold which input and make which
-choice.  Appendix~\ref{app:deployment} introduces a weaker, deployment-relative
-availability condition that counts partition-independent local commitments as
-available, sets aside the degenerate case in which one participant holds all
-relevant authority, and shows that a causal register needs no cross-component
-coordination when each participant answers only its own reads.  With the
-central results in place, we now compare their consequences across the
-surrounding literature.
+\paragraph{Answering every operation.}
+Gilbert and Lynch ask for less than interface-wide Availability: every request
+must receive \emph{some} response.  Asking for some response is meaningful only
+once the interface says which outputs count as answers, since an interface
+that accepts an abort or a null result is trivially available.
+Appendix~\ref{app:cap-response} makes that obligation part of the declared
+interface and proves a \emph{response form} of Complete CAP: a system can
+answer every operation through any partition, with jointly refinable
+responses, exactly when the specification is consistent on some \emph{response
+interface}, a total choice of answers that can always continue its own earlier
+answers (Theorem~\ref{thm:complete-cap-response}).  Lifted Monotonicity implies
+the response form, and for functional specifications the two forms coincide.
+
+The Gilbert--Lynch theorem is a special case: the case where one replica's
+only permitted answer is invalidated by input it cannot see.  A replica cut off
+from a completed write must still answer a read, its local view permits only
+the initial value, and the full history permits only the written one.  In our
+terms, a single emitted output has no refinement at some later input
+(Corollary~\ref{cor:gilbert-lynch}).  The appendix states the modeling bridge
+from Gilbert and Lynch's asynchronous model, and explains how the guarantee,
+the response obligation, and the deployment together decide a CAP question.
+
+\paragraph{Deployment.}
+Whether a commitment requires agreement across a partition also depends on
+which participant may hold which input and make which choice.
+Appendix~\ref{app:deployment} restricts Availability to the rows each
+participant is authorized to emit, sets aside the degenerate case in which one
+participant holds all relevant authority, and shows that a causal register
+needs no cross-component coordination when each participant answers only its
+own reads.  With the central results in place, we now compare their
+consequences across the surrounding literature.

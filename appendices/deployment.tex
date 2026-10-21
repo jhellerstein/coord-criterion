@@ -2,8 +2,8 @@
 \label{app:deployment}
 
 Theorem~\ref{thm:complete-cap} (Complete CAP) quantifies over all participants
-and inputs and uses interface-wide Availability, which requires every output
-event to be commitment-free.
+and inputs, and its Availability lets every participant emit every output in
+its current fiber.
 Whether a commitment is necessary is a question about the specification;
 whether it requires agreement across a partition also depends on
 \emph{deployment}: which participant may hold which input and select which row.
@@ -75,8 +75,9 @@ current input is deployment-available.
 \end{definition}
 
 This differs deliberately from the interface-wide Availability of
-Section~\ref{sec:cap-corollary}, which requires every output event to be
-commitment-free.  Here a local commitment counts as available; a commitment whose authority is split by
+Section~\ref{sec:cap-corollary}, which lets every participant emit every output
+in its fiber.  Here only authorized rows must be available; a local commitment
+counts as available, and a commitment whose authority is split by
 the partition does not.  Call a deployment \emph{single-authority} when one
 participant holds all relevant input state and output choices and every other
 participant is silent.  Such a deployment is a degenerate special case: the
@@ -133,38 +134,32 @@ condition here.
 The theorem concerns cross-component families of canonical runs and assumes,
 rather than derives, Deployment Availability.  It therefore characterizes
 partition compatibility under the authorized placement; it is not by itself an
-interface-wide, commitment-free availability theorem.  Run families whose two
+interface-wide availability theorem.  Run families whose two
 or more emissions are contained wholly in one component create no
 cross-component condition.  If a local commitment affects rows another
 component may emit, its cross-component consequences must themselves
 satisfy the theorem's condition.  Only run families that a partition separates
-are tested.  If there are at least two participants, the deployment lets every
-participant hold every row, and every output event is required to be
-commitment-free, then Deployment Availability is exactly the Availability
-condition of Section~\ref{sec:cap-corollary}.  Moreover, every pair of rows
+are tested.  If there are at least two participants and the deployment lets
+every participant hold every row, then Deployment Availability is exactly the
+Availability condition of Section~\ref{sec:cap-corollary}.  Moreover, every pair of rows
 can then be split across a partition and every single row paired with a silent
 participant; since pairs of rows suffice for the common-refinement condition
 (Section~\ref{sec:relational-specifications}), monotonicity across partitions
 is monotonicity.  Under those restrictions, this theorem's compatibility
-equivalence supplies the common-survivor condition used by the Partition
-Consistency part of Theorem~\ref{thm:complete-cap}; Complete CAP additionally
-derives Availability from Lifted Monotonicity, and its unrestricted canonical
-basis supplies the output events used for confluence.  Deployment
+equivalence supplies the common-survivor condition behind
+Theorem~\ref{thm:complete-cap}; Complete CAP additionally shows that a
+monotone specification needs no commitment, so its canonical basis supplies
+commitment-free output events for confluence.  Deployment
 determines which inputs and choices can occur independently, just as data
 placement does in the relational-transducer model.
 
 \subsection{Registers}
 \label{app:registers}
 The classical linearizable-register witness uses information hidden by the
-partition.  Begin with value $v_0$ and separate replicas $p$ and $q$.  In one
-execution no write occurs and $q$ reads; in another, indistinguishable to $q$,
-$p$ completes a write of \dog{} before the same read begins.  Deployment
-Availability requires $q$ to answer without receiving from $p$.  Fixing its
-local choices, it returns the same value in both executions.  Linearizability
-requires $v_0$ in the first and \dog{} in the second, so one execution must
-fail either availability or linearizability~\cite{gilbert2002cap}.  This is the
-classical negative case: the authority needed to answer the read is split by
-the deployment, rather than merely being a choice local to one replica.
+partition: a replica cut off from a completed write must still answer a read.
+Corollary~\ref{cor:gilbert-lynch} in Appendix~\ref{app:cap-response} recovers
+it.  Under a deployment, the authority needed to answer that read is split by
+the partition, rather than merely being a choice local to one replica.
 
 For comparison with causal consistency, consider two replicas initially
 holding no value.  Participant $p$ completes a write of \dog{} while $q$
@@ -184,8 +179,8 @@ requires $w_p(x,\dog)<_L w_q(x,\catv)$.  If $q$ returns \dog, its explanation
 requires the opposite order.  No total order refines both explanations.  This
 post-reconciliation execution exhibits failure of partition compatibility under
 the broad deployment that authorizes those opposite read choices; unlike the
-hidden-write argument above, it is not by itself the classical CAP
-indistinguishability witness.
+hidden-write witness of Corollary~\ref{cor:gilbert-lynch}, both writes are
+already known to both replicas.
 
 Under causal consistency, the writes remain concurrent and one explanation can
 assign $p$'s read to \catv{} and $q$'s read to \dog{}
