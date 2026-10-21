@@ -35,7 +35,7 @@ relational extensions combined here.
     fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$ & Eq.~\ref{eq:fiber} \\
     Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\JointOutputOrd S(j)$; finite sets in $S(i)$ have common refinements in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
     output retirement & removed $(k,x)$ is covered by retained $(k,u)$ with $x\OutputOrd u$ & Def.~\ref{def:output-retirement} \\
-    exposable output & $\mathsf{output}(o)$ needs no commitment; it may retire dominated rows & Def.~\ref{def:exposable-relational} \\
+    exposable output & $\mathsf{output}(o)$ needs no commitment; it may retire dominated rows & Def.~\ref{def:exposable} \\
     output-choice commitment & removes undominated conflicts while leaving their input valid & Sec.~\ref{sec:safe-exposure} \\
     \addlinespace
     \textbf{Results} & & \\
@@ -115,10 +115,11 @@ specification.  It equates Consistency---confluence of canonical runs---with
 Lifted Monotonicity.  The distributed execution model
 supplies the equivalent third view, Distributed Consistency.
 
-The connection is the survivor condition from
-Proposition~\ref{prop:confluence}.  Runs reconcile exactly when some output
-survives all of them at every common input refinement; Lifted Monotonicity says
-precisely that such a common-refining output exists.
+Its proof is assembled from parts already in hand: the common-refinement
+characterization of Consistency, which lifts unchanged to output choice
+(Section~\ref{sec:relational-executions}); the identification of Lifted
+Monotonicity with the common-refinement condition; and the distributed reading
+of Consistency.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -132,42 +133,20 @@ For an ordered relational specification, the following are equivalent:
 
 \begin{proof}
 Items~(1) and~(3) are equivalent by
-Proposition~\ref{prop:distributed-consistency}.  It remains to prove the
-substantive equivalence of items~(1) and~(2).
-
-Proposition~\ref{prop:confluence} says that Consistency means: for every
-finite set of canonical runs with final specification states $(i_r,R_r)$ and
-every common refinement $j$ of the $i_r$, some output $u\in\fiber{j}$ survives in every run,
-$u\in\bigcap_rR_r(j)$.  By Lemma~\ref{lem:run-residual}, this holds exactly
-when $u$ refines every output emitted on those runs; each such output $o$ was
-emitted at some $i_o\InputOrd j$ with $o\in\fiber{i_o}$.
-
-\emph{(2) $\Rightarrow$ (1): Lifted Monotonicity implies Consistency.}
-Assume Lifted Monotonicity.  The finitely many rows $(i_o,o)$ emitted on the
-runs have common refinement $j$, so
-Proposition~\ref{prop:lifted-monotonicity-decomposition}(3) supplies
-$u\in\fiber{j}$ refining them all.  Thus $u$ survives every run.
-
-\emph{(1) $\Rightarrow$ (2): Consistency implies Lifted Monotonicity.}
-Let rows $(i_1,o_1),\ldots,(i_k,o_k)$ have a common refinement $j$.  For each
-$r$, start a canonical run at $\sigma_S(i_r)$ and perform
-$\mathsf{output}(o_r)$; then
-$R_r(j)=\{u\in\fiber{j}:o_r\OutputOrd u\}$.  Consistency supplies an output
-$u$ that survives every run, so it refines every $o_r$.  This is form~(3) of
-Proposition~\ref{prop:lifted-monotonicity-decomposition}, hence Lifted
-Monotonicity.
-
+Proposition~\ref{prop:distributed-consistency}.  By
+Theorem~\ref{thm:common-refinement}, Consistency is equivalent to the
+common-refinement condition, which is form~(3) of
+Proposition~\ref{prop:lifted-monotonicity-decomposition} and hence equivalent
+to Lifted Monotonicity.
 \end{proof}
 
 
 
 The theorem gives a specification-level test for history confluence and closes
-the operational loop.  Exposability follows rather than being assumed.  In a
-consistent specification, every $o\in R(i)$ is exposable at every reachable
-$(i,R)$: for valid $j\succeq_I i$ and $x\in R(j)$, compare the canonical
-continuation that emits $o$ with one that accepts $j$ and emits $x$.
-Confluence supplies $u\in R(j)$ above both outputs, so
-Proposition~\ref{prop:exposability} applies.
+the operational loop.  Exposability follows rather than being assumed: by the
+exposure boundary (Proposition~\ref{prop:functional-exposure-boundary}), Lifted
+Monotonicity holds exactly when every output at every commitment-free
+reachable state is exposable.
 
 Thus Lifted Monotonicity makes all reachable outputs exposable, so output
 progress needs no commitment and is coordination-free.  Its failure exhibits
@@ -229,7 +208,8 @@ For an ordered relational specification $\Spec$, the following are equivalent:
 \begin{proof}
 Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Every output at
 each commitment-free participant state at the cut is exposable by the
-consequence of Complete CALM above, giving Availability.  The resulting
+exposure boundary (Proposition~\ref{prop:functional-exposure-boundary}), giving
+Availability.  The resulting
 participant projections are canonical runs, so Complete CALM gives their
 confluence and hence Partition Consistency.
 
