@@ -213,60 +213,55 @@ Consistency of the resolved composition, so Complete CALM gives Lifted
 Monotonicity.
 \end{proof}
 
-Lemma~\ref{lem:composition} and
-Lemma~\ref{lem:parameterized-composition} give one easy sufficient case: if the
-resolved upstream table and downstream specification each satisfy Lifted
-Monotonicity,
-their composition is proper.  The theorem is strictly more general: it requires
-only the resolved join to be monotone.
+The composition lemmas give an easy sufficient case.
 
-\paragraph{A committed log composed with a register or key-value store.}
-Let $F$ map histories of concurrent command proposals to the total-order log
-prefixes still permitted for them.  This log-ordering specification is
-non-monotone: different choices for the next position are incompatible outputs
-at one input.  Let $G$ relate a request history and a candidate log to the
-cumulative responses obtained by executing that log.  Hiding the shared log
-column in $G\star F$ gives the ordinary register or key-value-store
-specification.  It is also non-monotone: concurrent commands may be ordered in
-opposite ways and produce incompatible response histories.  Here $G$ is the
-internal evaluator; the externally visible store specification is the
-composition $G\star F$.
-
-A log authority commits to one next command at each position.  Its commitment
-strategy has a committed table $C\subseteq F$ that assigns each proposal
-history one log from a single append-only lineage.  This single upstream choice
-also restricts the store specification from $G\star F$ to $G\star C$.
-
-\begin{proposition}[Committed-log composition]
-\label{prop:committed-log-composition}
-Order finite logs by prefix and cumulative response histories by extension.
-Suppose the log commitment strategy is totality-preserving and its committed
-table $C$ is functional and prefix-preserving:
-every proposal history has exactly one committed log, and as proposal history
-grows, that log only extends.  Suppose deterministic store evaluation is
-prefix-preserving in both its request-history and log inputs.  Then the resolved
-store specification $G\star C$ is monotone and consistent.  This conclusion
-does not require the unresolved log specification $F$ or ordinary store
-specification $G\star F$ to be monotone.
-\end{proposition}
+\begin{corollary}[Committing upstream to a monotone function]
+\label{cor:monotone-commitment}
+Suppose a totality-preserving commitment strategy has a committed table $C$
+that is the graph of a monotone function, and the downstream specification
+($S_2$, or $G$ for independently parameterized composition) satisfies Lifted
+Monotonicity.  Then the commitments are proper.  Neither $S_1$ nor the
+unresolved composition need be monotone.
+\end{corollary}
 
 \begin{proof}
-The graph table of $C$ is a monotone function of proposal history: totality and
-functionality make it a function, and prefix preservation makes it monotone.  Deterministic
-evaluation is monotone under the product order on request histories and logs.
-Lemma~\ref{lem:parameterized-composition} therefore makes $G\star C$ satisfy
-Lifted Monotonicity; Complete CALM makes it consistent.
+The graph of a monotone function satisfies Lifted Monotonicity.
+Lemma~\ref{lem:composition} or Lemma~\ref{lem:parameterized-composition} makes
+the resolved composition satisfy Lifted Monotonicity, and
+Theorem~\ref{thm:proper-coordination} makes the commitments proper.
 \end{proof}
 
-The premise has the usual state-machine interpretation: extending a committed
-log or request history extends the cumulative response history without changing
-an earlier response.  Thus neither log ordering nor the ordinary store interface
-need be monotone, but committing the shared log order alone is sufficient to
-make their composition consistent.  No independent commitment at the register
-or key-value-store interface is required.
+The theorem is strictly more general than the corollary: it requires only the
+resolved join to be monotone.
 
-By Theorem~\ref{thm:proper-coordination}, the log commitments are proper.
-Multi-Paxos is a natural example of such an upstream component: distributed
-agreement on the same sequence of commitments yields one committed log per
-proposal history that only extends, so its committed table has the same three
-properties and the argument is unchanged~\cite{lamport2001paxos}.
+\begin{example}[A committed log composed with a register or key-value store]
+\label{ex:committed-log-composition}
+Let $F$ map histories of concurrent command proposals to the total-order log
+prefixes still permitted for them, ordered by prefix.  This log-ordering
+specification is non-monotone: different choices for the next position are
+incompatible outputs at one input.  Let $G$ relate a request history and a
+candidate log to the cumulative responses obtained by executing that log,
+ordered by extension.  Hiding the shared log column in $G\star F$ gives the
+ordinary register or key-value-store specification.  It is also non-monotone:
+concurrent commands may be ordered in opposite ways and produce incompatible
+response histories.  Here $G$ is the internal evaluator; the externally visible
+store specification is the composition $G\star F$.
+
+A log authority commits to one next command at each position.  Its commitment
+strategy is totality-preserving, and its committed table $C\subseteq F$ assigns
+each proposal history exactly one log, which only extends as proposal history
+grows.  So $C$ is the graph of a monotone function.  Deterministic store
+evaluation has the usual state-machine property: extending a committed log or
+request history extends the cumulative response history without changing an
+earlier response, so $G$ is monotone.
+Corollary~\ref{cor:monotone-commitment} makes the log commitments proper, and
+the resolved store specification $G\star C$ is monotone and consistent.
+
+Thus neither log ordering nor the ordinary store interface need be monotone;
+committing the shared log order alone makes their composition consistent, and
+no independent commitment at the register or key-value-store interface is
+required.  Multi-Paxos is a natural example of such an upstream component:
+distributed agreement on the same sequence of commitments yields one committed
+log per proposal history that only extends, so the same argument
+applies~\cite{lamport2001paxos}.
+\end{example}
