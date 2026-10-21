@@ -133,7 +133,7 @@ $\{\bot,x,y\}$.
 If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
 is \emph{determined}: input has resolved the ambiguity alone, without commitment.  
 
-In panel~(d), by contrast, a "registrar" within the system emits $\bot$ and closes the polls at
+In panel~(d), by contrast, a registrar within the system emits $\bot$ and closes the polls at
 $xy\cdot$ in the same output event.  Its irrevocable \emph{seal commitment}
 removes the still-possible $xyx$ and $xyy$ rows but leaves the current input
 unchanged, and so determines $\bot$.  Here $\bot$ needed no commitment; the
@@ -195,7 +195,7 @@ order no output at $xxx$ refines both outputs $\bot$ and $x$.  A run that emits 
 that receives $xx\cdot$ cannot be reconciled at $xxx$.
 
 Input and output events form a transition system between system states.  A
-specification is \emph{consistent} when its runs are confluent: two runs whose inputs have a common
+specification is \emph{consistent} when its runs are confluent: any runs whose inputs have a common
 refinement can always be extended to one common state there.
 Section~\ref{sec:functional-calm-theorem} shows that the test above is exactly
 what consistency requires: outputs at inputs with a common refinement $j$ must
@@ -256,7 +256,8 @@ A \emph{functional ordered specification} is a tuple
   \Spec=(I,\InputOrd,O,\OutputOrd,S),
 \]
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
-output types, and $S\subseteq I\times O$ is a typed relation in which every
+output types, and $S\subseteq I\times O$ is a typed relation with schema
+$(\mathrm{in},\mathrm{out})$ in which every
 input appears in at least one row ($S$ is \emph{total} on $I$) and at most one
 (the functional dependency):
 \[
@@ -287,8 +288,8 @@ Section~\ref{sec:election-story}.
 Specifications are relations, and we will benefit from a compact relational notation
 in our discussion.
 For any relation
-$R\subseteq I\times O$, we select rows by writing a predicate on its two
-columns in square brackets: $R[\mathrm{in}\succeq_I j]$ is the table of rows
+$R\subseteq I\times O$, we select rows by writing a predicate on its
+columns $\mathrm{in}$ and $\mathrm{out}$ in square brackets: $R[\mathrm{in}\succeq_I j]$ is the table of rows
 whose input refines $j$, $R[\mathrm{out}\succeq_O o]$ is the table of rows
 whose output refines $o$, and $R[\mathrm{in}=k]$ and $R[\mathrm{in}\in K]$ are
 the tables of rows at $k$ and at inputs in $K$.  Commas separate conjuncts:
