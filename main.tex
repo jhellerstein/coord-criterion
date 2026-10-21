@@ -56,13 +56,14 @@ CRDTs, Highly Available Transactions, and Invariant Confluence each answer part
 of this question, but in different formal models, so their answers are hard to
 compare or combine.  We put them on common ground.  We provide a minimalist
 relational definition of a specification: a table that includes, for each input,
-all outputs a system may produce; inputs and outputs both grow more informative
-as a run proceeds.  A system is \emph{consistent} when runs that have seen
-compatible input can always catch up to a common state.  Coordination shows up
+all outputs a system may produce.  Both columns are ordered: one input extends
+another when more of it has arrived, and one output refines another when it
+says more.  A system is \emph{consistent} when runs whose inputs have
+a common extension can always catch up to a common state.  Coordination shows up
 as an irrevocable \emph{commitment} to constrain the system by removing one or
 more rows from the specification table.  Commitments come in two kinds: they either
 \emph{seal} input, deciding that potential future inputs will be ignored, as
-when a timeout ends a quorum vote; or it \emph{chooses} among multiple allowed
+when a vote is closed and late ballots are ignored; or they \emph{choose} among multiple allowed
 outputs, as when a system elects a leader or orders transactions.
 
 When each input has only one output, only
@@ -73,7 +74,7 @@ never retracts an earlier answer, and then no output ever needs coordination.
 \emph{Complete CALM} covers ambiguous specifications that allow several outputs
 for the same input, where choice commitments arise too.  There the test becomes
 \emph{Lifted Monotonicity}: outputs allowed at compatible inputs must have a
-common extension that the specification also allows.
+common refinement that the specification also allows.
 
 Commitments are explicit in our model, allowing it to check for \emph{Proper
 Coordination}: whether a particular use of coordination provides consistency.  A totally
@@ -82,8 +83,8 @@ order makes the combined system monotone and hence consistent without changing t
 store. Finally, we turn Brewer's CAP intuition into a theorem for any
 consistency guarantee you can write down: a system can keep every allowed output
 available and consistent through a network partition exactly when its
-specification passes the same test.  Gilbert and Lynch's CAP Theorem is shown to
-be a special case.
+specification passes the same test.  Gilbert and Lynch's CAP Theorem is a special
+case of this generalization.
 \end{abstract}
 
 \begin{CCSXML}
