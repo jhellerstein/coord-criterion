@@ -182,7 +182,11 @@ set $K\subseteq S_1$ of those rows.  The strategy is
 \emph{totality-preserving} when $K$, like $S_1$, has a row at every input of the
 relevant domain, so that committing never leaves a downstream input without an
 upstream value.  Those commitments restrict the end-to-end behavior from
-$S_2\circ S_1$ to $S_2\circ K$.
+$S_2\circ S_1$ to $S_2\circ K$.  We treat $K$ as a \emph{declared resolution}
+rather than deriving it from runs of the composed transition system.  For an
+input-determined strategy, whose commitment at each input depends only on that
+input, the upstream outputs it leaves at $i$ are exactly those of $K$ at $i$,
+so $S_2\circ K$ describes what the commitments accomplish end to end.
 
 \begin{definition}[Proper Coordination]
 \label{def:proper-coordination}
@@ -253,6 +257,11 @@ $G\star F$ gives the ordinary register or key-value-store specification.  It is
 also non-monotone: concurrent commands may be ordered in opposite ways and
 produce incompatible response histories.  Here $G$ is the internal evaluator;
 the externally visible store specification is the composition $G\star F$.
+In the notation of the previous subsection, $I$ is the set of proposal
+streams, $A$ is a one-point parameter (the log has no configuration), $B$ is
+the set of logs, $J$ is the client request history, and $C$ is the set of
+cumulative response histories; each proposed command comes from a request in
+$J$.
 
 The authority commits to one next command at each position, in the order
 proposals reach it.  Because that order is part of the input, its commitment
@@ -265,12 +274,16 @@ history without changing an earlier response, so $G$ is monotone.
 Corollary~\ref{cor:monotone-commitment} makes the log commitments proper, and
 the resolved store specification $G\star K$ is monotone and consistent.
 
-Thus neither log ordering nor the ordinary store interface need be monotone;
-committing the shared log order alone makes their composition consistent, and
-no independent commitment at the register or key-value-store interface is
-required.  Multi-Paxos is a natural distributed realization of the log
-authority: state-machine replication implements a single totally ordered log
-across replicas~\cite{schneider1990smr,lamport2001paxos}, so the example
-applies with the authority's proposal stream read as the order in which
-commands are decided.
+The arrival order at the authority is itself the commitment.  Reading that
+order as input places the one binding choice, the order of the commands, at
+the authority, and the strategy records it.  The example therefore does not
+show that ordering needs no coordination; it shows that once the log order is
+fixed upstream, nothing further is needed downstream.  Neither log ordering nor
+the ordinary store interface need be monotone; committing the shared log order
+alone makes their composition consistent, and no independent commitment at
+the register or key-value-store interface is required.  Multi-Paxos is a
+natural distributed realization of the log authority: state-machine
+replication implements a single totally ordered log across
+replicas~\cite{schneider1990smr,lamport2001paxos}, so the example applies with
+the decided order of commands in place of the authority's arrival order.
 \end{example}
