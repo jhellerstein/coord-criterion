@@ -58,12 +58,11 @@ a common state.  This unifies classical definitions of consistency: a specificat
 table captures the space of acceptable outcomes, while confluence asks whether
 those requirements are maintained across concurrent executions.
 
-We begin by focusing on specification tables with a functional dependency from
-input to output (\S\ref{sec:functional-specifications}). These \emph{functional
-ordered specifications} capture arbitrary functions
-\(f:(I,\InputOrd)\to(O,\OutputOrd)\). Although each input has one output, a system
-may emit output before all input has arrived, and different executions may
-receive input in different orders. We call this \emph{execution ambiguity}. A
+We begin with functional specifications, which pair each input with one output
+(\S\ref{sec:functional-specifications}) and so capture arbitrary functions
+\(f:(I,\InputOrd)\to(O,\OutputOrd)\).  Even then, a system may emit output
+before all input has arrived, and different executions may receive input in
+different orders.  A
 function is monotone when \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\): an
 output emitted at \(i\) remains valid at \(j\).
 
@@ -76,46 +75,31 @@ this restriction a \emph{commitment}.  For a function, every commitment
 \emph{seals} input, ruling out later input that could contradict an output, as
 an election official does by closing the polls before announcing a result.
 Functional CALM characterizes exactly
-when execution ambiguity can be handled consistently without commitment.
+when a function can be computed consistently without commitment.
 This captures relational query languages and the usual CRDT state specification.
 
 We then give Consistency a distributed interpretation without changing the
 specification model (\S\ref{sec:distributed-execution}). We place one local
 execution at each participant in a distributed history, then project away delivery
 and strategy details that do not change specification state.
-\emph{Distributed Consistency} asks whether the resulting participant states can
+This distributed consistency asks whether the resulting participant states can
 still be brought to the same state. We prove that a specification has
-Distributed Consistency if and only if it is consistent in the sense above.
+distributed consistency if and only if it is consistent in the sense above.
 
 The functional specifications above cannot capture settings like leader election
-or transaction ordering, where many outputs are within spec for a given input. In the
-absence of a functional dependency determining the output for each input, a second source of
-ambiguity arises: \emph{semantic ambiguity}. We call the resolution of either type of
-ambiguity \emph{determination}; it is complete when only one output remains
-possible. Determination may occur through input, which may make alternatives
-unreachable, or through commitments, which exclude alternatives that would
-otherwise remain possible. With semantic ambiguity, commitments gain a second
-job besides sealing: \emph{choosing} among permitted outputs, as when a system
+or transaction ordering, where many outputs are within spec for a given input.
+There, commitments gain a second job besides sealing: \emph{choosing} among permitted outputs, as when a system
 picks one leader or one serial order.  We show that at each input a commitment does one or the other: the
 effect of any coordination mechanism on the specification is a combination of
 input seals and output choices.  For the case of general relations we must move beyond standard
 monotonicity of functions; we define a generalization called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
-Consistency, Lifted Monotonicity, and Distributed Consistency are equivalent
+Consistency, Lifted Monotonicity, and distributed consistency are equivalent
 (\S\ref{sec:complete-calm-theorem}).  For a system to be consistent when
 participants could choose differently, their commitments must rule out the
 same conflicting alternatives.  Coordination mechanisms operationalize this
 requirement.
-
-By explicitly modeling commitments, Complete CALM can also assess whether coordination
-is being used in a manner that achieves consistency.  For example, total log
-ordering and a key-value store are both non-monotone.  When they are composed
-through a shared log order, however, committing to a single order is sufficient
-to make the end-to-end specification monotone and consistent.  The key-value
-store can then execute requests in the committed order without making further
-commitments.  We call this analysis \emph{Proper Coordination} and formalize it
-in Appendix~\ref{app:composition}.
 
 Complete CALM also yields a Complete CAP Theorem
 (\S\ref{sec:cap-corollary}).  For any consistency guarantee expressed as a
@@ -133,19 +117,22 @@ This paper makes six contributions:
         among that behavior, each sealing input or choosing among outputs.
   \item \emph{Consistency as confluence.} One definition applies to general
         consistency models and application-specific requirements.
-        This run-level property is shown to be equivalent to Distributed
-        Consistency over distributed histories.
+        This run-level property is shown to be equivalent to distributed
+        consistency over distributed histories.
   \item \emph{Functional CALM.} For arbitrary functions between ordered
-        domains, Consistency---and hence Distributed Consistency---is equivalent
+        domains, Consistency---and hence distributed consistency---is equivalent
         to monotonicity.
   \item \emph{Complete CALM and CAP.} With multiple outputs per input,
-        Consistency---and hence Distributed Consistency---is equivalent to
+        Consistency---and hence distributed consistency---is equivalent to
         Lifted Monotonicity.  Complete CAP gives the corresponding availability
         boundary under partition, and the same machinery recovers the
         Gilbert--Lynch theorem as a corollary.
   \item \emph{Composition and Proper Coordination.} Specifications compose by
-        equijoin.  Committing a shared log order can make a non-monotone
-        log/store composition consistent without further store commitments
+        equijoin, and because commitments are explicit, the model can check
+        whether a particular use of coordination is enough.  For example, a
+        totally ordered log and a key-value store are both non-monotone, yet
+        committing to a single log order makes their composition monotone and
+        consistent, with no further commitments in the store
         (Appendix~\ref{app:composition}).
   \item \emph{Coordination-free frontiers.} Two theorems characterize how much
         a specification can promise before coordination becomes necessary
