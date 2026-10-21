@@ -425,9 +425,10 @@ canonical runs that use only the canonical seals and choices.
 \label{prop:seal-or-choose}
 \leavevmode
 \begin{enumerate}
-  \item At each input where a commitment removes rows, it either removes every
-        row, \emph{sealing} that input, or removes some outputs and keeps
-        others, \emph{choosing} among them.
+  \item At every state, the commitments applied so far have, at each input
+        where they removed rows, either removed every row, \emph{sealing} that
+        input, or removed some outputs and kept others, \emph{choosing} among
+        them.
   \item Every run under any commitment basis is equivalent to a canonical run
         that keeps at least as many rows after each event and whose only
         commitments are the seals $s_o$ and the choices $c_o$.
@@ -447,6 +448,12 @@ protocol---is contained in a combination of seals and choices.  One subtlety:
 $c_o$ acts at every refinement of the current input, not only at it, so a choice
 made now also constrains the choices still open at later inputs.  That is what a
 promise is: once $o$ is emitted, later outputs must refine it.
+
+The classification describes the net effect on the specification at each
+input, not the individual steps.  An input under choice may later be sealed,
+for instance when successive choices remove the last of its rows, but a sealed
+input never returns to choice, since rows are never added.  Which commitment
+completed a seal is a question of provenance, and this paper does not track it.
 
 Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when some
 valid output event for $o$ applies no commitment, though it may still retire
