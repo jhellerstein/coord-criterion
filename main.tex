@@ -24,22 +24,26 @@
 \newcommand{\OutputGe}{\succeq_O}
 \newcommand{\HoareOrd}{\preceq_H}
 \newcommand{\LiftedOrd}{\trianglelefteq}
-% Order vocabulary: "j extends i" means i \InputOrd j;
-% "u subsumes o" means o \OutputOrd u.  Change the verbs here.
-\newcommand{\extends}{extends\xspace}
-\newcommand{\extend}{extend\xspace}
-\newcommand{\extending}{extending\xspace}
-\newcommand{\extended}{extended\xspace}
-\newcommand{\extension}{extension\xspace}
-\newcommand{\extensions}{extensions\xspace}
-\newcommand{\Extension}{Extension\xspace}
-\newcommand{\subsumes}{subsumes\xspace}
-\newcommand{\subsume}{subsume\xspace}
-\newcommand{\subsuming}{subsuming\xspace}
-\newcommand{\subsumed}{subsumed\xspace}
-\newcommand{\subsumer}{subsumer\xspace}
-\newcommand{\subsumers}{subsumers\xspace}
-\newcommand{\Subsumes}{Subsumes\xspace}
+% Order vocabulary (role-based names; change the words here).
+% Input order:  "j \inrel i" means i \InputOrd j (non-strict); inputs \ingrow;
+%   a common \indesc of inputs evolves from each of them.
+% Output order: "u \outrel o" means o \OutputOrd u; a common \outnoun of
+%   outputs refines each of them.
+\newcommand{\inrel}{evolves from\xspace}     % relation, 3rd person
+\newcommand{\inrelbase}{evolve from\xspace}  % relation, base form
+\newcommand{\inrelpart}{evolving from\xspace}% relation, participle
+\newcommand{\ingrows}{evolves\xspace}        % growth, 3rd person
+\newcommand{\ingrow}{evolve\xspace}          % growth, base form
+\newcommand{\inmore}{more evolved\xspace}    % informal comparative
+\newcommand{\indesc}{descendant\xspace}      % noun
+\newcommand{\indescs}{descendants\xspace}
+\newcommand{\Indesc}{Descendant\xspace}
+\newcommand{\outrel}{refines\xspace}         % relation, 3rd person
+\newcommand{\outrelbase}{refine\xspace}      % relation, base form
+\newcommand{\outrelpart}{refining\xspace}    % relation, participle
+\newcommand{\outrelpast}{refined\xspace}     % relation, past participle
+\newcommand{\outnoun}{refinement\xspace}     % noun
+\newcommand{\outnouns}{refinements\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
 \newcommand{\fiber}[1]{S(#1)}
@@ -76,9 +80,9 @@ of this question, but in different formal models, so their answers are hard to
 compare or combine.  We put them on common ground.  We provide a minimalist
 relational definition of a specification: a table that includes, for each input,
 all outputs a system may produce.  Each column carries its own partial order,
-saying when one input \extends another and when one output \subsumes another.  A system is
+saying when one input \inrel another and when one output \outrel another.  A system is
 \emph{consistent} when it is confluent: runs whose inputs have a common
-\extension can always catch up to a common state.  Coordination shows up as an
+\indesc can always catch up to a common state.  Coordination shows up as an
 irrevocable \emph{commitment} to constrain the system by removing one or more
 rows from the specification table.  Commitments come in two kinds: they either
 \emph{seal} input, deciding that potential future inputs will be ignored, as
@@ -92,7 +96,7 @@ monotone, so that more input never retracts an earlier answer, and then no
 output ever needs coordination. \emph{Complete CALM} covers ambiguous
 specifications that allow several outputs for the same input, where choice
 commitments arise too.  There the test becomes \emph{Lifted Monotonicity}: as
-inputs are \extended, the outputs already emitted can always be \subsumed by a
+inputs \ingrow, the outputs already emitted can always be \outrelpast to a
 single output still allowed.
 
 Commitments are explicit in our model, allowing it to check for \emph{Proper

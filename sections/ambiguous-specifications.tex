@@ -47,7 +47,7 @@ contrast, can be preserved together in a larger route set.
     $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a\}$} \\
     $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize each removed row is subsumed by a}\\
+    \multicolumn{2}{@{}l}{\footnotesize each removed row is \outrelpast by a}\\
     \multicolumn{2}{@{}l}{\footnotesize remaining one: an output retirement}
   \end{tabular}
   \caption{Two specifications with several rows at one current input, each
@@ -251,7 +251,7 @@ For an ordered relational specification, the following are equivalent:
   \item Lifted Monotonicity: $i\InputOrd j$ implies
         $\fiber{i}\LiftedOrd\fiber{j}$;
   \item Relational Monotonicity and Directed Outputs;
-  \item the common-\extension condition
+  \item the common-\indesc condition
         (Definition~\ref{def:common-refinement-condition}): for every finite
         set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$, the outputs
         $o_1,\ldots,o_k$ are compatible at every common refinement of
@@ -289,7 +289,7 @@ initial decisions are compatible, but not all of them.
 
 The functional case has one row per input, so an output event either removes
 nothing or seals a valid input.  With several rows at one input, it can also
-retire a subsumed row while retaining the row that subsumes it.  We now lift output events to this case and check that they satisfy
+retire a \outrelpast row while retaining the row that \outrel it.  We now lift output events to this case and check that they satisfy
 the event contract of Proposition~\ref{prop:canonical-output-preservation}.
 
 \begin{definition}[Lifted output event]
@@ -299,19 +299,19 @@ under a basis $\mathcal B$ applies a finite, possibly empty sequence of
 commitments from $\mathcal B$, leaving a table $R_c$, and then retires rows and
 emits $o$, all atomically.  Call a row \emph{ruled out by} $o$ when its output
 does not refine $o$.  The event is \emph{valid} when $(i,o)\in R_c$ and every
-row of $R_c$ ruled out by $o$ is subsumed by a retained row that refines $o$:
+row of $R_c$ ruled out by $o$ is \outrelpast by a retained row that refines $o$:
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
   \quad\Longrightarrow\quad
   \exists u\in R_c[\mathrm{out}\OutputGe o](k).\ x\OutputOrd u.
   \label{eq:lifted-validity}
 \end{equation}
-The event then retires those subsumed rows and ends at
+The event then retires those \outrelpast rows and ends at
 $(i,R_c[\mathrm{out}\OutputGe o])$.
 \end{definition}
 
 This lifts Definition~\ref{def:output-event}.  With one row per input, a
-ruled-out row has no other row at its input to subsume it, so validity requires
+ruled-out row has no other row at its input to \outrelbase it, so validity requires
 that the commitments themselves leave only rows refining $o$, which is
 Equation~\ref{eq:supported-output-action}.  With several rows per input, the
 current row must now be retained explicitly, since other rows at $i$ may
@@ -338,18 +338,18 @@ the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
 \begin{definition}[Output retirement]
 \label{def:output-retirement}
 The \emph{output retirements} for $o$ at $(i,R)$ are the rows in $D_o$: rows
-ruled out by $o$ but subsumed by a row that refines $o$.
+ruled out by $o$ but \outrelpast by a row that refines $o$.
 \end{definition}
 
 Rows at inputs in $K_o$ require a \emph{seal}, which removes every row at those
-inputs.  Rows in $U_o$ are conflicts with $o$ that no row subsumes and require a
+inputs.  Rows in $U_o$ are conflicts with $o$ that no row \outrel and require a
 \emph{choice}, which removes some outputs at an input while leaving it valid.
 Every removed row thus has one of three causes: an input event removes rows that
-can no longer happen, an output retirement removes rows subsumed by a row the
+can no longer happen, an output retirement removes rows \outrelpast by a row the
 event keeps, and a commitment removes rows that could still happen and that no
-remaining row subsumes.  Equation~\ref{eq:commitment-excludes} is judged at the
+remaining row \outrel.  Equation~\ref{eq:commitment-excludes} is judged at the
 table a commitment leaves, so a row removed together with every row that
-subsumes it counts as a commitment's removal, not a retirement.
+\outrel it counts as a commitment's removal, not a retirement.
 
 For each $o\in O$, the \emph{canonical seal commitment} $s_o$ and the
 \emph{canonical choice commitment} $c_o$ are the partial functions
@@ -370,12 +370,12 @@ exactly
      \{c_o:o\in O,\ \operatorname{dom}(c_o)\neq\varnothing\}.
   \label{eq:canonical-commitment-basis-relational}
 \end{equation}
-Both are commitments: no row either removes is subsumed by a row it keeps
+Both are commitments: no row either removes is \outrelpast by a row it keeps
 (Equation~\ref{eq:commitment-excludes}).  The seal $s_o$ removes every row at
 the inputs in $K_o$, so nothing remains there to refine a removed row.  For
 $c_o$, suppose some $x\in U_o$ at input $k$ were refined by a row $y$ that
-$c_o$ leaves at $k$.  Either $y$ refines $o$, or $y\in D_o$ and is subsumed by
-a row refining $o$; by transitivity $x$ is then subsumed by a row refining
+$c_o$ leaves at $k$.  Either $y$ refines $o$, or $y\in D_o$ and is \outrelpast by
+a row refining $o$; by transitivity $x$ is then \outrelpast by a row refining
 $o$, so $x\in D_o$, a contradiction.  Moreover, $c_o$ only chooses: a row of
 $U_o$ at $k$ lies outside $K_o$, so some row at $k$ refines $o$ and survives.
 With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
@@ -390,7 +390,7 @@ $U_o$, so $c_o$ is defined there whenever $U_o\neq\varnothing$.
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
 $U_o$: no row at $\{A,B\}$ refines both, so the event makes a choice.  In
 panel~(g), the two removed route
-sets are in $D_o$, each subsumed by a retained route set, so the event retires
+sets are in $D_o$, each \outrelpast by a retained route set, so the event retires
 them without commitment.
 
 \begin{lemma}[Lifted containment, canonical support, and commitment-free events]
@@ -410,13 +410,13 @@ Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{proof}
 (1) A valid event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
 R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row at
-$k\in K_o$, or in $U_o$, has no subsuming row in $R[\mathrm{out}\OutputGe
+$k\in K_o$, or in $U_o$, has no \outrelpart row in $R[\mathrm{out}\OutputGe
 o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
 retired, so a valid event must remove it by commitment.  (2) The canonical
 commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
 of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
 o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
-subsuming row lies at an input outside $K_o$ and is not in $U_o$, so it
+\outrelpart row lies at an input outside $K_o$ and is not in $U_o$, so it
 survives the commitments.  The event is therefore valid and ends at
 $R[\mathrm{out}\OutputGe o]$.  (3) With no commitment, $R_c=R$, and a valid
 event ends at $R[\mathrm{out}\OutputGe o]$.
@@ -460,7 +460,7 @@ which this paper does not pursue.
 
 Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when some
 valid output event for $o$ applies no commitment, though it may still retire
-subsumed rows.  The fourth clause of the contract lifts as well:
+\outrelpast rows.  The fourth clause of the contract lifts as well:
 
 \begin{proposition}[Lifted exposure test]
 \label{prop:exposability}
@@ -477,7 +477,7 @@ $j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ refines both:
 \begin{proof}
 A commitment-free event has $R_c=R$, which contains $(i,o)$.  By
 Equation~\ref{eq:lifted-validity} it is valid exactly when every ruled-out row
-$(j,x)$ is subsumed by some row $(j,u)$ refining $o$.  Rows that already
+$(j,x)$ is \outrelpast by some row $(j,u)$ refining $o$.  Rows that already
 refine $o$ satisfy the stated test with $u=x$, so validity is exactly the
 stated test.
 \end{proof}
@@ -496,7 +496,7 @@ result of Sections~\ref{sec:determination} and~\ref{sec:functional-calm-theorem}
 that relies only on the contract therefore lifts unchanged: canonical
 equivalents (Lemma~\ref{lem:canonical-equivalent}), the rows remaining after a
 canonical run (Lemma~\ref{lem:run-residual}), the survivor test
-(Proposition~\ref{prop:confluence}), the common-\extension characterization
+(Proposition~\ref{prop:confluence}), the common-\indesc characterization
 (Theorem~\ref{thm:common-refinement}), and the exposure boundary
 (Proposition~\ref{prop:functional-exposure-boundary}).  So does the distributed
 reading of Consistency (Proposition~\ref{prop:distributed-consistency}).
@@ -506,8 +506,8 @@ surviving row in the survivor test need not be unique, so neither is the
 reconciled state, and Corollary~\ref{cor:state-by-input} fails;
 Section~\ref{sec:complete-calm} returns to this.  In place of Functional CALM,
 Proposition~\ref{prop:lifted-monotonicity-decomposition} identifies the
-common-\extension condition with Lifted Monotonicity: it is form~(3).  Lifted
+common-\indesc condition with Lifted Monotonicity: it is form~(3).  Lifted
 Monotonicity is therefore the lifted form of functional monotonicity in a
-precise sense: both are the common-\extension condition, read for one output
+precise sense: both are the common-\indesc condition, read for one output
 per input or for many.  Section~\ref{sec:complete-calm} assembles Complete
 CALM from these parts.
