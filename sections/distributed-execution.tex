@@ -220,5 +220,24 @@ their confluence.
 
 Combining Proposition~\ref{prop:distributed-consistency} with Functional CALM,
 a functional specification has Distributed Consistency exactly when it is
-monotone.  This distributed reading does not depend on output choice.  We next
-make that orthogonal extension to ambiguous specifications.
+monotone.  Corollary~\ref{cor:state-by-input} then gives convergence in every
+history:
+
+\begin{corollary}[Convergence]
+\label{cor:convergence}
+In any canonical history of a consistent functional specification, every
+participant whose current input at a consistent cut is $j$ is in state
+$\sigma_S(j)$.  Participants that have received the same input therefore agree,
+regardless of message paths, arrival order, or the outputs they emitted.
+\end{corollary}
+
+\begin{proof}
+Each participant's transition projection is a canonical run; apply
+Corollary~\ref{cor:state-by-input}.
+\end{proof}
+
+This is the convergence that strong eventual consistency asks of replicated
+state, derived here from the specification rather than from a merge operator.
+Output choice breaks its uniqueness, as Section~\ref{sec:complete-calm}
+discusses.  The distributed reading itself does not depend on output choice,
+and we next make that orthogonal extension to ambiguous specifications.

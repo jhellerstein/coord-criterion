@@ -178,6 +178,21 @@ Theorem~\ref{thm:commitments-require-coordination} shows that their output
 events must be mutually excluded; distributed agreement is one mechanism for
 doing so.
 
+Output choice also changes what reconciliation looks like.  In the functional
+case, a participant's state is determined by its input
+(Corollary~\ref{cor:state-by-input}), so knowing the global input determines
+both the reconciled state and the output.  With several outputs per input,
+Lemma~\ref{lem:run-residual} shows that the state is determined by the input
+together with the set of outputs emitted.  Participants at a common input $j$
+reconcile by emitting some $u\in\fiber{j}$ above everything any of them has
+emitted, and Lifted Monotonicity guarantees that such a $u$ exists.  If they
+share the same knowledge of inputs and emitted outputs, any deterministic rule
+for choosing $u$ brings them to the same state without coordination.  If they
+choose independently, their new outputs must themselves be reconciled.
+Lifted Monotonicity again guarantees that this is possible, but the reconciled
+state is not unique, and whether the process settles is a protocol question
+outside the specification.
+
 \subsection{The Complete CAP Theorem}
 \label{sec:cap-corollary}
 
