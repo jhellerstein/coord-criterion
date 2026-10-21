@@ -51,42 +51,39 @@
 }
 
 \begin{abstract}
-When does a distributed system really need coordination---locks, consensus,
-barriers---and when is coordination just overhead?  CALM, CAP, CRDTs, Highly
-Available Transactions, and Invariant Confluence each answer part of this
-question, but in different formal models, so their answers are hard to compare
-or combine.  We put them on common ground.  A specification is a table that
-lists, for each input, the outputs a system may produce; inputs and outputs
-both grow more informative as a run proceeds.  A system is \emph{consistent}
-when runs that have seen compatible input can always catch up to a common
-state.  Coordination shows up as a \emph{commitment}: a decision the system
-cannot take back, giving up options the input still allows.  There are only two
-kinds.  A commitment either \emph{seals} input, deciding that inputs still on
-their way will not count, as when an official closes the polls; or it
-\emph{chooses} among allowed outputs, as when a system elects a leader or
-orders transactions.
+When does a distributed system intrinsically need coordination? CALM, CAP,
+CRDTs, Highly Available Transactions, and Invariant Confluence each answer part
+of this question, but in different formal models, so their answers are hard to
+compare or combine.  We put them on common ground.  We provide a minimalist
+relational definition of a specification: a table that includes, for each input,
+all outputs a system may produce; inputs and outputs both grow more informative
+as a run proceeds.  A system is \emph{consistent} when runs that have seen
+compatible input can always catch up to a common state.  Coordination shows up
+as an irrevocable \emph{commitment} to constrain the system by removing one or
+more rows from the specification table.  Commitments come in two kinds: they either
+\emph{seal} input, deciding that potential future inputs will be ignored, as
+when a timeout ends a quorum vote; or it \emph{chooses} among multiple allowed
+outputs, as when a system elects a leader or orders transactions.
 
-When each input has one correct output, only sealing arises.
-\emph{Functional CALM} generalizes the original CALM Theorem from Datalog
-queries to any function between ordered domains: such a specification is
-consistent exactly when it is monotone, so that more input never retracts an
-earlier answer, and then no output ever needs coordination.
-\emph{Complete CALM} covers specifications that allow several outputs for the
-same input, such as transaction orders and leader elections, where choosing
-arises too.  There the test becomes \emph{Lifted Monotonicity}: outputs
-allowed at compatible inputs must have a common extension that the
-specification also allows.
+When each input has only one output, only
+sealing arises. \emph{Functional CALM} generalizes the original CALM Theorem
+from Datalog queries to any function between ordered domains: such a
+specification is consistent exactly when it is monotone, so that more input
+never retracts an earlier answer, and then no output ever needs coordination.
+\emph{Complete CALM} covers ambiguous specifications that allow several outputs
+for the same input, where choice commitments arise too.  There the test becomes
+\emph{Lifted Monotonicity}: outputs allowed at compatible inputs must have a
+common extension that the specification also allows.
 
-Because commitments are explicit, we can also check whether a particular use of
-coordination is enough, which we call \emph{Proper Coordination}.  A totally
-ordered log and a key-value store are each non-monotone, yet agreeing on the
-log order alone makes the combined system monotone and consistent.  Finally, we
-turn Brewer's CAP intuition into a theorem for any consistency guarantee you
-can write down: a system can keep every allowed output available and
-consistent through a network partition exactly when its specification passes
-the same test.  Gilbert and Lynch's classic result is the special case in which
-a partition forces a replica to answer a read without seeing a write that has
-already completed on the other side.
+Commitments are explicit in our model, allowing it to check for \emph{Proper
+Coordination}: whether a particular use of coordination provides consistency.  A totally
+ordered log and a key-value store are each non-monotone, yet agreeing on the log
+order makes the combined system monotone and hence consistent without changing the
+store. Finally, we turn Brewer's CAP intuition into a theorem for any
+consistency guarantee you can write down: a system can keep every allowed output
+available and consistent through a network partition exactly when its
+specification passes the same test.  Gilbert and Lynch's CAP Theorem is shown to
+be a special case.
 \end{abstract}
 
 \begin{CCSXML}
