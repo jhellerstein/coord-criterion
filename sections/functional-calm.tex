@@ -336,10 +336,7 @@ the one a system is in after receiving $i$ and emitting nothing, is the
 Input events alone move between canonical states, and runs start at one.
 Section~\ref{sec:functional-calm-theorem} shows that a consistent
 functional specification always returns to them.
-\begin{equation}
-  \sigma_S(i)=\bigl(i,\ S[\mathrm{in}\InputGe i]\bigr).
-  \label{eq:canonical-state}
-\end{equation}
+
 The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
 $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  Under the functional dependency a fiber
 has at most one value;
@@ -421,11 +418,18 @@ Since the only row at a legal input $j$ is $(j,f(j))$, $o$ is exposable at
 $(i,R)$ exactly when $f(j)$ \outrel $o$ at every legal input $j$.
 
 \paragraph{Determination.}
-A state is \emph{determined} when its upper fiber has one element; this is a
-property of the state alone.  An input event may determine the outcome by
-retiring rows that no longer \inrelbase the input received, and a commitment
-may determine it by sealing inputs that would otherwise remain possible, as in
-panels (c) and (d) of Figure~\ref{fig:election-frames}, respectively.
+A state is \emph{determined} when its upper fiber has one element: one result
+remains, whatever legal input still arrives.  This is a property of the state
+alone.  Under the functional dependency each input determines its own
+output; a determined state goes further, since its current input determines
+the output of every input that may still arrive.  A functional specification
+can therefore have undetermined states, as in panel~(b) of
+Figure~\ref{fig:election-frames}.  \emph{Determination} is the process of
+reaching a determined state.  An input event may do so by retiring rows that
+no longer \inrelbase the input received, and a commitment by sealing inputs
+that would otherwise remain possible, as in panels (c) and (d), respectively.
+A determined state stays determined: later events only remove rows, and a row
+at the current input always remains.
 
 \subsection{Executions and consistency}
 \label{sec:determination}
@@ -565,7 +569,7 @@ meet.
 In the functional case, consistency has a strong consequence: outputs leave no
 trace on the state.
 
-\begin{corollary}[State is determined by input]
+\begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
 In a consistent functional specification, every run ending at current
 input $i$ is in the canonical state $\sigma_S(i)$, whatever outputs it emitted
@@ -621,6 +625,37 @@ specification.  The usual CRDT state specification has the same functional shape
 with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} take up both instances.
+
+\paragraph{Determination yields monotonicity.}
+A state's remainder table is itself a specification.  For a state $(i,R)$,
+restricting to its legal inputs gives the functional ordered specification
+$\Spec_R=(\mathrm{in}(R),\InputOrd,O,\OutputOrd,R)$, whose canonical state at
+$i$ is $(i,R)$ itself, since $R=R[\mathrm{in}\InputGe i]$.  Every input legal
+at a state reached from $(i,R)$ lies in $\mathrm{in}(R)$, so runs from $(i,R)$
+are runs of $\Spec_R$.
+
+\begin{proposition}[Determination yields monotonicity]
+\label{prop:determined-monotone}
+If a state $(i,R)$ is determined, then $\Spec_R$ is monotone.  Runs from
+$(i,R)$ are therefore confluent, and every output they emit is exposable.
+\end{proposition}
+
+\begin{proof}
+The upper fiber $\mathrm{out}(R)$ is a single output $o$, so $\Spec_R$ is the
+constant function $o$ on $\mathrm{in}(R)$, which is monotone since
+$o\OutputOrd o$.  Functional CALM applied to $\Spec_R$ gives confluence.  Every
+state reached from $(i,R)$ is determined with the same output $o$, so
+$\mathsf{output}(o)$ removes no row there.
+\end{proof}
+
+Determination is the extreme case.  The same restriction shows that a system
+needs no further commitment from $(i,R)$ exactly when $\Spec_R$ is monotone:
+Proposition~\ref{prop:functional-exposure-boundary} applied to $\Spec_R$ says
+that every output reachable from $(i,R)$ without commitment is exposable if and
+only if $\Spec_R$ is monotone.  Commitments and input retirement can turn a
+non-monotone remainder into a monotone one, and coordination can stop there, before anything is
+determined: in panel~(b) of Figure~\ref{fig:election-frames} the state is
+undetermined, yet its remainder is monotone and no output needs a commitment.
 
 Before dropping the functional dependency, we give this consistency condition
 a distributed interpretation.  Section~\ref{sec:distributed-execution}
