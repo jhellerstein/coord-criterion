@@ -326,25 +326,35 @@ $R\subseteq S$ is the \emph{remainder table}, such that:
 An input $k$ is \emph{legal} at $\sigma$ when $R$ contains a row at $k$.
 \end{definition}
 
-Rows are never added during execution.  For each input $i$, the \emph{canonical
-state at $i$} retains all rows at $i$ and its \indescs:
+Rows are never added during execution.  The largest state at input $i$, and
+the one a system is in after receiving $i$ and emitting nothing, is the
+\emph{canonical state at $i$}, which retains all rows at $i$ and its \indescs:
+\begin{equation}
+  \sigma_S(i)=\bigl(i,\ S[\mathrm{in}\InputGe i]\bigr).
+  \label{eq:canonical-state}
+\end{equation}
+Input events alone move between canonical states, and runs start at one.
+Section~\ref{sec:functional-calm-theorem} shows that a consistent
+functional specification always returns to them.
 \begin{equation}
   \sigma_S(i)=\bigl(i,\ S[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
 \end{equation}
 The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
-$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  Under the functional dependency the
-fiber of $S$ at $k$ is the single output $\{f(k)\}$, from the one row at $k$;
+$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  Under the functional dependency a fiber
+has at most one value;
 Section~\ref{sec:ambiguous-specifications} allows more.
-For a state $(i,R)$, the \emph{upper fiber} $\mathrm{out}(R[\mathrm{in}\InputGe i])$
-collects the outputs at $i$ and its legal \indescs, the outputs still possible.
+The \emph{upper fiber} at $k$, $\mathrm{out}(R[\mathrm{in}\InputGe k])$,
+collects the outputs at $k$ and its \indescs.
+For a state $\sigma=(i, R)$ the upper fiber at $i$ is $\mathrm{out}(R)$---the
+outputs still possible.
 
 \subsection{Input and output events}
 \label{sec:functional-events}
 
 States tell us what remains possible.  We now define the two events that change state: input events
 incorporate new information, while output events record promises to the outside
-world.
+world. Each may remove rows from the remainder table.
 
 \paragraph{Input events.}
 For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
@@ -373,30 +383,33 @@ promise without assuming that clients tolerate retractions.  An emitted output
 must therefore be \outrelpast by later outputs.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Emitting it requires sealing every legal
+output the system may emit.  Emitting it safely requires sealing every legal
 input whose output does not \outrelbase $o$.
 
 \begin{definition}[Output event, seal, commitment]
 \label{def:output-event}
 Let $(i,R)$ be a state and $(i,o)$ its row at the current input.  The
-\emph{output event} $\mathsf{output}(o)$ keeps exactly the rows whose outputs
-\outrelbase $o$ and emits $o$, atomically:
+\emph{output event} $\mathsf{output}(o)$ performs two steps atomically: it restricts the remainder table
+to exactly the rows whose outputs
+\outrelbase $o$, and emits $o$ to the environment:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R' = R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-When this state change removes rows, we call it the \emph{seal}
-$s_o(i,R)=(i,R[\mathrm{out}\OutputGe o])$: it \emph{seals} the inputs of those
-rows, and it is a \emph{commitment}.
+When $R'\neq R$, we call this state change the \emph{seal}
+$s_o(i,R)=(i,R')$: it \emph{seals} the inputs of the removed rows, and it is a
+\emph{commitment}.
 \end{definition}
 
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
 ends at a state. A commitment removes rows that input alone would not have
 removed: the inputs it seals are no longer legal. Seals of this form are the
 only commitments this section uses. Systems may commit more than an output
-requires, as the registrar does in Figure~\ref{fig:election-frames}(d);
-Section~\ref{sec:coordination} shows this adds no observable behavior, so these seals
-suffice for our analysis.
+requires. In Figure~\ref{fig:election-frames}(d), $\bot$ can be
+emitted without a commitment, yet the registrar also closes the polls. Extra
+commitments only restrict behavior: any inputs and outputs of such a system are
+also those of some sequence of $\mathsf{input}$ and $\mathsf{output}$ events as just
+defined (Section~\ref{sec:coordination}), so these seals suffice for our analysis.
 
 \begin{definition}[Exposable output]
 \label{def:exposable}
@@ -408,14 +421,11 @@ Since the only row at a legal input $j$ is $(j,f(j))$, $o$ is exposable at
 $(i,R)$ exactly when $f(j)$ \outrel $o$ at every legal input $j$.
 
 \paragraph{Determination.}
-Both kinds of event can narrow what remains possible.  A state is
-\emph{determined} when its upper fiber has one element, regardless of how it
-was reached.
-An
-input event may determine the outcome by retiring rows that no longer \inrelbase the
-input received; a commitment may instead exclude an alternative that otherwise
-remains possible, as in panels (c) and (d) of
-Figure~\ref{fig:election-frames}.
+A state is \emph{determined} when its upper fiber has one element; this is a
+property of the state alone.  An input event may determine the outcome by
+retiring rows that no longer \inrelbase the input received, and a commitment
+may determine it by sealing inputs that would otherwise remain possible, as in
+panels (c) and (d) of Figure~\ref{fig:election-frames}, respectively.
 
 \subsection{Executions and consistency}
 \label{sec:determination}
@@ -442,11 +452,13 @@ A run is \emph{commitment-free} when none of its output events applies a
 commitment, that is, when each emits an exposable output.  A state is \emph{reachable without commitment} when
 some commitment-free run reaches it.
 
-A run's state has a simple description.  Input events keep only rows
-whose input \inrel the current one, and output events keep only rows whose
-outputs \outrelbase what has been emitted.  Both steps are selections, and selections commute.  So
-the remainder table depends only on the current input and the outputs emitted
-so far, not on the order of events or the inputs passed through along the way.
+A run's state has a simple description.  Input events keep only rows whose
+input \inrel the current one, and output events keep only rows whose outputs
+\outrelbase what has been emitted.  Both steps are selections, and selections
+commute; moreover, since inputs only \ingrow during a run, the last input's selection
+subsumes the earlier ones.  So the remainder table depends only on the current
+input and the outputs emitted so far, not on the order of events or the inputs
+passed through along the way.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -485,23 +497,26 @@ in every run.
 
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
-Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent
+Runs ending at states $(i_r,R_r)$, $r=1,\ldots,k$, are confluent
 at $j$ if and only if some row at $j$ survives in every final state:
 \begin{equation}
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
 \end{equation}
 For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
-every endpoint to the state
+every final state to the state
 $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-A common state has a row at $j$, and rows are never added; conversely, by Lemma~\ref{lem:run-residual} a surviving row $(j,u)$ is reached by $\mathsf{input}(j)$ and $\mathsf{output}(u)$ from every endpoint.  Full proof in Appendix~\ref{app:proofs}.
+A common state has a row at $j$, and rows are never added; conversely, by
+Lemma~\ref{lem:run-residual} a surviving row $(j,u)$ is reached by
+$\mathsf{input}(j)$ and $\mathsf{output}(u)$ from every final state.  Full proof in
+Appendix~\ref{app:proofs}.
 \end{proof}
 
 In a functional specification the only row at $j$ is $(j,f(j))$, so the test
-asks whether that row survives in every run, and $u=f(j)$.
+asks whether $(j,f(j))$ survives in every run.
 
 Consistency guarantees that runs never diverge irreparably.  Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
@@ -578,7 +593,7 @@ every state reachable without commitment is exposable.
 If $f$ is monotone, Corollary~\ref{cor:state-by-input} puts every state reachable without commitment at $\sigma_S(i)$, where the exposure test holds; conversely, the exposure test at each $\sigma_S(i)$ is monotonicity.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
-Since every commitment an output event applies here is a seal, Functional
+In a functional specification, every commitment an output event applies is a seal, so Functional
 CALM and Proposition~\ref{prop:functional-exposure-boundary} together say that a functional specification is consistent
 exactly when, at every state reachable without commitment, no output requires
 sealing input.  A monotone functional specification can emit every current
