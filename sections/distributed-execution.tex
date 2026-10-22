@@ -15,7 +15,7 @@ A finite set $P$ of \emph{participants} each holds a specification state,
 starting at a canonical state $\sigma_S(i_p)$, and changes it only by its own
 input and output events.  A participant learns input directly from the
 environment or in a message from another participant.  Participants exchange
-messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$ events.  A
+messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$.  A
 \emph{message} is a pair $m=(j,d)$ of a cumulative input $j$, or $\varnothing$
 if it carries none, and arbitrary other data $d$.  A receive does not change
 the specification state; a participant at $(i,R)$ that receives $(j,d)$ with
@@ -25,12 +25,12 @@ common \indesc $k$ of $i$ and $j$.
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
 Fix an ordered specification, participants $P$, and an initial input $i_p$
-for each.  A \emph{distributed history} $H$ is a finite set of events with:
+for each.  A \emph{distributed history} $H$ is a finite set of
+\emph{history events}, each an occurrence at one participant of an input
+event, an output event (Definition~\ref{def:output-event}),
+$\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
 \begin{enumerate}
-  \item a participant assignment and total local order for each participant;
-  \item labels $\mathsf{input}(j)$, $\mathsf{output}(o)$
-        (Definition~\ref{def:output-event}), $\mathsf{send}(m)$, or
-        $\mathsf{receive}(m)$;
+  \item a total local order on each participant's history events;
   \item for each receive, a matching send at another participant; and
   \item for each participant $p$, its input and output events, in local
         order, form a defined transition sequence from $\sigma_S(i_p)$: each
@@ -38,12 +38,13 @@ for each.  A \emph{distributed history} $H$ is a finite set of events with:
 \end{enumerate}
 \emph{Happens-before} is the transitive closure of the local orders and of
 each send preceding its matching receive.  A \emph{consistent cut} $C$ is a
-subset of events closed under
+subset of history events closed under
 happens-before~\cite{lamport1978time,chandy1985distributed}; the standard term
 is unrelated to our notion of consistency.
 \end{definition}
 
-A consistent cut contains a prefix of each participant's events, so by item~4
+A consistent cut contains a prefix of each participant's history events, so by
+item~3
 it determines one run per participant.
 
 \begin{definition}[Participant run, endpoint]
@@ -132,11 +133,11 @@ $(\sigma_1,\sigma_1)$.
 \label{sec:distributed-consistency}
 \label{sec:projection-confluence}
 
-A \emph{continuation} of a history at a cut $C$ adds events after those of
+A \emph{continuation} of a history at a cut $C$ adds history events after those of
 $C$.  The history $H$ is \emph{confluent at $C$ and $j$}, for a common
 \indesc $j$ of the participants' current inputs, when some continuation brings
-every participant to the same state $(j,R)$.  Events at different participants
-are independent, so this holds exactly when the participant runs at $C$ are
+every participant to the same state $(j,R)$.  History events at different
+participants are independent, so this holds exactly when the participant runs at $C$ are
 confluent at $j$ (Definition~\ref{def:consistency}).
 
 \begin{definition}[Distributed consistency]
