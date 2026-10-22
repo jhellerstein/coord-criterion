@@ -139,7 +139,12 @@ The examples from the start of this section pose the next question: as input
 \ingrows from $i$ to $j$, can some output permitted at $j$ \outrelbase
 whatever outputs runs emit at $i$?  Two things can go wrong: an output at $i$
 has no \outnoun in the fiber of some \indesc $j$, or two different outputs permitted at
-$i$ have no common \outnoun in the fiber of $i$.  We define each, then combine them.
+$i$ have no common \outnoun in the fiber of $i$.  We give the answer in
+three forms and show in Proposition~\ref{prop:lifted-monotonicity-decomposition}
+that they are equivalent: Relational Monotonicity together with Directed
+Outputs, which rule out each failure separately; Lifted Monotonicity, which rules out both in
+one monotonicity statement; and the common-\indesc condition, which compares
+outputs emitted at different inputs, as runs do.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -187,22 +192,16 @@ it is again in the fiber and refines each of them. The two transaction orders in
 Figure 5(f), by contrast, are incompatible.
 
 \paragraph{Lifted Monotonicity.}
-
-Relational Monotonicity gives each output a \outnoun at every \indesc of its
-input; Directed Outputs gives each finite set within a fiber a common \outnoun.  The joint lift
-expresses both.  For nonempty $A,B\subseteq O$, define
+To state both requirements at once, lift $\OutputOrd$ to sets.  For nonempty
+$A,B\subseteq O$, define
         \begin{equation}
   A\LiftedOrd B
   \;\Longleftrightarrow\;
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-the \emph{joint lift} of $\OutputOrd$.  It contains both conditions.  When
-$X=\{o\}$ is a single output of $A$, it asks that $o$ have a \outnoun in $B$:
-with $A=\fiber{i}$ and $B=\fiber{j}$, this is Relational Monotonicity.  When
-$X$ contains several outputs of $A$, it asks that they have a common
-\outnoun in $B$: with $A=B$, this is directedness, so $A\LiftedOrd A$ holds
-exactly when $A$ is directed.
+the \emph{joint lift} of $\OutputOrd$: a single output of $A$ must have a
+\outnoun in $B$, and several outputs of $A$ a common \outnoun in $B$.
 
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
@@ -218,11 +217,12 @@ under the joint lift:
 \end{definition}
 
 With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).  Runs, however, emit outputs
-at different inputs and meet at a common \indesc, and neither form above
-compares outputs across inputs directly.  The following condition has the form
-runs need, comparing outputs emitted at different inputs, and is equivalent to
-Lifted Monotonicity (Proposition~\ref{prop:lifted-monotonicity-decomposition}):
+(Definition~\ref{def:functional-monotonicity}).
+
+\paragraph{The common-\indesc condition.}
+Runs emit outputs at different inputs and meet at a common \indesc, but the
+conditions above compare outputs at one input, or at an input and its
+\indescs.  The third form compares outputs across inputs directly.
 
 \begin{definition}[Common-\indesc condition]
 \label{def:common-refinement-condition}
@@ -236,10 +236,7 @@ The inputs $i_r$ need not be comparable, because different runs meet only at a
 common \indesc.  For the empty set of rows the condition asks only that
 $S(j)$ be nonempty, which totality guarantees.
 
-The next proposition supplies
-two forms used later: form~(2) separates the
-across-input and within-fiber requirements, and form~(3) matches confluence by
-allowing outputs from several inputs.
+The three forms are equivalent.
 
 \begin{proposition}[Equivalent forms of Lifted Monotonicity]
 \label{prop:lifted-monotonicity-decomposition}
