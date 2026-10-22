@@ -183,7 +183,29 @@ This is the convergence that strong eventual
 consistency~\cite{shapiro2011crdt} asks of replicated state---replicas that
 have received the same updates are in equivalent states---derived here from
 the specification rather than from a merge operator.  With several outputs per
-input this uniqueness fails (Section~\ref{sec:complete-calm}), but
-Proposition~\ref{prop:distributed-consistency} uses only runs and holds
+input this uniqueness fails (Section~\ref{sec:complete-calm}).
+
+\paragraph{Exchanging outputs.}
+The data $d$ of a message is anything else a participant sends: votes,
+timestamps, or outputs it has emitted.  Data can influence which input and
+output events occur next at the receiver, but it never changes the receiver's
+specification state, and nothing in the definitions above depends on it;
+Section~\ref{sec:coordination} calls the rule that makes these choices a
+participant's \emph{strategy}.  What if a participant sends its output $o$ to
+another?  The receiver can emit $o$ itself, but only by an ordinary output
+event, legal where $o$ is permitted at its own current input.  Or it can
+silently honor $o$, restricting its table to $R[\mathrm{out}\OutputGe o]$.
+Neither changes confluence: the common state confluence asks for already keeps
+every output any participant emitted (Lemma~\ref{lem:run-residual}), so
+honoring $o$ only performs early a narrowing every reconciliation must perform.
+In a monotone specification, once the receiver has the sender's input,
+honoring $o$ removes nothing.  Otherwise honoring $o$ can cost the receiver
+commitments of its own.  Under the equality order, a receiver at $xy\cdot$
+that honors a sender's $\bot$ must itself close the polls, sealing $xyx$ and
+$xyy$.  One participant's promise then binds the others, and making such
+commitments jointly is what coordination does
+(Section~\ref{sec:complete-calm}).
+
+Proposition~\ref{prop:distributed-consistency} uses only runs, so it holds
 unchanged for the specifications of Section~\ref{sec:ambiguous-specifications},
 to which we turn next.
