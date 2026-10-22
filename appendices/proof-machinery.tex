@@ -1,0 +1,106 @@
+\section{Proofs for Section~\ref{sec:functional-calm}}
+\label{app:proofs}
+
+\begin{proof}[Proof of Proposition~\ref{prop:canonical-output-preservation}]
+Containment is Equation~\ref{eq:supported-output-action}, and canonical
+support is Equation~\ref{eq:output-action}.  The event $\Out{\varepsilon}{o}$
+leaves $R$ unchanged, so it is legal exactly when
+$R\subseteq R[\mathrm{out}\OutputGe o]$, in which case
+$R=R[\mathrm{out}\OutputGe o]$; this gives clause~3.  Since $R(j)=\{f(j)\}$
+at every legal $j\InputGe i$, that condition is the condition of clause~4.
+\end{proof}
+
+\begin{proof}[Proof of Lemma~\ref{lem:canonical-equivalent}]
+By induction on the events.  Both runs start at the same canonical state, so
+their remainder tables are initially equal.  Suppose that before some event the
+original run's table $R$ and the canonical run's table $\widehat R$ satisfy
+$R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input
+event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$.
+It retires every row whose input does not \inrelbase $j$, keeping
+$R[\mathrm{in}\InputGe j]$ in the original run and
+$\widehat R[\mathrm{in}\InputGe j]$ in the canonical run.  Since
+$R\subseteq\widehat R$, the first remains contained in the second.  For an
+output event $\Out{\gamma}{o}$ with $o\in R(i)$ taking $R$ to $R'$, containment
+(Proposition~\ref{prop:canonical-output-preservation}) gives
+$R'\subseteq R[\mathrm{out}\OutputGe o]$.  Since $o\in R(i)\subseteq\widehat R(i)$,
+canonical support applies at $\widehat R$: $\Out{\kappa_o}{o}$, with $\kappa_o$
+taken at $(i,\widehat R)$, takes $\widehat R$ to $\widehat R[\mathrm{out}\OutputGe o]$, which contains
+$R[\mathrm{out}\OutputGe o]$.
+\end{proof}
+
+\begin{proof}[Proof of Lemma~\ref{lem:run-residual}]
+The run starts at the canonical state $\sigma_S(i_0)$, whose table is
+$S[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
+the rows with $\mathrm{in}\InputGe j$ (Equation~\ref{eq:input-event}), and each
+canonical output event $\Out{\kappa_o}{o}$ keeps only the rows with
+$\mathrm{out}\OutputGe o$ (Equation~\ref{eq:output-action}). The input
+conditions reduce to the last one, $\mathrm{in}\InputGe i$, because each later
+input is an expansion of the earlier ones. One output condition remains for each
+emitted output.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:confluence}]
+A common state with current input $j$ has a row at $j$, and since rows are
+never added, that row belongs to every $R_r$.  Conversely, let $(j,u)$ belong
+to every $R_r$.  Then $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
+Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
+emitted on run $r$.  After $\mathsf{input}(j)$ and the canonical event for $u$
+($\kappa_u$ taken at each resulting state), the same lemma leaves exactly
+$S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
+starting run.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:state-by-input}]
+By Functional CALM (Theorem~\ref{thm:functional-calm}), the specification is
+monotone.  By Lemma~\ref{lem:run-residual}, the run's remainder table is
+$S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
+\mathrm{out}\OutputGe o_m]$, where each $o_\ell=f(i_\ell)$ for some
+$i_\ell\InputOrd i$.  Every row whose input \inrel $i$ has the form $(k,f(k))$ with
+$i_\ell\InputOrd k$, so monotonicity gives $o_\ell\OutputOrd f(k)$, and the
+output conditions remove nothing.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:functional-exposure-boundary}]
+Suppose $f$ is monotone, and let a commitment-free run, which is canonical,
+reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
+$(i,R)=\sigma_S(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
+$i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each; by the exposure test
+(Proposition~\ref{prop:canonical-output-preservation}), $f(i)$ is exposable.
+Conversely, if every such output is exposable, then at $\sigma_S(i)$, which the
+empty run reaches, the exposure test gives $f(i)\OutputOrd f(j)$ for every
+\indesc $j$ of $i$, so $f$ is monotone.
+\end{proof}
+
+\subsection*{Proofs for Section~\ref{sec:relational-executions}}
+
+\begin{proof}[Proof of Theorem~\ref{thm:common-refinement}]
+Suppose the condition holds, and let canonical runs end at $(i_r,R_r)$ with
+common \indesc $j$.  Each output $o$ emitted on a run was emitted at some
+input $i_o\InputOrd j$, and since $o\in R(i_o)\subseteq S(i_o)$, it forms a row
+$(i_o,o)$ of $S$.  The condition supplies $u\in S(j)$ \outrelpart all of these
+outputs.  Since $j$ \inrel every current input $i_r$,
+Lemma~\ref{lem:run-residual} puts $(j,u)$ in every $R_r$, and
+Proposition~\ref{prop:confluence} gives confluence at $j$.  Conversely, let
+rows $(i_r,o_r)$ have common \indesc $j$.  For each $r$, the canonical run
+that starts at $\sigma_S(i_r)$ and emits $o_r$ ends with remainder table
+$S[\mathrm{in}\InputGe i_r,\ \mathrm{out}\OutputGe o_r]$
+(Lemma~\ref{lem:run-residual}).  Consistency and
+Proposition~\ref{prop:confluence} supply a row $(j,u)$ surviving in every one
+of these runs, so $u\in S(j)$ \outrel every $o_r$.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
+Suppose the condition holds; by Theorem~\ref{thm:common-refinement}, the
+specification is consistent.  Let $(i,R)$ be reached by a commitment-free run,
+which is canonical, and let $o\in R(i)$, $j\InputGe i$ legal, and
+$x\in R(j)$.  Extend the run in two ways: by $\Out{\kappa_o}{o}$, and by
+$\mathsf{input}(j)$ followed by $\Out{\kappa_x}{x}$.
+Proposition~\ref{prop:confluence} supplies a row $(j,u)$ surviving in both, so
+$u\in R(j)$ \outrel $o$ and $x$, and the exposure test
+(Proposition~\ref{prop:exposability}) makes $o$ exposable.
+Conversely, suppose every such output is exposable, and let rows
+$(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality pick
+$u_0\in S(j)$.  For $r=1,\ldots,k$ in turn, the exposure test for $o_r$ at
+$\sigma_S(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in S(j)$ \outrelpart both
+$o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
+\end{proof}

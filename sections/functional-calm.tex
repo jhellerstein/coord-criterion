@@ -493,13 +493,8 @@ Let $(i,R)$ be a state and $o\in R(i)$.
 \end{enumerate}
 \end{proposition}
 
-\begin{proof}
-Containment is Equation~\ref{eq:supported-output-action}, and canonical
-support is Equation~\ref{eq:output-action}.  The event $\Out{\varepsilon}{o}$
-leaves $R$ unchanged, so it is legal exactly when
-$R\subseteq R[\mathrm{out}\OutputGe o]$, in which case
-$R=R[\mathrm{out}\OutputGe o]$; this gives clause~3.  Since $R(j)=\{f(j)\}$
-at every legal $j\InputGe i$, that condition is the condition of clause~4.
+\begin{proof}[Proof sketch]
+Each clause follows from the definitions of legal and canonical events; with one row per input, legality of $\Out{\varepsilon}{o}$ says exactly that $o\OutputOrd f(j)$ at each legal $j\InputGe i$.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
 \paragraph{Determination.}
@@ -566,22 +561,8 @@ Every run under any commitment basis is equivalent to a canonical run.  After
 each event, the canonical run's remainder table contains the original run's.
 \end{lemma}
 
-\begin{proof}
-By induction on the events.  Both runs start at the same canonical state, so
-their remainder tables are initially equal.  Suppose that before some event the
-original run's table $R$ and the canonical run's table $\widehat R$ satisfy
-$R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input
-event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$.
-It retires every row whose input does not \inrelbase $j$, keeping
-$R[\mathrm{in}\InputGe j]$ in the original run and
-$\widehat R[\mathrm{in}\InputGe j]$ in the canonical run.  Since
-$R\subseteq\widehat R$, the first remains contained in the second.  For an
-output event $\Out{\gamma}{o}$ with $o\in R(i)$ taking $R$ to $R'$, containment
-(Proposition~\ref{prop:canonical-output-preservation}) gives
-$R'\subseteq R[\mathrm{out}\OutputGe o]$.  Since $o\in R(i)\subseteq\widehat R(i)$,
-canonical support applies at $\widehat R$: $\Out{\kappa_o}{o}$, with $\kappa_o$
-taken at $(i,\widehat R)$, takes $\widehat R$ to $\widehat R[\mathrm{out}\OutputGe o]$, which contains
-$R[\mathrm{out}\OutputGe o]$.
+\begin{proof}[Proof sketch]
+Induct on events: input events keep the same selection on both tables, and containment and canonical support show the canonical output event keeps at least the rows the original one does.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
 The converse does not hold: a canonical run need not be equivalent to any run
@@ -609,16 +590,7 @@ the rows whose input \inrel $i$ and whose output \outrel every emitted
 output.
 \end{lemma}
 
-\begin{proof}
-The run starts at the canonical state $\sigma_S(i_0)$, whose table is
-$S[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
-the rows with $\mathrm{in}\InputGe j$ (Equation~\ref{eq:input-event}), and each
-canonical output event $\Out{\kappa_o}{o}$ keeps only the rows with
-$\mathrm{out}\OutputGe o$ (Equation~\ref{eq:output-action}). The input
-conditions reduce to the last one, $\mathrm{in}\InputGe i$, because each later
-input is an expansion of the earlier ones. One output condition remains for each
-emitted output.
-\end{proof}
+\noindent Proof in Appendix~\ref{app:proofs}.
 
 For example, in Figure~\ref{fig:nonmonotone-frame}'s equality-order variant, a
 canonical run that emits $\bot$ at $x\cdot\cdot$ keeps
@@ -655,15 +627,8 @@ For any such $u$, $\mathsf{input}(j)$ followed by the canonical event for $u$
 $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
 
-\begin{proof}
-A common state with current input $j$ has a row at $j$, and since rows are
-never added, that row belongs to every $R_r$.  Conversely, let $(j,u)$ belong
-to every $R_r$.  Then $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
-Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
-emitted on run $r$.  After $\mathsf{input}(j)$ and the canonical event for $u$
-($\kappa_u$ taken at each resulting state), the same lemma leaves exactly
-$S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
-starting run.
+\begin{proof}[Proof sketch]
+A common state has a row at $j$, and rows are never added; conversely, by Lemma~\ref{lem:run-residual} a surviving row $(j,u)$ is reached by $\mathsf{input}(j)$ and the canonical event for $u$ from every endpoint.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
 In a functional specification the only row at $j$ is $(j,f(j))$, so the test
@@ -725,14 +690,8 @@ input $i$ is in the canonical state $\sigma_S(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
 
-\begin{proof}
-By Functional CALM (Theorem~\ref{thm:functional-calm}), the specification is
-monotone.  By Lemma~\ref{lem:run-residual}, the run's remainder table is
-$S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
-\mathrm{out}\OutputGe o_m]$, where each $o_\ell=f(i_\ell)$ for some
-$i_\ell\InputOrd i$.  Every row whose input \inrel $i$ has the form $(k,f(k))$ with
-$i_\ell\InputOrd k$, so monotonicity gives $o_\ell\OutputOrd f(k)$, and the
-output conditions remove nothing.
+\begin{proof}[Proof sketch]
+By Functional CALM the specification is monotone, so in Lemma~\ref{lem:run-residual} the output conditions remove no row whose input expands $i$.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
 Confluence at a common \indesc $j$ therefore needs only $\mathsf{input}(j)$:
@@ -748,15 +707,8 @@ A functional ordered specification is monotone if and only if every output at
 every state reachable without commitment is exposable.
 \end{proposition}
 
-\begin{proof}
-Suppose $f$ is monotone, and let a commitment-free run, which is canonical,
-reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
-$(i,R)=\sigma_S(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
-$i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each; by the exposure test
-(Proposition~\ref{prop:canonical-output-preservation}), $f(i)$ is exposable.
-Conversely, if every such output is exposable, then at $\sigma_S(i)$, which the
-empty run reaches, the exposure test gives $f(i)\OutputOrd f(j)$ for every
-\indesc $j$ of $i$, so $f$ is monotone.
+\begin{proof}[Proof sketch]
+If $f$ is monotone, Corollary~\ref{cor:state-by-input} puts every state reachable without commitment at $\sigma_S(i)$, where the exposure test holds; conversely, the exposure test at each $\sigma_S(i)$ is monotonicity.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
 Since every commitment of a functional specification is a seal, Functional
