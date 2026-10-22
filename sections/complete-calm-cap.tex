@@ -23,14 +23,13 @@ relational generalizations combined here.
     \midrule
     participant; message & at a cut, each participant has one state $\sigma_p(C)$;
       messages carry cumulative input, strategy data, or both & Sec.~\ref{sec:histories} \\
-    strategy; system & a participant's rule for choosing its events; one shared
-      basis plus a strategy per participant & Sec.~\ref{sec:histories} \\
+    strategy & a participant's rule for choosing its events & Sec.~\ref{sec:histories} \\
     history; consistent cut & locally ordered events plus matched sends and receives;
       cut closed under happens-before & Def.~\ref{def:distributed-history} \\
     projection; endpoint & $\pi_p(C)$: $p$'s input and output events;
       $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
     history confluence & at a cut $C$ and common \indesc $j$, all participants can reach one state $(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
-    Distributed Consistency & every canonical history is confluent at every cut and common \indesc & Def.~\ref{def:distributed-consistency} \\
+    Distributed Consistency & every history is confluent at every cut and common \indesc & Def.~\ref{def:distributed-consistency} \\
     \addlinespace
     \textbf{Output choice} & & \\
     \midrule
@@ -39,6 +38,10 @@ relational generalizations combined here.
     output retirement & removed $(k,x)$ is \outrelpast by a retained $(k,u)$ that \outrel $o$ & Def.~\ref{def:output-retirement} \\
     exposable output & $\Out{\varepsilon}{o}$ is legal; it may retire \outrelpast rows & Def.~\ref{def:exposable} \\
     choice commitment & removes conflicts no row at the same input \outrel, leaving their input legal & Sec.~\ref{sec:safe-exposure} \\
+    \addlinespace
+    \textbf{Systems} & & \\
+    \midrule
+    system & a commitment basis shared by all participants plus a strategy per participant; its histories label output events $\Out{\gamma}{o}$ & Def.~\ref{def:system} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
@@ -55,6 +58,29 @@ relational generalizations combined here.
 
 \subsection{Coordination}
 \label{sec:coordination}
+
+Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} studied
+the output events the specification itself supplies.  A system may commit
+differently, for example by sealing more than an output requires or by taking a
+lock before it chooses, so we now let systems bring their own commitments.
+
+\begin{definition}[System, canonical system]
+\label{def:system}
+A \emph{system} consists of one commitment basis $\mathcal B$
+(Definition~\ref{def:basis}), shared by all participants, and a strategy for
+each participant (Section~\ref{sec:histories}).  Its histories are distributed
+histories (Definition~\ref{def:distributed-history}) whose output events are
+labeled $\Out{\gamma}{o}$, with $\gamma$ a finite sequence of commitments from
+$\mathcal B$ (Definition~\ref{def:compound-output-event}); such an event
+atomically applies $\gamma$ and emits $o$, and the environment observes $o$,
+not $\gamma$.  Their transition projections are runs under $\mathcal B$
+(Definition~\ref{def:run-under-basis}).  A system is \emph{canonical} when
+$\mathcal B$ is the canonical basis $\mathcal B_S$ and each output event it
+performs is the canonical event $\Out{\kappa_o}{o}$
+(Definition~\ref{def:canonical-commitment-basis}) at the participant's state
+where it occurs; its histories are then exactly those of
+Section~\ref{sec:histories}.
+\end{definition}
 
 Consistency is confluence: independently reached states can still meet.
 Coordination is its operational counterpart: the system makes a binding decision
@@ -100,7 +126,7 @@ belong to both.
 The proposition is a witness of non-confluence at the current input itself: the
 first participant's commitment is a choice at $i$ that rules out $x$.
 Mutual exclusion follows once the system's states must stay confluent.  For a
-canonical system (Section~\ref{sec:distributed-execution}), Consistency of the
+canonical system (Definition~\ref{def:system}), Consistency of the
 specification gives that confluence; a non-canonical system can lose it through
 commitments it did not need, as when a traceroute system discards the larger
 route sets.  If a system's states must stay confluent while both events remain
@@ -159,7 +185,7 @@ participants could each emit one of two conflicting outputs,
 Proposition~\ref{thm:commitments-require-coordination} applies.
 
 Output choice also separates safety from liveness.  Confluence guarantees that
-at any consistent cut of a canonical history, some continuation brings every
+at any consistent cut of a history (Section~\ref{sec:histories}), some continuation brings every
 participant to a common state.  In the functional case, finding that
 continuation is trivial: the state is
 determined by the input (Corollary~\ref{cor:state-by-input}), so delivering the
@@ -197,7 +223,7 @@ a choice.
         participants into two or more components and contains no receive whose
         matching send lies in another component; participants still receive
         environment input and emit outputs.
-  \item \emph{System.}  Fix a system (Section~\ref{sec:histories}), with a
+  \item \emph{System.}  Fix a system (Definition~\ref{def:system}), with a
         strategy for each participant of every finite participant set and
         every choice of initial inputs; each strategy depends only on its
         participant's local history.
@@ -244,7 +270,8 @@ run (Section~\ref{sec:determination}) and every state it reaches is reachable
 without commitment.  By the exposure boundary
 (Proposition~\ref{prop:exposure-boundary}), every output in each
 participant's fiber $R(i)$ is exposable, and emitting it needs neither a commitment nor a
-message: this gives Availability.  The history is canonical, so Distributed
+message: this gives Availability.  The system is canonical, so its histories
+are those of Section~\ref{sec:histories}, and Distributed
 Consistency, which Complete CALM supplies, gives Partition Consistency.
 
 Conversely, let finite rows $(i_r,o_r)$ have a common \indesc $j$.  For the

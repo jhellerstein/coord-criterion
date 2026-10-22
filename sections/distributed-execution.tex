@@ -1,7 +1,7 @@
 \section{Distributed Execution}
 \label{sec:distributed-execution}
 
-Consistency already compares independent canonical runs.  This
+Consistency already compares independent runs.  This
 section shows that those runs are exactly what the participants of a
 distributed history do, once sends and receives are set aside.  Keeping only
 each participant's input and output events reduces a snapshot of the history
@@ -24,19 +24,12 @@ A snapshot of such a history that never includes a receive without the events
 that causally precede it is a consistent cut.  (This standard use of
 ``consistent'' is unrelated to consistency as confluence.)  Because input and
 output events are atomic, the events at any such cut project to one run per
-participant under the history's commitment basis
-(Definition~\ref{def:semantic-projection}).  Messages explain how a participant learned
+participant (Definition~\ref{def:semantic-projection}).  Messages explain how a participant learned
 something; its projected run records only how that information changed the
 specification state.
 
-A participant's \emph{strategy} chooses its input and output events,
-including which commitments from the basis an output event applies, using the
+A participant's \emph{strategy} chooses its input and output events using the
 specification, the messages it has received, and any other strategy state.
-A \emph{system} consists of one commitment basis (Appendix~\ref{app:bases}), shared by all participants,
-and a strategy for each participant.  A system is \emph{canonical} when its
-basis is the canonical basis and each output event it performs is the output
-event of Definition~\ref{def:output-event} for its output (the canonical event,
-Appendix~\ref{app:bases}), so it commits no more than each output requires.
 Strategy state is not part of the specification state and affects the
 remainder table only through the selected transitions.  Sends, receives, and
 strategy data preserve delivery causality without complicating the
@@ -45,29 +38,27 @@ removes them.
 
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
-Fix an ordered specification, a finite participant set $P$, initial input $i_p$
-for each participant, and a commitment basis $\mathcal B$.  Messages carry
+Fix an ordered specification, a finite participant set $P$, and initial input
+$i_p$ for each participant.  Messages carry
 cumulative input, arbitrary strategy data, or both.  A \emph{distributed
 history} $H$ consists of a finite set of events with:
 \begin{enumerate}
   \item a participant assignment and total local order for each participant;
-  \item labels $\mathsf{input}(j)$, $\Out{\gamma}{o}$ with $\gamma$ a finite
-        sequence of basis commitments (Definition~\ref{def:compound-output-event}), $\mathsf{send}(m)$, or
+  \item labels $\mathsf{input}(j)$, $\mathsf{output}(o)$
+        (Definition~\ref{def:output-event}), $\mathsf{send}(m)$, or
         $\mathsf{receive}(m)$; and
   \item for each receive, a matching send at another participant.
 \end{enumerate}
-An output event $\Out{\gamma}{o}$ atomically applies $\gamma$ and emits $o$;
-the environment observes $o$, not $\gamma$.  The history is \emph{canonical}
-when its commitment basis is $\mathcal B_S$ and each of its output events is
-the canonical event $\Out{\kappa_o}{o}$ (Definition~\ref{def:canonical-commitment-basis}) at the participant's state where it
-occurs.  A \emph{consistent
+A \emph{consistent
 cut} $C$ is a subset of events closed under
 happens-before~\cite{chandy1985distributed}.
 \end{definition}
 
-With several outputs per input (Section~\ref{sec:safe-exposure}), an output
-event also performs any output retirements, removing rows \outrelpast by a
-retained row at the same input; nothing else in the definition changes.
+With several outputs per input (Section~\ref{sec:safe-exposure}), the output
+event has the same effect but may also choose among outputs and perform output
+retirements, removing rows \outrelpast by a retained row at the same input;
+nothing else in the definition changes.  Section~\ref{sec:coordination}
+generalizes histories to systems that make other commitments.
 
 \subsection{Transition projection and confluence}
 \label{sec:projection-confluence}
@@ -171,8 +162,7 @@ $\pi_p(C)$.  The \emph{state endpoint} of the cut is the vector
   \label{eq:semantic-endpoint}
         \end{equation}
 Because input and output events are atomic transitions, every transition
-projection is a run under $\mathcal B$ (Definition~\ref{def:run-under-basis}).  If the history is canonical, its
-projections are canonical runs.
+projection is a run (Definition~\ref{def:run}).
 \end{definition}
 
 At both cuts in Figure~\ref{fig:history-projection}, each local projection is
@@ -193,10 +183,9 @@ be brought to the same later specification state at every input that combines
 their current inputs.  Formally, let $j$ be a common \indesc of the
 participant inputs at $C$.  The history $H$ is \emph{confluent at $C$ and $j$}
 when the sub-history consisting of the events of $C$ has a further \emph{continuation}---additional events after those of
-$C$---under the same basis in which every participant reaches the same
+$C$---in which every participant reaches the same
 specification state $\sigma_j=(j,R)$; equivalently, the new cut has state
-endpoint $(\sigma_j)_{p\in P}$.  If $H$ is canonical, this continuation must
-remain canonical.  This is an existence
+endpoint $(\sigma_j)_{p\in P}$.  This is an existence
 claim about transitions, not a claim that a protocol delivers $j$,
 communicates, or terminates.
 
@@ -204,12 +193,12 @@ communicates, or terminates.
 \label{sec:distributed-consistency}
 
 Confluence is a property at one cut and common \indesc.  Distributed
-Consistency requires it at every cut of every canonical history.
+Consistency requires it at every cut of every history.
 
 \begin{definition}[Distributed Consistency]
 \label{def:distributed-consistency}
 An ordered specification has \emph{Distributed Consistency} when, for every
-finite participant set, canonical history $H$, and consistent cut $C$, $H$ is
+finite participant set, history $H$, and consistent cut $C$, $H$ is
 confluent at $C$ and every common \indesc of the participants' current
 inputs.
 \end{definition}
@@ -227,9 +216,9 @@ Consistency.
 \end{proposition}
 
 \begin{proof}
-At any cut of a canonical history, the projections are a finite set of
-canonical runs, so Consistency implies their confluence from those endpoints.
-Conversely, place any finite set of canonical runs in a message-free history,
+At any cut of a history, the projections are a finite set of runs, so
+Consistency implies their confluence from those endpoints.  Conversely, place
+any finite set of runs in a message-free history,
 one per participant; every input event in a run is already a cumulative
 $\mathsf{input}(j)$ event.  Distributed Consistency at the final cut gives
 their confluence.
@@ -242,14 +231,14 @@ history:
 
 \begin{corollary}[Convergence]
 \label{cor:convergence}
-In any canonical history of a consistent functional specification, every
+In any history of a consistent functional specification, every
 participant whose current input at a consistent cut is $j$ is in state
 $\sigma_S(j)$.  Participants that have received the same input therefore agree,
 regardless of message paths, arrival order, or the outputs they emitted.
 \end{corollary}
 
 \begin{proof}
-Each participant's transition projection is a canonical run; apply
+Each participant's transition projection is a run; apply
 Corollary~\ref{cor:state-by-input}.
 \end{proof}
 
