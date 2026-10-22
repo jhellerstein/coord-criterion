@@ -283,7 +283,9 @@ contains at least the input information in $i$, and we say that $j$
 externally visible claim in $o$ and may add more, and we say that $u$
 \emph{\outrel} $o$.  We use these two verbs only in these senses: inputs
 \ingrow, and outputs are \outrelpast.  We write $\InputGe$ and
-$\OutputGe$ for the converse orders.  A \emph{common \indesc} of inputs
+$\OutputGe$ for the converse orders.
+
+A \emph{common \indesc} of inputs
 $i_1,\ldots,i_k$ is an input $j$ that \inrel every $i_r$, and a
 \emph{common \outnoun} of outputs is an output that \outrel each of them.
 A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
@@ -291,10 +293,6 @@ when $w$ \outrel $u$.
 Section~\ref{sec:ambiguous-specifications}
 drops the functional dependency; we say \emph{ordered specification} for
 either kind.
-
-The two orders are independent: the input order compares inputs; the output
-order compares outputs.  Either may be the equality order of
-Section~\ref{sec:election-story}.
 
 \begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
@@ -353,8 +351,9 @@ separate part of the model, as follows.
 
 \begin{definition}[Commitment, commitment basis, seal]
 \label{def:commitment-basis}
-A \emph{commitment} is a partial function on specification states that leaves
-the current input unchanged and removes a nonempty set of rows, each with no remaining
+A commitment removes rows from the remainder table without changing the
+current input.  Formally, a \emph{commitment} is a partial function on
+specification states that leaves the current input unchanged and removes a nonempty set of rows, each with no remaining
 row at the same input that \outrel it: whenever $c(i,R)=(i,R')$, we have $R'\subsetneq R$ and
 \begin{equation}
   (k,u)\in R\setminus R',\ (k,w)\in R'
@@ -435,6 +434,10 @@ remainder table $R'$, the event is
 \end{equation}
 \end{definition}
 
+In an output event, every commitment maps a state to a state and leaves the
+current input unchanged, so the remaining table $R'$ still contains the current
+row $(i,o)$.
+
 A system's basis says which commitments that system may apply, and bases
 differ from system to system.  To make Consistency a property of the
 specification alone, our proofs use one basis derived from $S$ that can carry
@@ -444,12 +447,6 @@ shows this loses nothing (Lemma~\ref{lem:canonical-equivalent}).
 
 \begin{definition}[Canonical seal commitment, canonical basis, canonical event]
 \label{def:canonical-commitment-basis}
-For a state $(i,R)$ and its current row $(i,o)$, retaining the promise made by
-$o$ permits exactly the rows whose outputs \outrelbase $o$:
-\begin{equation}
-  R[\mathrm{out}\OutputGe o]=\{(k,u)\in R:o\OutputOrd u\}.
-  \label{eq:residual-refining-fibers}
-\end{equation}
 For each $o\in O$, the \emph{canonical seal commitment} $s_o$ is the partial
 function
 \begin{equation}
@@ -474,21 +471,14 @@ $o$ is $\Out{\kappa_o}{o}$.  Either way it ends at
 \end{equation}
 \end{definition}
 
-In an output event, every commitment maps a state to a state and leaves the
-current input unchanged, so the remaining table $R'$ still contains the current
-row $(i,o)$.
-
 \begin{definition}[Exposable output]
 \label{def:exposable}
 An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when $\Out{\varepsilon}{o}$
 is legal there.
 \end{definition}
 
-Systems differ in which commitments they hold, so one output can be emitted by
-many different events.  To reason about all of them at once, we isolate what
-they share.  No system-specific basis retains more rows than the canonical
-event, and the results that follow depend on output events only through four
-facts, which we collect as the \emph{event contract}.  We prove it here for
+The results that follow depend on output events only through four facts,
+which we collect as the \emph{event contract}.  We prove it here for
 functional specifications; Section~\ref{sec:safe-exposure} proves it again with
 several outputs per input.
 
@@ -521,17 +511,13 @@ $o\OutputOrd f(j)$ at every legal $j\InputGe i$; since $R(j)=\{f(j)\}$, taking
 $u=x=f(j)$ shows that it is the condition of clause~4.
 \end{proof}
 
-In a functional specification, then, $o$ is exposable exactly when
-$R[\mathrm{out}\OutputGe o]=R$, or equivalently $o\OutputOrd f(j)$ at every
-legal $j\InputGe i$.
-
 \paragraph{Determination.}
 Both kinds of event can narrow what remains possible.  For a state $(i,R)$, the
 \emph{upper fiber} $\mathrm{out}(R[\mathrm{in}\InputGe i])$ collects the
 outputs at $i$ and its legal \indescs.  The state is
 \emph{determined} when its upper fiber has one element, regardless of how it
 was reached.
-\emph{Determination} is movement toward or arrival at a determined state.  An
+An
 input event may resolve ambiguity by retiring rows that no longer \inrelbase the
 input received; a commitment may instead exclude an alternative that otherwise
 remains possible, as in panels (c) and (d) of
