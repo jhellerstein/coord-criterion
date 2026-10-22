@@ -38,8 +38,11 @@ for each.  A \emph{distributed history} $H$ is a finite set of events with:
   \item a participant assignment and total local order for each participant;
   \item labels $\mathsf{input}(j)$, $\mathsf{output}(o)$
         (Definition~\ref{def:output-event}), $\mathsf{send}(m)$, or
-        $\mathsf{receive}(m)$; and
-  \item for each receive, a matching send at another participant.
+        $\mathsf{receive}(m)$;
+  \item for each receive, a matching send at another participant; and
+  \item for each participant $p$, its input and output events, in local
+        order, form a defined transition sequence from $\sigma_S(i_p)$: each
+        is legal at the state where it occurs.
 \end{enumerate}
 \emph{Happens-before} is the transitive closure of the local orders and of
 each send preceding its matching receive; events it does not order are
@@ -141,10 +144,7 @@ to the transitions that determine that state.
 \label{def:semantic-projection}
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
 to $p$ in local order.  Its \emph{transition projection} $\pi_p(C)$ keeps input
-and output events in that order and deletes sends and receives.  We consider only pairs $(H,C)$ for
-which each $\pi_p(C)$ is a defined transition sequence from $\sigma_S(i_p)$;
-each recorded $\mathsf{input}(j)$ must itself be legal at the state where it
-occurs.  Write $\sigma_p(C)$ for the final specification state of
+and output events in that order and deletes sends and receives.  Write $\sigma_p(C)$ for the final specification state of
 $\pi_p(C)$.  The \emph{state endpoint} of the cut is the vector
         \begin{equation}
   \operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}.
