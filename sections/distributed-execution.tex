@@ -15,30 +15,24 @@ guarantee that can be derived from the specification (Corollary~\ref{cor:converg
 
 A distributed execution adds one complication to the transition system of
 Section~\ref{sec:determination}: participants may learn the same input through
-different message paths and at different times.  We retain those paths in a
-distributed history in the style of Lamport~\cite{lamport1978time}.  Each participant's events are totally ordered; a send precedes
-its matching receive; events not ordered by these constraints are concurrent.
-Their transitive closure is the familiar \emph{happens-before} relation.
+different message paths and at different times.
 
-A snapshot of such a history that never includes a receive without the events
-that causally precede it is traditionally called a ``consistent cut''.  (The standard term
-is unrelated to our notion of consistency.)  The events at any
-such cut project to one run per participant
-(Definition~\ref{def:semantic-projection}).  Messages explain how a participant learned
-something; its projected run records only how that information changed the
-specification state.
-
-A participant's input and output events may depend on the messages it has
-received.  Messages affect the remainder table only through those events:
-they explain why an event occurred, and the projection below keeps only the
-event.
+\paragraph{Participants and messages.}
+A finite set $P$ of \emph{participants} each holds a specification state,
+starting at a canonical state $\sigma_S(i_p)$.  A participant changes its
+state only by its own input and output events.  It learns input in two ways:
+directly from the environment, or in a message from another participant.
+Participants exchange messages by $\mathsf{send}$ and $\mathsf{receive}$
+events; a message carries cumulative input, other data, or both.  A receive
+does not change the specification state.  A participant that learns input $j$
+from a message incorporates it by its own event $\mathsf{input}(j)$, which
+must be legal at its state.  Messages thus explain why an event occurred, and
+only the event changes the state.
 
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
-Fix an ordered specification, a finite participant set $P$, and initial input
-$i_p$ for each participant.  Messages carry
-cumulative input, arbitrary other data, or both.  A \emph{distributed
-history} $H$ consists of a finite set of events with:
+Fix an ordered specification, participants $P$, and an initial input $i_p$
+for each.  A \emph{distributed history} $H$ is a finite set of events with:
 \begin{enumerate}
   \item a participant assignment and total local order for each participant;
   \item labels $\mathsf{input}(j)$, $\mathsf{output}(o)$
@@ -46,10 +40,15 @@ history} $H$ consists of a finite set of events with:
         $\mathsf{receive}(m)$; and
   \item for each receive, a matching send at another participant.
 \end{enumerate}
-A \emph{consistent
-cut} $C$ is a subset of events closed under
-happens-before~\cite{chandy1985distributed}.
+\emph{Happens-before} is the transitive closure of the local orders and of
+each send preceding its matching receive; events it does not order are
+concurrent.  A \emph{consistent cut} $C$ is a subset of events closed under
+happens-before~\cite{lamport1978time,chandy1985distributed}.
 \end{definition}
+
+The standard term ``consistent cut'' is unrelated to our notion of
+consistency.  The events at any consistent cut project to one run per
+participant (Definition~\ref{def:semantic-projection}).
 
 \subsection{Transition projection and confluence}
 \label{sec:projection-confluence}
@@ -141,9 +140,7 @@ to the transitions that determine that state.
 \label{def:semantic-projection}
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
 to $p$ in local order.  Its \emph{transition projection} $\pi_p(C)$ keeps input
-and output events in that order and deletes sends and receives.  A receive may
-influence a later input event, but it does not
-directly change the specification state.  We consider only pairs $(H,C)$ for
+and output events in that order and deletes sends and receives.  We consider only pairs $(H,C)$ for
 which each $\pi_p(C)$ is a defined transition sequence from $\sigma_S(i_p)$;
 each recorded $\mathsf{input}(j)$ must itself be legal at the state where it
 occurs.  Write $\sigma_p(C)$ for the final specification state of
