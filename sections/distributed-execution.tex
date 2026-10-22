@@ -2,8 +2,9 @@
 \label{sec:distributed-execution}
 
 Consistency compares independent runs.  A distributed execution places one run
-at each participant, with messages carrying input between them.  This section
-makes that precise, so that the results of
+at each participant, and the only additional change from our framework's perspective is that
+participants can learn about inputs at other participants via messages.  This section
+makes the mapping precise, so that the results of
 Sections~\ref{sec:determination} and~\ref{sec:functional-calm-theorem} read
 directly as statements about distributed executions, including a convergence
 guarantee derived from the specification (Corollary~\ref{cor:convergence}).
@@ -187,49 +188,27 @@ input this uniqueness fails (Section~\ref{sec:complete-calm}).
 
 \paragraph{Message data.}
 The data $d$ of a message is any application state other than input that a
-participant chooses to send: timestamps, version vectors, gossip, votes.  Data
+participant chooses to send: timestamps, version vectors, non-input-related gossip, votes, etc.  Data
 can influence which input and output events occur next at the receiver, but it
-never changes the receiver's specification state, and nothing in the
+never directly changes the receiver's specification state, and nothing in the
 definitions above depends on it; Section~\ref{sec:coordination} calls the rule
-that makes these choices a participant's \emph{strategy}.
+that makes these choices a participant's \emph{strategy}; $d$ could influence
+strategy, but the strategy can only make decisions within the parameters of the specification.
 
 \paragraph{Exchanging outputs.}
-An interesting question is what happens if participants share their outputs in
-$d$: does this introduce any substantive change?  A participant that receives
-an output $o$ its sender has emitted can emit $o$ itself, but that is an ordinary output event.  The
-new possibility is to \emph{honor} $o$ silently: a step that restricts the
-receiver's table to $R[\mathrm{out}\OutputGe o]$ without emitting, defined when
-the receiver's current row survives.  Call a history with such steps, each
-after the receive that delivered its $o$, an \emph{output-sharing history},
-and the history obtained by deleting those steps its \emph{reduct}.
-
-\begin{proposition}[Sharing outputs adds nothing]
-\label{prop:output-sharing}
-The reduct of an output-sharing history is a distributed history with the same
-input, output, send, and receive events.  A consistent cut of the
-output-sharing history is confluent at $j$ if and only if the same cut of its
-reduct is.
-\end{proposition}
-
-\begin{proof}
-Honoring only removes rows, so every event legal in the output-sharing history
-is legal in its reduct, and each participant's table in the reduct contains
-its table in the original.  Both tables are selections of $S$, so the survivor
-test (Proposition~\ref{prop:confluence}) applies to each.  A row at $j$ that
-survives everywhere in the original therefore survives in the reduct.
-Conversely, let $(j,u)$ survive in every table of the reduct.  Each honored
-$o$ was emitted before the receive that delivered it, so within the cut, and
-$u$ \outrel $o$ by Lemma~\ref{lem:run-residual} at its emitter.  Honoring $o$
-therefore keeps $(j,u)$.
-\end{proof}
-
-Sharing outputs is thus an implementation choice: it lets a receiver apply
-early a narrowing that any reconciliation applies anyway.  In a monotone
-specification, honoring $o$ removes nothing once the receiver has the
-sender's input.  Otherwise honoring can be a commitment by the receiver: under
-the equality order, a receiver at $xy\cdot$ that honors $\bot$ seals $xyx$ and
-$xyy$, as the sender's $\mathsf{output}(\bot)$ did
-(Figure~\ref{fig:nonmonotone-frame}).
+The attentive reader might ask what happens if participants share their outputs in
+$d$: does this introduce any substantive change?  A participant that receives an
+output $o$ its sender has emitted has two
+options.  If $o\in R(i)$ at its own current input $i$, it can emit $o$ itself;
+that is an ordinary output event, already covered by the definitions above.
+Otherwise, or in addition, it can silently honor $o$ by restricting its table
+to $R[\mathrm{out}\OutputGe o]$.  Silent honoring cannot change confluence in either direction.  It cannot
+help, because it only removes rows, and confluence asks for a row that
+survives everywhere (Proposition~\ref{prop:confluence}).  It cannot hurt,
+because a row that survives at a common \indesc already \outrel every output
+emitted in the cut (Lemma~\ref{lem:run-residual}), including the previously emitted output being honored.
+The confluence of a cut therefore depends on which outputs were emitted,
+not on who has heard about them.
 
 Proposition~\ref{prop:distributed-consistency} uses only runs, so it holds
 unchanged for the specifications of Section~\ref{sec:ambiguous-specifications},
