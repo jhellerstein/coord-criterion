@@ -139,12 +139,10 @@ The examples from the start of this section pose the next question: as input
 \ingrows from $i$ to $j$, can some output permitted at $j$ \outrelbase
 whatever outputs runs emit at $i$?  Two things can go wrong: an output at $i$
 has no \outnoun in the fiber of some \indesc $j$, or two different outputs permitted at
-$i$ have no common \outnoun in the fiber of $i$.  We give the answer in
-three forms and show in Proposition~\ref{prop:lifted-monotonicity-decomposition}
-that they are equivalent: Relational Monotonicity together with Directed
-Outputs, which rule out each failure separately; Lifted Monotonicity, which rules out both in
-one monotonicity statement; and the common-\indesc condition, which compares
-outputs emitted at different inputs, as runs do.
+$i$ have no common \outnoun in the fiber of $i$.  We name a condition for each
+failure, combine the two into Lifted Monotonicity, and then give an
+equivalent form, the common-\indesc condition, that compares outputs emitted
+at different inputs, as runs do.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -217,12 +215,18 @@ under the joint lift:
 \end{definition}
 
 With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).
+(Definition~\ref{def:functional-monotonicity}).  It also combines the two
+conditions above: a specification satisfies Lifted Monotonicity exactly when
+it satisfies Relational Monotonicity and Directed Outputs.  Taking $X=\{o\}$
+gives Relational Monotonicity, and taking $j=i$ gives Directed Outputs.
+Conversely, for $i\InputOrd j$ and finite nonempty $X\subseteq\fiber{i}$,
+Relational Monotonicity gives each $x\in X$ a \outnoun in $\fiber{j}$, and
+Directed Outputs gives those a common \outnoun in $\fiber{j}$.
 
 \paragraph{The common-\indesc condition.}
-Runs emit outputs at different inputs and meet at a common \indesc, but the
-conditions above compare outputs at one input, or at an input and its
-\indescs.  The third form compares outputs across inputs directly.
+Runs emit outputs at different inputs and meet at a common \indesc, but Lifted
+Monotonicity compares outputs at one input with outputs at its \indescs.  An
+equivalent condition compares outputs across inputs directly.
 
 \begin{definition}[Common-\indesc condition]
 \label{def:common-refinement-condition}
@@ -236,39 +240,22 @@ The inputs $i_r$ need not be comparable, because different runs meet only at a
 common \indesc.  For the empty set of rows the condition asks only that
 $S(j)$ be nonempty, which totality guarantees.
 
-The three forms are equivalent.
-
-\begin{proposition}[Equivalent forms of Lifted Monotonicity]
+\begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:lifted-monotonicity-decomposition}
-For an ordered relational specification, the following are equivalent:
-\begin{enumerate}
-  \item Lifted Monotonicity: $i\InputOrd j$ implies
-        $\fiber{i}\LiftedOrd\fiber{j}$;
-  \item Relational Monotonicity and Directed Outputs;
-  \item the common-\indesc condition
-        (Definition~\ref{def:common-refinement-condition}): for every finite
-        set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$, the outputs
-        $o_1,\ldots,o_k$ are compatible at every common \indesc of
-          $i_1,\ldots,i_k$.
-\end{enumerate}
+An ordered relational specification satisfies Lifted Monotonicity if and only
+if it satisfies the common-\indesc condition.
 \end{proposition}
 
 \begin{proof}
-(1) implies (2).  Taking $j=i$, $\fiber{i}\LiftedOrd\fiber{i}$ says that
-$\fiber{i}$ is directed.  Taking $X=\{o\}$ for $o\in\fiber{i}$ and
-$i\InputOrd j$ gives $u\in\fiber{j}$ with $o\OutputOrd u$, which is Relational
-Monotonicity.
-
-(2) implies (3).  Let rows $(i_r,o_r)$ have common \indesc $j$.  For the
-empty family, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, since
-$i_r\InputOrd j$, Relational Monotonicity gives, for each $r$, a
-$u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ now all lie in the one
-fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ \outrel every
-$u_r$, hence every $o_r$.
-
-(3) implies (1).  Let $i\InputOrd j$ and $X\subseteq\fiber{i}$ be nonempty and
-finite.  The rows $\{(i,x):x\in X\}$ have common \indesc $j$, so some
-$u\in\fiber{j}$ \outrel all of $X$; that is $\fiber{i}\LiftedOrd\fiber{j}$.
+Suppose Lifted Monotonicity, and let rows $(i_r,o_r)$ have common \indesc
+$j$.  For the empty family, totality gives $\fiber{j}\neq\varnothing$.
+Otherwise, since $i_r\InputOrd j$, Relational Monotonicity gives, for each
+$r$, a $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ all lie in the
+one fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ \outrel
+every $u_r$, hence every $o_r$.  Conversely, let $i\InputOrd j$ and
+$X\subseteq\fiber{i}$ be nonempty and finite.  The rows $\{(i,x):x\in X\}$
+have common \indesc $j$, so some $u\in\fiber{j}$ \outrel all of $X$; that is
+$\fiber{i}\LiftedOrd\fiber{j}$.
 \end{proof}
 
 \subsection{Lifted output events}
@@ -431,7 +418,7 @@ survivor test need not be unique, so neither is the reconciled state, and
 Corollary~\ref{cor:state-by-input} fails; Section~\ref{sec:complete-calm}
 returns to this.  In place of the functional reduction to monotonicity,
 Proposition~\ref{prop:lifted-monotonicity-decomposition} identifies the
-common-\indesc condition with Lifted Monotonicity: it is form~(3).  Lifted
+common-\indesc condition with Lifted Monotonicity.  Lifted
 Monotonicity is therefore the lifted form of functional monotonicity in a
 precise sense: both are the common-\indesc condition, read for one output
 per input or for many.
