@@ -110,16 +110,15 @@ An \emph{ordered relational specification} is
   \label{eq:relational-specification}
         \end{equation}
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and $S$
-is total on $I$: every input appears in at least one row.  The specification
-is \emph{ambiguous} when some fiber contains more than one output.  A row $(i,o)\in S$
+is total on $I$: every input appears in at least one row.  A row $(i,o)\in S$
 says that output $o$ is permitted at input $i$.  The fiber
         \begin{equation}
   \fiber{i}=\{o\in O:(i,o)\in S\}
   \label{eq:fiber}
         \end{equation}
 of Section~\ref{sec:functional-specifications} may now contain several
-outputs.  A functional specification is the special case
-$\fiber{i}=\{f(i)\}$.
+outputs; the specification is \emph{ambiguous} when some fiber does.  A
+functional specification is the special case $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
 Specification states and input events
@@ -194,8 +193,8 @@ under the joint lift:
 \end{definition}
 
 With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).  Its third form below is a
-condition on finite sets of rows, which Section~\ref{sec:relational-executions}
+(Definition~\ref{def:functional-monotonicity}).  A third form, the
+common-\indesc condition, is a condition on finite sets of rows, which Section~\ref{sec:relational-executions}
 identifies with consistency.
 
 \begin{definition}[Common-\indesc condition]
@@ -256,7 +255,8 @@ nothing or seals a legal input.  With several rows at one input, emitting $o$
 can also retire a \outrelpast row while keeping the row that \outrel it, or
 make a binding choice among outputs.  We lift output events to this case.
 
-Call a row \emph{ruled out by} $o$ when its output does not \outrelbase $o$.
+Fix a state $(i,R)$ and an output $o\in R(i)$.  Call a row
+\emph{ruled out by} $o$ when its output does not \outrelbase $o$.
 Emitting $o$ rules out every row outside $R[\mathrm{out}\OutputGe o]$, but
 those rows need not all be handled in the same way.  Some lie at inputs with no
 row \outrelpart $o$ and require sealing the input, some can be retired because

@@ -131,7 +131,7 @@ longer \inrelbase the ballots received.  The \emph{upper fiber} is the set of
 outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
 $\{\bot,x,y\}$.
 If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
-is \emph{determined}: input has resolved the ambiguity alone, without commitment.  
+is \emph{determined}: input alone has resolved the outcome, without commitment.  
 
 In panel~(d), by contrast, a registrar within the system emits $\bot$ and closes the polls at
 $xy\cdot$ in the same output event.  Its irrevocable \emph{seal commitment}
@@ -171,9 +171,10 @@ still possible at the current input or an \indesc still in the table \outrel it.
 in panels~(a) and~(b), and $x$ in panel~(c).  The atomic output event
 $\mathsf{output}(o)$ seals any legal input whose output does not \outrelbase
 $o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
-from then on, only rows whose outputs \outrelbase $o$ remain.  The emission stays
-explicit in the history because the uncontrolled environment may use it when
-choosing later input; it observes $o$, not the seal.
+from then on, only rows whose outputs \outrelbase $o$ remain.  The emission
+matters because the environment, which supplies input and is not under the
+system's control, may use it when choosing later input; it observes $o$, not
+the seal.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
@@ -189,7 +190,7 @@ $(xyx,x)$ have the common \indesc $xyx$, but under the equality
 order no output at $xyx$ \outrel both outputs $\bot$ and $x$.  A run that emits
 $\bot$ at $xy\cdot$ and one that receives $xyx$ cannot be reconciled at $xyx$.
 
-Input and output events form a transition system between system states.  A
+Input and output events form a transition system on specification states.  A
 specification is \emph{consistent} when its runs are confluent: any runs whose inputs have a common
 \indesc can always be continued to one common state there.
 Section~\ref{sec:functional-calm-theorem} shows that for functional tables
@@ -309,15 +310,8 @@ satisfying both predicates.
 To project onto a single column, we write $\mathrm{in}(R)$ and
 $\mathrm{out}(R)$ for the sets of inputs and outputs that appear in $R$.
 
-\jmh{This used to just be an example of notation, but ut buried the fiber definition
--- and it was returning a one-row table which made it seem weird. Maybe we should move it,
-and define upper fiber alongside. Where?}
-We say that the \emph{fiber} of $R$ at $k$ is
-$R(k)=\mathrm{out}(R[\mathrm{in}=k])$---this is a one-row table in the presence of
-the functional dependency, but may be larger when we remove it in Section~\ref{sec:ambiguous-specifications}.
-
 A specification describes every permitted input/output pair.  During execution,
-input arrives and choices become binding, so only some of those pairs remain
+input arrives and outputs are emitted, so only some of those pairs remain
 possible.  The changing state of the specification is defined as follows.
 
 \begin{definition}[Specification state]
@@ -338,6 +332,11 @@ state at $i$} retains all rows at $i$ and its \indescs:
   \sigma_S(i)=\bigl(i,\ S[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
 \end{equation}
+The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
+$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  Under the functional dependency it has
+at most one element; Section~\ref{sec:ambiguous-specifications} allows more.
+For a state $(i,R)$, the \emph{upper fiber} $\mathrm{out}(R)$ collects the
+outputs at $i$ and its legal \indescs, the outputs still possible.
 
 \subsection{Input and output events}
 \label{sec:functional-events}
@@ -350,7 +349,7 @@ world.
 For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{input}(j)}
-  \bigl(j,\ R' = R[\mathrm{in}\InputGe j]\bigr).
+  \bigl(j,\ R[\mathrm{in}\InputGe j]\bigr).
   \label{eq:input-event}
 \end{equation}
 It makes $j$ current and \emph{retires} every row failing the predicate: i.e.,
@@ -361,7 +360,7 @@ An input event records a new input $j$, not how $j$ was
 assembled.\footnote{The framework does not require cumulative inputs to come
 from a least common \indesc or a lattice, only that they grow according to
 $\InputOrd$.  For example, transaction schedules ordered by subsequence form a
-partial order but not a lattice: two independent events $a$ and $b$ have two
+partial order but not a lattice: two independent transactions $a$ and $b$ have two
 incomparable minimal common \indescs, $ab$ and $ba$.}  Because inputs are
 cumulative, applying $\mathsf{input}(j)$ and then $\mathsf{input}(k)$ has the
 same effect as applying $\mathsf{input}(k)$ directly; $\mathsf{input}(i)$ at
@@ -373,20 +372,21 @@ promise without assuming that clients tolerate retractions.  An emitted output
 must therefore be \outrelpast by later outputs.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Emitting it requires sealing every legal future
+output the system may emit.  Emitting it requires sealing every legal
 input whose output does not \outrelbase $o$.
 
-\begin{definition}[Output event, seal]
+\begin{definition}[Output event, seal, commitment]
 \label{def:output-event}
 Let $(i,R)$ be a state and $(i,o)$ its row at the current input.  The
 \emph{output event} $\mathsf{output}(o)$ keeps exactly the rows whose outputs
 \outrelbase $o$ and emits $o$, atomically:
 \begin{equation}
-  (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R' = R[\mathrm{out}\OutputGe o]\bigr).
+  (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-We call this state change the \emph{seal} $s_o(i,R)=(i,R[\mathrm{out}\OutputGe o])$.  When it removes rows, it
-\emph{seals} the inputs of those rows, and it is a \emph{commitment}.
+When this state change removes rows, we call it the \emph{seal}
+$s_o(i,R)=(i,R[\mathrm{out}\OutputGe o])$: it \emph{seals} the inputs of those
+rows, and it is a \emph{commitment}.
 \end{definition}
 
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
@@ -407,15 +407,11 @@ Since the only row at a legal input $j$ is $(j,f(j))$, $o$ is exposable at
 $(i,R)$ exactly when $f(j)$ \outrel $o$ at every legal input $j$.
 
 \paragraph{Determination.}
-Both kinds of event can narrow what remains possible.  
-\jmh{upper fiber definition buried here}
-For a state $(i,R)$, the
-\emph{upper fiber} $\mathrm{out}(R[\mathrm{in}\InputGe i])$ collects the
-outputs at $i$ and its legal \indescs.  The state is
+Both kinds of event can narrow what remains possible.  A state is
 \emph{determined} when its upper fiber has one element, regardless of how it
 was reached.
 An
-input event may resolve ambiguity by retiring rows that no longer \inrelbase the
+input event may determine the outcome by retiring rows that no longer \inrelbase the
 input received; a commitment may instead exclude an alternative that otherwise
 remains possible, as in panels (c) and (d) of
 Figure~\ref{fig:election-frames}.
@@ -423,15 +419,14 @@ Figure~\ref{fig:election-frames}.
 \subsection{Executions and consistency}
 \label{sec:determination}
 
-We now assemble events into runs and ask the central consistency question:
-when different runs follow different paths through the specification, can
-their resulting states still be reconciled?  We reduce consistency
-to a check on a single row in two steps.  First, a
+We now chain events into runs and ask the central consistency question: when
+runs take different paths through the specification, can they still be
+brought to a common state?  The answer reduces to a check on a single row.  A
 run's remaining rows depend only on its current input and the outputs it has
-emitted (Lemma~\ref{lem:run-residual}).  Second, runs are therefore confluent
-exactly when one row at their common input survives in all of them
-(Proposition~\ref{prop:confluence}), and both carry over to several outputs per
-input (Section~\ref{sec:relational-executions}).
+emitted (Lemma~\ref{lem:run-residual}), so runs can be brought together
+exactly when some row at a common \indesc of their inputs remains in all of
+them (Proposition~\ref{prop:confluence}).  Both results carry over to several
+outputs per input (Section~\ref{sec:relational-executions}).
 
 \begin{definition}[Transition system, run]
 \label{def:io-transition-system}

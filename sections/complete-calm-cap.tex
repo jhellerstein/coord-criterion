@@ -117,7 +117,11 @@ row the commitments leave has an output that \outrel $o$.  A legal
 $\Out{\gamma}{o}$ therefore ends inside $R[\mathrm{out}\OutputGe o]$, and it
 must remove by commitment the rows at inputs in $K_o$ and the rows in $U_o$,
 since no row it keeps can \outrelbase them
-(Lemma~\ref{lem:canonical-commitment-normal-form}, Appendix~\ref{app:bases}).  A system's histories are
+(Lemma~\ref{lem:canonical-commitment-normal-form}, Appendix~\ref{app:bases}).
+The output event $\mathsf{output}(o)$ of
+Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} is the
+legal event $\Out{\gamma}{o}$ whose $\gamma$ applies its seal $s_o$ and choice
+$c_o$, where present.  A system's histories are
 distributed histories (Definition~\ref{def:distributed-history}) whose output
 events are legal events $\Out{\gamma}{o}$ with $\gamma$ drawn from its basis; the
 environment observes $o$, not $\gamma$.
@@ -135,7 +139,8 @@ open.  By contrast, timestamp assignment in MVTO orders a transaction with respe
 in this case, $B$ is assigned first place.  Both are choices: they remove
 serialization orders while the input stays legal, but leave different
 alternatives open.  Each is one of the commitments a system applies in emitting
-a full serial order, and neither is the canonical choice $c_o$.
+a full serial order, and neither is the choice $c_o$ of
+Definition~\ref{def:lifted-output-event}.
 Appendix~\ref{app:cc-bases} gives both systems' commitments in full, including
 abort commitments, which fix a transaction as aborted.
 
@@ -342,10 +347,10 @@ a choice.
         participants into two or more components and contains no receive whose
         matching send lies in another component; participants still receive
         environment input and emit outputs.
-  \item \emph{System.}  Fix a system (Definition~\ref{def:system}), with a
-        strategy for each participant of every finite participant set and
-        every choice of initial inputs; each strategy depends only on its
-        participant's local history.
+  \item \emph{System.}  Fix a system (Definition~\ref{def:system}); we
+        additionally require a strategy for each participant of every finite
+        participant set and every choice of initial inputs, each depending only
+        on its participant's local history.
   \item \emph{Environment.}  The environment is adversarial: it may supply any
         legal input event to any participant.
   \item \emph{Availability.}  The system has \emph{Availability} when, at every
@@ -427,7 +432,8 @@ Gilbert and Lynch ask for less than the interface form: every request
 must receive \emph{some} response.  Asking for some response is meaningful only
 once the specification says which outputs count as answers, since a specification
 that accepts an abort or a null result at every input is trivially available.
-Appendix~\ref{app:cap-response} makes that obligation part of the declared
+Appendix~\ref{app:cap-response} makes that obligation, the \emph{response
+obligation}, part of the declared
 specification and proves a \emph{response form} of Complete CAP: a system can
 answer every operation through any partition, with responses that have a
 common \outnoun, exactly when the specification is consistent on some \emph{response
