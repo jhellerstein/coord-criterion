@@ -41,7 +41,7 @@ relational generalizations combined here.
     \addlinespace
     \textbf{Systems} & & \\
     \midrule
-    commitment & removes rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment-basis} \\
+    commitment & removes rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment} \\
     system & a commitment basis shared by all participants plus a strategy per participant; its histories label output events $\Out{\gamma}{o}$ & Def.~\ref{def:system} \\
     \addlinespace
     \textbf{Results} & & \\
@@ -49,7 +49,7 @@ relational generalizations combined here.
     Complete CALM & Consistency $\iff$ Lifted Monotonicity $\iff$ Distributed Consistency & Thm.~\ref{thm:complete-calm} \\
     seal or choice & every commitment seals inputs or chooses outputs & Prop.~\ref{prop:seal-or-choose} \\
     coordination & an output event that seals or chooses & Def.~\ref{def:coordination} \\
-    conflicting output events & a choice and the output it rules out leave states that cannot meet at the current input & Prop.~\ref{thm:commitments-require-coordination} \\
+    conflicting output events & a choice and an output it rules out cannot meet at the current input & Prop.~\ref{thm:commitments-require-coordination} \\
     \bottomrule
   \end{tabular}
   \caption{The distributed and relational generalizations combined by Complete
@@ -57,7 +57,7 @@ relational generalizations combined here.
   \label{fig:complete-formalism-summary}
 \end{figure*}
 
-\subsection{Systems and coordination}
+\subsection{Systems}
 \label{sec:coordination}
 
 Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} studied
@@ -67,7 +67,7 @@ lock before it chooses, so we now let systems bring their own commitments.
 We first define commitments in general.
 
 \begin{definition}[Commitment, seal, choice]
-\label{def:commitment-basis}
+\label{def:commitment}
 A commitment removes rows from the remainder table without changing the
 current input.  Formally, a \emph{commitment} is a partial function on
 specification states that leaves the current input unchanged and removes a
@@ -86,37 +86,15 @@ and \emph{chooses} at $k$ when it removes some but not all of the rows at $k$.
 The condition is judged at the table a commitment leaves, so a row removed
 together with every row that \outrel it counts as a commitment's removal, not a
 retirement.  The seals and choices of Definitions~\ref{def:output-event}
-and~\ref{def:lifted-output-event} are commitments.  With one row per input,
-Equation~\ref{eq:commitment-excludes} holds vacuously.  The seal $s_o$ removes
-every row at the inputs in $K_o$, so nothing remains there to \outrelbase a
-removed row.  For $c_o$, suppose some $x\in U_o$ at input $k$ were \outrelpast
-by a row $y$ that $c_o$ leaves at $k$.  Either $y$ \outrel $o$, or $y\in D_o$
-and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is then
-\outrelpast by a row \outrelpart $o$, so $x\in D_o$, a contradiction.  Taking
-$s_o$ to be defined at the states with $o\in R(i)$ and $K_o\neq\varnothing$,
-and $c_o$ at those with $o\in R(i)$, $K_o=\varnothing$, and
-$U_o\neq\varnothing$,\footnote{Here $K_o$, $D_o$, and $U_o$ are computed at
-the state where each commitment is applied.  Since $s_o$ removes only rows at
-inputs in $K_o$, recomputing them after $s_o$ gives $K_o=\varnothing$ and the
-same $D_o$ and $U_o$, so $c_o$ is defined there whenever
-$U_o\neq\varnothing$.} the \emph{canonical commitment basis} collects them,
-\begin{equation}
-  \mathcal B_S
-    =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}
-     \cup
-     \{c_o:o\in O,\ \operatorname{dom}(c_o)\neq\varnothing\},
-  \label{eq:canonical-commitment-basis-relational}
-\end{equation}
-generalizing the basis of Definition~\ref{def:canonical-commitment-basis}.
-
-A system declares a \emph{commitment basis} (Definition~\ref{def:basis}) and
-may apply several of its commitments in one output event
-(Definition~\ref{def:compound-output-event}); Appendix~\ref{app:bases}
-develops both.  With several outputs per input, such an event also retires
-rows.
+and~\ref{def:lifted-output-event} are commitments
+(Appendix~\ref{app:bases}).  A system declares a \emph{commitment basis}
+(Definition~\ref{def:basis}) and may apply several of its commitments in one
+output event; Appendix~\ref{app:bases} develops both.  With several outputs per
+input, such an event also retires rows.
 
 \begin{definition}[Output event of a system]
 \label{def:system-output-event}
+\label{def:compound-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
 under a basis $\mathcal B$ applies a finite, possibly empty sequence
 $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each $c_m$ defined at
@@ -134,11 +112,29 @@ The event then retires those \outrelpast rows and ends at
 $(i,R_c[\mathrm{out}\OutputGe o])$.
 \end{definition}
 
-With one row per input this is Definition~\ref{def:compound-output-event}.
-The output event of Definition~\ref{def:lifted-output-event} is the
-\emph{canonical event} $\Out{\kappa_o}{o}$, where $\kappa_o$ applies $s_o$ when
-$K_o\neq\varnothing$, then $c_o$ when $U_o\neq\varnothing$; so $\kappa_o$ is
-one of $\varepsilon$, $s_o$, $c_o$, or $s_o\,c_o$.
+With one row per input no row can be retired, and legality says that every
+row the commitments leave has an output that \outrel $o$:
+$R_c\subseteq R[\mathrm{out}\OutputGe o]$.
+
+\begin{definition}[Canonical basis, canonical event]
+\label{def:canonical-commitment-basis}
+The \emph{canonical commitment basis} collects the seals and choices of
+Definition~\ref{def:lifted-output-event},
+\begin{equation}
+  \mathcal B_S
+    =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}
+     \cup
+     \{c_o:o\in O,\ \operatorname{dom}(c_o)\neq\varnothing\},
+  \label{eq:canonical-commitment-basis-relational}
+\end{equation}
+where $s_o$ is defined at the states with $o\in R(i)$ and $K_o\neq\varnothing$,
+and $c_o$ at those with $o\in R(i)$ and $U_o\neq\varnothing$.  At $(i,R)$, let
+$\kappa_o$ apply $s_o$ when $K_o\neq\varnothing$ and $c_o$ when
+$U_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$, $s_o$, $c_o$, or
+$s_o\,c_o$.  The \emph{canonical event} for $o$ is $\Out{\kappa_o}{o}$: the
+output event of Definition~\ref{def:lifted-output-event}, and with one row per
+input that of Definition~\ref{def:output-event}.
+\end{definition}
 
 \begin{lemma}[Containment, canonical support, and commitment-free events]
 \label{lem:canonical-commitment-normal-form}
@@ -173,7 +169,6 @@ It is legal exactly when every ruled-out row is in $D_o$, that is, when $K_o$
 and $U_o$ are empty, which is exposability.
 \end{proof}
 
-
 \begin{definition}[System, canonical system]
 \label{def:system}
 A \emph{system} consists of one commitment basis $\mathcal B$
@@ -181,28 +176,83 @@ A \emph{system} consists of one commitment basis $\mathcal B$
 each participant (Section~\ref{sec:histories}).  Its histories are distributed
 histories (Definition~\ref{def:distributed-history}) whose output events are
 labeled $\Out{\gamma}{o}$, with $\gamma$ a finite sequence of commitments from
-$\mathcal B$ (Definitions~\ref{def:compound-output-event}
-and~\ref{def:system-output-event}); such an event
-atomically applies $\gamma$ and emits $o$, and the environment observes $o$,
-not $\gamma$.  Their transition projections are runs under $\mathcal B$
+$\mathcal B$ (Definition~\ref{def:system-output-event}); each such event is
+legal at the participant's state where it occurs, atomically applies $\gamma$,
+and emits $o$, and the environment observes $o$, not $\gamma$.  Their
+transition projections are runs under $\mathcal B$
 (Definition~\ref{def:run-under-basis}).  A system is \emph{canonical} when
 $\mathcal B$ is the canonical basis $\mathcal B_S$ and each output event it
 performs is the canonical event $\Out{\kappa_o}{o}$
-(Definitions~\ref{def:canonical-commitment-basis}
-and~\ref{def:system-output-event}) at the participant's state
+(Definition~\ref{def:canonical-commitment-basis}) at the participant's state
 where it occurs; its histories are then exactly those of
 Section~\ref{sec:histories}.
 \end{definition}
 
-Any system's runs are contained in canonical ones.
-Lemma~\ref{lem:canonical-equivalent} (Appendix~\ref{app:bases}) shows that
-every run under any basis is equivalent to a canonical run, one that accepts
-the same inputs and emits the same outputs, whose remainder table contains the
-original's after each event.  Its proof uses output events only through
-containment and canonical support, which
-Lemma~\ref{lem:canonical-commitment-normal-form} supplies with several outputs
-per input.  Consistency is therefore judged on canonical runs, the runs of
-Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}.
+\paragraph{Two systems, two choices.}
+The specification says which serialization orders are permitted; a system
+decides which binding choices it makes and when.
+Figure~\ref{fig:cc-commitments} shows two systems' choices on the same
+three-transaction fiber of Figure~\ref{fig:ambiguity-frames}---one captures
+two-phase locking (2PL), the other multi-version timestamp ordering (MVTO).
+In 2PL, racing for a lock commits orderings among a subset of transactions:
+in this case it commits only to $A$ before $B$, leaving $C$'s position
+open.  By contrast, timestamp assignment in MVTO orders a transaction with respect to all others:
+in this case, $B$ is assigned first place.  Both are choices: they remove
+serialization orders while the input stays legal, but leave different
+alternatives open.  Each is one of the commitments a system applies in emitting
+a full serial order, and neither is the canonical choice $c_o$.
+Appendix~\ref{app:cc-bases} gives both systems' commitments in full, including
+abort commitments, which fix a transaction as aborted.
+
+\begin{figure}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(h) 2PL: $A$ locks ahead of $B$}\\
+    \toprule
+    $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
+    $\{A,B,C\}$ & \sh{$[A,B,C]$} \\
+    $\{A,B,C\}$ & \sh{$[A,C,B]$} \\
+    $\{A,B,C\}$ & \sh{$[C,A,B]$} \\
+    \retired{$\{A,B,C\}$} & \retired{$[B,A,C]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[B,C,A]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \bottomrule
+  \end{tabular}
+  \hfill
+  \begin{tabular}[t]{@{}l l@{}}
+    \multicolumn{2}{@{}l}{(i) MVTO: $B$ receives the first timestamp}\\
+    \toprule
+    $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
+    $\{A,B,C\}$ & \sh{$[B,A,C]$} \\
+    $\{A,B,C\}$ & \sh{$[B,C,A]$} \\
+    \retired{$\{A,B,C\}$} & \retired{$[A,B,C]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[A,C,B]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,A,B]$} \\ \strikerow
+    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \bottomrule
+  \end{tabular}
+  \caption{Serialization orders for three concurrent transactions, after one
+  commitment under two protocols.  In (h) two-phase locking has ordered $A$
+  before $B$; in (i) multiversion timestamp ordering has placed $B$ first.
+  Legend as in Figure~\ref{fig:election-frames}.}
+  \label{fig:cc-commitments}
+\end{figure}
+
+We call the runs of
+Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}
+\emph{canonical runs}: they are the runs under $\mathcal B_S$ whose output
+events are all canonical (Definition~\ref{def:run-under-basis}).  Any system's
+runs are contained in canonical ones.  Lemma~\ref{lem:canonical-equivalent}
+(Appendix~\ref{app:bases}) shows that every run under any basis, including
+either protocol above, is equivalent to a canonical run, one that accepts the
+same inputs and emits the same outputs, whose remainder table contains the
+original's after each event.  Consistency is therefore judged on canonical
+runs.
+
+\subsection{Coordination}
+\label{sec:coordination-def}
 
 Canonical runs commit only by seals and choices.  That is not a design
 decision: no commitment can do anything else.
@@ -247,7 +297,7 @@ not coordination merely because it uses one of these mechanisms.
 \begin{definition}[Coordination]
 \label{def:coordination}
 A run or history \emph{coordinates} if and only if one of its output events
-$\Out{\gamma}{o}$ (Definition~\ref{def:compound-output-event}) has $\gamma\neq\varepsilon$, that is, applies a commitment that seals an input or chooses among outputs,
+$\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) has $\gamma\neq\varepsilon$, that is, applies a commitment that seals an input or chooses among outputs,
 removing an alternative that the current input still permits and that no
 remaining row at the same input \outrel.  It is \emph{coordination-free}, equivalently
 commitment-free, when every output event is some $\Out{\varepsilon}{o}$; such
@@ -277,7 +327,9 @@ belong to both.
 \end{proof}
 
 The proposition is a witness of non-confluence at the current input itself: the
-first participant's commitment is a choice at $i$ that rules out $x$.
+first participant's commitment is a choice at $i$ that rules out $x$, not a
+seal, since a commitment cannot empty the fiber at the current input: a state
+keeps a row there.
 Mutual exclusion follows once the system's states must stay confluent.  For a
 canonical system (Definition~\ref{def:system}), Consistency of the
 specification gives that confluence; a non-canonical system can lose it through

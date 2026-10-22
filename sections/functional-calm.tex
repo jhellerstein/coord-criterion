@@ -91,8 +91,9 @@ identifies when an output can be emitted without commitment.
   through: it was removed by a commitment; gray alone: it was retired by an
   input event.
   Panels (b) and (c) follow input events; panel (d)
-  follows an output event for $\bot$ that also closes the polls, a seal
-  commitment.}
+  follows a system's output event for $\bot$ that also closes the polls, a
+  seal commitment (not the $\mathsf{output}(\bot)$ of
+  Section~\ref{sec:functional-events}, which needs no commitment).}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -140,34 +141,29 @@ unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no commitment, since every output still possible \outrel it;
 closing the polls is a further decision by the system, not something the
 specification requires.
-A \emph{system} is what implements the specification
-(Definition~\ref{def:system} makes this precise); commitments belong to the
-system, not to the specification itself, and a system whose polls cannot close
-cannot make this one (Appendix~\ref{app:bases}).
 
 \begin{figure}[t]
   \centering
   \small
   \setlength{\tabcolsep}{6pt}
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(e) As (a), all outputs incomparable, polls closed}\\
+    \multicolumn{2}{@{}l}{(e) As (b), all outputs incomparable, $\bot$ emitted}\\
     \toprule
     $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-    \sh{$\mathbf{x\cdot\cdot}$} & \sh{$\bot$} \\
-    \retired{$xy\cdot$} & \retired{$\bot$} \\ \strikerow
+    \retired{$x\cdot\cdot$} & \retired{$\bot$} \\
+    \sh{$\mathbf{xy\cdot}$} & \sh{$\bot$} \\
     \retired{$xyx$} & \retired{$x$} \\ \strikerow
     \retired{$xyy$} & \retired{$y$} \\ \strikerow
-    \retired{$xx\cdot$} & \retired{$x$} \\ \strikerow
-    \retired{$xxx$} & \retired{$x$} \\ \strikerow
-    \retired{$xxy$} & \retired{$x$} \\ \strikerow
+    \retired{$xx\cdot$} & \retired{$x$} \\
+    \retired{$xxx$} & \retired{$x$} \\
+    \retired{$xxy$} & \retired{$x$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}
   \end{tabular}
-  \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
-  incomparable, after the registrar emits $\bot$ while closing the polls at
-  $x\cdot\cdot$.  Every \indesc of $x\cdot\cdot$ is removed by the output
-  event's seal commitment.  Legend as in
-  Figure~\ref{fig:election-frames}.}
+  \caption{Panel (b) of Figure~\ref{fig:election-frames} with all outputs
+  incomparable, after $\mathsf{output}(\bot)$.  Under the equality order,
+  emitting $\bot$ at $xy\cdot$ requires sealing $xyx$ and $xyy$: exactly
+  closing the polls.  Legend as in Figure~\ref{fig:election-frames}.}
   \label{fig:nonmonotone-frame}
 \end{figure}
 
@@ -184,10 +180,9 @@ choosing later input; it observes $o$, not the seal.
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
-to itself).  At $x\cdot\cdot$, $\bot$ is then incompatible with future
-winners.  Emitting it requires sealing those winner-producing \indescs; the
-figure shows the stronger, optional action of closing the polls and sealing all
-\indescs, including $xy\cdot$, which also outputs $\bot$.  This isolates the
+to itself).  Then $\bot$ is incompatible with future winners: at $xy\cdot$,
+emitting $\bot$ requires sealing $xyx$ and $xyy$, which is exactly closing the
+polls.  This isolates the
 Functional CALM boundary: under the original monotone order, outputs remain
 valid as input grows; under the equality order, some outputs require commitment
 before they can be emitted.
@@ -397,11 +392,12 @@ which removes the rows at every legal input whose output does not
 
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event ends
 at a state.  A commitment makes an allowed future unreachable, and seals of
-this form are the only commitments this section uses.  A system may seal more
-than an output requires, as the registrar does in
-Figure~\ref{fig:election-frames}(d); Appendix~\ref{app:bases} shows that such
-systems change none of the results.  Section~\ref{sec:coordination} defines
-commitments in general and treats systems that commit differently.
+this form are the only commitments this section uses.  Systems may commit
+differently, for example by sealing more than an output requires, as the
+registrar does in Figure~\ref{fig:election-frames}(d).
+Section~\ref{sec:coordination} defines commitments in general and shows that
+every system run accepts the same inputs and emits the same outputs as some run
+defined here, so the results below apply to every system.
 
 \begin{definition}[Exposable output]
 \label{def:exposable}
@@ -429,9 +425,7 @@ Figure~\ref{fig:election-frames}.
 
 We now assemble events into runs and ask the central consistency question:
 when different runs follow different paths through the specification, can
-their resulting states still be reconciled?  The runs of any system are
-contained in the runs defined here (Appendix~\ref{app:bases}), so studying
-them loses nothing.  We reduce Consistency
+their resulting states still be reconciled?  We reduce Consistency
 to a check on a single row in two steps.  First, a
 run's remaining rows depend only on its current input and the outputs it has
 emitted (Lemma~\ref{lem:run-residual}).  Second, runs are therefore confluent
@@ -441,14 +435,12 @@ through Equation~\ref{eq:output-action};
 Section~\ref{sec:relational-executions} shows that they carry over to several
 outputs per input.
 
-\begin{definition}[Transition system, run, canonical run]
+\begin{definition}[Transition system, run]
 \label{def:io-transition-system}
 \label{def:transition-system}
 The \emph{transition system} consists of specification states and the input and
 output events above.  A \emph{run} is any finite transition sequence from the
-canonical state $\sigma_S(i)$ at some input $i$.  When we compare these runs
-with those of a particular system (Appendix~\ref{app:bases}), we call them
-\emph{canonical runs}.
+canonical state $\sigma_S(i)$ at some input $i$.
 \label{def:run}
 \end{definition}
 
@@ -477,12 +469,10 @@ output.
 
 \noindent Proof in Appendix~\ref{app:proofs}.
 
-For example, in Figure~\ref{fig:nonmonotone-frame}'s equality-order variant, a
-run that emits $\bot$ at $x\cdot\cdot$ keeps
-$S[\mathrm{in}\InputGe x\cdot\cdot,\ \mathrm{out}\OutputGe\bot]$: the rows
-$(x\cdot\cdot,\bot)$ and $(xy\cdot,\bot)$.  The registrar in the figure also
-removes $(xy\cdot,\bot)$, a stronger commitment than the specification
-requires.
+For example, in the equality-order variant of
+Figure~\ref{fig:nonmonotone-frame}, a run that emits $\bot$ at $xy\cdot$ keeps
+$S[\mathrm{in}\InputGe xy\cdot,\ \mathrm{out}\OutputGe\bot]$: the single row
+$(xy\cdot,\bot)$, as the figure shows.
 
 To compare runs that end at different inputs, we consider a common \indesc
 of those inputs.
@@ -596,14 +586,13 @@ every state reachable without commitment is exposable.
 If $f$ is monotone, Corollary~\ref{cor:state-by-input} puts every state reachable without commitment at $\sigma_S(i)$, where the exposure test holds; conversely, the exposure test at each $\sigma_S(i)$ is monotonicity.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
-Since every commitment of a functional specification is a seal, Functional
+Since every commitment an output event applies here is a seal, Functional
 CALM and Proposition~\ref{prop:functional-exposure-boundary} together say that a functional specification is consistent
 exactly when, at every state reachable without commitment, no output requires
 sealing input.  A monotone functional specification can emit every current
 output without a commitment; if monotonicity fails at $i\InputOrd k$ with
 $f(i)\not\OutputOrd f(k)$, then at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$
-applies $s_{f(i)}$, which seals $k$, and any system's output event for $f(i)$
-must seal $k$ as well (Appendix~\ref{app:bases}).
+applies $s_{f(i)}$, which seals $k$.
 
 This is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read

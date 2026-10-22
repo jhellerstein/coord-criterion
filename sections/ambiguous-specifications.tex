@@ -88,58 +88,9 @@ with many outputs per input.  Two runs that emit $[A,B]$ and $[B,A]$ fail it;
 two traceroute runs that emit different route sets pass it, since their union
 survives in both.
 
-\paragraph{Different systems, different choices.}
-The specification says which serialization orders are permitted; a system
-decides which binding choices it makes and when (Section~\ref{sec:coordination}).
-Figure~\ref{fig:cc-commitments} shows two systems' choices on the same three-transaction
-fiber---one captures two-phase locking (2PL), the other multi-version timestamp ordering (MVTO).
-In 2PL, racing for a lock commits orderings among a subset of transactions:
-in this case it commits only to $A$ before $B$, leaving $C$'s position
-open.  By contrast, timestamp assignment in MVTO orders a transaction with respect to all others:
-in this case, $B$ is assigned first place.  Both are choices: they remove
-serialization orders while the input stays legal, but leave different
-alternatives open.
-Each is one of the commitments a system applies in emitting a full serial
-order.  Whatever the protocol, its runs are contained in the runs studied here
-(Section~\ref{sec:coordination}), and Consistency is judged on those.
-Appendix~\ref{app:cc-bases} gives both systems' commitments in full, including
-abort commitments, which fix a transaction as aborted.
-
-\begin{figure}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(h) 2PL: $A$ locks ahead of $B$}\\
-    \toprule
-    $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-    $\{A,B,C\}$ & \sh{$[A,B,C]$} \\
-    $\{A,B,C\}$ & \sh{$[A,C,B]$} \\
-    $\{A,B,C\}$ & \sh{$[C,A,B]$} \\
-    \retired{$\{A,B,C\}$} & \retired{$[B,A,C]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[B,C,A]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
-    \bottomrule
-  \end{tabular}
-  \hfill
-  \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(i) MVTO: $B$ receives the first timestamp}\\
-    \toprule
-    $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-    $\{A,B,C\}$ & \sh{$[B,A,C]$} \\
-    $\{A,B,C\}$ & \sh{$[B,C,A]$} \\
-    \retired{$\{A,B,C\}$} & \retired{$[A,B,C]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[A,C,B]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,A,B]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
-    \bottomrule
-  \end{tabular}
-  \caption{Serialization orders for three concurrent transactions, after one
-  commitment under two protocols.  In (h) two-phase locking has ordered $A$
-  before $B$; in (i) multiversion timestamp ordering has placed $B$ first.
-  Legend as in Figure~\ref{fig:election-frames}.}
-  \label{fig:cc-commitments}
-\end{figure}
+Different systems can realize the same choice differently, for example by
+taking a lock or assigning a timestamp; Section~\ref{sec:coordination} treats
+such systems.
 
 \subsection{Relational specifications and Lifted Monotonicity}
 \label{sec:relational-specifications}
@@ -356,7 +307,10 @@ $U_o\neq\varnothing$ the \emph{choice} $c_o$, two \emph{commitments}:
 It removes the rows in $D_o$ by output retirement, which is not a commitment.
 \end{definition}
 
-The three sets are disjoint, so the event is well defined.  The seal $s_o$
+The three sets are disjoint, so the event is well defined.  Removing the rows
+at inputs in $K_o$ leaves $D_o$ and $U_o$ unchanged, and removing $U_o$ leaves
+$K_o$ and $D_o$ unchanged, so the order in which the event applies $s_o$ and
+$c_o$ does not matter.  The seal $s_o$
 empties the fiber at each input in $K_o$, sealing it.  The choice $c_o$ removes
 some outputs at each input it touches and keeps others: a row of $U_o$ at $k$
 lies outside $K_o$, so some row at $k$ \outrel $o$ and survives.  With one row
@@ -364,9 +318,7 @@ per input, $D_o$ and $U_o$ are empty and this is
 Definition~\ref{def:output-event}.  Because $c_o$ acts at every \indesc of the
 current input, not only at it, a choice made now also constrains the choices
 still open at later inputs.  That is what a promise is: once $o$ is emitted,
-later outputs must \outrelbase it.  Systems may commit in other ways, for
-example by taking a lock before they choose; Section~\ref{sec:coordination}
-treats systems that commit differently.
+later outputs must \outrelbase it.
 
 Every removed row thus has one of three causes: an input event removes rows that
 can no longer happen, an output retirement removes rows \outrelpast by a row the
@@ -434,9 +386,7 @@ commitment-free runs, and Consistency are defined as before, and the results
 of Section~\ref{sec:determination} used output events only through that
 equation.  They therefore lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
-(Proposition~\ref{prop:confluence}).  So does
-the distributed reading of Consistency
-(Proposition~\ref{prop:distributed-consistency}).  With them, Consistency
+(Proposition~\ref{prop:confluence}).  With them, Consistency
 reduces to the common-\indesc condition.
 
 \begin{theorem}[Common-\indesc characterization]
