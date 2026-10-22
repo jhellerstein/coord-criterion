@@ -626,6 +626,20 @@ with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} take up both instances.
 
+\paragraph{Determination and monotonicity.}
+After $\mathsf{output}(o)$ every remaining output \outrel $o$, so an emitted
+output is the least element of the upper fiber.  A monotone specification
+already has this shape: at $\sigma_S(i)$, $f(i)$ is the least element of the
+upper fiber, so $\mathsf{output}(f(i))$ removes nothing, and a system can
+report $f(i)$ before the outcome is determined.  Under the equality output
+order the least element of a set is its only element, so every output event
+leaves a determined state: emitting is determining, and a system must wait
+for input to determine the outcome or determine it by a seal, as in
+Figure~\ref{fig:nonmonotone-frame}.  The output order thus sets how much of
+the outcome must be determined before it can be reported.  Equality demands
+all of it, and a richer refinement order lets a system report a lower bound
+early.
+
 Before dropping the functional dependency, we give this consistency condition
 a distributed interpretation.  Section~\ref{sec:distributed-execution}
 realizes runs as participant runs; the construction will apply unchanged when
