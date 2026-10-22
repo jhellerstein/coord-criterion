@@ -262,9 +262,11 @@ The unique output paired with $i$ induces the function
 \[f:(I,\InputOrd)\to(O,\OutputOrd)\]
 with $S=\{(i,f(i)):i\in I\}.$
 We call
-$\InputOrd$ the \emph{input order}: $i\InputOrd j$ means that $j$
-contains at least the input information in $i$, and we say that $j$
-\emph{\inrel} $i$, or is an \emph{\indesc} of $i$; every input is an \indesc of itself.  We call $\OutputOrd$ the
+$\InputOrd$ the \emph{input order}.  Because an output may depend on everything
+a system has received, we model inputs as \emph{cumulative}: an input
+records everything received so far, not a single message, and $i\InputOrd j$
+means that $j$ contains at least the input information in $i$.  We say that $j$
+\emph{\inrel} $i$, or is an \emph{\indesc} of $i$; every input is an \indesc of itself. We call $\OutputOrd$ the
 \emph{output order}: $o\OutputOrd u$ means that $u$ preserves every
 externally visible claim in $o$ and may add more, and we say that $u$
 \emph{\outrel} $o$.  We use these two verbs only in these senses: inputs
@@ -277,8 +279,8 @@ $i_1,\ldots,i_k$ is an input $j$ that \inrel every $i_r$, and a
 A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
 when $w$ \outrel $u$.
 Section~\ref{sec:ambiguous-specifications}
-drops the functional dependency; we say \emph{ordered specification} for
-either kind.
+drops the functional dependency; in general, we will use the term
+\emph{ordered specification}, whether functional or not.
 
 \begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
@@ -300,13 +302,19 @@ For any relation
 $R\subseteq I\times O$, we select rows by writing a predicate on its
 columns $\mathrm{in}$ and $\mathrm{out}$ in square brackets: $R[\mathrm{in}\InputGe j]$ is the table of rows
 whose input \inrel $j$, $R[\mathrm{out}\OutputGe o]$ is the table of rows
-whose output \outrel $o$, and $R[\mathrm{in}=k]$ and $R[\mathrm{in}\in K]$ are
-the tables of rows at $k$ and at inputs in $K$.  Commas separate conjuncts:
+whose output \outrel $o$, $R[\mathrm{in}\in K]$ is
+the table containing the rows with inputs in $K$, etc.  Commas separate conjuncts:
 $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ is the table of rows
-satisfying both predicates.  A selection is again a table.
+satisfying both predicates. 
 To project onto a single column, we write $\mathrm{in}(R)$ and
-$\mathrm{out}(R)$ for the sets of inputs and outputs that appear in $R$, and
-$R(k)=\mathrm{out}(R[\mathrm{in}=k])$ for the \emph{fiber} of $R$ at $k$.
+$\mathrm{out}(R)$ for the sets of inputs and outputs that appear in $R$.
+
+\jmh{This used to just be an example of notation, but ut buried the fiber definition
+-- and it was returning a one-row table which made it seem weird. Maybe we should move it,
+and define upper fiber alongside. Where?}
+We say that the \emph{fiber} of $R$ at $k$ is
+$R(k)=\mathrm{out}(R[\mathrm{in}=k])$---this is a one-row table in the presence of
+the functional dependency, but may be larger when we remove it in Section~\ref{sec:ambiguous-specifications}.
 
 A specification describes every permitted input/output pair.  During execution,
 input arrives and choices become binding, so only some of those pairs remain
@@ -319,7 +327,7 @@ pair $\sigma=(i,R)$, where $i\in I$ is the \emph{current input} and
 $R\subseteq S$ is the \emph{remainder table}, such that:
 \begin{enumerate}
   \item $R$ contains a row at $i$; and
-  \item every row $(k,o)\in R$ satisfies $i\InputOrd k$.
+  \item $R$ contains only rows at \indescs of $i$: every row $(k,o)\in R$ satisfies $i\InputOrd k$.
 \end{enumerate}
 An input $k$ is \emph{legal} at $\sigma$ when $R$ contains a row at $k$.
 \end{definition}
@@ -342,14 +350,14 @@ world.
 For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{input}(j)}
-  \bigl(j,\ R[\mathrm{in}\InputGe j]\bigr).
+  \bigl(j,\ R' = R[\mathrm{in}\InputGe j]\bigr).
   \label{eq:input-event}
 \end{equation}
 It makes $j$ current and \emph{retires} every row failing the predicate: i.e.,
 those whose input does not \inrelbase
 $j$. We call this \emph{input retirement}.
 
-An input event records a new cumulative input $j$, not how $j$ was
+An input event records a new input $j$, not how $j$ was
 assembled.\footnote{The framework does not require cumulative inputs to come
 from a least common \indesc or a lattice, only that they grow according to
 $\InputOrd$.  For example, transaction schedules ordered by subsequence form a
@@ -374,25 +382,20 @@ Let $(i,R)$ be a state and $(i,o)$ its row at the current input.  The
 \emph{output event} $\mathsf{output}(o)$ keeps exactly the rows whose outputs
 \outrelbase $o$ and emits $o$, atomically:
 \begin{equation}
-  (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
+  (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R' = R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-When $R[\mathrm{out}\OutputGe o]\neq R$, the event applies a
-\emph{commitment}, the \emph{seal}
-\begin{equation}
-  s_o(i,R)=\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr),
-  \label{eq:canonical-seal-commitment}
-\end{equation}
-which removes the rows at every legal input whose output does not
-\outrelbase $o$; it \emph{seals} those inputs.
+We call this state change the \emph{seal} $s_o(i,R)=(i,R[\mathrm{out}\OutputGe o])$.  When it removes rows, it
+\emph{seals} the inputs of those rows, and it is a \emph{commitment}.
 \end{definition}
 
-The current row $(i,o)$ remains, since $o$ \outrel itself, so the event ends
-at a state.  A commitment makes an allowed future unreachable, and seals of
-this form are the only commitments this section uses.  Systems may commit more
-than an output requires, as the registrar does in
-Figure~\ref{fig:election-frames}(d); Section~\ref{sec:coordination} shows this
-changes nothing observable, so we study runs of these events.
+The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
+ends at a state. A commitment removes rows that input alone would not have
+removed: the inputs it seals are no longer legal. Seals of this form are the
+only commitments this section uses. Systems may commit more than an output
+requires, as the registrar does in Figure~\ref{fig:election-frames}(d);
+Section~\ref{sec:coordination} shows this adds no observable behavior, so these seals
+suffice for our analysis.
 
 \begin{definition}[Exposable output]
 \label{def:exposable}
@@ -401,10 +404,12 @@ applies no commitment, that is, when $R[\mathrm{out}\OutputGe o]=R$.
 \end{definition}
 
 Since the only row at a legal input $j$ is $(j,f(j))$, $o$ is exposable at
-$(i,R)$ exactly when $o\OutputOrd f(j)$ at every legal $j\InputGe i$.
+$(i,R)$ exactly when $f(j)$ \outrel $o$ at every legal input $j$.
 
 \paragraph{Determination.}
-Both kinds of event can narrow what remains possible.  For a state $(i,R)$, the
+Both kinds of event can narrow what remains possible.  
+\jmh{upper fiber definition buried here}
+For a state $(i,R)$, the
 \emph{upper fiber} $\mathrm{out}(R[\mathrm{in}\InputGe i])$ collects the
 outputs at $i$ and its legal \indescs.  The state is
 \emph{determined} when its upper fiber has one element, regardless of how it
