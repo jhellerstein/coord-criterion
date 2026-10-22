@@ -412,41 +412,30 @@ Monotonicity is therefore the lifted form of functional monotonicity in a
 precise sense: both are the common-\indesc condition, read for one output
 per input or for many.
 
-\paragraph{Determination yields Lifted Monotonicity.}
-Determination (Section~\ref{sec:functional-events}) is defined on states and
-lifts unchanged: a state is determined when its upper fiber has one element.
-With several outputs per input it gains a second route, choice: in
-Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ chooses it over
-$[B,A]$, and the state is determined.  As in
-Section~\ref{sec:functional-calm-theorem}, restricting a state $(i,R)$ to its
-legal inputs gives an ordered specification
-$\Spec_R=(\mathrm{in}(R),\InputOrd,O,\OutputOrd,R)$ whose canonical state at
-$i$ is $(i,R)$, and runs from $(i,R)$ are runs of $\Spec_R$.
+\paragraph{Determination in hindsight.}
+Looking back at a run, we can ask what its commitments decided about the
+inputs it actually received, as if those inputs had been given up front.
+Seals decided nothing about them.
 
-\begin{proposition}[Determination yields Lifted Monotonicity]
-\label{prop:determined-lifted-monotone}
-If a state $(i,R)$ is determined, then $\Spec_R$ is functional and satisfies
-Lifted Monotonicity; runs from $(i,R)$ are therefore confluent, and every
-output they emit is exposable.  More generally, every output at every state
-reachable from $(i,R)$ without commitment is exposable if and only if
-$\Spec_R$ satisfies Lifted Monotonicity.
+\begin{proposition}[Seals vanish in hindsight]
+\label{prop:seals-vanish}
+Restricted to the inputs a run receives, the rows removed by its commitments
+are exactly the rows removed by its choices.
 \end{proposition}
 
 \begin{proof}
-If the upper fiber $\mathrm{out}(R)$ is $\{o\}$, every row of $R$ has output
-$o$, so $\Spec_R$ is functional and constant, hence monotone; with one output
-per input, Lifted Monotonicity is monotonicity.
-Proposition~\ref{prop:determined-monotone} applied to $\Spec_R$ gives the rest.
-For the general claim, the canonical states of $\Spec_R$ are the states
-$(k,R[\mathrm{in}\InputGe k])$ that $\mathsf{input}(k)$ reaches from $(i,R)$, so
-Proposition~\ref{prop:exposure-boundary} applied to $\Spec_R$, with
-Proposition~\ref{prop:lifted-monotonicity-decomposition}, gives the
-equivalence.
+Consider a seal applied by $\mathsf{output}(o)$ at $(k,R)$.  The current input
+$k$ is not in $K_o$, since its row $(k,o)$ remains.  Inputs received before
+$k$ have no rows in $R$, which holds only \indescs of $k$.  An input in $K_o$
+has no rows left, so no later input event can receive it.
 \end{proof}
 
-A determined remainder satisfies the functional dependency again:
-determination resolves the ambiguity this section introduced.  It is also more
-than coordination needs.  In panel~(g) the state is undetermined, with three
-route sets still possible, yet its remainder satisfies Lifted Monotonicity and
-no output needs a commitment.  Section~\ref{sec:complete-calm} assembles
+In a functional specification every commitment is a seal, so in hindsight a
+functional run determined nothing: its commitments were the price of emitting
+before its input was complete, as when the registrar closes the polls.  With
+several outputs per input, choices remain.  A serialization order must be
+chosen even when every transaction is known up front.  What a run determined
+about its own input is exactly its choices.
+
+Section~\ref{sec:complete-calm} assembles
 Complete CALM from these parts.

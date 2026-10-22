@@ -626,37 +626,6 @@ with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} take up both instances.
 
-\paragraph{Determination yields monotonicity.}
-A state's remainder table is itself a specification.  For a state $(i,R)$,
-restricting to its legal inputs gives the functional ordered specification
-$\Spec_R=(\mathrm{in}(R),\InputOrd,O,\OutputOrd,R)$, whose canonical state at
-$i$ is $(i,R)$ itself, since $R=R[\mathrm{in}\InputGe i]$.  Every input legal
-at a state reached from $(i,R)$ lies in $\mathrm{in}(R)$, so runs from $(i,R)$
-are runs of $\Spec_R$.
-
-\begin{proposition}[Determination yields monotonicity]
-\label{prop:determined-monotone}
-If a state $(i,R)$ is determined, then $\Spec_R$ is monotone.  Runs from
-$(i,R)$ are therefore confluent, and every output they emit is exposable.
-\end{proposition}
-
-\begin{proof}
-The upper fiber $\mathrm{out}(R)$ is a single output $o$, so $\Spec_R$ is the
-constant function $o$ on $\mathrm{in}(R)$, which is monotone since
-$o\OutputOrd o$.  Functional CALM applied to $\Spec_R$ gives confluence.  Every
-state reached from $(i,R)$ is determined with the same output $o$, so
-$\mathsf{output}(o)$ removes no row there.
-\end{proof}
-
-Determination is the extreme case.  The same restriction shows that a system
-needs no further commitment from $(i,R)$ exactly when $\Spec_R$ is monotone:
-Proposition~\ref{prop:functional-exposure-boundary} applied to $\Spec_R$ says
-that every output reachable from $(i,R)$ without commitment is exposable if and
-only if $\Spec_R$ is monotone.  Commitments and input retirement can turn a
-non-monotone remainder into a monotone one, and coordination can stop there, before anything is
-determined: in panel~(b) of Figure~\ref{fig:election-frames} the state is
-undetermined, yet its remainder is monotone and no output needs a commitment.
-
 Before dropping the functional dependency, we give this consistency condition
 a distributed interpretation.  Section~\ref{sec:distributed-execution}
 realizes runs as participant runs; the construction will apply unchanged when
