@@ -28,18 +28,17 @@ such cut project to one run per participant
 something; its projected run records only how that information changed the
 specification state.
 
-A participant's \emph{strategy} chooses its input and output events using the
-specification, the messages it has received, and any other strategy state.
-Strategy state is not part of the specification state and affects the
-remainder table only through the selected transitions.  Messages and strategy
-state explain why a participant took an event; the projection below keeps only
-the event.
+Which events a participant takes may depend on the messages it has received
+and on any other local state.  Local state is not part of the specification
+state and affects the remainder table only through the transitions the
+participant takes.  Messages and local state explain why a participant took an
+event; the projection below keeps only the event.
 
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
 Fix an ordered specification, a finite participant set $P$, and initial input
 $i_p$ for each participant.  Messages carry
-cumulative input, arbitrary strategy data, or both.  A \emph{distributed
+cumulative input, arbitrary other data, or both.  A \emph{distributed
 history} $H$ consists of a finite set of events with:
 \begin{enumerate}
   \item a participant assignment and total local order for each participant;
@@ -135,7 +134,7 @@ but both participants reach $\sigma_1=(xy\cdot,R_1)$.
 \end{figure}
 
 The figure shows why we need a transition projection.  A distributed history
-records sends, receives, and strategy state even when they make no difference
+records sends, receives, and local state even when they make no difference
 to the specification state.  The projection filters each participant's history
 to the transitions that determine that state.
 
@@ -144,7 +143,7 @@ to the transitions that determine that state.
 For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
 to $p$ in local order.  Its \emph{transition projection} $\pi_p(C)$ keeps input
 and output events in that order and deletes sends and receives.  A receive may
-update strategy state and influence a later input event, but it does not
+update local state and influence a later input event, but it does not
 directly change the specification state.  We consider only pairs $(H,C)$ for
 which each $\pi_p(C)$ is a defined transition sequence from $\sigma_S(i_p)$;
 each recorded $\mathsf{input}(j)$ must itself be legal at the state where it
@@ -167,7 +166,7 @@ its effect on the participant states.
 
 Equal endpoints need not determine the same future history: participants and
 the environment may have observed different outputs, and those observations may
-influence later inputs or strategy choices.
+influence later inputs or choices.
 
 \paragraph{Confluence of a history.}
 At a consistent cut $C$, the participants may hold different specification
