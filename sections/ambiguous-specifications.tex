@@ -73,27 +73,32 @@ serialization order \outrel the other, so emitting one requires a
 emitting $[A,B]$ chooses it over $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output retirement}
-(Definition~\ref{def:output-retirement}); because every removed output is
-\outrelpast by a remaining one, emitting the route observation needs no
-commitment: it is \emph{exposable}.  The atomic event
-$\mathsf{output}(o)$ applies any seal or choice it needs, performs any
-retirements, then emits $o$.
+(Definition~\ref{def:output-retirement}); every removed output is
+\outrelpast by a remaining one, so emitting the route observation needs no
+commitment: it is \emph{exposable}.  
+
+An output event can thus remove rows in three ways: by sealing inputs, as in
+Section~\ref{sec:functional-calm}; by choosing among outputs, as in
+panel~(f); or by retiring outputs, as in panel~(g).  The atomic event
+$\mathsf{output}(o)$ does whichever of these $o$ requires, then emits $o$;
+only the first two are commitments.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
-The difference is the order-theoretic concept of a \emph{directed} fiber:
-every finite set of outputs in the fiber has a common \outnoun there.
+The difference between them is the order-theoretic concept of a \emph{directed} fiber:
+every finite set of outputs in a given fiber has a common \outnoun in that fiber.
 Directedness at a single input is not sufficient, however;
 we must also \outrelbase prior outputs as input \ingrows. \emph{Lifted Monotonicity}
 combines the requirements: every finite set of outputs possible at an input
 must have a common \outnoun in the fiber of every \indesc.  Equivalently,
 outputs emitted at inputs with a common \indesc $j$ must have a common
-\outnoun permitted at $j$: the same test as in Section~\ref{sec:election-story}, read
-with many outputs per input.  Two runs that emit $[A,B]$ and $[B,A]$ fail it;
+\outnoun permitted at $j$: the same test as in Section~\ref{sec:election-story}, but
+with many outputs per input.  Two transaction scheduling runs that emit $[A,B]$ and $[B,A]$ fail it;
 two traceroute runs that emit different route sets pass it, since their union
 survives in both.
 
-Different systems can realize the same choice differently, for example by
-taking a lock or assigning a timestamp; Section~\ref{sec:coordination} treats
+Different systems can realize the same choice differently. For example two transaction systems 
+may achieve the same schedule, one by
+taking a lock and the other by assigning a timestamp; Section~\ref{sec:coordination} addresses
 such systems.
 
 \subsection{Relational specifications and Lifted Monotonicity}
