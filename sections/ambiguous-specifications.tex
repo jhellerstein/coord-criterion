@@ -303,8 +303,9 @@ the event contract of Proposition~\ref{prop:canonical-output-preservation}.
 \begin{definition}[Lifted output event]
 \label{def:lifted-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
-under a basis $\mathcal B$ applies a finite, possibly empty sequence $\gamma$ of
-commitments from $\mathcal B$, leaving a table $R_c$, and then retires rows and
+under a basis $\mathcal B$ applies a finite, possibly empty sequence
+$\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each $c_m$ defined at
+the state its predecessors leave, leaving a table $R_c$, and then retires rows and
 emits $o$, all atomically.  Call a row \emph{ruled out by} $o$ when its output
 does not \outrelbase $o$.  The event is \emph{legal} when $(i,o)\in R_c$ and every
 row of $R_c$ ruled out by $o$ is \outrelpast by a retained row that \outrel $o$:
@@ -411,7 +412,8 @@ $U_o$ at $k$ lies outside $K_o$, so some row at $k$ \outrel $o$ and survives.
 With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
 are those of Definition~\ref{def:canonical-commitment-basis}; canonical runs
 now use this lifted basis.  Let $\kappa_o$ be the sequence that applies $s_o$ when
-$K_o\neq\varnothing$, then $c_o$ when $U_o\neq\varnothing$ (empty if neither).
+$K_o\neq\varnothing$, then $c_o$ when $U_o\neq\varnothing$, so $\kappa_o$ is
+one of $\varepsilon$, $s_o$, $c_o$, or $s_o\,c_o$.
 The \emph{canonical event} is $\Out{\kappa_o}{o}$: it applies $\kappa_o$, then
 retires $D_o$ and emits $o$.\footnote{Here $K_o$, $D_o$, and $U_o$ are computed at the
 state where the event starts.  Since $s_o$ removes only rows at inputs in
@@ -513,8 +515,8 @@ $(j,x)$ is \outrelpast by some row $(j,u)$ \outrelpart $o$.  Rows that already
 stated test.
 \end{proof}
 
-This test marks the commitment boundary: if it fails, every legal output
-event uses a commitment to remove conflicting rows.
+This test marks the commitment boundary: if it fails, every legal
+$\Out{\gamma}{o}$ has $\gamma\neq\varepsilon$.
 
 \subsection{Lifted executions and consistency}
 \label{sec:relational-executions}

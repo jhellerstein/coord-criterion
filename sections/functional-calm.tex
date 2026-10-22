@@ -93,7 +93,7 @@ when an output can be emitted without commitment.
   through: it was removed by a commitment; gray alone: it was retired by an
   input event.
   Panels (b) and (c) follow input events; panel (d)
-  follows an output event for $\bot$ that contains a seal commitment.}
+  follows $\Out{\gamma}{\bot}$, where $\gamma$ contains a seal commitment.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -177,12 +177,12 @@ have this commitment in its basis.
 In a functional table, an output $o$ is \emph{exposable} when every output
 still possible at the current input or an \indesc still in the table \outrel it.  Hence $\bot$ is exposable
 in panels~(a) and~(b), and $x$ in panel~(c).  An atomic output event $\Out{\gamma}{o}$
-applies a sequence $\gamma$ of seal commitments needed so that $o$ becomes
+applies a sequence $\gamma$ of seal commitments after which $o$ is
 exposable, then emits $o$, in one transition; $\Out{\varepsilon}{o}$ applies
 none.  Emitting $o$ is a promise:
 from then on, only rows whose outputs \outrelbase $o$ remain.  The emission stays
 explicit in the history because the uncontrolled environment may use it when
-choosing later input.
+choosing later input.  It observes $o$, not $\gamma$.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
@@ -422,8 +422,9 @@ future input whose output does not \outrelbase $o$.
 \label{def:output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An \emph{output event}
 $\Out{\gamma}{o}$ under a basis $\mathcal B$ applies a finite, possibly
-empty sequence $\gamma$ of commitments from $\mathcal B$ and then emits $o$,
-all atomically; $\varepsilon$ is the empty sequence.  Events with different
+empty sequence $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each
+$c_m$ defined at the state its predecessors leave, and then emits $o$, all
+atomically; $\varepsilon$ is the empty sequence.  Events with different
 $\gamma$ emit the same output but are different events.  If $\gamma$ leaves
 remainder table $R'$, the event is
 \emph{legal} at $(i,R)$ when every remaining row's output \outrel $o$:
@@ -565,20 +566,22 @@ $\mathcal B$} is any finite transition sequence from the canonical state
 $\sigma_S(i)$ at some input $i$; its output events may use only commitments
 from $\mathcal B$.  We say simply \emph{run} when the basis is clear.  A
 \emph{canonical run} is a run under $\mathcal B_S$ in which every output event
-takes the canonical transition of Equation~\ref{eq:output-action}.
+is the canonical event $\Out{\kappa_o}{o}$ of the state where it occurs.
 \label{def:run}
 \end{definition}
 
-A run is \emph{commitment-free} when none of its output events applies a
-commitment.  By clause~3 of the event contract, a commitment-free run under any
+A run is \emph{commitment-free} when each of its output events is some
+$\Out{\varepsilon}{o}$.  By clause~3 of the event contract, a commitment-free run under any
 basis is a canonical run.  A state is \emph{reachable without commitment} when
 some commitment-free run reaches it.
 
 Our results quantify over canonical runs rather than over the runs of any
 particular system.  To see that this excludes no system's behavior, call two
-runs \emph{equivalent} when they start at the same canonical state and have the
-same sequence of event labels: they accept the same inputs and emit the same
-outputs, in the same order.  Equivalent runs may differ in the commitments
+runs \emph{equivalent} when they start at the same canonical state and agree
+once commitment sequences are erased: wherever one has $\mathsf{input}(j)$ the
+other does, and wherever one has $\Out{\gamma}{o}$ the other has
+$\Out{\gamma'}{o}$ for some $\gamma'$.  They accept the same inputs and emit
+the same outputs, in the same order, which is all the environment observes.  Equivalent runs may differ in the commitments
 their output events apply, and hence in their remainder tables.  We lift
 Proposition~\ref{prop:canonical-output-preservation} from single output events
 to runs:
@@ -599,11 +602,11 @@ It retires every row whose input does not \inrelbase $j$, keeping
 $R[\mathrm{in}\InputGe j]$ in the original run and
 $\widehat R[\mathrm{in}\InputGe j]$ in the canonical run.  Since
 $R\subseteq\widehat R$, the first remains contained in the second.  For an
-output event for $o\in R(i)$ taking $R$ to $R'$, containment
+output event $\Out{\gamma}{o}$ with $o\in R(i)$ taking $R$ to $R'$, containment
 (Proposition~\ref{prop:canonical-output-preservation}) gives
 $R'\subseteq R[\mathrm{out}\OutputGe o]$.  Since $o\in R(i)\subseteq\widehat R(i)$,
-canonical support applies at $\widehat R$: the canonical event takes
-$\widehat R$ to $\widehat R[\mathrm{out}\OutputGe o]$, which contains
+canonical support applies at $\widehat R$: $\Out{\kappa_o}{o}$, with $\kappa_o$
+taken at $(i,\widehat R)$, takes $\widehat R$ to $\widehat R[\mathrm{out}\OutputGe o]$, which contains
 $R[\mathrm{out}\OutputGe o]$.
 \end{proof}
 
@@ -671,8 +674,8 @@ at $j$ if and only if some row at $j$ survives in every final state:
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
 \end{equation}
-For any such $u$, $\mathsf{input}(j)$ followed by $\Out{\kappa_u}{u}$ takes
-every endpoint to the state
+For any such $u$, $\mathsf{input}(j)$ followed by the canonical event for $u$
+($\kappa_u$ taken at each resulting state) takes every endpoint to the state
 $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
 
@@ -681,8 +684,8 @@ A common state with current input $j$ has a row at $j$, and since rows are
 never added, that row belongs to every $R_r$.  Conversely, let $(j,u)$ belong
 to every $R_r$.  Then $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
-emitted on run $r$.  After $\mathsf{input}(j)$ and $\Out{\kappa_u}{u}$, the
-same lemma leaves exactly
+emitted on run $r$.  After $\mathsf{input}(j)$ and the canonical event for $u$
+($\kappa_u$ taken at each resulting state), the same lemma leaves exactly
 $S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
 starting run.
 \end{proof}
@@ -820,7 +823,8 @@ the two results together say that a functional specification is consistent
 exactly when, at every state reachable without commitment, no output requires
 sealing input.  A monotone functional specification can emit every current
 output without a commitment; if monotonicity fails at $i\InputOrd k$ with
-$f(i)\not\OutputOrd f(k)$, the canonical output event for $f(i)$ seals $k$.
+$f(i)\not\OutputOrd f(k)$, then at $\sigma_S(i)$, $\kappa_{f(i)}=s_{f(i)}$, and
+every legal $\Out{\gamma}{f(i)}$ seals $k$.
 
 This is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read

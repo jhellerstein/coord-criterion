@@ -50,15 +50,16 @@ cumulative input, arbitrary strategy data, or both.  A \emph{distributed
 history} $H$ consists of a finite set of events with:
 \begin{enumerate}
   \item a participant assignment and total local order for each participant;
-  \item labels $\mathsf{input}(j)$, $\Out{\gamma}{o}$,
-        $\mathsf{send}(m)$, or $\mathsf{receive}(m)$;
-  \item for each output event, the finite sequence of basis commitments it
-        applies, possibly empty; and
+  \item labels $\mathsf{input}(j)$, $\Out{\gamma}{o}$ with $\gamma$ a finite
+        sequence of basis commitments, $\mathsf{send}(m)$, or
+        $\mathsf{receive}(m)$; and
   \item for each receive, a matching send at another participant.
 \end{enumerate}
-An output event atomically applies its commitments and emits its label.  The
-history is \emph{canonical} when its commitment basis is
-$\mathcal B_S$ and all of its output events are canonical.  A \emph{consistent
+An output event $\Out{\gamma}{o}$ atomically applies $\gamma$ and emits $o$;
+the environment observes $o$, not $\gamma$.  The history is \emph{canonical}
+when its commitment basis is $\mathcal B_S$ and each of its output events is
+the canonical event $\Out{\kappa_o}{o}$ at the participant's state where it
+occurs.  A \emph{consistent
 cut} $C$ is a subset of events closed under
 happens-before~\cite{chandy1985distributed}.
 \end{definition}

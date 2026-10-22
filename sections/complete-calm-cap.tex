@@ -68,11 +68,11 @@ not coordination merely because it uses one of these mechanisms.
 \begin{definition}[Coordination]
 \label{def:coordination}
 A run or history \emph{coordinates} if and only if one of its output events
-applies a commitment, that is, seals an input or chooses among outputs,
+$\Out{\gamma}{o}$ has $\gamma\neq\varepsilon$, that is, applies a commitment that seals an input or chooses among outputs,
 removing an alternative that the current input still permits and that no
 remaining row at the same input \outrel.  It is \emph{coordination-free}, equivalently
-commitment-free, when its output events apply no commitments; they may still
-perform output retirements.
+commitment-free, when every output event is some $\Out{\varepsilon}{o}$; such
+events may still perform output retirements.
 \end{definition}
 
 The next result explains why commitments are where coordination lives: a
@@ -82,10 +82,10 @@ current input.
 \begin{proposition}[Conflicting output events cannot coexist]
 \label{thm:commitments-require-coordination}
 Let $\sigma=(i,R)$ be a state and $x\in R(i)$.  Suppose one participant's
-output event takes $\sigma$ to $\sigma'=(i,R')$ with no output in $R'(i)$
-that \outrel $x$; the event necessarily applies a commitment, since no
-retirement can remove $(i,x)$.  Suppose a second participant emits $x$ from
-$\sigma$, reaching $t=(i,R_t)$.  Then $\sigma'$ and $t$ cannot be brought to a
+event $\Out{\gamma}{o}$ takes $\sigma$ to $\sigma'=(i,R')$ with no output in
+$R'(i)$ that \outrel $x$ (necessarily $\gamma\neq\varepsilon$, since no
+retirement can remove $(i,x)$).  Suppose a second participant performs a legal
+$\Out{\gamma'}{x}$ from $\sigma$, reaching $t=(i,R_t)$.  Then $\sigma'$ and $t$ cannot be brought to a
 common state with current input $i$.
 \end{proposition}
 
@@ -230,12 +230,14 @@ For an ordered relational specification $\Spec$, the following are equivalent:
   \item $\Spec$ satisfies Lifted Monotonicity.
 \end{enumerate}
 Moreover, when they hold, a commitment-free system has both properties: the
-canonical basis with strategies that may emit any exposable output.
+canonical basis with strategies that may emit any exposable output $o$ by
+$\Out{\varepsilon}{o}$.
 \end{theorem}
 
 \begin{proof}
 Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Take the canonical
-basis and strategies that may emit any exposable output at any time.  Every
+basis and strategies that may emit any exposable output $o$ by
+$\Out{\varepsilon}{o}$ at any time.  Every
 history of this system is commitment-free (its output events apply no
 commitment), so each projection is a canonical
 run (Section~\ref{sec:determination}) and every state it reaches is reachable
