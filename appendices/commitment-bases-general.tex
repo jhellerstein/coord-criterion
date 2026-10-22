@@ -8,7 +8,8 @@ requires, and may restrict when each commitment is available.  This appendix
 supplies the details behind that section: the seals and choices of
 Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} are
 commitments, compound commitments behave like single ones, and every system's
-runs are contained in canonical runs.
+run has an observably equivalent canonical run that retains at least as many
+rows after each event.
 
 \begin{definition}[Commitment basis]
 \label{def:basis}
@@ -46,9 +47,10 @@ sequence is, is a commitment.
 \begin{proof}
 Each step leaves the current input unchanged and maps a state to a state, so the
 composite does too, and it removes a nonempty set of rows because the first
-step does.  Suppose step $m$ removes $(k,u)$ from table $R_m$.  No row of $R_m$
-at $k$ \outrel $u$, and the final table is contained in $R_m$, so no remaining
-row at $k$ \outrel $u$: Equation~\ref{eq:commitment-excludes} holds.
+step does.  Suppose step $m$ removes $(k,u)$, and let $R_m$ be the table that
+step $m$ leaves.  By Equation~\ref{eq:commitment-excludes} for that step, no
+row of $R_m$ at $k$ \outrel $u$; the final table is contained in $R_m$, so no
+remaining row at $k$ \outrel $u$ either.
 \end{proof}
 
 A compound output event (Definition~\ref{def:system-output-event}) therefore
@@ -115,5 +117,5 @@ Locks and timestamps are commitments of this kind: two-phase locking commits an
 order among some transactions, and timestamp assignment places one transaction
 relative to all others.  Section~\ref{sec:coordination} illustrates both, and
 Appendix~\ref{app:cc-bases} writes the two bases down.  By
-Lemma~\ref{lem:canonical-equivalent}, the runs of either are contained in
-canonical runs.
+Lemma~\ref{lem:canonical-equivalent}, each run of either has an observably
+equivalent canonical run that retains at least as many rows.
