@@ -203,12 +203,15 @@ Neither changes confluence: the common state confluence asks for already keeps
 every output any participant emitted (Lemma~\ref{lem:run-residual}), so
 honoring $o$ only performs early a narrowing every reconciliation must perform.
 In a monotone specification, once the receiver has the sender's input,
-honoring $o$ removes nothing.  Otherwise honoring $o$ can cost the receiver
-commitments of its own.  Under the equality order, a receiver at $xy\cdot$
-that honors a sender's $\bot$ must itself close the polls, sealing $xyx$ and
-$xyy$.  One participant's promise then binds the others, and making such
-commitments jointly is what coordination does
-(Section~\ref{sec:complete-calm}).
+honoring $o$ removes nothing.  Otherwise honoring $o$ can remove rows, and the
+receiver then applies a commitment itself.  In the equality-order election of
+Figure~\ref{fig:nonmonotone-frame}, a sender at $xy\cdot$ that emits $\bot$
+seals $xyx$ and $xyy$; a receiver at $xy\cdot$ that honors $\bot$ must apply
+the same seal to its own table.  A receiver that has already received $xyx$
+cannot honor $\bot$ at all, and its cut with the sender is not confluent.
+Sharing outputs therefore neither creates nor removes the need for
+commitments: it lets a receiver apply early the commitments any reconciliation
+would require, and it cannot repair a cut that is not confluent.
 
 Proposition~\ref{prop:distributed-consistency} uses only runs, so it holds
 unchanged for the specifications of Section~\ref{sec:ambiguous-specifications},
