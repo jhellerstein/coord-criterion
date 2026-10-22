@@ -137,13 +137,15 @@ output events.
 
 The examples from the start of this section pose the next question: as input
 \ingrows from $i$ to $j$, can some output permitted at $j$ \outrelbase
-whatever outputs runs emit at $i$?  Two things can go wrong: (a)~an output at
-$i$ has no \outnoun in the fiber of some \indesc $j$, or (b)~two outputs
-permitted at $i$ have no common \outnoun in the fiber of $i$.  We rule out
+whatever outputs runs emit at $i$?  Two things can go wrong.  A
+\emph{stranded output} is an output at $i$ with no \outnoun in the fiber of
+some \indesc $j$.  An \emph{incompatible pair} is two outputs permitted at
+$i$ with no common \outnoun in the fiber of $i$.  We rule out
 each in turn, combine the two, and then restate the result in the form runs
 need.
 
-Ruling out~(a) asks that every output keep some \outnoun as input \ingrows.
+Ruling out stranded outputs asks that every output keep some \outnoun as
+input \ingrows.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -159,14 +161,15 @@ when every output keeps some \outnoun as input \ingrows:
 
 For singleton fibers this is functional monotonicity,
 Equation~\ref{eq:functional-monotonicity}.  It treats each output separately,
-so it does not rule out~(b), which concerns several outputs at one input.
+so it does not rule out incompatible pairs, which concern several outputs at
+one input.
 For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
 \emph{incompatible in $F$} otherwise; they are \emph{compatible at input $i$}
 when they are compatible in the fiber $\fiber{i}$.
 
-Ruling out~(b) asks that every finite set of outputs in a fiber be compatible
-there.
+Ruling out incompatible pairs asks that every finite set of outputs in a
+fiber be compatible there.
 
 \begin{definition}[Directed fiber, Directed Outputs]
 \label{def:fiber-directedness}
@@ -198,8 +201,11 @@ $A,B\subseteq O$, define
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-the \emph{joint lift} of $\OutputOrd$: a single output of $A$ must have a
-\outnoun in $B$, and several outputs of $A$ a common \outnoun in $B$.
+the \emph{joint lift} of $\OutputOrd$.  Read it with $A=\fiber{i}$ and
+$B=\fiber{j}$ for $i\InputOrd j$.  When $X$ is a single output $o$, it asks
+that $o$ have a \outnoun at $j$, which rules out stranded outputs.  When $X$
+holds several outputs, it asks that they have a common \outnoun at $j$; with
+$j=i$, this rules out incompatible pairs.
 
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
@@ -215,13 +221,12 @@ under the joint lift:
 \end{definition}
 
 With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).  It also combines the two
-conditions above: a specification satisfies Lifted Monotonicity exactly when
-it satisfies Relational Monotonicity and Directed Outputs.  Taking $X=\{o\}$
-gives Relational Monotonicity, and taking $j=i$ gives Directed Outputs.
-Conversely, for $i\InputOrd j$ and finite nonempty $X\subseteq\fiber{i}$,
-Relational Monotonicity gives each $x\in X$ a \outnoun in $\fiber{j}$, and
-Directed Outputs gives those a common \outnoun in $\fiber{j}$.
+(Definition~\ref{def:functional-monotonicity}).  As the reading above shows,
+it implies Relational Monotonicity and Directed Outputs; conversely, for
+$i\InputOrd j$ and finite nonempty $X\subseteq\fiber{i}$, Relational
+Monotonicity gives each $x\in X$ a \outnoun in $\fiber{j}$, and Directed
+Outputs gives those a common \outnoun in $\fiber{j}$.  So Lifted Monotonicity
+holds exactly when both do.
 
 \paragraph{The common-\indesc condition.}
 Runs emit outputs at different inputs and meet at a common \indesc, but Lifted
