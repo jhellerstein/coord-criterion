@@ -102,9 +102,7 @@ the ballots received so far with the permitted result; orders on the columns
 describe how inputs grow and which later outputs \outrelbase earlier ones.  This
 section considers tables in which each input has exactly one output;
 Section~\ref{sec:ambiguous-specifications} later removes that functional
-dependency.  By a \emph{system} we mean any implementation that receives
-input from the environment and emits outputs to it;
-Section~\ref{sec:coordination} makes this precise.
+dependency.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
 $y$.  The output is whichever candidate has two ballots, or $\bot$ while there
@@ -135,7 +133,9 @@ $\{\bot,x,y\}$.
 If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
 is \emph{determined}: input alone has resolved the outcome, without commitment.  
 
-In panel~(d), by contrast, a registrar within the system emits $\bot$ and closes the polls at
+In panel~(d), by contrast, a registrar within the \emph{system}, the
+implementation that receives the ballots and announces the result
+(Section~\ref{sec:coordination} makes this precise), emits $\bot$ and closes the polls at
 $xy\cdot$ in the same output event.  Its irrevocable \emph{seal commitment}
 removes the still-possible $xyx$ and $xyy$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
