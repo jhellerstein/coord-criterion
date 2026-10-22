@@ -51,14 +51,13 @@ happens-before~\cite{lamport1978time,chandy1985distributed}.
 \end{definition}
 
 The standard term ``consistent cut'' is unrelated to our notion of
-consistency.  The events at any consistent cut project to one run per
-participant (Definition~\ref{def:semantic-projection}).
+consistency.  The events at any consistent cut give one run per participant
+(Definition~\ref{def:semantic-projection}).
 
-\subsection{Transition projection and confluence}
+\subsection{Participant runs and confluence}
 \label{sec:projection-confluence}
 
-The projection is easiest to see by comparing two histories with the same
-effect on their participants.
+Two histories with the same effect on their participants illustrate this.
 
 \paragraph{Example: direct and forwarded input.}
 In Figure~\ref{fig:history-projection}, $p$ and $q$ start at
@@ -135,31 +134,17 @@ but both participants reach $\sigma_1=(xy\cdot,R_1)$.
   \label{fig:history-projection}
 \end{figure}
 
-The figure shows why we need a transition projection.  A distributed history
-records sends and receives even when they make no difference
-to the specification state.  The projection filters each participant's history
-to the transitions that determine that state.
-
-\begin{definition}[Transition projection, state endpoint]
+\begin{definition}[Participant run, endpoint]
 \label{def:semantic-projection}
-For a consistent cut $C$ and participant $p$, list the events of $C$ assigned
-to $p$ in local order.  Its \emph{transition projection} $\pi_p(C)$ keeps input
-and output events in that order and deletes sends and receives.  Write $\sigma_p(C)$ for the final specification state of
-$\pi_p(C)$.  The \emph{state endpoint} of the cut is the vector
-        \begin{equation}
-  \operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}.
-  \label{eq:semantic-endpoint}
-        \end{equation}
-Because input and output events are atomic transitions, every transition
-projection is a run (Definition~\ref{def:run}).
+At a consistent cut $C$, the input and output events of $C$ at participant $p$,
+in local order, form its \emph{participant run}, a run
+(Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$.  The
+\emph{endpoint} of $C$ is $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
 \end{definition}
 
-At both cuts in Figure~\ref{fig:history-projection}, each local projection is
-$\mathsf{input}(xy\cdot)$, so every participant has specification state
-$\sigma_1$ and
-$\operatorname{end}(H_d,C_d)=\operatorname{end}(H_f,C_f)
-=(\sigma_1,\sigma_1)$.  Projection erases the delivery path while retaining
-its effect on the participant states.
+In Figure~\ref{fig:history-projection}, each participant run at either cut is
+$\mathsf{input}(xy\cdot)$, so both endpoints are $(\sigma_1,\sigma_1)$: the
+delivery paths differ, but the participant runs do not.
 
 Equal endpoints need not determine the same future history: participants and
 the environment may have observed different outputs, and those observations may
@@ -205,7 +190,7 @@ consistency.
 \end{proposition}
 
 \begin{proof}
-At any cut of a history, the projections are a finite set of runs, so
+At any cut of a history, the participant runs are a finite set of runs, so
 consistency implies their confluence from those endpoints.  Conversely, place
 any finite set of runs in a message-free history,
 one per participant; every input event in a run is already a cumulative
@@ -227,7 +212,7 @@ regardless of message paths, arrival order, or the outputs they emitted.
 \end{corollary}
 
 \begin{proof}
-Each participant's transition projection is a run; apply
+Each participant run is a run; apply
 Corollary~\ref{cor:state-by-input}.
 \end{proof}
 
