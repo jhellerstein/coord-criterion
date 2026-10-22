@@ -1,20 +1,11 @@
 \section{Proofs for Section~\ref{sec:functional-calm}}
 \label{app:proofs}
 
-\begin{proof}[Proof of Proposition~\ref{prop:canonical-output-preservation}]
-Containment is Equation~\ref{eq:supported-output-action}, and canonical
-support is Equation~\ref{eq:output-action}.  The event $\Out{\varepsilon}{o}$
-leaves $R$ unchanged, so it is legal exactly when
-$R\subseteq R[\mathrm{out}\OutputGe o]$, in which case
-$R=R[\mathrm{out}\OutputGe o]$; this gives clause~3.  Since $R(j)=\{f(j)\}$
-at every legal $j\InputGe i$, that condition is the condition of clause~4.
-\end{proof}
-
 \begin{proof}[Proof of Lemma~\ref{lem:run-residual}]
 The run starts at the canonical state $\sigma_S(i_0)$, whose table is
 $S[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
 the rows with $\mathrm{in}\InputGe j$ (Equation~\ref{eq:input-event}), and each
-canonical output event $\Out{\kappa_o}{o}$ keeps only the rows with
+output event $\mathsf{output}(o)$ keeps only the rows with
 $\mathrm{out}\OutputGe o$ (Equation~\ref{eq:output-action}). The input
 conditions reduce to the last one, $\mathrm{in}\InputGe i$, because each later
 input is an expansion of the earlier ones. One output condition remains for each
@@ -26,8 +17,8 @@ A common state with current input $j$ has a row at $j$, and since rows are
 never added, that row belongs to every $R_r$.  Conversely, let $(j,u)$ belong
 to every $R_r$.  Then $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
-emitted on run $r$.  After $\mathsf{input}(j)$ and the canonical event for $u$
-($\kappa_u$ taken at each resulting state), the same lemma leaves exactly
+emitted on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
+same lemma leaves exactly
 $S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
 starting run.
 \end{proof}
@@ -43,13 +34,12 @@ output conditions remove nothing.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:functional-exposure-boundary}]
-Suppose $f$ is monotone, and let a commitment-free run, which is canonical,
-reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
+Suppose $f$ is monotone, and let a commitment-free run reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
 $(i,R)=\sigma_S(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
-$i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each; by the exposure test
-(Proposition~\ref{prop:canonical-output-preservation}), $f(i)$ is exposable.
+$i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each, so $f(i)$ is exposable
+(Definition~\ref{def:exposable}).
 Conversely, if every such output is exposable, then at $\sigma_S(i)$, which the
-empty run reaches, the exposure test gives $f(i)\OutputOrd f(j)$ for every
+empty run reaches, exposability of $f(i)$ gives $f(i)\OutputOrd f(j)$ for every
 \indesc $j$ of $i$, so $f$ is monotone.
 \end{proof}
 
@@ -73,8 +63,7 @@ of these runs, so $u\in S(j)$ \outrel every $o_r$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
 Suppose the condition holds; by Theorem~\ref{thm:common-refinement}, the
-specification is consistent.  Let $(i,R)$ be reached by a commitment-free run,
-which is canonical, and let $o\in R(i)$, $j\InputGe i$ legal, and
+specification is consistent.  Let $(i,R)$ be reached by a commitment-free run, and let $o\in R(i)$, $j\InputGe i$ legal, and
 $x\in R(j)$.  Extend the run in two ways: by $\Out{\kappa_o}{o}$, and by
 $\mathsf{input}(j)$ followed by $\Out{\kappa_x}{x}$.
 Proposition~\ref{prop:confluence} supplies a row $(j,u)$ surviving in both, so

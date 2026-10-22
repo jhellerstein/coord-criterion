@@ -1,11 +1,15 @@
 \section{Commitment bases and compound commitments}
 \label{app:bases}
 
-Section~\ref{sec:functional-calm} considers simple commitments, one per output
-event.  Real systems declare which commitments they may make, may apply several
-in one output event, and may restrict when each is available.  This appendix
-shows that none of this changes the results: compound commitments behave like
-simple ones, and every system's runs are contained in canonical runs.
+Section~\ref{sec:functional-calm} considers only the output events of
+Definition~\ref{def:output-event}, each of which applies at most the one seal
+its output requires.  Real systems declare which commitments
+(Definition~\ref{def:commitment-basis}) they may make, may apply several in one
+output event, may commit more than an output requires, and may restrict when
+each commitment is available.  This appendix shows that none of this changes
+the results: compound commitments behave like single ones, and every system's
+runs are contained in the runs of Section~\ref{sec:functional-calm}, which we
+call canonical.
 
 \begin{definition}[Commitment basis]
 \label{def:basis}
@@ -27,10 +31,59 @@ under a basis $\mathcal B$ applies a finite, possibly empty sequence
 $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each $c_m$ defined at
 the state its predecessors leave, and then emits $o$, all atomically;
 $\varepsilon$ is the empty sequence.  If $\gamma$ leaves remainder table $R'$,
-the event is \emph{legal} when Equation~\ref{eq:supported-output-action}
-holds.  The simple output events of Definition~\ref{def:output-event} are the
-case $n\le 1$.
+the event is \emph{legal} at $(i,R)$ when every remaining row's output
+\outrel $o$:
+\begin{equation}
+  (k,u)\in R' \Longrightarrow o\OutputOrd u,
+  \quad\text{or equivalently}\quad R'\subseteq R[\mathrm{out}\OutputGe o].
+  \label{eq:supported-output-action}
+\end{equation}
 \end{definition}
+
+Every commitment maps a state to a state and leaves the current input
+unchanged, so $R'$ still contains the current row $(i,o)$.
+
+\begin{definition}[Canonical basis, canonical event]
+\label{def:canonical-commitment-basis}
+The \emph{canonical commitment basis} consists of the seals of
+Definition~\ref{def:output-event},
+\begin{equation}
+  \mathcal B_S
+    =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\},
+  \label{eq:canonical-commitment-basis}
+\end{equation}
+where $s_o$ is defined at the states $(i,R)$ with $(i,o)\in R$ and
+$R[\mathrm{out}\OutputGe o]\neq R$.  At $(i,R)$, let $\kappa_o$ be $s_o$ if
+$s_o$ is defined there and $\varepsilon$ otherwise.  The \emph{canonical event}
+for $o$ is $\Out{\kappa_o}{o}$: the output event $\mathsf{output}(o)$ of
+Definition~\ref{def:output-event}.
+\end{definition}
+
+Three facts relate an arbitrary output event to the canonical one.
+
+\begin{proposition}[Output events]
+\label{prop:canonical-output-preservation}
+Let $(i,R)$ be a state and $o\in R(i)$.
+\begin{enumerate}
+  \item \emph{Containment.}  Under any commitment basis, a legal output event
+        $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
+        $R'\subseteq R[\mathrm{out}\OutputGe o]$.
+  \item \emph{Canonical support.}  The canonical event $\Out{\kappa_o}{o}$ is
+        legal at $(i,R)$ and takes it to $(i,R[\mathrm{out}\OutputGe o])$.  It
+        therefore retains every row that any legal $\Out{\gamma}{o}$ retains.
+  \item \emph{Commitment-free events are canonical.}  If $\Out{\varepsilon}{o}$
+        is legal, it takes $(i,R)$ to $(i,R[\mathrm{out}\OutputGe o])$; it is
+        legal exactly when $o$ is exposable.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Containment is Equation~\ref{eq:supported-output-action}, and canonical
+support is Equation~\ref{eq:output-action}.  The event $\Out{\varepsilon}{o}$
+leaves $R$ unchanged, so it is legal exactly when
+$R\subseteq R[\mathrm{out}\OutputGe o]$, that is, when
+$R=R[\mathrm{out}\OutputGe o]$, which is Definition~\ref{def:exposable}.
+\end{proof}
 
 \begin{lemma}[Compound commitments are commitments]
 \label{lem:compound-commitment}
@@ -46,17 +99,18 @@ at $k$ \outrel $u$, and the final table is contained in $R_m$, so no remaining
 row at $k$ \outrel $u$: Equation~\ref{eq:commitment-excludes} holds.
 \end{proof}
 
-A compound output event therefore has the same effect as the simple event that
-applies the composite commitment, and the facts of
-Proposition~\ref{prop:canonical-output-preservation} hold for it as stated.  In
+A compound output event therefore has the same effect as an event that
+applies the composite commitment alone, and
+Proposition~\ref{prop:canonical-output-preservation} covers it as stated.  In
 a functional specification the composite of seals is again a seal.
 
 \begin{definition}[Run under a basis]
 \label{def:run-under-basis}
 Fix a commitment basis $\mathcal B$.  A \emph{run under $\mathcal B$} is a
 finite transition sequence from a canonical state $\sigma_S(i)$ whose output
-events $\Out{\gamma}{o}$ use only commitments from $\mathcal B$.  Canonical runs
-are runs under $\mathcal B_S$.
+events $\Out{\gamma}{o}$ use only commitments from $\mathcal B$.  The runs of
+Definition~\ref{def:run}, the \emph{canonical runs}, are the runs under
+$\mathcal B_S$ whose output events are all canonical.
 \end{definition}
 
 Our results quantify over canonical runs rather than over the runs of any

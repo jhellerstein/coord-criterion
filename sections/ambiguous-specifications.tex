@@ -313,13 +313,41 @@ initial decisions are compatible, but not all of them.
 
 The functional case has one row per input, so an output event either removes
 nothing or seals a legal input.  With several rows at one input, it can also
-retire a \outrelpast row while retaining the row that \outrel it.  We now lift output events to this case and check that they satisfy the
-facts about output events in Proposition~\ref{prop:canonical-output-preservation}.
+retire a \outrelpast row while retaining the row that \outrel it, or make a
+binding choice among outputs.  We first define commitments in general, then
+lift output events to this case and check that they satisfy the facts about
+output events in Proposition~\ref{prop:canonical-output-preservation}
+(Appendix~\ref{app:bases}).
+
+\begin{definition}[Commitment, seal, choice]
+\label{def:commitment-basis}
+A commitment removes rows from the remainder table without changing the
+current input.  Formally, a \emph{commitment} is a partial function on
+specification states that leaves the current input unchanged and removes a
+nonempty set of rows, each with no remaining row at the same input that
+\outrel it: whenever $c(i,R)=(i,R')$, we have $R'\subsetneq R$ and
+\begin{equation}
+  (k,u)\in R\setminus R',\ (k,w)\in R'
+  \quad\Longrightarrow\quad
+  u\not\OutputOrd w.
+  \label{eq:commitment-excludes}
+\end{equation}
+A commitment \emph{seals} a legal input $k$ when it empties the fiber at $k$,
+and \emph{chooses} at $k$ when it removes some but not all of the rows at $k$.
+\end{definition}
+
+The seals $s_o$ of Definition~\ref{def:output-event} are commitments: with one
+row per input, no other row shares a removed row's input, so
+Equation~\ref{eq:commitment-excludes} holds vacuously.  An output event of an
+arbitrary system may apply several commitments from that system's basis; we
+write $\Out{\gamma}{o}$ for an output event that applies the sequence $\gamma$
+and then emits $o$, with $\varepsilon$ the empty sequence
+(Appendix~\ref{app:bases}).
 
 \begin{definition}[Lifted output event]
 \label{def:lifted-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
-under a basis $\mathcal B$ (Appendix~\ref{app:bases}) applies a finite, possibly empty sequence
+under a basis $\mathcal B$ applies a finite, possibly empty sequence
 $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each $c_m$ defined at
 the state its predecessors leave, leaving a table $R_c$, and then retires rows and
 emits $o$, all atomically.  Call a row \emph{ruled out by} $o$ when its output
@@ -338,7 +366,7 @@ $(i,R_c[\mathrm{out}\OutputGe o])$.
 This lifts Definition~\ref{def:output-event}.  With one row per input, a
 ruled-out row has no other row at its input to \outrelbase it, so legality requires
 that the commitments themselves leave only rows \outrelpart $o$, which is
-Equation~\ref{eq:supported-output-action}.  With several rows per input, the
+Equation~\ref{eq:supported-output-action} (Appendix~\ref{app:bases}).  With several rows per input, the
 current row must now be retained explicitly, since other rows at $i$ may
 remain.
 
@@ -397,8 +425,8 @@ Table~\ref{tab:removal-classes} summarizes the three classes.
   \label{tab:removal-classes}
 \end{table}
 
-For each $o\in O$, the \emph{canonical seal commitment} $s_o$, lifting
-Definition~\ref{def:canonical-commitment-basis}, and the
+For each $o\in O$, the \emph{canonical seal commitment} $s_o$, lifting the
+seal of Definition~\ref{def:output-event}, and the
 \emph{canonical choice commitment} $c_o$ are the partial functions
 \begin{equation}
   s_o(i,R)=\bigl(i,\ R\setminus R[\mathrm{in}\in K_o]\bigr),
@@ -425,9 +453,10 @@ $c_o$ leaves at $k$.  Either $y$ \outrel $o$, or $y\in D_o$ and is \outrelpast b
 a row \outrelpart $o$; by transitivity $x$ is then \outrelpast by a row \outrelpart
 $o$, so $x\in D_o$, a contradiction.  Moreover, $c_o$ only chooses: a row of
 $U_o$ at $k$ lies outside $K_o$, so some row at $k$ \outrel $o$ and survives.
-With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
-are those of Definition~\ref{def:canonical-commitment-basis}; canonical runs
-now use this lifted basis.  Let $\kappa_o$ be the sequence that applies $s_o$ when
+With one row per input, $D_o$ and $U_o$ are empty, $s_o$ is the seal of
+Definition~\ref{def:output-event}, and $\mathcal B_S$ is the basis of
+Definition~\ref{def:canonical-commitment-basis}; runs
+(Definition~\ref{def:run}) now use the lifted canonical events defined next.  Let $\kappa_o$ be the sequence that applies $s_o$ when
 $K_o\neq\varnothing$, then $c_o$ when $U_o\neq\varnothing$, so $\kappa_o$ is
 one of $\varepsilon$, $s_o$, $c_o$, or $s_o\,c_o$.
 The \emph{canonical event} is $\Out{\kappa_o}{o}$: it applies $\kappa_o$, then
@@ -507,9 +536,9 @@ unambiguous.  A seal may remove the last rows that earlier choices left at an
 input; attributing the seal across that sequence is a question of provenance,
 which this paper does not pursue.
 
-Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when
-$\Out{\varepsilon}{o}$ is legal, though that event may still retire
-\outrelpast rows.  The exposure test lifts as well:
+Exposability lifts with the event: $o$ is exposable when emitting it applies
+no commitment, that is, when $\Out{\varepsilon}{o}$ is legal, though that event
+may still retire \outrelpast rows.  The exposure test lifts as well:
 
 \begin{proposition}[Lifted exposure test]
 \label{prop:exposability}
@@ -539,7 +568,8 @@ $\Out{\gamma}{o}$ has $\gamma\neq\varepsilon$.
 
 Lemma~\ref{lem:canonical-commitment-normal-form} and
 Proposition~\ref{prop:exposability} re-establish, for lifted output events, the
-facts of Proposition~\ref{prop:canonical-output-preservation}.  Specification
+facts of Proposition~\ref{prop:canonical-output-preservation}
+(Appendix~\ref{app:bases}).  Specification
 states, input events, runs, canonical runs, commitment-free runs, and
 Consistency are defined as before, and the results of
 Section~\ref{sec:determination} used output events only through those facts.
