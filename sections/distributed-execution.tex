@@ -185,14 +185,18 @@ have received the same updates are in equivalent states---derived here from
 the specification rather than from a merge operator.  With several outputs per
 input this uniqueness fails (Section~\ref{sec:complete-calm}).
 
+\paragraph{Message data.}
+The data $d$ of a message is any application state other than input that a
+participant chooses to send: timestamps, version vectors, gossip, votes.  Data
+can influence which input and output events occur next at the receiver, but it
+never changes the receiver's specification state, and nothing in the
+definitions above depends on it; Section~\ref{sec:coordination} calls the rule
+that makes these choices a participant's \emph{strategy}.
+
 \paragraph{Exchanging outputs.}
-The data $d$ of a message is anything else a participant sends: votes,
-timestamps, or outputs it has emitted.  Data can influence which input and
-output events occur next at the receiver, but it never changes the receiver's
-specification state, and nothing in the definitions above depends on it;
-Section~\ref{sec:coordination} calls the rule that makes these choices a
-participant's \emph{strategy}.  What if a participant sends its output $o$ to
-another?  The receiver can emit $o$ itself, but only by an ordinary output
+An interesting question is what happens if participants share their outputs in
+$d$: does this introduce any substantive change?  Suppose a participant sends
+its output $o$ to another.  The receiver can emit $o$ itself, but only by an ordinary output
 event, legal where $o$ is permitted at its own current input.  Or it can
 silently honor $o$, restricting its table to $R[\mathrm{out}\OutputGe o]$.
 Neither changes confluence: the common state confluence asks for already keeps
