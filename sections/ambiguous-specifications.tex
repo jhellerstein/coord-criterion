@@ -10,7 +10,7 @@ example.  Section~\ref{sec:relational-specifications} defines relational
 specifications and Lifted Monotonicity.  Section~\ref{sec:safe-exposure} lifts
 output events and classifies what they remove, and
 Section~\ref{sec:relational-executions} shows that the run-level results of
-Section~\ref{sec:determination} carry over and characterizes Consistency by a
+Section~\ref{sec:determination} carry over and characterizes consistency by a
 condition on the table.
 
 \subsection{Output choice by example}
@@ -52,10 +52,10 @@ contrast, can all be \outrelpast by a larger route set.
   \caption{Two specifications with several rows at one current input, each
   shown after one output event.  In (f) the input is a pair of
   concurrent transactions and an output is a serial order of them, under the
-  equality order.  In (g) the input $i$ is a source--service pair and an
-  output is a prefix-closed set of routes from source $s$, ordered by
-  inclusion, which reaches server \texttt{s1} directly and server \texttt{s2}
-  through hop $a$.  Shaded cells
+  equality order.  In (g) the input $i$ names a source $s$ and a service
+  hosted on servers \texttt{s1} and \texttt{s2}; an output is a prefix-closed
+  set of routes from $s$, ordered by inclusion.  Here $s$ reaches \texttt{s1}
+  directly and \texttt{s2} through hop $a$.  Shaded cells
   are the upper fiber that remains.  Legend as in
   Figure~\ref{fig:election-frames}, except that gray alone may also mark an
   output retirement.}
@@ -97,8 +97,9 @@ such systems.
 
 The examples pose the specification-level question: when can every finite set
 of possible outputs survive together as input \ingrows?  Lifted Monotonicity
-answers it by requiring monotonicity of fibers.  We first define the two ways
-it can fail, then combine them.
+answers it by requiring monotonicity of fibers.  Two things can go wrong: an
+output loses every \outnoun as input \ingrows, or two outputs at one input have
+no common \outnoun.  We define each, then combine them.
 
 \begin{definition}[Ordered relational specification]
 \label{def:relational-specification}
@@ -144,14 +145,10 @@ and does not say whether several outputs permitted at one input have a
 common \outnoun; Directed Outputs (Definition~\ref{def:fiber-directedness})
 addresses that question.
 
-\begin{definition}[Compatibility]
-\label{def:compatibility}
-Let $F\subseteq O$ be a set of outputs.  Outputs $o_1,\ldots,o_k$ are
-\emph{compatible in $F$} if some $u\in F$ \outrel all of them,
-$o_r\OutputOrd u$ for every $r$, and \emph{incompatible in $F$} otherwise.
-They are \emph{compatible at input $i$} when they are compatible in the fiber
-$\fiber{i}$.
-\end{definition}
+For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
+\emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
+\emph{incompatible in $F$} otherwise; they are \emph{compatible at input $i$}
+when they are compatible in the fiber $\fiber{i}$.
 
 \begin{definition}[Directed fiber, Directed Outputs]
 \label{def:fiber-directedness}
@@ -199,7 +196,7 @@ under the joint lift:
 With singleton fibers it is functional monotonicity
 (Definition~\ref{def:functional-monotonicity}).  Its third form below is a
 condition on finite sets of rows, which Section~\ref{sec:relational-executions}
-identifies with Consistency.
+identifies with consistency.
 
 \begin{definition}[Common-\indesc condition]
 \label{def:common-refinement-condition}
@@ -250,13 +247,6 @@ $u_r$, hence every $o_r$.
 finite.  The rows $\{(i,x):x\in X\}$ have common \indesc $j$, so some
 $u\in\fiber{j}$ \outrel all of $X$; that is $\fiber{i}\LiftedOrd\fiber{j}$.
 \end{proof}
-
-Checking pairs of rows suffices for form~(3), provided the pairs range over
-all rows of $S$, including those at the common \indesc: combine two rows
-into one row at $j$, then pair it with the next.  Pairs drawn only from
-participants' initial decisions do not suffice; in the $k$-set agreement
-example (participants must decide at most $k$ distinct values) of Appendix~\ref{app:additional-applications}, every $k$ of $k+1$
-initial decisions are compatible, but not all of them.
 
 \subsection{Lifted output events}
 \label{sec:safe-exposure}
@@ -320,11 +310,8 @@ current input, not only at it, a choice made now also constrains the choices
 still open at later inputs.  That is what a promise is: once $o$ is emitted,
 later outputs must \outrelbase it.
 
-Every removed row thus has one of three causes: an input event removes rows that
-can no longer happen, an output retirement removes rows \outrelpast by a row the
-event keeps at the same input, and a seal or choice removes rows that could
-still happen and that no remaining row at the same input \outrel.
-Table~\ref{tab:removal-classes} summarizes the three classes.
+Rows removed by an input event can no longer happen; rows ruled out by an
+output fall into the three classes of Table~\ref{tab:removal-classes}.
 
 \begin{table}[t]
   \centering
@@ -337,7 +324,7 @@ Table~\ref{tab:removal-classes} summarizes the three classes.
       closing the polls (Fig.~\ref{fig:election-frames}(d)) \\
     $D_o$ & output retirement: \outrelpast by a kept row at the same input &
       traceroute (Fig.~\ref{fig:ambiguity-frames}(g)) \\
-    $U_o$ & choice: no row \outrelpart $o$ at the input \outrel it &
+    $U_o$ & choice: input stays legal, but no kept row at that input \outrel it &
       $[B,A]$ after $[A,B]$ (Fig.~\ref{fig:ambiguity-frames}(f)) \\
     \bottomrule
   \end{tabular}
@@ -382,11 +369,11 @@ seal or a choice.
 
 A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, exactly as in
 Equation~\ref{eq:output-action}.  Specification states, input events, runs,
-commitment-free runs, and Consistency are defined as before, and the results
+commitment-free runs, and consistency are defined as before, and the results
 of Section~\ref{sec:determination} used output events only through that
 equation.  They therefore lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
-(Proposition~\ref{prop:confluence}).  With them, Consistency
+(Proposition~\ref{prop:confluence}).  With them, consistency
 reduces to the common-\indesc condition.
 
 \begin{theorem}[Common-\indesc characterization]

@@ -2,15 +2,13 @@
 \label{sec:complete-calm}
 
 The previous two sections developed orthogonal generalizations of Functional CALM:
-distributed histories give Consistency a distributed reading, while relational
-specifications add output choice.  We now combine them.  First we let systems
+distributed histories give consistency a distributed reading, while relational
+specifications add output choice.  We now combine them, and
+Figure~\ref{fig:complete-formalism-summary} recaps both.  First we let systems
 make their own commitments, identify coordination with commitment, and state
-when conflicting output events cannot coexist; then Complete CALM equates Consistency, Lifted Monotonicity, and
-Distributed Consistency, and Complete CAP states the resulting partition
-boundary.
-
-Figure~\ref{fig:complete-formalism-summary} recaps the distributed and
-relational generalizations combined here.
+when conflicting output events cannot coexist; then Complete CALM equates
+consistency, Lifted Monotonicity, and distributed consistency, and Complete CAP
+states the resulting partition boundary.
 
 \begin{figure*}[t]
   \centering
@@ -29,7 +27,7 @@ relational generalizations combined here.
     projection; endpoint & $\pi_p(C)$: $p$'s input and output events;
       $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
     history confluence & at a cut $C$ and common \indesc $j$, all participants can reach one state $(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
-    Distributed Consistency & every history is confluent at every cut and common \indesc & Def.~\ref{def:distributed-consistency} \\
+    distributed consistency & every history is confluent at every cut and common \indesc & Def.~\ref{def:distributed-consistency} \\
     \addlinespace
     \textbf{Output choice} & & \\
     \midrule
@@ -37,16 +35,16 @@ relational generalizations combined here.
     Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\LiftedOrd S(j)$; finite sets in $S(i)$ have common \outnouns in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
     output retirement & removed $(k,x)$ is \outrelpast by a retained $(k,u)$ that \outrel $o$ & Def.~\ref{def:output-retirement} \\
     exposable output & $\mathsf{output}(o)$ applies no commitment; it may retire \outrelpast rows & Sec.~\ref{sec:safe-exposure} \\
-    seal; choice & the commitments $s_o$, $c_o$ of $\mathsf{output}(o)$: empty a fiber; remove conflicts no row at the same input \outrel & Def.~\ref{def:lifted-output-event} \\
+    seal; choice & the commitments $s_o$, $c_o$ of $\mathsf{output}(o)$: empty a fiber; remove outputs that no kept row at that input \outrel & Def.~\ref{def:lifted-output-event} \\
     \addlinespace
     \textbf{Systems} & & \\
     \midrule
     commitment & removes rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment} \\
-    system & a commitment basis shared by all participants plus a strategy per participant; its histories label output events $\Out{\gamma}{o}$ & Def.~\ref{def:system} \\
+    system & a commitment basis shared by all participants plus a strategy per participant; its output events are $\Out{\gamma}{o}$ & Def.~\ref{def:system}, \ref{def:system-output-event} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
-    Complete CALM & Consistency $\iff$ Lifted Monotonicity $\iff$ Distributed Consistency & Thm.~\ref{thm:complete-calm} \\
+    Complete CALM & consistency $\iff$ Lifted Monotonicity $\iff$ distributed consistency & Thm.~\ref{thm:complete-calm} \\
     seal or choice & every commitment seals inputs or chooses outputs & Prop.~\ref{prop:seal-or-choose} \\
     coordination & an output event that seals or chooses & Def.~\ref{def:coordination} \\
     conflicting output events & a choice and an output it rules out cannot meet at the current input & Prop.~\ref{thm:commitments-require-coordination} \\
@@ -64,9 +62,8 @@ Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} studied
 the output events the specification itself supplies.  A system may commit
 differently, for example by sealing more than an output requires or by taking a
 lock before it chooses, so we now let systems bring their own commitments.
-We first define commitments in general.
 
-\begin{definition}[Commitment, seal, choice]
+\begin{definition}[Commitment]
 \label{def:commitment}
 A commitment removes rows from the remainder table without changing the
 current input.  Formally, a \emph{commitment} is a partial function on
@@ -79,18 +76,21 @@ nonempty set of rows, each with no remaining row at the same input that
   u\not\OutputOrd w.
   \label{eq:commitment-excludes}
 \end{equation}
-A commitment \emph{seals} a legal input $k$ when it empties the fiber at $k$,
-and \emph{chooses} at $k$ when it removes some but not all of the rows at $k$.
 \end{definition}
 
 The condition is judged at the table a commitment leaves, so a row removed
 together with every row that \outrel it counts as a commitment's removal, not a
 retirement.  The seals and choices of Definitions~\ref{def:output-event}
 and~\ref{def:lifted-output-event} are commitments
-(Appendix~\ref{app:bases}).  A system declares a \emph{commitment basis}
-(Definition~\ref{def:basis}) and may apply several of its commitments in one
-output event; Appendix~\ref{app:bases} develops both.  With several outputs per
-input, such an event also retires rows.
+(Appendix~\ref{app:bases}).
+
+\begin{definition}[System]
+\label{def:system}
+\label{def:basis}
+A \emph{system} consists of a \emph{commitment basis} $\mathcal B$, the set of
+commitments its output events may apply, shared by all participants, and a
+strategy for each participant (Section~\ref{sec:histories}).
+\end{definition}
 
 \begin{definition}[Output event of a system]
 \label{def:system-output-event}
@@ -113,86 +113,21 @@ $(i,R_c[\mathrm{out}\OutputGe o])$.
 \end{definition}
 
 With one row per input no row can be retired, and legality says that every
-row the commitments leave has an output that \outrel $o$:
-$R_c\subseteq R[\mathrm{out}\OutputGe o]$.
-
-\begin{definition}[Canonical basis, canonical event]
-\label{def:canonical-commitment-basis}
-The \emph{canonical commitment basis} collects the seals and choices of
-Definition~\ref{def:lifted-output-event},
-\begin{equation}
-  \mathcal B_S
-    =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}
-     \cup
-     \{c_o:o\in O,\ \operatorname{dom}(c_o)\neq\varnothing\},
-  \label{eq:canonical-commitment-basis-relational}
-\end{equation}
-where $s_o$ is defined at the states with $o\in R(i)$ and $K_o\neq\varnothing$,
-and $c_o$ at those with $o\in R(i)$ and $U_o\neq\varnothing$.  At $(i,R)$, let
-$\kappa_o$ apply $s_o$ when $K_o\neq\varnothing$ and $c_o$ when
-$U_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$, $s_o$, $c_o$, or
-$s_o\,c_o$.  The \emph{canonical event} for $o$ is $\Out{\kappa_o}{o}$: the
-output event of Definition~\ref{def:lifted-output-event}, and with one row per
-input that of Definition~\ref{def:output-event}.
-\end{definition}
-
-\begin{lemma}[Containment, canonical support, and commitment-free events]
-\label{lem:canonical-commitment-normal-form}
-Let $(i,R)$ be a state and $o\in R(i)$.
-\begin{enumerate}
-  \item Every legal output event $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
-        $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows at
-        inputs in $K_o$ and the rows in $U_o$ by commitment.
-  \item The canonical event $\Out{\kappa_o}{o}$ is legal and takes $(i,R)$ to
-        $(i,R[\mathrm{out}\OutputGe o])$, so it retains every row that any legal
-        $\Out{\gamma}{o}$ retains.
-  \item If $\Out{\varepsilon}{o}$ is legal, it takes $(i,R)$
-        to $(i,R[\mathrm{out}\OutputGe o])$; it is legal exactly when $o$ is
-        exposable.
-\end{enumerate}
-\end{lemma}
-
-\begin{proof}
-(1) A legal event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
-R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row at
-$k\in K_o$, or in $U_o$, has no \outrelpart row in $R[\mathrm{out}\OutputGe
-o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
-retired, so a legal event must remove it by commitment.  (2) The canonical
-commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
-of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
-o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
-\outrelpart row lies at an input outside $K_o$ and is not in $U_o$, so it
-survives the commitments.  The event is therefore legal and ends at
-$R[\mathrm{out}\OutputGe o]$; by (1) no legal event keeps more.  (3) With no
-commitment, $R_c=R$, and a legal event ends at $R[\mathrm{out}\OutputGe o]$.
-It is legal exactly when every ruled-out row is in $D_o$, that is, when $K_o$
-and $U_o$ are empty, which is exposability.
-\end{proof}
-
-\begin{definition}[System, canonical system]
-\label{def:system}
-A \emph{system} consists of one commitment basis $\mathcal B$
-(Definition~\ref{def:basis}), shared by all participants, and a strategy for
-each participant (Section~\ref{sec:histories}).  Its histories are distributed
-histories (Definition~\ref{def:distributed-history}) whose output events are
-labeled $\Out{\gamma}{o}$, with $\gamma$ a finite sequence of commitments from
-$\mathcal B$ (Definition~\ref{def:system-output-event}); each such event is
-legal at the participant's state where it occurs, atomically applies $\gamma$,
-and emits $o$, and the environment observes $o$, not $\gamma$.  Their
-transition projections are runs under $\mathcal B$
-(Definition~\ref{def:run-under-basis}).  A system is \emph{canonical} when
-$\mathcal B$ is the canonical basis $\mathcal B_S$ and each output event it
-performs is the canonical event $\Out{\kappa_o}{o}$
-(Definition~\ref{def:canonical-commitment-basis}) at the participant's state
-where it occurs; its histories are then exactly those of
-Section~\ref{sec:histories}.
-\end{definition}
+row the commitments leave has an output that \outrel $o$.  A legal
+$\Out{\gamma}{o}$ therefore ends inside $R[\mathrm{out}\OutputGe o]$, and it
+must remove by commitment the rows at inputs in $K_o$ and the rows in $U_o$,
+since no row it keeps can \outrelbase them
+(Lemma~\ref{lem:canonical-commitment-normal-form}, Appendix~\ref{app:bases}).  A system's histories are
+distributed histories (Definition~\ref{def:distributed-history}) whose output
+events are legal events $\Out{\gamma}{o}$ with $\gamma$ drawn from its basis; the
+environment observes $o$, not $\gamma$.
 
 \paragraph{Two systems, two choices.}
 The specification says which serialization orders are permitted; a system
 decides which binding choices it makes and when.
-Figure~\ref{fig:cc-commitments} shows two systems' choices on the same
-three-transaction fiber of Figure~\ref{fig:ambiguity-frames}---one captures
+Figure~\ref{fig:cc-commitments} shows two systems' choices on a
+three-transaction version of the ordering fiber in
+Figure~\ref{fig:ambiguity-frames}(f)---one captures
 two-phase locking (2PL), the other multi-version timestamp ordering (MVTO).
 In 2PL, racing for a lock commits orderings among a subset of transactions:
 in this case it commits only to $A$ before $B$, leaving $C$'s position
@@ -242,14 +177,13 @@ abort commitments, which fix a transaction as aborted.
 
 We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}
-\emph{canonical runs}: they are the runs under $\mathcal B_S$ whose output
-events are all canonical (Definition~\ref{def:run-under-basis}).  Every system run
-has an observably equivalent canonical run.  Lemma~\ref{lem:canonical-equivalent}
-(Appendix~\ref{app:bases}) shows that every run under any basis, including
-either protocol above, is equivalent to a canonical run, one that accepts the
-same inputs and emits the same outputs, whose remainder table contains the
-original's after each event.  Consistency is therefore judged on canonical
-runs.
+\emph{canonical runs}, and a \emph{run under a basis} $\mathcal B$ is one whose
+output events apply only commitments from $\mathcal B$
+(Definition~\ref{def:run-under-basis}).  Every run under any basis, including
+either protocol above, has an observably equivalent canonical run: one that
+accepts the same inputs and emits the same outputs, and whose remainder table
+contains the original's after each event (Lemma~\ref{lem:canonical-equivalent},
+Appendix~\ref{app:bases}).  Consistency is therefore judged on canonical runs.
 
 \subsection{Coordination}
 \label{sec:coordination-def}
@@ -259,35 +193,25 @@ decision: no commitment can do anything else.
 
 \begin{proposition}[Commitments seal inputs or choose outputs]
 \label{prop:seal-or-choose}
-\leavevmode
-\begin{enumerate}
-  \item At each input where a commitment removes rows of the state it is
-        applied to, it either removes every row, \emph{sealing} that input, or
-        removes some outputs and keeps others, \emph{choosing} among them.
-  \item Every run under any commitment basis is equivalent to a canonical run
-        that keeps at least as many rows after each event and whose only
-        commitments are the seals $s_o$ and the choices $c_o$.
-  \item In a functional specification every commitment only seals.
-\end{enumerate}
+At each input where a commitment removes rows of the state it is applied to,
+it either removes every row there, \emph{sealing} that input, or removes some
+outputs and keeps others, \emph{choosing} among them.
 \end{proposition}
 
 \begin{proof}
-(1) At an input $k$, either no row remains or some does.  (2) Canonical
-equivalents (Lemma~\ref{lem:canonical-equivalent}) give the run, and $s_o$ only
-seals and $c_o$ only chooses (Definition~\ref{def:lifted-output-event}).
-(3) Each fiber has one row, so removing a row at $k$ removes every row there.
+At an input $k$, either no row remains or some does.
 \end{proof}
 
-So the effect of any coordination mechanism---a lock, a timestamp, an agreement
-protocol---is contained in a combination of seals and choices.  Because each
+In a functional specification each fiber has one row, so every commitment
+seals.  Whatever a coordination mechanism does to the specification---a lock, a
+timestamp, an agreement protocol---it does by sealing and choosing.  Because each
 commitment acts on a given state, the classification is unambiguous.  A seal
 may remove the last rows that earlier choices left at an input; attributing the
 seal across that sequence is a question of provenance, which this paper does
 not pursue.
 
-Consistency is confluence: independently reached states can still meet.
-Coordination is its operational counterpart: the system makes a binding decision
-that removes some otherwise possible behavior.  In our transition system, that
+Coordination is the operational counterpart of confluence: a binding decision
+that removes otherwise possible behavior.  In our transition system, that
 act is exactly a commitment, which seals or chooses
 (Proposition~\ref{prop:seal-or-choose}).  A mutex, lock,
 atomic ordering mechanism, or agreement protocol is in scope when it serves
@@ -326,47 +250,41 @@ input $i$ has a row at $i$, and since events never add rows, that row would
 belong to both.
 \end{proof}
 
-The proposition is a witness of non-confluence at the current input itself: the
-first participant's commitment is a choice at $i$ that rules out $x$, not a
-seal, since a commitment cannot empty the fiber at the current input: a state
-keeps a row there.
-Mutual exclusion follows once the system's states must stay confluent.  For a
-canonical system (Definition~\ref{def:system}), Consistency of the
-specification gives that confluence; a non-canonical system can lose it through
-commitments it did not need, as when a traceroute system discards the larger
-route sets.  If a system's states must stay confluent while both events remain
-available to different participants, it must exclude one of them.  In a
-shared-memory system a mutex or atomic instruction provides that exclusion; in
-a distributed system, agreement is one way to establish it.  Static authority
-or a predetermined strategy can instead make one event unavailable, in which
-case no runtime agreement is needed.  Seals raise a related conflict that the
-proposition does not cover: an output that seals an \indesc of its input
-conflicts with input another participant may already have accepted.
-Appendix~\ref{app:cap-response} treats this case, which underlies the
+The conflict is at the current input, so it is a choice, not a seal: a
+commitment cannot empty the fiber at the current input, since a state keeps a
+row there.  If both events stay available to different participants and their
+states must stay confluent, the system must exclude one of them: by a mutex or
+atomic instruction in shared memory, by agreement in a distributed system, or by
+static authority or a predetermined strategy that makes one event unavailable,
+in which case no runtime agreement is needed.
+
+Seals raise a related conflict that the proposition does not cover: an output
+that seals an \indesc of its input conflicts with input another participant
+accepts.  Appendix~\ref{app:cap-response} treats this case, which underlies the
 Gilbert--Lynch theorem (Corollary~\ref{cor:gilbert-lynch}).
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
 Complete CALM turns the coordination boundary into a property of the
-specification.  It equates Consistency---confluence of canonical runs---with
+specification.  It equates consistency---confluence of canonical runs---with
 Lifted Monotonicity.  The distributed execution model
-supplies the equivalent third view, Distributed Consistency.
+supplies the equivalent third view, distributed consistency.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
 For an ordered relational specification, the following are equivalent:
 \begin{enumerate}
-  \item Consistency;
+  \item consistency;
   \item Lifted Monotonicity;
-  \item Distributed Consistency.
+  \item distributed consistency.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}
 Items~(1) and~(3) are equivalent by
 Proposition~\ref{prop:distributed-consistency}.  By
-Theorem~\ref{thm:common-refinement}, Consistency is equivalent to the
+Theorem~\ref{thm:common-refinement}, consistency is equivalent to the
 common-\indesc condition, which is form~(3) of
 Proposition~\ref{prop:lifted-monotonicity-decomposition} and hence equivalent
 to Lifted Monotonicity.
@@ -377,15 +295,11 @@ logic language.  The condition that characterizes consistency is instead a
 property of the specification: Lifted Monotonicity, which for a function is
 ordinary monotonicity.
 
-The theorem gives a specification-level test for history confluence, and it
-derives exposability rather than assuming it.  By the exposure boundary
-(Proposition~\ref{prop:exposure-boundary}), Lifted Monotonicity holds
-exactly when every output at every state reachable without commitment is
-exposable, so emitting outputs needs no commitment and is coordination-free.
-When it fails, some finite family of rows whose inputs have a common \indesc
-$j$ has no common \outnoun in $\fiber{j}$; by the exposure boundary some output
-is then not exposable at a state reachable without commitment, so emitting it
-requires a commitment and hence coordination.  When different
+The theorem also derives exposability rather than assuming it: by the
+exposure boundary (Proposition~\ref{prop:exposure-boundary}), Lifted
+Monotonicity holds exactly when every output at every state reachable without
+commitment is exposable, so emitting outputs is coordination-free.  When it
+fails, some output can be emitted only with a commitment, and when different
 participants could each emit one of two conflicting outputs,
 Proposition~\ref{thm:commitments-require-coordination} applies.
 
@@ -401,8 +315,8 @@ everything any of them has emitted, and Lifted Monotonicity guarantees that
 such a $u$ exists.
 Whether they reach it is a matter of strategy.  Participants that choose
 independently may keep emitting new outputs, each needing its own
-reconciliation.  One strategy that terminates, once participants stop emitting other outputs,
-is deterministic reconciliation: participants that share knowledge of the
+reconciliation.  If participants emit no further outputs, one strategy that
+terminates is deterministic reconciliation: participants that share knowledge of the
 inputs and emitted outputs apply the same rule for choosing $u$, and arrive at
 the same state without any commitment.  Section~\ref{sec:discussion} returns to this distinction.
 
@@ -460,24 +374,24 @@ For an ordered relational specification $\Spec$, the following are equivalent:
   \item some system has Availability and Partition Consistency;
   \item $\Spec$ satisfies Lifted Monotonicity.
 \end{enumerate}
-Moreover, when they hold, a commitment-free system has both properties: the
-canonical basis with strategies that may emit any exposable output $o$ by
-$\Out{\varepsilon}{o}$.
+Moreover, when they hold, a commitment-free system has both properties: one
+whose strategies may emit any exposable output $o$ by $\Out{\varepsilon}{o}$
+(Appendix~\ref{app:bases}).
 \end{theorem}
 
 \begin{proof}
-Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Take the canonical
-basis and strategies that may emit any exposable output $o$ by
-$\Out{\varepsilon}{o}$ at any time.  Every
+Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Take a system whose
+strategies may emit any exposable output $o$ by $\Out{\varepsilon}{o}$.  Every
 history of this system is commitment-free (its output events apply no
-commitment), so each projection is a canonical
-run (Section~\ref{sec:determination}) and every state it reaches is reachable
-without commitment.  By the exposure boundary
-(Proposition~\ref{prop:exposure-boundary}), every output in each
-participant's fiber $R(i)$ is exposable, and emitting it needs neither a commitment nor a
-message: this gives Availability.  The system is canonical, so its histories
-are those of Section~\ref{sec:histories}, and Distributed
-Consistency, which Complete CALM supplies, gives Partition Consistency.
+commitment).  A legal $\Out{\varepsilon}{o}$ is the output event of
+Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so each projection is a
+canonical run and every state it reaches is reachable without commitment.  By
+the exposure boundary (Proposition~\ref{prop:exposure-boundary}), every output
+in each participant's fiber $R(i)$ is exposable, and emitting it needs neither a
+commitment nor a message: this gives Availability.  The system's histories are
+those of Section~\ref{sec:histories}, so distributed consistency, which
+Complete CALM supplies, gives Partition Consistency.
 
 Conversely, let finite rows $(i_r,o_r)$ have a common \indesc $j$.  For the
 empty family, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, place one

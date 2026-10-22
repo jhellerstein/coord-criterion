@@ -2,20 +2,15 @@
 \label{app:bases}
 
 Section~\ref{sec:coordination} lets systems bring their own commitments
-(Definition~\ref{def:commitment}).  Real systems declare which commitments they
+(Definition~\ref{def:commitment}) through a commitment basis
+(Definition~\ref{def:system}).  Real systems declare which commitments they
 may make, may apply several in one output event, may commit more than an output
 requires, and may restrict when each commitment is available.  This appendix
 supplies the details behind that section: the seals and choices of
 Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} are
-commitments, compound commitments behave like single ones, and every system's
-run has an observably equivalent canonical run that retains at least as many
-rows after each event.
-
-\begin{definition}[Commitment basis]
-\label{def:basis}
-A \emph{commitment basis} $\mathcal B$ is a set of commitments available to a
-system.
-\end{definition}
+commitments and form a canonical basis, compound commitments behave like single
+ones, and every system's run has an observably equivalent canonical run that
+retains at least as many rows after each event.
 
 Commitments are \emph{partial} functions, so a system may authorize a
 commitment only at states satisfying a precondition of its own.  In
@@ -23,6 +18,26 @@ Figure~\ref{fig:election-frames}(d), the poll-closing commitment is defined at
 every state; a different system might authorize it only after some candidate
 has a majority.  A system whose polls cannot close has no such commitment in its
 basis.
+
+\begin{definition}[Canonical basis, canonical event]
+\label{def:canonical-commitment-basis}
+The \emph{canonical commitment basis} collects the seals and choices of
+Definition~\ref{def:lifted-output-event},
+\begin{equation}
+  \mathcal B_S
+    =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}
+     \cup
+     \{c_o:o\in O,\ \operatorname{dom}(c_o)\neq\varnothing\},
+  \label{eq:canonical-commitment-basis-relational}
+\end{equation}
+where $s_o$ is defined at the states with $o\in R(i)$ and $K_o\neq\varnothing$,
+and $c_o$ at those with $o\in R(i)$ and $U_o\neq\varnothing$.  At $(i,R)$, let
+$\kappa_o$ apply $s_o$ when $K_o\neq\varnothing$ and $c_o$ when
+$U_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$, $s_o$, $c_o$, or
+$s_o\,c_o$.  The \emph{canonical event} for $o$ is $\Out{\kappa_o}{o}$: the
+output event of Definition~\ref{def:lifted-output-event}, and with one row per
+input that of Definition~\ref{def:output-event}.
+\end{definition}
 
 \paragraph{The canonical seals and choices are commitments.}
 With one row per input, Equation~\ref{eq:commitment-excludes} holds vacuously,
@@ -37,6 +52,47 @@ $s_o$ and $c_o$ remove disjoint sets of rows and neither changes the other's
 (Section~\ref{sec:safe-exposure}), each is defined on the state the other
 leaves, and the canonical basis of
 Definition~\ref{def:canonical-commitment-basis} applies them in either order.
+
+\begin{lemma}[Containment, canonical support, and commitment-free events]
+\label{lem:canonical-commitment-normal-form}
+Let $(i,R)$ be a state and $o\in R(i)$.
+\begin{enumerate}
+  \item Every legal output event $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
+        $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows at
+        inputs in $K_o$ and the rows in $U_o$ by commitment.
+  \item The canonical event $\Out{\kappa_o}{o}$ is legal and takes $(i,R)$ to
+        $(i,R[\mathrm{out}\OutputGe o])$, so it retains every row that any legal
+        $\Out{\gamma}{o}$ retains.
+  \item If $\Out{\varepsilon}{o}$ is legal, it takes $(i,R)$
+        to $(i,R[\mathrm{out}\OutputGe o])$; it is legal exactly when $o$ is
+        exposable.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(1) A legal event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
+R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row at
+$k\in K_o$, or in $U_o$, has no \outrelpart row in $R[\mathrm{out}\OutputGe
+o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
+retired, so a legal event must remove it by commitment.  (2) The canonical
+commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
+of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
+o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
+\outrelpart row lies at an input outside $K_o$ and is not in $U_o$, so it
+survives the commitments.  The event is therefore legal and ends at
+$R[\mathrm{out}\OutputGe o]$; by (1) no legal event keeps more.  (3) With no
+commitment, $R_c=R$, and a legal event ends at $R[\mathrm{out}\OutputGe o]$.
+It is legal exactly when every ruled-out row is in $D_o$, that is, when $K_o$
+and $U_o$ are empty, which is exposability.
+\end{proof}
+
+\begin{definition}[Canonical system]
+\label{def:canonical-system}
+A system (Definition~\ref{def:system}) is \emph{canonical} when its basis is
+$\mathcal B_S$ and each output event it performs is the canonical event
+$\Out{\kappa_o}{o}$ at the participant's state where it occurs; its histories
+are then exactly those of Section~\ref{sec:histories}.
+\end{definition}
 
 \begin{lemma}[Compound commitments are commitments]
 \label{lem:compound-commitment}
@@ -109,7 +165,7 @@ The converse does not hold: a canonical run need not be equivalent to any run
 under a particular system's basis.  That basis may lack the commitment an
 output event requires, and so disable the output altogether.  Restricting
 attention to one system's runs could therefore hide non-monotonicity.  This is
-why Consistency (Definition~\ref{def:consistency}) is defined over canonical
+why consistency (Definition~\ref{def:consistency}) is defined over canonical
 runs rather than over a system's own.
 
 \paragraph{Application-specific commitments.}

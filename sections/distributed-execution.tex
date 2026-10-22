@@ -22,19 +22,18 @@ Their transitive closure is the familiar \emph{happens-before} relation.
 
 A snapshot of such a history that never includes a receive without the events
 that causally precede it is a consistent cut.  (This standard use of
-``consistent'' is unrelated to consistency as confluence.)  Because input and
-output events are atomic, the events at any such cut project to one run per
-participant (Definition~\ref{def:semantic-projection}).  Messages explain how a participant learned
+``consistent'' is unrelated to consistency as confluence.)  The events at any
+such cut project to one run per participant
+(Definition~\ref{def:semantic-projection}).  Messages explain how a participant learned
 something; its projected run records only how that information changed the
 specification state.
 
 A participant's \emph{strategy} chooses its input and output events using the
 specification, the messages it has received, and any other strategy state.
 Strategy state is not part of the specification state and affects the
-remainder table only through the selected transitions.  Sends, receives, and
-strategy data preserve delivery causality without complicating the
-specification state; the next subsection shows how transition projection
-removes them.
+remainder table only through the selected transitions.  Messages and strategy
+state explain why a participant took an event; the projection below keeps only
+the event.
 
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
@@ -53,11 +52,6 @@ A \emph{consistent
 cut} $C$ is a subset of events closed under
 happens-before~\cite{chandy1985distributed}.
 \end{definition}
-
-Section~\ref{sec:safe-exposure}'s lifted output events also end at
-$R[\mathrm{out}\OutputGe o]$; nothing in this section changes.
-Section~\ref{sec:coordination} generalizes histories to systems that make other
-commitments.
 
 \subsection{Transition projection and confluence}
 \label{sec:projection-confluence}
@@ -188,43 +182,43 @@ endpoint $(\sigma_j)_{p\in P}$.  This is an existence
 claim about transitions, not a claim that a protocol delivers $j$,
 communicates, or terminates.
 
-\subsection{Distributed Consistency}
+\subsection{Distributed consistency}
 \label{sec:distributed-consistency}
 
 Confluence is a property at one cut and common \indesc.  Distributed
-Consistency requires it at every cut of every history.
+consistency requires it at every cut of every history.
 
-\begin{definition}[Distributed Consistency]
+\begin{definition}[Distributed consistency]
 \label{def:distributed-consistency}
-An ordered specification has \emph{Distributed Consistency} when, for every
+An ordered specification has \emph{distributed consistency} when, for every
 finite participant set, history $H$, and consistent cut $C$, $H$ is
 confluent at $C$ and every common \indesc of the participants' current
 inputs.
 \end{definition}
 
-Distributed Consistency is the history-level reading of Consistency.
+Distributed consistency is the history-level reading of consistency.
 Histories add participants, messages, and cuts, but do not by themselves
 assert communication, delivery, or termination.  The next proposition shows
 that nothing is lost or gained; its short proof is also why the run
 formulation remains useful.
 
-\begin{proposition}[Consistency and Distributed Consistency]
+\begin{proposition}[Consistency and distributed consistency]
 \label{prop:distributed-consistency}
-An ordered specification is consistent if and only if it has Distributed
-Consistency.
+An ordered specification is consistent if and only if it has distributed
+consistency.
 \end{proposition}
 
 \begin{proof}
 At any cut of a history, the projections are a finite set of runs, so
-Consistency implies their confluence from those endpoints.  Conversely, place
+consistency implies their confluence from those endpoints.  Conversely, place
 any finite set of runs in a message-free history,
 one per participant; every input event in a run is already a cumulative
-$\mathsf{input}(j)$ event.  Distributed Consistency at the final cut gives
+$\mathsf{input}(j)$ event.  Distributed consistency at the final cut gives
 their confluence.
 \end{proof}
 
 Combining Proposition~\ref{prop:distributed-consistency} with Functional CALM,
-a functional specification has Distributed Consistency exactly when it is
+a functional specification has distributed consistency exactly when it is
 monotone.  Corollary~\ref{cor:state-by-input} then gives convergence in every
 history:
 

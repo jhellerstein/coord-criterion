@@ -13,7 +13,7 @@ input has a single specified output.  Section~\ref{sec:election-story} walks
 through the framework informally on an election.
 Section~\ref{sec:functional-specifications} defines specifications and states;
 Section~\ref{sec:functional-events} defines input and output events and the
-commitments output events apply; Section~\ref{sec:determination} assembles executions and Consistency;
+commitments output events apply; Section~\ref{sec:determination} assembles executions and consistency;
 and Section~\ref{sec:functional-calm-theorem} proves Functional CALM and
 identifies when an output can be emitted without commitment.
 
@@ -90,15 +90,14 @@ identifies when an output can be emitted without commitment.
   Gray: the row has been removed from the remainder table.  Gray and struck
   through: it was removed by a commitment; gray alone: it was retired by an
   input event.
-  Panels (b) and (c) follow input events; panel (d)
-  follows a system's output event for $\bot$ that also closes the polls, a
-  seal commitment (not the $\mathsf{output}(\bot)$ of
-  Section~\ref{sec:functional-events}, which needs no commitment).}
+  Panels (b) and (c) follow input events.  Panel (d) follows an output event
+  in which the registrar emits $\bot$ and also closes the polls, a seal that
+  $\mathsf{output}(\bot)$ alone does not require.}
   \label{fig:election-frames}
 \end{figure*}
 
-Before the full formalism, we explain the framework by example. We consider a small election,
-illustrated in Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
+We introduce the framework with a small election, illustrated in
+Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
 the ballots received so far with the permitted result; orders on the columns
 describe how inputs grow and which later outputs \outrelbase earlier ones.  This
 section considers tables in which each input has exactly one output;
@@ -160,10 +159,9 @@ specification requires.
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}
   \end{tabular}
-  \caption{Panel (b) of Figure~\ref{fig:election-frames} with all outputs
-  incomparable, after $\mathsf{output}(\bot)$.  Under the equality order,
-  emitting $\bot$ at $xy\cdot$ requires sealing $xyx$ and $xyy$: exactly
-  closing the polls.  Legend as in Figure~\ref{fig:election-frames}.}
+  \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$.
+  The table matches Figure~\ref{fig:election-frames}(d): the seal the registrar
+  chose there is required here.  Legend as in Figure~\ref{fig:election-frames}.}
   \label{fig:nonmonotone-frame}
 \end{figure}
 
@@ -180,17 +178,16 @@ choosing later input; it observes $o$, not the seal.
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
-to itself).  Then $\bot$ is incompatible with future winners: at $xy\cdot$,
-emitting $\bot$ requires sealing $xyx$ and $xyy$, which is exactly closing the
-polls.  This isolates the
+to itself).  Then $\bot$ is incompatible with future winners, so emitting it
+requires a seal (Figure~\ref{fig:nonmonotone-frame}).  This isolates the
 Functional CALM boundary: under the original monotone order, outputs remain
-valid as input grows; under the equality order, some outputs require commitment
-before they can be emitted.
+valid as input grows; under the equality order, some outputs can be emitted
+only with a commitment.
 
-The obstruction is a property of the table alone.  Rows $(x\cdot\cdot,\bot)$ and
-$(xx\cdot,x)$ have the common \indesc $xxx$, but under the equality
-order no output at $xxx$ \outrel both outputs $\bot$ and $x$.  A run that emits $\bot$ at $x\cdot\cdot$ and one
-that receives $xx\cdot$ cannot be reconciled at $xxx$.
+The obstruction is a property of the table alone.  Rows $(xy\cdot,\bot)$ and
+$(xyx,x)$ have the common \indesc $xyx$, but under the equality
+order no output at $xyx$ \outrel both outputs $\bot$ and $x$.  A run that emits
+$\bot$ at $xy\cdot$ and one that receives $xyx$ cannot be reconciled at $xyx$.
 
 Input and output events form a transition system between system states.  A
 specification is \emph{consistent} when its runs are confluent: any runs whose inputs have a common
@@ -368,8 +365,8 @@ promise without assuming that clients tolerate retractions.  An emitted output
 must therefore be \outrelpast by later outputs.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Before doing so, it must seal every legal
-future input whose output does not \outrelbase $o$.
+output the system may emit.  Emitting it requires sealing every legal future
+input whose output does not \outrelbase $o$.
 
 \begin{definition}[Output event, seal]
 \label{def:output-event}
@@ -392,13 +389,10 @@ which removes the rows at every legal input whose output does not
 
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event ends
 at a state.  A commitment makes an allowed future unreachable, and seals of
-this form are the only commitments this section uses.  Systems may commit
-differently, for example by sealing more than an output requires, as the
-registrar does in Figure~\ref{fig:election-frames}(d).
-Section~\ref{sec:coordination} defines commitments in general and shows that
-every system run accepts the same inputs and emits the same outputs as some run
-defined here that retains at least as many rows after each event; the results
-below are about these runs.
+this form are the only commitments this section uses.  Systems may commit more
+than an output requires, as the registrar does in
+Figure~\ref{fig:election-frames}(d); Section~\ref{sec:coordination} shows this
+changes nothing observable, so we study runs of these events.
 
 \begin{definition}[Exposable output]
 \label{def:exposable}
@@ -426,15 +420,13 @@ Figure~\ref{fig:election-frames}.
 
 We now assemble events into runs and ask the central consistency question:
 when different runs follow different paths through the specification, can
-their resulting states still be reconciled?  We reduce Consistency
+their resulting states still be reconciled?  We reduce consistency
 to a check on a single row in two steps.  First, a
 run's remaining rows depend only on its current input and the outputs it has
 emitted (Lemma~\ref{lem:run-residual}).  Second, runs are therefore confluent
 exactly when one row at their common input survives in all of them
-(Proposition~\ref{prop:confluence}).  These steps use output events only
-through Equation~\ref{eq:output-action};
-Section~\ref{sec:relational-executions} shows that they carry over to several
-outputs per input.
+(Proposition~\ref{prop:confluence}), and both carry over to several outputs per
+input (Section~\ref{sec:relational-executions}).
 
 \begin{definition}[Transition system, run]
 \label{def:io-transition-system}
@@ -508,9 +500,7 @@ A common state has a row at $j$, and rows are never added; conversely, by Lemma~
 \end{proof}
 
 In a functional specification the only row at $j$ is $(j,f(j))$, so the test
-asks whether that row survives in every run, and $u=f(j)$; in the
-equality-order election of Section~\ref{sec:election-story}, the row
-$(xxx,x)$ does not survive the run that emits $\bot$ at $x\cdot\cdot$.
+asks whether that row survives in every run, and $u=f(j)$.
 
 Consistency guarantees that runs never diverge irreparably.  Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
@@ -551,12 +541,12 @@ $(k,f(k))$, while one that accepts $\mathsf{input}(k)$ keeps it; no row at $k$
 survives in both, so they are not confluent at $k$.
 \end{proof}
 
-In the equality-order election, $f(x\cdot\cdot)=\bot$ and $f(xx\cdot)=x$ are
-incomparable: a run that emits $\bot$ at $x\cdot\cdot$ and one that accepts
-$xx\cdot$ are the two runs of Section~\ref{sec:election-story} that can never
+In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
+incomparable: a run that emits $\bot$ at $xy\cdot$ and one that accepts
+$xyx$ are the two runs of Section~\ref{sec:election-story} that can never
 meet.
 
-In the functional case, Consistency has a strong consequence: outputs leave no
+In the functional case, consistency has a strong consequence: outputs leave no
 trace on the state.
 
 \begin{corollary}[State is determined by input]
