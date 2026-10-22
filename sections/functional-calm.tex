@@ -333,10 +333,11 @@ state at $i$} retains all rows at $i$ and its \indescs:
   \label{eq:canonical-state}
 \end{equation}
 The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
-$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  Under the functional dependency it has
-at most one element; Section~\ref{sec:ambiguous-specifications} allows more.
-For a state $(i,R)$, the \emph{upper fiber} $\mathrm{out}(R)$ collects the
-outputs at $i$ and its legal \indescs, the outputs still possible.
+$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  Under the functional dependency the
+fiber of $S$ at $k$ is the single output $\{f(k)\}$, from the one row at $k$;
+Section~\ref{sec:ambiguous-specifications} allows more.
+For a state $(i,R)$, the \emph{upper fiber} $\mathrm{out}(R[\mathrm{in}\InputGe i])$
+collects the outputs at $i$ and its legal \indescs, the outputs still possible.
 
 \subsection{Input and output events}
 \label{sec:functional-events}
@@ -349,7 +350,7 @@ world.
 For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{input}(j)}
-  \bigl(j,\ R[\mathrm{in}\InputGe j]\bigr).
+  \bigl(j,\ R' = R[\mathrm{in}\InputGe j]\bigr).
   \label{eq:input-event}
 \end{equation}
 It makes $j$ current and \emph{retires} every row failing the predicate: i.e.,
@@ -381,7 +382,7 @@ Let $(i,R)$ be a state and $(i,o)$ its row at the current input.  The
 \emph{output event} $\mathsf{output}(o)$ keeps exactly the rows whose outputs
 \outrelbase $o$ and emits $o$, atomically:
 \begin{equation}
-  (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
+  (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R' = R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
 When this state change removes rows, we call it the \emph{seal}
