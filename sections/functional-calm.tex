@@ -1,6 +1,5 @@
 \section{Functional CALM}
 \label{sec:functional-calm}
-\jmh{CIDR length: consider keeping statements of the event contract and Lemmas canonical-equivalent and run-residual here and moving their proofs to an appendix.}
 
 The CALM Theorem was proved for queries in a logic programming language,
 evaluated by relational transducers, and its applicability outside that
@@ -12,12 +11,11 @@ schedule.  This section addresses the case that prior work on both CALM and
 CRDTs shared: specifications that are functions, in which each
 input has a single specified output.  Section~\ref{sec:election-story} walks
 through the framework informally on an election.
-Section~\ref{sec:functional-specifications} defines specifications, states, and
-commitment bases; Section~\ref{sec:functional-events} defines input and output
-events; Section~\ref{sec:determination} assembles executions and Consistency;
-and Section~\ref{sec:functional-calm-theorem} reduces Consistency to a single
-condition on the specification table, proves Functional CALM, and identifies
-when an output can be emitted without commitment.
+Section~\ref{sec:functional-specifications} defines specifications and states;
+Section~\ref{sec:functional-events} defines input and output events and the
+commitments output events apply; Section~\ref{sec:determination} assembles executions and consistency;
+and Section~\ref{sec:functional-calm-theorem} proves Functional CALM and
+identifies when an output can be emitted without commitment.
 
 \subsection{The framework by example}
 \label{sec:election-story}
@@ -92,13 +90,14 @@ when an output can be emitted without commitment.
   Gray: the row has been removed from the remainder table.  Gray and struck
   through: it was removed by a commitment; gray alone: it was retired by an
   input event.
-  Panels (b) and (c) follow input events; panel (d)
-  follows $\Out{\gamma}{\bot}$, where $\gamma$ contains a seal commitment.}
+  Panels (b) and (c) follow input events.  Panel (d) follows an output event
+  in which the registrar emits $\bot$ and also closes the polls, a seal that
+  $\mathsf{output}(\bot)$ alone does not require.}
   \label{fig:election-frames}
 \end{figure*}
 
-Before the full formalism, we explain the framework by example. We consider a small election,
-illustrated in Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
+We introduce the framework with a small election, illustrated in
+Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
 the ballots received so far with the permitted result; orders on the columns
 describe how inputs grow and which later outputs \outrelbase earlier ones.  This
 section considers tables in which each input has exactly one output;
@@ -141,72 +140,61 @@ unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no commitment, since every output still possible \outrel it;
 closing the polls is a further decision by the system, not something the
 specification requires.
-A \emph{system} is what implements the specification
-(Section~\ref{sec:histories} makes this precise); commitments belong to a
-system's declared \emph{commitment basis} $\mathcal B$,
-not to the specification itself; a system whose polls cannot close does not
-have this commitment in its basis.
 
 \begin{figure}[t]
   \centering
   \small
   \setlength{\tabcolsep}{6pt}
   \begin{tabular}[t]{@{}l c@{}}
-    \multicolumn{2}{@{}l}{(e) As (a), all outputs incomparable, polls closed}\\
+    \multicolumn{2}{@{}l}{(e) As (b), all outputs incomparable, $\bot$ emitted}\\
     \toprule
     $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-    \sh{$\mathbf{x\cdot\cdot}$} & \sh{$\bot$} \\
-    \retired{$xy\cdot$} & \retired{$\bot$} \\ \strikerow
+    \retired{$x\cdot\cdot$} & \retired{$\bot$} \\
+    \sh{$\mathbf{xy\cdot}$} & \sh{$\bot$} \\
     \retired{$xyx$} & \retired{$x$} \\ \strikerow
     \retired{$xyy$} & \retired{$y$} \\ \strikerow
-    \retired{$xx\cdot$} & \retired{$x$} \\ \strikerow
-    \retired{$xxx$} & \retired{$x$} \\ \strikerow
-    \retired{$xxy$} & \retired{$x$} \\ \strikerow
+    \retired{$xx\cdot$} & \retired{$x$} \\
+    \retired{$xxx$} & \retired{$x$} \\
+    \retired{$xxy$} & \retired{$x$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}
   \end{tabular}
-  \caption{Panel (a) of Figure~\ref{fig:election-frames} with all outputs
-  incomparable, after the registrar emits $\bot$ while closing the polls at
-  $x\cdot\cdot$.  Every \indesc of $x\cdot\cdot$ is removed by the output
-  event's seal commitment.  Legend as in
-  Figure~\ref{fig:election-frames}.}
+  \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$.
+  The table matches Figure~\ref{fig:election-frames}(d): the seal the registrar
+  chose there is required here.  Legend as in Figure~\ref{fig:election-frames}.}
   \label{fig:nonmonotone-frame}
 \end{figure}
 
 \paragraph{Output and consistency.}
 In a functional table, an output $o$ is \emph{exposable} when every output
 still possible at the current input or an \indesc still in the table \outrel it.  Hence $\bot$ is exposable
-in panels~(a) and~(b), and $x$ in panel~(c).  An atomic output event $\Out{\gamma}{o}$
-applies a sequence $\gamma$ of seal commitments after which $o$ is
-exposable, then emits $o$, in one transition; $\Out{\varepsilon}{o}$ applies
-none.  Emitting $o$ is a promise:
+in panels~(a) and~(b), and $x$ in panel~(c).  The atomic output event
+$\mathsf{output}(o)$ seals any legal input whose output does not \outrelbase
+$o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
 from then on, only rows whose outputs \outrelbase $o$ remain.  The emission stays
 explicit in the history because the uncontrolled environment may use it when
-choosing later input.  It observes $o$, not $\gamma$.
+choosing later input; it observes $o$, not the seal.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
-to itself).  At $x\cdot\cdot$, $\bot$ is then incompatible with future
-winners.  Emitting it requires sealing those winner-producing \indescs; the
-figure shows the stronger, optional action of closing the polls and sealing all
-\indescs, including $xy\cdot$, which also outputs $\bot$.  This isolates the
+to itself).  Then $\bot$ is incompatible with future winners, so emitting it
+requires a seal (Figure~\ref{fig:nonmonotone-frame}).  This isolates the
 Functional CALM boundary: under the original monotone order, outputs remain
-valid as input grows; under the equality order, some outputs require commitment
-before they can be emitted.
+valid as input grows; under the equality order, some outputs can be emitted
+only with a commitment.
 
-The obstruction is a property of the table alone.  Rows $(x\cdot\cdot,\bot)$ and
-$(xx\cdot,x)$ have the common \indesc $xxx$, but under the equality
-order no output at $xxx$ \outrel both outputs $\bot$ and $x$.  A run that emits $\bot$ at $x\cdot\cdot$ and one
-that receives $xx\cdot$ cannot be reconciled at $xxx$.
+The obstruction is a property of the table alone.  Rows $(xy\cdot,\bot)$ and
+$(xyx,x)$ have the common \indesc $xyx$, but under the equality
+order no output at $xyx$ \outrel both outputs $\bot$ and $x$.  A run that emits
+$\bot$ at $xy\cdot$ and one that receives $xyx$ cannot be reconciled at $xyx$.
 
 Input and output events form a transition system between system states.  A
 specification is \emph{consistent} when its runs are confluent: any runs whose inputs have a common
 \indesc can always be continued to one common state there.
-Section~\ref{sec:functional-calm-theorem} shows that the test above is exactly
-what consistency requires: outputs at inputs with a common \indesc $j$ must
-have a common \outnoun at $j$.  For functional tables this test is monotonicity,
-which is Functional CALM.
+Section~\ref{sec:functional-calm-theorem} shows that for functional tables
+this test is exactly monotonicity: a functional specification is consistent
+exactly when it is monotone, which is Functional CALM.
 
 The rest of this section formalizes these notions; Figure~\ref{fig:formalism-summary}
 serves as a reference.
@@ -231,30 +219,28 @@ serves as a reference.
     \addlinespace
     \textbf{Output handling} & & \\
     \midrule
-    output event & $\Out{\gamma}{o}$: apply commitments $\gamma$, then emit $o$; legal if every remaining row's output \outrel $o$ & Def.~\ref{def:output-event} \\
-    canonical basis, event & $\mathcal B_S=\{s_o\}$; canonical event $\Out{\kappa_o}{o}$ & Def.~\ref{def:canonical-commitment-basis} \\
-    event contract & containment, canonical support, commitment-free events, exposure test & Prop.~\ref{prop:canonical-output-preservation} \\
-    exposable output & $\Out{\varepsilon}{o}$ is legal & Def.~\ref{def:exposable} \\
-    run & finite input and output events & Def.~\ref{def:run} \\
+    output event & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,R[\mathrm{out}\OutputGe o])$; applies the seal $s_o$ if this removes rows & Def.~\ref{def:output-event} \\
+    exposable output & $\mathsf{output}(o)$ applies no commitment: $o\OutputOrd f(j)$ at every legal $j\InputGe i$ & Def.~\ref{def:exposable} \\
+    run & finite input and output events from a canonical state & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Results} & & \\
     \midrule
     consistent & runs confluent: \ $\bigcap_r R_r(j)\neq\varnothing$ at every common \indesc $j$ of their current inputs & Def.~\ref{def:consistency}, Prop.~\ref{prop:confluence} \\
-    common-\indesc char. & consistent $\iff$ common-\indesc condition & Thm.~\ref{thm:common-refinement} \\
     Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
-    exposure boundary & common-\indesc condition $\iff$ every reachable output exposable & Prop.~\ref{prop:functional-exposure-boundary} \\
+    state by input & consistent $\Longrightarrow$ a run ending at $i$ is in $\sigma_S(i)$ & Cor.~\ref{cor:state-by-input} \\
+    exposure boundary & monotone $\iff$ every output reachable without commitment is exposable & Prop.~\ref{prop:functional-exposure-boundary} \\
     \bottomrule
   \end{tabular}
   \caption{Reference for Functional CALM: one transition system embeds the
-  declarative specification and commitment basis in atomic input/output events.
+  declarative specification and its commitments in atomic input/output events.
   Terms are defined at the cited items.}
   \label{fig:formalism-summary}
 \end{figure*}
 
-\subsection{Specifications, states, and commitments}
+\subsection{Specifications and states}
 \label{sec:functional-specifications}
 
-We begin by defining the core structures of our framework: specifications and commitment bases.
+We begin by defining the core structures of our framework: specifications and their states.
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
 A \emph{functional ordered specification} is a tuple
@@ -345,45 +331,10 @@ state at $i$} retains all rows at $i$ and its \indescs:
   \label{eq:canonical-state}
 \end{equation}
 
-The specification and its states say which behaviors are possible, but not
-which possibilities the system is authorized to rule out.  That authority is a
-separate part of the model, as follows.
-
-\begin{definition}[Commitment, commitment basis, seal]
-\label{def:commitment-basis}
-A commitment removes rows from the remainder table without changing the
-current input.  Formally, a \emph{commitment} is a partial function on
-specification states that leaves the current input unchanged and removes a nonempty set of rows, each with no remaining
-row at the same input that \outrel it: whenever $c(i,R)=(i,R')$, we have $R'\subsetneq R$ and
-\begin{equation}
-  (k,u)\in R\setminus R',\ (k,w)\in R'
-  \quad\Longrightarrow\quad
-  u\not\OutputOrd w.
-  \label{eq:commitment-excludes}
-\end{equation}
-A \emph{commitment basis}
-$\mathcal B$ is a set of commitments available to a system.  A commitment
-\emph{seals} a legal input $k$ when it empties the fiber at $k$.
-\end{definition}
-
-In a functional specification each input has one row, so no other row shares
-a removed row's input and Equation~\ref{eq:commitment-excludes} holds
-vacuously; every commitment seals the inputs whose rows it removes; we call it a
-\emph{seal commitment}.  A commitment makes an allowed future unreachable.
-Section~\ref{sec:safe-exposure} shows what the condition adds when an input has
-several outputs.
-
-Note that commitments are \emph{partial} functions:  a system may be designed to
-authorize a commitment only at states satisfying an application-specific
-precondition.  For example, in Figure~\ref{fig:election-frames}(d), we defined the
-poll-closing commitment at every state; a different system might authorize it
-only after some candidate has a majority.
-
 \subsection{Input and output events}
 \label{sec:functional-events}
 
-States and commitment bases tell us what remains possible and what a system may
-rule out.  We now define the two events that change state: input events
+States tell us what remains possible.  We now define the two events that change state: input events
 incorporate new information, while output events record promises to the outside
 world.
 
@@ -414,102 +365,43 @@ promise without assuming that clients tolerate retractions.  An emitted output
 must therefore be \outrelpast by later outputs.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Before doing so, it must seal every legal
-future input whose output does not \outrelbase $o$.
+output the system may emit.  Emitting it requires sealing every legal future
+input whose output does not \outrelbase $o$.
 
-\begin{definition}[Output event]
+\begin{definition}[Output event, seal]
 \label{def:output-event}
-Let $(i,R)$ be a state and $o\in R(i)$.  An \emph{output event}
-$\Out{\gamma}{o}$ under a basis $\mathcal B$ applies a finite, possibly
-empty sequence $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each
-$c_m$ defined at the state its predecessors leave, and then emits $o$, all
-atomically; $\varepsilon$ is the empty sequence.  Events with different
-$\gamma$ emit the same output but are different events.  If $\gamma$ leaves
-remainder table $R'$, the event is
-\emph{legal} at $(i,R)$ when every remaining row's output \outrel $o$:
+Let $(i,R)$ be a state and $(i,o)$ its row at the current input.  The
+\emph{output event} $\mathsf{output}(o)$ keeps exactly the rows whose outputs
+\outrelbase $o$ and emits $o$, atomically:
 \begin{equation}
-  (k,u)\in R' \Longrightarrow o\OutputOrd u,
-  \quad\text{or equivalently}\quad R'\subseteq R[\mathrm{out}\OutputGe o].
-  \label{eq:supported-output-action}
-\end{equation}
-\end{definition}
-
-In an output event, every commitment maps a state to a state and leaves the
-current input unchanged, so the remaining table $R'$ still contains the current
-row $(i,o)$.
-
-A system's basis says which commitments that system may apply, and bases
-differ from system to system.  To make Consistency a property of the
-specification alone, our proofs use one basis derived from $S$ that can carry
-out every output event $S$ permits: for each output, it removes exactly the rows
-incompatible with that output's promise.  Section~\ref{sec:determination}
-shows this loses nothing (Lemma~\ref{lem:canonical-equivalent}).
-
-\begin{definition}[Canonical seal commitment, canonical basis, canonical event]
-\label{def:canonical-commitment-basis}
-For each $o\in O$, the \emph{canonical seal commitment} $s_o$ is the partial
-function
-\begin{equation}
-  s_o(i,R)=(i,R[\mathrm{out}\OutputGe o]),
-  \label{eq:canonical-seal-commitment}
-\end{equation}
-defined at every specification state $(i,R)$ where $(i,o)\in R$ and
-$R[\mathrm{out}\OutputGe o]\neq R$.  In a functional specification it seals
-exactly the legal inputs whose
-outputs do not \outrelbase $o$.  The \emph{canonical commitment basis} is exactly
-\begin{equation}
-  \mathcal B_S
-    =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}.
-  \label{eq:canonical-commitment-basis}
-\end{equation}
-At $(i,R)$, let $\kappa_o$ be the one-element sequence $s_o$ if $s_o$ is
-defined there, and $\varepsilon$ otherwise.  The \emph{canonical event} for
-$o$ is $\Out{\kappa_o}{o}$.  Either way it ends at
-\begin{equation}
-  (i,R)\xrightarrow{\Out{\kappa_o}{o}}(i,R[\mathrm{out}\OutputGe o]).
+  (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
+When $R[\mathrm{out}\OutputGe o]\neq R$, the event applies a
+\emph{commitment}, the \emph{seal}
+\begin{equation}
+  s_o(i,R)=\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr),
+  \label{eq:canonical-seal-commitment}
+\end{equation}
+which removes the rows at every legal input whose output does not
+\outrelbase $o$; it \emph{seals} those inputs.
 \end{definition}
+
+The current row $(i,o)$ remains, since $o$ \outrel itself, so the event ends
+at a state.  A commitment makes an allowed future unreachable, and seals of
+this form are the only commitments this section uses.  Systems may commit more
+than an output requires, as the registrar does in
+Figure~\ref{fig:election-frames}(d); Section~\ref{sec:coordination} shows this
+changes nothing observable, so we study runs of these events.
 
 \begin{definition}[Exposable output]
 \label{def:exposable}
-An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when $\Out{\varepsilon}{o}$
-is legal there.
+The output $o$ at $(i,R)$ is \emph{exposable} when $\mathsf{output}(o)$
+applies no commitment, that is, when $R[\mathrm{out}\OutputGe o]=R$.
 \end{definition}
 
-The results that follow depend on output events only through four facts,
-which we collect as the \emph{event contract}.  We prove it here for
-functional specifications; Section~\ref{sec:safe-exposure} proves it again with
-several outputs per input.
-
-\begin{proposition}[Event contract]
-\label{prop:canonical-output-preservation}
-Let $(i,R)$ be a state and $o\in R(i)$.
-\begin{enumerate}
-  \item \emph{Containment.}  Under any commitment basis, a legal output event
-        $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
-        $R'\subseteq R[\mathrm{out}\OutputGe o]$.
-  \item \emph{Canonical support.}  The canonical event $\Out{\kappa_o}{o}$ is legal at
-        $(i,R)$ and takes it to $(i,R[\mathrm{out}\OutputGe o])$.  It therefore
-        retains every row that any legal $\Out{\gamma}{o}$ retains.
-  \item \emph{Commitment-free events are canonical.}  If $\Out{\varepsilon}{o}$
-        is legal, it takes $(i,R)$ to
-        $(i,R[\mathrm{out}\OutputGe o])$.
-  \item \emph{Exposure test.}  The output $o$ is exposable at $(i,R)$ if and
-        only if, for every legal $j\InputGe i$ and every $x\in R(j)$, some
-        $u\in R(j)$ \outrel both $o$ and $x$.
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}
-Containment is Equation~\ref{eq:supported-output-action}, and canonical
-support is Equation~\ref{eq:output-action}.  The event $\Out{\varepsilon}{o}$
-leaves $R$ unchanged, so it is legal exactly when
-$R\subseteq R[\mathrm{out}\OutputGe o]$, in which case
-$R=R[\mathrm{out}\OutputGe o]$; this gives clause~3.  That condition says
-$o\OutputOrd f(j)$ at every legal $j\InputGe i$; since $R(j)=\{f(j)\}$, taking
-$u=x=f(j)$ shows that it is the condition of clause~4.
-\end{proof}
+Since the only row at a legal input $j$ is $(j,f(j))$, $o$ is exposable at
+$(i,R)$ exactly when $o\OutputOrd f(j)$ at every legal $j\InputGe i$.
 
 \paragraph{Determination.}
 Both kinds of event can narrow what remains possible.  For a state $(i,R)$, the
@@ -528,89 +420,36 @@ Figure~\ref{fig:election-frames}.
 
 We now assemble events into runs and ask the central consistency question:
 when different runs follow different paths through the specification, can
-their resulting states still be reconciled?  Consistency quantifies over all
-runs of all systems.  We reduce it to a check
-on the specification table in three steps.  First, any system's run can be
-replaced by a canonical run that keeps at least as many rows
-(Lemma~\ref{lem:canonical-equivalent}).  Second, a canonical run's remaining
-rows depend only on its current input and the outputs it has emitted
-(Lemma~\ref{lem:run-residual}).  Third, runs are therefore confluent exactly
-when one row at their common input survives in all of them
-(Proposition~\ref{prop:confluence}), which yields a condition on the table
-alone (Theorem~\ref{thm:common-refinement}, Section~\ref{sec:functional-calm-theorem}).
-None of these steps uses the functional dependency; they use output events only
-through the event contract of Section~\ref{sec:functional-events}.
-Section~\ref{sec:ambiguous-specifications} re-verifies that contract for
-several outputs per input, and every step then carries over.
+their resulting states still be reconciled?  We reduce consistency
+to a check on a single row in two steps.  First, a
+run's remaining rows depend only on its current input and the outputs it has
+emitted (Lemma~\ref{lem:run-residual}).  Second, runs are therefore confluent
+exactly when one row at their common input survives in all of them
+(Proposition~\ref{prop:confluence}), and both carry over to several outputs per
+input (Section~\ref{sec:relational-executions}).
 
-\begin{definition}[Transition system, run, canonical run]
+\begin{definition}[Transition system, run]
 \label{def:io-transition-system}
 \label{def:transition-system}
 The \emph{transition system} consists of specification states and the input and
-output events above.  Fix a commitment basis $\mathcal B$.  A \emph{run under
-$\mathcal B$} is any finite transition sequence from the canonical state
-$\sigma_S(i)$ at some input $i$; its output events may use only commitments
-from $\mathcal B$.  We say simply \emph{run} when the basis is clear.  A
-\emph{canonical run} is a run under $\mathcal B_S$ in which every output event
-is the canonical event $\Out{\kappa_o}{o}$ of the state where it occurs.
+output events above.  A \emph{run} is any finite transition sequence from the
+canonical state $\sigma_S(i)$ at some input $i$.
 \label{def:run}
 \end{definition}
 
-A run is \emph{commitment-free} when each of its output events is some
-$\Out{\varepsilon}{o}$.  By clause~3 of the event contract, a commitment-free run under any
-basis is a canonical run.  A state is \emph{reachable without commitment} when
+A run is \emph{commitment-free} when none of its output events applies a
+commitment, that is, when each emits an exposable output.  A state is \emph{reachable without commitment} when
 some commitment-free run reaches it.
 
-Our results quantify over canonical runs rather than over the runs of any
-particular system.  To see that this excludes no system's behavior, call two
-runs \emph{equivalent} when they start at the same canonical state and agree
-once commitment sequences are erased: wherever one has $\mathsf{input}(j)$ the
-other does, and wherever one has $\Out{\gamma}{o}$ the other has
-$\Out{\gamma'}{o}$ for some $\gamma'$.  They accept the same inputs and emit
-the same outputs, in the same order, which is all the environment observes.  Equivalent runs may differ in the commitments
-their output events apply, and hence in their remainder tables.  We lift
-Proposition~\ref{prop:canonical-output-preservation} from single output events
-to runs:
-
-\begin{lemma}[Canonical equivalents]
-\label{lem:canonical-equivalent}
-Every run under any commitment basis is equivalent to a canonical run.  After
-each event, the canonical run's remainder table contains the original run's.
-\end{lemma}
-
-\begin{proof}
-By induction on the events.  Both runs start at the same canonical state, so
-their remainder tables are initially equal.  Suppose that before some event the
-original run's table $R$ and the canonical run's table $\widehat R$ satisfy
-$R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input
-event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$.
-It retires every row whose input does not \inrelbase $j$, keeping
-$R[\mathrm{in}\InputGe j]$ in the original run and
-$\widehat R[\mathrm{in}\InputGe j]$ in the canonical run.  Since
-$R\subseteq\widehat R$, the first remains contained in the second.  For an
-output event $\Out{\gamma}{o}$ with $o\in R(i)$ taking $R$ to $R'$, containment
-(Proposition~\ref{prop:canonical-output-preservation}) gives
-$R'\subseteq R[\mathrm{out}\OutputGe o]$.  Since $o\in R(i)\subseteq\widehat R(i)$,
-canonical support applies at $\widehat R$: $\Out{\kappa_o}{o}$, with $\kappa_o$
-taken at $(i,\widehat R)$, takes $\widehat R$ to $\widehat R[\mathrm{out}\OutputGe o]$, which contains
-$R[\mathrm{out}\OutputGe o]$.
-\end{proof}
-
-The converse does not hold: a canonical run need not be equivalent to any run
-under a particular system's basis.  That basis may lack the commitment an
-output event requires, and so disable the output altogether.  Restricting
-attention to one system's runs could therefore hide non-monotonicity.  This is
-why Consistency, below, uses the canonical basis rather than a system's own.
-
-A canonical run's state has a simple description.  Input events keep only rows
+A run's state has a simple description.  Input events keep only rows
 whose input \inrel the current one, and output events keep only rows whose
 outputs \outrelbase what has been emitted.  Both steps are selections, and selections commute.  So
 the remainder table depends only on the current input and the outputs emitted
 so far, not on the order of events or the inputs passed through along the way.
 
-\begin{lemma}[Rows remaining after a canonical run]
+\begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
-If a canonical run ends at current input $i$ after emitting
+If a run ends at current input $i$ after emitting
 $o_1,\ldots,o_m$, its remainder table is
 \begin{equation}
   S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
@@ -621,23 +460,12 @@ the rows whose input \inrel $i$ and whose output \outrel every emitted
 output.
 \end{lemma}
 
-\begin{proof}
-The run starts at the canonical state $\sigma_S(i_0)$, whose table is
-$S[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
-the rows with $\mathrm{in}\InputGe j$ (Equation~\ref{eq:input-event}), and each
-canonical output event $\Out{\kappa_o}{o}$ keeps only the rows with
-$\mathrm{out}\OutputGe o$ (Equation~\ref{eq:output-action}). The input
-conditions reduce to the last one, $\mathrm{in}\InputGe i$, because each later
-input is an expansion of the earlier ones. One output condition remains for each
-emitted output.
-\end{proof}
+\noindent Proof in Appendix~\ref{app:proofs}.
 
-For example, in Figure~\ref{fig:nonmonotone-frame}'s equality-order variant, a
-canonical run that emits $\bot$ at $x\cdot\cdot$ keeps
-$S[\mathrm{in}\InputGe x\cdot\cdot,\ \mathrm{out}\OutputGe\bot]$: the rows
-$(x\cdot\cdot,\bot)$ and $(xy\cdot,\bot)$.  The registrar in the figure also
-removes $(xy\cdot,\bot)$, a stronger commitment than the specification
-requires.
+For example, in the equality-order variant of
+Figure~\ref{fig:nonmonotone-frame}, a run that emits $\bot$ at $xy\cdot$ keeps
+$S[\mathrm{in}\InputGe xy\cdot,\ \mathrm{out}\OutputGe\bot]$: the single row
+$(xy\cdot,\bot)$, as the figure shows.
 
 To compare runs that end at different inputs, we consider a common \indesc
 of those inputs.
@@ -645,10 +473,10 @@ of those inputs.
 \begin{definition}[Consistency]
 \label{def:consistency}
 An ordered specification is \emph{consistent} when every finite family of
-canonical runs is confluent: if the runs end at states
+runs is confluent: if the runs end at states
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common \indesc of their current
-inputs, each run can be continued by further canonical events to one common
-state with current input $j$.  The runs are then \emph{confluent at} $j$.
+inputs, each run can be continued by further input and output events to one
+common state with current input $j$.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
 Confluence has a simple test: some row at the common \indesc must survive
@@ -656,32 +484,23 @@ in every run.
 
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
-Canonical runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent
+Runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ are confluent
 at $j$ if and only if some row at $j$ survives in every final state:
 \begin{equation}
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
 \end{equation}
-For any such $u$, $\mathsf{input}(j)$ followed by the canonical event for $u$
-($\kappa_u$ taken at each resulting state) takes every endpoint to the state
+For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
+every endpoint to the state
 $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
 
-\begin{proof}
-A common state with current input $j$ has a row at $j$, and since rows are
-never added, that row belongs to every $R_r$.  Conversely, let $(j,u)$ belong
-to every $R_r$.  Then $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
-Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
-emitted on run $r$.  After $\mathsf{input}(j)$ and the canonical event for $u$
-($\kappa_u$ taken at each resulting state), the same lemma leaves exactly
-$S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
-starting run.
+\begin{proof}[Proof sketch]
+A common state has a row at $j$, and rows are never added; conversely, by Lemma~\ref{lem:run-residual} a surviving row $(j,u)$ is reached by $\mathsf{input}(j)$ and $\mathsf{output}(u)$ from every endpoint.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
 In a functional specification the only row at $j$ is $(j,f(j))$, so the test
-asks whether that row survives in every run, and $u=f(j)$; in the
-equality-order election of Section~\ref{sec:election-story}, the row
-$(xxx,x)$ does not survive the run that emits $\bot$ at $x\cdot\cdot$.
+asks whether that row survives in every run, and $u=f(j)$.
 
 Consistency guarantees that runs never diverge irreparably.  Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
@@ -698,49 +517,9 @@ this.
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
-Consistency is a property of families of canonical runs, while monotonicity
-is a local condition on pairs of inputs.  We first characterize Consistency by
-a condition on the specification table alone, then specialize it to
-functional specifications.
-
-\begin{definition}[Common-\indesc condition]
-\label{def:common-refinement-condition}
-An ordered specification satisfies the \emph{common-\indesc condition} when,
-for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$ and every
-common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
-$o_r$.
-\end{definition}
-
-The inputs $i_r$ need not be comparable, because different runs meet only at a
-common \indesc.  For the empty set of rows the condition asks only that
-$S(j)$ be nonempty, which totality guarantees.
-
-\begin{theorem}[Common-\indesc characterization]
-\label{thm:common-refinement}
-An ordered specification is consistent if and only if it satisfies the
-common-\indesc condition.
-\end{theorem}
-
-\begin{proof}
-Suppose the condition holds, and let canonical runs end at $(i_r,R_r)$ with
-common \indesc $j$.  Each output $o$ emitted on a run was emitted at some
-input $i_o\InputOrd j$, and since $o\in R(i_o)\subseteq S(i_o)$, it forms a row
-$(i_o,o)$ of $S$.  The condition supplies $u\in S(j)$ \outrelpart all of these
-outputs.  Since $j$ \inrel every current input $i_r$,
-Lemma~\ref{lem:run-residual} puts $(j,u)$ in every $R_r$, and
-Proposition~\ref{prop:confluence} gives confluence at $j$.  Conversely, let
-rows $(i_r,o_r)$ have common \indesc $j$.  For each $r$, the canonical run
-that starts at $\sigma_S(i_r)$ and emits $o_r$ ends with remainder table
-$S[\mathrm{in}\InputGe i_r,\ \mathrm{out}\OutputGe o_r]$
-(Lemma~\ref{lem:run-residual}).  Consistency and
-Proposition~\ref{prop:confluence} supply a row $(j,u)$ surviving in every one
-of these runs, so $u\in S(j)$ \outrel every $o_r$.
-\end{proof}
-
-In the equality-order election, the rows $(x\cdot\cdot,\bot)$ and $(xx\cdot,x)$
-have common \indesc $xxx$, but $S(xxx)=\{x\}$ and $x$ does not \outrelbase
-$\bot$.  The condition fails, and so does Consistency: these are the two runs of
-Section~\ref{sec:election-story} that can never meet.
+Consistency is a property of families of runs, while monotonicity
+is a local condition on pairs of inputs.  Functional CALM shows that these two
+views coincide.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
@@ -749,31 +528,36 @@ monotone.
 \end{theorem}
 
 \begin{proof}
-By Theorem~\ref{thm:common-refinement}, it suffices to show that, for a
-functional specification, the common-\indesc condition is equivalent to
-monotonicity.  The rows of $S$ are $(i_r,f(i_r))$ and $S(j)=\{f(j)\}$, so the
-condition says that $f(i_r)\OutputOrd f(j)$ whenever $i_r\InputOrd j$.  With
-one row this is monotonicity, and monotonicity gives it for every row.
+Every input has one row, so an output emitted at current input $k$ is $f(k)$.
+By Lemma~\ref{lem:run-residual}, a run ending at input $i$ keeps the
+row $(j,f(j))$ at an \indesc $j$ of $i$ exactly when $f(j)$ \outrel every
+output the run has emitted.  By Proposition~\ref{prop:confluence}, a finite
+family of runs is therefore confluent at a common \indesc $j$ exactly
+when $f(j)$ \outrel every output emitted on any of them.  If $f$ is monotone,
+this holds, since each emitted $f(k)$ has $k\InputOrd j$.  If $f$ is not
+monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.  Of two
+runs from $\sigma_S(i)$, one that emits $f(i)$ no longer has the row
+$(k,f(k))$, while one that accepts $\mathsf{input}(k)$ keeps it; no row at $k$
+survives in both, so they are not confluent at $k$.
 \end{proof}
 
-In the functional case, Consistency has a strong consequence: outputs leave no
+In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
+incomparable: a run that emits $\bot$ at $xy\cdot$ and one that accepts
+$xyx$ are the two runs of Section~\ref{sec:election-story} that can never
+meet.
+
+In the functional case, consistency has a strong consequence: outputs leave no
 trace on the state.
 
 \begin{corollary}[State is determined by input]
 \label{cor:state-by-input}
-In a consistent functional specification, every canonical run ending at current
+In a consistent functional specification, every run ending at current
 input $i$ is in the canonical state $\sigma_S(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
 
-\begin{proof}
-By Functional CALM (Theorem~\ref{thm:functional-calm}), the specification is
-monotone.  By Lemma~\ref{lem:run-residual}, the run's remainder table is
-$S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
-\mathrm{out}\OutputGe o_m]$, where each $o_\ell=f(i_\ell)$ for some
-$i_\ell\InputOrd i$.  Every row whose input \inrel $i$ has the form $(k,f(k))$ with
-$i_\ell\InputOrd k$, so monotonicity gives $o_\ell\OutputOrd f(k)$, and the
-output conditions remove nothing.
+\begin{proof}[Proof sketch]
+By Functional CALM the specification is monotone, so in Lemma~\ref{lem:run-residual} the output conditions remove no row whose input expands $i$.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
 Confluence at a common \indesc $j$ therefore needs only $\mathsf{input}(j)$:
@@ -781,38 +565,25 @@ every run reaches $\sigma_S(j)$, the state of a run that starts with all of the
 input.  Knowing the input is enough to know the state, and with it the one
 output $f(j)$.
 
-Exposability, too, is governed by the common-\indesc condition:
+Monotonicity also governs exposability:
 
 \begin{proposition}[Exposure boundary]
 \label{prop:functional-exposure-boundary}
-An ordered specification satisfies the common-\indesc condition if and only
-if every output at every state reachable without commitment is exposable.
+A functional ordered specification is monotone if and only if every output at
+every state reachable without commitment is exposable.
 \end{proposition}
 
-\begin{proof}
-Suppose the condition holds; by Theorem~\ref{thm:common-refinement}, the
-specification is consistent.  Let $(i,R)$ be reached by a commitment-free run,
-which is canonical, and let $o\in R(i)$, $j\InputGe i$ legal, and
-$x\in R(j)$.  Extend the run in two ways: by $\Out{\kappa_o}{o}$, and by
-$\mathsf{input}(j)$ followed by $\Out{\kappa_x}{x}$.
-Proposition~\ref{prop:confluence} supplies a row $(j,u)$ surviving in both, so
-$u\in R(j)$ \outrel $o$ and $x$, and the exposure test
-(Proposition~\ref{prop:canonical-output-preservation}) makes $o$ exposable.
-Conversely, suppose every such output is exposable, and let rows
-$(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality pick
-$u_0\in S(j)$.  For $r=1,\ldots,k$ in turn, the exposure test for $o_r$ at
-$\sigma_S(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in S(j)$ \outrelpart both
-$o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
+\begin{proof}[Proof sketch]
+If $f$ is monotone, Corollary~\ref{cor:state-by-input} puts every state reachable without commitment at $\sigma_S(i)$, where the exposure test holds; conversely, the exposure test at each $\sigma_S(i)$ is monotonicity.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
-For a functional specification, Functional CALM turns the condition into
-monotonicity.  Since every commitment of a functional specification is a seal,
-the two results together say that a functional specification is consistent
+Since every commitment an output event applies here is a seal, Functional
+CALM and Proposition~\ref{prop:functional-exposure-boundary} together say that a functional specification is consistent
 exactly when, at every state reachable without commitment, no output requires
 sealing input.  A monotone functional specification can emit every current
 output without a commitment; if monotonicity fails at $i\InputOrd k$ with
-$f(i)\not\OutputOrd f(k)$, then at $\sigma_S(i)$, $\kappa_{f(i)}=s_{f(i)}$, and
-every legal $\Out{\gamma}{f(i)}$ seals $k$.
+$f(i)\not\OutputOrd f(k)$, then at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$
+applies $s_{f(i)}$, which seals $k$.
 
 This is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read

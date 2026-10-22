@@ -1,0 +1,177 @@
+\section{Commitment bases and compound commitments}
+\label{app:bases}
+
+Section~\ref{sec:coordination} lets systems bring their own commitments
+(Definition~\ref{def:commitment}) through a commitment basis
+(Definition~\ref{def:system}).  Real systems declare which commitments they
+may make, may apply several in one output event, may commit more than an output
+requires, and may restrict when each commitment is available.  This appendix
+supplies the details behind that section: the seals and choices of
+Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} are
+commitments and form a canonical basis, compound commitments behave like single
+ones, and every system's run has an observably equivalent canonical run that
+retains at least as many rows after each event.
+
+Commitments are \emph{partial} functions, so a system may authorize a
+commitment only at states satisfying a precondition of its own.  In
+Figure~\ref{fig:election-frames}(d), the poll-closing commitment is defined at
+every state; a different system might authorize it only after some candidate
+has a majority.  A system whose polls cannot close has no such commitment in its
+basis.
+
+\begin{definition}[Canonical basis, canonical event]
+\label{def:canonical-commitment-basis}
+The \emph{canonical commitment basis} collects the seals and choices of
+Definition~\ref{def:lifted-output-event},
+\begin{equation}
+  \mathcal B_S
+    =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}
+     \cup
+     \{c_o:o\in O,\ \operatorname{dom}(c_o)\neq\varnothing\},
+  \label{eq:canonical-commitment-basis-relational}
+\end{equation}
+where $s_o$ is defined at the states with $o\in R(i)$ and $K_o\neq\varnothing$,
+and $c_o$ at those with $o\in R(i)$ and $U_o\neq\varnothing$.  At $(i,R)$, let
+$\kappa_o$ apply $s_o$ when $K_o\neq\varnothing$ and $c_o$ when
+$U_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$, $s_o$, $c_o$, or
+$s_o\,c_o$.  The \emph{canonical event} for $o$ is $\Out{\kappa_o}{o}$: the
+output event of Definition~\ref{def:lifted-output-event}, and with one row per
+input that of Definition~\ref{def:output-event}.
+\end{definition}
+
+\paragraph{The canonical seals and choices are commitments.}
+With one row per input, Equation~\ref{eq:commitment-excludes} holds vacuously,
+so the seals of Definition~\ref{def:output-event} are commitments.  With
+several outputs per input, the seal $s_o$ of Definition~\ref{def:lifted-output-event}
+removes every row at the inputs in $K_o$, so nothing remains there to
+\outrelbase a removed row.  For $c_o$, suppose some $x\in U_o$ at input $k$ were
+\outrelpast by a row $y$ that $c_o$ leaves at $k$.  Either $y$ \outrel $o$, or
+$y\in D_o$ and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is
+then \outrelpast by a row \outrelpart $o$, so $x\in D_o$, a contradiction.  Since
+$s_o$ and $c_o$ remove disjoint sets of rows and neither changes the other's
+(Section~\ref{sec:safe-exposure}), each is defined on the state the other
+leaves, and the canonical basis of
+Definition~\ref{def:canonical-commitment-basis} applies them in either order.
+
+\begin{lemma}[Containment, canonical support, and commitment-free events]
+\label{lem:canonical-commitment-normal-form}
+Let $(i,R)$ be a state and $o\in R(i)$.
+\begin{enumerate}
+  \item Every legal output event $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
+        $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows at
+        inputs in $K_o$ and the rows in $U_o$ by commitment.
+  \item The canonical event $\Out{\kappa_o}{o}$ is legal and takes $(i,R)$ to
+        $(i,R[\mathrm{out}\OutputGe o])$, so it retains every row that any legal
+        $\Out{\gamma}{o}$ retains.
+  \item If $\Out{\varepsilon}{o}$ is legal, it takes $(i,R)$
+        to $(i,R[\mathrm{out}\OutputGe o])$; it is legal exactly when $o$ is
+        exposable.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(1) A legal event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
+R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row at
+$k\in K_o$, or in $U_o$, has no \outrelpart row in $R[\mathrm{out}\OutputGe
+o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
+retired, so a legal event must remove it by commitment.  (2) The canonical
+commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
+of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
+o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
+\outrelpart row lies at an input outside $K_o$ and is not in $U_o$, so it
+survives the commitments.  The event is therefore legal and ends at
+$R[\mathrm{out}\OutputGe o]$; by (1) no legal event keeps more.  (3) With no
+commitment, $R_c=R$, and a legal event ends at $R[\mathrm{out}\OutputGe o]$.
+It is legal exactly when every ruled-out row is in $D_o$, that is, when $K_o$
+and $U_o$ are empty, which is exposability.
+\end{proof}
+
+\begin{definition}[Canonical system]
+\label{def:canonical-system}
+A system (Definition~\ref{def:system}) is \emph{canonical} when its basis is
+$\mathcal B_S$ and each output event it performs is the canonical event
+$\Out{\kappa_o}{o}$ at the participant's state where it occurs; its histories
+are then exactly those of Section~\ref{sec:histories}.
+\end{definition}
+
+\begin{lemma}[Compound commitments are commitments]
+\label{lem:compound-commitment}
+The composite of a nonempty sequence of commitments, defined wherever the
+sequence is, is a commitment.
+\end{lemma}
+
+\begin{proof}
+Each step leaves the current input unchanged and maps a state to a state, so the
+composite does too, and it removes a nonempty set of rows because the first
+step does.  Suppose step $m$ removes $(k,u)$, and let $R_m$ be the table that
+step $m$ leaves.  By Equation~\ref{eq:commitment-excludes} for that step, no
+row of $R_m$ at $k$ \outrel $u$; the final table is contained in $R_m$, so no
+remaining row at $k$ \outrel $u$ either.
+\end{proof}
+
+A compound output event (Definition~\ref{def:system-output-event}) therefore
+has the same effect as an event that applies the composite commitment alone,
+and Lemma~\ref{lem:canonical-commitment-normal-form} covers it as stated.  In a
+functional specification the composite of seals is again a seal.
+
+\begin{definition}[Run under a basis]
+\label{def:run-under-basis}
+Fix a commitment basis $\mathcal B$.  A \emph{run under $\mathcal B$} is a
+finite transition sequence from a canonical state $\sigma_S(i)$ of input events
+and legal output events $\Out{\gamma}{o}$
+(Definition~\ref{def:system-output-event}) that use only commitments from
+$\mathcal B$.  The \emph{canonical runs} are the runs under the canonical basis
+$\mathcal B_S$ of Definition~\ref{def:canonical-commitment-basis} whose output
+events are all canonical; they are the runs of
+Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}.
+\end{definition}
+
+To see that quantifying over canonical runs excludes no system's behavior, call
+two runs \emph{equivalent} when they start at the same canonical state and agree
+once commitment sequences are erased: wherever one has $\mathsf{input}(j)$ the
+other does, and wherever one has $\Out{\gamma}{o}$ the other has
+$\Out{\gamma'}{o}$ for some $\gamma'$.  They accept the same inputs and emit
+the same outputs, in the same order, which is all the environment observes.
+Equivalent runs may differ in the commitments their output events apply, and
+hence in their remainder tables.
+
+\begin{lemma}[Canonical equivalents]
+\label{lem:canonical-equivalent}
+Every run under any commitment basis is equivalent to a canonical run.  After
+each event, the canonical run's remainder table contains the original run's.
+\end{lemma}
+
+\begin{proof}
+By induction on the events.  Both runs start at the same canonical state, so
+their remainder tables are initially equal.  Suppose that before some event the
+original run's table $R$ and the canonical run's table $\widehat R$ satisfy
+$R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input
+event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$.
+It retires every row whose input does not \inrelbase $j$, keeping
+$R[\mathrm{in}\InputGe j]$ in the original run and
+$\widehat R[\mathrm{in}\InputGe j]$ in the canonical run.  Since
+$R\subseteq\widehat R$, the first remains contained in the second.  For a legal
+output event $\Out{\gamma}{o}$ with $o\in R(i)$ taking $R$ to $R'$, containment
+(Lemma~\ref{lem:canonical-commitment-normal-form}(1)) gives
+$R'\subseteq R[\mathrm{out}\OutputGe o]$.  Since
+$o\in R(i)\subseteq\widehat R(i)$, canonical support
+(Lemma~\ref{lem:canonical-commitment-normal-form}(2)) applies at $\widehat R$:
+$\Out{\kappa_o}{o}$, with $\kappa_o$ taken at $(i,\widehat R)$, is legal and
+takes $\widehat R$ to $\widehat R[\mathrm{out}\OutputGe o]$, which contains
+$R[\mathrm{out}\OutputGe o]$.
+\end{proof}
+
+The converse does not hold: a canonical run need not be equivalent to any run
+under a particular system's basis.  That basis may lack the commitment an
+output event requires, and so disable the output altogether.  Restricting
+attention to one system's runs could therefore hide non-monotonicity.  This is
+why consistency (Definition~\ref{def:consistency}) is defined over canonical
+runs rather than over a system's own.
+
+\paragraph{Application-specific commitments.}
+Locks and timestamps are commitments of this kind: two-phase locking commits an
+order among some transactions, and timestamp assignment places one transaction
+relative to all others.  Section~\ref{sec:coordination} illustrates both, and
+Appendix~\ref{app:cc-bases} writes the two bases down.  By
+Lemma~\ref{lem:canonical-equivalent}, each run of either has an observably
+equivalent canonical run that retains at least as many rows.

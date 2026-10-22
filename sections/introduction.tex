@@ -46,14 +46,14 @@ describing how input grows; the output domain $(O,\OutputOrd)$ has its own
 partial order characterizing when a later output preserves an earlier claim.
 State-machine-style specifications can be compiled into this form
 (\S\ref{sec:design-boundary}); the table elides operational details that are not
-externally observable.  Despite its simplicity, the model captures both general
-concurrency and consistency models that span applications---including
-linearizability and causal consistency (\S\ref{app:registers})---and
-application-specific requirements such as program invariants.  A
+externally observable.  Despite its simplicity, the model captures
+general-purpose consistency models such as linearizability and causal
+consistency (\S\ref{app:registers}) as well as application-specific
+requirements such as program invariants.  A
 specification is \emph{consistent} when the executions it admits are
 \emph{confluent}: states reached along different paths can still be brought to
-a common state.  This unifies classical definitions of consistency: a specification
-table captures the space of acceptable outcomes, while confluence asks whether
+a common state.  This gives one definition that covers these models: a
+specification table captures the space of acceptable outcomes, while confluence asks whether
 those requirements are maintained across concurrent executions.
 
 We begin with functional specifications, which pair each input with one output
@@ -66,7 +66,7 @@ output emitted at \(i\) remains valid at \(j\).
 
 Our first result is \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}). It generalizes CALM to arbitrary
-functions and partial orders, proving that Consistency is equivalent to
+functions and partial orders, proving that consistency is equivalent to
 monotonicity.  When monotonicity fails, emitting some output requires
 irrevocably restricting subsequent results to those that \outrelbase it.  We call
 this restriction a \emph{commitment}.  For a function, every commitment
@@ -76,7 +76,7 @@ Functional CALM characterizes exactly
 when a function can be computed consistently without commitment.
 This captures relational query languages and the usual CRDT state specification.
 
-We then give Consistency a distributed interpretation without changing the
+We then give consistency a distributed interpretation without changing the
 specification model (\S\ref{sec:distributed-execution}). We place one local
 execution at each participant in a distributed history, then project away delivery
 and strategy details that do not change specification state.
@@ -93,11 +93,10 @@ input seals and output choices.  For the case of general relations we must move 
 monotonicity of functions; we define a generalization called
 \emph{Lifted Monotonicity}, which asks whether outputs from different executions can remain
 consistent with one another as input grows. Complete CALM proves that
-Consistency, Lifted Monotonicity, and distributed consistency are equivalent
-(\S\ref{sec:complete-calm-theorem}).  For a system to be consistent when
-participants could choose differently, their commitments must rule out the
-same conflicting alternatives.  Coordination mechanisms operationalize this
-requirement.
+consistency, Lifted Monotonicity, and distributed consistency are equivalent
+(\S\ref{sec:complete-calm-theorem}).  When participants could choose
+differently, their commitments must rule out the same alternatives;
+coordination mechanisms implement that.
 
 Complete CALM also yields a Complete CAP Theorem
 (\S\ref{sec:cap-corollary}).  For any consistency guarantee expressed as a
@@ -118,10 +117,10 @@ This paper makes six contributions:
         This run-level property is shown to be equivalent to distributed
         consistency over distributed histories.
   \item \emph{Functional CALM.} For arbitrary functions between ordered
-        domains, Consistency---and hence distributed consistency---is equivalent
+        domains, consistency---and hence distributed consistency---is equivalent
         to monotonicity.
   \item \emph{Complete CALM and CAP.} With multiple outputs per input,
-        Consistency---and hence distributed consistency---is equivalent to
+        consistency---and hence distributed consistency---is equivalent to
         Lifted Monotonicity.  Complete CAP gives the corresponding availability
         boundary under partition, and the same machinery recovers the
         Gilbert--Lynch theorem as a corollary.
@@ -139,9 +138,11 @@ This paper makes six contributions:
 
 Section~\ref{sec:functional-calm} introduces the framework on an election
 and develops Functional CALM.  Section~\ref{sec:distributed-execution} gives
-Consistency its distributed reading.  Section~\ref{sec:ambiguous-specifications}
-generalizes the framework to ambiguous specifications, and Section~\ref{sec:complete-calm}
-combines the two generalizations in Complete CALM and Complete CAP.
+consistency its distributed reading.  Section~\ref{sec:ambiguous-specifications}
+generalizes the framework to ambiguous specifications, and
+Section~\ref{sec:complete-calm} lets systems make their own commitments,
+identifies coordination with commitment, and proves Complete CALM and Complete
+CAP.
 Section~\ref{sec:instances} applies the results to familiar systems, and
 Section~\ref{sec:discussion} draws out the design lessons and scope limits.
 Appendix~\ref{app:composition} proves the composition and Proper Coordination
