@@ -105,6 +105,8 @@ such systems.
 \subsection{Relational specifications}
 \label{sec:relational-specifications}
 
+We begin with our most general definition of a specification, which admits
+ambiguity of output.
 \begin{definition}[Ordered relational specification]
 \label{def:relational-specification}
 An \emph{ordered relational specification} is
@@ -133,7 +135,7 @@ output events.
 \subsection{Lifted Monotonicity}
 \label{sec:lifted-monotonicity}
 
-The examples pose the question from the start of this section: as input
+The examples from the start of this section pose the next question: as input
 \ingrows from $i$ to $j$, can some output permitted at $j$ \outrelbase
 whatever outputs runs emit at $i$?  Two things can go wrong: an output at $i$
 has no \outnoun in the fiber of some \indesc $j$, or two different outputs permitted at
@@ -146,17 +148,18 @@ when every output keeps some \outnoun as input \ingrows:
         \begin{equation}
   i\InputOrd j,\ o\in\fiber{i}
   \quad\Longrightarrow\quad
-  \exists u\in\fiber{j}.\ o\OutputOrd u.
+  \exists u\in\fiber{j}:\ o\OutputOrd u.
   \label{eq:relational-monotonicity}
         \end{equation}
 \end{definition}
 
 For singleton fibers this is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  It treats each output separately
-and does not say whether several outputs permitted at one input have a
-common \outnoun; Directed Outputs (Definition~\ref{def:fiber-directedness})
-addresses that question.
+Equation~\ref{eq:functional-monotonicity}.  It treats each output separately.
+% and does not say whether several outputs permitted at one input have a
+% common \outnoun; Directed Outputs (Definition~\ref{def:fiber-directedness})
+% addresses that question.
 
+The next concern regards several outputs jointly.
 For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
 \emph{incompatible in $F$} otherwise; they are \emph{compatible at input $i$}
@@ -169,9 +172,9 @@ $X\subseteq F$ is compatible in $F$.  An ordered relational specification has
 \emph{Directed Outputs} when every fiber $\fiber{i}$ is directed.
 \end{definition}
 
-A singleton fiber is directed, and closure under a join is sufficient but not
-necessary.  Directedness requires some upper bound within the fiber for each finite
-set, not a least one or a fixed merge operator, so it is weaker than a
+A singleton fiber is trivially directed. 
+Directedness requires some upper bound within the fiber for each finite
+set, but not a least one or a fixed merge operator, so it is weaker than a
 join-semilattice.  Compatibility likewise does not require comparability: two
 incomparable outputs may have a third output in the fiber that \outrel both.  Thus the
 traceroute fiber is directed by union, whereas the two transaction orders in
