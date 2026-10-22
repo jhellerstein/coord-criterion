@@ -9,10 +9,10 @@ permitted outputs, and this section shows that sealing and choosing are the
 only two.  Section~\ref{sec:ambiguity-story} introduces the issue by
 example.  Section~\ref{sec:relational-specifications} defines relational
 specifications and Lifted Monotonicity.  Section~\ref{sec:safe-exposure} lifts
-output events, verifies the event contract of
-Section~\ref{sec:functional-events}, and classifies commitments, and
-Section~\ref{sec:relational-executions} records which results of
-Section~\ref{sec:functional-calm} then carry over.
+output events and classifies commitments, and
+Section~\ref{sec:relational-executions} shows that the run-level results of
+Section~\ref{sec:determination} carry over and characterizes Consistency by a
+condition on the table.
 
 \subsection{Output choice by example}
 \label{sec:ambiguity-story}
@@ -247,7 +247,23 @@ under the joint lift:
 \end{definition}
 
 With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}).  The next proposition supplies
+(Definition~\ref{def:functional-monotonicity}).  Its third form below is a
+condition on finite sets of rows, which Section~\ref{sec:relational-executions}
+identifies with Consistency.
+
+\begin{definition}[Common-\indesc condition]
+\label{def:common-refinement-condition}
+An ordered specification satisfies the \emph{common-\indesc condition} when,
+for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$ and every
+common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
+$o_r$.
+\end{definition}
+
+The inputs $i_r$ need not be comparable, because different runs meet only at a
+common \indesc.  For the empty set of rows the condition asks only that
+$S(j)$ be nonempty, which totality guarantees.
+
+The next proposition supplies
 two forms used later: form~(2) separates the
 across-input and within-fiber requirements, and form~(3) matches confluence by
 allowing outputs from several inputs.
@@ -297,8 +313,8 @@ initial decisions are compatible, but not all of them.
 
 The functional case has one row per input, so an output event either removes
 nothing or seals a legal input.  With several rows at one input, it can also
-retire a \outrelpast row while retaining the row that \outrel it.  We now lift output events to this case and check that they satisfy
-the event contract of Proposition~\ref{prop:canonical-output-preservation}.
+retire a \outrelpast row while retaining the row that \outrel it.  We now lift output events to this case and check that they satisfy the
+facts about output events in Proposition~\ref{prop:canonical-output-preservation}.
 
 \begin{definition}[Lifted output event]
 \label{def:lifted-output-event}
@@ -493,7 +509,7 @@ which this paper does not pursue.
 
 Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when
 $\Out{\varepsilon}{o}$ is legal, though that event may still retire
-\outrelpast rows.  The fourth clause of the contract lifts as well:
+\outrelpast rows.  The exposure test lifts as well:
 
 \begin{proposition}[Lifted exposure test]
 \label{prop:exposability}
@@ -522,22 +538,73 @@ $\Out{\gamma}{o}$ has $\gamma\neq\varepsilon$.
 \label{sec:relational-executions}
 
 Lemma~\ref{lem:canonical-commitment-normal-form} and
-Proposition~\ref{prop:exposability} together establish the four clauses of the
-lifted event contract.  Specification states, input events, runs, canonical
-runs, commitment-free runs, and Consistency are defined as before.  Every
-result of Sections~\ref{sec:determination} and~\ref{sec:functional-calm-theorem}
-that relies only on the contract therefore lifts unchanged: canonical
-equivalents (Lemma~\ref{lem:canonical-equivalent}), the rows remaining after a
-canonical run (Lemma~\ref{lem:run-residual}), the survivor test
-(Proposition~\ref{prop:confluence}), the common-\indesc characterization
-(Theorem~\ref{thm:common-refinement}), and the exposure boundary
-(Proposition~\ref{prop:functional-exposure-boundary}).  So does the distributed
-reading of Consistency (Proposition~\ref{prop:distributed-consistency}).
+Proposition~\ref{prop:exposability} re-establish, for lifted output events, the
+facts of Proposition~\ref{prop:canonical-output-preservation}.  Specification
+states, input events, runs, canonical runs, commitment-free runs, and
+Consistency are defined as before, and the results of
+Section~\ref{sec:determination} used output events only through those facts.
+They therefore lift unchanged: canonical equivalents
+(Lemma~\ref{lem:canonical-equivalent}), the rows remaining after a canonical
+run (Lemma~\ref{lem:run-residual}), the fact that commitment-free runs are
+canonical, and the survivor test (Proposition~\ref{prop:confluence}).  So does
+the distributed reading of Consistency
+(Proposition~\ref{prop:distributed-consistency}).  With them, Consistency
+reduces to the common-\indesc condition.
 
-Two results used the functional dependency itself and do not lift.  The
-surviving row in the survivor test need not be unique, so neither is the
-reconciled state, and Corollary~\ref{cor:state-by-input} fails;
-Section~\ref{sec:complete-calm} returns to this.  In place of Functional CALM,
+\begin{theorem}[Common-\indesc characterization]
+\label{thm:common-refinement}
+An ordered specification is consistent if and only if it satisfies the
+common-\indesc condition.
+\end{theorem}
+
+\begin{proof}
+Suppose the condition holds, and let canonical runs end at $(i_r,R_r)$ with
+common \indesc $j$.  Each output $o$ emitted on a run was emitted at some
+input $i_o\InputOrd j$, and since $o\in R(i_o)\subseteq S(i_o)$, it forms a row
+$(i_o,o)$ of $S$.  The condition supplies $u\in S(j)$ \outrelpart all of these
+outputs.  Since $j$ \inrel every current input $i_r$,
+Lemma~\ref{lem:run-residual} puts $(j,u)$ in every $R_r$, and
+Proposition~\ref{prop:confluence} gives confluence at $j$.  Conversely, let
+rows $(i_r,o_r)$ have common \indesc $j$.  For each $r$, the canonical run
+that starts at $\sigma_S(i_r)$ and emits $o_r$ ends with remainder table
+$S[\mathrm{in}\InputGe i_r,\ \mathrm{out}\OutputGe o_r]$
+(Lemma~\ref{lem:run-residual}).  Consistency and
+Proposition~\ref{prop:confluence} supply a row $(j,u)$ surviving in every one
+of these runs, so $u\in S(j)$ \outrel every $o_r$.
+\end{proof}
+
+The same condition governs exposability.
+
+\begin{proposition}[Exposure boundary]
+\label{prop:exposure-boundary}
+An ordered specification satisfies the common-\indesc condition if and only
+if every output at every state reachable without commitment is exposable.
+\end{proposition}
+
+\begin{proof}
+Suppose the condition holds; by Theorem~\ref{thm:common-refinement}, the
+specification is consistent.  Let $(i,R)$ be reached by a commitment-free run,
+which is canonical, and let $o\in R(i)$, $j\InputGe i$ legal, and
+$x\in R(j)$.  Extend the run in two ways: by $\Out{\kappa_o}{o}$, and by
+$\mathsf{input}(j)$ followed by $\Out{\kappa_x}{x}$.
+Proposition~\ref{prop:confluence} supplies a row $(j,u)$ surviving in both, so
+$u\in R(j)$ \outrel $o$ and $x$, and the exposure test
+(Proposition~\ref{prop:exposability}) makes $o$ exposable.
+Conversely, suppose every such output is exposable, and let rows
+$(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality pick
+$u_0\in S(j)$.  For $r=1,\ldots,k$ in turn, the exposure test for $o_r$ at
+$\sigma_S(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in S(j)$ \outrelpart both
+$o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
+\end{proof}
+
+With one output per input the common-\indesc condition is monotonicity, so
+Theorem~\ref{thm:common-refinement} and Proposition~\ref{prop:exposure-boundary}
+specialize to Functional CALM (Theorem~\ref{thm:functional-calm}) and
+Proposition~\ref{prop:functional-exposure-boundary}.  One result used the
+functional dependency itself and does not lift: the surviving row in the
+survivor test need not be unique, so neither is the reconciled state, and
+Corollary~\ref{cor:state-by-input} fails; Section~\ref{sec:complete-calm}
+returns to this.  In place of the functional reduction to monotonicity,
 Proposition~\ref{prop:lifted-monotonicity-decomposition} identifies the
 common-\indesc condition with Lifted Monotonicity: it is form~(3).  Lifted
 Monotonicity is therefore the lifted form of functional monotonicity in a
