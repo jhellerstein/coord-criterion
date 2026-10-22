@@ -29,8 +29,8 @@ incompatible families a partition can split between its sides.
 \label{def:deployment}
 A \emph{deployment} over a participant set $P$ assigns to each participant $p$
 a set $A_p\subseteq S$ of rows it may emit; $(i,o)\in A_p$ means that $p$
-may hold $i$ as a current input and perform $\mathsf{output}(o)$ there on its
-own authority.  A partition $\Pi$ of $P$, the component split of a partitioned history
+may hold $i$ as a current input and perform an output event $\Out{\gamma}{o}$
+there on its own authority.  A partition $\Pi$ of $P$, the component split of a partitioned history
 (Section~\ref{sec:cap-corollary}), divides
 the participants into two or more nonempty components.
 
@@ -69,8 +69,8 @@ a single emitted row.
 \label{def:deployment-availability}
 At a state $(i,R)$ during a partition, a surviving authorized row
 $(i,o)\in A_p\cap R$ is \emph{deployment-available} when its participant can
-perform $\mathsf{output}(o)$ without a cross-component receive.  The output
-event may apply commitments whose authority is entirely within the
+perform some $\Out{\gamma}{o}$ without a cross-component receive.  Its
+sequence $\gamma$ may apply commitments whose authority is entirely within the
 participant's component.  A deployment has \emph{Deployment
 Availability} when every surviving authorized row at each participant's
 current input is deployment-available.
@@ -127,7 +127,7 @@ achieve: their independently emitted outputs have a common \outnoun in the
 specification.  The proposition establishes abstract compatibility, not deployment-authorized
 confluence to an identical state.  A common surviving row $u$ shows that the
 emitted outputs have a common \outnoun in the specification, but some
-participant may lack authority for $\mathsf{output}(u)$.  Confluence through
+participant may lack authority for any $\Out{\gamma}{u}$.  Confluence through
 legal output events of the deployment additionally requires enough authority to take
 an output event for a common \outnoun from every endpoint.  We do not impose that
 condition here.

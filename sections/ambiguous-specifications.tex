@@ -72,9 +72,9 @@ emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output retirement}
 (Definition~\ref{def:output-retirement}); because every removed output is
 \outrelpast by a remaining one, emitting the route observation needs no
-commitment: it is \emph{exposable}.  The atomic
-$\mathsf{output}(o)$ event performs any required commitments and retirements,
-then emits $o$.
+commitment: it is \emph{exposable}.  The atomic event
+$\Out{\gamma}{o}$ applies a sequence $\gamma$ of commitments, performs any
+retirements, then emits $o$.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
 The difference is the order-theoretic concept of a \emph{directed} fiber:
@@ -302,8 +302,8 @@ the event contract of Proposition~\ref{prop:canonical-output-preservation}.
 
 \begin{definition}[Lifted output event]
 \label{def:lifted-output-event}
-Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\mathsf{output}(o)$
-under a basis $\mathcal B$ applies a finite, possibly empty sequence of
+Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
+under a basis $\mathcal B$ applies a finite, possibly empty sequence $\gamma$ of
 commitments from $\mathcal B$, leaving a table $R_c$, and then retires rows and
 emits $o$, all atomically.  Call a row \emph{ruled out by} $o$ when its output
 does not \outrelbase $o$.  The event is \emph{legal} when $(i,o)\in R_c$ and every
@@ -410,9 +410,10 @@ $o$, so $x\in D_o$, a contradiction.  Moreover, $c_o$ only chooses: a row of
 $U_o$ at $k$ lies outside $K_o$, so some row at $k$ \outrel $o$ and survives.
 With one row per input, $D_o$ and $U_o$ are empty and $s_o$ and $\mathcal B_S$
 are those of Definition~\ref{def:canonical-commitment-basis}; canonical runs
-now use this lifted basis.  The \emph{canonical event} for $o$ applies $s_o$ when
-$K_o\neq\varnothing$, then $c_o$ when $U_o\neq\varnothing$, and then retires
-$D_o$ and emits $o$.\footnote{Here $K_o$, $D_o$, and $U_o$ are computed at the
+now use this lifted basis.  Let $\kappa_o$ be the sequence that applies $s_o$ when
+$K_o\neq\varnothing$, then $c_o$ when $U_o\neq\varnothing$ (empty if neither).
+The \emph{canonical event} is $\Out{\kappa_o}{o}$: it applies $\kappa_o$, then
+retires $D_o$ and emits $o$.\footnote{Here $K_o$, $D_o$, and $U_o$ are computed at the
 state where the event starts.  Since $s_o$ removes only rows at inputs in
 $K_o$, recomputing them after $s_o$ gives $K_o=\varnothing$ and the same $D_o$
 and $U_o$, so $c_o$ is defined there whenever $U_o\neq\varnothing$.}
@@ -427,12 +428,12 @@ them without commitment.
 \label{lem:canonical-commitment-normal-form}
 Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{enumerate}
-  \item Every legal output event for $o$ takes $(i,R)$ to some $(i,R')$ with
+  \item Every legal output event $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
         $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows at
         inputs in $K_o$ and the rows in $U_o$ by commitment.
-  \item The canonical event for $o$ is legal and takes $(i,R)$ to
+  \item The canonical event $\Out{\kappa_o}{o}$ is legal and takes $(i,R)$ to
         $(i,R[\mathrm{out}\OutputGe o])$.
-  \item A legal output event for $o$ that applies no commitment takes $(i,R)$
+  \item If $\Out{\varepsilon}{o}$ is legal, it takes $(i,R)$
         to $(i,R[\mathrm{out}\OutputGe o])$.
 \end{enumerate}
 \end{lemma}
@@ -488,8 +489,8 @@ unambiguous.  A seal may remove the last rows that earlier choices left at an
 input; attributing the seal across that sequence is a question of provenance,
 which this paper does not pursue.
 
-Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when some
-legal output event for $o$ applies no commitment, though it may still retire
+Definition~\ref{def:exposable} applies unchanged: $o$ is exposable when
+$\Out{\varepsilon}{o}$ is legal, though that event may still retire
 \outrelpast rows.  The fourth clause of the contract lifts as well:
 
 \begin{proposition}[Lifted exposure test]

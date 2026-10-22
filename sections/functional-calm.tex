@@ -176,9 +176,10 @@ have this commitment in its basis.
 \paragraph{Output and consistency.}
 In a functional table, an output $o$ is \emph{exposable} when every output
 still possible at the current input or an \indesc still in the table \outrel it.  Hence $\bot$ is exposable
-in panels~(a) and~(b), and $x$ in panel~(c).  The atomic $\mathsf{output}(o)$
-event applies any seal commitments needed so that $o$ becomes exposable,
-then emits $o$, in one transition.  Emitting $o$ is a promise:
+in panels~(a) and~(b), and $x$ in panel~(c).  An atomic output event $\Out{\gamma}{o}$
+applies a sequence $\gamma$ of seal commitments needed so that $o$ becomes
+exposable, then emits $o$, in one transition; $\Out{\varepsilon}{o}$ applies
+none.  Emitting $o$ is a promise:
 from then on, only rows whose outputs \outrelbase $o$ remain.  The emission stays
 explicit in the history because the uncontrolled environment may use it when
 choosing later input.
@@ -230,10 +231,10 @@ serves as a reference.
     \addlinespace
     \textbf{Output handling} & & \\
     \midrule
-    output event & commitments, then emit $o$; legal if every remaining row's output \outrel $o$ & Def.~\ref{def:output-event} \\
-    canonical commitment basis & supports every permitted output event & Def.~\ref{def:canonical-commitment-basis} \\
+    output event & $\Out{\gamma}{o}$: apply commitments $\gamma$, then emit $o$; legal if every remaining row's output \outrel $o$ & Def.~\ref{def:output-event} \\
+    canonical basis, event & $\mathcal B_S=\{s_o\}$; canonical event $\Out{\kappa_o}{o}$ & Def.~\ref{def:canonical-commitment-basis} \\
     event contract & containment, canonical support, commitment-free events, exposure test & Prop.~\ref{prop:canonical-output-preservation} \\
-    exposable output & some legal output event uses no commitment & Def.~\ref{def:exposable} \\
+    exposable output & $\Out{\varepsilon}{o}$ is legal & Def.~\ref{def:exposable} \\
     run & finite input and output events & Def.~\ref{def:run} \\
     \addlinespace
     \textbf{Results} & & \\
@@ -420,9 +421,11 @@ future input whose output does not \outrelbase $o$.
 \begin{definition}[Output event]
 \label{def:output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An \emph{output event}
-$\mathsf{output}(o)$ under a basis $\mathcal B$ applies a finite, possibly
-empty sequence of commitments from $\mathcal B$ and then emits $o$, all
-atomically.  If the commitments leave remainder table $R'$, the event is
+$\Out{\gamma}{o}$ under a basis $\mathcal B$ applies a finite, possibly
+empty sequence $\gamma$ of commitments from $\mathcal B$ and then emits $o$,
+all atomically; $\varepsilon$ is the empty sequence.  Events with different
+$\gamma$ emit the same output but are different events.  If $\gamma$ leaves
+remainder table $R'$, the event is
 \emph{legal} at $(i,R)$ when every remaining row's output \outrel $o$:
 \begin{equation}
   (k,u)\in R' \Longrightarrow o\OutputOrd u,
@@ -461,10 +464,11 @@ outputs do not \outrelbase $o$.  The \emph{canonical commitment basis} is exactl
     =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}.
   \label{eq:canonical-commitment-basis}
 \end{equation}
-The \emph{canonical event} for $o$ at $(i,R)$ applies $s_o$ if it is defined
-there, and no commitment otherwise, then emits $o$.  Either way it ends at
+At $(i,R)$, let $\kappa_o$ be the one-element sequence $s_o$ if $s_o$ is
+defined there, and $\varepsilon$ otherwise.  The \emph{canonical event} for
+$o$ is $\Out{\kappa_o}{o}$.  Either way it ends at
 \begin{equation}
-  (i,R)\xrightarrow{\mathsf{output}(o)}(i,R[\mathrm{out}\OutputGe o]).
+  (i,R)\xrightarrow{\Out{\kappa_o}{o}}(i,R[\mathrm{out}\OutputGe o]).
   \label{eq:output-action}
 \end{equation}
 \end{definition}
@@ -475,8 +479,8 @@ row $(i,o)$.
 
 \begin{definition}[Exposable output]
 \label{def:exposable}
-An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when some legal output
-event for $o$ applies no commitment.
+An output $o\in R(i)$ is \emph{exposable} at $(i,R)$ when $\Out{\varepsilon}{o}$
+is legal there.
 \end{definition}
 
 Systems differ in which commitments they hold, so one output can be emitted by
@@ -492,13 +496,13 @@ several outputs per input.
 Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{enumerate}
   \item \emph{Containment.}  Under any commitment basis, a legal output event
-        for $o$ takes $(i,R)$ to some $(i,R')$ with
+        $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
         $R'\subseteq R[\mathrm{out}\OutputGe o]$.
-  \item \emph{Canonical support.}  The canonical event for $o$ is legal at
+  \item \emph{Canonical support.}  The canonical event $\Out{\kappa_o}{o}$ is legal at
         $(i,R)$ and takes it to $(i,R[\mathrm{out}\OutputGe o])$.  It therefore
-        retains every row that any legal event for $o$ retains.
-  \item \emph{Commitment-free events are canonical.}  A legal output event for
-        $o$ that applies no commitment takes $(i,R)$ to
+        retains every row that any legal $\Out{\gamma}{o}$ retains.
+  \item \emph{Commitment-free events are canonical.}  If $\Out{\varepsilon}{o}$
+        is legal, it takes $(i,R)$ to
         $(i,R[\mathrm{out}\OutputGe o])$.
   \item \emph{Exposure test.}  The output $o$ is exposable at $(i,R)$ if and
         only if, for every legal $j\InputGe i$ and every $x\in R(j)$, some
@@ -508,8 +512,8 @@ Let $(i,R)$ be a state and $o\in R(i)$.
 
 \begin{proof}
 Containment is Equation~\ref{eq:supported-output-action}, and canonical
-support is Equation~\ref{eq:output-action}.  An output event that applies no
-commitment leaves $R$ unchanged, so it is legal exactly when
+support is Equation~\ref{eq:output-action}.  The event $\Out{\varepsilon}{o}$
+leaves $R$ unchanged, so it is legal exactly when
 $R\subseteq R[\mathrm{out}\OutputGe o]$, in which case
 $R=R[\mathrm{out}\OutputGe o]$; this gives clause~3.  That condition says
 $o\OutputOrd f(j)$ at every legal $j\InputGe i$; since $R(j)=\{f(j)\}$, taking
@@ -667,7 +671,7 @@ at $j$ if and only if some row at $j$ survives in every final state:
   (j,u)\in R_r\quad\text{for every }r,\ \text{for some }u\in O.
   \label{eq:reconciliation}
 \end{equation}
-For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
+For any such $u$, $\mathsf{input}(j)$ followed by $\Out{\kappa_u}{u}$ takes
 every endpoint to the state
 $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
@@ -677,7 +681,7 @@ A common state with current input $j$ has a row at $j$, and since rows are
 never added, that row belongs to every $R_r$.  Conversely, let $(j,u)$ belong
 to every $R_r$.  Then $\mathsf{input}(j)$ is defined at every $(i_r,R_r)$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
-emitted on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
+emitted on run $r$.  After $\mathsf{input}(j)$ and $\Out{\kappa_u}{u}$, the
 same lemma leaves exactly
 $S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
 starting run.
@@ -798,8 +802,8 @@ if every output at every state reachable without commitment is exposable.
 Suppose the condition holds; by Theorem~\ref{thm:common-refinement}, the
 specification is consistent.  Let $(i,R)$ be reached by a commitment-free run,
 which is canonical, and let $o\in R(i)$, $j\InputGe i$ legal, and
-$x\in R(j)$.  Extend the run in two ways: by $\mathsf{output}(o)$, and by
-$\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
+$x\in R(j)$.  Extend the run in two ways: by $\Out{\kappa_o}{o}$, and by
+$\mathsf{input}(j)$ followed by $\Out{\kappa_x}{x}$.
 Proposition~\ref{prop:confluence} supplies a row $(j,u)$ surviving in both, so
 $u\in R(j)$ \outrel $o$ and $x$, and the exposure test
 (Proposition~\ref{prop:canonical-output-preservation}) makes $o$ exposable.
