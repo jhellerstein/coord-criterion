@@ -12,7 +12,7 @@ CRDTs shared: specifications that are functions, in which each
 input has a single specified output.  Section~\ref{sec:election-story} walks
 through the framework informally on an election.
 Section~\ref{sec:functional-specifications} defines specifications, states, and
-commitment bases; Section~\ref{sec:functional-events} defines input and output
+commitments; Section~\ref{sec:functional-events} defines input and output
 events; Section~\ref{sec:determination} assembles executions and Consistency;
 and Section~\ref{sec:functional-calm-theorem} proves Functional CALM and
 identifies when an output can be emitted without commitment.
@@ -91,7 +91,7 @@ identifies when an output can be emitted without commitment.
   through: it was removed by a commitment; gray alone: it was retired by an
   input event.
   Panels (b) and (c) follow input events; panel (d)
-  follows $\Out{\gamma}{\bot}$, where $\gamma$ contains a seal commitment.}
+  follows $\Out{c}{\bot}$, where $c$ is a seal commitment.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -140,10 +140,9 @@ would need no commitment, since every output still possible \outrel it;
 closing the polls is a further decision by the system, not something the
 specification requires.
 A \emph{system} is what implements the specification
-(Section~\ref{sec:histories} makes this precise); commitments belong to a
-system's declared \emph{commitment basis} $\mathcal B$,
-not to the specification itself; a system whose polls cannot close does not
-have this commitment in its basis.
+(Section~\ref{sec:histories} makes this precise); commitments belong to the
+system, not to the specification itself, and a system whose polls cannot close
+cannot make this one (Appendix~\ref{app:bases}).
 
 \begin{figure}[t]
   \centering
@@ -174,13 +173,13 @@ have this commitment in its basis.
 \paragraph{Output and consistency.}
 In a functional table, an output $o$ is \emph{exposable} when every output
 still possible at the current input or an \indesc still in the table \outrel it.  Hence $\bot$ is exposable
-in panels~(a) and~(b), and $x$ in panel~(c).  An atomic output event $\Out{\gamma}{o}$
-applies a sequence $\gamma$ of seal commitments after which $o$ is
+in panels~(a) and~(b), and $x$ in panel~(c).  An atomic output event $\Out{c}{o}$
+applies a seal commitment $c$ after which $o$ is
 exposable, then emits $o$, in one transition; $\Out{\varepsilon}{o}$ applies
 none.  Emitting $o$ is a promise:
 from then on, only rows whose outputs \outrelbase $o$ remain.  The emission stays
 explicit in the history because the uncontrolled environment may use it when
-choosing later input.  It observes $o$, not $\gamma$.
+choosing later input.  It observes $o$, not $c$.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
@@ -228,8 +227,8 @@ serves as a reference.
     \addlinespace
     \textbf{Output handling} & & \\
     \midrule
-    output event & $\Out{\gamma}{o}$: apply commitments $\gamma$, then emit $o$; legal if every remaining row's output \outrel $o$ & Def.~\ref{def:output-event} \\
-    canonical basis, event & $\mathcal B_S=\{s_o\}$; canonical event $\Out{\kappa_o}{o}$ & Def.~\ref{def:canonical-commitment-basis} \\
+    output event & $\Out{c}{o}$: apply commitment $c$ (or none, $\varepsilon$), then emit $o$; legal if every remaining row's output \outrel $o$ & Def.~\ref{def:output-event} \\
+    canonical event & seal $s_o$; canonical event $\Out{\kappa_o}{o}$ & Def.~\ref{def:canonical-commitment-basis} \\
     output events & containment, canonical support, commitment-free events, exposure test & Prop.~\ref{prop:canonical-output-preservation} \\
     exposable output & $\Out{\varepsilon}{o}$ is legal & Def.~\ref{def:exposable} \\
     run & finite input and output events & Def.~\ref{def:run} \\
@@ -243,7 +242,7 @@ serves as a reference.
     \bottomrule
   \end{tabular}
   \caption{Reference for Functional CALM: one transition system embeds the
-  declarative specification and commitment basis in atomic input/output events.
+  declarative specification and its commitments in atomic input/output events.
   Terms are defined at the cited items.}
   \label{fig:formalism-summary}
 \end{figure*}
@@ -251,7 +250,7 @@ serves as a reference.
 \subsection{Specifications, states, and commitments}
 \label{sec:functional-specifications}
 
-We begin by defining the core structures of our framework: specifications and commitment bases.
+We begin by defining the core structures of our framework: specifications and commitments.
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
 A \emph{functional ordered specification} is a tuple
@@ -346,7 +345,7 @@ The specification and its states say which behaviors are possible, but not
 which possibilities the system is authorized to rule out.  That authority is a
 separate part of the model, as follows.
 
-\begin{definition}[Commitment, commitment basis, seal]
+\begin{definition}[Commitment, seal]
 \label{def:commitment-basis}
 A commitment removes rows from the remainder table without changing the
 current input.  Formally, a \emph{commitment} is a partial function on
@@ -358,8 +357,7 @@ row at the same input that \outrel it: whenever $c(i,R)=(i,R')$, we have $R'\sub
   u\not\OutputOrd w.
   \label{eq:commitment-excludes}
 \end{equation}
-A \emph{commitment basis}
-$\mathcal B$ is a set of commitments available to a system.  A commitment
+A commitment
 \emph{seals} a legal input $k$ when it empties the fiber at $k$.
 \end{definition}
 
@@ -368,16 +366,14 @@ a removed row's input and Equation~\ref{eq:commitment-excludes} holds
 vacuously; every commitment seals the inputs whose rows it removes; we call it a
 \emph{seal commitment}.  A commitment makes an allowed future unreachable.
 
-Note that commitments are \emph{partial} functions:  a system may be designed to
-authorize a commitment only at states satisfying an application-specific
-precondition.  For example, in Figure~\ref{fig:election-frames}(d), we defined the
-poll-closing commitment at every state; a different system might authorize it
-only after some candidate has a majority.
+Here we consider \emph{simple} commitments, one per output event;
+Appendix~\ref{app:bases} treats commitment bases and compound commitments, and
+shows that they reduce to the canonical ones below.
 
 \subsection{Input and output events}
 \label{sec:functional-events}
 
-States and commitment bases tell us what remains possible and what a system may
+States and commitments tell us what remains possible and what a system may
 rule out.  We now define the two events that change state: input events
 incorporate new information, while output events record promises to the outside
 world.
@@ -415,12 +411,10 @@ future input whose output does not \outrelbase $o$.
 \begin{definition}[Output event]
 \label{def:output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An \emph{output event}
-$\Out{\gamma}{o}$ under a basis $\mathcal B$ applies a finite, possibly
-empty sequence $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each
-$c_m$ defined at the state its predecessors leave, and then emits $o$, all
-atomically; $\varepsilon$ is the empty sequence.  Events with different
-$\gamma$ emit the same output but are different events.  If $\gamma$ leaves
-remainder table $R'$, the event is
+$\Out{c}{o}$ applies at most one commitment $c$ defined at $(i,R)$, or none,
+written $c=\varepsilon$, and then emits $o$, atomically.  Events with different
+$c$ emit the same output but are different events.  If $c$ leaves
+remainder table $R'$ ($R'=R$ when $c=\varepsilon$), the event is
 \emph{legal} at $(i,R)$ when every remaining row's output \outrel $o$:
 \begin{equation}
   (k,u)\in R' \Longrightarrow o\OutputOrd u,
@@ -433,12 +427,10 @@ In an output event, every commitment maps a state to a state and leaves the
 current input unchanged, so the remaining table $R'$ still contains the current
 row $(i,o)$.
 
-A system's basis says which commitments that system may apply, and bases
-differ from system to system.  To make Consistency a property of the
-specification alone, our proofs use one basis derived from $S$ that can carry
-out every output event $S$ permits: for each output, it removes exactly the rows
-incompatible with that output's promise.  Section~\ref{sec:determination}
-shows this loses nothing (Lemma~\ref{lem:canonical-equivalent}).
+Systems differ in which commitments they may apply
+(Appendix~\ref{app:bases}).  To make Consistency a property of the
+specification alone, we use one commitment per output, derived from $S$, that
+removes exactly the rows incompatible with that output's promise.
 
 \begin{definition}[Canonical seal commitment, canonical basis, canonical event]
 \label{def:canonical-commitment-basis}
@@ -457,7 +449,7 @@ outputs do not \outrelbase $o$.  The \emph{canonical commitment basis} is exactl
     =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}.
   \label{eq:canonical-commitment-basis}
 \end{equation}
-At $(i,R)$, let $\kappa_o$ be the one-element sequence $s_o$ if $s_o$ is
+At $(i,R)$, let $\kappa_o$ be $s_o$ if $s_o$ is
 defined there, and $\varepsilon$ otherwise.  The \emph{canonical event} for
 $o$ is $\Out{\kappa_o}{o}$.  Either way it ends at
 \begin{equation}
@@ -479,12 +471,12 @@ the proofs that follow.
 \label{prop:canonical-output-preservation}
 Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{enumerate}
-  \item \emph{Containment.}  Under any commitment basis, a legal output event
-        $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
+  \item \emph{Containment.}  A legal output event
+        $\Out{c}{o}$ takes $(i,R)$ to some $(i,R')$ with
         $R'\subseteq R[\mathrm{out}\OutputGe o]$.
   \item \emph{Canonical support.}  The canonical event $\Out{\kappa_o}{o}$ is legal at
         $(i,R)$ and takes it to $(i,R[\mathrm{out}\OutputGe o])$.  It therefore
-        retains every row that any legal $\Out{\gamma}{o}$ retains.
+        retains every row that any legal $\Out{c}{o}$ retains.
   \item \emph{Commitment-free events are canonical.}  If $\Out{\varepsilon}{o}$
         is legal, it takes $(i,R)$ to
         $(i,R[\mathrm{out}\OutputGe o])$.
@@ -514,12 +506,12 @@ Figure~\ref{fig:election-frames}.
 
 We now assemble events into runs and ask the central consistency question:
 when different runs follow different paths through the specification, can
-their resulting states still be reconciled?  Consistency quantifies over all
-runs of all systems.  We reduce it to a check on a single row in three steps.
-First, any system's run can be replaced by a canonical run that keeps at least
-as many rows (Lemma~\ref{lem:canonical-equivalent}).  Second, a canonical
+their resulting states still be reconciled?  Any system's runs are contained
+in canonical ones (Lemma~\ref{lem:canonical-equivalent},
+Appendix~\ref{app:bases}), so we study canonical runs.  We reduce Consistency
+to a check on a single row in two steps.  First, a canonical
 run's remaining rows depend only on its current input and the outputs it has
-emitted (Lemma~\ref{lem:run-residual}).  Third, runs are therefore confluent
+emitted (Lemma~\ref{lem:run-residual}).  Second, runs are therefore confluent
 exactly when one row at their common input survives in all of them
 (Proposition~\ref{prop:confluence}).  These steps use output events only
 through Proposition~\ref{prop:canonical-output-preservation};
@@ -530,46 +522,17 @@ outputs per input.
 \label{def:io-transition-system}
 \label{def:transition-system}
 The \emph{transition system} consists of specification states and the input and
-output events above.  Fix a commitment basis $\mathcal B$.  A \emph{run under
-$\mathcal B$} is any finite transition sequence from the canonical state
-$\sigma_S(i)$ at some input $i$; its output events may use only commitments
-from $\mathcal B$.  We say simply \emph{run} when the basis is clear.  A
-\emph{canonical run} is a run under $\mathcal B_S$ in which every output event
+output events above.  A \emph{run} is any finite transition sequence from the
+canonical state $\sigma_S(i)$ at some input $i$.  A
+\emph{canonical run} is a run in which every output event
 is the canonical event $\Out{\kappa_o}{o}$ of the state where it occurs.
 \label{def:run}
 \end{definition}
 
 A run is \emph{commitment-free} when each of its output events is some
-$\Out{\varepsilon}{o}$.  By clause~3 of Proposition~\ref{prop:canonical-output-preservation}, a commitment-free run under any
-basis is a canonical run.  A state is \emph{reachable without commitment} when
+$\Out{\varepsilon}{o}$.  By clause~3 of Proposition~\ref{prop:canonical-output-preservation}, a commitment-free run
+is a canonical run.  A state is \emph{reachable without commitment} when
 some commitment-free run reaches it.
-
-Our results quantify over canonical runs rather than over the runs of any
-particular system.  To see that this excludes no system's behavior, call two
-runs \emph{equivalent} when they start at the same canonical state and agree
-once commitment sequences are erased: wherever one has $\mathsf{input}(j)$ the
-other does, and wherever one has $\Out{\gamma}{o}$ the other has
-$\Out{\gamma'}{o}$ for some $\gamma'$.  They accept the same inputs and emit
-the same outputs, in the same order, which is all the environment observes.  Equivalent runs may differ in the commitments
-their output events apply, and hence in their remainder tables.  We lift
-Proposition~\ref{prop:canonical-output-preservation} from single output events
-to runs:
-
-\begin{lemma}[Canonical equivalents]
-\label{lem:canonical-equivalent}
-Every run under any commitment basis is equivalent to a canonical run.  After
-each event, the canonical run's remainder table contains the original run's.
-\end{lemma}
-
-\begin{proof}[Proof sketch]
-Induct on events: input events keep the same selection on both tables, and containment and canonical support show the canonical output event keeps at least the rows the original one does.  Full proof in Appendix~\ref{app:proofs}.
-\end{proof}
-
-The converse does not hold: a canonical run need not be equivalent to any run
-under a particular system's basis.  That basis may lack the commitment an
-output event requires, and so disable the output altogether.  Restricting
-attention to one system's runs could therefore hide non-monotonicity.  This is
-why Consistency, below, uses the canonical basis rather than a system's own.
 
 A canonical run's state has a simple description.  Input events keep only rows
 whose input \inrel the current one, and output events keep only rows whose
@@ -717,7 +680,7 @@ exactly when, at every state reachable without commitment, no output requires
 sealing input.  A monotone functional specification can emit every current
 output without a commitment; if monotonicity fails at $i\InputOrd k$ with
 $f(i)\not\OutputOrd f(k)$, then at $\sigma_S(i)$, $\kappa_{f(i)}=s_{f(i)}$, and
-every legal $\Out{\gamma}{f(i)}$ seals $k$.
+every legal $\Out{c}{f(i)}$ seals $k$.
 
 This is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read
