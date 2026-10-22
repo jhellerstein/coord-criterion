@@ -1,34 +1,26 @@
 \section{Distributed Execution}
 \label{sec:distributed-execution}
 
-Consistency already compares independent runs.  This
-section shows that those runs are exactly what the participants of a
-distributed history execute, once sends and receives are set aside.  Keeping only
-each participant's input and output events reduces a snapshot of the history
-to one specification state per participant, while retaining the output events
-that the environment can observe.  The payoff is that consistency results read
+Consistency compares independent runs.  A distributed execution places one run
+at each participant, with messages carrying input between them.  This section
+makes that precise, so that the results of
+Sections~\ref{sec:determination} and~\ref{sec:functional-calm-theorem} read
 directly as statements about distributed executions, including a convergence
-guarantee that can be derived from the specification (Corollary~\ref{cor:convergence}).
+guarantee derived from the specification (Corollary~\ref{cor:convergence}).
 
 \subsection{Distributed histories}
 \label{sec:histories}
 
-A distributed execution adds one complication to the transition system of
-Section~\ref{sec:determination}: participants may learn the same input through
-different message paths and at different times.
-
-\paragraph{Participants and messages.}
 A finite set $P$ of \emph{participants} each holds a specification state,
-starting at a canonical state $\sigma_S(i_p)$.  A participant changes its
-state only by its own input and output events.  It learns input in two ways:
-directly from the environment, or in a message from another participant.
-Participants exchange messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$
-events.  A \emph{message} is a pair $m=(j,d)$ of a cumulative input $j$, or
-$\varnothing$ if it carries none, and arbitrary other data $d$.  A receive
-does not change the specification state.  A participant at $(i,R)$ that
-receives $(j,d)$ with $j\neq\varnothing$ incorporates $j$ by its own
-$\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.  A message
-thus affects specification state only through that input event.
+starting at a canonical state $\sigma_S(i_p)$, and changes it only by its own
+input and output events.  A participant learns input directly from the
+environment or in a message from another participant.  Participants exchange
+messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$ events.  A
+\emph{message} is a pair $m=(j,d)$ of a cumulative input $j$, or $\varnothing$
+if it carries none, and arbitrary other data $d$.  A receive does not change
+the specification state; a participant at $(i,R)$ that receives $(j,d)$ with
+$j\neq\varnothing$ incorporates $j$ by its own $\mathsf{input}(k)$ for a legal
+common \indesc $k$ of $i$ and $j$.
 
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
@@ -45,25 +37,22 @@ for each.  A \emph{distributed history} $H$ is a finite set of events with:
         is legal at the state where it occurs.
 \end{enumerate}
 \emph{Happens-before} is the transitive closure of the local orders and of
-each send preceding its matching receive; events it does not order are
-concurrent.  A \emph{consistent cut} $C$ is a subset of events closed under
-happens-before~\cite{lamport1978time,chandy1985distributed}.
+each send preceding its matching receive.  A \emph{consistent cut} $C$ is a
+subset of events closed under
+happens-before~\cite{lamport1978time,chandy1985distributed}; the standard term
+is unrelated to our notion of consistency.
 \end{definition}
 
-The standard term ``consistent cut'' is unrelated to our notion of
-consistency.  The events at any consistent cut give one run per participant
-(Definition~\ref{def:semantic-projection}).
+A consistent cut contains a prefix of each participant's events, so by item~4
+it determines one run per participant.
 
-\subsection{Participant runs and confluence}
-\label{sec:projection-confluence}
-
-Two histories with the same effect on their participants illustrate this.
-
-\paragraph{Example: direct and forwarded input.}
-In Figure~\ref{fig:history-projection}, $p$ and $q$ start at
-$\sigma_a=\sigma_S(x\cdot\cdot)=(x\cdot\cdot,R_0)$ and receive cumulative input $xy\cdot$ directly
-from the environment or through a forwarded message.  The histories differ,
-but both participants reach $\sigma_1=(xy\cdot,R_1)$.
+\begin{definition}[Participant run, endpoint]
+\label{def:semantic-projection}
+At a consistent cut $C$, the input and output events of $C$ at participant $p$,
+in local order, form its \emph{participant run}, a run
+(Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$.  The
+\emph{endpoint} of $C$ is $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
+\end{definition}
 
 \begin{figure}[t]
   \centering
@@ -134,40 +123,21 @@ but both participants reach $\sigma_1=(xy\cdot,R_1)$.
   \label{fig:history-projection}
 \end{figure}
 
-\begin{definition}[Participant run, endpoint]
-\label{def:semantic-projection}
-At a consistent cut $C$, the input and output events of $C$ at participant $p$,
-in local order, form its \emph{participant run}, a run
-(Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$.  The
-\emph{endpoint} of $C$ is $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
-\end{definition}
-
-In Figure~\ref{fig:history-projection}, each participant run at either cut is
-$\mathsf{input}(xy\cdot)$, so both endpoints are $(\sigma_1,\sigma_1)$: the
-delivery paths differ, but the participant runs do not.
-
-Equal endpoints need not determine the same future history: participants and
-the environment may have observed different outputs, and those observations may
-influence later inputs or choices.
-
-\paragraph{Confluence of a history.}
-At a consistent cut $C$, the participants may hold different specification
-states $(\sigma_p(C))_{p\in P}$.  Confluence asks whether their local paths can
-be brought to the same later specification state at every input that combines
-their current inputs.  Formally, let $j$ be a common \indesc of the
-participant inputs at $C$.  The history $H$ is \emph{confluent at $C$ and $j$}
-when the sub-history consisting of the events of $C$ has a further \emph{continuation}---additional events after those of
-$C$---in which every participant reaches the same
-specification state $\sigma_j=(j,R)$; equivalently, the new cut has state
-endpoint $(\sigma_j)_{p\in P}$.  This is an existence
-claim about transitions, not a claim that a protocol delivers $j$,
-communicates, or terminates.
+In Figure~\ref{fig:history-projection}, the input $xy\cdot$ reaches $q$
+directly or through a message from $p$.  The histories differ, but at either
+cut each participant run is $\mathsf{input}(xy\cdot)$, so both endpoints are
+$(\sigma_1,\sigma_1)$.
 
 \subsection{Distributed consistency}
 \label{sec:distributed-consistency}
+\label{sec:projection-confluence}
 
-Confluence is a property at one cut and common \indesc.  Distributed
-consistency requires it at every cut of every history.
+A \emph{continuation} of a history at a cut $C$ adds events after those of
+$C$.  The history $H$ is \emph{confluent at $C$ and $j$}, for a common
+\indesc $j$ of the participants' current inputs, when some continuation brings
+every participant to the same state $(j,R)$.  Events at different participants
+are independent, so this holds exactly when the participant runs at $C$ are
+confluent at $j$ (Definition~\ref{def:consistency}).
 
 \begin{definition}[Distributed consistency]
 \label{def:distributed-consistency}
@@ -177,12 +147,6 @@ confluent at $C$ and every common \indesc of the participants' current
 inputs.
 \end{definition}
 
-Distributed consistency is the history-level reading of consistency.
-Histories add participants, messages, and cuts, but do not by themselves
-assert communication, delivery, or termination.  The next proposition shows
-that nothing is lost or gained; its short proof is also why the run
-formulation remains useful.
-
 \begin{proposition}[Consistency and distributed consistency]
 \label{prop:distributed-consistency}
 An ordered specification is consistent if and only if it has distributed
@@ -190,18 +154,15 @@ consistency.
 \end{proposition}
 
 \begin{proof}
-At any cut of a history, the participant runs are a finite set of runs, so
-consistency implies their confluence from those endpoints.  Conversely, place
-any finite set of runs in a message-free history,
-one per participant; every input event in a run is already a cumulative
-$\mathsf{input}(j)$ event.  Distributed consistency at the final cut gives
-their confluence.
+The participant runs at any cut are a finite family of runs.  Conversely,
+every finite family of runs is the family of participant runs of a
+message-free history, one participant per run, at its final cut.
 \end{proof}
 
-Combining Proposition~\ref{prop:distributed-consistency} with Functional CALM,
-a functional specification has distributed consistency exactly when it is
-monotone.  Corollary~\ref{cor:state-by-input} then gives convergence in every
-history:
+Neither notion asserts that a protocol delivers $j$, communicates, or
+terminates; both are existence claims about transitions.  With Functional
+CALM, a functional specification has distributed consistency exactly when it
+is monotone, and Corollary~\ref{cor:state-by-input} gives convergence:
 
 \begin{corollary}[Convergence]
 \label{cor:convergence}
@@ -212,16 +173,14 @@ regardless of message paths, arrival order, or the outputs they emitted.
 \end{corollary}
 
 \begin{proof}
-Each participant run is a run; apply
-Corollary~\ref{cor:state-by-input}.
+Each participant run is a run; apply Corollary~\ref{cor:state-by-input}.
 \end{proof}
 
 This is the convergence that strong eventual
 consistency~\cite{shapiro2011crdt} asks of replicated state---replicas that
-have received the same updates are in equivalent states---derived here from the specification rather than from a merge operator.
-With several outputs per input, this uniqueness fails, as
-Section~\ref{sec:complete-calm} discusses.  The distributed reading itself does
-not depend on how many outputs an input permits: its proof uses only runs, so
-Proposition~\ref{prop:distributed-consistency} holds unchanged for the
-specifications of Section~\ref{sec:ambiguous-specifications}, to which we turn
-next.
+have received the same updates are in equivalent states---derived here from
+the specification rather than from a merge operator.  With several outputs per
+input this uniqueness fails (Section~\ref{sec:complete-calm}), but
+Proposition~\ref{prop:distributed-consistency} uses only runs and holds
+unchanged for the specifications of Section~\ref{sec:ambiguous-specifications},
+to which we turn next.
