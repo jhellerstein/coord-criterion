@@ -76,29 +76,31 @@ Functional CALM characterizes exactly
 when a function can be computed consistently without commitment.
 This captures relational query languages and the usual CRDT state specification.
 
-We then give consistency a distributed interpretation without changing the
-specification model (\S\ref{sec:distributed-execution}). We place one local
-execution at each participant in a distributed history, then project away delivery
-and other local details that do not change specification state.
-This distributed consistency asks whether the resulting participant states can
-still be brought to the same state. We prove that a specification has
-distributed consistency if and only if it is consistent in the sense above.
+The functional specifications above cannot capture settings like leader
+election or transaction ordering, where many outputs are within spec for a
+given input.  There, commitments gain a second job besides sealing:
+\emph{choosing} among permitted outputs, as when a system picks one leader or
+one serial order.  For general relations we must move beyond monotonicity of
+functions; we define a generalization called \emph{Lifted Monotonicity}: as
+input \ingrows, some output permitted at the larger input \outrel whatever
+outputs were emitted at the smaller one.  \emph{Complete CALM} proves that
+consistency is equivalent to Lifted Monotonicity
+(\S\ref{sec:complete-calm-theorem}).
 
-The functional specifications above cannot capture settings like leader election
-or transaction ordering, where many outputs are within spec for a given input.
-There, commitments gain a second job besides sealing: \emph{choosing} among permitted outputs, as when a system
-picks one leader or one serial order.  We show that at each input a commitment does one or the other: the
-effect of any coordination mechanism on the specification is a combination of
-input seals and output choices.  For the case of general relations we must move beyond standard
-monotonicity of functions; we define a generalization called
-\emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
-larger input \outrel whatever outputs were emitted at the smaller one. Complete CALM proves that
-consistency, Lifted Monotonicity, and distributed consistency are equivalent
-(\S\ref{sec:complete-calm-theorem}).  When participants could choose
-differently, their commitments must rule out the same alternatives;
-coordination mechanisms implement that.
+Both theorems have a natural distributed reading
+(\S\ref{sec:distributed-execution}).  We place one local execution at each
+participant in a distributed history, then project away delivery and other
+local details that do not change specification state.  Distributed
+consistency asks whether the resulting participant states can still be
+brought to the same state; we prove it equivalent to consistency, so
+Functional and Complete CALM apply to distributed executions unchanged.
+Systems make their own commitments, and we show that at each input a
+commitment does one of two things: the effect of any coordination mechanism
+on the specification is a combination of input seals and output choices.
+When participants could choose differently, their commitments must rule out
+the same alternatives; coordination mechanisms implement that.
 
-Complete CALM also yields a Complete CAP Theorem
+Distributed Complete CALM yields a Complete CAP Theorem
 (\S\ref{sec:cap-corollary}).  For any consistency guarantee expressed as a
 specification, Lifted Monotonicity identifies which side of the CAP boundary it
 occupies.  A specification with Lifted Monotonicity can keep every output it permits
@@ -137,12 +139,11 @@ This paper makes six contributions:
 \end{enumerate}
 
 Section~\ref{sec:functional-calm} introduces the framework on an election
-and develops Functional CALM.  Section~\ref{sec:distributed-execution} gives
-consistency its distributed reading.  Section~\ref{sec:ambiguous-specifications}
-generalizes the framework to ambiguous specifications, and
-Section~\ref{sec:complete-calm} lets systems make their own commitments,
-identifies coordination with commitment, and proves Complete CALM and Complete
-CAP.
+and develops Functional CALM.  Section~\ref{sec:ambiguous-specifications}
+generalizes it to ambiguous specifications and proves Complete CALM.
+Section~\ref{sec:distributed-execution} gives both a distributed reading, lets
+systems make their own commitments, identifies coordination with commitment,
+and proves Complete CAP.
 Section~\ref{sec:instances} applies the results to familiar systems, and
 Section~\ref{sec:discussion} draws out the design lessons and scope limits.
 Appendix~\ref{app:composition} proves the composition and Proper Coordination

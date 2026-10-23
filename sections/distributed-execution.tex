@@ -1,13 +1,4 @@
-\section{Distributed Execution}
-\label{sec:distributed-execution}
-
-Consistency compares independent runs.  A distributed execution places one run
-at each participant, and the only additional change from our framework's perspective is that
-participants can learn about inputs at other participants via messages.  This section
-makes the mapping precise, so that the results of
-Sections~\ref{sec:determination} and~\ref{sec:functional-calm-theorem} read
-directly as statements about distributed executions, including a convergence
-guarantee derived from the specification (Corollary~\ref{cor:convergence}).
+% Subsections 1--2 of the distributed section (input from complete-calm-cap.tex).
 
 \subsection{Distributed histories}
 \label{sec:histories}
@@ -165,8 +156,10 @@ message-free history, one participant per run, at its final cut.
 
 Neither notion asserts that a protocol delivers $j$, communicates, or
 terminates; both are existence claims about transitions.  With Functional
-CALM, a functional specification has distributed consistency exactly when it
-is monotone, and Corollary~\ref{cor:state-by-input} gives convergence:
+CALM and Complete CALM, a specification has distributed consistency exactly
+when it is monotone, or, with several outputs per input, when it satisfies
+Lifted Monotonicity.  For functional specifications,
+Corollary~\ref{cor:state-by-input} also gives convergence:
 
 \begin{corollary}[Convergence]
 \label{cor:convergence}
@@ -209,7 +202,3 @@ because a row that survives at a common \indesc already \outrel every output
 emitted in the cut (Lemma~\ref{lem:run-residual}), including $o$ which was previously emitted.
 The confluence of a cut therefore depends on which outputs were emitted,
 not on who has heard about them.
-
-Proposition~\ref{prop:distributed-consistency} uses only runs, so it holds
-unchanged for the specifications of Section~\ref{sec:ambiguous-specifications},
-to which we turn next.
