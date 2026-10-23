@@ -1,2 +1,8 @@
 import CoordCriterion.Core
 import CoordCriterion.Runs
+import CoordCriterion.FunctionalCALM
+import CoordCriterion.CompleteCALM
+import CoordCriterion.Distributed
+import CoordCriterion.Commitments
+import CoordCriterion.CompleteCAP
+import CoordCriterion.IConfluence

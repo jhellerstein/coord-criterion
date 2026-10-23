@@ -148,4 +148,17 @@ theorem survivor_test {sp : Spec I O} (fam : List (State sp))
     have := reach_meet hE (hall σ hσ)
     exact this
 
+/-- Commitment-free executions are executions. -/
+theorem ExecCF.toExec {sp : Spec I O} {σ τ : State sp} {es : List (Event I O)}
+    (h : ExecCF σ es τ) : Exec σ es τ := by
+  induction h with
+  | nil σ => exact Exec.nil σ
+  | input hs _ ih => exact Exec.cons hs ih
+  | output hs _ _ ih => exact Exec.cons hs ih
+
+theorem ReachableCF.isRun {sp : Spec I O} {τ : State sp} (h : ReachableCF τ) :
+    IsRun τ := by
+  obtain ⟨i, es, hx⟩ := h
+  exact ⟨i, es, hx.toExec⟩
+
 end CC
