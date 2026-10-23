@@ -4,7 +4,7 @@
 In this section we drop the functional dependency, allowing a fiber to
 contain several outputs.  The monotonicity property we want to test as input
 grows from $i$ to $j\InputGe i$ must now be lifted to sets: can \emph{some}
-output permitted at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
+output in the fiber of $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
 In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{choosing}
 among permitted outputs.  Section~\ref{sec:ambiguity-story} introduces the issue by
 example.  Section~\ref{sec:relational-specifications} defines relational
@@ -19,7 +19,7 @@ condition on the table.
 \label{sec:ambiguity-story}
 
 Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
-several outputs at the same input.  Transaction ordering requires a choice
+several outputs in one fiber.  Transaction ordering requires a choice
 between incompatible serialization orders.  Traceroute observations, by
 contrast, can all be \outrelpast by a larger route set.
 
@@ -90,9 +90,9 @@ every finite set of outputs in a given fiber has a common \outnoun in that fiber
 Directedness at a single input is not sufficient, however;
 we must also \outrelbase prior outputs as input \ingrows. \emph{Lifted Monotonicity}
 combines the requirements: as input \ingrows from $i$ to $j$, some output
-permitted at $j$ \outrel whatever outputs runs emit at $i$.  Equivalently,
+in the fiber of $j$ \outrel whatever outputs runs emit at $i$.  Equivalently,
 outputs emitted at inputs with a common \indesc $j$ must have a common
-\outnoun permitted at $j$: the same test as in Section~\ref{sec:election-story}, but
+\outnoun in the fiber of $j$: the same test as in Section~\ref{sec:election-story}, but
 with many outputs per input.  Two transaction scheduling runs that emit $[A,B]$ and $[B,A]$ fail it;
 two traceroute runs that emit different route sets pass it, since their union
 survives in both.
@@ -136,11 +136,11 @@ output events.
 \label{sec:lifted-monotonicity}
 
 The examples from the start of this section pose the next question: as input
-\ingrows from $i$ to $j$, can some output permitted at $j$ \outrelbase
+\ingrows from $i$ to $j$, can some output in the fiber of $j$ \outrelbase
 whatever outputs runs emit at $i$?  Two things can go wrong.  A
-\emph{stranded output} is an output at $i$ with no \outnoun in the fiber of
-some \indesc $j$.  An \emph{incompatible pair} is two outputs permitted at
-$i$ with no common \outnoun in the fiber of $i$.  We rule out
+\emph{stranded output} is an output in the fiber of $i$ with no \outnoun in
+the fiber of some \indesc $j$.  An \emph{incompatible pair} is two outputs in
+the fiber of $i$ with no common \outnoun there.  We rule out
 each in turn, combine the two, and then restate the result in the form runs
 need.
 
@@ -161,12 +161,11 @@ when every output keeps some \outnoun as input \ingrows:
 
 For singleton fibers this is functional monotonicity,
 Equation~\ref{eq:functional-monotonicity}.  It treats each output separately,
-so it does not rule out incompatible pairs, which concern several outputs at
-one input.
+so it does not rule out incompatible pairs, which concern several outputs in
+one fiber.
 For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
-\emph{incompatible in $F$} otherwise; they are \emph{compatible at input $i$}
-when they are compatible in the fiber $\fiber{i}$.
+\emph{incompatible in $F$} otherwise.
 
 Ruling out incompatible pairs asks that every finite set of outputs in a
 fiber be compatible there.
@@ -203,8 +202,8 @@ $A,B\subseteq O$, define
         \end{equation}
 the \emph{joint lift} of $\OutputOrd$.  Read it with $A=\fiber{i}$ and
 $B=\fiber{j}$ for $i\InputOrd j$.  When $X$ is a single output $o$, it asks
-that $o$ have a \outnoun at $j$, which rules out stranded outputs.  When $X$
-holds several outputs, it asks that they have a common \outnoun at $j$; with
+that $o$ have a \outnoun in $\fiber{j}$, which rules out stranded outputs.  When $X$
+holds several outputs, it asks that they have a common \outnoun in $\fiber{j}$; with
 $j=i$, this rules out incompatible pairs.
 
 \begin{definition}[Lifted Monotonicity, monotone specification]
@@ -230,7 +229,7 @@ holds exactly when both do.
 
 \paragraph{The common-\indesc condition.}
 Runs emit outputs at different inputs and meet at a common \indesc, but Lifted
-Monotonicity compares outputs at one input with outputs at its \indescs.  An
+Monotonicity compares the fiber of an input with the fibers of its \indescs.  An
 equivalent condition compares outputs across inputs directly.
 
 \begin{definition}[Common-\indesc condition]
@@ -322,8 +321,8 @@ The three sets are disjoint, so the event is well defined.  Removing the rows
 at inputs in $K_o$ leaves $D_o$ and $U_o$ unchanged, and removing $U_o$ leaves
 $K_o$ and $D_o$ unchanged, so the order in which the event applies $s_o$ and
 $c_o$ does not matter.  The seal $s_o$
-empties the fiber at each input in $K_o$, sealing it.  The choice $c_o$ removes
-some outputs at each input it touches and keeps others: a row of $U_o$ at $k$
+empties the fiber of each input in $K_o$, sealing it.  The choice $c_o$ removes
+some outputs in each fiber it touches and keeps others: a row of $U_o$ at $k$
 lies outside $K_o$, so some row at $k$ \outrel $o$ and survives.  With one row
 per input, $D_o$ and $U_o$ are empty and this is
 Definition~\ref{def:output-event}.  Because $c_o$ acts at every \indesc of the
