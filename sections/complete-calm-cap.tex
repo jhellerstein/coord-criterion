@@ -1,64 +1,27 @@
-\section{Coordination and Complete CAP}
+\section{Distributed Execution}
+\label{sec:distributed-execution}
 \label{sec:complete-calm}
 
-Sections~\ref{sec:distributed-execution} and~\ref{sec:ambiguous-specifications}
-gave consistency a distributed reading and proved Complete CALM for
-specifications with output choice.  We now turn to the systems that realize
-them, and Figure~\ref{fig:complete-formalism-summary} recaps the formalism.
-We let systems make their own commitments, identify coordination with
-commitment, and state when conflicting output events cannot coexist; Complete
-CAP then states the resulting partition boundary.
+Consistency compares independent runs.  A distributed execution places one run
+at each participant, and the only additional change from our framework's
+perspective is that participants can learn about inputs at other participants
+via messages.  Functional CALM and Complete CALM therefore have a natural
+distributed reading.  Sections~\ref{sec:histories}
+and~\ref{sec:distributed-consistency} make it precise, including a
+convergence guarantee derived from the specification
+(Corollary~\ref{cor:convergence}).  We then let systems make their own
+commitments, identify coordination with commitment, and state when
+conflicting output events cannot coexist; Complete CAP then builds on
+distributed Complete CALM.
 
-\begin{figure*}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{6pt}
-  \renewcommand{\arraystretch}{1.25}
-  \begin{tabular}{@{}l l l@{}}
-    \toprule
-    \textbf{Distributed histories} & & \\
-    \midrule
-    participant; message & at a cut, each participant has one state $\sigma_p(C)$;
-      a message $m=(j,d)$ carries a cumulative input $j$ (or $\varnothing$) and other data $d$ & Sec.~\ref{sec:histories} \\
-    strategy & a participant's rule for choosing its events & Def.~\ref{def:system} \\
-    history; consistent cut & locally ordered history events, with matched sends and receives;
-      cut closed under happens-before & Def.~\ref{def:distributed-history} \\
-    participant run; endpoint & $p$'s input and output events at $C$, a run;
-      $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
-    cut confluence & at common \indesc $j$, a continuation brings all participants to one state $(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
-    distributed consistency & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency} \\
-    \addlinespace
-    \textbf{Output choice} & & \\
-    \midrule
-    fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$ & Eq.~\ref{eq:fiber} \\
-    Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\LiftedOrd S(j)$; finite sets in $S(i)$ have common \outnouns in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
-    output retirement & removed $(k,x)$ is \outrelpast by a retained $(k,u)$ that \outrel $o$ & Def.~\ref{def:output-retirement} \\
-    exposable output & $\mathsf{output}(o)$ applies no commitment; it may retire \outrelpast rows & Sec.~\ref{sec:safe-exposure} \\
-    seal; choice & the commitments $s_o$, $c_o$ of $\mathsf{output}(o)$: empty a fiber; remove outputs that no kept row at that input \outrel & Def.~\ref{def:lifted-output-event} \\
-    \addlinespace
-    \textbf{Systems} & & \\
-    \midrule
-    commitment & removes rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment} \\
-    system & a commitment basis shared by all participants plus a strategy per participant; its output events are $\Out{\gamma}{o}$ & Def.~\ref{def:system}, \ref{def:system-output-event} \\
-    \addlinespace
-    \textbf{Results} & & \\
-    \midrule
-    Complete CALM & consistency $\iff$ Lifted Monotonicity ($\iff$ distributed consistency, Prop.~\ref{prop:distributed-consistency}) & Thm.~\ref{thm:complete-calm} \\
-    seal or choice & every commitment seals inputs or chooses outputs & Prop.~\ref{prop:seal-or-choose} \\
-    coordination & an output event that seals or chooses & Def.~\ref{def:coordination} \\
-    conflicting output events & a choice and an output it rules out cannot meet at the current input & Prop.~\ref{thm:commitments-require-coordination} \\
-    \bottomrule
-  \end{tabular}
-  \caption{The distributed and relational generalizations combined by Complete
-  CALM, for reference.}
-  \label{fig:complete-formalism-summary}
-\end{figure*}
+\input{sections/distributed-execution.tex}
 
 \subsection{Systems}
 \label{sec:coordination}
 
-Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} studied
-the output events the specification itself supplies.  A system may commit
+The histories above use the output events the specification itself supplies
+(Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}).  A
+system may commit
 differently, for example by sealing more than an output requires or by taking a
 lock before it chooses, so we now let systems bring their own commitments.
 
@@ -107,7 +70,7 @@ is \emph{legal} when $(i,o)\in R_c$ and every row of $R_c$ ruled out by $o$ is
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
   \quad\Longrightarrow\quad
-  \exists u\in R_c[\mathrm{out}\OutputGe o](k).\ x\OutputOrd u.
+  \exists u\in R_c[\mathrm{out}\OutputGe o](k):\ x\OutputOrd u.
   \label{eq:lifted-validity}
 \end{equation}
 The event then retires those \outrelpast rows and ends at
@@ -270,9 +233,8 @@ that seals an \indesc of its input conflicts with input another participant
 accepts.  Appendix~\ref{app:cap-response} treats this case, which underlies the
 Gilbert--Lynch theorem (Corollary~\ref{cor:gilbert-lynch}).
 
-Complete CALM (Theorem~\ref{thm:complete-calm}) also derives exposability rather
-than assuming it: by the
-exposure boundary (Proposition~\ref{prop:exposure-boundary}), Lifted
+Complete CALM (Theorem~\ref{thm:complete-calm}) and the exposure boundary
+(Proposition~\ref{prop:exposure-boundary}) tie this to the specification: Lifted
 Monotonicity holds exactly when every output at every state reachable without
 commitment is exposable, so emitting outputs is coordination-free.  When it
 fails, some output can be emitted only with a commitment, and when different
@@ -283,7 +245,7 @@ Output choice also separates safety from liveness.  Confluence guarantees that
 at any consistent cut of a history (Section~\ref{sec:histories}), some continuation brings every
 participant to a common state.  In the functional case, finding that
 continuation is trivial: the state is
-determined by the input (Corollary~\ref{cor:state-by-input}), so delivering the
+fixed by the input (Corollary~\ref{cor:state-by-input}), so delivering the
 full input suffices.  With several outputs per input, the state also depends on
 which outputs have been emitted (Lemma~\ref{lem:run-residual}).  Participants at
 a common input $j$ can reconcile by emitting some $u\in\fiber{j}$ that \outrel

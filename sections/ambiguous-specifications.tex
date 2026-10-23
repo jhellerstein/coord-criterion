@@ -1,9 +1,8 @@
-\section{Ambiguous Specifications and Lifted Monotonicity}
+\section{Complete CALM}
 \label{sec:ambiguous-specifications}
 
-In this section we drop the functional dependency, allowing a fiber to
-contain several outputs.  The monotonicity property we want to test as input
-grows from $i$ to $j\InputGe i$ must now be lifted to sets: can \emph{some}
+We now allow a fiber to contain several outputs.  The monotonicity property we want to test as input
+\ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
 In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{choosing}
 among permitted outputs.  Section~\ref{sec:ambiguity-story} introduces the issue by
@@ -78,10 +77,10 @@ removal an \emph{output retirement}
 commitment: it is \emph{exposable}.  
 
 An output event can thus remove rows in three ways: by sealing inputs, as in
-Section~\ref{sec:functional-calm}; by choosing among outputs, as in
-panel~(f); or by retiring outputs, as in panel~(g).  The atomic event
+Section~\ref{sec:functional-calm}; by retiring outputs, as in panel~(g); or by
+choosing among outputs, as in panel~(f).  The atomic event
 $\mathsf{output}(o)$ does whichever of these $o$ requires, then emits $o$;
-only the first two are commitments.
+sealing and choosing are commitments, retiring is not.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
 The difference between them is the order-theoretic concept of a \emph{directed} fiber:
@@ -101,7 +100,7 @@ may achieve the same schedule, one by
 taking a lock and the other by assigning a timestamp; Section~\ref{sec:coordination} addresses
 such systems.
 
-\subsection{Relational specifications}
+\subsection{Relational specifications and states}
 \label{sec:relational-specifications}
 
 We begin with our most general definition of a specification, which admits
@@ -188,7 +187,7 @@ comparability: two incomparable outputs may have a third output in the fiber
 that \outrel both, as $\{a,b,c\}$ and $\{a,b,d\}$ do in the fiber above.  Thus
 the traceroute fiber is directed: the union of any finite set of route sets in
 it is again in the fiber and refines each of them. The two transaction orders in
-Figure 5(f), by contrast, are incompatible.
+Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.
 
 \paragraph{Lifted Monotonicity.}
 To state both requirements at once, lift $\OutputOrd$ to sets.  For nonempty
@@ -344,7 +343,7 @@ test with $u=x$, so this is exactly the stated test.
 This test marks the commitment boundary: if it fails, emitting $o$ requires a
 seal or a choice.
 
-\subsection{Lifted executions and Complete CALM}
+\subsection{The Complete CALM theorem}
 \label{sec:relational-executions}
 \label{sec:complete-calm-theorem}
 
@@ -373,9 +372,8 @@ treat the common-\indesc condition.  If it holds, a common refinement $u\in S(j)
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
 logic language.  The condition that characterizes consistency is instead a
 property of the specification: Lifted Monotonicity, which for a function is
-ordinary monotonicity.  By Proposition~\ref{prop:distributed-consistency},
-consistency is also distributed consistency, so Functional CALM and Complete
-CALM both hold for distributed histories.
+ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that
+Functional CALM and Complete CALM both hold for distributed histories.
 
 The same condition governs exposability.
 
@@ -409,33 +407,8 @@ input, runs that reach the same input can keep different rows: in
 Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
 $\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run
 that emitted nothing keeps them.  The state then depends on the outputs
-emitted, not only on the input; Section~\ref{sec:complete-calm} returns to
-this.
+emitted, not only on the input; Section~\ref{sec:coordination-def} returns
+to this.
 
-\paragraph{Determination in hindsight.}
-Looking back at a run, we can ask what its commitments decided about the
-inputs it actually received, as if those inputs had been given up front.
-Seals decided nothing about them.
-
-\begin{proposition}[Seals vanish in hindsight]
-\label{prop:seals-vanish}
-Restricted to the inputs a run receives, the rows removed by its commitments
-are exactly the rows removed by its choices.
-\end{proposition}
-
-\begin{proof}
-Consider a seal applied by $\mathsf{output}(o)$ at $(k,R)$.  The current input
-$k$ is not an input of $\Sealed_o$, since its row $(k,o)$ remains.  Inputs
-received before $k$ have no rows in $R$, which holds only \indescs of $k$.  An
-input of $\Sealed_o$ has no rows left, so no later input event can receive it.
-\end{proof}
-
-In a functional specification every commitment is a seal, so in hindsight a
-functional run determined nothing: its commitments were the price of emitting
-before its input was complete, as when the registrar closes the polls.  With
-several outputs per input, choices remain.  A serialization order must be
-chosen even when every transaction is known up front.  What a run determined
-about its own input is exactly its choices.
-
-Section~\ref{sec:complete-calm} turns to the systems that realize these
-specifications and to coordination.
+Section~\ref{sec:distributed-execution} turns to distributed execution, the
+systems that realize these specifications, and coordination.

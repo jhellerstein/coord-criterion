@@ -1,13 +1,4 @@
-\section{Distributed Execution}
-\label{sec:distributed-execution}
-
-Consistency compares independent runs.  A distributed execution places one run
-at each participant, and the only additional change from our framework's perspective is that
-participants can learn about inputs at other participants via messages.  This section
-makes the mapping precise, so that the results of
-Sections~\ref{sec:determination} and~\ref{sec:functional-calm-theorem} read
-directly as statements about distributed executions, including a convergence
-guarantee derived from the specification (Corollary~\ref{cor:convergence}).
+% Subsections 1--2 of the distributed section (input from complete-calm-cap.tex).
 
 \subsection{Distributed histories}
 \label{sec:histories}
@@ -28,7 +19,8 @@ common \indesc $k$ of $i$ and $j$.
 Fix an ordered specification, participants $P$, and an initial input $i_p$
 for each.  A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of an input
-event, an output event (Definition~\ref{def:output-event}),
+event, an output event (Definitions~\ref{def:output-event}
+and~\ref{def:lifted-output-event}),
 $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
 \begin{enumerate}
   \item a total local order on each participant's history events;
@@ -164,9 +156,11 @@ message-free history, one participant per run, at its final cut.
 \end{proof}
 
 Neither notion asserts that a protocol delivers $j$, communicates, or
-terminates; both are existence claims about transitions.  With Functional
-CALM, a functional specification has distributed consistency exactly when it
-is monotone, and Corollary~\ref{cor:state-by-input} gives convergence:
+terminates; both are existence claims about transitions.  By Complete CALM,
+which reduces to Functional CALM with one output per input, a specification
+has distributed consistency exactly when it satisfies Lifted Monotonicity.
+For functional specifications,
+Corollary~\ref{cor:state-by-input} also gives convergence:
 
 \begin{corollary}[Convergence]
 \label{cor:convergence}
@@ -191,9 +185,10 @@ The data $d$ of a message is any application state other than input that a
 participant chooses to send: timestamps, version vectors, non-input-related gossip, votes, etc.  Data
 can influence which input and output events occur next at the receiver, but it
 never directly changes the receiver's specification state, and nothing in the
-definitions above depends on it; Section~\ref{sec:coordination} calls the rule
-that makes these choices a participant's \emph{strategy}; $d$ could influence
-strategy, but the strategy can only make decisions within the parameters of the specification.
+definitions above depends on it.  Section~\ref{sec:coordination} calls the
+rule that makes these choices a participant's \emph{strategy}.  Data can
+influence the strategy, but the strategy can decide only within the
+specification.
 
 \paragraph{Exchanging outputs.}
 The attentive reader might ask what happens if participants share their \emph{outputs} in
@@ -206,10 +201,6 @@ to $R[\mathrm{out}\OutputGe o]$.  Silent honoring cannot change confluence in ei
 help, because it only removes rows, and confluence asks for a row that
 survives everywhere (Proposition~\ref{prop:confluence}).  It cannot hurt,
 because a row that survives at a common \indesc already \outrel every output
-emitted in the cut (Lemma~\ref{lem:run-residual}), including $o$ which was previously emitted.
+emitted in the cut (Lemma~\ref{lem:run-residual}), including $o$, which was previously emitted.
 The confluence of a cut therefore depends on which outputs were emitted,
 not on who has heard about them.
-
-Proposition~\ref{prop:distributed-consistency} uses only runs, so it holds
-unchanged for the specifications of Section~\ref{sec:ambiguous-specifications},
-to which we turn next.

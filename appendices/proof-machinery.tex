@@ -50,7 +50,8 @@ empty run reaches, exposability of $f(i)$ gives $f(i)\OutputOrd f(j)$ for every
 \subsection{Proofs for Section~\ref{sec:ambiguous-specifications}}
 
 \begin{proof}[Proof of Theorem~\ref{thm:common-refinement}]
-Suppose the condition holds, and let runs end at $(i_r,R_r)$ with
+By Proposition~\ref{prop:lifted-monotonicity-decomposition} it suffices to
+treat the common-\indesc condition.  Suppose it holds, and let runs end at $(i_r,R_r)$ with
 common \indesc $j$.  Each output $o$ emitted on a run was emitted at some
 input $i_o\InputOrd j$, and since $o\in R(i_o)\subseteq S(i_o)$, it forms a row
 $(i_o,o)$ of $S$.  The condition supplies $u\in S(j)$ \outrelpart all of these
@@ -66,7 +67,7 @@ of these runs, so $u\in S(j)$ \outrel every $o_r$.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
-Suppose the condition holds; by Theorem~\ref{thm:common-refinement}, the
+Suppose the common-\indesc condition holds; by Theorem~\ref{thm:common-refinement}, the
 specification is consistent.  Let $(i,R)$ be reached by a commitment-free run, and let $o\in R(i)$, $j\InputGe i$ legal, and
 $x\in R(j)$.  Extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
@@ -88,3 +89,68 @@ only from participants' initial decisions do not suffice; in the $k$-set
 agreement example (participants must decide at most $k$ distinct values) of
 Appendix~\ref{app:additional-applications}, every $k$ of $k+1$ initial
 decisions are compatible, but not all of them.
+
+\subsection{Invariant confluence (Section~\ref{sec:iconfluence-instance})}
+\label{app:iconfluence}
+
+The input records which transactions ran and what each one saw.  A
+\emph{transaction history} $h$ (here simply \emph{history}) is a finite partial order of transaction events, each
+labeled by a transaction in $T$; $e'<e$ means that $e'$ was visible to the
+replica that ran $e$.  History $h'$ \inrel $h$ when $h$ is a downward-closed
+sub-order of $h'$, so an event keeps exactly the predecessors it had.  The
+state of a history is computed event by event: $e$ runs on
+$\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
+$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, and
+$\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  Because
+transactions only add versions, the state of a union of downward-closed
+sub-histories is the union of their states.  A history is \emph{locally valid}
+when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ satisfies $\mathcal I$, as
+when replicas abort transactions that would violate the invariant on their own
+state.  It is \emph{valid} when every downward-closed sub-history $c$ has
+$\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
+state.
+
+The specification $S_{\mathcal I}$ has the locally valid histories as inputs.
+An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
+the system may expose the state of any valid sub-history:
+\[
+  S_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
+  sub-history of }h\}.
+\]
+A replica may hold some transactions back, but whatever it exposes must be a
+valid state together with everything it contains.  Taking $g$ empty gives
+$s_0$, so the specification is total.
+
+\begin{proof}[Proof of Proposition~\ref{prop:iconfluence-lm}]
+We use the common-\indesc form of Lifted Monotonicity
+(Proposition~\ref{prop:lifted-monotonicity-decomposition}).  First, the
+state of a valid history $g$ is reachable, by induction on $g$: if $e$ is
+maximal in $g$, then $\mathrm{pre}(e)$ and $\mathrm{eval}(g\setminus\{e\})$
+are states of smaller valid histories, $\mathrm{post}(e)$ is a valid
+transaction step from $\mathrm{pre}(e)$, and
+$\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
+valid merge.
+
+($\Rightarrow$) Let rows $(h_r,\mathrm{eval}(g_r))$, $r=1,\ldots,k$, have a
+common \indesc $j$, so each $g_r$ is a downward-closed sub-history of $j$.  Let
+$g=g_1\cup\cdots\cup g_k$.  Every downward-closed sub-history $c$ of $g$ is the
+union of the pieces $c\cap g_r$, each a downward-closed sub-history of the valid
+$g_r$, so by the first step $\mathrm{eval}(c)$ is a union of reachable states.  Invariant
+confluence makes each successive union valid, and a valid merge of reachable
+states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Thus $g$ is valid, and
+$\mathrm{eval}(g)\in S_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
+For $k=0$, take $g$ empty.
+
+($\Leftarrow$) First let $g_1$ and $g_2$ be valid histories, and let $j$ be
+their disjoint union, with no order between the two parts.  It is locally valid
+and \inrel both, and $(g_r,\mathrm{eval}(g_r))$ are rows.  Lifted Monotonicity
+gives a valid sub-history $g$ of $j$ whose state contains
+$\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)$; since
+$\mathrm{eval}(g)\subseteq\mathrm{eval}(j)$, the two are equal and
+$\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Applying this to
+every pair of downward-closed sub-histories shows that $j$ is itself valid.
+Valid histories are therefore closed under disjoint union, and under adding an
+event above all others when its transaction step is valid.  By induction on
+derivations, every reachable state is the state of a valid history, and the
+pairwise argument then gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
+\end{proof}
