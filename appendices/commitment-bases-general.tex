@@ -30,10 +30,10 @@ Definition~\ref{def:lifted-output-event},
      \{c_o:o\in O,\ \operatorname{dom}(c_o)\neq\varnothing\},
   \label{eq:canonical-commitment-basis-relational}
 \end{equation}
-where $s_o$ is defined at the states with $o\in R(i)$ and $K_o\neq\varnothing$,
-and $c_o$ at those with $o\in R(i)$ and $U_o\neq\varnothing$.  At $(i,R)$, let
-$\kappa_o$ apply $s_o$ when $K_o\neq\varnothing$ and $c_o$ when
-$U_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$, $s_o$, $c_o$, or
+where $s_o$ is defined at the states with $o\in R(i)$ and $\Sealed_o\neq\varnothing$,
+and $c_o$ at those with $o\in R(i)$ and $\Rejected_o\neq\varnothing$.  At $(i,R)$, let
+$\kappa_o$ apply $s_o$ when $\Sealed_o\neq\varnothing$ and $c_o$ when
+$\Rejected_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$, $s_o$, $c_o$, or
 $s_o\,c_o$.  The \emph{canonical event} for $o$ is $\Out{\kappa_o}{o}$: the
 output event of Definition~\ref{def:lifted-output-event}, and with one row per
 input that of Definition~\ref{def:output-event}.
@@ -43,11 +43,11 @@ input that of Definition~\ref{def:output-event}.
 With one row per input, Equation~\ref{eq:commitment-excludes} holds vacuously,
 so the seals of Definition~\ref{def:output-event} are commitments.  With
 several outputs per input, the seal $s_o$ of Definition~\ref{def:lifted-output-event}
-removes every row at the inputs in $K_o$, so nothing remains there to
-\outrelbase a removed row.  For $c_o$, suppose some $x\in U_o$ at input $k$ were
+removes every row at the inputs of $\Sealed_o$, so nothing remains there to
+\outrelbase a removed row.  For $c_o$, suppose some $x\in \Rejected_o$ at input $k$ were
 \outrelpast by a row $y$ that $c_o$ leaves at $k$.  Either $y$ \outrel $o$, or
-$y\in D_o$ and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is
-then \outrelpast by a row \outrelpart $o$, so $x\in D_o$, a contradiction.  Since
+$y\in \Retired_o$ and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is
+then \outrelpast by a row \outrelpart $o$, so $x\in \Retired_o$, a contradiction.  Since
 $s_o$ and $c_o$ remove disjoint sets of rows and neither changes the other's
 (Section~\ref{sec:safe-exposure}), each is defined on the state the other
 leaves, and the canonical basis of
@@ -58,8 +58,8 @@ Definition~\ref{def:canonical-commitment-basis} applies them in either order.
 Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{enumerate}
   \item Every legal output event $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
-        $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows at
-        inputs in $K_o$ and the rows in $U_o$ by commitment.
+        $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows in
+        $\Sealed_o$ and $\Rejected_o$ by commitment.
   \item The canonical event $\Out{\kappa_o}{o}$ is legal and takes $(i,R)$ to
         $(i,R[\mathrm{out}\OutputGe o])$, so it retains every row that any legal
         $\Out{\gamma}{o}$ retains.
@@ -71,19 +71,19 @@ Let $(i,R)$ be a state and $o\in R(i)$.
 
 \begin{proof}
 (1) A legal event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
-R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row at
-$k\in K_o$, or in $U_o$, has no \outrelpart row in $R[\mathrm{out}\OutputGe
+R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row in
+$\Sealed_o$ or $\Rejected_o$ has no \outrelpart row in $R[\mathrm{out}\OutputGe
 o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
 retired, so a legal event must remove it by commitment.  (2) The canonical
-commitments remove exactly the rows at inputs in $K_o$ and the rows in $U_o$, all
+commitments remove exactly the rows in $\Sealed_o$ and $\Rejected_o$, all
 of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
-o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $D_o$, and its
-\outrelpart row lies at an input outside $K_o$ and is not in $U_o$, so it
+o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $\Retired_o$, and its
+\outrelpart row is in neither $\Sealed_o$ nor $\Rejected_o$, so it
 survives the commitments.  The event is therefore legal and ends at
 $R[\mathrm{out}\OutputGe o]$; by (1) no legal event keeps more.  (3) With no
 commitment, $R_c=R$, and a legal event ends at $R[\mathrm{out}\OutputGe o]$.
-It is legal exactly when every ruled-out row is in $D_o$, that is, when $K_o$
-and $U_o$ are empty, which is exposability.
+It is legal exactly when every ruled-out row is in $\Retired_o$, that is, when $\Sealed_o$
+and $\Rejected_o$ are empty, which is exposability.
 \end{proof}
 
 \begin{definition}[Canonical system]

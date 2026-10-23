@@ -281,50 +281,47 @@ Emitting $o$ rules out every row outside $R[\mathrm{out}\OutputGe o]$, but
 those rows need not all be handled in the same way.  Some lie at inputs with no
 row \outrelpart $o$ and require sealing the input, some can be retired because
 another row at the same input \outrel them, and the rest require a binding
-choice among outputs.  Accordingly, the ruled-out rows fall into three classes:
-the rows at the inputs in $K_o$, and the rows in $D_o$ and $U_o$, where
+choice among outputs.  Accordingly, the ruled-out rows fall into three
+disjoint classes:
 \begin{align}
-  K_o&=\mathrm{in}(R)\setminus\mathrm{in}(R[\mathrm{out}\OutputGe o]),
+  \Sealed_o&=\{(k,x)\in R:\ k\notin\mathrm{in}(R[\mathrm{out}\OutputGe o])\},
       \label{eq:seal-inputs}\\
-  D_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:
-          \exists u\in R[\mathrm{out}\OutputGe o](k).\ x\OutputOrd u\},
+  \Retired_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:\
+          \exists u\in R[\mathrm{out}\OutputGe o](k):\ x\OutputOrd u\},
       \label{eq:output-retirements}\\
-  U_o&=(R\setminus R[\mathrm{out}\OutputGe o])
-       \setminus\bigl(D_o\cup R[\mathrm{in}\in K_o]\bigr).
+  \Rejected_o&=(R\setminus R[\mathrm{out}\OutputGe o])
+       \setminus(\Sealed_o\cup\Retired_o).
       \label{eq:choice-removals}
 \end{align}
 
-\begin{definition}[Output retirement]
-\label{def:output-retirement}
-The \emph{output retirements} for $o$ at $(i,R)$ are the rows in $D_o$: rows
-ruled out by $o$ but \outrelpast by a row at the same input that \outrel $o$.
-\end{definition}
-
-\begin{definition}[Lifted output event, seal, choice]
+\begin{definition}[Lifted output event, seal, output retirement, choice]
 \label{def:lifted-output-event}
+\label{def:output-retirement}
 Let $(i,R)$ be a state and $o\in R(i)$.  The \emph{output event}
 $\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
 emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
 Equation~\ref{eq:output-action}.  It removes the ruled-out rows in three ways.
-When $K_o\neq\varnothing$ it applies the \emph{seal} $s_o$, and when
-$U_o\neq\varnothing$ the \emph{choice} $c_o$, two \emph{commitments}:
+When $\Sealed_o\neq\varnothing$ it applies the \emph{seal} $s_o$.  It removes
+the rows in $\Retired_o$, each \outrelpast by a kept row at the same input, by
+\emph{output retirement}, which is not a commitment.  When
+$\Rejected_o\neq\varnothing$ it applies the \emph{choice} $c_o$.  The seal and
+the choice are \emph{commitments}:
 \begin{equation}
-  s_o(i,R)=\bigl(i,\ R\setminus R[\mathrm{in}\in K_o]\bigr),
+  s_o(i,R)=\bigl(i,\ R\setminus\Sealed_o\bigr),
   \qquad
-  c_o(i,R)=\bigl(i,\ R\setminus U_o\bigr).
+  c_o(i,R)=\bigl(i,\ R\setminus\Rejected_o\bigr).
   \label{eq:canonical-seal-commitment-relational}
 \end{equation}
-It removes the rows in $D_o$ by output retirement, which is not a commitment.
 \end{definition}
 
-The three sets are disjoint, so the event is well defined.  Removing the rows
-at inputs in $K_o$ leaves $D_o$ and $U_o$ unchanged, and removing $U_o$ leaves
-$K_o$ and $D_o$ unchanged, so the order in which the event applies $s_o$ and
+The three sets are disjoint, so the event is well defined.  Removing
+$\Sealed_o$ leaves $\Retired_o$ and $\Rejected_o$ unchanged, and removing
+$\Rejected_o$ leaves $\Sealed_o$ and $\Retired_o$ unchanged, so the order in which the event applies $s_o$ and
 $c_o$ does not matter.  The seal $s_o$
-empties the fiber at each input in $K_o$, sealing it.  The choice $c_o$ removes
-some outputs in each fiber it touches and keeps others: a row of $U_o$ at $k$
-lies outside $K_o$, so some row at $k$ \outrel $o$ and survives.  With one row
-per input, $D_o$ and $U_o$ are empty and this is
+empties the fiber at each input of $\Sealed_o$, sealing it.  The choice $c_o$ removes
+some outputs in each fiber it touches and keeps others: a row of $\Rejected_o$ at $k$
+lies outside $\Sealed_o$, so some row at $k$ \outrel $o$ and survives.  With one row
+per input, $\Retired_o$ and $\Rejected_o$ are empty and this is
 Definition~\ref{def:output-event}.  Because $c_o$ acts at every \indesc of the
 current input, not only at it, a choice made now also constrains the choices
 still open at later inputs.  That is what a promise is: once $o$ is emitted,
@@ -340,11 +337,11 @@ output fall into the three classes of Table~\ref{tab:removal-classes}.
     \toprule
     Rows & Cause & Example \\
     \midrule
-    $R[\mathrm{in}\in K_o]$ & seal: no row at the input \outrel $o$ &
+    $\Sealed_o$ & seal: no row at the input \outrel $o$ &
       closing the polls (Fig.~\ref{fig:election-frames}(d)) \\
-    $D_o$ & output retirement: \outrelpast by a kept row at the same input &
+    $\Retired_o$ & output retirement: \outrelpast by a kept row at the same input &
       traceroute (Fig.~\ref{fig:ambiguity-frames}(g)) \\
-    $U_o$ & choice: input stays legal, but no kept row at that input \outrel it &
+    $\Rejected_o$ & choice: input stays legal, but no kept row at that input \outrel it &
       $[B,A]$ after $[A,B]$ (Fig.~\ref{fig:ambiguity-frames}(f)) \\
     \bottomrule
   \end{tabular}
@@ -353,14 +350,14 @@ output fall into the three classes of Table~\ref{tab:removal-classes}.
 \end{table}
 
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
-$U_o$: no row at $\{A,B\}$ \outrel both, so the event makes a choice.  In
+$\Rejected_o$: no row at $\{A,B\}$ \outrel both, so the event makes a choice.  In
 panel~(g), the two removed route
-sets are in $D_o$, each \outrelpast by a retained route set, so the event retires
+sets are in $\Retired_o$, each \outrelpast by a retained route set, so the event retires
 them without commitment.
 
 Exposability lifts with the event: $o$ is exposable when $\mathsf{output}(o)$
-applies no commitment, that is, when $K_o$ and $U_o$ are empty, though the
-event may still retire the rows in $D_o$.  The exposure test lifts as well:
+applies no commitment, that is, when $\Sealed_o$ and $\Rejected_o$ are empty, though the
+event may still retire the rows in $\Retired_o$.  The exposure test lifts as well:
 
 \begin{proposition}[Lifted exposure test]
 \label{prop:exposability}
@@ -376,7 +373,7 @@ $j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ \outrel both:
 
 \begin{proof}
 The event $\mathsf{output}(o)$ applies no commitment exactly when every
-ruled-out row $(j,x)$ lies in $D_o$, that is, is \outrelpast by some row
+ruled-out row $(j,x)$ lies in $\Retired_o$, that is, is \outrelpast by some row
 $(j,u)$ \outrelpart $o$.  Rows that already \outrelbase $o$ satisfy the stated
 test with $u=x$, so this is exactly the stated test.
 \end{proof}
@@ -445,9 +442,9 @@ are exactly the rows removed by its choices.
 
 \begin{proof}
 Consider a seal applied by $\mathsf{output}(o)$ at $(k,R)$.  The current input
-$k$ is not in $K_o$, since its row $(k,o)$ remains.  Inputs received before
-$k$ have no rows in $R$, which holds only \indescs of $k$.  An input in $K_o$
-has no rows left, so no later input event can receive it.
+$k$ is not an input of $\Sealed_o$, since its row $(k,o)$ remains.  Inputs
+received before $k$ have no rows in $R$, which holds only \indescs of $k$.  An
+input of $\Sealed_o$ has no rows left, so no later input event can receive it.
 \end{proof}
 
 In a functional specification every commitment is a seal, so in hindsight a
