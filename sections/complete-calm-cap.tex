@@ -12,53 +12,7 @@ convergence guarantee derived from the specification
 (Corollary~\ref{cor:convergence}).  We then let systems make their own
 commitments, identify coordination with commitment, and state when
 conflicting output events cannot coexist; Complete CAP follows as a corollary
-of distributed Complete CALM.  Figure~\ref{fig:complete-formalism-summary}
-recaps the formalism.
-
-\begin{figure*}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{6pt}
-  \renewcommand{\arraystretch}{1.25}
-  \begin{tabular}{@{}l l l@{}}
-    \toprule
-    \textbf{Distributed histories} & & \\
-    \midrule
-    participant; message & at a cut, each participant has one state $\sigma_p(C)$;
-      a message $m=(j,d)$ carries a cumulative input $j$ (or $\varnothing$) and other data $d$ & Sec.~\ref{sec:histories} \\
-    strategy & a participant's rule for choosing its events & Def.~\ref{def:system} \\
-    history; consistent cut & locally ordered history events, with matched sends and receives;
-      cut closed under happens-before & Def.~\ref{def:distributed-history} \\
-    participant run; endpoint & $p$'s input and output events at $C$, a run;
-      $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection} \\
-    cut confluence & at common \indesc $j$, a continuation brings all participants to one state $(j,R)$ & Sec.~\ref{sec:projection-confluence} \\
-    distributed consistency & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency} \\
-    \addlinespace
-    \textbf{Output choice} & & \\
-    \midrule
-    fiber at $i$ & $S(i)=\{o:(i,o)\in S\}$ & Eq.~\ref{eq:fiber} \\
-    Lifted Monotonicity & $i\InputOrd j\Rightarrow S(i)\LiftedOrd S(j)$; finite sets in $S(i)$ have common \outnouns in $S(j)$ & Def.~\ref{def:lifted-monotonicity} \\
-    output retirement & removed $(k,x)$ is \outrelpast by a retained $(k,u)$ that \outrel $o$ & Def.~\ref{def:output-retirement} \\
-    exposable output & $\mathsf{output}(o)$ applies no commitment; it may retire \outrelpast rows & Sec.~\ref{sec:safe-exposure} \\
-    seal; choice & the commitments $s_o$, $c_o$ of $\mathsf{output}(o)$: empty a fiber; remove outputs that no kept row at that input \outrel & Def.~\ref{def:lifted-output-event} \\
-    \addlinespace
-    \textbf{Systems} & & \\
-    \midrule
-    commitment & removes rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment} \\
-    system & a commitment basis shared by all participants plus a strategy per participant; its output events are $\Out{\gamma}{o}$ & Def.~\ref{def:system}, \ref{def:system-output-event} \\
-    \addlinespace
-    \textbf{Results} & & \\
-    \midrule
-    Complete CALM & consistency $\iff$ Lifted Monotonicity ($\iff$ distributed consistency, Prop.~\ref{prop:distributed-consistency}) & Thm.~\ref{thm:complete-calm} \\
-    seal or choice & every commitment seals inputs or chooses outputs & Prop.~\ref{prop:seal-or-choose} \\
-    coordination & an output event that seals or chooses & Def.~\ref{def:coordination} \\
-    conflicting output events & a choice and an output it rules out cannot meet at the current input & Prop.~\ref{thm:commitments-require-coordination} \\
-    \bottomrule
-  \end{tabular}
-  \caption{The distributed and relational generalizations combined by Complete
-  CALM, for reference.}
-  \label{fig:complete-formalism-summary}
-\end{figure*}
+of distributed Complete CALM.
 
 \input{sections/distributed-execution.tex}
 

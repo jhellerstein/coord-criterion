@@ -200,46 +200,8 @@ Section~\ref{sec:functional-calm-theorem} shows that for functional tables
 this test is exactly monotonicity: a functional specification is consistent
 exactly when it is monotone, which is Functional CALM.
 
-The rest of this section formalizes these notions; Figure~\ref{fig:formalism-summary}
-serves as a reference.
-
-\begin{figure*}[t]
-  \centering
-  \small
-  \setlength{\tabcolsep}{6pt}
-  \renewcommand{\arraystretch}{1.25}
-  \begin{tabular}{@{}l l l@{}}
-    \toprule
-    \textbf{Specification} & & \\
-    \midrule
-    specification & $\Spec=(I,\InputOrd,O,\OutputOrd,S)$; induced $f:(I,\InputOrd)\to(O,\OutputOrd)$ & Def.~\ref{def:functional-specification} \\
-    monotone (functional) & $i\InputOrd j\ \Longrightarrow\ f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity} \\
-    \addlinespace
-    \textbf{Shared state and input} & & \\
-    \midrule
-    specification state & $(i,R)$: \ current input $i$ and remainder table $R\subseteq S$ & Def.~\ref{def:residual-state} \\
-    canonical state & $\sigma_S(i)=(i,S[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state} \\
-    input event & $(i,R)\xrightarrow{\mathsf{input}(j)}(j,R[\mathrm{in}\InputGe j])$ & Eq.~\ref{eq:input-event} \\
-    \addlinespace
-    \textbf{Output handling} & & \\
-    \midrule
-    output event & $(i,R)\xrightarrow{\mathsf{output}(o)}(i,R[\mathrm{out}\OutputGe o])$; applies the seal $s_o$ if this removes rows & Def.~\ref{def:output-event} \\
-    exposable output & $\mathsf{output}(o)$ applies no commitment: $o\OutputOrd f(j)$ at every legal $j\InputGe i$ & Def.~\ref{def:exposable} \\
-    run & finite input and output events from a canonical state & Def.~\ref{def:run} \\
-    \addlinespace
-    \textbf{Results} & & \\
-    \midrule
-    consistent & runs confluent: \ $\bigcap_r R_r(j)\neq\varnothing$ at every common \indesc $j$ of their current inputs & Def.~\ref{def:consistency}, Prop.~\ref{prop:confluence} \\
-    Functional CALM & consistent $\iff$ monotone & Thm.~\ref{thm:functional-calm} \\
-    state by input & consistent $\Longrightarrow$ a run ending at $i$ is in $\sigma_S(i)$ & Cor.~\ref{cor:state-by-input} \\
-    exposure boundary & monotone $\iff$ every output reachable without commitment is exposable & Prop.~\ref{prop:functional-exposure-boundary} \\
-    \bottomrule
-  \end{tabular}
-  \caption{Reference for Functional CALM: one transition system embeds the
-  declarative specification and its commitments in atomic input/output events.
-  Terms are defined at the cited items.}
-  \label{fig:formalism-summary}
-\end{figure*}
+The rest of this section formalizes these notions; Appendix~\ref{app:notation}
+collects them for reference.
 
 \subsection{Specifications and states}
 \label{sec:functional-specifications}

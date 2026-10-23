@@ -1,0 +1,73 @@
+\section{Notation and terms}
+\label{app:notation}
+
+The table collects the paper's notation and defined terms, in the order the
+sections introduce them, with a pointer to each definition.
+
+{\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.15}
+
+\noindent
+\begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
+  \toprule
+  \multicolumn{3}{@{}l}{\textbf{Functional CALM (Section~\ref{sec:functional-calm})}}\\
+  \midrule
+  specification & $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, total on $I$, one output per input; induced $f$ & Def.~\ref{def:functional-specification}\\
+  \inrel; \indesc & $i\InputOrd j$: $j$ contains the input information in $i$ & Sec.~\ref{sec:functional-specifications}\\
+  \outrel; \outnoun & $o\OutputOrd u$: $u$ preserves every visible claim in $o$ & Sec.~\ref{sec:functional-specifications}\\
+  common \indesc; common \outnoun & an input that \inrel each; an output that \outrel each & Sec.~\ref{sec:functional-specifications}\\
+  monotone (functional) & $i\InputOrd j\Rightarrow f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity}\\
+  selection; $\mathrm{in}(R)$, $\mathrm{out}(R)$ & $R[\text{predicate on }\mathrm{in},\mathrm{out}]$; inputs and outputs in $R$ & Sec.~\ref{sec:functional-specifications}\\
+  row at $k$; fiber $R(k)$ & a row $(k,u)$; $\mathrm{out}(R[\mathrm{in}=k])$ & Sec.~\ref{sec:functional-specifications}\\
+  upper fiber & $\mathrm{out}(R[\mathrm{in}\InputGe k])$ & Sec.~\ref{sec:functional-specifications}\\
+  state $(i,R)$; legal input & current input and remainder table, every row at an \indesc of $i$; an input with a row in $R$ & Def.~\ref{def:residual-state}\\
+  canonical state & $\sigma_S(i)=(i,S[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
+  input event; input retirement & $\mathsf{input}(j)$ keeps $R[\mathrm{in}\InputGe j]$; the rows it removes & Eq.~\ref{eq:input-event}\\
+  output event; seal; commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; removing rows, it is a seal, a commitment & Def.~\ref{def:output-event}\\
+  exposable & $\mathsf{output}(o)$ applies no commitment & Def.~\ref{def:exposable}\\
+  determined; determination & the upper fiber has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
+  run; commitment-free & finite event sequence from a canonical state; no output event commits & Def.~\ref{def:run}\\
+  consistent; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
+  \bottomrule
+\end{tabular}
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
+  \toprule
+  \multicolumn{3}{@{}l}{\textbf{Complete CALM (Section~\ref{sec:ambiguous-specifications})}}\\
+  \midrule
+  relational specification; ambiguous & $S\subseteq I\times O$ total on $I$; some fiber has several outputs & Def.~\ref{def:relational-specification}\\
+  stranded output; incompatible pair & an output at $i$ with no \outnoun at some \indesc; two outputs at $i$ with no common \outnoun there & Sec.~\ref{sec:lifted-monotonicity}\\
+  Relational Monotonicity & every output keeps a \outnoun as input \ingrows & Def.~\ref{def:relational-monotonicity}\\
+  compatible in $F$; directed; Directed Outputs & some $u\in F$ \outrel all; every finite subset compatible; every fiber directed & Def.~\ref{def:fiber-directedness}\\
+  joint lift $A\LiftedOrd B$ & every nonempty finite $X\subseteq A$ is compatible in $B$ & Eq.~\ref{eq:joint-output-order}\\
+  Lifted Monotonicity & $i\InputOrd j\Rightarrow\fiber{i}\LiftedOrd\fiber{j}$ & Def.~\ref{def:lifted-monotonicity}\\
+  common-\indesc condition & rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$ & Def.~\ref{def:common-refinement-condition}\\
+  ruled out by $o$ & a row whose output does not \outrelbase $o$ & Sec.~\ref{sec:safe-exposure}\\
+  $\Sealed_o$; $\Retired_o$; $\Rejected_o$ & ruled-out rows at inputs with no row \outrelpart $o$; \outrelpast by a kept row at the same input; the rest & Eq.~\ref{eq:seal-inputs}--\ref{eq:choice-removals}\\
+  seal; output retirement; choice & remove $\Sealed_o$; remove $\Retired_o$, not a commitment; remove $\Rejected_o$ & Def.~\ref{def:lifted-output-event}\\
+  \bottomrule
+\end{tabular}
+
+\medskip
+\noindent
+\begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
+  \toprule
+  \multicolumn{3}{@{}l}{\textbf{Distributed execution (Section~\ref{sec:distributed-execution})}}\\
+  \midrule
+  participant; message & holds a specification state; $m=(j,d)$, a cumulative input $j$ (or $\varnothing$) and other data $d$ & Sec.~\ref{sec:histories}\\
+  distributed history; history event & locally ordered input, output, send, and receive events & Def.~\ref{def:distributed-history}\\
+  happens-before; consistent cut & closure of local orders and send-before-receive; a set of history events closed under it & Def.~\ref{def:distributed-history}\\
+  participant run; endpoint & $p$'s input and output events at $C$; $(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:semantic-projection}\\
+  continuation; cut confluent at $j$ & a history extending $C$; some continuation brings every participant to one state $(j,R)$ & Sec.~\ref{sec:distributed-consistency}\\
+  distributed consistency & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency}\\
+  commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
+  system; basis; strategy & a commitment basis shared by all participants and a strategy per participant, choosing events from its local history & Def.~\ref{def:system}\\
+  system output event $\Out{\gamma}{o}$ & applies commitments $\gamma$ from the basis, retires, emits $o$ & Def.~\ref{def:system-output-event}\\
+  coordination & an output event with $\gamma\neq\varepsilon$ & Def.~\ref{def:coordination}\\
+  partitioned history; Availability; Partition Consistency & no message crosses components; each output emittable within its component; cuts of partitioned histories confluent & Def.~\ref{def:partition-notions}\\
+  \bottomrule
+\end{tabular}
+}
