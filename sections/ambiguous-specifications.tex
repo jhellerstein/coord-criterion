@@ -265,24 +265,16 @@ $\fiber{i}\LiftedOrd\fiber{j}$.
 \subsection{Lifted output events}
 \label{sec:safe-exposure}
 
-Lifted Monotonicity is a property of the table.  We now return to execution:
-what does emitting one of several permitted outputs do to the remainder
-table?  The examples of Section~\ref{sec:ambiguity-story} showed three
-answers, and this subsection makes them precise.
+Lifted Monotonicity is a property of the table.  We now return to execution.
+In the functional case an output event either removes nothing or seals inputs
+(Definition~\ref{def:output-event}).  With several rows at one input, emitting
+$o$ can also retire a \outrelpast row or choose among outputs, as the examples
+of Section~\ref{sec:ambiguity-story} showed.  We lift output events to cover
+all three.
 
-The functional case has one row per input, so an output event either removes
-nothing or seals a legal input.  With several rows at one input, emitting $o$
-can also retire a \outrelpast row while keeping the row that \outrel it, or
-make a binding choice among outputs.  We lift output events to this case.
-
-Fix a state $(i,R)$ and an output $o\in R(i)$.  Call a row
-\emph{ruled out by} $o$ when its output does not \outrelbase $o$.
-Emitting $o$ rules out every row outside $R[\mathrm{out}\OutputGe o]$, but
-those rows need not all be handled in the same way.  Some lie at inputs with no
-row \outrelpart $o$ and require sealing the input, some can be retired because
-another row at the same input \outrel them, and the rest require a binding
-choice among outputs.  Accordingly, the ruled-out rows fall into three
-disjoint classes:
+Fix a state $(i,R)$ and an output $o\in R(i)$.  A row is \emph{ruled out by}
+$o$ when its output does not \outrelbase $o$.  The ruled-out rows fall into
+three disjoint classes, by how they can be removed:
 \begin{align}
   \Sealed_o&=\{(k,x)\in R:\ k\notin\mathrm{in}(R[\mathrm{out}\OutputGe o])\},
       \label{eq:seal-inputs}\\
@@ -300,8 +292,7 @@ disjoint classes:
 Let $(i,R)$ be a state and $o\in R(i)$.  The \emph{output event}
 $\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
 emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
-Equation~\ref{eq:output-action}.  It removes the ruled-out rows in three ways.
-When $\Sealed_o\neq\varnothing$ it applies the \emph{seal} $s_o$.  It removes
+Equation~\ref{eq:output-action}.  When $\Sealed_o\neq\varnothing$ it applies the \emph{seal} $s_o$.  It removes
 the rows in $\Retired_o$, each \outrelpast by a kept row at the same input, by
 \emph{output retirement}, which is not a commitment.  When
 $\Rejected_o\neq\varnothing$ it applies the \emph{choice} $c_o$.  The seal and
@@ -314,21 +305,19 @@ the choice are \emph{commitments}:
 \end{equation}
 \end{definition}
 
-The three sets are disjoint, and removing the rows of either commitment leaves
-the other sets unchanged, so the event is well defined and may apply $s_o$ and
-$c_o$ in either order.  The choice commitment only narrows fibers: at each input it
-touches, some row \outrel $o$ survives.  With one row per input, $\Retired_o$
-and $\Rejected_o$ are empty; this is the functional output event of
-Definition~\ref{def:output-event}.
-
-The only other way a row leaves the remainder table is input retirement
-(Section~\ref{sec:functional-events}).
-
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
 $\Rejected_o$: no row at $\{A,B\}$ \outrel both, so the event makes a choice.  In
 panel~(g), the two removed route
 sets are in $\Retired_o$, each \outrelpast by a retained route set, so the event retires
 them without commitment.
+
+The three sets are disjoint, and removing the rows of either commitment leaves
+the other sets unchanged, so the event may apply $s_o$ and $c_o$ in either
+order.  The choice commitment only narrows fibers: at each input it touches, some row
+\outrel $o$ survives.  With one row per input, $\Retired_o$ and $\Rejected_o$
+are empty; this is the functional output event of
+Definition~\ref{def:output-event}.  Apart from these, a row leaves the
+remainder table only by input retirement (Section~\ref{sec:functional-events}).
 
 Exposability lifts with the event: $o$ is exposable when $\mathsf{output}(o)$
 applies no commitment, that is, when $\Sealed_o$ and $\Rejected_o$ are empty, though the
