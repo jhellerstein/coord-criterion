@@ -12,8 +12,7 @@ specifications, and Section~\ref{sec:lifted-monotonicity} Lifted
 Monotonicity.  Section~\ref{sec:safe-exposure} lifts
 output events and classifies what they remove, and
 Section~\ref{sec:relational-executions} shows that the run-level results of
-Section~\ref{sec:determination} carry over and characterizes consistency by a
-condition on the table.
+Section~\ref{sec:determination} carry over and proves Complete CALM.
 
 \subsection{Output choice by example}
 \label{sec:ambiguity-story}
@@ -345,8 +344,9 @@ test with $u=x$, so this is exactly the stated test.
 This test marks the commitment boundary: if it fails, emitting $o$ requires a
 seal or a choice.
 
-\subsection{Lifted executions and consistency}
+\subsection{Lifted executions and Complete CALM}
 \label{sec:relational-executions}
+\label{sec:complete-calm-theorem}
 
 A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, exactly as in
 Equation~\ref{eq:output-action}.  Specification states, input events, runs,
@@ -355,17 +355,27 @@ of Section~\ref{sec:determination} used output events only through that
 equation.  They therefore lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
 (Proposition~\ref{prop:confluence}).  With them, consistency
-reduces to the common-\indesc condition.
+reduces to Lifted Monotonicity, just as it reduced to monotonicity for
+functions.
 
-\begin{theorem}[Common-\indesc characterization]
+\begin{theorem}[Complete CALM]
+\label{thm:complete-calm}
 \label{thm:common-refinement}
-An ordered specification is consistent if and only if it satisfies the
-common-\indesc condition.
+An ordered specification is consistent if and only if it satisfies Lifted
+Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-If the condition holds, a common refinement $u\in S(j)$ of everything emitted survives in every run (Lemma~\ref{lem:run-residual}); conversely, runs that each emit one row's output must share a surviving row at $j$.  Full proof in Appendix~\ref{app:proofs}.
+By Proposition~\ref{prop:lifted-monotonicity-decomposition} it suffices to
+treat the common-\indesc condition.  If it holds, a common refinement $u\in S(j)$ of everything emitted survives in every run (Lemma~\ref{lem:run-residual}); conversely, runs that each emit one row's output must share a surviving row at $j$.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
+
+The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
+logic language.  The condition that characterizes consistency is instead a
+property of the specification: Lifted Monotonicity, which for a function is
+ordinary monotonicity.  By Proposition~\ref{prop:distributed-consistency},
+consistency is also distributed consistency, so Functional CALM and Complete
+CALM both hold for distributed histories.
 
 The same condition governs exposability.
 
@@ -385,17 +395,12 @@ lifted exposure test at canonical states, one row at a time, builds the common
 Appendix~\ref{app:proofs}.
 \end{proof}
 
-Theorem~\ref{thm:common-refinement} and Proposition~\ref{prop:exposure-boundary}
-are the relational counterparts of Functional CALM and
-Proposition~\ref{prop:functional-exposure-boundary}: with one output per
-input, the common-\indesc condition is monotonicity, and each reduces to its
-functional version.  In place of the functional reduction to monotonicity,
-Proposition~\ref{prop:lifted-monotonicity-decomposition} identifies the
-common-\indesc condition with Lifted Monotonicity.  Lifted Monotonicity is
-therefore the lifted form of functional monotonicity in a precise sense: both
-are the common-\indesc condition, read for one output per input or for many.
-Section~\ref{sec:complete-calm} completes the picture, adding the distributed
-and coordination readings to obtain Complete CALM.
+With one output per input, Lifted Monotonicity and the common-\indesc
+condition are both monotonicity, so Complete CALM and
+Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
+Proposition~\ref{prop:functional-exposure-boundary}.  Lifted Monotonicity is
+the lifted form of functional monotonicity in a precise sense: both are the
+common-\indesc condition, read for one output per input or for many.
 
 One functional result does not carry over.  In a consistent functional
 specification, every run ending at input $i$ is in the canonical state
@@ -432,5 +437,5 @@ several outputs per input, choices remain.  A serialization order must be
 chosen even when every transaction is known up front.  What a run determined
 about its own input is exactly its choices.
 
-Section~\ref{sec:complete-calm} assembles
-Complete CALM from these parts.
+Section~\ref{sec:complete-calm} turns to the systems that realize these
+specifications and to coordination.

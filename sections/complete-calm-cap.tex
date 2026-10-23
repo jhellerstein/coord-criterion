@@ -1,14 +1,13 @@
-\section{Complete CALM and Complete CAP}
+\section{Coordination and Complete CAP}
 \label{sec:complete-calm}
 
-The previous two sections developed orthogonal generalizations of Functional CALM:
-distributed histories give consistency a distributed reading, while relational
-specifications add output choice.  We now combine them, and
-Figure~\ref{fig:complete-formalism-summary} recaps both.  First we let systems
-make their own commitments, identify coordination with commitment, and state
-when conflicting output events cannot coexist; then Complete CALM equates
-consistency, Lifted Monotonicity, and distributed consistency, and Complete CAP
-states the resulting partition boundary.
+Sections~\ref{sec:distributed-execution} and~\ref{sec:ambiguous-specifications}
+gave consistency a distributed reading and proved Complete CALM for
+specifications with output choice.  We now turn to the systems that realize
+them, and Figure~\ref{fig:complete-formalism-summary} recaps the formalism.
+We let systems make their own commitments, identify coordination with
+commitment, and state when conflicting output events cannot coexist; Complete
+CAP then states the resulting partition boundary.
 
 \begin{figure*}[t]
   \centering
@@ -44,7 +43,7 @@ states the resulting partition boundary.
     \addlinespace
     \textbf{Results} & & \\
     \midrule
-    Complete CALM & consistency $\iff$ Lifted Monotonicity $\iff$ distributed consistency & Thm.~\ref{thm:complete-calm} \\
+    Complete CALM & consistency $\iff$ Lifted Monotonicity ($\iff$ distributed consistency, Prop.~\ref{prop:distributed-consistency}) & Thm.~\ref{thm:complete-calm} \\
     seal or choice & every commitment seals inputs or chooses outputs & Prop.~\ref{prop:seal-or-choose} \\
     coordination & an output event that seals or chooses & Def.~\ref{def:coordination} \\
     conflicting output events & a choice and an output it rules out cannot meet at the current input & Prop.~\ref{thm:commitments-require-coordination} \\
@@ -271,38 +270,8 @@ that seals an \indesc of its input conflicts with input another participant
 accepts.  Appendix~\ref{app:cap-response} treats this case, which underlies the
 Gilbert--Lynch theorem (Corollary~\ref{cor:gilbert-lynch}).
 
-\subsection{The Complete CALM theorem}
-\label{sec:complete-calm-theorem}
-
-Complete CALM turns the coordination boundary into a property of the
-specification.  It equates consistency---confluence of canonical runs---with
-Lifted Monotonicity.  The distributed execution model
-supplies the equivalent third view, distributed consistency.
-
-\begin{theorem}[Complete CALM]
-\label{thm:complete-calm}
-For an ordered relational specification, the following are equivalent:
-\begin{enumerate}
-  \item consistency;
-  \item Lifted Monotonicity;
-  \item distributed consistency.
-\end{enumerate}
-\end{theorem}
-
-\begin{proof}
-Items~(1) and~(3) are equivalent by
-Proposition~\ref{prop:distributed-consistency}.  By
-Theorem~\ref{thm:common-refinement}, consistency is equivalent to the
-common-\indesc condition, which is equivalent to Lifted Monotonicity by
-Proposition~\ref{prop:lifted-monotonicity-decomposition}.
-\end{proof}
-
-The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
-logic language.  The condition that characterizes consistency is instead a
-property of the specification: Lifted Monotonicity, which for a function is
-ordinary monotonicity.
-
-The theorem also derives exposability rather than assuming it: by the
+Complete CALM (Theorem~\ref{thm:complete-calm}) also derives exposability rather
+than assuming it: by the
 exposure boundary (Proposition~\ref{prop:exposure-boundary}), Lifted
 Monotonicity holds exactly when every output at every state reachable without
 commitment is exposable, so emitting outputs is coordination-free.  When it
