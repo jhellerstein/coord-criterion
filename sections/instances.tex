@@ -204,9 +204,13 @@ facts~\cite{berenson1995critique,bailis2013hat}.  Eventual storage convergence
 may choose a final state; it cannot retract a commit already exposed to a
 client.
 
-Convergent storage does not automatically provide a highly available
-transactional specification.  Storage convergence constrains states after update delivery;
-isolation constrains reads and commits exposed before then.
+Convergent storage does not by itself provide highly available transactions.
+Storage convergence constrains states after updates are delivered; isolation
+constrains the reads and commits exposed before then.  In the
+snapshot-isolation example, converged storage can settle on either final value
+of $x$, but it cannot retract a commit already exposed to a client.  Whether a
+transactional guarantee is available is decided by the facts it exposes, not
+by the storage merge.
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
@@ -251,10 +255,12 @@ reserve names, reject one allocation, or weaken the invariant.  Concurrency,
 not the transactions alone, decides the outcome: a transaction that is valid
 after another may be invalid when it runs without seeing it.
 
-State convergence, transaction availability, and invariant preservation test
-three different specifications.  A convergent merge may produce an invalid
-state; an available transaction may expose facts that later violate an
-invariant; an invariant-confluent application need not provide a particular
-isolation level.  The shared model makes these distinctions explicit rather
-than collapsing the properties.  We close by drawing out the resulting design
-lessons and scope limits.
+Convergence and transaction availability do not by themselves preserve an
+invariant: each is a different specification.  A convergent merge can produce
+an invalid state; in the uniqueness example, the union of the two replicas
+gives \texttt{sam} two owners.  An available transaction can expose facts that
+a concurrent one later invalidates, since each replica checks the invariant
+only against its own state.  Conversely, an invariant-confluent application
+need not provide any particular isolation level.
+
+We close by drawing out the resulting design lessons and scope limits.
