@@ -204,13 +204,15 @@ facts~\cite{berenson1995critique,bailis2013hat}.  Eventual storage convergence
 may choose a final state; it cannot retract a commit already exposed to a
 client.
 
-Convergent storage does not by itself provide highly available transactions.
-Storage convergence constrains states after updates are delivered; isolation
-constrains the reads and commits exposed before then.  In the
-snapshot-isolation example, converged storage can settle on either final value
-of $x$, but it cannot retract a commit already exposed to a client.  Whether a
-transactional guarantee is available is decided by the facts it exposes, not
-by the storage merge.
+The examples show where the boundary falls.  A guarantee whose exposed facts
+only accumulate, as read committed does here, has a common \outnoun for
+whatever separated replicas expose, so it stays available.  One that orders or
+excludes concurrent transactions, as serializability and first-committer-wins
+do, rules out combinations that separated replicas can each expose; emitting
+either side requires a choice, and a partition prevents making it jointly.
+Storage convergence does not change this, since it constrains states after
+delivery, not facts already exposed.  We illustrate where HAT's boundary
+falls; we do not re-derive its classification.
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
@@ -245,8 +247,9 @@ Monotonicity.
 
 \noindent Proof in Appendix~\ref{app:iconfluence}.
 
-By Complete CALM, the specification of an invariant-confluent transaction set
-is consistent, and conversely.  A uniqueness constraint shows the failure
+Invariant confluence is therefore not a separate boundary: for the
+specification that exposes database states, it is Lifted Monotonicity, and by
+Complete CALM it is consistency.  A uniqueness constraint shows the failure
 directly.  Two replicas each observe that username \texttt{sam} is free and
 allocate it to different accounts.  The history in which neither allocation
 saw the other is locally valid and \inrel both one-allocation histories, but
@@ -255,12 +258,9 @@ reserve names, reject one allocation, or weaken the invariant.  Concurrency,
 not the transactions alone, decides the outcome: a transaction that is valid
 after another may be invalid when it runs without seeing it.
 
-Convergence and transaction availability do not by themselves preserve an
-invariant: each is a different specification.  A convergent merge can produce
-an invalid state; in the uniqueness example, the union of the two replicas
-gives \texttt{sam} two owners.  An available transaction can expose facts that
-a concurrent one later invalidates, since each replica checks the invariant
-only against its own state.  Conversely, an invariant-confluent application
-need not provide any particular isolation level.
+Invariant preservation and transaction availability remain different
+specifications: an invariant-confluent application need not provide any
+particular isolation level, and an available transaction can expose facts
+that a concurrent one later invalidates.
 
 We close by drawing out the resulting design lessons and scope limits.
