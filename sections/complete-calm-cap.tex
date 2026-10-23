@@ -11,16 +11,17 @@ and~\ref{sec:distributed-consistency} make it precise, including a
 convergence guarantee derived from the specification
 (Corollary~\ref{cor:convergence}).  We then let systems make their own
 commitments, identify coordination with commitment, and state when
-conflicting output events cannot coexist; Complete CAP follows as a corollary
-of distributed Complete CALM.
+conflicting output events cannot coexist; Complete CAP then builds on
+distributed Complete CALM.
 
 \input{sections/distributed-execution.tex}
 
 \subsection{Systems}
 \label{sec:coordination}
 
-Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} studied
-the output events the specification itself supplies.  A system may commit
+The histories above use the output events the specification itself supplies
+(Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}).  A
+system may commit
 differently, for example by sealing more than an output requires or by taking a
 lock before it chooses, so we now let systems bring their own commitments.
 
@@ -69,7 +70,7 @@ is \emph{legal} when $(i,o)\in R_c$ and every row of $R_c$ ruled out by $o$ is
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
   \quad\Longrightarrow\quad
-  \exists u\in R_c[\mathrm{out}\OutputGe o](k).\ x\OutputOrd u.
+  \exists u\in R_c[\mathrm{out}\OutputGe o](k):\ x\OutputOrd u.
   \label{eq:lifted-validity}
 \end{equation}
 The event then retires those \outrelpast rows and ends at
@@ -232,9 +233,8 @@ that seals an \indesc of its input conflicts with input another participant
 accepts.  Appendix~\ref{app:cap-response} treats this case, which underlies the
 Gilbert--Lynch theorem (Corollary~\ref{cor:gilbert-lynch}).
 
-Complete CALM (Theorem~\ref{thm:complete-calm}) also derives exposability rather
-than assuming it: by the
-exposure boundary (Proposition~\ref{prop:exposure-boundary}), Lifted
+Complete CALM (Theorem~\ref{thm:complete-calm}) and the exposure boundary
+(Proposition~\ref{prop:exposure-boundary}) tie this to the specification: Lifted
 Monotonicity holds exactly when every output at every state reachable without
 commitment is exposable, so emitting outputs is coordination-free.  When it
 fails, some output can be emitted only with a commitment, and when different
@@ -245,7 +245,7 @@ Output choice also separates safety from liveness.  Confluence guarantees that
 at any consistent cut of a history (Section~\ref{sec:histories}), some continuation brings every
 participant to a common state.  In the functional case, finding that
 continuation is trivial: the state is
-determined by the input (Corollary~\ref{cor:state-by-input}), so delivering the
+fixed by the input (Corollary~\ref{cor:state-by-input}), so delivering the
 full input suffices.  With several outputs per input, the state also depends on
 which outputs have been emitted (Lemma~\ref{lem:run-residual}).  Participants at
 a common input $j$ can reconcile by emitting some $u\in\fiber{j}$ that \outrel

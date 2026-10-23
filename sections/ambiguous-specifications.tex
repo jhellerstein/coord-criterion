@@ -1,9 +1,8 @@
 \section{Complete CALM}
 \label{sec:ambiguous-specifications}
 
-In this section we drop the functional dependency, allowing a fiber to
-contain several outputs.  The monotonicity property we want to test as input
-grows from $i$ to $j\InputGe i$ must now be lifted to sets: can \emph{some}
+We now allow a fiber to contain several outputs.  The monotonicity property we want to test as input
+\ingrows from $i$ to $j\InputGe i$ must now be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
 In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{choosing}
 among permitted outputs.  Section~\ref{sec:ambiguity-story} introduces the issue by
@@ -78,10 +77,10 @@ removal an \emph{output retirement}
 commitment: it is \emph{exposable}.  
 
 An output event can thus remove rows in three ways: by sealing inputs, as in
-Section~\ref{sec:functional-calm}; by choosing among outputs, as in
-panel~(f); or by retiring outputs, as in panel~(g).  The atomic event
+Section~\ref{sec:functional-calm}; by retiring outputs, as in panel~(g); or by
+choosing among outputs, as in panel~(f).  The atomic event
 $\mathsf{output}(o)$ does whichever of these $o$ requires, then emits $o$;
-only the first two are commitments.
+sealing and choosing are commitments, retiring is not.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
 The difference between them is the order-theoretic concept of a \emph{directed} fiber:
@@ -408,8 +407,8 @@ input, runs that reach the same input can keep different rows: in
 Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
 $\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run
 that emitted nothing keeps them.  The state then depends on the outputs
-emitted, not only on the input; Section~\ref{sec:complete-calm} returns to
-this.
+emitted, not only on the input; Section~\ref{sec:coordination-def} returns
+to this.
 
 \paragraph{Determination in hindsight.}
 Looking back at a run, we can ask what its commitments decided about the
