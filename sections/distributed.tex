@@ -1,6 +1,5 @@
 \section{Distributed Execution}
 \label{sec:distributed-execution}
-\label{sec:complete-calm}
 
 Consistency compares independent runs.  A distributed execution places one run
 at each participant, and the only additional change from our framework's
@@ -14,13 +13,13 @@ commitments, identify coordination with commitment, and state when
 conflicting output events cannot coexist; Complete CAP then builds on
 distributed Complete CALM.
 
-\input{sections/distributed-execution.tex}
+\input{sections/distributed-histories.tex}
 
 \subsection{Systems}
-\label{sec:coordination}
+\label{sec:systems}
 
 The histories above use the output events the specification itself supplies
-(Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}).  A
+(Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}).  A
 system may commit
 differently, for example by sealing more than an output requires or by taking a
 lock before it chooses, so we now let systems bring their own commitments.
@@ -48,7 +47,6 @@ and~\ref{def:lifted-output-event} are commitments
 
 \begin{definition}[System]
 \label{def:system}
-\label{def:basis}
 A \emph{system} consists of a \emph{commitment basis} $\mathcal B$, the set of
 commitments its output events may apply, shared by all participants, and a
 \emph{strategy} for each participant: a rule that chooses the participant's
@@ -59,7 +57,6 @@ received.
 
 \begin{definition}[Output event of a system]
 \label{def:system-output-event}
-\label{def:compound-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
 under a basis $\mathcal B$ applies a finite, possibly empty sequence
 $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each $c_m$ defined at
@@ -84,7 +81,7 @@ must remove by commitment the rows in $\Sealed_o$ and $\Rejected_o$,
 since no row it keeps can \outrelbase them
 (Lemma~\ref{lem:canonical-commitment-normal-form}, Appendix~\ref{app:bases}).
 The output event $\mathsf{output}(o)$ of
-Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications} is the
+Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} is the
 legal event $\Out{\gamma}{o}$ whose $\gamma$ applies its seal $s_o$ and choice
 $c_o$, where present.  A system's histories are
 distributed histories (Definition~\ref{def:distributed-history}) whose output
@@ -146,7 +143,7 @@ abort commitments, which fix a transaction as aborted.
 \end{figure}
 
 We call the runs of
-Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}
+Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
 \emph{canonical runs}, and a \emph{run under a basis} $\mathcal B$ is one whose
 output events apply only commitments from $\mathcal B$
 (Definition~\ref{def:run-under-basis}).  Every run under any basis, including
@@ -156,7 +153,7 @@ contains the original's after each event (Lemma~\ref{lem:canonical-equivalent},
 Appendix~\ref{app:bases}).  Consistency is therefore judged on canonical runs.
 
 \subsection{Coordination}
-\label{sec:coordination-def}
+\label{sec:coordination}
 
 Canonical runs commit only by seals and choices.  That is not a design
 decision: no commitment can do anything else.
@@ -259,7 +256,7 @@ inputs and emitted outputs apply the same rule for choosing $u$, and arrive at
 the same state without any commitment.  Section~\ref{sec:discussion} returns to this distinction.
 
 \subsection{The Complete CAP Theorem}
-\label{sec:cap-corollary}
+\label{sec:complete-cap}
 
 Brewer conjectured that a distributed system cannot be consistent, available,
 and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
@@ -323,7 +320,7 @@ Suppose first that $\Spec$ satisfies Lifted Monotonicity.  Take a system whose
 strategies may emit any exposable output $o$ by $\Out{\varepsilon}{o}$.  Every
 history of this system is commitment-free (its output events apply no
 commitment).  A legal $\Out{\varepsilon}{o}$ is the output event of
-Sections~\ref{sec:functional-calm}--\ref{sec:ambiguous-specifications}
+Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
 (Lemma~\ref{lem:canonical-commitment-normal-form}), so each participant run is a
 canonical run and every state it reaches is reachable without commitment.  By
 the exposure boundary (Proposition~\ref{prop:exposure-boundary}), every output
@@ -347,7 +344,7 @@ input $j$.  That state has a row $(j,u)$, and since events never add rows,
 $(j,u)$ already lies in each $p_r$'s remainder table.  Containment
 (Lemma~\ref{lem:canonical-commitment-normal-form}) gives $o_r\OutputOrd u$ for
 every $r$, which is the common-\indesc condition;
-Proposition~\ref{prop:lifted-monotonicity-decomposition} gives Lifted
+Proposition~\ref{prop:common-expansion-form} gives Lifted
 Monotonicity.
 \end{proof}
 

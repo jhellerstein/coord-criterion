@@ -1,5 +1,5 @@
 \section{Complete CALM}
-\label{sec:ambiguous-specifications}
+\label{sec:complete-calm}
 
 We now allow a fiber to contain several outputs.  The monotonicity property we want to test as input
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
@@ -8,10 +8,10 @@ In addition to seal commitments on inputs, we now have a second kind of commitme
 among permitted outputs.  Section~\ref{sec:ambiguity-story} introduces the issue by
 example.  Section~\ref{sec:relational-specifications} defines relational
 specifications, and Section~\ref{sec:lifted-monotonicity} Lifted
-Monotonicity.  Section~\ref{sec:safe-exposure} lifts
+Monotonicity.  Section~\ref{sec:lifted-output-events} lifts
 output events and classifies what they remove, and
-Section~\ref{sec:relational-executions} shows that the run-level results of
-Section~\ref{sec:determination} carry over and proves Complete CALM.
+Section~\ref{sec:complete-calm-theorem} shows that the run-level results of
+Section~\ref{sec:executions} carry over and proves Complete CALM.
 
 \subsection{Output choice by example}
 \label{sec:ambiguity-story}
@@ -72,7 +72,7 @@ serialization order \outrel the other, so emitting one requires a
 emitting $[A,B]$ chooses it over $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output retirement}
-(Definition~\ref{def:output-retirement}); every removed output is
+(Definition~\ref{def:lifted-output-event}); every removed output is
 \outrelpast by a remaining one, so emitting the route observation needs no
 commitment: it is \emph{exposable}.  
 
@@ -97,7 +97,7 @@ survives in both.
 
 Different systems can realize the same choice differently. For example two transaction systems 
 may achieve the same schedule, one by
-taking a lock and the other by assigning a timestamp; Section~\ref{sec:coordination} addresses
+taking a lock and the other by assigning a timestamp; Section~\ref{sec:systems} addresses
 such systems.
 
 \subsection{Relational specifications and states}
@@ -127,7 +127,7 @@ functional specification is the special case $\fiber{i}=\{f(i)\}$.
 
 Specification states and input events
 (Sections~\ref{sec:functional-specifications} and~\ref{sec:functional-events})
-apply unchanged to relational tables; Section~\ref{sec:safe-exposure} lifts
+apply unchanged to relational tables; Section~\ref{sec:lifted-output-events} lifts
 output events.
 
 \subsection{Lifted Monotonicity}
@@ -231,7 +231,7 @@ Monotonicity compares the fiber at an input with the fibers at its \indescs.  An
 equivalent condition compares outputs across inputs directly.
 
 \begin{definition}[Common-\indesc condition]
-\label{def:common-refinement-condition}
+\label{def:common-expansion-condition}
 An ordered specification satisfies the \emph{common-\indesc condition} when,
 for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$ and every
 common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
@@ -243,7 +243,7 @@ common \indesc.  For the empty set of rows the condition asks only that
 $S(j)$ be nonempty, which totality guarantees.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
-\label{prop:lifted-monotonicity-decomposition}
+\label{prop:common-expansion-form}
 An ordered relational specification satisfies Lifted Monotonicity if and only
 if it satisfies the common-\indesc condition.
 \end{proposition}
@@ -261,7 +261,7 @@ $\fiber{i}\LiftedOrd\fiber{j}$.
 \end{proof}
 
 \subsection{Lifted output events}
-\label{sec:safe-exposure}
+\label{sec:lifted-output-events}
 
 Lifted Monotonicity is a property of the table.  We now return to execution.
 In the functional case an output event either removes nothing or seals inputs
@@ -286,7 +286,6 @@ three disjoint classes, by how they can be removed:
 
 \begin{definition}[Lifted output event, seal, output retirement, choice]
 \label{def:lifted-output-event}
-\label{def:output-retirement}
 Let $(i,R)$ be a state and $o\in R(i)$.  The \emph{output event}
 $\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
 emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
@@ -344,13 +343,12 @@ This test marks the commitment boundary: if it fails, emitting $o$ requires a
 seal or a choice.
 
 \subsection{The Complete CALM theorem}
-\label{sec:relational-executions}
 \label{sec:complete-calm-theorem}
 
 A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, exactly as in
 Equation~\ref{eq:output-action}.  Specification states, input events, runs,
 commitment-free runs, and consistency are defined as before, and the results
-of Section~\ref{sec:determination} used output events only through that
+of Section~\ref{sec:executions} used output events only through that
 equation.  They therefore lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
 (Proposition~\ref{prop:confluence}).  With them, consistency
@@ -359,13 +357,12 @@ functions.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-\label{thm:common-refinement}
 An ordered specification is consistent if and only if it satisfies Lifted
 Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-By Proposition~\ref{prop:lifted-monotonicity-decomposition} it suffices to
+By Proposition~\ref{prop:common-expansion-form} it suffices to
 treat the common-\indesc condition.  If it holds, a common refinement $u\in S(j)$ of everything emitted survives in every run (Lemma~\ref{lem:run-residual}); conversely, runs that each emit one row's output must share a surviving row at $j$.  Full proof in Appendix~\ref{app:proofs}.
 \end{proof}
 
@@ -385,7 +382,7 @@ if every output at every state reachable without commitment is exposable.
 
 \begin{proof}[Proof sketch]
 If the common-\indesc condition holds, the specification is consistent
-(Theorem~\ref{thm:common-refinement}), and the survivor test
+(Theorem~\ref{thm:complete-calm}), and the survivor test
 (Proposition~\ref{prop:confluence}) supplies the row the lifted exposure test
 (Proposition~\ref{prop:exposability}) requires.  Conversely, applying the
 lifted exposure test at canonical states, one row at a time, builds the common
@@ -407,7 +404,7 @@ input, runs that reach the same input can keep different rows: in
 Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
 $\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run
 that emitted nothing keeps them.  The state then depends on the outputs
-emitted, not only on the input; Section~\ref{sec:coordination-def} returns
+emitted, not only on the input; Section~\ref{sec:coordination} returns
 to this.
 
 Section~\ref{sec:distributed-execution} turns to distributed execution, the

@@ -13,7 +13,7 @@ input has a single specified output.  Section~\ref{sec:election-story} walks
 through the framework informally on an election.
 Section~\ref{sec:functional-specifications} defines specifications and states;
 Section~\ref{sec:functional-events} defines input and output events and the
-commitments output events apply; Section~\ref{sec:determination} assembles executions and consistency;
+commitments output events apply; Section~\ref{sec:executions} assembles executions and consistency;
 and Section~\ref{sec:functional-calm-theorem} proves Functional CALM and
 identifies when an output can be emitted without commitment.
 
@@ -101,7 +101,7 @@ Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
 the ballots received so far with the permitted result; orders on the columns
 describe how inputs grow and which later outputs \outrelbase earlier ones.  This
 section considers tables in which each input has exactly one output;
-Section~\ref{sec:ambiguous-specifications} later removes that functional
+Section~\ref{sec:complete-calm} later removes that functional
 dependency.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
@@ -135,7 +135,7 @@ is \emph{determined}: input alone has resolved the outcome, without commitment.
 
 Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
-(Section~\ref{sec:coordination}).  In this example, the system acts as a registrar, emitting $\bot$
+(Section~\ref{sec:systems}).  In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
 $xy\cdot$ in the same output event.  Its irrevocable \emph{seal commitment}
 removes the still-possible $xyx$ and $xyy$ rows but leaves the current input
@@ -248,7 +248,7 @@ a partial order in which two independent transactions $a$ and $b$ have two
 incomparable minimal common \indescs, $ab$ and $ba$.
 A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
 when $w$ \outrel $u$.
-Section~\ref{sec:ambiguous-specifications}
+Section~\ref{sec:complete-calm}
 drops the functional dependency; in general, we will use the term
 \emph{ordered specification}, whether functional or not.
 
@@ -311,7 +311,7 @@ functional specification always returns to them.
 The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
 $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  Under the functional dependency a fiber
 has at most one value;
-Section~\ref{sec:ambiguous-specifications} allows more.
+Section~\ref{sec:complete-calm} allows more.
 The \emph{upper fiber} at $k$, $\mathrm{out}(R[\mathrm{in}\InputGe k])$,
 collects the outputs in the fibers at $k$ and its \indescs.
 For a state $\sigma=(i, R)$ the upper fiber at $i$ is $\mathrm{out}(R)$---the
@@ -373,7 +373,7 @@ requires. In Figure~\ref{fig:election-frames}(d), $\bot$ can be
 emitted without a commitment, yet the registrar also closes the polls. Extra
 commitments only restrict behavior: any inputs and outputs of such a system are
 also those of some sequence of $\mathsf{input}$ and $\mathsf{output}$ events as just
-defined (Section~\ref{sec:coordination}), so these seals suffice for our analysis.
+defined (Section~\ref{sec:systems}), so these seals suffice for our analysis.
 
 \begin{definition}[Exposable output]
 \label{def:exposable}
@@ -400,7 +400,7 @@ A determined state stays determined: later events only remove rows, and a row
 at the current input always remains.
 
 \subsection{Executions and consistency}
-\label{sec:determination}
+\label{sec:executions}
 
 We now chain events into runs and ask the central consistency question: when
 runs take different paths through the specification, can they still be
@@ -409,15 +409,13 @@ run's remaining rows depend only on its current input and the outputs it has
 emitted (Lemma~\ref{lem:run-residual}), so runs can be brought together
 exactly when some row at a common \indesc of their inputs remains in all of
 them (Proposition~\ref{prop:confluence}).  Both results carry over to several
-outputs per input (Section~\ref{sec:relational-executions}).
+outputs per input (Section~\ref{sec:complete-calm-theorem}).
 
 \begin{definition}[Transition system, run]
-\label{def:io-transition-system}
-\label{def:transition-system}
+\label{def:run}
 The \emph{transition system} consists of specification states and the input and
 output events above.  A \emph{run} is any finite transition sequence from the
 canonical state $\sigma_S(i)$ at some input $i$.
-\label{def:run}
 \end{definition}
 
 A run is \emph{commitment-free} when none of its output events applies a
@@ -594,6 +592,6 @@ with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} take up both instances.
 
-Section~\ref{sec:ambiguous-specifications} drops the functional dependency and
+Section~\ref{sec:complete-calm} drops the functional dependency and
 proves Complete CALM; Section~\ref{sec:distributed-execution} then gives both
 theorems a distributed reading.

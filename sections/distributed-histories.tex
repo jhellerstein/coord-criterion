@@ -1,4 +1,4 @@
-% Subsections 1--2 of the distributed section (input from complete-calm-cap.tex).
+% Subsections 1--2 of the distributed section (input from distributed.tex).
 
 \subsection{Distributed histories}
 \label{sec:histories}
@@ -41,7 +41,7 @@ item~3
 it determines one run per participant.
 
 \begin{definition}[Participant run, endpoint]
-\label{def:semantic-projection}
+\label{def:participant-run}
 At a consistent cut $C$, the input and output events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, a run
 (Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$.  The
@@ -114,17 +114,16 @@ in local order, form its \emph{participant run}, a run
     records directly as $\mathsf{input}(xy\cdot)$.  In (b), participant $q$
     records that input after receiving $m=(xy\cdot,d_m)$.  Vertical dashed
     lines are consistent cuts.}
-  \label{fig:history-projection}
+  \label{fig:participant-runs}
 \end{figure}
 
-In Figure~\ref{fig:history-projection}, the input $xy\cdot$ reaches $q$
+In Figure~\ref{fig:participant-runs}, the input $xy\cdot$ reaches $q$
 directly or through a message from $p$.  The histories differ, but at either
 cut each participant run is $\mathsf{input}(xy\cdot)$, so both endpoints are
 $(\sigma_1,\sigma_1)$.
 
 \subsection{Distributed consistency}
 \label{sec:distributed-consistency}
-\label{sec:projection-confluence}
 
 A \emph{continuation} of a history at a consistent cut $C$ is a history $H'$
 that extends the history events of $C$ with further history events after
@@ -178,14 +177,14 @@ This is the convergence that strong eventual
 consistency~\cite{shapiro2011crdt} asks of replicated state---replicas that
 have received the same updates are in equivalent states---derived here from
 the specification rather than from a merge operator.  With several outputs per
-input this uniqueness fails (Section~\ref{sec:relational-executions}).
+input this uniqueness fails (Section~\ref{sec:complete-calm-theorem}).
 
 \paragraph{Message data.}
 The data $d$ of a message is any application state other than input that a
 participant chooses to send: timestamps, version vectors, non-input-related gossip, votes, etc.  Data
 can influence which input and output events occur next at the receiver, but it
 never directly changes the receiver's specification state, and nothing in the
-definitions above depends on it.  Section~\ref{sec:coordination} calls the
+definitions above depends on it.  Section~\ref{sec:systems} calls the
 rule that makes these choices a participant's \emph{strategy}.  Data can
 influence the strategy, but the strategy can decide only within the
 specification.
