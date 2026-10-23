@@ -410,30 +410,5 @@ that emitted nothing keeps them.  The state then depends on the outputs
 emitted, not only on the input; Section~\ref{sec:coordination-def} returns
 to this.
 
-\paragraph{Determination in hindsight.}
-Looking back at a run, we can ask what its commitments decided about the
-inputs it actually received, as if those inputs had been given up front.
-Seals decided nothing about them.
-
-\begin{proposition}[Seals vanish in hindsight]
-\label{prop:seals-vanish}
-Restricted to the inputs a run receives, the rows removed by its commitments
-are exactly the rows removed by its choices.
-\end{proposition}
-
-\begin{proof}
-Consider a seal applied by $\mathsf{output}(o)$ at $(k,R)$.  The current input
-$k$ is not an input of $\Sealed_o$, since its row $(k,o)$ remains.  Inputs
-received before $k$ have no rows in $R$, which holds only \indescs of $k$.  An
-input of $\Sealed_o$ has no rows left, so no later input event can receive it.
-\end{proof}
-
-In a functional specification every commitment is a seal, so in hindsight a
-functional run determined nothing: its commitments were the price of emitting
-before its input was complete, as when the registrar closes the polls.  With
-several outputs per input, choices remain.  A serialization order must be
-chosen even when every transaction is known up front.  What a run determined
-about its own input is exactly its choices.
-
 Section~\ref{sec:distributed-execution} turns to distributed execution, the
 systems that realize these specifications, and coordination.
