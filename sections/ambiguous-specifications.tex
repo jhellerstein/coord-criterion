@@ -316,34 +316,13 @@ the choice are \emph{commitments}:
 
 The three sets are disjoint, and removing the rows of either commitment leaves
 the other sets unchanged, so the event is well defined and may apply $s_o$ and
-$c_o$ in either order.  The seal empties the fibers at the inputs of
-$\Sealed_o$.  The choice only narrows fibers: at each input it touches, some
-row \outrel $o$ survives.  Because the choice acts at every \indesc of the
-current input, emitting $o$ now constrains the outputs still available at
-later inputs.  With one row per input, $\Retired_o$ and $\Rejected_o$ are
-empty and this is Definition~\ref{def:output-event}.
+$c_o$ in either order.  The choice commitment only narrows fibers: at each input it
+touches, some row \outrel $o$ survives.  With one row per input, $\Retired_o$
+and $\Rejected_o$ are empty; this is the functional output event of
+Definition~\ref{def:output-event}.
 
-Rows removed by an input event can no longer happen; rows ruled out by an
-output fall into the three classes of Table~\ref{tab:removal-classes}.
-
-\begin{table}[t]
-  \centering
-  \footnotesize
-  \begin{tabular}{@{}p{.17\columnwidth}p{.42\columnwidth}p{.33\columnwidth}@{}}
-    \toprule
-    Rows & Cause & Example \\
-    \midrule
-    $\Sealed_o$ & seal: no row at the input \outrel $o$ &
-      closing the polls (Fig.~\ref{fig:election-frames}(d)) \\
-    $\Retired_o$ & output retirement: \outrelpast by a kept row at the same input &
-      traceroute (Fig.~\ref{fig:ambiguity-frames}(g)) \\
-    $\Rejected_o$ & choice: input stays legal, but no kept row at that input \outrel it &
-      $[B,A]$ after $[A,B]$ (Fig.~\ref{fig:ambiguity-frames}(f)) \\
-    \bottomrule
-  \end{tabular}
-  \caption{The rows ruled out by an output $o$, by cause.}
-  \label{tab:removal-classes}
-\end{table}
+The only other way a row leaves the remainder table is input retirement
+(Section~\ref{sec:functional-events}).
 
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
 $\Rejected_o$: no row at $\{A,B\}$ \outrel both, so the event makes a choice.  In
