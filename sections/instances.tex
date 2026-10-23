@@ -99,17 +99,9 @@ $q\circ s$ is consistent exactly when
   \label{eq:crdt-query-monotonicity}
         \end{equation}
 Monotonicity of $q$ on all of $D$ is sufficient but not required; $q$ need
-only be monotone on reachable states.  Operation-based CRDTs, which deliver
-operations rather than states, have the same form.  Their payloads
-are operations delivered in causal order, and the set of operations a replica
-has received, closed under causal predecessors, grows by union; the causal
-order, once made explicit in the payload, is the state lattice, and the
-replica's state is a function of that set.  This is the emulation of
-operation-based by state-based CRDTs in the original CRDT
-paper~\cite{shapiro2011crdt}, the operation-context semantics of replicated
-data types~\cite{burckhardt2014replicated}, and the partially ordered log of
-pure operation-based CRDTs~\cite{baquero2014operation}; see
-also~\cite{hellerstein2025turtles}.
+only be monotone on reachable states.  Operation-based CRDTs have the same form:
+the causally closed set of delivered operations grows by union, and the state
+is a function of it~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
 
 \paragraph{A safe merge can have an unsafe observation.}
 Consider a two-phase set with state $(\mathit{Add},\mathit{Del})$: $\mathit{Add}$ records
@@ -158,40 +150,17 @@ threshold $\mathsf{false}$ is exposable because $\mathsf{true}$
 extracts a stable fact from an incomplete replica state without claiming that
 the state itself is complete.
 
-\paragraph{Beyond least merges.}
-A join-semilattice provides a uniform \emph{least} \outnoun and a fixed merge
-operator.  Complete CALM asks only for \emph{some} common \outnoun of each
-relevant finite family.  For example, consider the finite output poset with
-incomparable elements $a$ and $b$, incomparable minimal common upper bounds
-$c$ and $d$, and a top element $e$ above both $c$ and $d$:
-        \begin{equation}
-  a,b \prec c,d \prec e,
-  \qquad c\not\OutputOrd d,
-  \qquad d\not\OutputOrd c.
-  \label{eq:directed-nonlattice}
-        \end{equation}
-Every finite family has a common \outnoun---$e$ always suffices---so the
-poset is directed.  But $a$ and $b$ have no least common \outnoun: either
-$c$ or $d$ would have to be least, and they are incomparable.  A
-join-semilattice is therefore a sufficient discipline, not a requirement of
-Lifted Monotonicity.
-
-Strong eventual consistency (SEC) is a separate convergence property: replicas that
-have incorporated the same updates reach equivalent states.  A join-semilattice
-merge is one way to provide it, but SEC itself does not require a least element
-in this paper's declared output order, and last-writer-wins (LWW) designs may satisfy
-SEC as well.  In particular, SEC permits the observable equivalent of
-\emph{retraction}: a replica may expose one value and later converge to a state
-whose visible value replaces or discards that earlier answer.  This need not
-retract internal CRDT state, but it does retract the client-visible claim if
-outputs mean irrevocable observations.  Whether convergence is monotone
-therefore depends on the declared output order; an LWW specification that promises
-to retain both concurrent values differs from one that permits its resolution
-rule to discard one.
+A join supplies a uniform least common \outnoun, but Complete CALM needs only
+\emph{some} common \outnoun (Section~\ref{sec:lifted-monotonicity}); a
+join-semilattice is one sufficient discipline.  Strong eventual consistency is
+a different property: replicas that have incorporated the same updates reach
+equivalent states.  It permits the observable equivalent of retraction---a
+last-writer-wins replica can expose one value and later converge to a state
+that discards it---so whether convergence is monotone depends on the declared
+output order.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
-\jmh{Review this subsection: does it support the Discussion's claim (sec:sources) that the HAT boundary falls along the S / response obligation / deployment choices, or does it only illustrate it?}
 
 For a transactional specification, an input is the set of begin, read, write, and
 commit requests received so far, ordered by inclusion.  An output is a growing
@@ -199,16 +168,13 @@ set of public facts such as $\mathsf{read}(T,x,v)$,
 $\mathsf{commit}(T)$, and session-order facts, also ordered by inclusion.  The
 isolation level (which reads and commits concurrent transactions may expose) or
 session guarantee (per-client ordering, such as reading one's own writes)
-determines which fact sets are permitted.
-A deployment assigns transactions and requests to replicas.  Partition
-compatibility under a deployment
-(Proposition~\ref{thm:complete-cap-deployment}) tests the combinations those replicas can select across a partition,
-under the contact, failure, and session assumptions of the specification~\cite{bailis2013hat,terry1994session}.  In the response form of Complete CAP
-(Appendix~\ref{app:cap-response}), HAT's ingredients separate: the isolation
-level fixes the specification, the rule that transactions eventually commit
-rather than suffer system-initiated aborts fixes what counts as an answer, and
-sticky availability (each client keeps contacting replicas that hold its
-session's earlier operations) fixes the deployment.
+determines which fact sets are permitted.  HAT's ingredients then
+separate~\cite{bailis2013hat,terry1994session}: the isolation level fixes the
+specification, the rule that transactions commit rather than suffer
+system-initiated aborts is the response obligation
+(Appendix~\ref{app:cap-response}), and sticky availability, in which each
+client keeps contacting replicas that hold its session's earlier operations,
+is a deployment (Proposition~\ref{thm:complete-cap-deployment}).
 
 \paragraph{Accumulating facts.}
 Suppose two replicas execute transactions on disjoint keys.  One exposes
@@ -256,33 +222,16 @@ satisfying $\mathcal I$.  Every reachable state descends from $s_0$, so $T$ is
 \emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
 reachable $s_1$ and $s_2$.
 
-The input records which transactions ran and what each one saw.  A
-\emph{transaction history} $h$ (here simply \emph{history}) is a finite partial order of transaction events, each
-labeled by a transaction in $T$; $e'<e$ means that $e'$ was visible to the
-replica that ran $e$.  History $h'$ \inrel $h$ when $h$ is a downward-closed
-sub-order of $h'$, so an event keeps exactly the predecessors it had.  The
-state of a history is computed event by event: $e$ runs on
-$\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
-$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, and
-$\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  Because
-transactions only add versions, the state of a union of downward-closed
-sub-histories is the union of their states.  A history is \emph{locally valid}
-when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ satisfies $\mathcal I$, as
-when replicas abort transactions that would violate the invariant on their own
-state.  It is \emph{valid} when every downward-closed sub-history $c$ has
-$\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
-state.
-
-The specification $S_{\mathcal I}$ has the locally valid histories as inputs.
-An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
-the system may expose the state of any valid sub-history:
-\[
-  S_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
-  sub-history of }h\}.
-\]
-A replica may hold some transactions back, but whatever it exposes must be a
-valid state together with everything it contains.  Taking $g$ empty gives
-$s_0$, so the specification is total.
+The input is a \emph{transaction history}: a partial order of transaction
+events recording which transactions ran and what each one saw; a history
+\inrel each of its downward-closed sub-orders.  The inputs are the
+\emph{locally valid} histories, in which every transaction step preserves
+$\mathcal I$ on its replica's state, and a history is \emph{valid} when every
+merge of what it contains satisfies $\mathcal I$
+(Appendix~\ref{app:iconfluence}).  The specification $S_{\mathcal I}$ lets a
+replica expose the state of any valid downward-closed sub-history of its
+input: it may hold transactions back, but whatever it exposes must be a valid
+state together with everything it contains.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
@@ -290,39 +239,7 @@ $T$ is invariant confluent if and only if $S_{\mathcal I}$ satisfies Lifted
 Monotonicity.
 \end{proposition}
 
-\begin{proof}
-We use the common-\indesc form of Lifted Monotonicity
-(Proposition~\ref{prop:lifted-monotonicity-decomposition}).  First, the
-state of a valid history $g$ is reachable, by induction on $g$: if $e$ is
-maximal in $g$, then $\mathrm{pre}(e)$ and $\mathrm{eval}(g\setminus\{e\})$
-are states of smaller valid histories, $\mathrm{post}(e)$ is a valid
-transaction step from $\mathrm{pre}(e)$, and
-$\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
-valid merge.
-
-($\Rightarrow$) Let rows $(h_r,\mathrm{eval}(g_r))$, $r=1,\ldots,k$, have a
-common \indesc $j$, so each $g_r$ is a downward-closed sub-history of $j$.  Let
-$g=g_1\cup\cdots\cup g_k$.  Every downward-closed sub-history $c$ of $g$ is the
-union of the pieces $c\cap g_r$, each a downward-closed sub-history of the valid
-$g_r$, so by the first step $\mathrm{eval}(c)$ is a union of reachable states.  Invariant
-confluence makes each successive union valid, and a valid merge of reachable
-states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Thus $g$ is valid, and
-$\mathrm{eval}(g)\in S_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
-For $k=0$, take $g$ empty.
-
-($\Leftarrow$) First let $g_1$ and $g_2$ be valid histories, and let $j$ be
-their disjoint union, with no order between the two parts.  It is locally valid
-and \inrel both, and $(g_r,\mathrm{eval}(g_r))$ are rows.  Lifted Monotonicity
-gives a valid sub-history $g$ of $j$ whose state contains
-$\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)$; since
-$\mathrm{eval}(g)\subseteq\mathrm{eval}(j)$, the two are equal and
-$\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Applying this to
-every pair of downward-closed sub-histories shows that $j$ is itself valid.
-Valid histories are therefore closed under disjoint union, and under adding an
-event above all others when its transaction step is valid.  By induction on
-derivations, every reachable state is the state of a valid history, and the
-pairwise argument then gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
-\end{proof}
+\noindent Proof in Appendix~\ref{app:iconfluence}.
 
 By Complete CALM, the specification of an invariant-confluent transaction set
 is consistent, and conversely.  A uniqueness constraint shows the failure
@@ -330,13 +247,9 @@ directly.  Two replicas each observe that username \texttt{sam} is free and
 allocate it to different accounts.  The history in which neither allocation
 saw the other is locally valid and \inrel both one-allocation histories, but
 its state has two owners, so no state it permits \outrel both.  The system must
-reserve names, reject one allocation, or weaken the invariant.  Concurrency is
-what matters.  If $t_a$ adds fact $a$, $t_b$ adds $b$ and also $c$ when $a$ is
-present, and $\mathcal I$ forbids $a$ and $b$ without $c$, then running $t_b$
-after $t_a$ is valid.  But the history in which $t_a$ and $t_b$ ran
-concurrently permits no state containing both $a$ and $b$, so the test fails
-there, exactly as invariant confluence does: the sequential history does not
-\inrelbase the one where $t_b$ ran without seeing $t_a$.
+reserve names, reject one allocation, or weaken the invariant.  Concurrency,
+not the transactions alone, decides the outcome: a transaction that is valid
+after another may be invalid when it runs without seeing it.
 
 State convergence, transaction availability, and invariant preservation test
 three different specifications.  A convergent merge may produce an invalid
