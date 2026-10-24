@@ -343,11 +343,13 @@ Consistency.
 Conversely, suppose some system has Availability and Partition Consistency;
 we derive the common-\indesc condition.  We prove it for two rows, using two
 participants, and then extend to any finite set of rows by induction.  First
-take two rows $(i,o)$ and $(i',o')$ with a common \indesc $j$.  Place two participants in separate
+take two rows $(i,o)$ and $(i',o')$ with a common \indesc $j$; we find some
+$u\in\fiber{j}$ that \outrel both $o$ and $o'$.  Place two participants in separate
 components, starting at inputs $i$ and $i'$.  Each runs without messages.  By
 Availability, they can emit $o$ and $o'$.  By Partition Consistency, they then
-reach one state $(j,R)$, with some $u\in R(j)$
-(Definition~\ref{def:residual-state}).  Rows are never added, so $(j,u)$ was
+reach one state $(j,R)$, which has some row $(j,u)$
+(Definition~\ref{def:residual-state}); this $u$ is the one we seek.  Rows are
+never added, so $(j,u)$ was
 already in each participant's table just after its emission.  Emitting an
 output keeps only rows whose output \outrel it
 (Lemma~\ref{lem:canonical-commitment-normal-form}), so $u$ \outrel $o$ and
@@ -355,8 +357,8 @@ $o'$.
 
 Now let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows with a common \indesc $j$.  We
 show by induction on $m\le k$ that some $u_m\in\fiber{j}$ \outrel each of
-$o_1,\ldots,o_m$.  For $m=0$ there is nothing to refine, and totality gives
-some $u_0\in\fiber{j}$.  For $m>0$, $(j,u_{m-1})$ and $(i_m,o_m)$ are rows of
+$o_1,\ldots,o_m$.  For $m=0$ there is nothing to refine; since $\Spec$ is
+total, $j$ appears in some row $(j,u_0)$.  For $m>0$, $(j,u_{m-1})$ and $(i_m,o_m)$ are rows of
 $\Spec$ with common \indesc $j$, so the two-row case gives some
 $u_m\in\fiber{j}$ that \outrel $u_{m-1}$ and $o_m$.  Since $u_{m-1}$ \outrel
 $o_1,\ldots,o_{m-1}$, so does $u_m$, by transitivity.  For $m=k$, $u_k$ is the

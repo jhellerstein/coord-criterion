@@ -197,11 +197,12 @@ theorem «thm:complete-cap/proof-cf-continuations» (sp : Spec I O) (D : Type) :
   complete_cap_strong sp D
 
 /-- Proof of Theorem `thm:complete-cap`, (1)⇒(2), the two-row case: "First
-take two rows `(i,o)` and `(i',o')` with a common expansion `j`.  Place two
-participants in separate components, starting at inputs `i` and `i'`.  Each
-runs without messages.  By Availability, they can emit `o` and `o'`.  By
-Partition Consistency, they then reach one state `(j,R)`, with some
-`u ∈ R(j)`. … so `u` refines `o` and `o'`." -/
+take two rows `(i,o)` and `(i',o')` with a common expansion `j`; we find some
+`u ∈ S(j)` that refines both `o` and `o'`.  Place two participants in separate
+components, starting at inputs `i` and `i'`.  Each runs without messages.  By
+Availability, they can emit `o` and `o'`.  By Partition Consistency, they then
+reach one state `(j,R)`, which has some row `(j,u)`; this `u` is the one we
+seek. … so `u` refines `o` and `o'`." -/
 theorem «thm:complete-cap/proof-two-step» (Sys : System sp D)
     (hA : «def:partition-notions(4)» Sys) (hP : «def:partition-notions(5)» Sys)
     {i₁ i₂ j : I} {o₁ o₂ : O} (h₁ : sp.S i₁ o₁) (h₂ : sp.S i₂ o₂) (hj₁ : i₁ ≼ j) (hj₂ : i₂ ≼ j) :
@@ -211,7 +212,8 @@ theorem «thm:complete-cap/proof-two-step» (Sys : System sp D)
 /-- Proof of Theorem `thm:complete-cap`, (1)⇒(2): "Now let
 `(i_1,o_1),…,(i_k,o_k)` be rows with a common expansion `j`.  We show by
 induction on `m ≤ k` that some `u_m ∈ S(j)` refines each of `o_1,…,o_m`.  For
-`m=0` there is nothing to refine, and totality gives some `u_0 ∈ S(j)`.  For
+`m=0` there is nothing to refine; since `S` is total, `j` appears in some row
+`(j,u_0)`.  For
 `m>0`, `(j,u_{m-1})` and `(i_m,o_m)` are rows of `S` with common expansion
 `j`, so the two-row case gives some `u_m ∈ S(j)` that refines `u_{m-1}` and
 `o_m`.  Since `u_{m-1}` refines `o_1,…,o_{m-1}`, so does `u_m`, by
