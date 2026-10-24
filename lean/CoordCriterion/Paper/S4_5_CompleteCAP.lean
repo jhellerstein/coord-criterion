@@ -61,8 +61,8 @@ theorem «def:partition-notions(1)/unfolded» (H : History sp D n) (comp : Fin n
         H p = a ++ LEv.recv q k j d :: b → comp q = comp p :=
   Iff.rfl
 
-/-- Def. `def:partition-notions`(2), *System*: "Fix a system
-(Definition `def:system`); we additionally require a strategy for each
+/-- Def. `def:partition-notions`(2), *System*: "Fix a system; we require a
+strategy for each
 participant of every finite participant set and every choice of initial
 inputs, each depending only on its participant's local history."
 
@@ -178,8 +178,8 @@ theorem «sec:complete-cap/consistent-on-S» (sp : Spec I O) :
 
 /-! ### Theorem `thm:complete-cap` -/
 
-/-- **Theorem `thm:complete-cap` (Complete CAP).**  "For an ordered relational
-specification `S` and an availability relation `A ⊆ S`, the following are
+/-- **Theorem `thm:complete-cap` (Complete CAP).**  "For an ordered specification
+`S` and an availability relation `A ⊆ S`, the following are
 equivalent: (1) some system has Availability for `A` and Partition
 Consistency; (2) `S` is consistent on `A`."
 
@@ -226,9 +226,9 @@ theorem «sec:complete-cap/necessity-any-system» (A : Table I O) (hAS : ∀ i o
     (hP : «def:partition-notions(5)» Sys) : «def:partition-notions(6)» sp A :=
   consistentOn_of_availabilityFor A hAS Sys hA (commonRefinement_of_pc hP)
 
-/-- "Under consistency on `A`, the canonical output event for an output of `A`
-seals nothing and chooses only against outputs outside `A`, which the system
-never emits, so the system is coordination-free (Definition
+/-- "Under consistency on `A`, the canonical event for an output of `A` seals
+nothing and chooses only against outputs outside `A`, which the system never
+emits, so it is coordination-free (Definition
 `def:coordination`)."  "The system" is the canonical system of the intuition
 after Theorem `thm:complete-cap`, `respSystem A`.  Lean: the system emits only rows of `A`, and no output
 event removes a row that any run of the system emits, or seals an input any
@@ -345,8 +345,8 @@ theorem «sec:complete-cap/response-form» (sp : Spec I O) (D : Type) (Q : Oblig
     ∃ T, ResponseInterface Q T ∧ ConsistentOn sp T :=
   complete_cap_response sp D Q
 
-/-- "and derives the theorem in Gilbert and Lynch's asynchronous model
-(Proposition `prop:gl-async`)." -/
+/-- "and derives the theorem in Gilbert and Lynch's asynchronous model"
+(Proposition `prop:gl-async`). -/
 theorem «sec:complete-cap/gl-async» {N : Nat} {M : Type} (hN : 2 ≤ N)
     (A : CC.AsyncGL.Alg N M) : ¬ (CC.AsyncGL.Available A ∧ CC.AsyncGL.Atomic A) :=
   CC.AsyncGL.gilbert_lynch_async hN A

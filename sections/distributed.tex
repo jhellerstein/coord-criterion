@@ -2,7 +2,7 @@
 \label{sec:distributed-execution}
 
 Consistency compares independent runs.  A distributed execution places one run
-at each participant, and the only additional change from our framework's
+at each participant, and the only change from our framework's
 perspective is that participants can learn about inputs at other participants
 via messages.  Functional CALM and Complete CALM therefore have a natural
 distributed reading.  Sections~\ref{sec:histories}
@@ -48,7 +48,7 @@ nonempty set of rows, each with no remaining row at the same input that
 \end{equation}
 \end{definition}
 
-As expected, the seals and choices of Definition~\ref{def:output-event}
+The seals and choices of Definition~\ref{def:output-event}
 and Section~\ref{sec:lifted-output-events} satisfy this definition: a seal removes
 every row at the inputs it seals, and a choice removes the rows in
 $\Rejected_o$.  The converse also holds:
@@ -67,13 +67,13 @@ At an input $k$, either no row remains or some does.
 In a functional specification each fiber has one row, so every commitment
 seals.  Because each commitment acts on a given state, the classification is
 unambiguous.  A seal may remove the last rows that earlier choices left at an
-input; attributing the seal across that sequence is a question of provenance,
-which this paper does not pursue.
+input; attributing the seal across that sequence is a provenance question we do
+not pursue.
 
 \begin{definition}[Strategy]
 \label{def:strategy}
 A \emph{local history} of participant $p$ is a finite sequence of $p$'s history
-events (Definition~\ref{def:distributed-history}), including the messages it
+events, including the messages it
 has received.  A \emph{strategy} for $p$ is a nondeterministic transition
 function: it maps each local history $\lambda$ of $p$ to a set
 $\theta_p(\lambda)$ of output, send, and receive events of $p$, and $p$ next
@@ -91,7 +91,7 @@ system consists of environment inputs and events chosen by the participants'
 strategies.
 \end{definition}
 
-Strategies differ by participant so that we can later single out replicated
+Strategies differ by participant so we can single out replicated
 systems, whose participants share one (Appendix~\ref{app:cap-response}); no
 result distinguishes participants' commitments, so the basis is shared.
 
@@ -171,9 +171,8 @@ $c_o$ of Section~\ref{sec:lifted-output-events}.
     \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
     \bottomrule
   \end{tabular}
-  \caption{Serialization orders of three concurrent transactions after one commitment:
-  (h) two-phase locking orders $A$ before $B$; (i) multiversion timestamp
-  ordering places $B$ first.  Only complete rows without aborts or read results
+  \caption{Serial orders of three transactions after one commitment:
+  (h) 2PL orders $A$ before $B$; (i) MVTO places $B$ first.  Only complete rows without aborts or reads
   are shown.}
   \label{fig:cc-commitments}
 \end{figure}
@@ -194,14 +193,12 @@ canonical runs, as in
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 
 Consider 2PL on input $\{A,B,C\}$, where $A$ reads a key $x$ that no
-transaction writes, and $B$ then waits for a lock that $A$ holds on another
+transaction writes, and $B$ waits for a lock that $A$ holds on another
 key.  2PL's output event reports $A$'s read and applies $\mathsf{order}(A,B)$,
 keeping only the rows that can be completed without committing $B$ before $A$.
-The canonical run performs the canonical event for the same output: reporting
-the read requires no commitment, so it keeps every row that reports the read,
-including the one completed by $[B,A,C]$.  When 2PL later emits the complete
-serial order $[A,C,B]$, the canonical run emits it too, and both runs end with
-the same table.  The lock committed to $A$ before $B$ earlier than any output
+The canonical run reports the read with no commitment, so it keeps every row reporting the read,
+including the one completed by $[B,A,C]$.  When 2PL later emits
+$[A,C,B]$, so does the canonical run, and both end with the same table.  The lock committed to $A$ before $B$ earlier than any output
 required.
 
 \subsection{Coordination}
@@ -223,11 +220,11 @@ commitment.
 
 \begin{definition}[Coordination]
 \label{def:coordination}
-Let an output event $\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event})
+Let an output event $\Out{\gamma}{o}$
 of a run apply a commitment, and let $\mathcal R$ be a set of runs.  The
 commitment is \emph{contradicted} in $\mathcal R$ when some run in
 $\mathcal R$ accepts an input it seals, or emits, at the same input, an output
-it chooses against (Proposition~\ref{prop:seal-or-choose}).  A run or history
+it chooses against.  A run or history
 \emph{coordinates} relative to $\mathcal R$ when one of its output events
 applies a contradicted commitment, and is \emph{coordination-free} relative to
 $\mathcal R$ otherwise.  For a specification, $\mathcal R$ is its canonical
@@ -318,15 +315,15 @@ deterministic rule terminates once outputs stop.
 Brewer conjectured that a distributed system cannot be consistent, available,
 and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
 proved it for a linearizable register~\cite{gilbert2002cap}.  Their theorem
-concerns one guarantee; it does not say which guarantees can stay available and
+concerns one guarantee, not which guarantees can stay available and
 consistent through a partition.  Complete CAP answers that question for any
 declared guarantee: a specification of what is correct, together with the
 rows whose outputs must stay available.  The answer is that rows emitted apart
 must have a common \outnoun wherever their inputs meet; when every permitted
 output must stay available, this is Lifted Monotonicity.  A partition does not
 change which commitments a specification needs; it removes the ability to make
-them jointly, since participants separated by a partition cannot agree to seal
-an input or to make a choice that another participant could contradict.
+them jointly, since separated participants cannot agree to seal
+an input or make a choice that another could contradict.
 
 \begin{definition}[Partitioned history, Availability, Partition Consistency]
 \label{def:partition-notions}
@@ -336,8 +333,8 @@ an input or to make a choice that another participant could contradict.
         participants into two or more components and contains no receive whose
         matching send lies in another component; participants still receive
         environment input and emit outputs.
-  \item \emph{System.}  Fix a system (Definition~\ref{def:system}); we
-        additionally require a strategy for each participant of every finite
+  \item \emph{System.}  Fix a system; we
+        require a strategy for each participant of every finite
         participant set and every choice of initial inputs, each depending only
         on its participant's local history.
   \item \emph{Environment.}  The environment is adversarial: it may supply any
@@ -372,7 +369,7 @@ commit without coordination, as the remark after Corollary~\ref{cor:complete-cap
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
-For an ordered relational specification $\Spec$ and an availability relation
+For an ordered specification $\Spec$ and an availability relation
 $A\subseteq S$, the following are equivalent:
 \begin{enumerate}
   \item some system has Availability for $A$ and Partition Consistency;
@@ -381,7 +378,7 @@ $A\subseteq S$, the following are equivalent:
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-Intuitively, consider the system whose strategies emit each output of
+Consider the system whose strategies emit each output of
 $A$ by the canonical output event of Section~\ref{sec:complete-calm}.  It has
 Availability for $A$, and consistency on $A$ gives the outputs it emits a
 common \outnoun wherever their inputs meet.  Conversely, given one
@@ -400,16 +397,16 @@ $\Out{\varepsilon}{o}$.
 
 \begin{proof}[Proof sketch]
 With $A=S$, consistency on $A$ is Lifted Monotonicity, and the
-exposure boundary (Proposition~\ref{prop:exposure-boundary}) makes every
+exposure boundary makes every
 output of the commitment-free system available.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 The converse never assumes that the system is commitment-free, so commitments
 cannot enlarge the class of specifications that admit a system with
 Availability for $A$ and Partition Consistency.  Nor do the commitments of the
-canonical system above need coordination.  Under consistency on $A$, the canonical output event
+canonical system above need coordination.  Under consistency on $A$, the canonical event
 for an output of $A$ seals nothing and chooses only against outputs outside
-$A$, which the system never emits, so the system is
+$A$, which the system never emits, so it is
 coordination-free (Definition~\ref{def:coordination}).  For $A=S$ it needs no
 commitment at all.  For a smaller $A$ such local choices can be necessary: if
 $o\in A(i)$ and $x\in\fiber{i}\setminus A(i)$ have no common \outnoun at $i$,
@@ -434,6 +431,5 @@ outputs, which is what linearizability requires.
 Appendix~\ref{app:cap-response} takes precedence from real time, extends
 Complete CAP to systems that choose their responses when responses are not
 forced, and derives
-the theorem in Gilbert and Lynch's asynchronous model
-(Proposition~\ref{prop:gl-async}).
+the theorem in Gilbert and Lynch's asynchronous model.
 

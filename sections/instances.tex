@@ -2,7 +2,7 @@
 \label{sec:instances}
 
 Each setting below declares an input, an output, and their orders before
-applying Functional CALM or Complete CALM.  Changing the specification changes
+applying either theorem.  Changing the specification changes
 whether monotonicity or Directed Outputs holds.
 
 \subsection{Query monotonicity}
@@ -13,15 +13,15 @@ $J\mapsto Q(J)$.  Relational-transducer CALM (CALM for Datalog programs run on n
 relational transducers) proves the operational result for
 that language: monotone queries allow coordination-free evaluation under its
 data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
-that theorem.  It isolates the monotonicity property so that it
+that theorem.  It isolates the property so that it
 can be compared with specifications outside Datalog.
 
 Why did earlier CALM results not state Directed Outputs separately?  Their
 query specification is functional: each input $J$ has one result
 $Q(J)$, so each output fiber is a singleton and directed automatically.
 CRDTs also present a functional state for a fixed set of incorporated
-updates; semilattice join additionally provides least common \outnouns across
-partial inputs.  Complete CALM makes multiple outputs in one fiber explicit,
+updates; semilattice join provides least common \outnouns across
+partial inputs.  Complete CALM allows several outputs per fiber,
 so directedness can no longer be assumed.
 
 \subsection{CRDTs: monotone queries over convergent state}
@@ -48,7 +48,7 @@ Functional CALM, $q\circ s$ is consistent exactly when $U\subseteq V$ implies
 $q(s(U))\preceq_Y q(s(V))$.  Monotonicity of $q$ on all of $D$ suffices, but
 $q$ need only be monotone between reachable states.  The two-phase query fails
 the test: a removal payload grows $U$ and shrinks the answer.
-Operation-based CRDTs fit the same form, with the causally closed set of
+Operation-based CRDTs fit too, with the causally closed set of
 delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
 
@@ -92,7 +92,7 @@ it is not a claim that every combination of session guarantees is available.
 
 \paragraph{Serializability and transaction ordering.}
 Serializability requires the exposed facts to be explained by some serial order
-of the committed transactions.  The ordering issue becomes a distributed obstruction when exposed reads force
+of committed transactions.  This becomes a distributed obstruction when exposed reads force
 opposite serialization orders.  Initially $x=y=0$.  On one side, $T_1$ reads
 $x=0$, writes $y=1$, and commits.
 On the other, $T_2$ reads $y=0$, writes $x=1$, and commits.  Preserving $T_1$'s
@@ -119,8 +119,7 @@ combinations that separated replicas can each expose; emitting either side
 requires a choice (Proposition~\ref{thm:commitments-require-coordination}), and
 a partition prevents making it jointly.  Storage convergence constrains states
 after delivery; the facts already exposed are outputs, and output events never
-remove them.  We illustrate where HAT's boundary
-falls; we do not re-derive its classification.
+remove them.  We do not re-derive HAT's classification.
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
@@ -130,7 +129,7 @@ of Bailis et al.~\cite{bailis2014coordination}.  A database state is a set of
 versions, and replicas merge states by union.  Each transaction $t\in T$ runs
 on the state of the replica that executes it and adds the versions it writes,
 so $t(s)\supseteq s$.  An initial state $s_0$ satisfies the invariant
-$\mathcal I$.  A state is \emph{reachable} in their model when it can be derived from $s_0$ by
+$\mathcal I$.  A state is \emph{reachable} when it can be derived from $s_0$ by
 applying transactions and merging states, with every state along the way
 satisfying $\mathcal I$.  Every reachable state descends from $s_0$, so $T$ is
 \emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
@@ -144,8 +143,8 @@ $\mathcal I$ on its replica's state, and a history is \emph{valid} when every
 merge of what it contains satisfies $\mathcal I$
 (Appendix~\ref{app:iconfluence}).  The specification $S_{\mathcal I}$ lets a
 replica expose the state of any valid downward-closed sub-history of its
-input: it may hold transactions back, but whatever it exposes must be a valid
-state together with everything it contains.
+input: it may hold transactions back, but whatever it exposes must be valid
+together with everything it contains.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
@@ -173,4 +172,4 @@ Invariant preservation and transaction availability are different
 specifications: $S_{\mathcal I}$ constrains exposed database states, while an
 isolation level constrains exposed read and commit facts.
 
-We close by drawing out the resulting design lessons and scope limits.
+We close with the resulting design lessons and scope limits.

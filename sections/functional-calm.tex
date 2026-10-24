@@ -187,8 +187,8 @@ $(xyx,x)$ have the common \indesc $xyx$, but under the equality
 order no output at $xyx$ \outrel both outputs $\bot$ and $x$.  A run that emits
 $\bot$ at $xy\cdot$ and one that receives $xyx$ cannot be reconciled at $xyx$.
 
-Input and output events form a transition system on specification states, and
-the specification is consistent when its runs are confluent.
+Input and output events form a transition system, and the specification is
+consistent when its runs are confluent.
 Section~\ref{sec:functional-calm-theorem} shows that for functional tables
 this is exactly monotonicity.
 
@@ -256,7 +256,7 @@ A functional ordered specification $\Spec$, with induced function $f$, is
 \end{equation}
 \end{definition}
 
-Thus an output emitted from partial input remains valid as more input arrives.
+Thus an output on partial input stays valid as input \ingrows.
 
 \paragraph{Relational notation.}
 For a relation $R\subseteq I\times O$, a predicate on the columns
@@ -264,7 +264,7 @@ $\mathrm{in}$ and $\mathrm{out}$ in square brackets selects rows, and commas
 separate conjuncts: $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ is the
 table of rows whose input \inrel $j$ and whose output \outrel $o$.  A row
 $(k,u)$ is \emph{at} $k$, and $\mathrm{out}(R)$ is the set of outputs that
-appear in $R$.  Appendix~\ref{app:notation} spells the notation out.
+appear in $R$.
 
 A specification describes every permitted input/output pair.  During execution,
 input arrives and outputs are emitted, so only some of those pairs remain
@@ -294,9 +294,7 @@ Section~\ref{sec:functional-calm-theorem} shows that a consistent
 functional specification always returns to them.
 
 The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
-$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  Under the functional dependency a fiber
-has at most one value;
-Section~\ref{sec:complete-calm} allows more.
+$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  A functional fiber has at most one value.
 The \emph{upper fiber} at $k$, $\mathrm{out}(R[\mathrm{in}\InputGe k])$,
 collects the outputs in the fibers at $k$ and its \indescs.
 For a state $\sigma=(i, R)$ the upper fiber at $i$ is $\mathrm{out}(R)$---the
@@ -322,14 +320,14 @@ $j$. We call this \emph{input retirement}.
 
 An input event records a new input $j$, not how $j$ was
 assembled.  Because inputs are
-cumulative, applying $\mathsf{input}(j)$ and then $\mathsf{input}(k)$ has the
-same effect as applying $\mathsf{input}(k)$ directly; $\mathsf{input}(i)$ at
+cumulative, $\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the
+effect of $\mathsf{input}(k)$ alone; $\mathsf{input}(i)$ at
 $(i,R)$ has no effect.
 
 \paragraph{Output events.}
-A system controls what it tells the outside world.  We study what it can safely
-promise without assuming that clients tolerate retractions.  An emitted output
-must therefore be \outrelpast by later outputs.
+A system controls what it tells the world.  We study what it can safely
+promise without assuming that clients tolerate retractions.  Later outputs
+must therefore \outrelbase earlier ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
 output the system may emit.  Emitting it safely requires sealing every legal
@@ -367,8 +365,8 @@ applies no commitment.
 \end{definition}
 
 In a functional specification this means $R[\mathrm{out}\OutputGe o]=R$: the
-event removes nothing.  Since the only row at a legal input $j$ is $(j,f(j))$, $o$ is exposable at
-$(i,R)$ exactly when $f(j)$ \outrel $o$ at every legal input $j$.
+event removes nothing.  As the only row at a legal input $j$ is $(j,f(j))$, $o$ is exposable
+exactly when $f(j)$ \outrel $o$ for every legal $j$.
 
 \paragraph{Determination.}
 A state is \emph{determined} when its upper fiber has one element: one result
@@ -404,7 +402,7 @@ canonical state $\sigma_S(i)$ at some input $i$.
 \end{definition}
 
 A run is \emph{commitment-free} when none of its output events applies a
-commitment, that is, when each emits an exposable output.  A state is \emph{reachable without commitment} when
+commitment.  A state is \emph{reachable without commitment} when
 some commitment-free run reaches it.
 
 A run's state has a simple description.  Input events keep only rows whose
@@ -424,8 +422,7 @@ $o_1,\ldots,o_m$, its remainder table is
     \mathrm{out}\OutputGe o_m],
   \label{eq:run-residual}
 \end{equation}
-the rows whose input \inrel $i$ and whose output \outrel every emitted
-output.
+the rows whose input \inrel $i$ and whose output \outrel each $o_r$.
 \end{lemma}
 
 \begin{proof}
@@ -445,7 +442,7 @@ of those inputs.
 An ordered specification is \emph{consistent} when every finite family of
 runs is confluent: if the runs end at states
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common \indesc of their current
-inputs, each run can be continued by further input and output events to one
+inputs, each run can be continued by further events to one
 common state with current input $j$.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
@@ -467,7 +464,7 @@ $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 
 \begin{proof}[Proof sketch]
 Rows are never added, so the row of a common state at $j$ was there
-in every run all along.  Full proof in Appendix~\ref{app:proofs-sec2}.
+in every run.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 In a functional specification the only row at $j$ is $(j,f(j))$, so the test
@@ -482,8 +479,7 @@ Section~\ref{sec:functional-calm-theorem} shows that for a consistent
 functional specification it depends only on the input.
 
 Consistency is a property of the specification.  It describes no protocol and
-promises no delivery or termination; Section~\ref{sec:discussion} returns to
-this.
+promises no delivery or termination (Section~\ref{sec:discussion}).
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
@@ -544,10 +540,10 @@ exposure test is monotonicity.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 In a functional specification, every commitment an output event applies is a seal, so Functional
-CALM and Proposition~\ref{prop:functional-exposure-boundary} together say that a functional specification is consistent
+CALM and Proposition~\ref{prop:functional-exposure-boundary} say that a functional specification is consistent
 exactly when, at every state reachable without commitment, no output requires
-sealing input.  A monotone functional specification can emit every current
-output without a commitment; if monotonicity fails at $i\InputOrd k$ with
+sealing input.  A monotone specification can emit every current
+output without commitment; if monotonicity fails at $i\InputOrd k$ with
 $f(i)\not\OutputOrd f(k)$, then at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$
 applies $s_{f(i)}$, which seals $k$.
 
@@ -566,11 +562,10 @@ monotonicity becomes
 the standard definition of a monotone query~\cite{abiteboul1995foundations},
 which positive Datalog satisfies and negation may not.  Functional CALM
 generalizes the statement from fact sets under inclusion to arbitrary input and
-output orders, regardless of the formalism used to express the
-specification.  The usual CRDT state specification has the same functional shape,
+output orders, whatever formalism expresses the specification.  The usual CRDT state specification has the same functional shape,
 with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
-and~\ref{sec:crdt-instance} take up both instances.
+and~\ref{sec:crdt-instance} treat both.
 
 Section~\ref{sec:complete-calm} drops the functional dependency and
 proves Complete CALM; Section~\ref{sec:distributed-execution} then gives both

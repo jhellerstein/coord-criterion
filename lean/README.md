@@ -131,7 +131,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:canonical-state/input-moves-canonical»` | theorem | "Input events alone move between canonical states." |
 | `«eq:input-event»` | abbrev | **Eq. |
 | `«eq:input-event/legal-expands»` | theorem | The paper's input event asks for `j` legal *and* `i ≼ j`; the second follows from the first, since the remainder table contains only rows at expansions of `i`. |
-| `«sec:functional-events/input-cumulative»` | theorem | "Applying `input(j)` and then `input(k)` has the same effect as applying `input(k)` directly; `input(i)` at `(i,R)` has no effect." |
+| `«sec:functional-events/input-cumulative»` | theorem | "`input(j)` then `input(k)` has the effect of `input(k)` alone; `input(i)` at `(i,R)` has no effect." |
 | `«def:output-event»` | abbrev | **Def. |
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commit-iff-seal»` | theorem | Def. |
@@ -145,7 +145,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«sec:functional-events/determination-examples»` | theorem | "A functional specification can therefore have undetermined states, as in panel (b) … An input event may [reach a determined state] by retiring rows … and a… |
 | `«sec:functional-events/stays-determined»` | theorem | "A determined state stays determined: |
 | `«def:run»` | abbrev | **Def. |
-| `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment, that is, when each emits an exposable output. |
+| `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment. |
 | `«lem:run-residual»` | theorem | **Lemma `lem:run-residual`** (Rows remaining after a run). |
 | `«eq:run-residual»` | abbrev | **Eq. |
 | `«lem:run-residual/example»` | theorem | Example after Lemma `lem:run-residual`: |
@@ -230,7 +230,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing sea… |
 | `«def:commitment»` | abbrev | **Def. |
 | `«eq:commitment-excludes»` | theorem | **Eq. |
-| `«sec:systems/seals-and-choices-are-commitments»` | theorem | "As expected, the seals and choices of Definitions output-event and lifted-output-event satisfy this definition: |
+| `«sec:systems/seals-and-choices-are-commitments»` | theorem | "The seals and choices of Definitions output-event and lifted-output-event satisfy this definition: |
 | `«prop:seal-or-choose»` | theorem | **Prop. |
 | `«prop:seal-or-choose/functional»` | theorem | "In a functional specification each fiber has one row, so every commitment seals." |
 | `«def:strategy»` | abbrev | **Def. |
@@ -289,11 +289,11 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-notions(5)/at-cuts»` | theorem | Def. |
 | `«def:partition-notions(6)»` | abbrev | Def. |
 | `«sec:complete-cap/consistent-on-S»` | theorem | "With `A = S`, consistency on `A` is the common-expansion condition." |
-| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered relational specification `S` and an availability relation `A ⊆ S`, the following are equivalent: |
+| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered specification `S` and an availability relation `A ⊆ S`, the following are equivalent: |
 | `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `S` satisfies Lifted Monotonicity." |
 | `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
 | `«sec:complete-cap/necessity-any-system»` | theorem | "The converse never assumes that the system is commitment-free, so commitments cannot enlarge the class of specifications that admit a system with Availabili… |
-| `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Under consistency on `A`, the canonical output event for an output of `A` seals nothing and chooses only against outputs outside `A`, which the system never… |
+| `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Under consistency on `A`, the canonical event for an output of `A` seals nothing and chooses only against outputs outside `A`, which the system never emits,… |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `A = S` it needs no commitment at all." Lean: |
 | `«sec:complete-cap/local-choice-necessary»` | theorem | "For a smaller `A` such local choices can be necessary: |
 | `«sec:complete-cap/consistency-fails»` | theorem | "When consistency on `A` fails, some output of `A` either waits for another component, sacrificing Availability, or is emitted independently at the cost of P… |
@@ -303,7 +303,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of Complete CAP": |
 | `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |
 | `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
-| `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model (Proposition `prop:gl-async`)." |
+| `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model" (Proposition `prop:gl-async`). |
 
 ### §5 Instances
 
@@ -324,7 +324,7 @@ File `Paper/S5_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:hat-instance/snapshot-isolation»` | theorem | Paragraph "Snapshot isolation": |
 | `«sec:hat-instance/boundary»` | theorem | The boundary paragraph: |
 | `«sec:iconfluence-instance/model»` | abbrev | Sec. |
-| `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable in their model when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying… |
+| `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying `𝓘`." Lean: |
 | `«sec:iconfluence-instance/iconfluent-def»` | theorem | "`T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." Lean: |
 | `«sec:iconfluence-instance/bailis-definition»` | theorem | "Every reachable state descends from `s₀`, so `T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." This is the step from Ba… |
 | `«sec:iconfluence-instance/spec»` | theorem | "The inputs are the locally valid histories … a history is valid when every merge of what it contains satisfies `𝓘` … The specification `S_𝓘` lets a replica… |

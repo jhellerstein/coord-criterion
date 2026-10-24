@@ -269,7 +269,7 @@ theorem «eq:commitment-excludes» {sp : Spec I O} (c : Commitment sp) (σ τ : 
     ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w) :=
   c.excludes σ τ h
 
-/-- "As expected, the seals and choices of Definitions output-event and
+/-- "The seals and choices of Definitions output-event and
 lifted-output-event satisfy this definition: a seal removes every row at the
 inputs it seals, and a choice removes the rows in `Rejected_o`."
 
@@ -507,14 +507,13 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i :
     canonical_equivalent h
 
 /-- *Canonical runs suffice*, example.  "Consider 2PL on input `{A,B,C}`, where
-`A` reads a key `x` that no transaction writes, and `B` then waits for a lock
+`A` reads a key `x` that no transaction writes, and `B` waits for a lock
 that `A` holds on another key.  2PL's output event reports `A`'s read and
 applies `order(A,B)`, keeping only the rows that can be completed without
-committing `B` before `A`.  The canonical run performs the canonical event for
-the same output: reporting the read requires no commitment, so it keeps every
-row that reports the read, including the one completed by `[B,A,C]`.  When 2PL later emits the complete serial order
-`[A,C,B]`, the canonical run emits it too, and both runs end with the same
-table.  The lock committed to `A` before `B` earlier than any output required."
+committing `B` before `A`.  The canonical run reports the read with no
+commitment, so it keeps every row reporting the read, including the one
+completed by `[B,A,C]`.  When 2PL later emits `[A,C,B]`, so does the canonical
+run, and both end with the same table.  The lock committed to `A` before `B` earlier than any output required."
 
 Lean (Appendix G's specification; `rd`, `wr` arbitrary except `rd A x` and no
 transaction writes `x`; `o1` decides nothing and reports `A`'s read of `x`

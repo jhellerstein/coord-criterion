@@ -322,8 +322,8 @@ theorem «eq:input-event/legal-expands» {I O : Type} [PO I] [PO O] {sp : Spec I
     (σ : State sp) (j : I) (h : ∃ u, σ.R j u) : σ.cur ≼ j :=
   legal_above σ j h
 
-/-- "Applying `input(j)` and then `input(k)` has the same effect as applying
-`input(k)` directly; `input(i)` at `(i,R)` has no effect." -/
+/-- "`input(j)` then `input(k)` has the effect of `input(k)` alone; `input(i)`
+at `(i,R)` has no effect." -/
 theorem «sec:functional-events/input-cumulative» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} :
     (∀ {σ τ ρ : State sp} {j k : I},
@@ -398,9 +398,8 @@ theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I 
   exposable_iff_no_commitment σ o
 
 /-- "In a functional specification this means `R[out ⪰ o] = R`: the event
-removes nothing.  Since the only row at a legal input `j` is `(j, f(j))`, `o`
-is exposable at `(i,R)` exactly when `f(j)` refines `o` at every legal input
-`j`." -/
+removes nothing.  As the only row at a legal input `j` is `(j, f(j))`, `o` is
+exposable exactly when `f(j)` refines `o` for every legal `j`." -/
 theorem «sec:functional-events/functional-exposable» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
     (Exposable σ o ↔ outputTable σ o = σ.R) ∧ (Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x) :=
@@ -447,7 +446,7 @@ abbrev «def:run» {I O : Type} [PO I] [PO O] {sp : Spec I O} (τ : State sp) : 
   IsRun τ
 
 /-- "A run is *commitment-free* when none of its output events applies a
-commitment, that is, when each emits an exposable output.  A state is
+commitment.  A state is
 *reachable without commitment* when some commitment-free run reaches it."
 Lean: `ExecCF` and `ReachableCF`. -/
 abbrev «def:run/reachable-without-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I O}
@@ -465,7 +464,7 @@ theorem «lem:run-residual» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 /-- **Eq. `eq:run-residual`**: the table
 `S[in ⪰ i, out ⪰ o₁, …, out ⪰ oₘ]`, "the rows whose input expands `i` and
-whose output refines every emitted output"; the emitted outputs are a list.
+whose output refines each `o_r`"; the emitted outputs are a list.
 Lemma `lem:run-residual` says a run's remainder table is this table at its
 current input and `outs es`. -/
 abbrev «eq:run-residual» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I)
@@ -482,7 +481,7 @@ theorem «lem:run-residual/example» (k : Ballots) (o : ResE) :
 /-- **Def. `def:consistency`** (Consistency).  "An ordered specification is
 *consistent* when every finite family of runs is confluent: if the runs end
 at states `(i₁,R₁),…,(i_k,R_k)` and `j` is a common expansion of their current
-inputs, each run can be continued by further input and output events to one
+inputs, each run can be continued by further events to one
 common state with current input `j`."
 
 Lean: `Spec.Consistent`; finite families are lists of run end states, and

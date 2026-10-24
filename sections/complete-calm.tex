@@ -67,8 +67,7 @@ serialization order \outrel the other, so emitting one requires a
 \emph{choice commitment} that removes the other while the input stays legal:
 emitting $[A,B]$ chooses it over $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
-removal an \emph{output retirement}
-(Section~\ref{sec:lifted-output-events}); every removed output is
+removal an \emph{output retirement}; every removed output is
 \outrelpast by a remaining one, so emitting the route observation needs no
 commitment: it is \emph{exposable}.  
 
@@ -135,11 +134,9 @@ whatever outputs runs emit at $i$?  Two things can go wrong.  A
 \emph{stranded output} is an output in the fiber at $i$ with no \outnoun in
 the fiber at some \indesc $j$.  An \emph{incompatible pair} is two outputs in
 the fiber at $i$ with no common \outnoun there.  We rule out
-each in turn, combine the two, and then restate the result in the form runs
-need.
+each, combine them, and restate the result in the form runs need.
 
-Ruling out stranded outputs asks that every output keep some \outnoun as
-input \ingrows.
+First, we rule out stranded outputs.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -161,8 +158,7 @@ For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
 \emph{incompatible in $F$} otherwise.
 
-Ruling out incompatible pairs asks that every finite set of outputs in a
-fiber be compatible there.
+Second, we rule out incompatible pairs.
 
 \begin{definition}[Directed fiber, Directed Outputs]
 \label{def:fiber-directedness}
@@ -234,9 +230,9 @@ common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
 $o_r$.
 \end{definition}
 
-The inputs $i_r$ need not be comparable, because different runs meet only at a
+The inputs $i_r$ need not be comparable, since different runs meet only at a
 common \indesc.  For the empty set of rows the condition asks only that
-$S(j)$ be nonempty, which totality guarantees.
+$S(j)$ be nonempty, which totality ensures.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
@@ -245,7 +241,7 @@ if it satisfies the common-\indesc condition.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Intuitively, Relational Monotonicity carries each $o_r$ to some
+Relational Monotonicity carries each $o_r$ to some
 \outnoun in the fiber at $j$, and Directed Outputs gives those a common
 \outnoun there.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
@@ -271,22 +267,21 @@ the output event of Definition~\ref{def:output-event}.
 Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
 As before, $o$ is exposable when $\mathsf{output}(o)$ applies no commitment,
-that is, when $\Sealed_o$ and $\Rejected_o$ are empty; the event may still
-retire rows.  Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
+that is, when $\Sealed_o$ and $\Rejected_o$ are empty.  Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
 remaining output at $j$ have a common \outnoun at $j$
 (Proposition~\ref{prop:exposability}).
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
-A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, exactly as in
+A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
 Equation~\ref{eq:output-action}.  Specification states, input events, runs,
 commitment-free runs, and consistency are defined as before, and the results
 of Section~\ref{sec:executions} used output events only through that
 equation.  They therefore lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
 (Proposition~\ref{prop:confluence}).  With them, consistency
-reduces to Lifted Monotonicity, just as it reduced to monotonicity for
+reduces to Lifted Monotonicity, as it reduced to monotonicity for
 functions.
 
 \begin{theorem}[Complete CALM]
@@ -297,7 +292,7 @@ Monotonicity, equivalently the common-\indesc condition.
 
 \begin{proof}[Proof sketch]
 If the common-\indesc condition holds, a common \outnoun $u\in S(j)$
-of everything emitted survives in every run (Lemma~\ref{lem:run-residual}).
+of everything emitted survives in every run.
 Conversely, runs that each emit one row's output must share a surviving row
 at $j$.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
@@ -306,7 +301,7 @@ The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
 logic language.  The condition that characterizes consistency is instead a
 property of the specification: Lifted Monotonicity, which for a function is
 ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that
-Functional CALM and Complete CALM both hold for distributed histories.
+both theorems hold for distributed histories.
 
 The same condition governs exposability.
 
@@ -317,9 +312,9 @@ if every output at every state reachable without commitment is exposable.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Under the condition, consistency supplies the common \outnoun that
+Under the condition, consistency supplies the common \outnoun
 the exposure test asks for.  Conversely, the exposure test at canonical
-states, applied one row at a time, builds the common \outnoun the condition
+states, one row at a time, builds the common \outnoun the condition
 asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
@@ -337,8 +332,7 @@ input, runs that reach the same input can keep different rows: in
 Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
 $\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run
 that emitted nothing keeps them.  The state then depends on the outputs
-emitted, not only on the input; Section~\ref{sec:coordination} returns
-to this.
+emitted, not only on the input (Section~\ref{sec:coordination}).
 
 Section~\ref{sec:distributed-execution} turns to distributed execution, the
 systems that realize these specifications, and coordination.

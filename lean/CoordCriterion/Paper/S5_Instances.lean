@@ -209,7 +209,7 @@ sets of versions merged by union, transactions are inflationary
 `infl`, `s0`, `Inv`, `init`). -/
 abbrev «sec:iconfluence-instance/model» (V Tx : Type) : Type := IConf.Model V Tx
 
-/-- "A state is reachable in their model when it can be derived from `s₀` by
+/-- "A state is reachable when it can be derived from `s₀` by
 applying transactions and merging states, with every state along the way
 satisfying `𝓘`."  Lean: the inductive predicate `IConf.Reach M`. -/
 abbrev «sec:iconfluence-instance/reachable» {V Tx : Type} (M : IConf.Model V Tx) :
