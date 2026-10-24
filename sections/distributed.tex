@@ -49,7 +49,8 @@ and~\ref{def:lifted-output-event} are commitments
 \label{def:system}
 A \emph{system} consists of a \emph{commitment basis} $\mathcal B$, the set of
 commitments its output events may apply, shared by all participants, and a
-\emph{strategy} for each participant: a rule that chooses the participant's
+\emph{strategy} for each participant: a possibly nondeterministic rule that
+chooses the participant's
 next events from its local history in a distributed history
 (Definition~\ref{def:distributed-history}), including the messages it has
 received.
@@ -286,7 +287,8 @@ a choice.
   \item \emph{Availability.}  The system has \emph{Availability} when, at every
         consistent cut of every partitioned history it produces, each
         participant in state $(i,R)$ can emit every output in its fiber $R(i)$
-        in some continuation, produced by the system, that adds only history events of
+        in some continuation, produced by the system and partitioned by the
+        same components, that adds only history events of
         its own component and no input event.  No output waits for a message
         from another component, though an output event may apply commitments
         locally, within the participant's component.

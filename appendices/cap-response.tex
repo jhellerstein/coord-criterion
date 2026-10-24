@@ -49,7 +49,8 @@ weaker obligation.
 \label{def:response-availability}
 A system has \emph{Response Availability} for $(Q_p)_{p\in P}$ when, at every
 consistent cut of every partitioned history it produces, each participant $p$
-with current input $i$ satisfies two conditions.
+with current input $i$ satisfies two conditions.  Each continuation below is
+produced by the system and partitioned by the same components.
 \begin{enumerate}
   \item \emph{Answering.}  Some continuation that adds only events of $p$'s
         component, and no input event at $p$, has $p$ emit some output in
@@ -329,18 +330,22 @@ environment sees a response before invoking the next operation
 (Section~\ref{sec:election-story}); acknowledgments are outputs, so a write's
 completion is the writer's own answer.
 
-At each consistent cut $C$, the \emph{realized history} $h_C$ is the operation
-history the environment has produced so far: every invocation, with an edge
-from $a$ to $b$ whenever $a$'s response precedes $b$'s invocation in the
-interleaving.  It
+The realized history depends on the interleaving, which is not part of a
+distributed history, so we fix one.  For an interleaving $\lambda$ of a
+history and a consistent cut $C$ that is a prefix of $\lambda$, the
+\emph{realized history} $h_C$ is the operation history the environment has
+produced so far: every invocation in $C$, with an edge from $a$ to $b$
+whenever $a$'s response precedes $b$'s invocation in $\lambda$.  It
 is a common \indesc of every participant's current input, and it \inrel
-$h_{C'}$ whenever $C'\subseteq C$.
+$h_{C'}$ whenever $C'\subseteq C$ is also a prefix of $\lambda$.  A
+continuation extends $\lambda$ by appending its events in any order
+consistent with happens-before.
 
 \begin{corollary}[Gilbert--Lynch]
 \label{cor:gilbert-lynch}
 No system for the linearizable register has Response Availability and
 Response Partition Consistency at the realized history $h_C$ of every
-consistent cut $C$ of every partitioned history.
+prefix $C$ of every interleaving of every partitioned history.
 \end{corollary}
 
 \begin{proof}

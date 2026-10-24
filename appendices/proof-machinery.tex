@@ -101,14 +101,19 @@ sub-order of $h'$, so an event keeps exactly the predecessors it had.  The
 state of a history is computed event by event: $e$ runs on
 $\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
 $\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, and
-$\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  Because
-transactions only add versions, the state of a union of downward-closed
-sub-histories is the union of their states.  A history is \emph{locally valid}
+$\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  A
+downward-closed sub-history keeps each event's predecessors, and so its
+$\mathrm{pre}$ and $\mathrm{post}$; hence the state of a union of
+downward-closed sub-histories is the union of their states.  Because
+visibility is transitive and transactions are inflationary ($t(s)\supseteq
+s$), $\mathrm{pre}(e)$ is the state of the sub-history strictly below $e$ and
+$\mathrm{post}(e)$ is the state of the sub-history at or below $e$.  A history is \emph{locally valid}
 when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ satisfies $\mathcal I$, as
 when replicas abort transactions that would violate the invariant on their own
 state.  It is \emph{valid} when every downward-closed sub-history $c$ has
 $\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
-state.
+state.  Since $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ are states of
+downward-closed sub-histories, a valid history is locally valid.
 
 The specification $S_{\mathcal I}$ has the locally valid histories as inputs.
 An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
@@ -142,8 +147,10 @@ $\mathrm{eval}(g)\in S_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
 For $k=0$, take $g$ empty.
 
 ($\Leftarrow$) First let $g_1$ and $g_2$ be valid histories, and let $j$ be
-their disjoint union, with no order between the two parts.  It is locally valid
-and \inrel both, and $(g_r,\mathrm{eval}(g_r))$ are rows.  Lifted Monotonicity
+their disjoint union, with events renamed apart and no order between the two
+parts.  It is locally valid
+and \inrel both, and $(g_r,\mathrm{eval}(g_r))$ are rows, since valid
+histories are locally valid.  Lifted Monotonicity
 gives a valid sub-history $g$ of $j$ whose state contains
 $\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)$; since
 $\mathrm{eval}(g)\subseteq\mathrm{eval}(j)$, the two are equal and
