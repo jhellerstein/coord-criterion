@@ -249,8 +249,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:system/restrict»` | theorem | Def. |
 | `«def:system-output-event»` | abbrev | **Def. |
 | `«eq:lifted-validity»` | theorem | **Eq. |
-| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` ends at `R_c[out ⪰ o]`, inside `R[out ⪰ o]` since commitments only remove rows, and its commitments must remove the rows in `Sealed_o` an… |
-| `«sec:systems/output-is-canonical-event»` | theorem | "The output event `output(o)` of Sections functional-calm–complete-calm is the case in which `γ` applies exactly its seal `s_o` and choice `c_o`, where prese… |
+| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` commits at least as much as the `output(o)` of Sections functional-calm–complete-calm: |
+| `«sec:systems/output-is-canonical-event»` | theorem | "… and `output(o)` is the case in which they remove exactly those." Lean: |
 | `«sec:systems/system-histories»` | theorem | "The environment observes `o`, not `γ`." Together with Def. |
 | `«fig:cc-commitments»` | theorem | *Two systems, two choices* and Fig. |
 | `«sec:systems/two-systems-two-choices»` | theorem | *Two systems, two choices.* "Both are choices: |

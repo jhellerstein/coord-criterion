@@ -388,10 +388,9 @@ theorem «eq:lifted-validity» {sp : Spec I O} (σc : State sp) (o : O) :
    fun h k x hx hn => let ⟨u, ⟨hu, hou⟩, hxu⟩ := h k x hx (fun hk => hn hk.2)
       ⟨u, hu, hou, hxu⟩⟩
 
-/-- "A legal `Out_γ(o)` ends at `R_c[out ⪰ o]`, inside `R[out ⪰ o]` since
-commitments only remove rows, and its commitments must remove the rows in
-`Sealed_o` and `Rejected_o`, since no row it keeps refines them (Lemma
-canonical-commitment-normal-form)."
+/-- "A legal `Out_γ(o)` commits at least as much as the `output(o)` of
+Sections functional-calm–complete-calm: its commitments remove the rows in
+`Sealed_o` and `Rejected_o` (Lemma canonical-commitment-normal-form)…"
 
 Lean: Lemma containment (1) (`CC.containment`): the event keeps the current
 input, `o ∈ R(i)`, the end table is inside `R[out ⪰ o]`, and the state `σc`
@@ -402,9 +401,7 @@ theorem «sec:systems/legal-event-containment» {sp : Spec I O} {B : Basis sp}
     ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, (Sealed σ o k x ∨ Rejected σ o k x) → ¬ σc.R k x :=
   containment h
 
-/-- "The output event `output(o)` of Sections functional-calm–complete-calm is
-the case in which `γ` applies exactly its seal `s_o` and choice `c_o`, where
-present."
+/-- "… and `output(o)` is the case in which they remove exactly those."
 
 Lean: `κ_o` is `s_o` (if `Sealed_o ≠ ∅`) followed by `c_o` (if
 `Rejected_o ≠ ∅`); the canonical steps `CanonStep` (under `B_S`, output
