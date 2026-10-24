@@ -182,9 +182,10 @@ theorem «thm:complete-cap/moreover» (sp : Spec I O) (D : Type) (h : sp.LiftedM
       (partitionConsistency_iff_atEnd _).1 (complete_cap_cf sp D h).2⟩,
     fun _ _ _ => cfSystem_coordinationFree⟩
 
-/-- Proof of Theorem `thm:complete-cap`, (2)⇒(1), last sentence: "The
-system's histories are those of Section `sec:histories`, so distributed
-consistency … gives Partition Consistency."  Strong reading: the confluence
+/-- Proof of Theorem `thm:complete-cap`, (2)⇒(1), last sentence: "By
+Complete CALM, `S` is consistent, so it has distributed consistency
+(Proposition `prop:distributed-consistency`), which gives Partition
+Consistency."  Strong reading: the confluence
 continuation itself can be chosen commitment-free and receive-free
 (`PartitionConsistencyCF`), i.e. a history of Section `sec:histories`. -/
 theorem «thm:complete-cap/proof-cf-continuations» (sp : Spec I O) (D : Type) :
