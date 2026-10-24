@@ -52,6 +52,7 @@ paper proof now takes a different route, so that the route itself is checked:
 Not formalized (informal in the paper): the transaction-ordering and
 traceroute panels of Fig. `fig:ambiguity-frames`, the registrar seal of
 Fig. `fig:election-frames`(d), and the classical query / CRDT readings.
+(The figure panels are now checked in `Audit/Remaining.lean`.)
 -/
 import CoordCriterion.Core
 import CoordCriterion.Runs
