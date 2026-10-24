@@ -39,3 +39,4 @@ import CoordCriterion.Appendix.ProductFrontier
 import CoordCriterion.Appendix.Registers
 -- Appendix I additional applications
 import CoordCriterion.Appendix.Applications
+import CoordCriterion.Paper
