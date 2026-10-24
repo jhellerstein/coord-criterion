@@ -256,7 +256,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/two-systems-two-choices»` | theorem | *Two systems, two choices.* "Both are choices: |
 | `«sec:systems/neither-is-the-choice»` | theorem | *Two systems, two choices.* "… and neither is the choice `c_o` of Definition lifted-output-event." Lean (generic form): |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output events apply only commitments fro… |
-| `«sec:systems/canonical-equivalent»` | theorem | "Every run under any basis, including either protocol above, has an observably equivalent canonical run: |
+| `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Although each system can define its own basis, no basis yields behavior that canonical runs cannot. |
 | `«prop:seal-or-choose»` | theorem | **Prop. |
 | `«sec:coordination/functional-commitments-seal»` | theorem | "In a functional specification each fiber has one row, so every commitment seals." |
 | `«def:coordination»` | abbrev | **Def. |

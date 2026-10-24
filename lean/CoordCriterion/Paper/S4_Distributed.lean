@@ -480,10 +480,12 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : Basis sp) (es : List
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- "Every run under any basis, including either protocol above, has an
-observably equivalent canonical run: one that accepts the same inputs and emits
-the same outputs, and whose remainder table contains the original's after each
-event (Lemma canonical-equivalent)."
+/-- *Canonical runs suffice.*  "Although each system can define its own basis,
+no basis yields behavior that canonical runs cannot.  Lemma canonical-equivalent
+shows that every run under any basis has an observably equivalent canonical
+run: one that accepts the same inputs, emits the same outputs, and keeps at
+least the original's rows after each event.  A system's own commitments can
+only remove more rows than the canonical ones would."
 
 Lean: as `«lem:canonical-equivalent»`; `Lockstep` records the per-event
 containment. -/
