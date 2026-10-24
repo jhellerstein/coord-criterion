@@ -85,12 +85,14 @@ theorem «def:partition-notions(3)» (Sys : System sp D) (init : Fin n → I) (p
     Allowed Sys n init p pre (.inp j) :=
   trivial
 
-/-- Def. `def:partition-notions`(4), *Availability*: "The system has
-Availability when, at every consistent cut of every partitioned history it
-produces, each participant in state `(i,R)` can emit every output in its fiber
-`R(i)` in some continuation, produced by the system and partitioned by the
-same components, that adds only history events of its own component and no
-input event." -/
+/-- Def. `def:partition-notions`(4), *Availability*: "A continuation of a
+partitioned history is local to a participant `p` when the system produces it,
+it keeps the same components, and it adds only events of `p`'s component and no
+input events.  The system has Availability when, at every consistent cut of
+every partitioned history it produces, each participant `p` in state `(i,R)`
+can emit each output in `R(i)` in some continuation local to `p`."  In the
+unfolded form below, "local to `p`" is the conjunction `Produced … ∧
+Partitioned H' comp ∧ (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ q j, inp j ∉ ext q)`. -/
 abbrev «def:partition-notions(4)» (Sys : System sp D) : Prop := Availability Sys
 
 /-- Def. `def:partition-notions`(4), unfolded.  `WF init H` is "a history"
