@@ -17,3 +17,7 @@ import CoordCriterion.Audit.Bases
 import CoordCriterion.Audit.Applications
 import CoordCriterion.Audit.CAP
 import CoordCriterion.Audit.Deployment
+<<<<<<< HEAD
+=======
+import CoordCriterion.Audit.MVTOReads
+>>>>>>> 526179f (lean: check proposed MVTO read-fact extension of app:cc-bases)
