@@ -5,12 +5,12 @@ import CoordCriterion.CompleteCALM.Theorem
 # Transaction bases without read results (Appendix G, `app:cc-bases`)
 
 Commitment bases for two-phase locking (2PL) and multiversion timestamp
-ordering (MVTO), for the simpler specification with outputs `(L,X)` (no read
-results).  The appendix's current specification has outputs `(L,X,ρ)`; it is
-defined in `ReadSpec.lean` and the appendix's claims are re-proved for it in
-`PaperSpec.lean`, reusing the generic machinery here (finite sets, the
-antichain-fiber filter commitments, `exposable_iff_refines`).  Namespace
-`CC.Txn`.
+ordering (MVTO), for the simpler specification whose outputs are complete
+`(L,X)` (no undecided transactions, no read results).  Appendix G's
+specification, with partial outputs `(L,X,ρ)`, is in `Partial.lean`, which
+reuses the finite sets, outcomes and pair rows defined here.  This file is
+still used by the §4.3 figure entry and Appendix C (`Paper/S4_Distributed.lean`,
+`Paper/AppC_CommitmentBases.lean`).  Namespace `CC.Txn`.
 
 * `FinSet`, `Outcome`, `txnSpec`, `abortFreeSpec` — the specification
   (inputs: finite sets of transactions under inclusion; outputs `(L,X)` under

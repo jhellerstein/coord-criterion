@@ -28,7 +28,7 @@ contain, and their modeling choices.
 What is argued only in prose, not in Lean: the step from Gilbert and Lynch's
 fair-execution definitions to the finite forms used in
 `«prop:gl-async»` (Appendix F); the protocol steps of 2PL and MVTO (lock
-waits, timestamp issue, when the scheduler aborts; Appendix G); and the
+waits, timestamp issue, reads, when the scheduler aborts; Appendix G); and the
 design discussion of §5–§6.  The `Paper/` docstrings point these out where
 they occur.
 
@@ -75,9 +75,8 @@ first and supporting claims and examples follow.
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
-| `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | App. G | `(L,X)` spec, filter commitments on antichain fibers, 2PL/MVTO bases |
-| `Appendix/TransactionBases/ReadSpec.lean` | `CC.Txn.Reads` | App. G | The `(L,X,ρ)` spec of the appendix; MVTO abort claim; concrete instance |
-| `Appendix/TransactionBases/PaperSpec.lean` | `CC.Txn.Full` | App. G | Appendix claims re-proved for the `(L,X,ρ)` spec |
+| `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter commitments on antichain fibers (used by Fig. cc-commitments in §4.3 and App. C) |
+| `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | The `(L,X,ρ)` spec with partial outputs; closure commitments; 2PL/MVTO bases; bases differ; deadlock; MVTO: reported reads, entailed vs. chosen aborts |
 | `Appendix/Frontiers.lean` | `CC.Front` | App. H | Remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
 | `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. H | Thm. independent-product frontier, configuration example |
 | `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers), App. H | Causal and linearizable registers, two-write history, causal-register frontier |
@@ -90,7 +89,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-544 entries.
+545 entries.
 
 ### §2 Functional CALM
 
@@ -254,9 +253,10 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` commits at least as much as the `output(o)` of Sections functional-calm–complete-calm: |
 | `«sec:systems/output-is-canonical-event»` | theorem | "… and `output(o)` is the case in which they remove exactly those." Lean: |
 | `«sec:systems/system-histories»` | theorem | "The environment observes `o`, not `γ`." Together with Def. |
-| `«fig:cc-commitments»` | theorem | *Two systems, two choices* and Fig. |
-| `«sec:systems/two-systems-two-choices»` | theorem | *Two systems, two choices.* "Both are choices: |
-| `«sec:systems/neither-is-the-choice»` | theorem | *Two systems, two choices.* "… and neither is the choice `c_o` of Definition lifted-output-event." Lean (generic form): |
+| `«sec:systems/bases-differ»` | theorem | *A transactional example of bespoke commitments.* "The lock manager … is one system; multiversion timestamp ordering (MVTO) is another, and they have differe… |
+| `«fig:cc-commitments»` | theorem | Fig. |
+| `«sec:systems/two-systems-two-choices»` | theorem | *A transactional example of bespoke commitments.* "Both are choices: |
+| `«sec:systems/neither-is-the-choice»` | theorem | "… and neither is the choice `c_o` of Definition lifted-output-event." At the canonical state of `{A,B,C}` (Appendix G's specification), the results of `orde… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output events apply only commitments fro… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Although each system can define its own basis, no basis yields behavior that canonical runs cannot. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
@@ -636,43 +636,43 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 |---|---|---|
 | `«app:cc-bases/input»` | abbrev | "An input is a finite set of transactions … inputs are ordered by inclusion." `FinSet T` with `a ≼ b ↔ ∀ x, a x → b x`. |
 | `«app:cc-bases/input-order»` | theorem | Inputs are ordered by inclusion. |
-| `«app:cc-bases/output»` | abbrev | "We write an output as `(L,X,ρ)`: |
-| `«app:cc-bases/output-order»` | theorem | "`(L,X,ρ) ⪯ (L',X',ρ') ⟺ X ⊆ X', dom L ⊆ dom L', L'\|_{dom L} = L, ρ ⊆ ρ'`." (The restriction `L'\|_{dom L} = L` is: |
-| `«app:cc-bases/last-write»` | theorem | "Each reported read of a key `x` by a transaction `T` returns the write of `x` by the last transaction before `T` in the serial order that writes `x`, or the… |
-| `«app:cc-bases/permitted»` | theorem | "A row is permitted when every transaction of the input is committed or aborted, and not both, and each reported read … returns the [last] write …" (a report… |
-| `«app:cc-bases/spec»` | abbrev | The specification itself (total: |
-| `«app:cc-bases/figures-without-reads»` | theorem | "The figures … show only the serial order, for transactions without reads." An output `(L,X,∅)` reporting no reads is permitted exactly when `(L,X)` is a row… |
-| `«app:cc-bases/ab-ba-not-monotone»` | theorem | "The rows `({A,B},([A,B],∅,∅))` and `({A,B},([B,A],∅,∅))`, corresponding to Figure (f), have no common output [refinement], since it would order `A` before `… |
-| `«app:cc-bases/abort-free-spec»` | abbrev | "The *abort-free* specification has the same rows with `X = ∅`." |
-| `«app:cc-bases/abort-free-rows»` | theorem | The abort-free rows are the permitted rows with `X = ∅`. |
-| `«app:cc-bases/abort-free-not-monotone»` | theorem | The same two rows show that the abort-free specification is not monotone either (implicit in the appendix: |
-| `«app:cc-bases/order-condition»` | theorem | "`order(A,B)`, for distinct `A,B ∈ i`: |
-| `«app:cc-bases/commit-abort-condition»` | theorem | "`commit(A)`, for `A ∈ i`: |
-| `«app:cc-bases/stamp-condition»` | theorem | "`stamp(A)`, for `A ∈ i ∖ Z`, given `Z ⊆ i`, the transactions stamped before `A`: |
-| `«app:cc-bases/order»` | abbrev | The commitments `order(A,B)`, `commit(A)`, `abort(A)`, `stamp(A)` (given `Z`) on the specification with reads. |
-| `«app:cc-bases/commit»` | abbrev | `commit(A)` as a commitment. |
-| `«app:cc-bases/abort»` | abbrev | `abort(A)` as a commitment. |
-| `«app:cc-bases/stamp»` | abbrev | `stamp(A)`, given `Z`, as a commitment. |
-| `«app:cc-bases/order-applied»` | theorem | "Applied at a state `(i,R)`, it retains the rows of `R` that satisfy the condition, and is defined when some row of `R` at `i` satisfies it and some row of `… |
-| `«app:cc-bases/commit-abort-applied»` | theorem | … for `commit(A)` and `abort(A)`. |
-| `«app:cc-bases/stamp-applied»` | theorem | … for `stamp(A)`, with the guard "`Z ⊆ i`" part of definedness. |
-| `«app:cc-bases/comparable-same-LX»` | theorem | "Two permitted outputs at one input, one [refining] the other, have the same serial order and abort set: |
-| `«app:cc-bases/condition-stable»` | theorem | "Each condition depends only on `L` and `X`, so it holds at both or at neither." Any condition `P` on `(k,(L,X))` agrees on comparable permitted rows at one… |
-| `«app:cc-bases/each-is-commitment»` | theorem | "Each is a commitment (Definition `def:commitment`) … a removed row is therefore not [refined] by a retained row at the same input, which is Equation `eq:com… |
-| `«app:cc-bases/basis-2PL»` | abbrev | "The bases are `B_2PL = {order, commit, abort}` and `B_MVTO = {stamp, commit, abort}`, ranging over all transactions." |
-| `«app:cc-bases/basis-MVTO»` | abbrev | `B_MVTO = {stamp, commit, abort}`. |
-| `«app:cc-bases/basis-2PL-abort-free»` | abbrev | `B_2PL` for the abort-free specification (its `order`, `commit`, `abort` are the same conditions as filters on `abortFreeFull`). |
-| `«app:cc-bases/basis-members»` | theorem | Membership in the two bases. |
-| `«app:cc-bases/fig-h»` | theorem | "When `B` waits for a lock that `A` holds …, the scheduler applies `order(A,B)`; on rows without aborts it retains exactly those with `A` before `B` (Figure… |
-| `«app:cc-bases/deadlock»` | theorem | "A deadlock between `A` and `B` means both `order(A,B)` and `order(B,A)` have been applied; the rows left, at `i` and every larger input, are exactly those w… |
-| `«app:cc-bases/abort-free-waits-forever»` | theorem | "Under the abort-free specification, once `order(A,B)` is applied no remaining row satisfies `order(B,A)`, now or later, so it is never defined: |
-| `«app:cc-bases/fig-i»` | theorem | "On rows without aborts, `stamp(B)` with `Z = ∅` retains exactly those with `B` first (Figure `fig:cc-commitments`(i))." |
-| `«app:cc-bases/mvto-abort-row»` | theorem | The row-level argument for "the specification itself requires this abort": |
-| `«app:cc-bases/mvto-abort-required»` | theorem | "The specification itself requires this abort. |
-| `«app:cc-bases/mvto-abort-instance»` | theorem | Non-vacuity of `«app:cc-bases/mvto-abort-required»` (not stated in the appendix): |
-| `«app:cc-bases/writer-before-A»` | theorem | "The writer must be stamped before `A`: |
-| `«app:cc-bases/requirement-from-read»` | theorem | "The requirement comes from the reported read: |
-| `«app:cc-bases/outputs-decide-all»` | theorem | "Every output decides each transaction of its input, so fixing only `A`'s status or its relative position is a commitment, never itself an output." Formalized: |
+| `«app:cc-bases/output»` | abbrev | "An output has three parts: |
+| `«app:cc-bases/output-order»` | theorem | "One output refines another when it extends all three parts …" `(L,X,ρ) ⪯ (L',X',ρ') ⟺ X ⊆ X', dom L ⊆ dom L', L'\|_{dom L} = L, ρ ⊆ ρ'`. |
+| `«app:cc-bases/last-write»` | theorem | "… the last transaction before `T` in the serial order that writes `x`, or the initial version if no earlier transaction writes it." |
+| `«app:cc-bases/complete»` | theorem | "An output is complete at an input when it commits or aborts every transaction of the input, and not both. |
+| `«app:cc-bases/permitted»` | theorem | "A row `(i,o)` is permitted when some permitted complete output at `i` refines `o`." |
+| `«app:cc-bases/spec»` | abbrev | The specification. |
+| `«app:cc-bases/figure-rows»` | theorem | "The figures … show only complete outputs without aborts or read results, as serial orders": |
+| `«app:cc-bases/total»` | theorem | "Every input has a permitted row, the one that aborts every transaction and reports nothing." |
+| `«app:cc-bases/ab-ba-not-monotone»` | theorem | "The rows `({A,B},([A,B],∅,∅))` and `({A,B},([B,A],∅,∅))` … have no common refinement, since it would order `A` before `B` and `B` before `A`; so the specifi… |
+| `«app:cc-bases/abort-free-spec»` | theorem | "The *abort-free* specification permits a row when some permitted complete output with `X = ∅` refines it." |
+| `«app:cc-bases/abort-free-not-monotone»` | theorem | "… the same two rows show that it is not monotone either." |
+| `«app:cc-bases/applied»` | theorem | "Applied at a state `(i,R)`, it keeps a row `(k,o)` of `R` when some complete row `(k,c)` of `R` refines `o` and satisfies the condition, and removes the oth… |
+| `«app:cc-bases/conditions»` | theorem | The four conditions. |
+| `«app:cc-bases/order»` | abbrev | `order(A,B)`, for distinct `A,B ∈ i`. |
+| `«app:cc-bases/commit»` | abbrev | `commit(A)`, for `A ∈ i`. |
+| `«app:cc-bases/abort»` | abbrev | `abort(A)`, for `A ∈ i`. |
+| `«app:cc-bases/stamp»` | abbrev | `stamp(A)`, for `A ∈ i ∖ Z`, `Z ⊆ i`. |
+| `«app:cc-bases/read»` | abbrev | `read(A,x,v)`, for `A ∈ i`. |
+| `«app:cc-bases/each-is-commitment»` | theorem | "Each is a commitment (Definition `def:commitment`): |
+| `«app:cc-bases/complete-kept-iff»` | theorem | "… for them a complete row is kept exactly when it satisfies the condition, since two permitted complete outputs at one input, one refining the other, have t… |
+| `«app:cc-bases/bases»` | theorem | "The bases are `B_2PL = {order, commit, abort, read}` and `B_MVTO = {stamp, commit, abort, read}`, ranging over all transactions, keys, and versions." |
+| `«app:cc-bases/bases-differ»` | theorem | "… and differ in how they order: |
+| `«app:cc-bases/run-states»` | theorem | "In every state that a run under either basis reaches, each row has a complete refinement in the table at the same input, and each output between two rows of… |
+| `«app:cc-bases/read-emit»` | theorem | "Hence reporting a read is a `read` commitment followed by an exposable emission: |
+| `«app:cc-bases/fig-h»` | theorem | "… the scheduler applies `order(A,B)`; on complete rows without aborts it keeps exactly those with `A` before `B` (Figure `fig:cc-commitments`(h))." |
+| `«app:cc-bases/order-at-ABC»` | theorem | "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps both `[A,B,C]` and `[C,A,B]`, so it is a choice, and it is not the choice `c_o` of any ou… |
+| `«app:cc-bases/deadlock»` | theorem | "A deadlock between `A` and `B` means both `order(A,B)` and later `order(B,A)` have been applied. |
+| `«app:cc-bases/deadlock-resolution»` | theorem | "… and once the scheduler applies `commit(A)`, every remaining complete row aborts `B` and `commit(B)` is never again defined. |
+| `«app:cc-bases/abort-free-waits-forever»` | theorem | "Under the abort-free specification, once `order(A,B)` is applied, `order(B,A)` is undefined at every later state: |
+| `«app:cc-bases/fig-i»` | theorem | "… on complete rows without aborts, `stamp(B)` with `Z = ∅` keeps exactly those with `B` first (Figure `fig:cc-commitments`(i))." |
+| `«app:cc-bases/stamp-at-ABC»` | theorem | "… and at the canonical state of `{A,B,C}` it is a choice that is not the choice `c_o` of any output": |
+| `«app:cc-bases/mvto-row»` | theorem | The row argument: |
+| `«app:cc-bases/read-commits»` | theorem | "Hence, after the two stamps, no row that reports this read commits both `A` and `B`, and once `read` has been applied for it, no remaining row commits both,… |
+| `«app:cc-bases/writer-before-A»` | theorem | "The condition on the version is needed: |
+| `«app:cc-bases/abort-entailed»` | theorem | "If every remaining complete row commits `B`, for instance after `commit(B)`, then no remaining row commits `A`, every remaining complete row aborts `A`, and… |
+| `«app:cc-bases/abort-is-a-choice»` | theorem | "While `B` is undecided it need not. |
+| `«app:cc-bases/comparison»` | theorem | "Under MVTO, a later transaction's read of an older version commits that the writer and the reader do not both commit, and the write rule settles this at onc… |
 
 ### Appendix H: Frontiers
 

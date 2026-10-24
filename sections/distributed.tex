@@ -119,23 +119,26 @@ remove the rows in $\Sealed_o$ and $\Rejected_o$
 the case in which they remove exactly those.  The environment observes $o$, not
 $\gamma$.
 
-\paragraph{Two systems, two choices.}
-The specification says which serialization orders are permitted; a system
-decides which binding choices it makes and when.
-Figure~\ref{fig:cc-commitments} shows two systems' choices on a
-three-transaction version of the ordering fiber in
-Figure~\ref{fig:ambiguity-frames}(f)---one captures
-two-phase locking (2PL), the other multi-version timestamp ordering (MVTO).
-In 2PL, racing for a lock commits orderings among a subset of transactions:
-in this case it commits only to $A$ before $B$, leaving $C$'s position
-open.  By contrast, timestamp assignment in MVTO orders a transaction with respect to all others:
-in this case, $B$ is assigned first place.  Both are choices: they remove
-serialization orders while the input stays legal, but leave different
-alternatives open.  Each is one of the commitments a system applies in emitting
-a full serial order, and neither is the choice $c_o$ of
-Definition~\ref{def:lifted-output-event}.
-Appendix~\ref{app:cc-bases} gives both systems' commitments in full, including
-abort commitments, which fix a transaction as aborted.
+\paragraph{A transactional example of bespoke commitments.}
+The lock manager from the start of this section is one system; multiversion
+timestamp ordering (MVTO)~\cite{bernstein1981concurrency} is another, and they
+have different bases (Appendix~\ref{app:cc-bases}).  Two-phase locking (2PL)
+has $\mathcal B_{\mathrm{2PL}}$, made of ordering commitments
+$\mathsf{order}(A,B)$ together with commit, abort, and read commitments; MVTO
+has $\mathcal B_{\mathrm{MVTO}}$, made of stamp commitments $\mathsf{stamp}(A)$
+together with the same commit, abort, and read commitments.  The ordering
+commitments are where they part: $\mathsf{order}(A,B)$ fixes $A$ before $B$ and
+nothing else, which no MVTO commitment does, and $\mathsf{stamp}(B)$ places $B$
+before every other transaction, which no 2PL commitment does.
+Figure~\ref{fig:cc-commitments} shows each at work on a three-transaction
+version of the ordering fiber of Figure~\ref{fig:ambiguity-frames}(f).  When
+$B$ waits for a lock that $A$ holds, 2PL applies $\mathsf{order}(A,B)$, leaving
+$C$'s position open (panel (h)).  When MVTO gives $B$ the first timestamp, it
+applies $\mathsf{stamp}(B)$, placing $B$ first (panel (i)).  Both are choices:
+they remove serialization orders while the input stays legal, but leave
+different alternatives open.  Each is one commitment in the $\gamma$ of an
+output event that later emits a full serial order, and neither is the choice
+$c_o$ of Definition~\ref{def:lifted-output-event}.
 
 \begin{figure}[t]
   \centering
@@ -169,6 +172,7 @@ abort commitments, which fix a transaction as aborted.
   \caption{Serialization orders for three concurrent transactions, after one
   commitment under two protocols.  In (h) two-phase locking has ordered $A$
   before $B$; in (i) multiversion timestamp ordering has placed $B$ first.
+  Only complete rows without aborts or read results are shown.
   Legend as in Figure~\ref{fig:election-frames}.}
   \label{fig:cc-commitments}
 \end{figure}

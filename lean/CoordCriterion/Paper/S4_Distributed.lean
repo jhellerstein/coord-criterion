@@ -1,6 +1,7 @@
 import CoordCriterion.Distributed.Systems
 import CoordCriterion.Figures
 import CoordCriterion.Appendix.TransactionBases.NoReads
+import CoordCriterion.Paper.AppG_TransactionBases
 
 /-!
 # Paper §4.1–4.4: Distributed Execution (statement layer)
@@ -453,21 +454,38 @@ theorem «sec:systems/system-histories» {sp : Spec I O} {B : Basis sp} {σ τ :
     (SEvent.output γ o).erase = (Event.output o : Event I O) :=
   ⟨Dist.sysStep_iff_CAP, rfl⟩
 
-/-- *Two systems, two choices* and Fig. `fig:cc-commitments`.  "In 2PL … it
-commits only to `A` before `B`, leaving `C`'s position open.  By contrast,
-timestamp assignment in MVTO … `B` is assigned first place."
+/-- *A transactional example of bespoke commitments.*  "The lock manager …
+is one system; multiversion timestamp ordering (MVTO) is another, and they have
+different bases … The ordering commitments are where they part:
+`order(A,B)` fixes `A` before `B` and nothing else, which no MVTO commitment
+does, and `stamp(B)` places `B` before every other transaction, which no 2PL
+commitment does."  At the canonical state of `{A,B,C}` (Appendix G's
+specification), no commitment of `ℬ_MVTO` has the effect of `order(A,B)`, and
+no commitment of `ℬ_2PL` has the effect of `stamp(B)`. -/
+theorem «sec:systems/bases-differ» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
+    (h : Txn.Partial.Distinct3 A B C) :
+    (∃ τ, (Txn.Partial.order A B).app (Txn.Partial.σABC (K := K) rd wr h) = some τ ∧
+      ∀ c, Txn.Partial.basisMVTO c → c.app (Txn.Partial.σABC rd wr h) ≠ some τ) ∧
+    (∃ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σABC (K := K) rd wr h) = some τ ∧
+      ∀ c, Txn.Partial.basis2PL c → c.app (Txn.Partial.σABC rd wr h) ≠ some τ) :=
+  CC.Paper.«app:cc-bases/bases-differ» h
 
-Lean (Appendix G's `(L,X)` specification, on abort-free rows): panel (h) keeps
-exactly the rows satisfying `order(A,B)`, i.e. `A <_L B`; panel (i) keeps
-exactly those satisfying `stamp(B)` with no earlier stamps, i.e. `B <_L D` for
-every other `D`. -/
-theorem «fig:cc-commitments» {T : Type} {k : Txn.FinSet T} {o : Txn.Outcome T}
-    (h : (Txn.abortFreeSpec T).S k o) :
-    (∀ A B : T, Txn.orderP A B k o ↔ o.lt A B) ∧
-    (∀ B : T, Txn.stampP B (fun _ => False) k o ↔ ∀ D, k.1 D → D ≠ B → o.lt B D) :=
-  ⟨Txn.orderP_abortFree h, Txn.stampP_first_abortFree h⟩
+/-- Fig. `fig:cc-commitments`: "When `B` waits for a lock that `A` holds, 2PL
+applies `order(A,B)`, leaving `C`'s position open (panel (h)).  When MVTO gives
+`B` the first timestamp, it applies `stamp(B)`, placing `B` first (panel
+(i))."  The caption: only complete rows without aborts or read results are
+shown.  Among those, `order(A,B)` keeps exactly the rows with `A` before `B`,
+and `stamp(B)` (no earlier stamps) exactly those with `B` first. -/
+theorem «fig:cc-commitments» {T K : Type} {sp : Spec (Txn.FinSet T) (Txn.Partial.ROut T K)}
+    {σ τ τ' : State sp} {A B : T} {k : Txn.FinSet T} {c : Txn.Partial.ROut T K}
+    (hp : Txn.Partitions k c.o) (hX : ∀ t, ¬ c.o.X t) (hA : k.1 A) (hB : k.1 B) :
+    ((Txn.Partial.order A B).app σ = some τ → (τ.R k c ↔ σ.R k c ∧ c.o.lt A B)) ∧
+    ((Txn.Partial.stamp B (fun _ => False)).app σ = some τ' →
+      (τ'.R k c ↔ σ.R k c ∧ ∀ D, k.1 D → D ≠ B → c.o.lt B D)) :=
+  ⟨fun h => CC.Paper.«app:cc-bases/fig-h» h hp hX hA hB,
+   fun h => CC.Paper.«app:cc-bases/fig-i» h hp hX hB⟩
 
-/-- *Two systems, two choices.*  "Both are choices: they remove serialization
+/-- *A transactional example of bespoke commitments.*  "Both are choices: they remove serialization
 orders while the input stays legal, but leave different alternatives open."
 
 Lean, for any commitment (in particular `Txn.orderC`, `Txn.stampC`): a
@@ -481,18 +499,16 @@ theorem «sec:systems/two-systems-two-choices» {sp : Spec I O} (c : Commitment 
   obtain ⟨w, hw⟩ := commitment_not_seal_cur c h
   exact ⟨⟨w, hw⟩, fun _ => ⟨w, hw, fun u hu hnu => c.excludes σ τ h _ u w hu hnu hw⟩⟩
 
-/-- *Two systems, two choices.*  "… and neither is the choice `c_o` of
-Definition lifted-output-event."
-
-Lean (generic form): when the fiber at the current input is an antichain (as in
-the transaction specification, `Txn.partitions_antichain`), `c_o` keeps only
-`o` there, so a commitment that keeps two distinct rows there is not `c_o` for
-any `o`. -/
-theorem «sec:systems/neither-is-the-choice» {sp : Spec I O} {σ τ : State sp} {x y : O}
-    (hanti : ∀ x y, σ.R σ.cur x → σ.R σ.cur y → x ≼ y → x = y)
-    (hx : τ.R σ.cur x) (hy : τ.R σ.cur y) (hxy : x ≠ y) (o : O) :
-    (choiceC o : Commitment sp).app σ ≠ some τ :=
-  Dist.not_choice_of_two hanti hx hy hxy o
+/-- "… and neither is the choice `c_o` of Definition lifted-output-event."
+At the canonical state of `{A,B,C}` (Appendix G's specification), the results of
+`order(A,B)` and `stamp(B)` are not the result of `c_o` for any output `o`. -/
+theorem «sec:systems/neither-is-the-choice» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
+    (h : Txn.Partial.Distinct3 A B C) :
+    (∀ τ, (Txn.Partial.order A B).app (Txn.Partial.σABC (K := K) rd wr h) = some τ →
+      ∀ o, (choiceC o).app (Txn.Partial.σABC rd wr h) ≠ some τ) ∧
+    (∀ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σABC (K := K) rd wr h) = some τ →
+      ∀ o, (choiceC o).app (Txn.Partial.σABC rd wr h) ≠ some τ) :=
+  Txn.Partial.neither_is_choice h
 
 /-- "We call the runs of Sections functional-calm–complete-calm canonical runs,
 and a run under a basis `ℬ` is one whose output events apply only commitments
