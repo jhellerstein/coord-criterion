@@ -150,6 +150,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/neither-is-the-choice»
 #check @CC.Paper.«sec:systems/run-under-basis»
 #check @CC.Paper.«sec:systems/canonical-equivalent»
+#check @CC.Paper.«sec:coordination/closing-after-voting»
 #check @CC.Paper.«def:coordination»
 #check @CC.Paper.«def:coordination/coordination-free»
 #check @CC.Paper.«def:coordination/commitment-free-runs»

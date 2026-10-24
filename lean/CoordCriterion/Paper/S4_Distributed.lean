@@ -521,9 +521,21 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i :
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
+/-- §4.4: "We take coordination to mean a commitment: a binding decision that
+removes behavior the specification still permits. … A mechanism used without
+committing is not coordination.  Closing the polls after every voter has voted
+still runs the mechanism, but no ballot is left to seal, so it removes nothing
+the specification still permits and applies no commitment."  At the canonical
+state of any full ballot, the poll-closing commitment `closePolls` is undefined
+(it would remove no row). -/
+theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
+    (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
+    (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
+  Figures.Elec.close_after_voting i hfull
+
 /-- **Def. coordination** (`def:coordination`).  "A run or history coordinates
-if and only if one of its output events `Out_γ(o)` has `γ ≠ ε`, that is,
-applies a commitment that seals an input or chooses among outputs …"
+when one of its output events `Out_γ(o)` has `γ ≠ ε`, that is, applies a
+commitment."
 
 Lean: for runs, i.e. lists of system events.  (For histories of the `CC.CAP`
 model the same condition is on the `out γ o` events of each participant.) -/

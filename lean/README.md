@@ -90,7 +90,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-543 entries.
+544 entries.
 
 ### §2 Functional CALM
 
@@ -259,6 +259,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/neither-is-the-choice»` | theorem | *Two systems, two choices.* "… and neither is the choice `c_o` of Definition lifted-output-event." Lean (generic form): |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output events apply only commitments fro… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Although each system can define its own basis, no basis yields behavior that canonical runs cannot. |
+| `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:coordination»` | abbrev | **Def. |
 | `«def:coordination/coordination-free»` | abbrev | Def. |
 | `«def:coordination/commitment-free-runs»` | theorem | Def. |

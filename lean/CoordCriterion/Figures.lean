@@ -176,6 +176,23 @@ theorem close_at_b : (closePolls (sp := elec)).app (canon elec bxy) = some panel
   closeApp_eq.2 ⟨⟨bxyx, .win .x, ⟨(by decide : Res.win .x = winner bxyx), by decide⟩,
     by decide⟩, rfl⟩
 
+/-- Closing the polls after every voter has voted applies no commitment: at the
+canonical state of a full ballot (all three cast) there is no row at another
+input, so `closePolls` is undefined there. -/
+theorem close_after_voting (i : Ballots) (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
+    (closePolls (sp := elec)).app (canon elec i) = none := by
+  show closeApp (canon elec i) = none
+  unfold closeApp
+  split
+  · rename_i h
+    exfalso
+    obtain ⟨k, u, ⟨_, hik⟩, hne⟩ := h
+    apply hne
+    revert hfull hik
+    show _ → _ → k = i
+    ballot_cases i <;> ballot_cases k <;> decide
+  · rfl
+
 /-- Panel (d)'s remainder table is the single row `(xy·, ⊥)`. -/
 theorem panelD_rows (k : Ballots) (o : Res) : panelD.R k o ↔ (k = bxy ∧ o = .bot) := by
   constructor

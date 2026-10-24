@@ -191,24 +191,23 @@ Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 \subsection{Coordination}
 \label{sec:coordination}
 
-Coordination is the operational counterpart of confluence: a binding decision
-that removes otherwise possible behavior.  In our transition system, that
-act is exactly a commitment, which seals or chooses
-(Proposition~\ref{prop:seal-or-choose}).  Whatever a coordination mechanism
-does to the specification---a lock, a timestamp, an agreement protocol---it
-does by sealing and choosing.  A mutex, lock,
-atomic ordering mechanism, or agreement protocol is in scope when it serves
-this role.  Computation or communication that removes no such alternative is
-not coordination merely because it uses one of these mechanisms.
+We take \emph{coordination} to mean a commitment: a binding decision that
+removes behavior the specification still permits.  The informal term has no
+fixed definition; what mutexes, locks, timestamps, and agreement protocols have
+in common, semantically, is that each implements commitments, by sealing and
+choosing (Proposition~\ref{prop:seal-or-choose}).  A mechanism used without
+committing is not coordination.  Closing the polls after every voter has voted
+still runs the mechanism, but no ballot is left to seal, so it removes nothing
+the specification still permits and applies no commitment.
 
 \begin{definition}[Coordination]
 \label{def:coordination}
-A run or history \emph{coordinates} if and only if one of its output events
-$\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) has $\gamma\neq\varepsilon$, that is, applies a commitment that seals an input or chooses among outputs,
-removing an alternative that the current input still permits and that no
-remaining row at the same input \outrel.  It is \emph{coordination-free}, equivalently
-commitment-free, when every output event is some $\Out{\varepsilon}{o}$; such
-events may still perform output retirements.
+A run or history \emph{coordinates} when one of its output events
+$\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) has
+$\gamma\neq\varepsilon$, that is, applies a commitment.  It is
+\emph{coordination-free}, equivalently commitment-free, when every output
+event is some $\Out{\varepsilon}{o}$; such events may still perform output
+retirements.
 \end{definition}
 
 The next result explains why commitments are where coordination lives: a
