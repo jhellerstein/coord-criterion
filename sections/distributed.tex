@@ -213,8 +213,10 @@ still permits.  What mutexes, locks, timestamps, and agreement protocols have
 in common, semantically, is that each implements commitments, by sealing and
 choosing (Proposition~\ref{prop:seal-or-choose}).  A commitment needs
 coordination, however, only when some other behavior could contradict it:
-another participant accepting an input it sealed, or emitting an output it
-chose against.  We take \emph{coordination} to mean such a commitment.  A
+another run accepting an input it sealed, or emitting an output it chose
+against.  We take \emph{coordination} to mean such a commitment, and
+\emph{distributed coordination} to mean one that a run at another participant
+could contradict.  A
 mechanism used without committing is not coordination.  Closing the polls
 after every voter has voted still runs the mechanism, but no ballot is left to
 seal, so it removes nothing the specification still permits and applies no
@@ -230,32 +232,34 @@ it chooses against (Proposition~\ref{prop:seal-or-choose}).  A run or history
 \emph{coordinates} relative to $\mathcal R$ when one of its output events
 applies a contradicted commitment, and is \emph{coordination-free} relative to
 $\mathcal R$ otherwise.  For a specification, $\mathcal R$ is its canonical
-runs; for a system, it is the runs of the other participants in each history
-the system produces, under any inputs the environment may supply.
+runs; for a system, it is the runs it can perform, under any inputs the
+environment may supply.  The coordination is \emph{distributed} when the
+contradicting run is at another participant of the same history.
 \end{definition}
 
-For a specification, every commitment is contradicted.  Any family of
-canonical runs forms a message-free history
-(Proposition~\ref{prop:distributed-consistency}), and some canonical run
+For a specification, every commitment is contradicted: some canonical run
 accepts each input that a commitment can seal and emits each permitted
-output.  So for a specification, coordination-free means
-commitment-free: every output event is some $\Out{\varepsilon}{o}$, which may
+output.  Since any family of canonical runs forms a message-free history
+(Proposition~\ref{prop:distributed-consistency}), that run may be at another
+participant, so the coordination is also distributed.  For a specification,
+then, coordination-free means commitment-free: every output event is some $\Out{\varepsilon}{o}$, which may
 still perform output retirements.  This is the sense of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 
 For a system, the answer depends on which runs it can perform, and here seals
 and choices differ.  The environment may supply any input to any participant,
-so a seal is contradicted whenever another participant may receive the sealed
-input, whether or not one does in the run at hand.  Closing the polls before
-every voter has voted seals the remaining ballots; it is coordination when
-another polling station may accept a late ballot, and a station that alone
-receives those ballots closes them without coordination.  Outputs, by
-contrast, are chosen only by strategies, so a choice is contradicted only when
-some participant's strategy may emit the output it rules out.
+so a seal is distributed coordination whenever another participant may receive
+the sealed input, whether or not one does in the run at hand.  Closing the
+polls before every voter has voted seals the remaining ballots.  It is
+coordination in any case, since the environment could deliver a late ballot to
+a run that has not yet closed; it is distributed coordination when another
+polling station may accept one, and not when this station alone receives those
+ballots.  Outputs, by contrast, are chosen only by strategies, so a choice is
+contradicted only when some run's strategy may emit the output it rules out.
 
-The next result explains why a contradicted commitment needs coordination: a
-choice and an output it rules out leave states that cannot meet at the
-current input.
+The next result explains why distributed coordination needs exclusion: a
+choice and an output it rules out, at different participants, leave states
+that cannot meet at the current input.
 
 \begin{proposition}[Conflicting output events cannot be reconciled]
 \label{thm:commitments-require-coordination}
@@ -281,15 +285,16 @@ does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time};
 moreover, the input that would reconcile two outputs need not arrive.  Consistency
 therefore excludes every observable conflict, including a transient one.
 
-The first event's commitment is a choice against $x$, and it is
+The first event's commitment is a choice against $x$, and it is distributed
 coordination exactly when another participant may emit $x$.  The system must
 then exclude one of the two events: by a mutex or atomic instruction in shared
 memory, by agreement in a distributed system, or by a rule fixed in advance,
-such as assigning the choice to a single participant, which makes the choice
-local and needs no runtime agreement.  Seals are similar, with input in place
-of output; since the environment may deliver any input to any participant, a
-seal is local only when the system restricts which participants may receive
-which inputs (Appendix~\ref{app:deployment}).
+such as assigning the choice to a single participant, which keeps the
+coordination at that participant and needs no runtime agreement.  Seals are
+similar, with input in place of output; since the environment may deliver any
+input to any participant, a seal avoids distributed coordination only when the
+system restricts which participants may receive which inputs
+(Appendix~\ref{app:deployment}).
 
 \paragraph{Locks in a shared-nothing database.}
 The distinction is subtle in the most common setting.  Partition a database
@@ -297,17 +302,19 @@ by key across participants, each the lock manager for its own keys, as in
 shared-nothing designs~\cite{stonebraker1986sharednothing}; a transaction
 requests each lock by message from the key's owner.  Ordering two transactions
 on one key is a choice among serialization orders, and only the key's owner
-makes it.  Transactions may arrive anywhere, but no other participant emits an
-order for that key, so no run contradicts the choice: it is not coordination,
-although it needs messages, and a client cut off from the owner cannot obtain
-its answer.  A transaction that spans keys $k_1$ and $k_2$ needs a single
+makes it.  The choice is coordination, as locking is on any single machine:
+in another run $B$'s request arrives first and the owner orders $B$ before
+$A$.  But no other participant emits an order for that key, so it is not
+distributed coordination, although it needs messages, and a client cut off
+from the owner cannot obtain its answer.  A transaction that spans keys $k_1$ and $k_2$ needs a single
 order, but each owner chooses its part: one may order $A$ before $B$ on $k_1$
 while the other orders $B$ before $A$ on $k_2$.  These choices can contradict
-each other, and excluding that, by two-phase commit or by an order fixed before
-execution~\cite{thomson2012calvin}, is coordination.  Communication and
-coordination therefore differ.  The single-key case communicates without
-coordinating, and a deterministic tie-break that every participant applies
-makes a choice that no run contradicts, without communicating at all.
+each other across participants, and excluding that, by two-phase commit or by
+an order fixed before execution~\cite{thomson2012calvin}, is distributed
+coordination.  Communication and distributed coordination therefore differ.
+The single-key case communicates without distributed coordination, and a
+deterministic tie-break that every participant applies makes a choice that no
+run contradicts, with neither.
 
 Confluence is a safety property: some continuation brings the participants to a
 common state.  Reaching it is liveness, and a matter of strategy.  Under Lifted

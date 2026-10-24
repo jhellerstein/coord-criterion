@@ -382,5 +382,59 @@ theorem lc_coordinationFreeH (D : Type) :
     (respSystem (sp := lcSpec) (D := D) lcA).CoordinationFreeH :=
   respSystem_coordinationFreeH lcA lcSpec_consistentOn
 
+/-! ## One owner coordinates, but not distributedly -/
+
+/-- A history in which the owner (participant `0`) emits `u` by its canonical
+output event and participant `1` is idle. -/
+theorem owner_history (D : Type) (u : Ord3) :
+    ∃ (γ : List (Commitment ordSpec)) (σc : State ordSpec) (H : History ordSpec D 2),
+      (γ = [] ∨ γ = [kc u]) ∧ applySeq (canon ordSpec ()) γ = some σc ∧ Exposable σc u ∧
+      WF (fun _ => ()) H ∧ Produced (ownerSys D) 2 (fun _ => ()) H ∧
+      H 0 = [] ++ LEv.out γ u :: [] := by
+  obtain ⟨γ, σc, hγ, ha, hex, ρ, hr⟩ := ord_emit (D := D) u
+  let H : History ordSpec D 2 := fun r => if r.val = 0 then [LEv.out γ u] else []
+  have hH0 : H 0 = [] ++ LEv.out γ u :: [] := rfl
+  have hH1 : H 1 = [] := rfl
+  have hfin : ∀ r : Fin 2, r = 0 ∨ r = 1 := by decide
+  have hnr : ∀ r a q k j d b, H r ≠ a ++ LEv.recv q k j d :: b := by
+    intro r a q k j d b h
+    have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
+    rcases hfin r with rfl | rfl
+    · rw [hH0] at hm; simp at hm
+    · rw [hH1] at hm; simp at hm
+  refine ⟨γ, σc, H, hγ, ha, hex, ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩,
+    ?_, hH0⟩
+  · rcases hfin r with rfl | rfl
+    · exact ⟨ρ, hr⟩
+    · exact ⟨_, .nil _⟩
+  · intro r a e b h
+    rcases hfin r with rfl | rfl
+    · rw [hH0] at h
+      cases a with
+      | nil =>
+        simp at h; obtain ⟨rfl, _⟩ := h
+        refine ⟨fun c hc => ?_, hγ, Or.inr rfl⟩
+        rcases hγ with rfl | rfl
+        · cases hc
+        · simp at hc; exact ⟨u, hc⟩
+      | cons _ _ => simp at h
+    · rw [hH1] at h; simp at h
+
+/-- **One owner coordinates.**  The owner's choice of `A before B` is
+contradicted by another run of the same system, in which the owner chooses
+`B before A`: locking on a single participant is coordination, though not
+distributed coordination (`ownerSys_coordinationFreeH`). -/
+theorem ownerSys_not_coordinationFree (D : Type) : ¬ (ownerSys D).CoordinationFree := by
+  intro hcf
+  obtain ⟨γ0, σ0, H, _, ha0, hex0, hw, hp, hH0⟩ := owner_history D .ab
+  obtain ⟨γ1, _, H', _, _, _, hw', hp', hH0'⟩ := owner_history D .ba
+  have hgone : ¬ σ0.R () .ba := by
+    intro hba
+    obtain ⟨u, _, h1, h2⟩ := hex0 () .ba hba (by rw [ord3_le_iff]; simp)
+    rw [ord3_le_iff] at h1 h2
+    rcases h1 with rfl | h1 <;> simp_all
+  exact (hcf 2 _ H hw hp 0 [] [] γ0 .ab (canon ordSpec ()) σ0 hH0 (.nil _) ha0).1
+    () .ba (canon_ord_R _ _) hgone ⟨2, _, H', 0, [], [], γ1, canon ordSpec (), hw', hp', hH0', .nil _, rfl⟩
+
 end CAP
 end CC

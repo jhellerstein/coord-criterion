@@ -260,19 +260,19 @@ theorem «sec:complete-cap/necessity-any-system» (A : Table I O) (hAS : ∀ i o
 seals nothing and chooses only against outputs outside `A`, which the system
 never emits, so the system of the proof is coordination-free (Definition
 `def:coordination`)."  Lean: the system emits only rows of `A`, and no output
-event removes a row another participant of the same history emits, or seals an
-input another participant accepts. -/
+event removes a row that any run of the system emits, or seals an input any
+run accepts. -/
 theorem «sec:complete-cap/proof-system-coordination-free» (A : Table I O)
     (hcons : ConsistentOn sp A) :
-    (respSystem (sp := sp) (D := D) A).CoordinationFreeH ∧
+    (respSystem (sp := sp) (D := D) A).CoordinationFree ∧
     ∀ k x, SysEmits (respSystem (sp := sp) (D := D) A) k x → A k x :=
-  ⟨respSystem_coordinationFreeH A hcons, fun _ _ h => resp_emits_A h⟩
+  ⟨respSystem_coordinationFree A hcons, fun _ _ h => resp_emits_A h⟩
 
 /-- "For `A = S` it needs no commitment at all."  Lean: with Availability,
 any removal of a row `(k,x)` by an output event whose local prefix is
 receive-free is contradicted in some produced history by another participant
-whose initial input is below `k`; so such a system is coordination-free only
-if those events remove nothing. -/
+whose initial input is below `k` (distributed coordination); so such a system
+avoids distributed coordination only if those events remove nothing. -/
 theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     (hA : «def:partition-notions(4)» Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
@@ -291,8 +291,9 @@ consistent on `A`, `o` is not exposable (so its output event must commit),
 and the system of the proof is coordination-free. -/
 theorem «sec:complete-cap/local-choice-necessary» (D : Type) :
     ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
-    (respSystem (sp := CAP.lcSpec) (D := D) CAP.lcA).CoordinationFreeH :=
-  ⟨lcSpec_consistentOn, lcSpec_o_not_exposable, lc_coordinationFreeH D⟩
+    (respSystem (sp := CAP.lcSpec) (D := D) CAP.lcA).CoordinationFree :=
+  ⟨lcSpec_consistentOn, lcSpec_o_not_exposable,
+    respSystem_coordinationFree CAP.lcA lcSpec_consistentOn⟩
 
 /-- "When consistency on `A` fails, some output of `A` either waits for
 another component, sacrificing Availability, or is emitted independently at

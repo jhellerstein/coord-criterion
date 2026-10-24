@@ -154,6 +154,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/canonical-example»
 #check @CC.Paper.«sec:coordination/closing-after-voting»
 #check @CC.Paper.«def:coordination»
+#check @CC.Paper.«def:coordination/distributed»
+#check @CC.Paper.«def:coordination/distributed-of-free»
 #check @CC.Paper.«def:coordination/specification»
 #check @CC.Paper.«sec:coordination/specification-contradicted»
 #check @CC.Paper.«def:coordination/coordination-free»

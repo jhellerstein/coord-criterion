@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-559 entries.
+561 entries.
 
 ### §2 Functional CALM
 
@@ -264,8 +264,10 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:coordination»` | abbrev | **Def. |
+| `«def:coordination/distributed»` | abbrev | Def. |
+| `«def:coordination/distributed-of-free»` | theorem | Def. |
 | `«def:coordination/specification»` | abbrev | Def. |
-| `«sec:coordination/specification-contradicted»` | theorem | "For a specification, every commitment is contradicted. |
+| `«sec:coordination/specification-contradicted»` | theorem | "For a specification, every commitment is contradicted: |
 | `«def:coordination/coordination-free»` | abbrev | Def. |
 | `«sec:coordination/closing-before-voting-seals»` | theorem | "Closing the polls before every voter has voted seals the remaining ballots." Lean: |
 | `«sec:coordination/choices-by-strategies»` | theorem | "Outputs, by contrast, are chosen only by strategies, so a choice is contradicted only when some participant's strategy may emit the output it rules out." Lean: |
