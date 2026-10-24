@@ -315,6 +315,28 @@ theorem «sec:systems/seals-and-choices-are-commitments» {sp : Spec I O} (o : O
         σ.R σ.cur o ∧ (∃ k x, Rejected σ o k x) ∧ cmChooseState σ o = τ) :=
   ⟨sealApp_eq, chooseApp_eq⟩
 
+/-- **Prop. commitments seal inputs or choose outputs** (`prop:seal-or-choose`).
+"At each input where a commitment removes rows of the state it is applied to,
+it either removes every row there, sealing that input, or removes some outputs
+and keeps others, choosing among them."
+
+Lean: at such an input `k`, either no row remains (seal) or some row `w`
+remains that refines no removed row (choice; Eq. commitment-excludes); and not
+both ("the classification is unambiguous"). -/
+theorem «prop:seal-or-choose» {sp : Spec I O} (c : Commitment sp) {σ τ : State sp}
+    (h : c.app σ = some τ) (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
+    ((∀ u, ¬ τ.R k u) ∨
+      (∃ w, τ.R k w ∧ ∀ u, σ.R k u → ¬ τ.R k u → ¬ (u ≼ w))) ∧
+    ¬ ((∀ u, ¬ τ.R k u) ∧ ∃ w, τ.R k w) :=
+  seal_or_choose c h k hk
+
+/-- "In a functional specification each fiber has one row, so every commitment
+seals." -/
+theorem «prop:seal-or-choose/functional» {sp : Spec I O} (hf : sp.Functional)
+    (c : Commitment sp) {σ τ : State sp} (h : c.app σ = some τ) (k : I)
+    (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w :=
+  functional_commitment_seals hf c h k hk
+
 /-- **Def. strategy** (`def:strategy`).  "A local history of participant `p` is a
 finite sequence of `p`'s history events … A strategy for `p` is a
 nondeterministic transition function: it maps each local history `λ` of `p` to
@@ -498,28 +520,6 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i :
   canonical_equivalent h
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
-
-/-- **Prop. commitments seal inputs or choose outputs** (`prop:seal-or-choose`).
-"At each input where a commitment removes rows of the state it is applied to,
-it either removes every row there, sealing that input, or removes some outputs
-and keeps others, choosing among them."
-
-Lean: at such an input `k`, either no row remains (seal) or some row `w`
-remains that refines no removed row (choice; Eq. commitment-excludes); and not
-both ("the classification is unambiguous"). -/
-theorem «prop:seal-or-choose» {sp : Spec I O} (c : Commitment sp) {σ τ : State sp}
-    (h : c.app σ = some τ) (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
-    ((∀ u, ¬ τ.R k u) ∨
-      (∃ w, τ.R k w ∧ ∀ u, σ.R k u → ¬ τ.R k u → ¬ (u ≼ w))) ∧
-    ¬ ((∀ u, ¬ τ.R k u) ∧ ∃ w, τ.R k w) :=
-  seal_or_choose c h k hk
-
-/-- "In a functional specification each fiber has one row, so every commitment
-seals." -/
-theorem «sec:coordination/functional-commitments-seal» {sp : Spec I O} (hf : sp.Functional)
-    (c : Commitment sp) {σ τ : State sp} (h : c.app σ = some τ) (k : I)
-    (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w :=
-  functional_commitment_seals hf c h k hk
 
 /-- **Def. coordination** (`def:coordination`).  "A run or history coordinates
 if and only if one of its output events `Out_γ(o)` has `γ ≠ ε`, that is,

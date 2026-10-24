@@ -49,7 +49,24 @@ nonempty set of rows, each with no remaining row at the same input that
 As expected, the seals and choices of Definitions~\ref{def:output-event}
 and~\ref{def:lifted-output-event} satisfy this definition: a seal removes
 every row at the inputs it seals, and a choice removes the rows in
-$\Rejected_o$.
+$\Rejected_o$.  The converse also holds:
+
+\begin{proposition}[Commitments seal inputs or choose outputs]
+\label{prop:seal-or-choose}
+At each input where a commitment removes rows of the state it is applied to,
+it either removes every row there, \emph{sealing} that input, or removes some
+outputs and keeps others, \emph{choosing} among them.
+\end{proposition}
+
+\begin{proof}
+At an input $k$, either no row remains or some does.
+\end{proof}
+
+In a functional specification each fiber has one row, so every commitment
+seals.  Because each commitment acts on a given state, the classification is
+unambiguous.  A seal may remove the last rows that earlier choices left at an
+input; attributing the seal across that sequence is a question of provenance,
+which this paper does not pursue.
 
 \begin{definition}[Strategy]
 \label{def:strategy}
@@ -174,32 +191,12 @@ Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 \subsection{Coordination}
 \label{sec:coordination}
 
-Canonical runs commit only by seals and choices.  That is not a design
-decision: no commitment can do anything else.
-
-\begin{proposition}[Commitments seal inputs or choose outputs]
-\label{prop:seal-or-choose}
-At each input where a commitment removes rows of the state it is applied to,
-it either removes every row there, \emph{sealing} that input, or removes some
-outputs and keeps others, \emph{choosing} among them.
-\end{proposition}
-
-\begin{proof}
-At an input $k$, either no row remains or some does.
-\end{proof}
-
-In a functional specification each fiber has one row, so every commitment
-seals.  Whatever a coordination mechanism does to the specification---a lock, a
-timestamp, an agreement protocol---it does by sealing and choosing.  Because each
-commitment acts on a given state, the classification is unambiguous.  A seal
-may remove the last rows that earlier choices left at an input; attributing the
-seal across that sequence is a question of provenance, which this paper does
-not pursue.
-
 Coordination is the operational counterpart of confluence: a binding decision
 that removes otherwise possible behavior.  In our transition system, that
 act is exactly a commitment, which seals or chooses
-(Proposition~\ref{prop:seal-or-choose}).  A mutex, lock,
+(Proposition~\ref{prop:seal-or-choose}).  Whatever a coordination mechanism
+does to the specification---a lock, a timestamp, an agreement protocol---it
+does by sealing and choosing.  A mutex, lock,
 atomic ordering mechanism, or agreement protocol is in scope when it serves
 this role.  Computation or communication that removes no such alternative is
 not coordination merely because it uses one of these mechanisms.

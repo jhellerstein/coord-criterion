@@ -134,6 +134,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:commitment»
 #check @CC.Paper.«eq:commitment-excludes»
 #check @CC.Paper.«sec:systems/seals-and-choices-are-commitments»
+#check @CC.Paper.«prop:seal-or-choose»
+#check @CC.Paper.«prop:seal-or-choose/functional»
 #check @CC.Paper.«def:strategy»
 #check @CC.Paper.«def:system»
 #check @CC.Paper.«def:system/produced»
@@ -148,8 +150,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/neither-is-the-choice»
 #check @CC.Paper.«sec:systems/run-under-basis»
 #check @CC.Paper.«sec:systems/canonical-equivalent»
-#check @CC.Paper.«prop:seal-or-choose»
-#check @CC.Paper.«sec:coordination/functional-commitments-seal»
 #check @CC.Paper.«def:coordination»
 #check @CC.Paper.«def:coordination/coordination-free»
 #check @CC.Paper.«def:coordination/commitment-free-runs»
