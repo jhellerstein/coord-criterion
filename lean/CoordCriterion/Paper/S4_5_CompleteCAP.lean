@@ -318,7 +318,7 @@ theorem «sec:complete-cap/deterministic-strategies» (D : Type) :
 
 /-! ### Paragraph "Gilbert and Lynch" -/
 
-/-- "Model a register whose input is the set of operations a participant
+/-- "Consider a register whose input is the set of operations a participant
 knows, with their real-time precedence, and whose outputs answer every
 operation of the input as some linearization does.  Let `p`'s input be a write
 of `v ≠ v_0` and `q`'s a read; the only outputs they permit are the

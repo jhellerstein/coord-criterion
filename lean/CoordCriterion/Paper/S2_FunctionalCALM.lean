@@ -41,8 +41,9 @@ and `xy·` are incomparable." -/
 theorem «sec:election-story/input-order» :
     bxd ≼ bxy ∧ ¬ bxx ≼ bxy ∧ ¬ bxy ≼ bxx := by decide
 
-/-- "The *output order* records preservation of visible claims: either winner
-refines `⊥`, while `x` and `y` are incomparable." -/
+/-- "The *output order* says which announcements are safe to build on: `⊥`
+claims nothing, so either winner refines it, while `x` and `y` are
+incomparable." -/
 theorem «sec:election-story/output-order» :
     Res.bot ≼ Res.win .x ∧ Res.bot ≼ Res.win .y ∧
       ¬ Res.win .x ≼ Res.win .y ∧ ¬ Res.win .y ≼ Res.win .x :=

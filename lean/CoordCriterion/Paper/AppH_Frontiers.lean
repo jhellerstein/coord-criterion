@@ -211,7 +211,7 @@ theorem «prop:persistent-forwarding/one-step» {G G' : Snap K P} (hO : Obligati
   claims_step hO h
 
 /-- **Eq. `eq:forwarding-hull`**.  "Let `X(h) ⊆ C(h)` be the claims that are
-*exact* at `h` … Order claims by equality, so that `⊑_H` is inclusion.  By
+*exact* at `h` … Claims are ordered by equality, so that `⊑_H` is inclusion.  By
 Proposition `prop:persistent-forwarding`, `C` is a powerset relaxation of `X`
 satisfying Relational Monotonicity, so Equation `eq:hull-coverage` gives
 `X̂(h) ⊆ C(h)`: every claim that was ever exact remains valid, possibly through

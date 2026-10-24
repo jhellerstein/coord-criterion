@@ -1,42 +1,42 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-A specification abstracts execution details away, and the results here ask
-one question of it: can a participant act on what it knows without being
-contradicted by what it learns later?  Functional CALM asks when
-a functional specification remains confluent as input arrives: it does exactly
-when it is monotone, and then no output event needs a seal commitment.  This
-generalizes the classic result from logical fact sets to arbitrary input and
-output orders.
+A specification abstracts execution details away, and the results here reduce
+to a single question: can a participant act on what it knows without being
+contradicted by what it learns later?  Mutexes, locks, atomic instructions, and
+agreement protocols prevent such contradictions by making commitments.
+Functional CALM answers the question for functions: a functional specification
+stays confluent as input arrives exactly when it is monotone, and then no
+output needs a seal.  This generalizes the classic result from logical fact
+sets to arbitrary input and output orders.
 
-Complete CALM extends the model to specifications that offer several outputs
-for one input.  Lifting output events to retire \outrelpast rows and make output
-choices preserves the properties the arguments rely on:
-consistency is again the common-\indesc condition, now read as Lifted
-Monotonicity, which combines Relational Monotonicity with Directed Outputs.
-When Lifted Monotonicity fails, some reachable output requires a commitment and
-hence coordination, whether implemented by a mutex, lock, atomic ordering
-mechanism, or distributed agreement; its effect is to seal input or to choose
-among outputs.
-Unlike classical CALM, the model can then verify
-whether that coordination is proper (Appendix~\ref{app:composition}).  Sequential and independently
-parameterized composition are equijoins of specification tables; commitments
-restrict the joined table.  At their ordinary specifications, total log ordering
-and a register or key-value store are both non-monotone.  Once composed through
-a shared order, committing that log order alone makes the end-to-end
-specification satisfy Lifted Monotonicity and hence consistent.  Multi-Paxos
-distributes those log commitments.  Distributed histories and Complete CAP
-specialize the same boundary to participants and partitions.
+Complete CALM extends the answer to specifications that offer several outputs
+for one input.  The test is Lifted Monotonicity, which combines Relational
+Monotonicity with Directed Outputs.  When it fails, some reachable output
+requires a commitment, and every commitment does one of two jobs: it seals
+input or it chooses among outputs.  Because commitments are explicit, the model
+can also check whether a use of coordination is proper
+(Appendix~\ref{app:composition}).  For example, a totally ordered log and a
+key-value store are both non-monotone at their ordinary specifications, yet
+once they are composed through a shared order, committing the log order alone
+makes the composition consistent.  Multi-Paxos is one way to distribute those
+commitments.
 
-The Complete CAP Theorem is the partition form of the same equivalence.  It
-makes Brewer's conjecture precise for any declared guarantee: a system defined
-for every finite set of participants can keep a specification's every permitted
-output available and consistent through partitions exactly when the
-specification satisfies Lifted Monotonicity, and a guarantee that requires only
-some outputs to stay available can be met exactly when those outputs have a
-common \outnoun wherever their inputs meet.  The Gilbert--Lynch theorem follows
+Complete CAP is the partition form of the same equivalence, and it makes
+Brewer's conjecture precise for any declared guarantee.  A system can keep
+every permitted output available and consistent through partitions exactly
+when the specification satisfies Lifted Monotonicity.  If only some outputs
+must stay available, it can do so exactly when those outputs have a common
+\outnoun wherever their inputs meet.  The Gilbert--Lynch theorem follows
 directly: a replica's only permitted response is invalidated by a write it
-cannot see.  The guarantee, which outputs must stay available, and who serves
-which operations become separate design choices.  Query
+cannot see.  The guarantee, which of its outputs must stay available, and who
+serves which operations thus become separate design choices, and query
 monotonicity, CRDT merge, transactional availability, and invariant confluence
-then become directly comparable without being identified with one another.
+can be compared on one table without being identified with one another.
+
+% PLACEHOLDER: author will rewrite this paragraph.
+Several directions build on these results.  The first moves from criterion to
+complexity: not only whether a specification needs commitments, but how many.
+The second is determination provenance: which inputs determine an output that
+needs no commitment.  The third is general-purpose static analysis of CALM and
+of proper coordination in a real programming framework.

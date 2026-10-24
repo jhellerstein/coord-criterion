@@ -4,8 +4,8 @@
 Concurrent systems rely on coordination mechanisms ranging from mutexes and
 atomic instructions to database locks and distributed consensus protocols.
 These mechanisms prevent concurrent actions from producing undesirable
-outcomes, but they add overhead, and when coordination crosses a network
-partition it can also prevent availability.  Avoiding unnecessary coordination
+outcomes.  They also cost something: they add overhead, and when coordination
+crosses a network partition, it can cost availability.  Avoiding unnecessary coordination
 is therefore a central goal in distributed systems and databases.  This paper
 asks what coordination mechanisms accomplish at the specification level, and
 when that effect is intrinsically required.
@@ -18,8 +18,8 @@ directions, but only for Datalog queries evaluated by relational
 transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.  The
 CAP Theorem proved that no linearizable register can stay available through a
 network partition~\cite{brewer2000towards,gilbert2002cap}.  Both results are
-invoked far more broadly: CALM as a general monotonicity boundary for
-coordination, CAP as a general constraint on distributed systems.  The
+invoked far more broadly: CALM as a general rule that monotone programs
+need no coordination, CAP as a general constraint on distributed systems.  The
 folklore outgrew what the literature proves.
 
 Related results reach similar conclusions from different starting points.
@@ -35,11 +35,10 @@ formal languages, they do not translate directly.  Does CALM encompass CAP
 freedom, or merely one strong sufficient discipline
 (\S\ref{sec:crdt-instance})?  Why do some transactional guarantees
 stay available under partition while others do not
-(\S\ref{sec:hat-instance})?  Is invariant confluence a different coordination
-boundary from CALM's (\S\ref{sec:iconfluence-instance})?
+(\S\ref{sec:hat-instance})?  Is invariant confluence a different test from
+CALM's (\S\ref{sec:iconfluence-instance})?
 
-We develop a unified coordination criterion that spans this space,
-including the translation questions above.  We begin with a minimalist
+We answer all four questions with a single criterion.  We begin with a minimalist
 specification model: a two-column relational table pairing input values with the
 corresponding outputs that are within spec.  The model is purely declarative: it
 describes what can be observed about a system, without committing to a
@@ -80,10 +79,11 @@ Monotonicity}: as input \ingrows, some output permitted at the larger input
 CALM} proves that consistency is equivalent to Lifted Monotonicity
 (\S\ref{sec:complete-calm-theorem}).
 
-Both theorems have a distributed reading (\S\ref{sec:distributed-execution}).
-Distributed consistency, over histories of participants that exchange
-messages, is equivalent to consistency, so Functional and Complete CALM apply
-to distributed executions unchanged.  Systems may make their own commitments,
+Both theorems translate directly to distributed systems
+(\S\ref{sec:distributed-execution}).  We model a system as participants
+exchanging messages and define consistency over their histories; this is shown
+to be equivalent to consistency as defined above, so Functional and Complete
+CALM apply to distributed executions unchanged.  Systems may make their own commitments,
 and every commitment seals inputs or chooses among outputs.  A commitment is
 \emph{coordination} when another run could contradict it, by accepting an
 input it sealed or emitting an output it chose against, and \emph{distributed
@@ -91,10 +91,9 @@ coordination} when that run is at another participant.  Locking a key at its
 owner is coordination; ordering a transaction across two owners is
 distributed coordination.
 
-Complete CALM yields a Complete CAP Theorem
-(\S\ref{sec:complete-cap}).  For any consistency guarantee expressed as a
-specification, Lifted Monotonicity identifies which side of the CAP boundary it
-occupies.  A specification with Lifted Monotonicity can keep every output it permits
+Complete CALM also settles CAP (\S\ref{sec:complete-cap}).  Given a
+consistency guarantee expressed as a specification, Lifted Monotonicity says
+which side of CAP it falls on.  A specification with Lifted Monotonicity can keep every output it permits
 available and confluent during a partition; any other cannot.  More generally,
 a guarantee may declare which of its outputs must stay available; it can then
 be met through partitions exactly when those outputs have a common \outnoun

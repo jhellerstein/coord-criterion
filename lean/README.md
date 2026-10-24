@@ -102,7 +102,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
 | `«sec:election-story/input-order»` | theorem | "The *input order* records accumulated ballots: |
-| `«sec:election-story/output-order»` | theorem | "The *output order* records preservation of visible claims: |
+| `«sec:election-story/output-order»` | theorem | "The *output order* says which announcements are safe to build on: |
 | `«sec:election-story/monotone»` | theorem | "The functional table is *monotone* … Here, for example, the input sequence `x·· ⪯ xy· ⪯ xyx` monotonically produces the output sequence `⊥ ⪯ ⊥ ⪯ x`." The el… |
 | `«fig:election-frames/printed-rows»` | theorem | Fig. |
 | `«fig:election-frames/a»` | theorem | Fig. |
@@ -316,7 +316,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/local-choice-necessary»` | theorem | "For a smaller `A` such local choices can be necessary: |
 | `«sec:complete-cap/consistency-fails»` | theorem | "When consistency on `A` fails, some output of `A` either waits for another component, sacrificing Availability, or is emitted independently at the cost of P… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
-| `«sec:complete-cap/gl-register»` | theorem | "Model a register whose input is the set of operations a participant knows, with their real-time precedence, and whose outputs answer every operation of the… |
+| `«sec:complete-cap/gl-register»` | theorem | "Consider a register whose input is the set of operations a participant knows, with their real-time precedence, and whose outputs answer every operation of t… |
 | `«sec:complete-cap/gl-two-row-forced»` | theorem | "The converse in the proof of Theorem `thm:complete-cap` needs Availability only so that `p` can emit the acknowledgment and `q` can emit `v_0`. |
 | `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of Complete CAP": |
 | `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |

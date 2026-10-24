@@ -2,13 +2,11 @@
 \label{sec:functional-calm}
 
 This section treats functional specifications, in which each input has a
-single specified output.  Section~\ref{sec:election-story} walks
-through the framework informally on an election.
-Section~\ref{sec:functional-specifications} defines specifications and states;
-Section~\ref{sec:functional-events} defines input and output events and the
-commitments output events apply; Section~\ref{sec:executions} assembles executions and consistency;
-and Section~\ref{sec:functional-calm-theorem} proves Functional CALM and
-identifies when an output can be emitted without commitment.
+single specified output.  We walk through the framework informally on an
+election (Section~\ref{sec:election-story}), make it precise
+(Sections~\ref{sec:functional-specifications}--\ref{sec:executions}), and
+prove Functional CALM (Section~\ref{sec:functional-calm-theorem}), identifying
+along the way when an output can be emitted without commitment.
 
 \subsection{The framework by example}
 \label{sec:election-story}
@@ -108,11 +106,11 @@ is no winner.  An input is the ballots received so far, written as a
 three-character string with a dot for a ballot not yet received.  For brevity,
 the figure shows only inputs \inrelpart $x\cdot\cdot$.
 
-The two orders express different specification decisions.  The \emph{input order}
+The two orders are where a designer makes decisions.  The \emph{input order}
 records accumulated ballots: $xy\cdot$ \inrel $x\cdot\cdot$, while
-$xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output order} records
-preservation of visible claims: either winner \outrel $\bot$, while $x$ and
-$y$ are incomparable.  In general, the functional table is \emph{monotone}
+$xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output order} says which
+announcements are safe to build on: $\bot$ claims nothing, so either winner
+\outrel it, while $x$ and $y$ are incomparable.  In general, the functional table is \emph{monotone}
 when
 \[
   i\InputOrd j\quad\Longrightarrow\quad f(i)\OutputOrd f(j).
@@ -175,16 +173,15 @@ in panels~(a) and~(b), and $x$ in panel~(c).  The atomic output event
 $\mathsf{output}(o)$ seals any legal input whose output does not \outrelbase
 $o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
 from then on, only rows whose outputs \outrelbase $o$ remain.  The emission
-matters because the environment, which supplies input and is not under the
-system's control, may use it when choosing later input; it observes $o$, not
-the seal.
+matters because the environment is powerful and unpredictable; it may use $o$
+when choosing later input, and it observes $o$, not the seal.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
 to itself).  Then $\bot$ is incompatible with future winners, so emitting it
-requires a seal (Figure~\ref{fig:nonmonotone-frame}).  This isolates the
-Functional CALM boundary: under the original monotone order, outputs remain
+requires a seal.  That one change in the output order is Functional CALM in
+miniature: under the original monotone order, outputs remain
 valid as input grows; under the equality order, some outputs can be emitted
 only with a commitment.
 
