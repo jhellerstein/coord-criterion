@@ -6,11 +6,10 @@
      registrar's seal (`closePolls`, a commitment in the sense of
      Def. `def:commitment`), the claims of Sec. `sec:election-story` and
      Sec. `sec:functional-events` about it, and the printed rows and upper
-     fibers of panels (a)–(d) (`Elec.*`).  The figure caption says "only rows
-     whose input ⪰ `x··` are shown", but `x·x` and `x·y` are such inputs and
-     are not printed (`Elec.shown_inputs`, `Elec.unprinted_rows`).
+     fibers of panels (a)–(d) (`Elec.*`).  The figure prints exactly the rows
+     whose input ⪰ `x··`, as its caption says (`Elec.printed_complete`).
    * Sec. `sec:discussion`, "Receiving a decisive ballot and closing the polls
-     can leave the same result": both leave a determined state, the first by
+     both leave a single result": both leave a determined state, the first by
      input retirement, the second by a commitment; in the election the two
      never leave the *same* result, since closing the polls at an undetermined
      state always leaves `⊥` and every determined canonical state has a winner
@@ -111,17 +110,18 @@ def bxxy : Ballots := ⟨some .x, some .x, some .y⟩   -- xxy
 def bx_x : Ballots := ⟨some .x, none, some .x⟩      -- x·x
 def bx_y : Ballots := ⟨some .x, none, some .y⟩      -- x·y
 
-/-- The seven inputs printed in each panel, in order, with their outputs. -/
+/-- The nine inputs printed in each panel, in order, with their outputs. -/
 def printed : List (Ballots × Res) :=
   [(bxd, .bot), (bxy, .bot), (bxyx, .win .x), (bxyy, .win .y),
-   (bxx, .win .x), (bxxx, .win .x), (bxxy, .win .x)]
+   (bxx, .win .x), (bxxx, .win .x), (bxxy, .win .x),
+   (bx_x, .win .x), (bx_y, .bot)]
 
 /-- The printed outputs are the election's: every printed pair is a row. -/
 theorem printed_rows : ∀ r ∈ printed, elec.S r.1 r.2 := by
   intro r hr
   simp only [printed, List.mem_cons, List.mem_nil_iff, or_false] at hr
   show r.2 = winner r.1
-  rcases hr with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> decide
+  rcases hr with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> decide
 
 /-- Tactic helper: split a ballot into its 27 values. -/
 macro "ballot_cases" k:ident : tactic =>
@@ -135,16 +135,21 @@ theorem shown_inputs (k : Ballots) :
       k = bx_x ∨ k = bx_y) := by
   ballot_cases k <;> decide
 
-/-- The rows `(x·x, x)` and `(x·y, ⊥)` are rows at inputs `⪰ x··` that the
-figure does not print (not among the printed inputs). -/
-theorem unprinted_rows :
-    bxd ≼ bx_x ∧ bxd ≼ bx_y ∧ elec.S bx_x (.win .x) ∧ elec.S bx_y .bot ∧
-      (∀ r ∈ printed, r.1 ≠ bx_x ∧ r.1 ≠ bx_y) := by
-  refine ⟨by decide, by decide, (by decide : Res.win .x = winner bx_x),
-    (by decide : Res.bot = winner bx_y), ?_⟩
-  intro r hr
-  simp only [printed, List.mem_cons, List.mem_nil_iff, or_false] at hr
-  rcases hr with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> decide
+/-- The figure prints exactly the rows whose input `⪰ x··`: a pair is printed
+iff it is a row of the election at such an input. -/
+theorem printed_complete (k : Ballots) (o : Res) :
+    (k, o) ∈ printed ↔ (bxd ≼ k ∧ elec.S k o) := by
+  constructor
+  · intro hr
+    refine ⟨?_, printed_rows _ hr⟩
+    simp only [printed, List.mem_cons, List.mem_nil_iff, or_false] at hr
+    rcases hr with h | h | h | h | h | h | h | h | h <;>
+      (obtain ⟨rfl, rfl⟩ := Prod.mk.inj h; decide)
+  · rintro ⟨hk, hS⟩
+    have hS' : o = winner k := hS
+    subst hS'
+    rcases (shown_inputs k).1 hk with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
+      simp [printed] <;> decide
 
 /-- Upper fibers of panels (a) and (b): `{⊥, x, y}`. -/
 theorem upper_ab (o : Res) :
