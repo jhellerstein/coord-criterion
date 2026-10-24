@@ -106,10 +106,11 @@ Distributed Complete CALM yields a Complete CAP Theorem
 (\S\ref{sec:complete-cap}).  For any consistency guarantee expressed as a
 specification, Lifted Monotonicity identifies which side of the CAP boundary it
 occupies.  A specification with Lifted Monotonicity can keep every output it permits
-available and confluent during a partition; any other cannot.  A weaker form
-that asks only that every operation be answered yields the Gilbert--Lynch
-theorem for linearizable registers as a corollary of the same machinery
-(Appendix~\ref{app:cap-response}).
+available and confluent during a partition; any other cannot.  More generally,
+a guarantee may declare which of its outputs must stay available; it can then
+be met through partitions exactly when those outputs have a common \outnoun
+wherever their inputs meet.  The Gilbert--Lynch theorem for linearizable
+registers follows directly.
 
 This paper makes six contributions:
 \begin{enumerate}
@@ -126,8 +127,9 @@ This paper makes six contributions:
   \item \emph{Complete CALM and CAP.} With multiple outputs per input,
         consistency---and hence distributed consistency---is equivalent to
         Lifted Monotonicity.  Complete CAP gives the corresponding availability
-        boundary under partition, and the same machinery recovers the
-        Gilbert--Lynch theorem as a corollary.
+        boundary under partition, also for guarantees that require only some
+        outputs to stay available, and the Gilbert--Lynch theorem follows
+        directly from it.
   \item \emph{Composition and Proper Coordination.} Specifications compose by
         equijoin, and because commitments are explicit, the model can check
         whether a particular use of coordination is enough.  For example, a

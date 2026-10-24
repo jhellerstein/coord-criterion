@@ -164,6 +164,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«thm:commitments-require-coordination/any-bases»
 #check @CC.Paper.«thm:commitments-require-coordination/reach»
 #check @CC.Paper.«thm:commitments-require-coordination/confined-to-current-input»
+#check @CC.Paper.«sec:coordination/shared-nothing-single-key»
+#check @CC.Paper.«sec:coordination/shared-nothing-cross-key»
 #check @CC.Paper.«sec:coordination/conflict-is-choice»
 #check @CC.Paper.«sec:coordination/deterministic-reconciliation»
 #check @CC.Paper.«def:partition-notions(1)»
@@ -190,6 +192,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:complete-cap/necessity-any-system»
 #check @CC.Paper.«sec:complete-cap/proof-system-coordination-free»
 #check @CC.Paper.«sec:complete-cap/A-eq-S-no-commitment»
+#check @CC.Paper.«sec:complete-cap/local-choice-necessary»
 #check @CC.Paper.«sec:complete-cap/consistency-fails»
 #check @CC.Paper.«sec:complete-cap/deterministic-strategies»
 #check @CC.Paper.«sec:complete-cap/gl-register»

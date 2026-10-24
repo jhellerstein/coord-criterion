@@ -2,7 +2,7 @@ import CoordCriterion.CAP.ResponseAvailability
 import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.Necessity
 import CoordCriterion.CAP.Forced
-import CoordCriterion.CAP.LocalCommitment
+import CoordCriterion.CAP.Coordination
 import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.Registers
@@ -259,25 +259,40 @@ theorem «sec:complete-cap/necessity-any-system» (A : Table I O) (hAS : ∀ i o
 /-- "Under consistency on `A`, the canonical output event for an output of `A`
 seals nothing and chooses only against outputs outside `A`, which the system
 never emits, so the system of the proof is coordination-free (Definition
-`def:coordination`)."  Lean: no output event of `respSystem A` removes a row
-that some run of the system emits, or seals an input some run accepts; and
-the system emits only rows of `A`. -/
+`def:coordination`)."  Lean: the system emits only rows of `A`, and no output
+event removes a row another participant of the same history emits, or seals an
+input another participant accepts. -/
 theorem «sec:complete-cap/proof-system-coordination-free» (A : Table I O)
     (hcons : ConsistentOn sp A) :
-    (respSystem (sp := sp) (D := D) A).CoordinationFree ∧
+    (respSystem (sp := sp) (D := D) A).CoordinationFreeH ∧
     ∀ k x, SysEmits (respSystem (sp := sp) (D := D) A) k x → A k x :=
-  ⟨respSystem_coordinationFree A hcons, fun _ _ h => resp_emits_A h⟩
+  ⟨respSystem_coordinationFreeH A hcons, fun _ _ h => resp_emits_A h⟩
 
-/-- "For `A = S` it needs no commitment at all."  Lean: a system with
-Availability emits every row of `S`, so it is coordination-free exactly when
-no output event's commitments remove a row. -/
+/-- "For `A = S` it needs no commitment at all."  Lean: with Availability,
+any removal of a row `(k,x)` by an output event whose local prefix is
+receive-free is contradicted in some produced history by another participant
+whose initial input is below `k`; so such a system is coordination-free only
+if those events remove nothing. -/
 theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
-    (hA : «def:partition-notions(4)» Sys) :
-    (∀ k x, sp.S k x → SysEmits Sys k x) ∧
-    (Sys.CoordinationFree ↔ ∀ n init H, WF init H → Produced Sys n init H →
-      ∀ q a b γ o σ σc, H q = a ++ LEv.out γ o :: b → LRun (canon sp (init q)) a σ →
-        applySeq σ γ = some σc → ∀ k x, σ.R k x → σc.R k x) :=
-  ⟨every_row_emitted Sys hA, availability_coordinationFree_iff Sys hA⟩
+    (hA : «def:partition-notions(4)» Sys)
+    {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
+    (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
+    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O} {σ σc : State sp}
+    (hH : H p = a ++ LEv.out γ o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
+    (hrun : LRun (canon sp (init p)) a σ) (hap : applySeq σ γ = some σc)
+    {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x) (hqk : init q ≼ k) :
+    ¬ Sys.CoordinationFreeH :=
+  availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun hap hx hnx hqk
+
+/-- "For a smaller `A` such local choices can be necessary: if `o ∈ A(i)` and
+`x ∈ S(i) ∖ A(i)` have no common refinement at `i`, emitting `o` must choose
+against `x`."  Lean: one input, `S = {o, x}` incomparable, `A = {o}`: `S` is
+consistent on `A`, `o` is not exposable (so its output event must commit),
+and the system of the proof is coordination-free. -/
+theorem «sec:complete-cap/local-choice-necessary» (D : Type) :
+    ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
+    (respSystem (sp := CAP.lcSpec) (D := D) CAP.lcA).CoordinationFreeH :=
+  ⟨lcSpec_consistentOn, lcSpec_o_not_exposable, lc_coordinationFreeH D⟩
 
 /-- "When consistency on `A` fails, some output of `A` either waits for
 another component, sacrificing Availability, or is emitted independently at

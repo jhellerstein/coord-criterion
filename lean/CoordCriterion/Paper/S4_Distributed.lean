@@ -1,7 +1,7 @@
 import CoordCriterion.Distributed.Systems
 import CoordCriterion.CALM.TransientConflict
 import CoordCriterion.Figures
-import CoordCriterion.CAP.LocalCommitment
+import CoordCriterion.CAP.Coordination
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
 import CoordCriterion.Appendix.TransactionBases.CanonicalExample
@@ -605,16 +605,16 @@ seals, or emits, at the same input, an output it chooses against.  A run or
 history coordinates relative to `𝓡` when one of its output events applies a
 contradicted commitment, and is coordination-free relative to `𝓡` otherwise.
 For a specification, `𝓡` is its canonical runs; for a system, it is the runs
-its participants can perform, under any inputs the environment may supply."
+of the other participants in each history the system produces, under any
+inputs the environment may supply."
 
-Lean, for a system (`CC.CAP` model): `LocalEvent Sys σ σc` says the event's
-commitments, taking `σ` to `σc`, remove no row `(k,x)` that some produced
-history emits at current input `k` (`SysEmits`) and seal no input that some
-produced history accepts (`SysAccepts`); produced histories range over all
-inputs the adversarial environment may supply.  `System.CoordinationFree` asks
-this of every output event of every produced history. -/
+Lean, for a system (`CC.CAP` model): `System.CoordinationFreeH` says that in
+every produced history (the adversarial environment supplies any legal
+inputs), no output event's commitments remove a row `(k,x)` that another
+participant of the same history emits at current input `k`, or seal an input
+`k` that another participant of the same history accepts. -/
 abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
-  Sys.CoordinationFree
+  Sys.CoordinationFreeH
 
 /-- Def. `def:coordination`, for a specification (`𝓡` the canonical runs):
 coordinating means applying a commitment (`Coordinates`: some output event has
@@ -622,9 +622,9 @@ coordinating means applying a commitment (`Coordinates`: some output event has
 abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   Coordinates es
 
-/-- "For a specification, every commitment is contradicted: some canonical
-run accepts each input that a commitment can seal, and some canonical run
-emits each permitted output."  Lean: from `σ_S(i)` with `i ≼ k`, the
+/-- "For a specification, every commitment is contradicted.  Any family of
+canonical runs forms a message-free history, and some canonical run accepts
+each input that a commitment can seal and emits each permitted output."  Lean: from `σ_S(i)` with `i ≼ k`, the
 canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ S(k)` at
 current input `k`. -/
 theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I} {x : O}
@@ -737,6 +737,25 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
+/-- Paragraph "Locks in a shared-nothing database": "Ordering two transactions
+on one key is a choice among serialization orders, and only the key's owner
+makes it. … no run contradicts the choice: it is not coordination."  Lean: a
+spec with outputs `⊥ ≤ ab, ba` (`ab`, `ba` incomparable); emitting `ab` is a
+commitment (not exposable); the system in which only participant 0 may emit
+an order is coordination-free (Def. `def:coordination`). -/
+theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
+    ¬ Exposable (canon CAP.ordSpec ()) .ab ∧ (CAP.ownerSys D).CoordinationFreeH :=
+  ⟨CAP.ordSpec_ab_not_exposable, CAP.ownerSys_coordinationFreeH D⟩
+
+/-- Paragraph "Locks in a shared-nothing database": "A transaction that spans
+keys `k₁` and `k₂` needs a single order, but each owner chooses its part …
+These choices can contradict each other, and excluding that … is
+coordination."  Lean: when two participants may each emit an order, some
+history has one emit `ab` (removing `ba`) and the other emit `ba`. -/
+theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
+    ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=
+  CAP.twoOwnerSys_not_coordinationFreeH D
+
 /-- "The first event's commitment is a choice against `x`."
 
 Lean: (a) every commitment keeps a row at the current input; (b) in the

@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-556 entries.
+559 entries.
 
 ### §2 Functional CALM
 
@@ -265,7 +265,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:coordination»` | abbrev | **Def. |
 | `«def:coordination/specification»` | abbrev | Def. |
-| `«sec:coordination/specification-contradicted»` | theorem | "For a specification, every commitment is contradicted: |
+| `«sec:coordination/specification-contradicted»` | theorem | "For a specification, every commitment is contradicted. |
 | `«def:coordination/coordination-free»` | abbrev | Def. |
 | `«sec:coordination/closing-before-voting-seals»` | theorem | "Closing the polls before every voter has voted seals the remaining ballots." Lean: |
 | `«sec:coordination/choices-by-strategies»` | theorem | "Outputs, by contrast, are chosen only by strategies, so a choice is contradicted only when some participant's strategy may emit the output it rules out." Lean: |
@@ -274,6 +274,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/confined-to-current-input»` | theorem | "The conflict is confined to the current input. |
+| `«sec:coordination/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/conflict-is-choice»` | theorem | "The first event's commitment is a choice against `x`." Lean: |
 | `«sec:coordination/deterministic-reconciliation»` | theorem | "Under Lifted Monotonicity, participants at a common input `j` can each emit a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u` b… |
 
@@ -307,6 +309,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/necessity-any-system»` | theorem | "The converse never assumes that the system is commitment-free, so commitments cannot enlarge the class of specifications that admit a system with Availabili… |
 | `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Under consistency on `A`, the canonical output event for an output of `A` seals nothing and chooses only against outputs outside `A`, which the system never… |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `A = S` it needs no commitment at all." Lean: |
+| `«sec:complete-cap/local-choice-necessary»` | theorem | "For a smaller `A` such local choices can be necessary: |
 | `«sec:complete-cap/consistency-fails»` | theorem | "When consistency on `A` fails, some output of `A` either waits for another component, sacrificing Availability, or is emitted independently at the cost of P… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Model a register whose input is the set of operations a participant knows, with their real-time precedence, and whose outputs answer every operation of the… |
