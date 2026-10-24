@@ -210,15 +210,14 @@ theorem «thm:complete-cap/proof-two-step» (Sys : System sp D)
   cap_two_step Sys hA hP h₁ h₂ hj₁ hj₂
 
 /-- Proof of Theorem `thm:complete-cap`, (1)⇒(2): "Now let
-`(i_1,o_1),…,(i_k,o_k)` be rows with a common expansion `j`.  We show by
-induction on `m ≤ k` that some `u_m ∈ S(j)` refines each of `o_1,…,o_m`.  For
+`(i_1,o_1),…,(i_k,o_k)` be rows with a common expansion `j`; we find some
+`u ∈ S(j)` that refines every `o_r`.  We show by induction on `m ≤ k` that some `u_m ∈ S(j)` refines each of `o_1,…,o_m`.  For
 `m=0` there is nothing to refine; since `S` is total, `j` appears in some row
 `(j,u_0)`.  For
 `m>0`, `(j,u_{m-1})` and `(i_m,o_m)` are rows of `S` with common expansion
 `j`, so the two-row case gives some `u_m ∈ S(j)` that refines `u_{m-1}` and
 `o_m`.  Since `u_{m-1}` refines `o_1,…,o_{m-1}`, so does `u_m`, by
-transitivity.  For `m=k`, `u_k` is the output the common-expansion condition
-asks for, and Proposition `prop:common-expansion-form` gives Lifted
+transitivity.  Taking `m=k`, `u=u_k` refines every `o_r`, and Proposition `prop:common-expansion-form` gives Lifted
 Monotonicity."  Lean: induction on the list of rows, each step by
 `«thm:complete-cap/proof-two-step»`. -/
 theorem «thm:complete-cap/proof-necessity» (Sys : System sp D)
