@@ -12,7 +12,8 @@ certified successor.  Inputs are finite sets of protocol messages (proposals,
 votes, certificates), ordered by inclusion.  An output is a triple $(E,V,D)$:
 a certified epoch chain $E$, a finite sequence of epochs each certified under
 the authority of its predecessor; a set $V$ of votes or certificates; and a set
-$D$ of decisions, each a value certified for an epoch and slot.  Outputs are
+$D$ of decisions, at most one value per epoch and slot, each certified for
+that epoch and slot.  Outputs are
 ordered by
 \begin{equation}
   (E,V,D)\OutputOrd(E',V',D')
@@ -21,7 +22,8 @@ ordered by
   \label{eq:authority-refinement}
 \end{equation}
 where $E\preceq_{\rm pref}E'$ means that $E$ is a prefix of $E'$.
-Protocol safety guarantees that later evidence \outrel earlier evidence, so
+Protocol safety guarantees that every output permitted at the current or any
+later input \outrel the certified evidence already emitted, so
 authority changes and certified decisions are \outnouns and need no further
 commitment.  This covers following the succession rule, not choosing values:
 competing proposals for an undecided slot have incompatible extensions of
@@ -30,7 +32,7 @@ fixed, competing next epochs would require one as well.
 
 \subsection{$k$-set agreement: no $k$-wise test suffices}
 
-Fix $k\geq1$, participants $p_1,\ldots,p_{k+1}$ in the participant set $P$
+Fix $k\geq1$, distinct participants $p_1,\ldots,p_{k+1}$ in the participant set $P$
 (possibly among others), and distinct values $v_1,\ldots,v_{k+1}$ in a value
 set $\mathit{Val}$.  An input is a finite set of proposals $(p,v)$, at most one
 per participant, ordered by inclusion; the \emph{proposal input} of $p_r$ is
@@ -78,7 +80,7 @@ nor completeness.  A specification that requires the complete history, with
 output $h$ at $h$ and outputs ordered by equality, is functional and not
 monotone: its required output changes whenever an event arrives.  By
 Proposition~\ref{prop:functional-exposure-boundary}, some output can then be
-exposed only after a commitment that seals the input.
+exposed only after a commitment that seals larger inputs.
 
 \begin{acks}
 We thank Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin

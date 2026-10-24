@@ -133,9 +133,7 @@ committed to at $i$; its \emph{committed table} is the set $K\subseteq S_1$ of
 those rows.  It is \emph{totality-preserving} when $K$ has a row at every
 input.  The resolved end-to-end table is $S_2\circ K$ (or $G\star K$ for
 independently parameterized composition).  We take $K$ as declared rather
-than derived from runs of a composed transition system; when the commitment
-at each input depends only on that input, $K$ at $i$ is exactly what remains
-upstream at $i$.
+than derived from runs of a composed transition system.
 
 \begin{definition}[Proper Coordination]
 \label{def:proper-coordination}
@@ -145,8 +143,8 @@ $S_2\circ K$ (resp.\ $G\star K$) is consistent and every output at every
 state of it reachable without commitment is exposable.
 \end{definition}
 
-The second clause follows from the first by the exposure boundary
-(Proposition~\ref{prop:exposure-boundary}).  Neither $S_1$, $S_2$, nor the
+The second clause follows from the first by Complete CALM and the exposure
+boundary (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).  Neither $S_1$, $S_2$, nor the
 unresolved composition need be monotone.
 
 \begin{corollary}[Proper Coordination]
@@ -188,7 +186,9 @@ Take $I$ the proposal streams received by a single log authority and $B$ the
 logs, both ordered by prefix; $A$ a one-point set; $J$ the client request
 histories; and $C$ the cumulative response histories, ordered by extension.
 Restrict composed inputs to coherent pairs, in which every proposed command
-comes from a request in $J$.  Let $F$ relate each proposal stream to the logs
+comes from a request in $J$; restricting a specification to a subset of its
+inputs, with the induced order, preserves Lifted Monotonicity, so the results
+above apply.  Each command is proposed at most once.  Let $F$ relate each proposal stream to the logs
 still permitted for it, and $G$ relate a request history and a log to the
 responses obtained by executing that log.  Then $F$ is non-monotone (distinct
 next entries are incompatible outputs in one fiber), and so is the key-value

@@ -180,8 +180,7 @@ is a deployment (Proposition~\ref{thm:complete-cap-deployment}).
 Suppose two replicas execute transactions on disjoint keys.  One exposes
 $\mathsf{read}(T_1,x,0)$ and $\mathsf{commit}(T_1)$; the other exposes
 $\mathsf{read}(T_2,y,0)$ and $\mathsf{commit}(T_2)$.  If each read observes a
-committed version at its replica, the union contains no dirty read or write
-conflict.  Under the stated read-committed specification (a transaction reads only committed
+committed version at its replica, the union contains no dirty read.  Under the stated read-committed specification (a transaction reads only committed
 versions), later delivery keeps all four facts.  This is the positive accumulation pattern behind HAT results;
 it is not a claim that every combination of session guarantees is available.
 
@@ -193,7 +192,8 @@ $x=0$, writes $y=1$, and commits.
 On the other, $T_2$ reads $y=0$, writes $x=1$, and commits.  Preserving $T_1$'s
 read requires $T_1$ before $T_2$ in any serial explanation; preserving $T_2$'s
 read requires $T_2$ before $T_1$.  The serialization graph contains a cycle, so
-no serial history \outrel both sets of facts~\cite{adya2000generalized}.
+no serial order of $T_1$ and $T_2$ explains both sets of
+facts~\cite{adya2000generalized}.
 
 \paragraph{Snapshot isolation.}
 Let overlapping transactions $T_1$ and $T_2$ read the same snapshot and both
@@ -204,8 +204,8 @@ facts~\cite{berenson1995critique,bailis2013hat}.  Eventual storage convergence
 may choose a final state; it cannot retract a commit already exposed to a
 client.
 
-The examples show where the boundary falls.  A guarantee whose exposed facts
-only accumulate, as read committed does here, has a common \outnoun for
+The examples show where the boundary falls.  A guarantee whose permitted fact sets
+are closed under union, as read committed's are here, has a common \outnoun for
 whatever separated replicas expose, so it stays available.  One that orders or
 excludes concurrent transactions, as serializability and first-committer-wins
 do, rules out combinations that separated replicas can each expose; emitting
@@ -255,8 +255,9 @@ allocate it to different accounts.  The history in which neither allocation
 saw the other is locally valid and \inrel both one-allocation histories, but
 its state has two owners, so no state it permits \outrel both.  The system must
 reserve names, reject one allocation, or weaken the invariant.  Concurrency,
-not the transactions alone, decides the outcome: a transaction that is valid
-after another may be invalid when it runs without seeing it.
+not the transactions alone, decides the outcome: a transaction that is harmless
+after another can, when it runs without seeing it, produce a state whose merge
+with the other's is invalid.
 
 Invariant preservation and transaction availability remain different
 specifications: an invariant-confluent application need not provide any

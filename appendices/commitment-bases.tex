@@ -17,8 +17,8 @@ by
 \]
 A row $(\mathcal T,(L,X))$ is permitted when $X$ and $\mathrm{dom}\,L$ partition
 $\mathcal T$.
-The rows $(\{A,B\},([A,B],\varnothing))$ and $(\{A,B\},([B,A],\varnothing))$
-of Figure~\ref{fig:ambiguity-frames}(f) have no common \outnoun, so the
+The rows $(\{A,B\},([A,B],\varnothing))$ and $(\{A,B\},([B,A],\varnothing))$,
+corresponding to Figure~\ref{fig:ambiguity-frames}(f), have no common \outnoun, so the
 specification is not monotone.  The \emph{abort-free} specification has the
 same rows with $X=\varnothing$.
 
@@ -29,9 +29,9 @@ and some row of $R$ fails it.
 \begin{itemize}
   \item $\mathsf{order}(A,B)$, for distinct $A,B\in i$: $A\in X$, or $B\in X$,
         or $A<_L B$.
-  \item $\mathsf{commit}(A)$: $A\notin X$.\quad
-        $\mathsf{abort}(A)$: $A\in X$.
-  \item $\mathsf{stamp}(A)$, given $Z\subseteq i$, the transactions stamped
+  \item $\mathsf{commit}(A)$, for $A\in i$: $A\notin X$.\quad
+        $\mathsf{abort}(A)$, for $A\in i$: $A\in X$.
+  \item $\mathsf{stamp}(A)$, for $A\in i\setminus Z$, given $Z\subseteq i$, the transactions stamped
         before $A$: at row $(k,(L,X))$, for every $z\in Z$, $z<_L A$ or one of
         $z,A$ is in $X$; and for every $D\in k\setminus(Z\cup\{A\})$, $A<_L D$
         or one of $A,D$ is in $X$.
@@ -39,7 +39,9 @@ and some row of $R$ fails it.
 Each is a commitment (Definition~\ref{def:commitment}): at a fixed input $k$,
 if $(L,X)\OutputOrd(L',X')$ for permitted outputs then $X\subseteq X'$ and
 $\mathrm{dom}\,L\subseteq\mathrm{dom}\,L'$ with both pairs partitioning $k$, so
-the two outputs are equal, and Equation~\ref{eq:commitment-excludes} holds.
+$X=X'$ and $\mathrm{dom}\,L=\mathrm{dom}\,L'$, hence $L=L'|_{\mathrm{dom}\,L}=L'$.
+A removed and a retained row therefore differ, so neither \outrel the other,
+and Equation~\ref{eq:commitment-excludes} holds.
 The bases are
 $\mathcal B_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{commit},\mathsf{abort}\}$
 and
@@ -54,7 +56,7 @@ commitments $\gamma$ contains.  When $B$ waits for a lock that $A$ holds in a co
 applies $\mathsf{order}(A,B)$ (Figure~\ref{fig:cc-commitments}(h)); when $A$
 commits, it applies $\mathsf{commit}(A)$.  A deadlock between $A$ and $B$ means
 both $\mathsf{order}(A,B)$ and $\mathsf{order}(B,A)$ have been applied; the
-rows left at $i$ are exactly those with $A\in X$ or $B\in X$, and resolving the
+rows left, at $i$ and every larger input, are exactly those with $A\in X$ or $B\in X$, and resolving the
 deadlock is applying $\mathsf{abort}(A)$ or $\mathsf{abort}(B)$.  Under the
 abort-free specification, once $\mathsf{order}(A,B)$ is applied no row at $i$
 satisfies $\mathsf{order}(B,A)$, so it is undefined: $A$, and hence $B$, waits forever.
