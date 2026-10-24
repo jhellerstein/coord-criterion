@@ -6,7 +6,7 @@ import CoordCriterion.CALM.Lemmas
 Worked examples of `sections/functional-calm.tex`, `sections/complete-calm.tex`
 and `appendices/proof-machinery.tex`:
 
-* the `k`-set agreement example used for `app:pairs-suffice` (minimal-input
+* the `k`-set agreement example used for `app:pairs-suffice` (single-proposal-input
   rows do not suffice even `k` at a time): `KSet.proposal_row`,
   `KSet.any_k_compatible`, `KSet.not_all_compatible`,
   `KSet.not_commonExpansion`, `KSet.not_liftedMono`,
@@ -23,7 +23,11 @@ and `appendices/proof-machinery.tex`:
   `elecEq_not_confluent` (the figure panels themselves are in `Figures.lean`);
 * the directed fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` of Section
   `sec:lifted-monotonicity` (`f5_directed`, `f5_common_refinements`,
-  `f5_minimal_incomparable`, `f5_compatible`).
+  `f5_minimal_incomparable`, `f5_compatible`);
+* transaction schedules under subsequence (Section
+  `sec:functional-specifications`): `Sched`, `sched_two_minimal`;
+* monotone queries, Eq. `eq:query-monotonicity`: `PSet`, `querySpec`,
+  `query_monotone_iff`, `query_consistent_iff`.
 
 Modeling choice (`k`-set agreement): participants `p_r = r` and values
 `v_r = r` for `r : Fin (k+1)`; inputs and outputs are partial maps ordered by
@@ -187,7 +191,7 @@ theorem perm_atom_le {p v : Fin (k+1)} {o : PMap (k+1)} (h : (spec k).S (atom p 
 
 open Classical in
 /-- Paragraph `app:pairs-suffice`: "restricting the families to rows at
-minimal inputs does not suffice, even `k` rows at a time".  In this
+single-proposal inputs does not suffice, even `k` rows at a time".  In this
 specification *every* family of at most `k` rows at single-proposal inputs
 (the minimal nonempty inputs), with any common expansion `j`, is compatible
 in `S(j)`; yet the common-expansion condition fails (`not_commonExpansion`).
@@ -636,6 +640,108 @@ theorem f5_compatible : CompatibleIn (fun _ : F5 => True) [F5.abc, F5.abd] :=
     · rcases List.mem_cons.1 hx with rfl | hx
       · decide
       · cases hx⟩
+
+/-! ## 12. Transaction schedules under subsequence (Section
+`sec:functional-specifications`)
+
+"Transaction schedules ordered by subsequence form a partial order in which
+two independent transactions `a` and `b` have two incomparable minimal common
+expansions, `ab` and `ba`."  A schedule is a list of transactions; `s ≼ t`
+is `List.Sublist s t`.  "Independent" is read as `a ≠ b`. -/
+
+/-- Transaction schedules over `T`. -/
+structure Sched (T : Type) where
+  txs : List T
+
+instance (T : Type) : PO (Sched T) where
+  le s t := s.txs.Sublist t.txs
+  refl s := List.Sublist.refl s.txs
+  trans h1 h2 := h1.trans h2
+  antisymm {s t} h1 h2 := by
+    have := h1.eq_of_length_le h2.length_le
+    cases s; cases t; simp only at this; subst this; rfl
+
+theorem sched_le_iff {T : Type} (s t : Sched T) : s ≼ t ↔ s.txs.Sublist t.txs := Iff.rfl
+
+theorem two_le_length {T : Type} {a b : T} (hab : a ≠ b) {l : List T} (ha : a ∈ l)
+    (hb : b ∈ l) : 2 ≤ l.length := by
+  match l, ha, hb with
+  | [x], ha, hb =>
+    simp at ha hb; exact absurd (ha.trans hb.symm) hab
+  | _ :: _ :: _, _, _ => simp
+
+/-- `ab` is a common expansion of `a` and `b`, minimal among common
+expansions. -/
+theorem sched_minimal {T : Type} {a b : T} (hab : a ≠ b) :
+    (⟨[a]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧
+      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
+        u ≼ ⟨[a, b]⟩ → u = ⟨[a, b]⟩ := by
+  refine ⟨List.singleton_sublist.2 (by simp), List.singleton_sublist.2 (by simp), ?_⟩
+  intro u ha hb hu
+  have h2 := two_le_length hab (List.singleton_sublist.1 ha) (List.singleton_sublist.1 hb)
+  have := List.Sublist.eq_of_length_le hu (by simpa using h2)
+  cases u; simp only at this; subst this; rfl
+
+/-- "Two independent transactions `a` and `b` have two incomparable minimal
+common expansions, `ab` and `ba`." -/
+theorem sched_two_minimal {T : Type} {a b : T} (hab : a ≠ b) :
+    ((⟨[a]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧
+      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
+        u ≼ ⟨[a, b]⟩ → u = ⟨[a, b]⟩) ∧
+    ((⟨[a]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧
+      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
+        u ≼ ⟨[b, a]⟩ → u = ⟨[b, a]⟩) ∧
+    ¬ (⟨[a, b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ ¬ (⟨[b, a]⟩ : Sched T) ≼ ⟨[a, b]⟩ := by
+  have m1 := sched_minimal (T := T) hab
+  have m2 := sched_minimal (T := T) (Ne.symm hab)
+  refine ⟨m1, ⟨m2.2.1, m2.1, fun u ha hb hu => m2.2.2 u hb ha hu⟩, ?_, ?_⟩
+  · intro h
+    have := List.Sublist.eq_of_length_le h (by simp)
+    simp at this; exact hab this.1
+  · intro h
+    have := List.Sublist.eq_of_length_le h (by simp)
+    simp at this; exact hab this.2
+
+/-! ## 13. Monotone queries (Eq. `eq:query-monotonicity`)
+
+Classical CALM: inputs are fact sets ordered by inclusion, outputs are answer
+sets ordered by inclusion, and the specification is the graph of a query
+`Q`.  Sets are predicates (wrapped in `PSet`). -/
+
+/-- Sets of elements of `F`, ordered by inclusion. -/
+structure PSet (F : Type) where
+  mem : F → Prop
+
+instance (F : Type) : PO (PSet F) where
+  le s t := ∀ x, s.mem x → t.mem x
+  refl _ _ h := h
+  trans h1 h2 x h := h2 x (h1 x h)
+  antisymm {s t} h1 h2 := by
+    have : s.mem = t.mem := funext fun x => propext ⟨h1 x, h2 x⟩
+    cases s; cases t; simp only at this; subst this; rfl
+
+/-- The graph specification of a query `Q`. -/
+def querySpec {F A : Type} (Q : PSet F → PSet A) : Spec (PSet F) (PSet A) where
+  S J X := X = Q J
+  total J := ⟨Q J, rfl⟩
+
+theorem querySpec_functional {F A : Type} (Q : PSet F → PSet A) :
+    (querySpec Q).Functional := fun _ _ _ h h' => h.trans h'.symm
+
+/-- Functional monotonicity of the graph of `Q` is Eq.
+`eq:query-monotonicity`: `J ⊆ J' ⟹ Q(J) ⊆ Q(J')`. -/
+theorem query_monotone_iff {F A : Type} (Q : PSet F → PSet A) :
+    (querySpec Q).MonotoneF ↔
+      ∀ J J' : PSet F, (∀ x, J.mem x → J'.mem x) → ∀ a, (Q J).mem a → (Q J').mem a :=
+  ⟨fun h J J' hJ => h J J' _ _ hJ rfl rfl,
+   fun h J J' X Y hJ hX hY => by subst hX; subst hY; exact h J J' hJ⟩
+
+/-- By Functional CALM, the graph of `Q` is consistent iff Eq.
+`eq:query-monotonicity` holds. -/
+theorem query_consistent_iff {F A : Type} (Q : PSet F → PSet A) :
+    (querySpec Q).Consistent ↔
+      ∀ J J' : PSet F, (∀ x, J.mem x → J'.mem x) → ∀ a, (Q J).mem a → (Q J').mem a :=
+  (functional_calm (querySpec_functional Q)).trans (query_monotone_iff Q)
 
 end CALM
 end CC

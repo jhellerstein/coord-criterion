@@ -231,6 +231,27 @@ theorem «def:functional-specification/induced-function» {I O : Type} [PO I] [P
   · rintro ⟨f, hf⟩ i o o' h h'
     exact ((hf i o).1 h).trans ((hf i o').1 h').symm
 
+/-- "Neither need be unique or least: the input order need not be a lattice,
+only a partial order.  For example, transaction schedules ordered by
+subsequence form a partial order in which two independent transactions `a`
+and `b` have two incomparable minimal common expansions, `ab` and `ba`."
+
+Lean: schedules `Sched T` are lists ordered by `List.Sublist` (a `PO`
+instance); "independent" is read as `a ≠ b`.  Both `ab` and `ba` are common
+expansions of `a` and `b`, each minimal among common expansions, and they are
+incomparable. -/
+theorem «sec:functional-specifications/subsequence-example» {T : Type} {a b : T}
+    (hab : a ≠ b) :
+    (∀ s t : Sched T, s ≼ t ↔ s.txs.Sublist t.txs) ∧
+    ((⟨[a]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧
+      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
+        u ≼ ⟨[a, b]⟩ → u = ⟨[a, b]⟩) ∧
+    ((⟨[a]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧
+      ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
+        u ≼ ⟨[b, a]⟩ → u = ⟨[b, a]⟩) ∧
+    ¬ (⟨[a, b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ ¬ (⟨[b, a]⟩ : Sched T) ≼ ⟨[a, b]⟩ :=
+  ⟨sched_le_iff, sched_two_minimal hab⟩
+
 /-- **Def. `def:functional-monotonicity`** (Functional monotonicity).  "`Spec`,
 with induced function `f`, is *monotone* if `i ≼ j ⟹ f(i) ≼ f(j)`."
 
@@ -517,6 +538,24 @@ theorem «prop:functional-exposure-boundary/nonmonotone-seals» {I O : Type} [PO
     (hik : i ≼ k) (hio : sp.S i o) (hku : sp.S k u) (hn : ¬ o ≼ u) :
     Sealed (canon sp i) o k u :=
   nonmono_seals hf hik hio hku hn
+
+/-- **Eq. `eq:query-monotonicity`**.  "Classical CALM fits the pattern with
+inputs `J` ordered by fact inclusion and outputs `Q(J)` ordered by answer
+inclusion.  Functional monotonicity becomes `J ⊆ J' ⟹ Q(J) ⊆ Q(J')`, the
+standard definition of a monotone query … Functional CALM generalizes the
+statement."
+
+Lean: fact sets and answer sets are `PSet F`, `PSet A` (predicates under
+inclusion); `querySpec Q` is the graph of `Q`.  It is functional, its
+functional monotonicity is exactly the displayed implication, and hence (by
+Functional CALM) it is consistent exactly when the implication holds. -/
+theorem «eq:query-monotonicity» {F A : Type} (Q : PSet F → PSet A) :
+    (querySpec Q).Functional ∧
+    ((querySpec Q).MonotoneF ↔
+      ∀ J J' : PSet F, (∀ x, J.mem x → J'.mem x) → ∀ a, (Q J).mem a → (Q J').mem a) ∧
+    ((querySpec Q).Consistent ↔
+      ∀ J J' : PSet F, (∀ x, J.mem x → J'.mem x) → ∀ a, (Q J).mem a → (Q J').mem a) :=
+  ⟨querySpec_functional Q, query_monotone_iff Q, query_consistent_iff Q⟩
 
 /-! ## Cross-references from §6 (`sections/discussion.tex`) -/
 

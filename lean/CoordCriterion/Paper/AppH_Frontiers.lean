@@ -357,12 +357,21 @@ the empty tuple, which every output refines, and `T` is monotone across
 partitions; forbidding even that makes the deployment single-authority
 (Appendix `app:deployment`)."
 
-Lean: only the single-authority variant (participant `0` may emit every row
-of `T`, participant `1` none) is formalized; the variant in which participant
-`1` may also emit the empty tuple is not. -/
+Lean: `agreeSoleOwnerD I` lets participant `0` emit every row of `T` and
+participant `1` only the empty tuple `ptEmpty`; `agreeSingleD I` is the
+single-authority variant (participant `1` emits nothing). Both are monotone
+across partitions. -/
 theorem «sec:frontiers/configuration-example/sole-owner» {I : Type} [PO I] :
+    (∀ i x, (agreeSoleOwnerD I).A 0 i x ↔ (agreeSpec I).S i x) ∧
+    (∀ i x, (agreeSoleOwnerD I).A 1 i x ↔ x = ptEmpty) ∧
+    (∀ x, ptEmpty ≼ x) ∧
+    MonoAcrossPartitions (agreeSoleOwnerD I) ∧
     SingleAuthority (agreeSingleD I) 0 ∧ MonoAcrossPartitions (agreeSingleD I) :=
-  ⟨fun _ hq _ _ h => hq h.1, cfg_agree_single_authority⟩
+  ⟨fun _ _ => ⟨fun h => h.1, fun h => ⟨h, fun h' => absurd h' (by decide)⟩⟩,
+   fun _ _ => ⟨fun h => h.2 rfl,
+     fun h => ⟨h ▸ ⟨fun _ => ⟨false⟩, rfl, fun _ => Or.inl rfl⟩, fun _ => h⟩⟩,
+   ptEmpty_le, cfg_agree_sole_owner,
+   fun _ hq _ _ h => hq h.1, cfg_agree_single_authority⟩
 
 /-! #### Causal register -/
 

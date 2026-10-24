@@ -16,7 +16,8 @@ the deployment notions of `CC.Deploy`:
   `product_full_not_monoAcross`), and a counterexample to the literal wording
   (`tri_incomparable`, `tri_liftedMono`);
 * Example `product-config-example` with an arbitrary input poset
-  (`cfg_agree_not_monoAcross`, `cfg_agree_single_authority`), and the fact
+  (`cfg_agree_not_monoAcross`; the sole-owner deployments
+  `cfg_agree_sole_owner`, `cfg_agree_single_authority`), and the fact
   that the product interface does not satisfy the sufficient condition of
   `Appendix/DeploymentExamples.lean` (`cfg_product_conflict`).
 
@@ -354,6 +355,44 @@ def agreeSingleD (I : Type) [PO I] : Deployment (agreeSpec I) 2 where
 theorem cfg_agree_single_authority : MonoAcrossPartitions (agreeSingleD I) :=
   (single_authority_iff (by decide) (agreeSingleD I) 0 (fun q hq _ _ h => hq h.1)).2
     fun _ x hx _ _ => ⟨x, hx.2, PO.refl x⟩
+
+/-- The empty partial tuple `⊥`, below every partial tuple. -/
+def ptEmpty : PTd (fun _ : Fin 2 => Disc Bool) := ⟨fun _ => none⟩
+
+theorem ptEmpty_le (x : PTd (fun _ : Fin 2 => Disc Bool)) : ptEmpty ≼ x := fun _ => trivial
+
+/-- One participant owns both coordinates: participant `0` may emit every
+row of agreement, participant `1` only the empty tuple. -/
+def agreeSoleOwnerD (I : Type) [PO I] : Deployment (agreeSpec I) 2 where
+  A p i x := (agreeSpec I).S i x ∧ (p = 1 → x = ptEmpty)
+  sub _ _ _ h := h.1
+
+/-- Agreement is monotone across partitions under `agreeSoleOwnerD`: the
+residual output of participant `0`'s run refines all its rows, every output of
+participant `1` is `⊥`, and agreement does not depend on the input. -/
+theorem cfg_agree_sole_owner : MonoAcrossPartitions (agreeSoleOwnerD I) := by
+  intro comp _ F hA _ j _
+  cases h0 : F 0 with
+  | none =>
+    refine ⟨ptEmpty, ⟨fun _ => ⟨false⟩, rfl, fun _ => Or.inl rfl⟩, fun p r hr => ?_⟩
+    have hp : p = 1 := by
+      revert hr; refine Fin.cases ?_ (fun k => ?_) p
+      · exact fun hr => absurd hr (emits_none h0)
+      · intro _; have := k.isLt; ext; simp
+    rw [(hA p r hr).2 hp]; exact ptEmpty_le _
+  | some m =>
+    obtain ⟨u, hu⟩ := m.fin.hasCur
+    have hres := (m.residual _ _).1 hu
+    obtain ⟨y, hy, hyu⟩ := hres.1
+    refine ⟨u, ⟨y, hy, hyu⟩, fun p r hr => ?_⟩
+    by_cases hp : p = 1
+    · rw [(hA p r hr).2 hp]; exact ptEmpty_le _
+    · have hp0 : p = 0 := by
+        revert hp; refine Fin.cases ?_ (fun k => ?_) p
+        · exact fun _ => rfl
+        · intro hk; exfalso; apply hk; have := k.isLt; ext; simp
+      subst hp0
+      exact hres.2.2 r ((emits_some h0).1 hr)
 
 /-- The product interface does not satisfy the sufficient condition stated
 after the leader example: three authorized rows, `e_0(0)`, `e_0(1)`, `e_1(0)`,
