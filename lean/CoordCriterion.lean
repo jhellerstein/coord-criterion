@@ -15,6 +15,7 @@ import CoordCriterion.Distributed.Systems
 import CoordCriterion.CAP.Model
 import CoordCriterion.CAP.CompleteCAP
 import CoordCriterion.CAP.AvailabilityAtEnd
+import CoordCriterion.CAP.Necessity
 import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CAP.Register
 import CoordCriterion.CAP.ResponseAvailability

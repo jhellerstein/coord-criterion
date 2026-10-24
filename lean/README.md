@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-547 entries.
+549 entries.
 
 ### §2 Functional CALM
 
@@ -293,6 +293,8 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered relational specification `S`, the following are equivalent: |
 | `«thm:complete-cap/moreover»` | theorem | Theorem `thm:complete-cap`, "moreover" clause: |
 | `«thm:complete-cap/proof-cf-continuations»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1), last sentence: |
+| `«thm:complete-cap/proof-two-step»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2), the induction step: |
+| `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2): |
 | `«sec:complete-cap/necessity-any-system»` | theorem | "The proof of (1)⇒(2) never assumes that the system is commitment-free, so local commitments cannot enlarge the class of specifications with both properties.… |
 | `«sec:complete-cap/lm-fails»` | theorem | "When Lifted Monotonicity fails, some permitted output either waits for another component, sacrificing Availability, or completes independently at the cost o… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |

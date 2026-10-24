@@ -176,6 +176,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«thm:complete-cap»
 #check @CC.Paper.«thm:complete-cap/moreover»
 #check @CC.Paper.«thm:complete-cap/proof-cf-continuations»
+#check @CC.Paper.«thm:complete-cap/proof-two-step»
+#check @CC.Paper.«thm:complete-cap/proof-necessity»
 #check @CC.Paper.«sec:complete-cap/necessity-any-system»
 #check @CC.Paper.«sec:complete-cap/lm-fails»
 #check @CC.Paper.«sec:complete-cap/deterministic-strategies»
