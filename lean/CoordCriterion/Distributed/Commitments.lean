@@ -819,7 +819,7 @@ theorem canonical_equivalent {B : Basis sp} {i : I} {es : List (SEvent sp)} {ρ 
 
 /-! ### Proposition thm:commitments-require-coordination -/
 
-/-- **Prop. conflicting output events cannot coexist.**  Let `x ∈ R(i)`.  If
+/-- **Prop. conflicting output events cannot be reconciled.**  Let `x ∈ R(i)`.  If
 `Out_γ(o)` takes `σ` to `σ'` with no output in `R'(i)` refining `x`, then
 `γ ≠ ε`; and if `Out_γ'(x)` takes `σ` to `t`, then no state with current input
 `i` is reachable (under any basis) from both `σ'` and `t`. -/

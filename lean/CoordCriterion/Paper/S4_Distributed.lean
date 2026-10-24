@@ -627,7 +627,7 @@ theorem «def:coordination/commitment-free-runs» {sp : Spec I O} :
   ⟨coordFree_iff_not, fun _ _ _ _ h hf => coordFree_execCF h hf,
     fun B _ _ _ h => execCF_coordFree B h⟩
 
-/-- **Prop. conflicting output events cannot coexist**
+/-- **Prop. conflicting output events cannot be reconciled**
 (`thm:commitments-require-coordination`).  "Let `σ = (i,R)` be a state and
 `x ∈ R(i)`.  Suppose one participant's event `Out_γ(o)` takes `σ` to
 `σ' = (i,R')` with no output in `R'(i)` that refines `x` (necessarily
