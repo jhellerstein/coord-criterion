@@ -48,3 +48,28 @@ current.
 * Appendices are for theoreticians: definition, statement, proof.
 * Work on `main`; stage specific files; pull before editing; push after.
 * Never touch untracked files (uploaded PDFs, `.infinity/`).
+
+## Voice
+
+The author's voice (see his papers in `jmhpapers/`, untracked): medium
+declaratives broken by short sentences that land a point; intuition before
+formalism ("Intuitively, … Formally, …"), then an example ("Consider …");
+concrete systems artifacts; coined names that are explained; owned, calibrated
+hedges; plain signposting ("Recall that", "Note that", "First, … Second, …").
+
+Avoid:
+
+* Imperative "do X, and Y" constructions ("Compose them…, and…", "Write X
+  down, and…", "Model X as Y", "Partition a database…").  Use "Consider…",
+  "We model…", "Given…".  Standard proof imperatives ("Let", "Fix") are fine.
+* Results or sections as agents ("the results ask one question"); abstract
+  nouns as subjects ("This characterization yields…").
+* Vague "boundary", "object", "machinery", "notion"; generic openers ("central
+  goal", "core structures"); intensifiers ("crucially", "key insight").
+* Semicolon chains of three or more clauses; stacked appositives and
+  parentheticals; runs of "not X but Y"; slogan-like paragraph closers;
+  restating what was just said; "In other words" (use "Said differently",
+  "Simply put").
+* Cute flourishes ("someone is watching"), "Simple as it is" (prefer "Despite
+  its simplicity"), "the designer" for a hypothetical ("a designer").
+* Conclusions that only recap; the author writes the research agenda.
