@@ -43,5 +43,9 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Def. monotone across partitions; Prop. partition compatibility (family level) | `CC.Front.MonoAcrossPartitions`, `CC.Front.partition_compat_iff` | Frontiers |
 | Thm. independent-product frontier | `CC.Front.product_monoAcross`, `CC.Front.product_partition_compat`, `CC.Front.strengthening_not_monoAcross` | Frontiers |
 | Example product-config (and injective-ownership counterexample) | `CC.Front.config_agreement_not_ok`, `CC.Front.agreement_ok_sole_owner` | Frontiers |
+| Defs. deployment, separable family, monotone across partitions, deployment availability | `CC.Deploy.Separable`, `CC.Deploy.MonoAcrossPartitions`, `CC.Deploy.DeploymentAvailability` | Deployment |
+| Prop. partition compatibility under a deployment | `CC.Deploy.partition_compatibility`, `CC.Deploy.partition_compatibility_confluent` | Deployment |
+| Monotonicity ⇒ monotone across partitions; converse fails (leader election) | `CC.Deploy.monoAcrossPartitions_of_liftedMono`, `CC.Deploy.single_authority_monoAcross`, `CC.Deploy.leader_not_liftedMono`, `CC.Deploy.split_authority_not_monoAcross` | Deployment |
+| Full deployment: pairs suffice, monotone across partitions ⇔ monotone; Deployment Availability = Availability | `CC.Deploy.ce_of_pairs`, `CC.Deploy.full_deployment_iff`, `CC.Deploy.deploymentAvailability_full` | Deployment |
 
 Modeling choices are documented at the top of each file.
