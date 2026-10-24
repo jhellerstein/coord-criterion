@@ -345,18 +345,14 @@ we derive the common-\indesc condition.  Let $(i_1,o_1),\ldots,(i_k,o_k)$ be
 rows of $\Spec$ with a common \indesc $j$; we need some $u\in\fiber{j}$ with
 $o_r\OutputOrd u$ for every $r$.  If $k=0$, totality gives one.  Repeating a
 row if necessary, assume $k\ge2$.  Take participants $p_1,\ldots,p_k$ with
-initial inputs $i_1,\ldots,i_k$, each in its own component.  Each $p_r$ starts
-in state $\sigma_S(i_r)$, whose fiber contains $o_r$, so by Availability $p_r$
-can emit $o_r$ using only events of its own component and no input.
-Strategies depend only on local history, so running these continuations side
-by side gives one partitioned history that the system produces.  In it the
-participants' current inputs are still $i_1,\ldots,i_k$, so by Partition
-Consistency some continuation brings every participant to one state $(j,R)$,
-which has a row $(j,u)$ (Definition~\ref{def:residual-state}).  Events only remove rows, so $(j,u)$ was in $p_r$'s
-table right after $p_r$ emitted $o_r$; every row left after emitting $o_r$
-\outrel $o_r$ (Lemma~\ref{lem:canonical-commitment-normal-form}), so
-$o_r\OutputOrd u$.  Proposition~\ref{prop:common-expansion-form} then gives
-Lifted Monotonicity.
+initial inputs $i_1,\ldots,i_k$, each in its own component.  Each component runs without messages, starting at input
+$i_r$.  By Availability, each $p_r$ can emit $o_r$.  By Partition Consistency,
+the components then reach one state $(j,R)$, with some $u\in R(j)$
+(Definition~\ref{def:residual-state}).  Rows are never added, so $(j,u)$ was
+already in $p_r$'s table just after it emitted $o_r$; emitting $o_r$ keeps only
+rows whose output \outrel $o_r$
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so $o_r\OutputOrd u$.
+Proposition~\ref{prop:common-expansion-form} then gives Lifted Monotonicity.
 \end{proof}
 
 The proof of (1)$\Rightarrow$(2) never assumes that the system is
