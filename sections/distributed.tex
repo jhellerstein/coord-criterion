@@ -55,11 +55,19 @@ $\Rejected_o$.
 \label{def:system}
 A \emph{system} consists of a \emph{commitment basis} $\mathcal B$, the set of
 commitments its output events may apply, shared by all participants, and a
-\emph{strategy} for each participant: a possibly nondeterministic rule that
-chooses the participant's
-next events from its local history in a distributed history
-(Definition~\ref{def:distributed-history}), including the messages it has
-received.
+\emph{strategy} for each participant $p$, a function
+\[
+  \theta_p:\Lambda_p\to\mathcal P(E_p)
+\]
+from $p$'s \emph{local histories} $\Lambda_p$, the finite sequences of $p$'s
+history events (Definition~\ref{def:distributed-history}), including the
+messages it has received, to sets of events in $E_p$, the output, send, and
+receive events of $p$: those $p$ may perform next.  A strategy is nondeterministic when it permits more
+than one event; input events come from the environment and are not chosen by
+the strategy.  A distributed history is \emph{produced} by the system when
+every output, send, and receive event of each participant $p$ is in
+$\theta_p$ of $p$'s local history before it, and every output event applies
+only commitments from $\mathcal B$.
 \end{definition}
 
 \begin{definition}[Output event of a system]
