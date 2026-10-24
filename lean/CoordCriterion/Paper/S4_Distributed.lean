@@ -1,6 +1,7 @@
 import CoordCriterion.Distributed.Systems
 import CoordCriterion.CALM.TransientConflict
 import CoordCriterion.Figures
+import CoordCriterion.CAP.LocalCommitment
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
 import CoordCriterion.Appendix.TransactionBases.CanonicalExample
@@ -585,9 +586,9 @@ theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
-/-- §4.4: "We take coordination to mean a commitment: a binding decision that
-removes behavior the specification still permits. … A mechanism used without
-committing is not coordination.  Closing the polls after every voter has voted
+/-- §4.4: "A commitment needs coordination, however, only when some other
+behavior could contradict it … We take coordination to mean such a
+commitment.  A mechanism used without committing is not coordination.  Closing the polls after every voter has voted
 still runs the mechanism, but no ballot is left to seal, so it removes nothing
 the specification still permits and applies no commitment."  At the canonical
 state of any full ballot, the poll-closing commitment `closePolls` is undefined
@@ -597,21 +598,68 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
   Figures.Elec.close_after_voting i hfull
 
-/-- **Def. coordination** (`def:coordination`).  "A run or history coordinates
-when one of its output events `Out_γ(o)` has `γ ≠ ε`, that is, applies a
-commitment: a seal of inputs or a choice among outputs (Proposition
-seal-or-choose)."
+/-- **Def. coordination** (`def:coordination`).  "Let an output event
+`Out_γ(o)` of a run apply a commitment, and let `𝓡` be a set of runs.  The
+commitment is contradicted in `𝓡` when some run in `𝓡` accepts an input it
+seals, or emits, at the same input, an output it chooses against.  A run or
+history coordinates relative to `𝓡` when one of its output events applies a
+contradicted commitment, and is coordination-free relative to `𝓡` otherwise.
+For a specification, `𝓡` is its canonical runs; for a system, it is the runs
+its participants can perform, under any inputs the environment may supply."
 
-Lean: for runs, i.e. lists of system events.  (For histories of the `CC.CAP`
-model the same condition is on the `out γ o` events of each participant.) -/
-abbrev «def:coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+Lean, for a system (`CC.CAP` model): `LocalEvent Sys σ σc` says the event's
+commitments, taking `σ` to `σc`, remove no row `(k,x)` that some produced
+history emits at current input `k` (`SysEmits`) and seal no input that some
+produced history accepts (`SysAccepts`); produced histories range over all
+inputs the adversarial environment may supply.  `System.CoordinationFree` asks
+this of every output event of every produced history. -/
+abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
+  Sys.CoordinationFree
+
+/-- Def. `def:coordination`, for a specification (`𝓡` the canonical runs):
+coordinating means applying a commitment (`Coordinates`: some output event has
+`γ ≠ ε`). -/
+abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   Coordinates es
 
-/-- Def. `def:coordination`: "It is coordination-free, equivalently
-commitment-free, when every output event is some `Out_ε(o)`; such events may
-still perform output retirements." -/
+/-- "For a specification, every commitment is contradicted: some canonical
+run accepts each input that a commitment can seal, and some canonical run
+emits each permitted output."  Lean: from `σ_S(i)` with `i ≼ k`, the
+canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ S(k)` at
+current input `k`. -/
+theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I} {x : O}
+    (hik : i ≼ k) (hx : sp.S k x) :
+    ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
+  CAP.canonical_run_contradicts hik hx
+
+/-- Def. `def:coordination`: "So for a specification, coordination-free means
+commitment-free: every output event is some `Out_ε(o)`, which may still
+perform output retirements." -/
 abbrev «def:coordination/coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   CoordFree es
+
+/-- "Closing the polls before every voter has voted seals the remaining
+ballots."  Lean: at panel (b) (`xy·`), closing the polls is defined and leaves
+no row at the remaining-ballot input `xyx`, which had the row `(xyx, x)`. -/
+theorem «sec:coordination/closing-before-voting-seals» :
+    (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec CALM.bxy) =
+      some Figures.Elec.panelD ∧
+    (canon CALM.elec CALM.bxy).R CALM.bxyx (.win .x) ∧
+    ∀ o, ¬ Figures.Elec.panelD.R CALM.bxyx o := by
+  refine ⟨Figures.Elec.close_at_b,
+    ⟨(by decide : CALM.Res.win .x = CALM.winner CALM.bxyx), by decide⟩, fun o h => ?_⟩
+  have := (Figures.Elec.panelD_rows _ o).1 h
+  exact absurd this.1 (by decide)
+
+/-- "Outputs, by contrast, are chosen only by strategies, so a choice is
+contradicted only when some participant's strategy may emit the output it
+rules out."  Lean: `SysEmits` requires an output event in a produced history,
+hence one allowed by the participant's strategy. -/
+theorem «sec:coordination/choices-by-strategies» {sp : Spec I O} {D : Type}
+    (Sys : CAP.System sp D) {k : I} {x : O} (h : CAP.SysEmits Sys k x) :
+    ∃ n init q pre γ, Sys.strat n init q pre (CAP.LEv.out γ x) := by
+  obtain ⟨n, init, H, q, a, b, γ, σ, _, hp, hH, _, _⟩ := h
+  exact ⟨n, init, q, a, γ, ((hp q) a _ b hH).2⟩
 
 /-- Def. `def:coordination`: coordination-free is the negation of coordinates,
 and coordination-free runs under any basis are exactly the commitment-free

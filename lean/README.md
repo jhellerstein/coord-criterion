@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-547 entries.
+556 entries.
 
 ### §2 Functional CALM
 
@@ -264,7 +264,11 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:coordination»` | abbrev | **Def. |
+| `«def:coordination/specification»` | abbrev | Def. |
+| `«sec:coordination/specification-contradicted»` | theorem | "For a specification, every commitment is contradicted: |
 | `«def:coordination/coordination-free»` | abbrev | Def. |
+| `«sec:coordination/closing-before-voting-seals»` | theorem | "Closing the polls before every voter has voted seals the remaining ballots." Lean: |
+| `«sec:coordination/choices-by-strategies»` | theorem | "Outputs, by contrast, are chosen only by strategies, so a choice is contradicted only when some participant's strategy may emit the output it rules out." Lean: |
 | `«def:coordination/commitment-free-runs»` | theorem | Def. |
 | `«thm:commitments-require-coordination»` | theorem | **Prop. |
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
@@ -285,24 +289,29 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-notions(2)/produced»` | theorem | Def. |
 | `«def:partition-notions(3)»` | theorem | Def. |
 | `«def:partition-notions(4)»` | abbrev | Def. |
+| `«def:partition-notions(4)/for»` | abbrev | Def. |
+| `«def:partition-notions(4)/for-S»` | theorem | Def. |
 | `«def:partition-notions(4)/unfolded»` | theorem | Def. |
 | `«def:partition-notions(4)/at-cuts»` | theorem | Def. |
 | `«def:partition-notions(5)»` | abbrev | Def. |
 | `«def:partition-notions(5)/unfolded»` | theorem | Def. |
 | `«def:partition-notions(5)/at-cuts»` | theorem | Def. |
-| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered relational specification `S`, the following are equivalent: |
-| `«thm:complete-cap/moreover»` | theorem | Theorem `thm:complete-cap`, "moreover" clause: |
-| `«thm:complete-cap/proof-cf-continuations»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1), last sentence: |
-| `«thm:complete-cap/proof-two-step»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2), the two-row case: |
+| `«def:partition-notions(6)»` | abbrev | Def. |
+| `«sec:complete-cap/consistent-on-S»` | theorem | "With `A = S`, consistency on `A` is the common-expansion condition." |
+| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered relational specification `S` and an availability relation `A ⊆ S`, the following are equivalent: |
+| `«thm:complete-cap/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1): |
 | `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2): |
-| `«sec:complete-cap/necessity-any-system»` | theorem | "The two-row case never assumes that the system is commitment-free, so local commitments cannot enlarge the class of specifications that admit a system with… |
-| `«sec:complete-cap/commitments-not-needed»` | theorem | "Nor are they needed: |
-| `«sec:complete-cap/pc-demand»` | theorem | "The two-row case also shows what Partition Consistency demands: |
-| `«sec:complete-cap/lm-fails»` | theorem | "When Lifted Monotonicity fails, some permitted output either waits for another component, sacrificing Availability, or is emitted independently at the cost… |
+| `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `S` satisfies Lifted Monotonicity." |
+| `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
+| `«cor:complete-cap-S/proof-cf-continuations»` | theorem | Proof of Corollary `cor:complete-cap-S`: |
+| `«sec:complete-cap/necessity-any-system»` | theorem | "The converse never assumes that the system is commitment-free, so commitments cannot enlarge the class of specifications that admit a system with Availabili… |
+| `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Under consistency on `A`, the canonical output event for an output of `A` seals nothing and chooses only against outputs outside `A`, which the system never… |
+| `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `A = S` it needs no commitment at all." Lean: |
+| `«sec:complete-cap/consistency-fails»` | theorem | "When consistency on `A` fails, some output of `A` either waits for another component, sacrificing Availability, or is emitted independently at the cost of P… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Model a register whose input is the set of operations a participant knows, with their real-time precedence, and whose outputs answer every operation of the… |
-| `«sec:complete-cap/gl-two-row-forced»` | theorem | "In the two-row case, Availability is needed only so that `p` can emit the acknowledgment and `q` can emit `v_0`. |
-| `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of the two-row argument": |
+| `«sec:complete-cap/gl-two-row-forced»` | theorem | "The converse in the proof of Theorem `thm:complete-cap` needs Availability only so that `p` can emit the acknowledgment and `q` can emit `v_0`. |
+| `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of Complete CAP": |
 | `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |
 | `«sec:complete-cap/response-form»` | theorem | "gives a response form of Complete CAP for responses that are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAvailability.lean`). |
 | `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model (Proposition `prop:gl-async`)." |

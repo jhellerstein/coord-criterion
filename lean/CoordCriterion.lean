@@ -18,6 +18,7 @@ import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.Necessity
 import CoordCriterion.CAP.Forced
 import CoordCriterion.CAP.AvailabilityFor
+import CoordCriterion.CAP.LocalCommitment
 import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CAP.Register
 import CoordCriterion.CAP.ResponseAvailability
