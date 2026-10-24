@@ -22,10 +22,13 @@ The histories above use the output events of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}, which apply
 exactly the commitments an output requires: they seal the inputs in
 $\Sealed_o$ and remove the rows in $\Rejected_o$
-(Definitions~\ref{def:output-event} and~\ref{def:lifted-output-event}).  A
-system may commit
-differently, for example by sealing more than an output requires or by taking a
-lock before it chooses, so we now let systems bring their own commitments.
+(Definitions~\ref{def:output-event} and~\ref{def:lifted-output-event}).
+Many real systems behave differently.  For example, the registrar of
+Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the same
+event (Figure~\ref{fig:election-frames}(d)), a seal that $\mathsf{output}(\bot)$
+does not require; and a lock manager fixes $A$ before $B$ before any serial
+order is emitted (Figure~\ref{fig:cc-commitments}(h) below).  We now let
+systems bring their own commitments.
 
 \begin{definition}[Commitment]
 \label{def:commitment}
