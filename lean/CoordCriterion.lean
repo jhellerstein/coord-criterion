@@ -13,3 +13,5 @@ import CoordCriterion.GilbertLynch
 import CoordCriterion.Audit.Distributed
 import CoordCriterion.Audit.CALM
 import CoordCriterion.Audit.Instances
+import CoordCriterion.Audit.Bases
+import CoordCriterion.Audit.Applications
