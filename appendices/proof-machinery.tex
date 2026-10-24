@@ -54,7 +54,7 @@ which every later argument uses them.
 
 \begin{lemma}[Reconciliation]
 \label{lem:reconciliation}
-Let runs end at $(i_r,R_r)$, $r=1,\ldots,k$, let $j$ be a common \indesc of
+Let runs end at $(i_r,R_r)$, $r=1,\ldots,m$, let $j$ be a common \indesc of
 the $i_r$, and let $E$ be the set of outputs emitted on any of them.  The runs
 are confluent at $j$ if and only if some $u\in\fiber{j}$ \outrel every output
 in $E$.
@@ -80,7 +80,7 @@ emit $o_r$; for the empty family, totality gives $\fiber{j}\neq\varnothing$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
 Suppose the common-\indesc condition holds; by Theorem~\ref{thm:complete-calm}, the
-specification is consistent.  Let $(i,R)$ be reached by a commitment-free run, and let $o\in R(i)$, $j\InputGe i$ legal, and
+specification is consistent.  Let $(i,R)$ be reached by a run (commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
 $x\in R(j)$.  Extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
 By consistency the two extended runs are confluent at $j$, so
@@ -100,10 +100,11 @@ If every two rows with a common \indesc $j$ have a common \outnoun in
 $\fiber{j}$, the condition holds for every finite family: replace the first
 two rows by a row $(j,u)$ at $j$ and repeat; a single row is paired with any
 row at $j$.  The pairs must range over all rows of $S$, including those at
-$j$.  Restricting the families to rows at minimal inputs does not suffice,
-even $k$ rows at a time: in the $k$-set agreement example of
-Appendix~\ref{app:additional-applications}, every $k$ of $k+1$ proposal rows
-are compatible, but not all of them.
+$j$.  Restricting the families to rows at single-proposal inputs does not
+suffice, even $k$ rows at a time: in the $k$-set agreement example of
+Appendix~\ref{app:additional-applications}, every family of at most $k$ rows
+at such inputs is compatible at each common \indesc, but the $k+1$ proposal
+rows are not.
 
 \subsection{Invariant confluence (Section~\ref{sec:iconfluence-instance})}
 \label{app:iconfluence}

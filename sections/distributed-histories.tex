@@ -11,8 +11,8 @@ messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$.  A
 \emph{message} is a pair $m=(j,d)$ of a cumulative input $j$, or $\varnothing$
 if it carries none, and arbitrary other data $d$.  A receive does not change
 the specification state; a participant at $(i,R)$ that receives $(j,d)$ with
-$j\neq\varnothing$ incorporates $j$ by its own $\mathsf{input}(k)$ for a legal
-common \indesc $k$ of $i$ and $j$.
+$j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
+legal common \indesc $k$ of $i$ and $j$, when one exists.
 
 \begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
@@ -24,7 +24,8 @@ and~\ref{def:lifted-output-event}),
 $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
 \begin{enumerate}
   \item a total local order on each participant's history events;
-  \item for each receive, a matching send at another participant; and
+  \item for each receive, a matching send of the same message at another
+        participant, each send matching at most one receive; and
   \item for each participant $p$, its input and output events, in local
         order, form a defined transition sequence from $\sigma_S(i_p)$: each
         is legal at the state where it occurs.
@@ -165,7 +166,7 @@ Corollary~\ref{cor:state-by-input} also gives convergence:
 \label{cor:convergence}
 In any history of a consistent functional specification, every
 participant whose current input at a consistent cut is $j$ is in state
-$\sigma_S(j)$.  Participants that have received the same input therefore agree,
+$\sigma_S(j)$.  Participants with the same current input therefore agree,
 regardless of message paths, arrival order, or the outputs they emitted.
 \end{corollary}
 
