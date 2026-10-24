@@ -25,10 +25,12 @@ $\Sealed_o$ and remove the rows in $\Rejected_o$
 (Definitions~\ref{def:output-event} and~\ref{def:lifted-output-event}).
 Many real systems behave differently.  For example, the registrar of
 Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the same
-event (Figure~\ref{fig:election-frames}(d)), a seal that $\mathsf{output}(\bot)$
-does not require; and a lock manager fixes $A$ before $B$ before any serial
-order is emitted (Figure~\ref{fig:cc-commitments}(h) below).  We now let
-systems bring their own commitments.
+event (Figure~\ref{fig:election-frames}(d)); the output event for $\bot$ does
+not require the poll-closing seal, so closing the polls is a design decision of
+the system.  Similarly, a lock manager commits to an ordering of ongoing
+transactions ($A$ before $B$) without emitting that ordering until later
+(Figure~\ref{fig:cc-commitments}(h) below).  In this section we show how such
+systems can be modeled, by letting them bring bespoke commitments.
 
 \begin{definition}[Commitment]
 \label{def:commitment}
