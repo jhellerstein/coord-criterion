@@ -93,7 +93,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-579 entries.
+574 entries.
 
 ### §2 Functional CALM
 
@@ -311,18 +311,13 @@ File `Paper/S5_Instances.lean`; paper source `sections/instances.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«tab:instances/query-calm»` | theorem | Table `tab:instances`, row "Query CALM": |
-| `«tab:instances/crdt»` | theorem | Table `tab:instances`, row "CRDT": |
-| `«tab:instances/registers»` | theorem | Table `tab:instances`, row "Registers": |
-| `«tab:instances/hat»` | theorem | Table `tab:instances`, row "HAT": |
-| `«tab:instances/invariant-confluence»` | theorem | Table `tab:instances`, row "Invariant confluence": |
 | `«sec:query-instance/functional-directed»` | theorem | Sec. |
-| `«eq:crdt-state-function»` | theorem | Eq. |
+| `«sec:crdt-instance/state-function»` | theorem | Sec. |
 | `«sec:crdt-instance/state-monotone»` | theorem | Sec. |
-| `«eq:crdt-query-monotonicity»` | theorem | Eq. |
+| `«sec:crdt-instance/query-calm»` | theorem | Sec. |
 | `«sec:crdt-instance/query-monotone-on-reachable»` | theorem | Sec. |
-| `«eq:crdt-2p-query»` | theorem | Eq. |
-| `«eq:crdt-thresholds»` | theorem | Eq. |
+| `«sec:crdt-instance/two-phase»` | theorem | Sec. |
+| `«sec:crdt-instance/thresholds»` | theorem | Sec. |
 | `«sec:crdt-instance/lww»` | theorem | Sec. |
 | `«sec:hat-instance/accumulating-facts»` | theorem | Paragraph "Accumulating facts": |
 | `«sec:hat-instance/serializability-cycle»` | theorem | Paragraph "Serializability and transaction ordering": |

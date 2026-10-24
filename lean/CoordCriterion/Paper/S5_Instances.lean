@@ -1,7 +1,5 @@
 import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.BailisDefinition
-import CoordCriterion.Appendix.Registers
-import CoordCriterion.CAP.Register
 import CoordCriterion.CALM.Lemmas
 
 /-!
@@ -13,13 +11,11 @@ subsections, entries appear in paper order, and each entry quotes the claim
 it formalizes.
 
 * Numbered results and displayed equations are named by their LaTeX label
-  (`«prop:iconfluence-lm»`, `«eq:crdt-2p-query»`, …).
+  (`«prop:iconfluence-lm»`, …).
 * Unlabeled claims are named `«<enclosing label>/<slug>»`, e.g.
-  `«sec:hat-instance/serializability-cycle»`; rows of Table `tab:instances`
-  are `«tab:instances/<row>»`.
+  `«sec:hat-instance/serializability-cycle»`.
 * Every proof is a pointer to the library (`Instances/Examples.lean`,
-  `Instances/InvariantConfluence.lean`, `Instances/BailisDefinition.lean`,
-  and, for the Registers row, `Appendix/Registers.lean`, `CAP/Register.lean`).
+  `Instances/InvariantConfluence.lean`, `Instances/BailisDefinition.lean`).
 
 Conventions shared by the entries (details in `Instances/Examples.lean`):
 finite payload sets are `Inst.FSet P` (inclusion); a join-semilattice is
@@ -38,72 +34,6 @@ namespace Paper
 
 open CC.Comp (Monotone graph)
 
-/-! ## Table `tab:instances`: coordination results in the common model -/
-
-/-- Table `tab:instances`, row "Query CALM": "Later answers cover earlier
-ones as input grows; negation may require sealing."  Lean: a functional
-specification has directed (singleton) fibers, and in a functional
-specification an earlier answer `o` at `i` that is not below the answer `u` at
-an expansion `k` is sealed by emitting `o` (the row `(k,u)` is a seal). -/
-theorem «tab:instances/query-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
-    (sp.Functional → sp.DirectedOutputs) ∧
-      (sp.Functional → ∀ {i k : I} {o u : O}, i ≼ k → sp.S i o → sp.S k u → ¬ o ≼ u →
-        Sealed (canon sp i) o k u) :=
-  ⟨CALM.functional_directed, fun hf => CALM.nonmono_seals hf⟩
-
-/-- Table `tab:instances`, row "CRDT": "Join supplies a least common outcome
-across partial inputs."  Lean: `s(U₁ ∪ U₂)` covers `s(U₁)` and `s(U₂)` and
-lies below every common upper bound. -/
-theorem «tab:instances/crdt» {D : Type} [PO D] [Inst.JSL D] (s0 : D) (U₁ U₂ : Inst.FSet D) :
-    (Inst.st s0 U₁ ≼ Inst.st s0 (U₁.union U₂) ∧ Inst.st s0 U₂ ≼ Inst.st s0 (U₁.union U₂)) ∧
-      ∀ c, Inst.st s0 U₁ ≼ c → Inst.st s0 U₂ ≼ c → Inst.st s0 (U₁.union U₂) ≼ c :=
-  Inst.st_union_least s0 U₁ U₂
-
-/-- Table `tab:instances`, row "Registers": "Opposing total orders are
-incompatible; a read forced before a hidden write recovers Gilbert–Lynch
-(Cor. `cor:gilbert-lynch`); causal source maps (App. `app:registers`) can
-cover both reads."  Lean, on the two-write history `h2` of App. `app:registers`
-(`w_p, w_q` concurrent, both before `r_p, r_q`): (1) a deployment authorizing
-`r_p ↦ w_q` to `p` and `r_q ↦ w_p` to `q` makes the linearizable register not
-monotone across `{{p},{q}}`; (2) Gilbert–Lynch: no register system has both
-Response Availability and realized Response Partition Consistency; (3) the
-causal register admits the single source map `ρ12` sending `r_p ↦ w_q` and
-`r_q ↦ w_p`. -/
-theorem «tab:instances/registers» :
-    (∀ Dp : Deploy.Deployment (Deploy.linSpec Deploy.G2) 2,
-        Dp.A 0 Deploy.h2 Deploy.ρ1 → Dp.A 1 Deploy.h2 Deploy.ρ2 →
-        ¬ Deploy.MonoAcross Dp (fun p => p.val)) ∧
-      (∀ {D : Type} (Sys : CAP.System GL.regSpec D),
-        ¬ (CAP.ResponseAvailability Sys GL.regQn ∧ GL.RealizedRPC Sys)) ∧
-      Deploy.CausalFib Deploy.G2 Deploy.h2 Deploy.ρ12 :=
-  ⟨fun Dp h0 h1 => Deploy.lin_not_monoAcross Dp h0 h1, fun Sys => GL.gilbert_lynch Sys,
-    Deploy.causal_two_write⟩
-
-/-- Table `tab:instances`, row "HAT": "Some facts accumulate; serialization
-cycles and first-committer-wins require commitment."  Lean: the
-read-committed fact-set specification satisfies Lifted Monotonicity and is
-consistent; the serializable and first-committer-wins specifications are not
-consistent.  (Full statements in Sec. `sec:hat-instance` below.) -/
-theorem «tab:instances/hat» {I : Type} [PO I] (allowed : I → IConf.St Inst.Fact)
-    (hmono : Monotone allowed) :
-    ((Inst.factSpec allowed Inst.RC Inst.rc_empty).LiftedMono ∧
-        (Inst.factSpec allowed Inst.RC Inst.rc_empty).Consistent) ∧
-      ¬ (Inst.factSpec (fun i : IConf.St Inst.Fact => i) Inst.Ser Inst.ser_empty).Consistent ∧
-      ¬ (Inst.factSpec (fun i : IConf.St Inst.Fact => i) Inst.FCW (fun h => h.1)).Consistent :=
-  ⟨Inst.rc_liftedMono_consistent allowed hmono, Inst.serializable_spec_not_consistent.2,
-    Inst.snapshot_fcw.2.2.2⟩
-
-/-- Table `tab:instances`, row "Invariant confluence": "Valid merge is a
-common outcome; duplicate allocation violates uniqueness."  Lean: invariant
-confluence gives the common-expansion condition for `S_I`; for the
-uniqueness invariant it fails. -/
-theorem «tab:instances/invariant-confluence» {V Tx : Type} (M : IConf.Model V Tx) :
-    (M.IConfluent → (IConf.SI M).CommonExpansion) ∧
-      ¬ (IConf.SI Inst.uModel).CommonExpansion ∧ ¬ Inst.uModel.IConfluent :=
-  ⟨IConf.ic_commonExpansion M,
-    fun h => Inst.uniqueness_example.2.2.2.2.2.2.2.2 ((IConf.ic_iff_commonExpansion _).2 h),
-    Inst.uniqueness_example.2.2.2.2.2.2.2.2⟩
-
 /-! ## Query monotonicity (`sec:query-instance`) -/
 
 /-- Sec. `sec:query-instance`: "Their query specification is functional:
@@ -113,18 +43,21 @@ theorem «sec:query-instance/functional-directed» {I O : Type} [PO I] [PO O] {s
     (hf : sp.Functional) : sp.DirectedOutputs :=
   CALM.functional_directed hf
 
-/-! ## CRDTs: from convergent state to safe observations (`sec:crdt-instance`) -/
+/-! ## CRDTs: monotone queries over convergent state (`sec:crdt-instance`)
 
-/-- Eq. `eq:crdt-state-function`: `s(U) = s₀ ⊔ ⨆U`.  Lean: `Inst.st s₀ U` is
-the least upper bound of `{s₀} ∪ U` (independent of an enumeration of the
-finite set `U`). -/
-theorem «eq:crdt-state-function» {D : Type} [PO D] [Inst.JSL D] (s0 : D) (U : Inst.FSet D) :
+The opening paragraph credits the observation that convergent state can yield
+unsafe observations to Keep CALM and CRDT On; its two-phase-set example is
+checked in `«sec:crdt-instance/two-phase»` below. -/
+
+/-- Sec. `sec:crdt-instance`: "the replica's state is `s(U) = s₀ ⊔ ⨆U`."
+Lean: `Inst.st s₀ U` is the least upper bound of `{s₀} ∪ U` (independent of
+an enumeration of the finite set `U`). -/
+theorem «sec:crdt-instance/state-function» {D : Type} [PO D] [Inst.JSL D] (s0 : D) (U : Inst.FSet D) :
     Inst.IsLUB s0 U.1 (Inst.st s0 U) :=
   Inst.st_lub s0 U
 
-/-- Sec. `sec:crdt-instance`: "`U ⊆ V` implies `s(U) ⊑ s(V)`, and
-`s(U₁) ⊔ s(U₂) = s(U₁ ∪ U₂)`: the state specification is monotone, and join is
-the least state covering both states." -/
+/-- Sec. `sec:crdt-instance`: "Then `U ⊆ V` implies `s(U) ⊑ s(V)`, and
+`s(U₁) ⊔ s(U₂) = s(U₁ ∪ U₂)` is the least state refining both." -/
 theorem «sec:crdt-instance/state-monotone» {D : Type} [PO D] [Inst.JSL D] (s0 : D) :
     Monotone (Inst.st s0 : Inst.FSet D → D) ∧
       (∀ U₁ U₂ : Inst.FSet D, Inst.JSL.join (Inst.st s0 U₁) (Inst.st s0 U₂) = Inst.st s0 (U₁.union U₂)) ∧
@@ -133,16 +66,15 @@ theorem «sec:crdt-instance/state-monotone» {D : Type} [PO D] [Inst.JSL D] (s0 
           ∀ c, Inst.st s0 U₁ ≼ c → Inst.st s0 U₂ ≼ c → Inst.st s0 (U₁.union U₂) ≼ c :=
   ⟨Inst.st_mono s0, Inst.st_union s0, Inst.st_union_least s0⟩
 
-/-- Eq. `eq:crdt-query-monotonicity`: "by Functional CALM the client-visible
-specification `q ∘ s` is consistent exactly when
-`U ⊆ V ⟹ q(s(U)) ≼_Y q(s(V))`." -/
-theorem «eq:crdt-query-monotonicity» {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D) (q : D → Y) :
+/-- Sec. `sec:crdt-instance`: "By Functional CALM, `q ∘ s` is consistent
+exactly when `U ⊆ V` implies `q(s(U)) ≼_Y q(s(V))`." -/
+theorem «sec:crdt-instance/query-calm» {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D) (q : D → Y) :
     (graph (fun U : Inst.FSet D => q (Inst.st s0 U))).Consistent ↔
       ∀ U V : Inst.FSet D, U ≼ V → q (Inst.st s0 U) ≼ q (Inst.st s0 V) :=
   Inst.crdt_query_calm s0 q
 
-/-- Sec. `sec:crdt-instance`: "Monotonicity of `q` on all of `D` is sufficient
-but not required; `q` need only be monotone on reachable states."  Lean:
+/-- Sec. `sec:crdt-instance`: "Monotonicity of `q` on all of `D` suffices, but
+`q` need only be monotone between reachable states."  Lean:
 (1) sufficient; (2) `q ∘ s` is monotone iff `q` is monotone between reachable
 states `s(U) ⊑ s(V)`; (3) not required: on the two-point lattice with
 `s₀ = tt`, negation is not monotone but `neg ∘ s` is. -/
@@ -156,15 +88,15 @@ theorem «sec:crdt-instance/query-monotone-on-reachable» :
   ⟨fun s0 _ hq => Inst.crdt_query_of_mono s0 hq, fun s0 q => Inst.crdt_query_mono_iff_reachable s0 q,
     Inst.crdt_query_mono_not_required⟩
 
-/-- Eq. `eq:crdt-2p-query` and the paragraph "A safe merge can have an unsafe
-observation": `q_2P(Add, Del) = Add \ Del`, `F_2P = q_2P ∘ s`.  With
-`s(U₀) = ({potato, Ferrari}, ∅)` and `s(U₁) = ({potato, Ferrari}, {Ferrari})`:
-`F_2P(U₀) = {potato, Ferrari}`, `F_2P(U₁) = {potato}`, `U₀ ⊆ U₁` but
-`F_2P(U₀) ⋠ F_2P(U₁)`, so `F_2P` is not consistent, while the state
-specification `s` is ("State convergence does not establish monotonicity of an
-application query").  Lean: payloads are pairs `(Add, Del)` joined
-componentwise, `s₀ = (∅, ∅)`. -/
-theorem «eq:crdt-2p-query» :
+/-- Sec. `sec:crdt-instance`: a two-phase set's "state `(Add, Del)` merges by
+componentwise union.  The query `Add \ Del` can report a Ferrari in a shopping
+cart before a delayed removal arrives … The two-phase query fails the test: a
+removal payload grows `U` and shrinks the answer."  Lean: payloads are pairs
+`(Add, Del)` joined componentwise, `s₀ = (∅, ∅)`; with
+`s(U₀) = ({potato, Ferrari}, ∅)` and `s(U₁) = ({potato, Ferrari}, {Ferrari})`,
+`U₀ ⊆ U₁` but `q_2P(s(U₀)) = {potato, Ferrari} ⋠ {potato} = q_2P(s(U₁))`, so
+`q_2P ∘ s` is not consistent, while the state specification `s` is. -/
+theorem «sec:crdt-instance/two-phase» :
     Inst.st (Inst.emp, Inst.emp) Inst.U0 = (Inst.both, Inst.emp) ∧
       Inst.st (Inst.emp, Inst.emp) Inst.U1 = (Inst.both, Inst.sgl .ferrari) ∧
       Inst.q2P (Inst.st (Inst.emp, Inst.emp) Inst.U0) = Inst.both ∧
@@ -174,14 +106,14 @@ theorem «eq:crdt-2p-query» :
       (graph (Inst.st (Inst.emp, Inst.emp) : Inst.FSet (Inst.PS × Inst.PS) → Inst.PS × Inst.PS)).Consistent :=
   ⟨Inst.st_U0, Inst.st_U1, Inst.twoPhase_unsafe⟩
 
-/-- Eq. `eq:crdt-thresholds`: `q₁₀₀(d) = [|d| ≥ 100]`, `Q₁₀₀ = q₁₀₀ ∘ s`.
-"Once `Q₁₀₀(U) = true`, every expansion `V ⊇ U` still contains at least 100
-attempts … and before the threshold `false` is exposable because `true`
-covers it.  The query is monotone, so Functional CALM says that it extracts a
-stable fact."  Lean: `Q₁₀₀` is monotone, consistent, and every output at
-every state reachable without commitment is exposable; generally, LVars
-threshold queries `[t ⊑ d]` are monotone. -/
-theorem «eq:crdt-thresholds» {A : Type} (s0 : IConf.St A) :
+/-- Sec. `sec:crdt-instance`: "a Boolean test `[t ⊑ d]` under
+`false ≼ true`, which stays true as the state grows.  A replica can thus
+report that a grow-only set of failed logins has reached 100 entries without
+knowing that it has seen them all."  Lean: LVars threshold queries `[t ⊑ d]`
+are monotone; for `q₁₀₀(d) = [|d| ≥ 100]` on a grow-only set, `q₁₀₀ ∘ s` is
+monotone and consistent, and every output at every state reachable without
+commitment is exposable. -/
+theorem «sec:crdt-instance/thresholds» {A : Type} (s0 : IConf.St A) :
     Monotone (fun U : Inst.FSet (IConf.St A) => Inst.qThr 100 (Inst.st s0 U)) ∧
       (graph (fun U : Inst.FSet (IConf.St A) => Inst.qThr 100 (Inst.st s0 U))).Consistent ∧
       (∀ τ : State (graph (fun U : Inst.FSet (IConf.St A) => Inst.qThr 100 (Inst.st s0 U))),
@@ -190,12 +122,11 @@ theorem «eq:crdt-thresholds» {A : Type} (s0 : IConf.St A) :
   ⟨Inst.Q100_mono s0, (Inst.Q100_consistent_exposable s0).1, (Inst.Q100_consistent_exposable s0).2,
     fun t => Inst.lvar_threshold_mono t⟩
 
-/-- Sec. `sec:crdt-instance`: "a last-writer-wins replica can expose one value
-and later converge to a state that discards it—so whether convergence is
-monotone depends on the declared output order."  Lean: LWW states
-`(timestamp, value)` in lexicographic order; the state function is monotone,
-but exposing the value under the discrete order is neither monotone nor
-consistent. -/
+/-- Sec. `sec:crdt-instance`: "A last-writer-wins replica converges, yet it
+can expose one value and later discard it, so whether convergence is monotone
+depends on the declared output order."  Lean: LWW states `(timestamp, value)`
+in lexicographic order; the state function is monotone, but exposing the value
+under the discrete order is neither monotone nor consistent. -/
 theorem «sec:crdt-instance/lww» :
     Monotone (Inst.st (⟨0, 0⟩ : Inst.LWW)) ∧
       ¬ Monotone (fun U : Inst.FSet Inst.LWW => (⟨(Inst.st ⟨0, 0⟩ U).v⟩ : Inst.Disc Nat)) ∧

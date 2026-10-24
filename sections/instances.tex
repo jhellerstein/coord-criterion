@@ -1,55 +1,9 @@
 \section{Instances Across the Literature}
 \label{sec:instances}
 
-Table~\ref{tab:instances} summarizes how each setting fits the common
-model.  Each mapping declares an input, an output, and their
-orders before applying Functional CALM or Complete CALM.  Changing the specification
-changes whether monotonicity or Directed Outputs holds.
-
-\begin{table*}[t]
-  \centering
-  \footnotesize
-  \caption{Coordination results in the common model.}
-  \label{tab:instances}
-  \begin{tabular}{@{}p{.105\textwidth}p{.17\textwidth}p{.17\textwidth}
-                  p{.15\textwidth}p{.315\textwidth}@{}}
-    \toprule
-    Setting & Input and order & Visible output & Specification shape &
-      Common \outnoun or failure \\
-    \midrule
-    Query CALM
-      & Finite facts $J$, inclusion
-      & Answer $Q(J)$, inclusion
-      & Functional
-      & Later answers \outrelbase earlier ones as input \ingrows; negation may require
-        sealing. \\
-    CRDT
-      & Received payloads, inclusion
-      & Replica state, lattice order
-      & Functional state; canonical merge
-      & Join supplies a least common \outnoun across partial inputs. \\
-    Registers
-      & Causal history, causally closed sub-history
-      & Read source map
-      & Relational
-        & Opposing total orders are incompatible; a read forced before a hidden
-          write recovers Gilbert--Lynch (\S\ref{sec:complete-cap}); causal
-          source maps (App.~\ref{app:registers}) can \outrelbase both reads. \\
-    HAT
-      & Requests received so far, inclusion
-      & Read, commit, and session facts
-      & Relational
-      & Some facts accumulate; serialization cycles and first-committer-wins
-        require commitment. \\
-    Invariant confluence
-      & Transaction histories, expansion
-      & Valid exposed state
-      & Relational; states merged by union
-      & Valid merge is a common \outnoun; duplicate allocation violates
-        uniqueness. \\
-    \bottomrule
-  \end{tabular}
-\end{table*}
+Each setting below declares an input, an output, and their orders before
+applying Functional CALM or Complete CALM.  Changing the specification changes
+whether monotonicity or Directed Outputs holds.
 
 \subsection{Query monotonicity}
 \label{sec:query-instance}
@@ -70,94 +24,46 @@ updates; semilattice join additionally provides least common \outnouns across
 partial inputs.  Complete CALM makes multiple outputs in one fiber explicit,
 so directedness can no longer be assumed.
 
-\subsection{CRDTs: from convergent state to safe observations}
+\subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
 
-  A CRDT answers one important question: if replicas receive the same updates,
-will they converge to equivalent states despite differences in update delivery
-and merge order?  Applications immediately ask a second question: what may a
-client safely conclude from one replica's current state?  The CRDT merge theorem does not answer this second
-question.  Keep CALM and CRDT On called out this gap and proposed monotonicity as
-the test for safe queries~\cite{laddad2022keep}.  Functional CALM makes that
-test precise for the whole client-visible specification.
+A CRDT guarantees that replicas receiving the same updates converge to
+equivalent states, whatever the order of delivery and merge.  It says nothing
+about what a client may conclude from one replica's current state.  Keep CALM
+and CRDT On observed that convergent state can still yield unsafe
+observations, and proposed monotonicity as the test for safe
+queries~\cite{laddad2022keep}.  Its example is a two-phase set, whose state
+$(\mathit{Add},\mathit{Del})$ merges by componentwise union.  The query
+$\mathit{Add}\setminus\mathit{Del}$ can report a Ferrari in a shopping cart
+before a delayed removal arrives, and an application that treats that answer as
+final ships the car.  We make the proposed test precise with Functional CALM.
 
-Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice, and let the input
-be the finite set $U$ of immutable, joinable payloads received so far, ordered
-by inclusion.  The replica's state is
-        \begin{equation}
-  s(U)=s_0\sqcup\bigsqcup U,
-  \label{eq:crdt-state-function}
-        \end{equation}
-so $U\subseteq V$ implies $s(U)\sqsubseteq s(V)$, and
-$s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$: the state specification is monotone, and
-join is the least state \outrelpart both states~\cite{shapiro2011crdt}.  A
-client observation $q:(D,\sqsubseteq)\to(Y,\preceq_Y)$ replaces the state
-output with a new client-visible output, and by Functional CALM the client-visible specification
-$q\circ s$ is consistent exactly when
-        \begin{equation}
-  U\subseteq V \quad\Longrightarrow\quad q(s(U))\preceq_Y q(s(V)).
-  \label{eq:crdt-query-monotonicity}
-        \end{equation}
-Monotonicity of $q$ on all of $D$ is sufficient but not required; $q$ need
-only be monotone on reachable states.  Operation-based CRDTs can be cast in the same
-form, with the causally closed set of delivered operations as
+Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice.  The input is the
+finite set $U$ of immutable payloads received so far, ordered by inclusion, and
+the replica's state is $s(U)=s_0\sqcup\bigsqcup U$.  Then $U\subseteq V$
+implies $s(U)\sqsubseteq s(V)$, and $s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$ is the
+least state \outrelpart both~\cite{shapiro2011crdt}.  A client observation
+$q:D\to(Y,\preceq_Y)$ gives the client-visible specification $q\circ s$.  By
+Functional CALM, $q\circ s$ is consistent exactly when $U\subseteq V$ implies
+$q(s(U))\preceq_Y q(s(V))$.  Monotonicity of $q$ on all of $D$ suffices, but
+$q$ need only be monotone between reachable states.  The two-phase query fails
+the test: a removal payload grows $U$ and shrinks the answer.
+Operation-based CRDTs fit the same form, with the causally closed set of
+delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
 
-\paragraph{A safe merge can have an unsafe observation.}
-Consider a two-phase set with state $(\mathit{Add},\mathit{Del})$: $\mathit{Add}$ records
-additions and $\mathit{Del}$ records removals.  Both components grow by union, so replica state merges
-perfectly well.  Its user-facing query is
-        \begin{equation}
-  q_{\mathrm{2P}}(\mathit{Add},\mathit{Del})=\mathit{Add}\setminus\mathit{Del},
-  \qquad F_{\mathrm{2P}}=q_{\mathrm{2P}}\circ s.
-  \label{eq:crdt-2p-query}
-        \end{equation}
-Suppose the payload set $U_0$ yields
-\[
-  s(U_0)=(\{\mathsf{potato},\mathsf{Ferrari}\},\varnothing),
-  \qquad
-  (q_{\mathrm{2P}}\circ s)(U_0)
-    =\{\mathsf{potato},\mathsf{Ferrari}\}.
-\]
-If the application treats membership in this result as a lasting claim, it may
-ship the Ferrari.  Now let $U_1$ add a delayed payload removing the Ferrari.
-Then $U_0\subseteq U_1$, but
-\[
-  s(U_1)=(\{\mathsf{potato},\mathsf{Ferrari}\},\{\mathsf{Ferrari}\}),
-  \qquad
-  (q_{\mathrm{2P}}\circ s)(U_1)=\{\mathsf{potato}\}.
-\]
-The internal state advanced, but the client-visible claim did not.  An ordinary
-point-in-time read may merely expose its chosen local cut.  The bug appears when
-the program interprets that answer as complete, stable, or sufficient to justify
-an irreversible action.  Such a claim needs a seal on the relevant updates.
-State convergence does not establish monotonicity of an application query.
-
-\paragraph{Threshold queries.}
-Kuper and Newton's LVars introduced \emph{threshold queries}: Boolean-valued
-application queries that become true when a lattice state crosses a threshold~\cite{kuper2013lvars}.  The Boolean codomain is ordered by
-$\mathsf{false}\preceq_B\mathsf{true}$.  For example, let a grow-only set $d$
-record distinct failed login attempts and define
-        \begin{equation}
-  q_{100}(d)=[\,|d|\geq100\,],
-  \qquad Q_{100}=q_{100}\circ s.
-  \label{eq:crdt-thresholds}
-        \end{equation}
-Once $Q_{100}(U)=\mathsf{true}$, every \indesc $V\supseteq U$ still
-contains at least 100 attempts, so $Q_{100}(V)=\mathsf{true}$, and before the
-threshold $\mathsf{false}$ is exposable because $\mathsf{true}$
-\outrel it.  The query is monotone, so Functional CALM says that it
-extracts a stable fact from an incomplete replica state without claiming that
-the state itself is complete.
+The standard monotone example is a \emph{threshold query} in the style of
+Kuper and Newton's LVars~\cite{kuper2013lvars}: a Boolean test $[\,t\sqsubseteq
+d\,]$ under $\mathsf{false}\preceq\mathsf{true}$, which stays true as the state
+grows.  A replica can thus report that a grow-only set of failed logins has
+reached 100 entries without knowing that it has seen them all.
 
 A join supplies a uniform least common \outnoun, but Complete CALM needs only
-\emph{some} common \outnoun (Section~\ref{sec:lifted-monotonicity}); a
+\emph{some} common \outnoun (Section~\ref{sec:lifted-monotonicity}), so a
 join-semilattice is one sufficient discipline.  Strong eventual consistency is
-a different property: replicas that have incorporated the same updates reach
-equivalent states.  It permits the observable equivalent of retraction---a
-last-writer-wins replica can expose one value and later converge to a state
-that discards it---so whether convergence is monotone depends on the declared
-output order.
+a different property.  A last-writer-wins replica converges, yet it can expose
+one value and later discard it, so whether convergence is monotone depends on
+the declared output order.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
