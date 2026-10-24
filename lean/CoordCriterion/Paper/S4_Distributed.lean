@@ -109,7 +109,7 @@ theorem «def:participant-run/is-run» {D : Type} {n : Nat} {sp : Spec I O}
     (h : H.Endpoint sp C σs) : ∀ p, IsRun (σs p) :=
   h.isRun
 
-/-- **Fig. participant-runs** (`fig:participant-runs`).  "Two distinct histories
+/-- **Fig. participant-runs** (`fig:participant-runs`).  "Two histories
 from `σ_a = σ_S(x··)` to `σ_1 = (xy·, R_1)` … In Figure participant-runs, the
 input `xy·` reaches `q` directly or through a message from `p`.  The histories
 differ, but at either cut each participant run is `input(xy·)`, so both

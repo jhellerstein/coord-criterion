@@ -135,8 +135,8 @@ theorem «fig:election-frames/d» :
   ⟨Figures.Elec.close_at_b, Figures.Elec.registrar_step, Figures.Elec.panelD_cur,
    Figures.Elec.panelD_rows, Figures.Elec.panelD_struck, Figures.Elec.panelD_determined⟩
 
-/-- Fig. `fig:election-frames`(d), legend: "Gray and struck through: it was
-removed by a commitment; gray alone: it was retired by an input event."  A
+/-- Fig. `fig:election-frames`(d), legend: "Gray: removed from the remainder
+table; struck through if by a commitment, otherwise retired by an input event."  A
 printed row is absent from panel (d) iff its input does not expand `xy·`
 (gray) or it is one of the two struck rows. -/
 theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bxd ≼ k) (hS : elec.S k o) :
@@ -162,9 +162,8 @@ theorem «fig:nonmonotone-frame» :
       ∀ k o, outputTable (canon elecEq bxy) ⟨.bot⟩ k o ↔ (k = bxy ∧ o = ⟨.bot⟩) :=
   ⟨elecEq_bot_seals, elecEq_bot_single_row⟩
 
-/-- Fig. `fig:nonmonotone-frame` caption: "The table matches
-Figure `fig:election-frames`(d): the seal the registrar chose there is
-required here." -/
+/-- Fig. `fig:nonmonotone-frame` caption: "The seal the registrar chose in
+Figure `fig:election-frames`(d) is required here." -/
 theorem «fig:nonmonotone-frame/matches-d» (k : Ballots) (r : Res) :
     Figures.Elec.panelD.R k r ↔ outputTable (canon elecEq bxy) ⟨.bot⟩ k ⟨r⟩ :=
   Figures.Elec.panelD_matches_e k r
