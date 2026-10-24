@@ -2,102 +2,96 @@
 \label{app:cap-response}
 
 Complete CAP (Theorem~\ref{thm:complete-cap}) asks that every permitted output
-remain available during a partition.  The Gilbert--Lynch theorem asks only that
-every request receive some response~\cite{gilbert2002cap}.  This appendix
-develops the second notion in our model, proves the corresponding form of
-Complete CAP, and recovers Gilbert and Lynch's result as a corollary.
+remain available during a partition; Gilbert and Lynch ask only that every
+request receive some response~\cite{gilbert2002cap}.  This appendix defines the
+second notion, proves the corresponding form of Complete CAP, and derives the
+Gilbert--Lynch theorem.  Throughout, fix an ordered relational specification
+$\Spec$ and the partitioned histories of Section~\ref{sec:complete-cap}; the
+environment supplies any input to any participant and resolves the
+strategies' nondeterministic choices.  The \emph{emitted rows} of a run are
+the pairs $(i,o)$ such that it emits $o$ at current input $i$.
 
-\subsection{Two notions of availability}
-
-The notions answer different questions.  Gilbert and Lynch fix one object and
-ask whether any algorithm implements it; availability is a liveness property
-of that algorithm, and the object's consistency condition decides which
-response is correct.  For a linearizable read the full history usually leaves
-one correct answer, so choice rarely arises.  We start from a specification
-that may permit many outputs per input and ask what the specification itself
-forces.  With no algorithm fixed, the natural question is whether the whole
-declared specification can stay available, and that question has an exact answer
-in Lifted Monotonicity.
-
-Response availability is the classical notion and gives the stronger
-impossibility results, but it is only as strong as its notion of an answer: if
-an abort that the specification permits at every input counts as an answer, the
-specification is trivially available.  The interface form has no
-such loophole and matches Complete CALM exactly; Section~\ref{sec:complete-cap}
-compares the two.
-
-\subsection{Response obligations and availability}
-
-Throughout, fix an ordered relational specification $\Spec$ and the
-partitioned histories of Section~\ref{sec:complete-cap}.
+\subsection{Obligations, availability, and locality}
 
 \begin{definition}[Response obligation]
 \label{def:response-obligation}
 A \emph{response obligation} assigns to each participant $p$ a relation
 $Q_p\subseteq S$ that is total on $I$ and upward closed within fibers: if
 $(i,o)\in Q_p$, $(i,u)\in S$, and $o\OutputOrd u$, then $(i,u)\in Q_p$.  An
-output in $Q_p(i)$ \emph{answers} at $i$ for $p$.
+output in $Q_p(i)$ \emph{answers} at $i$ for $p$.  The obligation is
+\emph{uniform} when every $Q_p$ is the same relation $Q$.
 \end{definition}
 
-The obligation is declared alongside $\Spec$.  For a
-register, $Q_p(i)$ consists of the outputs that answer every read invoked at
-$p$ in $i$; a participant answers the operations it owns, not those it hears
-about from others.  A specification that counts an abort as an answer declares a
-weaker obligation.
+The obligation is part of the declared specification.  Response availability
+is only as strong as $Q_p$: if an output permitted at every input answers,
+every specification is available.
 
 \begin{definition}[Response Availability]
 \label{def:response-availability}
 A system has \emph{Response Availability} for $(Q_p)_{p\in P}$ when, at every
 consistent cut of every partitioned history it produces, each participant $p$
-with current input $i$ satisfies two conditions.  Each continuation below is
-produced by the system and partitioned by the same components.
+with current input $i$ satisfies two conditions, each by a continuation that
+the system produces, that is partitioned by the same components, and that adds
+only events of $p$'s component.
 \begin{enumerate}
-  \item \emph{Answering.}  Some continuation that adds only events of $p$'s
-        component, and no input event at $p$, has $p$ emit some output in
-        $Q_p(i)$.
-  \item \emph{Input acceptance.}  For every $j\InputGe i$, some continuation
-        that adds only events of $p$'s component has $p$ record
-        $\mathsf{input}(j)$.
+  \item \emph{Answering.}  In a continuation that adds no input event at $p$
+        (others in its component may still receive input), $p$ emits some
+        output in $Q_p(i)$.
+  \item \emph{Input acceptance.}  For every $j\InputGe i$, in some
+        continuation $p$ records $\mathsf{input}(j)$.
 \end{enumerate}
 \end{definition}
 
-Neither condition waits for another component.  Output events may apply
-commitments local to the participant's component, as in Availability
-(Definition~\ref{def:partition-notions}) and Deployment Availability
-(Definition~\ref{def:deployment-availability}).  Input acceptance means that a
-participant never seals an \indesc of its own current input.  It carries
-real weight: a specification whose outputs require sealing input, such as the
-election under the equality order (Figure~\ref{fig:nonmonotone-frame}), is
-unavailable in this sense, as it is for Gilbert and Lynch, whose nodes must
-accept every request.
+Input acceptance says that $p$ never seals an \indesc of its current input.
+It excludes specifications whose answers require such a seal, such as the
+election under the equality order (Figure~\ref{fig:nonmonotone-frame}), and it
+matches Gilbert and Lynch's
+requirement that nodes accept every request.
 
 \begin{definition}[Response Partition Consistency]
 \label{def:response-partition-consistency}
 A consistent cut has \emph{Response Partition Consistency} at an input $j$
-that \inrel every participant's current input when the outputs emitted in the
-cut have a common \outnoun in $\fiber{j}$.  A system has it when every
+that \inrel every participant's current input when some $u\in\fiber{j}$
+\outrel every output emitted in the cut.  A system has it when every
 consistent cut of every partitioned history it produces has it at every such
 $j$.
 \end{definition}
 
-This is atomicity of responses, in Gilbert and Lynch's sense that all emitted
-answers are explained together, rather than confluence of states.  By
-Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual}, it says that
-some row at $j$ survives in the table of every participant's canonical equivalent,
-and for histories of a canonical system
-(Definition~\ref{def:canonical-system}) the survivor test
-(Proposition~\ref{prop:confluence}) makes it confluence.  Confluence at $j$
-implies it, by containment
-(Lemma~\ref{lem:canonical-commitment-normal-form}).  With local commitments it is weaker: two
-participants may prune their own states so that the states cannot meet, while
-their responses still have a common \outnoun.
+Confluence at $j$ implies Response Partition Consistency at $j$
+(Corollary~\ref{cor:reconciliation-any-basis}), and for a canonical system
+(Definition~\ref{def:canonical-system}) the two coincide by
+Lemma~\ref{lem:reconciliation}, applied to the participant runs at the cut
+(Section~\ref{sec:distributed-consistency}).  With other commitments the converse can
+fail: participants may prune their states so that they cannot meet while their
+emitted outputs still have a common \outnoun.
 
-\subsection{Response interfaces}
+A system is \emph{replicated} when its obligation is uniform and every
+participant runs the same strategy, which depends only on the participant's
+local history and not on its identity or the number of participants.
+
+\begin{lemma}[Locality]
+\label{lem:locality}
+For each of some participants $p$, let $\ell_p$ be a local history that $p$'s
+strategy can produce from initial input $i_p$ and that contains no receive.
+Placing each $\ell_p$ in its own component, with any further participants
+idle, gives a partitioned history that the system produces.  If the system is
+replicated, a local history that the strategy can produce for one participant
+it can produce for any participant with the same initial input, in any
+participant set.
+\end{lemma}
+
+\begin{proof}
+Whether a history is produced is checked event by event against each
+participant's own local prefix (Definition~\ref{def:partition-notions}(2)),
+and there are no receives to match.
+Replication makes that check independent of the participant.
+\end{proof}
+
+\subsection{The response form of Complete CAP}
 
 \begin{definition}[Response interface]
 \label{def:response-interface}
-Call an obligation \emph{uniform} when it assigns every participant the same
-relation $Q\subseteq S$.  For a uniform obligation $Q$, a \emph{response interface} is a relation
+For a uniform obligation $Q$, a \emph{response interface} is a relation
 $T\subseteq Q$ that is total on $I$ and \emph{self-continuing}: if
 $(i,o)\in T$ and $i\InputOrd j$, then some $u\in T(j)$ \outrel $o$.  The
 specification is \emph{consistent on $T$} when, for every finite set of rows
@@ -105,50 +99,10 @@ $(i_1,o_1),\ldots,(i_k,o_k)$ of $T$ and every common \indesc $j$ of
 $i_1,\ldots,i_k$, some $u\in\fiber{j}$ \outrel every $o_r$.
 \end{definition}
 
-A response interface is a sub-relation of $S$, total and
-possibly more deterministic, with two additions.  Self-continuation lets an
-implementation keep answering as input \ingrows without breaking its own earlier
-answers.  Consistency on $T$ is checked against $S$: the reconciling output may
-lie outside $T$.
-
-\begin{proposition}[Relative common-\indesc characterization]
-\label{prop:relative-common-refinement}
-$\Spec$ is consistent on $T$ if and only if every finite family of canonical
-runs whose output events emit rows of $T$ is confluent at every common
-\indesc of their current inputs.  Here a run emits the row $(i,o)$ when it
-emits $o$ while its current input is $i$.
-\end{proposition}
-
-\begin{proof}
-This is the proof of Theorem~\ref{thm:complete-calm} restricted to such
-runs.  If $\Spec$ is consistent on $T$, the rows emitted on the runs form a
-finite subset of $T$ whose inputs $j$ \inrel, so some $u\in\fiber{j}$
-\outrel all of their outputs; Lemma~\ref{lem:run-residual} puts $(j,u)$ in
-every final table, and the survivor test gives confluence.  Conversely, for
-rows $(i_r,o_r)$ of $T$ with common \indesc $j$, the canonical run that
-starts at $\sigma_S(i_r)$ and emits $o_r$ emits a row of $T$.  Confluence and
-the survivor test supply a row $(j,u)$ surviving in all of them, so $u$
-\outrel every $o_r$.  The empty family is covered by totality.
-\end{proof}
-
-\subsection{The response form of Complete CAP}
-
-A \emph{replicated} system has a uniform obligation $Q$ and gives every
-participant the same strategy.  The strategy depends only on the participant's
-local history, not on its identity or on the number of participants.  The
-system is defined for every finite participant set and every choice of initial
-inputs, and the environment is adversarial: it may supply any input to any
-participant and resolves the strategy's nondeterministic choices.  Because
-strategies are local, the partitioned histories a system produces are closed
-under taking consistent cuts and under placing message-free local runs side by
-side in separate components.  Gilbert and Lynch's replicas likewise run one
-algorithm, but their register's obligation differs by replica, so we recover
-their theorem through Lemma~\ref{lem:forced-answer} rather than through the
-characterization below.\footnote{Without replication, an analogous argument
-gives a condition with one response interface $T_p\subseteq Q_p$ per
-participant, built from the answers that participant can emit without any message from
-others, with consistency
-required for families that draw on each $T_p$ at most once.}
+The reconciling output may lie outside $T$.  With $T=S$, consistency on $T$ is
+the common-\indesc condition of Proposition~\ref{prop:common-expansion-form},
+and by Lemma~\ref{lem:reconciliation} consistency on $T$ is confluence of the
+canonical runs whose emitted rows lie in $T$.
 
 \begin{theorem}[Complete CAP, response form]
 \label{thm:complete-cap-response}
@@ -162,242 +116,176 @@ the following are equivalent:
 \end{theorem}
 
 \begin{proof}
-(2$\Rightarrow$1.)  Use the canonical basis.  The strategy ignores messages,
-records every input the environment supplies, and at any time emits, by the
-$\Out{\kappa_u}{u}$, some $u\in T(i)$ at its current input $i$ that \outrel the
-last output it emitted, or any $u\in T(i)$ if it has emitted nothing.  Such a
-$u$ exists: the last output $o$ was emitted as a row $(i',o)\in T$ with
-$i'\InputOrd i$, and self-continuation applies.
+(2$\Rightarrow$1.)  Take the canonical basis and the strategy that ignores
+messages, records every input, and emits by the canonical event some $u\in
+T(i)$ at its current input $i$ that \outrel its last emitted output, or any
+$u\in T(i)$ if it has emitted nothing.  Self-continuation supplies $u$.  The
+emitted outputs form a chain $o_1\OutputOrd\cdots\OutputOrd o_m$, so by
+Lemma~\ref{lem:run-residual} the table is $S[\mathrm{in}\InputGe i,\
+\mathrm{out}\OutputGe o_m]$ (or $S[\mathrm{in}\InputGe i]$), which contains
+$(i,u)$: this is Answering.  For $k\InputGe i$, self-continuation applied to
+the row of $o_m$ (or totality of $S$) leaves a row at $k$: this is Input
+acceptance.  At a consistent cut, the emitted rows are finitely many rows of
+$T$ whose inputs every common \indesc $j$ of the current inputs \inrel, and
+consistency on $T$ gives Response Partition Consistency.
 
-The participant's emitted outputs form a chain.  If it has emitted nothing,
-its table at current input $i$ is $S[\mathrm{in}\InputGe i]$; otherwise let
-$(i_m,o_m)\in T$ be the row of its last emission, with emitted outputs
-$o_1\OutputOrd\cdots\OutputOrd o_m$, and by Lemma~\ref{lem:run-residual} its
-table is $S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_m]$.  Either table
-contains $(i,u)$, so $\Out{\kappa_u}{u}$ is legal, and
-$u\in T(i)\subseteq Q(i)$; this gives Answering.  For every $k\InputGe i$, a
-row at $k$ remains: by totality of $S$ if the participant has emitted nothing,
-and otherwise because self-continuation applied to $(i_m,o_m)$ supplies a row of
-$T$ at $k$ that \outrel $o_m$.  So $k$ remains legal and $\mathsf{input}(k)$ can
-be recorded; this gives Input acceptance.  Neither step involves a receive.  At any consistent cut, the
-emitted rows form a finite subset of $T$, and every common \indesc $j$ of
-the current inputs \inrel their inputs.  Consistency on $T$ supplies
-$u\in\fiber{j}$ \outrelpart every emitted output, which is Response Partition
-Consistency.
-
-(1$\Rightarrow$2.)  Fix such a system, and call an emission \emph{isolated}
-when its participant has received no message before it.  Let $T$ be the set
-of rows $(i,o)$ with $o\in Q(i)$ such that, in some partitioned history of the
-system, some participant emits $o$ in an isolated emission while its current
-input is $i$.  Legal output events emit outputs of the current fiber, so
-$T\subseteq Q\subseteq S$.  Because the strategy depends only on local history,
-an isolated local run can be reproduced by any participant of any partitioned
-history in which that participant sits alone in its component.  In each
-construction below, a partition needs a second component; we add a participant
-there that runs the strategy like every other, and take cuts that contain none
-of its events, so its current input is its initial input.
-
-\emph{Totality.}  Give a participant initial input $i$, alone in its
-component.  Answering supplies an isolated emission of some $o\in Q(i)$ at $i$,
-so $(i,o)\in T$.
-
-\emph{Self-continuation.}  Let $(i,o)\in T$, witnessed by an isolated run of
-participant $p$, and let $i\InputOrd j$.  Reproduce that run with $p$ alone in
-its component.  Input acceptance lets $p$ record $\mathsf{input}(j)$, and
-Answering then supplies an isolated emission of some $u\in Q(j)$ at $j$.  By containment
-(Lemma~\ref{lem:canonical-commitment-normal-form}) and
-Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual}, $p$'s table
-before that emission is contained in
-$S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$, and a legal event emits
-an output of that table, so $o\OutputOrd u$.  Hence
-$(j,u)\in T$.
-
-\emph{Consistency on $T$.}  Let $(i_1,o_1),\ldots,(i_k,o_k)\in T$ have common
-\indesc $j$; the empty family is covered by totality of $S$.  Reproduce
-each witnessing isolated run on its own participant $p_r$, alone in its own
-component and truncated just after its witnessing emission, so that $p_r$'s
-current input at the final cut is $i_r$; and add a participant with initial input $j$ in a further
-component.  The runs share no messages, so they form one partitioned history
-of the replicated system.  At its final cut, $j$ \inrel every current input,
-and Response Partition Consistency supplies $u\in\fiber{j}$ \outrelpart every
-emitted output, in particular every $o_r$.
+(1$\Rightarrow$2.)  Call an emission \emph{isolated} when its participant has
+received no message before it, and let $T$ be the set of rows $(i,o)$ with
+$o\in Q(i)$ emitted in an isolated emission in some partitioned history of the
+system; such a history and participant are a \emph{witness} for $(i,o)$.
+Then $T\subseteq Q$.  When a participant is alone in its component, every
+continuation that Response Availability supplies adds only its own events and,
+being partitioned, no receive, so the emission it yields is isolated.  By
+Lemma~\ref{lem:locality}, a witness's local history up to the emission can be
+replayed by a participant alone in its component, with an idle participant
+forming a second component.
+\emph{Totality:} for each $i$, Answering at the empty cut, for a participant
+with initial input $i$ alone in its component, gives a row of $T$ at $i$.
+\emph{Self-continuation:} given $(i,o)\in T$ and $j\InputGe i$, replay the
+witness, record $\mathsf{input}(j)$ by Input acceptance (truncating just after
+it), and answer by Answering with some $u\in Q(j)$.  By
+Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual} the table
+before that emission is contained in $S[\mathrm{in}\InputGe j,\
+\mathrm{out}\OutputGe o]$, so $o\OutputOrd u$ and $(j,u)\in T$.
+\emph{Consistency on $T$:} given rows $(i_r,o_r)$ of $T$ with common \indesc
+$j$, replay each witness on its own participant, truncated after the
+emission, and add a participant with initial input $j$.  By
+Lemma~\ref{lem:locality} this is a partitioned history of the system, and
+Response Partition Consistency at its final cut gives $u\in\fiber{j}$
+\outrelpart every $o_r$.  The empty family is covered by totality of $S$.
 \end{proof}
 
-The theorem does not promise convergence.  Reconciling outputs need not lie in
-$T$, and a participant that adopts one may lose its ability to keep answering;
-the second example below shows this.
+\begin{remark}[Without replication]
+For a system that is not replicated, the same proof, with $T_p$ built from
+$p$'s isolated emissions, gives one response interface $T_p\subseteq Q_p$ per
+participant.  Since each participant is replayed once, consistency is required
+only for families that draw on each $T_p$ at most once.
+\end{remark}
 
 \subsection{Relationship to the interface form}
 
-Lifted Monotonicity implies the response form for every obligation.  Take
-$T=Q$.  If $(i,o)\in Q$ and $i\InputOrd j$, Relational Monotonicity gives
-$u\in\fiber{j}$ with $o\OutputOrd u$; totality of $Q$ gives some $q\in Q(j)$;
-Directed Outputs gives $w\in\fiber{j}$ \outrelpart $u$ and $q$; and upward
-closure puts $w$ in $Q(j)$.  So $Q$ is self-continuing, and the
-common-\indesc condition makes $\Spec$ consistent on $Q$.  The interface form
-differs from the response form in three ways: its Availability asks that every
-permitted output be emittable, not merely one answer; its Partition Consistency
-is confluence of states rather than agreement of responses; and it has no Input
-acceptance clause and does not assume replication.
+Lifted Monotonicity implies the response form for every uniform obligation,
+with $T=Q$.  If $(i,o)\in Q$ and $i\InputOrd j$, Relational Monotonicity gives
+$u\in\fiber{j}$ with $o\OutputOrd u$, totality gives some $q\in Q(j)$,
+Directed Outputs gives $w\in\fiber{j}$ \outrelpart $u$ and $q$, and upward
+closure puts $w$ in $Q(j)$; the common-\indesc condition gives consistency on
+$Q$.
 
-The converse fails.  Let $I=\{0\InputOrd 1\}$, let $\bot\OutputOrd a$ and
-$\bot\OutputOrd b$ with $a$ and $b$ incomparable, and let
-$\fiber{0}=\{\bot,a\}$, $\fiber{1}=\{b\}$, and $Q=S$.  Lifted Monotonicity
-fails, since $a$ has no \outnoun in $\fiber{1}$, but
-$T=\{(0,\bot),(1,b)\}$ is a response interface on which $\Spec$ is
-consistent.  A system that answers $\bot$ at $0$ and $b$ at $1$ stays available: $\bot$ is
-a conservative answer that commits to nothing $a$ would add.
+The converse fails.  Let $I=\{0,1\}$ with $0\InputOrd 1$, $\bot\OutputOrd a$ and
+$\bot\OutputOrd b$ with $a,b$ incomparable, $\fiber{0}=\{\bot,a\}$,
+$\fiber{1}=\{b\}$, and $Q=S$.  Lifted Monotonicity fails at $(0,a)$, but $\Spec$
+is consistent on the response interface $\{(0,\bot),(1,b)\}$.
 
-For a functional specification the forms coincide.  A total $Q\subseteq S$ and
-a total $T\subseteq Q$ must both equal $S$; self-continuation of $S$ is
-monotonicity, and so is consistency on $S$.  This is a \emph{Functional CAP}:
-a functional specification admits a responsive, partition-consistent system
-exactly when it is monotone, exactly when it is consistent.
+For a functional specification the forms coincide: a total $T\subseteq Q\subseteq
+S$ equals $S$, and both self-continuation and consistency on $S$ are
+monotonicity.
 
-\paragraph{A monotone sub-specification is sufficient but not necessary.}
-If some total $T\subseteq Q$ satisfies Lifted Monotonicity as a specification
-in its own right, it is a response interface on which $\Spec$ is consistent,
-and Theorem~\ref{thm:complete-cap-response} gives the response form.  The exact
-condition is weaker.  Let $i_1$ and $i_2$ be incomparable inputs that $j$ \inrel,
-and let $k_1$ and $k_2$ be incomparable inputs that \inrelbase $j$, with no common
-\indesc.  Let $\fiber{i_1}=\{a\}$, $\fiber{i_2}=\{b\}$,
-$\fiber{j}=\{c_1,c_2,d_1,d_2\}$, $\fiber{k_1}=\{e_1\}$,
-$\fiber{k_2}=\{e_2\}$, and $Q=S$, ordered so that $a\OutputOrd c_1$,
-$b\OutputOrd c_2$, both $d_1$ and $d_2$ \outrelbase $c_1$ and $c_2$, $e_1$ \outrel
-$c_1$, $c_2$, and $d_1$ but not $d_2$, and $e_2$ \outrel $c_1$, $c_2$, and
-$d_2$ but not $d_1$.  The relation $T$ with rows $a$, $b$, $c_1$, $c_2$, $e_1$,
-and $e_2$ is a response interface, and $\Spec$ is consistent on it: families
-meeting at $j$ are reconciled by $d_1$, and families meeting at $k_1$ or $k_2$
-by $e_1$ or $e_2$.  A sub-specification satisfying Lifted Monotonicity must
-contain $a$ and $b$, so it needs $d_1$ or $d_2$ at $j$ to \outrelbase both, and
-either choice has no \outnoun in $\fiber{k_2}$ or $\fiber{k_1}$.  The example also shows the
-missing convergence: participants reconcile at $j$ only through $d_1$ or $d_2$,
-and a participant that emits either seals one of $k_1$ and $k_2$.
-
-\paragraph{The obligation decides what availability means.}
-The response form is only as strong as $Q$.  Highly Available Transactions
-illustrate how the three ingredients of a CAP question separate~\cite{bailis2013hat}.  The isolation level, together with any session guarantees, is the
-specification $\Spec$.  The rule that a transaction may abort only at the client's request, and must
-otherwise eventually commit, is the obligation: $Q$ excludes system-chosen
-aborts.  Sticky availability, which fixes the replicas a client may contact,
-is a deployment (Appendix~\ref{app:deployment}).
-A CAP question has a definite answer once all three are fixed.
+A total $T\subseteq Q$ that satisfies Lifted Monotonicity as a specification
+is a response interface on which $\Spec$ is consistent, but the condition is
+weaker.  Let $I=\{i_1,i_2,j,k_1,k_2\}$ with $i_1,i_2\InputOrd j\InputOrd
+k_1,k_2$ and no other relations, so $k_1$ and $k_2$ have no common \indesc.
+Let $\fiber{i_1}=\{a\}$, $\fiber{i_2}=\{b\}$, $\fiber{j}=\{c_1,c_2,d_1,d_2\}$,
+$\fiber{k_1}=\{e_1\}$, $\fiber{k_2}=\{e_2\}$, and $Q=S$, where $\OutputOrd$ is
+the least order with $a\OutputOrd c_1$, $b\OutputOrd c_2$, $c_1,c_2\OutputOrd
+d_1,d_2$, $c_1,c_2,d_1\OutputOrd e_1$, and $c_1,c_2,d_2\OutputOrd e_2$.  Then
+$T=\{(i_1,a),(i_2,b),(j,c_1),(j,c_2),(k_1,e_1),(k_2,e_2)\}$ is a response
+interface on which $\Spec$ is consistent: $d_1$ reconciles families at $j$, and
+$e_1$ or $e_2$ those at $k_1$ or $k_2$.  A sub-specification with Lifted
+Monotonicity must contain $(i_1,a)$ and $(i_2,b)$, hence $d_1$ or $d_2$ at $j$,
+which has no \outnoun at $k_2$ or $k_1$ respectively.  Reconciling outputs
+need not lie in $T$: a participant that emits $d_1$ or $d_2$ seals $k_2$ or
+$k_1$.
 
 \subsection{Recovering Gilbert--Lynch}
 
-\jmh{Consider option (b): promote the footnote's per-replica (non-uniform obligation) version of the response-form theorem to a theorem with proof, and derive Gilbert--Lynch from it, so that GL is a special case of a CAP theorem rather than a corollary of Lemma forced-answer.}
-
-The obstruction behind Gilbert and Lynch's theorem needs only one participant's
-answer.
+\jmh{Consider option (b): promote the remark's per-replica (non-uniform obligation) version of the response-form theorem to a theorem with proof, and derive Gilbert--Lynch from it, so that GL is a special case of a CAP theorem rather than a corollary of Lemma forced-answer.}
 
 \begin{lemma}[Forced answer]
 \label{lem:forced-answer}
 Let $i\InputOrd j$, and suppose no output in $Q_q(i)$ has a \outnoun in
-$\fiber{j}$.  In a system with Response Availability, consider a partitioned
+$\fiber{j}$.  In a system with Response Availability for $(Q_p)$, consider a partitioned
 history in which $q$ is alone in its component, with a cut at which $q$'s
 current input is $i$ and $j$ \inrel every participant's current input.  Then
-the history continues to a cut at which the emitted outputs have no common
-\outnoun in $\fiber{j}$.
+a continuation that adds only events of $q$, and no input event, reaches a cut
+at which the emitted outputs have no common \outnoun in $\fiber{j}$.
 \end{lemma}
 
 \begin{proof}
-Answering supplies a continuation that adds only events of $q$, and no input
-event, in which $q$ emits some $o\in Q_q(i)$.  No participant's current input
-changes, so $j$ still \inrel all of them, and no output of $\fiber{j}$
-\outrel $o$.
+Answering gives such a continuation in which $q$ emits some $o\in Q_q(i)$.  No
+current input changes, so $j$ still \inrel all of them, and no output of
+$\fiber{j}$ \outrel $o$.
 \end{proof}
 
-For the register, an input is a finite operation history: a set of read and
-write invocations at replicas, with a strict partial order of real-time
-precedence among them.  As in Gilbert and Lynch's asynchronous model, real time
-is the order of events in an execution: the environment's execution is an
-\emph{interleaving} of the distributed history, a linear order of its events
-consistent with happens-before, and $a$ precedes $b$ when $a$'s response comes
-before $b$'s invocation in that interleaving.  There are no clocks, and no
-strategy observes the interleaving.  One history \inrel another when it contains all of its
-operations and all of its precedence edges; it may add both operations and
-edges among existing operations, since a replica need not know every
-precedence.  An output is a response map $\rho$ that assigns values to reads
-and acknowledgments to writes, ordered by extension.  The fiber $\fiber{h}$
-contains the maps explained by some linearization of $h$: a total order of its
-operations extending its precedence order~\cite{herlihy1990linearizability} in
-which each answered read returns the last preceding write, or the initial value
-$v_0$.  Each replica answers the operations invoked at it: $Q_p(h)$ consists of
-the maps in $\fiber{h}$ that answer every read and acknowledge every write
-invoked at $p$.  Every finite history has a linearization, so $Q_p$ is total,
-and it is upward closed within fibers.  Precedence is input because the
-environment sees a response before invoking the next operation
-(Section~\ref{sec:election-story}); acknowledgments are outputs, so a write's
-completion is the writer's own answer.
+\paragraph{The register.}
+An input is a finite operation history: a set of read and write invocations at
+replicas with a strict partial order of real-time precedence.  One history
+\inrel another when it contains all of its operations and precedence edges.
+An output is a response map assigning values to reads and acknowledgments to
+writes, ordered by extension.  The fiber $\fiber{h}$ contains the maps
+explained by some linearization of $h$, a total order of its operations
+extending precedence~\cite{herlihy1990linearizability} in which each answered
+read returns the last preceding write, or the initial value $v_0$.  The
+obligation $Q_p(h)$ consists of the maps in $\fiber{h}$ that answer every read
+and acknowledge every write invoked at $p$.  Every finite history has a
+linearization, so $Q_p$ is total, and it is upward closed within fibers.
+Real-time precedence belongs to the input: the environment invokes $b$ after
+seeing $a$'s response, so the edge from $a$ to $b$ is information it supplies
+(Section~\ref{sec:election-story}).
 
-The realized history depends on the interleaving, which is not part of a
-distributed history, so we fix one.  For an interleaving $\lambda$ of a
-history and a consistent cut $C$ that is a prefix of $\lambda$, the
-\emph{realized history} $h_C$ is the operation history the environment has
-produced so far: every invocation in $C$, with an edge from $a$ to $b$
-whenever $a$'s response precedes $b$'s invocation in $\lambda$.  It
-is a common \indesc of every participant's current input, and it \inrel
-$h_{C'}$ whenever $C'\subseteq C$ is also a prefix of $\lambda$.  A
-continuation extends $\lambda$ by appending its events in any order
-consistent with happens-before.
+Real time is the order of events in an execution: an \emph{interleaving}
+$\lambda$ of a distributed history is a linear order of its events consistent
+with happens-before, and no strategy observes it.  The \emph{invocation} of an
+operation is the first input event at its replica whose input contains it,
+and its \emph{response} is the first output event at that replica whose map
+answers it.  For a prefix $C$ of $\lambda$ (a consistent cut), the
+\emph{realized history} $h_C$ contains the operations invoked in $C$, with an
+edge from $a$ to $b$ when $a$'s response precedes $b$'s invocation in
+$\lambda$.  If $C'\subseteq C$ is also a prefix, $h_C$ \inrel $h_{C'}$.  The
+realized history need not be a common \indesc of the participants' current
+inputs: an input event may introduce two operations with an edge between them
+before either responds.
 
 \begin{corollary}[Gilbert--Lynch]
 \label{cor:gilbert-lynch}
-No system for the linearizable register has Response Availability and
-Response Partition Consistency at the realized history $h_C$ of every
-prefix $C$ of every interleaving of every partitioned history.
+No system for the linearizable register has Response Availability for
+$(Q_p)$ together with the following: for every partitioned history,
+interleaving $\lambda$, and prefix $C$ of $\lambda$ such that $h_C$ is a common
+\indesc of the current inputs at $C$, the cut $C$ has Response Partition
+Consistency at $h_C$.
 \end{corollary}
 
 \begin{proof}
-Separate replicas $p$ and $q$ into two components from the start, and let
-the environment
-invoke a write of \dog{} at $p$.  Answering supplies a continuation, with no
-receive, in which $p$ emits a map in $Q_p$ that acknowledges the write.  The
-environment then invokes a read $r_q$ at $q$, after the acknowledgment in the
-interleaving.  Since no message crosses the
-partition, $q$'s current input is $i_q=\{r_q\}$, and the realized history $j$
-contains the write, $r_q$, and an edge from the write to $r_q$.  Every map in
-$Q_q(i_q)$ answers $r_q$ by a linearization of $r_q$ alone, so it returns
-$v_0$.  Every linearization of $j$ places the write first, so no map in
-$\fiber{j}$ answers $r_q$ with $v_0$, and no output in $Q_q(i_q)$ has a
-\outnoun in $\fiber{j}$.  The Forced answer lemma
-(Lemma~\ref{lem:forced-answer}) gives a continuation, adding no invocation and
-so leaving the realized history at $j$, whose emitted outputs have no common
-\outnoun in $\fiber{j}$.
+Let replicas $p$ and $q$ start with empty inputs in separate components, and
+invoke a write of $\dog\neq v_0$ at $p$.  Answering gives a continuation in
+which $p$ acknowledges it.  Then invoke a read $r_q$ at $q$, after the
+acknowledgment in $\lambda$.  No message crosses the partition, so $q$'s
+current input is $i_q=\{r_q\}$, and $j=h_C$ contains the write, $r_q$, and an
+edge from the write to $r_q$; it is a common \indesc of both current inputs.
+Every map in $Q_q(i_q)$ answers $r_q$ with $v_0$, and every linearization of
+$j$ places the write first, so no output in $Q_q(i_q)$ has a \outnoun in
+$\fiber{j}$.  Lemma~\ref{lem:forced-answer} gives a continuation adding no
+input event, so the realized history stays $j$, whose emitted outputs have no
+common \outnoun in $\fiber{j}$, contradicting Response Partition Consistency
+at $h_C$.
 \end{proof}
 
-The corollary checks Response Partition Consistency at the realized history
-only, which is Gilbert and Lynch's atomicity condition.  The register's
-obligation differs by replica, so Theorem~\ref{thm:complete-cap-response},
-which assumes a uniform obligation, does not apply as stated; the corollary is
-the classification.
-
-The correspondence with Gilbert and Lynch's asynchronous model rests on three
-modeling steps.
+The register's obligation differs by replica, so
+Theorem~\ref{thm:complete-cap-response} does not apply as stated.  The
+correspondence with Gilbert and Lynch's asynchronous model has three parts.
 \begin{enumerate}
-  \item \emph{Algorithms are strategies.}  A replica's algorithm state is a
-        function of its local history, so its algorithm is a strategy; its
-        messages are messages, an invocation is environment input,
-        and a response is an output event; nondeterministic algorithms are
-        allowed, and we take the canonical basis.  As in Gilbert and Lynch's
-        witness executions, the partition holds from the start: every message
-        between components is lost.  A replica alone in its component then has
-        no event of another component in its causal past, and it cannot
-        distinguish the actual execution from one in which the other component
-        receives no invocations.  That execution's realized history is the
-        replica's own view, so atomicity there already places each response in
-        the fiber at the view.  Our output events emit only such outputs, and
-        this loses no algorithm that is atomic in every execution.  This step
-        is where Gilbert and Lynch's indistinguishability argument lives.
-  \item \emph{Availability.}  Every request to a non-failed node eventually
-        receives a response, and messages across the partition are lost, so a
-        response never waits for one.  This is Answering.  A write's
-        acknowledgment is an answer in $Q_p$, so Answering forces it, as
-        availability does in their model.  The corollary uses only Answering.
-  \item \emph{Atomicity.}  Responses must be explained by a linearization of
-        the execution that actually occurred, which is Response Partition
-        Consistency at the realized history.
+  \item \emph{Algorithms are strategies.}  A replica's algorithm is a
+        possibly nondeterministic function of its local history; its messages
+        are messages, an invocation is input, and a response is an output
+        event; we take the canonical basis.  The partition holds from the
+        start, as in their witness executions, so a replica alone in its
+        component cannot distinguish the execution from one in which the
+        other component receives no invocations.  Atomicity in that execution
+        places each response in the fiber at the replica's current input, so
+        restricting output events to such outputs loses no algorithm that is
+        atomic in every execution.
+  \item \emph{Availability} is Answering: every request to a non-failed node
+        is answered, and messages across the partition are lost.  The
+        corollary uses only Answering.
+  \item \emph{Atomicity} is Response Partition Consistency at the realized
+        history.
 \end{enumerate}
-Under these steps the corollary is the Gilbert--Lynch theorem for the
-asynchronous model: the case in which availability forces an answer that input
-hidden by the partition rules out.
