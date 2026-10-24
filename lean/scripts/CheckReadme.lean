@@ -169,6 +169,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:partition-notions(3)»
 #check @CC.Paper.«def:partition-notions(4)»
 #check @CC.Paper.«def:partition-notions(4)/unfolded»
+#check @CC.Paper.«def:partition-notions(4)/at-cuts»
 #check @CC.Paper.«def:partition-notions(5)»
 #check @CC.Paper.«def:partition-notions(5)/unfolded»
 #check @CC.Paper.«thm:complete-cap»
