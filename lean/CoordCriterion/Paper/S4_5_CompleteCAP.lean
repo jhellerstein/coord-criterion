@@ -1,6 +1,7 @@
 import CoordCriterion.CAP.ResponseAvailability
 import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.Necessity
+import CoordCriterion.CAP.Forced
 import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.Registers
@@ -11,7 +12,7 @@ import CoordCriterion.Appendix.Registers
 Statement layer for Section `sec:complete-cap`, from the subsection header to
 the end of `sections/distributed.tex`: Definition `def:partition-notions`,
 Theorem `thm:complete-cap` (with its "moreover" clause), the remarks after its
-proof, and the claims of the paragraph "Answering every operation".
+proof, and the claims of the paragraph "Gilbert and Lynch".
 
 How to read this file: open it next to the `.tex` file.  The `/-! ## … -/`
 headers follow the paper's (sub)sections and paragraphs, in paper order.  Each
@@ -149,11 +150,6 @@ theorem «def:partition-notions(5)/at-cuts» (Sys : System sp D) :
     PartitionConsistency Sys ↔ «def:partition-notions(5)» Sys :=
   partitionConsistency_iff_atEnd Sys
 
-/-! "This is the *interface form* of Availability: every output the
-specification permits must remain available, not merely some response to each
-operation."  (Terminology; the response form is in
-`Paper/AppF_ResponseAvailability.lean`.) -/
-
 /-! ### Theorem `thm:complete-cap` -/
 
 /-- **Theorem `thm:complete-cap` (Complete CAP).**  "For an ordered relational
@@ -271,57 +267,64 @@ theorem «sec:complete-cap/deterministic-strategies» (D : Type) :
     ∀ Sys : System triSpec D, Sys.Deterministic → ¬ Availability Sys :=
   ⟨triSpec_liftedMono, deterministic_not_available D⟩
 
-/-! ### Paragraph "Answering every operation" -/
+/-! ### Paragraph "Gilbert and Lynch" -/
 
-/-- "a specification that accepts an abort or a null result at every input is
-trivially available": if some output `o₀` answers at every input, some
-replicated system has Response Availability and Response Partition
-Consistency. -/
-theorem «sec:complete-cap/trivially-available» (Q : Obligation sp) (o0 : O)
-    (h0 : ∀ i, Q.Q i o0) :
-    ∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
-      ResponsePC Sys :=
-  trivially_available Q o0 h0
+/-- "Model a register whose input is the set of operations a participant
+knows, with their real-time precedence, and whose outputs answer every
+operation of the input as some linearization does.  Let `p`'s input be a write
+of `v ≠ v_0` and `q`'s a read; the only outputs they permit are the
+acknowledgment and `v_0`.  Where the write precedes the read, every output
+returns `v`, so `v_0` has no refinement there."  Lean: the complete-response
+register `regFullSpec`; the fibers at `h1` (the write) and `h2` (the read) are
+singletons; no output at `hj` (write before read) returns `v0`; hence Lifted
+Monotonicity fails. -/
+theorem «sec:complete-cap/gl-register» :
+    (∀ o, CC.GL.regFull CC.GL.h1 o → o = CC.GL.ackMap) ∧
+    (∀ o, CC.GL.regFull CC.GL.h2 o → o = CC.GL.v0Map) ∧
+    (∀ u, CC.GL.regFull CC.GL.hj u → u.f 1 ≠ some (.val CC.GL.v0)) ∧
+    ¬ CC.GL.regFullSpec.LiftedMono :=
+  ⟨CC.GL.h1_forced, CC.GL.h2_forced, fun u hu h => CC.GL.hj_noread u hu.1 h,
+    CC.GL.regFullSpec_not_liftedMono⟩
 
-/-- "a system can answer every operation through any partition, with
-responses that have a common refinement, exactly when the specification is
-consistent on some response interface" — Theorem `thm:complete-cap-response`
-(see `Paper/AppF_ResponseAvailability.lean`). -/
+/-- "In the two-row case, Availability is needed only so that `p` can emit
+the acknowledgment and `q` can emit `v_0`.  Each is the only output its input
+permits, so it is enough that every request receive some response …
+Partition Consistency is needed only to give a common refinement of the two
+emitted outputs."  Lean: the two-row case with Answering in place of
+Availability, for outputs forced at their inputs, and a common refinement of
+the emitted outputs in place of Partition Consistency. -/
+theorem «sec:complete-cap/gl-two-row-forced» (Sys : System sp D)
+    (hA : AnsweringAtEnd Sys) (hC : CommonRefinementAtEnd Sys) {i₁ i₂ j : I} {o₁ o₂ : O}
+    (h₁ : ∀ o, sp.S i₁ o → o = o₁) (h₂ : ∀ o, sp.S i₂ o → o = o₂)
+    (hj₁ : i₁ ≼ j) (hj₂ : i₂ ≼ j) :
+    ∃ u, sp.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u :=
+  cap_two_step_forced Sys hA hC h₁ h₂ hj₁ hj₂
+
+/-- "Their theorem is a case of the two-row argument": no system for the
+register lets every request receive a response and keeps the emitted
+responses reconcilable (linearizable). -/
+theorem «sec:complete-cap/gilbert-lynch» (Sys : System CC.GL.regFullSpec D) :
+    ¬ (AnsweringAtEnd Sys ∧ CommonRefinementAtEnd Sys) :=
+  CC.GL.gilbert_lynch_direct Sys
+
+/-- "Appendix `app:cap-response` takes precedence from real time" —
+Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of
+two-participant client histories, consistency at the realized history). -/
+theorem «sec:complete-cap/gl-realized» (Sys : System CC.GL.regSpec D) :
+    ¬ (CC.AsyncGL.AnsweringC Sys ∧ CC.AsyncGL.RealizedRPCC Sys) :=
+  CC.AsyncGL.gilbert_lynch_client Sys
+
+/-- "gives a response form of Complete CAP for responses that are not
+forced" — Theorem `thm:complete-cap-response` (see
+`Paper/AppF_ResponseAvailability.lean`). -/
 theorem «sec:complete-cap/response-form» (sp : Spec I O) (D : Type) (Q : Obligation sp) :
     (∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
       ResponsePC Sys) ↔
     ∃ T, ResponseInterface Q T ∧ ConsistentOn sp T :=
   complete_cap_response sp D Q
 
-/-- "Lifted Monotonicity implies the response form". -/
-theorem «sec:complete-cap/lm-implies-response-form» (Q : Obligation sp) (h : sp.LiftedMono) :
-    ∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
-      ResponsePC Sys :=
-  lm_response_form Q h
-
-/-- "and for functional specifications the two forms coincide." -/
-theorem «sec:complete-cap/functional-forms-coincide» (hf : sp.Functional) (Q : Obligation sp) :
-    (∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
-      ResponsePC Sys) ↔
-    (∃ Sys : System sp D, Availability Sys ∧ PartitionConsistency Sys) :=
-  functional_forms_coincide hf Q
-
-/-- "In our terms, a single emitted output has no refinement in the fiber at
-some expansion of its input, a failure of Relational Monotonicity
-(Corollary `cor:gilbert-lynch`)."  Lean: the linearizable register
-`CC.GL.regSpec` is not relationally monotone. -/
-theorem «sec:complete-cap/register-not-relMono» : ¬ CC.GL.regSpec.RelMono :=
-  reg_not_relMono
-
-/-- "The Gilbert–Lynch theorem follows as a corollary of the same machinery"
-— Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of
-two-participant client histories); see `Paper/AppF_ResponseAvailability.lean`. -/
-theorem «sec:complete-cap/gilbert-lynch» (Sys : System CC.GL.regSpec D) :
-    ¬ (CC.AsyncGL.AnsweringC Sys ∧ CC.AsyncGL.RealizedRPCC Sys) :=
-  CC.AsyncGL.gilbert_lynch_client Sys
-
-/-- "The appendix derives Gilbert and Lynch's theorem in their asynchronous
-model from the corollary (Proposition `prop:gl-async`)." -/
+/-- "and derives the theorem in Gilbert and Lynch's asynchronous model
+(Proposition `prop:gl-async`)." -/
 theorem «sec:complete-cap/gl-async» {N : Nat} {M : Type} (hN : 2 ≤ N)
     (A : CC.AsyncGL.Alg N M) : ¬ (CC.AsyncGL.Available A ∧ CC.AsyncGL.Atomic A) :=
   CC.AsyncGL.gilbert_lynch_async hN A

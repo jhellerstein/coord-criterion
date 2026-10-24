@@ -183,12 +183,11 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:complete-cap/pc-demand»
 #check @CC.Paper.«sec:complete-cap/lm-fails»
 #check @CC.Paper.«sec:complete-cap/deterministic-strategies»
-#check @CC.Paper.«sec:complete-cap/trivially-available»
-#check @CC.Paper.«sec:complete-cap/response-form»
-#check @CC.Paper.«sec:complete-cap/lm-implies-response-form»
-#check @CC.Paper.«sec:complete-cap/functional-forms-coincide»
-#check @CC.Paper.«sec:complete-cap/register-not-relMono»
+#check @CC.Paper.«sec:complete-cap/gl-register»
+#check @CC.Paper.«sec:complete-cap/gl-two-row-forced»
 #check @CC.Paper.«sec:complete-cap/gilbert-lynch»
+#check @CC.Paper.«sec:complete-cap/gl-realized»
+#check @CC.Paper.«sec:complete-cap/response-form»
 #check @CC.Paper.«sec:complete-cap/gl-async»
 #check @CC.Paper.«tab:instances/query-calm»
 #check @CC.Paper.«tab:instances/crdt»

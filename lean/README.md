@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-548 entries.
+547 entries.
 
 ### §2 Functional CALM
 
@@ -300,13 +300,12 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/pc-demand»` | theorem | "The two-row case also shows what Partition Consistency demands: |
 | `«sec:complete-cap/lm-fails»` | theorem | "When Lifted Monotonicity fails, some permitted output either waits for another component, sacrificing Availability, or is emitted independently at the cost… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
-| `«sec:complete-cap/trivially-available»` | theorem | "a specification that accepts an abort or a null result at every input is trivially available": |
-| `«sec:complete-cap/response-form»` | theorem | "a system can answer every operation through any partition, with responses that have a common refinement, exactly when the specification is consistent on som… |
-| `«sec:complete-cap/lm-implies-response-form»` | theorem | "Lifted Monotonicity implies the response form". |
-| `«sec:complete-cap/functional-forms-coincide»` | theorem | "and for functional specifications the two forms coincide." |
-| `«sec:complete-cap/register-not-relMono»` | theorem | "In our terms, a single emitted output has no refinement in the fiber at some expansion of its input, a failure of Relational Monotonicity (Corollary `cor:gi… |
-| `«sec:complete-cap/gilbert-lynch»` | theorem | "The Gilbert–Lynch theorem follows as a corollary of the same machinery" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-p… |
-| `«sec:complete-cap/gl-async»` | theorem | "The appendix derives Gilbert and Lynch's theorem in their asynchronous model from the corollary (Proposition `prop:gl-async`)." |
+| `«sec:complete-cap/gl-register»` | theorem | "Model a register whose input is the set of operations a participant knows, with their real-time precedence, and whose outputs answer every operation of the… |
+| `«sec:complete-cap/gl-two-row-forced»` | theorem | "In the two-row case, Availability is needed only so that `p` can emit the acknowledgment and `q` can emit `v_0`. |
+| `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of the two-row argument": |
+| `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |
+| `«sec:complete-cap/response-form»` | theorem | "gives a response form of Complete CAP for responses that are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAvailability.lean`). |
+| `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model (Proposition `prop:gl-async`)." |
 
 ### §5 Instances
 

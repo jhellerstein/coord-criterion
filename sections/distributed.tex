@@ -314,9 +314,6 @@ a choice.
 \end{enumerate}
 \end{definition}
 
-This is the \emph{interface form} of Availability: every output the
-specification permits must remain available, not merely some response to each
-operation.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
@@ -378,35 +375,21 @@ fails, some permitted output either waits for another component, sacrificing
 Availability, or is emitted independently at the cost of Partition
 Consistency.
 
-\paragraph{Answering every operation.}
-Gilbert and Lynch ask for less than the interface form: every request
-must receive \emph{some} response.  Asking for some response is meaningful only
-once the specification says which outputs count as answers, since a specification
-that accepts an abort or a null result at every input is trivially available.
-Appendix~\ref{app:cap-response} makes that obligation, the \emph{response
-obligation}, part of the declared
-specification and proves a \emph{response form} of Complete CAP: a system can
-answer every operation through any partition, with responses that have a
-common \outnoun, exactly when the specification is consistent on some \emph{response
-interface}, a total choice of answers that can always continue its own earlier
-answers (Theorem~\ref{thm:complete-cap-response}).  Lifted Monotonicity implies
-the response form, and for functional specifications the two forms coincide.
-
-The Gilbert--Lynch theorem follows as a corollary of the same machinery as
-the response form.  A
-\emph{replica} is a participant holding a copy of the register, and the theorem
-is the case where a replica's only permitted answer is invalidated by input it
-cannot see (Lemma~\ref{lem:forced-answer}).  A replica cut off
-from a completed write must still answer a read
-(Appendix~\ref{app:registers}), its local view permits only
-the initial value, and the full history permits only the written one.  In our
-terms, a single emitted output has no \outnoun in the fiber at some \indesc of its
-input,
-a failure of Relational Monotonicity
-(Corollary~\ref{cor:gilbert-lynch}).  The appendix derives Gilbert and Lynch's
-theorem in their asynchronous model from the corollary
-(Proposition~\ref{prop:gl-async}), and explains how the guarantee,
-the response obligation, and the deployment (which participant may receive
-which inputs and emit which rows; Appendix~\ref{app:deployment}) together
-decide a CAP question.
+\paragraph{Gilbert and Lynch.}
+Their theorem is a case of the two-row argument.  Model a register whose input
+is the set of operations a participant knows, with their real-time
+precedence, and whose outputs answer every operation of the input as some
+linearization does~\cite{herlihy1990linearizability}.  Let $p$'s input be a
+write of $v\neq v_0$ and $q$'s a read; the only outputs they permit are the
+acknowledgment and $v_0$.  Where the write precedes the read, every output
+returns $v$, so $v_0$ has no \outnoun there.  In the two-row case,
+Availability is needed only so that $p$ can emit the acknowledgment and $q$
+can emit $v_0$.  Each is the only output its input permits, so it is enough
+that every request receive some response, which is Gilbert and Lynch's
+availability.  Partition Consistency is needed only to give a common
+\outnoun of the two emitted outputs, which is what linearizability requires.
+Appendix~\ref{app:cap-response} takes precedence from real time, gives a
+response form of Complete CAP for responses that are not forced, and derives
+the theorem in Gilbert and Lynch's asynchronous model
+(Proposition~\ref{prop:gl-async}).
 
