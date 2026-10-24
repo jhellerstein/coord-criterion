@@ -92,7 +92,7 @@ so $U\subseteq V$ implies $s(U)\sqsubseteq s(V)$, and
 $s(U_1)\sqcup s(U_2)=s(U_1\cup U_2)$: the state specification is monotone, and
 join is the least state \outrelpart both states~\cite{shapiro2011crdt}.  A
 client observation $q:(D,\sqsubseteq)\to(Y,\preceq_Y)$ replaces the state
-output with a new promise, and by Functional CALM the client-visible specification
+output with a new client-visible output, and by Functional CALM the client-visible specification
 $q\circ s$ is consistent exactly when
         \begin{equation}
   U\subseteq V \quad\Longrightarrow\quad q(s(U))\preceq_Y q(s(V)).
@@ -130,7 +130,7 @@ Then $U_0\subseteq U_1$, but
 The internal state advanced, but the client-visible claim did not.  An ordinary
 point-in-time read may merely expose its chosen local cut.  The bug appears when
 the program interprets that answer as complete, stable, or sufficient to justify
-an irreversible action.  Such a promise needs a seal on the relevant updates.
+an irreversible action.  Such a claim needs a seal on the relevant updates.
 State convergence does not establish monotonicity of an application query.
 
 \paragraph{Threshold queries.}
@@ -206,12 +206,14 @@ client.
 
 The examples show where the boundary falls.  A guarantee whose permitted fact sets
 are closed under union, as read committed's are here, has a common \outnoun for
-whatever separated replicas expose, so it stays available.  One that orders or
-excludes concurrent transactions, as serializability and first-committer-wins
-do, rules out combinations that separated replicas can each expose; emitting
-either side requires a choice, and a partition prevents making it jointly.
-Storage convergence does not change this, since it constrains states after
-delivery, not facts already exposed.  We illustrate where HAT's boundary
+whatever separated replicas expose, so it stays available
+(Theorem~\ref{thm:complete-cap}).  One that orders or excludes concurrent
+transactions, as serializability and first-committer-wins do, rules out
+combinations that separated replicas can each expose; emitting either side
+requires a choice (Proposition~\ref{thm:commitments-require-coordination}), and
+a partition prevents making it jointly.  Storage convergence constrains states
+after delivery; the facts already exposed are outputs, and output events never
+remove them.  We illustrate where HAT's boundary
 falls; we do not re-derive its classification.
 
 \subsection{Invariant confluence}
@@ -259,9 +261,8 @@ not the transactions alone, decides the outcome: a transaction that is harmless
 after another can, when it runs without seeing it, produce a state whose merge
 with the other's is invalid.
 
-Invariant preservation and transaction availability remain different
-specifications: an invariant-confluent application need not provide any
-particular isolation level, and an available transaction can expose facts
-that a concurrent one later invalidates.
+Invariant preservation and transaction availability are different
+specifications: $S_{\mathcal I}$ constrains exposed database states, while an
+isolation level constrains exposed read and commit facts.
 
 We close by drawing out the resulting design lessons and scope limits.
