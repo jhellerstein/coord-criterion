@@ -190,9 +190,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:complete-cap/register-not-relMono»
 #check @CC.Paper.«sec:complete-cap/gilbert-lynch»
 #check @CC.Paper.«sec:complete-cap/gl-async»
-#check @CC.Paper.«sec:complete-cap/deployment-availability»
-#check @CC.Paper.«sec:complete-cap/single-authority»
-#check @CC.Paper.«sec:complete-cap/causal-register»
 #check @CC.Paper.«tab:instances/query-calm»
 #check @CC.Paper.«tab:instances/crdt»
 #check @CC.Paper.«tab:instances/registers»

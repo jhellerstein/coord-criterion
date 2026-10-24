@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-551 entries.
+548 entries.
 
 ### §2 Functional CALM
 
@@ -307,9 +307,6 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/register-not-relMono»` | theorem | "In our terms, a single emitted output has no refinement in the fiber at some expansion of its input, a failure of Relational Monotonicity (Corollary `cor:gi… |
 | `«sec:complete-cap/gilbert-lynch»` | theorem | "The Gilbert–Lynch theorem follows as a corollary of the same machinery" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-p… |
 | `«sec:complete-cap/gl-async»` | theorem | "The appendix derives Gilbert and Lynch's theorem in their asynchronous model from the corollary (Proposition `prop:gl-async`)." |
-| `«sec:complete-cap/deployment-availability»` | theorem | "Appendix `app:deployment` restricts Availability to the rows each participant is authorized to emit": |
-| `«sec:complete-cap/single-authority»` | theorem | "notes the degenerate case in which one participant holds all relevant authority": |
-| `«sec:complete-cap/causal-register»` | theorem | "and shows that a causal register … needs no cross-component coordination when each participant answers only its own reads": |
 
 ### §5 Instances
 

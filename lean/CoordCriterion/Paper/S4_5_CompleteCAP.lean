@@ -11,8 +11,7 @@ import CoordCriterion.Appendix.Registers
 Statement layer for Section `sec:complete-cap`, from the subsection header to
 the end of `sections/distributed.tex`: Definition `def:partition-notions`,
 Theorem `thm:complete-cap` (with its "moreover" clause), the remarks after its
-proof, and the claims of the paragraphs "Answering every operation" and
-"Deployment".
+proof, and the claims of the paragraph "Answering every operation".
 
 How to read this file: open it next to the `.tex` file.  The `/-! ## … -/`
 headers follow the paper's (sub)sections and paragraphs, in paper order.  Each
@@ -326,33 +325,5 @@ model from the corollary (Proposition `prop:gl-async`)." -/
 theorem «sec:complete-cap/gl-async» {N : Nat} {M : Type} (hN : 2 ≤ N)
     (A : CC.AsyncGL.Alg N M) : ¬ (CC.AsyncGL.Available A ∧ CC.AsyncGL.Atomic A) :=
   CC.AsyncGL.gilbert_lynch_async hN A
-
-/-! ### Paragraph "Deployment" (forward pointers to Appendix `app:deployment`) -/
-
-/-- "Appendix `app:deployment` restricts Availability to the rows each
-participant is authorized to emit": with the full deployment (`A_p = S` for
-every `p`) Deployment Availability is the Availability of this section (at
-the deployment's participant set). -/
-theorem «sec:complete-cap/deployment-availability» (Sys : System sp D)
-    (Dp : CC.Deploy.Deployment sp n) (hA : ∀ p, Dp.A p = sp.S) :
-    CC.Deploy.DeploymentAvailability Sys Dp ↔ CC.Deploy.AvailabilityAt Sys n :=
-  CC.Deploy.deploymentAvailability_full Sys Dp hA
-
-/-- "notes the degenerate case in which one participant holds all relevant
-authority": under a single-authority deployment (at least two participants),
-monotonicity across partitions only asks that each authorized row have a
-refinement at every expansion of its input. -/
-theorem «sec:complete-cap/single-authority» (hn : 2 ≤ n) (Dp : CC.Deploy.Deployment sp n)
-    (p₀ : Fin n) (hSA : CC.Deploy.SingleAuthority Dp p₀) :
-    CC.Deploy.MonoAcrossPartitions Dp ↔
-      ∀ i o, Dp.A p₀ i o → ∀ j, i ≼ j → ∃ u, sp.S j u ∧ o ≼ u :=
-  CC.Deploy.single_authority_iff hn Dp p₀ hSA
-
-/-- "and shows that a causal register … needs no cross-component coordination
-when each participant answers only its own reads": the causal register is
-monotone across partitions under the replica deployment. -/
-theorem «sec:complete-cap/causal-register» {α : Type} (G : CC.Deploy.OpSig α n) :
-    CC.Deploy.MonoAcrossPartitions (CC.Deploy.replicaD G) :=
-  CC.Deploy.causal_monoAcross G
 
 end CC.Paper
