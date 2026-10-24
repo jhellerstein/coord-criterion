@@ -320,7 +320,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/gl-two-row-forced»` | theorem | "The converse in the proof of Theorem `thm:complete-cap` needs Availability only so that `p` can emit the acknowledgment and `q` can emit `v_0`. |
 | `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of Complete CAP": |
 | `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |
-| `«sec:complete-cap/response-form»` | theorem | "gives a response form of Complete CAP for responses that are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAvailability.lean`). |
+| `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
 | `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model (Proposition `prop:gl-async`)." |
 
 ### §5 Instances
@@ -630,11 +630,11 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«def:response-interface/T-eq-S»` | theorem | "With `T = S` it is the common-expansion condition of Proposition `prop:common-expansion-form`." |
 | `«def:response-interface/confluence»` | theorem | "and by Lemma `lem:reconciliation` it is confluence of the canonical runs whose emitted rows lie in `T`." Lean: |
 | `«app:cap-response/serve-interface»` | theorem | "A response interface is an availability relation that a system can always serve. |
-| `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP, response form).** "For an ordered relational specification `S` and a uniform obligation `Q`, the followi… |
+| `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).** "For an ordered relational specification `S` and a uniform obligation `Q`, the… |
 | `«thm:complete-cap-response/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap-response`, (2⇒1): |
 | `«app:cap-response/without-replication»` | theorem | **Remark "Without replication"**: |
 | `«app:cap-response/without-replication/local-init-needed»` | theorem | The `LocalInit` hypothesis ("each strategy depends on the initial inputs only through its own participant's") is needed: |
-| `«app:cap-response/lm-implies-response-form»` | theorem | "Theorem `thm:complete-cap` with `A = S` requires every permitted output to stay available; the response form lets the system choose which outputs to serve. |
+| `«app:cap-response/lm-implies-response-form»` | theorem | "Theorem `thm:complete-cap` with `A = S` requires every permitted output to stay available; Theorem `thm:complete-cap-response` lets the system choose which… |
 | `«app:cap-response/converse-fails»` | theorem | "The converse fails. |
 | `«app:cap-response/functional-coincide»` | theorem | "For a functional specification the two coincide: |
 | `«app:cap-response/lm-subspec»` | theorem | "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is a response interface on which `S` is consistent". |

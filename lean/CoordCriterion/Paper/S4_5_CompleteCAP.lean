@@ -365,8 +365,8 @@ theorem «sec:complete-cap/gl-realized» (Sys : System CC.GL.regSpec D) :
     ¬ (CC.AsyncGL.AnsweringC Sys ∧ CC.AsyncGL.RealizedRPCC Sys) :=
   CC.AsyncGL.gilbert_lynch_client Sys
 
-/-- "gives a response form of Complete CAP for responses that are not
-forced" — Theorem `thm:complete-cap-response` (see
+/-- "extends Complete CAP to systems that choose their responses when responses
+are not forced" — Theorem `thm:complete-cap-response` (see
 `Paper/AppF_ResponseAvailability.lean`). -/
 theorem «sec:complete-cap/response-form» (sp : Spec I O) (D : Type) (Q : Obligation sp) :
     (∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
