@@ -87,8 +87,8 @@ theorem «def:partition-notions(3)» (Sys : System sp D) (init : Fin n → I) (p
 
 /-- Def. `def:partition-notions`(4), *Availability*: "A continuation of a
 partitioned history is local to a participant `p` when the system produces it,
-it keeps the same components, and it adds only events of `p`'s component and no
-input events.  The system has Availability when, at every consistent cut of
+it adds only events of `p`'s component and no input events, and none of its
+receives takes a message sent from another component.  The system has Availability when, at every consistent cut of
 every partitioned history it produces, each participant `p` in state `(i,R)`
 can emit each output in `R(i)` in some continuation local to `p`."  In the
 unfolded form below, "local to `p`" is the conjunction `Produced … ∧
