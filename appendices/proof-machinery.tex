@@ -49,21 +49,32 @@ empty run reaches, exposability of $f(i)$ gives $f(i)\OutputOrd f(j)$ for every
 
 \subsection{Proofs for Section~\ref{sec:complete-calm}}
 
+The survivor test and Lemma~\ref{lem:run-residual} combine into the form in
+which every later argument uses them.
+
+\begin{lemma}[Reconciliation]
+\label{lem:reconciliation}
+Let runs end at $(i_r,R_r)$, $r=1,\ldots,k$, let $j$ be a common \indesc of
+the $i_r$, and let $E$ be the set of outputs emitted on all of them.  The runs
+are confluent at $j$ if and only if some $u\in\fiber{j}$ \outrel every output
+in $E$.
+\end{lemma}
+
+\begin{proof}
+By Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ exactly when $u\in\fiber{j}$
+\outrel every output emitted on run $r$.  Apply
+Proposition~\ref{prop:confluence}.
+\end{proof}
+
 \begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
-By Proposition~\ref{prop:common-expansion-form} it suffices to
-treat the common-\indesc condition.  Suppose it holds, and let runs end at $(i_r,R_r)$ with
-common \indesc $j$.  Each output $o$ emitted on a run was emitted at some
-input $i_o\InputOrd j$, and since $o\in R(i_o)\subseteq S(i_o)$, it forms a row
-$(i_o,o)$ of $S$.  The condition supplies $u\in S(j)$ \outrelpart all of these
-outputs.  Since $j$ \inrel every current input $i_r$,
-Lemma~\ref{lem:run-residual} puts $(j,u)$ in every $R_r$, and
-Proposition~\ref{prop:confluence} gives confluence at $j$.  Conversely, let
-rows $(i_r,o_r)$ have common \indesc $j$.  For each $r$, the run
-that starts at $\sigma_S(i_r)$ and emits $o_r$ ends with remainder table
-$S[\mathrm{in}\InputGe i_r,\ \mathrm{out}\OutputGe o_r]$
-(Lemma~\ref{lem:run-residual}).  Consistency and
-Proposition~\ref{prop:confluence} supply a row $(j,u)$ surviving in every one
-of these runs, so $u\in S(j)$ \outrel every $o_r$.
+By Proposition~\ref{prop:common-expansion-form} it suffices to treat the
+common-\indesc condition.  ($\Leftarrow$) Each output $o$ emitted on a run was
+emitted at some input $i_o\InputOrd j$, so $(i_o,o)$ is a row of $S$; the
+condition supplies $u\in\fiber{j}$ \outrelpart all of them, and
+Lemma~\ref{lem:reconciliation} gives confluence.  ($\Rightarrow$) Given rows
+$(i_r,o_r)$ with common \indesc $j$, apply consistency and
+Lemma~\ref{lem:reconciliation} to the runs that start at $\sigma_S(i_r)$ and
+emit $o_r$.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
@@ -112,8 +123,7 @@ when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ satisfies $\mathcal I$, as
 when replicas abort transactions that would violate the invariant on their own
 state.  It is \emph{valid} when every downward-closed sub-history $c$ has
 $\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
-state.  Since $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ are states of
-downward-closed sub-histories, a valid history is locally valid.
+state.
 
 The specification $S_{\mathcal I}$ has the locally valid histories as inputs.
 An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
@@ -146,18 +156,17 @@ states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Thus $g$ is valid, and
 $\mathrm{eval}(g)\in S_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
 For $k=0$, take $g$ empty.
 
-($\Leftarrow$) First let $g_1$ and $g_2$ be valid histories, and let $j$ be
-their disjoint union, with events renamed apart and no order between the two
-parts.  It is locally valid
-and \inrel both, and $(g_r,\mathrm{eval}(g_r))$ are rows, since valid
-histories are locally valid.  Lifted Monotonicity
-gives a valid sub-history $g$ of $j$ whose state contains
-$\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)$; since
-$\mathrm{eval}(g)\subseteq\mathrm{eval}(j)$, the two are equal and
-$\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Applying this to
-every pair of downward-closed sub-histories shows that $j$ is itself valid.
-Valid histories are therefore closed under disjoint union, and under adding an
-event above all others when its transaction step is valid.  By induction on
-derivations, every reachable state is the state of a valid history, and the
-pairwise argument then gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
+($\Leftarrow$) Only Directed Outputs is needed.  Let $g_1$ and $g_2$ be valid
+histories, and let $j$ be their disjoint union, with events renamed apart and
+no order between the two parts.  Each event keeps its predecessors, and its
+$\mathrm{pre}$ and $\mathrm{post}$ are states of downward-closed sub-histories
+of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in S_{\mathcal I}(j)$.
+Directed Outputs gives a valid sub-history $g$ of $j$ with
+$\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$,
+so $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Applied to every
+pair of downward-closed sub-histories, this makes $j$ valid.  Valid histories
+are therefore closed under disjoint union, and under adding an event above all
+others when its transaction step is valid.  By induction on derivations, every
+reachable state is the state of a valid history, and the pairwise argument
+gives $\mathcal I(s_1\cup s_2)$ for all reachable $s_1,s_2$.
 \end{proof}
