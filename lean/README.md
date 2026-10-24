@@ -5,6 +5,7 @@ Build: `lake build` from this directory.  Every theorem below depends only on
 the standard axioms (`propext`, `Quot.sound`, and in some cases
 `Classical.choice`); there is no `sorry`.  A metaprogram check over all
 2125 theorem constants in namespace `CC` confirms this.
+2175 theorems in namespace `CC` confirms this.
 
 The `Audit/` files check each proved claim against the current paper text and
 add proofs where the earlier files differ from it.  Where a result appears both
@@ -106,6 +107,11 @@ matches the current text; the table marks the earlier rows that no longer do.
 | Lemma forced-answer (current form: only `q`'s events, no input event; Answering only) | `CC.AuditC.forced_answer_strong` | Audit/CAP |
 | Cor. Gilbert–Lynch along the paper's proof, from Answering only | `CC.AuditC.gilbert_lynch_answering`, `CC.AuditC.gilbert_lynch_via_forced_answer` | Audit/CAP |
 | Register fails Relational Monotonicity; `Q_p` is an obligation | `CC.AuditC.reg_not_relMono`, `CC.AuditC.regQ_obligation` | Audit/CAP |
+| GL model: async algorithms, executions, atomicity (Lynch), availability under message loss; non-vacuity | `CC.AuditGL.Alg`, `CC.AuditGL.IsGExec`, `CC.AuditGL.Atomic`, `CC.AuditGL.Available`, `CC.AuditGL.silent_atomic`, `CC.AuditGL.eager_available` | Audit/GLReduction |
+| Cor. Gilbert–Lynch, client form (hypotheses only on two-participant client histories; implies the paper's form) | `CC.AuditGL.gilbert_lynch_client`, `CC.AuditGL.answeringC_of_RA`, `CC.AuditGL.realizedRPCC_of` | Audit/GLReduction |
+| Correspondence (1): algorithms are strategies; a lone node's atomic responses lie in the fiber at its view | `CC.AuditGL.sysOf`, `CC.AuditGL.atomic_view`, `CC.AuditGL.lin_to_regS`, `CC.AuditGL.emit_legal` | Audit/GLReduction |
+| Correspondence (2), (3): availability gives Answering; atomicity gives RPC at the realized history | `CC.AuditGL.sys_answering`, `CC.AuditGL.sys_rpc` | Audit/GLReduction |
+| Gilbert–Lynch Theorem 1 (async), by reduction to the corollary | `CC.AuditGL.gilbert_lynch_async` | Audit/GLReduction |
 | Audit D: run outputs form a chain; rows authorized only to `p` are separable only as one row | `CC.AuditD.rows_chain`, `CC.AuditD.rows_max`, `CC.AuditD.sole_rows_separable`, `CC.AuditD.sole_rows_two_not_separable` | Audit/Deployment |
 | Audit D: leader example as stated (equality order, `A_p=S`, `A_q=∅`, any input poset) | `CC.AuditD.lead_monoAcross`, `CC.AuditD.lead_not_liftedMono`, `CC.AuditD.lead_separable_shape`, `CC.AuditD.lead_run_one_output` | Audit/Deployment |
 | Audit D: sufficient condition for monotone across partitions (sole-authority conflicts) | `CC.AuditD.monoAcross_of_sole_conflicts`, `CC.AuditD.cfg_product_conflict` (product interface does not satisfy it) | Audit/Deployment |

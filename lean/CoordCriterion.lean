@@ -20,3 +20,4 @@ import CoordCriterion.Audit.Deployment
 import CoordCriterion.Audit.MVTOReads
 import CoordCriterion.Audit.MVTOFull
 import CoordCriterion.Audit.Remaining
+import CoordCriterion.Audit.GLReduction
