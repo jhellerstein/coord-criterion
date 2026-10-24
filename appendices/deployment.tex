@@ -11,7 +11,8 @@ characterizes the resulting compatibility condition.
 A \emph{deployment} over a finite participant set $P$ assigns to each $p\in P$
 a set $A_p\subseteq S$, the rows $p$ may emit: $p$ performs an output event
 $\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) at current input
-$i$ only if $(i,o)\in A_p$.  A \emph{partition} $\Pi$ of $P$ divides $P$ into
+$i$ only if $(i,o)\in A_p$.  The \emph{emitted rows} of a run are the pairs
+$(i,o)$ such that the run emits $o$ at current input $i$.  A \emph{partition} $\Pi$ of $P$ divides $P$ into
 two or more nonempty components, as in a partitioned history
 (Definition~\ref{def:partition-notions}).
 
@@ -35,16 +36,25 @@ across every partition of $P$.
 This is the common-\indesc condition
 (Definition~\ref{def:common-expansion-condition}) restricted to the families a
 partition can separate, so Lifted Monotonicity implies monotonicity across
-partitions.  Two choices available to one participant never form a separable
-family: one run never emits incompatible outputs, and the silent-participant
-case requires a single distinct row.  The converse can therefore fail: for
-example, when every incompatible family of two or more authorized rows is
-confined to one participant's authority (and single authorized rows lift), as
-in leader election where one participant names the leader.  If $|P|\ge2$ and
-$A_p=S$ for every $p$, every pair of rows can be split across a partition and
-every single row paired with a silent participant at the common \indesc; since
-pairs of rows suffice for the common-\indesc condition
-(Section~\ref{sec:lifted-monotonicity}), monotonicity across partitions is then
+partitions.  Rows authorized only to $p$ can be emitted only by $p$'s run,
+whose emitted outputs form a chain (each output event keeps only rows refining
+it), so they never form a separable family.  The converse can therefore fail.
+For example, let $P=\{p,q\}$, let every fiber be $\{a,b\}$ ordered by equality,
+and let $A_p=S$ and $A_q=\varnothing$, so that $p$ alone names a leader.  A run
+of $p$ emits at most one distinct output and $q$ never emits, so every separable
+family consists of one row $(i,a)$ or $(i,b)$ beside a silent $q$, and that
+output lies in $\fiber{j}$ for every \indesc $j$ of $i$.  So $\Spec$ is
+monotone across partitions, yet $(i,a)$ and $(i,b)$ have no common \outnoun and
+Lifted Monotonicity fails.  The same happens whenever each authorized row has a
+\outnoun at every \indesc of its input and every set of authorized rows
+lacking a common \outnoun at some common \indesc is authorized only to a single
+participant; the
+product interface of Theorem~\ref{thm:product-frontier} and the causal register
+of Appendix~\ref{app:registers} are examples with no single authority.  If
+$|P|\ge2$ and $A_p=S$ for every $p$, every pair of rows can be split across a
+partition and every single row paired with a silent participant at the common
+\indesc; since pairs of rows suffice for the common-\indesc condition
+(Appendix~\ref{app:pairs-suffice}), monotonicity across partitions is then
 Lifted Monotonicity.
 
 \begin{definition}[Deployment Availability]
@@ -59,12 +69,17 @@ input event.
 
 As in Availability (Definition~\ref{def:partition-notions}), the output event
 may apply commitments within the participant's component.  If $A_p=S$ for
-every $p$, Deployment Availability is Availability for histories over $P$.  We
-call a deployment \emph{single-authority} when one participant holds all
-relevant input and output choices and every other participant is silent; the
-formalism permits it, as do placement-sensitive models such as
-relational-transducer CALM~\cite{ameloot2013relational,ameloot2015weaker}, but
-it is degenerate and we set it aside.
+every $p$, Deployment Availability is Availability for histories over $P$.
+
+A deployment is \emph{single-authority} when $A_q=\varnothing$ for every
+participant $q$ but one, as in the leader example above.  Every separable family
+is then one row emitted by the single authority beside a silent participant, and
+monotonicity across partitions says only that each such row has a \outnoun at
+every \indesc of its input.  The formalism permits this case, as do
+placement-sensitive models such as relational-transducer
+CALM~\cite{ameloot2013relational,ameloot2015weaker}, and nothing below excludes
+it.  It is degenerate for CAP, since a sole authority never needs to agree with
+anyone, and we do not discuss it further.
 
 \begin{proposition}[Partition compatibility under a deployment]
 \label{thm:complete-cap-deployment}
@@ -84,14 +99,19 @@ and only if some $u\in\fiber{j}$ \outrel every output in $E$.  The two
 conditions thus agree family by family.
 \end{proof}
 
-The proposition does not use Deployment Availability.  Combined with it, the
-outputs that components emit independently under authorized placement have a
-common \outnoun $u$ in the specification.  It does not follow that the
-deployment authorizes any participant to emit $u$; confluence through legal
-output events of the deployment would additionally require that authority, a
-condition we do not impose.  With $|P|\ge2$ and $A_p=S$ for every $p$, the
-proposition is the common-survivor step (Proposition~\ref{prop:confluence})
-behind Theorem~\ref{thm:complete-cap}.
+The proposition concerns canonical runs and does not use Deployment
+Availability.  It applies to the runs of a system as well: by
+Lemma~\ref{lem:canonical-equivalent}, each such run is observably equivalent to
+a canonical run with the same emitted rows, which therefore lie in $A_p$.  So if
+$\Spec$ is monotone across partitions, the outputs that components of a
+partitioned history emit independently, as Deployment Availability permits,
+have a common \outnoun $u\in\fiber{j}$ at every common \indesc $j$.  It does not follow that the deployment authorizes any
+participant to emit $u$; confluence through legal output events of the
+deployment would additionally require that authority, a condition we do not
+impose.  With $|P|\ge2$ and $A_p=S$ for every $p$, item~(2) is Lifted
+Monotonicity, and the proposition is the step behind
+Theorem~\ref{thm:complete-cap} stating that separable families are confluent
+at every common \indesc exactly when Lifted Monotonicity holds.
 
 \subsection{Registers}
 \label{app:registers}
@@ -101,30 +121,56 @@ still answer a read, is recovered by Corollary~\ref{cor:gilbert-lynch}
 (Appendix~\ref{app:cap-response}).  Here both writes are visible to both
 replicas.
 
-An input is a finite causally closed operation history, with $h\InputOrd h'$
-when restricting $h'$ to the operations of $h$ gives $h$.  An output is an
-explanation $(L,\rho)$: $L$ is an operation order allowed by the consistency
-model and $\rho$ maps each completed read to the write supplying its response.
-One explanation \outrel another when it extends $L$ without reversing an
-existing order and extends $\rho$ without changing an answered read.  This is
-the register of Appendices~\ref{app:cap-response} and~\ref{sec:frontiers} with
-a different output record.
+\paragraph{The causal register.}
+This register records causal precedence rather than real-time precedence, and
+its outputs record the write that supplies each read rather than the value
+returned; it is otherwise the register of Appendix~\ref{app:cap-response}.  An
+input is a finite operation history $h$: a set of reads and writes of one
+register $x$ at replicas, with a strict partial order $\to$ of causal
+precedence (program order at each replica, and from each write to the
+operations a replica invokes after receiving it, closed transitively).  A set
+of operations of $h'$ is \emph{causally closed} when it contains every
+operation that causally precedes one of its members.  We set $h\InputOrd h'$
+when the operations of $h$ form a causally closed subset of $h'$ and $\to$
+restricted to them is the order of $h$.  Thus an \indesc never adds an
+operation to the causal past of an existing one.
+
+An output is a \emph{source map} $\rho$: a partial map assigning to some reads
+of $h$ a write of $h$ or the initial value $v_0$, ordered by extension.  A
+\emph{serialization} for replica $p$ is a total order of $p$'s operations and
+all writes of $h$ that extends $\to$; it explains a read of $p$ with source
+$w$ when $w$ is the last write before the read, or $v_0$ if there is none.
+Under causal consistency~\cite{lamport1978time,ahamad1995causal},
+$\rho\in\fiber{h}$ when each replica has a serialization explaining every read
+of that replica in the domain of $\rho$.  Under linearizability, a single
+total order of all operations of $h$ extending $\to$ must explain every read
+in the domain~\cite{herlihy1990linearizability}; real-time edges beyond $\to$
+play no role in the example below.
 
 Two replicas start empty.  Participant $p$ completes $w_p(x,\dog)$ while $q$
 concurrently completes $w_q(x,\catv)$; the replicas exchange both writes, a
-partition separates them, and each serves a local read.
+partition separates them, and each serves a local read, $r_p$ at $p$ and $r_q$
+at $q$.  Both writes causally precede both reads, and the writes are
+concurrent.
 
-Under linearizability $L$ is a total order extending real
-time~\cite{herlihy1990linearizability}.  If $p$ reads \catv, its explanation
-requires $w_p(x,\dog)<_L w_q(x,\catv)$; if $q$ reads \dog, it requires the
-opposite.  No explanation \outrel both, so the register is not monotone across
-the partition $\{\{p\},\{q\}\}$ under any deployment authorizing these two
-reads.
+Under linearizability, if $p$ reads \catv{} the order has
+$w_p(x,\dog)$ before $w_q(x,\catv)$; if $q$ reads \dog{} it has the opposite.
+No source map \outrel both, so the register is not monotone across the
+partition $\{\{p\},\{q\}\}$ under any deployment authorizing these two reads.
 
-Under causal consistency~\cite{lamport1978time,ahamad1995causal} the writes
-stay concurrent, and one explanation assigns $p$'s read to \catv{} and $q$'s
-to \dog{}.  Two answers to the same read remain incompatible, but under a
-deployment in which each participant answers only its own reads, such a pair
-is confined to one participant and is never separable.  The causal register is
-then monotone across partitions, and a commitment selecting a participant's
-response is local to its component.
+Under causal consistency the two replicas may serialize the concurrent writes
+differently, and one source map sends $r_p$ to $w_q(x,\catv)$ and $r_q$ to
+$w_p(x,\dog)$.  Under the deployment in which each replica answers only its own
+reads ($A_p$ holds the rows whose source map is defined only on reads of $p$),
+the causal register is monotone across partitions, for every history.  Let
+participant $p$'s run emit last the source map $\rho_p$ at input $i_p$, so that
+$\rho_p$ \outrel every output $p$ emitted, and let $j$ be a common \indesc.
+Take a serialization $L_p$ of $i_p$ explaining $\rho_p$, and extend it to $j$
+by appending the new operations of $p$ and the new writes in any order
+extending $\to$; since no new operation causally precedes an old one, the
+result extends $\to$ and explains the same reads.  Using these serializations
+for emitting replicas and arbitrary ones for the others, the union of the
+$\rho_p$ lies in $\fiber{j}$ and \outrel every emitted output.  Separability is
+not used.  Two answers to the same read remain incompatible, but they are
+confined to one participant.  A commitment selecting a participant's response
+is therefore local to its component.

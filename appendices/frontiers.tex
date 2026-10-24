@@ -1,12 +1,12 @@
 \section{Coordination-Free Frontiers}
 \label{sec:frontiers}
 
-We ask how much a specification can promise before coordination is needed,
+We ask how strong a specification can be before coordination is needed,
 holding the inputs, input order, and output order fixed.  A specification $T$
 is \emph{stronger} than $S$ when $T\subsetneq S$.  This compares sets of rows
 and is unrelated to $\OutputOrd$, which compares outputs.
 
-\subsection{Remembering what may remain true}
+\subsection{Remembered outputs}
 
 For $A,B\subseteq O$, the \emph{Hoare preorder} is
         \begin{equation}
@@ -56,18 +56,28 @@ maximality gives $y=m$; so $M(i)\subseteq Y$.  Minimality does not use
 finiteness.
 \end{proof}
 
-When $X=S$ is a specification, every $\widehat X(i)$ is nonempty, and
-$i\mapsto\widehat X(i)$ is a functional specification with outputs in
-$(\mathcal P(O)\setminus\{\varnothing\})/{\equiv_H}$, where $A\equiv_H B$ means
-$A\HoareOrd B\HoareOrd A$.  It is monotone, hence consistent by
-Theorem~\ref{thm:functional-calm}.  The theorem says it is the least such
-relaxation, and $M$ is its least representative drawn from remembered
+When $X=S$ is a specification, every $\widehat X(i)$ is nonempty.  Let
+$A\equiv_H B$ mean $A\HoareOrd B\HoareOrd A$, and order the quotient
+$(\mathcal P(O)\setminus\{\varnothing\})/{\equiv_H}$ by the order that
+$\HoareOrd$ induces on classes.  Then $i\mapsto\widehat X(i)$, read in this
+quotient, is a functional specification.  It is monotone, hence consistent by
+Theorem~\ref{thm:functional-calm}.  The theorem says it is least, under
+$\HoareOrd$ up to $\equiv_H$, among relaxations satisfying Relational
+Monotonicity, and $M$ is its least representative drawn from remembered
 outputs.
 
 Table~\ref{tab:lookup-lift} gives an example: a data item moves from node $a$ to
 node $b$ as input grows from $i_0$ to $i_1$.  Output $o_a$ ($o_b$) says that a
 lookup from $a$ ($b$) succeeds, and $o_{a\leadsto b}$ says that $b$ holds the
-item and $a$ forwards to it, so $o_a,o_b\OutputOrd o_{a\leadsto b}$.
+item and $a$ forwards to it, so $o_a,o_b\OutputOrd o_{a\leadsto b}$.  The table
+$X$ records only what is exact at each input: after the move, a lookup from $b$
+succeeds and $a$ is no longer a location.  It violates Relational Monotonicity,
+since $o_a$ at $i_0$ has nothing above it in $X(i_1)$.  The remembered output
+repairs this by keeping the stale claim $o_a$ beside $o_b$; both are maximal,
+so $M=\widehat X$.  Forwarding, $A(i_0)=\{o_a\}$ and
+$A(i_1)=\{o_{a\leadsto b}\}$, is another relaxation satisfying Relational
+Monotonicity, and Equation~\ref{eq:hull-coverage} places $\widehat X$ below it:
+$\{o_a,o_b\}\HoareOrd\{o_{a\leadsto b}\}$.
 
 \begin{table}[t]
   \centering
@@ -79,9 +89,7 @@ item and $a$ forwards to it, so $o_a,o_b\OutputOrd o_{a\leadsto b}$.
     Input & $X(i)$ & $\widehat X(i)$ & $M(i)$ \\
     \midrule
     $i_0$ & $\{o_a\}$ & $\{o_a\}$ & $\{o_a\}$ \\
-    $i_1$ & $\{o_b,o_{a\leadsto b}\}$
-          & $\{o_a,o_b,o_{a\leadsto b}\}$
-          & $\{o_{a\leadsto b}\}$ \\
+    $i_1$ & $\{o_b\}$ & $\{o_a,o_b\}$ & $\{o_a,o_b\}$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -91,39 +99,49 @@ item and $a$ forwards to it, so $o_a,o_b\OutputOrd o_{a\leadsto b}$.
 B-link trees keep a search starting at a split node correct by following a
 right link, so the parent can be repaired later~\cite{lehman1981efficient}.  We
 abstract the invariant.  Inputs are finite legal restructuring histories $h$,
-ordered by prefix.  For a key $k$ and search position $p$, $(k,p)\in R(h)$ when
-the key-directed search from $p$ follows a finite path to a current occurrence
-of $k$.  Each restructuring step must satisfy:
+ordered by prefix.  The structure after $h$ is a finite directed graph whose
+nodes are \emph{positions}; each edge is a \emph{child edge} or a \emph{link
+edge}, and some positions hold keys.  For each key $k$, every position has at
+most one outgoing \emph{search edge for $k$}, the edge a search for $k$
+follows there; the \emph{search for $k$ from $\pi$} follows search edges for
+$k$ from position $\pi$.  An \emph{occurrence} of $k$ is a position holding
+$k$, and \emph{current} means present after $h$.  The \emph{claim} $(k,\pi)$
+belongs to $C(h)$ when the search for $k$ from $\pi$ reaches a current
+occurrence of $k$ after finitely many edges.  Each restructuring step must
+satisfy:
 \begin{enumerate}
-  \item search positions keep stable identities;
-  \item every old key-directed edge is replaced by a key-directed path; and
-  \item every old occurrence of $k$ has a path to a current occurrence of $k$.
+  \item positions keep stable identities;
+  \item if $\pi\to\pi'$ was the search edge for $k$ at $\pi$ before the step,
+        the search for $k$ from $\pi$ reaches $\pi'$ after it; and
+  \item from every position that held $k$ before the step, the search for $k$
+        reaches a current occurrence of $k$ after it.
 \end{enumerate}
 Deletion and reclamation can violate (2) and (3) and are excluded.
 
 \begin{proposition}[Persistent-forwarding monotonicity]
 \label{prop:persistent-forwarding}
-Under (1)--(3), $h\InputOrd h'$ implies $R(h)\subseteq R(h')$.  The functional
-specification $h\mapsto R(h)$, ordered by inclusion, is therefore monotone and,
+Under (1)--(3), $h\InputOrd h'$ implies $C(h)\subseteq C(h')$.  The functional
+specification $h\mapsto C(h)$, ordered by inclusion, is therefore monotone and,
 by Theorem~\ref{thm:functional-calm}, consistent.
 \end{proposition}
 
 \begin{proof}
-By induction it suffices to treat one step.  Replace each edge of a valid search
-path by the path that (2) provides, then append the path that (3) provides from
-the old occurrence to a current one.
+By induction it suffices to treat one step.  Let the search for $k$ from $\pi$
+reach an occurrence before the step.  After the step, by (2) the search from
+each position on that path reaches the next one, so the search from $\pi$
+reaches the old occurrence, and by (3) it continues to a current occurrence.
 \end{proof}
 
-Let $X(g)\subseteq R(g)$ be the claims whose search is exact (uses no
-forwarding) at $g$, and order claims by equality, so that $\HoareOrd$ is
-inclusion.  By Proposition~\ref{prop:persistent-forwarding}, $R$ is a powerset
-relaxation of $X$ satisfying Relational Monotonicity, so
+Let $X(h)\subseteq C(h)$ be the claims that are \emph{exact} at $h$: their
+search follows only child edges.  Order claims by equality, so that $\HoareOrd$
+is inclusion.  By Proposition~\ref{prop:persistent-forwarding}, $C$ is a
+powerset relaxation of $X$ satisfying Relational Monotonicity, so
 Equation~\ref{eq:hull-coverage} gives
         \begin{equation}
-  \widehat X(h)\subseteq R(h):
+  \widehat X(h)\subseteq C(h):
   \label{eq:forwarding-hull}
         \end{equation}
-every claim that was ever exact remains valid, witnessed by a forwarding path.
+every claim that was ever exact remains valid, possibly through link edges.
 Here $X$ has empty fibers, which is why Theorem~\ref{thm:monotone-hull} is
 stated for tables.
 
@@ -155,11 +173,14 @@ $\bot$ or $y_p$.
   \item If views continue (for $i\InputOrd j$ and $v\in V_p(i)$ there is $w\in
         V_p(j)$ with $v\le_p w$), the product interface is monotone across
         partitions (Definition~\ref{def:monotone-across-partitions}) under the
-        owner deployment, so every separable run family passes the survivor
-        test (Proposition~\ref{thm:complete-cap-deployment}).
+        owner deployment, so every separable run family is confluent at every
+        common \indesc of its participants' current inputs
+        (Proposition~\ref{thm:complete-cap-deployment}).
   \item If each $V_p(i)$ is an antichain, no strict, normalized, locally
         conservative strengthening $T\subsetneq S$ is monotone across
-        partitions under its owner deployment.
+        partitions under its owner deployment.  (Here
+        Definition~\ref{def:monotone-across-partitions} is applied to $T$:
+        read $T(j)$ for $\fiber{j}$.)
 \end{enumerate}
 \end{theorem}
 
@@ -167,9 +188,9 @@ $\bot$ or $y_p$.
 (1) Take an authorized participant run family and a common \indesc $j$ of its
 current inputs.  We construct $w\in\prod_pV_p(j)$ that \outrel every emitted
 output; the construction does not use separability.  If $p$ has a run ending at
-current input $i_p$, its remainder table has a row $(i_p,u)$, and by
+current input $k_p$, its remainder table has a row $(k_p,u)$, and by
 Lemma~\ref{lem:run-residual} $u$ \outrel every output $p$ emitted.  As $u$ is a
-restriction of some $y\in\prod_qV_q(i_p)$, continuation gives $w_p\in V_p(j)$
+restriction of some $y\in\prod_qV_q(k_p)$, continuation gives $w_p\in V_p(j)$
 with $y_p\le_p w_p$.  Otherwise pick any $w_p\in V_p(j)$.  Each output $p$
 emitted is $\bot$ outside coordinate $p$, and its value there is at most
 $u_p\le_p y_p\le_p w_p$.
@@ -184,26 +205,39 @@ $j=i$.  A common \outnoun $u\in T(i)$ is a restriction of a selected $z$, and
 $y_p\le_p u_p=z_p$ with both in $V_p(i)$, so $y=z$, a contradiction.
 \end{proof}
 
-The hypotheses matter.  The deployment is essential: once some $V_p(i)$ has
-two incomparable views, the product interface is not monotone, since those two
-rows have no common \outnoun.  Sole
-ownership is needed: let two replicas each expose configuration 0 or 1, and let
-$T$ require them to agree, keeping $(0,0)$ and $(1,1)$.  This $T$ is strict and
-locally conservative, so by part (2) it is not monotone across partitions; if
-instead one participant owns both coordinates, $T$ is monotone across
-partitions.  Neither part says whether a participant can emit its views during
-a partition; that is Deployment Availability
+The hypotheses matter.  The deployment is essential: if some $V_p(i)$ has two
+incomparable views, the product interface has no Lifted Monotonicity, since
+those two rows have no common \outnoun; with $A_p=S$ for every $p$, the two
+rows form a separable family.  Owning only its own coordinate is needed: let
+two replicas each expose configuration 0 or 1 at every input, with views
+ordered by equality (so each $V_p(i)=\{0,1\}$ is an antichain), and let $T$
+require them to agree, keeping $(0,0)$ and $(1,1)$.  This $T$ is strict and
+locally conservative, so by part (2) it is not monotone across partitions
+under its owner deployment.  If instead one participant owns both coordinates,
+the deployment is single-authority (Appendix~\ref{app:deployment}) and $T$ is
+monotone across partitions.  Neither part says whether a participant can emit
+its views during a partition; that is Deployment Availability
 (Definition~\ref{def:deployment-availability}), a property of the
 implementation.
 
 \paragraph{Causal register.}
-Let $V_p(i)$ contain the register views of process $p$ (a source write for each
-of $p$'s reads) that some legal causal execution of the causally closed history
-$i$ explains, with each read owned by its process.  An expansion preserves the
-causal past of completed reads, so views continue and part (1) applies.  This
-uses causal legality only: a write that completed before an old read in real
-time can be added without entering that read's causal past.  For the same
-reason linearizability can remove a single-process causal view, so it is not a
-locally conservative strengthening of the causal product and part (2) does not
-apply over all histories.  The post-reconciliation execution of
-Appendix~\ref{app:deployment} exhibits the cross-process obstruction directly.
+Take the causal register of Appendix~\ref{app:registers}.  Let $V_p(h)$ be the
+maps from the reads of replica $p$ in $h$ to writes of $h$ or $v_0$ that some
+serialization for $p$ explains, ordered by extension; each $V_p(h)$ is an
+antichain, since its maps share a domain.  The product interface is then the
+causal register with each replica's reads answered together, and the owner
+deployment lets each replica answer only its own reads.  Views continue by the
+argument given there, so part (1) applies.
+
+Linearizability selects the tuples that a single total order of all
+operations explains.  It is locally conservative: a serialization $L_p$ for
+$p$, together with $\to$, has no cycle, because $L_p$ already extends $\to$ on
+its operations and $\to$ is transitive; so some total order of all operations extends both, and it
+gives $p$'s reads the same sources as $L_p$.  The two-write history of
+Appendix~\ref{app:registers} shows that it is strict, so part (2) recovers that
+linearizability is not monotone across partitions.  This depends on the input
+recording only causal precedence.  If the input also records real-time
+precedence, a write that finished before $p$'s read in real time but lies
+outside its causal past must precede that read in every linearization, so some
+causal view of $p$ alone is excluded; linearizability is then not locally
+conservative and part (2) does not apply.
