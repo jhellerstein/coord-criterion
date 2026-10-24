@@ -6,3 +6,4 @@ import CoordCriterion.Distributed
 import CoordCriterion.Commitments
 import CoordCriterion.CompleteCAP
 import CoordCriterion.IConfluence
+import CoordCriterion.Composition

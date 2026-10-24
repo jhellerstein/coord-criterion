@@ -29,5 +29,13 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Thm. Complete CAP | `CC.CAP.complete_cap` | CompleteCAP |
 | Thm. Complete CAP, response form | `CC.CAP.complete_cap_response` | CompleteCAP |
 | Prop. invariant confluence ⇔ Lifted Monotonicity | `CC.IConf.ic_iff_liftedMono` | IConfluence |
+| Lemma composition (+ associativity) | `CC.Comp.seq_liftedMono`, `CC.Comp.tcomp_assoc` | Composition |
+| Cor. functional composition | `CC.Comp.functional_composition` | Composition |
+| Prop. curried equijoin plan | `CC.Comp.curried_query_plan` | Composition |
+| Lemma independently parameterized composition (+ graph instance) | `CC.Comp.par_liftedMono`, `CC.Comp.parameterized_functional_composition` | Composition |
+| Def./Cor. Proper Coordination (sequential, parameterized) | `CC.Comp.proper_coordination_seq`, `CC.Comp.proper_coordination_par`, `CC.Comp.proper_second_clause` | Composition |
+| Cor. committing upstream to a monotone function | `CC.Comp.monotone_commitment_seq`, `CC.Comp.monotone_commitment_par` | Composition |
+| Remarks: neither S₁ nor unresolved composition need be monotone; strict generality | `CC.Comp.monotone_commitment_neither_monotone`, `CC.Comp.proper_strictly_more_general` | Composition |
+| Counterexample: Lemma composition needs S₂ total on all of M | `CC.Comp.restricted_middle_counterexample` | Composition |
 
 Modeling choices are documented at the top of each file.
