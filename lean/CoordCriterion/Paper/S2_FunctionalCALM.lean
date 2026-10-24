@@ -261,6 +261,13 @@ imply `o ≼ u`), which needs no induced function;
 abbrev «def:functional-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.MonotoneF
 
+/-- **Eq. `eq:functional-monotonicity`**: "`i ≼ j ⟹ f(i) ≼ f(j)`", the
+displayed condition on the induced function `f`.  By
+`«def:functional-monotonicity/via-f»` it is `Spec.MonotoneF` whenever
+`S = {(i, f(i))}`. -/
+abbrev «eq:functional-monotonicity» {I O : Type} [PO I] [PO O] (f : I → O) : Prop :=
+  ∀ i j : I, i ≼ j → f i ≼ f j
+
 /-- Def. `def:functional-monotonicity`, in terms of the induced function: if
 `S = {(i, f(i))}`, then `Spec.MonotoneF` is `i ≼ j ⟹ f(i) ≼ f(j)`. -/
 theorem «def:functional-monotonicity/via-f» {I O : Type} [PO I] [PO O]
@@ -338,6 +345,14 @@ exactly "some row is in `Sealed_o`" (`«def:output-event/commit-iff-seal»`). -/
 abbrev «def:output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
   outputTable σ o
+
+/-- **Eq. `eq:output-action`**: "`(i,R) --output(o)--> (i, R' = R[out ⪰ o])`".
+The new table `R[out ⪰ o]` is `outputTable σ o`: the rows of `R` whose output
+refines `o`. -/
+theorem «eq:output-action» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) (k : I) (u : O) :
+    outputTable σ o k u ↔ σ.R k u ∧ o ≼ u :=
+  Iff.rfl
 
 /-- Def. `def:output-event`: in a functional specification, the output event
 changes the table (`R' ≠ R`) iff it seals some row. -/
@@ -448,6 +463,15 @@ theorem «lem:run-residual» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     ∀ k u, τ.R k u ↔ (sp.S k u ∧ τ.cur ≼ k ∧ ∀ o ∈ outs es, o ≼ u) :=
   run_residual hx
 
+/-- **Eq. `eq:run-residual`**: the table
+`S[in ⪰ i, out ⪰ o₁, …, out ⪰ oₘ]`, "the rows whose input expands `i` and
+whose output refines every emitted output"; the emitted outputs are a list.
+Lemma `lem:run-residual` says a run's remainder table is this table at its
+current input and `outs es`. -/
+abbrev «eq:run-residual» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I)
+    (os : List O) : Table I O :=
+  fun k u => sp.S k u ∧ i ≼ k ∧ ∀ o ∈ os, o ≼ u
+
 /-- Example after Lemma `lem:run-residual`: "in the equality-order variant …
 a run that emits `⊥` at `xy·` keeps `S[in ⪰ xy·, out ⪰ ⊥]`: the single row
 `(xy·,⊥)`." -/
@@ -480,6 +504,13 @@ theorem «prop:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O} :
       (∀ {σ : State sp}, IsRun σ → ∀ {j : I} {u : O} (hju : σ.R j u),
         Exec σ [.input j, .output u] (meetState sp j u (σ.sub _ _ hju))) :=
   ⟨survivor_test, fun h _ _ hju => survivor_exec h hju⟩
+
+/-- **Eq. `eq:reconciliation`**: "`(j,u) ∈ R_r` for every `r`, for some
+`u ∈ S(j)`" — the survivor condition of Prop. `prop:confluence`, for a family
+of final states given as a list. -/
+abbrev «eq:reconciliation» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (fam : List (State sp)) (j : I) : Prop :=
+  ∃ u, sp.S j u ∧ ∀ σ ∈ fam, σ.R j u
 
 /-! ## The Functional CALM theorem (`sec:functional-calm-theorem`) -/
 

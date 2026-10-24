@@ -90,7 +90,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-528 entries.
+543 entries.
 
 ### §2 Functional CALM
 
@@ -118,7 +118,9 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«sec:election-story/consistency»` | theorem | §2.1: |
 | `«def:functional-specification»` | abbrev | **Def. |
 | `«def:functional-specification/induced-function»` | theorem | "The unique output paired with `i` induces the function `f : |
+| `«sec:functional-specifications/subsequence-example»` | theorem | "Neither need be unique or least: |
 | `«def:functional-monotonicity»` | abbrev | **Def. |
+| `«eq:functional-monotonicity»` | abbrev | **Eq. |
 | `«def:functional-monotonicity/via-f»` | theorem | Def. |
 | `«def:residual-state»` | abbrev | **Def. |
 | `«eq:canonical-state»` | abbrev | **Eq. |
@@ -128,6 +130,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:input-event/legal-expands»` | theorem | The paper's input event asks for `j` legal *and* `i ≼ j`; the second follows from the first, since the remainder table contains only rows at expansions of `i`. |
 | `«sec:functional-events/input-cumulative»` | theorem | "Applying `input(j)` and then `input(k)` has the same effect as applying `input(k)` directly; `input(i)` at `(i,R)` has no effect." |
 | `«def:output-event»` | abbrev | **Def. |
+| `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commit-iff-seal»` | theorem | Def. |
 | `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` refines itself, so the event always ends at a state." |
 | `«sec:functional-events/extra-commitments»` | theorem | "Extra commitments only restrict behavior: |
@@ -141,9 +144,11 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:run»` | abbrev | **Def. |
 | `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment, that is, when each emits an exposable output. |
 | `«lem:run-residual»` | theorem | **Lemma `lem:run-residual`** (Rows remaining after a run). |
+| `«eq:run-residual»` | abbrev | **Eq. |
 | `«lem:run-residual/example»` | theorem | Example after Lemma `lem:run-residual`: |
 | `«def:consistency»` | abbrev | **Def. |
 | `«prop:confluence»` | theorem | **Prop. |
+| `«eq:reconciliation»` | abbrev | **Eq. |
 | `«thm:functional-calm»` | theorem | **Theorem `thm:functional-calm`** (Functional CALM). |
 | `«thm:functional-calm/example»` | theorem | Example after Theorem `thm:functional-calm`: |
 | `«cor:state-by-input»` | theorem | **Corollary `cor:state-by-input`** (State is fixed by input). |
@@ -151,6 +156,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«prop:functional-exposure-boundary»` | theorem | **Prop. |
 | `«prop:functional-exposure-boundary/only-seals»` | theorem | After Prop. |
 | `«prop:functional-exposure-boundary/nonmonotone-seals»` | theorem | After Prop. |
+| `«eq:query-monotonicity»` | theorem | **Eq. |
 | `«sec:discussion/emit-before-determination»` | theorem | §6, "Did executions differ, or were several answers allowed?": |
 | `«sec:discussion/decisive-vs-close»` | theorem | §6, "Was an alternative discovered impossible, or made impossible?": |
 
@@ -167,8 +173,11 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«sec:ambiguity-story/transactions-fail»` | theorem | §3.1: |
 | `«sec:ambiguity-story/traceroute-passes»` | theorem | §3.1: |
 | `«def:relational-specification»` | abbrev | **Def. |
+| `«eq:relational-specification»` | abbrev | **Eq. |
+| `«eq:fiber»` | abbrev | **Eq. |
 | `«def:relational-specification/ambiguous»` | theorem | Def. |
 | `«def:relational-monotonicity»` | abbrev | **Def. |
+| `«eq:relational-monotonicity»` | theorem | **Eq. |
 | `«def:relational-monotonicity/functional»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/compatible»` | abbrev | "For a set `F ⊆ O` of outputs, outputs `o₁,…,o_k` are *compatible in `F`* if some `u ∈ F` refines all of them." Lean: |
 | `«def:fiber-directedness»` | abbrev | **Def. |
@@ -177,6 +186,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«sec:lifted-monotonicity/figure-fibers»` | theorem | "Thus the traceroute fiber is directed: |
 | `«eq:joint-output-order»` | abbrev | **Eq. |
 | `«def:lifted-monotonicity»` | abbrev | **Def. |
+| `«eq:lifted-monotonicity»` | theorem | **Eq. |
 | `«def:lifted-monotonicity/functional»` | theorem | After Def. |
 | `«def:lifted-monotonicity/relmono-directed»` | theorem | After Def. |
 | `«def:common-expansion-condition»` | abbrev | **Def. |
@@ -186,6 +196,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«eq:output-retirements»` | abbrev | **Eq. |
 | `«eq:choice-removals»` | abbrev | **Eq. |
 | `«def:lifted-output-event»` | abbrev | **Def. |
+| `«eq:canonical-seal-commitment-relational»` | theorem | **Eq. |
 | `«def:lifted-output-event/examples»` | theorem | After Def. |
 | `«sec:lifted-output-events/disjoint»` | theorem | "The three sets are disjoint." |
 | `«sec:lifted-output-events/commute»` | theorem | "… removing the rows of either commitment leaves the other sets unchanged, so the event may apply `s_o` and `c_o` in either order." |
@@ -193,6 +204,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«sec:lifted-output-events/functional»` | theorem | "With one row per input, `Retired_o` and `Rejected_o` are empty; this is the functional output event of Definition `def:output-event`." |
 | `«sec:lifted-output-events/exposable»` | theorem | "Exposability lifts with the event: |
 | `«prop:exposability»` | theorem | **Prop. |
+| `«eq:safe-exposure»` | abbrev | **Eq. |
 | `«sec:complete-calm-theorem/lift-unchanged»` | theorem | "Specification states, input events, runs, commitment-free runs, and consistency are defined as before, and the results of Section `sec:executions` … lift un… |
 | `«thm:complete-calm»` | theorem | **Theorem `thm:complete-calm`** (Complete CALM). |
 | `«prop:exposure-boundary»` | theorem | **Prop. |
@@ -229,11 +241,13 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:distributed-consistency/honored-table-not-state»` | theorem | *Exchanging outputs.* "This restriction is a table, not a specification state: |
 | `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing sea… |
 | `«def:commitment»` | abbrev | **Def. |
+| `«eq:commitment-excludes»` | theorem | **Eq. |
 | `«sec:systems/seals-and-choices-are-commitments»` | theorem | "As expected, the seals and choices of Definitions output-event and lifted-output-event satisfy this definition: |
 | `«def:strategy»` | abbrev | **Def. |
 | `«def:system»` | abbrev | **Def. |
 | `«def:system/produced»` | abbrev | Def. |
 | `«def:system-output-event»` | abbrev | **Def. |
+| `«eq:lifted-validity»` | theorem | **Eq. |
 | `«sec:systems/one-row-legality»` | theorem | "With one row per input no row can be retired, and legality says that every row the commitments leave has an output that refines `o`." |
 | `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` therefore ends inside `R[out ⪰ o]`, and it must remove by commitment the rows in `Sealed_o` and `Rejected_o`, since no row it keeps can r… |
 | `«sec:systems/output-is-canonical-event»` | theorem | "The output event `output(o)` of Sections functional-calm–complete-calm is the legal event `Out_γ(o)` whose `γ` applies its seal `s_o` and choice `c_o`, wher… |
@@ -455,6 +469,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
 | `«def:canonical-commitment-basis»` | abbrev | **Def. |
+| `«eq:canonical-commitment-basis-relational»` | theorem | **Eq. |
 | `«def:canonical-commitment-basis/kappa»` | theorem | Def. |
 | `«def:canonical-commitment-basis/canonical-event»` | theorem | Def. |
 | `«app:bases/functional-excludes-vacuous»` | theorem | *The canonical seals and choices are commitments.* "With one row per input, Equation commitment-excludes holds vacuously, so the seals of Definition output-e… |

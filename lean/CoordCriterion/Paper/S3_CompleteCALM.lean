@@ -117,6 +117,18 @@ Lean: `Spec I O` (orders are the `PO` instances); the fiber `S(i)` is
 `sp.S i`; functional is `Spec.Functional`. -/
 abbrev «def:relational-specification» (I O : Type) [PO I] [PO O] := Spec I O
 
+/-- **Eq. `eq:relational-specification`**: "`Spec = (I,≼,O,≼,S)`,
+`S ⊆ I × O`."  The orders are the `PO` instances; the relation `S ⊆ I × O` is a
+`Table I O` (a predicate on pairs).  A `Spec I O` is such a table together with
+totality: this is the `S` component. -/
+abbrev «eq:relational-specification» (I O : Type) [PO I] [PO O] (sp : Spec I O) : Table I O :=
+  sp.S
+
+/-- **Eq. `eq:fiber`**: "`S(i) = {o ∈ O : (i,o) ∈ S}`", as a predicate on
+outputs. -/
+abbrev «eq:fiber» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I) : O → Prop :=
+  fun o => sp.S i o
+
 /-- Def. `def:relational-specification`, "ambiguous": some fiber has two
 distinct outputs.  (The library has no named notion; this is the reading.)
 Ambiguity is the negation of the functional dependency. -/
@@ -133,6 +145,12 @@ theorem «def:relational-specification/ambiguous» {I O : Type} [PO I] [PO O] (s
 abbrev «def:relational-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.RelMono
 
+/-- **Eq. `eq:relational-monotonicity`**:
+"`i ≼ j, o ∈ S(i) ⟹ ∃ u ∈ S(j) : o ≼ u`" is the definition of
+`Spec.RelMono`. -/
+theorem «eq:relational-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+    sp.RelMono ↔ ∀ i j o, i ≼ j → sp.S i o → ∃ u, sp.S j u ∧ o ≼ u :=
+  Iff.rfl
 /-- After Def. `def:relational-monotonicity`: "For singleton fibers this is
 functional monotonicity." -/
 theorem «def:relational-monotonicity/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
@@ -195,6 +213,11 @@ specification).  "`i ≼ j ⟹ S(i) ⊑ S(j)`." -/
 abbrev «def:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.LiftedMono
 
+/-- **Eq. `eq:lifted-monotonicity`**: "`i ≼ j ⟹ S(i) ⊑ S(j)`" is the
+definition of `Spec.LiftedMono`, with `⊑` the joint lift `JointLift`. -/
+theorem «eq:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+    sp.LiftedMono ↔ ∀ i j, i ≼ j → JointLift (sp.S i) (sp.S j) :=
+  Iff.rfl
 /-- After Def. `def:lifted-monotonicity`: "With singleton fibers it is
 functional monotonicity." -/
 theorem «def:lifted-monotonicity/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
@@ -265,6 +288,18 @@ abbrev «def:lifted-output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp × State sp :=
   (sealState σ o ho, chooseState σ o ho)
 
+/-- **Eq. `eq:canonical-seal-commitment-relational`**:
+"`s_o(i,R) = (i, R ∖ Sealed_o)`, `c_o(i,R) = (i, R ∖ Rejected_o)`."  Both
+keep the current input; `sealState` removes exactly `Sealed_o`, `chooseState`
+exactly `Rejected_o`. -/
+theorem «eq:canonical-seal-commitment-relational» {I O : Type} [PO I] [PO O]
+    {sp : Spec I O} (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
+    ((sealState σ o ho).cur = σ.cur ∧
+        ∀ k x, (sealState σ o ho).R k x ↔ σ.R k x ∧ ¬ Sealed σ o k x) ∧
+      ((chooseState σ o ho).cur = σ.cur ∧
+        ∀ k x, (chooseState σ o ho).R k x ↔ σ.R k x ∧ ¬ Rejected σ o k x) :=
+  ⟨⟨rfl, fun _ _ => Iff.rfl⟩, ⟨rfl, fun _ _ => Iff.rfl⟩⟩
+
 /-- After Def. `def:lifted-output-event`: "In Figure `fig:ambiguity-frames`(f),
 emitting `[A,B]` places `[B,A]` in `Rejected_o` … In panel (g), the two
 removed route sets are in `Retired_o`." -/
@@ -324,6 +359,13 @@ theorem «prop:exposability» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
     Exposable σ o ↔ ∀ j, σ.cur ≼ j → ∀ x, σ.R j x → ∃ u, σ.R j u ∧ o ≼ u ∧ x ≼ u :=
   lifted_exposure_test σ o
+
+/-- **Eq. `eq:safe-exposure`**: "some `u ∈ R(j)` refines both: `o ≼ u` and
+`x ≼ u`" — the per-row test of Prop. `prop:exposability`, at legal input `j`
+and remaining output `x`. -/
+abbrev «eq:safe-exposure» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) (j : I) (x : O) : Prop :=
+  ∃ u, σ.R j u ∧ o ≼ u ∧ x ≼ u
 
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/
 

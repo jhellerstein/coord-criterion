@@ -290,6 +290,13 @@ Lean: `app : State sp → Option (State sp)` with fields `cur_eq`, `sub`,
 `removes` (`R' ⊊ R`), `excludes` (Eq. commitment-excludes). -/
 abbrev «def:commitment» (sp : Spec I O) := Commitment sp
 
+/-- **Eq. `eq:commitment-excludes`**: whenever `c(i,R) = (i,R')`,
+"`(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w`" (field `Commitment.excludes`). -/
+theorem «eq:commitment-excludes» {sp : Spec I O} (c : Commitment sp) (σ τ : State sp)
+    (h : c.app σ = some τ) :
+    ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w) :=
+  c.excludes σ τ h
+
 /-- "As expected, the seals and choices of Definitions output-event and
 lifted-output-event satisfy this definition: a seal removes every row at the
 inputs it seals, and a choice removes the rows in `Rejected_o`."
@@ -352,6 +359,18 @@ Eq. lifted-validity at the committed state is exactly `Exposable σc o`. -/
 abbrev «def:system-output-event» {sp : Spec I O} (B : Basis sp) (σ : State sp)
     (e : SEvent sp) (τ : State sp) : Prop :=
   SysStep B σ e τ
+
+/-- **Eq. `eq:lifted-validity`**: "`(k,x) ∈ R_c ∖ R_c[out ⪰ o] ⟹
+∃ u ∈ R_c[out ⪰ o](k) : x ≼ u`."  At the committed state `σc` (table `R_c`),
+this condition is exactly `Exposable σc o`, the legality premise of
+`SysStep.output`. -/
+theorem «eq:lifted-validity» {sp : Spec I O} (σc : State sp) (o : O) :
+    Exposable σc o ↔
+      ∀ k x, σc.R k x → ¬ outputTable σc o k x → ∃ u, outputTable σc o k u ∧ x ≼ u :=
+  ⟨fun h k x hx hn => let ⟨u, hu, hou, hxu⟩ := h k x hx (fun hox => hn ⟨hx, hox⟩)
+      ⟨u, ⟨hu, hou⟩, hxu⟩,
+   fun h k x hx hn => let ⟨u, ⟨hu, hou⟩, hxu⟩ := h k x hx (fun hk => hn hk.2)
+      ⟨u, hu, hou, hxu⟩⟩
 
 /-- "With one row per input no row can be retired, and legality says that every
 row the commitments leave has an output that refines `o`." -/

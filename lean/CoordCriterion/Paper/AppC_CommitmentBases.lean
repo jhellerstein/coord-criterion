@@ -41,6 +41,16 @@ where `s_o` is defined at the states with `o ∈ R(i)` and `Sealed_o ≠ ∅`, a
 (Eq. canonical-commitment-basis-relational.) -/
 abbrev «def:canonical-commitment-basis» (sp : Spec I O) : Basis sp := canonBasis sp
 
+/-- **Eq. `eq:canonical-commitment-basis-relational`**:
+"`ℬ_S = {s_o : o ∈ O, dom(s_o) ≠ ∅} ∪ {c_o : o ∈ O, dom(c_o) ≠ ∅}`."  A
+commitment is in `canonBasis sp` iff it is some `sealC o` or `choiceC o`
+defined at some state. -/
+theorem «eq:canonical-commitment-basis-relational» {sp : Spec I O} (c : Commitment sp) :
+    canonBasis sp c ↔
+      ∃ o : O, (c = sealC o ∧ ∃ σ τ : State sp, (sealC o).app σ = some τ) ∨
+        (c = choiceC o ∧ ∃ σ τ : State sp, (choiceC o).app σ = some τ) :=
+  Iff.rfl
+
 /-- Def. `def:canonical-commitment-basis`: "At `(i,R)`, let `κ_o` apply `s_o`
 when `Sealed_o ≠ ∅` and `c_o` when `Rejected_o ≠ ∅`, so `κ_o` is one of `ε`,
 `s_o`, `c_o`, or `s_o c_o`." -/

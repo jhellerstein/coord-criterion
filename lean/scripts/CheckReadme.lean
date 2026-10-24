@@ -23,7 +23,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:election-story/consistency»
 #check @CC.Paper.«def:functional-specification»
 #check @CC.Paper.«def:functional-specification/induced-function»
+#check @CC.Paper.«sec:functional-specifications/subsequence-example»
 #check @CC.Paper.«def:functional-monotonicity»
+#check @CC.Paper.«eq:functional-monotonicity»
 #check @CC.Paper.«def:functional-monotonicity/via-f»
 #check @CC.Paper.«def:residual-state»
 #check @CC.Paper.«eq:canonical-state»
@@ -33,6 +35,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:input-event/legal-expands»
 #check @CC.Paper.«sec:functional-events/input-cumulative»
 #check @CC.Paper.«def:output-event»
+#check @CC.Paper.«eq:output-action»
 #check @CC.Paper.«def:output-event/commit-iff-seal»
 #check @CC.Paper.«sec:functional-events/output-ends-at-state»
 #check @CC.Paper.«sec:functional-events/extra-commitments»
@@ -46,9 +49,11 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:run»
 #check @CC.Paper.«def:run/reachable-without-commitment»
 #check @CC.Paper.«lem:run-residual»
+#check @CC.Paper.«eq:run-residual»
 #check @CC.Paper.«lem:run-residual/example»
 #check @CC.Paper.«def:consistency»
 #check @CC.Paper.«prop:confluence»
+#check @CC.Paper.«eq:reconciliation»
 #check @CC.Paper.«thm:functional-calm»
 #check @CC.Paper.«thm:functional-calm/example»
 #check @CC.Paper.«cor:state-by-input»
@@ -56,6 +61,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:functional-exposure-boundary»
 #check @CC.Paper.«prop:functional-exposure-boundary/only-seals»
 #check @CC.Paper.«prop:functional-exposure-boundary/nonmonotone-seals»
+#check @CC.Paper.«eq:query-monotonicity»
 #check @CC.Paper.«sec:discussion/emit-before-determination»
 #check @CC.Paper.«sec:discussion/decisive-vs-close»
 #check @CC.Paper.«fig:ambiguity-frames/f»
@@ -65,8 +71,11 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:ambiguity-story/transactions-fail»
 #check @CC.Paper.«sec:ambiguity-story/traceroute-passes»
 #check @CC.Paper.«def:relational-specification»
+#check @CC.Paper.«eq:relational-specification»
+#check @CC.Paper.«eq:fiber»
 #check @CC.Paper.«def:relational-specification/ambiguous»
 #check @CC.Paper.«def:relational-monotonicity»
+#check @CC.Paper.«eq:relational-monotonicity»
 #check @CC.Paper.«def:relational-monotonicity/functional»
 #check @CC.Paper.«sec:lifted-monotonicity/compatible»
 #check @CC.Paper.«def:fiber-directedness»
@@ -75,6 +84,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:lifted-monotonicity/figure-fibers»
 #check @CC.Paper.«eq:joint-output-order»
 #check @CC.Paper.«def:lifted-monotonicity»
+#check @CC.Paper.«eq:lifted-monotonicity»
 #check @CC.Paper.«def:lifted-monotonicity/functional»
 #check @CC.Paper.«def:lifted-monotonicity/relmono-directed»
 #check @CC.Paper.«def:common-expansion-condition»
@@ -84,6 +94,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:output-retirements»
 #check @CC.Paper.«eq:choice-removals»
 #check @CC.Paper.«def:lifted-output-event»
+#check @CC.Paper.«eq:canonical-seal-commitment-relational»
 #check @CC.Paper.«def:lifted-output-event/examples»
 #check @CC.Paper.«sec:lifted-output-events/disjoint»
 #check @CC.Paper.«sec:lifted-output-events/commute»
@@ -91,6 +102,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:lifted-output-events/functional»
 #check @CC.Paper.«sec:lifted-output-events/exposable»
 #check @CC.Paper.«prop:exposability»
+#check @CC.Paper.«eq:safe-exposure»
 #check @CC.Paper.«sec:complete-calm-theorem/lift-unchanged»
 #check @CC.Paper.«thm:complete-calm»
 #check @CC.Paper.«prop:exposure-boundary»
@@ -120,11 +132,13 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:distributed-consistency/honored-table-not-state»
 #check @CC.Paper.«sec:systems/registrar»
 #check @CC.Paper.«def:commitment»
+#check @CC.Paper.«eq:commitment-excludes»
 #check @CC.Paper.«sec:systems/seals-and-choices-are-commitments»
 #check @CC.Paper.«def:strategy»
 #check @CC.Paper.«def:system»
 #check @CC.Paper.«def:system/produced»
 #check @CC.Paper.«def:system-output-event»
+#check @CC.Paper.«eq:lifted-validity»
 #check @CC.Paper.«sec:systems/one-row-legality»
 #check @CC.Paper.«sec:systems/legal-event-containment»
 #check @CC.Paper.«sec:systems/output-is-canonical-event»
@@ -304,6 +318,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:iconfluence/proof-backward»
 #check @CC.Paper.«app:iconfluence/proof-directed-suffices»
 #check @CC.Paper.«def:canonical-commitment-basis»
+#check @CC.Paper.«eq:canonical-commitment-basis-relational»
 #check @CC.Paper.«def:canonical-commitment-basis/kappa»
 #check @CC.Paper.«def:canonical-commitment-basis/canonical-event»
 #check @CC.Paper.«app:bases/functional-excludes-vacuous»
