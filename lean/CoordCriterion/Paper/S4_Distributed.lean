@@ -10,9 +10,11 @@ import CoordCriterion.Appendix.TransactionBases.CanonicalExample
 # Paper §4.1–4.4: Distributed Execution (statement layer)
 
 Covers `sections/distributed-histories.tex` (§4.1 Distributed histories, §4.2
-Distributed consistency, with the paragraphs *Message data* and *Exchanging
-outputs*) and `sections/distributed.tex` from §4.3 Systems through the end of
-§4.4 Coordination (it stops before §4.5 The Complete CAP Theorem).
+Distributed consistency, with the paragraph *Message data*) and
+`sections/distributed.tex` from §4.3 Systems through the end of §4.4
+Coordination (it stops before §4.5 The Complete CAP Theorem).  The paragraph
+*Exchanging outputs* and the proofs of §4 are in Appendix B
+(`Paper/AppB_ProofsDistributed.lean`).
 
 How to read this file.  Read it side by side with the paper.  Entries appear in
 paper order under headers named after the paper's subsections.  Each numbered
@@ -220,50 +222,16 @@ theorem «sec:distributed-consistency/message-data» (sp : Spec I O) (D D' : Typ
     Dist.DistConsistent sp D ↔ Dist.DistConsistent sp D' :=
   (Dist.consistent_iff_distConsistent sp D).symm.trans (Dist.consistent_iff_distConsistent sp D')
 
-/-- *Exchanging outputs* (table level).  "It can silently honor `o` by
-restricting its table to `R[out ⪰ o]` … Silent honoring cannot change
-confluence in either direction.  It cannot help, because it only removes rows
-… It cannot hurt, because a row that survives at a common expansion already
-refines every output emitted in the cut (Lemma run-residual), including `o`."
-
-Lean: each family member is a state with the residual shape for its emitted
-outputs (the shape of every run, `IsRun.residual`) and a list of honored
-outputs, each emitted by some member; a row at `j` survives the honored tables
-iff it survives the original ones (with the survivor test, this is
-confluence). -/
-theorem «sec:distributed-consistency/exchanging-outputs» {sp : Spec I O}
-    (fam : List (State sp × List O × List O))
-    (hres : ∀ x ∈ fam, Residual x.1 x.2.1)
-    (hos : ∀ x ∈ fam, ∀ o ∈ x.2.2, ∃ y ∈ fam, o ∈ y.2.1) (j : I) :
-    (∃ u, sp.S j u ∧ ∀ x ∈ fam, Dist.honor x.1.R x.2.2 j u) ↔
-      (∃ u, sp.S j u ∧ ∀ x ∈ fam, x.1.R j u) :=
-  Dist.honor_survivor fam hres hos j
-
-/-- *Exchanging outputs* (history level).  "The confluence of a cut therefore
-depends on which outputs were emitted, not on who has heard about them."
-
-Lean: if each participant `p` honors outputs `os p` emitted in the cut, the
-cut is confluent at `j` iff some row `(j,u)` survives every honored table. -/
-theorem «sec:distributed-consistency/exchanging-outputs-cut» {D : Type} {n : Nat}
+/-- *Message data*: "Participants may also share emitted outputs in `d`; this
+does not change which cuts are confluent (Appendix `app:exchanging-outputs`)."
+The entries are in `Paper/AppB_ProofsDistributed.lean`
+(`«app:exchanging-outputs/cut»`). -/
+theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
     {sp : Spec I O} {H : Dist.History I O D n} (hW : H.WF sp) {C : Dist.Pos n → Prop}
     (hC : H.IsCut C) {σs : Fin n → State sp} (hE : H.Endpoint sp C σs) (os : Fin n → List O)
     (hos : ∀ p, ∀ o ∈ os p, H.EmittedIn C o) (j : I) (hj : ∀ p, (σs p).cur ≼ j) :
     H.CutConfluentAt sp C j ↔ ∃ u, sp.S j u ∧ ∀ p, Dist.honor (σs p).R (os p) j u :=
   Dist.honor_cut_confluent hW hC hE os hos j hj
-
-/-- *Exchanging outputs.*  "This restriction is a table, not a specification
-state: it may have no row at the participant's current input, so silent
-honoring is not an event."
-
-Lean: a functional, monotone specification on `Fin 3` (`Dist.spV3`); `q` at
-`σ_S(1)` may emit `1`; honoring `1` at `p`'s `σ_S(0)` leaves no row at `p`'s
-current input `0`, although the row `(2,2)` survives. -/
-theorem «sec:distributed-consistency/honored-table-not-state» :
-    (canon Dist.spV3 (Dist.v 1)).R (Dist.v 1) (Dist.v 1) ∧
-    (¬ ∃ x, Dist.honor (canon Dist.spV3 (Dist.v 0)).R [Dist.v 1] (Dist.v 0) x) ∧
-    Dist.honor (canon Dist.spV3 (Dist.v 0)).R [Dist.v 1] (Dist.v 2) (Dist.v 2) ∧
-    (canon Dist.spV3 (Dist.v 1)).R (Dist.v 2) (Dist.v 2) :=
-  Dist.honor_counterexample
 
 /-! ## Systems (§4.3, `sec:systems`) -/
 
@@ -751,11 +719,10 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
-/-- Paragraph "Locks in a shared-nothing database": "Ordering two transactions
-on one key is a choice among serialization orders, and only the key's owner
-makes it.  The choice is coordination, as locking is on any single machine …
-But no other participant emits an order for that key, so it is not
-distributed coordination."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
+/-- Paragraph "Locks in a shared-nothing database": "Ordering two
+transactions on one key is coordination: in another run `B`'s request arrives
+first and the owner orders `B` before `A`.  It is not distributed
+coordination, since only the owner orders that key."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
 `ba` incomparable); emitting `ab` is a commitment (not exposable); in the
 system where only participant 0 may emit an order, another run (the owner
 choosing `ba`) contradicts it, but no other participant of a history does. -/
@@ -765,10 +732,10 @@ theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
   ⟨CAP.ordSpec_ab_not_exposable, CAP.ownerSys_not_coordinationFree D,
     CAP.ownerSys_coordinationFreeH D⟩
 
-/-- Paragraph "Locks in a shared-nothing database": "A transaction that spans
-keys `k₁` and `k₂` needs a single order, but each owner chooses its part …
-These choices can contradict each other across participants, and excluding
-that … is distributed coordination."  Lean: when two participants may each emit an order, some
+/-- Paragraph "Locks in a shared-nothing database": "A transaction across
+keys needs one order, but each owner chooses its part, so the owners' choices
+can contradict each other.  Excluding that … is distributed coordination."
+Lean: when two participants may each emit an order, some
 history has one emit `ab` (removing `ba`) and the other emit `ba`. -/
 theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
     ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=

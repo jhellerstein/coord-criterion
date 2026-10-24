@@ -19,8 +19,8 @@ legal common \indesc $k$ of $i$ and $j$, when one exists.
 Fix an ordered specification, participants $P$, and an initial input $i_p$
 for each.  A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of an input
-event, an output event (Definitions~\ref{def:output-event}
-and~\ref{def:lifted-output-event}),
+event, an output event (Definition~\ref{def:output-event} and
+Section~\ref{sec:lifted-output-events}),
 $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
 \begin{enumerate}
   \item a total local order on each participant's history events;
@@ -149,11 +149,9 @@ An ordered specification is consistent if and only if it has distributed
 consistency.
 \end{proposition}
 
-\begin{proof}
-The participant runs at any cut are a finite family of runs.  Conversely,
-every finite family of runs is the family of participant runs of a
-message-free history, one participant per run, at its final cut.
-\end{proof}
+\noindent The participant runs at a cut are a family of runs, and any family
+of runs can be placed at separate participants that exchange no messages.
+Proof in Appendix~\ref{app:proofs}.
 
 Neither notion asserts that a protocol delivers $j$, communicates, or
 terminates; both are existence claims about transitions.  By Complete CALM,
@@ -189,21 +187,5 @@ definitions above depends on it.  Section~\ref{sec:systems} calls the
 rule that makes these choices a participant's \emph{strategy}.  Data can
 influence the strategy, but the strategy can decide only within the
 specification.
-
-\paragraph{Exchanging outputs.}
-The attentive reader might ask what happens if participants share their \emph{outputs} in
-$d$: does this introduce any substantive change?  A participant that receives an
-output $o$ its sender has emitted has two
-options.  If $o\in R(i)$ at its own current input $i$, it can emit $o$ itself;
-that is an ordinary output event, already covered by the definitions above.
-Otherwise, or in addition, it can silently honor $o$ by restricting its table
-to $R[\mathrm{out}\OutputGe o]$.  This restriction is a table, not a
-specification state: it may have no row at the participant's current input,
-so silent honoring is not an event and we reason about it at the level of
-tables.  Silent honoring cannot change confluence in either direction.  It cannot
-help, because it only removes rows, and confluence asks for a row that
-survives everywhere (Proposition~\ref{prop:confluence}).  It cannot hurt,
-because a row that survives at a common \indesc already \outrel every output
-emitted in the cut (Lemma~\ref{lem:run-residual}), including $o$, which was previously emitted.
-The confluence of a cut therefore depends on which outputs were emitted,
-not on who has heard about them.
+Participants may also share emitted outputs in $d$; this does not change
+which cuts are confluent (Appendix~\ref{app:exchanging-outputs}).

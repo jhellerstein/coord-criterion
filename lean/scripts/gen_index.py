@@ -24,6 +24,7 @@ ORDER = [
     ("S5_Instances", "§5 Instances", "sections/instances.tex"),
     ("AppA_Notation", "Appendix A: Notation", "appendices/notation.tex"),
     ("AppB_Proofs", "Appendix B: Deferred proofs", "appendices/proof-machinery.tex"),
+    ("AppB_ProofsDistributed", "Appendix B: Deferred proofs for §4", "appendices/proof-machinery.tex"),
     ("AppB_InvariantConfluence", "Appendix B: Invariant confluence", "appendices/proof-machinery.tex"),
     ("AppC_CommitmentBases", "Appendix C: Commitment bases", "appendices/commitment-bases-general.tex"),
     ("AppD_Composition", "Appendix D: Composition", "appendices/composition.tex"),

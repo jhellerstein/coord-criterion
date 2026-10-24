@@ -72,7 +72,7 @@ serialization order \outrel the other, so emitting one requires a
 emitting $[A,B]$ chooses it over $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output retirement}
-(Definition~\ref{def:lifted-output-event}); every removed output is
+(Section~\ref{sec:lifted-output-events}); every removed output is
 \outrelpast by a remaining one, so emitting the route observation needs no
 commitment: it is \emph{exposable}.  
 
@@ -248,99 +248,35 @@ An ordered relational specification satisfies Lifted Monotonicity if and only
 if it satisfies the common-\indesc condition.
 \end{proposition}
 
-\begin{proof}
-Suppose Lifted Monotonicity, and let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows
-with common \indesc $j$.  If $k=0$, any $u\in\fiber{j}$ will do, and since
-$\Spec$ is total, $j$ appears in some row $(j,u)$.  Otherwise, since $i_r\InputOrd j$, Relational Monotonicity gives, for each
-$r$, a $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ all lie in the
-one fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ \outrel
-every $u_r$, hence every $o_r$.  Conversely, let $i\InputOrd j$ and
-$X\subseteq\fiber{i}$ be nonempty and finite.  The rows $\{(i,x):x\in X\}$
-have common \indesc $j$, so some $u\in\fiber{j}$ \outrel all of $X$; that is
-$\fiber{i}\LiftedOrd\fiber{j}$.
-\end{proof}
+\noindent Intuitively, Relational Monotonicity carries each $o_r$ to some
+\outnoun in the fiber at $j$, and Directed Outputs gives those a common
+\outnoun there.  Proof in Appendix~\ref{app:proofs}.
 
 \subsection{Lifted output events}
 \label{sec:lifted-output-events}
 
 Lifted Monotonicity is a property of the table.  We now return to execution.
-In the functional case an output event either removes nothing or seals inputs
-(Definition~\ref{def:output-event}).  With several rows at one input, emitting
-$o$ can also retire a \outrelpast row or choose among outputs, as the examples
-of Section~\ref{sec:ambiguity-story} showed.  We lift output events to cover
-all three.
+For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
+again keeps exactly the rows whose outputs \outrelbase $o$, ending at
+$(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
+emits $o$.  With several rows at one input, each removed row falls into one of
+three classes.  If no row at its input \outrel $o$, the row is in $\Sealed_o$,
+and the event \emph{seals} that input.  If a kept row at its input \outrel it,
+the row is in $\Retired_o$, and removing it is an \emph{output retirement}.
+Otherwise the row is in $\Rejected_o$: its input stays legal, and the event
+\emph{chooses} against it.  The seal $s_o$ removes $\Sealed_o$, and the choice
+$c_o$ removes $\Rejected_o$.  Both are commitments; output retirement is not.
+In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ puts $[B,A]$ in
+$\Rejected_o$.  In panel~(g), the two removed route sets are in $\Retired_o$.
+With one row per input, $\Retired_o$ and $\Rejected_o$ are empty, and this is
+the output event of Definition~\ref{def:output-event}.
+Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
-Fix a state $(i,R)$ and an output $o\in R(i)$.  A row is \emph{ruled out by}
-$o$ when its output does not \outrelbase $o$.  The ruled-out rows fall into
-three disjoint classes, by how they can be removed:
-\begin{align}
-  \Sealed_o&=\{(k,x)\in R:\ k\notin\mathrm{in}(R[\mathrm{out}\OutputGe o])\},
-      \label{eq:seal-inputs}\\
-  \Retired_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:\notag\\
-    &\qquad\quad x\OutputOrd u\text{ for some }u\in R[\mathrm{out}\OutputGe o](k)\},
-      \label{eq:output-retirements}\\
-  \Rejected_o&=(R\setminus R[\mathrm{out}\OutputGe o])
-       \setminus(\Sealed_o\cup\Retired_o).
-      \label{eq:choice-removals}
-\end{align}
-
-\begin{definition}[Lifted output event, seal, output retirement, choice]
-\label{def:lifted-output-event}
-Let $(i,R)$ be a state and $o\in R(i)$.  The \emph{output event}
-$\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
-emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
-Equation~\ref{eq:output-action}.  When $\Sealed_o\neq\varnothing$ it applies the \emph{seal} $s_o$.  It removes
-the rows in $\Retired_o$, each \outrelpast by a kept row at the same input, by
-\emph{output retirement}, which is not a commitment.  When
-$\Rejected_o\neq\varnothing$ it applies the \emph{choice} $c_o$.  The seal and
-the choice are \emph{commitments}:
-\begin{equation}
-  s_o(i,R)=\bigl(i,\ R\setminus\Sealed_o\bigr),
-  \qquad
-  c_o(i,R)=\bigl(i,\ R\setminus\Rejected_o\bigr).
-  \label{eq:canonical-seal-commitment-relational}
-\end{equation}
-\end{definition}
-
-In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
-$\Rejected_o$: no row at $\{A,B\}$ \outrel both, so the event makes a choice.  In
-panel~(g), the two removed route
-sets are in $\Retired_o$, each \outrelpast by a retained route set, so the event retires
-them without commitment.
-
-The three sets are disjoint, and removing the rows of either commitment leaves
-the other sets unchanged, so the event may apply $s_o$ and $c_o$ in either
-order.  The choice commitment only narrows fibers: at each input it touches, some row
-that \outrel $o$ survives.  With one row per input, $\Retired_o$ and $\Rejected_o$
-are empty; this is the functional output event of
-Definition~\ref{def:output-event}.  Apart from these, a row leaves the
-remainder table only by input retirement (Section~\ref{sec:functional-events}).
-
-Exposability lifts with the event: $o$ is exposable when $\mathsf{output}(o)$
-applies no commitment, that is, when $\Sealed_o$ and $\Rejected_o$ are empty, though the
-event may still retire the rows in $\Retired_o$.  The exposure test lifts as well:
-
-\begin{proposition}[Lifted exposure test]
-\label{prop:exposability}
-An output $o\in R(i)$ is exposable at $(i,R)$ if and only if, for every legal
-$j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ \outrel both:
-\begin{equation}
-  o\OutputOrd u
-  \qquad\text{and}\qquad
-  x\OutputOrd u.
-  \label{eq:safe-exposure}
-\end{equation}
-\end{proposition}
-
-\begin{proof}
-The event $\mathsf{output}(o)$ applies no commitment exactly when every
-ruled-out row $(j,x)$ lies in $\Retired_o$, that is, is \outrelpast by some row
-$(j,u)$ \outrelpart $o$.  Rows that already \outrelbase $o$ satisfy the stated
-test with $u=x$, so this is exactly the stated test.
-\end{proof}
-
-This test marks the commitment boundary: if it fails, emitting $o$ requires a
-seal or a choice.
+As before, $o$ is exposable when $\mathsf{output}(o)$ applies no commitment,
+that is, when $\Sealed_o$ and $\Rejected_o$ are empty; the event may still
+retire rows.  Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
+remaining output at $j$ have a common \outnoun at $j$
+(Proposition~\ref{prop:exposability}).
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
@@ -361,10 +297,10 @@ An ordered specification is consistent if and only if it satisfies Lifted
 Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
-\begin{proof}[Proof sketch]
-By Proposition~\ref{prop:common-expansion-form} it suffices to
-treat the common-\indesc condition.  If it holds, a common refinement $u\in S(j)$ of everything emitted survives in every run (Lemma~\ref{lem:run-residual}); conversely, runs that each emit one row's output must share a surviving row at $j$.  Full proof in Appendix~\ref{app:proofs}.
-\end{proof}
+\noindent If the common-\indesc condition holds, a common \outnoun $u\in S(j)$
+of everything emitted survives in every run (Lemma~\ref{lem:run-residual}).
+Conversely, runs that each emit one row's output must share a surviving row
+at $j$.  Proof in Appendix~\ref{app:proofs}.
 
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
 logic language.  The condition that characterizes consistency is instead a
@@ -380,15 +316,10 @@ An ordered specification satisfies the common-\indesc condition if and only
 if every output at every state reachable without commitment is exposable.
 \end{proposition}
 
-\begin{proof}[Proof sketch]
-If the common-\indesc condition holds, the specification is consistent
-(Theorem~\ref{thm:complete-calm}), and the survivor test
-(Proposition~\ref{prop:confluence}) supplies the row the lifted exposure test
-(Proposition~\ref{prop:exposability}) requires.  Conversely, applying the
-lifted exposure test at canonical states, one row at a time, builds the common
-\outnoun the common-\indesc condition asks for.  Full proof in
-Appendix~\ref{app:proofs}.
-\end{proof}
+\noindent Under the condition, consistency supplies the common \outnoun that
+the exposure test asks for.  Conversely, the exposure test at canonical
+states, applied one row at a time, builds the common \outnoun the condition
+asks for.  Proof in Appendix~\ref{app:proofs}.
 
 With one output per input, Lifted Monotonicity and the common-\indesc
 condition are both monotonicity, so Complete CALM and

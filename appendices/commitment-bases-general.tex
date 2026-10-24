@@ -1,13 +1,93 @@
-\section{Commitment bases and compound commitments}
+\section{Output events and commitment bases}
 \label{app:bases}
 
-This appendix supplies the details behind Section~\ref{sec:systems}: the
+This appendix first gives the formal definition of the lifted output events of
+Section~\ref{sec:lifted-output-events}.  It then supplies the details behind
+Section~\ref{sec:systems}: the
 seals and choices of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
 are commitments (Definition~\ref{def:commitment}) and form a canonical basis,
 compound commitments behave like single ones, and every run under any basis
 has an observably equivalent canonical run that retains at least as many rows
 after each event.  Commitments are partial functions, so a basis may make a
 commitment available only at states satisfying a precondition of its own.
+
+\subsection{Lifted output events}
+\label{app:lifted-output-events}
+
+Fix a state $(i,R)$ and an output $o\in R(i)$.  A row is \emph{ruled out by}
+$o$ when its output does not \outrelbase $o$.  The ruled-out rows fall into
+three disjoint classes, by how they can be removed:
+\begin{align}
+  \Sealed_o&=\{(k,x)\in R:\ k\notin\mathrm{in}(R[\mathrm{out}\OutputGe o])\},
+      \label{eq:seal-inputs}\\
+  \Retired_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:\notag\\
+    &\qquad\quad x\OutputOrd u\text{ for some }u\in R[\mathrm{out}\OutputGe o](k)\},
+      \label{eq:output-retirements}\\
+  \Rejected_o&=(R\setminus R[\mathrm{out}\OutputGe o])
+       \setminus(\Sealed_o\cup\Retired_o).
+      \label{eq:choice-removals}
+\end{align}
+
+\begin{definition}[Lifted output event, seal, output retirement, choice]
+\label{def:lifted-output-event}
+Let $(i,R)$ be a state and $o\in R(i)$.  The \emph{output event}
+$\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
+emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
+Equation~\ref{eq:output-action}.  When $\Sealed_o\neq\varnothing$ it applies the \emph{seal} $s_o$.  It removes
+the rows in $\Retired_o$, each \outrelpast by a kept row at the same input, by
+\emph{output retirement}, which is not a commitment.  When
+$\Rejected_o\neq\varnothing$ it applies the \emph{choice} $c_o$.  The seal and
+the choice are \emph{commitments}:
+\begin{equation}
+  s_o(i,R)=\bigl(i,\ R\setminus\Sealed_o\bigr),
+  \qquad
+  c_o(i,R)=\bigl(i,\ R\setminus\Rejected_o\bigr).
+  \label{eq:canonical-seal-commitment-relational}
+\end{equation}
+\end{definition}
+
+In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
+$\Rejected_o$: no row at $\{A,B\}$ \outrel both, so the event makes a choice.  In
+panel~(g), the two removed route
+sets are in $\Retired_o$, each \outrelpast by a retained route set, so the event retires
+them without commitment.
+
+The three sets are disjoint, and removing the rows of either commitment leaves
+the other sets unchanged, so the event may apply $s_o$ and $c_o$ in either
+order.  The choice commitment only narrows fibers: at each input it touches, some row
+that \outrel $o$ survives.  With one row per input, $\Retired_o$ and $\Rejected_o$
+are empty; this is the functional output event of
+Definition~\ref{def:output-event}.  Apart from these, a row leaves the
+remainder table only by input retirement (Section~\ref{sec:functional-events}).
+
+Exposability lifts with the event: $o$ is exposable when $\mathsf{output}(o)$
+applies no commitment, that is, when $\Sealed_o$ and $\Rejected_o$ are empty, though the
+event may still retire the rows in $\Retired_o$.  The exposure test lifts as well:
+
+\begin{proposition}[Lifted exposure test]
+\label{prop:exposability}
+An output $o\in R(i)$ is exposable at $(i,R)$ if and only if, for every legal
+$j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ \outrel both:
+\begin{equation}
+  o\OutputOrd u
+  \qquad\text{and}\qquad
+  x\OutputOrd u.
+  \label{eq:safe-exposure}
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+The event $\mathsf{output}(o)$ applies no commitment exactly when every
+ruled-out row $(j,x)$ lies in $\Retired_o$, that is, is \outrelpast by some row
+$(j,u)$ \outrelpart $o$.  Rows that already \outrelbase $o$ satisfy the stated
+test with $u=x$, so this is exactly the stated test.
+\end{proof}
+
+This test marks the commitment boundary: if it fails, emitting $o$ requires a
+seal or a choice.
+
+\subsection{Commitment bases and compound commitments}
+\label{app:commitment-bases}
 
 \begin{definition}[Canonical basis, canonical event]
 \label{def:canonical-commitment-basis}
@@ -40,7 +120,7 @@ $k$ has a row \outrelpart $o$, so no row at $k$ is in $\Sealed_o$.  Either $y$ \
 $y\in \Retired_o$ and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is
 then \outrelpast by a row \outrelpart $o$, so $x\in \Retired_o$, a contradiction.  Since
 $s_o$ and $c_o$ remove disjoint sets of rows and neither changes the other's
-(Section~\ref{sec:lifted-output-events}), each is defined on the state the other
+(Appendix~\ref{app:lifted-output-events}), each is defined on the state the other
 leaves, and the canonical event may apply them in either order.
 
 \begin{lemma}[Containment, canonical support, and commitment-free events]

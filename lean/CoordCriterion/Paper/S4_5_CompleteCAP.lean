@@ -12,8 +12,10 @@ import CoordCriterion.Appendix.Registers
 
 Statement layer for Section `sec:complete-cap`, from the subsection header to
 the end of `sections/distributed.tex`: Definition `def:partition-notions`,
-Theorem `thm:complete-cap` (with its "moreover" clause), the remarks after its
-proof, and the claims of the paragraph "Gilbert and Lynch".
+Theorem `thm:complete-cap` and Corollary `cor:complete-cap-S`, the remarks
+after them, and the claims of the paragraph "Gilbert and Lynch".  The proofs
+of the theorem and the corollary are in Appendix `app:proofs`; their entries
+are in `Paper/AppB_ProofsDistributed.lean`.
 
 How to read this file: open it next to the `.tex` file.  The `/-! ## … -/`
 headers follow the paper's (sub)sections and paragraphs, in paper order.  Each
@@ -188,29 +190,6 @@ theorem «thm:complete-cap» (sp : Spec I O) (D : Type) (A : Table I O)
       «def:partition-notions(6)» sp A :=
   complete_cap_for sp D A hAS
 
-/-- Proof of Theorem `thm:complete-cap`, (2)⇒(1): "Take the system whose
-strategies emit, by the canonical output event `output(o)` …, any output `o`
-of `A` in the current fiber. … so the system has Availability for `A`. …
-For a system that emits only canonical output events, that is confluence at
-`j`, which gives Partition Consistency."  Lean: `respSystem A`, a canonical
-system. -/
-theorem «thm:complete-cap/proof-sufficiency» (A : Table I O) (h : ConsistentOn sp A) :
-    AvailabilityFor A (respSystem (sp := sp) (D := D) A) ∧
-    PartitionConsistencyAtEnd (respSystem (sp := sp) (D := D) A) ∧
-    CanonicalSystem (respSystem (sp := sp) (D := D) A) :=
-  ⟨availabilityFor_resp A, pc_resp A h, respSystem_canonical A⟩
-
-/-- Proof of Theorem `thm:complete-cap`, (1)⇒(2): "take one participant `p_r`
-per row, starting at input `i_r`, each in its own component … By
-Availability for `A`, each `p_r` can emit `o_r`.  By Partition Consistency,
-they then reach one state `(j,R)`, which has some row `(j,u)` … so `u`
-refines every `o_r`."  Lean: only a common refinement of the emitted outputs
-is used (implied by Partition Consistency). -/
-theorem «thm:complete-cap/proof-necessity» (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
-    (Sys : System sp D) (hA : AvailabilityFor A Sys) (hC : CommonRefinementAtEnd Sys) :
-    ConsistentOn sp A :=
-  consistentOn_of_availabilityFor A hAS Sys hA hC
-
 /-! ### Corollary `cor:complete-cap-S` -/
 
 /-- **Corollary `cor:complete-cap-S`.**  "Some system has Availability and
@@ -236,16 +215,7 @@ theorem «cor:complete-cap-S/commitment-free» (sp : Spec I O) (D : Type) (h : s
       (partitionConsistency_iff_atEnd _).1 (complete_cap_cf sp D h).2⟩,
     fun _ _ _ => cfSystem_coordinationFree⟩
 
-/-- Proof of Corollary `cor:complete-cap-S`: "by Complete CALM and
-Proposition `prop:distributed-consistency` it has Partition Consistency."
-Strong reading: the confluence continuation itself can be chosen
-commitment-free and receive-free (`PartitionConsistencyCF`). -/
-theorem «cor:complete-cap-S/proof-cf-continuations» (sp : Spec I O) (D : Type) :
-    ((∃ Sys : System sp D, Availability Sys ∧ PartitionConsistency Sys) → sp.LiftedMono) ∧
-    (sp.LiftedMono → Availability (cfSystem sp D) ∧ PartitionConsistencyCF (cfSystem sp D)) :=
-  complete_cap_strong sp D
-
-/-! ### Remarks after the proof -/
+/-! ### Remarks after the corollary -/
 
 /-- "The converse never assumes that the system is commitment-free, so
 commitments cannot enlarge the class of specifications that admit a system
@@ -258,8 +228,9 @@ theorem «sec:complete-cap/necessity-any-system» (A : Table I O) (hAS : ∀ i o
 
 /-- "Under consistency on `A`, the canonical output event for an output of `A`
 seals nothing and chooses only against outputs outside `A`, which the system
-never emits, so the system of the proof is coordination-free (Definition
-`def:coordination`)."  Lean: the system emits only rows of `A`, and no output
+never emits, so the system is coordination-free (Definition
+`def:coordination`)."  "The system" is the canonical system of the intuition
+after Theorem `thm:complete-cap`, `respSystem A`.  Lean: the system emits only rows of `A`, and no output
 event removes a row that any run of the system emits, or seals an input any
 run accepts. -/
 theorem «sec:complete-cap/proof-system-coordination-free» (A : Table I O)
@@ -288,7 +259,7 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
 `x ∈ S(i) ∖ A(i)` have no common refinement at `i`, emitting `o` must choose
 against `x`."  Lean: one input, `S = {o, x}` incomparable, `A = {o}`: `S` is
 consistent on `A`, `o` is not exposable (so its output event must commit),
-and the system of the proof is coordination-free. -/
+and the canonical system `respSystem A` is coordination-free. -/
 theorem «sec:complete-cap/local-choice-necessary» (D : Type) :
     ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
     (respSystem (sp := CAP.lcSpec) (D := D) CAP.lcA).CoordinationFree :=

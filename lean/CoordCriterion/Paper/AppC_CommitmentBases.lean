@@ -1,11 +1,15 @@
 import CoordCriterion.Distributed.Systems
+import CoordCriterion.Figures
 import CoordCriterion.Appendix.TransactionBases.NoReads
 
 /-!
-# Paper Appendix C: Commitment bases and compound commitments (statement layer)
+# Paper Appendix C: Output events and commitment bases (statement layer)
 
-Covers `appendices/commitment-bases-general.tex` (`app:bases`): the canonical
-basis and canonical event, the paragraph *The canonical seals and choices are
+Covers `appendices/commitment-bases-general.tex` (`app:bases`): first the
+formal lifted output events (`app:lifted-output-events`: the sets `Sealed_o`,
+`Retired_o`, `Rejected_o`, Def. `def:lifted-output-event`, the remarks after
+it, and Prop. `prop:exposability`), then (`app:commitment-bases`)
+the canonical basis and canonical event, the paragraph *The canonical seals and choices are
 commitments*, Lemma `lem:canonical-commitment-normal-form` (three parts),
 Def. `def:canonical-system`, Lemma `lem:compound-commitment` and the remark
 after it, Def. `def:run-under-basis`, observable equivalence,
@@ -18,7 +22,8 @@ each unlabeled claim by `«app:bases/<slug>»`.  Docstrings quote the paper
 (LaTeX lightly turned into Unicode) and explain any difference in reading.
 Statements are written out; proofs are one-line references to
 `CoordCriterion/Distributed/Commitments.lean` (namespace `CC`) and
-`CoordCriterion/Distributed/Systems.lean` (namespace `CC.Dist`).
+`CoordCriterion/Distributed/Systems.lean` (namespace `CC.Dist`), and, for the
+lifted output events, to `CoordCriterion/CALM/` and `Figures.lean`.
 
 Conventions: a state `(i,R)` is `σ : State sp` with `σ.cur = i`, `σ.R = R`;
 `R[out ⪰ o]` is `outputTable σ o`; `Out_γ(o)` is `SEvent.output γ o`, and
@@ -31,6 +36,132 @@ namespace CC.Paper
 open CC Classical
 
 variable {I O : Type} [PO I] [PO O]
+
+/-! ## Lifted output events (`app:lifted-output-events`)
+
+Formal definitions behind the summary in §3.4 (`sec:lifted-output-events`). -/
+
+section LiftedOutputEvents
+
+open CC.CALM
+
+
+/-- **Eq. `eq:seal-inputs`**: `Sealed_o = {(k,x) ∈ R : k ∉ in(R[out ⪰ o])}`.
+Lean: `Sealed σ o k x` is `σ.R k x ∧ ¬ ∃ u, σ.R k u ∧ o ≼ u`. -/
+abbrev «eq:seal-inputs» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) : Table I O :=
+  Sealed σ o
+
+/-- **Eq. `eq:output-retirements`**: `Retired_o = {(k,x) ∈ R ∖ R[out ⪰ o] :
+x ≼ u for some u ∈ R[out ⪰ o](k)}`. -/
+abbrev «eq:output-retirements» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) : Table I O :=
+  Retired σ o
+
+/-- **Eq. `eq:choice-removals`**: `Rejected_o = (R ∖ R[out ⪰ o]) ∖ (Sealed_o ∪
+Retired_o)`. -/
+abbrev «eq:choice-removals» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) : Table I O :=
+  Rejected σ o
+
+/-- **Def. `def:lifted-output-event`** (Lifted output event, seal, output
+retirement, choice).  "`output(o)` keeps exactly the rows whose outputs
+refine `o` and emits `o`, atomically, ending at `(i, R[out ⪰ o])` … When
+`Sealed_o ≠ ∅` it applies the *seal* `s_o`. … When `Rejected_o ≠ ∅` it
+applies the *choice* `c_o`. … `s_o(i,R) = (i, R ∖ Sealed_o)`,
+`c_o(i,R) = (i, R ∖ Rejected_o)`."
+
+Lean: the event is `Step σ (.output o) τ` with `τ.R = outputTable σ o`,
+the same transition as Def. `def:output-event`; the two commitments as states
+are `sealState σ o _` and `chooseState σ o _` (as commitments in the sense of
+Def. `def:commitment`, §4.3: `CC.sealC o`, `CC.choiceC o`).  This
+declaration names the pair `(s_o, c_o)`. -/
+abbrev «def:lifted-output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp × State sp :=
+  (sealState σ o ho, chooseState σ o ho)
+
+/-- **Eq. `eq:canonical-seal-commitment-relational`**:
+"`s_o(i,R) = (i, R ∖ Sealed_o)`, `c_o(i,R) = (i, R ∖ Rejected_o)`."  Both
+keep the current input; `sealState` removes exactly `Sealed_o`, `chooseState`
+exactly `Rejected_o`. -/
+theorem «eq:canonical-seal-commitment-relational» {I O : Type} [PO I] [PO O]
+    {sp : Spec I O} (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
+    ((sealState σ o ho).cur = σ.cur ∧
+        ∀ k x, (sealState σ o ho).R k x ↔ σ.R k x ∧ ¬ Sealed σ o k x) ∧
+      ((chooseState σ o ho).cur = σ.cur ∧
+        ∀ k x, (chooseState σ o ho).R k x ↔ σ.R k x ∧ ¬ Rejected σ o k x) :=
+  ⟨⟨rfl, fun _ _ => Iff.rfl⟩, ⟨rfl, fun _ _ => Iff.rfl⟩⟩
+
+/-- After Def. `def:lifted-output-event`: "In Figure `fig:ambiguity-frames`(f),
+emitting `[A,B]` places `[B,A]` in `Rejected_o` … In panel (g), the two
+removed route sets are in `Retired_o`." -/
+theorem «def:lifted-output-event/examples» :
+    Rejected (canon Figures.Txn.spec ()) .ab () .ba ∧
+      Retired (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
+      Retired (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 :=
+  ⟨Figures.Txn.ba_rejected.1, Figures.Trace.removed_retired.2.1,
+   Figures.Trace.removed_retired.2.2.1⟩
+
+/-- "The three sets are disjoint." -/
+theorem «app:lifted-output-events/disjoint» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) (k : I) (x : O) :
+    ¬ (Sealed σ o k x ∧ Retired σ o k x) ∧ ¬ (Sealed σ o k x ∧ Rejected σ o k x) ∧
+      ¬ (Retired σ o k x ∧ Rejected σ o k x) :=
+  ⟨sealed_retired_disjoint σ o, sealed_rejected_disjoint σ o, retired_rejected_disjoint σ o⟩
+
+/-- "… removing the rows of either commitment leaves the other sets
+unchanged, so the event may apply `s_o` and `c_o` in either order." -/
+theorem «app:lifted-output-events/commute» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
+    (∀ k x, Retired (sealState σ o ho) o k x ↔ Retired σ o k x) ∧
+      (∀ k x, Rejected (sealState σ o ho) o k x ↔ Rejected σ o k x) ∧
+      (∀ k x, Sealed (chooseState σ o ho) o k x ↔ Sealed σ o k x) ∧
+      (∀ k x, Retired (chooseState σ o ho) o k x ↔ Retired σ o k x) ∧
+      (∀ h₁ h₂, (chooseState (sealState σ o ho) o h₁).R =
+        (sealState (chooseState σ o ho) o h₂).R) :=
+  ⟨seal_retired σ o ho, seal_rejected σ o ho, choose_sealed σ o ho, choose_retired σ o ho,
+   seal_choose_comm σ o ho⟩
+
+/-- "The choice commitment only narrows fibers: at each input it touches, some
+row that refines `o` survives." -/
+theorem «app:lifted-output-events/choice-narrows» {I O : Type} [PO I] [PO O]
+    {sp : Spec I O} (σ : State sp) (o : O) {k : I} {x : O} (h : Rejected σ o k x) :
+    ∃ u, σ.R k u ∧ o ≼ u :=
+  choice_narrows σ o h
+
+/-- "With one row per input, `Retired_o` and `Rejected_o` are empty; this is
+the functional output event of Definition `def:output-event`." -/
+theorem «app:lifted-output-events/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
+    ¬ Retired σ o k x ∧ ¬ Rejected σ o k x :=
+  functional_retired_rejected_empty hf σ o k x
+
+/-- "Exposability lifts with the event: `o` is exposable when `output(o)`
+applies no commitment, that is, when `Sealed_o` and `Rejected_o` are empty." -/
+theorem «app:lifted-output-events/exposable» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) :
+    Exposable σ o ↔ (∀ k x, ¬ Sealed σ o k x) ∧ (∀ k x, ¬ Rejected σ o k x) :=
+  exposable_iff_no_commitment σ o
+
+/-- **Prop. `prop:exposability`** (Lifted exposure test).  "An output
+`o ∈ R(i)` is exposable at `(i,R)` if and only if, for every legal `j ⪰ i`
+and `x ∈ R(j)`, some `u ∈ R(j)` refines both: `o ≼ u` and `x ≼ u`."  (The
+Lean statement does not need the hypothesis `o ∈ R(i)`.) -/
+theorem «prop:exposability» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) :
+    Exposable σ o ↔ ∀ j, σ.cur ≼ j → ∀ x, σ.R j x → ∃ u, σ.R j u ∧ o ≼ u ∧ x ≼ u :=
+  lifted_exposure_test σ o
+
+/-- **Eq. `eq:safe-exposure`**: "some `u ∈ R(j)` refines both: `o ≼ u` and
+`x ≼ u`" — the per-row test of Prop. `prop:exposability`, at legal input `j`
+and remaining output `x`. -/
+abbrev «eq:safe-exposure» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) (j : I) (x : O) : Prop :=
+  ∃ u, σ.R j u ∧ o ≼ u ∧ x ≼ u
+
+end LiftedOutputEvents
+
+/-! ## Commitment bases and compound commitments (`app:commitment-bases`) -/
 
 /-! ## Canonical basis, canonical event -/
 

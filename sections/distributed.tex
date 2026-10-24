@@ -22,7 +22,7 @@ The histories above use the output events of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}, which apply
 exactly the commitments an output requires: they seal the inputs in
 $\Sealed_o$ and remove the rows in $\Rejected_o$
-(Definitions~\ref{def:output-event} and~\ref{def:lifted-output-event}).
+(Definition~\ref{def:output-event} and Section~\ref{sec:lifted-output-events}).
 Many real systems behave differently.  For example, the registrar of
 Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the same
 event (Figure~\ref{fig:election-frames}(d)); the output event for $\bot$ does
@@ -48,8 +48,8 @@ nonempty set of rows, each with no remaining row at the same input that
 \end{equation}
 \end{definition}
 
-As expected, the seals and choices of Definitions~\ref{def:output-event}
-and~\ref{def:lifted-output-event} satisfy this definition: a seal removes
+As expected, the seals and choices of Definition~\ref{def:output-event}
+and Section~\ref{sec:lifted-output-events} satisfy this definition: a seal removes
 every row at the inputs it seals, and a choice removes the rows in
 $\Rejected_o$.  The converse also holds:
 
@@ -140,7 +140,7 @@ applies $\mathsf{stamp}(B)$, placing $B$ first (panel (i)).  Both are choices:
 they remove serialization orders while the input stays legal, but leave
 different alternatives open.  Each is one commitment in the $\gamma$ of an
 output event that later emits a full serial order, and neither is the choice
-$c_o$ of Definition~\ref{def:lifted-output-event}.
+$c_o$ of Section~\ref{sec:lifted-output-events}.
 
 \begin{figure}[t]
   \centering
@@ -268,12 +268,9 @@ emits $x$.  The two resulting states cannot be brought to a common state with
 current input $i$.
 \end{proposition}
 
-\begin{proof}
-After the second event every output at $i$ \outrel $x$, by containment
-(Lemma~\ref{lem:canonical-commitment-normal-form}); after the first, none does.
-A common state with current input $i$ has a row at $i$, and since events never
-add rows, that row would be in both states.
-\end{proof}
+\noindent After the second event every output at $i$ \outrel $x$, and after
+the first none does; since events never add rows, no row at $i$ can be common
+to both.  Proof in Appendix~\ref{app:proofs}.
 
 The conflict is confined to the current input.  If $i\InputOrd j$,
 $\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and $\fiber{j}=\{u\}$ with
@@ -296,24 +293,16 @@ other participant can receive the sealed input, a restriction on the
 environment that our model does not make.
 
 \paragraph{Locks in a shared-nothing database.}
-The distinction is subtle in the most common setting.  Consider a database partitioned
-by key across participants, each the lock manager for its own keys, as in
-shared-nothing designs~\cite{stonebraker1986sharednothing}; a transaction
-requests each lock by message from the key's owner.  Ordering two transactions
-on one key is a choice among serialization orders, and only the key's owner
-makes it.  The choice is coordination, as locking is on any single machine:
-in another run $B$'s request arrives first and the owner orders $B$ before
-$A$.  But no other participant emits an order for that key, so it is not
-distributed coordination, although it needs messages, and a client cut off
-from the owner cannot obtain its answer.  A transaction that spans keys $k_1$ and $k_2$ needs a single
-order, but each owner chooses its part: one may order $A$ before $B$ on $k_1$
-while the other orders $B$ before $A$ on $k_2$.  These choices can contradict
-each other across participants, and excluding that, by two-phase commit or by
+Consider a database partitioned by key, in which each participant is the lock
+manager for its own keys~\cite{stonebraker1986sharednothing}.  Ordering two
+transactions on one key is coordination: in another run $B$'s request arrives
+first and the owner orders $B$ before $A$.  It is not distributed
+coordination, since only the owner orders that key.  It still needs messages,
+and a client cut off from the owner cannot get its answer.  A transaction
+across keys needs one order, but each owner chooses its part, so the owners'
+choices can contradict each other.  Excluding that, by two-phase commit or by
 an order fixed before execution~\cite{thomson2012calvin}, is distributed
 coordination.  Communication and distributed coordination therefore differ.
-The single-key case communicates without distributed coordination, and a
-deterministic tie-break that every participant applies makes a choice that no
-run contradicts, with neither.
 
 Confluence is a safety property: some continuation brings the participants to a
 common state.  Reaching it is liveness, and a matter of strategy.  Under Lifted
@@ -378,7 +367,7 @@ an input or to make a choice that another participant could contradict.
 With $A=S$, consistency on $A$ is the common-\indesc condition
 (Definition~\ref{def:common-expansion-condition}).  Unlike Availability,
 Availability for a smaller $A$ can be met by a system whose output events
-commit without coordination, as the remark after the proof explains.
+commit without coordination, as the remark after Corollary~\ref{cor:complete-cap-S} explains.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
@@ -390,32 +379,13 @@ $A\subseteq S$, the following are equivalent:
 \end{enumerate}
 \end{theorem}
 
-\begin{proof}
-Suppose $\Spec$ is consistent on $A$.  Take the system whose strategies emit,
-by the canonical output event $\mathsf{output}(o)$ of
-Section~\ref{sec:complete-calm}, any output $o$ of $A$ in the current fiber.
-That event is always legal and applies whatever commitments $o$ requires
-(Lemma~\ref{lem:canonical-commitment-normal-form}), so the system has
-Availability for $A$.  Every output it emits is a row of $A$ at an input below
-the current one, so at a common \indesc $j$ of the current inputs the emitted
-outputs have a common \outnoun in $\fiber{j}$.  For a system that emits only
-canonical output events, that is confluence at $j$
-(Lemma~\ref{lem:reconciliation}), which gives Partition Consistency.
-
-Conversely, suppose some system has Availability for $A$ and Partition
-Consistency.  Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $A$ with a common
-\indesc $j$; we find some $u\in\fiber{j}$ that \outrel every $o_r$.  If $k=0$,
-$\Spec$ is total, so $j$ appears in some row $(j,u)$.  Otherwise, take one
-participant $p_r$ per row, starting at input $i_r$, each in its own component,
-and a second participant for the row if $k=1$.  Each runs without messages.
-By Availability for $A$, each $p_r$ can emit $o_r$.  By Partition Consistency,
-they then reach one state $(j,R)$, which has some row $(j,u)$
-(Definition~\ref{def:residual-state}); this $u$ is the one we seek.  Rows are
-never added, so $(j,u)$ was already in each $p_r$'s table just after it
-emitted $o_r$.  Emitting an output keeps only rows whose output \outrel it
-(Lemma~\ref{lem:canonical-commitment-normal-form}), so $u$ \outrel every
-$o_r$.
-\end{proof}
+\noindent Intuitively, consider the system whose strategies emit each output of
+$A$ by the canonical output event of Section~\ref{sec:complete-calm}.  It has
+Availability for $A$, and consistency on $A$ gives the outputs it emits a
+common \outnoun wherever their inputs meet.  Conversely, given one
+participant per row of $A$, each in its own component, Availability lets each
+emit its row's output, and Partition Consistency then supplies the common
+\outnoun.  Proof in Appendix~\ref{app:proofs}.
 
 \begin{corollary}
 \label{cor:complete-cap-S}
@@ -425,22 +395,17 @@ both: one whose strategies may emit any exposable output $o$ by
 $\Out{\varepsilon}{o}$.
 \end{corollary}
 
-\begin{proof}
-With $A=S$, consistency on $A$ is the common-\indesc condition, which is
-Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}).  When
-Lifted Monotonicity holds, every output at every state reachable without
-commitment is exposable (Proposition~\ref{prop:exposure-boundary}).  The
-commitment-free system never leaves such states, so it has Availability, and
-by Complete CALM and Proposition~\ref{prop:distributed-consistency} it has
-Partition Consistency.
-\end{proof}
+\noindent With $A=S$, consistency on $A$ is Lifted Monotonicity, and the
+exposure boundary (Proposition~\ref{prop:exposure-boundary}) makes every
+output of the commitment-free system available.  Proof in
+Appendix~\ref{app:proofs}.
 
 The converse never assumes that the system is commitment-free, so commitments
 cannot enlarge the class of specifications that admit a system with
 Availability for $A$ and Partition Consistency.  Nor do the commitments of the
-proof need coordination.  Under consistency on $A$, the canonical output event
+canonical system above need coordination.  Under consistency on $A$, the canonical output event
 for an output of $A$ seals nothing and chooses only against outputs outside
-$A$, which the system never emits, so the system of the proof is
+$A$, which the system never emits, so the system is
 coordination-free (Definition~\ref{def:coordination}).  For $A=S$ it needs no
 commitment at all.  For a smaller $A$ such local choices can be necessary: if
 $o\in A(i)$ and $x\in\fiber{i}\setminus A(i)$ have no common \outnoun at $i$,

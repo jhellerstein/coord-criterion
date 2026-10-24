@@ -6,6 +6,7 @@ import CoordCriterion.Paper.S5_Instances
 import CoordCriterion.Paper.AppA_Notation
 import CoordCriterion.Paper.AppB_Proofs
 import CoordCriterion.Paper.AppB_InvariantConfluence
+import CoordCriterion.Paper.AppB_ProofsDistributed
 import CoordCriterion.Paper.AppC_CommitmentBases
 import CoordCriterion.Paper.AppD_Composition
 import CoordCriterion.Paper.AppE_Deployment

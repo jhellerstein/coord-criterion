@@ -262,19 +262,12 @@ A functional ordered specification $\Spec$, with induced function $f$, is
 Thus an output emitted from partial input remains valid as more input arrives.
 
 \paragraph{Relational notation.}
-To describe how execution narrows $S$, we use a compact relational notation.
-For any relation
-$R\subseteq I\times O$, we select rows by writing a predicate on its
-columns $\mathrm{in}$ and $\mathrm{out}$ in square brackets: $R[\mathrm{in}\InputGe j]$ is the table of rows
-whose input \inrel $j$, $R[\mathrm{out}\OutputGe o]$ is the table of rows
-whose output \outrel $o$, $R[\mathrm{in}\in K]$ is
-the table containing the rows with inputs in $K$, etc.  Commas separate conjuncts:
-$R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ is the table of rows
-satisfying both predicates. 
-To project onto a single column, we write $\mathrm{in}(R)$ and
-$\mathrm{out}(R)$ for the sets of inputs and outputs that appear in $R$.
-We say that a row $(k,u)$ is \emph{at} $k$; $R[\mathrm{in}=k]$ is the table of
-rows at $k$.
+For a relation $R\subseteq I\times O$, a predicate on the columns
+$\mathrm{in}$ and $\mathrm{out}$ in square brackets selects rows, and commas
+separate conjuncts: $R[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe o]$ is the
+table of rows whose input \inrel $j$ and whose output \outrel $o$.  A row
+$(k,u)$ is \emph{at} $k$, and $\mathrm{out}(R)$ is the set of outputs that
+appear in $R$.  Appendix~\ref{app:notation} spells the notation out.
 
 A specification describes every permitted input/output pair.  During execution,
 input arrives and outputs are emitted, so only some of those pairs remain
@@ -473,12 +466,8 @@ every final state to the state
 $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
 
-\begin{proof}[Proof sketch]
-A common state has a row at $j$, and rows are never added; conversely, by
-Lemma~\ref{lem:run-residual} a surviving row $(j,u)$ is reached by
-$\mathsf{input}(j)$ and $\mathsf{output}(u)$ from every final state.  Full proof in
-Appendix~\ref{app:proofs}.
-\end{proof}
+\noindent Rows are never added, so the row of a common state at $j$ was there
+in every run all along.  Proof in Appendix~\ref{app:proofs}.
 
 In a functional specification the only row at $j$ is $(j,f(j))$, so the test
 asks whether $(j,f(j))$ survives in every run.
@@ -508,19 +497,11 @@ A functional ordered specification is consistent if and only if it is
 monotone.
 \end{theorem}
 
-\begin{proof}
-Every input has one row, so an output emitted at current input $k$ is $f(k)$.
-By Lemma~\ref{lem:run-residual}, a run ending at input $i$ keeps the
-row $(j,f(j))$ at an \indesc $j$ of $i$ exactly when $f(j)$ \outrel every
-output the run has emitted.  By Proposition~\ref{prop:confluence}, a finite
-family of runs is therefore confluent at a common \indesc $j$ exactly
-when $f(j)$ \outrel every output emitted on any of them.  If $f$ is monotone,
-this holds, since each emitted $f(k)$ has $k\InputOrd j$.  If $f$ is not
-monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.  Of two
-runs from $\sigma_S(i)$, one that emits $f(i)$ no longer has the row
-$(k,f(k))$, while one that accepts $\mathsf{input}(k)$ keeps it; no row at $k$
-survives in both, so they are not confluent at $k$.
-\end{proof}
+\noindent Intuitively, a monotone $f$ never emits an output that later input
+contradicts, so the row $(j,f(j))$ at a common \indesc survives in every run.
+If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
+\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never meet at $k$.  Proof in
+Appendix~\ref{app:proofs}.
 
 In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
 incomparable: a run that emits $\bot$ at $xy\cdot$ and one that accepts
@@ -537,9 +518,8 @@ input $i$ is in the canonical state $\sigma_S(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
 
-\begin{proof}[Proof sketch]
-By Functional CALM the specification is monotone, so in Lemma~\ref{lem:run-residual} the output conditions remove no row whose input expands $i$.  Full proof in Appendix~\ref{app:proofs}.
-\end{proof}
+\noindent By monotonicity, the outputs a run emits remove no row at an \indesc
+of $i$.  Proof in Appendix~\ref{app:proofs}.
 
 Confluence at a common \indesc $j$ therefore needs only $\mathsf{input}(j)$:
 every run reaches $\sigma_S(j)$, the state of a run that starts with all of the
@@ -554,9 +534,8 @@ A functional ordered specification is monotone if and only if every output at
 every state reachable without commitment is exposable.
 \end{proposition}
 
-\begin{proof}[Proof sketch]
-If $f$ is monotone, Corollary~\ref{cor:state-by-input} puts every state reachable without commitment at $\sigma_S(i)$, where the exposure test holds; conversely, the exposure test at each $\sigma_S(i)$ is monotonicity.  Full proof in Appendix~\ref{app:proofs}.
-\end{proof}
+\noindent If $f$ is monotone, every such state is canonical, and there the
+exposure test is monotonicity.  Proof in Appendix~\ref{app:proofs}.
 
 In a functional specification, every commitment an output event applies is a seal, so Functional
 CALM and Proposition~\ref{prop:functional-exposure-boundary} together say that a functional specification is consistent

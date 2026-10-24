@@ -27,6 +27,20 @@ $S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
 starting run.
 \end{proof}
 
+\begin{proof}[Proof of Theorem~\ref{thm:functional-calm}]
+Every input has one row, so an output emitted at current input $k$ is $f(k)$.
+By Lemma~\ref{lem:run-residual}, a run ending at input $i$ keeps the
+row $(j,f(j))$ at an \indesc $j$ of $i$ exactly when $f(j)$ \outrel every
+output the run has emitted.  By Proposition~\ref{prop:confluence}, a finite
+family of runs is therefore confluent at a common \indesc $j$ exactly
+when $f(j)$ \outrel every output emitted on any of them.  If $f$ is monotone,
+this holds, since each emitted $f(k)$ has $k\InputOrd j$.  If $f$ is not
+monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.  Of two
+runs from $\sigma_S(i)$, one that emits $f(i)$ no longer has the row
+$(k,f(k))$, while one that accepts $\mathsf{input}(k)$ keeps it; no row at $k$
+survives in both, so they are not confluent at $k$.
+\end{proof}
+
 \begin{proof}[Proof of Corollary~\ref{cor:state-by-input}]
 By Functional CALM (Theorem~\ref{thm:functional-calm}), the specification is
 monotone.  By Lemma~\ref{lem:run-residual}, the run's remainder table is
@@ -48,6 +62,18 @@ empty run reaches, exposability of $f(i)$ gives $f(i)\OutputOrd f(j)$ for every
 \end{proof}
 
 \subsection{Proofs for Section~\ref{sec:complete-calm}}
+
+\begin{proof}[Proof of Proposition~\ref{prop:common-expansion-form}]
+Suppose Lifted Monotonicity, and let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows
+with common \indesc $j$.  If $k=0$, any $u\in\fiber{j}$ will do, and since
+$\Spec$ is total, $j$ appears in some row $(j,u)$.  Otherwise, since $i_r\InputOrd j$, Relational Monotonicity gives, for each
+$r$, a $u_r\in\fiber{j}$ with $o_r\OutputOrd u_r$.  The $u_r$ all lie in the
+one fiber $\fiber{j}$, which is directed, so some $u\in\fiber{j}$ \outrel
+every $u_r$, hence every $o_r$.  Conversely, let $i\InputOrd j$ and
+$X\subseteq\fiber{i}$ be nonempty and finite.  The rows $\{(i,x):x\in X\}$
+have common \indesc $j$, so some $u\in\fiber{j}$ \outrel all of $X$; that is
+$\fiber{i}\LiftedOrd\fiber{j}$.
+\end{proof}
 
 The survivor test and Lemma~\ref{lem:run-residual} combine into the form in
 which every later argument uses them.
@@ -105,6 +131,78 @@ suffice, even $k$ rows at a time: in the $k$-set agreement example of
 Appendix~\ref{app:additional-applications}, every family of at most $k$ rows
 at such inputs is compatible at each common \indesc, but the $k+1$ proposal
 rows are not.
+
+\subsection{Proofs for Section~\ref{sec:distributed-execution}}
+
+\begin{proof}[Proof of Proposition~\ref{prop:distributed-consistency}]
+The participant runs at any cut are a finite family of runs.  Conversely,
+every finite family of runs is the family of participant runs of a
+message-free history, one participant per run, at its final cut.
+\end{proof}
+
+\paragraph{Exchanging outputs.}
+\label{app:exchanging-outputs}
+Suppose participants share their \emph{outputs} in the data $d$ of messages
+(Section~\ref{sec:distributed-consistency}).  A participant that receives an
+output $o$ its sender has emitted has two
+options.  If $o\in R(i)$ at its own current input $i$, it can emit $o$ itself;
+that is an ordinary output event, already covered by
+Definition~\ref{def:distributed-history}.
+Otherwise, or in addition, it can silently honor $o$ by restricting its table
+to $R[\mathrm{out}\OutputGe o]$.  This restriction is a table, not a
+specification state: it may have no row at the participant's current input,
+so silent honoring is not an event and we reason about it at the level of
+tables.  Silent honoring cannot change confluence in either direction.  It cannot
+help, because it only removes rows, and confluence asks for a row that
+survives everywhere (Proposition~\ref{prop:confluence}).  It cannot hurt,
+because a row that survives at a common \indesc already \outrel every output
+emitted in the cut (Lemma~\ref{lem:run-residual}), including $o$, which was previously emitted.
+The confluence of a cut therefore depends on which outputs were emitted,
+not on who has heard about them.
+
+\begin{proof}[Proof of Proposition~\ref{thm:commitments-require-coordination}]
+After the second event every output at $i$ \outrel $x$, by containment
+(Lemma~\ref{lem:canonical-commitment-normal-form}); after the first, none does.
+A common state with current input $i$ has a row at $i$, and since events never
+add rows, that row would be in both states.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:complete-cap}]
+Suppose $\Spec$ is consistent on $A$.  Take the system whose strategies emit,
+by the canonical output event $\mathsf{output}(o)$ of
+Section~\ref{sec:complete-calm}, any output $o$ of $A$ in the current fiber.
+That event is always legal and applies whatever commitments $o$ requires
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so the system has
+Availability for $A$.  Every output it emits is a row of $A$ at an input below
+the current one, so at a common \indesc $j$ of the current inputs the emitted
+outputs have a common \outnoun in $\fiber{j}$.  For a system that emits only
+canonical output events, that is confluence at $j$
+(Lemma~\ref{lem:reconciliation}), which gives Partition Consistency.
+
+Conversely, suppose some system has Availability for $A$ and Partition
+Consistency.  Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $A$ with a common
+\indesc $j$; we find some $u\in\fiber{j}$ that \outrel every $o_r$.  If $k=0$,
+$\Spec$ is total, so $j$ appears in some row $(j,u)$.  Otherwise, take one
+participant $p_r$ per row, starting at input $i_r$, each in its own component,
+and a second participant for the row if $k=1$.  Each runs without messages.
+By Availability for $A$, each $p_r$ can emit $o_r$.  By Partition Consistency,
+they then reach one state $(j,R)$, which has some row $(j,u)$
+(Definition~\ref{def:residual-state}); this $u$ is the one we seek.  Rows are
+never added, so $(j,u)$ was already in each $p_r$'s table just after it
+emitted $o_r$.  Emitting an output keeps only rows whose output \outrel it
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so $u$ \outrel every
+$o_r$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:complete-cap-S}]
+With $A=S$, consistency on $A$ is the common-\indesc condition, which is
+Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}).  When
+Lifted Monotonicity holds, every output at every state reachable without
+commitment is exposable (Proposition~\ref{prop:exposure-boundary}).  The
+commitment-free system never leaves such states, so it has Availability, and
+by Complete CALM and Proposition~\ref{prop:distributed-consistency} it has
+Partition Consistency.
+\end{proof}
 
 \subsection{Invariant confluence (Section~\ref{sec:iconfluence-instance})}
 \label{app:iconfluence}

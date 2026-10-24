@@ -48,6 +48,17 @@ theorem «proof:prop:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O} :
         Exec σ [.input j, .output u] (meetState sp j u (σ.sub _ _ hju))) :=
   ⟨reach_sub, fun h _ _ hju => survivor_exec h hju⟩
 
+/-- Proof of Thm. `thm:functional-calm`: "By Prop. `prop:confluence`, a finite
+family of runs is therefore confluent at a common expansion `j` exactly when
+`f(j)` refines every output emitted on any of them.  If `f` is monotone, this
+holds … If `f` is not monotone, some `i ≼ k` has `f(i) ⋠ f(k)`.  Of two runs
+from `σ_S(i)`, one that emits `f(i)` no longer has the row `(k,f(k))`, while
+one that accepts `input(k)` keeps it; no row at `k` survives in both, so they
+are not confluent at `k`."  The theorem, along the library route. -/
+theorem «proof:thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
+    (hf : sp.Functional) : sp.Consistent ↔ sp.MonotoneF :=
+  functional_calm hf
+
 /-- Proof of Cor. `cor:state-by-input`: "By Functional CALM …, the
 specification is monotone. … monotonicity gives `o_ℓ ≼ f(k)`, and the output
 conditions remove nothing."  The key step: in a monotone specification every
@@ -66,6 +77,16 @@ theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
   functional_exposure_boundary hf
 
 /-! ## Proofs for Section 3 -/
+
+/-- Proof of Prop. `prop:common-expansion-form`: "Suppose Lifted
+Monotonicity … Relational Monotonicity gives, for each `r`, a `u_r ∈ S(j)`
+with `o_r ≼ u_r`.  The `u_r` all lie in the one fiber `S(j)`, which is
+directed, so some `u ∈ S(j)` refines every `u_r`, hence every `o_r`.
+Conversely, … the rows `{(i,x) : x ∈ X}` have common expansion `j`, so some
+`u ∈ S(j)` refines all of `X`."  Both directions. -/
+theorem «proof:prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+    sp.LiftedMono ↔ sp.CommonExpansion :=
+  liftedMono_iff_commonExpansion sp
 
 /-- **Lemma `lem:reconciliation`** (Reconciliation).  "Let runs end at
 `(i_r,R_r)`, `r = 1,…,m`, let `j` be a common expansion of the `i_r`, and let

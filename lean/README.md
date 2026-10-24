@@ -93,7 +93,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-574 entries.
+579 entries.
 
 ### §2 Functional CALM
 
@@ -195,19 +195,6 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:common-expansion-condition»` | abbrev | **Def. |
 | `«def:common-expansion-condition/empty»` | theorem | After Def. |
 | `«prop:common-expansion-form»` | theorem | **Prop. |
-| `«eq:seal-inputs»` | abbrev | **Eq. |
-| `«eq:output-retirements»` | abbrev | **Eq. |
-| `«eq:choice-removals»` | abbrev | **Eq. |
-| `«def:lifted-output-event»` | abbrev | **Def. |
-| `«eq:canonical-seal-commitment-relational»` | theorem | **Eq. |
-| `«def:lifted-output-event/examples»` | theorem | After Def. |
-| `«sec:lifted-output-events/disjoint»` | theorem | "The three sets are disjoint." |
-| `«sec:lifted-output-events/commute»` | theorem | "… removing the rows of either commitment leaves the other sets unchanged, so the event may apply `s_o` and `c_o` in either order." |
-| `«sec:lifted-output-events/choice-narrows»` | theorem | "The choice commitment only narrows fibers: |
-| `«sec:lifted-output-events/functional»` | theorem | "With one row per input, `Retired_o` and `Rejected_o` are empty; this is the functional output event of Definition `def:output-event`." |
-| `«sec:lifted-output-events/exposable»` | theorem | "Exposability lifts with the event: |
-| `«prop:exposability»` | theorem | **Prop. |
-| `«eq:safe-exposure»` | abbrev | **Eq. |
 | `«sec:complete-calm-theorem/lift-unchanged»` | theorem | "Specification states, input events, runs, commitment-free runs, and consistency are defined as before, and the results of Section `sec:executions` … lift un… |
 | `«thm:complete-calm»` | theorem | **Theorem `thm:complete-calm`** (Complete CALM). |
 | `«prop:exposure-boundary»` | theorem | **Prop. |
@@ -239,9 +226,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:distributed-consistency/lifted-monotonicity»` | theorem | "By Complete CALM, which reduces to Functional CALM with one output per input, a specification has distributed consistency exactly when it satisfies Lifted M… |
 | `«cor:convergence»` | theorem | **Cor. |
 | `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which input and output events occur next at the receiver, but it never directly changes the receiver's specification stat… |
-| `«sec:distributed-consistency/exchanging-outputs»` | theorem | *Exchanging outputs* (table level). |
-| `«sec:distributed-consistency/exchanging-outputs-cut»` | theorem | *Exchanging outputs* (history level). |
-| `«sec:distributed-consistency/honored-table-not-state»` | theorem | *Exchanging outputs.* "This restriction is a table, not a specification state: |
+| `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
 | `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing sea… |
 | `«def:commitment»` | abbrev | **Def. |
 | `«eq:commitment-excludes»` | theorem | **Eq. |
@@ -305,11 +290,8 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-notions(6)»` | abbrev | Def. |
 | `«sec:complete-cap/consistent-on-S»` | theorem | "With `A = S`, consistency on `A` is the common-expansion condition." |
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered relational specification `S` and an availability relation `A ⊆ S`, the following are equivalent: |
-| `«thm:complete-cap/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1): |
-| `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2): |
 | `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `S` satisfies Lifted Monotonicity." |
 | `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
-| `«cor:complete-cap-S/proof-cf-continuations»` | theorem | Proof of Corollary `cor:complete-cap-S`: |
 | `«sec:complete-cap/necessity-any-system»` | theorem | "The converse never assumes that the system is commitment-free, so commitments cannot enlarge the class of specifications that admit a system with Availabili… |
 | `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Under consistency on `A`, the canonical output event for an output of `A` seals nothing and chooses only against outputs outside `A`, which the system never… |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `A = S` it needs no commitment at all." Lean: |
@@ -444,8 +426,10 @@ File `Paper/AppB_Proofs.lean`; paper source `appendices/proof-machinery.tex`.
 |---|---|---|
 | `«proof:lem:run-residual»` | theorem | Proof of Lemma `lem:run-residual`: |
 | `«proof:prop:confluence»` | theorem | Proof of Prop. |
+| `«proof:thm:functional-calm»` | theorem | Proof of Thm. |
 | `«proof:cor:state-by-input»` | theorem | Proof of Cor. |
 | `«proof:prop:functional-exposure-boundary»` | theorem | Proof of Prop. |
+| `«proof:prop:common-expansion-form»` | theorem | Proof of Prop. |
 | `«lem:reconciliation»` | theorem | **Lemma `lem:reconciliation`** (Reconciliation). |
 | `«lem:reconciliation/consistency-over-runs»` | theorem | Lemma `lem:reconciliation` quantifies over runs with their events; Def. |
 | `«proof:thm:complete-calm/if»` | theorem | Proof of Thm. |
@@ -457,6 +441,21 @@ File `Paper/AppB_Proofs.lean`; paper source `appendices/proof-machinery.tex`.
 | `«app:pairs-suffice/rows-at-j»` | theorem | `app:pairs-suffice`: |
 | `«app:pairs-suffice/k-at-a-time»` | theorem | `app:pairs-suffice`: |
 | `«app:pairs-suffice/k-set-not-monotone»` | theorem | Consequence for `app:pairs-suffice`: |
+
+### Appendix B: Deferred proofs for §4
+
+File `Paper/AppB_ProofsDistributed.lean`; paper source `appendices/proof-machinery.tex`.
+
+| Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
+|---|---|---|
+| `«proof:prop:distributed-consistency»` | theorem | Proof of Prop. |
+| `«app:exchanging-outputs»` | theorem | *Exchanging outputs* (table level). |
+| `«app:exchanging-outputs/cut»` | theorem | *Exchanging outputs* (history level). |
+| `«app:exchanging-outputs/honored-table-not-state»` | theorem | *Exchanging outputs.* "This restriction is a table, not a specification state: |
+| `«proof:thm:commitments-require-coordination»` | theorem | Proof of Prop. |
+| `«thm:complete-cap/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1): |
+| `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2): |
+| `«cor:complete-cap-S/proof-cf-continuations»` | theorem | Proof of Corollary `cor:complete-cap-S`: |
 
 ### Appendix B: Invariant confluence
 
@@ -494,6 +493,19 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
+| `«eq:seal-inputs»` | abbrev | **Eq. |
+| `«eq:output-retirements»` | abbrev | **Eq. |
+| `«eq:choice-removals»` | abbrev | **Eq. |
+| `«def:lifted-output-event»` | abbrev | **Def. |
+| `«eq:canonical-seal-commitment-relational»` | theorem | **Eq. |
+| `«def:lifted-output-event/examples»` | theorem | After Def. |
+| `«app:lifted-output-events/disjoint»` | theorem | "The three sets are disjoint." |
+| `«app:lifted-output-events/commute»` | theorem | "… removing the rows of either commitment leaves the other sets unchanged, so the event may apply `s_o` and `c_o` in either order." |
+| `«app:lifted-output-events/choice-narrows»` | theorem | "The choice commitment only narrows fibers: |
+| `«app:lifted-output-events/functional»` | theorem | "With one row per input, `Retired_o` and `Rejected_o` are empty; this is the functional output event of Definition `def:output-event`." |
+| `«app:lifted-output-events/exposable»` | theorem | "Exposability lifts with the event: |
+| `«prop:exposability»` | theorem | **Prop. |
+| `«eq:safe-exposure»` | abbrev | **Eq. |
 | `«def:canonical-commitment-basis»` | abbrev | **Def. |
 | `«eq:canonical-commitment-basis-relational»` | theorem | **Eq. |
 | `«def:canonical-commitment-basis/kappa»` | theorem | Def. |
