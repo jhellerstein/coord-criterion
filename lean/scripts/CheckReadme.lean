@@ -161,8 +161,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«thm:commitments-require-coordination/reach»
 #check @CC.Paper.«thm:commitments-require-coordination/confined-to-current-input»
 #check @CC.Paper.«sec:coordination/conflict-is-choice»
-#check @CC.Paper.«sec:coordination/lm-iff-coordination-free»
-#check @CC.Paper.«sec:coordination/functional-reconciliation»
 #check @CC.Paper.«sec:coordination/deterministic-reconciliation»
 #check @CC.Paper.«def:partition-notions(1)»
 #check @CC.Paper.«def:partition-notions(1)/unfolded»

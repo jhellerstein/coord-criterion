@@ -665,11 +665,10 @@ theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : B
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
   conflicting_outputs_reach h1 hno h2
 
-/-- "The conflict is confined to the current input.  Suppose `i ≺ j`,
-`S(i) = {o,x}` with `o` and `x` incomparable, and `S(j) = {u}` with `u`
-refining both.  After one participant emits `o` and another emits `x`, the two
-states cannot meet at `i`, but they meet as soon as `j` arrives.  Consistency
-nonetheless counts this as a failure …"  (The rest of the paragraph, on the
+/-- "The conflict is confined to the current input.  If `i ≺ j`, `S(i) = {o,x}`
+with `o` and `x` incomparable, and `S(j) = {u}` with `u` refining both, the two
+states meet once `j` arrives.  Consistency still counts this as a failure,
+since it asks for confluence at the current input too."  (The rest of the paragraph, on the
 environment and transient conflicts, is the paper's modeling assumption.)
 
 Lean: the example of `CALM/TransientConflict.lean`: inputs `i ≺ j`, outputs
@@ -690,8 +689,7 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
-/-- "The first event must apply a commitment, and that commitment is a choice
-against `x`."
+/-- "The first event's commitment is a choice against `x`."
 
 Lean: (a) every commitment keeps a row at the current input; (b) in the
 setting of the proposition, some commitment `c` of `γ` removes `(i,x)` while
@@ -704,27 +702,9 @@ theorem «sec:coordination/conflict-is-choice» {sp : Spec I O} :
         ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w) :=
   ⟨fun c _ _ h => commitment_not_seal_cur c h, fun h1 hx hno => Dist.conflict_is_choice h1 hx hno⟩
 
-/-- "Complete CALM and the exposure boundary tie this to the specification:
-Lifted Monotonicity holds exactly when every output at every state reachable
-without commitment is exposable, so emitting outputs is coordination-free." -/
-theorem «sec:coordination/lm-iff-coordination-free» (sp : Spec I O) :
-    sp.LiftedMono ↔
-      ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
-  (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
-
-/-- "In the functional case, finding that continuation is trivial: the state is
-fixed by the input (Corollary state-by-input), so delivering the full input
-suffices." -/
-theorem «sec:coordination/functional-reconciliation» {sp : Spec I O} (hf : sp.Functional)
-    (hc : sp.Consistent) {τ : State sp} (hτ : IsRun τ) : τ = canon sp τ.cur :=
-  state_by_input hf hc hτ
-
-/-- "Participants at a common input `j` can reconcile by emitting some
-`u ∈ S(j)` that refines everything any of them has emitted, and Lifted
-Monotonicity guarantees that such a `u` exists … one strategy that terminates
-is deterministic reconciliation: participants … apply the same rule for
-choosing `u`, and arrive at the same state without any commitment: under Lifted
-Monotonicity `u` is exposable, so each emits it by `Out_ε(u)`."
+/-- "Under Lifted Monotonicity, participants at a common input `j` can each emit
+a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u`
+by a shared deterministic rule terminates once outputs stop."
 
 Lean: under Lifted Monotonicity, runs with common expansion `j` share a row
 `(j,u)` (which, by Lemma run-residual, refines every output emitted on each

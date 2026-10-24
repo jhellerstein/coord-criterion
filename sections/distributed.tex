@@ -245,60 +245,29 @@ A common state with current input $i$ has a row at $i$, and since events never
 add rows, that row would be in both states.
 \end{proof}
 
-The conflict is confined to the current input.  Suppose $i\InputOrd j$,
+The conflict is confined to the current input.  If $i\InputOrd j$,
 $\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and $\fiber{j}=\{u\}$ with
-$u$ \outrelpart both.  After one participant emits $o$ and another emits $x$,
-the two states cannot meet at $i$, but they meet as soon as $j$ arrives.
-Consistency nonetheless counts this as a failure, because it asks for
-confluence at every common \indesc of the current inputs, including the current
-input itself.  The reason is the environment.  Emitted outputs are observable,
-and the environment may act on what it observes, so its next input can depend
-on outputs already emitted through channels the system does not see, as in
-Lamport's account of ``anomalous behavior,'' where a telephone call orders two
-requests without any message in the system~\cite{lamport1978time}.  We cannot
-assume that the input that would reconcile two outputs ever arrives.  A
-conflict that later input could repair is still a conflict the environment has
-seen, so consistency excludes every observable conflict, including a transient
-one.
+$u$ \outrelpart both, the two states meet once $j$ arrives.  Consistency still
+counts this as a failure, since it asks for confluence at the current input
+too.  The environment may act on what it observes, through channels the system
+does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time}, so
+the input that would reconcile two outputs need not arrive.  Consistency
+therefore excludes every observable conflict, including a transient one.
 
-The first event must apply a commitment, and that commitment is a choice
-against $x$.  If both events stay available to different participants and their
-states must stay confluent, the system must exclude one of them: by a mutex or
-atomic instruction in shared memory, by agreement in a distributed system, or by
-static authority or a predetermined strategy that makes one event unavailable,
-in which case no runtime agreement is needed.
+The first event's commitment is a choice against $x$.  If both events remain
+available to different participants, the system must exclude one: by a mutex
+or atomic instruction in shared memory, by agreement in a distributed system,
+or by a rule fixed in advance, such as assigning the choice to a single
+participant, which needs no runtime agreement.  Seals conflict with input
+another participant accepts; Appendix~\ref{app:cap-response} treats this case,
+which underlies the Gilbert--Lynch theorem (Corollary~\ref{cor:gilbert-lynch}).
 
-Seals raise a related conflict that the proposition does not cover: an output
-that seals an \indesc of its input conflicts with input another participant
-accepts.  Appendix~\ref{app:cap-response} treats this case, which underlies the
-Gilbert--Lynch theorem (Corollary~\ref{cor:gilbert-lynch}).
-
-Complete CALM (Theorem~\ref{thm:complete-calm}) and the exposure boundary
-(Proposition~\ref{prop:exposure-boundary}) tie this to the specification: Lifted
-Monotonicity holds exactly when every output at every state reachable without
-commitment is exposable, so emitting outputs is coordination-free.  When it
-fails, some output can be emitted only with a commitment, and when different
-participants could each emit one of two conflicting outputs,
-Proposition~\ref{thm:commitments-require-coordination} applies.
-
-Output choice also separates safety from liveness.  Confluence guarantees that
-at any consistent cut of a history (Section~\ref{sec:histories}), some continuation brings every
-participant to a common state.  In the functional case, finding that
-continuation is trivial: the state is
-fixed by the input (Corollary~\ref{cor:state-by-input}), so delivering the
-full input suffices.  With several outputs per input, the state also depends on
-which outputs have been emitted (Lemma~\ref{lem:run-residual}).  Participants at
-a common input $j$ can reconcile by emitting some $u\in\fiber{j}$ that \outrel
-everything any of them has emitted, and Lifted Monotonicity guarantees that
-such a $u$ exists.
-Whether they reach it is a matter of strategy.  Participants that choose
-independently may keep emitting new outputs, each needing its own
-reconciliation.  If participants emit no further outputs, one strategy that
-terminates is deterministic reconciliation: participants that share knowledge of the
-inputs and emitted outputs apply the same rule for choosing $u$, and arrive at
-the same state without any commitment: under Lifted Monotonicity $u$ is
-exposable (Proposition~\ref{prop:exposure-boundary}), so each emits it by
-$\Out{\varepsilon}{u}$.  Section~\ref{sec:discussion} returns to this distinction.
+Confluence is a safety property: some continuation brings the participants to a
+common state.  Reaching it is liveness, and a matter of strategy.  Under Lifted
+Monotonicity, participants at a common input $j$ can each emit a
+$u\in\fiber{j}$ that \outrel everything emitted, without commitment
+(Proposition~\ref{prop:exposure-boundary}); choosing $u$ by a shared
+deterministic rule terminates once outputs stop (Section~\ref{sec:discussion}).
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}

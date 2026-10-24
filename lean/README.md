@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-547 entries.
+545 entries.
 
 ### §2 Functional CALM
 
@@ -270,10 +270,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/confined-to-current-input»` | theorem | "The conflict is confined to the current input. |
-| `«sec:coordination/conflict-is-choice»` | theorem | "The first event must apply a commitment, and that commitment is a choice against `x`." Lean: |
-| `«sec:coordination/lm-iff-coordination-free»` | theorem | "Complete CALM and the exposure boundary tie this to the specification: |
-| `«sec:coordination/functional-reconciliation»` | theorem | "In the functional case, finding that continuation is trivial: |
-| `«sec:coordination/deterministic-reconciliation»` | theorem | "Participants at a common input `j` can reconcile by emitting some `u ∈ S(j)` that refines everything any of them has emitted, and Lifted Monotonicity guaran… |
+| `«sec:coordination/conflict-is-choice»` | theorem | "The first event's commitment is a choice against `x`." Lean: |
+| `«sec:coordination/deterministic-reconciliation»` | theorem | "Under Lifted Monotonicity, participants at a common input `j` can each emit a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u` b… |
 
 ### §4.5 Complete CAP
 
