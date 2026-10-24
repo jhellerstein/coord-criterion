@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-546 entries.
+547 entries.
 
 ### §2 Functional CALM
 
@@ -289,6 +289,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-notions(4)/at-cuts»` | theorem | Def. |
 | `«def:partition-notions(5)»` | abbrev | Def. |
 | `«def:partition-notions(5)/unfolded»` | theorem | Def. |
+| `«def:partition-notions(5)/at-cuts»` | theorem | Def. |
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered relational specification `S`, the following are equivalent: |
 | `«thm:complete-cap/moreover»` | theorem | Theorem `thm:complete-cap`, "moreover" clause: |
 | `«thm:complete-cap/proof-cf-continuations»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1), last sentence: |
@@ -411,7 +412,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/coordination»` | abbrev | *coordination* — an output event with `γ ≠ ε` (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — no message crosses components (Def. |
 | `«app:notation/availability»` | abbrev | *Availability* — each output emittable within its component (Def. |
-| `«app:notation/partition-consistency»` | abbrev | *Partition Consistency* — cuts of partitioned histories confluent (Def. |
+| `«app:notation/partition-consistency»` | abbrev | *Partition Consistency* — final cuts of partitioned histories confluent (Def. |
 | `«app:notation/response-obligation»` | abbrev | *response obligation* — per participant, the outputs that count as answers; upward closed within fibers (Def. |
 
 ### Appendix B: Deferred proofs

@@ -123,25 +123,31 @@ theorem «def:partition-notions(4)/at-cuts» (Sys : System sp D) :
   availability_iff_atEnd Sys
 
 /-- Def. `def:partition-notions`(5), *Partition Consistency*: "The system has
-Partition Consistency when every consistent cut of every such history is
-confluent at every common expansion of the participants' current inputs.  The
-continuation that confluence asks for need not stay partitioned and need not
-be produced by the system." -/
-abbrev «def:partition-notions(5)» (Sys : System sp D) : Prop := PartitionConsistency Sys
+Partition Consistency when the final cut of every such history is confluent at
+every common expansion of the participants' current inputs.  The continuation
+that confluence asks for need not stay partitioned and need not be produced by
+the system." -/
+abbrev «def:partition-notions(5)» (Sys : System sp D) : Prop := PartitionConsistencyAtEnd Sys
 
-/-- Def. `def:partition-notions`(5), unfolded; `ConfluentCut` asks for a
-well-formed continuation (neither partitioned nor produced) whose final cut
-puts every participant in one state with current input `j`. -/
+/-- Def. `def:partition-notions`(5), unfolded: for each `j` above every
+participant's final current input, a well-formed continuation (neither
+partitioned nor produced) puts every participant in one state `τ` with
+current input `j`. -/
 theorem «def:partition-notions(5)/unfolded» (Sys : System sp D) :
-    PartitionConsistency Sys ↔
+    PartitionConsistencyAtEnd Sys ↔
       ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
         WF init H → Produced Sys n init H → Partitioned H comp →
-        ∀ c, IsCut H c →
-        ∀ j : I, (∀ p σ, LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ j) →
-        ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)) (τ : State sp),
-          Extends H c H' ext ∧ WF init H' ∧ τ.cur = j ∧
-          ∀ p, LRun (canon sp (init p)) (H' p) τ :=
+        ∀ j : I, (∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j) →
+        ∃ τ : State sp, τ.cur = j ∧ ∃ ext : Fin n → List (LEv sp D n),
+          WF init (fun q => H q ++ ext q) ∧ ∀ p, LRun (canon sp (init p)) (H p ++ ext p) τ :=
   Iff.rfl
+
+/-- Def. `def:partition-notions`(5): asking at every consistent cut of every
+produced partitioned history (`PartitionConsistency`, the form the library
+proofs use) is the same as asking at the final cut. -/
+theorem «def:partition-notions(5)/at-cuts» (Sys : System sp D) :
+    PartitionConsistency Sys ↔ «def:partition-notions(5)» Sys :=
+  partitionConsistency_iff_atEnd Sys
 
 /-! "This is the *interface form* of Availability: every output the
 specification permits must remain available, not merely some response to each
@@ -157,9 +163,9 @@ Monotonicity."
 
 Lean: `D` is the (arbitrary) type of message payloads. -/
 theorem «thm:complete-cap» (sp : Spec I O) (D : Type) :
-    (∃ Sys : System sp D, «def:partition-notions(4)» Sys ∧ PartitionConsistency Sys) ↔
+    (∃ Sys : System sp D, «def:partition-notions(4)» Sys ∧ «def:partition-notions(5)» Sys) ↔
       sp.LiftedMono := by
-  simp only [← availability_iff_atEnd]; exact complete_cap sp D
+  simp only [← availability_iff_atEnd, ← partitionConsistency_iff_atEnd]; exact complete_cap sp D
 
 /-- Theorem `thm:complete-cap`, "moreover" clause: "when they hold, a
 commitment-free system has both properties: one whose strategies may emit any
@@ -169,10 +175,11 @@ Lean: `cfSystem` has empty basis and allows every event; an output event
 `Out ε o` is legal exactly when `o` is exposable.  Every history it produces
 is commitment-free. -/
 theorem «thm:complete-cap/moreover» (sp : Spec I O) (D : Type) (h : sp.LiftedMono) :
-    («def:partition-notions(4)» (cfSystem sp D) ∧ PartitionConsistency (cfSystem sp D)) ∧
+    («def:partition-notions(4)» (cfSystem sp D) ∧ «def:partition-notions(5)» (cfSystem sp D)) ∧
     ∀ (N : Nat) (init : Fin N → I) (H : History sp D N),
       Produced (cfSystem sp D) N init H → ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
-  ⟨⟨(availability_iff_atEnd _).1 (complete_cap_cf sp D h).1, (complete_cap_cf sp D h).2⟩,
+  ⟨⟨(availability_iff_atEnd _).1 (complete_cap_cf sp D h).1,
+      (partitionConsistency_iff_atEnd _).1 (complete_cap_cf sp D h).2⟩,
     fun _ _ _ => cfSystem_coordinationFree⟩
 
 /-- Proof of Theorem `thm:complete-cap`, (2)⇒(1), last sentence: "The

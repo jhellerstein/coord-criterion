@@ -82,5 +82,35 @@ theorem availability_iff_atEnd (Sys : System sp D) :
         (partitioned_cutHist hpt c) p σ hσ o ho
     exact ⟨fun q => cutHist H c q ++ ext q, ext, fun q => rfl, hw', hp', hpt', hloc, hni, hout⟩
 
+/-- Partition Consistency stated at the end of each produced partitioned
+history: its final cut is confluent at every common expansion of the
+participants' current inputs. -/
+def PartitionConsistencyAtEnd (Sys : System sp D) : Prop :=
+  ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
+    WF init H → Produced Sys n init H → Partitioned H comp →
+    ∀ j : I, (∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j) →
+    ∃ τ : State sp, τ.cur = j ∧ ∃ ext : Fin n → List (LEv sp D n),
+      WF init (fun q => H q ++ ext q) ∧ ∀ p, LRun (canon sp (init p)) (H p ++ ext p) τ
+
+/-- Partition Consistency at every consistent cut is the same as Partition
+Consistency at the end of every history. -/
+theorem partitionConsistency_iff_atEnd (Sys : System sp D) :
+    PartitionConsistency Sys ↔ PartitionConsistencyAtEnd Sys := by
+  constructor
+  · intro hC n init H comp hw hp hpt j hj
+    have hj' : ∀ p σ, LRun (canon sp (init p)) ((H p).take (H p).length) σ → σ.cur ≼ j := by
+      intro p σ h; rw [List.take_length] at h; exact hj p σ h
+    obtain ⟨H', ext, τ, hext, hw', hτ, hrun⟩ :=
+      hC n init H comp hw hp hpt _ (isCut_full hw) j hj'
+    have hH' : H' = fun q => H q ++ ext q := by
+      funext q; rw [hext q, List.take_length]
+    subst hH'
+    exact ⟨τ, hτ, ext, hw', hrun⟩
+  · intro hE n init H comp hw hp hpt c hc j hj
+    obtain ⟨τ, hτ, ext, hw', hrun⟩ :=
+      hE n init (cutHist H c) comp (wf_cutHist hw hc) (produced_cutHist hp c)
+        (partitioned_cutHist hpt c) j hj
+    exact ⟨fun q => cutHist H c q ++ ext q, ext, τ, fun q => rfl, hw', hτ, hrun⟩
+
 end CAP
 end CC

@@ -388,11 +388,12 @@ abbrev «app:notation/partitioned-history» {sp : Spec I O} {D : Type} {n : Nat}
 abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
   CAP.AvailabilityAtEnd Sys
 
-/-- *Partition Consistency* — cuts of partitioned histories confluent
-(Def. `def:partition-notions`).  Lean: `CAP.PartitionConsistency`. -/
+/-- *Partition Consistency* — final cuts of partitioned histories confluent
+(Def. `def:partition-notions`).  Lean: `CAP.PartitionConsistencyAtEnd`
+(equivalently `CAP.PartitionConsistency`, stated at cuts). -/
 abbrev «app:notation/partition-consistency» {sp : Spec I O} {D : Type}
     (Sys : CAP.System sp D) : Prop :=
-  CAP.PartitionConsistency Sys
+  CAP.PartitionConsistencyAtEnd Sys
 
 /-- *response obligation* — per participant, the outputs that count as
 answers; upward closed within fibers (Def. `def:response-obligation`).  Lean:
