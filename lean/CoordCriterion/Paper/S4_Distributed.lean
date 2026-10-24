@@ -628,12 +628,10 @@ theorem «def:coordination/commitment-free-runs» {sp : Spec I O} :
     fun B _ _ _ h => execCF_coordFree B h⟩
 
 /-- **Prop. conflicting output events cannot be reconciled**
-(`thm:commitments-require-coordination`).  "Let `σ = (i,R)` be a state and
-`x ∈ R(i)`.  Suppose one participant's event `Out_γ(o)` takes `σ` to
-`σ' = (i,R')` with no output in `R'(i)` that refines `x` (necessarily
-`γ ≠ ε` …).  Suppose a second participant performs a legal `Out_{γ'}(x)` from
-`σ`, reaching `t = (i,R_t)`.  Then `σ'` and `t` cannot be brought to a common
-state with current input `i`."
+(`thm:commitments-require-coordination`).  "From a state `(i,R)`, let one
+participant perform an output event after which no output at `i` refines `x`,
+and let another perform an output event that emits `x`.  The two resulting
+states cannot be brought to a common state with current input `i`."
 
 Lean: `x ∈ R(i)` follows from the legality of `Out_{γ'}(x)`.  "Brought to a
 common state" is: by executions under a basis `B''` (any; for different bases
@@ -666,9 +664,8 @@ theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : B
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
   conflicting_outputs_reach h1 hno h2
 
-/-- "The conflict is at the current input, so it is a choice, not a seal: a
-commitment cannot empty the fiber at the current input, since a state keeps a
-row there."
+/-- "The first event must apply a commitment, and that commitment is a choice
+against `x`."
 
 Lean: (a) every commitment keeps a row at the current input; (b) in the
 setting of the proposition, some commitment `c` of `γ` removes `(i,x)` while

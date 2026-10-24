@@ -232,25 +232,21 @@ current input.
 
 \begin{proposition}[Conflicting output events cannot be reconciled]
 \label{thm:commitments-require-coordination}
-Let $\sigma=(i,R)$ be a state and $x\in R(i)$.  Suppose one participant's
-event $\Out{\gamma}{o}$ takes $\sigma$ to $\sigma'=(i,R')$ with no output in
-$R'(i)$ that \outrel $x$ (necessarily $\gamma\neq\varepsilon$, since a
-retirement of $(i,x)$ keeps a row at $i$ that \outrel $x$).  Suppose a second participant performs a legal
-$\Out{\gamma'}{x}$ from $\sigma$, reaching $t=(i,R_t)$.  Then $\sigma'$ and $t$ cannot be brought to a
-common state with current input $i$.
+From a state $(i,R)$, let one participant perform an output event after which
+no output at $i$ \outrel $x$, and let another perform an output event that
+emits $x$.  The two resulting states cannot be brought to a common state with
+current input $i$.
 \end{proposition}
 
 \begin{proof}
-By containment (Lemma~\ref{lem:canonical-commitment-normal-form}), every
-output in $R_t(i)$ \outrel $x$, and no output in $R'(i)$ does.  The fibers
-$R'(i)$ and $R_t(i)$ are therefore disjoint.  A common state with current
-input $i$ has a row at $i$, and since events never add rows, that row would
-belong to both.
+After the second event every output at $i$ \outrel $x$, by containment
+(Lemma~\ref{lem:canonical-commitment-normal-form}); after the first, none does.
+A common state with current input $i$ has a row at $i$, and since events never
+add rows, that row would be in both states.
 \end{proof}
 
-The conflict is at the current input, so it is a choice, not a seal: a
-commitment cannot empty the fiber at the current input, since a state keeps a
-row there.  If both events stay available to different participants and their
+The first event must apply a commitment, and that commitment is a choice
+against $x$.  If both events stay available to different participants and their
 states must stay confluent, the system must exclude one of them: by a mutex or
 atomic instruction in shared memory, by agreement in a distributed system, or by
 static authority or a predetermined strategy that makes one event unavailable,

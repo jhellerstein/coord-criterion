@@ -268,7 +268,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«thm:commitments-require-coordination»` | theorem | **Prop. |
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
-| `«sec:coordination/conflict-is-choice»` | theorem | "The conflict is at the current input, so it is a choice, not a seal: |
+| `«sec:coordination/conflict-is-choice»` | theorem | "The first event must apply a commitment, and that commitment is a choice against `x`." Lean: |
 | `«sec:coordination/lm-iff-coordination-free»` | theorem | "Complete CALM and the exposure boundary tie this to the specification: |
 | `«sec:coordination/functional-reconciliation»` | theorem | "In the functional case, finding that continuation is trivial: |
 | `«sec:coordination/deterministic-reconciliation»` | theorem | "Participants at a common input `j` can reconcile by emitting some `u ∈ S(j)` that refines everything any of them has emitted, and Lifted Monotonicity guaran… |
