@@ -1,23 +1,13 @@
 \section{Commitment bases and compound commitments}
 \label{app:bases}
 
-Section~\ref{sec:systems} lets systems bring their own commitments
-(Definition~\ref{def:commitment}) through a commitment basis
-(Definition~\ref{def:system}).  Real systems declare which commitments they
-may make, may apply several in one output event, may commit more than an output
-requires, and may restrict when each commitment is available.  This appendix
-supplies the details behind that section: the seals and choices of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} are
-commitments and form a canonical basis, compound commitments behave like single
-ones, and every system's run has an observably equivalent canonical run that
-retains at least as many rows after each event.
-
-Commitments are \emph{partial} functions, so a system may authorize a
-commitment only at states satisfying a precondition of its own.  In
-Figure~\ref{fig:election-frames}(d), the poll-closing commitment is defined at
-every state; a different system might authorize it only after some candidate
-has a majority.  A system whose polls cannot close has no such commitment in its
-basis.
+This appendix supplies the details behind Section~\ref{sec:systems}: the
+seals and choices of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
+are commitments (Definition~\ref{def:commitment}) and form a canonical basis,
+compound commitments behave like single ones, and every run under any basis
+has an observably equivalent canonical run that retains at least as many rows
+after each event.  Commitments are partial functions, so a basis may make a
+commitment available only at states satisfying a precondition of its own.
 
 \begin{definition}[Canonical basis, canonical event]
 \label{def:canonical-commitment-basis}
@@ -45,13 +35,13 @@ so the seals of Definition~\ref{def:output-event} are commitments.  With
 several outputs per input, the seal $s_o$ of Definition~\ref{def:lifted-output-event}
 removes every row at the inputs of $\Sealed_o$, so nothing remains there to
 \outrelbase a removed row.  For $c_o$, suppose some $x\in \Rejected_o$ at input $k$ were
-\outrelpast by a row $y$ that $c_o$ leaves at $k$.  Either $y$ \outrel $o$, or
+\outrelpast by a row $y$ that $c_o$ leaves at $k$.  Since $x\notin\Sealed_o$,
+$k$ has a row \outrelpart $o$, so no row at $k$ is in $\Sealed_o$.  Either $y$ \outrel $o$, or
 $y\in \Retired_o$ and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is
 then \outrelpast by a row \outrelpart $o$, so $x\in \Retired_o$, a contradiction.  Since
 $s_o$ and $c_o$ remove disjoint sets of rows and neither changes the other's
 (Section~\ref{sec:lifted-output-events}), each is defined on the state the other
-leaves, and the canonical basis of
-Definition~\ref{def:canonical-commitment-basis} applies them in either order.
+leaves, and the canonical event may apply them in either order.
 
 \begin{lemma}[Containment, canonical support, and commitment-free events]
 \label{lem:canonical-commitment-normal-form}
@@ -112,7 +102,8 @@ remaining row at $k$ \outrel $u$ either.
 A compound output event (Definition~\ref{def:system-output-event}) therefore
 has the same effect as an event that applies the composite commitment alone,
 and Lemma~\ref{lem:canonical-commitment-normal-form} covers it as stated.  In a
-functional specification the composite of seals is again a seal.
+functional specification the composite removes every row at each input it
+touches, so it seals.
 
 \begin{definition}[Run under a basis]
 \label{def:run-under-basis}
@@ -173,11 +164,12 @@ then some $u\in\fiber{j}$ \outrel every output emitted on every run.
 The common state has a row $(j,u)$, and events never add rows, so
 $(j,u)\in R_r$.  By Lemma~\ref{lem:canonical-equivalent}, $R_r$ is contained in
 the table of a canonical run with the same inputs and outputs, and
-Lemma~\ref{lem:run-residual} makes $u$ \outrel its outputs.
+Lemma~\ref{lem:run-residual} makes $u$ \outrel the outputs of run $r$.
 \end{proof}
 
-The converse does not hold: a canonical run need not be observably equivalent to any run
-under a particular system's basis.  That basis may lack the commitment an
+The converse of Lemma~\ref{lem:canonical-equivalent} fails: a canonical run
+need not be observably equivalent to any run under a particular system's
+basis.  That basis may lack the commitment an
 output event requires, and so disable the output altogether.  Restricting
 attention to one system's runs could therefore hide non-monotonicity.  This is
 why consistency (Definition~\ref{def:consistency}) is defined over canonical
@@ -187,6 +179,4 @@ runs rather than over a system's own.
 Locks and timestamps are commitments of this kind: two-phase locking commits an
 order among some transactions, and timestamp assignment places one transaction
 relative to all others.  Section~\ref{sec:systems} illustrates both, and
-Appendix~\ref{app:cc-bases} writes the two bases down.  By
-Lemma~\ref{lem:canonical-equivalent}, each run of either has an observably
-equivalent canonical run that retains at least as many rows.
+Appendix~\ref{app:cc-bases} writes the two bases down.

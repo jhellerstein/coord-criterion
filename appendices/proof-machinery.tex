@@ -55,7 +55,7 @@ which every later argument uses them.
 \begin{lemma}[Reconciliation]
 \label{lem:reconciliation}
 Let runs end at $(i_r,R_r)$, $r=1,\ldots,k$, let $j$ be a common \indesc of
-the $i_r$, and let $E$ be the set of outputs emitted on all of them.  The runs
+the $i_r$, and let $E$ be the set of outputs emitted on any of them.  The runs
 are confluent at $j$ if and only if some $u\in\fiber{j}$ \outrel every output
 in $E$.
 \end{lemma}
@@ -68,13 +68,14 @@ Proposition~\ref{prop:confluence}.
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-calm}]
 By Proposition~\ref{prop:common-expansion-form} it suffices to treat the
-common-\indesc condition.  ($\Leftarrow$) Each output $o$ emitted on a run was
+common-\indesc condition.  ($\Leftarrow$) Let finitely many runs end at
+$(i_r,R_r)$ with common \indesc $j$.  Each output $o$ emitted on a run was
 emitted at some input $i_o\InputOrd j$, so $(i_o,o)$ is a row of $S$; the
 condition supplies $u\in\fiber{j}$ \outrelpart all of them, and
 Lemma~\ref{lem:reconciliation} gives confluence.  ($\Rightarrow$) Given rows
 $(i_r,o_r)$ with common \indesc $j$, apply consistency and
 Lemma~\ref{lem:reconciliation} to the runs that start at $\sigma_S(i_r)$ and
-emit $o_r$.
+emit $o_r$; for the empty family, totality gives $\fiber{j}\neq\varnothing$.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
@@ -82,8 +83,9 @@ Suppose the common-\indesc condition holds; by Theorem~\ref{thm:complete-calm}, 
 specification is consistent.  Let $(i,R)$ be reached by a commitment-free run, and let $o\in R(i)$, $j\InputGe i$ legal, and
 $x\in R(j)$.  Extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
-Proposition~\ref{prop:confluence} supplies a row $(j,u)$ surviving in both, so
-$u\in R(j)$ \outrel $o$ and $x$, and the exposure test
+By consistency the two extended runs are confluent at $j$, so
+Proposition~\ref{prop:confluence} supplies a row $(j,u)$ in both tables.  Both
+tables are contained in $R$, so $u\in R(j)$ \outrel $o$ and $x$, and the exposure test
 (Proposition~\ref{prop:exposability}) makes $o$ exposable.
 Conversely, suppose every such output is exposable, and let rows
 $(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality pick
@@ -93,13 +95,15 @@ $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
 \end{proof}
 
 \paragraph{Pairs suffice for the common-\indesc condition.}
-Checking pairs of rows suffices for the common-\indesc condition, provided the
-pairs range over all rows of $S$, including those at the common \indesc:
-combine two rows into one row at $j$, then pair it with the next.  Pairs drawn
-only from participants' initial decisions do not suffice; in the $k$-set
-agreement example (participants must decide at most $k$ distinct values) of
-Appendix~\ref{app:additional-applications}, every $k$ of $k+1$ initial
-decisions are compatible, but not all of them.
+\label{app:pairs-suffice}
+If every two rows with a common \indesc $j$ have a common \outnoun in
+$\fiber{j}$, the condition holds for every finite family: replace the first
+two rows by a row $(j,u)$ at $j$ and repeat; a single row is paired with any
+row at $j$.  The pairs must range over all rows of $S$, including those at
+$j$.  Restricting the families to rows at minimal inputs does not suffice,
+even $k$ rows at a time: in the $k$-set agreement example of
+Appendix~\ref{app:additional-applications}, every $k$ of $k+1$ proposal rows
+are compatible, but not all of them.
 
 \subsection{Invariant confluence (Section~\ref{sec:iconfluence-instance})}
 \label{app:iconfluence}
@@ -111,12 +115,12 @@ replica that ran $e$.  History $h'$ \inrel $h$ when $h$ is a downward-closed
 sub-order of $h'$, so an event keeps exactly the predecessors it had.  The
 state of a history is computed event by event: $e$ runs on
 $\mathrm{pre}(e)=s_0\cup\bigcup_{e'<e}\mathrm{post}(e')$ and produces
-$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, and
+$\mathrm{post}(e)=t_e(\mathrm{pre}(e))$, where $t_e$ is the transaction labeling $e$, and
 $\mathrm{eval}(h)=s_0\cup\bigcup_{e\in h}\mathrm{post}(e)$.  A
 downward-closed sub-history keeps each event's predecessors, and so its
 $\mathrm{pre}$ and $\mathrm{post}$; hence the state of a union of
 downward-closed sub-histories is the union of their states.  Because
-visibility is transitive and transactions are inflationary ($t(s)\supseteq
+$h$ is a partial order and transactions are inflationary ($t(s)\supseteq
 s$), $\mathrm{pre}(e)$ is the state of the sub-history strictly below $e$ and
 $\mathrm{post}(e)$ is the state of the sub-history at or below $e$.  A history is \emph{locally valid}
 when every $\mathrm{pre}(e)$ and $\mathrm{post}(e)$ satisfies $\mathcal I$, as
@@ -125,7 +129,9 @@ state.  It is \emph{valid} when every downward-closed sub-history $c$ has
 $\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
 state.
 
-The specification $S_{\mathcal I}$ has the locally valid histories as inputs.
+The specification $S_{\mathcal I}$ has the locally valid histories as inputs;
+a downward-closed sub-order of a locally valid history is locally valid, so the
+inputs are closed under the order.
 An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
 the system may expose the state of any valid sub-history:
 \[
@@ -140,8 +146,9 @@ $s_0$, so the specification is total.
 We use the common-\indesc form of Lifted Monotonicity
 (Proposition~\ref{prop:common-expansion-form}).  First, the
 state of a valid history $g$ is reachable, by induction on $g$: if $e$ is
-maximal in $g$, then $\mathrm{pre}(e)$ and $\mathrm{eval}(g\setminus\{e\})$
-are states of smaller valid histories, $\mathrm{post}(e)$ is a valid
+maximal in $g$, then $g\setminus\{e\}$ and the sub-history strictly below $e$
+are downward closed, hence valid, and their states $\mathrm{eval}(g\setminus\{e\})$
+and $\mathrm{pre}(e)$ are reachable by induction; $\mathrm{post}(e)$ is a valid
 transaction step from $\mathrm{pre}(e)$, and
 $\mathrm{eval}(g)=\mathrm{eval}(g\setminus\{e\})\cup\mathrm{post}(e)$ is a
 valid merge.
@@ -163,8 +170,10 @@ $\mathrm{pre}$ and $\mathrm{post}$ are states of downward-closed sub-histories
 of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in S_{\mathcal I}(j)$.
 Directed Outputs gives a valid sub-history $g$ of $j$ with
 $\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$,
-so $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Applied to every
-pair of downward-closed sub-histories, this makes $j$ valid.  Valid histories
+so $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Every
+downward-closed $c\subseteq j$ is the disjoint union of $c\cap g_1$ and $c\cap
+g_2$, both valid, so the same argument gives $\mathcal I(\mathrm{eval}(c))$ and
+$j$ is valid.  Valid histories
 are therefore closed under disjoint union, and under adding an event above all
 others when its transaction step is valid.  By induction on derivations, every
 reachable state is the state of a valid history, and the pairwise argument
