@@ -207,7 +207,8 @@ $k_1$.
 \begin{lemma}[Forced answer]
 \label{lem:forced-answer}
 Let $i\InputOrd j$, and suppose no output in $Q_q(i)$ has a \outnoun in
-$\fiber{j}$.  In a system with Response Availability for $(Q_p)$, consider a partitioned
+$\fiber{j}$.  In a system with Answering for $(Q_p)$
+(Definition~\ref{def:response-availability}(1)), consider a partitioned
 history that the system produces, in which $q$ is alone in its component, with a cut at which $q$'s
 current input is $i$ and $j$ \inrel every participant's current input.  Then
 a continuation, produced by the system and partitioned by the same components,
@@ -250,47 +251,65 @@ realized history need not be a common \indesc of the participants' current
 inputs: an input event may introduce two operations with an edge between them
 before either responds.
 
+A \emph{client history} has two participants with empty initial inputs, and
+each of its input events adds one operation, invoked at its participant after
+all of that participant's earlier operations are answered.
+
 \begin{corollary}[Gilbert--Lynch]
 \label{cor:gilbert-lynch}
-No system for the linearizable register has Response Availability for
-$(Q_p)$ together with the following: for every partitioned history it produces,
-interleaving $\lambda$, and prefix $C$ of $\lambda$ such that $h_C$ is a common
-\indesc of the current inputs at $C$, the cut $C$ has Response Partition
-Consistency at $h_C$.
+No system for the linearizable register has Answering for $(Q_p)$ together
+with the following, both required only of client histories: for every
+partitioned client history it produces, interleaving $\lambda$, and prefix $C$
+of $\lambda$ such that $h_C$ is a common \indesc of the current inputs at $C$,
+the cut $C$ has Response Partition Consistency at $h_C$.
 \end{corollary}
 
 \begin{proof}
 Let replicas $p$ and $q$ start with empty inputs in separate components, and
 invoke a write of $\dog\neq v_0$ at $p$.  Answering gives a continuation in
 which $p$ acknowledges it.  Then invoke a read $r_q$ at $q$, after the
-acknowledgment in $\lambda$.  No message crosses the partition, so $q$'s
-current input is $i_q=\{r_q\}$, and $j=h_C$ contains the write, $r_q$, and an
-edge from the write to $r_q$; it is a common \indesc of both current inputs.
-Every map in $Q_q(i_q)$ answers $r_q$ with $v_0$, and every linearization of
-$j$ places the write first, so no output in $Q_q(i_q)$ has a \outnoun in
-$\fiber{j}$.  Lemma~\ref{lem:forced-answer} gives a continuation adding no
-input event, so the realized history stays $j$, whose emitted outputs have no
-common \outnoun in $\fiber{j}$, contradicting Response Partition Consistency
-at $h_C$.
+acknowledgment in $\lambda$.  The history is a client history.  No message
+crosses the partition, so $q$'s current input is $i_q=\{r_q\}$, and $j=h_C$
+contains the write, $r_q$, and an edge from the write to $r_q$; it is a common
+\indesc of both current inputs.  Every map in $Q_q(i_q)$ answers $r_q$ with
+$v_0$, and every linearization of $j$ places the write first, so no output in
+$Q_q(i_q)$ has a \outnoun in $\fiber{j}$.  Lemma~\ref{lem:forced-answer}
+gives a continuation adding no input event, so the realized history stays
+$j$, whose emitted outputs have no common \outnoun in $\fiber{j}$,
+contradicting Response Partition Consistency at $h_C$.
 \end{proof}
 
-The register's obligation differs by replica, so
+A system with Response Availability, and with Response Partition Consistency
+at $h_C$ on every partitioned history, satisfies these hypotheses, so the
+corollary excludes it too.  The register's obligation differs by replica, so
 Theorem~\ref{thm:complete-cap-response} does not apply as stated.  The
-correspondence with Gilbert and Lynch's asynchronous model has three parts.
-\begin{enumerate}
-  \item \emph{Algorithms are strategies.}  A replica's algorithm is a
-        possibly nondeterministic function of its local history; its messages
-        are messages, an invocation is input, and a response is an output
-        event; we take the canonical basis.  The partition holds from the
-        start, as in their witness executions, so a replica alone in its
-        component cannot distinguish the execution from one in which the
-        other component receives no invocations.  Atomicity in that execution
-        places each response in the fiber at the replica's current input, so
-        restricting output events to such outputs loses no algorithm that is
-        atomic in every execution.
-  \item \emph{Availability} is Answering: every request to a non-failed node
-        is answered, and messages across the partition are lost.  The
-        corollary uses only Answering.
-  \item \emph{Atomicity} is Response Partition Consistency at the realized
-        history.
-\end{enumerate}
+corollary yields Gilbert and Lynch's theorem in their asynchronous network
+model~\cite{gilbert2002cap}.
+
+\begin{proposition}[Gilbert--Lynch, asynchronous model]
+\label{prop:gl-async}
+In the asynchronous network model with at least two nodes, no algorithm for a
+read/write register is both available (a request pending at a node is
+answered in some extension of the execution that adds no request and loses
+every message) and atomic (every execution with well-formed clients has a
+linearization).
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Translate the algorithm into a system with the canonical basis.  Participant
+$p$ runs node $p$.  An invocation becomes the input event whose input is $p$'s
+view: the operations invoked at $p$, with no precedence.  A response becomes an
+output event emitting $p$'s response map, and $p$ may also re-emit its current
+map.  With every message lost, $p$'s history is node $p$'s run in the
+execution where it is alone, and atomicity of that execution puts the map in
+the fiber at the view, so the output events are legal.  Availability, applied
+to each unanswered operation of the view, gives Answering.  An interleaving of
+a client history is an execution of the algorithm whose real-time order is the
+precedence of $h_C$, so atomicity gives Response Partition Consistency at
+$h_C$.  The corollary excludes the algorithm.
+\end{proof}
+
+Gilbert and Lynch's availability, in which every request to a non-failed node
+eventually receives a response in every fair execution, implies the form used
+here: extend the execution fairly, with no new request and every message
+lost.
