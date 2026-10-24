@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-549 entries.
+551 entries.
 
 ### §2 Functional CALM
 
@@ -295,8 +295,10 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«thm:complete-cap/proof-cf-continuations»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1), last sentence: |
 | `«thm:complete-cap/proof-two-step»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2), the two-row case: |
 | `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2): |
-| `«sec:complete-cap/necessity-any-system»` | theorem | "The proof of (1)⇒(2) never assumes that the system is commitment-free, so local commitments cannot enlarge the class of specifications with both properties.… |
-| `«sec:complete-cap/lm-fails»` | theorem | "When Lifted Monotonicity fails, some permitted output either waits for another component, sacrificing Availability, or completes independently at the cost o… |
+| `«sec:complete-cap/necessity-any-system»` | theorem | "The two-row case never assumes that the system is commitment-free, so local commitments cannot enlarge the class of specifications that admit a system with… |
+| `«sec:complete-cap/commitments-not-needed»` | theorem | "Nor are they needed: |
+| `«sec:complete-cap/pc-demand»` | theorem | "The two-row case also shows what Partition Consistency demands: |
+| `«sec:complete-cap/lm-fails»` | theorem | "When Lifted Monotonicity fails, some permitted output either waits for another component, sacrificing Availability, or is emitted independently at the cost… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/trivially-available»` | theorem | "a specification that accepts an abort or a null result at every input is trivially available": |
 | `«sec:complete-cap/response-form»` | theorem | "a system can answer every operation through any partition, with responses that have a common refinement, exactly when the specification is consistent on som… |

@@ -227,21 +227,39 @@ theorem «thm:complete-cap/proof-necessity» (Sys : System sp D)
 
 /-! ### Remarks after the proof -/
 
-/-- "The proof of (1)⇒(2) never assumes that the system is commitment-free, so
-local commitments cannot enlarge the class of specifications with both
-properties."  Lean: necessity holds for an arbitrary system (any basis, any
-nondeterministic local strategies). -/
+/-- "The two-row case never assumes that the system is commitment-free, so
+local commitments cannot enlarge the class of specifications that admit a
+system with Availability and Partition Consistency."  Lean: necessity holds
+for an arbitrary system (any basis, any nondeterministic local strategies). -/
 theorem «sec:complete-cap/necessity-any-system» (Sys : System sp D)
-    (hA : Availability Sys) (hP : PartitionConsistency Sys) : sp.LiftedMono :=
-  cap_necessary Sys hA hP
+    (hA : «def:partition-notions(4)» Sys) (hP : «def:partition-notions(5)» Sys) :
+    sp.LiftedMono :=
+  cap_necessary_two Sys hA hP
+
+/-- "Nor are they needed: when Lifted Monotonicity holds, the
+commitment-free system already has both properties." -/
+theorem «sec:complete-cap/commitments-not-needed» (sp : Spec I O) (D : Type)
+    (h : sp.LiftedMono) :
+    «def:partition-notions(4)» (cfSystem sp D) ∧ «def:partition-notions(5)» (cfSystem sp D) :=
+  («thm:complete-cap/moreover» sp D h).1
+
+/-- "The two-row case also shows what Partition Consistency demands: two
+outputs emitted in separate components must have a common refinement at a
+common expansion of their inputs."  Lean: for any system with both
+properties, two rows below `j` have a common refinement in `S(j)`. -/
+theorem «sec:complete-cap/pc-demand» (Sys : System sp D)
+    (hA : «def:partition-notions(4)» Sys) (hP : «def:partition-notions(5)» Sys)
+    {i₁ i₂ j : I} {o₁ o₂ : O} (h₁ : sp.S i₁ o₁) (h₂ : sp.S i₂ o₂) (hj₁ : i₁ ≼ j) (hj₂ : i₂ ≼ j) :
+    ∃ u, sp.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u :=
+  cap_two_step Sys hA hP h₁ h₂ hj₁ hj₂
 
 /-- "When Lifted Monotonicity fails, some permitted output either waits for
-another component, sacrificing Availability, or completes independently at
+another component, sacrificing Availability, or is emitted independently at
 the cost of Partition Consistency." -/
 theorem «sec:complete-cap/lm-fails» (hlm : ¬ sp.LiftedMono) (Sys : System sp D) :
-    ¬ Availability Sys ∨ ¬ PartitionConsistency Sys :=
-  (Classical.em (Availability Sys)).elim
-    (fun hA => Or.inr fun hP => hlm (cap_necessary Sys hA hP)) Or.inl
+    ¬ «def:partition-notions(4)» Sys ∨ ¬ «def:partition-notions(5)» Sys :=
+  (Classical.em («def:partition-notions(4)» Sys)).elim
+    (fun hA => Or.inr fun hP => hlm (cap_necessary_two Sys hA hP)) Or.inl
 
 /-- Precise reading (not a claim of the paper): Def. `def:system` speaks of "a
 rule that chooses" the next events.  Strategies must be read as
