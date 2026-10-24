@@ -3,7 +3,13 @@
 Lean 4 (core only, no Mathlib), toolchain in `lean-toolchain`.
 Build: `lake build` from this directory.  Every theorem below depends only on
 the standard axioms (`propext`, `Quot.sound`, and in some cases
-`Classical.choice`); there is no `sorry`.
+`Classical.choice`); there is no `sorry`.  A metaprogram check over all
+1918 theorems in namespace `CC` confirms this.
+
+The `Audit/` files check each proved claim against the current paper text and
+add proofs where the earlier files differ from it.  Where a result appears both
+in an earlier file and in an `Audit/` file, the `Audit/` row is the one that
+matches the current text; the table marks the earlier rows that no longer do.
 
 | Paper result | Lean | File |
 |---|---|---|
@@ -50,16 +56,16 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Remarks: neither S₁ nor unresolved composition need be monotone; strict generality | `CC.Comp.monotone_commitment_neither_monotone`, `CC.Comp.proper_strictly_more_general` | Composition |
 | Counterexample: Lemma composition needs S₂ total on all of M | `CC.Comp.restricted_middle_counterexample` | Composition |
 | Thm. remembered-output frontier (monotone hull, pruning) | `CC.Front.monotone_hull`, `CC.Front.pruned_unique`, `CC.Front.hullSpec_consistent` | Frontiers |
-| Table lookup-lift | `CC.Front.lookup_hull_i1`, `CC.Front.lookup_pruned_i1` | Frontiers |
+| Table lookup-lift (earlier version, X(i₁)={o_b,o_ab}; superseded by Audit D) | `CC.Front.lookup_hull_i1`, `CC.Front.lookup_pruned_i1` | Frontiers |
 | Prop. persistent-forwarding monotonicity; Eq. forwarding-hull | `CC.Front.persistent_forwarding`, `CC.Front.fwdSpec_consistent`, `CC.Front.forwarding_hull` | Frontiers |
 | Def. monotone across partitions; Prop. partition compatibility (family level) | `CC.Front.MonoAcrossPartitions`, `CC.Front.partition_compat_iff` | Frontiers |
-| Thm. independent-product frontier | `CC.Front.product_monoAcross`, `CC.Front.product_partition_compat`, `CC.Front.strengthening_not_monoAcross` | Frontiers |
-| Example product-config (and injective-ownership counterexample) | `CC.Front.config_agreement_not_ok`, `CC.Front.agreement_ok_sole_owner` | Frontiers |
+| Thm. independent-product frontier (single value type, stricter separability; superseded by Audit D) | `CC.Front.product_monoAcross`, `CC.Front.product_partition_compat`, `CC.Front.strengthening_not_monoAcross` | Frontiers |
+| Example product-config (and sole-owner variant where the other participant may emit the empty tuple) | `CC.Front.config_agreement_not_ok`, `CC.Front.agreement_ok_sole_owner` | Frontiers |
 | Defs. deployment, separable family, monotone across partitions, deployment availability | `CC.Deploy.Separable`, `CC.Deploy.MonoAcrossPartitions`, `CC.Deploy.DeploymentAvailability` | Deployment |
 | Prop. partition compatibility under a deployment | `CC.Deploy.partition_compatibility`, `CC.Deploy.partition_compatibility_confluent` | Deployment |
-| Monotonicity ⇒ monotone across partitions; converse fails (leader election) | `CC.Deploy.monoAcrossPartitions_of_liftedMono`, `CC.Deploy.single_authority_monoAcross`, `CC.Deploy.leader_not_liftedMono`, `CC.Deploy.split_authority_not_monoAcross` | Deployment |
+| Monotonicity ⇒ monotone across partitions; converse fails (earlier leader order ⊥<s1,s2; current text's example is Audit D `lead_*`) | `CC.Deploy.monoAcrossPartitions_of_liftedMono`, `CC.Deploy.single_authority_monoAcross`, `CC.Deploy.leader_not_liftedMono`, `CC.Deploy.split_authority_not_monoAcross` | Deployment |
 | Full deployment: pairs suffice, monotone across partitions ⇔ monotone; Deployment Availability = Availability | `CC.Deploy.ce_of_pairs`, `CC.Deploy.full_deployment_iff`, `CC.Deploy.deploymentAvailability_full` | Deployment |
-| Lemma forced-answer | `CC.CAP.forced_answer` | CompleteCAP |
+| Lemma forced-answer (earlier form; current statement is `CC.AuditC.forced_answer_strong`) | `CC.CAP.forced_answer` | CompleteCAP |
 | Register spec: `Q_p` total and upward closed | `CC.GL.regQ_total`, `CC.GL.regQ_upward` | GilbertLynch |
 | Realized history monotone in the prefix | `CC.GL.realized_mono` | GilbertLynch |
 | Cor. Gilbert–Lynch | `CC.GL.gilbert_lynch`, `CC.GL.gilbert_lynch_full` | GilbertLynch |
