@@ -140,7 +140,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:system/restrict»
 #check @CC.Paper.«def:system-output-event»
 #check @CC.Paper.«eq:lifted-validity»
-#check @CC.Paper.«sec:systems/one-row-legality»
 #check @CC.Paper.«sec:systems/legal-event-containment»
 #check @CC.Paper.«sec:systems/output-is-canonical-event»
 #check @CC.Paper.«sec:systems/system-histories»

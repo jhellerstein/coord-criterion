@@ -90,7 +90,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-544 entries.
+543 entries.
 
 ### §2 Functional CALM
 
@@ -249,10 +249,9 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:system/restrict»` | theorem | Def. |
 | `«def:system-output-event»` | abbrev | **Def. |
 | `«eq:lifted-validity»` | theorem | **Eq. |
-| `«sec:systems/one-row-legality»` | theorem | "With one row per input no row can be retired, and legality says that every row the commitments leave has an output that refines `o`." |
-| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` therefore ends inside `R[out ⪰ o]`, and it must remove by commitment the rows in `Sealed_o` and `Rejected_o`, since no row it keeps can r… |
-| `«sec:systems/output-is-canonical-event»` | theorem | "The output event `output(o)` of Sections functional-calm–complete-calm is the legal event `Out_γ(o)` whose `γ` applies its seal `s_o` and choice `c_o`, wher… |
-| `«sec:systems/system-histories»` | theorem | "A system's histories are distributed histories (Definition distributed-history) whose output events are legal events `Out_γ(o)` with `γ` drawn from its basi… |
+| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` ends at `R_c[out ⪰ o]`, inside `R[out ⪰ o]` since commitments only remove rows, and its commitments must remove the rows in `Sealed_o` an… |
+| `«sec:systems/output-is-canonical-event»` | theorem | "The output event `output(o)` of Sections functional-calm–complete-calm is the case in which `γ` applies exactly its seal `s_o` and choice `c_o`, where prese… |
+| `«sec:systems/system-histories»` | theorem | "The environment observes `o`, not `γ`." Together with Def. |
 | `«fig:cc-commitments»` | theorem | *Two systems, two choices* and Fig. |
 | `«sec:systems/two-systems-two-choices»` | theorem | *Two systems, two choices.* "Both are choices: |
 | `«sec:systems/neither-is-the-choice»` | theorem | *Two systems, two choices.* "… and neither is the choice `c_o` of Definition lifted-output-event." Lean (generic form): |

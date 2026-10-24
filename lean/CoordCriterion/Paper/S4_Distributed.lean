@@ -388,16 +388,10 @@ theorem «eq:lifted-validity» {sp : Spec I O} (σc : State sp) (o : O) :
    fun h k x hx hn => let ⟨u, ⟨hu, hou⟩, hxu⟩ := h k x hx (fun hk => hn hk.2)
       ⟨u, hu, hou, hxu⟩⟩
 
-/-- "With one row per input no row can be retired, and legality says that every
-row the commitments leave has an output that refines `o`." -/
-theorem «sec:systems/one-row-legality» {sp : Spec I O} (hf : sp.Functional) {B : Basis sp}
-    {σ τ : State sp} {γ : List (Commitment sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
-    ∃ σc, ApplySeq γ σ σc ∧ (∀ k x, σc.R k x → o ≼ x) ∧ τ.R = σc.R :=
-  Dist.functional_legal_ge hf h
-
-/-- "A legal `Out_γ(o)` therefore ends inside `R[out ⪰ o]`, and it must remove
-by commitment the rows in `Sealed_o` and `Rejected_o`, since no row it keeps
-can refine them (Lemma canonical-commitment-normal-form)."
+/-- "A legal `Out_γ(o)` ends at `R_c[out ⪰ o]`, inside `R[out ⪰ o]` since
+commitments only remove rows, and its commitments must remove the rows in
+`Sealed_o` and `Rejected_o`, since no row it keeps refines them (Lemma
+canonical-commitment-normal-form)."
 
 Lean: Lemma containment (1) (`CC.containment`): the event keeps the current
 input, `o ∈ R(i)`, the end table is inside `R[out ⪰ o]`, and the state `σc`
@@ -409,8 +403,8 @@ theorem «sec:systems/legal-event-containment» {sp : Spec I O} {B : Basis sp}
   containment h
 
 /-- "The output event `output(o)` of Sections functional-calm–complete-calm is
-the legal event `Out_γ(o)` whose `γ` applies its seal `s_o` and choice `c_o`,
-where present."
+the case in which `γ` applies exactly its seal `s_o` and choice `c_o`, where
+present."
 
 Lean: `κ_o` is `s_o` (if `Sealed_o ≠ ∅`) followed by `c_o` (if
 `Rejected_o ≠ ∅`); the canonical steps `CanonStep` (under `B_S`, output
@@ -424,9 +418,9 @@ theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
       ∃ e' : SEvent sp, e'.erase = e ∧ CanonStep σ e' τ) :=
   ⟨fun _ _ => rfl, fun _ _ _ => canonStep_step, fun _ _ _ => step_canonStep⟩
 
-/-- "A system's histories are distributed histories (Definition
-distributed-history) whose output events are legal events `Out_γ(o)` with `γ`
-drawn from its basis; the environment observes `o`, not `γ`."
+/-- "The environment observes `o`, not `γ`."  Together with Def. `def:system`:
+a system's output events are legal events `Out_γ(o)` with `γ` drawn from its
+basis.
 
 Lean: in the `CC.CAP` history model an output event `out γ o` is a basis check,
 `applySeq`, and an exposable `output(o)` step at the committed state; this is
