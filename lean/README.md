@@ -100,6 +100,20 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Lemma forced-answer (current form: only `q`'s events, no input event; Answering only) | `CC.AuditC.forced_answer_strong` | Audit/CAP |
 | Cor. Gilbert–Lynch along the paper's proof, from Answering only | `CC.AuditC.gilbert_lynch_answering`, `CC.AuditC.gilbert_lynch_via_forced_answer` | Audit/CAP |
 | Register fails Relational Monotonicity; `Q_p` is an obligation | `CC.AuditC.reg_not_relMono`, `CC.AuditC.regQ_obligation` | Audit/CAP |
+| Audit D: run outputs form a chain; rows authorized only to `p` are separable only as one row | `CC.AuditD.rows_chain`, `CC.AuditD.rows_max`, `CC.AuditD.sole_rows_separable`, `CC.AuditD.sole_rows_two_not_separable` | Audit/Deployment |
+| Audit D: leader example as stated (equality order, `A_p=S`, `A_q=∅`, any input poset) | `CC.AuditD.lead_monoAcross`, `CC.AuditD.lead_not_liftedMono`, `CC.AuditD.lead_separable_shape`, `CC.AuditD.lead_run_one_output` | Audit/Deployment |
+| Audit D: sufficient condition for monotone across partitions (sole-authority conflicts) | `CC.AuditD.monoAcross_of_sole_conflicts`, `CC.AuditD.cfg_product_conflict` (product interface does not satisfy it) | Audit/Deployment |
+| Audit D: single-authority deployments | `CC.AuditD.single_authority_shape`, `CC.AuditD.single_authority_iff` | Audit/Deployment |
+| Audit D: Thm. independent-product frontier, per-participant posets `W_p`, `CC.Deploy` definitions | `CC.AuditD.product_monoAcross`, `CC.AuditD.product_confluent`, `CC.AuditD.strengthening_not_monoAcross` | Audit/Deployment |
+| Audit D: "deployment is essential" (corrected: no common upper bound in `V_p(i)`); counterexample to literal wording | `CC.AuditD.product_not_liftedMono`, `CC.AuditD.product_full_not_monoAcross`, `CC.AuditD.tri_incomparable`, `CC.AuditD.tri_liftedMono` | Audit/Deployment |
+| Audit D: configuration example (any input poset; single-authority variant) | `CC.AuditD.cfg_agree_not_monoAcross`, `CC.AuditD.cfg_agree_single_authority` | Audit/Deployment |
+| Audit D: linear extensions of finite strict partial orders | `CC.AuditD.linExt`, `CC.AuditD.concat_sto`, `CC.AuditD.sto_max` | Audit/Deployment |
+| Audit D: causal register monotone across partitions (replica deployment, every history) | `CC.AuditD.causal_monoAcross`, `CC.AuditD.causal_confluent`, `CC.AuditD.ser_extend` | Audit/Deployment |
+| Audit D: two-write history (linearizable not monotone across `{{p},{q}}`; causal map; causal not monotone) | `CC.AuditD.lin_not_monoAcross`, `CC.AuditD.causal_two_write`, `CC.AuditD.causal_not_liftedMono` | Audit/Deployment |
+| Audit D: causal-register frontier application (antichain, views continue, part (1); linearizability locally conservative and strict, part (2)) | `CC.AuditD.cviews_antichain`, `CC.AuditD.cviews_cont`, `CC.AuditD.causal_product_monoAcross`, `CC.AuditD.lin_locCons`, `CC.AuditD.lin_strict`, `CC.AuditD.lin_product_not_monoAcross` | Audit/Deployment |
+| Audit D: real-time precedence breaks local conservativity | `CC.AuditD.linRT_not_locCons` | Audit/Deployment |
+| Audit D: Table lookup-lift as printed (`X(i₁)={o_b}`, `M=X̂`, forwarding above `X̂`) | `CC.AuditD.lookup2_hull_i1`, `CC.AuditD.lookup2_pruned`, `CC.AuditD.lookup2_not_relMono`, `CC.AuditD.lookup2_hull_le_fwd` | Audit/Deployment |
+| Audit D: Hoare quotient order; Eq. forwarding-hull via Eq. hull-coverage | `CC.AuditD.hclass_of_le_iff`, `CC.AuditD.hclass_of_eq_iff`, `CC.AuditD.hclass_eq_of`, `CC.AuditD.forwarding_hull_via_coverage` | Audit/Deployment |
 
 Modeling choices are documented at the top of each file.
 | App. cc-bases: spec, abort-free spec, not monotone (`([A,B],∅)`, `([B,A],∅)`) | `CC.AuditF.txnSpec`, `CC.AuditF.abortFreeSpec`, `CC.AuditF.ab_ba_no_common_refinement`, `CC.AuditF.txnSpec_not_liftedMono`, `CC.AuditF.abortFreeSpec_not_liftedMono` | Audit/Bases |

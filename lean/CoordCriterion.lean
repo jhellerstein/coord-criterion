@@ -16,3 +16,4 @@ import CoordCriterion.Audit.Instances
 import CoordCriterion.Audit.Bases
 import CoordCriterion.Audit.Applications
 import CoordCriterion.Audit.CAP
+import CoordCriterion.Audit.Deployment
