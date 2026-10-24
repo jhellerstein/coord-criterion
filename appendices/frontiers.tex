@@ -206,7 +206,8 @@ $y_p\le_p u_p=z_p$ with both in $V_p(i)$, so $y=z$, a contradiction.
 \end{proof}
 
 The hypotheses matter.  The deployment is essential: if some $V_p(i)$ has two
-incomparable views, the product interface has no Lifted Monotonicity, since
+views with no common upper bound in $V_p(i)$ (for instance, two distinct views
+when $V_p(i)$ is an antichain), the product interface has no Lifted Monotonicity, since
 those two rows have no common \outnoun; with $A_p=S$ for every $p$, the two
 rows form a separable family.  Owning only its own coordinate is needed: let
 two replicas each expose configuration 0 or 1 at every input, with views
@@ -214,8 +215,9 @@ ordered by equality (so each $V_p(i)=\{0,1\}$ is an antichain), and let $T$
 require them to agree, keeping $(0,0)$ and $(1,1)$.  This $T$ is strict and
 locally conservative, so by part (2) it is not monotone across partitions
 under its owner deployment.  If instead one participant owns both coordinates,
-the deployment is single-authority (Appendix~\ref{app:deployment}) and $T$ is
-monotone across partitions.  Neither part says whether a participant can emit
+the other may emit only the empty tuple, which every output refines, and $T$ is
+monotone across partitions; forbidding even that makes the deployment
+single-authority (Appendix~\ref{app:deployment}).  Neither part says whether a participant can emit
 its views during a partition; that is Deployment Availability
 (Definition~\ref{def:deployment-availability}), a property of the
 implementation.
@@ -234,8 +236,9 @@ operations explains.  It is locally conservative: a serialization $L_p$ for
 $p$, together with $\to$, has no cycle, because $L_p$ already extends $\to$ on
 its operations and $\to$ is transitive; so some total order of all operations extends both, and it
 gives $p$'s reads the same sources as $L_p$.  The two-write history of
-Appendix~\ref{app:registers} shows that it is strict, so part (2) recovers that
-linearizability is not monotone across partitions.  This depends on the input
+Appendix~\ref{app:registers} shows that it is strict, so part (2) recovers, for
+linearizability with each replica's reads answered together, the obstruction
+of Appendix~\ref{app:registers}.  This depends on the input
 recording only causal precedence.  If the input also records real-time
 precedence, a write that finished before $p$'s read in real time but lies
 outside its causal past must precede that read in every linearization, so some
