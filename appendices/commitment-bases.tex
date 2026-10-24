@@ -5,7 +5,7 @@ This appendix gives the specification of Section~\ref{sec:ambiguity-story} and
 the commitment bases of 2PL and MVTO.
 
 \paragraph{Specification.}
-An input is a finite set $T$ of transactions, ordered by inclusion.  An output
+An input is a finite set $\mathcal T$ of transactions, ordered by inclusion.  An output
 is a pair $(L,X)$ with $X$ a set of aborted transactions and $L$ a total order
 (the serialization order) on a set $\mathrm{dom}\,L$ of committed ones, ordered
 by
@@ -15,16 +15,17 @@ by
   X\subseteq X',\ \ \mathrm{dom}\,L\subseteq\mathrm{dom}\,L',\ \
   L'|_{\mathrm{dom}\,L}=L.
 \]
-A row $(T,(L,X))$ is permitted when $X$ and $\mathrm{dom}\,L$ partition $T$.
+A row $(\mathcal T,(L,X))$ is permitted when $X$ and $\mathrm{dom}\,L$ partition
+$\mathcal T$.
 The rows $(\{A,B\},([A,B],\varnothing))$ and $(\{A,B\},([B,A],\varnothing))$
 of Figure~\ref{fig:ambiguity-frames}(f) have no common \outnoun, so the
 specification is not monotone.  The \emph{abort-free} specification has the
 same rows with $X=\varnothing$.
 
 \paragraph{Commitments.}
-Each commitment below, applied at a state $(i,R)$, retains the rows of $R$
-(at $i$ and at every \indesc $k$ of $i$) that satisfy a condition, and is
-defined when some row at $i$ satisfies it and some row fails it.
+Each commitment below, applied at a state $(i,R)$, retains the rows of $R$ that
+satisfy a condition, and is defined when some row of $R$ at $i$ satisfies it
+and some row of $R$ fails it.
 \begin{itemize}
   \item $\mathsf{order}(A,B)$, for distinct $A,B\in i$: $A\in X$, or $B\in X$,
         or $A<_L B$.
@@ -46,14 +47,17 @@ $\mathcal B_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{commit},\mathsf{abort}\}$,
 ranging over all transactions.
 
 \paragraph{2PL.}
-When $B$ waits for a lock that $A$ holds in a conflicting mode, the scheduler
+The scheduler applies these commitments within the sequence $\gamma$ of the
+output event $\Out{\gamma}{o}$ that emits the outcome
+(Definition~\ref{def:system-output-event}); the protocol steps below say which
+commitments $\gamma$ contains.  When $B$ waits for a lock that $A$ holds in a conflicting mode, the scheduler
 applies $\mathsf{order}(A,B)$ (Figure~\ref{fig:cc-commitments}(h)); when $A$
 commits, it applies $\mathsf{commit}(A)$.  A deadlock between $A$ and $B$ means
 both $\mathsf{order}(A,B)$ and $\mathsf{order}(B,A)$ have been applied; the
 rows left at $i$ are exactly those with $A\in X$ or $B\in X$, and resolving the
 deadlock is applying $\mathsf{abort}(A)$ or $\mathsf{abort}(B)$.  Under the
 abort-free specification, once $\mathsf{order}(A,B)$ is applied no row at $i$
-satisfies $\mathsf{order}(B,A)$, so it is undefined and $B$ waits forever.
+satisfies $\mathsf{order}(B,A)$, so it is undefined: $A$, and hence $B$, waits forever.
 Deadlock handling thus corresponds to the choice between the two
 specifications.
 
@@ -63,8 +67,7 @@ applies $\mathsf{stamp}(A)$; Figure~\ref{fig:cc-commitments}(i) is
 $\mathsf{stamp}(B)$ with $Z=\varnothing$.  Reads add no commitment.  The
 scheduler applies $\mathsf{abort}(A)$ when $A$ writes a version that would
 directly follow a committed version $v$ already read by a transaction stamped
-after $A$; the check is repeated, atomically with publication, at commit, after
-which it applies $\mathsf{commit}(A)$.  Because outputs record orders and
+after $A$, and otherwise applies $\mathsf{commit}(A)$ when $A$ commits.  Because outputs record orders and
 aborts but not read results, this specification does not itself require that
 abort; one whose outputs include read facts, as in
 Section~\ref{sec:hat-instance}, would.

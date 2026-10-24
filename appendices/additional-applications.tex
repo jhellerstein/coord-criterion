@@ -8,16 +8,19 @@ termination.
 \subsection{Committed authority, then monotone evidence}
 
 Suppose a commitment fixes an initial authority and a rule determining each
-certified successor.  The system then exposes a certified epoch chain $E$,
-a set of votes or certificates $V$, and a set of decisions $D$ indexed by
-epoch and slot (in Paxos or Raft: terms, quorum certificates, log positions),
+certified successor.  Inputs are finite sets of protocol messages (proposals,
+votes, certificates), ordered by inclusion.  An output is a triple $(E,V,D)$:
+a certified epoch chain $E$, a finite sequence of epochs each certified under
+the authority of its predecessor; a set $V$ of votes or certificates; and a set
+$D$ of decisions, each a value certified for an epoch and slot.  Outputs are
 ordered by
 \begin{equation}
   (E,V,D)\OutputOrd(E',V',D')
   \quad\Longleftrightarrow\quad
-  E\preceq_{\rm pref}E',\quad V\subseteq V',\quad D\subseteq D'.
+  E\preceq_{\rm pref}E',\quad V\subseteq V',\quad D\subseteq D',
   \label{eq:authority-refinement}
 \end{equation}
+where $E\preceq_{\rm pref}E'$ means that $E$ is a prefix of $E'$.
 Protocol safety guarantees that later evidence \outrel earlier evidence, so
 authority changes and certified decisions are \outnouns and need no further
 commitment.  This covers following the succession rule, not choosing values:
@@ -25,12 +28,17 @@ competing proposals for an undecided slot have incompatible extensions of
 $D$, so certifying one is a commitment.  If the succession rule were not
 fixed, competing next epochs would require one as well.
 
-\subsection{$k$-set agreement needs finite families}
+\subsection{$k$-set agreement: no $k$-wise test suffices}
 
-Fix $k\geq1$, participants $p_1,\ldots,p_{k+1}$ (possibly among others), and
-distinct proposals $v_1,\ldots,v_{k+1}$.  Outputs are partial decision maps
-$m:P\rightharpoonup V$ ordered by extension, with at most $k$ values in their
-range.  At $p_r$'s proposal input, $\{p_r\mapsto v_r\}$ is permitted, and the
+Fix $k\geq1$, participants $p_1,\ldots,p_{k+1}$ in the participant set $P$
+(possibly among others), and distinct values $v_1,\ldots,v_{k+1}$ in a value
+set $\mathit{Val}$.  An input is a finite set of proposals $(p,v)$, at most one
+per participant, ordered by inclusion; the \emph{proposal input} of $p_r$ is
+$\{(p_r,v_r)\}$.  Outputs are partial decision maps
+$m:P\rightharpoonup\mathit{Val}$ ordered by extension.  At input $I$, $m$ is
+permitted when it decides only participants that propose in $I$, every value
+in its range is proposed in $I$ (validity), and its range has at most $k$
+values.  At $p_r$'s proposal input, $\{p_r\mapsto v_r\}$ is permitted, and the
 union of the proposal inputs is a common \indesc.  Any $k$ of these $k+1$
 rows have a common \outnoun there; all $k+1$ do not, since it would have
 $k+1$ values.  So the common-\indesc condition fails and the specification
@@ -41,38 +49,36 @@ computation, failure, and progress model~\cite{saks2000set}.
 
 \subsection{Tight renaming}
 
-Inputs are finite participant sets $P$, ordered by inclusion.  Outputs are
-finite partial naming maps ordered by extension, and the outputs at $P$ are
+Inputs are finite sets $N$ of participants, ordered by inclusion.  Outputs are
+finite partial naming maps ordered by extension, and the outputs at $N$ are
 the injective maps
 \begin{equation}
-  m:P\longrightarrow\{1,\ldots,|P|\}.
+  m:N\longrightarrow\{1,\ldots,|N|\}.
   \label{eq:tight-renaming}
 \end{equation}
 At $\{p\}$ the only output is $p\mapsto1$, and at $\{q\}$ it is $q\mapsto1$.
 Each has a \outnoun at $\{p,q\}$, so Relational Monotonicity does not fail
 here, but no injective map extends both.  Directed Outputs also fails at
 $\{p,q\}$: $\{p\mapsto1,q\mapsto2\}$ and $\{p\mapsto2,q\mapsto1\}$ have no
-common \outnoun.  A partition separating $p$ and $q$ gives the obstruction of
-Proposition~\ref{thm:complete-cap-deployment}.  Extending a completed naming
-is not a witness: a new process can take name $n+1$.  The obstruction comes
-from independent partial memberships.  The renaming hierarchy adds wait-free
-and topological conclusions~\cite{herlihy1991waitfree,herlihy1999topological}.
+common \outnoun.  The specification therefore fails Lifted Monotonicity, and
+by Theorem~\ref{thm:complete-cap} a partition separating $p$ and $q$ rules out
+Availability with Partition Consistency.  The renaming hierarchy adds
+wait-free and topological
+conclusions~\cite{herlihy1991waitfree,herlihy1999topological}.
 
 \subsection{Snapshots}
 
-Inputs are finite downward-closed causal histories ordered by induced
-extension.  The \emph{prefix} specification outputs any finite downward-closed
-subset of the current history.  Old prefixes stay legal as history grows, and
-finite unions of prefixes are prefixes, so it satisfies Lifted Monotonicity;
-it promises neither freshness nor completeness.  A specification that
-promises the complete state at a finished boundary, with outputs ordered by
-equality, changes its required output when a further relevant event arrives,
-so by Functional CALM the boundary must be sealed
-before the output is exposed.  Both are safety statements; a snapshot
-protocol must also collect a consistent cut and terminate under its channel
-and failure assumptions~\cite{chandy1985distributed}, and wait-free atomic
-snapshots~\cite{afek1993atomic} show that the process, memory, and failure
-model matter, not total ordering alone.
+Inputs are finite causal histories, that is, finite sets of events with a
+causal partial order; $h\InputOrd h'$ when $h$ is a downward-closed subset of
+$h'$ carrying the restricted order.  The \emph{prefix} specification permits
+at $h$ any downward-closed subset of $h$, with outputs ordered by inclusion.
+Old prefixes stay legal as history grows, and finite unions of prefixes are
+prefixes, so it satisfies Lifted Monotonicity; it guarantees neither freshness
+nor completeness.  A specification that requires the complete history, with
+output $h$ at $h$ and outputs ordered by equality, is functional and not
+monotone: its required output changes whenever an event arrives.  By
+Proposition~\ref{prop:functional-exposure-boundary}, some output can then be
+exposed only after a commitment that seals the input.
 
 \begin{acks}
 We thank Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
