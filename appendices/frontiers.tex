@@ -226,8 +226,9 @@ implementation.
 Take the causal register of Appendix~\ref{app:registers}.  Let $V_p(h)$ be the
 maps from the reads of replica $p$ in $h$ to writes of $h$ or $v_0$ that some
 serialization for $p$ explains, ordered by extension; each $V_p(h)$ is an
-antichain, since its maps share a domain.  The product interface is then the
-causal register with each replica's reads answered together, and the owner
+antichain, since its maps share a domain.  Its product interface, whose output
+at $h$ is a tuple of one view per replica, is the specification in which each
+replica answers all of its reads at once, and the owner
 deployment lets each replica answer only its own reads.  Views continue by the
 argument given there, so part (1) applies.
 
@@ -236,8 +237,8 @@ operations explains.  It is locally conservative: a serialization $L_p$ for
 $p$, together with $\to$, has no cycle, because $L_p$ already extends $\to$ on
 its operations and $\to$ is transitive; so some total order of all operations extends both, and it
 gives $p$'s reads the same sources as $L_p$.  The two-write history of
-Appendix~\ref{app:registers} shows that it is strict, so part (2) recovers, for
-linearizability with each replica's reads answered together, the obstruction
+Appendix~\ref{app:registers} shows that it is strict, so part (2) recovers, for the
+product form of linearizability, the obstruction
 of Appendix~\ref{app:registers}.  This depends on the input
 recording only causal precedence.  If the input also records real-time
 precedence, a write that finished before $p$'s read in real time but lies
