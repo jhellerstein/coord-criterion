@@ -1,4 +1,5 @@
 import CoordCriterion.CAP.ResponseAvailability
+import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.Registers
@@ -88,29 +89,38 @@ theorem «def:partition-notions(3)» (Sys : System sp D) (init : Fin n → I) (p
 /-- Def. `def:partition-notions`(4), *Availability*: "A continuation of a
 partitioned history is local to a participant `p` when the system produces it,
 it adds only events of `p`'s component and no input events, and none of its
-receives takes a message sent from another component.  The system has Availability when, at every consistent cut of
-every partitioned history it produces, each participant `p` in state `(i,R)`
-can emit each output in `R(i)` in some continuation local to `p`."  In the
-unfolded form below, "local to `p`" is the conjunction `Produced … ∧
-Partitioned H' comp ∧ (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ q j, inp j ∉ ext q)`. -/
-abbrev «def:partition-notions(4)» (Sys : System sp D) : Prop := Availability Sys
+receives takes a message sent from another component.  The system has
+Availability when, in every partitioned history it produces, each participant
+`p`, ending in state `(i,R)`, can emit each output in `R(i)` in some
+continuation local to `p`."  In the unfolded form below, "local to `p`" is the
+conjunction `Produced … ∧ Partitioned … comp ∧ (∀ q, comp q ≠ comp p → ext q =
+[]) ∧ (∀ q j, inp j ∉ ext q)`. -/
+abbrev «def:partition-notions(4)» (Sys : System sp D) : Prop := AvailabilityAtEnd Sys
 
 /-- Def. `def:partition-notions`(4), unfolded.  `WF init H` is "a history"
-(legal local runs from `σ_S(init p)`, matched receives); the cut `c` is given
-by prefix lengths; `σ` is `p`'s state `(i,R)` at the cut. -/
+(legal local runs from `σ_S(init p)`, matched receives); `σ` is `p`'s final
+state `(i,R)`; the continuation appends `ext q` to each `H q`. -/
 theorem «def:partition-notions(4)/unfolded» (Sys : System sp D) :
-    Availability Sys ↔
+    AvailabilityAtEnd Sys ↔
       ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
         WF init H → Produced Sys n init H → Partitioned H comp →
-        ∀ c, IsCut H c →
-        ∀ (p : Fin n) (σ : State sp), LRun (canon sp (init p)) ((H p).take (c p)) σ →
+        ∀ (p : Fin n) (σ : State sp), LRun (canon sp (init p)) (H p) σ →
         ∀ o, σ.R σ.cur o →
-        ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
-          Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
+        ∃ ext : Fin n → List (LEv sp D n),
+          WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
+          Partitioned (fun q => H q ++ ext q) comp ∧
           (∀ q, comp q ≠ comp p → ext q = []) ∧
           (∀ q j, LEv.inp j ∉ ext q) ∧
           ∃ γ, LEv.out γ o ∈ ext p :=
   Iff.rfl
+
+/-- Def. `def:partition-notions`(4): asking at every consistent cut of every
+produced partitioned history (`Availability`, the form the library proofs use)
+is the same as asking at the end of every such history, because a produced
+partitioned history restricted to a consistent cut is again one. -/
+theorem «def:partition-notions(4)/at-cuts» (Sys : System sp D) :
+    Availability Sys ↔ «def:partition-notions(4)» Sys :=
+  availability_iff_atEnd Sys
 
 /-- Def. `def:partition-notions`(5), *Partition Consistency*: "The system has
 Partition Consistency when every consistent cut of every such history is
@@ -147,8 +157,9 @@ Monotonicity."
 
 Lean: `D` is the (arbitrary) type of message payloads. -/
 theorem «thm:complete-cap» (sp : Spec I O) (D : Type) :
-    (∃ Sys : System sp D, Availability Sys ∧ PartitionConsistency Sys) ↔ sp.LiftedMono :=
-  complete_cap sp D
+    (∃ Sys : System sp D, «def:partition-notions(4)» Sys ∧ PartitionConsistency Sys) ↔
+      sp.LiftedMono := by
+  simp only [← availability_iff_atEnd]; exact complete_cap sp D
 
 /-- Theorem `thm:complete-cap`, "moreover" clause: "when they hold, a
 commitment-free system has both properties: one whose strategies may emit any
@@ -158,10 +169,11 @@ Lean: `cfSystem` has empty basis and allows every event; an output event
 `Out ε o` is legal exactly when `o` is exposable.  Every history it produces
 is commitment-free. -/
 theorem «thm:complete-cap/moreover» (sp : Spec I O) (D : Type) (h : sp.LiftedMono) :
-    (Availability (cfSystem sp D) ∧ PartitionConsistency (cfSystem sp D)) ∧
+    («def:partition-notions(4)» (cfSystem sp D) ∧ PartitionConsistency (cfSystem sp D)) ∧
     ∀ (N : Nat) (init : Fin N → I) (H : History sp D N),
       Produced (cfSystem sp D) N init H → ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
-  ⟨complete_cap_cf sp D h, fun _ _ _ => cfSystem_coordinationFree⟩
+  ⟨⟨(availability_iff_atEnd _).1 (complete_cap_cf sp D h).1, (complete_cap_cf sp D h).2⟩,
+    fun _ _ _ => cfSystem_coordinationFree⟩
 
 /-- Proof of Theorem `thm:complete-cap`, (2)⇒(1), last sentence: "The
 system's histories are those of Section `sec:histories`, so distributed

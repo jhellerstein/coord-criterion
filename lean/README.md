@@ -91,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-545 entries.
+546 entries.
 
 ### §2 Functional CALM
 
@@ -286,6 +286,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-notions(3)»` | theorem | Def. |
 | `«def:partition-notions(4)»` | abbrev | Def. |
 | `«def:partition-notions(4)/unfolded»` | theorem | Def. |
+| `«def:partition-notions(4)/at-cuts»` | theorem | Def. |
 | `«def:partition-notions(5)»` | abbrev | Def. |
 | `«def:partition-notions(5)/unfolded»` | theorem | Def. |
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered relational specification `S`, the following are equivalent: |

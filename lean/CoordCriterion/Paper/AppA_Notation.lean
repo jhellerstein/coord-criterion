@@ -1,6 +1,7 @@
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.Distributed.Systems
 import CoordCriterion.CAP.ResponseForm
+import CoordCriterion.CAP.AvailabilityAtEnd
 
 /-!
 # Paper Appendix A: notation and terms (`appendices/notation.tex`)
@@ -382,9 +383,10 @@ abbrev «app:notation/partitioned-history» {sp : Spec I O} {D : Type} {n : Nat}
   CAP.Partitioned H comp
 
 /-- *Availability* — each output emittable within its component
-(Def. `def:partition-notions`).  Lean: `CAP.Availability`. -/
+(Def. `def:partition-notions`).  Lean: `CAP.AvailabilityAtEnd` (equivalently
+`CAP.Availability`, stated at cuts). -/
 abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
-  CAP.Availability Sys
+  CAP.AvailabilityAtEnd Sys
 
 /-- *Partition Consistency* — cuts of partitioned histories confluent
 (Def. `def:partition-notions`).  Lean: `CAP.PartitionConsistency`. -/

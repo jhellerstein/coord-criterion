@@ -301,10 +301,10 @@ a choice.
   \item \emph{Availability.}  A continuation of a partitioned history is
         \emph{local to} a participant $p$ when the system produces it, it
         adds only events of $p$'s component and no input events, and none of
-        its receives takes a message sent from another component.  The system has \emph{Availability} when, at every
-        consistent cut of every partitioned history it produces, each
-        participant $p$ in state $(i,R)$ can emit each output in $R(i)$ in some
-        continuation local to $p$.
+        its receives takes a message sent from another component.  The system has \emph{Availability} when, in every
+        partitioned history it produces, each participant $p$, ending in state
+        $(i,R)$, can emit each output in $R(i)$ in some continuation local to
+        $p$.
   \item \emph{Partition Consistency.}  The system has \emph{Partition
         Consistency} when every consistent cut of every such history is
         confluent at every common \indesc of the participants' current
@@ -348,9 +348,9 @@ Conversely, let finite rows $(i_r,o_r)$ have a common \indesc $j$.  For the
 empty family, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, place one
 participant $p_r$ per row, with initial input $i_r$, each in its own
 component, and one more participant with initial input $j$ in a further
-component, so that there are at least two.  At the cut containing no history events,
+component, so that there are at least two.  In the history with no history events,
 $p_r$ is at $\sigma_S(i_r)$ and $o_r$ is in its fiber at $i_r$, so Availability
-supplies a continuation within its component in which $p_r$ emits $o_r$.  No
+supplies a continuation local to $p_r$ in which $p_r$ emits $o_r$.  No
 message crosses components and strategies depend only on local history, so
 these continuations combine into one partitioned history that the system
 produces.  At its final cut,

@@ -14,6 +14,7 @@ import CoordCriterion.Distributed.Systems
 -- §4.5 Complete CAP; Appendix F (response availability, Gilbert–Lynch)
 import CoordCriterion.CAP.Model
 import CoordCriterion.CAP.CompleteCAP
+import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CAP.Register
 import CoordCriterion.CAP.ResponseAvailability
