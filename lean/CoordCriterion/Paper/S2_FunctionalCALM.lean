@@ -591,19 +591,17 @@ theorem «eq:query-monotonicity» {F A : Type} (Q : PSet F → PSet A) :
 
 /-! ## Cross-references from §6 (`sections/discussion.tex`) -/
 
-/-- §6, "Did executions differ, or were several answers allowed?": "useful
-output need not wait for determination: the election can emit `⊥` while
-either candidate may still win."  At `σ_S(xy·)`, `⊥` is exposable and rows
-with output `x` and with output `y` both remain. -/
+/-- §6.1, "Design lessons": "useful output need not wait for
+determination: the election can emit `⊥` while either candidate may still
+win."  At `σ_S(xy·)`, `⊥` is exposable and rows with output `x` and with output `y` both remain. -/
 theorem «sec:discussion/emit-before-determination» :
     Exposable (canon elec bxy) .bot ∧ (∃ k, (canon elec bxy).R k (.win .x)) ∧
       (∃ k, (canon elec bxy).R k (.win .y)) :=
   ⟨elec_panels_exposable.2.1, (Figures.Elec.upper_ab _).2, (Figures.Elec.upper_ab _).2⟩
 
-/-- §6, "Was an alternative discovered impossible, or made impossible?":
-"Receiving a decisive ballot and closing the polls both leave a single
-result.  The first retires rows by input; the second removes rows that input
-still permits, a commitment."
+/-- §6.1, "Design lessons": "Receiving a decisive ballot and closing the
+polls both leave a single result.  The first retires rows by input; the
+second removes rows that input still permits, a commitment."
 
 (1) `input(xx·)` at `σ_S(x··)` reaches a determined state, and every row it
 removes has an input that does not expand `xx·`; (2) closing the polls at (b)
