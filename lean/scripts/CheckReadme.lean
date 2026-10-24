@@ -137,6 +137,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:strategy»
 #check @CC.Paper.«def:system»
 #check @CC.Paper.«def:system/produced»
+#check @CC.Paper.«def:system/restrict»
 #check @CC.Paper.«def:system-output-event»
 #check @CC.Paper.«eq:lifted-validity»
 #check @CC.Paper.«sec:systems/one-row-legality»

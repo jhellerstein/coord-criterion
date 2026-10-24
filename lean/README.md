@@ -90,7 +90,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-543 entries.
+544 entries.
 
 ### §2 Functional CALM
 
@@ -245,7 +245,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/seals-and-choices-are-commitments»` | theorem | "As expected, the seals and choices of Definitions output-event and lifted-output-event satisfy this definition: |
 | `«def:strategy»` | abbrev | **Def. |
 | `«def:system»` | abbrev | **Def. |
-| `«def:system/produced»` | abbrev | Def. |
+| `«def:system/produced»` | theorem | Def. |
+| `«def:system/restrict»` | theorem | Def. |
 | `«def:system-output-event»` | abbrev | **Def. |
 | `«eq:lifted-validity»` | theorem | **Eq. |
 | `«sec:systems/one-row-legality»` | theorem | "With one row per input no row can be retired, and legality says that every row the commitments leave has an output that refines `o`." |

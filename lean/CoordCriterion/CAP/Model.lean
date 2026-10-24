@@ -207,6 +207,50 @@ def Compliant {E : Type} (A : List E → E → Prop) (l : List E) : Prop :=
 def Produced (Sys : System sp D) (n : Nat) (init : Fin n → I) (H : History sp D n) : Prop :=
   ∀ p, Compliant (Allowed Sys n init p) (H p)
 
+/-- Def. `def:system` as worded in the paper: the strategies' output events
+apply only commitments from the basis. -/
+def System.BasisRespecting (Sys : System sp D) : Prop :=
+  ∀ n init p pre γ o, Sys.strat n init p pre (.out γ o) → ∀ c ∈ γ, Sys.basis c
+
+/-- The paper's reading of "produced": inputs from the environment, every
+other event chosen by the strategy. -/
+def StratAllowed (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
+    (pre : List (LEv sp D n)) : LEv sp D n → Prop
+  | .inp _ => True
+  | e => Sys.strat n init p pre e
+
+/-- For a system whose strategies respect the basis, "produced" in the
+paper's wording (`StratAllowed`) is `Allowed`. -/
+theorem allowed_iff_stratAllowed {Sys : System sp D} (h : Sys.BasisRespecting)
+    (n : Nat) (init : Fin n → I) (p : Fin n) (pre : List (LEv sp D n)) (e : LEv sp D n) :
+    Allowed Sys n init p pre e ↔ StratAllowed Sys n init p pre e := by
+  cases e with
+  | inp j => exact Iff.rfl
+  | out γ o => exact ⟨fun h' => h'.2, fun h' => ⟨h n init p pre γ o h', h'⟩⟩
+  | send j d => exact Iff.rfl
+  | recv q k j d => exact Iff.rfl
+
+/-- Restricting a system's strategies to basis commitments. -/
+def System.restrict (Sys : System sp D) : System sp D where
+  basis := Sys.basis
+  strat n init p pre e := Sys.strat n init p pre e ∧
+    ∀ γ o, e = .out γ o → ∀ c ∈ γ, Sys.basis c
+
+theorem System.restrict_basisRespecting (Sys : System sp D) : Sys.restrict.BasisRespecting :=
+  fun _ _ _ _ γ o h => h.2 γ o rfl
+
+/-- Restricting loses nothing: the restricted system allows exactly the same
+events, so it produces the same histories. -/
+theorem System.restrict_allowed (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
+    (pre : List (LEv sp D n)) (e : LEv sp D n) :
+    Allowed Sys.restrict n init p pre e ↔ Allowed Sys n init p pre e := by
+  cases e with
+  | inp j => exact Iff.rfl
+  | out γ o =>
+    exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, fun γ' o' he => by cases he; exact h.1⟩⟩
+  | send j d => exact ⟨fun h => h.1, fun h => ⟨h, fun _ _ he => by cases he⟩⟩
+  | recv q k j d => exact ⟨fun h => h.1, fun h => ⟨h, fun _ _ he => by cases he⟩⟩
+
 /-- Def. `def:partition-notions`(4): Availability (interface form). -/
 def Availability (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),

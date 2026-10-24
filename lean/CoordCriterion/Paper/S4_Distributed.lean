@@ -330,21 +330,37 @@ abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
 
 /-- **Def. system** (`def:system`).  "A system consists of a commitment basis
 `ℬ`, the set of commitments its output events may apply, shared by all
-participants, and a strategy `θ_p` for each participant `p`."
+participants, and a strategy `θ_p` for each participant `p` whose output events
+apply only commitments from `ℬ`."
 
 Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
 participant of every finite participant set and initial inputs, as §4.5 later
-requires).  Its commitments are `CAP.Commitment`, equivalent to
-`CC.Commitment` (`CC.Dist.toCAP`, `CC.Dist.ofCAP`). -/
-abbrev «def:system» (sp : Spec I O) (D : Type) := CAP.System sp D
+requires) with `System.BasisRespecting`.  Its commitments are
+`CAP.Commitment`, equivalent to `CC.Commitment` (`CC.Dist.toCAP`,
+`CC.Dist.ofCAP`).  The library's `CAP.System` does not require basis respect;
+`«def:system/restrict»` shows this loses nothing. -/
+abbrev «def:system» (sp : Spec I O) (D : Type) :=
+  {Sys : CAP.System sp D // Sys.BasisRespecting}
 
-/-- Def. `def:system`: "A distributed history is produced by the system when
-each output, send, and receive event of each participant `p` is in `θ_p` of
-`p`'s local history before it, and every output event applies only commitments
-from `ℬ`." -/
-abbrev «def:system/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) (n : Nat)
-    (init : Fin n → I) (H : CAP.History sp D n) : Prop :=
-  CAP.Produced Sys n init H
+/-- Def. `def:system`: "A distributed history produced by the system consists
+of environment inputs and events chosen by the participants' strategies."
+For a basis-respecting system this is the library's `CAP.Produced`: every
+event other than an input is permitted by the strategy at the local history
+before it (`CAP.allowed_iff_stratAllowed`). -/
+theorem «def:system/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
+    (h : Sys.BasisRespecting) (n : Nat) (init : Fin n → I) (H : CAP.History sp D n) :
+    CAP.Produced Sys n init H ↔ ∀ p, CAP.Compliant (CAP.StratAllowed Sys n init p) (H p) :=
+  ⟨fun hp p a e b hab => (CAP.allowed_iff_stratAllowed h n init p a e).1 (hp p a e b hab),
+   fun hp p a e b hab => (CAP.allowed_iff_stratAllowed h n init p a e).2 (hp p a e b hab)⟩
+
+/-- Def. `def:system`, generality: requiring the strategies to respect the
+basis loses nothing.  Restricting any system's strategies to basis
+commitments gives a basis-respecting system that allows exactly the same
+events, hence produces the same histories. -/
+theorem «def:system/restrict» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
+    Sys.restrict.BasisRespecting ∧
+      ∀ n init p pre e, CAP.Allowed Sys.restrict n init p pre e ↔ CAP.Allowed Sys n init p pre e :=
+  ⟨Sys.restrict_basisRespecting, Sys.restrict_allowed⟩
 
 /-- **Def. output event of a system** (`def:system-output-event`).  "An output
 event `Out_γ(o)` under a basis `ℬ` applies a finite, possibly empty sequence
