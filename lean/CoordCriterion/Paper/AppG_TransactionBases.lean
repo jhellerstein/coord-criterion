@@ -87,8 +87,8 @@ theorem «app:cc-bases/complete» {T K : Type} (rd wr : T → K → Prop) (k : F
         k.1 a ∧ rd a x ∧ Valid wr k x v ∧ (r.o.dom a → Partial.LastWrite wr r.o a x v) :=
   Iff.rfl
 
-/-- "A row `(i,o)` is permitted when some permitted complete output at `i`
-refines `o`." -/
+/-- "Any output is permitted when some permitted complete output refines it,
+that is, when it can still be completed." -/
 theorem «app:cc-bases/permitted» {T K : Type} (rd wr : T → K → Prop) (k : FinSet T)
     (u : Partial.ROut T K) :
     (spec rd wr false).S k u ↔ ∃ c, Complete rd wr k c ∧ u ≼ c :=
@@ -105,15 +105,15 @@ theorem «app:cc-bases/figure-rows» {T K : Type} (rd wr : T → K → Prop) (af
     (spec (K := K) rd wr af).S k (full o) :=
   ⟨full o, ⟨full_complete rd wr h.1, fun _ => h.2⟩, PO.refl _⟩
 
-/-- "Every input has a permitted row, the one that aborts every transaction and
+/-- "Every input has a permitted row: the one that aborts every transaction and
 reports nothing." -/
 theorem «app:cc-bases/total» {T K : Type} (rd wr : T → K → Prop) (k : FinSet T) :
     (spec (K := K) rd wr false).S k (full (allAbort k)) :=
   ⟨_, ⟨full_complete rd wr (allAbort_part k), fun h => by cases h⟩, PO.refl _⟩
 
-/-- "The rows `({A,B},([A,B],∅,∅))` and `({A,B},([B,A],∅,∅))` … have no common
-refinement, since it would order `A` before `B` and `B` before `A`; so the
-specification is not monotone."  Not monotone: no Directed Outputs, no Lifted
+/-- "The rows `({A,B},([A,B],∅,∅))` and `({A,B},([B,A],∅,∅))` of Figure
+ambiguity-frames(f) have no common refinement, which would order `A` both before
+and after `B`, so the specification is not monotone."  Not monotone: no Directed Outputs, no Lifted
 Monotonicity. -/
 theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} (rd wr : T → K → Prop) {A B : T}
     (h : A ≠ B) :
@@ -124,8 +124,8 @@ theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} (rd wr : T → K → Pr
   ⟨(ab_ba_rows rd wr false h).1, (ab_ba_rows rd wr false h).2, ab_ba_no_common h,
     spec_not_liftedMono rd wr false h⟩
 
-/-- "The *abort-free* specification permits a row when some permitted complete
-output with `X = ∅` refines it." -/
+/-- "The *abort-free* specification permits a row when it can be completed with
+`X = ∅`." -/
 theorem «app:cc-bases/abort-free-spec» {T K : Type} (rd wr : T → K → Prop) (k : FinSet T)
     (u : Partial.ROut T K) :
     (spec rd wr true).S k u ↔ ∃ c, (Complete rd wr k c ∧ ∀ t, ¬ c.o.X t) ∧ u ≼ c :=
@@ -139,10 +139,9 @@ theorem «app:cc-bases/abort-free-not-monotone» {T K : Type} (rd wr : T → K �
 
 /-! ## Commitments -/
 
-/-- "Applied at a state `(i,R)`, it keeps a row `(k,o)` of `R` when some
-complete row `(k,c)` of `R` refines `o` and satisfies the condition, and
-removes the other rows … It is defined when it keeps some row at `i` and
-removes some row."  (Guards such as "for `A ∈ i`" are part of definedness.) -/
+/-- "Applied at a state `(i,R)`, it keeps the rows of `R` that can still be
+completed, within `R`, by a complete row meeting the condition, and removes the
+rest.  It is defined when it keeps some row at `i` and removes some row."  (Guards such as "for `A ∈ i`" are part of definedness.) -/
 theorem «app:cc-bases/applied» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut T K)}
     (G : State sp → Prop) (Q : Partial.ROut T K → Prop) (σ τ : State sp) :
     (closeC G Q).app σ = some τ ↔
@@ -180,10 +179,10 @@ noncomputable abbrev «app:cc-bases/stamp» {T K : Type} {sp : Spec (FinSet T) (
 noncomputable abbrev «app:cc-bases/read» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut T K)}
     (A : T) (x : K) (v : Option T) : Commitment sp := read A x v
 
-/-- "Each is a commitment (Definition `def:commitment`): if a removed row were
-refined by a kept row at the same input, the complete row that keeps the
-latter would also refine the former and keep it, so
-Equation `eq:commitment-excludes` holds."  Every closure commitment, for every
+/-- "Each is a commitment (Definition `def:commitment`).  If a kept row refines
+another row at the same input, the complete row that keeps it also refines the
+other, which is therefore kept; so no removed row is refined by a kept one, as
+Equation `eq:commitment-excludes` requires."  Every closure commitment, for every
 guard and condition, is a `Commitment` (`closeC`); this states
 Eq. `commitment-excludes` for it. -/
 theorem «app:cc-bases/each-is-commitment» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut T K)}
@@ -237,9 +236,10 @@ theorem «app:cc-bases/run-states» {T K : Type} {rd wr : T → K → Prop} {af 
   let hg : Good τ := h.elim good_run.1 good_run.2
   ⟨hg.2, hg.1⟩
 
-/-- "Hence reporting a read is a `read` commitment followed by an exposable
-emission: after `read(A,x,v)`, adding the result to a row that every remaining
-row refines gives a row, and emitting it is exposable."  (At any state with the
+/-- "So a read is reported by applying `read(A,x,v)` and then emitting the
+result, which is then exposable."  Precisely: after `read(A,x,v)`, adding the
+result to a row that every remaining row refines gives a row, and emitting it is
+exposable.  (At any state with the
 two properties above.) -/
 theorem «app:cc-bases/read-emit» {T K : Type} {rd wr : T → K → Prop} {af : Bool} {A : T}
     {x : K} {v : Option T} {σ σ' : State (spec rd wr af)} (hg : Good σ)
@@ -250,7 +250,7 @@ theorem «app:cc-bases/read-emit» {T K : Type} {rd wr : T → K → Prop} {af :
 
 /-! ## 2PL -/
 
-/-- "… the scheduler applies `order(A,B)`; on complete rows without aborts it
+/-- "… the scheduler applies `order(A,B)`.  On complete rows without aborts it
 keeps exactly those with `A` before `B` (Figure `fig:cc-commitments`(h))." -/
 theorem «app:cc-bases/fig-h» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut T K)} {A B : T}
     {σ τ : State sp} (h : (order A B).app σ = some τ) {k : FinSet T} {c : Partial.ROut T K}
@@ -271,9 +271,10 @@ theorem «app:cc-bases/order-at-ABC» {T K : Type} {rd wr : T → K → Prop} {A
   let ⟨τ, hτ, h1, h2, h3⟩ := order_at (K := K) (rd := rd) (wr := wr) h
   ⟨τ, hτ, h1, h2, h3, (neither_is_choice h).1 τ hτ⟩
 
-/-- "A deadlock between `A` and `B` means both `order(A,B)` and later
-`order(B,A)` have been applied.  Then no remaining row, at any input, commits
-both `A` and `B`, so every remaining complete row aborts one of them."
+/-- "A deadlock between `A` and `B` means that `order(A,B)` and later
+`order(B,A)` have both been applied.  Then no remaining row, at any input,
+commits both `A` and `B`, so every remaining complete row aborts one of them,
+and resolving the deadlock means aborting one."
 "Remaining" is: in any table contained in the one after `order(B,A)`. -/
 theorem «app:cc-bases/deadlock» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut T K)}
     {A B : T} {σ σ1 σ1' σ2 : State sp}
@@ -285,9 +286,8 @@ theorem «app:cc-bases/deadlock» {T K : Type} {sp : Spec (FinSet T) (Partial.RO
   ⟨fun _ _ hw => deadlock h1 hs h2 hR hw,
    fun _ _ hc hp hA hB => deadlock_complete h1 hs h2 hR hc hp hA hB⟩
 
-/-- "… and once the scheduler applies `commit(A)`, every remaining complete row
-aborts `B` and `commit(B)` is never again defined.  Resolving the deadlock is
-aborting one of the two." -/
+/-- "Once the scheduler applies `commit(A)`, every remaining complete row aborts
+`B`, and `commit(B)` is never again defined." -/
 theorem «app:cc-bases/deadlock-resolution» {T K : Type}
     {sp : Spec (FinSet T) (Partial.ROut T K)} {A B : T} {σ σ1 σ1' σ2 σ3 σ4 : State sp}
     (h1 : (order A B).app σ = some σ1) (hs : ∀ k u, σ1'.R k u → σ1.R k u)
@@ -309,7 +309,7 @@ theorem «app:cc-bases/abort-free-waits-forever» {T K : Type} {rd wr : T → K 
 
 /-! ## MVTO -/
 
-/-- "… on complete rows without aborts, `stamp(B)` with `Z = ∅` keeps exactly
+/-- "On complete rows without aborts, `stamp(B)` with `Z = ∅` keeps exactly
 those with `B` first (Figure `fig:cc-commitments`(i))." -/
 theorem «app:cc-bases/fig-i» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut T K)} {B : T}
     {σ τ : State sp} (h : (stamp B (fun _ => False)).app σ = some τ) {k : FinSet T}
@@ -317,7 +317,7 @@ theorem «app:cc-bases/fig-i» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut 
     τ.R k c ↔ σ.R k c ∧ ∀ D, k.1 D → D ≠ B → c.o.lt B D :=
   fig_i h hp hX hB
 
-/-- "… and at the canonical state of `{A,B,C}` it is a choice that is not the
+/-- "… at the canonical state of `{A,B,C}` it is a choice, and it is not the
 choice `c_o` of any output": it keeps `[B,A,C]` and `[B,C,A]` and removes
 `[A,B,C]` and `[C,B,A]`. -/
 theorem «app:cc-bases/stamp-at-ABC» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
@@ -331,9 +331,9 @@ theorem «app:cc-bases/stamp-at-ABC» {T K : Type} {rd wr : T → K → Prop} {A
   let ⟨τ, hτ, h1, h2, h3, h4⟩ := stamp_at (K := K) (rd := rd) (wr := wr) h
   ⟨τ, hτ, h1, h2, h3, h4, (neither_is_choice h).2 τ hτ⟩
 
-/-- The row argument: "In a complete row that satisfies both stamps and commits
-both `A` and `B`, `A` comes after that version and before `B`, so the read is
-not permitted."  `Z_B ∋ A` is "`B` stamped after `A`"; the version is the
+/-- *What a read commits to*, the row argument: "A complete row that satisfies
+both stamps and commits both `A` and `B` places `A` between that version and
+`B`, so it does not permit the read."  `Z_B ∋ A` is "`B` stamped after `A`"; the version is the
 initial one or written by `W ∈ Z_A`, `W ≠ A`. -/
 theorem «app:cc-bases/mvto-row» {T K : Type} {rd wr : T → K → Prop} {k : FinSet T}
     {c : Partial.ROut T K} (hc : Complete rd wr k c) {A B : T} {ZA ZB : T → Prop} {x : K}
@@ -342,10 +342,10 @@ theorem «app:cc-bases/mvto-row» {T K : Type} {rd wr : T → K → Prop} {k : F
     (hρ : c.ρ B x = some v) : ¬ (c.o.dom A ∧ c.o.dom B) :=
   fun ⟨hA, hB⟩ => stamps_row hc hsA hsB hAB hBB hwA hv hρ hA hB
 
-/-- "Hence, after the two stamps, no row that reports this read commits both
-`A` and `B`, and once `read` has been applied for it, no remaining row commits
-both, whether or not it reports the read.  That is what reporting the read
-commits to: `A` and `B` do not both commit."  The two stamps are
+/-- "Hence, after the two stamps, no row reporting the read commits both `A`
+and `B`, and once `read` has been applied, no remaining row commits both,
+whether it reports the read or not.  Reporting the read commits to this: `A`
+and `B` do not both commit."  The two stamps are
 `TwoStamps A B Z_A Z_B σ σ2` (`stamp(A)`, anything, `stamp(B)` with `A ∈ Z_B`);
 "remaining" is: in any table contained in the one after the stamps (resp.
 after `read(B,x,v)`). -/
@@ -362,7 +362,7 @@ theorem «app:cc-bases/read-commits» {T K : Type} {rd wr : T → K → Prop} {a
   ⟨fun _ hR _ _ hw hρ => H.no_both hwA hv hR hw hρ,
    fun _ _ hs3 h _ hR _ _ hw => H.read_no_both hwA hv hs3 h hR hw⟩
 
-/-- "The condition on the version is needed: at input `{A,W,B}`, stamped in
+/-- "The condition on the version is needed.  At input `{A,W,B}`, stamped in
 that order, with `A` and `W` writing `x`, the complete row that commits all
 three in stamp order and reports that `B` read `W`'s write is permitted and
 satisfies every stamp." -/
@@ -374,11 +374,11 @@ theorem «app:cc-bases/writer-before-A» {T K : Type} {rd wr : T → K → Prop}
       wr A x ∧ r.ρ B x = some (some W) ∧ r.o.dom A :=
   writer_after_A h hwA hwW hrB
 
-/-- "If every remaining complete row commits `B`, for instance after
-`commit(B)`, then no remaining row commits `A`, every remaining complete row
-aborts `A`, and adding `A`'s abort to a row that reports the read and that
-every remaining row refines gives a row, and emitting it is exposable.  The
-specification then entails the abort."  Stated at any state `τ` with the two
+/-- *When the abort is entailed.*  "If every remaining complete row commits
+`B`, for instance after `commit(B)`, then every remaining complete row aborts
+`A`.  Emitting `A`'s abort, added to a row that reports the read and that every
+remaining row refines, is then exposable: the specification entails the abort."
+(Lean also shows that no remaining row commits `A`.)  Stated at any state `τ` with the two
 properties of `«app:cc-bases/run-states»` whose table is contained in the one
 after the two stamps. -/
 theorem «app:cc-bases/abort-entailed» {T K : Type} {rd wr : T → K → Prop} {af : Bool}
@@ -393,16 +393,15 @@ theorem «app:cc-bases/abort-entailed» {T K : Type} {rd wr : T → K → Prop} 
     (τ.R τ.cur u → τ.R τ.cur (addAbort u A) ∧ Exposable τ (addAbort u A)) :=
   H.abort_entailed hwA hv hτ hg hall hρ hB
 
-/-- "While `B` is undecided it need not.  At input `{A,B}`, with `A` writing
+/-- "While `B` is undecided, it does not.  At input `{A,B}`, with `A` writing
 `x`, `B` reading it, and further transactions free to arrive, apply `stamp(A)` and `stamp(B)`, and report that `B`
 read the initial version of `x`.  Reporting the read is not exposable on its
 own, since the row that commits `A` and then `B` cannot be completed with it;
-the output event that applies `read` first and then reports the read is legal
-under `B_MVTO`.  Afterwards two completions remain: `B` committed with `A`
-aborted, and `A` committed with `B` aborted.  Adding `A`'s abort to the output
-is not exposable, and `abort(A)` and `abort(B)` are both defined and keep
-different completions.  Once `commit(B)` is applied, `A`'s abort becomes
-exposable."  (`C` is the further transaction: `stamp(B)` is defined because `C` may
+the output event that applies `read` and then reports the read is legal under
+`B_MVTO`.  Two completions remain: `B` committed with `A` aborted, and `A`
+committed with `B` aborted.  Emitting `A`'s abort is not exposable, and
+`abort(A)` and `abort(B)` are both defined and keep different completions.
+After `commit(B)`, `A`'s abort becomes exposable."  (`C` is the further transaction: `stamp(B)` is defined because `C` may
 still arrive and be ordered before `B`; `Ex.u B x` is the output reporting the read,
 `Ex.r1`/`Ex.r2` the two completions.) -/
 theorem «app:cc-bases/abort-is-a-choice» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
