@@ -18,3 +18,4 @@ import CoordCriterion.Audit.Applications
 import CoordCriterion.Audit.CAP
 import CoordCriterion.Audit.Deployment
 import CoordCriterion.Audit.MVTOReads
+import CoordCriterion.Audit.MVTOFull
