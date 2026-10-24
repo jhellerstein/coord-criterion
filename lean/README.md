@@ -77,6 +77,7 @@ first and supporting claims and examples follow.
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter commitments on antichain fibers (used by Fig. cc-commitments in §4.3 and App. C) |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | The `(L,X,ρ)` spec with partial outputs; closure commitments; 2PL/MVTO bases; bases differ; deadlock; MVTO: reported reads, entailed vs. chosen aborts |
+| `Appendix/TransactionBases/CanonicalExample.lean` | `CC.Txn.Partial.CanonEx` | §4.3 | Canonical runs suffice: a 2PL run at `{A,B,C}` and its canonical run in lockstep |
 | `Appendix/Frontiers.lean` | `CC.Front` | App. H | Remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
 | `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. H | Thm. independent-product frontier, configuration example |
 | `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers), App. H | Causal and linearizable registers, two-write history, causal-register frontier |
@@ -89,7 +90,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-545 entries.
+546 entries.
 
 ### §2 Functional CALM
 
@@ -259,6 +260,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/neither-is-the-choice»` | theorem | "… and neither is the choice `c_o` of Definition lifted-output-event." At the canonical state of `{A,B,C}` (Appendix G's specification), the results of `orde… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output events apply only commitments fro… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Although each system can define its own basis, no basis yields behavior that canonical runs cannot. |
+| `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:coordination»` | abbrev | **Def. |
 | `«def:coordination/coordination-free»` | abbrev | Def. |

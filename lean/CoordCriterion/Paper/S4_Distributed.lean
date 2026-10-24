@@ -2,6 +2,7 @@ import CoordCriterion.Distributed.Systems
 import CoordCriterion.Figures
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
+import CoordCriterion.Appendix.TransactionBases.CanonicalExample
 
 /-!
 # Paper §4.1–4.4: Distributed Execution (statement layer)
@@ -533,7 +534,53 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i :
       es.map SEvent.erase = es'.map SEvent.erase ∧
       Exec (canon sp i) (es.map SEvent.erase) ρ' ∧
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
-  canonical_equivalent h
+    canonical_equivalent h
+
+/-- *Canonical runs suffice*, example.  "Consider 2PL on input `{A,B,C}`, where
+`A` reads a key `x` that no transaction writes, and `B` then waits for a lock
+that `A` holds on another key.  2PL's output event reports `A`'s read and
+applies `order(A,B)`, keeping only the rows that can be completed without
+committing `B` before `A`.  The canonical run performs the canonical event for
+the same output: reporting the read requires no commitment, so it keeps every
+row that reports the read, including the one completed by `[B,A,C]`.  When 2PL later emits the complete serial order
+`[A,C,B]`, the canonical run emits it too, and both runs end with the same
+table.  The lock committed to `A` before `B` earlier than any output required."
+
+Lean (Appendix G's specification; `rd`, `wr` arbitrary except `rd A x` and no
+transaction writes `x`; `o1` decides nothing and reports `A`'s read of `x`
+returning the initial version, `o2` is `[A,C,B]` with that read):
+`read(A,x,initial)` is undefined at the canonical state, `o1` is exposable
+there and `κ_{o1} = ε`; 2PL's `Out_[order(A,B)](o1)` is legal under `B_2PL`,
+keeps `[A,B,C]` and removes `[B,A,C]` (both with the read), and every remaining
+row has a remaining completion that does not commit `B` before `A` (aborting
+`A` or `B` counts); the canonical `Out_{κ}(o1)` ends at `R[out ⪰ o1]`, which
+contains 2PL's table and keeps `[B,A,C]` with the read.  (It is an output
+retirement: rows that do not report the read are removed.)  2PL then emits
+`o2` with `commit(A), commit(B), commit(C), order(A,C), order(C,B)`; the
+canonical run emits `o2` with `κ_{o2} ≠ ε`; both end at the same state, and the
+two runs are a `Lockstep` pair as in `«sec:systems/canonical-equivalent»`. -/
+theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
+    {x : K} (h : Txn.Partial.Distinct3 A B C) (hr : rd A x) (hnw : ∀ t, ¬ wr t x) :
+    let σ0 := Txn.Partial.σABC rd wr h
+    let k3 := Txn.Partial.tri A B C h
+    let o1 := Txn.Partial.CanonEx.o1 A x
+    let o2 := Txn.Partial.CanonEx.o2 A B C x
+    let γ2 := Txn.Partial.CanonEx.γ2 (K := K) (rd := rd) (wr := wr) A B C
+    ∃ τ1 τ2 τ1' τ2' : State (Txn.Partial.spec rd wr false),
+      (Txn.Partial.read A x none).app σ0 = none ∧ Exposable σ0 o1 ∧ kappa σ0 o1 = [] ∧
+      SysStep Txn.Partial.basis2PL σ0 (.output [Txn.Partial.order A B] o1) τ1 ∧
+      τ1.R k3 (Txn.Partial.CanonEx.row A x [A, B, C] fun _ => False) ∧
+      ¬ τ1.R k3 (Txn.Partial.CanonEx.row A x [B, A, C] fun _ => False) ∧
+      (∀ k w, τ1.R k w → ∃ c, τ1.R k c ∧ Txn.Partitions k c.o ∧ w ≼ c ∧ ¬ c.o.lt B A) ∧
+      CanonStep σ0 (.output (kappa σ0 o1) o1) τ1' ∧ τ1'.R = outputTable σ0 o1 ∧
+      τ1'.R k3 (Txn.Partial.CanonEx.row A x [B, A, C] fun _ => False) ∧
+      (∀ k u, τ1.R k u → τ1'.R k u) ∧
+      SysStep Txn.Partial.basis2PL τ1 (.output γ2 o2) τ2 ∧
+      CanonStep τ1' (.output (kappa τ1' o2) o2) τ2' ∧
+      ¬ Exposable τ1' o2 ∧ kappa τ1' o2 ≠ [] ∧ τ2 = τ2' ∧
+      Lockstep Txn.Partial.basis2PL σ0 [.output [Txn.Partial.order A B] o1, .output γ2 o2] τ2
+        σ0 [.output (kappa σ0 o1) o1, .output (kappa τ1' o2) o2] τ2' :=
+  Txn.Partial.CanonEx.example_2PL h hr hnw
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 

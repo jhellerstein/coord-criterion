@@ -32,6 +32,7 @@ import CoordCriterion.Appendix.DeploymentSystems
 -- Appendix G transaction bases
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Appendix.TransactionBases.Partial
+import CoordCriterion.Appendix.TransactionBases.CanonicalExample
 -- Appendix H frontiers (Registers covers Appendix E registers and their frontier)
 import CoordCriterion.Appendix.Frontiers
 import CoordCriterion.Appendix.ProductFrontier

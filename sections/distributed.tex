@@ -192,6 +192,17 @@ would.  In the remainder of the paper we therefore judge consistency on
 canonical runs, as in
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 
+Consider 2PL on input $\{A,B,C\}$, where $A$ reads a key $x$ that no
+transaction writes, and $B$ then waits for a lock that $A$ holds on another
+key.  2PL's output event reports $A$'s read and applies $\mathsf{order}(A,B)$,
+keeping only the rows that can be completed without committing $B$ before $A$.
+The canonical run performs the canonical event for the same output: reporting
+the read requires no commitment, so it keeps every row that reports the read,
+including the one completed by $[B,A,C]$.  When 2PL later emits the complete
+serial order $[A,C,B]$, the canonical run emits it too, and both runs end with
+the same table.  The lock committed to $A$ before $B$ earlier than any output
+required.
+
 \subsection{Coordination}
 \label{sec:coordination}
 
