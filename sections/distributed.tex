@@ -22,15 +22,19 @@ The histories above use the output events of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}, which apply
 exactly the commitments an output requires: they seal the inputs in
 $\Sealed_o$ and remove the rows in $\Rejected_o$
-(Definitions~\ref{def:output-event} and~\ref{def:lifted-output-event}).  A
-system may commit
-differently, for example by sealing more than an output requires or by taking a
-lock before it chooses, so we now let systems bring their own commitments.
+(Definitions~\ref{def:output-event} and~\ref{def:lifted-output-event}).
+Many real systems behave differently.  For example, the registrar of
+Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the same
+event (Figure~\ref{fig:election-frames}(d)); the output event for $\bot$ does
+not require the poll-closing seal, so closing the polls is a design decision of
+the system.  Similarly, a lock manager commits to an ordering of ongoing
+transactions ($A$ before $B$) without emitting that ordering until later
+(Figure~\ref{fig:cc-commitments}(h) below).  In this section we show how such
+systems can be modeled, by letting them bring bespoke commitments.
 
 \begin{definition}[Commitment]
 \label{def:commitment}
-A commitment removes rows from the remainder table without changing the
-current input.  Formally, a \emph{commitment} is a partial function on
+A \emph{commitment} is a partial function on
 specification states that leaves the current input unchanged and removes a
 nonempty set of rows, each with no remaining row at the same input that
 \outrel it: whenever $c(i,R)=(i,R')$, we have $R'\subsetneq R$ and
