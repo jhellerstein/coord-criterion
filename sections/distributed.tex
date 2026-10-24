@@ -342,17 +342,19 @@ Consistency.
 
 Conversely, suppose some system has Availability and Partition Consistency;
 we derive the common-\indesc condition.  Let $(i_1,o_1),\ldots,(i_k,o_k)$ be
-rows of $\Spec$ with a common \indesc $j$; we need some $u\in\fiber{j}$ with
-$o_r\OutputOrd u$ for every $r$.  If $k=0$, totality gives one.  Repeating a
-row if necessary, assume $k\ge2$.  Take participants $p_1,\ldots,p_k$ with
-initial inputs $i_1,\ldots,i_k$, each in its own component.  Each component runs without messages, starting at input
-$i_r$.  By Availability, each $p_r$ can emit $o_r$.  By Partition Consistency,
-the components then reach one state $(j,R)$, with some $u\in R(j)$
-(Definition~\ref{def:residual-state}).  Rows are never added, so $(j,u)$ was
-already in $p_r$'s table just after it emitted $o_r$; emitting $o_r$ keeps only
-rows whose output \outrel $o_r$
-(Lemma~\ref{lem:canonical-commitment-normal-form}), so $o_r\OutputOrd u$.
-Proposition~\ref{prop:common-expansion-form} then gives Lifted Monotonicity.
+rows of $\Spec$ with a common \indesc $j$.  We find $u_0,\ldots,u_k\in\fiber{j}$
+such that each $u_m$ \outrel $o_1,\ldots,o_m$.  By totality, $\fiber{j}$
+contains some $u_0$.  Given $u_{m-1}$, take two participants $p$ and $q$ in
+separate components, starting at inputs $j$ and $i_m$.  Each runs without
+messages.  By Availability, $p$ can emit $u_{m-1}$ and $q$ can emit $o_m$.  By
+Partition Consistency, they then reach one state $(j,R)$, with some $u_m\in
+R(j)$ (Definition~\ref{def:residual-state}).  Rows are never added, so
+$(j,u_m)$ was already in each participant's table just after its emission.
+Emitting an output keeps only rows whose output \outrel it
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so $u_m$ \outrel
+$u_{m-1}$ and $o_m$, and hence $o_1,\ldots,o_m$.  Then $u_k$ is the required
+output, and Proposition~\ref{prop:common-expansion-form} gives Lifted
+Monotonicity.
 \end{proof}
 
 The proof of (1)$\Rightarrow$(2) never assumes that the system is
