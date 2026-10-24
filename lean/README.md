@@ -64,5 +64,16 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Realized history monotone in the prefix | `CC.GL.realized_mono` | GilbertLynch |
 | Cor. Gilbert–Lynch | `CC.GL.gilbert_lynch`, `CC.GL.gilbert_lynch_full` | GilbertLynch |
 | Counterexample: `h_C` need not expand the current inputs | `CC.GL.realized_not_expansion` | GilbertLynch |
+| Lemma reconciliation; consistency over run families | `CC.AuditA.reconciliation`, `CC.AuditA.consistent_iff_runs` | Audit/CALM |
+| Thm. Complete CALM, paper's proof route (via Lemma reconciliation) | `CC.AuditA.complete_calm_paper`, `CC.AuditA.complete_calm_paper_lm` | Audit/CALM |
+| Prop. exposure boundary, paper's proof route (forward via consistency; holds at every run state) | `CC.AuditA.exposure_boundary_paper`, `CC.AuditA.exposable_of_consistent` | Audit/CALM |
+| Prop. survivor test, explicit `input(j); output(u)` form | `CC.AuditA.survivor_exec` | Audit/CALM |
+| Pairs suffice (`app:pairs-suffice`); rows at `j` needed; minimal-input rows fail even `k` at a time (`k`-set agreement) | `CC.AuditA.pairs_iff_commonExpansion`, `CC.AuditA.rowsAtJ_needed`, `CC.AuditA.KSet.atomic_k_at_a_time`, `CC.AuditA.KSet.not_commonExpansion` | Audit/CALM |
+| `k`-set agreement example: any `k` proposal rows compatible, not all `k+1`; not monotone | `CC.AuditA.KSet.any_k_compatible`, `CC.AuditA.KSet.not_all_compatible`, `CC.AuditA.KSet.not_liftedMono` | Audit/CALM |
+| Functional remarks: exposability test, commit ⇔ seal, failure of monotonicity seals `k`, RelMono/LM/CE = monotonicity for functions, `input(j)` alone reaches `σ_S(j)` | `CC.AuditA.exposable_iff_refines_all`, `CC.AuditA.functional_commit_iff_sealed`, `CC.AuditA.nonmono_seals`, `CC.AuditA.liftedMono_iff_monoF`, `CC.AuditA.commonExpansion_iff_monoF`, `CC.AuditA.functional_meet_by_input` | Audit/CALM |
+| Event facts: `input j; input k` = `input k`, `input i` no-op, determinism, determined stays determined, canonical state largest | `CC.AuditA.input_input`, `CC.AuditA.input_self`, `CC.AuditA.step_det`, `CC.AuditA.step_determined`, `CC.AuditA.state_le_canon`, `CC.AuditA.input_canon` | Audit/CALM |
+| Cor. state-by-input fails for relational specs | `CC.AuditA.state_by_input_fails_relationally` | Audit/CALM |
+| Election example (monotone / equality order, panels) | `CC.AuditA.elec_consistent`, `CC.AuditA.elecEq_not_consistent`, `CC.AuditA.elec_panels_exposable`, `CC.AuditA.elecEq_bot_single_row`, `CC.AuditA.elecEq_not_confluent` | Audit/CALM |
+| Directed-fiber example `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` | `CC.AuditA.f5_directed`, `CC.AuditA.f5_minimal_incomparable`, `CC.AuditA.f5_compatible` | Audit/CALM |
 
 Modeling choices are documented at the top of each file.

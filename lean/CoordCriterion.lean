@@ -11,3 +11,4 @@ import CoordCriterion.Frontiers
 import CoordCriterion.Deployment
 import CoordCriterion.GilbertLynch
 import CoordCriterion.Audit.Distributed
+import CoordCriterion.Audit.CALM
