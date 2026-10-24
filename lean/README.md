@@ -75,5 +75,18 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Cor. state-by-input fails for relational specs | `CC.AuditA.state_by_input_fails_relationally` | Audit/CALM |
 | Election example (monotone / equality order, panels) | `CC.AuditA.elec_consistent`, `CC.AuditA.elecEq_not_consistent`, `CC.AuditA.elec_panels_exposable`, `CC.AuditA.elecEq_bot_single_row`, `CC.AuditA.elecEq_not_confluent` | Audit/CALM |
 | Directed-fiber example `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` | `CC.AuditA.f5_directed`, `CC.AuditA.f5_minimal_incomparable`, `CC.AuditA.f5_compatible` | Audit/CALM |
+| Sec. query-instance: functional fibers are directed | `CC.AuditE.functional_directed` | Audit/Instances |
+| Sec. crdt-instance: Eq. crdt-state-function monotone, `s(U₁)⊔s(U₂)=s(U₁∪U₂)`, least | `CC.AuditE.st_mono`, `CC.AuditE.st_union`, `CC.AuditE.st_union_least` | Audit/Instances |
+| Eq. crdt-query-monotonicity (Functional CALM for `q∘s`); sufficient, reachable-only, not required | `CC.AuditE.crdt_query_calm`, `CC.AuditE.crdt_query_of_mono`, `CC.AuditE.crdt_query_mono_iff_reachable`, `CC.AuditE.crdt_query_mono_not_required` | Audit/Instances |
+| Two-phase set (Eq. crdt-2p-query) | `CC.AuditE.twoPhase_unsafe` | Audit/Instances |
+| Threshold queries (Eq. crdt-thresholds) | `CC.AuditE.Q100_mono`, `CC.AuditE.Q100_consistent_exposable`, `CC.AuditE.lvar_threshold_mono` | Audit/Instances |
+| LWW: monotone convergence depends on the output order | `CC.AuditE.lww_depends_on_order` | Audit/Instances |
+| Sec. hat-instance: accumulating facts (read committed) | `CC.AuditE.factSpec_liftedMono`, `CC.AuditE.rc_liftedMono_consistent`, `CC.AuditE.accumulating_example` | Audit/Instances |
+| Sec. hat-instance: serialization cycle; first-committer-wins | `CC.AuditE.serializability_cycle`, `CC.AuditE.serializable_spec_not_consistent`, `CC.AuditE.snapshot_fcw` | Audit/Instances |
+| App. iconfluence: inputs closed under the order | `CC.AuditE.pre_sub`, `CC.AuditE.locValid_sub` | Audit/Instances |
+| Sec. iconfluence-instance: uniqueness (`sam`) example | `CC.AuditE.uniqueness_example`, `CC.AuditE.uniqueness_concurrency` | Audit/Instances |
+| App. composition: converse example after Cor. monotone-commitment | `CC.AuditE.converse_example` | Audit/Instances |
+| Eq. curried-composition: curried form, plan on graph tables | `CC.AuditE.curried_sharp`, `CC.AuditE.curried_plan_graph` | Audit/Instances |
+| Example committed-log-composition (incl. restriction to coherent pairs) | `CC.AuditE.committed_log_example`, `CC.AuditE.onDom_liftedMono` | Audit/Instances |
 
 Modeling choices are documented at the top of each file.
