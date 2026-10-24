@@ -598,7 +598,8 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
 
 /-- **Def. coordination** (`def:coordination`).  "A run or history coordinates
 when one of its output events `Out_γ(o)` has `γ ≠ ε`, that is, applies a
-commitment."
+commitment: a seal of inputs or a choice among outputs (Proposition
+seal-or-choose)."
 
 Lean: for runs, i.e. lists of system events.  (For histories of the `CC.CAP`
 model the same condition is on the `out γ o` events of each participant.) -/
