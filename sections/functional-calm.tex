@@ -1,15 +1,8 @@
 \section{Functional CALM}
 \label{sec:functional-calm}
 
-The CALM Theorem was proved for queries in a logic programming language,
-evaluated by relational transducers, and its applicability outside that
-setting was never made precise.  Here we use a simpler model that applies to
-any specification expressible as an input/output relation over ordered domains.  A
-specification describes allowed input/output
-behavior without committing to a language, placement, protocol, or message
-schedule.  This section addresses the case that prior work on both CALM and
-CRDTs shared: specifications that are functions, in which each
-input has a single specified output.  Section~\ref{sec:election-story} walks
+This section treats functional specifications, in which each input has a
+single specified output.  Section~\ref{sec:election-story} walks
 through the framework informally on an election.
 Section~\ref{sec:functional-specifications} defines specifications and states;
 Section~\ref{sec:functional-events} defines input and output events and the
@@ -107,10 +100,7 @@ identifies when an output can be emitted without commitment.
 We introduce the framework with a small election, illustrated in
 Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
 the ballots received so far with the permitted result; orders on the columns
-describe how inputs grow and which later outputs \outrelbase earlier ones.  This
-section considers tables in which each input has exactly one output;
-Section~\ref{sec:complete-calm} later removes that functional
-dependency.
+describe how inputs grow and which later outputs \outrelbase earlier ones.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
 $y$.  The output is whichever candidate has two ballots, or $\bot$ while there
@@ -203,12 +193,10 @@ $(xyx,x)$ have the common \indesc $xyx$, but under the equality
 order no output at $xyx$ \outrel both outputs $\bot$ and $x$.  A run that emits
 $\bot$ at $xy\cdot$ and one that receives $xyx$ cannot be reconciled at $xyx$.
 
-Input and output events form a transition system on specification states.  A
-specification is \emph{consistent} when its runs are confluent: any runs whose inputs have a common
-\indesc can always be continued to one common state there.
+Input and output events form a transition system on specification states, and
+the specification is consistent when its runs are confluent.
 Section~\ref{sec:functional-calm-theorem} shows that for functional tables
-this test is exactly monotonicity: a functional specification is consistent
-exactly when it is monotone, which is Functional CALM.
+this is exactly monotonicity.
 
 The rest of this section formalizes these notions; Appendix~\ref{app:notation}
 collects them for reference.
