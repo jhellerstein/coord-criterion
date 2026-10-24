@@ -26,6 +26,18 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Prop. seal-or-choose | `CC.seal_or_choose` | Commitments |
 | Lemma canonical-equivalent | `CC.canonical_equivalent` | Commitments |
 | Prop. conflicting outputs | `CC.conflicting_outputs` | Commitments |
+| Fig. participant-runs: distinct histories, equal endpoints | `CC.AuditB.fig_participant_runs` | Audit/Distributed |
+| Prop. distributed-consistency without unique send identifiers | `CC.AuditB.consistent_iff_distConsistent0` | Audit/Distributed |
+| Distributed consistency ⇔ Lifted Monotonicity | `CC.AuditB.distConsistent_iff_liftedMono` | Audit/Distributed |
+| One row per input: excludes vacuous, κ_o ⊆ s_o, s_o = functional seal, legality | `CC.AuditB.functional_excludes_vacuous`, `CC.AuditB.functional_kappa`, `CC.AuditB.functional_seal_eq`, `CC.AuditB.functional_legal_ge` | Audit/Distributed |
+| Def. canonical system: canonical histories = histories of Sec. histories | `CC.AuditB.canonLegal_iff`, `CC.AuditB.canonExec_unique` | Audit/Distributed |
+| Prop. conflicting outputs (separate bases); conflict is a choice | `CC.AuditB.conflicting_outputs2`, `CC.AuditB.conflict_is_choice` | Audit/Distributed |
+| Compound output event = composite event; functional composite seals | `CC.AuditB.sysStep_to_composite`, `CC.AuditB.sysStep_of_composite`, `CC.AuditB.composite_functional_seals` | Audit/Distributed |
+| Cor. reconciliation under any basis | `CC.AuditB.reconciliation_any_basis` | Audit/Distributed |
+| Converse of Lemma canonical-equivalent fails; system runs hide non-monotonicity | `CC.AuditB.converse_fails`, `CC.AuditB.system_runs_hide_nonmonotonicity` | Audit/Distributed |
+| Deterministic reconciliation is commitment-free under LM | `CC.AuditB.reconcile_cf` | Audit/Distributed |
+| `Commitments` and `CompleteCAP` encodings of commitments/output events agree | `CC.AuditB.toCAP`, `CC.AuditB.ofCAP`, `CC.AuditB.sysStep_iff_CAP` | Audit/Distributed |
+| "Neither is the choice c_o" (antichain fibers) | `CC.AuditB.choice_antichain`, `CC.AuditB.not_choice_of_two` | Audit/Distributed |
 | Thm. Complete CAP | `CC.CAP.complete_cap` | CompleteCAP |
 | Thm. Complete CAP, response form | `CC.CAP.complete_cap_response` | CompleteCAP |
 | Prop. invariant confluence ⇔ Lifted Monotonicity | `CC.IConf.ic_iff_liftedMono` | IConfluence |

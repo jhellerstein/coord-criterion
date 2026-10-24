@@ -10,3 +10,4 @@ import CoordCriterion.Composition
 import CoordCriterion.Frontiers
 import CoordCriterion.Deployment
 import CoordCriterion.GilbertLynch
+import CoordCriterion.Audit.Distributed
