@@ -37,5 +37,11 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Cor. committing upstream to a monotone function | `CC.Comp.monotone_commitment_seq`, `CC.Comp.monotone_commitment_par` | Composition |
 | Remarks: neither S₁ nor unresolved composition need be monotone; strict generality | `CC.Comp.monotone_commitment_neither_monotone`, `CC.Comp.proper_strictly_more_general` | Composition |
 | Counterexample: Lemma composition needs S₂ total on all of M | `CC.Comp.restricted_middle_counterexample` | Composition |
+| Thm. remembered-output frontier (monotone hull, pruning) | `CC.Front.monotone_hull`, `CC.Front.pruned_unique`, `CC.Front.hullSpec_consistent` | Frontiers |
+| Table lookup-lift | `CC.Front.lookup_hull_i1`, `CC.Front.lookup_pruned_i1` | Frontiers |
+| Prop. persistent-forwarding monotonicity; Eq. forwarding-hull | `CC.Front.persistent_forwarding`, `CC.Front.fwdSpec_consistent`, `CC.Front.forwarding_hull` | Frontiers |
+| Def. monotone across partitions; Prop. partition compatibility (family level) | `CC.Front.MonoAcrossPartitions`, `CC.Front.partition_compat_iff` | Frontiers |
+| Thm. independent-product frontier | `CC.Front.product_monoAcross`, `CC.Front.product_partition_compat`, `CC.Front.strengthening_not_monoAcross` | Frontiers |
+| Example product-config (and injective-ownership counterexample) | `CC.Front.config_agreement_not_ok`, `CC.Front.agreement_ok_sole_owner` | Frontiers |
 
 Modeling choices are documented at the top of each file.
