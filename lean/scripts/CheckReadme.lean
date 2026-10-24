@@ -159,6 +159,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«thm:commitments-require-coordination»
 #check @CC.Paper.«thm:commitments-require-coordination/any-bases»
 #check @CC.Paper.«thm:commitments-require-coordination/reach»
+#check @CC.Paper.«thm:commitments-require-coordination/confined-to-current-input»
 #check @CC.Paper.«sec:coordination/conflict-is-choice»
 #check @CC.Paper.«sec:coordination/lm-iff-coordination-free»
 #check @CC.Paper.«sec:coordination/functional-reconciliation»

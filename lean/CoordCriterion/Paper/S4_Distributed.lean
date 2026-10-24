@@ -1,4 +1,5 @@
 import CoordCriterion.Distributed.Systems
+import CoordCriterion.CALM.TransientConflict
 import CoordCriterion.Figures
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
@@ -664,6 +665,31 @@ theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : B
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
   conflicting_outputs_reach h1 hno h2
 
+/-- "The conflict is confined to the current input.  Suppose `i ≺ j`,
+`S(i) = {o,x}` with `o` and `x` incomparable, and `S(j) = {u}` with `u`
+refining both.  After one participant emits `o` and another emits `x`, the two
+states cannot meet at `i`, but they meet as soon as `j` arrives.  Consistency
+nonetheless counts this as a failure …"  (The rest of the paragraph, on the
+environment and transient conflicts, is the paper's modeling assumption.)
+
+Lean: the example of `CALM/TransientConflict.lean`: inputs `i ≺ j`, outputs
+`o`, `x` incomparable below `u`, `S(i) = {o,x}`, `S(j) = {u}`.  From
+`σ_S(i)`, the canonical events `output(o)` and `output(x)` are legal; after
+`output(o)` no output at `i` refines `x`, so the two states have no common
+state with current input `i`; both reach `σ_S(j)` by `input(j)`, so they are
+confluent at `j`; and the specification is neither consistent nor directed at
+`i` (so not Lifted Monotone). -/
+theorem «thm:commitments-require-coordination/confined-to-current-input» :
+    open CALM.Transient in
+    Step σi (.output .o) tO ∧ Step σi (.output .x) tX ∧
+    (∀ y, tO.R .i y → ¬ (Out.x ≼ y)) ∧
+    (¬ ∃ ρ : State spec, ρ.cur = .i ∧ Reach tO ρ ∧ Reach tX ρ) ∧
+    Step tO (.input .j) (canon spec .j) ∧ Step tX (.input .j) (canon spec .j) ∧
+    ConfluentAt [tO, tX] .j ∧
+    ¬ spec.Consistent ∧ ¬ spec.DirectedOutputs ∧ ¬ spec.LiftedMono :=
+  open CALM.Transient in
+  ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
+    not_consistent, not_directedOutputs, not_liftedMono⟩
 /-- "The first event must apply a commitment, and that commitment is a choice
 against `x`."
 

@@ -6,6 +6,7 @@ import CoordCriterion.FunctionalCALM.Theorem
 import CoordCriterion.CompleteCALM.Theorem
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.CALM.Examples
+import CoordCriterion.CALM.TransientConflict
 -- §4.1–4.4 Distributed histories, consistency, systems, coordination; Appendix C
 import CoordCriterion.Distributed.Histories
 import CoordCriterion.Distributed.Commitments

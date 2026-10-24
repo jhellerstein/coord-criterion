@@ -58,6 +58,7 @@ first and supporting claims and examples follow.
 | `CompleteCALM/Theorem.lean` | `CC` | §3 | LM characterizations, common-expansion form, pairs suffice, lifted output event, Thm. Complete CALM, exposure boundary |
 | `CALM/Lemmas.lean` | `CC.CALM` | §2–§3, App. B | Event facts, functional remarks, Lemma reconciliation, paper proof routes, pairs suffice |
 | `CALM/Examples.lean` | `CC.CALM` | §2–§3, App. B | `k`-set agreement (pairs), rows at `j`, relational state-by-input, election, directed fiber |
+| `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §4.4 | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
 | `Figures.lean` | `CC.Figures` | §2–§3, §6 | Figure tables: election frames, ambiguity frames; decisive ballot vs. closing the polls |
 | `Distributed/Histories.lean` | `CC.Dist` | §4.1–4.2 | Histories, cuts, Prop. distributed consistency, Cor. convergence, exchanging outputs |
 | `Distributed/Commitments.lean` | `CC` | §4.3–4.4, App. C | Commitments, canonical seal/choice, system output events, normal form, seal-or-choose, canonical-equivalent, conflicting outputs |
@@ -90,7 +91,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-546 entries.
+547 entries.
 
 ### §2 Functional CALM
 
@@ -268,6 +269,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«thm:commitments-require-coordination»` | theorem | **Prop. |
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
+| `«thm:commitments-require-coordination/confined-to-current-input»` | theorem | "The conflict is confined to the current input. |
 | `«sec:coordination/conflict-is-choice»` | theorem | "The first event must apply a commitment, and that commitment is a choice against `x`." Lean: |
 | `«sec:coordination/lm-iff-coordination-free»` | theorem | "Complete CALM and the exposure boundary tie this to the specification: |
 | `«sec:coordination/functional-reconciliation»` | theorem | "In the functional case, finding that continuation is trivial: |

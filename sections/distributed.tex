@@ -245,6 +245,22 @@ A common state with current input $i$ has a row at $i$, and since events never
 add rows, that row would be in both states.
 \end{proof}
 
+The conflict is confined to the current input.  Suppose $i\InputOrd j$,
+$\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and $\fiber{j}=\{u\}$ with
+$u$ \outrelpart both.  After one participant emits $o$ and another emits $x$,
+the two states cannot meet at $i$, but they meet as soon as $j$ arrives.
+Consistency nonetheless counts this as a failure, because it asks for
+confluence at every common \indesc of the current inputs, including the current
+input itself.  The reason is the environment.  Emitted outputs are observable,
+and the environment may act on what it observes, so its next input can depend
+on outputs already emitted through channels the system does not see, as in
+Lamport's account of ``anomalous behavior,'' where a telephone call orders two
+requests without any message in the system~\cite{lamport1978time}.  We cannot
+assume that the input that would reconcile two outputs ever arrives.  A
+conflict that later input could repair is still a conflict the environment has
+seen, so consistency excludes every observable conflict, including a transient
+one.
+
 The first event must apply a commitment, and that commitment is a choice
 against $x$.  If both events stay available to different participants and their
 states must stay confluent, the system must exclude one of them: by a mutex or
