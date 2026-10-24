@@ -2,6 +2,8 @@ import CoordCriterion.CALM.Lemmas
 import CoordCriterion.Distributed.Systems
 import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CAP.AvailabilityAtEnd
+import CoordCriterion.CAP.Coordination
+import CoordCriterion.Appendix.Deployment
 
 /-!
 # Paper Appendix A: notation and terms (`appendices/notation.tex`)
@@ -369,11 +371,19 @@ Lean: two event lists are observably equivalent when their images under
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.map SEvent.erase = es'.map SEvent.erase
 
-/-- *coordination* — an output event with `γ ≠ ε` (Def. `def:coordination`).
-Lean: `Coordinates es` (some output event of `es` carries a nonempty `γ`);
-the negation is `CoordFree es`. -/
-abbrev «app:notation/coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-  Coordinates es
+/-- *coordination* — a commitment some other run contradicts
+(Def. `def:coordination`).  Lean, for a system: `CAP.System.CoordinationFree`
+(no output event's commitments are contradicted by any run); for a
+specification, coordination is commitment (`Coordinates es`). -/
+abbrev «app:notation/coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
+  Sys.CoordinationFree
+
+/-- *distributed coordination* — a commitment contradicted at another
+participant of the same history (Def. `def:coordination`).  Lean:
+`CAP.System.CoordinationFreeH` (none). -/
+abbrev «app:notation/distributed-coordination» {sp : Spec I O} {D : Type}
+    (Sys : CAP.System sp D) : Prop :=
+  Sys.CoordinationFreeH
 
 /-- *partitioned history* — no message crosses components
 (Def. `def:partition-notions`).  Lean: `CAP.Partitioned H comp` (at least two
@@ -382,11 +392,28 @@ abbrev «app:notation/partitioned-history» {sp : Spec I O} {D : Type} {n : Nat}
     (H : CAP.History sp D n) (comp : Fin n → Nat) : Prop :=
   CAP.Partitioned H comp
 
-/-- *Availability* — each output emittable within its component
-(Def. `def:partition-notions`).  Lean: `CAP.AvailabilityAtEnd` (equivalently
-`CAP.Availability`, stated at cuts). -/
-abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
-  CAP.AvailabilityAtEnd Sys
+/-- *availability relation* — `A ⊆ S`, the rows whose outputs must stay
+available (Def. `def:partition-notions`).  Lean: a table `A : Table I O`
+with `∀ i o, A i o → sp.S i o`. -/
+abbrev «app:notation/availability-relation» {sp : Spec I O} (A : Table I O) : Prop :=
+  ∀ i o, A i o → sp.S i o
+
+/-- *Availability for `A`* — each output of `R(i) ∩ A(i)` emittable locally
+(Def. `def:partition-notions`).  Lean: `CAP.AvailabilityFor A`; Availability
+is `A = S` (`CAP.AvailabilityAtEnd`). -/
+abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (A : Table I O)
+    (Sys : CAP.System sp D) : Prop :=
+  CAP.AvailabilityFor A Sys
+
+/-- *consistent on `A`* — every finite set of rows of `A` with a common
+expansion `j` has a common refinement in `S(j)` (Def. `def:partition-notions`).
+Lean: `CAP.ConsistentOn`. -/
+abbrev «app:notation/consistent-on» (sp : Spec I O) (A : Table I O) : Prop :=
+  CAP.ConsistentOn sp A
+
+/-- *deployment* — one availability relation `A_p` per participant
+(Def. `def:deployment`).  Lean: `CC.Deploy.Deployment sp n`. -/
+abbrev «app:notation/deployment» (sp : Spec I O) (n : Nat) : Type := CC.Deploy.Deployment sp n
 
 /-- *Partition Consistency* — final cuts of partitioned histories confluent
 (Def. `def:partition-notions`).  Lean: `CAP.PartitionConsistencyAtEnd`
@@ -400,6 +427,12 @@ answers; upward closed within fibers (Def. `def:response-obligation`).  Lean:
 `CAP.Obligation sp` (uniform case); `CAP.ResponseAvailability` takes a
 per-participant family `Q n p`. -/
 abbrev «app:notation/response-obligation» (sp : Spec I O) := CAP.Obligation sp
+
+/-- *response interface* — a total, self-continuing availability relation
+`T ⊆ Q` (Def. `def:response-interface`).  Lean: `CAP.ResponseInterface Q T`. -/
+abbrev «app:notation/response-interface» {sp : Spec I O} (Q : CAP.Obligation sp)
+    (T : Table I O) : Prop :=
+  CAP.ResponseInterface Q T
 
 end
 

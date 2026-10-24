@@ -67,8 +67,9 @@ first and supporting claims and examples follow.
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.5 | Thm. Complete CAP; deterministic strategies do not suffice |
 | `CAP/ResponseForm.lean` | `CC.CAP` | App. F | Response Availability, Response Partition Consistency, Thm. Complete CAP (response form) |
 | `CAP/Register.lean` | `CC.GL` | App. F | Linearizable register, realized histories, Cor. Gilbert–Lynch |
-| `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.5, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, interface form, Lemma forced-answer, GL via forced answer |
+| `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.5, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |
 | `CAP/AsyncGilbertLynch.lean` | `CC.AsyncGL` | App. F | Gilbert–Lynch Theorem 1 (asynchronous model) by reduction to the corollary |
+| `CAP/ChosenAvailability.lean` | `CC.CAP`, `CC.AsyncGL` | App. F | End-of-history forms of Response Availability / RPC / Answering; RPC is the converse's common-refinement condition; a response interface as a chosen availability relation; Lemma forced-answer and Cor. Gilbert–Lynch at the end of histories |
 | `Instances/InvariantConfluence.lean` | `CC.IConf` | §5, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §5 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
 | `Instances/Examples.lean` | `CC.Inst` | §5, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
@@ -76,6 +77,7 @@ first and supporting claims and examples follow.
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
+| `Appendix/DeploymentFor.lean` | `CC.Deploy` | App. E | Deployment Availability at the end of histories; uniform deployment is Availability for `A`; consistency on `A` implies monotone across partitions; single authority: choices not distributed coordination |
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter commitments on antichain fibers (used by Fig. cc-commitments in §4.3 and App. C) |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | The `(L,X,ρ)` spec with partial outputs; closure commitments; 2PL/MVTO bases; bases differ; deadlock; MVTO: reported reads, entailed vs. chosen aborts |
 | `Appendix/TransactionBases/CanonicalExample.lean` | `CC.Txn.Partial.CanonEx` | §4.3 | Canonical runs suffice: a 2PL run at `{A,B,C}` and its canonical run in lockstep |
@@ -91,7 +93,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-561 entries.
+574 entries.
 
 ### §2 Functional CALM
 
@@ -423,11 +425,16 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments erased; every run has a canonical one (Lem. |
-| `«app:notation/coordination»` | abbrev | *coordination* — an output event with `γ ≠ ε` (Def. |
+| `«app:notation/coordination»` | abbrev | *coordination* — a commitment some other run contradicts (Def. |
+| `«app:notation/distributed-coordination»` | abbrev | *distributed coordination* — a commitment contradicted at another participant of the same history (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — no message crosses components (Def. |
-| `«app:notation/availability»` | abbrev | *Availability* — each output emittable within its component (Def. |
+| `«app:notation/availability-relation»` | abbrev | *availability relation* — `A ⊆ S`, the rows whose outputs must stay available (Def. |
+| `«app:notation/availability»` | abbrev | *Availability for `A`* — each output of `R(i) ∩ A(i)` emittable locally (Def. |
+| `«app:notation/consistent-on»` | abbrev | *consistent on `A`* — every finite set of rows of `A` with a common expansion `j` has a common refinement in `S(j)` (Def. |
+| `«app:notation/deployment»` | abbrev | *deployment* — one availability relation `A_p` per participant (Def. |
 | `«app:notation/partition-consistency»` | abbrev | *Partition Consistency* — final cuts of partitioned histories confluent (Def. |
 | `«app:notation/response-obligation»` | abbrev | *response obligation* — per participant, the outputs that count as answers; upward closed within fibers (Def. |
+| `«app:notation/response-interface»` | abbrev | *response interface* — a total, self-continuing availability relation `T ⊆ Q` (Def. |
 
 ### Appendix B: Deferred proofs
 
@@ -552,7 +559,9 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«def:deployment/family»` | theorem | Def. |
 | `«def:deployment/separable»` | theorem | Def. |
 | `«def:monotone-across-partitions»` | theorem | **Definition `def:monotone-across-partitions`** (Monotone across partitions). |
-| `«app:deployment/lm-implies-mono-across»` | theorem | "This is the common-expansion condition restricted to the families a partition can separate, so Lifted Monotonicity implies monotonicity across partitions." |
+| `«app:deployment/consistent-on-implies-mono-across»` | theorem | "If `S` is consistent on a relation that contains every `A_p`, it is monotone across partitions: |
+| `«app:deployment/uniform-mono-across»` | theorem | "So consistency on `A` suffices for the uniform deployment `A_p = A` …" |
+| `«app:deployment/lm-implies-mono-across»` | theorem | "… and Lifted Monotonicity suffices for every deployment." |
 | `«app:deployment/run-outputs-chain»` | theorem | "Rows authorized only to `p` can be emitted only by `p`'s run, whose emitted outputs form a chain (each output event keeps only rows refining it)." The chain… |
 | `«app:deployment/sole-rows-single-row»` | theorem | "… so a family whose emitted rows are all authorized only to `p` is separable only when it emits a single row." Lean: |
 | `«app:deployment/leader-example/setup»` | theorem | "Let `P = {p,q}`, let every fiber be `{a,b}` ordered by equality, and let `A_p = S` and `A_q = ∅`, so that `p` alone names a leader." Lean: |
@@ -565,16 +574,19 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/full-deployment»` | theorem | "If `\|P\| ≥ 2` and `A_p = S` for every `p`, every pair of rows can be split across a partition and every single row paired with a silent participant at the co… |
 | `«app:deployment/full-deployment/pairs-suffice»` | theorem | The pairs-suffice step used above (Appendix `app:pairs-suffice`). |
 | `«def:deployment-availability»` | theorem | **Definition `def:deployment-availability`** (Deployment Availability). |
-| `«app:deployment/full-deployment-availability»` | theorem | "If `A_p = S` for every `p`, Deployment Availability is Availability for histories over `P`." `AvailabilityAt Sys n` is `CAP.Availability` restricted to hist… |
+| `«app:deployment/uniform-availability»` | theorem | "This is Availability for `A_p`, one relation per participant. |
+| `«app:deployment/full-deployment-availability»` | theorem | "… and for `A_p = S` it is Availability." `AvailabilityAt Sys n` is `CAP.Availability` restricted to histories over `Fin n` (`CAP.Availability Sys ↔ ∀ n, Ava… |
 | `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `A_q = ∅` for every participant `q` but one, as in the leader example above." |
 | `«app:deployment/single-authority/shape»` | theorem | "Every separable family is then one row emitted by the single authority beside a silent participant …" |
 | `«app:deployment/single-authority»` | theorem | "… and monotonicity across partitions says only that each such row has an expansion at every expansion of its input." (With `\|P\| ≥ 2`, so that some partition… |
+| `«app:deployment/single-authority/not-distributed»` | theorem | "In a system whose other participants emit nothing, no other participant emits an output that the authority chooses against, so its choices are not distribut… |
+| `«app:deployment/single-authority/coordination»` | theorem | "They are still coordination when another run of the authority may choose differently, as for the lock manager of Section `sec:coordination`." Lean: |
 | `«thm:complete-cap-deployment»` | theorem | **Proposition `thm:complete-cap-deployment`** (Partition compatibility under a deployment). |
 | `«thm:complete-cap-deployment/proof»` | theorem | Proof of Prop. |
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |
 | `«app:deployment/system-runs»` | theorem | "So if `S` is monotone across partitions, the outputs emitted by a separable family of runs of a partitioned history, as Deployment Availability permits, hav… |
 | `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`; confluence through legal output events of the deployment would additionally r… |
-| `«app:deployment/full-deployment-step»` | theorem | "With `\|P\| ≥ 2` and `A_p = S` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Theorem `thm:complete-cap` stating that… |
+| `«app:deployment/full-deployment-step»` | theorem | "With `\|P\| ≥ 2` and `A_p = S` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Corollary `cor:complete-cap-S` stating t… |
 | `«app:registers/history»` | abbrev | "An input is a finite operation history `h`: |
 | `«app:registers/history-order»` | theorem | "We set `h ⊑ h'` when the operations of `h` form a causally closed subset of `h'` and `→` restricted to them is the order of `h`." |
 | `«app:registers/no-new-past»` | theorem | "Thus an expansion never adds an operation to the causal past of an existing one." |
@@ -587,7 +599,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:registers/causal-monotone-across»` | theorem | "Under the deployment in which each replica answers only its own reads (`A_p` holds the rows whose source map is defined only on reads of `p`), the causal re… |
 | `«app:registers/serialization-extends»` | theorem | Proof step: |
 | `«app:registers/linear-extension»` | theorem | Supporting fact: |
-| `«app:registers/same-read-incompatible»` | theorem | "Two answers to the same read remain incompatible, but they are confined to one participant." The causal register is not monotone: |
+| `«app:registers/same-read-incompatible»` | theorem | "Two answers to the same read remain incompatible, but only the reading replica may emit either." The causal register is not monotone: |
 
 ### Appendix F: Response availability and Gilbert–Lynch
 
@@ -601,31 +613,34 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«app:cap-response/trivially-available»` | theorem | "Response availability is only as strong as `Q_p`: |
 | `«def:response-availability»` | abbrev | **Def. |
 | `«def:response-availability/unfolded»` | theorem | Def. |
+| `«def:response-availability/at-cuts»` | theorem | Def. |
 | `«def:response-availability(1)»` | theorem | Def. |
-| `«def:response-availability/input-acceptance-no-seal»` | theorem | "Input acceptance says that `p` never seals an expansion of its current input." Lean: |
+| `«def:response-availability/input-acceptance-no-seal»` | theorem | "Input acceptance says that `p` never seals an expansion of its current input." Lean, at any cut, in particular the end of the history: |
 | `«def:response-availability/excludes-forced-seal»` | theorem | "It excludes specifications whose answers require such a seal": |
 | `«def:response-availability/election-equality-order»` | theorem | "… such as the election under the equality order (Figure `fig:nonmonotone-frame`)": |
 | `«def:response-partition-consistency»` | theorem | **Def. |
-| `«def:response-partition-consistency/system»` | theorem | Def. |
-| `«def:response-partition-consistency/of-confluent»` | theorem | "Confluence at `j` implies Response Partition Consistency at `j` (Corollary `cor:reconciliation-any-basis`)." |
-| `«def:response-partition-consistency/canonical»` | theorem | "for a canonical system (Definition `def:canonical-system`) the two coincide by Lemma `lem:reconciliation`, applied to the participant runs at the cut." |
+| `«def:response-partition-consistency/converse-part»` | theorem | "This is the part of Partition Consistency that the converse of Theorem `thm:complete-cap` uses, so that theorem also holds with Response Partition Consisten… |
+| `«def:response-partition-consistency/of-confluent»` | theorem | "Confluence at `j` implies a common refinement at `j` (Corollary `cor:reconciliation-any-basis`)." Lean, at any cut, in particular the final one. |
+| `«def:response-partition-consistency/canonical»` | theorem | "for a canonical system (Definition `def:canonical-system`) the two coincide by Lemma `lem:reconciliation`, applied to the participant runs." Lean, at any cu… |
 | `«def:response-partition-consistency/converse-fails»` | theorem | "With other commitments the converse can fail: |
 | `«app:cap-response/replicated»` | theorem | "A system is *replicated* when its obligation is uniform and every participant runs the same strategy, which depends only on the participant's initial input… |
 | `«lem:locality»` | theorem | **Lemma `lem:locality` (Locality).** "For each of some participants `p`, let `ℓ_p` be a local history that `p`'s strategy can produce from initial input `i_p… |
 | `«def:response-interface»` | theorem | **Def. |
-| `«def:response-interface/consistent-on»` | theorem | Def. |
-| `«def:response-interface/T-eq-S»` | theorem | "With `T = S`, consistency on `T` is the common-expansion condition of Proposition `prop:common-expansion-form`." |
-| `«def:response-interface/confluence»` | theorem | "and by Lemma `lem:reconciliation` consistency on `T` is confluence of the canonical runs whose emitted rows lie in `T`." Lean: |
+| `«def:response-interface/consistent-on»` | theorem | "Consistency on `T` is that of Definition `def:partition-notions`(6), and the reconciling output may lie outside `T`." Lean: |
+| `«def:response-interface/T-eq-S»` | theorem | "With `T = S` it is the common-expansion condition of Proposition `prop:common-expansion-form`." |
+| `«def:response-interface/confluence»` | theorem | "and by Lemma `lem:reconciliation` it is confluence of the canonical runs whose emitted rows lie in `T`." Lean: |
+| `«app:cap-response/serve-interface»` | theorem | "A response interface is an availability relation that a system can always serve. |
 | `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP, response form).** "For an ordered relational specification `S` and a uniform obligation `Q`, the followi… |
+| `«thm:complete-cap-response/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap-response`, (2⇒1): |
 | `«app:cap-response/without-replication»` | theorem | **Remark "Without replication"**: |
 | `«app:cap-response/without-replication/local-init-needed»` | theorem | The `LocalInit` hypothesis ("each strategy depends on the initial inputs only through its own participant's") is needed: |
-| `«app:cap-response/lm-implies-response-form»` | theorem | "Lifted Monotonicity implies the response form for every uniform obligation, with `T = Q`." |
+| `«app:cap-response/lm-implies-response-form»` | theorem | "Theorem `thm:complete-cap` with `A = S` requires every permitted output to stay available; the response form lets the system choose which outputs to serve. |
 | `«app:cap-response/converse-fails»` | theorem | "The converse fails. |
-| `«app:cap-response/functional-coincide»` | theorem | "For a functional specification the forms coincide: |
+| `«app:cap-response/functional-coincide»` | theorem | "For a functional specification the two coincide: |
 | `«app:cap-response/lm-subspec»` | theorem | "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is a response interface on which `S` is consistent". |
 | `«app:cap-response/subspec-weaker»` | theorem | "… but the condition is weaker." The five-input example: |
 | `«app:cap-response/subspec-seals»` | theorem | "Reconciling outputs need not lie in `T`: |
-| `«lem:forced-answer»` | theorem | **Lemma `lem:forced-answer` (Forced answer).** "Let `i ≺ j`, and suppose no output in `Q_q(i)` has a refinement in `S(j)`. |
+| `«lem:forced-answer»` | theorem | **Lemma `lem:forced-answer` (Forced answer).** "Let `i ⪯ j`, and suppose no output in `Q_q(i)` has a refinement in `S(j)`. |
 | `«app:cap-response/register-fiber»` | theorem | "The fiber `S(h)` contains the maps explained by some linearization of `h`, a total order of its operations extending precedence in which each answered read… |
 | `«app:cap-response/register-obligation-def»` | theorem | "The obligation `Q_p(h)` consists of the maps in `S(h)` that answer every read and acknowledge every write invoked at `p`." |
 | `«app:cap-response/register-obligation»` | theorem | "Every finite history has a linearization, so `Q_p` is total, and it is upward closed within fibers." Lean: |
@@ -635,9 +650,9 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«app:cap-response/realized-not-expansion»` | theorem | "The realized history need not be a common expansion of the participants' current inputs: |
 | `«app:cap-response/client-history»` | theorem | "A *client history* has two participants with empty initial inputs, and each of its input events adds one operation, invoked at its participant after all of… |
 | `«cor:gilbert-lynch»` | theorem | **Corollary `cor:gilbert-lynch` (Gilbert–Lynch).** "No system for the linearizable register has Answering for `(Q_p)` together with the following, both requi… |
-| `«cor:gilbert-lynch/hypotheses»` | theorem | The two hypotheses of Corollary `cor:gilbert-lynch`, unfolded. |
+| `«cor:gilbert-lynch/hypotheses»` | theorem | The two hypotheses of Corollary `cor:gilbert-lynch`, unfolded; Answering at the end of client histories is equivalent to its cut form `AnsweringC` (cuts of c… |
 | `«cor:gilbert-lynch/via-forced-answer»` | theorem | Proof of Corollary `cor:gilbert-lynch`, along the paper's route through Lemma `lem:forced-answer` (here with the hypotheses required of all histories, not on… |
-| `«cor:gilbert-lynch/also-excludes»` | theorem | "A system with Response Availability, and with Response Partition Consistency at `h_C` on every partitioned history, satisfies these hypotheses, so the corol… |
+| `«cor:gilbert-lynch/also-excludes»` | theorem | "A system with Response Availability, and with a common refinement at `h_C` for every prefix `C` of every partitioned history, satisfies these hypotheses, so… |
 | `«cor:gilbert-lynch/not-relMono»` | theorem | (Section `sec:complete-cap`, repeated here for reference.) "a single emitted output has no refinement in the fiber at some expansion of its input, a failure… |
 | `«prop:gl-async/available»` | theorem | Prop. |
 | `«prop:gl-async/atomic»` | theorem | Prop. |

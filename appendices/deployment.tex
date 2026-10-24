@@ -1,16 +1,17 @@
-\section{Availability and Confluence under a Deployment}
+\section{Deployments: One Availability Relation per Participant}
 \label{app:deployment}
 
-Availability (Definition~\ref{def:partition-notions}) requires every participant
-to be able to emit every output in its fiber.  A deployment restricts which rows
-each participant may emit, assigning to each participant its own availability
-relation where Theorem~\ref{thm:complete-cap} uses one for all.  This appendix restricts Availability accordingly and
-characterizes the resulting compatibility condition.
+Theorem~\ref{thm:complete-cap} fixes one availability relation $A$ for all
+participants.  A deployment fixes one for each participant: the rows that
+participant may emit.  It models a system that assigns authority, such as a
+key owned by one participant or a replica that answers only its own reads.
+This appendix states Availability for a deployment and characterizes the
+condition on the specification that replaces consistency on $A$.
 
 \begin{definition}[Deployment, separable run family]
 \label{def:deployment}
 A \emph{deployment} over a finite participant set $P$ assigns to each $p\in P$
-a set $A_p\subseteq S$, the rows $p$ may emit: $p$ performs an output event
+an availability relation $A_p\subseteq S$, the rows $p$ may emit: $p$ performs an output event
 $\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) at current input
 $i$ only if $(i,o)\in A_p$.  The \emph{emitted rows} of a run are the pairs
 $(i,o)$ such that the run emits $o$ at current input $i$.  A \emph{partition} $\Pi$ of $P$ divides $P$ into
@@ -34,10 +35,13 @@ emitted output.  It is \emph{monotone across partitions} when it is monotone
 across every partition of $P$.
 \end{definition}
 
-This is the common-\indesc condition
-(Definition~\ref{def:common-expansion-condition}) restricted to the families a
-partition can separate, so Lifted Monotonicity implies monotonicity across
-partitions.  Rows authorized only to $p$ can be emitted only by $p$'s run,
+Monotonicity across partitions plays the role of consistency on $A$
+(Definition~\ref{def:partition-notions}(6)), restricted to the families a
+partition can separate.  If $\Spec$ is consistent on a relation that contains
+every $A_p$, it is monotone across partitions: the emitted rows of a family are
+rows of that relation at inputs below $j$.  So consistency on $A$ suffices for
+the uniform deployment $A_p=A$, and Lifted Monotonicity suffices for every
+deployment.  Rows authorized only to $p$ can be emitted only by $p$'s run,
 whose emitted outputs form a chain (each output event keeps only rows refining
 it), so a family whose emitted rows are all authorized only to $p$ is
 separable only when it emits a single row.  The converse can therefore fail.
@@ -63,27 +67,30 @@ Lifted Monotonicity.
 
 \begin{definition}[Deployment Availability]
 \label{def:deployment-availability}
-Relative to a deployment, a system has \emph{Deployment Availability} when, at
-every consistent cut of every partitioned history over $P$ it produces, each
-participant $p$ in state $(i,R)$ can emit every $o\in R(i)$ with
-$(i,o)\in A_p$ in some continuation, produced by the system and partitioned by
-the same components, that adds only history events of $p$'s component and no
-input event.
+Relative to a deployment, a system has \emph{Deployment Availability} when, in
+every partitioned history over $P$ it produces, each participant $p$, ending in
+state $(i,R)$, can emit each output in $R(i)\cap A_p(i)$ in some continuation
+local to $p$ (Definition~\ref{def:partition-notions}(4)).
 \end{definition}
 
-As in Availability (Definition~\ref{def:partition-notions}), the output event
-may apply commitments within the participant's component.  If $A_p=S$ for
-every $p$, Deployment Availability is Availability for histories over $P$.
+This is Availability for $A_p$, one relation per participant.  For the uniform
+deployment $A_p=A$ it is Availability for $A$ on histories over $P$, and for
+$A_p=S$ it is Availability.
 
 A deployment is \emph{single-authority} when $A_q=\varnothing$ for every
 participant $q$ but one, as in the leader example above.  Every separable family
 is then one row emitted by the single authority beside a silent participant, and
 monotonicity across partitions says only that each such row has a \outnoun at
-every \indesc of its input.  The formalism permits this case, as do
-placement-sensitive models such as relational-transducer
-CALM~\cite{ameloot2013relational,ameloot2015weaker}, and nothing below excludes
-it.  It is degenerate for CAP, since a sole authority never needs to agree with
-anyone, and we do not discuss it further.
+every \indesc of its input.  Placement-sensitive models such as
+relational-transducer CALM~\cite{ameloot2013relational,ameloot2015weaker} also
+admit this case.  In a system whose other participants emit nothing, no other
+participant emits an output that the authority chooses against, so its choices are not distributed
+coordination (Definition~\ref{def:coordination}).  They are still coordination
+when another run of the authority may choose differently, as for the lock
+manager of Section~\ref{sec:coordination}.  In this sense a deployment
+localizes choices.  It does not localize seals: it restricts which outputs a
+participant emits, not which inputs it receives, and the environment may
+deliver any input to any participant.
 
 \begin{proposition}[Partition compatibility under a deployment]
 \label{thm:complete-cap-deployment}
@@ -120,10 +127,9 @@ at every common \indesc exactly when Lifted Monotonicity holds.
 \subsection{Registers}
 \label{app:registers}
 
-The Gilbert--Lynch witness, a replica cut off from a completed write that must
-still answer a read, is recovered by Corollary~\ref{cor:gilbert-lynch}
-(Appendix~\ref{app:cap-response}).  Here both writes are visible to both
-replicas.
+Section~\ref{sec:complete-cap} derives the Gilbert--Lynch theorem from a
+replica cut off from a completed write that must still answer a read.  Here
+both writes are visible to both replicas.
 
 \paragraph{The causal register.}
 This register records causal precedence rather than real-time precedence, and
@@ -175,6 +181,5 @@ extending $\to$; since no new operation causally precedes an old one, the
 result extends $\to$ and explains the same reads.  Using these serializations
 for emitting replicas and arbitrary ones for the others, the union of the
 $\rho_p$ lies in $\fiber{j}$ and \outrel every emitted output.  Separability is
-not used.  Two answers to the same read remain incompatible, but they are
-confined to one participant.  A commitment selecting a participant's response
-is therefore local to its component.
+not used.  Two answers to the same read remain incompatible, but only the
+reading replica may emit either.

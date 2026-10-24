@@ -1,17 +1,21 @@
 import CoordCriterion.CAP.ResponseAvailability
 import CoordCriterion.CAP.AsyncGilbertLynch
+import CoordCriterion.CAP.ChosenAvailability
 
 /-!
-# Paper Appendix F, "Response Availability and Gilbert–Lynch" (`appendices/cap-response.tex`)
+# Paper Appendix F, "Choosing the Availability Relation" (`appendices/cap-response.tex`)
 
 Statement layer for Appendix `app:cap-response`, in paper order: the response
-obligation, Response Availability, Response Partition Consistency and the
-remarks on them, replicated systems, Lemma `lem:locality`, response
-interfaces, Theorem `thm:complete-cap-response`, the remark "Without
-replication", the relationship to the interface form, Lemma
-`lem:forced-answer`, the register, interleavings and realized histories,
-client histories, Corollary `cor:gilbert-lynch`, and Proposition
-`prop:gl-async`.
+obligation, continuations within a component, Response Availability, Response
+Partition Consistency and the remarks on them, replicated systems, Lemma
+`lem:locality`, response interfaces and how a system serves one, Theorem
+`thm:complete-cap-response`, the remark "Without replication", choosing versus
+requiring every output, Lemma `lem:forced-answer`, the register,
+interleavings and realized histories, client histories, Corollary
+`cor:gilbert-lynch`, and Proposition `prop:gl-async`.
+
+The paper states its definitions at the end of every partitioned history; the
+library's cut forms are equivalent (`CAP/ChosenAvailability.lean`).
 
 How to read this file: open it next to the `.tex` file.  The `/-! ## … -/`
 headers are the appendix's subsections (and paragraphs).  Each numbered
@@ -71,61 +75,76 @@ whole response form (Response Availability and Response Partition Consistency
 for a replicated system) then holds. -/
 theorem «app:cap-response/trivially-available» (Q : Obligation sp) (o0 : O)
     (h0 : ∀ i, Q.Q i o0) :
-    ∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
-      ResponsePC Sys :=
-  trivially_available Q o0 h0
+    ResponseForm sp D Q :=
+  (responseForm_iff_cuts sp D Q).2 (trivially_available Q o0 h0)
 
 /-! ### Definition `def:response-availability` -/
 
-/-- **Def. `def:response-availability`**: "A system has Response Availability
-for `(Q_p)` when, at every consistent cut of every partitioned history it
-produces, each participant `p` with current input `i` satisfies two
-conditions, each by a continuation that the system produces, that is
-partitioned by the same components, and that adds only events of `p`'s
-component.  (1) *Answering.* In a continuation that adds no input event at
-`p` (others in its component may still receive input), `p` emits some output
-in `Q_p(i)`.  (2) *Input acceptance.* For every `j ⪰ i`, in some continuation
-`p` records `input(j)`." -/
+/-- **Def. `def:response-availability`**: "A continuation of a partitioned
+history is within `p`'s component when the system produces it, it adds only
+events of `p`'s component, and none of its receives takes a message sent from
+another component. … A system has Response Availability for `(Q_p)` when, in
+every partitioned history it produces, each participant `p`, ending with
+current input `i`, satisfies two conditions.  (1) *Answering.*  In some
+continuation within `p`'s component that adds no input event at `p`, `p`
+emits some output in `Q_p(i)`.  (2) *Input acceptance.*  For every `j ⪰ i`,
+in some continuation within `p`'s component, `p` records `input(j)`."
+
+Lean: "within `p`'s component" is `Produced … ∧ Partitioned … comp ∧
+(∀ q, comp q ≠ comp p → ext q = [])`; a continuation local to `p` adds,
+besides, no input event. -/
 abbrev «def:response-availability» (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) :
     Prop :=
-  ResponseAvailability Sys Q
+  ResponseAvailabilityEnd Sys Q
 
-/-- Def. `def:response-availability`, unfolded; `σ` is `p`'s state at the
-cut, so `σ.cur` is its current input `i`. -/
+/-- Def. `def:response-availability`, unfolded; `σ` is `p`'s final state, so
+`σ.cur` is its current input `i`. -/
 theorem «def:response-availability/unfolded» (Sys : System sp D)
     (Q : (n : Nat) → Fin n → Table I O) :
-    ResponseAvailability Sys Q ↔
+    ResponseAvailabilityEnd Sys Q ↔
       ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
         WF init H → Produced Sys n init H → Partitioned H comp →
-        ∀ c, IsCut H c →
-        ∀ (p : Fin n) (σ : State sp), LRun (canon sp (init p)) ((H p).take (c p)) σ →
-          (∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
-            Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
+        ∀ (p : Fin n) (σ : State sp), LRun (canon sp (init p)) (H p) σ →
+          (∃ ext : Fin n → List (LEv sp D n),
+            WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
+            Partitioned (fun q => H q ++ ext q) comp ∧
             (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
             ∃ γ o, Q n p σ.cur o ∧ LEv.out γ o ∈ ext p) ∧
-          (∀ j, σ.cur ≼ j → ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
-            Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
+          (∀ j, σ.cur ≼ j → ∃ ext : Fin n → List (LEv sp D n),
+            WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
+            Partitioned (fun q => H q ++ ext q) comp ∧
             (∀ q, comp q ≠ comp p → ext q = []) ∧ LEv.inp j ∈ ext p) :=
   Iff.rfl
 
+/-- Def. `def:response-availability`: the library's form, at every consistent
+cut, is equivalent. -/
+theorem «def:response-availability/at-cuts» (Sys : System sp D)
+    (Q : (n : Nat) → Fin n → Table I O) :
+    ResponseAvailability Sys Q ↔ ResponseAvailabilityEnd Sys Q :=
+  responseAvailability_iff_end Sys Q
+
 /-- Def. `def:response-availability`(1), *Answering*, on its own (used by
-Lemma `lem:forced-answer`), and implied by Response Availability. -/
+Lemma `lem:forced-answer`), implied by Response Availability, and equivalent
+to its cut form. -/
 theorem «def:response-availability(1)» (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) :
-    (Answering Sys Q ↔
+    (AnsweringEnd Sys Q ↔
       ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
         WF init H → Produced Sys n init H → Partitioned H comp →
-        ∀ c, IsCut H c →
-        ∀ (p : Fin n) (σ : State sp), LRun (canon sp (init p)) ((H p).take (c p)) σ →
-          ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
-            Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
+        ∀ (p : Fin n) (σ : State sp), LRun (canon sp (init p)) (H p) σ →
+          ∃ ext : Fin n → List (LEv sp D n),
+            WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
+            Partitioned (fun q => H q ++ ext q) comp ∧
             (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
             ∃ γ o, Q n p σ.cur o ∧ LEv.out γ o ∈ ext p) ∧
-    (ResponseAvailability Sys Q → Answering Sys Q) :=
-  ⟨Iff.rfl, answering_of_ra⟩
+    (ResponseAvailabilityEnd Sys Q → AnsweringEnd Sys Q) ∧
+    (Answering Sys Q ↔ AnsweringEnd Sys Q) :=
+  ⟨Iff.rfl, fun h n init H comp hw hp hpt p σ hσ => (h n init H comp hw hp hpt p σ hσ).1,
+    answering_iff_end Sys Q⟩
 
 /-- "Input acceptance says that `p` never seals an expansion of its current
-input."  Lean: at a cut where `p` is in state `σ`, an Input-acceptance
-continuation for `j` exists iff `p`'s table still has a row at `j`. -/
+input."  Lean, at any cut, in particular the end of the history: where `p`
+is in state `σ`, an Input-acceptance continuation for `j` exists iff `p`'s
+table still has a row at `j`. -/
 theorem «def:response-availability/input-acceptance-no-seal» (Sys : System sp D)
     {init : Fin n → I} {H : History sp D n} {comp : Fin n → Nat} (hwf : WF init H)
     (hprod : Produced Sys n init H) (hpart : Partitioned H comp) {c : Fin n → Nat}
@@ -142,49 +161,55 @@ Availability (already with two participants, each alone). -/
 theorem «def:response-availability/excludes-forced-seal» (Sys : System sp D)
     (Q : (n : Nat) → Fin n → Table I O) {i j : I} (hij : i ≼ j)
     (hno : ∀ o, Q 2 0 i o → ¬ ∃ u, sp.S j u ∧ o ≼ u) :
-    ¬ ResponseAvailability Sys Q :=
-  ra_excludes_forced_seal Sys Q hij hno
+    ¬ ResponseAvailabilityEnd Sys Q :=
+  fun h => ra_excludes_forced_seal Sys Q hij hno ((responseAvailability_iff_end Sys Q).2 h)
 
 /-- "… such as the election under the equality order
 (Figure `fig:nonmonotone-frame`)": no system for `electionEq` has Response
 Availability for any obligation contained in `S`. -/
 theorem «def:response-availability/election-equality-order» (Sys : System electionEq D)
     (Q : (n : Nat) → Fin n → Table Ballots Win) (hQ : ∀ n p i o, Q n p i o → electionEq.S i o) :
-    ¬ ResponseAvailability Sys Q :=
-  election_eq_no_ra Sys Q hQ
+    ¬ ResponseAvailabilityEnd Sys Q :=
+  fun h => election_eq_no_ra Sys Q hQ ((responseAvailability_iff_end Sys Q).2 h)
 
 /-! ### Definition `def:response-partition-consistency` -/
 
-/-- **Def. `def:response-partition-consistency`**, for a cut: "A consistent
-cut has Response Partition Consistency at an input `j` that expands every
-participant's current input when some `u ∈ S(j)` refines every output emitted
-in the cut." -/
-theorem «def:response-partition-consistency» (H : History sp D n) (c : Fin n → Nat) (j : I) :
-    RPCAt H c j ↔ ∃ u, sp.S j u ∧ ∀ p γ o, LEv.out γ o ∈ (H p).take (c p) → o ≼ u :=
-  Iff.rfl
-
-/-- Def. `def:response-partition-consistency`, for a system: "A system has it
-when every consistent cut of every partitioned history it produces has it at
-every such `j`." -/
-theorem «def:response-partition-consistency/system» (Sys : System sp D) :
-    ResponsePC Sys ↔
+/-- **Def. `def:response-partition-consistency`**: "A system has Response
+Partition Consistency when, in every partitioned history it produces and at
+every common expansion `j` of the participants' current inputs, some
+`u ∈ S(j)` refines every output emitted in the history."  Lean: this is
+`CommonRefinementAtEnd`; the library's cut form `ResponsePC` is equivalent. -/
+theorem «def:response-partition-consistency» (Sys : System sp D) :
+    (CommonRefinementAtEnd Sys ↔
       ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
         WF init H → Produced Sys n init H → Partitioned H comp →
-        ∀ c, IsCut H c →
-        ∀ j : I, (∀ p σ, LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ j) →
-        RPCAt H c j :=
-  Iff.rfl
+        ∀ j : I, (∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j) →
+        ∃ u, sp.S j u ∧ ∀ p γ o, LEv.out γ o ∈ H p → o ≼ u) ∧
+    (ResponsePC Sys ↔ CommonRefinementAtEnd Sys) :=
+  ⟨Iff.rfl, responsePC_iff_commonRefinement Sys⟩
 
-/-- "Confluence at `j` implies Response Partition Consistency at `j`
-(Corollary `cor:reconciliation-any-basis`)." -/
+/-- "This is the part of Partition Consistency that the converse of Theorem
+`thm:complete-cap` uses, so that theorem also holds with Response Partition
+Consistency in place of Partition Consistency."  Lean: Partition Consistency
+implies it, and Theorem `thm:complete-cap` holds with it. -/
+theorem «def:response-partition-consistency/converse-part» (A : Table I O)
+    (hAS : ∀ i o, A i o → sp.S i o) :
+    (∀ Sys : System sp D, PartitionConsistencyAtEnd Sys → CommonRefinementAtEnd Sys) ∧
+    ((∃ Sys : System sp D, AvailabilityFor A Sys ∧ CommonRefinementAtEnd Sys) ↔
+      ConsistentOn sp A) :=
+  ⟨fun _ h => commonRefinement_of_pc h, complete_cap_for_rpc sp D A hAS⟩
+
+/-- "Confluence at `j` implies a common refinement at `j` (Corollary
+`cor:reconciliation-any-basis`)."  Lean, at any cut, in particular the final
+one. -/
 theorem «def:response-partition-consistency/of-confluent» {init : Fin n → I}
     {H : History sp D n} {c : Fin n → Nat} {j : I} (h : ConfluentCut init H c j) :
     RPCAt H c j :=
   rpc_of_confluent h
 
 /-- "for a canonical system (Definition `def:canonical-system`) the two
-coincide by Lemma `lem:reconciliation`, applied to the participant runs at the
-cut." -/
+coincide by Lemma `lem:reconciliation`, applied to the participant runs."
+Lean, at any cut, in particular the final one. -/
 theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
     (hS : CanonicalSystem Sys) {init : Fin n → I} {H : History sp D n} (hwf : WF init H)
     (hp : Produced Sys n init H) {c : Fin n → Nat} (hcut : IsCut H c) {j : I}
@@ -259,39 +284,38 @@ theorem «lem:locality» :
   ⟨fun Sys _ _ L comp h2 hnr hc hr => locality_glue Sys L comp h2 hnr hc hr,
    fun hrep _ _ _ _ _ _ hi _ hc hnr _ hrun => locality_transfer hrep hi hc hnr hrun⟩
 
-/-! ## The response form of Complete CAP
+/-! ## Response interfaces
 
 ### Definition `def:response-interface` -/
 
 /-- **Def. `def:response-interface`**, response interface: "For a uniform
-obligation `Q`, a response interface is a relation `T ⊆ Q` that is total on
-`I` and self-continuing: if `(i,o) ∈ T` and `i ⪯ j`, then some `u ∈ T(j)`
-refines `o`." -/
+obligation `Q`, a response interface is an availability relation `T ⊆ Q`
+that is total on `I` and self-continuing: if `(i,o) ∈ T` and `i ⪯ j`, then
+some `u ∈ T(j)` refines `o`." -/
 theorem «def:response-interface» (Q : Obligation sp) (T : Table I O) :
     ResponseInterface Q T ↔
       (∀ i o, T i o → Q.Q i o) ∧ (∀ i, ∃ o, T i o) ∧
       ∀ i o j, T i o → i ≼ j → ∃ u, T j u ∧ o ≼ u :=
   Iff.rfl
 
-/-- Def. `def:response-interface`, consistency on `T`: "The specification is
-consistent on `T` when, for every finite set of rows `(i₁,o₁),…,(i_k,o_k)` of
-`T` and every common expansion `j` of `i₁,…,i_k`, some `u ∈ S(j)` refines
-every `o_r`."  Lean: finite families of rows are lists. -/
+/-- "Consistency on `T` is that of Definition `def:partition-notions`(6), and
+the reconciling output may lie outside `T`."  Lean: the same `ConsistentOn`
+as in Theorem `thm:complete-cap`; finite families of rows are lists. -/
 theorem «def:response-interface/consistent-on» (T : Table I O) :
     ConsistentOn sp T ↔
       ∀ rows : List (I × O), (∀ r ∈ rows, T r.1 r.2) →
         ∀ j, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.S j u ∧ ∀ r ∈ rows, r.2 ≼ u :=
   Iff.rfl
 
-/-- "With `T = S`, consistency on `T` is the common-expansion condition of
-Proposition `prop:common-expansion-form`." -/
+/-- "With `T = S` it is the common-expansion condition of Proposition
+`prop:common-expansion-form`." -/
 theorem «def:response-interface/T-eq-S» : ConsistentOn sp sp.S ↔ sp.CommonExpansion :=
   consistentOn_S
 
-/-- "and by Lemma `lem:reconciliation` consistency on `T` is confluence of the
-canonical runs whose emitted rows lie in `T`."  Lean: a family of canonical
-executions `x.2.1` from `σ_S(x.1)` to `x.2.2`, with emitted rows in `T`; `T`
-is assumed contained in `S`. -/
+/-- "and by Lemma `lem:reconciliation` it is confluence of the canonical runs
+whose emitted rows lie in `T`."  Lean: a family of canonical executions
+`x.2.1` from `σ_S(x.1)` to `x.2.2`, with emitted rows in `T`; `T` is assumed
+contained in `S`. -/
 theorem «def:response-interface/confluence» (T : Table I O) (hTS : ∀ i o, T i o → sp.S i o) :
     ConsistentOn sp T ↔
       ∀ fam : List (I × List (Event I O) × State sp),
@@ -299,18 +323,58 @@ theorem «def:response-interface/confluence» (T : Table I O) (hTS : ∀ i o, T 
         ∀ j, (∀ x ∈ fam, x.2.2.cur ≼ j) → ConfluentAt (fam.map (fun x => x.2.2)) j :=
   consistentOn_iff_confluent T hTS
 
+/-- "A response interface is an availability relation that a system can always
+serve.  Consider the system of the proof of Theorem `thm:complete-cap` for
+`A = T` … So every participant's fiber meets `T`, and Availability for `T`
+gives Answering.  The same argument at an input `k ⪰ i` leaves a row at `k`,
+which gives Input acceptance."  Lean: `respSystem T` has Availability for
+`T`; at the end of every history it produces, each participant's current
+fiber meets `T`; hence Answering; and full Response Availability. -/
+theorem «app:cap-response/serve-interface» (Q : Obligation sp) (T : Table I O)
+    (hT : ResponseInterface Q T) :
+    AvailabilityFor T (respSystem (sp := sp) (D := D) T) ∧
+    (∀ (n : Nat) (init : Fin n → I) (H : History sp D n),
+      Produced (respSystem (sp := sp) (D := D) T) n init H →
+      ∀ (p : Fin n) (σ : State sp), LRun (canon sp (init p)) (H p) σ →
+      ∃ o, σ.R σ.cur o ∧ T σ.cur o) ∧
+    AnsweringEnd (respSystem (sp := sp) (D := D) T) (fun _ _ => Q.Q) ∧
+    ResponseAvailabilityEnd (respSystem (sp := sp) (D := D) T) (fun _ _ => Q.Q) :=
+  ⟨availabilityFor_resp T,
+   fun _ _ _ hp _ _ hσ => resp_fiber_meets T (fun i o h => Q.sub i o (hT.1 i o h))
+     hT.2.1 hT.2.2 hp hσ,
+   respSystem_answering Q T hT,
+   (responseAvailability_iff_end _ _).1 (respSystem_RA Q T hT)⟩
+
 /-! ### Theorem `thm:complete-cap-response` -/
 
 /-- **Theorem `thm:complete-cap-response` (Complete CAP, response form).**
 "For an ordered relational specification `S` and a uniform obligation `Q`,
 the following are equivalent: (1) some replicated system has Response
 Availability for `Q` and Response Partition Consistency; (2) `S` is consistent
-on some response interface `T ⊆ Q`." -/
+on some response interface `T ⊆ Q`; (3) for some response interface
+`T ⊆ Q`, some system has Availability for `T` and Partition Consistency."
+
+Lean: (1) is `ResponseForm sp D Q`, written out. -/
 theorem «thm:complete-cap-response» (sp : Spec I O) (D : Type) (Q : Obligation sp) :
-    (∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
-      ResponsePC Sys) ↔
-    ∃ T, ResponseInterface Q T ∧ ConsistentOn sp T :=
-  complete_cap_response sp D Q
+    ((∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailabilityEnd Sys (fun _ _ => Q.Q) ∧
+        CommonRefinementAtEnd Sys) ↔
+      ∃ T, ResponseInterface Q T ∧ ConsistentOn sp T) ∧
+    ((∃ T, ResponseInterface Q T ∧ ConsistentOn sp T) ↔
+      ∃ T, ResponseInterface Q T ∧
+        ∃ Sys : System sp D, AvailabilityFor T Sys ∧ PartitionConsistencyAtEnd Sys) :=
+  ⟨complete_cap_response_end sp D Q, response_form_iff_chosen sp D Q⟩
+
+/-- Proof of Theorem `thm:complete-cap-response`, (2⇒1): "Take the system of
+the proof of Theorem `thm:complete-cap` for `A = T`.  It is replicated, and
+… has Answering and Input acceptance. … consistency on `T` gives Response
+Partition Consistency."  Lean: `respSystem T`. -/
+theorem «thm:complete-cap-response/proof-sufficiency» (Q : Obligation sp) (T : Table I O)
+    (hT : ResponseInterface Q T) (hc : ConsistentOn sp T) :
+    (respSystem (sp := sp) (D := D) T).Replicated ∧
+    ResponseAvailabilityEnd (respSystem (sp := sp) (D := D) T) (fun _ _ => Q.Q) ∧
+    CommonRefinementAtEnd (respSystem (sp := sp) (D := D) T) :=
+  let h := response_sufficient (D := D) Q T hT hc
+  ⟨h.1, (responseAvailability_iff_end _ _).1 h.2.1, (responsePC_iff_commonRefinement _).1 h.2.2⟩
 
 /-! ### Remark "Without replication" -/
 
@@ -329,15 +393,16 @@ family drawing row `r p` from `T_p` for the participants `p` in `A` has a
 common refinement at every common expansion `j`. -/
 theorem «app:cap-response/without-replication» (Sys : System sp D)
     (Q : (n : Nat) → Fin n → Table I O) {n : Nat} (h2 : 2 ≤ n) :
-    (ResponseAvailability Sys Q → ∀ p : Fin n,
+    (ResponseAvailabilityEnd Sys Q → ∀ p : Fin n,
       (∀ i o, Tp Sys Q n p i o → Q n p i o) ∧ (∀ i, ∃ o, Tp Sys Q n p i o) ∧
       ∀ i o j, Tp Sys Q n p i o → i ≼ j → ∃ u, Tp Sys Q n p j u ∧ o ≼ u) ∧
-    (ResponsePC Sys → LocalInit Sys →
+    (CommonRefinementAtEnd Sys → LocalInit Sys →
       ∀ (A : Fin n → Prop) (r : Fin n → I × O),
         (∀ p, A p → Tp Sys Q n p (r p).1 (r p).2) →
         ∀ j : I, (∀ p, A p → (r p).1 ≼ j) → ∃ u, sp.S j u ∧ ∀ p, A p → (r p).2 ≼ u) :=
-  ⟨fun hRA p => without_replication_interface Sys Q hRA h2 p,
-   fun hRPC hloc A r hr j hj => without_replication Sys Q hRPC hloc h2 A r hr j hj⟩
+  ⟨fun hRA p => without_replication_interface Sys Q ((responseAvailability_iff_end Sys Q).2 hRA) h2 p,
+   fun hRPC hloc A r hr j hj => without_replication Sys Q
+     ((responsePC_iff_commonRefinement Sys).2 hRPC) hloc h2 A r hr j hj⟩
 
 /-- The `LocalInit` hypothesis ("each strategy depends on the initial inputs
 only through its own participant's") is needed: the non-replicated system
@@ -345,44 +410,55 @@ only through its own participant's") is needed: the non-replicated system
 the rows `(lo, b) ∈ T₀` and `(lo, a) ∈ T₁`, drawing on each `T_p` once, have
 no common refinement at any input. -/
 theorem «app:cap-response/without-replication/local-init-needed» :
-    ResponseAvailability mixSys (fun _ _ => Q4.Q) ∧ ResponsePC mixSys ∧
+    ResponseAvailabilityEnd mixSys (fun _ _ => Q4.Q) ∧ CommonRefinementAtEnd mixSys ∧
     Tp mixSys (fun _ _ => Q4.Q) 2 0 .lo .b ∧ Tp mixSys (fun _ _ => Q4.Q) 2 1 .lo .a ∧
     ∀ j u, sp4.S j u → ¬ (O4.b ≼ u ∧ O4.a ≼ u) :=
-  without_replication_counterexample
+  let h := without_replication_counterexample
+  ⟨(responseAvailability_iff_end _ _).1 h.1, (responsePC_iff_commonRefinement _).1 h.2.1, h.2.2⟩
 
-/-! ## Relationship to the interface form -/
+/-! ## Choosing versus requiring every output -/
 
-/-- "Lifted Monotonicity implies the response form for every uniform
+/-- "Theorem `thm:complete-cap` with `A = S` requires every permitted output
+to stay available; the response form lets the system choose which outputs to
+serve.  Lifted Monotonicity implies the response form for every uniform
 obligation, with `T = Q`." -/
 theorem «app:cap-response/lm-implies-response-form» (Q : Obligation sp) (h : sp.LiftedMono) :
-    (ResponseInterface Q Q.Q ∧ ConsistentOn sp Q.Q) ∧
-    ∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
-      ResponsePC Sys :=
-  ⟨lm_response_interface Q h, lm_response_form Q h⟩
+    (ResponseInterface Q Q.Q ∧ ConsistentOn sp Q.Q) ∧ ResponseForm sp D Q :=
+  ⟨lm_response_interface Q h, (responseForm_iff_cuts sp D Q).2 (lm_response_form Q h)⟩
 
 /-- "The converse fails.  Let `I = {0,1}` with `0 ≺ 1`, `⊥ ≺ a` and `⊥ ≺ b`
 with `a, b` incomparable, `S(0) = {⊥, a}`, `S(1) = {b}`, and `Q = S`.  Lifted
 Monotonicity fails at `(0,a)`, but `S` is consistent on the response interface
-`{(0,⊥),(1,b)}`."  Lean: `cxSpec` on `In2 = {lo ≺ hi}` and `O3 = {bot, a, b}`,
-`cxQ = S`, `cxT = {(lo,bot),(hi,b)}`; second conjunct: the system-level form
-(response form holds, interface form fails). -/
+`{(0,⊥),(1,b)}`: a system that answers `⊥` at `0` never emits the output that
+conflicts with `b`."  Lean: `cxSpec` on `In2 = {lo ≺ hi}` and
+`O3 = {bot, a, b}`, `cxQ = S`, `cxT = {(lo,bot),(hi,b)}`; second conjunct: the
+system-level form (the response form holds; no system has Availability and
+Partition Consistency). -/
 theorem «app:cap-response/converse-fails» (D : Type) :
     (¬ cxSpec.LiftedMono ∧ ResponseInterface cxQ cxT ∧ ConsistentOn cxSpec cxT) ∧
-    ((∃ Sys : System cxSpec D, Sys.Replicated ∧
-        ResponseAvailability Sys (fun _ _ => cxQ.Q) ∧ ResponsePC Sys) ∧
-      ¬ ∃ Sys : System cxSpec D, Availability Sys ∧ PartitionConsistency Sys) :=
-  ⟨converse_counterexample, converse_counterexample_systems D⟩
+    (ResponseForm cxSpec D cxQ ∧
+      ¬ ∃ Sys : System cxSpec D, AvailabilityAtEnd Sys ∧ PartitionConsistencyAtEnd Sys) :=
+  ⟨converse_counterexample,
+   (responseForm_iff_cuts _ _ _).2 (converse_counterexample_systems D).1,
+   fun ⟨Sys, hA, hP⟩ => (converse_counterexample_systems D).2
+     ⟨Sys, (availability_iff_atEnd _).2 hA, (partitionConsistency_iff_atEnd _).2 hP⟩⟩
 
-/-- "For a functional specification the forms coincide: a total `T ⊆ Q ⊆ S`
+/-- "For a functional specification the two coincide: a total `T ⊆ Q ⊆ S`
 equals `S`, and both self-continuation and consistency on `S` are
 monotonicity."  First conjunct: at the level of interfaces; second: at the
-level of systems (response form ⇔ interface form). -/
+level of systems (the response form ⇔ Availability and Partition
+Consistency). -/
 theorem «app:cap-response/functional-coincide» (hf : sp.Functional) (Q : Obligation sp) :
     ((∃ T, ResponseInterface Q T ∧ ConsistentOn sp T) ↔ sp.LiftedMono) ∧
-    ((∃ Sys : System sp D, Sys.Replicated ∧ ResponseAvailability Sys (fun _ _ => Q.Q) ∧
-        ResponsePC Sys) ↔
-      (∃ Sys : System sp D, Availability Sys ∧ PartitionConsistency Sys)) :=
-  ⟨functional_response_iff hf Q, functional_forms_coincide hf Q⟩
+    (ResponseForm sp D Q ↔
+      (∃ Sys : System sp D, AvailabilityAtEnd Sys ∧ PartitionConsistencyAtEnd Sys)) := by
+  refine ⟨functional_response_iff hf Q, ?_⟩
+  rw [responseForm_iff_cuts, functional_forms_coincide hf Q]
+  constructor
+  · rintro ⟨Sys, hA, hP⟩
+    exact ⟨Sys, (availability_iff_atEnd _).1 hA, (partitionConsistency_iff_atEnd _).1 hP⟩
+  · rintro ⟨Sys, hA, hP⟩
+    exact ⟨Sys, (availability_iff_atEnd _).2 hA, (partitionConsistency_iff_atEnd _).2 hP⟩
 
 /-- "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is
 a response interface on which `S` is consistent". -/
@@ -408,37 +484,41 @@ theorem «app:cap-response/subspec-seals» {D : Type} {n : Nat} {σ τ : State s
     (LEv.out γ .d1 ∈ l → ∀ u, ¬ τ.R .k2 u) ∧ (LEv.out γ .d2 ∈ l → ∀ u, ¬ τ.R .k1 u) :=
   ⟨fun hm u => emit_d1_seals_k2 h hm u, fun hm u => emit_d2_seals_k1 h hm u⟩
 
-/-! ## Recovering Gilbert–Lynch
+/-! ## Gilbert–Lynch with real-time precedence
+
+"Section `sec:complete-cap` derives the Gilbert–Lynch theorem from the
+converse of Theorem `thm:complete-cap`, with real-time precedence supplied as
+input.  Here precedence comes from real time, and consistency is required
+only at the precedence an execution realizes."  (The §4.5 derivation is
+`«sec:complete-cap/gilbert-lynch»` in `Paper/S4_5_CompleteCAP.lean`.)
 
 ### Lemma `lem:forced-answer` -/
 
-/-- **Lemma `lem:forced-answer` (Forced answer).**  "Let `i ≺ j`, and suppose
+/-- **Lemma `lem:forced-answer` (Forced answer).**  "Let `i ⪯ j`, and suppose
 no output in `Q_q(i)` has a refinement in `S(j)`.  In a system with Answering
 for `(Q_p)`, consider a partitioned history that the system produces, in which
-`q` is alone in its component, with a cut at which `q`'s current input is `i`
-and `j` expands every participant's current input.  Then a continuation,
-produced by the system and partitioned by the same components, that adds only
-events of `q`, and no input event, reaches a cut at which the emitted outputs
-have no common refinement in `S(j)`."
+`q` is alone in its component, `q`'s current input is `i`, and `j` expands
+every participant's current input.  Then some continuation within `q`'s
+component that adds only events of `q`, and no input event, has emitted
+outputs with no common refinement in `S(j)`."
 
 Lean: `i` is `σq.cur`; "`q` alone" is `halone`; `i ⪯ j` follows from `hj`.
-The reached cut is the full cut of `H'`, at which `j` still expands every
-current input. -/
+The continuation keeps `j` above every current input. -/
 theorem «lem:forced-answer» (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
-    (hAns : Answering Sys Q) {init : Fin n → I} {H : History sp D n}
+    (hAns : AnsweringEnd Sys Q) {init : Fin n → I} {H : History sp D n}
     {comp : Fin n → Nat} (hwf : WF init H) (hprod : Produced Sys n init H)
-    (hpart : Partitioned H comp) {c : Fin n → Nat} (hc : IsCut H c) {q : Fin n}
+    (hpart : Partitioned H comp) {q : Fin n}
     (halone : ∀ p, comp p = comp q → p = q) {σq : State sp}
-    (hσq : LRun (canon sp (init q)) ((H q).take (c q)) σq) {j : I}
-    (hj : ∀ p σ, LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ j)
+    (hσq : LRun (canon sp (init q)) (H q) σq) {j : I}
+    (hj : ∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j)
     (hno : ∀ o, Q n q σq.cur o → ¬ ∃ u, sp.S j u ∧ o ≼ u) :
-    ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
-      Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
+    ∃ ext : Fin n → List (LEv sp D n),
+      WF init (fun p => H p ++ ext p) ∧ Produced Sys n init (fun p => H p ++ ext p) ∧
+      Partitioned (fun p => H p ++ ext p) comp ∧
       (∀ p, p ≠ q → ext p = []) ∧ (∀ p j, LEv.inp j ∉ ext p) ∧
-      IsCut H' (fun p => (H' p).length) ∧
-      (∀ p σ, LRun (canon sp (init p)) ((H' p).take (H' p).length) σ → σ.cur ≼ j) ∧
-      ¬ RPCAt H' (fun p => (H' p).length) j :=
-  forced_answer Sys Q hAns hwf hprod hpart hc halone hσq hj hno
+      (∀ p σ, LRun (canon sp (init p)) (H p ++ ext p) σ → σ.cur ≼ j) ∧
+      ¬ ∃ u, sp.S j u ∧ ∀ p γ o, LEv.out γ o ∈ H p ++ ext p → o ≼ u :=
+  forced_answer_end Sys Q hAns hwf hprod hpart halone hσq hj hno
 
 /-! ### Paragraph "The register"
 
@@ -538,27 +618,31 @@ theorem «app:cap-response/client-history» (H : CC.GL.RHist D 2) :
 linearizable register has Answering for `(Q_p)` together with the following,
 both required only of client histories: for every partitioned client history
 it produces, interleaving `λ`, and prefix `C` of `λ` such that `h_C` is a
-common expansion of the current inputs at `C`, the cut `C` has Response
-Partition Consistency at `h_C`."
+common expansion of the current inputs at `C`, the outputs emitted in `C`
+have a common refinement in `S(h_C)`."
 
-Lean: `AnsweringC` is Answering for `Q_p = regQ p` restricted to client
+Lean: `AnsweringCEnd` is Answering for `Q_p = regQ p` at the end of client
 histories; `RealizedRPCC` is the second hypothesis.  Both are written out
 below. -/
 theorem «cor:gilbert-lynch» (Sys : System CC.GL.regSpec D) :
-    ¬ (CC.AsyncGL.AnsweringC Sys ∧ CC.AsyncGL.RealizedRPCC Sys) :=
-  CC.AsyncGL.gilbert_lynch_client Sys
+    ¬ (CC.AsyncGL.AnsweringCEnd Sys ∧ CC.AsyncGL.RealizedRPCC Sys) :=
+  CC.AsyncGL.gilbert_lynch_client_end Sys
 
-/-- The two hypotheses of Corollary `cor:gilbert-lynch`, unfolded. -/
+/-- The two hypotheses of Corollary `cor:gilbert-lynch`, unfolded; Answering
+at the end of client histories is equivalent to its cut form `AnsweringC`
+(cuts of client histories are client histories). -/
 theorem «cor:gilbert-lynch/hypotheses» (Sys : System CC.GL.regSpec D) :
-    (CC.AsyncGL.AnsweringC Sys ↔
+    (CC.AsyncGL.AnsweringCEnd Sys ↔
       ∀ (H : CC.GL.RHist D 2) (comp : Fin 2 → Nat), WF CC.AsyncGL.init0 H →
         Produced Sys 2 CC.AsyncGL.init0 H → Partitioned H comp → CC.AsyncGL.ClientH H →
-        ∀ c, IsCut H c → ∀ (p : Fin 2) (σ : State CC.GL.regSpec),
-          LRun (canon CC.GL.regSpec (CC.AsyncGL.init0 p)) ((H p).take (c p)) σ →
-          ∃ (H' : CC.GL.RHist D 2) (ext : Fin 2 → List (LEv CC.GL.regSpec D 2)),
-            Extends H c H' ext ∧ WF CC.AsyncGL.init0 H' ∧ Produced Sys 2 CC.AsyncGL.init0 H' ∧
-            Partitioned H' comp ∧ (∀ q, comp q ≠ comp p → ext q = []) ∧
+        ∀ (p : Fin 2) (σ : State CC.GL.regSpec),
+          LRun (canon CC.GL.regSpec (CC.AsyncGL.init0 p)) (H p) σ →
+          ∃ ext : Fin 2 → List (LEv CC.GL.regSpec D 2),
+            WF CC.AsyncGL.init0 (fun q => H q ++ ext q) ∧
+            Produced Sys 2 CC.AsyncGL.init0 (fun q => H q ++ ext q) ∧
+            Partitioned (fun q => H q ++ ext q) comp ∧ (∀ q, comp q ≠ comp p → ext q = []) ∧
             (∀ j, LEv.inp j ∉ ext p) ∧ ∃ γ o, CC.GL.regQ p.val σ.cur o ∧ LEv.out γ o ∈ ext p) ∧
+    (CC.AsyncGL.AnsweringC Sys ↔ CC.AsyncGL.AnsweringCEnd Sys) ∧
     (CC.AsyncGL.RealizedRPCC Sys ↔
       ∀ (H : CC.GL.RHist D 2) (comp : Fin 2 → Nat), WF CC.AsyncGL.init0 H →
         Produced Sys 2 CC.AsyncGL.init0 H → Partitioned H comp → CC.AsyncGL.ClientH H →
@@ -567,7 +651,7 @@ theorem «cor:gilbert-lynch/hypotheses» (Sys : System CC.GL.regSpec D) :
         (∀ p σ, LRun (canon CC.GL.regSpec (CC.AsyncGL.init0 p)) ((H p).take (c p)) σ →
           σ.cur ≼ j) →
         RPCAt H c j) :=
-  ⟨Iff.rfl, Iff.rfl⟩
+  ⟨Iff.rfl, CC.AsyncGL.answeringC_iff_end Sys, Iff.rfl⟩
 
 /-- Proof of Corollary `cor:gilbert-lynch`, along the paper's route through
 Lemma `lem:forced-answer` (here with the hypotheses required of all
@@ -576,17 +660,20 @@ theorem «cor:gilbert-lynch/via-forced-answer» (Sys : System CC.GL.regSpec D) :
     ¬ (Answering Sys CC.GL.regQn ∧ CC.GL.RealizedRPC Sys) :=
   gilbert_lynch_answering Sys
 
-/-- "A system with Response Availability, and with Response Partition
-Consistency at `h_C` on every partitioned history, satisfies these hypotheses,
-so the corollary excludes it too."  Lean: the implications, the resulting
-impossibility, and the variant with full Response Partition Consistency. -/
+/-- "A system with Response Availability, and with a common refinement at
+`h_C` for every prefix `C` of every partitioned history, satisfies these
+hypotheses, so the corollary excludes it too."  Lean: the implications, the
+resulting impossibility, and the variant with full Response Partition
+Consistency. -/
 theorem «cor:gilbert-lynch/also-excludes» (Sys : System CC.GL.regSpec D) :
-    (ResponseAvailability Sys CC.GL.regQn → CC.AsyncGL.AnsweringC Sys) ∧
+    (ResponseAvailabilityEnd Sys CC.GL.regQn → CC.AsyncGL.AnsweringCEnd Sys) ∧
     (CC.GL.RealizedRPC Sys → CC.AsyncGL.RealizedRPCC Sys) ∧
-    ¬ (ResponseAvailability Sys CC.GL.regQn ∧ CC.GL.RealizedRPC Sys) ∧
-    ¬ (ResponseAvailability Sys CC.GL.regQn ∧ ResponsePC Sys) :=
-  ⟨CC.AsyncGL.answeringC_of_RA, CC.AsyncGL.realizedRPCC_of,
-   CC.GL.gilbert_lynch Sys, CC.GL.gilbert_lynch_full Sys⟩
+    ¬ (ResponseAvailabilityEnd Sys CC.GL.regQn ∧ CC.GL.RealizedRPC Sys) ∧
+    ¬ (ResponseAvailabilityEnd Sys CC.GL.regQn ∧ CommonRefinementAtEnd Sys) :=
+  ⟨CC.AsyncGL.answeringCEnd_of_RAEnd, CC.AsyncGL.realizedRPCC_of,
+   fun ⟨h1, h2⟩ => CC.GL.gilbert_lynch Sys ⟨(responseAvailability_iff_end _ _).2 h1, h2⟩,
+   fun ⟨h1, h2⟩ => CC.GL.gilbert_lynch_full Sys
+     ⟨(responseAvailability_iff_end _ _).2 h1, (responsePC_iff_commonRefinement _).2 h2⟩⟩
 
 /-! "The register's obligation differs by replica, so
 Theorem `thm:complete-cap-response` does not apply as stated."  (Remark; in
@@ -637,13 +724,15 @@ theorem «prop:gl-async» {N : Nat} {M : Type} (hN : 2 ≤ N) (A : CC.AsyncGL.Al
 
 /-- Proof sketch of Prop. `prop:gl-async`: "Translate the algorithm into a
 system with the canonical basis.  …  Availability, applied to each unanswered
-operation of the view, gives Answering.  …  atomicity gives Response Partition
-Consistency at `h_C`.  The corollary excludes the algorithm."  Lean: the
+operation of the view, gives Answering.  …  atomicity gives a common
+refinement in `S(h_C)`.  The corollary excludes the algorithm."  Lean: the
 translation `sysOf A` satisfies both client-form hypotheses. -/
 theorem «prop:gl-async/proof» {N : Nat} {M : Type} (hN : 2 ≤ N) (A : CC.AsyncGL.Alg N M) :
-    (CC.AsyncGL.Atomic A → CC.AsyncGL.Available A → CC.AsyncGL.AnsweringC (CC.AsyncGL.sysOf A)) ∧
+    (CC.AsyncGL.Atomic A → CC.AsyncGL.Available A →
+      CC.AsyncGL.AnsweringCEnd (CC.AsyncGL.sysOf A)) ∧
     (CC.AsyncGL.Atomic A → CC.AsyncGL.RealizedRPCC (CC.AsyncGL.sysOf A)) :=
-  ⟨fun hat hav => CC.AsyncGL.sys_answering hN A hat hav, fun hat => CC.AsyncGL.sys_rpc hN A hat⟩
+  ⟨fun hat hav => (CC.AsyncGL.answeringC_iff_end _).1 (CC.AsyncGL.sys_answering hN A hat hav),
+   fun hat => CC.AsyncGL.sys_rpc hN A hat⟩
 
 /-- Proof sketch of Prop. `prop:gl-async`: "atomicity of that execution puts
 the map in the fiber at the view, so the output events are legal."  Lean: in
