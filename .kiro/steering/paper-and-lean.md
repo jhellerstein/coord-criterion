@@ -1,0 +1,50 @@
+---
+inclusion: always
+---
+
+# Working on this repository
+
+(Keep this file identical in content to `AGENTS.md` at the repository root.)
+
+## Paper and Lean must stay in sync
+
+The Lean formalization in `lean/` checks every result and proved claim of the
+paper.  `lean/CoordCriterion/Paper/*.lean` mirrors the paper section by
+section: each LaTeX label is a declaration `CC.Paper.«label»` whose docstring
+quotes the paper.
+
+After any change to `sections/*.tex` or `appendices/*.tex`:
+
+1. If a definition, statement, or proved claim changed, update the Lean so it
+   still proves the current statement (library under `lean/CoordCriterion/`,
+   entry in `Paper/`).  If the new claim is false or unproved, say so before
+   committing the paper change.
+2. If only wording changed, update the quoted text in the matching `Paper/`
+   docstring.
+3. If a label was added, removed, renamed, or moved between sections, move or
+   rename the `Paper/` entry to match.
+4. Rebuild and check, from `lean/`:
+   `lake build`, `lake env lean scripts/CheckAxioms.lean`,
+   `python3 scripts/gen_index.py`, `lake env lean scripts/CheckReadme.lean`.
+5. Commit the `.tex` and `lean/` changes together.
+
+Prose-only claims (no Lean) are listed in `lean/README.md`; keep that list
+current.
+
+## Building
+
+* Paper: `~/.local/bin/tectonic main.tex`; check the log for undefined or
+  multiply defined references.
+* Lean: `export ELAN_HOME=$HOME/.cache/elan PATH=$HOME/.cache/elan/bin:$PATH`,
+  then `lake build` in `lean/` (Lean 4 core only, no Mathlib).
+
+## Editing conventions
+
+* Plainspoken CIDR tone; surgical edits; define before use; no oversell; avoid
+  "promise" except colloquially in §2.
+* Vocabulary macros: `\inrel` (expands), `\outrel` (refines), "fiber at k",
+  "row at k"; named sets `\Sealed_o`, `\Retired_o`, `\Rejected_o`.
+* Do not edit the abstract or introduction without discussing it first.
+* Appendices are for theoreticians: definition, statement, proof.
+* Work on `main`; stage specific files; pull before editing; push after.
+* Never touch untracked files (uploaded PDFs, `.infinity/`).
