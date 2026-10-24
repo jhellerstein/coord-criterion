@@ -88,6 +88,18 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | App. composition: converse example after Cor. monotone-commitment | `CC.AuditE.converse_example` | Audit/Instances |
 | Eq. curried-composition: curried form, plan on graph tables | `CC.AuditE.curried_sharp`, `CC.AuditE.curried_plan_graph` | Audit/Instances |
 | Example committed-log-composition (incl. restriction to coherent pairs) | `CC.AuditE.committed_log_example`, `CC.AuditE.onDom_liftedMono` | Audit/Instances |
+| Thm. Complete CAP, (2)⇒(1) with commitment-free, receive-free confluence continuations | `CC.AuditC.cf_partitionConsistencyCF`, `CC.AuditC.complete_cap_strong` | Audit/CAP |
+| Remark: confluence ⇒ RPC; coincide for canonical systems; converse fails with other commitments | `CC.AuditC.rpc_of_confluent`, `CC.AuditC.canonical_rpc_iff_confluent`, `CC.AuditC.rpc_not_confluent` | Audit/CAP |
+| Input acceptance ⇔ no seal of an expansion; excludes forced seals (election, equality order) | `CC.AuditC.input_acceptance_iff`, `CC.AuditC.ra_excludes_forced_seal`, `CC.AuditC.election_eq_no_ra` | Audit/CAP |
+| An output answering at every input makes every spec available | `CC.AuditC.trivially_available` | Audit/CAP |
+| Lemma locality | `CC.AuditC.locality_glue`, `CC.AuditC.locality_transfer` | Audit/CAP |
+| Remark: consistency on `T` (= CE for `T = S`; = confluence of canonical runs with rows in `T`) | `CC.AuditC.consistentOn_S`, `CC.AuditC.consistentOn_iff_confluent` | Audit/CAP |
+| Remark without replication: counterexample as stated; corrected form (fixed participant set, `LocalInit`) | `CC.AuditC.without_replication_counterexample`, `CC.AuditC.without_replication_interface`, `CC.AuditC.without_replication` | Audit/CAP |
+| LM ⇒ response form with `T = Q`; converse fails; functional coincidence | `CC.AuditC.lm_response_interface`, `CC.AuditC.lm_response_form`, `CC.AuditC.converse_counterexample`, `CC.AuditC.converse_counterexample_systems`, `CC.AuditC.functional_response_iff`, `CC.AuditC.functional_forms_coincide` | Audit/CAP |
+| LM sub-spec ⇒ interface; five-input counterexample (and `d₁`/`d₂` seal `k₂`/`k₁`) | `CC.AuditC.subspec_lm_interface`, `CC.AuditC.subspec_counterexample`, `CC.AuditC.emit_d1_seals_k2`, `CC.AuditC.emit_d2_seals_k1` | Audit/CAP |
+| Lemma forced-answer (current form: only `q`'s events, no input event; Answering only) | `CC.AuditC.forced_answer_strong` | Audit/CAP |
+| Cor. Gilbert–Lynch along the paper's proof, from Answering only | `CC.AuditC.gilbert_lynch_answering`, `CC.AuditC.gilbert_lynch_via_forced_answer` | Audit/CAP |
+| Register fails Relational Monotonicity; `Q_p` is an obligation | `CC.AuditC.reg_not_relMono`, `CC.AuditC.regQ_obligation` | Audit/CAP |
 
 Modeling choices are documented at the top of each file.
 | App. cc-bases: spec, abort-free spec, not monotone (`([A,B],∅)`, `([B,A],∅)`) | `CC.AuditF.txnSpec`, `CC.AuditF.abortFreeSpec`, `CC.AuditF.ab_ba_no_common_refinement`, `CC.AuditF.txnSpec_not_liftedMono`, `CC.AuditF.abortFreeSpec_not_liftedMono` | Audit/Bases |
