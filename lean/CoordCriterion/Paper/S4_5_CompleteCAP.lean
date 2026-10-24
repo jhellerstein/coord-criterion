@@ -196,24 +196,25 @@ theorem «thm:complete-cap/proof-cf-continuations» (sp : Spec I O) (D : Type) :
     (sp.LiftedMono → Availability (cfSystem sp D) ∧ PartitionConsistencyCF (cfSystem sp D)) :=
   complete_cap_strong sp D
 
-/-- Proof of Theorem `thm:complete-cap`, (1)⇒(2), the induction step: "Given
-`u_{m-1}`, take two participants `p` and `q` in separate components, starting
-at inputs `j` and `i_m`.  Each runs without messages.  By Availability, `p` can
-emit `u_{m-1}` and `q` can emit `o_m`.  By Partition Consistency, they then
-reach one state `(j,R)`, with some `u_m ∈ R(j)`. … so `u_m` refines `u_{m-1}`
-and `o_m`."  Lean: stated for any two rows `(i₁,o₁)`, `(i₂,o₂)` below `j`;
-the paper's step is `i₁ = j`, `o₁ = u_{m-1}`. -/
+/-- Proof of Theorem `thm:complete-cap`, (1)⇒(2), the two-row case: "First
+take two rows `(i,o)` and `(i',o')` with a common expansion `j`.  Place two
+participants in separate components, starting at inputs `i` and `i'`.  Each
+runs without messages.  By Availability, they can emit `o` and `o'`.  By
+Partition Consistency, they then reach one state `(j,R)`, with some
+`u ∈ R(j)`. … so `u` refines `o` and `o'`." -/
 theorem «thm:complete-cap/proof-two-step» (Sys : System sp D)
     (hA : «def:partition-notions(4)» Sys) (hP : «def:partition-notions(5)» Sys)
     {i₁ i₂ j : I} {o₁ o₂ : O} (h₁ : sp.S i₁ o₁) (h₂ : sp.S i₂ o₂) (hj₁ : i₁ ≼ j) (hj₂ : i₂ ≼ j) :
     ∃ u, sp.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u :=
   cap_two_step Sys hA hP h₁ h₂ hj₁ hj₂
 
-/-- Proof of Theorem `thm:complete-cap`, (1)⇒(2): "We find
-`u_0,…,u_k ∈ S(j)` such that each `u_m` refines `o_1,…,o_m`.  By totality,
-`S(j)` contains some `u_0`. … Then `u_k` is the required output, and
-Proposition `prop:common-expansion-form` gives Lifted Monotonicity."  Lean:
-induction on the list of rows, each step by `«thm:complete-cap/proof-two-step»`. -/
+/-- Proof of Theorem `thm:complete-cap`, (1)⇒(2): "Now let
+`(i_1,o_1),…,(i_k,o_k)` be rows with a common expansion `j`.  By totality,
+`S(j)` contains some `u_0`.  Applying the two-row case to `(j,u_{m-1})` and
+`(i_m,o_m)` gives `u_m ∈ S(j)` that refines `u_{m-1}` and `o_m`, and hence
+`o_1,…,o_m`.  Then `u_k` is the required output, and Proposition
+`prop:common-expansion-form` gives Lifted Monotonicity."  Lean: induction on
+the list of rows, each step by `«thm:complete-cap/proof-two-step»`. -/
 theorem «thm:complete-cap/proof-necessity» (Sys : System sp D)
     (hA : «def:partition-notions(4)» Sys) (hP : «def:partition-notions(5)» Sys) :
     sp.LiftedMono :=
