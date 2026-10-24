@@ -160,8 +160,8 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«prop:functional-exposure-boundary/only-seals»` | theorem | After Prop. |
 | `«prop:functional-exposure-boundary/nonmonotone-seals»` | theorem | After Prop. |
 | `«eq:query-monotonicity»` | theorem | **Eq. |
-| `«sec:discussion/emit-before-determination»` | theorem | §6, "Did executions differ, or were several answers allowed?": |
-| `«sec:discussion/decisive-vs-close»` | theorem | §6, "Was an alternative discovered impossible, or made impossible?": |
+| `«sec:discussion/emit-before-determination»` | theorem | §6.1, "Design lessons": |
+| `«sec:discussion/decisive-vs-close»` | theorem | §6.1, "Design lessons": |
 
 ### §3 Complete CALM
 
