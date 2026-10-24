@@ -340,23 +340,23 @@ CALM, $\Spec$ is consistent, so it has distributed consistency
 (Proposition~\ref{prop:distributed-consistency}), which gives Partition
 Consistency.
 
-Conversely, we derive the common-\indesc condition.  Let
-$(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $\Spec$ with a common \indesc $j$.  If
-$k=0$, totality gives $\fiber{j}\neq\varnothing$.  Otherwise, place one
-participant $p_r$ per row, with initial input $i_r$, each in its own
-component, and one more participant with initial input $j$ in a further
-component, so that there are at least two.  In the history with no history events,
-$p_r$ is at $\sigma_S(i_r)$ and $o_r$ is in its fiber at $i_r$, so Availability
-supplies a continuation local to $p_r$ in which $p_r$ emits $o_r$.  No
-message crosses components and strategies depend only on local history, so
-these continuations combine into one partitioned history that the system
-produces.  At its final cut,
-Partition Consistency brings all participants to a common state with current
-input $j$.  That state has a row $(j,u)$, and since events never add rows,
-$(j,u)$ already lies in each $p_r$'s remainder table.  Containment
-(Lemma~\ref{lem:canonical-commitment-normal-form}) gives $o_r\OutputOrd u$ for
-every $r$, and Proposition~\ref{prop:common-expansion-form} gives Lifted
-Monotonicity.
+Conversely, suppose some system has Availability and Partition Consistency;
+we derive the common-\indesc condition.  Let $(i_1,o_1),\ldots,(i_k,o_k)$ be
+rows of $\Spec$ with a common \indesc $j$; we need some $u\in\fiber{j}$ with
+$o_r\OutputOrd u$ for every $r$.  If $k=0$, totality gives one.  Repeating a
+row if necessary, assume $k\ge2$.  Take participants $p_1,\ldots,p_k$ with
+initial inputs $i_1,\ldots,i_k$, each in its own component.  Each $p_r$ starts
+in state $\sigma_S(i_r)$, whose fiber contains $o_r$, so by Availability $p_r$
+can emit $o_r$ using only events of its own component and no input.
+Strategies depend only on local history, so running these continuations side
+by side gives one partitioned history that the system produces.  In it the
+participants' current inputs are still $i_1,\ldots,i_k$, so by Partition
+Consistency some continuation brings every participant to one state $(j,R)$,
+and $R$ has a row $(j,u)$.  Events only remove rows, so $(j,u)$ was in $p_r$'s
+table right after $p_r$ emitted $o_r$; every row left after emitting $o_r$
+\outrel $o_r$ (Lemma~\ref{lem:canonical-commitment-normal-form}), so
+$o_r\OutputOrd u$.  Proposition~\ref{prop:common-expansion-form} then gives
+Lifted Monotonicity.
 \end{proof}
 
 The proof of (1)$\Rightarrow$(2) never assumes that the system is
