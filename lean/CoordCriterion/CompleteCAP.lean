@@ -20,9 +20,8 @@ This file formalizes, self-contained on top of `Core` and `Runs`:
   Consistency, Lemma `lem:forced-answer` (`forced_answer`), its abstract
   impossibility consequence (`forced_answer_impossibility`), and Theorem
   `thm:complete-cap-response` in both directions (`complete_cap_response`).
-  The register instance behind Corollary `cor:gilbert-lynch` (linearizable
-  operation histories, realized history of an interleaving) is not
-  formalized.
+  The register instance behind Corollary `cor:gilbert-lynch` is in
+  `GilbertLynch.lean`.
 
 ## Modeling choices (documented deviations / precise readings)
 
