@@ -202,8 +202,6 @@ $k_1$.
 
 \subsection{Recovering Gilbert--Lynch}
 
-\jmh{Consider option (b): promote the remark's per-replica (non-uniform obligation) version of the response-form theorem to a theorem with proof, and derive Gilbert--Lynch from it, so that GL is a special case of a CAP theorem rather than a corollary of Lemma forced-answer.}
-
 \begin{lemma}[Forced answer]
 \label{lem:forced-answer}
 Let $i\InputOrd j$, and suppose no output in $Q_q(i)$ has a \outnoun in
@@ -309,7 +307,15 @@ precedence of $h_C$, so atomicity gives Response Partition Consistency at
 $h_C$.  The corollary excludes the algorithm.
 \end{proof}
 
-Gilbert and Lynch's availability, in which every request to a non-failed node
-eventually receives a response in every fair execution, implies the form used
-here: extend the execution fairly, with no new request and every message
-lost.
+Gilbert and Lynch require availability and atomicity in all fair executions,
+including those in which messages are lost, in Lynch's asynchronous network
+model~\cite[Theorem~1]{gilbert2002cap}\cite[Chapter~8]{lynch1996distributed}.
+Both imply the forms in the proposition.  In their model any message may be
+lost and client requests are inputs, so a finite execution extends to a fair
+execution with no new request in which every message is lost; their own
+proofs extend executions fairly in this way.  Availability answers the pending
+request at some finite point of that extension, and the prefix up to that
+response is the extension the proposition requires.  Atomicity of the fair
+extension gives atomicity of the finite execution, since atomicity is a safety
+property and so holds of every prefix of an atomic
+execution~\cite[Chapter~13]{lynch1996distributed}.
