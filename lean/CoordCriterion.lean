@@ -9,3 +9,4 @@ import CoordCriterion.IConfluence
 import CoordCriterion.Composition
 import CoordCriterion.Frontiers
 import CoordCriterion.Deployment
+import CoordCriterion.GilbertLynch

@@ -47,5 +47,10 @@ the standard axioms (`propext`, `Quot.sound`, and in some cases
 | Prop. partition compatibility under a deployment | `CC.Deploy.partition_compatibility`, `CC.Deploy.partition_compatibility_confluent` | Deployment |
 | Monotonicity ⇒ monotone across partitions; converse fails (leader election) | `CC.Deploy.monoAcrossPartitions_of_liftedMono`, `CC.Deploy.single_authority_monoAcross`, `CC.Deploy.leader_not_liftedMono`, `CC.Deploy.split_authority_not_monoAcross` | Deployment |
 | Full deployment: pairs suffice, monotone across partitions ⇔ monotone; Deployment Availability = Availability | `CC.Deploy.ce_of_pairs`, `CC.Deploy.full_deployment_iff`, `CC.Deploy.deploymentAvailability_full` | Deployment |
+| Lemma forced-answer | `CC.CAP.forced_answer` | CompleteCAP |
+| Register spec: `Q_p` total and upward closed | `CC.GL.regQ_total`, `CC.GL.regQ_upward` | GilbertLynch |
+| Realized history monotone in the prefix | `CC.GL.realized_mono` | GilbertLynch |
+| Cor. Gilbert–Lynch | `CC.GL.gilbert_lynch`, `CC.GL.gilbert_lynch_full` | GilbertLynch |
+| Counterexample: `h_C` need not expand the current inputs | `CC.GL.realized_not_expansion` | GilbertLynch |
 
 Modeling choices are documented at the top of each file.
