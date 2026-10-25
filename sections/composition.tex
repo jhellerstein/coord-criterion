@@ -71,7 +71,9 @@ satisfies Lifted Monotonicity, and then no output needs a commitment
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).
 That test is on the composite's table.  When the stages run as a pipeline, we
 also want them to avoid commitments.  A composite can be jointly monotone in
-three ways.
+three ways.  The orders on $I$ and $O$ are part of the composite's contract
+with its environment.  The order on $M$ is not: the composite's table never
+mentions it, and some order on $M$ may make both stages monotone.
 
 First, every stage is monotone.  By Lemma~\ref{lem:composition} the pipeline
 is monotone, and no stage need make a commitment (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
@@ -82,18 +84,17 @@ monotonicity of $q$ on all of the state domain suffices.
 
 Second, the upstream can filter out the inputs on which the downstream is not
 monotone.  Consider a counter capped at $9$ that feeds a test of whether the
-count is below $10$.  That test is not monotone: it answers yes at
-$0$ through $9$ and no at $10$.  But the counter never produces $10$ or higher.  The downstream need only be
-monotone on the values the upstream can produce.
+count is below $10$.  With counts ordered numerically and the answers yes and
+no incomparable, the test is not monotone: it answers yes at $0$ through $9$
+and no at $10$.  But the counter never produces $10$ or higher.  The
+downstream need only be monotone on the values the upstream can produce.
 
 Third, two non-monotone stages can cancel.  As an example,
 consider a first stage that receives a growing set $X$ from a domain $U$ and
 outputs its complement $U\setminus X$, and a second stage that complements
-again.  The composite returns $X$, which only grows.  Under the usual order on
-sets, though, each stage is non-monotone.  The remedy lies in the interface
-between the stages.  The composite's table never mentions the order on the
-intermediate domain $M$ between the stages, so the stages can agree on a
-different one.  Invert it: let $S\preceq_M S'$ exactly when $S'\subseteq S$.
+again.  The composite returns $X$, which only grows.  With $M$ ordered by
+inclusion, each stage is non-monotone.  Inverted inclusion for $M$ makes both
+monotone: let $S\preceq_M S'$ exactly when $S'\subseteq S$.
 The first stage's shrinking outputs then form a growing stream of updates, the
 second stage turns each update into a larger set, and both stages are
 monotone.
