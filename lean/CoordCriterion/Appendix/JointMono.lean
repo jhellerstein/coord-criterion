@@ -9,19 +9,16 @@ commitment?  Three mechanisms, and the limit of the third.
 
 1. **Filtering.**  `𝒮₁` never produces the inputs on which `𝒮₂` is not
    monotone.
-   * `CEOn`, `ceOn_iff_restrictTo` — `𝒮₂` satisfies the common-expansion
-     condition on a set `D` of middle values (equivalently: `𝒮₂` restricted
-     to `D` is Lifted-Monotone).
+   * `CEOn`, `ceOn_iff_restrictTo` (in `Appendix/Guarded.lean`) — `𝒮₂`
+     satisfies the common-expansion condition on a set `D` of middle values
+     (equivalently: `𝒮₂` restricted to `D` is Lifted-Monotone).
    * `seq_liftedMono_on` — if `𝒮₁` is Lifted-Monotone with outputs in `D`
      and `𝒮₂` is Lifted-Monotone on `D`, the composite is Lifted-Monotone.
      No closure condition on `D` is needed.
-   * Strategy-relative guarded results: `atMostOnce_of_sealsOutside`
-     (a store commitment that only removes rows at inputs the upstream never
-     emits is never contradicted), `at_least_once_on`, `filtered_proper`.
    * Instance `threshold`: `𝒮₁ = n ↦ min n 9`, `𝒮₂ = n ↦ [n < 10]`.  The
      store is not Lifted-Monotone, its empty-basis system cannot emit at all,
-     the composite is Lifted-Monotone, and the store that seals `{n ≥ 10}` once
-     follows every upstream output sequence and is proper.
+     the composite is Lifted-Monotone, and the pipeline is proper
+     (`Guard.Proper`).
 2. **Cancellation by re-ordering `M`.**  The composite's table does not depend
    on the order of `M` (`seq_under`), nor on a re-encoding of `M` that the
    downstream decodes (`reorder_seq`).  So stages that are Lifted-Monotone
@@ -101,79 +98,6 @@ end Basics
 section Filter
 variable {I M O : Type} [PO I] [PO M] [PO O]
 
-/-- The middle values `𝒮₁` can produce. -/
-def Img (sp : Spec I M) (m : M) : Prop := ∃ i, sp.S i m
-
-/-- **Common expansion on `D`**: the common-expansion condition for rows whose
-inputs lie in `D`, at expansions in `D`. -/
-def CEOn (sp : Spec M O) (D : M → Prop) : Prop :=
-  ∀ rows : List (M × O), (∀ r ∈ rows, D r.1 ∧ sp.S r.1 r.2) →
-    ∀ j, D j → (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.S j u ∧ ∀ r ∈ rows, r.2 ≼ u
-
-theorem ceOn_of_ce {sp : Spec M O} (h : sp.CommonExpansion) (D : M → Prop) : CEOn sp D :=
-  fun rows hr j _ hj => h rows (fun r h' => (hr r h').2) j hj
-
-theorem ceOn_mono {sp : Spec M O} {D D' : M → Prop} (h : ∀ m, D m → D' m)
-    (hC : CEOn sp D') : CEOn sp D :=
-  fun rows hr j hj hle => hC rows (fun r h' => ⟨h _ (hr r h').1, (hr r h').2⟩) j (h _ hj) hle
-
-/-- A function store is Lifted-Monotone on `D` when it is monotone on `D`. -/
-theorem graph_ceOn {g : M → O} {D : M → Prop}
-    (hg : ∀ a b, D a → D b → a ≼ b → g a ≼ g b) : CEOn (graph g) D :=
-  fun rows hr j hj hle => ⟨g j, rfl, fun r h => by
-    have e : r.2 = g r.1 := (hr r h).2
-    rw [e]; exact hg _ _ (hr r h).1 hj (hle r h)⟩
-
-/-- The subtype order. -/
-instance subPO (D : M → Prop) : PO {m // D m} where
-  le x y := x.1 ≼ y.1
-  refl x := PO.refl x.1
-  trans h h' := PO.trans h h'
-  antisymm h h' := Subtype.ext (PO.antisymm h h')
-
-/-- `𝒮` read as a specification on the inputs in `D`. -/
-def restrictTo (D : M → Prop) (sp : Spec M O) : Spec {m // D m} O :=
-  ⟨fun m o => sp.S m.1 o, fun m => sp.total m.1⟩
-
-/-- `CEOn sp D` says exactly that `sp` restricted to `D` satisfies Lifted
-Monotonicity. -/
-theorem ceOn_iff_restrictTo (D : M → Prop) (sp : Spec M O) :
-    CEOn sp D ↔ (restrictTo D sp).LiftedMono := by
-  rw [liftedMono_iff_commonExpansion]
-  constructor
-  · intro h rows hr j hj
-    obtain ⟨u, hu, hall⟩ := h (rows.map fun r => (r.1.1, r.2))
-      (by
-        intro r hr'
-        obtain ⟨r', h', rfl⟩ := List.mem_map.1 hr'
-        exact ⟨r'.1.2, hr r' h'⟩)
-      j.1 j.2
-      (by
-        intro r hr'
-        obtain ⟨r', h', rfl⟩ := List.mem_map.1 hr'
-        exact hj r' h')
-    exact ⟨u, hu, fun r h' => hall _ (List.mem_map.2 ⟨r, h', rfl⟩)⟩
-  · intro h rows hr j hDj hj
-    obtain ⟨L, hL1, hL2⟩ := choose_list (fun (r : M × O) (d : {m // D m}) => d.1 = r.1) rows
-      (fun r hr' => ⟨⟨r.1, (hr r hr').1⟩, rfl⟩)
-    obtain ⟨u, hu, hall⟩ := h (L.map fun p => (p.2, p.1.2))
-      (by
-        intro r hr'
-        obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr'
-        show sp.S p.2.1 p.1.2
-        rw [(hL2 p hp).2]
-        exact (hr p.1 (hL2 p hp).1).2)
-      ⟨j, hDj⟩
-      (by
-        intro r hr'
-        obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr'
-        show p.2.1 ≼ j
-        rw [(hL2 p hp).2]
-        exact hj p.1 (hL2 p hp).1)
-    refine ⟨u, hu, fun r hr' => ?_⟩
-    obtain ⟨b, hb⟩ := hL1 r hr'
-    exact hall (b, r.2) (List.mem_map.2 ⟨(r, b), hb, rfl⟩)
-
 /-- **Filtering composition.**  If `𝒮₁` satisfies Lifted Monotonicity with all
 its outputs in `D`, and `𝒮₂` satisfies Lifted Monotonicity on `D`, then
 `𝒮₂ ∘ 𝒮₁` satisfies Lifted Monotonicity.  (`D` needs no closure property;
@@ -206,163 +130,6 @@ theorem seq_liftedMono_img {sp1 : Spec I M} {sp2 : Spec M O}
 
 end Filter
 
-/-! #### Filtering in the guarded composite -/
-
-section GuardedFilter
-variable {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M} {sk : Spec M O}
-
-/-- After an execution the current input is the starting one or an input of
-the execution. -/
-theorem exec_cur {J X : Type} [PO J] [PO X] {sq : Spec J X} {σ τ : State sq}
-    {es : List (Event J X)} (h : Exec σ es τ) : τ.cur = σ.cur ∨ Event.input τ.cur ∈ es := by
-  induction h with
-  | nil => exact Or.inl rfl
-  | @cons σ τ ρ e es hs _ ih =>
-    rcases ih with h | h
-    · cases hs with
-      | input _ _ _ hc _ => exact Or.inr (by rw [h, hc]; exact List.mem_cons_self)
-      | output _ _ _ hc _ => exact Or.inl (h.trans hc)
-    · exact Or.inr (List.mem_cons_of_mem _ h)
-
-omit [PO M] [PO O] in
-theorem shaped_mem {l : List M} {m : M} {tr : List (Event M O)} (h : Shaped l m tr) {k : M}
-    (hk : k = m ∨ Event.input k ∈ tr) : k ∈ l := by
-  obtain ⟨o, ps, hpre, rfl⟩ := h
-  apply hpre.subset
-  rcases hk with rfl | hk
-  · exact List.mem_cons_self
-  · apply List.mem_cons_of_mem
-    rcases List.mem_cons.1 hk with h | h
-    · cases h
-    · exact mem_storeTr h
-
-/-- An input some reference run accepts occurs in an upstream output sequence. -/
-theorem accepts_mem {U : List M → Prop} {k : M} (h : Accepts U sk k) : ∃ l, U l ∧ k ∈ l := by
-  obtain ⟨m, tr, ⟨l, _, hU, hS, _⟩, hk⟩ := h
-  exact ⟨l, hU, shaped_mem hS hk⟩
-
-/-- An input at which some reference run emits occurs in an upstream output
-sequence. -/
-theorem emitsAt_mem {U : List M → Prop} {k : M} {x : O} (h : EmitsAt U sk k x) :
-    ∃ l, U l ∧ k ∈ l := by
-  obtain ⟨m, tr₁, tr₂, τ, ⟨l, _, hU, hS, _⟩, hx, rfl⟩ := h
-  refine ⟨l, hU, shaped_mem hS ?_⟩
-  rcases exec_cur hx with h | h
-  · exact Or.inl h
-  · exact Or.inr (List.mem_append_left _ h)
-
-/-- The commitments of a basis remove only rows at inputs outside `D`. -/
-def SealsOutside (B : Basis sk) (D : M → Prop) : Prop :=
-  ∀ c, B c → ∀ σ τ, c.app σ = some τ → ∀ k x, σ.R k x → ¬ τ.R k x → ¬ D k
-
-theorem applySeq_outside {B : Basis sk} {D : M → Prop} (hB : SealsOutside B D)
-    {γ : List (Commitment sk)} {σ σc : State sk} (hγ : ApplySeq γ σ σc) (hc : ∀ c ∈ γ, B c) :
-    ∀ k x, σ.R k x → ¬ σc.R k x → ¬ D k := by
-  induction hγ with
-  | nil => intro k x h h'; exact absurd h h'
-  | @cons c cs σ τ ρ happ _ ih =>
-    intro k x h h'
-    by_cases ht : τ.R k x
-    · exact ih (fun c' h'' => hc c' (List.mem_cons_of_mem _ h'')) k x ht h'
-    · exact hB c (hc c List.mem_cons_self) σ τ happ k x h ht
-
-/-- **A commitment outside what the upstream emits is never contradicted.**  If
-every output sequence the upstream can emit lies in `D`, and the store's
-commitments only remove rows at inputs outside `D`, the store coordinates at
-most once, whatever its strategy. -/
-theorem atMostOnce_of_sealsOutside {U : List M → Prop} {D : M → Prop}
-    (hU : ∀ l, U l → ∀ m ∈ l, D m) {K : Sys sk} (hB : SealsOutside K.basis D) :
-    AtMostOnce U K := by
-  rintro ⟨l, m, esK, a, δ, x, b, σ, σc, ⟨_, _, ρK, hK⟩, rfl, _, hδ, hc⟩
-  have hδB : ∀ c ∈ δ, K.basis c :=
-    sysExec_basis hK.1 δ x (List.mem_append_right _ List.mem_cons_self)
-  have hout := applySeq_outside hB hδ hδB
-  rcases hc with ⟨k, ⟨y, h1⟩, h2, hacc⟩ | ⟨k, y, h1, h2, hem⟩
-  · obtain ⟨l', hl', hk⟩ := accepts_mem hacc
-    exact hout k y h1 (h2 y) (hU l' hl' k hk)
-  · obtain ⟨l', hl', hk⟩ := emitsAt_mem hem
-    exact hout k y h1 h2 (hU l' hl' k hk)
-
-/-- Sealing the inputs in `Q` removes only rows at inputs in `Q`. -/
-theorem sealIn_outside (Q : M → Prop) :
-    SealsOutside (sk := sk) (fun c => c = sealIn Q) (fun k => ¬ Q k) := by
-  intro c hc σ τ happ k x hx hnx hD
-  subst hc
-  obtain ⟨_, _, rfl⟩ := sealInApp_eq.1 happ
-  exact hnx ⟨hx, hD⟩
-
-/-- Everything a system emits is in the image of its specification. -/
-theorem emitted_img {B : Basis sp} {σ ρ : State sp} {es : List (SEvent sp)}
-    (h : SysExec B σ es ρ) : ∀ m ∈ emitted es, Img sp m := by
-  induction h with
-  | nil => intro m hm; cases hm
-  | @cons σ τ ρ e es hs _ ih =>
-    cases e with
-    | input j => intro m hm; exact ih m hm
-    | output γ m' =>
-      intro m hm
-      rcases List.mem_cons.1 hm with rfl | hm
-      · exact ⟨σ.cur, σ.sub _ _ (containment hs).2.1⟩
-      · exact ih m hm
-
-theorem emits_img {P : Sys sp} {l : List M} (h : P.emits l) : ∀ m ∈ l, Img sp m := by
-  obtain ⟨_, es, _, hP, rfl⟩ := h
-  exact emitted_img hP.1
-
-/-- `cf_stepK` relative to `D`: if `𝒦` is Lifted-Monotone on `D` and `σ`'s
-outputs lie in `D`, every image of an exposable `m ∈ D` is exposable at the
-image state. -/
-theorem cf_stepK_on {D : M → Prop} (hC : CEOn sk D) {σ : State sp}
-    (hσ : ∀ k m, σ.R k m → D m) {m : M} (hm : D m) (hexp : Exposable σ m)
-    {o : O} (ho : sk.S m o) : Exposable (imgK sk σ) o := by
-  rintro k x ⟨m', hm', hx⟩ _
-  have hrows : ∀ r ∈ [(m, o), (m', x)], D r.1 ∧ sk.S r.1 r.2 := by
-    intro r hr
-    simp only [List.mem_cons, List.not_mem_nil, or_false] at hr
-    rcases hr with rfl | rfl
-    · exact ⟨hm, ho⟩
-    · exact ⟨hσ _ _ hm', hx⟩
-  have hbd : ∀ j, m ≼ j → m' ≼ j → ∀ r ∈ [(m, o), (m', x)], r.1 ≼ j := by
-    intro j h1 h2 r hr
-    simp only [List.mem_cons, List.not_mem_nil, or_false] at hr
-    rcases hr with rfl | rfl
-    · exact h1
-    · exact h2
-  have h1 : (m, o) ∈ [(m, o), (m', x)] := List.mem_cons_self
-  have h2 : (m', x) ∈ [(m, o), (m', x)] := List.mem_cons_of_mem _ List.mem_cons_self
-  by_cases hmm : m ≼ m'
-  · obtain ⟨u, hu, hall⟩ := hC _ hrows m' (hσ _ _ hm') (hbd m' hmm (PO.refl _))
-    exact ⟨u, ⟨m', hm', hu⟩, hall _ h1, hall _ h2⟩
-  · obtain ⟨w, hw, hmw, hm'w⟩ := hexp k m' hm' hmm
-    obtain ⟨u, hu, hall⟩ := hC _ hrows w (hσ _ _ hw) (hbd w hmw hm'w)
-    exact ⟨u, ⟨w, hw, hu⟩, hall _ h1, hall _ h2⟩
-
-/-- **At least once, relative to the upstream's image.**  If `𝒦` satisfies
-Lifted Monotonicity on a set containing every output of `𝒫`, at least once
-holds under any basis of `𝒫`. -/
-theorem at_least_once_on {D : M → Prop} (hC : CEOn sk D) (hD : ∀ i m, sp.S i m → D m)
-    (B : Basis sp) : AtLeastOnce B sk := by
-  intro σ τ γ m hs o ho hne hγ
-  subst hγ
-  obtain ⟨hm, hexp, _, _⟩ := eps_step_iff.1 hs
-  exact hne (cf_stepK_on hC (fun k m' h => hD k m' (σ.sub k m' h))
-    (hD _ _ (σ.sub _ _ hm)) hexp ho)
-
-/-- **Proper Coordination with a filtering upstream.**  Let `𝒫` never produce a
-middle value in `Q`, and let `𝒦` satisfy Lifted Monotonicity outside `Q`
-(`𝒦` itself need not).  Then a store whose only commitment is sealing `Q`
-coordinates properly with every system of `𝒫`: its seal is never
-contradicted, and `𝒫` commits wherever the composite needs it. -/
-theorem filtered_proper (Q : M → Prop) (hC : CEOn sk fun m => ¬ Q m)
-    (hQ : ∀ i m, sp.S i m → ¬ Q m) (P : Sys sp) {K : Sys sk}
-    (hK : ∀ c, K.basis c → c = sealIn Q) : Proper P K :=
-  ⟨atMostOnce_of_sealsOutside (D := fun m => ¬ Q m)
-      (fun _ hl m hm => let ⟨i, h⟩ := emits_img hl m hm; hQ i m h)
-      (fun c hc => sealIn_outside Q c (hK c hc)),
-    at_least_once_on hC hQ P.basis⟩
-
-end GuardedFilter
-
 /-! #### Instance: a threshold store behind a capped counter -/
 
 section Threshold
@@ -387,9 +154,6 @@ def Big (n : Nat) : Prop := 10 ≤ n
 
 def up : Spec Nat Nat := graph cap
 def thr : Spec Nat B2 := graph below
-
-/-- The store system whose only commitment seals `{n ≥ 10}`. -/
-noncomputable def sealStore : Sys thr := Sys.free (fun c => c = sealIn Big)
 
 theorem cap_monotone : Monotone cap := by
   intro x y h
@@ -419,13 +183,13 @@ theorem below_9_10 : ¬ (below 9 ≼ below 10) := by
 
 /-- **Threshold store behind a capped counter.**  (1) The store is not
 Lifted-Monotone; (2) under the empty basis it cannot emit at any canonical
-state below `10`; (3) the composite is Lifted-Monotone; (4) the store that
-seals `{n ≥ 10}` coordinates properly with every upstream system. -/
+state below `10`; (3) the composite is Lifted-Monotone; (4) the pipeline is
+proper: the store restricted to the counter's outputs needs no commitment. -/
 theorem threshold :
     ¬ thr.LiftedMono ∧
     (∀ m, m ≤ 9 → ∀ γ o τ, ¬ SysStep (fun _ => False) (canon thr m) (.output γ o) τ) ∧
     (seq up thr).LiftedMono ∧
-    ∀ P : Sys up, Proper P sealStore := by
+    Proper up thr := by
   refine ⟨?_, ?_, ?_, ?_⟩
   · intro h
     exact below_9_10 ((graph_liftedMono_iff below).1 h 9 10 (show 9 ≤ 10 by omega))
@@ -438,89 +202,7 @@ theorem threshold :
     exact below_9_10 this
   · exact seq_liftedMono_on ((graph_liftedMono_iff _).2 cap_monotone)
       (fun _ _ h => up_img h) thr_ceOn
-  · intro P
-    exact filtered_proper Big thr_ceOn (fun _ _ h => up_img h) P (fun _ h => h)
-
-/-- Invariant of the sealed store: current input and all rows below `10`, and
-every later input below `10` still answered. -/
-def TInv (τ : State thr) : Prop :=
-  τ.cur ≤ 9 ∧ (∀ k x, τ.R k x → k ≤ 9) ∧ ∀ k, τ.cur ≤ k → k ≤ 9 → τ.R k (below k)
-
-theorem tinv_exposable {τ : State thr} (h : TInv τ) : Exposable τ (below τ.cur) := by
-  intro k x hx hn
-  have e : x = below k := τ.sub k x hx
-  rw [e, below_eq h.1 (h.2.1 k x hx)] at hn
-  exact absurd (PO.refl _) hn
-
-theorem follow_thr : ∀ (ms : List Nat) (τ : State thr), TInv τ → ChainFrom (some τ.cur) ms →
-    (∀ m ∈ ms, m ≤ 9) → ∃ esK ρ, SysExec sealStore.basis τ esK ρ ∧
-      esK.map SEvent.erase = storeTr (ms.map fun m => (m, below m))
-  | [], τ, _, _, _ => ⟨[], τ, .nil _, rfl⟩
-  | m' :: ms, τ, hI, ⟨hle, hc⟩, hms => by
-    have hle' : τ.cur ≤ m' := hle
-    have hm' : m' ≤ 9 := hms m' List.mem_cons_self
-    have hR : τ.R m' (below m') := hI.2.2 m' hle' hm'
-    let τ1 := inState τ m' (below m') hR
-    have hI1 : TInv τ1 := by
-      refine ⟨hm', fun k x hx => hI.2.1 k x hx.1, fun k hk hk9 => ?_⟩
-      exact ⟨hI.2.2 k (Nat.le_trans hle' hk) hk9, hk⟩
-    have ho1 : τ1.R τ1.cur (below m') := ⟨hR, PO.refl m'⟩
-    let τ2 := outState τ1 (below m') ho1
-    have hI2 : TInv τ2 := by
-      refine ⟨hm', fun k x hx => hI1.2.1 k x hx.1, fun k hk hk9 => ?_⟩
-      refine ⟨hI1.2.2 k hk hk9, ?_⟩
-      show below m' = below k
-      exact below_eq hm' hk9
-    have st1 : SysStep sealStore.basis τ (.input m') τ1 :=
-      .input (Step.input τ τ1 m' ⟨_, hR⟩ rfl rfl)
-    have st2 : SysStep sealStore.basis τ1 (.output [] (below m')) τ2 :=
-      eps_step_iff.2 ⟨ho1, tinv_exposable hI1, rfl, rfl⟩
-    obtain ⟨esK, ρ, hx, he⟩ := follow_thr ms τ2 hI2 hc
-      (fun m hm => hms m (List.mem_cons_of_mem _ hm))
-    refine ⟨.input m' :: .output [] (below m') :: esK, ρ, .cons st1 (.cons st2 hx), ?_⟩
-    simp only [SEvent.erase, he, List.map, storeTr]
-
-theorem map_fst_below : ∀ ms : List Nat, (ms.map fun m => (m, below m)).map Prod.fst = ms
-  | [] => rfl
-  | a :: l => congrArg (List.cons a) (map_fst_below l)
-
-/-- **The sealed store follows the upstream.**  For every output sequence
-`m :: ms` that a system of the capped counter can emit, the store seals
-`{n ≥ 10}` once, at its first output, and then answers every later output
-without commitment: a guarded composite run. -/
-theorem sealStore_follows (P : Sys up) {m : Nat} {ms : List Nat} (hU : P.emits (m :: ms)) :
-    ∃ esK rest, GRun P.emits sealStore (m :: ms) m esK ∧
-      esK = .output [sealIn Big] (below m) :: rest ∧
-      esK.map SEvent.erase = .output (below m) :: storeTr (ms.map fun m => (m, below m)) := by
-  have hall : ∀ k ∈ m :: ms, k ≤ 9 := fun k hk => by
-    obtain ⟨i, h⟩ := emits_img hU k hk
-    have := up_img h; unfold Big at this; omega
-  have hm : m ≤ 9 := hall m List.mem_cons_self
-  have hc : ChainFrom (some m) ms := emits_chain hU
-  have hnB : ¬ Big (canon thr m).cur := by show ¬ 10 ≤ m; omega
-  let σc := sealInState (canon thr m) Big hnB
-  have happ : (sealIn (sq := thr) Big).app (canon thr m) = some σc :=
-    sealInApp_eq.2 ⟨hnB, ⟨10, below 10, ⟨rfl, show m ≤ 10 by omega⟩, show 10 ≤ 10 by omega⟩, rfl⟩
-  have hIc : TInv σc := by
-    refine ⟨hm, fun k x hx => ?_, fun k hk hk9 => ?_⟩
-    · have := hx.2; unfold Big at this; omega
-    · exact ⟨⟨rfl, hk⟩, show ¬ 10 ≤ k by omega⟩
-  have ho : σc.R σc.cur (below m) := hIc.2.2 m (Nat.le_refl m) hm
-  let τ := outState σc (below m) ho
-  have hI : TInv τ := by
-    refine ⟨hm, fun k x hx => hIc.2.1 k x hx.1, fun k hk hk9 => ⟨hIc.2.2 k hk hk9, ?_⟩⟩
-    show below m = below k
-    exact below_eq hm hk9
-  have st : SysStep sealStore.basis (canon thr m) (.output [sealIn Big] (below m)) τ :=
-    SysStep.output (fun c hc => List.mem_singleton.1 hc) (ApplySeq.cons happ (ApplySeq.nil _))
-      ho (tinv_exposable hIc) rfl rfl
-  obtain ⟨esK, ρ, hx, he⟩ := follow_thr ms τ hI hc (fun k hk => hall k (List.mem_cons_of_mem _ hk))
-  have hps : (ms.map fun m => (m, below m)).map Prod.fst = ms := map_fst_below ms
-  refine ⟨.output [sealIn Big] (below m) :: esK, esK, ⟨hU, ⟨below m, ms.map fun m => (m, below m), ?_, ?_⟩, ρ,
-    .cons st hx, compliant_free _⟩, rfl, ?_⟩
-  · rw [hps]; exact List.prefix_refl _
-  · simp only [List.map_cons, SEvent.erase, he]
-  · simp only [List.map_cons, SEvent.erase, he]
+  · exact proper_iff.2 (ceOn_mono (fun _ ⟨_, h⟩ => up_img h) thr_ceOn)
 
 end Threshold
 
@@ -768,6 +450,18 @@ theorem bool_toggle :
     intro a b h
     cases a with | mk a => cases b with | mk b =>
       cases a <;> cases b <;> simp_all [Function.comp, PO.le]
+
+/-- Without properness, (3) fails: with `𝒮₁` the identity on `Bool` (which
+needs no commitment) and `𝒮₂` negation, the composite is negation, which
+violates Lifted Monotonicity, yet `𝒮₁` emits every output without
+commitment. -/
+theorem needs_commit_needs_proper :
+    ¬ (seq (graph (id : Bool → Bool)) (graph not)).LiftedMono ∧
+      ∀ τ : State (graph (id : Bool → Bool)), ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o := by
+  refine ⟨fun h => not_not_monotone ?_, (exposure_boundary _).1
+    ((liftedMono_iff_commonExpansion _).1 ((graph_liftedMono_iff _).2 fun _ _ h => h))⟩
+  rw [seq_graph] at h
+  exact (graph_liftedMono_iff _).1 h
 
 end BoolToggle
 

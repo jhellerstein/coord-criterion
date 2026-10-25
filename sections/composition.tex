@@ -42,7 +42,12 @@ composition} has table
 \end{equation}
 where $\pi$ and $\Join$ are relational projection and equijoin.  Since $S_1$
 is total on $I$ and $S_2$ is total on $M$ (it has a row at every $m\in M$),
-every $i\in I$ has a nonempty fiber in $S_2\circ S_1$.
+every $i\in I$ has a nonempty fiber in $S_2\circ S_1$.  When the two stages
+run as a pipeline, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs, and
+we say that $\Spec_1$ \emph{guards} $\Spec_2$.
+Appendix~\ref{sec:parameterized-composition} gives each stage an input of its
+own as well, as when a store serves reads that bypass the log
+(Example~\ref{ex:bare-reads}).
 
 \begin{lemma}[Composition]
 \label{lem:composition}
@@ -132,10 +137,8 @@ on its own, but it is monotone on what the log offers: a log fixes the order
 of commands, and a longer log only extends the responses.  Unlike the
 filtering case, the upstream must commit to offer only such inputs.
 
-Let $\Spec_1$ be any specification, run by a system with any basis.  In the
-pipeline, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs and runs
-under a system of its own, and we say that $\Spec_1$ \emph{guards} $\Spec_2$.
-Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
+Let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
+let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
 $\Spec_1$.
 
 \begin{definition}[Proper Coordination]
@@ -155,8 +158,8 @@ Fix any system for $\Spec_1$.
         every run of $\Spec_1$.  The result is a run of $S_2\circ S_1$, and
         whenever runs of $\Spec_1$ can be brought to a common state, the
         composite runs are confluent.
-  \item If $S_2\circ S_1$ violates Lifted Monotonicity, $\Spec_1$ cannot emit
-        some output without a commitment.
+  \item If it is proper and $S_2\circ S_1$ violates Lifted Monotonicity,
+        $\Spec_1$ cannot emit some output without a commitment.
 \end{enumerate}
 \end{theorem}
 

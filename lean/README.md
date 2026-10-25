@@ -74,7 +74,7 @@ first and supporting claims and examples follow.
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
 | `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
-| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | Guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination for any Lifted-Monotone store (systems with strategies, guarded runs as composite runs, early/late/stalling locks), empty-store replacement, pipelines, counterexamples, per-key store, replicated store |
+| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no commitment; pipeline runs as composite runs, confluence, where the upstream must commit), systems with strategies, commitment-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
 | `Appendix/JointMono.lean` | `CC.Joint` | §5.1, App. D | Jointly monotone composites: filtering (capped counter), re-ordering the middle (boolean toggle, constant store; also the double complement, no longer cited in the paper), preorder/injective characterization and the no-partial-order counterexample |
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
@@ -95,7 +95,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-583 entries.
+575 entries.
 
 ### §2 Functional CALM
 
@@ -327,23 +327,10 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composite-calm/cancellation»` | theorem | "Third, considering a different order on `M` can make two non-monotone stages both monotone. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
 | `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |
-| `«sec:proper-coordination/image»` | theorem | "Let `𝒫 = (I,≼,M,≼,P)` be an upstream specification and `𝒦 = (M,≼,O,≼,K)` a downstream specification, the store, that satisfies Lifted Monotonicity. |
-| `«sec:proper-coordination/no-pushforward»` | theorem | "A commitment of `𝒫` may keep `m'` and remove `m`, with `m` and `m'` incomparable but `f(m) ≼ f(m')`. |
+| `«sec:proper-coordination/kvs-on-logs»` | theorem | "The replicated store of the opening extends the filtering case of Proposition `prop:joint-monotone`(2). |
 | `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
-| `«thm:guarded-runs»` | theorem | **Theorem `thm:guarded-runs`** (Guarded runs): |
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
-| `«sec:proper-coordination/empty-store-follows»` | theorem | "By Theorem `thm:guarded-runs`(1), a store under the empty basis also follows every run of `𝒫`. |
-| `«sec:proper-coordination/any-basis»` | theorem | "For a function store, every legal output event removes at least the rows its canonical event removes (Lemma `lem:canonical-commitment-normal-form`), so ever… |
-| `«sec:proper-coordination/replacement»` | theorem | "By Theorem `thm:proper-coordination`(1), none of the store's commitments is needed. |
-| `«cor:empty-store»` | theorem | **Corollary `cor:empty-store`** (Empty store): |
-| `«sec:proper-coordination/hypotheses-needed»` | theorem | "The hypotheses of (2) are needed. |
-| `«sec:proper-coordination/guard-of-guard»` | theorem | "The guarded composite is itself a guard. |
-| `«cor:pipelines»` | theorem | **Corollary `cor:pipelines`** (Pipelines): |
-| `«sec:proper-coordination/mutex-store»` | theorem | "Mutexes in the store, behind the log, are another matter. |
-| `«prop:invisible-coordination»` | theorem | **Proposition `prop:invisible-coordination`** (Invisible coordination): |
-| `«sec:proper-coordination/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order, and two commands `a` and `b` on different keys. |
-| `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
-| `«sec:composition/bare-reads»` | theorem | "There, bare reads need no commitment of their own when each response records the log position it read from, but they do when the specification demands the l… |
+| `«sec:proper-coordination/locks-overhead»` | theorem | "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |
 
 ### §6 Instances
 
@@ -578,26 +565,31 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«eq:curried-query-plan»` | theorem | Eq. |
 | `«prop:curried-query-plan»` | theorem | **Proposition `prop:curried-query-plan`** (Curried equijoin plan): |
 | `«eq:curried-composition»` | theorem | Eq. |
-| `«app:composition/all-monotone»` | theorem | "If every stage satisfies Lifted Monotonicity, a guarded composite whose first stage runs under the empty basis emits only what `𝒮₂ ∘ 𝒮₁` emits under the emp… |
+| `«app:composition/all-monotone»` | theorem | "If every stage satisfies Lifted Monotonicity and `𝒮₁` runs under the empty basis, the pipeline emits only what `S₂ ∘ S₁` emits under the empty basis. |
 | `«app:composition/joint-monotone»` | theorem | Proof of Proposition `prop:joint-monotone`: |
 | `«app:composition/reach»` | theorem | "The reach of case (3). |
 | `«app:composition/capped-counter»` | theorem | "For the capped counter of Section `sec:composite-calm`, let `𝒮₁` be the table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of the test `… |
 | `«app:composition/boolean-toggle»` | theorem | "For the boolean toggle, let `I`, `M`, and `O` be the booleans with `false` below `true`, and let both stages be negation. |
-| `«app:composition/components-commit»` | theorem | "Let `𝒫` have one input `*` and table `{(*,x),(*,y)}` with `x,y` incomparable, and let `f` map both to one value. |
-| `«app:composition/image-canon»` | theorem | "The image of the canonical state `σ_𝒫(i)` is the canonical state of `𝒦 ∘ 𝒫` at `i`, since `P[in ⪰ i] ⋈ K` is the composite table restricted to the expansion… |
-| `«app:composition/store-facts»` | theorem | "Two facts about a state `τ` that `𝒦` reaches without commitment carry the proofs. |
-| `«app:composition/guarded-lockstep»` | theorem | The induction of the proof of Theorem `thm:guarded-runs`(2): |
-| `«app:composition/store-steps»` | theorem | Proof of Theorem `thm:guarded-runs`(1) for a function store: |
-| `«app:composition/coverage»` | theorem | The covering argument: |
-| `«app:composition/store-exposable»` | theorem | Proof of Theorem `thm:proper-coordination`(1)–(2): |
+| `«app:composition/components-commit»` | theorem | "Let `𝒮₁` have one input `*` and table `{(*,x),(*,y)}` with `x,y` incomparable, and let `𝒮₂` be the table of a function `f` that maps both to one value. |
+| `«app:composition/image-canon»` | theorem | "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write `R ⋈ T = {(k,x) : |
+| `«app:composition/pipeline-run»` | theorem | "A run of the pipeline is a run of `𝒮₁` under `ℬ`, together with a run of `𝒮₂\|_{𝒮₁}` from `σ(m₁)`, where `m₁` is the first output of `𝒮₁`. |
+| `«app:composition/store-facts»` | theorem | "In a proper pipeline, two facts about a state `τ` that `𝒮₂\|_{𝒮₁}` reaches without commitment carry the proofs. |
+| `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:proper-coordination`(2): |
 | `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:proper-coordination`(3): |
+| `«app:composition/properness-needed»` | theorem | "Properness is needed in (3). |
+| `«app:composition/replacement»` | theorem | "The commitment-erased replacement of a system has the empty basis and the same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)`." Lean: |
+| `«cor:empty-store»` | theorem | **Corollary `cor:empty-store`** (Empty store): |
 | `«app:composition/empty-store»` | theorem | Proof of Corollary `cor:empty-store`: |
+| `«cor:pipelines»` | theorem | **Corollary `cor:pipelines`** (Pipelines): |
 | `«app:composition/pipelines»` | theorem | Proof of Corollary `cor:pipelines`: |
-| `«app:composition/mutex-store»` | theorem | "For the mutex store …, let `𝒫` be the log specification of Example `ex:committed-log-composition`, under its canonical basis with a strategy that allows eve… |
-| `«app:composition/per-key»` | theorem | "For the per-key store …, let `𝒫` have one input with fiber `{[a,b],[b,a]}`, and let `f` send a log to the family of its subsequences on each key. |
-| `«app:composition/no-pushforward»` | theorem | "The commitments of `𝒫` do not themselves push forward. |
+| `«app:composition/mutex-store»` | theorem | "Let `𝒮₁` be the log specification of Example `ex:committed-log-composition`, under its canonical basis with a strategy that allows every event, and `𝒮₂` the… |
+| `«prop:invisible-coordination»` | theorem | **Proposition `prop:invisible-coordination`** (Invisible coordination): |
+| `«app:composition/coverage»` | theorem | The covering argument: |
+| `«app:composition/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order. |
+| `«app:composition/no-pushforward»` | theorem | "The commitments of `𝒮₁` do not themselves push forward. |
 | `«app:composition/monotone-needed»` | theorem | "Monotonicity of `f` is needed. |
-| `«app:composition/store-choice»` | theorem | "A store that must itself choose cannot delegate the choice either. |
+| `«app:composition/store-choice»` | theorem | "A downstream that must itself choose cannot delegate the choice either. |
+| `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
 
