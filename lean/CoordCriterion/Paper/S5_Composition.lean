@@ -147,14 +147,14 @@ theorem «sec:composite-calm/filtering» :
   ⟨Joint.threshold, fun P _ _ h => Joint.sealStore_follows P h⟩
 
 /-- "Third, two stages that are each non-monotone can cancel.  Consider a
-first stage that receives a growing set `X` and outputs its complement
-`U ∖ X`, the elements not yet seen, and a second stage that complements again.
-The composite returns `X`, which only grows.  Under the usual order on sets,
-though, each stage is non-monotone.  As `X` grows, the first stage's output
-shrinks, so without commitment it can emit only the empty set.  … The
-composite's table never mentions the order on `M`, so the two stages may agree
-on a different one.  Let a smaller set of missing elements count as further
-along.  … both stages are monotone.  Likewise, suppose the upstream may output
+first stage that receives a growing set `X` from a domain `U` and outputs its
+complement `U ∖ X`, the elements not yet seen, and a second stage that
+complements again.  The composite returns `X`, which only grows.  Under the
+usual order on sets, though, each stage is non-monotone.  As `X` grows, the
+first stage's output shrinks, so without commitment it can emit only the empty
+set.  … The composite's table never mentions the intermediate order `M`
+between the stages, so it can be treated as a different one.  Let the order on
+`M` be inverted: `S ⊆ S' ⟹ S' ≼ S`.  … both stages are monotone.  Likewise, suppose the upstream may output
 either of two incomparable values `a` and `b`, and the downstream maps both to
 the same answer.  The upstream cannot emit either without choosing.  If the
 interface places `a` below `b`, the upstream can emit `a` and later supersede
@@ -189,8 +189,8 @@ theorem «sec:composite-calm/cancellation» {U : Type} [Nonempty U] :
 `M` leaves `S₂ ∘ S₁` unchanged.  So does re-encoding the intermediate values,
 provided the downstream can decode them.  (3) Let `f : I → M` and
 `g : M → O` be functions such that `g(f(x)) ≼ g(f(y))` whenever `x ⊑ y`.  If
-`g` maps distinct values to distinct values, some order on `M` makes both `f`
-and `g` monotone.  Otherwise there may be no such order."  And: "We say
+`g` is one-to-one (injective), some order on `M` makes both `f` and `g`
+monotone.  Otherwise there may be no such order."  And: "We say
 that `S₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when the
 common-expansion condition holds for its rows with inputs in `D`, at
 expansions in `D`."  Lean: `Joint.CEOn` (equivalently, the restriction to `D`
