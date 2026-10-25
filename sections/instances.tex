@@ -18,8 +18,39 @@ Functional CALM does not replace the details of that theorem.  It abstracts
 the result to a property that can be compared with specifications outside
 Datalog.
 
-Subsequent refinements of that CALM Theorem are all instances of our Functional CALM
-Theorem: \jmh{fill in brief explanations of Zinn, Baccaert, etc.}
+Later refinements of that theorem change the input order or the notion of
+coordination.  Zinn et al.\ gave transducers partial knowledge of how data is
+placed, and more queries became coordination-free, among them the
+non-monotone win-move query~\cite{zinn2012winmove}.  Ameloot et al.\
+characterized the new classes by weaker forms of
+monotonicity~\cite{ameloot2015weaker}, correcting an earlier one-fact
+version~\cite{zinn2012weak}.  A query is \emph{domain-distinct-monotone} when
+$Q(I)\subseteq Q(I\cup J)$ for every $J$ whose facts each contain a value
+that does not occur in $I$.  It is \emph{domain-disjoint-monotone} when this
+holds for every $J$ whose facts use only such values.  Each is Functional
+CALM under a different input order.  Under policy-aware placement, a node can
+learn which facts over its known values are absent, so the input it cannot
+yet rule out is a domain-distinct $J$.  Under domain-guided placement it is a
+domain-disjoint $J$.  When the order lets $I\cup J$ \inrelbase $I$ only for
+such $J$, each condition is functional monotonicity.  The placement model
+justifies that order.  Functional CALM takes the order as given.
+
+Baccaert and Ketsman go beyond
+queries~\cite{baccaert2023dcbq,baccaert2026spectrum}.  Their
+\emph{behaviors} map an input of facts located at nodes to a set of permitted
+located outputs.  With outputs ordered by inclusion, and an input \inrelpart
+another when it adds facts only at new nodes, a behavior is a relational
+specification.  Their characterization uses \emph{node monotonicity}: outputs
+computed by two disjoint subnetworks have a common \outnoun at the merged
+network.  Lifted Monotonicity implies it.  The converse fails, because their
+notion of coordination is narrower.  A behavior is coordination-free for them
+when it can be computed without the list of all nodes.  That list lets a node
+rule out further input, which is a seal in our terms.  A subnetwork may still
+choose among outputs, for instance one spanning tree among several, by
+deferring to its smallest node.  Complete CALM counts that choice as a
+commitment (Proposition~\ref{prop:seal-or-choose}), so it requires directed
+fibers, and node monotonicity does not.  For deterministic behaviors the two
+conditions coincide.
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}

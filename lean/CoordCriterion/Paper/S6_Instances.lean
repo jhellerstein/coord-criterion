@@ -1,5 +1,6 @@
 import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.BailisDefinition
+import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.CALM.Lemmas
 
 /-!
@@ -15,7 +16,8 @@ it formalizes.
 * Unlabeled claims are named `«<enclosing label>/<slug>»`, e.g.
   `«sec:hat-instance/serializability-cycle»`.
 * Every proof is a pointer to the library (`Instances/Examples.lean`,
-  `Instances/InvariantConfluence.lean`, `Instances/BailisDefinition.lean`).
+  `Instances/QueryRefinements.lean`, `Instances/InvariantConfluence.lean`,
+  `Instances/BailisDefinition.lean`).
 
 Conventions shared by the entries (details in `Instances/Examples.lean`):
 finite payload sets are `Inst.FSet P` (inclusion); a join-semilattice is
@@ -34,19 +36,106 @@ namespace Paper
 
 open CC.Comp (Monotone graph)
 
-/-! ## Query monotonicity (`sec:query-instance`) -/
+/-! The opening paragraph ("Complete CALM provides a unified lens for many
+results across literatures.  Each setting below declares an input, an output,
+and their orders before applying either theorem.") frames the section; it
+states no claim of its own.
 
-/-- Sec. `sec:query-instance`: "Their query specification is functional:
-each input `J` has one result `Q(J)`, so each output fiber is a singleton and
-directed automatically." -/
-theorem «sec:query-instance/functional-directed» {I O : Type} [PO I] [PO O] {sp : Spec I O}
-    (hf : sp.Functional) : sp.DirectedOutputs :=
-  CALM.functional_directed hf
+## Query monotonicity (`sec:query-instance`)
+
+The first paragraph recalls the relational-transducer CALM Theorem ("the CALM
+Theorem of Ameloot et al. proves an operational result for relational
+languages on transducer networks: coordination-free evaluation is possible
+iff a program is monotone … Functional CALM does not replace the details of
+that theorem.  It abstracts the result to a property that can be compared
+with specifications outside Datalog.").  The abstraction is
+`«eq:query-monotonicity»` (§2); the transducer theorem itself is cited, not
+formalized.  The entries below check the mapping of its refinements into our
+frame (`Instances/QueryRefinements.lean`); the operational statements of
+those papers (placement policies, transducers, which orders their placement
+models justify) are cited, not formalized. -/
+
+/-- Sec. `sec:query-instance`: "A query is domain-distinct-monotone when
+`Q(I) ⊆ Q(I ∪ J)` for every `J` whose facts each contain a value that does
+not occur in `I`.  It is domain-disjoint-monotone when this holds for every
+`J` whose facts use only such values.  Each is Functional CALM under a
+different input order. … When the order lets `I ∪ J` expand `I` only for such
+`J`, each condition is functional monotonicity."  Lean: facts carry values
+`vals : F → V → Prop`; `ExtInp (distinctAdm vals)` and
+`ExtInp (disjointAdm vals)` order instances by domain-distinct and
+domain-disjoint expansion (nullary facts are never domain disjoint, as in
+Ameloot et al.).  For each order, the weaker monotonicity is monotonicity of
+`J ↦ Q(J)`, and by Functional CALM the graph is consistent exactly when it
+holds.  With every fact admissible the order is inclusion and the condition
+is ordinary query monotonicity. -/
+theorem «sec:query-instance/weaker-monotonicity» {F V A : Type} (vals : F → V → Prop)
+    (Q : CALM.PSet F → CALM.PSet A) :
+    ((QRef.DistinctMono vals Q ↔ Monotone (fun I : QRef.ExtInp (QRef.distinctAdm vals) => Q I.set)) ∧
+      ((graph (fun I : QRef.ExtInp (QRef.distinctAdm vals) => Q I.set)).Consistent ↔
+        QRef.DistinctMono vals Q)) ∧
+    ((QRef.DisjointMono vals Q ↔ Monotone (fun I : QRef.ExtInp (QRef.disjointAdm vals) => Q I.set)) ∧
+      ((graph (fun I : QRef.ExtInp (QRef.disjointAdm vals) => Q I.set)).Consistent ↔
+        QRef.DisjointMono vals Q)) ∧
+    (QRef.RMono (QRef.allAdm F) Q ↔ ∀ J J' : CALM.PSet F, J ≼ J' → Q J ≼ Q J') :=
+  ⟨QRef.distinctMono_iff vals Q, QRef.disjointMono_iff vals Q, QRef.allAdm_rmono_iff Q⟩
+
+/-- Sec. `sec:query-instance`: "Ameloot et al. characterized the new classes
+by weaker forms of monotonicity, correcting an earlier one-fact version."
+Lean: the one-fact domain-distinct test is strictly weaker.  The query "the
+edge relation has no 2-cycle" passes it, but adding the domain-disjoint
+instance `{e(0,1), e(1,0)}` to `∅` falsifies the query, so it is neither
+domain-disjoint- nor domain-distinct-monotone. -/
+theorem «sec:query-instance/one-fact-version» :
+    QRef.OneFactDistinctMono QRef.edgeVals QRef.noCycle2 ∧
+      ¬ QRef.DisjointMono QRef.edgeVals QRef.noCycle2 ∧
+      ¬ QRef.DistinctMono QRef.edgeVals QRef.noCycle2 :=
+  ⟨QRef.noCycle2_oneFact, QRef.noCycle2_not_disjointMono, QRef.noCycle2_not_distinctMono⟩
+
+/-- Sec. `sec:query-instance`: "With outputs ordered by inclusion, and an
+input expanding another when it adds facts only at new nodes, a behavior is a
+relational specification.  Their characterization uses node monotonicity:
+outputs computed by two disjoint subnetworks have a common refinement at the
+merged network.  Lifted Monotonicity implies it."  Lean: inputs are
+`ExtInp (netAdm loc)` (located facts, network expansion) and a behavior is any
+`Spec` on them; consistency, equivalently Lifted Monotonicity, implies
+`NodeMono`. -/
+theorem «sec:query-instance/node-monotonicity» {F N G : Type} (loc : F → N)
+    (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)) :
+    (B.LiftedMono → QRef.NodeMono loc B) ∧ (B.Consistent → QRef.NodeMono loc B) :=
+  ⟨fun h => QRef.nodeMono_of_consistent loc ((complete_calm B).2 h),
+    QRef.nodeMono_of_consistent loc⟩
+
+/-- Sec. `sec:query-instance`: "The converse fails … A subnetwork may still
+choose among outputs … Complete CALM counts that choice as a commitment …, so
+it requires directed fibers, and node monotonicity does not."  Lean (a
+smaller choice than a spanning tree): each node of the input may pick one
+Boolean.  Disjoint networks never pick at the same node, so the behavior is
+node monotone; at the one-node network the picks `true` and `false` have no
+common refinement, so the fiber is not directed and the behavior is not
+consistent.  (Their notion of coordination, computing without the list of all
+nodes, is cited, not formalized.) -/
+theorem «sec:query-instance/node-monotone-not-lm» :
+    QRef.NodeMono id QRef.pick ∧ ¬ QRef.pick.DirectedOutputs ∧ ¬ QRef.pick.LiftedMono ∧
+      ¬ QRef.pick.Consistent :=
+  ⟨QRef.pick_nodeMono, QRef.pick_not_directed,
+    fun h => QRef.pick_not_consistent ((complete_calm _).2 h), QRef.pick_not_consistent⟩
+
+/-- Sec. `sec:query-instance`: "For deterministic behaviors the two conditions
+coincide."  Lean: for the graph of `b`, node monotonicity is monotonicity
+under network expansion, which by Functional CALM is consistency. -/
+theorem «sec:query-instance/deterministic-behaviors» {F N G : Type} (loc : F → N)
+    (b : QRef.ExtInp (QRef.netAdm loc) → CALM.PSet G) :
+    (QRef.NodeMono loc (graph b) ↔ Monotone b) ∧ ((graph b).Consistent ↔ Monotone b) :=
+  QRef.nodeMono_graph_iff loc b
 
 /-! ## CRDTs: monotone queries over convergent state (`sec:crdt-instance`)
 
-The opening paragraph credits the observation that convergent state can yield
-unsafe observations to Keep CALM and CRDT On; its two-phase-set example is
+The opening paragraph ("A CRDT guarantees that replicas receiving the same
+updates converge to equivalent states … But the Strong Eventual Consistency
+property it offers provides no guarantee on what the environment may observe,
+and is subject to Lamport's "anomalous behavior" (§`sec:coordination`).
+Laddad et al. proposed monotonicity as the right test for safe observation
+from CRDT state.") cites rather than proves; its two-phase-set example is
 checked in `«sec:crdt-instance/two-phase»` below. -/
 
 /-- Sec. `sec:crdt-instance`: "the replica's state is `s(U) = s₀ ⊔ ⨆U`."
@@ -106,32 +195,30 @@ theorem «sec:crdt-instance/two-phase» :
       (graph (Inst.st (Inst.emp, Inst.emp) : Inst.FSet (Inst.PS × Inst.PS) → Inst.PS × Inst.PS)).Consistent :=
   ⟨Inst.st_U0, Inst.st_U1, Inst.twoPhase_unsafe⟩
 
-/-- Sec. `sec:crdt-instance`: "a Boolean test `[t ⊑ d]` under
-`false ≼ true`, which stays true as the state grows.  A replica can thus
-report that a grow-only set of failed logins has reached 100 entries without
-knowing that it has seen them all."  Lean: LVars threshold queries `[t ⊑ d]`
-are monotone; for `q₁₀₀(d) = [|d| ≥ 100]` on a grow-only set, `q₁₀₀ ∘ s` is
-monotone and consistent, and every output at every state reachable without
-commitment is exposable. -/
-theorem «sec:crdt-instance/thresholds» {A : Type} (s0 : IConf.St A) :
-    Monotone (fun U : Inst.FSet (IConf.St A) => Inst.qThr 100 (Inst.st s0 U)) ∧
-      (graph (fun U : Inst.FSet (IConf.St A) => Inst.qThr 100 (Inst.st s0 U))).Consistent ∧
-      (∀ τ : State (graph (fun U : Inst.FSet (IConf.St A) => Inst.qThr 100 (Inst.st s0 U))),
-        ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o) ∧
-      ∀ {D : Type} [PO D] (t : D), Monotone (fun d : D => (t ≼ d : Prop)) :=
-  ⟨Inst.Q100_mono s0, (Inst.Q100_consistent_exposable s0).1, (Inst.Q100_consistent_exposable s0).2,
-    fun t => Inst.lvar_threshold_mono t⟩
+/-- Sec. `sec:crdt-instance`: "CRDT states form a join-semilattice."  Lean: a
+merge that is commutative, associative, and idempotent orders states by
+`x ≼ y ⟺ merge x y = y`; this relation is a partial order and `merge a b` is
+the least upper bound of `a` and `b`. -/
+theorem «sec:crdt-instance/semilattice» {D : Type} (m : Inst.CAI D) :
+    let le := fun x y => m.merge x y = y
+    (∀ x, le x x) ∧ (∀ x y z, le x y → le y z → le x z) ∧ (∀ x y, le x y → le y x → x = y) ∧
+      ∀ a b, le a (m.merge a b) ∧ le b (m.merge a b) ∧ ∀ c, le a c → le b c → le (m.merge a b) c :=
+  Inst.cai_semilattice m
 
-/-- Sec. `sec:crdt-instance`: "A last-writer-wins replica converges, yet it
-can expose one value and later discard it, so whether convergence is monotone
-depends on the declared output order."  Lean: LWW states `(timestamp, value)`
-in lexicographic order; the state function is monotone, but exposing the value
-under the discrete order is neither monotone nor consistent. -/
-theorem «sec:crdt-instance/lww» :
-    Monotone (Inst.st (⟨0, 0⟩ : Inst.LWW)) ∧
-      ¬ Monotone (fun U : Inst.FSet Inst.LWW => (⟨(Inst.st ⟨0, 0⟩ U).v⟩ : Inst.Disc Nat)) ∧
-      ¬ (graph (fun U : Inst.FSet Inst.LWW => (⟨(Inst.st ⟨0, 0⟩ U).v⟩ : Inst.Disc Nat))).Consistent :=
-  Inst.lww_depends_on_order
+/-- Sec. `sec:crdt-instance`: "Observations `q` need less: Complete CALM
+requires only some common refinement of query outputs
+(Section `sec:lifted-monotonicity`), not a least one."  Lean: on the state
+lattice `B2 × B2`, a monotone observation `qY` into a five-element order makes
+`q ∘ s` consistent, yet its outputs `a = q(s({(tt,ff)}))` and
+`b = q(s({(ff,tt)}))` have common refinements (`c`, and also `d`) but no
+least one. -/
+theorem «sec:crdt-instance/some-refinement» :
+    (graph (fun U : Inst.FSet (Inst.B2 × Inst.B2) => Inst.qY (Inst.st (Inst.B2.ff, Inst.B2.ff) U))).Consistent ∧
+      Inst.qY (Inst.st (Inst.B2.ff, Inst.B2.ff) (Inst.FSet.ofList [(Inst.B2.tt, Inst.B2.ff)])) = Inst.Y5.a ∧
+      Inst.qY (Inst.st (Inst.B2.ff, Inst.B2.ff) (Inst.FSet.ofList [(Inst.B2.ff, Inst.B2.tt)])) = Inst.Y5.b ∧
+      (Inst.Y5.a ≼ Inst.Y5.c ∧ Inst.Y5.b ≼ Inst.Y5.c) ∧
+      ¬ ∃ y : Inst.Y5, Inst.Y5.a ≼ y ∧ Inst.Y5.b ≼ y ∧ ∀ z, Inst.Y5.a ≼ z → Inst.Y5.b ≼ z → y ≼ z :=
+  Inst.crdt_observation_no_join
 
 /-! ## Highly available transactions (`sec:hat-instance`)
 
@@ -235,11 +322,18 @@ theorem «sec:iconfluence-instance/bailis-definition» {V Tx : Type} (M : IConf.
       (IConf.BailisIC M ↔ M.IConfluent) ∧ (IConf.BailisAnc M ↔ M.IConfluent) :=
   ⟨IConf.s0_anc, IConf.reachPlus_iff, IConf.bailis_iff, IConf.bailisAnc_iff⟩
 
-/-- "The inputs are the locally valid histories … a history is valid when
-every merge of what it contains satisfies `𝓘` …  The specification `S_𝓘`
-lets a replica expose the state of any valid downward-closed sub-history of
-its input."  Lean: `IConf.SI M` on inputs `IConf.Inp M` (locally valid
-histories, expansion order); full model in `Paper/AppB_InvariantConfluence`. -/
+/-- "From an instance `(s₀, T, 𝓘)` of their model we construct a
+specification `S_𝓘` in ours as follows.  Inputs are transaction histories:
+partial orders of events, each labeled by a transaction in `T`, where one
+event precedes another when the replica running the second saw the first.  A
+history expands each of its downward-closed sub-orders.  We keep the locally
+valid histories, in which every transaction step preserves `𝓘` on its
+replica's state.  Outputs are database states, ordered by inclusion.  The
+specification table permits, at input `h`, the state of any downward-closed sub-history of
+`h` that is valid: every merge of what it contains satisfies `𝓘`."  Lean:
+`IConf.SI M` on inputs `IConf.Inp M` (locally valid histories, expansion
+order) with outputs `IConf.St V` under inclusion; full model in
+`Paper/AppB_InvariantConfluence`. -/
 theorem «sec:iconfluence-instance/spec» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M)
     (s : IConf.St V) :
     (IConf.SI M).S h s ↔ ∃ g, g ≼ h.1 ∧ IConf.Valid M g ∧ IConf.eval M g = s :=
@@ -259,15 +353,18 @@ theorem «sec:iconfluence-instance/iconfluence-is-consistency» {V Tx : Type} (M
     M.IConfluent ↔ (IConf.SI M).Consistent :=
   (IConf.ic_iff_liftedMono M).trans (complete_calm _).symm
 
-/-- The uniqueness example: "Two replicas each observe that username `sam`
-is free and allocate it to different accounts.  The history in which neither
-allocation saw the other is locally valid and expands both one-allocation
-histories, but its state has two owners, so no state it permits covers
-both."  Lean: versions are owning accounts, `alloc a` allocates `sam` to `a`
-if the replica sees it free, the invariant is "at most one owner"; `jU` has
-the unordered events `alloc 1`, `alloc 2`; `oneU n t` is the one-event
-history.  Consequently `S_𝓘` fails Lifted Monotonicity and the transactions
-are not invariant confluent. -/
+/-- The uniqueness example: "The uniqueness constraint of Bailis et al.'s
+payroll example shows the failure directly.  Two replicas each create an
+employee and assign ID 7, which each sees is unused.  The history in which
+neither creation saw the other is locally valid and expands both
+one-creation histories, but its state has two employees with ID 7, so no
+state it permits refines both."  Lean (library names from an earlier
+username version of the example): versions are the employees holding ID 7;
+`alloc a` creates employee `a` with ID 7 if the replica sees the ID unused;
+the invariant `uModel.Inv` is "at most one employee has ID 7"; `jU` has the
+unordered events `alloc 1`, `alloc 2`; `oneU n t` is the one-event history.
+Consequently `S_𝓘` fails Lifted Monotonicity and the transactions are not
+invariant confluent. -/
 theorem «sec:iconfluence-instance/uniqueness» :
     IConf.LocValid Inst.uModel Inst.jU ∧ Inst.oneU 0 1 ≼ Inst.jU ∧ Inst.oneU 1 2 ≼ Inst.jU ∧
       IConf.eval Inst.uModel Inst.jU 1 ∧ IConf.eval Inst.uModel Inst.jU 2 ∧
