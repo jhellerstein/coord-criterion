@@ -66,8 +66,7 @@ monotone (Section~\ref{sec:lifted-monotonicity}).
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-The composite is itself an ordered specification, so Complete CALM applies to
-it directly.  Specification $S_2\circ S_1$ is consistent exactly when it
+The composite is itself an ordered specification.  By Complete CALM, specification $S_2\circ S_1$ is consistent exactly when it
 satisfies Lifted Monotonicity, and then no output needs a commitment
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).
 That test is on the composite's table.  When the stages run as a pipeline, we
@@ -75,8 +74,7 @@ also want them to avoid commitments.  A composite can be jointly monotone in
 three ways.
 
 First, every stage is monotone.  By Lemma~\ref{lem:composition} the pipeline
-is monotone, and every stage can run with the empty basis, with no seals and
-no choices anywhere (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+is monotone, and no stage need make a commitment (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
 client query $q$ over the replica state $s$ is the composition $q\circ s$, and
 compositions of monotone functions are monotone
 (Corollary~\ref{cor:functional-composition}), so
@@ -84,12 +82,11 @@ monotonicity of $q$ on all of the state domain suffices.
 
 Second, the upstream can filter out the inputs on which the downstream is not
 monotone.  Consider a counter capped at $9$ that feeds a test of whether the
-count is below $10$.  On its own the test is not monotone: it answers yes at
-$9$ and no at $10$.  But the counter never produces $10$, and on the counts
-$0$ through $9$ the test always answers yes.  The downstream need only be
+count is below $10$.  That test is not monotone: it answers yes at
+$0$ through $9$ and no at $10$.  But the counter never produces $10$ or higher.  The downstream need only be
 monotone on the values the upstream can produce.
 
-Third, two stages that are each non-monotone can cancel.  As an example,
+Third, two non-monotone stages can cancel.  As an example,
 consider a first stage that receives a growing set $X$ from a domain $U$ and
 outputs its complement $U\setminus X$, and a second stage that complements
 again.  The composite returns $X$, which only grows.  Under the usual order on
@@ -128,8 +125,7 @@ proof in Appendix~\ref{app:composition}.
 
 The three cases do not cover every monotone composite
 (Appendix~\ref{app:composition}).  When no case applies, some stage may have to
-commit even though the composite is monotone.  We ask which one in
-Section~\ref{sec:proper-coordination}.
+commit even though the composite is monotone, as we discuss next.
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
