@@ -1,7 +1,6 @@
 import CoordCriterion.Appendix.Deployment
 import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.DeploymentSystems
-import CoordCriterion.Appendix.ProductFrontier
 import CoordCriterion.Appendix.Registers
 import CoordCriterion.Appendix.DeploymentFor
 
@@ -201,22 +200,14 @@ theorem «app:deployment/sufficient-condition» (Dp : Deployment sp n)
 
 end Deployment2
 
-/-- "The product interface of Theorem `thm:product-frontier` and the causal
-register of Appendix `app:registers` are further examples, with no single
-authority, of monotonicity across partitions without Lifted Monotonicity."
+/-- "The causal register of Appendix `app:registers` is a further example,
+with no single authority, of monotonicity across partitions without Lifted
+Monotonicity."
 
-Lean: the product interface instance is the two-replica configuration
-interface (`cfgV`, every `V_p(i) = {0,1}` ordered by equality, any input
-poset, owner deployment); the causal-register instance is the two-write
-history signature `G2` with the replica deployment. -/
-theorem «app:deployment/further-examples» (I : Type) [PO I] (i : I) :
-    (MonoAcrossPartitions (ownerD (prodSpec (W := fun _ => Front.Disc Bool) (cfgV I) cfgV_ne)) ∧
-      ¬ (prodSpec (W := fun _ => Front.Disc Bool) (cfgV I) cfgV_ne).LiftedMono) ∧
-    (MonoAcrossPartitions (replicaD G2) ∧ ¬ (causalSpec G2).LiftedMono) :=
-  ⟨⟨product_monoAcross _ cfgV_ne (fun _ _ _ v _ _ => ⟨v, trivial, PO.refl v⟩),
-    product_not_liftedMono (p := 0) (i := i) (v := ⟨false⟩) (w := ⟨true⟩) _ cfgV_ne
-      trivial trivial (fun ⟨_, _, h1, h2⟩ => by cases h1.trans h2.symm)⟩,
-   ⟨causal_monoAcross G2, causal_not_liftedMono⟩⟩
+Lean: the two-write history signature `G2` with the replica deployment. -/
+theorem «app:deployment/further-examples» :
+    MonoAcrossPartitions (replicaD G2) ∧ ¬ (causalSpec G2).LiftedMono :=
+  ⟨causal_monoAcross G2, causal_not_liftedMono⟩
 
 /-- "… they need not satisfy this condition, since a set of rows lacking a
 common expansion may also contain rows of other participants."  Witness: in

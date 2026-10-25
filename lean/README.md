@@ -81,10 +81,10 @@ first and supporting claims and examples follow.
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter commitments on antichain fibers (used by Fig. cc-commitments in §4.3 and App. C) |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | The `(L,X,ρ)` spec with partial outputs; closure commitments; 2PL/MVTO bases; bases differ; deadlock; MVTO: reported reads, entailed vs. chosen aborts |
 | `Appendix/TransactionBases/CanonicalExample.lean` | `CC.Txn.Partial.CanonEx` | §4.3 | Canonical runs suffice: a 2PL run at `{A,B,C}` and its canonical run in lockstep |
-| `Appendix/Frontiers.lean` | `CC.Front` | App. H | Remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
-| `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. H | Thm. independent-product frontier, configuration example |
-| `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers), App. H | Causal and linearizable registers, two-write history, causal-register frontier |
-| `Appendix/Applications.lean` | `CC.Apps` | App. I | Committed authority, `k`-set agreement, tight renaming, snapshots |
+| `Appendix/Frontiers.lean` | `CC.Front` | not in paper | Remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
+| `Appendix/ProductFrontier.lean` | `CC.Deploy` | not in paper | Thm. independent-product frontier, configuration example |
+| `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers) | Causal and linearizable registers, two-write history, causal-register frontier |
+| `Appendix/Applications.lean` | `CC.Apps` | App. H | Committed authority, `k`-set agreement, tight renaming, snapshots |
 
 `ProductFrontier` and `Registers` are in `CC.Deploy` because they are stated
 in terms of the deployment notions of `Appendix/Deployment.lean`.
@@ -93,7 +93,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-574 entries.
+545 entries.
 
 ### §2 Functional CALM
 
@@ -576,7 +576,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/leader-example/separable-shape»` | theorem | "… and `q` never emits, so every separable family consists of one row `(i,a)` or `(i,b)` beside a silent `q`." |
 | `«app:deployment/leader-example»` | theorem | "So `S` is monotone across partitions, yet `(i,a)` and `(i,b)` have no common expansion and Lifted Monotonicity fails." (Any input `i` witnesses the failure.) |
 | `«app:deployment/sufficient-condition»` | theorem | "The same happens whenever each authorized row has an expansion at every expansion of its input and every set of authorized rows lacking a common expansion a… |
-| `«app:deployment/further-examples»` | theorem | "The product interface of Theorem `thm:product-frontier` and the causal register of Appendix `app:registers` are further examples, with no single authority,… |
+| `«app:deployment/further-examples»` | theorem | "The causal register of Appendix `app:registers` is a further example, with no single authority, of monotonicity across partitions without Lifted Monotonicit… |
 | `«app:deployment/further-examples/condition-fails»` | theorem | "… they need not satisfy this condition, since a set of rows lacking a common expansion may also contain rows of other participants." Witness: |
 | `«app:deployment/full-deployment»` | theorem | "If `\|P\| ≥ 2` and `A_p = S` for every `p`, every pair of rows can be split across a partition and every single row paired with a silent participant at the co… |
 | `«app:deployment/full-deployment/pairs-suffice»` | theorem | The pairs-suffice step used above (Appendix `app:pairs-suffice`). |
@@ -714,45 +714,9 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/abort-is-a-choice»` | theorem | "While `B` is undecided, it does not. |
 | `«app:cc-bases/comparison»` | theorem | "Under MVTO, a later transaction's read of an older version commits that the writer and the reader do not both commit, and the write rule settles this at onc… |
 
-### Appendix H: Frontiers
+### Appendix H: Additional applications
 
-File `Paper/AppH_Frontiers.lean`; paper source `appendices/frontiers.tex`.
-
-| Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
-|---|---|---|
-| `«eq:lifted-output-order»` | theorem | **Eq. |
-| `«sec:frontiers/powerset-relaxation»` | theorem | "Fix a table `X ⊆ I × O`, with fibers `X(i)` possibly empty. |
-| `«eq:monotone-hull»` | theorem | **Eq. |
-| `«eq:hull-coverage»` | theorem | **Eq. |
-| `«thm:monotone-hull»` | theorem | **Theorem `thm:monotone-hull`** (Remembered-output frontier). |
-| `«thm:monotone-hull/pruned-unique»` | theorem | `M(i)` is the set of maximal elements of `X̂(i)`, and the least subset is unique: |
-| `«sec:frontiers/hoare-quotient»` | theorem | "When `X = S` is a specification, every `X̂(i)` is nonempty. |
-| `«sec:frontiers/hull-spec-consistent»` | theorem | "Then `i ↦ X̂(i)`, read in this quotient, is a functional specification. |
-| `«tab:lookup-lift»` | theorem | **Table `tab:lookup-lift`** (Original, remembered, and pruned fibers for the lookup example). |
-| `«tab:lookup-lift/not-rel-mono»` | theorem | "It violates Relational Monotonicity, since `o_a` at `i₀` has nothing above it in `X(i₁)`." (`X` read as a powerset-valued map.) |
-| `«tab:lookup-lift/forwarding»` | theorem | "Forwarding, `A(i₀) = {o_a}` and `A(i₁) = {o_{a⇝b}}`, is another relaxation satisfying Relational Monotonicity, and Equation `eq:hull-coverage` places `X̂` b… |
-| `«sec:frontiers/claims»` | theorem | "The structure after `h` is a finite directed graph whose nodes are *positions* … For each key `k`, every position has at most one outgoing *search edge for… |
-| `«sec:frontiers/obligations»` | theorem | "Each restructuring step must satisfy: |
-| `«prop:persistent-forwarding»` | theorem | **Proposition `prop:persistent-forwarding`** (Persistent-forwarding monotonicity). |
-| `«prop:persistent-forwarding/one-step»` | theorem | Proof of Prop. |
-| `«eq:forwarding-hull»` | theorem | **Eq. |
-| `«sec:frontiers/partial-tuples»` | theorem | "A *partial tuple* assigns to each `p` either a value in `W_p` or `⊥`; partial tuples are ordered coordinate-wise, with `⊥` below every value. |
-| `«sec:frontiers/product-definitions»` | theorem | Definitions of the product interface, normalized strengthenings, local conservativity and the owner deployment. |
-| `«thm:product-frontier/1»` | theorem | **Theorem `thm:product-frontier`** (Independent-product frontier), part (1). |
-| `«thm:product-frontier/2»` | theorem | **Theorem `thm:product-frontier`**, part (2). |
-| `«thm:product-frontier»` | theorem | **Theorem `thm:product-frontier`**, both parts together, each with its own hypotheses. |
-| `«sec:frontiers/deployment-essential»` | theorem | "The hypotheses matter. |
-| `«sec:frontiers/deployment-essential/upper-bound-needed»` | theorem | Why the remark says "no common upper bound *in `V_p(i)`*" rather than "incomparable" (not a claim of the paper): |
-| `«sec:frontiers/configuration-example»` | theorem | "Owning only its own coordinate is needed: |
-| `«sec:frontiers/configuration-example/sole-owner»` | theorem | "If instead one participant owns both coordinates, the other may emit only the empty tuple, which every output refines, and `T` is monotone across partitions… |
-| `«sec:frontiers/causal-register»` | theorem | "Take the causal register of Appendix `app:registers`. |
-| `«sec:frontiers/linearizability-locally-conservative»` | theorem | "Linearizability selects the tuples that a single total order of all operations explains. |
-| `«sec:frontiers/linearizability-strict»` | theorem | "The two-write history of Appendix `app:registers` shows that it is strict, so part (2) recovers, for the product form of linearizability, the obstruction of… |
-| `«sec:frontiers/real-time-precedence»` | theorem | "This depends on the input recording only causal precedence. |
-
-### Appendix I: Additional applications
-
-File `Paper/AppI_Applications.lean`; paper source `appendices/additional-applications.tex`.
+File `Paper/AppH_Applications.lean`; paper source `appendices/additional-applications.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|

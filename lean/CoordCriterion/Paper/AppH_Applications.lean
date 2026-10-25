@@ -1,7 +1,7 @@
 import CoordCriterion.Appendix.Applications
 
 /-!
-# Paper, Appendix I: Additional applications (`app:additional-applications`)
+# Paper, Appendix H: Additional applications (`app:additional-applications`)
 
 Source: `appendices/additional-applications.tex` (the whole appendix: committed
 authority, `k`-set agreement, tight renaming, snapshots).
@@ -21,7 +21,7 @@ whole output type (stronger than among permitted outputs); "not monotone" is
 `CC.CAP.complete_cap`, whose proof builds the partition separating the rows'
 inputs.  The App. B version of `k`-set agreement (pairs suffice, with inputs
 and outputs both partial maps on `Fin (k+1)`) is `CC.CALM.KSet` in
-`CALM/Examples.lean`; this file uses the general version of App. I.
+`CALM/Examples.lean`; this file uses the general version of App. H.
 -/
 
 namespace CC

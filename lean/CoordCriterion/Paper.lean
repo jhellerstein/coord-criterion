@@ -12,8 +12,7 @@ import CoordCriterion.Paper.AppD_Composition
 import CoordCriterion.Paper.AppE_Deployment
 import CoordCriterion.Paper.AppF_ResponseAvailability
 import CoordCriterion.Paper.AppG_TransactionBases
-import CoordCriterion.Paper.AppH_Frontiers
-import CoordCriterion.Paper.AppI_Applications
+import CoordCriterion.Paper.AppH_Applications
 
 /-!
 # The paper, result by result

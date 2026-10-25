@@ -42,10 +42,10 @@ import CoordCriterion.Appendix.DeploymentSystems
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Appendix.TransactionBases.Partial
 import CoordCriterion.Appendix.TransactionBases.CanonicalExample
--- Appendix H frontiers (Registers covers Appendix E registers and their frontier)
+-- Frontier results (not in the paper; kept for future work) and registers (Appendix E)
 import CoordCriterion.Appendix.Frontiers
 import CoordCriterion.Appendix.ProductFrontier
 import CoordCriterion.Appendix.Registers
--- Appendix I additional applications
+-- Appendix H additional applications
 import CoordCriterion.Appendix.Applications
 import CoordCriterion.Paper
