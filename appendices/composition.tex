@@ -112,7 +112,66 @@ Lemma~\ref{lem:parameterized-composition} for their tables says that
 is monotone; in curried form, $h^\sharp(i,j)=g^\sharp(j)\circ f^\sharp(i)$,
 which is the plan of Proposition~\ref{prop:curried-query-plan} on tables of functions.
 
-\subsection{Composite CALM and component commitments}
+\subsection{Jointly monotone composites}
+
+If every stage satisfies Lifted Monotonicity, a guarded composite whose first
+stage runs under the empty basis emits only what $\mathcal S_2\circ\mathcal
+S_1$ emits under the empty basis.  Its runs are runs of a Lifted-Monotone
+specification, at whose states every output is exposable
+(Proposition~\ref{prop:exposure-boundary}).  So the next stage again has an
+empty-basis guard, and by induction no stage of the pipeline commits.
+
+\begin{proof}[Proof of Proposition~\ref{prop:joint-monotone}]
+(1) Let $D$ contain the outputs of $\Spec_1$.  Take rows $(i_r,o_r)$ of $S_2\circ
+S_1$ with a common \indesc $j$, and intermediate values $m_r$ with
+$(i_r,m_r)\in S_1$ and $(m_r,o_r)\in S_2$.  The common-\indesc condition for
+$\Spec_1$ gives $m\in S_1(j)$ that \outrel every $m_r$.  All of $m_r$ and $m$
+lie in $D$, so the condition for $\Spec_2$ on $D$ gives $o\in S_2(m)$ that
+\outrel every $o_r$, and $(j,o)\in S_2\circ S_1$.  No closure property of $D$
+is used.
+
+(2) Let $e:M\to M'$ have a left inverse $e'$.  Replace $S_1$ by
+$\{(i,e(m)):(i,m)\in S_1\}$ and $S_2$ by $\{(m',o):(e'(m'),o)\in S_2\}$.  A
+join through $e(m)$ is a join through $e'(e(m))=m$, so the composite table is
+unchanged, whatever the orders on $M$ and $M'$.
+
+(3) If $g\circ f$ is monotone, let $a\le b$ when $g(a)\OutputOrd g(b)$.  This
+preorder makes $g$ monotone, and $f$ monotone because $g\circ f$ is.  The
+converse composes monotone maps.  When $g$ is injective the preorder is
+antisymmetric.  For the last claim, let $I$ be the chain $a\InputOrd
+b\InputOrd c$, $M=\{p,q\}$, $f(a)=f(c)=p$, $f(b)=q$, and $g$ constant.  The
+composite is constant, hence monotone.  Under any partial order on $M$,
+monotonicity of $f$ gives $p\preceq_M q\preceq_M p$, so $p=q$, a contradiction.
+By the exposure test for tables of functions, $f(i)$ is exposable at
+$\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every $k\InputGe i$, so the
+upstream under the empty basis cannot emit at one of the canonical states of
+$a$ and $b$.
+\end{proof}
+
+For the capped counter of Section~\ref{sec:composite-calm}, let $\mathcal S_1$
+be the table of $n\mapsto\min(n,9)$ on $(\mathbb N,\le)$ and $\mathcal S_2$ the
+table of $n\mapsto[n<10]$, with two incomparable outputs.  $\mathcal S_2$
+violates Lifted Monotonicity, since $[9<10]$ and $[10<10]$ differ, but it
+satisfies it on $\{n\le 9\}$, so the composite is Lifted-Monotone by (1).  At
+$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must seal the row
+$(10,\mathit{false})$, so $\mathcal S_2$ cannot emit under the empty basis.
+Let its basis contain the seal of $\{n\ge 10\}$, applied at its first output.
+In the guarded composite every input that a run of $\mathcal S_2$ accepts or
+emits at occurs in an output sequence of $\mathcal S_1$, and none is
+$\ge 10$.  A store commitment that removes rows only at such inputs is never
+contradicted, so the store coordinates at most once.  At least once holds by
+the argument of Theorem~\ref{thm:proper-coordination}(2), since every row of a
+state of $\mathcal S_1$, and every \indesc that exposability supplies, lies in
+$\{n\le 9\}$.  The guarded composite is proper, and after its first output the
+store answers every count without commitment.
+
+For the double complement, let $M$ be the subsets of a nonempty set $U$.  The
+table of a function $f$ has $f(i)$ exposable at $\sigma(i)$ exactly when
+$f(i)\preceq_M f(k)$ for all $k\InputGe i$.  For the complement under
+inclusion this holds only for $i=U$, whose complement is $\emptyset$.  So under
+the empty basis the first stage emits only $\emptyset$, at the canonical state
+of $U$.  Ordered by reverse inclusion, the complement is monotone in both
+stages, and by (2) the composite is the identity in either order.
 
 Let $\mathcal P$ have one input $*$ and table $\{(*,x),(*,y)\}$ with $x,y$
 incomparable, and let $f$ map both to one value.  The composite
@@ -122,7 +181,9 @@ under the empty basis an output event is legal only for an exposable output
 (Lemma~\ref{lem:canonical-commitment-normal-form}).  Input events only remove
 rows at other inputs, and there are none, so every run of $\mathcal P$ under
 the empty basis stays at the canonical state and emits nothing.  The store
-then receives nothing.
+then receives nothing.  Renaming $x,y$ to $\mathit{lo}\preceq\mathit{hi}$ makes
+$\mathcal P$ Lifted-Monotone, since $\mathit{hi}$ retires $\mathit{lo}$, and by
+(2) the composite is unchanged.
 
 \subsection{Proper Coordination}
 

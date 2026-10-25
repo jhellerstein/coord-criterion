@@ -1,4 +1,5 @@
 import CoordCriterion.Appendix.Guarded
+import CoordCriterion.Appendix.JointMono
 
 /-!
 # Paper App. D, "Proofs and Details for Composition" (`appendices/composition.tex`)
@@ -97,21 +98,97 @@ theorem «eq:curried-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B
   ⟨Comp.parameterized_graph f g, fun hf hg => Comp.parameterized_functional_composition hf hg,
     Inst.curried_sharp f g, Inst.curried_plan_graph f g⟩
 
-/-! ## Composite CALM and component commitments -/
+/-! ## Jointly monotone composites -/
+
+/-- "If every stage satisfies Lifted Monotonicity, a guarded composite whose
+first stage runs under the empty basis emits only what `𝒮₂ ∘ 𝒮₁` emits under
+the empty basis.  Its runs are runs of a Lifted-Monotone specification, at
+whose states every output is exposable (Proposition `prop:exposure-boundary`).
+So the next stage again has an empty-basis guard, and by induction no stage of
+the pipeline commits."  Lean: `Guard.pipeline_coordination_free`, via
+`Guard.exec_execCF`. -/
+theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
+    {sp : Spec I M} {sk : Spec M O} (hP : sp.LiftedMono) (hK : sk.LiftedMono) (K : Guard.Sys sk)
+    {l' : List O} (h : Guard.GEmits (Guard.Sys.free (fun _ : Commitment sp => False)).emits K l') :
+    (Comp.seq sp sk).LiftedMono ∧
+      (Guard.Sys.free (fun _ : Commitment (Comp.seq sp sk) => False)).emits l' :=
+  Guard.pipeline_coordination_free hP hK h
+
+/-- Proof of Proposition `prop:joint-monotone`: "(1) … All of `m_r` and `m` lie
+in `D`, so the condition for `𝒮₂` on `D` gives `o ∈ S₂(m)` that refines every
+`o_r`, and `(j,o) ∈ S₂ ∘ S₁`.  No closure property of `D` is used.  (2) … A
+join through `e(m)` is a join through `e'(e(m)) = m`, so the composite table
+is unchanged, whatever the orders on `M` and `M'`.  (3) If `g ∘ f` is
+monotone, let `a ≤ b` when `g(a) ≼ g(b)`. … When `g` is injective the
+preorder is antisymmetric. … By the exposure test for tables of functions,
+`f(i)` is exposable at `σ(i)` exactly when `f(i) ≼ f(k)` for every `k ⪰ i`, so
+the upstream under the empty basis cannot emit at one of the canonical states
+of `a` and `b`."  Lean: `Joint.seq_liftedMono_on` (any `D` containing the outputs),
+`Joint.reorder_seq`, `Joint.preorder_factorization`,
+`Joint.injective_characterization`, `Joint.graph_canon_exposable_iff`,
+`Joint.no_order_counterexample` (the empty-basis upstream stalls at some
+canonical state). -/
+theorem «app:composition/joint-monotone» {I M O : Type} [PO I] [PO M] [PO O] :
+    (∀ {sp1 : Spec I M} {sp2 : Spec M O} {D : M → Prop}, sp1.LiftedMono →
+      (∀ i m, sp1.S i m → D m) → Joint.CEOn sp2 D → (Comp.seq sp1 sp2).LiftedMono) ∧
+    (∀ (D : M → Prop) (sp : Spec M O), Joint.CEOn sp D ↔ (Joint.restrictTo D sp).LiftedMono) ∧
+    (∀ (f : I → M) (i : I), Exposable (canon (graph f) i) (f i) ↔ ∀ k, i ≼ k → f i ≼ f k) :=
+  ⟨fun h1 hD h2 => Joint.seq_liftedMono_on h1 hD h2, Joint.ceOn_iff_restrictTo,
+    Joint.graph_canon_exposable_iff⟩
+
+/-- "For the capped counter …, let `𝒮₁` be the table of `n ↦ min(n,9)` on
+`(ℕ, ≤)` and `𝒮₂` the table of `n ↦ [n < 10]`, with two incomparable outputs.
+`𝒮₂` violates Lifted Monotonicity, … but it satisfies it on `{n ≤ 9}`, so the
+composite is Lifted-Monotone by (1). … In the guarded composite every input
+that a run of `𝒮₂` accepts or emits at occurs in an output sequence of `𝒮₁`,
+and none is `≥ 10`.  A store commitment that removes rows only at such inputs
+is never contradicted, so the store coordinates at most once.  At least once
+holds by the argument of Theorem `thm:proper-coordination`(2) … The guarded
+composite is proper, and after its first output the store answers every count
+without commitment."  Lean: `Joint.threshold`, `Joint.thr_ceOn`,
+`Joint.accepts_mem`, `Joint.emitsAt_mem`, `Joint.atMostOnce_of_sealsOutside`,
+`Joint.at_least_once_on`, `Joint.filtered_proper`, `Joint.sealStore_follows`. -/
+theorem «app:composition/capped-counter» :
+    Joint.CEOn Joint.thr (fun m => ¬ Joint.Big m) ∧
+    (∀ {M O : Type} [PO M] [PO O] {sp : Spec Nat M} {sk : Spec M O} (Q : M → Prop),
+      Joint.CEOn sk (fun m => ¬ Q m) → (∀ i m, sp.S i m → ¬ Q m) → ∀ (P : Guard.Sys sp)
+        {K : Guard.Sys sk}, (∀ c, K.basis c → c = Guard.sealIn Q) → Guard.Proper P K) :=
+  ⟨Joint.thr_ceOn, fun Q hC hQ P _ hK => Joint.filtered_proper Q hC hQ P hK⟩
+
+/-- "For the double complement, let `M` be the subsets of a nonempty set `U`.
+The table of a function `f` has `f(i)` exposable at `σ(i)` exactly when
+`f(i) ≼ f(k)` for all `k ⪰ i`.  For the complement under inclusion this holds
+only for `i = U`, whose complement is `∅`.  So under the empty basis the first
+stage emits only `∅`, at the canonical state of `U`.  Ordered by reverse
+inclusion, the complement is monotone in both stages, and by (2) the composite
+is the identity in either order."  Lean: `Joint.compl_exposable_iff`,
+`Joint.compl_empty_basis`, `Joint.double_complement`. -/
+theorem «app:composition/double-complement» {U : Type} [Nonempty U] (X : Joint.PSet U) :
+    (Exposable (canon (graph (Joint.compl (U := U))) X) (Joint.compl X) ↔ ∀ u, X.mem u) ∧
+    (∀ {γ o τ}, SysStep (fun _ => False) (canon (graph (Joint.compl (U := U))) X) (.output γ o) τ →
+      ∀ u, ¬ o.mem u) :=
+  ⟨Joint.compl_exposable_iff X, fun h => Joint.compl_empty_basis h⟩
 
 /-- "Let `𝒫` have one input `*` and table `{(*,x),(*,y)}` with `x,y`
 incomparable, and let `f` map both to one value.  The composite `𝒦 ∘ 𝒫` has
 one row, so it satisfies Lifted Monotonicity. … every run of `𝒫` under the
-empty basis stays at the canonical state and emits nothing."  Lean:
+empty basis stays at the canonical state and emits nothing.  The store then
+receives nothing.  Renaming `x,y` to `lo ≼ hi` makes `𝒫` Lifted-Monotone,
+since `hi` retires `lo`, and by (2) the composite is unchanged."  Lean:
 `𝒫 = Dist.spU`; the second conjunct of `Guard.composite_monotone_not_enough`
-says such runs emit nothing; `Guard.noBasis_silent` is the run-level form. -/
+says such runs emit nothing; `Guard.noBasis_silent` is the run-level form; the
+renaming is `Joint.constant_store_reorder` (on `Comp.anyS`). -/
 theorem «app:composition/components-commit» :
     (Guard.comp Dist.spU (fun _ : Dist.B2 => ())).LiftedMono ∧
       (∀ o, ¬ Exposable (canon Dist.spU ()) o) ∧
-      ∀ es ρ, SysExec Dist.noBasis (canon Dist.spU ()) es ρ → Guard.emitted es = [] :=
+      (∀ es ρ, SysExec Dist.noBasis (canon Dist.spU ()) es ρ → Guard.emitted es = []) ∧
+      (Joint.pushOut Comp.anyS Guard.fLvl).LiftedMono ∧
+      Comp.seq (Joint.pushOut Comp.anyS Guard.fLvl) (Joint.pullIn Joint.constK Joint.lvlTwo) =
+        Comp.seq Comp.anyS Joint.constK :=
   ⟨Guard.composite_monotone_not_enough.1,
     Dist.spU_not_exposable _ (fun _ _ => ⟨trivial, trivial⟩),
-    Guard.composite_monotone_not_enough.2⟩
+    Guard.composite_monotone_not_enough.2, Joint.constant_store_reorder.2.1,
+    Joint.constant_store_reorder.2.2.2.2.1⟩
 
 /-! ## Proper Coordination -/
 

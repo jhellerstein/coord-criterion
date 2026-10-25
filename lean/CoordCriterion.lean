@@ -35,6 +35,7 @@ import CoordCriterion.Figures
 -- §5 and Appendix D composition
 import CoordCriterion.Appendix.Composition
 import CoordCriterion.Appendix.Guarded
+import CoordCriterion.Appendix.JointMono
 -- Appendix E deployment
 import CoordCriterion.Appendix.Deployment
 import CoordCriterion.Appendix.DeploymentExamples

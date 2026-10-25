@@ -63,12 +63,6 @@ By associativity the lemma extends to finite pipelines.  For a function $f$,
 its table $\{(i,f(i))\}$ satisfies Lifted Monotonicity exactly when $f$ is
 monotone (Section~\ref{sec:lifted-monotonicity}). 
 
-The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
-client query $q$ over the replica state $s$ is the composition $q\circ s$, and
-compositions of monotone functions are monotone
-(Corollary~\ref{cor:functional-composition}), so
-monotonicity of $q$ on all of the state domain suffices.
-
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
@@ -76,17 +70,66 @@ The composite is itself an ordered specification, so Complete CALM applies to
 it directly.  Specification $S_2\circ S_1$ is consistent exactly when it
 satisfies Lifted Monotonicity, and then no output needs a commitment
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).
-Lemma~\ref{lem:composition} gives one way to meet that test.
+That test is on the composite's table.  When the stages run as a pipeline, we
+also want them to avoid commitments.  A composite can be jointly monotone in
+three ways.
 
-A monotone composite does not mean that each component can run without
-commitments.  Consider an upstream specification with one input and two
-incomparable outputs, and a downstream function that maps both to the same
-value.  The composite has one row, so it is monotone.  The upstream component
-still cannot emit either output without choosing, so a pipeline in which
-neither component commits never emits anything
-(Appendix~\ref{app:composition}).  The test is on the table alone.  Which
-component commits depends on the implementation, the subject of the next
-subsection.
+First, every stage is monotone.  By Lemma~\ref{lem:composition} the pipeline
+is monotone, and every stage can run with the empty basis, with no seals and
+no choices anywhere (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+client query $q$ over the replica state $s$ is the composition $q\circ s$, and
+compositions of monotone functions are monotone
+(Corollary~\ref{cor:functional-composition}), so
+monotonicity of $q$ on all of the state domain suffices.
+
+Second, the upstream can filter.  It may never produce the inputs on which the
+downstream is not monotone.  Consider a counter capped at $9$ that feeds the
+test ``count${}<10$''.  The test alone is not monotone, but no count of $10$
+ever arrives.  The pipeline then needs one commitment: the test seals the
+counts it never receives, at its first output.  No run of the counter
+contradicts that seal, so the coordination is proper in the sense of
+Section~\ref{sec:proper-coordination}.
+
+Third, the stages can cancel.  The composite's table does not depend on the
+order of $M$, so two stages that are not monotone under one order may be
+monotone under another.  Consider two complements of sets, $X\mapsto
+U\setminus X$, with $M$ ordered by inclusion.  Each stage reverses inclusion,
+and without commitment the first stage can emit only the empty set.  Ordered by
+reverse inclusion, both stages are monotone, and the composite is the identity
+either way.  Likewise, an upstream with two incomparable outputs, both mapped
+by the downstream to one value, cannot emit without choosing.  Declaring one
+output below the other makes it monotone, and the composite is unchanged.
+
+We say that $S_2$ satisfies Lifted Monotonicity \emph{on} a set $D\subseteq M$
+when the common-\indesc condition holds for its rows with inputs in $D$, at
+\indescs in $D$.
+
+\begin{proposition}[Jointly monotone composites]
+\label{prop:joint-monotone}
+\begin{enumerate}
+  \item If $\Spec_1$ satisfies Lifted Monotonicity and $\Spec_2$ satisfies it
+        on the outputs of $\Spec_1$, then $S_2\circ S_1$ satisfies Lifted
+        Monotonicity.
+  \item Renaming $M$ by a map with a left inverse, under any order, leaves
+        $S_2\circ S_1$ unchanged.
+  \item For functions $f:I\to M$ and $g:M\to O$, $g\circ f$ is monotone
+        exactly when some preorder on $M$ makes $f$ and $g$ monotone.  When
+        $g$ is injective, some partial order does.  In general no partial
+        order need exist.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+(1) The proof of Lemma~\ref{lem:composition} uses only intermediate values in
+fibers of $\Spec_1$.  (2) The join is taken over the renamed values, which the
+left inverse maps back.  (3) Order $M$ by $a\le b$ when $g(a)\OutputOrd g(b)$.
+For the last claim, take the chain $a\InputOrd b\InputOrd c$, $f(a)=f(c)\neq
+f(b)$, and $g$ constant.  Monotonicity of $f$ would force $f(a)\preceq_M
+f(b)\preceq_M f(a)$.  Full proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+When none of these applies, some stage must commit.  We ask which one in
+Section~\ref{sec:proper-coordination}.
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}

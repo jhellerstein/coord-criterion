@@ -1,4 +1,5 @@
 import CoordCriterion.Appendix.Guarded
+import CoordCriterion.Appendix.JointMono
 
 /-!
 # Paper §5, "Composition and Proper Coordination" (`sections/composition.tex`)
@@ -83,17 +84,6 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
     Comp.seq (graph f) (graph g) = graph (g ∘ f) ∧ ((graph f).LiftedMono ↔ Monotone f) :=
   ⟨Comp.seq_graph f g, Comp.graph_liftedMono_iff f⟩
 
-/-- "The CRDT observations of Section `sec:crdt-instance` have this shape: a
-client query `q` over the replica state `s` is the composition `q ∘ s`, and
-compositions of monotone functions are monotone (Corollary
-`cor:functional-composition`), so monotonicity of `q` on all of the state domain
-suffices."  Lean: the
-corollary applied to `s = Inst.st s₀` (monotone by
-`«sec:crdt-instance/state-monotone»`) and a monotone `q`. -/
-theorem «sec:composition/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D)
-    {q : D → Y} (hq : Monotone q) : Monotone (q ∘ (Inst.st s0 : Inst.FSet D → D)) :=
-  Comp.functional_composition (Inst.st_mono s0) hq
-
 /-! ## Composite CALM (`sec:composite-calm`) -/
 
 /-- "The composite is itself an ordered specification, so Complete CALM
@@ -108,17 +98,120 @@ theorem «sec:composite-calm/complete-calm» {I M O : Type} [PO I] [PO M] [PO O]
   ⟨complete_calm _, fun h =>
     (exposure_boundary _).1 ((liftedMono_iff_commonExpansion _).1 h)⟩
 
-/-- "A monotone composite does not mean that each component can run without
-commitments.  Consider an upstream specification with one input and two
-incomparable outputs, and a downstream function that maps both to the same
-value.  The composite has one row, so it is monotone.  The upstream component
-still cannot emit either output without choosing, so a pipeline in which
-neither component commits never emits anything."  Lean: `𝒫 = Dist.spU`, the
-constant store; every run of `𝒫` under the empty basis emits nothing. -/
-theorem «sec:composite-calm/components-commit» :
-    (Guard.comp Dist.spU (fun _ : Dist.B2 => ())).LiftedMono ∧
-      ∀ es ρ, SysExec Dist.noBasis (canon Dist.spU ()) es ρ → Guard.emitted es = [] :=
-  Guard.composite_monotone_not_enough
+/-- "First, every stage is monotone.  By Lemma `lem:composition` the pipeline
+is monotone, and every stage can run with the empty basis, with no seals and
+no choices anywhere (Corollary `cor:pipelines`)."  Lean:
+`Guard.pipeline_coordination_free` (the base case of the pipeline induction):
+the composite is Lifted-Monotone, and the guarded composite of an empty-basis
+upstream with any store system emits only what the composite emits under the
+empty basis, so it is again an empty-basis guard. -/
+theorem «sec:composite-calm/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
+    {sp : Spec I M} {sk : Spec M O} (hP : sp.LiftedMono) (hK : sk.LiftedMono) (K : Guard.Sys sk) :
+    (Comp.seq sp sk).LiftedMono ∧
+      ∀ l', Guard.GEmits (Guard.Sys.free (fun _ : Commitment sp => False)).emits K l' →
+        (Guard.Sys.free (fun _ : Commitment (Comp.seq sp sk) => False)).emits l' :=
+  ⟨Comp.seq_liftedMono hP hK, fun _ h => (Guard.pipeline_coordination_free hP hK h).2⟩
+
+/-- "The CRDT observations of Section `sec:crdt-instance` have this shape: a
+client query `q` over the replica state `s` is the composition `q ∘ s`, and
+compositions of monotone functions are monotone (Corollary
+`cor:functional-composition`), so monotonicity of `q` on all of the state domain
+suffices."  Lean: the
+corollary applied to `s = Inst.st s₀` (monotone by
+`«sec:crdt-instance/state-monotone»`) and a monotone `q`. -/
+theorem «sec:composite-calm/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D)
+    {q : D → Y} (hq : Monotone q) : Monotone (q ∘ (Inst.st s0 : Inst.FSet D → D)) :=
+  Comp.functional_composition (Inst.st_mono s0) hq
+
+/-- "Second, the upstream can filter.  It may never produce the inputs on
+which the downstream is not monotone.  Consider a counter capped at `9` that
+feeds the test "count `< 10`".  The test alone is not monotone, but no count of
+`10` ever arrives.  The pipeline then needs one commitment: the test seals the
+counts it never receives, at its first output.  No run of the counter
+contradicts that seal, so the coordination is proper in the sense of Section
+`sec:proper-coordination`."  Lean: `Joint.threshold` (the test is not
+Lifted-Monotone, cannot emit under the empty basis below `10`, the composite is
+Lifted-Monotone, and the sealing store is proper with every upstream system)
+and `Joint.sealStore_follows` (the store seals once, at its first output, and
+then answers every count without commitment). -/
+theorem «sec:composite-calm/filtering» :
+    (¬ Joint.thr.LiftedMono ∧
+      (∀ m, m ≤ 9 → ∀ γ o τ, ¬ SysStep (fun _ => False) (canon Joint.thr m) (.output γ o) τ) ∧
+      (Comp.seq Joint.up Joint.thr).LiftedMono ∧
+      ∀ P : Guard.Sys Joint.up, Guard.Proper P Joint.sealStore) ∧
+    ∀ (P : Guard.Sys Joint.up) {m : Nat} {ms : List Nat}, P.emits (m :: ms) →
+      ∃ esK rest, Guard.GRun P.emits Joint.sealStore (m :: ms) m esK ∧
+        esK = .output [Guard.sealIn Joint.Big] (Joint.below m) :: rest ∧
+        esK.map SEvent.erase =
+          .output (Joint.below m) :: Guard.storeTr (ms.map fun m => (m, Joint.below m)) :=
+  ⟨Joint.threshold, fun P _ _ h => Joint.sealStore_follows P h⟩
+
+/-- "Third, the stages can cancel.  The composite's table does not depend on
+the order of `M`, so two stages that are not monotone under one order may be
+monotone under another.  Consider two complements of sets, `X ↦ U ∖ X`, with
+`M` ordered by inclusion.  Each stage reverses inclusion, and without
+commitment the first stage can emit only the empty set.  Ordered by reverse
+inclusion, both stages are monotone, and the composite is the identity either
+way.  Likewise, an upstream with two incomparable outputs, both mapped by the
+downstream to one value, cannot emit without choosing.  Declaring one output
+below the other makes it monotone, and the composite is unchanged."  Lean:
+`Joint.double_complement`, `Joint.compl_empty_basis` (under the empty basis
+every output at a canonical state is `∅`), `Joint.constant_store_reorder`;
+the constant store cannot emit without choosing is
+`«app:composition/components-commit»`. -/
+theorem «sec:composite-calm/cancellation» {U : Type} [Nonempty U] :
+    (¬ (graph (Joint.compl (U := U))).LiftedMono ∧
+      Comp.seq (graph (Joint.compl (U := U))) (graph Joint.compl) = graph id ∧
+      (graph (id : Joint.PSet U → Joint.PSet U)).LiftedMono ∧
+      (Joint.pushOut (graph (Joint.compl (U := U))) Joint.Rev.mk).LiftedMono ∧
+      (Joint.pullIn (graph (Joint.compl (U := U))) Joint.Rev.val).LiftedMono ∧
+      Comp.seq (Joint.pushOut (graph (Joint.compl (U := U))) Joint.Rev.mk)
+          (Joint.pullIn (graph Joint.compl) Joint.Rev.val) =
+        Comp.seq (graph Joint.compl) (graph Joint.compl)) ∧
+    (∀ {X : Joint.PSet U} {γ o τ},
+      SysStep (fun _ => False) (canon (graph (Joint.compl (U := U))) X) (.output γ o) τ →
+        ∀ u, ¬ o.mem u) ∧
+    (¬ Comp.anyS.LiftedMono ∧ (Joint.pushOut Comp.anyS Guard.fLvl).LiftedMono ∧
+      Exposable (canon (Joint.pushOut Comp.anyS Guard.fLvl) Comp.Pt.pt) Guard.Lvl.hi ∧
+      (Joint.pullIn Joint.constK Joint.lvlTwo).LiftedMono ∧
+      Comp.seq (Joint.pushOut Comp.anyS Guard.fLvl) (Joint.pullIn Joint.constK Joint.lvlTwo) =
+        Comp.seq Comp.anyS Joint.constK ∧
+      (Comp.seq Comp.anyS Joint.constK).LiftedMono) :=
+  ⟨Joint.double_complement, fun h => Joint.compl_empty_basis h, Joint.constant_store_reorder⟩
+
+/-- **Proposition `prop:joint-monotone`** (Jointly monotone composites): "(1) If
+`𝒮₁` satisfies Lifted Monotonicity and `𝒮₂` satisfies it on the outputs of
+`𝒮₁`, then `S₂ ∘ S₁` satisfies Lifted Monotonicity.  (2) Renaming `M` by a map
+with a left inverse, under any order, leaves `S₂ ∘ S₁` unchanged.  (3) For
+functions `f : I → M` and `g : M → O`, `g ∘ f` is monotone exactly when some
+preorder on `M` makes `f` and `g` monotone.  When `g` is injective, some
+partial order does.  In general no partial order need exist."  And: "We say
+that `S₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when the
+common-expansion condition holds for its rows with inputs in `D`, at
+expansions in `D`."  Lean: `Joint.CEOn` (equivalently, the restriction to `D`
+is Lifted-Monotone, `Joint.ceOn_iff_restrictTo`); (1) `Joint.seq_liftedMono_img`;
+(2) `Joint.reorder_seq`; (3) `Joint.preorder_factorization`,
+`Joint.injective_characterization` (stated for Lifted Monotonicity of the
+tables), `Joint.no_order_counterexample`. -/
+theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O] :
+    (∀ {sp1 : Spec I M} {sp2 : Spec M O}, sp1.LiftedMono → Joint.CEOn sp2 (Joint.Img sp1) →
+      (Comp.seq sp1 sp2).LiftedMono) ∧
+    (∀ {M' : Type} [PO M'] (sp1 : Spec I M) (sp2 : Spec M O) (e : M → M') (e' : M' → M),
+      (∀ m, e' (e m) = m) → Comp.seq (Joint.pushOut sp1 e) (Joint.pullIn sp2 e') = Comp.seq sp1 sp2) ∧
+    (∀ {f : I → M} {g : M → O}, Monotone (g ∘ f) ↔ ∃ le : M → M → Prop, (∀ a, le a a) ∧
+      (∀ a b c, le a b → le b c → le a c) ∧ (∀ x y, x ≼ y → le (f x) (f y)) ∧
+      ∀ a b, le a b → g a ≼ g b) ∧
+    (∀ {f : I → M} {g : M → O}, (∀ a b, g a = g b → a = b) →
+      ((graph (g ∘ f)).LiftedMono ↔ ∃ inst : PO M,
+        @Spec.LiftedMono I M _ inst (@graph I M _ inst f) ∧
+        @Spec.LiftedMono M O inst _ (@graph M O inst _ g))) ∧
+    ((∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
+      (∀ _inst : PO Joint.Mid, ¬ (graph Joint.fz).LiftedMono) ∧
+      ∀ _inst : PO Joint.Mid, ∃ i, ∀ γ o τ,
+        ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output γ o) τ) :=
+  ⟨fun h1 h2 => Joint.seq_liftedMono_img h1 h2, fun sp1 sp2 e e' h => Joint.reorder_seq sp1 sp2 e e' h,
+    Joint.preorder_factorization, fun hg => Joint.injective_characterization hg,
+    Joint.no_order_counterexample⟩
 
 /-! ## Proper Coordination (`sec:proper-coordination`) -/
 
