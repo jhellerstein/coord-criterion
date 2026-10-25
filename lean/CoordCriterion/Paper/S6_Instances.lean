@@ -3,7 +3,7 @@ import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.CALM.Lemmas
 
 /-!
-# Paper §5, "Instances Across the Literature" (`sections/instances.tex`)
+# Paper §6, "Instances Across the Literature" (`sections/instances.tex`)
 
 Statement layer for Section `sec:instances`.  Read it side by side with
 `sections/instances.tex`: the `/-! ## … -/` headers follow the paper's

@@ -3,7 +3,7 @@ import CoordCriterion.Appendix.Composition
 import CoordCriterion.FunctionalCALM.Theorem
 
 /-!
-# Instances (Section 5) and composition examples (Appendix D)
+# Instances (Section 6) and composition examples (Section 5, Appendix D)
 
 Claims of `sections/instances.tex`, with the examples of
 `app:iconfluence` (Appendix B) and `appendices/composition.tex` that use the

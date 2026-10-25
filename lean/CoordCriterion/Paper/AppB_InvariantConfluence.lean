@@ -9,7 +9,7 @@ Statement layer for subsection `app:iconfluence` of
 `.tex`: entries follow the paper's paragraphs in order; each quotes the
 claim it formalizes.  Unlabeled claims are named `«app:iconfluence/<slug>»`;
 the proposition itself is stated as `«prop:iconfluence-lm»` in
-`Paper/S5_Instances.lean`, and its proof steps here are
+`Paper/S6_Instances.lean`, and its proof steps here are
 `«app:iconfluence/proof-…»`.
 
 Library: `Instances/InvariantConfluence.lean` (namespace `CC.IConf`), plus

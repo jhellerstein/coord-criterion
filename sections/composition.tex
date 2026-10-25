@@ -1,0 +1,216 @@
+\section{Composition and Proper Coordination}
+\label{sec:composition}
+
+Real systems are assembled from components, each with its own specification.
+Consider state-machine replication~\cite{schneider1990smr}.  Clients send
+requests, a log puts the requested commands in one order, and a key-value store
+executes the log and answers each request.  The log's specification is not
+monotone: when two commands arrive concurrently, either may be appended next,
+and the two resulting logs have no common \outnoun.  The key-value store's
+end-to-end specification, from request histories to responses, is not
+monotone either, since two concurrent commands executed in opposite orders can
+give incompatible responses.  Yet replicated stores are consistent, and they
+coordinate only in the log.  Multi-Paxos agrees on each log
+entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
+without further agreement.
+
+We now explain that pattern in our framework.  Specifications are
+tables, so they compose by equijoin, and composition preserves Lifted
+Monotonicity (Sections~\ref{sec:sequential-composition}
+and~\ref{sec:parameterized-composition}).  Because commitments are explicit, we
+can also ask whether commitments made at one component are enough to make the
+whole composition consistent.  When they are, we call the coordination
+\emph{proper} (Section~\ref{sec:proper-coordination}).  Example~\ref{ex:committed-log-composition}
+returns to the replicated store.  Proofs are in
+Appendix~\ref{app:composition}.
+
+\subsection{Sequential composition}
+\label{sec:sequential-composition}
+
+Intuitively, sequential composition feeds the output of one specification to
+the input of the next.  The composite is again a table: it pairs an input of
+the first specification with every output that the second permits for some
+intermediate value that the first permits.  Formally, let
+$\Spec_1=(I,\InputOrd,M,\preceq_M,S_1)$ and
+$\Spec_2=(M,\preceq_M,O,\OutputOrd,S_2)$ be ordered relational specifications
+sharing the ordered domain $(M,\preceq_M)$.  Their \emph{sequential
+composition} has table
+\begin{equation}
+  S_2\circ S_1
+  =\pi_{I,O}(S_1\Join_M S_2)
+  =\{(i,o):\exists m.\ (i,m)\in S_1\land(m,o)\in S_2\},
+  \label{eq:spec-composition}
+\end{equation}
+where $\pi$ and $\Join$ are relational projection and equijoin.  Since $S_1$
+is total on $I$ and $S_2$ is total on $M$ (it has a row at every $m\in M$),
+every $i\in I$ has a nonempty fiber in $S_2\circ S_1$.
+
+\begin{lemma}[Composition]
+\label{lem:composition}
+If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then the ordered
+specification with table $S_2\circ S_1$ satisfies Lifted Monotonicity.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+Take rows of $S_2\circ S_1$ whose inputs have a common \indesc $j$.  The
+common-\indesc condition for $\Spec_1$ gives one intermediate value at $j$
+that \outrel each row's intermediate value, and that value is a common \indesc
+at which the condition for $\Spec_2$ supplies the common \outnoun.  Full proof
+in Appendix~\ref{app:composition}.
+\end{proof}
+
+By associativity the lemma extends to finite pipelines.  For a function $f$,
+call $\{(i,f(i))\}$ its \emph{graph table}; it satisfies Lifted Monotonicity
+exactly when $f$ is monotone (Section~\ref{sec:lifted-monotonicity}).  Graph
+tables are closed under $\circ$, so the lemma specializes to functions:
+
+\begin{corollary}[Functional composition]
+\label{cor:functional-composition}
+If $f:(I,\InputOrd)\to(M,\preceq_M)$ and
+$g:(M,\preceq_M)\to(O,\OutputOrd)$ are monotone, so is $g\circ f$.
+\end{corollary}
+
+\begin{proof}[Proof sketch]
+The graph tables of $f$ and $g$ compose to the graph table of $g\circ f$.
+Full proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+client query $q$ over the replica state $s$ is the composition $q\circ s$, and
+Corollary~\ref{cor:functional-composition} is the observation there that
+monotonicity of $q$ on all of the state domain suffices.
+
+\subsection{Composition with independent inputs}
+\label{sec:parameterized-composition}
+
+In the replicated store, the log is not the store's only input.  The store
+also receives the client requests, which it answers, and the log component
+receives proposal streams, whose arrival order the store never sees.  Sequential composition cannot
+express a downstream component with input of its own, so we give each
+component a separate input.  Let
+\begin{align*}
+  \Spec_F&=\bigl(I\times A,\preceq_I\times\preceq_A,B,\preceq_B,F\bigr),\\
+  \Spec_G&=\bigl(J\times B,\preceq_J\times\preceq_B,C,\preceq_C,G\bigr)
+\end{align*}
+be ordered relational specifications sharing the ordered domain
+$(B,\preceq_B)$, which carries values from $F$ to $G$.  Here $i\in I$ is input
+that only $F$ receives, and $j\in J$ is input that only $G$ receives.  We
+split $F$'s input as $(i,a)$ so that $F$ restricted to a fixed $i$ is a table
+from $A$ to $B$; Appendix~\ref{app:composition} uses this split to evaluate
+the composition one pair $(i,j)$ at a time
+(Proposition~\ref{prop:curried-query-plan}).  The \emph{independently
+parameterized composition} of $\Spec_F$ and $\Spec_G$ is
+\begin{align}
+  G\star F
+  &=\pi_{I,J,A,C}\bigl(F\Join_{B}G\bigr) \notag\\
+  &=\{((i,j,a),c):\exists b.\ ((i,a),b)\in F
+                         \land ((j,b),c)\in G\},
+  \label{eq:parameterized-composition}
+\end{align}
+with the product order on $I\times J\times A$.  Since $F$ is total on
+$I\times A$ and $G$ is total on $J\times B$, every composed input has a
+nonempty fiber.
+
+\begin{lemma}[Independently parameterized composition]
+\label{lem:parameterized-composition}
+If $\Spec_F$ and $\Spec_G$ satisfy Lifted Monotonicity, then the specification
+with table $G\star F$ satisfies Lifted Monotonicity.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+As for Lemma~\ref{lem:composition}, with $j$ carried along: $\Spec_F$ supplies
+a value $b$ that \outrel every row's intermediate value, and $(j,b)$ is a
+common \indesc at which $\Spec_G$ supplies the common \outnoun.  Full proof in
+Appendix~\ref{app:composition}.
+\end{proof}
+
+\subsection{Proper Coordination}
+\label{sec:proper-coordination}
+
+When an upstream component is not monotone, the lemmas above do not apply, and
+the composition may need commitments.  Proper coordination asks whether commitments made
+upstream are enough on their own.  We describe those commitments by their
+effect on the upstream table.  Let $S_1\subseteq I\times M$ and
+$S_2\subseteq M\times O$ be as in Section~\ref{sec:sequential-composition}.  A
+\emph{commitment strategy} for $S_1$ (distinct from a participant's strategy,
+Definition~\ref{def:system}) fixes at each input $i$ the upstream outputs
+committed to at $i$.  Its \emph{committed table} is the set $K\subseteq S_1$
+of those rows.  It is \emph{totality-preserving} when $K$ has a row at every
+input, so that the commitments never leave an input without a permitted
+output.  The resolved end-to-end table is $S_2\circ K$, or $G\star K$ for
+independently parameterized composition.  We take $K$ as declared rather than
+derived from runs of a composed transition system.
+
+\begin{definition}[Proper Coordination]
+\label{def:proper-coordination}
+A totality-preserving commitment strategy with committed table $K$ is
+\emph{proper} for the composition when the resolved specification
+$S_2\circ K$ (resp.\ $G\star K$) is consistent and every output at every
+state of it reachable without commitment is exposable.
+\end{definition}
+
+The second clause follows from the first by Complete CALM and the exposure
+boundary (Theorem~\ref{thm:complete-calm},
+Proposition~\ref{prop:exposure-boundary}): once the upstream commitments are
+made, the composition needs no further commitment.  Neither $S_1$, $S_2$, nor
+the unresolved composition need be monotone.
+
+\begin{corollary}[Proper Coordination]
+\label{thm:proper-coordination}
+A totality-preserving commitment strategy is proper for a sequential or
+independently parameterized composition if and only if the resolved
+specification satisfies Lifted Monotonicity.
+\end{corollary}
+
+\begin{proof}[Proof sketch]
+Complete CALM equates consistency of the resolved specification with Lifted
+Monotonicity, and the exposure boundary supplies the second clause.  Full
+proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+The corollary reduces properness to a test on one table.  A simple
+sufficient condition commits the upstream component to a single output at
+each input, chosen so that the outputs grow with the input.
+
+\begin{corollary}[Committing upstream to a monotone function]
+\label{cor:monotone-commitment}
+If the committed table $K$ of a totality-preserving commitment strategy is the
+graph of a monotone function and the downstream specification ($S_2$ or $G$)
+satisfies Lifted Monotonicity, the strategy is proper.
+\end{corollary}
+
+\begin{proof}[Proof sketch]
+The graph of a monotone function satisfies Lifted Monotonicity, so
+Lemma~\ref{lem:composition} or~\ref{lem:parameterized-composition} makes the
+resolved table monotone.  Full proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+The converse fails: a strategy can be proper even when the downstream
+specification is not monotone (Appendix~\ref{app:composition}).
+
+\begin{example}[Committed log composed with a key-value store]
+\label{ex:committed-log-composition}
+Consider again state-machine replication.  Take $I$ the proposal streams
+received by a single log authority and $B$ the logs, both ordered by prefix;
+$A$ a one-point set; $J$ the client request histories; and $C$ the cumulative
+response histories, ordered by extension.  We restrict composed inputs to
+coherent pairs, in which every proposed command comes from a request in $J$.
+Restricting a specification to a subset of its inputs, with the induced order,
+preserves Lifted Monotonicity, so the results above apply.  Each command is
+proposed at most once.  Let $F$ relate each proposal stream to the logs still
+permitted for it, and $G$ relate a request history and a log to the responses
+obtained by executing that log.  Then $F$ is non-monotone, since distinct next
+entries are incompatible outputs in one fiber.  So is the key-value store
+specification $G\star F$, since concurrent commands ordered oppositely give
+incompatible responses.
+
+Let the authority commit, at each position, to the next command in arrival
+order.  Arrival order is part of the input, so $K$ assigns each stream one
+log, which extends as the stream does: $K$ is the graph of a monotone
+function.  Deterministic execution makes $G$ monotone.  By
+Corollary~\ref{cor:monotone-commitment} the log commitments are proper, and
+$G\star K$ is consistent with no commitment in the store.  The binding choice
+is the order itself, made upstream.  Multi-Paxos realizes the authority
+across replicas~\cite{schneider1990smr,lamport2001paxos}, with the decided
+order in place of arrival order.
+\end{example}

@@ -1,7 +1,7 @@
 import CoordCriterion.CompleteCALM.Theorem
 
 /-!
-# Composition and Proper Coordination (Appendix D, `appendices/composition.tex`)
+# Composition and Proper Coordination (Section 5, `sections/composition.tex`; proofs in Appendix D)
 
 Namespace `CC.Comp`.  Further examples of the appendix (converse example,
 curried form on graph tables, committed-log composition) are in

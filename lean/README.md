@@ -29,7 +29,7 @@ What is argued only in prose, not in Lean: the step from Gilbert and Lynch's
 fair-execution definitions to the finite forms used in
 `«prop:gl-async»` (Appendix F); the protocol steps of 2PL and MVTO (lock
 waits, timestamp issue, reads, when the scheduler aborts; Appendix G); and the
-design discussion of §5–§6.  The `Paper/` docstrings point these out where
+design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
 ## Building and checking
@@ -59,7 +59,7 @@ first and supporting claims and examples follow.
 | `CALM/Lemmas.lean` | `CC.CALM` | §2–§3, App. B | Event facts, functional remarks, Lemma reconciliation, paper proof routes, pairs suffice |
 | `CALM/Examples.lean` | `CC.CALM` | §2–§3, App. B | `k`-set agreement (pairs), rows at `j`, relational state-by-input, election, directed fiber |
 | `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §4.4 | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
-| `Figures.lean` | `CC.Figures` | §2–§3, §6 | Figure tables: election frames, ambiguity frames; decisive ballot vs. closing the polls |
+| `Figures.lean` | `CC.Figures` | §2–§3, §7 | Figure tables: election frames, ambiguity frames; decisive ballot vs. closing the polls |
 | `Distributed/Histories.lean` | `CC.Dist` | §4.1–4.2 | Histories, cuts, Prop. distributed consistency, Cor. convergence, exchanging outputs |
 | `Distributed/Commitments.lean` | `CC` | §4.3–4.4, App. C | Commitments, canonical seal/choice, system output events, normal form, seal-or-choose, canonical-equivalent, conflicting outputs |
 | `Distributed/Systems.lean` | `CC.Dist` | §4.1–4.4, App. C | Figure participant-runs, consistency without unique send ids, canonical systems, reconciliation under any basis, encodings agree |
@@ -70,10 +70,10 @@ first and supporting claims and examples follow.
 | `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.5, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |
 | `CAP/AsyncGilbertLynch.lean` | `CC.AsyncGL` | App. F | Gilbert–Lynch Theorem 1 (asynchronous model) by reduction to the corollary |
 | `CAP/ChosenAvailability.lean` | `CC.CAP`, `CC.AsyncGL` | App. F | End-of-history forms of Response Availability / RPC / Answering; RPC is the converse's common-refinement condition; a response interface as a chosen availability relation; Lemma forced-answer and Cor. Gilbert–Lynch at the end of histories |
-| `Instances/InvariantConfluence.lean` | `CC.IConf` | §5, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
-| `Instances/BailisDefinition.lean` | `CC.IConf` | §5 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
-| `Instances/Examples.lean` | `CC.Inst` | §5, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
-| `Appendix/Composition.lean` | `CC.Comp` | App. D | Composition lemmas, Proper Coordination |
+| `Instances/InvariantConfluence.lean` | `CC.IConf` | §6, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
+| `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
+| `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
+| `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, Proper Coordination |
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
@@ -93,7 +93,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-545 entries.
+547 entries.
 
 ### §2 Functional CALM
 
@@ -160,8 +160,8 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«prop:functional-exposure-boundary/only-seals»` | theorem | After Prop. |
 | `«prop:functional-exposure-boundary/nonmonotone-seals»` | theorem | After Prop. |
 | `«eq:query-monotonicity»` | theorem | **Eq. |
-| `«sec:discussion/emit-before-determination»` | theorem | §6.1, "Design lessons": |
-| `«sec:discussion/decisive-vs-close»` | theorem | §6.1, "Design lessons": |
+| `«sec:discussion/emit-before-determination»` | theorem | §7.1, "Design lessons": |
+| `«sec:discussion/decisive-vs-close»` | theorem | §7.1, "Design lessons": |
 
 ### §3 Complete CALM
 
@@ -305,9 +305,35 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
 | `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model" (Proposition `prop:gl-async`). |
 
-### §5 Instances
+### §5 Composition and Proper Coordination
 
-File `Paper/S5_Instances.lean`; paper source `sections/instances.tex`.
+File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
+
+| Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
+|---|---|---|
+| `«eq:spec-composition»` | theorem | Eq. |
+| `«sec:composition/seq-total»` | theorem | "Since `S₁` is total on `I` and `S₂` is total on `M` (it has a row at every `m ∈ M`), every `i ∈ I` has a nonempty fiber in `S₂ ∘ S₁`." Lean: |
+| `«sec:composition/middle-totality-needed»` | theorem | Totality of `S₂` on *all* of `M` is needed (not stated in the paper; it explains the hypothesis above). |
+| `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
+| `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
+| `«sec:composition/graph-tables»` | theorem | "For a function `f`, call `{(i,f(i))}` its graph table; it satisfies Lifted Monotonicity exactly when `f` is monotone. |
+| `«cor:functional-composition»` | theorem | **Corollary `cor:functional-composition`** (Functional composition): |
+| `«sec:composition/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
+| `«eq:parameterized-composition»` | theorem | Eq. |
+| `«lem:parameterized-composition»` | theorem | **Lemma `lem:parameterized-composition`** (Independently parameterized composition): |
+| `«sec:composition/commitment-strategy»` | abbrev | "A commitment strategy for `S₁` … fixes at each input `i` the upstream outputs committed to at `i`. |
+| `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
+| `«sec:composition/second-clause»` | theorem | "The second clause follows from the first by Complete CALM and the exposure boundary (Theorem `thm:complete-calm`, Proposition `prop:exposure-boundary`): |
+| `«sec:composition/neither-monotone»` | theorem | "Neither `S₁`, `S₂`, nor the unresolved composition need be monotone." Lean: |
+| `«thm:proper-coordination»` | theorem | **Corollary `thm:proper-coordination`** (Proper Coordination): |
+| `«cor:monotone-commitment»` | theorem | **Corollary `cor:monotone-commitment`** (Committing upstream to a monotone function): |
+| `«sec:composition/converse-fails»` | theorem | "The converse fails: |
+| `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Committed log composed with a key-value store), for any deterministic state machine `δ` and two distinct commands: |
+| `«ex:committed-log-composition/restriction»` | theorem | Inside Example `ex:committed-log-composition`: |
+
+### §6 Instances
+
+File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -525,34 +551,17 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«app:bases/basis-2PL»` | abbrev | *Application-specific commitments.* "Locks and timestamps are commitments of this kind: |
 | `«app:bases/basis-MVTO»` | abbrev | *Application-specific commitments*: |
 
-### Appendix D: Composition
+### Appendix D: Proofs and details for composition
 
 File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«eq:spec-composition»` | theorem | Eq. |
-| `«app:composition/seq-total»` | theorem | "Since `S₁` is total on `I` and `S₂` is total on `M` (it has a row at every `m ∈ M`), every `i ∈ I` has a nonempty fiber in `S₂ ∘ S₁`." Lean: |
-| `«app:composition/middle-totality-needed»` | theorem | Totality of `S₂` on *all* of `M` is needed (not stated in the paper; it explains the hypothesis above). |
-| `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
-| `«app:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
-| `«app:composition/graph-tables»` | theorem | "Graph tables of functions are closed under `∘`": |
-| `«cor:functional-composition»` | theorem | **Corollary `cor:functional-composition`** (Functional composition): |
-| `«eq:parameterized-composition»` | theorem | Eq. |
 | `«eq:curried-fibers»` | theorem | Eq. |
 | `«eq:curried-query-plan»` | theorem | Eq. |
 | `«prop:curried-query-plan»` | theorem | **Proposition `prop:curried-query-plan`** (Curried equijoin plan): |
-| `«lem:parameterized-composition»` | theorem | **Lemma `lem:parameterized-composition`** (Independently parameterized composition): |
 | `«eq:curried-composition»` | theorem | Eq. |
-| `«app:composition/commitment-strategy»` | abbrev | "A commitment strategy for `S₁` … fixes at each input `i` the upstream outputs committed to at `i`; its committed table is the set `K ⊆ S₁` of those rows. |
-| `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
-| `«app:composition/second-clause»` | theorem | "The second clause follows from the first by Complete CALM and the exposure boundary (Theorem `thm:complete-calm`, Proposition `prop:exposure-boundary`)." |
-| `«app:composition/neither-monotone»` | theorem | "Neither `S₁`, `S₂`, nor the unresolved composition need be monotone." Lean: |
-| `«thm:proper-coordination»` | theorem | **Corollary `thm:proper-coordination`** (Proper Coordination): |
-| `«cor:monotone-commitment»` | theorem | **Corollary `cor:monotone-commitment`** (Committing upstream to a monotone function): |
-| `«app:composition/converse-example»` | theorem | "The converse fails: |
-| `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Committed log composed with a key-value store), for any deterministic state machine `δ` and two distinct commands: |
-| `«ex:committed-log-composition/restriction»` | theorem | Inside Example `ex:committed-log-composition`: |
+| `«app:composition/converse-example»` | theorem | "The converse of Corollary `cor:monotone-commitment` fails: |
 
 ### Appendix E: Deployment
 

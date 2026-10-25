@@ -26,13 +26,13 @@ import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CAP.Register
 import CoordCriterion.CAP.ResponseAvailability
 import CoordCriterion.CAP.AsyncGilbertLynch
--- §5 Instances (incl. invariant confluence, Appendix B)
+-- §6 Instances (incl. invariant confluence, Appendix B)
 import CoordCriterion.Instances.InvariantConfluence
 import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.Examples
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
--- Appendix D composition
+-- §5 and Appendix D composition
 import CoordCriterion.Appendix.Composition
 -- Appendix E deployment
 import CoordCriterion.Appendix.Deployment

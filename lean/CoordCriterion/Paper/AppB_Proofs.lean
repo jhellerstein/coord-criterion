@@ -4,7 +4,7 @@ import CoordCriterion.CALM.Examples
 # Paper Appendix B: deferred proofs for §2–§3 (`appendices/proof-machinery.tex`)
 
 Statement layer for Appendix `app:proofs`, except subsection
-`app:iconfluence` (invariant confluence, handled with §5).
+`app:iconfluence` (invariant confluence, handled with §6).
 
 How to read this file: open `appendices/proof-machinery.tex` next to it.  The
 headers are the appendix's subsections, in order.  For each "Proof of …"

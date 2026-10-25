@@ -2,7 +2,8 @@ import CoordCriterion.Paper.S2_FunctionalCALM
 import CoordCriterion.Paper.S3_CompleteCALM
 import CoordCriterion.Paper.S4_Distributed
 import CoordCriterion.Paper.S4_5_CompleteCAP
-import CoordCriterion.Paper.S5_Instances
+import CoordCriterion.Paper.S5_Composition
+import CoordCriterion.Paper.S6_Instances
 import CoordCriterion.Paper.AppA_Notation
 import CoordCriterion.Paper.AppB_Proofs
 import CoordCriterion.Paper.AppB_InvariantConfluence

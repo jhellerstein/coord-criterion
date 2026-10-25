@@ -1,34 +1,13 @@
-\section{Composition and Proper Coordination}
+\section{Proofs and Details for Composition}
 \label{app:composition}
 
-We define sequential and independently parameterized composition as equijoins
-of specification tables, show that both preserve Lifted Monotonicity, and use
-them to characterize when commitments on a non-monotone component make a
-composition consistent.
+This appendix proves the results of Section~\ref{sec:composition}, gives the
+curried evaluation of independently parameterized composition, and shows that
+the converse of Corollary~\ref{cor:monotone-commitment} fails.
 
 \subsection{Sequential composition}
 
-Let $\Spec_1=(I,\InputOrd,M,\preceq_M,S_1)$ and
-$\Spec_2=(M,\preceq_M,O,\OutputOrd,S_2)$ be ordered relational specifications
-sharing the ordered domain $(M,\preceq_M)$.  Their \emph{sequential
-composition} has table
-\begin{equation}
-  S_2\circ S_1
-  =\pi_{I,O}(S_1\Join_M S_2)
-  =\{(i,o):\exists m.\ (i,m)\in S_1\land(m,o)\in S_2\},
-  \label{eq:spec-composition}
-\end{equation}
-where $\pi$ and $\Join$ are relational projection and equijoin.  Since $S_1$
-is total on $I$ and $S_2$ is total on $M$ (it has a row at every $m\in M$),
-every $i\in I$ has a nonempty fiber in $S_2\circ S_1$.
-
-\begin{lemma}[Composition]
-\label{lem:composition}
-If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then the ordered
-specification with table $S_2\circ S_1$ satisfies Lifted Monotonicity.
-\end{lemma}
-
-\begin{proof}
+\begin{proof}[Proof of Lemma~\ref{lem:composition}]
 We verify the common-\indesc condition
 (Proposition~\ref{prop:common-expansion-form}).  Let rows $(i_r,o_r)$ of
 $S_2\circ S_1$, finitely many, have common \indesc $j$, and choose $m_r$ with
@@ -39,41 +18,23 @@ $u\in S_2(m)$ \outrelpart every $o_r$.  So $(j,u)\in S_2\circ S_1$ is the
 required common \outnoun.
 \end{proof}
 
-By associativity the lemma extends to finite pipelines.  Graph tables of
-functions are closed under $\circ$, so it specializes to functions:
-
-\begin{corollary}[Functional composition]
-\label{cor:functional-composition}
-If $f:(I,\InputOrd)\to(M,\preceq_M)$ and
-$g:(M,\preceq_M)\to(O,\OutputOrd)$ are monotone, so is $g\circ f$.
-\end{corollary}
-
-\begin{proof}
+\begin{proof}[Proof of Corollary~\ref{cor:functional-composition}]
 The graph tables of $f$ and $g$ satisfy Lifted Monotonicity and compose to the
 graph table of $g\circ f$; apply Lemma~\ref{lem:composition}.
 \end{proof}
 
 \subsection{Composition with independent inputs}
 
-Let
-\[
-  \Spec_F=\bigl(I\times A,\preceq_I\times\preceq_A,B,\preceq_B,F\bigr),
-  \qquad
-  \Spec_G=\bigl(J\times B,\preceq_J\times\preceq_B,C,\preceq_C,G\bigr)
-\]
-be ordered relational specifications sharing the ordered domain
-$(B,\preceq_B)$.  Their \emph{independently parameterized composition} is
-\begin{align}
-  G\star F
-  &=\pi_{I,J,A,C}\bigl(F\Join_{B}G\bigr) \notag\\
-  &=\{((i,j,a),c):\exists b.\ ((i,a),b)\in F
-                         \land ((j,b),c)\in G\},
-  \label{eq:parameterized-composition}
-\end{align}
-with the product order on $I\times J\times A$.  Since $F$ is total on
-$I\times A$ and $G$ is total on $J\times B$, every composed input has a
-nonempty fiber.
+\begin{proof}[Proof of Lemma~\ref{lem:parameterized-composition}]
+Let rows $((i_r,j_r,a_r),c_r)$, finitely many, have common \indesc $(i,j,a)$,
+with witnesses $b_r$ from Equation~\ref{eq:parameterized-composition}.  The
+common-\indesc condition for $\Spec_F$ at $(i,a)$ gives $b\in F(i,a)$
+\outrelpart every $b_r$.  Then $(j,b)$ is a common \indesc of the
+$(j_r,b_r)$, and the condition for $\Spec_G$ gives $c\in G(j,b)$ \outrelpart
+every $c_r$.  So $((i,j,a),c)\in G\star F$ is the required common \outnoun.
+\end{proof}
 
+\paragraph{Curried evaluation.}
 For fixed parameters let
 \begin{equation}
   F_i=\pi_{A,B}(F[I=i]),
@@ -100,23 +61,8 @@ iff $(a,b)\in F_i$ and $(b,c)\in G_j$.  Quantifying over $b$ gives the same
 condition on $((i,j,a),c)$ in both expressions.
 \end{proof}
 
-\begin{lemma}[Independently parameterized composition]
-\label{lem:parameterized-composition}
-If $\Spec_F$ and $\Spec_G$ satisfy Lifted Monotonicity, then the specification
-with table $G\star F$ satisfies Lifted Monotonicity.
-\end{lemma}
-
-\begin{proof}
-Let rows $((i_r,j_r,a_r),c_r)$, finitely many, have common \indesc $(i,j,a)$,
-with witnesses $b_r$ from Equation~\ref{eq:parameterized-composition}.  The
-common-\indesc condition for $\Spec_F$ at $(i,a)$ gives $b\in F(i,a)$
-\outrelpart every $b_r$.  Then $(j,b)$ is a common \indesc of the
-$(j_r,b_r)$, and the condition for $\Spec_G$ gives $c\in G(j,b)$ \outrelpart
-every $c_r$.  So $((i,j,a),c)\in G\star F$ is the required common \outnoun.
-\end{proof}
-
 For monotone $f:I\times A\to B$ and $g:J\times B\to C$, the graph-table
-instance says that
+instance of Lemma~\ref{lem:parameterized-composition} says that
 \begin{equation}
   h(i,j,a)=g\bigl(j,f(i,a)\bigr)
   \label{eq:curried-composition}
@@ -126,82 +72,21 @@ which is the plan of Proposition~\ref{prop:curried-query-plan} on graph tables.
 
 \subsection{Proper Coordination}
 
-Let $S_1\subseteq I\times M$ and $S_2\subseteq M\times O$ be as above.  A
-\emph{commitment strategy} for $S_1$ (distinct from a participant's strategy,
-Definition~\ref{def:system}) fixes at each input $i$ the upstream outputs
-committed to at $i$; its \emph{committed table} is the set $K\subseteq S_1$ of
-those rows.  It is \emph{totality-preserving} when $K$ has a row at every
-input.  The resolved end-to-end table is $S_2\circ K$ (or $G\star K$ for
-independently parameterized composition).  We take $K$ as declared rather
-than derived from runs of a composed transition system.
-
-\begin{definition}[Proper Coordination]
-\label{def:proper-coordination}
-A totality-preserving commitment strategy with committed table $K$ is
-\emph{proper} for the composition when the resolved specification
-$S_2\circ K$ (resp.\ $G\star K$) is consistent and every output at every
-state of it reachable without commitment is exposable.
-\end{definition}
-
-The second clause follows from the first by Complete CALM and the exposure
-boundary (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).  Neither $S_1$, $S_2$, nor the
-unresolved composition need be monotone.
-
-\begin{corollary}[Proper Coordination]
-\label{thm:proper-coordination}
-A totality-preserving commitment strategy is proper for a sequential or
-independently parameterized composition if and only if the resolved
-specification satisfies Lifted Monotonicity.
-\end{corollary}
-
-\begin{proof}
+\begin{proof}[Proof of Corollary~\ref{thm:proper-coordination}]
 If the resolved specification satisfies Lifted Monotonicity, Complete CALM
 gives consistency and Proposition~\ref{prop:exposure-boundary} gives the
 exposability clause.  Conversely, properness includes consistency, and Complete
 CALM gives Lifted Monotonicity.
 \end{proof}
 
-\begin{corollary}[Committing upstream to a monotone function]
-\label{cor:monotone-commitment}
-If the committed table $K$ of a totality-preserving commitment strategy is the
-graph of a monotone function and the downstream specification ($S_2$ or $G$)
-satisfies Lifted Monotonicity, the strategy is proper.
-\end{corollary}
-
-\begin{proof}
+\begin{proof}[Proof of Corollary~\ref{cor:monotone-commitment}]
 The graph of a monotone function satisfies Lifted Monotonicity.  Apply
 Lemma~\ref{lem:composition} or~\ref{lem:parameterized-composition}, then
 Corollary~\ref{thm:proper-coordination}.
 \end{proof}
 
-The converse fails: let $I=\{*\}$, $M=\{x,y\}$ discrete,
-$S_1=\{(*,x),(*,y)\}$, $K=\{(*,x)\}$, and $S_2=\{(x,x),(y,x),(y,y)\}$.  The
-fiber $S_2(y)=\{x,y\}$ is not directed, so $S_2$ fails Lifted Monotonicity and
-the corollary does not apply, but the resolved table $\{(*,x)\}$ is monotone,
-so the strategy is proper.
-
-\begin{example}[Committed log composed with a key-value store]
-\label{ex:committed-log-composition}
-Take $I$ the proposal streams received by a single log authority and $B$ the
-logs, both ordered by prefix; $A$ a one-point set; $J$ the client request
-histories; and $C$ the cumulative response histories, ordered by extension.
-We restrict composed inputs to coherent pairs, in which every proposed command
-comes from a request in $J$; restricting a specification to a subset of its
-inputs, with the induced order, preserves Lifted Monotonicity, so the results
-above apply.  Each command is proposed at most once.  Let $F$ relate each proposal stream to the logs
-still permitted for it, and $G$ relate a request history and a log to the
-responses obtained by executing that log.  Then $F$ is non-monotone (distinct
-next entries are incompatible outputs in one fiber), and so is the key-value
-store specification $G\star F$ (concurrent commands ordered oppositely give
-incompatible responses).
-
-Let the authority commit, at each position, to the next command in arrival
-order.  Arrival order is part of the input, so $K$ assigns each stream one
-log, which extends as the stream does: $K$ is the graph of a monotone
-function.  Deterministic execution makes $G$ monotone.  By
-Corollary~\ref{cor:monotone-commitment} the log commitments are proper, and
-$G\star K$ is consistent with no commitment in the store.  The binding choice
-is the order itself, made upstream.  Multi-Paxos realizes the authority
-across replicas~\cite{schneider1990smr,lamport2001paxos}, with the decided
-order in place of arrival order.
-\end{example}
+The converse of Corollary~\ref{cor:monotone-commitment} fails: let
+$I=\{*\}$, $M=\{x,y\}$ discrete, $S_1=\{(*,x),(*,y)\}$, $K=\{(*,x)\}$, and
+$S_2=\{(x,x),(y,x),(y,y)\}$.  The fiber $S_2(y)=\{x,y\}$ is not directed, so
+$S_2$ fails Lifted Monotonicity and the corollary does not apply, but the
+resolved table $\{(*,x)\}$ is monotone, so the strategy is proper.

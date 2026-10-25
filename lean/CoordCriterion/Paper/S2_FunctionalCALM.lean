@@ -5,7 +5,7 @@ import CoordCriterion.Figures
 
 Statement layer for Section 2 (`sec:functional-calm`), including
 Figure `fig:election-frames` and Figure `fig:nonmonotone-frame`, followed by
-the claims of §6 (`sections/discussion.tex`) about the same election.
+the claims of §7 (`sections/discussion.tex`) about the same election.
 
 How to read this file: open `sections/functional-calm.tex` next to it.  The
 headers below are the paper's subsections, in order.  Every numbered result is
@@ -587,9 +587,9 @@ theorem «eq:query-monotonicity» {F A : Type} (Q : PSet F → PSet A) :
       ∀ J J' : PSet F, (∀ x, J.mem x → J'.mem x) → ∀ a, (Q J).mem a → (Q J').mem a) :=
   ⟨querySpec_functional Q, query_monotone_iff Q, query_consistent_iff Q⟩
 
-/-! ## Cross-references from §6 (`sections/discussion.tex`) -/
+/-! ## Cross-references from §7 (`sections/discussion.tex`) -/
 
-/-- §6.1, "Design lessons": "useful output need not wait for
+/-- §7.1, "Design lessons": "useful output need not wait for
 determination: the election can emit `⊥` while either candidate may still
 win."  At `σ_S(xy·)`, `⊥` is exposable and rows with output `x` and with output `y` both remain. -/
 theorem «sec:discussion/emit-before-determination» :
@@ -597,7 +597,7 @@ theorem «sec:discussion/emit-before-determination» :
       (∃ k, (canon elec bxy).R k (.win .y)) :=
   ⟨elec_panels_exposable.2.1, (Figures.Elec.upper_ab _).2, (Figures.Elec.upper_ab _).2⟩
 
-/-- §6.1, "Design lessons": "Receiving a decisive ballot and closing the
+/-- §7.1, "Design lessons": "Receiving a decisive ballot and closing the
 polls both leave a single result.  The first retires rows by input; the
 second removes rows that input still permits, a commitment."
 
