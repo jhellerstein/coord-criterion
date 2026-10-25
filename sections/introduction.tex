@@ -2,7 +2,7 @@
 \label{sec:intro}
 
 Concurrent systems rely on coordination mechanisms ranging from mutexes and
-atomic instructions to database locks and distributed consensus protocols.
+atomic instructions to database locks and consensus protocols.
 These mechanisms prevent concurrent actions from producing undesirable
 outcomes.  They also cost something: they add overhead, and when coordination
 crosses a network partition, it can cost availability.  Avoiding unnecessary coordination
@@ -51,8 +51,7 @@ externally observable.  Despite its simplicity, the model captures
 general-purpose consistency models such as linearizability and causal
 consistency (Appendix~\ref{app:registers}) and transactional
 isolation levels (\S\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}), as
-well as application-specific requirements
-such as program invariants.  A
+well as application invariants.  A
 specification is \emph{consistent} when the executions it admits are
 \emph{confluent}: states reached along different paths can still be brought to
 a common state.
@@ -116,12 +115,12 @@ This paper makes six contributions:
         that must stay available.
   \item \emph{Composition and Proper Coordination.} Specifications compose by
         equijoin, and because commitments are explicit, the model can check
-        whether a particular use of coordination is enough: a totally ordered
+        whether a use of coordination is enough: a totally ordered
         log and a key-value store are both non-monotone, yet committing to a
         single log order makes their composition monotone, with no further
         commitments in the store (Appendix~\ref{app:composition}).
   \item \emph{Coordination-free frontiers.} Two theorems characterize how much
-        a specification can promise before coordination becomes necessary
+        a specification can promise without coordination
         (Appendix~\ref{sec:frontiers}).
 \end{enumerate}
 
