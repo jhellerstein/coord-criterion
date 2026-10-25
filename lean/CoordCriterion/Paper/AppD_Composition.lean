@@ -114,35 +114,102 @@ theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
       (Guard.Sys.free (fun _ : Commitment (Comp.seq sp sk) => False)).emits l' :=
   Guard.pipeline_coordination_free hP hK h
 
-/-- Proof of Proposition `prop:joint-monotone`: "(1) … All of `m_r` and `m` lie
-in `D`, so the condition for `𝒮₂` on `D` gives `o ∈ S₂(m)` that refines every
-`o_r`, and `(j,o) ∈ S₂ ∘ S₁`.  No closure property of `D` is used.  (2) A
-re-encoding is a map `e : M → M'` together with a decoding `e' : M' → M` that
-recovers every value, `e'(e(m)) = m`. … A join through `e(m)` is a join through
+/-- Proof of Proposition `prop:joint-monotone`: "(1) is Lemma
+`lem:composition`, and also the case `D = M` of (2).  (2) Let `D` contain the
+outputs of `𝒮₁`. … All of `m_r` and `m` lie in `D`, so the condition for `𝒮₂`
+on `D` gives `o ∈ S₂(m)` that refines every `o_r`, and `(j,o) ∈ S₂ ∘ S₁`.  No
+closure property of `D` is used.  (3) The table `S₂ ∘ S₁` of Equation
+`eq:spec-composition` mentions no order on `M`, and Lifted Monotonicity of the
+composite uses only the orders on `I` and `O`.  So the composite under `≼_M` is
+the composite under the other order, which satisfies Lifted Monotonicity by
+(1).  The same holds after re-encoding the intermediate values.  A re-encoding
+is a map `e : M → M'` together with a decoding `e' : M' → M` that recovers
+every value, `e'(e(m)) = m`.  Replace `S₁` by `{(i,e(m)) : (i,m) ∈ S₁}` and
+`S₂` by `{(m',o) : (e'(m'),o) ∈ S₂}`.  A join through `e(m)` is a join through
 `e'(e(m)) = m`, so the composite table is unchanged, whatever the orders on `M`
-and `M'`.  (3) Place `a` below `b` in `M` when `g(a) ≼ g(b)`.  This relation
-is reflexive and transitive. … it is an order only when no such pair exists,
-in particular when `g` maps distinct values to distinct values. … By the
-exposure test for tables of functions, `f(i)` is exposable at `σ(i)` exactly
-when `f(i) ≼ f(k)` for every `k ⪰ i`, so the upstream under the empty basis
-cannot emit at one of the canonical states of `x` and `y`."  Lean:
-`Joint.seq_liftedMono_on` (any `D` containing the outputs), `Joint.reorder_seq`,
-`Joint.preorder_factorization` (the reflexive, transitive relation),
-`Joint.injective_characterization`, `Joint.graph_canon_exposable_iff`,
-`Joint.no_order_counterexample` (the empty-basis upstream stalls at some
-canonical state). -/
-theorem «app:composition/joint-monotone» {I M O : Type} [PO I] [PO M] [PO O] :
-    (∀ {sp1 : Spec I M} {sp2 : Spec M O} {D : M → Prop}, sp1.LiftedMono →
-      (∀ i m, sp1.S i m → D m) → Joint.CEOn sp2 D → (Comp.seq sp1 sp2).LiftedMono) ∧
-    (∀ (D : M → Prop) (sp : Spec M O), Joint.CEOn sp D ↔ (Joint.restrictTo D sp).LiftedMono) ∧
-    (∀ (f : I → M) (i : I), Exposable (canon (graph f) i) (f i) ↔ ∀ k, i ≼ k → f i ≼ f k) :=
-  ⟨fun h1 hD h2 => Joint.seq_liftedMono_on h1 hD h2, Joint.ceOn_iff_restrictTo,
-    Joint.graph_canon_exposable_iff⟩
+and `M'`."  Lean: (1) `Comp.seq_liftedMono`, and a Lifted-Monotone `𝒮₂`
+satisfies it on all of `M` (`Joint.ceOn_of_ce`); (2)
+`Joint.seq_liftedMono_on` (any `D` containing the outputs) and
+`Joint.ceOn_iff_restrictTo` ("on `D`" is Lifted Monotonicity of the
+restriction to `D`); (3) `Joint.seq_under` (the composite under the given
+order `instM` and under another order `inst` is one specification),
+`Joint.seq_liftedMono_reorder`, `Joint.reorder_seq` (re-encoding, as
+`Joint.pushOut` and `Joint.pullIn`) and `Joint.seq_liftedMono_reencode`. -/
+theorem «app:composition/joint-monotone» {I M O : Type} [PO I] [instM : PO M] [PO O] :
+    ((∀ {sp1 : Spec I M} {sp2 : Spec M O}, sp1.LiftedMono → sp2.LiftedMono →
+        (Comp.seq sp1 sp2).LiftedMono) ∧
+      ∀ sp2 : Spec M O, sp2.LiftedMono → Joint.CEOn sp2 (fun _ => True)) ∧
+    ((∀ {sp1 : Spec I M} {sp2 : Spec M O} {D : M → Prop}, sp1.LiftedMono →
+        (∀ i m, sp1.S i m → D m) → Joint.CEOn sp2 D → (Comp.seq sp1 sp2).LiftedMono) ∧
+      ∀ (D : M → Prop) (sp : Spec M O), Joint.CEOn sp D ↔ (Joint.restrictTo D sp).LiftedMono) ∧
+    ((∀ (sp1 : Spec I M) (sp2 : Spec M O) (inst : PO M),
+        @Comp.seq I M O _ inst _ (Joint.underOut inst sp1) (Joint.underIn inst sp2) =
+          @Comp.seq I M O _ instM _ sp1 sp2) ∧
+      (∀ {sp1 : Spec I M} {sp2 : Spec M O} (inst : PO M),
+        @Spec.LiftedMono I M _ inst (Joint.underOut inst sp1) →
+        @Spec.LiftedMono M O inst _ (Joint.underIn inst sp2) →
+        (@Comp.seq I M O _ instM _ sp1 sp2).LiftedMono) ∧
+      (∀ {M' : Type} [PO M'] (sp1 : Spec I M) (sp2 : Spec M O) (e : M → M') (e' : M' → M),
+        (∀ m, e' (e m) = m) →
+          Comp.seq (Joint.pushOut sp1 e) (Joint.pullIn sp2 e') = Comp.seq sp1 sp2) ∧
+      ∀ {M' : Type} [PO M'] {sp1 : Spec I M} {sp2 : Spec M O} {e : M → M'} {e' : M' → M},
+        (∀ m, e' (e m) = m) → (Joint.pushOut sp1 e).LiftedMono →
+          (Joint.pullIn sp2 e').LiftedMono → (Comp.seq sp1 sp2).LiftedMono) :=
+  ⟨⟨fun h1 h2 => Comp.seq_liftedMono h1 h2,
+      fun _ h => Joint.ceOn_of_ce ((liftedMono_iff_commonExpansion _).1 h) _⟩,
+    ⟨fun h1 hD h2 => Joint.seq_liftedMono_on h1 hD h2, Joint.ceOn_iff_restrictTo⟩,
+    ⟨fun sp1 sp2 inst => Joint.seq_under inst sp1 sp2, fun inst h1 h2 => Joint.seq_liftedMono_reorder inst h1 h2,
+      fun sp1 sp2 e e' h => Joint.reorder_seq sp1 sp2 e e' h,
+      fun h h1 h2 => Joint.seq_liftedMono_reencode h h1 h2⟩⟩
 
-/-- "For the capped counter …, let `𝒮₁` be the table of `n ↦ min(n,9)` on
-`(ℕ, ≤)` and `𝒮₂` the table of `n ↦ [n < 10]`, with two incomparable outputs.
-`𝒮₂` violates Lifted Monotonicity, … but it satisfies it on `{n ≤ 9}`, so the
-composite is Lifted-Monotone by (1). … In the guarded composite every input
+/-- "The reach of case (3).  Let `f : I → M` and `g : M → O` be functions with
+`g(f(·))` monotone.  Place `a` below `b` in `M` when `g(a) ≼ g(b)`.  This
+relation is reflexive and transitive.  It makes `g` monotone by construction,
+and `f` monotone because `g(f(·))` is.  It can place two distinct values each
+below the other, so it is an order only when no such pair exists, in
+particular when `g` maps distinct values to distinct values.  Then case (3)
+applies.  In general it need not.  Let `I` be the chain `x ⊑ y ⊑ z`,
+`M = {p,q}`, `f(x) = f(z) = p`, `f(y) = q`, and `g` constant.  The composite is
+constant, hence monotone.  Under any order on `M`, monotonicity of `f` gives
+`p ≼_M q ≼_M p`, so `p = q`, a contradiction.  By the exposure test for tables
+of functions, `f(i)` is exposable at `σ(i)` exactly when `f(i) ≼_M f(k)` for
+every `k ⪰ i`, so the upstream under the empty basis cannot emit at one of the
+canonical states of `x` and `y`.  The stages can be repaired only by merging
+`p` and `q` into one intermediate value."  Lean: `Joint.preorder_factorization` (the
+reflexive, transitive relation, which exists exactly when `g ∘ f` is
+monotone); `Joint.injective_characterization` (for one-to-one `g`, stated for
+Lifted Monotonicity of the tables, with the pulled-back partial order
+`Joint.pullPO`); `Joint.graph_canon_exposable_iff` (the exposure test);
+`Joint.no_order_counterexample` (`I = Joint.C3`, `M = Joint.Mid`; the
+empty-basis upstream stalls at some canonical state); `Joint.merge_needed`
+(any re-encoding `e` of `M`, into any partially ordered set, that makes the
+upstream `e ∘ f` monotone has `e(p) = e(q)`). -/
+theorem «app:composition/reach» {I M O : Type} [PO I] [PO O] :
+    (∀ {f : I → M} {g : M → O}, Monotone (g ∘ f) ↔ ∃ le : M → M → Prop, (∀ a, le a a) ∧
+      (∀ a b c, le a b → le b c → le a c) ∧ (∀ x y, x ≼ y → le (f x) (f y)) ∧
+      ∀ a b, le a b → g a ≼ g b) ∧
+    (∀ {f : I → M} {g : M → O}, (∀ a b, g a = g b → a = b) →
+      ((graph (g ∘ f)).LiftedMono ↔ ∃ inst : PO M,
+        @Spec.LiftedMono I M _ inst (@graph I M _ inst f) ∧
+        @Spec.LiftedMono M O inst _ (@graph M O inst _ g))) ∧
+    (∀ (inst : PO M) (f : I → M) (i : I),
+      @Exposable I M _ inst _ (@canon I M _ inst (@graph I M _ inst f) i) (f i) ↔
+        ∀ k, i ≼ k → @PO.le M inst (f i) (f k)) ∧
+    ((∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
+      (∀ _inst : PO Joint.Mid, ¬ (graph Joint.fz).LiftedMono) ∧
+      ∀ _inst : PO Joint.Mid, ∃ i, ∀ γ o τ,
+        ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output γ o) τ) ∧
+    ∀ {M' : Type} (inst : PO M') (e : Joint.Mid → M'),
+      @Monotone Joint.C3 M' _ inst (e ∘ Joint.fz) → e .p = e .q :=
+  ⟨Joint.preorder_factorization, fun hg => Joint.injective_characterization hg,
+    fun inst f i => @Joint.graph_canon_exposable_iff I M _ inst f i, Joint.no_order_counterexample,
+    fun inst e h => Joint.merge_needed inst e h⟩
+
+/-- "For the capped counter of Section `sec:composite-calm`, let `𝒮₁` be the
+table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of the
+test `t(n) = [n < 10]`, whose two outputs are incomparable.  `𝒮₂` violates
+Lifted Monotonicity, since `[9 < 10]` and `[10 < 10]` differ, but it satisfies
+it on `{n ≤ 9}`, so the composite is Lifted-Monotone by (1). … In the guarded composite every input
 that a run of `𝒮₂` accepts or emits at occurs in an output sequence of `𝒮₁`,
 and none is `≥ 10`.  A store commitment that removes rows only at such inputs
 is never contradicted, so the store coordinates at most once.  At least once

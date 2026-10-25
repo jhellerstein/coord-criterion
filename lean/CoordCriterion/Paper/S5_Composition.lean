@@ -75,11 +75,10 @@ theorem «sec:composition/associativity» {I M O P : Type} (S1 : Table I M) (S2 
     Comp.tcomp (Comp.tcomp S1 S2) S3 = Comp.tcomp S1 (Comp.tcomp S2 S3) :=
   Comp.tcomp_assoc S1 S2 S3
 
-/-- "For a function `f`, its table `{(i,f(i))}` satisfies
-Lifted Monotonicity exactly when `f` is monotone.  Tables of functions are closed
-under `∘`."  Lean: the composition of the tables of `f` and `g` is the
-table of `g ∘ f`, and the table of `f` satisfies Lifted
-Monotonicity iff `f` is monotone. -/
+/-- "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity
+exactly when `f` is monotone (Section `sec:lifted-monotonicity`)."  Lean: the
+table of `f` satisfies Lifted Monotonicity iff `f` is monotone; also, the
+composition of the tables of `f` and `g` is the table of `g ∘ f`. -/
 theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] (f : I → M) (g : M → O) :
     Comp.seq (graph f) (graph g) = graph (g ∘ f) ∧ ((graph f).LiftedMono ↔ Monotone f) :=
   ⟨Comp.seq_graph f g, Comp.graph_liftedMono_iff f⟩
@@ -146,82 +145,75 @@ theorem «sec:composite-calm/filtering» :
           .output (Joint.below m) :: Guard.storeTr (ms.map fun m => (m, Joint.below m)) :=
   ⟨Joint.threshold, fun P _ _ h => Joint.sealStore_follows P h⟩
 
-/-- "Third, two stages that are each non-monotone can cancel.  Consider a
-first stage that receives a growing set `X` from a domain `U` and outputs its
-complement `U ∖ X`, the elements not yet seen, and a second stage that
-complements again.  The composite returns `X`, which only grows.  Under the
-usual order on sets, though, each stage is non-monotone.  As `X` grows, the
-first stage's output shrinks, so without commitment it can emit only the empty
-set.  … The composite's table never mentions the order on the intermediate
-domain `M` between the stages, so the stages can agree on a different one.
-Invert it: let `S ≼_M S'` exactly when `S' ⊆ S`.  … both stages are
-monotone.  Likewise, suppose the upstream may output
-either of two incomparable values `a` and `b`, and the downstream maps both to
-the same answer.  The upstream cannot emit either without choosing.  If the
-interface places `a` below `b`, the upstream can emit `a` and later supersede
-it with `b`, and the composite is unchanged."  Lean:
-`Joint.double_complement` (`Joint.Rev` is the reversed order),
-`Joint.compl_empty_basis` (under the empty basis every output at a canonical
-state is `∅`), `Joint.constant_store_reorder`; the constant store cannot emit
-without choosing is `«app:composition/components-commit»`. -/
+/-- "Third, two stages that are each non-monotone can cancel.  As an example,
+consider a first stage that receives a growing set `X` from a domain `U` and
+outputs its complement `U ∖ X`, and a second stage that complements again.  The
+composite returns `X`, which only grows.  Under the usual order on sets,
+though, each stage is non-monotone.  The remedy lies in the interface between
+the stages.  The composite's table never mentions the order on the
+intermediate domain `M` between the stages, so the stages can agree on a
+different one.  Invert it: let `S ≼_M S'` exactly when `S' ⊆ S`.  The first
+stage's shrinking outputs then form a growing stream of updates, the second
+stage turns each update into a larger set, and both stages are monotone."
+Lean: `Joint.double_complement` (`Joint.Rev` is the reversed order; the
+composite is the identity, and is unchanged by the reversal).  The appendix's
+empty-basis behaviour of the complement stage is
+`«app:composition/double-complement»`. -/
 theorem «sec:composite-calm/cancellation» {U : Type} [Nonempty U] :
-    (¬ (graph (Joint.compl (U := U))).LiftedMono ∧
+    ¬ (graph (Joint.compl (U := U))).LiftedMono ∧
       Comp.seq (graph (Joint.compl (U := U))) (graph Joint.compl) = graph id ∧
       (graph (id : Joint.PSet U → Joint.PSet U)).LiftedMono ∧
       (Joint.pushOut (graph (Joint.compl (U := U))) Joint.Rev.mk).LiftedMono ∧
       (Joint.pullIn (graph (Joint.compl (U := U))) Joint.Rev.val).LiftedMono ∧
       Comp.seq (Joint.pushOut (graph (Joint.compl (U := U))) Joint.Rev.mk)
           (Joint.pullIn (graph Joint.compl) Joint.Rev.val) =
-        Comp.seq (graph Joint.compl) (graph Joint.compl)) ∧
-    (∀ {X : Joint.PSet U} {γ o τ},
-      SysStep (fun _ => False) (canon (graph (Joint.compl (U := U))) X) (.output γ o) τ →
-        ∀ u, ¬ o.mem u) ∧
-    (¬ Comp.anyS.LiftedMono ∧ (Joint.pushOut Comp.anyS Guard.fLvl).LiftedMono ∧
-      Exposable (canon (Joint.pushOut Comp.anyS Guard.fLvl) Comp.Pt.pt) Guard.Lvl.hi ∧
-      (Joint.pullIn Joint.constK Joint.lvlTwo).LiftedMono ∧
-      Comp.seq (Joint.pushOut Comp.anyS Guard.fLvl) (Joint.pullIn Joint.constK Joint.lvlTwo) =
-        Comp.seq Comp.anyS Joint.constK ∧
-      (Comp.seq Comp.anyS Joint.constK).LiftedMono) :=
-  ⟨Joint.double_complement, fun h => Joint.compl_empty_basis h, Joint.constant_store_reorder⟩
+        Comp.seq (graph Joint.compl) (graph Joint.compl) :=
+  Joint.double_complement
 
-/-- **Proposition `prop:joint-monotone`** (Jointly monotone composites): "(1) If
-`𝒮₁` satisfies Lifted Monotonicity and `𝒮₂` satisfies it on the outputs of
-`𝒮₁`, then `S₂ ∘ S₁` satisfies Lifted Monotonicity.  (2) Changing the order on
-`M` leaves `S₂ ∘ S₁` unchanged.  So does re-encoding the intermediate values,
-provided the downstream can decode them.  (3) Let `f : I → M` and
-`g : M → O` be functions such that `g(f(x)) ≼ g(f(y))` whenever `x ⊑ y`.  If
-`g` is one-to-one (injective), some order on `M` makes both `f` and `g`
-monotone.  Otherwise there may be no such order."  And: "We say
-that `S₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when the
-common-expansion condition holds for its rows with inputs in `D`, at
-expansions in `D`."  Lean: `Joint.CEOn` (equivalently, the restriction to `D`
-is Lifted-Monotone, `Joint.ceOn_iff_restrictTo`); (1) `Joint.seq_liftedMono_img`;
-(2) `Joint.reorder_seq` (encoding `e`, decoding `e'` with `e' (e m) = m`; a
-change of order alone is `e = e' = id` between two orders on `M`); (3)
-`Joint.preorder_factorization` (the reflexive, transitive relation of the
-proof, which exists exactly when `g ∘ f` is monotone),
-`Joint.injective_characterization` (stated for Lifted Monotonicity of the
-tables), `Joint.no_order_counterexample` ("otherwise there may be no such
-order"). -/
-theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O] :
-    (∀ {sp1 : Spec I M} {sp2 : Spec M O}, sp1.LiftedMono → Joint.CEOn sp2 (Joint.Img sp1) →
-      (Comp.seq sp1 sp2).LiftedMono) ∧
-    (∀ {M' : Type} [PO M'] (sp1 : Spec I M) (sp2 : Spec M O) (e : M → M') (e' : M' → M),
-      (∀ m, e' (e m) = m) → Comp.seq (Joint.pushOut sp1 e) (Joint.pullIn sp2 e') = Comp.seq sp1 sp2) ∧
-    (∀ {f : I → M} {g : M → O}, Monotone (g ∘ f) ↔ ∃ le : M → M → Prop, (∀ a, le a a) ∧
-      (∀ a b c, le a b → le b c → le a c) ∧ (∀ x y, x ≼ y → le (f x) (f y)) ∧
-      ∀ a b, le a b → g a ≼ g b) ∧
-    (∀ {f : I → M} {g : M → O}, (∀ a b, g a = g b → a = b) →
-      ((graph (g ∘ f)).LiftedMono ↔ ∃ inst : PO M,
-        @Spec.LiftedMono I M _ inst (@graph I M _ inst f) ∧
-        @Spec.LiftedMono M O inst _ (@graph M O inst _ g))) ∧
-    ((∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
+/-- **Proposition `prop:joint-monotone`** (Jointly monotone composites): "The
+composite `S₂ ∘ S₁` satisfies Lifted Monotonicity, and so is consistent and
+needs no commitment, in each of the following cases.  (1) `𝒮₁` and `𝒮₂`
+satisfy Lifted Monotonicity.  (2) `𝒮₁` satisfies Lifted Monotonicity, and `𝒮₂`
+satisfies it on the outputs of `𝒮₁`.  (3) `𝒮₁` and `𝒮₂` satisfy Lifted
+Monotonicity under some order on `M`, possibly other than `≼_M`."  And, just
+before: "We say that `S₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when
+the common-expansion condition holds for its rows with inputs in `D`, at
+expansions in `D`."  Lean: the hypothesis is the disjunction of the three
+cases; "on `D`" is `Joint.CEOn` (equivalently, the restriction to `D` is
+Lifted-Monotone, `Joint.ceOn_iff_restrictTo`), and "the outputs of `𝒮₁`" is
+`Joint.Img sp1`.  In (3), `Joint.underOut inst sp1` and `Joint.underIn inst sp2`
+are the same tables with `M` ordered by `inst`.  (1) `Comp.seq_liftedMono`;
+(2) `Joint.seq_liftedMono_img`; (3) `Joint.seq_liftedMono_reorder`.
+"Consistent and needs no commitment" is `«sec:composite-calm/complete-calm»`. -/
+theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
+    (sp1 : Spec I M) (sp2 : Spec M O)
+    (hcase : (sp1.LiftedMono ∧ sp2.LiftedMono) ∨
+      (sp1.LiftedMono ∧ Joint.CEOn sp2 (Joint.Img sp1)) ∨
+      ∃ inst : PO M, @Spec.LiftedMono I M _ inst (Joint.underOut inst sp1) ∧
+        @Spec.LiftedMono M O inst _ (Joint.underIn inst sp2)) :
+    (Comp.seq sp1 sp2).LiftedMono ∧ (Comp.seq sp1 sp2).Consistent ∧
+      ∀ τ : State (Comp.seq sp1 sp2), ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o := by
+  have h : (Comp.seq sp1 sp2).LiftedMono := by
+    rcases hcase with ⟨h1, h2⟩ | ⟨h1, h2⟩ | ⟨inst, h1, h2⟩
+    · exact Comp.seq_liftedMono h1 h2
+    · exact Joint.seq_liftedMono_img h1 h2
+    · exact Joint.seq_liftedMono_reorder inst h1 h2
+  exact ⟨h, («sec:composite-calm/complete-calm» sp1 sp2).1.2 h,
+    («sec:composite-calm/complete-calm» sp1 sp2).2 h⟩
+
+/-- "The three cases do not cover every monotone composite (Appendix
+`app:composition`).  When no case applies, some stage may have to commit even
+though the composite is monotone."  Lean: `Joint.no_order_counterexample`
+(`I` is the chain `Joint.C3`, `M = Joint.Mid`): under every partial order on
+`M` the composite is Lifted-Monotone, the upstream is not (so case (3) fails,
+and with it (1) and (2)), and its empty-basis system cannot emit at some
+canonical state.  The appendix treatment is `«app:composition/reach»`. -/
+theorem «sec:composite-calm/reach» :
+    (∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
       (∀ _inst : PO Joint.Mid, ¬ (graph Joint.fz).LiftedMono) ∧
       ∀ _inst : PO Joint.Mid, ∃ i, ∀ γ o τ,
-        ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output γ o) τ) :=
-  ⟨fun h1 h2 => Joint.seq_liftedMono_img h1 h2, fun sp1 sp2 e e' h => Joint.reorder_seq sp1 sp2 e e' h,
-    Joint.preorder_factorization, fun hg => Joint.injective_characterization hg,
-    Joint.no_order_counterexample⟩
+        ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output γ o) τ :=
+  Joint.no_order_counterexample
 
 /-! ## Proper Coordination (`sec:proper-coordination`) -/
 

@@ -26,7 +26,16 @@ After any change to `sections/*.tex` or `appendices/*.tex`:
 4. Rebuild and check, from `lean/`:
    `lake build`, `lake env lean scripts/CheckAxioms.lean`,
    `python3 scripts/gen_index.py`, `lake env lean scripts/CheckReadme.lean`.
-5. Commit the `.tex` and `lean/` changes together.
+5. Commit the `.tex` and `lean/` changes together, except during a revision
+   round (below).
+
+During a revision round, when the author is iterating on prose, `.tex`
+changes may be committed and pushed alone after a paper build.  Tag each such
+commit message `[lean-sync pending]`.  When the section settles, do one Lean
+pass covering every tagged commit since the last sync (steps 1–4), and commit
+it with a message that names the commits it syncs.  A text change that alters
+a definition, statement, or proved claim must still be flagged to the author
+when it is made, since the Lean may not prove it yet.
 
 Prose-only claims (no Lean) are listed in `lean/README.md`; keep that list
 current.

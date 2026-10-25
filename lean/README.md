@@ -95,7 +95,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-580 entries.
+582 entries.
 
 ### §2 Functional CALM
 
@@ -318,13 +318,14 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composition/middle-totality-needed»` | theorem | Totality of `S₂` on *all* of `M` is needed (not stated in the paper; it explains the hypothesis above). |
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
-| `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone. |
+| `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone (Section `sec:lifted-monotonicity`)." Lean: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an ordered specification, so Complete CALM applies to it directly. |
 | `«sec:composite-calm/all-monotone»` | theorem | "First, every stage is monotone. |
 | `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
 | `«sec:composite-calm/filtering»` | theorem | "Second, the upstream can filter out the inputs on which the downstream is not monotone. |
 | `«sec:composite-calm/cancellation»` | theorem | "Third, two stages that are each non-monotone can cancel. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
+| `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |
 | `«sec:proper-coordination/image»` | theorem | "Let `𝒫 = (I,≼,M,≼,P)` be an upstream specification and `𝒦 = (M,≼,O,≼,K)` a downstream specification, the store, that satisfies Lifted Monotonicity. |
 | `«sec:proper-coordination/no-pushforward»` | theorem | "A commitment of `𝒫` may keep `m'` and remove `m`, with `m` and `m'` incomparable but `f(m) ≼ f(m')`. |
 | `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
@@ -578,7 +579,8 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«eq:curried-composition»` | theorem | Eq. |
 | `«app:composition/all-monotone»` | theorem | "If every stage satisfies Lifted Monotonicity, a guarded composite whose first stage runs under the empty basis emits only what `𝒮₂ ∘ 𝒮₁` emits under the emp… |
 | `«app:composition/joint-monotone»` | theorem | Proof of Proposition `prop:joint-monotone`: |
-| `«app:composition/capped-counter»` | theorem | "For the capped counter …, let `𝒮₁` be the table of `n ↦ min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of `n ↦ [n < 10]`, with two incomparable outputs. |
+| `«app:composition/reach»` | theorem | "The reach of case (3). |
+| `«app:composition/capped-counter»` | theorem | "For the capped counter of Section `sec:composite-calm`, let `𝒮₁` be the table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of the test `… |
 | `«app:composition/double-complement»` | theorem | "For the double complement, let `M` be the subsets of a nonempty set `U`. |
 | `«app:composition/components-commit»` | theorem | "Let `𝒫` have one input `*` and table `{(*,x),(*,y)}` with `x,y` incomparable, and let `f` map both to one value. |
 | `«app:composition/image-canon»` | theorem | "The image of the canonical state `σ_𝒫(i)` is the canonical state of `𝒦 ∘ 𝒫` at `i`, since `P[in ⪰ i] ⋈ K` is the composite table restricted to the expansion… |
