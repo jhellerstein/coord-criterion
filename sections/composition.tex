@@ -1,20 +1,21 @@
 \section{Composition and Proper Coordination}
 \label{sec:composition}
 
-Real systems are assembled from components, each with its own specification.
-Consider state-machine replication~\cite{schneider1990smr}.  Clients send
-requests, a log puts the requested commands in one order, and a key-value store
-executes the log and answers each request.  The log's specification is not
+Prior literature presented a puzzle: the ``fix'' for a non-monotone
+program is coordination, which is another non-monotone program. A key-value
+store with mutable keys is non-monotone~\cite{alvaro2011bloom}. The standard
+solution, as in state-machine replication~\cite{schneider1990smr}, it to wrap it 
+with a log. Clients send
+requests, a log puts the requested commands in one order, and the key-value store
+executes the log and answers each request.  The log's specification is also not
 monotone: when two commands arrive concurrently, either may be appended next,
-and the two resulting logs have no common \outnoun.  The key-value store's
-end-to-end specification, from request histories to responses, is not
-monotone either, since two concurrent commands executed in opposite orders can
-give incompatible responses.  Yet replicated stores are consistent, and they
+and the two resulting logs have no common \outnoun.  
+Yet replicated stores are consistent, and they
 coordinate only in the log.  Multi-Paxos agrees on each log
-entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
-without further agreement.
+entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log---the
+key-value store needs no further agreement.
 
-We now explain that pattern in our framework.  Specifications are
+That puzzle is explained by our framework.  Specifications are
 tables, so they compose by equijoin, and composition preserves Lifted
 Monotonicity (Sections~\ref{sec:sequential-composition}
 and~\ref{sec:parameterized-composition}).  Because commitments are explicit, we
@@ -61,23 +62,11 @@ in Appendix~\ref{app:composition}.
 
 By associativity the lemma extends to finite pipelines.  For a function $f$,
 its table $\{(i,f(i))\}$ satisfies Lifted Monotonicity exactly when $f$ is
-monotone (Section~\ref{sec:lifted-monotonicity}).  Tables of functions are
-closed under $\circ$, so the lemma specializes to functions:
-
-\begin{corollary}[Functional composition]
-\label{cor:functional-composition}
-If $f:(I,\InputOrd)\to(M,\preceq_M)$ and
-$g:(M,\preceq_M)\to(O,\OutputOrd)$ are monotone, so is $g\circ f$.
-\end{corollary}
-
-\begin{proof}[Proof sketch]
-The tables of $f$ and $g$ compose to the table of $g\circ f$.
-Full proof in Appendix~\ref{app:composition}.
-\end{proof}
+monotone (Section~\ref{sec:lifted-monotonicity}). 
 
 The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
 client query $q$ over the replica state $s$ is the composition $q\circ s$, and
-Corollary~\ref{cor:functional-composition} is the observation there that
+compositions of monotone functions are monotone (Appendix~\ref{app:composition}), so
 monotonicity of $q$ on all of the state domain suffices.
 
 \subsection{Composition with independent inputs}
@@ -138,7 +127,7 @@ committed to at $i$.  Its \emph{committed table} is the set $K\subseteq S_1$
 of those rows.  It is \emph{totality-preserving} when $K$ has a row at every
 input, so that the commitments never leave an input without a permitted
 output.  The resolved end-to-end table is $S_2\circ K$, or $G\star K$ for
-independently parameterized composition.  We treat $K$ as given, not derived: it records which
+independently parameterized composition.  Table $K$ is given, not derived: it records which
 upstream rows the commitments keep.
 
 \begin{definition}[Proper Coordination]
@@ -168,7 +157,7 @@ Monotonicity, and the exposure boundary supplies the second clause.  Full
 proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-The corollary reduces properness to a test on one table.  A simple
+The corollary reduces properness to a test on one table.  A
 sufficient condition commits the upstream component to a single output at
 each input, chosen so that the outputs grow with the input.
 
