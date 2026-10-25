@@ -8,8 +8,9 @@ Statement layer for Appendix `app:composition`.  The results it proves are
 stated in Section `sec:composition` and recorded in
 `Paper/S5_Composition.lean`; this file holds what appears only in the
 appendix: composition with independent inputs and its curried evaluation, the
-component-commitment example, the covering argument and the counterexamples of
-the Proper Coordination subsection, and Example `ex:bare-reads`.
+component-commitment example, and the Proper Coordination subsection with its
+corollaries, the covering argument, the counterexamples, and Examples
+`ex:committed-log-composition` and `ex:bare-reads`.
 Unlabeled claims are `«app:composition/<slug>»`.
 
 Library: `Appendix/Composition.lean` (namespace `CC.Comp`), the examples at
@@ -100,13 +101,13 @@ theorem «eq:curried-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B
 
 /-! ## Jointly monotone composites -/
 
-/-- "If every stage satisfies Lifted Monotonicity, a guarded composite whose
-first stage runs under the empty basis emits only what `𝒮₂ ∘ 𝒮₁` emits under
-the empty basis.  Its runs are runs of a Lifted-Monotone specification, at
-whose states every output is exposable (Proposition `prop:exposure-boundary`).
-So the next stage again has an empty-basis guard, and by induction no stage of
-the pipeline commits."  Lean: `Guard.pipeline_coordination_free`, via
-`Guard.exec_execCF`. -/
+/-- "If every stage satisfies Lifted Monotonicity and `𝒮₁` runs under the
+empty basis, the pipeline emits only what `S₂ ∘ S₁` emits under the empty
+basis.  Its runs are runs of a Lifted-Monotone specification, at whose states
+every output is exposable (Proposition `prop:exposure-boundary`).  So the next
+stage again has an empty-basis guard, and by induction no stage of the
+pipeline commits."  Lean: `Guard.pipeline_coordination_free`, via
+`Guard.exec_execCF`, for any system of `𝒮₂`. -/
 theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
     {sp : Spec I M} {sk : Spec M O} (hP : sp.LiftedMono) (hK : sk.LiftedMono) (K : Guard.Sys sk)
     {l' : List O} (h : Guard.GEmits (Guard.Sys.free (fun _ : Commitment sp => False)).emits K l') :
@@ -209,21 +210,18 @@ theorem «app:composition/reach» {I M O : Type} [PO I] [PO O] :
 table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of the
 test `t(n) = [n < 10]`, whose two outputs are incomparable.  `𝒮₂` violates
 Lifted Monotonicity, since `[9 < 10]` and `[10 < 10]` differ, but it satisfies
-it on `{n ≤ 9}`, so the composite is Lifted-Monotone by case (2). … In the guarded composite every input
-that a run of `𝒮₂` accepts or emits at occurs in an output sequence of `𝒮₁`,
-and none is `≥ 10`.  A store commitment that removes rows only at such inputs
-is never contradicted, so the store coordinates at most once.  At least once
-holds by the argument of Theorem `thm:proper-coordination`(2) … The guarded
-composite is proper, and after its first output the store answers every count
-without commitment."  Lean: `Joint.threshold`, `Joint.thr_ceOn`,
-`Joint.accepts_mem`, `Joint.emitsAt_mem`, `Joint.atMostOnce_of_sealsOutside`,
-`Joint.at_least_once_on`, `Joint.filtered_proper`, `Joint.sealStore_follows`. -/
+it on `{n ≤ 9}`, so the composite is Lifted-Monotone by case (2).  At
+`σ_{𝒮₂}(m)` with `m ≤ 9`, emitting `[m < 10]` must seal the row `(10, false)`,
+so `𝒮₂` cannot emit under the empty basis.  The outputs of `𝒮₁` lie in
+`{n ≤ 9}`, so the pipeline is proper (Theorem `thm:proper-coordination`(1)).
+Under the empty basis, `𝒮₂|_{𝒮₁}` answers every count that `𝒮₁` emits."
+Lean: `Joint.thr_ceOn`, `Joint.up_img`, `Joint.threshold` (the rest of the
+paragraph is `«sec:composite-calm/filtering»`); answering every count is
+`Guard.proper_follows` for this proper pipeline. -/
 theorem «app:composition/capped-counter» :
-    Joint.CEOn Joint.thr (fun m => ¬ Joint.Big m) ∧
-    (∀ {M O : Type} [PO M] [PO O] {sp : Spec Nat M} {sk : Spec M O} (Q : M → Prop),
-      Joint.CEOn sk (fun m => ¬ Q m) → (∀ i m, sp.S i m → ¬ Q m) → ∀ (P : Guard.Sys sp)
-        {K : Guard.Sys sk}, (∀ c, K.basis c → c = Guard.sealIn Q) → Guard.Proper P K) :=
-  ⟨Joint.thr_ceOn, fun Q hC hQ P _ hK => Joint.filtered_proper Q hC hQ P hK⟩
+    Joint.CEOn Joint.thr (fun m => ¬ Joint.Big m) ∧ (∀ i m, Joint.up.S i m → ¬ Joint.Big m) ∧
+      Guard.Proper Joint.up Joint.thr :=
+  ⟨Joint.thr_ceOn, fun _ _ h => Joint.up_img h, Joint.threshold.2.2.2⟩
 
 /-- "For the boolean toggle, let `I`, `M`, and `O` be the booleans with `false`
 below `true`, and let both stages be negation.  The table of a function `f`
@@ -245,15 +243,16 @@ theorem «app:composition/boolean-toggle» (b : Bool) :
   ⟨Joint.toggle_exposable_iff b, Joint.toggle_empty_basis,
     Joint.bool_toggle.2.2.2.2.2.trans Joint.bool_toggle.2.1⟩
 
-/-- "Let `𝒫` have one input `*` and table `{(*,x),(*,y)}` with `x,y`
-incomparable, and let `f` map both to one value.  The composite `𝒦 ∘ 𝒫` has
-one row, so it satisfies Lifted Monotonicity. … every run of `𝒫` under the
-empty basis stays at the canonical state and emits nothing.  The store then
-receives nothing.  Renaming `x,y` to `lo ≼ hi` makes `𝒫` Lifted-Monotone,
-since `hi` retires `lo`, and by case (3) the composite is unchanged."  Lean:
-`𝒫 = Dist.spU`; the second conjunct of `Guard.composite_monotone_not_enough`
-says such runs emit nothing; `Guard.noBasis_silent` is the run-level form; the
-renaming is `Joint.constant_store_reorder` (on `Comp.anyS`). -/
+/-- "Let `𝒮₁` have one input `*` and table `{(*,x),(*,y)}` with `x,y`
+incomparable, and let `𝒮₂` be the table of a function `f` that maps both to
+one value.  The composite has one row, so it satisfies Lifted Monotonicity. …
+every run of `𝒮₁` under the empty basis stays at the canonical state and emits
+nothing.  Then `𝒮₂` receives nothing.  Renaming `x,y` to `lo ≼ hi` makes `𝒮₁`
+Lifted-Monotone, since `hi` retires `lo`, and by case (3) the composite is
+unchanged."  Lean: `𝒮₁ = Dist.spU`; the second conjunct of
+`Guard.composite_monotone_not_enough` says such runs emit nothing;
+`Guard.noBasis_silent` is the run-level form; the renaming is
+`Joint.constant_store_reorder` (on `Comp.anyS`). -/
 theorem «app:composition/components-commit» :
     (Guard.comp Dist.spU (fun _ : Dist.B2 => ())).LiftedMono ∧
       (∀ o, ¬ Exposable (canon Dist.spU ()) o) ∧
@@ -268,73 +267,247 @@ theorem «app:composition/components-commit» :
 
 /-! ## Proper Coordination -/
 
-/-- "The image of the canonical state `σ_𝒫(i)` is the canonical state of
-`𝒦 ∘ 𝒫` at `i`, since `P[in ⪰ i] ⋈ K` is the composite table restricted to
-the expansions of `i`."  Lean: `Guard.imgK_canon`; the function case is
-`Guard.img_canon`. -/
+/-- "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write
+`R ⋈ T = {(k,x) : ∃ m. (k,m) ∈ R ∧ (m,x) ∈ T}`.  The image of a state
+`σ = (i,R)` of `𝒮₁` is the state `(i, R ⋈ S₂)` of `S₂ ∘ S₁`.  The image of
+`σ_{𝒮₁}(i)` is `σ_{S₂∘S₁}(i)`, since `S₁[in ⪰ i] ⋈ S₂` is the composite table
+restricted to the expansions of `i`."  Lean: the image is `Guard.imgK sk σ`;
+`Guard.imgK_canon`.  The function case is `Guard.img f σ = Guard.imgK (graph f) σ`
+and `Guard.img_canon`. -/
 theorem «app:composition/image-canon» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     (sk : Spec M O) (f : M → O) (i : I) :
+    (∀ σ : State sp, (Guard.imgK sk σ).cur = σ.cur ∧
+      ∀ k x, (Guard.imgK sk σ).R k x ↔ ∃ m, σ.R k m ∧ sk.S m x) ∧
     Guard.imgK sk (canon sp i) = canon (Comp.seq sp sk) i ∧
+      (∀ σ : State sp, Guard.img f σ = Guard.imgK (graph f) σ) ∧
       Guard.img f (canon sp i) = canon (Guard.comp sp f) i :=
-  ⟨Guard.imgK_canon sk i, Guard.img_canon f i⟩
+  ⟨fun _ => ⟨rfl, fun _ _ => Iff.rfl⟩, Guard.imgK_canon sk i, Guard.img_eq_imgK f,
+    Guard.img_canon f i⟩
 
-/-- "Two facts about a state `τ` that `𝒦` reaches without commitment carry the
-proofs.  First, every input `j ⪰ τ.cur` has a row in `τ` … Second, every
-output at the current input is exposable (Proposition
-`prop:exposure-boundary`)."  Lean: both hold at every run state
-(`Guard.row_at`, `commonExpansion_exposable`); states reached without
-commitment are run states (`Guard.isRun_sysExec_empty`). -/
-theorem «app:composition/store-facts» {M O : Type} [PO M] [PO O] {sk : Spec M O}
-    (hK : sk.LiftedMono) :
-    (∀ τ : State sk, IsRun τ → ∀ j, τ.cur ≼ j → ∃ u, τ.R j u) ∧
-    (∀ τ : State sk, IsRun τ → ∀ o, τ.R τ.cur o → Exposable τ o) ∧
-    (∀ (σ τ : State sk) es, SysExec (fun _ => False) σ es τ → IsRun σ → IsRun τ) := by
-  have hC := (liftedMono_iff_commonExpansion sk).1 hK
-  exact ⟨fun _ hτ _ hj => Guard.row_at hC hτ hj, fun _ hτ _ ho => commonExpansion_exposable hC hτ ho,
-    fun _ _ _ h hσ => Guard.isRun_sysExec_empty h hσ⟩
+/-- "A run of the pipeline is a run of `𝒮₁` under `ℬ`, together with a run of
+`𝒮₂|_{𝒮₁}` from `σ(m₁)`, where `m₁` is the first output of `𝒮₁`.  Each later
+output of `𝒮₁` is an input event of `𝒮₂|_{𝒮₁}`.  Between its inputs,
+`𝒮₂|_{𝒮₁}` emits any number of outputs, possibly none."  Lean: a run of the
+pipeline is `Guard.GRun U K l m esK`: the upstream can emit `l` (`U l`; for a
+system `P` for `𝒮₁`, `U = Guard.liftU P`, its output sequences typed as
+inputs of `𝒮₂|_{𝒮₁}`), and the downstream system `K` produces `esK` from
+`σ(m)`.  The shape `Guard.Shaped` says that the erased trace is a block of
+outputs `os`, then, for each later output `m'` of `l` in order, `input(m')`
+followed by a block of outputs (`Guard.blk`); each block may be empty. -/
+theorem «app:composition/pipeline-run» {M O : Type} [PO M] [PO O] {sk : Spec M O}
+    (U : List M → Prop) (K : Guard.Sys sk) (l : List M) (m : M) (esK : List (SEvent sk)) :
+    (Guard.GRun U K l m esK ↔ U l ∧ Guard.Shaped l m (esK.map SEvent.erase) ∧
+      ∃ ρK, Guard.Produces K m esK ρK) ∧
+    (Guard.Shaped l m (esK.map SEvent.erase) ↔ ∃ (os : List O) (ps : List (M × List O)),
+      (m :: ps.map Prod.fst) <+: l ∧ esK.map SEvent.erase = os.map Event.output ++ Guard.blk ps) ∧
+    ∀ (m' : M) (os : List O) ps,
+      Guard.blk ((m', os) :: ps) = .input m' :: (os.map Event.output ++ Guard.blk ps) :=
+  ⟨Iff.rfl, Iff.rfl, fun _ _ _ => rfl⟩
 
-/-- The induction of the proof of Theorem `thm:guarded-runs`(2): "Before `𝒫`'s
-first output we keep `ρ.cur = σ.cur` and `R_σ ⋈ K ⊆ R_ρ` … Afterwards we keep
-`R_σ ⋈ T ⊆ R_ρ`, with `T` the store's table, and every row `(k,m)` of `R_σ`
-has `m` above the store's current input. … so the join stays inside the
-composite's table."  Lean: `Guard.Inv`; before the first output
-`Guard.merge_inputs`, afterwards `Guard.merge_lockstep`; assembled in
-`Guard.composite_run`.  The function case is `Guard.guarded_lockstep`. -/
+/-- "In a proper pipeline, two facts about a state `τ` that `𝒮₂|_{𝒮₁}`
+reaches without commitment carry the proofs.  First, every input
+`j ⪰_M τ.cur` has a row in `τ` … Second, every output at the current input is
+exposable.  A third fact concerns `𝒮₁`.  If an output `m` at the current
+input of a state `σ` of `𝒮₁` is exposable, every `o ∈ S₂(m)` is exposable at
+the image of `σ`. … Either way
+`(k,u)` is a row of the image that retires `(k,x)`."  Lean: the first two hold
+at every run state (`Guard.row_at`, `commonExpansion_exposable`, with the
+common-expansion condition of `𝒮₂|_{𝒮₁}` from `Guard.proper_iff_ce`); states
+reached without commitment are run states (`Guard.isRun_sysExec_empty`); the
+third is `Guard.cf_stepK_on`. -/
+theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
+    {sk : Spec M O} (hP : Guard.Proper sp sk) :
+    (∀ τ : State (Guard.rest sp sk), IsRun τ → ∀ j, τ.cur ≼ j → ∃ u, τ.R j u) ∧
+    (∀ τ : State (Guard.rest sp sk), IsRun τ → ∀ o, τ.R τ.cur o → Exposable τ o) ∧
+    (∀ (σ τ : State (Guard.rest sp sk)) es, SysExec (fun _ => False) σ es τ → IsRun σ → IsRun τ) ∧
+    ∀ (σ : State sp) {m : M}, Exposable σ m → sp.S σ.cur m → ∀ {o}, sk.S m o →
+      Exposable (Guard.imgK sk σ) o := by
+  have hC := Guard.proper_iff_ce.1 hP
+  exact ⟨fun _ hτ _ hj => Guard.row_at hC hτ hj,
+    fun _ hτ _ ho => commonExpansion_exposable hC hτ ho,
+    fun _ _ _ h hσ => Guard.isRun_sysExec_empty h hσ,
+    fun σ _ he hm _ ho => Guard.cf_stepK_on (Guard.proper_iff.1 hP)
+      (fun k m h => ⟨k, σ.sub k m h⟩) ⟨_, hm⟩ he ho⟩
+
+/-- Proof of Theorem `thm:proper-coordination`(2): "Before the first output of
+`𝒮₁` we keep `ρ.cur = σ.cur` and `R_σ ⋈ S₂ ⊆ R_ρ`.  Afterwards we keep
+`R_σ ⋈ T ⊆ R_ρ`, and every row `(k,m)` of `R_σ` has `m` above the current
+input of `𝒮₂|_{𝒮₁}`. … Each answer `o` has `(m,o) ∈ T`, so `(i,o) ∈ R_ρ`.  The
+composite's `output(o)` keeps `R_ρ[out ⪰ o]`, and `𝒮₂|_{𝒮₁}` keeps
+`T[out ⪰ o]`, so the join stays inside the composite's table."  Lean, for a
+downstream with the common-expansion condition (here `𝒮₂|_{𝒮₁}`, whose inputs
+are typed as outputs of `𝒮₁`, `Guard.core_lockstep`): `Guard.Inv`; before the
+first output `Guard.merge_inputs`; afterwards `Guard.merge_lockstep`, with the
+answers to one input `Guard.answer_run`; assembled in `Guard.composite_run`
+and `Guard.proper_run`. -/
 theorem «app:composition/guarded-lockstep» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
-    {sk : Spec M O} (hK : sk.LiftedMono) {B : Basis sp} {σ ρ : State sp} {es : List (SEvent sp)}
-    (h : SysExec B σ es ρ) :
+    {sk : Spec M O} (hC : sk.CommonExpansion) {B : Basis sp} {σ ρ : State sp}
+    {es : List (SEvent sp)} (h : SysExec B σ es ρ) :
     (Guard.emitted es = [] → ∀ ρ' : State (Comp.seq sp sk), Guard.Inv σ sk.S ρ' →
       ∃ ρ'', Exec ρ' (Guard.merge es []) ρ'' ∧ Guard.Inv ρ sk.S ρ'') ∧
-    (∀ (ps : List (M × O)) (τK ρK : State sk) (esK : List (SEvent sk))
+    ∀ (ps : List (M × List O)) (τK ρK : State sk) (esK : List (SEvent sk))
       (ρ' : State (Comp.seq sp sk)), Guard.emitted es = ps.map Prod.fst →
-      SysExec (fun _ => False) τK esK ρK → esK.map SEvent.erase = Guard.storeTr ps → IsRun τK →
+      SysExec (fun _ => False) τK esK ρK → esK.map SEvent.erase = Guard.blk ps → IsRun τK →
       (∀ k m, σ.R k m → τK.cur ≼ m) → Guard.Inv σ τK.R ρ' →
       ∃ ρ'', Exec ρ' (Guard.merge es (ps.map Prod.snd)) ρ'' ∧ Guard.Inv ρ ρK.R ρ'' ∧
-        ∀ k m, ρ.R k m → ρK.cur ≼ m) :=
-  ⟨fun he ρ' hI => Guard.merge_inputs h he ρ' hI,
-    Guard.merge_lockstep ((liftedMono_iff_commonExpansion sk).1 hK) h⟩
+        ∀ k m, ρ.R k m → ρK.cur ≼ m :=
+  ⟨fun he ρ' hI => Guard.merge_inputs h he ρ' hI, Guard.merge_lockstep hC h⟩
 
-/-- Proof of Theorem `thm:guarded-runs`(1) for a function store: "At a
-canonical state `σ_𝒦(m_r)`, every row `(k,f(k))` has `m_r ≼ k`, so
-`f(m_r) ≼ f(k)`.  Hence `output(f(m_r))` removes nothing, `f(m_r)` is
-exposable, and the state stays canonical."  (Function case, kept from the
-earlier version; the general proof is `Guard.follow`.) -/
-theorem «app:composition/store-steps» {M O : Type} [PO M] [PO O] {f : M → O}
-    (hf : Monotone f) (a : M) {b : M} (hab : a ≼ b) :
-    Step (canon (graph f) a) (.output (f a)) (canon (graph f) a) ∧
-      Exposable (canon (graph f) a) (f a) ∧
-      Step (canon (graph f) a) (.input b) (canon (graph f) b) :=
-  ⟨(Guard.store_out hf a).1, (Guard.store_out hf a).2,
-    Dist.step_canon_input (graph f) hab ⟨f b, rfl⟩⟩
+/-- Proof of Theorem `thm:proper-coordination`(3): "The proof of
+Proposition `prop:exposure-boundary` derives the common-expansion condition
+from exposability at canonical states alone." -/
+theorem «app:composition/canonical-states-suffice» {I O : Type} [PO I] [PO O] :
+    ∀ {sp : Spec I O}, (∀ i o, sp.S i o → Exposable (canon sp i) o) → sp.CommonExpansion :=
+  fun h => Guard.canon_exposable_commonExpansion h
 
-/-- The covering argument: "For a function store, the guarded composite's
-commitments are covered by `𝒫`'s. … Let `Out_γ(m)` be legal at `σ`, let `γ` leave
-`σ_c`, and let `ρ` be a composite state with `f(R_σ) ⊆ R_ρ`.  No row
-`(k,f(m'))` with `(k,m') ∈ R_{σ_c}` is in `Sealed_{f(m)}` or `Rejected_{f(m)}`
-at `ρ`. … So every row that the composite's canonical event for `f(m)`
-removes by commitment has had every preimage in `R_σ` removed by `γ`."
-Lean: `Guard.coverage` (stated for any `σ_c` at which `m` is exposable and any
-`ρ` containing `f(R_{σ_c})`) and `Guard.coverage_step`. -/
+/-- "Properness is needed in (3).  With `𝒮₁` the identity on the booleans and
+`𝒮₂` negation, the composite is negation, which violates Lifted Monotonicity,
+yet `𝒮₁` needs no commitment."  Lean: `Joint.needs_commit_needs_proper`
+(booleans ordered by `Joint.boolPO`, `false ≼ true`). -/
+theorem «app:composition/properness-needed» :
+    ¬ (Comp.seq (graph (id : Bool → Bool)) (graph not)).LiftedMono ∧
+      ∀ τ : State (graph (id : Bool → Bool)), ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
+  Joint.needs_commit_needs_proper
+
+/-- "The commitment-erased replacement of a system has the empty basis and the
+same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)`."  Lean:
+`Guard.eraseSys K`; after a local history it allows an event when `K` allows
+one with the same erasure (`Guard.eraseC`) after a history with the same
+erasure.  It is basis-free, so it applies no commitment. -/
+theorem «app:composition/replacement» {M O : Type} [PO M] [PO O] {sk : Spec M O}
+    (K : Guard.Sys sk) :
+    (Guard.eraseSys K).basis = (fun _ => False) ∧
+    (∀ i a' e', (Guard.eraseSys K).strat i a' e' ↔
+      ∃ a e, a.map Guard.eraseC = a'.map Guard.eraseC ∧ Guard.eraseC e = Guard.eraseC e' ∧
+        K.strat i a e) ∧
+    ∀ i es ρ, Guard.Produces (Guard.eraseSys K) i es ρ → ∀ γ x, SEvent.output γ x ∈ es → γ = [] :=
+  ⟨rfl, fun _ _ _ => Iff.rfl, fun _ _ _ h => Guard.eraseSys_eps h⟩
+
+/-- **Corollary `cor:empty-store`** (Empty store): "In a proper pipeline, fix
+any system for `𝒮₂|_{𝒮₁}`.  For every run of the pipeline, the replacement
+has one with the same run of `𝒮₁` and the same inputs and outputs of
+`𝒮₂|_{𝒮₁}`.  After each event, the replacement's table contains the
+original's."  Lean: `Guard.proper_erase`, for any upstream behaviour `U`
+("the same run of `𝒮₁`" is the same upstream output sequence `l`). -/
+theorem «cor:empty-store» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M} {sk : Spec M O}
+    (hP : Guard.Proper sp sk) (U : List {m // Joint.Img sp m} → Prop)
+    (K : Guard.Sys (Guard.rest sp sk)) :
+    ∀ l m esK, Guard.GRun U K l m esK →
+      Guard.GRun U (Guard.eraseSys K) l m (esK.map Guard.eraseC) ∧
+        (esK.map Guard.eraseC).map SEvent.erase = esK.map SEvent.erase ∧
+        ∀ ρK, Guard.Produces K m esK ρK → ∃ ρ', Guard.Produces (Guard.eraseSys K) m
+          (esK.map Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
+  fun _ _ _ h => Guard.proper_erase hP h
+
+/-- Proof of Corollary `cor:empty-store`: "Let `τ` be a state of the original
+and `τ'` a state of the replacement reached without commitment, with the same
+current input and `R_τ ⊆ R_τ'`. … If `Out_δ(x)` is legal at `τ`, then `x` is
+at the current input of `τ` and so of `τ'`, where it is exposable by the second
+fact. … Both start at `σ(m₁)`, so the containment holds after each event.  The
+replacement's strategy allows each erased event, since the original's allowed
+it before erasure."  Lean: `Guard.erase_lockstep` (for any downstream with the
+common-expansion condition) and `Guard.compliant_eraseSys`. -/
+theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M O}
+    (hC : sk.CommonExpansion) {BK : Basis sk} {σ ρ : State sk}
+    {es : List (SEvent sk)} (h : SysExec BK σ es ρ) (σ' : State sk) (hr : IsRun σ')
+    (hc : σ'.cur = σ.cur) (hs : ∀ k u, σ.R k u → σ'.R k u) :
+    ∃ ρ', SysExec (fun _ => False) σ' (es.map Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ρ'.cur = ρ.cur ∧
+      ∀ k u, ρ.R k u → ρ'.R k u :=
+  Guard.erase_lockstep hC h σ' hr hc hs
+
+/-- **Corollary `cor:pipelines`** (Pipelines): "In a proper pipeline, with any
+systems for `𝒮₁` and `𝒮₂|_{𝒮₁}`, the outputs of every run of the pipeline
+are emitted by a run of `S₂ ∘ S₁` under its canonical basis.  So the pipeline
+guards a further stage `𝒮₃`, and Theorem `thm:proper-coordination` applies
+with `S₂ ∘ S₁` in place of `𝒮₁`."  Lean: `Guard.proper_pipeline_step` (the
+outputs of the pipeline's runs, `Guard.GEmits (Guard.liftU P) K`, are emitted
+by the canonical-basis system of `S₂ ∘ S₁`); the theorem for `𝒮₃` is
+`«thm:proper-coordination»` with `sp := Comp.seq s1 s2`, whose (1) is restated
+here.  Associativity is `«sec:composition/associativity»`. -/
+theorem «cor:pipelines» {I M O Q : Type} [PO I] [PO M] [PO O] [PO Q] {s1 : Spec I M}
+    {s2 : Spec M O} (s3 : Spec O Q) (h12 : Guard.Proper s1 s2) (P : Guard.Sys s1)
+    (K2 : Guard.Sys (Guard.rest s1 s2)) :
+    (∀ l', Guard.GEmits (Guard.liftU P) K2 l' →
+      (Guard.Sys.free (canonBasis (Comp.seq s1 s2))).emits l') ∧
+    (Guard.Proper (Comp.seq s1 s2) s3 ↔ Joint.CEOn s3 (Joint.Img (Comp.seq s1 s2))) :=
+  ⟨fun _ h => Guard.proper_pipeline_step h12 h, Guard.proper_iff⟩
+
+/-- Proof of Corollary `cor:pipelines`: "By Corollary `cor:empty-store`, every
+run of the pipeline has one with the same outputs in which `𝒮₂|_{𝒮₁}` runs
+under the empty basis.  Theorem `thm:proper-coordination`(2), applied to it
+and a prefix of the run of `𝒮₁`, gives a run of `S₂ ∘ S₁` with these outputs,
+and the canonical event for each output (Lemma
+`lem:canonical-commitment-normal-form`) makes it a run under the canonical
+basis."  Lean: inside `Guard.proper_pipeline_step`, via `Guard.erase_simulates`,
+`Guard.emitted_prefix`, `Guard.proper_run`, `exec_canonExec` and
+`canonExec_sysExec`; the same step for a Lifted-Monotone downstream and any
+of its systems is `Guard.pipeline_step`. -/
+theorem «app:composition/pipelines» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
+    {sk : Spec M O} (hK : sk.LiftedMono) {P : Guard.Sys sp} {K : Guard.Sys sk} {l' : List O}
+    (h : Guard.GEmits P.emits K l') : (Guard.Sys.free (canonBasis (Comp.seq sp sk))).emits l' :=
+  Guard.pipeline_step ((liftedMono_iff_commonExpansion sk).1 hK) h
+
+/-- "Let `𝒮₁` be the log specification of Example
+`ex:committed-log-composition`, under its canonical basis with a strategy that
+allows every event, and `𝒮₂` the table of any monotone function `f` of the
+log.  Every log is an output of `𝒮₁`, so `𝒮₂|_{𝒮₁}` is `𝒮₂`.  For a set `Q`
+of logs, removing every row whose input is in `Q` is a commitment of `𝒮₂` at
+any state whose current input is not in `Q` and which has such a row.  It
+removes whole fibers, so it seals. … Suppose that the store takes the lock
+only once its current log is nonempty.  Every log it can still receive then
+has the same first command, so the lock removes no row and is not a
+commitment.  Suppose instead that the store takes the lock at the empty log,
+ahead of the log.  Its output `f([])` was exposable without the lock, and the
+lock seals logs that `𝒮₁` can still offer.  At `σ_{𝒮₁}([b])`, `𝒮₁` can emit
+`[]` and then `[b]`.  The replacement emits `f([])`, receives `[b]`, and emits
+`f([b])`.  The locking store must take the lock at `[]`, which seals `[b]`, so
+it cannot receive `[b]`."  Lean: `𝒮₁ = Inst.smrS1`; every log is an output
+(`Guard.smr_img`); the lock is `Guard.sealIn (Guard.bFirst b)` with store basis
+`Guard.mutexB b f`; at a nonempty log the lock is undefined
+(`Guard.lock_after_log`), so the late-lock store `Guard.lateLock b f` applies no
+commitment in any run (`Guard.lateLock_eps`); `f([])` is exposable at every
+state with current log `[]` (`Guard.store_exposable`); the early-lock store
+`Guard.earlyLock b f` loses a run of its replacement (`Guard.early_lock_strict`,
+observable traces `Guard.Obs`). -/
+theorem «app:composition/mutex-store» {Cmd O : Type} [PO O] {f : Inst.Pfx Cmd → O}
+    (hf : Monotone f) (b : Cmd) :
+    (∀ m, Joint.Img (Inst.smrS1 (Cmd := Cmd)) m) ∧
+    (∀ (Q : Inst.Pfx Cmd → Prop) (σ τ : State (graph f)), (Guard.sealIn Q).app σ = some τ →
+      ¬ Q σ.cur ∧ (∃ k x, σ.R k x ∧ Q k) ∧ ∀ k, Q k → ∀ x, ¬ τ.R k x) ∧
+    (∀ σ : State (graph f), σ.cur.l ≠ [] → (Guard.sealIn (Guard.bFirst b)).app σ = none) ∧
+    (∀ m esK ρ, Guard.Produces (Guard.lateLock b f) m esK ρ →
+      ∀ γ x, SEvent.output γ x ∈ esK → γ = []) ∧
+    (∀ σ : State (graph f), σ.cur = ⟨[]⟩ → Exposable σ (f ⟨[]⟩)) ∧
+    ∃ l m tr, Guard.Obs (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))).emits
+        (Guard.eraseSys (Guard.earlyLock b f)) l m tr ∧
+      ¬ Guard.Obs (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))).emits
+        (Guard.earlyLock b f) l m tr := by
+  refine ⟨Guard.smr_img, fun Q σ τ h => ?_, Guard.lock_after_log b,
+    fun _ _ _ h => Guard.lateLock_eps b h, fun σ hσ => hσ ▸ Guard.store_exposable hf σ,
+    Guard.early_lock_strict hf b⟩
+  obtain ⟨hn, hex, rfl⟩ := Guard.sealInApp_eq.1 h
+  exact ⟨hn, hex, fun _ hQ _ hx => hx.2 hQ⟩
+
+/-- **Proposition `prop:invisible-coordination`** (Invisible coordination):
+"Let `f` be monotone, and let `𝒮₁` emit `m` at `σ` by `Out_γ(m)`.  If every
+row that `γ` removes has a row with the same input and the same image that `γ`
+keeps, then `f(m)` is exposable at `f(σ)`." -/
+theorem «prop:invisible-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
+    {f : M → O} (hf : Monotone f) {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)}
+    {m : M} (h : SysStep B σ (.output γ m) τ)
+    (hinv : ∀ σc : State sp, ApplySeq γ σ σc →
+      ∀ k m', σ.R k m' → ∃ m'', σc.R k m'' ∧ f m'' = f m') :
+    Exposable (Guard.img f σ) (f m) :=
+  Guard.invisible_step hf h hinv
+
+/-- The covering argument: "The proof covers the composite's commitments by
+those of `𝒮₁`. … Let `Out_γ(m)` be legal at `σ`, let `γ` leave `σ_c`, and let
+`ρ` be a composite state with `f(R_σ) ⊆ R_ρ`.  No row `(k,f(m'))` with
+`(k,m') ∈ R_{σ_c}` is in `Sealed_{f(m)}` or `Rejected_{f(m)}` at `ρ`. … So every
+row that the composite's canonical event for `f(m)` removes by commitment has
+had every preimage in `R_σ` removed by `γ`."  Lean: `Guard.coverage` (stated
+for any `σ_c` at which `m` is exposable and any `ρ` containing `f(R_{σ_c})`)
+and `Guard.coverage_step`. -/
 theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {f : M → O} (hf : Monotone f) :
     (∀ {σc : State sp} {m : M}, Exposable σc m → ∀ {ρ : State (Guard.comp sp f)},
@@ -348,127 +521,29 @@ theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : S
           ∀ m', σ.R k m' → f m' = x → ¬ σc.R k m' :=
   ⟨fun he _ hs => Guard.coverage hf he hs, fun h _ hs => Guard.coverage_step hf h hs⟩
 
-/-- Proof of Theorem `thm:proper-coordination`(1)–(2): "For a function store
-with current input `m`, every row `(k,f(k))` has `m ≼ k`, so `f(m) ≼ f(k)` and
-nothing is ruled out, at every state. … Either way `(k,u)` is a row of `𝒦(σ)`
-that retires `(k,x)`, so `o` is exposable.  When `ℬ_𝒦` is empty, every output
-event of the store is some `Out_ε(o)`, which removes no row by commitment, so
-the store does not coordinate redundantly."  Lean: `Guard.store_exposable`,
-`Guard.cf_stepK`, `Guard.noStore_atMostOnce`. -/
-theorem «app:composition/store-exposable» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
-    {sk : Spec M O} (hK : sk.LiftedMono) :
-    (∀ (f : M → O), Monotone f → ∀ σ : State (graph f), Exposable σ (f σ.cur)) ∧
-    (∀ {σ : State sp} {m : M}, Exposable σ m → ∀ {o}, sk.S m o → Exposable (Guard.imgK sk σ) o) ∧
-    ∀ U : List M → Prop, Guard.AtMostOnce U (Guard.noStore sk) :=
-  ⟨fun _ hf σ => Guard.store_exposable hf σ,
-    fun he _ ho => Guard.cf_stepK ((liftedMono_iff_commonExpansion sk).1 hK) he ho,
-    fun U => Guard.noStore_atMostOnce U sk⟩
-
-/-- Proof of Theorem `thm:proper-coordination`(3): "The proof of
-Proposition `prop:exposure-boundary` derives the common-expansion condition
-from exposability at canonical states alone." -/
-theorem «app:composition/canonical-states-suffice» {I O : Type} [PO I] [PO O] :
-    ∀ {sp : Spec I O}, (∀ i o, sp.S i o → Exposable (canon sp i) o) → sp.CommonExpansion :=
-  fun h => Guard.canon_exposable_commonExpansion h
-
-/-- Proof of Corollary `cor:empty-store`: "(1) Let `σ` be a state of the store
-and `σ'` a state reached without commitment, with the same current input and
-`R_σ ⊆ R_σ'`. … Both start at `σ_𝒦(m)`, so the containment holds after each
-event.  The replacement's strategy allows each erased event, since the
-original's allowed it before erasure.  (2) Call a row `(k,x)` used when some
-run of `𝒦` on outputs `𝒫` can emit emits `x` at input `k`. … We build the
-original's run event by event, with the same erasure, and keep two facts: the
-current inputs agree, and every used row of the replacement's table is in the
-original's. … By at most once, `δ'` is not contradicted, so it removes no used
-row, and both facts persist."  Lean: (1) `Guard.erase_lockstep` (here) and
-`Guard.compliant_eraseSys`; (2) used rows are `Guard.EmitsAt`, and the
-induction is `Guard.reflect_aux`; a prefix of a store trace ending at an
-output is the trace on a prefix of its inputs (`Guard.storeTr_prefix`), and
-every input is followed by an output (`Guard.storeTr_next`). -/
-theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M O}
-    (hK : sk.LiftedMono) {BK : Basis sk} {σ ρ : State sk}
-    {es : List (SEvent sk)} (h : SysExec BK σ es ρ) (σ' : State sk) (hr : IsRun σ')
-    (hc : σ'.cur = σ.cur) (hs : ∀ k u, σ.R k u → σ'.R k u) :
-    ∃ ρ', SysExec (fun _ => False) σ' (es.map Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ρ'.cur = ρ.cur ∧
-      ∀ k u, ρ.R k u → ρ'.R k u :=
-  Guard.erase_lockstep ((liftedMono_iff_commonExpansion sk).1 hK) h σ' hr hc hs
-
-/-- Proof of Corollary `cor:pipelines`: "By Corollary `cor:empty-store`(1),
-every guarded composite run has one with an empty-basis store and the same
-trace.  Theorem `thm:guarded-runs`(2), applied to it and a prefix of the run of
-`𝒮_1`, gives a run of `𝒮_2 ∘ 𝒮_1`, and the canonical event for each output
-(Lemma `lem:canonical-commitment-normal-form`) makes it a run under the
-canonical basis that emits the store's outputs. … By induction this holds for
-every stage of the pipeline."  Lean: `Guard.grun_composite`,
-`Guard.pipeline_step` (via `exec_canonExec`, `canonExec_sysExec`), and the
-step `«cor:pipelines»`; a prefix of `𝒫`'s run emitting a prefix of its
-outputs is `Guard.emitted_prefix`. -/
-theorem «app:composition/pipelines» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
-    {sk : Spec M O} (hK : sk.LiftedMono) {P : Guard.Sys sp} {K : Guard.Sys sk} {l' : List O}
-    (h : Guard.GEmits P.emits K l') : (Guard.Sys.free (canonBasis (Comp.seq sp sk))).emits l' :=
-  Guard.pipeline_step ((liftedMono_iff_commonExpansion sk).1 hK) h
-
-/-- "For the mutex store …, let `𝒫` be the log specification of Example
-`ex:committed-log-composition`, under its canonical basis with a strategy that
-allows every event, and `𝒦` the table of any monotone function `f` of the log.
-For a set `Q` of logs, removing every row whose input is in `Q` is a
-commitment of `𝒦` at any state whose current input is not in `Q` and which has
-such a row.  It removes whole fibers, so it seals. … At a state whose current
-log is nonempty, every remaining log has the same first command, so this
-commitment is undefined there.  Let the store's strategy take the lock at its
-first event when the log is empty, and apply nothing otherwise. … So the
-commitment is contradicted, and the store coordinates redundantly.  Its
-replacement gains behaviour. … The locking store must take the lock at `[]`,
-which seals `[b]`, so it cannot receive `[b]`.  Let the strategy instead take
-the lock only when its current log is nonempty.  The lock is undefined there,
-so every output event the store performs is some `Out_ε(x)`.  The store
-applies no commitment, so it does not coordinate redundantly.  Its strategy
-depends only on the inputs it has received and always offers `Out_ε(x)`, so it
-meets the hypotheses of Corollary `cor:empty-store`(2).  A strategy that
-insists on the lock at a nonempty log also applies no commitment and ignores
-commitments, but it stalls.  When `𝒫` emits `[b]` first, the store never
-emits, while its replacement emits `f([b])`."  Lean: `Guard.sealIn Q` (for
-any specification); `Guard.lock_after_log`; the early-lock runs are those of
-`Guard.mutex_redundant` and `Guard.early_lock_strict`; the late lock is
-`Guard.lateLock_eps` and `Guard.late_lock_proper`; the stalling lock is
-`Guard.stall_lock`. -/
-theorem «app:composition/mutex-store» {I' Cmd O : Type} [PO I'] [PO O] {f : Inst.Pfx Cmd → O}
-    (hf : Monotone f) (b : Cmd) :
-    (∀ (Q : Inst.Pfx Cmd → Prop) (σ τ : State (graph f)), (Guard.sealIn Q).app σ = some τ →
-      ¬ Q σ.cur ∧ (∃ k x, σ.R k x ∧ Q k) ∧ ∀ k, Q k → ∀ x, ¬ τ.R k x) ∧
-    (∀ σ : State (graph f), σ.cur.l ≠ [] → (Guard.sealIn (Guard.bFirst b)).app σ = none) ∧
-    Guard.Redundant (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))).emits
-      (Guard.earlyLock b f) ∧
-    (∀ m esK ρ, Guard.Produces (Guard.lateLock b f) m esK ρ →
-      ∀ γ x, SEvent.output γ x ∈ esK → γ = []) ∧
-    ∀ (sq : Spec I' (Inst.Pfx Cmd)) (P : Guard.Sys sq),
-      Guard.Blind (Guard.lateLock b f) ∧ Guard.Live (Guard.lateLock b f) ∧
-      ∀ l m tr, Guard.Obs P.emits (Guard.lateLock b f) l m tr ↔
-        Guard.Obs P.emits (Guard.eraseSys (Guard.lateLock b f)) l m tr := by
-  refine ⟨fun Q σ τ h => ?_, Guard.lock_after_log b, (Guard.mutex_redundant hf b).2.1,
-    fun _ _ _ h => Guard.lateLock_eps b h, fun _ P => (Guard.late_lock_proper hf b P).2⟩
-  obtain ⟨hn, hex, rfl⟩ := Guard.sealInApp_eq.1 h
-  exact ⟨hn, hex, fun _ hQ _ hx => hx.2 hQ⟩
-
-/-- "For the per-key store …, let `𝒫` have one input with fiber
-`{[a,b],[b,a]}`, and let `f` send a log to the family of its subsequences on
-each key.  The two logs are incomparable with no common refinement, so `[a,b]`
-is not exposable.  When `a` and `b` are on different keys,
-`f([a,b]) = f([b,a])`, the composite has one row, and `f([a,b])` is exposable." -/
+/-- "Consider a store that answers each key from that key's commands, in log
+order.  Let `𝒮₁` have one input with fiber `{[a,b],[b,a]}`, for commands `a`
+and `b` on different keys, and let `f` send a log to the family of its
+subsequences on each key.  The two logs are incomparable with no common
+refinement, so `[a,b]` is not exposable, and `𝒮₁` must order them.  But
+`f([a,b]) = f([b,a])`, the composite has one row, and `f([a,b])` is
+exposable."  Lean: the per-key view `Guard.perKey key` is monotone;
+`𝒮₁ = Guard.abSpec a b`. -/
 theorem «app:composition/per-key» {Cmd K : Type} [DecidableEq K] (key : Cmd → K)
     {a b : Cmd} (hk : key a ≠ key b) :
-    Guard.perKey key ⟨[a, b]⟩ = Guard.perKey key ⟨[b, a]⟩ ∧
+    Monotone (Guard.perKey key) ∧ Guard.perKey key ⟨[a, b]⟩ = Guard.perKey key ⟨[b, a]⟩ ∧
       ¬ Exposable (canon (Guard.abSpec a b) Comp.Pt.pt) ⟨[a, b]⟩ ∧
       Exposable (canon (Guard.comp (Guard.abSpec a b) (Guard.perKey key)) Comp.Pt.pt)
         (Guard.perKey key ⟨[a, b]⟩) :=
-  ⟨Guard.perKey_swap key hk, Guard.commute_example key hk⟩
+  ⟨Guard.perKey_monotone key, Guard.perKey_swap key hk, Guard.commute_example key hk⟩
 
-/-- "The commitments of `𝒫` do not themselves push forward.  Let `𝒫` have one
-input with fiber `{x,y}`, `x` and `y` incomparable, and `f(x) = lo ≼ hi = f(y)`.
-The choice `c_y` removes `x` and keeps `y`.  Its image would remove `lo` and
-keep `hi`, violating Equation `eq:commitment-excludes`, so no commitment of the
-composite has that effect.  In the composite, `hi` is exposable at the
-canonical state, since it retires `lo`." -/
+/-- "The commitments of `𝒮₁` do not themselves push forward.  Let `𝒮₁` have
+one input with fiber `{x,y}`, `x` and `y` incomparable, and
+`f(x) = lo ≼ hi = f(y)`.  The choice `c_y` removes `x` and keeps `y`.  Its
+image would remove `lo` and keep `hi`, violating Equation
+`eq:commitment-excludes`, so no commitment of the composite has that effect.
+In the composite, `hi` is exposable at the canonical state, since it retires
+`lo`."  Lean: `𝒮₁ = Comp.anyS`, `f = Guard.fLvl`. -/
 theorem «app:composition/no-pushforward» :
     (∃ τ, (choiceC Comp.Two.y).app (canon Comp.anyS Comp.Pt.pt) = some τ ∧
       ∀ c : Commitment (Guard.comp Comp.anyS Guard.fLvl),
@@ -476,7 +551,7 @@ theorem «app:composition/no-pushforward» :
     Exposable (canon (Guard.comp Comp.anyS Guard.fLvl) Comp.Pt.pt) Guard.Lvl.hi :=
   ⟨Guard.push_not_commitment, Guard.choice_becomes_retirement.2⟩
 
-/-- "Monotonicity of `f` is needed.  Let `𝒫` be the table of the identity on
+/-- "Monotonicity of `f` is needed.  Let `𝒮₁` be the table of the identity on
 `M`, which needs no commitment.  For `m ≼ m'`, its run `output(m)`,
 `input(m')`, `output(m')` maps to a run of the composite exactly when
 `f(m) ≼ f(m')`." -/
@@ -488,16 +563,41 @@ theorem «app:composition/monotone-needed» {M O : Type} [PO M] [PO O] (f : M �
           [.output (f m), .input m', .output (f m')] ρ) ↔ f m ≼ f m') :=
   ⟨Guard.identity_cf hmm, Guard.monotone_necessary f hmm⟩
 
-/-- "A store that must itself choose cannot delegate the choice either.  If
-`𝒫` is the identity on one input, it admits no commitment at all.  If the
-store relates that input to two incomparable outputs, every output event of
-the composite at its canonical state applies a commitment, and that commitment
-is the store's." -/
+/-- "A downstream that must itself choose cannot delegate the choice either.
+If `𝒮₁` is the identity on one input, it admits no commitment at all.  If
+`𝒮₂` relates that input to two incomparable outputs, every output event of
+the composite at its canonical state applies a commitment, which `𝒮₁` cannot
+make." -/
 theorem «app:composition/store-choice» :
     (∀ (c : Commitment (graph fun x : Dist.U1 => x)) σ τ, c.app σ ≠ some τ) ∧
     ∀ (B : Basis (Comp.seq (graph fun x : Dist.U1 => x) Dist.spU)) γ o τ,
       SysStep B (canon _ ()) (.output γ o) τ → γ ≠ [] :=
   Guard.store_choice_not_delegable
+
+/-- **Example `ex:committed-log-composition`** (Replicated store), for any
+deterministic state machine `δ` and two distinct commands: "Then `𝒮₁` is
+non-monotone, since distinct next entries are incompatible outputs in one
+fiber.  So is the key-value store `S₂ ∘ S₁`, since concurrent commands ordered
+oppositely give incompatible responses. … Since `f` is monotone, the pipeline
+is proper, and by Theorem `thm:proper-coordination`(2) the store under the
+empty basis follows every run of the log.  By Theorem
+`thm:proper-coordination`(3), the log's commitments cannot be dropped.  By
+Corollary `cor:empty-store`, replicas whose store takes locks of its own can
+run it with no commitments at all."  Lean: `𝒮₁ = Inst.smrS1`
+(`I = M = Inst.Pfx Cmd`, prefix order), `f = Inst.execF δ σ₀` (monotone);
+following every run is `«thm:proper-coordination»`(2) and dropping the
+store's commitments is `«cor:empty-store»`, both for this proper pipeline. -/
+theorem «ex:committed-log-composition» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt)
+    {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
+    ¬ (Inst.smrS1 (Cmd := Cmd)).LiftedMono ∧
+      ¬ (Guard.comp Inst.smrS1 (Inst.execF δ σ0)).LiftedMono ∧
+      Monotone (Inst.execF δ σ0) ∧ Guard.Proper Inst.smrS1 (graph (Inst.execF δ σ0)) ∧
+      ∃ i m, Inst.smrS1.S i m ∧
+        ¬ Exposable (canon (Guard.comp Inst.smrS1 (Inst.execF δ σ0)) i) (Inst.execF δ σ0 m) ∧
+        ∀ m', Inst.smrS1.S i m' → Inst.execF δ σ0 m' = Inst.execF δ σ0 m →
+          ¬ Exposable (canon Inst.smrS1 i) m' :=
+  let h := Guard.smr_proper δ σ0 hne
+  ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.2⟩
 
 /-- **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for
 any deterministic state machine `δ`, read function `rd`, and two distinct

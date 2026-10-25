@@ -114,9 +114,9 @@ which is the plan of Proposition~\ref{prop:curried-query-plan} on tables of func
 
 \subsection{Jointly monotone composites}
 
-If every stage satisfies Lifted Monotonicity, a guarded composite whose first
-stage runs under the empty basis emits only what $\mathcal S_2\circ\mathcal
-S_1$ emits under the empty basis.  Its runs are runs of a Lifted-Monotone
+If every stage satisfies Lifted Monotonicity and $\Spec_1$ runs under the
+empty basis, the pipeline emits only what $S_2\circ S_1$ emits under the empty
+basis.  Its runs are runs of a Lifted-Monotone
 specification, at whose states every output is exposable
 (Proposition~\ref{prop:exposure-boundary}).  So the next stage again has an
 empty-basis guard, and by induction no stage of the pipeline commits.
@@ -168,15 +168,9 @@ violates Lifted Monotonicity, since $[9<10]$ and $[10<10]$ differ, but it
 satisfies it on $\{n\le 9\}$, so the composite is Lifted-Monotone by case (2).  At
 $\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must seal the row
 $(10,\mathit{false})$, so $\mathcal S_2$ cannot emit under the empty basis.
-Let its basis contain the seal of $\{n\ge 10\}$, applied at its first output.
-In the guarded composite every input that a run of $\mathcal S_2$ accepts or
-emits at occurs in an output sequence of $\mathcal S_1$, and none is
-$\ge 10$.  A store commitment that removes rows only at such inputs is never
-contradicted, so the store coordinates at most once.  At least once holds by
-the argument of Theorem~\ref{thm:proper-coordination}(2), since every row of a
-state of $\mathcal S_1$, and every \indesc that exposability supplies, lies in
-$\{n\le 9\}$.  The guarded composite is proper, and after its first output the
-store answers every count without commitment.
+The outputs of $\mathcal S_1$ lie in $\{n\le 9\}$, so the pipeline is proper
+(Theorem~\ref{thm:proper-coordination}(1)).  Under the empty basis,
+$\mathcal S_2|_{\mathcal S_1}$ answers every count that $\mathcal S_1$ emits.
 
 For the boolean toggle, let $I$, $M$, and $O$ be the booleans with
 $\mathit{false}$ below $\mathit{true}$, and let both stages be negation.  The
@@ -187,320 +181,196 @@ $\mathit{false}$ at the larger input, so under the empty basis it cannot emit
 there.  Under the reversed order on $M$, negation is monotone in both stages,
 and by case (3) the composite is the identity in either order.
 
-Let $\mathcal P$ have one input $*$ and table $\{(*,x),(*,y)\}$ with $x,y$
-incomparable, and let $f$ map both to one value.  The composite
-$\mathcal K\circ\mathcal P$ has one row, so it satisfies Lifted Monotonicity.
-At the canonical state of $\mathcal P$ neither $x$ nor $y$ is exposable, and
-under the empty basis an output event is legal only for an exposable output
-(Lemma~\ref{lem:canonical-commitment-normal-form}).  Input events only remove
-rows at other inputs, and there are none, so every run of $\mathcal P$ under
-the empty basis stays at the canonical state and emits nothing.  The store
-then receives nothing.  Renaming $x,y$ to $\mathit{lo}\preceq\mathit{hi}$ makes
-$\mathcal P$ Lifted-Monotone, since $\mathit{hi}$ retires $\mathit{lo}$, and by case
-(3) the composite is unchanged.
+Let $\mathcal S_1$ have one input $*$ and table $\{(*,x),(*,y)\}$ with $x,y$
+incomparable, and let $\mathcal S_2$ be the table of a function $f$ that maps
+both to one value.  The composite has one row, so it satisfies Lifted
+Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
+exposable, and under the empty basis an output event is legal only for an
+exposable output (Lemma~\ref{lem:canonical-commitment-normal-form}).  Input
+events only remove rows at other inputs, and there are none, so every run of
+$\mathcal S_1$ under the empty basis stays at the canonical state and emits
+nothing.  Then $\mathcal S_2$ receives nothing.  Renaming $x,y$ to
+$\mathit{lo}\preceq\mathit{hi}$ makes $\mathcal S_1$ Lifted-Monotone, since
+$\mathit{hi}$ retires $\mathit{lo}$, and by case (3) the composite is
+unchanged.
 
 \subsection{Proper Coordination}
 
-% ===== MOVED FROM §5.2 (to be reconciled with the new definition) =====
+Throughout, $\Spec_1$ guards $\Spec_2$, and $\mathcal B$ is the basis of the
+system for $\Spec_1$.  The inputs of $\Spec_2|_{\Spec_1}$ are the outputs of
+$\Spec_1$, ordered by $\preceq_M$, and its rows are the rows of $S_2$ at those
+inputs.  For tables $R$ of $\Spec_1$ and $T$ of $\Spec_2$ we write $R\Join
+T=\{(k,x):\exists m.\ (k,m)\in R\land(m,x)\in T\}$.  The \emph{image} of a
+state $\sigma=(i,R)$ of $\Spec_1$ is the state $(i,R\Join S_2)$ of
+$S_2\circ S_1$.  The image of $\sigma_{\Spec_1}(i)$ is
+$\sigma_{S_2\circ S_1}(i)$, since $S_1[\mathrm{in}\InputGe i]\Join S_2$ is the
+composite table restricted to the \indescs of $i$.
 
-Intuitively, a replicated store coordinates once.  Multi-Paxos commits to an
-order of concurrent commands, and the store executes whatever log it is given.
-We now make this precise for any composition whose downstream component
-satisfies Lifted Monotonicity.
+A run of the pipeline is a run of $\Spec_1$ under $\mathcal B$, together with
+a run of $\Spec_2|_{\Spec_1}$ from $\sigma(m_1)$, where $m_1$ is the first
+output of $\Spec_1$.  Each later output of $\Spec_1$ is an input event of
+$\Spec_2|_{\Spec_1}$.  Between its inputs, $\Spec_2|_{\Spec_1}$ emits any
+number of outputs, possibly none.  The environment observes $\mathsf{input}(j)$
+and the outputs of $\Spec_2|_{\Spec_1}$.
 
-Let $\mathcal P=(I,\InputOrd,M,\preceq_M,P)$ be an upstream specification and
-$\mathcal K=(M,\preceq_M,O,\OutputOrd,K)$ a downstream specification, the
-\emph{store}, that satisfies Lifted Monotonicity.  For a state $\sigma=(i,R)$
-of $\mathcal P$, its \emph{image} $\mathcal K(\sigma)$ is the state
-$(i,\{(k,x):\exists m.\ (k,m)\in R\land(m,x)\in K\})$ of
-$\mathcal K\circ\mathcal P$.  Fix a system for $\mathcal P$
-(Definition~\ref{def:system}) with basis $\mathcal B$, and a system for
-$\mathcal K$ with basis $\mathcal B_{\mathcal K}$.  In the \emph{guarded
-composite}, the store follows $\mathcal P$: when $\mathcal P$ emits $m$, the
-store receives $m$ and answers with some $o\in K(m)$ by an output event
-$\Out{\delta}{o}$, with $\delta$ from $\mathcal B_{\mathcal K}$.  A
-\emph{guarded composite run} is a run produced by the system for
-$\mathcal P$, together with a run produced by the system for the store on the
-outputs $\mathcal P$ has emitted so far.  The environment observes
-$\mathsf{input}(j)$ and the store's answers.  We say that $\mathcal P$
-\emph{guards} $\mathcal K$, and that $\mathcal K$ \emph{delegates} commitment
-to $\mathcal P$.  When $K$ is the table $\{(m,f(m))\}$ of a monotone function
-$f$, the answer to $m$ is $f(m)$, and we write $f(\sigma)$ for the image.
+In a proper pipeline, two facts about a state $\tau$ that
+$\Spec_2|_{\Spec_1}$ reaches without commitment carry the proofs.  First,
+every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$: the
+common-\indesc condition gives $u\in S_2(j)$ that \outrel an output $v$ at the
+current input, and $(j,u)$ survives, since every output emitted so far is
+\outrelpast by $v$.  Second, every output at the current input is exposable.
+A third fact concerns $\Spec_1$.  If an output $m$ at the current input of a
+state $\sigma$ of $\Spec_1$ is exposable, every $o\in S_2(m)$ is exposable at
+the image of $\sigma$.  Indeed,
+let $(k,x)$ be a row of the image not \outrelpast by $o$, coming from
+$(k,m')\in R_\sigma$ and $(m',x)\in S_2$.  If $m\preceq_M m'$, the
+common-\indesc condition on the outputs of $\Spec_1$, for the rows $(m,o)$ and
+$(m',x)$ at $m'$, gives $u\in S_2(m')$ with $o,x\OutputOrd u$.  Otherwise
+exposability gives $(k,w)\in R_\sigma$ with $m,m'\preceq_M w$, and the
+condition at $w$ gives $u\in S_2(w)$.  Either way $(k,u)$ is a row of the
+image that retires $(k,x)$.
 
-One might push each commitment of $\mathcal P$ forward through the store.
-This does not work, even for a function.  A commitment of $\mathcal P$ may keep
-$m'$ and remove $m$, with $m$ and $m'$ incomparable but $f(m)\OutputOrd
-f(m')$.  Its image removes a row \outrelpast by a row it keeps, which
-Equation~\ref{eq:commitment-excludes} forbids.  In the composite, emitting
-$f(m')$ needs no commitment at all, since it retires $f(m)$.  A choice upstream
-can become a retirement downstream.  We therefore push forward runs, not
-commitments.
+\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
+(1) By Theorem~\ref{thm:complete-calm} and
+Proposition~\ref{prop:exposure-boundary}, $\Spec_2|_{\Spec_1}$ needs no
+commitment exactly when it satisfies Lifted Monotonicity.  Its rows have
+inputs among the outputs of $\Spec_1$, and so do its \indescs.  So this is
+Lifted Monotonicity of $\Spec_2$ on the outputs of $\Spec_1$.
 
-% [moved: old def:proper-coordination removed; superseded by the body]
+(2) After $\Out{\gamma}{m}$ every row of $\Spec_1$ \outrel $m$
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so the outputs
+$m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$ form a chain.
+$\Spec_2|_{\Spec_1}$ starts at $\sigma(m_1)$, which it reaches without
+commitment.  By the first two facts it can receive each $m_{r+1}$ and answer
+it by an exposable output, so it follows the run under the empty basis.
 
+Consider any run of the pipeline in which $\Spec_2|_{\Spec_1}$ runs under the
+empty basis, and replace each output $m_r$ of $\Spec_1$ by the answers to it.
+Let $\sigma$ be the state of $\Spec_1$, $T$ the table of
+$\Spec_2|_{\Spec_1}$, and $\rho$ the composite's state.  Before the first
+output of $\Spec_1$ we keep $\rho.\mathrm{cur}=\sigma.\mathrm{cur}$ and
+$R_\sigma\Join S_2\subseteq R_\rho$.  Afterwards we keep $R_\sigma\Join
+T\subseteq R_\rho$, and every row $(k,m)$ of $R_\sigma$ has $m$ above the
+current input of $\Spec_2|_{\Spec_1}$.  Both hold at the start, where the
+image of $\sigma_{\Spec_1}(i)$ is $\sigma_{S_2\circ S_1}(i)$.  For
+$\mathsf{input}(j)$ of $\Spec_1$, a row $(j,m)$ of $R_\sigma$ and, by the first
+fact, a row $(m,x)$ of $T$ give $(j,x)\in R_\rho$, so the input is legal, and
+both events keep the rows at \indescs of $j$.  For a legal $\Out{\gamma}{m}$
+at input $i$, containment gives $(i,m)\in R_\sigma$ and a resulting table
+inside $R_\sigma[\mathrm{out}\succeq_M m]$.  $\Spec_2|_{\Spec_1}$ receives $m$
+and keeps $T[\mathrm{in}\succeq_M m]$.  Each answer $o$ has $(m,o)\in T$, so
+$(i,o)\in R_\rho$.  The composite's $\mathsf{output}(o)$ keeps
+$R_\rho[\mathrm{out}\OutputGe o]$, and $\Spec_2|_{\Spec_1}$ keeps
+$T[\mathrm{out}\OutputGe o]$, so the join stays inside the composite's table.
 
-At most once says that the store adds no coordination of its own.  The
-store's input comes from $\mathcal P$, not from the environment.  A store
-commitment is therefore contradicted when a run of $\mathcal K$ on outputs
-$\mathcal P$ can emit accepts an input it seals, or emits an output it chooses
-against.  We judge it against the runs of the specification, since a store
-that has sealed an input never accepts it in its own runs.  A store commitment
-that is not contradicted removes only behaviour that $\mathcal P$ never asks
-of the store, and it is not coordination.  At least once says that whatever
-commitment the composite needs, $\mathcal P$ makes.  It always holds
-(Theorem~\ref{thm:proper-coordination}), so it is the necessity half.  Whether
-a composite is proper then depends on the store's system.
+For confluence, let the runs of $\Spec_1$ end at
+$\sigma_1,\ldots,\sigma_n$, the runs of $\Spec_2|_{\Spec_1}$ at
+$\tau_1,\ldots,\tau_n$, and the composite runs at $\rho_1,\ldots,\rho_n$, and
+let each $\sigma_r$ continue under some basis to a common state with a row
+$(j,m)$.  Events never add rows, so $(j,m)\in R_{\sigma_r}$, and $m$ is above
+the current input of each $\tau_r$.  Let $v_r$ be an output at the current
+input of $\tau_r$.  The common-\indesc condition gives $u\in S_2(m)$ that
+\outrel every $v_r$, and $(m,u)$ survives in every $\tau_r$.  So $(j,u)\in
+R_{\rho_r}$ for every $r$, and the composite runs are confluent at $j$
+(Proposition~\ref{prop:confluence}).
 
-\begin{theorem}[Guarded runs]
-\label{thm:guarded-runs}
-Let $\mathcal B$ be any basis of $\mathcal P$.
-\begin{enumerate}
-  \item The outputs $m_1,m_2,\ldots$ of a run of $\mathcal P$ under
-        $\mathcal B$ form a chain, and a store under the empty basis follows
-        it.  Starting at $\sigma_{\mathcal K}(m_1)$, it answers $m_1$, then
-        receives and answers each later $m_r$, with no commitment.
-  \item Replacing each output $m_r$ of the run of $\mathcal P$ by the store's
-        answer $o_r$ gives a run of $\mathcal K\circ\mathcal P$ from the same
-        canonical state.  After each event, the composite run's table contains
-        the join of the tables of $\mathcal P$ and of the store.
-  \item If finitely many runs of $\mathcal P$ can be brought to a common state
-        with current input $j$, under any bases, the corresponding composite
-        runs are confluent at $j$.
-\end{enumerate}
-\end{theorem}
-
-\begin{proof}[Proof sketch]
-(1) An output event $\Out{\gamma}{m}$ keeps only rows that \outrel $m$
-(Lemma~\ref{lem:canonical-commitment-normal-form}), so later outputs \outrel
-earlier ones.  The store's states are reached without commitment.  At such a
-state of a Lifted-Monotone specification, every later input still has a row,
-and every output at the current input is exposable
-(Proposition~\ref{prop:exposure-boundary}).  (2) By induction on events.  When
-$\mathcal P$ emits $m_r$ at input $i$, the row $(i,m_r)$ is in its table and
-$(m_r,o_r)$ in the store's, so $(i,o_r)$ is in the composite's.  (3) A common
-state has a row $(j,m)$.  The stores' current outputs have a common \outnoun
-$u\in K(m)$, which every store keeps, so every composite run keeps $(j,u)$.
-Full proof in Appendix~\ref{app:composition}.
+(3) The proof of Proposition~\ref{prop:exposure-boundary} derives the
+common-\indesc condition from exposability at canonical states alone.  If
+Lifted Monotonicity fails for $S_2\circ S_1$, some $o$ with $(i,m)\in S_1$ and
+$o\in S_2(m)$ is therefore not exposable at $\sigma_{S_2\circ S_1}(i)$, the
+image of $\sigma_{\Spec_1}(i)$.  By the third fact, no $m'\in S_1(i)$ with
+$o\in S_2(m')$ is exposable at $\sigma_{\Spec_1}(i)$.
 \end{proof}
 
-% [moved: old thm:proper-coordination removed; superseded by the body]
+Properness is needed in (3).  With $\Spec_1$ the identity on the booleans and
+$\Spec_2$ negation, the composite is negation, which violates Lifted
+Monotonicity, yet $\Spec_1$ needs no commitment.
 
-
-\begin{proof}[Proof sketch]
-(1) is Proposition~\ref{prop:exposure-boundary} for $\mathcal K$.  (2) For at
-least once, suppose $\mathcal P$ emits $m$ at $\sigma$ with no commitment, so
-$m$ is exposable at $\sigma$, and let $o\in K(m)$.  A row $(k,x)$ of
-$\mathcal K(\sigma)$ comes from a row $(k,m')$ of $\sigma$.  Either $m\preceq_M
-m'$, or a row $(k,w)$ of $\sigma$ retires it with $m,m'\preceq_M w$.  In
-either case the common-\indesc condition for $\mathcal K$ gives a row of
-$\mathcal K(\sigma)$ at $k$ that \outrel $o$ and $x$, so $o$ is exposable at
-$\mathcal K(\sigma)$.  A store under the empty basis applies no commitment, so
-none is contradicted.  (3) When Lifted Monotonicity fails, the exposure
-boundary already fails at a canonical state
-(Proposition~\ref{prop:exposure-boundary}), and the image of a canonical state
-is canonical.  Full proof in Appendix~\ref{app:composition}.
-\end{proof}
-
-By Theorem~\ref{thm:guarded-runs}(1), a store under the empty basis also
-follows every run of $\mathcal P$.  The theorem holds for every system for
-$\mathcal P$.  Multi-Paxos commits by deciding log slots.  A log built with
-per-key mutexes would instead order pairs of commands on one key, as 2PL
-orders pairs of transactions where MVTO stamps them
-(Section~\ref{sec:systems}, Appendix~\ref{app:cc-bases}).  Neither basis need
-match the canonical commitments of the composite, and we need not compare
-them.  For a function store, every legal output event removes at least the
-rows its canonical event removes
-(Lemma~\ref{lem:canonical-commitment-normal-form}), so every row that the
-composite must seal or choose against has lost all its preimages to
-$\mathcal P$'s commitments (Appendix~\ref{app:composition}).
-
-By Theorem~\ref{thm:proper-coordination}(1), none of the store's commitments
-is needed.  So it should be safe to replace the store's system with one whose
-basis is empty, with no seals or choices allowed.  The
-\emph{commitment-erased replacement} of the store's system has the empty basis
-and the same strategy, with each $\Out{\delta}{x}$ replaced by
+The \emph{commitment-erased replacement} of a system has the empty basis and
+the same strategy, with each $\Out{\delta}{x}$ replaced by
 $\Out{\varepsilon}{x}$.
 
 \begin{corollary}[Empty store]
 \label{cor:empty-store}
-Fix systems for $\mathcal P$ and $\mathcal K$.
-\begin{enumerate}
-  \item For every guarded composite run, the replacement has one with the same
-        run of $\mathcal P$ and the same store inputs and outputs.  After each
-        event, the replacement's table contains the original's.
-  \item Suppose the store coordinates at most once, and its strategy ignores
-        the commitments in its history and never stalls: whenever it offers an
-        output still in its table, it also offers a legal output event for it.
-        Then the converse of (1) holds too, so the store and its replacement
-        have the same observable behaviour.
-\end{enumerate}
+In a proper pipeline, fix any system for $\Spec_2|_{\Spec_1}$.  For every run
+of the pipeline, the replacement has one with the same run of $\Spec_1$ and
+the same inputs and outputs of $\Spec_2|_{\Spec_1}$.  After each event, the
+replacement's table contains the original's.
 \end{corollary}
 
-\begin{proof}[Proof sketch]
-(1) By induction on events.  The replacement's table is the larger one, so
-its input events are legal, and by
-Theorem~\ref{thm:proper-coordination}(1) so is each $\Out{\varepsilon}{x}$.
-(2) We follow a run of the replacement and build the original's.  At each
-output, the hypotheses on the strategy give a legal output event of the
-original.  By at most once its commitments are not contradicted, so they
-remove nothing that a later event of the replacement's run uses.  Full proof
-in Appendix~\ref{app:composition}.
+\begin{proof}
+Let $\tau$ be a state of the original and $\tau'$ a state of the replacement
+reached without commitment, with the same current input and $R_\tau\subseteq
+R_{\tau'}$.  If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
+$j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
+the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is legal at $\tau$, then $x$
+is at the current input of $\tau$ and so of $\tau'$, where it is exposable by
+the second fact.  Containment (Lemma~\ref{lem:canonical-commitment-normal-form})
+puts the original's resulting table inside $R_\tau[\mathrm{out}\OutputGe x]$,
+which is inside $R_{\tau'}[\mathrm{out}\OutputGe x]$, where
+$\Out{\varepsilon}{x}$ ends.  Both start at $\sigma(m_1)$, so the containment
+holds after each event.  The replacement's strategy allows each erased event,
+since the original's allowed it before erasure.
 \end{proof}
 
-The hypotheses of (2) are needed.  A strategy that offers only commitments
-undefined at its state never emits, while its replacement does.  If the store
-is redundant, the replacement can follow runs of $\mathcal P$ that the store
-cannot, as the mutex store below shows.
-
-The guarded composite is itself a guard.  Its runs are runs of
-$\mathcal K\circ\mathcal P$ under the canonical basis
-(Theorem~\ref{thm:guarded-runs}(2)), so it can feed a further stage.
+The converse fails: the early lock below loses a run that its replacement has.
 
 \begin{corollary}[Pipelines]
 \label{cor:pipelines}
-Consider a pipeline $\mathcal S_n\circ\cdots\circ\mathcal S_1$ in which
-$\mathcal S_1$ has any system and $\mathcal S_2,\ldots,\mathcal S_n$ satisfy
-Lifted Monotonicity.  Every downstream stage can run with the empty basis, and
-every guarded run is a run of the full composite.  Replacing the system of a
-downstream stage by its commitment-erased replacement loses nothing, and
-gains nothing when that stage coordinates at most once and its strategy meets
-the hypotheses of Corollary~\ref{cor:empty-store}(2).
+In a proper pipeline, with any systems for $\Spec_1$ and
+$\Spec_2|_{\Spec_1}$, the outputs of every run of the pipeline are emitted by
+a run of $S_2\circ S_1$ under its canonical basis.  So the pipeline guards a
+further stage $\Spec_3$, and Theorem~\ref{thm:proper-coordination} applies
+with $S_2\circ S_1$ in place of $\Spec_1$.
 \end{corollary}
 
-\begin{proof}[Proof sketch]
-By induction on $n$.  The guarded composite of $\mathcal S_1,\ldots,\mathcal
-S_k$ emits only what $\mathcal S_k\circ\cdots\circ\mathcal S_1$ emits under its
-canonical basis, so the results for two stages apply to $\mathcal S_{k+1}$.
-Full proof in Appendix~\ref{app:composition}.
+\begin{proof}
+By Corollary~\ref{cor:empty-store}, every run of the pipeline has one with the
+same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis.
+Theorem~\ref{thm:proper-coordination}(2), applied to it and a prefix of the
+run of $\Spec_1$, gives a run of $S_2\circ S_1$ with these outputs, and the
+canonical event for each output
+(Lemma~\ref{lem:canonical-commitment-normal-form}) makes it a run under the
+canonical basis.  By induction the same holds along a pipeline
+$\Spec_n\circ\cdots\circ\Spec_1$ in which each prefix properly guards the next
+stage.  Composition is associative, so the bracketing does not matter.
 \end{proof}
 
-Mutexes in the store, behind the log, are another matter.  By
-Theorem~\ref{thm:proper-coordination}(1) the store never needs a commitment,
-so each commitment it applies is redundant once a run on outputs of
-$\mathcal P$ contradicts it.  Consider a store that executes a log of writes
-and locks each key, and two writes $a$ and $b$ to one key.  Whether the lock
-is coordination depends on the store's strategy.  If the strategy takes the
-lock only after the log has placed one of them first, every log the store can
-still receive agrees with that order.  The lock removes no row, so it is not a
-commitment, and the composite is proper.  The locks are still taken, but they
-decide nothing.  Suppose instead that the strategy grants the lock to $a$ at
-the empty log, ahead of the log, and so seals every log in which $b$ comes
-first.  The log can still decide $b$ first and feed the store $[b]$, which
-contradicts the lock.  The lock then repeats coordination that the log already
-does, so the composite is not proper.  The lock also costs behaviour.  When
-the log emits $[\,]$ and then $[b]$, the replacement follows, but the locking
-store, having sealed $[b]$, cannot (Appendix~\ref{app:composition}).
+Consider locks in the store behind the log.  Let $\Spec_1$ be the log
+specification of Example~\ref{ex:committed-log-composition}, under its
+canonical basis with a strategy that allows every event, and $\Spec_2$ the
+table of any monotone function $f$ of the log.  Every log is an output of
+$\Spec_1$, so $\Spec_2|_{\Spec_1}$ is $\Spec_2$.  For a set $Q$ of logs,
+removing every row whose input is in $Q$ is a commitment of $\Spec_2$ at any
+state whose current input is not in $Q$ and which has such a row.  It removes
+whole fibers, so it seals.  Consider two writes $a$ and $b$ to one key, and a
+lock granted to $a$, which seals the logs that start with $b$.  Suppose that
+the store takes the lock only once its current log is nonempty.  Every log it
+can still receive then has the same first command, so the lock removes no row
+and is not a commitment.  Suppose instead that the store takes the lock at the
+empty log, ahead of the log.  Its output $f([\,])$ was exposable without the
+lock, and the lock seals logs that $\Spec_1$ can still offer.  At
+$\sigma_{\Spec_1}([b])$, $\Spec_1$ can emit $[\,]$ and then $[b]$.  The
+replacement emits $f([\,])$, receives $[b]$, and emits $f([b])$.  The locking
+store must take the lock at $[\,]$, which seals $[b]$, so it cannot receive
+$[b]$.
 
-For a function store, some of $\mathcal P$'s commitments are invisible to the
-composite.
+For a function store, some commitments of $\Spec_1$ are invisible to the
+composite.  Let $\Spec_2$ be the table of a monotone function $f$, and write
+$f(\sigma)$ for the image of a state $\sigma$ of $\Spec_1$.
 
 \begin{proposition}[Invisible coordination]
 \label{prop:invisible-coordination}
-Let $f$ be monotone, and let $\mathcal P$ emit $m$ at $\sigma$ by
+Let $f$ be monotone, and let $\Spec_1$ emit $m$ at $\sigma$ by
 $\Out{\gamma}{m}$.  If every row that $\gamma$ removes has a row with the same
 input and the same image that $\gamma$ keeps, then $f(m)$ is exposable at
 $f(\sigma)$.
 \end{proposition}
 
-Consider a store that answers each key from that key's commands, in log
-order, and two commands $a$ and $b$ on different keys.  The log must order
-them, since $[a,b]$ and $[b,a]$ have no common \outnoun.  The store's view of
-both logs is the same, so the composite needs no commitment
-(Appendix~\ref{app:composition}).  The order of $a$ and $b$ is coordination
-inside $\mathcal P$ that the composite does not see.
-
-\begin{example}[Replicated store]
-\label{ex:committed-log-composition}
-Consider again state-machine replication, with every put and get passing
-through the log.  Take $I$ the proposal streams and $M$ the logs, both ordered
-by prefix, and $O$ the cumulative response histories, ordered by extension.
-Let $\mathcal P$ relate each proposal stream to the logs of its commands, and
-let the store $\mathcal K$ be the table of the function $f$ that executes a
-log on a deterministic state machine, which is monotone in the prefix order.  Then $\mathcal P$ is non-monotone, since distinct next
-entries are incompatible outputs in one fiber.  So is the key-value store
-$\mathcal K\circ\mathcal P$, since concurrent commands ordered oppositely give
-incompatible responses.  Multi-Paxos runs $\mathcal P$ under its own basis,
-deciding one log slot at a time~\cite{schneider1990smr,lamport2001paxos}.  By
-Theorems~\ref{thm:guarded-runs} and~\ref{thm:proper-coordination}, the
-store needs no commitment of its own, and under the empty basis it follows
-every run of the log.  Because the composite is not monotone, the log's
-commitments cannot be dropped.  The replicated store coordinates exactly
-once.  By Corollary~\ref{cor:empty-store}, if the replicas' store takes locks of
-its own and the composite stays proper, the replicas can run the store with
-no commitments at all.
-\end{example}
-
-A downstream component often has input of its own, not only the output of the
-component before it.  In a replicated store, for example, not every request
-needs to pass through the log.  Some stores serve \emph{bare reads}: a client
-sends a get directly to a replica, which answers from the log prefix it has
-executed, without going through Multi-Paxos.  Bare reads avoid the cost of
-coordination, at the risk of missing a fresher value that has already reached
-another replica.  In Appendix~\ref{sec:parameterized-composition} we give
-each component a separate input, in an \emph{independently parameterized
-composition}, and Lemma~\ref{lem:composition} carries over.  There, bare reads
-need no commitment of their own when each response records the log position it
-read from, but they do when the specification demands the latest value
-(Example~\ref{ex:bare-reads}).
-
-% ===== END MOVED =====
-
-Throughout, $\mathcal K$ satisfies Lifted Monotonicity, used through the
-common-\indesc condition, and $\mathcal B$ and $\mathcal B_{\mathcal K}$ are
-the bases of the systems for $\mathcal P$ and $\mathcal K$.  For tables $R$ of
-$\mathcal P$ and $T$ of $\mathcal K$ we write $R\Join T=\{(k,x):\exists m.\
-(k,m)\in R\land(m,x)\in T\}$.  The image of the canonical state
-$\sigma_{\mathcal P}(i)$ is the canonical state of $\mathcal K\circ\mathcal P$
-at $i$, since $P[\mathrm{in}\InputGe i]\Join K$ is the composite table
-restricted to the \indescs of $i$.
-
-Two facts about a state $\tau$ that $\mathcal K$ reaches without commitment
-carry the proofs.  First, every input $j\succeq_M\tau.\mathrm{cur}$ has a row
-in $\tau$: the common-\indesc condition gives $u\in K(j)$ that \outrel an
-output $v$ at the current input, and $(j,u)$ survives, since every output
-emitted so far is \outrelpast by $v$.  Second, every output at the current
-input is exposable (Proposition~\ref{prop:exposure-boundary}).
-
-\begin{proof}[Proof of Theorem~\ref{thm:guarded-runs}]
-(1) After $\Out{\gamma}{m}$ every row \outrel $m$
-(Lemma~\ref{lem:canonical-commitment-normal-form}), so the outputs
-$m_1\preceq_M m_2\preceq_M\cdots$ of a run form a chain.  The store starts at
-$\sigma_{\mathcal K}(m_1)$, which is reached without commitment.  By the two
-facts it can receive each $m_{r+1}\succeq_M m_r$ and answer it by an exposable
-output, so its run is a run under the empty basis.
-
-(2) Before $\mathcal P$'s first output we keep $\rho.\mathrm{cur}=\sigma.\mathrm{cur}$
-and $R_\sigma\Join K\subseteq R_\rho$, where $\sigma$ is $\mathcal P$'s state
-and $\rho$ the composite's.  Afterwards we keep $R_\sigma\Join T\subseteq
-R_\rho$, with $T$ the store's table, and every row $(k,m)$ of $R_\sigma$ has
-$m$ above the store's current input.  Both hold at the start, where the image
-of $\sigma_{\mathcal P}(i)$ is $\sigma_{\mathcal K\circ\mathcal P}(i)$.  For
-$\mathsf{input}(j)$ of $\mathcal P$, a row $(j,m)$ of $R_\sigma$ and, by the
-first fact, a row $(m,x)$ of $T$ give $(j,x)\in R_\rho$, so the input is legal,
-and both events keep the rows at \indescs of $j$.  For a legal
-$\Out{\gamma}{m}$ at input $i$, containment gives $(i,m)\in R_\sigma$ and a
-resulting table inside $R_\sigma[\mathrm{out}\succeq_M m]$.  The store
-receives $m$ and answers $o$, so $(m,o)\in T$ and $(i,o)\in R_\rho$.  The
-composite's $\mathsf{output}(o)$ keeps $R_\rho[\mathrm{out}\OutputGe o]$, and
-the store keeps $T[\mathrm{in}\succeq_M m,\mathrm{out}\OutputGe o]$, so the
-join stays inside the composite's table.
-
-(3) Let the runs of $\mathcal P$ end at $\sigma_1,\ldots,\sigma_n$, the
-stores at $\tau_1,\ldots,\tau_n$, and the composite runs at
-$\rho_1,\ldots,\rho_n$, and let each $\sigma_r$ continue under some basis to a
-common state with a row $(j,m)$.  Events never add rows, so $(j,m)\in
-R_{\sigma_r}$, and $m$ is above each store's current input.  Let $v_r$ be an
-output at the current input of $\tau_r$.  The common-\indesc condition gives
-$u\in K(m)$ that \outrel every $v_r$, and $(m,u)$ survives in every $\tau_r$.
-So $(j,u)\in R_{\rho_r}$ for every $r$, and the composite runs are confluent
-at $j$ (Proposition~\ref{prop:confluence}).
-\end{proof}
-
-For a function store, the guarded composite's commitments are covered by
-$\mathcal P$'s.  For a table $R$ of $\mathcal P$ write
-$f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
-$\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and
-let $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
+The proof covers the composite's commitments by those of $\Spec_1$.  For a
+table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
+$\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
+$\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
 $(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Sealed_{f(m)}$ or
 $\Rejected_{f(m)}$ at $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
 Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
@@ -508,145 +378,57 @@ $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ retires $(k,f(m'))$.  So every row
 that the composite's canonical event for $f(m)$ removes by commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
-\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
-(1) is the second fact.  If $\Out{\delta}{o}$ is legal at $\tau$, then $o$ is
-at the current input of $\tau$ and so of the larger table $\tau'$, and
-containment (Lemma~\ref{lem:canonical-commitment-normal-form}) puts the
-original's resulting table inside $R_\tau[\mathrm{out}\OutputGe o]\subseteq
-R_{\tau'}[\mathrm{out}\OutputGe o]$, where $\Out{\varepsilon}{o}$ ends.  For a
-function store with current input $m$, every row $(k,f(k))$ has $m\preceq_M k$,
-so $f(m)\OutputOrd f(k)$ and nothing is ruled out, at every state.
-
-(2) Let $\Out{\varepsilon}{m}$ be legal at $\sigma$, so $m$ is exposable at
-$\sigma$, and let $o\in K(m)$ and $(k,x)$ be a row of $\mathcal K(\sigma)$ not
-\outrelpast by $o$, coming from $(k,m')\in R_\sigma$ and $(m',x)\in K$.  If
-$m\preceq_M m'$, the common-\indesc condition for the rows $(m,o)$ and
-$(m',x)$ at $m'$ gives $u\in K(m')$ with $o,x\OutputOrd u$.  Otherwise
-exposability gives $(k,w)\in R_\sigma$ with $m,m'\preceq_M w$, and the
-condition at $w$ gives $u\in K(w)$.  Either way $(k,u)$ is a row of
-$\mathcal K(\sigma)$ that retires $(k,x)$, so $o$ is exposable.  When
-$\mathcal B_{\mathcal K}$ is empty, every output event of the store is some
-$\Out{\varepsilon}{o}$, which removes no row by commitment, so the store does
-not coordinate redundantly.
-
-(3) The proof of Proposition~\ref{prop:exposure-boundary} derives the
-common-\indesc condition from exposability at canonical states alone.  If
-Lifted Monotonicity fails for $\mathcal K\circ\mathcal P$, some $o$ with
-$(i,m)\in P$ and $o\in K(m)$ is therefore not exposable at
-$\sigma_{\mathcal K\circ\mathcal P}(i)=\mathcal K(\sigma_{\mathcal P}(i))$,
-and by (2) no $m'$ with $o\in K(m')$ is exposable at $\sigma_{\mathcal P}(i)$.
-\end{proof}
-
-\begin{proof}[Proof of Corollary~\ref{cor:empty-store}]
-(1) Let $\sigma$ be a state of the store and $\sigma'$ a state reached
-without commitment, with the same current input and $R_\sigma\subseteq
-R_{\sigma'}$.  If $\mathsf{input}(j)$ is legal at $\sigma$, a row of $R_\sigma$
-at $j$ is in $R_{\sigma'}$, so the input is legal at $\sigma'$, and both events
-keep the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is legal at $\sigma$,
-$\Out{\varepsilon}{x}$ is legal at $\sigma'$ by
-Theorem~\ref{thm:proper-coordination}(1), with a larger resulting table.  Both
-start at $\sigma_{\mathcal K}(m)$, so the containment holds after each event.
-The replacement's strategy allows each erased event, since the original's
-allowed it before erasure.
-
-(2) Call a row $(k,x)$ \emph{used} when some run of $\mathcal K$ on outputs
-$\mathcal P$ can emit emits $x$ at input $k$.  Consider a guarded composite
-run of the replacement.  It is a run of $\mathcal K$ on such outputs, so every
-row it emits at is used.  We build the original's run event by event, with the
-same erasure, and keep two facts: the current inputs agree, and every used row
-of the replacement's table is in the original's.  An input event
-$\mathsf{input}(j)$ of the replacement is followed by an output $x$ at $j$, so
-$(j,x)$ is used, is in the original's table, and makes the input legal there.
-An output event $\Out{\varepsilon}{x}$ is allowed because the original's
-strategy allows some $\Out{\delta}{x}$ after a history with the same erasure.
-The strategy ignores commitments, so it allows $\Out{\delta}{x}$ after the
-original's history.  The row $(\mathrm{cur},x)$ is used, hence in the
-original's table, so the strategy, which never stalls, offers a legal
-$\Out{\delta'}{x}$.  The original's events so far, with the run of
-$\mathcal P$, form a guarded composite run in which this event applies
-$\delta'$.  By at most once, $\delta'$ is not contradicted, so it removes no
-used row, and both facts persist.
-\end{proof}
-
-\begin{proof}[Proof of Corollary~\ref{cor:pipelines}]
-Let $\mathcal S_1$ have any system and $\mathcal S_2$ satisfy Lifted
-Monotonicity.  By Corollary~\ref{cor:empty-store}(1), every guarded composite
-run has one with an empty-basis store and the same trace.  Theorem~\ref{thm:guarded-runs}(2),
-applied to it and a prefix of the run of $\mathcal S_1$, gives a run of
-$\mathcal S_2\circ\mathcal S_1$, and the canonical event for each output
-(Lemma~\ref{lem:canonical-commitment-normal-form}) makes it a run under the
-canonical basis that emits the store's outputs.  So the outputs of guarded
-composite runs are emitted by a system for $\mathcal S_2\circ\mathcal S_1$,
-and every result of this section applies to a further stage $\mathcal S_3$
-with that system as its guard.  By induction this holds for every stage of the
-pipeline.  Composition is associative, so the composite is
-$\mathcal S_n\circ\cdots\circ\mathcal S_1$ however it is bracketed.
-\end{proof}
-
-For the mutex store of Section~\ref{sec:proper-coordination}, let
-$\mathcal P$ be the log specification of
-Example~\ref{ex:committed-log-composition}, under its canonical basis with a
-strategy that allows every event, and $\mathcal K$ the table of any monotone
-function $f$ of the log.  For a set $Q$ of logs, removing every row whose input is in $Q$ is a
-commitment of $\mathcal K$ at any state whose current input is not in $Q$ and
-which has such a row.  It removes whole fibers, so it seals.  Let
-$\mathcal B_{\mathcal K}$ contain this commitment for $Q$ the logs that start
-with $b$.  At a state whose current log is nonempty, every remaining log has
-the same first command, so this commitment is undefined there.
-
-Let the store's strategy take the lock at its first event when the log is
-empty, and apply nothing otherwise.  In one guarded composite run,
-$\mathcal P$ emits the empty log $[\,]$ by $\Out{\varepsilon}{[\,]}$, and the
-store, at $\sigma_{\mathcal K}([\,])$, emits $f([\,])$ by applying the
-commitment.  By Theorem~\ref{thm:proper-coordination}(1), $f([\,])$ was
-exposable without it.  $\mathcal P$ can also emit $[b]$ at
-$\sigma_{\mathcal P}([b])$ by its canonical event, so it feeds the store
-$[b]$, an input the commitment sealed.  So the commitment is contradicted,
-and the store coordinates redundantly.  Its replacement gains behaviour.  At
-$\sigma_{\mathcal P}([b])$, $\mathcal P$ can emit $[\,]$ and then $[b]$.  The
-replacement emits $f([\,])$, receives $[b]$, and emits $f([b])$.  The locking
-store must take the lock at $[\,]$, which seals $[b]$, so it cannot receive
-$[b]$.
-
-Let the strategy instead take the lock only when its current log is nonempty.
-The lock is undefined there, so every output event the store performs is
-some $\Out{\varepsilon}{x}$.  The store applies no commitment, so it does not
-coordinate redundantly.  Its strategy depends only on the inputs it has
-received and always offers $\Out{\varepsilon}{x}$, so it meets the hypotheses
-of Corollary~\ref{cor:empty-store}(2).  A strategy that insists on the lock
-at a nonempty log also applies no commitment and ignores commitments, but it
-stalls.  When $\mathcal P$ emits $[b]$ first, the store never emits, while its
-replacement emits $f([b])$.
-
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
 The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering
 argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
 $\Rejected_{f(m)}$, so $f(m)$ is exposable at $f(\sigma)$.
 \end{proof}
 
-For the per-key store of Section~\ref{sec:proper-coordination}, let
-$\mathcal P$ have one input with fiber $\{[a,b],[b,a]\}$, and let $f$ send a
-log to the family of its subsequences on each key.  The two logs are
-incomparable with no common \outnoun, so $[a,b]$ is not exposable.  When $a$
-and $b$ are on different keys, $f([a,b])=f([b,a])$, the composite has one row,
-and $f([a,b])$ is exposable.
+Consider a store that answers each key from that key's commands, in log
+order.  Let $\Spec_1$ have one input with fiber $\{[a,b],[b,a]\}$, for
+commands $a$ and $b$ on different keys, and let $f$ send a log to the family
+of its subsequences on each key.  The two logs are incomparable with no common
+\outnoun, so $[a,b]$ is not exposable, and $\Spec_1$ must order them.  But
+$f([a,b])=f([b,a])$, the composite has one row, and $f([a,b])$ is exposable.
+The order of $a$ and $b$ is coordination inside $\Spec_1$ that the composite
+does not see.
 
-The commitments of $\mathcal P$ do not themselves push forward.  Let
-$\mathcal P$ have one input with fiber $\{x,y\}$, $x$ and $y$ incomparable, and
+The commitments of $\Spec_1$ do not themselves push forward.  Let $\Spec_1$
+have one input with fiber $\{x,y\}$, $x$ and $y$ incomparable, and
 $f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The choice $c_y$ removes $x$
 and keeps $y$.  Its image would remove $\mathit{lo}$ and keep $\mathit{hi}$,
 violating Equation~\ref{eq:commitment-excludes}, so no commitment of the
 composite has that effect.  In the composite, $\mathit{hi}$ is exposable at the
 canonical state, since it retires $\mathit{lo}$.
 
-Monotonicity of $f$ is needed.  Let $\mathcal P$ be the table of the identity
-on $M$, which needs no commitment.  For $m\preceq_M m'$, its run
+Monotonicity of $f$ is needed.  Let $\Spec_1$ be the table of the identity on
+$M$, which needs no commitment.  For $m\preceq_M m'$, its run
 $\mathsf{output}(m)$, $\mathsf{input}(m')$, $\mathsf{output}(m')$ maps to a run
-of the composite exactly when $f(m)\OutputOrd f(m')$.  A store that must
-itself choose cannot delegate the choice either.  If $\mathcal P$ is the
-identity on one input, it admits no commitment at all.  If the store relates
-that input to two incomparable outputs, every output event of the composite at
-its canonical state applies a commitment, and that commitment is the store's.
+of the composite exactly when $f(m)\OutputOrd f(m')$.  A downstream that must
+itself choose cannot delegate the choice either.  If $\Spec_1$ is the identity
+on one input, it admits no commitment at all.  If $\Spec_2$ relates that input
+to two incomparable outputs, every output event of the composite at its
+canonical state applies a commitment, which $\Spec_1$ cannot make.
+
+\begin{example}[Replicated store]
+\label{ex:committed-log-composition}
+Consider again state-machine replication, with every put and get passing
+through the log.  Take $I$ the proposal streams and $M$ the logs, both ordered
+by prefix, and $O$ the cumulative response histories, ordered by extension.
+Let $\Spec_1$ relate each proposal stream to the logs of its commands, and let
+the store $\Spec_2$ be the table of the function $f$ that executes a log on a
+deterministic state machine, which is monotone in the prefix order.  Then
+$\Spec_1$ is non-monotone, since distinct next entries are incompatible
+outputs in one fiber.  So is the key-value store $S_2\circ S_1$, since
+concurrent commands ordered oppositely give incompatible responses.
+Multi-Paxos runs $\Spec_1$ under its own basis, deciding one log slot at a
+time~\cite{schneider1990smr,lamport2001paxos}.  Since $f$ is monotone, the
+pipeline is proper, and by Theorem~\ref{thm:proper-coordination}(2) the store
+under the empty basis follows every run of the log.  By
+Theorem~\ref{thm:proper-coordination}(3), the log's commitments cannot be
+dropped.  By Corollary~\ref{cor:empty-store}, replicas whose store takes locks
+of its own can run it with no commitments at all.
+\end{example}
 
 \begin{example}[Bare reads]
 \label{ex:bare-reads}
@@ -655,7 +437,7 @@ and $B$ the proposal streams and logs of that example, $A$ a one-point set,
 and $J$ the histories of bare reads received by a replica, ordered by prefix.
 Take $C$ the pairs of a response history for logged commands, ordered by
 extension, and a set of bare-read responses, ordered by inclusion.  Let $F$ be
-the log specification $\mathcal P$ of that example, with the one-point $A$
+the log specification $\Spec_1$ of that example, with the one-point $A$
 added to its input.  Let $G$ relate a bare-read history $j$ and a log $b$ to
 the responses obtained by executing $b$, together with at least one response to
 each bare read in $j$.  Responses are facts, so a set of them may answer one
