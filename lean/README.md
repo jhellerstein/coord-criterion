@@ -322,8 +322,8 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an ordered specification, so Complete CALM applies to it directly. |
 | `«sec:composite-calm/all-monotone»` | theorem | "First, every stage is monotone. |
 | `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
-| `«sec:composite-calm/filtering»` | theorem | "Second, the upstream can filter. |
-| `«sec:composite-calm/cancellation»` | theorem | "Third, the stages can cancel. |
+| `«sec:composite-calm/filtering»` | theorem | "Second, the upstream can filter out the inputs on which the downstream is not monotone. |
+| `«sec:composite-calm/cancellation»` | theorem | "Third, two stages that are each non-monotone can cancel. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
 | `«sec:proper-coordination/image»` | theorem | "Let `𝒫 = (I,≼,M,≼,P)` be an upstream specification and `𝒦 = (M,≼,O,≼,K)` a downstream specification, the store, that satisfies Lifted Monotonicity. |
 | `«sec:proper-coordination/no-pushforward»` | theorem | "A commitment of `𝒫` may keep `m'` and remove `m`, with `m` and `m'` incomparable but `f(m) ≼ f(m')`. |

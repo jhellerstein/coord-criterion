@@ -82,23 +82,29 @@ compositions of monotone functions are monotone
 (Corollary~\ref{cor:functional-composition}), so
 monotonicity of $q$ on all of the state domain suffices.
 
-Second, the upstream can filter.  It may never produce the inputs on which the
-downstream is not monotone.  Consider a counter capped at $9$ that feeds the
-test ``count${}<10$''.  The test alone is not monotone, but no count of $10$
-ever arrives.  The pipeline then needs one commitment: the test seals the
-counts it never receives, at its first output.  No run of the counter
-contradicts that seal, so the coordination is proper in the sense of
-Section~\ref{sec:proper-coordination}.
+Second, the upstream can filter out the inputs on which the downstream is not
+monotone.  Consider a counter capped at $9$ that feeds a test of whether the
+count is below $10$.  On its own the test is not monotone: it answers yes at
+$9$ and no at $10$.  But the counter never produces $10$, and on the counts
+$0$ through $9$ the test always answers yes.  The downstream need only be
+monotone on the values the upstream can produce.
 
-Third, the stages can cancel.  The composite's table does not depend on the
-order of $M$, so two stages that are not monotone under one order may be
-monotone under another.  Consider two complements of sets, $X\mapsto
-U\setminus X$, with $M$ ordered by inclusion.  Each stage reverses inclusion,
-and without commitment the first stage can emit only the empty set.  Ordered by
-reverse inclusion, both stages are monotone, and the composite is the identity
-either way.  Likewise, an upstream with two incomparable outputs, both mapped
-by the downstream to one value, cannot emit without choosing.  Declaring one
-output below the other makes it monotone, and the composite is unchanged.
+Third, two stages that are each non-monotone can cancel.  Consider a first
+stage that receives a growing set $X$ and outputs its complement
+$U\setminus X$, the elements not yet seen, and a second stage that
+complements again.  The composite returns $X$, which only grows.  Under the
+usual order on sets, though, each stage is non-monotone.  As $X$ grows, the
+first stage's output shrinks, so without commitment it can emit only the
+empty set.  The remedy lies in the interface between the stages.  The
+composite's table never mentions the order on $M$, so the two stages may agree
+on a different one.  Let a smaller set of missing elements count as further
+along.  The first stage's shrinking outputs then form a growing stream of
+updates, the second stage turns each update into a larger set, and both stages
+are monotone.  Likewise, suppose the upstream may output either of two
+incomparable values $a$ and $b$, and the downstream maps both to the same
+answer.  The upstream cannot emit either without choosing.  If the interface
+places $a$ below $b$, the upstream can emit $a$ and later supersede it with
+$b$, and the composite is unchanged.
 
 We say that $S_2$ satisfies Lifted Monotonicity \emph{on} a set $D\subseteq M$
 when the common-\indesc condition holds for its rows with inputs in $D$, at
@@ -110,22 +116,27 @@ when the common-\indesc condition holds for its rows with inputs in $D$, at
   \item If $\Spec_1$ satisfies Lifted Monotonicity and $\Spec_2$ satisfies it
         on the outputs of $\Spec_1$, then $S_2\circ S_1$ satisfies Lifted
         Monotonicity.
-  \item Renaming $M$ by a map with a left inverse, under any order, leaves
-        $S_2\circ S_1$ unchanged.
-  \item For functions $f:I\to M$ and $g:M\to O$, $g\circ f$ is monotone
-        exactly when some preorder on $M$ makes $f$ and $g$ monotone.  When
-        $g$ is injective, some partial order does.  In general no partial
-        order need exist.
+  \item Changing the order on $M$ leaves $S_2\circ S_1$ unchanged.  So does
+        re-encoding the intermediate values, provided the downstream can
+        decode them.
+  \item Let $f:I\to M$ and $g:M\to O$ be functions such that $g(f(x))\OutputOrd
+        g(f(y))$ whenever $x\InputOrd y$.  If $g$ maps distinct values to
+        distinct values, some order on $M$ makes both $f$ and $g$ monotone.
+        Otherwise there may be no such order.
 \end{enumerate}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
 (1) The proof of Lemma~\ref{lem:composition} uses only intermediate values in
-fibers of $\Spec_1$.  (2) The join is taken over the renamed values, which the
-left inverse maps back.  (3) Order $M$ by $a\le b$ when $g(a)\OutputOrd g(b)$.
-For the last claim, take the chain $a\InputOrd b\InputOrd c$, $f(a)=f(c)\neq
-f(b)$, and $g$ constant.  Monotonicity of $f$ would force $f(a)\preceq_M
-f(b)\preceq_M f(a)$.  Full proof in Appendix~\ref{app:composition}.
+fibers of $\Spec_1$.  (2) The composite joins the two tables on the
+intermediate value, and decoding recovers it.  (3) Place $a$ below $b$ in $M$
+when $g(a)\OutputOrd g(b)$.  This makes $g$ monotone by construction, and $f$
+monotone because $g(f(\cdot))$ is.  For the last claim, take inputs
+$x\InputOrd y\InputOrd z$ with $f(x)=f(z)\neq f(y)$, and $g$ constant.  Then
+$g(f(\cdot))$ is constant, hence monotone.  An order making $f$ monotone would
+place $f(x)$ below $f(y)$ and $f(y)$ below $f(z)=f(x)$, so $f(x)=f(y)$.  The
+stages can be repaired only by merging $f(x)$ and $f(y)$ into one intermediate
+value.  Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
 When none of these applies, some stage must commit.  We ask which one in

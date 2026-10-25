@@ -116,15 +116,18 @@ theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
 
 /-- Proof of Proposition `prop:joint-monotone`: "(1) … All of `m_r` and `m` lie
 in `D`, so the condition for `𝒮₂` on `D` gives `o ∈ S₂(m)` that refines every
-`o_r`, and `(j,o) ∈ S₂ ∘ S₁`.  No closure property of `D` is used.  (2) … A
-join through `e(m)` is a join through `e'(e(m)) = m`, so the composite table
-is unchanged, whatever the orders on `M` and `M'`.  (3) If `g ∘ f` is
-monotone, let `a ≤ b` when `g(a) ≼ g(b)`. … When `g` is injective the
-preorder is antisymmetric. … By the exposure test for tables of functions,
-`f(i)` is exposable at `σ(i)` exactly when `f(i) ≼ f(k)` for every `k ⪰ i`, so
-the upstream under the empty basis cannot emit at one of the canonical states
-of `a` and `b`."  Lean: `Joint.seq_liftedMono_on` (any `D` containing the outputs),
-`Joint.reorder_seq`, `Joint.preorder_factorization`,
+`o_r`, and `(j,o) ∈ S₂ ∘ S₁`.  No closure property of `D` is used.  (2) A
+re-encoding is a map `e : M → M'` together with a decoding `e' : M' → M` that
+recovers every value, `e'(e(m)) = m`. … A join through `e(m)` is a join through
+`e'(e(m)) = m`, so the composite table is unchanged, whatever the orders on `M`
+and `M'`.  (3) Place `a` below `b` in `M` when `g(a) ≼ g(b)`.  This relation
+is reflexive and transitive. … it is an order only when no such pair exists,
+in particular when `g` maps distinct values to distinct values. … By the
+exposure test for tables of functions, `f(i)` is exposable at `σ(i)` exactly
+when `f(i) ≼ f(k)` for every `k ⪰ i`, so the upstream under the empty basis
+cannot emit at one of the canonical states of `x` and `y`."  Lean:
+`Joint.seq_liftedMono_on` (any `D` containing the outputs), `Joint.reorder_seq`,
+`Joint.preorder_factorization` (the reflexive, transitive relation),
 `Joint.injective_characterization`, `Joint.graph_canon_exposable_iff`,
 `Joint.no_order_counterexample` (the empty-basis upstream stalls at some
 canonical state). -/

@@ -123,17 +123,17 @@ theorem «sec:composite-calm/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y
     {q : D → Y} (hq : Monotone q) : Monotone (q ∘ (Inst.st s0 : Inst.FSet D → D)) :=
   Comp.functional_composition (Inst.st_mono s0) hq
 
-/-- "Second, the upstream can filter.  It may never produce the inputs on
-which the downstream is not monotone.  Consider a counter capped at `9` that
-feeds the test "count `< 10`".  The test alone is not monotone, but no count of
-`10` ever arrives.  The pipeline then needs one commitment: the test seals the
-counts it never receives, at its first output.  No run of the counter
-contradicts that seal, so the coordination is proper in the sense of Section
-`sec:proper-coordination`."  Lean: `Joint.threshold` (the test is not
-Lifted-Monotone, cannot emit under the empty basis below `10`, the composite is
-Lifted-Monotone, and the sealing store is proper with every upstream system)
-and `Joint.sealStore_follows` (the store seals once, at its first output, and
-then answers every count without commitment). -/
+/-- "Second, the upstream can filter out the inputs on which the downstream is
+not monotone.  Consider a counter capped at `9` that feeds a test of whether
+the count is below `10`.  On its own the test is not monotone: it answers yes
+at `9` and no at `10`.  But the counter never produces `10`, and on the counts
+`0` through `9` the test always answers yes.  The downstream need only be
+monotone on the values the upstream can produce."  Lean: `Joint.threshold`
+(the test is not Lifted-Monotone, the composite is).  Lean also proves the
+Appendix D treatment of the test as a store with a basis: it cannot emit under
+the empty basis below `10`, and with one seal at its first output
+(`Joint.sealStore_follows`) the guarded composite is proper with every upstream
+system. -/
 theorem «sec:composite-calm/filtering» :
     (¬ Joint.thr.LiftedMono ∧
       (∀ m, m ≤ 9 → ∀ γ o τ, ¬ SysStep (fun _ => False) (canon Joint.thr m) (.output γ o) τ) ∧
@@ -146,19 +146,23 @@ theorem «sec:composite-calm/filtering» :
           .output (Joint.below m) :: Guard.storeTr (ms.map fun m => (m, Joint.below m)) :=
   ⟨Joint.threshold, fun P _ _ h => Joint.sealStore_follows P h⟩
 
-/-- "Third, the stages can cancel.  The composite's table does not depend on
-the order of `M`, so two stages that are not monotone under one order may be
-monotone under another.  Consider two complements of sets, `X ↦ U ∖ X`, with
-`M` ordered by inclusion.  Each stage reverses inclusion, and without
-commitment the first stage can emit only the empty set.  Ordered by reverse
-inclusion, both stages are monotone, and the composite is the identity either
-way.  Likewise, an upstream with two incomparable outputs, both mapped by the
-downstream to one value, cannot emit without choosing.  Declaring one output
-below the other makes it monotone, and the composite is unchanged."  Lean:
-`Joint.double_complement`, `Joint.compl_empty_basis` (under the empty basis
-every output at a canonical state is `∅`), `Joint.constant_store_reorder`;
-the constant store cannot emit without choosing is
-`«app:composition/components-commit»`. -/
+/-- "Third, two stages that are each non-monotone can cancel.  Consider a
+first stage that receives a growing set `X` and outputs its complement
+`U ∖ X`, the elements not yet seen, and a second stage that complements again.
+The composite returns `X`, which only grows.  Under the usual order on sets,
+though, each stage is non-monotone.  As `X` grows, the first stage's output
+shrinks, so without commitment it can emit only the empty set.  … The
+composite's table never mentions the order on `M`, so the two stages may agree
+on a different one.  Let a smaller set of missing elements count as further
+along.  … both stages are monotone.  Likewise, suppose the upstream may output
+either of two incomparable values `a` and `b`, and the downstream maps both to
+the same answer.  The upstream cannot emit either without choosing.  If the
+interface places `a` below `b`, the upstream can emit `a` and later supersede
+it with `b`, and the composite is unchanged."  Lean:
+`Joint.double_complement` (`Joint.Rev` is the reversed order),
+`Joint.compl_empty_basis` (under the empty basis every output at a canonical
+state is `∅`), `Joint.constant_store_reorder`; the constant store cannot emit
+without choosing is `«app:composition/components-commit»`. -/
 theorem «sec:composite-calm/cancellation» {U : Type} [Nonempty U] :
     (¬ (graph (Joint.compl (U := U))).LiftedMono ∧
       Comp.seq (graph (Joint.compl (U := U))) (graph Joint.compl) = graph id ∧
@@ -181,18 +185,23 @@ theorem «sec:composite-calm/cancellation» {U : Type} [Nonempty U] :
 
 /-- **Proposition `prop:joint-monotone`** (Jointly monotone composites): "(1) If
 `𝒮₁` satisfies Lifted Monotonicity and `𝒮₂` satisfies it on the outputs of
-`𝒮₁`, then `S₂ ∘ S₁` satisfies Lifted Monotonicity.  (2) Renaming `M` by a map
-with a left inverse, under any order, leaves `S₂ ∘ S₁` unchanged.  (3) For
-functions `f : I → M` and `g : M → O`, `g ∘ f` is monotone exactly when some
-preorder on `M` makes `f` and `g` monotone.  When `g` is injective, some
-partial order does.  In general no partial order need exist."  And: "We say
+`𝒮₁`, then `S₂ ∘ S₁` satisfies Lifted Monotonicity.  (2) Changing the order on
+`M` leaves `S₂ ∘ S₁` unchanged.  So does re-encoding the intermediate values,
+provided the downstream can decode them.  (3) Let `f : I → M` and
+`g : M → O` be functions such that `g(f(x)) ≼ g(f(y))` whenever `x ⊑ y`.  If
+`g` maps distinct values to distinct values, some order on `M` makes both `f`
+and `g` monotone.  Otherwise there may be no such order."  And: "We say
 that `S₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when the
 common-expansion condition holds for its rows with inputs in `D`, at
 expansions in `D`."  Lean: `Joint.CEOn` (equivalently, the restriction to `D`
 is Lifted-Monotone, `Joint.ceOn_iff_restrictTo`); (1) `Joint.seq_liftedMono_img`;
-(2) `Joint.reorder_seq`; (3) `Joint.preorder_factorization`,
+(2) `Joint.reorder_seq` (encoding `e`, decoding `e'` with `e' (e m) = m`; a
+change of order alone is `e = e' = id` between two orders on `M`); (3)
+`Joint.preorder_factorization` (the reflexive, transitive relation of the
+proof, which exists exactly when `g ∘ f` is monotone),
 `Joint.injective_characterization` (stated for Lifted Monotonicity of the
-tables), `Joint.no_order_counterexample`. -/
+tables), `Joint.no_order_counterexample` ("otherwise there may be no such
+order"). -/
 theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O] :
     (∀ {sp1 : Spec I M} {sp2 : Spec M O}, sp1.LiftedMono → Joint.CEOn sp2 (Joint.Img sp1) →
       (Comp.seq sp1 sp2).LiftedMono) ∧
