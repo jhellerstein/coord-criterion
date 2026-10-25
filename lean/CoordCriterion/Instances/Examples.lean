@@ -9,13 +9,17 @@ Claims of `sections/instances.tex`, with the examples of
 `app:iconfluence` (Appendix B) and `appendices/composition.tex` that use the
 same models (namespace `CC.Inst`):
 
-* Sec. `crdt-instance`, state-based CRDTs: the state function is monotone and
+* Sec. `crdt-instance`, state-based CRDTs: a commutative, associative,
+  idempotent merge is the join of its induced order (`CAI`, `cai_semilattice`);
+  the state function is monotone and
   a least upper bound (`st_mono`, `st_union`, `st_union_least`); Eq.
   `crdt-query-monotonicity` (`crdt_query_calm`, `crdt_query_of_mono`,
-  `crdt_query_mono_iff_reachable`, `crdt_query_mono_not_required`); the
+  `crdt_query_mono_iff_reachable`, `crdt_query_mono_not_required`); a
+  consistent observation whose outputs have no join
+  (`crdt_observation_no_join`); the
   two-phase set (`twoPhase_unsafe`); threshold queries (`Q100_mono`,
   `Q100_consistent_exposable`, `lvar_threshold_mono`); last-writer-wins
-  (`lww_depends_on_order`);
+  (`lww_depends_on_order`; the last two are no longer cited in the paper);
 * Sec. `hat-instance`, highly available transactions: accumulating facts
   (`factSpec_liftedMono`, `rc_liftedMono_consistent`,
   `accumulating_example`), the serialization cycle and first-committer-wins
@@ -113,6 +117,50 @@ instance {D E : Type} [PO D] [PO E] [JSL D] [JSL E] : JSL (D × E) where
   le_l p q := ⟨JSL.le_l p.1 q.1, JSL.le_l p.2 q.2⟩
   le_r p q := ⟨JSL.le_r p.1 q.1, JSL.le_r p.2 q.2⟩
   lub h₁ h₂ := ⟨JSL.lub h₁.1 h₂.1, JSL.lub h₁.2 h₂.2⟩
+
+/-! ## CRDT states form a join-semilattice
+
+A merge that is commutative, associative, and idempotent defines the partial
+order `x ≼ y ⟺ merge x y = y`, in which `merge` is the least upper bound. -/
+
+/-- A commutative, associative, idempotent merge. -/
+structure CAI (D : Type) where
+  merge : D → D → D
+  comm : ∀ a b, merge a b = merge b a
+  assoc : ∀ a b c, merge (merge a b) c = merge a (merge b c)
+  idem : ∀ a, merge a a = a
+
+/-- The order induced by a merge: `x ≼ y` iff `merge x y = y`. -/
+@[reducible] def CAI.po {D : Type} (m : CAI D) : PO D where
+  le x y := m.merge x y = y
+  refl := m.idem
+  trans {x y z} h₁ h₂ := by
+    show m.merge x z = z
+    rw [← h₂, ← m.assoc, h₁]
+  antisymm {x y} h₁ h₂ := by
+    have h₂' : m.merge y x = x := h₂
+    rw [← h₂', m.comm]; exact h₁
+
+/-- The merge is the join of the induced order. -/
+@[reducible] def CAI.jsl {D : Type} (m : CAI D) : @JSL D m.po :=
+  @JSL.mk D m.po m.merge
+    (fun a b => show m.merge a (m.merge a b) = m.merge a b by rw [← m.assoc, m.idem])
+    (fun a b => show m.merge b (m.merge a b) = m.merge a b by
+      rw [m.comm a b, ← m.assoc, m.idem])
+    (fun {a b c} h₁ h₂ => show m.merge (m.merge a b) c = c by
+      have h₁' : m.merge a c = c := h₁
+      have h₂' : m.merge b c = c := h₂
+      rw [m.assoc, h₂', h₁'])
+
+/-- Under `x ≼ y ⟺ merge x y = y`: reflexive, transitive, antisymmetric, and
+`merge a b` is the least upper bound of `a` and `b`. -/
+theorem cai_semilattice {D : Type} (m : CAI D) :
+    let le := fun x y => m.merge x y = y
+    (∀ x, le x x) ∧ (∀ x y z, le x y → le y z → le x z) ∧ (∀ x y, le x y → le y x → x = y) ∧
+      ∀ a b, le a (m.merge a b) ∧ le b (m.merge a b) ∧ ∀ c, le a c → le b c → le (m.merge a b) c :=
+  ⟨m.po.refl, fun _ _ _ => m.po.trans, fun _ _ => m.po.antisymm,
+    fun a b => ⟨@JSL.le_l D m.po m.jsl a b, @JSL.le_r D m.po m.jsl a b,
+      fun _ => @JSL.lub D m.po m.jsl _ _ _⟩⟩
 
 /-! The "Query CALM" row of the instances table (functional specifications
 have singleton, hence directed, fibers) is `CC.CALM.functional_directed`. -/
@@ -284,6 +332,60 @@ theorem crdt_query_mono_not_required :
   refine ⟨fun h => ?_, fun U V _ => by simp only; rw [htop U, htop V]; exact PO.refl _⟩
   have := h B2.ff B2.tt trivial
   simp [B2.neg, PO.le, B2.le] at this
+
+/-! ### Observations need only some common refinement
+
+Complete CALM asks for some common refinement of outputs, not a least one.
+Take the CRDT state `B2 × B2` (componentwise join) and an observation into
+`Y5`, where `a` and `b` have the two incomparable upper bounds `c` and `d`
+and hence no join.  The observation is monotone, so `q ∘ s` is consistent,
+and its outputs `a = q(s({(tt,ff)}))` and `b = q(s({(ff,tt)}))` have no least
+common refinement. -/
+
+inductive Y5 where
+  | bot | a | b | c | d
+  deriving DecidableEq
+
+def Y5.le : Y5 → Y5 → Bool
+  | .bot, _ => true
+  | .a, .a | .a, .c | .a, .d => true
+  | .b, .b | .b, .c | .b, .d => true
+  | .c, .c => true
+  | .d, .d => true
+  | _, _ => false
+
+instance : PO Y5 where
+  le x y := Y5.le x y = true
+  refl x := by cases x <;> rfl
+  trans {x y z} h h' := by cases x <;> cases y <;> cases z <;> simp_all [Y5.le]
+  antisymm {x y} h h' := by cases x <;> cases y <;> simp_all [Y5.le]
+
+/-- The observation: which components are set. -/
+def qY : B2 × B2 → Y5
+  | (.ff, .ff) => .bot
+  | (.tt, .ff) => .a
+  | (.ff, .tt) => .b
+  | (.tt, .tt) => .c
+
+theorem qY_mono : Monotone qY := by
+  intro ⟨x₁, x₂⟩ ⟨y₁, y₂⟩ ⟨h₁, h₂⟩
+  revert h₁ h₂
+  cases x₁ <;> cases x₂ <;> cases y₁ <;> cases y₂ <;> simp [PO.le, B2.le, qY, Y5.le]
+
+theorem crdt_observation_no_join :
+    (graph (fun U : FSet (B2 × B2) => qY (st (B2.ff, B2.ff) U))).Consistent ∧
+      qY (st (B2.ff, B2.ff) (FSet.ofList [(B2.tt, B2.ff)])) = Y5.a ∧
+      qY (st (B2.ff, B2.ff) (FSet.ofList [(B2.ff, B2.tt)])) = Y5.b ∧
+      (Y5.a ≼ Y5.c ∧ Y5.b ≼ Y5.c) ∧
+      ¬ ∃ y : Y5, Y5.a ≼ y ∧ Y5.b ≼ y ∧ ∀ z, Y5.a ≼ z → Y5.b ≼ z → y ≼ z := by
+  refine ⟨(complete_calm _).2 ((graph_liftedMono_iff _).2 (crdt_query_of_mono _ qY_mono)), ?_, ?_,
+    ⟨rfl, rfl⟩, ?_⟩
+  · rw [st_ofList]; rfl
+  · rw [st_ofList]; rfl
+  · intro ⟨y, ha, hb, hl⟩
+    have hc := hl Y5.c rfl rfl
+    have hd := hl Y5.d rfl rfl
+    cases y <;> simp_all [PO.le, Y5.le]
 
 /-! ### Two-phase set (Eq. crdt-2p-query) -/
 
@@ -688,9 +790,9 @@ theorem locValid_sub {c h : Hist Tx} (hc : c ≼ h) (hl : LocValid M h) : LocVal
 
 /-! ### The uniqueness example
 
-Versions are the accounts owning username `sam`; `alloc a` allocates `sam`
-to account `a` if the replica sees it free.  The invariant: at most one
-owner. -/
+Bailis et al.'s payroll unique-ID example.  Versions are the employees
+holding ID 7; `alloc a` creates employee `a` with ID 7 if the replica sees the
+ID unused.  The invariant: at most one employee has ID 7. -/
 
 def uModel : Model Nat Nat where
   app a s := fun v => s v ∨ (v = a ∧ ¬ ∃ b, s b)
@@ -772,9 +874,9 @@ theorem locValid_jU : LocValid uModel jU := by
   rw [(post_antichain jU (fun _ _ h => h) e t ht a).1 ha,
     (post_antichain jU (fun _ _ h => h) e t ht b).1 hb]
 
-/-- The uniqueness example: the history `jU` in which neither allocation saw
-the other is locally valid and expands both one-allocation histories; its
-state has two owners; no state `S_I` permits at `jU` covers both rows; hence
+/-- The uniqueness example: the history `jU` in which neither creation saw
+the other is locally valid and expands both one-creation histories; its
+state has two employees with ID 7; no state `S_I` permits at `jU` covers both rows; hence
 `S_I` fails Lifted Monotonicity and the transactions are not invariant
 confluent. -/
 theorem uniqueness_example :

@@ -30,6 +30,7 @@ import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.Instances.InvariantConfluence
 import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.Examples
+import CoordCriterion.Instances.QueryRefinements
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
 -- §5 and Appendix D composition

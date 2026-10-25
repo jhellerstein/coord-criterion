@@ -28,7 +28,11 @@ contain, and their modeling choices.
 What is argued only in prose, not in Lean: the step from Gilbert and Lynch's
 fair-execution definitions to the finite forms used in
 `«prop:gl-async»` (Appendix F); the protocol steps of 2PL and MVTO (lock
-waits, timestamp issue, reads, when the scheduler aborts; Appendix G); and the
+waits, timestamp issue, reads, when the scheduler aborts; Appendix G); the
+operational results that §6.1 cites (the transducer theorems of Ameloot et
+al., Zinn et al., and Baccaert and Ketsman, which input order a placement
+model justifies, and their notion of coordination; Lean checks only the
+mapping of their monotonicity conditions into our frame); and the
 design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
@@ -73,6 +77,7 @@ first and supporting claims and examples follow.
 | `Instances/InvariantConfluence.lean` | `CC.IConf` | §6, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
 | `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
+| `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
 | `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no commitment; pipeline runs as composite runs, confluence, where the upstream must commit), systems with strategies, commitment-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
 | `Appendix/JointMono.lean` | `CC.Joint` | §5.1, App. D | Jointly monotone composites: filtering (capped counter), re-ordering the middle (boolean toggle, constant store; also the double complement, no longer cited in the paper), preorder/injective characterization and the no-partial-order counterexample |
@@ -96,7 +101,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-575 entries.
+579 entries.
 
 ### §2 Functional CALM
 
@@ -339,14 +344,18 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«sec:query-instance/functional-directed»` | theorem | Sec. |
+| `«sec:query-instance/weaker-monotonicity»` | theorem | Sec. |
+| `«sec:query-instance/one-fact-version»` | theorem | Sec. |
+| `«sec:query-instance/node-monotonicity»` | theorem | Sec. |
+| `«sec:query-instance/node-monotone-not-lm»` | theorem | Sec. |
+| `«sec:query-instance/deterministic-behaviors»` | theorem | Sec. |
 | `«sec:crdt-instance/state-function»` | theorem | Sec. |
 | `«sec:crdt-instance/state-monotone»` | theorem | Sec. |
 | `«sec:crdt-instance/query-calm»` | theorem | Sec. |
 | `«sec:crdt-instance/query-monotone-on-reachable»` | theorem | Sec. |
 | `«sec:crdt-instance/two-phase»` | theorem | Sec. |
-| `«sec:crdt-instance/thresholds»` | theorem | Sec. |
-| `«sec:crdt-instance/lww»` | theorem | Sec. |
+| `«sec:crdt-instance/semilattice»` | theorem | Sec. |
+| `«sec:crdt-instance/some-refinement»` | theorem | Sec. |
 | `«sec:hat-instance/accumulating-facts»` | theorem | Paragraph "Accumulating facts": |
 | `«sec:hat-instance/serializability-cycle»` | theorem | Paragraph "Serializability and transaction ordering": |
 | `«sec:hat-instance/snapshot-isolation»` | theorem | Paragraph "Snapshot isolation": |
@@ -355,7 +364,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying `𝓘`." Lean: |
 | `«sec:iconfluence-instance/iconfluent-def»` | theorem | "`T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." Lean: |
 | `«sec:iconfluence-instance/bailis-definition»` | theorem | "Every reachable state descends from `s₀`, so `T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." This is the step from Ba… |
-| `«sec:iconfluence-instance/spec»` | theorem | "The inputs are the locally valid histories … a history is valid when every merge of what it contains satisfies `𝓘` … The specification `S_𝓘` lets a replica… |
+| `«sec:iconfluence-instance/spec»` | theorem | "From an instance `(s₀, T, 𝓘)` of their model we construct a specification `S_𝓘` in ours as follows. |
 | `«prop:iconfluence-lm»` | theorem | **Proposition `prop:iconfluence-lm`** (Invariant confluence and Lifted Monotonicity): |
 | `«sec:iconfluence-instance/iconfluence-is-consistency»` | theorem | "Invariant confluence is therefore not a separate boundary: |
 | `«sec:iconfluence-instance/uniqueness»` | theorem | The uniqueness example: |

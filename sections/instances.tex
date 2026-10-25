@@ -18,8 +18,39 @@ Functional CALM does not replace the details of that theorem.  It abstracts
 the result to a property that can be compared with specifications outside
 Datalog.
 
-Subsequent refinements of that CALM Theorem are all instances of our Functional CALM
-Theorem: \jmh{fill in brief explanations of Zinn, Baccaert, etc.}
+Later refinements of that theorem change the input order or the notion of
+coordination.  Zinn et al.\ gave transducers partial knowledge of how data is
+placed, and more queries became coordination-free, among them the
+non-monotone win-move query~\cite{zinn2012winmove}.  Ameloot et al.\
+characterized the new classes by weaker forms of
+monotonicity~\cite{ameloot2015weaker}, correcting an earlier one-fact
+version~\cite{zinn2012weak}.  A query is \emph{domain-distinct-monotone} when
+$Q(I)\subseteq Q(I\cup J)$ for every $J$ whose facts each contain a value
+that does not occur in $I$.  It is \emph{domain-disjoint-monotone} when this
+holds for every $J$ whose facts use only such values.  Each is Functional
+CALM under a different input order.  Under policy-aware placement, a node can
+learn which facts over its known values are absent, so the input it cannot
+yet rule out is a domain-distinct $J$.  Under domain-guided placement it is a
+domain-disjoint $J$.  When the order lets $I\cup J$ \inrelbase $I$ only for
+such $J$, each condition is functional monotonicity.  The placement model
+justifies that order.  Functional CALM takes the order as given.
+
+Baccaert and Ketsman go beyond
+queries~\cite{baccaert2023dcbq,baccaert2026spectrum}.  Their
+\emph{behaviors} map an input of facts located at nodes to a set of permitted
+located outputs.  With outputs ordered by inclusion, and an input \inrelpart
+another when it adds facts only at new nodes, a behavior is a relational
+specification.  Their characterization uses \emph{node monotonicity}: outputs
+computed by two disjoint subnetworks have a common \outnoun at the merged
+network.  Lifted Monotonicity implies it.  The converse fails, because their
+notion of coordination is narrower.  A behavior is coordination-free for them
+when it can be computed without the list of all nodes.  That list lets a node
+rule out further input, which is a seal in our terms.  A subnetwork may still
+choose among outputs, for instance one spanning tree among several, by
+deferring to its smallest node.  Complete CALM counts that choice as a
+commitment (Proposition~\ref{prop:seal-or-choose}), so it requires directed
+fibers, and node monotonicity does not.  For deterministic behaviors the two
+conditions coincide.
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
@@ -50,8 +81,7 @@ Operation-based CRDTs fit too, with the causally closed set of
 delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
 
-The replica states of a convergent CRDT always form a join-semilattice, since
-merge is commutative, associative, and idempotent.  Observations need less:
+CRDT states form a join-semilattice.  Observations $q$ need less:
 Complete CALM requires only \emph{some} common \outnoun of query outputs
 (Section~\ref{sec:lifted-monotonicity}), not a least one.
 
@@ -125,16 +155,20 @@ satisfying $\mathcal I$.  Every reachable state descends from $s_0$, so $T$ is
 \emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
 reachable $s_1$ and $s_2$.
 
-The input is a \emph{transaction history}: a partial order of transaction
-events recording which transactions ran and what each one saw; a history
-\inrel each of its downward-closed sub-orders.  The inputs are the
-\emph{locally valid} histories, in which every transaction step preserves
-$\mathcal I$ on its replica's state, and a history is \emph{valid} when every
-merge of what it contains satisfies $\mathcal I$
-(Appendix~\ref{app:iconfluence}).  The specification $S_{\mathcal I}$ lets a
-replica expose the state of any valid downward-closed sub-history of its
-input: it may hold transactions back, but whatever it exposes must be valid
-together with everything it contains.
+From an instance $(s_0,T,\mathcal I)$ of their model we construct a
+specification $S_{\mathcal I}$ in ours as follows (Appendix~\ref{app:iconfluence}).
+Inputs are \emph{transaction histories}: partial orders of
+        events, each labeled by a transaction in $T$, where one event precedes
+        another when the replica running the second saw the first.  A history
+        \inrel each of its downward-closed sub-orders.  We keep the
+        \emph{locally valid} histories, in which every transaction step
+        preserves $\mathcal I$ on its replica's state.
+Outputs are database states, ordered by inclusion.
+The specification table permits, at input $h$, the state of any downward-closed
+        sub-history of $h$ that is \emph{valid}: every merge of what it
+        contains satisfies $\mathcal I$.
+A replica may thus hold transactions back, but whatever it exposes must be
+valid together with everything it contains.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
@@ -148,12 +182,13 @@ See Appendix~\ref{app:iconfluence}.
 
 Invariant confluence is therefore not a separate boundary: for the
 specification that exposes database states, it is Lifted Monotonicity, and by
-Complete CALM it is consistency.  A uniqueness constraint shows the failure
-directly.  Two replicas each observe that username \texttt{sam} is free and
-allocate it to different accounts.  The history in which neither allocation
-saw the other is locally valid and \inrel both one-allocation histories, but
-its state has two owners, so no state it permits \outrel both.  The system must
-reserve names, reject one allocation, or weaken the invariant.  Concurrency,
+Complete CALM it is consistency.  The
+uniqueness constraint of Bailis et al.'s payroll example shows the failure
+directly.  Two replicas each create an employee and assign ID~7, which each
+sees is unused.  The history in which neither creation saw the other is
+locally valid and \inrel both one-creation histories, but its state has two
+employees with ID~7, so no state it permits \outrel both.  The system must
+reserve IDs, reject one creation, or weaken the invariant.  Concurrency,
 not the transactions alone, decides the outcome: a transaction that is harmless
 after another can, when it runs without seeing it, produce a state whose merge
 with the other's is invalid.
