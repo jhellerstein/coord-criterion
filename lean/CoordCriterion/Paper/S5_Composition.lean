@@ -11,6 +11,12 @@ LaTeX label; unlabeled claims are `«sec:composition/<slug>»`.  The proofs
 are in Appendix `app:composition`; its curried evaluation and the converse
 counterexample are in `Paper/AppD_Composition.lean`.
 
+The section has no subsection heading for sequential composition; its label
+`sec:sequential-composition` sits after the section opening.  Composition with
+independent inputs (`sec:parameterized-composition`) is in Appendix
+`app:composition` and `Paper/AppD_Composition.lean`; the Proper Coordination
+entries below state both the sequential and the parameterized forms.
+
 Library: `Appendix/Composition.lean` (namespace `CC.Comp`) and the examples
 at the end of `Instances/Examples.lean` (namespace `CC.Inst`).
 
@@ -87,29 +93,6 @@ theorem «sec:composition/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (
     {q : D → Y} (hq : Monotone q) : Monotone (q ∘ (Inst.st s0 : Inst.FSet D → D)) :=
   Comp.functional_composition (Inst.st_mono s0) hq
 
-/-! ## Composition with independent inputs (`sec:parameterized-composition`) -/
-
-/-- Eq. `eq:parameterized-composition`:
-`G ⋆ F = π_{I,J,A,C}(F ⋈_B G) = {((i,j,a),c) : ∃ b. ((i,a),b) ∈ F ∧ ((j,b),c) ∈ G}`,
-"with the product order on `I × J × A`.  Since `F` is total on `I × A` and `G`
-is total on `J × B`, every composed input has a nonempty fiber."  Lean: the
-composed input `(i,j,a)` is `(i,(j,a))`; `Comp.par F G` is the specification
-with table `ptable`. -/
-theorem «eq:parameterized-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B] [PO C]
-    (F : Spec (I × A) B) (G : Spec (J × B) C) :
-    (∀ (i : I) (j : J) (a : A) (c : C),
-        (Comp.par F G).S (i, (j, a)) c ↔ ∃ b, F.S (i, a) b ∧ G.S (j, b) c) ∧
-      ∀ x, ∃ c, (Comp.par F G).S x c :=
-  ⟨fun _ _ _ _ => Iff.rfl, (Comp.par F G).total⟩
-
-/-- **Lemma `lem:parameterized-composition`** (Independently parameterized
-composition): "If `Spec_F` and `Spec_G` satisfy Lifted Monotonicity, then the
-specification with table `G ⋆ F` satisfies Lifted Monotonicity." -/
-theorem «lem:parameterized-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B] [PO C]
-    {F : Spec (I × A) B} {G : Spec (J × B) C} (hF : F.LiftedMono) (hG : G.LiftedMono) :
-    (Comp.par F G).LiftedMono :=
-  Comp.par_liftedMono hF hG
-
 /-! ## Proper Coordination (`sec:proper-coordination`) -/
 
 /-- "A commitment strategy for `S₁` … fixes at each input `i` the upstream
@@ -123,11 +106,12 @@ abbrev «sec:composition/commitment-strategy» {I M : Type} [PO I] [PO M] (sp1 :
 
 /-- **Definition `def:proper-coordination`** (Proper Coordination): "A
 totality-preserving commitment strategy with committed table `K` is proper
-for the composition when the resolved specification `S₂ ∘ K` (resp. `G ⋆ K`)
-is consistent and every output at every state of it reachable without
-commitment is exposable."  Lean: `Comp.Proper` on the resolved
-specification, instantiated as `Comp.ProperSeq κ sp2` (`S₂ ∘ K`) and
-`Comp.ProperPar κ G` (`G ⋆ K`). -/
+for the composition when the resolved specification `S₂ ∘ K` is consistent
+and every output at every state of it reachable without commitment is
+exposable."  Lean: `Comp.Proper` on the resolved specification, instantiated
+as `Comp.ProperSeq κ sp2` (`S₂ ∘ K`) and, for the parameterized form of
+Appendix `app:composition` ("`G ⋆ K` as the resolved table"),
+`Comp.ProperPar κ G`. -/
 theorem «def:proper-coordination» :
     (∀ {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M} (κ : Comp.CommitTable sp1)
         (sp2 : Spec M O),
@@ -166,9 +150,10 @@ theorem «sec:composition/neither-monotone» :
     Inst.converse_example.2.2.2.2.2.2.2.1, Inst.converse_example.2.2.2.2.2.2.2.2⟩
 
 /-- **Corollary `thm:proper-coordination`** (Proper Coordination): "A
-totality-preserving commitment strategy is proper for a sequential or
-independently parameterized composition if and only if the resolved
-specification satisfies Lifted Monotonicity." -/
+totality-preserving commitment strategy is proper for a composition if and
+only if the resolved specification satisfies Lifted Monotonicity."  Lean: the
+sequential form and the independently parameterized form (Appendix
+`app:composition`). -/
 theorem «thm:proper-coordination» :
     (∀ {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M} (κ : Comp.CommitTable sp1)
         (sp2 : Spec M O),
@@ -181,8 +166,9 @@ theorem «thm:proper-coordination» :
 /-- **Corollary `cor:monotone-commitment`** (Committing upstream to a monotone
 function): "If the committed table `K` of a totality-preserving commitment
 strategy is the table of a monotone function and the downstream
-specification (`S₂` or `G`) satisfies Lifted Monotonicity, the strategy is
-proper." -/
+specification `S₂` satisfies Lifted Monotonicity, the strategy is proper."
+Lean: the sequential form and the independently parameterized form with `G`
+in place of `S₂` (Appendix `app:composition`). -/
 theorem «cor:monotone-commitment» :
     (∀ {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M} (κ : Comp.CommitTable sp1)
         (sp2 : Spec M O) (f : I → M),
@@ -203,31 +189,40 @@ theorem «sec:composition/converse-fails» :
 
 /-- **Example `ex:committed-log-composition`** (Committed log composed with a
 key-value store), for any deterministic state machine `δ` and two distinct
-commands: "`F` is non-monotone, since distinct next entries are incompatible
-outputs in one fiber.  So is the key-value store specification `G ⋆ F`,
-since concurrent commands ordered oppositely give incompatible responses.
-… `K` is the table of a monotone function.  Deterministic execution makes `G`
-monotone.  By Corollary `cor:monotone-commitment` the log commitments are
-proper, and `G ⋆ K` is consistent with no commitment in the store."  Lean:
-`I = B = Inst.Pfx Cmd` (prefix order), `A = Comp.Pt`; `logF`, `logK` (commit
-to the arrival order, `K(i) = i`), `kvG δ σ₀`; composed inputs restricted to
-coherent pairs via `Inst.onDom Inst.Coh`. -/
+commands: "Then `S₁` is non-monotone, since distinct next entries are
+incompatible outputs in one fiber.  So is the key-value store specification
+`S₂ ∘ S₁`, since concurrent commands ordered oppositely give incompatible
+responses. … `K` is the table of a monotone function.  Deterministic
+execution makes `S₂` monotone.  By Corollary `cor:monotone-commitment` the log
+commitments are proper, and `S₂ ∘ K` is consistent with no commitment in the
+store."  Lean: `I = M = Inst.Pfx Cmd` (prefix order); `smrS1`, `smrK` (commit
+to the arrival order, `K(i) = i`), `smrS2 δ σ₀` (the table of execution
+`execF δ σ₀`). -/
 theorem «ex:committed-log-composition» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt)
     {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
-    ¬ (Inst.logF (Cmd := Cmd)).LiftedMono ∧
-      ¬ (Inst.onDom Inst.Coh (Comp.par Inst.logF (Inst.kvG δ σ0))).LiftedMono ∧
-      (Inst.logK (Cmd := Cmd)).K = (graph fun p : Inst.Pfx Cmd × Comp.Pt => p.1).S ∧
-      Monotone (fun p : Inst.Pfx Cmd × Comp.Pt => p.1) ∧ (Inst.kvG δ σ0).LiftedMono ∧
-      Comp.ProperPar Inst.logK (Inst.kvG δ σ0) ∧ (Comp.par Inst.logK.spec (Inst.kvG δ σ0)).Consistent ∧
-      (Inst.onDom Inst.Coh (Comp.par Inst.logK.spec (Inst.kvG δ σ0))).Consistent :=
-  Inst.committed_log_example δ σ0 hne
+    ¬ (Inst.smrS1 (Cmd := Cmd)).LiftedMono ∧
+      ¬ (Comp.seq Inst.smrS1 (Inst.smrS2 δ σ0)).LiftedMono ∧
+      (Inst.smrK (Cmd := Cmd)).K = (graph fun i : Inst.Pfx Cmd => i).S ∧
+      Monotone (fun i : Inst.Pfx Cmd => i) ∧ (Inst.smrS2 δ σ0).LiftedMono ∧
+      Comp.ProperSeq Inst.smrK (Inst.smrS2 δ σ0) ∧
+      (Comp.seq Inst.smrK.spec (Inst.smrS2 δ σ0)).Consistent :=
+  Inst.smr_example δ σ0 hne
 
-/-- Inside Example `ex:committed-log-composition`: "Restricting a
-specification to a subset of its inputs, with the induced order, preserves
-Lifted Monotonicity, so the results above apply." -/
-theorem «ex:committed-log-composition/restriction» {α O : Type} [PO α] [PO O] (P : α → Prop)
-    {sp : Spec α O} (h : sp.LiftedMono) : (Inst.onDom P sp).LiftedMono :=
-  Inst.onDom_liftedMono P h
+/-- "There, bare reads are consistent when each response records the log
+position it read from, but not when the specification demands the latest
+value (Example `ex:bare-reads`)."  Lean: with position-tagged responses
+(`Inst.bareG`) the resolved table `G ⋆ K` is consistent; with latest-value
+responses (`Inst.latestG`) it violates Lifted Monotonicity, hence is not
+consistent, once some command `c` changes what some read `r` returns.  See
+`«ex:bare-reads»` in `Paper/AppD_Composition.lean`. -/
+theorem «sec:composition/bare-reads» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd → Stt × R)
+    (rd : Stt → Rd → V) (σ0 : Stt) :
+    (Comp.par Inst.logK.spec (Inst.bareG δ rd σ0)).Consistent ∧
+      ∀ {c : Cmd} {r : Rd}, rd (δ σ0 c).1 r ≠ rd σ0 r →
+        ¬ (Comp.par Inst.logK.spec (Inst.latestG δ rd σ0)).Consistent :=
+  ⟨(Comp.monotone_commitment_par Inst.logK _ (fun p => p.1) rfl Inst.logK_monotone
+      (Inst.bareG_liftedMono δ rd σ0)).1,
+    fun hc h => (Inst.latest_not_proper δ rd σ0 hc).1 ((complete_calm _).1 h)⟩
 
 end Paper
 end CC

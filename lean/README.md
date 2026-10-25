@@ -93,7 +93,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-547 entries.
+550 entries.
 
 ### §2 Functional CALM
 
@@ -318,8 +318,6 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone. |
 | `«sec:composition/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
-| `«eq:parameterized-composition»` | theorem | Eq. |
-| `«lem:parameterized-composition»` | theorem | **Lemma `lem:parameterized-composition`** (Independently parameterized composition): |
 | `«sec:composition/commitment-strategy»` | abbrev | "A commitment strategy for `S₁` … fixes at each input `i` the upstream outputs committed to at `i`. |
 | `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«sec:composition/second-clause»` | theorem | "The second clause follows from the first by Complete CALM and the exposure boundary (Theorem `thm:complete-calm`, Proposition `prop:exposure-boundary`): |
@@ -328,7 +326,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«cor:monotone-commitment»` | theorem | **Corollary `cor:monotone-commitment`** (Committing upstream to a monotone function): |
 | `«sec:composition/converse-fails»` | theorem | "The converse fails: |
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Committed log composed with a key-value store), for any deterministic state machine `δ` and two distinct commands: |
-| `«ex:committed-log-composition/restriction»` | theorem | Inside Example `ex:committed-log-composition`: |
+| `«sec:composition/bare-reads»` | theorem | "There, bare reads are consistent when each response records the log position it read from, but not when the specification demands the latest value (Example… |
 
 ### §6 Instances
 
@@ -557,11 +555,16 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
 | `«cor:functional-composition»` | theorem | **Corollary `cor:functional-composition`** (Functional composition): |
+| `«eq:parameterized-composition»` | theorem | Eq. |
+| `«lem:parameterized-composition»` | theorem | **Lemma `lem:parameterized-composition`** (Independently parameterized composition): |
 | `«eq:curried-fibers»` | theorem | Eq. |
 | `«eq:curried-query-plan»` | theorem | Eq. |
 | `«prop:curried-query-plan»` | theorem | **Proposition `prop:curried-query-plan`** (Curried equijoin plan): |
 | `«eq:curried-composition»` | theorem | Eq. |
+| `«app:composition/parameterized-proper»` | theorem | "Definition `def:proper-coordination` and Corollaries `thm:proper-coordination` and `cor:monotone-commitment` apply to independently parameterized compositio… |
 | `«app:composition/converse-example»` | theorem | "The converse of Corollary `cor:monotone-commitment` fails: |
+| `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
+| `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
 
 ### Appendix E: Deployment
 

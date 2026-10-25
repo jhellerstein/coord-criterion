@@ -26,8 +26,9 @@ same models (namespace `CC.Inst`):
   (`uniqueness_example`, `uniqueness_concurrency`);
 * App. `app:composition`: the converse example after Cor. monotone-commitment
   (`converse_example`), Eq. `curried-composition` (`curried_sharp`,
-  `curried_plan_graph`), Example `committed-log-composition`
-  (`committed_log_example`, `onDom_liftedMono`).
+  `curried_plan_graph`), Example `bare-reads` (`bare_read_example`,
+  `latestG_not_liftedMono`, `latest_not_proper`);
+* Sec. `composition`, Example `committed-log-composition` (`smr_example`).
 
 The "Query CALM" row (functional fibers are directed) is
 `CC.CALM.functional_directed`.
@@ -897,28 +898,9 @@ theorem curried_plan_graph (f : I × A → B) (g : J × B → C) :
   rw [← curried_query_plan]
   exact congrArg Spec.S (parameterized_graph f g)
 
-/-- Inputs satisfying a predicate, with the induced order. -/
-def Sub {α : Type} (P : α → Prop) := {x : α // P x}
-
-instance {α : Type} [PO α] (P : α → Prop) : PO (Sub P) where
-  le x y := x.1 ≼ y.1
-  refl x := PO.refl x.1
-  trans h h' := PO.trans h h'
-  antisymm h h' := Subtype.ext (PO.antisymm h h')
-
-/-- A specification restricted to the inputs satisfying `P`. -/
-def onDom {α O : Type} [PO α] [PO O] (P : α → Prop) (sp : Spec α O) : Spec (Sub P) O :=
-  ⟨fun x o => sp.S x.1 o, fun x => sp.total x.1⟩
-
-/-- Restricting the inputs preserves Lifted Monotonicity (used when
-Example `ex:committed-log-composition` restricts to coherent pairs). -/
-theorem onDom_liftedMono {α O : Type} [PO α] [PO O] (P : α → Prop) {sp : Spec α O}
-    (h : sp.LiftedMono) : (onDom P sp).LiftedMono :=
-  fun i j hij X hne hX => h i.1 j.1 hij X hne hX
-
 end CompExamples
 
-/-! ### Example `ex:committed-log-composition` -/
+/-! ### Replicated store: Examples `ex:committed-log-composition` and `ex:bare-reads` -/
 
 section Log
 open Comp
@@ -967,8 +949,85 @@ theorem exec_append : ∀ (σ : Stt) (l t : List Cmd), exec δ σ (l ++ t) = exe
   | _, [], _ => rfl
   | σ, c :: l, t => by simp only [List.cons_append, exec, final, exec_append _ l t]
 
-/-- `F`: at proposal stream `i`, the logs still permitted (logs of proposed
-commands).  `I = B = Pfx Cmd`, `A = Pt`. -/
+theorem perm_mem {α : Type} {a b c : α} (hc : c ∈ [b, a]) : c ∈ [a, b] := by
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at hc ⊢
+  rcases hc with rfl | rfl <;> simp
+
+/-- The log of responses, as a function of the log: deterministic execution
+from `σ₀`.  `M = Pfx Cmd`, `O = Pfx (Cmd × R)`. -/
+def execF (σ0 : Stt) (b : Pfx Cmd) : Pfx (Cmd × R) := ⟨exec δ σ0 b.l⟩
+
+theorem execF_monotone (σ0 : Stt) : Monotone (execF δ σ0) := by
+  rintro b b' ⟨t, ht⟩
+  exact ⟨exec δ (final δ σ0 b.l) t, by show exec δ σ0 b'.l = exec δ σ0 b.l ++ _; rw [ht, exec_append]⟩
+
+/-- Two distinct commands executed in opposite orders give incompatible
+response logs. -/
+theorem exec_swap_incompatible (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) {u : Pfx (Cmd × R)}
+    (h1 : execF δ σ0 ⟨[c₁, c₂]⟩ ≼ u) (h2 : execF δ σ0 ⟨[c₂, c₁]⟩ ≼ u) : False := by
+  have h1' : (⟨(c₁, (δ σ0 c₁).2) :: exec δ (δ σ0 c₁).1 [c₂]⟩ : Pfx (Cmd × R)) ≼ u := h1
+  have h2' : (⟨(c₂, (δ σ0 c₂).2) :: exec δ (δ σ0 c₂).1 [c₁]⟩ : Pfx (Cmd × R)) ≼ u := h2
+  exact hne (congrArg Prod.fst (pfx_head h1' h2'))
+
+/-! #### Example `ex:committed-log-composition`: every command goes through the log -/
+
+/-- `S₁`: at proposal stream `i`, the logs still permitted (logs of proposed
+commands).  `I = M = Pfx Cmd`.  (The paper assumes each command is proposed
+at most once; the claims below do not need it.) -/
+def smrS1 : Spec (Pfx Cmd) (Pfx Cmd) :=
+  ⟨fun i b => ∀ c ∈ b.l, c ∈ i.l, fun _ => ⟨⟨[]⟩, fun _ h => nomatch h⟩⟩
+
+/-- The authority commits to the next command in arrival order: `K(i) = i`. -/
+def smrK : CommitTable (smrS1 (Cmd := Cmd)) :=
+  ⟨(graph fun i : Pfx Cmd => i).S, fun i b h => by
+    have h' : b = i := h
+    subst h'; exact fun _ hc => hc, fun _ => ⟨_, rfl⟩⟩
+
+/-- `S₂`: the responses obtained by executing the log. -/
+def smrS2 (σ0 : Stt) : Spec (Pfx Cmd) (Pfx (Cmd × R)) := graph (execF δ σ0)
+
+/-- Example `ex:committed-log-composition`, for any deterministic state
+machine and any two distinct commands:
+* `S₁` violates Lifted Monotonicity (two next entries in one fiber);
+* `S₂ ∘ S₁` violates it (opposite orders give incompatible responses);
+* `K` is the graph of a monotone function and `S₂` is monotone;
+* the commitment is proper, and `S₂ ∘ K` is consistent. -/
+theorem smr_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
+    ¬ (smrS1 (Cmd := Cmd)).LiftedMono ∧
+      ¬ (seq smrS1 (smrS2 δ σ0)).LiftedMono ∧
+      (smrK (Cmd := Cmd)).K = (graph fun i : Pfx Cmd => i).S ∧
+      Monotone (fun i : Pfx Cmd => i) ∧ (smrS2 δ σ0).LiftedMono ∧
+      ProperSeq smrK (smrS2 δ σ0) ∧ (seq smrK.spec (smrS2 δ σ0)).Consistent := by
+  have hG : (smrS2 δ σ0).LiftedMono := (graph_liftedMono_iff _).2 (execF_monotone δ σ0)
+  have hid : Monotone (fun i : Pfx Cmd => i) := fun _ _ h => h
+  have hP : ProperSeq smrK (smrS2 δ σ0) :=
+    monotone_commitment_seq smrK (smrS2 δ σ0) (fun i => i) rfl hid hG
+  refine ⟨?_, ?_, rfl, hid, hG, hP, hP.1⟩
+  · intro h
+    obtain ⟨u, _, hall⟩ := h ⟨[c₁, c₂]⟩ ⟨[c₁, c₂]⟩ (PO.refl _)
+      [⟨[c₁]⟩, ⟨[c₂]⟩] (by simp) (by
+        intro z hz
+        simp only [List.mem_cons, List.not_mem_nil, or_false] at hz
+        rcases hz with rfl | rfl <;> intro c hc <;> simp_all)
+    exact hne (pfx_head (l := []) (m := []) (hall ⟨[c₁]⟩ (by simp)) (hall ⟨[c₂]⟩ (by simp)))
+  · intro h
+    have r1 : (seq smrS1 (smrS2 δ σ0)).S ⟨[c₁, c₂]⟩ (execF δ σ0 ⟨[c₁, c₂]⟩) :=
+      ⟨⟨[c₁, c₂]⟩, fun _ hc => hc, rfl⟩
+    have r2 : (seq smrS1 (smrS2 δ σ0)).S ⟨[c₁, c₂]⟩ (execF δ σ0 ⟨[c₂, c₁]⟩) :=
+      ⟨⟨[c₂, c₁]⟩, fun _ hc => perm_mem hc, rfl⟩
+    obtain ⟨u, _, hall⟩ := h ⟨[c₁, c₂]⟩ ⟨[c₁, c₂]⟩ (PO.refl _)
+      [execF δ σ0 ⟨[c₁, c₂]⟩, execF δ σ0 ⟨[c₂, c₁]⟩] (by simp) (by
+        intro z hz
+        simp only [List.mem_cons, List.not_mem_nil, or_false] at hz
+        rcases hz with rfl | rfl
+        · exact r1
+        · exact r2)
+    exact exec_swap_incompatible δ σ0 hne (hall _ (by simp)) (hall _ (by simp))
+
+/-! #### Example `ex:bare-reads`: a store with bare reads (Appendix D) -/
+
+/-- `F`: at proposal stream `i`, the logs still permitted.  `I = B = Pfx Cmd`,
+`A = Pt`. -/
 def logF : Spec (Pfx Cmd × Pt) (Pfx Cmd) :=
   ⟨fun p b => ∀ c ∈ b.l, c ∈ p.1.l, fun _ => ⟨⟨[]⟩, fun _ h => nomatch h⟩⟩
 
@@ -978,42 +1037,91 @@ def logK : CommitTable (logF (Cmd := Cmd)) :=
     have h' : b = p.1 := h
     subst h'; exact fun _ hc => hc, fun _ => ⟨_, rfl⟩⟩
 
-/-- `G`: a request history and a log determine the responses (deterministic
-execution).  `J = Pfx Cmd`, `C = Pfx (Cmd × R)`. -/
-def kvG (σ0 : Stt) : Spec (Pfx Cmd × Pfx Cmd) (Pfx (Cmd × R)) :=
-  graph fun q => ⟨exec δ σ0 q.2.l⟩
-
-/-- Coherent pairs: every proposed command comes from a request in `J`. -/
-def Coh (x : Pfx Cmd × (Pfx Cmd × Pt)) : Prop := ∀ c ∈ x.1.l, c ∈ x.2.1.l
-
 theorem logK_monotone : Monotone (fun p : Pfx Cmd × Pt => p.1) := fun _ _ h => h.1
 
-theorem kvG_monotone (σ0 : Stt) :
-    Monotone (fun q : Pfx Cmd × Pfx Cmd => (⟨exec δ σ0 q.2.l⟩ : Pfx (Cmd × R))) := by
-  rintro q q' ⟨_, t, ht⟩
-  exact ⟨exec δ (final δ σ0 q.2.l) t, by show exec δ σ0 q'.2.l = _; rw [ht, exec_append]⟩
+/-- Sets of facts, ordered by inclusion. -/
+structure Facts (α : Type) where
+  has : α → Prop
 
-/-- Example `ex:committed-log-composition`, for any deterministic state
-machine and any two distinct commands:
-* `F` violates Lifted Monotonicity (two next entries in one fiber);
-* `G ⋆ F`, restricted to coherent pairs, violates it (opposite orders give
-  incompatible responses);
+instance (α : Type) : PO (Facts α) where
+  le a b := ∀ x, a.has x → b.has x
+  refl _ _ h := h
+  trans h h' x hx := h' x (h x hx)
+  antisymm := by
+    rintro ⟨a⟩ ⟨b⟩ h h'
+    have : a = b := funext fun x => propext ⟨h x, h' x⟩
+    rw [this]
+
+variable {Rd V : Type} (rd : Stt → Rd → V)
+
+/-- A position-tagged response `(r, n, v)` is valid for bare-read history `j`
+and log `b` when `r` was received, `n ≤ |b|`, and `v` is the value that `r`
+reads (`rd`) after the first `n` entries of `b`. -/
+def TagValid (σ0 : Stt) (j : Pfx Rd) (b : Pfx Cmd) (f : Rd × Nat × V) : Prop :=
+  f.1 ∈ j.l ∧ f.2.1 ≤ b.l.length ∧ f.2.2 = rd (final δ σ0 (b.l.take f.2.1)) f.1
+
+/-- `G` with position-tagged bare reads.  `J = Pfx Rd` (bare reads received, by
+prefix); `C = Pfx (Cmd × R) × Facts (Rd × Nat × V)`, the responses to logged
+commands (by extension) and the set of bare-read responses (by inclusion).
+At `(j, b)`: logged commands are answered by executing `b`, every bare-read
+response is valid, and every read in `j` has at least one response.
+Modeling choice: responses are facts, so one read may be answered at several
+positions; position-tagged responses never contradict each other. -/
+def bareG (σ0 : Stt) : Spec (Pfx Rd × Pfx Cmd) (Pfx (Cmd × R) × Facts (Rd × Nat × V)) :=
+  ⟨fun q o => o.1 = execF δ σ0 q.2 ∧ (∀ f, o.2.has f → TagValid δ rd σ0 q.1 q.2 f) ∧
+      ∀ r ∈ q.1.l, ∃ f, o.2.has f ∧ f.1 = r,
+   fun q => ⟨(execF δ σ0 q.2, ⟨fun f => f.1 ∈ q.1.l ∧ f.2.1 = 0 ∧ f.2.2 = rd σ0 f.1⟩),
+     rfl,
+     fun f hf => ⟨hf.1, by rw [hf.2.1]; exact Nat.zero_le _,
+       by rw [hf.2.1, List.take_zero]; exact hf.2.2⟩,
+     fun r hr => ⟨(r, 0, rd σ0 r), ⟨hr, rfl, rfl⟩, rfl⟩⟩⟩
+
+/-- "A longer log never contradicts" a position-tagged response: `G` satisfies
+Lifted Monotonicity. -/
+theorem bareG_liftedMono (σ0 : Stt) : (bareG δ rd σ0).LiftedMono := by
+  rintro ⟨j, b⟩ ⟨j', b'⟩ ⟨⟨s, hs⟩, ⟨t, ht⟩⟩ X _ hX
+  refine ⟨(execF δ σ0 b',
+      ⟨fun f => (∃ x ∈ X, x.2.has f) ∨ (f.1 ∈ j'.l ∧ f.2.1 = 0 ∧ f.2.2 = rd σ0 f.1)⟩),
+    ⟨rfl, ?_, ?_⟩, ?_⟩
+  · rintro f (⟨x, hx, hf⟩ | ⟨h1, h2, h3⟩)
+    · obtain ⟨-, hv, -⟩ := hX x hx
+      obtain ⟨v1, v2, v3⟩ := hv f hf
+      refine ⟨?_, ?_, ?_⟩
+      · show f.1 ∈ j'.l
+        rw [hs]; exact List.mem_append_left _ v1
+      · show f.2.1 ≤ b'.l.length
+        have v2' : f.2.1 ≤ b.l.length := v2
+        rw [ht, List.length_append]; omega
+      · show f.2.2 = rd (final δ σ0 (b'.l.take f.2.1)) f.1
+        have v2' : f.2.1 ≤ b.l.length := v2
+        rw [ht, List.take_append_of_le_length v2']; exact v3
+    · refine ⟨h1, ?_, ?_⟩
+      · show f.2.1 ≤ b'.l.length
+        rw [h2]; exact Nat.zero_le _
+      · show f.2.2 = rd (final δ σ0 (b'.l.take f.2.1)) f.1
+        rw [h2, List.take_zero]; exact h3
+  · intro r hr; exact ⟨(r, 0, rd σ0 r), Or.inr ⟨hr, rfl, rfl⟩, rfl⟩
+  · intro x hx
+    obtain ⟨e, -, -⟩ := hX x hx
+    refine ⟨?_, fun f hf => Or.inl ⟨x, hx, hf⟩⟩
+    rw [e]; exact execF_monotone δ σ0 b b' ⟨t, ht⟩
+
+/-- Example `ex:bare-reads` with position-tagged responses, for any
+deterministic state machine, any read function `rd`, and two distinct
+commands:
+* `F` and `G ⋆ F` violate Lifted Monotonicity;
 * `K` is the graph of a monotone function and `G` is monotone;
-* the commitment is proper, and `G ⋆ K` is consistent, also on coherent
-  pairs. -/
-theorem committed_log_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
+* the commitment is proper, and `G ⋆ K` is consistent. -/
+theorem bare_read_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
     ¬ (logF (Cmd := Cmd)).LiftedMono ∧
-      ¬ (onDom Coh (par logF (kvG δ σ0))).LiftedMono ∧
+      ¬ (par logF (bareG δ rd σ0)).LiftedMono ∧
       (logK (Cmd := Cmd)).K = (graph fun p : Pfx Cmd × Pt => p.1).S ∧
-      Monotone (fun p : Pfx Cmd × Pt => p.1) ∧ (kvG δ σ0).LiftedMono ∧
-      ProperPar logK (kvG δ σ0) ∧ (par logK.spec (kvG δ σ0)).Consistent ∧
-      (onDom Coh (par logK.spec (kvG δ σ0))).Consistent := by
-  have hG : (kvG δ σ0).LiftedMono := (graph_liftedMono_iff _).2 (kvG_monotone δ σ0)
-  have hP : ProperPar logK (kvG δ σ0) :=
-    monotone_commitment_par logK (kvG δ σ0) (fun p => p.1) rfl logK_monotone hG
-  have hLM := (proper_coordination_par logK (kvG δ σ0)).1 hP
-  refine ⟨?_, ?_, rfl, logK_monotone, hG, hP, hP.1,
-    (complete_calm _).2 (onDom_liftedMono Coh hLM)⟩
+      Monotone (fun p : Pfx Cmd × Pt => p.1) ∧ (bareG δ rd σ0).LiftedMono ∧
+      ProperPar logK (bareG δ rd σ0) ∧ (par logK.spec (bareG δ rd σ0)).Consistent := by
+  have hG := bareG_liftedMono δ rd σ0
+  have hP : ProperPar logK (bareG δ rd σ0) :=
+    monotone_commitment_par logK (bareG δ rd σ0) (fun p => p.1) rfl logK_monotone hG
+  refine ⟨?_, ?_, rfl, logK_monotone, hG, hP, hP.1⟩
   · intro h
     obtain ⟨u, _, hall⟩ := h (⟨[c₁, c₂]⟩, .pt) (⟨[c₁, c₂]⟩, .pt) (PO.refl _)
       [⟨[c₁]⟩, ⟨[c₂]⟩] (by simp) (by
@@ -1022,28 +1130,82 @@ theorem committed_log_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂
         rcases hz with rfl | rfl <;> intro c hc <;> simp_all)
     exact hne (pfx_head (l := []) (m := []) (hall ⟨[c₁]⟩ (by simp)) (hall ⟨[c₂]⟩ (by simp)))
   · intro h
-    let x : Sub Coh := ⟨(⟨[c₁, c₂]⟩, (⟨[c₁, c₂]⟩, .pt)), fun _ hc => hc⟩
-    have r1 : (onDom Coh (par logF (kvG δ σ0))).S x ⟨exec δ σ0 [c₁, c₂]⟩ :=
-      ⟨⟨[c₁, c₂]⟩, fun _ hc => hc, rfl⟩
-    have r2 : (onDom Coh (par logF (kvG δ σ0))).S x ⟨exec δ σ0 [c₂, c₁]⟩ := by
-      refine ⟨⟨[c₂, c₁]⟩, fun c hc => ?_, rfl⟩
-      show c ∈ [c₁, c₂]
-      have hc' : c ∈ [c₂, c₁] := hc
-      simp only [List.mem_cons, List.not_mem_nil, or_false] at hc' ⊢
-      rcases hc' with rfl | rfl <;> simp
-    obtain ⟨u, _, hall⟩ := h x x (PO.refl _)
-      [⟨exec δ σ0 [c₁, c₂]⟩, ⟨exec δ σ0 [c₂, c₁]⟩] (by simp) (by
+    let x : Pfx Cmd × (Pfx Rd × Pt) := (⟨[c₁, c₂]⟩, (⟨[]⟩, .pt))
+    let y1 : Pfx (Cmd × R) × Facts (Rd × Nat × V) := (execF δ σ0 ⟨[c₁, c₂]⟩, ⟨fun _ => False⟩)
+    let y2 : Pfx (Cmd × R) × Facts (Rd × Nat × V) := (execF δ σ0 ⟨[c₂, c₁]⟩, ⟨fun _ => False⟩)
+    have r1 : (par logF (bareG δ rd σ0)).S x y1 :=
+      ⟨⟨[c₁, c₂]⟩, fun _ hc => hc, rfl, fun _ hf => hf.elim, fun _ hr => nomatch hr⟩
+    have r2 : (par logF (bareG δ rd σ0)).S x y2 :=
+      ⟨⟨[c₂, c₁]⟩, fun _ hc => perm_mem hc, rfl, fun _ hf => hf.elim, fun _ hr => nomatch hr⟩
+    obtain ⟨u, _, hall⟩ := h x x (PO.refl _) [y1, y2] (by simp) (by
         intro z hz
         simp only [List.mem_cons, List.not_mem_nil, or_false] at hz
         rcases hz with rfl | rfl
         · exact r1
         · exact r2)
-    have h1 := hall ⟨exec δ σ0 [c₁, c₂]⟩ (by simp)
-    have h2 := hall ⟨exec δ σ0 [c₂, c₁]⟩ (by simp)
-    simp only [exec] at h1 h2
-    have := pfx_head h1 h2
-    exact hne (congrArg Prod.fst this)
+    obtain ⟨u1, -⟩ := hall y1 (by simp)
+    obtain ⟨u2, -⟩ := hall y2 (by simp)
+    exact exec_swap_incompatible δ σ0 hne u1 u2
 
+/-- A latest-value response `(r, v)` is valid for bare-read history `j` and log
+`b` when `r` was received and `v` is the value that `r` reads after all of `b`. -/
+def LatestValid (σ0 : Stt) (j : Pfx Rd) (b : Pfx Cmd) (f : Rd × V) : Prop :=
+  f.1 ∈ j.l ∧ f.2 = rd (final δ σ0 b.l) f.1
+
+/-- `G` when the specification demands the latest value; otherwise as
+`bareG`, with untagged responses `Facts (Rd × V)`. -/
+def latestG (σ0 : Stt) : Spec (Pfx Rd × Pfx Cmd) (Pfx (Cmd × R) × Facts (Rd × V)) :=
+  ⟨fun q o => o.1 = execF δ σ0 q.2 ∧ (∀ f, o.2.has f → LatestValid δ rd σ0 q.1 q.2 f) ∧
+      ∀ r ∈ q.1.l, ∃ f, o.2.has f ∧ f.1 = r,
+   fun q => ⟨(execF δ σ0 q.2, ⟨fun f => LatestValid δ rd σ0 q.1 q.2 f⟩), rfl, fun _ hf => hf,
+     fun r hr => ⟨(r, rd (final δ σ0 q.2.l) r), ⟨hr, rfl⟩, rfl⟩⟩⟩
+
+/-- The response to read `r` before any entry, as an output of `latestG` at
+the empty log. -/
+theorem latestG_initial (σ0 : Stt) (r : Rd) :
+    (latestG δ rd σ0).S (⟨[r]⟩, ⟨[]⟩)
+      ((⟨[]⟩, ⟨fun f => f = (r, rd σ0 r)⟩) : Pfx (Cmd × R) × Facts (Rd × V)) := by
+  refine ⟨rfl, fun f hf => ?_, fun r' hr' => ⟨(r, rd σ0 r), rfl, (List.mem_singleton.1 hr').symm⟩⟩
+  have hf' : f = (r, rd σ0 r) := hf
+  subst hf'
+  exact ⟨List.mem_singleton_self r, rfl⟩
+
+/-- "A bare read can be contradicted by an entry it has not seen": given a
+command `c` that changes what read `r` returns, `G` violates Lifted
+Monotonicity. -/
+theorem latestG_not_liftedMono (σ0 : Stt) {c : Cmd} {r : Rd}
+    (hc : rd (δ σ0 c).1 r ≠ rd σ0 r) : ¬ (latestG δ rd σ0).LiftedMono := by
+  intro h
+  obtain ⟨u, hu, hall⟩ := h (⟨[r]⟩, ⟨[]⟩) (⟨[r]⟩, ⟨[c]⟩) ⟨PO.refl _, ⟨[c], rfl⟩⟩
+    [((⟨[]⟩, ⟨fun f => f = (r, rd σ0 r)⟩) : Pfx (Cmd × R) × Facts (Rd × V))] (by simp)
+    (fun y hy => by
+      simp only [List.mem_singleton] at hy
+      subst hy; exact latestG_initial δ rd σ0 r)
+  obtain ⟨-, hv, -⟩ := hu
+  obtain ⟨-, h2⟩ := hall _ (List.mem_singleton_self _)
+  have h2' : ∀ f : Rd × V, f = (r, rd σ0 r) → u.2.has f := h2
+  exact hc (hv _ (h2' _ rfl)).2.symm
+
+/-- The latest-value store is not made consistent by the log commitments:
+`G ⋆ K` violates Lifted Monotonicity, so the strategy is not proper. -/
+theorem latest_not_proper (σ0 : Stt) {c : Cmd} {r : Rd}
+    (hc : rd (δ σ0 c).1 r ≠ rd σ0 r) :
+    ¬ (par logK.spec (latestG δ rd σ0)).LiftedMono ∧ ¬ ProperPar logK (latestG δ rd σ0) := by
+  have hn : ¬ (par logK.spec (latestG δ rd σ0)).LiftedMono := by
+    intro h
+    obtain ⟨u, hu, hall⟩ := h (⟨[]⟩, (⟨[r]⟩, .pt)) (⟨[c]⟩, (⟨[r]⟩, .pt))
+      ⟨⟨[c], rfl⟩, PO.refl _⟩
+      [((⟨[]⟩, ⟨fun f => f = (r, rd σ0 r)⟩) : Pfx (Cmd × R) × Facts (Rd × V))] (by simp)
+      (fun y hy => by
+        simp only [List.mem_singleton] at hy
+        subst hy; exact ⟨⟨[]⟩, rfl, latestG_initial δ rd σ0 r⟩)
+    obtain ⟨b, hb, -, hv, -⟩ := hu
+    have hb' : b = ⟨[c]⟩ := hb
+    subst hb'
+    obtain ⟨-, h2⟩ := hall _ (List.mem_singleton_self _)
+    have h2' : ∀ f : Rd × V, f = (r, rd σ0 r) → u.2.has f := h2
+    exact hc (hv _ (h2' _ rfl)).2.symm
+  exact ⟨hn, fun hP => hn ((proper_coordination_par logK _).1 hP)⟩
 end Log
 
 end Inst

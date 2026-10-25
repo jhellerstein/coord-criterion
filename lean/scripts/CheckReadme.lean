@@ -192,8 +192,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:composition/associativity»
 #check @CC.Paper.«sec:composition/function-tables»
 #check @CC.Paper.«sec:composition/crdt-query»
-#check @CC.Paper.«eq:parameterized-composition»
-#check @CC.Paper.«lem:parameterized-composition»
 #check @CC.Paper.«sec:composition/commitment-strategy»
 #check @CC.Paper.«def:proper-coordination»
 #check @CC.Paper.«sec:composition/second-clause»
@@ -202,7 +200,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«cor:monotone-commitment»
 #check @CC.Paper.«sec:composition/converse-fails»
 #check @CC.Paper.«ex:committed-log-composition»
-#check @CC.Paper.«ex:committed-log-composition/restriction»
+#check @CC.Paper.«sec:composition/bare-reads»
 #check @CC.Paper.«sec:query-instance/functional-directed»
 #check @CC.Paper.«sec:crdt-instance/state-function»
 #check @CC.Paper.«sec:crdt-instance/state-monotone»
@@ -382,11 +380,16 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:bases/basis-2PL»
 #check @CC.Paper.«app:bases/basis-MVTO»
 #check @CC.Paper.«cor:functional-composition»
+#check @CC.Paper.«eq:parameterized-composition»
+#check @CC.Paper.«lem:parameterized-composition»
 #check @CC.Paper.«eq:curried-fibers»
 #check @CC.Paper.«eq:curried-query-plan»
 #check @CC.Paper.«prop:curried-query-plan»
 #check @CC.Paper.«eq:curried-composition»
+#check @CC.Paper.«app:composition/parameterized-proper»
 #check @CC.Paper.«app:composition/converse-example»
+#check @CC.Paper.«ex:bare-reads»
+#check @CC.Paper.«ex:bare-reads/latest-value»
 #check @CC.Paper.«def:deployment»
 #check @CC.Paper.«def:deployment/emitted-rows»
 #check @CC.Paper.«def:deployment/partition»

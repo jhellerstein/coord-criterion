@@ -1,9 +1,10 @@
 \section{Proofs and Details for Composition}
 \label{app:composition}
 
-This appendix proves the results of Section~\ref{sec:composition}, gives the
-curried evaluation of independently parameterized composition, and shows that
-the converse of Corollary~\ref{cor:monotone-commitment} fails.
+This appendix proves the results of Section~\ref{sec:composition}, defines
+composition with independent inputs and its curried evaluation, shows that the
+converse of Corollary~\ref{cor:monotone-commitment} fails, and works out the
+replicated store with bare reads.
 
 \subsection{Sequential composition}
 
@@ -33,8 +34,41 @@ table of $g\circ f$; apply Lemma~\ref{lem:composition}.
 \end{proof}
 
 \subsection{Composition with independent inputs}
+\label{sec:parameterized-composition}
 
-\begin{proof}[Proof of Lemma~\ref{lem:parameterized-composition}]
+Sequential composition cannot express a downstream component with input of
+its own, such as a replica that serves bare reads
+(Section~\ref{sec:composition}), so we give each component a separate
+input.  Let
+\begin{align*}
+  \Spec_F&=\bigl(I\times A,\preceq_I\times\preceq_A,B,\preceq_B,F\bigr),\\
+  \Spec_G&=\bigl(J\times B,\preceq_J\times\preceq_B,C,\preceq_C,G\bigr)
+\end{align*}
+be ordered relational specifications sharing the ordered domain
+$(B,\preceq_B)$, which carries values from $F$ to $G$.  Here $i\in I$ is input
+that only $F$ receives, and $j\in J$ is input that only $G$ receives.  We
+split $F$'s input as $(i,a)$ so that $F$ restricted to a fixed $i$ is a table
+from $A$ to $B$.  The curried evaluation below uses this split to evaluate
+the composition one pair $(i,j)$ at a time.  The \emph{independently
+parameterized composition} of $\Spec_F$ and $\Spec_G$ is
+\begin{align}
+  G\star F
+  &=\pi_{I,J,A,C}\bigl(F\Join_{B}G\bigr) \notag\\
+  &=\{((i,j,a),c):\exists b.\ ((i,a),b)\in F
+                         \land ((j,b),c)\in G\},
+  \label{eq:parameterized-composition}
+\end{align}
+with the product order on $I\times J\times A$.  Since $F$ is total on
+$I\times A$ and $G$ is total on $J\times B$, every composed input has a
+nonempty fiber.
+
+\begin{lemma}[Independently parameterized composition]
+\label{lem:parameterized-composition}
+If $\Spec_F$ and $\Spec_G$ satisfy Lifted Monotonicity, then the specification
+with table $G\star F$ satisfies Lifted Monotonicity.
+\end{lemma}
+
+\begin{proof}
 Let rows $((i_r,j_r,a_r),c_r)$, finitely many, have common \indesc $(i,j,a)$,
 with witnesses $b_r$ from Equation~\ref{eq:parameterized-composition}.  The
 common-\indesc condition for $\Spec_F$ at $(i,a)$ gives $b\in F(i,a)$
@@ -81,6 +115,11 @@ which is the plan of Proposition~\ref{prop:curried-query-plan} on tables of func
 
 \subsection{Proper Coordination}
 
+Definition~\ref{def:proper-coordination} and
+Corollaries~\ref{thm:proper-coordination} and~\ref{cor:monotone-commitment}
+apply to independently parameterized composition, with $F$ in place of $S_1$,
+$G$ in place of $S_2$, and $G\star K$ as the resolved table.
+
 \begin{proof}[Proof of Corollary~\ref{thm:proper-coordination}]
 If the resolved specification satisfies Lifted Monotonicity, Complete CALM
 gives consistency and Proposition~\ref{prop:exposure-boundary} gives the
@@ -99,3 +138,28 @@ $I=\{*\}$, $M=\{x,y\}$ discrete, $S_1=\{(*,x),(*,y)\}$, $K=\{(*,x)\}$, and
 $S_2=\{(x,x),(y,x),(y,y)\}$.  The fiber $S_2(y)=\{x,y\}$ is not directed, so
 $S_2$ fails Lifted Monotonicity and the corollary does not apply, but the
 resolved table $\{(*,x)\}$ is monotone, so the strategy is proper.
+
+\begin{example}[Bare reads]
+\label{ex:bare-reads}
+We add bare reads to Example~\ref{ex:committed-log-composition}.  Take $I$
+and $B$ the proposal streams and logs of that example, $A$ a one-point set,
+and $J$ the histories of bare reads received by a replica, ordered by prefix.
+Take $C$ the pairs of a response history for logged commands, ordered by
+extension, and a set of bare-read responses, ordered by inclusion.  Let $F$ be
+the log specification $S_1$ of that example, with the one-point $A$ added to
+its input, and $K$ the arrival-order commitment.  Let $G$ relate a bare-read history $j$ and a log $b$ to the
+responses obtained by executing $b$, together with at least one response to
+each bare read in $j$.  Responses are facts, so a set of them may answer one
+read more than once.  As in Example~\ref{ex:committed-log-composition}, $F$
+and $G\star F$ are non-monotone, and $K$ is the table of a monotone function.
+
+Suppose first that each bare-read response records the log position it read
+from, as in ``$x=5$ as of entry 17.''  A longer log never contradicts such a
+response, so $G$ is monotone and bare reads need no coordination.  By
+Corollary~\ref{cor:monotone-commitment} the log commitments are proper, and
+$G\star K$ is consistent.  Suppose instead that the specification demands the
+latest value, so that a read of $x$ must return the value of $x$ after all of
+$b$.  Then a bare read can be contradicted by an entry it has not seen, $G$ is
+not monotone, and neither is $G\star K$.  Bare reads then need coordination,
+typically by going through the log.
+\end{example}
