@@ -73,7 +73,8 @@ first and supporting claims and examples follow.
 | `Instances/InvariantConfluence.lean` | `CC.IConf` | §6, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
 | `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
-| `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, Proper Coordination |
+| `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
+| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | Guarded runs, store under the empty basis, covering, invisible coordination, Irredundant Coordination, counterexamples, per-key store, replicated store |
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
@@ -93,7 +94,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-550 entries.
+561 entries.
 
 ### §2 Functional CALM
 
@@ -305,7 +306,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
 | `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model" (Proposition `prop:gl-async`). |
 
-### §5 Composition and Proper Coordination
+### §5 Composition and Irredundant Coordination
 
 File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 
@@ -318,15 +319,18 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone. |
 | `«sec:composition/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
-| `«sec:composition/commitment-strategy»` | abbrev | "A commitment strategy for `S₁` … fixes at each input `i` the upstream outputs committed to at `i`. |
-| `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
-| `«sec:composition/second-clause»` | theorem | "The second clause follows from the first by Complete CALM and the exposure boundary (Theorem `thm:complete-calm`, Proposition `prop:exposure-boundary`): |
-| `«sec:composition/neither-monotone»` | theorem | "Neither `S₁`, `S₂`, nor the unresolved composition need be monotone." Lean: |
-| `«thm:proper-coordination»` | theorem | **Corollary `thm:proper-coordination`** (Proper Coordination): |
-| `«cor:monotone-commitment»` | theorem | **Corollary `cor:monotone-commitment`** (Committing upstream to a monotone function): |
-| `«sec:composition/converse-fails»` | theorem | "The converse fails: |
-| `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Committed log composed with a key-value store), for any deterministic state machine `δ` and two distinct commands: |
-| `«sec:composition/bare-reads»` | theorem | "There, bare reads are consistent when each response records the log position it read from, but not when the specification demands the latest value (Example… |
+| `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an ordered specification, so Complete CALM applies to it directly. |
+| `«sec:composite-calm/components-commit»` | theorem | "A monotone composite does not mean that each component can run without commitments. |
+| `«sec:irredundant-coordination/image»` | theorem | "The store `𝒦` is the specification with table `{(m,f(m))}`, and the composite `𝒦 ∘ 𝒫` has table `{(i,f(m)) : |
+| `«sec:irredundant-coordination/no-pushforward»` | theorem | "A commitment of `𝒫` may keep `m'` and remove `m`, with `m` and `m'` incomparable but `f(m) ≼ f(m')`. |
+| `«def:irredundant-coordination»` | theorem | **Definition `def:irredundant-coordination`** (Irredundant Coordination): |
+| `«thm:guarded-runs»` | theorem | **Theorem `thm:guarded-runs`** (Guarded runs): |
+| `«thm:irredundant-coordination»` | theorem | **Theorem `thm:irredundant-coordination`** (Irredundant Coordination): |
+| `«sec:irredundant-coordination/any-basis»` | theorem | "Every legal output event removes at least the rows its canonical event removes (Lemma `lem:canonical-commitment-normal-form`), so every row that the composi… |
+| `«prop:invisible-coordination»` | theorem | **Proposition `prop:invisible-coordination`** (Invisible coordination): |
+| `«sec:irredundant-coordination/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order, and two commands `a` and `b` on different keys. |
+| `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
+| `«sec:composition/bare-reads»` | theorem | "There, bare reads need no commitment of their own when each response records the log position it read from, but they do when the specification demands the l… |
 
 ### §6 Instances
 
@@ -561,8 +565,16 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«eq:curried-query-plan»` | theorem | Eq. |
 | `«prop:curried-query-plan»` | theorem | **Proposition `prop:curried-query-plan`** (Curried equijoin plan): |
 | `«eq:curried-composition»` | theorem | Eq. |
-| `«app:composition/parameterized-proper»` | theorem | "Definition `def:proper-coordination` and Corollaries `thm:proper-coordination` and `cor:monotone-commitment` apply to independently parameterized compositio… |
-| `«app:composition/converse-example»` | theorem | "The converse of Corollary `cor:monotone-commitment` fails: |
+| `«app:composition/components-commit»` | theorem | "Let `𝒫` have one input `*` and table `{(*,x),(*,y)}` with `x,y` incomparable, and let `f` map both to one value. |
+| `«app:composition/image-canon»` | theorem | "The image of the canonical state `σ_𝒫(i)` is the canonical state of `𝒦 ∘ 𝒫` at `i`." |
+| `«app:composition/guarded-lockstep»` | theorem | The induction of the proof of Theorem `thm:guarded-runs`(1): |
+| `«app:composition/store-steps»` | theorem | Proof of Theorem `thm:guarded-runs`(2): |
+| `«app:composition/coverage»` | theorem | The covering argument: |
+| `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:irredundant-coordination`: |
+| `«app:composition/per-key»` | theorem | "For the per-key store …, let `𝒫` have one input with fiber `{[a,b],[b,a]}`, and let `f` send a log to the family of its subsequences on each key. |
+| `«app:composition/no-pushforward»` | theorem | "The commitments of `𝒫` do not themselves push forward. |
+| `«app:composition/monotone-needed»` | theorem | "Monotonicity of `f` is needed. |
+| `«app:composition/store-choice»` | theorem | "A store that must itself choose cannot delegate the choice either. |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
 

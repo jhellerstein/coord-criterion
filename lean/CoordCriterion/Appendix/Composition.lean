@@ -1,11 +1,12 @@
 import CoordCriterion.CompleteCALM.Theorem
 
 /-!
-# Composition and Proper Coordination (Section 5, `sections/composition.tex`; proofs in Appendix D)
+# Composition (Section 5, `sections/composition.tex`; proofs in Appendix D)
 
-Namespace `CC.Comp`.  Further examples of the appendix (converse example,
-curried form on graph tables, committed-log composition) are in
-`Instances/Examples.lean`.
+Namespace `CC.Comp`.  Further examples of the appendix (curried form on graph
+tables, the replicated store, bare reads) are in `Instances/Examples.lean`;
+guarded composition and Irredundant Coordination are in
+`Appendix/Guarded.lean`.
 
 * `seq_liftedMono`                 — Lemma lem:composition
 * `tcomp_assoc`                    — associativity remark after the lemma
@@ -14,13 +15,6 @@ curried form on graph tables, committed-log composition) are in
 * `par_liftedMono`                 — Lemma lem:parameterized-composition
 * `parameterized_graph`, `parameterized_functional_composition`
                                    — Eq. curried-composition (graph instance)
-* `Proper`, `ProperSeq`, `ProperPar` — Def. def:proper-coordination
-* `proper_second_clause`           — "the second clause is implied by the first"
-* `proper_coordination_seq/par`    — Cor. thm:proper-coordination
-* `monotone_commitment_seq/par`    — Cor. cor:monotone-commitment
-* `monotone_commitment_neither_monotone` — "Neither S₁ nor the unresolved
-  composition need be monotone"
-* `proper_strictly_more_general`   — remark after Cor. cor:monotone-commitment
 * `restricted_middle_counterexample` — why `S₂` must be total on all of `M`
 
 Modeling choices.
@@ -35,9 +29,6 @@ Modeling choices.
   necessary for Lemma lem:composition.
 * Products carry the componentwise order (`instPOProd`).  The composed input
   `I × J × A` of independently parameterized composition is `I × (J × A)`.
-* A commitment strategy is represented, as in the paper, only by its declared
-  committed table `K ⊆ S₁` (`CommitTable`).  Totality-preservation is the field
-  `total`; without it the resolved table would not be a `Spec`.
 * "Monotone function" is `Monotone f : ∀ i j, i ≼ j → f i ≼ f j`; its graph
   table is `graph f`.
 -/
@@ -253,78 +244,6 @@ theorem parameterized_functional_composition {f : I × A → B} {g : J × B → 
 
 end Par
 
-/-! ### Proper Coordination -/
-
-section Proper
-variable {I M O : Type} [PO I] [PO M] [PO O]
-
-/-- A totality-preserving commitment strategy for `sp1`, recorded (as in the
-paper) by its declared committed table `K ⊆ S₁`. -/
-structure CommitTable (sp1 : Spec I M) where
-  K : Table I M
-  sub : ∀ i m, K i m → sp1.S i m
-  total : ∀ i, ∃ m, K i m
-
-/-- The committed table as a specification (possible by totality). -/
-def CommitTable.spec {sp1 : Spec I M} (κ : CommitTable sp1) : Spec I M := ⟨κ.K, κ.total⟩
-
-/-- The two clauses of Def. proper-coordination, about a resolved
-specification. -/
-def Proper (sp : Spec I O) : Prop :=
-  sp.Consistent ∧ ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o
-
-/-- Proper for a sequential composition: the resolved spec is `S₂ ∘ K`. -/
-def ProperSeq {sp1 : Spec I M} (κ : CommitTable sp1) (sp2 : Spec M O) : Prop :=
-  Proper (seq κ.spec sp2)
-
-/-- Proper for an independently parameterized composition: `G ⋆ K`. -/
-def ProperPar {I J A B C : Type} [PO I] [PO J] [PO A] [PO B] [PO C]
-    {F : Spec (I × A) B} (κ : CommitTable F) (G : Spec (J × B) C) : Prop :=
-  Proper (par κ.spec G)
-
-/-- The second clause is implied by the first (via Complete CALM and the
-exposure boundary). -/
-theorem proper_second_clause (sp : Spec I O) (h : sp.Consistent) :
-    ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
-  (exposure_boundary sp).1 ((complete_calm_commonExpansion sp).1 h)
-
-theorem proper_iff (sp : Spec I O) : Proper sp ↔ sp.LiftedMono := by
-  constructor
-  · intro h; exact (complete_calm sp).1 h.1
-  · intro h
-    have hc := (complete_calm sp).2 h
-    exact ⟨hc, proper_second_clause sp hc⟩
-
-/-- **Corollary (Proper Coordination)**, sequential case. -/
-theorem proper_coordination_seq {sp1 : Spec I M} (κ : CommitTable sp1) (sp2 : Spec M O) :
-    ProperSeq κ sp2 ↔ (seq κ.spec sp2).LiftedMono :=
-  proper_iff _
-
-/-- **Corollary (Proper Coordination)**, independently parameterized case. -/
-theorem proper_coordination_par {I J A B C : Type} [PO I] [PO J] [PO A] [PO B] [PO C]
-    {F : Spec (I × A) B} (κ : CommitTable F) (G : Spec (J × B) C) :
-    ProperPar κ G ↔ (par κ.spec G).LiftedMono :=
-  proper_iff _
-
-/-- **Corollary (Committing upstream to a monotone function)**, sequential. -/
-theorem monotone_commitment_seq {sp1 : Spec I M} (κ : CommitTable sp1) (sp2 : Spec M O)
-    (f : I → M) (hK : κ.K = (graph f).S) (hf : Monotone f) (h2 : sp2.LiftedMono) :
-    ProperSeq κ sp2 := by
-  have hk : κ.spec = graph f := Spec.ext' hK
-  rw [ProperSeq, proper_iff, hk]
-  exact seq_liftedMono ((graph_liftedMono_iff f).2 hf) h2
-
-/-- **Corollary (Committing upstream to a monotone function)**, parameterized. -/
-theorem monotone_commitment_par {I J A B C : Type} [PO I] [PO J] [PO A] [PO B] [PO C]
-    {F : Spec (I × A) B} (κ : CommitTable F) (G : Spec (J × B) C)
-    (f : I × A → B) (hK : κ.K = (graph f).S) (hf : Monotone f) (hG : G.LiftedMono) :
-    ProperPar κ G := by
-  have hk : κ.spec = graph f := Spec.ext' hK
-  rw [ProperPar, proper_iff, hk]
-  exact par_liftedMono ((graph_liftedMono_iff f).2 hf) hG
-
-end Proper
-
 /-! ### Examples and counterexamples -/
 
 section Examples
@@ -354,58 +273,7 @@ instance : PO Two where
 /-- A non-monotone upstream: one input, fiber `{x, y}` of incomparable outputs. -/
 def anyS : Spec Pt Two := ⟨fun _ _ => True, fun _ => ⟨.x, trivial⟩⟩
 
-/-- Monotone downstream: the identity. -/
-def idS : Spec Two Two := graph id
-
-/-- Commit upstream to `x`. -/
-def kappaX : CommitTable anyS :=
-  ⟨(graph fun _ : Pt => Two.x).S, fun _ _ _ => trivial, fun _ => ⟨_, rfl⟩⟩
-
 theorem two_ne : ¬ (Two.x ≼ Two.y) := fun h => Two.noConfusion h
-
-/-- "Neither `S₁` nor the unresolved composition need be monotone":
-here `S₁` and `S₂ ∘ S₁` violate Lifted Monotonicity, yet committing to a
-monotone function makes the composition proper. -/
-theorem monotone_commitment_neither_monotone :
-    ¬ anyS.LiftedMono ∧ ¬ (seq anyS idS).LiftedMono ∧ ProperSeq kappaX idS := by
-  refine ⟨?_, ?_, ?_⟩
-  · intro h
-    obtain ⟨u, _, hall⟩ := h .pt .pt trivial [.x, .y] (by simp) (fun _ _ => trivial)
-    have h1 : Two.x = u := hall .x (by simp)
-    have h2 : Two.y = u := hall .y (by simp)
-    exact two_ne (h1.trans h2.symm)
-  · intro h
-    obtain ⟨u, _, hall⟩ := h .pt .pt trivial [.x, .y] (by simp)
-      (fun z _ => ⟨z, trivial, rfl⟩)
-    have h1 : Two.x = u := hall .x (by simp)
-    have h2 : Two.y = u := hall .y (by simp)
-    exact two_ne (h1.trans h2.symm)
-  · exact monotone_commitment_seq kappaX idS (fun _ => .x) rfl (fun _ _ _ => rfl)
-      ((graph_liftedMono_iff id).2 (fun _ _ h => h))
-
-/-- A non-monotone downstream: `S₂(x) = {x}`, `S₂(y) = {x, y}`. -/
-def s2NM : Spec Two Two := ⟨fun m o => m = .y ∨ o = .x, fun _ => ⟨.x, Or.inr rfl⟩⟩
-
-/-- Cor. thm:proper-coordination is strictly more general than
-Cor. cor:monotone-commitment: the downstream `s2NM` violates Lifted
-Monotonicity (so Cor. cor:monotone-commitment does not apply), but the
-resolved composition is proper. -/
-theorem proper_strictly_more_general :
-    ¬ s2NM.LiftedMono ∧ ProperSeq kappaX s2NM := by
-  refine ⟨?_, ?_⟩
-  · intro h
-    obtain ⟨u, _, hall⟩ := h .y .y rfl [.x, .y] (by simp) (fun _ _ => Or.inl rfl)
-    have h1 : Two.x = u := hall .x (by simp)
-    have h2 : Two.y = u := hall .y (by simp)
-    exact two_ne (h1.trans h2.symm)
-  · rw [proper_coordination_seq]
-    intro i j _ X _ hX
-    refine ⟨.x, ⟨.x, rfl, Or.inr rfl⟩, fun z hz => ?_⟩
-    obtain ⟨m, hm, h⟩ := hX z hz
-    have hm' : m = Two.x := hm
-    rcases h with h | h
-    · rw [hm'] at h; exact Two.noConfusion h
-    · exact h
 
 /-! #### The middle domain must be all of `M`
 

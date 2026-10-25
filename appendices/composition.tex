@@ -2,9 +2,8 @@
 \label{app:composition}
 
 This appendix proves the results of Section~\ref{sec:composition}, defines
-composition with independent inputs and its curried evaluation, shows that the
-converse of Corollary~\ref{cor:monotone-commitment} fails, and works out the
-replicated store with bare reads.
+composition with independent inputs and its curried evaluation, and works out
+the replicated store with bare reads.
 
 \subsection{Sequential composition}
 
@@ -113,31 +112,114 @@ Lemma~\ref{lem:parameterized-composition} for their tables says that
 is monotone; in curried form, $h^\sharp(i,j)=g^\sharp(j)\circ f^\sharp(i)$,
 which is the plan of Proposition~\ref{prop:curried-query-plan} on tables of functions.
 
-\subsection{Proper Coordination}
+\subsection{Composite CALM and component commitments}
 
-Definition~\ref{def:proper-coordination} and
-Corollaries~\ref{thm:proper-coordination} and~\ref{cor:monotone-commitment}
-apply to independently parameterized composition, with $F$ in place of $S_1$,
-$G$ in place of $S_2$, and $G\star K$ as the resolved table.
+Let $\mathcal P$ have one input $*$ and table $\{(*,x),(*,y)\}$ with $x,y$
+incomparable, and let $f$ map both to one value.  The composite
+$\mathcal K\circ\mathcal P$ has one row, so it satisfies Lifted Monotonicity.
+At the canonical state of $\mathcal P$ neither $x$ nor $y$ is exposable, and
+under the empty basis an output event is legal only for an exposable output
+(Lemma~\ref{lem:canonical-commitment-normal-form}).  Input events only remove
+rows at other inputs, and there are none, so every run of $\mathcal P$ under
+the empty basis stays at the canonical state and emits nothing.  The store
+then receives nothing.
 
-\begin{proof}[Proof of Corollary~\ref{thm:proper-coordination}]
-If the resolved specification satisfies Lifted Monotonicity, Complete CALM
-gives consistency and Proposition~\ref{prop:exposure-boundary} gives the
-exposability clause.  Conversely, properness includes consistency, and Complete
-CALM gives Lifted Monotonicity.
+\subsection{Irredundant Coordination}
+
+Throughout, $f$ is monotone, $\mathcal B$ is a basis of $\mathcal P$, and for a
+table $R$ of $\mathcal P$ we write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  The image
+of the canonical state $\sigma_{\mathcal P}(i)$ is the canonical state of
+$\mathcal K\circ\mathcal P$ at $i$, since $f(P[\mathrm{in}\InputGe i])$ is
+the composite table restricted to the \indescs of $i$.
+
+\begin{proof}[Proof of Theorem~\ref{thm:guarded-runs}]
+(1) We show by induction on events that, if a state $\sigma$ of $\mathcal P$
+and a state $\rho$ of the composite have the same current input and
+$f(R_\sigma)\subseteq R_\rho$, the next event of $\mathcal P$ has a matching
+event of the composite that preserves both facts.  At the start both states
+are canonical at $i$ and the tables are equal.  For $\mathsf{input}(j)$, a row
+$(j,m)$ of $R_\sigma$ gives the row $(j,f(m))$ of $R_\rho$, so the input is
+legal, and both events keep the rows at \indescs of $j$.  For a legal
+$\Out{\gamma}{m}$, containment
+(Lemma~\ref{lem:canonical-commitment-normal-form}) gives $(i,m)\in R_\sigma$
+and a resulting table contained in $R_\sigma[\mathrm{out}\succeq_M m]$.  So
+$(i,f(m))\in R_\rho$, and $\mathsf{output}(f(m))$ keeps
+$R_\rho[\mathrm{out}\OutputGe f(m)]$.  A remaining row $(k,m')$ of
+$\mathcal P$ has $m\preceq_M m'$, hence $f(m)\OutputOrd f(m')$ by monotonicity,
+and $(k,f(m'))$ is kept.
+
+(2) After $\Out{\gamma}{m}$ every row \outrel $m$, so each later output
+\outrel $m$, and the outputs $m_1\preceq_M m_2\preceq_M\cdots$ of a run form a
+chain.  The store starts at its canonical state at $m_1$.  At a canonical state
+$\sigma_{\mathcal K}(m_r)$, every row $(k,f(k))$ has $m_r\preceq_M k$, so
+$f(m_r)\OutputOrd f(k)$.  Hence $\mathsf{output}(f(m_r))$ removes nothing,
+$f(m_r)$ is exposable, and the state stays canonical.  The input event
+$\mathsf{input}(m_{r+1})$ moves to $\sigma_{\mathcal K}(m_{r+1})$.  The store's
+events form a commitment-free run, which is a run under the empty basis.
+
+(3) Let the runs of $\mathcal P$ end at $\sigma_1,\ldots,\sigma_n$ and the
+composite runs at $\rho_1,\ldots,\rho_n$, with $f(R_{\sigma_r})\subseteq
+R_{\rho_r}$ by (1), and let each $\sigma_r$ continue under some basis to a
+common state $\tau$ with current input $j$.  Then $\tau$ has a row $(j,m)$.
+Events never add rows, so $(j,m)\in R_{\sigma_r}$ and $(j,f(m))\in
+R_{\rho_r}$ for every $r$.  The composite runs share a row at $j$, so they
+are confluent at $j$ (Proposition~\ref{prop:confluence}).
 \end{proof}
 
-\begin{proof}[Proof of Corollary~\ref{cor:monotone-commitment}]
-The table of a monotone function satisfies Lifted Monotonicity.  Apply
-Lemma~\ref{lem:composition} or~\ref{lem:parameterized-composition}, then
-Corollary~\ref{thm:proper-coordination}.
+The guarded composite's commitments are covered by $\mathcal P$'s.  Let
+$\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and
+let $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
+$(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Sealed_{f(m)}$ or
+$\Rejected_{f(m)}$ at $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
+Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
+$m'\preceq_M u$, and $(k,f(u))\in R_\rho$ retires $(k,f(m'))$.  So every row
+that the composite's canonical event for $f(m)$ removes by commitment has had
+every preimage in $R_\sigma$ removed by $\gamma$.
+
+\begin{proof}[Proof of Theorem~\ref{thm:irredundant-coordination}]
+At most once is Theorem~\ref{thm:guarded-runs}(1)--(2).  For at least once,
+let $\Out{\varepsilon}{m}$ be legal at $\sigma$, so $\sigma_c=\sigma$ and $m$
+is exposable at $\sigma$.  By the covering argument with $\rho=f(\sigma)$, no
+row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or $\Rejected_{f(m)}$, so $f(m)$ is
+exposable at $f(\sigma)$ (Lemma~\ref{lem:canonical-commitment-normal-form}).
+For the second claim, the proof of Proposition~\ref{prop:exposure-boundary}
+derives the common-\indesc condition from exposability at canonical states
+alone.  If Lifted Monotonicity fails for $\mathcal K\circ\mathcal P$, some
+$f(m)$ with $(i,m)\in P$ is therefore not exposable at
+$\sigma_{\mathcal K\circ\mathcal P}(i)=f(\sigma_{\mathcal P}(i))$, and by
+what we just proved no $m'$ with $f(m')=f(m)$ is exposable at
+$\sigma_{\mathcal P}(i)$.
 \end{proof}
 
-The converse of Corollary~\ref{cor:monotone-commitment} fails: let
-$I=\{*\}$, $M=\{x,y\}$ discrete, $S_1=\{(*,x),(*,y)\}$, $K=\{(*,x)\}$, and
-$S_2=\{(x,x),(y,x),(y,y)\}$.  The fiber $S_2(y)=\{x,y\}$ is not directed, so
-$S_2$ fails Lifted Monotonicity and the corollary does not apply, but the
-resolved table $\{(*,x)\}$ is monotone, so the strategy is proper.
+\begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
+The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering
+argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
+$\Rejected_{f(m)}$, so $f(m)$ is exposable at $f(\sigma)$.
+\end{proof}
+
+For the per-key store of Section~\ref{sec:irredundant-coordination}, let
+$\mathcal P$ have one input with fiber $\{[a,b],[b,a]\}$, and let $f$ send a
+log to the family of its subsequences on each key.  The two logs are
+incomparable with no common \outnoun, so $[a,b]$ is not exposable.  When $a$
+and $b$ are on different keys, $f([a,b])=f([b,a])$, the composite has one row,
+and $f([a,b])$ is exposable.
+
+The commitments of $\mathcal P$ do not themselves push forward.  Let
+$\mathcal P$ have one input with fiber $\{x,y\}$, $x$ and $y$ incomparable, and
+$f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The choice $c_y$ removes $x$
+and keeps $y$.  Its image would remove $\mathit{lo}$ and keep $\mathit{hi}$,
+violating Equation~\ref{eq:commitment-excludes}, so no commitment of the
+composite has that effect.  In the composite, $\mathit{hi}$ is exposable at the
+canonical state, since it retires $\mathit{lo}$.
+
+Monotonicity of $f$ is needed.  Let $\mathcal P$ be the table of the identity
+on $M$, which needs no commitment.  For $m\preceq_M m'$, its run
+$\mathsf{output}(m)$, $\mathsf{input}(m')$, $\mathsf{output}(m')$ maps to a run
+of the composite exactly when $f(m)\OutputOrd f(m')$.  A store that must
+itself choose cannot delegate the choice either.  If $\mathcal P$ is the
+identity on one input, it admits no commitment at all.  If the store relates
+that input to two incomparable outputs, every output event of the composite at
+its canonical state applies a commitment, and that commitment is the store's.
 
 \begin{example}[Bare reads]
 \label{ex:bare-reads}
@@ -146,20 +228,21 @@ and $B$ the proposal streams and logs of that example, $A$ a one-point set,
 and $J$ the histories of bare reads received by a replica, ordered by prefix.
 Take $C$ the pairs of a response history for logged commands, ordered by
 extension, and a set of bare-read responses, ordered by inclusion.  Let $F$ be
-the log specification $S_1$ of that example, with the one-point $A$ added to
-its input, and $K$ the arrival-order commitment.  Let $G$ relate a bare-read history $j$ and a log $b$ to the
-responses obtained by executing $b$, together with at least one response to
+the log specification $\mathcal P$ of that example, with the one-point $A$
+added to its input.  Let $G$ relate a bare-read history $j$ and a log $b$ to
+the responses obtained by executing $b$, together with at least one response to
 each bare read in $j$.  Responses are facts, so a set of them may answer one
 read more than once.  As in Example~\ref{ex:committed-log-composition}, $F$
-and $G\star F$ are non-monotone, and $K$ is the table of a monotone function.
+and $G\star F$ are non-monotone.
 
 Suppose first that each bare-read response records the log position it read
 from, as in ``$x=5$ as of entry 17.''  A longer log never contradicts such a
-response, so $G$ is monotone and bare reads need no coordination.  By
-Corollary~\ref{cor:monotone-commitment} the log commitments are proper, and
-$G\star K$ is consistent.  Suppose instead that the specification demands the
-latest value, so that a read of $x$ must return the value of $x$ after all of
-$b$.  Then a bare read can be contradicted by an entry it has not seen, $G$ is
-not monotone, and neither is $G\star K$.  Bare reads then need coordination,
-typically by going through the log.
+response, so $G$ is monotone.  By Complete CALM and the exposure boundary,
+every output of $G$ at every state reachable without commitment is
+exposable, so bare reads need no commitment of their own.  Suppose instead
+that the specification demands the latest value, so that a read of $x$ must
+return the value of $x$ after all of $b$.  Then a bare read can be
+contradicted by an entry it has not seen, and $G$ is not monotone.  By the
+exposure boundary some output of $G$ then needs a commitment of the store's
+own.  Bare reads then need coordination, typically by going through the log.
 \end{example}

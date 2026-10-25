@@ -24,11 +24,11 @@ same models (namespace `CC.Inst`):
 * Sec. `iconfluence-instance` / `app:iconfluence`: inputs are closed under the
   order (`pre_sub`, `locValid_sub`), the uniqueness example
   (`uniqueness_example`, `uniqueness_concurrency`);
-* App. `app:composition`: the converse example after Cor. monotone-commitment
-  (`converse_example`), Eq. `curried-composition` (`curried_sharp`,
+* App. `app:composition`: Eq. `curried-composition` (`curried_sharp`,
   `curried_plan_graph`), Example `bare-reads` (`bare_read_example`,
-  `latestG_not_liftedMono`, `latest_not_proper`);
-* Sec. `composition`, Example `committed-log-composition` (`smr_example`).
+  `latestG_not_liftedMono`, `latest_needs_store_commitment`);
+* Sec. `composition`, Example `committed-log-composition` (`smr_example`;
+  its irredundance is `CC.Guard.smr_irredundant`).
 
 The "Query CALM" row (functional fibers are directed) is
 `CC.CALM.functional_directed`.
@@ -843,46 +843,6 @@ end IConfExamples
 section CompExamples
 open Comp
 
-/-- The converse example after Cor. `cor:monotone-commitment`:
-`I = {*}`, `M = {x, y}` discrete, `S₁ = {(*,x),(*,y)}`, `K = {(*,x)}`,
-`S₂ = {(x,x),(y,x),(y,y)}`.  `S₁`, `S₂` and the unresolved `S₂ ∘ S₁` all fail
-Lifted Monotonicity (so also "neither `S₁`, `S₂`, nor the unresolved
-composition need be monotone"), `S₂(y) = {x, y}` is not directed, the resolved
-table is exactly `{(*,x)}`, and the strategy is proper. -/
-theorem converse_example :
-    (∀ p m, anyS.S p m) ∧ (∀ p m, kappaX.K p m ↔ m = Two.x) ∧
-    (∀ m o, s2NM.S m o ↔ (m = .x ∧ o = .x) ∨ (m = .y ∧ o = .x) ∨ (m = .y ∧ o = .y)) ∧
-    (∀ p o, (seq kappaX.spec s2NM).S p o ↔ o = Two.x) ∧
-    ¬ JointLift (s2NM.S .y) (s2NM.S .y) ∧
-    ¬ anyS.LiftedMono ∧ ¬ s2NM.LiftedMono ∧ ¬ (seq anyS s2NM).LiftedMono ∧
-    ProperSeq kappaX s2NM := by
-  have hxy : ¬ ∃ u : Two, Two.x ≼ u ∧ Two.y ≼ u := fun ⟨u, h1, h2⟩ =>
-    two_ne ((h1 : Two.x = u).trans (h2 : Two.y = u).symm)
-  refine ⟨fun _ _ => trivial, fun _ _ => Iff.rfl, ?_, ?_, ?_,
-    monotone_commitment_neither_monotone.1, proper_strictly_more_general.1, ?_,
-    proper_strictly_more_general.2⟩
-  · intro m o; cases m <;> cases o <;> simp [s2NM]
-  · intro p o
-    constructor
-    · rintro ⟨m, hm, h⟩
-      have hm' : m = Two.x := hm
-      subst hm'
-      rcases h with h | h
-      · exact Two.noConfusion h
-      · exact h
-    · rintro rfl; exact ⟨.x, rfl, Or.inr rfl⟩
-  · intro h
-    obtain ⟨u, _, hall⟩ := h [.x, .y] (by simp) (fun _ _ => Or.inl rfl)
-    exact hxy ⟨u, hall _ (by simp), hall _ (by simp)⟩
-  · intro h
-    obtain ⟨u, _, hall⟩ := h .pt .pt trivial [.x, .y] (by simp) (by
-      intro z hz
-      simp only [List.mem_cons, List.not_mem_nil, or_false] at hz
-      rcases hz with rfl | rfl
-      · exact ⟨.x, trivial, Or.inr rfl⟩
-      · exact ⟨.y, trivial, Or.inl rfl⟩)
-    exact hxy ⟨u, hall _ (by simp), hall _ (by simp)⟩
-
 variable {I J A B C : Type} [PO I] [PO J] [PO A] [PO B] [PO C]
 
 omit [PO I] [PO J] [PO A] [PO B] [PO C] in
@@ -977,32 +937,21 @@ at most once; the claims below do not need it.) -/
 def smrS1 : Spec (Pfx Cmd) (Pfx Cmd) :=
   ⟨fun i b => ∀ c ∈ b.l, c ∈ i.l, fun _ => ⟨⟨[]⟩, fun _ h => nomatch h⟩⟩
 
-/-- The authority commits to the next command in arrival order: `K(i) = i`. -/
-def smrK : CommitTable (smrS1 (Cmd := Cmd)) :=
-  ⟨(graph fun i : Pfx Cmd => i).S, fun i b h => by
-    have h' : b = i := h
-    subst h'; exact fun _ hc => hc, fun _ => ⟨_, rfl⟩⟩
-
 /-- `S₂`: the responses obtained by executing the log. -/
 def smrS2 (σ0 : Stt) : Spec (Pfx Cmd) (Pfx (Cmd × R)) := graph (execF δ σ0)
 
 /-- Example `ex:committed-log-composition`, for any deterministic state
 machine and any two distinct commands:
-* `S₁` violates Lifted Monotonicity (two next entries in one fiber);
+* `S₁` (the log specification `𝒫`) violates Lifted Monotonicity (two next
+  entries in one fiber);
 * `S₂ ∘ S₁` violates it (opposite orders give incompatible responses);
-* `K` is the graph of a monotone function and `S₂` is monotone;
-* the commitment is proper, and `S₂ ∘ K` is consistent. -/
+* execution is monotone, so `S₂` satisfies Lifted Monotonicity. -/
 theorem smr_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
     ¬ (smrS1 (Cmd := Cmd)).LiftedMono ∧
       ¬ (seq smrS1 (smrS2 δ σ0)).LiftedMono ∧
-      (smrK (Cmd := Cmd)).K = (graph fun i : Pfx Cmd => i).S ∧
-      Monotone (fun i : Pfx Cmd => i) ∧ (smrS2 δ σ0).LiftedMono ∧
-      ProperSeq smrK (smrS2 δ σ0) ∧ (seq smrK.spec (smrS2 δ σ0)).Consistent := by
+      Monotone (execF δ σ0) ∧ (smrS2 δ σ0).LiftedMono := by
   have hG : (smrS2 δ σ0).LiftedMono := (graph_liftedMono_iff _).2 (execF_monotone δ σ0)
-  have hid : Monotone (fun i : Pfx Cmd => i) := fun _ _ h => h
-  have hP : ProperSeq smrK (smrS2 δ σ0) :=
-    monotone_commitment_seq smrK (smrS2 δ σ0) (fun i => i) rfl hid hG
-  refine ⟨?_, ?_, rfl, hid, hG, hP, hP.1⟩
+  refine ⟨?_, ?_, execF_monotone δ σ0, hG⟩
   · intro h
     obtain ⟨u, _, hall⟩ := h ⟨[c₁, c₂]⟩ ⟨[c₁, c₂]⟩ (PO.refl _)
       [⟨[c₁]⟩, ⟨[c₂]⟩] (by simp) (by
@@ -1030,14 +979,6 @@ theorem smr_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
 `A = Pt`. -/
 def logF : Spec (Pfx Cmd × Pt) (Pfx Cmd) :=
   ⟨fun p b => ∀ c ∈ b.l, c ∈ p.1.l, fun _ => ⟨⟨[]⟩, fun _ h => nomatch h⟩⟩
-
-/-- The authority commits to the next command in arrival order: `K(i) = i`. -/
-def logK : CommitTable (logF (Cmd := Cmd)) :=
-  ⟨(graph fun p : Pfx Cmd × Pt => p.1).S, fun p b h => by
-    have h' : b = p.1 := h
-    subst h'; exact fun _ hc => hc, fun _ => ⟨_, rfl⟩⟩
-
-theorem logK_monotone : Monotone (fun p : Pfx Cmd × Pt => p.1) := fun _ _ h => h.1
 
 /-- Sets of facts, ordered by inclusion. -/
 structure Facts (α : Type) where
@@ -1110,18 +1051,14 @@ theorem bareG_liftedMono (σ0 : Stt) : (bareG δ rd σ0).LiftedMono := by
 deterministic state machine, any read function `rd`, and two distinct
 commands:
 * `F` and `G ⋆ F` violate Lifted Monotonicity;
-* `K` is the graph of a monotone function and `G` is monotone;
-* the commitment is proper, and `G ⋆ K` is consistent. -/
+* `G` is monotone, so every output of `G` at every state reachable without
+  commitment is exposable: bare reads need no commitment of their own. -/
 theorem bare_read_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
     ¬ (logF (Cmd := Cmd)).LiftedMono ∧
-      ¬ (par logF (bareG δ rd σ0)).LiftedMono ∧
-      (logK (Cmd := Cmd)).K = (graph fun p : Pfx Cmd × Pt => p.1).S ∧
-      Monotone (fun p : Pfx Cmd × Pt => p.1) ∧ (bareG δ rd σ0).LiftedMono ∧
-      ProperPar logK (bareG δ rd σ0) ∧ (par logK.spec (bareG δ rd σ0)).Consistent := by
+      ¬ (par logF (bareG δ rd σ0)).LiftedMono ∧ (bareG δ rd σ0).LiftedMono ∧
+      ∀ τ : State (bareG δ rd σ0), ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o := by
   have hG := bareG_liftedMono δ rd σ0
-  have hP : ProperPar logK (bareG δ rd σ0) :=
-    monotone_commitment_par logK (bareG δ rd σ0) (fun p => p.1) rfl logK_monotone hG
-  refine ⟨?_, ?_, rfl, logK_monotone, hG, hP, hP.1⟩
+  refine ⟨?_, ?_, hG, (exposure_boundary _).1 ((liftedMono_iff_commonExpansion _).1 hG)⟩
   · intro h
     obtain ⟨u, _, hall⟩ := h (⟨[c₁, c₂]⟩, .pt) (⟨[c₁, c₂]⟩, .pt) (PO.refl _)
       [⟨[c₁]⟩, ⟨[c₂]⟩] (by simp) (by
@@ -1186,26 +1123,19 @@ theorem latestG_not_liftedMono (σ0 : Stt) {c : Cmd} {r : Rd}
   have h2' : ∀ f : Rd × V, f = (r, rd σ0 r) → u.2.has f := h2
   exact hc (hv _ (h2' _ rfl)).2.symm
 
-/-- The latest-value store is not made consistent by the log commitments:
-`G ⋆ K` violates Lifted Monotonicity, so the strategy is not proper. -/
-theorem latest_not_proper (σ0 : Stt) {c : Cmd} {r : Rd}
+/-- The latest-value store needs commitments of its own: some output of `G`
+at some state reachable without commitment is not exposable. -/
+theorem latest_needs_store_commitment (σ0 : Stt) {c : Cmd} {r : Rd}
     (hc : rd (δ σ0 c).1 r ≠ rd σ0 r) :
-    ¬ (par logK.spec (latestG δ rd σ0)).LiftedMono ∧ ¬ ProperPar logK (latestG δ rd σ0) := by
-  have hn : ¬ (par logK.spec (latestG δ rd σ0)).LiftedMono := by
-    intro h
-    obtain ⟨u, hu, hall⟩ := h (⟨[]⟩, (⟨[r]⟩, .pt)) (⟨[c]⟩, (⟨[r]⟩, .pt))
-      ⟨⟨[c], rfl⟩, PO.refl _⟩
-      [((⟨[]⟩, ⟨fun f => f = (r, rd σ0 r)⟩) : Pfx (Cmd × R) × Facts (Rd × V))] (by simp)
-      (fun y hy => by
-        simp only [List.mem_singleton] at hy
-        subst hy; exact ⟨⟨[]⟩, rfl, latestG_initial δ rd σ0 r⟩)
-    obtain ⟨b, hb, -, hv, -⟩ := hu
-    have hb' : b = ⟨[c]⟩ := hb
-    subst hb'
-    obtain ⟨-, h2⟩ := hall _ (List.mem_singleton_self _)
-    have h2' : ∀ f : Rd × V, f = (r, rd σ0 r) → u.2.has f := h2
-    exact hc (hv _ (h2' _ rfl)).2.symm
-  exact ⟨hn, fun hP => hn ((proper_coordination_par logK _).1 hP)⟩
+    ∃ τ : State (latestG δ rd σ0), ReachableCF τ ∧ ∃ o, τ.R τ.cur o ∧ ¬ Exposable τ o := by
+  apply Classical.byContradiction
+  intro hn
+  apply latestG_not_liftedMono δ rd σ0 hc
+  apply (liftedMono_iff_commonExpansion _).2
+  apply (exposure_boundary _).2
+  intro τ hτ o ho
+  exact Classical.byContradiction fun he => hn ⟨τ, hτ, o, ho, he⟩
+
 end Log
 
 end Inst

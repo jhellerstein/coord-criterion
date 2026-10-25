@@ -15,11 +15,11 @@ for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with Directed Outputs.  When it fails, some reachable output
 requires a commitment, and every commitment does one of two jobs: it seals
 input or it chooses among outputs.  Because commitments are explicit, the model
-can also check whether a use of coordination is proper
+can also check where a composition coordinates
 (Section~\ref{sec:composition}).  For example, a totally ordered log and a
 key-value store are both non-monotone at their ordinary specifications, yet
-once they are composed through a shared order, committing the log order alone
-makes the composition consistent.  Multi-Paxos is one way to distribute those
+when the log guards the store, the log's commitments are all the composition
+needs and the store makes none.  Multi-Paxos is one way to distribute those
 commitments.
 
 Complete CAP is the partition form of the same equivalence.  A system can keep
@@ -32,4 +32,4 @@ Several directions build on these results.  The first moves from criterion to
 complexity: not only whether a specification needs commitments, but how many.
 The second is determination provenance: which inputs determine an output that
 needs no commitment.  The third is general-purpose static analysis of CALM and
-of proper coordination in a real programming framework.
+of irredundant coordination in a real programming framework.

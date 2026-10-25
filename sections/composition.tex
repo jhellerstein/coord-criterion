@@ -1,10 +1,10 @@
-\section{Composition and Proper Coordination}
+\section{Composition and Irredundant Coordination}
 \label{sec:composition}
 
 Prior literature presented a puzzle: the ``fix'' for a non-monotone
 program is coordination, which is another non-monotone program. A key-value
 store with mutable keys is non-monotone~\cite{alvaro2011bloom}. The standard
-solution, as in state-machine replication~\cite{schneider1990smr}, it to wrap it 
+solution, as in state-machine replication~\cite{schneider1990smr}, is to wrap it
 with a log. Clients send
 requests, a log puts the requested commands in one order, and the key-value store
 executes the log and answers each request.  The log's specification is also not
@@ -18,9 +18,10 @@ key-value store needs no further agreement.
 That puzzle is explained by our framework.  Specifications are
 tables, so they compose by equijoin, and composition preserves Lifted
 Monotonicity.  Because commitments are explicit, we
-can also ask whether commitments made at one component are enough to make the
-whole composition consistent.  When they are, we call the coordination
-\emph{proper} (Section~\ref{sec:proper-coordination}).  Example~\ref{ex:committed-log-composition}
+can also ask which component makes a composition's commitments.  When one
+component makes every commitment the composition needs and the other makes
+none, we call the coordination \emph{irredundant}
+(Section~\ref{sec:irredundant-coordination}).  Example~\ref{ex:committed-log-composition}
 returns to the replicated store.  Proofs are in
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
@@ -67,89 +68,158 @@ compositions of monotone functions are monotone
 (Corollary~\ref{cor:functional-composition}), so
 monotonicity of $q$ on all of the state domain suffices.
 
-\subsection{Proper Coordination}
-\label{sec:proper-coordination}
+\subsection{Composite CALM}
+\label{sec:composite-calm}
 
-When an upstream component is not monotone, Lemma~\ref{lem:composition} does not apply, and
-the composition may need commitments.  Proper coordination asks whether commitments made
-upstream are enough on their own.  We describe those commitments by their
-effect on the upstream table.  Let $S_1\subseteq I\times M$ and
-$S_2\subseteq M\times O$ be as above.  A
-\emph{commitment strategy} for $S_1$ (distinct from a participant's strategy,
-Definition~\ref{def:system}) fixes at each input $i$ the upstream outputs
-committed to at $i$.  Its \emph{committed table} is the set $K\subseteq S_1$
-of those rows.  It is \emph{totality-preserving} when $K$ has a row at every
-input, so that the commitments never leave an input without a permitted
-output.  The resolved end-to-end table is $S_2\circ K$.  Table $K$ is given, not derived: it records which
-upstream rows the commitments keep.
+The composite is itself an ordered specification, so Complete CALM applies to
+it directly.  Specification $S_2\circ S_1$ is consistent exactly when it
+satisfies Lifted Monotonicity, and then no output needs a commitment
+(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).
+Lemma~\ref{lem:composition} gives one way to meet that test.
 
-\begin{definition}[Proper Coordination]
-\label{def:proper-coordination}
-A totality-preserving commitment strategy with committed table $K$ is
-\emph{proper} for the composition when the resolved specification
-$S_2\circ K$ is consistent and every output at every
-state of it reachable without commitment is exposable.
+A monotone composite does not mean that each component can run without
+commitments.  Consider an upstream specification with one input and two
+incomparable outputs, and a downstream function that maps both to the same
+value.  The composite has one row, so it is monotone.  The upstream component
+still cannot emit either output without choosing, so a pipeline in which
+neither component commits never emits anything
+(Appendix~\ref{app:composition}).  The test is on the table alone.  Which
+component commits depends on the implementation, the subject of the next
+subsection.
+
+\subsection{Irredundant Coordination}
+\label{sec:irredundant-coordination}
+
+Intuitively, a replicated store coordinates once.  Multi-Paxos commits to an
+order of concurrent commands, and the store executes whatever log it is given.
+We now make this precise for a composition whose downstream component is a
+function.
+
+Let $\mathcal P=(I,\InputOrd,M,\preceq_M,P)$ be an upstream specification and
+$f:(M,\preceq_M)\to(O,\OutputOrd)$ a function.  The \emph{store} $\mathcal K$
+is the specification with table $\{(m,f(m))\}$, and the composite
+$\mathcal K\circ\mathcal P$ has table $\{(i,f(m)):(i,m)\in P\}$.  For a state
+$\sigma=(i,R)$ of $\mathcal P$, its \emph{image} $f(\sigma)$ is the state
+$(i,\{(k,f(m)):(k,m)\in R\})$ of the composite.  Fix a system for
+$\mathcal P$ (Definition~\ref{def:system}) with basis $\mathcal B$.  In the
+\emph{guarded composite}, the store follows each participant: when the
+participant emits $m$ by $\Out{\gamma}{m}$, the store receives $m$ and emits
+$f(m)$.  The environment observes $\mathsf{input}(j)$ and $f(m)$.  We say that
+$\mathcal P$ \emph{guards} $\mathcal K$, and that $\mathcal K$
+\emph{delegates} commitment to $\mathcal P$.
+
+One might push each commitment of $\mathcal P$ forward along $f$.  This does
+not work.  A commitment of $\mathcal P$ may keep $m'$ and remove $m$, with $m$
+and $m'$ incomparable but $f(m)\OutputOrd f(m')$.  Its image removes a row
+\outrelpast by a row it keeps, which Equation~\ref{eq:commitment-excludes}
+forbids.  In the composite, emitting $f(m')$ needs no commitment at all, since
+it retires $f(m)$.  A choice upstream can become a retirement downstream.  We
+therefore push forward runs, not commitments.
+
+\begin{definition}[Irredundant Coordination]
+\label{def:irredundant-coordination}
+The guarded composite coordinates \emph{at most once} when every run of
+$\mathcal P$ under $\mathcal B$, with each output $m$ replaced by $f(m)$, is a
+run of $\mathcal K\circ\mathcal P$, and the store's part of it is a run of
+$\mathcal K$ under the empty basis.  It coordinates \emph{at least once} when
+every output event $\Out{\gamma}{m}$ of $\mathcal P$ at a state $\sigma$ such
+that $f(m)$ is not exposable at $f(\sigma)$ has $\gamma\neq\varepsilon$.  It is
+\emph{irredundant} when it coordinates at most once and at least once.
 \end{definition}
 
-The second clause follows from the first by Complete CALM and the exposure
-boundary (Theorem~\ref{thm:complete-calm},
-Proposition~\ref{prop:exposure-boundary}): once the upstream commitments are
-made, the composition needs no further commitment.  Neither $S_1$, $S_2$, nor
-the unresolved composition need be monotone.
+At most once says that the store adds no commitment.  At least once says that
+whatever commitment the composite needs, $\mathcal P$ makes.  Both halves are
+needed, since a silent system trivially satisfies the first.
 
-\begin{corollary}[Proper Coordination]
-\label{thm:proper-coordination}
-A totality-preserving commitment strategy is proper for a composition if
-and only if the resolved
-specification satisfies Lifted Monotonicity.
-\end{corollary}
-
-\begin{proof}[Proof sketch]
-Complete CALM equates consistency of the resolved specification with Lifted
-Monotonicity, and the exposure boundary supplies the second clause.  Full
-proof in Appendix~\ref{app:composition}.
-\end{proof}
-
-The corollary reduces properness to a test on one table.  A
-sufficient condition commits the upstream component to a single output at
-each input, chosen so that the outputs grow with the input.
-
-\begin{corollary}[Committing upstream to a monotone function]
-\label{cor:monotone-commitment}
-If the committed table $K$ of a totality-preserving commitment strategy is the
-table of a monotone function and the downstream specification $S_2$
-satisfies Lifted Monotonicity, the strategy is proper.
-\end{corollary}
+\begin{theorem}[Guarded runs]
+\label{thm:guarded-runs}
+Let $f$ be monotone and $\mathcal B$ any basis of $\mathcal P$.
+\begin{enumerate}
+  \item Every run of $\mathcal P$ under $\mathcal B$, with each output $m$
+        replaced by $f(m)$, is a run of $\mathcal K\circ\mathcal P$ from the
+        same canonical state.  After each event, the composite run's table
+        contains the image of $\mathcal P$'s.
+  \item The outputs of such a run form a chain, and the store's run on them
+        is a run of $\mathcal K$ under the empty basis.
+  \item If finitely many runs of $\mathcal P$ can be brought to a common state
+        with current input $j$, under any bases, the corresponding composite
+        runs are confluent at $j$.
+\end{enumerate}
+\end{theorem}
 
 \begin{proof}[Proof sketch]
-The table of a monotone function satisfies Lifted Monotonicity, so
-Lemma~\ref{lem:composition} makes the resolved table monotone.  Full proof in Appendix~\ref{app:composition}.
+(1) By induction on events.  An output event $\Out{\gamma}{m}$ keeps only rows
+that \outrel $m$ (Lemma~\ref{lem:canonical-commitment-normal-form}), and $f$
+carries them to rows that \outrel $f(m)$, which the composite's
+$\mathsf{output}(f(m))$ keeps.  (2) Each emitted output \outrel the earlier
+ones, so the store's inputs grow, and every output of a monotone function is
+exposable.  (3) A common state has a row $(j,m)$, so every composite run keeps
+$(j,f(m))$, which gives confluence.  Full proof in
+Appendix~\ref{app:composition}.
 \end{proof}
 
-The converse fails: a strategy can be proper even when the downstream
-specification is not monotone (Appendix~\ref{app:composition}).
+\begin{theorem}[Irredundant Coordination]
+\label{thm:irredundant-coordination}
+If $f$ is monotone, the guarded composite is irredundant for every basis of
+$\mathcal P$.  If moreover $\mathcal K\circ\mathcal P$ violates Lifted
+Monotonicity, some output $f(m)$ of the composite is not exposable at a
+canonical state, and $\mathcal P$ must commit to emit any output with that
+image there.
+\end{theorem}
 
-\begin{example}[Committed log composed with a key-value store]
+\begin{proof}[Proof sketch]
+At most once is Theorem~\ref{thm:guarded-runs}.  For at least once, suppose
+$\mathcal P$ emits $m$ at $\sigma$ with no commitment, so $m$ is exposable at
+$\sigma$.  A row of $\sigma$ retired to $(k,u)$ maps to a row of $f(\sigma)$
+retired to $(k,f(u))$, so $f(m)$ is exposable at $f(\sigma)$.  When Lifted
+Monotonicity fails, the exposure boundary already fails at a canonical state
+(Proposition~\ref{prop:exposure-boundary}), and the image of a canonical state
+is canonical.  Full proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+The theorem holds for every basis of $\mathcal P$.  Multi-Paxos commits by
+deciding log slots.  A design with per-key mutexes would instead order pairs of
+commands on one key, as 2PL orders pairs of transactions where MVTO stamps
+them (Section~\ref{sec:systems}, Appendix~\ref{app:cc-bases}).  Neither basis
+need match the canonical commitments of the composite, and we need not compare
+them.
+Every legal output event removes at least the rows its canonical event
+removes (Lemma~\ref{lem:canonical-commitment-normal-form}), so every row that
+the composite must seal or choose against has lost all its preimages to
+$\mathcal P$'s commitments (Appendix~\ref{app:composition}).
+
+Some of $\mathcal P$'s commitments are invisible to the composite.
+
+\begin{proposition}[Invisible coordination]
+\label{prop:invisible-coordination}
+Let $f$ be monotone, and let $\mathcal P$ emit $m$ at $\sigma$ by
+$\Out{\gamma}{m}$.  If every row that $\gamma$ removes has a row with the same
+input and the same image that $\gamma$ keeps, then $f(m)$ is exposable at
+$f(\sigma)$.
+\end{proposition}
+
+Consider a store that answers each key from that key's commands, in log
+order, and two commands $a$ and $b$ on different keys.  The log must order
+them, since $[a,b]$ and $[b,a]$ have no common \outnoun.  The store's view of
+both logs is the same, so the composite needs no commitment
+(Appendix~\ref{app:composition}).  The order of $a$ and $b$ is coordination
+inside $\mathcal P$ that the composite does not see.
+
+\begin{example}[Replicated store]
 \label{ex:committed-log-composition}
 Consider again state-machine replication, with every put and get passing
-through the log.  Take $I$ the proposal streams received by a single log
-authority and $M$ the logs, both ordered by prefix, and $O$ the cumulative
-response histories, ordered by extension.  Each command is proposed at most
-once.  Let $S_1$ relate each proposal stream to the logs still permitted for
-it, and $S_2$ relate a log to the responses obtained by executing it.  Then
-$S_1$ is non-monotone, since distinct next entries are incompatible outputs in
-one fiber.  So is the key-value store specification $S_2\circ S_1$, since
-concurrent commands ordered oppositely give incompatible responses.
-
-Let the authority commit, at each position, to the next command in arrival
-order.  Arrival order is part of the input, so $K$ assigns each stream one
-log, which extends as the stream does: $K$ is the table of a monotone
-function.  Deterministic execution makes $S_2$ monotone.  By
-Corollary~\ref{cor:monotone-commitment} the log commitments are proper, and
-$S_2\circ K$ is consistent with no commitment in the store.  The binding choice
-is the order itself, made upstream.  Multi-Paxos realizes the authority
-across replicas~\cite{schneider1990smr,lamport2001paxos}, with the decided
-order in place of arrival order.
+through the log.  Take $I$ the proposal streams and $M$ the logs, both ordered
+by prefix, and $O$ the cumulative response histories, ordered by extension.
+Let $\mathcal P$ relate each proposal stream to the logs of its commands, and
+let $f$ execute a log on a deterministic state machine, which is monotone in
+the prefix order.  Then $\mathcal P$ is non-monotone, since distinct next
+entries are incompatible outputs in one fiber.  So is the key-value store
+$\mathcal K\circ\mathcal P$, since concurrent commands ordered oppositely give
+incompatible responses.  Multi-Paxos runs $\mathcal P$ under its own basis,
+deciding one log slot at a time~\cite{schneider1990smr,lamport2001paxos}.  By
+Theorem~\ref{thm:irredundant-coordination}, the store needs no commitment of
+its own, and because the composite is not monotone, the log's commitments
+cannot be dropped.  The replicated store coordinates exactly once.
 \end{example}
 
 A downstream component often has input of its own, not only the output of the
@@ -160,7 +230,7 @@ executed, without going through Multi-Paxos.  Bare reads avoid the cost of
 coordination, at the risk of missing a fresher value that has already reached
 another replica.  In Appendix~\ref{sec:parameterized-composition} we give
 each component a separate input, in an \emph{independently parameterized
-composition} for which the results above still hold.  There, bare reads are
-consistent when each response records the log position it read from, but not
-when the specification demands the latest value
+composition}, and Lemma~\ref{lem:composition} carries over.  There, bare reads
+need no commitment of their own when each response records the log position it
+read from, but they do when the specification demands the latest value
 (Example~\ref{ex:bare-reads}).
