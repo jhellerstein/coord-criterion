@@ -1,6 +1,7 @@
 \section{Instances Across the Literature}
 \label{sec:instances}
 
+Complete CALM provides a unified lens for many results across literatures.
 Each setting below declares an input, an output, and their orders before
 applying either theorem.  Changing the specification changes
 whether monotonicity or Directed Outputs holds.
@@ -8,31 +9,27 @@ whether monotonicity or Directed Outputs holds.
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-Section~\ref{sec:functional-calm} gave the functional encoding
-$J\mapsto Q(J)$.  Relational-transducer CALM (CALM for Datalog programs run on networks of
-relational transducers) proves the operational result for
-that language: monotone queries allow coordination-free evaluation under its
-data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM does not replace
-that theorem.  It isolates the property so that it
-can be compared with specifications outside Datalog.
+As previously dicussed (\S\ref{sec:functional-calm}),
+the CALM Theorem of Ameloot, et al. proves an operational result for
+relational languages on transducer networks: coordination-free evaluation is possible
+iff a program is monotone,
+under its data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.
+Functional CALM explains but does not replace the details of that theorem; 
+it abstracts the result to a higher-level property, allowing it to be
+compared with specifications outside Datalog.
 
-Why did earlier CALM results not state Directed Outputs separately?  Their
-query specification is functional: each input $J$ has one result
-$Q(J)$, so each output fiber is a singleton and directed automatically.
-CRDTs also present a functional state for a fixed set of incorporated
-updates; semilattice join provides least common \outnouns across
-partial inputs.  Complete CALM allows several outputs per fiber,
-so directedness can no longer be assumed.
+Subsequent refinements of that CALM Theorem are all instances of our Functional CALM
+Theorem: \jmh{fill in brief explanations of Zinn, Baccaert, etc.}
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
 
 A CRDT guarantees that replicas receiving the same updates converge to
-equivalent states, whatever the order of delivery and merge.  It says nothing
-about what a client may conclude from one replica's current state.  Keep CALM
-and CRDT On observed that convergent state can still yield unsafe
-observations, and proposed monotonicity as the test for safe
-queries~\cite{laddad2022keep}.  Its example is a two-phase set, whose state
+equivalent states, whatever the order of delivery and merge.  But the Strong
+Eventual Consistency property it offers provides no guarantee on what the environment
+may observe, and is subject to Lamport’s “anomalous behavior” (\S~ref{sec:complete-calm}).
+Laddad, et al.\ proposed monotonicity as the right test for safe
+observation from CRDT state~\cite{laddad2022keep}.  Their example is a two-phase set, whose state
 $(\mathit{Add},\mathit{Del})$ merges by componentwise union.  The query
 $\mathit{Add}\setminus\mathit{Del}$ can report a Ferrari in a shopping cart
 before a delayed removal arrives, and an application that treats that answer as
@@ -52,18 +49,11 @@ Operation-based CRDTs fit too, with the causally closed set of
 delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
 
-The standard monotone example is a \emph{threshold query} in the style of
-Kuper and Newton's LVars~\cite{kuper2013lvars}: a Boolean test $[\,t\sqsubseteq
-d\,]$ under $\mathsf{false}\preceq\mathsf{true}$, which stays true as the state
-grows.  A replica can thus report that a grow-only set of failed logins has
-reached 100 entries without knowing that it has seen them all.
-
-A join supplies a uniform least common \outnoun, but Complete CALM needs only
-\emph{some} common \outnoun (Section~\ref{sec:lifted-monotonicity}), so a
-join-semilattice is one sufficient discipline.  Strong eventual consistency is
-a different property.  A last-writer-wins replica converges, yet it can expose
-one value and later discard it, so whether convergence is monotone depends on
-the declared output order.
+CRDTs can be safely weakened beyond join semi-lattices and still
+provide consistency for monotone observations:
+Complete CALM needs only
+\emph{some} common \outnoun (Section~\ref{sec:lifted-monotonicity}), not a least
+one.  
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
