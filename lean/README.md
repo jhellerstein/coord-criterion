@@ -31,8 +31,11 @@ fair-execution definitions to the finite forms used in
 waits, timestamp issue, reads, when the scheduler aborts; Appendix G); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
 al., Zinn et al., and Baccaert and Ketsman, which input order a placement
-model justifies, and their notion of coordination; Lean checks only the
-mapping of their monotonicity conditions into our frame); and the
+model justifies, and their notion of coordination; for Baccaert and Ketsman
+also their notion of computing a behavior, that a fact enters only at its own
+node, that their spanning-tree behavior is node monotone, and that spanning
+trees meet the hypotheses of the overlapping-networks lemma; Lean checks only
+the mapping of their monotonicity conditions into our frame); and the
 design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
@@ -347,7 +350,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:query-instance/weaker-monotonicity»` | theorem | Sec. |
 | `«sec:query-instance/one-fact-version»` | theorem | Sec. |
 | `«sec:query-instance/node-monotonicity»` | theorem | Sec. |
-| `«sec:query-instance/node-monotone-not-lm»` | theorem | Sec. |
+| `«sec:query-instance/overlapping-networks»` | theorem | Sec. |
 | `«sec:query-instance/deterministic-behaviors»` | theorem | Sec. |
 | `«sec:crdt-instance/state-function»` | theorem | Sec. |
 | `«sec:crdt-instance/state-monotone»` | theorem | Sec. |

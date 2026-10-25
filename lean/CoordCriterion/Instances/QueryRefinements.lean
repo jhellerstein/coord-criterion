@@ -1,4 +1,5 @@
 import CoordCriterion.CALM.Examples
+import CoordCriterion.CAP.ResponseForm
 import CoordCriterion.CompleteCALM.Theorem
 import CoordCriterion.Instances.Examples
 
@@ -23,13 +24,22 @@ the mapping into our frame.
 * The one-fact versions of those definitions (Zinn, CoRR 2012) are strictly
   weaker: the query "no 2-cycle" passes the one-fact domain-distinct test but
   is not domain-disjoint-monotone (`noCycle2_*`).
-* Behaviors (Baccaert and Ketsman, PODS 2023).  Inputs are located facts,
-  ordered by network expansion (new facts only at new nodes, `netAdm`), and a
-  behavior is a relational specification on them.  Node monotonicity
-  (`NodeMono`) follows from consistency (`nodeMono_of_consistent`) but does
-  not imply it: letting each node pick one Boolean gives a node-monotone
-  behavior with a non-directed fiber (`pick_nodeMono`, `pick_not_consistent`).
-  For functional behaviors the two coincide (`nodeMono_graph_iff`).
+* Behaviors (Baccaert and Ketsman, PODS 2023; Inf. Syst. 2026).  Inputs are
+  located facts, ordered by network expansion (new facts only at new nodes,
+  `netAdm`), so the network is read off the input, and a behavior is a
+  relational specification on them.  A transducer computes a behavior when
+  every run lands in it, so an implementation realizes a sub-behavior; the
+  comparison is Complete CAP with that sub-behavior as availability relation
+  (`CAP.ConsistentOn`).  Node monotonicity (`NodeMono`) is the
+  common-expansion condition asked only of two rows at disjoint networks
+  (`nodeMono_iff_disjointPair`), so consistency implies it
+  (`nodeMono_of_consistent`).  Choice alone does not separate the two: the
+  node-monotone `pick` has a non-directed fiber, yet `pick` is consistent on
+  the total sub-behavior `pickTrue`.  Overlapping networks do: for
+  spanning-tree behaviors no total sub-behavior is consistent
+  (`no_consistentOn_of_triangle`), and the node-monotone `tree` is one
+  (`tree_nodeMono`, `tree_no_consistentOn`).  For functional behaviors node
+  monotonicity and consistency coincide (`nodeMono_graph_iff`).
 
 Modeling choices.  Instances are `PSet F` (predicates under inclusion, as in
 `eq:query-monotonicity`); finiteness plays no role.  The values of a fact are
@@ -243,11 +253,21 @@ def netAdm : Adm F where
   ok H f := ¬ Netw loc H (loc f)
   anti h hn := fun ⟨g, hg, hl⟩ => hn ⟨g, h g hg, hl⟩
 
-/-- Node monotonicity (Baccaert–Ketsman Def. 6.2): outputs of two behaviors
-on disjoint networks have a common refinement at the merged network. -/
+/-- Node monotonicity (Baccaert–Ketsman, Inf. Syst. 2026, Def. 7): outputs of
+a behavior on two disjoint networks have a common refinement at the merged
+network. -/
 def NodeMono {G : Type} (B : Spec (ExtInp (netAdm loc)) (PSet G)) : Prop :=
   ∀ H₁ H₂ : PSet F, (∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) →
     ∀ K₁ K₂, B.S ⟨H₁⟩ K₁ → B.S ⟨H₂⟩ K₂ → ∃ K, B.S ⟨union H₁ H₂⟩ K ∧ K₁ ≼ K ∧ K₂ ≼ K
+
+/-- The common-expansion condition asked only of two rows at disjoint
+networks: every common expansion `j` of their inputs has a common refinement
+of their outputs. -/
+def DisjointPairExpansion {G : Type} (B : Spec (ExtInp (netAdm loc)) (PSet G)) : Prop :=
+  ∀ H₁ H₂ : PSet F, (∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) →
+    ∀ K₁ K₂, B.S ⟨H₁⟩ K₁ → B.S ⟨H₂⟩ K₂ →
+      ∀ j : ExtInp (netAdm loc), (⟨H₁⟩ : ExtInp (netAdm loc)) ≼ j →
+        (⟨H₂⟩ : ExtInp (netAdm loc)) ≼ j → ∃ u, B.S j u ∧ K₁ ≼ u ∧ K₂ ≼ u
 
 theorem le_union_left {H₁ H₂ : PSet F} (hd : ∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) :
     (⟨H₁⟩ : ExtInp (netAdm loc)) ≼ ⟨union H₁ H₂⟩ :=
@@ -256,6 +276,36 @@ theorem le_union_left {H₁ H₂ : PSet F} (hd : ∀ x, Netw loc H₁ x → ¬ N
 theorem le_union_right {H₁ H₂ : PSet F} (hd : ∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) :
     (⟨H₂⟩ : ExtInp (netAdm loc)) ≼ ⟨union H₁ H₂⟩ :=
   ⟨fun _ hf => Or.inr hf, fun f hf hn => hf.elim (fun h1 h2 => hd _ ⟨f, h1, rfl⟩ h2) (absurd · hn)⟩
+
+/-- Node monotonicity is the common-expansion condition for two rows at
+disjoint networks.  The merged network is one common expansion; any other `j`
+adds facts only at further new nodes, and node monotonicity with those facts
+carries the refinement to `j`. -/
+theorem nodeMono_iff_disjointPair {G : Type} (B : Spec (ExtInp (netAdm loc)) (PSet G)) :
+    NodeMono loc B ↔ DisjointPairExpansion loc B := by
+  constructor
+  · intro h H₁ H₂ hd K₁ K₂ h₁ h₂ j hj₁ hj₂
+    obtain ⟨K, hK, k1, k2⟩ := h H₁ H₂ hd K₁ K₂ h₁ h₂
+    let U := union H₁ H₂
+    let R : PSet F := ⟨fun f => j.set.mem f ∧ ¬ U.mem f⟩
+    have hdR : ∀ x, Netw loc U x → ¬ Netw loc R x := by
+      intro x ⟨g, hg, hgl⟩ ⟨f, ⟨hfj, hfU⟩, hfl⟩
+      rcases hg with hg | hg
+      · exact hj₁.2 f hfj (fun h' => hfU (Or.inl h')) ⟨g, hg, hgl.trans hfl.symm⟩
+      · exact hj₂.2 f hfj (fun h' => hfU (Or.inr h')) ⟨g, hg, hgl.trans hfl.symm⟩
+    obtain ⟨KR, hKR⟩ := B.total ⟨R⟩
+    obtain ⟨u, hu, ku, _⟩ := h U R hdR K KR hK hKR
+    have hset : union U R = j.set :=
+      PSet.ext' fun f => ⟨fun h' => h'.elim (fun hU => hU.elim (hj₁.1 f) (hj₂.1 f)) (·.1),
+        fun hf => by
+          by_cases hU : U.mem f
+          · exact Or.inl hU
+          · exact Or.inr ⟨hf, hU⟩⟩
+    have hj : (⟨union U R⟩ : ExtInp (netAdm loc)) = j := by
+      cases j; simp only at hset; rw [hset]
+    exact ⟨u, hj ▸ hu, PO.trans k1 ku, PO.trans k2 ku⟩
+  · intro h H₁ H₂ hd K₁ K₂ h₁ h₂
+    exact h H₁ H₂ hd K₁ K₂ h₁ h₂ _ (le_union_left loc hd) (le_union_right loc hd)
 
 /-- Consistency (equivalently Lifted Monotonicity) implies node monotonicity. -/
 theorem nodeMono_of_consistent {G : Type} {B : Spec (ExtInp (netAdm loc)) (PSet G)}
@@ -289,15 +339,27 @@ theorem nodeMono_graph_iff {G : Type} (b : ExtInp (netAdm loc) → PSet G) :
 
 end Behaviors
 
-/-! ### Node monotone, not consistent: each node picks a Boolean
+/-! ### Node names as input
 
-Input facts are node names (`Node@x()`), located at themselves.  An output is
-a set of located facts `Pick@x(c)`, at nodes of the input, with at most one
-pick per node.  Disjoint networks never pick at the same node, so the union of
-their outputs is permitted: the behavior is node monotone.  At the one-node
-network `{0}`, the outputs `{Pick@0(true)}` and `{Pick@0(false)}` have no
-common refinement: the fiber is not directed, so the behavior fails Lifted
-Monotonicity and is not consistent. -/
+The examples below take as input a set of node names (`Node@x()`, located at
+`x`), so `loc = id` and network expansion is inclusion. -/
+
+/-- The network with node set `P`. -/
+def net (P : Nat → Prop) : ExtInp (netAdm (id : Nat → Nat)) := ⟨⟨P⟩⟩
+
+theorem net_le {H K : PSet Nat} (h : ∀ x, H.mem x → K.mem x) :
+    (⟨H⟩ : ExtInp (netAdm (id : Nat → Nat))) ≼ ⟨K⟩ :=
+  ⟨h, fun f _ hn ⟨g, hg, hgf⟩ => hn ((show g = f from hgf) ▸ hg)⟩
+
+/-! ### Each node picks a Boolean: a choice that a sub-behavior removes
+
+An output is a set of located facts `Pick@x(c)`, at nodes of the input, with
+at most one pick per node.  The behavior is node monotone, and its fiber at
+`{0}` is not directed, so it fails Lifted Monotonicity.  Baccaert and Ketsman
+only ask that an implementation compute it, that is, land in some
+sub-behavior.  The sub-behavior "every node picks `true`" is total, and the
+behavior is consistent on it, so Complete CAP covers it with that
+availability relation. -/
 
 section Pick
 
@@ -333,7 +395,193 @@ theorem pick_not_directed : ¬ pick.DirectedOutputs := by
 theorem pick_not_consistent : ¬ pick.Consistent := fun hc =>
   pick_not_directed fun i => (complete_calm pick).1 hc i i (PO.refl i)
 
+/-- The sub-behavior in which every node picks `true`. -/
+def pickTrue : Table (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Bool)) :=
+  fun H K => K = ⟨fun p => H.set.mem p.1 ∧ p.2 = true⟩
+
+theorem pickTrue_sub : ∀ H K, pickTrue H K → pick.S H K := by
+  intro H K h
+  subst h
+  exact ⟨fun _ _ h => h.1, fun _ _ _ h h' => h.2.trans h'.2.symm⟩
+
+theorem pickTrue_total : ∀ H, ∃ K, pickTrue H K := fun _ => ⟨_, rfl⟩
+
+/-- `pick` is consistent on `pickTrue`. -/
+theorem pick_consistentOn_pickTrue : CAP.ConsistentOn pick pickTrue := by
+  intro rows hrows j hj
+  refine ⟨_, pickTrue_sub j _ rfl, fun r hr => ?_⟩
+  rw [show r.2 = _ from hrows r hr]
+  exact fun p hp => ⟨(hj r hr).1 _ hp.1, hp.2⟩
+
 end Pick
+
+/-! ### Overlapping networks: no consistent sub-behavior
+
+Baccaert and Ketsman's `Top_span` (Inf. Syst. 2026, Example 8) permits every
+spanning tree of the network.  At a two-node network every tree has the one
+edge; a tree on three nodes has two edges.  The networks `{0,1}`, `{1,2}`,
+`{0,2}` overlap pairwise and have the common expansion `{0,1,2}`, so the
+common-expansion condition on any total sub-behavior asks for a tree on
+`{0,1,2}` with all three edges (`no_consistentOn_of_triangle`).
+
+`tree` is a concrete such behavior: spanning trees in which every node other
+than the least has one parent, smaller than itself.  It is node monotone
+(`tree_nodeMono`): across two disjoint networks, the least node of one gains
+the least node of the other as parent if that one is smaller.  It has no
+total sub-behavior on which it is consistent (`tree_no_consistentOn`).
+Output facts `(x, y)` read "the parent of `x` is `y`". -/
+
+section Tree
+
+/-- `x` and `y` are linked in `K`. -/
+def Adj (K : PSet (Nat × Nat)) (x y : Nat) : Prop := K.mem (x, y) ∨ K.mem (y, x)
+
+/-- If every output at a two-node network links its nodes, and no output at
+`{0,1,2}` links all three pairs, then no total sub-behavior `A` has `B`
+consistent on `A`. -/
+theorem no_consistentOn_of_triangle
+    (B : Spec (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)))
+    (hpair : ∀ a b K, a ≠ b → B.S (net fun x => x = a ∨ x = b) K → Adj K a b)
+    (htri : ∀ K, B.S (net fun x => x = 0 ∨ x = 1 ∨ x = 2) K →
+      ¬ (Adj K 0 1 ∧ Adj K 1 2 ∧ Adj K 0 2))
+    (A : Table (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)))
+    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → B.S H K) :
+    ¬ CAP.ConsistentOn B A := by
+  intro hc
+  let H₀₁ := net fun x => x = 0 ∨ x = 1
+  let H₁₂ := net fun x => x = 1 ∨ x = 2
+  let H₀₂ := net fun x => x = 0 ∨ x = 2
+  let J := net fun x => x = 0 ∨ x = 1 ∨ x = 2
+  obtain ⟨K₀₁, h₀₁⟩ := hA H₀₁
+  obtain ⟨K₁₂, h₁₂⟩ := hA H₁₂
+  obtain ⟨K₀₂, h₀₂⟩ := hA H₀₂
+  have m₁ : (H₀₁, K₀₁) ∈ [(H₀₁, K₀₁), (H₁₂, K₁₂), (H₀₂, K₀₂)] := List.mem_cons_self ..
+  have m₂ : (H₁₂, K₁₂) ∈ [(H₀₁, K₀₁), (H₁₂, K₁₂), (H₀₂, K₀₂)] :=
+    List.mem_cons_of_mem _ (List.mem_cons_self ..)
+  have m₃ : (H₀₂, K₀₂) ∈ [(H₀₁, K₀₁), (H₁₂, K₁₂), (H₀₂, K₀₂)] :=
+    List.mem_cons_of_mem _ (List.mem_cons_of_mem _ (List.mem_cons_self ..))
+  have cases : ∀ r ∈ [(H₀₁, K₀₁), (H₁₂, K₁₂), (H₀₂, K₀₂)],
+      r = (H₀₁, K₀₁) ∨ r = (H₁₂, K₁₂) ∨ r = (H₀₂, K₀₂) := by
+    intro r hr; simpa using hr
+  obtain ⟨u, hu, hall⟩ := hc [(H₀₁, K₀₁), (H₁₂, K₁₂), (H₀₂, K₀₂)]
+    (fun r hr => by rcases cases r hr with rfl | rfl | rfl <;> assumption) J
+    (fun r hr => by
+      rcases cases r hr with rfl | rfl | rfl <;>
+        exact net_le fun x (hx : _ ∨ _) => show _ ∨ _ ∨ _ by omega)
+  have tr : ∀ K a b, K ≼ u → Adj K a b → Adj u a b := fun _ _ _ h hab =>
+    hab.elim (fun h' => Or.inl (h _ h')) (fun h' => Or.inr (h _ h'))
+  exact htri u hu
+    ⟨tr _ _ _ (hall _ m₁) (hpair 0 1 _ (by decide) (hsub _ _ h₀₁)),
+     tr _ _ _ (hall _ m₂) (hpair 1 2 _ (by decide) (hsub _ _ h₁₂)),
+     tr _ _ _ (hall _ m₃) (hpair 0 2 _ (by decide) (hsub _ _ h₀₂))⟩
+
+/-- `m` is the least node of `H`. -/
+def IsMin (H : PSet Nat) (m : Nat) : Prop := H.mem m ∧ ∀ z, H.mem z → m ≤ z
+
+theorem exists_isMin {H : PSet Nat} : ∀ z, H.mem z → ∃ m, IsMin H m := by
+  intro z
+  induction z using Nat.strongRecOn with
+  | ind z ih =>
+    intro hz
+    by_cases h : ∃ w, H.mem w ∧ w < z
+    · obtain ⟨w, hw, hlt⟩ := h
+      exact ih w hlt hw
+    · exact ⟨z, hz, fun w hw => Nat.le_of_not_lt fun hlt => h ⟨w, hw, hlt⟩⟩
+
+theorem isMin_unique {H : PSet Nat} {m m' : Nat} (h : IsMin H m) (h' : IsMin H m') : m = m' :=
+  Nat.le_antisymm (h.2 _ h'.1) (h'.2 _ h.1)
+
+/-- Spanning trees with parents smaller than children. -/
+def tree : Spec (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)) where
+  S H K := (∀ x y, K.mem (x, y) → H.set.mem x ∧ H.set.mem y ∧ y < x) ∧
+    (∀ x y y', K.mem (x, y) → K.mem (x, y') → y = y') ∧
+    (∀ x z, H.set.mem x → H.set.mem z → z < x → ∃ y, K.mem (x, y))
+  total H := ⟨⟨fun p => H.set.mem p.1 ∧ IsMin H.set p.2 ∧ p.2 < p.1⟩,
+    fun _ _ h => ⟨h.1, h.2.1.1, h.2.2⟩,
+    fun _ _ _ h h' => isMin_unique h.2.1 h'.2.1,
+    fun _ z hx hz hlt =>
+      let ⟨m, hm⟩ := exists_isMin z hz
+      ⟨m, hx, hm, Nat.lt_of_le_of_lt (hm.2 z hz) hlt⟩⟩
+
+theorem tree_nodeMono : NodeMono id tree := by
+  intro H₁ H₂ hd K₁ K₂ ⟨l₁, u₁, e₁⟩ ⟨l₂, u₂, e₂⟩
+  have hd' : ∀ x, H₁.mem x → H₂.mem x → False := fun x a b => hd x ⟨x, a, rfl⟩ ⟨x, b, rfl⟩
+  let K : PSet (Nat × Nat) := ⟨fun p => K₁.mem p ∨ K₂.mem p ∨
+    (H₁.mem p.1 ∧ (∀ z, H₁.mem z → ¬ z < p.1) ∧ IsMin H₂ p.2 ∧ p.2 < p.1) ∨
+    (H₂.mem p.1 ∧ (∀ z, H₂.mem z → ¬ z < p.1) ∧ IsMin H₁ p.2 ∧ p.2 < p.1)⟩
+  refine ⟨K, ⟨?_, ?_, ?_⟩, fun _ h => Or.inl h, fun _ h => Or.inr (Or.inl h)⟩
+  · intro x y h
+    rcases h with h | h | ⟨a, _, m, lt⟩ | ⟨a, _, m, lt⟩
+    · exact ⟨Or.inl (l₁ _ _ h).1, Or.inl (l₁ _ _ h).2.1, (l₁ _ _ h).2.2⟩
+    · exact ⟨Or.inr (l₂ _ _ h).1, Or.inr (l₂ _ _ h).2.1, (l₂ _ _ h).2.2⟩
+    · exact ⟨Or.inl a, Or.inr m.1, lt⟩
+    · exact ⟨Or.inr a, Or.inl m.1, lt⟩
+  · intro x y y' h h'
+    rcases h with h | h | ⟨a1, n1, m1, _⟩ | ⟨a2, n2, m2, _⟩ <;>
+      rcases h' with h' | h' | ⟨a1', n1', m1', _⟩ | ⟨a2', n2', m2', _⟩
+    · exact u₁ _ _ _ h h'
+    · exact (hd' x (l₁ _ _ h).1 (l₂ _ _ h').1).elim
+    · exact (n1' y (l₁ _ _ h).2.1 (l₁ _ _ h).2.2).elim
+    · exact (hd' x (l₁ _ _ h).1 a2').elim
+    · exact (hd' x (l₁ _ _ h').1 (l₂ _ _ h).1).elim
+    · exact u₂ _ _ _ h h'
+    · exact (hd' x a1' (l₂ _ _ h).1).elim
+    · exact (n2' y (l₂ _ _ h).2.1 (l₂ _ _ h).2.2).elim
+    · exact (n1 y' (l₁ _ _ h').2.1 (l₁ _ _ h').2.2).elim
+    · exact (hd' x a1 (l₂ _ _ h').1).elim
+    · exact isMin_unique m1 m1'
+    · exact (hd' x a1 a2').elim
+    · exact (hd' x (l₁ _ _ h').1 a2).elim
+    · exact (n2 y' (l₂ _ _ h').2.1 (l₂ _ _ h').2.2).elim
+    · exact (hd' x a1' a2).elim
+    · exact isMin_unique m2 m2'
+  · intro x z hx hz hlt
+    rcases hx with hx | hx
+    · by_cases hs : ∃ w, H₁.mem w ∧ w < x
+      · obtain ⟨w, hw, hwx⟩ := hs
+        obtain ⟨y, hy⟩ := e₁ x w hx hw hwx
+        exact ⟨y, Or.inl hy⟩
+      · rcases hz with hz | hz
+        · exact (hs ⟨z, hz, hlt⟩).elim
+        · obtain ⟨m, hm⟩ := exists_isMin z hz
+          exact ⟨m, Or.inr (Or.inr (Or.inl ⟨hx, fun w hw hwx => hs ⟨w, hw, hwx⟩, hm,
+            Nat.lt_of_le_of_lt (hm.2 z hz) hlt⟩))⟩
+    · by_cases hs : ∃ w, H₂.mem w ∧ w < x
+      · obtain ⟨w, hw, hwx⟩ := hs
+        obtain ⟨y, hy⟩ := e₂ x w hx hw hwx
+        exact ⟨y, Or.inr (Or.inl hy)⟩
+      · rcases hz with hz | hz
+        · obtain ⟨m, hm⟩ := exists_isMin z hz
+          exact ⟨m, Or.inr (Or.inr (Or.inr ⟨hx, fun w hw hwx => hs ⟨w, hw, hwx⟩, hm,
+            Nat.lt_of_le_of_lt (hm.2 z hz) hlt⟩))⟩
+        · exact (hs ⟨z, hz, hlt⟩).elim
+
+theorem tree_pair : ∀ a b K, a ≠ b → tree.S (net fun x => x = a ∨ x = b) K → Adj K a b := by
+  intro a b K hab ⟨l, _, e⟩
+  rcases Nat.lt_or_gt_of_ne hab with h | h
+  · obtain ⟨y, hy⟩ := e b a (Or.inr rfl) (Or.inl rfl) h
+    have := l _ _ hy
+    simp only [net] at this
+    have hy' : y = a := by omega
+    exact Or.inr (hy' ▸ hy)
+  · obtain ⟨y, hy⟩ := e a b (Or.inl rfl) (Or.inr rfl) h
+    have := l _ _ hy
+    simp only [net] at this
+    have hy' : y = b := by omega
+    exact Or.inl (hy' ▸ hy)
+
+theorem tree_triangle : ∀ K, tree.S (net fun x => x = 0 ∨ x = 1 ∨ x = 2) K →
+    ¬ (Adj K 0 1 ∧ Adj K 1 2 ∧ Adj K 0 2) := by
+  intro K ⟨l, u, _⟩ ⟨_, h12, h02⟩
+  have h21 : K.mem (2, 1) := h12.elim (fun h => absurd (l _ _ h).2.2 (by decide)) id
+  have h20 : K.mem (2, 0) := h02.elim (fun h => absurd (l _ _ h).2.2 (by decide)) id
+  exact absurd (u _ _ _ h21 h20) (by decide)
+
+theorem tree_no_consistentOn (A : Table (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)))
+    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → tree.S H K) : ¬ CAP.ConsistentOn tree A :=
+  no_consistentOn_of_triangle tree tree_pair tree_triangle A hA hsub
+
+end Tree
 
 end QRef
 end CC

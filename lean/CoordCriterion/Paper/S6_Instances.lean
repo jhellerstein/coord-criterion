@@ -91,34 +91,50 @@ theorem «sec:query-instance/one-fact-version» :
       ¬ QRef.DistinctMono QRef.edgeVals QRef.noCycle2 :=
   ⟨QRef.noCycle2_oneFact, QRef.noCycle2_not_disjointMono, QRef.noCycle2_not_distinctMono⟩
 
-/-- Sec. `sec:query-instance`: "With outputs ordered by inclusion, and an
-input expanding another when it adds facts only at new nodes, a behavior is a
-relational specification.  Their characterization uses node monotonicity:
-outputs computed by two disjoint subnetworks have a common refinement at the
-merged network.  Lifted Monotonicity implies it."  Lean: inputs are
-`ExtInp (netAdm loc)` (located facts, network expansion) and a behavior is any
-`Spec` on them; consistency, equivalently Lifted Monotonicity, implies
-`NodeMono`. -/
+/-- Sec. `sec:query-instance`: "The network is the set of nodes that hold
+input, so membership is part of the input.  With outputs ordered by inclusion,
+and an input expanding another when it adds facts only at new nodes, a
+behavior is a relational specification. … Their characterization asks that
+some `A` be node monotone: the common-expansion condition on `A`, asked only
+of two rows at disjoint networks."  Lean: inputs are `ExtInp (netAdm loc)`
+(located facts, network expansion, so the network `Netw loc H` is read off
+the input) and a behavior is any `Spec` on them.  Node monotonicity is
+equivalent to the common-expansion condition for two rows at disjoint
+networks and any common expansion `j` (`QRef.DisjointPairExpansion`); the full
+common-expansion condition (Lifted Monotonicity) implies it.  The transducer
+model, its notion of computing a behavior, and its characterization theorem
+(Inf. Syst. 2026, Def. 4, Def. 6, Thm. 5) are cited, not formalized. -/
 theorem «sec:query-instance/node-monotonicity» {F N G : Type} (loc : F → N)
     (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)) :
-    (B.LiftedMono → QRef.NodeMono loc B) ∧ (B.Consistent → QRef.NodeMono loc B) :=
-  ⟨fun h => QRef.nodeMono_of_consistent loc ((complete_calm B).2 h),
-    QRef.nodeMono_of_consistent loc⟩
+    (QRef.NodeMono loc B ↔ QRef.DisjointPairExpansion loc B) ∧
+      (B.CommonExpansion → QRef.NodeMono loc B) :=
+  ⟨QRef.nodeMono_iff_disjointPair loc B,
+    fun h => QRef.nodeMono_of_consistent loc ((complete_calm_commonExpansion B).2 h)⟩
 
-/-- Sec. `sec:query-instance`: "The converse fails … A subnetwork may still
-choose among outputs … Complete CALM counts that choice as a commitment …, so
-it requires directed fibers, and node monotonicity does not."  Lean (a
-smaller choice than a spanning tree): each node of the input may pick one
-Boolean.  Disjoint networks never pick at the same node, so the behavior is
-node monotone; at the one-node network the picks `true` and `false` have no
-common refinement, so the fiber is not directed and the behavior is not
-consistent.  (Their notion of coordination, computing without the list of all
-nodes, is cited, not formalized.) -/
-theorem «sec:query-instance/node-monotone-not-lm» :
-    QRef.NodeMono id QRef.pick ∧ ¬ QRef.pick.DirectedOutputs ∧ ¬ QRef.pick.LiftedMono ∧
-      ¬ QRef.pick.Consistent :=
-  ⟨QRef.pick_nodeMono, QRef.pick_not_directed,
-    fun h => QRef.pick_not_consistent ((complete_calm _).2 h), QRef.pick_not_consistent⟩
+/-- Sec. `sec:query-instance`: "Complete CAP also asks it of overlapping
+networks … Their spanning-tree behavior shows the difference.  It is node
+monotone, yet every sub-behavior has the edge `ab` at network `{a,b}`, and no
+tree on `{a,b,c}` has all three such edges."  Lean, with node names as input
+(`loc = id`, inputs `QRef.net P`): first, for any behavior whose outputs at
+every two-node network link its nodes and whose outputs at `{0,1,2}` never
+link all three pairs, no total sub-behavior `A` has the behavior consistent
+on `A` (`CAP.ConsistentOn`, the condition of Theorem `thm:complete-cap`).
+Spanning trees meet both hypotheses (prose).  Second, `QRef.tree`, the
+spanning trees whose parents are smaller than their children, is a concrete
+such behavior, and it is node monotone.  That `Top_span` is node monotone is
+Baccaert and Ketsman's Example 8; their facts entering only at their own node
+and their transducers' subnetwork agreement are cited, not formalized. -/
+theorem «sec:query-instance/overlapping-networks» :
+    (∀ (B : Spec (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat))),
+      (∀ a b K, a ≠ b → B.S (QRef.net fun x => x = a ∨ x = b) K → QRef.Adj K a b) →
+      (∀ K, B.S (QRef.net fun x => x = 0 ∨ x = 1 ∨ x = 2) K →
+        ¬ (QRef.Adj K 0 1 ∧ QRef.Adj K 1 2 ∧ QRef.Adj K 0 2)) →
+      ∀ A : Table (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat)),
+        (∀ H, ∃ K, A H K) → (∀ H K, A H K → B.S H K) → ¬ CAP.ConsistentOn B A) ∧
+    QRef.NodeMono id QRef.tree ∧
+    (∀ A : Table (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat)),
+      (∀ H, ∃ K, A H K) → (∀ H K, A H K → QRef.tree.S H K) → ¬ CAP.ConsistentOn QRef.tree A) :=
+  ⟨QRef.no_consistentOn_of_triangle, QRef.tree_nodeMono, QRef.tree_no_consistentOn⟩
 
 /-- Sec. `sec:query-instance`: "For deterministic behaviors the two conditions
 coincide."  Lean: for the graph of `b`, node monotonicity is monotonicity

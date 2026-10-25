@@ -39,18 +39,22 @@ justifies that order.  Functional CALM takes the order as given.
 Baccaert and Ketsman go beyond
 queries~\cite{baccaert2023dcbq,baccaert2026spectrum}.  Their
 \emph{behaviors} map an input of facts located at nodes to a set of permitted
-located outputs.  With outputs ordered by inclusion, and an input \inrelpart
-another when it adds facts only at new nodes, a behavior is a relational
-specification.  Their characterization uses \emph{node monotonicity}: outputs
-computed by two disjoint subnetworks have a common \outnoun at the merged
-network.  Lifted Monotonicity implies it.  The converse fails, because their
-notion of coordination is narrower.  A behavior is coordination-free for them
-when it can be computed without the list of all nodes.  That list lets a node
-rule out further input, which is a seal in our terms.  A subnetwork may still
-choose among outputs, for instance one spanning tree among several, by
-deferring to its smallest node.  Complete CALM counts that choice as a
-commitment (Proposition~\ref{prop:seal-or-choose}), so it requires directed
-fibers, and node monotonicity does not.  For deterministic behaviors the two
+located outputs.  The network is the set of nodes that hold input, so
+membership is part of the input.  With outputs ordered by inclusion, and an
+input \inrelpart another when it adds facts only at new nodes, a behavior is a
+relational specification.  A transducer computes a behavior when every run
+ends at a permitted output, so it may implement a sub-behavior $A$.  It is
+coordination-free when it needs no list of all nodes, which would seal the
+network.  The comparison is therefore with Complete CAP for an availability
+relation $A$ (Theorem~\ref{thm:complete-cap}).  Their characterization asks
+that some $A$ be \emph{node monotone}: the common-\indesc condition on $A$,
+asked only of two rows at disjoint networks.  Complete CAP also asks it of
+overlapping networks, since our environment may deliver any input to any
+participant.  In their model a fact enters only at its own node, and a
+subnetwork agrees on its members before its smallest node chooses.  Their
+spanning-tree behavior shows the difference.  It is node monotone, yet every
+sub-behavior has the edge $ab$ at network $\{a,b\}$, and no tree on
+$\{a,b,c\}$ has all three such edges.  For deterministic behaviors the two
 conditions coincide.
 
 \subsection{CRDTs: monotone queries over convergent state}
