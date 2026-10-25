@@ -201,6 +201,250 @@ $\mathcal P$ Lifted-Monotone, since $\mathit{hi}$ retires $\mathit{lo}$, and by 
 
 \subsection{Proper Coordination}
 
+% ===== MOVED FROM §5.2 (to be reconciled with the new definition) =====
+
+Intuitively, a replicated store coordinates once.  Multi-Paxos commits to an
+order of concurrent commands, and the store executes whatever log it is given.
+We now make this precise for any composition whose downstream component
+satisfies Lifted Monotonicity.
+
+Let $\mathcal P=(I,\InputOrd,M,\preceq_M,P)$ be an upstream specification and
+$\mathcal K=(M,\preceq_M,O,\OutputOrd,K)$ a downstream specification, the
+\emph{store}, that satisfies Lifted Monotonicity.  For a state $\sigma=(i,R)$
+of $\mathcal P$, its \emph{image} $\mathcal K(\sigma)$ is the state
+$(i,\{(k,x):\exists m.\ (k,m)\in R\land(m,x)\in K\})$ of
+$\mathcal K\circ\mathcal P$.  Fix a system for $\mathcal P$
+(Definition~\ref{def:system}) with basis $\mathcal B$, and a system for
+$\mathcal K$ with basis $\mathcal B_{\mathcal K}$.  In the \emph{guarded
+composite}, the store follows $\mathcal P$: when $\mathcal P$ emits $m$, the
+store receives $m$ and answers with some $o\in K(m)$ by an output event
+$\Out{\delta}{o}$, with $\delta$ from $\mathcal B_{\mathcal K}$.  A
+\emph{guarded composite run} is a run produced by the system for
+$\mathcal P$, together with a run produced by the system for the store on the
+outputs $\mathcal P$ has emitted so far.  The environment observes
+$\mathsf{input}(j)$ and the store's answers.  We say that $\mathcal P$
+\emph{guards} $\mathcal K$, and that $\mathcal K$ \emph{delegates} commitment
+to $\mathcal P$.  When $K$ is the table $\{(m,f(m))\}$ of a monotone function
+$f$, the answer to $m$ is $f(m)$, and we write $f(\sigma)$ for the image.
+
+One might push each commitment of $\mathcal P$ forward through the store.
+This does not work, even for a function.  A commitment of $\mathcal P$ may keep
+$m'$ and remove $m$, with $m$ and $m'$ incomparable but $f(m)\OutputOrd
+f(m')$.  Its image removes a row \outrelpast by a row it keeps, which
+Equation~\ref{eq:commitment-excludes} forbids.  In the composite, emitting
+$f(m')$ needs no commitment at all, since it retires $f(m)$.  A choice upstream
+can become a retirement downstream.  We therefore push forward runs, not
+commitments.
+
+% [moved: old def:proper-coordination removed; superseded by the body]
+
+
+At most once says that the store adds no coordination of its own.  The
+store's input comes from $\mathcal P$, not from the environment.  A store
+commitment is therefore contradicted when a run of $\mathcal K$ on outputs
+$\mathcal P$ can emit accepts an input it seals, or emits an output it chooses
+against.  We judge it against the runs of the specification, since a store
+that has sealed an input never accepts it in its own runs.  A store commitment
+that is not contradicted removes only behaviour that $\mathcal P$ never asks
+of the store, and it is not coordination.  At least once says that whatever
+commitment the composite needs, $\mathcal P$ makes.  It always holds
+(Theorem~\ref{thm:proper-coordination}), so it is the necessity half.  Whether
+a composite is proper then depends on the store's system.
+
+\begin{theorem}[Guarded runs]
+\label{thm:guarded-runs}
+Let $\mathcal B$ be any basis of $\mathcal P$.
+\begin{enumerate}
+  \item The outputs $m_1,m_2,\ldots$ of a run of $\mathcal P$ under
+        $\mathcal B$ form a chain, and a store under the empty basis follows
+        it.  Starting at $\sigma_{\mathcal K}(m_1)$, it answers $m_1$, then
+        receives and answers each later $m_r$, with no commitment.
+  \item Replacing each output $m_r$ of the run of $\mathcal P$ by the store's
+        answer $o_r$ gives a run of $\mathcal K\circ\mathcal P$ from the same
+        canonical state.  After each event, the composite run's table contains
+        the join of the tables of $\mathcal P$ and of the store.
+  \item If finitely many runs of $\mathcal P$ can be brought to a common state
+        with current input $j$, under any bases, the corresponding composite
+        runs are confluent at $j$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+(1) An output event $\Out{\gamma}{m}$ keeps only rows that \outrel $m$
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so later outputs \outrel
+earlier ones.  The store's states are reached without commitment.  At such a
+state of a Lifted-Monotone specification, every later input still has a row,
+and every output at the current input is exposable
+(Proposition~\ref{prop:exposure-boundary}).  (2) By induction on events.  When
+$\mathcal P$ emits $m_r$ at input $i$, the row $(i,m_r)$ is in its table and
+$(m_r,o_r)$ in the store's, so $(i,o_r)$ is in the composite's.  (3) A common
+state has a row $(j,m)$.  The stores' current outputs have a common \outnoun
+$u\in K(m)$, which every store keeps, so every composite run keeps $(j,u)$.
+Full proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+% [moved: old thm:proper-coordination removed; superseded by the body]
+
+
+\begin{proof}[Proof sketch]
+(1) is Proposition~\ref{prop:exposure-boundary} for $\mathcal K$.  (2) For at
+least once, suppose $\mathcal P$ emits $m$ at $\sigma$ with no commitment, so
+$m$ is exposable at $\sigma$, and let $o\in K(m)$.  A row $(k,x)$ of
+$\mathcal K(\sigma)$ comes from a row $(k,m')$ of $\sigma$.  Either $m\preceq_M
+m'$, or a row $(k,w)$ of $\sigma$ retires it with $m,m'\preceq_M w$.  In
+either case the common-\indesc condition for $\mathcal K$ gives a row of
+$\mathcal K(\sigma)$ at $k$ that \outrel $o$ and $x$, so $o$ is exposable at
+$\mathcal K(\sigma)$.  A store under the empty basis applies no commitment, so
+none is contradicted.  (3) When Lifted Monotonicity fails, the exposure
+boundary already fails at a canonical state
+(Proposition~\ref{prop:exposure-boundary}), and the image of a canonical state
+is canonical.  Full proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+By Theorem~\ref{thm:guarded-runs}(1), a store under the empty basis also
+follows every run of $\mathcal P$.  The theorem holds for every system for
+$\mathcal P$.  Multi-Paxos commits by deciding log slots.  A log built with
+per-key mutexes would instead order pairs of commands on one key, as 2PL
+orders pairs of transactions where MVTO stamps them
+(Section~\ref{sec:systems}, Appendix~\ref{app:cc-bases}).  Neither basis need
+match the canonical commitments of the composite, and we need not compare
+them.  For a function store, every legal output event removes at least the
+rows its canonical event removes
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so every row that the
+composite must seal or choose against has lost all its preimages to
+$\mathcal P$'s commitments (Appendix~\ref{app:composition}).
+
+By Theorem~\ref{thm:proper-coordination}(1), none of the store's commitments
+is needed.  So it should be safe to replace the store's system with one whose
+basis is empty, with no seals or choices allowed.  The
+\emph{commitment-erased replacement} of the store's system has the empty basis
+and the same strategy, with each $\Out{\delta}{x}$ replaced by
+$\Out{\varepsilon}{x}$.
+
+\begin{corollary}[Empty store]
+\label{cor:empty-store}
+Fix systems for $\mathcal P$ and $\mathcal K$.
+\begin{enumerate}
+  \item For every guarded composite run, the replacement has one with the same
+        run of $\mathcal P$ and the same store inputs and outputs.  After each
+        event, the replacement's table contains the original's.
+  \item Suppose the store coordinates at most once, and its strategy ignores
+        the commitments in its history and never stalls: whenever it offers an
+        output still in its table, it also offers a legal output event for it.
+        Then the converse of (1) holds too, so the store and its replacement
+        have the same observable behaviour.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}[Proof sketch]
+(1) By induction on events.  The replacement's table is the larger one, so
+its input events are legal, and by
+Theorem~\ref{thm:proper-coordination}(1) so is each $\Out{\varepsilon}{x}$.
+(2) We follow a run of the replacement and build the original's.  At each
+output, the hypotheses on the strategy give a legal output event of the
+original.  By at most once its commitments are not contradicted, so they
+remove nothing that a later event of the replacement's run uses.  Full proof
+in Appendix~\ref{app:composition}.
+\end{proof}
+
+The hypotheses of (2) are needed.  A strategy that offers only commitments
+undefined at its state never emits, while its replacement does.  If the store
+is redundant, the replacement can follow runs of $\mathcal P$ that the store
+cannot, as the mutex store below shows.
+
+The guarded composite is itself a guard.  Its runs are runs of
+$\mathcal K\circ\mathcal P$ under the canonical basis
+(Theorem~\ref{thm:guarded-runs}(2)), so it can feed a further stage.
+
+\begin{corollary}[Pipelines]
+\label{cor:pipelines}
+Consider a pipeline $\mathcal S_n\circ\cdots\circ\mathcal S_1$ in which
+$\mathcal S_1$ has any system and $\mathcal S_2,\ldots,\mathcal S_n$ satisfy
+Lifted Monotonicity.  Every downstream stage can run with the empty basis, and
+every guarded run is a run of the full composite.  Replacing the system of a
+downstream stage by its commitment-erased replacement loses nothing, and
+gains nothing when that stage coordinates at most once and its strategy meets
+the hypotheses of Corollary~\ref{cor:empty-store}(2).
+\end{corollary}
+
+\begin{proof}[Proof sketch]
+By induction on $n$.  The guarded composite of $\mathcal S_1,\ldots,\mathcal
+S_k$ emits only what $\mathcal S_k\circ\cdots\circ\mathcal S_1$ emits under its
+canonical basis, so the results for two stages apply to $\mathcal S_{k+1}$.
+Full proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+Mutexes in the store, behind the log, are another matter.  By
+Theorem~\ref{thm:proper-coordination}(1) the store never needs a commitment,
+so each commitment it applies is redundant once a run on outputs of
+$\mathcal P$ contradicts it.  Consider a store that executes a log of writes
+and locks each key, and two writes $a$ and $b$ to one key.  Whether the lock
+is coordination depends on the store's strategy.  If the strategy takes the
+lock only after the log has placed one of them first, every log the store can
+still receive agrees with that order.  The lock removes no row, so it is not a
+commitment, and the composite is proper.  The locks are still taken, but they
+decide nothing.  Suppose instead that the strategy grants the lock to $a$ at
+the empty log, ahead of the log, and so seals every log in which $b$ comes
+first.  The log can still decide $b$ first and feed the store $[b]$, which
+contradicts the lock.  The lock then repeats coordination that the log already
+does, so the composite is not proper.  The lock also costs behaviour.  When
+the log emits $[\,]$ and then $[b]$, the replacement follows, but the locking
+store, having sealed $[b]$, cannot (Appendix~\ref{app:composition}).
+
+For a function store, some of $\mathcal P$'s commitments are invisible to the
+composite.
+
+\begin{proposition}[Invisible coordination]
+\label{prop:invisible-coordination}
+Let $f$ be monotone, and let $\mathcal P$ emit $m$ at $\sigma$ by
+$\Out{\gamma}{m}$.  If every row that $\gamma$ removes has a row with the same
+input and the same image that $\gamma$ keeps, then $f(m)$ is exposable at
+$f(\sigma)$.
+\end{proposition}
+
+Consider a store that answers each key from that key's commands, in log
+order, and two commands $a$ and $b$ on different keys.  The log must order
+them, since $[a,b]$ and $[b,a]$ have no common \outnoun.  The store's view of
+both logs is the same, so the composite needs no commitment
+(Appendix~\ref{app:composition}).  The order of $a$ and $b$ is coordination
+inside $\mathcal P$ that the composite does not see.
+
+\begin{example}[Replicated store]
+\label{ex:committed-log-composition}
+Consider again state-machine replication, with every put and get passing
+through the log.  Take $I$ the proposal streams and $M$ the logs, both ordered
+by prefix, and $O$ the cumulative response histories, ordered by extension.
+Let $\mathcal P$ relate each proposal stream to the logs of its commands, and
+let the store $\mathcal K$ be the table of the function $f$ that executes a
+log on a deterministic state machine, which is monotone in the prefix order.  Then $\mathcal P$ is non-monotone, since distinct next
+entries are incompatible outputs in one fiber.  So is the key-value store
+$\mathcal K\circ\mathcal P$, since concurrent commands ordered oppositely give
+incompatible responses.  Multi-Paxos runs $\mathcal P$ under its own basis,
+deciding one log slot at a time~\cite{schneider1990smr,lamport2001paxos}.  By
+Theorems~\ref{thm:guarded-runs} and~\ref{thm:proper-coordination}, the
+store needs no commitment of its own, and under the empty basis it follows
+every run of the log.  Because the composite is not monotone, the log's
+commitments cannot be dropped.  The replicated store coordinates exactly
+once.  By Corollary~\ref{cor:empty-store}, if the replicas' store takes locks of
+its own and the composite stays proper, the replicas can run the store with
+no commitments at all.
+\end{example}
+
+A downstream component often has input of its own, not only the output of the
+component before it.  In a replicated store, for example, not every request
+needs to pass through the log.  Some stores serve \emph{bare reads}: a client
+sends a get directly to a replica, which answers from the log prefix it has
+executed, without going through Multi-Paxos.  Bare reads avoid the cost of
+coordination, at the risk of missing a fresher value that has already reached
+another replica.  In Appendix~\ref{sec:parameterized-composition} we give
+each component a separate input, in an \emph{independently parameterized
+composition}, and Lemma~\ref{lem:composition} carries over.  There, bare reads
+need no commitment of their own when each response records the log position it
+read from, but they do when the specification demands the latest value
+(Example~\ref{ex:bare-reads}).
+
+% ===== END MOVED =====
+
 Throughout, $\mathcal K$ satisfies Lifted Monotonicity, used through the
 common-\indesc condition, and $\mathcal B$ and $\mathcal B_{\mathcal K}$ are
 the bases of the systems for $\mathcal P$ and $\mathcal K$.  For tables $R$ of
