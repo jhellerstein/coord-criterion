@@ -69,7 +69,7 @@ theorem «sec:composition/associativity» {I M O P : Type} (S1 : Table I M) (S2 
 
 /-- "For a function `f`, its table `{(i,f(i))}` satisfies
 Lifted Monotonicity exactly when `f` is monotone.  Tables of functions are closed
-under `∘`."  Lean: the composition of the tables of functions of `f` and `g` is the
+under `∘`."  Lean: the composition of the tables of `f` and `g` is the
 table of `g ∘ f`, and the table of `f` satisfies Lifted
 Monotonicity iff `f` is monotone. -/
 theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] (f : I → M) (g : M → O) :
