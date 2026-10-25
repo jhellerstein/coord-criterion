@@ -152,9 +152,10 @@ complement `U ∖ X`, the elements not yet seen, and a second stage that
 complements again.  The composite returns `X`, which only grows.  Under the
 usual order on sets, though, each stage is non-monotone.  As `X` grows, the
 first stage's output shrinks, so without commitment it can emit only the empty
-set.  … The composite's table never mentions the intermediate order `M`
-between the stages, so it can be treated as a different one.  Let the order on
-`M` be inverted: `S ⊆ S' ⟹ S' ≼ S`.  … both stages are monotone.  Likewise, suppose the upstream may output
+set.  … The composite's table never mentions the order on the intermediate
+domain `M` between the stages, so the stages can agree on a different one.
+Invert it: let `S ≼_M S'` exactly when `S' ⊆ S`.  … both stages are
+monotone.  Likewise, suppose the upstream may output
 either of two incomparable values `a` and `b`, and the downstream maps both to
 the same answer.  The upstream cannot emit either without choosing.  If the
 interface places `a` below `b`, the upstream can emit `a` and later supersede
