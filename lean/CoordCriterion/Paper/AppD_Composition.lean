@@ -225,19 +225,25 @@ theorem «app:composition/capped-counter» :
         {K : Guard.Sys sk}, (∀ c, K.basis c → c = Guard.sealIn Q) → Guard.Proper P K) :=
   ⟨Joint.thr_ceOn, fun Q hC hQ P _ hK => Joint.filtered_proper Q hC hQ P hK⟩
 
-/-- "For the double complement, let `M` be the subsets of a nonempty set `U`.
-The table of a function `f` has `f(i)` exposable at `σ(i)` exactly when
-`f(i) ≼ f(k)` for all `k ⪰ i`.  For the complement under inclusion this holds
-only for `i = U`, whose complement is `∅`.  So under the empty basis the first
-stage emits only `∅`, at the canonical state of `U`.  Ordered by reverse
-inclusion, the complement is monotone in both stages, and by case (3) the composite
-is the identity in either order."  Lean: `Joint.compl_exposable_iff`,
-`Joint.compl_empty_basis`, `Joint.double_complement`. -/
-theorem «app:composition/double-complement» {U : Type} [Nonempty U] (X : Joint.PSet U) :
-    (Exposable (canon (graph (Joint.compl (U := U))) X) (Joint.compl X) ↔ ∀ u, X.mem u) ∧
-    (∀ {γ o τ}, SysStep (fun _ => False) (canon (graph (Joint.compl (U := U))) X) (.output γ o) τ →
-      ∀ u, ¬ o.mem u) :=
-  ⟨Joint.compl_exposable_iff X, fun h => Joint.compl_empty_basis h⟩
+/-- "For the boolean toggle, let `I`, `M`, and `O` be the booleans with `false`
+below `true`, and let both stages be negation.  The table of a function `f`
+has `f(i)` exposable at `σ(i)` exactly when `f(i) ≼_M f(k)` for all `k ⪰ i`.
+At `i = false` the first stage would emit `true`, which is not below its
+output `false` at the larger input, so under the empty basis it cannot emit
+there.  Under the reversed order on `M`, negation is monotone in both stages,
+and by case (3) the composite is the identity in either order."  Lean:
+`Joint.graph_canon_exposable_iff` (the exposure test, in
+`«app:composition/reach»`), `Joint.toggle_exposable_iff` (the first stage's
+output is exposable at `σ(b)` exactly when `b = true`),
+`Joint.toggle_empty_basis`, `Joint.bool_toggle` (in
+`«sec:composite-calm/cancellation»`). -/
+theorem «app:composition/boolean-toggle» (b : Bool) :
+    (Exposable (canon (graph not) b) (!b) ↔ b = true) ∧
+    (∀ {γ o τ}, ¬ SysStep (fun _ => False) (canon (graph not) false) (.output γ o) τ) ∧
+    Comp.seq (Joint.pushOut (graph not) Joint.Rev.mk) (Joint.pullIn (graph not) Joint.Rev.val) =
+      graph (id : Bool → Bool) :=
+  ⟨Joint.toggle_exposable_iff b, Joint.toggle_empty_basis,
+    Joint.bool_toggle.2.2.2.2.2.trans Joint.bool_toggle.2.1⟩
 
 /-- "Let `𝒫` have one input `*` and table `{(*,x),(*,y)}` with `x,y`
 incomparable, and let `f` map both to one value.  The composite `𝒦 ∘ 𝒫` has

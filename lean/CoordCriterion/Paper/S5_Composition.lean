@@ -85,9 +85,9 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
 
 /-! ## Composite CALM (`sec:composite-calm`) -/
 
-/-- "The composite is itself an ordered specification, so Complete CALM
-applies to it directly.  Specification `S₂ ∘ S₁` is consistent exactly when it
-satisfies Lifted Monotonicity, and then no output needs a commitment (Theorem
+/-- "The composite is itself an ordered specification.  By Complete CALM,
+specification `S₂ ∘ S₁` is consistent exactly when it satisfies Lifted
+Monotonicity, and then no output needs a commitment (Theorem
 `thm:complete-calm`, Proposition `prop:exposure-boundary`)." -/
 theorem «sec:composite-calm/complete-calm» {I M O : Type} [PO I] [PO M] [PO O]
     (sp1 : Spec I M) (sp2 : Spec M O) :
@@ -97,9 +97,22 @@ theorem «sec:composite-calm/complete-calm» {I M O : Type} [PO I] [PO M] [PO O]
   ⟨complete_calm _, fun h =>
     (exposure_boundary _).1 ((liftedMono_iff_commonExpansion _).1 h)⟩
 
+/-- "The orders on `I` and `O` are part of the composite's contract with its
+environment.  The order on `M` is not: the composite's table never mentions
+it, and some order on `M` may make both stages monotone."  Lean:
+`Joint.seq_under` (the composite of the stages read under another order `inst`
+on `M` is the composite under the given order `instM`; the type `Spec I O`
+does not mention `M`).  That some order on `M` may make both stages monotone
+is the boolean toggle, `«sec:composite-calm/cancellation»`. -/
+theorem «sec:composite-calm/middle-order» {I M O : Type} [PO I] [instM : PO M] [PO O]
+    (inst : PO M) (sp1 : Spec I M) (sp2 : Spec M O) :
+    @Comp.seq I M O _ inst _ (Joint.underOut inst sp1) (Joint.underIn inst sp2) =
+      Comp.seq sp1 sp2 :=
+  Joint.seq_under inst sp1 sp2
+
 /-- "First, every stage is monotone.  By Lemma `lem:composition` the pipeline
-is monotone, and every stage can run with the empty basis, with no seals and
-no choices anywhere (Corollary `cor:pipelines`)."  Lean:
+is monotone, and no stage need make a commitment (Corollary `cor:pipelines`)."
+Lean:
 `Guard.pipeline_coordination_free` (the base case of the pipeline induction):
 the composite is Lifted-Monotone, and the guarded composite of an empty-basis
 upstream with any store system emits only what the composite emits under the
@@ -124,10 +137,10 @@ theorem «sec:composite-calm/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y
 
 /-- "Second, the upstream can filter out the inputs on which the downstream is
 not monotone.  Consider a counter capped at `9` that feeds a test of whether
-the count is below `10`.  On its own the test is not monotone: it answers yes
-at `9` and no at `10`.  But the counter never produces `10`, and on the counts
-`0` through `9` the test always answers yes.  The downstream need only be
-monotone on the values the upstream can produce."  Lean: `Joint.threshold`
+the count is below `10`.  With counts ordered numerically and the answers yes
+and no incomparable, the test is not monotone: it answers yes at `0` through
+`9` and no at `10`.  But the counter never produces `10` or higher.  The
+downstream need only be monotone on the values the upstream can produce."  Lean: `Joint.threshold`
 (the test is not Lifted-Monotone, the composite is).  Lean also proves the
 Appendix D treatment of the test as a store with a basis: it cannot emit under
 the empty basis below `10`, and with one seal at its first output
@@ -145,44 +158,39 @@ theorem «sec:composite-calm/filtering» :
           .output (Joint.below m) :: Guard.storeTr (ms.map fun m => (m, Joint.below m)) :=
   ⟨Joint.threshold, fun P _ _ h => Joint.sealStore_follows P h⟩
 
-/-- "Third, two stages that are each non-monotone can cancel.  As an example,
-consider a first stage that receives a growing set `X` from a domain `U` and
-outputs its complement `U ∖ X`, and a second stage that complements again.  The
-composite returns `X`, which only grows.  Under the usual order on sets,
-though, each stage is non-monotone.  The remedy lies in the interface between
-the stages.  The composite's table never mentions the order on the
-intermediate domain `M` between the stages, so the stages can agree on a
-different one.  Invert it: let `S ≼_M S'` exactly when `S' ⊆ S`.  The first
-stage's shrinking outputs then form a growing stream of updates, the second
-stage turns each update into a larger set, and both stages are monotone."
-Lean: `Joint.double_complement` (`Joint.Rev` is the reversed order; the
-composite is the identity, and is unchanged by the reversal).  The appendix's
-empty-basis behaviour of the complement stage is
-`«app:composition/double-complement»`. -/
-theorem «sec:composite-calm/cancellation» {U : Type} [Nonempty U] :
-    ¬ (graph (Joint.compl (U := U))).LiftedMono ∧
-      Comp.seq (graph (Joint.compl (U := U))) (graph Joint.compl) = graph id ∧
-      (graph (id : Joint.PSet U → Joint.PSet U)).LiftedMono ∧
-      (Joint.pushOut (graph (Joint.compl (U := U))) Joint.Rev.mk).LiftedMono ∧
-      (Joint.pullIn (graph (Joint.compl (U := U))) Joint.Rev.val).LiftedMono ∧
-      Comp.seq (Joint.pushOut (graph (Joint.compl (U := U))) Joint.Rev.mk)
-          (Joint.pullIn (graph Joint.compl) Joint.Rev.val) =
-        Comp.seq (graph Joint.compl) (graph Joint.compl) :=
-  Joint.double_complement
+/-- "Third, considering a different order on `M` can make two non-monotone
+stages both monotone.  Order the booleans with false below true for `I`, `O`
+and `M`.  Consider a double-toggle: two stages that each negate a boolean
+compose to the identity.  Neither is monotone, but under the reversed order on
+`M`, both are (Appendix `app:composition`)."  Lean: `Joint.bool_toggle`
+(`Bool` ordered by `Joint.boolPO`, `false ≼ true`; `Joint.Rev` is the reversed
+order; the composite is the identity, and is unchanged by the reversal).  The
+appendix's empty-basis behaviour of the first stage is
+`«app:composition/boolean-toggle»`. -/
+theorem «sec:composite-calm/cancellation» :
+    ¬ (graph not).LiftedMono ∧
+      Comp.seq (graph not) (graph not) = graph (id : Bool → Bool) ∧
+      (graph (id : Bool → Bool)).LiftedMono ∧
+      (Joint.pushOut (graph not) Joint.Rev.mk).LiftedMono ∧
+      (Joint.pullIn (graph not) Joint.Rev.val).LiftedMono ∧
+      Comp.seq (Joint.pushOut (graph not) Joint.Rev.mk) (Joint.pullIn (graph not) Joint.Rev.val) =
+        Comp.seq (graph not) (graph not) :=
+  Joint.bool_toggle
 
 /-- **Proposition `prop:joint-monotone`** (Jointly monotone composites): "The
 composite `S₂ ∘ S₁` satisfies Lifted Monotonicity, and so is consistent and
 needs no commitment, in each of the following cases.  (1) `𝒮₁` and `𝒮₂`
-satisfy Lifted Monotonicity.  (2) `𝒮₁` satisfies Lifted Monotonicity, and `𝒮₂`
-satisfies it on the outputs of `𝒮₁`.  (3) `𝒮₁` and `𝒮₂` satisfy Lifted
-Monotonicity under some order on `M`, possibly other than `≼_M`."  And, just
+satisfy Lifted Monotonicity.  (2) `𝒮₁` satisfies Lifted Monotonicity; `𝒮₂`
+satisfies it on `𝒮₁`'s outputs.  (3) `𝒮₁` and `𝒮₂` satisfy Lifted
+Monotonicity via a different order on `M`."  And, just
 before: "We say that `S₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when
 the common-expansion condition holds for its rows with inputs in `D`, at
 expansions in `D`."  Lean: the hypothesis is the disjunction of the three
 cases; "on `D`" is `Joint.CEOn` (equivalently, the restriction to `D` is
-Lifted-Monotone, `Joint.ceOn_iff_restrictTo`), and "the outputs of `𝒮₁`" is
+Lifted-Monotone, `Joint.ceOn_iff_restrictTo`), and "`𝒮₁`'s outputs" is
 `Joint.Img sp1`.  In (3), `Joint.underOut inst sp1` and `Joint.underIn inst sp2`
-are the same tables with `M` ordered by `inst`.  (1) `Comp.seq_liftedMono`;
+are the same tables with `M` ordered by `inst`; "a different order" is any
+partial order `inst` (it may coincide with `≼_M`, which is case (1)).  (1) `Comp.seq_liftedMono`;
 (2) `Joint.seq_liftedMono_img`; (3) `Joint.seq_liftedMono_reorder`.
 "Consistent and needs no commitment" is `«sec:composite-calm/complete-calm»`. -/
 theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
@@ -203,7 +211,7 @@ theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
 
 /-- "The three cases do not cover every monotone composite (Appendix
 `app:composition`).  When no case applies, some stage may have to commit even
-though the composite is monotone."  Lean: `Joint.no_order_counterexample`
+though the composite is monotone, as we discuss next."  Lean: `Joint.no_order_counterexample`
 (`I` is the chain `Joint.C3`, `M = Joint.Mid`): under every partial order on
 `M` the composite is Lifted-Monotone, the upstream is not (so case (3) fails,
 and with it (1) and (2)), and its empty-basis system cannot emit at some

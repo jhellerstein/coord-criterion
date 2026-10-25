@@ -27,7 +27,13 @@ commitment?  Three mechanisms, and the limit of the third.
    downstream decodes (`reorder_seq`).  So stages that are Lifted-Monotone
    under another order on `M` (`seq_liftedMono_reorder`), or after a
    re-encoding (`seq_liftedMono_reencode`), have a Lifted-Monotone composite.
-   * Double complement (`double_complement`): with `⊆` on the middle sets both
+   * Boolean toggle (`bool_toggle`, the paper's example): with `false ≼ true`
+     on the middle both negation stages violate monotonicity and the first
+     cannot emit at `false` without commitment (`toggle_exposable_iff`,
+     `toggle_empty_basis`); with the reversed order on the middle both stages
+     are monotone; the composite is the identity either way.
+   * Double complement (`double_complement`; no longer cited in the paper,
+     which uses the boolean toggle): with `⊆` on the middle sets both
      complement stages violate monotonicity and the first can emit, without
      commitment, only the empty set (`compl_exposable_iff`,
      `compl_empty_basis`); with `⊇` on the middle both stages are monotone; the
@@ -697,6 +703,73 @@ theorem double_complement [Nonempty U] :
     exact hu (h u hZ)
 
 end DoubleComplement
+
+/-! #### Boolean toggle -/
+
+section BoolToggle
+
+/-- The booleans ordered with `false` below `true`. -/
+instance boolPO : PO Bool where
+  le a b := a = true → b = true
+  refl _ h := h
+  trans h1 h2 h := h2 (h1 h)
+  antisymm {a b} h1 h2 := by cases a <;> cases b <;> simp_all
+
+theorem not_not_monotone : ¬ Monotone not :=
+  fun h => Bool.noConfusion (h false true (fun _ => rfl) rfl)
+
+/-- **The commitment-free toggle stage emits only at `true`.**  Under
+`false ≼ true` on the middle, emitting `!b` at `σ(b)` without commitment is
+possible only for `b = true`. -/
+theorem toggle_exposable_iff (b : Bool) :
+    Exposable (canon (graph not) b) (!b) ↔ b = true := by
+  rw [graph_canon_exposable_iff]
+  cases b
+  · exact ⟨fun h => Bool.noConfusion (h true (fun _ => rfl) rfl), fun h => Bool.noConfusion h⟩
+  · exact ⟨fun _ => rfl, fun _ k hk => by
+      cases k
+      · exact Bool.noConfusion (hk rfl)
+      · exact fun h => h⟩
+
+/-- At input `false` the toggle stage cannot emit under the empty basis: its
+output `true` is not below its output `false` at the larger input `true`. -/
+theorem toggle_empty_basis {γ : List (Commitment (graph not))} {o : Bool}
+    {τ : State (graph not)} :
+    ¬ SysStep (fun _ => False) (canon (graph not) false) (.output γ o) τ := by
+  intro h
+  obtain ⟨_, ho, he⟩ := empty_step h
+  have e : o = !false := ho.1
+  subst e
+  exact Bool.noConfusion ((toggle_exposable_iff false).1 he)
+
+/-- **Boolean toggle.**  (1) With `false ≼ true` on the middle, the negation
+stage `𝒮₁ = 𝒮₂ = graph not` is not Lifted-Monotone; (2) the composite is the
+identity, which is Lifted-Monotone; (3) with the reversed order on the middle
+(`Rev`), both re-indexed stages are Lifted-Monotone, and (4) the composite is
+the same specification. -/
+theorem bool_toggle :
+    ¬ (graph not).LiftedMono ∧
+    seq (graph not) (graph not) = graph (id : Bool → Bool) ∧
+    (graph (id : Bool → Bool)).LiftedMono ∧
+    (pushOut (graph not) Rev.mk).LiftedMono ∧
+    (pullIn (graph not) Rev.val).LiftedMono ∧
+    seq (pushOut (graph not) Rev.mk) (pullIn (graph not) Rev.val) =
+      seq (graph not) (graph not) := by
+  refine ⟨fun h => not_not_monotone ((graph_liftedMono_iff _).1 h), ?_,
+    (graph_liftedMono_iff _).2 fun _ _ h => h, ?_, ?_, reorder_seq _ _ _ _ fun _ => rfl⟩
+  · rw [seq_graph]
+    congr 1
+    funext b
+    cases b <;> rfl
+  · rw [pushOut_graph, graph_liftedMono_iff]
+    intro a b h
+    cases a <;> cases b <;> simp_all [Function.comp, PO.le]
+  · rw [pullIn_graph, graph_liftedMono_iff]
+    intro a b h
+    cases a with | mk a => cases b with | mk b =>
+      cases a <;> cases b <;> simp_all [Function.comp, PO.le]
+
+end BoolToggle
 
 /-! #### The constant store, re-ordered -/
 

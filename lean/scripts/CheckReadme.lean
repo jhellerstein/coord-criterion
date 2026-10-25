@@ -192,6 +192,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:composition/associativity»
 #check @CC.Paper.«sec:composition/function-tables»
 #check @CC.Paper.«sec:composite-calm/complete-calm»
+#check @CC.Paper.«sec:composite-calm/middle-order»
 #check @CC.Paper.«sec:composite-calm/all-monotone»
 #check @CC.Paper.«sec:composite-calm/crdt-query»
 #check @CC.Paper.«sec:composite-calm/filtering»
@@ -404,7 +405,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:composition/joint-monotone»
 #check @CC.Paper.«app:composition/reach»
 #check @CC.Paper.«app:composition/capped-counter»
-#check @CC.Paper.«app:composition/double-complement»
+#check @CC.Paper.«app:composition/boolean-toggle»
 #check @CC.Paper.«app:composition/components-commit»
 #check @CC.Paper.«app:composition/image-canon»
 #check @CC.Paper.«app:composition/store-facts»
