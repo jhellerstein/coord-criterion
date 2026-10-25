@@ -90,15 +90,16 @@ $0$ through $9$ the test always answers yes.  The downstream need only be
 monotone on the values the upstream can produce.
 
 Third, two stages that are each non-monotone can cancel.  Consider a first
-stage that receives a growing set $X$ and outputs its complement
+stage that receives a growing set $X$ from a domain $U$ and outputs its complement
 $U\setminus X$, the elements not yet seen, and a second stage that
 complements again.  The composite returns $X$, which only grows.  Under the
 usual order on sets, though, each stage is non-monotone.  As $X$ grows, the
 first stage's output shrinks, so without commitment it can emit only the
 empty set.  The remedy lies in the interface between the stages.  The
-composite's table never mentions the order on $M$, so the two stages may agree
-on a different one.  Let a smaller set of missing elements count as further
-along.  The first stage's shrinking outputs then form a growing stream of
+composite's table never mentions the intermediate order $M$ between the stages, 
+so it can be treated as a different one.  Let the order on $M$ be 
+inverted: $S \subseteq S' \implies S' \OutputOrd S$.
+The first stage's shrinking outputs then form a growing stream of
 updates, the second stage turns each update into a larger set, and both stages
 are monotone.  Likewise, suppose the upstream may output either of two
 incomparable values $a$ and $b$, and the downstream maps both to the same
@@ -120,8 +121,8 @@ when the common-\indesc condition holds for its rows with inputs in $D$, at
         re-encoding the intermediate values, provided the downstream can
         decode them.
   \item Let $f:I\to M$ and $g:M\to O$ be functions such that $g(f(x))\OutputOrd
-        g(f(y))$ whenever $x\InputOrd y$.  If $g$ maps distinct values to
-        distinct values, some order on $M$ makes both $f$ and $g$ monotone.
+        g(f(y))$ whenever $x\InputOrd y$.  If $g$ is one-to-one (injective),
+        some order on $M$ makes both $f$ and $g$ monotone.
         Otherwise there may be no such order.
 \end{enumerate}
 \end{proposition}
