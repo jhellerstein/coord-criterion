@@ -24,34 +24,35 @@ contrast, can all be \outrelpast by a larger route set.
 \begin{figure}[t]
   \centering
   \small
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabular}[t]{@{}c@{}}
-  \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(f) Transaction ordering, after outputting $[A,B]$}\\
-    \toprule
-    $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-    $\{A,B\}$ & \sh{$[A,B]$} \\
-    \retired{$\{A,B\}$} & \retired{$[B,A]$} \\ \strikerow
-    \bottomrule
-  \end{tabular}\\
-  \footnotesize no remaining row \outrel the removed one: a commitment
-  \\ \\
-  \end{tabular}
-  \hfill
-  \begin{tabular}[t]{@{}c@{}}
-  \begin{tabular}[t]{@{}l l@{}}
-    \multicolumn{2}{@{}l}{(g) Traceroute, after outputting $\{s{\to}\texttt{s1}\}$}\\
-    \toprule
-    $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-    $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
-    \retired{$i$} & \retired{$\{s{\to}a\}$} \\
-    \retired{$i$} & \retired{$\{s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
-    $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a\}$} \\
-    $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
-    \bottomrule
-  \end{tabular}\\
-  \footnotesize each removed row is \outrelpast by a remaining one: an output retirement
-  \end{tabular}
+  \setlength{\tabcolsep}{4pt}
+  \begin{minipage}[t]{0.36\columnwidth}
+    \raggedright
+    (f) After $[A,B]$\par\smallskip
+    \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}l@{}}
+      \toprule
+      $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
+      $\{A,B\}$ & \sh{$[A,B]$} \\
+      \retired{$\{A,B\}$} & \retired{$[B,A]$} \\ \strikerow
+      \bottomrule
+    \end{tabular*}\par\smallskip
+    {\footnotesize no remaining row \outrel the removed one: a commitment}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.6\columnwidth}
+    \raggedright
+    (g) After $\{s{\to}\texttt{s1}\}$\par\smallskip
+    \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}l@{}}
+      \toprule
+      $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
+      $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
+      \retired{$i$} & \retired{$\{s{\to}a\}$} \\
+      \retired{$i$} & \retired{$\{s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
+      $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a\}$} \\
+      $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
+      \bottomrule
+    \end{tabular*}\par\smallskip
+    {\footnotesize each removed row is \outrelpast by a remaining one: an output
+    retirement}
+  \end{minipage}
   \caption{Two specifications with several rows at one input, each after one output
   event.  (f) Serial orders of two concurrent transactions, under the equality
   order.  (g) Route sets from a source $s$ to a service on \texttt{s1} and

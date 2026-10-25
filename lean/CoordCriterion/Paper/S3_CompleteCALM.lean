@@ -28,8 +28,7 @@ open CC CC.CALM
 
 /-! ## Output choice by example (`sec:ambiguity-story`) -/
 
-/-- Fig. `fig:ambiguity-frames`(f): "Transaction ordering, after outputting
-`[A,B]` … no remaining row refines the removed one: a commitment."  After
+/-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row refines the removed one: a commitment."  After
 `output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Rejected_o` (a
 choice), neither sealed (the input keeps `[A,B]`) nor retired (no row refines
 both). -/
@@ -41,8 +40,7 @@ theorem «fig:ambiguity-frames/f» :
       ¬ ∃ u, Figures.Txn.spec.S () u ∧ Figures.Txn.TOut.ab ≼ u ∧ Figures.Txn.TOut.ba ≼ u :=
   ⟨Figures.Txn.after_ab, Figures.Txn.ba_rejected⟩
 
-/-- Fig. `fig:ambiguity-frames`(g): "Traceroute, after outputting
-`{s→s1}` … each removed row is refined by a remaining one: an output
+/-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is refined by a remaining one: an output
 retirement."  The remaining rows are `{s→s1}`, `{s→s1,s→a}`,
 `{s→s1,s→a,s→a→s2}`; the removed `{s→a}` and `{s→a,s→a→s2}` are in
 `Retired_o`; nothing is sealed or rejected, so `{s→s1}` is exposable. -/
