@@ -39,8 +39,16 @@ runs with the empty basis, emitting `f m` whenever `𝒫` emits `m`.  We say
 * `PK`, `perKey`, `perKey_monotone`, `commute_example` — a per-key store:
   `𝒫` must choose the order of commands on different keys, the composite
   needs no commitment.
-* `AtMostOnce`, `AtLeastOnce`, `Irredundant`, `guarded_irredundant`,
-  `at_least_once_needed` — Def./Thm. Irredundant Coordination.
+* `GRun`, `StoreAccepts`, `StoreEmits`, `Contradicted`, `Redundant`,
+  `AtMostOnce`, `AtLeastOnce`, `Irredundant` — Def. Irredundant Coordination:
+  the store runs under its own basis `BK` on the outputs `𝒫` emits, and
+  coordinates redundantly when one of its commitments is contradicted by a
+  guarded composite run.
+* `store_exposable`, `store_eps`, `at_least_once`, `noStore_atMostOnce`,
+  `noStore_follows`, `guarded_irredundant`, `at_least_once_needed` — Thm.
+  Irredundant Coordination.
+* `sealIn`, `mutexB`, `mutex_redundant` — a store with its own lock behind
+  the log coordinates redundantly.
 * `smr_irredundant` — Example `ex:committed-log-composition`.
 -/
 
@@ -404,38 +412,174 @@ theorem guarded_confluent (fam : List (State sp × State (comp sp f)))
 
 /-! ### Irredundant Coordination -/
 
-/-- **At most once.**  `𝒫` under basis `B` guards the store `graph f`: every
-run of `𝒫` under `B`, read through `f`, is a composite run whose table
-contains the image of `𝒫`'s, and the store's own part of the run is a run of
-`graph f` under the empty basis. -/
-def AtMostOnce (B : Basis sp) (f : M → O) : Prop :=
-  (∀ i es ρ, SysExec B (canon sp i) es ρ →
-    ∃ ρ', Exec (canon (comp sp f) i) (es.map (obs f)) ρ' ∧ ρ'.cur = ρ.cur ∧
-      ∀ k o, imgT f ρ.R k o → ρ'.R k o) ∧
-  (∀ (σ ρ : State sp) es m ms, SysExec B σ es ρ → emitted es = m :: ms →
-    ∃ es' : List (SEvent (graph f)), es'.map SEvent.erase = .output (f m) :: storeEvs f ms ∧
-      CoordFree es' ∧
-      SysExec (fun _ => False) (canon (graph f) m) es' (canon (graph f) (ms.getLastD m)))
+/-- Commitments applied in an execution under `B` come from `B`. -/
+theorem sysExec_basis {I O : Type} [PO I] [PO O] {sp : Spec I O} {B : Basis sp}
+    {σ ρ : State sp} {es : List (SEvent sp)} (h : SysExec B σ es ρ) :
+    ∀ γ o, SEvent.output γ o ∈ es → ∀ c ∈ γ, B c := by
+  induction h with
+  | nil => intro _ _ h; cases h
+  | cons hs _ ih =>
+    intro γ o hm
+    rcases List.mem_cons.1 hm with he | hm
+    · subst he
+      cases hs with
+      | output hb _ _ _ _ _ => exact hb
+    · exact ih γ o hm
+
+/-- The empty store basis. -/
+def noStore (f : M → O) : Basis (graph f) := fun _ => False
+
+/-- **Guarded composite run.**  `𝒫` runs under `B` from a canonical state and
+emits `m :: ms`.  The store runs under its own basis `BK` from its canonical
+state at `m`: it emits an image of `m`, then receives and answers each later
+output.  The environment observes `𝒫`'s inputs and the store's outputs. -/
+def GRun (B : Basis sp) (BK : Basis (graph f)) (es : List (SEvent sp)) (m : M)
+    (esK : List (SEvent (graph f))) : Prop :=
+  (∃ i ρ, SysExec B (canon sp i) es ρ) ∧
+  (∃ ms, emitted es = m :: ms ∧ esK.map SEvent.erase = .output (f m) :: storeEvs f ms) ∧
+  ∃ ρK, SysExec BK (canon (graph f) m) esK ρK
+
+/-- In some guarded composite run, the store receives `k`. -/
+def StoreAccepts (B : Basis sp) (BK : Basis (graph f)) (k : M) : Prop :=
+  ∃ es m esK, GRun B BK es m esK ∧ k ∈ emitted es
+
+/-- In some guarded composite run, the store emits `x` at current input `k`. -/
+def StoreEmits (B : Basis sp) (BK : Basis (graph f)) (k : M) (x : O) : Prop :=
+  ∃ es m esK a δ b σ, GRun B BK es m esK ∧ esK = a ++ .output δ x :: b ∧
+    SysExec BK (canon (graph f) m) a σ ∧ σ.cur = k
+
+/-- Commitments taking the store from `σ` to `σc` are **contradicted** in the
+guarded composite runs (Def. `def:coordination`, with `𝓡` the store's runs
+that `𝒫` can feed): some such run emits a removed row's output at its input,
+or accepts a sealed input. -/
+def Contradicted (B : Basis sp) (BK : Basis (graph f)) (σ σc : State (graph f)) : Prop :=
+  (∃ k x, σ.R k x ∧ ¬ σc.R k x ∧ StoreEmits B BK k x) ∨
+  (∃ k, (∃ x, σ.R k x) ∧ (∀ x, ¬ σc.R k x) ∧ StoreAccepts B BK k)
+
+/-- **The store coordinates redundantly**: in some guarded composite run, a
+store output event `Out_δ(x)` applies commitments that are contradicted. -/
+def Redundant (B : Basis sp) (BK : Basis (graph f)) : Prop :=
+  ∃ es m esK a δ x b σ σc, GRun B BK es m esK ∧ esK = a ++ .output δ x :: b ∧
+    SysExec BK (canon (graph f) m) a σ ∧ ApplySeq δ σ σc ∧ Contradicted B BK σ σc
+
+/-- **At most once**: the store does not coordinate redundantly. -/
+def AtMostOnce (B : Basis sp) (BK : Basis (graph f)) : Prop := ¬ Redundant B BK
 
 /-- **At least once.**  Whenever the composite needs a commitment to emit
-`f m` at the image of `𝒫`'s state, `𝒫`'s output event for `m` applies one:
-`𝒫`'s commitments cannot be dropped. -/
+`f m` at the image of `𝒫`'s state, `𝒫`'s output event for `m` applies one. -/
 def AtLeastOnce (B : Basis sp) (f : M → O) : Prop :=
   ∀ (σ τ : State sp) γ m, SysStep B σ (.output γ m) τ →
     ¬ Exposable (img f σ) (f m) → γ ≠ []
 
-/-- **Irredundant Coordination**: the guarded composite coordinates at most
-once (the store applies no commitment) and at least once (every commitment
-the composite needs is applied by `𝒫`). -/
-def Irredundant (B : Basis sp) (f : M → O) : Prop := AtMostOnce B f ∧ AtLeastOnce B f
+/-- **Irredundant Coordination**: the store coordinates at most once and `𝒫`
+at least once. -/
+def Irredundant (B : Basis sp) (BK : Basis (graph f)) : Prop :=
+  AtMostOnce B BK ∧ AtLeastOnce B f
 
-/-- **Theorem (Irredundant Coordination).**  If `f` is monotone, then for any
-basis `B` of `𝒫` the guarded composite is irredundant. -/
-theorem guarded_irredundant (hf : Monotone f) (B : Basis sp) : Irredundant B f := by
-  refine ⟨⟨fun _ _ _ hx => guarded_run hf hx, fun _ _ _ _ _ hx he => store_run hf hx he⟩, ?_⟩
+/-- **At least once always holds** for monotone `f`, under any basis of `𝒫`:
+an `Out_ε(m)` of `𝒫` maps to an exposable `f m` (`cf_step`). -/
+theorem at_least_once (hf : Monotone f) (B : Basis sp) : AtLeastOnce B f := by
   intro σ τ γ m hs hne hγ
   subst hγ
   exact hne (cf_step hf (eps_step_iff.1 hs).2.1)
+
+/-- **Every store output is exposable.**  If `f` is monotone, at every state of
+the store `f(cur)` (its only output there) is exposable: the store never needs
+a commitment. -/
+theorem store_exposable (hf : Monotone f) (σ : State (graph f)) : Exposable σ (f σ.cur) := by
+  intro k x hx hnx
+  have e : x = f k := σ.sub k x hx
+  exact absurd (e ▸ hf _ _ (σ.above k x hx)) hnx
+
+/-- **A store commitment is never needed.**  If `f` is monotone, wherever the
+store's `Out_δ(x)` is legal, so is `Out_ε(x)`, and it keeps at least the same
+rows. -/
+theorem store_eps (hf : Monotone f) {BK : Basis (graph f)} {σ τ : State (graph f)}
+    {δ : List (Commitment (graph f))} {x : O} (h : SysStep BK σ (.output δ x) τ) :
+    ∃ τ', SysStep BK σ (.output [] x) τ' ∧ ∀ k u, τ.R k u → τ'.R k u := by
+  obtain ⟨_, ho, hin, _⟩ := containment h
+  have e : x = f σ.cur := σ.sub _ _ ho
+  refine ⟨outState σ x ho, eps_step_iff.2 ⟨ho, e ▸ store_exposable hf σ, rfl, rfl⟩,
+    fun k u hu => hin k u hu⟩
+
+/-- With monotone `f`, irredundance is exactly at most once. -/
+theorem irredundant_iff (hf : Monotone f) (B : Basis sp) (BK : Basis (graph f)) :
+    Irredundant B BK ↔ AtMostOnce B BK :=
+  ⟨fun h => h.1, fun h => ⟨h, at_least_once hf B⟩⟩
+
+/-- A store under the empty basis never coordinates redundantly. -/
+theorem noStore_atMostOnce (B : Basis sp) (f : M → O) : AtMostOnce B (noStore f) := by
+  rintro ⟨es, m, esK, a, δ, x, b, σ, σc, ⟨_, _, ρK, hK⟩, rfl, _, hδ, hc⟩
+  have : δ = [] := by
+    cases δ with
+    | nil => rfl
+    | cons c _ =>
+      exact (sysExec_basis hK _ _ (List.mem_append_right _ (List.mem_cons_self ..)) c
+        (List.mem_cons_self ..)).elim
+  subst this
+  cases hδ
+  rcases hc with ⟨k, x, h1, h2, _⟩ | ⟨k, ⟨x, h1⟩, h2, _⟩
+  · exact h2 h1
+  · exact h2 x h1
+
+/-- **The empty-basis store follows every run of `𝒫`**: each run under any
+basis that emits `m :: ms` extends to a guarded composite run. -/
+theorem noStore_follows (hf : Monotone f) {B : Basis sp} {i : I} {es : List (SEvent sp)}
+    {ρ : State sp} (h : SysExec B (canon sp i) es ρ) {m : M} {ms : List M}
+    (he : emitted es = m :: ms) : ∃ esK, GRun B (noStore f) es m esK := by
+  obtain ⟨esK, hK, _, hx⟩ := store_run hf h he
+  exact ⟨esK, ⟨i, ρ, h⟩, ⟨ms, he, hK⟩, _, hx⟩
+
+/-- **Theorem (Irredundant Coordination).**  If `f` is monotone, then for any
+basis `B` of `𝒫` the guarded composite with the empty-basis store is
+irredundant. -/
+theorem guarded_irredundant (hf : Monotone f) (B : Basis sp) : Irredundant B (noStore f) :=
+  ⟨noStore_atMostOnce B f, at_least_once hf B⟩
+
+/-! ### A store with its own commitments -/
+
+section SealIn
+variable {J P : Type} [PO J] [PO P] {sq : Spec J P}
+
+/-- `(i, R ∖ R[in ∈ Q])`, for `Q` false at the current input. -/
+def sealInState (σ : State sq) (Q : J → Prop) (h : ¬ Q σ.cur) : State sq where
+  cur := σ.cur
+  R := fun k x => σ.R k x ∧ ¬ Q k
+  sub := fun k x hx => σ.sub k x hx.1
+  hasCur := let ⟨o, ho⟩ := σ.hasCur; ⟨o, ho, h⟩
+  above := fun k x hx => σ.above k x hx.1
+
+noncomputable def sealInApp (Q : J → Prop) (σ : State sq) : Option (State sq) :=
+  if h : ¬ Q σ.cur ∧ ∃ k x, σ.R k x ∧ Q k then some (sealInState σ Q h.1) else none
+
+theorem sealInApp_eq {Q : J → Prop} {σ τ : State sq} :
+    sealInApp Q σ = some τ ↔ ∃ h : ¬ Q σ.cur, (∃ k x, σ.R k x ∧ Q k) ∧ sealInState σ Q h = τ := by
+  unfold sealInApp
+  split
+  · rename_i h
+    simp only [Option.some.injEq]
+    exact ⟨fun e => ⟨h.1, h.2, e⟩, fun ⟨_, _, e⟩ => e⟩
+  · rename_i h
+    simp only [reduceCtorEq, false_iff]
+    rintro ⟨h1, h2, _⟩
+    exact h ⟨h1, h2⟩
+
+/-- **Sealing the inputs in `Q`** (defined when `Q` is false at the current
+input and some remaining row has its input in `Q`) is a commitment. -/
+noncomputable def sealIn (Q : J → Prop) : Commitment sq where
+  app := sealInApp Q
+  cur_eq := by intro σ τ h; obtain ⟨_, _, rfl⟩ := sealInApp_eq.1 h; rfl
+  sub := by intro σ τ h k u hu; obtain ⟨_, _, rfl⟩ := sealInApp_eq.1 h; exact hu.1
+  removes := by
+    intro σ τ h
+    obtain ⟨_, ⟨k, x, hx, hQ⟩, rfl⟩ := sealInApp_eq.1 h
+    exact ⟨k, x, hx, fun h' => h'.2 hQ⟩
+  excludes := by
+    intro σ τ h k u w hu hnu hw _
+    obtain ⟨_, _, rfl⟩ := sealInApp_eq.1 h
+    exact hnu ⟨hu, hw.2⟩
+
+end SealIn
 
 /-- Exposability at canonical states alone gives the common-expansion
 condition (the reverse direction of the exposure boundary uses only them). -/
@@ -737,17 +881,94 @@ open Inst (Pfx smrS1 execF)
 /-- **The replicated store coordinates exactly once.**  For any deterministic
 state machine and two distinct commands, the log specification `𝒫 = smrS1`
 and the composite violate Lifted Monotonicity, execution is monotone, and for
-every basis of `𝒫` (Multi-Paxos's, or any other) the guarded composite is
-irredundant; some composite output needs a commitment, which `𝒫` must make. -/
+every basis of `𝒫` (Multi-Paxos's, or any other) the guarded composite with
+the empty-basis store is irredundant; some composite output needs a
+commitment, which `𝒫` must make. -/
 theorem smr_irredundant {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt)
     {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) (B : Basis (smrS1 (Cmd := Cmd))) :
     ¬ (smrS1 (Cmd := Cmd)).LiftedMono ∧ ¬ (comp smrS1 (execF δ σ0)).LiftedMono ∧
-      Monotone (execF δ σ0) ∧ Irredundant B (execF δ σ0) ∧
+      Monotone (execF δ σ0) ∧ Irredundant B (noStore (execF δ σ0)) ∧
       ∃ i m, smrS1.S i m ∧ ¬ Exposable (canon (comp smrS1 (execF δ σ0)) i) (execF δ σ0 m) ∧
         ∀ m', smrS1.S i m' → execF δ σ0 m' = execF δ σ0 m → ¬ Exposable (canon smrS1 i) m' := by
   obtain ⟨h1, h2, hf, _⟩ := Inst.smr_example δ σ0 hne
   obtain ⟨i, m, hm, hne', hall, _⟩ := at_least_once_needed hf h2
   exact ⟨h1, h2, hf, guarded_irredundant hf B, i, m, hm, hne', hall⟩
+
+/-- A lock granted to `a` over `b` on one key: the logs in which `b` comes
+first. -/
+def bFirst {Cmd : Type} (b : Cmd) (k : Pfx Cmd) : Prop := k.l.head? = some b
+
+/-- The mutex store's basis: its only commitment seals the logs in which `b`
+comes first. -/
+noncomputable def mutexB {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : Basis (graph f) :=
+  fun c => c = sealIn (bFirst b)
+
+/-- **An uncontended lock decides nothing.**  Once the store's current log is
+nonempty, every log it can still receive has the same first command, so
+sealing the logs in which `b` comes first removes no row: it is not a
+commitment there (the partial function is undefined). -/
+theorem lock_after_log {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd)
+    (σ : State (graph f)) (h : σ.cur.l ≠ []) : (sealIn (bFirst b)).app σ = none := by
+  cases hc : (sealIn (bFirst b)).app σ with
+  | none => rfl
+  | some τ =>
+    obtain ⟨hn, ⟨k, x, hx, hQ⟩, _⟩ := sealInApp_eq.1 hc
+    obtain ⟨t, ht⟩ := σ.above k x hx
+    obtain ⟨c, l, hl⟩ := List.exists_cons_of_ne_nil h
+    exfalso; apply hn
+    unfold bFirst at hQ ⊢
+    rw [ht, hl] at hQ; rw [hl]
+    simpa using hQ
+
+/-- **A mutex behind the log coordinates redundantly.**  Let the store run
+`smrS1`'s logs through any monotone `f`, and let it apply its own lock: at the
+empty log it seals every log in which `b` comes first, before emitting.  `𝒫`
+runs under its canonical basis.  The store's output was exposable without the
+lock (`store_exposable`), yet another guarded run feeds the store the log
+`[b]`, contradicting the lock.  So this composite is not irredundant, while the
+same `𝒫` with the empty-basis store is. -/
+theorem mutex_redundant {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Monotone f) (b : Cmd) :
+    (∃ σ : State (graph f), σ.cur = ⟨[]⟩ ∧ Exposable σ (f ⟨[]⟩) ∧
+      ∃ σc, ApplySeq [sealIn (bFirst b)] σ σc ∧ Contradicted (canonBasis smrS1) (mutexB b f) σ σc) ∧
+    Redundant (canonBasis (smrS1 (Cmd := Cmd))) (mutexB b f) ∧
+    ¬ Irredundant (canonBasis (smrS1 (Cmd := Cmd))) (mutexB b f) ∧
+    Irredundant (canonBasis (smrS1 (Cmd := Cmd))) (noStore f) := by
+  let e : Pfx Cmd := ⟨[]⟩
+  let kb : Pfx Cmd := ⟨[b]⟩
+  let σ := canon (graph f) e
+  have hne : ¬ bFirst b σ.cur := fun h => by cases h
+  have happ : (sealIn (bFirst b)).app σ = some (sealInState σ (bFirst b) hne) :=
+    sealInApp_eq.2 ⟨hne, ⟨kb, f kb, ⟨rfl, ⟨[b], rfl⟩⟩, rfl⟩, rfl⟩
+  let σc := sealInState σ (bFirst b) hne
+  have hγ : ApplySeq [sealIn (bFirst b)] σ σc := .cons happ (.nil _)
+  -- the store accepts `[b]` in another guarded run
+  have hacc : StoreAccepts (canonBasis smrS1) (mutexB b f) kb := by
+    let σP := canon (smrS1 (Cmd := Cmd)) kb
+    have ho : σP.R σP.cur kb := ⟨fun _ h => h, PO.refl _⟩
+    have hP : SysExec (canonBasis smrS1) σP [.output (kappa σP kb) kb] (outState σP kb ho) :=
+      .cons (canonical_support σP kb ho) (.nil _)
+    let σK := canon (graph f) kb
+    have hoK : σK.R σK.cur (f kb) := ⟨rfl, PO.refl _⟩
+    have hK : SysExec (mutexB b f) σK [.output [] (f kb)] (outState σK (f kb) hoK) :=
+      .cons (τ := outState σK (f kb) hoK)
+        (eps_step_iff.2 ⟨hoK, store_exposable hf σK, rfl, rfl⟩) (.nil _)
+    exact ⟨_, kb, _, ⟨⟨kb, _, hP⟩, ⟨[], rfl, rfl⟩, _, hK⟩, List.mem_singleton_self _⟩
+  have hcon : Contradicted (canonBasis smrS1) (mutexB b f) σ σc :=
+    Or.inr ⟨kb, ⟨f kb, rfl, ⟨[b], rfl⟩⟩, fun _ h => h.2 rfl, hacc⟩
+  -- the guarded run in which the store applies the lock
+  have hred : Redundant (canonBasis (smrS1 (Cmd := Cmd))) (mutexB b f) := by
+    let σP := canon (smrS1 (Cmd := Cmd)) e
+    have ho : σP.R σP.cur e := ⟨fun _ h => (nomatch h), PO.refl _⟩
+    have hexpP : Exposable σP e := fun _ x _ hn => absurd ⟨x.l, rfl⟩ hn
+    have hP : SysExec (canonBasis smrS1) σP [.output [] e] (outState σP e ho) :=
+      .cons (τ := outState σP e ho) (eps_step_iff.2 ⟨ho, hexpP, rfl, rfl⟩) (.nil _)
+    have hoc : σc.R σc.cur (f e) := ⟨⟨rfl, PO.refl _⟩, hne⟩
+    have hK : SysExec (mutexB b f) σ [.output [sealIn (bFirst b)] (f e)] (outState σc (f e) hoc) :=
+      .cons (τ := outState σc (f e) hoc) (.output (fun c hc => by simp at hc; exact hc) hγ hoc (store_exposable hf σc) rfl rfl)
+        (.nil _)
+    exact ⟨_, e, _, [], _, _, [], σ, σc, ⟨⟨e, _, hP⟩, ⟨[], rfl, rfl⟩, _, hK⟩, rfl, .nil _, hγ, hcon⟩
+  exact ⟨⟨σ, rfl, store_exposable hf σ, σc, hγ, hcon⟩, hred, fun h => h.1 hred,
+    guarded_irredundant hf _⟩
 
 end SMR
 

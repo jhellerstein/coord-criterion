@@ -165,15 +165,47 @@ theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : S
           ∀ m', σ.R k m' → f m' = x → ¬ σc.R k m' :=
   ⟨fun he _ hs => Guard.coverage hf he hs, fun h _ hs => Guard.coverage_step hf h hs⟩
 
-/-- Proof of Theorem `thm:irredundant-coordination`: "the proof of
+/-- Proof of Theorem `thm:irredundant-coordination`(1)–(2): "Let `(m,R)` be a
+state of `𝒦`.  Its fiber at `m` is `{f(m)}`, and every row `(k,f(k)) ∈ R` has
+`m ≼ k`, so `f(m) ≼ f(k)` by monotonicity.  No row is ruled out by `f(m)`, so
+`f(m)` is exposable. … When `ℬ_𝒦` is empty, every output event of the store is
+some `Out_ε(f(m))`, which removes no row by commitment, so the store does not
+coordinate redundantly." -/
+theorem «app:composition/store-exposable» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
+    {f : M → O} (hf : Monotone f) :
+    (∀ σ : State (graph f), Exposable σ (f σ.cur)) ∧
+      ∀ B : Basis sp, Guard.AtMostOnce B (Guard.noStore f) :=
+  ⟨Guard.store_exposable hf, fun B => Guard.noStore_atMostOnce B f⟩
+
+/-- Proof of Theorem `thm:irredundant-coordination`(3): "The proof of
 Proposition `prop:exposure-boundary` derives the common-expansion condition
-from exposability at canonical states alone"; and the at-least-once step: if
-`m` is exposable at `σ`, then `f(m)` is exposable at `f(σ)`. -/
+from exposability at canonical states alone"; and the at-least-once step of
+(2): if `m` is exposable at `σ`, then `f(m)` is exposable at `f(σ)`. -/
 theorem «app:composition/canonical-states-suffice» {I M O : Type} [PO I] [PO M] [PO O] :
     (∀ {sp : Spec I O}, (∀ i o, sp.S i o → Exposable (canon sp i) o) → sp.CommonExpansion) ∧
     ∀ {sp : Spec I M} {f : M → O}, Monotone f → ∀ {σ : State sp} {m : M},
       Exposable σ m → Exposable (Guard.img f σ) (f m) :=
   ⟨fun h => Guard.canon_exposable_commonExpansion h, fun hf _ _ he => Guard.cf_step hf he⟩
+
+/-- "For the mutex store …, let `𝒫` be the log specification of Example
+`ex:committed-log-composition` under its canonical basis, and `f` any monotone
+function of the log.  For a set `Q` of logs, removing every row whose input is
+in `Q` is a commitment of `𝒦` at any state whose current input is not in `Q`
+and which has such a row.  It removes whole fibers, so it seals. … At a
+state whose current log is nonempty, every remaining log has the same first
+command, so this commitment is undefined there. … So the commitment is
+contradicted, and the store coordinates redundantly."  Lean: `Guard.sealIn Q`
+(for any specification); `Guard.lock_after_log`; the runs are those of
+`Guard.mutex_redundant`. -/
+theorem «app:composition/mutex-store» {Cmd O : Type} [PO O] {f : Inst.Pfx Cmd → O}
+    (hf : Monotone f) (b : Cmd) :
+    (∀ (Q : Inst.Pfx Cmd → Prop) (σ τ : State (graph f)), (Guard.sealIn Q).app σ = some τ →
+      ¬ Q σ.cur ∧ (∃ k x, σ.R k x ∧ Q k) ∧ ∀ k, Q k → ∀ x, ¬ τ.R k x) ∧
+    (∀ σ : State (graph f), σ.cur.l ≠ [] → (Guard.sealIn (Guard.bFirst b)).app σ = none) ∧
+    Guard.Redundant (canonBasis (Inst.smrS1 (Cmd := Cmd))) (Guard.mutexB b f) := by
+  refine ⟨fun Q σ τ h => ?_, Guard.lock_after_log b, (Guard.mutex_redundant hf b).2.1⟩
+  obtain ⟨hn, hex, rfl⟩ := Guard.sealInApp_eq.1 h
+  exact ⟨hn, hex, fun _ hQ _ hx => hx.2 hQ⟩
 
 /-- "For the per-key store …, let `𝒫` have one input with fiber
 `{[a,b],[b,a]}`, and let `f` send a log to the family of its subsequences on

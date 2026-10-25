@@ -199,7 +199,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:irredundant-coordination»
 #check @CC.Paper.«thm:guarded-runs»
 #check @CC.Paper.«thm:irredundant-coordination»
+#check @CC.Paper.«sec:irredundant-coordination/empty-store-follows»
 #check @CC.Paper.«sec:irredundant-coordination/any-basis»
+#check @CC.Paper.«sec:irredundant-coordination/mutex-store»
 #check @CC.Paper.«prop:invisible-coordination»
 #check @CC.Paper.«sec:irredundant-coordination/per-key»
 #check @CC.Paper.«ex:committed-log-composition»
@@ -394,7 +396,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:composition/guarded-lockstep»
 #check @CC.Paper.«app:composition/store-steps»
 #check @CC.Paper.«app:composition/coverage»
+#check @CC.Paper.«app:composition/store-exposable»
 #check @CC.Paper.«app:composition/canonical-states-suffice»
+#check @CC.Paper.«app:composition/mutex-store»
 #check @CC.Paper.«app:composition/per-key»
 #check @CC.Paper.«app:composition/no-pushforward»
 #check @CC.Paper.«app:composition/monotone-needed»

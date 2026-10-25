@@ -126,7 +126,8 @@ then receives nothing.
 
 \subsection{Irredundant Coordination}
 
-Throughout, $f$ is monotone, $\mathcal B$ is a basis of $\mathcal P$, and for a
+Throughout, $f$ is monotone, $\mathcal B$ and $\mathcal B_{\mathcal K}$ are
+bases of $\mathcal P$ and $\mathcal K$, and for a
 table $R$ of $\mathcal P$ we write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  The image
 of the canonical state $\sigma_{\mathcal P}(i)$ is the canonical state of
 $\mathcal K\circ\mathcal P$ at $i$, since $f(P[\mathrm{in}\InputGe i])$ is
@@ -177,19 +178,46 @@ that the composite's canonical event for $f(m)$ removes by commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
 \begin{proof}[Proof of Theorem~\ref{thm:irredundant-coordination}]
-At most once is Theorem~\ref{thm:guarded-runs}(1)--(2).  For at least once,
-let $\Out{\varepsilon}{m}$ be legal at $\sigma$, so $\sigma_c=\sigma$ and $m$
-is exposable at $\sigma$.  By the covering argument with $\rho=f(\sigma)$, no
-row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or $\Rejected_{f(m)}$, so $f(m)$ is
-exposable at $f(\sigma)$ (Lemma~\ref{lem:canonical-commitment-normal-form}).
-For the second claim, the proof of Proposition~\ref{prop:exposure-boundary}
+(1) Let $(m,R)$ be a state of $\mathcal K$.  Its fiber at $m$ is $\{f(m)\}$,
+and every row $(k,f(k))\in R$ has $m\preceq_M k$, so $f(m)\OutputOrd f(k)$ by
+monotonicity.  No row is ruled out by $f(m)$, so $f(m)$ is exposable.  If
+$\Out{\delta}{f(m)}$ is legal, containment
+(Lemma~\ref{lem:canonical-commitment-normal-form}) puts its resulting table
+inside $R[\mathrm{out}\OutputGe f(m)]$, where $\Out{\varepsilon}{f(m)}$ ends.
+
+(2) For at least once, let $\Out{\varepsilon}{m}$ be legal at $\sigma$, so
+$\sigma_c=\sigma$ and $m$ is exposable at $\sigma$.  By the covering argument
+with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
+$\Rejected_{f(m)}$, so $f(m)$ is exposable at $f(\sigma)$
+(Lemma~\ref{lem:canonical-commitment-normal-form}).  When
+$\mathcal B_{\mathcal K}$ is empty, every output event of the store is some
+$\Out{\varepsilon}{f(m)}$, which removes no row by commitment, so the store
+does not coordinate redundantly.
+
+(3) The proof of Proposition~\ref{prop:exposure-boundary}
 derives the common-\indesc condition from exposability at canonical states
 alone.  If Lifted Monotonicity fails for $\mathcal K\circ\mathcal P$, some
 $f(m)$ with $(i,m)\in P$ is therefore not exposable at
 $\sigma_{\mathcal K\circ\mathcal P}(i)=f(\sigma_{\mathcal P}(i))$, and by
-what we just proved no $m'$ with $f(m')=f(m)$ is exposable at
-$\sigma_{\mathcal P}(i)$.
+(2) no $m'$ with $f(m')=f(m)$ is exposable at $\sigma_{\mathcal P}(i)$.
 \end{proof}
+
+For the mutex store of Section~\ref{sec:irredundant-coordination}, let
+$\mathcal P$ be the log specification of
+Example~\ref{ex:committed-log-composition} under its canonical basis, and $f$
+any monotone function of the log.  For a set $Q$ of logs, removing every row
+whose input is in $Q$ is a commitment of $\mathcal K$ at any state whose
+current input is not in $Q$ and which has such a row.  It removes whole
+fibers, so it seals.  Let $\mathcal B_{\mathcal K}$ contain this commitment
+for $Q$ the logs that start with $b$.  At a state whose current log is
+nonempty, every remaining log has the same first command, so this commitment
+is undefined there.  In one guarded composite run,
+$\mathcal P$ emits the empty log $[\,]$ by $\Out{\varepsilon}{[\,]}$, and the
+store, at $\sigma_{\mathcal K}([\,])$, emits $f([\,])$ by applying the
+commitment.  By (1), $f([\,])$ was exposable without it.  In another,
+$\mathcal P$ emits $[b]$ at $\sigma_{\mathcal P}([b])$ by its canonical event,
+and the store receives $[b]$, an input the first run sealed.  So the
+commitment is contradicted, and the store coordinates redundantly.
 
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
 The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering

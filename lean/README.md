@@ -74,7 +74,7 @@ first and supporting claims and examples follow.
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
 | `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
-| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | Guarded runs, store under the empty basis, covering, invisible coordination, Irredundant Coordination, counterexamples, per-key store, replicated store |
+| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | Guarded runs, store under the empty basis, covering, invisible coordination, Irredundant Coordination (store bases, redundant mutex store), counterexamples, per-key store, replicated store |
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
@@ -94,7 +94,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-561 entries.
+565 entries.
 
 ### §2 Functional CALM
 
@@ -326,7 +326,9 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«def:irredundant-coordination»` | theorem | **Definition `def:irredundant-coordination`** (Irredundant Coordination): |
 | `«thm:guarded-runs»` | theorem | **Theorem `thm:guarded-runs`** (Guarded runs): |
 | `«thm:irredundant-coordination»` | theorem | **Theorem `thm:irredundant-coordination`** (Irredundant Coordination): |
+| `«sec:irredundant-coordination/empty-store-follows»` | theorem | "By Theorem `thm:guarded-runs`(2), a store under the empty basis also follows every run of `𝒫`." Lean: |
 | `«sec:irredundant-coordination/any-basis»` | theorem | "Every legal output event removes at least the rows its canonical event removes (Lemma `lem:canonical-commitment-normal-form`), so every row that the composi… |
+| `«sec:irredundant-coordination/mutex-store»` | theorem | "Mutexes in the store, behind the log, are another matter. |
 | `«prop:invisible-coordination»` | theorem | **Proposition `prop:invisible-coordination`** (Invisible coordination): |
 | `«sec:irredundant-coordination/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order, and two commands `a` and `b` on different keys. |
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
@@ -570,7 +572,9 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/guarded-lockstep»` | theorem | The induction of the proof of Theorem `thm:guarded-runs`(1): |
 | `«app:composition/store-steps»` | theorem | Proof of Theorem `thm:guarded-runs`(2): |
 | `«app:composition/coverage»` | theorem | The covering argument: |
-| `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:irredundant-coordination`: |
+| `«app:composition/store-exposable»` | theorem | Proof of Theorem `thm:irredundant-coordination`(1)–(2): |
+| `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:irredundant-coordination`(3): |
+| `«app:composition/mutex-store»` | theorem | "For the mutex store …, let `𝒫` be the log specification of Example `ex:committed-log-composition` under its canonical basis, and `f` any monotone function o… |
 | `«app:composition/per-key»` | theorem | "For the per-key store …, let `𝒫` have one input with fiber `{[a,b],[b,a]}`, and let `f` send a log to the family of its subsequences on each key. |
 | `«app:composition/no-pushforward»` | theorem | "The commitments of `𝒫` do not themselves push forward. |
 | `«app:composition/monotone-needed»` | theorem | "Monotonicity of `f` is needed. |

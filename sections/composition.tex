@@ -20,7 +20,8 @@ tables, so they compose by equijoin, and composition preserves Lifted
 Monotonicity.  Because commitments are explicit, we
 can also ask which component makes a composition's commitments.  When one
 component makes every commitment the composition needs and the other makes
-none, we call the coordination \emph{irredundant}
+none that a run of the composition contradicts, we call the coordination
+\emph{irredundant}
 (Section~\ref{sec:irredundant-coordination}).  Example~\ref{ex:committed-log-composition}
 returns to the replicated store.  Proofs are in
 Appendix~\ref{app:composition}.
@@ -101,10 +102,14 @@ is the specification with table $\{(m,f(m))\}$, and the composite
 $\mathcal K\circ\mathcal P$ has table $\{(i,f(m)):(i,m)\in P\}$.  For a state
 $\sigma=(i,R)$ of $\mathcal P$, its \emph{image} $f(\sigma)$ is the state
 $(i,\{(k,f(m)):(k,m)\in R\})$ of the composite.  Fix a system for
-$\mathcal P$ (Definition~\ref{def:system}) with basis $\mathcal B$.  In the
-\emph{guarded composite}, the store follows each participant: when the
-participant emits $m$ by $\Out{\gamma}{m}$, the store receives $m$ and emits
-$f(m)$.  The environment observes $\mathsf{input}(j)$ and $f(m)$.  We say that
+$\mathcal P$ (Definition~\ref{def:system}) with basis $\mathcal B$, and a
+system for $\mathcal K$ with basis $\mathcal B_{\mathcal K}$.  In the
+\emph{guarded composite}, the store follows $\mathcal P$: when $\mathcal P$
+emits $m$ by $\Out{\gamma}{m}$, the store receives $m$ and emits $f(m)$ by some
+$\Out{\delta}{f(m)}$ with $\delta$ from $\mathcal B_{\mathcal K}$.  A
+\emph{guarded composite run} is a run of $\mathcal P$ under $\mathcal B$
+together with such a run of the store on the outputs $\mathcal P$ emits.  The
+environment observes $\mathsf{input}(j)$ and $f(m)$.  We say that
 $\mathcal P$ \emph{guards} $\mathcal K$, and that $\mathcal K$
 \emph{delegates} commitment to $\mathcal P$.
 
@@ -118,18 +123,24 @@ therefore push forward runs, not commitments.
 
 \begin{definition}[Irredundant Coordination]
 \label{def:irredundant-coordination}
-The guarded composite coordinates \emph{at most once} when every run of
-$\mathcal P$ under $\mathcal B$, with each output $m$ replaced by $f(m)$, is a
-run of $\mathcal K\circ\mathcal P$, and the store's part of it is a run of
-$\mathcal K$ under the empty basis.  It coordinates \emph{at least once} when
-every output event $\Out{\gamma}{m}$ of $\mathcal P$ at a state $\sigma$ such
-that $f(m)$ is not exposable at $f(\sigma)$ has $\gamma\neq\varepsilon$.  It is
+The store coordinates \emph{redundantly} when, in some guarded composite run,
+one of its output events applies a commitment that is contradicted in the
+guarded composite runs (Definition~\ref{def:coordination}).  The guarded
+composite coordinates \emph{at most once} when the store does not coordinate
+redundantly.  It coordinates \emph{at least once} when every output event
+$\Out{\gamma}{m}$ of $\mathcal P$ at a state $\sigma$ such that $f(m)$ is not
+exposable at $f(\sigma)$ has $\gamma\neq\varepsilon$.  It is
 \emph{irredundant} when it coordinates at most once and at least once.
 \end{definition}
 
-At most once says that the store adds no commitment.  At least once says that
-whatever commitment the composite needs, $\mathcal P$ makes.  Both halves are
-needed, since a silent system trivially satisfies the first.
+At most once says that the store adds no coordination of its own.  The
+store's input comes from $\mathcal P$, not from the environment.  A store
+commitment that no guarded run contradicts therefore removes only inputs that
+$\mathcal P$ never feeds the store, and it is not coordination.  At least once
+says that whatever commitment the composite needs, $\mathcal P$ makes.  For
+monotone $f$ it always holds (Theorem~\ref{thm:irredundant-coordination}), so
+it is the necessity half.  Whether a composite is irredundant then depends on
+the store's basis.
 
 \begin{theorem}[Guarded runs]
 \label{thm:guarded-runs}
@@ -139,8 +150,9 @@ Let $f$ be monotone and $\mathcal B$ any basis of $\mathcal P$.
         replaced by $f(m)$, is a run of $\mathcal K\circ\mathcal P$ from the
         same canonical state.  After each event, the composite run's table
         contains the image of $\mathcal P$'s.
-  \item The outputs of such a run form a chain, and the store's run on them
-        is a run of $\mathcal K$ under the empty basis.
+  \item The outputs of such a run form a chain, and a store under the empty
+        basis follows it: its run on them is a run of $\mathcal K$ under the
+        empty basis.
   \item If finitely many runs of $\mathcal P$ can be brought to a common state
         with current input $j$, under any bases, the corresponding composite
         runs are confluent at $j$.
@@ -160,33 +172,59 @@ Appendix~\ref{app:composition}.
 
 \begin{theorem}[Irredundant Coordination]
 \label{thm:irredundant-coordination}
-If $f$ is monotone, the guarded composite is irredundant for every basis of
-$\mathcal P$.  If moreover $\mathcal K\circ\mathcal P$ violates Lifted
-Monotonicity, some output $f(m)$ of the composite is not exposable at a
-canonical state, and $\mathcal P$ must commit to emit any output with that
-image there.
+Let $f$ be monotone and $\mathcal B$ any basis of $\mathcal P$.
+\begin{enumerate}
+  \item Every output of the store is exposable at every state of
+        $\mathcal K$.  So wherever $\Out{\delta}{f(m)}$ is legal,
+        $\Out{\varepsilon}{f(m)}$ is legal too and keeps at least the same rows.
+  \item The guarded composite coordinates at least once, for every basis
+        $\mathcal B_{\mathcal K}$.  It is irredundant when
+        $\mathcal B_{\mathcal K}$ is empty.
+  \item If $\mathcal K\circ\mathcal P$ violates Lifted Monotonicity, some
+        output $f(m)$ of the composite is not exposable at a canonical state,
+        and $\mathcal P$ must commit to emit any output with that image there.
+\end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-At most once is Theorem~\ref{thm:guarded-runs}.  For at least once, suppose
-$\mathcal P$ emits $m$ at $\sigma$ with no commitment, so $m$ is exposable at
-$\sigma$.  A row of $\sigma$ retired to $(k,u)$ maps to a row of $f(\sigma)$
-retired to $(k,f(u))$, so $f(m)$ is exposable at $f(\sigma)$.  When Lifted
-Monotonicity fails, the exposure boundary already fails at a canonical state
+(1) At a state of $\mathcal K$ with current input $m$, every row $(k,f(k))$
+has $m\preceq_M k$, so $f(m)\OutputOrd f(k)$ and nothing is ruled out.  (2)
+For at least once, suppose $\mathcal P$ emits $m$ at $\sigma$ with no
+commitment, so $m$ is exposable at $\sigma$.  A row of $\sigma$ retired to
+$(k,u)$ maps to a row of $f(\sigma)$ retired to $(k,f(u))$, so $f(m)$ is
+exposable at $f(\sigma)$.  A store under the empty basis applies no
+commitment, so none is contradicted.  (3) When Lifted Monotonicity fails, the
+exposure boundary already fails at a canonical state
 (Proposition~\ref{prop:exposure-boundary}), and the image of a canonical state
 is canonical.  Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-The theorem holds for every basis of $\mathcal P$.  Multi-Paxos commits by
-deciding log slots.  A design with per-key mutexes would instead order pairs of
-commands on one key, as 2PL orders pairs of transactions where MVTO stamps
-them (Section~\ref{sec:systems}, Appendix~\ref{app:cc-bases}).  Neither basis
-need match the canonical commitments of the composite, and we need not compare
+By Theorem~\ref{thm:guarded-runs}(2), a store under the empty basis also
+follows every run of $\mathcal P$.  The theorem holds for every basis of
+$\mathcal P$.  Multi-Paxos commits by deciding log slots.  A log built with
+per-key mutexes would instead order pairs of commands on one key, as 2PL
+orders pairs of transactions where MVTO stamps them
+(Section~\ref{sec:systems}, Appendix~\ref{app:cc-bases}).  Neither basis need
+match the canonical commitments of the composite, and we need not compare
 them.
 Every legal output event removes at least the rows its canonical event
 removes (Lemma~\ref{lem:canonical-commitment-normal-form}), so every row that
 the composite must seal or choose against has lost all its preimages to
 $\mathcal P$'s commitments (Appendix~\ref{app:composition}).
+
+Mutexes in the store, behind the log, are another matter.  By
+Theorem~\ref{thm:irredundant-coordination}(1) the store never needs a
+commitment, so each commitment it applies is redundant once some guarded run
+contradicts it.  Consider a store that locks each key, and two writes $a$ and
+$b$ to one key.  If the store takes the lock after the log has placed one of
+them first, every log it can still receive agrees with that order.  The lock
+removes no row, so it is not a commitment.  The locks are still taken, but
+they decide nothing.  Suppose instead that the store grants the lock to $a$ at
+the empty log, ahead of the log, and so seals every log in which $b$ comes
+first.  In another guarded run the log decides $b$ first and feeds the store
+$[b]$, which contradicts the lock.  The lock then repeats coordination that
+the log already does, so the composite is not irredundant
+(Appendix~\ref{app:composition}).
 
 Some of $\mathcal P$'s commitments are invisible to the composite.
 
@@ -217,9 +255,11 @@ entries are incompatible outputs in one fiber.  So is the key-value store
 $\mathcal K\circ\mathcal P$, since concurrent commands ordered oppositely give
 incompatible responses.  Multi-Paxos runs $\mathcal P$ under its own basis,
 deciding one log slot at a time~\cite{schneider1990smr,lamport2001paxos}.  By
-Theorem~\ref{thm:irredundant-coordination}, the store needs no commitment of
-its own, and because the composite is not monotone, the log's commitments
-cannot be dropped.  The replicated store coordinates exactly once.
+Theorems~\ref{thm:guarded-runs} and~\ref{thm:irredundant-coordination}, the
+store needs no commitment of its own, and under the empty basis it follows
+every run of the log.  Because the composite is not monotone, the log's
+commitments cannot be dropped.  The replicated store coordinates exactly
+once.
 \end{example}
 
 A downstream component often has input of its own, not only the output of the
