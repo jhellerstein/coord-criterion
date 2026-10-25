@@ -23,7 +23,10 @@ commitment?  Three mechanisms, and the limit of the third.
      the composite is Lifted-Monotone, and the store that seals `{n ≥ 10}` once
      follows every upstream output sequence and is proper.
 2. **Cancellation by re-ordering `M`.**  The composite's table does not depend
-   on the order of `M` (`reorder_seq`).
+   on the order of `M` (`seq_under`), nor on a re-encoding of `M` that the
+   downstream decodes (`reorder_seq`).  So stages that are Lifted-Monotone
+   under another order on `M` (`seq_liftedMono_reorder`), or after a
+   re-encoding (`seq_liftedMono_reencode`), have a Lifted-Monotone composite.
    * Double complement (`double_complement`): with `⊆` on the middle sets both
      complement stages violate monotonicity and the first can emit, without
      commitment, only the empty set (`compl_exposable_iff`,
@@ -41,7 +44,9 @@ commitment?  Three mechanisms, and the limit of the third.
    * `no_order_counterexample` — in general no partial order on `M` works:
      the composite is Lifted-Monotone (constant) but under every partial order
      on `M` the upstream is not, and its empty-basis system stalls at some
-     canonical state.
+       canonical state.
+     * `merge_needed` — any re-encoding of the middle that makes the upstream
+       of the counterexample monotone merges its two middle values.
 -/
 
 namespace CC
@@ -542,6 +547,15 @@ theorem reorder_seq (sp1 : Spec I M) (sp2 : Spec M O) (e : M → M') (e' : M' �
   · rintro ⟨m, h1, h2⟩
     exact ⟨e m, ⟨m, h1, rfl⟩, by rw [h m]; exact h2⟩
 
+/-- **Lifted Monotonicity through a re-encoding.**  If the re-encoded stages
+`pushOut 𝒮₁ e` and `pullIn 𝒮₂ e'` (with `e' ∘ e = id`) satisfy Lifted
+Monotonicity under the order on `M'`, then so does `𝒮₂ ∘ 𝒮₁`: by Lemma
+`lem:composition` on `M'` and `reorder_seq`. -/
+theorem seq_liftedMono_reencode {sp1 : Spec I M} {sp2 : Spec M O} {e : M → M'} {e' : M' → M}
+    (h : ∀ m, e' (e m) = m) (h1 : (pushOut sp1 e).LiftedMono) (h2 : (pullIn sp2 e').LiftedMono) :
+    (seq sp1 sp2).LiftedMono :=
+  reorder_seq sp1 sp2 e e' h ▸ seq_liftedMono h1 h2
+
 theorem pushOut_graph (f : I → M) (e : M → M') : pushOut (graph f) e = graph (e ∘ f) := by
   apply Spec.ext'
   funext i m'
@@ -552,6 +566,44 @@ theorem pushOut_graph (f : I → M) (e : M → M') : pushOut (graph f) e = graph
 theorem pullIn_graph (g : M → O) (e' : M' → M) : pullIn (graph g) e' = graph (g ∘ e') := rfl
 
 end Reorder
+
+/-! #### Another order on the same middle -/
+
+section ReorderSame
+variable {I M O : Type} [PO I] [PO O]
+
+/-! The given order on `M` is the implicit `instM`; the other order `inst` is
+passed explicitly.  All instance arguments on `M` are written out, since an
+explicit `inst : PO M` would otherwise be picked up by instance resolution. -/
+
+/-- `𝒮₁` with the same table, its outputs ordered by `inst` instead. -/
+def underOut {instM : PO M} (inst : PO M) (sp : @Spec I M _ instM) : @Spec I M _ inst :=
+  @Spec.mk I M _ inst (@Spec.S I M _ instM sp) (@Spec.total I M _ instM sp)
+
+/-- `𝒮₂` with the same table, its inputs ordered by `inst` instead. -/
+def underIn {instM : PO M} (inst : PO M) (sp : @Spec M O instM _) : @Spec M O inst _ :=
+  @Spec.mk M O inst _ (@Spec.S M O instM _ sp) (@Spec.total M O instM _ sp)
+
+/-- **The composite does not depend on the order on `M`.**  The composite of
+the two stages read under `inst` is the composite under the given order
+`instM` (the type `Spec I O` does not mention `M` at all). -/
+theorem seq_under {instM : PO M} (inst : PO M) (sp1 : @Spec I M _ instM)
+    (sp2 : @Spec M O instM _) :
+    @seq I M O _ inst _ (underOut inst sp1) (underIn inst sp2) = @seq I M O _ instM _ sp1 sp2 :=
+  rfl
+
+/-- **Case (3) of `prop:joint-monotone`.**  If, under some partial order
+`inst` on `M` (possibly other than the given `instM`), both stages satisfy
+Lifted Monotonicity, then `𝒮₂ ∘ 𝒮₁` satisfies Lifted Monotonicity under the
+given order: Lemma `lem:composition` under `inst`, and `seq_under`. -/
+theorem seq_liftedMono_reorder {instM : PO M} {sp1 : @Spec I M _ instM}
+    {sp2 : @Spec M O instM _} (inst : PO M)
+    (h1 : @Spec.LiftedMono I M _ inst (underOut inst sp1))
+    (h2 : @Spec.LiftedMono M O inst _ (underIn inst sp2)) :
+    (@seq I M O _ instM _ sp1 sp2).LiftedMono :=
+  seq_under inst sp1 sp2 ▸ @seq_liftedMono I M O _ inst _ _ _ h1 h2
+
+end ReorderSame
 
 /-! #### Double complement -/
 
@@ -783,6 +835,14 @@ theorem no_order_monotone (inst : PO Mid) : ¬ @Monotone C3 Mid _ inst fz := by
   have h1 : @PO.le Mid inst Mid.p Mid.q := h .a .b (show (0 : Nat) ≤ 1 by decide)
   have h2 : @PO.le Mid inst Mid.q Mid.p := h .b .c (show (1 : Nat) ≤ 2 by decide)
   exact absurd (@PO.antisymm Mid inst _ _ h1 h2) (by decide)
+
+/-- **Repair only by merging.**  Any re-encoding `e : Mid → M'` of the middle,
+into any partially ordered `M'`, under which the upstream `e ∘ fz` is monotone
+merges `fz a = p` and `fz b = q`. -/
+theorem merge_needed {M' : Type} (inst : PO M') (e : Mid → M')
+    (h : @Monotone C3 M' _ inst (e ∘ fz)) : e .p = e .q :=
+  @PO.antisymm M' inst _ _ (h .a .b (show (0 : Nat) ≤ 1 by decide))
+    (h .b .c (show (1 : Nat) ≤ 2 by decide))
 
 /-- **No order on the middle makes both stages monotone.**  The composite
 `gz ∘ fz` is Lifted-Monotone (it is constant) whatever the order on `Mid`, yet
