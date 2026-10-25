@@ -209,7 +209,7 @@ theorem «app:composition/reach» {I M O : Type} [PO I] [PO O] :
 table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of the
 test `t(n) = [n < 10]`, whose two outputs are incomparable.  `𝒮₂` violates
 Lifted Monotonicity, since `[9 < 10]` and `[10 < 10]` differ, but it satisfies
-it on `{n ≤ 9}`, so the composite is Lifted-Monotone by (1). … In the guarded composite every input
+it on `{n ≤ 9}`, so the composite is Lifted-Monotone by case (2). … In the guarded composite every input
 that a run of `𝒮₂` accepts or emits at occurs in an output sequence of `𝒮₁`,
 and none is `≥ 10`.  A store commitment that removes rows only at such inputs
 is never contradicted, so the store coordinates at most once.  At least once
@@ -230,7 +230,7 @@ The table of a function `f` has `f(i)` exposable at `σ(i)` exactly when
 `f(i) ≼ f(k)` for all `k ⪰ i`.  For the complement under inclusion this holds
 only for `i = U`, whose complement is `∅`.  So under the empty basis the first
 stage emits only `∅`, at the canonical state of `U`.  Ordered by reverse
-inclusion, the complement is monotone in both stages, and by (2) the composite
+inclusion, the complement is monotone in both stages, and by case (3) the composite
 is the identity in either order."  Lean: `Joint.compl_exposable_iff`,
 `Joint.compl_empty_basis`, `Joint.double_complement`. -/
 theorem «app:composition/double-complement» {U : Type} [Nonempty U] (X : Joint.PSet U) :
@@ -244,7 +244,7 @@ incomparable, and let `f` map both to one value.  The composite `𝒦 ∘ 𝒫` 
 one row, so it satisfies Lifted Monotonicity. … every run of `𝒫` under the
 empty basis stays at the canonical state and emits nothing.  The store then
 receives nothing.  Renaming `x,y` to `lo ≼ hi` makes `𝒫` Lifted-Monotone,
-since `hi` retires `lo`, and by (2) the composite is unchanged."  Lean:
+since `hi` retires `lo`, and by case (3) the composite is unchanged."  Lean:
 `𝒫 = Dist.spU`; the second conjunct of `Guard.composite_monotone_not_enough`
 says such runs emit nothing; `Guard.noBasis_silent` is the run-level form; the
 renaming is `Joint.constant_store_reorder` (on `Comp.anyS`). -/
