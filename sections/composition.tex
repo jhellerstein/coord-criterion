@@ -89,23 +89,19 @@ $9$ and no at $10$.  But the counter never produces $10$, and on the counts
 $0$ through $9$ the test always answers yes.  The downstream need only be
 monotone on the values the upstream can produce.
 
-Third, two stages that are each non-monotone can cancel.  Consider a first
+Third, two stages that are each non-monotone can cancel.  As an example,
+consider a first
 stage that receives a growing set $X$ from a domain $U$ and outputs its complement
-$U\setminus X$, the elements not yet seen, and a second stage that
+$U\setminus X$, and a second stage that
 complements again.  The composite returns $X$, which only grows.  Under the
-usual order on sets, though, each stage is non-monotone.  As $X$ grows, the
-first stage's output shrinks, so without commitment it can emit only the
-empty set.  The remedy lies in the interface between the stages.  The
+usual order on sets, though, each stage is non-monotone. 
+The remedy lies in the interface between the stages.  The
 composite's table never mentions the order on the intermediate domain $M$
 between the stages, so the stages can agree on a different one.  Invert it:
 let $S\preceq_M S'$ exactly when $S'\subseteq S$.
 The first stage's shrinking outputs then form a growing stream of
 updates, the second stage turns each update into a larger set, and both stages
-are monotone.  Likewise, suppose the upstream may output either of two
-incomparable values $a$ and $b$, and the downstream maps both to the same
-answer.  The upstream cannot emit either without choosing.  If the interface
-places $a$ below $b$, the upstream can emit $a$ and later supersede it with
-$b$, and the composite is unchanged.
+are monotone. 
 
 We say that $S_2$ satisfies Lifted Monotonicity \emph{on} a set $D\subseteq M$
 when the common-\indesc condition holds for its rows with inputs in $D$, at
