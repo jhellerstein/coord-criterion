@@ -90,18 +90,16 @@ $0$ through $9$ the test always answers yes.  The downstream need only be
 monotone on the values the upstream can produce.
 
 Third, two stages that are each non-monotone can cancel.  As an example,
-consider a first
-stage that receives a growing set $X$ from a domain $U$ and outputs its complement
-$U\setminus X$, and a second stage that
-complements again.  The composite returns $X$, which only grows.  Under the
-usual order on sets, though, each stage is non-monotone. 
-The remedy lies in the interface between the stages.  The
-composite's table never mentions the order on the intermediate domain $M$
-between the stages, so the stages can agree on a different one.  Invert it:
-let $S\preceq_M S'$ exactly when $S'\subseteq S$.
-The first stage's shrinking outputs then form a growing stream of
-updates, the second stage turns each update into a larger set, and both stages
-are monotone. 
+consider a first stage that receives a growing set $X$ from a domain $U$ and
+outputs its complement $U\setminus X$, and a second stage that complements
+again.  The composite returns $X$, which only grows.  Under the usual order on
+sets, though, each stage is non-monotone.  The remedy lies in the interface
+between the stages.  The composite's table never mentions the order on the
+intermediate domain $M$ between the stages, so the stages can agree on a
+different one.  Invert it: let $S\preceq_M S'$ exactly when $S'\subseteq S$.
+The first stage's shrinking outputs then form a growing stream of updates, the
+second stage turns each update into a larger set, and both stages are
+monotone.
 
 We say that $S_2$ satisfies Lifted Monotonicity \emph{on} a set $D\subseteq M$
 when the common-\indesc condition holds for its rows with inputs in $D$, at
@@ -109,35 +107,36 @@ when the common-\indesc condition holds for its rows with inputs in $D$, at
 
 \begin{proposition}[Jointly monotone composites]
 \label{prop:joint-monotone}
+The composite $S_2\circ S_1$ satisfies Lifted Monotonicity, and so is
+consistent and needs no commitment, in each of the following cases.
 \begin{enumerate}
-  \item If $\Spec_1$ satisfies Lifted Monotonicity and $\Spec_2$ satisfies it
-        on the outputs of $\Spec_1$, then $S_2\circ S_1$ satisfies Lifted
-        Monotonicity.
-  \item Changing the order on $M$ leaves $S_2\circ S_1$ unchanged.  So does
-        re-encoding the intermediate values, provided the downstream can
-        decode them.
-  \item Let $f:I\to M$ and $g:M\to O$ be functions such that $g(f(x))\OutputOrd
-        g(f(y))$ whenever $x\InputOrd y$.  If $g$ is one-to-one (injective),
-        some order on $M$ makes both $f$ and $g$ monotone.
-        Otherwise there may be no such order.
+  \item $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity.
+  \item $\Spec_1$ satisfies Lifted Monotonicity, and $\Spec_2$ satisfies it on
+        the outputs of $\Spec_1$.
+  \item $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity under some order
+        on $M$, possibly other than $\preceq_M$.
 \end{enumerate}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-(1) The proof of Lemma~\ref{lem:composition} uses only intermediate values in
-fibers of $\Spec_1$.  (2) The composite joins the two tables on the
-intermediate value, and decoding recovers it.  (3) Place $a$ below $b$ in $M$
-when $g(a)\OutputOrd g(b)$.  This makes $g$ monotone by construction, and $f$
-monotone because $g(f(\cdot))$ is.  For the last claim, take inputs
-$x\InputOrd y\InputOrd z$ with $f(x)=f(z)\neq f(y)$, and $g$ constant.  Then
-$g(f(\cdot))$ is constant, hence monotone.  An order making $f$ monotone would
-place $f(x)$ below $f(y)$ and $f(y)$ below $f(z)=f(x)$, so $f(x)=f(y)$.  The
-stages can be repaired only by merging $f(x)$ and $f(y)$ into one intermediate
-value.  Full proof in Appendix~\ref{app:composition}.
+(1) is Lemma~\ref{lem:composition}.  (2) The proof of the lemma uses only
+intermediate values in fibers of $\Spec_1$.  (3) The composite joins the two
+tables on the intermediate value and never compares two of them, so its table
+is the same under either order.  Apply the lemma under the other order.  Full
+proof in Appendix~\ref{app:composition}.
 \end{proof}
 
-When none of these applies, some stage must commit.  We ask which one in
-Section~\ref{sec:proper-coordination}.
+The three cases do not cover every monotone composite.  Consider functions
+$f:I\to M$ and $g:M\to O$, and inputs $x\InputOrd y\InputOrd z$ with
+$f(x)=f(z)\neq f(y)$ and $g$ constant.  Then $g(f(\cdot))$ is constant, hence
+monotone.  An order on $M$ making $f$ monotone would place $f(x)$ below $f(y)$
+and $f(y)$ below $f(z)=f(x)$, so no such order exists, and without commitment
+the first stage stalls.  The stages can be repaired only by merging $f(x)$ and
+$f(y)$ into one intermediate value.  When $g$ is one-to-one, case (3) does
+cover every monotone $g(f(\cdot))$ (Appendix~\ref{app:composition}).
+
+When no case applies, some stage may have to commit even though the composite
+is monotone.  We ask which one in Section~\ref{sec:proper-coordination}.
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}

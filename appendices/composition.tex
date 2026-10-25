@@ -122,7 +122,9 @@ specification, at whose states every output is exposable
 empty-basis guard, and by induction no stage of the pipeline commits.
 
 \begin{proof}[Proof of Proposition~\ref{prop:joint-monotone}]
-(1) Let $D$ contain the outputs of $\Spec_1$.  Take rows $(i_r,o_r)$ of $S_2\circ
+(1) is Lemma~\ref{lem:composition}, and also the case $D=M$ of (2).
+
+(2) Let $D$ contain the outputs of $\Spec_1$.  Take rows $(i_r,o_r)$ of $S_2\circ
 S_1$ with a common \indesc $j$, and intermediate values $m_r$ with
 $(i_r,m_r)\in S_1$ and $(m_r,o_r)\in S_2$.  The common-\indesc condition for
 $\Spec_1$ gives $m\in S_1(j)$ that \outrel every $m_r$.  All of $m_r$ and $m$
@@ -130,27 +132,32 @@ lie in $D$, so the condition for $\Spec_2$ on $D$ gives $o\in S_2(m)$ that
 \outrel every $o_r$, and $(j,o)\in S_2\circ S_1$.  No closure property of $D$
 is used.
 
-(2) A re-encoding is a map $e:M\to M'$ together with a decoding
-$e':M'\to M$ that recovers every value, $e'(e(m))=m$.  Changing only the order
-is the case $M'=M$ with $e$ and $e'$ the identity.  Replace $S_1$ by
-$\{(i,e(m)):(i,m)\in S_1\}$ and $S_2$ by $\{(m',o):(e'(m'),o)\in S_2\}$.  A
-join through $e(m)$ is a join through $e'(e(m))=m$, so the composite table is
-unchanged, whatever the orders on $M$ and $M'$.
-
-(3) Place $a$ below $b$ in $M$ when $g(a)\OutputOrd g(b)$.  This relation is
-reflexive and transitive.  It makes $g$ monotone by construction, and $f$
-monotone because $g(f(\cdot))$ is.  Conversely, if some such relation makes
-both monotone, so is $g(f(\cdot))$.  The relation can place two distinct
-values each below the other, so it is an order only when no such pair exists,
-in particular when $g$ maps distinct values to distinct values.  For the last
-claim, let $I$ be the chain $x\InputOrd y\InputOrd z$, $M=\{p,q\}$,
-$f(x)=f(z)=p$, $f(y)=q$, and $g$ constant.  The composite is constant, hence
-monotone.  Under any order on $M$, monotonicity of $f$ gives $p\preceq_M
-q\preceq_M p$, so $p=q$, a contradiction.  By the exposure test for tables of
-functions, $f(i)$ is exposable at $\sigma(i)$ exactly when $f(i)\preceq_M f(k)$
-for every $k\InputGe i$, so the upstream under the empty basis cannot emit at
-one of the canonical states of $x$ and $y$.
+(3) The table $S_2\circ S_1$ of Equation~\ref{eq:spec-composition} mentions
+no order on $M$, and Lifted Monotonicity of the composite uses only the orders
+on $I$ and $O$.  So the composite under $\preceq_M$ is the composite under the
+other order, which satisfies Lifted Monotonicity by (1).  The same holds after
+re-encoding the intermediate values.  A re-encoding is a map $e:M\to M'$
+together with a decoding $e':M'\to M$ that recovers every value,
+$e'(e(m))=m$.  Replace $S_1$ by $\{(i,e(m)):(i,m)\in S_1\}$ and $S_2$ by
+$\{(m',o):(e'(m'),o)\in S_2\}$.  A join through $e(m)$ is a join through
+$e'(e(m))=m$, so the composite table is unchanged, whatever the orders on $M$
+and $M'$.
 \end{proof}
+
+\paragraph{The reach of case (3).}  Let $f:I\to M$ and $g:M\to O$ be
+functions with $g(f(\cdot))$ monotone.  Place $a$ below $b$ in $M$ when
+$g(a)\OutputOrd g(b)$.  This relation is reflexive and transitive.  It makes
+$g$ monotone by construction, and $f$ monotone because $g(f(\cdot))$ is.  It
+can place two distinct values each below the other, so it is an order only
+when no such pair exists, in particular when $g$ maps distinct values to
+distinct values.  Then case (3) applies.  In general it need not.  Let $I$ be
+the chain $x\InputOrd y\InputOrd z$, $M=\{p,q\}$, $f(x)=f(z)=p$, $f(y)=q$, and
+$g$ constant.  The composite is constant, hence monotone.  Under any order on
+$M$, monotonicity of $f$ gives $p\preceq_M q\preceq_M p$, so $p=q$, a
+contradiction.  By the exposure test for tables of functions, $f(i)$ is
+exposable at $\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every
+$k\InputGe i$, so the upstream under the empty basis cannot emit at one of the
+canonical states of $x$ and $y$.
 
 For the capped counter of Section~\ref{sec:composite-calm}, let $\mathcal S_1$
 be the table of the function $c(n)=\min(n,9)$ on $(\mathbb N,\le)$ and
