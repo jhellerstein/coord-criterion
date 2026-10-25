@@ -32,10 +32,12 @@ waits, timestamp issue, reads, when the scheduler aborts; Appendix G); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
 al., Zinn et al., and Baccaert and Ketsman, which input order a placement
 model justifies, and their notion of coordination; for Baccaert and Ketsman
-also their notion of computing a behavior, that a fact enters only at its own
-node, that their spanning-tree behavior is node monotone, and that spanning
-trees meet the hypotheses of the overlapping-networks lemma; Lean checks only
-the mapping of their monotonicity conditions into our frame); and the
+also their notion of computing a behavior, that a node without the list of
+all nodes may be the whole network and must emit, that their construction
+waits until a group confirms its members and that groups sharing a node are
+nested, that the group's choice is coordination but not distributed
+coordination, and that the list and an order on nodes compute every behavior;
+Lean checks only the mapping of their conditions into our frame); and the
 design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
@@ -104,7 +106,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-579 entries.
+580 entries.
 
 ### §2 Functional CALM
 
@@ -350,7 +352,8 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:query-instance/weaker-monotonicity»` | theorem | Sec. |
 | `«sec:query-instance/one-fact-version»` | theorem | Sec. |
 | `«sec:query-instance/node-monotonicity»` | theorem | Sec. |
-| `«sec:query-instance/overlapping-networks»` | theorem | Sec. |
+| `«sec:query-instance/all-nodes»` | theorem | Sec. |
+| `«sec:query-instance/pairing»` | theorem | Sec. |
 | `«sec:query-instance/deterministic-behaviors»` | theorem | Sec. |
 | `«sec:crdt-instance/state-function»` | theorem | Sec. |
 | `«sec:crdt-instance/state-monotone»` | theorem | Sec. |

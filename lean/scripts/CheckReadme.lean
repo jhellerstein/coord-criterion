@@ -206,7 +206,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:query-instance/weaker-monotonicity»
 #check @CC.Paper.«sec:query-instance/one-fact-version»
 #check @CC.Paper.«sec:query-instance/node-monotonicity»
-#check @CC.Paper.«sec:query-instance/overlapping-networks»
+#check @CC.Paper.«sec:query-instance/all-nodes»
+#check @CC.Paper.«sec:query-instance/pairing»
 #check @CC.Paper.«sec:query-instance/deterministic-behaviors»
 #check @CC.Paper.«sec:crdt-instance/state-function»
 #check @CC.Paper.«sec:crdt-instance/state-monotone»

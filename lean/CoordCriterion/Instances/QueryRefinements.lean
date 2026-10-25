@@ -35,10 +35,18 @@ the mapping into our frame.
   (`nodeMono_iff_disjointPair`), so consistency implies it
   (`nodeMono_of_consistent`).  Choice alone does not separate the two: the
   node-monotone `pick` has a non-directed fiber, yet `pick` is consistent on
-  the total sub-behavior `pickTrue`.  Overlapping networks do: for
-  spanning-tree behaviors no total sub-behavior is consistent
-  (`no_consistentOn_of_triangle`), and the node-monotone `tree` is one
-  (`tree_nodeMono`, `tree_no_consistentOn`).  For functional behaviors node
+  the total sub-behavior `pickTrue`.  Overlapping networks do: the
+  node-monotone `pairing` has no total sub-behavior on which it is consistent
+  (`pairing_nodeMono`, `pairing_no_consistentOn`), and neither does the
+  spanning-tree behavior `tree` (`no_consistentOn_of_triangle`,
+  `tree_nodeMono`, `tree_no_consistentOn`).  The `tree` obstruction relies on
+  one participant emitting another node's parent; with each node emitting
+  only its own located facts it disappears (prose), while the `pairing` one
+  does not, since its two rows bind node `1` from nodes `0` and `2`.  With
+  the list of all nodes in the input (`AllInp`), complete views are maximal
+  and any functional choice there is consistent (`allInp_complete_maximal`,
+  `consistentOn_of_maximal`); the star at the least member is one for
+  spanning trees (`treeAll_star`).  For functional behaviors node
   monotonicity and consistency coincide (`nodeMono_graph_iff`).
 
 Modeling choices.  Instances are `PSet F` (predicates under inclusion, as in
@@ -582,6 +590,326 @@ theorem tree_no_consistentOn (A : Table (ExtInp (netAdm (id : Nat → Nat))) (PS
   no_consistentOn_of_triangle tree tree_pair tree_triangle A hA hsub
 
 end Tree
+
+/-! ### With a list of all nodes
+
+Baccaert and Ketsman's `All` constraint gives every node the list of all
+nodes.  We model it by putting the membership `mem` into the input, beside
+the nodes heard from so far (`view ⊆ mem`).  An input then expands another
+only when the membership is the same, so an input whose view is the whole
+membership is maximal: a node that has heard from every member has nothing
+left to wait for.  Any functional choice at maximal inputs is consistent
+(`consistentOn_of_maximal`, `allInp_complete_maximal`), and so is any choice
+that depends only on the membership (`consistentOn_of_membership`,
+`graph_membership_consistent`).  For spanning trees of the membership, the
+star centred at the least member is such a choice (`treeAll_star`), so the
+overlapping-networks obstruction for `tree` disappears. -/
+
+section WithAll
+
+/-- Inputs with the list of all nodes: the membership `mem` and the nodes
+heard from so far, `view ⊆ mem`. -/
+structure AllInp where
+  mem : PSet Nat
+  view : PSet Nat
+  sub : view ≼ mem
+
+/-- An input expands another when the membership is the same and the view
+grows. -/
+instance : PO AllInp where
+  le i j := i.mem = j.mem ∧ i.view ≼ j.view
+  refl _ := ⟨rfl, PO.refl _⟩
+  trans h₁ h₂ := ⟨h₁.1.trans h₂.1, PO.trans h₁.2 h₂.2⟩
+  antisymm {i j} h₁ h₂ := by
+    cases i with
+    | mk m v s =>
+      cases j with
+      | mk m' v' s' =>
+        have hm : m = m' := h₁.1
+        have hv : v = v' := PO.antisymm h₁.2 h₂.2
+        subst hm; subst hv; rfl
+
+/-- A view is complete when it is the whole membership. -/
+def AllInp.Complete (i : AllInp) : Prop := i.mem ≼ i.view
+
+/-- Complete inputs are maximal. -/
+theorem allInp_complete_maximal {i j : AllInp} (hc : i.Complete) (h : i ≼ j) : i = j := by
+  have hv : j.view ≼ i.view := fun x hx => hc x ((show i.mem = j.mem from h.1) ▸ j.sub x hx)
+  exact PO.antisymm h ⟨h.1.symm, hv⟩
+
+/-- A functional choice at maximal inputs is consistent: rows with a common
+expansion are all at that expansion. -/
+theorem consistentOn_of_maximal {I O : Type} [PO I] [PO O] (B : Spec I O) (A : Table I O)
+    (hsub : ∀ i o, A i o → B.S i o) (hmax : ∀ i o j, A i o → i ≼ j → i = j)
+    (hfun : ∀ i o o', A i o → A i o' → o = o') : CAP.ConsistentOn B A := by
+  intro rows hrows j hj
+  cases rows with
+  | nil =>
+    obtain ⟨u, hu⟩ := B.total j
+    exact ⟨u, hu, fun _ h => by simp at h⟩
+  | cons r₀ rest =>
+    have h₀ := hrows r₀ (List.mem_cons_self ..)
+    have e₀ : r₀.1 = j := hmax _ _ _ h₀ (hj r₀ (List.mem_cons_self ..))
+    refine ⟨r₀.2, e₀ ▸ hsub _ _ h₀, fun r hr => ?_⟩
+    have e : r.1 = j := hmax _ _ _ (hrows r hr) (hj r hr)
+    have hr' : A r₀.1 r.2 := e₀ ▸ e ▸ hrows r hr
+    rw [hfun _ _ _ hr' h₀]
+    exact PO.refl _
+
+/-- A choice that depends only on the membership is consistent. -/
+theorem consistentOn_of_membership {O : Type} [PO O] (B : Spec AllInp O) (f : PSet Nat → O)
+    (hf : ∀ i, B.S i (f i.mem)) : CAP.ConsistentOn B (fun i K => K = f i.mem) := by
+  intro rows hrows j hj
+  refine ⟨f j.mem, hf j, fun r hr => ?_⟩
+  rw [hrows r hr, (hj r hr).1]
+  exact PO.refl _
+
+/-- As a specification, such a choice is functional and monotone, hence
+consistent (Functional CALM). -/
+theorem graph_membership_consistent {O : Type} [PO O] (f : PSet Nat → O) :
+    (graph (fun i : AllInp => f i.mem)).Consistent := by
+  rw [functional_calm (Inst.graph_functional _), Inst.graph_monotoneF_iff]
+  intro i j h
+  show f i.mem ≼ f j.mem
+  rw [h.1]
+  exact PO.refl _
+
+/-- Spanning trees of the whole membership, at every view. -/
+def treeAll : Spec AllInp (PSet (Nat × Nat)) where
+  S i K := tree.S (net i.mem.mem) K
+  total _ := tree.total _
+
+/-- The star centred at the least member. -/
+def star (M : PSet Nat) : PSet (Nat × Nat) := ⟨fun p => M.mem p.1 ∧ IsMin M p.2 ∧ p.2 < p.1⟩
+
+theorem star_tree (M : PSet Nat) : tree.S (net M.mem) (star M) :=
+  ⟨fun _ _ h => ⟨h.1, h.2.1.1, h.2.2⟩,
+    fun _ _ _ h h' => isMin_unique h.2.1 h'.2.1,
+    fun _ z hx hz hlt =>
+      let ⟨m, hm⟩ := exists_isMin (H := M) z hz
+      ⟨m, hx, hm, Nat.lt_of_le_of_lt (hm.2 z hz) hlt⟩⟩
+
+/-- With the list of all nodes, the star is a total sub-behavior of the
+spanning trees, the behavior is consistent on it, and as a specification it
+is consistent. -/
+theorem treeAll_star :
+    (∀ i, treeAll.S i (star i.mem)) ∧
+      CAP.ConsistentOn treeAll (fun i K => K = star i.mem) ∧
+      (graph (fun i : AllInp => star i.mem)).Consistent :=
+  ⟨fun i => star_tree i.mem, consistentOn_of_membership treeAll star (fun i => star_tree i.mem),
+    graph_membership_consistent star⟩
+
+end WithAll
+
+/-! ### Pairing: node monotone, with no consistent sub-behavior
+
+Nodes pair off, symmetrically, and on a finite network at most one node is
+left unpaired.  The behavior is node monotone (`pairing_nodeMono`): across
+two disjoint finite networks, the two leftover nodes pair with each other.
+Yet every output at a two-node network `{a,b}` pairs `a` with `b`
+(`pairing_pair`), so any total sub-behavior pairs `1` with `0` at `{0,1}` and
+with `2` at `{1,2}`, and no output at `{0,1,2}` does both
+(`pairing_no_consistentOn`).  The obstruction needs only two rows, and the
+two pairs are emitted by different nodes (`0` and `2`), so it does not depend
+on which node emits which located facts. -/
+
+section Pairing
+
+/-- `x` is paired in `K`. -/
+def Paired (K : PSet (Nat × Nat)) (x : Nat) : Prop := ∃ y, K.mem (x, y)
+
+/-- `H` is finite. -/
+def FinSet (H : PSet Nat) : Prop := ∃ n, ∀ x, H.mem x → x < n
+
+/-- Symmetric pairs of distinct nodes of `H`, each node paired at most once. -/
+def IsPairing (H : PSet Nat) (K : PSet (Nat × Nat)) : Prop :=
+  (∀ x y, K.mem (x, y) → H.mem x ∧ H.mem y ∧ x ≠ y) ∧
+    (∀ x y, K.mem (x, y) → K.mem (y, x)) ∧
+    (∀ x y y', K.mem (x, y) → K.mem (x, y') → y = y')
+
+/-- At most one node of `H` is unpaired. -/
+def NearPerfect (H : PSet Nat) (K : PSet (Nat × Nat)) : Prop :=
+  ∀ x z, H.mem x → H.mem z → x ≠ z → Paired K x ∨ Paired K z
+
+theorem exists_pairing : ∀ (n : Nat) (H : PSet Nat), (∀ x, H.mem x → x < n) →
+    ∃ K, IsPairing H K ∧ NearPerfect H K := by
+  intro n
+  induction n with
+  | zero =>
+    intro H hH
+    exact ⟨⟨fun _ => False⟩, ⟨fun _ _ h => h.elim, fun _ _ h => h.elim, fun _ _ _ h => h.elim⟩,
+      fun x _ hx _ _ => absurd (hH x hx) (Nat.not_lt_zero _)⟩
+  | succ n ih =>
+    intro H hH
+    let H' : PSet Nat := ⟨fun x => H.mem x ∧ x < n⟩
+    obtain ⟨K', ⟨l', s', u'⟩, np'⟩ := ih H' fun _ h => h.2
+    have below : ∀ x, H.mem x → x ≠ n → H'.mem x := fun x hx hne =>
+      ⟨hx, Nat.lt_of_le_of_ne (Nat.le_of_lt_succ (hH x hx)) hne⟩
+    have nK : ∀ y, ¬ K'.mem (n, y) := fun y h => Nat.lt_irrefl _ (l' _ _ h).1.2
+    by_cases hn : H.mem n
+    · by_cases hu : ∃ w, H'.mem w ∧ ¬ Paired K' w
+      · obtain ⟨w, hw, hwu⟩ := hu
+        let K : PSet (Nat × Nat) := ⟨fun p => K'.mem p ∨ p = (n, w) ∨ p = (w, n)⟩
+        refine ⟨K, ⟨?_, ?_, ?_⟩, ?_⟩
+        · intro x y h
+          rcases h with h | h | h
+          · exact ⟨(l' _ _ h).1.1, (l' _ _ h).2.1.1, (l' _ _ h).2.2⟩
+          · cases h; exact ⟨hn, hw.1, fun e => Nat.lt_irrefl _ (e ▸ hw.2)⟩
+          · cases h; exact ⟨hw.1, hn, fun e => Nat.lt_irrefl _ (e ▸ hw.2)⟩
+        · intro x y h
+          rcases h with h | h | h
+          · exact Or.inl (s' _ _ h)
+          · cases h; exact Or.inr (Or.inr rfl)
+          · cases h; exact Or.inr (Or.inl rfl)
+        · intro x y y' h h'
+          rcases h with h | h | h <;> rcases h' with h' | h' | h'
+          · exact u' _ _ _ h h'
+          · cases h'; exact (nK _ h).elim
+          · cases h'; exact (hwu ⟨_, h⟩).elim
+          · cases h; exact (nK _ h').elim
+          · cases h; cases h'; rfl
+          · cases h; cases h'; exact absurd hw.2 (Nat.lt_irrefl _)
+          · cases h; exact (hwu ⟨_, h'⟩).elim
+          · cases h; cases h'; exact absurd hw.2 (Nat.lt_irrefl _)
+          · cases h; cases h'; rfl
+        · intro x z hx hz hxz
+          by_cases ex : x = n
+          · subst ex; exact Or.inl ⟨w, Or.inr (Or.inl rfl)⟩
+          · by_cases ez : z = n
+            · subst ez; exact Or.inr ⟨w, Or.inr (Or.inl rfl)⟩
+            · rcases np' x z (below x hx ex) (below z hz ez) hxz with ⟨y, hy⟩ | ⟨y, hy⟩
+              · exact Or.inl ⟨y, Or.inl hy⟩
+              · exact Or.inr ⟨y, Or.inl hy⟩
+      · refine ⟨K', ⟨fun x y h => ⟨(l' _ _ h).1.1, (l' _ _ h).2.1.1, (l' _ _ h).2.2⟩, s', u'⟩, ?_⟩
+        have all : ∀ w, H'.mem w → Paired K' w := fun w hw =>
+          Classical.byContradiction fun h => hu ⟨w, hw, h⟩
+        intro x z hx hz hxz
+        by_cases ex : x = n
+        · subst ex; exact Or.inr (all z (below z hz (Ne.symm hxz)))
+        · exact Or.inl (all x (below x hx ex))
+    · refine ⟨K', ⟨fun x y h => ⟨(l' _ _ h).1.1, (l' _ _ h).2.1.1, (l' _ _ h).2.2⟩, s', u'⟩, ?_⟩
+      intro x z hx hz hxz
+      exact np' x z (below x hx fun e => hn (e ▸ hx)) (below z hz fun e => hn (e ▸ hz)) hxz
+
+/-- The pairing behavior. -/
+def pairing : Spec (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)) where
+  S H K := IsPairing H.set K ∧ (FinSet H.set → NearPerfect H.set K)
+  total H := by
+    by_cases hf : FinSet H.set
+    · obtain ⟨n, hn⟩ := hf
+      obtain ⟨K, hK, hnp⟩ := exists_pairing n H.set hn
+      exact ⟨K, hK, fun _ => hnp⟩
+    · exact ⟨⟨fun _ => False⟩, ⟨fun _ _ h => h.elim, fun _ _ h => h.elim, fun _ _ _ h => h.elim⟩,
+        fun h => absurd h hf⟩
+
+theorem finSet_mono {H H' : PSet Nat} (h : H ≼ H') : FinSet H' → FinSet H :=
+  fun ⟨n, hn⟩ => ⟨n, fun x hx => hn x (h x hx)⟩
+
+theorem pairing_nodeMono : NodeMono id pairing := by
+  intro H₁ H₂ hd K₁ K₂ ⟨⟨l₁, s₁, u₁⟩, n₁⟩ ⟨⟨l₂, s₂, u₂⟩, n₂⟩
+  have hd' : ∀ x, H₁.mem x → H₂.mem x → False := fun x a b => hd x ⟨x, a, rfl⟩ ⟨x, b, rfl⟩
+  -- the leftover nodes pair across, when both networks are finite
+  let C : Nat × Nat → Prop := fun p => FinSet H₁ ∧ FinSet H₂ ∧
+    ((H₁.mem p.1 ∧ ¬ Paired K₁ p.1 ∧ H₂.mem p.2 ∧ ¬ Paired K₂ p.2) ∨
+      (H₂.mem p.1 ∧ ¬ Paired K₂ p.1 ∧ H₁.mem p.2 ∧ ¬ Paired K₁ p.2))
+  let K : PSet (Nat × Nat) := ⟨fun p => K₁.mem p ∨ K₂.mem p ∨ C p⟩
+  -- at most one leftover node on each side
+  have one₁ : FinSet H₁ → ∀ y y', H₁.mem y → ¬ Paired K₁ y → H₁.mem y' → ¬ Paired K₁ y' → y = y' :=
+    fun hf y y' hy py hy' py' => Classical.byContradiction fun hne =>
+      (n₁ hf y y' hy hy' hne).elim py py'
+  have one₂ : FinSet H₂ → ∀ y y', H₂.mem y → ¬ Paired K₂ y → H₂.mem y' → ¬ Paired K₂ y' → y = y' :=
+    fun hf y y' hy py hy' py' => Classical.byContradiction fun hne =>
+      (n₂ hf y y' hy hy' hne).elim py py'
+  refine ⟨K, ⟨⟨?_, ?_, ?_⟩, ?_⟩, fun _ h => Or.inl h, fun _ h => Or.inr (Or.inl h)⟩
+  · intro x y h
+    rcases h with h | h | ⟨_, _, ⟨a, _, b, _⟩ | ⟨a, _, b, _⟩⟩
+    · exact ⟨Or.inl (l₁ _ _ h).1, Or.inl (l₁ _ _ h).2.1, (l₁ _ _ h).2.2⟩
+    · exact ⟨Or.inr (l₂ _ _ h).1, Or.inr (l₂ _ _ h).2.1, (l₂ _ _ h).2.2⟩
+    · exact ⟨Or.inl a, Or.inr b, fun e => hd' x a (e ▸ b)⟩
+    · exact ⟨Or.inr a, Or.inl b, fun e => hd' y b (e ▸ a)⟩
+  · intro x y h
+    rcases h with h | h | ⟨f₁, f₂, ⟨a, pa, b, pb⟩ | ⟨a, pa, b, pb⟩⟩
+    · exact Or.inl (s₁ _ _ h)
+    · exact Or.inr (Or.inl (s₂ _ _ h))
+    · exact Or.inr (Or.inr ⟨f₁, f₂, Or.inr ⟨b, pb, a, pa⟩⟩)
+    · exact Or.inr (Or.inr ⟨f₁, f₂, Or.inl ⟨b, pb, a, pa⟩⟩)
+  · intro x y y' h h'
+    rcases h with h | h | ⟨f₁, f₂, ⟨a, pa, b, _⟩ | ⟨a, pa, b, _⟩⟩ <;>
+      rcases h' with h' | h' | ⟨_, _, ⟨a', pa', b', _⟩ | ⟨a', pa', b', _⟩⟩
+    · exact u₁ _ _ _ h h'
+    · exact (hd' x (l₁ _ _ h).1 (l₂ _ _ h').1).elim
+    · exact (pa' ⟨_, h⟩).elim
+    · exact (hd' x (l₁ _ _ h).1 a').elim
+    · exact (hd' x (l₁ _ _ h').1 (l₂ _ _ h).1).elim
+    · exact u₂ _ _ _ h h'
+    · exact (hd' x a' (l₂ _ _ h).1).elim
+    · exact (pa' ⟨_, h⟩).elim
+    · exact (pa ⟨_, h'⟩).elim
+    · exact (hd' x a (l₂ _ _ h').1).elim
+    · exact one₂ f₂ _ _ b ‹_› b' ‹_›
+    · exact (hd' x a a').elim
+    · exact (hd' x (l₁ _ _ h').1 a).elim
+    · exact (pa ⟨_, h'⟩).elim
+    · exact (hd' x a' a).elim
+    · exact one₁ f₁ _ _ b ‹_› b' ‹_›
+  · intro hf x z hx hz hxz
+    have f₁ : FinSet H₁ := finSet_mono (fun _ h => Or.inl h) hf
+    have f₂ : FinSet H₂ := finSet_mono (fun _ h => Or.inr h) hf
+    have lift₁ : ∀ w, Paired K₁ w → Paired K w := fun _ ⟨y, hy⟩ => ⟨y, Or.inl hy⟩
+    have lift₂ : ∀ w, Paired K₂ w → Paired K w := fun _ ⟨y, hy⟩ => ⟨y, Or.inr (Or.inl hy)⟩
+    rcases hx with hx | hx <;> rcases hz with hz | hz
+    · exact (n₁ f₁ x z hx hz hxz).elim (Or.inl ∘ lift₁ _) (Or.inr ∘ lift₁ _)
+    · by_cases px : Paired K₁ x
+      · exact Or.inl (lift₁ _ px)
+      · by_cases pz : Paired K₂ z
+        · exact Or.inr (lift₂ _ pz)
+        · exact Or.inl ⟨z, Or.inr (Or.inr ⟨f₁, f₂, Or.inl ⟨hx, px, hz, pz⟩⟩)⟩
+    · by_cases px : Paired K₂ x
+      · exact Or.inl (lift₂ _ px)
+      · by_cases pz : Paired K₁ z
+        · exact Or.inr (lift₁ _ pz)
+        · exact Or.inl ⟨z, Or.inr (Or.inr ⟨f₁, f₂, Or.inr ⟨hx, px, hz, pz⟩⟩)⟩
+    · exact (n₂ f₂ x z hx hz hxz).elim (Or.inl ∘ lift₂ _) (Or.inr ∘ lift₂ _)
+
+/-- Every output at a two-node network pairs its nodes. -/
+theorem pairing_pair : ∀ a b K, a ≠ b → pairing.S (net fun x => x = a ∨ x = b) K → K.mem (a, b) := by
+  intro a b K hab ⟨⟨l, s, _⟩, np⟩
+  have fin : FinSet (net fun x => x = a ∨ x = b).set :=
+    ⟨a + b + 1, fun x (hx : x = a ∨ x = b) => by rcases hx with rfl | rfl <;> omega⟩
+  rcases np fin a b (Or.inl rfl) (Or.inr rfl) hab with ⟨y, hy⟩ | ⟨y, hy⟩
+  · obtain ⟨_, hy', hne⟩ := l _ _ hy
+    rcases (hy' : y = a ∨ y = b) with rfl | rfl
+    · exact absurd rfl hne
+    · exact hy
+  · obtain ⟨_, hy', hne⟩ := l _ _ hy
+    rcases (hy' : y = a ∨ y = b) with rfl | rfl
+    · exact s _ _ hy
+    · exact absurd rfl hne
+
+/-- No total sub-behavior of `pairing` has `pairing` consistent on it. -/
+theorem pairing_no_consistentOn (A : Table (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)))
+    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → pairing.S H K) :
+    ¬ CAP.ConsistentOn pairing A := by
+  intro hc
+  let H₀₁ := net fun x => x = 0 ∨ x = 1
+  let H₁₂ := net fun x => x = 1 ∨ x = 2
+  let J := net fun x => x = 0 ∨ x = 1 ∨ x = 2
+  obtain ⟨K₀₁, h₀₁⟩ := hA H₀₁
+  obtain ⟨K₁₂, h₁₂⟩ := hA H₁₂
+  have m₁ : (H₀₁, K₀₁) ∈ [(H₀₁, K₀₁), (H₁₂, K₁₂)] := List.mem_cons_self ..
+  have m₂ : (H₁₂, K₁₂) ∈ [(H₀₁, K₀₁), (H₁₂, K₁₂)] := List.mem_cons_of_mem _ (List.mem_cons_self ..)
+  have cases : ∀ r ∈ [(H₀₁, K₀₁), (H₁₂, K₁₂)], r = (H₀₁, K₀₁) ∨ r = (H₁₂, K₁₂) := by
+    intro r hr; simpa using hr
+  obtain ⟨u, ⟨⟨_, su, uu⟩, _⟩, hall⟩ := hc [(H₀₁, K₀₁), (H₁₂, K₁₂)]
+    (fun r hr => by rcases cases r hr with rfl | rfl <;> assumption) J
+    (fun r hr => by
+      rcases cases r hr with rfl | rfl <;>
+        exact net_le fun x (hx : _ ∨ _) => show _ ∨ _ ∨ _ by omega)
+  have e₀₁ : u.mem (0, 1) := hall _ m₁ _ (pairing_pair 0 1 _ (by decide) (hsub _ _ h₀₁))
+  have e₁₂ : u.mem (1, 2) := hall _ m₂ _ (pairing_pair 1 2 _ (by decide) (hsub _ _ h₁₂))
+  exact absurd (uu _ _ _ (su _ _ e₀₁) e₁₂) (by decide)
+
+end Pairing
 
 end QRef
 end CC

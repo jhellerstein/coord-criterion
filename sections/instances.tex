@@ -36,26 +36,23 @@ domain-disjoint $J$.  When the order lets $I\cup J$ \inrelbase $I$ only for
 such $J$, each condition is functional monotonicity.  The placement model
 justifies that order.  Functional CALM takes the order as given.
 
-Baccaert and Ketsman go beyond
-queries~\cite{baccaert2023dcbq,baccaert2026spectrum}.  Their
-\emph{behaviors} map an input of facts located at nodes to a set of permitted
-located outputs.  The network is the set of nodes that hold input, so
-membership is part of the input.  With outputs ordered by inclusion, and an
-input \inrelpart another when it adds facts only at new nodes, a behavior is a
-relational specification.  A transducer computes a behavior when every run
-ends at a permitted output, so it may implement a sub-behavior $A$.  It is
-coordination-free when it needs no list of all nodes, which would seal the
-network.  The comparison is therefore with Complete CAP for an availability
-relation $A$ (Theorem~\ref{thm:complete-cap}).  Their characterization asks
-that some $A$ be \emph{node monotone}: the common-\indesc condition on $A$,
-asked only of two rows at disjoint networks.  Complete CAP also asks it of
-overlapping networks, since our environment may deliver any input to any
-participant.  In their model a fact enters only at its own node, and a
-subnetwork agrees on its members before its smallest node chooses.  Their
-spanning-tree behavior shows the difference.  It is node monotone, yet every
-sub-behavior has the edge $ab$ at network $\{a,b\}$, and no tree on
-$\{a,b,c\}$ has all three such edges.  For deterministic behaviors the two
-conditions coincide.
+Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
+permitted located outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}.  Under
+inclusion of outputs, with inputs \inrelpart only by facts at new nodes, a
+behavior is a relational specification.  A transducer computes a behavior if
+every fair run ends at a permitted output, thus implementing a sub-behavior
+$A$.  A list of all nodes lets nodes wait for everyone and choose
+consistently.  Without it, isolated nodes may be the whole network and must
+emit.  Their characterization, \emph{node monotonicity} of $A$, is the
+common-\indesc condition on $A$ for two rows at disjoint networks.  Complete
+CAP extends it to overlapping networks, since Availability lets no participant
+wait.  Delays are finite, so their construction waits: a group's smallest node
+chooses once every member confirms the group.  Groups sharing a node are
+nested, so the choice is coordination, but not distributed
+(Definition~\ref{def:coordination}).  Pairing off nodes, leaving at most one
+unpaired, is node monotone, yet every $A$ pairs $b$ with $a$ at $\{a,b\}$ and
+with $c$ at $\{b,c\}$.  For deterministic behaviors the two conditions
+coincide.
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}

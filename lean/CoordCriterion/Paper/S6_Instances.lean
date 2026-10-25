@@ -91,19 +91,20 @@ theorem «sec:query-instance/one-fact-version» :
       ¬ QRef.DistinctMono QRef.edgeVals QRef.noCycle2 :=
   ⟨QRef.noCycle2_oneFact, QRef.noCycle2_not_disjointMono, QRef.noCycle2_not_distinctMono⟩
 
-/-- Sec. `sec:query-instance`: "The network is the set of nodes that hold
-input, so membership is part of the input.  With outputs ordered by inclusion,
-and an input expanding another when it adds facts only at new nodes, a
-behavior is a relational specification. … Their characterization asks that
-some `A` be node monotone: the common-expansion condition on `A`, asked only
-of two rows at disjoint networks."  Lean: inputs are `ExtInp (netAdm loc)`
-(located facts, network expansion, so the network `Netw loc H` is read off
-the input) and a behavior is any `Spec` on them.  Node monotonicity is
-equivalent to the common-expansion condition for two rows at disjoint
-networks and any common expansion `j` (`QRef.DisjointPairExpansion`); the full
-common-expansion condition (Lifted Monotonicity) implies it.  The transducer
-model, its notion of computing a behavior, and its characterization theorem
-(Inf. Syst. 2026, Def. 4, Def. 6, Thm. 5) are cited, not formalized. -/
+/-- Sec. `sec:query-instance`: "Under inclusion of outputs, with inputs
+expanding only by facts at new nodes, a behavior is a relational
+specification.  A transducer computes a behavior if every fair run ends at a
+permitted output, thus implementing a sub-behavior `A`. … Their
+characterization, node monotonicity of `A`, is the common-expansion condition
+on `A` for two rows at disjoint networks.  Complete CAP extends it to
+overlapping networks"  Lean: inputs are `ExtInp (netAdm loc)` (located facts,
+network expansion, so the network `Netw loc H` is read off the input) and a
+behavior is any `Spec` on them.  Node monotonicity is equivalent to the
+common-expansion condition for two rows at disjoint networks and any common
+expansion `j` (`QRef.DisjointPairExpansion`); the full common-expansion
+condition implies it.  The transducer model, its notion of computing a
+behavior (Inf. Syst. 2026, Def. 4, Lemma 4), and its characterization theorem
+(Def. 6, Thm. 5) are cited, not formalized. -/
 theorem «sec:query-instance/node-monotonicity» {F N G : Type} (loc : F → N)
     (B : Spec (QRef.ExtInp (QRef.netAdm loc)) (CALM.PSet G)) :
     (QRef.NodeMono loc B ↔ QRef.DisjointPairExpansion loc B) ∧
@@ -111,30 +112,45 @@ theorem «sec:query-instance/node-monotonicity» {F N G : Type} (loc : F → N)
   ⟨QRef.nodeMono_iff_disjointPair loc B,
     fun h => QRef.nodeMono_of_consistent loc ((complete_calm_commonExpansion B).2 h)⟩
 
-/-- Sec. `sec:query-instance`: "Complete CAP also asks it of overlapping
-networks … Their spanning-tree behavior shows the difference.  It is node
-monotone, yet every sub-behavior has the edge `ab` at network `{a,b}`, and no
-tree on `{a,b,c}` has all three such edges."  Lean, with node names as input
-(`loc = id`, inputs `QRef.net P`): first, for any behavior whose outputs at
-every two-node network link its nodes and whose outputs at `{0,1,2}` never
-link all three pairs, no total sub-behavior `A` has the behavior consistent
-on `A` (`CAP.ConsistentOn`, the condition of Theorem `thm:complete-cap`).
-Spanning trees meet both hypotheses (prose).  Second, `QRef.tree`, the
-spanning trees whose parents are smaller than their children, is a concrete
-such behavior, and it is node monotone.  That `Top_span` is node monotone is
-Baccaert and Ketsman's Example 8; their facts entering only at their own node
-and their transducers' subnetwork agreement are cited, not formalized. -/
-theorem «sec:query-instance/overlapping-networks» :
-    (∀ (B : Spec (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat))),
-      (∀ a b K, a ≠ b → B.S (QRef.net fun x => x = a ∨ x = b) K → QRef.Adj K a b) →
-      (∀ K, B.S (QRef.net fun x => x = 0 ∨ x = 1 ∨ x = 2) K →
-        ¬ (QRef.Adj K 0 1 ∧ QRef.Adj K 1 2 ∧ QRef.Adj K 0 2)) →
-      ∀ A : Table (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat)),
-        (∀ H, ∃ K, A H K) → (∀ H K, A H K → B.S H K) → ¬ CAP.ConsistentOn B A) ∧
-    QRef.NodeMono id QRef.tree ∧
-    (∀ A : Table (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat)),
-      (∀ H, ∃ K, A H K) → (∀ H K, A H K → QRef.tree.S H K) → ¬ CAP.ConsistentOn QRef.tree A) :=
-  ⟨QRef.no_consistentOn_of_triangle, QRef.tree_nodeMono, QRef.tree_no_consistentOn⟩
+/-- Sec. `sec:query-instance`: "A list of all nodes lets nodes wait for
+everyone and choose consistently."  Lean: the list puts the membership in the
+input (`QRef.AllInp`: membership `mem` and the nodes heard from, `view ⊆
+mem`; an input expands another only at the same membership).  A complete
+view is maximal, and a choice of one output at each maximal input is a table
+on which any behavior containing it is consistent (`CAP.ConsistentOn`, the
+condition of Theorem `thm:complete-cap`).  For instance, the star centred at
+the least member is a spanning tree of the membership, the spanning-tree
+behavior is consistent on it, and as a specification it is consistent.  That
+the list and an order on nodes compute every behavior is Baccaert and
+Ketsman's Thm. 2–3, cited, not formalized. -/
+theorem «sec:query-instance/all-nodes» :
+    (∀ {i j : QRef.AllInp}, i.Complete → i ≼ j → i = j) ∧
+    (∀ {I O : Type} [PO I] [PO O] (B : Spec I O) (A : Table I O),
+      (∀ i o, A i o → B.S i o) → (∀ i o j, A i o → i ≼ j → i = j) →
+      (∀ i o o', A i o → A i o' → o = o') → CAP.ConsistentOn B A) ∧
+    ((∀ i, QRef.treeAll.S i (QRef.star i.mem)) ∧
+      CAP.ConsistentOn QRef.treeAll (fun i K => K = QRef.star i.mem) ∧
+      (graph (fun i : QRef.AllInp => QRef.star i.mem)).Consistent) :=
+  ⟨QRef.allInp_complete_maximal, fun B A => QRef.consistentOn_of_maximal B A, QRef.treeAll_star⟩
+
+/-- Sec. `sec:query-instance`: "Pairing off nodes, leaving at most one
+unpaired, is node monotone, yet every `A` pairs `b` with `a` at `{a,b}` and
+with `c` at `{b,c}`."  Lean, with node names as input (`loc = id`, inputs
+`QRef.net P`): `QRef.pairing` permits symmetric pairings in which, on a
+finite network, at most one node is unpaired.  It is node monotone, every
+output at a two-node network pairs its nodes, and no total sub-behavior `A`
+has `pairing` consistent on it (rows at `{0,1}` and `{1,2}`, common expansion
+`{0,1,2}`).  The surrounding prose (isolated nodes must emit; their
+construction waits for a group to confirm itself; groups sharing a node are
+nested; the group's choice is coordination but not distributed coordination)
+reads Baccaert and Ketsman's Prop. 9–11 and is not formalized. -/
+theorem «sec:query-instance/pairing» :
+    QRef.NodeMono id QRef.pairing ∧
+      (∀ a b K, a ≠ b → QRef.pairing.S (QRef.net fun x => x = a ∨ x = b) K → K.mem (a, b)) ∧
+      (∀ A : Table (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat)),
+        (∀ H, ∃ K, A H K) → (∀ H K, A H K → QRef.pairing.S H K) →
+          ¬ CAP.ConsistentOn QRef.pairing A) :=
+  ⟨QRef.pairing_nodeMono, QRef.pairing_pair, QRef.pairing_no_consistentOn⟩
 
 /-- Sec. `sec:query-instance`: "For deterministic behaviors the two conditions
 coincide."  Lean: for the graph of `b`, node monotonicity is monotonicity
