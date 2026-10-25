@@ -124,16 +124,22 @@ satisfying $\mathcal I$.  Every reachable state descends from $s_0$, so $T$ is
 \emph{invariant confluent} exactly when $\mathcal I(s_1\cup s_2)$ for all
 reachable $s_1$ and $s_2$.
 
-The input is a \emph{transaction history}: a partial order of transaction
-events recording which transactions ran and what each one saw; a history
-\inrel each of its downward-closed sub-orders.  The inputs are the
-\emph{locally valid} histories, in which every transaction step preserves
-$\mathcal I$ on its replica's state, and a history is \emph{valid} when every
-merge of what it contains satisfies $\mathcal I$
-(Appendix~\ref{app:iconfluence}).  The specification $S_{\mathcal I}$ lets a
-replica expose the state of any valid downward-closed sub-history of its
-input: it may hold transactions back, but whatever it exposes must be valid
-together with everything it contains.
+From an instance $(s_0,T,\mathcal I)$ of their model we construct a
+specification $S_{\mathcal I}$ in ours as follows (Appendix~\ref{app:iconfluence}).
+\begin{itemize}
+  \item \emph{Inputs} are \emph{transaction histories}: partial orders of
+        events, each labeled by a transaction in $T$, where one event precedes
+        another when the replica running the second saw the first.  A history
+        \inrel each of its downward-closed sub-orders.  We keep the
+        \emph{locally valid} histories, in which every transaction step
+        preserves $\mathcal I$ on its replica's state.
+  \item \emph{Outputs} are database states, ordered by inclusion.
+  \item \emph{The table} permits, at input $h$, the state of any downward-closed
+        sub-history of $h$ that is \emph{valid}: every merge of what it
+        contains satisfies $\mathcal I$.
+\end{itemize}
+A replica may thus hold transactions back, but whatever it exposes must be
+valid together with everything it contains.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
@@ -147,12 +153,13 @@ See Appendix~\ref{app:iconfluence}.
 
 Invariant confluence is therefore not a separate boundary: for the
 specification that exposes database states, it is Lifted Monotonicity, and by
-Complete CALM it is consistency.  A uniqueness constraint shows the failure
-directly.  Two replicas each observe that username \texttt{sam} is free and
-allocate it to different accounts.  The history in which neither allocation
-saw the other is locally valid and \inrel both one-allocation histories, but
-its state has two owners, so no state it permits \outrel both.  The system must
-reserve names, reject one allocation, or weaken the invariant.  Concurrency,
+Complete CALM it is consistency.  The
+uniqueness constraint of Bailis et al.'s payroll example shows the failure
+directly.  Two replicas each create an employee and assign ID~7, which each
+sees is unused.  The history in which neither creation saw the other is
+locally valid and \inrel both one-creation histories, but its state has two
+employees with ID~7, so no state it permits \outrel both.  The system must
+reserve IDs, reject one creation, or weaken the invariant.  Concurrency,
 not the transactions alone, decides the outcome: a transaction that is harmless
 after another can, when it runs without seeing it, produce a state whose merge
 with the other's is invalid.
