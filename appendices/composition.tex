@@ -124,50 +124,62 @@ rows at other inputs, and there are none, so every run of $\mathcal P$ under
 the empty basis stays at the canonical state and emits nothing.  The store
 then receives nothing.
 
-\subsection{Irredundant Coordination}
+\subsection{Proper Coordination}
 
-Throughout, $f$ is monotone, $\mathcal B$ and $\mathcal B_{\mathcal K}$ are
-bases of $\mathcal P$ and $\mathcal K$, and for a
-table $R$ of $\mathcal P$ we write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  The image
-of the canonical state $\sigma_{\mathcal P}(i)$ is the canonical state of
-$\mathcal K\circ\mathcal P$ at $i$, since $f(P[\mathrm{in}\InputGe i])$ is
-the composite table restricted to the \indescs of $i$.
+Throughout, $\mathcal K$ satisfies Lifted Monotonicity, used through the
+common-\indesc condition, and $\mathcal B$ and $\mathcal B_{\mathcal K}$ are
+the bases of the systems for $\mathcal P$ and $\mathcal K$.  For tables $R$ of
+$\mathcal P$ and $T$ of $\mathcal K$ we write $R\Join T=\{(k,x):\exists m.\
+(k,m)\in R\land(m,x)\in T\}$.  The image of the canonical state
+$\sigma_{\mathcal P}(i)$ is the canonical state of $\mathcal K\circ\mathcal P$
+at $i$, since $P[\mathrm{in}\InputGe i]\Join K$ is the composite table
+restricted to the \indescs of $i$.
+
+Two facts about a state $\tau$ that $\mathcal K$ reaches without commitment
+carry the proofs.  First, every input $j\succeq_M\tau.\mathrm{cur}$ has a row
+in $\tau$: the common-\indesc condition gives $u\in K(j)$ that \outrel an
+output $v$ at the current input, and $(j,u)$ survives, since every output
+emitted so far is \outrelpast by $v$.  Second, every output at the current
+input is exposable (Proposition~\ref{prop:exposure-boundary}).
 
 \begin{proof}[Proof of Theorem~\ref{thm:guarded-runs}]
-(1) We show by induction on events that, if a state $\sigma$ of $\mathcal P$
-and a state $\rho$ of the composite have the same current input and
-$f(R_\sigma)\subseteq R_\rho$, the next event of $\mathcal P$ has a matching
-event of the composite that preserves both facts.  At the start both states
-are canonical at $i$ and the tables are equal.  For $\mathsf{input}(j)$, a row
-$(j,m)$ of $R_\sigma$ gives the row $(j,f(m))$ of $R_\rho$, so the input is
-legal, and both events keep the rows at \indescs of $j$.  For a legal
-$\Out{\gamma}{m}$, containment
-(Lemma~\ref{lem:canonical-commitment-normal-form}) gives $(i,m)\in R_\sigma$
-and a resulting table contained in $R_\sigma[\mathrm{out}\succeq_M m]$.  So
-$(i,f(m))\in R_\rho$, and $\mathsf{output}(f(m))$ keeps
-$R_\rho[\mathrm{out}\OutputGe f(m)]$.  A remaining row $(k,m')$ of
-$\mathcal P$ has $m\preceq_M m'$, hence $f(m)\OutputOrd f(m')$ by monotonicity,
-and $(k,f(m'))$ is kept.
+(1) After $\Out{\gamma}{m}$ every row \outrel $m$
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so the outputs
+$m_1\preceq_M m_2\preceq_M\cdots$ of a run form a chain.  The store starts at
+$\sigma_{\mathcal K}(m_1)$, which is reached without commitment.  By the two
+facts it can receive each $m_{r+1}\succeq_M m_r$ and answer it by an exposable
+output, so its run is a run under the empty basis.
 
-(2) After $\Out{\gamma}{m}$ every row \outrel $m$, so each later output
-\outrel $m$, and the outputs $m_1\preceq_M m_2\preceq_M\cdots$ of a run form a
-chain.  The store starts at its canonical state at $m_1$.  At a canonical state
-$\sigma_{\mathcal K}(m_r)$, every row $(k,f(k))$ has $m_r\preceq_M k$, so
-$f(m_r)\OutputOrd f(k)$.  Hence $\mathsf{output}(f(m_r))$ removes nothing,
-$f(m_r)$ is exposable, and the state stays canonical.  The input event
-$\mathsf{input}(m_{r+1})$ moves to $\sigma_{\mathcal K}(m_{r+1})$.  The store's
-events form a commitment-free run, which is a run under the empty basis.
+(2) Before $\mathcal P$'s first output we keep $\rho.\mathrm{cur}=\sigma.\mathrm{cur}$
+and $R_\sigma\Join K\subseteq R_\rho$, where $\sigma$ is $\mathcal P$'s state
+and $\rho$ the composite's.  Afterwards we keep $R_\sigma\Join T\subseteq
+R_\rho$, with $T$ the store's table, and every row $(k,m)$ of $R_\sigma$ has
+$m$ above the store's current input.  Both hold at the start, where the image
+of $\sigma_{\mathcal P}(i)$ is $\sigma_{\mathcal K\circ\mathcal P}(i)$.  For
+$\mathsf{input}(j)$ of $\mathcal P$, a row $(j,m)$ of $R_\sigma$ and, by the
+first fact, a row $(m,x)$ of $T$ give $(j,x)\in R_\rho$, so the input is legal,
+and both events keep the rows at \indescs of $j$.  For a legal
+$\Out{\gamma}{m}$ at input $i$, containment gives $(i,m)\in R_\sigma$ and a
+resulting table inside $R_\sigma[\mathrm{out}\succeq_M m]$.  The store
+receives $m$ and answers $o$, so $(m,o)\in T$ and $(i,o)\in R_\rho$.  The
+composite's $\mathsf{output}(o)$ keeps $R_\rho[\mathrm{out}\OutputGe o]$, and
+the store keeps $T[\mathrm{in}\succeq_M m,\mathrm{out}\OutputGe o]$, so the
+join stays inside the composite's table.
 
-(3) Let the runs of $\mathcal P$ end at $\sigma_1,\ldots,\sigma_n$ and the
-composite runs at $\rho_1,\ldots,\rho_n$, with $f(R_{\sigma_r})\subseteq
-R_{\rho_r}$ by (1), and let each $\sigma_r$ continue under some basis to a
-common state $\tau$ with current input $j$.  Then $\tau$ has a row $(j,m)$.
-Events never add rows, so $(j,m)\in R_{\sigma_r}$ and $(j,f(m))\in
-R_{\rho_r}$ for every $r$.  The composite runs share a row at $j$, so they
-are confluent at $j$ (Proposition~\ref{prop:confluence}).
+(3) Let the runs of $\mathcal P$ end at $\sigma_1,\ldots,\sigma_n$, the
+stores at $\tau_1,\ldots,\tau_n$, and the composite runs at
+$\rho_1,\ldots,\rho_n$, and let each $\sigma_r$ continue under some basis to a
+common state with a row $(j,m)$.  Events never add rows, so $(j,m)\in
+R_{\sigma_r}$, and $m$ is above each store's current input.  Let $v_r$ be an
+output at the current input of $\tau_r$.  The common-\indesc condition gives
+$u\in K(m)$ that \outrel every $v_r$, and $(m,u)$ survives in every $\tau_r$.
+So $(j,u)\in R_{\rho_r}$ for every $r$, and the composite runs are confluent
+at $j$ (Proposition~\ref{prop:confluence}).
 \end{proof}
 
-The guarded composite's commitments are covered by $\mathcal P$'s.  Let
+For a function store, the guarded composite's commitments are covered by
+$\mathcal P$'s.  For a table $R$ of $\mathcal P$ write
+$f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
 $\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and
 let $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
 $(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Sealed_{f(m)}$ or
@@ -177,47 +189,115 @@ $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ retires $(k,f(m'))$.  So every row
 that the composite's canonical event for $f(m)$ removes by commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
-\begin{proof}[Proof of Theorem~\ref{thm:irredundant-coordination}]
-(1) Let $(m,R)$ be a state of $\mathcal K$.  Its fiber at $m$ is $\{f(m)\}$,
-and every row $(k,f(k))\in R$ has $m\preceq_M k$, so $f(m)\OutputOrd f(k)$ by
-monotonicity.  No row is ruled out by $f(m)$, so $f(m)$ is exposable.  If
-$\Out{\delta}{f(m)}$ is legal, containment
-(Lemma~\ref{lem:canonical-commitment-normal-form}) puts its resulting table
-inside $R[\mathrm{out}\OutputGe f(m)]$, where $\Out{\varepsilon}{f(m)}$ ends.
+\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
+(1) is the second fact.  If $\Out{\delta}{o}$ is legal at $\tau$, then $o$ is
+at the current input of $\tau$ and so of the larger table $\tau'$, and
+containment (Lemma~\ref{lem:canonical-commitment-normal-form}) puts the
+original's resulting table inside $R_\tau[\mathrm{out}\OutputGe o]\subseteq
+R_{\tau'}[\mathrm{out}\OutputGe o]$, where $\Out{\varepsilon}{o}$ ends.  For a
+function store with current input $m$, every row $(k,f(k))$ has $m\preceq_M k$,
+so $f(m)\OutputOrd f(k)$ and nothing is ruled out, at every state.
 
-(2) For at least once, let $\Out{\varepsilon}{m}$ be legal at $\sigma$, so
-$\sigma_c=\sigma$ and $m$ is exposable at $\sigma$.  By the covering argument
-with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
-$\Rejected_{f(m)}$, so $f(m)$ is exposable at $f(\sigma)$
-(Lemma~\ref{lem:canonical-commitment-normal-form}).  When
+(2) Let $\Out{\varepsilon}{m}$ be legal at $\sigma$, so $m$ is exposable at
+$\sigma$, and let $o\in K(m)$ and $(k,x)$ be a row of $\mathcal K(\sigma)$ not
+\outrelpast by $o$, coming from $(k,m')\in R_\sigma$ and $(m',x)\in K$.  If
+$m\preceq_M m'$, the common-\indesc condition for the rows $(m,o)$ and
+$(m',x)$ at $m'$ gives $u\in K(m')$ with $o,x\OutputOrd u$.  Otherwise
+exposability gives $(k,w)\in R_\sigma$ with $m,m'\preceq_M w$, and the
+condition at $w$ gives $u\in K(w)$.  Either way $(k,u)$ is a row of
+$\mathcal K(\sigma)$ that retires $(k,x)$, so $o$ is exposable.  When
 $\mathcal B_{\mathcal K}$ is empty, every output event of the store is some
-$\Out{\varepsilon}{f(m)}$, which removes no row by commitment, so the store
-does not coordinate redundantly.
+$\Out{\varepsilon}{o}$, which removes no row by commitment, so the store does
+not coordinate redundantly.
 
-(3) The proof of Proposition~\ref{prop:exposure-boundary}
-derives the common-\indesc condition from exposability at canonical states
-alone.  If Lifted Monotonicity fails for $\mathcal K\circ\mathcal P$, some
-$f(m)$ with $(i,m)\in P$ is therefore not exposable at
-$\sigma_{\mathcal K\circ\mathcal P}(i)=f(\sigma_{\mathcal P}(i))$, and by
-(2) no $m'$ with $f(m')=f(m)$ is exposable at $\sigma_{\mathcal P}(i)$.
+(3) The proof of Proposition~\ref{prop:exposure-boundary} derives the
+common-\indesc condition from exposability at canonical states alone.  If
+Lifted Monotonicity fails for $\mathcal K\circ\mathcal P$, some $o$ with
+$(i,m)\in P$ and $o\in K(m)$ is therefore not exposable at
+$\sigma_{\mathcal K\circ\mathcal P}(i)=\mathcal K(\sigma_{\mathcal P}(i))$,
+and by (2) no $m'$ with $o\in K(m')$ is exposable at $\sigma_{\mathcal P}(i)$.
 \end{proof}
 
-For the mutex store of Section~\ref{sec:irredundant-coordination}, let
+\begin{proof}[Proof of Corollary~\ref{cor:empty-store}]
+(1) Let $\sigma$ be a state of the store and $\sigma'$ a state reached
+without commitment, with the same current input and $R_\sigma\subseteq
+R_{\sigma'}$.  If $\mathsf{input}(j)$ is legal at $\sigma$, a row of $R_\sigma$
+at $j$ is in $R_{\sigma'}$, so the input is legal at $\sigma'$, and both events
+keep the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is legal at $\sigma$,
+$\Out{\varepsilon}{x}$ is legal at $\sigma'$ by
+Theorem~\ref{thm:proper-coordination}(1), with a larger resulting table.  Both
+start at $\sigma_{\mathcal K}(m)$, so the containment holds after each event.
+The replacement's strategy allows each erased event, since the original's
+allowed it before erasure.
+
+(2) Call a row $(k,x)$ \emph{used} when some run of $\mathcal K$ on outputs
+$\mathcal P$ can emit emits $x$ at input $k$.  Consider a guarded composite
+run of the replacement.  It is a run of $\mathcal K$ on such outputs, so every
+row it emits at is used.  We build the original's run event by event, with the
+same erasure, and keep two facts: the current inputs agree, and every used row
+of the replacement's table is in the original's.  An input event
+$\mathsf{input}(j)$ of the replacement is followed by an output $x$ at $j$, so
+$(j,x)$ is used, is in the original's table, and makes the input legal there.
+An output event $\Out{\varepsilon}{x}$ is allowed because the original's
+strategy allows some $\Out{\delta}{x}$ after a history with the same erasure.
+The strategy ignores commitments, so it allows $\Out{\delta}{x}$ after the
+original's history.  The row $(\mathrm{cur},x)$ is used, hence in the
+original's table, so the strategy, which never stalls, offers a legal
+$\Out{\delta'}{x}$.  The original's events so far, with the run of
+$\mathcal P$, form a guarded composite run in which this event applies
+$\delta'$.  By at most once, $\delta'$ is not contradicted, so it removes no
+used row, and both facts persist.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:pipelines}]
+Let $\mathcal S_1$ have any system and $\mathcal S_2$ satisfy Lifted
+Monotonicity.  By Corollary~\ref{cor:empty-store}(1), every guarded composite
+run has one with an empty-basis store and the same trace.  Theorem~\ref{thm:guarded-runs}(2),
+applied to it and a prefix of the run of $\mathcal S_1$, gives a run of
+$\mathcal S_2\circ\mathcal S_1$, and the canonical event for each output
+(Lemma~\ref{lem:canonical-commitment-normal-form}) makes it a run under the
+canonical basis that emits the store's outputs.  So the outputs of guarded
+composite runs are emitted by a system for $\mathcal S_2\circ\mathcal S_1$,
+and every result of this section applies to a further stage $\mathcal S_3$
+with that system as its guard.  By induction this holds for every stage of the
+pipeline.  Composition is associative, so the composite is
+$\mathcal S_n\circ\cdots\circ\mathcal S_1$ however it is bracketed.
+\end{proof}
+
+For the mutex store of Section~\ref{sec:proper-coordination}, let
 $\mathcal P$ be the log specification of
-Example~\ref{ex:committed-log-composition} under its canonical basis, and $f$
-any monotone function of the log.  For a set $Q$ of logs, removing every row
-whose input is in $Q$ is a commitment of $\mathcal K$ at any state whose
-current input is not in $Q$ and which has such a row.  It removes whole
-fibers, so it seals.  Let $\mathcal B_{\mathcal K}$ contain this commitment
-for $Q$ the logs that start with $b$.  At a state whose current log is
-nonempty, every remaining log has the same first command, so this commitment
-is undefined there.  In one guarded composite run,
+Example~\ref{ex:committed-log-composition}, under its canonical basis with a
+strategy that allows every event, and $\mathcal K$ the table of any monotone
+function $f$ of the log.  For a set $Q$ of logs, removing every row whose input is in $Q$ is a
+commitment of $\mathcal K$ at any state whose current input is not in $Q$ and
+which has such a row.  It removes whole fibers, so it seals.  Let
+$\mathcal B_{\mathcal K}$ contain this commitment for $Q$ the logs that start
+with $b$.  At a state whose current log is nonempty, every remaining log has
+the same first command, so this commitment is undefined there.
+
+Let the store's strategy take the lock at its first event when the log is
+empty, and apply nothing otherwise.  In one guarded composite run,
 $\mathcal P$ emits the empty log $[\,]$ by $\Out{\varepsilon}{[\,]}$, and the
 store, at $\sigma_{\mathcal K}([\,])$, emits $f([\,])$ by applying the
-commitment.  By (1), $f([\,])$ was exposable without it.  In another,
-$\mathcal P$ emits $[b]$ at $\sigma_{\mathcal P}([b])$ by its canonical event,
-and the store receives $[b]$, an input the first run sealed.  So the
-commitment is contradicted, and the store coordinates redundantly.
+commitment.  By Theorem~\ref{thm:proper-coordination}(1), $f([\,])$ was
+exposable without it.  $\mathcal P$ can also emit $[b]$ at
+$\sigma_{\mathcal P}([b])$ by its canonical event, so it feeds the store
+$[b]$, an input the commitment sealed.  So the commitment is contradicted,
+and the store coordinates redundantly.  Its replacement gains behaviour.  At
+$\sigma_{\mathcal P}([b])$, $\mathcal P$ can emit $[\,]$ and then $[b]$.  The
+replacement emits $f([\,])$, receives $[b]$, and emits $f([b])$.  The locking
+store must take the lock at $[\,]$, which seals $[b]$, so it cannot receive
+$[b]$.
+
+Let the strategy instead take the lock only when its current log is nonempty.
+The lock is undefined there, so every output event the store performs is
+some $\Out{\varepsilon}{x}$.  The store applies no commitment, so it does not
+coordinate redundantly.  Its strategy depends only on the inputs it has
+received and always offers $\Out{\varepsilon}{x}$, so it meets the hypotheses
+of Corollary~\ref{cor:empty-store}(2).  A strategy that insists on the lock
+at a nonempty log also applies no commitment and ignores commitments, but it
+stalls.  When $\mathcal P$ emits $[b]$ first, the store never emits, while its
+replacement emits $f([b])$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
 The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering
@@ -225,7 +305,7 @@ argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
 $\Rejected_{f(m)}$, so $f(m)$ is exposable at $f(\sigma)$.
 \end{proof}
 
-For the per-key store of Section~\ref{sec:irredundant-coordination}, let
+For the per-key store of Section~\ref{sec:proper-coordination}, let
 $\mathcal P$ have one input with fiber $\{[a,b],[b,a]\}$, and let $f$ send a
 log to the family of its subsequences on each key.  The two logs are
 incomparable with no common \outnoun, so $[a,b]$ is not exposable.  When $a$

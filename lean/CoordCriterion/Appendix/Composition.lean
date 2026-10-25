@@ -5,7 +5,7 @@ import CoordCriterion.CompleteCALM.Theorem
 
 Namespace `CC.Comp`.  Further examples of the appendix (curried form on graph
 tables, the replicated store, bare reads) are in `Instances/Examples.lean`;
-guarded composition and Irredundant Coordination are in
+guarded composition and Proper Coordination are in
 `Appendix/Guarded.lean`.
 
 * `seq_liftedMono`                 — Lemma lem:composition

@@ -74,7 +74,7 @@ first and supporting claims and examples follow.
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
 | `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
-| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | Guarded runs, store under the empty basis, covering, invisible coordination, Irredundant Coordination (store bases, redundant mutex store), counterexamples, per-key store, replicated store |
+| `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | Guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (store systems with strategies, early and late locks), empty-store replacement, counterexamples, per-key store, replicated store |
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
@@ -94,7 +94,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-565 entries.
+569 entries.
 
 ### §2 Functional CALM
 
@@ -306,7 +306,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/response-form»` | theorem | "extends Complete CAP to systems that choose their responses when responses are not forced" — Theorem `thm:complete-cap-response` (see `Paper/AppF_ResponseAv… |
 | `«sec:complete-cap/gl-async»` | theorem | "and derives the theorem in Gilbert and Lynch's asynchronous model" (Proposition `prop:gl-async`). |
 
-### §5 Composition and Irredundant Coordination
+### §5 Composition and Proper Coordination
 
 File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 
@@ -321,16 +321,19 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composition/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an ordered specification, so Complete CALM applies to it directly. |
 | `«sec:composite-calm/components-commit»` | theorem | "A monotone composite does not mean that each component can run without commitments. |
-| `«sec:irredundant-coordination/image»` | theorem | "The store `𝒦` is the specification with table `{(m,f(m))}`, and the composite `𝒦 ∘ 𝒫` has table `{(i,f(m)) : |
-| `«sec:irredundant-coordination/no-pushforward»` | theorem | "A commitment of `𝒫` may keep `m'` and remove `m`, with `m` and `m'` incomparable but `f(m) ≼ f(m')`. |
-| `«def:irredundant-coordination»` | theorem | **Definition `def:irredundant-coordination`** (Irredundant Coordination): |
+| `«sec:proper-coordination/image»` | theorem | "The store `𝒦` is the specification with table `{(m,f(m))}`, and the composite `𝒦 ∘ 𝒫` has table `{(i,f(m)) : |
+| `«sec:proper-coordination/no-pushforward»` | theorem | "A commitment of `𝒫` may keep `m'` and remove `m`, with `m` and `m'` incomparable but `f(m) ≼ f(m')`. |
+| `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«thm:guarded-runs»` | theorem | **Theorem `thm:guarded-runs`** (Guarded runs): |
-| `«thm:irredundant-coordination»` | theorem | **Theorem `thm:irredundant-coordination`** (Irredundant Coordination): |
-| `«sec:irredundant-coordination/empty-store-follows»` | theorem | "By Theorem `thm:guarded-runs`(2), a store under the empty basis also follows every run of `𝒫`." Lean: |
-| `«sec:irredundant-coordination/any-basis»` | theorem | "Every legal output event removes at least the rows its canonical event removes (Lemma `lem:canonical-commitment-normal-form`), so every row that the composi… |
-| `«sec:irredundant-coordination/mutex-store»` | theorem | "Mutexes in the store, behind the log, are another matter. |
+| `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
+| `«sec:proper-coordination/empty-store-follows»` | theorem | "By Theorem `thm:guarded-runs`(2), a store under the empty basis also follows every run of `𝒫`. |
+| `«sec:proper-coordination/any-basis»` | theorem | "Every legal output event removes at least the rows its canonical event removes (Lemma `lem:canonical-commitment-normal-form`), so every row that the composi… |
+| `«sec:proper-coordination/replacement»` | theorem | "By Theorem `thm:proper-coordination`(1), none of the store's commitments is needed. |
+| `«cor:empty-store»` | theorem | **Corollary `cor:empty-store`** (Empty store): |
+| `«sec:proper-coordination/hypotheses-needed»` | theorem | "The hypotheses of (2) are needed. |
+| `«sec:proper-coordination/mutex-store»` | theorem | "Mutexes in the store, behind the log, are another matter. |
 | `«prop:invisible-coordination»` | theorem | **Proposition `prop:invisible-coordination`** (Invisible coordination): |
-| `«sec:irredundant-coordination/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order, and two commands `a` and `b` on different keys. |
+| `«sec:proper-coordination/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order, and two commands `a` and `b` on different keys. |
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«sec:composition/bare-reads»` | theorem | "There, bare reads need no commitment of their own when each response records the log position it read from, but they do when the specification demands the l… |
 
@@ -572,9 +575,10 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/guarded-lockstep»` | theorem | The induction of the proof of Theorem `thm:guarded-runs`(1): |
 | `«app:composition/store-steps»` | theorem | Proof of Theorem `thm:guarded-runs`(2): |
 | `«app:composition/coverage»` | theorem | The covering argument: |
-| `«app:composition/store-exposable»` | theorem | Proof of Theorem `thm:irredundant-coordination`(1)–(2): |
-| `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:irredundant-coordination`(3): |
-| `«app:composition/mutex-store»` | theorem | "For the mutex store …, let `𝒫` be the log specification of Example `ex:committed-log-composition` under its canonical basis, and `f` any monotone function o… |
+| `«app:composition/store-exposable»` | theorem | Proof of Theorem `thm:proper-coordination`(1)–(2): |
+| `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:proper-coordination`(3): |
+| `«app:composition/empty-store»` | theorem | Proof of Corollary `cor:empty-store`: |
+| `«app:composition/mutex-store»` | theorem | "For the mutex store …, let `𝒫` be the log specification of Example `ex:committed-log-composition`, under its canonical basis with a strategy that allows eve… |
 | `«app:composition/per-key»` | theorem | "For the per-key store …, let `𝒫` have one input with fiber `{[a,b],[b,a]}`, and let `f` send a log to the family of its subsequences on each key. |
 | `«app:composition/no-pushforward»` | theorem | "The commitments of `𝒫` do not themselves push forward. |
 | `«app:composition/monotone-needed»` | theorem | "Monotonicity of `f` is needed. |
