@@ -9,14 +9,14 @@ whether monotonicity or Directed Outputs holds.
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-As previously dicussed (\S\ref{sec:functional-calm}),
-the CALM Theorem of Ameloot, et al. proves an operational result for
+As previously discussed (\S\ref{sec:functional-calm}),
+the CALM Theorem of Ameloot et al.\ proves an operational result for
 relational languages on transducer networks: coordination-free evaluation is possible
 iff a program is monotone,
 under its data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.
-Functional CALM explains but does not replace the details of that theorem; 
-it abstracts the result to a higher-level property, allowing it to be
-compared with specifications outside Datalog.
+Functional CALM does not replace the details of that theorem.  It abstracts
+the result to a property that can be compared with specifications outside
+Datalog.
 
 Subsequent refinements of that CALM Theorem are all instances of our Functional CALM
 Theorem: \jmh{fill in brief explanations of Zinn, Baccaert, etc.}
@@ -27,8 +27,9 @@ Theorem: \jmh{fill in brief explanations of Zinn, Baccaert, etc.}
 A CRDT guarantees that replicas receiving the same updates converge to
 equivalent states, whatever the order of delivery and merge.  But the Strong
 Eventual Consistency property it offers provides no guarantee on what the environment
-may observe, and is subject to Lamport’s “anomalous behavior” (\S~ref{sec:complete-calm}).
-Laddad, et al.\ proposed monotonicity as the right test for safe
+may observe, and is subject to Lamport's ``anomalous
+behavior''~\cite{lamport1978time} (\S\ref{sec:coordination}).
+Laddad et al.\ proposed monotonicity as the right test for safe
 observation from CRDT state~\cite{laddad2022keep}.  Their example is a two-phase set, whose state
 $(\mathit{Add},\mathit{Del})$ merges by componentwise union.  The query
 $\mathit{Add}\setminus\mathit{Del}$ can report a Ferrari in a shopping cart
@@ -49,11 +50,10 @@ Operation-based CRDTs fit too, with the causally closed set of
 delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
 
-CRDTs can be safely weakened beyond join semi-lattices and still
-provide consistency for monotone observations:
-Complete CALM needs only
-\emph{some} common \outnoun (Section~\ref{sec:lifted-monotonicity}), not a least
-one.  
+The replica states of a convergent CRDT always form a join-semilattice, since
+merge is commutative, associative, and idempotent.  Observations need less:
+Complete CALM requires only \emph{some} common \outnoun of query outputs
+(Section~\ref{sec:lifted-monotonicity}), not a least one.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
