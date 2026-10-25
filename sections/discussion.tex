@@ -1,45 +1,70 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Design lessons}
+The computer systems literature is rich with coordination mechanisms for managing concurrency
+both within and across machines. When the CALM Conjecture was first being considered,
+it addressed a different question: when are these mechanisms required, and why? 
+The original CALM Conjecture built on emerging work in declarative
+networking \jmh{cite Loo} for intuition. Inspired by Codd's tradition of
+separating specification from implementation \jmh{cite Codd}, declarative
+networking showed that the desired effects of protocols could be written as
+queries, and subsequently analyzed and optimized into a variety of mechanisms.
 
-The criterion is diagnostic, and four distinctions do most of the work.
-First, permitted alternatives belong in the specification as rows, not in an
-implementation's nondeterminism, and useful output need not wait for
-determination: the election can emit $\bot$ while either candidate may still
-win.  Second, a removal is classified by its effect on the table.  Receiving a
-decisive ballot and closing the polls both leave a single result.  The first
-retires rows by input; the second removes rows that input still permits, a
-commitment.  Third, convergent state does not by itself preserve what replicas
-reported, so a CRDT state, a read of it, and a query over it can fall on
-different sides of the line (Section~\ref{sec:crdt-instance}).  Finally, a
-mechanism coordinates only if it commits.  An uncontended lock excludes
-nothing, while a local controller can make a binding choice without
-communicating.  Barriers and end-of-input markers seal input, and locks,
-timestamps, and consensus choose among outputs
-(Proposition~\ref{prop:seal-or-choose}).
+There was a related friction at the time in the literature on parallel query processing. The
+widely-cited Google MapReduce paper \jmh{cite} departed from prior work on parallel
+query processing~\jmh{cite WilshutApers, Exchange}, conflating data redistribution
+(shuffle) with barrier coordination required for a non-monotone reduce operator.
+This poor separation of concerns required monotone operators like join to block
+in the MapReduce model unnecessarily.  This conflation leaked into theory as
+well: metrics of ``rounds'' of BSP or MapReduce effectively charge a complexity
+cost to incidental uses of barriers that similarly are not intrinsic to program
+semantics \jmh{cite Afrati/Ullman, BSP, who else}.
 
-\subsection{Scope}
-\label{sec:consistency-as-confluence}
-\label{sec:design-boundary}
+The CALM Conjecture hypothesized that the database community's tradition of more
+judicious use of barriers could be generalized: coordination---of any kind---is
+required if and only if the program is non-monotone. The CALM Theorem of Ameloot
+et al.\ proved it. Unfortunately the impact of the conjecture and its proof was
+limited by its embrace of declarative languages, which to date have still not
+become mainstream (more on this below.)
 
-Our conditions are semantic.  Confluence guarantees that a common \outnoun
-exists, not that a deployed system reaches it.  A participant may lack the
-authority to emit it (Appendix~\ref{app:deployment}), and reaching it takes an
-algorithm, message delivery, and a termination argument.  Participant runs
-likewise set aside delivery and strategy details.  A state machine induces a
-table by pairing environment histories with their observable outputs;
-summarizing histories by machine states is a modeling choice that a designer
-makes.  Protocols, liveness, and cost belong to the operational model in which
-a specification is realized.
+This paper can be seen as moving one level higher in its declarations, from
+programs made of queries to a single virtual table---a view. For our analysis,
+what is important about a specification is only the encapsulated view mapping
+its base input to its final output. By eliding the query logic entirely, we not
+only reduce complexity, we free ourselves from the syntax and semantics of any
+particular language, providing a declarative view compatible with any
+programming framework.
 
-\subsection{A declarative foundation}
+By raising the abstraction, the focus of what to specify naturally broadens as
+well. Prior work focused on implementing complex programs declaratively
+\jmh{cite loo-sigmod, chu, P2, Bloom}. This was interesting ``declarative
+engineering'' with concrete benefits in analysis and optimization.  The model
+here naturally expands the scope, naturally modeling abstract families of
+invariants like CAP, isolation levels or consistency requirements that have no
+specific application or protocol in mind.
 
-\emph{The Declarative Imperative} stated CALM for monotonic
-Datalog~\cite{hellerstein2010declarative}, which tied the coordination
-question to a program: its rules, language extensions, and operational
-semantics.  The specification table is declarative at a lower layer, recording
-only which behaviors are permitted and which observations \outrelbase others.
-In retrospect, the durable part of the original thesis is that the
-coordination question belongs on a declarative description of what is
-allowed, not on the code that produces it.
+Lifting the abstraction improves the power of analysis as well. Prior attempts
+to do program analysis, e.g.\ in languages like Bloom~\cite{alvaro2011bloom},
+became enmeshed in the details of the ``declarative'' syntax of full
+implementations. Bloom could conservatively identify locations in programs where
+coordination protocols would likely be required based on syntax: the use of
+potentially non-monotone constructs. But adding coordination code in Bloom does
+not remove those constructs---it actually adds more. Our composition results
+here (\S\ref{sec:composition}) benefit from the absence of programs. The
+resaulting analysis is exact rather than conservative \jmh{soften that claim!},
+and via proper coordination shows how the non-monotonicity of a coordination
+protocol frees its consumers from the need to coordinate further.
+
+Underlying all this discussion is a refined question of what a ``declarative
+specification'' should capture---a reassessment of Codd's agenda. This is
+timely. Automated code generation in imperative languages is now a reality, but
+the ensuing large volume of code is often rife with bugs. This has led to more
+widespread interest in formal specification languages like Lean \jmh{cite}, and
+a renewed opportunity for logic, dataflow or functional programming languages to
+capture the attention of developers and their coding agents. Still, these
+languages are typically used by developers to specify protocols and programs at
+a significant level of detail, as in the declarative networking work. The
+question of ``how declarative should my specification be'' is increasingly
+topical. This paper points to an approach that specifies at a higher level,
+which may offer new opportunities for both analyses like ours, as well as formal
+program synthesis and optimization.
