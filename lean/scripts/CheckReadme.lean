@@ -190,7 +190,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:composition/middle-totality-needed»
 #check @CC.Paper.«lem:composition»
 #check @CC.Paper.«sec:composition/associativity»
-#check @CC.Paper.«sec:composition/graph-tables»
+#check @CC.Paper.«sec:composition/function-tables»
 #check @CC.Paper.«cor:functional-composition»
 #check @CC.Paper.«sec:composition/crdt-query»
 #check @CC.Paper.«eq:parameterized-composition»

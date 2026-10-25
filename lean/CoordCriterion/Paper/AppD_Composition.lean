@@ -45,12 +45,12 @@ theorem «prop:curried-query-plan» {I J A B C : Type} (F : Table (I × A) B) (G
   Comp.curried_query_plan F G
 
 /-- Eq. `eq:curried-composition`: "For monotone `f : I × A → B` and
-`g : J × B → C`, the graph-table instance of
+`g : J × B → C`, the instance for tables of functions of
 Lemma `lem:parameterized-composition` says that `h(i,j,a) = g(j, f(i,a))`
 is monotone; in curried form, `h^♯(i,j) = g^♯(j) ∘ f^♯(i)`, which is the plan
-of Proposition `prop:curried-query-plan` on graph tables."  Lean: (1) `G ⋆ F`
-of graph tables is the graph of `h`; (2) `h` is monotone; (3) the curried
-form; (4) the curried plan of the two graph tables is the graph table of `h`. -/
+of Proposition `prop:curried-query-plan` on tables of functions."  Lean: (1) `G ⋆ F`
+of tables of functions is the table of `h`; (2) `h` is monotone; (3) the curried
+form; (4) the curried plan of the two tables of functions is the table of `h`. -/
 theorem «eq:curried-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B] [PO C]
     (f : I × A → B) (g : J × B → C) :
     Comp.par (graph f) (graph g) = graph (fun x : I × (J × A) => g (x.2.1, f (x.1, x.2.2))) ∧

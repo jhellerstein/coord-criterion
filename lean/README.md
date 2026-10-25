@@ -316,7 +316,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composition/middle-totality-needed»` | theorem | Totality of `S₂` on *all* of `M` is needed (not stated in the paper; it explains the hypothesis above). |
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
-| `«sec:composition/graph-tables»` | theorem | "For a function `f`, call `{(i,f(i))}` its graph table; it satisfies Lifted Monotonicity exactly when `f` is monotone. |
+| `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone. |
 | `«cor:functional-composition»` | theorem | **Corollary `cor:functional-composition`** (Functional composition): |
 | `«sec:composition/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
 | `«eq:parameterized-composition»` | theorem | Eq. |

@@ -17,7 +17,7 @@ at the end of `Instances/Examples.lean` (namespace `CC.Inst`).
 Conventions: a table is `Table I O := I → O → Prop`; `Spec I O` is a table
 total on all of `I` with orders on `I` and `O`; products carry the
 componentwise order; the composed input `I × J × A` is `I × (J × A)`;
-`Comp.graph f` is the graph table of `f`, and `Comp.Monotone f` is
+`Comp.graph f` is the table of `f`, and `Comp.Monotone f` is
 `∀ x y, x ≼ y → f x ≼ f y`.  A commitment strategy is recorded by its
 declared committed table `K ⊆ S₁` (`Comp.CommitTable`), whose field `total`
 is totality preservation; `κ.spec` is `K` read as a specification.
@@ -67,18 +67,18 @@ theorem «sec:composition/associativity» {I M O P : Type} (S1 : Table I M) (S2 
     Comp.tcomp (Comp.tcomp S1 S2) S3 = Comp.tcomp S1 (Comp.tcomp S2 S3) :=
   Comp.tcomp_assoc S1 S2 S3
 
-/-- "For a function `f`, call `{(i,f(i))}` its graph table; it satisfies
-Lifted Monotonicity exactly when `f` is monotone.  Graph tables are closed
-under `∘`."  Lean: the composition of the graph tables of `f` and `g` is the
-graph table of `g ∘ f`, and the graph table of `f` satisfies Lifted
+/-- "For a function `f`, its table `{(i,f(i))}` satisfies
+Lifted Monotonicity exactly when `f` is monotone.  Tables of functions are closed
+under `∘`."  Lean: the composition of the tables of functions of `f` and `g` is the
+table of `g ∘ f`, and the table of `f` satisfies Lifted
 Monotonicity iff `f` is monotone. -/
-theorem «sec:composition/graph-tables» {I M O : Type} [PO I] [PO M] [PO O] (f : I → M) (g : M → O) :
+theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] (f : I → M) (g : M → O) :
     Comp.seq (graph f) (graph g) = graph (g ∘ f) ∧ ((graph f).LiftedMono ↔ Monotone f) :=
   ⟨Comp.seq_graph f g, Comp.graph_liftedMono_iff f⟩
 
 /-- **Corollary `cor:functional-composition`** (Functional composition): "If
 `f : (I,≼_I) → (M,≼_M)` and `g : (M,≼_M) → (O,≼_O)` are monotone, so is
-`g ∘ f`."  (Proved in the library through graph tables and
+`g ∘ f`."  (Proved in the library through tables of functions and
 Lemma `lem:composition`, as in the paper.) -/
 theorem «cor:functional-composition» {I M O : Type} [PO I] [PO M] [PO O] {f : I → M} {g : M → O}
     (hf : Monotone f) (hg : Monotone g) : Monotone (g ∘ f) :=
@@ -187,7 +187,7 @@ theorem «thm:proper-coordination» :
 
 /-- **Corollary `cor:monotone-commitment`** (Committing upstream to a monotone
 function): "If the committed table `K` of a totality-preserving commitment
-strategy is the graph of a monotone function and the downstream
+strategy is the table of a monotone function and the downstream
 specification (`S₂` or `G`) satisfies Lifted Monotonicity, the strategy is
 proper." -/
 theorem «cor:monotone-commitment» :
@@ -213,7 +213,7 @@ key-value store), for any deterministic state machine `δ` and two distinct
 commands: "`F` is non-monotone, since distinct next entries are incompatible
 outputs in one fiber.  So is the key-value store specification `G ⋆ F`,
 since concurrent commands ordered oppositely give incompatible responses.
-… `K` is the graph of a monotone function.  Deterministic execution makes `G`
+… `K` is the table of a monotone function.  Deterministic execution makes `G`
 monotone.  By Corollary `cor:monotone-commitment` the log commitments are
 proper, and `G ⋆ K` is consistent with no commitment in the store."  Lean:
 `I = B = Inst.Pfx Cmd` (prefix order), `A = Comp.Pt`; `logF`, `logK` (commit
