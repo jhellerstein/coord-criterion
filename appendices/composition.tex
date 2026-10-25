@@ -455,3 +455,53 @@ contradicted by an entry it has not seen, and $G$ is not monotone.  By the
 exposure boundary some output of $G$ then needs a commitment of the store's
 own.  Bare reads then need coordination, typically by going through the log.
 \end{example}
+
+\subsection{Dataflow graphs}
+\label{app:dataflow-graphs}
+
+Sequential composition builds pipelines.  Two more ingredients build
+arbitrary acyclic graphs of stages.  The \emph{product}
+$\Spec_a\otimes\Spec_b$ runs two stages side by side on independent inputs.
+Its inputs are pairs $(i_a,i_b)$, ordered componentwise, and each of its rows
+pairs a row of $\Spec_a$ with a row of $\Spec_b$.  \emph{Glue} stages are
+tables of monotone functions.  A \emph{tee} $m\mapsto(m,m)$ copies one output
+to two consumers, a \emph{merge} joins two inputs, for instance by set union,
+a \emph{split} routes each element of a set by a fixed predicate, and a
+projection discards a component.  A graph is an expression built from
+$\circ$, $\otimes$, and glue.
+
+The product behaves componentwise.  It satisfies Lifted Monotonicity exactly
+when both factors do, an output is exposable exactly when both components
+are, and it needs no commitment exactly when neither factor does.  The
+converse directions need nonempty input domains.  A stage that merges the
+outputs of two guards is proper exactly when it satisfies Lifted Monotonicity
+on the product of their outputs, and a merge by join is always proper.
+Composition with independent inputs (Section~\ref{sec:parameterized-composition})
+is the product of $\Spec_1$ with the identity on $J$, followed by $\Spec_2$, so
+Lemma~\ref{lem:parameterized-composition} follows from the product and
+composition lemmas.
+
+Monotonicity of a graph can be checked node by node, much as a type checker
+proceeds.  Each node is offered the outputs that everything upstream of it
+can produce.  The node passes when it satisfies Lifted Monotonicity on what it
+is offered, and its outputs become what the next node is offered.  If every
+node passes, the graph satisfies Lifted Monotonicity.  A node's test is
+exactly properness of the pipeline from its upstream, so a graph in which
+every node is properly guarded is consistent.  The test is sufficient but not
+necessary: a composite that is monotone only under another order on an
+interface (Proposition~\ref{prop:joint-monotone}(3)) fails it.
+
+What a node is offered depends on the shape of the graph at fan-in.
+Independent sources offer the product of their outputs, while a tee offers
+only matching pairs.  So teeing a stage's output differs from running the
+stage twice.  Both are monotone when the stage is, but two runs of a
+nondeterministic stage may disagree.  Consider a stage with one input and
+outputs $\mathit{lo}\preceq\mathit{hi}$, followed by a test of whether its two
+copies agree.  The pipeline is proper after a tee, and not after two runs.
+Teeing and running twice coincide exactly when the stage is a function.
+
+We leave feedback loops to future work.  Networks of monotone functions have
+least-fixpoint meanings~\cite{kahn1974semantics}, but for nondeterministic
+stages, input--output relations do not compose under
+feedback~\cite{brock1981scenarios}.
+
