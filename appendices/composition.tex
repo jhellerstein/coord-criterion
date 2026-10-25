@@ -124,10 +124,10 @@ rows at other inputs, and there are none, so every run of $\mathcal P$ under
 the empty basis stays at the canonical state and emits nothing.  The store
 then receives nothing.
 
-\subsection{Irredundant Coordination}
+\subsection{Proper Coordination}
 
 Throughout, $f$ is monotone, $\mathcal B$ and $\mathcal B_{\mathcal K}$ are
-bases of $\mathcal P$ and $\mathcal K$, and for a
+the bases of the systems for $\mathcal P$ and $\mathcal K$, and for a
 table $R$ of $\mathcal P$ we write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  The image
 of the canonical state $\sigma_{\mathcal P}(i)$ is the canonical state of
 $\mathcal K\circ\mathcal P$ at $i$, since $f(P[\mathrm{in}\InputGe i])$ is
@@ -177,7 +177,7 @@ $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ retires $(k,f(m'))$.  So every row
 that the composite's canonical event for $f(m)$ removes by commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
-\begin{proof}[Proof of Theorem~\ref{thm:irredundant-coordination}]
+\begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
 (1) Let $(m,R)$ be a state of $\mathcal K$.  Its fiber at $m$ is $\{f(m)\}$,
 and every row $(k,f(k))\in R$ has $m\preceq_M k$, so $f(m)\OutputOrd f(k)$ by
 monotonicity.  No row is ruled out by $f(m)$, so $f(m)$ is exposable.  If
@@ -202,22 +202,74 @@ $\sigma_{\mathcal K\circ\mathcal P}(i)=f(\sigma_{\mathcal P}(i))$, and by
 (2) no $m'$ with $f(m')=f(m)$ is exposable at $\sigma_{\mathcal P}(i)$.
 \end{proof}
 
-For the mutex store of Section~\ref{sec:irredundant-coordination}, let
+\begin{proof}[Proof of Corollary~\ref{cor:empty-store}]
+(1) Let $\sigma$ and $\sigma'$ be states of $\mathcal K$ with the same current
+input $m$ and $R_\sigma\subseteq R_{\sigma'}$.  If $\mathsf{input}(j)$ is legal
+at $\sigma$, a row of $R_\sigma$ at $j$ is in $R_{\sigma'}$, so the input is
+legal at $\sigma'$, and both events keep the rows at \indescs of $j$.  If
+$\Out{\delta}{x}$ is legal at $\sigma$, then $x=f(m)$ and $(m,x)\in
+R_{\sigma'}$, so $\Out{\varepsilon}{x}$ is legal at $\sigma'$ by
+Theorem~\ref{thm:proper-coordination}(1).  By containment
+(Lemma~\ref{lem:canonical-commitment-normal-form}) the original ends inside
+$R_\sigma[\mathrm{out}\OutputGe x]$, which is contained in
+$R_{\sigma'}[\mathrm{out}\OutputGe x]$, where the replacement ends.  Both
+start at $\sigma_{\mathcal K}(m)$, so the containment holds after each event.
+The replacement's strategy allows each erased event, since the original's
+allowed it before erasure.
+
+(2) Say that $\mathcal P$ \emph{feeds} $k$ when some run of its system emits
+$k$.  Consider a guarded composite run of the replacement.  We build the
+original's run event by event, with the same erasure, and keep two facts: the
+current inputs agree, and every row $(k,f(k))$ of the replacement's table with
+$k$ fed is in the original's.  An input event $\mathsf{input}(j)$ of the
+replacement has $j$ fed, so $(j,f(j))$ is in the original's table and the
+input is legal there.  An output event $\Out{\varepsilon}{x}$ is allowed
+because the original's strategy allows some $\Out{\delta}{x}$ after a history
+with the same erasure.  The strategy ignores commitments, so it allows
+$\Out{\delta}{x}$ after the original's history.  It never stalls, so it also
+allows some $\Out{\delta'}{x}$ with $\delta'$ from $\mathcal B_{\mathcal K}$
+defined at the original's state $\sigma$.  The commitments keep the current
+input $m$, whose fiber is $\{x\}$, so the event is legal by
+Theorem~\ref{thm:proper-coordination}(1).  The original's events so far,
+with the run of $\mathcal P$, form a guarded composite run in which this event
+applies $\delta'$.  By at most once, $\delta'$ is not contradicted, so it
+removes no row $(k,f(k))$ with $k$ fed, and both facts persist.
+\end{proof}
+
+For the mutex store of Section~\ref{sec:proper-coordination}, let
 $\mathcal P$ be the log specification of
-Example~\ref{ex:committed-log-composition} under its canonical basis, and $f$
-any monotone function of the log.  For a set $Q$ of logs, removing every row
-whose input is in $Q$ is a commitment of $\mathcal K$ at any state whose
-current input is not in $Q$ and which has such a row.  It removes whole
-fibers, so it seals.  Let $\mathcal B_{\mathcal K}$ contain this commitment
-for $Q$ the logs that start with $b$.  At a state whose current log is
-nonempty, every remaining log has the same first command, so this commitment
-is undefined there.  In one guarded composite run,
+Example~\ref{ex:committed-log-composition}, under its canonical basis with a
+strategy that allows every event, and $f$ any monotone function of the log.
+For a set $Q$ of logs, removing every row whose input is in $Q$ is a
+commitment of $\mathcal K$ at any state whose current input is not in $Q$ and
+which has such a row.  It removes whole fibers, so it seals.  Let
+$\mathcal B_{\mathcal K}$ contain this commitment for $Q$ the logs that start
+with $b$.  At a state whose current log is nonempty, every remaining log has
+the same first command, so this commitment is undefined there.
+
+Let the store's strategy take the lock at its first event when the log is
+empty, and apply nothing otherwise.  In one guarded composite run,
 $\mathcal P$ emits the empty log $[\,]$ by $\Out{\varepsilon}{[\,]}$, and the
 store, at $\sigma_{\mathcal K}([\,])$, emits $f([\,])$ by applying the
-commitment.  By (1), $f([\,])$ was exposable without it.  In another,
-$\mathcal P$ emits $[b]$ at $\sigma_{\mathcal P}([b])$ by its canonical event,
-and the store receives $[b]$, an input the first run sealed.  So the
-commitment is contradicted, and the store coordinates redundantly.
+commitment.  By Theorem~\ref{thm:proper-coordination}(1), $f([\,])$ was
+exposable without it.  $\mathcal P$ can also emit $[b]$ at
+$\sigma_{\mathcal P}([b])$ by its canonical event, so it feeds the store
+$[b]$, an input the commitment sealed.  So the commitment is contradicted,
+and the store coordinates redundantly.  Its replacement gains behaviour.  At
+$\sigma_{\mathcal P}([b])$, $\mathcal P$ can emit $[\,]$ and then $[b]$.  The
+replacement emits $f([\,])$, receives $[b]$, and emits $f([b])$.  The locking
+store must take the lock at $[\,]$, which seals $[b]$, so it cannot receive
+$[b]$.
+
+Let the strategy instead take the lock only when its current log is nonempty.
+The lock is undefined there, so every output event the store performs is
+some $\Out{\varepsilon}{x}$.  The store applies no commitment, so it does not
+coordinate redundantly.  Its strategy depends only on the inputs it has
+received and always offers $\Out{\varepsilon}{x}$, so it meets the hypotheses
+of Corollary~\ref{cor:empty-store}(2).  A strategy that insists on the lock
+at a nonempty log also applies no commitment and ignores commitments, but it
+stalls.  When $\mathcal P$ emits $[b]$ first, the store never emits, while its
+replacement emits $f([b])$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
 The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering
@@ -225,7 +277,7 @@ argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
 $\Rejected_{f(m)}$, so $f(m)$ is exposable at $f(\sigma)$.
 \end{proof}
 
-For the per-key store of Section~\ref{sec:irredundant-coordination}, let
+For the per-key store of Section~\ref{sec:proper-coordination}, let
 $\mathcal P$ have one input with fiber $\{[a,b],[b,a]\}$, and let $f$ send a
 log to the family of its subsequences on each key.  The two logs are
 incomparable with no common \outnoun, so $[a,b]$ is not exposable.  When $a$

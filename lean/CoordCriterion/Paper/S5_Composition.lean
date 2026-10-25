@@ -1,7 +1,7 @@
 import CoordCriterion.Appendix.Guarded
 
 /-!
-# Paper §5, "Composition and Irredundant Coordination" (`sections/composition.tex`)
+# Paper §5, "Composition and Proper Coordination" (`sections/composition.tex`)
 
 Statement layer for Section `sec:composition`.  Read it side by side with
 `sections/composition.tex`: the `/-! ## … -/` headers follow the section's
@@ -120,13 +120,13 @@ theorem «sec:composite-calm/components-commit» :
       ∀ es ρ, SysExec Dist.noBasis (canon Dist.spU ()) es ρ → Guard.emitted es = [] :=
   Guard.composite_monotone_not_enough
 
-/-! ## Irredundant Coordination (`sec:irredundant-coordination`) -/
+/-! ## Proper Coordination (`sec:proper-coordination`) -/
 
 /-- "The store `𝒦` is the specification with table `{(m,f(m))}`, and the
 composite `𝒦 ∘ 𝒫` has table `{(i,f(m)) : (i,m) ∈ P}`.  For a state `σ = (i,R)`
 of `𝒫`, its image `f(σ)` is the state `(i, {(k,f(m)) : (k,m) ∈ R})` of the
 composite." -/
-theorem «sec:irredundant-coordination/image» {I M O : Type} [PO I] [PO M] [PO O]
+theorem «sec:proper-coordination/image» {I M O : Type} [PO I] [PO M] [PO O]
     (sp : Spec I M) (f : M → O) :
     (∀ i o, (Guard.comp sp f).S i o ↔ ∃ m, sp.S i m ∧ o = f m) ∧
       ∀ σ : State sp, (Guard.img f σ).cur = σ.cur ∧
@@ -139,7 +139,7 @@ keeps, which Equation `eq:commitment-excludes` forbids.  In the composite,
 emitting `f(m')` needs no commitment at all, since it retires `f(m)`."
 Lean: `𝒫 = Comp.anyS` (fiber `{x, y}`), `f = Guard.fLvl` (`x ↦ lo`,
 `y ↦ hi`); the choice `c_y`. -/
-theorem «sec:irredundant-coordination/no-pushforward» :
+theorem «sec:proper-coordination/no-pushforward» :
     (∃ τ, (choiceC Comp.Two.y).app (canon Comp.anyS Comp.Pt.pt) = some τ ∧
       ∀ c : Commitment (Guard.comp Comp.anyS Guard.fLvl),
         c.app (Guard.img Guard.fLvl (canon Comp.anyS Comp.Pt.pt)) ≠ some (Guard.img Guard.fLvl τ)) ∧
@@ -147,30 +147,38 @@ theorem «sec:irredundant-coordination/no-pushforward» :
       Exposable (canon (Guard.comp Comp.anyS Guard.fLvl) Comp.Pt.pt) Guard.Lvl.hi :=
   ⟨Guard.push_not_commitment, Guard.choice_becomes_retirement⟩
 
-/-- **Definition `def:irredundant-coordination`** (Irredundant Coordination):
+/-- **Definition `def:proper-coordination`** (Proper Coordination):
 "The store coordinates redundantly when, in some guarded composite run, one of
-its output events applies a commitment that is contradicted in the guarded
-composite runs (Definition `def:coordination`).  The guarded composite
-coordinates at most once when the store does not coordinate redundantly.  It
-coordinates at least once when every output event `Out_γ(m)` of `𝒫` at a state
-`σ` such that `f(m)` is not exposable at `f(σ)` has `γ ≠ ε`.  It is irredundant
-when it coordinates at most once and at least once."  Lean: a guarded
-composite run is `Guard.GRun B BK es m esK` (`𝒫` under `B` emits `m :: ms`; the
-store under `BK` starts at `σ_𝒦(m)`, emits an image of `m`, then receives and
-answers each later output).  Contradiction follows `def:coordination` with `𝓡`
-the store's parts of guarded composite runs: some such run emits a removed row
-at its input (`Guard.StoreEmits`) or accepts a sealed input
-(`Guard.StoreAccepts`). -/
-theorem «def:irredundant-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
-    {f : M → O} (B : Basis sp) (BK : Basis (graph f)) :
-    (Guard.Irredundant B BK ↔ Guard.AtMostOnce B BK ∧ Guard.AtLeastOnce B f) ∧
-      (Guard.AtMostOnce B BK ↔ ¬ Guard.Redundant B BK) ∧
-      (Guard.Redundant B BK ↔ ∃ es m esK a δ x b σ σc, Guard.GRun B BK es m esK ∧
-        esK = a ++ .output δ x :: b ∧ SysExec BK (canon (graph f) m) a σ ∧ ApplySeq δ σ σc ∧
-        Guard.Contradicted B BK σ σc) ∧
-      (Guard.AtLeastOnce B f ↔ ∀ (σ τ : State sp) γ m, SysStep B σ (.output γ m) τ →
+its output events applies a commitment that is contradicted (Definition
+`def:coordination`) in the store's runs on the outputs that runs of `𝒫`'s
+system emit.  The guarded composite coordinates at most once when the store
+does not coordinate redundantly.  It coordinates at least once when every
+output event `Out_γ(m)` of `𝒫` at a state `σ` such that `f(m)` is not exposable
+at `f(σ)` has `γ ≠ ε`.  It is proper when it coordinates at most once and
+at least once."  Lean: a system for one participant is `Guard.Sys` (a basis
+and a strategy that sees the initial input and the local history), and its
+produced runs are `Guard.Produces`.  A guarded composite run is
+`Guard.GRun P K es m esK`: `P` produces `es`, which emits `m` first, and `K`
+produces `esK` from `σ_𝒦(m)` on a prefix `m :: ms` of the outputs of `es`.
+Contradiction follows `def:coordination` with `𝓡` the store's runs on what
+`𝒫` can feed it (`Guard.Feeds`): every store commitment seals, and it is
+contradicted when it removes a row at an input that some run of `P` emits.
+"Each fiber of `𝒦` has one row, so every store commitment seals, and it is
+contradicted exactly when `𝒫` can feed the store an input it seals.  We judge
+this against the runs of `𝒫`, since a store that has sealed an input never
+accepts it in its own runs." -/
+theorem «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
+    {f : M → O} (P : Guard.Sys sp) (K : Guard.Sys (graph f)) :
+    (Guard.Proper P K ↔ Guard.AtMostOnce P K ∧ Guard.AtLeastOnce P.basis f) ∧
+      (Guard.AtMostOnce P K ↔ ¬ Guard.Redundant P K) ∧
+      (Guard.Redundant P K ↔ ∃ es m esK a δ x b σ σc, Guard.GRun P K es m esK ∧
+        esK = a ++ .output δ x :: b ∧ SysExec K.basis (canon (graph f) m) a σ ∧
+        ApplySeq δ σ σc ∧ Guard.Contradicted P σ σc) ∧
+      (∀ σ σc : State (graph f), Guard.Contradicted P σ σc ↔
+        ∃ k x, σ.R k x ∧ ¬ σc.R k x ∧ ∃ i es ρ, Guard.Produces P i es ρ ∧ k ∈ Guard.emitted es) ∧
+      (Guard.AtLeastOnce P.basis f ↔ ∀ (σ τ : State sp) γ m, SysStep P.basis σ (.output γ m) τ →
         ¬ Exposable (Guard.img f σ) (f m) → γ ≠ []) :=
-  ⟨Iff.rfl, Iff.rfl, Iff.rfl, Iff.rfl⟩
+  ⟨Iff.rfl, Iff.rfl, Iff.rfl, fun _ _ => Iff.rfl, Iff.rfl⟩
 
 /-- **Theorem `thm:guarded-runs`** (Guarded runs): "Let `f` be monotone and
 `ℬ` any basis of `𝒫`.  (1) Every run of `𝒫` under `ℬ`, with each output `m`
@@ -204,39 +212,42 @@ theorem «thm:guarded-runs» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
    fun _ _ _ _ _ hx he => Guard.store_run hf hx he,
    fun fam hrun hsub j hj hP => Guard.guarded_confluent fam hrun hsub j hj hP⟩
 
-/-- **Theorem `thm:irredundant-coordination`** (Irredundant Coordination):
-"Let `f` be monotone and `ℬ` any basis of `𝒫`.  (1) Every output of the store
-is exposable at every state of `𝒦`.  So wherever `Out_δ(f(m))` is legal,
+/-- **Theorem `thm:proper-coordination`** (Proper Coordination):
+"Let `f` be monotone, and fix any system for `𝒫`.  (1) Every output of the
+store is exposable at every state of `𝒦`.  So wherever `Out_δ(f(m))` is legal,
 `Out_ε(f(m))` is legal too and keeps at least the same rows.  (2) The guarded
-composite coordinates at least once, for every basis `ℬ_𝒦`.  It is irredundant
-when `ℬ_𝒦` is empty.  (3) If `𝒦 ∘ 𝒫` violates Lifted Monotonicity, some output
+composite coordinates at least once, for every system for `𝒦`.  It is
+proper when `ℬ_𝒦` is empty.  (3) If `𝒦 ∘ 𝒫` violates Lifted Monotonicity, some output
 `f(m)` of the composite is not exposable at a canonical state, and `𝒫` must
 commit to emit any output with that image there."  Lean: at a store state
-`σ`, its only output is `f(σ.cur)`; the empty basis is `Guard.noStore f`.
+`σ`, its only output is `f(σ.cur)`; the empty-basis store is `Guard.noStore f`
+(its strategy allows every event).
 "Must commit" is: no `m'` with the same image is exposable at `σ_𝒫(i)`, and
 under the empty basis no output event at `σ_𝒫(i)` emits one. -/
-theorem «thm:irredundant-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
+theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {f : M → O} (hf : Monotone f) :
     (∀ σ : State (graph f), Exposable σ (f σ.cur)) ∧
     (∀ (BK : Basis (graph f)) (σ τ : State (graph f)) δ x, SysStep BK σ (.output δ x) τ →
       ∃ τ', SysStep BK σ (.output [] x) τ' ∧ ∀ k u, τ.R k u → τ'.R k u) ∧
     (∀ B : Basis sp, Guard.AtLeastOnce B f) ∧
-    (∀ B : Basis sp, Guard.Irredundant B (Guard.noStore f)) ∧
+    (∀ P : Guard.Sys sp, Guard.Proper P (Guard.noStore f)) ∧
     (¬ (Guard.comp sp f).LiftedMono →
       ∃ i m, sp.S i m ∧ ¬ Exposable (canon (Guard.comp sp f) i) (f m) ∧
         (∀ m', sp.S i m' → f m' = f m → ¬ Exposable (canon sp i) m') ∧
         ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → f m' ≠ f m) :=
   ⟨Guard.store_exposable hf, fun _ _ _ _ _ h => Guard.store_eps hf h, Guard.at_least_once hf,
-    Guard.guarded_irredundant hf, Guard.at_least_once_needed hf⟩
+    Guard.guarded_proper hf, Guard.at_least_once_needed hf⟩
 
 /-- "By Theorem `thm:guarded-runs`(2), a store under the empty basis also
-follows every run of `𝒫`."  Lean: every run of `𝒫` under any basis that emits
-`m :: ms` extends to a guarded composite run with the empty store basis. -/
-theorem «sec:irredundant-coordination/empty-store-follows» {I M O : Type} [PO I] [PO M] [PO O]
-    {sp : Spec I M} {f : M → O} (hf : Monotone f) {B : Basis sp} {i : I}
-    {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) {m : M}
+follows every run of `𝒫`.  The theorem holds for every system for `𝒫`."  Lean:
+every run that `𝒫`'s system produces and that emits `m :: ms` extends to a
+guarded composite run in which the empty-basis store answers every output. -/
+theorem «sec:proper-coordination/empty-store-follows» {I M O : Type} [PO I] [PO M] [PO O]
+    {sp : Spec I M} {f : M → O} (hf : Monotone f) {P : Guard.Sys sp} {i : I}
+    {es : List (SEvent sp)} {ρ : State sp} (h : Guard.Produces P i es ρ) {m : M}
     {ms : List M} (he : Guard.emitted es = m :: ms) :
-    ∃ esK, Guard.GRun B (Guard.noStore f) es m esK :=
+    ∃ esK, Guard.GRun P (Guard.noStore f) es m esK ∧
+      esK.map SEvent.erase = .output (f m) :: Guard.storeEvs f ms :=
   Guard.noStore_follows hf h he
 
 /-- "Every legal output event removes at least the rows its canonical event
@@ -245,7 +256,7 @@ composite must seal or choose against has lost all its preimages to `𝒫`'s
 commitments."  Lean: for a legal `Out_γ(m)` of `𝒫` under any basis and any
 composite state whose table contains the image of `𝒫`'s; the covering argument
 of Appendix `app:composition` is `«app:composition/coverage»`. -/
-theorem «sec:irredundant-coordination/any-basis» {I M O : Type} [PO I] [PO M] [PO O]
+theorem «sec:proper-coordination/any-basis» {I M O : Type} [PO I] [PO M] [PO O]
     {sp : Spec I M} {f : M → O} (hf : Monotone f) {B : Basis sp} {σ τ : State sp}
     {γ : List (Commitment sp)} {m : M} (h : SysStep B σ (.output γ m) τ)
     {ρ : State (Guard.comp sp f)} (hsub : ∀ k o, Guard.imgT f σ.R k o → ρ.R k o) :
@@ -254,32 +265,116 @@ theorem «sec:irredundant-coordination/any-basis» {I M O : Type} [PO I] [PO M] 
         ∀ m', σ.R k m' → f m' = x → ¬ σc.R k m' :=
   Guard.coverage_step hf h hsub
 
+/-- "By Theorem `thm:proper-coordination`(1), none of the store's
+commitments is needed.  So it should be safe to replace the store's system with
+one whose basis is empty, with no seals or choices allowed.  The
+commitment-erased replacement of the store's system has the empty basis and
+the same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)`."  Lean:
+`Guard.eraseSys K`; after a local history it allows an event when `K` allows
+one with the same erasure (`Guard.eraseC`) after a history with the same
+erasure.  It is basis-free, so it applies no commitment. -/
+theorem «sec:proper-coordination/replacement» {M O : Type} [PO M] [PO O] {f : M → O}
+    (K : Guard.Sys (graph f)) :
+    (Guard.eraseSys K).basis = (fun _ => False) ∧
+    (∀ i a' e', (Guard.eraseSys K).strat i a' e' ↔
+      ∃ a e, a.map Guard.eraseC = a'.map Guard.eraseC ∧ Guard.eraseC e = Guard.eraseC e' ∧
+        K.strat i a e) ∧
+    ∀ i es ρ, Guard.Produces (Guard.eraseSys K) i es ρ → ∀ γ x, SEvent.output γ x ∈ es → γ = [] :=
+  ⟨rfl, fun _ _ _ => Iff.rfl, fun _ _ _ h => Guard.eraseSys_eps h⟩
+
+/-- **Corollary `cor:empty-store`** (Empty store): "Let `f` be monotone, and fix
+systems for `𝒫` and `𝒦`.  (1) For every guarded composite run, the replacement
+has one with the same run of `𝒫` and the same store inputs and outputs.  After
+each event, the replacement's table contains the original's.  (2) Suppose the
+guarded composite is proper, and the store's strategy ignores the
+commitments in its history and, whenever it offers an output, also offers it
+with commitments defined at the current state.  Then the converse of (1) holds
+too, so the store and its replacement have the same observable behaviour."
+Lean: (1) `Guard.erase_simulates` (proper coordination not needed; the lockstep form,
+after each event, is `Guard.erase_lockstep`); (2) `Guard.erase_reflects` and
+`Guard.empty_store`, with the strategy hypotheses `Guard.Blind` and
+`Guard.Live`.  Observable behaviour is `Guard.Obs`: for each run of `𝒫`, the
+erased store traces of guarded composite runs.  The replacement is itself
+proper. -/
+theorem «cor:empty-store» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M} {f : M → O}
+    (hf : Monotone f) (P : Guard.Sys sp) (K : Guard.Sys (graph f)) :
+    (∀ es m esK, Guard.GRun P K es m esK →
+      Guard.GRun P (Guard.eraseSys K) es m (esK.map Guard.eraseC) ∧
+        (esK.map Guard.eraseC).map SEvent.erase = esK.map SEvent.erase ∧
+        ∀ ρK, Guard.Produces K m esK ρK → ∃ ρ', Guard.Produces (Guard.eraseSys K) m
+          (esK.map Guard.eraseC) ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u) ∧
+    (Guard.Proper P K → Guard.Blind K → Guard.Live K →
+      (∀ es m esK', Guard.GRun P (Guard.eraseSys K) es m esK' →
+        ∃ esK, Guard.GRun P K es m esK ∧ esK.map SEvent.erase = esK'.map SEvent.erase) ∧
+      Guard.Proper P (Guard.eraseSys K) ∧
+      ∀ es m l, Guard.Obs P K es m l ↔ Guard.Obs P (Guard.eraseSys K) es m l) :=
+  ⟨fun _ _ _ h => Guard.erase_simulates hf h, fun hirr hb hl =>
+    ⟨fun _ _ _ h => Guard.erase_reflects hf hb hl hirr.1 h, Guard.empty_store hf hirr hb hl⟩⟩
+
+/-- "The hypotheses of (2) are needed.  A strategy that offers only commitments
+undefined at its state never emits, while its replacement does.  If the store
+is redundant, the replacement can follow runs of `𝒫` that the store cannot, as
+the next example shows."  Lean: with `𝒫 = Inst.smrS1` under its canonical
+basis and every strategy, and any monotone `f`: the stalling-lock store
+`Guard.stallLock b f` is proper and `Guard.Blind`, yet its replacement follows
+a run it cannot (`Guard.stall_lock`), so `Guard.Live` is needed; the redundant
+early-lock store loses a run the same way (`Guard.early_lock_strict`). -/
+theorem «sec:proper-coordination/hypotheses-needed» {Cmd O : Type} [PO O]
+    {f : Inst.Pfx Cmd → O} (hf : Monotone f) (b : Cmd) :
+    (Guard.Proper (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))) (Guard.stallLock b f) ∧
+      Guard.Blind (Guard.stallLock b f) ∧
+      ∃ es m l, Guard.Obs (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd))))
+          (Guard.eraseSys (Guard.stallLock b f)) es m l ∧
+        ¬ Guard.Obs (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))) (Guard.stallLock b f)
+          es m l) ∧
+    ∃ es m l, Guard.Obs (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd))))
+        (Guard.eraseSys (Guard.earlyLock b f)) es m l ∧
+      ¬ Guard.Obs (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))) (Guard.earlyLock b f)
+        es m l :=
+  ⟨Guard.stall_lock hf b, Guard.early_lock_strict hf b⟩
+
 /-- "Mutexes in the store, behind the log, are another matter.  By Theorem
-`thm:irredundant-coordination`(1) the store never needs a commitment, so each
-commitment it applies is redundant once some guarded run contradicts it.
+`thm:proper-coordination`(1) the store never needs a commitment, so each
+commitment it applies is redundant once a run of `𝒫` contradicts it.
 Consider a store that locks each key, and two writes `a` and `b` to one key.
-If the store takes the lock after the log has placed one of them first, every
-log it can still receive agrees with that order.  The lock removes no row, so
-it is not a commitment.  The locks are still taken, but they decide nothing.
-Suppose instead that the store grants the lock to `a` at the empty log, ahead
-of the log, and so seals every log in which `b` comes first.  In another
-guarded run the log decides `b` first and feeds the store `[b]`, which
-contradicts the lock.  The lock then repeats coordination that the log
-already does, so the composite is not irredundant."  Lean: `𝒫 = Inst.smrS1`
-under its canonical basis, any monotone `f`; the lock is
-`Guard.sealIn (Guard.bFirst b)` and the store basis `Guard.mutexB b f`.  At a
-nonempty log the lock is undefined (`Guard.lock_after_log`).  The same `𝒫`
-with the empty store basis is irredundant. -/
-theorem «sec:irredundant-coordination/mutex-store» {Cmd O : Type} [PO O]
+Whether the lock is coordination depends on the store's strategy.  If the
+strategy takes the lock only after the log has placed one of them first, every
+log the store can still receive agrees with that order.  The lock removes no
+row, so it is not a commitment, and the composite is proper.  The locks
+are still taken, but they decide nothing.  Suppose instead that the strategy
+grants the lock to `a` at the empty log, ahead of the log, and so seals every
+log in which `b` comes first.  The log can still decide `b` first and feed the
+store `[b]`, which contradicts the lock.  The lock then repeats coordination
+that the log already does, so the composite is not proper.  The lock also
+costs behaviour.  When the log emits `[]` and then `[b]`, the replacement
+follows, but the locking store, having sealed `[b]`, cannot."  Lean: the lock
+is `Guard.sealIn (Guard.bFirst b)` and the store basis `Guard.mutexB b f`; at a
+nonempty log the lock is undefined (`Guard.lock_after_log`).  The late-lock
+store `Guard.lateLock b f` is proper for any upstream system
+(`Guard.late_lock_proper`).  With `𝒫 = Inst.smrS1` under its canonical
+basis and every strategy, and any monotone `f`, the early-lock store
+`Guard.earlyLock b f` is redundant (`Guard.mutex_redundant`), and its
+replacement follows a run it cannot (`Guard.early_lock_strict`).  The same `𝒫`
+with the empty-basis store is proper. -/
+theorem «sec:proper-coordination/mutex-store» {I' Cmd O : Type} [PO I'] [PO O]
     {f : Inst.Pfx Cmd → O} (hf : Monotone f) (b : Cmd) :
     (∀ σ : State (graph f), σ.cur.l ≠ [] → (Guard.sealIn (Guard.bFirst b)).app σ = none) ∧
+    (∀ (sq : Spec I' (Inst.Pfx Cmd)) (P : Guard.Sys sq), Guard.Proper P (Guard.lateLock b f)) ∧
     (∃ σ : State (graph f), σ.cur = ⟨[]⟩ ∧ Exposable σ (f ⟨[]⟩) ∧
       ∃ σc, ApplySeq [Guard.sealIn (Guard.bFirst b)] σ σc ∧
-        Guard.Contradicted (canonBasis Inst.smrS1) (Guard.mutexB b f) σ σc) ∧
-    Guard.Redundant (canonBasis (Inst.smrS1 (Cmd := Cmd))) (Guard.mutexB b f) ∧
-    ¬ Guard.Irredundant (canonBasis (Inst.smrS1 (Cmd := Cmd))) (Guard.mutexB b f) ∧
-    Guard.Irredundant (canonBasis (Inst.smrS1 (Cmd := Cmd))) (Guard.noStore f) :=
-  ⟨Guard.lock_after_log b, Guard.mutex_redundant hf b⟩
+        Guard.Contradicted (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))) σ σc) ∧
+    Guard.Redundant (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))) (Guard.earlyLock b f) ∧
+    ¬ Guard.Proper (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd))))
+      (Guard.earlyLock b f) ∧
+    Guard.Proper (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))) (Guard.noStore f) ∧
+    (∃ es m l, Guard.Obs (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd))))
+        (Guard.eraseSys (Guard.earlyLock b f)) es m l ∧
+      ¬ Guard.Obs (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))) (Guard.earlyLock b f)
+        es m l) :=
+  ⟨Guard.lock_after_log b, fun _ P => (Guard.late_lock_proper hf b P).1,
+    (Guard.mutex_redundant hf b).1, (Guard.mutex_redundant hf b).2.1,
+    (Guard.mutex_redundant hf b).2.2.1, (Guard.mutex_redundant hf b).2.2.2,
+    Guard.early_lock_strict hf b⟩
 
 /-- **Proposition `prop:invisible-coordination`** (Invisible coordination):
 "Let `f` be monotone, and let `𝒫` emit `m` at `σ` by `Out_γ(m)`.  If every row
@@ -299,7 +394,7 @@ them, since `[a,b]` and `[b,a]` have no common refinement.  The store's view of
 both logs is the same, so the composite needs no commitment."  Lean: the
 per-key view `Guard.perKey key` is monotone; with `𝒫 = Guard.abSpec a b`
 (fiber `{[a,b],[b,a]}`), `[a,b]` is not exposable but its image is. -/
-theorem «sec:irredundant-coordination/per-key» {Cmd K : Type} [DecidableEq K] (key : Cmd → K)
+theorem «sec:proper-coordination/per-key» {Cmd K : Type} [DecidableEq K] (key : Cmd → K)
     {a b : Cmd} (hk : key a ≠ key b) :
     Monotone (Guard.perKey key) ∧ Guard.perKey key ⟨[a, b]⟩ = Guard.perKey key ⟨[b, a]⟩ ∧
       ¬ Exposable (canon (Guard.abSpec a b) Comp.Pt.pt) ⟨[a, b]⟩ ∧
@@ -312,22 +407,26 @@ deterministic state machine `δ` and two distinct commands: "Then `𝒫` is
 non-monotone, since distinct next entries are incompatible outputs in one
 fiber.  So is the key-value store `𝒦 ∘ 𝒫`, since concurrent commands ordered
 oppositely give incompatible responses.  …  By Theorems `thm:guarded-runs`
-and `thm:irredundant-coordination`, the store needs no commitment of its own,
+and `thm:proper-coordination`, the store needs no commitment of its own,
 and under the empty basis it follows every run of the log.  Because the
-composite is not monotone, the log's commitments cannot be dropped."  Lean:
+composite is not monotone, the log's commitments cannot be dropped.  …  By
+Corollary `cor:empty-store`, if the replicas' store takes locks of its own and
+the composite stays proper, the replicas can run the store with no commitments
+at all."  Lean:
 `𝒫 = Inst.smrS1` (`I = M = Inst.Pfx Cmd`, prefix order), `f = Inst.execF δ σ₀`
-(monotone); for every basis `B` of `𝒫`, with the empty store basis; following
-every run is `«sec:irredundant-coordination/empty-store-follows»`. -/
+(monotone); for every system `P` of `𝒫`, with the empty-basis store; following
+every run is `«sec:proper-coordination/empty-store-follows»`, and the last
+sentence is `«cor:empty-store»`(2). -/
 theorem «ex:committed-log-composition» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt)
-    {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) (B : Basis (Inst.smrS1 (Cmd := Cmd))) :
+    {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) (P : Guard.Sys (Inst.smrS1 (Cmd := Cmd))) :
     ¬ (Inst.smrS1 (Cmd := Cmd)).LiftedMono ∧
       ¬ (Guard.comp Inst.smrS1 (Inst.execF δ σ0)).LiftedMono ∧
-      Monotone (Inst.execF δ σ0) ∧ Guard.Irredundant B (Guard.noStore (Inst.execF δ σ0)) ∧
+      Monotone (Inst.execF δ σ0) ∧ Guard.Proper P (Guard.noStore (Inst.execF δ σ0)) ∧
       ∃ i m, Inst.smrS1.S i m ∧
         ¬ Exposable (canon (Guard.comp Inst.smrS1 (Inst.execF δ σ0)) i) (Inst.execF δ σ0 m) ∧
         ∀ m', Inst.smrS1.S i m' → Inst.execF δ σ0 m' = Inst.execF δ σ0 m →
           ¬ Exposable (canon Inst.smrS1 i) m' :=
-  Guard.smr_irredundant δ σ0 hne B
+  Guard.smr_proper δ σ0 hne P
 
 /-- "There, bare reads need no commitment of their own when each response
 records the log position it read from, but they do when the specification

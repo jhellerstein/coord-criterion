@@ -1,4 +1,4 @@
-\section{Composition and Irredundant Coordination}
+\section{Composition and Proper Coordination}
 \label{sec:composition}
 
 Prior literature presented a puzzle: the ``fix'' for a non-monotone
@@ -21,8 +21,8 @@ Monotonicity.  Because commitments are explicit, we
 can also ask which component makes a composition's commitments.  When one
 component makes every commitment the composition needs and the other makes
 none that a run of the composition contradicts, we call the coordination
-\emph{irredundant}
-(Section~\ref{sec:irredundant-coordination}).  Example~\ref{ex:committed-log-composition}
+\emph{proper}
+(Section~\ref{sec:proper-coordination}).  Example~\ref{ex:committed-log-composition}
 returns to the replicated store.  Proofs are in
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
@@ -88,8 +88,8 @@ neither component commits never emits anything
 component commits depends on the implementation, the subject of the next
 subsection.
 
-\subsection{Irredundant Coordination}
-\label{sec:irredundant-coordination}
+\subsection{Proper Coordination}
+\label{sec:proper-coordination}
 
 Intuitively, a replicated store coordinates once.  Multi-Paxos commits to an
 order of concurrent commands, and the store executes whatever log it is given.
@@ -107,8 +107,9 @@ system for $\mathcal K$ with basis $\mathcal B_{\mathcal K}$.  In the
 \emph{guarded composite}, the store follows $\mathcal P$: when $\mathcal P$
 emits $m$ by $\Out{\gamma}{m}$, the store receives $m$ and emits $f(m)$ by some
 $\Out{\delta}{f(m)}$ with $\delta$ from $\mathcal B_{\mathcal K}$.  A
-\emph{guarded composite run} is a run of $\mathcal P$ under $\mathcal B$
-together with such a run of the store on the outputs $\mathcal P$ emits.  The
+\emph{guarded composite run} is a run produced by the system for
+$\mathcal P$, together with a run produced by the system for the store on the
+outputs $\mathcal P$ has emitted so far.  The
 environment observes $\mathsf{input}(j)$ and $f(m)$.  We say that
 $\mathcal P$ \emph{guards} $\mathcal K$, and that $\mathcal K$
 \emph{delegates} commitment to $\mathcal P$.
@@ -121,26 +122,31 @@ forbids.  In the composite, emitting $f(m')$ needs no commitment at all, since
 it retires $f(m)$.  A choice upstream can become a retirement downstream.  We
 therefore push forward runs, not commitments.
 
-\begin{definition}[Irredundant Coordination]
-\label{def:irredundant-coordination}
+\begin{definition}[Proper Coordination]
+\label{def:proper-coordination}
 The store coordinates \emph{redundantly} when, in some guarded composite run,
-one of its output events applies a commitment that is contradicted in the
-guarded composite runs (Definition~\ref{def:coordination}).  The guarded
+one of its output events applies a commitment that is contradicted
+(Definition~\ref{def:coordination}) in the store's runs on the outputs that
+runs of $\mathcal P$'s system emit.  The guarded
 composite coordinates \emph{at most once} when the store does not coordinate
 redundantly.  It coordinates \emph{at least once} when every output event
 $\Out{\gamma}{m}$ of $\mathcal P$ at a state $\sigma$ such that $f(m)$ is not
 exposable at $f(\sigma)$ has $\gamma\neq\varepsilon$.  It is
-\emph{irredundant} when it coordinates at most once and at least once.
+\emph{proper} when it coordinates at most once and at least once.
 \end{definition}
 
 At most once says that the store adds no coordination of its own.  The
-store's input comes from $\mathcal P$, not from the environment.  A store
-commitment that no guarded run contradicts therefore removes only inputs that
-$\mathcal P$ never feeds the store, and it is not coordination.  At least once
-says that whatever commitment the composite needs, $\mathcal P$ makes.  For
-monotone $f$ it always holds (Theorem~\ref{thm:irredundant-coordination}), so
-it is the necessity half.  Whether a composite is irredundant then depends on
-the store's basis.
+store's input comes from $\mathcal P$, not from the environment.  Each fiber of
+$\mathcal K$ has one row, so every store commitment seals, and it is
+contradicted exactly when $\mathcal P$ can feed the store an input it seals.
+We judge this against the runs of $\mathcal P$, since a store that has sealed
+an input never accepts it in its own runs.  A store commitment that is not
+contradicted removes only inputs that $\mathcal P$ never feeds the store, and
+it is not coordination.  At least once says that whatever commitment the
+composite needs, $\mathcal P$ makes.  For
+monotone $f$ it always holds (Theorem~\ref{thm:proper-coordination}), so
+it is the necessity half.  Whether a composite is proper then depends on
+the store's system.
 
 \begin{theorem}[Guarded runs]
 \label{thm:guarded-runs}
@@ -170,16 +176,16 @@ $(j,f(m))$, which gives confluence.  Full proof in
 Appendix~\ref{app:composition}.
 \end{proof}
 
-\begin{theorem}[Irredundant Coordination]
-\label{thm:irredundant-coordination}
-Let $f$ be monotone and $\mathcal B$ any basis of $\mathcal P$.
+\begin{theorem}[Proper Coordination]
+\label{thm:proper-coordination}
+Let $f$ be monotone, and fix any system for $\mathcal P$.
 \begin{enumerate}
   \item Every output of the store is exposable at every state of
         $\mathcal K$.  So wherever $\Out{\delta}{f(m)}$ is legal,
         $\Out{\varepsilon}{f(m)}$ is legal too and keeps at least the same rows.
-  \item The guarded composite coordinates at least once, for every basis
-        $\mathcal B_{\mathcal K}$.  It is irredundant when
-        $\mathcal B_{\mathcal K}$ is empty.
+  \item The guarded composite coordinates at least once, for every system
+        for $\mathcal K$.  It is proper when $\mathcal B_{\mathcal K}$
+        is empty.
   \item If $\mathcal K\circ\mathcal P$ violates Lifted Monotonicity, some
         output $f(m)$ of the composite is not exposable at a canonical state,
         and $\mathcal P$ must commit to emit any output with that image there.
@@ -200,7 +206,7 @@ is canonical.  Full proof in Appendix~\ref{app:composition}.
 \end{proof}
 
 By Theorem~\ref{thm:guarded-runs}(2), a store under the empty basis also
-follows every run of $\mathcal P$.  The theorem holds for every basis of
+follows every run of $\mathcal P$.  The theorem holds for every system for
 $\mathcal P$.  Multi-Paxos commits by deciding log slots.  A log built with
 per-key mutexes would instead order pairs of commands on one key, as 2PL
 orders pairs of transactions where MVTO stamps them
@@ -212,19 +218,61 @@ removes (Lemma~\ref{lem:canonical-commitment-normal-form}), so every row that
 the composite must seal or choose against has lost all its preimages to
 $\mathcal P$'s commitments (Appendix~\ref{app:composition}).
 
+By Theorem~\ref{thm:proper-coordination}(1), none of the store's
+commitments is needed.  So it should be safe to replace the store's system
+with one whose basis is empty, with no seals or choices allowed.  The
+\emph{commitment-erased replacement} of the store's system has the empty basis
+and the same strategy, with each $\Out{\delta}{x}$ replaced by
+$\Out{\varepsilon}{x}$.
+
+\begin{corollary}[Empty store]
+\label{cor:empty-store}
+Let $f$ be monotone, and fix systems for $\mathcal P$ and $\mathcal K$.
+\begin{enumerate}
+  \item For every guarded composite run, the replacement has one with the same
+        run of $\mathcal P$ and the same store inputs and outputs.  After each
+        event, the replacement's table contains the original's.
+  \item Suppose the guarded composite is proper, and the store's strategy
+        ignores the commitments in its history and, whenever it offers an
+        output, also offers it with commitments defined at the current state.
+        Then the converse of (1) holds too, so the store and its replacement
+        have the same observable behaviour.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}[Proof sketch]
+(1) By induction on events.  The replacement's table is the larger one, so
+its input events are legal, and by
+Theorem~\ref{thm:proper-coordination}(1) so is each
+$\Out{\varepsilon}{x}$.  (2) We follow a run of the replacement and build the
+original's.  At each output, the hypotheses on the strategy give an output
+event of the original with commitments defined at its state.  By at most once
+those commitments are not contradicted, so they seal no input that
+$\mathcal P$ can feed, and every later input stays legal.  Full proof in
+Appendix~\ref{app:composition}.
+\end{proof}
+
+The hypotheses of (2) are needed.  A strategy that offers only commitments
+undefined at its state never emits, while its replacement does.  If the store
+is redundant, the replacement can follow runs of $\mathcal P$ that the store
+cannot, as the next example shows.
+
 Mutexes in the store, behind the log, are another matter.  By
-Theorem~\ref{thm:irredundant-coordination}(1) the store never needs a
-commitment, so each commitment it applies is redundant once some guarded run
-contradicts it.  Consider a store that locks each key, and two writes $a$ and
-$b$ to one key.  If the store takes the lock after the log has placed one of
-them first, every log it can still receive agrees with that order.  The lock
-removes no row, so it is not a commitment.  The locks are still taken, but
-they decide nothing.  Suppose instead that the store grants the lock to $a$ at
-the empty log, ahead of the log, and so seals every log in which $b$ comes
-first.  In another guarded run the log decides $b$ first and feeds the store
-$[b]$, which contradicts the lock.  The lock then repeats coordination that
-the log already does, so the composite is not irredundant
-(Appendix~\ref{app:composition}).
+Theorem~\ref{thm:proper-coordination}(1) the store never needs a
+commitment, so each commitment it applies is redundant once a run of
+$\mathcal P$ contradicts it.  Consider a store that locks each key, and two
+writes $a$ and $b$ to one key.  Whether the lock is coordination depends on
+the store's strategy.  If the strategy takes the lock only after the log has
+placed one of them first, every log the store can still receive agrees with
+that order.  The lock removes no row, so it is not a commitment, and the
+composite is proper.  The locks are still taken, but they decide nothing.
+Suppose instead that the strategy grants the lock to $a$ at the empty log,
+ahead of the log, and so seals every log in which $b$ comes first.  The log
+can still decide $b$ first and feed the store $[b]$, which contradicts the
+lock.  The lock then repeats coordination that the log already does, so the
+composite is not proper.  The lock also costs behaviour.  When the log
+emits $[\,]$ and then $[b]$, the replacement follows, but the locking store,
+having sealed $[b]$, cannot (Appendix~\ref{app:composition}).
 
 Some of $\mathcal P$'s commitments are invisible to the composite.
 
@@ -255,11 +303,13 @@ entries are incompatible outputs in one fiber.  So is the key-value store
 $\mathcal K\circ\mathcal P$, since concurrent commands ordered oppositely give
 incompatible responses.  Multi-Paxos runs $\mathcal P$ under its own basis,
 deciding one log slot at a time~\cite{schneider1990smr,lamport2001paxos}.  By
-Theorems~\ref{thm:guarded-runs} and~\ref{thm:irredundant-coordination}, the
+Theorems~\ref{thm:guarded-runs} and~\ref{thm:proper-coordination}, the
 store needs no commitment of its own, and under the empty basis it follows
 every run of the log.  Because the composite is not monotone, the log's
 commitments cannot be dropped.  The replicated store coordinates exactly
-once.
+once.  By Corollary~\ref{cor:empty-store}, if the replicas' store takes locks of
+its own and the composite stays proper, the replicas can run the store with
+no commitments at all.
 \end{example}
 
 A downstream component often has input of its own, not only the output of the

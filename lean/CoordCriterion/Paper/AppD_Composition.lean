@@ -8,7 +8,7 @@ stated in Section `sec:composition` and recorded in
 `Paper/S5_Composition.lean`; this file holds what appears only in the
 appendix: composition with independent inputs and its curried evaluation, the
 component-commitment example, the covering argument and the counterexamples of
-the Irredundant Coordination subsection, and Example `ex:bare-reads`.
+the Proper Coordination subsection, and Example `ex:bare-reads`.
 Unlabeled claims are `«app:composition/<slug>»`.
 
 Library: `Appendix/Composition.lean` (namespace `CC.Comp`), the examples at
@@ -113,7 +113,7 @@ theorem «app:composition/components-commit» :
     Dist.spU_not_exposable _ (fun _ _ => ⟨trivial, trivial⟩),
     Guard.composite_monotone_not_enough.2⟩
 
-/-! ## Irredundant Coordination -/
+/-! ## Proper Coordination -/
 
 /-- "The image of the canonical state `σ_𝒫(i)` is the canonical state of
 `𝒦 ∘ 𝒫` at `i`." -/
@@ -165,7 +165,7 @@ theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : S
           ∀ m', σ.R k m' → f m' = x → ¬ σc.R k m' :=
   ⟨fun he _ hs => Guard.coverage hf he hs, fun h _ hs => Guard.coverage_step hf h hs⟩
 
-/-- Proof of Theorem `thm:irredundant-coordination`(1)–(2): "Let `(m,R)` be a
+/-- Proof of Theorem `thm:proper-coordination`(1)–(2): "Let `(m,R)` be a
 state of `𝒦`.  Its fiber at `m` is `{f(m)}`, and every row `(k,f(k)) ∈ R` has
 `m ≼ k`, so `f(m) ≼ f(k)` by monotonicity.  No row is ruled out by `f(m)`, so
 `f(m)` is exposable. … When `ℬ_𝒦` is empty, every output event of the store is
@@ -174,10 +174,10 @@ coordinate redundantly." -/
 theorem «app:composition/store-exposable» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {f : M → O} (hf : Monotone f) :
     (∀ σ : State (graph f), Exposable σ (f σ.cur)) ∧
-      ∀ B : Basis sp, Guard.AtMostOnce B (Guard.noStore f) :=
-  ⟨Guard.store_exposable hf, fun B => Guard.noStore_atMostOnce B f⟩
+      ∀ P : Guard.Sys sp, Guard.AtMostOnce P (Guard.noStore f) :=
+  ⟨Guard.store_exposable hf, fun P => Guard.noStore_atMostOnce P f⟩
 
-/-- Proof of Theorem `thm:irredundant-coordination`(3): "The proof of
+/-- Proof of Theorem `thm:proper-coordination`(3): "The proof of
 Proposition `prop:exposure-boundary` derives the common-expansion condition
 from exposability at canonical states alone"; and the at-least-once step of
 (2): if `m` is exposable at `σ`, then `f(m)` is exposable at `f(σ)`. -/
@@ -187,23 +187,66 @@ theorem «app:composition/canonical-states-suffice» {I M O : Type} [PO I] [PO M
       Exposable σ m → Exposable (Guard.img f σ) (f m) :=
   ⟨fun h => Guard.canon_exposable_commonExpansion h, fun hf _ _ he => Guard.cf_step hf he⟩
 
+/-- Proof of Corollary `cor:empty-store`: "(1) Let `σ` and `σ'` be states of
+`𝒦` with the same current input `m` and `R_σ ⊆ R_σ'`. … Both start at
+`σ_𝒦(m)`, so the containment holds after each event.  The replacement's
+strategy allows each erased event, since the original's allowed it before
+erasure.  (2) Say that `𝒫` feeds `k` when some run of its system emits `k`. …
+We build the original's run event by event, with the same erasure, and keep
+two facts: the current inputs agree, and every row `(k,f(k))` of the
+replacement's table with `k` fed is in the original's. … By at most once, `δ'`
+is not contradicted, so it removes no row `(k,f(k))` with `k` fed, and both
+facts persist."  Lean: (1) `Guard.erase_lockstep`, `Guard.compliant_eraseSys`;
+(2) the induction is `Guard.reflect_aux`, with `Guard.Feeds`; a prefix of a
+store trace ending at an output is the trace on a prefix of its inputs
+(`Guard.storeEvs_prefix`), so the original's events so far form a guarded
+composite run. -/
+theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {f : M → O}
+    (hf : Monotone f) {BK : Basis (graph f)} {σ ρ : State (graph f)}
+    {es : List (SEvent (graph f))} (h : SysExec BK σ es ρ) (σ' : State (graph f))
+    (hc : σ'.cur = σ.cur) (hs : ∀ k u, σ.R k u → σ'.R k u) :
+    ∃ ρ', SysExec (fun _ => False) σ' (es.map Guard.eraseC) ρ' ∧ ρ'.cur = ρ.cur ∧
+      ∀ k u, ρ.R k u → ρ'.R k u :=
+  Guard.erase_lockstep hf h σ' hc hs
+
 /-- "For the mutex store …, let `𝒫` be the log specification of Example
-`ex:committed-log-composition` under its canonical basis, and `f` any monotone
-function of the log.  For a set `Q` of logs, removing every row whose input is
-in `Q` is a commitment of `𝒦` at any state whose current input is not in `Q`
-and which has such a row.  It removes whole fibers, so it seals. … At a
-state whose current log is nonempty, every remaining log has the same first
-command, so this commitment is undefined there. … So the commitment is
-contradicted, and the store coordinates redundantly."  Lean: `Guard.sealIn Q`
-(for any specification); `Guard.lock_after_log`; the runs are those of
-`Guard.mutex_redundant`. -/
-theorem «app:composition/mutex-store» {Cmd O : Type} [PO O] {f : Inst.Pfx Cmd → O}
+`ex:committed-log-composition`, under its canonical basis with a strategy that
+allows every event, and `f` any monotone function of the log.  For a set `Q`
+of logs, removing every row whose input is in `Q` is a commitment of `𝒦` at
+any state whose current input is not in `Q` and which has such a row.  It
+removes whole fibers, so it seals. … At a state whose current log is
+nonempty, every remaining log has the same first command, so this commitment
+is undefined there.  Let the store's strategy take the lock at its first event
+when the log is empty, and apply nothing otherwise. … So the commitment is
+contradicted, and the store coordinates redundantly.  Its replacement gains
+behaviour. … The locking store must take the lock at `[]`, which seals `[b]`,
+so it cannot receive `[b]`.  Let the strategy instead take the lock only when
+its current log is nonempty.  The lock is undefined there, so every output
+event the store performs is some `Out_ε(x)`.  The store applies no
+commitment, so it does not coordinate redundantly.  Its strategy depends only
+on the inputs it has received and always offers `Out_ε(x)`, so it meets the
+hypotheses of Corollary `cor:empty-store`(2).  A strategy that insists on the
+lock at a nonempty log also applies no commitment and ignores commitments, but
+it stalls.  When `𝒫` emits `[b]` first, the store never emits, while its
+replacement emits `f([b])`."  Lean: `Guard.sealIn Q` (for
+any specification); `Guard.lock_after_log`; the early-lock runs are those of
+`Guard.mutex_redundant` and `Guard.early_lock_strict`; the late lock is
+`Guard.lateLock_eps` and `Guard.late_lock_proper`; the stalling lock is
+`Guard.stall_lock`. -/
+theorem «app:composition/mutex-store» {I' Cmd O : Type} [PO I'] [PO O] {f : Inst.Pfx Cmd → O}
     (hf : Monotone f) (b : Cmd) :
     (∀ (Q : Inst.Pfx Cmd → Prop) (σ τ : State (graph f)), (Guard.sealIn Q).app σ = some τ →
       ¬ Q σ.cur ∧ (∃ k x, σ.R k x ∧ Q k) ∧ ∀ k, Q k → ∀ x, ¬ τ.R k x) ∧
     (∀ σ : State (graph f), σ.cur.l ≠ [] → (Guard.sealIn (Guard.bFirst b)).app σ = none) ∧
-    Guard.Redundant (canonBasis (Inst.smrS1 (Cmd := Cmd))) (Guard.mutexB b f) := by
-  refine ⟨fun Q σ τ h => ?_, Guard.lock_after_log b, (Guard.mutex_redundant hf b).2.1⟩
+    Guard.Redundant (Guard.Sys.free (canonBasis (Inst.smrS1 (Cmd := Cmd)))) (Guard.earlyLock b f) ∧
+    (∀ m esK ρ, Guard.Produces (Guard.lateLock b f) m esK ρ →
+      ∀ γ x, SEvent.output γ x ∈ esK → γ = []) ∧
+    ∀ (sq : Spec I' (Inst.Pfx Cmd)) (P : Guard.Sys sq),
+      Guard.Blind (Guard.lateLock b f) ∧ Guard.Live (Guard.lateLock b f) ∧
+      ∀ es m l, Guard.Obs P (Guard.lateLock b f) es m l ↔
+        Guard.Obs P (Guard.eraseSys (Guard.lateLock b f)) es m l := by
+  refine ⟨fun Q σ τ h => ?_, Guard.lock_after_log b, (Guard.mutex_redundant hf b).2.1,
+    fun _ _ _ h => Guard.lateLock_eps b h, fun _ P => (Guard.late_lock_proper hf b P).2⟩
   obtain ⟨hn, hex, rfl⟩ := Guard.sealInApp_eq.1 h
   exact ⟨hn, hex, fun _ hQ _ hx => hx.2 hQ⟩
 

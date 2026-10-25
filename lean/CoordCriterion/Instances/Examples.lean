@@ -28,7 +28,7 @@ same models (namespace `CC.Inst`):
   `curried_plan_graph`), Example `bare-reads` (`bare_read_example`,
   `latestG_not_liftedMono`, `latest_needs_store_commitment`);
 * Sec. `composition`, Example `committed-log-composition` (`smr_example`;
-  its irredundance is `CC.Guard.smr_irredundant`; a redundant mutex store
+  its proper coordination is `CC.Guard.smr_proper`; a redundant mutex store
   is `CC.Guard.mutex_redundant`).
 
 The "Query CALM" row (functional fibers are directed) is
