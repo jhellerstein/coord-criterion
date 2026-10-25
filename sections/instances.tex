@@ -58,15 +58,14 @@ conditions coincide.
 
 A CRDT guarantees that replicas receiving the same updates converge to
 equivalent states, whatever the order of delivery and merge.  But the Strong
-Eventual Consistency property it offers provides no guarantee on what the environment
-may observe, and is subject to Lamport's ``anomalous
-behavior''~\cite{lamport1978time} (\S\ref{sec:coordination}).
-Laddad et al.\ proposed monotonicity as the right test for safe
-observation from CRDT state~\cite{laddad2022keep}.  Their example is a two-phase set, whose state
+Eventual Consistency property it offers provides no guarantee on what the
+environment may observe, and is subject to Lamport's ``anomalous
+behavior''~\cite{lamport1978time} (\S\ref{sec:coordination}). Laddad et al.\
+proposed monotonicity as the right test for safe observation from CRDT
+state~\cite{laddad2022keep}.  Their example is a two-phase set, whose state
 $(\mathit{Add},\mathit{Del})$ merges by componentwise union.  The query
-$\mathit{Add}\setminus\mathit{Del}$ can report a Ferrari in a shopping cart
-before a delayed removal arrives, and an application that treats that answer as
-final ships the car.  We make the proposed test precise with Functional CALM.
+$\mathit{Add}\setminus\mathit{Del}$ can expose added items that are subsequently
+deleted.  We make the proposed test precise with Functional CALM.
 
 Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice.  The input is the
 finite set $U$ of immutable payloads received so far, ordered by inclusion, and
@@ -77,7 +76,7 @@ $q:D\to(Y,\preceq_Y)$ gives the client-visible specification $q\circ s$.  By
 Functional CALM, $q\circ s$ is consistent exactly when $U\subseteq V$ implies
 $q(s(U))\preceq_Y q(s(V))$.  Monotonicity of $q$ on all of $D$ suffices, but
 $q$ need only be monotone between reachable states.  The two-phase query fails
-the test: a removal payload grows $U$ and shrinks the answer.
+the test: a deleted item grows $U$ and shrinks the answer.
 Operation-based CRDTs fit too, with the causally closed set of
 delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
