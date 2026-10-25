@@ -317,7 +317,6 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone. |
-| `«cor:functional-composition»` | theorem | **Corollary `cor:functional-composition`** (Functional composition): |
 | `«sec:composition/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
 | `«eq:parameterized-composition»` | theorem | Eq. |
 | `«lem:parameterized-composition»` | theorem | **Lemma `lem:parameterized-composition`** (Independently parameterized composition): |
@@ -557,6 +556,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
+| `«cor:functional-composition»` | theorem | **Corollary `cor:functional-composition`** (Functional composition): |
 | `«eq:curried-fibers»` | theorem | Eq. |
 | `«eq:curried-query-plan»` | theorem | Eq. |
 | `«prop:curried-query-plan»` | theorem | **Proposition `prop:curried-query-plan`** (Curried equijoin plan): |

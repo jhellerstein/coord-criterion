@@ -191,7 +191,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«lem:composition»
 #check @CC.Paper.«sec:composition/associativity»
 #check @CC.Paper.«sec:composition/function-tables»
-#check @CC.Paper.«cor:functional-composition»
 #check @CC.Paper.«sec:composition/crdt-query»
 #check @CC.Paper.«eq:parameterized-composition»
 #check @CC.Paper.«lem:parameterized-composition»
@@ -382,6 +381,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:bases/converse-fails»
 #check @CC.Paper.«app:bases/basis-2PL»
 #check @CC.Paper.«app:bases/basis-MVTO»
+#check @CC.Paper.«cor:functional-composition»
 #check @CC.Paper.«eq:curried-fibers»
 #check @CC.Paper.«eq:curried-query-plan»
 #check @CC.Paper.«prop:curried-query-plan»

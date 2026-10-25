@@ -76,18 +76,11 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
     Comp.seq (graph f) (graph g) = graph (g ∘ f) ∧ ((graph f).LiftedMono ↔ Monotone f) :=
   ⟨Comp.seq_graph f g, Comp.graph_liftedMono_iff f⟩
 
-/-- **Corollary `cor:functional-composition`** (Functional composition): "If
-`f : (I,≼_I) → (M,≼_M)` and `g : (M,≼_M) → (O,≼_O)` are monotone, so is
-`g ∘ f`."  (Proved in the library through tables of functions and
-Lemma `lem:composition`, as in the paper.) -/
-theorem «cor:functional-composition» {I M O : Type} [PO I] [PO M] [PO O] {f : I → M} {g : M → O}
-    (hf : Monotone f) (hg : Monotone g) : Monotone (g ∘ f) :=
-  Comp.functional_composition hf hg
-
 /-- "The CRDT observations of Section `sec:crdt-instance` have this shape: a
 client query `q` over the replica state `s` is the composition `q ∘ s`, and
-Corollary `cor:functional-composition` is the observation there that
-monotonicity of `q` on all of the state domain suffices."  Lean: the
+compositions of monotone functions are monotone (Corollary
+`cor:functional-composition`), so monotonicity of `q` on all of the state domain
+suffices."  Lean: the
 corollary applied to `s = Inst.st s₀` (monotone by
 `«sec:crdt-instance/state-monotone»`) and a monotone `q`. -/
 theorem «sec:composition/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y] (s0 : D)

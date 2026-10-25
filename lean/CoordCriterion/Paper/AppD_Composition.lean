@@ -22,6 +22,15 @@ open CC.Comp (Monotone graph)
 
 /-! ## Curried evaluation -/
 
+
+/-- **Corollary `cor:functional-composition`** (Functional composition): "If
+`f : (I,≼_I) → (M,≼_M)` and `g : (M,≼_M) → (O,≼_O)` are monotone, so is
+`g ∘ f`."  (Proved in the library through tables of functions and
+Lemma `lem:composition`, as in the paper.) -/
+theorem «cor:functional-composition» {I M O : Type} [PO I] [PO M] [PO O] {f : I → M} {g : M → O}
+    (hf : Monotone f) (hg : Monotone g) : Monotone (g ∘ f) :=
+  Comp.functional_composition hf hg
+
 /-- Eq. `eq:curried-fibers`: `F_i = π_{A,B}(F[I=i])`, `G_j = π_{B,C}(G[J=j])`. -/
 theorem «eq:curried-fibers» {I J A B C : Type} (F : Table (I × A) B) (G : Table (J × B) C)
     (i : I) (j : J) (a : A) (b : B) (c : C) :
