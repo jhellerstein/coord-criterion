@@ -49,6 +49,7 @@ import CoordCriterion.Appendix.TransactionBases.CanonicalExample
 import CoordCriterion.Appendix.Frontiers
 import CoordCriterion.Appendix.ProductFrontier
 import CoordCriterion.Appendix.Registers
+import CoordCriterion.Appendix.RealTimeCausal
 -- Dataflow graphs of stages (not in the paper; exploration)
 import CoordCriterion.Appendix.Graphs
 -- Appendix H additional applications

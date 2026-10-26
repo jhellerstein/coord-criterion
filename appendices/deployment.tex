@@ -182,3 +182,122 @@ for emitting replicas and arbitrary ones for the others, the union of the
 $\rho_p$ lies in $\fiber{j}$ and \outrel every emitted output.  Separability is
 not used.  Two answers to the same read remain incompatible, but only the
 reading replica may emit either.
+
+\subsection{Real-time causal consistency}
+\label{app:rtc}
+
+Mahajan et al.\ show that no consistency semantics stronger than real-time
+causal consistency can be enforced in an always-available, one-way convergent
+system, and that real-time causal consistency can~\cite{mahajan2011consistency}.
+We recover both halves with real time as input data.  The argument rests on a
+property of products of independent views.
+
+\paragraph{Independent products.}
+Fix participants $P$ with $|P|\ge2$.  For each $p$ let $(W_p,\le_p)$ be a
+poset and, for each input $i$, let $V_p(i)\subseteq W_p$ be a nonempty
+antichain, the \emph{views} $p$ may expose at $i$.  A \emph{partial tuple}
+assigns to each $p$ a value in $W_p$ or $\bot$, ordered coordinate-wise with
+$\bot$ below every value; it is a \emph{restriction} of $y$ when each
+coordinate $x_p$ is $\bot$ or $y_p$.  The \emph{product interface} has a row
+$(i,x)$ for every restriction $x$ of every $y\in\prod_pV_p(i)$.  A
+\emph{strengthening} $T$ selects at each input a set of tuples in
+$\prod_pV_p(i)$, and its rows are their restrictions.  It is \emph{strict} when
+it omits a row of the product interface, and \emph{locally conservative} when
+every $v\in V_p(i)$ is the $p$-coordinate of a tuple it selects at $i$.  Under
+the \emph{owner deployment}, $p$ may emit exactly the rows whose tuple is
+$\bot$ outside coordinate $p$.
+
+\begin{theorem}[Independent products]
+\label{thm:product-frontier}
+\leavevmode
+\begin{enumerate}
+  \item If views continue (for $i\InputOrd j$ and $v\in V_p(i)$ some $w\in
+        V_p(j)$ has $v\le_p w$), the product interface is monotone across
+        partitions under the owner deployment.
+  \item No strict, locally conservative strengthening is monotone across
+        partitions under its owner deployment.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+(1) Fix an authorized family and a common \indesc $j$.  If $p$ has a run, its
+remainder table has a row $(k_p,u)$, and $u$ \outrel every output $p$ emitted
+(Lemma~\ref{lem:run-residual}).  As $u$ is a restriction of some
+$y\in\prod_qV_q(k_p)$, continuation gives $w_p\in V_p(j)$ with $y_p\le_p w_p$.
+Otherwise pick any $w_p\in V_p(j)$.  Each output of $p$ is $\bot$ outside
+coordinate $p$, so $w$ \outrel every emitted output.
+(2) Strictness gives $y\in\prod_pV_p(i)$ that $T$ does not select at $i$.  By
+local conservativity, the tuple $e_p$ that is $y_p$ at $p$ and $\bot$
+elsewhere is a row of $T$ at $i$, authorized for $p$.  Let every participant
+emit $e_p$ at $i$; every partition separates two of them.  A common \outnoun
+at $i$ is a restriction of a selected $z$ with $y_p\le_p z_p$ for every $p$, so
+$y=z$ by the antichain property, a contradiction.
+\end{proof}
+
+\paragraph{Real-time causal views.}
+Consider the histories of Appendix~\ref{app:registers} with a second strict
+partial order $\prec$: $a\prec b$ when $a$ ended before $b$ began.  We assume
+that $a\to b$ implies $a\prec b$, so replicas propagate only completed writes,
+and that $\to$ totally orders the operations of each replica.  One input
+\inrel another when it does as a history and $\prec$ agrees on the old
+operations.  A write $w$ is \emph{visible} to a read $r$ when $w\to r$.  A
+\emph{real-time causal view} of replica $p$ assigns to every read $r$ of $p$ a
+source $s(r)$ such that
+\begin{enumerate}
+  \item $s(r)$ is a write visible to $r$, or $v_0$ if none is;
+  \item $s(r)\not\prec w$ for every write $w$ visible to $r$;
+  \item if $r'\to r$ is a read of $p$ to which $s(r)$ is visible, then
+        $s(r')=s(r)$.
+\end{enumerate}
+Intuitively, these are Mahajan et al.'s checks for the order that $p$'s reads expose, in
+which each visible write precedes the read and each overwritten write
+precedes the source.  Item~(1) says a replica returns only writes it has
+received, (2) is their real-time check ``time doesn't travel backward'', and
+(3) keeps one replica's overwrites consistent.  Their reads return all
+concurrent latest writes; ours return one.
+
+Views exist: take as source the visible write latest in a linear extension of
+$\prec$.  They continue: an \indesc changes neither a read's causal past nor
+$\prec$ on it, and new reads take the latest visible write in a linear
+extension of $\prec$ and the edges $x\prec s(r)$ from each write $x$ visible to
+an old read $r$ with $x\ne s(r)$.  Views share a domain, so they form an
+antichain.  By Theorem~\ref{thm:product-frontier}(1), the real-time causal
+product interface, in which each replica answers its own reads, is monotone
+across partitions under the owner deployment.
+
+\paragraph{Maximality.}
+A strengthening is \emph{real-time blind} when a tuple it selects at an input
+stays selected at the same history with fewer real-time edges, provided its
+views are still real-time causal there.  Mahajan et al.'s implementations do
+not observe real time, so they return the same answers at both inputs.
+
+\begin{proposition}[Real-time causal maximality]
+\label{prop:rtc-maximal}
+No strict, real-time blind strengthening of the real-time causal product
+interface is monotone across partitions under its owner deployment.
+\end{proposition}
+
+\begin{proof}
+By Theorem~\ref{thm:product-frontier}(2) it suffices to show local
+conservativity.  Let $v$ be a view of $p$ at $(h,\prec)$.  Let $a\prec_v b$
+when $a\prec b$, or when $a=x$ or $a\prec x$, and $s(r)=b$ or $s(r)\prec b$, for a
+read $r$ of $p$ and a write $x\ne s(r)$ visible to $r$.  Items~(2) and~(3) and program order
+make $\prec_v$ a strict partial order, and it contains $\to$.  At $(h,\prec_v)$,
+$v$ is $p$'s only view: by~(1) a source is a visible write, and a visible
+$x\ne s(r)$ has $x\prec_v s(r)$, which~(2) forbids.  Every input has a row of the
+strengthening, and rows are restrictions of selected tuples, so it selects
+some tuple at $(h,\prec_v)$, and that tuple's $p$-coordinate is $v$.  Real-time edges
+only exclude views, so its views are real-time causal at $(h,\prec)$, and
+blindness selects it there.
+\end{proof}
+
+Each hypothesis has a counterpart in Mahajan et al.'s theorem.  Always
+availability is that $T$ selects a tuple at every input, so every replica can
+answer every read, together with Deployment Availability.  One-way convergence
+needs no separate hypothesis: the input records which writes each replica has
+received, the environment supplies it, and views must respect $\to$.
+Real-time blindness is their assumption that an implementation does not
+observe real time, which their proof uses to swap the real-time order of
+concurrent writes.  The proof needs it, since a strengthening may read real
+time from the input, for instance to break ties between writes that overlap
+in real time.

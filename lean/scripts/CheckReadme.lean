@@ -467,6 +467,14 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:registers/serialization-extends»
 #check @CC.Paper.«app:registers/linear-extension»
 #check @CC.Paper.«app:registers/same-read-incompatible»
+#check @CC.Paper.«thm:product-frontier»
+#check @CC.Paper.«app:rtc/input»
+#check @CC.Paper.«app:rtc/views»
+#check @CC.Paper.«app:rtc/monotone-across»
+#check @CC.Paper.«app:rtc/blind»
+#check @CC.Paper.«prop:rtc-maximal»
+#check @CC.Paper.«prop:rtc-maximal/forced»
+#check @CC.Paper.«prop:rtc-maximal/locally-conservative»
 #check @CC.Paper.«app:cap-response/emitted-rows»
 #check @CC.Paper.«def:response-obligation»
 #check @CC.Paper.«def:response-obligation/fields»

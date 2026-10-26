@@ -37,7 +37,10 @@ all nodes may be the whole network and must emit, that their construction
 waits until a group confirms its members and that groups sharing a node are
 nested, that the group's choice is coordination but not distributed
 coordination, and that the list and an order on nodes compute every behavior;
-Lean checks only the mapping of their conditions into our frame); and the
+Lean checks only the mapping of their conditions into our frame); in
+Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
+al.'s checks, the correspondence of the hypotheses to theirs, and the remark
+that a strengthening may read real time from the input; and the
 design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
@@ -94,19 +97,20 @@ first and supporting claims and examples follow.
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | The `(L,X,ρ)` spec with partial outputs; closure commitments; 2PL/MVTO bases; bases differ; deadlock; MVTO: reported reads, entailed vs. chosen aborts |
 | `Appendix/TransactionBases/CanonicalExample.lean` | `CC.Txn.Partial.CanonEx` | §4.3 | Canonical runs suffice: a 2PL run at `{A,B,C}` and its canonical run in lockstep |
 | `Appendix/Frontiers.lean` | `CC.Front` | not in paper | Remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
-| `Appendix/ProductFrontier.lean` | `CC.Deploy` | not in paper | Thm. independent-product frontier, configuration example |
+| `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. E (real-time causal) | Thm. independent products (`thm:product-frontier`), configuration example |
 | `Appendix/Graphs.lean` | `CC.Graph` | not in paper | Products, tee vs. running twice, merge, partition; stage expressions with per-node offered-domain test; Proper Coordination for products; parameterized composition as a product |
 | `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers) | Causal and linearizable registers, two-write history, causal-register frontier |
+| `Appendix/RealTimeCausal.lean` | `CC.Deploy` | App. E (real-time causal) | Histories with real-time precedence, real-time causal views, their product interface, forcing, maximality for real-time blind strengthenings |
 | `Appendix/Applications.lean` | `CC.Apps` | App. H | Committed authority, `k`-set agreement, tight renaming, snapshots |
 
-`ProductFrontier` and `Registers` are in `CC.Deploy` because they are stated
+`ProductFrontier`, `Registers`, and `RealTimeCausal` are in `CC.Deploy` because they are stated
 in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 ## Paper index
 
 <!-- BEGIN PAPER INDEX -->
 
-580 entries.
+588 entries.
 
 ### §2 Functional CALM
 
@@ -662,6 +666,14 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:registers/serialization-extends»` | theorem | Proof step: |
 | `«app:registers/linear-extension»` | theorem | Supporting fact: |
 | `«app:registers/same-read-incompatible»` | theorem | "Two answers to the same read remain incompatible, but only the reading replica may emit either." The causal register is not monotone: |
+| `«thm:product-frontier»` | theorem | **Theorem `thm:product-frontier`** (Independent products). |
+| `«app:rtc/input»` | theorem | "Consider the histories of Appendix `app:registers` with a second strict partial order `≺`: |
+| `«app:rtc/views»` | theorem | "A *real-time causal view* of replica `p` assigns to every read `r` of `p` a source `s(r)` such that (1) `s(r)` is a write visible to `r`, or `v₀` if none is… |
+| `«app:rtc/monotone-across»` | theorem | "Views exist … They continue … Views share a domain, so they form an antichain. |
+| `«app:rtc/blind»` | theorem | "A strengthening is *real-time blind* when a tuple it selects at an input stays selected at the same history with fewer real-time edges, provided its views a… |
+| `«prop:rtc-maximal»` | theorem | **Proposition `prop:rtc-maximal`** (Real-time causal maximality). |
+| `«prop:rtc-maximal/forced»` | theorem | Proof of `prop:rtc-maximal`: |
+| `«prop:rtc-maximal/locally-conservative»` | theorem | Proof of `prop:rtc-maximal`: |
 
 ### Appendix F: Response availability and Gilbert–Lynch
 
