@@ -12,60 +12,64 @@ queries, and subsequently analyzed and optimized into a variety of mechanisms.
 Could a signature property of declarative languages---monotonicity---be the
 desired criterion?
 
-The intuition was sharpened by a related friction in the literature
-on parallel query processing. The widely-cited Google MapReduce paper~\cite{dean2004mapreduce}
-departed from prior work on parallel query processing~\cite{wilschut1991dataflow,graefe1990volcano}, conflating data redistribution (shuffle) with barrier coordination
-required for a non-monotone reduce operator. This poor separation of concerns
-required monotone operators like join to block in the MapReduce model
-unnecessarily.  Cost models that count rounds, from BSP supersteps to
-MapReduce rounds, carry the same conflation~\cite{valiant1990bsp,karloff2010mrc},
-while communication-based models charge the data that must
-move~\cite{beame2013communication,afrati2013bounds}.
+The intuition was sharpened by a related friction in the literature on parallel
+query processing. The widely-cited Google MapReduce
+paper~\cite{dean2004mapreduce} departed from prior work on parallel query
+processing~\cite{wilschut1991dataflow,graefe1990volcano}, conflating data
+redistribution (shuffle) with barrier coordination required for a non-monotone
+reduce operator. This coupling of unrelated concerns required monotone operators
+like join to block in the MapReduce model unnecessarily.  Cost models that count
+rounds, from BSP supersteps to MapReduce rounds, carry the same
+conflation~\cite{valiant1990bsp,karloff2010mrc}.
 
-The CALM Conjecture hypothesized that the database community's more
-judicious use of barriers could be generalized: coordination---of any kind---is
-required if and only if the program is non-monotone. The CALM Theorem of Ameloot
-et al.\ proved it. The impact of the conjecture and proof was
-limited by its tie to relational languages, which to date have still not
-become mainstream beyond query processing (more on this below).
+The CALM Conjecture hypothesized that the database community's more judicious
+use of barriers could be generalized: coordination---of any kind---is required
+if and only if the program is non-monotone. The CALM Theorem of Ameloot et al.\
+proved it. Relational database research provided the intuition and framework for
+CALM, but limited the scope to relational languages, which to date have
+still not become mainstream beyond query processing (more on this below).
 
 This paper can be seen as moving one level higher in its declarations, from
-queries to views. For our analysis,
-what is important about a specification is only the single encapsulated view mapping
-all of a program's base inputs to its final output. By eliding the query logic entirely, we not
-only reduce complexity, we free ourselves from any
-particular language, providing a declarative model compatible with any
-programming framework.
+queries to views. For our analysis, what is important about a specification is
+only the single encapsulated view mapping all of a program's base inputs to its
+final output. By eliding the query logic entirely, we not only reduce
+complexity, we free ourselves from any particular language, providing a
+declarative model compatible with any programming framework.
 
-After raising the abstraction, the focus of what to specify naturally broadens.
-Prior work focused on implementing complex programs declaratively~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2011bloom}. This was interesting ``declarative engineering''
-with concrete benefits in analysis and optimization.  The model here
-expands the scope, naturally modeling abstract families of invariants like CAP or
-isolation levels that have no specific application
-or protocol in mind.
+After raising the abstraction, the focus of what to specify also broadens
+naturally. Prior work focused on implementing complex programs
+declaratively~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro2011bloom}.
+This was interesting ``declarative engineering'' with concrete benefits in
+analysis and optimization.  The model here expands the scope, naturally modeling
+abstract families of invariants like CAP and isolation levels that have no
+specific application or protocol in mind.
 
 Lifting the abstraction improves the power of analysis as well. Prior attempts
-to do program analysis, e.g.\ in languages like Bloom~\cite{alvaro2011bloom},
-became enmeshed in the details of the ``declarative'' syntax of full
-implementations. Bloom flagged syntactic non-monotonicity in programs, proposing
-to conservatively inject coordination code in front of them. But adding
-coordination code in Bloom does not remove the identified non-monotone
-syntax; it adds more. The composition results here (\S\ref{sec:composition})
-need no program logic. The criteria in this paper are exact on
-specifications, not conservative, and proper
-coordination certifies when a stage behind a coordinating one needs no
-coordination of its own.
+to do program analysis, e.g.\ in languages like Bloom~\cite{alvaro2011bloom} or
+SQL \jmh{find some Jaganathan citations; we should treat that work more
+robustly}, became enmeshed in the details of the details of implementations,
+however declarative. Bloom flagged syntactic non-monotonicity in programs,
+proposing to conservatively inject coordination code in front of them. As noted
+in Section~\ref{sec:composition}, adding coordination to a Bloom program only
+results in more instances of non-monotone syntax. The composition results here
+(\S\ref{sec:composition}) need no program logic. The criteria in this paper are
+exact on specifications, not conservative, and proper coordination certifies
+when a stage behind a coordinating one needs no coordination of its own.
 
-Underlying these issues is a reassessment of tradition. What is a
-``declarative specification'', and how little does it require to be useful? The
-question is timely. Automated code generation in imperative languages is now a
-reality, but the ensuing large volume of code is often rife with bugs. This has
-led to more widespread interest in formal specification languages like Lean~\cite{demoura2021lean4}, which remove the incidental complexity of implementation
-details, and allow for proofs of correctness. This is a renewed opportunity for
-logic, dataflow or functional programming languages to capture the attention of
-developers and their coding agents. Today, when these languages are used by
-developers they typically specify protocols and programs at a significant level
-of detail, as in the declarative networking papers. This paper points to the
-benefits of specification at an even higher level, offering new opportunities
-for analyses as in this paper, as well as the potential for formal program
-synthesis and optimization.
+Underlying these issues is a reassessment of tradition. What is a ``declarative
+specification'', and how little does it require to be useful? The question is
+timely: declarative specification is seeing a new dawn due to the rise of
+automated code generation. Imperative code is increasingly authored by automated
+agents, and the ensuing output is often rife with bugs. This has led to
+increasing interest in formal specification languages like
+Lean~\cite{demoura2021lean4}. Raising the language abstraction helps prevent
+agents from getting lost in the incidental complexity of implementation details;
+the higher level language enables and complement agents with proofs of
+correctness: neurosymbolic computing \jmh{cite Byron Cook}. This is a renewed
+opportunity for logic, dataflow or functional programming languages to capture
+the attention of developers and their coding agents. Today, when these languages
+are used by developers they typically specify protocols and programs at a
+significant level of detail, as in the declarative networking papers. This paper
+points to the benefits of specification at an even higher level, offering new
+opportunities for analyses as in this paper, as well as the potential for formal
+program synthesis and optimization.
