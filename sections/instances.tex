@@ -89,58 +89,57 @@ Complete CALM requires only \emph{some} common \outnoun of query outputs
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-For a transactional specification, an input is the set of begin, read, write, and
-commit requests received so far, ordered by inclusion.  An output is a growing
-set of public facts such as $\mathsf{read}(T,x,v)$,
-$\mathsf{commit}(T)$, and session-order facts, also ordered by inclusion.  The
-isolation level (which reads and commits concurrent transactions may expose) or
-session guarantee (per-client ordering, such as reading one's own writes)
-determines which fact sets are permitted.  HAT's ingredients then
-separate~\cite{bailis2013hat,terry1994session}: the isolation level fixes the
-specification, the rule that transactions commit rather than suffer
-system-initiated aborts is the response obligation
-(Appendix~\ref{app:cap-response}), and sticky availability, in which each
-client keeps contacting replicas that hold its session's earlier operations,
-is a deployment (Proposition~\ref{thm:complete-cap-deployment}).
+Consider a transactional specification.  An input is the set of begin, read,
+write, and commit requests received so far, ordered by inclusion.  An output is
+a set of public facts, such as $\mathsf{read}(T,x,v)$, $\mathsf{commit}(T)$,
+and session-order facts, also ordered by inclusion.  The isolation level or
+session guarantee determines which fact sets are permitted.  An isolation level
+says which reads and commits concurrent transactions may expose.  A session
+guarantee orders one client's operations, as in reading one's own writes.
 
-\paragraph{Accumulating facts.}
-Suppose two replicas execute transactions on disjoint keys.  One exposes
-$\mathsf{read}(T_1,x,0)$ and $\mathsf{commit}(T_1)$; the other exposes
-$\mathsf{read}(T_2,y,0)$ and $\mathsf{commit}(T_2)$.  If each read observes a
-committed version at its replica, the union contains no dirty read.  Under the stated read-committed specification (a transaction reads only committed
-versions), later delivery keeps all four facts.  This is the positive accumulation pattern behind HAT results;
-it is not a claim that every combination of session guarantees is available.
+The ingredients of highly available transactions (HAT) then come
+apart~\cite{bailis2013hat,terry1994session}.  The isolation level or session
+guarantee fixes the specification.  The rule that transactions commit, without
+system-initiated aborts, is a response obligation
+(Appendix~\ref{app:cap-response}).  Sticky availability, in which each client
+keeps contacting replicas that hold its session's earlier operations, is a
+deployment (Proposition~\ref{thm:complete-cap-deployment}).
 
-\paragraph{Serializability and transaction ordering.}
+\paragraph{Read committed.}
+Under read committed, a transaction reads only committed versions.  Suppose two
+separated replicas run transactions on disjoint keys.  One exposes
+$\mathsf{read}(T_1,x,0)$ and $\mathsf{commit}(T_1)$, and the other exposes
+$\mathsf{read}(T_2,y,0)$ and $\mathsf{commit}(T_2)$.  Each read saw a committed
+version, so the union of the four facts contains no dirty read and is itself
+permitted.  It is a common \outnoun of what the two replicas exposed.
+
+\paragraph{Serializability.}
 Serializability requires the exposed facts to be explained by some serial order
-of committed transactions.  This becomes a distributed obstruction when exposed reads force
-opposite serialization orders.  Initially $x=y=0$.  On one side, $T_1$ reads
-$x=0$, writes $y=1$, and commits.
-On the other, $T_2$ reads $y=0$, writes $x=1$, and commits.  Preserving $T_1$'s
-read requires $T_1$ before $T_2$ in any serial explanation; preserving $T_2$'s
-read requires $T_2$ before $T_1$.  The serialization graph contains a cycle, so
-no serial order of $T_1$ and $T_2$ explains both sets of
-facts~\cite{adya2000generalized}.
+of the committed transactions.  Initially $x=y=0$.  On one replica, $T_1$ reads
+$x=0$, writes $y=1$, and commits.  On the other, $T_2$ reads $y=0$, writes
+$x=1$, and commits.  Each replica's facts are permitted on their own.  $T_1$'s
+read places $T_1$ before $T_2$ in any serial explanation, and $T_2$'s read
+places $T_2$ before $T_1$.  So no serial order explains both sets of
+facts~\cite{adya2000generalized}, and no permitted output contains them both.
 
 \paragraph{Snapshot isolation.}
-Let overlapping transactions $T_1$ and $T_2$ read the same snapshot and both
-write $x$.  Separate replicas could each expose its local commit.  Snapshot
-isolation's first-committer-wins rule (of two concurrent writers of $x$, only the first to
-commit may commit) allows no output containing both commit
-facts~\cite{berenson1995critique,bailis2013hat}.  Eventual storage convergence
-may choose a final state; it cannot retract a commit already exposed to a
-client.
+Let concurrent transactions $T_1$ and $T_2$ read the same snapshot and both
+write $x$, each on its own replica.  Each replica's commit fact is permitted on
+its own.  The first-committer-wins rule of snapshot isolation lets only one of
+two concurrent writers of $x$ commit, so no permitted output contains both
+commit facts~\cite{berenson1995critique,bailis2013hat}.
 
-The examples show where the boundary falls.  A guarantee whose permitted fact sets
-are closed under union, as read committed's are here, has a common \outnoun for
-whatever separated replicas expose, so it stays available
-(Corollary~\ref{cor:complete-cap-S}).  One that orders or excludes concurrent
-transactions, as serializability and first-committer-wins do, rules out
-combinations that separated replicas can each expose; emitting either side
-requires a choice (Proposition~\ref{thm:commitments-require-coordination}), and
-a partition prevents making it jointly.  Storage convergence constrains states
-after delivery; the facts already exposed are outputs, and output events never
-remove them.  We do not re-derive HAT's classification.
+The examples show where the boundary falls.  When the permitted fact sets are
+closed under union, as for read committed here, whatever separated replicas
+expose has a common \outnoun, so the guarantee stays available
+(Corollary~\ref{cor:complete-cap-S}).  Serializability and first-committer-wins
+instead exclude some combinations of facts that separated replicas can each
+expose.  Emitting either side then requires a choice
+(Proposition~\ref{thm:commitments-require-coordination}), and a partition
+prevents the replicas from making it together.  Eventual convergence of storage
+does not help.  It constrains states after delivery, but the facts already
+exposed are outputs, and no event removes them.  We do not re-derive HAT's
+classification of individual guarantees.
 
 Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent
