@@ -65,7 +65,9 @@
   \noalign{\vskip 0.5\dimexpr\ht\strutbox+\dp\strutbox\relax}%
   \noalign{\vskip-0.5\arrayrulewidth}}
 % Pointer to the long version (proofs and extended material).
-\newcommand{\extended}{the extended version~\cite{hellerstein2026completecalmfull}}
+\newcommand{\extended}{the full paper~\cite{hellerstein2026completecalmfull}}
+\newcommand{\fullproof}{Full proof in the full paper~\cite{hellerstein2026completecalmfull}.}
+\newcommand{\proofinfull}{\begin{proof}In the full paper~\cite{hellerstein2026completecalmfull}.\end{proof}}
 
 % ---------- Comment macro; NEVER EVER DELETE!!! ----------
 \newcommand{\jmh}[1]{\textcolor{red}{\textit{#1 -- JMH}}}
@@ -595,6 +597,7 @@ $o_1,\ldots,o_m$, its remainder table is
 $S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
   \mathrm{out}\OutputGe o_m]$.
 \end{lemma}
+\proofinfull
 
 To compare runs that end at different inputs, we consider a common \indesc
 of those inputs.
@@ -618,7 +621,7 @@ state to $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 
 \begin{proof}[Proof sketch]
 Rows are never added, so the row of a common state at $j$ was there
-in every run.
+in every run.  \fullproof
 \end{proof}
 
 Consistency guarantees that runs never diverge irreparably.  Whatever input
@@ -645,7 +648,7 @@ monotone.
 Intuitively, a monotone $f$ never emits an output that later input
 contradicts, so the row $(j,f(j))$ at a common \indesc survives in every run.
 If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
-\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never meet at $k$.
+\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never meet at $k$.  \fullproof
 \end{proof}
 
 In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
@@ -659,6 +662,7 @@ In a consistent functional specification, every run ending at current
 input $i$ is in the canonical state $\sigma_S(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
+\proofinfull
 
 Knowing the input is therefore enough to know the state, and with it the one
 output.  Monotonicity also governs exposability:
@@ -671,7 +675,7 @@ every state reachable without commitment is exposable.
 
 \begin{proof}[Proof sketch]
 If $f$ is monotone, every such state is canonical, and there the
-exposure test is monotonicity.
+exposure test is monotonicity.  \fullproof
 \end{proof}
 
 A monotone specification can thus emit every current
@@ -929,7 +933,7 @@ if it satisfies the common-\indesc condition.
 \begin{proof}[Proof sketch]
 Relational Monotonicity carries each $o_r$ to some
 \outnoun in the fiber at $j$, and Directed Outputs gives those a common
-\outnoun there.
+\outnoun there.  \fullproof
 \end{proof}
 
 \subsection{Lifted output events}
@@ -978,7 +982,7 @@ Monotonicity, equivalently the common-\indesc condition.
 If the common-\indesc condition holds, a common \outnoun $u\in S(j)$
 of everything emitted survives in every run.
 Conversely, runs that each emit one row's output must share a surviving row
-at $j$.
+at $j$.  \fullproof
 \end{proof}
 
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
@@ -999,7 +1003,7 @@ if every output at every state reachable without commitment is exposable.
 Under the condition, consistency supplies the common \outnoun
 the exposure test asks for.  Conversely, the exposure test at canonical
 states, one row at a time, builds the common \outnoun the condition
-asks for.
+asks for.  \fullproof
 \end{proof}
 
 With one output per input, Lifted Monotonicity and the common-\indesc
@@ -1074,7 +1078,7 @@ consistency.
 
 \begin{proof}[Proof sketch]
 The participant runs at a cut are a family of runs, and any family
-of runs can be placed at separate participants that exchange no messages.
+of runs can be placed at separate participants that exchange no messages.  \fullproof
 \end{proof}
 
 By Complete CALM, then, a specification has distributed consistency exactly
@@ -1215,7 +1219,7 @@ current input $i$.
 \begin{proof}[Proof sketch]
 After the second event every output at $i$ \outrel $x$, and after
 the first none does; since events never add rows, no row at $i$ can be common
-to both.
+to both.  \fullproof
 \end{proof}
 
 The conflict may be transient: an input $j$ \inrelpart $i$ might reconcile the
@@ -1308,7 +1312,7 @@ Availability for $A$, and consistency on $A$ gives the outputs it emits a
 common \outnoun wherever their inputs meet.  Conversely, given one
 participant per row of $A$, each in its own component, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
-\outnoun.
+\outnoun.  \fullproof
 \end{proof}
 
 \begin{corollary}
@@ -1318,6 +1322,7 @@ satisfies Lifted Monotonicity.  When it does, a commitment-free system has
 both: one whose strategies may emit any exposable output $o$ by
 $\Out{\varepsilon}{o}$.
 \end{corollary}
+\proofinfull
 
 The converse never assumes that the system is commitment-free, so commitments
 cannot enlarge the class of specifications that admit a system with
@@ -1344,7 +1349,7 @@ $v_0$.  Each is the only output its input permits, so it is enough that every
 request receive some response, which is Gilbert and Lynch's availability.  It
 needs Partition Consistency only to give a common \outnoun of the emitted
 outputs, which is what linearizability requires.
-The extended version takes precedence from real time, extends
+The full paper takes precedence from real time, extends
 Complete CAP to systems that choose their responses when responses are not
 forced, and derives
 the theorem in Gilbert and Lynch's asynchronous model~\cite{hellerstein2026completecalmfull}.
@@ -1405,7 +1410,7 @@ specification with table $S_2\circ S_1$ satisfies Lifted Monotonicity.
 Take rows of $S_2\circ S_1$ whose inputs have a common \indesc $j$.  The
 common-\indesc condition for $\Spec_1$ gives one intermediate value at $j$
 that \outrel each row's intermediate value, and that value is a common \indesc
-at which the condition for $\Spec_2$ supplies the common \outnoun.
+at which the condition for $\Spec_2$ supplies the common \outnoun.  \fullproof
 \end{proof}
 
 By associativity the lemma extends to finite pipelines.
@@ -1473,13 +1478,13 @@ applied to $\Spec_2|_{\Spec_1}$.  (2) Each output event of $\Spec_1$ keeps
 only rows above its output, so each input $\Spec_2$ receives lies above the
 previous one, and by (1) every answer is exposable.  (3) The exposure boundary
 of the composite fails at a canonical state, which is the image of a canonical
-state of $\Spec_1$.
+state of $\Spec_1$.  \fullproof
 \end{proof}
 
 The theorem holds whatever basis $\Spec_1$ uses, and a proper pipeline is
 itself a guard for a further stage.  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
-logs needs no commitment.  The extended version extends these results to
+logs needs no commitment.  The full paper extends these results to
 stages with inputs of their own and to acyclic dataflow graphs, checked node
 by node much as types are~\cite{hellerstein2026completecalmfull}.
 
@@ -1586,6 +1591,7 @@ sub-history of $h$ whose merges all satisfy $\mathcal I$.
 $T$ is invariant confluent if and only if $S_{\mathcal I}$ satisfies Lifted
 Monotonicity.
 \end{proposition}
+\proofinfull
 
 Invariant confluence is therefore not a separate boundary: for the
 specification that exposes database states, it is Lifted Monotonicity, and by
