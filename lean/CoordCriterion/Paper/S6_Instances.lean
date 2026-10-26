@@ -94,7 +94,7 @@ theorem «sec:query-instance/one-fact-version» :
 /-- Sec. `sec:query-instance`: "Under inclusion of outputs, with inputs
 expanding only by facts at new nodes, a behavior is a relational
 specification.  A transducer computes a behavior if every fair run ends at a
-permitted output, thus implementing a sub-behavior `A`. … Their
+permitted output, and so implements a sub-behavior `A`. … Their
 characterization, node monotonicity of `A`, is the common-expansion condition
 on `A` for two rows at disjoint networks.  Complete CAP extends it to
 overlapping networks"  Lean: inputs are `ExtInp (netAdm loc)` (located facts,

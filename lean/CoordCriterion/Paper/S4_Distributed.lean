@@ -733,9 +733,10 @@ theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
 
 /-- Paragraph "Locks in a shared-nothing database": "A transaction across
 keys needs one order, but each owner chooses its part, so the owners' choices
-can contradict each other.  Excluding that … is distributed coordination."
-Lean: when two participants may each emit an order, some
-history has one emit `ab` (removing `ba`) and the other emit `ba`. -/
+can contradict each other.  Two-phase commit excludes that without
+distributed coordination: …"  Lean: when two participants may each emit an
+order, some history has one emit `ab` (removing `ba`) and the other emit `ba`.
+The two-phase-commit claim is not yet formalized (pending sync). -/
 theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
     ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=
   CAP.twoOwnerSys_not_coordinationFreeH D
