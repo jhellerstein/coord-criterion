@@ -12,6 +12,8 @@ cidr.tex itself is not modified.  Usage, from the repo root:
 """
 import re
 import difflib
+import json
+import os
 
 SECTIONS = ["introduction", "functional-calm", "complete-calm", "distributed",
             "composition", "instances", "discussion", "conclusion"]
@@ -112,6 +114,12 @@ def plain(s, n=16):
     return " ".join(w[:n]) + (" ..." if len(w) > n else "")
 
 
+BLOCKS = []
+CATNAME = {"F": "formal definition/notation", "C": "formal caution", "E": "example",
+           "X": "explanation", "R": "signposting", "T": "result",
+           "W": "related-work detail", "?": "unclassified"}
+
+
 def main():
     corpus_text = "\n".join(expand_inputs(strip_comments(open(f"sections/{n}.tex").read()))
                             for n in SECTIONS)
@@ -157,15 +165,10 @@ def main():
     notes, last_kept, block = {}, "__START__", []
     def close():
         if block:
-            sens = [u for u in block if u[0] == "s"]
-            labs = [u[1] for u in block if u[0] == "l"]
-            msg = []
-            if sens:
-                msg.append(f"{len(sens)} sentence{'s' if len(sens) > 1 else ''}: "
-                           f"\\textit{{{plain(sens[0][1])}}}")
-            if labs:
-                msg.append("labels " + ", ".join(l.replace("_", "\\_") for l in labs))
-            notes.setdefault(last_kept, []).append("; ".join(msg))
+            BLOCKS.append({"anchor": last_kept[:80],
+                           "sentences": [u[1] for u in block if u[0] == "s"],
+                           "labels": [u[1] for u in block if u[0] == "l"]})
+            notes.setdefault(last_kept, []).append(len(BLOCKS) - 1)
             block.clear()
     for u in src_units:
         if u[2]:
@@ -178,6 +181,30 @@ def main():
         else:
             block.append(u)
     close()
+    cats = json.load(open(os.path.join(os.path.dirname(__file__), "cidr_categories.json")))
+
+    def bkey(b):
+        if b["sentences"]:
+            return re.sub(r"\s+", " ", b["sentences"][0]).strip()[:60]
+        return "LABELS:" + ",".join(b["labels"])
+
+    for b in BLOCKS:
+        b["words"] = sum(len(re.sub(r"\$[^$]*\$", "M", x).split()) for x in b["sentences"])
+        b["cat"] = cats.get(bkey(b), "?")
+    order = sorted(range(len(BLOCKS)), key=lambda i: -BLOCKS[i]["words"])
+    for r, i in enumerate(order, 1):
+        BLOCKS[i]["rank"] = r
+
+    def render(i):
+        b = BLOCKS[i]
+        msg = [f"\\textbf{{{CATNAME[b['cat']]}}}, {b['words']} words, rank {b['rank']}"]
+        if b["sentences"]:
+            msg.append(f"\\textit{{{plain(b['sentences'][0])}}}")
+        if b["labels"]:
+            msg.append("labels " + ", ".join(l.replace("_", "\\_") for l in b["labels"]))
+        return "; ".join(msg)
+
+    notes = {k: [render(i) for i in v] for k, v in notes.items()}
 
     # Re-key notes whose anchor sentence sits inside a longer cidr sentence.
     all_cidr = [norm(x) for k, p in prose_units(body.split("\n")) if k == "par"
@@ -220,12 +247,24 @@ def main():
         "\\definecolor{newblue}{RGB}{0,70,200}\n"
         "\\definecolor{cutred}{RGB}{190,0,0}\n"
         "\\newcommand{\\removednote}[1]{{\\color{cutred}\\footnotesize"
-        "\\,[\\textbf{removed} #1]\\,}}\n")
-    review = (head + macros + "\\begin{document}" + front + "\n"
+        "\\,[removed: #1]\\,}}\n")
+    tot = {}
+    for b in BLOCKS:
+        tot.setdefault(b["cat"], [0, 0]); tot[b["cat"]][0] += 1; tot[b["cat"]][1] += b["words"]
+    rows = "".join(f"{CATNAME[c]} & {n} & {w}\\\\\n" for c, (n, w) in
+                   sorted(tot.items(), key=lambda kv: -kv[1][1]))
+    top = "".join(f"{BLOCKS[i]['rank']}. {CATNAME[BLOCKS[i]['cat']]}, {BLOCKS[i]['words']} words: "
+                  f"\\textit{{{plain(BLOCKS[i]['sentences'][0], 10) if BLOCKS[i]['sentences'] else ''}}}\\par\n"
+                  for i in order[:12])
+    summary = ("\\noindent{\\color{cutred}\\footnotesize\\textbf{Removals by category}\\par\n"
+               "\\begin{tabular}{lrr}category & blocks & words\\\\\\hline\n" + rows +
+               "\\end{tabular}\\par\\smallskip\\textbf{Largest removals}\\par\n" + top + "}\\par\\medskip\n")
+    review = (head + macros + "\\begin{document}" + front + "\n" + summary +
               "\\noindent{\\color{newblue}Blue: new or edited for CIDR.}\\quad"
               "{\\color{cutred}Red: removed from the full version.}\\par\n"
               + "\n".join(out) + "\n\\bibliographystyle" + tail)
     open("cidr-review.tex", "w").write(review)
+    json.dump(BLOCKS, open(os.environ.get("TMPDIR", ".") + "/cidr_blocks.json", "w"), indent=1)
     print(f"sentences kept {n_old}, new/edited {n_new}, removed-note anchors "
           f"{len(used)}, unplaced {len(unplaced)}")
 
