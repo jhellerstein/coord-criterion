@@ -42,8 +42,13 @@ current.
 
 ## Building
 
-* Paper: `~/.local/bin/tectonic main.tex`; check the log for undefined or
-  multiply defined references.
+* Paper: `~/.local/bin/tectonic main.tex` (and `cidr.tex` for the CIDR
+  version).  Tectonic's console output does not report undefined references,
+  so check the PDF: an unresolved `\ref` or `\cite` renders as `⁇`.  With
+  pypdf on the path
+  (`PYTHONPATH=.infinity/research/python`), count them with
+  `python3 -c "import pypdf; r=pypdf.PdfReader('main.pdf'); print(sum(p.extract_text().count('⁇') for p in r.pages))"`;
+  the count must be 0.
 * Lean: `export ELAN_HOME=$HOME/.cache/elan PATH=$HOME/.cache/elan/bin:$PATH`,
   then `lake build` in `lean/` (Lean 4 core only, no Mathlib).
 
