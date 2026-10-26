@@ -2,13 +2,14 @@ import CoordCriterion.Appendix.Deployment
 import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.DeploymentSystems
 import CoordCriterion.Appendix.Registers
+import CoordCriterion.Appendix.RealTimeCausal
 import CoordCriterion.Appendix.DeploymentFor
 
 /-!
 # Paper, Appendix E: Deployments: One Availability Relation per Participant
 
 Source: `appendices/deployment.tex` (Appendix `app:deployment`, including
-subsection `app:registers`).
+subsections `app:registers` and `app:rtc`).
 
 How to read this file: open it beside the appendix.  Every numbered result
 and every claim the text proves or justifies appears below in paper order,
@@ -565,6 +566,103 @@ common expansion; both are authorized only to `p` under `replicaD`. -/
 theorem «app:registers/same-read-incompatible» :
     (causalSpec G2).S h2 ρa ∧ (causalSpec G2).S h2 ρ1 ∧ ¬ (causalSpec G2).LiftedMono :=
   ⟨causal_ρa, causal_ρ1, causal_not_liftedMono⟩
+
+/-! ## Appendix E.2: Real-time causal consistency (`app:rtc`) -/
+
+section RTC
+variable {α : Type} {n : Nat}
+
+/-- **Theorem `thm:product-frontier`** (Independent products).  "(1) If views
+continue (for `i ⊑ j` and `v ∈ V_p(i)` some `w ∈ V_p(j)` has `v ≤_p w`), the
+product interface is monotone across partitions under the owner deployment.
+(2) No strict, locally conservative strengthening is monotone across
+partitions under its owner deployment."
+
+Lean: participants `Fin n` with `2 ≤ n` for part (2); views `V p i` nonempty
+(`hne`), an antichain at each input (`Antichain`); a strengthening is
+`NormStr V` and `sp` any specification whose table is its table. -/
+theorem «thm:product-frontier» {I : Type} [PO I] {W : Fin n → Type} [∀ p, PO (W p)]
+    (V : (p : Fin n) → I → W p → Prop) (hne : ∀ p i, ∃ v, V p i v) :
+    (Continue V → MonoAcrossPartitions (ownerD (prodSpec V hne))) ∧
+    (2 ≤ n → Antichain V → ∀ (T : NormStr V) (sp : Spec I (PTd W)),
+      (∀ i x, sp.S i x ↔ T.table i x) → T.LocCons → T.Strict →
+      ¬ MonoAcrossPartitions (ownerD sp)) :=
+  ⟨fun hc => product_monoAcross V hne hc,
+   fun hn hAC T sp hsp hLC hst => strengthening_not_monoAcross hn V hAC T sp hsp hLC hst⟩
+
+/-- "Consider the histories of Appendix `app:registers` with a second strict
+partial order `≺`: `a ≺ b` when `a` ended before `b` began.  We assume that
+`a → b` implies `a ≺ b`, so replicas propagate only completed writes, and that
+`→` totally orders the operations of each replica.  One input expands another
+when it does as a history and `≺` agrees on the old operations."
+
+Lean: `RHist G` (fields `rt`, `hb_rt`, `po`) and its order. -/
+theorem «app:rtc/input» (G : OpSig α n) (i j : RHist G) :
+    (i ≼ j ↔ i.h ≼ j.h ∧ ∀ a b, i.h.mem a → i.h.mem b → (j.rt a b ↔ i.rt a b)) ∧
+    (∀ a b, i.h.hb a b → i.rt a b) ∧
+    (∀ a b, i.h.mem a → i.h.mem b → G.rep a = G.rep b → a ≠ b → i.h.hb a b ∨ i.h.hb b a) :=
+  ⟨Iff.rfl, i.hb_rt, i.po⟩
+
+/-- "A *real-time causal view* of replica `p` assigns to every read `r` of `p`
+a source `s(r)` such that (1) `s(r)` is a write visible to `r`, or `v₀` if none
+is; (2) `s(r) ⊀ w` for every write `w` visible to `r`; (3) if `r' → r` is a
+read of `p` to which `s(r)` is visible, then `s(r') = s(r)`."
+
+Lean: `RView G p i v`; (1) and (2) are `RSrc`, (3) is `RMono`. -/
+theorem «app:rtc/views» (G : OpSig α n) (p : Fin n) (i : RHist G) (v : SMap α) :
+    RView G p i v ↔ (∀ r, (∃ s, v.f r = some s) ↔ PRead G i.h p r) ∧
+      (∀ r s, v.f r = some s → RSrc G i r s) ∧ RMono G i p v :=
+  Iff.rfl
+
+/-- "Views exist … They continue … Views share a domain, so they form an
+antichain.  By Theorem `thm:product-frontier`(1), the real-time causal product
+interface, in which each replica answers its own reads, is monotone across
+partitions under the owner deployment." -/
+theorem «app:rtc/monotone-across» (G : OpSig α n) :
+    (∀ p i, ∃ v, RView G p i v) ∧ Continue (W := fun _ => SMap α) (RView G) ∧
+    Antichain (W := fun _ => SMap α) (RView G) ∧
+    MonoAcrossPartitions (ownerD (prodSpec (W := fun _ => SMap α) (RView G) rview_ne)) :=
+  ⟨rview_ne, rview_cont, rview_antichain, rtc_product_monoAcross⟩
+
+/-- "A strengthening is *real-time blind* when a tuple it selects at an input
+stays selected at the same history with fewer real-time edges, provided its
+views are still real-time causal there." -/
+theorem «app:rtc/blind» (G : OpSig α n) (T : NormStr (W := fun _ => SMap α) (RView G)) :
+    RBlind T ↔ ∀ (i i' : RHist G), i'.h = i.h → (∀ a b, i.rt a b → i'.rt a b) →
+      ∀ y, T.sel i' y → (∀ q, RView G q i (y q)) → T.sel i y :=
+  Iff.rfl
+
+/-- **Proposition `prop:rtc-maximal`** (Real-time causal maximality).  "No
+strict, real-time blind strengthening of the real-time causal product interface
+is monotone across partitions under its owner deployment."  (With `2 ≤ n`.) -/
+theorem «prop:rtc-maximal» (G : OpSig α n) (hn : 2 ≤ n)
+    (T : NormStr (W := fun _ => SMap α) (RView G))
+    (sp : Spec (RHist G) (PTd (fun _ : Fin n => SMap α)))
+    (hsp : ∀ i x, sp.S i x ↔ T.table i x) (hbl : RBlind T) (hst : T.Strict) :
+    ¬ MonoAcrossPartitions (ownerD sp) :=
+  rtc_strengthening_not_monoAcross hn T sp hsp hbl hst
+
+/-- Proof of `prop:rtc-maximal`: "Items (2) and (3) and program order make
+`≺_v` a strict partial order, and it contains `→`.  At `(h,≺_v)`, `v` is `p`'s
+only view … Real-time edges only exclude views."  Here `forceRt i _` is
+`(h,≺_v)`. -/
+theorem «prop:rtc-maximal/forced» (G : OpSig α n) {p : Fin n} {i : RHist G} {v : SMap α}
+    (hv : RView G p i v) :
+    (forceRt i (rview_good G hv)).h = i.h ∧
+    (∀ a b, i.rt a b → (forceRt i (rview_good G hv)).rt a b) ∧
+    (∀ v', RView G p (forceRt i (rview_good G hv)) v' → v' = v) ∧
+    (∀ q y, RView G q (forceRt i (rview_good G hv)) y → RView G q i y) :=
+  ⟨rfl, fun _ _ h => Or.inl h, fun _ h => rview_unique hv h,
+   fun _ _ h => rview_back (rview_good G hv) h⟩
+
+/-- Proof of `prop:rtc-maximal`: "it suffices to show local conservativity". -/
+theorem «prop:rtc-maximal/locally-conservative» (G : OpSig α n)
+    (T : NormStr (W := fun _ => SMap α) (RView G))
+    (sp : Spec (RHist G) (PTd (fun _ : Fin n => SMap α)))
+    (hsp : ∀ i x, sp.S i x ↔ T.table i x) (hbl : RBlind T) : T.LocCons :=
+  rtc_locCons T sp hsp hbl
+
+end RTC
 
 end Paper
 end CC

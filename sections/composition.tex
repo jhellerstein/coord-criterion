@@ -1,19 +1,17 @@
 \section{Composition and Proper Coordination}
 \label{sec:composition}
 
-Prior literature presented a puzzle: the ``fix'' for a non-monotone
-program is coordination, which is another non-monotone program. A key-value
-store with mutable keys is non-monotone~\cite{alvaro2011bloom}. The standard
-solution, as in state-machine replication~\cite{schneider1990smr}, is to wrap it
-with a log. Clients send
-requests, a log puts the requested commands in one order, and the key-value store
+Coordination poses a puzzle.  A non-monotone program needs coordination, yet
+coordination is itself non-monotone.  A key-value store with mutable keys is
+non-monotone~\cite{alvaro2011bloom}.  State-machine
+replication~\cite{schneider1990smr} wraps it in a log.  Clients send requests,
+the log puts the requested commands in one order, and the key-value store
 executes the log and answers each request.  The log's specification is also not
 monotone: when two commands arrive concurrently, either may be appended next,
-and the two resulting logs have no common \outnoun.  
-Yet replicated stores are consistent, and they
-coordinate only in the log.  Multi-Paxos agrees on each log
-entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log---the
-key-value store needs no further agreement.
+and the two resulting logs have no common \outnoun.  Yet replicated stores are
+consistent, and they coordinate only in the log.  Multi-Paxos agrees on each
+log entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
+with no further agreement.
 
 That puzzle is explained by our framework.  Specifications are
 tables, so they compose by equijoin, and composition preserves Lifted

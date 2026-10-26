@@ -1,11 +1,11 @@
-\section{Related Work and its Mappings}
+\section{Related Work and Mappings}
 \label{sec:instances}
 \label{sec:related}
 
 Complete CALM provides a unified lens for many results across literatures.
-Each setting below declares an input, an output, and their orders before
-applying either theorem.  Changing the specification changes
-whether monotonicity or Directed Outputs holds.
+For the key related ideas, we provide mappings here to our specification model.
+Each setting declares an input, an output, and their orders before
+applying either CALM theorem.
 
 \subsection{Query monotonicity}
 \label{sec:query-instance}
@@ -148,11 +148,12 @@ system~\cite{mahajan2011consistency}.  Their availability, that every
 request is eventually answered, is a response obligation in our terms
 (Appendix~\ref{app:cap-response}).  Their result is a maximality claim:
 real-time causal consistency is achievable, and no stronger semantics is.
-Such claims are provable in our frame
-without enumerating alternatives.  For registers, no strengthening of causal
-consistency that keeps every replica's causal views is coordination-free
-(proof omitted).  Real-time causal consistency adds real-time precedence to the
-input, which that argument does not cover.
+With real-time precedence recorded in the input, we recover both halves
+(Appendix~\ref{app:rtc}).  The real-time causal register is coordination-free,
+and no strict strengthening is, provided that the strengthening, like their
+implementations, does not consult real time.  One-way convergence needs no
+separate assumption, since the input records which writes each replica has
+received.
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
@@ -208,7 +209,10 @@ with the other's is invalid.
 
 Invariant preservation and transaction availability are different
 specifications: $S_{\mathcal I}$ constrains exposed database states, while an
-isolation level constrains exposed read and commit facts.
+isolation level constrains exposed read and commit facts.  Kaki et
+al.~\cite{kaki2018alone} relate the two for a given program: they infer the
+weakest isolation level a store offers under which each transaction still
+preserves the declared invariants.
 
 \subsection{General operational specification models}
 Labeled transition systems and I/O automata provide general operational models
