@@ -635,8 +635,10 @@ many such executions, so the induced specification is a semantic object: we
 can reason about it, but not list it.  Two standard approaches make that
 reasoning practical."  This frames the paragraph.  "The first is testing.  A
 simulator or model checker runs the machine and its environment on bounded
-inputs and collects what it observes.  This is routine engineering practice
-and has found serious bugs in production systems.  Testing suits refutation."
+inputs; the input/output pairs it collects form a finite specification in our
+model, which can be checked for violations of Lifted Monotonicity.  This is
+routine engineering practice and has found serious bugs in production
+systems.  Testing suits refutation."
 These sentences describe tools and practice and are argued in prose only (see
 the README); the refutation claim is the next entry. -/
 
@@ -652,7 +654,11 @@ an observation that fails to refine some `βᵣ`'s.  The common expansion `h`
 is the input of `β`; it is an input that occurs, as every input of the
 induced specification is.  The library also gives finite certificates for
 the last clause (`IOM.not_liftedMono_of_fiber_list`,
-`IOM.not_liftedMono_of_machine_cert`).  The next sentence ("Testing cannot
+`IOM.not_liftedMono_of_machine_cert`); the first of these is the paper's next
+sentence, "A violation found in the finite specification is such a witness
+when the exploration covers every execution with input `h`, so that its fiber
+there is complete": a finite list containing every observation at `h`, each
+failing to refine some `βᵣ`'s, refutes Lifted Monotonicity.  The next sentence ("Testing cannot
 show that Lifted Monotonicity holds, since that is a claim about every
 input.") is argued in prose only (see the README). -/
 theorem «sec:operational-models/testing-witness» {C P Q O : Type} [PO O]

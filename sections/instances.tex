@@ -332,13 +332,16 @@ induced specification is a semantic object: we can reason about it, but not
 list it.  Two standard approaches make that reasoning practical.
 
 The first is testing.  A simulator or model checker runs the machine and its
-environment on bounded inputs and collects what it
-observes~\cite{misra1986des,flanagan2005dpor}.  This is routine engineering
+environment on bounded inputs~\cite{misra1986des,flanagan2005dpor}; the
+input/output pairs it collects form a finite specification in our model,
+which can be checked for violations of Lifted Monotonicity.  This is routine engineering
 practice and has found serious bugs in production
 systems~\cite{newcombe2015aws,zhou2021foundationdb}.  Testing suits
 refutation.  If Lifted Monotonicity fails, finitely many executions show it:
 executions with inputs $h_1,\ldots,h_k$, and a common \indesc $h$ at which no
-execution's observation \outrel all of theirs.  Testing cannot show that
+execution's observation \outrel all of theirs.  A violation found in the
+finite specification is such a witness when the exploration covers every
+execution with input $h$, so that its fiber there is complete.  Testing cannot show that
 Lifted Monotonicity holds, since that is a claim about every input.
 
 The second is proof.  Instead of computing the induced specification, a

@@ -47,7 +47,8 @@ that a strengthening may read real time from the input; in §6.5, that
 distributing a compiled state machine is direct (each client's events go to
 some participant and §4 applies with the induced specification), and in its
 "Testing and proof" paragraph that simulators and model checkers run the
-machine on bounded inputs, that this is routine engineering practice and has
+machine on bounded inputs and that the input/output pairs they collect form a
+finite specification that can be checked for violations, that this is routine engineering practice and has
 found serious bugs in production systems, that testing cannot show Lifted
 Monotonicity holds, the example rules of a declared specification ("the set
 of ballots received", "the largest timestamp seen"), and the relation of the
