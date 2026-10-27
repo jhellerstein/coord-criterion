@@ -1,6 +1,7 @@
 -- Foundations (Section 2 definitions, runs)
 import CoordCriterion.Foundations.Core
 import CoordCriterion.Foundations.Runs
+import CoordCriterion.Foundations.IOAutomata
 -- §2 Functional CALM, §3 Complete CALM, Appendix B (deferred proofs)
 import CoordCriterion.FunctionalCALM.Theorem
 import CoordCriterion.CompleteCALM.Theorem
@@ -33,6 +34,7 @@ import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.Instances.StateMachine
+import CoordCriterion.Instances.IOMachine
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
 -- §5 and Appendix D composition
