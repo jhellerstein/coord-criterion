@@ -70,7 +70,7 @@ theorem lrun_sysExec {σ τ : State sp} {l : List (LEv sp D m)} (h : LRun σ l �
   | recv _ ih => exact ih
 
 theorem emitted_toS (c : I) (l : List (LEv sp D m)) :
-    emitted c ((toS l).map SEvent.erase) = emittedL c l := by
+    emitted c ((toS l).filterMap SEvent.erase) = emittedL c l := by
   induction l generalizing c with
   | nil => rfl
   | cons e es ih =>

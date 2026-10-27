@@ -401,7 +401,7 @@ theorem store_run (hf : Monotone f) {B : Basis sp} {σ ρ : State sp}
     {es : List (SEvent sp)} (h : SysExec B σ es ρ) {m : M} {ms : List M}
     (he : emitted es = m :: ms) :
     ∃ es' : List (SEvent (graph f)),
-      es'.map SEvent.erase = .output (f m) :: storeEvs f ms ∧ CoordFree es' ∧
+      es'.filterMap SEvent.erase = .output (f m) :: storeEvs f ms ∧ CoordFree es' ∧
       SysExec (fun _ => False) (canon (graph f) m) es' (canon (graph f) (ms.getLastD m)) := by
   have hc : ChainFrom (some m) ms := by
     have := emitted_chain h none (fun _ h => by cases h)
@@ -481,7 +481,7 @@ theorem delegation (hf : Monotone f) (B : Basis sp) {R : State sp → Prop}
     (∀ i es ρ, SysExec B (canon sp i) es ρ → R ρ →
       ∃ ρ', Exec (canon (comp sp f) i) (es.map (obs f)) ρ' ∧ GuardedRuns R f ρ') ∧
     (∀ i es ρ m ms, SysExec B (canon sp i) es ρ → emitted es = m :: ms →
-      ∃ es' : List (SEvent (graph f)), es'.map SEvent.erase = .output (f m) :: storeEvs f ms ∧
+      ∃ es' : List (SEvent (graph f)), es'.filterMap SEvent.erase = .output (f m) :: storeEvs f ms ∧
         CoordFree es' ∧
         SysExec (fun _ => False) (canon (graph f) m) es' (canon (graph f) (ms.getLastD m))) ∧
     (∀ fam : List (State (comp sp f)), (∀ ρ ∈ fam, GuardedRuns R f ρ) →
@@ -705,13 +705,13 @@ theorem erase_eraseC (e : SEvent sq) : (eraseC e).erase = e.erase := by cases e 
 theorem eraseC_eraseC (e : SEvent sq) : eraseC (eraseC e) = eraseC e := by cases e <;> rfl
 
 theorem map_erase_eraseC (l : List (SEvent sq)) :
-    (l.map eraseC).map SEvent.erase = l.map SEvent.erase := by
+    (l.map eraseC).filterMap SEvent.erase = l.filterMap SEvent.erase := by
   induction l with
   | nil => rfl
   | cons e l ih => simp only [List.map_cons, erase_eraseC, ih]
 
 theorem map_erase_of_eraseC {l l' : List (SEvent sq)} (h : l.map eraseC = l'.map eraseC) :
-    l.map SEvent.erase = l'.map SEvent.erase := by
+    l.filterMap SEvent.erase = l'.filterMap SEvent.erase := by
   rw [← map_erase_eraseC l, h, map_erase_eraseC]
 
 /-- **Commitment-erased replacement.**  Same strategy, empty basis, and each
@@ -886,7 +886,7 @@ theorem sysStep_empty_step {J X : Type} [PO J] [PO X] {sq : Spec J X} {σ τ : S
 
 theorem sysExec_empty_exec {J X : Type} [PO J] [PO X] {sq : Spec J X} {σ τ : State sq}
     {es : List (SEvent sq)} (h : SysExec (fun _ => False) σ es τ) :
-    Exec σ (es.map SEvent.erase) τ := by
+    Exec σ (es.filterMap SEvent.erase) τ := by
   induction h with
   | nil => exact .nil _
   | cons hs _ ih => exact .cons (sysStep_empty_step hs) ih
@@ -930,7 +930,7 @@ def Shaped (l : List M) (m : M) (tr : List (Event M O)) : Prop :=
 with `m`, and the store's system produces a run from `σ_𝒦(m)` on a prefix of
 `l`.  For an upstream system `P`, `U = P.emits`. -/
 def GRun (U : List M → Prop) (K : Sys sk) (l : List M) (m : M) (esK : List (SEvent sk)) : Prop :=
-  U l ∧ Shaped l m (esK.map SEvent.erase) ∧ ∃ ρK, Produces K m esK ρK
+  U l ∧ Shaped l m (esK.filterMap SEvent.erase) ∧ ∃ ρK, Produces K m esK ρK
 
 /-- The output sequences that a system's produced runs emit. -/
 def Sys.emits (P : Sys sp) (l : List M) : Prop := ∃ i es ρ, Produces P i es ρ ∧ emitted es = l
@@ -969,7 +969,7 @@ theorem follow (hC : sk.CommonExpansion) :
 answers `m` and every later input without commitment. -/
 theorem store_follows (hC : sk.CommonExpansion) {m : M} {ms : List M}
     (hc : ChainFrom (some m) ms) :
-    ∃ o ps esK ρ, ps.map Prod.fst = ms ∧ esK.map SEvent.erase = .output o :: storeTr ps ∧
+    ∃ o ps esK ρ, ps.map Prod.fst = ms ∧ esK.filterMap SEvent.erase = .output o :: storeTr ps ∧
       Produces (noStore sk) m esK ρ ∧ IsRun ρ := by
   have hr0 : IsRun (canon sk m) := ⟨m, [], .nil _⟩
   obtain ⟨o, ho⟩ := (canon sk m).hasCur
@@ -992,7 +992,7 @@ run in which the store answers every output. -/
 theorem noStore_follows (hC : sk.CommonExpansion) {U : List M → Prop} {m : M} {ms : List M}
     (hU : U (m :: ms)) (hc : ChainFrom none (m :: ms)) :
     ∃ esK o ps, GRun U (noStore sk) (m :: ms) m esK ∧ ps.map Prod.fst = ms ∧
-      esK.map SEvent.erase = .output o :: storeTr ps := by
+      esK.filterMap SEvent.erase = .output o :: storeTr ps := by
   obtain ⟨o, ps, esK, ρ, hps, he, hK, _⟩ := store_follows hC (sk := sk) hc
   refine ⟨esK, o, ps, ⟨hU, ⟨[o], ps.map fun p => (p.1, [p.2]), ?_, ?_⟩, ρ, hK⟩, hps, he⟩
   · rw [map_fst_single, hps]; exact List.prefix_refl _
@@ -1084,7 +1084,7 @@ output event of the composite, and the join stays inside the composite's
 table. -/
 theorem answer_run {σ : State sp} : ∀ (os : List O) {τK ρK : State sk} {esK : List (SEvent sk)}
     (ρ' : State (seq sp sk)), SysExec (fun _ => False) τK esK ρK →
-    esK.map SEvent.erase = os.map Event.output → σ.R σ.cur τK.cur → Inv σ τK.R ρ' →
+    esK.filterMap SEvent.erase = os.map Event.output → σ.R σ.cur τK.cur → Inv σ τK.R ρ' →
     ∃ ρ'', Exec ρ' (os.map Event.output) ρ'' ∧ Inv σ ρK.R ρ'' ∧ ρK.cur = τK.cur
   | [], _, _, esK, ρ', hK, htr, _, hI => by
     have : esK = [] := List.map_eq_nil_iff.1 htr
@@ -1143,7 +1143,7 @@ theorem merge_lockstep (hC : sk.CommonExpansion) {B : Basis sp} {σ ρ : State s
     ∀ (ps : List (M × List O)) (τK ρK : State sk) (esK : List (SEvent sk))
       (ρ' : State (seq sp sk)),
       emitted es = ps.map Prod.fst → SysExec (fun _ => False) τK esK ρK →
-      esK.map SEvent.erase = blk ps → IsRun τK → (∀ k m, σ.R k m → τK.cur ≼ m) →
+      esK.filterMap SEvent.erase = blk ps → IsRun τK → (∀ k m, σ.R k m → τK.cur ≼ m) →
       Inv σ τK.R ρ' →
       ∃ ρ'', Exec ρ' (merge es (ps.map Prod.snd)) ρ'' ∧ Inv ρ ρK.R ρ'' ∧
         ∀ k m, ρ.R k m → ρK.cur ≼ m := by
@@ -1226,7 +1226,7 @@ theorem composite_run (hC : sk.CommonExpansion) {B : Basis sp} {i : I} {es : Lis
     (he : emitted es = m :: ms) {os : List O} {ps : List (M × List O)}
     (hps : ps.map Prod.fst = ms) {esK : List (SEvent sk)} {ρK : State sk}
     (hK : SysExec (fun _ => False) (canon sk m) esK ρK)
-    (htr : esK.map SEvent.erase = os.map Event.output ++ blk ps) :
+    (htr : esK.filterMap SEvent.erase = os.map Event.output ++ blk ps) :
     ∃ ρ', Exec (canon (seq sp sk) i) (merge es (os :: ps.map Prod.snd)) ρ' ∧ ρ'.cur = ρ.cur ∧
       (∀ k m x, ρ.R k m → ρK.R m x → ρ'.R k x) ∧ IsRun ρK ∧ ∀ k m, ρ.R k m → ρK.cur ≼ m := by
   obtain ⟨es₀, γ, es₁, rfl, h0, h1⟩ := emitted_split he
@@ -1303,7 +1303,7 @@ theorem guarded_confluentK (hC : sk.CommonExpansion)
 sequence `l` starting with `m`: the erased traces of the store parts of
 guarded runs. -/
 def Obs (U : List M → Prop) (K : Sys sk) (l : List M) (m : M) (tr : List (Event M O)) : Prop :=
-  ∃ esK, GRun U K l m esK ∧ esK.map SEvent.erase = tr
+  ∃ esK, GRun U K l m esK ∧ esK.filterMap SEvent.erase = tr
 
 /-- **Erasure, lockstep.**  If `𝒦` satisfies the common-expansion condition,
 then from any run state `σ'` with the same current input whose table contains
@@ -1351,7 +1351,7 @@ original's.  Proper coordination is not needed. -/
 theorem erase_simulates (hC : sk.CommonExpansion) {U : List M → Prop} {K : Sys sk}
     {l : List M} {m : M} {esK : List (SEvent sk)} (h : GRun U K l m esK) :
     GRun U (eraseSys K) l m (esK.map eraseC) ∧
-      (esK.map eraseC).map SEvent.erase = esK.map SEvent.erase ∧
+      (esK.map eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
       ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.map eraseC) ρ' ∧
         IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u := by
   obtain ⟨hU, hS, ρK, hK⟩ := h
@@ -1377,7 +1377,7 @@ def outs : List (Event I O) → List O
   | .output o :: es => o :: outs es
 
 theorem emitted_eq_outs {J X : Type} [PO J] [PO X] {sq : Spec J X} :
-    ∀ es : List (SEvent sq), emitted es = outs (es.map SEvent.erase)
+    ∀ es : List (SEvent sq), emitted es = outs (es.filterMap SEvent.erase)
   | [] => rfl
   | .input _ :: es => emitted_eq_outs es
   | .output _ _ :: es => congrArg _ (emitted_eq_outs es)
@@ -1414,7 +1414,7 @@ theorem outs_merge : ∀ (es : List (SEvent sp)) (oss : List (List O)),
 /-- The output sequences that the store parts of guarded composite runs emit:
 the guarded composite's behaviour as an upstream for a further stage. -/
 def GEmits (U : List M → Prop) (K : Sys sk) (l' : List O) : Prop :=
-  ∃ l m esK, GRun U K l m esK ∧ outs (esK.map SEvent.erase) = l'
+  ∃ l m esK, GRun U K l m esK ∧ outs (esK.filterMap SEvent.erase) = l'
 
 /-- **Every guarded composite run is a run of the composite.**  Let `𝒦`
 satisfy Lifted Monotonicity, `P` be any system of `𝒫`, and `K` any store
@@ -1424,7 +1424,7 @@ form a run of `𝒦 ∘ 𝒫` from a canonical state. -/
 theorem grun_composite (hC : sk.CommonExpansion) {P : Sys sp} {K : Sys sk} {l : List M}
     {m : M} {esK : List (SEvent sk)} (h : GRun P.emits K l m esK) :
     ∃ i es₀ σ₀ ρ' oss, SysExec P.basis (canon sp i) es₀ σ₀ ∧ emitted es₀ <+: l ∧
-      (emitted es₀).length = oss.length ∧ oss.flatten = outs (esK.map SEvent.erase) ∧
+      (emitted es₀).length = oss.length ∧ oss.flatten = outs (esK.filterMap SEvent.erase) ∧
       Exec (canon (seq sp sk) i) (merge es₀ oss) ρ' := by
   obtain ⟨hR, _, _⟩ := erase_simulates hC h
   obtain ⟨⟨i, es, ρ, hP, rfl⟩, ⟨os, ps, hpre, hsh⟩, ρK, hK, _⟩ := hR
@@ -1659,7 +1659,7 @@ theorem proper_run (hP : Proper sp sk) {B : Basis sp} {i : I} {es : List (SEvent
     {ps : List ({m // Img sp m} × List O)} (hps : ps.map Prod.fst = ms)
     {esK : List (SEvent (rest sp sk))} {ρK : State (rest sp sk)}
     (hK : SysExec (fun _ => False) (canon (rest sp sk) m) esK ρK)
-    (htr : esK.map SEvent.erase = os.map Event.output ++ blk ps) :
+    (htr : esK.filterMap SEvent.erase = os.map Event.output ++ blk ps) :
     ∃ ρ' : State (seq sp sk), Exec (canon (seq sp sk) i) (merge es (os :: ps.map Prod.snd)) ρ' ∧
       ρ'.cur = ρ.cur ∧ (∀ k m x (h : Img sp m), ρ.R k m → ρK.R ⟨m, h⟩ x → ρ'.R k x) ∧
       IsRun ρK ∧ ∀ k m, ρ.R k m → ρK.cur.1 ≼ m := by
@@ -1683,7 +1683,7 @@ theorem proper_follows (hP : Proper sp sk) {B : Basis sp} {i : I} {es : List (SE
     (he : emitted es = m :: ms) :
     ∃ (hm : Img sp m) (o : O) (ps : List ({m // Img sp m} × O))
       (esK : List (SEvent (rest sp sk))) (ρK : State (rest sp sk)),
-      ps.map (fun p => p.1.1) = ms ∧ esK.map SEvent.erase = .output o :: storeTr ps ∧
+      ps.map (fun p => p.1.1) = ms ∧ esK.filterMap SEvent.erase = .output o :: storeTr ps ∧
       Produces (noStore (rest sp sk)) ⟨m, hm⟩ esK ρK ∧
       ∃ ρ' : State (seq sp sk),
         Exec (canon (seq sp sk) i) (merge es ([o] :: ps.map fun p => [p.2])) ρ' ∧ ρ'.cur = ρ.cur := by
@@ -1770,7 +1770,7 @@ theorem proper_erase (hP : Proper sp sk) {U : List {m // Img sp m} → Prop}
     {K : Sys (rest sp sk)} {l : List {m // Img sp m}} {m : {m // Img sp m}}
     {esK : List (SEvent (rest sp sk))} (h : GRun U K l m esK) :
     GRun U (eraseSys K) l m (esK.map eraseC) ∧
-      (esK.map eraseC).map SEvent.erase = esK.map SEvent.erase ∧
+      (esK.map eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
       ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.map eraseC) ρ' ∧
         IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
   erase_simulates (proper_iff_ce.1 hP) h

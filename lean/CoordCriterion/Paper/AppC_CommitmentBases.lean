@@ -328,7 +328,7 @@ theorem «def:canonical-system/histories» {D : Type} {n : Nat} {sp : Spec I O} 
     (∀ H : Dist.History I O D n, Dist.CanonLegal sp H ↔
       ∀ p, ∃ τ : State sp, Exec (canon sp (H.init p)) (Dist.ioOf (H.ev p)) τ) ∧
     (∀ {σ ρ ρ' : State sp} {es es' : List (SEvent sp)}, CanonExec σ es ρ → CanonExec σ es' ρ' →
-      es.map SEvent.erase = es'.map SEvent.erase → es = es' ∧ ρ = ρ') ∧
+      es.filterMap SEvent.erase = es'.filterMap SEvent.erase → es = es' ∧ ρ = ρ') ∧
     (∀ H : Dist.History I O D n, Dist.CanonLegal sp H → Dist.SysLegal (canonBasis sp) H) :=
   ⟨Dist.canonLegal_iff, Dist.canonExec_unique, fun _ h => Dist.canonLegal_sysLegal h⟩
 
@@ -396,9 +396,9 @@ abbrev «def:run-under-basis/canonical-run» {sp : Spec I O} (i : I) (es : List 
 functional-calm–complete-calm", and they are runs under `ℬ_S`. -/
 theorem «def:run-under-basis/canonical-runs-are-runs» {sp : Spec I O} :
     (∀ {σ τ : State sp} {es : List (SEvent sp)},
-      CanonExec σ es τ → Exec σ (es.map SEvent.erase) τ) ∧
+      CanonExec σ es τ → Exec σ (es.filterMap SEvent.erase) τ) ∧
     (∀ {σ τ : State sp} {es : List (Event I O)},
-      Exec σ es τ → ∃ es' : List (SEvent sp), es'.map SEvent.erase = es ∧ CanonExec σ es' τ) ∧
+      Exec σ es τ → ∃ es' : List (SEvent sp), es'.filterMap SEvent.erase = es ∧ CanonExec σ es' τ) ∧
     (∀ {σ τ : State sp} {es : List (SEvent sp)},
       CanonExec σ es τ → SysExec (canonBasis sp) σ es τ) :=
   ⟨canonExec_exec, exec_canonExec, canonExec_sysExec⟩
@@ -411,7 +411,7 @@ state and agree once commitment sequences are erased: wherever one has
 Lean: the event lists agree after `SEvent.erase` (the common start state is
 fixed by the context). -/
 abbrev «app:bases/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
-  es.map SEvent.erase = es'.map SEvent.erase
+  es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
 /-- **Lemma canonical equivalents** (`lem:canonical-equivalent`).  "Every run
 under any commitment basis is observably equivalent to a canonical run.  After
@@ -424,8 +424,8 @@ of §§2–3 ending at `ρ'` with the same current input and a larger table. -/
 theorem «lem:canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
     {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
     ∃ es' ρ', Lockstep B (canon sp i) es ρ (canon sp i) es' ρ' ∧
-      es.map SEvent.erase = es'.map SEvent.erase ∧
-      Exec (canon sp i) (es.map SEvent.erase) ρ' ∧
+      es.filterMap SEvent.erase = es'.filterMap SEvent.erase ∧
+      Exec (canon sp i) (es.filterMap SEvent.erase) ρ' ∧
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
   canonical_equivalent h
 
@@ -443,7 +443,7 @@ theorem «cor:reconciliation-any-basis» {sp : Spec I O} {m : Nat} (B B' : Fin m
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
     (τ : State sp) (j : I) (hτ : τ.cur = j)
     (hcont : ∀ r, ∃ es', SysExec (B' r) (ρ r) es' τ) :
-    ∃ u, sp.S j u ∧ ∀ r, ∀ o ∈ outs ((es r).map SEvent.erase), o ≼ u :=
+    ∃ u, sp.S j u ∧ ∀ r, ∀ o ∈ outs ((es r).filterMap SEvent.erase), o ≼ u :=
   Dist.reconciliation_any_basis B B' i es ρ hrun τ j hτ hcont
 
 /-- "The converse of Lemma canonical-equivalent fails: a canonical run need not
@@ -460,7 +460,7 @@ theorem «app:bases/converse-fails» :
     ((∃ τ, Exec (canon Dist.spU ()) [.output (true : Bool)] τ) ∧
       ¬ ∃ (es : List (SEvent Dist.spU)) (ρ : State Dist.spU),
           SysExec Dist.noBasis (canon Dist.spU ()) es ρ ∧
-          es.map SEvent.erase = [.output (true : Bool)]) ∧
+          es.filterMap SEvent.erase = [.output (true : Bool)]) ∧
     (¬ Dist.spU.Consistent ∧
       ∀ fam : List (State Dist.spU),
         (∀ σ ∈ fam, ∃ i es, SysExec Dist.noBasis (canon Dist.spU i) es σ) →

@@ -296,10 +296,10 @@ outputs `os`, then, for each later output `m'` of `l` in order, `input(m')`
 followed by a block of outputs (`Guard.blk`); each block may be empty. -/
 theorem «app:composition/pipeline-run» {M O : Type} [PO M] [PO O] {sk : Spec M O}
     (U : List M → Prop) (K : Guard.Sys sk) (l : List M) (m : M) (esK : List (SEvent sk)) :
-    (Guard.GRun U K l m esK ↔ U l ∧ Guard.Shaped l m (esK.map SEvent.erase) ∧
+    (Guard.GRun U K l m esK ↔ U l ∧ Guard.Shaped l m (esK.filterMap SEvent.erase) ∧
       ∃ ρK, Guard.Produces K m esK ρK) ∧
-    (Guard.Shaped l m (esK.map SEvent.erase) ↔ ∃ (os : List O) (ps : List (M × List O)),
-      (m :: ps.map Prod.fst) <+: l ∧ esK.map SEvent.erase = os.map Event.output ++ Guard.blk ps) ∧
+    (Guard.Shaped l m (esK.filterMap SEvent.erase) ↔ ∃ (os : List O) (ps : List (M × List O)),
+      (m :: ps.map Prod.fst) <+: l ∧ esK.filterMap SEvent.erase = os.map Event.output ++ Guard.blk ps) ∧
     ∀ (m' : M) (os : List O) ps,
       Guard.blk ((m', os) :: ps) = .input m' :: (os.map Event.output ++ Guard.blk ps) :=
   ⟨Iff.rfl, Iff.rfl, fun _ _ _ => rfl⟩
@@ -347,7 +347,7 @@ theorem «app:composition/guarded-lockstep» {I M O : Type} [PO I] [PO M] [PO O]
       ∃ ρ'', Exec ρ' (Guard.merge es []) ρ'' ∧ Guard.Inv ρ sk.S ρ'') ∧
     ∀ (ps : List (M × List O)) (τK ρK : State sk) (esK : List (SEvent sk))
       (ρ' : State (Comp.seq sp sk)), Guard.emitted es = ps.map Prod.fst →
-      SysExec (fun _ => False) τK esK ρK → esK.map SEvent.erase = Guard.blk ps → IsRun τK →
+      SysExec (fun _ => False) τK esK ρK → esK.filterMap SEvent.erase = Guard.blk ps → IsRun τK →
       (∀ k m, σ.R k m → τK.cur ≼ m) → Guard.Inv σ τK.R ρ' →
       ∃ ρ'', Exec ρ' (Guard.merge es (ps.map Prod.snd)) ρ'' ∧ Guard.Inv ρ ρK.R ρ'' ∧
         ∀ k m, ρ.R k m → ρK.cur ≼ m :=
@@ -394,7 +394,7 @@ theorem «cor:empty-store» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M} 
     (K : Guard.Sys (Guard.rest sp sk)) :
     ∀ l m esK, Guard.GRun U K l m esK →
       Guard.GRun U (Guard.eraseSys K) l m (esK.map Guard.eraseC) ∧
-        (esK.map Guard.eraseC).map SEvent.erase = esK.map SEvent.erase ∧
+        (esK.map Guard.eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
         ∀ ρK, Guard.Produces K m esK ρK → ∃ ρ', Guard.Produces (Guard.eraseSys K) m
           (esK.map Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
   fun _ _ _ h => Guard.proper_erase hP h
