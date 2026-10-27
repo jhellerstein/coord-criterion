@@ -144,7 +144,7 @@ example & 8 & 621\\
 explanation & 15 & 441\\
 formal caution & 9 & 376\\
 unclassified & 11 & 349\\
-signposting & 17 & 238\\
+signposting & 17 & 241\\
 result & 3 & 185\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
 1. formal definition/notation, 523 words: \textit{At an input [math], either no row remains or some ...}\par
@@ -290,7 +290,7 @@ this paper into the broader context of the CALM agenda. \removednote{\textbf{sig
 \label{sec:functional-calm}
 
 This section focuses on functional specifications, in which each input has a
-single specified output. \removednote{\textbf{unclassified}, 29 words, rank 40; \textit{We walk through the framework informally on an election, make it precise, and prove Functional CALM, ...}} \textcolor{newblue}{We walk through the framework informally on an
+single specified output. \removednote{\textbf{unclassified}, 29 words, rank 41; \textit{We walk through the framework informally on an election, make it precise, and prove Functional CALM, ...}} \textcolor{newblue}{We walk through the framework informally on an
 election (Section~\ref{sec:election-story}), state it precisely
 (Section~\ref{sec:framework-brief}), and
 prove Functional CALM (Section~\ref{sec:functional-calm-theorem}), identifying
@@ -666,13 +666,12 @@ monotone.
 \begin{proof}[Proof sketch]
 Intuitively, every output a monotone $f$ could emit later \outrel anything it
 emits now, so the row $(j,f(j))$ at a common \indesc survives in every run. If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
-\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never meet at $k$. \removednote{\textbf{explanation}, 4 words, rank 84; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$. \removednote{\textbf{explanation}, 4 words, rank 84; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
 incomparable: a run that emits $\bot$ at $xy\cdot$ and one that accepts
-$xyx$ are the two runs of Section~\ref{sec:election-story} that can never
-meet. \removednote{\textbf{explanation}, 16 words, rank 65; \textit{In the functional case, consistency has a strong consequence: outputs leave no trace on the state.}}
+$xyx$ are the two runs of Section~\ref{sec:election-story} that can never be reconciled. \removednote{\textbf{explanation}, 16 words, rank 65; \textit{In the functional case, consistency has a strong consequence: outputs leave no trace on the state.}}
 
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
@@ -925,7 +924,7 @@ Outputs gives those a common \outnoun in $\fiber{j}$. So Lifted Monotonicity
 holds exactly when both do.
 
 \paragraph{The common-\indesc condition.}
-Runs emit outputs at different inputs and meet at a common \indesc, but Lifted
+Runs emit outputs at different inputs and are reconciled at a common \indesc, but Lifted
 Monotonicity compares the fiber at an input with the fibers at its \indescs. An
 equivalent condition compares outputs across inputs directly.
 
@@ -937,8 +936,7 @@ common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
 $o_r$.
 \end{definition}
 
-The inputs $i_r$ need not be comparable, since different runs meet only at a
-common \indesc. \removednote{\textbf{formal caution}, 17 words, rank 62; \textit{For the empty set of rows the condition asks only that [math] be nonempty, which totality ...}}
+The inputs $i_r$ need not be comparable, since different runs can be reconciled only at a common \indesc. \removednote{\textbf{formal caution}, 17 words, rank 62; \textit{For the empty set of rows the condition asks only that [math] be nonempty, which totality ...}}
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
@@ -1097,7 +1095,7 @@ of runs can be placed at separate participants that exchange no messages. \remov
 when it satisfies Lifted Monotonicity.} \textcolor{newblue}{For functional specifications,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
-arrival order, or the outputs they emitted.} \removednote{\textbf{result}, 50 words, rank 21; \textit{In any history of a consistent functional specification, every participant whose current input at a consistent ...}; labels cor:convergence} \textcolor{newblue}{This is the convergence that
+arrival order, or the outputs they emitted.} \removednote{\textbf{result}, 50 words, rank 22; \textit{In any history of a consistent functional specification, every participant whose current input at a consistent ...}; labels cor:convergence} \textcolor{newblue}{This is the convergence that
 strong eventual consistency~\cite{shapiro2011crdt} asks of replicated state,
 derived here from the specification rather than from a merge operator.} \removednote{\textbf{explanation}, 108 words, rank 11; \textit{With several outputs per input this uniqueness fails (Section ).}} \removednote{\textbf{explanation}, 32 words, rank 38; \textit{The histories above use the output events of Sections --, which apply exactly the commitments an ...}}
 
@@ -1217,7 +1215,7 @@ then, coordination-free means commitment-free.} For a system, the answer
 depends on which runs it can perform, and here seals and choices differ. \textcolor{newblue}{The
 environment may supply any input to any participant, so a seal is distributed
 coordination whenever another participant may receive the sealed input.} \removednote{\textbf{example}, 28 words, rank 43; \textit{Closing the polls before every voter has voted seals the remaining ballots, so it is coordination, ...}} Outputs, by contrast, are chosen only by strategies, so a choice is
-contradicted only when some run's strategy may emit the output it rules out. \removednote{\textbf{signposting}, 29 words, rank 41; \textit{The next result explains why distributed coordination needs exclusion: a choice and an output it rules ...}}
+contradicted only when some run's strategy may emit the output it rules out. \removednote{\textbf{signposting}, 30 words, rank 40; \textit{The next result explains why distributed coordination needs exclusion: a choice and an output it rules ...}}
 
 \begin{proposition}[Conflicting output events cannot be reconciled]
 \label{thm:commitments-require-coordination}
@@ -1230,7 +1228,7 @@ current input $i$.
 \begin{proof}[Proof sketch]
 After the second event every output at $i$ \outrel $x$, and after
 the first none does; since events never add rows, no row at $i$ can be common
-to both. \removednote{\textbf{signposting}, 50 words, rank 22; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+to both. \removednote{\textbf{signposting}, 52 words, rank 21; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{The conflict may be transient: an input $j$ \inrelpart $i$ might reconcile the
@@ -1260,7 +1258,7 @@ concerns one guarantee, not which guarantees can stay available and
 consistent through a partition. Complete CAP answers that question for any
 declared guarantee: a specification of what is correct, together with the
 rows whose outputs must stay available. The answer is that rows emitted apart
-must have a common \outnoun wherever their inputs meet; when every permitted
+must have a common \outnoun at every common \indesc of their inputs; when every permitted
 output must stay available, this is Lifted Monotonicity. A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
@@ -1328,7 +1326,7 @@ $\Spec$ is consistent on $A$.
 Consider the system whose strategies emit each output of
 $A$ by the canonical output event of Section~\ref{sec:complete-calm}. It has
 Availability for $A$, and consistency on $A$ gives the outputs it emits a
-common \outnoun wherever their inputs meet. Conversely, given one
+common \outnoun at every common \indesc of their inputs. Conversely, given one
 participant per row of $A$, each in its own component, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
 \outnoun. \removednote{\textbf{signposting}, 4 words, rank 89; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
@@ -1737,7 +1735,7 @@ commitments.
 
 Complete CAP is the partition form of the same equivalence. A system can keep
 the outputs a guarantee declares available, and consistent, through partitions
-exactly when those outputs have a common \outnoun wherever their inputs meet;
+exactly when those outputs have a common \outnoun at every common \indesc of their inputs;
 when every permitted output must stay available, this is Lifted Monotonicity.
 
 The generality of our specification model opens a range of new questions

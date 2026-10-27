@@ -642,13 +642,12 @@ monotone.
 Intuitively, every output a monotone $f$ could emit later \outrel anything it
 emits now, so the row $(j,f(j))$ at a common \indesc survives in every run.
 If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
-\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never meet at $k$.  \fullproof
+\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$.  \fullproof
 \end{proof}
 
 In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
 incomparable: a run that emits $\bot$ at $xy\cdot$ and one that accepts
-$xyx$ are the two runs of Section~\ref{sec:election-story} that can never
-meet.
+$xyx$ are the two runs of Section~\ref{sec:election-story} that can never be reconciled.
 
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
@@ -904,7 +903,7 @@ Outputs gives those a common \outnoun in $\fiber{j}$.  So Lifted Monotonicity
 holds exactly when both do.
 
 \paragraph{The common-\indesc condition.}
-Runs emit outputs at different inputs and meet at a common \indesc, but Lifted
+Runs emit outputs at different inputs and are reconciled at a common \indesc, but Lifted
 Monotonicity compares the fiber at an input with the fibers at its \indescs.  An
 equivalent condition compares outputs across inputs directly.
 
@@ -916,8 +915,7 @@ common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
 $o_r$.
 \end{definition}
 
-The inputs $i_r$ need not be comparable, since different runs meet only at a
-common \indesc.
+The inputs $i_r$ need not be comparable, since different runs can be reconciled only at a common \indesc.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
@@ -1247,7 +1245,7 @@ concerns one guarantee, not which guarantees can stay available and
 consistent through a partition.  Complete CAP answers that question for any
 declared guarantee: a specification of what is correct, together with the
 rows whose outputs must stay available.  The answer is that rows emitted apart
-must have a common \outnoun wherever their inputs meet; when every permitted
+must have a common \outnoun at every common \indesc of their inputs; when every permitted
 output must stay available, this is Lifted Monotonicity.  A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
@@ -1307,7 +1305,7 @@ $A\subseteq S$, the following are equivalent:
 Consider the system whose strategies emit each output of
 $A$ by the canonical output event of Section~\ref{sec:complete-calm}.  It has
 Availability for $A$, and consistency on $A$ gives the outputs it emits a
-common \outnoun wherever their inputs meet.  Conversely, given one
+common \outnoun at every common \indesc of their inputs.  Conversely, given one
 participant per row of $A$, each in its own component, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
 \outnoun.  \fullproof
@@ -1724,7 +1722,7 @@ commitments.
 
 Complete CAP is the partition form of the same equivalence.  A system can keep
 the outputs a guarantee declares available, and consistent, through partitions
-exactly when those outputs have a common \outnoun wherever their inputs meet;
+exactly when those outputs have a common \outnoun at every common \indesc of their inputs;
 when every permitted output must stay available, this is Lifted Monotonicity.
 
 The generality of our specification model opens a range of new questions

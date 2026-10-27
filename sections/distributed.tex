@@ -251,8 +251,7 @@ accept a late ballot.  Outputs, by contrast, are chosen only by strategies, so a
 contradicted only when some run's strategy may emit the output it rules out.
 
 The next result explains why distributed coordination needs exclusion: a
-choice and an output it rules out, at different participants, leave states
-that cannot meet at the current input.
+choice and an output it rules out, at different participants, leave states that cannot be reconciled at the current input.
 
 \begin{proposition}[Conflicting output events cannot be reconciled]
 \label{thm:commitments-require-coordination}
@@ -270,7 +269,7 @@ to both.  Full proof in Appendix~\ref{app:proofs-sec4}.
 
 The conflict is confined to the current input.  If $i\InputOrd j$,
 $\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and $\fiber{j}=\{u\}$ with
-$u$ \outrelpart both, the two states meet once $j$ arrives.  Consistency still
+$u$ \outrelpart both, the two states can be reconciled once $j$ arrives.  Consistency still
 counts this as a failure, since it asks for confluence at the current input
 too.  The environment may act on what it observes, through channels the system
 does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time};
@@ -318,7 +317,7 @@ concerns one guarantee, not which guarantees can stay available and
 consistent through a partition.  Complete CAP answers that question for any
 declared guarantee: a specification of what is correct, together with the
 rows whose outputs must stay available.  The answer is that rows emitted apart
-must have a common \outnoun wherever their inputs meet; when every permitted
+must have a common \outnoun at every common \indesc of their inputs; when every permitted
 output must stay available, this is Lifted Monotonicity.  A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
@@ -380,7 +379,7 @@ $A\subseteq S$, the following are equivalent:
 Consider the system whose strategies emit each output of
 $A$ by the canonical output event of Section~\ref{sec:complete-calm}.  It has
 Availability for $A$, and consistency on $A$ gives the outputs it emits a
-common \outnoun wherever their inputs meet.  Conversely, given one
+common \outnoun at every common \indesc of their inputs.  Conversely, given one
 participant per row of $A$, each in its own component, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
 \outnoun.  Full proof in Appendix~\ref{app:proofs-sec4}.
