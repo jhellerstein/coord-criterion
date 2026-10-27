@@ -59,6 +59,9 @@ current.
 * Vocabulary macros: `\inrel` (expands), `\outrel` (refines), "fiber at k",
   "row at k"; named sets `\Sealed_o`, `\Retired_o`, `\Rejected_o`.
 * Do not edit the abstract or introduction without discussing it first.
+* Check priority and scope claims ("first", "only", "all", "no prior work",
+  "for the first time") against the cited literature.  If the record does not
+  support a claim as worded, flag it and propose an accurate version.
 * Appendices are for theoreticians: definition, statement, proof.
 * Work on `main`; stage specific files; pull before editing; push after.
 * Never touch untracked files (uploaded PDFs, `.infinity/`).
