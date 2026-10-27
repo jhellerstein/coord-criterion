@@ -88,36 +88,34 @@
 }
 
 \begin{abstract}
-When does a distributed system intrinsically need coordination?  There is
-still no formalism in which the question can be posed in general.  CALM, CAP,
-CRDTs, Highly Available Transactions, and Invariant Confluence each answer it
-for one model of programs, data, or replicas.  Their answers cannot be compared
-or combined, and together they leave basic questions open, such as which stage
-of a composed system must coordinate.  We put them on common ground.  We provide a minimalist
-relational definition of a specification: a table that includes, for each input,
-all outputs a system may produce.  Each column carries its own partial order,
-saying when one input \inrel another and when one output \outrel another.  A specification is
-\emph{consistent} when its runs are confluent: runs whose inputs have a common
-\indesc can always catch up to a common state.  Coordination shows up as an
-irrevocable \emph{commitment} to constrain the system by removing one or more
-rows from the specification table.
+When does a distributed system intrinsically need coordination?  Existing
+results each pose the question in one narrow setting.  CALM, CAP, and CRDTs
+answer it for one model of programs, data, or replicas.  Their answers cannot
+be compared or combined, and together they leave basic questions open, such as
+which stage of a composed system must coordinate.  We put them on common
+ground.  We provide a minimalist relational definition of a specification: a
+table that includes, for each input, all outputs a system may produce.  Each
+column carries its own partial order, saying when one input \inrel another and
+when one output \outrel another.  A specification is \emph{consistent} when its
+runs are confluent: runs whose inputs have a common \indesc can always catch up
+to a common state.  Coordination shows up as an irrevocable \emph{commitment}
+to constrain the system by removing rows from the specification table.
 
-\emph{Functional CALM}
-generalizes the original CALM Theorem from Datalog queries to any function
-between ordered domains: such a specification is consistent exactly when it is
-monotone, so that more input never retracts an earlier answer, and then no
-output ever needs coordination. \emph{Complete CALM} covers ambiguous
-specifications that allow several outputs for the same input.
-There the test becomes \emph{Lifted Monotonicity}: as input \ingrows, some
-output permitted at the larger input \outrel whatever outputs were emitted at
-the smaller one. Because commitments are explicit, the model can
-also check whether a particular use of coordination is enough to achieve
-consistency.  
-
-Finally, we turn Brewer's CAP intuition into a \emph{Complete CAP} theorem for
-any consistency guarantee: a distributed system can keep every allowed output
-available and consistent across a partition if and only if its
-specification passes Lifted Monotonicity.  Gilbert and Lynch's CAP Theorem follows directly.
+We lift CALM out of its original setting.  \emph{Functional CALM} generalizes
+the CALM Theorem from Datalog queries to any function between ordered domains:
+such a specification is consistent exactly when it is monotone, and then no
+output ever needs coordination.  We extend CAP.  \emph{Complete CAP} covers
+any consistency guarantee: a system can keep every allowed output available
+and consistent across a partition if and only if its specification passes
+Lifted Monotonicity, and Gilbert and Lynch's theorem follows directly.  We add
+what neither covered.  \emph{Complete CALM} handles ambiguous specifications
+that allow several outputs for the same input, where the test becomes
+\emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
+larger input \outrel whatever was emitted at the smaller one.
+\emph{Proper Coordination} says which stage of a composition must coordinate.
+In a replicated store, the log commits to an order, and the store behind it
+needs no coordination of its own.  Highly Available Transactions, Invariant
+Confluence, and later refinements of CALM all map into the same framework.
 \end{abstract}
 
 \begin{CCSXML}
