@@ -69,6 +69,7 @@ first and supporting claims and examples follow.
 | `Paper/*.lean` | `CC.Paper` | all | The paper's results by label, in paper order (see the index below) |
 | `Foundations/Core.lean` | `CC` | §2–§3, App. A | Orders, specifications, states, events, monotonicity notions, consistency |
 | `Foundations/Runs.lean` | `CC` | §2–§3 | Lemma run-residual, survivor test, determinism of events |
+| `Foundations/IOAutomata.lean` | `CC.IOA` | §6 | Lynch–Tuttle I/O automata: signatures, input-enabled automata, executions, compatible composition, projection and its converse |
 | `FunctionalCALM/Theorem.lean` | `CC` | §2 | Thm. Functional CALM, Cor. state-by-input, functional exposure boundary |
 | `CompleteCALM/Theorem.lean` | `CC` | §3 | LM characterizations, common-expansion form, pairs suffice, lifted output event, Thm. Complete CALM, exposure boundary |
 | `CALM/Lemmas.lean` | `CC.CALM` | §2–§3, App. B | Event facts, functional remarks, Lemma reconciliation, paper proof routes, pairs suffice |
@@ -91,6 +92,7 @@ first and supporting claims and examples follow.
 | `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
 | `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity |
 | `Instances/StateMachine.lean` | `CC.SM` | §6 | Specifications induced by state machines (Def. induced-specification, Prop. induced-specification); prefix order; arrival-order independence; the election as an induced specification |
+| `Instances/IOMachine.lean` | `CC.IOM` | §6 | A machine, clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; FIFO single client is the prefix encoding; arrival orders; confluence across executions ⇔ Lifted Monotonicity |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
 | `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no commitment; pipeline runs as composite runs, confluence, where the upstream must commit), systems with strategies, commitment-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
 | `Appendix/JointMono.lean` | `CC.Joint` | §5.1, App. D | Jointly monotone composites: filtering (capped counter), re-ordering the middle (boolean toggle, constant store; also the double complement, no longer cited in the paper), preorder/injective characterization and the no-partial-order counterexample |
