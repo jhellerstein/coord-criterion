@@ -451,9 +451,12 @@ from sending an event to receiving it."
 
 Lean: Lynch–Tuttle I/O automata and their composition are `CC.IOA`
 (`Foundations/IOAutomata.lean`).  The machine is `SM.Machine Q P O` (payloads
-`P`; fields `q0`, `step`, `enabled`, `obs`), and `IOM.sys k M` composes the
-machine automaton `IOM.machA M` (inputs `recv e`, outputs `out c o` reporting
-`obs q` without changing state), the clients `IOM.cliA c` (outputs `send e`
+`P`; fields `q0`, `step`, `enabled`, `obs`), seen as the machine automaton
+`IOM.ofSM M` (inputs `recv e`, outputs `out c o` reporting `obs q` without
+changing state, no internal steps); the library treats general machine
+automata `IOM.Machine C P Q O` whose outputs and internal steps may change
+state.  `IOM.sys k (IOM.ofSM M)` composes the machine automaton
+`IOM.machA (IOM.ofSM M)`, the clients `IOM.cliA c` (outputs `send e`
 with any payload at any time, inputs `out c o`), and the channel
 `IOM.chanA k` (a bag, `k = .bag`, or a FIFO queue, `k = .fifo`; it neither
 loses nor duplicates).  Events `IOM.Ev C P` carry a client, a sequence
@@ -479,7 +482,7 @@ rows that refine it") applies Def. `def:output-event` to the induced
 specification. -/
 theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
     (k : IOM.ChanKind) (M : SM.Machine Q P O) {β : List (IOM.Act C P O)}
-    {s : (IOM.sys (C := C) k M).St} (hx : IOA.Execution (IOM.sys k M) β s)
+    {s : (IOM.sys (C := C) k (IOM.ofSM M)).St} (hx : IOA.Execution (IOM.sys k (IOM.ofSM M)) β s)
     {m r j : Nat} {c : C} {o : O} {e e' : IOM.Ev C P}
     (hm : β[m]? = some (.out c o)) (hrv : β[r]? = some (.recv e)) (hrm : r < m)
     (hj : IOM.SendAt β j e') (hmj : m < j) (hc : e'.client = c) :
@@ -496,7 +499,7 @@ the end of every execution with that input."
 
 Lean: `IOM.input β` (membership: `recv e ∈ β`; order: happens-before between
 the positions sending the two events), the order `IOM.Inp.instPO`, the
-inputs that occur `IOM.OccInp C P k M`, and the table `IOM.spec k M`; the
+inputs that occur `IOM.OccInp C P k (IOM.ofSM M)`, and the table `IOM.spec k (IOM.ofSM M)`; the
 statement unfolds each.
 
 The remarks that follow ("This is not a
@@ -515,8 +518,8 @@ theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
       (.recv a ∈ β ∧ .recv b ∈ β) ∧ ∃ i j, IOM.SendAt β i a ∧ IOM.SendAt β j b ∧ IOM.HB β i j) ∧
     (∀ h h' : IOM.Inp C P, h ≼ h' ↔
       (∀ e, h.mem e → h'.mem e) ∧ ∀ a b, h.mem a → h.mem b → (h.lt a b ↔ h'.lt a b)) ∧
-    (∀ (h : IOM.OccInp C P k M) o, (IOM.spec k M).S h o ↔
-      ∃ β s, IOA.Execution (IOM.sys k M) β s ∧ IOM.input β = h.val ∧ M.obs (s .mach) = o) :=
+    (∀ (h : IOM.OccInp C P k (IOM.ofSM M)) o, (IOM.spec k (IOM.ofSM M)).S h o ↔
+      ∃ β s, IOA.Execution (IOM.sys k (IOM.ofSM M)) β s ∧ IOM.input β = h.val ∧ M.obs (s .mach) = o) :=
   ⟨fun _ _ => Iff.rfl, fun _ _ _ => Iff.rfl, fun _ _ => Iff.rfl, fun _ _ => Iff.rfl⟩
 
 /-- **Prop. `prop:induced-specification`** (Induced specifications).
@@ -547,7 +550,7 @@ moreover a linear extension of the input order) and
 `IOM.bag_fiber_of_outFree`: for the input of an execution over a bag with no
 `out` actions (`IOM.OutFree`), the observation after every run of `M` on
 every arrival order of its events is in the fiber;
-(4) `IOM.ObsConfluent k M` is the confluence condition on observations at the
+(4) `IOM.ObsConfluent k (IOM.ofSM M)` is the confluence condition on observations at the
 end of executions, and `IOM.confluent_iff_liftedMono`.  The proof follows the
 paper's sketch; (4) unfolds the fiber in the common-expansion condition
 (`IOM.obsConfluent_iff_commonExpansion`) and applies
@@ -556,34 +559,34 @@ emitted outputs (`IOM.emitConfluent_iff_liftedMono`). -/
 theorem «prop:induced-specification» {C P Q O : Type} [PO O] [DecidableEq C]
     (k : IOM.ChanKind) (M : SM.Machine Q P O) :
     -- (1)
-    ((∀ h : IOM.OccInp C P k M, ∃ o, (IOM.spec k M).S h o) ∧
-      ∀ (β γ : List (IOM.Act C P O)) (s : (IOM.sys (C := C) k M).St),
-        IOA.Execution (IOM.sys k M) (β ++ γ) s → IOM.input β ≼ IOM.input (β ++ γ)) ∧
+    ((∀ h : IOM.OccInp C P k (IOM.ofSM M), ∃ o, (IOM.spec k (IOM.ofSM M)).S h o) ∧
+      ∀ (β γ : List (IOM.Act C P O)) (s : (IOM.sys (C := C) k (IOM.ofSM M)).St),
+        IOA.Execution (IOM.sys k (IOM.ofSM M)) (β ++ γ) s → IOM.input β ≼ IOM.input (β ++ γ)) ∧
     -- (2)
-    ((∀ h : IOM.OccInp Unit P .fifo M, ∀ a b, h.val.mem a → h.val.mem b → a ≠ b →
+    ((∀ h : IOM.OccInp Unit P .fifo (IOM.ofSM M), ∀ a b, h.val.mem a → h.val.mem b → a ≠ b →
         h.val.lt a b ∨ h.val.lt b a) ∧
-      (∀ h h' : IOM.OccInp Unit P .fifo M, h ≼ h' ↔ IOM.word h ≼ IOM.word h') ∧
-      (∀ w : SM.Seq P, ∃ h : IOM.OccInp Unit P .fifo M, IOM.word h = w) ∧
-      (∀ h o, (IOM.spec .fifo M).S h o ↔ (SM.induced M (SM.prefixAbs P)).S (IOM.word h) o) ∧
-      (SM.Deterministic M → ((IOM.spec (C := Unit) .fifo M).Consistent ↔ SM.TransMono M))) ∧
+      (∀ h h' : IOM.OccInp Unit P .fifo (IOM.ofSM M), h ≼ h' ↔ IOM.word h ≼ IOM.word h') ∧
+      (∀ w : SM.Seq P, ∃ h : IOM.OccInp Unit P .fifo (IOM.ofSM M), IOM.word h = w) ∧
+      (∀ h o, (IOM.spec .fifo (IOM.ofSM M)).S h o ↔ (SM.induced M (SM.prefixAbs P)).S (IOM.word h) o) ∧
+      (SM.Deterministic M → ((IOM.spec (C := Unit) .fifo (IOM.ofSM M)).Consistent ↔ SM.TransMono M))) ∧
     -- (3)
-    ((∀ (h : IOM.OccInp C P k M) o, (IOM.spec k M).S h o →
+    ((∀ (h : IOM.OccInp C P k (IOM.ofSM M)) o, (IOM.spec k (IOM.ofSM M)).S h o →
         ∃ w : List (IOM.Ev C P), w.Nodup ∧ (∀ e, e ∈ w ↔ h.val.mem e) ∧
           (∃ q, SM.Runs M M.q0 (w.map IOM.Ev.payload) q ∧ M.obs q = o) ∧
           (k = .fifo → w.Pairwise fun a b => ¬ h.val.lt b a)) ∧
-      ∀ (β : List (IOM.Act C P O)) (s : (IOM.sys (C := C) .bag M).St),
-        IOA.Execution (IOM.sys .bag M) β s → IOM.OutFree β →
-        ∀ h : IOM.OccInp C P .bag M, h.val = IOM.input β →
+      ∀ (β : List (IOM.Act C P O)) (s : (IOM.sys (C := C) .bag (IOM.ofSM M)).St),
+        IOA.Execution (IOM.sys .bag (IOM.ofSM M)) β s → IOM.OutFree β →
+        ∀ h : IOM.OccInp C P .bag (IOM.ofSM M), h.val = IOM.input β →
         ∀ w : List (IOM.Ev C P), w.Nodup → (∀ e, e ∈ w ↔ h.val.mem e) →
-        ∀ q, SM.Runs M M.q0 (w.map IOM.Ev.payload) q → (IOM.spec .bag M).S h (M.obs q)) ∧
+        ∀ q, SM.Runs M M.q0 (w.map IOM.Ev.payload) q → (IOM.spec .bag (IOM.ofSM M)).S h (M.obs q)) ∧
     -- (4)
-    (IOM.ObsConfluent (C := C) k M ↔ (IOM.spec (C := C) k M).LiftedMono) :=
+    (IOM.ObsConfluent (C := C) k (IOM.ofSM M) ↔ (IOM.spec (C := C) k (IOM.ofSM M)).LiftedMono) :=
   have h2 := IOM.fifo_single M
-  ⟨⟨(IOM.spec k M).total, fun _ _ s hx => IOM.input_mono ⟨s, hx, rfl⟩⟩,
+  ⟨⟨(IOM.spec k (IOM.ofSM M)).total, fun _ _ s hx => IOM.input_mono ⟨s, hx, rfl⟩⟩,
     ⟨h2.1, h2.2.1, h2.2.2.1, h2.2.2.2.1, h2.2.2.2.2.2⟩,
     ⟨IOM.fiber_sub, fun _ _ hx hout h hh _ hw hmem _ hq =>
       IOM.bag_fiber_of_outFree hx hout h hh hw hmem hq⟩,
-    (IOM.confluent_iff_liftedMono k M).1⟩
+    (IOM.confluent_iff_liftedMono k (IOM.ofSM M)).1⟩
 
 end Paper
 end CC
