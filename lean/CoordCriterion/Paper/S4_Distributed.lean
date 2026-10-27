@@ -611,7 +611,7 @@ commitment event is matched by no canonical event.
 
 The output event emitting `[A,C,B]` applies no further commitment ordering
 `A` and `B`; it does apply `order(A,C)` and `order(C,B)`, which place `C`, and
-TxCommit commitments alone do not suffice (`Out_[TxCommit(A),TxCommit(B),TxCommit(C)](o2)`
+transactional-commit commitments alone do not suffice (`Out_[TxCommit(A),TxCommit(B),TxCommit(C)](o2)`
 is not legal, since the row `[A,B,C]` survives them and is neither refined by
 `o2` nor by any row refining `o2`). -/
 theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
