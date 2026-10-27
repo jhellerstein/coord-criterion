@@ -111,9 +111,9 @@ theorem monoAcrossPartitions_uniform (A : Table I O) (hAS : ∀ i o, A i o → s
 
 /-! ## Single authority: choices are not distributed coordination -/
 
-/-- The choice clause of `System.CoordinationFreeH`: no row removed by an
-output event is emitted, at the same input, by another participant of the
-same history. -/
+/-- The choice clause of `System.CoordinationFreeH`, for output events: no row
+removed by an output event is emitted, at the same input, by another
+participant of the same history. -/
 def ChoicesNotDistributed (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
     ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (o : O)
@@ -138,7 +138,7 @@ theorem sole_emitter_choices (Sys : System sp D)
 theorem choicesNotDistributed_of_H {Sys : System sp D} (h : Sys.CoordinationFreeH) :
     ChoicesNotDistributed Sys :=
   fun n init H hw hp p a b γ o σ σc hH hr ha k x hx hnx =>
-    (h n init H hw hp p a b γ o σ σc hH hr ha).1 k x hx hnx
+    (h.1 n init H hw hp p a b γ o σ σc hH hr ha).1 k x hx hnx
 
 end Deploy
 end CC

@@ -516,6 +516,17 @@ inductive Corr (p : Nat) : List (Nat × Act N M) → PL N M n → Prop where
       Corr p t L → (γ = [] ∨ γ = [kc (rmap (acts t))]) →
       Corr p t (L ++ [.out γ (rmap (acts t))])
 
+/-- A correspondence never produces a commit event. -/
+theorem corr_no_cmt {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Corr p t L) :
+    ∀ γ, LEv.cmt γ ∉ L := by
+  induction h with
+  | nil => intro γ hm; cases hm
+  | inv _ _ _ ih | resp _ _ ih | send _ ih | stut _ _ ih =>
+    intro γ hm
+    rcases List.mem_append.1 hm with hm | hm
+    · exact ih γ hm
+    · simp at hm
+
 theorem acts_snoc (t : List (Nat × Act N M)) (x : Nat × Act N M) :
     acts (t ++ [x]) = acts t ++ [x.2] := by simp [acts]
 
@@ -898,6 +909,9 @@ theorem corr_of_produced (A : Alg N M) {init : Fin n → Hist} {p : Fin n} (hp :
         rwa [viewOf_snoc_inv _ _ _ _ hf, ← hop] at this
       · rw [acts_snoc]; exact nrun_append.2 ⟨s, hs, .cons hs' (.nil _)⟩
     | out γ o => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
+    | cmt γ =>
+      dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, _⟩ := hA
+      exact absurd (List.mem_append_right _ (List.mem_singleton_self _)) (corr_no_cmt h1 γ)
     | send j d => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
     | recv q k j d => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
 

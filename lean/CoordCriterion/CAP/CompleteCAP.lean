@@ -30,12 +30,15 @@ variable {sp : Spec I O} {D : Type} {n : Nat}
 /-! ## The commitment-free system -/
 
 theorem cf_allowed {N : Nat} {init : Fin N → I} {p : Fin N} {pre : List (LEv sp D N)}
-    {e : LEv sp D N} (he : ∀ γ o, e = .out γ o → γ = []) :
+    {e : LEv sp D N} (he : ∀ γ o, e = .out γ o → γ = []) (hc : ∀ γ, e = .cmt γ → γ = []) :
     Allowed (cfSystem sp D) N init p pre e := by
   cases e with
   | inp => trivial
   | out γ o =>
     have := he γ o rfl; subst this
+    exact ⟨by simp, trivial⟩
+  | cmt γ =>
+    have := hc γ rfl; subst this
     exact ⟨by simp, trivial⟩
   | send => trivial
   | recv => trivial
@@ -44,6 +47,16 @@ theorem compliant_cf_out {N : Nat} {init : Fin N → I} {p : Fin N} {l : List (L
     (h : Compliant (Allowed (cfSystem sp D) N init p) l) :
     ∀ γ o, LEv.out γ o ∈ l → γ = [] := by
   intro γ o hm
+  obtain ⟨a, b, hab⟩ := List.append_of_mem hm
+  have := (h a _ b hab).1
+  cases γ with
+  | nil => rfl
+  | cons c _ => exact absurd (this c (List.mem_cons_self ..)) id
+
+theorem compliant_cf_cmt {N : Nat} {init : Fin N → I} {p : Fin N} {l : List (LEv sp D N)}
+    (h : Compliant (Allowed (cfSystem sp D) N init p) l) :
+    ∀ γ, LEv.cmt γ ∈ l → γ = [] := by
+  intro γ hm
   obtain ⟨a, b, hab⟩ := List.append_of_mem hm
   have := (h a _ b hab).1
   cases γ with
@@ -61,6 +74,7 @@ theorem cf_availability (hlm : sp.LiftedMono) : Availability (cfSystem sp D) := 
   intro N init H comp hwf hprod hpart c hcut p σ hσ o ho
   classical
   obtain ⟨es, hx⟩ := lrun_cf hσ (compliant_cf_out (compliant_take (hprod p) (c p)))
+      (compliant_cf_cmt (compliant_take (hprod p) (c p)))
   have hres : Residual σ (outs es) := run_residual hx
   have hexp : Exposable σ o := ce_exposable hce hres ho
   let τ : State sp :=
@@ -92,12 +106,16 @@ theorem cf_availability (hlm : sp.LiftedMono) : Availability (cfSystem sp D) := 
   · intro q
     apply compliant_append (compliant_take (hprod q) (c q))
     intro a e b he
-    apply cf_allowed
-    intro γ o' hγ
-    subst hγ
-    have hm : LEv.out γ o' ∈ ext q := by rw [he]; simp
-    simp only [ext] at hm; split at hm <;> simp at hm
-    exact hm.1
+    refine cf_allowed ?_ ?_
+    · intro γ o' hγ
+      subst hγ
+      have hm : LEv.out γ o' ∈ ext q := by rw [he]; simp
+      simp only [ext] at hm; split at hm <;> simp at hm
+      exact hm.1
+    · intro γ hγ
+      subst hγ
+      have hm : LEv.cmt γ ∈ ext q := by rw [he]; simp
+      simp only [ext] at hm; split at hm <;> simp at hm
   · intro q hq
     have : q ≠ p := fun h => hq (h ▸ rfl)
     simp [ext, this]
@@ -115,6 +133,7 @@ theorem cf_partitionConsistency (hlm : sp.LiftedMono) :
     obtain ⟨τp, hp⟩ := hwf.1 p
     obtain ⟨σ, hσ⟩ := lrun_take hp (c p)
     obtain ⟨es, hx⟩ := lrun_cf hσ (compliant_cf_out (compliant_take (hprod p) (c p)))
+      (compliant_cf_cmt (compliant_take (hprod p) (c p)))
     obtain ⟨rows, hm, hr⟩ := exec_rows hx
     refine ⟨(σ, rows), hσ, ?_, hr⟩
     show Residual σ (rows.map Prod.snd)
@@ -281,6 +300,9 @@ theorem lrun_emit_row {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l 
     rcases List.mem_cons.1 hm with he | hm'
     · cases he; exact ⟨_, hsub _ _ (step_output_inv hs).1⟩
     · obtain ⟨k, hk⟩ := ih hm'; exact ⟨k, hsub _ _ (step_sub hs k o hk)⟩
+  | @cmt σ τ' ρ γ' es _ ha _ ih =>
+    obtain ⟨k, hk⟩ := ih (by simpa using hm)
+    exact ⟨k, (applySeq_spec γ' σ τ' ha).2 _ _ hk⟩
   | send _ ih => exact ih (by simpa using hm)
   | recv _ ih => exact ih (by simpa using hm)
 
@@ -333,6 +355,7 @@ theorem compliant_strat {Sys : System sp D} {N : Nat} {init : Fin N → I} {p : 
   cases e with
   | inp j => exact absurd (by rw [h]; simp) (hn j)
   | out γ o => exact by simpa using hA.2
+  | cmt γ => exact by simpa using hA.2
   | send => simpa [Allowed] using hA
   | recv => simpa [Allowed] using hA
 

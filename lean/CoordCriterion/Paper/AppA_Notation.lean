@@ -373,7 +373,7 @@ abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SE
 
 /-- *coordination* — a commitment some other run contradicts
 (Def. `def:coordination`).  Lean, for a system: `CAP.System.CoordinationFree`
-(no output event's commitments are contradicted by any run); for a
+(no output or commit event's commitments are contradicted by any run); for a
 specification, coordination is commitment (`Coordinates es`). -/
 abbrev «app:notation/coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
   Sys.CoordinationFree

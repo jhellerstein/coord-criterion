@@ -117,6 +117,7 @@ theorem cf_partitionConsistencyCF (hlm : sp.LiftedMono) :
     obtain ⟨τp, hp⟩ := hwf.1 p
     obtain ⟨σ, hσ⟩ := lrun_take hp (c p)
     obtain ⟨es, hx⟩ := lrun_cf hσ (compliant_cf_out (compliant_take (hprod p) (c p)))
+      (compliant_cf_cmt (compliant_take (hprod p) (c p)))
     obtain ⟨rows, hm, hr⟩ := exec_rows hx
     refine ⟨(σ, rows), hσ, ?_, hr⟩
     show Residual σ (rows.map Prod.snd)
@@ -175,39 +176,45 @@ theorem rpc_of_confluent {init : Fin n → I} {H : History sp D n} {c : Fin n �
   exact lrun_out_mem h2 hm j u ((lrun_mono h3).2 j u hu)
 
 /-- Every output event of `l` is a canonical event `Out κ_o o` (`κ_o = kc o`)
-or `Out ε o`. -/
+or `Out ε o`, and `l` has no commit event. -/
 def CanonOut (l : List (LEv sp D n)) : Prop :=
-  ∀ γ o, LEv.out γ o ∈ l → γ = [] ∨ γ = [kc o]
+  (∀ γ o, LEv.out γ o ∈ l → γ = [] ∨ γ = [kc o]) ∧ ∀ γ, LEv.cmt γ ∉ l
 
 /-- Def. `def:canonical-system`: every output event a strategy allows is a
-canonical event. -/
+canonical event, and strategies allow no commit event. -/
 def CanonicalSystem (Sys : System sp D) : Prop :=
-  ∀ n init p pre γ o, Sys.strat n init p pre (LEv.out γ o) → γ = [] ∨ γ = [kc o]
+  (∀ n init p pre γ o, Sys.strat n init p pre (LEv.out γ o) → γ = [] ∨ γ = [kc o]) ∧
+  ∀ n init p pre γ, ¬ Sys.strat n init p pre (LEv.cmt γ)
 
 theorem lrun_canon_exec {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     (hc : CanonOut l) : ∃ es, Exec σ es τ ∧ ∀ o ∈ outs es, ∃ γ, LEv.out γ o ∈ l := by
   induction h with
   | nil σ => exact ⟨[], .nil σ, by simp [outs]⟩
   | @inp σ τ' ρ j es hs _ ih =>
-    obtain ⟨es', hx, hm⟩ := ih (fun γ o h => hc γ o (List.mem_cons_of_mem _ h))
+    obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
+      fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
     refine ⟨_, .cons hs hx, fun o ho => ?_⟩
     simp only [outs] at ho
     obtain ⟨γ, h⟩ := hm o ho
     exact ⟨γ, List.mem_cons_of_mem _ h⟩
   | @out σ σc τ' ρ γ o es ha hs _ _ ih =>
-    obtain ⟨es', hx, hm⟩ := ih (fun γ o h => hc γ o (List.mem_cons_of_mem _ h))
-    have hst := kc_effect (hc γ o (List.mem_cons_self ..)) ha hs
+    obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
+      fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
+    have hst := kc_effect (hc.1 γ o (List.mem_cons_self ..)) ha hs
     refine ⟨_, .cons hst hx, fun o' ho => ?_⟩
     simp only [outs, List.mem_cons] at ho
     rcases ho with rfl | ho
     · exact ⟨γ, List.mem_cons_self ..⟩
     · obtain ⟨γ', h⟩ := hm o' ho; exact ⟨γ', List.mem_cons_of_mem _ h⟩
+  | cmt _ _ _ _ => exact absurd (List.mem_cons_self ..) (hc.2 _)
   | @send σ ρ j d es _ ih =>
-    obtain ⟨es', hx, hm⟩ := ih (fun γ o h => hc γ o (List.mem_cons_of_mem _ h))
+    obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
+      fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
     exact ⟨es', hx, fun o ho => by
       obtain ⟨γ, h⟩ := hm o ho; exact ⟨γ, List.mem_cons_of_mem _ h⟩⟩
   | @recv σ ρ q k j d es _ ih =>
-    obtain ⟨es', hx, hm⟩ := ih (fun γ o h => hc γ o (List.mem_cons_of_mem _ h))
+    obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
+      fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
     exact ⟨es', hx, fun o ho => by
       obtain ⟨γ, h⟩ := hm o ho; exact ⟨γ, List.mem_cons_of_mem _ h⟩⟩
 
@@ -233,24 +240,32 @@ receive. -/
 theorem exec_lrun_canon {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es τ) :
     ∃ l : List (LEv sp D n), LRun σ l τ ∧ CanonOut l ∧ (∀ q k j d, LEv.recv q k j d ∉ l) := by
   induction hx with
-  | nil σ => exact ⟨[], .nil σ, fun _ _ h => (by cases h), fun _ _ _ _ h => (by cases h)⟩
+  | nil σ => exact ⟨[], .nil σ, ⟨fun _ _ h => (by cases h), fun _ h => (by cases h)⟩,
+      fun _ _ _ _ h => (by cases h)⟩
   | @cons σ τ' ρ e es hs _ ih =>
     obtain ⟨l, hl, hc, hnr⟩ := ih
     cases e with
     | input j =>
-      refine ⟨.inp j :: l, .inp hs hl, fun γ o h => ?_, fun q k j' d h => ?_⟩
+      refine ⟨.inp j :: l, .inp hs hl, ⟨fun γ o h => ?_, fun γ h => ?_⟩, fun q k j' d h => ?_⟩
       · rcases List.mem_cons.1 h with h | h
         · cases h
-        · exact hc γ o h
+        · exact hc.1 γ o h
+      · rcases List.mem_cons.1 h with h | h
+        · cases h
+        · exact hc.2 γ h
       · rcases List.mem_cons.1 h with h | h
         · cases h
         · exact hnr q k j' d h
     | output o =>
       obtain ⟨γ, hγ, h1⟩ := step_out_lrun (D := D) (n := n) hs
-      refine ⟨.out γ o :: l, lrun_append.2 ⟨τ', h1, hl⟩, fun γ' o' h => ?_, fun q k j' d h => ?_⟩
+      refine ⟨.out γ o :: l, lrun_append.2 ⟨τ', h1, hl⟩, ⟨fun γ' o' h => ?_, fun γ' h => ?_⟩,
+        fun q k j' d h => ?_⟩
       · rcases List.mem_cons.1 h with h | h
         · cases h; exact hγ
-        · exact hc γ' o' h
+        · exact hc.1 γ' o' h
+      · rcases List.mem_cons.1 h with h | h
+        · cases h
+        · exact hc.2 γ' h
       · rcases List.mem_cons.1 h with h | h
         · cases h
         · exact hnr q k j' d h
@@ -295,9 +310,11 @@ theorem confluent_of_rpc_canonical {init : Fin n → I} {H : History sp D n} {c 
 theorem canonOut_of_produced {Sys : System sp D} (hS : CanonicalSystem Sys) {init : Fin n → I}
     {H : History sp D n} (hp : Produced Sys n init H) (p : Fin n) (c : Nat) :
     CanonOut ((H p).take c) := by
-  intro γ o hm
-  obtain ⟨a, b, hab⟩ := List.append_of_mem (List.mem_of_mem_take hm)
-  exact hS _ _ _ _ _ _ (hp p a _ b hab).2
+  refine ⟨fun γ o hm => ?_, fun γ hm => ?_⟩
+  · obtain ⟨a, b, hab⟩ := List.append_of_mem (List.mem_of_mem_take hm)
+    exact hS.1 _ _ _ _ _ _ (hp p a _ b hab).2
+  · obtain ⟨a, b, hab⟩ := List.append_of_mem (List.mem_of_mem_take hm)
+    exact hS.2 _ _ _ _ _ (hp p a _ b hab).2
 
 /-- Remark after Def. `def:response-partition-consistency`: for a canonical
 system, at a common expansion `j` of the current inputs, Response Partition
@@ -312,9 +329,8 @@ theorem canonical_rpc_iff_confluent {Sys : System sp D} (hS : CanonicalSystem Sy
 
 /-- The replicated system of Theorem `thm:complete-cap-response` (2)⇒(1) is
 canonical. -/
-theorem respSystem_canonical (T : Table I O) : CanonicalSystem (respSystem (sp := sp) (D := D) T) := by
-  intro n init p pre γ o h
-  exact h.1
+theorem respSystem_canonical (T : Table I O) : CanonicalSystem (respSystem (sp := sp) (D := D) T) :=
+  ⟨fun _ _ _ _ _ _ h => h.1, fun _ _ _ _ _ h => h⟩
 
 /-! ## Input acceptance, Answering, forced answers -/
 
