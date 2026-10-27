@@ -412,7 +412,9 @@ theorem good_sysStep {B : Basis (spec rd wr af)} (hB : ∀ c, B c → IsClosure 
   cases h with
   | input h => exact good_input h hg
   | output hγ happ _ _ _ hR =>
-    exact good_outputTable hR (good_applySeq (fun c hc => hB c (hγ c hc)) happ hg)
+      exact good_outputTable hR (good_applySeq (fun c hc => hB c (hγ c hc)) happ hg)
+  | commit hγ _ happ =>
+    exact good_applySeq (fun c hc => hB c (hγ c hc)) happ hg
 
 theorem good_sysExec {B : Basis (spec rd wr af)} (hB : ∀ c, B c → IsClosure c)
     {σ τ : State (spec rd wr af)} {es : List (SEvent (spec rd wr af))}

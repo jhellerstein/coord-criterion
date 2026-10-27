@@ -727,12 +727,21 @@ theorem filterMap_eraseC_idem (l : List (SEvent sq)) :
   exact congrArg (fun g => List.filterMap g l) (funext eraseC_eraseC)
 
 theorem map_erase_eraseC (l : List (SEvent sq)) :
+<<<<<<< HEAD
     (l.filterMap eraseC).filterMap SEvent.erase = l.filterMap SEvent.erase := by
   rw [List.filterMap_filterMap]
   exact congrArg (fun g => List.filterMap g l) (funext erase_eraseC)
 
 theorem map_erase_of_eraseC {l l' : List (SEvent sq)}
     (h : l.filterMap eraseC = l'.filterMap eraseC) :
+=======
+    (l.map eraseC).filterMap SEvent.erase = l.filterMap SEvent.erase := by
+  induction l with
+  | nil => rfl
+  | cons e l ih => simp only [List.map_cons, erase_eraseC, ih]
+
+theorem map_erase_of_eraseC {l l' : List (SEvent sq)} (h : l.map eraseC = l'.map eraseC) :
+>>>>>>> sandbox-20e053a6-1144-45e4-ad0f-e8cf14292186
     l.filterMap SEvent.erase = l'.filterMap SEvent.erase := by
   rw [← map_erase_eraseC l, h, map_erase_eraseC]
 
@@ -1445,9 +1454,15 @@ satisfies Lifted Monotonicity, every guarded composite run of a store system
 original's.  Proper coordination is not needed. -/
 theorem erase_simulates (hC : sk.CommonExpansion) {U : List M → Prop} {K : Sys sk}
     {l : List M} {m : M} {esK : List (SEvent sk)} (h : GRun U K l m esK) :
+<<<<<<< HEAD
     GRun U (eraseSys K) l m (esK.filterMap eraseC) ∧
       (esK.filterMap eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
       ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.filterMap eraseC) ρ' ∧
+=======
+    GRun U (eraseSys K) l m (esK.map eraseC) ∧
+      (esK.map eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
+      ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.map eraseC) ρ' ∧
+>>>>>>> sandbox-20e053a6-1144-45e4-ad0f-e8cf14292186
         IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u := by
   obtain ⟨hU, hS, ρK, hK⟩ := h
   have main : ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.filterMap eraseC) ρ' ∧
@@ -1880,9 +1895,15 @@ theorem proper_needs_commit (hP : Proper sp sk) (hnot : ¬ (seq sp sk).LiftedMon
 theorem proper_erase (hP : Proper sp sk) {U : List {m // Img sp m} → Prop}
     {K : Sys (rest sp sk)} {l : List {m // Img sp m}} {m : {m // Img sp m}}
     {esK : List (SEvent (rest sp sk))} (h : GRun U K l m esK) :
+<<<<<<< HEAD
     GRun U (eraseSys K) l m (esK.filterMap eraseC) ∧
       (esK.filterMap eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
       ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.filterMap eraseC) ρ' ∧
+=======
+    GRun U (eraseSys K) l m (esK.map eraseC) ∧
+      (esK.map eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
+      ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.map eraseC) ρ' ∧
+>>>>>>> sandbox-20e053a6-1144-45e4-ad0f-e8cf14292186
         IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
   erase_simulates (proper_iff_ce.1 hP) h
 
