@@ -5,8 +5,11 @@ import CoordCriterion.CALM.Lemmas
 # Two-phase commit: counting votes over a fixed membership (§4.4)
 
 Supports the paragraph "Locks in a shared-nothing database" of
-`sections/distributed.tex`: "the coordinator's decision counts votes from a
-fixed set of participants, which is monotone."
+`sections/distributed.tex`, case "No coordination": "the coordinator's
+unanimity decision over a fixed set of participants is monotone, so it issues
+no commitment that requires coordination."  `decide2PC_detects` checks the
+sentence after it: the decision aborts exactly when the votes do not all say
+yes.
 
 The decision specification `voteSpec n`: an input records, for each of the
 `n` fixed participants, its vote if received (`some true` = yes, `some false`
@@ -83,6 +86,40 @@ noncomputable def decide2PC {n : Nat} (v : Votes n) : Decision :=
 noncomputable def voteSpec (n : Nat) : Spec (Votes n) Decision where
   S v d := d = decide2PC v
   total _ := ⟨_, rfl⟩
+
+/-- The decision detects whether the votes agree: it is `abort` exactly when
+some received vote is no, and `commit` exactly when every vote is yes; so once
+every vote is in, it aborts exactly when the votes do not all agree on yes. -/
+theorem decide2PC_detects {n : Nat} (v : Votes n) :
+    (decide2PC v = .abort ↔ ∃ p, v p = some false) ∧
+    (decide2PC v = .commit ↔ ∀ p, v p = some true) ∧
+    ((∀ p, v p ≠ none) → (decide2PC v = .abort ↔ ¬ ∀ p, v p = some true)) := by
+  have hab : decide2PC v = .abort ↔ ∃ p, v p = some false := by
+    unfold decide2PC
+    split
+    · next h1 => exact ⟨fun _ => h1, fun _ => rfl⟩
+    · next h1 => split <;> exact ⟨fun h => (by cases h), fun h => (h1 h).elim⟩
+  have hco : decide2PC v = .commit ↔ ∀ p, v p = some true := by
+    unfold decide2PC
+    split
+    · next h1 =>
+      obtain ⟨p, hp⟩ := h1
+      exact ⟨fun h => (by cases h), fun h => (by rw [h p] at hp; cases hp)⟩
+    · split
+      · next h2 => exact ⟨fun _ => h2, fun _ => rfl⟩
+      · next h2 => exact ⟨fun h => (by cases h), fun h => (h2 h).elim⟩
+  refine ⟨hab, hco, fun hall => hab.trans ⟨fun ⟨p, hp⟩ h => (by rw [h p] at hp; cases hp),
+    fun h => ?_⟩⟩
+  apply Classical.byContradiction
+  intro hne
+  apply h
+  intro p
+  cases hp : v p with
+  | none => exact (hall p hp).elim
+  | some b =>
+    cases b with
+    | true => rfl
+    | false => exact (hne ⟨p, hp⟩).elim
 
 theorem voteSpec_functional (n : Nat) : (voteSpec n).Functional :=
   fun _ _ _ h h' => h.trans h'.symm

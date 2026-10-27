@@ -12,7 +12,9 @@ Consistency is unchanged and measured in `S`.
 
 `complete_cap_for`: some system has Availability for `A` and Partition
 Consistency iff `S` is consistent on `A` (every finite family of rows of `A`
-with a common expansion `j` has a common refinement in `S(j)`).
+with a common expansion `j` has a common refinement in `S(j)`).  The paper
+calls this condition *Lifted Monotonicity for `A`* (Def. `def:lm-for-A`); the
+library keeps the name `ConsistentOn`.
 
 * `A = S` is the interface form: consistency on `S` is the common-expansion
   condition, i.e. Lifted Monotonicity (`availabilityFor_S`).

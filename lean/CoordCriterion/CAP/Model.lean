@@ -16,7 +16,8 @@ Appendix `app:cap-response` (on top of `Foundations` and
   (Def. `def:system`), and the histories a system *produces* (`System`,
   `Produced`);
 * partitioned histories, Availability, Partition Consistency
-  (Def. `def:partition-notions`): `Partitioned`, `Availability`,
+  (Defs. `def:partitioned-history`, `def:partition-notions`,
+  `def:partition-consistency`): `Partitioned`, `Availability`,
   `PartitionConsistency`;
 * run and history lemmas used by the proofs, and `ce_exposable` (under the
   common-expansion condition every output of a run state's fiber is
@@ -200,8 +201,8 @@ def ConfluentCut (init : Fin n → I) (H : History sp D n) (c : Fin n → Nat) (
 
 /-! ## Systems -/
 
-/-- Def. `def:system`, with the extra requirement of Def.
-`def:partition-notions`(2): a strategy for each participant of every finite
+/-- Def. `def:system`, with the extra requirement of
+the system assumption after Def. `def:partitioned-history` (Section `sec:complete-cap`): a strategy for each participant of every finite
 participant set and every choice of initial inputs.  Strategies are
 nondeterministic: `strat n init p pre e` says that `p` may perform `e` after
 local history `pre`. -/
@@ -281,7 +282,7 @@ theorem System.restrict_allowed (Sys : System sp D) (n : Nat) (init : Fin n → 
   | recv q k j d => exact ⟨fun h => h.1, fun h => ⟨h, (fun _ _ he => by cases he),
       fun _ he => by cases he⟩⟩
 
-/-- Def. `def:partition-notions`(4): Availability (interface form). -/
+/-- Def. `def:partition-notions`: Availability (interface form). -/
 def Availability (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →
@@ -294,7 +295,7 @@ def Availability (Sys : System sp D) : Prop :=
       (∀ q j, LEv.inp j ∉ ext q) ∧
       ∃ γ, LEv.out γ o ∈ ext p
 
-/-- Def. `def:partition-notions`(5): Partition Consistency. -/
+/-- Def. `def:partition-consistency`: Partition Consistency. -/
 def PartitionConsistency (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →

@@ -121,10 +121,11 @@ everyone and choose consistently."  Lean: the list puts the membership in the
 input (`QRef.AllInp`: membership `mem` and the nodes heard from, `view ⊆
 mem`; an input expands another only at the same membership).  A complete
 view is maximal, and a choice of one output at each maximal input is a table
-on which any behavior containing it is consistent (`CAP.ConsistentOn`, the
-condition of Theorem `thm:complete-cap`).  For instance, the star centred at
+for which any behavior containing it satisfies Lifted Monotonicity
+(`CAP.ConsistentOn`, Def. `def:lm-for-A`, the condition of Theorem
+`thm:complete-cap`).  For instance, the star centred at
 the least member is a spanning tree of the membership, the spanning-tree
-behavior is consistent on it, and as a specification it is consistent.  That
+behavior satisfies Lifted Monotonicity for it, and as a specification it is consistent.  That
 the list and an order on nodes compute every behavior is Baccaert and
 Ketsman's Thm. 2–3, cited, not formalized. -/
 theorem «sec:query-instance/all-nodes» :
@@ -143,7 +144,7 @@ with `c` at `{b,c}`."  Lean, with node names as input (`loc = id`, inputs
 `QRef.net P`): `QRef.pairing` permits symmetric pairings in which, on a
 finite network, at most one node is unpaired.  It is node monotone, every
 output at a two-node network pairs its nodes, and no total sub-behavior `A`
-has `pairing` consistent on it (rows at `{0,1}` and `{1,2}`, common expansion
+has `pairing` satisfy Lifted Monotonicity for it (rows at `{0,1}` and `{1,2}`, common expansion
 `{0,1,2}`).  The surrounding prose (isolated nodes must emit; their
 construction waits for a group to confirm itself; groups sharing a node are
 nested; the group's choice requires coordination, but not distributed coordination)

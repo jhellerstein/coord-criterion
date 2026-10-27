@@ -3,7 +3,7 @@ import CoordCriterion.CAP.Model
 /-!
 # Availability at the end of a history
 
-`Availability` (Def. `def:partition-notions`(4)) quantifies over every
+`Availability` (Def. `def:partition-notions`) quantifies over every
 consistent cut of every produced partitioned history.  The cuts are redundant:
 restricting a produced partitioned history to a consistent cut gives another
 produced partitioned history, so it suffices to ask at the end of every such
