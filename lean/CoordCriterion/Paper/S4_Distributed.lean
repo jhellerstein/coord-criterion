@@ -588,9 +588,9 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i :
 a commitment event, before any output, keeping only the rows that can be
 completed without committing `B` before `A`.  The canonical run skips that
 event, so it keeps every row, including the one completed by `[B,A,C]`.  When
-2PL later reports `A`'s read and emits `[A,C,B]`, it applies no further
-ordering commitment, and the canonical run emits the same outputs; both end
-with the same table.  The lock committed to `A` before `B` earlier than any
+2PL later reports `A`'s read, with no commitment, and emits `[A,C,B]`, it
+applies no further commitment ordering `A` and `B`, and the canonical run emits
+the same outputs; both end with the same table.  The lock committed to `A` before `B` earlier than any
 output required."
 
 Lean (`CC.Txn.Partial.CommitEx.example_commit_event_ABC`; Appendix G's
@@ -609,13 +609,11 @@ after its `Out_{κ}(o1)` (`κ_{o1} = ε`);
 (d) both end at the same state, and the runs are a `Lockstep` pair whose
 commitment event is matched by no canonical event.
 
-Difference from the text: the output event emitting `[A,C,B]` applies no
-further commitment on the order of `A` and `B`, but it does apply the ordering
-commitments `order(A,C)` and `order(C,B)` that place `C`; commit commitments
-alone do not suffice (`Out_[commit(A),commit(B),commit(C)](o2)` is not legal,
-since the row `[A,B,C]` survives them and is neither refined by `o2` nor by any
-row refining `o2`).  The paper's "no further ordering commitment" holds only
-when read as "no further commitment ordering `A` and `B`". -/
+The output event emitting `[A,C,B]` applies no further commitment ordering
+`A` and `B`; it does apply `order(A,C)` and `order(C,B)`, which place `C`, and
+commit commitments alone do not suffice (`Out_[commit(A),commit(B),commit(C)](o2)`
+is not legal, since the row `[A,B,C]` survives them and is neither refined by
+`o2` nor by any row refining `o2`). -/
 theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
     {x : K} (h : Txn.Partial.Distinct3 A B C) (hr : rd A x) (hnw : ∀ t, ¬ wr t x) :
     let σ0 := Txn.Partial.σABC rd wr h

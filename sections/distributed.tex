@@ -208,10 +208,9 @@ transaction writes, and $B$ waits for a lock that $A$ holds on another
 key.  When $B$ begins to wait, 2PL applies $\mathsf{order}(A,B)$ in a
 commitment event, before any output, keeping only the rows that can be
 completed without committing $B$ before $A$.  The canonical run skips that
-event, so it keeps every row, including the one completed by $[B,A,C]$.  When
-2PL later reports $A$'s read and emits $[A,C,B]$, it applies no further
-ordering commitment, and the canonical run emits the same outputs; both end
-with the same table.  The lock committed to $A$ before $B$ earlier than any output
+event, so it keeps every row, including the one completed by $[B,A,C]$.  When 2PL later reports $A$'s read, with no commitment, and emits $[A,C,B]$, it
+applies no further commitment ordering $A$ and $B$, and the canonical run emits
+the same outputs; both end with the same table.  The lock committed to $A$ before $B$ earlier than any output
 required.
 
 \subsection{Coordination}
