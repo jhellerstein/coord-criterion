@@ -5,6 +5,7 @@ import CoordCriterion.Foundations.IOAutomata
 -- §2 Functional CALM, §3 Complete CALM, Appendix B (deferred proofs)
 import CoordCriterion.FunctionalCALM.Theorem
 import CoordCriterion.CompleteCALM.Theorem
+import CoordCriterion.CompleteCALM.Cofinal
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.CALM.Examples
 import CoordCriterion.CALM.TransientConflict
@@ -36,6 +37,7 @@ import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
 import CoordCriterion.Instances.IOMachineLocal
+import CoordCriterion.Instances.IOMachineCofinal
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
 -- §5 and Appendix D composition
