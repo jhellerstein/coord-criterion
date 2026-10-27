@@ -20,6 +20,7 @@ import CoordCriterion.CAP.Forced
 import CoordCriterion.CAP.AvailabilityFor
 import CoordCriterion.CAP.LocalCommitment
 import CoordCriterion.CAP.Coordination
+import CoordCriterion.CAP.TwoPhaseCommit
 import CoordCriterion.CAP.ChosenAvailability
 import CoordCriterion.Appendix.DeploymentFor
 import CoordCriterion.CAP.ResponseForm

@@ -59,7 +59,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«cor:state-by-input»
 #check @CC.Paper.«cor:state-by-input/input-suffices»
 #check @CC.Paper.«prop:functional-exposure-boundary»
-#check @CC.Paper.«prop:functional-exposure-boundary/only-seals»
 #check @CC.Paper.«prop:functional-exposure-boundary/nonmonotone-seals»
 #check @CC.Paper.«eq:query-monotonicity»
 #check @CC.Paper.«sec:discussion/emit-before-determination»
@@ -87,15 +86,17 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:lifted-monotonicity»
 #check @CC.Paper.«def:lifted-monotonicity/functional»
 #check @CC.Paper.«def:lifted-monotonicity/relmono-directed»
+#check @CC.Paper.«def:lifted-monotonicity/hoare»
+#check @CC.Paper.«def:lifted-monotonicity/not-reflexive»
 #check @CC.Paper.«def:common-expansion-condition»
 #check @CC.Paper.«def:common-expansion-condition/empty»
 #check @CC.Paper.«prop:common-expansion-form»
+#check @CC.Paper.«sec:lifted-output-events/functional»
 #check @CC.Paper.«sec:complete-calm-theorem/lift-unchanged»
 #check @CC.Paper.«thm:complete-calm»
 #check @CC.Paper.«prop:exposure-boundary»
+#check @CC.Paper.«prop:exposure-boundary/common-expansion»
 #check @CC.Paper.«prop:exposure-boundary/functional»
-#check @CC.Paper.«sec:complete-calm-theorem/state-by-input-fails»
-#check @CC.Paper.«sec:complete-calm-theorem/state-by-input-fails-minimal»
 #check @CC.Paper.«def:distributed-history»
 #check @CC.Paper.«def:distributed-history/well-formed»
 #check @CC.Paper.«def:distributed-history/happens-before»
@@ -113,6 +114,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:distributed-consistency/literal-matching»
 #check @CC.Paper.«sec:distributed-consistency/lifted-monotonicity»
 #check @CC.Paper.«cor:convergence»
+#check @CC.Paper.«cor:convergence/relational-fails»
+#check @CC.Paper.«cor:convergence/relational-fails-minimal»
 #check @CC.Paper.«sec:distributed-consistency/message-data»
 #check @CC.Paper.«sec:distributed-consistency/sharing-outputs»
 #check @CC.Paper.«sec:systems/registrar»
@@ -153,6 +156,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«thm:commitments-require-coordination/confined-to-current-input»
 #check @CC.Paper.«sec:coordination/shared-nothing-single-key»
 #check @CC.Paper.«sec:coordination/shared-nothing-cross-key»
+#check @CC.Paper.«sec:coordination/two-phase-commit»
 #check @CC.Paper.«sec:coordination/conflict-is-choice»
 #check @CC.Paper.«sec:coordination/deterministic-reconciliation»
 #check @CC.Paper.«def:partition-notions(1)»
@@ -216,7 +220,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:crdt-instance/two-phase»
 #check @CC.Paper.«sec:crdt-instance/semilattice»
 #check @CC.Paper.«sec:crdt-instance/some-refinement»
-#check @CC.Paper.«sec:hat-instance/accumulating-facts»
+#check @CC.Paper.«sec:hat-instance/read-committed»
 #check @CC.Paper.«sec:hat-instance/serializability-cycle»
 #check @CC.Paper.«sec:hat-instance/snapshot-isolation»
 #check @CC.Paper.«sec:hat-instance/boundary»

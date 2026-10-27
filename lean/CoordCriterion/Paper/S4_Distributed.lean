@@ -2,6 +2,7 @@ import CoordCriterion.Distributed.Systems
 import CoordCriterion.CALM.TransientConflict
 import CoordCriterion.Figures
 import CoordCriterion.CAP.Coordination
+import CoordCriterion.CAP.TwoPhaseCommit
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
 import CoordCriterion.Appendix.TransactionBases.CanonicalExample
@@ -211,6 +212,46 @@ theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consis
     (∀ p, σs p = canon sp (σs p).cur) ∧
     (∀ p q, (σs p).cur = (σs q).cur → σs p = σs q) :=
   ⟨fun p => Dist.convergence hc hf hE p rfl, Dist.convergence_agree hc hf hE⟩
+
+/-- After Cor. `cor:convergence`: "With several outputs per input this fails
+even for consistent specifications: in Figure `fig:ambiguity-frames`(g), a
+run that emitted `{s→s1}` has retired the route sets that omit it, while a
+run at the same input that emitted nothing keeps them.  Consistency then
+guarantees that such replicas can be reconciled, not that they agree."  The
+traceroute specification is consistent; the run that emitted `{s→s1}` and the
+canonical run end at the same input in different states (the first has
+retired `{s→a}`, the second keeps it); and the two are confluent at that
+input. -/
+theorem «cor:convergence/relational-fails» :
+    Figures.Trace.spec.Consistent ∧
+      (IsRun (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
+          ((Figures.Trace.canonR _).2 (by decide))) ∧
+        IsRun (canon Figures.Trace.spec ()) ∧
+        (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
+          ((Figures.Trace.canonR _).2 (by decide))).cur = (canon Figures.Trace.spec ()).cur ∧
+        ¬ (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
+          ((Figures.Trace.canonR _).2 (by decide))).R () Figures.Trace.rA ∧
+        (canon Figures.Trace.spec ()).R () Figures.Trace.rA ∧
+        outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
+          ((Figures.Trace.canonR _).2 (by decide)) ≠ canon Figures.Trace.spec ()) ∧
+      ConfluentAt [outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
+          ((Figures.Trace.canonR _).2 (by decide)), canon Figures.Trace.spec ()] () := by
+  have hc := Figures.Trace.directed.2.2
+  have hd := Figures.Trace.state_depends_on_outputs
+  refine ⟨hc, hd, hc _ ?_ () ?_⟩
+  · intro σ hσ
+    rcases List.mem_cons.1 hσ with rfl | hσ
+    · exact hd.1
+    · rcases List.mem_cons.1 hσ with rfl | hσ
+      · exact hd.2.1
+      · cases hσ
+  · intro σ _; exact PO.refl _
+
+/-- The same failure on a minimal example: a consistent specification with one
+input and outputs `lo ≼ hi` has a run ending at a non-canonical state. -/
+theorem «cor:convergence/relational-fails-minimal» :
+    CALM.specTwo.Consistent ∧ ∃ τ : State CALM.specTwo, IsRun τ ∧ τ ≠ canon CALM.specTwo τ.cur :=
+  CALM.state_by_input_fails_relationally
 
 /-- *Message data.*  "Data can influence which input and output events occur
 next at the receiver, but it never directly changes the receiver's
@@ -489,14 +530,18 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : Basis sp) (es : List
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *Canonical runs suffice.*  "Although each system can define its own basis,
-no basis yields behavior that canonical runs cannot.  Lemma canonical-equivalent
-shows that every run under any basis has an observably equivalent canonical
-run: one that accepts the same inputs, emits the same outputs, and keeps at
-least the original's rows after each event.  A system's own commitments can
-only remove more rows than the canonical ones would."
+/-- *Canonical runs suffice.*  "Locks, timestamps, quorums, and consensus
+differ in how and when they decide.  Yet every output event of any system
+removes at least the rows that the canonical event for its output removes
+(Lemma canonical-commitment-normal-form), and every run under any basis has an
+observably equivalent canonical run: one that accepts the same inputs, emits
+the same outputs, and keeps at least the original's rows after each event
+(Lemma canonical-equivalent, Appendix bases).  In the remainder of the paper we
+therefore judge consistency on canonical runs."
 
-Lean: as `«lem:canonical-equivalent»`; `Lockstep` records the per-event
+Lean: the first clause is `«sec:systems/legal-event-containment»` (Lemma
+`lem:canonical-commitment-normal-form`); this entry is the second, as
+`«lem:canonical-equivalent»`; `Lockstep` records the per-event
 containment. -/
 theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
     {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
@@ -696,7 +741,7 @@ theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : B
 
 /-- "The conflict is confined to the current input.  If `i ≺ j`, `S(i) = {o,x}`
 with `o` and `x` incomparable, and `S(j) = {u}` with `u` refining both, the two
-states meet once `j` arrives.  Consistency still counts this as a failure,
+states can be reconciled once `j` arrives.  Consistency still counts this as a failure,
 since it asks for confluence at the current input too."  (The rest of the paragraph, on the
 environment and transient conflicts, is the paper's modeling assumption.)
 
@@ -733,13 +778,35 @@ theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
 
 /-- Paragraph "Locks in a shared-nothing database": "A transaction across
 keys needs one order, but each owner chooses its part, so the owners' choices
-can contradict each other.  Two-phase commit excludes that without
-distributed coordination: …"  Lean: when two participants may each emit an
+can contradict each other."  Lean: when two participants may each emit an
 order, some history has one emit `ab` (removing `ba`) and the other emit `ba`.
-The two-phase-commit claim is not yet formalized (pending sync). -/
+The two-phase-commit sentence that follows is `«sec:coordination/two-phase-commit»`. -/
 theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
     ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=
   CAP.twoOwnerSys_not_coordinationFreeH D
+
+/-- Paragraph "Locks in a shared-nothing database": "Two-phase commit
+excludes that without distributed coordination: each owner's prepare is its
+own commitment, and the coordinator's decision counts votes from a fixed set
+of participants, which is monotone."
+
+Lean, for the decision (`CAP/TwoPhaseCommit.lean`): inputs record the votes
+of `n` fixed participants (`none` until received; a received vote does not
+change), outputs are `undecided ≼ commit, abort`, and `S` aborts on a no vote,
+commits when all voted yes, and is undecided otherwise.  This is a monotone
+function, hence consistent; no decision at a commitment-free reachable state
+needs a commitment; and the system that emits decisions by canonical output
+events is coordination-free (`CoordinationFree`), so a fortiori needs no
+distributed coordination (`CoordinationFreeH`).  The prepare half is the
+single-owner pattern of `«sec:coordination/shared-nothing-single-key»`; the
+protocol itself (messages, logging, blocking) is not modeled. -/
+theorem «sec:coordination/two-phase-commit» (n : Nat) (D : Type) :
+    (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
+      (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d, τ.R τ.cur d → Exposable τ d) ∧
+      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFree ∧
+      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFreeH :=
+  ⟨CAP.voteSpec_functional n, CAP.voteSpec_monotone n, CAP.voteSpec_consistent n,
+   CAP.voteSpec_exposable n, CAP.voteSpec_coordinationFree n D⟩
 
 /-- "The first event's commitment is a choice against `x`."
 

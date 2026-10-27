@@ -182,9 +182,9 @@ theorem «sec:election-story/equality-order-seal» :
     ¬ Exposable (canon elecEq bxy) ⟨.bot⟩ :=
   fun h => ((exposable_iff_empty _ _).1 h).1 ⟨_, _, elecEq_bot_seals⟩
 
-/-- §2.1: "The obstruction is a property of the table alone.  Rows
-`(xy·,⊥)` and `(xyx,x)` have the common expansion `xyx`, but under the
-equality order no output at `xyx` refines both outputs `⊥` and `x`." -/
+/-- §2.1: "The obstruction is a property solely of the table and its orders.
+Rows `(xy·,⊥)` and `(xyx,x)` have the common input expansion `xyx`, but under
+the equality order no output at `xyx` refines both outputs `⊥` and `x`." -/
 theorem «sec:election-story/obstruction» :
     elecEq.S bxy ⟨.bot⟩ ∧ elecEq.S bxyx ⟨.win .x⟩ ∧ bxy ≼ bxyx ∧ bxyx ≼ bxyx ∧
       ¬ ∃ u, elecEq.S bxyx u ∧ (⟨.bot⟩ : ResE) ≼ u ∧ (⟨.win .x⟩ : ResE) ≼ u :=
@@ -199,9 +199,10 @@ theorem «sec:election-story/not-reconciled» :
         ((elecEq_bot_single_row bxy _).2 ⟨rfl, rfl⟩).1, canon elecEq bxyx] bxyx :=
   elecEq_not_confluent
 
-/-- §2.1: "a functional specification is consistent exactly when it is
-monotone": the election is consistent under the refinement order and not
-under the equality order. -/
+/-- §2.1: "Input and output events form a transition system, and the
+specification is consistent when its runs are confluent.  For functional
+tables this corresponds exactly to monotonicity": the election is consistent
+under the refinement order and not under the equality order. -/
 theorem «sec:election-story/consistency» :
     elec.Consistent ∧ ¬ elecEq.Consistent :=
   ⟨elec_consistent, elecEq_not_consistent⟩
@@ -212,7 +213,7 @@ theorem «sec:election-story/consistency» :
 specification).  "A tuple `(I, ≼, O, ≼, S)`, where `(I,≼)` and `(O,≼)` are
 partially ordered input and output types, and `S ⊆ I × O` is a typed relation
 … in which every input appears in at least one row (`S` is total on `I`) and
-at most one (the functional dependency)."
+at most one (a functional dependency)."
 
 Lean: the orders are the `PO` instances, `Spec I O` bundles `S` with
 totality, and `Spec.Functional` is the functional dependency. -/
@@ -335,7 +336,8 @@ theorem «sec:functional-events/input-cumulative» {I O : Type} [PO I] [PO O]
 `(i,R)` be a state and `(i,o)` its row at the current input.  The *output
 event* `output(o)` … restricts the remainder table to exactly the rows whose
 outputs refine `o`, and emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`.
-When `R' ≠ R`, we call this state change the *seal* … it is a *commitment*."
+When `R' ≠ R`, removing some row at an input `j ⪰ i`, we call this state
+change the *seal* … it is a *commitment*."
 
 Lean: `Step σ (.output o) τ` (constructor `Step.output`) requires
 `σ.R σ.cur o` and sets `τ.R = outputTable σ o = R[out ⪰ o]`.  The general
@@ -368,9 +370,9 @@ theorem «sec:functional-events/output-ends-at-state» {I O : Type} [PO I] [PO O
     Step σ (.output o) (outputState σ o h) ∧ (outputState σ o h).R σ.cur o :=
   ⟨step_outputState σ o h, ⟨h, PO.refl o⟩⟩
 
-/-- "Extra commitments only restrict behavior: any inputs and outputs of such
-a system are also those of some sequence of `input` and `output` events as
-just defined (Section `sec:systems`)."  For the registrar of panel (d): its
+/-- "Systems may commit more, as the registrar of Figure
+`fig:election-frames`(d) does, but extra commitments only restrict behavior
+(Section `sec:systems`)."  For the registrar of panel (d): its
 event `Out_[closePolls](⊥)` has an observably equivalent `output(⊥)` of the
 transition system, whose table contains panel (d)'s.  The general statement
 is Lemma `lem:canonical-equivalent` (`CC.canonical_equivalent`, §4.3). -/
@@ -521,7 +523,8 @@ theorem «thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
 
 /-- Example after Theorem `thm:functional-calm`: "In the equality-order
 election, `f(xy·) = ⊥` and `f(xyx) = x` are incomparable: a run that emits `⊥`
-at `xy·` and one that accepts `xyx` are the two runs … that can never meet." -/
+at `xy·` and one that accepts `xyx` are the two runs … that can never be
+reconciled." -/
 theorem «thm:functional-calm/example» :
     winner bxy = .bot ∧ winner bxyx = .win .x ∧ bxy ≼ bxyx ∧ ¬ elecEq.MonotoneF ∧
       ¬ ConfluentAt [outputState (canon elecEq bxy) ⟨.bot⟩
@@ -552,17 +555,9 @@ theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : S
     sp.MonotoneF ↔ ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   functional_exposure_boundary hf
 
-/-- After Prop. `prop:functional-exposure-boundary`: "In a functional
-specification, every commitment an output event applies is a seal": `Retired_o`
-and `Rejected_o` are empty. -/
-theorem «prop:functional-exposure-boundary/only-seals» {I O : Type} [PO I] [PO O]
-    {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ Retired σ o k x ∧ ¬ Rejected σ o k x :=
-  functional_retired_rejected_empty hf σ o k x
-
-/-- After Prop. `prop:functional-exposure-boundary`: "if monotonicity fails at
+/-- After Prop. `prop:functional-exposure-boundary`: "If monotonicity fails at
 `i ≼ k` with `f(i) ⋠ f(k)`, then at `σ_S(i)` the event `output(f(i))` applies
-`s_{f(i)}`, which seals `k`." -/
+`s_{f(i)}`, sealing `k`." -/
 theorem «prop:functional-exposure-boundary/nonmonotone-seals» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
     (hik : i ≼ k) (hio : sp.S i o) (hku : sp.S k u) (hn : ¬ o ≼ u) :
@@ -570,10 +565,11 @@ theorem «prop:functional-exposure-boundary/nonmonotone-seals» {I O : Type} [PO
   nonmono_seals hf hik hio hku hn
 
 /-- **Eq. `eq:query-monotonicity`**.  "Classical CALM fits the pattern with
-inputs `J` ordered by fact inclusion and outputs `Q(J)` ordered by answer
-inclusion.  Functional monotonicity becomes `J ⊆ J' ⟹ Q(J) ⊆ Q(J')`, the
-standard definition of a monotone query … Functional CALM generalizes the
-statement."
+inputs `J` as sets of facts ordered by inclusion and output tables `Q(J)`
+ordered by inclusion.  Functional monotonicity becomes
+`J ⊆ J' ⟹ Q(J) ⊆ Q(J')`, the standard definition of a monotone query …
+Functional CALM generalizes the statement to arbitrary input and output
+orders."
 
 Lean: fact sets and answer sets are `PSet F`, `PSet A` (predicates under
 inclusion); `querySpec Q` is the graph of `Q`.  It is functional, its
