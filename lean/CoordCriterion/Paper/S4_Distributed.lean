@@ -646,12 +646,12 @@ theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
-/-- §4.4: "A commitment requires coordination, however, only when some other
-behavior could contradict it … It requires distributed coordination when a run
-at another participant could contradict it.  A mechanism used without
-committing applies no such commitment.  Closing the polls after every voter
-has voted still runs the mechanism, but no ballot is left to seal, so it
-removes nothing the specification still permits and applies no commitment."  At the canonical
+/-- §4.4: "A commitment requires coordination only when another run could
+contradict it … it requires distributed coordination when that run is at
+another participant.  Running such a mechanism need not commit: closing the
+polls after every voter has voted still runs the mechanism, but no ballot is
+left to seal, so it removes nothing the specification still permits and
+applies no commitment."  At the canonical
 state of any full ballot, the poll-closing commitment `closePolls` is undefined
 (it would remove no row). -/
 theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)

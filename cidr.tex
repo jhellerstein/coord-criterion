@@ -1167,17 +1167,14 @@ choices its outputs require, whatever mechanism a system uses to make them.
 \label{sec:coordination}
 
 A commitment is a binding decision that removes behavior the specification
-still permits.  The common semantic result of mutexes, locks, timestamps, and agreement protocols 
-is implementing commitments.  A commitment needs
-coordination, however, only when some other behavior could contradict it:
-another run accepting an input it sealed, or emitting an output it chose
-against.  We take \emph{coordination} to mean such a commitment, and
-\emph{distributed coordination} to mean one that a run at another participant
-could contradict.  A
-mechanism used without committing is not coordination: e.g., closing the polls
-after every voter has voted still runs the mechanism, but no ballot is left to
-seal, so it removes nothing the specification still permits and applies no
-commitment.
+still permits.  Mutexes, locks, timestamps, and agreement protocols have a
+common semantic effect: each implements commitments, by sealing and
+choosing.  A commitment requires coordination only when another run could contradict it,
+by accepting an input it sealed or emitting an output it chose against; it
+requires distributed coordination when that run is at another participant.
+Running such a mechanism need not commit: closing the polls after every voter
+has voted still runs the mechanism, but no ballot is left to seal, so it
+removes nothing the specification still permits and applies no commitment.
 
 \begin{definition}[Coordination-requiring commitment]
 \label{def:coordination}
