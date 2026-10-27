@@ -204,12 +204,21 @@ it implies Relational Monotonicity and Directed Outputs; conversely, for
 $i\InputOrd j$ and finite nonempty $X\subseteq\fiber{i}$, Relational
 Monotonicity gives each $x\in X$ a \outnoun in $\fiber{j}$, and Directed
 Outputs gives those a common \outnoun in $\fiber{j}$.  So Lifted Monotonicity
-holds exactly when both do.
+holds exactly when both do.  In powerdomain terms, Relational Monotonicity
+is monotonicity of $i\mapsto\fiber{i}$ under the Hoare
+preorder~\cite{abramsky1994domain}, which asks only that each output in $A$
+have a \outnoun in $B$; the joint lift asks that every finite set of them have
+a common one.  The two agree when $B$ is directed.  Unlike the Hoare preorder,
+the joint lift is not reflexive: $A\LiftedOrd A$ holds exactly when $A$ is
+directed, so the transaction fiber of Figure~\ref{fig:ambiguity-frames}(f)
+already fails it at $j=i$.
 
 \paragraph{The common-\indesc condition.}
-Runs emit outputs at different inputs and are reconciled at a common \indesc, but Lifted
-Monotonicity compares the fiber at an input with the fibers at its \indescs.  An
-equivalent condition compares outputs across inputs directly.
+Lifted Monotonicity compares an input with its
+own expansions. Runs, however, may emit outputs at incomparable inputs, say
+$o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
+\indesc $j$ of both. The following condition asks for exactly that: a common
+\outnoun of $o_1$ and $o_2$ in the fiber at $j$.
 
 \begin{definition}[Common-\indesc condition]
 \label{def:common-expansion-condition}
@@ -219,8 +228,8 @@ common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
 $o_r$.
 \end{definition}
 
-The inputs $i_r$ need not be comparable, since different runs can be reconciled only at a common \indesc.  For the empty set of rows the condition asks only that
-$S(j)$ be nonempty, which totality ensures.
+For the empty set of rows the condition asks only that $S(j)$ be nonempty, which
+follows from $S$ being total on $I$.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
@@ -241,15 +250,15 @@ For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
 again keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
 emits $o$.  With several rows at one input, each removed row falls into one of
-three classes.  If no row at its input \outrel $o$, the row is in $\Sealed_o$,
-and the event \emph{seals} that input.  If a kept row at its input \outrel it,
-the row is in $\Retired_o$, and removing it is an \emph{output retirement}.
-Otherwise the row is in $\Rejected_o$: its input stays legal, and the event
-\emph{chooses} against it.  The seal $s_o$ removes $\Sealed_o$, and the choice
+three classes.  Consider a removed row $(i',o')$.  If no row at $i'$ \outrel $o$,
+the row is in $\Sealed_o$, and the event \emph{seals} $i'$.  If a kept row at
+$i'$ \outrel $o'$, the row is in $\Retired_o$, and removing it is an
+\emph{output retirement}.  Otherwise the row is in $\Rejected_o$: $i'$ stays
+legal, but the event \emph{chooses} against $o'$.  The seal $s_o$ removes $\Sealed_o$, and the choice
 $c_o$ removes $\Rejected_o$.  Both are commitments; output retirement is not.
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ puts $[B,A]$ in
 $\Rejected_o$.  In panel~(g), the two removed route sets are in $\Retired_o$.
-With one row per input, $\Retired_o$ and $\Rejected_o$ are empty, and this is
+In the functional case, $\Retired_o$ and $\Rejected_o$ are empty, so this is
 the output event of Definition~\ref{def:output-event}.
 Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
