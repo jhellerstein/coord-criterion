@@ -5,13 +5,7 @@ We now allow a fiber to contain several outputs.  The monotonicity property we w
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
 In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{choosing}
-among permitted outputs.  Section~\ref{sec:ambiguity-story} introduces the issue by
-example.  Section~\ref{sec:relational-specifications} defines relational
-specifications, and Section~\ref{sec:lifted-monotonicity} Lifted
-Monotonicity.  Section~\ref{sec:lifted-output-events} lifts
-output events and classifies what they remove, and
-Section~\ref{sec:complete-calm-theorem} shows that the run-level results of
-Section~\ref{sec:executions} carry over and proves Complete CALM.
+among permitted outputs.
 
 \subsection{Output choice by example}
 \label{sec:ambiguity-story}
@@ -123,15 +117,12 @@ functional specification is the special case $\fiber{i}=\{f(i)\}$.
 
 Specification states and input events
 (Sections~\ref{sec:functional-specifications} and~\ref{sec:functional-events})
-apply unchanged to relational tables; Section~\ref{sec:lifted-output-events} lifts
-output events.
+apply unchanged to relational tables.
 
 \subsection{Lifted Monotonicity}
 \label{sec:lifted-monotonicity}
 
-The examples from the start of this section pose the next question: as input
-\ingrows from $i$ to $j$, can some output in the fiber at $j$ \outrelbase
-whatever outputs runs emit at $i$?  Two things can go wrong.  A
+As input \ingrows from $i$ to $j$, two things can go wrong.  A
 \emph{stranded output} is an output in the fiber at $i$ with no \outnoun in
 the fiber at some \indesc $j$.  An \emph{incompatible pair} is two outputs in
 the fiber at $i$ with no common \outnoun there.  We rule out
@@ -250,7 +241,6 @@ Relational Monotonicity carries each $o_r$ to some
 \subsection{Lifted output events}
 \label{sec:lifted-output-events}
 
-Lifted Monotonicity is a property of the table.  We now return to execution.
 For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
 again keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
@@ -301,8 +291,7 @@ at $j$.  Full proof in Appendix~\ref{app:proofs-sec3}.
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
 logic language.  The condition that characterizes consistency is instead a
 property of the specification: Lifted Monotonicity, which for a function is
-ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that
-both theorems hold for distributed histories.
+ordinary monotonicity.
 
 The same condition governs exposability.
 
@@ -322,9 +311,7 @@ asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
 With one output per input, Lifted Monotonicity and the common-\indesc
 condition are both monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
-Proposition~\ref{prop:functional-exposure-boundary}.  Lifted Monotonicity is
-the lifted form of functional monotonicity in a precise sense: both are the
-common-\indesc condition, read for one output per input or for many.
+Proposition~\ref{prop:functional-exposure-boundary}.
 
 One functional result does not carry over.  In a consistent functional
 specification, every run ending at input $i$ is in the canonical state
@@ -334,6 +321,3 @@ Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
 $\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run
 that emitted nothing keeps them.  The state then depends on the outputs
 emitted, not only on the input (Section~\ref{sec:coordination}).
-
-Section~\ref{sec:distributed-execution} turns to distributed execution, the
-systems that realize these specifications, and coordination.

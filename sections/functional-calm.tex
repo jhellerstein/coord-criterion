@@ -3,10 +3,8 @@
 
 This section treats functional specifications, in which each input has a
 single specified output.  We walk through the framework informally on an
-election (Section~\ref{sec:election-story}), make it precise
-(Sections~\ref{sec:functional-specifications}--\ref{sec:executions}), and
-prove Functional CALM (Section~\ref{sec:functional-calm-theorem}), identifying
-along the way when an output can be emitted without commitment.
+election, make it precise, and prove Functional CALM, identifying along the
+way when an output can be emitted without commitment.
 
 \subsection{The framework by example}
 \label{sec:election-story}
@@ -201,17 +199,13 @@ order no output at $xyx$ \outrel both outputs $\bot$ and $x$.  A run that emits
 $\bot$ at $xy\cdot$ and one that receives $xyx$ cannot be reconciled at $xyx$.
 
 Input and output events form a transition system, and the specification is
-consistent when its runs are confluent.
-Section~\ref{sec:functional-calm-theorem} shows that for functional tables
-this is exactly monotonicity.
-
-The rest of this section formalizes these notions; Appendix~\ref{app:notation}
-collects them for reference.
+consistent when its runs are confluent.  For functional tables this is
+exactly monotonicity (Section~\ref{sec:functional-calm-theorem}).
+Appendix~\ref{app:notation} collects the notation for reference.
 
 \subsection{Specifications and states}
 \label{sec:functional-specifications}
 
-We begin by defining the core structures of our framework: specifications and their states.
 \begin{definition}[Functional ordered specification]
 \label{def:functional-specification}
 A \emph{functional ordered specification} is a tuple
@@ -303,8 +297,6 @@ the one a system is in after receiving $i$ and emitting nothing, is the
   \label{eq:canonical-state}
 \end{equation}
 Input events alone move between canonical states, and runs start at one.
-Section~\ref{sec:functional-calm-theorem} shows that a consistent
-functional specification always returns to them.
 
 The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
 $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  A functional fiber has at most one value.
@@ -316,9 +308,9 @@ outputs still possible.
 \subsection{Input and output events}
 \label{sec:functional-events}
 
-States tell us what remains possible.  We now define the two events that change state: input events
-incorporate new information, while output events record promises to the outside
-world. Each may remove rows from the remainder table.
+Two events change state: input events incorporate new information, while
+output events record promises to the outside world.  Each may remove rows from
+the remainder table.
 
 \paragraph{Input events.}
 For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
@@ -363,13 +355,10 @@ $s_o(i,R)=(i,R')$: it \emph{seals} the inputs of the removed rows, and it is a
 
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
 ends at a state. A commitment removes rows that input alone would not have
-removed: the inputs it seals are no longer legal. Seals of this form are the
-only commitments this section uses. Systems may commit more than an output
-requires. In Figure~\ref{fig:election-frames}(d), $\bot$ can be
-emitted without a commitment, yet the registrar also closes the polls. Extra
-commitments only restrict behavior: any inputs and outputs of such a system are
-also those of some sequence of $\mathsf{input}$ and $\mathsf{output}$ events as just
-defined (Section~\ref{sec:systems}), so these seals suffice for our analysis.
+removed: the inputs it seals are no longer legal.  Seals of this form are the
+only commitments this section uses.  Systems may commit more, as the registrar
+of Figure~\ref{fig:election-frames}(d) does, but extra commitments only
+restrict behavior (Section~\ref{sec:systems}).
 
 \begin{definition}[Exposable output]
 \label{def:exposable}
@@ -398,14 +387,8 @@ at the current input always remains.
 \subsection{Executions and consistency}
 \label{sec:executions}
 
-We now chain events into runs and ask the central consistency question: when
-runs take different paths through the specification, can they still be
-brought to a common state?  The answer reduces to a check on a single row.  A
-run's remaining rows depend only on its current input and the outputs it has
-emitted (Lemma~\ref{lem:run-residual}), so runs can be brought together
-exactly when some row at a common \indesc of their inputs remains in all of
-them (Proposition~\ref{prop:confluence}).  Both results carry over to several
-outputs per input (Section~\ref{sec:complete-calm-theorem}).
+When runs take different paths through the specification, can they still be
+brought to a common state?  The answer reduces to a check on a single row.
 
 \begin{definition}[Transition system, run]
 \label{def:run}
@@ -422,9 +405,7 @@ A run's state has a simple description.  Input events keep only rows whose
 input \inrel the current one, and output events keep only rows whose outputs
 \outrelbase what has been emitted.  Both steps are selections, and selections
 commute; moreover, since inputs only \ingrow during a run, the last input's selection
-subsumes the earlier ones.  So the remainder table depends only on the current
-input and the outputs emitted so far, not on the order of events or the inputs
-passed through along the way.
+subsumes the earlier ones.
 
 \begin{lemma}[Rows remaining after a run]
 \label{lem:run-residual}
@@ -487,12 +468,8 @@ Consistency guarantees that runs never diverge irreparably.  Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
 of theirs leaves a single state that every run can reach: one that keeps every
 promise any of them has made and accepts all of that input.
-Proposition~\ref{prop:confluence} identifies that state, and
-Section~\ref{sec:functional-calm-theorem} shows that for a consistent
-functional specification it depends only on the input.
-
-Consistency is a property of the specification.  It describes no protocol and
-promises no delivery or termination (Section~\ref{sec:discussion}).
+Proposition~\ref{prop:confluence} identifies that state.  Consistency is a
+property of the specification, not of a protocol (Section~\ref{sec:scope}).
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
@@ -552,15 +529,11 @@ If $f$ is monotone, every such state is canonical, and there the
 exposure test is monotonicity.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-In a functional specification, every commitment an output event applies is a seal, so Functional
-CALM and Proposition~\ref{prop:functional-exposure-boundary} say that a functional specification is consistent
-exactly when, at every state reachable without commitment, no output requires
-sealing input.  A monotone specification can emit every current
-output without commitment; if monotonicity fails at $i\InputOrd k$ with
-$f(i)\not\OutputOrd f(k)$, then at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$
-applies $s_{f(i)}$, which seals $k$.
+If monotonicity fails at $i\InputOrd k$ with $f(i)\not\OutputOrd f(k)$, then
+at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$ applies $s_{f(i)}$, which
+seals $k$.
 
-This is the familiar CALM dichotomy stated at the level of the specification
+Functional CALM is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read
 both as consistency and as confluence; Definition~\ref{def:consistency} is
 both.  Classical CALM fits the pattern with inputs $J$ ordered by fact
@@ -579,7 +552,3 @@ output orders, whatever formalism expresses the specification.  The usual CRDT s
 with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} treat both.
-
-Section~\ref{sec:complete-calm} drops the functional dependency and
-proves Complete CALM; Section~\ref{sec:distributed-execution} then gives both
-theorems a distributed reading.

@@ -5,13 +5,10 @@ Consistency compares independent runs.  A distributed execution places one run
 at each participant, and the only change from our framework's
 perspective is that participants can learn about inputs at other participants
 via messages.  Functional CALM and Complete CALM therefore have a natural
-distributed reading.  Sections~\ref{sec:histories}
-and~\ref{sec:distributed-consistency} make it precise, including a
-convergence guarantee derived from the specification
-(Corollary~\ref{cor:convergence}).  We then let systems make their own
-commitments, identify coordination with commitment, and state when
-conflicting output events cannot be reconciled; Complete CAP then builds on
-distributed Complete CALM.
+distributed reading, including a convergence guarantee derived from the
+specification (Corollary~\ref{cor:convergence}).  We then let systems make
+their own commitments, identify coordination with commitment, and prove
+Complete CAP.
 
 \input{sections/distributed-histories.tex}
 
@@ -31,8 +28,8 @@ the system.  Similarly, a lock manager commits to an ordering of ongoing
 transactions ($A$ before $B$) without emitting that ordering until later
 (Figure~\ref{fig:cc-commitments}(h) below); whether that commitment needs
 coordination depends on who else may order the same transactions
-(Section~\ref{sec:coordination}).  In this section we show how such
-systems can be modeled, by letting them bring bespoke commitments.
+(Section~\ref{sec:coordination}).  We model such systems by letting them
+bring bespoke commitments.
 
 \begin{definition}[Commitment]
 \label{def:commitment}
@@ -182,15 +179,17 @@ We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
 runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output events
 apply only commitments from $\mathcal B$ (Definition~\ref{def:run-under-basis}).
-Although each system can define its own basis, no basis yields behavior that
-canonical runs cannot.  Lemma~\ref{lem:canonical-equivalent}
-(Appendix~\ref{app:bases}) shows that every run under any basis has an
-observably equivalent canonical run: one that accepts the same inputs, emits
-the same outputs, and keeps at least the original's rows after each event.  A
-system's own commitments can only remove more rows than the canonical ones
-would.  In the remainder of the paper we therefore judge consistency on
-canonical runs, as in
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
+Locks, timestamps, quorums, and consensus differ in how and when they decide.
+Yet every output event of any system removes at least the rows that the
+canonical event for its output removes
+(Lemma~\ref{lem:canonical-commitment-normal-form}), and every run under any
+basis has an observably equivalent canonical run: one that accepts the same
+inputs, emits the same outputs, and keeps at least the original's rows after
+each event (Lemma~\ref{lem:canonical-equivalent}, Appendix~\ref{app:bases}).
+In the remainder of the paper we therefore judge consistency on canonical
+runs.  Whether a specification needs coordination is a question about the
+seals and choices its outputs require, whatever mechanism a system uses to
+make them.
 
 Consider 2PL on input $\{A,B,C\}$, where $A$ reads a key $x$ that no
 transaction writes, and $B$ waits for a lock that $A$ holds on another
@@ -200,13 +199,6 @@ The canonical run reports the read with no commitment, so it keeps every row rep
 including the one completed by $[B,A,C]$.  When 2PL later emits
 $[A,C,B]$, so does the canonical run, and both end with the same table.  The lock committed to $A$ before $B$ earlier than any output
 required.
-
-The canonical commitments are therefore universal.  Locks, timestamps,
-quorums, and consensus differ in how and when they decide.  Yet every output
-event of any system removes at least the rows that the canonical event for its
-output removes (Lemma~\ref{lem:canonical-commitment-normal-form}).  Whether a
-specification needs coordination is thus a question about the seals and
-choices its outputs require, whatever mechanism a system uses to make them.
 
 \subsection{Coordination}
 \label{sec:coordination}
@@ -253,10 +245,9 @@ For a system, the answer depends on which runs it can perform, and here seals
 and choices differ.  The environment may supply any input to any participant,
 so a seal is distributed coordination whenever another participant may receive
 the sealed input, whether or not one does in the run at hand.  Closing the
-polls before every voter has voted seals the remaining ballots.  It is
-coordination in any case, since the environment could deliver a late ballot to
-a run that has not yet closed; it is distributed coordination when another
-polling station may accept one.  Outputs, by contrast, are chosen only by strategies, so a choice is
+polls before every voter has voted seals the remaining ballots, so it is
+coordination, and distributed coordination when another polling station may
+accept a late ballot.  Outputs, by contrast, are chosen only by strategies, so a choice is
 contradicted only when some run's strategy may emit the output it rules out.
 
 The next result explains why distributed coordination needs exclusion: a
@@ -310,8 +301,8 @@ distributed coordination: each owner's prepare is its own commitment, and the
 coordinator's decision counts votes from a fixed set of participants, which is
 monotone.  Communication and distributed coordination therefore differ.
 
-Confluence is a safety property: some continuation brings the participants to a
-common state.  Reaching it is liveness, and a matter of strategy.  Under Lifted
+Confluence is a safety property, and reaching it is liveness
+(Section~\ref{sec:scope}).  Under Lifted
 Monotonicity, participants at a common input $j$ can each emit a
 $u\in\fiber{j}$ that \outrel everything emitted, without commitment
 (Proposition~\ref{prop:exposure-boundary}); choosing $u$ by a shared
