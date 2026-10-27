@@ -138,8 +138,8 @@ Confluence, and later refinements of CALM all map into the same framework.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
+unclassified & 15 & 1885\\
 formal definition/notation & 25 & 1366\\
-unclassified & 15 & 1329\\
 related-work detail & 7 & 1070\\
 example & 8 & 690\\
 formal caution & 7 & 350\\
@@ -147,9 +147,9 @@ explanation & 14 & 350\\
 signposting & 17 & 241\\
 result & 3 & 185\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
-1. formal definition/notation, 523 words: \textit{At an input [math], either no row remains or some ...}\par
-2. unclassified, 423 words: \textit{The induced specification is an ordered specification, and the input ...}\par
-3. unclassified, 337 words: \textit{We now make the mapping precise.}\par
+1. unclassified, 970 words: \textit{The induced specification is an ordered specification, and the input ...}\par
+2. formal definition/notation, 523 words: \textit{At an input [math], either no row remains or some ...}\par
+3. unclassified, 346 words: \textit{We now make the mapping precise, and then explain how ...}\par
 4. related-work detail, 307 words: \textit{An output is a set of public facts, such as ...}\par
 5. example, 260 words: \textit{The uniqueness constraint of Bailis et al.'s payroll example shows ...}\par
 6. related-work detail, 258 words: \textit{An invariant is a predicate that every state must satisfy.}\par
@@ -1137,7 +1137,7 @@ function on specification states that leaves the current input unchanged and
 removes a nonempty set of rows, none of them \outrelpast by a remaining row at
 the same input.} \removednote{\textbf{result}, 33 words, rank 38; \textit{The seals and choices of Definition and Section satisfy this definition: a seal removes every row ...}; labels eq:commitment-excludes, prop:seal-or-choose} \textcolor{newblue}{At each input where it removes rows, a commitment either
 removes every row there, \emph{sealing} that input, or removes some outputs
-and keeps others, \emph{choosing} among them.} \removednote{\textbf{formal definition/notation}, 523 words, rank 1; \textit{At an input [math], either no row remains or some does.}; labels def:strategy, def:system, def:system-output-event, eq:lifted-validity} \removednote{\textbf{formal definition/notation}, 26 words, rank 49; \textit{We call the runs of Sections -- canonical runs , and a run under a basis ...}} \textcolor{newblue}{A \emph{system} consists of a
+and keeps others, \emph{choosing} among them.} \removednote{\textbf{formal definition/notation}, 523 words, rank 2; \textit{At an input [math], either no row remains or some does.}; labels def:strategy, def:system, def:system-output-event, eq:lifted-validity} \removednote{\textbf{formal definition/notation}, 26 words, rank 49; \textit{We call the runs of Sections -- canonical runs , and a run under a basis ...}} \textcolor{newblue}{A \emph{system} consists of a
 \emph{commitment basis} $\mathcal B$ and a nondeterministic strategy per
 participant that picks its next output, send, or receive event from its local
 history.} \textcolor{newblue}{Its output event $\Out{\gamma}{o}$ applies a sequence $\gamma$ of
@@ -1257,7 +1257,7 @@ an input or make a choice that another could contradict.
 
 \begin{definition}[Partitioned history, Availability, Partition Consistency]
 \label{def:partition-notions}
-\leavevmode \removednote{\textbf{unclassified}, 423 words, rank 2; \textit{The induced specification is an ordered specification, and the input of an execution only expands as ...}}
+\leavevmode \removednote{\textbf{unclassified}, 970 words, rank 1; \textit{The induced specification is an ordered specification, and the input of an execution only expands as ...}; labels prop:declared-specification}
 \begin{enumerate}
 \item
 \emph{Partitioned history.}  A \emph{partitioned history} divides the
@@ -1612,12 +1612,20 @@ permits \outrel both.}
 Automata are a traditional way to model operational behavior
 abstractly~\cite{lynch1987io,lynch1996distributed}. Our model keeps only the
 inputs and outputs of that behavior and drops the operational details. The
-mapping is straightforward: for each finite input, enumerate the possible runs
-and collect their outputs. \textcolor{newblue}{This is what simulators do: discrete-event
-simulation and model checking both enumerate the runs of a modeled
-system~\cite{misra1986des,flanagan2005dpor}, and \extended{} gives the
-details.} Work that models systems as state machines therefore maps naturally
-into our model, where Complete CALM assesses its consistency directly. \removednote{\textbf{unclassified}, 337 words, rank 3; \textit{We now make the mapping precise.}; labels def:induced-specification, prop:induced-specification} Our conditions are semantic. \removednote{\textbf{formal caution}, 60 words, rank 22; \textit{Confluence guarantees that a common exists, not that a deployed system reaches it.}} \textcolor{newblue}{Confluence guarantees that
+mapping is straightforward: an input's outputs are those of the runs that
+consume it. \textcolor{newblue}{Two standard approaches then apply, both used widely and with
+success.} \textcolor{newblue}{Simulation and model checking explore bounded fragments of these
+runs and exhibit
+violations~\cite{misra1986des,flanagan2005dpor,newcombe2015aws,zhou2021foundationdb}.} \textcolor{newblue}{Proofs declare a specification and show, by the standard obligations of
+refinement~\cite{abadi1991refinement,lynch1995forward}, that it represents the
+machine: every execution's output is dominated by a declared one, and every
+declared row is produced by some execution.} \textcolor{newblue}{Such proofs are routinely
+mechanized~\cite{hawblitzel2015ironfleet}, and Lifted Monotonicity is then
+checked on the declared specification; \extended{} gives the details.} Work
+that models systems as state machines therefore maps naturally into our
+model, where Complete CALM assesses its consistency directly. \removednote{\textbf{unclassified}, 346 words, rank 3; \textit{We now make the mapping precise, and then explain how it is used in practice.}; labels def:induced-specification, prop:induced-specification}
+
+Our conditions are semantic. \removednote{\textbf{formal caution}, 60 words, rank 22; \textit{Confluence guarantees that a common exists, not that a deployed system reaches it.}} \textcolor{newblue}{Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
 liveness, and cost belong to the operational model in which a specification
 is realized.}

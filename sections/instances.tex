@@ -232,12 +232,11 @@ across such formalisms.
 Automata are a traditional way to model operational behavior
 abstractly~\cite{lynch1987io,lynch1996distributed}.  Our model keeps only the
 inputs and outputs of that behavior and drops the operational details.  The
-mapping is straightforward: for each finite input, enumerate the possible runs
-and collect their outputs.  This is what simulators do: discrete-event
-simulation and model checking both enumerate the runs of a modeled
-system~\cite{misra1986des,flanagan2005dpor}.  Work that models systems as
-state machines therefore maps naturally into our model, where Complete CALM
-assesses its consistency directly.  We now make the mapping precise.
+mapping is straightforward: an input's outputs are those of the runs that
+consume it.  Work that models systems as state machines therefore maps
+naturally into our model, where Complete CALM assesses its consistency
+directly.  We now make the mapping precise, and then explain how it is used in
+practice.
 
 We take the standard I/O-automaton model~\cite{lynch1987io} of a state
 machine, its clients, and the channel that carries their events.  The machine
@@ -324,10 +323,76 @@ executions.  Outputs are where the environment's reactions enter.  A client
 that sends after observing an output is ordered after everything that output
 reflected, and the input records that dependence; what the client saw is
 recorded by the run's output events, which keep only rows that \outrelbase
-it.  Collecting the fibers means exploring every execution with a given
-input, which is the task of a model checker; for bounded systems, dynamic
-partial-order reduction~\cite{flanagan2005dpor} computes them without
-enumerating every interleaving.
+it.  
+
+\paragraph{Testing and proof.}
+The induced specification is defined by every finite execution of the machine
+and its environment.  There are infinitely many such executions, so the
+induced specification is a semantic object: we can reason about it, but not
+list it.  Two standard approaches make that reasoning practical.
+
+The first is testing.  A simulator or model checker runs the machine and its
+environment on bounded inputs and collects what it
+observes~\cite{misra1986des,flanagan2005dpor}.  This is routine engineering
+practice and has found serious bugs in production
+systems~\cite{newcombe2015aws,zhou2021foundationdb}.  Testing suits
+refutation.  If Lifted Monotonicity fails, finitely many executions show it:
+executions with inputs $h_1,\ldots,h_k$, and a common \indesc $h$ at which no
+execution's observation \outrel all of theirs.  Testing cannot show that
+Lifted Monotonicity holds, since that is a claim about every input.
+
+The second is proof.  Instead of computing the induced specification, the
+designer writes one down.  A \emph{declared} specification $D$ gives, for each
+input, a set of outputs by a rule, such as ``the set of ballots received'' or
+``the largest timestamp seen''; it does not enumerate executions.  The proof
+then shows that $D$ describes the machine well enough that Lifted Monotonicity
+can be checked on $D$ instead.  Two things must be shown, and both are needed,
+because neither half alone preserves Lifted Monotonicity: if $D$ omits an
+output the machine can produce, it may hide an incompatibility, and if $D$
+adds an output the machine cannot produce, it may supply a common \outnoun
+that no execution reaches.
+\begin{itemize}
+  \item \emph{Realizability.}  Every output that $D$ allows at an input is the
+        observation of some execution with that input.
+  \item \emph{Domination.}  Every execution's final observation is
+        \outrelpast by some output that $D$ allows at its input.
+\end{itemize}
+$D$ need not match the machine exactly: it may leave out observations that
+others \outrelbase, such as transient intermediate states.
+
+\begin{proposition}[Declared specifications]
+\label{prop:declared-specification}
+Let $D$ be an ordered specification whose inputs correspond, by an order
+isomorphism, to the inputs that occur.  If $D$ satisfies realizability and
+domination, then $D$ satisfies Lifted Monotonicity exactly when the induced
+specification does, and so exactly when the machine's observations are
+confluent across its executions.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+Use the common-\indesc form.  Given rows of the induced specification,
+dominate each by a row of $D$, take their common \outnoun in $D$, and realize
+it.  Conversely, rows of $D$ are rows of the induced specification, and their
+common \outnoun there is dominated back into $D$.
+\end{proof}
+
+Both obligations are standard in the verification literature.  Domination
+says that the machine refines $D$: every observation of every execution is
+allowed by $D$, up to refinement of outputs.  It is proved with an
+\emph{invariant}, a property of the machine's state that holds initially, is
+preserved by every step, and implies that the observation is dominated; it is
+checked one step at a time, never by enumerating executions.  This is the core
+of refinement proofs for state machines, which Lynch and Vaandrager call a
+forward simulation~\cite{lynch1995forward} and Abadi and Lamport a refinement
+mapping~\cite{abadi1991refinement}; such proofs are routinely mechanized for
+practical distributed systems~\cite{hawblitzel2015ironfleet}.  Realizability
+is the converse inclusion, that $D$ allows nothing the machine cannot produce.
+It too is proved once for all inputs, typically by induction on the input,
+giving a uniform recipe that builds, for any declared row, an execution that
+produces it.  The proposition asks for nothing beyond these two facts.  It
+says that together they let $D$ stand in for the machine: Lifted Monotonicity
+is checked on $D$ exactly as everywhere else in this paper, and nothing about
+coordination is proved about the machine itself.
 
 \subsection{Scope}
 \label{sec:scope}
