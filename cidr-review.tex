@@ -145,7 +145,7 @@ example & 8 & 690\\
 formal caution & 7 & 350\\
 explanation & 14 & 350\\
 signposting & 17 & 241\\
-result & 3 & 185\\
+result & 3 & 207\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
 1. unclassified, 1013 words: \textit{The induced specification is an ordered specification, and the input ...}\par
 2. formal definition/notation, 523 words: \textit{At an input [math], either no row remains or some ...}\par
@@ -518,7 +518,7 @@ the input information in $i$.} \textcolor{newblue}{We say that $j$ \emph{\inrel}
 $o\OutputOrd u$ means that $u$ preserves every externally visible claim in $o$
 and may add more, and we say that $u$ \emph{\outrel} $o$. \removednote{\textbf{formal definition/notation}, 24 words, rank 53; \textit{We use these two verbs only in these senses: inputs , and outputs are .}} \textcolor{newblue}{A \emph{common
 \indesc} of inputs is an input that \inrel each of them, and a \emph{common
-\outnoun} of outputs is an output that \outrel each of them.} \removednote{\textbf{formal caution}, 63 words, rank 21; \textit{Neither need be unique or least: the input order need not be a lattice, only a ...}} \removednote{\textbf{formal definition/notation}, 12 words, rank 74; \textit{A functional ordered specification [math], with induced function [math], is monotone if}} \removednote{\textbf{explanation}, 11 words, rank 81; \textit{Thus an output on partial input stays valid as input .}} \textcolor{newblue}{Neither need be
+\outnoun} of outputs is an output that \outrel each of them.} \removednote{\textbf{formal caution}, 63 words, rank 22; \textit{Neither need be unique or least: the input order need not be a lattice, only a ...}} \removednote{\textbf{formal definition/notation}, 12 words, rank 74; \textit{A functional ordered specification [math], with induced function [math], is monotone if}} \removednote{\textbf{explanation}, 11 words, rank 81; \textit{Thus an output on partial input stays valid as input .}} \textcolor{newblue}{Neither need be
 unique or least: for example, two independent transactions $a$ and $b$, with schedules
 ordered by subsequence, have two incomparable minimal common \indescs, $ab$
 and $ba$.}
@@ -875,7 +875,7 @@ A singleton fiber is trivially directed. \textcolor{newblue}{As with common \ind
 common \outnoun need not be
 least: directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
-join-semilattice.} \removednote{\textbf{example}, 53 words, rank 23; \textit{For example, the fiber [math] under inclusion is directed, since [math] every member, yet [math] and ...}} For example, the fiber
+join-semilattice.} \removednote{\textbf{example}, 53 words, rank 24; \textit{For example, the fiber [math] under inclusion is directed, since [math] every member, yet [math] and ...}} For example, the fiber
 \[
   \{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}
 \]
@@ -1084,9 +1084,10 @@ of runs can be placed at separate participants that exchange no messages. \remov
 when it satisfies Lifted Monotonicity.} \textcolor{newblue}{For functional specifications,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
-arrival order, or the outputs they emitted.} \removednote{\textbf{result}, 50 words, rank 26; \textit{In any history of a consistent functional specification, every participant whose current input at a consistent ...}; labels cor:convergence} \textcolor{newblue}{This is the convergence that
-strong eventual consistency~\cite{shapiro2011crdt} asks of replicated state,
-derived here from the specification rather than from a merge operator.} With several outputs per input this fails even for consistent specifications:
+arrival order, or the outputs they emitted.} \removednote{\textbf{result}, 72 words, rank 20; \textit{In any history of a consistent functional specification, every participant whose current input at a consistent ...}; labels cor:convergence} \textcolor{newblue}{This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
+asks of replicated state.} The semilattice merge of CRDTs suffices for it but
+is not needed: here it follows directly from any consistent functional
+specification. With several outputs per input this fails even for consistent specifications:
 in Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
 $\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run at
 the same input that emitted nothing keeps them. Consistency then guarantees
@@ -1163,7 +1164,7 @@ run reports the read with no commitment; when 2PL later emits a serial order,
 so does the canonical run, and both end with the same table.}
 
 \textcolor{newblue}{The canonical commitments are therefore universal.} Locks, timestamps,
-quorums, and consensus differ in how and when they decide. \removednote{\textbf{unclassified}, 68 words, rank 20; \textit{Yet every output event of any system removes at least the rows that the canonical event ...}} \textcolor{newblue}{Yet every output
+quorums, and consensus differ in how and when they decide. \removednote{\textbf{unclassified}, 68 words, rank 21; \textit{Yet every output event of any system removes at least the rows that the canonical event ...}} \textcolor{newblue}{Yet every output
 event of any system removes at least the rows that the canonical event for its
 output removes.} \textcolor{newblue}{Whether a
 specification needs coordination is thus a question about the seals and
@@ -1221,7 +1222,7 @@ current input $i$.
 \begin{proof}[Proof sketch]
 After the second event every output at $i$ \outrel $x$, and after
 the first none does; since events never add rows, no row at $i$ can be common
-to both. \removednote{\textbf{signposting}, 52 words, rank 25; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+to both. \removednote{\textbf{signposting}, 52 words, rank 26; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{The conflict may be transient: an input $j$ \inrelpart $i$ might reconcile the
@@ -1548,7 +1549,7 @@ client observation $q:D\to(Y,\preceq_Y)$ gives the client-visible
 specification $q\circ s$. By Functional CALM, $q\circ s$ is consistent
 exactly when $U\subseteq V$ implies $q(s(U))\preceq_Y q(s(V))$. Monotonicity
 of $q$ on all of $D$ suffices, but $q$ need only be monotone between reachable
-states. \removednote{\textbf{related-work detail}, 53 words, rank 24; \textit{The two-phase query fails the test: a deleted item grows [math] and shrinks the answer.}} \textcolor{newblue}{The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set
+states. \removednote{\textbf{related-work detail}, 53 words, rank 25; \textit{The two-phase query fails the test: a deleted item grows [math] and shrinks the answer.}} \textcolor{newblue}{The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set
 fails the test: a deleted item grows $U$ and shrinks the answer.} \textcolor{newblue}{CRDT states
 form a join-semilattice, but observations need less: Complete CALM requires
 only \emph{some} common \outnoun of query outputs, not a least one.}
@@ -1631,7 +1632,7 @@ checked on the declared specification; \extended{} gives the details.} Work that
 models systems as state machines therefore maps naturally into our model, where
 Complete CALM assesses its consistency directly. \removednote{\textbf{unclassified}, 346 words, rank 3; \textit{We now make the mapping precise, and then explain how it is used in practice.}; labels def:induced-specification, prop:induced-specification}
 
-Our conditions are semantic. \removednote{\textbf{formal caution}, 60 words, rank 22; \textit{Confluence guarantees that a common exists, not that a deployed system reaches it.}} \textcolor{newblue}{Confluence guarantees that
+Our conditions are semantic. \removednote{\textbf{formal caution}, 60 words, rank 23; \textit{Confluence guarantees that a common exists, not that a deployed system reaches it.}} \textcolor{newblue}{Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
 liveness, and cost belong to the operational model in which a specification
 is realized.}
