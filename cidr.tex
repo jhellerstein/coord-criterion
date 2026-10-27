@@ -1605,10 +1605,12 @@ abstractly~\cite{lynch1987io,lynch1996distributed}.  Our model keeps only the
 inputs and outputs of that behavior and drops the operational details.  The
 mapping is straightforward: an input's outputs are those of the runs that
 consume it.  Two standard approaches then apply, both used widely and with
-success.  Simulation and model checking explore runs on bounded
-inputs~\cite{misra1986des,flanagan2005dpor,newcombe2015aws,zhou2021foundationdb};
+success.  Model checkers explore runs on bounded
+inputs~\cite{flanagan2005dpor,newcombe2015aws};
 their input/output pairs become a finite specification in our model that can be tested for
-violations of Lifted Monotonicity. The more comprehensive approach is to use
+violations of Lifted Monotonicity.  The only additional requirement is on the
+checker's bounds: any input it reports on must have had all its executions
+explored, as exhaustive checking of a finite-state model ensures. The more comprehensive approach is to use
 formal proofs to declare a specification and show, by the standard obligations
 of refinement~\cite{abadi1991refinement,lynch1995forward}, that it represents
 the machine: every execution's output is dominated by a declared one, and every
