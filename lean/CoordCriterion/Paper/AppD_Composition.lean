@@ -370,18 +370,22 @@ theorem «app:composition/properness-needed» :
   Joint.needs_commit_needs_proper
 
 /-- "The commitment-erased replacement of a system has the empty basis and the
-same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)`."  Lean:
-`Guard.eraseSys K`; after a local history it allows an event when `K` allows
-one with the same erasure (`Guard.eraseC`) after a history with the same
-erasure.  It is basis-free, so it applies no commitment. -/
+same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)` and its commitment
+events dropped."  Lean: `Guard.eraseSys K`; after a local history it allows an
+event when `K` allows one with the same erasure (`Guard.eraseC`, which drops
+commitment events) after a history with the same erasure.  It is basis-free,
+so it applies no commitment: every output event is `Out_ε(x)`, and it performs
+no commitment event (`Guard.eraseSys_noCommit`). -/
 theorem «app:composition/replacement» {M O : Type} [PO M] [PO O] {sk : Spec M O}
     (K : Guard.Sys sk) :
     (Guard.eraseSys K).basis = (fun _ => False) ∧
     (∀ i a' e', (Guard.eraseSys K).strat i a' e' ↔
       ∃ a e, a.filterMap Guard.eraseC = a'.filterMap Guard.eraseC ∧ Guard.eraseC e = Guard.eraseC e' ∧
         K.strat i a e) ∧
-    ∀ i es ρ, Guard.Produces (Guard.eraseSys K) i es ρ → ∀ γ x, SEvent.output γ x ∈ es → γ = [] :=
-  ⟨rfl, fun _ _ _ => Iff.rfl, fun _ _ _ h => Guard.eraseSys_eps h⟩
+    (∀ i es ρ, Guard.Produces (Guard.eraseSys K) i es ρ → ∀ γ x, SEvent.output γ x ∈ es → γ = []) ∧
+    ∀ i es ρ, Guard.Produces (Guard.eraseSys K) i es ρ → ∀ γ, SEvent.commit γ ∉ es :=
+  ⟨rfl, fun _ _ _ => Iff.rfl, fun _ _ _ h => Guard.eraseSys_eps h,
+    fun _ _ _ h => Guard.eraseSys_noCommit h⟩
 
 /-- **Corollary `cor:empty-store`** (Empty store): "In a proper pipeline, fix
 any system for `𝒮₂|_{𝒮₁}`.  For every run of the pipeline, the replacement

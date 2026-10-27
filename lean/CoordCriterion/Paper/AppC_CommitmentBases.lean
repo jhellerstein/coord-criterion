@@ -308,11 +308,14 @@ theorem «lem:canonical-commitment-normal-form» {sp : Spec I O} :
 
 /-- **Def. canonical system** (`def:canonical-system`).  "A system is canonical
 when its basis is `ℬ_S` and each output event it performs is the canonical
-event `Out_{κ_o}(o)` at the participant's state where it occurs."
+event `Out_{κ_o}(o)` at the participant's state where it occurs, and it
+performs no commitment event."
 
 Lean: stated on histories, as the property that each participant's
 input/output events, annotated with commitment sequences, form a canonical run
-(`CanonExec`) from `σ_S(i_p)`.  There is no separate `CAP.System` instance
+(`CanonExec`) from `σ_S(i_p)`.  A canonical step is never a commitment event
+(`CanonStep`, third conjunct), so a canonical run has none
+(`«def:canonical-system/no-commitment-event»`).  There is no separate `CAP.System` instance
 named "canonical system" in the library. -/
 abbrev «def:canonical-system» {D : Type} {n : Nat} (sp : Spec I O)
     (H : Dist.History I O D n) : Prop :=
@@ -332,6 +335,12 @@ theorem «def:canonical-system/histories» {D : Type} {n : Nat} {sp : Spec I O} 
       es.filterMap SEvent.erase = es'.filterMap SEvent.erase → es = es' ∧ ρ = ρ') ∧
     (∀ H : Dist.History I O D n, Dist.CanonLegal sp H → Dist.SysLegal (canonBasis sp) H) :=
   ⟨Dist.canonLegal_iff, Dist.canonExec_unique, fun _ h => Dist.canonLegal_sysLegal h⟩
+
+/-- Def. `def:canonical-system`: "… and it performs no commitment event."
+A canonical run (`CanonExec`) contains no commit event. -/
+theorem «def:canonical-system/no-commitment-event» {sp : Spec I O} {σ τ : State sp}
+    {es : List (SEvent sp)} (h : CanonExec σ es τ) : ∀ γ, SEvent.commit γ ∉ es :=
+  canonExec_noCommit h
 
 /-! ## Compound commitments -/
 
@@ -379,8 +388,11 @@ theorem «app:bases/compound-output-event» {sp : Spec I O} :
 /-! ## Runs under a basis -/
 
 /-- **Def. run under a basis** (`def:run-under-basis`).  "A run under `ℬ` is a
-finite transition sequence from a canonical state `σ_S(i)` of input events and
-legal output events `Out_γ(o)` that use only commitments from `ℬ`." -/
+finite transition sequence from a canonical state `σ_S(i)` of input events,
+legal output events `Out_γ(o)` (Definition system-output-event), and
+commitment events (Definition commitment-event) that use only commitments from
+`ℬ`."  Lean: `RunUnder B es τ`, an execution of `SysStep B` (input, output and
+commit events `SEvent.commit γ`) from `σ_S(i)`. -/
 abbrev «def:run-under-basis» {sp : Spec I O} (B : Basis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   RunUnder B es τ
@@ -405,12 +417,13 @@ theorem «def:run-under-basis/canonical-runs-are-runs» {sp : Spec I O} :
   ⟨canonExec_exec, exec_canonExec, canonExec_sysExec⟩
 
 /-- "Call two runs observably equivalent when they start at the same canonical
-state and agree once commitment sequences are erased: wherever one has
-`input(j)` the other does, and wherever one has `Out_γ(o)` the other has
-`Out_{γ'}(o)` for some `γ'`."
+state and agree once commitment sequences are erased and commitment events
+dropped: wherever one has `input(j)` the other does, and wherever one has
+`Out_γ(o)` the other has `Out_{γ'}(o)` for some `γ'`."
 
-Lean: the event lists agree after `SEvent.erase` (the common start state is
-fixed by the context). -/
+Lean: the event lists agree after `filterMap SEvent.erase`, which erases `γ`
+and drops commit events (`SEvent.erase (.commit γ) = none`); the common start
+state is fixed by the context. -/
 abbrev «app:bases/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
@@ -420,8 +433,12 @@ each event, the canonical run's remainder table contains the original run's."
 
 Lean: from a run under `B` from `σ_S(i)`, a canonical run from the same
 `σ_S(i)` in `Lockstep` (after each event: erasures agree, current inputs
-agree, and the canonical table contains the original's); its erasure is a run
-of §§2–3 ending at `ρ'` with the same current input and a larger table. -/
+agree, and the canonical table contains the original's; a commitment event of
+the original is matched by no canonical event, and the canonical table still
+contains the original's, since a commitment only removes rows); its erasure is
+a run of §§2–3 ending at `ρ'` with the same current input and a larger table.
+(The paper's proof treats input and output events; the commitment-event case
+is the `Lockstep.commit` step of `CC.canonical_equivalent_gen`.) -/
 theorem «lem:canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
     {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
     ∃ es' ρ', Lockstep B (canon sp i) es ρ (canon sp i) es' ρ' ∧

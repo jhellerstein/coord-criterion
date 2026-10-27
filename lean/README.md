@@ -115,7 +115,7 @@ first and supporting claims and examples follow.
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter commitments on antichain fibers (used by Fig. cc-commitments in §4.3 and App. C) |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | The `(L,X,ρ)` spec with partial outputs; closure commitments; 2PL/MVTO bases; bases differ; deadlock; MVTO: reported reads, entailed vs. chosen aborts |
 | `Appendix/TransactionBases/CanonicalExample.lean` | `CC.Txn.Partial.CanonEx` | §4.3 | Canonical runs suffice: a 2PL run at `{A,B,C}` and its canonical run in lockstep |
-| `Appendix/TransactionBases/CommitEvent.lean` | `CC.Txn.Partial.CommitEx` | §4.3 | A 2PL commit event: `Commit([order(A,B)])` when `B` waits for `A`'s lock, then an output applying only `commit(A)`, `commit(B)`; the run coordinates and is in lockstep with its canonical run |
+| `Appendix/TransactionBases/CommitEvent.lean` | `CC.Txn.Partial.CommitEx` | §4.2 | 2PL commitment events: `Commit([order(A,B)])` when `B` waits for `A`'s lock, at `{A,B}` and at the paper's `{A,B,C}` instance (then `Out_ε` reporting `A`'s read and `[A,C,B]`); lockstep with the canonical run, same final state |
 | `Appendix/Frontiers.lean` | `CC.Front` | §3 (Hoare remark); otherwise not in paper | Hoare preorder vs. the joint lift; remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
 | `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. E (real-time causal) | Thm. independent products (`thm:product-frontier`), configuration example |
 | `Appendix/Graphs.lean` | `CC.Graph` | not in paper | Products, tee vs. running twice, merge, partition; stage expressions with per-node offered-domain test; Proper Coordination for products; parameterized composition as a product |
@@ -130,7 +130,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-598 entries.
+602 entries.
 
 ### §2 Functional CALM
 
@@ -278,6 +278,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:system/produced»` | theorem | Def. |
 | `«def:system/restrict»` | theorem | Def. |
 | `«def:system-output-event»` | abbrev | **Def. |
+| `«def:commitment-event»` | abbrev | **Def. |
+| `«sec:systems/commitment-event-unobserved»` | theorem | After Def. |
 | `«eq:lifted-validity»` | theorem | **Eq. |
 | `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` commits at least as much as the `output(o)` of Sections functional-calm–complete-calm: |
 | `«sec:systems/output-is-canonical-event»` | theorem | "… and `output(o)` is the case in which they remove exactly those." Lean: |
@@ -286,7 +288,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«fig:cc-commitments»` | theorem | Fig. |
 | `«sec:systems/two-systems-two-choices»` | theorem | *A transactional example of bespoke commitments.* "Both are choices: |
 | `«sec:systems/neither-is-the-choice»` | theorem | "… and neither is the choice `c_o` of Definition lifted-output-event." At the canonical state of `{A,B,C}` (Appendix G's specification), the results of `orde… |
-| `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output events apply only commitments fro… |
+| `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Locks, timestamps, quorums, and consensus differ in how and when they decide. |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
@@ -471,14 +473,15 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/cut-confluent-at»` | abbrev | *cut confluent at `j`* — some continuation brings every participant to one state `(j,R)` (Sec. |
 | `«app:notation/distributed-consistency»` | abbrev | *distributed consistency* — every consistent cut of every history is confluent at every common expansion (Def. |
 | `«app:notation/commitment»` | abbrev | *commitment* — partial function on states removing rows, none refined by a remaining row at the same input (Def. |
-| `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, send and receive events `p` may perform next (Def. |
+| `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, commitment, send, and receive events `p` may perform next (Def. |
 | `«app:notation/system»` | abbrev | *system* — a commitment basis `𝓑` and a strategy per participant (Def. |
 | `«app:notation/basis»` | abbrev | *basis* (Def. |
 | `«app:notation/produced»` | abbrev | *produced* — every non-input event permitted by its strategy and using only commitments from `𝓑` (Def. |
 | `«app:notation/system-output-event»` | abbrev | *system output event `Out_γ(o)`* — applies commitments `γ` from the basis, retires, emits `o` (Def. |
+| `«app:notation/commitment-event»` | abbrev | *commitment event `commit(γ)`* — applies a nonempty sequence `γ` from the basis, emits nothing (Def. |
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
-| `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments erased; every run has a canonical one (Lem. |
+| `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments and commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/coordination»` | abbrev | *requires coordination; coordination-free* — a commitment some other run could contradict; applying none (Def. |
 | `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — a commitment some other run at another participant could contradict (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — no message crosses components (Def. |
@@ -589,13 +592,14 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«lem:canonical-commitment-normal-form»` | theorem | **Lemma containment, canonical support, and commitment-free events** (`lem:canonical-commitment-normal-form`). |
 | `«def:canonical-system»` | abbrev | **Def. |
 | `«def:canonical-system/histories»` | theorem | Def. |
+| `«def:canonical-system/no-commitment-event»` | theorem | Def. |
 | `«lem:compound-commitment»` | abbrev | **Lemma compound commitments are commitments** (`lem:compound-commitment`). |
 | `«lem:compound-commitment/defined»` | theorem | Lemma `lem:compound-commitment`: |
 | `«app:bases/compound-output-event»` | theorem | "A compound output event therefore has the same effect as an event that applies the composite commitment alone, and Lemma canonical-commitment-normal-form co… |
 | `«def:run-under-basis»` | abbrev | **Def. |
 | `«def:run-under-basis/canonical-run»` | abbrev | Def. |
 | `«def:run-under-basis/canonical-runs-are-runs»` | theorem | Def. |
-| `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once commitment sequences are erased: |
+| `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once commitment sequences are erased and commitment events dropped: |
 | `«lem:canonical-equivalent»` | theorem | **Lemma canonical equivalents** (`lem:canonical-equivalent`). |
 | `«cor:reconciliation-any-basis»` | theorem | **Cor. |
 | `«app:bases/converse-fails»` | theorem | "The converse of Lemma canonical-equivalent fails: |
@@ -627,7 +631,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:proper-coordination`(2): |
 | `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:proper-coordination`(3): |
 | `«app:composition/properness-needed»` | theorem | "Properness is needed in (3). |
-| `«app:composition/replacement»` | theorem | "The commitment-erased replacement of a system has the empty basis and the same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)`." Lean: |
+| `«app:composition/replacement»` | theorem | "The commitment-erased replacement of a system has the empty basis and the same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)` and its commitment even… |
 | `«cor:empty-store»` | theorem | **Corollary `cor:empty-store`** (Empty store): |
 | `«app:composition/empty-store»` | theorem | Proof of Corollary `cor:empty-store`: |
 | `«cor:pipelines»` | theorem | **Corollary `cor:pipelines`** (Pipelines): |

@@ -320,7 +320,7 @@ a remaining row at the same input (Def. `def:commitment`).  Lean:
 abbrev «app:notation/commitment» (sp : Spec I O) := Commitment sp
 
 /-- *local history; strategy* — `p`'s history events in order;
-`θ_p(λ)`, the output, send and receive events `p` may perform next
+`θ_p(λ)`, the output, commitment, send, and receive events `p` may perform next
 (Def. `def:strategy`).  Lean (`CC.CAP`): a local history is a list
 `pre : List (CAP.LEv sp D n)`; the strategy is the field `System.strat`
 (`strat n init p pre e`: `p` may perform `e` after `pre`), a relation, i.e.
@@ -350,6 +350,13 @@ abbrev «app:notation/system-output-event» {sp : Spec I O} (B : Basis sp) :
     State sp → SEvent sp → State sp → Prop :=
   SysStep B
 
+/-- *commitment event `commit(γ)`* — applies a nonempty sequence `γ` from the
+basis, emits nothing (Def. `def:commitment-event`).  Lean: the event
+`SEvent.commit γ`, with transition `SysStep B σ (.commit γ) τ`. -/
+abbrev «app:notation/commitment-event» {sp : Spec I O} (B : Basis sp) (σ : State sp)
+    (γ : List (Commitment sp)) (τ : State sp) : Prop :=
+  SysStep B σ (.commit γ) τ
+
 /-- *run under a basis* — events whose commitments come from the basis
 (Def. `def:run-under-basis`).  Lean: `RunUnder B es τ`. -/
 abbrev «app:notation/run-under-basis» {sp : Spec I O} (B : Basis sp) (es : List (SEvent sp))
@@ -364,10 +371,11 @@ abbrev «app:notation/canonical-run» {sp : Spec I O} (σ : State sp) (es : List
     (τ : State sp) : Prop :=
   CanonExec σ es τ
 
-/-- *observably equivalent* — same input and output events, commitments
-erased; every run has a canonical one (Lem. `lem:canonical-equivalent`).
-Lean: two event lists are observably equivalent when their images under
-`SEvent.erase` agree; the lemma is `CC.canonical_equivalent`. -/
+/-- *observably equivalent* — same input and output events, commitments and
+commitment events erased; every run has a canonical one
+(Lem. `lem:canonical-equivalent`).  Lean: two event lists are observably
+equivalent when their images under `filterMap SEvent.erase` (which drops
+commit events) agree; the lemma is `CC.canonical_equivalent`. -/
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 

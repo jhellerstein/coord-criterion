@@ -768,6 +768,17 @@ theorem canonExec_sysExec {σ τ : State sp} {es : List (SEvent sp)} (h : CanonE
   | nil => exact SysExec.nil _
   | cons hs _ ih => exact SysExec.cons hs.1 ih
 
+/-- A canonical run performs no commit event. -/
+theorem canonExec_noCommit {σ τ : State sp} {es : List (SEvent sp)} (h : CanonExec σ es τ) :
+    ∀ γ, SEvent.commit γ ∉ es := by
+  induction h with
+  | nil => intro _ h; cases h
+  | cons hs _ ih =>
+    intro γ hm
+    rcases List.mem_cons.1 hm with he | hm
+    · exact hs.2.2 γ he.symm
+    · exact ih γ hm
+
 /-- Two runs in lockstep: the original under `B`, the other canonical; at
 every observable step the events agree after erasure, current inputs agree,
 and the canonical table contains the original's.  A commit event of the
