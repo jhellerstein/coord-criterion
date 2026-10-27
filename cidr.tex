@@ -1004,15 +1004,6 @@ condition are both monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
 Proposition~\ref{prop:functional-exposure-boundary}.
 
-One functional result does not carry over.  In a consistent functional
-specification, every run ending at input $i$ is in the canonical state
-$\sigma_S(i)$ (Corollary~\ref{cor:state-by-input}).  With several outputs per
-input, runs that reach the same input can keep different rows: in
-Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
-$\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run
-that emitted nothing keeps them.  The state then depends on the outputs
-emitted, not only on the input.
-
 % ======================================================================
 \section{Distributed Execution}
 \label{sec:distributed-execution}
@@ -1081,6 +1072,11 @@ the same current input are in the same state, regardless of message paths,
 arrival order, or the outputs they emitted.  This is the convergence that
 strong eventual consistency~\cite{shapiro2011crdt} asks of replicated state,
 derived here from the specification rather than from a merge operator.
+With several outputs per input this fails even for consistent specifications:
+in Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
+$\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run at
+the same input that emitted nothing keeps them.  Consistency then guarantees
+that such replicas can be reconciled, not that they agree.
 
 \subsection{Systems}
 \label{sec:systems}

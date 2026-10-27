@@ -141,9 +141,9 @@ Confluence, and later refinements of CALM all map into the same framework.
 formal definition/notation & 25 & 1344\\
 related-work detail & 8 & 1113\\
 example & 8 & 621\\
-unclassified & 12 & 470\\
-explanation & 15 & 458\\
+unclassified & 13 & 569\\
 formal caution & 8 & 359\\
+explanation & 14 & 350\\
 signposting & 17 & 241\\
 result & 3 & 185\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
@@ -158,7 +158,7 @@ result & 3 & 185\\
 9. formal caution, 135 words: \textit{Seals are similar, with input in place of output, but ...}\par
 10. unclassified, 121 words: \textit{As the reading above shows, it implies Relational Monotonicity and ...}\par
 11. formal definition/notation, 119 words: \textit{Fix an ordered specification, participants [math], and an initial input ...}\par
-12. explanation, 108 words: \textit{With several outputs per input this uniqueness fails (Section ).}\par
+12. result, 102 words: \textit{The composite [math] satisfies Lifted Monotonicity, and so is consistent ...}\par
 }\par\medskip
 \noindent{\color{newblue}Blue: new or edited for CIDR.}\quad{\color{cutred}Red: removed from the full version.}\par
 
@@ -664,9 +664,9 @@ monotone.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
-\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$. A monotone $f$ only emits outputs that all of its future outputs \outrelbase,
-so the row $(j,f(j))$ at a common \indesc $j$ survives in every run. \removednote{\textbf{explanation}, 4 words, rank 85; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+A monotone $f$ only emits outputs that all of its future outputs \outrelbase,
+so the row $(j,f(j))$ at a common \indesc $j$ survives in every run. If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
+\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$. \removednote{\textbf{explanation}, 4 words, rank 85; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
@@ -976,8 +976,7 @@ of Section~\ref{sec:executions} used output events only through that
 equation. They therefore lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
 (Proposition~\ref{prop:confluence}). With them, consistency
-reduces to Lifted Monotonicity, as it reduced to monotonicity for
-functions.
+reduces to Lifted Monotonicity.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -994,7 +993,7 @@ reconciled there. \removednote{\textbf{signposting}, 4 words, rank 87; \textit{F
 
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
 logic language. The condition that characterizes consistency is instead a
-property of the specification: Lifted Monotonicity, which for a function is
+property of the specification: Consistency As Lifted Monotonicity, which for a function is
 ordinary monotonicity. \textcolor{newblue}{Section~\ref{sec:distributed-consistency} shows that
 both theorems hold for distributed histories.}
 
@@ -1002,12 +1001,12 @@ The same condition governs exposability.
 
 \begin{proposition}[Exposure boundary]
 \label{prop:exposure-boundary}
-An ordered specification satisfies the common-\indesc condition if and only
+An ordered specification satisfies Lifted Monotonicity if and only
 if every output at every state reachable without commitment is exposable.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Under the condition, consistency supplies the common \outnoun
+Under the common-\indesc condition, consistency supplies the common \outnoun
 the exposure test asks for. Conversely, the exposure test at canonical
 states, one row at a time, builds the common \outnoun the condition
 asks for. \removednote{\textbf{signposting}, 4 words, rank 88; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
@@ -1017,15 +1016,6 @@ With one output per input, Lifted Monotonicity and the common-\indesc
 condition are both monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
 Proposition~\ref{prop:functional-exposure-boundary}.
-
-One functional result does not carry over. In a consistent functional
-specification, every run ending at input $i$ is in the canonical state
-$\sigma_S(i)$ (Corollary~\ref{cor:state-by-input}). With several outputs per
-input, runs that reach the same input can keep different rows: in
-Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
-$\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run
-that emitted nothing keeps them. \textcolor{newblue}{The state then depends on the outputs
-emitted, not only on the input.}
 
 
 \section{Distributed Execution}
@@ -1094,7 +1084,11 @@ Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
 arrival order, or the outputs they emitted.} \removednote{\textbf{result}, 50 words, rank 23; \textit{In any history of a consistent functional specification, every participant whose current input at a consistent ...}; labels cor:convergence} \textcolor{newblue}{This is the convergence that
 strong eventual consistency~\cite{shapiro2011crdt} asks of replicated state,
-derived here from the specification rather than from a merge operator.} \removednote{\textbf{explanation}, 108 words, rank 12; \textit{With several outputs per input this uniqueness fails (Section ).}} \removednote{\textbf{explanation}, 32 words, rank 39; \textit{The histories above use the output events of Sections --, which apply exactly the commitments an ...}}
+derived here from the specification rather than from a merge operator.} With several outputs per input this fails even for consistent specifications:
+in Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
+$\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run at
+the same input that emitted nothing keeps them. Consistency then guarantees
+that such replicas can be reconciled, not that they agree. \removednote{\textbf{unclassified}, 99 words, rank 14; \textit{The data [math] of a message is any application state other than input that a participant ...}} \removednote{\textbf{explanation}, 32 words, rank 39; \textit{The histories above use the output events of Sections --, which apply exactly the commitments an ...}}
 
 \subsection{Systems}
 \label{sec:systems}
@@ -1171,7 +1165,7 @@ quorums, and consensus differ in how and when they decide. \removednote{\textbf{
 event of any system removes at least the rows that the canonical event for its
 output removes.} \textcolor{newblue}{Whether a
 specification needs coordination is thus a question about the seals and
-choices its outputs require, whatever mechanism a system uses to make them.} \removednote{\textbf{unclassified}, 101 words, rank 14; \textit{Consider 2PL on input [math], where [math] reads a key [math] that no transaction writes, and ...}}
+choices its outputs require, whatever mechanism a system uses to make them.} \removednote{\textbf{unclassified}, 101 words, rank 13; \textit{Consider 2PL on input [math], where [math] reads a key [math] that no transaction writes, and ...}}
 
 \subsection{Coordination}
 \label{sec:coordination}
@@ -1445,7 +1439,7 @@ negate a boolean.} \textcolor{newblue}{These cases do not cover every monotone c
 (\extended).} \textcolor{newblue}{When none applies, some stage may have to commit even though the
 composite is monotone, as we discuss next.} \removednote{\textbf{signposting}, 12 words, rank 78; \textit{The replicated store of the opening extends the filtering case of Proposition (2).}} We say that $S_2$ satisfies Lifted
 Monotonicity \emph{on} a set $D\subseteq M$ when the common-\indesc condition
-holds for its rows with inputs in $D$, at \indescs in $D$. \removednote{\textbf{result}, 102 words, rank 13; \textit{The composite [math] satisfies Lifted Monotonicity, and so is consistent and needs no commitment, in each ...}; labels prop:joint-monotone}
+holds for its rows with inputs in $D$, at \indescs in $D$. \removednote{\textbf{result}, 102 words, rank 12; \textit{The composite [math] satisfies Lifted Monotonicity, and so is consistent and needs no commitment, in each ...}; labels prop:joint-monotone}
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
