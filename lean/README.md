@@ -44,11 +44,16 @@ Lean checks only the mapping of their conditions into our frame); in
 Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
 al.'s checks, the correspondence of the hypotheses to theirs, and the remark
 that a strengthening may read real time from the input; in §6.5, that
-discrete-event simulation and model checking both enumerate the runs of a
-modeled system, that distributing a compiled state machine is direct (each client's events go to
-some participant and §4 applies with the induced specification) and that
-dynamic partial-order reduction computes the fibers of bounded systems; and the
-design discussion of §6–§7.  The `Paper/` docstrings point these out where
+distributing a compiled state machine is direct (each client's events go to
+some participant and §4 applies with the induced specification), and in its
+"Testing and proof" paragraph that simulators and model checkers run the
+machine on bounded inputs, that this is routine engineering practice and has
+found serious bugs in production systems, that testing cannot show Lifted
+Monotonicity holds, the example rules of a declared specification ("the set
+of ballots received", "the largest timestamp seen"), and the relation of the
+two obligations to the verification literature (invariants, forward
+simulations, refinement mappings, mechanized proofs, realizability typically
+proved by induction on the input); and the design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
 ## Building and checking
@@ -76,7 +81,7 @@ first and supporting claims and examples follow.
 | `Foundations/IOAutomata.lean` | `CC.IOA` | §6 | Lynch–Tuttle I/O automata: signatures, input-enabled automata, executions, compatible composition, projection and its converse |
 | `FunctionalCALM/Theorem.lean` | `CC` | §2 | Thm. Functional CALM, Cor. state-by-input, functional exposure boundary |
 | `CompleteCALM/Theorem.lean` | `CC` | §3 | LM characterizations, common-expansion form, pairs suffice, lifted output event, Thm. Complete CALM, exposure boundary |
-| `CompleteCALM/Cofinal.lean` | `CC` | not yet in the paper text | Cofinality: a declared spec whose rows are rows of `T` and dominate every row of `T` (same inputs, or along an order embedding) is Lifted Monotone / consistent iff `T` is |
+| `CompleteCALM/Cofinal.lean` | `CC` | §6.5 | Cofinality (used by Prop. declared-specification): a declared spec whose rows are rows of `T` and dominate every row of `T` (same inputs, or along an order embedding) is Lifted Monotone / consistent iff `T` is |
 | `CALM/Lemmas.lean` | `CC.CALM` | §2–§3, App. B | Event facts, functional remarks, Lemma reconciliation, paper proof routes, pairs suffice |
 | `CALM/Examples.lean` | `CC.CALM` | §2–§3, App. B | `k`-set agreement (pairs), rows at `j`, relational state-by-input, election, directed fiber |
 | `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §4.4 | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
@@ -98,7 +103,7 @@ first and supporting claims and examples follow.
 | `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity |
 | `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by Prop. induced-specification (2)); arrival-order independence; the election as an induced specification |
 | `Instances/IOMachine.lean` | `CC.IOM` | §6 | A general machine automaton (receives, outputs and internal steps that may change state; state machines as the special case `ofSM`), clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; fibers are reached by machine executions on arrival orders, every one over a bag without observations; FIFO single client is the table of payload sequences under prefix (the prefix encoding for state machines); confluence across executions ⇔ Lifted Monotonicity, also for emitted outputs when outputs report observations; later sends after an output (Def./Prop. induced-specification) |
-| `Instances/IOMachineCofinal.lean` | `CC.IOM` | §6 (not yet in the paper text) | Machine bridge: a declared spec over the occurring inputs (or along an order embedding of them) whose rows are produced by executions and dominate every execution's final observation is Lifted Monotone iff the induced spec is, iff observations are confluent; re-derives single-client FIFO stationary consistency ⇔ `TransMono` and Lifted Monotonicity of the transient dip (a machine whose internal step lowers the observation); finite witnesses of a violation of Lifted Monotonicity, certified by the machine's own runs or a finite list containing the fiber |
+| `Instances/IOMachineCofinal.lean` | `CC.IOM` | §6.5 | Prop. declared-specification (machine bridge): a declared spec over the occurring inputs (or along an order embedding of them) whose rows are produced by executions and dominate every execution's final observation is Lifted Monotone iff the induced spec is, iff observations are confluent; re-derives single-client FIFO stationary consistency ⇔ `TransMono` and Lifted Monotonicity of the transient dip (a machine whose internal step lowers the observation); finite witnesses of a violation of Lifted Monotonicity, certified by the machine's own runs or a finite list containing the fiber; the `fork` machine, showing neither obligation alone suffices |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
 | `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no commitment; pipeline runs as composite runs, confluence, where the upstream must commit), systems with strategies, commitment-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
 | `Appendix/JointMono.lean` | `CC.Joint` | §5.1, App. D | Jointly monotone composites: filtering (capped counter), re-ordering the middle (boolean toggle, constant store; also the double complement, no longer cited in the paper), preorder/injective characterization and the no-partial-order counterexample |
@@ -123,7 +128,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-595 entries.
+598 entries.
 
 ### §2 Functional CALM
 
@@ -399,6 +404,9 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:operational-models/later-sends»` | theorem | "An output of the machine is an input of the client that receives it, so a client's later sends happen after everything the machine had received when it emit… |
 | `«def:induced-specification»` | theorem | **Def. |
 | `«prop:induced-specification»` | theorem | **Prop. |
+| `«sec:operational-models/testing-witness»` | theorem | "If Lifted Monotonicity fails, finitely many executions show it: |
+| `«sec:operational-models/both-halves»` | theorem | "The second is proof. |
+| `«prop:declared-specification»` | theorem | **Prop. |
 
 ### Appendix A: Notation
 

@@ -236,6 +236,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:operational-models/later-sends»
 #check @CC.Paper.«def:induced-specification»
 #check @CC.Paper.«prop:induced-specification»
+#check @CC.Paper.«sec:operational-models/testing-witness»
+#check @CC.Paper.«sec:operational-models/both-halves»
+#check @CC.Paper.«prop:declared-specification»
 #check @CC.Paper.«app:notation/functional-specification»
 #check @CC.Paper.«app:notation/expands»
 #check @CC.Paper.«app:notation/refines»
