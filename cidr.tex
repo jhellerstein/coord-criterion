@@ -1361,15 +1361,17 @@ output of $A$ either waits for another component, sacrificing Availability, or
 is emitted independently at the cost of Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}
-Their theorem is a case of Complete CAP.  Consider a register whose input is the
-set of operations a participant knows, with their real-time precedence, and
-whose outputs answer every operation of the input as some linearization
-does~\cite{herlihy1990linearizability}.  Let $p$'s input be a write of
-$v\neq v_0$ and $q$'s a read; the only outputs they permit are the
-acknowledgment and $v_0$.  Where the write precedes the read, every output
-returns $v$, so $v_0$ has no \outnoun there and $\Spec$ does not satisfy Lifted Monotonicity for $S$.  The converse in the proof of Theorem~\ref{thm:complete-cap} needs
+Their theorem is a case of Complete CAP.  Consider a register specification
+whose inputs are sets of operations with their real-time precedence, and whose
+outputs answer every operation of the input as some linearization
+does~\cite{herlihy1990linearizability}.  Let $p$'s input contain only a write
+of $v\neq v_0$, and $q$'s only a read.  The fiber at $p$'s input holds only the
+write's acknowledgment; the fiber at $q$'s input, which contains no write,
+holds only the answer $v_0$ to the read.  At the common \indesc where the write
+precedes the read, every output in the fiber answers the read with $v$, so no
+output there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.  The converse in the proof of Theorem~\ref{thm:complete-cap} needs
 Availability only so that $p$ can emit the acknowledgment and $q$ can emit
-$v_0$.  Each is the only output its input permits, so it is enough that every
+$v_0$.  Each is the only output in its fiber, so it is enough that every
 request receive some response, which is Gilbert and Lynch's availability.  It
 needs Partition Consistency only to give a common \outnoun of the emitted
 outputs, which is what linearizability requires.
