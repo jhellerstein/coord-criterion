@@ -296,10 +296,10 @@ outputs `os`, then, for each later output `m'` of `l` in order, `input(m')`
 followed by a block of outputs (`Guard.blk`); each block may be empty. -/
 theorem «app:composition/pipeline-run» {M O : Type} [PO M] [PO O] {sk : Spec M O}
     (U : List M → Prop) (K : Guard.Sys sk) (l : List M) (m : M) (esK : List (SEvent sk)) :
-    (Guard.GRun U K l m esK ↔ U l ∧ Guard.Shaped l m (esK.map SEvent.erase) ∧
+    (Guard.GRun U K l m esK ↔ U l ∧ Guard.Shaped l m (esK.filterMap SEvent.erase) ∧
       ∃ ρK, Guard.Produces K m esK ρK) ∧
-    (Guard.Shaped l m (esK.map SEvent.erase) ↔ ∃ (os : List O) (ps : List (M × List O)),
-      (m :: ps.map Prod.fst) <+: l ∧ esK.map SEvent.erase = os.map Event.output ++ Guard.blk ps) ∧
+    (Guard.Shaped l m (esK.filterMap SEvent.erase) ↔ ∃ (os : List O) (ps : List (M × List O)),
+      (m :: ps.map Prod.fst) <+: l ∧ esK.filterMap SEvent.erase = os.map Event.output ++ Guard.blk ps) ∧
     ∀ (m' : M) (os : List O) ps,
       Guard.blk ((m', os) :: ps) = .input m' :: (os.map Event.output ++ Guard.blk ps) :=
   ⟨Iff.rfl, Iff.rfl, fun _ _ _ => rfl⟩
@@ -347,7 +347,7 @@ theorem «app:composition/guarded-lockstep» {I M O : Type} [PO I] [PO M] [PO O]
       ∃ ρ'', Exec ρ' (Guard.merge es []) ρ'' ∧ Guard.Inv ρ sk.S ρ'') ∧
     ∀ (ps : List (M × List O)) (τK ρK : State sk) (esK : List (SEvent sk))
       (ρ' : State (Comp.seq sp sk)), Guard.emitted es = ps.map Prod.fst →
-      SysExec (fun _ => False) τK esK ρK → esK.map SEvent.erase = Guard.blk ps → IsRun τK →
+      SysExec (fun _ => False) τK esK ρK → esK.filterMap SEvent.erase = Guard.blk ps → IsRun τK →
       (∀ k m, σ.R k m → τK.cur ≼ m) → Guard.Inv σ τK.R ρ' →
       ∃ ρ'', Exec ρ' (Guard.merge es (ps.map Prod.snd)) ρ'' ∧ Guard.Inv ρ ρK.R ρ'' ∧
         ∀ k m, ρ.R k m → ρK.cur ≼ m :=
@@ -378,7 +378,7 @@ theorem «app:composition/replacement» {M O : Type} [PO M] [PO O] {sk : Spec M 
     (K : Guard.Sys sk) :
     (Guard.eraseSys K).basis = (fun _ => False) ∧
     (∀ i a' e', (Guard.eraseSys K).strat i a' e' ↔
-      ∃ a e, a.map Guard.eraseC = a'.map Guard.eraseC ∧ Guard.eraseC e = Guard.eraseC e' ∧
+      ∃ a e, a.filterMap Guard.eraseC = a'.filterMap Guard.eraseC ∧ Guard.eraseC e = Guard.eraseC e' ∧
         K.strat i a e) ∧
     ∀ i es ρ, Guard.Produces (Guard.eraseSys K) i es ρ → ∀ γ x, SEvent.output γ x ∈ es → γ = [] :=
   ⟨rfl, fun _ _ _ => Iff.rfl, fun _ _ _ h => Guard.eraseSys_eps h⟩
@@ -393,10 +393,10 @@ theorem «cor:empty-store» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M} 
     (hP : Guard.Proper sp sk) (U : List {m // Joint.Img sp m} → Prop)
     (K : Guard.Sys (Guard.rest sp sk)) :
     ∀ l m esK, Guard.GRun U K l m esK →
-      Guard.GRun U (Guard.eraseSys K) l m (esK.map Guard.eraseC) ∧
-        (esK.map Guard.eraseC).map SEvent.erase = esK.map SEvent.erase ∧
+      Guard.GRun U (Guard.eraseSys K) l m (esK.filterMap Guard.eraseC) ∧
+        (esK.filterMap Guard.eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
         ∀ ρK, Guard.Produces K m esK ρK → ∃ ρ', Guard.Produces (Guard.eraseSys K) m
-          (esK.map Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
+          (esK.filterMap Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
   fun _ _ _ h => Guard.proper_erase hP h
 
 /-- Proof of Corollary `cor:empty-store`: "Let `τ` be a state of the original
@@ -411,7 +411,7 @@ theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M 
     (hC : sk.CommonExpansion) {BK : Basis sk} {σ ρ : State sk}
     {es : List (SEvent sk)} (h : SysExec BK σ es ρ) (σ' : State sk) (hr : IsRun σ')
     (hc : σ'.cur = σ.cur) (hs : ∀ k u, σ.R k u → σ'.R k u) :
-    ∃ ρ', SysExec (fun _ => False) σ' (es.map Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ρ'.cur = ρ.cur ∧
+    ∃ ρ', SysExec (fun _ => False) σ' (es.filterMap Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ρ'.cur = ρ.cur ∧
       ∀ k u, ρ.R k u → ρ'.R k u :=
   Guard.erase_lockstep hC h σ' hr hc hs
 

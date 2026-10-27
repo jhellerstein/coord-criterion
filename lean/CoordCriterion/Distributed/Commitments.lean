@@ -10,13 +10,17 @@ Namespace `CC`.  Further claims of these sections are in
 * `sealC`, `choiceC`                     — the canonical seal `s_o` and choice `c_o`
                                          (eq. canonical-seal-commitment-relational)
 * `seal_choice_commute`                — "defined on each other's results and commute"
-* `SysStep`, `SysExec`                 — Def. output event of a system / run under a basis
+* `SEvent`, `SysStep`, `SysExec`       — Def. output event of a system (`Out_γ(o)`), commit
+                                         events `Commit(γ)` (a nonempty basis sequence,
+                                         applied without emitting), run under a basis;
+                                         `SEvent.erase` (commit events erase to nothing)
 * `containment`, `canonical_support`,
   `eps_step_iff`                       — Lemma canonical-commitment-normal-form (1)–(3)
 * `composite`, `applySeq_composite`    — Lemma compound-commitment
 * `seal_or_choose`                     — Prop. seal-or-choose
 * `coordFree_execCF`, `execCF_coordFree` — Def. coordination vs. commitment-free runs
-* `canonical_equivalent`               — Lemma canonical-equivalent
+* `canonical_equivalent`               — Lemma canonical-equivalent (the canonical run
+                                         skips commit events)
 * `conflicting_outputs`                — Prop. thm:commitments-require-coordination
 -/
 
@@ -305,15 +309,20 @@ theorem ApplySeq.det {γ : List (Commitment sp)} {σ ρ₁ ρ₂ : State sp}
       cases hc'
       exact ih h'
 
-/-- Events of a system: output events carry their commitment sequence `γ`. -/
+/-- Events of a system: output events carry their commitment sequence `γ`;
+commit events `Commit(γ)` apply a commitment sequence without emitting. -/
 inductive SEvent (sp : Spec I O) where
   | input (j : I)
   | output (γ : List (Commitment sp)) (o : O)
+  | commit (γ : List (Commitment sp))
 
-/-- Erase commitment sequences (what the environment observes). -/
-def SEvent.erase : SEvent sp → Event I O
-  | .input j => .input j
-  | .output _ o => .output o
+/-- Erase commitment sequences (what the environment observes): commit events
+are unobservable and erase to nothing.  A list of events erases to
+`es.filterMap SEvent.erase`. -/
+def SEvent.erase : SEvent sp → Option (Event I O)
+  | .input j => some (.input j)
+  | .output _ o => some (.output o)
+  | .commit _ => none
 
 /-- A commitment basis. -/
 abbrev Basis (sp : Spec I O) := Commitment sp → Prop
@@ -327,6 +336,11 @@ inductive SysStep (B : Basis sp) : State sp → SEvent sp → State sp → Prop 
   | output {σ σc τ : State sp} {γ : List (Commitment sp)} {o : O} :
       (∀ c ∈ γ, B c) → ApplySeq γ σ σc → σc.R σc.cur o → Exposable σc o →
       τ.cur = σ.cur → τ.R = outputTable σc o → SysStep B σ (.output γ o) τ
+  /-- **Commit event** `Commit(γ)`: a nonempty sequence of basis commitments,
+  each defined at the state its predecessors leave; it ends at the state the
+  sequence leaves, retires nothing and emits nothing. -/
+  | commit {σ τ : State sp} {γ : List (Commitment sp)} :
+      (∀ c ∈ γ, B c) → γ ≠ [] → ApplySeq γ σ τ → SysStep B σ (.commit γ) τ
 
 /-- Executions under a basis. -/
 inductive SysExec (B : Basis sp) : State sp → List (SEvent sp) → State sp → Prop where
@@ -344,6 +358,13 @@ theorem SysStep.sub {B : Basis sp} {σ τ : State sp} {e : SEvent sp}
   | input hs => exact step_sub hs
   | output _ hγ _ _ _ hR =>
     intro k u hu; rw [hR] at hu; exact hγ.sub k u hu.1
+  | commit _ _ hγ => exact hγ.sub
+
+/-- A commit event keeps the current input. -/
+theorem SysStep.commit_cur {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)}
+    (h : SysStep B σ (.commit γ) τ) : τ.cur = σ.cur := by
+  cases h with
+  | commit _ _ hγ => exact hγ.cur_eq
 
 theorem SysExec.sub {B : Basis sp} {σ τ : State sp} {es : List (SEvent sp)}
     (h : SysExec B σ es τ) : ∀ k u, τ.R k u → σ.R k u := by
@@ -609,67 +630,88 @@ theorem functional_commitment_seals (hf : sp.Functional) (c : Commitment sp)
 
 /-! ### Def. coordination -/
 
-/-- A run (event list) coordinates: some output event applies a commitment. -/
+/-- A run (event list) coordinates: some event applies a commitment, i.e.
+some output event applies a nonempty sequence, or the run has a commit event. -/
 def Coordinates (es : List (SEvent sp)) : Prop :=
-  ∃ γ o, SEvent.output γ o ∈ es ∧ γ ≠ []
+  (∃ γ o, SEvent.output γ o ∈ es ∧ γ ≠ []) ∨ ∃ γ, SEvent.commit γ ∈ es
 
-/-- Coordination-free (commitment-free): every output event is `Out_ε(o)`. -/
+/-- Coordination-free (commitment-free): every output event is `Out_ε(o)`,
+and there is no commit event. -/
 def CoordFree (es : List (SEvent sp)) : Prop :=
-  ∀ γ o, SEvent.output γ o ∈ es → γ = []
+  (∀ γ o, SEvent.output γ o ∈ es → γ = []) ∧ ∀ γ, SEvent.commit γ ∉ es
 
 theorem coordFree_iff_not (es : List (SEvent sp)) : CoordFree es ↔ ¬ Coordinates es := by
   constructor
-  · rintro h ⟨γ, o, hm, hne⟩; exact hne (h γ o hm)
-  · intro h γ o hm
-    exact Classical.byContradiction fun hne => h ⟨γ, o, hm, hne⟩
+  · rintro ⟨h, hc⟩ (⟨γ, o, hm, hne⟩ | ⟨γ, hm⟩)
+    · exact hne (h γ o hm)
+    · exact hc γ hm
+  · intro h
+    exact ⟨fun γ o hm => Classical.byContradiction fun hne => h (Or.inl ⟨γ, o, hm, hne⟩),
+      fun γ hm => h (Or.inr ⟨γ, hm⟩)⟩
+
+theorem CoordFree.tail {e : SEvent sp} {es : List (SEvent sp)} (h : CoordFree (e :: es)) :
+    CoordFree es :=
+  ⟨fun γ o hm => h.1 γ o (List.mem_cons_of_mem _ hm),
+   fun γ hm => h.2 γ (List.mem_cons_of_mem _ hm)⟩
 
 /-- Coordination-free executions under any basis are commitment-free
 executions (`ExecCF`) of the erased events. -/
 theorem coordFree_execCF {B : Basis sp} {σ τ : State sp} {es : List (SEvent sp)}
-    (h : SysExec B σ es τ) (hf : CoordFree es) : ExecCF σ (es.map SEvent.erase) τ := by
+    (h : SysExec B σ es τ) (hf : CoordFree es) : ExecCF σ (es.filterMap SEvent.erase) τ := by
   induction h with
   | nil => exact ExecCF.nil _
   | @cons σ τ ρ e es hs _ ih =>
-    have hf' : CoordFree es := fun γ o hm => hf γ o (List.mem_cons_of_mem _ hm)
+    have hf' : CoordFree es := hf.tail
     cases e with
     | input j =>
       cases hs with
       | input hs => exact ExecCF.input hs (ih hf')
     | output γ o =>
-      have hγe : γ = [] := hf γ o List.mem_cons_self
+      have hγe : γ = [] := hf.1 γ o List.mem_cons_self
       subst hγe
       obtain ⟨ho, hexp, hcur, hR⟩ := eps_step_iff.1 hs
       exact ExecCF.output (Step.output _ _ o ho hcur hR) hexp (ih hf')
+    | commit γ => exact absurd List.mem_cons_self (hf.2 γ)
 
 theorem execCF_coordFree (B : Basis sp) {σ τ : State sp} {es : List (Event I O)}
     (h : ExecCF σ es τ) :
-    ∃ es' : List (SEvent sp), es'.map SEvent.erase = es ∧ CoordFree es' ∧ SysExec B σ es' τ := by
+    ∃ es' : List (SEvent sp), es'.filterMap SEvent.erase = es ∧ CoordFree es' ∧
+      SysExec B σ es' τ := by
   induction h with
-  | nil => exact ⟨[], rfl, fun _ _ h => by simp at h, SysExec.nil _⟩
+  | nil => exact ⟨[], rfl, ⟨fun _ _ h => by simp at h, fun _ h => by simp at h⟩, SysExec.nil _⟩
   | @input σ τ ρ j es hs _ ih =>
     obtain ⟨es', he, hf, hx⟩ := ih
-    refine ⟨.input j :: es', by simp [he, SEvent.erase], ?_, SysExec.cons (SysStep.input hs) hx⟩
-    intro γ o hm
-    simp only [List.mem_cons, reduceCtorEq, false_or] at hm
-    exact hf γ o hm
+    refine ⟨.input j :: es', by simp [he, SEvent.erase], ⟨?_, ?_⟩,
+      SysExec.cons (SysStep.input hs) hx⟩
+    · intro γ o hm
+      simp only [List.mem_cons, reduceCtorEq, false_or] at hm
+      exact hf.1 γ o hm
+    · intro γ hm
+      simp only [List.mem_cons, reduceCtorEq, false_or] at hm
+      exact hf.2 γ hm
   | @output σ τ ρ o es hs hexp _ ih =>
     obtain ⟨es', he, hf, hx⟩ := ih
     match hs with
     | .output _ _ _ ho hcur hR =>
-    refine ⟨.output [] o :: es', by simp [he, SEvent.erase], ?_,
+    refine ⟨.output [] o :: es', by simp [he, SEvent.erase], ⟨?_, ?_⟩,
       SysExec.cons (eps_step_iff.2 ⟨ho, hexp, hcur, hR⟩) hx⟩
-    intro γ o' hm
-    simp only [List.mem_cons, SEvent.output.injEq] at hm
-    rcases hm with ⟨rfl, _⟩ | hm
-    · rfl
-    · exact hf γ o' hm
+    · intro γ o' hm
+      simp only [List.mem_cons, SEvent.output.injEq] at hm
+      rcases hm with ⟨rfl, _⟩ | hm
+      · rfl
+      · exact hf.1 γ o' hm
+    · intro γ hm
+      simp only [List.mem_cons, reduceCtorEq, false_or] at hm
+      exact hf.2 γ hm
 
 /-! ### Canonical runs and Lemma canonical-equivalent -/
 
 /-- A canonical step: a step under `B_S` whose output events are canonical
-`Out_{κ_o}(o)` at the state where they occur. -/
+`Out_{κ_o}(o)` at the state where they occur; canonical runs have no commit
+events. -/
 def CanonStep (σ : State sp) (e : SEvent sp) (τ : State sp) : Prop :=
-  SysStep (canonBasis sp) σ e τ ∧ ∀ γ o, e = .output γ o → γ = kappa σ o
+  SysStep (canonBasis sp) σ e τ ∧ (∀ γ o, e = .output γ o → γ = kappa σ o) ∧
+    ∀ γ, e ≠ .commit γ
 
 inductive CanonExec : State sp → List (SEvent sp) → State sp → Prop where
   | nil (σ : State sp) : CanonExec σ [] σ
@@ -678,43 +720,47 @@ inductive CanonExec : State sp → List (SEvent sp) → State sp → Prop where
 
 /-- Canonical steps are exactly the steps of Sections 2–3. -/
 theorem canonStep_step {σ τ : State sp} {e : SEvent sp} (h : CanonStep σ e τ) :
-    Step σ e.erase τ := by
-  obtain ⟨hs, hk⟩ := h
+    ∃ e' : Event I O, e.erase = some e' ∧ Step σ e' τ := by
+  obtain ⟨hs, hk, hnc⟩ := h
   cases e with
-  | input j => cases hs with | input hs => exact hs
+  | input j => cases hs with | input hs => exact ⟨_, rfl, hs⟩
   | output γ o =>
     have hγ := hk γ o rfl
     subst hγ
     have ho := (containment hs).2.1
     obtain ⟨hc, hR⟩ := kappa_step_eq hs
-    exact Step.output _ _ o ho hc hR
+    exact ⟨_, rfl, Step.output _ _ o ho hc hR⟩
+  | commit γ => exact absurd rfl (hnc γ)
 
 theorem step_canonStep {σ τ : State sp} {e : Event I O} (h : Step σ e τ) :
-    ∃ e' : SEvent sp, e'.erase = e ∧ CanonStep σ e' τ := by
+    ∃ e' : SEvent sp, e'.erase = some e ∧ CanonStep σ e' τ := by
   match h with
   | .input _ _ j hleg hc hR =>
     exact ⟨.input j, rfl, SysStep.input (Step.input _ _ j hleg hc hR),
-      fun _ _ h => by cases h⟩
+      ⟨(fun _ _ h => by cases h), fun _ h => by cases h⟩⟩
   | .output _ _ o ho hc hR =>
-    refine ⟨.output (kappa σ o) o, rfl, ?_, fun γ o' h => by cases h; rfl⟩
+    refine ⟨.output (kappa σ o) o, rfl, ?_, ⟨(fun γ o' h => by cases h; rfl), fun _ h => by cases h⟩⟩
     have h0 := canonical_support σ o ho
     have : τ = outState σ o ho := State.ext' hc hR
     rw [this]; exact h0
 
 theorem canonExec_exec {σ τ : State sp} {es : List (SEvent sp)} (h : CanonExec σ es τ) :
-    Exec σ (es.map SEvent.erase) τ := by
+    Exec σ (es.filterMap SEvent.erase) τ := by
   induction h with
   | nil => exact Exec.nil _
-  | cons hs _ ih => exact Exec.cons (canonStep_step hs) ih
+  | cons hs _ ih =>
+    obtain ⟨e', he, hst⟩ := canonStep_step hs
+    rw [List.filterMap_cons_some he]
+    exact Exec.cons hst ih
 
 theorem exec_canonExec {σ τ : State sp} {es : List (Event I O)} (h : Exec σ es τ) :
-    ∃ es' : List (SEvent sp), es'.map SEvent.erase = es ∧ CanonExec σ es' τ := by
+    ∃ es' : List (SEvent sp), es'.filterMap SEvent.erase = es ∧ CanonExec σ es' τ := by
   induction h with
   | nil => exact ⟨[], rfl, CanonExec.nil _⟩
   | cons hs _ ih =>
     obtain ⟨e', he, hc⟩ := step_canonStep hs
     obtain ⟨es', hes, hx⟩ := ih
-    exact ⟨e' :: es', by simp [he, hes], CanonExec.cons hc hx⟩
+    exact ⟨e' :: es', by rw [List.filterMap_cons_some he, hes], CanonExec.cons hc hx⟩
 
 theorem canonExec_sysExec {σ τ : State sp} {es : List (SEvent sp)} (h : CanonExec σ es τ) :
     SysExec (canonBasis sp) σ es τ := by
@@ -723,8 +769,10 @@ theorem canonExec_sysExec {σ τ : State sp} {es : List (SEvent sp)} (h : CanonE
   | cons hs _ ih => exact SysExec.cons hs.1 ih
 
 /-- Two runs in lockstep: the original under `B`, the other canonical; at
-every step the events agree after erasure, current inputs agree, and the
-canonical table contains the original's. -/
+every observable step the events agree after erasure, current inputs agree,
+and the canonical table contains the original's.  A commit event of the
+original is matched by no canonical event (the canonical run stays put, and
+the invariant still holds). -/
 inductive Lockstep (B : Basis sp) :
     State sp → List (SEvent sp) → State sp → State sp → List (SEvent sp) → State sp → Prop where
   | nil (σ σ' : State sp) : Lockstep B σ [] σ σ' [] σ'
@@ -732,24 +780,33 @@ inductive Lockstep (B : Basis sp) :
       SysStep B σ e τ → CanonStep σ' e' τ' → e.erase = e'.erase →
       τ.cur = τ'.cur → (∀ k u, τ.R k u → τ'.R k u) →
       Lockstep B τ es ρ τ' es' ρ' → Lockstep B σ (e :: es) ρ σ' (e' :: es') ρ'
+  | commit {σ τ ρ σ' ρ' : State sp} {γ : List (Commitment sp)} {es es' : List (SEvent sp)} :
+      SysStep B σ (.commit γ) τ → τ.cur = σ'.cur → (∀ k u, τ.R k u → σ'.R k u) →
+      Lockstep B τ es ρ σ' es' ρ' → Lockstep B σ (.commit γ :: es) ρ σ' es' ρ'
 
 theorem Lockstep.left {B : Basis sp} {σ ρ σ' ρ' : State sp} {es es' : List (SEvent sp)}
     (h : Lockstep B σ es ρ σ' es' ρ') : SysExec B σ es ρ := by
   induction h with
   | nil => exact SysExec.nil _
   | cons hs _ _ _ _ _ ih => exact SysExec.cons hs ih
+  | commit hs _ _ _ ih => exact SysExec.cons hs ih
 
 theorem Lockstep.right {B : Basis sp} {σ ρ σ' ρ' : State sp} {es es' : List (SEvent sp)}
     (h : Lockstep B σ es ρ σ' es' ρ') : CanonExec σ' es' ρ' := by
   induction h with
   | nil => exact CanonExec.nil _
   | cons _ hc _ _ _ _ ih => exact CanonExec.cons hc ih
+  | commit _ _ _ _ ih => exact ih
 
 theorem Lockstep.erase {B : Basis sp} {σ ρ σ' ρ' : State sp} {es es' : List (SEvent sp)}
-    (h : Lockstep B σ es ρ σ' es' ρ') : es.map SEvent.erase = es'.map SEvent.erase := by
+    (h : Lockstep B σ es ρ σ' es' ρ') :
+    es.filterMap SEvent.erase = es'.filterMap SEvent.erase := by
   induction h with
   | nil => rfl
-  | cons _ _ he _ _ _ ih => simp [he, ih]
+  | @cons _ _ _ _ _ _ e e' _ _ _ _ he _ _ _ ih =>
+    rw [List.filterMap_cons, List.filterMap_cons, he]
+    cases e'.erase <;> simp [ih]
+  | commit _ _ _ _ ih => rw [List.filterMap_cons_none rfl]; exact ih
 
 /-- Generalized inductive step of Lemma canonical-equivalent: from any pair of
 states with equal current input and `R ⊆ R̂`. -/
@@ -778,7 +835,8 @@ theorem canonical_equivalent_gen {B : Basis sp} {σ ρ : State sp} {es : List (S
         obtain ⟨es', ρ', hl⟩ := ih τ' hcur.symm hsub'
         exact ⟨.input j :: es', ρ', Lockstep.cons
           (SysStep.input (Step.input _ _ j ⟨u, hu⟩ hcur hR))
-          ⟨SysStep.input hst', fun _ _ h => by cases h⟩ rfl hcur hsub' hl⟩
+          ⟨SysStep.input hst', ⟨(fun _ _ h => by cases h), fun _ h => by cases h⟩⟩
+          rfl hcur hsub' hl⟩
     | output γ o =>
       obtain ⟨hcur', ho', hin, _⟩ := containment hs
       have ho'' : σ'.R σ'.cur o := by rw [hc]; exact hsub _ _ ho'
@@ -790,17 +848,26 @@ theorem canonical_equivalent_gen {B : Basis sp} {σ ρ : State sp} {es : List (S
       have hct : τ.cur = τ'.cur := by rw [hcur']; exact hc.symm
       obtain ⟨es', ρ', hl⟩ := ih τ' hct.symm hsub'
       exact ⟨.output (kappa σ' o) o :: es', ρ', Lockstep.cons hs
-        ⟨canonical_support σ' o ho'', fun γ o' h => by cases h; rfl⟩ rfl hct hsub' hl⟩
+        ⟨canonical_support σ' o ho'', ⟨(fun γ o' h => by cases h; rfl), fun _ h => by cases h⟩⟩
+        rfl hct hsub' hl⟩
+    | commit γ =>
+      -- the canonical run does nothing; the invariant survives since a
+      -- commit event keeps the current input and only removes rows
+      have hct : τ.cur = σ'.cur := by rw [hs.commit_cur]; exact hc.symm
+      have hsub' : ∀ k x, τ.R k x → σ'.R k x := fun k x hx => hsub _ _ (hs.sub k x hx)
+      obtain ⟨es', ρ', hl⟩ := ih σ' hct.symm hsub'
+      exact ⟨es', ρ', Lockstep.commit hs hct hsub' hl⟩
 
 /-- **Lemma canonical-equivalent.**  Every run under any basis `B` (from the
 canonical state `σ_S(i)`) has an observably equivalent canonical run from the
 same canonical state, in lockstep: after each event the canonical run's table
-contains the original's.  The canonical run is a run of Sections 2–3. -/
+contains the original's.  The canonical run is a run of Sections 2–3; it
+skips the original's commit events, which are unobservable. -/
 theorem canonical_equivalent {B : Basis sp} {i : I} {es : List (SEvent sp)} {ρ : State sp}
     (h : SysExec B (canon sp i) es ρ) :
     ∃ es' ρ', Lockstep B (canon sp i) es ρ (canon sp i) es' ρ' ∧
-      es.map SEvent.erase = es'.map SEvent.erase ∧
-      Exec (canon sp i) (es.map SEvent.erase) ρ' ∧
+      es.filterMap SEvent.erase = es'.filterMap SEvent.erase ∧
+      Exec (canon sp i) (es.filterMap SEvent.erase) ρ' ∧
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) := by
   obtain ⟨es', ρ', hl⟩ := canonical_equivalent_gen h (canon sp i) rfl (fun _ _ h => h)
   have he := hl.erase
@@ -816,6 +883,7 @@ theorem canonical_equivalent {B : Basis sp} {i : I} {es : List (SEvent sp)} {ρ 
   induction hl' with
   | nil => exact ⟨hc, hs⟩
   | cons _ _ _ hct hsub _ ih => exact ih hct.symm hsub
+  | commit _ hct hsub _ ih => exact ih hct.symm hsub
 
 /-! ### Proposition thm:commitments-require-coordination -/
 

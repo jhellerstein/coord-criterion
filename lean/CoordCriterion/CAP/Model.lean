@@ -41,12 +41,14 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
 3. *Consistent cuts.*  Since local orders are total, a happens-before–closed
    set of events is a prefix of each participant's list closed under
    send→receive edges; we represent a cut by its prefix lengths `c : Fin n → Nat`.
-4. *Output events of a system.*  `out γ o` applies the commitment sequence `γ`
-   (each a genuine commitment: partial, input-preserving, strictly
-   row-removing, satisfying Eq. `commitment-excludes`), then is legal exactly
-   when `(i,o)` survives and Eq. `lifted-validity` holds, i.e. `Exposable` at
-   the committed state, and ends at `R_c[out ⪰ o]`.  This is literally
-   `Step σc (.output o) τ ∧ Exposable σc o`.
+4. *Output and commit events of a system.*  `out γ o` applies the commitment
+   sequence `γ` (each a genuine commitment: partial, input-preserving,
+   strictly row-removing, satisfying Eq. `commitment-excludes`), then is legal
+   exactly when `(i,o)` survives and Eq. `lifted-validity` holds, i.e.
+   `Exposable` at the committed state, and ends at `R_c[out ⪰ o]`.  This is
+   literally `Step σc (.output o) τ ∧ Exposable σc o`.  A commit event
+   `cmt γ` (`γ` nonempty) applies `γ` and stops there: no retirement, no
+   output.
 5. *Strategies are nondeterministic* (relations from local history to
    allowed next events), and may depend on the participant set, the initial
    inputs and the participant's identity, but otherwise only on the
@@ -59,8 +61,8 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
    participant is allowed given its own local prefix: input events are always
    allowed (adversarial environment: any *legal* input to any participant at
    any time — legality is enforced by well-formedness); every other event must
-   be allowed by the strategy, and output events may use only basis
-   commitments.  Locality of this condition is exactly the paper's
+   be allowed by the strategy, and output and commit events may use only
+   basis commitments.  Locality of this condition is exactly the paper's
    "strategies depend only on local history", and it is what makes the
    (⇒) construction (gluing separate local runs) sound.
 7. *Partitioned history.*  A labelling `comp : Fin n → Nat` with at least two
@@ -115,11 +117,25 @@ theorem applySeq_spec {sp : Spec I O} :
       exact ⟨h2.trans (c.cur_eq _ _ h1), fun k u hu => c.sub _ _ h1 k u (h3 k u hu)⟩
     · cases h
 
+/-- A nonempty commitment sequence that applies removes some row. -/
+theorem applySeq_removes {sp : Spec I O} {γ : List (Commitment sp)} {σ σc : State sp}
+    (hne : γ ≠ []) (h : applySeq σ γ = some σc) : ∃ k u, σ.R k u ∧ ¬ σc.R k u := by
+  cases γ with
+  | nil => exact absurd rfl hne
+  | cons c cs =>
+    simp only [applySeq] at h
+    split at h
+    · rename_i τ hτ
+      obtain ⟨k, u, hu, hnu⟩ := c.strict σ τ hτ
+      exact ⟨k, u, hu, fun h' => hnu ((applySeq_spec cs τ σc h).2 k u h')⟩
+    · cases h
+
 /-- Local (history) events of a participant among `n` participants with
 message data `D`. -/
 inductive LEv (sp : Spec I O) (D : Type) (n : Nat) where
   | inp (j : I)
   | out (γ : List (Commitment sp)) (o : O)
+  | cmt (γ : List (Commitment sp))
   | send (j : Option I) (d : D)
   | recv (q : Fin n) (k : Nat) (j : Option I) (d : D)
 
@@ -127,7 +143,9 @@ variable {sp : Spec I O} {D : Type} {n : Nat}
 
 /-- A participant's local event list as a transition sequence (item 3 of
 Def. `def:distributed-history`): input events are `Step`s, output events are
-legal `Out γ o` events, sends and receives leave the state unchanged. -/
+legal `Out γ o` events, commit events `Commit(γ)` (`γ` nonempty) apply `γ`
+with no retirement and no output, sends and receives leave the state
+unchanged. -/
 inductive LRun : State sp → List (LEv sp D n) → State sp → Prop where
   | nil (σ : State sp) : LRun σ [] σ
   | inp {σ τ ρ : State sp} {j : I} {es : List (LEv sp D n)} :
@@ -135,6 +153,8 @@ inductive LRun : State sp → List (LEv sp D n) → State sp → Prop where
   | out {σ σc τ ρ : State sp} {γ : List (Commitment sp)} {o : O} {es : List (LEv sp D n)} :
       applySeq σ γ = some σc → Step σc (.output o) τ → Exposable σc o →
       LRun τ es ρ → LRun σ (.out γ o :: es) ρ
+  | cmt {σ τ ρ : State sp} {γ : List (Commitment sp)} {es : List (LEv sp D n)} :
+      γ ≠ [] → applySeq σ γ = some τ → LRun τ es ρ → LRun σ (.cmt γ :: es) ρ
   | send {σ ρ : State sp} {j : Option I} {d : D} {es : List (LEv sp D n)} :
       LRun σ es ρ → LRun σ (.send j d :: es) ρ
   | recv {σ ρ : State sp} {q : Fin n} {k : Nat} {j : Option I} {d : D}
@@ -196,6 +216,7 @@ def Allowed (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
     (pre : List (LEv sp D n)) : LEv sp D n → Prop
   | .inp _ => True
   | .out γ o => (∀ c ∈ γ, Sys.basis c) ∧ Sys.strat n init p pre (.out γ o)
+  | .cmt γ => (∀ c ∈ γ, Sys.basis c) ∧ Sys.strat n init p pre (.cmt γ)
   | .send j d => Sys.strat n init p pre (.send j d)
   | .recv q k j d => Sys.strat n init p pre (.recv q k j d)
 
@@ -208,9 +229,10 @@ def Produced (Sys : System sp D) (n : Nat) (init : Fin n → I) (H : History sp 
   ∀ p, Compliant (Allowed Sys n init p) (H p)
 
 /-- Def. `def:system` as worded in the paper: the strategies' output events
-apply only commitments from the basis. -/
+and commit events apply only commitments from the basis. -/
 def System.BasisRespecting (Sys : System sp D) : Prop :=
-  ∀ n init p pre γ o, Sys.strat n init p pre (.out γ o) → ∀ c ∈ γ, Sys.basis c
+  (∀ n init p pre γ o, Sys.strat n init p pre (.out γ o) → ∀ c ∈ γ, Sys.basis c) ∧
+  (∀ n init p pre γ, Sys.strat n init p pre (.cmt γ) → ∀ c ∈ γ, Sys.basis c)
 
 /-- The paper's reading of "produced": inputs from the environment, every
 other event chosen by the strategy. -/
@@ -226,7 +248,8 @@ theorem allowed_iff_stratAllowed {Sys : System sp D} (h : Sys.BasisRespecting)
     Allowed Sys n init p pre e ↔ StratAllowed Sys n init p pre e := by
   cases e with
   | inp j => exact Iff.rfl
-  | out γ o => exact ⟨fun h' => h'.2, fun h' => ⟨h n init p pre γ o h', h'⟩⟩
+  | out γ o => exact ⟨fun h' => h'.2, fun h' => ⟨h.1 n init p pre γ o h', h'⟩⟩
+  | cmt γ => exact ⟨fun h' => h'.2, fun h' => ⟨h.2 n init p pre γ h', h'⟩⟩
   | send j d => exact Iff.rfl
   | recv q k j d => exact Iff.rfl
 
@@ -234,10 +257,11 @@ theorem allowed_iff_stratAllowed {Sys : System sp D} (h : Sys.BasisRespecting)
 def System.restrict (Sys : System sp D) : System sp D where
   basis := Sys.basis
   strat n init p pre e := Sys.strat n init p pre e ∧
-    ∀ γ o, e = .out γ o → ∀ c ∈ γ, Sys.basis c
+    (∀ γ o, e = .out γ o → ∀ c ∈ γ, Sys.basis c) ∧
+    (∀ γ, e = .cmt γ → ∀ c ∈ γ, Sys.basis c)
 
 theorem System.restrict_basisRespecting (Sys : System sp D) : Sys.restrict.BasisRespecting :=
-  fun _ _ _ _ γ o h => h.2 γ o rfl
+  ⟨fun _ _ _ _ γ o h => h.2.1 γ o rfl, fun _ _ _ _ γ h => h.2.2 γ rfl⟩
 
 /-- Restricting loses nothing: the restricted system allows exactly the same
 events, so it produces the same histories. -/
@@ -247,9 +271,15 @@ theorem System.restrict_allowed (Sys : System sp D) (n : Nat) (init : Fin n → 
   cases e with
   | inp j => exact Iff.rfl
   | out γ o =>
-    exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, fun γ' o' he => by cases he; exact h.1⟩⟩
-  | send j d => exact ⟨fun h => h.1, fun h => ⟨h, fun _ _ he => by cases he⟩⟩
-  | recv q k j d => exact ⟨fun h => h.1, fun h => ⟨h, fun _ _ he => by cases he⟩⟩
+    exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, (fun γ' o' he => by cases he; exact h.1),
+      fun _ he => by cases he⟩⟩
+  | cmt γ =>
+    exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, (fun _ _ he => by cases he),
+      fun γ' he => by cases he; exact h.1⟩⟩
+  | send j d => exact ⟨fun h => h.1, fun h => ⟨h, (fun _ _ he => by cases he),
+      fun _ he => by cases he⟩⟩
+  | recv q k j d => exact ⟨fun h => h.1, fun h => ⟨h, (fun _ _ he => by cases he),
+      fun _ he => by cases he⟩⟩
 
 /-- Def. `def:partition-notions`(4): Availability (interface form). -/
 def Availability (Sys : System sp D) : Prop :=
@@ -303,12 +333,14 @@ theorem lrun_append {a b : List (LEv sp D n)} {σ ρ : State sp} :
       cases h with
       | inp hs hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .inp hs h1, h2⟩
       | out ha hs hx hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .out ha hs hx h1, h2⟩
+      | cmt hne ha hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .cmt hne ha h1, h2⟩
       | send hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .send h1, h2⟩
       | recv hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .recv h1, h2⟩
     · rintro ⟨τ, h1, h2⟩
       cases h1 with
       | inp hs hr => exact .inp hs (ih.2 ⟨τ, hr, h2⟩)
       | out ha hs hx hr => exact .out ha hs hx (ih.2 ⟨τ, hr, h2⟩)
+      | cmt hne ha hr => exact .cmt hne ha (ih.2 ⟨τ, hr, h2⟩)
       | send hr => exact .send (ih.2 ⟨τ, hr, h2⟩)
       | recv hr => exact .recv (ih.2 ⟨τ, hr, h2⟩)
 
@@ -329,6 +361,9 @@ theorem lrun_mono {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ) 
     refine ⟨?_, fun k u h => hc2 k u (hsub k u (ih.2 k u h))⟩
     have : τ.cur = σc.cur := (step_output_inv hs).2.1
     rw [← hc1, ← this]; exact ih.1
+  | @cmt σ τ ρ γ es _ ha _ ih =>
+    obtain ⟨hc1, hc2⟩ := applySeq_spec γ σ τ ha
+    exact ⟨hc1 ▸ ih.1, fun k u h => hc2 k u (ih.2 k u h)⟩
   | send _ ih => exact ih
   | recv _ ih => exact ih
 
@@ -347,6 +382,7 @@ theorem lrun_out_mem {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l �
       have hx' := (lrun_mono hr).2 k x hx
       rw [(step_output_inv hs).2.2] at hx'; exact hx'.2
     · exact ih hm'
+  | cmt _ _ _ ih => exact ih (by simpa using hm)
   | send _ ih => exact ih (by simpa using hm)
   | recv _ ih => exact ih (by simpa using hm)
 
@@ -360,6 +396,8 @@ theorem lrun_noinp {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     have h1 := ih (fun j hj => hn j (List.mem_cons_of_mem _ hj))
     have hc1 := (applySeq_spec γ σ σc ha).1
     rw [h1, (step_output_inv hs).2.1, hc1]
+  | @cmt σ τ ρ γ es _ ha _ ih =>
+    rw [ih (fun j hj => hn j (List.mem_cons_of_mem _ hj)), (applySeq_spec γ σ τ ha).1]
   | send _ ih => exact ih (fun j hj => hn j (List.mem_cons_of_mem _ hj))
   | recv _ ih => exact ih (fun j hj => hn j (List.mem_cons_of_mem _ hj))
 
@@ -384,27 +422,39 @@ theorem lrun_det {σ τ τ' : State sp} {l : List (LEv sp D n)} (h : LRun σ l �
       obtain ⟨_, hc', hR'⟩ := step_output_inv hs'
       have := State.ext' (hc.trans hc'.symm) (hR.trans hR'.symm)
       subst this; exact hr'
+  | cmt _ ha _ ih =>
+    cases h' with
+    | cmt _ ha' hr' => rw [ha] at ha'; cases ha'; exact ih hr'
   | nil => cases h'; rfl
   | send _ ih => cases h' with | send hr' => exact ih hr'
   | recv _ ih => cases h' with | recv hr' => exact ih hr'
 
-/-- A participant run whose output events are all `Out ε o` is a canonical
-(Section 3) execution. -/
+/-- A participant run whose output and commit events apply no commitment (so,
+since commit events are nonempty, it has no commit event and every output
+event is `Out ε o`) is a canonical (Section 3) execution. -/
 theorem lrun_cf {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
-    (hcf : ∀ γ o, LEv.out γ o ∈ l → γ = []) : ∃ es, Exec σ es τ := by
+    (hcf : ∀ γ o, LEv.out γ o ∈ l → γ = []) (hnc : ∀ γ, LEv.cmt γ ∈ l → γ = []) :
+    ∃ es, Exec σ es τ := by
   induction h with
   | nil σ => exact ⟨[], .nil σ⟩
   | inp hs _ ih =>
     obtain ⟨es, hx⟩ := ih (fun γ o hm => hcf γ o (List.mem_cons_of_mem _ hm))
+      (fun γ hm => hnc γ (List.mem_cons_of_mem _ hm))
     exact ⟨_, .cons hs hx⟩
   | @out σ σc τ' ρ γ o es ha hs _ _ ih =>
     obtain ⟨es, hx⟩ := ih (fun γ o hm => hcf γ o (List.mem_cons_of_mem _ hm))
+      (fun γ hm => hnc γ (List.mem_cons_of_mem _ hm))
     have hγ := hcf γ o (List.mem_cons_self ..)
     subst hγ
     simp [applySeq] at ha; subst ha
     exact ⟨_, .cons hs hx⟩
-  | send _ ih => exact ih (fun γ o hm => hcf γ o (List.mem_cons_of_mem _ hm))
-  | recv _ ih => exact ih (fun γ o hm => hcf γ o (List.mem_cons_of_mem _ hm))
+  | cmt hne _ _ _ => exact absurd (hnc _ (List.mem_cons_self ..)) hne
+  | send _ ih =>
+    exact ih (fun γ o hm => hcf γ o (List.mem_cons_of_mem _ hm))
+      (fun γ hm => hnc γ (List.mem_cons_of_mem _ hm))
+  | recv _ ih =>
+    exact ih (fun γ o hm => hcf γ o (List.mem_cons_of_mem _ hm))
+      (fun γ hm => hnc γ (List.mem_cons_of_mem _ hm))
 
 /-! ## Lifted Monotonicity and the common-expansion condition -/
 

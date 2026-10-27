@@ -445,9 +445,10 @@ theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
     (∀ (σ : State sp) (o : O), kappa σ o =
       (if ∃ k x, Sealed σ o k x then [sealC o] else []) ++
       (if ∃ k x, Rejected σ o k x then [choiceC o] else [])) ∧
-    (∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ → Step σ e.erase τ) ∧
+    (∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ →
+      ∃ e' : Event I O, e.erase = some e' ∧ Step σ e' τ) ∧
     (∀ (σ τ : State sp) (e : Event I O), Step σ e τ →
-      ∃ e' : SEvent sp, e'.erase = e ∧ CanonStep σ e' τ) :=
+      ∃ e' : SEvent sp, e'.erase = some e ∧ CanonStep σ e' τ) :=
   ⟨fun _ _ => rfl, fun _ _ _ => canonStep_step, fun _ _ _ => step_canonStep⟩
 
 /-- "The environment observes `o`, not `γ`."  Together with Def. `def:system`:
@@ -463,7 +464,7 @@ theorem «sec:systems/system-histories» {sp : Spec I O} {B : Basis sp} {σ τ :
     (SysStep B σ (.output γ o) τ ↔
       (∀ c ∈ γ, B c) ∧ ∃ σc, CAP.applySeq σ (γ.map Dist.toCAP) = some σc ∧
         Step σc (.output o) τ ∧ Exposable σc o) ∧
-    (SEvent.output γ o).erase = (Event.output o : Event I O) :=
+    (SEvent.output γ o).erase = some (Event.output o : Event I O) :=
   ⟨Dist.sysStep_iff_CAP, rfl⟩
 
 /-- *A transactional example of bespoke commitments.*  "The lock manager …
@@ -546,8 +547,8 @@ containment. -/
 theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
     {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
     ∃ es' ρ', Lockstep B (canon sp i) es ρ (canon sp i) es' ρ' ∧
-      es.map SEvent.erase = es'.map SEvent.erase ∧
-      Exec (canon sp i) (es.map SEvent.erase) ρ' ∧
+      es.filterMap SEvent.erase = es'.filterMap SEvent.erase ∧
+      Exec (canon sp i) (es.filterMap SEvent.erase) ρ' ∧
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
     canonical_equivalent h
 
@@ -598,12 +599,12 @@ theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
-/-- §4.4: "A commitment needs coordination, however, only when some other
-behavior could contradict it … We take coordination to mean such a
-commitment, and distributed coordination to mean one that a run at another
-participant could contradict.  A mechanism used without committing is not coordination.  Closing the polls after every voter has voted
-still runs the mechanism, but no ballot is left to seal, so it removes nothing
-the specification still permits and applies no commitment."  At the canonical
+/-- §4.4: "A commitment requires coordination, however, only when some other
+behavior could contradict it … It requires distributed coordination when a run
+at another participant could contradict it.  A mechanism used without
+committing applies no such commitment.  Closing the polls after every voter
+has voted still runs the mechanism, but no ballot is left to seal, so it
+removes nothing the specification still permits and applies no commitment."  At the canonical
 state of any full ballot, the poll-closing commitment `closePolls` is undefined
 (it would remove no row). -/
 theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
@@ -611,27 +612,28 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
   Figures.Elec.close_after_voting i hfull
 
-/-- **Def. coordination** (`def:coordination`).  "Let an output event
-`Out_γ(o)` of a run apply a commitment, and let `𝓡` be a set of runs.  The
-commitment is contradicted in `𝓡` when some run in `𝓡` accepts an input it
-seals, or emits, at the same input, an output it chooses against.  A run or
-history coordinates relative to `𝓡` when one of its output events applies a
-contradicted commitment, and is coordination-free relative to `𝓡` otherwise.
-For a specification, `𝓡` is its canonical runs; for a system, it is the runs
-it can perform, under any inputs the environment may supply."
+/-- **Def. coordination-requiring commitment** (`def:coordination`).  "Let an
+event of a run apply a commitment, and let `𝓡` be a set of runs.  The
+commitment requires coordination relative to `𝓡` when some run in `𝓡` accepts
+an input it seals, or emits, at the same input, an output it chooses against.
+… A run or history is coordination-free relative to `𝓡` when it applies no
+commitment that requires coordination.  For a specification, `𝓡` is its
+canonical runs; for a system, it is the runs it can perform, under any inputs
+the environment may supply."  The events that apply commitments are output
+events `Out_γ(o)` and commit events `Commit(γ)`.
 
 Lean, for a system (`CC.CAP` model): `System.CoordinationFree` says no output
-event of a produced history removes a row `(k,x)` that some produced history
+event and no commit event of a produced history removes a row `(k,x)` that some produced history
 emits at current input `k` (`SysEmits`), or seals an input some produced
 history accepts (`SysAccepts`); produced histories range over all inputs the
 adversarial environment may supply. -/
 abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
   Sys.CoordinationFree
 
-/-- Def. `def:coordination`: "The coordination is distributed when the
-contradicting run is at another participant of the same history."  Lean:
-`System.CoordinationFreeH` (no distributed coordination); it is implied by
-coordination-freedom. -/
+/-- Def. `def:coordination`: "It requires distributed coordination when that
+run is at another participant of the same history."  Lean:
+`System.CoordinationFreeH` (no commitment, of an output or commit event, that
+requires distributed coordination); it is implied by coordination-freedom. -/
 abbrev «def:coordination/distributed» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
     Prop :=
   Sys.CoordinationFreeH
@@ -643,12 +645,12 @@ theorem «def:coordination/distributed-of-free» {sp : Spec I O} {D : Type}
   CAP.coordinationFree_to_H h
 
 /-- Def. `def:coordination`, for a specification (`𝓡` the canonical runs):
-coordinating means applying a commitment (`Coordinates`: some output event has
-`γ ≠ ε`). -/
+requiring coordination means applying a commitment (`Coordinates`: some output
+event has `γ ≠ ε`, or there is a commit event). -/
 abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   Coordinates es
 
-/-- "For a specification, every commitment is contradicted: some canonical run
+/-- "For a specification, every commitment requires coordination: some canonical run
 accepts each input that a commitment can seal and emits each permitted
 output."  Lean: from `σ_S(i)` with `i ≼ k`, the
 canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ S(k)` at
@@ -658,9 +660,10 @@ theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
-/-- Def. `def:coordination`: "So for a specification, coordination-free means
+/-- Def. `def:coordination`: "For a specification, then, coordination-free means
 commitment-free: every output event is some `Out_ε(o)`, which may still
-perform output retirements." -/
+perform output retirements."  Lean: `CoordFree` (every output event is
+`Out_ε(o)`, and there is no commit event). -/
 abbrev «def:coordination/coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   CoordFree es
 
@@ -677,9 +680,8 @@ theorem «sec:coordination/closing-before-voting-seals» :
   have := (Figures.Elec.panelD_rows _ o).1 h
   exact absurd this.1 (by decide)
 
-/-- "Outputs, by contrast, are chosen only by strategies, so a choice is
-contradicted only when some participant's strategy may emit the output it
-rules out."  Lean: `SysEmits` requires an output event in a produced history,
+/-- "Outputs, by contrast, are chosen only by strategies, so a choice requires
+coordination only when some run's strategy may emit the output it rules out."  Lean: `SysEmits` requires an output event in a produced history,
 hence one allowed by the participant's strategy. -/
 theorem «sec:coordination/choices-by-strategies» {sp : Spec I O} {D : Type}
     (Sys : CAP.System sp D) {k : I} {x : O} (h : CAP.SysEmits Sys k x) :
@@ -695,9 +697,9 @@ executions (`ExecCF`) of §3 after erasing `γ`.  `Out_ε(o)` ends at
 theorem «def:coordination/commitment-free-runs» {sp : Spec I O} :
     (∀ es : List (SEvent sp), CoordFree es ↔ ¬ Coordinates es) ∧
     (∀ (B : Basis sp) (σ τ : State sp) (es : List (SEvent sp)),
-      SysExec B σ es τ → CoordFree es → ExecCF σ (es.map SEvent.erase) τ) ∧
+      SysExec B σ es τ → CoordFree es → ExecCF σ (es.filterMap SEvent.erase) τ) ∧
     (∀ (B : Basis sp) (σ τ : State sp) (es : List (Event I O)), ExecCF σ es τ →
-      ∃ es' : List (SEvent sp), es'.map SEvent.erase = es ∧ CoordFree es' ∧
+      ∃ es' : List (SEvent sp), es'.filterMap SEvent.erase = es ∧ CoordFree es' ∧
         SysExec B σ es' τ) :=
   ⟨coordFree_iff_not, fun _ _ _ _ h hf => coordFree_execCF h hf,
     fun B _ _ _ h => execCF_coordFree B h⟩
@@ -764,9 +766,9 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
 /-- Paragraph "Locks in a shared-nothing database": "Ordering two
-transactions on one key is coordination: in another run `B`'s request arrives
-first and the owner orders `B` before `A`.  It is not distributed
-coordination, since only the owner orders that key."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
+transactions on one key requires coordination: in another run `B`'s request
+arrives first and the owner orders `B` before `A`.  It does not require
+distributed coordination, since only the owner orders that key."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
 `ba` incomparable); emitting `ab` is a commitment (not exposable); in the
 system where only participant 0 may emit an order, another run (the owner
 choosing `ba`) contradicts it, but no other participant of a history does. -/
@@ -786,7 +788,7 @@ theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
   CAP.twoOwnerSys_not_coordinationFreeH D
 
 /-- Paragraph "Locks in a shared-nothing database": "Two-phase commit
-excludes that without distributed coordination: each owner's prepare is its
+excludes that with no commitment that requires distributed coordination: each owner's prepare is its
 own commitment, and the coordinator's decision counts votes from a fixed set
 of participants, which is monotone."
 

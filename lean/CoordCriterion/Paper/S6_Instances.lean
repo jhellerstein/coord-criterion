@@ -146,7 +146,7 @@ output at a two-node network pairs its nodes, and no total sub-behavior `A`
 has `pairing` consistent on it (rows at `{0,1}` and `{1,2}`, common expansion
 `{0,1,2}`).  The surrounding prose (isolated nodes must emit; their
 construction waits for a group to confirm itself; groups sharing a node are
-nested; the group's choice is coordination but not distributed coordination)
+nested; the group's choice requires coordination, but not distributed coordination)
 reads Baccaert and Ketsman's Prop. 9–11 and is not formalized. -/
 theorem «sec:query-instance/pairing» :
     QRef.NodeMono id QRef.pairing ∧

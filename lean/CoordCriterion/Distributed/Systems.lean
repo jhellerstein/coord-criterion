@@ -38,10 +38,10 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
                                 — "the converse of Lemma canonical-equivalent fails".
 * `reconcile_cf`                — deterministic reconciliation under Lifted
                                   Monotonicity needs no commitment (Sec. coordination).
-* `toCAP`, `ofCAP`, `sysStep_iff_CAP`
-                                — the two encodings of commitments and system
-                                  output events (`CC.Commitment`/`SysStep` vs `CC.CAP`)
-                                  coincide.
+* `toCAP`, `ofCAP`, `sysStep_iff_CAP`, `sysStep_commit_iff_CAP`
+                                — the two encodings of commitments, system
+                                  output events and commit events
+                                  (`CC.Commitment`/`SysStep` vs `CC.CAP`) coincide.
 * `choice_antichain`, `not_choice_of_two`
                                 — "neither [2PL nor MVTO commitment] is the
                                   choice `c_o`" (generic form).
@@ -321,12 +321,12 @@ variable {sp : Spec I O} {D : Type} {n : Nat}
 sequences gives a legal canonical run (every output event is `Out_{κ_o}(o)`
 at the state where it occurs). -/
 def CanonLegal (sp : Spec I O) (H : Dist.History I O D n) : Prop :=
-  ∀ p, ∃ es : List (SEvent sp), es.map SEvent.erase = Dist.ioOf (H.ev p) ∧
+  ∀ p, ∃ es : List (SEvent sp), es.filterMap SEvent.erase = Dist.ioOf (H.ev p) ∧
     ∃ τ, CanonExec (canon sp (H.init p)) es τ
 
 /-- The same with legal events `Out_γ(o)` from a basis `B`. -/
 def SysLegal (B : Basis sp) (H : Dist.History I O D n) : Prop :=
-  ∀ p, ∃ es : List (SEvent sp), es.map SEvent.erase = Dist.ioOf (H.ev p) ∧
+  ∀ p, ∃ es : List (SEvent sp), es.filterMap SEvent.erase = Dist.ioOf (H.ev p) ∧
     ∃ τ, SysExec B (canon sp (H.init p)) es τ
 
 /-- **Def. canonical system**, last clause: a history's events can be
@@ -346,32 +346,43 @@ theorem canonLegal_iff (H : Dist.History I O D n) :
 is unique. -/
 theorem canonExec_unique {σ ρ ρ' : State sp} {es es' : List (SEvent sp)}
     (h : CanonExec σ es ρ) (h' : CanonExec σ es' ρ')
-    (he : es.map SEvent.erase = es'.map SEvent.erase) : es = es' ∧ ρ = ρ' := by
+    (he : es.filterMap SEvent.erase = es'.filterMap SEvent.erase) : es = es' ∧ ρ = ρ' := by
   induction h generalizing es' with
   | nil =>
-    cases es' with
-    | nil => cases h'; exact ⟨rfl, rfl⟩
-    | cons _ _ => simp at he
+    cases h' with
+    | nil => exact ⟨rfl, rfl⟩
+    | cons hs' _ =>
+      obtain ⟨_, he', _⟩ := canonStep_step hs'
+      rw [List.filterMap_nil, List.filterMap_cons_some he'] at he; cases he
   | @cons σ τ ρ e es hs _ ih =>
     cases h' with
-    | nil => simp at he
+    | nil =>
+      obtain ⟨_, he', _⟩ := canonStep_step hs
+      rw [List.filterMap_nil, List.filterMap_cons_some he'] at he; cases he
     | @cons _ τ' _ e' es'' hs' hr' =>
-      simp only [List.map_cons, List.cons.injEq] at he
+      obtain ⟨a, ha, hst⟩ := canonStep_step hs
+      obtain ⟨a', ha', hst'⟩ := canonStep_step hs'
+      rw [List.filterMap_cons_some ha, List.filterMap_cons_some ha'] at he
+      simp only [List.cons.injEq] at he
       obtain ⟨he1, he2⟩ := he
+      subst he1
       have hee : e = e' := by
         cases e with
         | input j =>
           cases e' with
-          | input j' => cases he1; rfl
-          | output _ _ => cases he1
+          | input j' => cases ha; cases ha'; rfl
+          | output _ _ => cases ha; cases ha'
+          | commit _ => cases ha'
         | output γ o =>
           cases e' with
-          | input _ => cases he1
+          | input _ => cases ha; cases ha'
           | output γ' o' =>
-            cases he1
-            rw [hs.2 γ o rfl, hs'.2 γ' o rfl]
+            cases ha; cases ha'
+            rw [hs.2.1 γ o rfl, hs'.2.1 γ' o rfl]
+          | commit _ => cases ha'
+        | commit _ => cases ha
       subst hee
-      have hτ : τ = τ' := step_det (canonStep_step hs) (canonStep_step hs')
+      have hτ : τ = τ' := step_det hst hst'
       subst hτ
       obtain ⟨h1, h2⟩ := ih hr' he2
       exact ⟨by rw [h1], h2⟩
@@ -483,7 +494,7 @@ theorem reconciliation_any_basis {sp : Spec I O} {m : Nat} (B B' : Fin m → Bas
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
     (τ : State sp) (j : I) (hτ : τ.cur = j)
     (hcont : ∀ r, ∃ es', SysExec (B' r) (ρ r) es' τ) :
-    ∃ u, sp.S j u ∧ ∀ r, ∀ o ∈ outs ((es r).map SEvent.erase), o ≼ u := by
+    ∃ u, sp.S j u ∧ ∀ r, ∀ o ∈ outs ((es r).filterMap SEvent.erase), o ≼ u := by
   obtain ⟨u, hu⟩ := τ.hasCur
   rw [hτ] at hu
   refine ⟨u, τ.sub _ _ hu, fun r => ?_⟩
@@ -552,6 +563,10 @@ theorem noBasis_full {σ ρ : State spU} {es : List (SEvent spU)} (h : SysExec n
       | nil =>
         cases hγ
         exact (spU_not_exposable σ hσ _ hleg).elim
+    | _, .commit (γ := γ) hb hne _ =>
+      cases γ with
+      | nil => exact absurd rfl hne
+      | cons c _ => exact (hb c (List.mem_cons_self ..)).elim
 
 theorem canonU_full (i : U1) : ∀ k u, (canon spU i).R k u := fun _ _ => ⟨trivial, trivial⟩
 
@@ -561,7 +576,7 @@ empty basis. -/
 theorem converse_fails :
     (∃ τ, Exec (canon spU ()) [.output (true : Bool)] τ) ∧
     ¬ ∃ (es : List (SEvent spU)) (ρ : State spU),
-        SysExec noBasis (canon spU ()) es ρ ∧ es.map SEvent.erase = [.output (true : Bool)] := by
+        SysExec noBasis (canon spU ()) es ρ ∧ es.filterMap SEvent.erase = [.output (true : Bool)] := by
   refine ⟨⟨outState (canon spU ()) (true : Bool) ⟨trivial, trivial⟩,
     .cons (Step.output (canon spU ()) (outState (canon spU ()) (true : Bool) ⟨trivial, trivial⟩)
       (true : Bool) ⟨trivial, trivial⟩ rfl rfl) (.nil _)⟩, ?_⟩
@@ -580,6 +595,12 @@ theorem converse_fails :
         | nil =>
           cases hγ
           exact spU_not_exposable _ (canonU_full ()) _ hleg
+    | commit γ =>
+      cases hs with
+      | commit hb hne _ =>
+        cases γ with
+        | nil => exact hne rfl
+        | cons c _ => exact hb c (List.mem_cons_self ..)
 
 /-- "Restricting attention to one system's runs could therefore hide
 non-monotonicity": `spU` is not consistent, yet every finite family of runs
@@ -702,6 +723,19 @@ theorem sysStep_iff_CAP {B : Basis sp} {σ τ : State sp} {γ : List (Commitment
     cases hs with
     | output _ _ ho hcur hR =>
       exact SysStep.output hb hγ' ho hleg (hcur.trans hγ'.cur_eq) hR
+
+/-- A commit event `Commit(γ)` of `Distributed/Commitments.lean` is exactly a
+legal `cmt γ` of `CAP/Model.lean`: basis commitments, `γ ≠ ε`, and `applySeq`
+reaching the next state. -/
+theorem sysStep_commit_iff_CAP {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)} :
+    SysStep B σ (.commit γ) τ ↔
+      (∀ c ∈ γ, B c) ∧ γ ≠ [] ∧ CAP.applySeq σ (γ.map toCAP) = some τ := by
+  constructor
+  · intro h
+    cases h with
+    | commit hb hne hγ => exact ⟨hb, hne, applySeq_iff_CAP.1 hγ⟩
+  · rintro ⟨hb, hne, hγ⟩
+    exact SysStep.commit hb hne (applySeq_iff_CAP.2 hγ)
 
 end encodings
 

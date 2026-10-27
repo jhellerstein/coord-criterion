@@ -71,12 +71,14 @@ def ResponsePC (Sys : System sp D) : Prop :=
 inductive LEvN (sp : Spec I O) (D : Type) where
   | inp (j : I)
   | out (γ : List (Commitment sp)) (o : O)
+  | cmt (γ : List (Commitment sp))
   | send (j : Option I) (d : D)
   | recv (q : Nat) (k : Nat) (j : Option I) (d : D)
 
 def LEv.erase : LEv sp D n → LEvN sp D
   | .inp j => .inp j
   | .out γ o => .out γ o
+  | .cmt γ => .cmt γ
   | .send j d => .send j d
   | .recv q k j d => .recv q.val k j d
 
@@ -228,6 +230,7 @@ def curOf (i0 : I) : List (LEvN sp D) → I
   | [] => i0
   | .inp j :: l => curOf j l
   | .out _ _ :: l => curOf i0 l
+  | .cmt _ :: l => curOf i0 l
   | .send _ _ :: l => curOf i0 l
   | .recv _ _ _ _ :: l => curOf i0 l
 
@@ -235,6 +238,7 @@ def emittedOf : List (LEvN sp D) → List O
   | [] => []
   | .out _ o :: l => o :: emittedOf l
   | .inp _ :: l => emittedOf l
+  | .cmt _ :: l => emittedOf l
   | .send _ _ :: l => emittedOf l
   | .recv _ _ _ _ :: l => emittedOf l
 
@@ -328,6 +332,10 @@ theorem rinv_run (T : Table I O) {N : Nat} {init : Fin N → I} {p : Fin N} :
       rcases List.mem_append.1 ho with ho | ho
       · exact hge o ho
       · simp at ho; subst ho; exact PO.refl _
+  | @cmt σ τ' ρ γ es _ _ _ _ =>
+    intro pre hc _
+    have := hc [] (.cmt γ) es rfl
+    simp [Allowed, respSystem, respF, LEv.erase] at this
   | @send σ ρ j d es _ _ =>
     intro pre hc _
     have := hc [] (.send j d) es rfl
@@ -459,6 +467,7 @@ receives, leave the state unchanged). -/
 def tr {m N : Nat} : LEv sp D m → LEv sp D N
   | .inp j => .inp j
   | .out γ o => .out γ o
+  | .cmt γ => .cmt γ
   | .send j d => .send j d
   | .recv _ _ j d => .send j d
 
@@ -468,6 +477,7 @@ theorem lrun_tr {m N : Nat} {σ τ : State sp} {l : List (LEv sp D m)} (h : LRun
   | nil => exact .nil _
   | inp hs _ ih => exact .inp hs ih
   | out ha hs hx _ ih => exact .out ha hs hx ih
+  | cmt hne ha _ ih => exact .cmt hne ha ih
   | send _ ih => exact .send ih
   | recv _ ih => exact .send ih
 
@@ -480,6 +490,7 @@ theorem lrun_tr_inv {m N : Nat} {l : List (LEv sp D m)} :
     cases e with
     | inp j => cases h with | inp hs hr => exact .inp hs (ih hr)
     | out γ o => cases h with | out ha hs hx hr => exact .out ha hs hx (ih hr)
+    | cmt γ => cases h with | cmt hne ha hr => exact .cmt hne ha (ih hr)
     | send j d => cases h with | send hr => exact .send (ih hr)
     | recv q k j d => cases h with | send hr => exact .recv (ih hr)
 
@@ -517,6 +528,9 @@ theorem compliant_tr {Sys : System sp D} {F : I → List (LEvN sp D) → LEvN sp
   cases e with
   | inp j => trivial
   | out γ o =>
+    refine ⟨hA.1, (hF _ _ _ _ _).2 ?_⟩
+    rw [hi, hpre]; exact (hF _ _ _ _ _).1 hA.2
+  | cmt γ =>
     refine ⟨hA.1, (hF _ _ _ _ _).2 ?_⟩
     rw [hi, hpre]; exact (hF _ _ _ _ _).1 hA.2
   | send j d =>
