@@ -464,7 +464,7 @@ theorem «app:cap-response/functional-coincide» (hf : sp.Functional) (Q : Oblig
     exact ⟨Sys, (availability_iff_atEnd _).2 hA, (partitionConsistency_iff_atEnd _).2 hP⟩
 
 /-- "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is
-a response interface on which `S` is consistent". -/
+a response interface for which `S` satisfies Lifted Monotonicity". -/
 theorem «app:cap-response/lm-subspec» (Q : Obligation sp) (T : Spec I O)
     (hTQ : ∀ i o, T.S i o → Q.Q i o) (h : T.LiftedMono) :
     ResponseInterface Q T.S ∧ ConsistentOn sp T.S :=
@@ -472,7 +472,7 @@ theorem «app:cap-response/lm-subspec» (Q : Obligation sp) (T : Spec I O)
 
 /-- "… but the condition is weaker."  The five-input example: `I = {i₁, i₂,
 j, k₁, k₂}` (`sp5`, `Q5 = S`), `T = {(i₁,a),(i₂,b),(j,c₁),(j,c₂),(k₁,e₁),
-(k₂,e₂)}` (`T5`) is a response interface on which `S` is consistent, but no
+(k₂,e₂)}` (`T5`) is a response interface for which `S` satisfies Lifted Monotonicity, but no
 sub-specification of `Q` satisfies Lifted Monotonicity. -/
 theorem «app:cap-response/subspec-weaker» :
     (ResponseInterface Q5 T5 ∧ ConsistentOn sp5 T5) ∧

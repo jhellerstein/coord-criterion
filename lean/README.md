@@ -758,7 +758,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«app:cap-response/lm-implies-response-form»` | theorem | "Theorem `thm:complete-cap` with `A = S` requires every permitted output to stay available; Theorem `thm:complete-cap-response` lets the system choose which… |
 | `«app:cap-response/converse-fails»` | theorem | "The converse fails. |
 | `«app:cap-response/functional-coincide»` | theorem | "For a functional specification the two coincide: |
-| `«app:cap-response/lm-subspec»` | theorem | "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is a response interface on which `S` is consistent". |
+| `«app:cap-response/lm-subspec»` | theorem | "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is a response interface for which `S` satisfies Lifted Monotonicity". |
 | `«app:cap-response/subspec-weaker»` | theorem | "… but the condition is weaker." The five-input example: |
 | `«app:cap-response/subspec-seals»` | theorem | "Reconciling outputs need not lie in `T`: |
 | `«lem:forced-answer»` | theorem | **Lemma `lem:forced-answer` (Forced answer).** "Let `i ⪯ j`, and suppose no output in `Q_q(i)` has a refinement in `S(j)`. |
