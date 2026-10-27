@@ -371,15 +371,15 @@ Lean: two event lists are observably equivalent when their images under
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- *coordination* — a commitment some other run contradicts
-(Def. `def:coordination`).  Lean, for a system: `CAP.System.CoordinationFree`
+/-- *requires coordination; coordination-free* — a commitment some other run
+could contradict; applying none (Def. `def:coordination`).  Lean, for a system: `CAP.System.CoordinationFree`
 (no output or commit event's commitments are contradicted by any run); for a
 specification, coordination is commitment (`Coordinates es`). -/
 abbrev «app:notation/coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
   Sys.CoordinationFree
 
-/-- *distributed coordination* — a commitment contradicted at another
-participant of the same history (Def. `def:coordination`).  Lean:
+/-- *requires distributed coordination* — a commitment some other run at
+another participant could contradict (Def. `def:coordination`).  Lean:
 `CAP.System.CoordinationFreeH` (none). -/
 abbrev «app:notation/distributed-coordination» {sp : Spec I O} {D : Type}
     (Sys : CAP.System sp D) : Prop :=

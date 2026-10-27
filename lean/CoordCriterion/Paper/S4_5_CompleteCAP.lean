@@ -242,8 +242,10 @@ theorem «sec:complete-cap/proof-system-coordination-free» (A : Table I O)
 /-- "For `A = S` it needs no commitment at all."  Lean: with Availability,
 any removal of a row `(k,x)` by an output event whose local prefix is
 receive-free is contradicted in some produced history by another participant
-whose initial input is below `k` (distributed coordination); so such a system
-avoids distributed coordination only if those events remove nothing. -/
+whose initial input is below `k` (it requires distributed coordination); so
+such a system avoids requiring distributed coordination only if those events
+remove nothing.  The same holds for commit events
+(`CAP.availability_not_coordinationFreeH_commit`). -/
 theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     (hA : «def:partition-notions(4)» Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)

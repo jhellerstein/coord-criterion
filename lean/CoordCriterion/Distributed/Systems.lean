@@ -38,10 +38,10 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
                                 — "the converse of Lemma canonical-equivalent fails".
 * `reconcile_cf`                — deterministic reconciliation under Lifted
                                   Monotonicity needs no commitment (Sec. coordination).
-* `toCAP`, `ofCAP`, `sysStep_iff_CAP`
-                                — the two encodings of commitments and system
-                                  output events (`CC.Commitment`/`SysStep` vs `CC.CAP`)
-                                  coincide.
+* `toCAP`, `ofCAP`, `sysStep_iff_CAP`, `sysStep_commit_iff_CAP`
+                                — the two encodings of commitments, system
+                                  output events and commit events
+                                  (`CC.Commitment`/`SysStep` vs `CC.CAP`) coincide.
 * `choice_antichain`, `not_choice_of_two`
                                 — "neither [2PL nor MVTO commitment] is the
                                   choice `c_o`" (generic form).
@@ -723,6 +723,19 @@ theorem sysStep_iff_CAP {B : Basis sp} {σ τ : State sp} {γ : List (Commitment
     cases hs with
     | output _ _ ho hcur hR =>
       exact SysStep.output hb hγ' ho hleg (hcur.trans hγ'.cur_eq) hR
+
+/-- A commit event `Commit(γ)` of `Distributed/Commitments.lean` is exactly a
+legal `cmt γ` of `CAP/Model.lean`: basis commitments, `γ ≠ ε`, and `applySeq`
+reaching the next state. -/
+theorem sysStep_commit_iff_CAP {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)} :
+    SysStep B σ (.commit γ) τ ↔
+      (∀ c ∈ γ, B c) ∧ γ ≠ [] ∧ CAP.applySeq σ (γ.map toCAP) = some τ := by
+  constructor
+  · intro h
+    cases h with
+    | commit hb hne hγ => exact ⟨hb, hne, applySeq_iff_CAP.1 hγ⟩
+  · rintro ⟨hb, hne, hγ⟩
+    exact SysStep.commit hb hne (applySeq_iff_CAP.2 hγ)
 
 end encodings
 

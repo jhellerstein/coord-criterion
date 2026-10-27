@@ -314,8 +314,8 @@ theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n
   single_authority_iff hn Dp p₀ hSA
 
 /-- "In a system whose other participants emit nothing, no other participant
-emits an output that the authority chooses against, so its choices are not
-distributed coordination."  Lean: if only participant `0` may perform output
+emits an output that the authority chooses against, so its choices do not
+require distributed coordination."  Lean: if only participant `0` may perform output
 events, no row removed by an output event is emitted, at the same input, by
 another participant of the same history. -/
 theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CAP.System sp D)
@@ -323,7 +323,7 @@ theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CA
     ChoicesNotDistributed Sys :=
   sole_emitter_choices Sys hsole
 
-/-- "They are still coordination when another run of the authority may choose
+/-- "They still require coordination when another run of the authority may choose
 differently, as for the lock manager of Section `sec:coordination`."  Lean:
 the owner system of §4.4 (only participant `0` may emit an order): its choice
 is a commitment, contradicted by another of its runs, but not at another

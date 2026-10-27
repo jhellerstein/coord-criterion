@@ -10,13 +10,17 @@ Namespace `CC`.  Further claims of these sections are in
 * `sealC`, `choiceC`                     — the canonical seal `s_o` and choice `c_o`
                                          (eq. canonical-seal-commitment-relational)
 * `seal_choice_commute`                — "defined on each other's results and commute"
-* `SysStep`, `SysExec`                 — Def. output event of a system / run under a basis
+* `SEvent`, `SysStep`, `SysExec`       — Def. output event of a system (`Out_γ(o)`), commit
+                                         events `Commit(γ)` (a nonempty basis sequence,
+                                         applied without emitting), run under a basis;
+                                         `SEvent.erase` (commit events erase to nothing)
 * `containment`, `canonical_support`,
   `eps_step_iff`                       — Lemma canonical-commitment-normal-form (1)–(3)
 * `composite`, `applySeq_composite`    — Lemma compound-commitment
 * `seal_or_choose`                     — Prop. seal-or-choose
 * `coordFree_execCF`, `execCF_coordFree` — Def. coordination vs. commitment-free runs
-* `canonical_equivalent`               — Lemma canonical-equivalent
+* `canonical_equivalent`               — Lemma canonical-equivalent (the canonical run
+                                         skips commit events)
 * `conflicting_outputs`                — Prop. thm:commitments-require-coordination
 -/
 

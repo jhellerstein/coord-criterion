@@ -38,7 +38,7 @@ model justifies, and their notion of coordination; for Baccaert and Ketsman
 also their notion of computing a behavior, that a node without the list of
 all nodes may be the whole network and must emit, that their construction
 waits until a group confirms its members and that groups sharing a node are
-nested, that the group's choice is coordination but not distributed
+nested, that the group's choice requires coordination but not distributed
 coordination, and that the list and an order on nodes compute every behavior;
 Lean checks only the mapping of their conditions into our frame); in
 Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
@@ -88,9 +88,9 @@ first and supporting claims and examples follow.
 | `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §4.4 | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
 | `Figures.lean` | `CC.Figures` | §2–§3, §7 | Figure tables: election frames, ambiguity frames; decisive ballot vs. closing the polls |
 | `Distributed/Histories.lean` | `CC.Dist` | §4.1–4.2 | Histories, cuts, Prop. distributed consistency, Cor. convergence, exchanging outputs |
-| `Distributed/Commitments.lean` | `CC` | §4.3–4.4, App. C | Commitments, canonical seal/choice, system output events, normal form, seal-or-choose, canonical-equivalent, conflicting outputs |
-| `Distributed/Systems.lean` | `CC.Dist` | §4.1–4.4, App. C | Figure participant-runs, consistency without unique send ids, canonical systems, reconciliation under any basis, encodings agree |
-| `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: commitments, histories, cuts, systems, Availability, Partition Consistency |
+| `Distributed/Commitments.lean` | `CC` | §4.3–4.4, App. C | Commitments, canonical seal/choice, system output events `Out_γ(o)` and commit events `Commit(γ)` (a nonempty sequence of basis commitments applied without emitting; erased to nothing), normal form, seal-or-choose, coordination (an output event with `γ ≠ ε` or a commit event), canonical-equivalent (the canonical run skips commit events), conflicting outputs |
+| `Distributed/Systems.lean` | `CC.Dist` | §4.1–4.4, App. C | Figure participant-runs, consistency without unique send ids, canonical systems, reconciliation under any basis, encodings of output and commit events agree |
+| `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: commitments, histories (local events: inputs, output events `out γ o`, commit events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.5 | Thm. Complete CAP; deterministic strategies do not suffice |
 | `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.4 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
 | `CAP/ResponseForm.lean` | `CC.CAP` | App. F | Response Availability, Response Partition Consistency, Thm. Complete CAP (response form) |
@@ -115,6 +115,7 @@ first and supporting claims and examples follow.
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter commitments on antichain fibers (used by Fig. cc-commitments in §4.3 and App. C) |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | The `(L,X,ρ)` spec with partial outputs; closure commitments; 2PL/MVTO bases; bases differ; deadlock; MVTO: reported reads, entailed vs. chosen aborts |
 | `Appendix/TransactionBases/CanonicalExample.lean` | `CC.Txn.Partial.CanonEx` | §4.3 | Canonical runs suffice: a 2PL run at `{A,B,C}` and its canonical run in lockstep |
+| `Appendix/TransactionBases/CommitEvent.lean` | `CC.Txn.Partial.CommitEx` | §4.3 | A 2PL commit event: `Commit([order(A,B)])` when `B` waits for `A`'s lock, then an output applying only `commit(A)`, `commit(B)`; the run coordinates and is in lockstep with its canonical run |
 | `Appendix/Frontiers.lean` | `CC.Front` | §3 (Hoare remark); otherwise not in paper | Hoare preorder vs. the joint lift; remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
 | `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. E (real-time causal) | Thm. independent products (`thm:product-frontier`), configuration example |
 | `Appendix/Graphs.lean` | `CC.Graph` | not in paper | Products, tee vs. running twice, merge, partition; stage expressions with per-node offered-domain test; Proper Coordination for products; parameterized composition as a product |
@@ -293,10 +294,10 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:coordination/distributed»` | abbrev | Def. |
 | `«def:coordination/distributed-of-free»` | theorem | Def. |
 | `«def:coordination/specification»` | abbrev | Def. |
-| `«sec:coordination/specification-contradicted»` | theorem | "For a specification, every commitment is contradicted: |
+| `«sec:coordination/specification-contradicted»` | theorem | "For a specification, every commitment requires coordination: |
 | `«def:coordination/coordination-free»` | abbrev | Def. |
 | `«sec:coordination/closing-before-voting-seals»` | theorem | "Closing the polls before every voter has voted seals the remaining ballots." Lean: |
-| `«sec:coordination/choices-by-strategies»` | theorem | "Outputs, by contrast, are chosen only by strategies, so a choice is contradicted only when some participant's strategy may emit the output it rules out." Lean: |
+| `«sec:coordination/choices-by-strategies»` | theorem | "Outputs, by contrast, are chosen only by strategies, so a choice requires coordination only when some run's strategy may emit the output it rules out." Lean: |
 | `«def:coordination/commitment-free-runs»` | theorem | Def. |
 | `«thm:commitments-require-coordination»` | theorem | **Prop. |
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
@@ -478,8 +479,8 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments erased; every run has a canonical one (Lem. |
-| `«app:notation/coordination»` | abbrev | *coordination* — a commitment some other run contradicts (Def. |
-| `«app:notation/distributed-coordination»` | abbrev | *distributed coordination* — a commitment contradicted at another participant of the same history (Def. |
+| `«app:notation/coordination»` | abbrev | *requires coordination; coordination-free* — a commitment some other run could contradict; applying none (Def. |
+| `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — a commitment some other run at another participant could contradict (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — no message crosses components (Def. |
 | `«app:notation/availability-relation»` | abbrev | *availability relation* — `A ⊆ S`, the rows whose outputs must stay available (Def. |
 | `«app:notation/availability»` | abbrev | *Availability for `A`* — each output of `R(i) ∩ A(i)` emittable locally (Def. |
@@ -674,8 +675,8 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `A_q = ∅` for every participant `q` but one, as in the leader example above." |
 | `«app:deployment/single-authority/shape»` | theorem | "Every separable family is then one row emitted by the single authority beside a silent participant …" |
 | `«app:deployment/single-authority»` | theorem | "… and monotonicity across partitions says only that each such row has an expansion at every expansion of its input." (With `\|P\| ≥ 2`, so that some partition… |
-| `«app:deployment/single-authority/not-distributed»` | theorem | "In a system whose other participants emit nothing, no other participant emits an output that the authority chooses against, so its choices are not distribut… |
-| `«app:deployment/single-authority/coordination»` | theorem | "They are still coordination when another run of the authority may choose differently, as for the lock manager of Section `sec:coordination`." Lean: |
+| `«app:deployment/single-authority/not-distributed»` | theorem | "In a system whose other participants emit nothing, no other participant emits an output that the authority chooses against, so its choices do not require di… |
+| `«app:deployment/single-authority/coordination»` | theorem | "They still require coordination when another run of the authority may choose differently, as for the lock manager of Section `sec:coordination`." Lean: |
 | `«thm:complete-cap-deployment»` | theorem | **Proposition `thm:complete-cap-deployment`** (Partition compatibility under a deployment). |
 | `«thm:complete-cap-deployment/proof»` | theorem | Proof of Prop. |
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |
