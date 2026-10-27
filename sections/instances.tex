@@ -236,7 +236,7 @@ payloads that accepts every payload in every state, and an observation
 $\mathrm{obs}:Q\to O$, which it may output at any time without changing state.
 Each of finitely many clients may send an event with any payload at any time
 and receives the machine's outputs; the channel delivers each sent event
-exactly once, in any order or in the order sent.  In an execution of the
+at most once, in any order or in the order sent.  In an execution of the
 composed automaton, \emph{happens-before} is Lamport's
 order~\cite{lamport1978time}: the transitive closure of the local order at the
 machine and at each client and of the edge from sending an event to receiving
@@ -304,7 +304,7 @@ The input orders events by their sends, not by their arrivals: the machine
 receives events in one total order, but that order is what differs between
 executions.  Outputs are where the environment's reactions enter.  A client
 that sends after observing an output is ordered after everything that output
-reflected, so no execution delivers its event earlier; what the client saw is
+reflected, and the input records that dependence; what the client saw is
 recorded by the run's output events, which keep only rows that \outrelbase
 it.  Collecting the fibers means exploring every execution with a given
 input, which is the task of a model checker; for bounded systems, dynamic

@@ -444,7 +444,7 @@ relation on event payloads that accepts every payload in every state, and an
 observation `obs : Q → O`, which it may output at any time without changing
 state.  Each of finitely many clients may send an event with any payload at
 any time and receives the machine's outputs; the channel delivers each sent
-event exactly once, in any order or in the order sent.  In an execution of
+event at most once, in any order or in the order sent.  In an execution of
 the composed automaton, *happens-before* is Lamport's order: the transitive
 closure of the local order at the machine and at each client and of the edge
 from sending an event to receiving it."
@@ -459,15 +459,14 @@ with any payload at any time, inputs `out c o`), and the channel
 loses nor duplicates).  Events `IOM.Ev C P` carry a client, a sequence
 number, and a payload.  `IOM.HB β` is happens-before on positions of the
 schedule `β`.  The client type `C` is arbitrary; finiteness is not needed.
-Delivery "exactly once" is read as safety: a sent event is delivered at most
-once and may stay in transit in a finite execution. -/
+A sent event may stay in transit in a finite execution. -/
 
 /-- "An output of the machine is an input of the client that receives it, so
 a client's later sends happen after everything the machine had received when
 it emitted that output."  From the remark after
 Proposition `prop:induced-specification`: "A client that sends after
-observing an output is ordered after everything that output reflected, so no
-execution delivers its event earlier."
+observing an output is ordered after everything that output reflected, and the
+input records that dependence."
 
 Lean: in an execution `β`, if the machine received `e` (position `r`) before
 emitting `out c o` (position `m`), and client `c` sends `e'` at a later
