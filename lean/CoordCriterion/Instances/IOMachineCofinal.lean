@@ -1,4 +1,4 @@
-import CoordCriterion.Instances.IOMachineLocal
+import CoordCriterion.Instances.IOMachine
 import CoordCriterion.CompleteCALM.Cofinal
 
 /-!
@@ -47,7 +47,19 @@ Sanity checks:
   occurring input omits the transient observations `1` and `0`, is cofinal
   in `spec k (dip C P)`, and is trivially Lifted Monotone; the bridge gives
   Lifted Monotonicity of `spec k (dip C P)` and confluence of its
-  observations (`dip_cofinal`, `dip_liftedMono_via_cofinal`).
+  observations (`dip_cofinal`, `dip_liftedMono_via_cofinal`).  `dip` takes
+  an internal step that lowers the observation, and a later one that raises
+  it above everything; internal steps extend an execution without changing
+  its input (`extend_int`).
+
+Testing side: a violation of Lifted Monotonicity is witnessed by finitely
+many executions and one execution `β` whose input expands theirs, such that
+no execution with the input of `β` refines them all
+(`not_liftedMono_iff_witness`).  The last clause quantifies over all
+executions with that input.  It is implied by a check over the machine
+automaton's own runs on arrival orders of that input
+(`not_liftedMono_of_machine_cert`, by `fiber_sub_run`), or over any finite list
+of values containing the fiber (`not_liftedMono_of_fiber_list`).
 -/
 
 namespace CC
@@ -55,6 +67,140 @@ namespace IOM
 open IOA
 
 variable {C P Q O : Type}
+
+/-! ### Internal steps of the machine -/
+
+/-- One internal step of the machine: an output to some client, or an
+internal action. -/
+def IStep (G : Machine C P Q O) (q q' : Q) : Prop := (∃ c o, G.out q c o q') ∨ G.tau q q'
+
+/-- `MRun G q w q'`: the machine goes from `q` to `q'` receiving the payloads
+`w` in order, interleaved with internal steps.  `MRun G q [] q'` is a run of
+internal steps only. -/
+inductive MRun (G : Machine C P Q O) : Q → List P → Q → Prop where
+  | nil (q : Q) : MRun G q [] q
+  | int {q q1 q2 : Q} {w : List P} : IStep G q q1 → MRun G q1 w q2 → MRun G q w q2
+  | recv {q q1 q2 : Q} {p : P} {w : List P} : G.recv q p q1 → MRun G q1 w q2 →
+      MRun G q (p :: w) q2
+
+/-! ### Extension by internal steps -/
+
+section extend
+variable [DecidableEq C] {k : ChanKind} {G : Machine C P Q O}
+
+omit [DecidableEq C] in
+/-- Appending an internal step does not change the input. -/
+theorem input_snoc_tau (β : List (Act C P O)) : input (β ++ [.tau]) = input β := by
+  have hs : ∀ i e, SendAt (β ++ [.tau]) i e ↔ SendAt β i e := fun _ _ => sendAt_snoc nofun
+  have hr : ∀ e, Act.recv e ∈ β ++ [.tau] ↔ Act.recv e ∈ β := by simp
+  refine Inp.ext' (funext fun e => propext (hr e)) (funext fun a => funext fun b => propext ?_)
+  constructor
+  · rintro ⟨⟨ha, hb⟩, i, j, hi, hj, hij⟩
+    have hj' := (hs j b).1 hj
+    exact ⟨⟨(hr a).1 ha, (hr b).1 hb⟩, i, j, (hs i a).1 hi, hj',
+      (hb_append (sendAt_lt hj')).1 hij⟩
+  · rintro ⟨⟨ha, hb⟩, i, j, hi, hj, hij⟩
+    exact ⟨⟨(hr a).2 ha, (hr b).2 hb⟩, i, j, (hs i a).2 hi, (hs j b).2 hj,
+      (hb_append (sendAt_lt hj)).2 hij⟩
+
+/-- **Extension by internal steps.**  Internal steps of the machine extend
+an execution without changing its input. -/
+theorem extend_int {q q' : Q} (hm : MRun G q [] q') :
+    ∀ {β : List (Act C P O)} {f : Flat C P Q}, Reach k G β f → f.q = q →
+      ∃ γ f', Reach k G (β ++ γ) f' ∧ input (β ++ γ) = input β ∧ f'.q = q' := by
+  generalize hw : ([] : List P) = w at hm
+  induction hm with
+  | nil => intro β f hr hq; exact ⟨[], f, by simpa using hr, by simp, hq⟩
+  | @int q q1 _ _ hs _ ih =>
+    intro β f hr hq
+    rcases hs with ⟨c, o, ho⟩ | ht
+    · have hr1 : Reach k G (β ++ [.out c o]) ⟨q1, f.cnt, f.ch⟩ :=
+        reach_snoc.2 ⟨f, hr, FStep.out f c o q1 (hq ▸ ho)⟩
+      obtain ⟨γ, f', hf', hi, hq'⟩ := ih hw hr1 rfl
+      refine ⟨.out c o :: γ, f', by simpa using hf', ?_, hq'⟩
+      have : β ++ Act.out c o :: γ = (β ++ [.out c o]) ++ γ := by simp
+      rw [this, hi, input_snoc_out]
+    · have hr1 : Reach k G (β ++ [.tau]) ⟨q1, f.cnt, f.ch⟩ :=
+        reach_snoc.2 ⟨f, hr, FStep.tau f q1 (hq ▸ ht)⟩
+      obtain ⟨γ, f', hf', hi, hq'⟩ := ih hw hr1 rfl
+      refine ⟨.tau :: γ, f', by simpa using hf', ?_, hq'⟩
+      have : β ++ Act.tau :: γ = (β ++ [.tau]) ++ γ := by simp
+      rw [this, hi, input_snoc_tau]
+  | recv _ _ _ => cases hw
+
+end extend
+
+/-! ### Testing: finite witnesses of a violation -/
+
+section testing
+variable [PO O] (k : ChanKind) (G : Machine C P Q O)
+
+/-- **A violation is witnessed by finitely many executions and one input.**
+Lifted Monotonicity fails iff there are finitely many executions `βᵣ` and an
+execution `β` whose input expands each of theirs, such that no execution
+with the input of `β` ends with an observation refining every `βᵣ`'s.  The
+last clause ranges over all executions with that input. -/
+theorem not_liftedMono_iff_witness :
+    ¬ (spec (C := C) k G).LiftedMono ↔
+      ∃ fam : List (List (Act C P O) × (sys (C := C) k G).St),
+        (∀ r ∈ fam, Execution (sys k G) r.1 r.2) ∧
+        ∃ β s, Execution (sys k G) β s ∧ (∀ r ∈ fam, input r.1 ≼ input β) ∧
+          ∀ β' s', Execution (sys k G) β' s' → input β' = input β →
+            ∃ r ∈ fam, ¬ G.obs (r.2 .mach) ≼ G.obs (s' .mach) := by
+  rw [← (confluent_iff_liftedMono k G).1]
+  constructor
+  · intro hn
+    refine Classical.byContradiction fun hne => hn ?_
+    intro fam hfam β s hx hle
+    refine Classical.byContradiction fun hno => hne ⟨fam, hfam, β, s, hx, hle, ?_⟩
+    intro β' s' hx' hi'
+    refine Classical.byContradiction fun hall => hno ⟨β', s', hx', hi', fun r hr => ?_⟩
+    exact Classical.byContradiction fun h => hall ⟨r, hr, h⟩
+  · rintro ⟨fam, hfam, β, s, hx, hle, hno⟩ hO
+    obtain ⟨β', s', hx', hi', hall⟩ := hO fam hfam β s hx hle
+    obtain ⟨r, hr, hn⟩ := hno β' s' hx' hi'
+    exact hn (hall r hr)
+
+/-- **A finite list containing the fiber suffices.**  If every execution
+with the input of `β` ends with an observation in the list `L`, and every
+element of `L` fails to refine some `βᵣ`'s observation, Lifted Monotonicity
+fails. -/
+theorem not_liftedMono_of_fiber_list
+    (fam : List (List (Act C P O) × (sys (C := C) k G).St))
+    (hfam : ∀ r ∈ fam, Execution (sys k G) r.1 r.2) {β : List (Act C P O)}
+    {s : (sys (C := C) k G).St} (hx : Execution (sys k G) β s)
+    (hle : ∀ r ∈ fam, input r.1 ≼ input β) (L : List O)
+    (hL : ∀ β' s', Execution (sys (C := C) k G) β' s' → input β' = input β → G.obs (s' .mach) ∈ L)
+    (hcert : ∀ u ∈ L, ∃ r ∈ fam, ¬ G.obs (r.2 .mach) ≼ u) :
+    ¬ (spec (C := C) k G).LiftedMono :=
+  (not_liftedMono_iff_witness k G).2 ⟨fam, hfam, β, s, hx, hle, fun β' s' hx' hi' =>
+    hcert _ (hL β' s' hx' hi')⟩
+
+/-- **A check over the machine's own runs suffices.**  If every run of the
+machine automaton that receives the events of `input β`, each once, in some
+order (for FIFO, a linear extension of the input order), interleaved with
+any internal and output steps, ends with an observation that fails to refine
+some `βᵣ`'s, Lifted Monotonicity fails.  These runs over-approximate the
+fiber (`fiber_sub_run`); for a finite-state machine they reach finitely many
+states. -/
+theorem not_liftedMono_of_machine_cert [DecidableEq C]
+    (fam : List (List (Act C P O) × (sys (C := C) k G).St))
+    (hfam : ∀ r ∈ fam, Execution (sys k G) r.1 r.2) {β : List (Act C P O)}
+    {s : (sys (C := C) k G).St} (hx : Execution (sys k G) β s)
+    (hle : ∀ r ∈ fam, input r.1 ≼ input β)
+    (hcert : ∀ γ q, Execution (machA G) γ q → (recvs γ).Nodup →
+      (∀ e, e ∈ recvs γ ↔ (input β).mem e) →
+      (k = .fifo → (recvs γ).Pairwise fun a b => ¬ (input β).lt b a) →
+      ∃ r ∈ fam, ¬ G.obs (r.2 .mach) ≼ G.obs q) :
+    ¬ (spec (C := C) k G).LiftedMono := by
+  refine (not_liftedMono_iff_witness k G).2 ⟨fam, hfam, β, s, hx, hle, fun β' s' hx' hi' => ?_⟩
+  obtain ⟨γ, q, hγ, ho, hn, hm, hf⟩ :=
+    fiber_sub_run (k := k) (G := G) ⟨input β, β, s, hx, rfl⟩ (G.obs (s' .mach))
+      ⟨β', s', hx', hi', rfl⟩
+  rw [← ho]
+  exact hcert γ q hγ hn hm hf
+
+end testing
 
 section bridge
 variable [PO O] {J : Type} [PO J] (k : ChanKind) (G : Machine C P Q O)
@@ -169,6 +315,36 @@ end fifo
 /-! ### Sanity check: the transient dip -/
 
 section dip
+
+/-- `Nat` under `≤` (a local instance for the `dip` check). -/
+@[instance_reducible] def natPO : PO Nat where
+  le := Nat.le
+  refl := Nat.le_refl
+  trans := Nat.le_trans
+  antisymm := Nat.le_antisymm
+
+/-- States of `dip`. -/
+inductive Dip where
+  | a
+  | b
+  | c
+
+/-- Observations of `dip`: `a ↦ 1`, `b ↦ 0`, `c ↦ 2`. -/
+def Dip.obs : Dip → Nat
+  | .a => 1
+  | .b => 0
+  | .c => 2
+
+/-- Internal steps `a → b → c`; every receive goes to `c`; no outputs.  The
+step `a → b` lowers the observation. -/
+def dip (C P : Type) : Machine C P Dip Nat where
+  q0 := .a
+  recv _ _ q' := q' = .c
+  recv_enabled _ _ := ⟨.c, rfl⟩
+  out _ _ _ _ := False
+  tau q q' := (q = .a ∧ q' = .b) ∨ (q = .b ∧ q' = .c)
+  obs := Dip.obs
+
 attribute [local instance] natPO
 
 /-- The declared specification of `dip`: at every occurring input the only
