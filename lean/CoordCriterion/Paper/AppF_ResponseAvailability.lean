@@ -51,7 +51,8 @@ abbrev «app:cap-response/emitted-rows» : I → List (Event I O) → List (I ×
 
 ### Definition `def:response-obligation` -/
 
-/-- **Def. `def:response-obligation`** (uniform case): "A response obligation
+/-- **Def. `def:response-obligation`** (Response obligation, answering,
+uniform obligation; uniform case): "A response obligation
 assigns to each participant `p` a relation `Q_p ⊆ S` that is total on `I` and
 upward closed within fibers: if `(i,o) ∈ Q_p`, `(i,u) ∈ S`, and `o ⪯ u`, then
 `(i,u) ∈ Q_p`.  …  The obligation is *uniform* when every `Q_p` is the same
@@ -288,7 +289,8 @@ theorem «lem:locality» :
 
 ### Definition `def:response-interface` -/
 
-/-- **Def. `def:response-interface`**, response interface: "For a uniform
+/-- **Def. `def:response-interface`** (Response interface,
+self-continuing): "For a uniform
 obligation `Q`, a response interface is an availability relation `T ⊆ Q`
 that is total on `I` and self-continuing: if `(i,o) ∈ T` and `i ⪯ j`, then
 some `u ∈ T(j)` refines `o`." -/

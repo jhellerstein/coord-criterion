@@ -42,7 +42,8 @@ variable {I O : Type} [PO I] [PO O]
 
 /-! ## Distributed histories (§4.1, `sec:histories`) -/
 
-/-- **Def. distributed history** (`def:distributed-history`), the carrier.
+/-- **Def. distributed history, history event, happens-before, consistent
+cut** (`def:distributed-history`), the carrier.
 "A distributed history `H` is a finite set of history events, each an
 occurrence at one participant of an input event, an output event, `send(m)`, or
 `receive(m)` …"
@@ -350,7 +351,7 @@ theorem «prop:seal-or-choose/functional» {sp : Spec I O} (hf : sp.Functional)
     (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w :=
   functional_commitment_seals hf c h k hk
 
-/-- **Def. strategy** (`def:strategy`).  "A local history of participant `p` is a
+/-- **Def. local history, strategy** (`def:strategy`).  "A local history of participant `p` is a
 finite sequence of `p`'s history events … A strategy for `p` is a
 nondeterministic transition function: it maps each local history `λ` of `p` to
 a set `θ_p(λ)` of output, commitment, send, and receive events of `p`, and `p`
@@ -364,7 +365,7 @@ is ignored: `CAP.Allowed` always allows inputs. -/
 abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
   List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop
 
-/-- **Def. system** (`def:system`).  "A system consists of a commitment basis
+/-- **Def. system, commitment basis, produced history** (`def:system`).  "A system consists of a commitment basis
 `ℬ`, the set of commitments its output and commitment events may apply, shared
 by all participants, and a strategy `θ_p` for each participant `p` whose output
 and commitment events apply only commitments from `ℬ`."
@@ -398,7 +399,8 @@ theorem «def:system/restrict» {sp : Spec I O} {D : Type} (Sys : CAP.System sp 
       ∀ n init p pre e, CAP.Allowed Sys.restrict n init p pre e ↔ CAP.Allowed Sys n init p pre e :=
   ⟨Sys.restrict_basisRespecting, Sys.restrict_allowed⟩
 
-/-- **Def. output event of a system** (`def:system-output-event`).  "An output
+/-- **Def. output event of a system, legal output event**
+(`def:system-output-event`).  "An output
 event `Out_γ(o)` under a basis `ℬ` applies a finite, possibly empty sequence
 `γ = c₁⋯cₙ` of commitments from `ℬ`, each `c_m` defined at the state its
 predecessors leave, leaving a table `R_c`, and then retires rows and emits `o`,
@@ -659,45 +661,85 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
   Figures.Elec.close_after_voting i hfull
 
-/-- **Def. coordination-requiring commitment** (`def:coordination`).  "Let an
-event of a run apply a commitment, and let `𝓡` be a set of runs.  A run
-contradicts the commitment if it accepts an input the commitment seals, or
-emits an output the commitment chooses against at the same input.  The
-commitment requires coordination relative to `𝓡` when some run in `𝓡`
-contradicts it.
-… A run or history is coordination-free relative to `𝓡` when it applies no
-commitment that requires coordination.  For a specification, `𝓡` is its
-canonical runs; for a system, it is the runs it can perform, under any inputs
-the environment may supply."  The events that apply commitments are output
-events `Out_γ(o)` and commit events `Commit(γ)`.
+/-- **Def. contradicting run** (`def:contradicts`).  "Let an event of a run
+apply a commitment.  A run contradicts the commitment if it accepts an input
+the commitment seals, or emits an output the commitment chooses against at the
+same input."  The events that apply commitments are output events `Out_γ(o)`
+and commit events `Commit(γ)`.
 
-Lean, for a system (`CC.CAP` model): `System.CoordinationFree` says no output
-event and no commit event of a produced history removes a row `(k,x)` that some produced history
-emits at current input `k` (`SysEmits`), or seals an input some produced
-history accepts (`SysAccepts`); produced histories range over all inputs the
-adversarial environment may supply. -/
-abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
-  Sys.CoordinationFree
+Lean (`CC.CAP` model): `CAP.Contradicts emits accepts σ σc`, for commitments
+taking `σ` to `σc` and runs described by the outputs they emit at each current
+input (`emits k x`) and the inputs they accept (`accepts k`): some removed row
+`(k,x)` is emitted at current input `k`, or some sealed input `k` (one whose
+remaining rows are all removed) is accepted. -/
+abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
+    (σ σc : State sp) : Prop :=
+  CAP.Contradicts emits accepts σ σc
+
+/-- **Def. coordination-requiring commitment, distributed coordination**
+(`def:coordination`).  "Let `𝓡` be a set of runs: for a specification, its
+canonical runs; for a system, the runs it can perform under any inputs the
+environment may supply.  A commitment requires coordination relative to `𝓡`
+when some run in `𝓡` contradicts it (Definition contradicts)."
+
+Lean, for a system: the commitments taking `σ` to `σc` are contradicted
+(`«def:contradicts»`) by the runs of `Sys`: some produced history emits a
+removed row (`SysEmits`) or accepts a sealed input (`SysAccepts`); produced
+histories range over all inputs the adversarial environment may supply. -/
+abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
+    (σ σc : State sp) : Prop :=
+  CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
 
 /-- Def. `def:coordination`: "It requires distributed coordination when that
-run is at another participant of the same history."  Lean:
-`System.CoordinationFreeH` (no commitment, of an output or commit event, that
-requires distributed coordination); it is implied by coordination-freedom. -/
-abbrev «def:coordination/distributed» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
+run is at another participant of the same history."  Lean: the commitments
+taking `σ` to `σc`, applied by participant `p` of `H`, are contradicted by a
+participant `q ≠ p` of `H` (`OtherEmits`, `OtherAccepts`). -/
+abbrev «def:coordination/distributed» {sp : Spec I O} {D : Type} {n : Nat}
+    (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp) : Prop :=
+  CAP.Contradicts (CAP.OtherEmits init H p) (CAP.OtherAccepts H p) σ σc
+
+/-- Def. `def:coordination`, for a specification (`𝓡` the canonical runs): a
+run applies a commitment that requires coordination exactly when it applies a
+commitment at all (`Coordinates`: some output event has `γ ≠ ε`, or there is a
+commit event); see `«sec:coordination/specification-contradicted»`. -/
+abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+  Coordinates es
+
+/-- **Def. coordination-free** (`def:coordination-free`).  "A run or history is
+coordination-free relative to `𝓡` when it applies no commitment that requires
+coordination relative to `𝓡`."
+
+Lean, for a system: `System.CoordinationFree` says the commitments of every
+output event and every commit event of every produced history are local
+(`LocalEvent`), which is the negation of `«def:coordination»`
+(`«def:coordination-free/local-iff»`). -/
+abbrev «def:coordination-free» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
+  Sys.CoordinationFree
+
+/-- Def. `def:coordination-free`: an event is local (`LocalEvent`) exactly when
+its commitments do not require coordination relative to the system's runs
+(`«def:coordination»`); within a history, `LocalInH` is the negation of
+requiring distributed coordination (`«def:coordination/distributed»`). -/
+theorem «def:coordination-free/local-iff» {sp : Spec I O} {D : Type} :
+    (∀ (Sys : CAP.System sp D) (σ σc : State sp),
+      CAP.LocalEvent Sys σ σc ↔ ¬ «def:coordination» Sys σ σc) ∧
+    (∀ {n : Nat} (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp),
+      CAP.LocalInH init H p σ σc ↔ ¬ «def:coordination/distributed» init H p σ σc) :=
+  ⟨CAP.localEvent_iff_not_contradicts, CAP.localInH_iff_not_contradicts⟩
+
+/-- Def. `def:coordination-free`, distributed: no commitment of an output or
+commit event of a produced history requires distributed coordination.  Lean:
+`System.CoordinationFreeH` (every such event is `LocalInH`). -/
+abbrev «def:coordination-free/distributed» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
     Prop :=
   Sys.CoordinationFreeH
 
-/-- Def. `def:coordination`: a coordination-free system has no distributed
+/-- Def. `def:coordination-free`: a coordination-free system has no distributed
 coordination. -/
-theorem «def:coordination/distributed-of-free» {sp : Spec I O} {D : Type}
-    {Sys : CAP.System sp D} (h : «def:coordination» Sys) : «def:coordination/distributed» Sys :=
+theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
+    {Sys : CAP.System sp D} (h : «def:coordination-free» Sys) :
+    «def:coordination-free/distributed» Sys :=
   CAP.coordinationFree_to_H h
-
-/-- Def. `def:coordination`, for a specification (`𝓡` the canonical runs):
-requiring coordination means applying a commitment (`Coordinates`: some output
-event has `γ ≠ ε`, or there is a commit event). -/
-abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-  Coordinates es
 
 /-- "For a specification, every commitment requires coordination: some canonical run
 accepts each input that a commitment can seal and emits each permitted
@@ -709,11 +751,11 @@ theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
-/-- Def. `def:coordination`: "For a specification, then, coordination-free means
+/-- Def. `def:coordination-free`: "For a specification, then, coordination-free means
 commitment-free: every output event is some `Out_ε(o)`, which may still
 perform output retirements, and no commitment event occurs."  Lean: `CoordFree` (every output event is
 `Out_ε(o)`, and there is no commit event). -/
-abbrev «def:coordination/coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   CoordFree es
 
 /-- "Closing the polls before every voter has voted seals the remaining
@@ -738,12 +780,12 @@ theorem «sec:coordination/choices-by-strategies» {sp : Spec I O} {D : Type}
   obtain ⟨n, init, H, q, a, b, γ, σ, _, hp, hH, _, _⟩ := h
   exact ⟨n, init, q, a, γ, ((hp q) a _ b hH).2⟩
 
-/-- Def. `def:coordination`: coordination-free is the negation of coordinates,
+/-- Def. `def:coordination-free`: coordination-free is the negation of coordinates,
 and coordination-free runs under any basis are exactly the commitment-free
 executions (`ExecCF`) of §3 after erasing `γ`.  `Out_ε(o)` ends at
 `R[out ⪰ o]`, so it may still retire rows (`«lem:canonical-commitment-normal-form»`
 (3) in the App. C file). -/
-theorem «def:coordination/commitment-free-runs» {sp : Spec I O} :
+theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
     (∀ es : List (SEvent sp), CoordFree es ↔ ¬ Coordinates es) ∧
     (∀ (B : Basis sp) (σ τ : State sp) (es : List (SEvent sp)),
       SysExec B σ es τ → CoordFree es → ExecCF σ (es.filterMap SEvent.erase) τ) ∧

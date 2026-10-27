@@ -379,19 +379,37 @@ commit events) agree; the lemma is `CC.canonical_equivalent`. -/
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- *requires coordination; coordination-free* — a commitment some other run
-could contradict; applying none (Def. `def:coordination`).  Lean, for a system: `CAP.System.CoordinationFree`
-(no output or commit event's commitments are contradicted by any run); for a
-specification, coordination is commitment (`Coordinates es`). -/
-abbrev «app:notation/coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
-  Sys.CoordinationFree
+/-- *contradicts* — accepts an input the commitment seals, or emits an output
+it chooses against (Def. `def:contradicts`).  Lean: `CAP.Contradicts emits
+accepts σ σc` (some removed row is emitted at its input, or some sealed input is
+accepted). -/
+abbrev «app:notation/contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
+    (σ σc : State sp) : Prop :=
+  CAP.Contradicts emits accepts σ σc
 
-/-- *requires distributed coordination* — a commitment some other run at
-another participant could contradict (Def. `def:coordination`).  Lean:
-`CAP.System.CoordinationFreeH` (none). -/
-abbrev «app:notation/distributed-coordination» {sp : Spec I O} {D : Type}
-    (Sys : CAP.System sp D) : Prop :=
-  Sys.CoordinationFreeH
+/-- *requires coordination* — a commitment some run contradicts
+(Def. `def:coordination`).  Lean, for a system: the commitments taking `σ` to
+`σc` are contradicted by the runs of `Sys` (`SysEmits`, `SysAccepts`); for a
+specification, coordination is commitment (`Coordinates es`). -/
+abbrev «app:notation/coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
+    (σ σc : State sp) : Prop :=
+  CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
+
+/-- *requires distributed coordination* — a commitment some run at another
+participant contradicts (Def. `def:coordination`).  Lean: the commitments of
+participant `p` of `H` are contradicted by a participant `q ≠ p` of `H`. -/
+abbrev «app:notation/distributed-coordination» {sp : Spec I O} {D : Type} {n : Nat}
+    (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp) : Prop :=
+  CAP.Contradicts (CAP.OtherEmits init H p) (CAP.OtherAccepts H p) σ σc
+
+/-- *coordination-free* — applies no commitment that requires coordination
+(Def. `def:coordination-free`).  Lean, for a system:
+`CAP.System.CoordinationFree` (no output or commit event's commitments are
+contradicted by any run of the system); `CAP.System.CoordinationFreeH` for
+distributed coordination; for a specification, `CoordFree es`. -/
+abbrev «app:notation/coordination-free» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
+    Prop :=
+  Sys.CoordinationFree
 
 /-- *partitioned history* — no message crosses components
 (Def. `def:partition-notions`).  Lean: `CAP.Partitioned H comp` (at least two

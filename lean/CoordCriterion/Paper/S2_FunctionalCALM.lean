@@ -210,7 +210,7 @@ theorem «sec:election-story/consistency» :
 /-! ## Specifications and states (`sec:functional-specifications`) -/
 
 /-- **Def. `def:functional-specification`** (Functional ordered
-specification).  "A tuple `(I, ≼, O, ≼, S)`, where `(I,≼)` and `(O,≼)` are
+specification, total).  "A tuple `(I, ≼, O, ≼, S)`, where `(I,≼)` and `(O,≼)` are
 partially ordered input and output types, and `S ⊆ I × O` is a typed relation
 … in which every input appears in at least one row (`S` is total on `I`) and
 at most one (a functional dependency)."
@@ -253,7 +253,8 @@ theorem «sec:functional-specifications/subsequence-example» {T : Type} {a b : 
     ¬ (⟨[a, b]⟩ : Sched T) ≼ ⟨[b, a]⟩ ∧ ¬ (⟨[b, a]⟩ : Sched T) ≼ ⟨[a, b]⟩ :=
   ⟨sched_le_iff, sched_two_minimal hab⟩
 
-/-- **Def. `def:functional-monotonicity`** (Functional monotonicity).  "`Spec`,
+/-- **Def. `def:functional-monotonicity`** (Functional monotonicity,
+monotone).  "`Spec`,
 with induced function `f`, is *monotone* if `i ≼ j ⟹ f(i) ≼ f(j)`."
 
 Lean: `Spec.MonotoneF` is stated on rows (`i ≼ j`, `(i,o) ∈ S`, `(j,u) ∈ S`
@@ -277,7 +278,8 @@ theorem «def:functional-monotonicity/via-f» {I O : Type} [PO I] [PO O]
   ⟨fun h i j hij => h i j _ _ hij ((hf i _).2 rfl) ((hf j _).2 rfl),
    fun h i j o u hij ho hu => by rw [(hf i o).1 ho, (hf j u).1 hu]; exact h i j hij⟩
 
-/-- **Def. `def:residual-state`** (Specification state).  "A pair
+/-- **Def. `def:residual-state`** (Specification state, current input,
+remainder table, legal input).  "A pair
 `σ = (i,R)`, where `i ∈ I` is the *current input* and `R ⊆ S` is the
 *remainder table*, such that: (1) `R` contains a row at `i`; and (2) `R`
 contains only rows at expansions of `i`."  An input `k` is *legal* at `σ`
@@ -480,7 +482,7 @@ theorem «lem:run-residual/example» (k : Ballots) (o : ResE) :
     outputTable (canon elecEq bxy) ⟨.bot⟩ k o ↔ (k = bxy ∧ o = ⟨.bot⟩) :=
   elecEq_bot_single_row k o
 
-/-- **Def. `def:consistency`** (Consistency).  "An ordered specification is
+/-- **Def. `def:consistency`** (Consistency, confluence at an input).  "An ordered specification is
 *consistent* when every finite family of runs is confluent: if the runs end
 at states `(i₁,R₁),…,(i_k,R_k)` and `j` is a common expansion of their current
 inputs, each run can be continued by further events to one

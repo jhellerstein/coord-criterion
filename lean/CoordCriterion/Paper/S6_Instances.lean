@@ -511,7 +511,8 @@ theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
       (.recv e' ∈ β → (IOM.input β).lt e e') :=
   IOM.send_after_out ⟨s, hx, rfl⟩ hm hrv hrm hj hmj hc
 
-/-- **Def. `def:induced-specification`** (Induced specification).  "The
+/-- **Def. `def:induced-specification`** (Input of an execution, induced
+specification).  "The
 *input* of a finite execution is the set of events the machine has received,
 ordered by happens-before between their sends; `h ⊑ h'` when `h ⊆ h'` and the
 two orders agree on `h`.  The specification *induced* by `M` and its

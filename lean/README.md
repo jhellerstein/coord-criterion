@@ -130,7 +130,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-602 entries.
+608 entries.
 
 ### §2 Functional CALM
 
@@ -292,15 +292,19 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Locks, timestamps, quorums, and consensus differ in how and when they decide. |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
+| `«def:contradicts»` | abbrev | **Def. |
 | `«def:coordination»` | abbrev | **Def. |
 | `«def:coordination/distributed»` | abbrev | Def. |
-| `«def:coordination/distributed-of-free»` | theorem | Def. |
 | `«def:coordination/specification»` | abbrev | Def. |
+| `«def:coordination-free»` | abbrev | **Def. |
+| `«def:coordination-free/local-iff»` | theorem | Def. |
+| `«def:coordination-free/distributed»` | abbrev | Def. |
+| `«def:coordination-free/distributed-of-free»` | theorem | Def. |
 | `«sec:coordination/specification-contradicted»` | theorem | "For a specification, every commitment requires coordination: |
-| `«def:coordination/coordination-free»` | abbrev | Def. |
+| `«def:coordination-free/specification»` | abbrev | Def. |
 | `«sec:coordination/closing-before-voting-seals»` | theorem | "Closing the polls before every voter has voted seals the remaining ballots." Lean: |
 | `«sec:coordination/choices-by-strategies»` | theorem | "Outputs, by contrast, are chosen only by strategies, so a choice requires coordination only when some run's strategy may emit the output it rules out." Lean: |
-| `«def:coordination/commitment-free-runs»` | theorem | Def. |
+| `«def:coordination-free/commitment-free-runs»` | theorem | Def. |
 | `«thm:commitments-require-coordination»` | theorem | **Prop. |
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
@@ -482,8 +486,10 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments and commitment events erased; every run has a canonical one (Lem. |
-| `«app:notation/coordination»` | abbrev | *requires coordination; coordination-free* — a commitment some other run could contradict; applying none (Def. |
-| `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — a commitment some other run at another participant could contradict (Def. |
+| `«app:notation/contradicts»` | abbrev | *contradicts* — accepts an input the commitment seals, or emits an output it chooses against (Def. |
+| `«app:notation/coordination»` | abbrev | *requires coordination* — a commitment some run contradicts (Def. |
+| `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — a commitment some run at another participant contradicts (Def. |
+| `«app:notation/coordination-free»` | abbrev | *coordination-free* — applies no commitment that requires coordination (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — no message crosses components (Def. |
 | `«app:notation/availability-relation»` | abbrev | *availability relation* — `A ⊆ S`, the rows whose outputs must stay available (Def. |
 | `«app:notation/availability»` | abbrev | *Availability for `A`* — each output of `R(i) ∩ A(i)` emittable locally (Def. |
@@ -653,7 +659,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«def:deployment»` | abbrev | **Definition `def:deployment`** (Deployment, separable run family). |
+| `«def:deployment»` | abbrev | **Definition `def:deployment`** (Deployment, emitted rows, participant run family, silent participant, separable run family). |
 | `«def:deployment/emitted-rows»` | theorem | Def. |
 | `«def:deployment/partition»` | theorem | Def. |
 | `«def:deployment/family»` | theorem | Def. |

@@ -41,7 +41,8 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
 /-! ## §4.5 The Complete CAP Theorem
 
-### Definition `def:partition-notions` (Partitioned history, Availability, Partition Consistency) -/
+### Definition `def:partition-notions` (Partitioned history, availability relation,
+Availability, Partition Consistency, consistency on `A`) -/
 
 /-- Def. `def:partition-notions`(1), *Partitioned history*: "A partitioned
 history divides the participants into two or more components and contains no
@@ -229,7 +230,7 @@ theorem «sec:complete-cap/necessity-any-system» (A : Table I O) (hAS : ∀ i o
 /-- "Under consistency on `A`, the canonical event for an output of `A` seals
 nothing and chooses only against outputs outside `A`, which the system never
 emits, so it is coordination-free (Definition
-`def:coordination`)."  "The system" is the canonical system of the intuition
+`def:coordination-free`)."  "The system" is the canonical system of the intuition
 after Theorem `thm:complete-cap`, `respSystem A`.  Lean: the system emits only rows of `A`, and no output
 event removes a row that any run of the system emits, or seals an input any
 run accepts. -/

@@ -387,7 +387,7 @@ theorem «app:bases/compound-output-event» {sp : Spec I O} :
 
 /-! ## Runs under a basis -/
 
-/-- **Def. run under a basis** (`def:run-under-basis`).  "A run under `ℬ` is a
+/-- **Def. run under a basis, canonical run** (`def:run-under-basis`).  "A run under `ℬ` is a
 finite transition sequence from a canonical state `σ_S(i)` of input events,
 legal output events `Out_γ(o)` (Definition system-output-event), and
 commitment events (Definition commitment-event) that use only commitments from
