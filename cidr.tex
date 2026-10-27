@@ -1132,10 +1132,12 @@ the same input.  At each input where it removes rows, a commitment either
 removes every row there, \emph{sealing} that input, or removes some outputs
 and keeps others, \emph{choosing} among them.  A \emph{system} consists of a
 \emph{commitment basis} $\mathcal B$ and a nondeterministic \emph{strategy} per
-participant that picks its next output, send, or receive event from its local
-history.  Its output event $\Out{\gamma}{o}$ applies a sequence $\gamma$ of
-commitments from $\mathcal B$, retires rows, and emits $o$; $\varepsilon$ is
-the empty sequence.  The full paper gives these definitions formally and shows
+participant that picks its next output, commitment, send, or receive event
+from its local history.  Its output event $\Out{\gamma}{o}$ applies a sequence
+$\gamma$ of commitments from $\mathcal B$, retires rows, and emits $o$;
+$\varepsilon$ is the empty sequence.  A commitment event $\mathsf{commit}(\gamma)$
+applies such a sequence and emits nothing, as when 2PL orders $A$ before $B$
+while $B$ waits for $A$'s lock.  The full paper gives these definitions formally and shows
 that every seal and choice of Section~\ref{sec:complete-calm} is a commitment
 in this sense.
 
@@ -1150,8 +1152,8 @@ Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}, which we call
 \emph{canonical runs}, cannot.  Every run under any basis has an observably
 equivalent canonical run, one that accepts the same inputs, emits the same
 outputs, and keeps at least the original's rows after each event (\extended).
-When 2PL orders $A$ before $B$ while reporting only $A$'s read, the canonical
-run reports the read with no commitment; when 2PL later emits a serial order,
+When 2PL orders $A$ before $B$ in a commitment event, the canonical run skips
+it; when 2PL later emits a serial order,
 so does the canonical run, and both end with the same table.
 
 The canonical commitments are therefore universal.  Locks, timestamps,
