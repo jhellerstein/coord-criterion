@@ -105,8 +105,7 @@ theorem «eq:curried-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B
 empty basis, the pipeline emits only what `S₂ ∘ S₁` emits under the empty
 basis.  Its runs are runs of a Lifted-Monotone specification, at whose states
 every output is exposable (Proposition `prop:exposure-boundary`).  So the next
-stage again has an empty-basis guard, and by induction no stage of the
-pipeline commits."  Lean: `Guard.pipeline_coordination_free`, via
+stage again has an empty-basis guard, and by induction no stage of the pipeline issues a commitment."  Lean: `Guard.pipeline_coordination_free`, via
 `Guard.exec_execCF`, for any system of `𝒮₂`. -/
 theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
     {sp : Spec I M} {sk : Spec M O} (hP : sp.LiftedMono) (hK : sk.LiftedMono) (K : Guard.Sys sk)

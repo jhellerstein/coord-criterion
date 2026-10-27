@@ -450,7 +450,7 @@ theorem «eq:lifted-validity» {sp : Spec I O} (σc : State sp) (o : O) :
    fun h k x hx hn => let ⟨u, ⟨hu, hou⟩, hxu⟩ := h k x hx (fun hk => hn hk.2)
       ⟨u, hu, hou, hxu⟩⟩
 
-/-- "A legal `Out_γ(o)` commits at least as much as the `output(o)` of
+/-- "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of
 Sections functional-calm–complete-calm: its commitments remove the rows in
 `Sealed_o` and `Rejected_o` (Lemma canonical-commitment-normal-form)…"
 
@@ -590,7 +590,7 @@ completed without committing `B` before `A`.  The canonical run skips that
 event, so it keeps every row, including the one completed by `[B,A,C]`.  When
 2PL later reports `A`'s read, with no commitment, and emits `[A,C,B]`, it
 applies no further commitment ordering `A` and `B`, and the canonical run emits
-the same outputs; both end with the same table.  The lock committed to `A` before `B` earlier than any
+the same outputs; both end with the same table.  The lock issued its commitment to `A` before `B` earlier than any
 output required."
 
 Lean (`CC.Txn.Partial.CommitEx.example_commit_event_ABC`; Appendix G's
@@ -648,7 +648,7 @@ theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop
 
 /-- §4.4: "A commitment requires coordination only when another run could
 contradict it … it requires distributed coordination when that run is at
-another participant.  Running such a mechanism need not commit: closing the
+another participant.  Running such a mechanism need not issue a commitment: closing the
 polls after every voter has voted still runs the mechanism, but no ballot is
 left to seal, so it removes nothing the specification still permits and
 applies no commitment."  At the canonical

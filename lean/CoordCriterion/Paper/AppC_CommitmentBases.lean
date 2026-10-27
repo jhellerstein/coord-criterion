@@ -489,7 +489,7 @@ theorem «app:bases/converse-fails» :
 /-! ## Application-specific commitments -/
 
 /-- *Application-specific commitments.*  "Locks and timestamps are commitments
-of this kind: two-phase locking commits an order among some transactions, and
+of this kind: two-phase locking issues a commitment to an order among some transactions, and
 timestamp assignment places one transaction relative to all others."
 
 Lean: for any transaction specification whose fibers are antichains, the 2PL

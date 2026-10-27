@@ -175,8 +175,7 @@ CALM's (\S\ref{sec:iconfluence-instance})?
 We answer such questions with a single criterion.  Our foundation is a minimalist
 specification model: a relational table pairing input values with
 corresponding outputs that are within spec.  The model is purely declarative: it
-describes what can be observed about a system, without committing to a
-language, protocol or placement.  The input domain $(I,\InputOrd)$ carries a partial order saying when one input
+describes what can be observed about a system, without fixing a language, protocol or placement.  The input domain $(I,\InputOrd)$ carries a partial order saying when one input
 \inrel another; the output domain $(O,\OutputOrd)$ carries one saying when one
 output \outrel another, preserving every claim the earlier one made.
 State-machine-style specifications can be compiled into this form via standard techniques
@@ -557,7 +556,7 @@ When this removes any row (at some input $j \InputGe i$), we call the state chan
 \end{definition}
 
 A commitment removes rows that input alone would not have removed: the inputs
-it seals are no longer legal.  Systems may commit more than an output
+it seals are no longer legal.  Systems may issue more commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 extra commitments only restrict behavior (Section~\ref{sec:systems}).
 
@@ -1123,7 +1122,7 @@ The output events above immediately apply exactly the commitments required.
 Many real systems make commitments before they're needed for output, for application-specific reasons.  The registrar of
 Section~\ref{sec:election-story} could emit $\bot$ without closing the polls, but closing the polls 
 is what is desired; a
-lock manager that commits to an ordering of ongoing transactions ($A$ before $B$)
+lock manager that issues a commitment to an ordering of ongoing transactions ($A$ before $B$)
 could output that fact immediately, but database clients do not require that information.  We model such systems by letting
 them bring bespoke commitments.  In general, a \emph{commitment} is a partial
 function on specification states that leaves the current input unchanged and
@@ -1172,7 +1171,7 @@ common semantic effect: each implements commitments, by sealing and
 choosing.  A commitment requires coordination only when another run could contradict it,
 by accepting an input it sealed or emitting an output it chose against; it
 requires distributed coordination when that run is at another participant.
-Running such a mechanism need not commit: closing the polls after every voter
+Running such a mechanism need not issue a commitment: closing the polls after every voter
 has voted still runs the mechanism, but no ballot is left to seal, so it
 removes nothing the specification still permits and applies no commitment.
 
@@ -1429,7 +1428,7 @@ of whether the count is below $10$ answers no.  Third, the
 order on $M$ is not part of the composite's contract, and a different order
 may make two non-monotone stages monotone, as with two stages that each
 negate a boolean.  These cases do not cover every monotone composite
-(\extended).  When none applies, some stage may have to commit even though the
+(\extended).  When none applies, some stage may have to issue a commitment even though the
 composite is monotone, as we discuss next.  We say that $S_2$ satisfies Lifted
 Monotonicity \emph{on} a set $D\subseteq M$ when the common-\indesc condition
 holds for its rows with inputs in $D$, at \indescs in $D$.
@@ -1441,7 +1440,7 @@ The replicated store of the opening extends the filtering case.  The
 key-value store is not monotone
 on its own, but it is monotone on what the log offers: a log fixes the order
 of commands, and a longer log only extends the responses.  Unlike the
-filtering case, the upstream must commit to offer only such inputs.
+filtering case, the upstream must issue a commitment to offer only such inputs.
 
 Let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of

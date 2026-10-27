@@ -138,12 +138,12 @@ Confluence, and later refinements of CALM all map into the same framework.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 16 & 1987\\
+unclassified & 16 & 1989\\
 formal definition/notation & 24 & 1344\\
 related-work detail & 7 & 1072\\
 example & 8 & 690\\
-explanation & 14 & 438\\
-formal caution & 7 & 352\\
+explanation & 14 & 440\\
+formal caution & 7 & 353\\
 signposting & 16 & 211\\
 result & 3 & 207\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
@@ -203,8 +203,7 @@ CALM's (\S\ref{sec:iconfluence-instance})?
 We answer such questions with a single criterion. Our foundation is a minimalist
 specification model: a relational table pairing input values with
 corresponding outputs that are within spec. The model is purely declarative: it
-describes what can be observed about a system, without committing to a
-language, protocol or placement. The input domain $(I,\InputOrd)$ carries a partial order saying when one input
+describes what can be observed about a system, without fixing a language, protocol or placement. The input domain $(I,\InputOrd)$ carries a partial order saying when one input
 \inrel another; the output domain $(O,\OutputOrd)$ carries one saying when one
 output \outrel another, preserving every claim the earlier one made. \textcolor{newblue}{State-machine-style specifications can be compiled into this form via standard techniques
 in formal verification, 
@@ -583,7 +582,7 @@ table to the rows whose outputs \outrelbase $o$, and emits $o$:}
 \end{definition}
 
 A commitment removes rows that input alone would not have removed: the inputs
-it seals are no longer legal. \removednote{\textbf{example}, 11 words, rank 81; \textit{Seals of this form are the only commitments this section uses.}} \textcolor{newblue}{Systems may commit more than an output
+it seals are no longer legal. \removednote{\textbf{example}, 11 words, rank 81; \textit{Seals of this form are the only commitments this section uses.}} \textcolor{newblue}{Systems may issue more commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 extra commitments only restrict behavior (Section~\ref{sec:systems}).}
 
@@ -643,7 +642,7 @@ state to $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.}
 
 \begin{proof}[Proof sketch]
 Rows are never added, so the row of a common state at $j$ was there
-in every run. \removednote{\textbf{explanation}, 25 words, rank 50; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+in every run. \removednote{\textbf{explanation}, 25 words, rank 51; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 Consistency guarantees runs never diverge irreparably: no ``split brain''. Whatever input
@@ -1041,7 +1040,7 @@ environment or in a message from another participant. \removednote{\textbf{forma
 if it carries none, and arbitrary application-specific data $d$; one can envision timestamps, version
 vectors, state identities, and so on.} \textcolor{newblue}{A receive does not change the specification state; a
 participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own
-$\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.} \removednote{\textbf{formal definition/notation}, 119 words, rank 13; \textit{Fix an ordered specification, participants [math], and an initial input [math] for each.}} \textcolor{newblue}{Data can
+$\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.} \removednote{\textbf{formal definition/notation}, 119 words, rank 14; \textit{Fix an ordered specification, participants [math], and an initial input [math] for each.}} \textcolor{newblue}{Data can
 influence which events a system chooses to execute next (\S\ref{sec:systems}), but never directly changes a specification
 state.}
 
@@ -1089,7 +1088,7 @@ specification. With several outputs per input this fails even for consistent spe
 in Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
 $\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run at
 the same input that emitted nothing keeps them. Consistency then guarantees
-that such replicas can be reconciled, not that they agree. \removednote{\textbf{unclassified}, 99 words, rank 17; \textit{The data [math] of a message is any application state other than input that a participant ...}} \removednote{\textbf{explanation}, 113 words, rank 15; \textit{The histories above use the output events of Sections --, which apply exactly the commitments an ...}}
+that such replicas can be reconciled, not that they agree. \removednote{\textbf{unclassified}, 99 words, rank 17; \textit{The data [math] of a message is any application state other than input that a participant ...}} \removednote{\textbf{explanation}, 115 words, rank 15; \textit{The histories above use the output events of Sections --, which apply exactly the commitments an ...}}
 
 \subsection{Systems}
 \label{sec:systems}
@@ -1132,7 +1131,7 @@ that such replicas can be reconciled, not that they agree. \removednote{\textbf{
 \textcolor{newblue}{The output events above immediately apply exactly the commitments required.} \textcolor{newblue}{Many real systems make commitments before they're needed for output, for application-specific reasons.} \textcolor{newblue}{The registrar of
 Section~\ref{sec:election-story} could emit $\bot$ without closing the polls, but closing the polls 
 is what is desired; a
-lock manager that commits to an ordering of ongoing transactions ($A$ before $B$)
+lock manager that issues a commitment to an ordering of ongoing transactions ($A$ before $B$)
 could output that fact immediately, but database clients do not require that information.} We model such systems by letting
 them bring bespoke commitments. \removednote{\textbf{unclassified}, 0 words, rank 95; labels def:commitment} \textcolor{newblue}{In general, a \emph{commitment} is a partial
 function on specification states that leaves the current input unchanged and
@@ -1169,7 +1168,7 @@ quorums, and consensus differ in how and when they decide. \removednote{\textbf{
 event of any system removes at least the rows that the canonical event for its
 output removes.} \textcolor{newblue}{Whether a
 specification needs coordination is thus a question about the seals and
-choices its outputs require, whatever mechanism a system uses to make them.} \removednote{\textbf{unclassified}, 119 words, rank 14; \textit{Consider 2PL on input [math], where [math] reads a key [math] that no transaction writes, and ...}}
+choices its outputs require, whatever mechanism a system uses to make them.} \removednote{\textbf{unclassified}, 121 words, rank 13; \textit{Consider 2PL on input [math], where [math] reads a key [math] that no transaction writes, and ...}}
 
 \subsection{Coordination}
 \label{sec:coordination}
@@ -1179,7 +1178,7 @@ still permits. \textcolor{newblue}{Mutexes, locks, timestamps, and agreement pro
 common semantic effect: each implements commitments, by sealing and
 choosing.} A commitment requires coordination only when another run could contradict it,
 by accepting an input it sealed or emitting an output it chose against; it
-requires distributed coordination when that run is at another participant. Running such a mechanism need not commit: closing the polls after every voter
+requires distributed coordination when that run is at another participant. Running such a mechanism need not issue a commitment: closing the polls after every voter
 has voted still runs the mechanism, but no ballot is left to seal, so it
 removes nothing the specification still permits and applies no commitment.
 
@@ -1302,7 +1301,7 @@ an input or make a choice that another could contradict.
 \end{definition}
 
 With $A=S$, consistency on $A$ is the common-\indesc condition
-(Definition~\ref{def:common-expansion-condition}). \removednote{\textbf{formal caution}, 25 words, rank 51; \textit{Unlike Availability, Availability for a smaller [math] can be met by a system whose output events ...}}
+(Definition~\ref{def:common-expansion-condition}). \removednote{\textbf{formal caution}, 26 words, rank 49; \textit{Unlike Availability, Availability for a smaller [math] can be met by a system whose output events ...}}
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
@@ -1342,7 +1341,7 @@ canonical system above need coordination. Under consistency on $A$, the canonica
 for an output of $A$ seals nothing and chooses only against outputs outside
 $A$, which the system never emits, so it is
 coordination-free (Definition~\ref{def:coordination}). For $A=S$ it needs no
-commitment at all. \removednote{\textbf{formal caution}, 26 words, rank 49; \textit{For a smaller [math] such local choices can be necessary: if [math] and [math] have no ...}} When consistency on $A$ fails, some
+commitment at all. \removednote{\textbf{formal caution}, 26 words, rank 50; \textit{For a smaller [math] such local choices can be necessary: if [math] and [math] have no ...}} When consistency on $A$ fails, some
 output of $A$ either waits for another component, sacrificing Availability, or
 is emitted independently at the cost of Partition Consistency.
 
@@ -1439,7 +1438,7 @@ of whether the count is below $10$ answers no.} \textcolor{newblue}{Third, the
 order on $M$ is not part of the composite's contract, and a different order
 may make two non-monotone stages monotone, as with two stages that each
 negate a boolean.} \textcolor{newblue}{These cases do not cover every monotone composite
-(\extended).} \textcolor{newblue}{When none applies, some stage may have to commit even though the
+(\extended).} \textcolor{newblue}{When none applies, some stage may have to issue a commitment even though the
 composite is monotone, as we discuss next.} \removednote{\textbf{signposting}, 12 words, rank 78; \textit{The replicated store of the opening extends the filtering case of Proposition (2).}} We say that $S_2$ satisfies Lifted
 Monotonicity \emph{on} a set $D\subseteq M$ when the common-\indesc condition
 holds for its rows with inputs in $D$, at \indescs in $D$. \removednote{\textbf{result}, 102 words, rank 16; \textit{The composite [math] satisfies Lifted Monotonicity, and so is consistent and needs no commitment, in each ...}; labels prop:joint-monotone}
@@ -1451,7 +1450,7 @@ holds for its rows with inputs in $D$, at \indescs in $D$. \removednote{\textbf{
 key-value store is not monotone
 on its own, but it is monotone on what the log offers: a log fixes the order
 of commands, and a longer log only extends the responses. Unlike the
-filtering case, the upstream must commit to offer only such inputs.
+filtering case, the upstream must issue a commitment to offer only such inputs.
 
 Let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own. Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of

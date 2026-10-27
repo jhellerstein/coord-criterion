@@ -173,7 +173,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commit-iff-seal»` | theorem | Def. |
 | `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` refines itself, so the event always ends at a state." |
-| `«sec:functional-events/extra-commitments»` | theorem | "Systems may commit more, as the registrar of Figure `fig:election-frames`(d) does, but extra commitments only restrict behavior (Section `sec:systems`)." Fo… |
+| `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments, as the registrar of Figure `fig:election-frames`(d) does, but extra commitments only restrict behavior (Section `sec:sys… |
 | `«def:exposable»` | abbrev | **Def. |
 | `«def:exposable/no-commitment»` | theorem | Def. |
 | `«sec:functional-events/functional-exposable»` | theorem | "In a functional specification this means `R[out ⪰ o] = R`: |
@@ -281,7 +281,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:commitment-event»` | abbrev | **Def. |
 | `«sec:systems/commitment-event-unobserved»` | theorem | After Def. |
 | `«eq:lifted-validity»` | theorem | **Eq. |
-| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` commits at least as much as the `output(o)` of Sections functional-calm–complete-calm: |
+| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of Sections functional-calm–complete-calm: |
 | `«sec:systems/output-is-canonical-event»` | theorem | "… and `output(o)` is the case in which they remove exactly those." Lean: |
 | `«sec:systems/system-histories»` | theorem | "The environment observes `o`, not `γ`." Together with Def. |
 | `«sec:systems/bases-differ»` | theorem | *A transactional example of bespoke commitments.* "The lock manager … is one system; multiversion timestamp ordering (MVTO) is another, and they have differe… |
@@ -808,12 +808,12 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/abort-free-waits-forever»` | theorem | "Under the abort-free specification, once `order(A,B)` is applied, `order(B,A)` is undefined at every later state: |
 | `«app:cc-bases/fig-i»` | theorem | "On complete rows without aborts, `stamp(B)` with `Z = ∅` keeps exactly those with `B` first (Figure `fig:cc-commitments`(i))." |
 | `«app:cc-bases/stamp-at-ABC»` | theorem | "… at the canonical state of `{A,B,C}` it is a choice, and it is not the choice `c_o` of any output": |
-| `«app:cc-bases/mvto-row»` | theorem | *What a read commits to*, the row argument: |
+| `«app:cc-bases/mvto-row»` | theorem | *What a read is a commitment to*, the row argument: |
 | `«app:cc-bases/read-commits»` | theorem | "Hence, after the two stamps, no row reporting the read commits both `A` and `B`, and once `read` has been applied, no remaining row commits both, whether it… |
 | `«app:cc-bases/writer-before-A»` | theorem | "The condition on the version is needed. |
 | `«app:cc-bases/abort-entailed»` | theorem | *When the abort is entailed.* "If every remaining complete row commits `B`, for instance after `commit(B)`, then every remaining complete row aborts `A`. |
 | `«app:cc-bases/abort-is-a-choice»` | theorem | "While `B` is undecided, it does not. |
-| `«app:cc-bases/comparison»` | theorem | "Under MVTO, a later transaction's read of an older version commits that the writer and the reader do not both commit, and the write rule settles this at onc… |
+| `«app:cc-bases/comparison»` | theorem | "Under MVTO, a later transaction's read of an older version is a commitment that the writer and the reader do not both commit, and the write rule settles thi… |
 
 ### Appendix H: Additional applications
 

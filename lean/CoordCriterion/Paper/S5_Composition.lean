@@ -202,8 +202,7 @@ theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
     («sec:composite-calm/complete-calm» sp1 sp2).2 h⟩
 
 /-- "The three cases do not cover every monotone composite (Appendix
-`app:composition`).  When no case applies, some stage may have to commit even
-though the composite is monotone, as we discuss next."  Lean: `Joint.no_order_counterexample`
+`app:composition`).  When no case applies, some stage may have to issue a commitment even though the composite is monotone, as we discuss next."  Lean: `Joint.no_order_counterexample`
 (`I` is the chain `Joint.C3`, `M = Joint.Mid`): under every partial order on
 `M` the composite is Lifted-Monotone, the upstream is not (so case (3) fails,
 and with it (1) and (2)), and its empty-basis system cannot emit at some
@@ -221,7 +220,7 @@ theorem «sec:composite-calm/reach» :
 Proposition `prop:joint-monotone`(2).  The key-value store is not monotone on
 its own, but it is monotone on what the log offers: a log fixes the order of
 commands, and a longer log only extends the responses.  Unlike the filtering
-case, the upstream must commit to offer only such inputs."  Lean, for any
+case, the upstream must issue a commitment to offer only such inputs."  Lean, for any
 deterministic state machine `δ` and two distinct commands: the key-value store
 `𝒦 ∘ 𝒫` (`𝒫 = Inst.smrS1`, the log) is not Lifted-Monotone, execution
 `Inst.execF δ σ₀` is monotone on logs, and the log is not Lifted-Monotone. -/

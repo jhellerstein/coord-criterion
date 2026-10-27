@@ -370,7 +370,7 @@ theorem «sec:functional-events/output-ends-at-state» {I O : Type} [PO I] [PO O
     Step σ (.output o) (outputState σ o h) ∧ (outputState σ o h).R σ.cur o :=
   ⟨step_outputState σ o h, ⟨h, PO.refl o⟩⟩
 
-/-- "Systems may commit more, as the registrar of Figure
+/-- "Systems may issue more commitments, as the registrar of Figure
 `fig:election-frames`(d) does, but extra commitments only restrict behavior
 (Section `sec:systems`)."  For the registrar of panel (d): its
 event `Out_[closePolls](⊥)` has an observably equivalent `output(⊥)` of the

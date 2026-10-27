@@ -331,7 +331,7 @@ theorem «app:cc-bases/stamp-at-ABC» {T K : Type} {rd wr : T → K → Prop} {A
   let ⟨τ, hτ, h1, h2, h3, h4⟩ := stamp_at (K := K) (rd := rd) (wr := wr) h
   ⟨τ, hτ, h1, h2, h3, h4, (neither_is_choice h).2 τ hτ⟩
 
-/-- *What a read commits to*, the row argument: "A complete row that satisfies
+/-- *What a read is a commitment to*, the row argument: "A complete row that satisfies
 both stamps and commits both `A` and `B` places `A` between that version and
 `B`, so it does not permit the read."  `Z_B ∋ A` is "`B` stamped after `A`"; the version is the
 initial one or written by `W ∈ Z_A`, `W ≠ A`. -/
@@ -344,7 +344,7 @@ theorem «app:cc-bases/mvto-row» {T K : Type} {rd wr : T → K → Prop} {k : F
 
 /-- "Hence, after the two stamps, no row reporting the read commits both `A`
 and `B`, and once `read` has been applied, no remaining row commits both,
-whether it reports the read or not.  Reporting the read commits to this: `A`
+whether it reports the read or not.  Reporting the read is a commitment to this: `A`
 and `B` do not both commit."  The two stamps are
 `TwoStamps A B Z_A Z_B σ σ2` (`stamp(A)`, anything, `stamp(B)` with `A ∈ Z_B`);
 "remaining" is: in any table contained in the one after the stamps (resp.
@@ -425,8 +425,7 @@ theorem «app:cc-bases/abort-is-a-choice» {T K : Type} {rd wr : T → K → Pro
 
 /-! ## Comparison -/
 
-/-- "Under MVTO, a later transaction's read of an older version commits that
-the writer and the reader do not both commit, and the write rule settles this
+/-- "Under MVTO, a later transaction's read of an older version is a commitment that the writer and the reader do not both commit, and the write rule settles this
 at once by aborting the writer; the specification forces that abort only after
 the reader commits."  The first part is `«app:cc-bases/read-commits»`; the
 second is `«app:cc-bases/abort-entailed»` together with the instance

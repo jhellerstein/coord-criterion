@@ -125,14 +125,13 @@ A write of $x$ by $A$ is rejected, and $A$ aborted, when a transaction stamped
 after $A$ has already read a version of $x$ stamped before $A$; otherwise the
 scheduler applies $\mathsf{commit}(A)$ when $A$ commits.
 
-\emph{What a read commits to.}  Suppose $A$ writes $x$, $B$ is stamped after
+\emph{What a read is a commitment to.}  Suppose $A$ writes $x$, $B$ is stamped after
 $A$, and $B$'s read of $x$ returned the initial version or the write of $x$ by
 a transaction stamped before $A$.  A complete row that satisfies both stamps
 and commits both $A$ and $B$ places $A$ between that version and $B$, so it
 does not permit the read.  Hence, after the two stamps, no row reporting the
 read commits both $A$ and $B$, and once $\mathsf{read}$ has been applied, no
-remaining row commits both, whether it reports the read or not.  Reporting the
-read commits to this: $A$ and $B$ do not both commit.  The condition on the
+remaining row commits both, whether it reports the read or not.  Reporting the read is a commitment to this: $A$ and $B$ do not both commit.  The condition on the
 version is needed.  At input $\{A,W,B\}$, stamped in that order, with $A$ and
 $W$ writing $x$, the complete row that commits all three in stamp order and
 reports that $B$ read $W$'s write is permitted and satisfies every stamp.
@@ -158,9 +157,9 @@ choice, made by $\mathsf{abort}(A)$, between two outcomes the specification
 still permits.
 
 \paragraph{Comparison.}
-2PL commits relative orders, only between conflicting transactions; MVTO
-commits each transaction's position against all present and future ones on
+2PL issues commitments to relative orders, only between conflicting
+transactions; MVTO issues a commitment to each transaction's position against all present and future ones on
 arrival.  Both report reads through $\mathsf{read}$.  Under MVTO, a later
-transaction's read of an older version commits that the writer and the reader
-do not both commit; the write rule settles this at once by aborting the writer,
+transaction's read of an older version is a commitment that the writer and the
+reader do not both commit; the write rule settles this at once by aborting the writer,
 and the specification forces that abort only after the reader commits.
