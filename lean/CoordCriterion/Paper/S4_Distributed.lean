@@ -445,9 +445,10 @@ theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
     (∀ (σ : State sp) (o : O), kappa σ o =
       (if ∃ k x, Sealed σ o k x then [sealC o] else []) ++
       (if ∃ k x, Rejected σ o k x then [choiceC o] else [])) ∧
-    (∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ → Step σ e.erase τ) ∧
+    (∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ →
+      ∃ e' : Event I O, e.erase = some e' ∧ Step σ e' τ) ∧
     (∀ (σ τ : State sp) (e : Event I O), Step σ e τ →
-      ∃ e' : SEvent sp, e'.erase = e ∧ CanonStep σ e' τ) :=
+      ∃ e' : SEvent sp, e'.erase = some e ∧ CanonStep σ e' τ) :=
   ⟨fun _ _ => rfl, fun _ _ _ => canonStep_step, fun _ _ _ => step_canonStep⟩
 
 /-- "The environment observes `o`, not `γ`."  Together with Def. `def:system`:
@@ -463,7 +464,7 @@ theorem «sec:systems/system-histories» {sp : Spec I O} {B : Basis sp} {σ τ :
     (SysStep B σ (.output γ o) τ ↔
       (∀ c ∈ γ, B c) ∧ ∃ σc, CAP.applySeq σ (γ.map Dist.toCAP) = some σc ∧
         Step σc (.output o) τ ∧ Exposable σc o) ∧
-    (SEvent.output γ o).erase = (Event.output o : Event I O) :=
+    (SEvent.output γ o).erase = some (Event.output o : Event I O) :=
   ⟨Dist.sysStep_iff_CAP, rfl⟩
 
 /-- *A transactional example of bespoke commitments.*  "The lock manager …

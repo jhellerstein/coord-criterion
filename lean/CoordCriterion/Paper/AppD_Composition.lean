@@ -378,7 +378,7 @@ theorem «app:composition/replacement» {M O : Type} [PO M] [PO O] {sk : Spec M 
     (K : Guard.Sys sk) :
     (Guard.eraseSys K).basis = (fun _ => False) ∧
     (∀ i a' e', (Guard.eraseSys K).strat i a' e' ↔
-      ∃ a e, a.map Guard.eraseC = a'.map Guard.eraseC ∧ Guard.eraseC e = Guard.eraseC e' ∧
+      ∃ a e, a.filterMap Guard.eraseC = a'.filterMap Guard.eraseC ∧ Guard.eraseC e = Guard.eraseC e' ∧
         K.strat i a e) ∧
     ∀ i es ρ, Guard.Produces (Guard.eraseSys K) i es ρ → ∀ γ x, SEvent.output γ x ∈ es → γ = [] :=
   ⟨rfl, fun _ _ _ => Iff.rfl, fun _ _ _ h => Guard.eraseSys_eps h⟩
@@ -393,10 +393,10 @@ theorem «cor:empty-store» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M} 
     (hP : Guard.Proper sp sk) (U : List {m // Joint.Img sp m} → Prop)
     (K : Guard.Sys (Guard.rest sp sk)) :
     ∀ l m esK, Guard.GRun U K l m esK →
-      Guard.GRun U (Guard.eraseSys K) l m (esK.map Guard.eraseC) ∧
-        (esK.map Guard.eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
+      Guard.GRun U (Guard.eraseSys K) l m (esK.filterMap Guard.eraseC) ∧
+        (esK.filterMap Guard.eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
         ∀ ρK, Guard.Produces K m esK ρK → ∃ ρ', Guard.Produces (Guard.eraseSys K) m
-          (esK.map Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
+          (esK.filterMap Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
   fun _ _ _ h => Guard.proper_erase hP h
 
 /-- Proof of Corollary `cor:empty-store`: "Let `τ` be a state of the original
@@ -411,7 +411,7 @@ theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M 
     (hC : sk.CommonExpansion) {BK : Basis sk} {σ ρ : State sk}
     {es : List (SEvent sk)} (h : SysExec BK σ es ρ) (σ' : State sk) (hr : IsRun σ')
     (hc : σ'.cur = σ.cur) (hs : ∀ k u, σ.R k u → σ'.R k u) :
-    ∃ ρ', SysExec (fun _ => False) σ' (es.map Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ρ'.cur = ρ.cur ∧
+    ∃ ρ', SysExec (fun _ => False) σ' (es.filterMap Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ρ'.cur = ρ.cur ∧
       ∀ k u, ρ.R k u → ρ'.R k u :=
   Guard.erase_lockstep hC h σ' hr hc hs
 

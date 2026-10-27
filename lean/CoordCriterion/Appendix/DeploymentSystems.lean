@@ -38,6 +38,7 @@ def emittedL (c : I) : List (LEv sp D m) → List (I × O)
   | [] => []
   | .inp j :: es => emittedL j es
   | .out _ o :: es => (c, o) :: emittedL c es
+  | .cmt _ :: es => emittedL c es
   | .send _ _ :: es => emittedL c es
   | .recv _ _ _ _ :: es => emittedL c es
 
@@ -47,6 +48,7 @@ def toS : List (LEv sp D m) → List (SEvent sp)
   | [] => []
   | .inp j :: es => .input j :: toS es
   | .out γ o :: es => .output (γ.map Dist.ofCAP) o :: toS es
+  | .cmt γ :: es => .commit (γ.map Dist.ofCAP) :: toS es
   | .send _ _ :: es => toS es
   | .recv _ _ _ _ :: es => toS es
 
@@ -66,6 +68,10 @@ theorem lrun_sysExec {σ τ : State sp} {l : List (LEv sp D m)} (h : LRun σ l �
   | @out σ σc τ ρ γ o es hγ hs hexp _ ih =>
     refine SysExec.cons (Dist.sysStep_iff_CAP.2 ⟨fun _ _ => trivial, σc, ?_, hs, hexp⟩) ih
     rw [map_ofCAP_toCAP]; exact hγ
+  | cmt hne hγ _ ih =>
+    refine SysExec.cons (SysStep.commit (fun _ _ => trivial) ?_ ?_) ih
+    · intro h; exact hne (List.map_eq_nil_iff.1 h)
+    · rw [Dist.applySeq_iff_CAP, map_ofCAP_toCAP]; exact hγ
   | send _ ih => exact ih
   | recv _ ih => exact ih
 
@@ -76,7 +82,8 @@ theorem emitted_toS (c : I) (l : List (LEv sp D m)) :
   | cons e es ih =>
     cases e with
     | inp j => exact ih j
-    | out γ o => simp only [toS, List.map_cons, SEvent.erase, emitted, emittedL, ih]
+    | out γ o => simp only [toS, List.filterMap_cons, SEvent.erase, emitted, emittedL, ih]
+    | cmt γ => exact ih c
     | send _ _ => exact ih c
     | recv _ _ _ _ => exact ih c
 

@@ -199,9 +199,10 @@ Lean: (a) canonical steps are exactly the steps of §§2–3 (both directions);
 (b) with one row per input, `κ_o` is at most the seal, and the seal leaves
 `R[out ⪰ o]`, the table of Def. output-event. -/
 theorem «def:canonical-commitment-basis/canonical-event» {sp : Spec I O} :
-    ((∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ → Step σ e.erase τ) ∧
+    ((∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ →
+      ∃ e' : Event I O, e.erase = some e' ∧ Step σ e' τ) ∧
      (∀ (σ τ : State sp) (e : Event I O), Step σ e τ →
-        ∃ e' : SEvent sp, e'.erase = e ∧ CanonStep σ e' τ)) ∧
+        ∃ e' : SEvent sp, e'.erase = some e ∧ CanonStep σ e' τ)) ∧
     (sp.Functional →
       (∀ (σ : State sp) (o : O),
         kappa σ o = (if ∃ k x, Sealed σ o k x then [sealC o] else [])) ∧

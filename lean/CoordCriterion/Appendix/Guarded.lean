@@ -727,21 +727,12 @@ theorem filterMap_eraseC_idem (l : List (SEvent sq)) :
   exact congrArg (fun g => List.filterMap g l) (funext eraseC_eraseC)
 
 theorem map_erase_eraseC (l : List (SEvent sq)) :
-<<<<<<< HEAD
     (l.filterMap eraseC).filterMap SEvent.erase = l.filterMap SEvent.erase := by
   rw [List.filterMap_filterMap]
   exact congrArg (fun g => List.filterMap g l) (funext erase_eraseC)
 
 theorem map_erase_of_eraseC {l l' : List (SEvent sq)}
     (h : l.filterMap eraseC = l'.filterMap eraseC) :
-=======
-    (l.map eraseC).filterMap SEvent.erase = l.filterMap SEvent.erase := by
-  induction l with
-  | nil => rfl
-  | cons e l ih => simp only [List.map_cons, erase_eraseC, ih]
-
-theorem map_erase_of_eraseC {l l' : List (SEvent sq)} (h : l.map eraseC = l'.map eraseC) :
->>>>>>> sandbox-20e053a6-1144-45e4-ad0f-e8cf14292186
     l.filterMap SEvent.erase = l'.filterMap SEvent.erase := by
   rw [← map_erase_eraseC l, h, map_erase_eraseC]
 
@@ -778,6 +769,26 @@ theorem eraseSys_eps {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq
   cases γ with
   | nil => rfl
   | cons c _ => exact (sysExec_basis h.1 _ _ hm c List.mem_cons_self).elim
+
+/-- A system whose strategy never allows a commit event produces none. -/
+theorem produces_noCommit {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq}
+    (hS : ∀ a γ, ¬ S.strat i a (.commit γ)) (h : Produces S i es ρ) :
+    ∀ γ, SEvent.commit γ ∉ es := by
+  intro γ hm
+  obtain ⟨a, c, rfl⟩ := List.append_of_mem hm
+  exact hS a γ (h.2 a _ c rfl)
+
+/-- Without commit events, erasure keeps the length. -/
+theorem length_filterMap_erase {es : List (SEvent sq)} (h : ∀ γ, SEvent.commit γ ∉ es) :
+    (es.filterMap SEvent.erase).length = es.length := by
+  induction es with
+  | nil => rfl
+  | cons e es ih =>
+    have ih' := ih (fun γ hm => h γ (List.mem_cons_of_mem _ hm))
+    cases e with
+    | commit γ => exact absurd List.mem_cons_self (h γ)
+    | input _ => simp [SEvent.erase, ih']
+    | output _ _ => simp [SEvent.erase, ih']
 
 /-- Current input after a history: the last input, or the initial one. -/
 def lastIn : J → List (SEvent sq) → J
@@ -924,10 +935,9 @@ theorem sysStep_empty_erase {J X : Type} [PO J] [PO X] {sq : Spec J X} {σ τ : 
     cases hγ with
     | nil => exact ⟨_, rfl, Step.output _ _ _ ho hcur hR⟩
     | cons _ _ => exact (hb _ List.mem_cons_self).elim
-  | @commit _ _ γ hb hne _ =>
-    cases γ with
-    | nil => exact absurd rfl hne
-    | cons c _ => exact (hb c List.mem_cons_self).elim
+  | commit hb hne _ =>
+    obtain ⟨c, hc⟩ := List.exists_mem_of_ne_nil _ hne
+    exact (hb c hc).elim
 
 /-- An empty-basis step is a step of the transition system of Sections 2–3. -/
 theorem sysStep_empty_step {J X : Type} [PO J] [PO X] {sq : Spec J X} {σ τ : State sq}
@@ -1454,15 +1464,9 @@ satisfies Lifted Monotonicity, every guarded composite run of a store system
 original's.  Proper coordination is not needed. -/
 theorem erase_simulates (hC : sk.CommonExpansion) {U : List M → Prop} {K : Sys sk}
     {l : List M} {m : M} {esK : List (SEvent sk)} (h : GRun U K l m esK) :
-<<<<<<< HEAD
     GRun U (eraseSys K) l m (esK.filterMap eraseC) ∧
       (esK.filterMap eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
       ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.filterMap eraseC) ρ' ∧
-=======
-    GRun U (eraseSys K) l m (esK.map eraseC) ∧
-      (esK.map eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
-      ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.map eraseC) ρ' ∧
->>>>>>> sandbox-20e053a6-1144-45e4-ad0f-e8cf14292186
         IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u := by
   obtain ⟨hU, hS, ρK, hK⟩ := h
   have main : ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.filterMap eraseC) ρ' ∧
@@ -1666,9 +1670,9 @@ theorem merge_congr {N : Type} [PO N] {sq : Spec I N} :
       es.filterMap skel = es'.filterMap skel → merge es oss = merge es' oss
   | [], [], _, _ => rfl
   | .commit _ :: es, es', oss, h => by
-    simp only [merge]; exact merge_congr es es' oss (by simpa [skel] using h)
+    simp only [merge]; exact merge_congr es es' oss (by rwa [List.filterMap_cons_none rfl] at h)
   | es, .commit _ :: es', oss, h => by
-    simp only [merge]; exact merge_congr es es' oss (by simpa [skel] using h)
+    simp only [merge]; exact merge_congr es es' oss (by rwa [List.filterMap_cons_none rfl] at h)
   | [], .input _ :: _, _, h => by simp [skel] at h
   | [], .output _ _ :: _, _, h => by simp [skel] at h
   | .input _ :: _, [], _, h => by simp [skel] at h
@@ -1725,7 +1729,7 @@ theorem core_lockstep {B : Basis sp} {σ ρ : State sp} {es : List (SEvent sp)}
     | commit γ =>
       obtain ⟨es', ρ', hx, hsk, hem, hcρ, hsρ⟩ := ih σ' (by rw [hs.commit_cur]; exact hc)
         (fun k m hk => hsub k m (hs.sub _ _ hk))
-      exact ⟨es', ρ', hx, by simpa [skel] using hsk, hem, hcρ, hsρ⟩
+      exact ⟨es', ρ', hx, by rw [List.filterMap_cons_none rfl]; exact hsk, hem, hcρ, hsρ⟩
 
 /-- Transport a run along an equality of specifications. -/
 theorem exec_cast {J X : Type} [PO J] [PO X] {sq sq' : Spec J X} (h : sq = sq') {i : J}
@@ -1895,15 +1899,9 @@ theorem proper_needs_commit (hP : Proper sp sk) (hnot : ¬ (seq sp sk).LiftedMon
 theorem proper_erase (hP : Proper sp sk) {U : List {m // Img sp m} → Prop}
     {K : Sys (rest sp sk)} {l : List {m // Img sp m}} {m : {m // Img sp m}}
     {esK : List (SEvent (rest sp sk))} (h : GRun U K l m esK) :
-<<<<<<< HEAD
     GRun U (eraseSys K) l m (esK.filterMap eraseC) ∧
       (esK.filterMap eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
       ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.filterMap eraseC) ρ' ∧
-=======
-    GRun U (eraseSys K) l m (esK.map eraseC) ∧
-      (esK.map eraseC).filterMap SEvent.erase = esK.filterMap SEvent.erase ∧
-      ∀ ρK, Produces K m esK ρK → ∃ ρ', Produces (eraseSys K) m (esK.map eraseC) ρ' ∧
->>>>>>> sandbox-20e053a6-1144-45e4-ad0f-e8cf14292186
         IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
   erase_simulates (proper_iff_ce.1 hP) h
 
@@ -2129,6 +2127,7 @@ theorem composite_monotone_not_enough :
   | cons e es ih =>
     cases e with
     | input j => exact ih (fun γ o h => hs γ o (List.mem_cons_of_mem _ h))
+    | commit γ => exact ih (fun γ o h => hs γ o (List.mem_cons_of_mem _ h))
     | output γ o => exact absurd (List.mem_cons_self ..) (hs γ o)
 
 end Limits
@@ -2234,17 +2233,19 @@ noncomputable def mutexB {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : B
   fun c => c = sealIn (bFirst b)
 
 /-- **Early lock.**  The store's strategy takes the lock at its first event if
-the log is still empty, and applies nothing otherwise. -/
+the log is still empty, and applies nothing otherwise (in particular it
+performs no commit event). -/
 noncomputable def earlyLock {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : Sys (graph f) where
   basis := mutexB b f
-  strat m a e := ∀ δ x, e = .output δ x →
-    ((a = [] ∧ m = ⟨[]⟩) → δ = [sealIn (bFirst b)]) ∧ (¬ (a = [] ∧ m = ⟨[]⟩) → δ = [])
+  strat m a e := (∀ δ x, e = .output δ x →
+    ((a = [] ∧ m = ⟨[]⟩) → δ = [sealIn (bFirst b)]) ∧ (¬ (a = [] ∧ m = ⟨[]⟩) → δ = [])) ∧
+    ∀ γ, e ≠ .commit γ
 
 /-- **Late lock.**  The store's strategy takes the lock only once its current
-log is nonempty, and may also apply nothing. -/
+log is nonempty, and may also apply nothing; it performs no commit event. -/
 noncomputable def lateLock {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : Sys (graph f) where
   basis := mutexB b f
-  strat m a e := ∀ δ x, e = .output δ x → δ = [] ∨ (lastIn m a).l ≠ []
+  strat m a e := (∀ δ x, e = .output δ x → δ = [] ∨ (lastIn m a).l ≠ []) ∧ ∀ γ, e ≠ .commit γ
 
 /-- **An uncontended lock decides nothing.**  Once the store's current log is
 nonempty, every log it can still receive has the same first command, so
@@ -2297,7 +2298,7 @@ theorem lock_eps {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd) {K : Sys (g
 theorem lateLock_eps {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd) {m : Pfx Cmd}
     {esK : List (SEvent (graph f))} {ρ : State (graph f)} (h : Produces (lateLock b f) m esK ρ) :
     ∀ γ x, SEvent.output γ x ∈ esK → γ = [] :=
-  lock_eps (K := lateLock b f) b rfl (fun _ _ δ x h => h δ x rfl) h
+  lock_eps (K := lateLock b f) b rfl (fun _ _ δ x h => h.1 δ x rfl) h
 
 /-- **A redundant store can lose behaviour.**  With `𝒫 = smrS1` under its
 canonical basis, `𝒫` can emit `[]` and then `[b]`.  The commitment-erased
@@ -2336,11 +2337,13 @@ theorem early_lock_strict {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Monoto
       [.output [] (f e), .input kb, .output [] (f kb)] := by
     have h1 : Allowed (eraseSys (earlyLock b f)) e [] (.output [] (f e)) :=
       ⟨[], .output [sealIn (bFirst b)] (f e), rfl, rfl, by
-        intro δ x h; cases h; exact ⟨fun _ => rfl, fun hn => absurd ⟨rfl, rfl⟩ hn⟩⟩
+        intro δ x h; cases h; exact ⟨fun _ => rfl, fun hn => absurd ⟨rfl, rfl⟩ hn⟩,
+        fun _ h => by cases h⟩
     have h3 : Allowed (eraseSys (earlyLock b f)) e [.output [] (f e), .input kb]
         (.output [] (f kb)) :=
       ⟨[.output [sealIn (bFirst b)] (f e), .input kb], .output [] (f kb), rfl, rfl, by
-        intro δ x h; cases h; exact ⟨fun h => absurd h.1 (List.cons_ne_nil _ _), fun _ => rfl⟩⟩
+        intro δ x h; cases h; exact ⟨fun h => absurd h.1 (List.cons_ne_nil _ _), fun _ => rfl⟩,
+        fun _ h => by cases h⟩
     exact compliant_snoc (l := [SEvent.output [] (f e), SEvent.input kb])
       (compliant_snoc (l := [SEvent.output [] (f e)]) (e := SEvent.input kb)
         (compliant_snoc (l := []) compliant_nil h1) trivial) h3
@@ -2348,18 +2351,23 @@ theorem early_lock_strict {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Monoto
     ⟨_, ⟨⟨kb, _, _, produces_free.2 hP, rfl⟩, ⟨[f e], [(kb, [f kb])], List.prefix_refl _, rfl⟩, _, hK,
       hcK⟩, rfl⟩, ?_⟩
   rintro ⟨esK, ⟨_, _, ρ, hx, hc⟩, hl⟩
+  have hnc := produces_noCommit (S := earlyLock b f) (fun _ γ h => h.2 γ rfl) ⟨hx, hc⟩
+  have hlen := length_filterMap_erase hnc
+  rw [hl] at hlen
   rcases esK with _ | ⟨e1, _ | ⟨e2, _ | ⟨e3, _ | ⟨e4, t⟩⟩⟩⟩
-  all_goals try (simp at hl; done)
+  all_goals try (simp at hlen; done)
   cases e1 with
   | input j => simp [SEvent.erase] at hl
+  | commit γ => exact absurd List.mem_cons_self (hnc γ)
   | output δ₀ x₀ =>
   cases e2 with
   | output γ y => simp [SEvent.erase] at hl
+  | commit γ => exact absurd (List.mem_cons_of_mem _ List.mem_cons_self) (hnc γ)
   | input j =>
   have hj : j = kb := by simp [SEvent.erase] at hl; exact hl.2.1
   subst hj
   have hδ : δ₀ = [sealIn (bFirst b)] :=
-    ((hc [] _ [_, e3] rfl : (earlyLock b f).strat e [] (.output δ₀ x₀)) δ₀ x₀ rfl).1 ⟨rfl, rfl⟩
+    ((hc [] _ [_, e3] rfl : (earlyLock b f).strat e [] (.output δ₀ x₀)).1 δ₀ x₀ rfl).1 ⟨rfl, rfl⟩
   subst hδ
   cases hx with
   | cons hs1 hr1 =>
