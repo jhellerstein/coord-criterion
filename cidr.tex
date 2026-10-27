@@ -1605,17 +1605,18 @@ abstractly~\cite{lynch1987io,lynch1996distributed}.  Our model keeps only the
 inputs and outputs of that behavior and drops the operational details.  The
 mapping is straightforward: an input's outputs are those of the runs that
 consume it.  Two standard approaches then apply, both used widely and with
-success.  Simulation and model checking explore bounded fragments of these
-runs and exhibit
-violations~\cite{misra1986des,flanagan2005dpor,newcombe2015aws,zhou2021foundationdb}.
-Proofs declare a specification and show, by the standard obligations of
-refinement~\cite{abadi1991refinement,lynch1995forward}, that it represents the
-machine: every execution's output is dominated by a declared one, and every
+success.  Simulation and model checking explore runs on bounded
+inputs~\cite{misra1986des,flanagan2005dpor,newcombe2015aws,zhou2021foundationdb};
+their input/output pairs become a finite specification in our model that can be tested for
+violations of Lifted Monotonicity. The more comprehensive approach is to use
+formal proofs to declare a specification and show, by the standard obligations
+of refinement~\cite{abadi1991refinement,lynch1995forward}, that it represents
+the machine: every execution's output is dominated by a declared one, and every
 declared row is produced by some execution.  Such proofs are routinely
 mechanized~\cite{hawblitzel2015ironfleet}, and Lifted Monotonicity is then
-checked on the declared specification; \extended{} gives the details.  Work
-that models systems as state machines therefore maps naturally into our
-model, where Complete CALM assesses its consistency directly.
+checked on the declared specification; \extended{} gives the details.  Work that
+models systems as state machines therefore maps naturally into our model, where
+Complete CALM assesses its consistency directly.
 
   Our conditions are semantic.  Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
@@ -1748,10 +1749,11 @@ analysis of CALM and proper coordination in a real programming framework.
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.
 Much gratitude to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
 Kleppmann, Paris Koutris, Edward Lee, Shulu Li, Vincent Liu, David Chu McElroy,
-Sarah Morin, and Dan Suciu for helpful feedback. Thanks also to the
-anonymous reviewers for frank feedback on earlier drafts of this paper.
+Sarah Morin, and Dan Suciu for helpful feedback. Thanks also to
+anonymous reviewers of this and previous submissions for frank feedback that pushed
+this work deeper.
 
-Generative AI tools (Claude and ChatGPT) were used as interactive writing and
+Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
 reviewing assistants during the preparation of this work, including drafting
 and revising text, and checking mathematical arguments with Lean proofs.  All
 content was reviewed, validated, and approved by the author.
