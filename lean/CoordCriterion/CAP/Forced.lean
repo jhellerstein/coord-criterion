@@ -241,6 +241,28 @@ theorem h2_forced (o : RMap) (ho : regFull h2 o) : o = v0Map := by
       obtain ⟨op, hop, _⟩ := hex a r hf
       exact absurd (h2_ops hop).1 ha
 
+/-- Every output at `hj`, where the write of `1` precedes the read, answers
+that same read (operation `1`) with the written value `1 ≠ v0`. -/
+theorem hj_reads_write (u : RMap) (hu : regFull hj u) : u.f 1 = some (.val 1) := by
+  obtain ⟨⟨pos, hl, hex⟩, hans⟩ := hu
+  cases hf : u.f 1 with
+  | none => exact absurd hf (hans 1 rOp rfl)
+  | some r =>
+    obtain ⟨op, hop, hok⟩ := hex 1 r hf
+    have hop' : op = rOp := by
+      rcases hj_ops hop with ⟨h', _⟩ | ⟨_, h'⟩
+      · cases h'
+      · exact h'
+    subst hop'
+    obtain ⟨v, rfl, hrv⟩ := hok
+    have hp : pos 0 < pos 1 := hl.2 0 1 ⟨rfl, rfl⟩
+    rcases hrv with ⟨_, hno⟩ | ⟨w, ⟨r', hw'⟩, _, _⟩
+    · exact absurd hp (hno 0 1 ⟨0, rfl⟩)
+    · rcases hj_ops hw' with ⟨_, he⟩ | ⟨_, he⟩
+      · simp only [wOp, Op.mk.injEq, Kind.write.injEq] at he
+        rw [he.2]
+      · simp [rOp] at he
+
 /-- **Gilbert–Lynch, by the Complete CAP argument.**  No system for the
 complete-response register lets every participant answer and keeps the
 emitted outputs reconcilable: the write's acknowledgment at `h1` and the

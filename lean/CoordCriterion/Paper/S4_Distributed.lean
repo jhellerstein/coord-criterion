@@ -741,7 +741,9 @@ theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
     «def:coordination-free/distributed» Sys :=
   CAP.coordinationFree_to_H h
 
-/-- "For a specification, every commitment requires coordination: some canonical run
+/-- "Whether a commitment requires coordination depends on the set of runs:
+those of a specification, or those of a system implementing it.  For a
+specification, every commitment requires coordination: some canonical run
 accepts each input that a commitment can seal and emits each permitted
 output."  Lean: from `σ_S(i)` with `i ≼ k`, the
 canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ S(k)` at
@@ -771,9 +773,13 @@ theorem «sec:coordination/closing-before-voting-seals» :
   have := (Figures.Elec.panelD_rows _ o).1 h
   exact absurd this.1 (by decide)
 
-/-- "Outputs, by contrast, are chosen only by strategies, so a choice requires
-coordination only when some run's strategy may emit the output it rules out."  Lean: `SysEmits` requires an output event in a produced history,
-hence one allowed by the participant's strategy. -/
+/-- "Outputs, by contrast, come only from the system's strategies, so a choice
+requires coordination only when the system can perform a run that emits an
+output the choice rules out, and distributed coordination when such a run is
+at another participant."  Lean: `SysEmits` requires an output event in a
+produced history, hence one allowed by the participant's strategy.  The rest
+of the sentence is Def. `def:coordination` for the system's runs
+(`«def:coordination»`, `«def:coordination/distributed»`). -/
 theorem «sec:coordination/choices-by-strategies» {sp : Spec I O} {D : Type}
     (Sys : CAP.System sp D) {k : I} {x : O} (h : CAP.SysEmits Sys k x) :
     ∃ n init q pre γ, Sys.strat n init q pre (CAP.LEv.out γ x) := by
@@ -797,8 +803,8 @@ theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
 
 /-- **Prop. conflicting output events cannot be reconciled**
 (`thm:commitments-require-coordination`).  "From a state `(i,R)`, let one
-participant perform an output event after which no output at `i` refines `x`,
-and let another perform an output event that emits `x`.  The two resulting
+run perform an output event after which no output at `i` refines `x`,
+and let another run perform an output event that emits `x`.  The two resulting
 states cannot be brought to a common state with current input `i`."
 
 Lean: `x ∈ R(i)` follows from the legality of `Out_{γ'}(x)`.  "Brought to a
@@ -856,10 +862,15 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
-/-- Paragraph "Locks in a shared-nothing database": "Ordering two
-transactions on one key requires coordination: in another run `B`'s request
-arrives first and the owner orders `B` before `A`.  It does not require
-distributed coordination, since only the owner orders that key."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
+/-- Paragraph "Locks in a shared-nothing database": "Ownership changes which
+runs can contradict a commitment.  The three cases of the definitions all
+arise in a database partitioned by key, in which each key is owned by one
+participant, which manages its locks."
+
+*Local coordination.*  "Ordering two transactions on one key requires
+coordination: in another run `B`'s request arrives first and the key's owner
+orders `B` before `A`.  But only runs at the key's owner can contradict it, so
+it does not require distributed coordination."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
 `ba` incomparable); emitting `ab` is a commitment (not exposable); in the
 system where only participant 0 may emit an order, another run (the owner
 choosing `ba`) contradicts it, but no other participant of a history does. -/
@@ -869,19 +880,26 @@ theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
   ⟨CAP.ordSpec_ab_not_exposable, CAP.ownerSys_not_coordinationFree D,
     CAP.ownerSys_coordinationFreeH D⟩
 
-/-- Paragraph "Locks in a shared-nothing database": "A transaction across
-keys needs one order, but each owner chooses its part, so the owners' choices
-can contradict each other."  Lean: when two participants may each emit an
-order, some history has one emit `ab` (removing `ba`) and the other emit `ba`.
-The two-phase-commit sentence that follows is `«sec:coordination/two-phase-commit»`. -/
+/-- Paragraph "Locks in a shared-nothing database", *Distributed
+coordination*: "A transaction that spans keys needs one order, but each key's
+owner orders its part, and the owners of two keys can order the same pair of
+transactions oppositely.  Each ordering then requires distributed
+coordination, and the owners must agree."  Lean: when two participants may
+each emit an order, some history has one emit `ab` (removing `ba`) and the
+other emit `ba`, so the system is not free of distributed coordination.
+"The owners must agree" is the paper's reading of that (some mechanism must
+exclude one of the two events), not a separate claim.  The case that follows
+is `«sec:coordination/two-phase-commit»`. -/
 theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
     ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=
   CAP.twoOwnerSys_not_coordinationFreeH D
 
-/-- Paragraph "Locks in a shared-nothing database": "Two-phase commit
-excludes that with no commitment that requires distributed coordination: each owner's prepare is its
-own commitment, and the coordinator's decision counts votes from a fixed set
-of participants, which is monotone."
+/-- Paragraph "Locks in a shared-nothing database", *No coordination*:
+"Two-phase commit adds no coordination beyond the owners' own.  Each owner's
+prepare is its own commitment, local coordination as in the first case.  The
+unanimous vote that combines them, however, requires no coordination at all:
+the coordinator's unanimity decision over a fixed set of participants is
+monotone, so it issues no commitment that requires coordination."
 
 Lean, for the decision (`CAP/TwoPhaseCommit.lean`): inputs record the votes
 of `n` fixed participants (`none` until received; a received vote does not
@@ -892,7 +910,8 @@ needs a commitment; and the system that emits decisions by canonical output
 events is coordination-free (`CoordinationFree`), so a fortiori needs no
 distributed coordination (`CoordinationFreeH`).  The prepare half is the
 single-owner pattern of `«sec:coordination/shared-nothing-single-key»`; the
-protocol itself (messages, logging, blocking) is not modeled. -/
+protocol itself (messages, logging, blocking) is not modeled.  The sentence
+that follows is `«sec:coordination/two-phase-commit-detects»`. -/
 theorem «sec:coordination/two-phase-commit» (n : Nat) (D : Type) :
     (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
       (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d, τ.R τ.cur d → Exposable τ d) ∧
@@ -900,6 +919,35 @@ theorem «sec:coordination/two-phase-commit» (n : Nat) (D : Type) :
       (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFreeH :=
   ⟨CAP.voteSpec_functional n, CAP.voteSpec_monotone n, CAP.voteSpec_consistent n,
    CAP.voteSpec_exposable n, CAP.voteSpec_coordinationFree n D⟩
+
+/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "The
+coordinator does not make the owners agree; it detects whether their local
+commitments already agree, and aborts when they do not."  Lean, for the
+decision of `CAP/TwoPhaseCommit.lean` (each vote reports whether the owner's
+prepare succeeded): the decision is `abort` exactly when some received vote is
+no and `commit` exactly when every vote is yes, so once every vote is in it
+aborts exactly when the votes do not all say yes.  "Does not make the owners
+agree" is the coordination-freedom of `«sec:coordination/two-phase-commit»`;
+that a yes vote reports a successful local prepare is the protocol, not
+modeled. -/
+theorem «sec:coordination/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n) :
+    (CAP.decide2PC v = .abort ↔ ∃ p, v p = some false) ∧
+    (CAP.decide2PC v = .commit ↔ ∀ p, v p = some true) ∧
+    ((∀ p, v p ≠ none) → (CAP.decide2PC v = .abort ↔ ¬ ∀ p, v p = some true)) :=
+  CAP.decide2PC_detects v
+
+/-- Paragraph "Locks in a shared-nothing database": "All three exchange
+messages, and a client cut off from an owner cannot get its answer; only the
+second issues a commitment that a run at another participant could
+contradict."  Lean, for the second clause: of the three systems, only the
+two-owner system of the distributed case fails to be free of distributed
+coordination (`CoordinationFreeH`).  The first clause (messages, clients cut
+off from owners) is not modeled; see `lean/README.md`. -/
+theorem «sec:coordination/shared-nothing-only-second» (n : Nat) (D : Type) :
+    (CAP.ownerSys D).CoordinationFreeH ∧ ¬ (CAP.twoOwnerSys D).CoordinationFreeH ∧
+      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFreeH :=
+  ⟨CAP.ownerSys_coordinationFreeH D, CAP.twoOwnerSys_not_coordinationFreeH D,
+    (CAP.voteSpec_coordinationFree n D).2⟩
 
 /-- "The first event's commitment is a choice against `x`."
 

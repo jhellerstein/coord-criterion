@@ -412,7 +412,7 @@ abbrev «app:notation/coordination-free» {sp : Spec I O} {D : Type} (Sys : CAP.
   Sys.CoordinationFree
 
 /-- *partitioned history* — no message crosses components
-(Def. `def:partition-notions`).  Lean: `CAP.Partitioned H comp` (at least two
+(Def. `def:partitioned-history`).  Lean: `CAP.Partitioned H comp` (at least two
 components, no cross-component receive). -/
 abbrev «app:notation/partitioned-history» {sp : Spec I O} {D : Type} {n : Nat}
     (H : CAP.History sp D n) (comp : Fin n → Nat) : Prop :=
@@ -431,10 +431,10 @@ abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (A : Table I O)
     (Sys : CAP.System sp D) : Prop :=
   CAP.AvailabilityFor A Sys
 
-/-- *consistent on `A`* — every finite set of rows of `A` with a common
-expansion `j` has a common refinement in `S(j)` (Def. `def:partition-notions`).
+/-- *Lifted Monotonicity for `A`* — every finite set of rows of `A` with a
+common expansion `j` has a common refinement in `S(j)` (Def. `def:lm-for-A`).
 Lean: `CAP.ConsistentOn`. -/
-abbrev «app:notation/consistent-on» (sp : Spec I O) (A : Table I O) : Prop :=
+abbrev «app:notation/lm-for-A» (sp : Spec I O) (A : Table I O) : Prop :=
   CAP.ConsistentOn sp A
 
 /-- *deployment* — one availability relation `A_p` per participant
@@ -442,7 +442,7 @@ abbrev «app:notation/consistent-on» (sp : Spec I O) (A : Table I O) : Prop :=
 abbrev «app:notation/deployment» (sp : Spec I O) (n : Nat) : Type := CC.Deploy.Deployment sp n
 
 /-- *Partition Consistency* — final cuts of partitioned histories confluent
-(Def. `def:partition-notions`).  Lean: `CAP.PartitionConsistencyAtEnd`
+(Def. `def:partition-consistency`).  Lean: `CAP.PartitionConsistencyAtEnd`
 (equivalently `CAP.PartitionConsistency`, stated at cuts). -/
 abbrev «app:notation/partition-consistency» {sp : Spec I O} {D : Type}
     (Sys : CAP.System sp D) : Prop :=

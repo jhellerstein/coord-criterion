@@ -300,10 +300,10 @@ theorem «def:response-interface» (Q : Obligation sp) (T : Table I O) :
       ∀ i o j, T i o → i ≼ j → ∃ u, T j u ∧ o ≼ u :=
   Iff.rfl
 
-/-- "Consistency on `T` is that of Definition `def:partition-notions`(6), and
+/-- "Lifted Monotonicity for `T` is that of Definition `def:lm-for-A`, and
 the reconciling output may lie outside `T`."  Lean: the same `ConsistentOn`
 as in Theorem `thm:complete-cap`; finite families of rows are lists. -/
-theorem «def:response-interface/consistent-on» (T : Table I O) :
+theorem «def:response-interface/lm-for-T» (T : Table I O) :
     ConsistentOn sp T ↔
       ∀ rows : List (I × O), (∀ r ∈ rows, T r.1 r.2) →
         ∀ j, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.S j u ∧ ∀ r ∈ rows, r.2 ≼ u :=
@@ -352,8 +352,8 @@ theorem «app:cap-response/serve-interface» (Q : Obligation sp) (T : Table I O)
 /-- **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).**
 "For an ordered relational specification `S` and a uniform obligation `Q`,
 the following are equivalent: (1) some replicated system has Response
-Availability for `Q` and Response Partition Consistency; (2) `S` is consistent
-on some response interface `T ⊆ Q`; (3) for some response interface
+Availability for `Q` and Response Partition Consistency; (2) `S` satisfies
+Lifted Monotonicity for some response interface `T ⊆ Q`; (3) for some response interface
 `T ⊆ Q`, some system has Availability for `T` and Partition Consistency."
 
 Lean: (1) is `ResponseForm sp D Q`, written out. -/
@@ -368,7 +368,7 @@ theorem «thm:complete-cap-response» (sp : Spec I O) (D : Type) (Q : Obligation
 
 /-- Proof of Theorem `thm:complete-cap-response`, (2⇒1): "Take the system of
 the proof of Theorem `thm:complete-cap` for `A = T`.  It is replicated, and
-… has Answering and Input acceptance. … consistency on `T` gives Response
+… has Answering and Input acceptance. … Lifted Monotonicity for `T` gives Response
 Partition Consistency."  Lean: `respSystem T`. -/
 theorem «thm:complete-cap-response/proof-sufficiency» (Q : Obligation sp) (T : Table I O)
     (hT : ResponseInterface Q T) (hc : ConsistentOn sp T) :
@@ -431,7 +431,7 @@ theorem «app:cap-response/lm-implies-response-form» (Q : Obligation sp) (h : s
 
 /-- "The converse fails.  Let `I = {0,1}` with `0 ≺ 1`, `⊥ ≺ a` and `⊥ ≺ b`
 with `a, b` incomparable, `S(0) = {⊥, a}`, `S(1) = {b}`, and `Q = S`.  Lifted
-Monotonicity fails at `(0,a)`, but `S` is consistent on the response interface
+Monotonicity fails at `(0,a)`, but `S` satisfies Lifted Monotonicity for the response interface
 `{(0,⊥),(1,b)}`: a system that answers `⊥` at `0` never emits the output that
 conflicts with `b`."  Lean: `cxSpec` on `In2 = {lo ≺ hi}` and
 `O3 = {bot, a, b}`, `cxQ = S`, `cxT = {(lo,bot),(hi,b)}`; second conjunct: the
@@ -447,7 +447,7 @@ theorem «app:cap-response/converse-fails» (D : Type) :
      ⟨Sys, (availability_iff_atEnd _).2 hA, (partitionConsistency_iff_atEnd _).2 hP⟩⟩
 
 /-- "For a functional specification the two coincide: a total `T ⊆ Q ⊆ S`
-equals `S`, and both self-continuation and consistency on `S` are
+equals `S`, and both self-continuation and Lifted Monotonicity for `S` are
 monotonicity."  First conjunct: at the level of interfaces; second: at the
 level of systems (the conditions of Theorem `thm:complete-cap-response` ⇔ Availability and Partition
 Consistency). -/

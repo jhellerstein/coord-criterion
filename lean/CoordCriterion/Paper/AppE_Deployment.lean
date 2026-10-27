@@ -111,15 +111,15 @@ theorem «def:monotone-across-partitions» (Dp : Deployment sp n) :
     (MonoAcrossPartitions Dp ↔ ∀ comp, IsPartition comp → MonoAcross Dp comp) :=
   ⟨fun _ => Iff.rfl, Iff.rfl⟩
 
-/-- "If `S` is consistent on a relation that contains every `A_p`, it is
+/-- "If `S` satisfies Lifted Monotonicity for a relation that contains every `A_p`, it is
 monotone across partitions: the emitted rows of a family are rows of that
 relation at inputs below `j`." -/
-theorem «app:deployment/consistent-on-implies-mono-across» (Dp : Deployment sp n)
+theorem «app:deployment/lm-for-implies-mono-across» (Dp : Deployment sp n)
     (B : Table I O) (hB : ∀ p i o, Dp.A p i o → B i o) (hc : CAP.ConsistentOn sp B) :
     MonoAcrossPartitions Dp :=
   monoAcrossPartitions_of_consistentOn Dp B hB hc
 
-/-- "So consistency on `A` suffices for the uniform deployment `A_p = A` …" -/
+/-- "So Lifted Monotonicity for `A` suffices for the uniform deployment `A_p = A` …" -/
 theorem «app:deployment/uniform-mono-across» (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
     (hc : CAP.ConsistentOn sp A) :
     MonoAcrossPartitions (Deployment.uniform (n := n) A hAS) :=

@@ -15,7 +15,7 @@ framework of `CC.CAP` (histories, systems, cuts, `ResponseAvailability`,
 Contents (paper item ↦ Lean):
 
 * Partition Consistency with *commitment-free, receive-free* continuations
-  for the commitment-free system (strong reading of Def. `def:partition-notions`(5),
+  for the commitment-free system (strong reading of Def. `def:partition-consistency`,
   where the confluence continuation is a history of Section `sec:histories`):
   `cf_partitionConsistencyCF`, `complete_cap_strong`.
 * Remark after Def. `def:response-partition-consistency`:
@@ -33,7 +33,7 @@ Contents (paper item ↦ Lean):
 * Remark after Def. `def:response-interface`: `consistentOn_S`,
   `consistentOn_iff_confluent`.
 * Remark "Without replication": as stated it is false under
-  Def. `def:partition-notions`(2) (`without_replication_counterexample`); it
+  the system assumption after Def. `def:partitioned-history` (`without_replication_counterexample`); it
   holds for a fixed participant set when each strategy depends on the initial
   inputs only through its own (`without_replication`).
 * "Relationship to the interface form": `lm_response_interface`,
@@ -69,7 +69,7 @@ theorem full_cut' {init : Fin n → I} {H : History sp D n} (hwf : WF init H) :
 
 /-! ## Partition Consistency with commitment-free continuations -/
 
-/-- Def. `def:partition-notions`(5), strong reading: the confluence
+/-- Def. `def:partition-consistency`, strong reading: the confluence
 continuation adds only commitment-free output events and no receives (so it is
 a history of Section `sec:histories`). -/
 def PartitionConsistencyCF (Sys : System sp D) : Prop :=
@@ -1428,8 +1428,8 @@ theorem Tb4_ok : ResponseInterface Q4 Tb4 ∧ ConsistentOn sp4 Tb4 := by
     · exact ⟨.b2, rfl, by intro i o h hi; cases i <;> cases o <;> revert h hi <;> decide⟩
 
 /-- Which interface the system follows: for two participants with different
-initial inputs `Tb`, otherwise `Ta`.  (Allowed by Def.
-`def:partition-notions`(2): one strategy per participant set and choice of
+initial inputs `Tb`, otherwise `Ta`.  (Allowed by
+the system assumption after Def. `def:partitioned-history`: one strategy per participant set and choice of
 initial inputs.) -/
 def Tsel (n : Nat) (init : Fin n → In2) : Table In2 O4 :=
   if h : 2 ≤ n then (if init ⟨0, by omega⟩ = init ⟨1, by omega⟩ then Ta4 else Tb4) else Ta4
