@@ -660,9 +660,11 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
   Figures.Elec.close_after_voting i hfull
 
 /-- **Def. coordination-requiring commitment** (`def:coordination`).  "Let an
-event of a run apply a commitment, and let `𝓡` be a set of runs.  The
-commitment requires coordination relative to `𝓡` when some run in `𝓡` accepts
-an input it seals, or emits, at the same input, an output it chooses against.
+event of a run apply a commitment, and let `𝓡` be a set of runs.  A run
+contradicts the commitment if it accepts an input the commitment seals, or
+emits an output the commitment chooses against at the same input.  The
+commitment requires coordination relative to `𝓡` when some run in `𝓡`
+contradicts it.
 … A run or history is coordination-free relative to `𝓡` when it applies no
 commitment that requires coordination.  For a specification, `𝓡` is its
 canonical runs; for a system, it is the runs it can perform, under any inputs
