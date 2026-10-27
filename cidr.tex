@@ -1205,25 +1205,26 @@ mechanisms.  It identifies the commitments that need one; how a system can
 provide it, or why it sometimes cannot, is the subject of the rest of this
 section.
 
-The need for coordination needs to be contextualized with respect to a
-specification, or a system implementing that specification. For a specification,
-every commitment requires coordination: some canonical run accepts each input
-that a commitment can seal and emits each permitted output, and that run may be
-at another participant.  For a specification, then, coordination-free means
-commitment-free.  For a system, the answer depends on which runs it can perform,
-and here seals and choices differ.  The environment may supply any input to any
-participant, so a seal requires distributed coordination whenever another
-participant may receive the sealed input. Outputs, by contrast, are chosen only
-by strategies, so a choice requires coordination only when one run's strategy
-may emit the output and another's rules it out. \jmh{this is a bit inaccurate --
-runs don't have strategies, systems do}
+Whether a commitment requires coordination depends on the set of runs: those
+of a specification, or those of a system implementing it.  For a
+specification, every commitment requires coordination: some canonical run
+accepts each input that a commitment can seal and emits each permitted output,
+and that run may be at another participant.  For a specification, then,
+coordination-free means commitment-free.  For a system, the answer depends on
+which runs it can perform, and here seals and choices differ.  The environment
+may supply any input to any participant, so a seal requires distributed
+coordination whenever another participant may receive the sealed input.
+Outputs, by contrast, come only from the system's strategies, so a choice
+requires coordination only when the system can perform a run that emits an
+output the choice rules out, and distributed coordination when such a run is
+at another participant.
 
 \begin{proposition}[Conflicting output events cannot be reconciled]
 \label{thm:commitments-require-coordination}
-From a state $(i,R)$, let one participant perform an output event after which
-no output at $i$ \outrel $x$, and let another perform an output event that
+From a state $(i,R)$, let one run perform an output event after which no
+output at $i$ \outrel $x$, and let another run perform an output event that
 emits $x$.  The two resulting states cannot be brought to a common state with
-current input $i$. \jmh{why is this on participants rather than runs?}
+current input $i$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -1240,17 +1241,27 @@ reconciling input need not arrive.  The system must therefore exclude one of the
 two events: by a mutex or atomic instruction in shared memory, by agreement in a
 distributed system, or by a rule fixed in advance, such as assigning the choice
 to a single participant, so that only that participant's runs can contradict it.
-In a shared-nothing database in which each participant is the lock manager for
-its own keys~\cite{stonebraker1986sharednothing}, ordering two transactions on
-one key requires coordination but not distributed coordination; it still needs
-messages, and a client cut off from the owner cannot get its answer.  Two-phase
-commit orders a transaction across keys with no commitment that requires
-distributed coordination: each owner's local ``prepare'' decision is its own
-commitment; the coordinator gathers votes and makes a unanimity decision from a
-fixed set of participants, which is monotone.  This illustrates how communication
-and distributed coordination differ. \jmh{does it? it really only illustrates
-communication without distributed commitment. what do we actually want to achieve
-in this paragraph? maybe we should decide that, and then rewrite examples to support}
+
+Ownership changes which runs can contradict a commitment.  The three cases of
+the definitions all arise in a shared-nothing database in which each key is
+owned by one participant, which manages its
+locks~\cite{stonebraker1986sharednothing}.  \emph{Local coordination.}
+Ordering two transactions on one key requires coordination, but only runs at
+the key's owner can contradict it, so it does not require distributed
+coordination.  \emph{Distributed coordination.}  A transaction that spans keys
+needs one order, but each key's owner orders its part, and the owners of two
+keys can order the same pair of transactions oppositely.  Each ordering then
+requires distributed coordination, and the owners must agree or follow a rule
+fixed in advance.  \emph{No coordination.}  Atomic commitment combines the
+owners' work without further coordination.  In two-phase commit, each owner's
+prepare is its own commitment, local coordination as in the first case, and
+the coordinator's unanimity decision over a fixed set of participants is
+monotone, so it issues no commitment that requires coordination.  The
+coordinator does not make the owners agree; it detects whether their local
+commitments already agree, and aborts when they do not.  A specification
+requiring the owners to agree on the outcome would instead require distributed
+coordination.  All three exchange messages; only the second issues a
+commitment that a run at another participant could contradict.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
