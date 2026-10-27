@@ -275,7 +275,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
       SysExec B (canon sp i) es ρ → Guard.emitted es = m :: ms →
       ∃ (hm : Joint.Img sp m) (o : O) (ps : List ({m // Joint.Img sp m} × O))
         (esK : List (SEvent (Guard.rest sp sk))) (ρK : State (Guard.rest sp sk)),
-        ps.map (fun p => p.1.1) = ms ∧ esK.map SEvent.erase = .output o :: Guard.storeTr ps ∧
+        ps.map (fun p => p.1.1) = ms ∧ esK.filterMap SEvent.erase = .output o :: Guard.storeTr ps ∧
         Guard.Produces (Guard.noStore (Guard.rest sp sk)) ⟨m, hm⟩ esK ρK ∧
         ∃ ρ' : State (Comp.seq sp sk),
           Exec (canon (Comp.seq sp sk) i) (Guard.merge es ([o] :: ps.map fun p => [p.2])) ρ' ∧
@@ -284,7 +284,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
       (ps : List ({m // Joint.Img sp m} × List O)) esK (ρK : State (Guard.rest sp sk)),
       SysExec B (canon sp i) es ρ → Guard.emitted es = m.1 :: ms.map Subtype.val →
       ps.map Prod.fst = ms → SysExec (fun _ => False) (canon (Guard.rest sp sk) m) esK ρK →
-      esK.map SEvent.erase = os.map Event.output ++ Guard.blk ps →
+      esK.filterMap SEvent.erase = os.map Event.output ++ Guard.blk ps →
       ∃ ρ' : State (Comp.seq sp sk),
         Exec (canon (Comp.seq sp sk) i) (Guard.merge es (os :: ps.map Prod.snd)) ρ' ∧
         ρ'.cur = ρ.cur ∧ (∀ k m x (h : Joint.Img sp m), ρ.R k m → ρK.R ⟨m, h⟩ x → ρ'.R k x) ∧

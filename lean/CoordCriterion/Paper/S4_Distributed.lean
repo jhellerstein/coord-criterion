@@ -546,8 +546,8 @@ containment. -/
 theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
     {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
     ∃ es' ρ', Lockstep B (canon sp i) es ρ (canon sp i) es' ρ' ∧
-      es.map SEvent.erase = es'.map SEvent.erase ∧
-      Exec (canon sp i) (es.map SEvent.erase) ρ' ∧
+      es.filterMap SEvent.erase = es'.filterMap SEvent.erase ∧
+      Exec (canon sp i) (es.filterMap SEvent.erase) ρ' ∧
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
     canonical_equivalent h
 
@@ -695,9 +695,9 @@ executions (`ExecCF`) of §3 after erasing `γ`.  `Out_ε(o)` ends at
 theorem «def:coordination/commitment-free-runs» {sp : Spec I O} :
     (∀ es : List (SEvent sp), CoordFree es ↔ ¬ Coordinates es) ∧
     (∀ (B : Basis sp) (σ τ : State sp) (es : List (SEvent sp)),
-      SysExec B σ es τ → CoordFree es → ExecCF σ (es.map SEvent.erase) τ) ∧
+      SysExec B σ es τ → CoordFree es → ExecCF σ (es.filterMap SEvent.erase) τ) ∧
     (∀ (B : Basis sp) (σ τ : State sp) (es : List (Event I O)), ExecCF σ es τ →
-      ∃ es' : List (SEvent sp), es'.map SEvent.erase = es ∧ CoordFree es' ∧
+      ∃ es' : List (SEvent sp), es'.filterMap SEvent.erase = es ∧ CoordFree es' ∧
         SysExec B σ es' τ) :=
   ⟨coordFree_iff_not, fun _ _ _ _ h hf => coordFree_execCF h hf,
     fun B _ _ _ h => execCF_coordFree B h⟩

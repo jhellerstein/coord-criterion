@@ -369,7 +369,7 @@ erased; every run has a canonical one (Lem. `lem:canonical-equivalent`).
 Lean: two event lists are observably equivalent when their images under
 `SEvent.erase` agree; the lemma is `CC.canonical_equivalent`. -/
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
-  es.map SEvent.erase = es'.map SEvent.erase
+  es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
 /-- *coordination* — a commitment some other run contradicts
 (Def. `def:coordination`).  Lean, for a system: `CAP.System.CoordinationFree`
