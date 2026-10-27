@@ -43,7 +43,10 @@ coordination, and that the list and an order on nodes compute every behavior;
 Lean checks only the mapping of their conditions into our frame); in
 Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
 al.'s checks, the correspondence of the hypotheses to theirs, and the remark
-that a strengthening may read real time from the input; and the
+that a strengthening may read real time from the input; in §6.5, that
+distributing a compiled state machine is direct (each client's events go to
+some participant and §4 applies with the induced specification) and that
+dynamic partial-order reduction computes the fibers of bounded systems; and the
 design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
@@ -91,8 +94,8 @@ first and supporting claims and examples follow.
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
 | `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
 | `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity |
-| `Instances/StateMachine.lean` | `CC.SM` | §6 | Specifications induced by state machines (Def. induced-specification, Prop. induced-specification); prefix order; arrival-order independence; the election as an induced specification |
-| `Instances/IOMachine.lean` | `CC.IOM` | §6 | A machine, clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; FIFO single client is the prefix encoding; arrival orders; confluence across executions ⇔ Lifted Monotonicity |
+| `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by Prop. induced-specification (2)); arrival-order independence; the election as an induced specification |
+| `Instances/IOMachine.lean` | `CC.IOM` | §6 | A machine, clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; FIFO single client is the prefix encoding; arrival orders; confluence across executions ⇔ Lifted Monotonicity; later sends after an output (Def./Prop. induced-specification) |
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
 | `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no commitment; pipeline runs as composite runs, confluence, where the upstream must commit), systems with strategies, commitment-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
 | `Appendix/JointMono.lean` | `CC.Joint` | §5.1, App. D | Jointly monotone composites: filtering (capped counter), re-ordering the middle (boolean toggle, constant store; also the double complement, no longer cited in the paper), preorder/injective characterization and the no-partial-order counterexample |
@@ -117,7 +120,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-597 entries.
+595 entries.
 
 ### §2 Functional CALM
 
@@ -390,11 +393,9 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:iconfluence-instance/iconfluence-is-consistency»` | theorem | "Invariant confluence is therefore not a separate boundary: |
 | `«sec:iconfluence-instance/uniqueness»` | theorem | The uniqueness example: |
 | `«sec:iconfluence-instance/concurrency-decides»` | theorem | "Concurrency, not the transactions alone, decides the outcome: |
+| `«sec:operational-models/later-sends»` | theorem | "An output of the machine is an input of the client that receives it, so a client's later sends happen after everything the machine had received when it emit… |
 | `«def:induced-specification»` | theorem | **Def. |
 | `«prop:induced-specification»` | theorem | **Prop. |
-| `«prop:induced-specification/prefix-order»` | theorem | "Under the prefix order of (2), two event sequences have a common expansion only when one extends the other: |
-| `«prop:induced-specification/arrival-order»` | theorem | "When `α` forgets arrival order, for instance by mapping each sequence to the set of events in it, sequences that differ only in order become one input, and… |
-| `«prop:induced-specification/election»` | theorem | "The election of Section `sec:election-story` is the specification induced by a vote-counting machine under the map that records each voter's first ballot; i… |
 
 ### Appendix A: Notation
 

@@ -233,11 +233,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:iconfluence-instance/iconfluence-is-consistency»
 #check @CC.Paper.«sec:iconfluence-instance/uniqueness»
 #check @CC.Paper.«sec:iconfluence-instance/concurrency-decides»
+#check @CC.Paper.«sec:operational-models/later-sends»
 #check @CC.Paper.«def:induced-specification»
 #check @CC.Paper.«prop:induced-specification»
-#check @CC.Paper.«prop:induced-specification/prefix-order»
-#check @CC.Paper.«prop:induced-specification/arrival-order»
-#check @CC.Paper.«prop:induced-specification/election»
 #check @CC.Paper.«app:notation/functional-specification»
 #check @CC.Paper.«app:notation/expands»
 #check @CC.Paper.«app:notation/refines»
