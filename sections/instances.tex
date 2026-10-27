@@ -214,6 +214,7 @@ weakest isolation level a store offers under which each transaction still
 preserves the declared invariants.
 
 \subsection{General operational specification models}
+\label{sec:operational-models}
 Labeled transition systems and I/O automata provide general operational models
 of components, including input, output, and internal actions, composition, and
 implementation (simulation) relations~\cite{lynch1987io,lynch1996distributed}.  They answer how a declared
@@ -227,6 +228,67 @@ does not replace an operational formalism; it is a semantic
 projection designed to make the intrinsic coordination question comparable
 across such formalisms.
 
+\paragraph{Compiling a state machine.}
+A state machine compiles into an ordered specification.  Let $M$ have states
+$Q$, an initial state $q_0$, environment events $E$, and a transition relation
+${\to}\subseteq Q\times E\times Q$ that accepts every event in every state, and
+let $\mathrm{obs}:Q\to O$ give the observable output of each state, with
+$(O,\OutputOrd)$ an output order.  Write $q_0\xrightarrow{w}q$ when $M$ can
+reach $q$ by consuming the event sequence $w\in E^*$.  A map $\alpha$ from
+$E^*$ onto a partially ordered input domain $(I,\InputOrd)$, monotone for the
+prefix order, says which event sequences the specification treats as the same
+input.
+
+\begin{definition}[Induced specification]
+\label{def:induced-specification}
+The specification \emph{induced} by $M$ and $\alpha$ has table
+\[
+  S_{M,\alpha}=\{(\alpha(w),\mathrm{obs}(q)) : q_0\xrightarrow{w}q\}.
+\]
+\end{definition}
+
+\begin{proposition}[Induced specifications]
+\label{prop:induced-specification}
+\leavevmode
+\begin{enumerate}
+  \item $(I,\InputOrd,O,\OutputOrd,S_{M,\alpha})$ is an ordered specification.
+  \item If $M$ is deterministic and $\alpha$ is the identity on $E^*$ ordered by
+        prefix, the specification is functional, and it is consistent exactly
+        when $\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every transition
+        $q\to q'$ from a reachable state.
+  \item If $M$ is deterministic and $\alpha(w)$ is the state reached on $w$,
+        with reachable states ordered by reachability and that order
+        antisymmetric, the specification is consistent exactly when the one in
+        (2) is.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) Every $i\in I$ is $\alpha(w)$ for some $w$, and $M$ accepts every event,
+so some run consumes $w$; hence $S_{M,\alpha}$ is total on $I$.
+(2) Determinism gives one state, and so one output, per sequence.  If $w$ is a
+prefix of $w'$, the run on $w'$ passes through the state reached on $w$, so
+monotonicity in the prefix order is monotonicity of $\mathrm{obs}$ along
+single transitions, by transitivity of $\OutputOrd$.  Functional CALM
+(Theorem~\ref{thm:functional-calm}) gives consistency.
+(3) The table is $\{(q,\mathrm{obs}(q))\}$ over reachable states, and $q$ is
+expanded by $q'$ exactly when $q'$ is reachable from $q$.  Monotonicity is
+again monotonicity of $\mathrm{obs}$ along single transitions.
+\end{proof}
+
+The choice of $\alpha$ is where coordination enters.  Under the prefix order
+of (2), two event sequences have a common \indesc only when one extends the
+other: the machine is one sequential process, and a deterministic machine
+whose observations only grow is consistent.  When $\alpha$ forgets arrival
+order, for instance by mapping each sequence to the set of events in it,
+sequences that differ only in order become one input, and the fiber at that
+input collects the observations of every order.  Sensitivity to arrival order
+in the machine then appears as ambiguity in the specification, which Complete
+CALM analyzes.  The election of Section~\ref{sec:election-story} is the
+specification induced by a vote-counting machine under the map that records
+each voter's first ballot; its observations do not depend on arrival order,
+so its fibers are singletons.
+
 \subsection{Scope}
 \label{sec:scope}
 
@@ -234,9 +296,7 @@ Our conditions are semantic.  Confluence guarantees that a common \outnoun
 exists, not that a deployed system reaches it.  A participant may lack the
 authority to emit it (Appendix~\ref{app:deployment}), and reaching it takes an
 algorithm, message delivery, and a termination argument.  Participant runs
-likewise set aside delivery and strategy details.  A state machine induces a
-table by pairing environment histories with their observable outputs.
-Summarizing histories by machine states is a modeling choice.  Protocols,
+likewise set aside delivery and strategy details.  Protocols,
 liveness, and cost belong to the operational model in which a specification is
 realized.
 
