@@ -218,10 +218,9 @@ the ambiguous specifications common in transactional and distributed systems.
 Section~\ref{sec:distributed-execution} models distributed execution with participants
 exchanging messages and defines consistency over their histories; this is shown
 to be equivalent to consistency as defined above, so Functional and Complete
-CALM apply to distributed executions unchanged.  A commitment is
-\emph{coordination} when another run could contradict it, by accepting an
-input it sealed or emitting an output it chose against; it is \emph{distributed
-coordination} when that run is at another participant.
+CALM apply to distributed executions unchanged.  A commitment \emph{requires coordination} when another run could contradict it,
+by accepting an input it sealed or emitting an output it chose against, and
+\emph{distributed coordination} when that run is at another participant.
 
 Complete CALM leads to \emph{Complete CAP} (\S\ref{sec:complete-cap}).  Given a
 consistency guarantee expressed as a specification, Lifted Monotonicity says
@@ -1016,9 +1015,8 @@ at each participant, and the only change from our framework's perspective is
 that participants can learn about inputs at other participants via messages.
 Functional CALM and Complete CALM therefore have a natural distributed reading,
 which Section~\ref{sec:histories} makes precise.  We then define systems, whose
-commitments may exceed those the specification requires, and distributed
-coordination---a commitment that a run at another participant could contradict;
-Complete CAP follows.
+commitments may exceed those the specification requires, and commitments that require distributed coordination, which a run at
+another participant could contradict; Complete CAP follows.
 
 \subsection{Distributed histories and consistency}
 \label{sec:histories}
@@ -1169,41 +1167,43 @@ choices its outputs require, whatever mechanism a system uses to make them.
 A commitment is a binding decision that removes behavior the specification
 still permits.  What mutexes, locks, timestamps, and agreement protocols have
 in common, semantically, is that each implements commitments, by sealing and
-choosing.  A commitment needs
-coordination, however, only when some other behavior could contradict it:
-another run accepting an input it sealed, or emitting an output it chose
-against.  We take \emph{coordination} to mean such a commitment, and
-\emph{distributed coordination} to mean one that a run at another participant
-could contradict.  A
-mechanism used without committing is not coordination.  Closing the polls
+choosing.  A commitment requires coordination, however, only when some other behavior could
+contradict it: another run accepting an input it sealed, or emitting an output
+it chose against.  It requires distributed coordination when a run at another
+participant could contradict it.  A mechanism used without committing applies
+no such commitment.  Closing the polls
 after every voter has voted still runs the mechanism, but no ballot is left to
 seal, so it removes nothing the specification still permits and applies no
 commitment.
 
-\begin{definition}[Coordination]
+\begin{definition}[Coordination-requiring commitment]
 \label{def:coordination}
-Let an output event $\Out{\gamma}{o}$
-of a run apply a commitment, and let $\mathcal R$ be a set of runs.  The
-commitment is \emph{contradicted} in $\mathcal R$ when some run in
-$\mathcal R$ accepts an input it seals, or emits, at the same input, an output
-it chooses against.  A run or history
-\emph{coordinates} relative to $\mathcal R$ when one of its output events
-applies a contradicted commitment, and is \emph{coordination-free} relative to
-$\mathcal R$ otherwise.  For a specification, $\mathcal R$ is its canonical
-runs; for a system, it is the runs it can perform, under any inputs the
-environment may supply.  The coordination is \emph{distributed} when the
-contradicting run is at another participant of the same history.
+Let an event of a run apply a commitment, and let $\mathcal R$ be a set of runs.
+The commitment \emph{requires coordination} relative to $\mathcal R$ when some
+run in $\mathcal R$ accepts an input it seals, or emits, at the same input, an
+output it chooses against.  It \emph{requires distributed coordination} when
+that run is at another participant of the same history.  A run or history is
+\emph{coordination-free} relative to $\mathcal R$ when it applies no
+commitment that requires coordination.  For a specification, $\mathcal R$ is
+its canonical runs; for a system, it is the runs it can perform, under any
+inputs the environment may supply.
 \end{definition}
 
-For a specification, every commitment is contradicted: some canonical run
+\emph{Coordination} is any operational mechanism, such as agreement, locking,
+ownership, or a single sequencer, that ensures the runs of a system make no
+commitments that contradict one another.  The definition does not model such
+mechanisms.  It identifies the commitments that need one; how a system can
+provide it, or why it sometimes cannot, is the subject of the rest of this
+section.
+
+For a specification, every commitment requires coordination: some canonical run
 accepts each input that a commitment can seal and emits each permitted
 output, and that run may be at another participant.  For a specification,
 then, coordination-free means commitment-free.  For a system, the answer
 depends on which runs it can perform, and here seals and choices differ.  The
-environment may supply any input to any participant, so a seal is distributed
-coordination whenever another participant may receive the sealed input.
-Outputs, by contrast, are chosen only by strategies, so a choice is
-contradicted only when some run's strategy may emit the output it rules out.
+environment may supply any input to any participant, so a seal requires distributed coordination whenever another participant may receive the sealed input.
+Outputs, by contrast, are chosen only by strategies, so a choice requires coordination only when some run's strategy may emit the
+output it rules out.
 
 \begin{proposition}[Conflicting output events cannot be reconciled]
 \label{thm:commitments-require-coordination}
@@ -1226,13 +1226,14 @@ Lamport's ``anomalous behavior''~\cite{lamport1978time}, and the reconciling
 input need not arrive.  The system must therefore exclude one of the two
 events: by a mutex or atomic instruction in shared memory, by agreement in a
 distributed system, or by a rule fixed in advance, such as assigning the
-choice to a single participant, which keeps the coordination at that
-participant.  In a shared-nothing database in which each participant is the
+choice to a single participant, so that only that participant's runs can
+contradict it.  In a shared-nothing database in which each participant is the
 lock manager for its own keys~\cite{stonebraker1986sharednothing}, ordering
-two transactions on one key is coordination but not distributed coordination;
+two transactions on one key requires coordination but not distributed
+coordination;
 it still needs messages, and a client cut off from the owner cannot get its
-answer.  Two-phase commit orders a transaction across keys without
-distributed coordination: each owner's prepare is its own commitment, and the
+answer.  Two-phase commit orders a transaction across keys with no commitment that
+requires distributed coordination: each owner's prepare is its own commitment, and the
 coordinator's decision counts votes from a fixed set of participants, which is
 monotone.  Communication and distributed coordination therefore differ.
 
