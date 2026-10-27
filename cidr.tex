@@ -260,12 +260,12 @@ this paper into the broader context of the CALM agenda.  Full proofs and further
 \section{Functional CALM}
 \label{sec:functional-calm}
 
-This section treats functional specifications, in which each input has a
+This section focuses on functional specifications, in which each input has a
 single specified output.  We walk through the framework informally on an
 election (Section~\ref{sec:election-story}), state it precisely
 (Section~\ref{sec:framework-brief}), and
 prove Functional CALM (Section~\ref{sec:functional-calm-theorem}), identifying
-along the way when an output can be emitted without commitment.
+along the way when an output can be safely emitted without commitment.
 
 \subsection{The framework by example}
 \label{sec:election-story}
@@ -354,7 +354,7 @@ along the way when an output can be emitted without commitment.
 We introduce the framework with a small election, illustrated in
 Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
 the ballots received so far with the permitted result; orders on the columns
-describe how inputs grow and which later outputs \outrelbase earlier ones.
+describe how inputs \ingrow and which later outputs \outrelbase earlier ones.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
 $y$.  The output is whichever candidate has two ballots, or $\bot$ while there
@@ -363,7 +363,7 @@ three-character string with a dot for a ballot not yet received.  For brevity,
 the figure shows only inputs \inrelpart $x\cdot\cdot$.
 
 The two orders are where a designer makes decisions.  The \emph{input order}
-records accumulated ballots: $xy\cdot$ \inrel $x\cdot\cdot$, while
+records accumulated ballots, one per voter: $xy\cdot$ \inrel $x\cdot\cdot$, while
 $xx\cdot$ and $xy\cdot$ are incomparable.  The \emph{output order} says which
 announcements are safe to build on: $\bot$ claims nothing, so either winner
 \outrel it, while $x$ and $y$ are incomparable.  In general, the functional table is \emph{monotone}
@@ -379,7 +379,7 @@ Each panel captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
 still possible from that input.  When $v_2$'s ballot for $y$ arrives, the event
 $\mathsf{input}(xy\cdot)$ produces panel~(b), retiring rows whose inputs no
-longer \inrelbase the ballots received.  The \emph{upper fiber} is the set of
+longer \inrelbase the ballots received, and treating such inputs as illegal.  The \emph{upper fiber} is the set of
 outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
 $\{\bot,x,y\}$.
 If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
@@ -435,32 +435,32 @@ specification requires.
 
 \paragraph{Output and consistency.}
 In a functional table, an output $o$ is \emph{exposable} when every output
-still possible at the current input or an \indesc still in the table \outrel it.  Hence $\bot$ is exposable
+that could occur in future \outrel it---the entire upper fiber of the current input.  Hence $\bot$ is exposable
 in panels~(a) and~(b), and $x$ in panel~(c).  The atomic output event
 $\mathsf{output}(o)$ seals any legal input whose output does not \outrelbase
 $o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
 from then on, only rows whose outputs \outrelbase $o$ remain.  The emission
 matters because the environment is powerful and unpredictable; it may use $o$
-when choosing later input, and it observes $o$, not the seal.
+when choosing later input.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
 to itself).  Then $\bot$ is incompatible with future winners, so emitting it
-requires a seal.  That one change in the output order is Functional CALM in
-miniature: under the original monotone order, outputs remain
+requires a seal.  That change in the output order is Functional CALM in
+miniature: the original order is monotone with respect to input order, so all outputs remain
 valid as input grows; under the equality order, some outputs can be emitted
 only with a commitment.
 
-The obstruction is a property of the table alone.  Rows $(xy\cdot,\bot)$ and
-$(xyx,x)$ have the common \indesc $xyx$, but under the equality
+The obstruction is a property solely of the table and its orders.  Rows $(xy\cdot,\bot)$ and
+$(xyx,x)$ have the common input \indesc $xyx$, but under the equality
 order no output at $xyx$ \outrel both outputs $\bot$ and $x$.  A run that emits
 $\bot$ at $xy\cdot$ and one that receives $xyx$ cannot be reconciled at $xyx$.
 
 Input and output events form a transition system, and the specification is
 consistent when its runs are confluent.
 Section~\ref{sec:functional-calm-theorem} shows that for functional tables
-this is exactly monotonicity.
+this corresponds exactly to monotonicity.
 
 \subsection{The framework in brief}
 \label{sec:framework-brief}
@@ -478,7 +478,7 @@ where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
 output types, and $S\subseteq I\times O$ is a typed relation with schema
 $(\mathrm{in},\mathrm{out})$ in which every
 input appears in at least one row ($S$ is \emph{total} on $I$) and at most one
-(the functional dependency).  The unique output paired with $i$ induces a
+(a functional dependency).  The unique output paired with $i$ induces a
 function $f:I\to O$.
 \end{definition}
 
@@ -490,10 +490,9 @@ $o\OutputOrd u$ means that $u$ preserves every externally visible claim in $o$
 and may add more, and we say that $u$ \emph{\outrel} $o$.  A \emph{common
 \indesc} of inputs is an input that \inrel each of them, and a \emph{common
 \outnoun} of outputs is an output that \outrel each of them.  Neither need be
-unique or least: two independent transactions $a$ and $b$, with schedules
+unique or least: for example, two independent transactions $a$ and $b$, with schedules
 ordered by subsequence, have two incomparable minimal common \indescs, $ab$
-and $ba$.  Section~\ref{sec:complete-calm} drops the functional dependency; in
-general, we will use the term \emph{ordered specification}.
+and $ba$.
 
 \begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
@@ -506,14 +505,14 @@ $\Spec$ is \emph{monotone} if
 \end{equation}
 \end{definition}
 
-For a relation $R\subseteq I\times O$, a predicate in square brackets selects
+We introduce some compact notation. For a relation $R\subseteq I\times O$, a predicate in square brackets selects
 rows, and commas separate conjuncts: $R[\mathrm{in}\InputGe j,\
 \mathrm{out}\OutputGe o]$ holds the rows whose input \inrel $j$ and whose
-output \outrel $o$.  A row $(k,u)$ is \emph{at} $k$, and $\mathrm{out}(R)$ is
+output \outrel $o$.  We say that a row $(k,u)$ is \emph{at} $k$, and $\mathrm{out}(R)$ is
 the set of outputs in $R$.
 
 \paragraph{States.}
-A \emph{specification state} is a pair $\sigma=(i,R)$ of a \emph{current
+As illustrated by the non-gray text in the panels of Figure~\ref{fig:election-frames}, a \emph{specification state} is a pair $\sigma=(i,R)$ of a \emph{current
 input} $i$ and a \emph{remainder table} $R\subseteq S$ that contains a row at
 $i$ and only rows at \indescs of $i$.  An input $k$ is \emph{legal} at
 $\sigma$ when $R$ contains a row at $k$.  Rows are never added during
@@ -525,8 +524,8 @@ received $i$ and emitted nothing, retains all rows at $i$ and its \indescs:
 \end{equation}
 The \emph{fiber} of $R$ at $k$ is $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The
 \emph{upper fiber} of $(i,R)$ is $\mathrm{out}(R)$, the outputs still
-possible, and the state is \emph{determined} when it has one element.  A
-determined state stays determined.
+possible, and the state is \emph{determined} when the upper fiber has one element.
+Determined states stay determined.
 
 \paragraph{Events.}
 For a state $(i,R)$ and a legal input $j$, the \emph{input event}
@@ -552,7 +551,7 @@ table to the rows whose outputs \outrelbase $o$, and emits $o$:
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-When this removes rows, we call the state change the \emph{seal} $s_o$: it
+When this removes any row (at some input $j \InputGe i$), we call the state change the \emph{seal} $s_o$: it
 \emph{seals} the inputs of the removed rows, and it is a \emph{commitment}.
 \end{definition}
 
@@ -571,6 +570,7 @@ In a functional specification, $o$ is exposable exactly when $f(j)$ \outrel
 $o$ for every legal $j$.
 
 \paragraph{Runs and consistency.}
+We now consider the executions corresponding to a specification.
 \begin{definition}[Run]
 \label{def:run}
 A \emph{run} is a finite sequence of input and output events from the
@@ -582,7 +582,7 @@ reaches it.
 
 Input events keep only rows whose input \inrel the current one, and output
 events keep only rows whose outputs \outrelbase what has been emitted.  Both
-steps are selections, and selections commute; since inputs only \ingrow during
+steps are relational selections, and selections commute; since inputs only \ingrow during
 a run, the last input's selection subsumes the earlier ones.
 
 \begin{lemma}[Rows remaining after a run]
@@ -619,7 +619,7 @@ Rows are never added, so the row of a common state at $j$ was there
 in every run.  \fullproof
 \end{proof}
 
-Consistency guarantees that runs never diverge irreparably.  Whatever input
+Consistency guarantees runs never diverge irreparably: no ``split brain''.  Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
 of theirs leaves a single state that every run can reach: one that keeps every
 promise any of them has made and accepts all of that input.
