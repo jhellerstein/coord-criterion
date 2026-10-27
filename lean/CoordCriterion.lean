@@ -36,7 +36,6 @@ import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
-import CoordCriterion.Instances.IOMachineLocal
 import CoordCriterion.Instances.IOMachineCofinal
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
