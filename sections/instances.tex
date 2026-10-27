@@ -229,65 +229,87 @@ projection designed to make the intrinsic coordination question comparable
 across such formalisms.
 
 \paragraph{Compiling a state machine.}
-A state machine compiles into an ordered specification.  Let $M$ have states
-$Q$, an initial state $q_0$, environment events $E$, and a transition relation
-${\to}\subseteq Q\times E\times Q$ that accepts every event in every state, and
-let $\mathrm{obs}:Q\to O$ give the observable output of each state, with
-$(O,\OutputOrd)$ an output order.  Write $q_0\xrightarrow{w}q$ when $M$ can
-reach $q$ by consuming the event sequence $w\in E^*$.  A map $\alpha$ from
-$E^*$ onto a partially ordered input domain $(I,\InputOrd)$, monotone for the
-prefix order, says which event sequences the specification treats as the same
-input.
+We take the standard I/O-automaton model~\cite{lynch1987io} of a state
+machine, its clients, and the channel that carries their events.  The machine
+$M$ has states $Q$, an initial state $q_0$, a transition relation on event
+payloads that accepts every payload in every state, and an observation
+$\mathrm{obs}:Q\to O$, which it may output at any time without changing state.
+Each of finitely many clients may send an event with any payload at any time
+and receives the machine's outputs; the channel delivers each sent event
+exactly once, in any order or in the order sent.  In an execution of the
+composed automaton, \emph{happens-before} is Lamport's
+order~\cite{lamport1978time}: the transitive closure of the local order at the
+machine and at each client and of the edge from sending an event to receiving
+it.  An output of the machine is an input of the client that receives it, so a
+client's later sends happen after everything the machine had received when it
+emitted that output.
 
 \begin{definition}[Induced specification]
 \label{def:induced-specification}
-The specification \emph{induced} by $M$ and $\alpha$ has table
-\[
-  S_{M,\alpha}=\{(\alpha(w),\mathrm{obs}(q)) : q_0\xrightarrow{w}q\}.
-\]
+The \emph{input} of a finite execution is the set of events the machine has
+received, ordered by happens-before between their sends; $h\InputOrd h'$ when
+$h\subseteq h'$ and the two orders agree on $h$.  The specification
+\emph{induced} by $M$ and its environment pairs each input that occurs with
+the machine's observation at the end of every execution with that input.
 \end{definition}
+
+This is not a distributed execution in the sense of
+Section~\ref{sec:distributed-execution}.  The machine is a single
+participant; the clients and the channel are its environment, and outputs
+flow to the environment as in Section~\ref{sec:election-story}, where the
+environment may use an output when choosing later input.  Happens-before here
+only keeps the books: it records which events each client sent after which
+outputs, so the input remembers what the environment's choices depended on.
+Distributing the machine is then direct: the clients remain the environment,
+each client's events are sent to some participant, and among participants
+Section~\ref{sec:distributed-execution} applies, with the induced
+specification as the specification.
 
 \begin{proposition}[Induced specifications]
 \label{prop:induced-specification}
 \leavevmode
 \begin{enumerate}
-  \item $(I,\InputOrd,O,\OutputOrd,S_{M,\alpha})$ is an ordered specification.
-  \item If $M$ is deterministic and $\alpha$ is the identity on $E^*$ ordered by
-        prefix, the specification is functional, and it is consistent exactly
-        when $\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every transition
-        $q\to q'$ from a reachable state.
-  \item If $M$ is deterministic and $\alpha(w)$ is the state reached on $w$,
-        with reachable states ordered by reachability and that order
-        antisymmetric, the specification is consistent exactly when the one in
-        (2) is.
+  \item The induced specification is an ordered specification, and the input
+        of an execution only expands as the execution continues.
+  \item With one client and an order-preserving channel, every input is a
+        chain and the induced specification is the table of event sequences
+        ordered by prefix; for a deterministic machine it is consistent
+        exactly when $\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every
+        transition $q\to q'$ from a reachable state.
+  \item Every observation in the fiber at $h$ is reached by $M$ on some
+        arrival order of the events of $h$.  With a reordering channel and
+        clients that observe no outputs, every arrival order is reached.
+  \item The machine's observations are confluent across its executions---for
+        executions with inputs $h_1,\ldots,h_k$ and any input $h$ that occurs
+        and expands each $h_r$, some execution with input $h$ ends in an
+        observation that \outrel each of theirs---exactly when the induced
+        specification satisfies Lifted Monotonicity.
 \end{enumerate}
 \end{proposition}
 
-\begin{proof}
-(1) Every $i\in I$ is $\alpha(w)$ for some $w$, and $M$ accepts every event,
-so some run consumes $w$; hence $S_{M,\alpha}$ is total on $I$.
-(2) Determinism gives one state, and so one output, per sequence.  If $w$ is a
-prefix of $w'$, the run on $w'$ passes through the state reached on $w$, so
-monotonicity in the prefix order is monotonicity of $\mathrm{obs}$ along
-single transitions, by transitivity of $\OutputOrd$.  Functional CALM
-(Theorem~\ref{thm:functional-calm}) gives consistency.
-(3) The table is $\{(q,\mathrm{obs}(q))\}$ over reachable states, and $q$ is
-expanded by $q'$ exactly when $q'$ is reachable from $q$.  Monotonicity is
-again monotonicity of $\mathrm{obs}$ along single transitions.
+\begin{proof}[Proof sketch]
+(1) Inclusion with agreeing orders is a partial order, every input that occurs
+has a row, and extending an execution adds received events without changing
+happens-before among earlier sends.  (2) A single client's sends are totally
+ordered, and an order-preserving channel delivers them in that order, so an
+input is determined by its sequence of payloads; the claim is then
+monotonicity along transitions, and Functional CALM.  (3) Executions
+interleave the channel's deliveries freely; without outputs, happens-before
+orders only each client's own sends.  (4) Unfold the fiber in the
+common-\indesc condition and apply Complete CALM
+(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:common-expansion-form}).
 \end{proof}
 
-The choice of $\alpha$ is where coordination enters.  Under the prefix order
-of (2), two event sequences have a common \indesc only when one extends the
-other: the machine is one sequential process, and a deterministic machine
-whose observations only grow is consistent.  When $\alpha$ forgets arrival
-order, for instance by mapping each sequence to the set of events in it,
-sequences that differ only in order become one input, and the fiber at that
-input collects the observations of every order.  Sensitivity to arrival order
-in the machine then appears as ambiguity in the specification, which Complete
-CALM analyzes.  The election of Section~\ref{sec:election-story} is the
-specification induced by a vote-counting machine under the map that records
-each voter's first ballot; its observations do not depend on arrival order,
-so its fibers are singletons.
+The input orders events by their sends, not by their arrivals: the machine
+receives events in one total order, but that order is what differs between
+executions.  Outputs are where the environment's reactions enter.  A client
+that sends after observing an output is ordered after everything that output
+reflected, so no execution delivers its event earlier; what the client saw is
+recorded by the run's output events, which keep only rows that \outrelbase
+it.  Collecting the fibers means exploring every execution with a given
+input, which is the task of a model checker; for bounded systems, dynamic
+partial-order reduction~\cite{flanagan2005dpor} computes them without
+enumerating every interleaving.
 
 \subsection{Scope}
 \label{sec:scope}
