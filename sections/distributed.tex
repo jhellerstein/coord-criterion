@@ -469,13 +469,20 @@ does~\cite{herlihy1990linearizability}.  Let $p$'s input contain only a write
 of $v\neq v_0$, and $q$'s only a read.  The fiber at $p$'s input holds only the
 write's acknowledgment; the fiber at $q$'s input, which contains no write,
 holds only the answer $v_0$ to the read.  At the common \indesc where the write
-precedes the read, every output in the fiber answers the read with $v$, so no
-output there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.  The converse in the proof of Theorem~\ref{thm:complete-cap} needs
-Availability only so that $p$ can emit the acknowledgment and $q$ can emit
-$v_0$.  Each is the only output in its fiber, so it is enough that every
-request receive some response, which is Gilbert and Lynch's availability.  It
-needs Partition Consistency only to give a common \outnoun of the emitted
-outputs, which is what linearizability requires.
+precedes the read, every output in the fiber answers that same read with $v$.  That contradicts
+the answer $v_0$; it is not a later read observing a newer value.  So no output
+there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.
+
+By Complete CAP, then, no system keeps both outputs available and consistent
+across a partition.  The proof needs less than the full hypotheses here, which
+is why it yields Gilbert and Lynch's theorem exactly.  Place $p$ and $q$ in
+separate components.  Availability is used only to make $p$ acknowledge the
+write and $q$ answer the read; each fiber holds a single output, so any
+response will do, which is Gilbert and Lynch's availability.  Partition
+Consistency is used only to demand a common \outnoun of those two answers, a
+single linearization that explains both, which is Gilbert and Lynch's
+consistency.  No such \outnoun exists.
+
 Appendix~\ref{app:cap-response} takes precedence from real time, extends
 Complete CAP to systems that choose their responses when responses are not
 forced, and derives
