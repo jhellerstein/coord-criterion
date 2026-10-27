@@ -353,7 +353,7 @@ theorem example_2PL (h : Distinct3 A B C) (hr : rd A x) (hnw : ∀ t, ¬ wr t x)
   -- canonical event 1
   let τ1' := outState σ0 (o1 A x) o1_0
   have cstep1 : CanonStep σ0 (.output (kappa σ0 (o1 A x)) (o1 A x)) τ1' :=
-    ⟨canonical_support σ0 (o1 A x) o1_0, fun _ _ e => by cases e; rfl⟩
+    ⟨canonical_support σ0 (o1 A x) o1_0, ⟨(fun _ _ e => by cases e; rfl), fun _ e => by cases e⟩⟩
   have rBAC1' : τ1'.R k3 (row A x [B, A, C] Z) := ⟨r0 pBAC, o1_le_row _ _⟩
   have sub1 : ∀ k u, τ1.R k u → τ1'.R k u := fun k u hu =>
     ⟨(order A B).sub _ _ h1 k u hu.1, hu.2⟩
@@ -438,7 +438,7 @@ theorem example_2PL (h : Distinct3 A B C) (hr : rd A x) (hnw : ∀ t, ¬ wr t x)
   have o2_1' : τ1'.R τ1'.cur (o2 A B C x) := ⟨r0 pACB, o1_le_row _ _⟩
   let τ2' := outState τ1' (o2 A B C x) o2_1'
   have cstep2 : CanonStep τ1' (.output (kappa τ1' (o2 A B C x)) (o2 A B C x)) τ2' :=
-    ⟨canonical_support τ1' (o2 A B C x) o2_1', fun _ _ e => by cases e; rfl⟩
+    ⟨canonical_support τ1' (o2 A B C x) o2_1', ⟨(fun _ _ e => by cases e; rfl), fun _ e => by cases e⟩⟩
   have nexp : ¬ Exposable τ1' (o2 A B C x) := by
     have lAB : ∀ {o : Outcome T}, (mk [A, C, B] Z) ≼ o → o.lt A B := fun hle =>
       (hle.2.2 A B (by simp [mk_dom]) (by simp [mk_dom])).2 (by rw [lt_ACB h]; simp)
