@@ -441,7 +441,7 @@ formalisms.") positions the model; it states no claim of its own.
 "Compiling a state machine": "Automata are a traditional way to model
 operational behavior abstractly.  Our model keeps only the inputs and outputs
 of that behavior and drops the operational details.  The mapping is
-straightforward: an input's outputs are those of the runs that consume it.
+straightforward: for each input, record the outputs of the runs that consume it.
 Work that models systems as state machines therefore maps naturally into our
 model, where Complete CALM assesses its consistency directly.  We now make the
 mapping precise, and then explain how it is used in practice."  The mapping is
