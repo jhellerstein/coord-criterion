@@ -621,7 +621,7 @@ For a specification, `𝓡` is its canonical runs; for a system, it is the runs
 it can perform, under any inputs the environment may supply."
 
 Lean, for a system (`CC.CAP` model): `System.CoordinationFree` says no output
-event of a produced history removes a row `(k,x)` that some produced history
+event and no commit event of a produced history removes a row `(k,x)` that some produced history
 emits at current input `k` (`SysEmits`), or seals an input some produced
 history accepts (`SysAccepts`); produced histories range over all inputs the
 adversarial environment may supply. -/
