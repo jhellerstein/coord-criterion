@@ -4,6 +4,7 @@ import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.CALM.Lemmas
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
+import CoordCriterion.Instances.IOMachineCofinal
 
 /-!
 # Paper §6, "Instances Across the Literature" (`sections/instances.tex`)
@@ -20,7 +21,7 @@ it formalizes.
 * Every proof is a pointer to the library (`Instances/Examples.lean`,
   `Instances/QueryRefinements.lean`, `Instances/InvariantConfluence.lean`,
   `Instances/BailisDefinition.lean`, `Instances/StateMachine.lean`,
-  `Instances/IOMachine.lean`).
+  `Instances/IOMachine.lean`, `Instances/IOMachineCofinal.lean`).
 
 Conventions shared by the entries (details in `Instances/Examples.lean`):
 finite payload sets are `Inst.FSet P` (inclusion); a join-semilattice is
@@ -440,19 +441,18 @@ formalisms.") positions the model; it states no claim of its own.
 "Compiling a state machine": "Automata are a traditional way to model
 operational behavior abstractly.  Our model keeps only the inputs and outputs
 of that behavior and drops the operational details.  The mapping is
-straightforward: for each finite input, enumerate the possible runs and
-collect their outputs.  This is what simulators do: discrete-event simulation
-and model checking both enumerate the runs of a modeled system.  Work that
-models systems as state machines therefore maps naturally into our model,
-where Complete CALM assesses its consistency directly.  We now make the
-mapping precise."  The mapping is Def. `def:induced-specification`, and
-"Complete CALM assesses its consistency directly" is
-`IOM.confluent_iff_liftedMono` (consistency iff Lifted Monotonicity for every
-induced specification; part (4) of Prop. `prop:induced-specification`).  That
-simulators and model checkers enumerate runs is a remark about those tools,
-argued in prose only (see the README).
+straightforward: an input's outputs are those of the runs that consume it.
+Work that models systems as state machines therefore maps naturally into our
+model, where Complete CALM assesses its consistency directly.  We now make the
+mapping precise, and then explain how it is used in practice."  The mapping is
+Def. `def:induced-specification`, and "Complete CALM assesses its consistency
+directly" is `IOM.confluent_iff_liftedMono` (consistency iff Lifted
+Monotonicity for every induced specification; part (4) of
+Prop. `prop:induced-specification`).  How it is used in practice is the
+paragraph "Testing and proof" (entries after
+Prop. `prop:induced-specification`).
 
-"We take the standard I/O-automaton model of a state machine, its clients,
+We take the standard I/O-automaton model of a state machine, its clients,
 and the channel that carries their events.  The machine `M` has states `Q`,
 an initial state `q₀`, receive transitions on event payloads that accept
 every payload in every state, output transitions that emit an output to a
@@ -628,6 +628,119 @@ theorem «prop:induced-specification» {C P Q O : Type} [PO O] [DecidableEq C]
     ⟨IOM.fiber_sub_run, fun _ _ hx hout h hh _ _ hγ hw hmem =>
       IOM.bag_fiber_of_run hx hout h hh hγ hw hmem⟩,
     (IOM.confluent_iff_liftedMono k G).1⟩
+
+/-! "Testing and proof": "The induced specification is defined by every
+finite execution of the machine and its environment.  There are infinitely
+many such executions, so the induced specification is a semantic object: we
+can reason about it, but not list it.  Two standard approaches make that
+reasoning practical."  This frames the paragraph.  "The first is testing.  A
+simulator or model checker runs the machine and its environment on bounded
+inputs and collects what it observes.  This is routine engineering practice
+and has found serious bugs in production systems.  Testing suits refutation."
+These sentences describe tools and practice and are argued in prose only (see
+the README); the refutation claim is the next entry. -/
+
+/-- "If Lifted Monotonicity fails, finitely many executions show it:
+executions with inputs `h₁,…,hₖ`, and a common expansion `h` at which no
+execution's observation refines all of theirs."
+
+Lean (general machine `G`, either channel): `IOM.not_liftedMono_iff_witness`.
+Lifted Monotonicity of the induced specification fails iff there are a
+finite list of executions `βᵣ` and an execution `β` whose input expands each
+`input βᵣ`, such that every execution `β'` with `input β' = input β` ends in
+an observation that fails to refine some `βᵣ`'s.  The common expansion `h`
+is the input of `β`; it is an input that occurs, as every input of the
+induced specification is.  The library also gives finite certificates for
+the last clause (`IOM.not_liftedMono_of_fiber_list`,
+`IOM.not_liftedMono_of_machine_cert`).  The next sentence ("Testing cannot
+show that Lifted Monotonicity holds, since that is a claim about every
+input.") is argued in prose only (see the README). -/
+theorem «sec:operational-models/testing-witness» {C P Q O : Type} [PO O]
+    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) :
+    ¬ (IOM.spec (C := C) k G).LiftedMono ↔
+      ∃ fam : List (List (IOM.Act C P O) × (IOM.sys (C := C) k G).St),
+        (∀ r ∈ fam, IOA.Execution (IOM.sys k G) r.1 r.2) ∧
+        ∃ β s, IOA.Execution (IOM.sys k G) β s ∧ (∀ r ∈ fam, IOM.input r.1 ≼ IOM.input β) ∧
+          ∀ β' s', IOA.Execution (IOM.sys k G) β' s' → IOM.input β' = IOM.input β →
+            ∃ r ∈ fam, ¬ G.obs (r.2 .mach) ≼ G.obs (s' .mach) :=
+  IOM.not_liftedMono_iff_witness k G
+
+/-- "The second is proof.  Instead of computing the induced specification,
+the designer writes one down.  A *declared* specification `D` gives, for
+each input, a set of outputs by a rule … it does not enumerate executions.
+The proof then shows that `D` describes the machine well enough that Lifted
+Monotonicity can be checked on `D` instead.  Two things must be shown, and
+both are needed, because neither half alone preserves Lifted Monotonicity:
+if `D` omits an output the machine can produce, it may hide an
+incompatibility, and if `D` adds an output the machine cannot produce, it may
+supply a common refinement that no execution reaches."  The examples of rules
+("the set of ballots received", "the largest timestamp seen") are
+illustrations, argued in prose only (see the README).
+
+Lean: the machine `IOM.fork` (receives keep the state; an internal step moves
+to `b`, observed as `l`, or to `c`, observed as `r`, from any state; `l` and
+`r` are incomparable, below `top`) is not Lifted Monotone.  `IOM.forkOmit`
+(only `l` at every input) omits the output `r` the machine produces: it
+satisfies Realizability and is Lifted Monotone.  `IOM.forkAdd` (only `top`)
+adds an output no execution reaches: it satisfies Domination and is Lifted
+Monotone.  So neither obligation alone carries Lifted Monotonicity from `D`
+to the machine (`IOM.fork_halves`). -/
+theorem «sec:operational-models/both-halves» {C P : Type} [DecidableEq C]
+    (k : IOM.ChanKind) :
+    letI := IOM.lvlPO
+    (∀ h o, (IOM.forkOmit C P k).S h o →
+      ∃ β s, IOA.Execution (IOM.sys k (IOM.fork C P)) β s ∧ IOM.input β = h.val ∧
+        (IOM.fork C P).obs (s .mach) = o) ∧
+    (IOM.forkOmit C P k).LiftedMono ∧
+    (∀ β s, ∀ hx : IOA.Execution (IOM.sys k (IOM.fork C P)) β s,
+      ∃ o, (IOM.forkAdd C P k).S (IOM.occOfExec k (IOM.fork C P) hx) o ∧
+        (IOM.fork C P).obs (s .mach) ≼ o) ∧
+    (IOM.forkAdd C P k).LiftedMono ∧
+    ¬ (IOM.spec (C := C) k (IOM.fork C P)).LiftedMono :=
+  IOM.fork_halves k
+
+/-- **Prop. `prop:declared-specification`** (Declared specifications).  "Let
+`D` be an ordered specification whose inputs correspond, by an order
+isomorphism, to the inputs that occur.  If `D` satisfies realizability and
+domination, then `D` satisfies Lifted Monotonicity exactly when the induced
+specification does, and so exactly when the machine's observations are
+confluent across its executions."  With the obligations: "*Realizability.*
+Every output that `D` allows at an input is the observation of some execution
+with that input.  *Domination.*  Every execution's final observation is
+refined by some output that `D` allows at its input."  The remark "`D` need
+not match the machine exactly: it may leave out observations that others
+refine, such as transient intermediate states" is illustrated by
+`IOM.dip_liftedMono_via_cofinal` (a declared specification that omits two
+transient observations).
+
+Lean (general machine `G`, either channel): `D : Spec J O` over an ordered
+input type `J`, and `φ : OccInp C P k G → J`.  `IOM.MachineCofinal k G φ D`
+bundles: `φ` is an order embedding (`emb`); Realizability over executions
+(`real`: every row `(j, o)` of `D` is `(φ (input β), obs)` for an execution
+`β`); Domination (`dom`: every execution's final observation is refined by
+a row of `D` at the image of its input).  The paper's order isomorphism is
+an order embedding that is onto; ontoness is not assumed, since Realizability
+and totality of `D` imply it.  The conclusion is
+`IOM.liftedMono_iff_of_machineCofinal`: `D.LiftedMono ↔ (spec k G).LiftedMono`,
+`D.LiftedMono ↔ ObsConfluent k G`, and also `D` consistent iff the induced
+specification is.  The proof follows the sketch: both directions go through
+the common-expansion form (`commonExpansion_of_dominated`,
+`commonExpansion_of_realized` in `CompleteCALM/Cofinal.lean`).
+
+The closing paragraph ("Both obligations are standard in the verification
+literature. … nothing about coordination is proved about the machine
+itself.") relates the obligations to invariants, forward simulations,
+refinement mappings, and mechanized proofs, and says how realizability is
+typically proved; these are argued in prose only (see the README).  "The
+proposition asks for nothing beyond these two facts" is the shape of the
+statement above. -/
+theorem «prop:declared-specification» {C P Q O J : Type} [PO O] [PO J]
+    (k : IOM.ChanKind) (G : IOM.Machine C P Q O) (φ : IOM.OccInp C P k G → J)
+    (D : Spec J O) (H : IOM.MachineCofinal k G φ D) :
+    (D.LiftedMono ↔ (IOM.spec (C := C) k G).LiftedMono) ∧
+      (D.LiftedMono ↔ IOM.ObsConfluent (C := C) k G) ∧
+      (D.Consistent ↔ (IOM.spec (C := C) k G).Consistent) :=
+  IOM.liftedMono_iff_of_machineCofinal H
 
 end Paper
 end CC

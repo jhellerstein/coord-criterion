@@ -1,7 +1,7 @@
 import CoordCriterion.CompleteCALM.Theorem
 
 /-!
-# Cofinal specifications (not yet in the paper text)
+# Cofinal specifications (§6.5, Prop. `prop:declared-specification`)
 
 A declared specification `S` is *cofinal* in a specification `T` over the
 same ordered inputs and outputs when

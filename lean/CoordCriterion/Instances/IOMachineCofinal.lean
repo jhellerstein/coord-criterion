@@ -2,7 +2,7 @@ import CoordCriterion.Instances.IOMachine
 import CoordCriterion.CompleteCALM.Cofinal
 
 /-!
-# A declared specification cofinal in a machine's behaviour (not yet in the paper text)
+# A declared specification cofinal in a machine's behaviour (§6.5, "Testing and proof")
 
 The induced specification `spec k G` of `Instances/IOMachine.lean` has a
 row for every execution of the composed system, including transient
@@ -384,6 +384,136 @@ theorem dip_liftedMono_via_cofinal [DecidableEq C] (k : ChanKind) :
   exact ⟨e1.1 (dipDecl_liftedMono k), e2.1 (dipDecl_liftedMono k)⟩
 
 end dip
+
+/-! ### Neither obligation alone suffices -/
+
+section fork
+
+/-- Observations of `fork`: `bot` below everything, `top` above everything,
+`l` and `r` incomparable. -/
+inductive Lvl where
+  | bot
+  | l
+  | r
+  | top
+  deriving DecidableEq
+
+/-- The order on `Lvl`. -/
+@[instance_reducible] def lvlPO : PO Lvl where
+  le x y := x = .bot ∨ y = .top ∨ x = y
+  refl _ := Or.inr (Or.inr rfl)
+  trans {x y z} h1 h2 := by
+    cases x <;> cases y <;> cases z <;> simp_all
+  antisymm {x y} h1 h2 := by
+    cases x <;> cases y <;> simp_all
+
+attribute [local instance] lvlPO
+
+/-- States of `fork`. -/
+inductive Fork where
+  | a
+  | b
+  | c
+
+/-- Observations of `fork`: `a ↦ bot`, `b ↦ l`, `c ↦ r`. -/
+def Fork.obs : Fork → Lvl
+  | .a => .bot
+  | .b => .l
+  | .c => .r
+
+/-- Receives leave the state unchanged; an internal step moves to `b` or to
+`c` from any state; no outputs.  Every input has executions ending in `b`
+and in `c`, whose observations `l` and `r` have no common refinement among
+observations. -/
+def fork (C P : Type) : Machine C P Fork Lvl where
+  q0 := .a
+  recv q _ q' := q' = q
+  recv_enabled q _ := ⟨q, rfl⟩
+  out _ _ _ _ := False
+  tau _ q' := q' = .b ∨ q' = .c
+  obs := Fork.obs
+
+/-- A declared specification that omits an output `fork` produces: `l` only. -/
+def forkOmit (C P : Type) (k : ChanKind) : Spec (OccInp C P k (fork C P)) Lvl where
+  S _ o := o = .l
+  total _ := ⟨.l, rfl⟩
+
+/-- A declared specification that adds an output `fork` cannot produce:
+`top` only. -/
+def forkAdd (C P : Type) (k : ChanKind) : Spec (OccInp C P k (fork C P)) Lvl where
+  S _ o := o = .top
+  total _ := ⟨.top, rfl⟩
+
+/-- A specification with a single output at every input is Lifted Monotone. -/
+theorem liftedMono_const {I : Type} [PO I] (sp : Spec I Lvl) (u : Lvl)
+    (h : ∀ i o, sp.S i o ↔ o = u) : sp.LiftedMono :=
+  fun _ j _ _ _ hA => ⟨u, (h j u).2 rfl, fun x hx => by
+    rw [(h _ x).1 (hA x hx)]; exact PO.refl u⟩
+
+variable [DecidableEq C] (k : ChanKind)
+
+/-- One internal step to `q'` extends an execution without changing its
+input. -/
+theorem fork_step {β : List (Act C P Lvl)} {s : (sys (C := C) k (fork C P)).St}
+    (hx : Execution (sys k (fork C P)) β s) (q' : Fork) (hq : q' = .b ∨ q' = .c) :
+    ∃ s', Execution (sys k (fork C P)) (β ++ [.tau]) s' ∧ s' .mach = q' := by
+  obtain ⟨s', hx', hs'⟩ := reach_snoc.2 ⟨toFlat s, ⟨s, hx, rfl⟩,
+    FStep.tau (G := fork C P) (k := k) (toFlat s) q' hq⟩
+  exact ⟨s', hx', by rw [← show (toFlat s').q = s' .mach from rfl, hs']⟩
+
+/-- `fork` is not Lifted Monotone: from the empty execution, one internal
+step reaches `l` and another `r`, at the same (empty) input, and no
+observation refines both. -/
+theorem fork_not_liftedMono : ¬ (spec (C := C) k (fork C P)).LiftedMono := by
+  obtain ⟨s0, hx0, _⟩ := (reach_nil (k := k) (G := fork C P)).2 rfl
+  obtain ⟨sb, hxb, hb⟩ := fork_step k hx0 .b (Or.inl rfl)
+  obtain ⟨sc, hxc, hc⟩ := fork_step k hx0 .c (Or.inr rfl)
+  have hi : input ([] ++ [Act.tau] : List (Act C P Lvl)) = input [] := input_snoc_tau []
+  simp only [List.nil_append] at hxb hxc hi
+  refine not_liftedMono_of_fiber_list k (fork C P) [([.tau], sb), ([.tau], sc)]
+    (fun r hr => by
+      simp only [List.mem_cons, List.mem_nil_iff, or_false] at hr
+      rcases hr with rfl | rfl
+      · exact hxb
+      · exact hxc)
+    hx0 (fun r hr => by
+      simp only [List.mem_cons, List.mem_nil_iff, or_false] at hr
+      rcases hr with rfl | rfl <;> (show input [Act.tau] ≼ _; rw [hi]; exact PO.refl _))
+    [.bot, .l, .r]
+    (fun _ s' _ _ => ?_) ?_
+  · show Fork.obs (s' .mach) ∈ _
+    cases s' .mach <;> simp [Fork.obs]
+  · have ob : (fork C P).obs (sb .mach) = .l := by rw [hb]; rfl
+    have oc : (fork C P).obs (sc .mach) = .r := by rw [hc]; rfl
+    intro u hu
+    simp only [List.mem_cons, List.mem_nil_iff, or_false] at hu
+    rcases hu with rfl | rfl | rfl
+    · exact ⟨_, List.mem_cons_self .., by rw [ob]; show ¬ (_ ∨ _ ∨ _); simp⟩
+    · exact ⟨_, List.mem_cons_of_mem _ (List.mem_cons_self ..), by
+        rw [oc]; show ¬ (_ ∨ _ ∨ _); simp⟩
+    · exact ⟨_, List.mem_cons_self .., by rw [ob]; show ¬ (_ ∨ _ ∨ _); simp⟩
+
+/-- **Neither obligation alone preserves Lifted Monotonicity.**  `forkOmit`
+satisfies Realizability (every input reaches `b` by one internal step) and
+`forkAdd` satisfies Domination (`top` refines every observation); both are
+Lifted Monotone, while the induced specification of `fork` is not. -/
+theorem fork_halves :
+    (∀ h o, (forkOmit C P k).S h o →
+      ∃ β s, Execution (sys k (fork C P)) β s ∧ input β = h.val ∧ (fork C P).obs (s .mach) = o) ∧
+    (forkOmit C P k).LiftedMono ∧
+    (∀ β s, ∀ hx : Execution (sys k (fork C P)) β s,
+      ∃ o, (forkAdd C P k).S (occOfExec k (fork C P) hx) o ∧ (fork C P).obs (s .mach) ≼ o) ∧
+    (forkAdd C P k).LiftedMono ∧
+    ¬ (spec (C := C) k (fork C P)).LiftedMono := by
+  refine ⟨fun h o ho => ?_, liftedMono_const _ .l fun _ _ => Iff.rfl,
+    fun _ _ _ => ⟨.top, rfl, Or.inr (Or.inl rfl)⟩, liftedMono_const _ .top fun _ _ => Iff.rfl,
+    fork_not_liftedMono k⟩
+  obtain ⟨β, s, hx, hi⟩ := h.occ
+  obtain ⟨s', hx', hb⟩ := fork_step k hx .b (Or.inl rfl)
+  refine ⟨β ++ [.tau], s', hx', (input_snoc_tau β).trans hi, ?_⟩
+  rw [ho]; show Fork.obs (s' .mach) = _; rw [hb]; rfl
+
+end fork
 
 end IOM
 end CC
