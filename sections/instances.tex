@@ -229,14 +229,25 @@ projection designed to make the intrinsic coordination question comparable
 across such formalisms.
 
 \paragraph{Compiling a state machine.}
+Automata are a traditional way to model operational behavior
+abstractly~\cite{lynch1987io,lynch1996distributed}.  Our model keeps only the
+inputs and outputs of that behavior and drops the operational details.  The
+mapping is straightforward: for each finite input, enumerate the possible runs
+and collect their outputs.  This is what simulators do: discrete-event
+simulation and model checking both enumerate the runs of a modeled
+system~\cite{misra1986des,flanagan2005dpor}.  Work that models systems as
+state machines therefore maps naturally into our model, where Complete CALM
+assesses its consistency directly.  We now make the mapping precise.
+
 We take the standard I/O-automaton model~\cite{lynch1987io} of a state
 machine, its clients, and the channel that carries their events.  The machine
-$M$ has states $Q$, an initial state $q_0$, a transition relation on event
-payloads that accepts every payload in every state, and an observation
-$\mathrm{obs}:Q\to O$, which it may output at any time without changing state.
-Each of finitely many clients may send an event with any payload at any time
-and receives the machine's outputs; the channel delivers each sent event
-at most once, in any order or in the order sent.  In an execution of the
+$M$ has states $Q$, an initial state $q_0$, receive transitions on event
+payloads that accept every payload in every state, output transitions that
+emit an output to a client and may change state, internal transitions, and an
+observation $\mathrm{obs}:Q\to O$.  Each of finitely many clients may send an
+event with any payload at any time and receives the machine's outputs; a
+channel carries events, each at most once, to the machine's input queue, which
+it consumes in order, and may reorder them on the way.  In an execution of the
 composed automaton, \emph{happens-before} is Lamport's
 order~\cite{lamport1978time}: the transitive closure of the local order at the
 machine and at each client and of the edge from sending an event to receiving
@@ -271,14 +282,20 @@ specification as the specification.
 \begin{enumerate}
   \item The induced specification is an ordered specification, and the input
         of an execution only expands as the execution continues.
-  \item With one client and an order-preserving channel, every input is a
-        chain and the induced specification is the table of event sequences
-        ordered by prefix; for a deterministic machine it is consistent
-        exactly when $\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every
+  \item When there is one client and its events arrive in the order it sent
+        them, every input is a chain, inputs correspond to event sequences
+        ordered by prefix, and the fiber at a sequence collects the
+        observations of the machine's runs that receive it in order,
+        interleaved with output and internal steps.  If output and internal
+        steps leave the state unchanged and receiving is deterministic, the
+        specification is functional and consistent exactly when
+        $\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every receive
         transition $q\to q'$ from a reachable state.
-  \item Every observation in the fiber at $h$ is reached by $M$ on some
-        arrival order of the events of $h$.  With a reordering channel and
-        clients that observe no outputs, every arrival order is reached.
+  \item Every observation in the fiber at $h$ is reached by a run of the
+        machine that receives each event of $h$ once, interleaved with output
+        and internal steps.  If the channel may reorder and clients observe no
+        outputs, every such run is reached, whatever the order of its
+        receives.
   \item The machine's observations are confluent across its executions---for
         executions with inputs $h_1,\ldots,h_k$ and any input $h$ that occurs
         and expands each $h_r$, some execution with input $h$ ends in an
@@ -291,11 +308,12 @@ specification as the specification.
 (1) Inclusion with agreeing orders is a partial order, every input that occurs
 has a row, and extending an execution adds received events without changing
 happens-before among earlier sends.  (2) A single client's sends are totally
-ordered, and an order-preserving channel delivers them in that order, so an
-input is determined by its sequence of payloads; the claim is then
-monotonicity along transitions, and Functional CALM.  (3) Executions
-interleave the channel's deliveries freely; without outputs, happens-before
-orders only each client's own sends.  (4) Unfold the fiber in the
+ordered, and they arrive in that order, so an input is determined by its
+sequence of payloads, and the machine's steps in an execution form a run of
+the machine automaton; in the special case, the claim is monotonicity along
+receive transitions, and Functional CALM.  (3) The machine's steps in an
+execution form such a run; without outputs to clients, happens-before orders
+only each client's own sends, so all sends can precede the machine's run.  (4) Unfold the fiber in the
 common-\indesc condition and apply Complete CALM
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:common-expansion-form}).
 \end{proof}
