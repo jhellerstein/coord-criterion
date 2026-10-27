@@ -138,11 +138,11 @@ Confluence, and later refinements of CALM all map into the same framework.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 16 & 2032\\
+unclassified & 17 & 2058\\
 formal definition/notation & 24 & 1344\\
 related-work detail & 7 & 1072\\
 example & 8 & 690\\
-explanation & 14 & 543\\
+explanation & 13 & 519\\
 formal caution & 6 & 216\\
 signposting & 16 & 211\\
 result & 3 & 207\\
@@ -514,7 +514,7 @@ inputs as \emph{cumulative}: $i\InputOrd j$ means that $j$ contains at least
 the input information in $i$.} \textcolor{newblue}{We say that $j$ \emph{\inrel} $i$, or is an
 \emph{\indesc} of $i$.} We call $\OutputOrd$ the \emph{output order}:
 $o\OutputOrd u$ means that $u$ preserves every externally visible claim in $o$
-and may add more, and we say that $u$ \emph{\outrel} $o$. \removednote{\textbf{formal definition/notation}, 24 words, rank 51; \textit{We use these two verbs only in these senses: inputs , and outputs are .}} \textcolor{newblue}{A \emph{common
+and may add more, and we say that $u$ \emph{\outrel} $o$. \removednote{\textbf{formal definition/notation}, 24 words, rank 52; \textit{We use these two verbs only in these senses: inputs , and outputs are .}} \textcolor{newblue}{A \emph{common
 \indesc} of inputs is an input that \inrel each of them, and a \emph{common
 \outnoun} of outputs is an output that \outrel each of them.} \removednote{\textbf{formal caution}, 63 words, rank 21; \textit{Neither need be unique or least: the input order need not be a lattice, only a ...}} \removednote{\textbf{formal definition/notation}, 12 words, rank 72; \textit{A functional ordered specification [math], with induced function [math], is monotone if}} \removednote{\textbf{explanation}, 11 words, rank 79; \textit{Thus an output on partial input stays valid as input .}} \textcolor{newblue}{Neither need be
 unique or least: for example, two independent transactions $a$ and $b$, with schedules
@@ -642,7 +642,7 @@ state to $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.}
 
 \begin{proof}[Proof sketch]
 Rows are never added, so the row of a common state at $j$ was there
-in every run. \removednote{\textbf{explanation}, 25 words, rank 50; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+in every run. \removednote{\textbf{explanation}, 25 words, rank 51; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 Consistency guarantees runs never diverge irreparably: no ``split brain''. Whatever input
@@ -1275,10 +1275,12 @@ proved it for a linearizable register~\cite{gilbert2002cap}. Their theorem
 concerns one guarantee, not which guarantees can stay available and
 consistent through a partition. Complete CAP answers that broader question for any declared guarantee. A
 guarantee is encoded as an ordered specification together with a designated
-subset $A$ of its rows: those whose outputs must stay available. For the rows
-in $A$, outputs emitted on different sides of a partition must have a common
-\outnoun at every common \indesc of their inputs; when $A$ is every permitted
-row, this is Lifted Monotonicity. A partition does not
+subset $A$ of its rows: those whose outputs must stay available. Complete CAP says that such a guarantee can be kept
+available and consistent through partitions exactly when the specification
+satisfies Lifted Monotonicity for $A$: outputs of rows in $A$ emitted on
+different sides of a partition must have a common \outnoun at every common
+\indesc of their inputs. When $A$ is every permitted row, this is Lifted
+Monotonicity itself. A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
 an input or make a choice that another could contradict.
@@ -1316,13 +1318,13 @@ participants' current inputs. The continuation that confluence asks for need
 not stay partitioned and need not be produced by the system.
 \end{definition}
 
-\begin{definition}[Consistency on $A$]
-\label{def:consistency-on-A}
-$\Spec$ is \emph{consistent on $A$} when every finite set of rows of $A$ with
+\begin{definition}[Lifted Monotonicity for $A$]
+\label{def:lm-for-A}
+$\Spec$ satisfies \emph{Lifted Monotonicity for $A$} when every finite set of rows of $A$ with
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \end{definition}
 
-With $A=S$, consistency on $A$ is the common-\indesc condition
+With $A=S$, Lifted Monotonicity for $A$ is the common-\indesc condition
 (Definition~\ref{def:common-expansion-condition}). \removednote{\textbf{formal caution}, 26 words, rank 48; \textit{Unlike Availability, Availability for a smaller [math] can be met by a system whose output events ...}}
 
 \begin{theorem}[Complete CAP]
@@ -1333,14 +1335,14 @@ $A\subseteq S$, the following are equivalent:
 \item
 some system has Availability for $A$ and Partition Consistency;
 \item
-$\Spec$ is consistent on $A$.
+$\Spec$ satisfies Lifted Monotonicity for $A$.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
 Consider the system whose strategies emit each output of
 $A$ by the canonical output event of Section~\ref{sec:complete-calm}. It has
-Availability for $A$, and consistency on $A$ gives the outputs it emits a
+Availability for $A$, and Lifted Monotonicity for $A$ gives the outputs it emits a
 common \outnoun at every common \indesc of their inputs. Conversely, given one
 participant per row of $A$, each in its own component, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
@@ -1352,18 +1354,18 @@ emit its row's output, and Partition Consistency then supplies the common
 Some system has Availability and Partition Consistency if and only if $\Spec$
 satisfies Lifted Monotonicity. When it does, a commitment-free system has
 both: one whose strategies may emit any exposable output $o$ by
-$\Out{\varepsilon}{o}$. \removednote{\textbf{explanation}, 24 words, rank 52; \textit{With [math], consistency on [math] is Lifted Monotonicity, and the exposure boundary makes every output of ...}}
+$\Out{\varepsilon}{o}$. \removednote{\textbf{unclassified}, 26 words, rank 49; \textit{With [math], Lifted Monotonicity for [math] is Lifted Monotonicity itself, and the exposure boundary makes every ...}}
 \end{corollary}
 \textcolor{newblue}{\proofinfull}
 
 The converse never assumes that the system is commitment-free, so commitments
 cannot enlarge the class of specifications that admit a system with
 Availability for $A$ and Partition Consistency. Nor do the commitments of the
-canonical system above need coordination. Under consistency on $A$, the canonical event
+canonical system above need coordination. Under Lifted Monotonicity for $A$, the canonical event
 for an output of $A$ seals nothing and chooses only against outputs outside
 $A$, which the system never emits, so it is
 coordination-free (Definition~\ref{def:coordination-free}). For $A=S$ it needs no
-commitment at all. \removednote{\textbf{formal caution}, 26 words, rank 49; \textit{For a smaller [math] such local choices can be necessary: if [math] and [math] have no ...}} When consistency on $A$ fails, some
+commitment at all. \removednote{\textbf{formal caution}, 26 words, rank 50; \textit{For a smaller [math] such local choices can be necessary: if [math] and [math] have no ...}} When Lifted Monotonicity for $A$ fails, some
 output of $A$ either waits for another component, sacrificing Availability, or
 is emitted independently at the cost of Partition Consistency.
 
@@ -1374,8 +1376,7 @@ whose outputs answer every operation of the input as some linearization
 does~\cite{herlihy1990linearizability}. Let $p$'s input be a write of
 $v\neq v_0$ and $q$'s a read; the only outputs they permit are the
 acknowledgment and $v_0$. Where the write precedes the read, every output
-returns $v$, so $v_0$ has no \outnoun there and $\Spec$ is not consistent on
-$S$. The converse in the proof of Theorem~\ref{thm:complete-cap} needs
+returns $v$, so $v_0$ has no \outnoun there and $\Spec$ does not satisfy Lifted Monotonicity for $S$. The converse in the proof of Theorem~\ref{thm:complete-cap} needs
 Availability only so that $p$ can emit the acknowledgment and $q$ can emit
 $v_0$. Each is the only output its input permits, so it is enough that every
 request receive some response, which is Gilbert and Lynch's availability. It

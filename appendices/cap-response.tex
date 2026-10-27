@@ -105,7 +105,7 @@ relation $T\subseteq Q$ that is total on $I$ and \emph{self-continuing}: if
 $(i,o)\in T$ and $i\InputOrd j$, then some $u\in T(j)$ \outrel $o$.
 \end{definition}
 
-Consistency on $T$ is that of Definition~\ref{def:consistency-on-A}, and
+Lifted Monotonicity for $T$ is that of Definition~\ref{def:lm-for-A}, and
 the reconciling output may lie outside $T$.  With $T=S$ it is the
 common-\indesc condition of Proposition~\ref{prop:common-expansion-form}, and
 by Lemma~\ref{lem:reconciliation} it is confluence of the canonical runs whose
@@ -130,7 +130,7 @@ the following are equivalent:
 \begin{enumerate}
   \item some replicated system has Response Availability for $Q$ and
         Response Partition Consistency;
-  \item $\Spec$ is consistent on some response interface $T\subseteq Q$;
+  \item $\Spec$ satisfies Lifted Monotonicity for some response interface $T\subseteq Q$;
   \item for some response interface $T\subseteq Q$, some system has
         Availability for $T$ and Partition Consistency.
 \end{enumerate}
@@ -143,7 +143,7 @@ the following are equivalent:
 Theorem~\ref{thm:complete-cap} for $A=T$.  It is replicated, and by the
 paragraph above it has Answering and Input acceptance.  The outputs emitted in
 a history are rows of $T$ at inputs that every common \indesc $j$ of the
-current inputs \inrel, so consistency on $T$ gives Response Partition
+current inputs \inrel, so Lifted Monotonicity for $T$ gives Response Partition
 Consistency.
 
 (1$\Rightarrow$2.)  Call an emission \emph{isolated} when its participant has
@@ -164,7 +164,7 @@ it), and answer by Answering with some $u\in Q(j)$.  By
 Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual} the table
 before that emission is contained in $S[\mathrm{in}\InputGe j,\
 \mathrm{out}\OutputGe o]$, so $o\OutputOrd u$ and $(j,u)\in T$.
-\emph{Consistency on $T$:} given rows $(i_r,o_r)$ of $T$ with common \indesc
+\emph{Lifted Monotonicity for $T$:} given rows $(i_r,o_r)$ of $T$ with common \indesc
 $j$, replay each witness on its own participant, truncated after the
 emission, and add a participant with initial input $j$.  By
 Lemma~\ref{lem:locality} this is a partitioned history of the system, and
@@ -190,17 +190,16 @@ which outputs to serve.  Lifted Monotonicity implies the conditions of that
 theorem for every uniform obligation, with $T=Q$.  If $(i,o)\in Q$ and $i\InputOrd j$, Relational Monotonicity gives
 $u\in\fiber{j}$ with $o\OutputOrd u$, totality gives some $q\in Q(j)$,
 Directed Outputs gives $w\in\fiber{j}$ \outrelpart $u$ and $q$, and upward
-closure puts $w$ in $Q(j)$; the common-\indesc condition gives consistency on
-$Q$.
+closure puts $w$ in $Q(j)$; the common-\indesc condition gives Lifted Monotonicity for $Q$.
 
 The converse fails.  Let $I=\{0,1\}$ with $0\InputOrd 1$, $\bot\OutputOrd a$ and
 $\bot\OutputOrd b$ with $a,b$ incomparable, $\fiber{0}=\{\bot,a\}$,
 $\fiber{1}=\{b\}$, and $Q=S$.  Lifted Monotonicity fails at $(0,a)$, but $\Spec$
-is consistent on the response interface $\{(0,\bot),(1,b)\}$: a system that
+satisfies Lifted Monotonicity for the response interface $\{(0,\bot),(1,b)\}$: a system that
 answers $\bot$ at $0$ never emits the output that conflicts with $b$.
 
 For a functional specification the two coincide: a total $T\subseteq Q\subseteq
-S$ equals $S$, and both self-continuation and consistency on $S$ are
+S$ equals $S$, and both self-continuation and Lifted Monotonicity for $S$ are
 monotonicity.
 
 A total $T\subseteq Q$ that satisfies Lifted Monotonicity as a specification

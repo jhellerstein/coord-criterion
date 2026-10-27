@@ -360,10 +360,12 @@ proved it for a linearizable register~\cite{gilbert2002cap}.  Their theorem
 concerns one guarantee, not which guarantees can stay available and
 consistent through a partition.  Complete CAP answers that broader question for any declared guarantee.  A
 guarantee is encoded as an ordered specification together with a designated
-subset $A$ of its rows: those whose outputs must stay available.  For the rows
-in $A$, outputs emitted on different sides of a partition must have a common
-\outnoun at every common \indesc of their inputs; when $A$ is every permitted
-row, this is Lifted Monotonicity.  A partition does not
+subset $A$ of its rows: those whose outputs must stay available.  Complete CAP says that such a guarantee can be kept
+available and consistent through partitions exactly when the specification
+satisfies Lifted Monotonicity for $A$: outputs of rows in $A$ emitted on
+different sides of a partition must have a common \outnoun at every common
+\indesc of their inputs.  When $A$ is every permitted row, this is Lifted
+Monotonicity itself.  A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
 an input or make a choice that another could contradict.
@@ -401,13 +403,13 @@ participants' current inputs.  The continuation that confluence asks for need
 not stay partitioned and need not be produced by the system.
 \end{definition}
 
-\begin{definition}[Consistency on $A$]
-\label{def:consistency-on-A}
-$\Spec$ is \emph{consistent on $A$} when every finite set of rows of $A$ with
+\begin{definition}[Lifted Monotonicity for $A$]
+\label{def:lm-for-A}
+$\Spec$ satisfies \emph{Lifted Monotonicity for $A$} when every finite set of rows of $A$ with
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \end{definition}
 
-With $A=S$, consistency on $A$ is the common-\indesc condition
+With $A=S$, Lifted Monotonicity for $A$ is the common-\indesc condition
 (Definition~\ref{def:common-expansion-condition}).  Unlike Availability,
 Availability for a smaller $A$ can be met by a system whose output events issue commitments without coordination, as the remark after Corollary~\ref{cor:complete-cap-S} explains.
 
@@ -417,14 +419,14 @@ For an ordered specification $\Spec$ and an availability relation
 $A\subseteq S$, the following are equivalent:
 \begin{enumerate}
   \item some system has Availability for $A$ and Partition Consistency;
-  \item $\Spec$ is consistent on $A$.
+  \item $\Spec$ satisfies Lifted Monotonicity for $A$.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
 Consider the system whose strategies emit each output of
 $A$ by the canonical output event of Section~\ref{sec:complete-calm}.  It has
-Availability for $A$, and consistency on $A$ gives the outputs it emits a
+Availability for $A$, and Lifted Monotonicity for $A$ gives the outputs it emits a
 common \outnoun at every common \indesc of their inputs.  Conversely, given one
 participant per row of $A$, each in its own component, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
@@ -440,7 +442,7 @@ $\Out{\varepsilon}{o}$.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
-With $A=S$, consistency on $A$ is Lifted Monotonicity, and the
+With $A=S$, Lifted Monotonicity for $A$ is Lifted Monotonicity itself, and the
 exposure boundary makes every
 output of the commitment-free system available.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
@@ -448,13 +450,13 @@ output of the commitment-free system available.  Full proof in Appendix~\ref{app
 The converse never assumes that the system is commitment-free, so commitments
 cannot enlarge the class of specifications that admit a system with
 Availability for $A$ and Partition Consistency.  Nor do the commitments of the
-canonical system above need coordination.  Under consistency on $A$, the canonical event
+canonical system above need coordination.  Under Lifted Monotonicity for $A$, the canonical event
 for an output of $A$ seals nothing and chooses only against outputs outside
 $A$, which the system never emits, so it is
 coordination-free (Definition~\ref{def:coordination-free}).  For $A=S$ it needs no
 commitment at all.  For a smaller $A$ such local choices can be necessary: if
 $o\in A(i)$ and $x\in\fiber{i}\setminus A(i)$ have no common \outnoun at $i$,
-emitting $o$ must choose against $x$.  When consistency on $A$ fails, some
+emitting $o$ must choose against $x$.  When Lifted Monotonicity for $A$ fails, some
 output of $A$ either waits for another component, sacrificing Availability, or
 is emitted independently at the cost of Partition Consistency.
 
@@ -465,8 +467,7 @@ whose outputs answer every operation of the input as some linearization
 does~\cite{herlihy1990linearizability}.  Let $p$'s input be a write of
 $v\neq v_0$ and $q$'s a read; the only outputs they permit are the
 acknowledgment and $v_0$.  Where the write precedes the read, every output
-returns $v$, so $v_0$ has no \outnoun there and $\Spec$ is not consistent on
-$S$.  The converse in the proof of Theorem~\ref{thm:complete-cap} needs
+returns $v$, so $v_0$ has no \outnoun there and $\Spec$ does not satisfy Lifted Monotonicity for $S$.  The converse in the proof of Theorem~\ref{thm:complete-cap} needs
 Availability only so that $p$ can emit the acknowledgment and $q$ can emit
 $v_0$.  Each is the only output its input permits, so it is enough that every
 request receive some response, which is Gilbert and Lynch's availability.  It
