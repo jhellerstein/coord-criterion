@@ -480,10 +480,10 @@ monotone.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-Intuitively, every output a monotone $f$ could emit later \outrel anything it
-emits now, so the row $(j,f(j))$ at a common \indesc survives in every run.
 If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
-\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$.  Full proof in Appendix~\ref{app:proofs-sec2}.
+\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$.
+A monotone $f$ only emits outputs that all of its future outputs \outrelbase,
+so the row $(j,f(j))$ at a common \indesc survives in every run.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
@@ -519,19 +519,19 @@ every state reachable without commitment is exposable.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-If $f$ is monotone, every such state is canonical, and there the
-exposure test is monotonicity.  Full proof in Appendix~\ref{app:proofs-sec2}.
+By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
+states. At $\sigma_S(i)$, which input alone reaches, $f(i)$ is exposable exactly
+when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 If monotonicity fails at $i\InputOrd k$ with $f(i)\not\OutputOrd f(k)$, then
-at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$ applies $s_{f(i)}$, which
-seals $k$.
+at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$ applies $s_{f(i)}$, sealing $k$.
 
 Functional CALM is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read
-both as consistency and as confluence; Definition~\ref{def:consistency} is
-both.  Classical CALM fits the pattern with inputs $J$ ordered by fact
-inclusion and outputs $Q(J)$ ordered by answer inclusion.  Functional
+both as consistency and as confluence; Definition~\ref{def:consistency} equates them.
+Classical CALM fits the pattern with inputs $J$ as sets of facts ordered by
+inclusion and output tables $Q(J)$ ordered by inclusion.  Functional
 monotonicity becomes
         \begin{equation}
   J\subseteq J'
@@ -541,8 +541,8 @@ monotonicity becomes
         \end{equation}
 the standard definition of a monotone query~\cite{abiteboul1995foundations},
 which positive Datalog satisfies and negation may not.  Functional CALM
-generalizes the statement from fact sets under inclusion to arbitrary input and
+generalizes the statement to arbitrary input and
 output orders, whatever formalism expresses the specification.  The usual CRDT state specification has the same functional shape,
-with received payloads ordered by inclusion and states by the semilattice
+with received payloads ordered by inclusion and states ordered by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} treat both.
