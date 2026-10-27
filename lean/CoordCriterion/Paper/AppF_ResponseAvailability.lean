@@ -218,8 +218,8 @@ theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
   canonical_rpc_iff_confluent hS hwf hp hcut hj
 
 /-- "With other commitments the converse can fail: participants may prune
-their states so that they cannot meet while their emitted outputs still have
-a common refinement."  Witness: `uSpec` (inputs `lo ≺ hi`, one output) and the
+their states so that they cannot be reconciled while their emitted outputs
+still have a common refinement."  Witness: `uSpec` (inputs `lo ≺ hi`, one output) and the
 system `rnSys` whose basis is a commitment sealing `hi`; in the history `rnH`
 the cut has RPC at `hi` but is not confluent there. -/
 theorem «def:response-partition-consistency/converse-fails» :
@@ -325,11 +325,11 @@ theorem «def:response-interface/confluence» (T : Table I O) (hTS : ∀ i o, T 
 
 /-- "A response interface is an availability relation that a system can always
 serve.  Consider the system of the proof of Theorem `thm:complete-cap` for
-`A = T` … So every participant's fiber meets `T`, and Availability for `T`
-gives Answering.  The same argument at an input `k ⪰ i` leaves a row at `k`,
+`A = T` … So every participant's fiber intersects `T`, and Availability for
+`T` gives Answering.  The same argument at an input `k ⪰ i` leaves a row at `k`,
 which gives Input acceptance."  Lean: `respSystem T` has Availability for
 `T`; at the end of every history it produces, each participant's current
-fiber meets `T`; hence Answering; and full Response Availability. -/
+fiber intersects `T`; hence Answering; and full Response Availability. -/
 theorem «app:cap-response/serve-interface» (Q : Obligation sp) (T : Table I O)
     (hT : ResponseInterface Q T) :
     AvailabilityFor T (respSystem (sp := sp) (D := D) T) ∧

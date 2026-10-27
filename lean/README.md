@@ -29,6 +29,9 @@ What is argued only in prose, not in Lean: the step from Gilbert and Lynch's
 fair-execution definitions to the finite forms used in
 `«prop:gl-async»` (Appendix F); the protocol steps of 2PL and MVTO (lock
 waits, timestamp issue, reads, when the scheduler aborts; Appendix G); the
+protocol steps of two-phase commit in §4.4 (prepare messages, logging,
+blocking; Lean checks only that the vote-counting decision is monotone and
+needs no coordination); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
 al., Zinn et al., and Baccaert and Ketsman, which input order a placement
 model justifies, and their notion of coordination; for Baccaert and Ketsman
@@ -77,6 +80,7 @@ first and supporting claims and examples follow.
 | `Distributed/Systems.lean` | `CC.Dist` | §4.1–4.4, App. C | Figure participant-runs, consistency without unique send ids, canonical systems, reconciliation under any basis, encodings agree |
 | `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: commitments, histories, cuts, systems, Availability, Partition Consistency |
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.5 | Thm. Complete CAP; deterministic strategies do not suffice |
+| `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.4 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
 | `CAP/ResponseForm.lean` | `CC.CAP` | App. F | Response Availability, Response Partition Consistency, Thm. Complete CAP (response form) |
 | `CAP/Register.lean` | `CC.GL` | App. F | Linearizable register, realized histories, Cor. Gilbert–Lynch |
 | `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.5, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |
@@ -96,7 +100,7 @@ first and supporting claims and examples follow.
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter commitments on antichain fibers (used by Fig. cc-commitments in §4.3 and App. C) |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | The `(L,X,ρ)` spec with partial outputs; closure commitments; 2PL/MVTO bases; bases differ; deadlock; MVTO: reported reads, entailed vs. chosen aborts |
 | `Appendix/TransactionBases/CanonicalExample.lean` | `CC.Txn.Partial.CanonEx` | §4.3 | Canonical runs suffice: a 2PL run at `{A,B,C}` and its canonical run in lockstep |
-| `Appendix/Frontiers.lean` | `CC.Front` | not in paper | Remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
+| `Appendix/Frontiers.lean` | `CC.Front` | §3 (Hoare remark); otherwise not in paper | Hoare preorder vs. the joint lift; remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
 | `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. E (real-time causal) | Thm. independent products (`thm:product-frontier`), configuration example |
 | `Appendix/Graphs.lean` | `CC.Graph` | not in paper | Products, tee vs. running twice, merge, partition; stage expressions with per-node offered-domain test; Proper Coordination for products; parameterized composition as a product |
 | `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers) | Causal and linearizable registers, two-write history, causal-register frontier |
@@ -110,7 +114,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-588 entries.
+592 entries.
 
 ### §2 Functional CALM
 
@@ -153,7 +157,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commit-iff-seal»` | theorem | Def. |
 | `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` refines itself, so the event always ends at a state." |
-| `«sec:functional-events/extra-commitments»` | theorem | "Extra commitments only restrict behavior: |
+| `«sec:functional-events/extra-commitments»` | theorem | "Systems may commit more, as the registrar of Figure `fig:election-frames`(d) does, but extra commitments only restrict behavior (Section `sec:systems`)." Fo… |
 | `«def:exposable»` | abbrev | **Def. |
 | `«def:exposable/no-commitment»` | theorem | Def. |
 | `«sec:functional-events/functional-exposable»` | theorem | "In a functional specification this means `R[out ⪰ o] = R`: |
@@ -174,7 +178,6 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«cor:state-by-input»` | theorem | **Corollary `cor:state-by-input`** (State is fixed by input). |
 | `«cor:state-by-input/input-suffices»` | theorem | After Cor. |
 | `«prop:functional-exposure-boundary»` | theorem | **Prop. |
-| `«prop:functional-exposure-boundary/only-seals»` | theorem | After Prop. |
 | `«prop:functional-exposure-boundary/nonmonotone-seals»` | theorem | After Prop. |
 | `«eq:query-monotonicity»` | theorem | **Eq. |
 | `«sec:discussion/emit-before-determination»` | theorem | §7.1, "Design lessons": |
@@ -209,15 +212,17 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«eq:lifted-monotonicity»` | theorem | **Eq. |
 | `«def:lifted-monotonicity/functional»` | theorem | After Def. |
 | `«def:lifted-monotonicity/relmono-directed»` | theorem | After Def. |
+| `«def:lifted-monotonicity/hoare»` | theorem | After Def. |
+| `«def:lifted-monotonicity/not-reflexive»` | theorem | After Def. |
 | `«def:common-expansion-condition»` | abbrev | **Def. |
 | `«def:common-expansion-condition/empty»` | theorem | After Def. |
 | `«prop:common-expansion-form»` | theorem | **Prop. |
+| `«sec:lifted-output-events/functional»` | theorem | §3.4: |
 | `«sec:complete-calm-theorem/lift-unchanged»` | theorem | "Specification states, input events, runs, commitment-free runs, and consistency are defined as before, and the results of Section `sec:executions` … lift un… |
 | `«thm:complete-calm»` | theorem | **Theorem `thm:complete-calm`** (Complete CALM). |
 | `«prop:exposure-boundary»` | theorem | **Prop. |
+| `«prop:exposure-boundary/common-expansion»` | theorem | Prop. |
 | `«prop:exposure-boundary/functional»` | theorem | After Prop. |
-| `«sec:complete-calm-theorem/state-by-input-fails»` | theorem | "One functional result does not carry over. |
-| `«sec:complete-calm-theorem/state-by-input-fails-minimal»` | theorem | The same failure on a minimal example: |
 
 ### §4.1–4.4 Distributed execution
 
@@ -242,6 +247,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:distributed-consistency/literal-matching»` | theorem | Prop. |
 | `«sec:distributed-consistency/lifted-monotonicity»` | theorem | "By Complete CALM, which reduces to Functional CALM with one output per input, a specification has distributed consistency exactly when it satisfies Lifted M… |
 | `«cor:convergence»` | theorem | **Cor. |
+| `«cor:convergence/relational-fails»` | theorem | After Cor. |
+| `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
 | `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which input and output events occur next at the receiver, but it never directly changes the receiver's specification stat… |
 | `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
 | `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing sea… |
@@ -264,7 +271,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/two-systems-two-choices»` | theorem | *A transactional example of bespoke commitments.* "Both are choices: |
 | `«sec:systems/neither-is-the-choice»` | theorem | "… and neither is the choice `c_o` of Definition lifted-output-event." At the canonical state of `{A,B,C}` (Appendix G's specification), the results of `orde… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output events apply only commitments fro… |
-| `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Although each system can define its own basis, no basis yields behavior that canonical runs cannot. |
+| `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Locks, timestamps, quorums, and consensus differ in how and when they decide. |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:coordination»` | abbrev | **Def. |
@@ -282,6 +289,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«thm:commitments-require-coordination/confined-to-current-input»` | theorem | "The conflict is confined to the current input. |
 | `«sec:coordination/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:coordination/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/conflict-is-choice»` | theorem | "The first event's commitment is a choice against `x`." Lean: |
 | `«sec:coordination/deterministic-reconciliation»` | theorem | "Under Lifted Monotonicity, participants at a common input `j` can each emit a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u` b… |
 
@@ -366,8 +374,8 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:crdt-instance/two-phase»` | theorem | Sec. |
 | `«sec:crdt-instance/semilattice»` | theorem | Sec. |
 | `«sec:crdt-instance/some-refinement»` | theorem | Sec. |
-| `«sec:hat-instance/accumulating-facts»` | theorem | Paragraph "Accumulating facts": |
-| `«sec:hat-instance/serializability-cycle»` | theorem | Paragraph "Serializability and transaction ordering": |
+| `«sec:hat-instance/read-committed»` | theorem | Paragraph "Read committed": |
+| `«sec:hat-instance/serializability-cycle»` | theorem | Paragraph "Serializability": |
 | `«sec:hat-instance/snapshot-isolation»` | theorem | Paragraph "Snapshot isolation": |
 | `«sec:hat-instance/boundary»` | theorem | The boundary paragraph: |
 | `«sec:iconfluence-instance/model»` | abbrev | Sec. |

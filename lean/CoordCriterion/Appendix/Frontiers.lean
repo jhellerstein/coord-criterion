@@ -77,6 +77,59 @@ theorem HoareLe.trans {A B C : O → Prop} (h1 : HoareLe A B) (h2 : HoareLe B C)
 theorem HoareLe.of_sub {A B : O → Prop} (h : ∀ o, A o → B o) : HoareLe A B :=
   fun a ha => ⟨a, h a ha, PO.refl a⟩
 
+/-! ### The Hoare preorder and the joint lift
+
+Remark after the Lifted Monotonicity paragraph: Relational Monotonicity is
+monotonicity of `i ↦ S(i)` under the Hoare preorder; the joint lift implies
+it; the two agree when the target is directed; the joint lift is reflexive
+exactly on directed sets. -/
+
+/-- Relational Monotonicity is monotonicity of `i ↦ S(i)` under the Hoare
+preorder. -/
+theorem relMono_iff_hoare (sp : Spec I O) :
+    sp.RelMono ↔ ∀ i j, i ≼ j → HoareLe (sp.S i) (sp.S j) :=
+  ⟨fun h i j hij o ho => h i j o hij ho, fun h i j o hij ho => h i j hij o ho⟩
+
+/-- The joint lift implies the Hoare preorder. -/
+theorem jointLift_hoare {A B : O → Prop} (h : JointLift A B) : HoareLe A B :=
+  fun a ha =>
+    let ⟨u, hu, hall⟩ := h [a] (by simp) (by simp [ha])
+    ⟨u, hu, hall a (by simp)⟩
+
+/-- Accumulator: under the Hoare preorder, a finite list in `A` is covered,
+element by element, by a finite list in `B` (nonempty when the first is). -/
+theorem hoare_cover {A B : O → Prop} (h : HoareLe A B) :
+    ∀ X : List O, (∀ x ∈ X, A x) →
+      ∃ Y : List O, (X ≠ [] → Y ≠ []) ∧ (∀ y ∈ Y, B y) ∧ ∀ x ∈ X, ∃ y ∈ Y, x ≼ y := by
+  intro X
+  induction X with
+  | nil => intro _; exact ⟨[], fun h => (h rfl).elim, by simp, by simp⟩
+  | cons x X ih =>
+    intro hX
+    obtain ⟨Y, -, hY, hcov⟩ := ih (fun y hy => hX y (List.mem_cons_of_mem _ hy))
+    obtain ⟨b, hb, hxb⟩ := h x (hX x (List.mem_cons_self ..))
+    refine ⟨b :: Y, fun _ => List.cons_ne_nil _ _, ?_, ?_⟩
+    · intro y hy
+      rcases List.mem_cons.1 hy with rfl | hy
+      · exact hb
+      · exact hY y hy
+    · intro z hz
+      rcases List.mem_cons.1 hz with rfl | hz
+      · exact ⟨b, List.mem_cons_self .., hxb⟩
+      · obtain ⟨y, hy, hzy⟩ := hcov z hz
+        exact ⟨y, List.mem_cons_of_mem _ hy, hzy⟩
+
+/-- When `B` is directed (`JointLift B B`), the Hoare preorder and the joint
+lift agree. -/
+theorem hoare_iff_jointLift_of_directed {A B : O → Prop} (hB : JointLift B B) :
+    HoareLe A B ↔ JointLift A B := by
+  refine ⟨fun h X hne hX => ?_, jointLift_hoare⟩
+  obtain ⟨Y, hYne, hY, hcov⟩ := hoare_cover h X hX
+  obtain ⟨u, hu, hall⟩ := hB Y (hYne hne) hY
+  refine ⟨u, hu, fun x hx => ?_⟩
+  obtain ⟨y, hy, hxy⟩ := hcov x hx
+  exact PO.trans hxy (hall y hy)
+
 /-- Remembered output `X̂(i) = ⋃_{j ≼ i} X(j)` (Eq. `monotone-hull`). -/
 def hull (X : Table I O) : Table I O := fun i o => ∃ j, j ≼ i ∧ X j o
 

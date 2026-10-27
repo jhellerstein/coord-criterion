@@ -255,30 +255,36 @@ theorem «sec:crdt-instance/some-refinement» :
 /-! ## Highly available transactions (`sec:hat-instance`)
 
 The opening paragraph (inputs are request sets, outputs are fact sets, both
-under inclusion; the isolation level fixes the specification) is the model of
-`Inst.factSpec allowed P`: at input `i` expose any fact set `F ⊆ allowed i`
-satisfying the isolation predicate `P`.  Its remarks on the response
-obligation and on sticky availability as a deployment are pointers to
-App. `app:cap-response` and Prop. `thm:complete-cap-deployment`, not claims
-proved here. -/
+under inclusion; the isolation level or session guarantee determines which
+fact sets are permitted) is the model of `Inst.factSpec allowed P`: at input
+`i` expose any fact set `F ⊆ allowed i` satisfying the isolation predicate
+`P`.  The second paragraph ("The ingredients of highly available transactions
+(HAT) then come apart"), on the response obligation and on sticky
+availability as a deployment, points to App. `app:cap-response` and Prop.
+`thm:complete-cap-deployment`; it states no claim proved here. -/
 
-/-- Paragraph "Accumulating facts": one replica exposes
-`read(T₁,x,0), commit(T₁)`, the other `read(T₂,y,0), commit(T₂)`; "the union
-contains no dirty read.  Under the stated read-committed specification …
-later delivery keeps all four facts."  Lean: each side and their union are
-read committed, and the read-committed specification satisfies Lifted
-Monotonicity and is consistent for any monotone `allowed`. -/
-theorem «sec:hat-instance/accumulating-facts» {I : Type} [PO I] (allowed : I → IConf.St Inst.Fact)
+/-- Paragraph "Read committed": "Under read committed, a transaction reads
+only committed versions.  Suppose two separated replicas run transactions on
+disjoint keys.  One exposes `read(T₁,x,0)` and `commit(T₁)`, and the other
+exposes `read(T₂,y,0)` and `commit(T₂)`.  Each read saw a committed version, so
+the union of the four facts contains no dirty read and is itself permitted.
+It is a common refinement of what the two replicas exposed."  Lean: each side
+and their union are read committed, and the read-committed specification
+satisfies Lifted Monotonicity and is consistent for any monotone
+`allowed`. -/
+theorem «sec:hat-instance/read-committed» {I : Type} [PO I] (allowed : I → IConf.St Inst.Fact)
     (hmono : Monotone allowed) :
     (Inst.RC Inst.acc1 ∧ Inst.RC Inst.acc2 ∧ Inst.RC (Inst.acc1.union Inst.acc2)) ∧
       (Inst.factSpec allowed Inst.RC Inst.rc_empty).LiftedMono ∧
       (Inst.factSpec allowed Inst.RC Inst.rc_empty).Consistent :=
   ⟨Inst.accumulating_example, Inst.rc_liftedMono_consistent allowed hmono⟩
 
-/-- Paragraph "Serializability and transaction ordering": `T₁` reads `x = 0`,
-writes `y = 1`, commits; `T₂` reads `y = 0`, writes `x = 1`, commits.  "The
-serialization graph contains a cycle, so no serial order of `T₁` and `T₂`
-explains both sets of facts."  Lean: each side is serializable; no fact set
+/-- Paragraph "Serializability": `T₁` reads `x = 0`, writes `y = 1`, commits;
+`T₂` reads `y = 0`, writes `x = 1`, commits.  "Each replica's facts are
+permitted on their own.  `T₁`'s read places `T₁` before `T₂` in any serial
+explanation, and `T₂`'s read places `T₂` before `T₁`.  So no serial order
+explains both sets of facts, and no permitted output contains them both."
+Lean: each side is serializable; no fact set
 containing both sides (and supported by the requests) is serializable; hence
 the serializable specification violates Lifted Monotonicity and is not
 consistent. -/
@@ -289,8 +295,10 @@ theorem «sec:hat-instance/serializability-cycle» :
       ¬ (Inst.factSpec (fun i : IConf.St Inst.Fact => i) Inst.Ser Inst.ser_empty).Consistent :=
   ⟨Inst.serializability_cycle, Inst.serializable_spec_not_consistent⟩
 
-/-- Paragraph "Snapshot isolation": for overlapping writers `T₁, T₂` of `x`,
-"first-committer-wins … allows no output containing both commit facts."
+/-- Paragraph "Snapshot isolation": for concurrent writers `T₁, T₂` of `x`,
+"Each replica's commit fact is permitted on its own.  The first-committer-wins
+rule of snapshot isolation lets only one of two concurrent writers of `x`
+commit, so no permitted output contains both commit facts."
 Lean: each local commit is permitted, no fact set containing both is, and
 the specification is not consistent. -/
 theorem «sec:hat-instance/snapshot-isolation» :
@@ -299,10 +307,11 @@ theorem «sec:hat-instance/snapshot-isolation» :
       ¬ (Inst.factSpec (fun i : IConf.St Inst.Fact => i) Inst.FCW (fun h => h.1)).Consistent :=
   Inst.snapshot_fcw
 
-/-- The boundary paragraph: "A guarantee whose permitted fact sets are closed
-under union … has a common outcome for whatever separated replicas expose,
-so it stays available.  One that orders or excludes concurrent transactions …
-rules out combinations that separated replicas can each expose."  Lean:
+/-- The boundary paragraph: "When the permitted fact sets are closed under
+union, as for read committed here, whatever separated replicas expose has a
+common refinement, so the guarantee stays available.  Serializability and
+first-committer-wins instead exclude some combinations of facts that
+separated replicas can each expose."  Lean:
 (1) for any isolation predicate `P` closed under union, the fact-set
 specification satisfies Lifted Monotonicity; (2) two rows below a common
 input `j` with no permitted common upper bound at `j` refute Lifted

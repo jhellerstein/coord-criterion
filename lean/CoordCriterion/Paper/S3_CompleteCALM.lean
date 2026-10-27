@@ -1,4 +1,5 @@
 import CoordCriterion.Figures
+import CoordCriterion.Appendix.Frontiers
 
 /-!
 # Paper §3: Complete CALM (`sections/complete-calm.tex`)
@@ -109,7 +110,8 @@ specification).  "`Spec = (I,≼,O,≼,S)`, `S ⊆ I × O`, where `(I,≼)` and
 `(O,≼)` are partially ordered sets and `S` is total on `I` … The fiber
 `S(i) = {o ∈ O : (i,o) ∈ S}` … may now contain several outputs; the
 specification is *ambiguous* when some fiber does.  A functional
-specification is the special case `S(i) = {f(i)}`."
+specification is the special case `S(i) = {f(i)}`.  We call either kind
+simply an *ordered specification*."
 
 Lean: `Spec I O` (orders are the `PO` instances); the fiber `S(i)` is
 `sp.S i`; functional is `Spec.Functional`. -/
@@ -228,6 +230,36 @@ theorem «def:lifted-monotonicity/relmono-directed» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) : sp.LiftedMono ↔ sp.RelMono ∧ sp.DirectedOutputs :=
   liftedMono_iff_relMono_directed sp
 
+/-- After Def. `def:lifted-monotonicity`: "In powerdomain terms, Relational
+Monotonicity is monotonicity of `i ↦ S(i)` under the Hoare preorder, which
+asks only that each output in `A` have a refinement in `B`; the joint lift
+asks that every finite set of them have a common one.  The two agree when `B`
+is directed."  Lean: the Hoare preorder is `Front.HoareLe A B`
+(`∀ a ∈ A, ∃ b ∈ B, a ≼ b`); (1) Relational Monotonicity is Hoare
+monotonicity of the fibers; (2) the joint lift implies the Hoare preorder;
+(3) for directed `B` (`JointLift B B`, Def. `def:fiber-directedness`) the two
+coincide. -/
+theorem «def:lifted-monotonicity/hoare» {I O : Type} [PO I] [PO O] :
+    (∀ sp : Spec I O, sp.RelMono ↔ ∀ i j, i ≼ j → Front.HoareLe (sp.S i) (sp.S j)) ∧
+      (∀ A B : O → Prop, JointLift A B → Front.HoareLe A B) ∧
+      (∀ A B : O → Prop, JointLift B B → (Front.HoareLe A B ↔ JointLift A B)) :=
+  ⟨Front.relMono_iff_hoare, fun _ _ => Front.jointLift_hoare,
+   fun _ _ => Front.hoare_iff_jointLift_of_directed⟩
+
+/-- After Def. `def:lifted-monotonicity`: "Unlike the Hoare preorder, the
+joint lift is not reflexive: `A ⊑ A` holds exactly when `A` is directed, so
+the transaction fiber of Figure `fig:ambiguity-frames`(f) already fails it at
+`j = i`."  Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition
+directedness of `A` (Def. `def:fiber-directedness`); the panel (f) fiber
+`{[A,B],[B,A]}` is not directed, so `S(i) ⊑ S(i)` fails at `i = {A,B}`. -/
+theorem «def:lifted-monotonicity/not-reflexive» :
+    (∀ (O : Type) [PO O] (A : O → Prop), Front.HoareLe A A) ∧
+      (∀ (O : Type) [PO O] (A : O → Prop),
+        JointLift A A ↔ ∀ X : List O, X ≠ [] → (∀ x ∈ X, A x) → CompatibleIn A X) ∧
+      ¬ JointLift (Figures.Txn.spec.S ()) (Figures.Txn.spec.S ()) :=
+  ⟨fun _ _ A => Front.HoareLe.refl A, fun _ _ _ => Iff.rfl,
+   fun h => Figures.Txn.not_monotone.2.1 fun _ => h⟩
+
 /-- **Def. `def:common-expansion-condition`** (Common-expansion condition).
 "For every finite set of rows `(i₁,o₁),…,(i_k,o_k)` of `S` and every common
 expansion `j` of `i₁,…,i_k`, some `u ∈ S(j)` refines every `o_r`."  Lean:
@@ -236,8 +268,8 @@ abbrev «def:common-expansion-condition» {I O : Type} [PO I] [PO O] (sp : Spec 
   sp.CommonExpansion
 
 /-- After Def. `def:common-expansion-condition`: "For the empty set of rows
-the condition asks only that `S(j)` be nonempty, which totality
-guarantees." -/
+the condition asks only that `S(j)` be nonempty, which follows from `S` being
+total on `I`." -/
 theorem «def:common-expansion-condition/empty» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) (j : I) :
     (∃ u, sp.S j u ∧ ∀ r ∈ ([] : List (I × O)), r.2 ≼ u) :=
@@ -258,6 +290,14 @@ The body gives an informal summary; the formal definitions (`eq:seal-inputs`,
 Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
 `app:lifted-output-events`, and their entries in
 `Paper/AppC_CommitmentBases.lean`. -/
+
+/-- §3.4: "In the functional case, `Retired_o` and `Rejected_o` are empty, so
+this is the output event of Definition `def:output-event`."  Every commitment
+an output event applies in a functional specification is a seal. -/
+theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
+    {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
+    ¬ Retired σ o k x ∧ ¬ Rejected σ o k x :=
+  functional_retired_rejected_empty hf σ o k x
 
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/
 
@@ -281,9 +321,22 @@ theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
   ⟨complete_calm sp, complete_calm_commonExpansion sp⟩
 
 /-- **Prop. `prop:exposure-boundary`** (Exposure boundary).  "An ordered
-specification satisfies the common-expansion condition if and only if every
-output at every state reachable without commitment is exposable." -/
+specification satisfies Lifted Monotonicity if and only if every output at
+every state reachable without commitment is exposable."  The proof sketch
+goes through the common-expansion condition (Prop.
+`prop:common-expansion-form`); `«prop:exposure-boundary/common-expansion»`
+is that form. -/
 theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+    sp.LiftedMono ↔
+      ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
+  (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
+
+/-- Prop. `prop:exposure-boundary`, proof sketch: "Under the common-expansion
+condition, consistency supplies the common refinement the exposure test asks
+for.  Conversely, the exposure test at canonical states, one row at a time,
+builds the common refinement the condition asks for."  The common-expansion
+form of the proposition. -/
+theorem «prop:exposure-boundary/common-expansion» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.CommonExpansion ↔
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   exposure_boundary sp
@@ -296,31 +349,5 @@ theorem «prop:exposure-boundary/functional» {I O : Type} [PO I] [PO O] {sp : S
     (hf : sp.Functional) :
     (sp.LiftedMono ↔ sp.MonotoneF) ∧ (sp.CommonExpansion ↔ sp.MonotoneF) :=
   ⟨liftedMono_iff_monoF hf, commonExpansion_iff_monoF hf⟩
-
-/-- "One functional result does not carry over. … With several outputs per
-input, runs that reach the same input can keep different rows: in Figure
-`fig:ambiguity-frames`(g), a run that emitted `{s→s1}` has retired the route
-sets that omit it, while a run that emitted nothing keeps them."  The
-traceroute specification is consistent, yet the two runs end at the same input
-in different states. -/
-theorem «sec:complete-calm-theorem/state-by-input-fails» :
-    Figures.Trace.spec.Consistent ∧
-      (IsRun (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide))) ∧
-        IsRun (canon Figures.Trace.spec ()) ∧
-        (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide))).cur = (canon Figures.Trace.spec ()).cur ∧
-        ¬ (outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide))).R () Figures.Trace.rA ∧
-        (canon Figures.Trace.spec ()).R () Figures.Trace.rA ∧
-        outState (canon Figures.Trace.spec ()) Figures.Trace.rS1
-          ((Figures.Trace.canonR _).2 (by decide)) ≠ canon Figures.Trace.spec ()) :=
-  ⟨Figures.Trace.directed.2.2, Figures.Trace.state_depends_on_outputs⟩
-
-/-- The same failure on a minimal example: a consistent specification with one
-input and outputs `lo ≼ hi` has a run ending at a non-canonical state. -/
-theorem «sec:complete-calm-theorem/state-by-input-fails-minimal» :
-    specTwo.Consistent ∧ ∃ τ : State specTwo, IsRun τ ∧ τ ≠ canon specTwo τ.cur :=
-  state_by_input_fails_relationally
 
 end CC.Paper
