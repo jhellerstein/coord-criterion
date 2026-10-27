@@ -815,6 +815,52 @@ theorem input_mono {β γ : List (Act C P O)} {f : Flat C P Q} (h : Reach k M (�
     subst e1 e2
     exact ⟨⟨ha, hb⟩, i, j, hi0, hj0, (hb_append (sendAt_lt hj0)).1 hij⟩
 
+/-- An event is sent before it is received. -/
+theorem send_before_recv {β : List (Act C P O)} {f : Flat C P Q} (hr : Reach k M β f)
+    {r : Nat} {e : Ev C P} (hrv : β[r]? = some (.recv e)) : ∃ i, SendAt β i e ∧ i < r := by
+  have hlt : r < β.length := (List.getElem?_eq_some_iff.1 hrv).1
+  have hsplit := List.take_append_drop (r + 1) β
+  have hr' : Reach k M (β.take (r + 1) ++ β.drop (r + 1)) f := by rw [hsplit]; exact hr
+  obtain ⟨f0, h0⟩ := reach_prefix hr'
+  have hmem : Act.recv e ∈ β.take (r + 1) := by
+    refine List.mem_of_getElem? (i := r) ?_
+    rw [List.getElem?_take_of_lt (by omega)]; exact hrv
+  obtain ⟨i, hi⟩ := sendAt_of_mem (recv_sent h0 hmem)
+  have hil : i < r + 1 := by have := sendAt_lt hi; simp at this; omega
+  have hi' : SendAt β i e := by
+    have := (sendAt_append (γ := β.drop (r + 1)) (sendAt_lt hi)).2 hi
+    rwa [hsplit] at this
+  refine ⟨i, hi', ?_⟩
+  rcases Nat.lt_or_ge i r with h | h
+  · exact h
+  · have : i = r := by omega
+    subst this
+    unfold SendAt at hi'
+    rw [hrv] at hi'
+    cases hi'
+
+/-- **A client's later sends happen after what an output reflected.**  If
+the machine received `e` (position `r`) before emitting `out c o`
+(position `m`), and client `c` later sends `e'` (position `j`), then the
+send of `e` happens before the send of `e'`, `e'` is delivered after `e`,
+and if the machine received `e'` the input orders `e` before `e'`. -/
+theorem send_after_out {β : List (Act C P O)} {f : Flat C P Q} (hr : Reach k M β f)
+    {m r j : Nat} {c : C} {o : O} {e e' : Ev C P}
+    (hm : β[m]? = some (.out c o)) (hrv : β[r]? = some (.recv e)) (hrm : r < m)
+    (hj : SendAt β j e') (hmj : m < j) (hc : e'.client = c) :
+    (∃ i, SendAt β i e ∧ HB β i j) ∧ (∀ t, β[t]? = some (.recv e') → r < t) ∧
+      (.recv e' ∈ β → (input β).lt e e') := by
+  obtain ⟨i, hi, hir⟩ := send_before_recv hr hrv
+  have hij : HB β i j := by
+    refine .tail (.tail (.single ⟨hir, _, _, hi, hrv, .inr ⟨e, rfl, rfl⟩⟩)
+      ⟨hrm, _, _, hrv, hm, .inl ⟨.mach, rfl, .inl rfl⟩⟩) ⟨hmj, _, _, hm, hj, .inl ⟨.cli c, .inr rfl, ?_⟩⟩
+    show Proc.cli c = Proc.cli e'.client
+    rw [hc]
+  refine ⟨⟨i, hi, hij⟩, fun t ht => ?_, fun he' => ⟨⟨List.mem_of_getElem? hrv, he'⟩, i, j, hi, hj, hij⟩⟩
+  obtain ⟨j', hj', hjt⟩ := send_before_recv hr ht
+  have := sendAt_unique (reach_inv β f hr).nodup hj' hj
+  omega
+
 end inputMono
 
 /-- Appending a report does not change the input. -/
