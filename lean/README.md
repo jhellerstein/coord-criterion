@@ -44,7 +44,8 @@ Lean checks only the mapping of their conditions into our frame); in
 Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
 al.'s checks, the correspondence of the hypotheses to theirs, and the remark
 that a strengthening may read real time from the input; in §6.5, that
-distributing a compiled state machine is direct (each client's events go to
+discrete-event simulation and model checking both enumerate the runs of a
+modeled system, that distributing a compiled state machine is direct (each client's events go to
 some participant and §4 applies with the induced specification) and that
 dynamic partial-order reduction computes the fibers of bounded systems; and the
 design discussion of §6–§7.  The `Paper/` docstrings point these out where

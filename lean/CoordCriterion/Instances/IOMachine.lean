@@ -75,7 +75,11 @@ Results for a general machine:
 For a state machine (`ofSM M`) the results specialize to those of
 `Instances/StateMachine.lean`: `fiber_sub`, `bag_arrival`,
 `bag_fiber_of_outFree`, `fifo_single` (consistent iff `TransMono M` for
-deterministic `M`), `emitConfluent_iff_liftedMono`.
+deterministic `M`), `emitConfluent_iff_liftedMono`.  More generally, for a
+machine whose output and internal steps leave the state unchanged
+(`Stationary`) with deterministic receives, the single-client FIFO
+specification is functional and consistent iff `TransMono (recvSM G)`
+(`fifo_single_stationary`).
 -/
 
 namespace CC
@@ -1999,6 +2003,93 @@ theorem emitConfluent_iff_liftedMono [PO O] [DecidableEq C] [Nonempty C] (k : Ch
     (fun q => ⟨Classical.choice ‹_›, q, rfl, rfl⟩)
 
 end stateMachine
+
+/-! ### Stationary machines: output and internal steps leave the state unchanged -/
+
+section stationary
+
+/-- The receive transitions of a machine automaton as a state machine. -/
+def recvSM (G : Machine C P Q O) : SM.Machine Q P O := ⟨G.q0, G.recv, G.recv_enabled, G.obs⟩
+
+/-- Output and internal steps leave the state unchanged. -/
+def Stationary (G : Machine C P Q O) : Prop :=
+  (∀ q c o q', G.out q c o q' → q' = q) ∧ ∀ q q', G.tau q q' → q' = q
+
+/-- A state machine's machine automaton is stationary. -/
+theorem stationary_ofSM (M : SM.Machine Q P O) : Stationary (ofSM (C := C) M) :=
+  ⟨fun _ _ _ _ h => h.2, fun _ _ h => h.elim⟩
+
+variable {G : Machine C P Q O}
+
+/-- For a stationary machine, a run of the machine automaton is a run of its
+receive transitions on the payloads it receives. -/
+theorem runs_of_run_stationary (hs : Stationary G) :
+    ∀ {q q' : Q} {γ : List (Act C P O)}, Run (machA G) q γ q' →
+      SM.Runs (recvSM G) q ((recvs γ).map Ev.payload) q'
+  | _, _, [], .nil _ => .nil _
+  | _, _, a :: γ, .cons ht hr => by
+    cases a with
+    | send => exact ht.elim
+    | recv e => exact .cons ht (runs_of_run_stationary hs hr)
+    | out c o =>
+      have e := hs.1 _ _ _ _ ht
+      subst e
+      simpa using runs_of_run_stationary hs hr
+    | tau =>
+      have e := hs.2 _ _ ht
+      subst e
+      simpa using runs_of_run_stationary hs hr
+
+/-- Conversely, a run of the receive transitions on the payloads of `w` is a
+run of the machine automaton receiving `w`. -/
+theorem run_of_runs_recvSM :
+    ∀ {q q' : Q} (w : List (Ev C P)), SM.Runs (recvSM G) q (w.map Ev.payload) q' →
+      Run (machA G) q (w.map .recv) q'
+  | _, _, [], h => by cases h; exact .nil _
+  | _, _, e :: w, h => by
+    cases h with
+    | cons hs hr => exact .cons hs (run_of_runs_recvSM w hr)
+
+/-- For a stationary machine, `runSpec` is the prefix encoding of its receive
+transitions. -/
+theorem runSpec_stationary [PO O] {G : Machine Unit P Q O} (hs : Stationary G)
+    (w : SM.Seq P) (o : O) :
+    (runSpec G).S w o ↔ (SM.induced (recvSM G) (SM.prefixAbs P)).S w o := by
+  constructor
+  · rintro ⟨γ, q, ⟨q0, hq0, hγ⟩, hw, rfl⟩
+    have hq0' : q0 = G.q0 := hq0
+    subst hq0'
+    refine ⟨_, q, ?_, runs_of_run_stationary hs hγ, rfl⟩
+    show SM.Seq.mk _ = w
+    rw [hw]
+  · rintro ⟨w', q, rfl, hq, rfl⟩
+    rw [← evs_payload 0 w'] at hq
+    refine ⟨(evs 0 w').map .recv, q, ⟨_, rfl, run_of_runs_recvSM _ hq⟩, ?_, rfl⟩
+    rw [recvs_map_recv, evs_payload]
+    rfl
+
+/-- **Single client, FIFO channel, stationary deterministic machine.**  If
+output and internal steps leave the state unchanged and receiving is
+deterministic, the induced specification is functional, and it is consistent
+iff observations grow along every receive transition from a reachable
+state. -/
+theorem fifo_single_stationary [PO O] {G : Machine Unit P Q O} (hs : Stationary G)
+    (hd : SM.Deterministic (recvSM G)) :
+    (spec (C := Unit) .fifo G).Functional ∧
+      ((spec (C := Unit) .fifo G).Consistent ↔ SM.TransMono (recvSM G)) := by
+  obtain ⟨_, h2, h3, h4, _⟩ := fifo_single_run G
+  have hf : ∀ h o, (spec .fifo G).S h o ↔
+      (SM.induced (recvSM G) (SM.prefixAbs P)).S (word h) o := fun h o =>
+    (h4 h o).trans (runSpec_stationary hs _ _)
+  have hcons : (spec (C := Unit) .fifo G).Consistent ↔
+      (SM.induced (recvSM G) (SM.prefixAbs P)).Consistent := by
+    rw [complete_calm, complete_calm]
+    exact liftedMono_transfer _ _ word h2 h3 hf
+  obtain ⟨hfun, hmono⟩ := SM.induced_prefix (recvSM G) hd
+  exact ⟨fun h o o' ho ho' => hfun _ _ _ ((hf h o).1 ho) ((hf h o').1 ho'),
+    hcons.trans hmono⟩
+
+end stationary
 
 end IOM
 end CC
