@@ -5,7 +5,7 @@ import CoordCriterion.CAP.Coordination
 import CoordCriterion.CAP.TwoPhaseCommit
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
-import CoordCriterion.Appendix.TransactionBases.CanonicalExample
+import CoordCriterion.Appendix.TransactionBases.CommitEvent
 
 /-!
 # Paper §4.1–4.4: Distributed Execution (statement layer)
@@ -353,20 +353,21 @@ theorem «prop:seal-or-choose/functional» {sp : Spec I O} (hf : sp.Functional)
 /-- **Def. strategy** (`def:strategy`).  "A local history of participant `p` is a
 finite sequence of `p`'s history events … A strategy for `p` is a
 nondeterministic transition function: it maps each local history `λ` of `p` to
-a set `θ_p(λ)` of output, send, and receive events of `p`, and `p` next performs
-any one of them, or waits.  Input events come from the environment, not the
-strategy."
+a set `θ_p(λ)` of output, commitment, send, and receive events of `p`, and `p`
+next performs any one of them, or waits.  Input events come from the
+environment, not the strategy."
 
 Lean (the `CC.CAP` system model): a strategy for `p` is a relation from local
-histories (`List (CAP.LEv sp D n)`) to next events.  Its value on input events
+histories (`List (CAP.LEv sp D n)`) to next events; local events include
+commitment events `CAP.LEv.cmt γ`.  Its value on input events
 is ignored: `CAP.Allowed` always allows inputs. -/
 abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
   List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop
 
 /-- **Def. system** (`def:system`).  "A system consists of a commitment basis
-`ℬ`, the set of commitments its output events may apply, shared by all
-participants, and a strategy `θ_p` for each participant `p` whose output events
-apply only commitments from `ℬ`."
+`ℬ`, the set of commitments its output and commitment events may apply, shared
+by all participants, and a strategy `θ_p` for each participant `p` whose output
+and commitment events apply only commitments from `ℬ`."
 
 Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
 participant of every finite participant set and initial inputs, as §4.5 later
@@ -410,6 +411,32 @@ Eq. lifted-validity at the committed state is exactly `Exposable σc o`. -/
 abbrev «def:system-output-event» {sp : Spec I O} (B : Basis sp) (σ : State sp)
     (e : SEvent sp) (τ : State sp) : Prop :=
   SysStep B σ e τ
+
+/-- **Def. commitment event** (`def:commitment-event`).  "A commitment event
+`commit(γ)` under a basis `ℬ` applies a nonempty sequence `γ = c₁⋯cₙ` of
+commitments from `ℬ`, each defined at the state its predecessors leave, and
+emits nothing."
+
+Lean: `SysStep B σ (.commit γ) τ` (constructor `SysStep.commit`: every
+`c ∈ γ` is in `B`, `γ ≠ []`, and `ApplySeq γ σ τ`).  In the `CC.CAP` history
+model the local event is `CAP.LEv.cmt γ`. -/
+abbrev «def:commitment-event» {sp : Spec I O} (B : Basis sp) (σ : State sp)
+    (γ : List (Commitment sp)) (τ : State sp) : Prop :=
+  SysStep B σ (.commit γ) τ
+
+/-- After Def. `def:commitment-event`: "A commitment event lets a system decide
+before any output needs the decision.  The environment observes nothing from
+it."  Lean: a commitment event is exactly a nonempty basis sequence applied in
+order; it keeps the current input and only removes rows, and its erasure is
+empty (`SEvent.erase (.commit γ) = none`). -/
+theorem «sec:systems/commitment-event-unobserved» {sp : Spec I O} {B : Basis sp}
+    {σ τ : State sp} {γ : List (Commitment sp)} :
+    (SysStep B σ (.commit γ) τ ↔ (∀ c ∈ γ, B c) ∧ γ ≠ [] ∧ ApplySeq γ σ τ) ∧
+    (SysStep B σ (.commit γ) τ → τ.cur = σ.cur ∧ ∀ k u, τ.R k u → σ.R k u) ∧
+    (SEvent.commit γ : SEvent sp).erase = none :=
+  ⟨⟨fun h => by cases h with | commit hb hne ha => exact ⟨hb, hne, ha⟩,
+    fun ⟨hb, hne, ha⟩ => SysStep.commit hb hne ha⟩,
+   fun h => ⟨h.commit_cur, h.sub⟩, rfl⟩
 
 /-- **Eq. `eq:lifted-validity`**: "`(k,x) ∈ R_c ∖ R_c[out ⪰ o] ⟹
 ∃ u ∈ R_c[out ⪰ o](k) : x ≼ u`."  At the committed state `σc` (table `R_c`),
@@ -524,8 +551,8 @@ theorem «sec:systems/neither-is-the-choice» {T K : Type} {rd wr : T → K → 
   Txn.Partial.neither_is_choice h
 
 /-- "We call the runs of Sections functional-calm–complete-calm canonical runs,
-and a run under a basis `ℬ` is one whose output events apply only commitments
-from `ℬ` (Definition run-under-basis)."  (Formal definitions:
+and a run under a basis `ℬ` is one whose output and commitment events apply
+only commitments from `ℬ` (Definition run-under-basis)."  (Formal definitions:
 `«def:run-under-basis»` in `Paper/AppC_CommitmentBases.lean`.) -/
 abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : Basis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
@@ -536,14 +563,17 @@ differ in how and when they decide.  Yet every output event of any system
 removes at least the rows that the canonical event for its output removes
 (Lemma canonical-commitment-normal-form), and every run under any basis has an
 observably equivalent canonical run: one that accepts the same inputs, emits
-the same outputs, and keeps at least the original's rows after each event
-(Lemma canonical-equivalent, Appendix bases).  In the remainder of the paper we
-therefore judge consistency on canonical runs."
+the same outputs, and keeps at least the original's rows after each event; its
+commitment events erase to nothing (Lemma canonical-equivalent, Appendix
+bases).  In the remainder of the paper we therefore judge consistency on
+canonical runs."
 
 Lean: the first clause is `«sec:systems/legal-event-containment»` (Lemma
 `lem:canonical-commitment-normal-form`); this entry is the second, as
-`«lem:canonical-equivalent»`; `Lockstep` records the per-event
-containment. -/
+`«lem:canonical-equivalent»`; `Lockstep` records the per-event containment
+(a commitment event of the original is matched by no canonical event), and
+`SEvent.erase (.commit γ) = none`, so commitment events disappear from the
+erasure `es.filterMap SEvent.erase`. -/
 theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
     {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
     ∃ es' ρ', Lockstep B (canon sp i) es ρ (canon sp i) es' ρ' ∧
@@ -553,27 +583,39 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i :
     canonical_equivalent h
 
 /-- *Canonical runs suffice*, example.  "Consider 2PL on input `{A,B,C}`, where
-`A` reads a key `x` that no transaction writes, and `B` waits for a lock
-that `A` holds on another key.  2PL's output event reports `A`'s read and
-applies `order(A,B)`, keeping only the rows that can be completed without
-committing `B` before `A`.  The canonical run reports the read with no
-commitment, so it keeps every row reporting the read, including the one
-completed by `[B,A,C]`.  When 2PL later emits `[A,C,B]`, so does the canonical
-run, and both end with the same table.  The lock committed to `A` before `B` earlier than any output required."
+`A` reads a key `x` that no transaction writes, and `B` waits for a lock that
+`A` holds on another key.  When `B` begins to wait, 2PL applies `order(A,B)` in
+a commitment event, before any output, keeping only the rows that can be
+completed without committing `B` before `A`.  The canonical run skips that
+event, so it keeps every row, including the one completed by `[B,A,C]`.  When
+2PL later reports `A`'s read and emits `[A,C,B]`, it applies no further
+ordering commitment, and the canonical run emits the same outputs; both end
+with the same table.  The lock committed to `A` before `B` earlier than any
+output required."
 
-Lean (Appendix G's specification; `rd`, `wr` arbitrary except `rd A x` and no
-transaction writes `x`; `o1` decides nothing and reports `A`'s read of `x`
-returning the initial version, `o2` is `[A,C,B]` with that read):
-`read(A,x,initial)` is undefined at the canonical state, `o1` is exposable
-there and `κ_{o1} = ε`; 2PL's `Out_[order(A,B)](o1)` is legal under `B_2PL`,
-keeps `[A,B,C]` and removes `[B,A,C]` (both with the read), and every remaining
-row has a remaining completion that does not commit `B` before `A` (aborting
-`A` or `B` counts); the canonical `Out_{κ}(o1)` ends at `R[out ⪰ o1]`, which
-contains 2PL's table and keeps `[B,A,C]` with the read.  (It is an output
-retirement: rows that do not report the read are removed.)  2PL then emits
-`o2` with `commit(A), commit(B), commit(C), order(A,C), order(C,B)`; the
-canonical run emits `o2` with `κ_{o2} ≠ ε`; both end at the same state, and the
-two runs are a `Lockstep` pair as in `«sec:systems/canonical-equivalent»`. -/
+Lean (`CC.Txn.Partial.CommitEx.example_commit_event_ABC`; Appendix G's
+specification, `rd`, `wr` arbitrary except `rd A x` and no transaction writes
+`x`; `o1` decides nothing and reports `A`'s read of `x` returning the initial
+version, `o2` is `[A,C,B]` with that read; rows carry the read):
+(a) the commitment event `commit([order(A,B)])` is a legal `B_2PL` step from
+the canonical state `σ₀` to `σ₁`; `σ₁` keeps exactly the rows of `σ₀` with a
+complete refinement in `σ₀` that does not commit `B` before `A` (aborting `A`
+or `B` counts), so it keeps `[A,B,C]` and removes `[B,A,C]`;
+(b) the canonical run stays at `σ₀`, which has `[B,A,C]`, and still has it
+after its `Out_{κ}(o1)` (`κ_{o1} = ε`);
+(c) 2PL's `Out_ε(o1)` from `σ₁` and its
+`Out_[commit(A),commit(B),commit(C),order(A,C),order(C,B)](o2)` are legal
+`B_2PL` steps, and the canonical run emits `o1` and `o2`;
+(d) both end at the same state, and the runs are a `Lockstep` pair whose
+commitment event is matched by no canonical event.
+
+Difference from the text: the output event emitting `[A,C,B]` applies no
+further commitment on the order of `A` and `B`, but it does apply the ordering
+commitments `order(A,C)` and `order(C,B)` that place `C`; commit commitments
+alone do not suffice (`Out_[commit(A),commit(B),commit(C)](o2)` is not legal,
+since the row `[A,B,C]` survives them and is neither refined by `o2` nor by any
+row refining `o2`).  The paper's "no further ordering commitment" holds only
+when read as "no further commitment ordering `A` and `B`". -/
 theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
     {x : K} (h : Txn.Partial.Distinct3 A B C) (hr : rd A x) (hnw : ∀ t, ¬ wr t x) :
     let σ0 := Txn.Partial.σABC rd wr h
@@ -581,21 +623,28 @@ theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop
     let o1 := Txn.Partial.CanonEx.o1 A x
     let o2 := Txn.Partial.CanonEx.o2 A B C x
     let γ2 := Txn.Partial.CanonEx.γ2 (K := K) (rd := rd) (wr := wr) A B C
-    ∃ τ1 τ2 τ1' τ2' : State (Txn.Partial.spec rd wr false),
-      (Txn.Partial.read A x none).app σ0 = none ∧ Exposable σ0 o1 ∧ kappa σ0 o1 = [] ∧
-      SysStep Txn.Partial.basis2PL σ0 (.output [Txn.Partial.order A B] o1) τ1 ∧
-      τ1.R k3 (Txn.Partial.CanonEx.row A x [A, B, C] fun _ => False) ∧
-      ¬ τ1.R k3 (Txn.Partial.CanonEx.row A x [B, A, C] fun _ => False) ∧
-      (∀ k w, τ1.R k w → ∃ c, τ1.R k c ∧ Txn.Partitions k c.o ∧ w ≼ c ∧ ¬ c.o.lt B A) ∧
-      CanonStep σ0 (.output (kappa σ0 o1) o1) τ1' ∧ τ1'.R = outputTable σ0 o1 ∧
-      τ1'.R k3 (Txn.Partial.CanonEx.row A x [B, A, C] fun _ => False) ∧
-      (∀ k u, τ1.R k u → τ1'.R k u) ∧
+    let row := Txn.Partial.CanonEx.row (T := T) A x
+    ∃ σ1 τ1 τ2 τ1' τ2' : State (Txn.Partial.spec rd wr false),
+      -- (a)
+      SysStep Txn.Partial.basis2PL σ0 (.commit [Txn.Partial.order A B]) σ1 ∧ σ1.cur = k3 ∧
+      (∀ k w, σ1.R k w ↔ σ0.R k w ∧
+        ∃ c, σ0.R k c ∧ Txn.Partitions k c.o ∧ w ≼ c ∧ ¬ c.o.lt B A) ∧
+      σ1.R k3 (row [A, B, C] fun _ => False) ∧ ¬ σ1.R k3 (row [B, A, C] fun _ => False) ∧
+      -- (b)
+      σ0.R k3 (row [B, A, C] fun _ => False) ∧ τ1'.R k3 (row [B, A, C] fun _ => False) ∧
+      -- (c)
+      SysStep Txn.Partial.basis2PL σ1 (.output [] o1) τ1 ∧
       SysStep Txn.Partial.basis2PL τ1 (.output γ2 o2) τ2 ∧
+      (¬ ∃ τ, SysStep Txn.Partial.basis2PL τ1
+        (.output [Txn.Partial.commit A, Txn.Partial.commit B, Txn.Partial.commit C] o2) τ) ∧
+      kappa σ0 o1 = [] ∧ CanonStep σ0 (.output (kappa σ0 o1) o1) τ1' ∧
       CanonStep τ1' (.output (kappa τ1' o2) o2) τ2' ∧
-      ¬ Exposable τ1' o2 ∧ kappa τ1' o2 ≠ [] ∧ τ2 = τ2' ∧
-      Lockstep Txn.Partial.basis2PL σ0 [.output [Txn.Partial.order A B] o1, .output γ2 o2] τ2
+      -- (d)
+      τ2 = τ2' ∧
+      Lockstep Txn.Partial.basis2PL σ0
+        [.commit [Txn.Partial.order A B], .output [] o1, .output γ2 o2] τ2
         σ0 [.output (kappa σ0 o1) o1, .output (kappa τ1' o2) o2] τ2' :=
-  Txn.Partial.CanonEx.example_2PL h hr hnw
+  Txn.Partial.CommitEx.example_commit_event_ABC h hr hnw
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
@@ -662,7 +711,7 @@ theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I
 
 /-- Def. `def:coordination`: "For a specification, then, coordination-free means
 commitment-free: every output event is some `Out_ε(o)`, which may still
-perform output retirements."  Lean: `CoordFree` (every output event is
+perform output retirements, and no commitment event occurs."  Lean: `CoordFree` (every output event is
 `Out_ε(o)`, and there is no commit event). -/
 abbrev «def:coordination/coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   CoordFree es

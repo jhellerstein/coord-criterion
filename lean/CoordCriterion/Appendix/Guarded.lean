@@ -770,6 +770,27 @@ theorem eraseSys_eps {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq
   | nil => rfl
   | cons c _ => exact (sysExec_basis h.1 _ _ hm c List.mem_cons_self).elim
 
+/-- The empty-basis system performs no commit event: a commit event applies a
+nonempty sequence of basis commitments. -/
+theorem eraseSys_noCommit {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq}
+    (h : Produces (eraseSys S) i es ρ) : ∀ γ, SEvent.commit γ ∉ es := by
+  have key : ∀ {σ : State sq} {es : List (SEvent sq)} {ρ : State sq},
+      SysExec (fun _ => False) σ es ρ → ∀ γ, SEvent.commit γ ∉ es := by
+    intro σ es ρ hx
+    induction hx with
+    | nil => intro _ h; cases h
+    | cons hs _ ih =>
+      intro γ hm
+      rcases List.mem_cons.1 hm with he | hm
+      · subst he
+        cases hs with
+        | commit hb hne _ =>
+          cases γ with
+          | nil => exact hne rfl
+          | cons c _ => exact hb c List.mem_cons_self
+      · exact ih γ hm
+  exact key h.1
+
 /-- A system whose strategy never allows a commit event produces none. -/
 theorem produces_noCommit {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq}
     (hS : ∀ a γ, ¬ S.strat i a (.commit γ)) (h : Produces S i es ρ) :

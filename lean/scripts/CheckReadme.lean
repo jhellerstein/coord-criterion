@@ -129,6 +129,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:system/produced»
 #check @CC.Paper.«def:system/restrict»
 #check @CC.Paper.«def:system-output-event»
+#check @CC.Paper.«def:commitment-event»
+#check @CC.Paper.«sec:systems/commitment-event-unobserved»
 #check @CC.Paper.«eq:lifted-validity»
 #check @CC.Paper.«sec:systems/legal-event-containment»
 #check @CC.Paper.«sec:systems/output-is-canonical-event»
@@ -299,6 +301,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/basis»
 #check @CC.Paper.«app:notation/produced»
 #check @CC.Paper.«app:notation/system-output-event»
+#check @CC.Paper.«app:notation/commitment-event»
 #check @CC.Paper.«app:notation/run-under-basis»
 #check @CC.Paper.«app:notation/canonical-run»
 #check @CC.Paper.«app:notation/observably-equivalent»
@@ -384,6 +387,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«lem:canonical-commitment-normal-form»
 #check @CC.Paper.«def:canonical-system»
 #check @CC.Paper.«def:canonical-system/histories»
+#check @CC.Paper.«def:canonical-system/no-commitment-event»
 #check @CC.Paper.«lem:compound-commitment»
 #check @CC.Paper.«lem:compound-commitment/defined»
 #check @CC.Paper.«app:bases/compound-output-event»
