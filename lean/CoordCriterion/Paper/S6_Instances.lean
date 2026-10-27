@@ -269,8 +269,8 @@ availability as a deployment, points to App. `app:cap-response` and Prop.
 
 /-- Paragraph "Read committed": "Under read committed, a transaction reads
 only committed versions.  Suppose two separated replicas run transactions on
-disjoint keys.  One exposes `read(T₁,x,0)` and `commit(T₁)`, and the other
-exposes `read(T₂,y,0)` and `commit(T₂)`.  Each read saw a committed version, so
+disjoint keys.  One exposes `read(T₁,x,0)` and `TxCommit(T₁)`, and the other
+exposes `read(T₂,y,0)` and `TxCommit(T₂)`.  Each read saw a committed version, so
 the union of the four facts contains no dirty read and is itself permitted.
 It is a common refinement of what the two replicas exposed."  Lean: each side
 and their union are read committed, and the read-committed specification

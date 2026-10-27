@@ -151,7 +151,7 @@ theorem «app:cc-bases/applied» {T K : Type} {sp : Spec (FinSet T) (Partial.ROu
   closeC_app_iff
 
 /-- The four conditions.  "`order(A,B)` …: `B` is not committed before `A`,
-that is, not `B <_L A`.  `commit(A)`: `A ∉ X`.  `abort(A)`:
+that is, not `B <_L A`.  `TxCommit(A)`: `A ∉ X`.  `abort(A)`:
 `A ∉ dom L`.  `stamp(A)` …: no committed transaction outside `Z ∪ {A}`
 precedes `A` in `L`, and no committed transaction of `Z` follows `A`.
 `read(A,x,v)`: the output reports that `A`'s read of `x` returned the version
@@ -166,7 +166,7 @@ theorem «app:cc-bases/conditions» {T K : Type} (A B : T) (Z : T → Prop) (o :
 /-- `order(A,B)`, for distinct `A,B ∈ i`. -/
 noncomputable abbrev «app:cc-bases/order» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut T K)}
     (A B : T) : Commitment sp := order A B
-/-- `commit(A)`, for `A ∈ i`. -/
+/-- `TxCommit(A)`, for `A ∈ i`. -/
 noncomputable abbrev «app:cc-bases/commit» {T K : Type} {sp : Spec (FinSet T) (Partial.ROut T K)}
     (A : T) : Commitment sp := commit A
 /-- `abort(A)`, for `A ∈ i`. -/
@@ -286,8 +286,8 @@ theorem «app:cc-bases/deadlock» {T K : Type} {sp : Spec (FinSet T) (Partial.RO
   ⟨fun _ _ hw => deadlock h1 hs h2 hR hw,
    fun _ _ hc hp hA hB => deadlock_complete h1 hs h2 hR hc hp hA hB⟩
 
-/-- "Once the scheduler applies `commit(A)`, every remaining complete row aborts
-`B`, and `commit(B)` is never again defined." -/
+/-- "Once the scheduler applies `TxCommit(A)`, every remaining complete row aborts
+`B`, and `TxCommit(B)` is never again defined." -/
 theorem «app:cc-bases/deadlock-resolution» {T K : Type}
     {sp : Spec (FinSet T) (Partial.ROut T K)} {A B : T} {σ σ1 σ1' σ2 σ3 σ4 : State sp}
     (h1 : (order A B).app σ = some σ1) (hs : ∀ k u, σ1'.R k u → σ1.R k u)
@@ -375,7 +375,7 @@ theorem «app:cc-bases/writer-before-A» {T K : Type} {rd wr : T → K → Prop}
   writer_after_A h hwA hwW hrB
 
 /-- *When the abort is entailed.*  "If every remaining complete row commits
-`B`, for instance after `commit(B)`, then every remaining complete row aborts
+`B`, for instance after `TxCommit(B)`, then every remaining complete row aborts
 `A`.  Emitting `A`'s abort, added to a row that reports the read and that every
 remaining row refines, is then exposable: the specification entails the abort."
 (Lean also shows that no remaining row commits `A`.)  Stated at any state `τ` with the two
@@ -401,7 +401,7 @@ the output event that applies `read` and then reports the read is legal under
 `B_MVTO`.  Two completions remain: `B` committed with `A` aborted, and `A`
 committed with `B` aborted.  Emitting `A`'s abort is not exposable, and
 `abort(A)` and `abort(B)` are both defined and keep different completions.
-After `commit(B)`, `A`'s abort becomes exposable."  (`C` is the further transaction: `stamp(B)` is defined because `C` may
+After `TxCommit(B)`, `A`'s abort becomes exposable."  (`C` is the further transaction: `stamp(B)` is defined because `C` may
 still arrive and be ordered before `B`; `Ex.u B x` is the output reporting the read,
 `Ex.r1`/`Ex.r2` the two completions.) -/
 theorem «app:cc-bases/abort-is-a-choice» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
@@ -431,7 +431,7 @@ the reader commits."  The first part is `«app:cc-bases/read-commits»`; the
 second is `«app:cc-bases/abort-entailed»` together with the instance
 `«app:cc-bases/abort-is-a-choice»`, restated here: after the read is reported,
 `A`'s abort is not exposable while `B` is undecided, and is exposable once
-`commit(B)` has been applied. -/
+`TxCommit(B)` has been applied. -/
 theorem «app:cc-bases/comparison» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
     (h : Distinct3 A B C) {x : K} (hwA : wr A x) (hrB : rd B x) :
     ∃ τ : State (spec (K := K) rd wr false),

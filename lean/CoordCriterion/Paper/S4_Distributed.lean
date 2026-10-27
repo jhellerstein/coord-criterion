@@ -604,14 +604,14 @@ or `B` counts), so it keeps `[A,B,C]` and removes `[B,A,C]`;
 (b) the canonical run stays at `σ₀`, which has `[B,A,C]`, and still has it
 after its `Out_{κ}(o1)` (`κ_{o1} = ε`);
 (c) 2PL's `Out_ε(o1)` from `σ₁` and its
-`Out_[commit(A),commit(B),commit(C),order(A,C),order(C,B)](o2)` are legal
+`Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)](o2)` are legal
 `B_2PL` steps, and the canonical run emits `o1` and `o2`;
 (d) both end at the same state, and the runs are a `Lockstep` pair whose
 commitment event is matched by no canonical event.
 
 The output event emitting `[A,C,B]` applies no further commitment ordering
 `A` and `B`; it does apply `order(A,C)` and `order(C,B)`, which place `C`, and
-commit commitments alone do not suffice (`Out_[commit(A),commit(B),commit(C)](o2)`
+TxCommit commitments alone do not suffice (`Out_[TxCommit(A),TxCommit(B),TxCommit(C)](o2)`
 is not legal, since the row `[A,B,C]` survives them and is neither refined by
 `o2` nor by any row refining `o2`). -/
 theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop} {A B C : T}

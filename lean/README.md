@@ -791,7 +791,7 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/applied»` | theorem | "Applied at a state `(i,R)`, it keeps the rows of `R` that can still be completed, within `R`, by a complete row meeting the condition, and removes the rest. |
 | `«app:cc-bases/conditions»` | theorem | The four conditions. |
 | `«app:cc-bases/order»` | abbrev | `order(A,B)`, for distinct `A,B ∈ i`. |
-| `«app:cc-bases/commit»` | abbrev | `commit(A)`, for `A ∈ i`. |
+| `«app:cc-bases/commit»` | abbrev | `TxCommit(A)`, for `A ∈ i`. |
 | `«app:cc-bases/abort»` | abbrev | `abort(A)`, for `A ∈ i`. |
 | `«app:cc-bases/stamp»` | abbrev | `stamp(A)`, for `A ∈ i ∖ Z`, `Z ⊆ i`. |
 | `«app:cc-bases/read»` | abbrev | `read(A,x,v)`, for `A ∈ i`. |
@@ -804,14 +804,14 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/fig-h»` | theorem | "… the scheduler applies `order(A,B)`. |
 | `«app:cc-bases/order-at-ABC»` | theorem | "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps both `[A,B,C]` and `[C,A,B]`, so it is a choice, and it is not the choice `c_o` of any ou… |
 | `«app:cc-bases/deadlock»` | theorem | "A deadlock between `A` and `B` means that `order(A,B)` and later `order(B,A)` have both been applied. |
-| `«app:cc-bases/deadlock-resolution»` | theorem | "Once the scheduler applies `commit(A)`, every remaining complete row aborts `B`, and `commit(B)` is never again defined." |
+| `«app:cc-bases/deadlock-resolution»` | theorem | "Once the scheduler applies `TxCommit(A)`, every remaining complete row aborts `B`, and `TxCommit(B)` is never again defined." |
 | `«app:cc-bases/abort-free-waits-forever»` | theorem | "Under the abort-free specification, once `order(A,B)` is applied, `order(B,A)` is undefined at every later state: |
 | `«app:cc-bases/fig-i»` | theorem | "On complete rows without aborts, `stamp(B)` with `Z = ∅` keeps exactly those with `B` first (Figure `fig:cc-commitments`(i))." |
 | `«app:cc-bases/stamp-at-ABC»` | theorem | "… at the canonical state of `{A,B,C}` it is a choice, and it is not the choice `c_o` of any output": |
 | `«app:cc-bases/mvto-row»` | theorem | *What a read is a commitment to*, the row argument: |
 | `«app:cc-bases/read-commits»` | theorem | "Hence, after the two stamps, no row reporting the read commits both `A` and `B`, and once `read` has been applied, no remaining row commits both, whether it… |
 | `«app:cc-bases/writer-before-A»` | theorem | "The condition on the version is needed. |
-| `«app:cc-bases/abort-entailed»` | theorem | *When the abort is entailed.* "If every remaining complete row commits `B`, for instance after `commit(B)`, then every remaining complete row aborts `A`. |
+| `«app:cc-bases/abort-entailed»` | theorem | *When the abort is entailed.* "If every remaining complete row commits `B`, for instance after `TxCommit(B)`, then every remaining complete row aborts `A`. |
 | `«app:cc-bases/abort-is-a-choice»` | theorem | "While `B` is undecided, it does not. |
 | `«app:cc-bases/comparison»` | theorem | "Under MVTO, a later transaction's read of an older version is a commitment that the writer and the reader do not both commit, and the write rule settles thi… |
 

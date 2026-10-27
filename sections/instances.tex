@@ -91,7 +91,7 @@ Complete CALM requires only \emph{some} common \outnoun of query outputs
 
 Consider a transactional specification.  An input is the set of begin, read,
 write, and commit requests received so far, ordered by inclusion.  An output is
-a set of public facts, such as $\mathsf{read}(T,x,v)$, $\mathsf{commit}(T)$,
+a set of public facts, such as $\mathsf{read}(T,x,v)$, $\mathsf{TxCommit}(T)$,
 and session-order facts, also ordered by inclusion.  The isolation level or
 session guarantee determines which fact sets are permitted.  An isolation level
 says which reads and commits concurrent transactions may expose.  A session
@@ -108,8 +108,8 @@ deployment (Proposition~\ref{thm:complete-cap-deployment}).
 \paragraph{Read committed.}
 Under read committed, a transaction reads only committed versions.  Suppose two
 separated replicas run transactions on disjoint keys.  One exposes
-$\mathsf{read}(T_1,x,0)$ and $\mathsf{commit}(T_1)$, and the other exposes
-$\mathsf{read}(T_2,y,0)$ and $\mathsf{commit}(T_2)$.  Each read saw a committed
+$\mathsf{read}(T_1,x,0)$ and $\mathsf{TxCommit}(T_1)$, and the other exposes
+$\mathsf{read}(T_2,y,0)$ and $\mathsf{TxCommit}(T_2)$.  Each read saw a committed
 version, so the union of the four facts contains no dirty read and is itself
 permitted.  It is a common \outnoun of what the two replicas exposed.
 

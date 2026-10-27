@@ -55,7 +55,7 @@ it keeps some row at $i$ and removes some row.
 \begin{itemize}
   \item $\mathsf{order}(A,B)$, for distinct $A,B\in i$: $B$ is not committed
         before $A$, that is, not $B<_L A$.
-  \item $\mathsf{commit}(A)$, for $A\in i$: $A\notin X$.\quad
+  \item $\mathsf{TxCommit}(A)$, for $A\in i$: $A\notin X$.\quad
         $\mathsf{abort}(A)$, for $A\in i$: $A\notin\mathrm{dom}\,L$.
   \item $\mathsf{stamp}(A)$, for $A\in i\setminus Z$, given the set $Z\subseteq
         i$ of transactions stamped before $A$: no committed transaction outside
@@ -74,10 +74,10 @@ at one input, one \outrelpart the other, have the same serial order and abort
 set.
 
 The bases are
-$\mathcal B_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{commit},\mathsf{abort},\mathsf{read}\}$
+$\mathcal B_{\mathrm{2PL}}=\{\mathsf{order},\mathsf{TxCommit},\mathsf{abort},\mathsf{read}\}$
 and
-$\mathcal B_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{commit},\mathsf{abort},\mathsf{read}\}$,
-over all transactions, keys, and versions.  They share $\mathsf{commit}$,
+$\mathcal B_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{TxCommit},\mathsf{abort},\mathsf{read}\}$,
+over all transactions, keys, and versions.  They share $\mathsf{TxCommit}$,
 $\mathsf{abort}$, and $\mathsf{read}$, and differ in how they order: at the
 canonical state of three transactions $\{A,B,C\}$, no commitment of
 $\mathcal B_{\mathrm{MVTO}}$ has the effect of $\mathsf{order}(A,B)$, and no
@@ -99,14 +99,14 @@ exactly those with $A$ before $B$ (Figure~\ref{fig:cc-commitments}(h)).  At the
 canonical state of $\{A,B,C\}$ it removes $[B,A,C]$ and keeps $[A,B,C]$ and
 $[C,A,B]$, so it is a choice, and it is not the choice $c_o$ of any output $o$.
 When a transaction reads, the scheduler applies $\mathsf{read}$; when it
-commits, $\mathsf{commit}$.
+commits, $\mathsf{TxCommit}$.
 
 A deadlock between $A$ and $B$ means that $\mathsf{order}(A,B)$ and later
 $\mathsf{order}(B,A)$ have both been applied.  Then no remaining row, at any
 input, commits both $A$ and $B$, so every remaining complete row aborts one of
 them, and resolving the deadlock means aborting one.  Once the scheduler
-applies $\mathsf{commit}(A)$, every remaining complete row aborts $B$, and
-$\mathsf{commit}(B)$ is never again defined.  Under the abort-free
+applies $\mathsf{TxCommit}(A)$, every remaining complete row aborts $B$, and
+$\mathsf{TxCommit}(B)$ is never again defined.  Under the abort-free
 specification, once $\mathsf{order}(A,B)$ is applied, $\mathsf{order}(B,A)$ is
 undefined at every later state: $A$, and hence $B$, waits forever.  Whether a
 deadlock can be resolved thus depends on which of the two specifications the
@@ -123,7 +123,7 @@ of any output.  A read of $x$ by $A$ returns the committed version of $x$ with
 the largest timestamp below $A$'s, and the scheduler applies $\mathsf{read}$.
 A write of $x$ by $A$ is rejected, and $A$ aborted, when a transaction stamped
 after $A$ has already read a version of $x$ stamped before $A$; otherwise the
-scheduler applies $\mathsf{commit}(A)$ when $A$ commits.
+scheduler applies $\mathsf{TxCommit}(A)$ when $A$ commits.
 
 \emph{What a read is a commitment to.}  Suppose $A$ writes $x$, $B$ is stamped after
 $A$, and $B$'s read of $x$ returned the initial version or the write of $x$ by
@@ -138,7 +138,7 @@ reports that $B$ read $W$'s write is permitted and satisfies every stamp.
 
 \emph{When the abort is entailed.}  Which of $A$ and $B$ aborts depends on
 whether $B$ is decided.  If every remaining complete row commits $B$, for
-instance after $\mathsf{commit}(B)$, then every remaining complete row aborts
+instance after $\mathsf{TxCommit}(B)$, then every remaining complete row aborts
 $A$.  Emitting $A$'s abort, added to a row that reports the read and that every
 remaining row \outrel, is then exposable: the specification entails the abort.
 While $B$ is undecided, it does not.  At input $\{A,B\}$, with $A$ writing $x$,
@@ -150,7 +150,7 @@ event that applies $\mathsf{read}$ and then reports the read is legal under
 $\mathcal B_{\mathrm{MVTO}}$.  Two completions remain: $B$ committed with $A$
 aborted, and $A$ committed with $B$ aborted.  Emitting $A$'s abort is not
 exposable, and $\mathsf{abort}(A)$ and $\mathsf{abort}(B)$ are both defined and
-keep different completions.  After $\mathsf{commit}(B)$, $A$'s abort becomes
+keep different completions.  After $\mathsf{TxCommit}(B)$, $A$'s abort becomes
 exposable.  MVTO's write rule aborts $A$ without waiting for $B$ to commit,
 since it records reads when they execute.  That abort is the scheduler's
 choice, made by $\mathsf{abort}(A)$, between two outcomes the specification
