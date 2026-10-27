@@ -67,7 +67,7 @@ unambiguous.  A seal may remove the last rows that earlier choices left at an
 input; attributing the seal across that sequence is a provenance question we do
 not pursue.
 
-\begin{definition}[Strategy]
+\begin{definition}[Local history, strategy]
 \label{def:strategy}
 A \emph{local history} of participant $p$ is a finite sequence of $p$'s history
 events, including the messages it
@@ -78,7 +78,7 @@ performs any one of them, or waits.  Input events come from the environment,
 not the strategy.
 \end{definition}
 
-\begin{definition}[System]
+\begin{definition}[System, commitment basis, produced history]
 \label{def:system}
 A \emph{system} consists of a \emph{commitment basis} $\mathcal B$, the set of
 commitments its output and commitment events may apply, shared by all
@@ -92,7 +92,7 @@ Strategies differ by participant so we can single out replicated
 systems, whose participants share one (Appendix~\ref{app:cap-response}); no
 result distinguishes participants' commitments, so the basis is shared.
 
-\begin{definition}[Output event of a system]
+\begin{definition}[Output event of a system, legal output event]
 \label{def:system-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
 under a basis $\mathcal B$ applies a finite, possibly empty sequence
@@ -225,18 +225,27 @@ Running such a mechanism need not issue a commitment: closing the polls after ev
 has voted still runs the mechanism, but no ballot is left to seal, so it
 removes nothing the specification still permits and applies no commitment.
 
-\begin{definition}[Coordination-requiring commitment]
+\begin{definition}[Contradicting run]
+\label{def:contradicts}
+Let an event of a run apply a commitment.  A run \emph{contradicts} the
+commitment if it accepts an input the commitment seals, or emits an output the
+commitment chooses against at the same input.
+\end{definition}
+
+\begin{definition}[Coordination-requiring commitment, distributed coordination]
 \label{def:coordination}
-Let an event of a run apply a commitment, and let $\mathcal R$ be a set of runs.
-A run \emph{contradicts} the commitment if it accepts an input the commitment
-seals, or emits an output the commitment chooses against at the same input.
-The commitment \emph{requires coordination} relative to $\mathcal R$ when some
-run in $\mathcal R$ contradicts it.  It \emph{requires distributed coordination} when
-that run is at another participant of the same history.  A run or history is
-\emph{coordination-free} relative to $\mathcal R$ when it applies no
-commitment that requires coordination.  For a specification, $\mathcal R$ is
-its canonical runs; for a system, it is the runs it can perform, under any
-inputs the environment may supply.
+Let $\mathcal R$ be a set of runs: for a specification, its canonical runs;
+for a system, the runs it can perform under any inputs the environment may
+supply.  A commitment \emph{requires coordination} relative to $\mathcal R$
+when some run in $\mathcal R$ contradicts it
+(Definition~\ref{def:contradicts}).  It \emph{requires distributed
+coordination} when that run is at another participant of the same history.
+\end{definition}
+
+\begin{definition}[Coordination-free]
+\label{def:coordination-free}
+A run or history is \emph{coordination-free} relative to $\mathcal R$ when it
+applies no commitment that requires coordination relative to $\mathcal R$.
 \end{definition}
 
 \emph{Coordination} is any operational mechanism, such as agreement, locking,
@@ -337,7 +346,7 @@ change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
 an input or make a choice that another could contradict.
 
-\begin{definition}[Partitioned history, Availability, Partition Consistency]
+\begin{definition}[Partitioned history, availability relation, Availability, Partition Consistency, consistency on $A$]
 \label{def:partition-notions}
 \leavevmode
 \begin{enumerate}
@@ -418,7 +427,7 @@ Availability for $A$ and Partition Consistency.  Nor do the commitments of the
 canonical system above need coordination.  Under consistency on $A$, the canonical event
 for an output of $A$ seals nothing and chooses only against outputs outside
 $A$, which the system never emits, so it is
-coordination-free (Definition~\ref{def:coordination}).  For $A=S$ it needs no
+coordination-free (Definition~\ref{def:coordination-free}).  For $A=S$ it needs no
 commitment at all.  For a smaller $A$ such local choices can be necessary: if
 $o\in A(i)$ and $x\in\fiber{i}\setminus A(i)$ have no common \outnoun at $i$,
 emitting $o$ must choose against $x$.  When consistency on $A$ fails, some

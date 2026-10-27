@@ -497,7 +497,7 @@ this corresponds exactly to monotonicity.}
 
 \textcolor{newblue}{We now state these notions precisely.}
 
-\begin{definition}[Functional ordered specification]
+\begin{definition}[Functional ordered specification, total]
 \label{def:functional-specification}
 \textcolor{newblue}{A \emph{functional ordered specification} is a tuple
 $\Spec=(I,\InputOrd,O,\OutputOrd,S)$,
@@ -521,7 +521,7 @@ unique or least: for example, two independent transactions $a$ and $b$, with sch
 ordered by subsequence, have two incomparable minimal common \indescs, $ab$
 and $ba$.}
 
-\begin{definition}[Functional monotonicity]
+\begin{definition}[Functional monotonicity, monotone]
 \label{def:functional-monotonicity}
 \textcolor{newblue}{$\Spec$ is \emph{monotone} if}
 \begin{equation}
@@ -597,7 +597,7 @@ $o$ for every legal $j$.}
 
 \paragraph{Runs and consistency.}
 \textcolor{newblue}{We now consider the executions corresponding to a specification.}
-\begin{definition}[Run]
+\begin{definition}[Run, commitment-free run, reachable without commitment]
 \label{def:run}
 \textcolor{newblue}{A \emph{run} is a finite sequence of input and output events from the
 canonical state $\sigma_S(i)$ at some input $i$.} \removednote{\textbf{formal definition/notation}, 32 words, rank 40; \textit{A run is commitment-free when none of its output events applies a commitment.}} \textcolor{newblue}{It is
@@ -623,7 +623,7 @@ $S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
 To compare runs that end at different inputs, we consider a common \indesc
 of those inputs.
 
-\begin{definition}[Consistency]
+\begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
 An ordered specification is \emph{consistent} when every finite family of
 runs is confluent: if the runs end at states
@@ -813,7 +813,7 @@ survives in both.
 
 We begin with our most general definition of a specification, which admits
 ambiguity of output.
-\begin{definition}[Ordered relational specification]
+\begin{definition}[Ordered relational specification, ambiguity, ordered specification]
 \label{def:relational-specification}
 \textcolor{newblue}{An \emph{ordered relational specification} is
 $\Spec=(I,\InputOrd,O,\OutputOrd,S)$ with $S\subseteq I\times O$,
@@ -1044,7 +1044,7 @@ $\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.} \removednote
 influence which events a system chooses to execute next (\S\ref{sec:systems}), but never directly changes a specification
 state.}
 
-\begin{definition}[Distributed history, consistent cut]
+\begin{definition}[Distributed history, history event, happens-before, consistent cut]
 \label{def:distributed-history}
 \textcolor{newblue}{A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of an input
@@ -1182,16 +1182,27 @@ requires distributed coordination when that run is at another participant. Runni
 has voted still runs the mechanism, but no ballot is left to seal, so it
 removes nothing the specification still permits and applies no commitment.
 
-\begin{definition}[Coordination-requiring commitment]
+\begin{definition}[Contradicting run]
+\label{def:contradicts}
+Let an event of a run apply a commitment. A run \emph{contradicts} the
+commitment if it accepts an input the commitment seals, or emits an output the
+commitment chooses against at the same input.
+\end{definition}
+
+\begin{definition}[Coordination-requiring commitment, distributed coordination]
 \label{def:coordination}
-Let an event of a run apply a commitment, and let $\mathcal R$ be a set of runs. A run \emph{contradicts} the commitment if it accepts an input the commitment
-seals, or emits an output the commitment chooses against at the same input. The commitment \emph{requires coordination} relative to $\mathcal R$ when some
-run in $\mathcal R$ contradicts it. It \emph{requires distributed coordination} when
-that run is at another participant of the same history. A run or history is
-\emph{coordination-free} relative to $\mathcal R$ when it applies no
-commitment that requires coordination. For a specification, $\mathcal R$ is
-its canonical runs; for a system, it is the runs it can perform, under any
-inputs the environment may supply.
+Let $\mathcal R$ be a set of runs: for a specification, its canonical runs;
+for a system, the runs it can perform under any inputs the environment may
+supply. A commitment \emph{requires coordination} relative to $\mathcal R$
+when some run in $\mathcal R$ contradicts it
+(Definition~\ref{def:contradicts}). It \emph{requires distributed
+coordination} when that run is at another participant of the same history.
+\end{definition}
+
+\begin{definition}[Coordination-free]
+\label{def:coordination-free}
+A run or history is \emph{coordination-free} relative to $\mathcal R$ when it
+applies no commitment that requires coordination relative to $\mathcal R$.
 \end{definition}
 
 \emph{Coordination} is any operational mechanism, such as agreement, locking,
@@ -1257,7 +1268,7 @@ change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
 an input or make a choice that another could contradict.
 
-\begin{definition}[Partitioned history, Availability, Partition Consistency]
+\begin{definition}[Partitioned history, availability relation, Availability, Partition Consistency, consistency on $A$]
 \label{def:partition-notions}
 \leavevmode \removednote{\textbf{unclassified}, 1013 words, rank 1; \textit{The induced specification is an ordered specification, and the input of an execution only expands as ...}; labels prop:declared-specification}
 \begin{enumerate}
@@ -1340,7 +1351,7 @@ Availability for $A$ and Partition Consistency. Nor do the commitments of the
 canonical system above need coordination. Under consistency on $A$, the canonical event
 for an output of $A$ seals nothing and chooses only against outputs outside
 $A$, which the system never emits, so it is
-coordination-free (Definition~\ref{def:coordination}). For $A=S$ it needs no
+coordination-free (Definition~\ref{def:coordination-free}). For $A=S$ it needs no
 commitment at all. \removednote{\textbf{formal caution}, 26 words, rank 50; \textit{For a smaller [math] such local choices can be necessary: if [math] and [math] have no ...}} When consistency on $A$ fails, some
 output of $A$ either waits for another component, sacrificing Availability, or
 is emitted independently at the cost of Partition Consistency.
