@@ -1238,9 +1238,8 @@ two outputs.  Consistency still counts it as a failure.  The environment may act
 on transient inconsistencies that it observes, through channels the system does
 not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time}, and the
 reconciling input need not arrive.  The system must therefore exclude one of the
-two events: by a mutex or atomic instruction in shared memory, by agreement in a
-distributed system, or by a rule fixed in advance, such as assigning the choice
-to a single participant, so that only that participant's runs can contradict it.
+two events: by a mutex or atomic instruction in shared memory,
+or by agreement in a distributed system.
 
 Ownership changes which runs can contradict a commitment.  The three cases of
 the definitions all arise in a shared-nothing database in which each key is
@@ -1269,50 +1268,53 @@ Brewer conjectured that a distributed system cannot be consistent, available,
 and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
 proved it for a linearizable register~\cite{gilbert2002cap}.  Their theorem
 concerns one guarantee, not which guarantees can stay available and
-consistent through a partition.  Complete CAP answers that broader question for any
-declared guarantee, encoded as an ordered specification.  Succinctly,
-rows whose outputs are emitted at distinct participants
-must have a common \outnoun at every common \indesc of their inputs; when every permitted
-output must stay available, this is Lifted Monotonicity.  A partition does not
+consistent through a partition.  Complete CAP answers that broader question for any declared guarantee.  A
+guarantee is encoded as an ordered specification together with a designated
+subset $A$ of its rows: those whose outputs must stay available.  For the rows
+in $A$, outputs emitted on different sides of a partition must have a common
+\outnoun at every common \indesc of their inputs; when $A$ is every permitted
+row, this is Lifted Monotonicity.  A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
 an input or make a choice that another could contradict.
 
-\begin{definition}[Partitioned history, availability relation, Availability, Partition Consistency, consistency on $A$]
+\begin{definition}[Partitioned history]
+\label{def:partitioned-history}
+A \emph{partitioned history} divides the participants into two or more
+components and contains no receive whose matching send lies in another
+component; participants still receive environment input and emit outputs.
+\end{definition}
+
+We fix a system, with a strategy for each participant of every finite
+participant set and every choice of initial inputs, each depending only on its
+participant's local history, and an adversarial environment that may supply
+any legal input event to any participant.
+
+\begin{definition}[Availability relation, Availability]
 \label{def:partition-notions}
-\leavevmode
-\begin{enumerate}
-  \item \emph{Partitioned history.}  A \emph{partitioned history} divides the
-        participants into two or more components and contains no receive whose
-        matching send lies in another component; participants still receive
-        environment input and emit outputs.
-  \item \emph{System.}  Fix a system; we
-        require a strategy for each participant of every finite
-        participant set and every choice of initial inputs, each depending only
-        on its participant's local history.
-  \item \emph{Environment.}  The environment is adversarial: it may supply any
-        legal input event to any participant.
-  \item \emph{Availability.}  A continuation of a partitioned history is
-        \emph{local to} a participant $p$ when the system produces it, it
-        adds only events of $p$'s component and no input events, and none of
-        its receives takes a message sent from another component.  Fix an
-        \emph{availability relation} $A\subseteq S$, the rows $(i,o)$ whose
-        output $o$ must stay available at input $i$, and write $A(i)$ for its
-        fiber $\{o:(i,o)\in A\}$.  The system has \emph{Availability for $A$}
-        when, in every partitioned history it produces, each participant $p$,
-        ending in state $(i,R)$, can emit each output in $R(i)\cap A(i)$ in
-        some continuation local to $p$.  \emph{Availability} is Availability
-        for $S$.
-  \item \emph{Partition Consistency.}  The system has \emph{Partition
-        Consistency} when the final cut of every such history is
-        confluent at every common \indesc of the participants' current
-        inputs.  The
-        continuation that confluence asks for need not stay partitioned and
-        need not be produced by the system.
-  \item \emph{Consistency on $A$.}  $\Spec$ is \emph{consistent on $A$} when
-        every finite set of rows of $A$ with a common \indesc $j$ has a common
-        \outnoun in $\fiber{j}$.
-\end{enumerate}
+A continuation of a partitioned history is \emph{local to} a participant $p$
+when the system produces it, it adds only events of $p$'s component and no
+input events, and none of its receives takes a message sent from another
+component.  An \emph{availability relation} $A\subseteq S$ is a set of rows
+$(i,o)$ whose output $o$ must stay available at input $i$; write $A(i)$ for
+its fiber $\{o:(i,o)\in A\}$.  The system has \emph{Availability for $A$}
+when, in every partitioned history it produces, each participant $p$, ending
+in state $(i,R)$, can emit each output in $R(i)\cap A(i)$ in some continuation
+local to $p$.  \emph{Availability} is Availability for $S$.
+\end{definition}
+
+\begin{definition}[Partition Consistency]
+\label{def:partition-consistency}
+The system has \emph{Partition Consistency} when the final cut of every
+partitioned history it produces is confluent at every common \indesc of the
+participants' current inputs.  The continuation that confluence asks for need
+not stay partitioned and need not be produced by the system.
+\end{definition}
+
+\begin{definition}[Consistency on $A$]
+\label{def:consistency-on-A}
+$\Spec$ is \emph{consistent on $A$} when every finite set of rows of $A$ with
+a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \end{definition}
 
 With $A=S$, consistency on $A$ is the common-\indesc condition
