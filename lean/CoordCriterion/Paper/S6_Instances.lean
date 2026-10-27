@@ -2,6 +2,7 @@ import CoordCriterion.Instances.Examples
 import CoordCriterion.Instances.BailisDefinition
 import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.CALM.Lemmas
+import CoordCriterion.Instances.StateMachine
 
 /-!
 # Paper §6, "Instances Across the Literature" (`sections/instances.tex`)
@@ -17,7 +18,7 @@ it formalizes.
   `«sec:hat-instance/serializability-cycle»`.
 * Every proof is a pointer to the library (`Instances/Examples.lean`,
   `Instances/QueryRefinements.lean`, `Instances/InvariantConfluence.lean`,
-  `Instances/BailisDefinition.lean`).
+  `Instances/BailisDefinition.lean`, `Instances/StateMachine.lean`).
 
 Conventions shared by the entries (details in `Instances/Examples.lean`):
 finite payload sets are `Inst.FSet P` (inclusion); a join-semilattice is
@@ -425,6 +426,105 @@ theorem «sec:iconfluence-instance/concurrency-decides» :
       Inst.uModel.Inv (Inst.uModel.app 2 Inst.uModel.s0) ∧
       ¬ Inst.uModel.Inv ((Inst.uModel.app 1 Inst.uModel.s0).union (Inst.uModel.app 2 Inst.uModel.s0)) :=
   Inst.uniqueness_concurrency
+
+/-! ## General operational specification models (`sec:operational-models`)
+
+The opening paragraph ("Labeled transition systems and I/O automata provide
+general operational models of components … Thus our specification model does
+not replace an operational formalism; it is a semantic projection designed to
+make the intrinsic coordination question comparable across such
+formalisms.") positions the model; it states no claim of its own.
+
+"Compiling a state machine": "Let `M` have states `Q`, an initial state `q₀`,
+environment events `E`, and a transition relation `→ ⊆ Q × E × Q` that accepts
+every event in every state, and let `obs : Q → O` give the observable output
+of each state, with `(O,⪯)` an output order.  Write `q₀ →w q` when `M` can
+reach `q` by consuming the event sequence `w ∈ E*`.  A map `α` from `E*` onto
+a partially ordered input domain `(I,⪯)`, monotone for the prefix order, says
+which event sequences the specification treats as the same input."  Lean:
+`SM.Machine Q E O` (fields `q0`, `step`, `enabled`, `obs`), `SM.Runs M q w q'`
+(events consumed head first), and `SM.Abs E I` (fields `α`, `onto`, `mono`,
+with monotonicity stated as `α w ⪯ α (w ++ v)`). -/
+
+/-- **Def. `def:induced-specification`** (Induced specification).  "The
+specification *induced* by `M` and `α` has table
+`S_{M,α} = {(α(w), obs(q)) : q₀ →w q}`."  Lean: `SM.induced M A`; the
+statement gives its table. -/
+theorem «def:induced-specification» {Q E O I : Type} [PO I] [PO O]
+    (M : SM.Machine Q E O) (A : SM.Abs E I) (i : I) (o : O) :
+    (SM.induced M A).S i o ↔ ∃ w q, A.α w = i ∧ SM.Runs M M.q0 w q ∧ M.obs q = o :=
+  Iff.rfl
+
+/-- **Prop. `prop:induced-specification`** (Induced specifications).
+"(1) `(I,⪯,O,⪯,S_{M,α})` is an ordered specification.  (2) If `M` is
+deterministic and `α` is the identity on `E*` ordered by prefix, the
+specification is functional, and it is consistent exactly when
+`obs(q) ⪯ obs(q')` for every transition `q → q'` from a reachable state.
+(3) If `M` is deterministic and `α(w)` is the state reached on `w`, with
+reachable states ordered by reachability and that order antisymmetric, the
+specification is consistent exactly when the one in (2) is."
+
+Lean: (1) every input has a row of the table (`SM.induced` is a `Spec`);
+(2) `SM.prefixAbs E` is the identity onto `SM.Seq E` (prefix order) and
+`SM.TransMono M` is the transition condition; (3) `SM.stateAbs M hd` maps `w`
+to the state reached on it, `SM.RState M` are the reachable states ordered by
+reachability, and the antisymmetry hypothesis is the class
+`SM.ReachAntisymm M`.  The proof follows the paper's: Functional CALM for (2)
+and (3), with the table of (3) equal to `{(q, obs q)}`
+(`SM.stateAbs_table`). -/
+theorem «prop:induced-specification» {Q E O : Type} [PO O] (M : SM.Machine Q E O) :
+    (∀ {I : Type} [PO I] (A : SM.Abs E I) (i : I),
+      ∃ o w q, A.α w = i ∧ SM.Runs M M.q0 w q ∧ M.obs q = o) ∧
+    (SM.Deterministic M →
+      (SM.induced M (SM.prefixAbs E)).Functional ∧
+        ((SM.induced M (SM.prefixAbs E)).Consistent ↔ SM.TransMono M)) ∧
+    (∀ [SM.ReachAntisymm M] (hd : SM.Deterministic M),
+      (SM.induced M (SM.stateAbs M hd)).Consistent ↔
+        (SM.induced M (SM.prefixAbs E)).Consistent) :=
+  ⟨fun A i => (SM.induced M A).total i, SM.induced_prefix M,
+    fun hd => SM.induced_state M hd⟩
+
+/-- "Under the prefix order of (2), two event sequences have a common
+expansion only when one extends the other: the machine is one sequential
+process, and a deterministic machine whose observations only grow is
+consistent."  Lean: `SM.prefix_common_expansion` and
+`SM.consistent_of_growing`. -/
+theorem «prop:induced-specification/prefix-order» {Q E O : Type} [PO O] (M : SM.Machine Q E O) :
+    (∀ a b c : SM.Seq E, a ≼ c → b ≼ c → a ≼ b ∨ b ≼ a) ∧
+    (SM.Deterministic M → (∀ q e q', M.step q e q' → M.obs q ≼ M.obs q') →
+      (SM.induced M (SM.prefixAbs E)).Consistent) :=
+  ⟨SM.prefix_common_expansion, SM.consistent_of_growing M⟩
+
+/-- "When `α` forgets arrival order, for instance by mapping each sequence to
+the set of events in it, sequences that differ only in order become one
+input, and the fiber at that input collects the observations of every order.
+Sensitivity to arrival order in the machine then appears as ambiguity in the
+specification, which Complete CALM analyzes."  Lean: for any `α`, the
+induced specification is functional (no ambiguity) exactly when runs on
+sequences with the same `α` end in states with the same observation. -/
+theorem «prop:induced-specification/arrival-order» {Q E O I : Type} [PO I] [PO O]
+    (M : SM.Machine Q E O) (A : SM.Abs E I) :
+    (SM.induced M A).Functional ↔
+      ∀ w w' q q', A.α w = A.α w' → SM.Runs M M.q0 w q → SM.Runs M M.q0 w' q' →
+        M.obs q = M.obs q' :=
+  SM.functional_iff_order_independent M A
+
+/-- "The election of Section `sec:election-story` is the specification
+induced by a vote-counting machine under the map that records each voter's
+first ballot; its observations do not depend on arrival order, so its fibers
+are singletons."  Lean: `SM.voteMachine` records the first ballot of each of
+three voters (`SM.record`) and observes `winner`; `SM.firstAbs` is the
+first-ballot map onto `Ballots`.  The induced table is the election's
+(`CALM.elec`, refinement order on `Res`), its fiber at `i` is `{winner i}`,
+and sequences with the same first ballots end in states with the same
+observation. -/
+theorem «prop:induced-specification/election» :
+    (∀ i o, (SM.induced SM.voteMachine SM.firstAbs).S i o ↔ CALM.elec.S i o) ∧
+      (∀ i o, (SM.induced SM.voteMachine SM.firstAbs).S i o ↔ o = CALM.winner i) ∧
+      (∀ w w', SM.firstBallots w = SM.firstBallots w' →
+        SM.voteMachine.obs (SM.reached SM.voteMachine w) =
+          SM.voteMachine.obs (SM.reached SM.voteMachine w')) :=
+  SM.election_induced
 
 end Paper
 end CC
