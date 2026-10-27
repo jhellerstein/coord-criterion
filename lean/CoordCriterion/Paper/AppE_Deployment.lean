@@ -46,7 +46,8 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
 /-! ## Appendix E: Deployments: One Availability Relation per Participant -/
 
-/-- **Definition `def:deployment`** (Deployment, separable run family).
+/-- **Definition `def:deployment`** (Deployment, emitted rows, participant
+run family, silent participant, separable run family).
 "A *deployment* over a finite participant set `P` assigns to each `p ∈ P` an
 availability relation `A_p ⊆ S`, the rows `p` may emit: `p` performs an output event `Out_γ(o)`
 at current input `i` only if `(i,o) ∈ A_p`."

@@ -106,7 +106,7 @@ theorem «sec:ambiguity-story/traceroute-passes» (x y : Figures.Trace.RS)
 /-! ## Relational specifications and states (`sec:relational-specifications`) -/
 
 /-- **Def. `def:relational-specification`** (Ordered relational
-specification).  "`Spec = (I,≼,O,≼,S)`, `S ⊆ I × O`, where `(I,≼)` and
+specification, ambiguity, ordered specification).  "`Spec = (I,≼,O,≼,S)`, `S ⊆ I × O`, where `(I,≼)` and
 `(O,≼)` are partially ordered sets and `S` is total on `I` … The fiber
 `S(i) = {o ∈ O : (i,o) ∈ S}` … may now contain several outputs; the
 specification is *ambiguous* when some fiber does.  A functional

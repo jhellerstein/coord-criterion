@@ -44,6 +44,29 @@ def LocalInH {n : Nat} (init : Fin n → I) (H : History sp D n) (p : Fin n) (σ
   (∀ k, (∃ x, σ.R k x) → (∀ x, ¬ σc.R k x) →
     ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)), q ≠ p ∧ H q = a' ++ LEv.inp k :: b')
 
+/-- Some participant `q ≠ p` of `H` emits `x` at current input `k`. -/
+def OtherEmits {n : Nat} (init : Fin n → I) (H : History sp D n) (p : Fin n) (k : I) (x : O) :
+    Prop :=
+  ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
+    q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
+
+/-- Some participant `q ≠ p` of `H` accepts `k`. -/
+def OtherAccepts {n : Nat} (H : History sp D n) (p : Fin n) (k : I) : Prop :=
+  ∃ (q : Fin n) (a' b' : List (LEv sp D n)), q ≠ p ∧ H q = a' ++ LEv.inp k :: b'
+
+/-- `p`'s commitments are local to `H` exactly when no other participant of
+`H` contradicts them. -/
+theorem localInH_iff_not_contradicts {n : Nat} (init : Fin n → I) (H : History sp D n)
+    (p : Fin n) (σ σc : State sp) :
+    LocalInH init H p σ σc ↔ ¬ Contradicts (OtherEmits init H p) (OtherAccepts H p) σ σc := by
+  constructor
+  · rintro ⟨h1, h2⟩ (⟨k, x, hx, hnx, he⟩ | ⟨k, hk, hall, ha⟩)
+    · exact h1 k x hx hnx he
+    · exact h2 k hk hall ha
+  · intro h
+    exact ⟨fun k x hx hnx he => h (Or.inl ⟨k, x, hx, hnx, he⟩),
+      fun k hk hall ha => h (Or.inr ⟨k, hk, hall, ha⟩)⟩
+
 /-- Coordination-free within histories: no output event's or commit event's
 commitments are contradicted by another participant of the same history. -/
 def System.CoordinationFreeH (Sys : System sp D) : Prop :=

@@ -52,6 +52,26 @@ def LocalEvent (Sys : System sp D) (σ σc : State sp) : Prop :=
   (∀ k x, σ.R k x → ¬ σc.R k x → ¬ SysEmits Sys k x) ∧
   (∀ k, (∃ x, σ.R k x) → (∀ x, ¬ σc.R k x) → ¬ SysAccepts Sys k)
 
+/-- Runs that emit `emits k x` (output `x` at current input `k`) and accept
+`accepts k` *contradict* the commitments taking `σ` to `σc`: they emit the
+output of a removed row at its input, or accept a sealed input (one whose
+remaining rows are all removed). -/
+def Contradicts (emits : I → O → Prop) (accepts : I → Prop) (σ σc : State sp) : Prop :=
+  (∃ k x, σ.R k x ∧ ¬ σc.R k x ∧ emits k x) ∨
+  (∃ k, (∃ x, σ.R k x) ∧ (∀ x, ¬ σc.R k x) ∧ accepts k)
+
+/-- An event is local exactly when no run of the system contradicts its
+commitments. -/
+theorem localEvent_iff_not_contradicts (Sys : System sp D) (σ σc : State sp) :
+    LocalEvent Sys σ σc ↔ ¬ Contradicts (SysEmits Sys) (SysAccepts Sys) σ σc := by
+  constructor
+  · rintro ⟨h1, h2⟩ (⟨k, x, hx, hnx, he⟩ | ⟨k, hk, hall, ha⟩)
+    · exact h1 k x hx hnx he
+    · exact h2 k hk hall ha
+  · intro h
+    exact ⟨fun k x hx hnx he => h (Or.inl ⟨k, x, hx, hnx, he⟩),
+      fun k hk hall ha => h (Or.inr ⟨k, hk, hall, ha⟩)⟩
+
 /-- A system is coordination-free when every output event and every commit
 event of every history it produces is local. -/
 def System.CoordinationFree (Sys : System sp D) : Prop :=
