@@ -666,7 +666,7 @@ theorem «sec:operational-models/testing-witness» {C P Q O : Type} [PO O]
   IOM.not_liftedMono_iff_witness k G
 
 /-- "The second is proof.  Instead of computing the induced specification,
-the designer writes one down.  A *declared* specification `D` gives, for
+a designer writes one down.  A *declared* specification `D` gives, for
 each input, a set of outputs by a rule … it does not enumerate executions.
 The proof then shows that `D` describes the machine well enough that Lifted
 Monotonicity can be checked on `D` instead.  Two things must be shown, and
