@@ -291,7 +291,7 @@ theorem «lem:locality» :
 
 /-- **Def. `def:response-interface`** (Response interface,
 self-continuing): "For a uniform
-obligation `Q`, a response interface is an availability relation `T ⊆ Q`
+obligation `Q`, a response interface is an explicit relation `T ⊆ Q`
 that is total on `I` and self-continuing: if `(i,o) ∈ T` and `i ⪯ j`, then
 some `u ∈ T(j)` refines `o`." -/
 theorem «def:response-interface» (Q : Obligation sp) (T : Table I O) :
