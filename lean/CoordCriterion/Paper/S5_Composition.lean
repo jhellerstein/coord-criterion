@@ -176,10 +176,10 @@ satisfy Lifted Monotonicity.  (2) `𝒮₁` satisfies Lifted Monotonicity; `𝒮
 satisfies it on `𝒮₁`'s outputs.  (3) `𝒮₁` and `𝒮₂` satisfy Lifted
 Monotonicity via a different order on `M`."  And, just
 before: "We say that `S₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when
-the common-expansion condition holds for its rows with inputs in `D`, at
-expansions in `D`."  Lean: the hypothesis is the disjunction of the three
-cases; "on `D`" is `Joint.CEOn` (equivalently, the restriction to `D` is
-Lifted-Monotone, `Joint.ceOn_iff_restrictTo`), and "`𝒮₁`'s outputs" is
+its restriction to inputs in `D` does."  Lean: the hypothesis is the
+disjunction of the three cases; "on `D`" is `Joint.CEOn`, which is
+equivalent to Lifted Monotonicity of the restriction to `D`
+(`Joint.ceOn_iff_restrictTo`), and "`𝒮₁`'s outputs" is
 `Joint.Img sp1`.  In (3), `Joint.underOut inst sp1` and `Joint.underIn inst sp2`
 are the same tables with `M` ordered by `inst`; "a different order" is any
 partial order `inst` (it may coincide with `≼_M`, which is case (1)).  (1) `Comp.seq_liftedMono`;
