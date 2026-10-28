@@ -14,7 +14,7 @@ paper's subsections:
   `CC.Paper.«thm:complete-calm»` or `CC.Paper.«def:commitment»`; search the
   `.tex` label and you find the Lean;
 * claims that the text proves inline are named `«<enclosing label>/<slug>»`,
-  for example `CC.Paper.«sec:hat-instance/serializability-cycle»`;
+  for example `CC.Paper.«sec:hat-instance/rc-timestamps»`;
 * each declaration states the result in full and quotes the paper in its
   docstring; when the Lean reading differs from the paper's wording (finite
   sets as lists, tables as predicates), the docstring says how;
@@ -46,7 +46,7 @@ coordination, and that the list and an order on nodes compute every behavior;
 Lean checks only the mapping of their conditions into our frame); in
 Appendix E (`app:rtc`), the reading of the real-time causal views as Mahajan et
 al.'s checks, the correspondence of the hypotheses to theirs, and the remark
-that a strengthening may read real time from the input; in §6.5, that
+that a strengthening may read real time from the input; in §6.3, that HAT's session guarantees under sticky availability are deployments; in §6.5, that
 distributing a compiled state machine is direct (each client's events go to
 some participant and §4 applies with the induced specification), and in its
 "Testing and proof" paragraph that simulators and model checkers run the
@@ -103,7 +103,10 @@ first and supporting claims and examples follow.
 | `CAP/ChosenAvailability.lean` | `CC.CAP`, `CC.AsyncGL` | App. F | End-of-history forms of Response Availability / RPC / Answering; RPC is the converse's common-refinement condition; a response interface as a chosen availability relation; Lemma forced-answer and Cor. Gilbert–Lynch at the end of histories |
 | `Instances/InvariantConfluence.lean` | `CC.IConf` | §6, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
-| `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, HAT, uniqueness example, composition examples |
+| `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, uniqueness example, composition examples |
+| `Instances/HATRC.lean` | `CC.HATRC` | §6.3 | HAT's Read Committed algorithm (App. B pseudocode, partial replication, anti-entropy): a G1c witness with timestamps fixed at `BEGIN`; with Lamport timestamps chosen at commit every run is PL-2 |
+| `Instances/HATUnion.lean` | `CC.HATUnion` | — (not cited) | Bailis's dissertation frame (histories merged by union): two read-committed histories whose union has G1c; with the Lamport condition unions never do |
+| `Instances/HATSpec.lean` | `CC.HATSpec` | §6.3 | Def. hat-spec, Thm. hat-levels: event-history inputs with happens-before (optionally with the timestamp condition), read-answer outputs, HAT levels (RU, RC, SI, RR, SER; item-only); HAT's read rule as availability relation; RU/RC available under the timestamp condition; any level proscribing Lost Update unavailable; without the condition the read rule leaves `S_RC` |
 | `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity |
 | `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by Prop. induced-specification (2)); arrival-order independence; the election as an induced specification |
 | `Instances/IOMachine.lean` | `CC.IOM` | §6 | A general machine automaton (receives, outputs and internal steps that may change state; state machines as the special case `ofSM`), clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; fibers are reached by machine executions on arrival orders, every one over a bag without observations; FIFO single client is the table of payload sequences under prefix (the prefix encoding for state machines); confluence across executions ⇔ Lifted Monotonicity, also for emitted outputs when outputs report observations; later sends after an output (Def./Prop. induced-specification) |
@@ -405,17 +408,20 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:crdt-instance/two-phase»` | theorem | Sec. |
 | `«sec:crdt-instance/semilattice»` | theorem | Sec. |
 | `«sec:crdt-instance/some-refinement»` | theorem | Sec. |
-| `«sec:hat-instance/read-committed»` | theorem | Paragraph "Read committed": |
-| `«sec:hat-instance/serializability-cycle»` | theorem | Paragraph "Serializability": |
-| `«sec:hat-instance/snapshot-isolation»` | theorem | Paragraph "Snapshot isolation": |
-| `«sec:hat-instance/boundary»` | theorem | The boundary paragraph: |
+| `«def:hat-spec»` | abbrev | **Definition `def:hat-spec`** (HAT specification): |
+| `«def:hat-spec/inputs-closed»` | theorem | Def. |
+| `«def:hat-spec/read-rule»` | theorem | Def. |
+| `«thm:hat-levels»` | theorem | **Theorem `thm:hat-levels`** (HAT levels): |
+| `«thm:hat-levels/answers-stable»` | theorem | Proof sketch of Thm. |
+| `«thm:hat-levels/lost-update-pair»` | theorem | Proof sketch of Thm. |
+| `«sec:hat-instance/rc-timestamps»` | theorem | "The timestamp condition is needed. |
 | `«sec:iconfluence-instance/model»` | abbrev | Sec. |
 | `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying `𝓘`." Lean: |
 | `«sec:iconfluence-instance/iconfluent-def»` | theorem | "`T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." Lean: |
 | `«sec:iconfluence-instance/bailis-definition»` | theorem | "Every reachable state descends from `s₀`, so `T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." This is the step from Ba… |
 | `«sec:iconfluence-instance/spec»` | theorem | "From an instance `(s₀, T, 𝓘)` of their model we construct a specification `S_𝓘` in ours as follows. |
 | `«prop:iconfluence-lm»` | theorem | **Proposition `prop:iconfluence-lm`** (Invariant confluence and Lifted Monotonicity): |
-| `«sec:iconfluence-instance/iconfluence-is-consistency»` | theorem | "Invariant confluence is therefore not a separate boundary: |
+| `«sec:iconfluence-instance/iconfluence-is-consistency»` | theorem | Invariant confluence is consistency of `S_𝓘`: |
 | `«sec:iconfluence-instance/uniqueness»` | theorem | The uniqueness example: |
 | `«sec:iconfluence-instance/concurrency-decides»` | theorem | "Concurrency, not the transactions alone, decides the outcome: |
 | `«sec:operational-models/later-sends»` | theorem | "An output of the machine is an input of the client that receives it, so a client's later sends happen after everything the machine had received when it emit… |
