@@ -138,7 +138,7 @@ Confluence, and later refinements of CALM all map into the same framework.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 19 & 2530\\
+unclassified & 19 & 2540\\
 formal definition/notation & 24 & 1344\\
 related-work detail & 7 & 1072\\
 explanation & 13 & 519\\
@@ -149,7 +149,7 @@ result & 2 & 105\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
 1. unclassified, 1360 words: \textit{We now make the mapping precise, and then explain how ...}\par
 2. formal definition/notation, 575 words: \textit{At an input [math], either no row remains or some ...}\par
-3. unclassified, 350 words: \textit{The orders on [math] and [math] are part of the ...}\par
+3. unclassified, 360 words: \textit{The orders on [math] and [math] are part of the ...}\par
 4. related-work detail, 307 words: \textit{An output is a set of public facts, such as ...}\par
 5. example, 260 words: \textit{The uniqueness constraint of Bailis et al.'s payroll example shows ...}\par
 6. related-work detail, 258 words: \textit{An invariant is a predicate that every state must satisfy.}\par
@@ -1394,7 +1394,7 @@ replication~\cite{schneider1990smr} wraps it in a log. Clients send requests,
 the log puts the requested commands in one order, and the key-value store
 executes the log and answers each request. The log's specification is also not
 monotone: when two commands arrive concurrently, either may be appended next,
-and the two resulting logs have no common \outnoun. Yet replicated stores are
+and the two alternative orders have no common \outnoun. Yet replicated stores are
 consistent, and they coordinate only in the log. Multi-Paxos agrees on each
 log entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
 with no further agreement.
@@ -1452,12 +1452,12 @@ satisfies Lifted Monotonicity, and then no output needs a commitment.} That test
 each stage runs on its own, with its runs taking as input the outputs of the
 stage before. A stage may then need a commitment even when the composite
 needs none. \textcolor{newblue}{A composite can be jointly monotone, with no stage needing a
-commitment, in two ways.} \removednote{\textbf{unclassified}, 350 words, rank 3; \textit{The orders on [math] and [math] are part of the composite's contract with its environment.}; labels prop:joint-monotone} \textcolor{newblue}{First, every stage is monotone,
+commitment, in two ways.} \removednote{\textbf{unclassified}, 360 words, rank 3; \textit{The orders on [math] and [math] are part of the composite's contract with its environment.}; labels prop:joint-monotone} \textcolor{newblue}{First, if every stage is monotone,
 as when a monotone client query observes CRDT state
-(Section~\ref{sec:crdt-instance}), and Lemma~\ref{lem:composition} applies.} \textcolor{newblue}{Second, the upstream can filter out the inputs on which the downstream is not
+(Section~\ref{sec:crdt-instance}), then Lemma~\ref{lem:composition} applies.} \textcolor{newblue}{Second, the upstream can filter out the inputs on which the downstream is not
 monotone: a counter capped at $9$ never produces the counts at which a test
 of whether the count is below $10$ answers no.} \textcolor{newblue}{These cases do not cover every monotone composite
-(\extended).} \textcolor{newblue}{When none applies, some stage may have to issue a commitment even though the
+(see \extended).} \textcolor{newblue}{When none applies, some stage may have to issue a commitment even though the
 composite is monotone, as we discuss next.} \removednote{\textbf{signposting}, 12 words, rank 77; \textit{The replicated store of the opening extends the filtering case of Proposition (2).}}
 
 \subsection{Proper Coordination}
