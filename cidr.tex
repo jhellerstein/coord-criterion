@@ -1519,8 +1519,8 @@ For the key related ideas, we provide mappings here to our specification model.
 Each setting declares an input, an output, and their orders before
 applying either CALM theorem.  The full paper~\cite{hellerstein2026completecalmfull}
 gives each mapping in more detail, along with deployments, response
-obligations, commitment bases for 2PL and MVTO, registers, and further
-applications such as $k$-set agreement, renaming, and snapshots.
+obligations, and commitment bases for the transactional protocols 2PL and MVTO,
+and distributed systems protocols including registers, $k$-set agreement, renaming, and snapshots.
 
 \subsection{Query monotonicity}
 \label{sec:query-instance}
@@ -1532,21 +1532,23 @@ iff a program is monotone,
 under its data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.
 Functional CALM does not replace the details of that theorem.  It abstracts
 the result to a property that can be compared with specifications outside
-Datalog.  Later refinements change the input order.  When transducers know
+Datalog. Subsequent extensions to the original CALM Theorem become changes to the input domain
+and its order.
+When transducers know
 how data is placed, more queries become coordination-free, among them the
 non-monotone win-move query~\cite{zinn2012winmove}, and Ameloot et al.\
 characterized the new classes by domain-distinct and domain-disjoint
 monotonicity~\cite{ameloot2015weaker,zinn2012weak}.  Each is Functional CALM
 under an input order in which $I\cup J$ \inrel $I$ only for the $J$ that the
 placement policy leaves a node unable to rule out.  The placement model
-justifies that order.  Functional CALM takes the order as given.
+justifies that order.  \jmh{don't like the preceding sentence} Functional CALM takes the order as given.
 
 Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
 permitted located outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}; under
 inclusion, a behavior is a relational specification.  Their characterization,
 \emph{node monotonicity}, is the common-\indesc condition for two rows at
 disjoint networks, and Complete CAP extends it to overlapping networks
-(\extended).
+(see \extended).
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
@@ -1565,7 +1567,7 @@ exactly when $U\subseteq V$ implies $q(s(U))\preceq_Y q(s(V))$.  Monotonicity
 of $q$ on all of $D$ suffices, but $q$ need only be monotone between reachable
 states.  The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set
 fails the test: a deleted item grows $U$ and shrinks the answer.  CRDT states
-form a join-semilattice, but observations need less: Complete CALM requires
+form a join-semilattice, but $q$ needs less: Complete CALM requires
 only \emph{some} common \outnoun of query outputs, not a least one.
 
 \subsection{Highly available transactions}
@@ -1627,9 +1629,7 @@ Monotonicity.
 \end{proposition}
 \proofinfull
 
-Invariant confluence is therefore not a separate boundary: for the
-specification that exposes database states, it is Lifted Monotonicity, and by
-Complete CALM it is consistency.  In Bailis et al.'s payroll example, two
+In Bailis et al.'s payroll example, two
 replicas each assign ID~7 to a new employee; the history in which neither
 creation saw the other \inrel both one-creation histories, but no state it
 permits \outrel both.
