@@ -1,25 +1,25 @@
-\section{Deployments: One Availability Relation per Participant}
+\section{Deployments: One Explicit Relation per Participant}
 \label{app:deployment}
 
-Theorem~\ref{thm:complete-cap} fixes one availability relation $A$ for all
+Theorem~\ref{thm:complete-cap} fixes one explicit relation $E$ for all
 participants.  A deployment fixes one for each participant: the rows that
 participant may emit.  It models a system that assigns authority, such as a
 key owned by one participant or a replica that answers only its own reads.
 This appendix states Availability for a deployment and characterizes the
-condition on the specification that replaces Lifted Monotonicity for $A$.
+condition on the specification that replaces Lifted Monotonicity for $E$.
 
 \begin{definition}[Deployment, emitted rows, participant run family, silent participant, separable run family]
 \label{def:deployment}
 A \emph{deployment} over a finite participant set $P$ assigns to each $p\in P$
-an availability relation $A_p\subseteq S$, the rows $p$ may emit: $p$ performs an output event
+an explicit relation $E_p\subseteq S$, the rows $p$ may emit: $p$ performs an output event
 $\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) at current input
-$i$ only if $(i,o)\in A_p$.  The \emph{emitted rows} of a run are the pairs
+$i$ only if $(i,o)\in E_p$.  The \emph{emitted rows} of a run are the pairs
 $(i,o)$ such that the run emits $o$ at current input $i$.  A \emph{partition} $\Pi$ of $P$ divides $P$ into
 two or more nonempty components, as in a partitioned history
 (Definition~\ref{def:partitioned-history}).
 
 A \emph{participant run family} assigns to each of finitely many participants
-$p\in P$ an initial input and a canonical run whose emitted rows lie in $A_p$.
+$p\in P$ an initial input and a canonical run whose emitted rows lie in $E_p$.
 A participant whose run emits no output is \emph{silent}.  The family is
 \emph{separable under $\Pi$} when either participants in at least two
 components emit, or exactly one distinct row is emitted and some silent
@@ -35,18 +35,18 @@ emitted output.  It is \emph{monotone across partitions} when it is monotone
 across every partition of $P$.
 \end{definition}
 
-Monotonicity across partitions plays the role of Lifted Monotonicity for $A$
+Monotonicity across partitions plays the role of Lifted Monotonicity for $E$
 (Definition~\ref{def:lm-for-A}), restricted to the families a
 partition can separate.  If $\Spec$ satisfies Lifted Monotonicity for a relation that contains
-every $A_p$, it is monotone across partitions: the emitted rows of a family are
-rows of that relation at inputs below $j$.  So Lifted Monotonicity for $A$ suffices for
-the uniform deployment $A_p=A$, and Lifted Monotonicity suffices for every
+every $E_p$, it is monotone across partitions: the emitted rows of a family are
+rows of that relation at inputs below $j$.  So Lifted Monotonicity for $E$ suffices for
+the uniform deployment $E_p=E$, and Lifted Monotonicity suffices for every
 deployment.  Rows authorized only to $p$ can be emitted only by $p$'s run,
 whose emitted outputs form a chain (each output event keeps only rows refining
 it), so a family whose emitted rows are all authorized only to $p$ is
 separable only when it emits a single row.  The converse can therefore fail.
 For example, let $P=\{p,q\}$, let every fiber be $\{a,b\}$ ordered by equality,
-and let $A_p=S$ and $A_q=\varnothing$, so that $p$ alone names a leader.  A run
+and let $E_p=S$ and $E_q=\varnothing$, so that $p$ alone names a leader.  A run
 of $p$ emits at most one distinct output and $q$ never emits, so every separable
 family consists of one row $(i,a)$ or $(i,b)$ beside a silent $q$, and that
 output lies in $\fiber{j}$ for every \indesc $j$ of $i$.  So $\Spec$ is
@@ -58,7 +58,7 @@ participant.  The causal register of Appendix~\ref{app:registers} is a further
 example, with no single authority, of monotonicity across partitions without
 Lifted Monotonicity; it need not satisfy this condition, since a set of rows lacking
 a common \outnoun may also contain rows of other participants.  If
-$|P|\ge2$ and $A_p=S$ for every $p$, every pair of rows can be split across a
+$|P|\ge2$ and $E_p=S$ for every $p$, every pair of rows can be split across a
 partition and every single row paired with a silent participant at the common
 \indesc; since pairs of rows suffice for the common-\indesc condition
 (Appendix~\ref{app:pairs-suffice}), monotonicity across partitions is then
@@ -68,15 +68,15 @@ Lifted Monotonicity.
 \label{def:deployment-availability}
 Relative to a deployment, a system has \emph{Deployment Availability} when, in
 every partitioned history over $P$ it produces, each participant $p$, ending in
-state $(i,R)$, can emit each output in $R(i)\cap A_p(i)$ in some continuation
+state $(i,R)$, can emit each output in $R(i)\cap E_p(i)$ in some continuation
 local to $p$ (Definition~\ref{def:partition-notions}).
 \end{definition}
 
-This is Availability for $A_p$, one relation per participant.  For the uniform
-deployment $A_p=A$ it is Availability for $A$ on histories over $P$, and for
-$A_p=S$ it is Availability.
+This is Availability for $E_p$, one relation per participant.  For the uniform
+deployment $E_p=E$ it is Availability for $E$ on histories over $P$, and for
+$E_p=S$ it is Availability.
 
-A deployment is \emph{single-authority} when $A_q=\varnothing$ for every
+A deployment is \emph{single-authority} when $E_q=\varnothing$ for every
 participant $q$ but one, as in the leader example above.  Every separable family
 is then one row emitted by the single authority beside a silent participant, and
 monotonicity across partitions says only that each such row has a \outnoun at
@@ -103,22 +103,22 @@ Fix a deployment.  The following are equivalent.
 \end{proposition}
 
 \begin{proof}
-Fix $\Pi$, a separable family, and $j$, and let $E$ be the set of emitted
+Fix $\Pi$, a separable family, and $j$, and let $X$ be the set of emitted
 outputs.  By Lemma~\ref{lem:reconciliation}, the family is confluent at $j$ if
-and only if some $u\in\fiber{j}$ \outrel every output in $E$.  The two
+and only if some $u\in\fiber{j}$ \outrel every output in $X$.  The two
 conditions thus agree family by family.
 \end{proof}
 
 The proposition concerns canonical runs and does not use Deployment
 Availability.  It applies to the runs of a system as well: by
 Lemma~\ref{lem:canonical-equivalent}, each such run is observably equivalent to
-a canonical run with the same emitted rows, which therefore lie in $A_p$.  So if
+a canonical run with the same emitted rows, which therefore lie in $E_p$.  So if
 $\Spec$ is monotone across partitions, the outputs emitted by a separable
 family of runs of a partitioned history, as Deployment Availability permits,
 have a common \outnoun $u\in\fiber{j}$ at every common \indesc $j$.  It does not follow that the deployment authorizes any
 participant to emit $u$; confluence through legal output events of the
 deployment would additionally require that authority, a condition we do not
-impose.  With $|P|\ge2$ and $A_p=S$ for every $p$, item~(2) is Lifted
+impose.  With $|P|\ge2$ and $E_p=S$ for every $p$, item~(2) is Lifted
 Monotonicity, and the proposition is the step behind
 Corollary~\ref{cor:complete-cap-S} stating that separable families are confluent
 at every common \indesc exactly when Lifted Monotonicity holds.
@@ -170,7 +170,7 @@ partition $\{\{p\},\{q\}\}$ under any deployment authorizing these two reads.
 Under causal consistency the two replicas may serialize the concurrent writes
 differently, and one source map sends $r_p$ to $w_q(x,\catv)$ and $r_q$ to
 $w_p(x,\dog)$.  Under the deployment in which each replica answers only its own
-reads ($A_p$ holds the rows whose source map is defined only on reads of $p$),
+reads ($E_p$ holds the rows whose source map is defined only on reads of $p$),
 the causal register is monotone across partitions, for every history.  Let
 participant $p$'s run emit last the source map $\rho_p$ at input $i_p$, so that
 $\rho_p$ \outrel every output $p$ emitted, and let $j$ be a common \indesc.

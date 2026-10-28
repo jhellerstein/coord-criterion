@@ -368,11 +368,18 @@ proved it for a linearizable register~\cite{gilbert2002cap}.  Their theorem
 concerns one guarantee, not which guarantees can stay available and
 consistent through a partition.  Complete CAP answers that broader question for any declared guarantee.  A
 guarantee is encoded as an ordered specification together with a designated
-subset $A$ of its rows: those whose outputs must stay available.  Complete CAP says that such a guarantee can be kept
-available and consistent through partitions exactly when the specification
-satisfies Lifted Monotonicity for $A$: outputs of rows in $A$ emitted on
-different sides of a partition must have a common \outnoun at every common
-\indesc of their inputs.  When $A$ is every permitted row, this is Lifted
+subset $E$ of its rows: those whose outputs must stay available.  This
+separates what participants must be able to emit from what may be observed.
+Outputs of $E$ are \emph{explicit}: some participant must be able to emit them
+on its own.  The other permitted outputs are \emph{implicit}: none need ever be
+emitted, but an observer outside the system may collect outputs from every
+side, and the specification decides whether that collection is permitted.  It
+may be an implicit output that no participant could emit, as when each replica
+answers only its own reads.  Complete CAP says that such a guarantee can be
+kept available and consistent through partitions exactly when the
+specification satisfies Lifted Monotonicity for $E$: explicit outputs emitted
+on different sides of a partition must have a common \outnoun in the
+specification at every common \indesc of their inputs.  When $E$ is every permitted row, this is Lifted
 Monotonicity itself.  A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
@@ -390,16 +397,16 @@ participant set and every choice of initial inputs, each depending only on its
 participant's local history, and an adversarial environment that may supply
 any legal input event to any participant.
 
-\begin{definition}[Availability relation, Availability]
+\begin{definition}[Explicit relation, Availability]
 \label{def:partition-notions}
 A continuation of a partitioned history is \emph{local to} a participant $p$
 when the system produces it, it adds only events of $p$'s component and no
 input events, and none of its receives takes a message sent from another
-component.  An \emph{availability relation} $A\subseteq S$ is a set of rows
-$(i,o)$ whose output $o$ must stay available at input $i$; write $A(i)$ for
-its fiber $\{o:(i,o)\in A\}$.  The system has \emph{Availability for $A$}
+component.  An \emph{explicit relation} $E\subseteq S$ is a set of rows
+$(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
+its fiber $\{o:(i,o)\in E\}$.  The system has \emph{Availability for $E$}
 when, in every partitioned history it produces, each participant $p$, ending
-in state $(i,R)$, can emit each output in $R(i)\cap A(i)$ in some continuation
+in state $(i,R)$, can emit each output in $R(i)\cap E(i)$ in some continuation
 local to $p$.  \emph{Availability} is Availability for $S$.
 \end{definition}
 
@@ -411,32 +418,32 @@ participants' current inputs.  The continuation that confluence asks for need
 not stay partitioned and need not be produced by the system.
 \end{definition}
 
-\begin{definition}[Lifted Monotonicity for $A$]
+\begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
-$\Spec$ satisfies \emph{Lifted Monotonicity for $A$} when every finite set of rows of $A$ with
+$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \end{definition}
 
-With $A=S$, Lifted Monotonicity for $A$ is the common-\indesc condition
+With $E=S$, Lifted Monotonicity for $E$ is the common-\indesc condition
 (Definition~\ref{def:common-expansion-condition}).  Unlike Availability,
-Availability for a smaller $A$ can be met by a system whose output events issue commitments without coordination, as the remark after Corollary~\ref{cor:complete-cap-S} explains.
+Availability for a smaller $E$ can be met by a system whose output events issue commitments without coordination, as the remark after Corollary~\ref{cor:complete-cap-S} explains.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
-For an ordered specification $\Spec$ and an availability relation
-$A\subseteq S$, the following are equivalent:
+For an ordered specification $\Spec$ and an explicit relation
+$E\subseteq S$, the following are equivalent:
 \begin{enumerate}
-  \item some system has Availability for $A$ and Partition Consistency;
-  \item $\Spec$ satisfies Lifted Monotonicity for $A$.
+  \item some system has Availability for $E$ and Partition Consistency;
+  \item $\Spec$ satisfies Lifted Monotonicity for $E$.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
 Consider the system whose strategies emit each output of
-$A$ by the canonical output event of Section~\ref{sec:complete-calm}.  It has
-Availability for $A$, and Lifted Monotonicity for $A$ gives the outputs it emits a
+$E$ by the canonical output event of Section~\ref{sec:complete-calm}.  It has
+Availability for $E$, and Lifted Monotonicity for $E$ gives the outputs it emits a
 common \outnoun at every common \indesc of their inputs.  Conversely, given one
-participant per row of $A$, each in its own component, Availability lets each
+participant per row of $E$, each in its own component, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
 \outnoun.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
@@ -450,7 +457,7 @@ commitment, by $\Out{\varepsilon}{o}$.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
-With $A=S$, Lifted Monotonicity for $A$ is Lifted Monotonicity itself, and the
+With $E=S$, Lifted Monotonicity for $E$ is Lifted Monotonicity itself, and the
 exposure boundary makes every
 output of the commitment-free system available.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
@@ -459,14 +466,14 @@ A system might hope to keep more outputs available by issuing commitments,
 coordinating within each side of a partition.  It cannot: the impossibility
 direction of the proof holds for every system, commitment-free or not.  Nor
 does the system in the proof need coordination.  Under Lifted Monotonicity for
-$A$, the canonical event
-for an output of $A$ seals nothing and chooses only against outputs outside
-$A$, which the system never emits, so it is
-coordination-free (Definition~\ref{def:coordination-free}).  For $A=S$ it needs no
-commitment at all.  For a smaller $A$ such local choices can be necessary: if
-$o\in A(i)$ and $x\in\fiber{i}\setminus A(i)$ have no common \outnoun at $i$,
-emitting $o$ must choose against $x$.  When Lifted Monotonicity for $A$ fails, some
-output of $A$ either waits for another component, sacrificing Availability, or
+$E$, the canonical event
+for an explicit output seals nothing and chooses only against implicit
+outputs, which the system never emits, so it is
+coordination-free (Definition~\ref{def:coordination-free}).  For $E=S$ it needs no
+commitment at all.  For a smaller $E$ such local choices can be necessary: if
+$o\in E(i)$ and $x\in\fiber{i}\setminus E(i)$ have no common \outnoun at $i$,
+emitting $o$ must choose against $x$.  When Lifted Monotonicity for $E$ fails, some
+output of $E$ either waits for another component, sacrificing Availability, or
 is emitted independently at the cost of Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}

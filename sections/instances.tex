@@ -109,22 +109,23 @@ Inputs are ordered by downward-closed extension.  An output is a set of read
 answers, ordered by inclusion.  For an isolation level $L$, $S_L$ permits an
 output at an input when it extends to a history that answers every read,
 orders versions by timestamp, and exhibits none of the phenomena that $L$
-proscribes.  The availability relation $A$ is the replica's read rule above.
+proscribes.  The explicit relation $E$ holds, at each input, the answers that
+the read rule above gives.
 \end{definition}
 
 \begin{theorem}[HAT levels]
 \label{thm:hat-levels}
 Suppose each transaction's timestamp exceeds that of every version it reads.
-For read uncommitted and read committed, $A\subseteq S_L$ and $S_L$
-satisfies Lifted Monotonicity for $A$, so by Complete CAP these levels stay
+For read uncommitted and read committed, $E\subseteq S_L$ and $S_L$
+satisfies Lifted Monotonicity for $E$, so by Complete CAP these levels stay
 available and consistent through partitions.  For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
-serializability, no availability relation that answers every read satisfies
+serializability, no explicit relation that answers every read satisfies
 Lifted Monotonicity for it.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A read's answer under $A$ depends only on the events that precede it, so
+A read's answer under $E$ depends only on the events that precede it, so
 later input never changes it, and the timestamp condition rules out the
 dependency cycles of G0 and G1c.  For the converse, let two transactions at
 different replicas each read $x_0$ and write $x$.  Each replica's answer is
