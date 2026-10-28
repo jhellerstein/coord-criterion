@@ -136,7 +136,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-615 entries.
+618 entries.
 
 ### §2 Functional CALM
 
