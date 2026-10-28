@@ -588,24 +588,19 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i :
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
     canonical_equivalent h
 
-/-- *Canonical runs suffice*, example.  "Consider 2PL on input `{A,B,C}`, where
-`A` reads a key `x` that no transaction writes, and `B` waits for a lock that
-`A` holds on another key.  When `B` begins to wait, 2PL applies `order(A,B)` in
-a commitment event, before any output, keeping only the rows that can be
-completed without committing `B` before `A`.  The canonical run skips that
-event, so it keeps every row, including the one completed by `[B,A,C]`.  When
-2PL later reports `A`'s read, with no commitment, and emits `[A,C,B]`, it
-applies no further commitment ordering `A` and `B`, and the canonical run emits
-the same outputs; both end with the same table.  The lock issued its commitment
-to `A` before `B` earlier than any output required."
+/-- *Canonical runs suffice*, example.  "Consider 2PL on an input of three
+transactions `A`, `B`, `C` that have each issued their operations and requested
+commit, where `B` waits for a lock that `A` holds.  When `B` begins to wait,
+2PL applies `order(A,B)` in a commitment event, before any output, keeping only
+the rows that can be completed without committing `B` before `A`.  The
+canonical run skips that event, so it keeps every row, including the one
+completed by `[B,A,C]`.  When 2PL later emits `[A,C,B]`, it applies no further
+commitment ordering `A` and `B`, and the canonical run emits the same output;
+both end with the same table.  The lock issued its commitment to `A` before `B`
+earlier than any output required."
 
-**Not proved as quoted.**  Under Appendix G's specification, where inputs are
-operation sequences and further transactions may still arrive, reporting `A`'s
-read is itself a commitment (a transaction that arrives later, writes `x`, and
-commits before `A` would contradict it), so "reports `A`'s read, with no
-commitment" no longer holds.  Lean proves the example without the read
-(`CC.Txn.Partial.CommitEx.example_commit_event_ABC`), at any input `k` whose
-transactions `A`, `B`, `C` have each issued their operations and requested
+Lean (`CC.Txn.Partial.CommitEx.example_commit_event_ABC`), at any input `k`
+whose transactions `A`, `B`, `C` have each issued their operations and requested
 commit; rows are serial orders without aborts or reads:
 (a) the commitment event `commit([order(A,B)])` is a legal `B_2PL` step from
 the canonical state `σ₀` to `σ₁`; `σ₁` keeps exactly the rows of `σ₀` with a

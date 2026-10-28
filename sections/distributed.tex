@@ -209,14 +209,16 @@ runs.  Whether a specification needs coordination is a question about the
 seals and choices its outputs require, whatever mechanism a system uses to
 make them.
 
-Consider 2PL on input $\{A,B,C\}$, where $A$ reads a key $x$ that no
-transaction writes, and $B$ waits for a lock that $A$ holds on another
-key.  When $B$ begins to wait, 2PL applies $\mathsf{order}(A,B)$ in a
+Consider 2PL on an input of three transactions $A$, $B$, $C$ that have each
+issued their operations and requested commit, where $B$ waits for a lock that
+$A$ holds.  When $B$ begins to wait, 2PL applies $\mathsf{order}(A,B)$ in a
 commitment event, before any output, keeping only the rows that can be
 completed without committing $B$ before $A$.  The canonical run skips that
-event, so it keeps every row, including the one completed by $[B,A,C]$.  When 2PL later reports $A$'s read, with no commitment, and emits $[A,C,B]$, it
-applies no further commitment ordering $A$ and $B$, and the canonical run emits
-the same outputs; both end with the same table.  The lock issued its commitment to $A$ before $B$ earlier than any output required.
+event, so it keeps every row, including the one completed by $[B,A,C]$.  When
+2PL later emits $[A,C,B]$, it applies no further commitment ordering $A$ and
+$B$, and the canonical run emits the same output; both end with the same
+table.  The lock issued its commitment to $A$ before $B$ earlier than any
+output required.
 
 \subsection{Coordination}
 \label{sec:coordination}
