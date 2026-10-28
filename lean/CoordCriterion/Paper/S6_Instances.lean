@@ -292,9 +292,8 @@ deliveries of committed writes to replicas.  Inputs are ordered by
 downward-closed extension, and outputs are sets of read answers, ordered by
 inclusion.  For an isolation level `L`, defined by the phenomena it
 proscribes, `S_L` permits an output when it extends to a history that answers
-every read, orders versions by timestamp, and exhibits none of those
-phenomena.  The explicit relation `E` holds, at each input, the answers the
-read rule gives.")
+every read, orders versions by timestamp, and exhibits none of them.  The
+explicit relation `E` holds, at each input, the answers the read rule gives.")
 Lean: inputs `HATSpec.Inp true` (events `rd`, `cm`, `dl`; legality `WF` plus
 the timestamp condition of Thm. `thm:hat-levels`, so that the theorem's
 hypothesis is part of the input domain; of program order only "reads precede
@@ -397,10 +396,10 @@ transaction begins, as in the pseudocode of the extended version of Bailis et
 al., a transaction that reads a version with a higher timestamp and then
 overwrites it forms a G1c cycle, so read committed's read rule is not
 contained in `S_L`.  Taking the timestamp at commit, above every version
-read, removes the cycle."  (CIDR version: "The timestamp condition is needed:
-with timestamps fixed when a transaction begins, as in the pseudocode of
-[the extended version], a transaction that reads a higher-timestamped version
-and then overwrites it forms a G1c cycle.")  Lean: (1) in the specification
+read, removes the cycle."  (CIDR version: "The condition is needed: with
+timestamps fixed at transaction begin, as in the pseudocode of [the extended
+version], a transaction that reads a higher-timestamped version and overwrites
+it forms a G1c cycle.")  Lean: (1) in the specification
 without the timestamp condition (`Inp false`), an input where `T₁` reads
 `T₂`'s version `(1,2)` and then commits `x` with timestamp `(1,1)` has HAT's
 answer outside `S_RC`; (2) the pseudocode itself, run with timestamps fixed at
