@@ -3,7 +3,7 @@ import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.CAP.ChosenAvailability
 
 /-!
-# Paper Appendix F, "Choosing the Availability Relation" (`appendices/cap-response.tex`)
+# Paper Appendix F, "Choosing the Explicit Relation" (`appendices/cap-response.tex`)
 
 Statement layer for Appendix `app:cap-response`, in paper order: the response
 obligation, continuations within a component, Response Availability, Response
@@ -325,9 +325,9 @@ theorem «def:response-interface/confluence» (T : Table I O) (hTS : ∀ i o, T 
         ∀ j, (∀ x ∈ fam, x.2.2.cur ≼ j) → ConfluentAt (fam.map (fun x => x.2.2)) j :=
   consistentOn_iff_confluent T hTS
 
-/-- "A response interface is an availability relation that a system can always
+/-- "A response interface is an explicit relation that a system can always
 serve.  Consider the system of the proof of Theorem `thm:complete-cap` for
-`A = T` … So every participant's fiber intersects `T`, and Availability for
+`E = T` … So every participant's fiber intersects `T`, and Availability for
 `T` gives Answering.  The same argument at an input `k ⪰ i` leaves a row at `k`,
 which gives Input acceptance."  Lean: `respSystem T` has Availability for
 `T`; at the end of every history it produces, each participant's current
@@ -367,7 +367,7 @@ theorem «thm:complete-cap-response» (sp : Spec I O) (D : Type) (Q : Obligation
   ⟨complete_cap_response_end sp D Q, response_form_iff_chosen sp D Q⟩
 
 /-- Proof of Theorem `thm:complete-cap-response`, (2⇒1): "Take the system of
-the proof of Theorem `thm:complete-cap` for `A = T`.  It is replicated, and
+the proof of Theorem `thm:complete-cap` for `E = T`.  It is replicated, and
 … has Answering and Input acceptance. … Lifted Monotonicity for `T` gives Response
 Partition Consistency."  Lean: `respSystem T`. -/
 theorem «thm:complete-cap-response/proof-sufficiency» (Q : Obligation sp) (T : Table I O)
@@ -420,7 +420,7 @@ theorem «app:cap-response/without-replication/local-init-needed» :
 
 /-! ## Choosing versus requiring every output -/
 
-/-- "Theorem `thm:complete-cap` with `A = S` requires every permitted output
+/-- "Theorem `thm:complete-cap` with `E = S` requires every permitted output
 to stay available; Theorem `thm:complete-cap-response` lets the system choose
 which outputs to serve.  Lifted Monotonicity implies the conditions of that
 theorem for every uniform

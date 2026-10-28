@@ -2,7 +2,7 @@ import CoordCriterion.CAP.Forced
 import CoordCriterion.CAP.ResponseAvailability
 
 /-!
-# Complete CAP for a declared availability relation
+# Complete CAP for a declared explicit relation
 
 A guarantee may declare, besides its specification `S`, an *availability
 relation* `A ⊆ S`: the outputs a system must keep emittable.  Availability for
@@ -186,7 +186,7 @@ theorem pc_resp (A : Table I O) (hcons : ConsistentOn sp A) :
 
 /-! ## The theorem -/
 
-/-- **Complete CAP for an availability relation.**  For `A ⊆ S`: some system
+/-- **Complete CAP for an explicit relation.**  For `A ⊆ S`: some system
 has Availability for `A` and Partition Consistency iff `S` is consistent on
 `A`.  The forward direction needs only a common refinement of the emitted
 outputs, for any system. -/

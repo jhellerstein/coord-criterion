@@ -6,7 +6,7 @@ import CoordCriterion.Appendix.RealTimeCausal
 import CoordCriterion.Appendix.DeploymentFor
 
 /-!
-# Paper, Appendix E: Deployments: One Availability Relation per Participant
+# Paper, Appendix E: Deployments: One Explicit Relation per Participant
 
 Source: `appendices/deployment.tex` (Appendix `app:deployment`, including
 subsections `app:registers` and `app:rtc`).
@@ -24,7 +24,7 @@ one-line references to the library (`CoordCriterion/Appendix/Deployment*.lean`,
 Conventions used throughout (see `Appendix/Deployment.lean`, modeling
 choices):
 * the participant set `P` is `Fin n`; a deployment is `A : Fin n → Table I O`
-  with `A p ⊆ S`;
+  with `A p ⊆ S` (the paper's `E_p` is `A p`);
 * a partition `Π` is a labelling `comp : Fin n → Nat` with at least two
   distinct labels (`IsPartition`); components are the label classes;
 * a participant run family is `F : Fin n → Option (PRun sp)`: participant `p`
@@ -44,16 +44,16 @@ set_option linter.unusedSectionVars false
 section Deployment
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
-/-! ## Appendix E: Deployments: One Availability Relation per Participant -/
+/-! ## Appendix E: Deployments: One Explicit Relation per Participant -/
 
 /-- **Definition `def:deployment`** (Deployment, emitted rows, participant
 run family, silent participant, separable run family).
 "A *deployment* over a finite participant set `P` assigns to each `p ∈ P` an
-availability relation `A_p ⊆ S`, the rows `p` may emit: `p` performs an output event `Out_γ(o)`
-at current input `i` only if `(i,o) ∈ A_p`."
+explicit relation `E_p ⊆ S`, the rows `p` may emit: `p` performs an output event `Out_γ(o)`
+at current input `i` only if `(i,o) ∈ E_p`."
 
-Lean: `Deployment sp n` has a field `A : Fin n → Table I O` and a proof
-`sub : A p ⊆ S`.  The restriction on output events is imposed where families
+Lean: `Deployment sp n` has a field `A : Fin n → Table I O` (the paper's
+`E_p` is `A p`) and a proof `sub : A p ⊆ S`.  The restriction on output events is imposed where families
 are used (`Authorized`). -/
 abbrev «def:deployment» (sp : Spec I O) (n : Nat) : Type := CC.Deploy.Deployment sp n
 
@@ -78,11 +78,11 @@ theorem «def:deployment/partition» (comp : Fin n → Nat) :
 
 /-- Def. `def:deployment`: "A *participant run family* assigns to each of
 finitely many participants `p ∈ P` an initial input and a canonical run whose
-emitted rows lie in `A_p`.  A participant whose run emits no output is
+emitted rows lie in `E_p`.  A participant whose run emits no output is
 *silent*."
 
 Lean: a family is `Fin n → Option (PRun sp)`; the condition "emitted rows lie
-in `A_p`" is `Authorized Dp F`, kept as a separate hypothesis. -/
+in `E_p`" is `Authorized Dp F`, kept as a separate hypothesis. -/
 theorem «def:deployment/family» (Dp : Deployment sp n) (F : Family sp n) :
     (Authorized Dp F ↔ ∀ p r, Emits F p r → Dp.A p r.1 r.2) ∧
     (∀ q, Silent F q ↔ ∃ m, F q = some m ∧ m.rows = []) :=
@@ -111,7 +111,7 @@ theorem «def:monotone-across-partitions» (Dp : Deployment sp n) :
     (MonoAcrossPartitions Dp ↔ ∀ comp, IsPartition comp → MonoAcross Dp comp) :=
   ⟨fun _ => Iff.rfl, Iff.rfl⟩
 
-/-- "If `S` satisfies Lifted Monotonicity for a relation that contains every `A_p`, it is
+/-- "If `S` satisfies Lifted Monotonicity for a relation that contains every `E_p`, it is
 monotone across partitions: the emitted rows of a family are rows of that
 relation at inputs below `j`." -/
 theorem «app:deployment/lm-for-implies-mono-across» (Dp : Deployment sp n)
@@ -119,11 +119,11 @@ theorem «app:deployment/lm-for-implies-mono-across» (Dp : Deployment sp n)
     MonoAcrossPartitions Dp :=
   monoAcrossPartitions_of_consistentOn Dp B hB hc
 
-/-- "So Lifted Monotonicity for `A` suffices for the uniform deployment `A_p = A` …" -/
-theorem «app:deployment/uniform-mono-across» (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
-    (hc : CAP.ConsistentOn sp A) :
-    MonoAcrossPartitions (Deployment.uniform (n := n) A hAS) :=
-  monoAcrossPartitions_uniform A hAS hc
+/-- "So Lifted Monotonicity for `E` suffices for the uniform deployment `E_p = E` …" -/
+theorem «app:deployment/uniform-mono-across» (E : Table I O) (hES : ∀ i o, E i o → sp.S i o)
+    (hc : CAP.ConsistentOn sp E) :
+    MonoAcrossPartitions (Deployment.uniform (n := n) E hES) :=
+  monoAcrossPartitions_uniform E hES hc
 
 /-- "… and Lifted Monotonicity suffices for every deployment." -/
 theorem «app:deployment/lm-implies-mono-across» (hlm : sp.LiftedMono)
@@ -156,7 +156,7 @@ end Deployment
 /-! ### The leader example -/
 
 /-- "Let `P = {p,q}`, let every fiber be `{a,b}` ordered by equality, and let
-`A_p = S` and `A_q = ∅`, so that `p` alone names a leader."
+`E_p = S` and `E_q = ∅`, so that `p` alone names a leader."
 
 Lean: `leadSpec I` over any input poset `I`, outputs `Disc Bool` (equality
 order; `a = ⟨false⟩`, `b = ⟨true⟩`); `leadD I` with `p = 0`, `q = 1`. -/
@@ -228,7 +228,7 @@ theorem «app:deployment/further-examples/condition-fails» {I : Type} [PO I] (i
 section Deployment3
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
-/-- "If `|P| ≥ 2` and `A_p = S` for every `p`, every pair of rows can be split
+/-- "If `|P| ≥ 2` and `E_p = S` for every `p`, every pair of rows can be split
 across a partition and every single row paired with a silent participant at
 the common expansion; since pairs of rows suffice for the common-expansion
 condition (Appendix `app:pairs-suffice`), monotonicity across partitions is
@@ -247,7 +247,7 @@ theorem «app:deployment/full-deployment/pairs-suffice»
 /-- **Definition `def:deployment-availability`** (Deployment Availability).
 "Relative to a deployment, a system has *Deployment Availability* when, in
 every partitioned history over `P` it produces, each participant `p`, ending
-in state `(i,R)`, can emit each output in `R(i) ∩ A_p(i)` in some
+in state `(i,R)`, can emit each output in `R(i) ∩ E_p(i)` in some
 continuation local to `p`."
 
 Lean: `DeploymentAvailabilityEnd`, unfolded below; it is equivalent to the cut
@@ -268,18 +268,18 @@ theorem «def:deployment-availability» {D : Type} (Sys : CAP.System sp D)
     (DeploymentAvailability Sys Dp ↔ DeploymentAvailabilityEnd Sys Dp) :=
   ⟨Iff.rfl, deploymentAvailability_iff_end Sys Dp⟩
 
-/-- "This is Availability for `A_p`, one relation per participant.  For the
-uniform deployment `A_p = A` it is Availability for `A` on histories over
-`P` …"  `AvailabilityForAt A Sys n` is `CAP.AvailabilityFor A` restricted to
+/-- "This is Availability for `E_p`, one relation per participant.  For the
+uniform deployment `E_p = E` it is Availability for `E` on histories over
+`P` …"  `AvailabilityForAt E Sys n` is `CAP.AvailabilityFor E` restricted to
 histories over `Fin n`. -/
 theorem «app:deployment/uniform-availability» {D : Type} (Sys : CAP.System sp D)
-    (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o) :
-    (DeploymentAvailabilityEnd Sys (Deployment.uniform (n := n) A hAS) ↔
-      AvailabilityForAt A Sys n) ∧
-    (CAP.AvailabilityFor A Sys ↔ ∀ m, AvailabilityForAt A Sys m) :=
-  ⟨deploymentAvailability_uniform Sys A hAS, availabilityFor_iff_at A Sys⟩
+    (E : Table I O) (hES : ∀ i o, E i o → sp.S i o) :
+    (DeploymentAvailabilityEnd Sys (Deployment.uniform (n := n) E hES) ↔
+      AvailabilityForAt E Sys n) ∧
+    (CAP.AvailabilityFor E Sys ↔ ∀ m, AvailabilityForAt E Sys m) :=
+  ⟨deploymentAvailability_uniform Sys E hES, availabilityFor_iff_at E Sys⟩
 
-/-- "… and for `A_p = S` it is Availability."  `AvailabilityAt Sys n` is
+/-- "… and for `E_p = S` it is Availability."  `AvailabilityAt Sys n` is
 `CAP.Availability` restricted to histories over `Fin n`
 (`CAP.Availability Sys ↔ ∀ n, AvailabilityAt Sys n`). -/
 theorem «app:deployment/full-deployment-availability» {D : Type} (Sys : CAP.System sp D)
@@ -291,7 +291,7 @@ theorem «app:deployment/full-deployment-availability» {D : Type} (Sys : CAP.Sy
 
 /-! ### Single-authority deployments -/
 
-/-- "A deployment is *single-authority* when `A_q = ∅` for every participant
+/-- "A deployment is *single-authority* when `E_q = ∅` for every participant
 `q` but one, as in the leader example above." -/
 theorem «app:deployment/single-authority/def» (Dp : Deployment sp n) (p₀ : Fin n) :
     SingleAuthority Dp p₀ ↔ ∀ q, q ≠ p₀ → ∀ i o, ¬ Dp.A q i o :=
@@ -355,7 +355,7 @@ theorem «thm:complete-cap-deployment» (Dp : Deployment sp n) :
 
 /-- Proof of Prop. `thm:complete-cap-deployment`: "By Lemma
 `lem:reconciliation`, the family is confluent at `j` if and only if some
-`u ∈ S(j)` refines every output in `E`.  The two conditions thus agree family
+`u ∈ S(j)` refines every output in `X`.  The two conditions thus agree family
 by family."  Lean: the per-family step in survivor form (some row at `j`
 survives in every remainder table iff the emitted outputs have a common
 expansion in `S(j)`), and the proposition in survivor form. -/
@@ -369,7 +369,7 @@ theorem «thm:complete-cap-deployment/proof» (Dp : Deployment sp n) :
 /-- "The proposition concerns canonical runs and does not use Deployment
 Availability.  It applies to the runs of a system as well: by Lemma
 `lem:canonical-equivalent`, each such run is observably equivalent to a
-canonical run with the same emitted rows, which therefore lie in `A_p`."
+canonical run with the same emitted rows, which therefore lie in `E_p`."
 
 Lean: a system participant run (`SRun`: a `CAP` local run from a canonical
 state, with sends, receives and output events carrying arbitrary commitments)
@@ -407,7 +407,7 @@ end Deployment3
 additionally require that authority, a condition we do not impose."
 
 Lean witness: one input, fiber `{a, b, top}` with `a, b < top` (`CAP.triSpec`),
-`A_0 = {a}`, `A_1 = {b}`: the specification is monotone across partitions, the
+`E_0 = {a}`, `E_1 = {b}`: the specification is monotone across partitions, the
 family "`0` emits `a`, `1` emits `b`" is authorized and separable, its only
 common refinement is `top`, and no participant may emit `top`. -/
 theorem «app:deployment/unauthorized-refinement» :
@@ -417,7 +417,7 @@ theorem «app:deployment/unauthorized-refinement» :
       (∀ u, (∀ p r, Emits F p r → r.2 ≼ u) → u = .top) ∧ ∀ p, ¬ triD.A p () .top :=
   unauthorized_refinement
 
-/-- "With `|P| ≥ 2` and `A_p = S` for every `p`, item (2) is Lifted
+/-- "With `|P| ≥ 2` and `E_p = S` for every `p`, item (2) is Lifted
 Monotonicity, and the proposition is the step behind Corollary
 `cor:complete-cap-S` stating that separable families are confluent at every
 common expansion exactly when Lifted Monotonicity holds." -/
@@ -525,7 +525,7 @@ section Registers2
 variable {α : Type} {n : Nat}
 
 /-- "Under the deployment in which each replica answers only its own reads
-(`A_p` holds the rows whose source map is defined only on reads of `p`), the
+(`E_p` holds the rows whose source map is defined only on reads of `p`), the
 causal register is monotone across partitions, for every history. … Separability
 is not used."
 

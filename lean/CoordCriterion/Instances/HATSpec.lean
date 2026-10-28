@@ -6,7 +6,7 @@ import CoordCriterion.CAP.AvailabilityFor
 # Highly available transactions as a specification (Sec. `hat-instance`)
 
 HAT (Bailis et al., VLDB 2014) under its own assumptions, with partial
-replication, encoded as a specification with an availability relation, so
+replication, encoded as a specification with an explicit relation, so
 that Theorem `thm:complete-cap` (`CAP.complete_cap_for`) decides which
 isolation levels stay available.
 
@@ -53,7 +53,7 @@ levels are HAT's, item-only (predicate phenomena omitted): `RU` (G0), `RC`
 observation phenomena not modeled), `RR` (G0, G1, G2-item, which here is G2),
 and `SER` (Adya's PL-3, here the same set as `RR`).
 
-**The availability relation** `hatA` is HAT's server rule (App. B `GET` with
+**The explicit relation** `hatA` is HAT's server rule (App. B `GET` with
 `ts_required = ⊥`), evaluated at the read's place in happens-before: answer
 with the highest timestamp among the writes of `k` delivered to `r` before
 the read, or the initial version.  It answers every read exactly once and
@@ -63,7 +63,7 @@ Results: `hat_rule` (the rule answers every read once and never revises an
 answer); `rc_available` (under the timestamp condition, RU and RC satisfy
 Lifted Monotonicity for `hatA`, so some system has Availability for `hatA`
 and Partition Consistency); `lostUpdate_unavailableP` (for any proscribed
-set containing Lost Update, e.g. SI, RR, SER, no availability relation that
+set containing Lost Update, e.g. SI, RR, SER, no explicit relation that
 answers every read does, using HAT's pair of concurrent read-modify-writes at
 two replicas); `timestamp_condition_needed` (without the condition, `hatA`
 is not contained in `S_RC`).  `serial_clean` shows every input has a
@@ -439,7 +439,7 @@ def specP (P : (j : Inp lam) → CH j → Prop) (hP : ∀ j, ¬ P j (serial j)) 
 proscribes. -/
 def spec (L : Level) : Spec (Inp lam) (St Fact) := specP (Proscribed L) fun j => serial_clean j L
 
-/-! ## HAT's server rule as the availability relation -/
+/-! ## HAT's server rule as the explicit relation -/
 
 /-- Versions `GET` may see at read `e`: the initial one, or a write of `k`
 delivered to `e`'s replica before `e`. -/
@@ -455,7 +455,7 @@ def Ans (j : Inp lam) (e : Nat) (v : Ts) : Prop := Cand j e v ∧ ∀ v', Cand j
 def hatOut (j : Inp lam) : St Fact
   | .read e v => Ans j e v
 
-/-- The availability relation: the rows `(j, hatOut j)`. -/
+/-- The explicit relation: the rows `(j, hatOut j)`. -/
 def hatA : Table (Inp lam) (St Fact) := fun j o => o = hatOut j
 
 theorem ans_exists (j : Inp lam) {e : Nat} (he : IsRd j e) : ∃ v, Ans j e v := by
