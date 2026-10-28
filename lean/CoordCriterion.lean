@@ -37,6 +37,9 @@ import CoordCriterion.Instances.QueryRefinements
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
 import CoordCriterion.Instances.IOMachineCofinal
+import CoordCriterion.Instances.HATRC
+import CoordCriterion.Instances.HATSpec
+import CoordCriterion.Instances.HATUnion
 -- Figures of §2–§3 and the discussion
 import CoordCriterion.Figures
 -- §5 and Appendix D composition

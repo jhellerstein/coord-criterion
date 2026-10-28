@@ -5,6 +5,7 @@ import CoordCriterion.CALM.Lemmas
 import CoordCriterion.Instances.StateMachine
 import CoordCriterion.Instances.IOMachine
 import CoordCriterion.Instances.IOMachineCofinal
+import CoordCriterion.Instances.HATSpec
 
 /-!
 # Paper §6, "Instances Across the Literature" (`sections/instances.tex`)
@@ -17,7 +18,7 @@ it formalizes.
 * Numbered results and displayed equations are named by their LaTeX label
   (`«prop:iconfluence-lm»`, …).
 * Unlabeled claims are named `«<enclosing label>/<slug>»`, e.g.
-  `«sec:hat-instance/serializability-cycle»`.
+  `«sec:iconfluence-instance/iconfluence-is-consistency»`.
 * Every proof is a pointer to the library (`Instances/Examples.lean`,
   `Instances/QueryRefinements.lean`, `Instances/InvariantConfluence.lean`,
   `Instances/BailisDefinition.lean`, `Instances/StateMachine.lean`,
@@ -41,9 +42,10 @@ namespace Paper
 open CC.Comp (Monotone graph)
 
 /-! The opening paragraph ("Complete CALM provides a unified lens for many
-results across literatures.  Each setting below declares an input, an output,
-and their orders before applying either theorem.") frames the section; it
-states no claim of its own.
+results across literatures.  For the key related ideas, we provide mappings
+here to our specification model.  Each setting declares an input, an output,
+and their orders before applying either CALM theorem.") frames the section;
+it states no claim of its own.
 
 ## Query monotonicity (`sec:query-instance`)
 
@@ -232,7 +234,7 @@ theorem «sec:crdt-instance/two-phase» :
       (graph (Inst.st (Inst.emp, Inst.emp) : Inst.FSet (Inst.PS × Inst.PS) → Inst.PS × Inst.PS)).Consistent :=
   ⟨Inst.st_U0, Inst.st_U1, Inst.twoPhase_unsafe⟩
 
-/-- Sec. `sec:crdt-instance`: "CRDT states form a join-semilattice."  Lean: a
+/-- Sec. `sec:crdt-instance`: "CRDT states form a join-semilattice …"  Lean: a
 merge that is commutative, associative, and idempotent orders states by
 `x ≼ y ⟺ merge x y = y`; this relation is a partial order and `merge a b` is
 the least upper bound of `a` and `b`. -/
@@ -242,9 +244,9 @@ theorem «sec:crdt-instance/semilattice» {D : Type} (m : Inst.CAI D) :
       ∀ a b, le a (m.merge a b) ∧ le b (m.merge a b) ∧ ∀ c, le a c → le b c → le (m.merge a b) c :=
   Inst.cai_semilattice m
 
-/-- Sec. `sec:crdt-instance`: "Observations `q` need less: Complete CALM
-requires only some common refinement of query outputs
-(Section `sec:lifted-monotonicity`), not a least one."  Lean: on the state
+/-- Sec. `sec:crdt-instance`: "CRDT states form a join-semilattice, but `q`
+needs less: Complete CALM requires only some common refinement of query
+outputs (Section `sec:lifted-monotonicity`), not a least one."  Lean: on the state
 lattice `B2 × B2`, a monotone observation `qY` into a five-element order makes
 `q ∘ s` consistent, yet its outputs `a = q(s({(tt,ff)}))` and
 `b = q(s({(ff,tt)}))` have common refinements (`c`, and also `d`) but no
@@ -259,80 +261,158 @@ theorem «sec:crdt-instance/some-refinement» :
 
 /-! ## Highly available transactions (`sec:hat-instance`)
 
-The opening paragraph (inputs are request sets, outputs are fact sets, both
-under inclusion; the isolation level or session guarantee determines which
-fact sets are permitted) is the model of `Inst.factSpec allowed P`: at input
-`i` expose any fact set `F ⊆ allowed i` satisfying the isolation predicate
-`P`.  The second paragraph ("The ingredients of highly available transactions
-(HAT) then come apart"), on the response obligation and on sticky
-availability as a deployment, points to App. `app:cap-response` and Prop.
-`thm:complete-cap-deployment`; it states no claim proved here. -/
+The opening paragraph ("Bailis et al. define isolation levels by Adya's
+phenomena, adding sessions and per-item dependencies … We take their
+assumptions as given.  Items are partially replicated, and a client sends
+each operation to some replica of its item.  A transaction's writes carry a
+unique client timestamp, and versions are ordered by timestamp, last writer
+wins.  The system never aborts a transaction on its own.  A replica answers a
+read with the highest-timestamped committed write of the item that it has
+received.") fixes the model of `Instances/HATSpec.lean`; the read rule is
+`HATSpec.hatOut`.  The closing sentence on session guarantees ("Session
+guarantees, which Bailis et al. achieve under sticky availability, are
+deployments in our terms (Proposition `thm:complete-cap-deployment`); we do
+not treat them here.") is argued only in prose. -/
 
-/-- Paragraph "Read committed": "Under read committed, a transaction reads
-only committed versions.  Suppose two separated replicas run transactions on
-disjoint keys.  One exposes `read(T₁,x,0)` and `TxCommit(T₁)`, and the other
-exposes `read(T₂,y,0)` and `TxCommit(T₂)`.  Each read saw a committed version, so
-the union of the four facts contains no dirty read and is itself permitted.
-It is a common refinement of what the two replicas exposed."  Lean: each side
-and their union are read committed, and the read-committed specification
-satisfies Lifted Monotonicity and is consistent for any monotone
-`allowed`. -/
-theorem «sec:hat-instance/read-committed» {I : Type} [PO I] (allowed : I → IConf.St Inst.Fact)
-    (hmono : Monotone allowed) :
-    (Inst.RC Inst.acc1 ∧ Inst.RC Inst.acc2 ∧ Inst.RC (Inst.acc1.union Inst.acc2)) ∧
-      (Inst.factSpec allowed Inst.RC Inst.rc_empty).LiftedMono ∧
-      (Inst.factSpec allowed Inst.RC Inst.rc_empty).Consistent :=
-  ⟨Inst.accumulating_example, Inst.rc_liftedMono_consistent allowed hmono⟩
+/-- **Definition `def:hat-spec`** (HAT specification): "An input is a history
+of received events ordered by happens-before: reads, each tagged with its
+replica; commits, each with its client timestamp and write set; and
+deliveries of committed writes to replicas.  Events follow each client's
+program order and each replica's arrival order, and a transaction's reads
+precede its commit, which precedes its deliveries.  Inputs are ordered by
+downward-closed extension.  An output is a set of read answers, ordered by
+inclusion.  For an isolation level `L`, `S_L` permits an output at an input
+when it extends to a history that answers every read, orders versions by
+timestamp, and exhibits none of the phenomena that `L` proscribes.  The
+availability relation `A` is the replica's read rule above."  (CIDR version:
+"An input is a history of received events ordered by happens-before: reads
+tagged with their replica, commits with their timestamp and write set, and
+deliveries of committed writes to replicas.  Inputs are ordered by
+downward-closed extension, and outputs are sets of read answers, ordered by
+inclusion.  For an isolation level `L`, defined by the phenomena it
+proscribes, `S_L` permits an output when it extends to a history that answers
+every read, orders versions by timestamp, and exhibits none of those
+phenomena.  The availability relation `A` is the replica's read rule.")
+Lean: inputs `HATSpec.Inp true` (events `rd`, `cm`, `dl`; legality `WF` plus
+the timestamp condition of Thm. `thm:hat-levels`, so that the theorem's
+hypothesis is part of the input domain; of program order only "reads precede
+their commit" is required); `S_L = HATSpec.spec L`; `A = HATSpec.hatA`, the
+rows `(j, hatOut j)`.  A history (`HATSpec.CH`) returns, for each read, the
+initial version or one installed by another committed transaction; levels
+are item-only (`HATSpec.Level`: RU, RC, SI, RR, SER). -/
+abbrev «def:hat-spec» (L : HATSpec.Level) : Spec (HATSpec.Inp true) (IConf.St HATSpec.Fact) :=
+  HATSpec.spec L
 
-/-- Paragraph "Serializability": `T₁` reads `x = 0`, writes `y = 1`, commits;
-`T₂` reads `y = 0`, writes `x = 1`, commits.  "Each replica's facts are
-permitted on their own.  `T₁`'s read places `T₁` before `T₂` in any serial
-explanation, and `T₂`'s read places `T₂` before `T₁`.  So no serial order
-explains both sets of facts, and no permitted output contains them both."
-Lean: each side is serializable; no fact set
-containing both sides (and supported by the requests) is serializable; hence
-the serializable specification violates Lifted Monotonicity and is not
-consistent. -/
-theorem «sec:hat-instance/serializability-cycle» :
-    (Inst.Ser Inst.ser1 ∧ Inst.Ser Inst.ser2 ∧
-        ∀ G : IConf.St Inst.Fact, Inst.ser1 ≼ G → Inst.ser2 ≼ G → G ≼ Inst.serAllowed → ¬ Inst.Ser G) ∧
-      ¬ (Inst.factSpec (fun i : IConf.St Inst.Fact => i) Inst.Ser Inst.ser_empty).LiftedMono ∧
-      ¬ (Inst.factSpec (fun i : IConf.St Inst.Fact => i) Inst.Ser Inst.ser_empty).Consistent :=
-  ⟨Inst.serializability_cycle, Inst.serializable_spec_not_consistent⟩
+/-- Def. `def:hat-spec`: "Inputs are ordered by downward-closed extension."
+Lean: inputs are closed under the order: a downward-closed sub-history of a
+legal input is legal, and satisfies the timestamp condition if the input
+does. -/
+theorem «def:hat-spec/inputs-closed» {a b : IConf.Hist HATSpec.Ev} (hab : a ≼ b) :
+    (HATSpec.WF b → HATSpec.WF a) ∧ (HATSpec.Lamport b → HATSpec.Lamport a) :=
+  ⟨HATSpec.wf_down hab, HATSpec.lamport_down hab⟩
 
-/-- Paragraph "Snapshot isolation": for concurrent writers `T₁, T₂` of `x`,
-"Each replica's commit fact is permitted on its own.  The first-committer-wins
-rule of snapshot isolation lets only one of two concurrent writers of `x`
-commit, so no permitted output contains both commit facts."
-Lean: each local commit is permitted, no fact set containing both is, and
-the specification is not consistent. -/
-theorem «sec:hat-instance/snapshot-isolation» :
-    Inst.FCW Inst.fcw1 ∧ Inst.FCW Inst.fcw2 ∧
-      (∀ G : IConf.St Inst.Fact, Inst.fcw1 ≼ G → Inst.fcw2 ≼ G → ¬ Inst.FCW G) ∧
-      ¬ (Inst.factSpec (fun i : IConf.St Inst.Fact => i) Inst.FCW (fun h => h.1)).Consistent :=
-  Inst.snapshot_fcw
+/-- Def. `def:hat-spec`: "The availability relation `A` is the replica's read
+rule above", i.e. "A replica answers a read with the highest-timestamped
+committed write of the item that it has received."  Lean: `hatOut j` answers
+read event `e` with the highest timestamp among the writes of its item
+delivered to its replica before `e` (or the initial version); every read gets
+exactly one answer. -/
+theorem «def:hat-spec/read-rule» :
+    ∀ (j : HATSpec.Inp true) e, HATSpec.IsRd j e → (∃ v, HATSpec.hatOut j (.read e v)) ∧
+      ∀ v v', HATSpec.hatOut j (.read e v) → HATSpec.hatOut j (.read e v') → v = v' :=
+  HATSpec.hat_rule.1
 
-/-- The boundary paragraph: "When the permitted fact sets are closed under
-union, as for read committed here, whatever separated replicas expose has a
-common refinement, so the guarantee stays available.  Serializability and
-first-committer-wins instead exclude some combinations of facts that
-separated replicas can each expose."  Lean:
-(1) for any isolation predicate `P` closed under union, the fact-set
-specification satisfies Lifted Monotonicity; (2) two rows below a common
-input `j` with no permitted common upper bound at `j` refute Lifted
-Monotonicity and consistency.  (Availability then follows from
-Thm. `thm:complete-cap`; that emitting either side requires a choice is
-Prop. `thm:commitments-require-coordination`, both in the general theory.) -/
-theorem «sec:hat-instance/boundary» {I Φ : Type} [PO I] (allowed : I → IConf.St Φ)
-    (P : IConf.St Φ → Prop) (hP0 : P Inst.noFacts) :
-    (Monotone allowed → (∀ F G, P F → P G → P (F.union G)) →
-        (Inst.factSpec allowed P hP0).LiftedMono) ∧
-      ∀ {i₁ i₂ j : I} {F₁ F₂ : IConf.St Φ}, i₁ ≼ j → i₂ ≼ j →
-        (Inst.factSpec allowed P hP0).S i₁ F₁ → (Inst.factSpec allowed P hP0).S i₂ F₂ →
-        (∀ G, F₁ ≼ G → F₂ ≼ G → G ≼ allowed j → ¬ P G) →
-        ¬ (Inst.factSpec allowed P hP0).LiftedMono ∧ ¬ (Inst.factSpec allowed P hP0).Consistent :=
-  ⟨fun hm hU => Inst.factSpec_liftedMono allowed hm P hP0 hU,
-    fun h₁ h₂ r₁ r₂ hno => Inst.factSpec_not_liftedMono allowed P hP0 h₁ h₂ r₁ r₂ hno⟩
+/-- **Theorem `thm:hat-levels`** (HAT levels): "Suppose each transaction's
+timestamp exceeds that of every version it reads.  For read uncommitted and
+read committed, `A ⊆ S_L` and `S_L` satisfies Lifted Monotonicity for `A`, so
+by Complete CAP these levels stay available and consistent through
+partitions.  For any level that proscribes Lost Update, including snapshot
+isolation, repeatable read, and serializability, no availability relation
+that answers every read satisfies Lifted Monotonicity for it."  Lean:
+(1) for `L ∈ {RU, RC}`, `A ⊆ S_L`, Lifted Monotonicity for `A`
+(`CAP.ConsistentOn`), and some system with Availability for `A` and
+Partition Consistency (`CAP.complete_cap_for`); (2) for any proscribed set
+`P` containing Lost Update (avoided by the serial history, so `S_P` is a
+specification), every `A ⊆ S_P` that answers every read fails Lifted
+Monotonicity for `A`, and no system has Availability for `A` and Partition
+Consistency; (3) in particular for SI, RR, and serializability.  The
+hypothesis is the timestamp condition on inputs: under `A`, the version a
+read returns is the highest delivered before it, so "exceeds every version
+it reads" and "exceeds every version delivered before its reads" agree.
+Part (2) holds with or without it. -/
+theorem «thm:hat-levels» (D : Type) :
+    (∀ L, L = .RU ∨ L = .RC →
+      (∀ i o, HATSpec.hatA i o → (HATSpec.spec (lam := true) L).S i o) ∧
+        CAP.ConsistentOn (HATSpec.spec (lam := true) L) HATSpec.hatA ∧
+        ∃ Sys : CAP.System (HATSpec.spec (lam := true) L) D,
+          CAP.AvailabilityFor HATSpec.hatA Sys ∧ CAP.PartitionConsistencyAtEnd Sys) ∧
+    (∀ (P : (j : HATSpec.Inp true) → HATSpec.CH j → Prop) (hP : ∀ j, ¬ P j (HATSpec.serial j)),
+      (∀ j (H : HATSpec.CH j), HATSpec.LostUpdate H → P j H) →
+      ∀ (A : Table (HATSpec.Inp true) (IConf.St HATSpec.Fact)),
+        (∀ i o, A i o → (HATSpec.specP P hP).S i o) → (∀ i, ∃ o, A i o) →
+        (∀ i o e, A i o → HATSpec.IsRd i e → ∃ v, o (.read e v)) →
+        ¬ CAP.ConsistentOn (HATSpec.specP P hP) A ∧
+          ¬ ∃ Sys : CAP.System (HATSpec.specP P hP) D,
+            CAP.AvailabilityFor A Sys ∧ CAP.PartitionConsistencyAtEnd Sys) ∧
+    (∀ L, L = .SI ∨ L = .RR ∨ L = .SER → ∀ (j : HATSpec.Inp true) (H : HATSpec.CH j),
+      HATSpec.LostUpdate H → HATSpec.Proscribed L j H) :=
+  ⟨fun L hL => HATSpec.rc_available L hL D,
+    fun P hP hLU A hAS htot hans => HATSpec.lostUpdate_unavailableP P hP hLU D A hAS htot hans,
+    fun L hL _ H h => HATSpec.proscribes_lostUpdate L hL H h⟩
+
+/-- Proof sketch of Thm. `thm:hat-levels`: "A read's answer under `A` depends
+only on the events that precede it, so later input never changes it, and the
+timestamp condition rules out the dependency cycles of G0 and G1c."  Lean:
+the candidates of a read are the same at every expansion containing it
+(`HATSpec.cand_iff`), so `hatOut` is monotone; under the timestamp condition
+every read- and write-dependency of HAT's history increases timestamps, so
+`hatOut j ∈ S_RC(j)`. -/
+theorem «thm:hat-levels/answers-stable» :
+    (∀ i j : HATSpec.Inp true, i ≼ j → HATSpec.hatOut i ≼ HATSpec.hatOut j) ∧
+      ∀ j : HATSpec.Inp true, (HATSpec.spec .RC).S j (HATSpec.hatOut j) :=
+  ⟨HATSpec.hat_rule.2, HATSpec.hatOut_rc⟩
+
+/-- Proof sketch of Thm. `thm:hat-levels`: "For the converse, let two
+transactions at different replicas each read `x₀` and write `x`.  Each
+replica's answer is forced, and their union contains a cycle on `x` with an
+anti-dependency, which is Lost Update."  Lean: `T₁` (timestamp `(1,1)`) and
+`T₂` (`(1,2)`) read and write `x` at replicas 0 and 1, with no delivery; at
+each one-transaction input the only version a read may return is `x₀`; in
+every complete history of the union in which `T₂` read `x₀`, the
+anti-dependency `T₂ → T₁` and the write-dependency `T₁ → T₂` on `x` form a
+Lost Update (and a G2) cycle. -/
+theorem «thm:hat-levels/lost-update-pair» :
+    (∀ v, HATSpec.Ver (HATSpec.i1 (lam := true)) 1 1 0 v → v = HATRC.tsInit) ∧
+      (∀ v, HATSpec.Ver (HATSpec.i2 (lam := true)) 2 1 0 v → v = HATRC.tsInit) ∧
+      HATSpec.i1 (lam := true) ≼ HATSpec.iJ ∧ HATSpec.i2 (lam := true) ≼ HATSpec.iJ ∧
+      ∀ H : HATSpec.CH (HATSpec.iJ (lam := true)), H.ans 2 = HATRC.tsInit →
+        HATSpec.LostUpdate H ∧ HATSpec.G2 H :=
+  ⟨fun _ h => HATSpec.i1_ver h, fun _ h => HATSpec.i2_ver h, HATSpec.le_hJ _ HATSpec.hk1,
+    HATSpec.le_hJ _ HATSpec.hk2, fun H h => HATSpec.lu_cycle H h⟩
+
+/-- "The timestamp condition is needed.  With timestamps fixed when a
+transaction begins, as in the pseudocode of the extended version of Bailis et
+al., a transaction that reads a version with a higher timestamp and then
+overwrites it forms a G1c cycle, so read committed's read rule is not
+contained in `S_L`.  Taking the timestamp at commit, above every version
+read, removes the cycle."  (CIDR version: "The timestamp condition is needed:
+with timestamps fixed when a transaction begins, as in the pseudocode of
+[the extended version], a transaction that reads a higher-timestamped version
+and then overwrites it forms a G1c cycle.")  Lean: (1) in the specification
+without the timestamp condition (`Inp false`), an input where `T₁` reads
+`T₂`'s version `(1,2)` and then commits `x` with timestamp `(1,1)` has HAT's
+answer outside `S_RC`; (2) the pseudocode itself, run with timestamps fixed at
+`BEGIN` (`HATRC`), produces that G1c history; (3) with Lamport timestamps
+taken at commit, every run is PL-2 (no G1a, G0, G1c; distinct timestamps). -/
+theorem «sec:hat-instance/rc-timestamps» :
+    (¬ HATSpec.Lamport HATSpec.wHist ∧ ¬ (HATSpec.spec .RC).S HATSpec.wInp (HATSpec.hatOut HATSpec.wInp)) ∧
+      (HATRC.ww HATRC.wfinal (1, 1) (1, 2) ∧ HATRC.wr HATRC.wfinal (1, 2) (1, 1) ∧
+        HATRC.G1c HATRC.wfinal ∧ ¬ HATRC.G1a HATRC.wfinal) ∧
+      ∀ l, ((HATRC.run .lamport l).commits.map (·.ts)).Nodup ∧
+        ¬ HATRC.G1a (HATRC.run .lamport l) ∧ ¬ HATRC.G0 (HATRC.run .lamport l) ∧
+        ¬ HATRC.G1c (HATRC.run .lamport l) :=
+  ⟨⟨HATSpec.timestamp_condition_needed.1, HATSpec.timestamp_condition_needed.2.2⟩,
+    HATRC.g1c_witness.2.2.2, fun l => let h := HATRC.lamport_pl2 l; ⟨h.1, h.2.2⟩⟩
 
 /-! ## Invariant confluence (`sec:iconfluence-instance`) -/
 
@@ -392,9 +472,11 @@ theorem «prop:iconfluence-lm» {V Tx : Type} (M : IConf.Model V Tx) :
     M.IConfluent ↔ (IConf.SI M).LiftedMono :=
   IConf.ic_iff_liftedMono M
 
-/-- "Invariant confluence is therefore not a separate boundary: for the
-specification that exposes database states, it is Lifted Monotonicity, and
-by Complete CALM it is consistency." -/
+/-- Invariant confluence is consistency of `S_𝓘`: Prop. `prop:iconfluence-lm`
+read through "applying either CALM theorem" (§6 opening: "Each setting
+declares an input, an output, and their orders before applying either CALM
+theorem.").  The sentence that stated this directly was removed from §6.4;
+Lean: by Complete CALM, Lifted Monotonicity of `S_𝓘` is its consistency. -/
 theorem «sec:iconfluence-instance/iconfluence-is-consistency» {V Tx : Type} (M : IConf.Model V Tx) :
     M.IConfluent ↔ (IConf.SI M).Consistent :=
   (IConf.ic_iff_liftedMono M).trans (complete_calm _).symm

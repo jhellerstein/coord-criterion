@@ -230,10 +230,13 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:crdt-instance/two-phase»
 #check @CC.Paper.«sec:crdt-instance/semilattice»
 #check @CC.Paper.«sec:crdt-instance/some-refinement»
-#check @CC.Paper.«sec:hat-instance/read-committed»
-#check @CC.Paper.«sec:hat-instance/serializability-cycle»
-#check @CC.Paper.«sec:hat-instance/snapshot-isolation»
-#check @CC.Paper.«sec:hat-instance/boundary»
+#check @CC.Paper.«def:hat-spec»
+#check @CC.Paper.«def:hat-spec/inputs-closed»
+#check @CC.Paper.«def:hat-spec/read-rule»
+#check @CC.Paper.«thm:hat-levels»
+#check @CC.Paper.«thm:hat-levels/answers-stable»
+#check @CC.Paper.«thm:hat-levels/lost-update-pair»
+#check @CC.Paper.«sec:hat-instance/rc-timestamps»
 #check @CC.Paper.«sec:iconfluence-instance/model»
 #check @CC.Paper.«sec:iconfluence-instance/reachable»
 #check @CC.Paper.«sec:iconfluence-instance/iconfluent-def»
