@@ -319,7 +319,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:coordination/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
 | `«sec:coordination/shared-nothing-only-second»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/conflict-is-choice»` | theorem | "The first event's commitment is a choice against `x`." Lean: |
-| `«sec:coordination/conflict-is-choice-commit»` | theorem | "The first event's commitment is a choice against `x`", when the first event is a commitment event `commit(γ)` (proposed wording of the proposition). |
+| `«sec:coordination/conflict-is-choice-commit»` | theorem | "The first event's commitment is a choice against `x`", when the first event is a commitment event `commit(γ)`, as the proposition allows ("an output or comm… |
 | `«sec:coordination/deterministic-reconciliation»` | theorem | "Under Lifted Monotonicity, participants at a common input `j` can each emit a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u` b… |
 
 ### §4.5 Complete CAP
@@ -611,7 +611,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«lem:compound-commitment»` | abbrev | **Lemma compound commitments are commitments** (`lem:compound-commitment`). |
 | `«lem:compound-commitment/defined»` | theorem | Lemma `lem:compound-commitment`: |
 | `«app:bases/compound-output-event»` | theorem | "A compound output event therefore has the same effect as an event that applies the composite commitment alone, and Lemma canonical-commitment-normal-form co… |
-| `«app:bases/compound-commitment-event»` | theorem | A compound commitment event has the same effect as a commitment event that applies the composite commitment alone (proposed wording: |
+| `«app:bases/compound-commitment-event»` | theorem | A compound commitment event has the same effect as a commitment event that applies the composite commitment alone: |
 | `«def:run-under-basis»` | abbrev | **Def. |
 | `«def:run-under-basis/canonical-run»` | abbrev | Def. |
 | `«def:run-under-basis/canonical-runs-are-runs»` | theorem | Def. |

@@ -801,13 +801,14 @@ theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
   ⟨coordFree_iff_not, fun _ _ _ _ h hf => coordFree_execCF h hf,
     fun B _ _ _ h => execCF_coordFree B h⟩
 
-/-- **Prop. conflicting output events cannot be reconciled**
+/-- **Prop. conflicting events cannot be reconciled**
 (`thm:commitments-require-coordination`).  "From a state `(i,R)`, let one
-run perform an output event after which no output at `i` refines `x`,
+run perform an output or commitment event after which no output at `i` refines `x`,
 and let another run perform an output event that emits `x`.  The two resulting
 states cannot be brought to a common state with current input `i`."
 
-Lean: `x ∈ R(i)` follows from the legality of `Out_{γ'}(x)`.  "Brought to a
+Lean: this entry takes the first event to be an output event; for a
+commitment event (indeed any event) see `…/any-event`.  `x ∈ R(i)` follows from the legality of `Out_{γ'}(x)`.  "Brought to a
 common state" is: by executions under a basis `B''` (any; for different bases
 see `…/any-bases`, for the transition system of §§2–3 see `…/reach`). -/
 theorem «thm:commitments-require-coordination» {sp : Spec I O} {B B' B'' : Basis sp}
@@ -839,8 +840,8 @@ theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : B
   conflicting_outputs_reach h1 hno h2
 
 /-- Prop. `thm:commitments-require-coordination` with the first event any
-event, in particular a commitment event `commit(γ)` (proposed wording: "let one
-run perform an event after which no output at `i` refines `x`").
+event, in particular a commitment event `commit(γ)`: "let one run perform an
+output or commitment event after which no output at `i` refines `x`".
 
 Lean: for any event `e` taking `σ` to `σ'` with no output at `i` refining `x`,
 and `Out_{γ'}(x)` taking `σ` to `t`, no state with current input `i` is
@@ -983,7 +984,8 @@ theorem «sec:coordination/conflict-is-choice» {sp : Spec I O} :
   ⟨fun c _ _ h => commitment_not_seal_cur c h, fun h1 hx hno => Dist.conflict_is_choice h1 hx hno⟩
 
 /-- "The first event's commitment is a choice against `x`", when the first
-event is a commitment event `commit(γ)` (proposed wording of the proposition).
+event is a commitment event `commit(γ)`, as the proposition allows ("an output
+or commitment event").
 
 Lean: if `commit(γ)` leaves no output at `i` refining `x ∈ R(i)`, some
 commitment `c` of `γ` removes `(i,x)` while keeping a row at `i`, and no kept

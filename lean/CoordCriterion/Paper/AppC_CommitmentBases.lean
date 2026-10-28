@@ -386,9 +386,10 @@ theorem «app:bases/compound-output-event» {sp : Spec I O} :
     fun hf c cs _ _ h k hk => Dist.composite_functional_seals hf c cs h k hk⟩
 
 /-- A compound commitment event has the same effect as a commitment event that
-applies the composite commitment alone (proposed wording: "A compound output or
-commitment event … therefore has the same effect as an event that applies the
-composite commitment alone").
+applies the composite commitment alone: "A compound output event
+(Definition `def:system-output-event`), or a compound commitment event,
+therefore has the same effect as an event that applies the composite
+commitment alone".
 
 Lean: `commit(c::cs)` under `B` is `commit([composite])` under any basis `B'`
 containing the composite, and back. -/
@@ -462,8 +463,8 @@ theorem «lem:canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
 
 /-- **Cor. reconciliation under any basis** (`cor:reconciliation-any-basis`).
 "Let runs under any commitment bases end at `(i_r,R_r)`, and let `j` be a common
-expansion of the `i_r`.  If some continuations, whose output events may apply
-any commitments, bring them to a common state with current input `j`, then some
+expansion of the `i_r`.  If some continuations, whose output and commitment
+events may apply any commitments, bring them to a common state with current input `j`, then some
 `u ∈ S(j)` refines every output emitted on every run."
 
 Lean: the finite family is indexed by `Fin m`; run `r` is under basis `B r`

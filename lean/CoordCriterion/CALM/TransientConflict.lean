@@ -4,7 +4,7 @@ import CoordCriterion.Foundations.Runs
 # A conflict confined to the current input (Section 4.4)
 
 Supports the remark after Prop. `thm:commitments-require-coordination`
-("Conflicting output events cannot be reconciled") in
+("Conflicting events cannot be reconciled") in
 `sections/distributed.tex`: the conflict is confined to the current input.
 
 The specification: inputs `i ≺ j` (a two-element chain), outputs `o`, `x`,
