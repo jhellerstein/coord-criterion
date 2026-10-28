@@ -63,6 +63,10 @@ current.
   "for the first time") against the cited literature.  If the record does not
   support a claim as worded, flag it and propose an accurate version.
 * Appendices are for theoreticians: definition, statement, proof.
+* Definition titles name every term the definition introduces that a reader
+  would look up later, e.g. "Availability relation, Availability".  Auxiliary
+  terms used only inside the definition may be omitted if they appear in the
+  notation table.
 * Work on `main`; stage specific files; pull before editing; push after.
 * Never touch untracked files (uploaded PDFs, `.infinity/`).
 
