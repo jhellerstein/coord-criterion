@@ -88,6 +88,11 @@ system consists of environment inputs and events chosen by the participants'
 strategies.
 \end{definition}
 
+In a history a system produces, commitment events are history events too:
+item~3 of Definition~\ref{def:distributed-history} and participant runs
+(Definition~\ref{def:participant-run}) include them, so each participant run
+is a run under $\mathcal B$.
+
 Strategies differ by participant so we can single out replicated
 systems, whose participants share one (Appendix~\ref{app:cap-response}); no
 result distinguishes participants' commitments, so the basis is shared.
@@ -146,7 +151,8 @@ $B$ waits for a lock that $A$ holds, 2PL applies $\mathsf{order}(A,B)$, leaving
 $C$'s position open (panel (h)).  When MVTO gives $B$ the first timestamp, it
 applies $\mathsf{stamp}(B)$, placing $B$ first (panel (i)).  Both are choices:
 they remove serialization orders while the input stays legal, but leave
-different alternatives open.  Each is one commitment in the $\gamma$ of an
+different alternatives open.  Each can be applied in a commitment event
+$\mathsf{commit}(\gamma)$, as below, or as one commitment in the $\gamma$ of an
 output event that later emits a full serial order, and neither is the choice
 $c_o$ of Section~\ref{sec:lifted-output-events}.
 
@@ -281,9 +287,9 @@ The next result explains why a commitment that requires distributed
 coordination calls for exclusion: a
 choice and an output it rules out, at different participants, leave states that cannot be reconciled at the current input.
 
-\begin{proposition}[Conflicting output events cannot be reconciled]
+\begin{proposition}[Conflicting events cannot be reconciled]
 \label{thm:commitments-require-coordination}
-From a state $(i,R)$, let one run perform an output event after which no
+From a state $(i,R)$, let one run perform an output or commitment event after which no
 output at $i$ \outrel $x$, and let another run perform an output event that
 emits $x$.  The two resulting states cannot be brought to a common state with
 current input $i$.
