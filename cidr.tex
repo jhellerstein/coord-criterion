@@ -265,7 +265,7 @@ single specified output.  We walk through the framework informally on an
 election (Section~\ref{sec:election-story}), state it precisely
 (Section~\ref{sec:framework-brief}), and
 prove Functional CALM (Section~\ref{sec:functional-calm-theorem}), identifying
-along the way when an output can be safely emitted without commitment.
+when an output can be safely emitted without commitment.
 
 \subsection{The framework by example}
 \label{sec:election-story}
@@ -353,8 +353,8 @@ along the way when an output can be safely emitted without commitment.
 
 We introduce the framework with a small election, illustrated in
 Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
-the ballots received so far with the permitted result; orders on the columns
-describe how inputs \ingrow and which later outputs \outrelbase earlier ones.
+the ballots received so far with the permitted result; the column orders
+say how inputs \ingrow and which later outputs \outrelbase earlier ones.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
 $y$.  The output is whichever candidate has two ballots, or $\bot$ while there
@@ -382,8 +382,8 @@ $\mathsf{input}(xy\cdot)$ produces panel~(b), retiring rows whose inputs no
 longer \inrelbase the ballots received, and treating such inputs as illegal.  The \emph{upper fiber} is the set of
 outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
 $\{\bot,x,y\}$.
-If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
-is \emph{determined}: input alone has resolved the outcome, without commitment.  
+If $v_2$ instead votes for $x$ (panel~(c)), the upper fiber is $\{x\}$.  The state
+is \emph{determined}: input alone resolved the outcome, without commitment.  
 
 Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
@@ -448,7 +448,7 @@ changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
 to itself).  Then $\bot$ is incompatible with future winners, so emitting it
 requires a seal.  That change in the output order is Functional CALM in
-miniature: the original order is monotone with respect to input order, so all outputs remain
+miniature: the original order is monotone, so all outputs remain
 valid as input grows; under the equality order, some outputs can be emitted
 only with a commitment.
 
@@ -523,8 +523,7 @@ received $i$ and emitted nothing, retains all rows at $i$ and its \indescs:
   \label{eq:canonical-state}
 \end{equation}
 The \emph{fiber} of $R$ at $k$ is $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The
-\emph{upper fiber} of $(i,R)$ is $\mathrm{out}(R)$, the outputs still
-possible, and the state is \emph{determined} when the upper fiber has one element.
+\emph{upper fiber} of $(i,R)$ is $\mathrm{out}(R)$, and the state is \emph{determined} when the upper fiber has one element.
 Determined states stay determined.
 
 \paragraph{Events.}
@@ -551,11 +550,11 @@ table to the rows whose outputs \outrelbase $o$, and emits $o$:
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-When this removes any row (at some input $j \InputGe i$), we call the state change the \emph{seal} $s_o$: it
+When this removes any row (at some input $j \InputGe i$), we call it the \emph{seal} $s_o$: it
 \emph{seals} the inputs of the removed rows, and it is a \emph{commitment}.
 \end{definition}
 
-A commitment removes rows that input alone would not have removed: the inputs
+A commitment removes rows that input alone would not: the inputs
 it seals are no longer legal.  Systems may issue more commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 extra commitments only restrict behavior (Section~\ref{sec:systems}).
@@ -602,7 +601,7 @@ of those inputs.
 An ordered specification is \emph{consistent} when every finite family of
 runs is confluent: if the runs end at states
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common \indesc of their current
-inputs, each run can be continued by further events to one
+inputs, each run can be continued to one
 common state with current input $j$.  The runs are then \emph{confluent at} $j$.
 \end{definition}
 
@@ -630,7 +629,7 @@ promises no delivery or termination.
 \label{sec:functional-calm-theorem}
 
 Consistency is defined by a specification's executions, monotonicity by its
-table and orders alone.  Functional CALM shows that these coincide.  Full proofs of this and later results are in \extended.
+table and orders alone.  Functional CALM shows that these coincide.  Full proofs are in \extended.
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
@@ -669,7 +668,7 @@ every state reachable without commitment is exposable.
 
 \begin{proof}[Proof sketch]
 By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
-states. At $\sigma_S(i)$, which input alone reaches, $f(i)$ is exposable exactly
+states. At $\sigma_S(i)$, $f(i)$ is exposable exactly
 when $f$ is monotone at $i$.
  \fullproof
 \end{proof}
@@ -688,8 +687,8 @@ monotonicity becomes $J\subseteq J'\Rightarrow Q(J)\subseteq Q(J')$,
 the standard definition of a monotone query~\cite{abiteboul1995foundations},
 which positive Datalog satisfies and negation may not.  Functional CALM
 generalizes the statement to arbitrary input and
-output orders, whatever formalism expresses the specification.  The usual CRDT state specification has the same functional shape,
-with received payloads ordered by inclusion and states ordered by the semilattice
+output orders, whatever formalism expresses the specification.  CRDT state specifications have the same functional shape,
+with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} treat both.
 
@@ -861,8 +860,8 @@ join-semilattice.  For example, the fiber
 \]
 under inclusion is directed, since $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$ have two
 incomparable minimal common \outnouns.  Thus
-the traceroute fiber is directed: the union of any finite set of route sets in
-it is again in the fiber and refines each of them. The two transaction orders in
+the traceroute fiber is directed: the union of finitely many route sets in
+it is again in the fiber and refines each. The two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.
 
 \paragraph{Lifted Monotonicity.}
@@ -900,9 +899,9 @@ both do.
 
 \paragraph{The common-\indesc condition.}
 Lifted Monotonicity compares an input with its
-own expansions. Runs, however, may emit outputs at incomparable inputs, say
+own expansions. Runs may emit outputs at incomparable inputs, say
 $o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
-\indesc $j$ of both. The following condition asks for exactly that: a common
+\indesc $j$ of both. The next condition asks exactly that: a common
 \outnoun of $o_1$ and $o_2$ in the fiber at $j$.
 
 \begin{definition}[Common-\indesc condition]
@@ -945,8 +944,8 @@ $c_o$ removes $\Rejected_o$.  Both are commitments; output retirement is not.
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ puts $[B,A]$ in
 $\Rejected_o$.  In panel~(g), the two removed route sets are in $\Retired_o$.
 In the functional case, $\Retired_o$ and $\Rejected_o$ are empty, so this is
-the output event of Definition~\ref{def:output-event}.  The formal definitions
-of lifted output events are in \extended.
+the output event of Definition~\ref{def:output-event}.  Formal definitions
+are in \extended.
 
 As before, $o$ is exposable when $\mathsf{output}(o)$ applies no commitment,
 that is, when $\Sealed_o$ and $\Rejected_o$ are empty.  Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
@@ -956,12 +955,12 @@ remaining output at $j$ have a common \outnoun at $j$.
 \label{sec:complete-calm-theorem}
 
 A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
-Equation~\ref{eq:output-action}.  Specification states, input events, runs,
+Equation~\ref{eq:output-action}.  States, input events, runs,
 commitment-free runs, and consistency are defined as before, and the results
 of Section~\ref{sec:executions} used output events only through that
-equation.  They therefore lift unchanged: the rows remaining after a run
+equation.  They lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
-(Proposition~\ref{prop:confluence}).  With them, consistency
+(Proposition~\ref{prop:confluence}).  Thus consistency
 reduces to Lifted Monotonicity.
 
 \begin{theorem}[Complete CALM]
@@ -1000,8 +999,7 @@ states, one row at a time, builds the common \outnoun the condition
 asks for.  \fullproof
 \end{proof}
 
-With one output per input, Lifted Monotonicity and the common-\indesc
-condition are both monotonicity, so Complete CALM and
+With one output per input, both conditions are monotonicity, so Complete CALM and
 Proposition~\ref{prop:exposure-boundary} reduce to Functional CALM and
 Proposition~\ref{prop:functional-exposure-boundary}.
 
@@ -1053,7 +1051,7 @@ $p$, in local order, form its \emph{participant run}.  The cut is
 current inputs, when some continuation of $C$ brings every participant to the
 same state $(j,R)$.  A specification has \emph{distributed consistency} when,
 for every finite participant set, every consistent cut of every history is
-confluent at every common \indesc of the participants' current inputs.
+confluent at every common \indesc of their current inputs.
 
 \begin{proposition}[Consistency and distributed consistency]
 \label{prop:distributed-consistency}
@@ -1161,8 +1159,8 @@ The canonical commitments are therefore universal.  Locks, timestamps,
 quorums, and consensus differ in how and when they decide.  Yet every output
 event of any system removes at least the rows that the canonical event for its
 output removes.  Whether a
-specification needs coordination is thus a question about the seals and
-choices its outputs require, whatever mechanism a system uses to make them.
+specification needs coordination thus depends on the seals and
+choices its outputs require, whatever mechanism makes them.
 
 \subsection{Coordination}
 \label{sec:coordination}
@@ -1216,7 +1214,7 @@ coordination-free means commitment-free.  For a system, the answer depends on
 which runs it can perform, and here seals and choices differ.  The environment
 may supply any input to any participant, so a seal requires distributed
 coordination whenever another participant may receive the sealed input.
-Outputs, by contrast, come only from the system's strategies, so a choice
+Outputs, by contrast, come only from strategies, so a choice
 requires coordination only when the system can perform a run that emits an
 output the choice rules out, and distributed coordination when such a run is
 at another participant.
@@ -1237,9 +1235,9 @@ to both.  \fullproof
 
 The conflict may be transient: an input $j$ \inrelpart $i$ might reconcile the
 two outputs.  Consistency still counts it as a failure.  The environment may act
-on transient inconsistencies that it observes, through channels the system does
+on inconsistencies it observes, through channels the system does
 not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time}, and the
-reconciling input need not arrive.  The system must therefore exclude one of the
+reconciling input need not arrive.  The system must exclude one of the
 two events: by a mutex or atomic instruction in shared memory,
 or by agreement in a distributed system.
 
@@ -1290,8 +1288,8 @@ component; participants still receive environment input and emit outputs.
 \end{definition}
 
 We fix a system, with a strategy for each participant of every finite
-participant set and every choice of initial inputs, each depending only on its
-participant's local history, and an adversarial environment that may supply
+participant set and every choice of initial inputs, each depending only on
+local history, and an adversarial environment that may supply
 any legal input event to any participant.
 
 \begin{definition}[Availability relation, Availability]
@@ -1391,8 +1389,8 @@ the log puts the requested commands in one order, and the key-value store
 executes the log and answers each request.  The log's specification is also not
 monotone: when two commands arrive concurrently, either may be appended next,
 and the two alternative orders have no common \outnoun.  Yet replicated stores are
-consistent, and they coordinate only in the log.  Multi-Paxos agrees on each
-log entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
+consistent, coordinating only in the log.  Multi-Paxos agrees on each
+log entry~\cite{lamport2001paxos}, and the replicas then execute the log
 with no further agreement.
 
 That puzzle is explained by our framework.  Specifications are
@@ -1433,8 +1431,8 @@ specification with table $S_2\circ S_1$ satisfies Lifted Monotonicity.
 
 \begin{proof}[Proof sketch]
 Take rows of $S_2\circ S_1$ whose inputs have a common \indesc $j$.  The
-common-\indesc condition for $\Spec_1$ gives one intermediate value at $j$
-that \outrel each row's intermediate value, and that value is a common \indesc
+common-\indesc condition for $\Spec_1$ gives an intermediate value at $j$
+that \outrel each row's, and that value is a common \indesc
 at which the condition for $\Spec_2$ supplies the common \outnoun.  \fullproof
 \end{proof}
 
@@ -1456,7 +1454,7 @@ Second, the upstream can filter out the inputs on which the downstream is not
 monotone: a counter capped at $9$ never produces the counts at which a test
 of whether the count is below $10$ answers no.  These cases do not cover every monotone composite
 (see \extended).  When none applies, some stage may have to issue a commitment even though the
-composite is monotone, as we discuss next.
+composite is monotone.
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
@@ -1771,7 +1769,7 @@ Monotonicity with Directed Outputs.  When it fails, some reachable output
 requires a commitment, and every commitment does one of two jobs: it seals
 input or it chooses among outputs.  Because commitments are explicit, the model
 can also check where a composition coordinates
-(Section~\ref{sec:composition}).  For example, a totally ordered log and a
+(Section~\ref{sec:composition}).  A totally ordered log and a
 key-value store are both non-monotone at their ordinary specifications, yet
 when the log guards the store, the log's commitments are all the composition
 needs and the store makes none.  Multi-Paxos is one way to distribute those
