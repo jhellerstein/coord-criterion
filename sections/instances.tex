@@ -89,82 +89,59 @@ Complete CALM requires only \emph{some} common \outnoun of query outputs
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-Consider a transactional specification, with isolation levels as defined by
-Adya et al.~\cite{adya2000generalized,adya1999weakconsistency}.  A transaction
-is a sequence of operations (reads, writes, and a final commit or abort
-request) that one client issues in order.  Transactions come in sets: an input
-is a set of transactions, each recorded as the prefix its client has issued so
-far, and it grows by new transactions or by longer prefixes.  The input fixes
-no order between transactions; that is the system's to choose.
+Bailis et al.\ define isolation levels by Adya's phenomena, adding sessions and
+per-item dependencies, and give highly available algorithms for the weaker
+levels~\cite{bailis2013hat,adya1999weakconsistency}.  We take their
+assumptions as given.  Items are partially replicated, and a client sends each
+operation to some replica of its item.  A transaction's writes carry a unique
+client timestamp, and versions are ordered by timestamp, last writer wins.
+The system never aborts a transaction on its own.  A replica answers a read
+with the highest-timestamped committed write of the item that it has received.
 
-Adya calls the system's choices a \emph{history}: which version each read
-returns, whether each transaction commits, a version order on each object's
-committed versions, and, for snapshot isolation, a time-precedes order on
-transactions' start and commit points.  An output is a set of such facts,
-ordered by inclusion: $\mathsf{read}(T,k,x_j)$, meaning that the $k$-th
-operation of $T$ returned the version of $x$ written by $T_j$;
-$\mathsf{TxCommit}(T)$; $x_i \ll x_j$; and $c_i <_t s_j$.  A fact set is
-permitted at an input when it extends to a history of the input's
-transactions that exhibits none of the phenomena the level proscribes: G1
-for read committed (PL-2), G1 and G2 for serializability (PL-3), and G1 and
-G-SI for snapshot isolation (PL-SI).  A system may withhold any of these
-facts, for example by never exposing a version order.  A session guarantee
-additionally constrains one client's transactions, as in reading one's own
-writes~\cite{terry1994session}.
+\begin{definition}[HAT specification]
+\label{def:hat-spec}
+An input is a history of received events ordered by happens-before: reads,
+each tagged with its replica; commits, each with its client timestamp and
+write set; and deliveries of committed writes to replicas.  Events follow
+each client's program order and each replica's arrival order, and a
+transaction's reads precede its commit, which precedes its deliveries.
+Inputs are ordered by downward-closed extension.  An output is a set of read
+answers, ordered by inclusion.  For an isolation level $L$, $S_L$ permits an
+output at an input when it extends to a history that answers every read,
+orders versions by timestamp, and exhibits none of the phenomena that $L$
+proscribes.  The availability relation $A$ is the replica's read rule above.
+\end{definition}
 
-The ingredients of highly available transactions (HAT) then come
-apart~\cite{bailis2013hat}.  The isolation level or session
-guarantee fixes the specification.  The rule that transactions commit, without
-system-initiated aborts, is a response obligation
-(Appendix~\ref{app:cap-response}).  Sticky availability, in which each client
-keeps contacting replicas that hold its session's earlier operations, is a
-deployment (Proposition~\ref{thm:complete-cap-deployment}).
+\begin{theorem}[HAT levels]
+\label{thm:hat-levels}
+Suppose each transaction's timestamp exceeds that of every version it reads.
+For read uncommitted and read committed, $A\subseteq S_L$ and $S_L$
+satisfies Lifted Monotonicity for $A$, so by Complete CAP these levels stay
+available and consistent through partitions.  For any level that proscribes
+Lost Update, including snapshot isolation, repeatable read, and
+serializability, no availability relation that answers every read satisfies
+Lifted Monotonicity for it.
+\end{theorem}
 
-\paragraph{Read committed.}
-Suppose two separated replicas run transactions on disjoint keys.  One exposes
-$\mathsf{read}(T_1,1,x_0)$ and $\mathsf{TxCommit}(T_1)$, and the other exposes
-$\mathsf{read}(T_2,1,y_0)$ and $\mathsf{TxCommit}(T_2)$, where $x_0$ and $y_0$
-are initial versions.  No aborted or intermediate version is read and no cycle
-of dependencies arises, so the union of the four facts exhibits no G1
-phenomenon and is permitted.  It is a common \outnoun of what the two replicas
-exposed.
+\begin{proof}[Proof sketch]
+A read's answer under $A$ depends only on the events that precede it, so
+later input never changes it, and the timestamp condition rules out the
+dependency cycles of G0 and G1c.  For the converse, let two transactions at
+different replicas each read $x_0$ and write $x$.  Each replica's answer is
+forced, and their union contains a cycle on $x$ with an anti-dependency,
+which is Lost Update.
+\end{proof}
 
-\paragraph{Serializability.}
-On one replica, $T_1$ reads $x_0$, writes $y$, and commits.  On the other,
-$T_2$ reads $y_0$, writes $x$, and commits.  Each replica's facts are
-permitted on their own.  In any history containing both, $T_2$'s version of
-$x$ follows $x_0$, so $T_1$'s read of $x_0$ is an anti-dependency from $T_1$
-to $T_2$; symmetrically, $T_2$'s read of $y_0$ is one from $T_2$ to $T_1$.
-The two form a G2 cycle (indeed G2-item)~\cite{adya2000generalized}, so no
-permitted output contains both sets of facts.
+The timestamp condition is needed.  With timestamps fixed when a transaction
+begins, as in the pseudocode of the extended version of Bailis et
+al.~\cite{bailis2013hatextended}, a transaction that reads a version with a
+higher timestamp and then overwrites it forms a G1c cycle, so read
+committed's read rule is not contained in $S_L$.  Taking the timestamp at
+commit, above every version read, removes the cycle.
 
-\paragraph{Snapshot isolation.}
-Let $T_1$ and $T_2$ each read $x_0$ and write $x$, each on its own replica.
-Each replica's facts, including its commit, are permitted on their own.
-Suppose both commit, and say the version order puts $T_1$'s write of $x$
-before $T_2$'s.  Unless $c_1 <_t s_2$, the write-dependency from $T_1$ to $T_2$
-has no start-dependency beside it, which is G-SIa.  If $c_1 <_t s_2$, then
-$T_2$'s read of $x_0$ is an anti-dependency from $T_2$ to $T_1$, which with
-the start-dependency forms a cycle with a single anti-dependency, which is
-G-SIb~\cite{adya1999weakconsistency}.  So no permitted output contains both
-commit facts.  This is the first-committer-wins rule of snapshot
-isolation~\cite{berenson1995critique,bailis2013hat}.
-
-The examples show where the boundary falls.  When the permitted fact sets are
-closed under union, as for the read and commit facts of read committed here,
-whatever separated replicas expose has a common \outnoun, so the guarantee
-stays available (Corollary~\ref{cor:complete-cap-S}).  Version-order facts
-are different at every level: two replicas that have both seen $T_1$'s and
-$T_2$'s writes of $x$ could expose $x_1 \ll x_2$ and $x_2 \ll x_1$, and no
-history contains both.  An available system therefore keeps the version order
-private, or fixes it from the input, as with client-assigned timestamps,
-which is a stronger specification than the level itself.  Serializability and first-committer-wins
-instead exclude some combinations of facts that separated replicas can each
-expose.  Emitting either side then requires a choice
-(Proposition~\ref{thm:commitments-require-coordination}), and a partition
-prevents the replicas from making it together.  Eventual convergence of storage
-does not help.  It constrains states after delivery, but the facts already
-exposed are outputs, and no event removes them.
+Session guarantees, which Bailis et al.\ achieve under sticky availability,
+are deployments in our terms (Proposition~\ref{thm:complete-cap-deployment});
+we do not treat them here.
 
 Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent

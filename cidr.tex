@@ -1572,35 +1572,41 @@ only \emph{some} common \outnoun of query outputs, not a least one.
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-Consider a transactional specification, with isolation levels as defined by
-Adya et al.~\cite{adya2000generalized,adya1999weakconsistency}.  A transaction
-is a sequence of operations that one client issues in order.  An input is a
-set of transactions, each recorded as the prefix issued so far, and grows by
-new transactions or longer prefixes; the order between transactions is the
-system's to choose.  Adya calls the system's choices a \emph{history}: which
-version each read returns, which transactions commit, a version order on each
-object, and, for snapshot isolation, a time-precedes order on start and commit
-points.  An output is a set of such facts, ordered by inclusion, such as
-$\mathsf{read}(T,k,x_j)$ (the $k$-th operation of $T$ returned $T_j$'s version
-of $x$) and $\mathsf{TxCommit}(T)$.  It is permitted when it extends to a
-history exhibiting none of the phenomena the level proscribes.  Under read
-committed (PL-2), two separated replicas that each read initial versions and
-commit expose facts whose union exhibits no G1 phenomenon, a common \outnoun.
-Under serializability (PL-3), if $T_1$ reads $x_0$ and writes $y$ on one
-replica while $T_2$ reads $y_0$ and writes $x$ on the other, the two reads are
-anti-dependencies forming a G2 cycle.  Under snapshot isolation (PL-SI), two
-transactions that read $x_0$ and write $x$ cannot both commit: whichever
-order of start and commit points is chosen yields G-SIa or G-SIb.  This is
-the first-committer-wins rule~\cite{berenson1995critique}.  When the permitted
-fact sets are closed under union, whatever separated replicas expose has a
-common \outnoun, so the guarantee stays available
-(Corollary~\ref{cor:complete-cap-S}).  Serializability and
-first-committer-wins instead exclude some combinations of facts that separated
-replicas can each expose.  Emitting either side then requires a choice
-(Proposition~\ref{thm:commitments-require-coordination}), and a partition
-prevents the replicas from making it together.  Exposing a version order is
-such a choice at every level, so an available system keeps it private or
-fixes it from the input.
+We take the assumptions of Bailis et al.\ as given~\cite{bailis2013hat}:
+items are partially replicated; a client sends each operation to some replica
+of its item; a transaction's writes carry a unique client timestamp, last
+writer wins; the system never aborts on its own; and a replica answers a read
+with the highest-timestamped committed write of the item it has received.
+
+\begin{definition}[HAT specification]
+\label{def:hat-spec}
+An input is a history of received events ordered by happens-before: reads
+tagged with their replica, commits with their timestamp and write set, and
+deliveries of committed writes to replicas.  Inputs are ordered by
+downward-closed extension, and outputs are sets of read answers, ordered by
+inclusion.  For an isolation level $L$, defined by the phenomena it
+proscribes~\cite{adya1999weakconsistency}, $S_L$ permits an output when it
+extends to a history that answers every read, orders versions by timestamp,
+and exhibits none of those phenomena.  The availability relation $A$ is the
+replica's read rule.
+\end{definition}
+
+\begin{theorem}[HAT levels]
+\label{thm:hat-levels}
+Suppose each transaction's timestamp exceeds that of every version it reads.
+For read uncommitted and read committed, $A\subseteq S_L$ and $S_L$
+satisfies Lifted Monotonicity for $A$, so by Complete CAP these levels stay
+available and consistent through partitions.  For any level that proscribes
+Lost Update, including snapshot isolation, repeatable read, and
+serializability, no availability relation that answers every read satisfies
+Lifted Monotonicity for it.
+\end{theorem}
+\proofinfull
+
+The timestamp condition is needed: with timestamps fixed when a transaction
+begins, as in the pseudocode of~\cite{bailis2013hatextended}, a transaction
+that reads a higher-timestamped version and then overwrites it forms a G1c
+cycle.
 
 Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent
