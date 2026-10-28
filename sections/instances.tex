@@ -19,8 +19,8 @@ Functional CALM does not replace the details of that theorem.  It abstracts
 the result to a property that can be compared with specifications outside
 Datalog.
 
-Later refinements of that theorem change the input order or the notion of
-coordination.  Zinn et al.\ gave transducers partial knowledge of how data is
+Subsequent extensions to the original CALM Theorem become changes to the input
+domain and its order, or to the notion of coordination.  Zinn et al.\ gave transducers partial knowledge of how data is
 placed, and more queries became coordination-free, among them the
 non-monotone win-move query~\cite{zinn2012winmove}.  Ameloot et al.\
 characterized the new classes by weaker forms of
@@ -82,7 +82,7 @@ Operation-based CRDTs fit too, with the causally closed set of
 delivered operations as
 input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,hellerstein2025turtles}.
 
-CRDT states form a join-semilattice.  Observations $q$ need less:
+CRDT states form a join-semilattice, but $q$ needs less:
 Complete CALM requires only \emph{some} common \outnoun of query outputs
 (Section~\ref{sec:lifted-monotonicity}), not a least one.
 
@@ -219,10 +219,7 @@ Monotonicity.
 See Appendix~\ref{app:iconfluence}.
 \end{proof}
 
-Invariant confluence is therefore not a separate boundary: for the
-specification that exposes database states, it is Lifted Monotonicity, and by
-Complete CALM it is consistency.  The
-uniqueness constraint of Bailis et al.'s payroll example shows the failure
+The uniqueness constraint of Bailis et al.'s payroll example shows the failure
 directly.  Two replicas each create an employee and assign ID~7, which each
 sees is unused.  The history in which neither creation saw the other is
 locally valid and \inrel both one-creation histories, but its state has two
