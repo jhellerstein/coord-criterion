@@ -385,6 +385,19 @@ theorem «app:bases/compound-output-event» {sp : Spec I O} :
   ⟨Dist.sysStep_to_composite, Dist.sysStep_of_composite,
     fun hf c cs _ _ h k hk => Dist.composite_functional_seals hf c cs h k hk⟩
 
+/-- A compound commitment event has the same effect as a commitment event that
+applies the composite commitment alone (proposed wording: "A compound output or
+commitment event … therefore has the same effect as an event that applies the
+composite commitment alone").
+
+Lean: `commit(c::cs)` under `B` is `commit([composite])` under any basis `B'`
+containing the composite, and back. -/
+theorem «app:bases/compound-commitment-event» {sp : Spec I O} {B B' : Basis sp}
+    {σ τ : State sp} {c : Commitment sp} {cs : List (Commitment sp)}
+    (hB : ∀ c' ∈ c :: cs, B c') (hB' : B' (composite c cs)) :
+    SysStep B σ (.commit (c :: cs)) τ ↔ SysStep B' σ (.commit [composite c cs]) τ :=
+  Dist.sysStep_commit_composite_iff hB hB'
+
 /-! ## Runs under a basis -/
 
 /-- **Def. run under a basis, canonical run** (`def:run-under-basis`).  "A run under `ℬ` is a

@@ -159,6 +159,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«thm:commitments-require-coordination»
 #check @CC.Paper.«thm:commitments-require-coordination/any-bases»
 #check @CC.Paper.«thm:commitments-require-coordination/reach»
+#check @CC.Paper.«thm:commitments-require-coordination/any-event»
 #check @CC.Paper.«thm:commitments-require-coordination/confined-to-current-input»
 #check @CC.Paper.«sec:coordination/shared-nothing-single-key»
 #check @CC.Paper.«sec:coordination/shared-nothing-cross-key»
@@ -166,6 +167,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:coordination/two-phase-commit-detects»
 #check @CC.Paper.«sec:coordination/shared-nothing-only-second»
 #check @CC.Paper.«sec:coordination/conflict-is-choice»
+#check @CC.Paper.«sec:coordination/conflict-is-choice-commit»
 #check @CC.Paper.«sec:coordination/deterministic-reconciliation»
 #check @CC.Paper.«sec:complete-cap/intro»
 #check @CC.Paper.«def:partitioned-history»
@@ -401,6 +403,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«lem:compound-commitment»
 #check @CC.Paper.«lem:compound-commitment/defined»
 #check @CC.Paper.«app:bases/compound-output-event»
+#check @CC.Paper.«app:bases/compound-commitment-event»
 #check @CC.Paper.«def:run-under-basis»
 #check @CC.Paper.«def:run-under-basis/canonical-run»
 #check @CC.Paper.«def:run-under-basis/canonical-runs-are-runs»

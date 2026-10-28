@@ -133,7 +133,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-612 entries.
+615 entries.
 
 ### §2 Functional CALM
 
@@ -311,6 +311,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«thm:commitments-require-coordination»` | theorem | **Prop. |
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
+| `«thm:commitments-require-coordination/any-event»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/confined-to-current-input»` | theorem | "The conflict is confined to the current input. |
 | `«sec:coordination/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database", *Distributed coordination*: |
@@ -318,6 +319,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:coordination/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
 | `«sec:coordination/shared-nothing-only-second»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/conflict-is-choice»` | theorem | "The first event's commitment is a choice against `x`." Lean: |
+| `«sec:coordination/conflict-is-choice-commit»` | theorem | "The first event's commitment is a choice against `x`", when the first event is a commitment event `commit(γ)` (proposed wording of the proposition). |
 | `«sec:coordination/deterministic-reconciliation»` | theorem | "Under Lifted Monotonicity, participants at a common input `j` can each emit a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u` b… |
 
 ### §4.5 Complete CAP
@@ -609,6 +611,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«lem:compound-commitment»` | abbrev | **Lemma compound commitments are commitments** (`lem:compound-commitment`). |
 | `«lem:compound-commitment/defined»` | theorem | Lemma `lem:compound-commitment`: |
 | `«app:bases/compound-output-event»` | theorem | "A compound output event therefore has the same effect as an event that applies the composite commitment alone, and Lemma canonical-commitment-normal-form co… |
+| `«app:bases/compound-commitment-event»` | theorem | A compound commitment event has the same effect as a commitment event that applies the composite commitment alone (proposed wording: |
 | `«def:run-under-basis»` | abbrev | **Def. |
 | `«def:run-under-basis/canonical-run»` | abbrev | Def. |
 | `«def:run-under-basis/canonical-runs-are-runs»` | theorem | Def. |

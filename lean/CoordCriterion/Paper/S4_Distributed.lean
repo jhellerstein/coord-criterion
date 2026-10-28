@@ -838,6 +838,26 @@ theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : B
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
   conflicting_outputs_reach h1 hno h2
 
+/-- Prop. `thm:commitments-require-coordination` with the first event any
+event, in particular a commitment event `commit(γ)` (proposed wording: "let one
+run perform an event after which no output at `i` refines `x`").
+
+Lean: for any event `e` taking `σ` to `σ'` with no output at `i` refining `x`,
+and `Out_{γ'}(x)` taking `σ` to `t`, no state with current input `i` is
+reachable from both, under any bases or in the transition system of §§2–3; if
+`e` is an output or commitment event, its commitment sequence is nonempty. -/
+theorem «thm:commitments-require-coordination/any-event» {sp : Spec I O}
+    {B B' B1 B2 : Basis sp} {σ σ' t : State sp} {e : SEvent sp}
+    {γ' : List (Commitment sp)} {x : O}
+    (h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
+    (h2 : SysStep B' σ (.output γ' x) t) :
+    (∀ γ o, e = .output γ o → γ ≠ []) ∧ (∀ γ, e = .commit γ → γ ≠ []) ∧
+    (¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
+        (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ)) ∧
+    ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
+  let h := Dist.conflicting_events (B1 := B1) (B2 := B2) h1 hno h2
+  ⟨h.1, h.2.1, h.2.2, Dist.conflicting_events_reach h1 hno h2⟩
+
 /-- "The conflict is confined to the current input.  If `i ≺ j`, `S(i) = {o,x}`
 with `o` and `x` incomparable, and `S(j) = {u}` with `u` refining both, the two
 states can be reconciled once `j` arrives.  Consistency still counts this as a failure,
@@ -961,6 +981,20 @@ theorem «sec:coordination/conflict-is-choice» {sp : Spec I O} :
       ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
         ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w) :=
   ⟨fun c _ _ h => commitment_not_seal_cur c h, fun h1 hx hno => Dist.conflict_is_choice h1 hx hno⟩
+
+/-- "The first event's commitment is a choice against `x`", when the first
+event is a commitment event `commit(γ)` (proposed wording of the proposition).
+
+Lean: if `commit(γ)` leaves no output at `i` refining `x ∈ R(i)`, some
+commitment `c` of `γ` removes `(i,x)` while keeping a row at `i`, and no kept
+row at `i` refines `x`. -/
+theorem «sec:coordination/conflict-is-choice-commit» {sp : Spec I O} {B : Basis sp}
+    {σ σ' : State sp} {γ : List (Commitment sp)} {x : O}
+    (h1 : SysStep B σ (.commit γ) σ') (hx : σ.R σ.cur x)
+    (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
+    ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
+      ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w :=
+  Dist.conflict_is_choice_commit h1 hx hno
 
 /-- "Under Lifted Monotonicity, participants at a common input `j` can each emit
 a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u`

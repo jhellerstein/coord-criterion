@@ -451,6 +451,63 @@ theorem conflict_is_choice {B : Basis sp} {σ σ' : State sp} {γ : List (Commit
     obtain ⟨w, hw⟩ := β.hasCur
     exact ⟨w, hβc ▸ hw⟩
 
+/-- Prop. `thm:commitments-require-coordination` for any first event: if an
+event `e` (input, output, or commitment event) takes `σ` to `σ'` with no output
+at `i` refining `x`, and `Out_γ'(x)` takes `σ` to `t`, then no state with
+current input `i` is reachable (under any bases) from both.  If `e` is an
+output event `Out_γ(o)`, then `γ ≠ ε`; a commitment event has `γ ≠ ε` by
+definition. -/
+theorem conflicting_events {B B' B1 B2 : Basis sp} {σ σ' t : State sp}
+    {e : SEvent sp} {γ' : List (Commitment sp)} {x : O}
+    (h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
+    (h2 : SysStep B' σ (.output γ' x) t) :
+    (∀ γ o, e = .output γ o → γ ≠ []) ∧
+    (∀ γ, e = .commit γ → γ ≠ []) ∧
+    ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
+        (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ) := by
+  obtain ⟨_, _, ht, _⟩ := containment h2
+  refine ⟨?_, ?_, ?_⟩
+  · rintro γ o rfl
+    exact (conflicting_outputs (B'' := B) h1 hno h2).1
+  · rintro γ rfl
+    cases h1 with
+    | commit _ hne _ => exact hne
+  · rintro ⟨ρ, hc, ⟨es1, hx1⟩, ⟨es2, hx2⟩⟩
+    obtain ⟨w, hw⟩ := ρ.hasCur
+    rw [hc] at hw
+    exact hno w (hx1.sub _ _ hw) (ht _ _ (hx2.sub _ _ hw)).2
+
+/-- The same with reachability by the transition system of Sections 2–3. -/
+theorem conflicting_events_reach {B B' : Basis sp} {σ σ' t : State sp}
+    {e : SEvent sp} {γ' : List (Commitment sp)} {x : O}
+    (_h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
+    (h2 : SysStep B' σ (.output γ' x) t) :
+    ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ := by
+  obtain ⟨_, _, ht, _⟩ := containment h2
+  rintro ⟨ρ, hc, h1r, h2r⟩
+  obtain ⟨w, hw⟩ := ρ.hasCur
+  rw [hc] at hw
+  exact hno w (reach_sub h1r _ _ hw) (ht _ _ (reach_sub h2r _ _ hw)).2
+
+/-- "The first event's commitment is a choice against `x`", for a commitment
+event: if `commit(γ)` leaves no output refining `x ∈ R(i)`, then some
+commitment `c` of `γ` removes `(i, x)` while keeping a row at `i`, and no kept
+row at `i` refines `x`. -/
+theorem conflict_is_choice_commit {B : Basis sp} {σ σ' : State sp}
+    {γ : List (Commitment sp)} {x : O} (h1 : SysStep B σ (.commit γ) σ')
+    (hx : σ.R σ.cur x) (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
+    ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
+      ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w := by
+  cases h1 with
+  | commit _ _ hγ =>
+    have hnc : ¬ σ'.R σ.cur x := fun h => hno x h (PO.refl x)
+    obtain ⟨c, hc, α, β, hab, hαc, hαx, hβx⟩ := applySeq_removed hγ hx hnc
+    have hβc : β.cur = σ.cur := (c.cur_eq α β hab).trans hαc
+    refine ⟨c, hc, α, β, hab, hαc, hαx, hβx, ?_,
+      fun w hw => c.excludes α β hab _ x w hαx hβx hw⟩
+    obtain ⟨w, hw⟩ := β.hasCur
+    exact ⟨w, hβc ▸ hw⟩
+
 end conflict
 
 /-! ### Remark after Lemma `lem:compound-commitment` -/
@@ -474,6 +531,23 @@ theorem sysStep_of_composite {B B' : Basis sp} {σ τ : State sp} {c : Commitmen
   match h with
   | .output _ hγ ho hleg hcur hR =>
     exact SysStep.output hB ((applySeq_composite c cs _ _).2 hγ) ho hleg hcur hR
+
+/-- A compound commitment event `commit(c cs)` has the same effect as
+`commit(composite c cs)`. -/
+theorem sysStep_commit_composite_iff {B B' : Basis sp} {σ τ : State sp}
+    {c : Commitment sp} {cs : List (Commitment sp)} (hB : ∀ c' ∈ c :: cs, B c')
+    (hB' : B' (composite c cs)) :
+    SysStep B σ (.commit (c :: cs)) τ ↔ SysStep B' σ (.commit [composite c cs]) τ := by
+  constructor
+  · intro h
+    cases h with
+    | commit _ _ hγ =>
+      exact SysStep.commit (fun c' hc' => (List.mem_singleton.1 hc') ▸ hB')
+        (List.cons_ne_nil _ _) ((applySeq_composite c cs _ _).1 hγ)
+  · intro h
+    cases h with
+    | commit _ _ hγ =>
+      exact SysStep.commit hB (List.cons_ne_nil _ _) ((applySeq_composite c cs _ _).2 hγ)
 
 /-- "In a functional specification the composite … seals." -/
 theorem composite_functional_seals (hf : sp.Functional) (c : Commitment sp)
