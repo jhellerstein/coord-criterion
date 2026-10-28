@@ -556,7 +556,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:cc-bases/input-order»
 #check @CC.Paper.«app:cc-bases/output»
 #check @CC.Paper.«app:cc-bases/output-order»
-#check @CC.Paper.«app:cc-bases/last-write»
+#check @CC.Paper.«app:cc-bases/complete-output»
+#check @CC.Paper.«app:cc-bases/read-rule»
 #check @CC.Paper.«app:cc-bases/complete»
 #check @CC.Paper.«app:cc-bases/permitted»
 #check @CC.Paper.«app:cc-bases/spec»

@@ -7,10 +7,10 @@ import CoordCriterion.CompleteCALM.Theorem
 Commitment bases for two-phase locking (2PL) and multiversion timestamp
 ordering (MVTO), for the simpler specification whose outputs are complete
 `(L,X)` (no undecided transactions, no read results).  Appendix G's
-specification, with partial outputs `(L,X,ρ)`, is in `Partial.lean`, which
-reuses the finite sets, outcomes and pair rows defined here.  This file is
-still used by the §4.3 figure entry and Appendix C (`Paper/S4_Distributed.lean`,
-`Paper/AppC_CommitmentBases.lean`).  Namespace `CC.Txn`.
+specification, with operation sequences as inputs and partial outputs
+`(L,X,ρ)`, is in `Spec.lean` and `Partial.lean`, which reuse the finite sets,
+outcomes and pair rows defined here.  This file is still used by Appendix C
+(`Paper/AppC_CommitmentBases.lean`).  Namespace `CC.Txn`.
 
 * `FinSet`, `Outcome`, `txnSpec`, `abortFreeSpec` — the specification
   (inputs: finite sets of transactions under inclusion; outputs `(L,X)` under

@@ -25,7 +25,7 @@ docstring quotes the paper (LaTeX lightly turned into Unicode) and, where the
 Lean statement reads differently, says how the two correspond.  Statements are
 written out in full; the proofs are one-line references to the library
 (`CoordCriterion/Distributed/*.lean`, `CAP/Model.lean`, `Figures.lean`,
-`Appendix/TransactionBases/NoReads.lean`), where the modeling choices are
+`Appendix/TransactionBases/*.lean`), where the modeling choices are
 documented.
 
 Global reading conventions: sets are predicates, finite families are `List`s
@@ -501,15 +501,16 @@ is one system; multiversion timestamp ordering (MVTO) is another, and they have
 different bases … The ordering commitments are where they part:
 `order(A,B)` fixes `A` before `B` and nothing else, which no MVTO commitment
 does, and `stamp(B)` places `B` before every other transaction, which no 2PL
-commitment does."  At the canonical state of `{A,B,C}` (Appendix G's
-specification), no commitment of `ℬ_MVTO` has the effect of `order(A,B)`, and
-no commitment of `ℬ_2PL` has the effect of `stamp(B)`. -/
-theorem «sec:systems/bases-differ» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
-    (h : Txn.Partial.Distinct3 A B C) :
-    (∃ τ, (Txn.Partial.order A B).app (Txn.Partial.σABC (K := K) rd wr h) = some τ ∧
-      ∀ c, Txn.Partial.basisMVTO c → c.app (Txn.Partial.σABC rd wr h) ≠ some τ) ∧
-    (∃ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σABC (K := K) rd wr h) = some τ ∧
-      ∀ c, Txn.Partial.basis2PL c → c.app (Txn.Partial.σABC rd wr h) ≠ some τ) :=
+commitment does."  At the canonical state of an input whose transactions `A`,
+`B`, `C` have each requested commit (Appendix G's specification), no commitment
+of `ℬ_MVTO` has the effect of `order(A,B)`, and no commitment of `ℬ_2PL` has the
+effect of `stamp(B)`. -/
+theorem «sec:systems/bases-differ» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
+    (h : Txn.Partial.Tri k A B C) :
+    (∃ τ, (Txn.Partial.order A B).app (Txn.Partial.σ3 k) = some τ ∧
+      ∀ c, Txn.Partial.basisMVTO c → c.app (Txn.Partial.σ3 k) ≠ some τ) ∧
+    (∃ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σ3 k) = some τ ∧
+      ∀ c, Txn.Partial.basis2PL c → c.app (Txn.Partial.σ3 k) ≠ some τ) :=
   CC.Paper.«app:cc-bases/bases-differ» h
 
 /-- Fig. `fig:cc-commitments`: "When `B` waits for a lock that `A` holds, 2PL
@@ -518,19 +519,21 @@ applies `order(A,B)`, leaving `C`'s position open (panel (h)).  When MVTO gives
 (i))."  The caption: only complete rows without aborts or read results are
 shown.  Among those, `order(A,B)` keeps exactly the rows with `A` before `B`,
 and `stamp(B)` (no earlier stamps) exactly those with `B` first. -/
-theorem «fig:cc-commitments» {T K : Type} {sp : Spec (Txn.FinSet T) (Txn.Partial.ROut T K)}
-    {σ τ τ' : State sp} {A B : T} {k : Txn.FinSet T} {c : Txn.Partial.ROut T K}
-    (hp : Txn.Partitions k c.o) (hX : ∀ t, ¬ c.o.X t) (hA : k.1 A) (hB : k.1 B) :
+theorem «fig:cc-commitments» {T K : Type}
+    {σ τ τ' : State (Txn.Partial.spec (T := T) (K := K) false)} {A B : T}
+    {k : Txn.Partial.Inp T K} {c : Txn.Partial.ROut T K}
+    (hp : Txn.Partial.Decides false k c.o) (hX : ∀ t, ¬ c.o.X t) (hA : k.mem A)
+    (hB : k.mem B) :
     ((Txn.Partial.order A B).app σ = some τ → (τ.R k c ↔ σ.R k c ∧ c.o.lt A B)) ∧
     ((Txn.Partial.stamp B (fun _ => False)).app σ = some τ' →
-      (τ'.R k c ↔ σ.R k c ∧ ∀ D, k.1 D → D ≠ B → c.o.lt B D)) :=
+      (τ'.R k c ↔ σ.R k c ∧ ∀ D, k.mem D → D ≠ B → c.o.lt B D)) :=
   ⟨fun h => CC.Paper.«app:cc-bases/fig-h» h hp hX hA hB,
    fun h => CC.Paper.«app:cc-bases/fig-i» h hp hX hB⟩
 
 /-- *A transactional example of bespoke commitments.*  "Both are choices: they remove serialization
 orders while the input stays legal, but leave different alternatives open."
 
-Lean, for any commitment (in particular `Txn.orderC`, `Txn.stampC`): a
+Lean, for any commitment (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): a
 commitment keeps a row at the current input, so where it removes rows there it
 chooses — some row is kept and no removed row is refined by it. -/
 theorem «sec:systems/two-systems-two-choices» {sp : Spec I O} (c : Commitment sp)
@@ -542,14 +545,15 @@ theorem «sec:systems/two-systems-two-choices» {sp : Spec I O} (c : Commitment 
   exact ⟨⟨w, hw⟩, fun _ => ⟨w, hw, fun u hu hnu => c.excludes σ τ h _ u w hu hnu hw⟩⟩
 
 /-- "… and neither is the choice `c_o` of Definition lifted-output-event."
-At the canonical state of `{A,B,C}` (Appendix G's specification), the results of
+At the canonical state of an input whose transactions `A`, `B`, `C` have each
+requested commit (Appendix G's specification), the results of
 `order(A,B)` and `stamp(B)` are not the result of `c_o` for any output `o`. -/
-theorem «sec:systems/neither-is-the-choice» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
-    (h : Txn.Partial.Distinct3 A B C) :
-    (∀ τ, (Txn.Partial.order A B).app (Txn.Partial.σABC (K := K) rd wr h) = some τ →
-      ∀ o, (choiceC o).app (Txn.Partial.σABC rd wr h) ≠ some τ) ∧
-    (∀ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σABC (K := K) rd wr h) = some τ →
-      ∀ o, (choiceC o).app (Txn.Partial.σABC rd wr h) ≠ some τ) :=
+theorem «sec:systems/neither-is-the-choice» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
+    (h : Txn.Partial.Tri k A B C) :
+    (∀ τ, (Txn.Partial.order A B).app (Txn.Partial.σ3 k) = some τ →
+      ∀ o, (choiceC o).app (Txn.Partial.σ3 k) ≠ some τ) ∧
+    (∀ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σ3 k) = some τ →
+      ∀ o, (choiceC o).app (Txn.Partial.σ3 k) ≠ some τ) :=
   Txn.Partial.neither_is_choice h
 
 /-- "We call the runs of Sections functional-calm–complete-calm canonical runs,
@@ -592,59 +596,52 @@ completed without committing `B` before `A`.  The canonical run skips that
 event, so it keeps every row, including the one completed by `[B,A,C]`.  When
 2PL later reports `A`'s read, with no commitment, and emits `[A,C,B]`, it
 applies no further commitment ordering `A` and `B`, and the canonical run emits
-the same outputs; both end with the same table.  The lock issued its commitment to `A` before `B` earlier than any
-output required."
+the same outputs; both end with the same table.  The lock issued its commitment
+to `A` before `B` earlier than any output required."
 
-Lean (`CC.Txn.Partial.CommitEx.example_commit_event_ABC`; Appendix G's
-specification, `rd`, `wr` arbitrary except `rd A x` and no transaction writes
-`x`; `o1` decides nothing and reports `A`'s read of `x` returning the initial
-version, `o2` is `[A,C,B]` with that read; rows carry the read):
+**Not proved as quoted.**  Under Appendix G's specification, where inputs are
+operation sequences and further transactions may still arrive, reporting `A`'s
+read is itself a commitment (a transaction that arrives later, writes `x`, and
+commits before `A` would contradict it), so "reports `A`'s read, with no
+commitment" no longer holds.  Lean proves the example without the read
+(`CC.Txn.Partial.CommitEx.example_commit_event_ABC`), at any input `k` whose
+transactions `A`, `B`, `C` have each issued their operations and requested
+commit; rows are serial orders without aborts or reads:
 (a) the commitment event `commit([order(A,B)])` is a legal `B_2PL` step from
 the canonical state `σ₀` to `σ₁`; `σ₁` keeps exactly the rows of `σ₀` with a
 complete refinement in `σ₀` that does not commit `B` before `A` (aborting `A`
 or `B` counts), so it keeps `[A,B,C]` and removes `[B,A,C]`;
-(b) the canonical run stays at `σ₀`, which has `[B,A,C]`, and still has it
-after its `Out_{κ}(o1)` (`κ_{o1} = ε`);
-(c) 2PL's `Out_ε(o1)` from `σ₁` and its
-`Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)](o2)` are legal
-`B_2PL` steps, and the canonical run emits `o1` and `o2`;
+(b) the canonical run stays at `σ₀`, which has `[B,A,C]`;
+(c) 2PL's `Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)]([A,C,B])`
+is a legal `B_2PL` step from `σ₁`, `Out_[TxCommit(A),TxCommit(B),TxCommit(C)]([A,C,B])`
+is not (the row `[A,B,C]` survives those commitments), and the canonical run
+emits `[A,C,B]` with `κ`;
 (d) both end at the same state, and the runs are a `Lockstep` pair whose
-commitment event is matched by no canonical event.
-
-The output event emitting `[A,C,B]` applies no further commitment ordering
-`A` and `B`; it does apply `order(A,C)` and `order(C,B)`, which place `C`, and
-transactional-commit commitments alone do not suffice (`Out_[TxCommit(A),TxCommit(B),TxCommit(C)](o2)`
-is not legal, since the row `[A,B,C]` survives them and is neither refined by
-`o2` nor by any row refining `o2`). -/
-theorem «sec:systems/canonical-example» {T K : Type} {rd wr : T → K → Prop} {A B C : T}
-    {x : K} (h : Txn.Partial.Distinct3 A B C) (hr : rd A x) (hnw : ∀ t, ¬ wr t x) :
-    let σ0 := Txn.Partial.σABC rd wr h
-    let k3 := Txn.Partial.tri A B C h
-    let o1 := Txn.Partial.CanonEx.o1 A x
-    let o2 := Txn.Partial.CanonEx.o2 A B C x
-    let γ2 := Txn.Partial.CanonEx.γ2 (K := K) (rd := rd) (wr := wr) A B C
-    let row := Txn.Partial.CanonEx.row (T := T) A x
-    ∃ σ1 τ1 τ2 τ1' τ2' : State (Txn.Partial.spec rd wr false),
+commitment event is matched by no canonical event. -/
+theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
+    (h : Txn.Partial.Tri k A B C) :
+    let σ0 := Txn.Partial.σ3 k
+    let o2 := Txn.Partial.CommitEx.o2 (K := K) A B C
+    let γ2 := Txn.Partial.CommitEx.γ2 (K := K) A B C
+    let row := fun (l : List T) => Txn.Partial.full (K := K) (Txn.Partial.mk l fun _ => False)
+    ∃ σ1 τ2 τ2' : State (Txn.Partial.spec (T := T) (K := K) false),
       -- (a)
-      SysStep Txn.Partial.basis2PL σ0 (.commit [Txn.Partial.order A B]) σ1 ∧ σ1.cur = k3 ∧
-      (∀ k w, σ1.R k w ↔ σ0.R k w ∧
-        ∃ c, σ0.R k c ∧ Txn.Partitions k c.o ∧ w ≼ c ∧ ¬ c.o.lt B A) ∧
-      σ1.R k3 (row [A, B, C] fun _ => False) ∧ ¬ σ1.R k3 (row [B, A, C] fun _ => False) ∧
+      SysStep Txn.Partial.basis2PL σ0 (.commit [Txn.Partial.order A B]) σ1 ∧ σ1.cur = k ∧
+      (∀ k' w, σ1.R k' w ↔ σ0.R k' w ∧
+        ∃ c, σ0.R k' c ∧ Txn.Partial.Decides false k' c.o ∧ w ≼ c ∧ ¬ c.o.lt B A) ∧
+      σ1.R k (row [A, B, C]) ∧ ¬ σ1.R k (row [B, A, C]) ∧
       -- (b)
-      σ0.R k3 (row [B, A, C] fun _ => False) ∧ τ1'.R k3 (row [B, A, C] fun _ => False) ∧
+      σ0.R k (row [B, A, C]) ∧
       -- (c)
-      SysStep Txn.Partial.basis2PL σ1 (.output [] o1) τ1 ∧
-      SysStep Txn.Partial.basis2PL τ1 (.output γ2 o2) τ2 ∧
-      (¬ ∃ τ, SysStep Txn.Partial.basis2PL τ1
+      SysStep Txn.Partial.basis2PL σ1 (.output γ2 o2) τ2 ∧
+      (¬ ∃ τ, SysStep Txn.Partial.basis2PL σ1
         (.output [Txn.Partial.commit A, Txn.Partial.commit B, Txn.Partial.commit C] o2) τ) ∧
-      kappa σ0 o1 = [] ∧ CanonStep σ0 (.output (kappa σ0 o1) o1) τ1' ∧
-      CanonStep τ1' (.output (kappa τ1' o2) o2) τ2' ∧
+      CanonStep σ0 (.output (kappa σ0 o2) o2) τ2' ∧
       -- (d)
       τ2 = τ2' ∧
-      Lockstep Txn.Partial.basis2PL σ0
-        [.commit [Txn.Partial.order A B], .output [] o1, .output γ2 o2] τ2
-        σ0 [.output (kappa σ0 o1) o1, .output (kappa τ1' o2) o2] τ2' :=
-  Txn.Partial.CommitEx.example_commit_event_ABC h hr hnw
+      Lockstep Txn.Partial.basis2PL σ0 [.commit [Txn.Partial.order A B], .output γ2 o2] τ2
+        σ0 [.output (kappa σ0 o2) o2] τ2' :=
+  Txn.Partial.CommitEx.example_commit_event_ABC h
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 

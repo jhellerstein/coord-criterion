@@ -49,8 +49,9 @@ import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.DeploymentSystems
 -- Appendix G transaction bases
 import CoordCriterion.Appendix.TransactionBases.NoReads
+import CoordCriterion.Appendix.TransactionBases.Spec
 import CoordCriterion.Appendix.TransactionBases.Partial
-import CoordCriterion.Appendix.TransactionBases.CanonicalExample
+import CoordCriterion.Appendix.TransactionBases.MVTO
 import CoordCriterion.Appendix.TransactionBases.CommitEvent
 -- Frontier results (not in the paper; kept for future work) and registers (Appendix E)
 import CoordCriterion.Appendix.Frontiers
