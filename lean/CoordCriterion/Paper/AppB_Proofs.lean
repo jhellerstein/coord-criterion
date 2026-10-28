@@ -90,10 +90,10 @@ theorem «proof:prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Sp
 
 /-- **Lemma `lem:reconciliation`** (Reconciliation).  "Let runs end at
 `(i_r,R_r)`, `r = 1,…,m`, let `j` be a common expansion of the `i_r`, and let
-`E` be the set of outputs emitted on any of them.  The runs are confluent at
-`j` if and only if some `u ∈ S(j)` refines every output in `E`."
+`X` be the set of outputs emitted on any of them.  The runs are confluent at
+`j` if and only if some `u ∈ S(j)` refines every output in `X`."
 
-Lean: the runs are a list `fam` of runs with their events, `E` is
+Lean: the runs are a list `fam` of runs with their events, `X` is
 `emittedAll fam`. -/
 theorem «lem:reconciliation» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (fam : List (RunW sp)) (j : I) (hj : ∀ r ∈ fam, r.fin.cur ≼ j) :

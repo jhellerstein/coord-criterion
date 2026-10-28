@@ -29,7 +29,7 @@ the mapping into our frame.
   `netAdm`), so the network is read off the input, and a behavior is a
   relational specification on them.  A transducer computes a behavior when
   every run lands in it, so an implementation realizes a sub-behavior; the
-  comparison is Complete CAP with that sub-behavior as availability relation
+  comparison is Complete CAP with that sub-behavior as explicit relation
   (`CAP.ConsistentOn`).  Node monotonicity (`NodeMono`) is the
   common-expansion condition asked only of two rows at disjoint networks
   (`nodeMono_iff_disjointPair`), so consistency implies it
@@ -367,7 +367,7 @@ at most one pick per node.  The behavior is node monotone, and its fiber at
 only ask that an implementation compute it, that is, land in some
 sub-behavior.  The sub-behavior "every node picks `true`" is total, and the
 behavior is consistent on it, so Complete CAP covers it with that
-availability relation. -/
+explicit relation. -/
 
 section Pick
 

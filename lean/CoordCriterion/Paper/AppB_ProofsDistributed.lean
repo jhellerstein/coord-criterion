@@ -109,26 +109,26 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
 /-- Proof of Theorem `thm:complete-cap`, (2)⇒(1): "Take the system whose
 strategies emit, by the canonical output event `output(o)` …, any output `o`
-of `A` in the current fiber. … so the system has Availability for `A`. …
+of `E` in the current fiber. … so the system has Availability for `E`. …
 For a system that emits only canonical output events, that is confluence at
-`j`, which gives Partition Consistency."  Lean: `respSystem A`, a canonical
+`j`, which gives Partition Consistency."  Lean: `respSystem E`, a canonical
 system. -/
-theorem «thm:complete-cap/proof-sufficiency» (A : Table I O) (h : ConsistentOn sp A) :
-    AvailabilityFor A (respSystem (sp := sp) (D := D) A) ∧
-    PartitionConsistencyAtEnd (respSystem (sp := sp) (D := D) A) ∧
-    CanonicalSystem (respSystem (sp := sp) (D := D) A) :=
-  ⟨availabilityFor_resp A, pc_resp A h, respSystem_canonical A⟩
+theorem «thm:complete-cap/proof-sufficiency» (E : Table I O) (h : ConsistentOn sp E) :
+    AvailabilityFor E (respSystem (sp := sp) (D := D) E) ∧
+    PartitionConsistencyAtEnd (respSystem (sp := sp) (D := D) E) ∧
+    CanonicalSystem (respSystem (sp := sp) (D := D) E) :=
+  ⟨availabilityFor_resp E, pc_resp E h, respSystem_canonical E⟩
 
 /-- Proof of Theorem `thm:complete-cap`, (1)⇒(2): "take one participant `p_r`
 per row, starting at input `i_r`, each in its own component … By
-Availability for `A`, each `p_r` can emit `o_r`.  By Partition Consistency,
+Availability for `E`, each `p_r` can emit `o_r`.  By Partition Consistency,
 they then reach one state `(j,R)`, which has some row `(j,u)` … so `u`
 refines every `o_r`."  Lean: only a common refinement of the emitted outputs
 is used (implied by Partition Consistency). -/
-theorem «thm:complete-cap/proof-necessity» (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
-    (Sys : System sp D) (hA : AvailabilityFor A Sys) (hC : CommonRefinementAtEnd Sys) :
-    ConsistentOn sp A :=
-  consistentOn_of_availabilityFor A hAS Sys hA hC
+theorem «thm:complete-cap/proof-necessity» (E : Table I O) (hES : ∀ i o, E i o → sp.S i o)
+    (Sys : System sp D) (hA : AvailabilityFor E Sys) (hC : CommonRefinementAtEnd Sys) :
+    ConsistentOn sp E :=
+  consistentOn_of_availabilityFor E hES Sys hA hC
 
 /-! ## Proof of Corollary `cor:complete-cap-S` -/
 

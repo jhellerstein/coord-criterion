@@ -2,10 +2,10 @@ import CoordCriterion.Appendix.Deployment
 import CoordCriterion.CAP.Coordination
 
 /-!
-# Appendix E: a deployment as one availability relation per participant
+# Appendix E: a deployment as one explicit relation per participant
 
 Appendix `app:deployment` reads a deployment `(A_p)` as Theorem
-`thm:complete-cap`'s availability relation, chosen per participant.  This file
+`thm:complete-cap`'s explicit relation, chosen per participant.  This file
 proves the facts that connect the two:
 
 * Deployment Availability at the end of histories agrees with the cut form of

@@ -284,7 +284,8 @@ downward-closed extension.  An output is a set of read answers, ordered by
 inclusion.  For an isolation level `L`, `S_L` permits an output at an input
 when it extends to a history that answers every read, orders versions by
 timestamp, and exhibits none of the phenomena that `L` proscribes.  The
-availability relation `A` is the replica's read rule above."  (CIDR version:
+explicit relation `E` holds, at each input, the answers that the read rule
+above gives."  (CIDR version:
 "An input is a history of received events ordered by happens-before: reads
 tagged with their replica, commits with their timestamp and write set, and
 deliveries of committed writes to replicas.  Inputs are ordered by
@@ -292,11 +293,12 @@ downward-closed extension, and outputs are sets of read answers, ordered by
 inclusion.  For an isolation level `L`, defined by the phenomena it
 proscribes, `S_L` permits an output when it extends to a history that answers
 every read, orders versions by timestamp, and exhibits none of those
-phenomena.  The availability relation `A` is the replica's read rule.")
+phenomena.  The explicit relation `E` holds, at each input, the answers the
+read rule gives.")
 Lean: inputs `HATSpec.Inp true` (events `rd`, `cm`, `dl`; legality `WF` plus
 the timestamp condition of Thm. `thm:hat-levels`, so that the theorem's
 hypothesis is part of the input domain; of program order only "reads precede
-their commit" is required); `S_L = HATSpec.spec L`; `A = HATSpec.hatA`, the
+their commit" is required); `S_L = HATSpec.spec L`; `E = HATSpec.hatA`, the
 rows `(j, hatOut j)`.  A history (`HATSpec.CH`) returns, for each read, the
 initial version or one installed by another committed transaction; levels
 are item-only (`HATSpec.Level`: RU, RC, SI, RR, SER). -/
@@ -311,8 +313,8 @@ theorem «def:hat-spec/inputs-closed» {a b : IConf.Hist HATSpec.Ev} (hab : a �
     (HATSpec.WF b → HATSpec.WF a) ∧ (HATSpec.Lamport b → HATSpec.Lamport a) :=
   ⟨HATSpec.wf_down hab, HATSpec.lamport_down hab⟩
 
-/-- Def. `def:hat-spec`: "The availability relation `A` is the replica's read
-rule above", i.e. "A replica answers a read with the highest-timestamped
+/-- Def. `def:hat-spec`: "The explicit relation `E` holds, at each input, the
+answers that the read rule above gives", i.e. "A replica answers a read with the highest-timestamped
 committed write of the item that it has received."  Lean: `hatOut j` answers
 read event `e` with the highest timestamp among the writes of its item
 delivered to its replica before `e` (or the initial version); every read gets
@@ -324,19 +326,19 @@ theorem «def:hat-spec/read-rule» :
 
 /-- **Theorem `thm:hat-levels`** (HAT levels): "Suppose each transaction's
 timestamp exceeds that of every version it reads.  For read uncommitted and
-read committed, `A ⊆ S_L` and `S_L` satisfies Lifted Monotonicity for `A`, so
+read committed, `E ⊆ S_L` and `S_L` satisfies Lifted Monotonicity for `E`, so
 by Complete CAP these levels stay available and consistent through
 partitions.  For any level that proscribes Lost Update, including snapshot
-isolation, repeatable read, and serializability, no availability relation
+isolation, repeatable read, and serializability, no explicit relation
 that answers every read satisfies Lifted Monotonicity for it."  Lean:
-(1) for `L ∈ {RU, RC}`, `A ⊆ S_L`, Lifted Monotonicity for `A`
-(`CAP.ConsistentOn`), and some system with Availability for `A` and
+(1) for `L ∈ {RU, RC}`, `E ⊆ S_L`, Lifted Monotonicity for `E`
+(`CAP.ConsistentOn`), and some system with Availability for `E` and
 Partition Consistency (`CAP.complete_cap_for`); (2) for any proscribed set
 `P` containing Lost Update (avoided by the serial history, so `S_P` is a
-specification), every `A ⊆ S_P` that answers every read fails Lifted
-Monotonicity for `A`, and no system has Availability for `A` and Partition
+specification), every `E ⊆ S_P` that answers every read fails Lifted
+Monotonicity for `E`, and no system has Availability for `E` and Partition
 Consistency; (3) in particular for SI, RR, and serializability.  The
-hypothesis is the timestamp condition on inputs: under `A`, the version a
+hypothesis is the timestamp condition on inputs: under `E`, the version a
 read returns is the highest delivered before it, so "exceeds every version
 it reads" and "exceeds every version delivered before its reads" agree.
 Part (2) holds with or without it. -/
@@ -348,19 +350,19 @@ theorem «thm:hat-levels» (D : Type) :
           CAP.AvailabilityFor HATSpec.hatA Sys ∧ CAP.PartitionConsistencyAtEnd Sys) ∧
     (∀ (P : (j : HATSpec.Inp true) → HATSpec.CH j → Prop) (hP : ∀ j, ¬ P j (HATSpec.serial j)),
       (∀ j (H : HATSpec.CH j), HATSpec.LostUpdate H → P j H) →
-      ∀ (A : Table (HATSpec.Inp true) (IConf.St HATSpec.Fact)),
-        (∀ i o, A i o → (HATSpec.specP P hP).S i o) → (∀ i, ∃ o, A i o) →
-        (∀ i o e, A i o → HATSpec.IsRd i e → ∃ v, o (.read e v)) →
-        ¬ CAP.ConsistentOn (HATSpec.specP P hP) A ∧
+      ∀ (E : Table (HATSpec.Inp true) (IConf.St HATSpec.Fact)),
+        (∀ i o, E i o → (HATSpec.specP P hP).S i o) → (∀ i, ∃ o, E i o) →
+        (∀ i o e, E i o → HATSpec.IsRd i e → ∃ v, o (.read e v)) →
+        ¬ CAP.ConsistentOn (HATSpec.specP P hP) E ∧
           ¬ ∃ Sys : CAP.System (HATSpec.specP P hP) D,
-            CAP.AvailabilityFor A Sys ∧ CAP.PartitionConsistencyAtEnd Sys) ∧
+            CAP.AvailabilityFor E Sys ∧ CAP.PartitionConsistencyAtEnd Sys) ∧
     (∀ L, L = .SI ∨ L = .RR ∨ L = .SER → ∀ (j : HATSpec.Inp true) (H : HATSpec.CH j),
       HATSpec.LostUpdate H → HATSpec.Proscribed L j H) :=
   ⟨fun L hL => HATSpec.rc_available L hL D,
-    fun P hP hLU A hAS htot hans => HATSpec.lostUpdate_unavailableP P hP hLU D A hAS htot hans,
+    fun P hP hLU E hES htot hans => HATSpec.lostUpdate_unavailableP P hP hLU D E hES htot hans,
     fun L hL _ H h => HATSpec.proscribes_lostUpdate L hL H h⟩
 
-/-- Proof sketch of Thm. `thm:hat-levels`: "A read's answer under `A` depends
+/-- Proof sketch of Thm. `thm:hat-levels`: "A read's answer under `E` depends
 only on the events that precede it, so later input never changes it, and the
 timestamp condition rules out the dependency cycles of G0 and G1c."  Lean:
 the candidates of a read are the same at every expansion containing it

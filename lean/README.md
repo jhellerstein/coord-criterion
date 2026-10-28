@@ -102,13 +102,13 @@ first and supporting claims and examples follow.
 | `CAP/Register.lean` | `CC.GL` | App. F | Linearizable register, realized histories, Cor. Gilbert–Lynch |
 | `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.5, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |
 | `CAP/AsyncGilbertLynch.lean` | `CC.AsyncGL` | App. F | Gilbert–Lynch Theorem 1 (asynchronous model) by reduction to the corollary |
-| `CAP/ChosenAvailability.lean` | `CC.CAP`, `CC.AsyncGL` | App. F | End-of-history forms of Response Availability / RPC / Answering; RPC is the converse's common-refinement condition; a response interface as a chosen availability relation; Lemma forced-answer and Cor. Gilbert–Lynch at the end of histories |
+| `CAP/ChosenAvailability.lean` | `CC.CAP`, `CC.AsyncGL` | App. F | End-of-history forms of Response Availability / RPC / Answering; RPC is the converse's common-refinement condition; a response interface as a chosen explicit relation; Lemma forced-answer and Cor. Gilbert–Lynch at the end of histories |
 | `Instances/InvariantConfluence.lean` | `CC.IConf` | §6, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
 | `Instances/BailisDefinition.lean` | `CC.IConf` | §6 | Bailis et al. Def. 5/6 ⇔ `IConfluent` |
 | `Instances/Examples.lean` | `CC.Inst` | §5–§6, App. B, App. D | CRDTs, uniqueness example, composition examples |
 | `Instances/HATRC.lean` | `CC.HATRC` | §6.3 | HAT's Read Committed algorithm (App. B pseudocode, partial replication, anti-entropy): a G1c witness with timestamps fixed at `BEGIN`; with Lamport timestamps chosen at commit every run is PL-2 |
 | `Instances/HATUnion.lean` | `CC.HATUnion` | — (not cited) | Bailis's dissertation frame (histories merged by union): two read-committed histories whose union has G1c; with the Lamport condition unions never do |
-| `Instances/HATSpec.lean` | `CC.HATSpec` | §6.3 | Def. hat-spec, Thm. hat-levels: event-history inputs with happens-before (optionally with the timestamp condition), read-answer outputs, HAT levels (RU, RC, SI, RR, SER; item-only); HAT's read rule as availability relation; RU/RC available under the timestamp condition; any level proscribing Lost Update unavailable; without the condition the read rule leaves `S_RC` |
+| `Instances/HATSpec.lean` | `CC.HATSpec` | §6.3 | Def. hat-spec, Thm. hat-levels: event-history inputs with happens-before (optionally with the timestamp condition), read-answer outputs, HAT levels (RU, RC, SI, RR, SER; item-only); HAT's read rule as explicit relation; RU/RC available under the timestamp condition; any level proscribing Lost Update unavailable; without the condition the read rule leaves `S_RC` |
 | `Instances/QueryRefinements.lean` | `CC.QRef` | §6.1 | Domain-distinct/disjoint monotonicity as Functional CALM under restricted expansion orders; one-fact versions are weaker; behaviors over located facts, node monotonicity vs. Lifted Monotonicity |
 | `Instances/StateMachine.lean` | `CC.SM` | §6 | State machines and the prefix-ordered table of event sequences (used by Prop. induced-specification (2)); arrival-order independence; the election as an induced specification |
 | `Instances/IOMachine.lean` | `CC.IOM` | §6 | A general machine automaton (receives, outputs and internal steps that may change state; state machines as the special case `ofSM`), clients, and a bag or FIFO channel as composed I/O automata; happens-before; the specification of (received events with happens-before, observation) pairs; fibers are reached by machine executions on arrival orders, every one over a bag without observations; FIFO single client is the table of payload sequences under prefix (the prefix encoding for state machines); confluence across executions ⇔ Lifted Monotonicity, also for emitted outputs when outputs report observations; later sends after an output (Def./Prop. induced-specification) |
@@ -119,7 +119,7 @@ first and supporting claims and examples follow.
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
-| `Appendix/DeploymentFor.lean` | `CC.Deploy` | App. E | Deployment Availability at the end of histories; uniform deployment is Availability for `A`; Lifted Monotonicity for `A` implies monotone across partitions; single authority: choices not distributed coordination |
+| `Appendix/DeploymentFor.lean` | `CC.Deploy` | App. E | Deployment Availability at the end of histories; uniform deployment is Availability for `E`; Lifted Monotonicity for `E` implies monotone across partitions; single authority: choices not distributed coordination |
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter commitments on antichain fibers (used by Fig. cc-commitments in §4.3 and App. C) |
 | `Appendix/TransactionBases/Spec.lean` | `CC.Txn.Partial` | App. G | The specification: inputs are transactions with operation sequences (prefix order, frozen after the commit request); outputs `(L,X,ρ)` with reads by position; complete outputs, read rule, abort-free variant |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | Closure commitments; 2PL/MVTO bases; bases differ at three transactions that requested commit; deadlock (and under abort-free: the two commit requests are never both accepted); MVTO: what a reported read commits to, when the writer's abort is entailed |
@@ -349,15 +349,15 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-consistency/unfolded»` | theorem | Def. |
 | `«def:partition-consistency/at-cuts»` | theorem | Def. |
 | `«def:lm-for-A»` | abbrev | **Def. |
-| `«sec:complete-cap/lm-for-S»` | theorem | "With `A = S`, Lifted Monotonicity for `A` is the common-expansion condition." |
-| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered specification `S` and an availability relation `A ⊆ S`, the following are equivalent: |
+| `«sec:complete-cap/lm-for-S»` | theorem | "With `E = S`, Lifted Monotonicity for `E` is the common-expansion condition." |
+| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered specification `S` and an explicit relation `E ⊆ S`, the following are equivalent: |
 | `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `S` satisfies Lifted Monotonicity." |
 | `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
 | `«sec:complete-cap/necessity-any-system»` | theorem | "A system might hope to keep more outputs available by issuing commitments, coordinating within each side of a partition. |
 | `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Nor does the system in the proof need coordination. |
-| `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `A = S` it needs no commitment at all." Lean: |
-| `«sec:complete-cap/local-choice-necessary»` | theorem | "For a smaller `A` such local choices can be necessary: |
-| `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `A` fails, some output of `A` either waits for another component, sacrificing Availability, or is emitted independently at the… |
+| `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `E = S` it needs no commitment at all." Lean: |
+| `«sec:complete-cap/local-choice-necessary»` | theorem | "For a smaller `E` such local choices can be necessary: |
+| `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` either waits for another component, sacrificing Availability, or is emitted independently at the… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Consider a register specification whose inputs are sets of operations with their real-time precedence, and whose outputs answer every operation of the input… |
 | `«sec:complete-cap/gl-no-system»` | theorem | "By Complete CAP, then, no system keeps both outputs available and consistent across a partition." Lean: |
@@ -509,13 +509,13 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — a commitment some run at another participant contradicts (Def. |
 | `«app:notation/coordination-free»` | abbrev | *coordination-free* — applies no commitment that requires coordination (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — no message crosses components (Def. |
-| `«app:notation/availability-relation»` | abbrev | *availability relation* — `A ⊆ S`, the rows whose outputs must stay available (Def. |
-| `«app:notation/availability»` | abbrev | *Availability for `A`* — each output of `R(i) ∩ A(i)` emittable locally (Def. |
-| `«app:notation/lm-for-A»` | abbrev | *Lifted Monotonicity for `A`* — every finite set of rows of `A` with a common expansion `j` has a common refinement in `S(j)` (Def. |
-| `«app:notation/deployment»` | abbrev | *deployment* — one availability relation `A_p` per participant (Def. |
+| `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`; explicit, implicit output* — `E ⊆ S`, the rows whose outputs must stay available; outputs of `E`, and the other permitted outputs (Def. |
+| `«app:notation/availability»` | abbrev | *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable locally (Def. |
+| `«app:notation/lm-for-A»` | abbrev | *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a common expansion `j` has a common refinement in `S(j)` (Def. |
+| `«app:notation/deployment»` | abbrev | *deployment* — one explicit relation `E_p` per participant (Def. |
 | `«app:notation/partition-consistency»` | abbrev | *Partition Consistency* — final cuts of partitioned histories confluent (Def. |
 | `«app:notation/response-obligation»` | abbrev | *response obligation* — per participant, the outputs that count as answers; upward closed within fibers (Def. |
-| `«app:notation/response-interface»` | abbrev | *response interface* — a total, self-continuing availability relation `T ⊆ Q` (Def. |
+| `«app:notation/response-interface»` | abbrev | *response interface* — a total, self-continuing explicit relation `T ⊆ Q` (Def. |
 
 ### Appendix B: Deferred proofs
 
@@ -684,24 +684,24 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«def:deployment/family»` | theorem | Def. |
 | `«def:deployment/separable»` | theorem | Def. |
 | `«def:monotone-across-partitions»` | theorem | **Definition `def:monotone-across-partitions`** (Monotone across partitions). |
-| `«app:deployment/lm-for-implies-mono-across»` | theorem | "If `S` satisfies Lifted Monotonicity for a relation that contains every `A_p`, it is monotone across partitions: |
-| `«app:deployment/uniform-mono-across»` | theorem | "So Lifted Monotonicity for `A` suffices for the uniform deployment `A_p = A` …" |
+| `«app:deployment/lm-for-implies-mono-across»` | theorem | "If `S` satisfies Lifted Monotonicity for a relation that contains every `E_p`, it is monotone across partitions: |
+| `«app:deployment/uniform-mono-across»` | theorem | "So Lifted Monotonicity for `E` suffices for the uniform deployment `E_p = E` …" |
 | `«app:deployment/lm-implies-mono-across»` | theorem | "… and Lifted Monotonicity suffices for every deployment." |
 | `«app:deployment/run-outputs-chain»` | theorem | "Rows authorized only to `p` can be emitted only by `p`'s run, whose emitted outputs form a chain (each output event keeps only rows refining it)." The chain… |
 | `«app:deployment/sole-rows-single-row»` | theorem | "… so a family whose emitted rows are all authorized only to `p` is separable only when it emits a single row." Lean: |
-| `«app:deployment/leader-example/setup»` | theorem | "Let `P = {p,q}`, let every fiber be `{a,b}` ordered by equality, and let `A_p = S` and `A_q = ∅`, so that `p` alone names a leader." Lean: |
+| `«app:deployment/leader-example/setup»` | theorem | "Let `P = {p,q}`, let every fiber be `{a,b}` ordered by equality, and let `E_p = S` and `E_q = ∅`, so that `p` alone names a leader." Lean: |
 | `«app:deployment/leader-example/one-output»` | theorem | "A run of `p` emits at most one distinct output …" |
 | `«app:deployment/leader-example/separable-shape»` | theorem | "… and `q` never emits, so every separable family consists of one row `(i,a)` or `(i,b)` beside a silent `q`." |
 | `«app:deployment/leader-example»` | theorem | "So `S` is monotone across partitions, yet `(i,a)` and `(i,b)` have no common expansion and Lifted Monotonicity fails." (Any input `i` witnesses the failure.) |
 | `«app:deployment/sufficient-condition»` | theorem | "The same happens whenever each authorized row has an expansion at every expansion of its input and every set of authorized rows lacking a common expansion a… |
 | `«app:deployment/further-examples»` | theorem | "The causal register of Appendix `app:registers` is a further example, with no single authority, of monotonicity across partitions without Lifted Monotonicit… |
 | `«app:deployment/further-examples/condition-fails»` | theorem | "… they need not satisfy this condition, since a set of rows lacking a common expansion may also contain rows of other participants." Witness: |
-| `«app:deployment/full-deployment»` | theorem | "If `\|P\| ≥ 2` and `A_p = S` for every `p`, every pair of rows can be split across a partition and every single row paired with a silent participant at the co… |
+| `«app:deployment/full-deployment»` | theorem | "If `\|P\| ≥ 2` and `E_p = S` for every `p`, every pair of rows can be split across a partition and every single row paired with a silent participant at the co… |
 | `«app:deployment/full-deployment/pairs-suffice»` | theorem | The pairs-suffice step used above (Appendix `app:pairs-suffice`). |
 | `«def:deployment-availability»` | theorem | **Definition `def:deployment-availability`** (Deployment Availability). |
-| `«app:deployment/uniform-availability»` | theorem | "This is Availability for `A_p`, one relation per participant. |
-| `«app:deployment/full-deployment-availability»` | theorem | "… and for `A_p = S` it is Availability." `AvailabilityAt Sys n` is `CAP.Availability` restricted to histories over `Fin n` (`CAP.Availability Sys ↔ ∀ n, Ava… |
-| `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `A_q = ∅` for every participant `q` but one, as in the leader example above." |
+| `«app:deployment/uniform-availability»` | theorem | "This is Availability for `E_p`, one relation per participant. |
+| `«app:deployment/full-deployment-availability»` | theorem | "… and for `E_p = S` it is Availability." `AvailabilityAt Sys n` is `CAP.Availability` restricted to histories over `Fin n` (`CAP.Availability Sys ↔ ∀ n, Ava… |
+| `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `E_q = ∅` for every participant `q` but one, as in the leader example above." |
 | `«app:deployment/single-authority/shape»` | theorem | "Every separable family is then one row emitted by the single authority beside a silent participant …" |
 | `«app:deployment/single-authority»` | theorem | "… and monotonicity across partitions says only that each such row has an expansion at every expansion of its input." (With `\|P\| ≥ 2`, so that some partition… |
 | `«app:deployment/single-authority/not-distributed»` | theorem | "In a system whose other participants emit nothing, no other participant emits an output that the authority chooses against, so its choices do not require di… |
@@ -711,7 +711,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |
 | `«app:deployment/system-runs»` | theorem | "So if `S` is monotone across partitions, the outputs emitted by a separable family of runs of a partitioned history, as Deployment Availability permits, hav… |
 | `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`; confluence through legal output events of the deployment would additionally r… |
-| `«app:deployment/full-deployment-step»` | theorem | "With `\|P\| ≥ 2` and `A_p = S` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Corollary `cor:complete-cap-S` stating t… |
+| `«app:deployment/full-deployment-step»` | theorem | "With `\|P\| ≥ 2` and `E_p = S` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Corollary `cor:complete-cap-S` stating t… |
 | `«app:registers/history»` | abbrev | "An input is a finite operation history `h`: |
 | `«app:registers/history-order»` | theorem | "We set `h ⊑ h'` when the operations of `h` form a causally closed subset of `h'` and `→` restricted to them is the order of `h`." |
 | `«app:registers/no-new-past»` | theorem | "Thus an expansion never adds an operation to the causal past of an existing one." |
@@ -721,7 +721,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:registers/two-write-history»` | theorem | "Participant `p` completes `w_p(x,dog)` while `q` concurrently completes `w_q(x,cat)`; … each serves a local read, `r_p` at `p` and `r_q` at `q`. |
 | `«app:registers/linearizable-not-monotone-across»` | theorem | "Under linearizability, if `p` reads cat the order has `w_p(x,dog)` before `w_q(x,cat)`; if `q` reads dog it has the opposite. |
 | `«app:registers/causal-two-write»` | theorem | "Under causal consistency the two replicas may serialize the concurrent writes differently, and one source map sends `r_p` to `w_q(x,cat)` and `r_q` to `w_p(… |
-| `«app:registers/causal-monotone-across»` | theorem | "Under the deployment in which each replica answers only its own reads (`A_p` holds the rows whose source map is defined only on reads of `p`), the causal re… |
+| `«app:registers/causal-monotone-across»` | theorem | "Under the deployment in which each replica answers only its own reads (`E_p` holds the rows whose source map is defined only on reads of `p`), the causal re… |
 | `«app:registers/serialization-extends»` | theorem | Proof step: |
 | `«app:registers/linear-extension»` | theorem | Supporting fact: |
 | `«app:registers/same-read-incompatible»` | theorem | "Two answers to the same read remain incompatible, but only the reading replica may emit either." The causal register is not monotone: |
@@ -762,12 +762,12 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«def:response-interface/lm-for-T»` | theorem | "Lifted Monotonicity for `T` is that of Definition `def:lm-for-A`, and the reconciling output may lie outside `T`." Lean: |
 | `«def:response-interface/T-eq-S»` | theorem | "With `T = S` it is the common-expansion condition of Proposition `prop:common-expansion-form`." |
 | `«def:response-interface/confluence»` | theorem | "and by Lemma `lem:reconciliation` it is confluence of the canonical runs whose emitted rows lie in `T`." Lean: |
-| `«app:cap-response/serve-interface»` | theorem | "A response interface is an availability relation that a system can always serve. |
+| `«app:cap-response/serve-interface»` | theorem | "A response interface is an explicit relation that a system can always serve. |
 | `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).** "For an ordered relational specification `S` and a uniform obligation `Q`, the… |
 | `«thm:complete-cap-response/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap-response`, (2⇒1): |
 | `«app:cap-response/without-replication»` | theorem | **Remark "Without replication"**: |
 | `«app:cap-response/without-replication/local-init-needed»` | theorem | The `LocalInit` hypothesis ("each strategy depends on the initial inputs only through its own participant's") is needed: |
-| `«app:cap-response/lm-implies-response-form»` | theorem | "Theorem `thm:complete-cap` with `A = S` requires every permitted output to stay available; Theorem `thm:complete-cap-response` lets the system choose which… |
+| `«app:cap-response/lm-implies-response-form»` | theorem | "Theorem `thm:complete-cap` with `E = S` requires every permitted output to stay available; Theorem `thm:complete-cap-response` lets the system choose which… |
 | `«app:cap-response/converse-fails»` | theorem | "The converse fails. |
 | `«app:cap-response/functional-coincide»` | theorem | "For a functional specification the two coincide: |
 | `«app:cap-response/lm-subspec»` | theorem | "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is a response interface for which `S` satisfies Lifted Monotonicity". |

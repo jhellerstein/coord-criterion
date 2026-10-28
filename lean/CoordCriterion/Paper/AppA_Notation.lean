@@ -418,26 +418,27 @@ abbrev «app:notation/partitioned-history» {sp : Spec I O} {D : Type} {n : Nat}
     (H : CAP.History sp D n) (comp : Fin n → Nat) : Prop :=
   CAP.Partitioned H comp
 
-/-- *availability relation* — `A ⊆ S`, the rows whose outputs must stay
-available (Def. `def:partition-notions`).  Lean: a table `A : Table I O`
-with `∀ i o, A i o → sp.S i o`. -/
-abbrev «app:notation/availability-relation» {sp : Spec I O} (A : Table I O) : Prop :=
-  ∀ i o, A i o → sp.S i o
+/-- *explicit relation `E`; explicit, implicit output* — `E ⊆ S`, the rows
+whose outputs must stay available; outputs of `E`, and the other permitted
+outputs (Def. `def:partition-notions`).  Lean: a table `E : Table I O` with
+`∀ i o, E i o → sp.S i o`. -/
+abbrev «app:notation/explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
+  ∀ i o, E i o → sp.S i o
 
-/-- *Availability for `A`* — each output of `R(i) ∩ A(i)` emittable locally
-(Def. `def:partition-notions`).  Lean: `CAP.AvailabilityFor A`; Availability
-is `A = S` (`CAP.AvailabilityAtEnd`). -/
-abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (A : Table I O)
+/-- *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable locally
+(Def. `def:partition-notions`).  Lean: `CAP.AvailabilityFor E`; Availability
+is `E = S` (`CAP.AvailabilityAtEnd`). -/
+abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (E : Table I O)
     (Sys : CAP.System sp D) : Prop :=
-  CAP.AvailabilityFor A Sys
+  CAP.AvailabilityFor E Sys
 
-/-- *Lifted Monotonicity for `A`* — every finite set of rows of `A` with a
+/-- *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a
 common expansion `j` has a common refinement in `S(j)` (Def. `def:lm-for-A`).
 Lean: `CAP.ConsistentOn`. -/
-abbrev «app:notation/lm-for-A» (sp : Spec I O) (A : Table I O) : Prop :=
-  CAP.ConsistentOn sp A
+abbrev «app:notation/lm-for-A» (sp : Spec I O) (E : Table I O) : Prop :=
+  CAP.ConsistentOn sp E
 
-/-- *deployment* — one availability relation `A_p` per participant
+/-- *deployment* — one explicit relation `E_p` per participant
 (Def. `def:deployment`).  Lean: `CC.Deploy.Deployment sp n`. -/
 abbrev «app:notation/deployment» (sp : Spec I O) (n : Nat) : Type := CC.Deploy.Deployment sp n
 
@@ -454,7 +455,7 @@ answers; upward closed within fibers (Def. `def:response-obligation`).  Lean:
 per-participant family `Q n p`. -/
 abbrev «app:notation/response-obligation» (sp : Spec I O) := CAP.Obligation sp
 
-/-- *response interface* — a total, self-continuing availability relation
+/-- *response interface* — a total, self-continuing explicit relation
 `T ⊆ Q` (Def. `def:response-interface`).  Lean: `CAP.ResponseInterface Q T`. -/
 abbrev «app:notation/response-interface» {sp : Spec I O} (Q : CAP.Obligation sp)
     (T : Table I O) : Prop :=

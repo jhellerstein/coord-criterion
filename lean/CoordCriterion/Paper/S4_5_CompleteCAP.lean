@@ -44,24 +44,29 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
 /-- Section `sec:complete-cap`, opening: "Complete CAP answers that broader
 question for any declared guarantee.  A guarantee is encoded as an ordered
-specification together with a designated subset `A` of its rows: those whose
-outputs must stay available.  Complete CAP says that such a guarantee can be
+specification together with a designated subset `E` of its rows: those whose
+outputs must stay available.  This separates what participants must be able to
+emit from what may be observed.  Outputs of `E` are *explicit*: some
+participant must be able to emit them on its own.  The other permitted outputs
+are *implicit*: none need ever be emitted, but an observer outside the system
+may collect outputs from every side, and the specification decides whether
+that collection is permitted.  Complete CAP says that such a guarantee can be
 kept available and consistent through partitions exactly when the
-specification satisfies Lifted Monotonicity for `A`: outputs of rows in `A`
-emitted on different sides of a partition must have a common refinement at
-every common expansion of their inputs.  When `A` is every permitted row, this
-is Lifted Monotonicity itself."  Lean: Theorem `thm:complete-cap` and
+specification satisfies Lifted Monotonicity for `E`: explicit outputs emitted
+on different sides of a partition must have a common refinement in the
+specification at every common expansion of their inputs.  When `E` is every
+permitted row, this is Lifted Monotonicity itself."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
 `«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`).  The
 closing sentences ("A partition does not change which commitments a
 specification needs; …") are intuition for those results. -/
-theorem «sec:complete-cap/intro» (sp : Spec I O) (D : Type) (A : Table I O)
-    (hAS : ∀ i o, A i o → sp.S i o) :
-    ((∃ Sys : System sp D, AvailabilityFor A Sys ∧ PartitionConsistencyAtEnd Sys) ↔
-      ConsistentOn sp A) ∧
+theorem «sec:complete-cap/intro» (sp : Spec I O) (D : Type) (E : Table I O)
+    (hES : ∀ i o, E i o → sp.S i o) :
+    ((∃ Sys : System sp D, AvailabilityFor E Sys ∧ PartitionConsistencyAtEnd Sys) ↔
+      ConsistentOn sp E) ∧
     ((∃ Sys : System sp D, AvailabilityAtEnd Sys ∧ PartitionConsistencyAtEnd Sys) ↔
       sp.LiftedMono) :=
-  ⟨complete_cap_for sp D A hAS,
+  ⟨complete_cap_for sp D E hES,
    ⟨fun ⟨Sys, hA, hP⟩ => cap_necessary_two Sys hA hP,
     fun h => ⟨cfSystem sp D, (availability_iff_atEnd _).1 (cf_availability h),
       (partitionConsistency_iff_atEnd _).1 (cf_partitionConsistency h)⟩⟩⟩
@@ -119,26 +124,26 @@ theorem «sec:complete-cap/environment» (Sys : System sp D) (init : Fin n → I
     Allowed Sys n init p pre (.inp j) :=
   trivial
 
-/-! ### Definition `def:partition-notions` (Availability relation, Availability) -/
+/-! ### Definition `def:partition-notions` (Explicit relation, Availability) -/
 
-/-- **Def. `def:partition-notions` (Availability relation, Availability).**  "A
+/-- **Def. `def:partition-notions` (Explicit relation, Availability).**  "A
 continuation of a partitioned history is local to a participant `p` when the system produces it,
 it adds only events of `p`'s component and no input events, and none of its
 receives takes a message sent from another component.  … *Availability* is
 Availability for `S`."  In the unfolded form below, "local to `p`" is the
 conjunction `Produced … ∧ Partitioned … comp ∧ (∀ q, comp q ≠ comp p → ext q =
-[]) ∧ (∀ q j, inp j ∉ ext q)`.  For a general availability relation see
+[]) ∧ (∀ q j, inp j ∉ ext q)`.  For a general explicit relation see
 `«def:partition-notions/for»`. -/
 abbrev «def:partition-notions» (Sys : System sp D) : Prop := AvailabilityAtEnd Sys
 
-/-- Def. `def:partition-notions`: "An availability relation `A ⊆ S` is a set
+/-- Def. `def:partition-notions`: "An explicit relation `E ⊆ S` is a set
 of rows `(i,o)` whose output `o` must stay available at input `i`; write
-`A(i)` for its fiber `{o : (i,o) ∈ A}`.  The system has Availability for `A` when, in every
+`E(i)` for its fiber `{o : (i,o) ∈ E}`.  The system has Availability for `E` when, in every
 partitioned history it produces, each participant `p`, ending in state
-`(i,R)`, can emit each output in `R(i) ∩ A(i)` in some continuation local to
+`(i,R)`, can emit each output in `R(i) ∩ E(i)` in some continuation local to
 `p`." -/
-abbrev «def:partition-notions/for» (A : Table I O) (Sys : System sp D) : Prop :=
-  AvailabilityFor A Sys
+abbrev «def:partition-notions/for» (E : Table I O) (Sys : System sp D) : Prop :=
+  AvailabilityFor E Sys
 
 /-- Def. `def:partition-notions`: "Availability is Availability for `S`." -/
 theorem «def:partition-notions/for-S» (Sys : System sp D) :
@@ -200,15 +205,15 @@ theorem «def:partition-consistency/at-cuts» (Sys : System sp D) :
     PartitionConsistency Sys ↔ «def:partition-consistency» Sys :=
   partitionConsistency_iff_atEnd Sys
 
-/-! ### Definition `def:lm-for-A` (Lifted Monotonicity for `A`) -/
+/-! ### Definition `def:lm-for-A` (Lifted Monotonicity for `E`) -/
 
-/-- **Def. `def:lm-for-A` (Lifted Monotonicity for `A`).**  "`S` satisfies
-Lifted Monotonicity for `A` when every finite set of rows of `A` with a common
-expansion `j` has a common refinement in `S(j)`."  Lean: `ConsistentOn sp A`
+/-- **Def. `def:lm-for-A` (Lifted Monotonicity for `E`).**  "`S` satisfies
+Lifted Monotonicity for `E` when every finite set of rows of `E` with a common
+expansion `j` has a common refinement in `S(j)`."  Lean: `ConsistentOn sp E`
 (the library name predates the paper's term); finite sets are lists. -/
-abbrev «def:lm-for-A» (sp : Spec I O) (A : Table I O) : Prop := ConsistentOn sp A
+abbrev «def:lm-for-A» (sp : Spec I O) (E : Table I O) : Prop := ConsistentOn sp E
 
-/-- "With `A = S`, Lifted Monotonicity for `A` is the common-expansion
+/-- "With `E = S`, Lifted Monotonicity for `E` is the common-expansion
 condition." -/
 theorem «sec:complete-cap/lm-for-S» (sp : Spec I O) :
     «def:lm-for-A» sp sp.S ↔ sp.CommonExpansion :=
@@ -217,16 +222,16 @@ theorem «sec:complete-cap/lm-for-S» (sp : Spec I O) :
 /-! ### Theorem `thm:complete-cap` -/
 
 /-- **Theorem `thm:complete-cap` (Complete CAP).**  "For an ordered specification
-`S` and an availability relation `A ⊆ S`, the following are
-equivalent: (1) some system has Availability for `A` and Partition
-Consistency; (2) `S` satisfies Lifted Monotonicity for `A`."
+`S` and an explicit relation `E ⊆ S`, the following are
+equivalent: (1) some system has Availability for `E` and Partition
+Consistency; (2) `S` satisfies Lifted Monotonicity for `E`."
 
 Lean: `D` is the (arbitrary) type of message payloads. -/
-theorem «thm:complete-cap» (sp : Spec I O) (D : Type) (A : Table I O)
-    (hAS : ∀ i o, A i o → sp.S i o) :
-    (∃ Sys : System sp D, «def:partition-notions/for» A Sys ∧ «def:partition-consistency» Sys) ↔
-      «def:lm-for-A» sp A :=
-  complete_cap_for sp D A hAS
+theorem «thm:complete-cap» (sp : Spec I O) (D : Type) (E : Table I O)
+    (hES : ∀ i o, E i o → sp.S i o) :
+    (∃ Sys : System sp D, «def:partition-notions/for» E Sys ∧ «def:partition-consistency» Sys) ↔
+      «def:lm-for-A» sp E :=
+  complete_cap_for sp D E hES
 
 /-! ### Corollary `cor:complete-cap-S` -/
 
@@ -262,26 +267,26 @@ impossibility direction of the proof holds for every system, commitment-free
 or not."  Lean: necessity holds for an arbitrary system (any basis, any
 nondeterministic local strategies, so any commitments its output and commit
 events issue). -/
-theorem «sec:complete-cap/necessity-any-system» (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
-    (Sys : System sp D) (hA : «def:partition-notions/for» A Sys)
-    (hP : «def:partition-consistency» Sys) : «def:lm-for-A» sp A :=
-  consistentOn_of_availabilityFor A hAS Sys hA (commonRefinement_of_pc hP)
+theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o, E i o → sp.S i o)
+    (Sys : System sp D) (hA : «def:partition-notions/for» E Sys)
+    (hP : «def:partition-consistency» Sys) : «def:lm-for-A» sp E :=
+  consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP)
 
 /-- "Nor does the system in the proof need coordination.  Under Lifted
-Monotonicity for `A`, the canonical event for an output of `A` seals
-nothing and chooses only against outputs outside `A`, which the system never
+Monotonicity for `E`, the canonical event for an explicit output seals
+nothing and chooses only against implicit outputs, which the system never
 emits, so it is coordination-free (Definition
 `def:coordination-free`)."  "The system in the proof" is the canonical system
-of the proof sketch of Theorem `thm:complete-cap`, `respSystem A`.  Lean: the system emits only rows of `A`, and no output
+of the proof sketch of Theorem `thm:complete-cap`, `respSystem E`.  Lean: the system emits only rows of `E`, and no output
 event removes a row that any run of the system emits, or seals an input any
 run accepts. -/
-theorem «sec:complete-cap/proof-system-coordination-free» (A : Table I O)
-    (hcons : ConsistentOn sp A) :
-    (respSystem (sp := sp) (D := D) A).CoordinationFree ∧
-    ∀ k x, SysEmits (respSystem (sp := sp) (D := D) A) k x → A k x :=
-  ⟨respSystem_coordinationFree A hcons, fun _ _ h => resp_emits_A h⟩
+theorem «sec:complete-cap/proof-system-coordination-free» (E : Table I O)
+    (hcons : ConsistentOn sp E) :
+    (respSystem (sp := sp) (D := D) E).CoordinationFree ∧
+    ∀ k x, SysEmits (respSystem (sp := sp) (D := D) E) k x → E k x :=
+  ⟨respSystem_coordinationFree E hcons, fun _ _ h => resp_emits_A h⟩
 
-/-- "For `A = S` it needs no commitment at all."  Lean: with Availability,
+/-- "For `E = S` it needs no commitment at all."  Lean: with Availability,
 any removal of a row `(k,x)` by an output event whose local prefix is
 receive-free is contradicted in some produced history by another participant
 whose initial input is below `k` (it requires distributed coordination); so
@@ -299,26 +304,26 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     ¬ Sys.CoordinationFreeH :=
   availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun hap hx hnx hqk
 
-/-- "For a smaller `A` such local choices can be necessary: if `o ∈ A(i)` and
-`x ∈ S(i) ∖ A(i)` have no common refinement at `i`, emitting `o` must choose
-against `x`."  Lean: one input, `S = {o, x}` incomparable, `A = {o}`: `S`
-satisfies Lifted Monotonicity for `A` (`ConsistentOn`), `o` is not exposable (so its output event must commit),
-and the canonical system `respSystem A` is coordination-free. -/
+/-- "For a smaller `E` such local choices can be necessary: if `o ∈ E(i)` and
+`x ∈ S(i) ∖ E(i)` have no common refinement at `i`, emitting `o` must choose
+against `x`."  Lean: one input, `S = {o, x}` incomparable, `E = {o}` (`lcA`): `S`
+satisfies Lifted Monotonicity for `E` (`ConsistentOn`), `o` is not exposable (so its output event must commit),
+and the canonical system `respSystem E` is coordination-free. -/
 theorem «sec:complete-cap/local-choice-necessary» (D : Type) :
     ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
     (respSystem (sp := CAP.lcSpec) (D := D) CAP.lcA).CoordinationFree :=
   ⟨lcSpec_consistentOn, lcSpec_o_not_exposable,
     respSystem_coordinationFree CAP.lcA lcSpec_consistentOn⟩
 
-/-- "When Lifted Monotonicity for `A` fails, some output of `A` either waits for
+/-- "When Lifted Monotonicity for `E` fails, some output of `E` either waits for
 another component, sacrificing Availability, or is emitted independently at
 the cost of Partition Consistency." -/
-theorem «sec:complete-cap/lm-for-A-fails» (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
-    (hno : ¬ ConsistentOn sp A) (Sys : System sp D) :
-    ¬ «def:partition-notions/for» A Sys ∨ ¬ «def:partition-consistency» Sys :=
-  (Classical.em («def:partition-notions/for» A Sys)).elim
+theorem «sec:complete-cap/lm-for-A-fails» (E : Table I O) (hES : ∀ i o, E i o → sp.S i o)
+    (hno : ¬ ConsistentOn sp E) (Sys : System sp D) :
+    ¬ «def:partition-notions/for» E Sys ∨ ¬ «def:partition-consistency» Sys :=
+  (Classical.em («def:partition-notions/for» E Sys)).elim
     (fun hA => Or.inr fun hP =>
-      hno (consistentOn_of_availabilityFor A hAS Sys hA (commonRefinement_of_pc hP))) Or.inl
+      hno (consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP))) Or.inl
 
 /-- Precise reading (not a claim of the paper): Def. `def:system` speaks of "a
 rule that chooses" the next events.  Strategies must be read as

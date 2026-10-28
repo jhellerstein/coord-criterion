@@ -2,7 +2,7 @@ import CoordCriterion.CAP.LocalCommitment
 import CoordCriterion.CAP.AsyncGilbertLynch
 
 /-!
-# Appendix F: the response form as a chosen availability relation
+# Appendix F: the response form as a chosen explicit relation
 
 Appendix `app:cap-response` states its definitions at the end of every
 partitioned history, as Section `sec:complete-cap` does.  This file proves
@@ -19,7 +19,7 @@ facts that connect the response form with Theorem `thm:complete-cap`:
   interface `T`, every participant's fiber meets `T` (`resp_fiber_meets`), so
   its Availability for `T` gives Answering (`respSystem_answering`);
 * the response form is Theorem `thm:complete-cap` applied to a chosen
-  availability relation (`response_form_iff_chosen`);
+  explicit relation (`response_form_iff_chosen`);
 * Lemma `lem:forced-answer` and Corollary `cor:gilbert-lynch` at the end of
   histories (`forced_answer_end`, `gilbert_lynch_client_end`).
 -/
@@ -127,7 +127,7 @@ theorem complete_cap_for_rpc (sp : Spec I O) (D : Type) (A : Table I O)
   ⟨fun ⟨Sys, hA, hC⟩ => consistentOn_of_availabilityFor A hAS Sys hA hC,
    fun h => ⟨respSystem A, availabilityFor_resp A, commonRefinement_of_pc (pc_resp A h)⟩⟩
 
-/-! ## A response interface as an availability relation -/
+/-! ## A response interface as an explicit relation -/
 
 /-- In the system of the proof of Theorem `thm:complete-cap` for a total,
 self-continuing `T ⊆ S`, every participant's current fiber meets `T`: some
@@ -217,7 +217,7 @@ theorem respSystem_RA (Q : Obligation sp) (T : Table I O) (hT : ResponseInterfac
       by rw [hp]; simp⟩
 
 /-- The response form is Theorem `thm:complete-cap` applied to a chosen
-availability relation: `S` is consistent on some response interface iff some
+explicit relation: `S` is consistent on some response interface iff some
 response interface `T` admits a system with Availability for `T` and
 Partition Consistency. -/
 theorem response_form_iff_chosen (sp : Spec I O) (D : Type) (Q : Obligation sp) :
