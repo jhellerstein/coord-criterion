@@ -89,16 +89,31 @@ Complete CALM requires only \emph{some} common \outnoun of query outputs
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-Consider a transactional specification.  An input is the set of begin, read,
-write, and commit requests received so far, ordered by inclusion.  An output is
-a set of public facts, such as $\mathsf{read}(T,x,v)$, $\mathsf{TxCommit}(T)$,
-and session-order facts, also ordered by inclusion.  The isolation level or
-session guarantee determines which fact sets are permitted.  An isolation level
-says which reads and commits concurrent transactions may expose.  A session
-guarantee orders one client's operations, as in reading one's own writes.
+Consider a transactional specification, with isolation levels as defined by
+Adya et al.~\cite{adya2000generalized,adya1999weakconsistency}.  A transaction
+is a sequence of operations (reads, writes, and a final commit or abort
+request) that one client issues in order.  Transactions come in sets: an input
+is a set of transactions, each recorded as the prefix its client has issued so
+far, and it grows by new transactions or by longer prefixes.  The input fixes
+no order between transactions; that is the system's to choose.
+
+Adya calls the system's choices a \emph{history}: which version each read
+returns, whether each transaction commits, a version order on each object's
+committed versions, and, for snapshot isolation, a time-precedes order on
+transactions' start and commit points.  An output is a set of such facts,
+ordered by inclusion: $\mathsf{read}(T,k,x_j)$, meaning that the $k$-th
+operation of $T$ returned the version of $x$ written by $T_j$;
+$\mathsf{TxCommit}(T)$; $x_i \ll x_j$; and $c_i <_t s_j$.  A fact set is
+permitted at an input when it extends to a history of the input's
+transactions that exhibits none of the phenomena the level proscribes: G1
+for read committed (PL-2), G1 and G2 for serializability (PL-3), and G1 and
+G-SI for snapshot isolation (PL-SI).  A system may withhold any of these
+facts, for example by never exposing a version order.  A session guarantee
+additionally constrains one client's transactions, as in reading one's own
+writes~\cite{terry1994session}.
 
 The ingredients of highly available transactions (HAT) then come
-apart~\cite{bailis2013hat,terry1994session}.  The isolation level or session
+apart~\cite{bailis2013hat}.  The isolation level or session
 guarantee fixes the specification.  The rule that transactions commit, without
 system-initiated aborts, is a response obligation
 (Appendix~\ref{app:cap-response}).  Sticky availability, in which each client
@@ -106,33 +121,44 @@ keeps contacting replicas that hold its session's earlier operations, is a
 deployment (Proposition~\ref{thm:complete-cap-deployment}).
 
 \paragraph{Read committed.}
-Under read committed, a transaction reads only committed versions.  Suppose two
-separated replicas run transactions on disjoint keys.  One exposes
-$\mathsf{read}(T_1,x,0)$ and $\mathsf{TxCommit}(T_1)$, and the other exposes
-$\mathsf{read}(T_2,y,0)$ and $\mathsf{TxCommit}(T_2)$.  Each read saw a committed
-version, so the union of the four facts contains no dirty read and is itself
-permitted.  It is a common \outnoun of what the two replicas exposed.
+Suppose two separated replicas run transactions on disjoint keys.  One exposes
+$\mathsf{read}(T_1,1,x_0)$ and $\mathsf{TxCommit}(T_1)$, and the other exposes
+$\mathsf{read}(T_2,1,y_0)$ and $\mathsf{TxCommit}(T_2)$, where $x_0$ and $y_0$
+are initial versions.  No aborted or intermediate version is read and no cycle
+of dependencies arises, so the union of the four facts exhibits no G1
+phenomenon and is permitted.  It is a common \outnoun of what the two replicas
+exposed.
 
 \paragraph{Serializability.}
-Serializability requires the exposed facts to be explained by some serial order
-of the committed transactions.  Initially $x=y=0$.  On one replica, $T_1$ reads
-$x=0$, writes $y=1$, and commits.  On the other, $T_2$ reads $y=0$, writes
-$x=1$, and commits.  Each replica's facts are permitted on their own.  $T_1$'s
-read places $T_1$ before $T_2$ in any serial explanation, and $T_2$'s read
-places $T_2$ before $T_1$.  So no serial order explains both sets of
-facts~\cite{adya2000generalized}, and no permitted output contains them both.
+On one replica, $T_1$ reads $x_0$, writes $y$, and commits.  On the other,
+$T_2$ reads $y_0$, writes $x$, and commits.  Each replica's facts are
+permitted on their own.  In any history containing both, $T_2$'s version of
+$x$ follows $x_0$, so $T_1$'s read of $x_0$ is an anti-dependency from $T_1$
+to $T_2$; symmetrically, $T_2$'s read of $y_0$ is one from $T_2$ to $T_1$.
+The two form a G2 cycle (indeed G2-item)~\cite{adya2000generalized}, so no
+permitted output contains both sets of facts.
 
 \paragraph{Snapshot isolation.}
-Let concurrent transactions $T_1$ and $T_2$ read the same snapshot and both
-write $x$, each on its own replica.  Each replica's commit fact is permitted on
-its own.  The first-committer-wins rule of snapshot isolation lets only one of
-two concurrent writers of $x$ commit, so no permitted output contains both
-commit facts~\cite{berenson1995critique,bailis2013hat}.
+Let $T_1$ and $T_2$ each read $x_0$ and write $x$, each on its own replica.
+Each replica's facts, including its commit, are permitted on their own.
+Suppose both commit, and say the version order puts $T_1$'s write of $x$
+before $T_2$'s.  Unless $c_1 <_t s_2$, the write-dependency from $T_1$ to $T_2$
+has no start-dependency beside it, which is G-SIa.  If $c_1 <_t s_2$, then
+$T_2$'s read of $x_0$ is an anti-dependency from $T_2$ to $T_1$, which with
+the start-dependency forms a cycle with a single anti-dependency, which is
+G-SIb~\cite{adya1999weakconsistency}.  So no permitted output contains both
+commit facts.  This is the first-committer-wins rule of snapshot
+isolation~\cite{berenson1995critique,bailis2013hat}.
 
 The examples show where the boundary falls.  When the permitted fact sets are
-closed under union, as for read committed here, whatever separated replicas
-expose has a common \outnoun, so the guarantee stays available
-(Corollary~\ref{cor:complete-cap-S}).  Serializability and first-committer-wins
+closed under union, as for the read and commit facts of read committed here,
+whatever separated replicas expose has a common \outnoun, so the guarantee
+stays available (Corollary~\ref{cor:complete-cap-S}).  Version-order facts
+are different at every level: two replicas that have both seen $T_1$'s and
+$T_2$'s writes of $x$ could expose $x_1 \ll x_2$ and $x_2 \ll x_1$, and no
+history contains both.  An available system therefore keeps the version order
+private, or fixes it from the input, as with client-assigned timestamps,
+which is a stronger specification than the level itself.  Serializability and first-committer-wins
 instead exclude some combinations of facts that separated replicas can each
 expose.  Emitting either side then requires a choice
 (Proposition~\ref{thm:commitments-require-coordination}), and a partition

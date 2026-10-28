@@ -1571,25 +1571,35 @@ only \emph{some} common \outnoun of query outputs, not a least one.
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-Consider a transactional specification.  An input is the set of begin, read,
-write, and commit requests received so far, ordered by inclusion.  An output is
-a set of public facts, such as $\mathsf{read}(T,x,v)$ and $\mathsf{TxCommit}(T)$,
-also ordered by inclusion, and the isolation level or session
-guarantee~\cite{bailis2013hat,terry1994session} determines which fact sets are
-permitted.  Under read committed, two separated replicas that each expose a
-read of a committed version and a commit produce facts whose union contains no
-dirty read and is itself permitted, a common \outnoun.  Under
-serializability, if $T_1$ reads $x=0$ and writes $y=1$ on one replica while
-$T_2$ reads $y=0$ and writes $x=1$ on the other, no serial order explains
-both sets of facts~\cite{adya2000generalized}.  Under snapshot isolation, the
-first-committer-wins rule lets only one of two concurrent writers of $x$
-commit~\cite{berenson1995critique}.  When the permitted fact sets are closed
-under union, whatever separated replicas expose has a common \outnoun, so the
-guarantee stays available (Corollary~\ref{cor:complete-cap-S}).
-Serializability and first-committer-wins instead exclude some combinations of
-facts that separated replicas can each expose.  Emitting either side then
-requires a choice (Proposition~\ref{thm:commitments-require-coordination}),
-and a partition prevents the replicas from making it together.
+Consider a transactional specification, with isolation levels as defined by
+Adya et al.~\cite{adya2000generalized,adya1999weakconsistency}.  A transaction
+is a sequence of operations that one client issues in order.  An input is a
+set of transactions, each recorded as the prefix issued so far, and grows by
+new transactions or longer prefixes; the order between transactions is the
+system's to choose.  Adya calls the system's choices a \emph{history}: which
+version each read returns, which transactions commit, a version order on each
+object, and, for snapshot isolation, a time-precedes order on start and commit
+points.  An output is a set of such facts, ordered by inclusion, such as
+$\mathsf{read}(T,k,x_j)$ (the $k$-th operation of $T$ returned $T_j$'s version
+of $x$) and $\mathsf{TxCommit}(T)$.  It is permitted when it extends to a
+history exhibiting none of the phenomena the level proscribes.  Under read
+committed (PL-2), two separated replicas that each read initial versions and
+commit expose facts whose union exhibits no G1 phenomenon, a common \outnoun.
+Under serializability (PL-3), if $T_1$ reads $x_0$ and writes $y$ on one
+replica while $T_2$ reads $y_0$ and writes $x$ on the other, the two reads are
+anti-dependencies forming a G2 cycle.  Under snapshot isolation (PL-SI), two
+transactions that read $x_0$ and write $x$ cannot both commit: whichever
+order of start and commit points is chosen yields G-SIa or G-SIb.  This is
+the first-committer-wins rule~\cite{berenson1995critique}.  When the permitted
+fact sets are closed under union, whatever separated replicas expose has a
+common \outnoun, so the guarantee stays available
+(Corollary~\ref{cor:complete-cap-S}).  Serializability and
+first-committer-wins instead exclude some combinations of facts that separated
+replicas can each expose.  Emitting either side then requires a choice
+(Proposition~\ref{thm:commitments-require-coordination}), and a partition
+prevents the replicas from making it together.  Exposing a version order is
+such a choice at every level, so an available system keeps it private or
+fixes it from the input.
 
 Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent
