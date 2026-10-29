@@ -301,7 +301,7 @@ theorem «eq:canonical-state/largest» {I O : Type} [PO I] [PO O] {sp : Spec I O
     (σ : State sp) : ∀ k x, σ.R k x → (canon sp σ.cur).R k x :=
   state_le_canon σ
 
-/-- "Input events alone move between canonical states." -/
+/-- "An input event from a canonical state leads to another canonical state." -/
 theorem «eq:canonical-state/input-moves-canonical» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} {i j : I} {τ : State sp} (h : Step (canon sp i) (.input j) τ) :
     τ = canon sp j :=

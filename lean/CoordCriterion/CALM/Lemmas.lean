@@ -117,7 +117,7 @@ theorem state_le_canon {sp : Spec I O} (σ : State sp) :
     ∀ k x, σ.R k x → (canon sp σ.cur).R k x :=
   fun k x h => ⟨σ.sub k x h, σ.above k x h⟩
 
-/-- "Input events alone move between canonical states." -/
+/-- "An input event from a canonical state leads to another canonical state." -/
 theorem input_canon {sp : Spec I O} {i j : I} {τ : State sp}
     (h : Step (canon sp i) (.input j) τ) : τ = canon sp j := by
   cases h with
