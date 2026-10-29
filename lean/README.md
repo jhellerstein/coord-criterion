@@ -182,7 +182,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commit-iff-seal»` | theorem | Def. |
 | `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` refines itself, so the event always ends at a state." |
-| `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments, as the registrar of Figure `fig:election-frames`(d) does, but extra commitments only restrict behavior (Section `sec:sys… |
+| `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments than an output requires, as the registrar does in Figure `fig:election-frames`(d), but extra commitments only restrict be… |
 | `«def:exposable»` | abbrev | **Def. |
 | `«def:exposable/no-commitment»` | theorem | Def. |
 | `«sec:functional-events/functional-exposable»` | theorem | "In a functional specification this means `R[out ⪰ o] = R`: |
@@ -357,10 +357,10 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Nor does the system in the proof need coordination. |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `E = S` it needs no commitment at all." Lean: |
 | `«sec:complete-cap/local-choice-necessary»` | theorem | "For a smaller `E` such local choices can be necessary: |
-| `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` either waits for another component, sacrificing Availability, or is emitted independently at the… |
+| `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another component, sacrificing Availability, or is emitted anyway, sacrificing Partitio… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Consider a register specification whose inputs are sets of operations with their real-time precedence, and whose outputs answer every operation of the input… |
-| `«sec:complete-cap/gl-no-system»` | theorem | "By Complete CAP, then, no system keeps both outputs available and consistent across a partition." Lean: |
+| `«sec:complete-cap/gl-no-system»` | theorem | "By Complete CAP, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem." Lean: |
 | `«sec:complete-cap/gl-two-row-forced»` | theorem | "The proof needs less than the full hypotheses here, which is why it yields Gilbert and Lynch's theorem exactly. |
 | `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of Complete CAP" … "No such refinement exists.": |
 | `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |

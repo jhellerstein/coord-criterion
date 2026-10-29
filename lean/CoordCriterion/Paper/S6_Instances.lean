@@ -218,7 +218,7 @@ theorem «sec:crdt-instance/query-monotone-on-reachable» :
 
 /-- Sec. `sec:crdt-instance`: a two-phase set's "state `(Add, Del)` merges by
 componentwise union.  The query `Add \ Del` can report a Ferrari in a shopping
-cart before a delayed removal arrives … The two-phase query fails the test: a
+cart before a delayed removal arrives … The query `Add \ Del` over a two-phase set fails the test: a
 removal payload grows `U` and shrinks the answer."  Lean: payloads are pairs
 `(Add, Del)` joined componentwise, `s₀ = (∅, ∅)`; with
 `s(U₀) = ({potato, Ferrari}, ∅)` and `s(U₁) = ({potato, Ferrari}, {Ferrari})`,

@@ -265,8 +265,8 @@ theorem liftedMono_iff_monoF {sp : Spec I O} (hf : sp.Functional) :
   rw [liftedMono_iff_relMono_directed, ← relMono_iff_monoF hf]
   exact ⟨fun h => h.1, fun h => ⟨h, functional_directed hf⟩⟩
 
-/-- "With one output per input, Lifted Monotonicity and the common-expansion
-condition are both monotonicity." -/
+/-- "For functions, both [Lifted Monotonicity and the common-expansion
+condition] are monotonicity." -/
 theorem commonExpansion_iff_monoF {sp : Spec I O} (hf : sp.Functional) :
     sp.CommonExpansion ↔ sp.MonotoneF := by
   rw [← liftedMono_iff_commonExpansion, liftedMono_iff_monoF hf]
