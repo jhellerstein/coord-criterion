@@ -632,11 +632,12 @@ events only remove rows, and a row at the current input always remains.
 When runs take different paths through the specification, can they still be
 brought to a common state? The answer reduces to a check on a single row.
 
-\begin{definition}[Transition system, run]
+\begin{definition}[Specification event, transition system, run]
 \label{def:run}
-The \emph{transition system} consists of specification states and the input and
-output events above. A \emph{run} is any finite transition sequence from the
-canonical state $\sigma_S(i)$ at some input $i$.
+Input and output events are \emph{specification events}: they change the
+specification state. The \emph{transition system} consists of specification
+states and these events. \textcolor{reviewed}{A \emph{run} is any finite transition sequence from the
+canonical state $\sigma_S(i)$ at some input $i$.}
 \end{definition}
 
 A run is \emph{commitment-free} when none of its output events applies a
@@ -1120,7 +1121,7 @@ another participant could contradict; Complete CAP follows.}
 
 \textcolor{reviewed}{A finite set $P$ of \emph{participants} each holds a specification state,
 starting at a canonical state $\sigma_S(i_p)$, and changes it only by its own
-input and output events.} \textcolor{reviewed}{A participant learns input directly from the
+specification events.} \textcolor{reviewed}{A participant learns input directly from the
 environment or in a message from another participant.} Participants exchange
 messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$. \textcolor{reviewed}{A
 \emph{message} is a pair $m=(j,d)$ of a cumulative input $j$, or $\varnothing$
@@ -1134,10 +1135,9 @@ legal common \indesc $k$ of $i$ and $j$, when one exists.}
 \label{def:distributed-history}
 Fix an ordered specification, participants $P$, and an initial input $i_p$
 for each. A \emph{distributed history} $H$ is a finite set of
-\emph{history events}, each an occurrence at one participant of an input
-event, an output event (Definition~\ref{def:output-event} and
-Section~\ref{sec:lifted-output-events}),
-$\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
+\emph{history events}, each an occurrence at one participant of a
+specification event (Definition~\ref{def:run}), $\mathsf{send}(m)$, or
+$\mathsf{receive}(m)$, with:
 \begin{enumerate}
 \item
 a total local order on each participant's history events;
@@ -1145,8 +1145,8 @@ a total local order on each participant's history events;
 for each receive, a matching send of the same message at another
         participant, each send matching at most one receive; and
 \item
-for each participant $p$, its input and output events, in local
-        order, form a defined transition sequence from $\sigma_S(i_p)$: each
+for each participant $p$, its specification events, in local order,
+        form a defined transition sequence from $\sigma_S(i_p)$: each
         is legal at the state where it occurs.
 \end{enumerate}
 \emph{Happens-before} is the transitive closure of the local orders and of
@@ -1162,7 +1162,7 @@ it determines one run per participant.
 
 \begin{definition}[Participant run, endpoint]
 \label{def:participant-run}
-At a consistent cut $C$, the input and output events of $C$ at participant $p$,
+At a consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, a run
 (Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$. The
 \emph{endpoint} of $C$ is $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
@@ -1364,34 +1364,10 @@ unambiguous. A seal may remove the last rows that earlier choices left at an
 input; attributing the seal across that sequence is a provenance question we do
 not pursue.
 
-\begin{definition}[Local history, strategy]
-\label{def:strategy}
-A \emph{local history} of participant $p$ is a finite sequence of $p$'s history
-events, including the messages it
-has received. A \emph{strategy} for $p$ is a nondeterministic transition
-function: it maps each local history $\lambda$ of $p$ to a set
-$\theta_p(\lambda)$ of output, commitment, send, and receive events of $p$, and $p$ next
-performs any one of them, or waits. Input events come from the environment,
-not the strategy.
-\end{definition}
-
-\begin{definition}[System, commitment basis, produced history]
-\label{def:system}
-A \emph{system} consists of a \emph{commitment basis} $\mathcal B$, the set of
-commitments its output and commitment events may apply, shared by all
-participants, and a strategy $\theta_p$ for each participant $p$ whose output
-and commitment events apply only commitments from $\mathcal B$. A distributed history \emph{produced} by the
-system consists of environment inputs and events chosen by the participants'
-strategies.
-\end{definition}
-
-Strategies differ by participant so we can single out replicated
-systems, whose participants share one (Appendix~\ref{app:cap-response}); no
-result distinguishes participants' commitments, so the basis is shared.
-
-\begin{definition}[Output event of a system, legal output event]
+\begin{definition}[Commitment basis, output event of a system, legal output event]
 \label{def:system-output-event}
-Let $(i,R)$ be a state and $o\in R(i)$. An output event $\Out{\gamma}{o}$
+A \emph{commitment basis} is a set $\mathcal B$ of commitments. Let $(i,R)$ be
+a state and $o\in R(i)$. An output event $\Out{\gamma}{o}$
 under a basis $\mathcal B$ applies a finite, possibly empty sequence
 $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each $c_m$ defined at
 the state its predecessors leave, leaving a table $R_c$, and then retires rows
@@ -1416,11 +1392,10 @@ $\mathcal B$, each defined at the state its predecessors leave, and emits
 nothing.
 \end{definition}
 
-A commitment event lets a system decide before any output needs the decision. The environment observes nothing from it. A history a system produces may
-also contain commitment events; item~3 of
-Definition~\ref{def:distributed-history} and participant runs
-(Definition~\ref{def:participant-run}) include them, in local order, so each
-participant run is a run under $\mathcal B$.
+A commitment event lets a system decide before any output needs the decision. The environment observes nothing from it. Commitment events are a third
+kind of specification event, so a distributed history may contain them;
+Definitions~\ref{def:distributed-history} and~\ref{def:participant-run} apply
+unchanged.
 
 A legal $\Out{\gamma}{o}$ issues at least the commitments of the $\mathsf{output}(o)$
 of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}: its commitments
@@ -1428,6 +1403,30 @@ remove the rows in $\Sealed_o$ and $\Rejected_o$
 (Lemma~\ref{lem:canonical-commitment-normal-form}), and $\mathsf{output}(o)$ is
 the case in which they remove exactly those. The environment observes $o$, not
 $\gamma$.
+
+\begin{definition}[Local history, strategy]
+\label{def:strategy}
+A \emph{local history} of participant $p$ is a finite sequence of $p$'s history
+events, including the messages it
+has received. A \emph{strategy} for $p$ is a nondeterministic transition
+function: it maps each local history $\lambda$ of $p$ to a set
+$\theta_p(\lambda)$ of output, commitment, send, and receive events of $p$, and $p$ next
+performs any one of them, or waits. Input events come from the environment,
+not the strategy.
+\end{definition}
+
+\begin{definition}[System, produced history]
+\label{def:system}
+A \emph{system} consists of a commitment basis $\mathcal B$, shared by all
+participants, and a strategy $\theta_p$ for each participant $p$ whose output
+and commitment events apply only commitments from $\mathcal B$. A distributed history \emph{produced} by the
+system consists of environment inputs and events chosen by the participants'
+strategies.
+\end{definition}
+
+Strategies differ by participant so we can single out replicated
+systems, whose participants share one (Appendix~\ref{app:cap-response}); no
+result distinguishes participants' commitments, so the basis is shared.
 
 \paragraph{A transactional example of bespoke commitments.}
 The lock manager from the start of this section is one system; multiversion
@@ -2569,9 +2568,10 @@ rows at $k$.
   \multicolumn{3}{@{}l}{\textbf{Distributed execution (Section~\ref{sec:distributed-execution})}}\\
   \midrule
   participant; message & holds a specification state; $m=(j,d)$, a cumulative input $j$ (or $\varnothing$) and other data $d$ & Sec.~\ref{sec:histories}\\
-  distributed history; history event & locally ordered input, output, commitment, send, and receive events & Def.~\ref{def:distributed-history}\\
+  specification event & an input or output event; in Section~\ref{sec:systems}, also a commitment event & Defs.~\ref{def:run}, \ref{def:commitment-event}\\
+  distributed history; history event & locally ordered specification, send, and receive events & Def.~\ref{def:distributed-history}\\
   happens-before; consistent cut & closure of local orders and send-before-receive; a set of history events closed under it & Def.~\ref{def:distributed-history}\\
-  participant run; endpoint & $p$'s input, output, and commitment events at $C$; $(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:participant-run}\\
+  participant run; endpoint & $p$'s specification events at $C$; $(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:participant-run}\\
   continuation; cut confluent at $j$ & a history extending $C$; some continuation brings every participant to one state $(j,R)$ & Sec.~\ref{sec:distributed-consistency}\\
   distributed consistency & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency}\\
   commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\

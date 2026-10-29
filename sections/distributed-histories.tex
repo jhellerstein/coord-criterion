@@ -5,7 +5,7 @@
 
 A finite set $P$ of \emph{participants} each holds a specification state,
 starting at a canonical state $\sigma_S(i_p)$, and changes it only by its own
-input and output events.  A participant learns input directly from the
+specification events.  A participant learns input directly from the
 environment or in a message from another participant.  Participants exchange
 messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$.  A
 \emph{message} is a pair $m=(j,d)$ of a cumulative input $j$, or $\varnothing$
@@ -19,16 +19,15 @@ legal common \indesc $k$ of $i$ and $j$, when one exists.
 \label{def:distributed-history}
 Fix an ordered specification, participants $P$, and an initial input $i_p$
 for each.  A \emph{distributed history} $H$ is a finite set of
-\emph{history events}, each an occurrence at one participant of an input
-event, an output event (Definition~\ref{def:output-event} and
-Section~\ref{sec:lifted-output-events}),
-$\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
+\emph{history events}, each an occurrence at one participant of a
+specification event (Definition~\ref{def:run}), $\mathsf{send}(m)$, or
+$\mathsf{receive}(m)$, with:
 \begin{enumerate}
   \item a total local order on each participant's history events;
   \item for each receive, a matching send of the same message at another
         participant, each send matching at most one receive; and
-  \item for each participant $p$, its input and output events, in local
-        order, form a defined transition sequence from $\sigma_S(i_p)$: each
+  \item for each participant $p$, its specification events, in local order,
+        form a defined transition sequence from $\sigma_S(i_p)$: each
         is legal at the state where it occurs.
 \end{enumerate}
 \emph{Happens-before} is the transitive closure of the local orders and of
@@ -44,7 +43,7 @@ it determines one run per participant.
 
 \begin{definition}[Participant run, endpoint]
 \label{def:participant-run}
-At a consistent cut $C$, the input and output events of $C$ at participant $p$,
+At a consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, a run
 (Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$.  The
 \emph{endpoint} of $C$ is $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.

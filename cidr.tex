@@ -574,13 +574,13 @@ to another determined state.
 
 \paragraph{Runs and consistency.}
 We now consider the executions corresponding to a specification.
-\begin{definition}[Run, commitment-free run, reachable without commitment]
+\begin{definition}[Specification event, run, commitment-free run, reachable without commitment]
 \label{def:run}
-A \emph{run} is a finite sequence of input and output events from the
+Input and output events are \emph{specification events}.  A \emph{run} is a
+finite sequence of them from the
 canonical state $\sigma_S(i)$ at some input $i$.  It is
-\emph{commitment-free} when none of its output events applies a commitment, and
-a state is \emph{reachable without commitment} when some commitment-free run
-reaches it.
+\emph{commitment-free} when no output event in it applies a commitment; the
+states such runs reach are \emph{reachable without commitment}.
 \end{definition}
 
 Input events keep only rows whose input \inrel the current one, and output
@@ -1033,7 +1033,7 @@ another participant could contradict; Complete CAP follows.
 
 A finite set $P$ of \emph{participants} each holds a specification state,
 starting at a canonical state $\sigma_S(i_p)$, and changes it only by its own
-input and output events.  A participant learns input directly from the
+specification events.  A participant learns input directly from the
 environment or in a message from another participant.  A
 \emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$
 if it carries none, and arbitrary application-specific data $d$; one can envision timestamps, version
@@ -1045,10 +1045,10 @@ influence which events a system executes next (\S\ref{sec:systems}), but never d
 \begin{definition}[Distributed history, history event, happens-before, consistent cut]
 \label{def:distributed-history}
 A \emph{distributed history} $H$ is a finite set of
-\emph{history events}, each an occurrence at one participant of an input
-event, an output event, $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with
+\emph{history events}, each an occurrence at one participant of a
+specification event, $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with
 a total local order on each participant's events, a matching send at another
-participant for each receive, and, for each participant $p$, input and output
+participant for each receive, and, for each participant $p$, specification
 events that in local order form a defined transition sequence from
 $\sigma_S(i_p)$.  A \emph{consistent cut} $C$ is a
 subset of history events closed under
@@ -1056,8 +1056,8 @@ happens-before~\cite{lamport1978time,chandy1985distributed} (a term
 unrelated to our consistency).
 \end{definition}
 
-At a consistent cut $C$, the input and output events of $C$ at participant
-$p$, in local order, form its \emph{participant run}.  The cut is
+At a consistent cut $C$, the specification events of $C$ at participant $p$,
+in local order, form its \emph{participant run}.  The cut is
 \emph{confluent at} $j$, for a common \indesc $j$ of the participants'
 current inputs, when some continuation of $C$ brings every participant to the
 same state $(j,R)$.  A specification has \emph{distributed consistency} when,
@@ -1066,7 +1066,7 @@ confluent at every such $j$.
 
 \begin{proposition}[Consistency and distributed consistency]
 \label{prop:distributed-consistency}
-A specification is consistent exactly when it has distributed consistency.
+Consistency is equivalent to distributed consistency.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -1137,14 +1137,15 @@ function on specification states that leaves the current input unchanged and
 removes a nonempty set of rows, none of them \outrelpast by a remaining row at
 the same input.  At each input where it removes rows, a commitment either
 removes every row there, \emph{sealing} that input, or removes some outputs
-and keeps others, \emph{choosing} among them.  A \emph{system} consists of a
-\emph{commitment basis} $\mathcal B$ and a nondeterministic \emph{strategy} per
-participant that picks its next output, commitment, send, or receive event
-from its local history.  Its output event $\Out{\gamma}{o}$ applies a sequence
-$\gamma$ of commitments from $\mathcal B$, retires rows, and emits $o$.  A commitment event $\mathsf{commit}(\gamma)$
-applies such a sequence and emits nothing, as when 2PL orders $A$ before $B$
-while $B$ waits for $A$'s lock.  Histories a system produces may also contain
-commitment events, and participant runs include them.  The full paper gives these definitions formally and shows
+and keeps others, \emph{choosing} among them.  Given a \emph{commitment basis}
+$\mathcal B$, a set of commitments, an output event $\Out{\gamma}{o}$ applies a
+sequence $\gamma$ of commitments from $\mathcal B$, retires rows, and emits $o$.
+A \emph{commitment event} $\mathsf{commit}(\gamma)$ applies such a sequence and
+emits nothing, as when 2PL orders $A$ before $B$ while $B$ waits for $A$'s
+lock; it is a third kind of specification event.  A \emph{system} consists of a
+basis $\mathcal B$ and a nondeterministic \emph{strategy} per participant that
+picks its next output, commitment, send, or receive event from its local
+history.  The full paper gives these definitions formally and shows
 that every seal and choice of Section~\ref{sec:complete-calm} is a commitment
 in this sense.
 

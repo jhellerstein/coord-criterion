@@ -45,23 +45,24 @@ variable {I O : Type} [PO I] [PO O]
 /-- **Def. distributed history, history event, happens-before, consistent
 cut** (`def:distributed-history`), the carrier.
 "A distributed history `H` is a finite set of history events, each an
-occurrence at one participant of an input event, an output event, `send(m)`, or
+occurrence at one participant of a specification event, `send(m)`, or
 `receive(m)` …"
 
 Lean: participants are `Fin n`; each participant has a finite `List` of local
 events (`Dist.LEv`: `io e`, `send x m`, `recv x m` with a message identifier
 `x` and a message `m = (j, d) : Option I × D`, `none` playing `∅`).  The list
 order *is* item 1, the total local order.  The initial inputs `i_p` are
-`H.init`.  Histories a system produces may also contain commitment events
-(§4.2, after Def. `def:commitment-event`); they are modeled as
+`H.init`.  "Commitment events are a third kind of specification event, so a
+distributed history may contain them" (§4.2, after Def.
+`def:commitment-event`); histories a system produces are modeled with them as
 `CAP.LEv.cmt γ` in `CAP/Model.lean`, whose well-formedness includes them in
 item 3. -/
 abbrev «def:distributed-history» (I O D : Type) (n : Nat) := Dist.History I O D n
 
 /-- Def. `def:distributed-history`, items 2–3: "for each receive, a matching
 send of the same message at another participant, each send matching at most
-one receive; and for each participant `p`, its input and output events, in
-local order, form a defined transition sequence from `σ_S(i_p)`".
+one receive; and for each participant `p`, its specification events, in local
+order, form a defined transition sequence from `σ_S(i_p)`".
 
 Lean: `History.WF`.  "Each send matching at most one receive" is read as
 "send identifiers are unique"; `CC.Dist.WF0` drops this (see
@@ -97,7 +98,7 @@ theorem «sec:histories/cut-determines-runs» {D : Type} {n : Nat} (sp : Spec I 
     fun _ _ => Dist.History.endpoint_unique⟩
 
 /-- **Def. participant run, endpoint** (`def:participant-run`).  "At a
-consistent cut `C`, the input and output events of `C` at participant `p`, in
+consistent cut `C`, the specification events of `C` at participant `p`, in
 local order, form its participant run … whose final state we write `σ_p(C)`.
 The endpoint of `C` is `end(H,C) = (σ_p(C))_{p∈P}`."
 
@@ -368,9 +369,8 @@ is ignored: `CAP.Allowed` always allows inputs. -/
 abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
   List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop
 
-/-- **Def. system, commitment basis, produced history** (`def:system`).  "A system consists of a commitment basis
-`ℬ`, the set of commitments its output and commitment events may apply, shared
-by all participants, and a strategy `θ_p` for each participant `p` whose output
+/-- **Def. system, produced history** (`def:system`).  "A system consists of a
+commitment basis `ℬ`, shared by all participants, and a strategy `θ_p` for each participant `p` whose output
 and commitment events apply only commitments from `ℬ`."
 
 Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
@@ -402,9 +402,9 @@ theorem «def:system/restrict» {sp : Spec I O} {D : Type} (Sys : CAP.System sp 
       ∀ n init p pre e, CAP.Allowed Sys.restrict n init p pre e ↔ CAP.Allowed Sys n init p pre e :=
   ⟨Sys.restrict_basisRespecting, Sys.restrict_allowed⟩
 
-/-- **Def. output event of a system, legal output event**
-(`def:system-output-event`).  "An output
-event `Out_γ(o)` under a basis `ℬ` applies a finite, possibly empty sequence
+/-- **Def. commitment basis, output event of a system, legal output event**
+(`def:system-output-event`).  "A commitment basis is a set `ℬ` of commitments.
+… An output event `Out_γ(o)` under a basis `ℬ` applies a finite, possibly empty sequence
 `γ = c₁⋯cₙ` of commitments from `ℬ`, each `c_m` defined at the state its
 predecessors leave, leaving a table `R_c`, and then retires rows and emits `o`,
 all atomically … The event is legal when `(i,o) ∈ R_c` and every row of `R_c`

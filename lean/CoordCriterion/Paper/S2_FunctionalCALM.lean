@@ -442,8 +442,11 @@ theorem «sec:functional-events/stays-determined» {I O : Type} [PO I] [PO O]
 
 /-! ## Executions and consistency (`sec:executions`) -/
 
-/-- **Def. `def:run`** (Transition system, run).  "A *run* is any finite
-transition sequence from the canonical state `σ_S(i)` at some input `i`."
+/-- **Def. `def:run`** (Specification event, transition system, run).  "Input
+and output events are *specification events*: they change the specification
+state.  The *transition system* consists of specification states and these
+events.  A *run* is any finite transition sequence from the canonical state
+`σ_S(i)` at some input `i`."
 
 Lean: `Exec σ es τ` is execution along the event list `es`; `IsRun τ` says
 that `τ` is the final state of some run (`∃ i es, Exec (canon sp i) es τ`). -/

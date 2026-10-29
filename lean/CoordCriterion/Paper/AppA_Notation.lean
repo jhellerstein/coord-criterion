@@ -333,7 +333,8 @@ abbrev «app:notation/strategy» {sp : Spec I O} {D : Type} (Sys : CAP.System sp
 (Def. `def:system`).  Lean: `CAP.System sp D` (fields `basis`, `strat`). -/
 abbrev «app:notation/system» (sp : Spec I O) (D : Type) := CAP.System sp D
 
-/-- *basis* (Def. `def:system`).  Lean: `Basis sp := Commitment sp → Prop`
+/-- *basis* (Def. `def:system-output-event`: "A commitment basis is a set `ℬ`
+of commitments").  Lean: `Basis sp := Commitment sp → Prop`
 (in `CC.CAP`: the field `System.basis`). -/
 abbrev «app:notation/basis» (sp : Spec I O) := Basis sp
 
