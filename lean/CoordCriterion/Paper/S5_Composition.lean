@@ -63,8 +63,8 @@ theorem «sec:composition/middle-totality-needed» :
   Comp.restricted_middle_counterexample
 
 /-- **Lemma `lem:composition`** (Composition): "If `Spec₁` and `Spec₂`
-satisfy Lifted Monotonicity, then the ordered specification with table
-`S₂ ∘ S₁` satisfies Lifted Monotonicity." -/
+satisfy Lifted Monotonicity, then so does the ordered specification with
+table `S₂ ∘ S₁`." -/
 theorem «lem:composition» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M} {sp2 : Spec M O}
     (h1 : sp1.LiftedMono) (h2 : sp2.LiftedMono) : (Comp.seq sp1 sp2).LiftedMono :=
   Comp.seq_liftedMono h1 h2
@@ -202,7 +202,7 @@ theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
     («sec:composite-calm/complete-calm» sp1 sp2).2 h⟩
 
 /-- "The three cases do not cover every monotone composite (Appendix
-`app:composition`).  When no case applies, some stage may have to issue a commitment even though the composite is monotone, as we discuss next."  Lean: `Joint.no_order_counterexample`
+`app:composition`).  When no case applies, some stage may have to issue a commitment even though the composite is monotone."  Lean: `Joint.no_order_counterexample`
 (`I` is the chain `Joint.C3`, `M = Joint.Mid`): under every partial order on
 `M` the composite is Lifted-Monotone, the upstream is not (so case (3) fails,
 and with it (1) and (2)), and its empty-basis system cannot emit at some

@@ -315,9 +315,9 @@ theorem «sec:complete-cap/local-choice-necessary» (D : Type) :
   ⟨lcSpec_consistentOn, lcSpec_o_not_exposable,
     respSystem_coordinationFree CAP.lcA lcSpec_consistentOn⟩
 
-/-- "When Lifted Monotonicity for `E` fails, some output of `E` either waits for
-another component, sacrificing Availability, or is emitted independently at
-the cost of Partition Consistency." -/
+/-- "When Lifted Monotonicity for `E` fails, some output of `E` waits for
+another component, sacrificing Availability, or is emitted anyway, sacrificing
+Partition Consistency." -/
 theorem «sec:complete-cap/lm-for-A-fails» (E : Table I O) (hES : ∀ i o, E i o → sp.S i o)
     (hno : ¬ ConsistentOn sp E) (Sys : System sp D) :
     ¬ «def:partition-notions/for» E Sys ∨ ¬ «def:partition-consistency» Sys :=
@@ -369,7 +369,7 @@ theorem «sec:complete-cap/gl-register» :
     CC.GL.regFullSpec_not_liftedMono⟩
 
 /-- "By Complete CAP, then, no system keeps both outputs available and
-consistent across a partition."  Lean: no system for `regFullSpec` has
+consistent across a partition, which is Gilbert and Lynch's theorem."  Lean: no system for `regFullSpec` has
 Availability and Partition Consistency. -/
 theorem «sec:complete-cap/gl-no-system» (Sys : System CC.GL.regFullSpec D) :
     ¬ («def:partition-notions» Sys ∧ «def:partition-consistency» Sys) :=

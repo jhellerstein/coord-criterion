@@ -191,8 +191,8 @@ theorem «sec:lifted-monotonicity/directed-example» :
       CompatibleIn (fun _ : F5 => True) [F5.abc, F5.abd] :=
   ⟨f5_directed, f5_common_refinements, f5_minimal_incomparable, f5_compatible⟩
 
-/-- "Thus the traceroute fiber is directed: the union of any finite set of
-route sets in it is again in the fiber and refines each of them.  The two
+/-- "Thus the traceroute fiber is directed: the union of finitely many
+route sets in it is again in the fiber and refines each.  The two
 transaction orders in Figure `fig:ambiguity-frames`(f), by contrast, are
 incompatible." -/
 theorem «sec:lifted-monotonicity/figure-fibers» :
@@ -341,8 +341,8 @@ theorem «prop:exposure-boundary/common-expansion» {I O : Type} [PO I] [PO O] (
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   exposure_boundary sp
 
-/-- After Prop. `prop:exposure-boundary`: "With one output per input, Lifted
-Monotonicity and the common-expansion condition are both monotonicity, so
+/-- After Prop. `prop:exposure-boundary`: "For functions, both are
+monotonicity, so
 Complete CALM and Proposition `prop:exposure-boundary` reduce to Functional
 CALM and Proposition `prop:functional-exposure-boundary`." -/
 theorem «prop:exposure-boundary/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}

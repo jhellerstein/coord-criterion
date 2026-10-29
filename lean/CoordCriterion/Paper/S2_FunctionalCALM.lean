@@ -82,8 +82,8 @@ theorem «fig:election-frames/a» :
 
 /-- Fig. `fig:election-frames`(b) and §2.1 "Input and determination": "When
 `v₂`'s ballot for `y` arrives, the event `input(xy·)` produces panel (b),
-retiring rows whose inputs no longer expand the ballots received. … in panel
-(b) it is `{⊥,x,y}`."  Also "`⊥` needs no commitment" (`⊥` exposable). -/
+retiring rows whose inputs no longer expand the ballots received; such inputs
+are now illegal. … in panel (b) it is `{⊥,x,y}`."  Also "`⊥` needs no commitment" (`⊥` exposable). -/
 theorem «fig:election-frames/b» :
     Step (canon elec bxd) (.input bxy) (canon elec bxy) ∧
       (∀ o : Res, ∃ k, (canon elec bxy).R k o) ∧ ¬ Determined (canon elec bxy) ∧
@@ -232,10 +232,9 @@ theorem «def:functional-specification/induced-function» {I O : Type} [PO I] [P
   · rintro ⟨f, hf⟩ i o o' h h'
     exact ((hf i o).1 h).trans ((hf i o').1 h').symm
 
-/-- "Neither need be unique or least: the input order need not be a lattice,
-only a partial order.  For example, transaction schedules ordered by
-subsequence form a partial order in which two independent transactions `a`
-and `b` have two incomparable minimal common expansions, `ab` and `ba`."
+/-- "Neither need be unique or least: for example, two independent
+transactions `a` and `b`, with schedules ordered by subsequence, have two
+incomparable minimal common expansions, `ab` and `ba`."
 
 Lean: schedules `Sched T` are lists ordered by `List.Sublist` (a `PO`
 instance); "independent" is read as `a ≠ b`.  Both `ab` and `ba` are common
@@ -373,9 +372,9 @@ theorem «sec:functional-events/output-ends-at-state» {I O : Type} [PO I] [PO O
     Step σ (.output o) (outputState σ o h) ∧ (outputState σ o h).R σ.cur o :=
   ⟨step_outputState σ o h, ⟨h, PO.refl o⟩⟩
 
-/-- "Systems may issue more commitments, as the registrar of Figure
-`fig:election-frames`(d) does, but extra commitments only restrict behavior
-(Section `sec:systems`)."  For the registrar of panel (d): its
+/-- "Systems may issue more commitments than an output requires, as the
+registrar does in Figure `fig:election-frames`(d), but extra commitments only
+restrict behavior (Section `sec:systems`)."  For the registrar of panel (d): its
 event `Out_[closePolls](⊥)` has an observably equivalent `output(⊥)` of the
 transition system, whose table contains panel (d)'s.  The general statement
 is Lemma `lem:canonical-equivalent` (`CC.canonical_equivalent`, §4.3). -/
@@ -487,8 +486,8 @@ theorem «lem:run-residual/example» (k : Ballots) (o : ResE) :
 /-- **Def. `def:consistency`** (Consistency, confluence at an input).  "An ordered specification is
 *consistent* when every finite family of runs is confluent: if the runs end
 at states `(i₁,R₁),…,(i_k,R_k)` and `j` is a common expansion of their current
-inputs, each run can be continued by further events to one
-common state with current input `j`."
+inputs, each can be continued to a common state with current input `j`.
+They are then *confluent at* `j`."
 
 Lean: `Spec.Consistent`; finite families are lists of run end states, and
 "confluent at `j`" is `ConfluentAt fam j` (`∃ τ, τ.cur = j ∧ ∀ σ ∈ fam,
@@ -560,7 +559,8 @@ theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : S
     sp.MonotoneF ↔ ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   functional_exposure_boundary hf
 
-/-- After Prop. `prop:functional-exposure-boundary`: "If monotonicity fails at
+/-- After Prop. `prop:functional-exposure-boundary`: "A monotone specification
+can thus emit every current output without commitment; if monotonicity fails at
 `i ≼ k` with `f(i) ⋠ f(k)`, then at `σ_S(i)` the event `output(f(i))` applies
 `s_{f(i)}`, sealing `k`." -/
 theorem «prop:functional-exposure-boundary/nonmonotone-seals» {I O : Type} [PO I] [PO O]
