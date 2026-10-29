@@ -138,10 +138,10 @@ Confluence, and later refinements of CALM all map into the same framework.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 30 & 3430\\
+unclassified & 31 & 3445\\
 formal definition/notation & 24 & 1385\\
 related-work detail & 5 & 591\\
-explanation & 13 & 519\\
+explanation & 12 & 508\\
 signposting & 16 & 471\\
 example & 6 & 192\\
 formal caution & 3 & 140\\
@@ -221,7 +221,7 @@ Our first result, \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}), covers specifications that pair each
 input with one output: arbitrary functions between ordered domains. It proves
 that consistency is equivalent to monotonicity: \(i\InputOrd j\) implies
-\(f(i)\OutputOrd f(j)\), so an output emitted at \(i\) remains valid at \(j\). When monotonicity fails, emitting some output requires irrevocably restricting
+\(f(i)\OutputOrd f(j)\), so the output at \(j\) \outrel any output emitted at \(i\). When monotonicity fails, emitting some output requires irrevocably restricting
 later results to those that \outrelbase it. We call this restriction a
 \emph{commitment}. A commitment in this sense is not a transactional commit,
 though we will see throughout the paper how transactions rely on
@@ -478,8 +478,8 @@ changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
 to itself). Then $\bot$ is incompatible with future winners, so emitting it
 requires a seal. \textcolor{newblue}{That change in the output order is Functional CALM in
-miniature: the original order is monotone, so all outputs remain
-valid as input grows; under the equality order, some outputs can be emitted
+miniature: the original order is monotone, so later outputs \outrelbase every
+earlier one; under the equality order, some outputs can be emitted
 only with a commitment.}
 
 The obstruction is a property solely of the table and its orders. Rows $(xy\cdot,\bot)$ and
@@ -518,7 +518,7 @@ the input information in $i$.} \textcolor{newblue}{We say that $j$ \emph{\inrel}
 $o\OutputOrd u$ means that $u$ preserves every externally visible claim in $o$
 and may add more, and we say that $u$ \emph{\outrel} $o$. \removednote{\textbf{formal definition/notation}, 24 words, rank 58; \textit{We use these two verbs only in these senses: inputs , and outputs are .}} \textcolor{newblue}{A \emph{common
 \indesc} of inputs is an input that \inrel each of them, and a \emph{common
-\outnoun} of outputs is an output that \outrel each of them.} \removednote{\textbf{formal caution}, 63 words, rank 26; \textit{Neither need be unique or least: the input order need not be a lattice, only a ...}} \removednote{\textbf{formal definition/notation}, 12 words, rank 77; \textit{A functional ordered specification [math], with induced function [math], is monotone if}} \removednote{\textbf{explanation}, 11 words, rank 84; \textit{Thus an output on partial input stays valid as input .}} \textcolor{newblue}{Neither need be
+\outnoun} of outputs is an output that \outrel each of them.} \removednote{\textbf{formal caution}, 63 words, rank 26; \textit{Neither need be unique or least: the input order need not be a lattice, only a ...}} \removednote{\textbf{formal definition/notation}, 12 words, rank 78; \textit{A functional ordered specification [math], with induced function [math], is monotone if}} \removednote{\textbf{unclassified}, 15 words, rank 74; \textit{Thus an output emitted on partial input is by the output at every .}} \textcolor{newblue}{Neither need be
 unique or least: for example, two independent transactions $a$ and $b$, with schedules
 ordered by subsequence, have two incomparable minimal common \indescs, $ab$
 and $ba$.}
@@ -545,7 +545,7 @@ the set of outputs in $R$.} \removednote{\textbf{formal definition/notation}, 88
 input} $i$ and a \emph{remainder table} $R\subseteq S$ that contains a row at
 $i$ and only rows at \indescs of $i$.} An input $k$ is \emph{legal} at
 $\sigma$ when $R$ contains a row at $k$. Rows are never added during
-execution. \removednote{\textbf{formal definition/notation}, 34 words, rank 43; \textit{The largest state at input [math], and the one a system is in after receiving [math] ...}} \removednote{\textbf{explanation}, 12 words, rank 78; \textit{Input events alone move between canonical states, and runs start at one.}} \textcolor{newblue}{The \emph{canonical state at $i$}, the state of a system that has
+execution. \removednote{\textbf{formal definition/notation}, 34 words, rank 43; \textit{The largest state at input [math], and the one a system is in after receiving [math] ...}} \removednote{\textbf{explanation}, 12 words, rank 79; \textit{Input events alone move between canonical states, and runs start at one.}} \textcolor{newblue}{The \emph{canonical state at $i$}, the state of a system that has
 received $i$ and emitted nothing, retains all rows at $i$ and its \indescs:}
 \begin{equation}
   \sigma_S(i)=\bigl(i,\ S[\mathrm{in}\InputGe i]\bigr).
@@ -567,7 +567,7 @@ $\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.}
 
 A system controls what it tells the world. We study what it can safely
 promise without assuming that clients tolerate retractions. Later outputs
-must therefore \outrelbase earlier ones. \removednote{\textbf{explanation}, 35 words, rank 41; \textit{At state [math], the current input has a unique row [math], so [math] is the only ...}} \removednote{\textbf{formal definition/notation}, 13 words, rank 76; \textit{Let [math] be a state and [math] its row at the current input.}}
+must therefore \outrelbase earlier ones. \removednote{\textbf{explanation}, 35 words, rank 41; \textit{At state [math], the current input has a unique row [math], so [math] is the only ...}} \removednote{\textbf{formal definition/notation}, 13 words, rank 77; \textit{Let [math] be a state and [math] its row at the current input.}}
 
 \begin{definition}[Output event, seal, commitment]
 \label{def:output-event}
@@ -590,7 +590,7 @@ extra commitments only restrict behavior (Section~\ref{sec:systems}).}
 \begin{definition}[Exposable output]
 \label{def:exposable}
 The output $o$ at $(i,R)$ is \emph{exposable} when $\mathsf{output}(o)$
-applies no commitment. \removednote{\textbf{formal definition/notation}, 165 words, rank 7; \textit{In a functional specification this means [math]: the event removes nothing.}} \removednote{\textbf{unclassified}, 27 words, rank 52; \textit{When runs take different paths through the specification, can they still be brought to a common ...}} \removednote{\textbf{formal definition/notation}, 14 words, rank 75; \textit{The transition system consists of specification states and the input and output events above.}}
+applies no commitment. \removednote{\textbf{formal definition/notation}, 165 words, rank 7; \textit{In a functional specification this means [math]: the event removes nothing.}} \removednote{\textbf{unclassified}, 27 words, rank 52; \textit{When runs take different paths through the specification, can they still be brought to a common ...}} \removednote{\textbf{formal definition/notation}, 14 words, rank 76; \textit{The transition system consists of specification states and the input and output events above.}}
 \end{definition}
 
 \textcolor{newblue}{In a functional specification, $o$ is exposable exactly when $f(j)$ \outrel
@@ -824,9 +824,9 @@ where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and $S$
 is total on $I$.} \removednote{\textbf{formal definition/notation}, 22 words, rank 60; \textit{where [math] and [math] are partially ordered sets and [math] is total on [math]: every input ...}; labels eq:relational-specification} A row $(i,o)\in S$
 says that output $o$ is permitted at input $i$. \textcolor{newblue}{The fiber
 $\fiber{i}=\{o\in O:(i,o)\in S\}$ may now contain several
-outputs; the specification is \emph{ambiguous} when some fiber does.} \removednote{\textbf{formal definition/notation}, 15 words, rank 74; \textit{of Section may now contain several outputs; the specification is ambiguous when some fiber does.}; labels eq:fiber} A
+outputs; the specification is \emph{ambiguous} when some fiber does.} \removednote{\textbf{formal definition/notation}, 15 words, rank 75; \textit{of Section may now contain several outputs; the specification is ambiguous when some fiber does.}; labels eq:fiber} A
 functional specification is the special case $\fiber{i}=\{f(i)\}$. We call
-either kind simply an \emph{ordered specification}. \removednote{\textbf{unclassified}, 12 words, rank 79; \textit{Specification states and input events (Sections and ) apply unchanged to relational tables.}} \removednote{\textbf{unclassified}, 12 words, rank 80; \textit{As input from [math] to [math], two things can go wrong.}}
+either kind simply an \emph{ordered specification}. \removednote{\textbf{unclassified}, 12 words, rank 80; \textit{Specification states and input events (Sections and ) apply unchanged to relational tables.}} \removednote{\textbf{unclassified}, 12 words, rank 81; \textit{As input from [math] to [math], two things can go wrong.}}
 \end{definition}
 
 \textcolor{newblue}{Specification states and input events
@@ -1079,7 +1079,7 @@ consistency.
 
 \begin{proof}[Proof sketch]
 The participant runs at a cut are a family of runs, and any family
-of runs can be placed at separate participants that exchange no messages. \removednote{\textbf{signposting}, 12 words, rank 81; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+of runs can be placed at separate participants that exchange no messages. \removednote{\textbf{signposting}, 12 words, rank 82; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{By Complete CALM, then, a specification has distributed consistency exactly
@@ -1470,7 +1470,7 @@ as when a monotone client query observes CRDT state
 monotone: a counter capped at $9$ never produces the counts at which a test
 of whether the count is below $10$ answers no.} \textcolor{newblue}{These cases do not cover every monotone composite
 (see \extended).} \textcolor{newblue}{When none applies, some stage may have to issue a commitment even though the
-composite is monotone.} \removednote{\textbf{signposting}, 12 words, rank 82; \textit{The replicated store of the opening extends the filtering case of Proposition (2).}}
+composite is monotone.} \removednote{\textbf{signposting}, 12 words, rank 83; \textit{The replicated store of the opening extends the filtering case of Proposition (2).}}
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
@@ -1574,7 +1574,7 @@ provides no guarantee on what the environment may observe.} Laddad et al.\
 proposed monotonicity as the right test for safe observation from CRDT
 state~\cite{laddad2022keep}. \removednote{\textbf{example}, 24 words, rank 59; \textit{Their example is a two-phase set, whose state [math] merges by componentwise union.}} We make the proposed test precise with
 Functional CALM. Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice. The input is the finite set $U$ of immutable payloads received so far, ordered
-by inclusion, and the replica's state is $s(U)=s_0\sqcup\bigsqcup U$. \removednote{\textbf{formal definition/notation}, 12 words, rank 83; \textit{Then [math] implies [math], and [math] is the least state both .}} A
+by inclusion, and the replica's state is $s(U)=s_0\sqcup\bigsqcup U$. \removednote{\textbf{formal definition/notation}, 12 words, rank 84; \textit{Then [math] implies [math], and [math] is the least state both .}} A
 client observation $q:D\to(Y,\preceq_Y)$ gives the client-visible
 specification $q\circ s$. By Functional CALM, $q\circ s$ is consistent
 exactly when $U\subseteq V$ implies $q(s(U))\preceq_Y q(s(V))$. Monotonicity
