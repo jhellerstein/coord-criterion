@@ -70,6 +70,13 @@ current.
 * Work on `main`; stage specific files; pull before editing; push after.
 * Never touch untracked files (uploaded PDFs, `.infinity/`).
 
+## Before CIDR submission
+
+* Replace the placeholder `hellerstein2026completecalmfull` entry in
+  `cidr-extra.bib` with the full paper's final arXiv reference (ID, URL, and
+  version), once the full version is posted.  cidr.tex cites it as
+  `\extended`, `\fullproof`, and `\proofinfull`.
+
 ## Voice
 
 The author's voice (see his papers in `jmhpapers/`, untracked): medium
