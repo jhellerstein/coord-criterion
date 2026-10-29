@@ -45,20 +45,23 @@ variable {I O : Type} [PO I] [PO O]
 /-- **Def. distributed history, history event, happens-before, consistent
 cut** (`def:distributed-history`), the carrier.
 "A distributed history `H` is a finite set of history events, each an
-occurrence at one participant of an input event, an output event, `send(m)`, or
-`receive(m)` …"
+occurrence at one participant of an input event, an output event, a commitment
+event of a system, `send(m)`, or `receive(m)` …"
 
 Lean: participants are `Fin n`; each participant has a finite `List` of local
 events (`Dist.LEv`: `io e`, `send x m`, `recv x m` with a message identifier
 `x` and a message `m = (j, d) : Option I × D`, `none` playing `∅`).  The list
 order *is* item 1, the total local order.  The initial inputs `i_p` are
-`H.init`. -/
+`H.init`.  Histories of a specification (this carrier) contain no
+commitment events, since canonical runs have none; histories a system produces
+add them as `CAP.LEv.cmt γ` (`CAP/Model.lean`), whose well-formedness includes
+them in item 3. -/
 abbrev «def:distributed-history» (I O D : Type) (n : Nat) := Dist.History I O D n
 
 /-- Def. `def:distributed-history`, items 2–3: "for each receive, a matching
 send of the same message at another participant, each send matching at most
-one receive; and for each participant `p`, its input and output events, in
-local order, form a defined transition sequence from `σ_S(i_p)`".
+one receive; and for each participant `p`, its input, output, and commitment
+events, in local order, form a defined transition sequence from `σ_S(i_p)`".
 
 Lean: `History.WF`.  "Each send matching at most one receive" is read as
 "send identifiers are unique"; `CC.Dist.WF0` drops this (see
@@ -94,8 +97,8 @@ theorem «sec:histories/cut-determines-runs» {D : Type} {n : Nat} (sp : Spec I 
     fun _ _ => Dist.History.endpoint_unique⟩
 
 /-- **Def. participant run, endpoint** (`def:participant-run`).  "At a
-consistent cut `C`, the input and output events of `C` at participant `p`, in
-local order, form its participant run … whose final state we write `σ_p(C)`.
+consistent cut `C`, the input, output, and commitment events of `C` at
+participant `p`, in local order, form its participant run … whose final state we write `σ_p(C)`.
 The endpoint of `C` is `end(H,C) = (σ_p(C))_{p∈P}`."
 
 Lean: relational — `σs` *is* the endpoint when each `σs p` is the final state

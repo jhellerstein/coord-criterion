@@ -287,7 +287,7 @@ abbrev «app:notation/consistent-cut» {D : Type} {n : Nat} (H : Dist.History I 
     (C : Dist.Pos n → Prop) : Prop :=
   H.IsCut C
 
-/-- *participant run; endpoint* — `p`'s input and output events at `C`;
+/-- *participant run; endpoint* — `p`'s input, output, and commitment events at `C`;
 `(σ_p(C))_{p ∈ P}` (Def. `def:participant-run`).  Lean:
 `Dist.History.Endpoint sp H C σs` says `σs p` is the final state of `p`'s
 participant run `ioOf ((H.ev p).take c)` at `C`. -/

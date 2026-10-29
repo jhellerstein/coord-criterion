@@ -490,7 +490,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/history-event»` | abbrev | *history event* — (Def. |
 | `«app:notation/happens-before»` | abbrev | *happens-before* — closure of local orders and send-before-receive (Def. |
 | `«app:notation/consistent-cut»` | abbrev | *consistent cut* — a set of history events closed under happens-before (Def. |
-| `«app:notation/endpoint»` | abbrev | *participant run; endpoint* — `p`'s input and output events at `C`; `(σ_p(C))_{p ∈ P}` (Def. |
+| `«app:notation/endpoint»` | abbrev | *participant run; endpoint* — `p`'s input, output, and commitment events at `C`; `(σ_p(C))_{p ∈ P}` (Def. |
 | `«app:notation/continuation»` | abbrev | *continuation* — a history extending `C` (Sec. |
 | `«app:notation/cut-confluent-at»` | abbrev | *cut confluent at `j`* — some continuation brings every participant to one state `(j,R)` (Sec. |
 | `«app:notation/distributed-consistency»` | abbrev | *distributed consistency* — every consistent cut of every history is confluent at every common expansion (Def. |
