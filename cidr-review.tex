@@ -141,7 +141,7 @@ Confluence, and later refinements of CALM all map into the same framework.
 unclassified & 33 & 3501\\
 formal definition/notation & 23 & 1382\\
 related-work detail & 5 & 591\\
-explanation & 10 & 486\\
+explanation & 10 & 499\\
 signposting & 16 & 471\\
 example & 6 & 192\\
 formal caution & 3 & 140\\
@@ -285,7 +285,8 @@ Section~\ref{sec:distributed-execution} gives the distributed reading, defines
 coordination, and proves Complete CAP. Section~\ref{sec:composition}
 composes specifications and characterizes proper coordination. Section~\ref{sec:instances} recovers several earlier results as consequences
 of ours and compares other approaches; Section~\ref{sec:discussion} puts
-this paper into the broader context of the CALM agenda. \removednote{\textbf{signposting}, 15 words, rank 72; \textit{The appendices give the remaining proofs and further applications; Appendix collects notation and defined terms.}} \textcolor{newblue}{Full proofs and further applications appear in \extended.}
+this paper into the broader context of the CALM agenda. \removednote{\textbf{signposting}, 15 words, rank 72; \textit{The appendices give the remaining proofs and further applications; Appendix collects notation and defined terms.}} \textcolor{newblue}{The full paper~\cite{hellerstein2026completecalmfull} gives more intuition and
+examples, the full details of all proofs, and further applications.}
 
 
 \section{Functional CALM}
@@ -545,7 +546,7 @@ the set of outputs in $R$.} \removednote{\textbf{formal definition/notation}, 88
 input} $i$ and a \emph{remainder table} $R\subseteq S$ that contains a row at
 $i$ and only rows at \indescs of $i$.} An input $k$ is \emph{legal} at
 $\sigma$ when $R$ contains a row at $k$. Rows are never added during
-execution. \removednote{\textbf{unclassified}, 40 words, rank 39; \textit{The canonical state at [math] is the state at [math] with no rows removed: it keeps ...}} \removednote{\textbf{unclassified}, 17 words, rank 67; \textit{An input event from a canonical state leads to another canonical state, and runs start at ...}} \textcolor{newblue}{The \emph{canonical state at $i$}, the state of a system that has
+execution. \removednote{\textbf{unclassified}, 40 words, rank 39; \textit{The canonical state at [math] is the state at [math] with no rows removed: it keeps ...}} \removednote{\textbf{unclassified}, 17 words, rank 68; \textit{An input event from a canonical state leads to another canonical state, and runs start at ...}} \textcolor{newblue}{The \emph{canonical state at $i$}, the state of a system that has
 received $i$ and emitted nothing, has no rows removed: it keeps every row at $i$
 and its \indescs:}
 \begin{equation}
@@ -580,7 +581,7 @@ table to the rows whose outputs \outrelbase $o$, and emits $o$:}
   \label{eq:output-action}
 \end{equation}
 \textcolor{newblue}{When this removes any row, we call this transition the \emph{seal} $s_o$: it
-\emph{seals} the inputs of the removed rows, and it is a \emph{commitment}.} \removednote{\textbf{formal caution}, 17 words, rank 68; \textit{The current row [math] remains, since [math] itself, so the event always ends at a state.}}
+\emph{seals} the inputs of the removed rows, and it is a \emph{commitment}.} \removednote{\textbf{formal caution}, 17 words, rank 69; \textit{The current row [math] remains, since [math] itself, so the event always ends at a state.}}
 \end{definition}
 
 \textcolor{newblue}{A commitment removes rows that input alone would not: the inputs
@@ -654,7 +655,7 @@ in every run. \removednote{\textbf{explanation}, 25 words, rank 58; \textit{Full
 Consistency guarantees runs never diverge irreparably: no ``split brain''. Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
 of theirs leaves a single state that every run can reach: one that keeps every
-promise any of them has made and accepts all of that input. \removednote{\textbf{unclassified}, 16 words, rank 69; \textit{Proposition identifies that state.}} \textcolor{newblue}{Consistency is a property of the specification.} \textcolor{newblue}{It describes no protocol and
+promise any of them has made and accepts all of that input. \removednote{\textbf{unclassified}, 16 words, rank 70; \textit{Proposition identifies that state.}} \textcolor{newblue}{Consistency is a property of the specification.} \textcolor{newblue}{It describes no protocol and
 promises no delivery or termination.}
 
 \subsection{The Functional CALM theorem}
@@ -677,13 +678,13 @@ so the row $(j,f(j))$ at a common \indesc $j$ survives in every run. If $f$ is n
 
 In the equality-order election, $f(xy\cdot)=\bot$ and $f(xyx)=x$ are
 incomparable: a run that emits $\bot$ at $xy\cdot$ and one that accepts
-$xyx$ are the two runs of Section~\ref{sec:election-story} that can never be reconciled. \removednote{\textbf{explanation}, 16 words, rank 70; \textit{In the functional case, consistency has a strong consequence: outputs leave no trace on the state.}}
+$xyx$ are the two runs of Section~\ref{sec:election-story} that can never be reconciled. \removednote{\textbf{explanation}, 21 words, rank 64; \textit{In the functional case, consistency has a strong consequence: emitting outputs never changes the state, which ...}}
 
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
 In a consistent functional specification, every run ending at current
 input $i$ is in the canonical state $\sigma_S(i)$, whatever outputs it emitted
-along the way. \removednote{\textbf{explanation}, 45 words, rank 32; \textit{By monotonicity, the outputs a run emits remove no row at an of [math].}}
+along the way. \removednote{\textbf{explanation}, 53 words, rank 30; \textit{By monotonicity, the outputs a run emits remove no row at an of [math].}}
 \end{corollary}
 \textcolor{newblue}{\proofinfull}
 
@@ -699,7 +700,7 @@ every state reachable without commitment is exposable.
 \begin{proof}[Proof sketch]
 By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
 states. \textcolor{newblue}{At $\sigma_S(i)$, $f(i)$ is exposable exactly
-when $f$ is monotone at $i$.} \removednote{\textbf{explanation}, 21 words, rank 64; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+when $f$ is monotone at $i$.} \removednote{\textbf{explanation}, 21 words, rank 65; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{A monotone specification can thus emit every current
@@ -881,7 +882,7 @@ A singleton fiber is trivially directed. \textcolor{newblue}{As with common \ind
 common \outnoun need not be
 least: directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
-join-semilattice.} \removednote{\textbf{example}, 53 words, rank 30; \textit{For example, the fiber [math] under inclusion is directed, since [math] every member, yet [math] and ...}} For example, the fiber
+join-semilattice.} \removednote{\textbf{example}, 53 words, rank 31; \textit{For example, the fiber [math] under inclusion is directed, since [math] every member, yet [math] and ...}} For example, the fiber
 \[
   \{\{a\},\{b\},\{a,b,c\},\{a,b,d\},\{a,b,c,d\}\}
 \]
@@ -1033,7 +1034,7 @@ Proposition~\ref{prop:functional-exposure-boundary}.}
 
 Consistency compares independent runs. A distributed execution places one run
 at each participant, and the only change from our framework's perspective is
-that participants can learn about inputs at other participants via messages. \removednote{\textbf{signposting}, 20 words, rank 65; \textit{Functional CALM and Complete CALM therefore have a natural distributed reading, including a convergence guarantee derived ...}} \textcolor{newblue}{Functional CALM and Complete CALM therefore have a natural distributed reading,
+that participants can learn about inputs at other participants via messages. \removednote{\textbf{signposting}, 20 words, rank 66; \textit{Functional CALM and Complete CALM therefore have a natural distributed reading, including a convergence guarantee derived ...}} \textcolor{newblue}{Functional CALM and Complete CALM therefore have a natural distributed reading,
 which Section~\ref{sec:histories} makes precise.} We then define systems, whose
 commitments may exceed those the specification requires, and commitments that require distributed coordination, which a run at
 another participant could contradict; Complete CAP follows.
@@ -1065,7 +1066,7 @@ events that in local order form a defined transition sequence from
 $\sigma_S(i_p)$.} A \emph{consistent cut} $C$ is a
 subset of history events closed under
 happens-before~\cite{lamport1978time,chandy1985distributed}; the standard term
-is unrelated to our notion of consistency. \removednote{\textbf{formal definition/notation}, 20 words, rank 66; \textit{A consistent cut contains a prefix of each participant's history events, so by item 3 it ...}; labels def:participant-run}
+is unrelated to our notion of consistency. \removednote{\textbf{formal definition/notation}, 20 words, rank 67; \textit{A consistent cut contains a prefix of each participant's history events, so by item 3 it ...}; labels def:participant-run}
 \end{definition}
 
 \textcolor{newblue}{At a consistent cut $C$, the input and output events of $C$ at participant
@@ -1247,7 +1248,7 @@ current input $i$.
 \begin{proof}[Proof sketch]
 After the second event every output at $i$ \outrel $x$, and after
 the first none does; since events never add rows, no row at $i$ can be common
-to both. \removednote{\textbf{signposting}, 52 words, rank 31; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+to both. \removednote{\textbf{signposting}, 52 words, rank 32; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{The conflict may be transient: an input $j$ \inrelpart $i$ might reconcile the
