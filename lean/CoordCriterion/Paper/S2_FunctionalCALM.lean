@@ -543,8 +543,9 @@ theorem «cor:state-by-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     τ = canon sp τ.cur :=
   state_by_input hf hc hτ
 
-/-- After Cor. `cor:state-by-input`: "Confluence at a common expansion `j`
-therefore needs only `input(j)`: every run reaches `σ_S(j)`." -/
+/-- After Cor. `cor:state-by-input`: "To be confluent at a common expansion
+`j`, each run therefore needs only the single event `input(j)`, which takes it
+to `σ_S(j)`." -/
 theorem «cor:state-by-input/input-suffices» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hf : sp.Functional) (hc : sp.Consistent) {σ : State sp} (hrun : IsRun σ) {j : I}
     (hj : σ.cur ≼ j) : Exec σ [.input j] (canon sp j) :=
