@@ -1632,7 +1632,11 @@ requires no coordination at all: the coordinator's unanimity decision over a
 fixed set of participants is monotone, so it issues no commitment that
 requires coordination.} \textcolor{reviewed}{The coordinator does not make the
 owners agree; it detects whether their local commitments already agree, and
-aborts when they do not.} \textcolor{reviewed}{Two-phase commit can still block: if the coordinator fails after the owners
+aborts when they do not.} A coordinator that aborts on timeout, before the last vote arrives, does issue a
+commitment: like closing the polls, it seals every input that adds a missing
+vote, yes or no. Only the coordinator decides, so this is local coordination,
+as in the first case; it becomes distributed coordination when the decision is
+replicated for fault tolerance, as in Paxos Commit~\cite{gray2006consensus}. \textcolor{reviewed}{Two-phase commit can still block: if the coordinator fails after the owners
 prepare, they must wait for its decision.} \textcolor{reviewed}{That is a loss of availability,
 not a commitment that another participant could contradict.}
 
