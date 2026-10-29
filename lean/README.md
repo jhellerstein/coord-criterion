@@ -98,6 +98,7 @@ first and supporting claims and examples follow.
 | `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: commitments, histories (local events: inputs, output events `out γ o`, commit events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.5 | Thm. Complete CAP; deterministic strategies do not suffice |
 | `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.4 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
+| `CAP/TimeoutAbort.lean` | `CC.CAP.Timeout` | §4.3 | Two-phase commit aborting on timeout: as closing the polls it seals every input adding a missing vote and requires distributed coordination; as a choice (abort allowed until decided) it is local coordination when only the coordinator decides, distributed when the decision is replicated |
 | `CAP/ResponseForm.lean` | `CC.CAP` | App. F | Response Availability, Response Partition Consistency, Thm. Complete CAP (response form) |
 | `CAP/Register.lean` | `CC.GL` | App. F | Linearizable register, realized histories, Cor. Gilbert–Lynch |
 | `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.5, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |
@@ -139,7 +140,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-617 entries.
+619 entries.
 
 ### §2 Functional CALM
 
@@ -321,6 +322,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database", *Distributed coordination*: |
 | `«sec:coordination/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
 | `«sec:coordination/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
+| `«sec:coordination/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
+| `«sec:coordination/2pc-timeout-abort-local»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
 | `«sec:coordination/shared-nothing-only-second»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/conflict-is-choice»` | theorem | "The first event's commitment is a choice against `x`." Lean: |
 | `«sec:coordination/conflict-is-choice-commit»` | theorem | "The first event's commitment is a choice against `x`", when the first event is a commitment event `commit(γ)`, as the proposition allows ("an output or comm… |
