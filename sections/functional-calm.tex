@@ -92,8 +92,7 @@ way when an output can be emitted without commitment.
 
 We introduce the framework with a small election, illustrated in
 Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
-the ballots received so far with the permitted result; orders on the columns
-describe how inputs \ingrow and which later outputs \outrelbase earlier ones.
+the ballots received so far with the permitted result; the column orders say how inputs \ingrow and which later outputs \outrelbase earlier ones.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $x$ or
 $y$.  The output is whichever candidate has two ballots, or $\bot$ while there
@@ -118,7 +117,7 @@ Each panel captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
 still possible from that input.  When $v_2$'s ballot for $y$ arrives, the event
 $\mathsf{input}(xy\cdot)$ produces panel~(b), retiring rows whose inputs no
-longer \inrelbase the ballots received, and treating such inputs as illegal.  The \emph{upper fiber} is the set of
+longer \inrelbase the ballots received; such inputs are now illegal.  The \emph{upper fiber} is the set of
 outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
 $\{\bot,x,y\}$.
 If $v_2$ instead votes for $x$, as in panel~(c), the upper fiber is $\{x\}$.  The state
@@ -188,7 +187,7 @@ changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
 to itself).  Then $\bot$ is incompatible with future winners, so emitting it
 requires a seal.  That change in the output order is Functional CALM in
-miniature: the original order is monotone with respect to input order, so later outputs \outrelbase every
+miniature: the original order is monotone, so later outputs \outrelbase every
 earlier one; under the equality order, some outputs can be emitted
 only with a commitment.
 
@@ -239,10 +238,7 @@ $\OutputGe$ for the converse orders.
 A \emph{common \indesc} of inputs
 $i_1,\ldots,i_k$ is an input $j$ that \inrel every $i_r$, and a
 \emph{common \outnoun} of outputs is an output that \outrel each of them.
-Neither need be unique or least: the input order need not be a lattice, only a
-partial order.  For example, transaction schedules ordered by subsequence form
-a partial order in which two independent transactions $a$ and $b$ have two
-incomparable minimal common \indescs, $ab$ and $ba$.
+Neither need be unique or least: for example, two independent transactions $a$ and $b$, with schedules ordered by subsequence, have two incomparable minimal common \indescs, $ab$ and $ba$.
 A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
 when $w$ \outrel $u$.
 
@@ -317,9 +313,7 @@ For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
   \bigl(j,\ R' = R[\mathrm{in}\InputGe j]\bigr).
   \label{eq:input-event}
 \end{equation}
-It makes $j$ current and \emph{retires} every row failing the predicate: i.e.,
-those whose input does not \inrelbase
-$j$. We call this \emph{input retirement}.
+It makes $j$ current and \emph{retires} the rows whose input does not \inrelbase $j$. We call this \emph{input retirement}.
 
 An input event names the cumulative input $j$: everything received so far,
 including all of $i$, not just what arrived since $i$.  Thus $\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the
@@ -351,10 +345,8 @@ $s_o(i,R)=(i,R')$: it \emph{seals} the inputs of the removed rows, and it is a
 \end{definition}
 
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
-ends at a state. A commitment removes rows that input alone would not have
-removed: the inputs it seals are no longer legal.  Seals of this form are the
-only commitments this section uses.  Systems may issue more commitments, as the registrar
-of Figure~\ref{fig:election-frames}(d) does, but extra commitments only
+ends at a state. A commitment removes rows that input alone would not: the inputs it seals are no longer legal.  Seals of this form are the
+only commitments this section uses.  Systems may issue more commitments than an output requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but extra commitments only
 restrict behavior (Section~\ref{sec:systems}).
 
 \begin{definition}[Exposable output]
@@ -400,8 +392,7 @@ some commitment-free run reaches it.
 
 A run's state has a simple description.  Input events keep only rows whose
 input \inrel the current one, and output events keep only rows whose outputs
-\outrelbase what has been emitted.  Both steps are relational selections, and selections
-commute; moreover, since inputs only \ingrow during a run, the last input's selection
+\outrelbase what has been emitted.  Both steps are relational selections, and selections commute; since inputs only \ingrow during a run, the last input's selection
 subsumes the earlier ones.
 
 \begin{lemma}[Rows remaining after a run]
@@ -433,8 +424,7 @@ of those inputs.
 An ordered specification is \emph{consistent} when every finite family of
 runs is confluent: if the runs end at states
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common \indesc of their current
-inputs, each run can be continued by further events to one
-common state with current input $j$.  The runs are then \emph{confluent at} $j$.
+inputs, each can be continued to a common state with current input $j$. They are then \emph{confluent at} $j$.
 \end{definition}
 
 Confluence has a simple test: some row at the common \indesc must survive
@@ -525,7 +515,8 @@ states. At $\sigma_S(i)$, which input alone reaches, $f(i)$ is exposable exactly
 when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-If monotonicity fails at $i\InputOrd k$ with $f(i)\not\OutputOrd f(k)$, then
+A monotone specification can thus emit every current output without commitment;
+if monotonicity fails at $i\InputOrd k$ with $f(i)\not\OutputOrd f(k)$, then
 at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$ applies $s_{f(i)}$, sealing $k$.
 
 Functional CALM is the familiar CALM dichotomy stated at the level of the specification
@@ -543,7 +534,5 @@ monotonicity becomes
 the standard definition of a monotone query~\cite{abiteboul1995foundations},
 which positive Datalog satisfies and negation may not.  Functional CALM
 generalizes the statement to arbitrary input and
-output orders, whatever formalism expresses the specification.  The usual CRDT state specification has the same functional shape,
-with received payloads ordered by inclusion and states ordered by the semilattice
-order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
+output orders, whatever formalism expresses the specification.  CRDT state specifications have the same functional shape, with received payloads ordered by inclusion and states by the semilattice order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} treat both.

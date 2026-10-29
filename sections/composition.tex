@@ -8,8 +8,7 @@ replication~\cite{schneider1990smr} wraps it in a log.  Clients send requests,
 the log puts the requested commands in one order, and the key-value store
 executes the log and answers each request.  The log's specification is also not
 monotone: when two commands arrive concurrently, either may be appended next,
-and the two alternative orders have no common \outnoun.  Yet replicated stores are
-consistent, and they coordinate only in the log.  Multi-Paxos agrees on each
+and the two alternative orders have no common \outnoun.  Yet replicated stores are consistent, coordinating only in the log.  Multi-Paxos agrees on each
 log entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
 with no further agreement.
 
@@ -49,14 +48,12 @@ own as well, as when a store serves reads that bypass the log
 
 \begin{lemma}[Composition]
 \label{lem:composition}
-If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then the ordered
-specification with table $S_2\circ S_1$ satisfies Lifted Monotonicity.
+If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the ordered specification with table $S_2\circ S_1$.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
 Take rows of $S_2\circ S_1$ whose inputs have a common \indesc $j$.  The
-common-\indesc condition for $\Spec_1$ gives one intermediate value at $j$
-that \outrel each row's intermediate value, and that value is a common \indesc
+common-\indesc condition for $\Spec_1$ gives an intermediate value at $j$ that \outrel each row's, and that value is a common \indesc
 at which the condition for $\Spec_2$ supplies the common \outnoun.  Full proof
 in Appendix~\ref{app:composition}.
 \end{proof}
@@ -124,7 +121,7 @@ proof in Appendix~\ref{app:composition}.
 \end{proof}
 
 The three cases do not cover every monotone composite
-(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue a commitment even though the composite is monotone, as we discuss next.
+(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue a commitment even though the composite is monotone.
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}

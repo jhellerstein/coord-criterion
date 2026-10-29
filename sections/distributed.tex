@@ -205,9 +205,7 @@ inputs, emits the same outputs, and keeps at least the original's rows after eac
 erase to nothing (Lemma~\ref{lem:canonical-equivalent},
 Appendix~\ref{app:bases}).
 In the remainder of the paper we therefore judge consistency on canonical
-runs.  Whether a specification needs coordination is a question about the
-seals and choices its outputs require, whatever mechanism a system uses to
-make them.
+runs.  Whether a specification needs coordination thus depends on the seals and choices its outputs require, whatever mechanism makes them.
 
 Consider 2PL on an input of three transactions $A$, $B$, $C$ that have each
 issued their operations and requested commit, where $B$ waits for a lock that
@@ -308,8 +306,7 @@ $\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and $\fiber{j}=\{u\}$ with
 $u$ \outrelpart both, the two states can be reconciled once $j$ arrives.  Consistency still
 counts this as a failure, since it asks for confluence at the current input
 too.  The environment may act on what it observes, through channels the system
-does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time};
-moreover, the input that would reconcile two outputs need not arrive.  Consistency
+does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time}, and the reconciling input need not arrive.  Consistency
 therefore excludes every observable conflict, including a transient one.
 
 The first event's commitment is a choice against $x$, and it requires
@@ -475,8 +472,7 @@ coordination-free (Definition~\ref{def:coordination-free}).  For $E=S$ it needs 
 commitment at all.  For a smaller $E$ such local choices can be necessary: if
 $o\in E(i)$ and $x\in\fiber{i}\setminus E(i)$ have no common \outnoun at $i$,
 emitting $o$ must choose against $x$.  When Lifted Monotonicity for $E$ fails, some
-output of $E$ either waits for another component, sacrificing Availability, or
-is emitted independently at the cost of Partition Consistency.
+output of $E$ waits for another component, sacrificing Availability, or is emitted anyway, sacrificing Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}
 Their theorem is a case of Complete CAP.  Consider a register specification
@@ -490,8 +486,7 @@ precedes the read, every output in the fiber answers that same read with $v$.  T
 the answer $v_0$; it is not a later read observing a newer value.  So no output
 there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.
 
-By Complete CAP, then, no system keeps both outputs available and consistent
-across a partition.  The proof needs less than the full hypotheses here, which
+By Complete CAP, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem.  The proof needs less than the full hypotheses here, which
 is why it yields Gilbert and Lynch's theorem exactly.  Place $p$ and $q$ in
 separate components.  Availability is used only to make $p$ acknowledge the
 write and $q$ answer the read; each fiber holds a single output, so any
