@@ -189,7 +189,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«sec:functional-events/determined»` | abbrev | §2.3 "Determination": |
 | `«sec:functional-events/determined-one-element»` | theorem | "Determined": |
 | `«sec:functional-events/determination-examples»` | theorem | "A functional specification can therefore have undetermined states, as in panel (b) … An input event may [reach a determined state] by retiring rows … and a… |
-| `«sec:functional-events/stays-determined»` | theorem | "A determined state stays determined: |
+| `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state: |
 | `«def:run»` | abbrev | **Def. |
 | `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment. |
 | `«lem:run-residual»` | theorem | **Lemma `lem:run-residual`** (Rows remaining after a run). |

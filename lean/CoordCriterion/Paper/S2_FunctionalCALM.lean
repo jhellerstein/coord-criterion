@@ -432,8 +432,9 @@ theorem «sec:functional-events/determination-examples» :
   ⟨elec_functional, elec_panel_b_undetermined, elec_panel_c_determined,
    Figures.Elec.panelD_determined.1⟩
 
-/-- "A determined state stays determined: later events only remove rows, and
-a row at the current input always remains." -/
+/-- "An event from a determined state always leads to another determined
+state: events only remove rows, and a row at the current input always
+remains." -/
 theorem «sec:functional-events/stays-determined» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} :
     (∀ {σ τ : State sp} {e : Event I O}, Step σ e τ → Determined σ → Determined τ) ∧
