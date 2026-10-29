@@ -293,7 +293,8 @@ abbrev «def:residual-state» {I O : Type} [PO I] [PO O] (sp : Spec I O) := Stat
 abbrev «eq:canonical-state» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I) : State sp :=
   canon sp i
 
-/-- "The largest state at input `i` … is the *canonical state at `i`*":
+/-- "The *canonical state at `i`* is the state at `i` with no rows removed: it
+keeps every row of `S` at `i` and its expansions":
 every state's table is contained in that of the canonical state at its
 current input. -/
 theorem «eq:canonical-state/largest» {I O : Type} [PO I] [PO O] {sp : Spec I O}

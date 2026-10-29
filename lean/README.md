@@ -173,7 +173,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:functional-monotonicity/via-f»` | theorem | Def. |
 | `«def:residual-state»` | abbrev | **Def. |
 | `«eq:canonical-state»` | abbrev | **Eq. |
-| `«eq:canonical-state/largest»` | theorem | "The largest state at input `i` … is the *canonical state at `i`*": |
+| `«eq:canonical-state/largest»` | theorem | "The *canonical state at `i`* is the state at `i` with no rows removed: |
 | `«eq:canonical-state/input-moves-canonical»` | theorem | "Input events alone move between canonical states." |
 | `«eq:input-event»` | abbrev | **Eq. |
 | `«eq:input-event/legal-expands»` | theorem | The paper's input event asks for `j` legal *and* `i ≼ j`; the second follows from the first, since the remainder table contains only rows at expansions of `i`. |

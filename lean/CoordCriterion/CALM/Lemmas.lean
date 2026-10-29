@@ -111,7 +111,7 @@ theorem input_self {sp : Spec I O} {σ τ : State sp} (h : Step σ (.input σ.cu
     apply propext
     exact ⟨fun h => h.1, fun h => ⟨h, σ.above _ _ h⟩⟩
 
-/-- "The largest state at input `i` ... is the canonical state": every state
+/-- "The canonical state at `i` is the state at `i` with no rows removed": every state
 with current input `i` has its table inside `S[in ⪰ i]`. -/
 theorem state_le_canon {sp : Spec I O} (σ : State sp) :
     ∀ k x, σ.R k x → (canon sp σ.cur).R k x :=
