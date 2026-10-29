@@ -31,8 +31,8 @@ def strip_comments(text):
 
 def expand_inputs(text):
     def rep(m):
-        return strip_comments(open(m.group(1) if m.group(1).endswith(".tex")
-                                   else m.group(1) + ".tex").read())
+        return expand_inputs(strip_comments(open(m.group(1) if m.group(1).endswith(".tex")
+                                                 else m.group(1) + ".tex").read()))
     return re.sub(r"\\input\{([^}]*)\}", rep, text)
 
 

@@ -24,7 +24,7 @@ THRESHOLD = 0.85
 def expand_inputs(text):
     def rep(m):
         name = m.group(1) if m.group(1).endswith(".tex") else m.group(1) + ".tex"
-        return strip_comments(open(name).read())
+        return expand_inputs(strip_comments(open(name).read()))
     return re.sub(r"(?m)^\s*\\input\{([^}]*)\}", rep, text)
 
 
