@@ -339,8 +339,8 @@ theorem «sec:functional-events/input-cumulative» {I O : Type} [PO I] [PO O]
 `(i,R)` be a state and `(i,o)` its row at the current input.  The *output
 event* `output(o)` … restricts the remainder table to exactly the rows whose
 outputs refine `o`, and emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`.
-When `R' ≠ R`, removing some row at an input `j ⪰ i`, we call this state
-change the *seal* … it is a *commitment*."
+When `R' ≠ R`, removing some row at an input `j ⪰ i`, we call this
+transition the *seal* … it is a *commitment*."
 
 Lean: `Step σ (.output o) τ` (constructor `Step.output`) requires
 `σ.R σ.cur o` and sets `τ.R = outputTable σ o = R[out ⪰ o]`.  The general
