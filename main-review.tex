@@ -1136,8 +1136,8 @@ Fix an ordered specification, participants $P$, and an initial input $i_p$
 for each. A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of an input
 event, an output event (Definition~\ref{def:output-event} and
-Section~\ref{sec:lifted-output-events}), a commitment event of a system
-(Section~\ref{sec:systems}), $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
+Section~\ref{sec:lifted-output-events}),
+$\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
 \begin{enumerate}
 \item
 a total local order on each participant's history events;
@@ -1145,8 +1145,8 @@ a total local order on each participant's history events;
 for each receive, a matching send of the same message at another
         participant, each send matching at most one receive; and
 \item
-for each participant $p$, its input, output, and commitment events, in
-        local order, form a defined transition sequence from $\sigma_S(i_p)$: each
+for each participant $p$, its input and output events, in local
+        order, form a defined transition sequence from $\sigma_S(i_p)$: each
         is legal at the state where it occurs.
 \end{enumerate}
 \emph{Happens-before} is the transitive closure of the local orders and of
@@ -1162,8 +1162,8 @@ it determines one run per participant.
 
 \begin{definition}[Participant run, endpoint]
 \label{def:participant-run}
-At a consistent cut $C$, the input, output, and commitment events of $C$ at
-participant $p$, in local order, form its \emph{participant run}, a run
+At a consistent cut $C$, the input and output events of $C$ at participant $p$,
+in local order, form its \emph{participant run}, a run
 (Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$. The
 \emph{endpoint} of $C$ is $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
 \end{definition}
@@ -1301,7 +1301,7 @@ be reconciled, not that they agree.}
 \paragraph{Message data.}
 The data $d$ of a message is any application state other than input that a
 participant chooses to send: timestamps, version vectors, non-input-related gossip, votes, etc. Data
-can influence which input and output events occur next at the receiver, but it
+can influence which events occur next at the receiver, but it
 never directly changes the receiver's specification state, and nothing in the
 definitions above depends on it. Section~\ref{sec:systems} calls the
 rule that makes these choices a participant's \emph{strategy}. Data can
@@ -1385,9 +1385,6 @@ system consists of environment inputs and events chosen by the participants'
 strategies.
 \end{definition}
 
-Each participant run of a history a system produces is thus a run under
-$\mathcal B$.
-
 Strategies differ by participant so we can single out replicated
 systems, whose participants share one (Appendix~\ref{app:cap-response}); no
 result distinguishes participants' commitments, so the basis is shared.
@@ -1419,7 +1416,11 @@ $\mathcal B$, each defined at the state its predecessors leave, and emits
 nothing.
 \end{definition}
 
-A commitment event lets a system decide before any output needs the decision. The environment observes nothing from it.
+A commitment event lets a system decide before any output needs the decision. The environment observes nothing from it. A history a system produces may
+also contain commitment events; item~3 of
+Definition~\ref{def:distributed-history} and participant runs
+(Definition~\ref{def:participant-run}) include them, in local order, so each
+participant run is a run under $\mathcal B$.
 
 A legal $\Out{\gamma}{o}$ issues at least the commitments of the $\mathsf{output}(o)$
 of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}: its commitments

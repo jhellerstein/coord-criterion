@@ -139,7 +139,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-619 entries.
+617 entries.
 
 ### §2 Functional CALM
 
@@ -205,8 +205,6 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«prop:functional-exposure-boundary»` | theorem | **Prop. |
 | `«prop:functional-exposure-boundary/nonmonotone-seals»` | theorem | After Prop. |
 | `«eq:query-monotonicity»` | theorem | **Eq. |
-| `«sec:discussion/emit-before-determination»` | theorem | §7.1, "Design lessons": |
-| `«sec:discussion/decisive-vs-close»` | theorem | §7.1, "Design lessons": |
 
 ### §3 Complete CALM
 
@@ -274,7 +272,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«cor:convergence»` | theorem | **Cor. |
 | `«cor:convergence/relational-fails»` | theorem | After Cor. |
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
-| `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which input and output events occur next at the receiver, but it never directly changes the receiver's specification stat… |
+| `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which events occur next at the receiver, but it never directly changes the receiver's specification state, and nothing in… |
 | `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
 | `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing sea… |
 | `«def:commitment»` | abbrev | **Def. |

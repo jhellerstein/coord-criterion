@@ -10,12 +10,6 @@ import CoordCriterion.Distributed.Systems
   Sec. `sec:functional-events` about it, and the printed rows and upper
   fibers of panels (a)–(d) (`Elec.*`).  The figure prints exactly the rows
   whose input ⪰ `x··`, as its caption says (`Elec.printed_complete`).
-* Sec. `sec:discussion`, "Receiving a decisive ballot and closing the polls
-  both leave a single result": both leave a determined state, the first by
-  input retirement, the second by a commitment; in the election the two never
-  leave the *same* result, since closing the polls at an undetermined state
-  always leaves `⊥` and every determined canonical state has a winner
-  (`Elec.decisive_vs_close`).
 * Fig. `fig:ambiguity-frames`(f), transaction ordering (`Txn.*`), and (g),
   traceroute (`Trace.*`), as printed (one input; the rows at it), with the
   claims of Sec. `sec:ambiguity-story`, Sec. `sec:lifted-monotonicity`,

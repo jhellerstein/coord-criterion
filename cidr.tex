@@ -1046,19 +1046,18 @@ influence which events a system executes next (\S\ref{sec:systems}), but never d
 \label{def:distributed-history}
 A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of an input
-event, an output event, a commitment event of a system
-(Section~\ref{sec:systems}), $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with
+event, an output event, $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with
 a total local order on each participant's events, a matching send at another
-participant for each receive, and, for each participant $p$, input, output, and
-commitment events that in local order form a defined transition sequence from
+participant for each receive, and, for each participant $p$, input and output
+events that in local order form a defined transition sequence from
 $\sigma_S(i_p)$.  A \emph{consistent cut} $C$ is a
 subset of history events closed under
 happens-before~\cite{lamport1978time,chandy1985distributed} (a term
 unrelated to our consistency).
 \end{definition}
 
-At a consistent cut $C$, the input, output, and commitment events of $C$ at
-participant $p$, in local order, form its \emph{participant run}.  The cut is
+At a consistent cut $C$, the input and output events of $C$ at participant
+$p$, in local order, form its \emph{participant run}.  The cut is
 \emph{confluent at} $j$, for a common \indesc $j$ of the participants'
 current inputs, when some continuation of $C$ brings every participant to the
 same state $(j,R)$.  A specification has \emph{distributed consistency} when,
@@ -1144,7 +1143,8 @@ participant that picks its next output, commitment, send, or receive event
 from its local history.  Its output event $\Out{\gamma}{o}$ applies a sequence
 $\gamma$ of commitments from $\mathcal B$, retires rows, and emits $o$.  A commitment event $\mathsf{commit}(\gamma)$
 applies such a sequence and emits nothing, as when 2PL orders $A$ before $B$
-while $B$ waits for $A$'s lock.  The full paper gives these definitions formally and shows
+while $B$ waits for $A$'s lock.  Histories a system produces may also contain
+commitment events, and participant runs include them.  The full paper gives these definitions formally and shows
 that every seal and choice of Section~\ref{sec:complete-calm} is a commitment
 in this sense.
 

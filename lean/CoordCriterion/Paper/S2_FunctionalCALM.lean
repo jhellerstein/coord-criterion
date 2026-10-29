@@ -588,36 +588,4 @@ theorem «eq:query-monotonicity» {F A : Type} (Q : PSet F → PSet A) :
       ∀ J J' : PSet F, (∀ x, J.mem x → J'.mem x) → ∀ a, (Q J).mem a → (Q J').mem a) :=
   ⟨querySpec_functional Q, query_monotone_iff Q, query_consistent_iff Q⟩
 
-/-! ## Cross-references from §7 (`sections/discussion.tex`) -/
-
-/-- §7.1, "Design lessons": "useful output need not wait for
-determination: the election can emit `⊥` while either candidate may still
-win."  At `σ_S(xy·)`, `⊥` is exposable and rows with output `x` and with output `y` both remain. -/
-theorem «sec:discussion/emit-before-determination» :
-    Exposable (canon elec bxy) .bot ∧ (∃ k, (canon elec bxy).R k (.win .x)) ∧
-      (∃ k, (canon elec bxy).R k (.win .y)) :=
-  ⟨elec_panels_exposable.2.1, (Figures.Elec.upper_ab _).2, (Figures.Elec.upper_ab _).2⟩
-
-/-- §7.1, "Design lessons": "Receiving a decisive ballot and closing the
-polls both leave a single result.  The first retires rows by input; the
-second removes rows that input still permits, a commitment."
-
-(1) `input(xx·)` at `σ_S(x··)` reaches a determined state, and every row it
-removes has an input that does not expand `xx·`; (2) closing the polls at (b)
-reaches a determined state, and every row it removes is at a legal input
-strictly expanding the current one; (3)–(4) in the election the two never
-leave the *same* result: closing the polls at any undetermined canonical
-state leaves only `⊥`, while every determined canonical state has a winner. -/
-theorem «sec:discussion/decisive-vs-close» :
-    (Step (canon elec bxd) (.input bxx) (canon elec bxx) ∧ Determined (canon elec bxx) ∧
-        ∀ k u, (canon elec bxd).R k u → ¬ (canon elec bxx).R k u → ¬ bxx ≼ k) ∧
-      (Determined Figures.Elec.panelD ∧ ∀ k u, (canon elec bxy).R k u →
-        ¬ Figures.Elec.panelD.R k u → bxy ≼ k ∧ k ≠ bxy) ∧
-      (∀ i, ¬ Determined (canon elec i) →
-        (Figures.closePolls (sp := elec)).app (canon elec i) =
-            some (Figures.closeState (canon elec i)) ∧
-          ∀ k x, (Figures.closeState (canon elec i)).R k x → x = .bot) ∧
-      (∀ i, Determined (canon elec i) → ∃ c, winner i = .win c) :=
-  Figures.Elec.decisive_vs_close
-
 end CC.Paper

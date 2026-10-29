@@ -61,8 +61,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:functional-exposure-boundary»
 #check @CC.Paper.«prop:functional-exposure-boundary/nonmonotone-seals»
 #check @CC.Paper.«eq:query-monotonicity»
-#check @CC.Paper.«sec:discussion/emit-before-determination»
-#check @CC.Paper.«sec:discussion/decisive-vs-close»
 #check @CC.Paper.«fig:ambiguity-frames/f»
 #check @CC.Paper.«fig:ambiguity-frames/g»
 #check @CC.Paper.«sec:ambiguity-story/choice»
