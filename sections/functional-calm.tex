@@ -4,7 +4,7 @@
 This section focuses on functional specifications, in which each input has a
 single specified output.  We walk through the framework informally on an
 election, make it precise, and prove Functional CALM, identifying along the
-way when an output can be safely emitted without commitment.
+way when an output can be emitted without commitment.
 
 \subsection{The framework by example}
 \label{sec:election-story}
@@ -327,13 +327,13 @@ effect of $\mathsf{input}(k)$ alone; $\mathsf{input}(i)$ at
 $(i,R)$ has no effect.
 
 \paragraph{Output events.}
-A system controls what it tells the world.  We study what it can safely
+A system controls what it tells the world.  We study what it can
 promise without assuming that clients tolerate retractions.  Later outputs
 must therefore \outrelbase earlier ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Emitting it safely requires sealing every legal
-input whose output does not \outrelbase $o$.
+output the system may emit.  Since every later output must \outrelbase $o$, emitting $o$ requires sealing
+every legal input whose output does not \outrelbase it.
 
 \begin{definition}[Output event, seal, commitment]
 \label{def:output-event}
