@@ -139,7 +139,7 @@ Confluence, and later refinements of CALM all map into the same framework.
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
 unclassified & 31 & 3227\\
-formal definition/notation & 22 & 1317\\
+formal definition/notation & 22 & 1310\\
 related-work detail & 4 & 562\\
 explanation & 10 & 482\\
 signposting & 16 & 471\\
@@ -148,7 +148,7 @@ result & 2 & 105\\
 formal caution & 2 & 77\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
 1. unclassified, 1360 words: \textit{We now make the mapping precise, and then explain how ...}\par
-2. formal definition/notation, 616 words: \textit{At an input [math], either no row remains or some ...}\par
+2. formal definition/notation, 601 words: \textit{At an input [math], either no row remains or some ...}\par
 3. unclassified, 360 words: \textit{The orders on [math] and [math] are part of the ...}\par
 4. signposting, 262 words: \textit{See Appendix .}\par
 5. related-work detail, 258 words: \textit{An invariant is a predicate that every state must satisfy.}\par
@@ -157,8 +157,8 @@ formal caution & 2 & 77\\
 8. unclassified, 153 words: \textit{A read's answer under [math] depends only on the events ...}\par
 9. unclassified, 136 words: \textit{Zinn et al. gave transducers partial knowledge of how data ...}\par
 10. explanation, 134 words: \textit{Consistency therefore excludes every observable conflict, including a transient one.}\par
-11. unclassified, 121 words: \textit{As the reading above shows, it implies Relational Monotonicity and ...}\par
-12. formal definition/notation, 119 words: \textit{Fix an ordered specification, participants [math], and an initial input ...}\par
+11. formal definition/notation, 127 words: \textit{Fix an ordered specification, participants [math], and an initial input ...}\par
+12. unclassified, 121 words: \textit{As the reading above shows, it implies Relational Monotonicity and ...}\par
 }\par\medskip
 \noindent{\color{newblue}Blue: new or edited for CIDR.}\quad{\color{cutred}Red: removed from the full version.}\par
 
@@ -921,7 +921,7 @@ under the joint lift:
 \end{definition}
 
 With singleton fibers it is functional monotonicity
-(Definition~\ref{def:functional-monotonicity}). \removednote{\textbf{unclassified}, 121 words, rank 11; \textit{As the reading above shows, it implies Relational Monotonicity and Directed Outputs; conversely, for [math] and ...}} \textcolor{newblue}{Lifted
+(Definition~\ref{def:functional-monotonicity}). \removednote{\textbf{unclassified}, 121 words, rank 12; \textit{As the reading above shows, it implies Relational Monotonicity and Directed Outputs; conversely, for [math] and ...}} \textcolor{newblue}{Lifted
 Monotonicity holds exactly when Relational Monotonicity and Directed Outputs
 both do.}
 
@@ -1051,36 +1051,35 @@ environment or in a message from another participant. \removednote{\textbf{forma
 if it carries none, and arbitrary application-specific data $d$; one can envision timestamps, version
 vectors, state identities, and so on.} \textcolor{newblue}{A receive does not change the specification state; a
 participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own
-$\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.} \removednote{\textbf{formal definition/notation}, 119 words, rank 12; \textit{Fix an ordered specification, participants [math], and an initial input [math] for each.}} \textcolor{newblue}{Data can
-influence which events a system chooses to execute next (\S\ref{sec:systems}), but never directly changes a specification
-state.}
+$\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.} \removednote{\textbf{formal definition/notation}, 127 words, rank 11; \textit{Fix an ordered specification, participants [math], and an initial input [math] for each.}} \textcolor{newblue}{Data can
+influence which events a system executes next (\S\ref{sec:systems}), but never directly changes the state.}
 
 \begin{definition}[Distributed history, history event, happens-before, consistent cut]
 \label{def:distributed-history}
 \textcolor{newblue}{A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of an input
-event, an output event, $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with
+event, an output event, a commitment event of a system
+(Section~\ref{sec:systems}), $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with
 a total local order on each participant's events, a matching send at another
-participant for each receive, and, for each participant $p$, input and output
-events that in local order form a defined transition sequence from
-$\sigma_S(i_p)$.} A \emph{consistent cut} $C$ is a
+participant for each receive, and, for each participant $p$, input, output, and
+commitment events that in local order form a defined transition sequence from
+$\sigma_S(i_p)$.} \textcolor{newblue}{A \emph{consistent cut} $C$ is a
 subset of history events closed under
-happens-before~\cite{lamport1978time,chandy1985distributed}; the standard term
-is unrelated to our notion of consistency. \removednote{\textbf{formal definition/notation}, 20 words, rank 59; \textit{A consistent cut contains a prefix of each participant's history events, so by item 3 it ...}; labels def:participant-run}
+happens-before~\cite{lamport1978time,chandy1985distributed} (a term
+unrelated to our consistency).} \removednote{\textbf{formal definition/notation}, 20 words, rank 59; \textit{A consistent cut contains a prefix of each participant's history events, so by item 3 it ...}; labels def:participant-run}
 \end{definition}
 
-\textcolor{newblue}{At a consistent cut $C$, the input and output events of $C$ at participant
-$p$, in local order, form its \emph{participant run}.} \removednote{\textbf{example}, 37 words, rank 39; \textit{The endpoint of [math] is [math].}; labels fig:participant-runs} \removednote{\textbf{formal definition/notation}, 39 words, rank 38; \textit{A continuation of a history at a consistent cut [math] is a history [math] that extends ...}} \textcolor{newblue}{The cut is
+\textcolor{newblue}{At a consistent cut $C$, the input, output, and commitment events of $C$ at
+participant $p$, in local order, form its \emph{participant run}.} \removednote{\textbf{example}, 37 words, rank 39; \textit{The endpoint of [math] is [math].}; labels fig:participant-runs} \removednote{\textbf{formal definition/notation}, 39 words, rank 38; \textit{A continuation of a history at a consistent cut [math] is a history [math] that extends ...}} \textcolor{newblue}{The cut is
 \emph{confluent at} $j$, for a common \indesc $j$ of the participants'
 current inputs, when some continuation of $C$ brings every participant to the
 same state $(j,R)$.} \removednote{\textbf{formal definition/notation}, 22 words, rank 55; \textit{History events at different participants are independent, so this holds exactly when the participant runs at ...}; labels def:distributed-consistency} \textcolor{newblue}{A specification has \emph{distributed consistency} when,
 for every finite participant set, every consistent cut of every history is
-confluent at every common \indesc of their current inputs.}
+confluent at every such $j$.}
 
 \begin{proposition}[Consistency and distributed consistency]
 \label{prop:distributed-consistency}
-An ordered specification is consistent if and only if it has distributed
-consistency.
+\textcolor{newblue}{A specification is consistent exactly when it has distributed consistency.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -1149,15 +1148,13 @@ function on specification states that leaves the current input unchanged and
 removes a nonempty set of rows, none of them \outrelpast by a remaining row at
 the same input.} \removednote{\textbf{result}, 33 words, rank 41; \textit{The seals and choices of Definition and Section satisfy this definition: a seal removes every row ...}; labels eq:commitment-excludes, prop:seal-or-choose} \textcolor{newblue}{At each input where it removes rows, a commitment either
 removes every row there, \emph{sealing} that input, or removes some outputs
-and keeps others, \emph{choosing} among them.} \removednote{\textbf{formal definition/notation}, 616 words, rank 2; \textit{At an input [math], either no row remains or some does.}; labels def:strategy, def:system, def:system-output-event, eq:lifted-validity, def:commitment-event} \removednote{\textbf{formal definition/notation}, 28 words, rank 45; \textit{We call the runs of Sections -- canonical runs , and a run under a basis ...}} \textcolor{newblue}{A \emph{system} consists of a
+and keeps others, \emph{choosing} among them.} \removednote{\textbf{formal definition/notation}, 601 words, rank 2; \textit{At an input [math], either no row remains or some does.}; labels def:strategy, def:system, def:system-output-event, eq:lifted-validity, def:commitment-event} \removednote{\textbf{formal definition/notation}, 28 words, rank 45; \textit{We call the runs of Sections -- canonical runs , and a run under a basis ...}} \textcolor{newblue}{A \emph{system} consists of a
 \emph{commitment basis} $\mathcal B$ and a nondeterministic \emph{strategy} per
 participant that picks its next output, commitment, send, or receive event
 from its local history.} \textcolor{newblue}{Its output event $\Out{\gamma}{o}$ applies a sequence
 $\gamma$ of commitments from $\mathcal B$, retires rows, and emits $o$.} \textcolor{newblue}{A commitment event $\mathsf{commit}(\gamma)$
 applies such a sequence and emits nothing, as when 2PL orders $A$ before $B$
-while $B$ waits for $A$'s lock.} \textcolor{newblue}{Commitment events are history events of the
-histories a system produces, so a participant run includes the commitments it
-applies, all from $\mathcal B$.} \textcolor{newblue}{The full paper gives these definitions formally and shows
+while $B$ waits for $A$'s lock.} \textcolor{newblue}{The full paper gives these definitions formally and shows
 that every seal and choice of Section~\ref{sec:complete-calm} is a commitment
 in this sense.}
 
