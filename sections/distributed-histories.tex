@@ -21,14 +21,14 @@ Fix an ordered specification, participants $P$, and an initial input $i_p$
 for each.  A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of an input
 event, an output event (Definition~\ref{def:output-event} and
-Section~\ref{sec:lifted-output-events}),
-$\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
+Section~\ref{sec:lifted-output-events}), a commitment event of a system
+(Section~\ref{sec:systems}), $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with:
 \begin{enumerate}
   \item a total local order on each participant's history events;
   \item for each receive, a matching send of the same message at another
         participant, each send matching at most one receive; and
-  \item for each participant $p$, its input and output events, in local
-        order, form a defined transition sequence from $\sigma_S(i_p)$: each
+  \item for each participant $p$, its input, output, and commitment events, in
+        local order, form a defined transition sequence from $\sigma_S(i_p)$: each
         is legal at the state where it occurs.
 \end{enumerate}
 \emph{Happens-before} is the transitive closure of the local orders and of
@@ -44,8 +44,8 @@ it determines one run per participant.
 
 \begin{definition}[Participant run, endpoint]
 \label{def:participant-run}
-At a consistent cut $C$, the input and output events of $C$ at participant $p$,
-in local order, form its \emph{participant run}, a run
+At a consistent cut $C$, the input, output, and commitment events of $C$ at
+participant $p$, in local order, form its \emph{participant run}, a run
 (Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$.  The
 \emph{endpoint} of $C$ is $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
 \end{definition}
