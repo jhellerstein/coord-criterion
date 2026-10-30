@@ -124,8 +124,8 @@ not the strategy.
 A \emph{system} consists of a commitment basis $\mathcal B$, shared by all
 participants, and a strategy $\theta_p$ for each participant $p$ whose output
 and commitment events apply only commitments from $\mathcal B$.  A distributed history \emph{produced} by the
-system consists of environment inputs and events chosen by the participants'
-strategies.
+system consists of input events supplied by the environment and output,
+commitment, send, and receive events chosen by the participants' strategies.
 \end{definition}
 
 Strategies differ by participant so we can single out replicated
@@ -236,7 +236,7 @@ removes nothing the specification still permits and applies no commitment.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
-Let an event of a run apply a commitment.  A run \emph{contradicts} the
+Let a specification event of a run apply a commitment.  A run \emph{contradicts} the
 commitment if it accepts an input the commitment seals, or emits an output the
 commitment chooses against at the same input.
 \end{definition}
@@ -300,7 +300,7 @@ current input $i$.
 
 \begin{proof}[Proof sketch]
 After the second event every output at $i$ \outrel $x$, and after
-the first none does; since events never add rows, no row at $i$ can be common
+the first none does; since specification events never add rows, no row at $i$ can be common
 to both.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
@@ -314,7 +314,7 @@ therefore excludes every observable conflict, including a transient one.
 
 The first event's commitment is a choice against $x$, and it requires
 distributed coordination exactly when another participant may emit $x$.  The system must
-then exclude one of the two events: by a mutex or atomic instruction in shared
+then exclude one of the two specification events: by a mutex or atomic instruction in shared
 memory, by agreement in a distributed system, or by a rule fixed in advance,
 such as assigning the choice to a single participant, so that only that
 participant's runs can contradict it and no runtime agreement is needed.  Seals are
@@ -407,7 +407,7 @@ any legal input event to any participant.
 \begin{definition}[Explicit relation, Availability]
 \label{def:partition-notions}
 A continuation of a partitioned history is \emph{local to} a participant $p$
-when the system produces it, it adds only events of $p$'s block and no
+when the system produces it, it adds only history events of $p$'s block and no
 input events, and none of its receives takes a message sent from another
 block.  An \emph{explicit relation} $E\subseteq S$ is a set of rows
 $(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
