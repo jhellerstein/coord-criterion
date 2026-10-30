@@ -288,7 +288,8 @@ theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
 
 /-- "The registrar … emits `⊥` and closes the polls in the same event
 (Figure election-frames(d)); the output event for `⊥` does not require the
-poll-closing seal, so closing the polls is a design decision of the system."
+poll-closing seal.  Closing the polls is the registrar's design decision,
+as fixing orderings is 2PL's."
 
 Lean: under any basis containing `closePolls`, `Out_{[closePolls]}(⊥)` from
 `σ_S(xy·)` is legal and ends at panel (d); yet `⊥` is exposable there and
@@ -529,15 +530,14 @@ theorem «sec:systems/system-histories» {sp : Spec I O} {B : Basis sp} {σ τ :
     (SEvent.output γ o).erase = some (Event.output o : Event I O) :=
   ⟨Dist.sysStep_iff_CAP, rfl⟩
 
-/-- *A transactional example of bespoke commitments.*  "The lock manager …
-is one system; multiversion timestamp ordering (MVTO) is another, and they have
-different bases … The ordering commitments are where they part:
-`order(A,B)` fixes `A` before `B` and nothing else, which no MVTO commitment
-does, and `stamp(B)` places `B` before every other transaction, which no 2PL
-commitment does."  At the canonical state of an input whose transactions `A`,
-`B`, `C` have each requested commit (Appendix G's specification), no commitment
-of `ℬ_MVTO` has the effect of `order(A,B)`, and no commitment of `ℬ_2PL` has the
-effect of `stamp(B)`. -/
+/-- Opener of §4.2: "Two-phase locking (2PL) waits until two transactions contend
+for a lock, then fixes their order: `order(A,B)` excludes every serial order
+with `B` before `A`.  Multiversion timestamp ordering (MVTO) stamps each
+transaction when it starts and lets the stamps decide: `stamp(B)` excludes
+every serial order that does not start with `B`."  At the canonical state of
+an input whose transactions `A`, `B`, `C` have each requested commit (Appendix
+G's specification), no commitment of `ℬ_MVTO` has the effect of `order(A,B)`,
+and no commitment of `ℬ_2PL` has the effect of `stamp(B)`. -/
 theorem «sec:systems/bases-differ» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
     (h : Txn.Partial.Tri k A B C) :
     (∃ τ, (Txn.Partial.order A B).app (Txn.Partial.σ3 k) = some τ ∧
@@ -546,9 +546,9 @@ theorem «sec:systems/bases-differ» {T K : Type} {A B C : T} {k : Txn.Partial.I
       ∀ c, Txn.Partial.basis2PL c → c.app (Txn.Partial.σ3 k) ≠ some τ) :=
   CC.Paper.«app:cc-bases/bases-differ» h
 
-/-- Fig. `fig:cc-commitments`: "When `B` waits for a lock that `A` holds, 2PL
-applies `order(A,B)`, leaving `C`'s position open (panel (h)).  When MVTO gives
-`B` the first timestamp, it applies `stamp(B)`, placing `B` first (panel
+/-- Fig. `fig:cc-commitments`: "2PL applies `order(A,B)` when `B` waits for a
+lock `A` holds, leaving `C`'s position open (panel (h)); MVTO applies
+`stamp(B)` when `B` receives the first timestamp, placing `B` first (panel
 (i))."  The caption: only complete rows without aborts or read results are
 shown.  Among those, `order(A,B)` keeps exactly the rows with `A` before `B`,
 and `stamp(B)` (no earlier stamps) exactly those with `B` first. -/
@@ -563,8 +563,7 @@ theorem «fig:cc-commitments» {T K : Type}
   ⟨fun h => CC.Paper.«app:cc-bases/fig-h» h hp hX hA hB,
    fun h => CC.Paper.«app:cc-bases/fig-i» h hp hX hB⟩
 
-/-- *A transactional example of bespoke commitments.*  "Both are choices: they remove serialization
-orders while the input stays legal, but leave different alternatives open."
+/-- "Both are choices: rows survive at the input."
 
 Lean, for any commitment (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): a
 commitment keeps a row at the current input, so where it removes rows there it

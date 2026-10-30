@@ -1314,20 +1314,26 @@ which cuts are confluent (Appendix~\ref{app:exchanging-outputs}).
 \subsection{Systems}
 \label{sec:systems}
 
-The histories above use the output events of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}, which apply
-exactly the commitments an output requires: they seal the inputs in
-$\Sealed_o$ and remove the rows in $\Rejected_o$
-(Definition~\ref{def:output-event} and Section~\ref{sec:lifted-output-events}). Many real systems behave differently. For example, the registrar of
-Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the same
-event (Figure~\ref{fig:election-frames}(d)); the output event for $\bot$ does
-not require the poll-closing seal, so closing the polls is a design decision of
-the system. Similarly, a lock manager issues a commitment to an ordering of ongoing
-transactions ($A$ before $B$) without emitting that ordering until later
-(Figure~\ref{fig:cc-commitments}(h) below); whether that commitment needs
-coordination depends on who else may order the same transactions
-(Section~\ref{sec:coordination}). \textcolor{reviewed}{We model such systems by letting them
-bring bespoke commitments.}
+Serializability does not say what to serialize by. The ordering fiber of
+Figure~\ref{fig:ambiguity-frames}(f)~--- transactions and their valid serial
+orders, formalized in Appendix~\ref{app:cc-bases}~--- is one specification;
+many protocols implement it. Two-phase locking (2PL) waits until two
+transactions contend for a lock, then fixes their order:
+$\mathsf{order}(A,B)$ excludes every serial order with $B$ before $A$. Multiversion timestamp ordering (MVTO)~\cite{bernstein1981concurrency} stamps
+each transaction when it starts and lets the stamps decide:
+$\mathsf{stamp}(B)$ excludes every serial order that does not start with $B$. Both exclude serial orders while keeping the input legal, but exclude
+different ones. Each protocol issues commitments the specification does not
+require.
+
+Non-transactional systems do the same. The registrar of
+Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the
+same event (Figure~\ref{fig:election-frames}(d)); the output event for
+$\bot$ does not require the poll-closing seal. Closing the polls is the
+registrar's design decision, as fixing orderings is 2PL's.
+
+A system therefore dictates two things: a specification and a basis of
+commitments its participants may issue; each participant's strategy decides
+when and which to apply.
 
 \begin{definition}[Commitment]
 \label{def:commitment}
@@ -1344,10 +1350,12 @@ undominated by the rows that remain at its input: no remaining row there
 \textcolor{reviewed}{It leaves the current input unchanged: $j=i$.}
 \end{definition}
 
-The seals and choices of Definition~\ref{def:output-event}
-and Section~\ref{sec:lifted-output-events} satisfy this definition: a seal removes
-every row at the inputs it seals, and a choice removes the rows in
-$\Rejected_o$. The converse also holds:
+The ordering commitment above fits: $\mathsf{order}(A,B)$ removes the serial
+orders with $B$ before $A$, each undominated by a surviving row with $A$
+before $B$. The seals and choices of Definition~\ref{def:output-event}
+and Section~\ref{sec:lifted-output-events} satisfy this definition, too: a
+seal removes every row at the inputs it seals, and a choice removes the
+rows in $\Rejected_o$. The converse also holds:
 
 \begin{proposition}[Commitments seal inputs or choose outputs]
 \label{prop:seal-or-choose}
@@ -1426,34 +1434,26 @@ sends, and output, commitment, and send events chosen by the participants'
 strategies.
 \end{definition}
 
-A system implements one specification: all its participants work from the
-same table and the same basis, and the basis is shared because no theorem
-below depends on which participant issues a commitment. Participants may
-behave differently; a replicated (SPMD) system is the special case in which they
-share one strategy (Appendix~\ref{app:cap-response}), and a deployment may
-limit what each one emits (Appendix~\ref{app:deployment}). Systems for
-different specifications compose as components
-(Section~\ref{sec:proper-coordination}).
+A system implements one specification, so its participants share the basis;
+no theorem below depends on which participant issues a commitment. Participants may behave differently; a replicated (SPMD) system is the
+special case in which they share one strategy
+(Appendix~\ref{app:cap-response}), and a deployment may limit what each one
+emits (Appendix~\ref{app:deployment}). Systems for different specifications
+compose as components (Section~\ref{sec:proper-coordination}).
 
-\paragraph{A transactional example of bespoke commitments.}
-The lock manager from the start of this section is one system; multiversion
-timestamp ordering (MVTO)~\cite{bernstein1981concurrency} is another, and they
-have different bases (Appendix~\ref{app:cc-bases}). Two-phase locking (2PL)
-has $\mathcal B_{\mathrm{2PL}}$, made of ordering commitments
-$\mathsf{order}(A,B)$ together with transactional-commit, abort, and read commitments; MVTO
-has $\mathcal B_{\mathrm{MVTO}}$, made of stamp commitments $\mathsf{stamp}(A)$
-together with the same transactional-commit, abort, and read commitments. The ordering
-commitments are where they part: $\mathsf{order}(A,B)$ fixes $A$ before $B$ and
-nothing else, which no MVTO commitment does, and $\mathsf{stamp}(B)$ places $B$
-before every other transaction, which no 2PL commitment does. Figure~\ref{fig:cc-commitments} shows each at work on a three-transaction
-version of the ordering fiber of Figure~\ref{fig:ambiguity-frames}(f). When
-$B$ waits for a lock that $A$ holds, 2PL applies $\mathsf{order}(A,B)$, leaving
-$C$'s position open (panel (h)). When MVTO gives $B$ the first timestamp, it
-applies $\mathsf{stamp}(B)$, placing $B$ first (panel (i)). Both are choices:
-they remove serialization orders while the input stays legal, but leave
-different alternatives open. Each can be applied in a commitment event
-$\mathsf{commit}(\gamma)$, as below, or as one commitment in the $\gamma$ of an
-output event that later emits a full serial order, and neither is the choice
+\paragraph{Two bases on three transactions.}
+Each basis contains its ordering commitments along with transactional-commit,
+abort, and read commitments: $\mathcal B_{\mathrm{2PL}}$ with $\mathsf{order}$,
+$\mathcal B_{\mathrm{MVTO}}$ with $\mathsf{stamp}$
+(Appendix~\ref{app:cc-bases}). Figure~\ref{fig:cc-commitments} shows each
+at work on a three-transaction version of the ordering fiber of
+Figure~\ref{fig:ambiguity-frames}(f).  2PL applies $\mathsf{order}(A,B)$
+when $B$ waits for a lock $A$ holds, leaving $C$'s position open (panel
+(h)); MVTO applies $\mathsf{stamp}(B)$ when $B$ receives the first
+timestamp, placing $B$ first (panel (i)). Both are choices: rows survive
+at the input. Each can be applied in a commitment event
+$\mathsf{commit}(\gamma)$ or as one commitment in the $\gamma$ of an output
+event that later emits a full serial order, and neither is the choice
 $c_o$ of Section~\ref{sec:lifted-output-events}.
 
 \begin{figure}[t]
@@ -1508,7 +1508,7 @@ Consider 2PL on an input of three transactions $A$, $B$, $C$ that have each
 issued their operations and requested commit, where $B$ waits for a lock that
 $A$ holds. When $B$ begins to wait, 2PL applies $\mathsf{order}(A,B)$ in a
 commitment event, before any output, keeping only the rows that can be
-completed without committing $B$ before $A$. The canonical run skips that
+completed without placing $B$ before $A$. The canonical run skips that
 event, so it keeps every row, including the one completed by $[B,A,C]$. When
 2PL later emits $[A,C,B]$, it applies no further commitment ordering $A$ and
 $B$, and the canonical run emits the same output; both end with the same
