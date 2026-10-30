@@ -347,7 +347,8 @@ and keeps others, choosing among them."
 
 Lean: at such an input `k`, either no row remains (seal) or some row `w`
 remains that refines no removed row (choice; Eq. commitment-excludes); and not
-both ("the classification is unambiguous"). -/
+both for this commitment at this state.  Thus the classification is
+run-dependent when earlier commitments have changed the state. -/
 theorem «prop:seal-or-choose» {sp : Spec I O} (c : Commitment sp) {σ τ : State sp}
     (h : c.app σ = some τ) (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
     ((∀ u, ¬ τ.R k u) ∨
