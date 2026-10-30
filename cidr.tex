@@ -380,7 +380,7 @@ monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd x$.
 \paragraph{Input and determination.}
 Each panel captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
-still possible from that input.  When $v_2$'s ballot for $y$ arrives, the event
+still possible from that input.  When $v_2$'s ballot for $y$ arrives, the input event
 $\mathsf{input}(xy\cdot)$ produces panel~(b), retiring rows whose inputs no
 longer \inrelbase the ballots received; such inputs are now illegal.  The \emph{upper fiber} is the set of
 outputs in the remaining rows at the current input and its \indescs: in panel~(b),
@@ -1040,7 +1040,7 @@ if it carries none, and arbitrary application-specific data $d$; one can envisio
 vectors, state identities, and so on.  A receive does not change the specification state; a
 participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own
 $\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.  Data can
-influence which events a system executes next (\S\ref{sec:systems}), but never directly changes the state.
+influence a system's subsequent actions (\S\ref{sec:systems}), but never directly changes the state.
 
 \begin{definition}[Distributed history, history event, happens-before, consistent cut]
 \label{def:distributed-history}
@@ -1316,7 +1316,7 @@ any legal input event to any participant.
 \begin{definition}[Explicit relation, Availability]
 \label{def:partition-notions}
 A continuation of a partitioned history is \emph{local to} a participant $p$
-when the system produces it, it adds only events of $p$'s block and no
+when the system produces it, it adds only history events of $p$'s block and no
 input events, and none of its receives takes a message sent from another
 block.  An \emph{explicit relation} $E\subseteq S$ is a set of rows
 $(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
@@ -1602,7 +1602,7 @@ with the highest-timestamped committed write of the item it has received.
 
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
-An input is a history of received events ordered by happens-before: reads
+An input is a history of received application events ordered by happens-before: reads
 tagged with their replica, commits with their timestamp and write set, and
 deliveries of committed writes to replicas.  Inputs are ordered by
 downward-closed extension, and outputs are sets of read answers, ordered by
