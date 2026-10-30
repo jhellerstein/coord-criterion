@@ -234,10 +234,10 @@ theorem «def:response-partition-consistency/converse-fails» :
 
 /-! ### Replicated systems -/
 
-/-- "A system is *replicated* when its obligation is uniform and every
-participant runs the same strategy, which depends only on the participant's
-initial input and local history, and not on its identity or the number of
-participants."
+/-- "A system is *replicated* (SPMD: every participant runs the same strategy)
+when its obligation is uniform and every participant runs the same strategy,
+which depends only on the participant's initial input and local history, and
+not on its identity or the number of participants."
 
 Lean: one relation `F` on (initial input, erased local history, erased
 event), where erasing forgets the participant-set size in receives.

@@ -774,7 +774,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«def:response-partition-consistency/of-confluent»` | theorem | "Confluence at `j` implies a common refinement at `j` (Corollary `cor:reconciliation-any-basis`)." Lean, at any cut, in particular the final one. |
 | `«def:response-partition-consistency/canonical»` | theorem | "for a canonical system (Definition `def:canonical-system`) the two coincide by Lemma `lem:reconciliation`, applied to the participant runs." Lean, at any cu… |
 | `«def:response-partition-consistency/converse-fails»` | theorem | "With other commitments the converse can fail: |
-| `«app:cap-response/replicated»` | theorem | "A system is *replicated* when its obligation is uniform and every participant runs the same strategy, which depends only on the participant's initial input… |
+| `«app:cap-response/replicated»` | theorem | "A system is *replicated* (SPMD: |
 | `«lem:locality»` | theorem | **Lemma `lem:locality` (Locality).** "For each of some participants `p`, let `ℓ_p` be a local history that `p`'s strategy can produce from initial input `i_p… |
 | `«def:response-interface»` | theorem | **Def. |
 | `«def:response-interface/lm-for-T»` | theorem | "Lifted Monotonicity for `T` is that of Definition `def:lm-for-A`, and the reconciling output may lie outside `T`." Lean: |
