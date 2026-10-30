@@ -979,52 +979,46 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
       (k = v ∧ u = CAP.decide2PC v)) :=
   CAP.Timeout.timeout_seals v p hp
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "Only
-the coordinator decides, so this is local coordination, as in the first case;
-it becomes distributed coordination when the decision is replicated for fault
-tolerance, as in Paxos Commit."  (CIDR version: "but only the coordinator
-decides: local coordination.")
+/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "The
+decision is its own specification, run by the coordinator alone, so this is
+local coordination, as in the first case; it becomes distributed coordination
+when the decision is replicated for fault tolerance, as in Paxos Commit."
+(CIDR version: "but the decision is a specification only the coordinator
+runs: local coordination.")
 
-Lean (`CAP/TimeoutAbort.lean`) checks this for the abort read as a *choice*,
-and finds it false for the abort read as a *seal*.
+Lean (`CAP/TimeoutAbort.lean`), for the seal of
+`«sec:coordination/2pc-timeout-abort»` (closing the polls on `voteSpec` at
+`yy·`).  The decision specification is run by a system of its own, as each
+stage is in the composition section; the owners' specifications are separate
+systems.
 
-*Seal* (the reading of `«sec:coordination/2pc-timeout-abort»`): in any system
-whose coordinator may close the polls at `yy·`, another participant of some
-history accepts the sealed late vote `yyy` (the environment may deliver any
-input to any participant), so the system is not `CoordinationFreeH`, even for
-`sealSys`, where only the coordinator decides.  This is the paper's own rule
-that "a seal requires distributed coordination whenever another participant
-may receive the sealed input".
+*Run by the coordinator alone* (`sealSys1`, whose strategies act only when
+the system has one participant): the seal requires coordination, since
+another run of the coordinator from `yy·` accepts the sealed late vote `yyy`
+(not `CoordinationFree`); but no history of the system applies a commitment
+that another participant of the same history contradicts
+(`CoordinationFreeH`): local coordination.  The general fact is
+`single_coordinationFreeH`.
 
-*Choice* (`abortSpec`: the coordinator may abort until it decides, `S(v) =
-{decide2PC v, abort}`): at `yy·`, aborting is not exposable; its canonical
-commitment removes `(yyy, commit)`, keeps `(yyy, abort)`, and seals nothing.
-When only the coordinator decides (`coordSys`), the abort requires
-coordination (another run of the coordinator commits at `yyy`) but the system
-is `CoordinationFreeH`; when every participant may decide (`replSys`), one
-aborts at `yy·` while another, after the late vote, commits in the same
-history: distributed coordination.  Paxos Commit itself is not modeled. -/
+*Replicated* (two or more participants run `voteSpec`): any system in which
+participant `0` of two, starting at `yy·`, may close the polls there is not
+`CoordinationFreeH`, since the environment may deliver `yyy` to the other
+participant; `sealSysRepl` (every participant at `yy·` may close the polls) is
+an instance.  Distributed coordination.  Paxos Commit itself is not modeled.
+
+Library lemmas not quoted here: the abort read as a choice (`abortSpec`,
+`abort_choice_yy`, `coordSys_coordinationFreeH`,
+`replSys_not_coordinationFreeH`). -/
 theorem «sec:coordination/2pc-timeout-abort-local» (D : Type) :
+    (¬ (CAP.Timeout.sealSys1 D).CoordinationFree ∧
+      (CAP.Timeout.sealSys1 D).CoordinationFreeH) ∧
     (∀ Sys : CAP.System (CAP.voteSpec 3) D, Sys.basis CAP.Timeout.cp →
       Sys.strat 2 (fun _ => CAP.Timeout.yyN) 0 [] (.out [CAP.Timeout.cp] .undecided) →
       ¬ Sys.CoordinationFreeH) ∧
-    ¬ (CAP.Timeout.sealSys D).CoordinationFree ∧ ¬ (CAP.Timeout.sealSys D).CoordinationFreeH ∧
-    (¬ Exposable (canon (CAP.Timeout.abortSpec 3) CAP.Timeout.yyN) .abort ∧
-      ∃ σc, CAP.applySeq (canon (CAP.Timeout.abortSpec 3) CAP.Timeout.yyN)
-          [CAP.kc .abort] = some σc ∧
-        σc.R σc.cur .abort ∧ Exposable σc .abort ∧
-        (canon (CAP.Timeout.abortSpec 3) CAP.Timeout.yyN).R CAP.Timeout.yyy .commit ∧
-        ¬ σc.R CAP.Timeout.yyy .commit ∧ σc.R CAP.Timeout.yyy .abort ∧
-        ∀ k, (∃ x, (canon (CAP.Timeout.abortSpec 3) CAP.Timeout.yyN).R k x) →
-          ∃ x, σc.R k x) ∧
-    ¬ (CAP.Timeout.coordSys 3 D).CoordinationFree ∧
-      (CAP.Timeout.coordSys 3 D).CoordinationFreeH ∧
-    ¬ (CAP.Timeout.replSys 3 D).CoordinationFreeH :=
-  ⟨fun Sys hb hs => CAP.Timeout.seal_not_coordinationFreeH Sys hb hs,
-   (CAP.Timeout.sealSys_not_coordinationFreeH D).1,
-   (CAP.Timeout.sealSys_not_coordinationFreeH D).2, CAP.Timeout.abort_choice_yy,
-   CAP.Timeout.coordSys_not_coordinationFree D, CAP.Timeout.coordSys_coordinationFreeH 3 D,
-   CAP.Timeout.replSys_not_coordinationFreeH D⟩
+    ¬ (CAP.Timeout.sealSysRepl D).CoordinationFreeH :=
+  ⟨CAP.Timeout.sealSys1_local D,
+   fun Sys hb hs => CAP.Timeout.seal_not_coordinationFreeH Sys hb hs,
+   CAP.Timeout.sealSysRepl_not_coordinationFreeH D⟩
 
 /-- Paragraph "Locks in a shared-nothing database": "All three exchange
 messages, and a client cut off from an owner cannot get its answer; only the
