@@ -302,8 +302,9 @@ theorem «sec:systems/registrar» :
     Figures.Elec.bot_alone_at_b.2.1, Figures.Elec.bot_alone_at_b.2.2.1⟩
 
   /-- **Def. commitment** (`def:commitment`).  "A commitment is a partial function
-  on specification states that removes a nonempty set of rows, each with no
-  remaining row at the same input that refines it: whenever
+  on specification states that removes a nonempty set of rows.  Each removed row
+  is undominated by the rows that remain at its input: no remaining row there
+  refines it.  Thus, whenever
   `c(i,R) = (j,R')`, we have `R' ⊊ R` and
   `(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w` (Eq. commitment-excludes).  It leaves
   the current input unchanged: `j=i`."

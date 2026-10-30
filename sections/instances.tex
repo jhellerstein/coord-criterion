@@ -99,9 +99,9 @@ with the highest-timestamped committed write of the item that it has received.
 
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
-An input is a history of received environment events ordered by happens-before: reads,
-each tagged with its replica; commits, each with its client timestamp and
-write set; and deliveries of committed writes to replicas.  These environment events follow
+An input is a history ordered by happens-before: reads, each tagged with its
+replica; commits, each with its client timestamp and write set; and deliveries
+of committed writes to replicas.  The history preserves
 each client's program order and each replica's arrival order, and a
 transaction's reads precede its commit, which precedes its deliveries.
 Inputs are ordered by downward-closed extension.  An output is a set of read
@@ -124,7 +124,7 @@ Lifted Monotonicity for it.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A read's answer under $E$ depends only on the environment events that precede it, so
+A read's answer under $E$ depends only on the history preceding it, so
 later input never changes it, and the timestamp condition rules out the
 dependency cycles of G0 and G1c.  For the converse, let two transactions at
 different replicas each read $x_0$ and write $x$.  Each replica's answer is

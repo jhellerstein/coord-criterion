@@ -1133,8 +1133,9 @@ is what is desired; a
 lock manager that issues a commitment to an ordering of ongoing transactions ($A$ before $B$)
 could output that fact immediately, but database clients do not require that information.  We model such systems by letting
 them bring bespoke commitments.  In general, a \emph{commitment} is a partial
-function on specification states that removes a nonempty set of rows, none of
-them \outrelpast by a remaining row at the same input.  It leaves the current
+function on specification states that removes a nonempty set of rows.  Each
+removed row is undominated by the rows remaining at its input: no remaining
+row there \outrel it.  It leaves the current
 input unchanged.  At each input where it removes rows, a commitment either
 removes every row there, \emph{sealing} that input, or removes some outputs
 and keeps others, \emph{choosing} among them.  Given a \emph{commitment basis}
@@ -1602,9 +1603,9 @@ with the highest-timestamped committed write of the item it has received.
 
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
-An input is a history of received application events ordered by happens-before: reads
-tagged with their replica, commits with their timestamp and write set, and
-deliveries of committed writes to replicas.  Inputs are ordered by
+An input is a history ordered by happens-before: reads tagged with their
+replica, commits with their timestamp and write set, and deliveries of
+committed writes to replicas.  Inputs are ordered by
 downward-closed extension, and outputs are sets of read answers, ordered by
 inclusion.  For an isolation level $L$, defined by the phenomena it
 proscribes~\cite{adya1999weakconsistency}, $S_L$ permits an output when it
