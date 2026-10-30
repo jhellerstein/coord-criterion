@@ -436,11 +436,9 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
 … An output event `Out_γ(o)` under a basis `ℬ` applies a finite, possibly empty sequence
 `γ = c₁⋯cₙ` of commitments from `ℬ`, each `c_m` defined at the state its
 predecessors leave, leaving a table `R_c`, and then retires rows and emits `o`,
-all atomically … The event is legal when `o` remains permitted at the current
-input after `γ`, and emitting `o` requires no further commitment.  Formally,
-`(i,o) ∈ R_c`, and every row `(k,x)` discarded by the output has a retained row
-`(k,u)` at the same input that refines `x` (Eq. lifted-validity).  The event
-retires those discarded rows and ends at `(i, R_c[out ⪰ o])`."
+all atomically … The event is legal when `o` is exposable after `γ` is
+applied.  That is, Eq. lifted-validity holds.  The event retires those discarded
+rows and ends at `(i, R_c[out ⪰ o])`."
 
 Lean: `SysStep B σ (.output γ o) τ` (also covering input events, unchanged).
 Eq. lifted-validity at the committed state is exactly `Exposable σc o`. -/
