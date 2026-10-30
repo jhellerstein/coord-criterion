@@ -173,6 +173,18 @@ itself a guard for a further stage (Corollary~\ref{cor:pipelines}).  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no commitment.
 
+We call a system for one specification a \emph{component}.  A component may
+run as one process or as a cluster of replicas, and the stages around it see
+only the runs it admits, each from an input to an output of its
+specification.  Components with different specifications compose into a
+typed pipeline (Appendix~\ref{app:components}).  The pipeline shows its
+environment the first component's input and the second component's output,
+hiding the intermediate value and both runs, and every pair it shows is a row
+of $S_2\circ S_1$.  Properness concerns the two specifications, not the
+components that run them.  A downstream component may still take locks, as
+above, or admit too few runs to follow its upstream.  The empty-basis
+component for $\Spec_2|_{\Spec_1}$ does neither.
+
 Sequential composition, products of independent stages, and glue stages that
 copy, merge, or route outputs build arbitrary acyclic graphs.  A graph
 satisfies Lifted Monotonicity when every node does on the outputs offered to

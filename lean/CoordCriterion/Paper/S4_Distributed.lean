@@ -7,6 +7,8 @@ import CoordCriterion.CAP.TimeoutAbort
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
 import CoordCriterion.Appendix.TransactionBases.CommitEvent
+import CoordCriterion.Appendix.ComponentSystems
+import CoordCriterion.Appendix.Deployment
 
 /-!
 # Paper §4.1–4.4: Distributed Execution (statement layer)
@@ -402,6 +404,26 @@ theorem «def:system/restrict» {sp : Spec I O} {D : Type} (Sys : CAP.System sp 
     Sys.restrict.BasisRespecting ∧
       ∀ n init p pre e, CAP.Allowed Sys.restrict n init p pre e ↔ CAP.Allowed Sys n init p pre e :=
   ⟨Sys.restrict_basisRespecting, Sys.restrict_allowed⟩
+
+/-- After Def. `def:system`: "A system thus implements one specification.  Its
+participants may behave differently, and a deployment may limit what each one
+emits (Appendix `app:deployment`), but all of them work from the same table and
+basis.  Systems for different specifications compose as components
+(Section `sec:proper-coordination`)."  Lean: `CAP.System sp D` carries one
+specification `sp` and one basis; its strategies `strat n init p` may differ
+by participant.  A deployment `Deploy.Deployment sp n` gives participant `p` a
+table `A p` inside `sp.S`.  The system is the component
+`Components.Component.ofSystemOn Sys N` of `sp`, with the system's basis and
+the participant runs of its produced histories as admitted runs. -/
+theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
+    (N : Nat → Prop) (location : Option Components.LocationForm) :
+    (Components.Component.ofSystemOn Sys N location).basis =
+        (fun c => Sys.basis (Dist.toCAP c)) ∧
+      (∀ r, (Components.Component.ofSystemOn Sys N location).accepts r →
+        SysExec (fun c => Sys.basis (Dist.toCAP c)) (canon sp r.input) r.events r.final) ∧
+      ∀ (n : Nat) (Dp : Deploy.Deployment sp n) p k u, Dp.A p k u → sp.S k u :=
+  ⟨rfl, fun r h => ((Components.Component.ofSystemOn Sys N location).sound r h).legal,
+    fun _ Dp => Dp.sub⟩
 
 /-- **Def. commitment basis, output event of a system, legal output event**
 (`def:system-output-event`).  "A commitment basis is a set `ℬ` of commitments.

@@ -47,6 +47,8 @@ import CoordCriterion.Figures
 import CoordCriterion.Appendix.Composition
 import CoordCriterion.Appendix.Guarded
 import CoordCriterion.Appendix.JointMono
+import CoordCriterion.Appendix.Components
+import CoordCriterion.Appendix.ComponentSystems
 -- Appendix E deployment
 import CoordCriterion.Appendix.Deployment
 import CoordCriterion.Appendix.DeploymentExamples
