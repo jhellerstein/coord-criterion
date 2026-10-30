@@ -320,7 +320,7 @@ a remaining row at the same input (Def. `def:commitment`).  Lean:
 abbrev «app:notation/commitment» (sp : Spec I O) := Commitment sp
 
 /-- *local history; strategy* — `p`'s history events in order;
-`θ_p(λ)`, the output, commitment, send, and receive events `p` may perform next
+`θ_p(λ)`, the output, commitment, and send events `p` may perform next
 (Def. `def:strategy`).  Lean (`CC.CAP`): a local history is a list
 `pre : List (CAP.LEv sp D n)`; the strategy is the field `System.strat`
 (`strat n init p pre e`: `p` may perform `e` after `pre`), a relation, i.e.

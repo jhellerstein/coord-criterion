@@ -366,9 +366,10 @@ theorem «prop:seal-or-choose/functional» {sp : Spec I O} (hf : sp.Functional)
 /-- **Def. local history, strategy** (`def:strategy`).  "A local history of participant `p` is a
 finite sequence of `p`'s history events … A strategy for `p` is a
 nondeterministic transition function: it maps each local history `λ` of `p` to
-a set `θ_p(λ)` of output, commitment, send, and receive events of `p`, and `p`
-next performs any one of them, or waits.  Input events come from the
-environment, not the strategy."
+a set `θ_p(λ)` of output, commitment, and send events of `p`, and `p` next
+performs any one of them, or waits.  Input and receive events are not chosen
+by the strategy: inputs come from the environment and receives from matching
+sends."
 
 Lean (the `CC.CAP` system model): a strategy for `p` is a relation from local
 histories (`List (CAP.LEv sp D n)`) to next events; local events include
@@ -391,8 +392,8 @@ abbrev «def:system» (sp : Spec I O) (D : Type) :=
   {Sys : CAP.System sp D // Sys.BasisRespecting}
 
 /-- Def. `def:system`: "A distributed history produced by the system consists
-of input events supplied by the environment and output, commitment, send,
-and receive events chosen by the participants' strategies."
+of input events supplied by the environment, receives of matching sends, and
+output, commitment, and send events chosen by the participants' strategies."
 For a basis-respecting system this is the library's `CAP.Produced`: every
 event other than an input is permitted by the strategy at the local history
 before it (`CAP.allowed_iff_stratAllowed`). -/

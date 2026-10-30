@@ -1410,9 +1410,10 @@ A \emph{local history} of participant $p$ is a finite sequence of $p$'s history
 events, including the messages it
 has received. A \emph{strategy} for $p$ is a nondeterministic transition
 function: it maps each local history $\lambda$ of $p$ to a set
-$\theta_p(\lambda)$ of output, commitment, send, and receive events of $p$, and $p$ next
-performs any one of them, or waits. Input events come from the environment,
-not the strategy.
+$\theta_p(\lambda)$ of output, commitment, and send events of $p$, and $p$ next
+performs any one of them, or waits. Input and receive events are not chosen
+by the strategy: inputs come from the environment and receives from matching
+sends.
 \end{definition}
 
 \begin{definition}[System, produced history]
@@ -1420,8 +1421,9 @@ not the strategy.
 A \emph{system} consists of a commitment basis $\mathcal B$, shared by all
 participants, and a strategy $\theta_p$ for each participant $p$ whose output
 and commitment events apply only commitments from $\mathcal B$. A distributed history \emph{produced} by the
-system consists of input events supplied by the environment and output,
-commitment, send, and receive events chosen by the participants' strategies.
+system consists of input events supplied by the environment, receives of matching
+sends, and output, commitment, and send events chosen by the participants'
+strategies.
 \end{definition}
 
 Strategies differ by participant so we can single out replicated
@@ -2599,7 +2601,7 @@ rows at $k$.
   continuation; cut confluent at $j$ & a history extending $C$; some continuation brings every participant to one state $(j,R)$ & Sec.~\ref{sec:distributed-consistency}\\
   distributed consistency & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency}\\
   commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
-  local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, commitment, send, and receive events $p$ may perform next & Def.~\ref{def:strategy}\\
+  local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
     system; basis; produced & a commitment basis $\mathcal B$ and a strategy per participant; every non-input event permitted by its strategy and using only commitments from $\mathcal B$ & Def.~\ref{def:system}\\
   system output event $\Out{\gamma}{o}$ & applies commitments $\gamma$ from the basis, retires, emits $o$ & Def.~\ref{def:system-output-event}\\
   commitment event $\mathsf{commit}(\gamma)$ & applies a nonempty sequence $\gamma$ from the basis, emits nothing & Def.~\ref{def:commitment-event}\\

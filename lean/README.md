@@ -505,7 +505,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/cut-confluent-at»` | abbrev | *cut confluent at `j`* — some continuation brings every participant to one state `(j,R)` (Sec. |
 | `«app:notation/distributed-consistency»` | abbrev | *distributed consistency* — every consistent cut of every history is confluent at every common expansion (Def. |
 | `«app:notation/commitment»` | abbrev | *commitment* — partial function on states removing rows, none refined by a remaining row at the same input (Def. |
-| `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, commitment, send, and receive events `p` may perform next (Def. |
+| `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, commitment, and send events `p` may perform next (Def. |
 | `«app:notation/system»` | abbrev | *system* — a commitment basis `𝓑` and a strategy per participant (Def. |
 | `«app:notation/basis»` | abbrev | *basis* (Def. |
 | `«app:notation/produced»` | abbrev | *produced* — every non-input event permitted by its strategy and using only commitments from `𝓑` (Def. |
