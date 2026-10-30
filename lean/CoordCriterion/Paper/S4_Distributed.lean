@@ -301,11 +301,12 @@ theorem «sec:systems/registrar» :
   ⟨Figures.Elec.registrar_step, Figures.Elec.bot_alone_at_b.1,
     Figures.Elec.bot_alone_at_b.2.1, Figures.Elec.bot_alone_at_b.2.2.1⟩
 
-/-- **Def. commitment** (`def:commitment`).  "A commitment is a partial function
-on specification states that leaves the current input unchanged and removes a
-nonempty set of rows, each with no remaining row at the same input that refines
-it: whenever `c(i,R) = (i,R')`, we have `R' ⊊ R` and
-`(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w`" (Eq. commitment-excludes).
+  /-- **Def. commitment** (`def:commitment`).  "A commitment is a partial function
+  on specification states that removes a nonempty set of rows, each with no
+  remaining row at the same input that refines it: whenever
+  `c(i,R) = (j,R')`, we have `R' ⊊ R` and
+  `(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w` (Eq. commitment-excludes).  It leaves
+  the current input unchanged: `j=i`."
 
 Lean: `app : State sp → Option (State sp)` with fields `cur_eq`, `sub`,
 `removes` (`R' ⊊ R`), `excludes` (Eq. commitment-excludes). -/
