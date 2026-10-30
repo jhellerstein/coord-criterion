@@ -1130,8 +1130,8 @@ The output events above immediately apply exactly the commitments required.
 Many real systems make commitments before they're needed for output, for application-specific reasons.  The registrar of
 Section~\ref{sec:election-story} could emit $\bot$ without closing the polls, but closing the polls 
 is what is desired; a
-lock manager that issues a commitment to an ordering of ongoing transactions ($A$ before $B$)
-could output that fact immediately, but database clients do not require that information.  We model such systems by letting
+lock manager fixes an ordering between ongoing transactions ($A$ before
+$B$) without yet emitting it.  We model such systems by letting
 them bring bespoke commitments.  In general, a \emph{commitment} is a partial
 function on specification states that removes a nonempty set of rows.  Each
 removed row is undominated by the rows remaining at its input: no remaining
@@ -1153,12 +1153,12 @@ in this sense.
 Two-phase locking (2PL) and multiversion timestamp
 ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
 $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
-$\mathsf{stamp}(B)$ places $B$ before every other transaction
+$\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped
 (Figure~\ref{fig:cc-commitments}).  Both are choices, but they leave
 different alternatives open.  We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
 runs}.  Locks, timestamps, quorums, and consensus differ in how and when
-they decide; what the environment sees does not.
+they decide; what the environment sees does not, as the next lemma shows.
 
 \begin{lemma}[Canonical Run Universality]
 \label{lem:canonical-equivalent}
@@ -1167,7 +1167,7 @@ canonical run: one that accepts the same inputs, emits the same outputs,
 and keeps at least the original's rows after each event (\extended).
 \end{lemma}
 
-For example, when 2PL orders $A$ before $B$ in a commitment event, the
+To illustrate, when 2PL orders $A$ before $B$ in a commitment event, the
 canonical run skips it; when 2PL later emits a serial order, so does the
 canonical run, and both end with the same table.  Whether a specification
 needs coordination thus depends on the seals and choices its outputs

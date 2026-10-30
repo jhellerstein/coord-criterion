@@ -75,6 +75,8 @@ a fiber; whichever is applied second seals that input, while the first only
 chooses there.  In a functional specification each fiber has one row, so every
 commitment seals.
 
+A system draws its commitments from a basis.
+
 \begin{definition}[Commitment basis, output event of a system, legal output event]
 \label{def:system-output-event}
 A \emph{commitment basis} is a set $\mathcal B$ of commitments.  Let $(i,R)$ be
@@ -102,7 +104,7 @@ $\mathcal B$, each defined at the state its predecessors leave, and emits
 nothing.
 \end{definition}
 
-A commitment event lets a system decide before any output needs the decision.
+A commitment event lets a system apply commitments before any output needs them.
 The environment observes nothing from it.  Commitment events are a third
 kind of specification event, so a distributed history may contain them;
 Definitions~\ref{def:distributed-history} and~\ref{def:participant-run} apply
@@ -127,6 +129,9 @@ by the strategy: inputs come from the environment and receives from matching
 sends.
 \end{definition}
 
+A strategy says how one participant acts; a system packages one basis with
+a strategy for every participant.
+
 \begin{definition}[System, produced history]
 \label{def:system}
 A \emph{system} consists of a commitment basis $\mathcal B$, shared by all
@@ -146,7 +151,9 @@ emits (Appendix~\ref{app:deployment}).  Systems for different specifications
 compose as components (Section~\ref{sec:proper-coordination}).
 
 \paragraph{Two bases on three transactions.}
-Each basis contains its ordering commitments along with transactional-commit,
+We return to the concurrency protocols from the beginning of this
+subsection.  Each basis contains its ordering commitments along with
+transactional-commit,
 abort, and read commitments: $\mathcal B_{\mathrm{2PL}}$ with $\mathsf{order}$,
 $\mathcal B_{\mathrm{MVTO}}$ with $\mathsf{stamp}$
 (Appendix~\ref{app:cc-bases}).  Figure~\ref{fig:cc-commitments} shows each
@@ -196,13 +203,14 @@ $c_o$ of Section~\ref{sec:lifted-output-events}.
 \end{figure}
 
 \paragraph{Canonical runs suffice.}
-We call the runs of
+The analysis in the rest of the paper works with canonical runs rather
+than with every possible basis.  We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
 runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and
 commitment events apply only commitments from $\mathcal B$
 (Definition~\ref{def:run-under-basis}).  Locks, timestamps, quorums, and
 consensus differ in how and when they decide; what the environment sees
-does not.
+does not, as the next lemma shows.
 
 \begin{lemma}[Canonical Run Universality]
 \label{lem:canonical-equivalent}
@@ -223,9 +231,9 @@ along the run.  Full proof in Appendix~\ref{app:bases}.
 In the remainder of the paper we therefore judge consistency on canonical
 runs.  Whether a specification needs coordination thus depends on the seals and choices its outputs require, whatever mechanism makes them.
 
-Consider 2PL on an input of three transactions $A$, $B$, $C$ that have each
-issued their operations and requested commit, where $B$ waits for a lock that
-$A$ holds.  When $B$ begins to wait, 2PL applies $\mathsf{order}(A,B)$ in a
+To illustrate the lemma, consider 2PL on an input of three transactions
+$A$, $B$, $C$ that have each issued their operations and requested commit,
+where $B$ waits for a lock that $A$ holds.  When $B$ begins to wait, 2PL applies $\mathsf{order}(A,B)$ in a
 commitment event, before any output, keeping only the rows that can be
 completed without placing $B$ before $A$.  The canonical run skips that
 event, so it keeps every row, including the one completed by $[B,A,C]$.  When
