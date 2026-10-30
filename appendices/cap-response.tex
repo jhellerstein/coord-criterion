@@ -29,7 +29,7 @@ is only as strong as $Q_p$: if an output permitted at every input answers,
 every specification is available.
 
 A continuation of a partitioned history is \emph{within $p$'s block} when
-the system produces it, it adds only events of $p$'s block, and none of its
+the system produces it, it adds only history events of $p$'s block, and none of its
 receives takes a message sent from another block.  A continuation local to
 $p$ (Definition~\ref{def:partition-notions}) is one within $p$'s block
 that adds no input event.
@@ -89,7 +89,7 @@ participant set.
 \end{lemma}
 
 \begin{proof}
-Whether a history is produced is checked event by event against each
+Whether a history is produced is checked one history event at a time against each
 participant's own local prefix, as fixed before
 Definition~\ref{def:partition-notions},
 and there are no receives to match.
@@ -151,7 +151,7 @@ received no message before it, and let $T$ be the set of rows $(i,o)$ with
 $o\in Q(i)$ emitted in an isolated emission in some partitioned history of the
 system; such a history and participant are a \emph{witness} for $(i,o)$.
 Then $T\subseteq Q$.  When a participant is alone in its block, every
-continuation that Response Availability supplies adds only its own events and,
+continuation that Response Availability supplies adds only its own history events and,
 being partitioned, no receive, so the emission it yields is isolated.  By
 Lemma~\ref{lem:locality}, a witness's local history up to the emission can be
 replayed by a participant alone in its block, with an idle participant
@@ -233,7 +233,7 @@ $\fiber{j}$.  In a system with Answering for $(Q_p)$
 (Definition~\ref{def:response-availability}(1)), consider a partitioned
 history that the system produces, in which $q$ is alone in its block,
 $q$'s current input is $i$, and $j$ \inrel every participant's current input.
-Then some continuation within $q$'s block that adds only events of $q$,
+Then some continuation within $q$'s block that adds only history events of $q$,
 and no input event, has emitted outputs with no common \outnoun in
 $\fiber{j}$.
 \end{lemma}
@@ -260,8 +260,8 @@ Real-time precedence belongs to the input: the environment invokes $b$ after
 seeing $a$'s response, so the edge from $a$ to $b$ is information it supplies
 (Section~\ref{sec:election-story}).
 
-Real time is the order of events in an execution: an \emph{interleaving}
-$\lambda$ of a distributed history is a linear order of its events consistent
+Real time is the order of history events in an execution: an \emph{interleaving}
+$\lambda$ of a distributed history is a linear order of its history events consistent
 with happens-before, and no strategy observes it.  The \emph{invocation} of an
 operation is the first input event at its replica whose input contains it,
 and its \emph{response} is the first output event at that replica whose map

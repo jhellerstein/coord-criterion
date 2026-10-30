@@ -99,9 +99,9 @@ with the highest-timestamped committed write of the item that it has received.
 
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
-An input is a history of received events ordered by happens-before: reads,
+An input is a history of received environment events ordered by happens-before: reads,
 each tagged with its replica; commits, each with its client timestamp and
-write set; and deliveries of committed writes to replicas.  Events follow
+write set; and deliveries of committed writes to replicas.  These environment events follow
 each client's program order and each replica's arrival order, and a
 transaction's reads precede its commit, which precedes its deliveries.
 Inputs are ordered by downward-closed extension.  An output is a set of read
@@ -124,7 +124,7 @@ Lifted Monotonicity for it.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A read's answer under $E$ depends only on the events that precede it, so
+A read's answer under $E$ depends only on the environment events that precede it, so
 later input never changes it, and the timestamp condition rules out the
 dependency cycles of G0 and G1c.  For the converse, let two transactions at
 different replicas each read $x_0$ and write $x$.  Each replica's answer is
@@ -239,24 +239,24 @@ directly.  We now make the mapping precise, and then explain how it is used in
 practice.
 
 We take the standard I/O-automaton model~\cite{lynch1987io} of a state
-machine, its clients, and the channel that carries their events.  The machine
-$M$ has states $Q$, an initial state $q_0$, receive transitions on event
-payloads that accept every payload in every state, output transitions that
+machine, its clients, and the channel that carries their state-machine events.  The machine
+$M$ has states $Q$, an initial state $q_0$, receive transitions for
+state-machine events that accept every payload in every state, output transitions that
 emit an output to a client and may change state, internal transitions, and an
-observation $\mathrm{obs}:Q\to O$.  Each of finitely many clients may send an
-event with any payload at any time and receives the machine's outputs; a
-channel carries events, each at most once, to the machine's input queue, which
+observation $\mathrm{obs}:Q\to O$.  Each of finitely many clients may send a
+state-machine event with any payload at any time and receives the machine's outputs; a
+channel carries state-machine events, each at most once, to the machine's input queue, which
 it consumes in order, and may reorder them on the way.  In an execution of the
 composed automaton, \emph{happens-before} is Lamport's
 order~\cite{lamport1978time}: the transitive closure of the local order at the
-machine and at each client and of the edge from sending an event to receiving
+machine and at each client and of the edge from sending a state-machine event to receiving
 it.  An output of the machine is an input of the client that receives it, so a
 client's later sends happen after everything the machine had received when it
 emitted that output.
 
 \begin{definition}[Input of an execution, induced specification]
 \label{def:induced-specification}
-The \emph{input} of a finite execution is the set of events the machine has
+The \emph{input} of a finite execution is the set of state-machine events the machine has
 received, ordered by happens-before between their sends; $h\InputOrd h'$ when
 $h\subseteq h'$ and the two orders agree on $h$.  The specification
 \emph{induced} by $M$ and its environment pairs each input that occurs with
@@ -268,10 +268,10 @@ Section~\ref{sec:distributed-execution}.  The machine is a single
 participant; the clients and the channel are its environment, and outputs
 flow to the environment as in Section~\ref{sec:election-story}, where the
 environment may use an output when choosing later input.  Happens-before here
-only keeps the books: it records which events each client sent after which
+only keeps the books: it records which state-machine events each client sent after which
 outputs, so the input remembers what the environment's choices depended on.
 Distributing the machine is then direct: the clients remain the environment,
-each client's events are sent to some participant, and among participants
+each client's state-machine events are sent to some participant, and among participants
 Section~\ref{sec:distributed-execution} applies, with the induced
 specification as the specification.
 
@@ -281,8 +281,8 @@ specification as the specification.
 \begin{enumerate}
   \item The induced specification is an ordered specification, and the input
         of an execution only expands as the execution continues.
-  \item When there is one client and its events arrive in the order it sent
-        them, every input is a chain, inputs correspond to event sequences
+  \item When there is one client and its state-machine events arrive in the order it sent
+        them, every input is a chain, inputs correspond to state-machine event sequences
         ordered by prefix, and the fiber at a sequence collects the
         observations of the machine's runs that receive it in order,
         interleaved with output and internal steps.  If output and internal
@@ -291,7 +291,7 @@ specification as the specification.
         $\mathrm{obs}(q)\OutputOrd\mathrm{obs}(q')$ for every receive
         transition $q\to q'$ from a reachable state.
   \item Every observation in the fiber at $h$ is reached by a run of the
-        machine that receives each event of $h$ once, interleaved with output
+        machine that receives each state-machine event of $h$ once, interleaved with output
         and internal steps.  If the channel may reorder and clients observe no
         outputs, every such run is reached, whatever the order of its
         receives.
@@ -305,7 +305,7 @@ specification as the specification.
 
 \begin{proof}[Proof sketch]
 (1) Inclusion with agreeing orders is a partial order, every input that occurs
-has a row, and extending an execution adds received events without changing
+has a row, and extending an execution adds received state-machine events without changing
 happens-before among earlier sends.  (2) A single client's sends are totally
 ordered, and they arrive in that order, so an input is determined by its
 sequence of payloads, and the machine's steps in an execution form a run of
@@ -317,8 +317,8 @@ common-\indesc condition and apply Complete CALM
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:common-expansion-form}).
 \end{proof}
 
-The input orders events by their sends, not by their arrivals: the machine
-receives events in one total order, but that order is what differs between
+The input orders state-machine events by their sends, not by their arrivals: the machine
+receives state-machine events in one total order, but that order is what differs between
 executions.  Outputs are where the environment's reactions enter.  A client
 that sends after observing an output is ordered after everything that output
 reflected, and the input records that dependence; what the client saw is
