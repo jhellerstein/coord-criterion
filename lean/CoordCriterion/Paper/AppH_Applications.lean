@@ -198,7 +198,7 @@ theorem «app:additional-applications/renaming-not-monotone» {P : Type} [Decida
 
 /-! ## Snapshots -/
 
-/-- "Inputs are finite causal histories, that is, finite sets of events with a
+/-- "Inputs are finite causal histories, that is, finite sets of environment events with a
 causal partial order; `h ⊑ h'` when `h` is a downward-closed subset of `h'`
 carrying the restricted order." -/
 theorem «app:additional-applications/history-order» {Ev : Type} (h h' : Hist Ev) :
@@ -231,7 +231,7 @@ theorem «app:additional-applications/prefix-empty» {Ev : Type} (h : Hist Ev) :
 
 /-- "A specification that requires the complete history, with output `h` at `h`
 and outputs ordered by equality, is functional and not monotone: its required
-output changes whenever an event arrives."  (Not monotone as soon as there is an
+output changes whenever an environment event arrives."  (Not monotone as soon as there is an
 event `e`: `∅ ⊑ {e}`.) -/
 theorem «app:additional-applications/complete-history» {Ev : Type} (e : Ev) :
     (∀ h o, (completeSpec Ev).S h o ↔ o = ⟨h⟩) ∧

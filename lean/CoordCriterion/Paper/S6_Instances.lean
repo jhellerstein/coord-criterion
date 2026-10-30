@@ -275,9 +275,9 @@ deployments in our terms (Proposition `thm:complete-cap-deployment`); we do
 not treat them here.") is argued only in prose. -/
 
 /-- **Definition `def:hat-spec`** (HAT specification): "An input is a history
-of received events ordered by happens-before: reads, each tagged with its
+of received environment events ordered by happens-before: reads, each tagged with its
 replica; commits, each with its client timestamp and write set; and
-deliveries of committed writes to replicas.  Events follow each client's
+deliveries of committed writes to replicas.  These environment events follow each client's
 program order and each replica's arrival order, and a transaction's reads
 precede its commit, which precedes its deliveries.  Inputs are ordered by
 downward-closed extension.  An output is a set of read answers, ordered by
@@ -286,7 +286,7 @@ when it extends to a history that answers every read, orders versions by
 timestamp, and exhibits none of the phenomena that `L` proscribes.  The
 explicit relation `E` holds, at each input, the answers that the read rule
 above gives."  (CIDR version:
-"An input is a history of received events ordered by happens-before: reads
+"An input is a history of received application events ordered by happens-before: reads
 tagged with their replica, commits with their timestamp and write set, and
 deliveries of committed writes to replicas.  Inputs are ordered by
 downward-closed extension, and outputs are sets of read answers, ordered by
@@ -362,7 +362,7 @@ theorem «thm:hat-levels» (D : Type) :
     fun L hL _ H h => HATSpec.proscribes_lostUpdate L hL H h⟩
 
 /-- Proof sketch of Thm. `thm:hat-levels`: "A read's answer under `E` depends
-only on the events that precede it, so later input never changes it, and the
+only on the environment events that precede it, so later input never changes it, and the
 timestamp condition rules out the dependency cycles of G0 and G1c."  Lean:
 the candidates of a read are the same at every expansion containing it
 (`HATSpec.cand_iff`), so `hatOut` is monotone; under the timestamp condition
@@ -537,17 +537,16 @@ paragraph "Testing and proof" (entries after
 Prop. `prop:induced-specification`).
 
 We take the standard I/O-automaton model of a state machine, its clients,
-and the channel that carries their events.  The machine `M` has states `Q`,
-an initial state `q₀`, receive transitions on event payloads that accept
+and the channel that carries their state-machine events.  The machine `M` has states `Q`,
+an initial state `q₀`, receive transitions for
+state-machine events that accept
 every payload in every state, output transitions that emit an output to a
 client and may change state, internal transitions, and an observation
-`obs : Q → O`.  Each of finitely many clients may send an event with any
-payload at any time and receives the machine's outputs; a channel carries
-events, each at most once, to the machine's input queue, which it consumes
+`obs : Q → O`.  Each of finitely many clients may send a
+state-machine event with any payload at any time and receives the machine's outputs; a channel carries state-machine events, each at most once, to the machine's input queue, which it consumes
 in order, and may reorder them on the way.  In an execution of the composed
 automaton, *happens-before* is Lamport's order: the transitive closure of the
-local order at the machine and at each client and of the edge from sending an
-event to receiving it."
+local order at the machine and at each client and of the edge from sending a state-machine event to receiving it."
 
 Lean: Lynch–Tuttle I/O automata and their composition are `CC.IOA`
 (`Foundations/IOAutomata.lean`).  The machine is a general machine automaton
@@ -561,12 +560,12 @@ action `tau`).  A state machine `M : SM.Machine Q P O` is the special case
 channel `IOM.chanA k`, which neither loses nor duplicates.  The machine's
 input queue is folded into the channel: the machine's `recv e` is the
 channel's delivery of `e`, i.e. the machine consuming `e` from its queue.  A
-channel that may reorder is the bag, `k = .bag` (any event in transit is
-consumed next); the case in which events arrive in the order sent (part (2)
+channel that may reorder is the bag, `k = .bag` (any state-machine event in transit is
+consumed next); the case in which state-machine events arrive in the order sent (part (2)
 of Prop. `prop:induced-specification`) is the FIFO queue, `k = .fifo`.
 Events `IOM.Ev C P` carry a client, a sequence number, and a payload.
 `IOM.HB β` is happens-before on positions of the schedule `β`.  The client
-type `C` is arbitrary; finiteness is not needed.  A sent event may stay in
+type `C` is arbitrary; finiteness is not needed.  A sent state-machine event may stay in
 transit in a finite execution. -/
 
 /-- "An output of the machine is an input of the client that receives it, so
@@ -597,7 +596,7 @@ theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
 
 /-- **Def. `def:induced-specification`** (Input of an execution, induced
 specification).  "The
-*input* of a finite execution is the set of events the machine has received,
+*input* of a finite execution is the set of state-machine events the machine has received,
 ordered by happens-before between their sends; `h ⊑ h'` when `h ⊆ h'` and the
 two orders agree on `h`.  The specification *induced* by `M` and its
 environment pairs each input that occurs with the machine's observation at
@@ -610,7 +609,7 @@ statement unfolds each, for a general machine `G`.
 
 The remarks that follow ("This is not a
 distributed execution in the sense of Section `sec:distributed-execution`.
-… Happens-before here only keeps the books: it records which events each
+… Happens-before here only keeps the books: it records which state-machine events each
 client sent after which outputs, so the input remembers what the
 environment's choices depended on.") explain the model and state no claim of
 their own.  The sentence "Distributing the machine is then direct: … among
@@ -631,15 +630,15 @@ theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
 /-- **Prop. `prop:induced-specification`** (Induced specifications).
 "(1) The induced specification is an ordered specification, and the input of
 an execution only expands as the execution continues.  (2) When there is one
-client and its events arrive in the order it sent them, every input is a
-chain, inputs correspond to event sequences ordered by prefix, and the fiber
+client and its state-machine events arrive in the order it sent them, every input is a
+chain, inputs correspond to state-machine event sequences ordered by prefix, and the fiber
 at a sequence collects the observations of the machine's runs that receive it
 in order, interleaved with output and internal steps.  If output and internal
 steps leave the state unchanged and receiving is deterministic, the
 specification is functional and consistent exactly when `obs(q) ⪯ obs(q')`
 for every receive transition `q → q'` from a reachable state.  (3) Every
 observation in the fiber at `h` is reached by a run of the machine that
-receives each event of `h` once, interleaved with output and internal steps.
+receives each state-machine event of `h` once, interleaved with output and internal steps.
 If the channel may reorder and clients observe no outputs, every such run is
 reached, whatever the order of its receives.  (4) The machine's observations
 are confluent across its executions—for executions with inputs `h₁,…,hₖ` and
@@ -671,7 +670,7 @@ for `IOM.ofSM M`);
 moreover a linear extension of the input order) and `IOM.bag_fiber_of_run`:
 for the input of an execution over a bag with no `out` actions
 (`IOM.OutFree`, clients observe no outputs), the observation at the end of
-every run of the machine that receives each of its events once, in any
+every run of the machine that receives each of its state-machine events once, in any
 order, is in the fiber (`IOM.bag_arrival_run` gives the execution);
 (4) `IOM.ObsConfluent k G` is the confluence condition on observations at the
 end of executions, and `IOM.confluent_iff_liftedMono`.  The proof follows the

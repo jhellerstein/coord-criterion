@@ -261,9 +261,11 @@ theorem «cor:convergence/relational-fails-minimal» :
     CALM.specTwo.Consistent ∧ ∃ τ : State CALM.specTwo, IsRun τ ∧ τ ≠ canon CALM.specTwo τ.cur :=
   CALM.state_by_input_fails_relationally
 
-/-- *Message data.*  "Data can influence which events occur next at the
+/-- *Message data.*  "Data can influence which history events occur next at the
 receiver, but it never directly changes the receiver's
-specification state, and nothing in the definitions above depends on it."
+specification state, and nothing in the definitions above depends on it."  The
+CIDR version says: "Data can influence a system's subsequent actions, but never
+directly changes the state."
 
 Lean: distributed consistency does not depend on the type `D` of message data
 (sends and receives are filtered out of participant runs by `Dist.ioOf`). -/
@@ -388,7 +390,8 @@ abbrev «def:system» (sp : Spec I O) (D : Type) :=
   {Sys : CAP.System sp D // Sys.BasisRespecting}
 
 /-- Def. `def:system`: "A distributed history produced by the system consists
-of environment inputs and events chosen by the participants' strategies."
+of input events supplied by the environment and output, commitment, send,
+and receive events chosen by the participants' strategies."
 For a basis-respecting system this is the library's `CAP.Produced`: every
 event other than an input is permitted by the strategy at the local history
 before it (`CAP.allowed_iff_stratAllowed`). -/
@@ -681,7 +684,7 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
   Figures.Elec.close_after_voting i hfull
 
-/-- **Def. contradicting run** (`def:contradicts`).  "Let an event of a run
+/-- **Def. contradicting run** (`def:contradicts`).  "Let a specification event of a run
 apply a commitment.  A run contradicts the commitment if it accepts an input
 the commitment seals, or emits an output the commitment chooses against at the
 same input."  The events that apply commitments are output events `Out_γ(o)`
