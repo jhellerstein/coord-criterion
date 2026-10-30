@@ -1155,22 +1155,23 @@ ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
 $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
 $\mathsf{stamp}(B)$ places $B$ before every other transaction
 (Figure~\ref{fig:cc-commitments}).  Both are choices, but they leave
-different alternatives open.  Although each
-system can define its own basis, no basis yields behavior that the runs of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}, which we call
-\emph{canonical runs}, cannot.  Every run under any basis has an observably
-equivalent canonical run, one that accepts the same inputs, emits the same
-outputs, and keeps at least the original's rows after each event (\extended).
-When 2PL orders $A$ before $B$ in a commitment event, the canonical run skips
-it; when 2PL later emits a serial order,
-so does the canonical run, and both end with the same table.
+different alternatives open.  We call the runs of
+Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
+runs}.  Locks, timestamps, quorums, and consensus differ in how and when
+they decide; what the environment sees does not.
 
-The canonical commitments are therefore universal.  Locks, timestamps,
-quorums, and consensus differ in how and when they decide.  Yet every output
-event of any system removes at least the rows that the canonical event for its
-output removes.  Whether a
-specification needs coordination thus depends on the seals and
-choices its outputs require, whatever mechanism makes them.
+\begin{lemma}[Canonical Run Universality]
+\label{lem:canonical-equivalent}
+Every run under any commitment basis is \emph{observably equivalent} to a
+canonical run: one that accepts the same inputs, emits the same outputs,
+and keeps at least the original's rows after each event (\extended).
+\end{lemma}
+
+For example, when 2PL orders $A$ before $B$ in a commitment event, the
+canonical run skips it; when 2PL later emits a serial order, so does the
+canonical run, and both end with the same table.  Whether a specification
+needs coordination thus depends on the seals and choices its outputs
+require, whatever mechanism makes them.
 
 \subsection{Coordination}
 \label{sec:coordination}
@@ -1741,8 +1742,7 @@ invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}.  Their tools pick,
 for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties.  We
 ask what the specification itself requires, independent of any menu of
-levels.  Because the canonical commitments are universal
-(Section~\ref{sec:systems}), the answer holds for every mechanism.  Our
+levels.  By Canonical Run Universality (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.  Our
 composition results need no program logic, and the criteria are exact on
 specifications, not conservative.  
 
