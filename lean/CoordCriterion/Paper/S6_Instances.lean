@@ -275,20 +275,20 @@ deployments in our terms (Proposition `thm:complete-cap-deployment`); we do
 not treat them here.") is argued only in prose. -/
 
 /-- **Definition `def:hat-spec`** (HAT specification): "An input is a history
-of received environment events ordered by happens-before: reads, each tagged with its
-replica; commits, each with its client timestamp and write set; and
-deliveries of committed writes to replicas.  These environment events follow each client's
-program order and each replica's arrival order, and a transaction's reads
-precede its commit, which precedes its deliveries.  Inputs are ordered by
+ordered by happens-before: reads, each tagged with its replica; commits, each
+with its client timestamp and write set; and deliveries of committed writes
+to replicas.  The history preserves each client's program order and each
+replica's arrival order, and a transaction's reads precede its commit, which
+precedes its deliveries.  Inputs are ordered by
 downward-closed extension.  An output is a set of read answers, ordered by
 inclusion.  For an isolation level `L`, `S_L` permits an output at an input
 when it extends to a history that answers every read, orders versions by
 timestamp, and exhibits none of the phenomena that `L` proscribes.  The
 explicit relation `E` holds, at each input, the answers that the read rule
 above gives."  (CIDR version:
-"An input is a history of received application events ordered by happens-before: reads
-tagged with their replica, commits with their timestamp and write set, and
-deliveries of committed writes to replicas.  Inputs are ordered by
+"An input is a history ordered by happens-before: reads tagged with their
+replica, commits with their timestamp and write set, and deliveries of
+committed writes to replicas.  Inputs are ordered by
 downward-closed extension, and outputs are sets of read answers, ordered by
 inclusion.  For an isolation level `L`, defined by the phenomena it
 proscribes, `S_L` permits an output when it extends to a history that answers
@@ -362,7 +362,7 @@ theorem «thm:hat-levels» (D : Type) :
     fun L hL _ H h => HATSpec.proscribes_lostUpdate L hL H h⟩
 
 /-- Proof sketch of Thm. `thm:hat-levels`: "A read's answer under `E` depends
-only on the environment events that precede it, so later input never changes it, and the
+only on the history preceding it, so later input never changes it, and the
 timestamp condition rules out the dependency cycles of G0 and G1c."  Lean:
 the candidates of a read are the same at every expansion containing it
 (`HATSpec.cand_iff`), so `hatOut` is monotone; under the timestamp condition

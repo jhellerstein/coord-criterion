@@ -1302,7 +1302,7 @@ be reconciled, not that they agree.}
 \paragraph{Message data.}
 The data $d$ of a message is any application state other than input that a
 participant chooses to send: timestamps, version vectors, non-input-related gossip, votes, etc. Data
-can influence which events occur next at the receiver, but it
+can influence which history events occur next at the receiver, but it
 never directly changes the receiver's specification state, and nothing in the
 definitions above depends on it. Section~\ref{sec:systems} calls the
 rule that makes these choices a participant's \emph{strategy}. Data can
@@ -1331,10 +1331,10 @@ bring bespoke commitments.}
 
 \begin{definition}[Commitment]
 \label{def:commitment}
-A \emph{commitment} is a partial function on
-specification states that removes a nonempty set of rows, each with no
-remaining row at the same input that
-\outrel it: whenever $c(i,R)=(j,R')$, we have $R'\subsetneq R$ and
+\textcolor{reviewed}{A \emph{commitment} is a partial function on
+specification states that removes a nonempty set of rows.} \textcolor{reviewed}{Each removed row is
+undominated by the rows that remain at its input: no remaining row there
+\outrel it.} Thus, whenever $c(i,R)=(j,R')$, we have $R'\subsetneq R$ and
 \begin{equation}
   (k,u)\in R\setminus R',\ (k,w)\in R'
   \quad\Longrightarrow\quad
@@ -1422,8 +1422,8 @@ not the strategy.
 A \emph{system} consists of a commitment basis $\mathcal B$, shared by all
 participants, and a strategy $\theta_p$ for each participant $p$ whose output
 and commitment events apply only commitments from $\mathcal B$. A distributed history \emph{produced} by the
-system consists of environment inputs and events chosen by the participants'
-strategies.
+system consists of input events supplied by the environment and output,
+commitment, send, and receive events chosen by the participants' strategies.
 \end{definition}
 
 Strategies differ by participant so we can single out replicated
@@ -1528,7 +1528,7 @@ removes nothing the specification still permits and applies no commitment.}
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
-\textcolor{reviewed}{Let an event of a run apply a commitment.} \textcolor{reviewed}{A run \emph{contradicts} the
+\textcolor{reviewed}{Let a specification event of a run apply a commitment.} \textcolor{reviewed}{A run \emph{contradicts} the
 commitment if it accepts an input the commitment seals, or emits an output the
 commitment chooses against at the same input.}
 \end{definition}
@@ -1592,7 +1592,7 @@ current input $i$.}
 
 \begin{proof}[Proof sketch]
 \textcolor{reviewed}{After the second event every output at $i$ \outrel $x$, and after
-the first none does; since events never add rows, no row at $i$ can be common
+the first none does; since specification events never add rows, no row at $i$ can be common
 to both.} Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
@@ -1606,7 +1606,7 @@ therefore excludes every observable conflict, including a transient one.
 
 The first event's commitment is a choice against $x$, and it requires
 distributed coordination exactly when another participant may emit $x$. The system must
-then exclude one of the two events: by a mutex or atomic instruction in shared
+then exclude one of the two specification events: by a mutex or atomic instruction in shared
 memory, by agreement in a distributed system, or by a rule fixed in advance,
 such as assigning the choice to a single participant, so that only that
 participant's runs can contradict it and no runtime agreement is needed. Seals are
@@ -1695,7 +1695,7 @@ any legal input event to any participant.}
 \begin{definition}[Explicit relation, Availability]
 \label{def:partition-notions}
 \textcolor{reviewed}{A continuation of a partitioned history is \emph{local to} a participant $p$
-when the system produces it, it adds only events of $p$'s block and no
+when the system produces it, it adds only history events of $p$'s block and no
 input events, and none of its receives takes a message sent from another
 block.} \textcolor{reviewed}{An \emph{explicit relation} $E\subseteq S$ is a set of rows
 $(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
@@ -2096,9 +2096,9 @@ with the highest-timestamped committed write of the item that it has received.
 
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
-\textcolor{reviewed}{An input is a history of received events ordered by happens-before: reads,
-each tagged with its replica; commits, each with its client timestamp and
-write set; and deliveries of committed writes to replicas.} Events follow
+\textcolor{reviewed}{An input is a history ordered by happens-before: reads, each tagged with its
+replica; commits, each with its client timestamp and write set; and deliveries
+of committed writes to replicas.} The history preserves
 each client's program order and each replica's arrival order, and a
 transaction's reads precede its commit, which precedes its deliveries. Inputs are ordered by downward-closed extension. An output is a set of read
 answers, ordered by inclusion. For an isolation level $L$, $S_L$ permits an
@@ -2119,7 +2119,7 @@ Lifted Monotonicity for it.}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-A read's answer under $E$ depends only on the events that precede it, so
+A read's answer under $E$ depends only on the history preceding it, so
 later input never changes it, and the timestamp condition rules out the
 dependency cycles of G0 and G1c. For the converse, let two transactions at
 different replicas each read $x_0$ and write $x$. Each replica's answer is
@@ -2231,24 +2231,24 @@ directly.} We now make the mapping precise, and then explain how it is used in
 practice.
 
 We take the standard I/O-automaton model~\cite{lynch1987io} of a state
-machine, its clients, and the channel that carries their events. The machine
-$M$ has states $Q$, an initial state $q_0$, receive transitions on event
-payloads that accept every payload in every state, output transitions that
+machine, its clients, and the channel that carries their state-machine events. The machine
+$M$ has states $Q$, an initial state $q_0$, receive transitions for
+state-machine events that accept every payload in every state, output transitions that
 emit an output to a client and may change state, internal transitions, and an
-observation $\mathrm{obs}:Q\to O$. Each of finitely many clients may send an
-event with any payload at any time and receives the machine's outputs; a
-channel carries events, each at most once, to the machine's input queue, which
+observation $\mathrm{obs}:Q\to O$. Each of finitely many clients may send a
+state-machine event with any payload at any time and receives the machine's outputs; a
+channel carries state-machine events, each at most once, to the machine's input queue, which
 it consumes in order, and may reorder them on the way. In an execution of the
 composed automaton, \emph{happens-before} is Lamport's
 order~\cite{lamport1978time}: the transitive closure of the local order at the
-machine and at each client and of the edge from sending an event to receiving
+machine and at each client and of the edge from sending a state-machine event to receiving
 it. An output of the machine is an input of the client that receives it, so a
 client's later sends happen after everything the machine had received when it
 emitted that output.
 
 \begin{definition}[Input of an execution, induced specification]
 \label{def:induced-specification}
-The \emph{input} of a finite execution is the set of events the machine has
+The \emph{input} of a finite execution is the set of state-machine events the machine has
 received, ordered by happens-before between their sends; $h\InputOrd h'$ when
 $h\subseteq h'$ and the two orders agree on $h$. The specification
 \emph{induced} by $M$ and its environment pairs each input that occurs with
@@ -2260,9 +2260,9 @@ Section~\ref{sec:distributed-execution}. The machine is a single
 participant; the clients and the channel are its environment, and outputs
 flow to the environment as in Section~\ref{sec:election-story}, where the
 environment may use an output when choosing later input. Happens-before here
-only keeps the books: it records which events each client sent after which
+only keeps the books: it records which state-machine events each client sent after which
 outputs, so the input remembers what the environment's choices depended on. Distributing the machine is then direct: the clients remain the environment,
-each client's events are sent to some participant, and among participants
+each client's state-machine events are sent to some participant, and among participants
 Section~\ref{sec:distributed-execution} applies, with the induced
 specification as the specification.
 
@@ -2274,8 +2274,8 @@ specification as the specification.
 The induced specification is an ordered specification, and the input
         of an execution only expands as the execution continues.
 \item
-When there is one client and its events arrive in the order it sent
-        them, every input is a chain, inputs correspond to event sequences
+When there is one client and its state-machine events arrive in the order it sent
+        them, every input is a chain, inputs correspond to state-machine event sequences
         ordered by prefix, and the fiber at a sequence collects the
         observations of the machine's runs that receive it in order,
         interleaved with output and internal steps. If output and internal
@@ -2285,7 +2285,7 @@ When there is one client and its events arrive in the order it sent
         transition $q\to q'$ from a reachable state.
 \item
 Every observation in the fiber at $h$ is reached by a run of the
-        machine that receives each event of $h$ once, interleaved with output
+        machine that receives each state-machine event of $h$ once, interleaved with output
         and internal steps. If the channel may reorder and clients observe no
         outputs, every such run is reached, whatever the order of its
         receives.
@@ -2300,7 +2300,7 @@ The machine's observations are confluent across its executions---for
 
 \begin{proof}[Proof sketch]
 (1) Inclusion with agreeing orders is a partial order, every input that occurs
-has a row, and extending an execution adds received events without changing
+has a row, and extending an execution adds received state-machine events without changing
 happens-before among earlier sends. (2) A single client's sends are totally
 ordered, and they arrive in that order, so an input is determined by its
 sequence of payloads, and the machine's steps in an execution form a run of
@@ -2312,8 +2312,8 @@ common-\indesc condition and apply Complete CALM
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:common-expansion-form}).
 \end{proof}
 
-The input orders events by their sends, not by their arrivals: the machine
-receives events in one total order, but that order is what differs between
+The input orders state-machine events by their sends, not by their arrivals: the machine
+receives state-machine events in one total order, but that order is what differs between
 executions. Outputs are where the environment's reactions enter. A client
 that sends after observing an output is ordered after everything that output
 reflected, and the input records that dependence; what the client saw is
@@ -2563,7 +2563,7 @@ rows at $k$.
   output event; seal; commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; removing rows, it is a seal, a commitment & Def.~\ref{def:output-event}\\
   exposable & $\mathsf{output}(o)$ applies no commitment & Def.~\ref{def:exposable}\\
   determined; determination & the upper fiber has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
-  run; commitment-free & finite event sequence from a canonical state; no output event issues a commitment & Def.~\ref{def:run}\\
+  run; commitment-free & finite sequence of specification events from a canonical state; no output event issues a commitment & Def.~\ref{def:run}\\
   consistent; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
   \bottomrule
 \end{tabular}
@@ -2605,7 +2605,7 @@ rows at $k$.
     system; basis; produced & a commitment basis $\mathcal B$ and a strategy per participant; every non-input event permitted by its strategy and using only commitments from $\mathcal B$ & Def.~\ref{def:system}\\
   system output event $\Out{\gamma}{o}$ & applies commitments $\gamma$ from the basis, retires, emits $o$ & Def.~\ref{def:system-output-event}\\
   commitment event $\mathsf{commit}(\gamma)$ & applies a nonempty sequence $\gamma$ from the basis, emits nothing & Def.~\ref{def:commitment-event}\\
-  run under a basis; canonical run & events whose commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
+  run under a basis; canonical run & specification events whose commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, commitments and commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
   contradicts & accepts an input the commitment seals, or emits an output it chooses against & Def.~\ref{def:contradicts}\\
   requires (distributed) coordination & a commitment some run (at another participant) contradicts & Def.~\ref{def:coordination}\\
@@ -2787,7 +2787,7 @@ that is an ordinary output event, already covered by
 Definition~\ref{def:distributed-history}. Otherwise, or in addition, it can silently honor $o$ by restricting its table
 to $R[\mathrm{out}\OutputGe o]$. This restriction is a table, not a
 specification state: it may have no row at the participant's current input,
-so silent honoring is not an event and we reason about it at the level of
+so silent honoring is not a specification event and we reason about it at the level of
 tables. Silent honoring cannot change confluence in either direction. It cannot
 help, because it only removes rows, and confluence asks for a row that
 survives everywhere (Proposition~\ref{prop:confluence}). It cannot hurt,
@@ -2797,7 +2797,7 @@ not on who has heard about them.
 
 \begin{proof}[Proof of Proposition~\ref{thm:commitments-require-coordination}]
 After the second event every output at $i$ \outrel $x$, by containment
-(Lemma~\ref{lem:canonical-commitment-normal-form}); after the first, none does. A common state with current input $i$ has a row at $i$, and since events never
+(Lemma~\ref{lem:canonical-commitment-normal-form}); after the first, none does. A common state with current input $i$ has a row at $i$, and since specification events never
 add rows, that row would be in both states.
 \end{proof}
 
@@ -4125,7 +4125,7 @@ is only as strong as $Q_p$: if an output permitted at every input answers,
 every specification is available.
 
 \textcolor{reviewed}{A continuation of a partitioned history is \emph{within $p$'s block} when
-the system produces it, it adds only events of $p$'s block, and none of its
+the system produces it, it adds only history events of $p$'s block, and none of its
 receives takes a message sent from another block.} A continuation local to
 $p$ (Definition~\ref{def:partition-notions}) is one within $p$'s block
 that adds no input event.
@@ -4185,7 +4185,7 @@ participant set.
 \end{lemma}
 
 \begin{proof}
-Whether a history is produced is checked event by event against each
+Whether a history is produced is checked one history event at a time against each
 participant's own local prefix, as fixed before
 Definition~\ref{def:partition-notions},
 and there are no receives to match. Replication makes that check independent of the participant.
@@ -4247,7 +4247,7 @@ Consistency.
 received no message before it, and let $T$ be the set of rows $(i,o)$ with
 $o\in Q(i)$ emitted in an isolated emission in some partitioned history of the
 system; such a history and participant are a \emph{witness} for $(i,o)$. Then $T\subseteq Q$. When a participant is alone in its block, every
-continuation that Response Availability supplies adds only its own events and,
+continuation that Response Availability supplies adds only its own history events and,
 being partitioned, no receive, so the emission it yields is isolated. By
 Lemma~\ref{lem:locality}, a witness's local history up to the emission can be
 replayed by a participant alone in its block, with an idle participant
@@ -4324,7 +4324,7 @@ Let $i\InputOrd j$, and suppose no output in $Q_q(i)$ has a \outnoun in
 $\fiber{j}$. In a system with Answering for $(Q_p)$
 (Definition~\ref{def:response-availability}(1)), consider a partitioned
 history that the system produces, in which $q$ is alone in its block,
-$q$'s current input is $i$, and $j$ \inrel every participant's current input. Then some continuation within $q$'s block that adds only events of $q$,
+$q$'s current input is $i$, and $j$ \inrel every participant's current input. Then some continuation within $q$'s block that adds only history events of $q$,
 and no input event, has emitted outputs with no common \outnoun in
 $\fiber{j}$.
 \end{lemma}
@@ -4349,8 +4349,8 @@ linearization, so $Q_p$ is total, and it is upward closed within fibers. Real-ti
 seeing $a$'s response, so the edge from $a$ to $b$ is information it supplies
 (Section~\ref{sec:election-story}).
 
-Real time is the order of events in an execution: an \emph{interleaving}
-$\lambda$ of a distributed history is a linear order of its events consistent
+Real time is the order of history events in an execution: an \emph{interleaving}
+$\lambda$ of a distributed history is a linear order of its history events consistent
 with happens-before, and no strategy observes it. The \emph{invocation} of an
 operation is the first input event at its replica whose input contains it,
 and its \emph{response} is the first output event at that replica whose map
@@ -4709,14 +4709,14 @@ conclusions~\cite{herlihy1991waitfree,herlihy1999topological}.
 
 \subsection{Snapshots}
 
-Inputs are finite causal histories, that is, finite sets of events with a
+Inputs are finite causal histories, that is, finite sets of environment events with a
 causal partial order; $h\InputOrd h'$ when $h$ is a downward-closed subset of
 $h'$ carrying the restricted order. The \emph{prefix} specification permits
 at $h$ any downward-closed subset of $h$, with outputs ordered by inclusion. Old prefixes stay legal as history grows, and finite unions of prefixes are
 prefixes, so it satisfies Lifted Monotonicity; it guarantees neither freshness
 nor completeness. A specification that requires the complete history, with
 output $h$ at $h$ and outputs ordered by equality, is functional and not
-monotone: its required output changes whenever an event arrives. By
+monotone: its required output changes whenever an environment event arrives. By
 Proposition~\ref{prop:functional-exposure-boundary}, some output can then be
 exposed only after a commitment that seals larger inputs.
 
