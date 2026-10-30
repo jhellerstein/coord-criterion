@@ -1373,16 +1373,17 @@ a state and $o\in R(i)$. An output event $\Out{\gamma}{o}$
 under a basis $\mathcal B$ applies a finite, possibly empty sequence
 $\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each $c_m$ defined at
 the state its predecessors leave, leaving a table $R_c$, and then retires rows
-and emits $o$, all atomically; $\varepsilon$ is the empty sequence. The event
-is \emph{legal} when $(i,o)\in R_c$ and every row of $R_c$ ruled out by $o$ is
-\outrelpast by a retained row that \outrel $o$:
+and emits $o$, all atomically; $\varepsilon$ is the empty sequence. The event is \emph{legal} when $o$ remains permitted at the current input
+after $\gamma$, and emitting $o$ requires no further commitment. Formally,
+$(i,o)\in R_c$, and every row $(k,x)$ discarded by the output has a retained
+row $(k,u)$ at the same input that \outrel $x$:
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
   \quad\Longrightarrow\quad
   \exists u\in R_c[\mathrm{out}\OutputGe o](k):\ x\OutputOrd u.
   \label{eq:lifted-validity}
 \end{equation}
-The event then retires those \outrelpast rows and ends at
+The event retires those discarded rows and ends at
 $(i,R_c[\mathrm{out}\OutputGe o])$.
 \end{definition}
 
