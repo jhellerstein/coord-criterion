@@ -98,7 +98,7 @@ first and supporting claims and examples follow.
 | `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: commitments, histories (local events: inputs, output events `out γ o`, commit events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.5 | Thm. Complete CAP; deterministic strategies do not suffice |
 | `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.4 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
-| `CAP/TimeoutAbort.lean` | `CC.CAP.Timeout` | §4.3 | Two-phase commit aborting on timeout: as closing the polls it seals every input adding a missing vote and requires distributed coordination; as a choice (abort allowed until decided) it is local coordination when only the coordinator decides, distributed when the decision is replicated |
+| `CAP/TimeoutAbort.lean` | `CC.CAP.Timeout` | §4.3 | Two-phase commit aborting on timeout: as closing the polls it seals every input adding a missing vote; run by the coordinator alone this is local coordination, replicated it is distributed; as a choice (abort allowed until decided) it is local coordination when only the coordinator decides, distributed when the decision is replicated |
 | `CAP/ResponseForm.lean` | `CC.CAP` | App. F | Response Availability, Response Partition Consistency, Thm. Complete CAP (response form) |
 | `CAP/Register.lean` | `CC.GL` | App. F | Linearizable register, realized histories, Cor. Gilbert–Lynch |
 | `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.5, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |

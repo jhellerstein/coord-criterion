@@ -15,11 +15,18 @@ the last vote arrives.  Two readings of that abort are checked.
   missing vote, yes or no; at `yy·` it removes `(yyy, commit)` and
   `(yyn, abort)` (`timeout_seals_yy`).
 * `seal_not_coordinationFreeH`: any system in which the coordinator
-  (participant `0`) may close the polls at `yy·` requires *distributed*
+  (participant `0` of two) may close the polls at `yy·` requires *distributed*
   coordination, whatever the other participants' strategies: the environment
   may deliver the late vote `yyy` to another participant
   (inputs are always allowed, `Allowed`).  In particular `sealSys`, where only
   the coordinator emits a decision, is not `CoordinationFreeH`.
+  This is the replicated case (`sealSysRepl`: every participant at `yy·` may
+  close the polls).
+* `sealSys1_local`: when the decision specification is run by the coordinator
+  alone (a system whose strategies act only with one participant), the seal
+  requires coordination (not `CoordinationFree`: another run of the
+  coordinator accepts `yyy`) but not distributed coordination
+  (`CoordinationFreeH`, by `single_coordinationFreeH`).
 
 *As a choice* (`abortSpec`: the coordinator may abort until it decides, so
 `S(v) = {decide2PC v, abort}`):
@@ -218,6 +225,104 @@ theorem sealSys_not_coordinationFreeH (D : Type) :
     ¬ (sealSys D).CoordinationFree ∧ ¬ (sealSys D).CoordinationFreeH := by
   have h := seal_not_coordinationFreeH (sealSys D) rfl ⟨rfl, rfl, rfl, rfl⟩
   exact ⟨fun hcf => h (coordinationFree_to_H hcf), h⟩
+
+/-! ## The seal run by the coordinator alone -/
+
+/-- In a one-participant history no other participant can contradict a
+commitment. -/
+theorem localInH_one {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
+    (init : Fin 1 → I) (H : History sp' D 1) (p : Fin 1) (σ σc : State sp') :
+    LocalInH init H p σ σc := by
+  have h : ∀ q : Fin 1, q ≠ p → False := fun q hq =>
+    hq (Fin.ext (by have := q.isLt; have := p.isLt; omega))
+  exact ⟨fun _ _ _ _ ⟨q, _, _, _, _, hq, _⟩ => h q hq, fun _ _ _ ⟨q, _, _, hq, _⟩ => h q hq⟩
+
+/-- **A system run by one participant needs no distributed coordination.**
+If the strategies act only when the system has one participant, no history of
+the system applies a commitment that another participant of the same history
+contradicts: with more participants no output or commit event occurs, and
+with one there is no other participant. -/
+theorem single_coordinationFreeH {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
+    (Sys : System sp' D) (h1 : ∀ n init p pre e, Sys.strat n init p pre e → n = 1) :
+    Sys.CoordinationFreeH := by
+  refine ⟨fun n init H _ hp p a b γ o σ σc hH _ _ => ?_,
+    fun n init H _ hp p a b γ σ σc hH _ _ => ?_⟩
+  · have hn := h1 _ _ _ _ _ (hp p a (.out γ o) b hH).2
+    subst hn; exact localInH_one init H p σ σc
+  · have hn := h1 _ _ _ _ _ (hp p a (.cmt γ) b hH).2
+    subst hn; exact localInH_one init H p σ σc
+
+/-- The coordinator alone runs the decision specification: the system has one
+participant, which closes the polls at `yy·`. -/
+noncomputable def sealSys1 (D : Type) : System (voteSpec 3) D where
+  basis := fun c => c = cp
+  strat := fun n init p _ e =>
+    match e with
+    | .out γ u => n = 1 ∧ γ = [cp] ∧ u = .undecided ∧ init p = yyN
+    | _ => False
+
+/-- **The seal run by the coordinator alone: local coordination.**  The seal
+requires coordination (another run of the coordinator, from `yy·`, accepts the
+sealed late vote `yyy`), but no history of `sealSys1` applies a commitment
+requiring distributed coordination. -/
+theorem sealSys1_local (D : Type) :
+    ¬ (sealSys1 D).CoordinationFree ∧ (sealSys1 D).CoordinationFreeH := by
+  refine ⟨fun hcf => ?_, single_coordinationFreeH _ fun n init p pre e h => ?_⟩
+  · obtain ⟨happ, _, _, _⟩ := timeout_seals yyN 2 rfl
+    obtain ⟨-, -, hsy, -, hrows⟩ := timeout_seals_yy
+    have hcy : (canon (voteSpec 3) yyN).R yyy (decide2PC yyy) := ⟨rfl, yyN_le_yyy⟩
+    let σ := canon (voteSpec 3) yyN
+    let σc := Figures.closeState σ
+    have ha : applySeq σ [cp] = some σc := by
+      simp only [applySeq]
+      rw [show cp.f σ = some σc from happ]
+    have hu : σc.R σc.cur .undecided := (hrows _ _).2 ⟨rfl, rfl⟩
+    have hex : Exposable σc .undecided := fun _ _ _ hn => absurd (Or.inl rfl) hn
+    obtain ⟨τ0, hr0⟩ := lrun_out (D := D) (n := 1) ha hu hex
+    -- the coordinator closes the polls at `yy·`
+    let H : History (voteSpec 3) D 1 := fun _ => [LEv.out [cp] .undecided]
+    have hw : WF (fun _ => yyN) H := by
+      refine ⟨fun _ => ⟨τ0, hr0⟩, fun r a q k j d b h => ?_⟩
+      have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
+      simp [H] at hm
+    have hp : Produced (sealSys1 D) 1 (fun _ => yyN) H := by
+      intro r a e b h
+      cases a with
+      | nil =>
+        simp [H] at h; obtain ⟨rfl, _⟩ := h
+        exact ⟨fun c hc => by simp at hc; subst hc; rfl, rfl, rfl, rfl, rfl⟩
+      | cons _ _ => simp [H] at h
+    -- another run of the coordinator, from `yy·`, accepts the late vote
+    let H' : History (voteSpec 3) D 1 := fun _ => [LEv.inp yyy]
+    have hr1 : LRun (D := D) (n := 1) σ [LEv.inp yyy] (canon _ yyy) :=
+      .inp (Dist.step_canon_input _ yyN_le_yyy ⟨_, rfl⟩) (.nil _)
+    have hw' : WF (fun _ => yyN) H' := by
+      refine ⟨fun _ => ⟨_, hr1⟩, fun r a q k j d b h => ?_⟩
+      have hm : LEv.recv q k j d ∈ H' r := by rw [h]; simp
+      simp [H'] at hm
+    have hp' : Produced (sealSys1 D) 1 (fun _ => yyN) H' := by
+      intro r a e b h
+      cases a with
+      | nil => simp [H'] at h; obtain ⟨rfl, _⟩ := h; trivial
+      | cons _ _ => simp [H'] at h
+    exact (hcf.1 1 _ H hw hp 0 [] [] [cp] .undecided σ σc rfl (.nil _) ha).2 yyy
+      ⟨_, hcy⟩ hsy ⟨1, _, H', 0, [], [], hw', hp', rfl⟩
+  · cases e with
+    | out γ u => exact h.1
+    | _ => exact h.elim
+
+/-- The decision replicated: every participant starting at `yy·` may close
+the polls there. -/
+noncomputable def sealSysRepl (D : Type) : System (voteSpec 3) D where
+  basis := fun c => c = cp
+  strat := fun _ init p _ e =>
+    match e with
+    | .out γ u => γ = [cp] ∧ u = .undecided ∧ init p = yyN
+    | _ => False
+
+/-- **The seal replicated: distributed coordination.** -/
+theorem sealSysRepl_not_coordinationFreeH (D : Type) : ¬ (sealSysRepl D).CoordinationFreeH :=
+  seal_not_coordinationFreeH (sealSysRepl D) rfl ⟨rfl, rfl, rfl⟩
 
 /-! ## The timeout abort as a choice: `abortSpec` -/
 
