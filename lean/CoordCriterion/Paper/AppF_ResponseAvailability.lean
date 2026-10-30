@@ -82,7 +82,7 @@ theorem «app:cap-response/trivially-available» (Q : Obligation sp) (o0 : O)
 /-! ### Definition `def:response-availability` -/
 
 /-- **Def. `def:response-availability`**: "A continuation of a partitioned
-history is within `p`'s block when the system produces it, it adds only
+history is within `p`'s block when the system produces it, it adds only history
 events of `p`'s block, and none of its receives takes a message sent from
 another block. … A system has Response Availability for `(Q_p)` when, in
 every partitioned history it produces, each participant `p`, ending with
@@ -502,7 +502,7 @@ no output in `Q_q(i)` has a refinement in `S(j)`.  In a system with Answering
 for `(Q_p)`, consider a partitioned history that the system produces, in which
 `q` is alone in its block, `q`'s current input is `i`, and `j` expands
 every participant's current input.  Then some continuation within `q`'s
-block that adds only events of `q`, and no input event, has emitted
+block that adds only history events of `q`, and no input event, has emitted
 outputs with no common refinement in `S(j)`."
 
 Lean: `i` is `σq.cur`; "`q` alone" is `halone`; `i ⪯ j` follows from `hj`.
@@ -559,7 +559,8 @@ theorem «app:cap-response/register-obligation» (p : Nat) :
 
 /-! ### Interleavings and realized histories -/
 
-/-- "an *interleaving* `λ` of a distributed history is a linear order of its
+/-- "Real time is the order of history events in an execution: an
+*interleaving* `λ` of a distributed history is a linear order of its history
 events consistent with happens-before".  Lean: an injective position function
 on events, increasing along each local order and along send→receive edges. -/
 theorem «app:cap-response/interleaving» (H : CC.GL.RHist D n) (pos : Fin n → Nat → Nat) :

@@ -128,7 +128,7 @@ theorem «sec:complete-cap/environment» (Sys : System sp D) (init : Fin n → I
 
 /-- **Def. `def:partition-notions` (Explicit relation, Availability).**  "A
 continuation of a partitioned history is local to a participant `p` when the system produces it,
-it adds only events of `p`'s block and no input events, and none of its
+it adds only history events of `p`'s block and no input events, and none of its
 receives takes a message sent from another block.  … *Availability* is
 Availability for `S`."  In the unfolded form below, "local to `p`" is the
 conjunction `Produced … ∧ Partitioned … comp ∧ (∀ q, comp q ≠ comp p → ext q =

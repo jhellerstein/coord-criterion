@@ -280,7 +280,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«cor:convergence»` | theorem | **Cor. |
 | `«cor:convergence/relational-fails»` | theorem | After Cor. |
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
-| `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which events occur next at the receiver, but it never directly changes the receiver's specification state, and nothing in… |
+| `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which history events occur next at the receiver, but it never directly changes the receiver's specification state, and no… |
 | `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
 | `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing sea… |
 | `«def:commitment»` | abbrev | **Def. |
@@ -472,7 +472,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/output-event-commits»` | abbrev | *commitment* (§2 sense) — an output event that removes rows (Def. |
 | `«app:notation/exposable»` | abbrev | *exposable* — `output(o)` applies no commitment (Def. |
 | `«app:notation/determined»` | abbrev | *determined* — the upper fiber has one element; *determination* — reaching such a state (Sec. |
-| `«app:notation/run»` | abbrev | *run* — finite event sequence from a canonical state (Def. |
+| `«app:notation/run»` | abbrev | *run* — finite sequence of specification events from a canonical state (Def. |
 | `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
 | `«app:notation/consistent»` | abbrev | *consistent* — every finite family of runs can reach one common state at each common expansion `j` (Def. |
 | `«app:notation/confluent-at»` | abbrev | *confluent at `j`* (Def. |
@@ -511,7 +511,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/produced»` | abbrev | *produced* — every non-input event permitted by its strategy and using only commitments from `𝓑` (Def. |
 | `«app:notation/system-output-event»` | abbrev | *system output event `Out_γ(o)`* — applies commitments `γ` from the basis, retires, emits `o` (Def. |
 | `«app:notation/commitment-event»` | abbrev | *commitment event `commit(γ)`* — applies a nonempty sequence `γ` from the basis, emits nothing (Def. |
-| `«app:notation/run-under-basis»` | abbrev | *run under a basis* — events whose commitments come from the basis (Def. |
+| `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments and commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/contradicts»` | abbrev | *contradicts* — accepts an input the commitment seals, or emits an output it chooses against (Def. |
@@ -795,7 +795,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«app:cap-response/register-fiber»` | theorem | "The fiber `S(h)` contains the maps explained by some linearization of `h`, a total order of its operations extending precedence in which each answered read… |
 | `«app:cap-response/register-obligation-def»` | theorem | "The obligation `Q_p(h)` consists of the maps in `S(h)` that answer every read and acknowledge every write invoked at `p`." |
 | `«app:cap-response/register-obligation»` | theorem | "Every finite history has a linearization, so `Q_p` is total, and it is upward closed within fibers." Lean: |
-| `«app:cap-response/interleaving»` | theorem | "an *interleaving* `λ` of a distributed history is a linear order of its events consistent with happens-before". |
+| `«app:cap-response/interleaving»` | theorem | "Real time is the order of history events in an execution: |
 | `«app:cap-response/realized-history»` | theorem | "For a prefix `C` of `λ` (a consistent cut), the *realized history* `h_C` contains the operations invoked in `C`, with an edge from `a` to `b` when `a`'s res… |
 | `«app:cap-response/realized-mono»` | theorem | "If `C' ⊆ C` is also a prefix, `h_C` expands `h_{C'}`." |
 | `«app:cap-response/realized-not-expansion»` | theorem | "The realized history need not be a common expansion of the participants' current inputs: |
@@ -883,7 +883,7 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/additional-applica
 | `«app:additional-applications/renaming-singletons»` | theorem | "At `{p}` the only output is `p ↦ 1`, and at `{q}` it is `q ↦ 1`." |
 | `«app:additional-applications/renaming-each-extends»` | theorem | "Each has a [refinement] at `{p,q}`, so Relational Monotonicity does not fail here, but no injective map extends both." |
 | `«app:additional-applications/renaming-not-monotone»` | theorem | "Directed Outputs also fails at `{p,q}`: |
-| `«app:additional-applications/history-order»` | theorem | "Inputs are finite causal histories, that is, finite sets of events with a causal partial order; `h ⊑ h'` when `h` is a downward-closed subset of `h'` carryi… |
+| `«app:additional-applications/history-order»` | theorem | "Inputs are finite causal histories, that is, finite sets of environment events with a causal partial order; `h ⊑ h'` when `h` is a downward-closed subset of… |
 | `«app:additional-applications/prefix-spec»` | theorem | "The *prefix* specification permits at `h` any downward-closed subset of `h`, with outputs ordered by inclusion." |
 | `«app:additional-applications/prefix-monotone»` | theorem | "Old prefixes stay legal as history grows, and finite unions of prefixes are prefixes, so it satisfies Lifted Monotonicity." |
 | `«app:additional-applications/prefix-empty»` | theorem | "… it guarantees neither freshness nor completeness": |

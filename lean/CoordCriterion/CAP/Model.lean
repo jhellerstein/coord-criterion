@@ -346,7 +346,7 @@ theorem lrun_append {a b : List (LEv sp D n)} {σ ρ : State sp} :
       | recv hr => exact .recv (ih.2 ⟨τ, hr, h2⟩)
 
 /-- Along a participant run the current input only grows and rows are only
-removed ("events never add rows"). -/
+removed ("specification events never add rows"). -/
 theorem lrun_mono {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ) :
     σ.cur ≼ τ.cur ∧ ∀ k u, τ.R k u → σ.R k u := by
   induction h with

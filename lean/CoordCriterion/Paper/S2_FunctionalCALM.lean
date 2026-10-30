@@ -83,7 +83,8 @@ theorem «fig:election-frames/a» :
 /-- Fig. `fig:election-frames`(b) and §2.1 "Input and determination": "When
 `v₂`'s ballot for `y` arrives, the event `input(xy·)` produces panel (b),
 retiring rows whose inputs no longer expand the ballots received; such inputs
-are now illegal. … in panel (b) it is `{⊥,x,y}`."  Also "`⊥` needs no commitment" (`⊥` exposable). -/
+are now illegal. … in panel (b) it is `{⊥,x,y}`."  The CIDR version says "the
+input event `input(xy·)`".  Also "`⊥` needs no commitment" (`⊥` exposable). -/
 theorem «fig:election-frames/b» :
     Step (canon elec bxd) (.input bxy) (canon elec bxy) ∧
       (∀ o : Res, ∃ k, (canon elec bxy).R k o) ∧ ¬ Determined (canon elec bxy) ∧
