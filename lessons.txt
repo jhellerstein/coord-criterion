@@ -1,0 +1,51 @@
+Pithy Lessons:
+
+2.1 *Specifications: a spec is a map from expanding inputs to refining outputs*.
+What could I learn? (Growing inputs)
+What can I say? (Table)
+What keeps my word? (Refining outputs)
+"Something you have yet to learn could make you break a promise". Commitments are Promise Keepers.
+> The input order says what you may still learn. The table says which answers are permitted. The output order says what an emitted answer promises. You need a commitment exactly when something you may still learn would make a permitted answer break a promise you've already made. The election shows each part: ballots still to arrive are the input order, the winner rule is the table, and whether ⊥ claims "no winner yet" or "no winner ever" is the output order.
+
+2.3: *Lamport is Watching You.* If somebody can find out what you said, it can be communicated via Lamport's Telephone -- and it can change history.
+
+2.3: *Consistency was always confluence, no matter what you wanted it to be."
+
+2.4: Functional CALM: Consistent Means Monotone.
+
+2.4 (Corollary "state is fixed by input"): For functional specs, the only thing that matters is which input you reach. 
+There are two spec questions: is a current output exposable (Lamport's Surveillance), and is there a maximal output (Eventual Consistency).
+
+3. Ambiguity isn't the problem; irreconcilable ambiguity is (traceroute vs. serial orders).
+- Only two kinds of commitment: seal an input, or choose among outputs.
+- Consistency As Lifted Monotonicity.
+
+§4 Distributed Execution
+
+    4.1: distribution adds nothing to the criterion.
+    4.1: convergence comes free from any consistent functional specification; a CRDT merge is not required.
+    4.3: 
+    - commitment, coordination and distributed coordination are three different things. waiting is a construct.
+    Commitment changes what's possible. Coordination is a commitment that prevents contradiction across runs. Distributed coordination does so across participants. Waiting is irrelevant; "impatience" -- i.e. sealing input --- is a commitment.
+    - 2PC's unanimity vote is not coordination: it detects agreement rather than creating it.
+    4.4: a partition doesn't change which commitments you need; it removes the ability to make them jointly.
+    4.4: decide what must be emittable (explicit) separately from what may merely be observed (implicit).
+    4.4: a linearizable read is a commitment against a write the reader hasn't seen (Gilbert–Lynch).
+
+§5 Composition (unchanged)
+
+    Coordination is non-monotone, yet coordinated systems are consistent.
+    Coordinate once, upstream. The log's commitments are all that state-machine replication needs.
+    A stage may need a commitment even when the whole pipeline doesn't.
+
+§6 Related Work (unchanged)
+
+    6.1: refinements of CALM are different input orders.
+    6.2: convergent state is not safe observation; test the query, not the merge.
+    6.3: an isolation level is available exactly when replicas' local read answers can never be contradicted later. Second pearl: fix timestamps at commit, not at begin.
+    6.4: invariant confluence is Lifted Monotonicity on database states.
+    6.5: a model checker's input/output pairs are a specification you can test.
+
+§7 Discussion (unchanged)
+
+    CALM is now constructive on both sides.
