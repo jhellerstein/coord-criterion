@@ -1426,7 +1426,11 @@ strategies.
 
 Strategies differ by participant so we can single out replicated
 systems, whose participants share one (Appendix~\ref{app:cap-response}); no
-result distinguishes participants' commitments, so the basis is shared.
+result distinguishes participants' commitments, so the basis is shared. A system thus implements one specification. Its participants may behave
+differently, and a deployment may limit what each one emits
+(Appendix~\ref{app:deployment}), but all of them work from the same table and
+basis. Systems for different specifications compose as components
+(Section~\ref{sec:proper-coordination}).
 
 \paragraph{A transactional example of bespoke commitments.}
 The lock manager from the start of this section is one system; multiversion
@@ -1634,8 +1638,8 @@ requires coordination.} \textcolor{reviewed}{The coordinator does not make the
 owners agree; it detects whether their local commitments already agree, and
 aborts when they do not.} A coordinator that aborts on timeout, before the last vote arrives, does issue a
 commitment: like closing the polls, it seals every input that adds a missing
-vote, yes or no. Only the coordinator decides, so this is local coordination,
-as in the first case; it becomes distributed coordination when the decision is
+vote, yes or no. The decision is its own specification, run by the coordinator
+alone, so this is local coordination, as in the first case; it becomes distributed coordination when the decision is
 replicated for fault tolerance, as in Paxos Commit~\cite{gray2006consensus}. \textcolor{reviewed}{Two-phase commit can still block: if the coordinator fails after the owners
 prepare, they must wait for its decision.} \textcolor{reviewed}{That is a loss of availability,
 not a commitment that another participant could contradict.}
@@ -1677,8 +1681,8 @@ an input or make a choice that another could contradict.}
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
 \textcolor{reviewed}{A \emph{partitioned history} divides the participants into two or more
-components and contains no receive whose matching send lies in another
-component; participants still receive environment input and emit outputs.}
+blocks and contains no receive whose matching send lies in another
+block; participants still receive environment input and emit outputs.}
 \end{definition}
 
 \textcolor{reviewed}{We fix a system, with a strategy for each participant of every finite
@@ -1689,9 +1693,9 @@ any legal input event to any participant.}
 \begin{definition}[Explicit relation, Availability]
 \label{def:partition-notions}
 \textcolor{reviewed}{A continuation of a partitioned history is \emph{local to} a participant $p$
-when the system produces it, it adds only events of $p$'s component and no
+when the system produces it, it adds only events of $p$'s block and no
 input events, and none of its receives takes a message sent from another
-component.} \textcolor{reviewed}{An \emph{explicit relation} $E\subseteq S$ is a set of rows
+block.} \textcolor{reviewed}{An \emph{explicit relation} $E\subseteq S$ is a set of rows
 $(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
 its fiber $\{o:(i,o)\in E\}$.} \textcolor{reviewed}{The system has \emph{Availability for $E$}
 when, in every partitioned history it produces, each participant $p$, ending
@@ -1734,7 +1738,7 @@ $E\subseteq S$, the following are equivalent:}
 $E$ by the canonical output event of Section~\ref{sec:complete-calm}.} \textcolor{reviewed}{It has
 Availability for $E$, and Lifted Monotonicity for $E$ gives the outputs it emits a
 common \outnoun at every common \indesc of their inputs.} \textcolor{reviewed}{Conversely, given one
-participant per row of $E$, each in its own component, Availability lets each
+participant per row of $E$, each in its own block, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
 \outnoun.} Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
@@ -1764,7 +1768,7 @@ coordination-free (Definition~\ref{def:coordination-free}).} \textcolor{reviewed
 commitment at all.} For a smaller $E$ such local choices can be necessary: if
 $o\in E(i)$ and $x\in\fiber{i}\setminus E(i)$ have no common \outnoun at $i$,
 emitting $o$ must choose against $x$. \textcolor{reviewed}{When Lifted Monotonicity for $E$ fails, some
-output of $E$ waits for another component, sacrificing Availability, or is emitted anyway, sacrificing Partition Consistency.}
+output of $E$ waits for another block, sacrificing Availability, or is emitted anyway, sacrificing Partition Consistency.}
 
 \paragraph{Gilbert and Lynch.}
 \textcolor{reviewed}{Their theorem is a case of Complete CAP.} \textcolor{reviewed}{Consider a register specification
@@ -1780,7 +1784,7 @@ there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.}
 
 \textcolor{reviewed}{By Complete CAP, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem.} The proof needs less than the full hypotheses here, which
 is why it yields Gilbert and Lynch's theorem exactly. Place $p$ and $q$ in
-separate components. Availability is used only to make $p$ acknowledge the
+separate blocks. Availability is used only to make $p$ acknowledge the
 write and $q$ answer the read; each fiber holds a single output, so any
 response will do, which is Gilbert and Lynch's availability. Partition
 Consistency is used only to demand a common \outnoun of those two answers, a
@@ -1971,6 +1975,22 @@ state of $\Spec_1$.} Full proof in Appendix~\ref{app:composition}.
 itself a guard for a further stage (Corollary~\ref{cor:pipelines}).} \textcolor{reviewed}{Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no commitment.}
+
+We call a system for one specification, viewed through a chosen set of sound
+boundary observations, a \emph{component}. A component may run as one
+process or as a replicated cluster. The stages around it observe only its
+admitted boundary runs, each pairing an input with an emitted output
+permitted by its specification. Components with different specifications
+form typed pipelines (Appendix~\ref{app:components}). The pipeline hides the
+intermediate value and the two component runs; every external pair it
+presents is a row of $S_2\circ S_1$. A typed pipeline is
+\emph{contract-proper} when it is proper in the sense of
+Definition~\ref{def:proper-coordination}. Contract properness concerns the
+specifications. \emph{Implementation properness} additionally concerns the
+runs admitted by the selected downstream component. A downstream
+implementation may still take locks, or admit too few runs to follow its
+upstream. The maximally permissive empty-basis component for
+$\Spec_2|_{\Spec_1}$ does neither.
 
 Sequential composition, products of independent stages, and glue stages that
 copy, merge, or route outputs build arbitrary acyclic graphs. A graph
@@ -2588,7 +2608,7 @@ rows at $k$.
   contradicts & accepts an input the commitment seals, or emits an output it chooses against & Def.~\ref{def:contradicts}\\
   requires (distributed) coordination & a commitment some run (at another participant) contradicts & Def.~\ref{def:coordination}\\
   coordination-free & applies no commitment that requires coordination & Def.~\ref{def:coordination-free}\\
-  partitioned history; explicit relation $E$; explicit, implicit output & no message crosses components; $E\subseteq S$, the rows whose outputs must stay available; outputs of $E$, and the other permitted outputs & Defs.~\ref{def:partitioned-history}, \ref{def:partition-notions}\\
+  partitioned history; block; explicit relation $E$; explicit, implicit output & participants divided into two or more blocks, no message crosses blocks; $E\subseteq S$, the rows whose outputs must stay available; outputs of $E$, and the other permitted outputs & Defs.~\ref{def:partitioned-history}, \ref{def:partition-notions}\\
   Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable locally; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\
   Lifted Monotonicity for $E$ & every finite set of rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$ & Def.~\ref{def:lm-for-A}\\
   deployment & one explicit relation $E_p$ per participant & Def.~\ref{def:deployment}\\
@@ -2607,6 +2627,9 @@ rows at $k$.
   Lifted Monotonicity on $D$ & the common-\indesc condition for rows with inputs in $D$, at \indescs in $D$ & Sec.~\ref{sec:composite-calm}\\
   restriction $\Spec_2|_{\Spec_1}$ & $\Spec_2$ restricted to the outputs of $\Spec_1$ & Sec.~\ref{sec:proper-coordination}\\
   proper & $\Spec_2|_{\Spec_1}$ needs no commitment: every output at every state reached without commitment is exposable & Def.~\ref{def:proper-coordination}\\
+  component; admitted run & a commitment basis and admitted runs, each from $\sigma(i)$ emitting a named $o$ with $(i,o)\in S$ & Def.~\ref{def:component}\\
+  typed pipeline; feed; external observation & components $C_1,C_2$ joined by feeds, an admitted run of $C_1$ ending at $m$ and one of $C_2$ from $\sigma(m)$; the pair $(i,o)$ a feed shows & Def.~\ref{def:typed-pipeline}\\
+  contract-proper; implementation-proper & the pipeline of $\Spec_1$ and $\Spec_2$ is proper; no downstream run of a feed applies a commitment & Def.~\ref{def:typed-pipeline}\\
   \bottomrule
 \end{tabular}
 }
@@ -2791,7 +2814,7 @@ Conversely, suppose some system has Availability for $E$ and Partition
 Consistency. Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common
 \indesc $j$; we find some $u\in\fiber{j}$ that \outrel every $o_r$. If $k=0$,
 $\Spec$ is total, so $j$ appears in some row $(j,u)$. Otherwise, take one
-participant $p_r$ per row, starting at input $i_r$, each in its own component,
+participant $p_r$ per row, starting at input $i_r$, each in its own block,
 and a second participant for the row if $k=1$. Each runs without messages. By Availability for $E$, each $p_r$ can emit $o_r$. By Partition Consistency,
 they then reach one state $(j,R)$, which has some row $(j,u)$
 (Definition~\ref{def:residual-state}); this $u$ is the one we seek. Rows are
@@ -3596,6 +3619,133 @@ exposure boundary some output of $G$ then needs a commitment of the store's
 own. Bare reads then need coordination, typically by going through the log.
 \end{example}
 
+\subsection{Components and typed pipelines}
+\label{app:components}
+
+Theorem~\ref{thm:proper-coordination} fixes a system for each stage and
+follows the pipeline event by event. Here each stage is seen from outside,
+through a typed boundary, so that stages with different specifications,
+bases, and participants compose without one shared history.
+
+\begin{definition}[Component, admitted run, implementation form]
+\label{def:component}
+A \emph{component} for a specification $\Spec$ consists of a commitment basis
+$\mathcal B$ and a set of \emph{admitted runs}. Each admitted run is a run
+under $\mathcal B$ from a canonical state $\sigma(i)$
+(Definition~\ref{def:run-under-basis}), together with an output $o$ that it
+emits, such that $(i,o)\in S$. A component may carry an
+\emph{implementation form}, $\mathsf{Process}$, $\mathsf{Cluster}$, or
+$\mathsf{Composite}$, which records how it is realized. The implementation
+form plays no role in typed composition; it determines which internal system
+model and coordination classification justify the component's admitted runs.
+\end{definition}
+
+A system for $\Spec$ (Definition~\ref{def:system}) induces a component once
+its boundary observations are chosen. An admitted boundary run is a
+participant run of a produced history together with a named emitted output
+$o$ whose pair $(i,o)$ with the run's initial input is a row of $S$; runs
+with no such output induce no observation. The system's messages,
+partitions, and commitments stay inside the component. Restricted to
+one-participant histories, the induced component is a process, and a
+replicated system induces a cluster. The two-phase commit decision of Section~\ref{sec:coordination} has
+both forms. Run by the coordinator alone, it is a process, and its timeout
+seal requires coordination but not distributed coordination. Replicated, it
+is a cluster, and the same seal requires distributed coordination. The
+\emph{maximally permissive} component under $\mathcal B$ admits every such
+run under $\mathcal B$.
+
+Let $C_1$ be a component for $\Spec_1$ and $C_2$ a component for $\Spec_2$.
+
+\begin{definition}[Typed pipeline, feed, external observation, contract-proper, implementation-proper]
+\label{def:typed-pipeline}
+A \emph{feed} pairs an admitted run of $C_1$, with input $i$ and output $m$,
+with an admitted run of $C_2$ from $\sigma(m)$, with output $o$. The
+\emph{typed pipeline} of $C_1$ and $C_2$ shows the \emph{external
+observation} $(i,o)$ of each feed; the value $m$, both runs, and their
+commitments stay hidden. The pipeline is \emph{contract-proper} when the
+pipeline of $\Spec_1$ and $\Spec_2$ is proper
+(Definition~\ref{def:proper-coordination}), and
+\emph{implementation-proper} when no downstream run of a feed applies a
+commitment.
+\end{definition}
+
+Receiving $m$ is the downstream run's initial input, not a commitment of
+$C_2$. Glue stages that copy, merge, route, or adapt values
+(Section~\ref{app:dataflow-graphs}) are components with specifications of
+their own, and they may issue commitments of their own.
+
+\begin{proposition}[Typed pipelines]
+\label{prop:typed-pipelines}
+\leavevmode
+\begin{enumerate}
+\item
+Every external observation admitted by a typed pipeline is a row of
+      $S_2\circ S_1$.
+\item
+If a pipeline is implementation-proper, the downstream run of every
+      feed, with its commitments erased, is a commitment-free run of
+      $\Spec_2$, in which every output is exposable.
+\item
+Contract properness does not imply implementation properness: behind a
+      log, the early-lock store is a contract-proper downstream
+      implementation that still issues commitments.
+\item
+Contract properness does not imply feed availability for an
+      arbitrarily typed downstream component: behind the capped counter, the
+      maximally permissive empty-basis component for the unrestricted
+      threshold specification admits no feed at an offered count.
+\item
+If, in a contract-proper pipeline, the downstream is instead the
+      maximally permissive empty-basis component for $\Spec_2|_{\Spec_1}$,
+      every admitted upstream boundary run has a feed, and the pipeline is
+      implementation-proper.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) The two runs of a feed certify $(i,m)\in S_1$ and $(m,o)\in S_2$.
+
+(2) A run that applies no commitment has no commitment event, and each of its
+output events is $\Out{\varepsilon}{o}$, which is legal exactly when $o$ is
+exposable.
+
+(3) The early-lock store above, fed by a log, is contract-proper, since the
+store's table satisfies Lifted Monotonicity on logs. From the empty log it
+admits a run whose output event takes the lock, a commitment.
+
+(4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
+the test of whether the count is below $10$. The pipeline is
+contract-proper, since the test satisfies Lifted Monotonicity on the counts
+the counter offers. An admitted run of the test from an offered count
+$m\le 9$ must emit yes, its answer at $m$. While its current count is below
+$10$, its table keeps the row $(10,\mathit{no})$, so yes is not exposable;
+once the count reaches $10$, only no remains. So no feed exists.
+
+(5) Let $m$ be the output of an admitted run of $C_1$. By
+Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies
+Lifted Monotonicity, so every $o\in S_2(m)$ is exposable at $\sigma(m)$
+(Proposition~\ref{prop:exposure-boundary}). The one-event run
+$\Out{\varepsilon}{o}$ from $\sigma(m)$ is then an admitted run of $C_2$. Under the empty basis no run applies a commitment.
+\end{proof}
+
+Item (5) covers one boundary output. Theorem~\ref{thm:proper-coordination}(2) follows the entire emitted stream
+and gives the composite-run invariant and confluence, and (3) of that
+theorem supplies the necessity result. Item (4) is why (5) uses a component
+for $\Spec_2|_{\Spec_1}$ rather than for $\Spec_2$: its canonical states keep
+only rows at inputs the upstream offers.
+
+Hydro's \texttt{Process} and \texttt{Cluster} location
+types~\cite{hydro} provide the implementation analogy. A \texttt{Process}
+location corresponds to a one-participant component, while a
+\texttt{Cluster} location corresponds to a replicated component. Both
+connect to the surrounding dataflow through typed edges. This is an
+interface analogy; the results do not model Hydro's scheduler, placement, or
+failure semantics. A typed pipeline is binary, and finite acyclic graphs
+follow by associativity of composition and explicit glue components. We do
+not treat cyclic dataflows, scheduling a graph of components, physical
+placement, co-location, or failure domains, and we do not merge the
+participants of different components into one history.
+
 \subsection{Dataflow graphs}
 \label{app:dataflow-graphs}
 
@@ -3658,14 +3808,14 @@ an explicit relation $E_p\subseteq S$, the rows $p$ may emit: $p$ performs an ou
 $\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) at current input
 $i$ only if $(i,o)\in E_p$. The \emph{emitted rows} of a run are the pairs
 $(i,o)$ such that the run emits $o$ at current input $i$. A \emph{partition} $\Pi$ of $P$ divides $P$ into
-two or more nonempty components, as in a partitioned history
+two or more nonempty blocks, as in a partitioned history
 (Definition~\ref{def:partitioned-history}).
 
 A \emph{participant run family} assigns to each of finitely many participants
 $p\in P$ an initial input and a canonical run whose emitted rows lie in $E_p$. A participant whose run emits no output is \emph{silent}. The family is
 \emph{separable under $\Pi$} when either participants in at least two
-components emit, or exactly one distinct row is emitted and some silent
-participant lies in another component.
+blocks emit, or exactly one distinct row is emitted and some silent
+participant lies in another block.
 \end{definition}
 
 \begin{definition}[Monotone across partitions]
@@ -3972,10 +4122,10 @@ The obligation is part of the declared specification. Response availability
 is only as strong as $Q_p$: if an output permitted at every input answers,
 every specification is available.
 
-\textcolor{reviewed}{A continuation of a partitioned history is \emph{within $p$'s component} when
-the system produces it, it adds only events of $p$'s component, and none of its
-receives takes a message sent from another component.} A continuation local to
-$p$ (Definition~\ref{def:partition-notions}) is one within $p$'s component
+\textcolor{reviewed}{A continuation of a partitioned history is \emph{within $p$'s block} when
+the system produces it, it adds only events of $p$'s block, and none of its
+receives takes a message sent from another block.} A continuation local to
+$p$ (Definition~\ref{def:partition-notions}) is one within $p$'s block
 that adds no input event.
 
 \begin{definition}[Response Availability]
@@ -3985,11 +4135,11 @@ partitioned history it produces, each participant $p$, ending with current
 input $i$, satisfies two conditions.
 \begin{enumerate}
 \item
-\emph{Answering.}  In some continuation within $p$'s component that
+\emph{Answering.}  In some continuation within $p$'s block that
         adds no input event at $p$, $p$ emits some output in $Q_p(i)$.
 \item
 \emph{Input acceptance.}  For every $j\InputGe i$, in some
-        continuation within $p$'s component, $p$ records $\mathsf{input}(j)$.
+        continuation within $p$'s block, $p$ records $\mathsf{input}(j)$.
 \end{enumerate}
 \end{definition}
 
@@ -4024,7 +4174,7 @@ participants.
 \begin{lemma}[Locality]
 \label{lem:locality}
 For each of some participants $p$, let $\ell_p$ be a local history that $p$'s
-strategy can produce from initial input $i_p$ and that contains no receive. Placing each $\ell_p$ in its own component, with at least two components and
+strategy can produce from initial input $i_p$ and that contains no receive. Placing each $\ell_p$ in its own block, with at least two blocks and
 any further participants
 idle, gives a partitioned history that the system produces. If the system is
 replicated, a receive-free local history that the strategy can produce for one participant
@@ -4094,13 +4244,13 @@ Consistency.
 (1$\Rightarrow$2.)  Call an emission \emph{isolated} when its participant has
 received no message before it, and let $T$ be the set of rows $(i,o)$ with
 $o\in Q(i)$ emitted in an isolated emission in some partitioned history of the
-system; such a history and participant are a \emph{witness} for $(i,o)$. Then $T\subseteq Q$. When a participant is alone in its component, every
+system; such a history and participant are a \emph{witness} for $(i,o)$. Then $T\subseteq Q$. When a participant is alone in its block, every
 continuation that Response Availability supplies adds only its own events and,
 being partitioned, no receive, so the emission it yields is isolated. By
 Lemma~\ref{lem:locality}, a witness's local history up to the emission can be
-replayed by a participant alone in its component, with an idle participant
-forming a second component. \emph{Totality:} for each $i$, Answering in the empty history, for a participant
-with initial input $i$ alone in its component, gives a row of $T$ at $i$. \emph{Self-continuation:} given $(i,o)\in T$ and $j\InputGe i$, replay the
+replayed by a participant alone in its block, with an idle participant
+forming a second block. \emph{Totality:} for each $i$, Answering in the empty history, for a participant
+with initial input $i$ alone in its block, gives a row of $T$ at $i$. \emph{Self-continuation:} given $(i,o)\in T$ and $j\InputGe i$, replay the
 witness, record $\mathsf{input}(j)$ by Input acceptance (truncating just after
 it), and answer by Answering with some $u\in Q(j)$. By
 Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual} the table
@@ -4171,8 +4321,8 @@ only at the precedence an execution realizes.
 Let $i\InputOrd j$, and suppose no output in $Q_q(i)$ has a \outnoun in
 $\fiber{j}$. In a system with Answering for $(Q_p)$
 (Definition~\ref{def:response-availability}(1)), consider a partitioned
-history that the system produces, in which $q$ is alone in its component,
-$q$'s current input is $i$, and $j$ \inrel every participant's current input. Then some continuation within $q$'s component that adds only events of $q$,
+history that the system produces, in which $q$ is alone in its block,
+$q$'s current input is $i$, and $j$ \inrel every participant's current input. Then some continuation within $q$'s block that adds only events of $q$,
 and no input event, has emitted outputs with no common \outnoun in
 $\fiber{j}$.
 \end{lemma}
@@ -4224,7 +4374,7 @@ the outputs emitted in $C$ have a common \outnoun in $\fiber{h_C}$.
 \end{corollary}
 
 \begin{proof}
-Let replicas $p$ and $q$ start with empty inputs in separate components, and
+Let replicas $p$ and $q$ start with empty inputs in separate blocks, and
 invoke a write of $\dog\neq v_0$ at $p$. Answering gives a continuation in
 which $p$ acknowledges it. Then invoke a read $r_q$ at $q$, after the
 acknowledgment in $\lambda$. The history is a client history. No message

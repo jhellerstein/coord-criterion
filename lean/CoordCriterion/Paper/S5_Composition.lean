@@ -328,7 +328,7 @@ sound boundary observations, a component.  A component may run as one process
 or as a replicated cluster.  The stages around it observe only its admitted
 boundary runs, each pairing an input with an emitted output permitted by its
 specification.  Components with different specifications form typed pipelines
-(Appendix `app:components`).  A feed hides the intermediate value and the two
+(Appendix `app:components`).  The pipeline hides the intermediate value and the two
 component runs; every external pair it presents is a row of `S₂ ∘ S₁`.  A
 typed pipeline is contract-proper when it is proper in the sense of
 Definition `def:proper-coordination`.  Contract properness concerns the
