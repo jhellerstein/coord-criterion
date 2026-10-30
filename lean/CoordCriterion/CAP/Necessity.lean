@@ -9,7 +9,7 @@ participants at a time.  For rows `(i_1,o_1),…,(i_k,o_k)` with a common
 expansion `j` it builds `u_0,…,u_k ∈ S(j)`, each `u_m` refining
 `o_1,…,o_m`: totality gives `u_0`, and the step from `u_{m-1}` to `u_m` puts
 one participant at `j` (emitting `u_{m-1}`) and one at `i_m` (emitting `o_m`)
-in separate components.  `cap_two_step` is that step; `cap_necessary_two`
+in separate blocks.  `cap_two_step` is that step; `cap_necessary_two`
 is the induction.  Both use the paper's end-of-history forms
 `AvailabilityAtEnd` and `PartitionConsistencyAtEnd`.
 -/
@@ -20,7 +20,7 @@ namespace CAP
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
 /-- The induction step: two rows with a common expansion `j` have a common
-refinement in `S(j)`.  Two participants in separate components start at `i₁`
+refinement in `S(j)`.  Two participants in separate blocks start at `i₁`
 and `i₂`; by Availability each emits its output without messages; by
 Partition Consistency they reach one state `(j,R)`, whose row `(j,u)`
 refines both outputs. -/
@@ -43,7 +43,7 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     ⟨fun p => ⟨_, .nil _⟩, by intro p a q k j d b h; simp [H0] at h⟩
   have hprod0 : Produced Sys 2 init H0 := fun p a e b h => by simp [H0] at h
   have hpart0 : Partitioned H0 comp := ⟨hcomp2, by intro p a q k j d b h; simp [H0] at h⟩
-  -- Availability: each participant emits its output within its component
+  -- Availability: each participant emits its output within its block
   have hL : ∀ p : Fin 2, ∃ L : List (LEv sp D 2),
       (∃ τ, LRun (canon sp (init p)) L τ) ∧ (∀ (q : Fin 2) k j d, LEv.recv q k j d ∉ L) ∧
       Compliant (Allowed Sys 2 init p) L ∧ (∀ j, LEv.inp j ∉ L) ∧

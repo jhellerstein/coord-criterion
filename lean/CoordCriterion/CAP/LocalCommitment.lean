@@ -155,7 +155,7 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
       exact hall u ⟨hRu, not_rm_of_le hRu hou⟩
 
 /-- A system with Availability emits every row of `S`: two participants start
-at `k` in separate components, and the first emits `x` locally, at current
+at `k` in separate blocks, and the first emits `x` locally, at current
 input `k`. -/
 theorem every_row_emitted (Sys : System sp D) (hA : AvailabilityAtEnd Sys) :
     ∀ k x, sp.S k x → SysEmits Sys k x := by

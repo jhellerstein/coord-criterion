@@ -126,6 +126,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:system»
 #check @CC.Paper.«def:system/produced»
 #check @CC.Paper.«def:system/restrict»
+#check @CC.Paper.«sec:systems/one-specification»
 #check @CC.Paper.«def:system-output-event»
 #check @CC.Paper.«def:commitment-event»
 #check @CC.Paper.«sec:systems/commitment-event-unobserved»
@@ -219,6 +220,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:proper-coordination»
 #check @CC.Paper.«thm:proper-coordination»
 #check @CC.Paper.«sec:proper-coordination/locks-overhead»
+#check @CC.Paper.«sec:proper-coordination/components»
 #check @CC.Paper.«sec:query-instance/weaker-monotonicity»
 #check @CC.Paper.«sec:query-instance/one-fact-version»
 #check @CC.Paper.«sec:query-instance/node-monotonicity»
@@ -323,6 +325,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/distributed-coordination»
 #check @CC.Paper.«app:notation/coordination-free»
 #check @CC.Paper.«app:notation/partitioned-history»
+#check @CC.Paper.«app:notation/block»
 #check @CC.Paper.«app:notation/explicit-relation»
 #check @CC.Paper.«app:notation/availability»
 #check @CC.Paper.«app:notation/lm-for-A»
@@ -450,6 +453,13 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«ex:committed-log-composition»
 #check @CC.Paper.«ex:bare-reads»
 #check @CC.Paper.«ex:bare-reads/latest-value»
+#check @CC.Paper.«def:component»
+#check @CC.Paper.«app:components/system-is-component»
+#check @CC.Paper.«app:components/two-phase-commit»
+#check @CC.Paper.«def:typed-pipeline»
+#check @CC.Paper.«app:components/feed-is-input»
+#check @CC.Paper.«prop:typed-pipelines»
+#check @CC.Paper.«app:components/follows»
 #check @CC.Paper.«def:deployment»
 #check @CC.Paper.«def:deployment/emitted-rows»
 #check @CC.Paper.«def:deployment/partition»

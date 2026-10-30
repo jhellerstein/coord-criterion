@@ -1,5 +1,6 @@
 import CoordCriterion.Appendix.Guarded
 import CoordCriterion.Appendix.JointMono
+import CoordCriterion.Appendix.Components
 
 /-!
 # Paper §5, "Composition and Proper Coordination" (`sections/composition.tex`)
@@ -321,6 +322,41 @@ theorem «sec:proper-coordination/locks-overhead» {Cmd Stt R : Type} (δ : Stt 
         ∀ o, τ.R τ.cur o → Exposable τ o :=
   let h := Guard.smr_proper δ σ0 hne
   ⟨h.2.2.2.1, h.2.2.2.2.1⟩
+
+/-- "We call a system for one specification, viewed through a chosen set of
+sound boundary observations, a component.  A component may run as one process
+or as a replicated cluster.  The stages around it observe only its admitted
+boundary runs, each pairing an input with an emitted output permitted by its
+specification.  Components with different specifications form typed pipelines
+(Appendix `app:components`).  A feed hides the intermediate value and the two
+component runs; every external pair it presents is a row of `S₂ ∘ S₁`.  A
+typed pipeline is contract-proper when it is proper in the sense of
+Definition `def:proper-coordination`.  Contract properness concerns the
+specifications.  Implementation properness additionally concerns the runs
+admitted by the selected downstream component.  A downstream implementation
+may still take locks, or admit too few runs to follow its upstream.  The
+maximally permissive empty-basis component for `𝒮₂|_{𝒮₁}` does neither."
+Lean: `Components.Component` (Def. `def:component`; systems as components are
+`«app:components/system-is-component»`), `Components.Pipeline.sound` for the
+rows; contract properness is `Components.Pipeline.ContractProper`, equivalent
+to `Guard.Proper` and stated on the specifications; implementation properness
+is `Components.Pipeline.ImplementationProper`; the locking store is
+`Components.early_lock_component`, a downstream admitting too few runs is
+`Components.threshold_component`; the empty-basis component for `𝒮₂|_{𝒮₁}`
+is `Components.offered_available` (Prop. `prop:typed-pipelines`(3)–(5) in
+`Paper/AppD_Composition.lean`). -/
+theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO O]
+    (sp : Spec I M) (sk : Spec M O) :
+    (∀ (p : Components.Pipeline sp sk) obs, p.Accepts obs →
+      (Comp.seq sp sk).S obs.input obs.output) ∧
+    (∀ p : Components.Pipeline sp sk, p.ContractProper ↔ Guard.Proper sp sk) ∧
+    (Guard.Proper sp sk → ∀ (C1 : Components.Component sp) r, C1.accepts r →
+      let p := Components.Pipeline.offered (sk := sk) C1
+        (Components.Component.ofBasis (Components.emptyBasis _))
+      p.ImplementationProper ∧ ∃ w : Components.FeedWitness p.upstream p.downstream,
+        w.upRun.input = r.input ∧ w.upRun.output.1 = r.output ∧ CoordFree w.downRun.events) :=
+  ⟨fun p _ h => p.sound h, Components.contractProper_iff_guardProper,
+    fun hP C1 _ h => Components.offered_available hP C1 h⟩
 
 end Paper
 end CC

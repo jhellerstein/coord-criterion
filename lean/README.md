@@ -59,7 +59,12 @@ Monotonicity holds, the example rules of a declared specification ("the set
 of ballots received", "the largest timestamp seen"), and the relation of the
 two obligations to the verification literature (invariants, forward
 simulations, refinement mappings, mechanized proofs, realizability typically
-proved by induction on the input); and the design discussion of §6–§7.  The `Paper/` docstrings point these out where
+proved by induction on the input); in Appendix D (`app:components`),
+that a system's messages and partitions stay inside its component, that the
+implementation form determines which internal system model and coordination
+classification justify a component's admitted runs, the Hydro interface
+analogy, and the list of topics left out (cyclic dataflows, scheduling,
+placement, co-location, failure domains, one history across components); and the design discussion of §6–§7.  The `Paper/` docstrings point these out where
 they occur.
 
 ## Building and checking
@@ -117,6 +122,8 @@ first and supporting claims and examples follow.
 | `Appendix/Composition.lean` | `CC.Comp` | §5, App. D | Composition lemmas, independently parameterized composition, curried plan |
 | `Appendix/Guarded.lean` | `CC.Guard` | §5, App. D | `Joint.Img`, `Joint.CEOn`, `Joint.restrictTo`; guarded runs, store under the empty basis, covering, invisible coordination, Proper Coordination (`𝒮₂` restricted to the outputs of `𝒮₁` needs no commitment; pipeline runs as composite runs, confluence, where the upstream must commit), systems with strategies, commitment-erased replacement, pipelines, early/late locks, counterexamples, per-key store, replicated store |
 | `Appendix/JointMono.lean` | `CC.Joint` | §5.1, App. D | Jointly monotone composites: filtering (capped counter), re-ordering the middle (boolean toggle, constant store; also the double complement, no longer cited in the paper), preorder/injective characterization and the no-partial-order counterexample |
+| `Appendix/Components.lean` | `CC.Components` | §5, App. D | Components and typed pipelines: component implementations (basis, admitted output-annotated runs, soundness certificates, implementation-form metadata), feed witnesses, external observations, boundary safety; contract properness (= `Guard.Proper`) vs. implementation properness, with the early-lock and capped-counter counterexamples; bridges to Proper Coordination (upstream retyped at its offered outputs, empty-basis `𝒮₂\|_{𝒮₁}` admits a following run, `Guard.proper_follows`/`proper_run` for admitted runs) |
+| `Appendix/ComponentSystems.lean` | `CC.Components` | §4.3–4.4, App. D | A system as one component implementation (participant runs of produced histories); process and cluster forms; the 2PC timeout seal as a process (coordinator alone) and as a cluster (replicated) |
 | `Appendix/Deployment.lean` | `CC.Deploy` | App. E | Deployments, separability, monotone across partitions, partition compatibility, Deployment Availability |
 | `Appendix/DeploymentExamples.lean` | `CC.Deploy` | App. E | Chains of emitted outputs, leader example, sole-authority sufficient condition, single-authority deployments |
 | `Appendix/DeploymentSystems.lean` | `CC.Deploy` | App. E | Remark: the proposition applies to system runs |
@@ -140,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-619 entries.
+629 entries.
 
 ### §2 Functional CALM
 
@@ -285,6 +292,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:system»` | abbrev | **Def. |
 | `«def:system/produced»` | theorem | Def. |
 | `«def:system/restrict»` | theorem | Def. |
+| `«sec:systems/one-specification»` | theorem | After Def. |
 | `«def:system-output-event»` | abbrev | **Def. |
 | `«def:commitment-event»` | abbrev | **Def. |
 | `«sec:systems/commitment-event-unobserved»` | theorem | After Def. |
@@ -358,7 +366,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Nor does the system in the proof need coordination. |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `E = S` it needs no commitment at all." Lean: |
 | `«sec:complete-cap/local-choice-necessary»` | theorem | "For a smaller `E` such local choices can be necessary: |
-| `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another component, sacrificing Availability, or is emitted anyway, sacrificing Partitio… |
+| `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another block, sacrificing Availability, or is emitted anyway, sacrificing Partition Co… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Consider a register specification whose inputs are sets of operations with their real-time precedence, and whose outputs answer every operation of the input… |
 | `«sec:complete-cap/gl-no-system»` | theorem | "By Complete CAP, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem." Lean: |
@@ -392,6 +400,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
 | `«sec:proper-coordination/locks-overhead»` | theorem | "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |
+| `«sec:proper-coordination/components»` | theorem | "We call a system for one specification, viewed through a chosen set of sound boundary observations, a component. |
 
 ### §6 Instances
 
@@ -509,7 +518,8 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/coordination»` | abbrev | *requires coordination* — a commitment some run contradicts (Def. |
 | `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — a commitment some run at another participant contradicts (Def. |
 | `«app:notation/coordination-free»` | abbrev | *coordination-free* — applies no commitment that requires coordination (Def. |
-| `«app:notation/partitioned-history»` | abbrev | *partitioned history* — no message crosses components (Def. |
+| `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more blocks, no message crosses blocks (Def. |
+| `«app:notation/block»` | abbrev | *block* — one of the two or more classes into which a partitioned history divides the participants (Def. |
 | `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`; explicit, implicit output* — `E ⊆ S`, the rows whose outputs must stay available; outputs of `E`, and the other permitted outputs (Def. |
 | `«app:notation/availability»` | abbrev | *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable locally (Def. |
 | `«app:notation/lm-for-A»` | abbrev | *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a common expansion `j` has a common refinement in `S(j)` (Def. |
@@ -672,6 +682,13 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
+| `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run, implementation form): |
+| `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component once its boundary observations are chosen. |
+| `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision of Section `sec:coordination` has both forms. |
+| `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Typed pipeline, feed, external observation, contract-proper, implementation-proper): |
+| `«app:components/feed-is-input»` | theorem | "Receiving `m` is the downstream run's initial input, not a commitment of `C₂`." Lean: |
+| `«prop:typed-pipelines»` | theorem | **Proposition `prop:typed-pipelines`** (Typed pipelines): |
+| `«app:components/follows»` | theorem | "Item (5) covers one boundary output. |
 
 ### Appendix E: Deployment
 

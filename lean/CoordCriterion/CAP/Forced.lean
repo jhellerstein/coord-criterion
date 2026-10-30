@@ -67,7 +67,7 @@ theorem commonRefinement_of_pc {Sys : System sp D} (hP : PartitionConsistencyAtE
   exact lrun_out_mem h2 hγ j u ((lrun_mono h3).2 j u hu)
 
 /-- The two-row case with a weaker hypothesis: two participants in separate
-components, starting at `init 0` and `init 1` from the empty history, can each
+blocks, starting at `init 0` and `init 1` from the empty history, can each
 emit `outs p` without messages or inputs (`hE`).  A common refinement of the
 emitted outputs (`hC`, implied by Partition Consistency) then lies in `S(j)`. -/
 theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)

@@ -120,7 +120,7 @@ theorem «thm:complete-cap/proof-sufficiency» (E : Table I O) (h : ConsistentOn
   ⟨availabilityFor_resp E, pc_resp E h, respSystem_canonical E⟩
 
 /-- Proof of Theorem `thm:complete-cap`, (1)⇒(2): "take one participant `p_r`
-per row, starting at input `i_r`, each in its own component … By
+per row, starting at input `i_r`, each in its own block … By
 Availability for `E`, each `p_r` can emit `o_r`.  By Partition Consistency,
 they then reach one state `(j,R)`, which has some row `(j,u)` … so `u`
 refines every `o_r`."  Lean: only a common refinement of the emitted outputs

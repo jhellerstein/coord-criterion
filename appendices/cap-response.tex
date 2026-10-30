@@ -28,10 +28,10 @@ The obligation is part of the declared specification.  Response availability
 is only as strong as $Q_p$: if an output permitted at every input answers,
 every specification is available.
 
-A continuation of a partitioned history is \emph{within $p$'s component} when
-the system produces it, it adds only events of $p$'s component, and none of its
-receives takes a message sent from another component.  A continuation local to
-$p$ (Definition~\ref{def:partition-notions}) is one within $p$'s component
+A continuation of a partitioned history is \emph{within $p$'s block} when
+the system produces it, it adds only events of $p$'s block, and none of its
+receives takes a message sent from another block.  A continuation local to
+$p$ (Definition~\ref{def:partition-notions}) is one within $p$'s block
 that adds no input event.
 
 \begin{definition}[Response Availability]
@@ -40,10 +40,10 @@ A system has \emph{Response Availability} for $(Q_p)_{p\in P}$ when, in every
 partitioned history it produces, each participant $p$, ending with current
 input $i$, satisfies two conditions.
 \begin{enumerate}
-  \item \emph{Answering.}  In some continuation within $p$'s component that
+  \item \emph{Answering.}  In some continuation within $p$'s block that
         adds no input event at $p$, $p$ emits some output in $Q_p(i)$.
   \item \emph{Input acceptance.}  For every $j\InputGe i$, in some
-        continuation within $p$'s component, $p$ records $\mathsf{input}(j)$.
+        continuation within $p$'s block, $p$ records $\mathsf{input}(j)$.
 \end{enumerate}
 \end{definition}
 
@@ -80,7 +80,7 @@ participants.
 \label{lem:locality}
 For each of some participants $p$, let $\ell_p$ be a local history that $p$'s
 strategy can produce from initial input $i_p$ and that contains no receive.
-Placing each $\ell_p$ in its own component, with at least two components and
+Placing each $\ell_p$ in its own block, with at least two blocks and
 any further participants
 idle, gives a partitioned history that the system produces.  If the system is
 replicated, a receive-free local history that the strategy can produce for one participant
@@ -150,14 +150,14 @@ Consistency.
 received no message before it, and let $T$ be the set of rows $(i,o)$ with
 $o\in Q(i)$ emitted in an isolated emission in some partitioned history of the
 system; such a history and participant are a \emph{witness} for $(i,o)$.
-Then $T\subseteq Q$.  When a participant is alone in its component, every
+Then $T\subseteq Q$.  When a participant is alone in its block, every
 continuation that Response Availability supplies adds only its own events and,
 being partitioned, no receive, so the emission it yields is isolated.  By
 Lemma~\ref{lem:locality}, a witness's local history up to the emission can be
-replayed by a participant alone in its component, with an idle participant
-forming a second component.
+replayed by a participant alone in its block, with an idle participant
+forming a second block.
 \emph{Totality:} for each $i$, Answering in the empty history, for a participant
-with initial input $i$ alone in its component, gives a row of $T$ at $i$.
+with initial input $i$ alone in its block, gives a row of $T$ at $i$.
 \emph{Self-continuation:} given $(i,o)\in T$ and $j\InputGe i$, replay the
 witness, record $\mathsf{input}(j)$ by Input acceptance (truncating just after
 it), and answer by Answering with some $u\in Q(j)$.  By
@@ -231,9 +231,9 @@ only at the precedence an execution realizes.
 Let $i\InputOrd j$, and suppose no output in $Q_q(i)$ has a \outnoun in
 $\fiber{j}$.  In a system with Answering for $(Q_p)$
 (Definition~\ref{def:response-availability}(1)), consider a partitioned
-history that the system produces, in which $q$ is alone in its component,
+history that the system produces, in which $q$ is alone in its block,
 $q$'s current input is $i$, and $j$ \inrel every participant's current input.
-Then some continuation within $q$'s component that adds only events of $q$,
+Then some continuation within $q$'s block that adds only events of $q$,
 and no input event, has emitted outputs with no common \outnoun in
 $\fiber{j}$.
 \end{lemma}
@@ -287,7 +287,7 @@ the outputs emitted in $C$ have a common \outnoun in $\fiber{h_C}$.
 \end{corollary}
 
 \begin{proof}
-Let replicas $p$ and $q$ start with empty inputs in separate components, and
+Let replicas $p$ and $q$ start with empty inputs in separate blocks, and
 invoke a write of $\dog\neq v_0$ at $p$.  Answering gives a continuation in
 which $p$ acknowledges it.  Then invoke a read $r_q$ at $q$, after the
 acknowledgment in $\lambda$.  The history is a client history.  No message

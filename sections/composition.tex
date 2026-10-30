@@ -173,6 +173,22 @@ itself a guard for a further stage (Corollary~\ref{cor:pipelines}).  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no commitment.
 
+We call a system for one specification, viewed through a chosen set of sound
+boundary observations, a \emph{component}.  A component may run as one
+process or as a replicated cluster.  The stages around it observe only its
+admitted boundary runs, each pairing an input with an emitted output
+permitted by its specification.  Components with different specifications
+form typed pipelines (Appendix~\ref{app:components}).  A feed hides the
+intermediate value and the two component runs; every external pair it
+presents is a row of $S_2\circ S_1$.  A typed pipeline is
+\emph{contract-proper} when it is proper in the sense of
+Definition~\ref{def:proper-coordination}.  Contract properness concerns the
+specifications.  \emph{Implementation properness} additionally concerns the
+runs admitted by the selected downstream component.  A downstream
+implementation may still take locks, or admit too few runs to follow its
+upstream.  The maximally permissive empty-basis component for
+$\Spec_2|_{\Spec_1}$ does neither.
+
 Sequential composition, products of independent stages, and glue stages that
 copy, merge, or route outputs build arbitrary acyclic graphs.  A graph
 satisfies Lifted Monotonicity when every node does on the outputs offered to

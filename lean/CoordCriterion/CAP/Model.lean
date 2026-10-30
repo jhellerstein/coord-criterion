@@ -67,11 +67,11 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
    "strategies depend only on local history", and it is what makes the
    (⇒) construction (gluing separate local runs) sound.
 7. *Partitioned history.*  A labelling `comp : Fin n → Nat` with at least two
-   distinct labels (two or more nonempty components) and no receive from a
-   different component.
+   distinct labels (two or more nonempty blocks) and no receive from a
+   different block.
 8. *Availability continuation.*  A continuation extends the cut's prefixes;
    for Availability it must be well formed, produced, partitioned by the same
-   components, add events only at participants of `p`'s component, add no
+   blocks, add events only at participants of `p`'s block, add no
    input event, and contain an output event of `p` emitting `o`.
 9. *Partition Consistency continuation.*  Any well-formed continuation (it
    need not be partitioned or produced, and its output events may use
@@ -187,7 +187,7 @@ def Extends (H : History sp D n) (c : Fin n → Nat) (H' : History sp D n)
     (ext : Fin n → List (LEv sp D n)) : Prop :=
   ∀ p, H' p = (H p).take (c p) ++ ext p
 
-/-- Partitioned history: at least two components, no cross-component receive. -/
+/-- Partitioned history: at least two blocks, no cross-block receive. -/
 def Partitioned (H : History sp D n) (comp : Fin n → Nat) : Prop :=
   (∃ p q, comp p ≠ comp q) ∧
   ∀ (p : Fin n) (a : List (LEv sp D n)) (q : Fin n) (k : Nat) (j : Option I) (d : D) b, H p = a ++ LEv.recv q k j d :: b → comp q = comp p
