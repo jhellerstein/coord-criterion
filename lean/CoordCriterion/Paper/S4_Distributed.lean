@@ -530,11 +530,10 @@ theorem «sec:systems/system-histories» {sp : Spec I O} {B : Basis sp} {σ τ :
     (SEvent.output γ o).erase = some (Event.output o : Event I O) :=
   ⟨Dist.sysStep_iff_CAP, rfl⟩
 
-/-- Opener of §4.2: "Two-phase locking (2PL) waits until two transactions contend
-for a lock, then fixes their order: `order(A,B)` excludes every serial order
-with `B` before `A`.  Multiversion timestamp ordering (MVTO) stamps each
-transaction when it starts and lets the stamps decide: `stamp(B)` excludes
-every serial order that does not start with `B`."  At the canonical state of
+/-- Opener of §4.2: "Two-phase locking (2PL) uses locks on operations: when
+`B` waits for a lock `A` holds, `order(A,B)` fixes `A` before `B`.
+Multiversion timestamp ordering (MVTO) uses timestamps: `stamp(B)` fixes
+`B` before any transaction not yet stamped."  At the canonical state of
 an input whose transactions `A`, `B`, `C` have each requested commit (Appendix
 G's specification), no commitment of `ℬ_MVTO` has the effect of `order(A,B)`,
 and no commitment of `ℬ_2PL` has the effect of `stamp(B)`. -/

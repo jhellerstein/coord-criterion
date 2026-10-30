@@ -1314,16 +1314,16 @@ which cuts are confluent (Appendix~\ref{app:exchanging-outputs}).
 \subsection{Systems}
 \label{sec:systems}
 
-Serializability does not say what to serialize by. The ordering fiber of
-Figure~\ref{fig:ambiguity-frames}(f)~--- transactions and their valid serial
-orders, formalized in Appendix~\ref{app:cc-bases}~--- is one specification;
-many protocols implement it. Two-phase locking (2PL) waits until two
-transactions contend for a lock, then fixes their order:
-$\mathsf{order}(A,B)$ excludes every serial order with $B$ before $A$. Multiversion timestamp ordering (MVTO)~\cite{bernstein1981concurrency} stamps
-each transaction when it starts and lets the stamps decide:
-$\mathsf{stamp}(B)$ excludes every serial order that does not start with $B$. Both exclude serial orders while keeping the input legal, but exclude
-different ones. Each protocol issues commitments the specification does not
-require.
+Specifications are declarative, and admit many implementations. For
+example, serializability can be enforced by any of a number of concurrency
+control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
+Appendix~\ref{app:cc-bases}). Two-phase locking (2PL) uses locks on
+operations: when $B$ waits for a lock $A$ holds, $\mathsf{order}(A,B)$
+fixes $A$ before $B$. Multiversion timestamp ordering
+(MVTO)~\cite{bernstein1981concurrency} uses timestamps:
+$\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped. The
+two narrow the specification differently; each issues commitments the
+specification does not require.
 
 Non-transactional systems do the same. The registrar of
 Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the
@@ -1496,16 +1496,16 @@ We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
 runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and
 commitment events apply only commitments from $\mathcal B$
-(Definition~\ref{def:run-under-basis}). Locks, timestamps, quorums, and
+(Definition~\ref{def:run-under-basis}). \textcolor{reviewed}{Locks, timestamps, quorums, and
 consensus differ in how and when they decide; what the environment sees
-does not.
+does not.}
 
 \begin{lemma}[Canonical Run Universality]
 \label{lem:canonical-equivalent}
-Every run under any commitment basis is \emph{observably equivalent} to a
+\textcolor{reviewed}{Every run under any commitment basis is \emph{observably equivalent} to a
 canonical run: one that accepts the same inputs, emits the same outputs,
 and keeps at least the original's rows after each event; its commitment
-events erase to nothing.
+events erase to nothing.}
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -2471,8 +2471,8 @@ invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}.} \textcolor{reviewed
 for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties.} \textcolor{reviewed}{We
 ask what the specification itself requires, independent of any menu of
-levels.} \textcolor{reviewed}{Because the canonical commitments are universal
-(Section~\ref{sec:systems}), the answer holds for every mechanism.} \textcolor{reviewed}{Our
+levels.} Because the canonical commitments are universal
+(Section~\ref{sec:systems}), the answer holds for every mechanism. \textcolor{reviewed}{Our
 composition results need no program logic, and the criteria are exact on
 specifications, not conservative.}
 

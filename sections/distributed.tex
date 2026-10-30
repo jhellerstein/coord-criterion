@@ -15,18 +15,16 @@ another participant could contradict; Complete CAP follows.
 \subsection{Systems}
 \label{sec:systems}
 
-Serializability does not say what to serialize by.  The ordering fiber of
-Figure~\ref{fig:ambiguity-frames}(f)~--- transactions and their valid serial
-orders, formalized in Appendix~\ref{app:cc-bases}~--- is one specification;
-many protocols implement it.  Two-phase locking (2PL) waits until two
-transactions contend for a lock, then fixes their order:
-$\mathsf{order}(A,B)$ excludes every serial order with $B$ before $A$.
-Multiversion timestamp ordering (MVTO)~\cite{bernstein1981concurrency} stamps
-each transaction when it starts and lets the stamps decide:
-$\mathsf{stamp}(B)$ excludes every serial order that does not start with $B$.
-Both exclude serial orders while keeping the input legal, but exclude
-different ones.  Each protocol issues commitments the specification does not
-require.
+Specifications are declarative, and admit many implementations.  For
+example, serializability can be enforced by any of a number of concurrency
+control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
+Appendix~\ref{app:cc-bases}).  Two-phase locking (2PL) uses locks on
+operations: when $B$ waits for a lock $A$ holds, $\mathsf{order}(A,B)$
+fixes $A$ before $B$.  Multiversion timestamp ordering
+(MVTO)~\cite{bernstein1981concurrency} uses timestamps:
+$\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped.  The
+two narrow the specification differently; each issues commitments the
+specification does not require.
 
 Non-transactional systems do the same.  The registrar of
 Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the
