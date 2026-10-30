@@ -3,6 +3,7 @@ import CoordCriterion.CALM.TransientConflict
 import CoordCriterion.Figures
 import CoordCriterion.CAP.Coordination
 import CoordCriterion.CAP.TwoPhaseCommit
+import CoordCriterion.CAP.TimeoutAbort
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
 import CoordCriterion.Appendix.TransactionBases.CommitEvent
@@ -951,6 +952,79 @@ theorem «sec:coordination/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n
     (CAP.decide2PC v = .commit ↔ ∀ p, v p = some true) ∧
     ((∀ p, v p ≠ none) → (CAP.decide2PC v = .abort ↔ ¬ ∀ p, v p = some true)) :=
   CAP.decide2PC_detects v
+
+/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "A
+coordinator that aborts on timeout, before the last vote arrives, does issue a
+commitment: like closing the polls, it seals every input that adds a missing
+vote, yes or no."  (CIDR version: "A coordinator that aborts on timeout,
+before the last vote arrives, issues a commitment, like closing the polls".)
+
+Lean (`CAP/TimeoutAbort.lean`), on the decision `voteSpec` of
+`«sec:coordination/two-phase-commit»`: at `σ_S(v)` with vote `p` missing,
+closing the polls (`Figures.closePolls`, a commitment) applies; it is a seal;
+every input `k ⪰ v` with `k p = some b`, for `b` yes or no, had the row
+`(k, decide2PC k)` and keeps none; the only rows left are `(v, decide2PC v)`
+(with the polls closed, `undecided` is final: abort).  At `yy·` the struck
+rows include `(yyy, commit)` and `(yyn, abort)`. -/
+theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : Fin m)
+    (hp : v p = none) :
+    CAP.Timeout.cp.f (canon (CAP.voteSpec m) v) =
+        some (Figures.closeState (canon (CAP.voteSpec m) v)) ∧
+    (∀ σ τ : State (CAP.voteSpec m), CAP.Timeout.cp.f σ = some τ →
+      ∀ k, (∃ u, σ.R k u ∧ ¬ τ.R k u) → ∀ w, ¬ τ.R k w) ∧
+    (∀ (b : Bool) (k : CAP.Votes m), v ≼ k → k p = some b →
+      (canon (CAP.voteSpec m) v).R k (CAP.decide2PC k) ∧
+        ∀ u, ¬ (Figures.closeState (canon (CAP.voteSpec m) v)).R k u) ∧
+    (∀ k u, (Figures.closeState (canon (CAP.voteSpec m) v)).R k u ↔
+      (k = v ∧ u = CAP.decide2PC v)) :=
+  CAP.Timeout.timeout_seals v p hp
+
+/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "Only
+the coordinator decides, so this is local coordination, as in the first case;
+it becomes distributed coordination when the decision is replicated for fault
+tolerance, as in Paxos Commit."  (CIDR version: "but only the coordinator
+decides: local coordination.")
+
+Lean (`CAP/TimeoutAbort.lean`) checks this for the abort read as a *choice*,
+and finds it false for the abort read as a *seal*.
+
+*Seal* (the reading of `«sec:coordination/2pc-timeout-abort»`): in any system
+whose coordinator may close the polls at `yy·`, another participant of some
+history accepts the sealed late vote `yyy` (the environment may deliver any
+input to any participant), so the system is not `CoordinationFreeH`, even for
+`sealSys`, where only the coordinator decides.  This is the paper's own rule
+that "a seal requires distributed coordination whenever another participant
+may receive the sealed input".
+
+*Choice* (`abortSpec`: the coordinator may abort until it decides, `S(v) =
+{decide2PC v, abort}`): at `yy·`, aborting is not exposable; its canonical
+commitment removes `(yyy, commit)`, keeps `(yyy, abort)`, and seals nothing.
+When only the coordinator decides (`coordSys`), the abort requires
+coordination (another run of the coordinator commits at `yyy`) but the system
+is `CoordinationFreeH`; when every participant may decide (`replSys`), one
+aborts at `yy·` while another, after the late vote, commits in the same
+history: distributed coordination.  Paxos Commit itself is not modeled. -/
+theorem «sec:coordination/2pc-timeout-abort-local» (D : Type) :
+    (∀ Sys : CAP.System (CAP.voteSpec 3) D, Sys.basis CAP.Timeout.cp →
+      Sys.strat 2 (fun _ => CAP.Timeout.yyN) 0 [] (.out [CAP.Timeout.cp] .undecided) →
+      ¬ Sys.CoordinationFreeH) ∧
+    ¬ (CAP.Timeout.sealSys D).CoordinationFree ∧ ¬ (CAP.Timeout.sealSys D).CoordinationFreeH ∧
+    (¬ Exposable (canon (CAP.Timeout.abortSpec 3) CAP.Timeout.yyN) .abort ∧
+      ∃ σc, CAP.applySeq (canon (CAP.Timeout.abortSpec 3) CAP.Timeout.yyN)
+          [CAP.kc .abort] = some σc ∧
+        σc.R σc.cur .abort ∧ Exposable σc .abort ∧
+        (canon (CAP.Timeout.abortSpec 3) CAP.Timeout.yyN).R CAP.Timeout.yyy .commit ∧
+        ¬ σc.R CAP.Timeout.yyy .commit ∧ σc.R CAP.Timeout.yyy .abort ∧
+        ∀ k, (∃ x, (canon (CAP.Timeout.abortSpec 3) CAP.Timeout.yyN).R k x) →
+          ∃ x, σc.R k x) ∧
+    ¬ (CAP.Timeout.coordSys 3 D).CoordinationFree ∧
+      (CAP.Timeout.coordSys 3 D).CoordinationFreeH ∧
+    ¬ (CAP.Timeout.replSys 3 D).CoordinationFreeH :=
+  ⟨fun Sys hb hs => CAP.Timeout.seal_not_coordinationFreeH Sys hb hs,
+   (CAP.Timeout.sealSys_not_coordinationFreeH D).1,
+   (CAP.Timeout.sealSys_not_coordinationFreeH D).2, CAP.Timeout.abort_choice_yy,
+   CAP.Timeout.coordSys_not_coordinationFree D, CAP.Timeout.coordSys_coordinationFreeH 3 D,
+   CAP.Timeout.replSys_not_coordinationFreeH D⟩
 
 /-- Paragraph "Locks in a shared-nothing database": "All three exchange
 messages, and a client cut off from an owner cannot get its answer; only the

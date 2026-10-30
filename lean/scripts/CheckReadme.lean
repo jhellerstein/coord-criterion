@@ -163,6 +163,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:coordination/shared-nothing-cross-key»
 #check @CC.Paper.«sec:coordination/two-phase-commit»
 #check @CC.Paper.«sec:coordination/two-phase-commit-detects»
+#check @CC.Paper.«sec:coordination/2pc-timeout-abort»
+#check @CC.Paper.«sec:coordination/2pc-timeout-abort-local»
 #check @CC.Paper.«sec:coordination/shared-nothing-only-second»
 #check @CC.Paper.«sec:coordination/conflict-is-choice»
 #check @CC.Paper.«sec:coordination/conflict-is-choice-commit»
