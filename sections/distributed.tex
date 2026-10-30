@@ -200,16 +200,28 @@ $c_o$ of Section~\ref{sec:lifted-output-events}.
 \paragraph{Canonical runs suffice.}
 We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and commitment
-events apply only commitments from $\mathcal B$ (Definition~\ref{def:run-under-basis}).
-Locks, timestamps, quorums, and consensus differ in how and when they decide.
-Yet every output event of any system removes at least the rows that the
-canonical event for its output removes
-(Lemma~\ref{lem:canonical-commitment-normal-form}), and every run under any
-basis has an observably equivalent canonical run: one that accepts the same
-inputs, emits the same outputs, and keeps at least the original's rows after each event; its commitment events
-erase to nothing (Lemma~\ref{lem:canonical-equivalent},
-Appendix~\ref{app:bases}).
+runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and
+commitment events apply only commitments from $\mathcal B$
+(Definition~\ref{def:run-under-basis}).  Locks, timestamps, quorums, and
+consensus differ in how and when they decide; what the environment sees
+does not.
+
+\begin{lemma}[Canonical Run Universality]
+\label{lem:canonical-equivalent}
+Every run under any commitment basis is \emph{observably equivalent} to a
+canonical run: one that accepts the same inputs, emits the same outputs,
+and keeps at least the original's rows after each event; its commitment
+events erase to nothing.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+Every output event of any system removes at least the rows the canonical
+event for its output removes
+(Lemma~\ref{lem:canonical-commitment-normal-form}); commitment events are
+dropped on the canonical side; the row containment extends event by event
+along the run.  Full proof in Appendix~\ref{app:bases}.
+\end{proof}
+
 In the remainder of the paper we therefore judge consistency on canonical
 runs.  Whether a specification needs coordination thus depends on the seals and choices its outputs require, whatever mechanism makes them.
 

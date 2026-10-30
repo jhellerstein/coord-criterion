@@ -1494,14 +1494,29 @@ $c_o$ of Section~\ref{sec:lifted-output-events}.
 \paragraph{Canonical runs suffice.}
 We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and commitment
-events apply only commitments from $\mathcal B$ (Definition~\ref{def:run-under-basis}). \textcolor{reviewed}{Locks, timestamps, quorums, and consensus differ in how and when they decide.} Yet every output event of any system removes at least the rows that the
-canonical event for its output removes
-(Lemma~\ref{lem:canonical-commitment-normal-form}), and every run under any
-basis has an observably equivalent canonical run: one that accepts the same
-inputs, emits the same outputs, and keeps at least the original's rows after each event; its commitment events
-erase to nothing (Lemma~\ref{lem:canonical-equivalent},
-Appendix~\ref{app:bases}). In the remainder of the paper we therefore judge consistency on canonical
+runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and
+commitment events apply only commitments from $\mathcal B$
+(Definition~\ref{def:run-under-basis}). Locks, timestamps, quorums, and
+consensus differ in how and when they decide; what the environment sees
+does not.
+
+\begin{lemma}[Canonical Run Universality]
+\label{lem:canonical-equivalent}
+Every run under any commitment basis is \emph{observably equivalent} to a
+canonical run: one that accepts the same inputs, emits the same outputs,
+and keeps at least the original's rows after each event; its commitment
+events erase to nothing.
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+Every output event of any system removes at least the rows the canonical
+event for its output removes
+(Lemma~\ref{lem:canonical-commitment-normal-form}); commitment events are
+dropped on the canonical side; the row containment extends event by event
+along the run. Full proof in Appendix~\ref{app:bases}.
+\end{proof}
+
+In the remainder of the paper we therefore judge consistency on canonical
 runs. \textcolor{reviewed}{Whether a specification needs coordination thus depends on the seals and choices its outputs require, whatever mechanism makes them.}
 
 Consider 2PL on an input of three transactions $A$, $B$, $C$ that have each
@@ -3111,20 +3126,14 @@ events are all canonical; they are the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 \end{definition}
 
-To see that quantifying over canonical runs excludes no system's behavior, call
-two runs \emph{observably equivalent} when they start at the same canonical state and agree once commitment sequences are erased and commitment events dropped:
+To make the claim of Lemma~\ref{lem:canonical-equivalent} precise, call two
+runs \emph{observably equivalent} when they start at the same canonical state and agree once commitment sequences are erased and commitment events dropped:
 wherever one has $\mathsf{input}(j)$ the other does, and wherever one has
 $\Out{\gamma}{o}$ the other has $\Out{\gamma'}{o}$ for some $\gamma'$. They accept the same inputs and emit
 the same outputs, in the same order, which is all the environment observes. Observably equivalent runs may differ in the commitments their output and commitment events apply, and
 hence in their remainder tables.
 
-\begin{lemma}[Canonical equivalents]
-\label{lem:canonical-equivalent}
-Every run under any commitment basis is observably equivalent to a canonical run. After
-each event, the canonical run's remainder table contains the original run's.
-\end{lemma}
-
-\begin{proof}
+\begin{proof}[Proof of Lemma~\ref{lem:canonical-equivalent}]
 By induction on the events. Both runs start at the same canonical state, so
 their remainder tables are initially equal. Suppose that before some event the
 original run's table $R$ and the canonical run's table $\widehat R$ satisfy
