@@ -643,19 +643,27 @@ form): "A component for a specification `𝒮` consists of a commitment basis
 canonical state `σ(i)` (Definition `def:run-under-basis`), together with an
 output `o` that it emits, such that `(i,o) ∈ S`.  A component may carry an
 implementation form, `Process`, `Cluster`, or `Composite`, which records how
-it is realized and plays no role in the results."  Lean: `Components.Component`
+it is realized.  The implementation form plays no role in typed composition;
+it determines which internal system model and coordination classification
+justify the component's admitted runs."  Lean: `Components.Component`
 (fields `basis`, `accepts`, `sound`, `location`); an admitted run is a
 `Components.OperationalRun` (input, named output, events, final state) whose
 certificate `OperationalRun.Valid` is an execution under the basis from
 `canon sp input`, an output event emitting the named output, and the row.
-The form is `Components.LocationForm`; no proof obligation mentions it. -/
+The form is `Components.LocationForm`; no typed-composition proof obligation
+mentions it.  The internal system model it points to is
+`Components.Component.ofSystemOn` (process or cluster), with the coordination
+classifications of `«app:components/two-phase-commit»`. -/
 abbrev «def:component» {I O : Type} [PO I] [PO O] (sp : Spec I O) :=
   Components.Component sp
 
-/-- "A system for `𝒮` (Definition `def:system`) is a component.  Its admitted
-runs are the participant runs of the histories it produces, and its messages,
-partitions, and commitments stay inside it.  Restricted to one-participant
-histories it is a process, and a replicated system is a cluster. … The
+/-- "A system for `𝒮` (Definition `def:system`) induces a component once its
+boundary observations are chosen.  An admitted boundary run is a participant
+run of a produced history together with a named emitted output `o` whose pair
+`(i,o)` with the run's initial input is a row of `S`; runs with no such output
+induce no observation.  The system's messages, partitions, and commitments
+stay inside the component.  Restricted to one-participant histories, the
+induced component is a process, and a replicated system induces a cluster. … The
 maximally permissive component under `ℬ` admits every such run under `ℬ`."
 Lean: `Components.Component.ofSystemOn Sys N` (participant runs of produced,
 well-formed histories with `N n` participants, translated by
@@ -699,24 +707,28 @@ theorem «app:components/two-phase-commit» (D : Type) :
   ⟨h.1, h.2.2.1, h.2.2.2, h'.1, h'.2⟩
 
 /-- **Definition `def:typed-pipeline`** (Typed pipeline, feed, external
-observation): "A feed pairs an admitted run of `C₁`, with input `i` and output
+observation, contract-proper, implementation-proper): "A feed pairs an admitted run of `C₁`, with input `i` and output
 `m`, with an admitted run of `C₂` from `σ(m)`, with output `o`.  The typed
 pipeline of `C₁` and `C₂` shows the external observation `(i,o)` of each
 feed; the value `m`, both runs, and their commitments stay hidden.  The
-pipeline is implementation-proper when no downstream run of a feed applies a
-commitment."  Lean: `Components.FeedWitness` (`feed : upRun.output =
+pipeline is contract-proper when the pipeline of `𝒮₁` and `𝒮₂` is proper
+(Definition `def:proper-coordination`), and implementation-proper when no
+downstream run of a feed applies a commitment."  Lean: `Components.FeedWitness` (`feed : upRun.output =
 downRun.input`), `Components.Pipeline`, `Pipeline.Accepts` (the observations
 `FeedWitness.boundary`, of type `BoundaryObservation I O`, which has no field
-for `m` or the runs), `Pipeline.Proper`.  "Applies a commitment" is the
+for `m` or the runs), `Pipeline.ContractProper` (equivalent to `Guard.Proper`
+by `contractProper_iff_guardProper`), `Pipeline.ImplementationProper`.  "Applies a commitment" is the
 negation of the library's `CoordFree` (`«def:coordination-free/commitment-free-runs»`). -/
 theorem «def:typed-pipeline» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M}
     {sp2 : Spec M O} (p : Components.Pipeline sp1 sp2) (obs : Components.BoundaryObservation I O) :
     (p.Accepts obs ↔ ∃ w : Components.FeedWitness p.upstream p.downstream,
       w.upRun.input = obs.input ∧ w.downRun.output = obs.output) ∧
-    (p.Proper ↔ ∀ w : Components.FeedWitness p.upstream p.downstream,
+    (p.ContractProper ↔ Guard.Proper sp1 sp2) ∧
+    (p.ImplementationProper ↔ ∀ w : Components.FeedWitness p.upstream p.downstream,
       CoordFree w.downRun.events) :=
   ⟨⟨fun ⟨w, h⟩ => ⟨w, by rw [← h]; rfl, by rw [← h]; rfl⟩,
-    fun ⟨w, h1, h2⟩ => ⟨w, by cases obs; cases h1; cases h2; rfl⟩⟩, Iff.rfl⟩
+    fun ⟨w, h1, h2⟩ => ⟨w, by cases obs; cases h1; cases h2; rfl⟩⟩,
+    Components.contractProper_iff_guardProper p, Iff.rfl⟩
 
 /-- "Receiving `m` is the downstream run's initial input, not a commitment of
 `C₂`."  Lean: a feed equates the upstream's named output with the downstream
@@ -729,24 +741,28 @@ theorem «app:components/feed-is-input» {I M O : Type} [PO I] [PO M] [PO O] {sp
   w.feed ▸ (C2.sound _ w.downAccepted).legal
 
 /-- **Proposition `prop:typed-pipelines`** (Typed pipelines): "(1) Every
-external observation of a typed pipeline is a row of `S₂ ∘ S₁`.  (2) In an
-implementation-proper pipeline, the downstream run of every feed, with its
-commitments erased, is a run of `𝒮₂` in which every output is exposable.
-(3) A proper pipeline (Definition `def:proper-coordination`) need not be
-implementation-proper, and the maximally permissive component for `𝒮₂` under
-the empty basis may admit no feed at all.  (4) In a proper pipeline, let `C₂`
-be the maximally permissive component for `𝒮₂|_{𝒮₁}` under the empty basis.
-Every admitted run of `C₁` has a feed, and the pipeline is
-implementation-proper."
+external observation admitted by a typed pipeline is a row of `S₂ ∘ S₁`.
+(2) If a pipeline is implementation-proper, the downstream run of every feed,
+with its commitments erased, is a commitment-free run of `𝒮₂`, in which every
+output is exposable.  (3) Contract properness does not imply implementation
+properness: behind a log, the early-lock store is a contract-proper downstream
+implementation that still issues commitments.  (4) Contract properness does
+not imply feed availability for an arbitrarily typed downstream component:
+behind the capped counter, the maximally permissive empty-basis component for
+the unrestricted threshold specification admits no feed at an offered count.
+(5) If, in a contract-proper pipeline, the downstream is instead the maximally
+permissive empty-basis component for `𝒮₂|_{𝒮₁}`, every admitted upstream
+boundary run has a feed, and the pipeline is implementation-proper."
 
-Lean: (1) `Pipeline.sound`.  (2) `proper_downstream_execCF` (`ExecCF`: every
-output exposable).  "Proper" is `Guard.Proper`, which is
-`Pipeline.ContractProper` (`contractProper_iff_guardProper`).  (3) for any
-command `b` and monotone `f` on logs, the log `Inst.smrS1` (empty basis)
-feeding the early-lock store `Guard.earlyLock b f` (`early_lock_component`);
-the capped counter `Joint.up` feeding `Joint.thr` under the empty basis on
-both sides: the downstream admits no run at an offered count
-(`threshold_component`).  (4) `offered_available`: the downstream is
+Lean: (1) `Pipeline.sound`.  (2) `implementationProper_downstream_execCF`
+(`ExecCF`: every output exposable).  "Contract-proper" is `Guard.Proper`,
+which is `Pipeline.ContractProper` (`contractProper_iff_guardProper`).
+(3) For any command `b` and monotone `f` on logs, the log `Inst.smrS1` (empty
+basis) feeding the early-lock store `Guard.earlyLock b f`
+(`early_lock_component`).  (4) The capped counter `Joint.up` feeding
+`Joint.thr` under the empty basis on both sides: the downstream admits no run
+at an offered count, so the pipeline admits no observation
+(`threshold_component`).  (5) `offered_available`: the downstream is
 `Component.ofBasis (emptyBasis (Guard.rest sp sk))`; the upstream is `C₁`
 retyped at its offered outputs (`Component.core`, through
 `Guard.core_lockstep`), which keeps each admitted run's input and output; the
@@ -754,46 +770,52 @@ composite is still `S₂ ∘ S₁` (`offered_compositeSpec`). -/
 theorem «prop:typed-pipelines» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) :
     (∀ (p : Components.Pipeline sp sk) obs, p.Accepts obs → (Comp.seq sp sk).S obs.input obs.output) ∧
-    (∀ (p : Components.Pipeline sp sk), p.Proper → ∀ w : Components.FeedWitness p.upstream p.downstream,
+    (∀ (p : Components.Pipeline sp sk), p.ImplementationProper → ∀ w : Components.FeedWitness p.upstream p.downstream,
       ExecCF (canon sk w.downRun.input) (w.downRun.events.filterMap SEvent.erase) w.downRun.final) ∧
     (∀ (Cmd O' : Type) [PO O'] (f : Inst.Pfx Cmd → O'), Monotone f → ∀ b : Cmd,
       Guard.Proper Inst.smrS1 (graph f) ∧
       ¬ (Components.Pipeline.mk
           (Components.Component.ofBasis (Components.emptyBasis (Inst.smrS1 (Cmd := Cmd))))
-          (Components.Component.ofSys (Guard.earlyLock b f))).Proper) ∧
+          (Components.Component.ofSys (Guard.earlyLock b f))).ImplementationProper) ∧
     (Guard.Proper Joint.up Joint.thr ∧
+      (∀ r, (Components.Component.ofBasis (Components.emptyBasis Joint.thr)).accepts r →
+        ¬ Joint.Img Joint.up r.input) ∧
       ∀ obs, ¬ (Components.Pipeline.mk
         (Components.Component.ofBasis (Components.emptyBasis Joint.up))
         (Components.Component.ofBasis (Components.emptyBasis Joint.thr))).Accepts obs) ∧
     (Guard.Proper sp sk → ∀ (C1 : Components.Component sp) r, C1.accepts r →
       let p := Components.Pipeline.offered (sk := sk) C1
         (Components.Component.ofBasis (Components.emptyBasis _))
-      p.compositeSpec = Comp.seq sp sk ∧ p.Proper ∧
+      p.compositeSpec = Comp.seq sp sk ∧ p.ImplementationProper ∧
       ∃ w : Components.FeedWitness p.upstream p.downstream,
         w.upRun.input = r.input ∧ w.upRun.output.1 = r.output) :=
   ⟨fun p _ h => p.sound h,
-    fun _ hp w => Components.proper_downstream_execCF hp w,
+    fun _ hp w => Components.implementationProper_downstream_execCF hp w,
     fun _ _ _ _ hf b => by
       have h := Components.early_lock_component hf b
       exact ⟨(Components.contractProper_iff_guardProper _).1 h.1, h.2⟩,
     by
       have h := Components.threshold_component
-      exact ⟨(Components.contractProper_iff_guardProper _).1 h.1, h.2.2.2⟩,
+      exact ⟨(Components.contractProper_iff_guardProper _).1 h.1, h.2.2.1, h.2.2.2⟩,
     fun hP C1 _ h => by
       obtain ⟨hp, w, h1, h2, _⟩ := Components.offered_available (sk := sk) hP C1 h
       exact ⟨Components.offered_compositeSpec _ _, hp, w, h1, h2⟩⟩
 
-/-- "Item (4) is one step of Theorem `thm:proper-coordination`(2), which
-follows every output of the upstream run.  Item (3) is why (4) uses a
-component for `𝒮₂|_{𝒮₁}` rather than for `𝒮₂`: its canonical states keep only
-rows at inputs the upstream offers.  Properness says what a downstream
-component can do without commitment, and whether a given component does it
-depends on the runs it admits."  Lean: `Component.proper_follows` is
-`Guard.proper_follows` for every run an upstream component admits (the
-empty-basis `𝒮₂|_{𝒮₁}` answers every output, and the merged trace is a run of
-`S₂ ∘ S₁`); a silent downstream is vacuously implementation-proper and shows
-nothing (`proper_silent`); on the offered interface, properness of the
-pipeline is the boundary's contract properness (`offered_contractProper_iff`). -/
+/-- "Item (5) covers one boundary output.  Theorem `thm:proper-coordination`(2)
+follows the entire emitted stream and gives the composite-run invariant and
+confluence, and (3) of that theorem supplies the necessity result.  Item (4)
+is why (5) uses a component for `𝒮₂|_{𝒮₁}` rather than for `𝒮₂`: its
+canonical states keep only rows at inputs the upstream offers."  Lean: the
+whole stream is `Guard.proper_follows`, the composite-run invariant
+`Guard.proper_run`, confluence `Guard.proper_confluent`, and necessity
+`Guard.proper_needs_commit`.  For the runs an upstream component admits,
+`Component.proper_follows` wraps `Guard.proper_follows` (the empty-basis
+`𝒮₂|_{𝒮₁}` answers every output, and the merged trace is a run of
+`S₂ ∘ S₁`) and `Component.proper_run` wraps `Guard.proper_run`.  A silent
+downstream is vacuously implementation-proper and shows nothing
+(`implementationProper_silent`); on the offered interface, contract
+properness of the pipeline is Proper Coordination
+(`offered_contractProper_iff`). -/
 theorem «app:components/follows» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {sk : Spec M O} (hP : Guard.Proper sp sk) (C1 : Components.Component sp)
     {r : Components.OperationalRun sp} (h : C1.accepts r) {m : M} {ms : List M}
@@ -805,11 +827,11 @@ theorem «app:components/follows» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spe
       ∃ ρ' : State (Comp.seq sp sk),
         Exec (canon (Comp.seq sp sk) r.input) (Guard.merge r.events ([o] :: ps.map fun p => [p.2])) ρ' ∧
         ρ'.cur = r.final.cur) ∧
-    ((Components.Pipeline.mk C1 (Components.Component.silent sk)).Proper ∧
+    ((Components.Pipeline.mk C1 (Components.Component.silent sk)).ImplementationProper ∧
       ∀ obs, ¬ (Components.Pipeline.mk C1 (Components.Component.silent sk)).Accepts obs) ∧
     ∀ k : Components.Component (Guard.rest sp sk),
       (Components.Pipeline.offered C1 k).ContractProper :=
-  ⟨Components.Component.proper_follows hP C1 h he, Components.proper_silent C1,
+  ⟨Components.Component.proper_follows hP C1 h he, Components.implementationProper_silent C1,
     fun k => (Components.offered_contractProper_iff C1 k).2 hP⟩
 
 end Paper

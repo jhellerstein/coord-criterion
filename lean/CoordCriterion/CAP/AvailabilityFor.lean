@@ -52,7 +52,7 @@ theorem availabilityFor_S (Sys : System sp D) :
 
 /-- (⇒): if some system keeps `A` available and the emitted outputs
 reconcilable, `S` is consistent on `A`.  One participant per row, each alone
-in its component, plus one at `j`. -/
+in its block, plus one at `j`. -/
 theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
     (Sys : System sp D) (hA : AvailabilityFor A Sys) (hC : CommonRefinementAtEnd Sys) :
     ConsistentOn sp A := by
@@ -71,7 +71,7 @@ theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o �
     ⟨fun p => ⟨_, .nil _⟩, by intro p a q k j d b h; simp [H0] at h⟩
   have hprod0 : Produced Sys N init H0 := fun p a e b h => by simp [H0] at h
   have hpart0 : Partitioned H0 comp := ⟨hcomp2, by intro p a q k j d b h; simp [H0] at h⟩
-  -- each `p_r` emits `o_r` alone in its component
+  -- each `p_r` emits `o_r` alone in its block
   have hL : ∀ p : Fin N, ∃ L : List (LEv sp D N),
       (∃ τ, LRun (canon sp (init p)) L τ) ∧ (∀ (q : Fin N) k j d, LEv.recv q k j d ∉ L) ∧
       Compliant (Allowed Sys N init p) L ∧ (∀ j, LEv.inp j ∉ L) ∧

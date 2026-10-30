@@ -28,11 +28,11 @@ composition is the library's `Comp.seq`; the values an upstream can offer are
   the values the upstream contract can offer) with `JointMonoOn`,
   `contractProper_iff_guardProper`, `contractProper_iff_jointMonoOn`,
   `contractProper_iff_rest`, `contractProper_liftedMono`.
-* `Pipeline.Proper` (implementation properness: every downstream run admitted
-  in a feed uses no commitment), `proper_of_downstream_commitmentFree`,
-  `proper_downstream_execCF`, `ofBasis_empty_commitmentFree`.
+* `Pipeline.ImplementationProper` (implementation properness: every downstream run admitted
+  in a feed uses no commitment), `implementationProper_of_downstream_commitmentFree`,
+  `implementationProper_downstream_execCF`, `ofBasis_empty_commitmentFree`.
 * Contract properness does not give implementation properness or availability:
-  `Component.silent` (admits nothing; vacuously proper), `early_lock_component`
+  `Component.silent` (admits nothing; vacuously implementation-proper), `early_lock_component`
   (a contract-proper pipeline whose downstream deliberately commits),
   `threshold_component` (a contract-proper pipeline whose maximally permissive
   empty-basis downstream, typed at all of `M`, admits no run at an offered
@@ -323,26 +323,26 @@ theorem contractProper_liftedMono {upSpec : Spec I M} {downSpec : Spec M O}
 
 /-- **Implementation properness**: every downstream run admitted in a feed
 applies no commitment. -/
-def Pipeline.Proper {upSpec : Spec I M} {downSpec : Spec M O}
+def Pipeline.ImplementationProper {upSpec : Spec I M} {downSpec : Spec M O}
     (p : Pipeline upSpec downSpec) : Prop :=
   ∀ w : FeedWitness p.upstream p.downstream, CoordFree w.downRun.events
 
-theorem proper_of_downstream_commitmentFree {upSpec : Spec I M} {downSpec : Spec M O}
-    (p : Pipeline upSpec downSpec) (h : p.downstream.CommitmentFree) : p.Proper :=
+theorem implementationProper_of_downstream_commitmentFree {upSpec : Spec I M} {downSpec : Spec M O}
+    (p : Pipeline upSpec downSpec) (h : p.downstream.CommitmentFree) : p.ImplementationProper :=
   fun w => h _ w.downAccepted
 
 /-- In an implementation-proper pipeline every admitted downstream run erases
 to a commitment-free execution. -/
-theorem proper_downstream_execCF {upSpec : Spec I M} {downSpec : Spec M O}
-    {p : Pipeline upSpec downSpec} (hp : p.Proper) (w : FeedWitness p.upstream p.downstream) :
+theorem implementationProper_downstream_execCF {upSpec : Spec I M} {downSpec : Spec M O}
+    {p : Pipeline upSpec downSpec} (hp : p.ImplementationProper) (w : FeedWitness p.upstream p.downstream) :
     ExecCF (canon downSpec w.downRun.input) (w.downRun.events.filterMap SEvent.erase)
       w.downRun.final :=
   coordFree_execCF (p.downstream.sound _ w.downAccepted).legal (hp w)
 
 /-- A silent downstream makes any pipeline implementation-proper, and the
 pipeline admits no observation. -/
-theorem proper_silent {upSpec : Spec I M} {downSpec : Spec M O} (up : Component upSpec) :
-    (Pipeline.mk up (Component.silent downSpec)).Proper ∧
+theorem implementationProper_silent {upSpec : Spec I M} {downSpec : Spec M O} (up : Component upSpec) :
+    (Pipeline.mk up (Component.silent downSpec)).ImplementationProper ∧
       ∀ obs, ¬ (Pipeline.mk up (Component.silent downSpec)).Accepts obs :=
   ⟨fun w => False.elim w.downAccepted, fun _ ⟨w, _⟩ => w.downAccepted⟩
 
@@ -371,7 +371,7 @@ theorem early_lock_component {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Mon
     (b : Cmd) :
     let p : Pipeline (smrS1 (Cmd := Cmd)) (graph f) :=
       ⟨Component.ofBasis (emptyBasis _), Component.ofSys (earlyLock b f)⟩
-    p.ContractProper ∧ ¬ p.Proper := by
+    p.ContractProper ∧ ¬ p.ImplementationProper := by
   intro p
   refine ⟨ceOn_of_ce (graph_commonExpansion hf) _, fun hp => ?_⟩
   obtain ⟨ρ, hρ⟩ := smr_empty_run (Cmd := Cmd) (emptyBasis _)
@@ -588,7 +588,7 @@ pipeline is implementation-proper. -/
 theorem offered_available {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp sk)
     (c : Component sp) {r : OperationalRun sp} (h : c.accepts r) :
     let p := Pipeline.offered (sk := sk) c (Component.ofBasis (emptyBasis _))
-    p.Proper ∧ ∃ w : FeedWitness p.upstream p.downstream,
+    p.ImplementationProper ∧ ∃ w : FeedWitness p.upstream p.downstream,
       w.upRun.input = r.input ∧ w.upRun.output.1 = r.output ∧ CoordFree w.downRun.events := by
   intro p
   have hC := proper_iff_ce.1 hP
@@ -604,7 +604,7 @@ theorem offered_available {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp 
       upAccepted := hr'
       downAccepted := (Component.ofBasis_accepts _ _ _).2 ⟨hx, ⟨[], List.mem_cons_self⟩, ho⟩
       feed := rfl }
-  exact ⟨proper_of_downstream_commitmentFree p (ofBasis_empty_commitmentFree _),
+  exact ⟨implementationProper_of_downstream_commitmentFree p (ofBasis_empty_commitmentFree _),
     w, hin, hout, sysExec_emptyBasis_coordFree hx⟩
 
 /-- **Theorem `thm:proper-coordination`(2), following, for the runs an

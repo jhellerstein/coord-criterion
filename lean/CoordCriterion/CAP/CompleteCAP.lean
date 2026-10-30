@@ -194,7 +194,7 @@ theorem cap_necessary (Sys : System sp D) (hA : Availability Sys)
   have hpart0 : Partitioned H0 comp := ⟨hcomp2, by intro p a q k j d b h; simp [H0] at h⟩
   have hcut0 : IsCut H0 (fun _ => 0) :=
     ⟨fun _ => Nat.zero_le _, by intro p a q k j d b h; simp at h⟩
-  -- Availability at the empty cut: each `p_r` emits `o_r` alone in its component
+  -- Availability at the empty cut: each `p_r` emits `o_r` alone in its block
   have hL : ∀ p : Fin N, ∃ L : List (LEv sp D N),
       (∃ τ, LRun (canon sp (init p)) L τ) ∧ (∀ (q : Fin N) k j d, LEv.recv q k j d ∉ L) ∧
       Compliant (Allowed Sys N init p) L ∧ (∀ j, LEv.inp j ∉ L) ∧
@@ -278,7 +278,7 @@ theorem complete_cap_cf (sp : Spec I O) (D : Type) (h : sp.LiftedMono) :
 Def. `def:system` speaks of "a rule that chooses the participant's next
 events".  If that rule is a *function* of the local history, the (2)⇒(1)
 direction of Theorem `thm:complete-cap` fails: a participant alone in its
-component has a single possible future, so it cannot have two incomparable
+block has a single possible future, so it cannot have two incomparable
 outputs of its fiber both available.  We give a three-output counterexample
 satisfying Lifted Monotonicity.  The formalization above (and Appendix
 `app:cap-response`) therefore reads strategies as nondeterministic. -/

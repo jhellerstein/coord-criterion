@@ -669,7 +669,7 @@ history `h_C` of every prefix `C` of every interleaving of every partitioned
 history it produces.
 
 The proof follows the paper: replicas `p = 0` and `q = 1` are in separate
-components from the start; the environment invokes the write at `p`;
+blocks from the start; the environment invokes the write at `p`;
 Answering makes `p` acknowledge it; the environment invokes the read at `q`
 (after the acknowledgment in the interleaving); Answering makes `q` answer it,
 necessarily with `v0`; at the realized history (write, read, write → read) no

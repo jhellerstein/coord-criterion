@@ -984,7 +984,7 @@ theorem single_clientWF {i : Fin N} {t : List (Nat × Act N M)}
 map of a run of node `i` alone (no other node takes a step; nothing is
 received) lies in the register fiber at the node's view.  Since a node's
 behaviour depends only on its own run, this holds for every execution in which
-the node is alone in its component of a partition. -/
+the node is alone in its block of a partition. -/
 theorem atomic_view {A : Alg N M} (hat : Atomic A) {i : Fin N} {t : List (Nat × Act N M)}
     (hrun : ∃ s, NRun A i (A.start i) (acts t) s) (hpw : t.Pairwise (fun x y => x.1 < y.1))
     (hnr : ∀ x ∈ t, ∀ s m, x.2 ≠ Act.recv s m)

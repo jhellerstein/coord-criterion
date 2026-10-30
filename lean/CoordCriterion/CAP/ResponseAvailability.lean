@@ -738,7 +738,7 @@ theorem two_labels {n : Nat} (h2 : 2 ≤ n) :
   ⟨⟨0, by omega⟩, ⟨1, by omega⟩, by simp⟩
 
 /-- Replaying an isolated emission in its own participant set, alone in its
-component, the others idle. -/
+block, the others idle. -/
 theorem LocAt.replay {Sys : System sp D} {n : Nat} (h2 : 2 ≤ n) {p : Fin n} {i : I} {o : O}
     (w : LocAt Sys n p i o) (init' : Fin n → I) (hi : init' p = w.init p)
     (hA : Allowed Sys n init' p = Allowed Sys n w.init p) :
@@ -771,7 +771,7 @@ theorem LocAt.replay {Sys : System sp D} {n : Nat} (h2 : 2 ≤ n) {p : Fin n} {i
   rw [lrun_noinp hb (by simp)]
   exact w.cur σa ha
 
-/-- Answering at a participant of a singleton-component history yields an
+/-- Answering at a participant of a singleton-block history yields an
 isolated emission by that participant, refining its earlier outputs. -/
 theorem answer_iso_at {Sys : System sp D} {Q : (n : Nat) → Fin n → Table I O}
     (hRA : ResponseAvailability Sys Q) {N : Nat} {init : Fin N → I}
@@ -1680,7 +1680,7 @@ theorem gilbert_lynch_answering (Sys : System regSpec D) :
     rw [hext3 0, List.take_length, e20, he3q 0 (by decide)]; simp
   have e31 : H3 1 = [LEv.inp h2] := by
     rw [hext3 1, List.take_length, e21, he31]; rfl
-  -- Lemma forced-answer at `q`, alone in its component
+  -- Lemma forced-answer at `q`, alone in its block
   have hτ2 : LRun (canon regSpec (init 1)) ((H3 1).take (H3 1).length)
       (inpState (canon regSpec emptyH) h2 u2 hR2) := by
     rw [List.take_length, e31]; exact inp_lrun hR2

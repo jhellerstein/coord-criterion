@@ -26,7 +26,7 @@ choices):
 * the participant set `P` is `Fin n`; a deployment is `A : Fin n → Table I O`
   with `A p ⊆ S` (the paper's `E_p` is `A p`);
 * a partition `Π` is a labelling `comp : Fin n → Nat` with at least two
-  distinct labels (`IsPartition`); components are the label classes;
+  distinct labels (`IsPartition`); blocks are the label classes;
 * a participant run family is `F : Fin n → Option (PRun sp)`: participant `p`
   belongs to the family iff `F p = some m`, and `m` is a canonical run from
   `σ_S(m.init)`; `Emits F p r` says `p`'s run emits row `r = (i, o)`;
@@ -70,8 +70,8 @@ theorem «def:deployment/emitted-rows» (m : PRun sp) (c j : I) (o : O)
   ⟨rfl, rfl, rfl, rfl⟩
 
 /-- Def. `def:deployment`: "A *partition* `Π` of `P` divides `P` into two or
-more nonempty components."  A labelling `comp : Fin n → Nat` with two
-participants in different components. -/
+more nonempty blocks."  A labelling `comp : Fin n → Nat` with two
+participants in different blocks. -/
 theorem «def:deployment/partition» (comp : Fin n → Nat) :
     IsPartition comp ↔ ∃ p q, comp p ≠ comp q :=
   Iff.rfl
@@ -89,8 +89,8 @@ theorem «def:deployment/family» (Dp : Deployment sp n) (F : Family sp n) :
   ⟨Iff.rfl, fun _ => Iff.rfl⟩
 
 /-- Def. `def:deployment`: "The family is *separable under `Π`* when either
-participants in at least two components emit, or exactly one distinct row is
-emitted and some silent participant lies in another component." -/
+participants in at least two blocks emit, or exactly one distinct row is
+emitted and some silent participant lies in another block." -/
 theorem «def:deployment/separable» (F : Family sp n) (comp : Fin n → Nat) :
     Separable F comp ↔
       ((∃ p q r r', Emits F p r ∧ Emits F q r' ∧ comp p ≠ comp q) ∨

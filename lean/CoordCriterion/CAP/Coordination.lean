@@ -108,7 +108,7 @@ non-receive event `e` of `p` whose local prefix is receive-free, `x` is
 emitted at input `k` by another participant `q` of a history that keeps `p`'s
 prefix and event `e`: `q` (initial input below
 `k`) records `input(k)` and then, by Availability, emits `x` locally.  The
-participants are placed in separate components.  (Receive-freedom of `p`'s
+participants are placed in separate blocks.  (Receive-freedom of `p`'s
 prefix lets the history drop everything else.) -/
 theorem availability_contradicts_gen (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
@@ -205,7 +205,7 @@ theorem availability_contradicts_gen (Sys : System sp D) (hA : AvailabilityAtEnd
 local prefix is receive-free, is emitted at input `k` by another participant
 `q` of a history that keeps `p`'s prefix and event: `q` (initial input below
 `k`) records `input(k)` and then, by Availability, emits `x` locally.  The
-participants are placed in separate components.  (Receive-freedom of `p`'s
+participants are placed in separate blocks.  (Receive-freedom of `p`'s
 prefix lets the history drop everything else.) -/
 theorem availability_contradicts_removal (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)

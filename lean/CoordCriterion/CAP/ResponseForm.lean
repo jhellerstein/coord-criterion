@@ -543,7 +543,7 @@ theorem compliant_prefix {E : Type} {A : List E → E → Prop} {x y : List E}
   have := compliant_take h x.length
   simpa using this
 
-/-- In a partitioned history whose components are singletons, nobody receives. -/
+/-- In a partitioned history whose blocks are singletons, nobody receives. -/
 theorem norecv_singletons {N : Nat} {init : Fin N → I} {H : History sp D N}
     (hwf : WF init H) (hpart : Partitioned H (fun p => p.val)) :
     ∀ p q k j d, LEv.recv q k j d ∉ H p := by
@@ -552,7 +552,7 @@ theorem norecv_singletons {N : Nat} {init : Fin N → I} {H : History sp D N}
   exact (hwf.2 p a q k j d b hab).1 (Fin.ext (hpart.2 p a q k j d b hab))
 
 /-- Gluing receive-free, compliant local runs into a produced partitioned
-history with singleton components. -/
+history with singleton blocks. -/
 theorem glue {Sys : System sp D} {N : Nat} (hN : 2 ≤ N) {init : Fin N → I}
     (L : History sp D N) (hnr : ∀ p q k j d, LEv.recv q k j d ∉ L p)
     (hc : ∀ p, Compliant (Allowed Sys N init p) (L p))
@@ -620,7 +620,7 @@ theorem cut_of_norecv {N : Nat} {H : History sp D N} (hnr : ∀ p q k j d, LEv.r
   refine ⟨hc, fun p a q k j d b h => absurd ?_ (hnr p q k j d)⟩
   have := take_split h; rw [this]; simp
 
-/-- Answering, applied at a participant of a singleton-component history,
+/-- Answering, applied at a participant of a singleton-block history,
 yields an isolated emission that expands every output the participant has
 already emitted. -/
 theorem answer_iso {Sys : System sp D} {Q : Obligation sp}

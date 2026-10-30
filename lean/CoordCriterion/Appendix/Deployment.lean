@@ -41,16 +41,16 @@ of emitted outputs, the leader example, single-authority deployments),
    participant has at most one canonical run (Section 3 `Exec` from
    `canon sp init`).  The emitted rows of a run are the pairs
    `(current input at the output event, output)` (`emitted`).  Arbitrary
-   runs cover "every order of input arrival within each component".
+   runs cover "every order of input arrival within each block".
 4. *Separable.*  Either two emitted rows are emitted by participants in
-   different components, or the set of emitted rows is a singleton `{r₀}` and
-   some participant of the family whose run emits nothing lies in a component
+   different blocks, or the set of emitted rows is a singleton `{r₀}` and
+   some participant of the family whose run emits nothing lies in a block
    different from that of a participant emitting `r₀`.
 5. *Deployment Availability.*  The paper's "commitments whose authority is
-   entirely within the participant's component" is not defined anywhere (the
+   entirely within the participant's block" is not defined anywhere (the
    paper defines no authority of a commitment).  We read locality exactly as
    in `CC.CAP.Availability`: the continuation is produced, stays partitioned
-   by the same components, adds events only at the participant's component,
+   by the same blocks, adds events only at the participant's block,
    adds no input event, and contains an output event `Out γ o` of the
    participant (so `γ` is any sequence of basis commitments).  The only
    change is that `o` must be authorized: `A p σ.cur o`.  Since a deployment
@@ -72,7 +72,7 @@ structure Deployment (sp : Spec I O) (n : Nat) where
   A : Fin n → Table I O
   sub : ∀ p k u, A p k u → sp.S k u
 
-/-- A partition: two or more nonempty components. -/
+/-- A partition: two or more nonempty blocks. -/
 def IsPartition {n : Nat} (comp : Fin n → Nat) : Prop := ∃ p q, comp p ≠ comp q
 
 /-- Emitted rows along an event list, starting at current input `c`. -/
@@ -370,7 +370,7 @@ theorem availability_iff (Sys : System sp D) :
 
 /-- Def. `def:deployment-availability` (see modeling choice 5): every
 surviving *authorized* row at a participant's current input can be emitted by
-that participant using only events of its own component. -/
+that participant using only events of its own block. -/
 def DeploymentAvailability (Sys : System sp D) (Dp : Deployment sp n) : Prop :=
   ∀ (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →

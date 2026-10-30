@@ -473,15 +473,19 @@ under $\mathcal B$ from a canonical state $\sigma(i)$
 (Definition~\ref{def:run-under-basis}), together with an output $o$ that it
 emits, such that $(i,o)\in S$.  A component may carry an
 \emph{implementation form}, $\mathsf{Process}$, $\mathsf{Cluster}$, or
-$\mathsf{Composite}$, which records how it is realized and plays no role in
-the results.
+$\mathsf{Composite}$, which records how it is realized.  The implementation
+form plays no role in typed composition; it determines which internal system
+model and coordination classification justify the component's admitted runs.
 \end{definition}
 
-A system for $\Spec$ (Definition~\ref{def:system}) is a component.  Its
-admitted runs are the participant runs of the histories it produces, and its
-messages, partitions, and commitments stay inside it.  Restricted to
-one-participant histories it is a process, and a replicated system is a
-cluster.  The two-phase commit decision of Section~\ref{sec:coordination} has
+A system for $\Spec$ (Definition~\ref{def:system}) induces a component once
+its boundary observations are chosen.  An admitted boundary run is a
+participant run of a produced history together with a named emitted output
+$o$ whose pair $(i,o)$ with the run's initial input is a row of $S$; runs
+with no such output induce no observation.  The system's messages,
+partitions, and commitments stay inside the component.  Restricted to
+one-participant histories, the induced component is a process, and a
+replicated system induces a cluster.  The two-phase commit decision of Section~\ref{sec:coordination} has
 both forms.  Run by the coordinator alone, it is a process, and its timeout
 seal requires coordination but not distributed coordination.  Replicated, it
 is a cluster, and the same seal requires distributed coordination.  The
@@ -490,14 +494,17 @@ run under $\mathcal B$.
 
 Let $C_1$ be a component for $\Spec_1$ and $C_2$ a component for $\Spec_2$.
 
-\begin{definition}[Typed pipeline, feed, external observation]
+\begin{definition}[Typed pipeline, feed, external observation, contract-proper, implementation-proper]
 \label{def:typed-pipeline}
 A \emph{feed} pairs an admitted run of $C_1$, with input $i$ and output $m$,
 with an admitted run of $C_2$ from $\sigma(m)$, with output $o$.  The
 \emph{typed pipeline} of $C_1$ and $C_2$ shows the \emph{external
 observation} $(i,o)$ of each feed; the value $m$, both runs, and their
-commitments stay hidden.  The pipeline is \emph{implementation-proper} when
-no downstream run of a feed applies a commitment.
+commitments stay hidden.  The pipeline is \emph{contract-proper} when the
+pipeline of $\Spec_1$ and $\Spec_2$ is proper
+(Definition~\ref{def:proper-coordination}), and
+\emph{implementation-proper} when no downstream run of a feed applies a
+commitment.
 \end{definition}
 
 Receiving $m$ is the downstream run's initial input, not a commitment of
@@ -509,17 +516,22 @@ their own, and they may issue commitments of their own.
 \label{prop:typed-pipelines}
 \leavevmode
 \begin{enumerate}
-\item Every external observation of a typed pipeline is a row of
+\item Every external observation admitted by a typed pipeline is a row of
       $S_2\circ S_1$.
-\item In an implementation-proper pipeline, the downstream run of every feed,
-      with its commitments erased, is a run of $\Spec_2$ in which every
-      output is exposable.
-\item A proper pipeline (Definition~\ref{def:proper-coordination}) need not
-      be implementation-proper, and the maximally permissive component for
-      $\Spec_2$ under the empty basis may admit no feed at all.
-\item In a proper pipeline, let $C_2$ be the maximally permissive component
-      for $\Spec_2|_{\Spec_1}$ under the empty basis.  Every admitted run of
-      $C_1$ has a feed, and the pipeline is implementation-proper.
+\item If a pipeline is implementation-proper, the downstream run of every
+      feed, with its commitments erased, is a commitment-free run of
+      $\Spec_2$, in which every output is exposable.
+\item Contract properness does not imply implementation properness: behind a
+      log, the early-lock store is a contract-proper downstream
+      implementation that still issues commitments.
+\item Contract properness does not imply feed availability for an
+      arbitrarily typed downstream component: behind the capped counter, the
+      maximally permissive empty-basis component for the unrestricted
+      threshold specification admits no feed at an offered count.
+\item If, in a contract-proper pipeline, the downstream is instead the
+      maximally permissive empty-basis component for $\Spec_2|_{\Spec_1}$,
+      every admitted upstream boundary run has a feed, and the pipeline is
+      implementation-proper.
 \end{enumerate}
 \end{proposition}
 
@@ -530,16 +542,19 @@ their own, and they may issue commitments of their own.
 output events is $\Out{\varepsilon}{o}$, which is legal exactly when $o$ is
 exposable.
 
-(3) The early-lock store above is a downstream component that commits behind
-a log, and that pipeline is proper.  For the second claim, consider the capped
-counter of Section~\ref{sec:composite-calm} feeding the test of whether the
-count is below $10$.  The pipeline is proper, since the test satisfies Lifted
-Monotonicity on the counts the counter offers.  An admitted run of the test
-from an offered count $m\le 9$ must emit yes, its answer at $m$.  While its
-current count is below $10$, its table keeps the row $(10,\mathit{no})$, so
-yes is not exposable; once the count reaches $10$, only no remains.
+(3) The early-lock store above, fed by a log, is contract-proper, since the
+store's table satisfies Lifted Monotonicity on logs.  From the empty log it
+admits a run whose output event takes the lock, a commitment.
 
-(4) Let $m$ be the output of an admitted run of $C_1$.  By
+(4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
+the test of whether the count is below $10$.  The pipeline is
+contract-proper, since the test satisfies Lifted Monotonicity on the counts
+the counter offers.  An admitted run of the test from an offered count
+$m\le 9$ must emit yes, its answer at $m$.  While its current count is below
+$10$, its table keeps the row $(10,\mathit{no})$, so yes is not exposable;
+once the count reaches $10$, only no remains.  So no feed exists.
+
+(5) Let $m$ be the output of an admitted run of $C_1$.  By
 Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies
 Lifted Monotonicity, so every $o\in S_2(m)$ is exposable at $\sigma(m)$
 (Proposition~\ref{prop:exposure-boundary}).  The one-event run
@@ -547,22 +562,24 @@ $\Out{\varepsilon}{o}$ from $\sigma(m)$ is then an admitted run of $C_2$.
 Under the empty basis no run applies a commitment.
 \end{proof}
 
-Item (4) is one step of Theorem~\ref{thm:proper-coordination}(2), which
-follows every output of the upstream run.  Item (3) is why (4) uses a
-component for $\Spec_2|_{\Spec_1}$ rather than for $\Spec_2$: its canonical
-states keep only rows at inputs the upstream offers.  Properness says what a
-downstream component can do without commitment, and whether a given
-component does it depends on the runs it admits.
+Item (5) covers one boundary output.
+Theorem~\ref{thm:proper-coordination}(2) follows the entire emitted stream
+and gives the composite-run invariant and confluence, and (3) of that
+theorem supplies the necessity result.  Item (4) is why (5) uses a component
+for $\Spec_2|_{\Spec_1}$ rather than for $\Spec_2$: its canonical states keep
+only rows at inputs the upstream offers.
 
-Hydro~\cite{hydro} suggests the intended reading.  A \texttt{Process} location
-corresponds to a one-participant component, a \texttt{Cluster} location to a
-replicated one, and both connect to the surrounding dataflow through typed
-edges.  This is an analogy only; nothing here depends on Hydro's runtime,
-placement, or failure handling.  A typed pipeline is binary, and finite
-acyclic graphs follow by associativity of composition and explicit glue
-components.  We do not treat cyclic dataflows, scheduling a graph of
-components, physical placement, co-location, or failure domains, and we do
-not merge the participants of different components into one history.
+Hydro's \texttt{Process} and \texttt{Cluster} location
+types~\cite{hydro} provide the implementation analogy.  A \texttt{Process}
+location corresponds to a one-participant component, while a
+\texttt{Cluster} location corresponds to a replicated component.  Both
+connect to the surrounding dataflow through typed edges.  This is an
+interface analogy; the results do not model Hydro's scheduler, placement, or
+failure semantics.  A typed pipeline is binary, and finite acyclic graphs
+follow by associativity of composition and explicit glue components.  We do
+not treat cyclic dataflows, scheduling a graph of components, physical
+placement, co-location, or failure domains, and we do not merge the
+participants of different components into one history.
 
 \subsection{Dataflow graphs}
 \label{app:dataflow-graphs}

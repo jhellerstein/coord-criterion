@@ -325,6 +325,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/distributed-coordination»
 #check @CC.Paper.«app:notation/coordination-free»
 #check @CC.Paper.«app:notation/partitioned-history»
+#check @CC.Paper.«app:notation/block»
 #check @CC.Paper.«app:notation/explicit-relation»
 #check @CC.Paper.«app:notation/availability»
 #check @CC.Paper.«app:notation/lm-for-A»

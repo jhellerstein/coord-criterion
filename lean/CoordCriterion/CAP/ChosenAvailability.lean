@@ -29,11 +29,11 @@ namespace CAP
 
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
-/-! ## Continuations within a component, at the end of histories -/
+/-! ## Continuations within a block, at the end of histories -/
 
 /-- Def. `def:response-availability`, at the end of histories.  Both
-continuations are produced, partitioned by the same components, and add only
-events of `p`'s component; Answering adds no input event at `p`. -/
+continuations are produced, partitioned by the same blocks, and add only
+events of `p`'s block; Answering adds no input event at `p`. -/
 def ResponseAvailabilityEnd (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →
