@@ -64,19 +64,30 @@ abbrev «eq:choice-removals» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
   Rejected σ o
 
-/-- **Def. `def:lifted-output-event`** (Lifted output event, seal, output
-retirement, choice).  "`output(o)` keeps exactly the rows whose outputs
-refine `o` and emits `o`, atomically, ending at `(i, R[out ⪰ o])` … When
-`Sealed_o ≠ ∅` it applies the *seal* `s_o`. … When `Rejected_o ≠ ∅` it
-applies the *choice* `c_o`. … `s_o(i,R) = (i, R ∖ Sealed_o)`,
-`c_o(i,R) = (i, R ∖ Rejected_o)`."
+/-- **Def. `def:lifted-output-event`** (Lifted output event, output
+retirement).  "`output(o)` keeps exactly the rows whose outputs refine `o`
+and emits `o`, atomically, ending at `(i, R[out ⪰ o])`.  It removes the rows
+in `Retired_o`, each refined past by a kept row at the same input, by
+*output retirement*, which is not a commitment."
 
 Lean: the event is `Step σ (.output o) τ` with `τ.R = outputTable σ o`,
-the same transition as Def. `def:output-event`; the two commitments as states
-are `sealState σ o _` and `chooseState σ o _` (as commitments in the sense of
-Def. `def:commitment`, §4.3: `CC.sealC o`, `CC.choiceC o`).  This
-declaration names the pair `(s_o, c_o)`. -/
+the same transition as Def. `def:output-event`.  This declaration names the
+event's resulting state, parameterized by `(σ, o)`. -/
 abbrev «def:lifted-output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp :=
+  outputState σ o ho
+
+/-- **Def. `def:lifted-seal-choice`** (Lifted seal, lifted choice).  "When
+`Sealed_o ≠ ∅`, the output event applies the *seal* `s_o`; when
+`Rejected_o ≠ ∅`, it applies the *choice* `c_o`.  The seal and the choice are
+*commitments*: `s_o(i,R) = (i, R ∖ Sealed_o)`,
+`c_o(i,R) = (i, R ∖ Rejected_o)`."
+
+Lean: as commitments (in the sense of Def. `def:commitment`), `sealC o` and
+`choiceC o` with their domains of definition (`Sealed_o ≠ ∅` and
+`Rejected_o ≠ ∅` respectively).  This declaration names the pair as states
+left behind. -/
+abbrev «def:lifted-seal-choice» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp × State sp :=
   (sealState σ o ho, chooseState σ o ho)
 
@@ -165,8 +176,8 @@ end LiftedOutputEvents
 
 /-! ## Canonical basis, canonical event -/
 
-/-- **Def. canonical basis, canonical event** (`def:canonical-commitment-basis`),
-the basis.  "`ℬ_S = {s_o : o ∈ O, dom(s_o) ≠ ∅} ∪ {c_o : o ∈ O, dom(c_o) ≠ ∅}`,
+/-- **Def. `def:canonical-commitment-basis`** (Canonical basis), the basis.
+"`ℬ_S = {s_o : o ∈ O, dom(s_o) ≠ ∅} ∪ {c_o : o ∈ O, dom(c_o) ≠ ∅}`,
 where `s_o` is defined at the states with `o ∈ R(i)` and `Sealed_o ≠ ∅`, and
 `c_o` at those with `o ∈ R(i)` and `Rejected_o ≠ ∅`."
 (Eq. canonical-commitment-basis-relational.) -/
@@ -190,6 +201,17 @@ theorem «def:canonical-commitment-basis/kappa» {sp : Spec I O} (σ : State sp)
       (if ∃ k x, Sealed σ o k x then [sealC o] else []) ++
       (if ∃ k x, Rejected σ o k x then [choiceC o] else []) :=
   rfl
+
+/-- **Def. `def:canonical-event`** (Canonical event).  "At `(i,R)`, let `κ_o`
+apply `s_o` when `Sealed_o ≠ ∅` and `c_o` when `Rejected_o ≠ ∅`, so `κ_o` is
+one of `ε`, `s_o`, `c_o`, or `s_o c_o`.  The *canonical event* for `o` is
+`Out_{κ_o}(o)`: the output event of Definition `def:lifted-output-event`, and
+with one row per input that of Definition `def:output-event`."
+
+Lean: `kappa σ o` is the list `[]`, `[sealC o]`, `[choiceC o]`, or
+`[sealC o, choiceC o]`.  The event is `SEvent.output (kappa σ o) o`. -/
+noncomputable abbrev «def:canonical-event» {sp : Spec I O} (σ : State sp) (o : O) : SEvent sp :=
+  SEvent.output (kappa σ o) o
 
 /-- Def. `def:canonical-commitment-basis`: "The canonical event for `o` is
 `Out_{κ_o}(o)`: the output event of Definition lifted-output-event, and with one
@@ -401,20 +423,29 @@ theorem «app:bases/compound-commitment-event» {sp : Spec I O} {B B' : Basis sp
 
 /-! ## Runs under a basis -/
 
-/-- **Def. run under a basis, canonical run** (`def:run-under-basis`).  "A run under `ℬ` is a
-finite transition sequence from a canonical state `σ_S(i)` of input events,
+/-- **Def. `def:run-under-basis`** (Run under a basis).  "A run under `ℬ` is
+a finite transition sequence from a canonical state `σ_S(i)` of input events,
 legal output events `Out_γ(o)` (Definition system-output-event), and
-commitment events (Definition commitment-event) that use only commitments from
-`ℬ`."  Lean: `RunUnder B es τ`, an execution of `SysStep B` (input, output and
+commitment events (Definition commitment-event) that use only commitments
+from `ℬ`."
+
+Lean: `RunUnder B es τ`, an execution of `SysStep B` (input, output and
 commit events `SEvent.commit γ`) from `σ_S(i)`. -/
 abbrev «def:run-under-basis» {sp : Spec I O} (B : Basis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- Def. `def:run-under-basis`: "The canonical runs are the runs under the
-canonical basis `ℬ_S` … whose output events are all canonical."
+/-- **Def. `def:canonical-run`** (Canonical run).  "The *canonical runs* are
+the runs under the canonical basis `ℬ_S` of Definition
+`def:canonical-commitment-basis` whose output events are all canonical; they
+are the runs of Sections functional-calm–complete-calm."
 
 Lean: an execution of canonical steps (`CanonStep`) from `σ_S(i)`. -/
+abbrev «def:canonical-run» {sp : Spec I O} (i : I) (es : List (SEvent sp))
+    (τ : State sp) : Prop :=
+  CanonExec (canon sp i) es τ
+
+/-- Legacy sub-label pointing at `«def:canonical-run»`. -/
 abbrev «def:run-under-basis/canonical-run» {sp : Spec I O} (i : I) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   CanonExec (canon sp i) es τ

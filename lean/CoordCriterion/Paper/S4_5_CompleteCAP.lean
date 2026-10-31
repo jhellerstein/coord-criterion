@@ -124,16 +124,35 @@ theorem «sec:complete-cap/environment» (Sys : System sp D) (init : Fin n → I
     Allowed Sys n init p pre (.inp j) :=
   trivial
 
-/-! ### Definition `def:partition-notions` (Explicit relation, Availability) -/
+/-! ### Definitions `def:local-continuation`, `def:explicit-relation`, `def:partition-notions` (Availability) -/
 
-/-- **Def. `def:partition-notions` (Explicit relation, Availability).**  "A
-continuation of a partitioned history is local to a participant `p` when the system produces it,
-it adds only history events of `p`'s block and no input events, and none of its
-receives takes a message sent from another block.  … *Availability* is
-Availability for `S`."  In the unfolded form below, "local to `p`" is the
-conjunction `Produced … ∧ Partitioned … comp ∧ (∀ q, comp q ≠ comp p → ext q =
-[]) ∧ (∀ q j, inp j ∉ ext q)`.  For a general explicit relation see
-`«def:partition-notions/for»`. -/
+/-- **Def. `def:local-continuation`** (Local continuation).  "A continuation
+of a partitioned history is *local to* a participant `p` when the system
+produces it, it adds only history events of `p`'s block and no input events,
+and none of its receives takes a message sent from another block."
+
+Lean: "local to `p`" is unfolded as `Produced … ∧ Partitioned … comp ∧
+(∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ q j, inp j ∉ ext q)` in the
+unfolded form of `«def:partition-notions/unfolded»`. -/
+abbrev «def:local-continuation» (Sys : System sp D) : Prop :=
+  AvailabilityAtEnd Sys
+
+/-- **Def. `def:explicit-relation`** (Explicit relation).  "An *explicit
+relation* `E ⊆ S` is a set of rows `(i,o)` whose output `o` must stay
+available at input `i`; write `E(i)` for its fiber `{o : (i,o) ∈ E}`."
+
+Lean: a table `E : Table I O` subset of `sp.S`. -/
+abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
+  ∀ i o, E i o → sp.S i o
+
+/-- **Def. `def:partition-notions`** (Availability).  "The system has
+*Availability for `E`* when, in every partitioned history it produces, each
+participant `p`, ending in state `(i,R)`, can emit each output in `R(i) ∩
+E(i)` in some continuation local to `p` (Definition
+`def:local-continuation`).  *Availability* is Availability for `S`."
+
+Lean: `AvailabilityAtEnd Sys` (= `AvailabilityFor sp.S Sys`); for a general
+`E`, use `«def:partition-notions/for»`. -/
 abbrev «def:partition-notions» (Sys : System sp D) : Prop := AvailabilityAtEnd Sys
 
 /-- Def. `def:partition-notions`: "An explicit relation `E ⊆ S` is a set

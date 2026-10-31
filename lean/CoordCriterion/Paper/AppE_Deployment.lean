@@ -46,8 +46,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
 /-! ## Appendix E: Deployments: One Explicit Relation per Participant -/
 
-/-- **Definition `def:deployment`** (Deployment, emitted rows, participant
-run family, silent participant, separable run family).
+/-- **Definition `def:deployment`** (Deployment, emitted rows, partition).
 "A *deployment* over a finite participant set `P` assigns to each `p ∈ P` an
 explicit relation `E_p ⊆ S`, the rows `p` may emit: `p` performs an output event `Out_γ(o)`
 at current input `i` only if `(i,o) ∈ E_p`."
@@ -76,21 +75,29 @@ theorem «def:deployment/partition» (comp : Fin n → Nat) :
     IsPartition comp ↔ ∃ p q, comp p ≠ comp q :=
   Iff.rfl
 
-/-- Def. `def:deployment`: "A *participant run family* assigns to each of
-finitely many participants `p ∈ P` an initial input and a canonical run whose
-emitted rows lie in `E_p`.  A participant whose run emits no output is
-*silent*."
+/-- **Definition `def:participant-run-family`** (Participant run family,
+silent participant, separable run family).  "A *participant run family*
+assigns to each of finitely many participants `p ∈ P` an initial input and a
+canonical run whose emitted rows lie in `E_p`.  A participant whose run emits
+no output is *silent*.  The family is *separable under `Π`* when either
+participants in at least two blocks emit, or exactly one distinct row is
+emitted and some silent participant lies in another block."
 
-Lean: a family is `Fin n → Option (PRun sp)`; the condition "emitted rows lie
-in `E_p`" is `Authorized Dp F`, kept as a separate hypothesis. -/
+Lean: a family is `Fin n → Option (PRun sp)`; `Authorized Dp F` enforces
+"emitted rows lie in `E_p`"; `Silent F q` and `Separable F comp` carry the
+rest. -/
+abbrev «def:participant-run-family» (sp : Spec I O) (n : Nat) : Type := Family sp n
+
+/-- Def. `def:participant-run-family`: `Authorized` captures the authorization
+condition; `Silent` captures silence. -/
 theorem «def:deployment/family» (Dp : Deployment sp n) (F : Family sp n) :
     (Authorized Dp F ↔ ∀ p r, Emits F p r → Dp.A p r.1 r.2) ∧
     (∀ q, Silent F q ↔ ∃ m, F q = some m ∧ m.rows = []) :=
   ⟨Iff.rfl, fun _ => Iff.rfl⟩
 
-/-- Def. `def:deployment`: "The family is *separable under `Π`* when either
-participants in at least two blocks emit, or exactly one distinct row is
-emitted and some silent participant lies in another block." -/
+/-- Def. `def:participant-run-family`: "The family is *separable under `Π`*
+when either participants in at least two blocks emit, or exactly one distinct
+row is emitted and some silent participant lies in another block." -/
 theorem «def:deployment/separable» (F : Family sp n) (comp : Fin n → Nat) :
     Separable F comp ↔
       ((∃ p q r r', Emits F p r ∧ Emits F q r' ∧ comp p ≠ comp q) ∨

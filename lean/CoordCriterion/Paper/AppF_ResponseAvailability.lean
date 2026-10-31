@@ -51,12 +51,11 @@ abbrev «app:cap-response/emitted-rows» : I → List (Event I O) → List (I ×
 
 ### Definition `def:response-obligation` -/
 
-/-- **Def. `def:response-obligation`** (Response obligation, answering,
-uniform obligation; uniform case): "A response obligation
-assigns to each participant `p` a relation `Q_p ⊆ S` that is total on `I` and
-upward closed within fibers: if `(i,o) ∈ Q_p`, `(i,u) ∈ S`, and `o ⪯ u`, then
-`(i,u) ∈ Q_p`.  …  The obligation is *uniform* when every `Q_p` is the same
-relation `Q`."
+/-- **Def. `def:response-obligation`** (Response obligation, answering).
+"A response obligation assigns to each participant `p` a relation `Q_p ⊆ S`
+that is total on `I` and upward closed within fibers: if `(i,o) ∈ Q_p`,
+`(i,u) ∈ S`, and `o ⪯ u`, then `(i,u) ∈ Q_p`.  An output in `Q_p(i)` *answers*
+at `i` for `p`."
 
 Lean: `Obligation sp` packages a uniform `Q` with the three conditions.  A
 per-participant obligation is a family `(n : Nat) → Fin n → Table I O`; the
@@ -69,6 +68,13 @@ theorem «def:response-obligation/fields» (Q : Obligation sp) :
     (∀ i o, Q.Q i o → sp.S i o) ∧ (∀ i, ∃ o, Q.Q i o) ∧
     ∀ i o u, Q.Q i o → sp.S i u → o ≼ u → Q.Q i u :=
   ⟨Q.sub, Q.total, Q.up⟩
+
+/-- **Def. `def:uniform-obligation`** (Uniform obligation).  "A response
+obligation is *uniform* when every `Q_p` is the same relation `Q`."
+
+Lean: `Obligation sp` carries one `Q`; the uniform case is the identity shape
+used throughout. -/
+abbrev «def:uniform-obligation» (sp : Spec I O) : Type := Obligation sp
 
 /-- "Response availability is only as strong as `Q_p`: if an output permitted
 at every input answers, every specification is available."  Lean: indeed the

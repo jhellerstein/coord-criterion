@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-629 entries.
+650 entries.
 
 ### §2 Functional CALM
 
@@ -180,6 +180,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:functional-monotonicity»` | abbrev | **Eq. |
 | `«def:functional-monotonicity/via-f»` | theorem | Def. |
 | `«def:residual-state»` | abbrev | **Def. |
+| `«def:legal-input»` | abbrev | **Def. |
 | `«eq:canonical-state»` | abbrev | **Eq. |
 | `«eq:canonical-state/largest»` | theorem | "The *canonical state at `i`* is the state at `i` with no rows removed: |
 | `«eq:canonical-state/input-moves-canonical»` | theorem | "An input event from a canonical state leads to another canonical state." |
@@ -187,6 +188,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:input-event/legal-expands»` | theorem | The paper's input event asks for `j` legal *and* `i ≼ j`; the second follows from the first, since the remainder table contains only rows at expansions of `i`. |
 | `«sec:functional-events/input-cumulative»` | theorem | "`input(j)` then `input(k)` has the effect of `input(k)` alone; `input(i)` at `(i,R)` has no effect." |
 | `«def:output-event»` | abbrev | **Def. |
+| `«def:seal»` | abbrev | **Def. |
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commit-iff-seal»` | theorem | Def. |
 | `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` refines itself, so the event always ends at a state." |
@@ -198,11 +200,14 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«sec:functional-events/determined-one-element»` | theorem | "Determined": |
 | `«sec:functional-events/determination-examples»` | theorem | "A functional specification can therefore have undetermined states, as in panel (b) … An input event may [reach a determined state] by retiring rows … and a… |
 | `«sec:functional-events/stays-determined»` | theorem | "An event from a determined state always leads to another determined state: |
+| `«def:specification-event»` | abbrev | **Def. |
+| `«def:transition-system»` | abbrev | **Def. |
 | `«def:run»` | abbrev | **Def. |
 | `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment. |
 | `«lem:run-residual»` | theorem | **Lemma `lem:run-residual`** (Rows remaining after a run). |
 | `«eq:run-residual»` | abbrev | **Eq. |
 | `«lem:run-residual/example»` | theorem | Example after Lemma `lem:run-residual`: |
+| `«def:confluence»` | abbrev | **Def. |
 | `«def:consistency»` | abbrev | **Def. |
 | `«prop:confluence»` | theorem | **Prop. |
 | `«eq:reconciliation»` | abbrev | **Eq. |
@@ -230,11 +235,13 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«eq:relational-specification»` | abbrev | **Eq. |
 | `«eq:fiber»` | abbrev | **Eq. |
 | `«def:relational-specification/ambiguous»` | theorem | Def. |
+| `«def:ambiguous»` | abbrev | **Def. |
 | `«def:relational-monotonicity»` | abbrev | **Def. |
 | `«eq:relational-monotonicity»` | theorem | **Eq. |
 | `«def:relational-monotonicity/functional»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/compatible»` | abbrev | "For a set `F ⊆ O` of outputs, outputs `o₁,…,o_k` are *compatible in `F`* if some `u ∈ F` refines all of them." Lean: |
 | `«def:fiber-directedness»` | abbrev | **Def. |
+| `«def:directed-outputs»` | abbrev | **Def. |
 | `«def:fiber-directedness/singleton»` | theorem | After Def. |
 | `«sec:lifted-monotonicity/directed-example»` | theorem | "The fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` under inclusion is directed, since `{a,b,c,d}` refines every member, yet `{a}` and `{b}` have two incomparab… |
 | `«sec:lifted-monotonicity/figure-fibers»` | theorem | "Thus the traceroute fiber is directed: |
@@ -263,10 +270,11 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 |---|---|---|
 | `«def:distributed-history»` | abbrev | **Def. |
 | `«def:distributed-history/well-formed»` | abbrev | Def. |
-| `«def:distributed-history/happens-before»` | abbrev | Def. |
-| `«def:distributed-history/consistent-cut»` | abbrev | Def. |
+| `«def:happens-before»` | abbrev | **Def. |
+| `«def:consistent-cut»` | abbrev | **Def. |
 | `«sec:histories/cut-determines-runs»` | theorem | "A consistent cut contains a prefix of each participant's history events, so by item 3 it determines one run per participant." Lean: |
 | `«def:participant-run»` | abbrev | **Def. |
+| `«def:endpoint»` | abbrev | **Def. |
 | `«def:participant-run/is-run»` | theorem | Def. |
 | `«fig:participant-runs»` | theorem | **Fig. |
 | `«fig:participant-runs/general»` | theorem | The general form of Fig. |
@@ -282,14 +290,16 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
 | `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which history events occur next at the receiver, but it never directly changes the receiver's specification state, and no… |
 | `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
-| `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing sea… |
+| `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing seal. |
 | `«def:commitment»` | abbrev | **Def. |
 | `«eq:commitment-excludes»` | theorem | **Eq. |
 | `«sec:systems/seals-and-choices-are-commitments»` | theorem | "The seals and choices of Definitions output-event and lifted-output-event satisfy this definition: |
 | `«prop:seal-or-choose»` | theorem | **Prop. |
 | `«prop:seal-or-choose/functional»` | theorem | "In a functional specification each fiber has one row, so every commitment seals." |
+| `«def:local-history»` | abbrev | **Def. |
 | `«def:strategy»` | abbrev | **Def. |
 | `«def:system»` | abbrev | **Def. |
+| `«def:produced-history»` | abbrev | **Def. |
 | `«def:system/produced»` | theorem | Def. |
 | `«def:system/restrict»` | theorem | Def. |
 | `«sec:systems/one-specification»` | theorem | After Def. |
@@ -300,9 +310,9 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of Sections functional-calm–complete-calm: |
 | `«sec:systems/output-is-canonical-event»` | theorem | "… and `output(o)` is the case in which they remove exactly those." Lean: |
 | `«sec:systems/system-histories»` | theorem | "The environment observes `o`, not `γ`." Together with Def. |
-| `«sec:systems/bases-differ»` | theorem | *A transactional example of bespoke commitments.* "The lock manager … is one system; multiversion timestamp ordering (MVTO) is another, and they have differe… |
+| `«sec:systems/bases-differ»` | theorem | Opener of §4.2: |
 | `«fig:cc-commitments»` | theorem | Fig. |
-| `«sec:systems/two-systems-two-choices»` | theorem | *A transactional example of bespoke commitments.* "Both are choices: |
+| `«sec:systems/two-systems-two-choices»` | theorem | "Both are choices: |
 | `«sec:systems/neither-is-the-choice»` | theorem | "… and neither is the choice `c_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requeste… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Locks, timestamps, quorums, and consensus differ in how and when they decide. |
@@ -310,7 +320,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:contradicts»` | abbrev | **Def. |
 | `«def:coordination»` | abbrev | **Def. |
-| `«def:coordination/distributed»` | abbrev | Def. |
+| `«def:distributed-coordination»` | abbrev | **Def. |
+| `«def:coordination/distributed»` | abbrev | Legacy sub-label pointing at `«def:distributed-coordination»`. |
 | `«def:coordination/specification»` | abbrev | Def. |
 | `«def:coordination-free»` | abbrev | **Def. |
 | `«def:coordination-free/local-iff»` | theorem | Def. |
@@ -349,6 +360,8 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/system»` | abbrev | Paragraph after Def. |
 | `«sec:complete-cap/system-produced»` | theorem | "We fix a system …": |
 | `«sec:complete-cap/environment»` | theorem | "… and an adversarial environment that may supply any legal input event to any participant." Lean: |
+| `«def:local-continuation»` | abbrev | **Def. |
+| `«def:explicit-relation»` | abbrev | **Def. |
 | `«def:partition-notions»` | abbrev | **Def. |
 | `«def:partition-notions/for»` | abbrev | Def. |
 | `«def:partition-notions/for-S»` | theorem | Def. |
@@ -439,6 +452,7 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:iconfluence-instance/concurrency-decides»` | theorem | "Concurrency, not the transactions alone, decides the outcome: |
 | `«sec:operational-models/later-sends»` | theorem | "An output of the machine is an input of the client that receives it, so a client's later sends happen after everything the machine had received when it emit… |
 | `«def:induced-specification»` | theorem | **Def. |
+| `«def:execution-input»` | abbrev | **Def. |
 | `«prop:induced-specification»` | theorem | **Prop. |
 | `«sec:operational-models/testing-witness»` | theorem | "If Lifted Monotonicity fails, finitely many executions show it: |
 | `«sec:operational-models/both-halves»` | theorem | "The second is proof. |
@@ -509,8 +523,8 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/system»` | abbrev | *system* — a commitment basis `𝓑` and a strategy per participant (Def. |
 | `«app:notation/basis»` | abbrev | *basis* (Def. |
 | `«app:notation/produced»` | abbrev | *produced* — every non-input event permitted by its strategy and using only commitments from `𝓑` (Def. |
-| `«app:notation/system-output-event»` | abbrev | *system output event `Out_γ(o)`* — applies commitments `γ` from the basis, retires, emits `o` (Def. |
-| `«app:notation/commitment-event»` | abbrev | *commitment event `commit(γ)`* — applies a nonempty sequence `γ` from the basis, emits nothing (Def. |
+| `«app:notation/system-output-event»` | abbrev | *system output event `Out_γ(o)`* — applies commitments `γ`, retires, emits `o` (Def. |
+| `«app:notation/commitment-event»` | abbrev | *commitment event `commit(γ)`* — applies a nonempty sequence `γ` of commitments, emits nothing (Def. |
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments and commitment events erased; every run has a canonical one (Lem. |
@@ -607,6 +621,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«eq:output-retirements»` | abbrev | **Eq. |
 | `«eq:choice-removals»` | abbrev | **Eq. |
 | `«def:lifted-output-event»` | abbrev | **Def. |
+| `«def:lifted-seal-choice»` | abbrev | **Def. |
 | `«eq:canonical-seal-commitment-relational»` | theorem | **Eq. |
 | `«def:lifted-output-event/examples»` | theorem | After Def. |
 | `«app:lifted-output-events/disjoint»` | theorem | "The three sets are disjoint." |
@@ -619,6 +634,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«def:canonical-commitment-basis»` | abbrev | **Def. |
 | `«eq:canonical-commitment-basis-relational»` | theorem | **Eq. |
 | `«def:canonical-commitment-basis/kappa»` | theorem | Def. |
+| `«def:canonical-event»` | abbrev | **Def. |
 | `«def:canonical-commitment-basis/canonical-event»` | theorem | Def. |
 | `«app:bases/functional-excludes-vacuous»` | theorem | *The canonical seals and choices are commitments.* "With one row per input, Equation commitment-excludes holds vacuously, so the seals of Definition output-e… |
 | `«app:bases/seal-is-commitment»` | theorem | *The canonical seals and choices are commitments* (`s_o`). |
@@ -633,7 +649,8 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«app:bases/compound-output-event»` | theorem | "A compound output event therefore has the same effect as an event that applies the composite commitment alone, and Lemma canonical-commitment-normal-form co… |
 | `«app:bases/compound-commitment-event»` | theorem | A compound commitment event has the same effect as a commitment event that applies the composite commitment alone: |
 | `«def:run-under-basis»` | abbrev | **Def. |
-| `«def:run-under-basis/canonical-run»` | abbrev | Def. |
+| `«def:canonical-run»` | abbrev | **Def. |
+| `«def:run-under-basis/canonical-run»` | abbrev | Legacy sub-label pointing at `«def:canonical-run»`. |
 | `«def:run-under-basis/canonical-runs-are-runs»` | theorem | Def. |
 | `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once commitment sequences are erased and commitment events dropped: |
 | `«lem:canonical-equivalent»` | theorem | **Lemma canonical equivalents** (`lem:canonical-equivalent`). |
@@ -682,10 +699,12 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
-| `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run, implementation form): |
+| `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run). |
+| `«def:implementation-form»` | abbrev | **Definition `def:implementation-form`** (Implementation form). |
 | `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component once its boundary observations are chosen. |
 | `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision of Section `sec:coordination` has both forms. |
-| `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Typed pipeline, feed, external observation, contract-proper, implementation-proper): |
+| `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Feed, typed pipeline, external observation). |
+| `«def:proper-pipeline»` | theorem | **Definition `def:proper-pipeline`** (Contract-proper, implementation-proper). |
 | `«app:components/feed-is-input»` | theorem | "Receiving `m` is the downstream run's initial input, not a commitment of `C₂`." Lean: |
 | `«prop:typed-pipelines»` | theorem | **Proposition `prop:typed-pipelines`** (Typed pipelines): |
 | `«app:components/follows»` | theorem | "Item (5) covers one boundary output. |
@@ -696,9 +715,10 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
-| `«def:deployment»` | abbrev | **Definition `def:deployment`** (Deployment, emitted rows, participant run family, silent participant, separable run family). |
+| `«def:deployment»` | abbrev | **Definition `def:deployment`** (Deployment, emitted rows, partition). |
 | `«def:deployment/emitted-rows»` | theorem | Def. |
 | `«def:deployment/partition»` | theorem | Def. |
+| `«def:participant-run-family»` | abbrev | **Definition `def:participant-run-family`** (Participant run family, silent participant, separable run family). |
 | `«def:deployment/family»` | theorem | Def. |
 | `«def:deployment/separable»` | theorem | Def. |
 | `«def:monotone-across-partitions»` | theorem | **Definition `def:monotone-across-partitions`** (Monotone across partitions). |
@@ -761,6 +781,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«app:cap-response/emitted-rows»` | abbrev | "The *emitted rows* of a run are the pairs `(i,o)` such that it emits `o` at current input `i`." Lean: |
 | `«def:response-obligation»` | abbrev | **Def. |
 | `«def:response-obligation/fields»` | theorem | Def. |
+| `«def:uniform-obligation»` | abbrev | **Def. |
 | `«app:cap-response/trivially-available»` | theorem | "Response availability is only as strong as `Q_p`: |
 | `«def:response-availability»` | abbrev | **Def. |
 | `«def:response-availability/unfolded»` | theorem | Def. |

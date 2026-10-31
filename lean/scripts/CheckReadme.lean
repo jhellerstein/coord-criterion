@@ -28,6 +28,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:functional-monotonicity»
 #check @CC.Paper.«def:functional-monotonicity/via-f»
 #check @CC.Paper.«def:residual-state»
+#check @CC.Paper.«def:legal-input»
 #check @CC.Paper.«eq:canonical-state»
 #check @CC.Paper.«eq:canonical-state/largest»
 #check @CC.Paper.«eq:canonical-state/input-moves-canonical»
@@ -35,6 +36,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:input-event/legal-expands»
 #check @CC.Paper.«sec:functional-events/input-cumulative»
 #check @CC.Paper.«def:output-event»
+#check @CC.Paper.«def:seal»
 #check @CC.Paper.«eq:output-action»
 #check @CC.Paper.«def:output-event/commit-iff-seal»
 #check @CC.Paper.«sec:functional-events/output-ends-at-state»
@@ -46,11 +48,14 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:functional-events/determined-one-element»
 #check @CC.Paper.«sec:functional-events/determination-examples»
 #check @CC.Paper.«sec:functional-events/stays-determined»
+#check @CC.Paper.«def:specification-event»
+#check @CC.Paper.«def:transition-system»
 #check @CC.Paper.«def:run»
 #check @CC.Paper.«def:run/reachable-without-commitment»
 #check @CC.Paper.«lem:run-residual»
 #check @CC.Paper.«eq:run-residual»
 #check @CC.Paper.«lem:run-residual/example»
+#check @CC.Paper.«def:confluence»
 #check @CC.Paper.«def:consistency»
 #check @CC.Paper.«prop:confluence»
 #check @CC.Paper.«eq:reconciliation»
@@ -71,11 +76,13 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:relational-specification»
 #check @CC.Paper.«eq:fiber»
 #check @CC.Paper.«def:relational-specification/ambiguous»
+#check @CC.Paper.«def:ambiguous»
 #check @CC.Paper.«def:relational-monotonicity»
 #check @CC.Paper.«eq:relational-monotonicity»
 #check @CC.Paper.«def:relational-monotonicity/functional»
 #check @CC.Paper.«sec:lifted-monotonicity/compatible»
 #check @CC.Paper.«def:fiber-directedness»
+#check @CC.Paper.«def:directed-outputs»
 #check @CC.Paper.«def:fiber-directedness/singleton»
 #check @CC.Paper.«sec:lifted-monotonicity/directed-example»
 #check @CC.Paper.«sec:lifted-monotonicity/figure-fibers»
@@ -97,10 +104,11 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:exposure-boundary/functional»
 #check @CC.Paper.«def:distributed-history»
 #check @CC.Paper.«def:distributed-history/well-formed»
-#check @CC.Paper.«def:distributed-history/happens-before»
-#check @CC.Paper.«def:distributed-history/consistent-cut»
+#check @CC.Paper.«def:happens-before»
+#check @CC.Paper.«def:consistent-cut»
 #check @CC.Paper.«sec:histories/cut-determines-runs»
 #check @CC.Paper.«def:participant-run»
+#check @CC.Paper.«def:endpoint»
 #check @CC.Paper.«def:participant-run/is-run»
 #check @CC.Paper.«fig:participant-runs»
 #check @CC.Paper.«fig:participant-runs/general»
@@ -122,8 +130,10 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/seals-and-choices-are-commitments»
 #check @CC.Paper.«prop:seal-or-choose»
 #check @CC.Paper.«prop:seal-or-choose/functional»
+#check @CC.Paper.«def:local-history»
 #check @CC.Paper.«def:strategy»
 #check @CC.Paper.«def:system»
+#check @CC.Paper.«def:produced-history»
 #check @CC.Paper.«def:system/produced»
 #check @CC.Paper.«def:system/restrict»
 #check @CC.Paper.«sec:systems/one-specification»
@@ -144,6 +154,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:coordination/closing-after-voting»
 #check @CC.Paper.«def:contradicts»
 #check @CC.Paper.«def:coordination»
+#check @CC.Paper.«def:distributed-coordination»
 #check @CC.Paper.«def:coordination/distributed»
 #check @CC.Paper.«def:coordination/specification»
 #check @CC.Paper.«def:coordination-free»
@@ -176,6 +187,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:complete-cap/system»
 #check @CC.Paper.«sec:complete-cap/system-produced»
 #check @CC.Paper.«sec:complete-cap/environment»
+#check @CC.Paper.«def:local-continuation»
+#check @CC.Paper.«def:explicit-relation»
 #check @CC.Paper.«def:partition-notions»
 #check @CC.Paper.«def:partition-notions/for»
 #check @CC.Paper.«def:partition-notions/for-S»
@@ -252,6 +265,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:iconfluence-instance/concurrency-decides»
 #check @CC.Paper.«sec:operational-models/later-sends»
 #check @CC.Paper.«def:induced-specification»
+#check @CC.Paper.«def:execution-input»
 #check @CC.Paper.«prop:induced-specification»
 #check @CC.Paper.«sec:operational-models/testing-witness»
 #check @CC.Paper.«sec:operational-models/both-halves»
@@ -385,6 +399,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:output-retirements»
 #check @CC.Paper.«eq:choice-removals»
 #check @CC.Paper.«def:lifted-output-event»
+#check @CC.Paper.«def:lifted-seal-choice»
 #check @CC.Paper.«eq:canonical-seal-commitment-relational»
 #check @CC.Paper.«def:lifted-output-event/examples»
 #check @CC.Paper.«app:lifted-output-events/disjoint»
@@ -397,6 +412,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:canonical-commitment-basis»
 #check @CC.Paper.«eq:canonical-commitment-basis-relational»
 #check @CC.Paper.«def:canonical-commitment-basis/kappa»
+#check @CC.Paper.«def:canonical-event»
 #check @CC.Paper.«def:canonical-commitment-basis/canonical-event»
 #check @CC.Paper.«app:bases/functional-excludes-vacuous»
 #check @CC.Paper.«app:bases/seal-is-commitment»
@@ -411,6 +427,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:bases/compound-output-event»
 #check @CC.Paper.«app:bases/compound-commitment-event»
 #check @CC.Paper.«def:run-under-basis»
+#check @CC.Paper.«def:canonical-run»
 #check @CC.Paper.«def:run-under-basis/canonical-run»
 #check @CC.Paper.«def:run-under-basis/canonical-runs-are-runs»
 #check @CC.Paper.«app:bases/observably-equivalent»
@@ -454,15 +471,18 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«ex:bare-reads»
 #check @CC.Paper.«ex:bare-reads/latest-value»
 #check @CC.Paper.«def:component»
+#check @CC.Paper.«def:implementation-form»
 #check @CC.Paper.«app:components/system-is-component»
 #check @CC.Paper.«app:components/two-phase-commit»
 #check @CC.Paper.«def:typed-pipeline»
+#check @CC.Paper.«def:proper-pipeline»
 #check @CC.Paper.«app:components/feed-is-input»
 #check @CC.Paper.«prop:typed-pipelines»
 #check @CC.Paper.«app:components/follows»
 #check @CC.Paper.«def:deployment»
 #check @CC.Paper.«def:deployment/emitted-rows»
 #check @CC.Paper.«def:deployment/partition»
+#check @CC.Paper.«def:participant-run-family»
 #check @CC.Paper.«def:deployment/family»
 #check @CC.Paper.«def:deployment/separable»
 #check @CC.Paper.«def:monotone-across-partitions»
@@ -518,6 +538,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:cap-response/emitted-rows»
 #check @CC.Paper.«def:response-obligation»
 #check @CC.Paper.«def:response-obligation/fields»
+#check @CC.Paper.«def:uniform-obligation»
 #check @CC.Paper.«app:cap-response/trivially-available»
 #check @CC.Paper.«def:response-availability»
 #check @CC.Paper.«def:response-availability/unfolded»

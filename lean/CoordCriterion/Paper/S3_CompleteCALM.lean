@@ -106,12 +106,10 @@ theorem «sec:ambiguity-story/traceroute-passes» (x y : Figures.Trace.RS)
 /-! ## Relational specifications and states (`sec:relational-specifications`) -/
 
 /-- **Def. `def:relational-specification`** (Ordered relational
-specification, ambiguity, ordered specification).  "`Spec = (I,≼,O,≼,S)`, `S ⊆ I × O`, where `(I,≼)` and
+specification).  "`Spec = (I,≼,O,≼,S)`, `S ⊆ I × O`, where `(I,≼)` and
 `(O,≼)` are partially ordered sets and `S` is total on `I` … The fiber
-`S(i) = {o ∈ O : (i,o) ∈ S}` … may now contain several outputs; the
-specification is *ambiguous* when some fiber does.  A functional
-specification is the special case `S(i) = {f(i)}`.  We call either kind
-simply an *ordered specification*."
+`S(i) = {o ∈ O : (i,o) ∈ S}` … may now contain several outputs.  A functional
+specification is the special case `S(i) = {f(i)}`."
 
 Lean: `Spec I O` (orders are the `PO` instances); the fiber `S(i)` is
 `sp.S i`; functional is `Spec.Functional`. -/
@@ -138,6 +136,13 @@ theorem «def:relational-specification/ambiguous» {I O : Type} [PO I] [PO O] (s
    fun hn => Classical.byContradiction fun h =>
      hn fun i o o' ho ho' => Classical.byContradiction fun hne => h ⟨i, o, o', ho, ho', hne⟩⟩
 
+/-- **Def. `def:ambiguous`** (Ambiguous specification).  "An ordered
+relational specification is *ambiguous* when some fiber contains more than
+one output."  Lean reading: there exist `i, o, o'` with `o ≠ o'` and both in
+`sp.S i`. -/
+abbrev «def:ambiguous» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
+  ∃ i o o', sp.S i o ∧ sp.S i o' ∧ o ≠ o'
+
 /-! ## Lifted Monotonicity (`sec:lifted-monotonicity`) -/
 
 /-- **Def. `def:relational-monotonicity`** (Relational Monotonicity).
@@ -163,12 +168,17 @@ the outputs as a list `X`. -/
 abbrev «sec:lifted-monotonicity/compatible» {O : Type} [PO O] (F : O → Prop) (X : List O) : Prop :=
   CompatibleIn F X
 
-/-- **Def. `def:fiber-directedness`** (Directed fiber, Directed Outputs).  "A
-fiber `F ⊆ O` is *directed* when every nonempty finite `X ⊆ F` is compatible
-in `F`.  An ordered relational specification has *Directed Outputs* when every
-fiber `S(i)` is directed."  Lean: `F` is directed iff `JointLift F F`;
-`Spec.DirectedOutputs` is `∀ i, JointLift (sp.S i) (sp.S i)`. -/
-abbrev «def:fiber-directedness» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
+/-- **Def. `def:fiber-directedness`** (Directed fiber).  "A fiber `F ⊆ O` is
+*directed* when every nonempty finite `X ⊆ F` is compatible in `F`."  Lean:
+`F` is directed iff `JointLift F F`. -/
+abbrev «def:fiber-directedness» {O : Type} [PO O] (F : O → Prop) : Prop :=
+  JointLift F F
+
+/-- **Def. `def:directed-outputs`** (Directed Outputs).  "An ordered
+relational specification has *Directed Outputs* when every fiber `S(i)` is
+directed."  Lean: `Spec.DirectedOutputs` is `∀ i, JointLift (sp.S i)
+(sp.S i)`. -/
+abbrev «def:directed-outputs» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.DirectedOutputs
 
 /-- After Def. `def:fiber-directedness`: "A singleton fiber is trivially
@@ -208,8 +218,8 @@ theorem «sec:lifted-monotonicity/figure-fibers» :
 abbrev «eq:joint-output-order» {O : Type} [PO O] (A B : O → Prop) : Prop :=
   JointLift A B
 
-/-- **Def. `def:lifted-monotonicity`** (Lifted Monotonicity, monotone
-specification).  "`i ≼ j ⟹ S(i) ⊑ S(j)`." -/
+/-- **Def. `def:lifted-monotonicity`** (Lifted Monotonicity).  "`i ≼ j ⟹
+S(i) ⊑ S(j)`." -/
 abbrev «def:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.LiftedMono
 

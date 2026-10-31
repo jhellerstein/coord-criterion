@@ -102,7 +102,7 @@ abbrev «app:notation/upper-fiber» (R : Table I O) (k : I) (o : O) : Prop :=
 expansion of `i` (Def. `def:residual-state`).  Lean: `State sp`. -/
 abbrev «app:notation/state» (sp : Spec I O) := State sp
 
-/-- *legal input* — an input with a row in `R` (Def. `def:residual-state`).
+/-- *legal input* — an input with a row in `R` (Def. `def:legal-input`).
 No library name: `∃ u, σ.R k u` (the hypothesis of `Step.input`). -/
 abbrev «app:notation/legal» {sp : Spec I O} (σ : State sp) (k : I) : Prop := ∃ u, σ.R k u
 
@@ -173,7 +173,7 @@ abbrev «app:notation/confluent-at» {sp : Spec I O} (fam : List (State sp)) (j 
 abbrev «app:notation/relational-specification» (I O : Type) [PO I] [PO O] := Spec I O
 
 /-- *ambiguous* — some fiber has several outputs
-(Def. `def:relational-specification`).  No library name; equivalently
+(Def. `def:ambiguous`).  No library name; equivalently
 `¬ sp.Functional` (`«def:relational-specification/ambiguous»`). -/
 abbrev «app:notation/ambiguous» (sp : Spec I O) : Prop :=
   ∃ i o o', sp.S i o ∧ sp.S i o' ∧ o ≠ o'
@@ -202,7 +202,7 @@ abbrev «app:notation/compatible-in» (F : O → Prop) (X : List O) : Prop := Co
 (Def. `def:fiber-directedness`).  Lean: `JointLift F F`. -/
 abbrev «app:notation/directed» (F : O → Prop) : Prop := JointLift F F
 
-/-- *Directed Outputs* — every fiber directed (Def. `def:fiber-directedness`).
+/-- *Directed Outputs* — every fiber directed (Def. `def:directed-outputs`).
 Lean: `Spec.DirectedOutputs`. -/
 abbrev «app:notation/directed-outputs» (sp : Spec I O) : Prop := sp.DirectedOutputs
 
@@ -399,8 +399,9 @@ abbrev «app:notation/coordination» {sp : Spec I O} {D : Type} (Sys : CAP.Syste
   CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
 
 /-- *requires distributed coordination* — a commitment some run at another
-participant contradicts (Def. `def:coordination`).  Lean: the commitments of
-participant `p` of `H` are contradicted by a participant `q ≠ p` of `H`. -/
+participant contradicts (Def. `def:distributed-coordination`).  Lean: the
+commitments of participant `p` of `H` are contradicted by a participant
+`q ≠ p` of `H`. -/
 abbrev «app:notation/distributed-coordination» {sp : Spec I O} {D : Type} {n : Nat}
     (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp) : Prop :=
   CAP.Contradicts (CAP.OtherEmits init H p) (CAP.OtherAccepts H p) σ σc
@@ -429,7 +430,7 @@ abbrev «app:notation/block» {n : Nat} (comp : Fin n → Nat) (p : Fin n) : Fin
 
 /-- *explicit relation `E`; explicit, implicit output* — `E ⊆ S`, the rows
 whose outputs must stay available; outputs of `E`, and the other permitted
-outputs (Def. `def:partition-notions`).  Lean: a table `E : Table I O` with
+outputs (Def. `def:explicit-relation`).  Lean: a table `E : Table I O` with
 `∀ i o, E i o → sp.S i o`. -/
 abbrev «app:notation/explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.S i o

@@ -594,18 +594,14 @@ theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
       (.recv e' ∈ β → (IOM.input β).lt e e') :=
   IOM.send_after_out ⟨s, hx, rfl⟩ hm hrv hrm hj hmj hc
 
-/-- **Def. `def:induced-specification`** (Input of an execution, induced
-specification).  "The
-*input* of a finite execution is the set of state-machine events the machine has received,
-ordered by happens-before between their sends; `h ⊑ h'` when `h ⊆ h'` and the
-two orders agree on `h`.  The specification *induced* by `M` and its
-environment pairs each input that occurs with the machine's observation at
-the end of every execution with that input."
+/-- **Def. `def:induced-specification`** (Induced specification).  "The
+specification *induced* by `M` and its environment pairs each input
+(Definition `def:execution-input`) that occurs with the machine's observation
+at the end of every execution with that input."
 
-Lean: `IOM.input β` (membership: `recv e ∈ β`; order: happens-before between
-the positions sending the two events), the order `IOM.Inp.instPO`, the
-inputs that occur `IOM.OccInp C P k G`, and the table `IOM.spec k G`; the
-statement unfolds each, for a general machine `G`.
+Lean: the table `IOM.spec k G` on `IOM.OccInp C P k G`; for a general
+machine `G`, this theorem gives the unfolded conditions for input
+membership, order, and fiber membership together.
 
 The remarks that follow ("This is not a
 distributed execution in the sense of Section `sec:distributed-execution`.
@@ -626,6 +622,16 @@ theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
     (∀ (h : IOM.OccInp C P k G) o, (IOM.spec k G).S h o ↔
       ∃ β s, IOA.Execution (IOM.sys k G) β s ∧ IOM.input β = h.val ∧ G.obs (s .mach) = o) :=
   ⟨fun _ _ => Iff.rfl, fun _ _ _ => Iff.rfl, fun _ _ => Iff.rfl, fun _ _ => Iff.rfl⟩
+
+/-- **Def. `def:execution-input`** (Input of an execution).  "The *input* of
+a finite execution is the set of state-machine events the machine has
+received, ordered by happens-before between their sends; `h ⊑ h'` when
+`h ⊆ h'` and the two orders agree on `h`."
+
+Lean: `IOM.input β` (membership: `recv e ∈ β`; order: happens-before between
+the positions sending the two events), the order `IOM.Inp.instPO`. -/
+abbrev «def:execution-input» {C P O : Type} (β : List (IOM.Act C P O)) : IOM.Inp C P :=
+  IOM.input β
 
 /-- **Prop. `prop:induced-specification`** (Induced specifications).
 "(1) The induced specification is an ordered specification, and the input of

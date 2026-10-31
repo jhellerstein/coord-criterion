@@ -637,25 +637,31 @@ theorem «ex:bare-reads/latest-value» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd
 
 /-! ## Components and typed pipelines (`app:components`) -/
 
-/-- **Definition `def:component`** (Component, admitted run, implementation
-form): "A component for a specification `𝒮` consists of a commitment basis
-`ℬ` and a set of admitted runs.  Each admitted run is a run under `ℬ` from a
-canonical state `σ(i)` (Definition `def:run-under-basis`), together with an
-output `o` that it emits, such that `(i,o) ∈ S`.  A component may carry an
-implementation form, `Process`, `Cluster`, or `Composite`, which records how
-it is realized.  The implementation form plays no role in typed composition;
-it determines which internal system model and coordination classification
-justify the component's admitted runs."  Lean: `Components.Component`
-(fields `basis`, `accepts`, `sound`, `location`); an admitted run is a
-`Components.OperationalRun` (input, named output, events, final state) whose
-certificate `OperationalRun.Valid` is an execution under the basis from
-`canon sp input`, an output event emitting the named output, and the row.
-The form is `Components.LocationForm`; no typed-composition proof obligation
+/-- **Definition `def:component`** (Component, admitted run).  "A component
+for a specification `𝒮` consists of a commitment basis `ℬ` and a set of
+admitted runs.  Each admitted run is a run under `ℬ` from a canonical state
+`σ(i)` (Definition `def:run-under-basis`), together with an output `o` that
+it emits, such that `(i,o) ∈ S`."
+
+Lean: `Components.Component` (fields `basis`, `accepts`, `sound`,
+`location`); an admitted run is a `Components.OperationalRun` (input, named
+output, events, final state) whose certificate `OperationalRun.Valid` is an
+execution under the basis from `canon sp input`, an output event emitting the
+named output, and the row. -/
+abbrev «def:component» {I O : Type} [PO I] [PO O] (sp : Spec I O) :=
+  Components.Component sp
+
+/-- **Definition `def:implementation-form`** (Implementation form).  "A
+component may carry an *implementation form*, `Process`, `Cluster`, or
+`Composite`, which records how it is realized.  The implementation form plays
+no role in typed composition; it determines which internal system model and
+coordination classification justify the component's admitted runs."
+
+Lean: `Components.LocationForm`; no typed-composition proof obligation
 mentions it.  The internal system model it points to is
 `Components.Component.ofSystemOn` (process or cluster), with the coordination
 classifications of `«app:components/two-phase-commit»`. -/
-abbrev «def:component» {I O : Type} [PO I] [PO O] (sp : Spec I O) :=
-  Components.Component sp
+abbrev «def:implementation-form» := Components.LocationForm
 
 /-- "A system for `𝒮` (Definition `def:system`) induces a component once its
 boundary observations are chosen.  An admitted boundary run is a participant
@@ -706,29 +712,39 @@ theorem «app:components/two-phase-commit» (D : Type) :
   let h' := Components.sealSysRepl_cluster D
   ⟨h.1, h.2.2.1, h.2.2.2, h'.1, h'.2⟩
 
-/-- **Definition `def:typed-pipeline`** (Typed pipeline, feed, external
-observation, contract-proper, implementation-proper): "A feed pairs an admitted run of `C₁`, with input `i` and output
-`m`, with an admitted run of `C₂` from `σ(m)`, with output `o`.  The typed
-pipeline of `C₁` and `C₂` shows the external observation `(i,o)` of each
-feed; the value `m`, both runs, and their commitments stay hidden.  The
-pipeline is contract-proper when the pipeline of `𝒮₁` and `𝒮₂` is proper
-(Definition `def:proper-coordination`), and implementation-proper when no
-downstream run of a feed applies a commitment."  Lean: `Components.FeedWitness` (`feed : upRun.output =
-downRun.input`), `Components.Pipeline`, `Pipeline.Accepts` (the observations
+/-- **Definition `def:typed-pipeline`** (Feed, typed pipeline, external
+observation).  "A feed pairs an admitted run of `C₁`, with input `i` and
+output `m`, with an admitted run of `C₂` from `σ(m)`, with output `o`.  The
+typed pipeline of `C₁` and `C₂` shows the external observation `(i,o)` of
+each feed; the value `m`, both runs, and their commitments stay hidden."
+
+Lean: `Components.FeedWitness` (`feed : upRun.output = downRun.input`),
+`Components.Pipeline`, `Pipeline.Accepts` (the observations
 `FeedWitness.boundary`, of type `BoundaryObservation I O`, which has no field
-for `m` or the runs), `Pipeline.ContractProper` (equivalent to `Guard.Proper`
-by `contractProper_iff_guardProper`), `Pipeline.ImplementationProper`.  "Applies a commitment" is the
-negation of the library's `CoordFree` (`«def:coordination-free/commitment-free-runs»`). -/
+for `m` or the runs). -/
 theorem «def:typed-pipeline» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M}
     {sp2 : Spec M O} (p : Components.Pipeline sp1 sp2) (obs : Components.BoundaryObservation I O) :
-    (p.Accepts obs ↔ ∃ w : Components.FeedWitness p.upstream p.downstream,
-      w.upRun.input = obs.input ∧ w.downRun.output = obs.output) ∧
+    p.Accepts obs ↔ ∃ w : Components.FeedWitness p.upstream p.downstream,
+      w.upRun.input = obs.input ∧ w.downRun.output = obs.output :=
+  ⟨fun ⟨w, h⟩ => ⟨w, by rw [← h]; rfl, by rw [← h]; rfl⟩,
+   fun ⟨w, h1, h2⟩ => ⟨w, by cases obs; cases h1; cases h2; rfl⟩⟩
+
+/-- **Definition `def:proper-pipeline`** (Contract-proper,
+implementation-proper).  "A typed pipeline is *contract-proper* when the
+pipeline of `𝒮₁` and `𝒮₂` is proper (Definition `def:proper-coordination`),
+and *implementation-proper* when no downstream run of a feed applies a
+commitment."
+
+Lean: `Pipeline.ContractProper` (equivalent to `Guard.Proper` by
+`contractProper_iff_guardProper`), `Pipeline.ImplementationProper`.
+"Applies a commitment" is the negation of the library's `CoordFree`
+(`«def:coordination-free/commitment-free-runs»`). -/
+theorem «def:proper-pipeline» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M}
+    {sp2 : Spec M O} (p : Components.Pipeline sp1 sp2) :
     (p.ContractProper ↔ Guard.Proper sp1 sp2) ∧
     (p.ImplementationProper ↔ ∀ w : Components.FeedWitness p.upstream p.downstream,
       CoordFree w.downRun.events) :=
-  ⟨⟨fun ⟨w, h⟩ => ⟨w, by rw [← h]; rfl, by rw [← h]; rfl⟩,
-    fun ⟨w, h1, h2⟩ => ⟨w, by cases obs; cases h1; cases h2; rfl⟩⟩,
-    Components.contractProper_iff_guardProper p, Iff.rfl⟩
+  ⟨Components.contractProper_iff_guardProper p, Iff.rfl⟩
 
 /-- "Receiving `m` is the downstream run's initial input, not a commitment of
 `C₂`."  Lean: a feed equates the upstream's named output with the downstream

@@ -45,11 +45,10 @@ variable {I O : Type} [PO I] [PO O]
 
 /-! ## Distributed histories (§4.1, `sec:histories`) -/
 
-/-- **Def. distributed history, history event, happens-before, consistent
-cut** (`def:distributed-history`), the carrier.
-"A distributed history `H` is a finite set of history events, each an
-occurrence at one participant of a specification event, `send(m)`, or
-`receive(m)` …"
+/-- **Def. `def:distributed-history`** (Distributed history, history event),
+the carrier.  "A distributed history `H` is a finite set of history events,
+each an occurrence at one participant of a specification event, `send(m)`,
+or `receive(m)` …"
 
 Lean: participants are `Fin n`; each participant has a finite `List` of local
 events (`Dist.LEv`: `io e`, `send x m`, `recv x m` with a message identifier
@@ -74,15 +73,16 @@ abbrev «def:distributed-history/well-formed» {D : Type} {n : Nat} (sp : Spec I
     (H : Dist.History I O D n) : Prop :=
   H.WF sp
 
-/-- Def. `def:distributed-history`: "Happens-before is the transitive closure of
-the local orders and of each send preceding its matching receive." -/
-abbrev «def:distributed-history/happens-before» {D : Type} {n : Nat}
+/-- **Def. `def:happens-before`** (Happens-before).  "Happens-before is the
+transitive closure of the local orders of a distributed history and of each
+send preceding its matching receive." -/
+abbrev «def:happens-before» {D : Type} {n : Nat}
     (H : Dist.History I O D n) : Dist.Pos n → Dist.Pos n → Prop :=
   H.HB
 
-/-- Def. `def:distributed-history`: "A consistent cut `C` is a subset of history
-events closed under happens-before." -/
-abbrev «def:distributed-history/consistent-cut» {D : Type} {n : Nat}
+/-- **Def. `def:consistent-cut`** (Consistent cut).  "A consistent cut `C` is
+a subset of history events closed under happens-before." -/
+abbrev «def:consistent-cut» {D : Type} {n : Nat}
     (H : Dist.History I O D n) (C : Dist.Pos n → Prop) : Prop :=
   H.IsCut C
 
@@ -100,15 +100,20 @@ theorem «sec:histories/cut-determines-runs» {D : Type} {n : Nat} (sp : Spec I 
   ⟨hC.cut_prefix, Dist.History.endpoint_exists hW hC,
     fun _ _ => Dist.History.endpoint_unique⟩
 
-/-- **Def. participant run, endpoint** (`def:participant-run`).  "At a
-consistent cut `C`, the specification events of `C` at participant `p`, in
-local order, form its participant run … whose final state we write `σ_p(C)`.
-The endpoint of `C` is `end(H,C) = (σ_p(C))_{p∈P}`."
+/-- **Def. `def:participant-run`** (Participant run).  "At a consistent cut
+`C`, the specification events of `C` at participant `p`, in local order, form
+its participant run … whose final state we write `σ_p(C)`."
 
-Lean: relational — `σs` *is* the endpoint when each `σs p` is the final state
-of `p`'s input/output events in the cut (existence and uniqueness:
-`«sec:histories/cut-determines-runs»`). -/
+Lean: relational — `σs p` is the final state of `p`'s input/output events in
+the cut (existence and uniqueness: `«sec:histories/cut-determines-runs»`). -/
 abbrev «def:participant-run» {D : Type} {n : Nat} (sp : Spec I O)
+    (H : Dist.History I O D n) (C : Dist.Pos n → Prop) (σs : Fin n → State sp) : Prop :=
+  H.Endpoint sp C σs
+
+/-- **Def. `def:endpoint`** (Endpoint).  "The endpoint of a consistent cut
+`C` is `end(H,C) = (σ_p(C))_{p∈P}`."  Lean: `σs` is the family of final states
+across participants, i.e. `H.Endpoint sp C σs`. -/
+abbrev «def:endpoint» {D : Type} {n : Nat} (sp : Spec I O)
     (H : Dist.History I O D n) (C : Dist.Pos n → Prop) (σs : Fin n → State sp) : Prop :=
   H.Endpoint sp C σs
 
@@ -364,13 +369,22 @@ theorem «prop:seal-or-choose/functional» {sp : Spec I O} (hf : sp.Functional)
     (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w :=
   functional_commitment_seals hf c h k hk
 
-/-- **Def. local history, strategy** (`def:strategy`).  "A local history of participant `p` is a
-finite sequence of `p`'s history events … A strategy for `p` is a
-nondeterministic transition function: it maps each local history `λ` of `p` to
-a set `θ_p(λ)` of output, commitment, and send events of `p`, and `p` next
-performs any one of them, or waits.  Input and receive events are not chosen
-by the strategy: inputs come from the environment and receives from matching
-sends."
+/-- **Def. `def:local-history`** (Local history).  "A local history of
+participant `p` is a finite sequence of `p`'s history events, including the
+messages it has received."
+
+Lean: for a `CAP.History sp D n`, participant `p`'s local history is
+`H p : List (CAP.LEv sp D n)`; the events are inputs, outputs, sends,
+receives, and commitment events `CAP.LEv.cmt γ`. -/
+abbrev «def:local-history» (sp : Spec I O) (D : Type) (n : Nat) :=
+  List (CAP.LEv sp D n)
+
+/-- **Def. `def:strategy`** (Strategy).  "A strategy for a participant `p` is
+a nondeterministic transition function: it maps each local history `λ` of
+`p` to a set `θ_p(λ)` of output, commitment, and send events of `p`, and `p`
+next performs any one of them, or waits.  Input and receive events are not
+chosen by the strategy: inputs come from the environment and receives from
+matching sends."
 
 Lean (the `CC.CAP` system model): a strategy for `p` is a relation from local
 histories (`List (CAP.LEv sp D n)`) to next events; local events include
@@ -379,9 +393,10 @@ is ignored: `CAP.Allowed` always allows inputs. -/
 abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
   List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop
 
-/-- **Def. system, produced history** (`def:system`).  "A system consists
-of a *commitment basis* `ℬ`, a set of commitments shared by all participants, and a strategy `θ_p` for each participant `p` whose output
-and commitment events apply only commitments from `ℬ`."
+/-- **Def. `def:system`** (System).  "A system consists of a *commitment
+basis* `ℬ`, a set of commitments shared by all participants, and a strategy
+`θ_p` for each participant `p` whose output and commitment events apply only
+commitments from `ℬ`."
 
 Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
 participant of every finite participant set and initial inputs, as §4.5 later
@@ -391,6 +406,15 @@ requires) with `System.BasisRespecting`.  Its commitments are
 `«def:system/restrict»` shows this loses nothing. -/
 abbrev «def:system» (sp : Spec I O) (D : Type) :=
   {Sys : CAP.System sp D // Sys.BasisRespecting}
+
+/-- **Def. `def:produced-history`** (Produced history).  "A distributed
+history produced by a system consists of input events supplied by the
+environment, receives of matching sends, and output, commitment, and send
+events chosen by the participants' strategies."  Lean: `CAP.Produced Sys n
+init H`. -/
+abbrev «def:produced-history» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
+    (n : Nat) (init : Fin n → I) (H : CAP.History sp D n) : Prop :=
+  CAP.Produced Sys n init H
 
 /-- Def. `def:system`: "A distributed history produced by the system consists
 of input events supplied by the environment, receives of matching sends, and
@@ -697,11 +721,11 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
-/-- **Def. coordination-requiring commitment, distributed coordination**
-(`def:coordination`).  "Let `𝓡` be a set of runs: for a specification, its
-canonical runs; for a system, the runs it can perform under any inputs the
-environment may supply.  A commitment requires coordination relative to `𝓡`
-when some run in `𝓡` contradicts it (Definition contradicts)."
+/-- **Def. `def:coordination`** (Coordination-requiring commitment).  "Let
+`𝓡` be a set of runs: for a specification, its canonical runs; for a system,
+the runs it can perform under any inputs the environment may supply.  A
+commitment requires coordination relative to `𝓡` when some run in `𝓡`
+contradicts it (Definition contradicts)."
 
 Lean, for a system: the commitments taking `σ` to `σc` are contradicted
 (`«def:contradicts»`) by the runs of `Sys`: some produced history emits a
@@ -711,10 +735,18 @@ abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
     (σ σc : State sp) : Prop :=
   CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
 
-/-- Def. `def:coordination`: "It requires distributed coordination when that
-run is at another participant of the same history."  Lean: the commitments
-taking `σ` to `σc`, applied by participant `p` of `H`, are contradicted by a
-participant `q ≠ p` of `H` (`OtherEmits`, `OtherAccepts`). -/
+/-- **Def. `def:distributed-coordination`** (Distributed coordination).  "A
+commitment requires distributed coordination relative to `𝓡` when the run
+that contradicts it is at another participant of the same history."
+
+Lean: the commitments taking `σ` to `σc`, applied by participant `p` of `H`,
+are contradicted by a participant `q ≠ p` of `H` (`OtherEmits`,
+`OtherAccepts`). -/
+abbrev «def:distributed-coordination» {sp : Spec I O} {D : Type} {n : Nat}
+    (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp) : Prop :=
+  CAP.Contradicts (CAP.OtherEmits init H p) (CAP.OtherAccepts H p) σ σc
+
+/-- Legacy sub-label pointing at `«def:distributed-coordination»`. -/
 abbrev «def:coordination/distributed» {sp : Spec I O} {D : Type} {n : Nat}
     (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp) : Prop :=
   CAP.Contradicts (CAP.OtherEmits init H p) (CAP.OtherAccepts H p) σ σc

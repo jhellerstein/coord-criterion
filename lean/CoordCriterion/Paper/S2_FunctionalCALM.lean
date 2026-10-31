@@ -279,15 +279,19 @@ theorem «def:functional-monotonicity/via-f» {I O : Type} [PO I] [PO O]
    fun h i j o u hij ho hu => by rw [(hf i o).1 ho, (hf j u).1 hu]; exact h i j hij⟩
 
 /-- **Def. `def:residual-state`** (Specification state, current input,
-remainder table, legal input).  "A pair
-`σ = (i,R)`, where `i ∈ I` is the *current input* and `R ⊆ S` is the
-*remainder table*, such that: (1) `R` contains a row at `i`; and (2) `R`
-contains only rows at expansions of `i`."  An input `k` is *legal* at `σ`
-when `∃ u, σ.R k u`.
+remainder table).  "A pair `σ = (i,R)`, where `i ∈ I` is the *current input*
+and `R ⊆ S` is the *remainder table*, such that: (1) `R` contains a row at
+`i`; and (2) `R` contains only rows at expansions of `i`."
 
 Lean: `State sp` with fields `cur`, `R`, `sub` (`R ⊆ S`), `hasCur` (1) and
 `above` (2). -/
 abbrev «def:residual-state» {I O : Type} [PO I] [PO O] (sp : Spec I O) := State sp
+
+/-- **Def. `def:legal-input`**.  "An input `k` is *legal* at a state `(i,R)`
+when `R` contains a row at `k`."  Lean: `∃ u, σ.R k u`. -/
+abbrev «def:legal-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (σ : State sp) (k : I) : Prop :=
+  ∃ u, σ.R k u
 
 /-- **Eq. `eq:canonical-state`**: the canonical state `σ_S(i) = (i, S[in ⪰ i])`. -/
 abbrev «eq:canonical-state» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I) : State sp :=
@@ -335,12 +339,10 @@ theorem «sec:functional-events/input-cumulative» {I O : Type} [PO I] [PO O]
       (∀ {σ τ : State sp}, Step σ (.input σ.cur) τ → τ = σ) :=
   ⟨input_input, input_self⟩
 
-/-- **Def. `def:output-event`** (Output event, seal, commitment).  "Let
-`(i,R)` be a state and `(i,o)` its row at the current input.  The *output
-event* `output(o)` … restricts the remainder table to exactly the rows whose
-outputs refine `o`, and emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`.
-When `R' ≠ R`, removing some row at an input `j ⪰ i`, we call this
-transition the *seal* … it is a *commitment*."
+/-- **Def. `def:output-event`** (Output event).  "Let `(i,R)` be a state and
+`(i,o)` its row at the current input.  The *output event* `output(o)` …
+restricts the remainder table to exactly the rows whose outputs refine `o`,
+and emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`."
 
 Lean: `Step σ (.output o) τ` (constructor `Step.output`) requires
 `σ.R σ.cur o` and sets `τ.R = outputTable σ o = R[out ⪰ o]`.  The general
@@ -350,6 +352,17 @@ exactly "some row is in `Sealed_o`" (`«def:output-event/commit-iff-seal»`). -/
 abbrev «def:output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
   outputTable σ o
+
+/-- **Def. `def:seal`**.  "When `R' ≠ R` in Definition `def:output-event`,
+removing some row at an input `j ⪰ i`, we call this transition the *seal*
+`s_o(i,R) = (i,R')`: it *seals* the inputs of the removed rows, and it is a
+*commitment*."
+
+Lean: `sealC o : Commitment sp` (`sealApp o`): the commitment that removes the
+rows in `Sealed_o`, defined at states where `o ∈ R(i)` and `Sealed_o ≠ ∅`. -/
+noncomputable abbrev «def:seal» {I O : Type} [PO I] [PO O] {sp : Spec I O} (o : O) :
+    Commitment sp :=
+  sealC o
 
 /-- **Eq. `eq:output-action`**: "`(i,R) --output(o)--> (i, R' = R[out ⪰ o])`".
 The new table `R[out ⪰ o]` is `outputTable σ o`: the rows of `R` whose output
@@ -443,11 +456,20 @@ theorem «sec:functional-events/stays-determined» {I O : Type} [PO I] [PO O]
 
 /-! ## Executions and consistency (`sec:executions`) -/
 
-/-- **Def. `def:run`** (Specification event, transition system, run).  "Input
-and output events are *specification events*: they change the specification
-state.  The *transition system* consists of specification states and these
-events.  A *run* is any finite transition sequence from the canonical state
-`σ_S(i)` at some input `i`."
+/-- **Def. `def:specification-event`**.  "Input and output events are
+*specification events*: they change the specification state.  We call them
+simply *events* when unambiguous."  Lean: `Event I O` (two constructors
+`.input`, `.output`). -/
+abbrev «def:specification-event» (I O : Type) := Event I O
+
+/-- **Def. `def:transition-system`**.  "The *transition system* consists of
+specification states and specification events."  Lean: `State sp` and
+`Event I O` together with `Step σ e τ`. -/
+abbrev «def:transition-system» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
+  ∀ (σ : State sp) (e : Event I O), ∃ τ, Step σ e τ ∨ ¬ ∃ τ, Step σ e τ
+
+/-- **Def. `def:run`** (Run).  "A *run* is any finite transition sequence of
+the transition system from the canonical state `σ_S(i)` at some input `i`."
 
 Lean: `Exec σ es τ` is execution along the event list `es`; `IsRun τ` says
 that `τ` is the final state of some run (`∃ i es, Exec (canon sp i) es τ`). -/
@@ -487,15 +509,21 @@ theorem «lem:run-residual/example» (k : Ballots) (o : ResE) :
     outputTable (canon elecEq bxy) ⟨.bot⟩ k o ↔ (k = bxy ∧ o = ⟨.bot⟩) :=
   elecEq_bot_single_row k o
 
-/-- **Def. `def:consistency`** (Consistency, confluence at an input).  "An ordered specification is
-*consistent* when every finite family of runs is confluent: if the runs end
-at states `(i₁,R₁),…,(i_k,R_k)` and `j` is a common expansion of their current
-inputs, each can be continued to a common state with current input `j`.
-They are then *confluent at* `j`."
+/-- **Def. `def:confluence`** (Confluence at an input).  "A finite family of
+runs ending at states `(i₁,R₁),…,(i_k,R_k)` is *confluent at* `j`, a common
+expansion of their current inputs, when each can be continued to a common
+state with current input `j`."
 
-Lean: `Spec.Consistent`; finite families are lists of run end states, and
-"confluent at `j`" is `ConfluentAt fam j` (`∃ τ, τ.cur = j ∧ ∀ σ ∈ fam,
-Reach σ τ`). -/
+Lean: `ConfluentAt fam j` (`∃ τ, τ.cur = j ∧ ∀ σ ∈ fam, Reach σ τ`). -/
+abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+    (fam : List (State sp)) (j : I) : Prop :=
+  ConfluentAt fam j
+
+/-- **Def. `def:consistency`** (Consistency).  "An ordered specification is
+*consistent* when every finite family of runs is confluent at every common
+expansion of their current inputs."
+
+Lean: `Spec.Consistent`. -/
 abbrev «def:consistency» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.Consistent
 
