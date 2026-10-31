@@ -465,17 +465,22 @@ follows the pipeline event by event.  Here each stage is seen from outside,
 through a typed boundary, so that stages with different specifications,
 bases, and participants compose without one shared history.
 
-\begin{definition}[Component, admitted run, implementation form]
+\begin{definition}[Component, admitted run]
 \label{def:component}
 A \emph{component} for a specification $\Spec$ consists of a commitment basis
 $\mathcal B$ and a set of \emph{admitted runs}.  Each admitted run is a run
 under $\mathcal B$ from a canonical state $\sigma(i)$
 (Definition~\ref{def:run-under-basis}), together with an output $o$ that it
-emits, such that $(i,o)\in S$.  A component may carry an
-\emph{implementation form}, $\mathsf{Process}$, $\mathsf{Cluster}$, or
-$\mathsf{Composite}$, which records how it is realized.  The implementation
-form plays no role in typed composition; it determines which internal system
-model and coordination classification justify the component's admitted runs.
+emits, such that $(i,o)\in S$.
+\end{definition}
+
+\begin{definition}[Implementation form]
+\label{def:implementation-form}
+A component may carry an \emph{implementation form}, $\mathsf{Process}$,
+$\mathsf{Cluster}$, or $\mathsf{Composite}$, which records how it is
+realized.  The implementation form plays no role in typed composition; it
+determines which internal system model and coordination classification
+justify the component's admitted runs.
 \end{definition}
 
 A system for $\Spec$ (Definition~\ref{def:system}) induces a component once
@@ -494,15 +499,19 @@ run under $\mathcal B$.
 
 Let $C_1$ be a component for $\Spec_1$ and $C_2$ a component for $\Spec_2$.
 
-\begin{definition}[Typed pipeline, feed, external observation, contract-proper, implementation-proper]
+\begin{definition}[Feed, typed pipeline, external observation]
 \label{def:typed-pipeline}
 A \emph{feed} pairs an admitted run of $C_1$, with input $i$ and output $m$,
 with an admitted run of $C_2$ from $\sigma(m)$, with output $o$.  The
 \emph{typed pipeline} of $C_1$ and $C_2$ shows the \emph{external
 observation} $(i,o)$ of each feed; the value $m$, both runs, and their
-commitments stay hidden.  The pipeline is \emph{contract-proper} when the
-pipeline of $\Spec_1$ and $\Spec_2$ is proper
-(Definition~\ref{def:proper-coordination}), and
+commitments stay hidden.
+\end{definition}
+
+\begin{definition}[Contract-proper, implementation-proper]
+\label{def:proper-pipeline}
+A typed pipeline is \emph{contract-proper} when the pipeline of $\Spec_1$
+and $\Spec_2$ is proper (Definition~\ref{def:proper-coordination}), and
 \emph{implementation-proper} when no downstream run of a feed applies a
 commitment.
 \end{definition}

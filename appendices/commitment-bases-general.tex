@@ -28,16 +28,22 @@ three disjoint classes, by how they can be removed:
       \label{eq:choice-removals}
 \end{align}
 
-\begin{definition}[Lifted output event, seal, output retirement, choice]
+\begin{definition}[Lifted output event, output retirement]
 \label{def:lifted-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  The \emph{output event}
 $\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
 emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
-Equation~\ref{eq:output-action}.  When $\Sealed_o\neq\varnothing$ it applies the \emph{seal} $s_o$.  It removes
-the rows in $\Retired_o$, each \outrelpast by a kept row at the same input, by
-\emph{output retirement}, which is not a commitment.  When
-$\Rejected_o\neq\varnothing$ it applies the \emph{choice} $c_o$.  The seal and
-the choice are \emph{commitments}:
+Equation~\ref{eq:output-action}.  It removes the rows in $\Retired_o$, each
+\outrelpast by a kept row at the same input, by \emph{output retirement},
+which is not a commitment.
+\end{definition}
+
+\begin{definition}[Lifted seal, lifted choice]
+\label{def:lifted-seal-choice}
+When $\Sealed_o\neq\varnothing$, the output event
+(Definition~\ref{def:lifted-output-event}) applies the \emph{seal} $s_o$;
+when $\Rejected_o\neq\varnothing$, it applies the \emph{choice} $c_o$.  The
+seal and the choice are \emph{commitments}:
 \begin{equation}
   s_o(i,R)=\bigl(i,\ R\setminus\Sealed_o\bigr),
   \qquad
@@ -89,10 +95,10 @@ seal or a choice.
 \subsection{Commitment bases and compound commitments}
 \label{app:commitment-bases}
 
-\begin{definition}[Canonical basis, canonical event]
+\begin{definition}[Canonical basis]
 \label{def:canonical-commitment-basis}
 The \emph{canonical commitment basis} collects the seals and choices of
-Definition~\ref{def:lifted-output-event},
+Definition~\ref{def:lifted-seal-choice},
 \begin{equation}
   \mathcal B_S
     =\{s_o:o\in O,\ \operatorname{dom}(s_o)\neq\varnothing\}
@@ -101,12 +107,17 @@ Definition~\ref{def:lifted-output-event},
   \label{eq:canonical-commitment-basis-relational}
 \end{equation}
 where $s_o$ is defined at the states with $o\in R(i)$ and $\Sealed_o\neq\varnothing$,
-and $c_o$ at those with $o\in R(i)$ and $\Rejected_o\neq\varnothing$.  At $(i,R)$, let
-$\kappa_o$ apply $s_o$ when $\Sealed_o\neq\varnothing$ and $c_o$ when
-$\Rejected_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$, $s_o$, $c_o$, or
-$s_o\,c_o$.  The \emph{canonical event} for $o$ is $\Out{\kappa_o}{o}$: the
-output event of Definition~\ref{def:lifted-output-event}, and with one row per
-input that of Definition~\ref{def:output-event}.
+and $c_o$ at those with $o\in R(i)$ and $\Rejected_o\neq\varnothing$.
+\end{definition}
+
+\begin{definition}[Canonical event]
+\label{def:canonical-event}
+At $(i,R)$, let $\kappa_o$ apply $s_o$ when $\Sealed_o\neq\varnothing$ and
+$c_o$ when $\Rejected_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$,
+$s_o$, $c_o$, or $s_o\,c_o$.  The \emph{canonical event} for $o$ is
+$\Out{\kappa_o}{o}$: the output event of
+Definition~\ref{def:lifted-output-event}, and with one row per input that of
+Definition~\ref{def:output-event}.
 \end{definition}
 
 \paragraph{The canonical seals and choices are commitments.}
@@ -185,13 +196,18 @@ and Lemma~\ref{lem:canonical-commitment-normal-form} covers it as stated.  In a
 functional specification the composite removes every row at each input it
 touches, so it seals.
 
-\begin{definition}[Run under a basis, canonical run]
+\begin{definition}[Run under a basis]
 \label{def:run-under-basis}
 Fix a commitment basis $\mathcal B$.  A \emph{run under $\mathcal B$} is a
 finite transition sequence from a canonical state $\sigma_S(i)$ of input events, legal output events $\Out{\gamma}{o}$
 (Definition~\ref{def:system-output-event}), and commitment events
 (Definition~\ref{def:commitment-event}) that use only commitments from
-$\mathcal B$.  The \emph{canonical runs} are the runs under the canonical basis
+$\mathcal B$.
+\end{definition}
+
+\begin{definition}[Canonical run]
+\label{def:canonical-run}
+The \emph{canonical runs} are the runs under the canonical basis
 $\mathcal B_S$ of Definition~\ref{def:canonical-commitment-basis} whose output
 events are all canonical; they are the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.

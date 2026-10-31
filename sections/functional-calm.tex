@@ -242,7 +242,7 @@ Neither need be unique or least: for example, two independent transactions $a$ a
 A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
 when $w$ \outrel $u$.
 
-\begin{definition}[Functional monotonicity, monotone]
+\begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
 A functional ordered specification $\Spec$, with induced function $f$, is
 \emph{monotone} if
@@ -269,7 +269,7 @@ input arrives and outputs are emitted, so only some of those pairs remain
 possible.  The changing state of the specification, illustrated by the non-gray text in
 the panels of Figure~\ref{fig:election-frames}, is defined as follows.
 
-\begin{definition}[Specification state, current input, remainder table, legal input]
+\begin{definition}[Specification state, current input, remainder table]
 \label{def:residual-state}
 Given a specification $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, a \emph{specification state} is a
 pair $\sigma=(i,R)$, where $i\in I$ is the \emph{current input} and
@@ -278,7 +278,11 @@ $R\subseteq S$ is the \emph{remainder table}, such that:
   \item $R$ contains a row at $i$; and
   \item $R$ contains only rows at \indescs of $i$: every row $(k,o)\in R$ satisfies $i\InputOrd k$.
 \end{enumerate}
-An input $k$ is \emph{legal} at $\sigma$ when $R$ contains a row at $k$.
+\end{definition}
+
+\begin{definition}[Legal input]
+\label{def:legal-input}
+An input $k$ is \emph{legal} at a state $\sigma=(i,R)$ when $R$ contains a row at $k$.
 \end{definition}
 
 Rows are never added during execution.  The \emph{canonical state at $i$} is
@@ -329,7 +333,7 @@ At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
 output the system may emit.  Since every later output must \outrelbase $o$, emitting $o$ requires sealing
 every legal input whose output does not \outrelbase it.
 
-\begin{definition}[Output event, seal, commitment]
+\begin{definition}[Output event]
 \label{def:output-event}
 Let $(i,R)$ be a state and $(i,o)$ its row at the current input.  The
 \emph{output event} $\mathsf{output}(o)$ performs two steps atomically: it restricts the remainder table
@@ -339,7 +343,11 @@ to exactly the rows whose outputs
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R' = R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-When $R'\neq R$, removing some row at an input $j\InputGe i$, we call this transition the \emph{seal}
+\end{definition}
+
+\begin{definition}[Seal]
+\label{def:seal}
+When $R'\neq R$ in Definition~\ref{def:output-event}, removing some row at an input $j\InputGe i$, we call this transition the \emph{seal}
 $s_o(i,R)=(i,R')$: it \emph{seals} the inputs of the removed rows, and it is a
 \emph{commitment}.
 \end{definition}
@@ -379,12 +387,21 @@ events only remove rows, and a row at the current input always remains.
 When runs take different paths through the specification, can they still be
 brought to a common state?  The answer reduces to a check on a single row.
 
-\begin{definition}[Specification event, transition system, run]
-\label{def:run}
+\begin{definition}[Specification event]
+\label{def:specification-event}
 Input and output events are \emph{specification events}: they change the
-specification state.  We call them simply \emph{events} when unambiguous.  The
-\emph{transition system} consists of specification
-states and these events.  A \emph{run} is any finite transition sequence from the
+specification state.  We call them simply \emph{events} when unambiguous.
+\end{definition}
+
+\begin{definition}[Transition system]
+\label{def:transition-system}
+The \emph{transition system} consists of specification states and
+specification events.
+\end{definition}
+
+\begin{definition}[Run]
+\label{def:run}
+A \emph{run} is any finite transition sequence of the transition system from the
 canonical state $\sigma_S(i)$ at some input $i$.
 \end{definition}
 
@@ -421,12 +438,15 @@ $(xy\cdot,\bot)$, as the figure shows.
 To compare runs that end at different inputs, we consider a common \indesc
 of those inputs.
 
-\begin{definition}[Consistency, confluence at an input]
+\begin{definition}[Confluence at an input]
+\label{def:confluence}
+A finite family of runs ending at states $(i_1,R_1),\ldots,(i_k,R_k)$ is \emph{confluent at} $j$, a common \indesc of their current inputs, when each can be continued to a common state with current input $j$.
+\end{definition}
+
+\begin{definition}[Consistency]
 \label{def:consistency}
 An ordered specification is \emph{consistent} when every finite family of
-runs is confluent: if the runs end at states
-$(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common \indesc of their current
-inputs, each can be continued to a common state with current input $j$. They are then \emph{confluent at} $j$.
+runs is confluent at every common \indesc of their current inputs.
 \end{definition}
 
 Confluence has a simple test: some row at the common \indesc must survive

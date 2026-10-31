@@ -15,7 +15,7 @@ the specification state; a participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
 legal common \indesc $k$ of $i$ and $j$, when one exists.
 
-\begin{definition}[Distributed history, history event, happens-before, consistent cut]
+\begin{definition}[Distributed history, history event]
 \label{def:distributed-history}
 Fix an ordered specification, participants $P$, and an initial input $i_p$
 for each.  A \emph{distributed history} $H$ is a finite set of
@@ -30,9 +30,17 @@ $\mathsf{receive}(m)$, with:
         form a defined transition sequence from $\sigma_S(i_p)$: each
         is legal at the state where it occurs.
 \end{enumerate}
-\emph{Happens-before} is the transitive closure of the local orders and of
-each send preceding its matching receive.  A \emph{consistent cut} $C$ is a
-subset of history events closed under
+\end{definition}
+
+\begin{definition}[Happens-before]
+\label{def:happens-before}
+\emph{Happens-before} is the transitive closure of the local orders of a
+distributed history and of each send preceding its matching receive.
+\end{definition}
+
+\begin{definition}[Consistent cut]
+\label{def:consistent-cut}
+A \emph{consistent cut} $C$ is a subset of history events closed under
 happens-before~\cite{lamport1978time,chandy1985distributed}; the standard term
 is unrelated to our notion of consistency.
 \end{definition}
@@ -41,12 +49,17 @@ A consistent cut contains a prefix of each participant's history events, so by
 item~3
 it determines one run per participant.
 
-\begin{definition}[Participant run, endpoint]
+\begin{definition}[Participant run]
 \label{def:participant-run}
 At a consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}, a run
-(Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$.  The
-\emph{endpoint} of $C$ is $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
+(Definition~\ref{def:run}) whose final state we write $\sigma_p(C)$.
+\end{definition}
+
+\begin{definition}[Endpoint]
+\label{def:endpoint}
+The \emph{endpoint} of a consistent cut $C$ is
+$\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
 \end{definition}
 
 \begin{figure}[t]

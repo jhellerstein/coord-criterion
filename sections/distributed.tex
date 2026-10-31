@@ -115,11 +115,15 @@ remove the rows in $\Sealed_o$ and $\Rejected_o$
 the case in which they remove exactly those.  The environment observes $o$, not
 $\gamma$.
 
-\begin{definition}[Local history, strategy]
+\begin{definition}[Local history]
+\label{def:local-history}
+A \emph{local history} of participant $p$ is a finite sequence of $p$'s
+history events, including the messages it has received.
+\end{definition}
+
+\begin{definition}[Strategy]
 \label{def:strategy}
-A \emph{local history} of participant $p$ is a finite sequence of $p$'s history
-events, including the messages it
-has received.  A \emph{strategy} for $p$ is a nondeterministic transition
+A \emph{strategy} for a participant $p$ is a nondeterministic transition
 function: it maps each local history $\lambda$ of $p$ to a set
 $\theta_p(\lambda)$ of output, commitment, and send events of $p$, and $p$ next
 performs any one of them, or waits.  Input and receive events are not chosen
@@ -130,15 +134,19 @@ sends.
 A strategy says how one participant acts; a system packages one basis with
 a strategy for every participant.
 
-\begin{definition}[System, produced history]
+\begin{definition}[System]
 \label{def:system}
 A \emph{system} consists of a \emph{commitment basis} $\mathcal B$, a set
 of commitments shared by all participants, and a strategy $\theta_p$ for
 each participant $p$ whose output and commitment events apply only
-commitments from $\mathcal B$.  A distributed history \emph{produced} by
-the system consists of input events supplied by the environment, receives
-of matching sends, and output, commitment, and send events chosen by the
-participants' strategies.
+commitments from $\mathcal B$.
+\end{definition}
+
+\begin{definition}[Produced history]
+\label{def:produced-history}
+A distributed history \emph{produced} by a system consists of input events
+supplied by the environment, receives of matching sends, and output,
+commitment, and send events chosen by the participants' strategies.
 \end{definition}
 
 A system implements one specification, so its participants share the basis;
@@ -261,14 +269,20 @@ commitment if it accepts an input the commitment seals, or emits an output the
 commitment chooses against at the same input.
 \end{definition}
 
-\begin{definition}[Coordination-requiring commitment, distributed coordination]
+\begin{definition}[Coordination-requiring commitment]
 \label{def:coordination}
 Let $\mathcal R$ be a set of runs: for a specification, its canonical runs;
 for a system, the runs it can perform under any inputs the environment may
 supply.  A commitment \emph{requires coordination} relative to $\mathcal R$
 when some run in $\mathcal R$ contradicts it
-(Definition~\ref{def:contradicts}).  It \emph{requires distributed
-coordination} when that run is at another participant of the same history.
+(Definition~\ref{def:contradicts}).
+\end{definition}
+
+\begin{definition}[Distributed coordination]
+\label{def:distributed-coordination}
+A commitment \emph{requires distributed coordination} relative to $\mathcal R$
+when the run that contradicts it is at another participant of the same
+history.
 \end{definition}
 
 \begin{definition}[Coordination-free]
@@ -425,17 +439,27 @@ participant set and every choice of initial inputs, each depending only on its
 participant's local history, and an adversarial environment that may supply
 any legal input event to any participant.
 
-\begin{definition}[Explicit relation, Availability]
-\label{def:partition-notions}
+\begin{definition}[Local continuation]
+\label{def:local-continuation}
 A continuation of a partitioned history is \emph{local to} a participant $p$
 when the system produces it, it adds only history events of $p$'s block and no
 input events, and none of its receives takes a message sent from another
-block.  An \emph{explicit relation} $E\subseteq S$ is a set of rows
-$(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
-its fiber $\{o:(i,o)\in E\}$.  The system has \emph{Availability for $E$}
-when, in every partitioned history it produces, each participant $p$, ending
-in state $(i,R)$, can emit each output in $R(i)\cap E(i)$ in some continuation
-local to $p$.  \emph{Availability} is Availability for $S$.
+block.
+\end{definition}
+
+\begin{definition}[Explicit relation]
+\label{def:explicit-relation}
+An \emph{explicit relation} $E\subseteq S$ is a set of rows $(i,o)$ whose
+output $o$ must stay available at input $i$; write $E(i)$ for its fiber
+$\{o:(i,o)\in E\}$.
+\end{definition}
+
+\begin{definition}[Availability]
+\label{def:partition-notions}
+The system has \emph{Availability for $E$} when, in every partitioned history it
+produces, each participant $p$, ending in state $(i,R)$, can emit each
+output in $R(i)\cap E(i)$ in some continuation local to $p$.
+\emph{Availability} is Availability for $S$.
 \end{definition}
 
 \begin{definition}[Partition Consistency]
