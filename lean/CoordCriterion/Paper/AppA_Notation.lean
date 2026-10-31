@@ -333,8 +333,8 @@ abbrev «app:notation/strategy» {sp : Spec I O} {D : Type} (Sys : CAP.System sp
 (Def. `def:system`).  Lean: `CAP.System sp D` (fields `basis`, `strat`). -/
 abbrev «app:notation/system» (sp : Spec I O) (D : Type) := CAP.System sp D
 
-/-- *basis* (Def. `def:system-output-event`: "A commitment basis is a set `ℬ`
-of commitments").  Lean: `Basis sp := Commitment sp → Prop`
+/-- *basis* (Def. `def:system`: "A commitment basis is a set of commitments
+shared by all participants").  Lean: `Basis sp := Commitment sp → Prop`
 (in `CC.CAP`: the field `System.basis`). -/
 abbrev «app:notation/basis» (sp : Spec I O) := Basis sp
 
@@ -344,16 +344,18 @@ abbrev «app:notation/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp
     (init : Fin n → I) (H : CAP.History sp D n) : Prop :=
   CAP.Produced Sys n init H
 
-/-- *system output event `Out_γ(o)`* — applies commitments `γ` from the
-basis, retires, emits `o` (Def. `def:system-output-event`).  Lean: the event
-`SEvent.output γ o`, with transition `SysStep B σ (.output γ o) τ`. -/
+/-- *system output event `Out_γ(o)`* — applies commitments `γ`, retires,
+emits `o` (Def. `def:system-output-event`); when run by a system, `γ ⊆ B`
+(Def. `def:system`).  Lean: the event `SEvent.output γ o`, with transition
+`SysStep B σ (.output γ o) τ`. -/
 abbrev «app:notation/system-output-event» {sp : Spec I O} (B : Basis sp) :
     State sp → SEvent sp → State sp → Prop :=
   SysStep B
 
-/-- *commitment event `commit(γ)`* — applies a nonempty sequence `γ` from the
-basis, emits nothing (Def. `def:commitment-event`).  Lean: the event
-`SEvent.commit γ`, with transition `SysStep B σ (.commit γ) τ`. -/
+/-- *commitment event `commit(γ)`* — applies a nonempty sequence `γ` of
+commitments, emits nothing (Def. `def:commitment-event`); when run by a
+system, `γ ⊆ B` (Def. `def:system`).  Lean: the event `SEvent.commit γ`,
+with transition `SysStep B σ (.commit γ) τ`. -/
 abbrev «app:notation/commitment-event» {sp : Spec I O} (B : Basis sp) (σ : State sp)
     (γ : List (Commitment sp)) (τ : State sp) : Prop :=
   SysStep B σ (.commit γ) τ

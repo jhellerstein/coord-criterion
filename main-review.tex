@@ -1376,14 +1376,14 @@ chooses there.
 
 A system draws its commitments from a basis.
 
-\begin{definition}[Commitment basis, output event of a system, legal output event]
+\begin{definition}[Output event $\Out{\gamma}{o}$, legal output event]
 \label{def:system-output-event}
-A \emph{commitment basis} is a set $\mathcal B$ of commitments. Let $(i,R)$ be
-a state and $o\in R(i)$. An output event $\Out{\gamma}{o}$
-under a basis $\mathcal B$ applies a finite, possibly empty sequence
-$\gamma=c_1\cdots c_n$ of commitments from $\mathcal B$, each $c_m$ defined at
-the state its predecessors leave, leaving a table $R_c$, and then retires rows
-and emits $o$, all atomically; $\varepsilon$ is the empty sequence. The event is \emph{legal} when $o$ is exposable after $\gamma$ is applied. That is,
+Let $(i,R)$ be a state and $o\in R(i)$. An output event $\Out{\gamma}{o}$
+applies a sequence $\gamma=c_1\cdots c_n$ of commitments, each $c_m$
+defined at the state its predecessors leave, and then retires rows and
+emits $o$, all atomically. The sequence may be empty, written
+$\varepsilon$. Write $R_c$ for the table after $\gamma$ is applied. The
+event is \emph{legal} when $o$ is exposable at $(i,R_c)$:
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
   \quad\Longrightarrow\quad
@@ -1396,10 +1396,9 @@ $(i,R_c[\mathrm{out}\OutputGe o])$.
 
 \begin{definition}[Commitment event]
 \label{def:commitment-event}
-A \emph{commitment event} $\mathsf{commit}(\gamma)$ under a basis $\mathcal B$
-applies a nonempty sequence $\gamma=c_1\cdots c_n$ of commitments from
-$\mathcal B$, each defined at the state its predecessors leave, and emits
-nothing.
+A \emph{commitment event} $\mathsf{commit}(\gamma)$ applies a nonempty
+sequence $\gamma=c_1\cdots c_n$ of commitments, each defined at the state
+its predecessors leave, and emits nothing.
 \end{definition}
 
 A commitment event lets a system apply commitments before any output needs them. The environment observes nothing from it. Commitment events are a third
@@ -1431,12 +1430,13 @@ a strategy for every participant.
 
 \begin{definition}[System, produced history]
 \label{def:system}
-A \emph{system} consists of a commitment basis $\mathcal B$, shared by all
-participants, and a strategy $\theta_p$ for each participant $p$ whose output
-and commitment events apply only commitments from $\mathcal B$. A distributed history \emph{produced} by the
-system consists of input events supplied by the environment, receives of matching
-sends, and output, commitment, and send events chosen by the participants'
-strategies.
+A \emph{system} consists of a \emph{commitment basis} $\mathcal B$, a set
+of commitments shared by all participants, and a strategy $\theta_p$ for
+each participant $p$ whose output and commitment events apply only
+commitments from $\mathcal B$. A distributed history \emph{produced} by
+the system consists of input events supplied by the environment, receives
+of matching sends, and output, commitment, and send events chosen by the
+participants' strategies.
 \end{definition}
 
 A system implements one specification, so its participants share the basis;
@@ -2628,8 +2628,8 @@ rows at $k$.
   commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
   local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
     system; basis; produced & a commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only commitments from $\mathcal B$ & Def.~\ref{def:system}\\
-  system output event $\Out{\gamma}{o}$ & applies commitments $\gamma$ from the basis, retires, emits $o$ & Def.~\ref{def:system-output-event}\\
-  commitment event $\mathsf{commit}(\gamma)$ & applies a nonempty sequence $\gamma$ from the basis, emits nothing & Def.~\ref{def:commitment-event}\\
+  system output event $\Out{\gamma}{o}$ & applies commitments $\gamma$, retires, emits $o$ & Def.~\ref{def:system-output-event}\\
+  commitment event $\mathsf{commit}(\gamma)$ & applies a nonempty sequence $\gamma$ of commitments, emits nothing & Def.~\ref{def:commitment-event}\\
   run under a basis; canonical run & specification events whose commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, commitments and commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
   contradicts & accepts an input the commitment seals, or emits an output it chooses against & Def.~\ref{def:contradicts}\\

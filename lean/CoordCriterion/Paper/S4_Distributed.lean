@@ -379,8 +379,8 @@ is ignored: `CAP.Allowed` always allows inputs. -/
 abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
   List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop
 
-/-- **Def. system, produced history** (`def:system`).  "A system consists of a
-commitment basis `ℬ`, shared by all participants, and a strategy `θ_p` for each participant `p` whose output
+/-- **Def. system, produced history** (`def:system`).  "A system consists
+of a *commitment basis* `ℬ`, a set of commitments shared by all participants, and a strategy `θ_p` for each participant `p` whose output
 and commitment events apply only commitments from `ℬ`."
 
 Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
@@ -433,14 +433,13 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
   ⟨rfl, fun r h => ((Components.Component.ofSystemOn Sys N location).sound r h).legal,
     fun _ Dp => Dp.sub⟩
 
-/-- **Def. commitment basis, output event of a system, legal output event**
-(`def:system-output-event`).  "A commitment basis is a set `ℬ` of commitments.
-… An output event `Out_γ(o)` under a basis `ℬ` applies a finite, possibly empty sequence
-`γ = c₁⋯cₙ` of commitments from `ℬ`, each `c_m` defined at the state its
-predecessors leave, leaving a table `R_c`, and then retires rows and emits `o`,
-all atomically … The event is legal when `o` is exposable after `γ` is
-applied.  That is, Eq. lifted-validity holds.  The event retires those discarded
-rows and ends at `(i, R_c[out ⪰ o])`."
+/-- **Def. output event, legal output event** (`def:system-output-event`).
+"An output event `Out_γ(o)` applies a sequence `γ = c₁⋯cₙ` of commitments,
+each `c_m` defined at the state its predecessors leave, and then retires
+rows and emits `o`, all atomically.  The sequence may be empty, written
+`ε`.  Write `R_c` for the table after `γ` is applied.  The event is legal
+when `o` is exposable at `(i, R_c)`: Eq. lifted-validity holds.  The event
+retires those discarded rows and ends at `(i, R_c[out ⪰ o])`."
 
 Lean: `SysStep B σ (.output γ o) τ` (also covering input events, unchanged).
 Eq. lifted-validity at the committed state is exactly `Exposable σc o`. -/
@@ -449,9 +448,8 @@ abbrev «def:system-output-event» {sp : Spec I O} (B : Basis sp) (σ : State sp
   SysStep B σ e τ
 
 /-- **Def. commitment event** (`def:commitment-event`).  "A commitment event
-`commit(γ)` under a basis `ℬ` applies a nonempty sequence `γ = c₁⋯cₙ` of
-commitments from `ℬ`, each defined at the state its predecessors leave, and
-emits nothing."
+`commit(γ)` applies a nonempty sequence `γ = c₁⋯cₙ` of commitments, each
+defined at the state its predecessors leave, and emits nothing."
 
 Lean: `SysStep B σ (.commit γ) τ` (constructor `SysStep.commit`: every
 `c ∈ γ` is in `B`, `γ ≠ []`, and `ApplySeq γ σ τ`).  In the `CC.CAP` history
