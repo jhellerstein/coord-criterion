@@ -6,7 +6,7 @@ import CoordCriterion.CAP.CompleteCAP
 * Def. `def:response-availability` / Response Partition Consistency
   (`ResponseAvailability`, `ResponsePC`, `RPCAt`);
 * replicated systems, obligations and response interfaces;
-* the canonical commitment `κ_u` (seal and choice applied together);
+* the canonical exclusion `κ_u` (input and output exclusions applied together);
 * Theorem `thm:complete-cap-response` in both directions
   (`complete_cap_response`).
 
@@ -70,15 +70,15 @@ def ResponsePC (Sys : System sp D) : Prop :=
 /-- Participant-independent local events (receives name the sender by number). -/
 inductive LEvN (sp : Spec I O) (D : Type) where
   | inp (j : I)
-  | out (γ : List (Commitment sp)) (o : O)
-  | cmt (γ : List (Commitment sp))
+  | out (γ : List (Exclusion sp)) (o : O)
+  | exclude (γ : List (Exclusion sp))
   | send (j : Option I) (d : D)
   | recv (q : Nat) (k : Nat) (j : Option I) (d : D)
 
 def LEv.erase : LEv sp D n → LEvN sp D
   | .inp j => .inp j
   | .out γ o => .out γ o
-  | .cmt γ => .cmt γ
+  | .exclude γ => .exclude γ
   | .send j d => .send j d
   | .recv q k j d => .recv q.val k j d
 
@@ -117,10 +117,10 @@ theorem consistentOn_outs {T : Table I O} (hc : ConsistentOn sp T) {j : I} (L : 
   exact ⟨u, hu, fun o ho => hall _ (by
     simp only [rows, List.mem_map]; exact ⟨⟨o, ho⟩, List.mem_attach _ _, rfl⟩)⟩
 
-/-! ### The canonical commitment `κ_u` (seal and choice applied together) -/
+/-! ### The canonical exclusion `κ_u` (input and output exclusions applied together) -/
 
-/-- Rows the canonical event for `u` removes by commitment. -/
-def Rm (σ : State sp) (u : O) (k : I) (x : O) : Prop := Sealed σ u k x ∨ Excluded σ u k x
+/-- Rows the canonical event for `u` removes by exclusion. -/
+def Rm (σ : State sp) (u : O) (k : I) (x : O) : Prop := InputExcluded σ u k x ∨ OutputExcluded σ u k x
 
 theorem not_rm_of_le {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x) (h : u ≼ x) :
     ¬ Rm σ u k x := by
@@ -146,10 +146,10 @@ def kcState (σ : State sp) (u : O) (hu : σ.R σ.cur u) : State sp where
   above := fun k x h => σ.above k x h.1
 
 open Classical in
-/-- The canonical commitment for `u`: defined when `u` is in the current fiber
-and some row must be removed by commitment; it removes `Sealed_u ∪ Excluded_u`.
-That this is a commitment (Eq. `commitment-excludes`) is checked here. -/
-noncomputable def kc (u : O) : Commitment sp where
+/-- The canonical exclusion for `u`: defined when `u` is in the current fiber
+and some row must be removed by exclusion; it removes `Excluded^in_u ∪ Excluded^out_u`.
+That this is an exclusion (Eq. `exclusion-excludes`) is checked here. -/
+noncomputable def kc (u : O) : Exclusion sp where
   f := fun σ => if h : σ.R σ.cur u ∧ ∃ k x, Rm σ u k x then some (kcState σ u h.1) else none
   cur_eq := by
     intro σ τ h; split at h
@@ -197,7 +197,7 @@ theorem kc_apply_some {σ : State sp} {u : O} {σc : State sp}
   · cases h
 
 /-- The canonical event for `u` is legal at any state with `u` in the current
-fiber (Lemma `lem:canonical-commitment-normal-form`(2)). -/
+fiber (Lemma `lem:canonical-exclusion-normal-form`(2)). -/
 theorem kc_legal {σ : State sp} {u : O} (hu : σ.R σ.cur u) :
     ∃ γ σc, (γ = [] ∨ γ = [kc u]) ∧ applySeq σ γ = some σc ∧ σc.R σc.cur u ∧
       Exposable σc u := by
@@ -212,7 +212,7 @@ theorem kc_legal {σ : State sp} {u : O} (hu : σ.R σ.cur u) :
     exact subsumed_of_not_rm hx (fun h => hrm ⟨k, x, h⟩) hn
 
 /-- Effect of a canonical event: it ends at `R[out ⪰ u]`. -/
-theorem kc_effect {σ σc τ : State sp} {u : O} {γ : List (Commitment sp)}
+theorem kc_effect {σ σc τ : State sp} {u : O} {γ : List (Exclusion sp)}
     (hγ : γ = [] ∨ γ = [kc u]) (ha : applySeq σ γ = some σc) (hs : Step σc (.output u) τ) :
     Step σ (.output u) τ := by
   rcases hγ with rfl | rfl
@@ -230,7 +230,7 @@ def curOf (i0 : I) : List (LEvN sp D) → I
   | [] => i0
   | .inp j :: l => curOf j l
   | .out _ _ :: l => curOf i0 l
-  | .cmt _ :: l => curOf i0 l
+  | .exclude _ :: l => curOf i0 l
   | .send _ _ :: l => curOf i0 l
   | .recv _ _ _ _ :: l => curOf i0 l
 
@@ -238,7 +238,7 @@ def emittedOf : List (LEvN sp D) → List O
   | [] => []
   | .out _ o :: l => o :: emittedOf l
   | .inp _ :: l => emittedOf l
-  | .cmt _ :: l => emittedOf l
+  | .exclude _ :: l => emittedOf l
   | .send _ _ :: l => emittedOf l
   | .recv _ _ _ _ :: l => emittedOf l
 
@@ -254,7 +254,7 @@ theorem emittedOf_append (a b : List (LEvN sp D)) :
   | nil => rfl
   | cons e a ih => cases e <;> simp [emittedOf, ih]
 
-theorem mem_emittedOf {L : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O}
+theorem mem_emittedOf {L : List (LEv sp D n)} {γ : List (Exclusion sp)} {o : O}
     (h : LEv.out γ o ∈ L) : o ∈ emittedOf (L.map LEv.erase) := by
   induction L with
   | nil => cases h
@@ -332,9 +332,9 @@ theorem rinv_run (T : Table I O) {N : Nat} {init : Fin N → I} {p : Fin N} :
       rcases List.mem_append.1 ho with ho | ho
       · exact hge o ho
       · simp at ho; subst ho; exact PO.refl _
-  | @cmt σ τ' ρ γ es _ _ _ _ =>
+  | @exclude σ τ' ρ γ es _ _ _ _ =>
     intro pre hc _
-    have := hc [] (.cmt γ) es rfl
+    have := hc [] (.exclude γ) es rfl
     simp [Allowed, respSystem, respF, LEv.erase] at this
   | @send σ ρ j d es _ _ =>
     intro pre hc _
@@ -467,7 +467,7 @@ receives, leave the state unchanged). -/
 def tr {m N : Nat} : LEv sp D m → LEv sp D N
   | .inp j => .inp j
   | .out γ o => .out γ o
-  | .cmt γ => .cmt γ
+  | .exclude γ => .exclude γ
   | .send j d => .send j d
   | .recv _ _ j d => .send j d
 
@@ -477,7 +477,7 @@ theorem lrun_tr {m N : Nat} {σ τ : State sp} {l : List (LEv sp D m)} (h : LRun
   | nil => exact .nil _
   | inp hs _ ih => exact .inp hs ih
   | out ha hs hx _ ih => exact .out ha hs hx ih
-  | cmt hne ha _ ih => exact .cmt hne ha ih
+  | exclude hne ha _ ih => exact .exclude hne ha ih
   | send _ ih => exact .send ih
   | recv _ ih => exact .send ih
 
@@ -490,7 +490,7 @@ theorem lrun_tr_inv {m N : Nat} {l : List (LEv sp D m)} :
     cases e with
     | inp j => cases h with | inp hs hr => exact .inp hs (ih hr)
     | out γ o => cases h with | out ha hs hx hr => exact .out ha hs hx (ih hr)
-    | cmt γ => cases h with | cmt hne ha hr => exact .cmt hne ha (ih hr)
+    | exclude γ => cases h with | exclude hne ha hr => exact .exclude hne ha (ih hr)
     | send j d => cases h with | send hr => exact .send (ih hr)
     | recv q k j d => cases h with | send hr => exact .recv (ih hr)
 
@@ -530,7 +530,7 @@ theorem compliant_tr {Sys : System sp D} {F : I → List (LEvN sp D) → LEvN sp
   | out γ o =>
     refine ⟨hA.1, (hF _ _ _ _ _).2 ?_⟩
     rw [hi, hpre]; exact (hF _ _ _ _ _).1 hA.2
-  | cmt γ =>
+  | exclude γ =>
     refine ⟨hA.1, (hF _ _ _ _ _).2 ?_⟩
     rw [hi, hpre]; exact (hF _ _ _ _ _).1 hA.2
   | send j d =>
@@ -571,7 +571,7 @@ theorem glue {Sys : System sp D} {N : Nat} (hN : 2 ≤ N) {init : Fin N → I}
 history produced by the system. -/
 def IsoEmit (Sys : System sp D) (i : I) (o : O) : Prop :=
   ∃ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat) (p : Fin n)
-    (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ : State sp),
+    (a b : List (LEv sp D n)) (γ : List (Exclusion sp)) (σ : State sp),
     WF init H ∧ Produced Sys n init H ∧ Partitioned H comp ∧ H p = a ++ .out γ o :: b ∧
     (∀ q k j d, LEv.recv q k j d ∉ a) ∧ LRun (canon sp (init p)) a σ ∧ σ.cur = i
 
@@ -581,7 +581,7 @@ structure LocW (Sys : System sp D) (i : I) (o : O) where
   init : Fin n → I
   p : Fin n
   a : List (LEv sp D n)
-  γ : List (Commitment sp)
+  γ : List (Exclusion sp)
   comp : Compliant (Allowed Sys n init p) (a ++ [LEv.out γ o])
   norecv : ∀ q k j d, LEv.recv q k j d ∉ a
   run : ∃ τ, LRun (canon sp (init p)) (a ++ [LEv.out γ o]) τ

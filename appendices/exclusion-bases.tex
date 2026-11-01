@@ -1,9 +1,9 @@
-\section{Commitment Bases for Two-Phase Locking and Multiversion Timestamp Ordering}
+\section{Exclusion Bases for Two-Phase Locking and Multiversion Timestamp Ordering}
 \label{app:cc-bases}
 
 This appendix gives the serializability specification of
 Sections~\ref{sec:ambiguity-story} and~\ref{sec:systems} in full, and the
-commitment bases of two-phase locking (2PL) and multiversion timestamp ordering
+exclusion bases of two-phase locking (2PL) and multiversion timestamp ordering
 (MVTO).  Schedulers act as operations arrive, and they report results while
 transactions are still running, such as a read result before its reader
 commits, so an output may leave transactions undecided.
@@ -62,8 +62,8 @@ $X=\varnothing$, where a complete output now commits exactly the transactions
 whose commit request is in the input and leaves the others undecided; the same
 two rows show that it is not monotone either.
 
-\paragraph{Commitments.}
-Each commitment is a condition on complete outputs.  Applied at a state
+\paragraph{Exclusions.}
+Each exclusion is a condition on complete outputs.  Applied at a state
 $(i,R)$, it keeps the rows of $R$ that can still be completed, within $R$, by a
 complete row satisfying the condition, and removes the rest.  It is defined
 when it keeps some row at $i$ and removes some row.
@@ -80,10 +80,10 @@ when it keeps some row at $i$ and removes some row.
   \item $\mathsf{read}(A,k,v)$, for $A\in i$ whose $k$-th operation in $i$ is a
         read: the output reports that this read returned the version $v$.
 \end{itemize}
-Each is a commitment (Definition~\ref{def:commitment}).  If a kept row \outrel
+Each is an exclusion (Definition~\ref{def:exclusion}).  If a kept row \outrel
 another row at the same input, the complete row that keeps it also
 \outrel the other, which is therefore kept; so no removed row is \outrelpast by
-a kept one, as Equation~\ref{eq:commitment-excludes} requires.  The first four
+a kept one, as Equation~\ref{eq:exclusion-excludes} requires.  The first four
 conditions concern only $L$ and $X$, and for them a complete row is kept
 exactly when it satisfies the condition, since two permitted complete outputs
 at one input, one \outrelpart the other, have the same serial order and abort
@@ -96,17 +96,17 @@ $\mathcal B_{\mathrm{MVTO}}=\{\mathsf{stamp},\mathsf{TxCommit},\mathsf{abort},\m
 over all transactions, positions, and versions.  They share
 $\mathsf{TxCommit}$, $\mathsf{abort}$, and $\mathsf{read}$, and differ in how
 they order.  Let $\{A,B,C\}$ be an input in which $A$, $B$, and $C$ have each
-requested commit, after any operations.  At its canonical state, no commitment
+requested commit, after any operations.  At its canonical state, no exclusion
 of $\mathcal B_{\mathrm{MVTO}}$ has the effect of $\mathsf{order}(A,B)$, and no
-commitment of $\mathcal B_{\mathrm{2PL}}$ has the effect of $\mathsf{stamp}(B)$
+exclusion of $\mathcal B_{\mathrm{2PL}}$ has the effect of $\mathsf{stamp}(B)$
 with $Z=\varnothing$.
 
-A scheduler applies commitments within the sequence $\gamma$ of an output
+A scheduler applies exclusions within the sequence $\gamma$ of an output
 event $\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) or of a
-commitment event $\mathsf{commit}(\gamma)$
-(Definition~\ref{def:commitment-event}).  Each protocol step below responds to
+exclusion event $\mathsf{exclude}(\gamma)$
+(Definition~\ref{def:exclusion-event}).  Each protocol step below responds to
 the arrival of an operation, that is, to an input event, and says which
-commitments it applies.  In every state that a run under either basis reaches,
+exclusions it applies.  In every state that a run under either basis reaches,
 each row has a complete \outnoun in the table at its input, and any output
 between two rows of the table at one input is itself a row of the table.  So a
 read is reported by applying $\mathsf{read}(A,k,v)$ and then emitting the
@@ -115,12 +115,12 @@ result, which is then a legal output.
 \paragraph{2PL.}
 When an operation of $B$ arrives, 2PL requests a lock on its key, shared for a
 read and exclusive for a write.  If $A$ holds that lock in a conflicting mode,
-$B$ waits, and the scheduler applies $\mathsf{order}(A,B)$ in a commitment
+$B$ waits, and the scheduler applies $\mathsf{order}(A,B)$ in an exclusion
 event, reporting nothing.  On complete rows without aborts,
 $\mathsf{order}(A,B)$ keeps exactly those with $A$ before $B$
-(Figure~\ref{fig:cc-commitments}(h)).  At the canonical state of $\{A,B,C\}$ it
+(Figure~\ref{fig:cc-exclusions}(h)).  At the canonical state of $\{A,B,C\}$ it
 removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$, so it is an exclusion, and it
-is not the exclusion $x_o$ of any output $o$.  When a read is granted its lock,
+is not the canonical output exclusion $x_o^{\mathrm{out}}$ of any output $o$.  When a read is granted its lock,
 the scheduler applies $\mathsf{read}$ and reports the result.  When a commit
 request arrives, the scheduler applies $\mathsf{TxCommit}$ and releases the
 transaction's locks.
@@ -142,10 +142,10 @@ specifications the system implements.
 We follow Bernstein and Goodman~\cite{bernstein1981concurrency}.  When the
 first operation of a transaction $A$ arrives, $A$ receives a timestamp above
 all issued ones, and the scheduler applies $\mathsf{stamp}(A)$, with $Z$ the
-transactions stamped before $A$, in a commitment event.  On complete rows
+transactions stamped before $A$, in an exclusion event.  On complete rows
 without aborts, $\mathsf{stamp}(B)$ with $Z=\varnothing$ keeps exactly those
-with $B$ first (Figure~\ref{fig:cc-commitments}(i)); at the canonical state of
-$\{A,B,C\}$ it is an exclusion, and it is not the exclusion $x_o$ of any output.  When
+with $B$ first (Figure~\ref{fig:cc-exclusions}(i)); at the canonical state of
+$\{A,B,C\}$ it is an exclusion, and it is not the canonical output exclusion $x_o^{\mathrm{out}}$ of any output.  When
 a read of $x$ by $A$ arrives, it returns $A$'s own write of $x$ if $A$ has
 written $x$, and otherwise the committed version of $x$ with the largest
 timestamp below $A$'s; the scheduler applies $\mathsf{read}$ and reports the
@@ -155,7 +155,7 @@ before $A$; the scheduler then applies $\mathsf{abort}(A)$ and reports the
 abort.  When the commit request of $A$ arrives, the scheduler applies
 $\mathsf{TxCommit}(A)$.
 
-\emph{What a read is a commitment to.}  Suppose $B$ is stamped after $A$, and
+\emph{What reporting a read excludes.}  Suppose $B$ is stamped after $A$, and
 $B$'s read of $x$ returned the initial version or the write of $x$ by a
 transaction stamped before $A$.  At an input in which $A$ writes $x$, a
 complete row that satisfies both stamps and commits both $A$ and $B$ places $A$
@@ -163,7 +163,7 @@ between that version and $B$, so it does not permit the read.  Hence, after the
 two stamps, no row that reports the read and is at an input in which $A$
 writes $x$ commits both $A$ and $B$.  Once $\mathsf{read}$ has been applied, no
 remaining row at such an input commits both, whether it reports the read or
-not.  Reporting the read is a commitment to this: if $A$ writes $x$, then $A$
+not.  Reporting the read excludes the contrary possibility: if $A$ writes $x$, then $A$
 and $B$ do not both commit.  MVTO reports the read when it arrives, whether or not
 $A$'s write has arrived.  The condition on the version is needed.  At an input of three
 transactions $A$, $W$, $B$, stamped in that order, each having requested
@@ -180,7 +180,7 @@ a legal output: the specification entails the abort.  While $B$ is undecided, it
 does not.  Consider a run in which $A$'s first operation, a read of $x$,
 arrives, then $B$'s read of $x$, and then $A$'s write of $x$, with further
 transactions free to arrive.  The scheduler applies $\mathsf{stamp}(A)$ and
-$\mathsf{stamp}(B)$ in commitment events and reports that $B$ read the initial
+$\mathsf{stamp}(B)$ in exclusion events and reports that $B$ read the initial
 version of $x$.  Reporting the read is not a legal output on its own, since at an
 input in which $A$ writes $x$ the row that commits $A$ and then $B$ cannot be
 completed with it; the output event that applies $\mathsf{read}$ and then
@@ -197,11 +197,11 @@ $B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s abort
 becomes a legal output.
 
 \paragraph{Comparison.}
-2PL issues commitments to relative orders, only between conflicting
-transactions, as their operations arrive; MVTO issues a commitment to each
+2PL applies exclusions that fix relative orders, only between conflicting
+transactions, as their operations arrive; MVTO applies an exclusion that fixes each
 transaction's position against all present and future ones when its first
 operation arrives.  Both report reads through $\mathsf{read}$.  Under MVTO, a
-later transaction's read of an older version is a commitment that, if the
+later transaction's read of an older version is an exclusion that, if the
 writer writes that key, the writer and the reader do not both commit.  The
 write rule settles this by aborting the writer when its write arrives, and the
 specification forces that abort only after the reader commits.

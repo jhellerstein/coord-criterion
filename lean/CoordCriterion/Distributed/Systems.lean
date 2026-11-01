@@ -2,16 +2,16 @@ import CoordCriterion.Foundations.Core
 import CoordCriterion.Foundations.Runs
 import CoordCriterion.CompleteCALM.Theorem
 import CoordCriterion.Distributed.Histories
-import CoordCriterion.Distributed.Commitments
+import CoordCriterion.Distributed.Exclusions
 import CoordCriterion.CAP.ResponseForm
 
 /-!
 # Systems, canonical systems, and coordination (Sections 4.1–4.4, Appendix C)
 
 Claims of `sections/distributed-histories.tex`, `sections/distributed.tex`
-(through `sec:coordination`) and `appendices/commitment-bases-general.tex`
+(through `sec:coordination`) and `appendices/exclusion-bases-general.tex`
 (`app:bases`) beyond the core development of `Distributed/Histories.lean`
-and `Distributed/Commitments.lean`, stated in the paper's form (namespace
+and `Distributed/Exclusions.lean`, stated in the paper's form (namespace
 `CC.Dist`):
 
 * `fig_participant_runs`        — Figure `fig:participant-runs`: the two
@@ -22,29 +22,29 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
                                   assumption of `Dist.History.WF`.
 * `distConsistent_iff_liftedMono` — "distributed consistency exactly when
                                   Lifted Monotonicity" (Sec. distributed consistency).
-* `functional_excludes_vacuous`, `functional_kappa`, `functional_seal_eq`,
+* `functional_excludes_vacuous`, `functional_kappa`, `functional_inputExclusion_eq`,
   `functional_legal_ge`         — the one-row-per-input claims.
 * `canonLegal_iff`, `canonExec_unique`
                                 — Def. `def:canonical-system`: canonical
                                   histories are exactly those of Sec. histories.
-* `conflicting_outputs2`, `conflict_is_choice`
-                                — Prop. `thm:commitments-require-coordination`
+* `conflicting_outputs2`, `conflict_is_outputExclusion`
+                                — Prop. `thm:exclusions-require-coordination`
                                   with independent bases, and "the conflict is
-                                  a choice, not a seal".
-* `sysStep_to_composite`, `sysStep_of_composite`, `composite_functional_seals`
-                                — the remark after Lemma `lem:compound-commitment`.
+                                  an output exclusion, not an input exclusion".
+* `sysStep_to_composite`, `sysStep_of_composite`, `composite_functional_inputExcludes`
+                                — the remark after Lemma `lem:compound-exclusion`.
 * `reconciliation_any_basis`    — Cor. `cor:reconciliation-any-basis`.
 * `converse_fails`, `system_runs_hide_nonmonotonicity`
                                 — "the converse of Lemma canonical-equivalent fails".
 * `reconcile_cf`                — deterministic reconciliation under Lifted
-                                  Monotonicity needs no commitment (Sec. coordination).
-* `toCAP`, `ofCAP`, `sysStep_iff_CAP`, `sysStep_commit_iff_CAP`
-                                — the two encodings of commitments, system
-                                  output events and commit events
-                                  (`CC.Commitment`/`SysStep` vs `CC.CAP`) coincide.
-* `choice_antichain`, `not_choice_of_two`
-                                — "neither [2PL nor MVTO commitment] is the
-                                  exclusion `x_o`" (generic form).
+                                  Monotonicity needs no exclusion (Sec. coordination).
+* `toCAP`, `ofCAP`, `sysStep_iff_CAP`, `sysStep_exclude_iff_CAP`
+                                — the two encodings of exclusions, system
+                                  output events and exclusion events
+                                  (`CC.Exclusion`/`SysStep` vs `CC.CAP`) coincide.
+* `outputExclusion_antichain`, `not_output_exclusion_of_two`
+                                — "neither [2PL nor MVTO exclusion] is the
+                                  exclusion `x_o^out`" (generic form).
 -/
 
 namespace CC
@@ -257,34 +257,34 @@ theorem distConsistent_iff_liftedMono (sp : Spec I O) (D : Type) :
 section functional
 variable {sp : Spec I O}
 
-/-- "With one row per input, Eq. commitment-excludes holds vacuously." -/
+/-- "With one row per input, Eq. exclusion-excludes holds vacuously." -/
 theorem functional_excludes_vacuous (hf : sp.Functional) (σ τ : State sp) :
     ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w) := by
   intro k u w hu hnu hw _
   have : u = w := hf k u w (σ.sub _ _ hu) (τ.sub _ _ hw)
   exact hnu (this ▸ hw)
 
-theorem functional_not_rejected (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ Excluded σ o k x := by
+theorem functional_not_outputExcluded (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
+    ¬ OutputExcluded σ o k x := by
   intro hr
   have : ∃ u, σ.R k u ∧ o ≼ u := Classical.byContradiction fun hn => hr.2.2.1 ⟨hr.1, hn⟩
   obtain ⟨u, hu, hou⟩ := this
   have : x = u := hf k x u (σ.sub _ _ hr.1) (σ.sub _ _ hu)
   exact hr.2.1 (this ▸ hou)
 
-/-- With one row per input, the canonical event applies at most the seal. -/
+/-- With one row per input, the canonical event applies at most the input exclusion. -/
 theorem functional_kappa (hf : sp.Functional) (σ : State sp) (o : O) :
-    kappa σ o = (if ∃ k x, Sealed σ o k x then [sealC o] else []) := by
-  have h2 : ¬ ∃ k x, Excluded σ o k x := fun ⟨k, x, h⟩ => functional_not_rejected hf σ o k x h
+    kappa σ o = (if ∃ k x, InputExcluded σ o k x then [inputExclusion o] else []) := by
+  have h2 : ¬ ∃ k x, OutputExcluded σ o k x := fun ⟨k, x, h⟩ => functional_not_outputExcluded hf σ o k x h
   simp only [kappa, h2, ite_false, List.append_nil]
 
-/-- With one row per input, the seal `s_o` of Def. `def:lifted-output-event` is
-the seal of Def. `def:output-event`: it leaves `R[out ⪰ o]`. -/
-theorem functional_seal_eq (hf : sp.Functional) (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
-    (cmSealState σ o ho).R = outputTable σ o := by
+/-- With one row per input, the input exclusion `x_o^in` of Def. `def:lifted-output-event` is
+the input exclusion of Def. `def:output-event`: it leaves `R[out ⪰ o]`. -/
+theorem functional_inputExclusion_eq (hf : sp.Functional) (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
+    (inputExcludeState σ o ho).R = outputTable σ o := by
   funext k x
   apply propext
-  show (σ.R k x ∧ ¬ Sealed σ o k x) ↔ (σ.R k x ∧ o ≼ x)
+  show (σ.R k x ∧ ¬ InputExcluded σ o k x) ↔ (σ.R k x ∧ o ≼ x)
   constructor
   · rintro ⟨hx, hns⟩
     refine ⟨hx, ?_⟩
@@ -295,10 +295,10 @@ theorem functional_seal_eq (hf : sp.Functional) (σ : State sp) (o : O) (ho : σ
   · rintro ⟨hx, hox⟩
     exact ⟨hx, fun hs => hs.2 ⟨x, hx, hox⟩⟩
 
-/-- "With one row per input … legality says that every row the commitments
+/-- "With one row per input … legality says that every row the exclusions
 leave has an output that refines `o`." -/
-theorem functional_legal_ge (hf : sp.Functional) {B : Basis sp} {σ τ : State sp}
-    {γ : List (Commitment sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
+theorem functional_legal_ge (hf : sp.Functional) {B : ExclusionBasis sp} {σ τ : State sp}
+    {γ : List (Exclusion sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
     ∃ σc, ApplySeq γ σ σc ∧ (∀ k x, σc.R k x → o ≼ x) ∧ τ.R = σc.R := by
   match h with
   | .output (σc := σc) _ hγ _ hleg _ hR =>
@@ -317,7 +317,7 @@ end functional
 section canonical_system
 variable {sp : Spec I O} {D : Type} {n : Nat}
 
-/-- Annotating each participant's input/output events of `H` with commitment
+/-- Annotating each participant's input/output events of `H` with exclusion
 sequences gives a legal canonical run (every output event is `Out_{κ_o}(o)`
 at the state where it occurs). -/
 def CanonLegal (sp : Spec I O) (H : Dist.History I O D n) : Prop :=
@@ -325,7 +325,7 @@ def CanonLegal (sp : Spec I O) (H : Dist.History I O D n) : Prop :=
     ∃ τ, CanonExec (canon sp (H.init p)) es τ
 
 /-- The same with legal events `Out_γ(o)` from a basis `B`. -/
-def SysLegal (B : Basis sp) (H : Dist.History I O D n) : Prop :=
+def SysLegal (B : ExclusionBasis sp) (H : Dist.History I O D n) : Prop :=
   ∀ p, ∃ es : List (SEvent sp), es.filterMap SEvent.erase = Dist.ioOf (H.ev p) ∧
     ∃ τ, SysExec B (canon sp (H.init p)) es τ
 
@@ -372,15 +372,15 @@ theorem canonExec_unique {σ ρ ρ' : State sp} {es es' : List (SEvent sp)}
           cases e' with
           | input j' => cases ha; cases ha'; rfl
           | output _ _ => cases ha; cases ha'
-          | commit _ => cases ha'
+          | exclude _ => cases ha'
         | output γ o =>
           cases e' with
           | input _ => cases ha; cases ha'
           | output γ' o' =>
             cases ha; cases ha'
             rw [hs.2.1 γ o rfl, hs'.2.1 γ' o rfl]
-          | commit _ => cases ha'
-        | commit _ => cases ha
+          | exclude _ => cases ha'
+        | exclude _ => cases ha
       subst hee
       have hτ : τ = τ' := step_det hst hst'
       subst hτ
@@ -389,21 +389,21 @@ theorem canonExec_unique {σ ρ ρ' : State sp} {es es' : List (SEvent sp)}
 
 /-- Every canonical annotation is in particular legal under `B_S`. -/
 theorem canonLegal_sysLegal {H : Dist.History I O D n} (h : CanonLegal sp H) :
-    SysLegal (canonBasis sp) H := by
+    SysLegal (canonExclusionBasis sp) H := by
   intro p
   obtain ⟨es, he, τ, hx⟩ := h p
   exact ⟨es, he, τ, canonExec_sysExec hx⟩
 
 end canonical_system
 
-/-! ### Prop. `thm:commitments-require-coordination`, refinements -/
+/-! ### Prop. `thm:exclusions-require-coordination`, refinements -/
 
 section conflict
 variable {sp : Spec I O}
 
 /-- The two continuations may use different bases. -/
-theorem conflicting_outputs2 {B B' B1 B2 : Basis sp} {σ σ' t : State sp}
-    {γ γ' : List (Commitment sp)} {o x : O}
+theorem conflicting_outputs2 {B B' B1 B2 : ExclusionBasis sp} {σ σ' t : State sp}
+    {γ γ' : List (Exclusion sp)} {o x : O}
     (_h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
@@ -414,8 +414,8 @@ theorem conflicting_outputs2 {B B' B1 B2 : Basis sp} {σ σ' t : State sp}
   rw [hc] at hw
   exact hno w (hx1.sub _ _ hw) (ht _ _ (hx2.sub _ _ hw)).2
 
-/-- Some commitment of a sequence removes any row that the sequence removes. -/
-theorem applySeq_removed {γ : List (Commitment sp)} {σ σc : State sp}
+/-- Some exclusion of a sequence removes any row that the sequence removes. -/
+theorem applySeq_removed {γ : List (Exclusion sp)} {σ σc : State sp}
     (h : ApplySeq γ σ σc) {k : I} {x : O} :
     σ.R k x → ¬ σc.R k x →
       ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R k x ∧ ¬ β.R k x := by
@@ -428,11 +428,11 @@ theorem applySeq_removed {γ : List (Commitment sp)} {σ σc : State sp}
       exact ⟨c', List.mem_cons_of_mem _ hc', α, β, h1, h2.trans (c.cur_eq σ τ hc), h3, h4⟩
     · exact ⟨c, List.mem_cons_self .., σ, τ, hc, rfl, hx, hτ⟩
 
-/-- "The conflict is at the current input, so it is a choice, not a seal":
-if `Out_γ(o)` leaves no output refining `x ∈ R(i)`, then some commitment `c`
+/-- "The conflict is at the current input, so it is an output exclusion, not an input exclusion":
+if `Out_γ(o)` leaves no output refining `x ∈ R(i)`, then some exclusion `c`
 of `γ` removes `(i, x)` while keeping a row at `i`, and no kept row at `i`
 refines `x`. -/
-theorem conflict_is_choice {B : Basis sp} {σ σ' : State sp} {γ : List (Commitment sp)}
+theorem conflict_is_outputExclusion {B : ExclusionBasis sp} {σ σ' : State sp} {γ : List (Exclusion sp)}
     {o x : O} (h1 : SysStep B σ (.output γ o) σ') (hx : σ.R σ.cur x)
     (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
     ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
@@ -451,18 +451,18 @@ theorem conflict_is_choice {B : Basis sp} {σ σ' : State sp} {γ : List (Commit
     obtain ⟨w, hw⟩ := β.hasCur
     exact ⟨w, hβc ▸ hw⟩
 
-/-- Prop. `thm:commitments-require-coordination` for any first event: if an
-event `e` (input, output, or commitment event) takes `σ` to `σ'` with no output
+/-- Prop. `thm:exclusions-require-coordination` for any first event: if an
+event `e` (input, output, or exclusion event) takes `σ` to `σ'` with no output
 at `i` refining `x`, and `Out_γ'(x)` takes `σ` to `t`, then no state with
 current input `i` is reachable (under any bases) from both.  If `e` is an
-output event `Out_γ(o)`, then `γ ≠ ε`; a commitment event has `γ ≠ ε` by
+output event `Out_γ(o)`, then `γ ≠ ε`; an exclusion event has `γ ≠ ε` by
 definition. -/
-theorem conflicting_events {B B' B1 B2 : Basis sp} {σ σ' t : State sp}
-    {e : SEvent sp} {γ' : List (Commitment sp)} {x : O}
+theorem conflicting_events {B B' B1 B2 : ExclusionBasis sp} {σ σ' t : State sp}
+    {e : SEvent sp} {γ' : List (Exclusion sp)} {x : O}
     (h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
     (∀ γ o, e = .output γ o → γ ≠ []) ∧
-    (∀ γ, e = .commit γ → γ ≠ []) ∧
+    (∀ γ, e = .exclude γ → γ ≠ []) ∧
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
         (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ) := by
   obtain ⟨_, _, ht, _⟩ := containment h2
@@ -471,15 +471,15 @@ theorem conflicting_events {B B' B1 B2 : Basis sp} {σ σ' t : State sp}
     exact (conflicting_outputs (B'' := B) h1 hno h2).1
   · rintro γ rfl
     cases h1 with
-    | commit _ hne _ => exact hne
+    | exclude _ hne _ => exact hne
   · rintro ⟨ρ, hc, ⟨es1, hx1⟩, ⟨es2, hx2⟩⟩
     obtain ⟨w, hw⟩ := ρ.hasCur
     rw [hc] at hw
     exact hno w (hx1.sub _ _ hw) (ht _ _ (hx2.sub _ _ hw)).2
 
 /-- The same with reachability by the transition system of Sections 2–3. -/
-theorem conflicting_events_reach {B B' : Basis sp} {σ σ' t : State sp}
-    {e : SEvent sp} {γ' : List (Commitment sp)} {x : O}
+theorem conflicting_events_reach {B B' : ExclusionBasis sp} {σ σ' t : State sp}
+    {e : SEvent sp} {γ' : List (Exclusion sp)} {x : O}
     (_h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ := by
@@ -489,17 +489,17 @@ theorem conflicting_events_reach {B B' : Basis sp} {σ σ' t : State sp}
   rw [hc] at hw
   exact hno w (reach_sub h1r _ _ hw) (ht _ _ (reach_sub h2r _ _ hw)).2
 
-/-- "The first event's commitment is a choice against `x`", for a commitment
-event: if `commit(γ)` leaves no output refining `x ∈ R(i)`, then some
-commitment `c` of `γ` removes `(i, x)` while keeping a row at `i`, and no kept
+/-- "The first event's exclusion is an output exclusion of `x`", for an exclusion
+event: if `exclude(γ)` leaves no output refining `x ∈ R(i)`, then some
+exclusion `c` of `γ` removes `(i, x)` while keeping a row at `i`, and no kept
 row at `i` refines `x`. -/
-theorem conflict_is_choice_commit {B : Basis sp} {σ σ' : State sp}
-    {γ : List (Commitment sp)} {x : O} (h1 : SysStep B σ (.commit γ) σ')
+theorem conflict_is_output_exclusion_event {B : ExclusionBasis sp} {σ σ' : State sp}
+    {γ : List (Exclusion sp)} {x : O} (h1 : SysStep B σ (.exclude γ) σ')
     (hx : σ.R σ.cur x) (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
     ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
       ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w := by
   cases h1 with
-  | commit _ _ hγ =>
+  | exclude _ _ hγ =>
     have hnc : ¬ σ'.R σ.cur x := fun h => hno x h (PO.refl x)
     obtain ⟨c, hc, α, β, hab, hαc, hαx, hβx⟩ := applySeq_removed hγ hx hnc
     have hβc : β.cur = σ.cur := (c.cur_eq α β hab).trans hαc
@@ -510,13 +510,13 @@ theorem conflict_is_choice_commit {B : Basis sp} {σ σ' : State sp}
 
 end conflict
 
-/-! ### Remark after Lemma `lem:compound-commitment` -/
+/-! ### Remark after Lemma `lem:compound-exclusion` -/
 
 section compound
 variable {sp : Spec I O}
 
-theorem sysStep_to_composite {B B' : Basis sp} {σ τ : State sp} {c : Commitment sp}
-    {cs : List (Commitment sp)} {o : O} (hB' : B' (composite c cs))
+theorem sysStep_to_composite {B B' : ExclusionBasis sp} {σ τ : State sp} {c : Exclusion sp}
+    {cs : List (Exclusion sp)} {o : O} (hB' : B' (composite c cs))
     (h : SysStep B σ (.output (c :: cs) o) τ) :
     SysStep B' σ (.output [composite c cs] o) τ := by
   match h with
@@ -524,36 +524,36 @@ theorem sysStep_to_composite {B B' : Basis sp} {σ τ : State sp} {c : Commitmen
     exact SysStep.output (fun c' hc' => (List.mem_singleton.1 hc') ▸ hB')
       ((applySeq_composite c cs _ _).1 hγ) ho hleg hcur hR
 
-theorem sysStep_of_composite {B B' : Basis sp} {σ τ : State sp} {c : Commitment sp}
-    {cs : List (Commitment sp)} {o : O} (hB : ∀ c' ∈ c :: cs, B c')
+theorem sysStep_of_composite {B B' : ExclusionBasis sp} {σ τ : State sp} {c : Exclusion sp}
+    {cs : List (Exclusion sp)} {o : O} (hB : ∀ c' ∈ c :: cs, B c')
     (h : SysStep B' σ (.output [composite c cs] o) τ) :
     SysStep B σ (.output (c :: cs) o) τ := by
   match h with
   | .output _ hγ ho hleg hcur hR =>
     exact SysStep.output hB ((applySeq_composite c cs _ _).2 hγ) ho hleg hcur hR
 
-/-- A compound commitment event `commit(c cs)` has the same effect as
+/-- A compound exclusion event `commit(c cs)` has the same effect as
 `commit(composite c cs)`. -/
-theorem sysStep_commit_composite_iff {B B' : Basis sp} {σ τ : State sp}
-    {c : Commitment sp} {cs : List (Commitment sp)} (hB : ∀ c' ∈ c :: cs, B c')
+theorem sysStep_exclude_composite_iff {B B' : ExclusionBasis sp} {σ τ : State sp}
+    {c : Exclusion sp} {cs : List (Exclusion sp)} (hB : ∀ c' ∈ c :: cs, B c')
     (hB' : B' (composite c cs)) :
-    SysStep B σ (.commit (c :: cs)) τ ↔ SysStep B' σ (.commit [composite c cs]) τ := by
+    SysStep B σ (.exclude (c :: cs)) τ ↔ SysStep B' σ (.exclude [composite c cs]) τ := by
   constructor
   · intro h
     cases h with
-    | commit _ _ hγ =>
-      exact SysStep.commit (fun c' hc' => (List.mem_singleton.1 hc') ▸ hB')
+    | exclude _ _ hγ =>
+      exact SysStep.exclude (fun c' hc' => (List.mem_singleton.1 hc') ▸ hB')
         (List.cons_ne_nil _ _) ((applySeq_composite c cs _ _).1 hγ)
   · intro h
     cases h with
-    | commit _ _ hγ =>
-      exact SysStep.commit hB (List.cons_ne_nil _ _) ((applySeq_composite c cs _ _).2 hγ)
+    | exclude _ _ hγ =>
+      exact SysStep.exclude hB (List.cons_ne_nil _ _) ((applySeq_composite c cs _ _).2 hγ)
 
-/-- "In a functional specification the composite … seals." -/
-theorem composite_functional_seals (hf : sp.Functional) (c : Commitment sp)
-    (cs : List (Commitment sp)) {σ τ : State sp} (h : (composite c cs).app σ = some τ)
+/-- "In a functional specification the composite … input-excludes." -/
+theorem composite_functional_inputExcludes (hf : sp.Functional) (c : Exclusion sp)
+    (cs : List (Exclusion sp)) {σ τ : State sp} (h : (composite c cs).app σ = some τ)
     (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w :=
-  functional_commitment_seals hf _ h k hk
+  functional_exclusion_input_excludes hf _ h k hk
 
 end compound
 
@@ -563,7 +563,7 @@ end compound
 continued under arbitrary bases `B' r` to one state with current input `j`:
 some `u ∈ P(j)` refines every output emitted on every run.  (The hypothesis
 that `j` is a common expansion is not needed.) -/
-theorem reconciliation_any_basis {sp : Spec I O} {m : Nat} (B B' : Fin m → Basis sp)
+theorem reconciliation_any_basis {sp : Spec I O} {m : Nat} (B B' : Fin m → ExclusionBasis sp)
     (i : Fin m → I) (es : Fin m → List (SEvent sp)) (ρ : Fin m → State sp)
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
     (τ : State sp) (j : I) (hτ : τ.cur = j)
@@ -607,7 +607,7 @@ def spU : Spec U1 B2 where
   total _ := ⟨(true : Bool), trivial⟩
 
 /-- The empty basis. -/
-def noBasis : Basis spU := fun _ => False
+def noExclusionBasis : ExclusionBasis spU := fun _ => False
 
 theorem b2_ne {a b : B2} (h : a ≠ b) : ¬ a ≼ b := h
 
@@ -622,7 +622,7 @@ theorem spU_not_exposable (σ : State spU) (hfull : ∀ k u, σ.R k u) (o : B2) 
   exact hne (e1.trans e2.symm)
 
 /-- Runs under the empty basis never leave the canonical state. -/
-theorem noBasis_full {σ ρ : State spU} {es : List (SEvent spU)} (h : SysExec noBasis σ es ρ) :
+theorem noExclusionBasis_full {σ ρ : State spU} {es : List (SEvent spU)} (h : SysExec noExclusionBasis σ es ρ) :
     (∀ k u, σ.R k u) → ∀ k u, ρ.R k u := by
   induction h with
   | nil => exact id
@@ -637,7 +637,7 @@ theorem noBasis_full {σ ρ : State spU} {es : List (SEvent spU)} (h : SysExec n
       | nil =>
         cases hγ
         exact (spU_not_exposable σ hσ _ hleg).elim
-    | _, .commit (γ := γ) hb hne _ =>
+    | _, .exclude (γ := γ) hb hne _ =>
       cases γ with
       | nil => exact absurd rfl hne
       | cons c _ => exact (hb c (List.mem_cons_self ..)).elim
@@ -650,7 +650,7 @@ empty basis. -/
 theorem converse_fails :
     (∃ τ, Exec (canon spU ()) [.output (true : Bool)] τ) ∧
     ¬ ∃ (es : List (SEvent spU)) (ρ : State spU),
-        SysExec noBasis (canon spU ()) es ρ ∧ es.filterMap SEvent.erase = [.output (true : Bool)] := by
+        SysExec noExclusionBasis (canon spU ()) es ρ ∧ es.filterMap SEvent.erase = [.output (true : Bool)] := by
   refine ⟨⟨outState (canon spU ()) (true : Bool) ⟨trivial, trivial⟩,
     .cons (Step.output (canon spU ()) (outState (canon spU ()) (true : Bool) ⟨trivial, trivial⟩)
       (true : Bool) ⟨trivial, trivial⟩ rfl rfl) (.nil _)⟩, ?_⟩
@@ -669,9 +669,9 @@ theorem converse_fails :
         | nil =>
           cases hγ
           exact spU_not_exposable _ (canonU_full ()) _ hleg
-    | commit γ =>
+    | exclude γ =>
       cases hs with
-      | commit hb hne _ =>
+      | exclude hb hne _ =>
         cases γ with
         | nil => exact hne rfl
         | cons c _ => exact hb c (List.mem_cons_self ..)
@@ -681,8 +681,8 @@ non-monotonicity": `spU` is not consistent, yet every finite family of runs
 under the empty basis is confluent, within that system, at every input. -/
 theorem system_runs_hide_nonmonotonicity :
     ¬ spU.Consistent ∧
-    ∀ fam : List (State spU), (∀ σ ∈ fam, ∃ i es, SysExec noBasis (canon spU i) es σ) →
-      ∀ j : U1, ∃ τ : State spU, τ.cur = j ∧ ∀ σ ∈ fam, ∃ es, SysExec noBasis σ es τ := by
+    ∀ fam : List (State spU), (∀ σ ∈ fam, ∃ i es, SysExec noExclusionBasis (canon spU i) es σ) →
+      ∀ j : U1, ∃ τ : State spU, τ.cur = j ∧ ∀ σ ∈ fam, ∃ es, SysExec noExclusionBasis σ es τ := by
   refine ⟨fun hc => ?_, fun fam hfam j => ?_⟩
   · have hLM := (complete_calm spU).1 hc
     obtain ⟨u, _, h⟩ := hLM () () trivial [(true : B2), (false : B2)] (List.cons_ne_nil _ _)
@@ -692,7 +692,7 @@ theorem system_runs_hide_nonmonotonicity :
     exact Bool.noConfusion (e1.trans e2.symm)
   · refine ⟨canon spU (), u1_eq _ _, fun σ hσ => ⟨[], ?_⟩⟩
     obtain ⟨i, es, hx⟩ := hfam σ hσ
-    have hfull := noBasis_full hx (canonU_full i)
+    have hfull := noExclusionBasis_full hx (canonU_full i)
     have : σ = canon spU () := State.ext' (u1_eq _ _) (by
       funext k u; apply propext
       exact ⟨fun _ => canonU_full () k u, fun _ => hfull k u⟩)
@@ -700,10 +700,10 @@ theorem system_runs_hide_nonmonotonicity :
 
 end converse
 
-/-! ### Deterministic reconciliation needs no commitment -/
+/-! ### Deterministic reconciliation needs no exclusion -/
 
 /-- Under Lifted Monotonicity, runs with a common expansion `j` share a row
-`(j,u)`, and from each final state the commitment-free events `input(j)`,
+`(j,u)`, and from each final state the exclusion-free events `input(j)`,
 `Out_ε(u)` reach the same state `(j, P[in ⪰ j, out ⪰ u])`. -/
 theorem reconcile_cf {sp : Spec I O} (hLM : sp.LiftedMono) (fam : List (State sp))
     (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (hj : ∀ σ ∈ fam, σ.cur ≼ j) :
@@ -741,22 +741,22 @@ theorem reconcile_cf {sp : Spec I O} (hLM : sp.LiftedMono) (fam : List (State sp
       exact ⟨σ.sub _ _ h, hjk, hux⟩
   exact .input s1 (.output s2 hexp (.nil _))
 
-/-! ### The two encodings of commitments coincide -/
+/-! ### The two encodings of exclusions coincide -/
 
 section encodings
 variable {sp : Spec I O}
 
-def toCAP (c : Commitment sp) : CAP.Commitment sp :=
+def toCAP (c : Exclusion sp) : CAP.Exclusion sp :=
   ⟨c.app, c.cur_eq, c.sub, c.removes, c.excludes⟩
 
-def ofCAP (c : CAP.Commitment sp) : Commitment sp :=
+def ofCAP (c : CAP.Exclusion sp) : Exclusion sp :=
   ⟨c.f, c.cur_eq, c.sub, c.strict, c.excl⟩
 
-theorem ofCAP_toCAP (c : Commitment sp) : ofCAP (toCAP c) = c := by cases c; rfl
+theorem ofCAP_toCAP (c : Exclusion sp) : ofCAP (toCAP c) = c := by cases c; rfl
 
-theorem toCAP_ofCAP (c : CAP.Commitment sp) : toCAP (ofCAP c) = c := by cases c; rfl
+theorem toCAP_ofCAP (c : CAP.Exclusion sp) : toCAP (ofCAP c) = c := by cases c; rfl
 
-theorem applySeq_iff_CAP {γ : List (Commitment sp)} {σ ρ : State sp} :
+theorem applySeq_iff_CAP {γ : List (Exclusion sp)} {σ ρ : State sp} :
     ApplySeq γ σ ρ ↔ CAP.applySeq σ (γ.map toCAP) = some ρ := by
   induction γ generalizing σ with
   | nil =>
@@ -779,10 +779,10 @@ theorem applySeq_iff_CAP {γ : List (Commitment sp)} {σ ρ : State sp} :
       · intro h; cases h with | cons hc' h' => rw [hc] at hc'; cases hc'; exact h'
       · intro h; exact ApplySeq.cons hc h
 
-/-- A legal `Out_γ(o)` of `Distributed/Commitments.lean` is exactly a legal `out γ o` of
+/-- A legal `Out_γ(o)` of `Distributed/Exclusions.lean` is exactly a legal `out γ o` of
 `CAP/Model.lean` (`applySeq`, then `Step` and `Exposable` at the committed
-state), with the commitments transported by `toCAP`. -/
-theorem sysStep_iff_CAP {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)} {o : O} :
+state), with the exclusions transported by `toCAP`. -/
+theorem sysStep_iff_CAP {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (Exclusion sp)} {o : O} :
     SysStep B σ (.output γ o) τ ↔
       (∀ c ∈ γ, B c) ∧ ∃ σc, CAP.applySeq σ (γ.map toCAP) = some σc ∧
         Step σc (.output o) τ ∧ Exposable σc o := by
@@ -798,31 +798,31 @@ theorem sysStep_iff_CAP {B : Basis sp} {σ τ : State sp} {γ : List (Commitment
     | output _ _ ho hcur hR =>
       exact SysStep.output hb hγ' ho hleg (hcur.trans hγ'.cur_eq) hR
 
-/-- A commit event `Commit(γ)` of `Distributed/Commitments.lean` is exactly a
-legal `cmt γ` of `CAP/Model.lean`: basis commitments, `γ ≠ ε`, and `applySeq`
+/-- A exclusion event `Exclude(γ)` of `Distributed/Exclusions.lean` is exactly a
+legal `cmt γ` of `CAP/Model.lean`: basis exclusions, `γ ≠ ε`, and `applySeq`
 reaching the next state. -/
-theorem sysStep_commit_iff_CAP {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)} :
-    SysStep B σ (.commit γ) τ ↔
+theorem sysStep_exclude_iff_CAP {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (Exclusion sp)} :
+    SysStep B σ (.exclude γ) τ ↔
       (∀ c ∈ γ, B c) ∧ γ ≠ [] ∧ CAP.applySeq σ (γ.map toCAP) = some τ := by
   constructor
   · intro h
     cases h with
-    | commit hb hne hγ => exact ⟨hb, hne, applySeq_iff_CAP.1 hγ⟩
+    | exclude hb hne hγ => exact ⟨hb, hne, applySeq_iff_CAP.1 hγ⟩
   · rintro ⟨hb, hne, hγ⟩
-    exact SysStep.commit hb hne (applySeq_iff_CAP.2 hγ)
+    exact SysStep.exclude hb hne (applySeq_iff_CAP.2 hγ)
 
 end encodings
 
-/-! ### "Neither is the exclusion `x_o`" (generic form) -/
+/-! ### "Neither is the exclusion `x_o^out`" (generic form) -/
 
 section antichain
 variable {sp : Spec I O}
 
-/-- If the fiber at the current input is an antichain, `x_o` keeps only `o`
+/-- If the fiber at the current input is an antichain, `x_o^out` keeps only `o`
 there. -/
-theorem choice_antichain {σ : State sp} {o : O} (ho : σ.R σ.cur o)
+theorem outputExclusion_antichain {σ : State sp} {o : O} (ho : σ.R σ.cur o)
     (hanti : ∀ x y, σ.R σ.cur x → σ.R σ.cur y → x ≼ y → x = y) :
-    ∀ x, (cmExcludeState σ o).R σ.cur x ↔ x = o := by
+    ∀ x, (outputExcludeState σ o).R σ.cur x ↔ x = o := by
   intro x
   constructor
   · rintro ⟨hx, hnr⟩
@@ -836,18 +836,18 @@ theorem choice_antichain {σ : State sp} {o : O} (ho : σ.R σ.cur o)
     have e2 := hanti x u hx hu hxu
     exact hne (e2.trans e1.symm)
   · rintro rfl
-    exact ⟨ho, not_rejected_of_ge (PO.refl x)⟩
+    exact ⟨ho, not_outputExcluded_of_ge (PO.refl x)⟩
 
-/-- A commitment that keeps two distinct rows at the current input of a state
-whose current fiber is an antichain is not `x_o` for any `o`. -/
-theorem not_choice_of_two {σ τ : State sp} {x y : O}
+/-- An exclusion that keeps two distinct rows at the current input of a state
+whose current fiber is an antichain is not `x_o^out` for any `o`. -/
+theorem not_output_exclusion_of_two {σ τ : State sp} {x y : O}
     (hanti : ∀ x y, σ.R σ.cur x → σ.R σ.cur y → x ≼ y → x = y)
     (hx : τ.R σ.cur x) (hy : τ.R σ.cur y) (hxy : x ≠ y) (o : O) :
-    (excludeC o).app σ ≠ some τ := by
+    (outputExclusion o).app σ ≠ some τ := by
   intro h
-  obtain ⟨ho, _, rfl⟩ := chooseApp_eq.1 h
-  have e1 := (choice_antichain ho hanti x).1 hx
-  have e2 := (choice_antichain ho hanti y).1 hy
+  obtain ⟨ho, _, rfl⟩ := outputExclusionApp_eq.1 h
+  have e1 := (outputExclusion_antichain ho hanti x).1 hx
+  have e2 := (outputExclusion_antichain ho hanti y).1 hy
   exact hxy (e1.trans e2.symm)
 
 end antichain

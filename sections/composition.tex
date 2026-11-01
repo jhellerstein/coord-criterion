@@ -14,9 +14,9 @@ with no further agreement.
 
 That puzzle is explained by our framework.  Specifications are
 tables, so they compose by equijoin, and composition preserves Lifted
-Monotonicity.  Because commitments are explicit, we
-can also ask which component makes a composition's commitments.  When the
-upstream component makes every commitment the composition needs, and the
+Monotonicity.  Because exclusions are explicit, we
+can also ask which component makes a composition's exclusions.  When the
+upstream component makes every exclusion the composition needs, and the
 downstream needs none on the inputs the upstream offers, we call the
 coordination \emph{proper}
 (Section~\ref{sec:proper-coordination}).  Proofs are in
@@ -66,18 +66,18 @@ monotone (Section~\ref{sec:lifted-monotonicity}).
 \label{sec:composite-calm}
 
 The composite is itself an ordered specification.  By Complete CALM, specification $P_2\circ P_1$ is consistent exactly when it
-satisfies Lifted Monotonicity, and then no output needs a commitment
+satisfies Lifted Monotonicity, and then no output needs an exclusion
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).
 That test treats the composite as a single specification.  Suppose instead that
 each stage runs on its own, with its runs taking as input the outputs of the
-stage before.  A stage may then need a commitment even when the composite
+stage before.  A stage may then need an exclusion even when the composite
 needs none.  A composite can be jointly monotone, with no stage needing a
-commitment, in three ways.  The orders on $I$ and $O$ are part of the composite's contract
+exclusion, in three ways.  The orders on $I$ and $O$ are part of the composite's contract
 with its environment.  The order on $M$ is not: the composite's table never
 mentions it, and some order on $M$ may make both stages monotone.
 
 First, every stage is monotone.  By Lemma~\ref{lem:composition} the pipeline
-is monotone, and no stage need make a commitment (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+is monotone, and no stage need make an exclusion (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
 client query $q$ over the replica state $s$ is the composition $q\circ s$, and
 compositions of monotone functions are monotone
 (Corollary~\ref{cor:functional-composition}), so
@@ -102,7 +102,7 @@ when its restriction to inputs in $D$ does.
 \begin{proposition}[Jointly monotone composites]
 \label{prop:joint-monotone}
 The composite $P_2\circ P_1$ satisfies Lifted Monotonicity, and so is
-consistent and needs no commitment, in each of the following cases.
+consistent and needs no exclusion, in each of the following cases.
 \begin{enumerate}
   \item $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity.
   \item $\Spec_1$ satisfies Lifted Monotonicity; $\Spec_2$ satisfies it on
@@ -121,7 +121,7 @@ proof in Appendix~\ref{app:composition}.
 \end{proof}
 
 The three cases do not cover every monotone composite
-(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue a commitment even though the composite is monotone.
+(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue an exclusion even though the composite is monotone.
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
@@ -130,7 +130,7 @@ The replicated store of the opening extends the filtering case of
 Proposition~\ref{prop:joint-monotone}(2).  The key-value store is not monotone
 on its own, but it is monotone on what the log offers: a log fixes the order
 of commands, and a longer log only extends the responses.  Unlike the
-filtering case, the upstream must issue a commitment to offer only such inputs.
+filtering case, the upstream must issue an exclusion to offer only such inputs.
 
 Let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
@@ -139,8 +139,8 @@ $\Spec_1$.
 \begin{definition}[Proper Coordination]
 \label{def:proper-coordination}
 A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{proper} when
-$\Spec_2|_{\Spec_1}$ needs no commitment: every output at every state it
-reaches without commitment is legal.
+$\Spec_2|_{\Spec_1}$ needs no exclusion: every output at every state it
+reaches without exclusion is legal.
 \end{definition}
 
 \begin{theorem}[Proper Coordination]
@@ -154,7 +154,7 @@ Fix any system for $\Spec_1$.
         whenever runs of $\Spec_1$ can be brought to a common state, the
         composite runs are confluent.
   \item If it is proper and $P_2\circ P_1$ violates Lifted Monotonicity,
-        $\Spec_1$ cannot emit some output without a commitment.
+        $\Spec_1$ cannot emit some output without an exclusion.
 \end{enumerate}
 \end{theorem}
 
@@ -171,7 +171,7 @@ state of $\Spec_1$.  Full proof in Appendix~\ref{app:composition}.
 The theorem holds whatever basis $\Spec_1$ uses, and a proper pipeline is
 itself a guard for a further stage (Corollary~\ref{cor:pipelines}).  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
-logs needs no commitment.
+logs needs no exclusion.
 
 We call a system for one specification, viewed through a chosen set of sound
 boundary observations, a \emph{component}.  A component may run as one

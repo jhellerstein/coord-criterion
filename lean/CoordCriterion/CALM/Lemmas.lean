@@ -21,8 +21,8 @@ own proof routes:
   every final state to `(j, P[in ⪰ j, out ⪰ u])`" (`survivor_exec`);
 * functional remarks: exposability is "`f(j)` refines `o` at every legal `j`"
   (`exposable_iff_refines_all`); a functional output event commits iff it
-  seals (`functional_commit_iff_sealed`); failure of monotonicity at
-  `i ≼ k` makes `output(f(i))` at `σ_P(i)` seal `k` (`nonmono_seals`);
+  input-excludes (`functional_exclude_iff_inputExcluded`); failure of monotonicity at
+  `i ≼ k` makes `output(f(i))` at `σ_P(i)` input exclusion `k` (`nonmono_inputExcludes`);
   RelMono / Lifted Monotonicity / the common-expansion condition are
   functional monotonicity for singleton fibers (`relMono_iff_monoF`,
   `liftedMono_iff_monoF`, `commonExpansion_iff_monoF`); in a consistent
@@ -35,7 +35,7 @@ own proof routes:
   (`complete_calm_paper`, `complete_calm_paper_lm`);
 * **Prop. exposure boundary by the paper's route** (forward direction via
   consistency and the survivor test, `exposable_of_consistent`, which holds
-  at every run state, not only commitment-free ones;
+  at every run state, not only exclusion-free ones;
   `exposure_boundary_paper`);
 * **Pairs suffice** (`app:pairs-suffice`): `pairs_iff_commonExpansion`, from
   `CC.ce_of_pairs` (`CompleteCALM/Theorem.lean`).
@@ -209,28 +209,28 @@ theorem exposable_iff_refines_all {sp : Spec I O} (hf : sp.Functional) (σ : Sta
     exact absurd (h k x hx) hn
 
 /-- Def. `def:output-event` vs. Def. `def:lifted-output-event`: in a
-functional specification the output event commits (`R' ≠ R`) iff it seals
+functional specification the output event applies an exclusion (`R' ≠ R`) iff it input-excludes
 some row. -/
-theorem functional_commit_iff_sealed {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
-    outputTable σ o ≠ σ.R ↔ ∃ k x, Sealed σ o k x := by
+theorem functional_exclude_iff_inputExcluded {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
+    outputTable σ o ≠ σ.R ↔ ∃ k x, InputExcluded σ o k x := by
   constructor
   · intro hne
     apply Classical.byContradiction
     intro hno
-    have he : Exposable σ o := (exposable_iff_no_commitment σ o).2
+    have he : Exposable σ o := (exposable_iff_no_exclusion σ o).2
       ⟨fun k x hs => hno ⟨k, x, hs⟩,
-       fun k x hr => (functional_subsumed_rejected_empty hf σ o k x).2 hr⟩
+       fun k x hr => (functional_subsumed_outputExcluded_empty hf σ o k x).2 hr⟩
     exact hne ((exposable_iff_functional hf σ o).1 he)
   · rintro ⟨k, x, hs⟩ heq
     have he := (exposable_iff_functional hf σ o).2 heq
-    exact ((exposable_iff_no_commitment σ o).1 he).1 k x hs
+    exact ((exposable_iff_no_exclusion σ o).1 he).1 k x hs
 
 /-- Paragraph after Prop. `prop:functional-exposure-boundary`: if
-monotonicity fails at `i ≼ k`, then at `σ_P(i)` the event `output(f(i))` seals
+monotonicity fails at `i ≼ k`, then at `σ_P(i)` the event `output(f(i))` input-excludes
 `k`. -/
-theorem nonmono_seals {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
+theorem nonmono_inputExcludes {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
     (hik : i ≼ k) (_hio : sp.P i o) (hku : sp.P k u) (hn : ¬ o ≼ u) :
-    Sealed (canon sp i) o k u := by
+    InputExcluded (canon sp i) o k u := by
   refine ⟨⟨hku, hik⟩, ?_⟩
   rintro ⟨u', hu', hou'⟩
   have : u' = u := hf k u' u hu'.1 hku

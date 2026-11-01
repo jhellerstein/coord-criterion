@@ -10,7 +10,7 @@ import CoordCriterion.CAP.Coordination
 Statement layer for the subsection *Proofs for Section 4* of Appendix
 `app:proofs`: the proofs of Prop. `prop:distributed-consistency`, the
 paragraph *Exchanging outputs* (`app:exchanging-outputs`), and the proofs of
-Prop. `thm:commitments-require-coordination`, Theorem `thm:complete-cap`, and
+Prop. `thm:exclusions-require-coordination`, Theorem `thm:complete-cap`, and
 Corollary `cor:complete-cap-S`.  The results themselves are stated in
 `Paper/S4_Distributed.lean` and `Paper/S4_5_CompleteCAP.lean`.
 
@@ -85,13 +85,13 @@ theorem «app:exchanging-outputs/honored-table-not-state» :
     (canon Dist.spV3 (Dist.v 1)).R (Dist.v 2) (Dist.v 2) :=
   Dist.honor_counterexample
 
-/-- Proof of Prop. `thm:commitments-require-coordination`: "After the second
+/-- Proof of Prop. `thm:exclusions-require-coordination`: "After the second
 event every output at `i` refines `x`, by containment …; after the first, none
 does.  A common state with current input `i` has a row at `i`, and since specification events never
 add rows, that row would be in both states."  Stated with
 continuations in the transition system of §§2–3. -/
-theorem «proof:thm:commitments-require-coordination» {sp : Spec I O} {B B' : Basis sp}
-    {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
+theorem «proof:thm:exclusions-require-coordination» {sp : Spec I O} {B B' : ExclusionBasis sp}
+    {σ σ' t : State sp} {γ γ' : List (Exclusion sp)} {o x : O}
     (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
@@ -135,7 +135,7 @@ theorem «thm:complete-cap/proof-necessity» (E : Table I O) (hES : ∀ i o, E i
 /-- Proof of Corollary `cor:complete-cap-S`: "by Complete CALM and
 Proposition `prop:distributed-consistency` it has Partition Consistency."
 Strong reading: the confluence continuation itself can be chosen
-commitment-free and receive-free (`PartitionConsistencyCF`). -/
+exclusion-free and receive-free (`PartitionConsistencyCF`). -/
 theorem «cor:complete-cap-S/proof-cf-continuations» (sp : Spec I O) (D : Type) :
     ((∃ Sys : System sp D, Availability Sys ∧ PartitionConsistency Sys) → sp.LiftedMono) ∧
     (sp.LiftedMono → Availability (cfSystem sp D) ∧ PartitionConsistencyCF (cfSystem sp D)) :=

@@ -184,7 +184,7 @@ theorem reach_pstate {σa : State sa} {σb : State sb} {es : List (Event (Ia × 
     obtain ⟨σa'', σb'', h, ⟨la, hla⟩, ⟨lb, hlb⟩⟩ := ih rfl
     exact ⟨σa'', σb'', h, ⟨ea :: la, .cons ha hla⟩, ⟨eb :: lb, .cons hb hlb⟩⟩
 
-/-- **Needing no commitment is componentwise** (through the exposure
+/-- **Needing no exclusion is componentwise** (through the exposure
 boundary). -/
 theorem needsNoCommit_prod_iff [Nonempty Ia] [Nonempty Ib] :
     NeedsNoCommit (prod sa sb) ↔ NeedsNoCommit sa ∧ NeedsNoCommit sb := by

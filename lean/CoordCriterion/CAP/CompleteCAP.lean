@@ -5,7 +5,7 @@ import CoordCriterion.CAP.Model
 
 On top of the system model of `CAP/Model.lean`:
 
-* the commitment-free system (`cfSystem`, defined in `CAP/Model.lean`) and its Availability and Partition
+* the exclusion-free system (`cfSystem`, defined in `CAP/Model.lean`) and its Availability and Partition
   Consistency under Lifted Monotonicity (`cf_availability`,
   `cf_partitionConsistency`);
 * necessity: Availability ∧ Partition Consistency ⇒ Lifted Monotonicity
@@ -16,7 +16,7 @@ On top of the system model of `CAP/Model.lean`:
   strategies (`deterministic_not_available`; see modeling choice 5 of
   `CAP/Model.lean`).
 
-The strengthened (2)⇒(1) direction with commitment-free, receive-free
+The strengthened (2)⇒(1) direction with exclusion-free, receive-free
 confluence continuations is `complete_cap_strong` in
 `CAP/ResponseAvailability.lean`.
 -/
@@ -27,17 +27,17 @@ namespace CAP
 variable {I O : Type} [PO I] [PO O]
 variable {sp : Spec I O} {D : Type} {n : Nat}
 
-/-! ## The commitment-free system -/
+/-! ## The exclusion-free system -/
 
 theorem cf_allowed {N : Nat} {init : Fin N → I} {p : Fin N} {pre : List (LEv sp D N)}
-    {e : LEv sp D N} (he : ∀ γ o, e = .out γ o → γ = []) (hc : ∀ γ, e = .cmt γ → γ = []) :
+    {e : LEv sp D N} (he : ∀ γ o, e = .out γ o → γ = []) (hc : ∀ γ, e = .exclude γ → γ = []) :
     Allowed (cfSystem sp D) N init p pre e := by
   cases e with
   | inp => trivial
   | out γ o =>
     have := he γ o rfl; subst this
     exact ⟨by simp, trivial⟩
-  | cmt γ =>
+  | exclude γ =>
     have := hc γ rfl; subst this
     exact ⟨by simp, trivial⟩
   | send => trivial
@@ -55,7 +55,7 @@ theorem compliant_cf_out {N : Nat} {init : Fin N → I} {p : Fin N} {l : List (L
 
 theorem compliant_cf_cmt {N : Nat} {init : Fin N → I} {p : Fin N} {l : List (LEv sp D N)}
     (h : Compliant (Allowed (cfSystem sp D) N init p) l) :
-    ∀ γ, LEv.cmt γ ∈ l → γ = [] := by
+    ∀ γ, LEv.exclude γ ∈ l → γ = [] := by
   intro γ hm
   obtain ⟨a, b, hab⟩ := List.append_of_mem hm
   have := (h a _ b hab).1
@@ -63,7 +63,7 @@ theorem compliant_cf_cmt {N : Nat} {init : Fin N → I} {p : Fin N} {l : List (L
   | nil => rfl
   | cons c _ => exact absurd (this c (List.mem_cons_self ..)) id
 
-/-- Every history the commitment-free system produces is coordination-free
+/-- Every history the exclusion-free system produces is coordination-free
 (Def. `def:coordination-free`): each output event is some `Out ε o`. -/
 theorem cfSystem_coordinationFree {N : Nat} {init : Fin N → I} {H : History sp D N}
     (h : Produced (cfSystem sp D) N init H) : ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
@@ -114,7 +114,7 @@ theorem cf_availability (hlm : sp.LiftedMono) : Availability (cfSystem sp D) := 
       exact hm.1
     · intro γ hγ
       subst hγ
-      have hm : LEv.cmt γ ∈ ext q := by rw [he]; simp
+      have hm : LEv.exclude γ ∈ ext q := by rw [he]; simp
       simp only [ext] at hm; split at hm <;> simp at hm
   · intro q hq
     have : q ≠ p := fun h => hq (h ▸ rfl)
@@ -261,7 +261,7 @@ theorem cap_necessary (Sys : System sp D) (hA : Availability Sys)
 
 /-- **Complete CAP.**  Some system has Availability and Partition Consistency
 iff the specification satisfies Lifted Monotonicity; moreover the
-commitment-free system then has both. -/
+exclusion-free system then has both. -/
 theorem complete_cap (sp : Spec I O) (D : Type) :
     (∃ Sys : System sp D, Availability Sys ∧ PartitionConsistency Sys) ↔ sp.LiftedMono :=
   ⟨fun ⟨Sys, hA, hP⟩ => cap_necessary Sys hA hP,
@@ -290,7 +290,7 @@ def System.Deterministic (Sys : System sp D) : Prop :=
 
 /-- An output emitted after `o` on a run expands `o`. -/
 theorem lrun_emit_row {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
-    {γ : List (Commitment sp)} {o : O} (hm : LEv.out γ o ∈ l) : ∃ k, σ.R k o := by
+    {γ : List (Exclusion sp)} {o : O} (hm : LEv.out γ o ∈ l) : ∃ k, σ.R k o := by
   induction h with
   | nil => cases hm
   | inp hs _ ih =>
@@ -300,14 +300,14 @@ theorem lrun_emit_row {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l 
     rcases List.mem_cons.1 hm with he | hm'
     · cases he; exact ⟨_, hsub _ _ (step_output_inv hs).1⟩
     · obtain ⟨k, hk⟩ := ih hm'; exact ⟨k, hsub _ _ (step_sub hs k o hk)⟩
-  | @cmt σ τ' ρ γ' es _ ha _ ih =>
+  | @exclude σ τ' ρ γ' es _ ha _ ih =>
     obtain ⟨k, hk⟩ := ih (by simpa using hm)
     exact ⟨k, (applySeq_spec γ' σ τ' ha).2 _ _ hk⟩
   | send _ ih => exact ih (by simpa using hm)
   | recv _ ih => exact ih (by simpa using hm)
 
 theorem lrun_later_le {σ τ : State sp} {l1 l2 : List (LEv sp D n)}
-    {γ γ' : List (Commitment sp)} {o o' : O}
+    {γ γ' : List (Exclusion sp)} {o o' : O}
     (h : LRun σ (l1 ++ LEv.out γ o :: l2) τ) (hm : LEv.out γ' o' ∈ l2) : o ≼ o' := by
   obtain ⟨σ1, _, h2⟩ := lrun_append.1 h
   cases h2 with
@@ -317,7 +317,7 @@ theorem lrun_later_le {σ τ : State sp} {l1 l2 : List (LEv sp D n)}
 
 /-- A participant run cannot emit two incomparable outputs. -/
 theorem lrun_no_incomparable {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
-    {γ γ' : List (Commitment sp)} {o o' : O} (hm : LEv.out γ o ∈ l) (hm' : LEv.out γ' o' ∈ l)
+    {γ γ' : List (Exclusion sp)} {o o' : O} (hm : LEv.out γ o ∈ l) (hm' : LEv.out γ' o' ∈ l)
     (h1 : ¬ o ≼ o') (h2 : ¬ o' ≼ o) : False := by
   obtain ⟨l1, l2, rfl⟩ := List.append_of_mem hm
   rcases List.mem_append.1 hm' with hin | hin
@@ -355,7 +355,7 @@ theorem compliant_strat {Sys : System sp D} {N : Nat} {init : Fin N → I} {p : 
   cases e with
   | inp j => exact absurd (by rw [h]; simp) (hn j)
   | out γ o => exact by simpa using hA.2
-  | cmt γ => exact by simpa using hA.2
+  | exclude γ => exact by simpa using hA.2
   | send => simpa [Allowed] using hA
   | recv => simpa [Allowed] using hA
 

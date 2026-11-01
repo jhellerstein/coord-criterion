@@ -29,7 +29,7 @@ componentwise order; the composed input `I × J × A` is `I × (J × A)`;
 `∀ x y, x ≼ y → f x ≼ f y`.  For an upstream `𝒫 : Spec I M` and a store
 `f : M → O`, `Guard.comp 𝒫 f` is `𝒦 ∘ 𝒫`, `Guard.img f σ` is the image
 state `f(σ)`, and `Guard.obs f` replaces each output `m` by `f(m)` (and
-erases commitments).
+erases exclusions).
 -/
 
 namespace CC
@@ -88,7 +88,7 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
 
 /-- "The composite is itself an ordered specification.  By Complete CALM,
 specification `P₂ ∘ P₁` is consistent exactly when it satisfies Lifted
-Monotonicity, and then no output needs a commitment (Theorem
+Monotonicity, and then no output needs an exclusion (Theorem
 `thm:complete-calm`, Proposition `prop:exposure-boundary`)." -/
 theorem «sec:composite-calm/complete-calm» {I M O : Type} [PO I] [PO M] [PO O]
     (sp1 : Spec I M) (sp2 : Spec M O) :
@@ -112,7 +112,7 @@ theorem «sec:composite-calm/middle-order» {I M O : Type} [PO I] [instM : PO M]
   Joint.seq_under inst sp1 sp2
 
 /-- "First, every stage is monotone.  By Lemma `lem:composition` the pipeline
-is monotone, and no stage need make a commitment (Corollary `cor:pipelines`)."
+is monotone, and no stage need make an exclusion (Corollary `cor:pipelines`)."
 Lean:
 `Guard.pipeline_coordination_free` (the base case of the pipeline induction):
 the composite is Lifted-Monotone, and the pipeline of an empty-basis upstream
@@ -121,8 +121,8 @@ the empty basis, so it is again an empty-basis guard. -/
 theorem «sec:composite-calm/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
     {sp : Spec I M} {sk : Spec M O} (hP : sp.LiftedMono) (hK : sk.LiftedMono) (K : Guard.Sys sk) :
     (Comp.seq sp sk).LiftedMono ∧
-      ∀ l', Guard.GEmits (Guard.Sys.free (fun _ : Commitment sp => False)).emits K l' →
-        (Guard.Sys.free (fun _ : Commitment (Comp.seq sp sk) => False)).emits l' :=
+      ∀ l', Guard.GEmits (Guard.Sys.free (fun _ : Exclusion sp => False)).emits K l' →
+        (Guard.Sys.free (fun _ : Exclusion (Comp.seq sp sk) => False)).emits l' :=
   ⟨Comp.seq_liftedMono hP hK, fun _ h => (Guard.pipeline_coordination_free hP hK h).2⟩
 
 /-- "The CRDT observations of Section `sec:crdt-instance` have this shape: a
@@ -172,7 +172,7 @@ theorem «sec:composite-calm/cancellation» :
 
 /-- **Proposition `prop:joint-monotone`** (Jointly monotone composites): "The
 composite `P₂ ∘ P₁` satisfies Lifted Monotonicity, and so is consistent and
-needs no commitment, in each of the following cases.  (1) `𝒮₁` and `𝒮₂`
+needs no exclusion, in each of the following cases.  (1) `𝒮₁` and `𝒮₂`
 satisfy Lifted Monotonicity.  (2) `𝒮₁` satisfies Lifted Monotonicity; `𝒮₂`
 satisfies it on `𝒮₁`'s outputs.  (3) `𝒮₁` and `𝒮₂` satisfy Lifted
 Monotonicity via a different order on `M`."  And, just
@@ -185,7 +185,7 @@ equivalent to Lifted Monotonicity of the restriction to `D`
 are the same tables with `M` ordered by `inst`; "a different order" is any
 partial order `inst` (it may coincide with `≼_M`, which is case (1)).  (1) `Comp.seq_liftedMono`;
 (2) `Joint.seq_liftedMono_img`; (3) `Joint.seq_liftedMono_reorder`.
-"Consistent and needs no commitment" is `«sec:composite-calm/complete-calm»`. -/
+"Consistent and needs no exclusion" is `«sec:composite-calm/complete-calm»`. -/
 theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
     (sp1 : Spec I M) (sp2 : Spec M O)
     (hcase : (sp1.LiftedMono ∧ sp2.LiftedMono) ∨
@@ -203,7 +203,7 @@ theorem «prop:joint-monotone» {I M O : Type} [PO I] [PO M] [PO O]
     («sec:composite-calm/complete-calm» sp1 sp2).2 h⟩
 
 /-- "The three cases do not cover every monotone composite (Appendix
-`app:composition`).  When no case applies, some stage may have to issue a commitment even though the composite is monotone."  Lean: `Joint.no_order_counterexample`
+`app:composition`).  When no case applies, some stage may have to issue an exclusion even though the composite is monotone."  Lean: `Joint.no_order_counterexample`
 (`I` is the chain `Joint.C3`, `M = Joint.Mid`): under every partial order on
 `M` the composite is Lifted-Monotone, the upstream is not (so case (3) fails,
 and with it (1) and (2)), and its empty-basis system cannot emit at some
@@ -221,7 +221,7 @@ theorem «sec:composite-calm/reach» :
 Proposition `prop:joint-monotone`(2).  The key-value store is not monotone on
 its own, but it is monotone on what the log offers: a log fixes the order of
 commands, and a longer log only extends the responses.  Unlike the filtering
-case, the upstream must issue a commitment to offer only such inputs."  Lean, for any
+case, the upstream must issue an exclusion to offer only such inputs."  Lean, for any
 deterministic state machine `δ` and two distinct commands: the key-value store
 `𝒦 ∘ 𝒫` (`𝒫 = Inst.smrS1`, the log) is not Lifted-Monotone, execution
 `Inst.execF δ σ₀` is monotone on logs, and the log is not Lifted-Monotone. -/
@@ -233,12 +233,12 @@ theorem «sec:proper-coordination/kvs-on-logs» {Cmd Stt R : Type} (δ : Stt →
   ⟨h.2.1, h.2.2.1, h.1⟩
 
 /-- **Definition `def:proper-coordination`** (Proper Coordination): "A pipeline
-in which `𝒮₁` guards `𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no commitment:
-every output at every state it reaches without commitment is a legal output."  And,
+in which `𝒮₁` guards `𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no exclusion:
+every output at every state it reaches without exclusion is a legal output."  And,
 just before: "Write `𝒮₂|_{𝒮₁}` for `𝒮₂` restricted to the outputs of `𝒮₁`."
 Lean: `𝒮₂|_{𝒮₁}` is `Guard.rest sp sk = Joint.restrictTo (Joint.Img sp) sk`,
 whose inputs are the outputs of `sp` (a subtype of `M` with the order of `M`);
-"needs no commitment" is `Guard.NeedsNoCommit`.  The definition does not
+"needs no exclusion" is `Guard.NeedsNoCommit`.  The definition does not
 mention the system for `𝒮₁`. -/
 theorem «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) :
@@ -254,7 +254,7 @@ Lifted Monotonicity on the outputs of `𝒮₁`.  (2) If it is proper, `𝒮₂|
 under the empty basis follows every run of `𝒮₁`.  The result is a run of
 `P₂ ∘ P₁`, and whenever runs of `𝒮₁` can be brought to a common state, the
 composite runs are confluent.  (3) If it is proper and `P₂ ∘ P₁` violates
-Lifted Monotonicity, `𝒮₁` cannot emit some output without a commitment."
+Lifted Monotonicity, `𝒮₁` cannot emit some output without an exclusion."
 Lean: (1) `Guard.proper_iff` ("on the outputs" is `Joint.CEOn sk (Joint.Img sp)`),
 with `Guard.proper_iff_consistent` (Complete CALM on `𝒮₂|_{𝒮₁}`).  (2) For
 every run of `𝒮₁` under any basis `B` emitting `m :: ms`:
@@ -271,7 +271,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
     (sk : Spec M O) :
     (Guard.Proper sp sk ↔ Joint.CEOn sk (Joint.Img sp)) ∧
     (Guard.Proper sp sk ↔ (Guard.rest sp sk).Consistent) ∧
-    (Guard.Proper sp sk → ∀ (B : Basis sp) i es (ρ : State sp) m ms,
+    (Guard.Proper sp sk → ∀ (B : ExclusionBasis sp) i es (ρ : State sp) m ms,
       SysExec B (canon sp i) es ρ → Guard.emitted es = m :: ms →
       ∃ (hm : Joint.Img sp m) (o : O) (ps : List ({m // Joint.Img sp m} × O))
         (esK : List (SEvent (Guard.rest sp sk))) (ρK : State (Guard.rest sp sk)),
@@ -280,7 +280,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
         ∃ ρ' : State (Comp.seq sp sk),
           Exec (canon (Comp.seq sp sk) i) (Guard.merge es ([o] :: ps.map fun p => [p.2])) ρ' ∧
           ρ'.cur = ρ.cur) ∧
-    (Guard.Proper sp sk → ∀ (B : Basis sp) i es (ρ : State sp) (m : {m // Joint.Img sp m}) ms os
+    (Guard.Proper sp sk → ∀ (B : ExclusionBasis sp) i es (ρ : State sp) (m : {m // Joint.Img sp m}) ms os
       (ps : List ({m // Joint.Img sp m} × List O)) esK (ρK : State (Guard.rest sp sk)),
       SysExec B (canon sp i) es ρ → Guard.emitted es = m.1 :: ms.map Subtype.val →
       ps.map Prod.fst = ms → SysExec (fun _ => False) (canon (Guard.rest sp sk) m) esK ρK →
@@ -295,7 +295,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
       (∀ p ∈ fam, ∀ k m x (h : Joint.Img sp m), p.1.R k m → p.2.1.R ⟨m, h⟩ x → p.2.2.R k x) →
       (∀ p ∈ fam, ∀ k m, p.1.R k m → p.2.1.cur.1 ≼ m) →
       ∀ j : I, (∀ p ∈ fam, p.2.2.cur ≼ j) →
-      (∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : Basis sp) (es : List (SEvent sp)),
+      (∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : ExclusionBasis sp) (es : List (SEvent sp)),
         SysExec B p.1 es τ) →
       ConfluentAt (fam.map fun p => p.2.2) j) ∧
     (Guard.Proper sp sk → ¬ (Comp.seq sp sk).LiftedMono →
@@ -311,9 +311,9 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
 /-- "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is
 itself a guard for a further stage (Corollary `cor:pipelines`).  Locks in the
 key-value store would be pure overhead: by (1), the store restricted to logs
-needs no commitment."  Lean: for the log `𝒫 = Inst.smrS1` and execution
+needs no exclusion."  Lean: for the log `𝒫 = Inst.smrS1` and execution
 `Inst.execF δ σ₀`, every log is an output of the log, and the pipeline is
-proper, so the store restricted to logs needs no commitment.  Being a guard
+proper, so the store restricted to logs needs no exclusion.  Being a guard
 is `«cor:pipelines»`. -/
 theorem «sec:proper-coordination/locks-overhead» {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R)
     (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
@@ -352,7 +352,7 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
     (∀ p : Components.Pipeline sp sk, p.ContractProper ↔ Guard.Proper sp sk) ∧
     (Guard.Proper sp sk → ∀ (C1 : Components.Component sp) r, C1.accepts r →
       let p := Components.Pipeline.offered (sk := sk) C1
-        (Components.Component.ofBasis (Components.emptyBasis _))
+        (Components.Component.ofExclusionBasis (Components.emptyExclusionBasis _))
       p.ImplementationProper ∧ ∃ w : Components.FeedWitness p.upstream p.downstream,
         w.upRun.input = r.input ∧ w.upRun.output.1 = r.output ∧ CoordFree w.downRun.events) :=
   ⟨fun p _ h => p.sound h, Components.contractProper_iff_guardProper,

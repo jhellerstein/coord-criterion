@@ -19,7 +19,7 @@ and `appendices/proof-machinery.tex`:
 * the election (Section `sec:election-story`): `elec_monotone`,
   `elec_consistent`, `elecEq_not_monotone`, `elecEq_not_consistent`,
   `elec_panels_exposable`, `elec_panel_b_undetermined`,
-  `elec_panel_c_determined`, `elecEq_bot_seals`, `elecEq_bot_single_row`,
+  `elec_panel_c_determined`, `elecEq_bot_inputExcludes`, `elecEq_bot_single_row`,
   `elecEq_not_confluent` (the figure panels themselves are in `Figures.lean`);
 * the directed fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` of Section
   `sec:lifted-monotonicity` (`f5_directed`, `f5_common_refinements`,
@@ -537,9 +537,9 @@ theorem elec_panel_c_determined : Determined (canon elec baa) := by
   rcases c3 with _ | _ | _ <;> decide
 
 /-- Equality-order variant (Fig. `fig:nonmonotone-frame`): `output(⊥)` at
-`σ_P(ab·)` seals `aba` ... -/
-theorem elecEq_bot_seals : Sealed (canon elecEq bab) ⟨.bot⟩ baba ⟨winner baba⟩ :=
-  nonmono_seals elecEq_functional bab_le_baba
+`σ_P(ab·)` input-excludes `aba` ... -/
+theorem elecEq_bot_inputExcludes : InputExcluded (canon elecEq bab) ⟨.bot⟩ baba ⟨winner baba⟩ :=
+  nonmono_inputExcludes elecEq_functional bab_le_baba
     (show (⟨Res.bot⟩ : ResE) = ⟨winner bab⟩ by rw [winner_bab]) rfl
     (by rw [winner_baba]; intro h; cases h)
 

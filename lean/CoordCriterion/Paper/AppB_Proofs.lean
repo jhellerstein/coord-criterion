@@ -68,7 +68,7 @@ theorem «proof:cor:state-by-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}
   run_canon_of_mono hm hτ
 
 /-- Proof of Prop. `prop:functional-exposure-boundary`: monotone ⇒ every
-output at a state reachable without commitment is a legal output (via
+output at a state reachable without exclusion is a legal output (via
 Cor. `cor:state-by-input`); conversely, legality at `σ_P(i)`, reached by
 the empty run, is monotonicity. -/
 theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
@@ -133,7 +133,7 @@ theorem «proof:thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
   ⟨complete_calm_paper sp, complete_calm_paper_lm sp⟩
 
 /-- Proof of Prop. `prop:exposure-boundary`, (⇒): "Let `(i,R)` be reached by a
-run (commitment-free or not) … Extend the run in two ways: by `output(o)`,
+run (exclusion-free or not) … Extend the run in two ways: by `output(o)`,
 and by `input(j)` followed by `output(x)`.  By consistency the two extended
 runs are confluent at `j` … the exposure test makes `o` a legal output."
 Stated, as in the proof, at every run state. -/

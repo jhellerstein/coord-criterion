@@ -25,7 +25,7 @@ same models (namespace `CC.Inst`):
   (`uniqueness_example`, `uniqueness_concurrency`);
 * App. `app:composition`: Eq. `curried-composition` (`curried_sharp`,
   `curried_plan_graph`), Example `bare-reads` (`bare_read_example`,
-  `latestG_not_liftedMono`, `latest_needs_store_commitment`);
+  `latestG_not_liftedMono`, `latest_needs_store_exclusion`);
 * Sec. `composition`, Example `committed-log-composition` (`smr_example`;
   its proper coordination is `CC.Guard.smr_proper`; a redundant mutex store
   is `CC.Guard.mutex_redundant`).
@@ -461,7 +461,7 @@ theorem Q100_mono (s0 : IConf.St A) :
   crdt_query_of_mono s0 (qThr_mono 100)
 
 /-- Functional CALM: `Q_100` is consistent, and (exposure boundary) every
-output at every state reachable without commitment, in particular `false`
+output at every state reachable without exclusion, in particular `false`
 before the threshold, is exposable. -/
 theorem Q100_consistent_exposable (s0 : IConf.St A) :
     (graph (fun U : FSet (IConf.St A) => qThr 100 (st s0 U))).Consistent ∧
@@ -939,7 +939,7 @@ deterministic state machine, any read function `rd`, and two distinct
 commands:
 * `F` and `G ⋆ F` violate Lifted Monotonicity;
 * `G` is monotone, so every output of `G` at every state reachable without
-  commitment is exposable: bare reads need no commitment of their own. -/
+  exclusion is exposable: bare reads need no exclusion of their own. -/
 theorem bare_read_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
     ¬ (logF (Cmd := Cmd)).LiftedMono ∧
       ¬ (par logF (bareG δ rd σ0)).LiftedMono ∧ (bareG δ rd σ0).LiftedMono ∧
@@ -1010,9 +1010,9 @@ theorem latestG_not_liftedMono (σ0 : Stt) {c : Cmd} {r : Rd}
   have h2' : ∀ f : Rd × V, f = (r, rd σ0 r) → u.2.has f := h2
   exact hc (hv _ (h2' _ rfl)).2.symm
 
-/-- The latest-value store needs commitments of its own: some output of `G`
-at some state reachable without commitment is not exposable. -/
-theorem latest_needs_store_commitment (σ0 : Stt) {c : Cmd} {r : Rd}
+/-- The latest-value store needs exclusions of its own: some output of `G`
+at some state reachable without exclusion is not exposable. -/
+theorem latest_needs_store_exclusion (σ0 : Stt) {c : Cmd} {r : Rd}
     (hc : rd (δ σ0 c).1 r ≠ rd σ0 r) :
     ∃ τ : State (latestG δ rd σ0), ReachableCF τ ∧ ∃ o, τ.R τ.cur o ∧ ¬ Exposable τ o := by
   apply Classical.byContradiction

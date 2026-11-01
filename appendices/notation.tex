@@ -39,10 +39,10 @@ rows at $k$.
   state $(i,R)$; legal input & current input and remainder table, every row at an \indesc of $i$; an input with a row in $R$ & Def.~\ref{def:residual-state}\\
   canonical state & $\sigma_P(i)=(i,P[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
   input event; input loss & $\mathsf{input}(j)$ keeps $R[\mathrm{in}\InputGe j]$; the rows it removes & Eq.~\ref{eq:input-event}\\
-  output event; seal; commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; removing rows, it is a seal, a commitment & Def.~\ref{def:output-event}\\
-  legal output & $\mathsf{output}(o)$ applies no commitment & Def.~\ref{def:exposable}\\
+  output event; input exclusion & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; when it removes rows, that removal is an input exclusion & Def.~\ref{def:output-event}\\
+  legal output & $\mathsf{output}(o)$ applies no exclusion & Def.~\ref{def:exposable}\\
   determined; determination & the upper fiber has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
-  run; commitment-free & finite sequence of specification events from a canonical state; no output event issues a commitment & Def.~\ref{def:run}\\
+  run; exclusion-free & finite sequence of specification events from a canonical state; no output event issues an exclusion & Def.~\ref{def:run}\\
   consistent; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
   \bottomrule
 \end{tabular}
@@ -61,8 +61,8 @@ rows at $k$.
   Lifted Monotonicity & $i\InputOrd j\Rightarrow\fiber{i}\LiftedOrd\fiber{j}$ & Def.~\ref{def:lifted-monotonicity}\\
   common-\indesc condition & rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$ & Def.~\ref{def:common-expansion-condition}\\
   ruled out by $o$ & a row whose output does not \outrelbase $o$ & App.~\ref{app:lifted-output-events}\\
-  $\Sealed_o$; $\Subsumed_o$; $\Excluded_o$ & ruled-out rows at inputs with no row \outrelpart $o$; \outrelpast by a kept row at the same input; the rest & Eq.~\ref{eq:seal-inputs}--\ref{eq:choice-removals}\\
-  seal; output subsumption; exclusion & remove $\Sealed_o$; remove $\Subsumed_o$, not a commitment; remove $\Excluded_o$ & Def.~\ref{def:lifted-output-event}\\
+  $\ExcludedIn_o$; $\Subsumed_o$; $\ExcludedOut_o$ & ruled-out rows at inputs with no row \outrelpart $o$; \outrelpast by a kept row at the same input; the rest & Eq.~\ref{eq:input-exclusion-removals}--\ref{eq:output-exclusion-removals}\\
+  input exclusion; output subsumption; output exclusion & remove $\ExcludedIn_o$; remove $\Subsumed_o$, not an exclusion; remove $\ExcludedOut_o$ & Defs.~\ref{def:lifted-output-event}, \ref{def:canonical-input-output-exclusion}\\
   \bottomrule
 \end{tabular}
 
@@ -73,22 +73,22 @@ rows at $k$.
   \multicolumn{3}{@{}l}{\textbf{Distributed execution (Section~\ref{sec:distributed-execution})}}\\
   \midrule
   participant; message & holds a specification state; $m=(j,d)$, a cumulative input $j$ (or $\varnothing$) and other data $d$ & Sec.~\ref{sec:histories}\\
-  specification event & an input or output event; in Section~\ref{sec:systems}, also a commitment event & Defs.~\ref{def:run}, \ref{def:commitment-event}\\
+  specification event & an input or output event; in Section~\ref{sec:systems}, also an exclusion event & Defs.~\ref{def:run}, \ref{def:exclusion-event}\\
   distributed history; history event & locally ordered specification, send, and receive events & Def.~\ref{def:distributed-history}\\
   happens-before; consistent cut & closure of local orders and send-before-receive; a set of history events closed under it & Def.~\ref{def:distributed-history}\\
   participant run; endpoint & $p$'s specification events at $C$; $(\sigma_p(C))_{p\in P}$ & Def.~\ref{def:participant-run}\\
   continuation; cut confluent at $j$ & a history extending $C$; some continuation brings every participant to one state $(j,R)$ & Sec.~\ref{sec:distributed-consistency}\\
   distributed consistency & every consistent cut of every history is confluent at every common \indesc & Def.~\ref{def:distributed-consistency}\\
-  commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
-  local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
-    system; basis; produced & a commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only commitments from $\mathcal B$ & Def.~\ref{def:system}\\
-  system output event $\Out{\gamma}{o}$ & applies commitments $\gamma$, subsumes, emits $o$ & Def.~\ref{def:system-output-event}\\
-  commitment event $\mathsf{commit}(\gamma)$ & applies a nonempty sequence $\gamma$ of commitments, emits nothing & Def.~\ref{def:commitment-event}\\
-  run under a basis; canonical run & specification events whose commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
-  observably equivalent & same input and output events, commitments and commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
-  contradicts & accepts an input the commitment seals, or emits an output it excludes & Def.~\ref{def:contradicts}\\
-  requires (distributed) coordination & a commitment some run (at another participant) contradicts & Def.~\ref{def:coordination}\\
-  coordination-free & applies no commitment that requires coordination & Def.~\ref{def:coordination-free}\\
+  exclusion & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:exclusion}\\
+  local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, exclusion, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
+    system; basis; produced & an exclusion basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only exclusions from $\mathcal B$ & Def.~\ref{def:system}\\
+  system output event $\Out{\gamma}{o}$ & applies exclusions $\gamma$, subsumes, emits $o$ & Def.~\ref{def:system-output-event}\\
+  exclusion event $\mathsf{exclude}(\gamma)$ & applies a nonempty sequence $\gamma$ of exclusions, emits nothing & Def.~\ref{def:exclusion-event}\\
+  run under a basis; canonical run & specification events whose exclusions come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
+  observably equivalent & same input and output events, exclusions and exclusion events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
+  contradicts & accepts an input that an input exclusion ruled out, or emits an output an output exclusion ruled out & Def.~\ref{def:contradicts}\\
+  requires (distributed) coordination & an exclusion some run (at another participant) contradicts & Def.~\ref{def:coordination}\\
+  coordination-free & applies no exclusion that requires coordination & Def.~\ref{def:coordination-free}\\
   partitioned history; block; explicit relation $E$; explicit, implicit output & participants divided into two or more blocks, no message crosses blocks; $E\subseteq P$, the rows whose outputs must stay available; outputs of $E$, and the other permitted outputs & Defs.~\ref{def:partitioned-history}, \ref{def:partition-notions}\\
   Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable locally; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\
   Lifted Monotonicity for $E$ & every finite set of rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$ & Def.~\ref{def:lm-for-A}\\
@@ -107,10 +107,10 @@ rows at $k$.
   $\Spec_1$ guards $\Spec_2$ & $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs & Sec.~\ref{sec:sequential-composition}\\
   Lifted Monotonicity on $D$ & the common-\indesc condition for rows with inputs in $D$, at \indescs in $D$ & Sec.~\ref{sec:composite-calm}\\
   restriction $\Spec_2|_{\Spec_1}$ & $\Spec_2$ restricted to the outputs of $\Spec_1$ & Sec.~\ref{sec:proper-coordination}\\
-  proper & $\Spec_2|_{\Spec_1}$ needs no commitment: every output at every state reached without commitment is legal & Def.~\ref{def:proper-coordination}\\
-  component; admitted run & a commitment basis and admitted runs, each from $\sigma(i)$ emitting a named $o$ with $(i,o)\in P$ & Def.~\ref{def:component}\\
+  proper & $\Spec_2|_{\Spec_1}$ needs no exclusion: every output at every state reached without exclusion is legal & Def.~\ref{def:proper-coordination}\\
+  component; admitted run & an exclusion basis and admitted runs, each from $\sigma(i)$ emitting a named $o$ with $(i,o)\in P$ & Def.~\ref{def:component}\\
   typed pipeline; feed; external observation & components $C_1,C_2$ joined by feeds, an admitted run of $C_1$ ending at $m$ and one of $C_2$ from $\sigma(m)$; the pair $(i,o)$ a feed shows & Def.~\ref{def:typed-pipeline}\\
-  contract-proper; implementation-proper & the pipeline of $\Spec_1$ and $\Spec_2$ is proper; no downstream run of a feed applies a commitment & Def.~\ref{def:typed-pipeline}\\
+  contract-proper; implementation-proper & the pipeline of $\Spec_1$ and $\Spec_2$ is proper; no downstream run of a feed applies an exclusion & Def.~\ref{def:typed-pipeline}\\
   \bottomrule
 \end{tabular}
 }

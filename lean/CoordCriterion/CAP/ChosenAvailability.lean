@@ -1,4 +1,4 @@
-import CoordCriterion.CAP.LocalCommitment
+import CoordCriterion.CAP.LocalExclusion
 import CoordCriterion.CAP.AsyncGilbertLynch
 
 /-!

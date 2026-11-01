@@ -7,12 +7,12 @@ The self-contained system model used by Theorem `thm:complete-cap` and
 Appendix `app:cap-response` (on top of `Foundations` and
 `CompleteCALM/Theorem.lean`):
 
-* commitments (Def. `def:commitment`) and output events of a system
-  `Out γ o` (Def. `def:system-output-event`): `Commitment`, `applySeq`;
+* exclusions (Def. `def:exclusion`) and output events of a system
+  `Out γ o` (Def. `def:system-output-event`): `Exclusion`, `applySeq`;
 * distributed histories with explicit send/receive matching, consistent
   cuts, participant runs and continuations (Section `sec:histories`):
   `LEv`, `LRun`, `History`, `WF`, `IsCut`, `Extends`;
-* systems with a commitment basis and (nondeterministic) local strategies
+* systems with an exclusion basis and (nondeterministic) local strategies
   (Def. `def:system`), and the histories a system *produces* (`System`,
   `Produced`);
 * partitioned histories, Availability, Partition Consistency
@@ -23,8 +23,8 @@ Appendix `app:cap-response` (on top of `Foundations` and
   common-expansion condition every output of a run state's fiber is
   exposable).
 
-`Distributed/Systems.lean` proves that these commitments and output events
-coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
+`Distributed/Systems.lean` proves that these exclusions and output events
+coincide with those of `Distributed/Exclusions.lean` (`CC.Dist.toCAP`,
 `CC.Dist.ofCAP`, `CC.Dist.sysStep_iff_CAP`).  The theorem is in
 `CAP/CompleteCAP.lean`, the response form in `CAP/ResponseForm.lean`.
 
@@ -42,12 +42,12 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
 3. *Consistent cuts.*  Since local orders are total, a happens-before–closed
    set of events is a prefix of each participant's list closed under
    send→receive edges; we represent a cut by its prefix lengths `c : Fin n → Nat`.
-4. *Output and commit events of a system.*  `out γ o` applies the commitment
-   sequence `γ` (each a genuine commitment: partial, input-preserving,
-   strictly row-removing, satisfying Eq. `commitment-excludes`), then is legal
+4. *Output and exclusion events of a system.*  `out γ o` applies the exclusion
+   sequence `γ` (each a genuine exclusion: partial, input-preserving,
+   strictly row-removing, satisfying Eq. `exclusion-excludes`), then is legal
    exactly when `(i,o)` survives and Eq. `lifted-validity` holds, i.e.
    `Exposable` at the committed state, and ends at `R_c[out ⪰ o]`.  This is
-   literally `Step σc (.output o) τ ∧ Exposable σc o`.  A commit event
+   literally `Step σc (.output o) τ ∧ Exposable σc o`.  A exclusion event
    `cmt γ` (`γ` nonempty) applies `γ` and stops there: no subsumption, no
    output.
 5. *Strategies are nondeterministic* (relations from local history to
@@ -62,8 +62,8 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
    participant is allowed given its own local prefix: input events are always
    allowed (adversarial environment: any *legal* input to any participant at
    any time — legality is enforced by well-formedness); every other event must
-   be allowed by the strategy, and output and commit events may use only
-   basis commitments.  Locality of this condition is exactly the paper's
+   be allowed by the strategy, and output and exclusion events may use only
+   basis exclusions.  Locality of this condition is exactly the paper's
    "strategies depend only on local history", and it is what makes the
    (⇒) construction (gluing separate local runs) sound.
 7. *Partitioned history.*  A labelling `comp : Fin n → Nat` with at least two
@@ -75,7 +75,7 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
    input event, and contain an output event of `p` emitting `o`.
 9. *Partition Consistency continuation.*  Any well-formed continuation (it
    need not be partitioned or produced, and its output events may use
-   arbitrary commitments) whose final cut puts every participant in the same
+   arbitrary exclusions) whose final cut puts every participant in the same
    state with current input `j`.
 -/
 
@@ -84,21 +84,21 @@ namespace CAP
 
 variable {I O : Type} [PO I] [PO O]
 
-/-! ## Commitments and system output events -/
+/-! ## Exclusions and system output events -/
 
-/-- Def. `def:commitment`: a partial function on specification states that
+/-- Def. `def:exclusion`: a partial function on specification states that
 keeps the current input and removes a nonempty set of rows, none of which is
 dominated by a row that remains at the same input. -/
-structure Commitment (sp : Spec I O) where
+structure Exclusion (sp : Spec I O) where
   f : State sp → Option (State sp)
   cur_eq : ∀ σ τ, f σ = some τ → τ.cur = σ.cur
   sub : ∀ σ τ, f σ = some τ → ∀ k u, τ.R k u → σ.R k u
   strict : ∀ σ τ, f σ = some τ → ∃ k u, σ.R k u ∧ ¬ τ.R k u
   excl : ∀ σ τ, f σ = some τ → ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w)
 
-/-- Apply a commitment sequence `c₁ ⋯ cₙ`, each defined at the state its
+/-- Apply an exclusion sequence `c₁ ⋯ cₙ`, each defined at the state its
 predecessors leave. -/
-def applySeq {sp : Spec I O} : State sp → List (Commitment sp) → Option (State sp)
+def applySeq {sp : Spec I O} : State sp → List (Exclusion sp) → Option (State sp)
   | σ, [] => some σ
   | σ, c :: cs =>
     match c.f σ with
@@ -106,7 +106,7 @@ def applySeq {sp : Spec I O} : State sp → List (Commitment sp) → Option (Sta
     | none => none
 
 theorem applySeq_spec {sp : Spec I O} :
-    ∀ (γ : List (Commitment sp)) (σ τ : State sp), applySeq σ γ = some τ →
+    ∀ (γ : List (Exclusion sp)) (σ τ : State sp), applySeq σ γ = some τ →
       τ.cur = σ.cur ∧ ∀ k u, τ.R k u → σ.R k u
   | [], σ, τ, h => by
     simp [applySeq] at h; subst h; exact ⟨rfl, fun _ _ h => h⟩
@@ -118,8 +118,8 @@ theorem applySeq_spec {sp : Spec I O} :
       exact ⟨h2.trans (c.cur_eq _ _ h1), fun k u hu => c.sub _ _ h1 k u (h3 k u hu)⟩
     · cases h
 
-/-- A nonempty commitment sequence that applies removes some row. -/
-theorem applySeq_removes {sp : Spec I O} {γ : List (Commitment sp)} {σ σc : State sp}
+/-- A nonempty exclusion sequence that applies removes some row. -/
+theorem applySeq_removes {sp : Spec I O} {γ : List (Exclusion sp)} {σ σc : State sp}
     (hne : γ ≠ []) (h : applySeq σ γ = some σc) : ∃ k u, σ.R k u ∧ ¬ σc.R k u := by
   cases γ with
   | nil => exact absurd rfl hne
@@ -135,8 +135,8 @@ theorem applySeq_removes {sp : Spec I O} {γ : List (Commitment sp)} {σ σc : S
 message data `D`. -/
 inductive LEv (sp : Spec I O) (D : Type) (n : Nat) where
   | inp (j : I)
-  | out (γ : List (Commitment sp)) (o : O)
-  | cmt (γ : List (Commitment sp))
+  | out (γ : List (Exclusion sp)) (o : O)
+  | exclude (γ : List (Exclusion sp))
   | send (j : Option I) (d : D)
   | recv (q : Fin n) (k : Nat) (j : Option I) (d : D)
 
@@ -144,18 +144,18 @@ variable {sp : Spec I O} {D : Type} {n : Nat}
 
 /-- A participant's local event list as a transition sequence (item 3 of
 Def. `def:distributed-history`): input events are `Step`s, output events are
-legal `Out γ o` events, commit events `Commit(γ)` (`γ` nonempty) apply `γ`
+legal `Out γ o` events, exclusion events `Exclude(γ)` (`γ` nonempty) apply `γ`
 with no subsumption and no output, sends and receives leave the state
 unchanged. -/
 inductive LRun : State sp → List (LEv sp D n) → State sp → Prop where
   | nil (σ : State sp) : LRun σ [] σ
   | inp {σ τ ρ : State sp} {j : I} {es : List (LEv sp D n)} :
       Step σ (.input j) τ → LRun τ es ρ → LRun σ (.inp j :: es) ρ
-  | out {σ σc τ ρ : State sp} {γ : List (Commitment sp)} {o : O} {es : List (LEv sp D n)} :
+  | out {σ σc τ ρ : State sp} {γ : List (Exclusion sp)} {o : O} {es : List (LEv sp D n)} :
       applySeq σ γ = some σc → Step σc (.output o) τ → Exposable σc o →
       LRun τ es ρ → LRun σ (.out γ o :: es) ρ
-  | cmt {σ τ ρ : State sp} {γ : List (Commitment sp)} {es : List (LEv sp D n)} :
-      γ ≠ [] → applySeq σ γ = some τ → LRun τ es ρ → LRun σ (.cmt γ :: es) ρ
+  | exclude {σ τ ρ : State sp} {γ : List (Exclusion sp)} {es : List (LEv sp D n)} :
+      γ ≠ [] → applySeq σ γ = some τ → LRun τ es ρ → LRun σ (.exclude γ :: es) ρ
   | send {σ ρ : State sp} {j : Option I} {d : D} {es : List (LEv sp D n)} :
       LRun σ es ρ → LRun σ (.send j d :: es) ρ
   | recv {σ ρ : State sp} {q : Fin n} {k : Nat} {j : Option I} {d : D}
@@ -207,7 +207,7 @@ participant set and every choice of initial inputs.  Strategies are
 nondeterministic: `strat n init p pre e` says that `p` may perform `e` after
 local history `pre`. -/
 structure System (sp : Spec I O) (D : Type) where
-  basis : Commitment sp → Prop
+  basis : Exclusion sp → Prop
   strat : (n : Nat) → (Fin n → I) → Fin n → List (LEv sp D n) → LEv sp D n → Prop
 
 /-- Which next event a participant may perform after local history `pre`.
@@ -217,7 +217,7 @@ def Allowed (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
     (pre : List (LEv sp D n)) : LEv sp D n → Prop
   | .inp _ => True
   | .out γ o => (∀ c ∈ γ, Sys.basis c) ∧ Sys.strat n init p pre (.out γ o)
-  | .cmt γ => (∀ c ∈ γ, Sys.basis c) ∧ Sys.strat n init p pre (.cmt γ)
+  | .exclude γ => (∀ c ∈ γ, Sys.basis c) ∧ Sys.strat n init p pre (.exclude γ)
   | .send j d => Sys.strat n init p pre (.send j d)
   | .recv q k j d => Sys.strat n init p pre (.recv q k j d)
 
@@ -230,10 +230,10 @@ def Produced (Sys : System sp D) (n : Nat) (init : Fin n → I) (H : History sp 
   ∀ p, Compliant (Allowed Sys n init p) (H p)
 
 /-- Def. `def:system` as worded in the paper: the strategies' output events
-and commit events apply only commitments from the basis. -/
-def System.BasisRespecting (Sys : System sp D) : Prop :=
+and exclusion events apply only exclusions from the basis. -/
+def System.ExclusionBasisRespecting (Sys : System sp D) : Prop :=
   (∀ n init p pre γ o, Sys.strat n init p pre (.out γ o) → ∀ c ∈ γ, Sys.basis c) ∧
-  (∀ n init p pre γ, Sys.strat n init p pre (.cmt γ) → ∀ c ∈ γ, Sys.basis c)
+  (∀ n init p pre γ, Sys.strat n init p pre (.exclude γ) → ∀ c ∈ γ, Sys.basis c)
 
 /-- The paper's reading of "produced": inputs from the environment, every
 other event chosen by the strategy. -/
@@ -244,24 +244,24 @@ def StratAllowed (Sys : System sp D) (n : Nat) (init : Fin n → I) (p : Fin n)
 
 /-- For a system whose strategies respect the basis, "produced" in the
 paper's wording (`StratAllowed`) is `Allowed`. -/
-theorem allowed_iff_stratAllowed {Sys : System sp D} (h : Sys.BasisRespecting)
+theorem allowed_iff_stratAllowed {Sys : System sp D} (h : Sys.ExclusionBasisRespecting)
     (n : Nat) (init : Fin n → I) (p : Fin n) (pre : List (LEv sp D n)) (e : LEv sp D n) :
     Allowed Sys n init p pre e ↔ StratAllowed Sys n init p pre e := by
   cases e with
   | inp j => exact Iff.rfl
   | out γ o => exact ⟨fun h' => h'.2, fun h' => ⟨h.1 n init p pre γ o h', h'⟩⟩
-  | cmt γ => exact ⟨fun h' => h'.2, fun h' => ⟨h.2 n init p pre γ h', h'⟩⟩
+  | exclude γ => exact ⟨fun h' => h'.2, fun h' => ⟨h.2 n init p pre γ h', h'⟩⟩
   | send j d => exact Iff.rfl
   | recv q k j d => exact Iff.rfl
 
-/-- Restricting a system's strategies to basis commitments. -/
+/-- Restricting a system's strategies to basis exclusions. -/
 def System.restrict (Sys : System sp D) : System sp D where
   basis := Sys.basis
   strat n init p pre e := Sys.strat n init p pre e ∧
     (∀ γ o, e = .out γ o → ∀ c ∈ γ, Sys.basis c) ∧
-    (∀ γ, e = .cmt γ → ∀ c ∈ γ, Sys.basis c)
+    (∀ γ, e = .exclude γ → ∀ c ∈ γ, Sys.basis c)
 
-theorem System.restrict_basisRespecting (Sys : System sp D) : Sys.restrict.BasisRespecting :=
+theorem System.restrict_basisRespecting (Sys : System sp D) : Sys.restrict.ExclusionBasisRespecting :=
   ⟨fun _ _ _ _ γ o h => h.2.1 γ o rfl, fun _ _ _ _ γ h => h.2.2 γ rfl⟩
 
 /-- Restricting loses nothing: the restricted system allows exactly the same
@@ -274,7 +274,7 @@ theorem System.restrict_allowed (Sys : System sp D) (n : Nat) (init : Fin n → 
   | out γ o =>
     exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, (fun γ' o' he => by cases he; exact h.1),
       fun _ he => by cases he⟩⟩
-  | cmt γ =>
+  | exclude γ =>
     exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, (fun _ _ he => by cases he),
       fun γ' he => by cases he; exact h.1⟩⟩
   | send j d => exact ⟨fun h => h.1, fun h => ⟨h, (fun _ _ he => by cases he),
@@ -303,7 +303,7 @@ def PartitionConsistency (Sys : System sp D) : Prop :=
     ∀ j : I, (∀ p σ, LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ j) →
     ConfluentCut init H c j
 
-/-- The commitment-free system of Theorem `thm:complete-cap`: empty basis
+/-- The exclusion-free system of Theorem `thm:complete-cap`: empty basis
 (so every output event is some `Out ε o`, legal iff `o` is exposable), and a
 strategy that allows every event. -/
 def cfSystem (sp : Spec I O) (D : Type) : System sp D where
@@ -334,14 +334,14 @@ theorem lrun_append {a b : List (LEv sp D n)} {σ ρ : State sp} :
       cases h with
       | inp hs hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .inp hs h1, h2⟩
       | out ha hs hx hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .out ha hs hx h1, h2⟩
-      | cmt hne ha hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .cmt hne ha h1, h2⟩
+      | exclude hne ha hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .exclude hne ha h1, h2⟩
       | send hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .send h1, h2⟩
       | recv hr => obtain ⟨τ, h1, h2⟩ := ih.1 hr; exact ⟨τ, .recv h1, h2⟩
     · rintro ⟨τ, h1, h2⟩
       cases h1 with
       | inp hs hr => exact .inp hs (ih.2 ⟨τ, hr, h2⟩)
       | out ha hs hx hr => exact .out ha hs hx (ih.2 ⟨τ, hr, h2⟩)
-      | cmt hne ha hr => exact .cmt hne ha (ih.2 ⟨τ, hr, h2⟩)
+      | exclude hne ha hr => exact .exclude hne ha (ih.2 ⟨τ, hr, h2⟩)
       | send hr => exact .send (ih.2 ⟨τ, hr, h2⟩)
       | recv hr => exact .recv (ih.2 ⟨τ, hr, h2⟩)
 
@@ -362,16 +362,16 @@ theorem lrun_mono {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ) 
     refine ⟨?_, fun k u h => hc2 k u (hsub k u (ih.2 k u h))⟩
     have : τ.cur = σc.cur := (step_output_inv hs).2.1
     rw [← hc1, ← this]; exact ih.1
-  | @cmt σ τ ρ γ es _ ha _ ih =>
+  | @exclude σ τ ρ γ es _ ha _ ih =>
     obtain ⟨hc1, hc2⟩ := applySeq_spec γ σ τ ha
     exact ⟨hc1 ▸ ih.1, fun k u h => hc2 k u (ih.2 k u h)⟩
   | send _ ih => exact ih
   | recv _ ih => exact ih
 
 /-- After a run that emits `o`, every remaining row's output expands `o`
-(containment, Lemma `lem:canonical-commitment-normal-form`(1)). -/
+(containment, Lemma `lem:canonical-exclusion-normal-form`(1)). -/
 theorem lrun_out_mem {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
-    {γ : List (Commitment sp)} {o : O} (hm : LEv.out γ o ∈ l) :
+    {γ : List (Exclusion sp)} {o : O} (hm : LEv.out γ o ∈ l) :
     ∀ k x, τ.R k x → o ≼ x := by
   induction h with
   | nil => cases hm
@@ -383,7 +383,7 @@ theorem lrun_out_mem {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l �
       have hx' := (lrun_mono hr).2 k x hx
       rw [(step_output_inv hs).2.2] at hx'; exact hx'.2
     · exact ih hm'
-  | cmt _ _ _ ih => exact ih (by simpa using hm)
+  | exclude _ _ _ ih => exact ih (by simpa using hm)
   | send _ ih => exact ih (by simpa using hm)
   | recv _ ih => exact ih (by simpa using hm)
 
@@ -397,7 +397,7 @@ theorem lrun_noinp {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     have h1 := ih (fun j hj => hn j (List.mem_cons_of_mem _ hj))
     have hc1 := (applySeq_spec γ σ σc ha).1
     rw [h1, (step_output_inv hs).2.1, hc1]
-  | @cmt σ τ ρ γ es _ ha _ ih =>
+  | @exclude σ τ ρ γ es _ ha _ ih =>
     rw [ih (fun j hj => hn j (List.mem_cons_of_mem _ hj)), (applySeq_spec γ σ τ ha).1]
   | send _ ih => exact ih (fun j hj => hn j (List.mem_cons_of_mem _ hj))
   | recv _ ih => exact ih (fun j hj => hn j (List.mem_cons_of_mem _ hj))
@@ -423,18 +423,18 @@ theorem lrun_det {σ τ τ' : State sp} {l : List (LEv sp D n)} (h : LRun σ l �
       obtain ⟨_, hc', hR'⟩ := step_output_inv hs'
       have := State.ext' (hc.trans hc'.symm) (hR.trans hR'.symm)
       subst this; exact hr'
-  | cmt _ ha _ ih =>
+  | exclude _ ha _ ih =>
     cases h' with
-    | cmt _ ha' hr' => rw [ha] at ha'; cases ha'; exact ih hr'
+    | exclude _ ha' hr' => rw [ha] at ha'; cases ha'; exact ih hr'
   | nil => cases h'; rfl
   | send _ ih => cases h' with | send hr' => exact ih hr'
   | recv _ ih => cases h' with | recv hr' => exact ih hr'
 
-/-- A participant run whose output and commit events apply no commitment (so,
-since commit events are nonempty, it has no commit event and every output
+/-- A participant run whose output and exclusion events apply no exclusion (so,
+since exclusion events are nonempty, it has no exclusion event and every output
 event is `Out ε o`) is a canonical (Section 3) execution. -/
 theorem lrun_cf {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
-    (hcf : ∀ γ o, LEv.out γ o ∈ l → γ = []) (hnc : ∀ γ, LEv.cmt γ ∈ l → γ = []) :
+    (hcf : ∀ γ o, LEv.out γ o ∈ l → γ = []) (hnc : ∀ γ, LEv.exclude γ ∈ l → γ = []) :
     ∃ es, Exec σ es τ := by
   induction h with
   | nil σ => exact ⟨[], .nil σ⟩
@@ -449,7 +449,7 @@ theorem lrun_cf {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     subst hγ
     simp [applySeq] at ha; subst ha
     exact ⟨_, .cons hs hx⟩
-  | cmt hne _ _ _ => exact absurd (hnc _ (List.mem_cons_self ..)) hne
+  | exclude hne _ _ _ => exact absurd (hnc _ (List.mem_cons_self ..)) hne
   | send _ ih =>
     exact ih (fun γ o hm => hcf γ o (List.mem_cons_of_mem _ hm))
       (fun γ hm => hnc γ (List.mem_cons_of_mem _ hm))
@@ -475,7 +475,7 @@ theorem ce_exposable (hce : sp.CommonExpansion) {σ : State sp} {E : List O}
   have hxu : x ≼ u := hu (k, x) (by simp)
   exact ⟨u, (hσ _ _).2 ⟨hSu, hck, fun e he => PO.trans (hEx e he) hxu⟩, hou, hxu⟩
 
-/-- The commitment-free event list corresponding to a canonical execution. -/
+/-- The exclusion-free event list corresponding to a canonical execution. -/
 def toL : List (Event I O) → List (LEv sp D n)
   | [] => []
   | .input j :: es => .inp j :: toL es

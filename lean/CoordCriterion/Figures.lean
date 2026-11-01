@@ -5,8 +5,8 @@ import CoordCriterion.Distributed.Systems
 # Figure tables of Sections 2–3 and the discussion
 
 * Fig. `fig:election-frames`, panel (d) "(b), then polls closed", with the
-  registrar's seal (`closePolls`, a commitment in the sense of
-  Def. `def:commitment`), the claims of Sec. `sec:election-story` and
+  registrar's input exclusion (`closePolls`, an exclusion in the sense of
+  Def. `def:exclusion`), the claims of Sec. `sec:election-story` and
   Sec. `sec:functional-events` about it, and the printed rows and upper
   fibers of panels (a)–(d) (`Elec.*`).  The figure prints exactly the rows
   whose input ⪰ `a··`, as its caption says (`Elec.printed_complete`).
@@ -51,10 +51,10 @@ theorem closeApp_eq {σ τ : State sp} :
   · rename_i h; simp only [Option.some.injEq]; exact ⟨fun e => ⟨h, e⟩, fun ⟨_, e⟩ => e⟩
   · rename_i h; simp only [reduceCtorEq, false_iff]; exact fun ⟨h', _⟩ => h h'
 
-/-- Closing the polls is a commitment (Def. `def:commitment`): it keeps the
+/-- Closing the polls is an exclusion (Def. `def:exclusion`): it keeps the
 current input, only removes rows, removes one, and every input where it
-removes a row keeps none, so Eq. `commitment-excludes` holds vacuously. -/
-noncomputable def closePolls : Commitment sp where
+removes a row keeps none, so Eq. `exclusion-excludes` holds vacuously. -/
+noncomputable def closePolls : Exclusion sp where
   app := closeApp
   cur_eq σ τ h := by obtain ⟨_, rfl⟩ := closeApp_eq.1 h; rfl
   sub σ τ h k u hu := by obtain ⟨_, rfl⟩ := closeApp_eq.1 h; exact hu.1
@@ -65,8 +65,8 @@ noncomputable def closePolls : Commitment sp where
     obtain ⟨_, rfl⟩ := closeApp_eq.1 h
     exact absurd ⟨hu, hw.2⟩ hnu
 
-/-- It is a seal: at every input where it removes a row, it removes all rows. -/
-theorem closePolls_seals {σ τ : State sp} (h : (closePolls (sp := sp)).app σ = some τ)
+/-- It is an input exclusion: at every input where it removes a row, it removes all rows. -/
+theorem closePolls_inputExcludes {σ τ : State sp} (h : (closePolls (sp := sp)).app σ = some τ)
     (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w := by
   obtain ⟨_, rfl⟩ := closeApp_eq.1 h
   obtain ⟨u, hu, hnu⟩ := hk
@@ -170,7 +170,7 @@ theorem close_at_b : (closePolls (sp := elec)).app (canon elec bab) = some panel
   closeApp_eq.2 ⟨⟨baba, .win .a, ⟨(by decide : Res.win .a = winner baba), by decide⟩,
     by decide⟩, rfl⟩
 
-/-- Closing the polls after every voter has voted applies no commitment: at the
+/-- Closing the polls after every voter has voted applies no exclusion: at the
 canonical state of a full ballot (all three cast) there is no row at another
 input, so `closePolls` is undefined there. -/
 theorem close_after_voting (i : Ballots) (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
@@ -201,7 +201,7 @@ theorem panelD_cur : panelD.cur = bab := rfl
 theorem panelD_determined : Determined panelD ∧ ∀ k x, panelD.R k x → x = .bot :=
   ⟨⟨.bot, fun k x h => ((panelD_rows k x).1 h).2⟩, fun k x h => ((panelD_rows k x).1 h).2⟩
 
-/-- The seal removes exactly the still-possible rows `(aba, a)` and `(abb, b)`
+/-- The input exclusion removes exactly the still-possible rows `(aba, a)` and `(abb, b)`
 (struck through), and these inputs are legal at (b) and expand the current
 input: input alone would not have removed them. -/
 theorem panelD_struck (k : Ballots) (o : Res) :
@@ -212,7 +212,7 @@ theorem panelD_struck (k : Ballots) (o : Res) :
   ballot_cases k <;> rcases o with _ | ⟨_ | _⟩ <;> decide
 
 /-- The printed gray-only rows of (d) are those lost after `input(ab·)`;
-the current input is unchanged by the seal. -/
+the current input is unchanged by the input exclusion. -/
 theorem panelD_gray (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
     ¬ panelD.R k o ↔ (¬ bab ≼ k ∨ (k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b)) := by
   rw [panelD_rows]
@@ -223,7 +223,7 @@ theorem panelD_gray (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
 
 /-- The registrar's output event: `Out_{[closePolls]}(⊥)` at (b) is legal (under
 any basis containing `closePolls`) and ends at panel (d). -/
-theorem registrar_step (B : Basis elec) (hB : B closePolls) :
+theorem registrar_step (B : ExclusionBasis elec) (hB : B closePolls) :
     SysStep B (canon elec bab) (.output [closePolls] .bot) panelD := by
   refine SysStep.output (fun c hc => by simp at hc; subst hc; exact hB)
     (ApplySeq.cons close_at_b (ApplySeq.nil _)) ((panelD_rows _ _).2 ⟨rfl, rfl⟩) ?_ rfl ?_
@@ -231,12 +231,12 @@ theorem registrar_step (B : Basis elec) (hB : B closePolls) :
   · funext k x; apply propext
     exact ⟨fun h => ⟨h, Or.inl rfl⟩, fun h => h.1⟩
 
-/-- "Emitting `⊥` by itself would need no commitment": at (b), `⊥` is
-exposable, `Sealed_⊥` and `Excluded_⊥` are empty, and `output(⊥)` removes no
-row; so the seal is not required by the output. -/
+/-- "Emitting `⊥` by itself would need no exclusion": at (b), `⊥` is
+exposable, `Excluded^in_⊥` and `Excluded^out_⊥` are empty, and `output(⊥)` removes no
+row; so the input exclusion is not required by the output. -/
 theorem bot_alone_at_b :
-    Exposable (canon elec bab) .bot ∧ (¬ ∃ k x, Sealed (canon elec bab) .bot k x) ∧
-      (¬ ∃ k x, Excluded (canon elec bab) .bot k x) ∧
+    Exposable (canon elec bab) .bot ∧ (¬ ∃ k x, InputExcluded (canon elec bab) .bot k x) ∧
+      (¬ ∃ k x, OutputExcluded (canon elec bab) .bot k x) ∧
       outputTable (canon elec bab) .bot = (canon elec bab).R := by
   have he := elec_panels_exposable.2.1
   refine ⟨he, (exposable_iff_empty _ _).1 he |>.1, (exposable_iff_empty _ _).1 he |>.2, ?_⟩
@@ -250,10 +250,10 @@ theorem panelD_matches_e (k : Ballots) (r : Res) :
   rw [panelD_rows, elecEq_bot_single_row]
   exact ⟨fun ⟨h1, h2⟩ => ⟨h1, by rw [h2]⟩, fun ⟨h1, h2⟩ => ⟨h1, by cases h2; rfl⟩⟩
 
-/-- "Extra commitments only restrict behavior": the registrar's run has an
+/-- "Extran exclusions only restrict behavior": the registrar's run has an
 observably equivalent run of the transition system (`input`/`output` events),
 whose table contains panel (d)'s. -/
-theorem registrar_canonical (B : Basis elec) (hB : B closePolls) :
+theorem registrar_canonical (B : ExclusionBasis elec) (hB : B closePolls) :
     ∃ ρ', Exec (canon elec bab) [.output .bot] ρ' ∧ ρ'.cur = bab ∧
       ∀ k u, panelD.R k u → ρ'.R k u := by
   obtain ⟨_, ρ', _, _, hx, hc, hsub⟩ :=
@@ -293,7 +293,7 @@ theorem winner_determined (i : Ballots) (c : Cand) (h : winner i = .win c) :
 (`input(aa·)` at panel (a)) reaches a determined state and every row it
 removes is lost after input (its input no longer expands the current input).
 (2) Closing the polls at (b) reaches a determined state and every row it
-removes is at a legal input expanding the current one (a commitment).
+removes is at a legal input expanding the current one (an exclusion).
 (3) The results differ: in the election, closing the polls at any
 undetermined canonical state leaves the single result `⊥`, while every
 determined canonical state has a winner. -/
@@ -361,13 +361,13 @@ theorem after_ab (k : Unit) (o : TOut) : outputTable (canon spec ()) .ab k o ↔
   ⟨fun h => h.2.symm, fun h => ⟨sR o, h.symm⟩⟩
 
 /-- "No remaining row refines the removed one": the row `[B,A]` is in
-`Excluded_o` (an exclusion), not sealed (the input keeps `[A,B]`) and not subsumed
+`Excluded^out_o` (an exclusion), not inputExcluded (the input keeps `[A,B]`) and not subsumed
 (no row refines both). -/
-theorem ba_rejected :
-    Excluded (canon spec ()) .ab () .ba ∧ ¬ Sealed (canon spec ()) .ab () .ba ∧
+theorem ba_outputExcluded :
+    OutputExcluded (canon spec ()) .ab () .ba ∧ ¬ InputExcluded (canon spec ()) .ab () .ba ∧
       ¬ Subsumed (canon spec ()) .ab () .ba ∧
       ¬ ∃ u, spec.P () u ∧ TOut.ab ≼ u ∧ TOut.ba ≼ u := by
-  have hns : ¬ Sealed (canon spec ()) .ab () .ba := fun h => h.2 ⟨.ab, sR _, rfl⟩
+  have hns : ¬ InputExcluded (canon spec ()) .ab () .ba := fun h => h.2 ⟨.ab, sR _, rfl⟩
   have hnr : ¬ Subsumed (canon spec ()) .ab () .ba := by
     rintro ⟨_, _, u, _, h1, h2⟩
     exact TOut.noConfusion (h1.trans h2.symm)
@@ -375,23 +375,23 @@ theorem ba_rejected :
   rintro ⟨u, _, h1, h2⟩
   exact TOut.noConfusion (h1.trans h2.symm)
 
-/-- Emitting `[A,B]` is not exposable: it requires a commitment, and every
+/-- Emitting `[A,B]` is not exposable: it requires an exclusion, and every
 legal system output event emitting it carries one. -/
 theorem ab_not_exposable : ¬ Exposable (canon spec ()) .ab ∧
-    ∀ (B : Basis spec) (γ : List (Commitment spec)) τ,
+    ∀ (B : ExclusionBasis spec) (γ : List (Exclusion spec)) τ,
       SysStep B (canon spec ()) (.output γ .ab) τ → γ ≠ [] := by
-  refine ⟨fun h => ((exposable_iff_empty _ _).1 h).2 ⟨(), .ba, ba_rejected.1⟩, ?_⟩
+  refine ⟨fun h => ((exposable_iff_empty _ _).1 h).2 ⟨(), .ba, ba_outputExcluded.1⟩, ?_⟩
   intro B γ τ h
-  exact containment_nonempty h ⟨(), .ba, Or.inr ba_rejected.1⟩
+  exact containment_nonempty h ⟨(), .ba, Or.inr ba_outputExcluded.1⟩
 
 /-- The exclusion `x_[A,B]` applies at `{A,B}`; it removes `[B,A]` while the
 input stays legal (the row `[A,B]` remains). -/
-theorem choice_applies :
-    (excludeC (sp := spec) .ab).app (canon spec ()) = some (cmExcludeState (canon spec ()) .ab) ∧
-      (cmExcludeState (canon spec ()) .ab).R () .ab ∧
-      ¬ (cmExcludeState (canon spec ()) .ab).R () .ba :=
-  ⟨chooseApp_eq.2 ⟨sR _, ⟨(), .ba, ba_rejected.1⟩, rfl⟩,
-   ⟨sR _, not_rejected_of_ge (PO.refl _)⟩, fun h => h.2 ba_rejected.1⟩
+theorem outputExclusion_applies :
+    (outputExclusion (sp := spec) .ab).app (canon spec ()) = some (outputExcludeState (canon spec ()) .ab) ∧
+      (outputExcludeState (canon spec ()) .ab).R () .ab ∧
+      ¬ (outputExcludeState (canon spec ()) .ab).R () .ba :=
+  ⟨outputExclusionApp_eq.2 ⟨sR _, ⟨(), .ba, ba_outputExcluded.1⟩, rfl⟩,
+   ⟨sR _, not_outputExcluded_of_ge (PO.refl _)⟩, fun h => h.2 ba_outputExcluded.1⟩
 
 /-- The two orders are incompatible: not directed, not monotone, not
 consistent. -/
@@ -400,7 +400,7 @@ theorem not_monotone :
       ¬ spec.Consistent := by
   have hc : ¬ CompatibleIn (spec.P ()) [.ab, .ba] := by
     rintro ⟨u, hu, hall⟩
-    exact ba_rejected.2.2.2 ⟨u, hu, hall _ (by simp), hall _ (by simp)⟩
+    exact ba_outputExcluded.2.2.2 ⟨u, hu, hall _ (by simp), hall _ (by simp)⟩
   have hd : ¬ spec.DirectedOutputs := fun h => hc (h () [.ab, .ba] (by simp) (fun _ _ => trivial))
   have hl : ¬ spec.LiftedMono := fun h => hc (h () () trivial [.ab, .ba] (by simp)
     (fun _ _ => trivial))
@@ -419,7 +419,7 @@ theorem runs_not_confluent :
     · exact ⟨(), _, Exec.cons (Step.output _ (outState _ _ _) _ (sR _) rfl rfl) (Exec.nil _)⟩
     · exact ⟨(), _, Exec.cons (Step.output _ (outState _ _ _) _ (sR _) rfl rfl) (Exec.nil _)⟩
   obtain ⟨u, hu, hall⟩ := (survivor_test _ hrun () (fun _ _ => trivial)).1 h
-  exact ba_rejected.2.2.2 ⟨u, hu, (hall (outState (canon spec ()) .ab (sR _)) (by simp)).2,
+  exact ba_outputExcluded.2.2.2 ⟨u, hu, (hall (outState (canon spec ()) .ab (sR _)) (by simp)).2,
     (hall (outState (canon spec ()) .ba (sR _)) (by simp)).2⟩
 
 end Txn
@@ -487,12 +487,12 @@ theorem after_s1 (x : RS) :
   rs_cases x <;> decide
 
 /-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output subsumptions,
-each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is sealed or
+each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is inputExcluded or
 excluded, so `{s→s1}` is exposable. -/
 theorem removed_subsumed :
     (∀ x, (canon spec ()).R () x → (¬ outputTable (canon spec ()) rS1 () x ↔ (x = rA ∨ x = rA2))) ∧
     Subsumed (canon spec ()) rS1 () rA ∧ Subsumed (canon spec ()) rS1 () rA2 ∧
-    (¬ ∃ k x, Sealed (canon spec ()) rS1 k x) ∧ (¬ ∃ k x, Excluded (canon spec ()) rS1 k x) ∧
+    (¬ ∃ k x, InputExcluded (canon spec ()) rS1 k x) ∧ (¬ ∃ k x, OutputExcluded (canon spec ()) rS1 k x) ∧
     Exposable (canon spec ()) rS1 := by
   have hall : (canon spec ()).R () rAll := (canonR _).2 (by decide)
   have hexp : Exposable (canon spec ()) rS1 := by

@@ -14,18 +14,18 @@ framework of `CC.CAP` (histories, systems, cuts, `ResponseAvailability`,
 
 Contents (paper item ↦ Lean):
 
-* Partition Consistency with *commitment-free, receive-free* continuations
-  for the commitment-free system (strong reading of Def. `def:partition-consistency`,
+* Partition Consistency with *exclusion-free, receive-free* continuations
+  for the exclusion-free system (strong reading of Def. `def:partition-consistency`,
   where the confluence continuation is a history of Section `sec:histories`):
   `cf_partitionConsistencyCF`, `complete_cap_strong`.
 * Remark after Def. `def:response-partition-consistency`:
   confluence ⇒ RPC (`rpc_of_confluent`); for a canonical system they coincide
-  (`canonical_rpc_iff_confluent`); with other commitments the converse fails
+  (`canonical_rpc_iff_confluent`); with other exclusions the converse fails
   (`rpc_not_confluent`).
-* "Input acceptance says that `p` never seals an expansion of its current
+* "Input acceptance says that `p` never input-excludes an expansion of its current
   input": `input_acceptance_iff`.
-* "It excludes specifications whose answers require such a seal, such as the
-  election under the equality order": `ra_excludes_forced_seal`,
+* "It excludes specifications whose answers require such an input exclusion, such as the
+  election under the equality order": `ra_excludes_forced_inputExclusion`,
   `election_eq_no_ra`.
 * "if an output permitted at every input answers, every specification is
   available": `trivially_available`.
@@ -67,10 +67,10 @@ theorem full_cut' {init : Fin n → I} {H : History sp D n} (hwf : WF init H) :
   obtain ⟨_, hs⟩ := hwf.2 p a q k j d b h
   exact (List.getElem?_eq_some_iff.1 hs).1
 
-/-! ## Partition Consistency with commitment-free continuations -/
+/-! ## Partition Consistency with exclusion-free continuations -/
 
 /-- Def. `def:partition-consistency`, strong reading: the confluence
-continuation adds only commitment-free output events and no receives (so it is
+continuation adds only exclusion-free output events and no receives (so it is
 a history of Section `sec:histories`). -/
 def PartitionConsistencyCF (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
@@ -89,7 +89,7 @@ theorem partitionConsistency_of_CF {Sys : System sp D} (h : PartitionConsistency
   obtain ⟨H', ext, τ, hext, hwf', hτ, hrun, _, _⟩ := h n init H comp hwf hprod hpart c hc j hj
   exact ⟨H', ext, τ, hext, hwf', hτ, hrun⟩
 
-theorem toL_out : ∀ (es : List (Event I O)) (γ : List (Commitment sp)) (o : O),
+theorem toL_out : ∀ (es : List (Event I O)) (γ : List (Exclusion sp)) (o : O),
     LEv.out γ o ∈ toL (sp := sp) (D := D) (n := n) es → γ = []
   | [], _, _, h => by simp [toL] at h
   | .input _ :: es, γ, o, h => by
@@ -104,7 +104,7 @@ theorem toL_out : ∀ (es : List (Event I O)) (γ : List (Commitment sp)) (o : O
       · exact toL_out es γ o h
 
 /-- (2)⇒(1) of Theorem `thm:complete-cap`, Partition Consistency part, with
-commitment-free confluence continuations. -/
+exclusion-free confluence continuations. -/
 theorem cf_partitionConsistencyCF (hlm : sp.LiftedMono) :
     PartitionConsistencyCF (cfSystem sp D) := by
   have hce := (liftedMono_iff_commonExpansion _).1 hlm
@@ -163,7 +163,7 @@ theorem complete_cap_strong (sp : Spec I O) (D : Type) :
 
 /-- Confluence of a cut at `j` implies Response Partition Consistency at `j`
 (Cor. `cor:reconciliation-any-basis` at the distributed level; any
-commitments, before and after the cut). -/
+exclusions, before and after the cut). -/
 theorem rpc_of_confluent {init : Fin n → I} {H : History sp D n} {c : Fin n → Nat} {j : I}
     (h : ConfluentCut init H c j) : RPCAt H c j := by
   obtain ⟨H', ext, τ, hext, _, hτj, hτ⟩ := h
@@ -176,15 +176,15 @@ theorem rpc_of_confluent {init : Fin n → I} {H : History sp D n} {c : Fin n �
   exact lrun_out_mem h2 hm j u ((lrun_mono h3).2 j u hu)
 
 /-- Every output event of `l` is a canonical event `Out κ_o o` (`κ_o = kc o`)
-or `Out ε o`, and `l` has no commit event. -/
+or `Out ε o`, and `l` has no exclusion event. -/
 def CanonOut (l : List (LEv sp D n)) : Prop :=
-  (∀ γ o, LEv.out γ o ∈ l → γ = [] ∨ γ = [kc o]) ∧ ∀ γ, LEv.cmt γ ∉ l
+  (∀ γ o, LEv.out γ o ∈ l → γ = [] ∨ γ = [kc o]) ∧ ∀ γ, LEv.exclude γ ∉ l
 
 /-- Def. `def:canonical-system`: every output event a strategy allows is a
-canonical event, and strategies allow no commit event. -/
+canonical event, and strategies allow no exclusion event. -/
 def CanonicalSystem (Sys : System sp D) : Prop :=
   (∀ n init p pre γ o, Sys.strat n init p pre (LEv.out γ o) → γ = [] ∨ γ = [kc o]) ∧
-  ∀ n init p pre γ, ¬ Sys.strat n init p pre (LEv.cmt γ)
+  ∀ n init p pre γ, ¬ Sys.strat n init p pre (LEv.exclude γ)
 
 theorem lrun_canon_exec {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     (hc : CanonOut l) : ∃ es, Exec σ es τ ∧ ∀ o ∈ outs es, ∃ γ, LEv.out γ o ∈ l := by
@@ -206,7 +206,7 @@ theorem lrun_canon_exec {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ 
     rcases ho with rfl | ho
     · exact ⟨γ, List.mem_cons_self ..⟩
     · obtain ⟨γ', h⟩ := hm o' ho; exact ⟨γ', List.mem_cons_of_mem _ h⟩
-  | cmt _ _ _ _ => exact absurd (List.mem_cons_self ..) (hc.2 _)
+  | exclude _ _ _ _ => exact absurd (List.mem_cons_self ..) (hc.2 _)
   | @send σ ρ j d es _ ih =>
     obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
       fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
@@ -334,7 +334,7 @@ theorem respSystem_canonical (T : Table I O) : CanonicalSystem (respSystem (sp :
 
 /-! ## Input acceptance, Answering, forced answers -/
 
-/-- "Input acceptance says that `p` never seals an expansion of its current
+/-- "Input acceptance says that `p` never input-excludes an expansion of its current
 input": the Input-acceptance continuation for `j` exists iff `p`'s table at the
 cut still has a row at `j`. -/
 theorem input_acceptance_iff (Sys : System sp D) {init : Fin n → I} {H : History sp D n}
@@ -421,9 +421,9 @@ theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O
     rw [List.take_length, hext q]; exact List.mem_append_right _ hm
 
 /-- "Input acceptance … excludes specifications whose answers require such a
-seal": if no answer at `i` has a refinement at some `j ⪰ i`, no system has
+input exclusion": if no answer at `i` has a refinement at some `j ⪰ i`, no system has
 Response Availability (already for two participants, each alone). -/
-theorem ra_excludes_forced_seal (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
+theorem ra_excludes_forced_inputExclusion (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
     {i j : I} (hij : i ≼ j) (hno : ∀ o, Q 2 0 i o → ¬ ∃ u, sp.P j u ∧ o ≼ u) :
     ¬ ResponseAvailability Sys Q := by
   intro hRA
@@ -704,7 +704,7 @@ theorem rpc_pointwise {Sys : System sp D}
 participant set `Fin n`. -/
 def IsoEmitAt (Sys : System sp D) (n : Nat) (p : Fin n) (i : I) (o : O) : Prop :=
   ∃ (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat) (a b : List (LEv sp D n))
-    (γ : List (Commitment sp)) (σ : State sp),
+    (γ : List (Exclusion sp)) (σ : State sp),
     WF init H ∧ Produced Sys n init H ∧ Partitioned H comp ∧ H p = a ++ .out γ o :: b ∧
     (∀ q k j d, LEv.recv q k j d ∉ a) ∧ LRun (canon sp (init p)) a σ ∧ σ.cur = i
 
@@ -716,7 +716,7 @@ def Tp (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) (n : Nat) (p 
 structure LocAt (Sys : System sp D) (n : Nat) (p : Fin n) (i : I) (o : O) where
   init : Fin n → I
   a : List (LEv sp D n)
-  γ : List (Commitment sp)
+  γ : List (Exclusion sp)
   comp : Compliant (Allowed Sys n init p) (a ++ [LEv.out γ o])
   norecv : ∀ q k j d, LEv.recv q k j d ∉ a
   run : ∃ τ, LRun (canon sp (init p)) (a ++ [LEv.out γ o]) τ
@@ -1151,29 +1151,29 @@ theorem subspec_counterexample :
     ∀ T' : Spec I5 O8, (∀ i o, T'.P i o → Q5.Q i o) → ¬ T'.LiftedMono :=
   ⟨subspec_example_interface, fun T' h => subspec_example_noLM T' h⟩
 
-/-- "A participant that emits `d₁` or `d₂` seals `k₂` or `k₁`" (under any
+/-- "A participant that emits `d₁` or `d₂` input-excludes `k₂` or `k₁`" (under any
 basis). -/
-theorem emit_d1_seals_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
-    (h : LRun σ l τ) {γ : List (Commitment sp5)} (hm : LEv.out γ .d1 ∈ l) (u : O8) :
+theorem emit_d1_inputExcludes_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
+    (h : LRun σ l τ) {γ : List (Exclusion sp5)} (hm : LEv.out γ .d1 ∈ l) (u : O8) :
     ¬ τ.R .k2 u := by
   intro hu
   have h1 := lrun_out_mem h hm .k2 u hu
   have h2 := τ.sub _ _ hu
   cases u <;> revert h1 h2 <;> decide
 
-theorem emit_d2_seals_k1 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
-    (h : LRun σ l τ) {γ : List (Commitment sp5)} (hm : LEv.out γ .d2 ∈ l) (u : O8) :
+theorem emit_d2_inputExcludes_k1 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
+    (h : LRun σ l τ) {γ : List (Exclusion sp5)} (hm : LEv.out γ .d2 ∈ l) (u : O8) :
     ¬ τ.R .k1 u := by
   intro hu
   have h1 := lrun_out_mem h hm .k1 u hu
   have h2 := τ.sub _ _ hu
   cases u <;> revert h1 h2 <;> decide
 
-/-! ### With other commitments, RPC does not imply confluence -/
+/-! ### With other exclusions, RPC does not imply confluence -/
 
 abbrev uSpec : Spec In2 Unit := ⟨fun _ _ => True, fun _ => ⟨(), trivial⟩⟩
 
-def sealHiState (σ : State uSpec) (h : σ.cur = .lo) : State uSpec where
+def inputExcludeHiState (σ : State uSpec) (h : σ.cur = .lo) : State uSpec where
   cur := σ.cur
   R := fun k u => σ.R k u ∧ k = .lo
   sub := fun k u h => σ.sub k u h.1
@@ -1181,9 +1181,9 @@ def sealHiState (σ : State uSpec) (h : σ.cur = .lo) : State uSpec where
   above := fun k u h => σ.above k u h.1
 
 open Classical in
-/-- A seal of `hi` at current input `lo`. -/
-noncomputable def sealHi : Commitment uSpec where
-  f := fun σ => if h : σ.cur = .lo ∧ ∃ u, σ.R .hi u then some (sealHiState σ h.1) else none
+/-- An input exclusion of `hi` at current input `lo`. -/
+noncomputable def inputExcludeHi : Exclusion uSpec where
+  f := fun σ => if h : σ.cur = .lo ∧ ∃ u, σ.R .hi u then some (inputExcludeHiState σ h.1) else none
   cur_eq := by
     intro σ τ h; split at h
     · cases h; rfl
@@ -1205,29 +1205,29 @@ noncomputable def sealHi : Commitment uSpec where
       exact absurd ⟨hu, hw.2⟩ hnu
     · cases h
 
-theorem sealHi_apply :
-    applySeq (canon uSpec .lo) [sealHi] = some (sealHiState (canon uSpec .lo) rfl) := by
-  have hf : sealHi.f (canon uSpec .lo) = some (sealHiState (canon uSpec .lo) rfl) := by
-    simp only [sealHi]
+theorem inputExcludeHi_apply :
+    applySeq (canon uSpec .lo) [inputExcludeHi] = some (inputExcludeHiState (canon uSpec .lo) rfl) := by
+  have hf : inputExcludeHi.f (canon uSpec .lo) = some (inputExcludeHiState (canon uSpec .lo) rfl) := by
+    simp only [inputExcludeHi]
     rw [dite_eq_left_of_eq_true (eq_true ⟨rfl, (), trivial, rfl⟩)]
   simp only [applySeq, hf]
 
-noncomputable def rnSys : System uSpec Unit := ⟨fun c => c = sealHi, fun _ _ _ _ _ => True⟩
+noncomputable def rnSys : System uSpec Unit := ⟨fun c => c = inputExcludeHi, fun _ _ _ _ _ => True⟩
 
 noncomputable def rnH : History uSpec Unit 2 :=
-  fun p => if p.val = 0 then [LEv.out [sealHi] ()] else []
+  fun p => if p.val = 0 then [LEv.out [inputExcludeHi] ()] else []
 
-theorem rnH_run : ∃ τ, LRun (canon uSpec .lo) [LEv.out (D := Unit) (n := 2) [sealHi] ()] τ := by
-  let σc := sealHiState (canon uSpec .lo) rfl
+theorem rnH_run : ∃ τ, LRun (canon uSpec .lo) [LEv.out (D := Unit) (n := 2) [inputExcludeHi] ()] τ := by
+  let σc := inputExcludeHiState (canon uSpec .lo) rfl
   have hc : σc.R σc.cur () := ⟨⟨trivial, rfl⟩, rfl⟩
   have hexp : Exposable σc () := by
     intro k x _ hn; exact absurd trivial hn
-  exact ⟨outSt σc () hc, .out sealHi_apply (Step.output σc (outSt σc () hc) () hc rfl rfl) hexp
+  exact ⟨outSt σc () hc, .out inputExcludeHi_apply (Step.output σc (outSt σc () hc) () hc rfl rfl) hexp
     (.nil _)⟩
 
 /-- Remark after Def. `def:response-partition-consistency`, last sentence:
-with other commitments the converse can fail.  Participant `0` emits `()` at
-`lo` while sealing `hi`; the emitted outputs have a common refinement at `hi`,
+with other exclusions the converse can fail.  Participant `0` emits `()` at
+`lo` while applying an input exclusion to `hi`; the emitted outputs have a common refinement at `hi`,
 but the cut is not confluent at `hi`. -/
 theorem rpc_not_confluent :
     WF (fun _ => In2.lo) rnH ∧ Produced rnSys 2 (fun _ => In2.lo) rnH ∧
@@ -1236,7 +1236,7 @@ theorem rpc_not_confluent :
         σ.cur ≼ In2.hi) ∧
       RPCAt rnH (fun p => (rnH p).length) .hi ∧
       ¬ ConfluentCut (fun _ => In2.lo) rnH (fun p => (rnH p).length) .hi := by
-  have h0 : rnH 0 = [LEv.out [sealHi] ()] := rfl
+  have h0 : rnH 0 = [LEv.out [inputExcludeHi] ()] := rfl
   have h1 : rnH 1 = [] := rfl
   have hp : ∀ p : Fin 2, p = 0 ∨ p = 1 := by decide
   obtain ⟨g1, g2, g3, g4⟩ := locality_glue rnSys (init := fun _ => In2.lo) rnH _ (two_labels (by omega))
@@ -1261,11 +1261,11 @@ theorem rpc_not_confluent :
   · rintro ⟨H', ext, τ, hext, _, hτj, hτ⟩
     have hr := hτ 0
     rw [hext 0] at hr
-    have ht : (rnH 0).take (rnH 0).length = [LEv.out [sealHi] ()] := by rw [h0]; rfl
+    have ht : (rnH 0).take (rnH 0).length = [LEv.out [inputExcludeHi] ()] := by rw [h0]; rfl
     rw [ht, List.singleton_append] at hr
     cases hr with
     | out ha hs _ hr' =>
-      have he := Option.some.inj (ha.symm.trans sealHi_apply)
+      have he := Option.some.inj (ha.symm.trans inputExcludeHi_apply)
       subst he
       obtain ⟨u, hu⟩ := τ.hasCur
       rw [hτj] at hu
@@ -1341,7 +1341,7 @@ has Response Availability for any obligation contained in `S`. -/
 theorem election_eq_no_ra {D : Type} (Sys : System electionEq D)
     (Q : (n : Nat) → Fin n → Table Ballots Win) (hQ : ∀ n p i o, Q n p i o → electionEq.P i o) :
     ¬ ResponseAvailability Sys Q := by
-  apply ra_excludes_forced_seal Sys Q (i := bAB) (j := bABA) ⟨Or.inr rfl, Or.inr rfl, Or.inl rfl⟩
+  apply ra_excludes_forced_inputExclusion Sys Q (i := bAB) (j := bABA) ⟨Or.inr rfl, Or.inr rfl, Or.inl rfl⟩
   rintro o ho ⟨u, hu, hle⟩
   have h1 : o = winner bAB := hQ _ _ _ _ ho
   have h2 : u = winner bABA := hu
@@ -1548,7 +1548,7 @@ theorem final_rpc (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : Fin 
     (hinj : ∀ p q, comp p = comp q → p = q)
     {A B : List (LEv regSpec D 2)} (hA : H 0 = LEv.inp h1 :: A) (hB : H 1 = LEv.inp h2 :: B)
     (hAi : ∀ j, LEv.inp j ∉ A) (hBi : ∀ j, LEv.inp j ∉ B)
-    {γ : List (Commitment regSpec)} {o : RMap}
+    {γ : List (Exclusion regSpec)} {o : RMap}
     (ho : LEv.out γ o ∈ A) (hoQ : regQ 0 h1 o) :
     RPCAt H (fun p => (H p).length) hj := by
   have hnr := norecv_of_inj hwf hpart hinj
