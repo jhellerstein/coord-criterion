@@ -24,8 +24,8 @@ Library conventions used throughout (see `Foundations/Core.lean`):
 * a state `σ : State sp` has current input `σ.cur` and remainder table `σ.R`;
 * `R[in ⪰ j]` is `inputTable σ j`, `R[out ⪰ o]` is `outputTable σ o`.
 
-The election itself (`elec`, `elecEq`, ballots `bxd = x··`, `bxy = xy·`,
-`bxyx = xyx`, `bxx = xx·`, …) is defined in `CALM/Examples.lean` and
+The election itself (`elec`, `elecEq`, ballots `bad = a··`, `bab = ab·`,
+`baba = aba`, `baa = aa·`, …) is defined in `CALM/Examples.lean` and
 `Figures.lean`; `elec` uses the refinement order on results (`⊥ ≼` each
 winner), `elecEq` the equality order.
 -/
@@ -36,113 +36,113 @@ open CC CC.CALM
 
 /-! ## The framework by example (`sec:election-story`) -/
 
-/-- "The *input order* records accumulated ballots: `xy· ⪰ x··`, while `xx·`
-and `xy·` are incomparable." -/
+/-- "The *input order* records accumulated ballots: `ab· ⪰ a··`, while `aa·`
+and `ab·` are incomparable." -/
 theorem «sec:election-story/input-order» :
-    bxd ≼ bxy ∧ ¬ bxx ≼ bxy ∧ ¬ bxy ≼ bxx := by decide
+    bad ≼ bab ∧ ¬ baa ≼ bab ∧ ¬ bab ≼ baa := by decide
 
 /-- "The *output order* says which announcements are safe to build on: `⊥`
-claims nothing, so either winner refines it, while `x` and `y` are
+claims nothing, so either winner refines it, while `a` and `b` are
 incomparable." -/
 theorem «sec:election-story/output-order» :
-    Res.bot ≼ Res.win .x ∧ Res.bot ≼ Res.win .y ∧
-      ¬ Res.win .x ≼ Res.win .y ∧ ¬ Res.win .y ≼ Res.win .x :=
+    Res.bot ≼ Res.win .a ∧ Res.bot ≼ Res.win .b ∧
+      ¬ Res.win .a ≼ Res.win .b ∧ ¬ Res.win .b ≼ Res.win .a :=
   ⟨Or.inl rfl, Or.inl rfl, (by rintro (h | h) <;> cases h), (by rintro (h | h) <;> cases h)⟩
 
 /-- "The functional table is *monotone* … Here, for example, the input
-sequence `x·· ⪯ xy· ⪯ xyx` monotonically produces the output sequence
-`⊥ ⪯ ⊥ ⪯ x`."  The election (refinement order) is monotone, and the chain is
+sequence `a·· ⪯ ab· ⪯ aba` monotonically produces the output sequence
+`⊥ ⪯ ⊥ ⪯ a`."  The election (refinement order) is monotone, and the chain is
 as stated. -/
 theorem «sec:election-story/monotone» :
     elec.MonotoneF ∧
-      (bxd ≼ bxy ∧ bxy ≼ bxyx) ∧
-      (winner bxd = .bot ∧ winner bxy = .bot ∧ winner bxyx = .win .x) ∧
-      (Res.bot ≼ Res.bot ∧ Res.bot ≼ Res.win .x) :=
+      (bad ≼ bab ∧ bab ≼ baba) ∧
+      (winner bad = .bot ∧ winner bab = .bot ∧ winner baba = .win .a) ∧
+      (Res.bot ≼ Res.bot ∧ Res.bot ≼ Res.win .a) :=
   ⟨elec_monotone, by decide, by decide, ⟨Or.inl rfl, Or.inl rfl⟩⟩
 
-/-- Fig. `fig:election-frames`: "Only rows whose input expands `x··` are
+/-- Fig. `fig:election-frames`: "Only rows whose input expands `a··` are
 shown."  The nine printed pairs (`Figures.Elec.printed`) are exactly the rows
-of the election at inputs `⪰ x··`. -/
+of the election at inputs `⪰ a··`. -/
 theorem «fig:election-frames/printed-rows» (k : Ballots) (o : Res) :
-    (k, o) ∈ Figures.Elec.printed ↔ (bxd ≼ k ∧ elec.S k o) :=
+    (k, o) ∈ Figures.Elec.printed ↔ (bad ≼ k ∧ elec.S k o) :=
   Figures.Elec.printed_complete k o
 
-/-- Fig. `fig:election-frames`(a): "Initial state, current input `x··` …
-upper fiber `{⊥,x,y}`; undetermined; `⊥` needs no commitment."  Panel (a) is
-the canonical state `σ_S(x··)`; "upper fiber is all of `{⊥,x,y}`" is stated
+/-- Fig. `fig:election-frames`(a): "Initial state, current input `a··` …
+upper fiber `{⊥,a,b}`; undetermined; `⊥` needs no commitment."  Panel (a) is
+the canonical state `σ_S(a··)`; "upper fiber is all of `{⊥,a,b}`" is stated
 as "every output occurs in some remaining row". -/
 theorem «fig:election-frames/a» :
-    (∀ o : Res, ∃ k, (canon elec bxd).R k o) ∧ ¬ Determined (canon elec bxd) ∧
-      Exposable (canon elec bxd) .bot := by
+    (∀ o : Res, ∃ k, (canon elec bad).R k o) ∧ ¬ Determined (canon elec bad) ∧
+      Exposable (canon elec bad) .bot := by
   refine ⟨fun o => (Figures.Elec.upper_ab o).1, ?_, elec_panels_exposable.1⟩
   rintro ⟨o, h⟩
   obtain ⟨k₁, h₁⟩ := (Figures.Elec.upper_ab .bot).1
-  obtain ⟨k₂, h₂⟩ := (Figures.Elec.upper_ab (.win .x)).1
+  obtain ⟨k₂, h₂⟩ := (Figures.Elec.upper_ab (.win .a)).1
   cases (h _ _ h₁).trans (h _ _ h₂).symm
 
 /-- Fig. `fig:election-frames`(b) and §2.1 "Input and determination": "When
-`v₂`'s ballot for `y` arrives, the event `input(xy·)` produces panel (b),
+`v₂`'s ballot for `b` arrives, the event `input(ab·)` produces panel (b),
 retiring rows whose inputs no longer expand the ballots received; such inputs
-are now illegal. … in panel (b) it is `{⊥,x,y}`."  The CIDR version says "the
-input event `input(xy·)`".  Also "`⊥` needs no commitment" (`⊥` is a legal output). -/
+are now illegal. … in panel (b) it is `{⊥,a,b}`."  The CIDR version says "the
+input event `input(ab·)`".  Also "`⊥` needs no commitment" (`⊥` is a legal output). -/
 theorem «fig:election-frames/b» :
-    Step (canon elec bxd) (.input bxy) (canon elec bxy) ∧
-      (∀ o : Res, ∃ k, (canon elec bxy).R k o) ∧ ¬ Determined (canon elec bxy) ∧
-      Exposable (canon elec bxy) .bot :=
+    Step (canon elec bad) (.input bab) (canon elec bab) ∧
+      (∀ o : Res, ∃ k, (canon elec bab).R k o) ∧ ¬ Determined (canon elec bab) ∧
+      Exposable (canon elec bab) .bot :=
   ⟨Dist.step_canon_input elec (by decide) ⟨_, rfl⟩, fun o => (Figures.Elec.upper_ab o).2,
    elec_panel_b_undetermined, elec_panels_exposable.2.1⟩
 
 /-- Fig. `fig:election-frames`(b), the printed rows: of the rows at inputs
-`⪰ x··`, exactly `(xy·,⊥)`, `(xyx,x)`, `(xyy,y)` remain; every other printed
-row is gray because its input does not expand `xy·` (input retirement). -/
-theorem «fig:election-frames/b-rows» (k : Ballots) (o : Res) (hk : bxd ≼ k) :
-    ((canon elec bxy).R k o ↔
-        ((k = bxy ∧ o = .bot) ∨ (k = bxyx ∧ o = .win .x) ∨
-          (k = Figures.Elec.bxyy ∧ o = .win .y))) ∧
-      (elec.S k o → ¬ (canon elec bxy).R k o → ¬ bxy ≼ k) :=
+`⪰ a··`, exactly `(ab·,⊥)`, `(aba,a)`, `(abb,b)` remain; every other printed
+row is gray because its input does not expand `ab·` (input retirement). -/
+theorem «fig:election-frames/b-rows» (k : Ballots) (o : Res) (hk : bad ≼ k) :
+    ((canon elec bab).R k o ↔
+        ((k = bab ∧ o = .bot) ∨ (k = baba ∧ o = .win .a) ∨
+          (k = Figures.Elec.babb ∧ o = .win .b))) ∧
+      (elec.S k o → ¬ (canon elec bab).R k o → ¬ bab ≼ k) :=
   Figures.Elec.panel_b k o hk
 
-/-- Fig. `fig:election-frames`(c) and §2.1: "If `v₂` instead votes for `x`,
-as in panel (c), the upper fiber is `{x}`.  The state is *determined*: input
-alone has resolved the outcome, without commitment"; caption: "`x` needs no
+/-- Fig. `fig:election-frames`(c) and §2.1: "If `v₂` instead votes for `a`,
+as in panel (c), the upper fiber is `{a}`.  The state is *determined*: input
+alone has resolved the outcome, without commitment"; caption: "`a` needs no
 commitment". -/
 theorem «fig:election-frames/c» :
-    Step (canon elec bxd) (.input bxx) (canon elec bxx) ∧
-      (∀ o, (∃ k, (canon elec bxx).R k o) ↔ o = .win .x) ∧
-      Determined (canon elec bxx) ∧ Exposable (canon elec bxx) (.win .x) :=
+    Step (canon elec bad) (.input baa) (canon elec baa) ∧
+      (∀ o, (∃ k, (canon elec baa).R k o) ↔ o = .win .a) ∧
+      Determined (canon elec baa) ∧ Exposable (canon elec baa) (.win .a) :=
   ⟨Dist.step_canon_input elec (by decide) ⟨_, rfl⟩, Figures.Elec.upper_c,
    elec_panel_c_determined, elec_panels_exposable.2.2⟩
 
 /-- Fig. `fig:election-frames`(d) and §2.1: "the system acts as a registrar,
-emitting `⊥` and closing the polls at `xy·` in the same output event.  Its
-irrevocable *seal commitment* removes the still-possible `xyx` and `xyy` rows
+emitting `⊥` and closing the polls at `ab·` in the same output event.  Its
+irrevocable *seal commitment* removes the still-possible `aba` and `abb` rows
 but leaves the current input unchanged, and so makes `⊥` the final result."
 
 Closing the polls is the commitment `Figures.closePolls` (a commitment in the
 sense of Def. `def:commitment`, §4.3), and it is a seal; the registrar's
 event is the system output event `Out_[closePolls](⊥)` of §4.3, legal under
 any basis containing `closePolls`.  It ends at `panelD`, whose only row is
-`(xy·,⊥)`; the rows it removes beyond `(b)` are exactly `(xyx,x)`, `(xyy,y)`
+`(ab·,⊥)`; the rows it removes beyond `(b)` are exactly `(aba,a)`, `(abb,b)`
 (the struck rows); the state is determined with result `⊥`. -/
 theorem «fig:election-frames/d» :
-    (Figures.closePolls (sp := elec)).app (canon elec bxy) = some Figures.Elec.panelD ∧
+    (Figures.closePolls (sp := elec)).app (canon elec bab) = some Figures.Elec.panelD ∧
       (∀ B : Basis elec, B Figures.closePolls →
-        SysStep B (canon elec bxy) (.output [Figures.closePolls] .bot) Figures.Elec.panelD) ∧
-      Figures.Elec.panelD.cur = bxy ∧
-      (∀ k o, Figures.Elec.panelD.R k o ↔ (k = bxy ∧ o = .bot)) ∧
-      (∀ k o, ((canon elec bxy).R k o ∧ ¬ Figures.Elec.panelD.R k o) ↔
-        ((k = bxyx ∧ o = .win .x) ∨ (k = Figures.Elec.bxyy ∧ o = .win .y))) ∧
+        SysStep B (canon elec bab) (.output [Figures.closePolls] .bot) Figures.Elec.panelD) ∧
+      Figures.Elec.panelD.cur = bab ∧
+      (∀ k o, Figures.Elec.panelD.R k o ↔ (k = bab ∧ o = .bot)) ∧
+      (∀ k o, ((canon elec bab).R k o ∧ ¬ Figures.Elec.panelD.R k o) ↔
+        ((k = baba ∧ o = .win .a) ∨ (k = Figures.Elec.babb ∧ o = .win .b))) ∧
       (Determined Figures.Elec.panelD ∧ ∀ k x, Figures.Elec.panelD.R k x → x = .bot) :=
   ⟨Figures.Elec.close_at_b, Figures.Elec.registrar_step, Figures.Elec.panelD_cur,
    Figures.Elec.panelD_rows, Figures.Elec.panelD_struck, Figures.Elec.panelD_determined⟩
 
 /-- Fig. `fig:election-frames`(d), legend: "Gray: removed from the remainder
 table; struck through if by a commitment, otherwise retired by an input event."  A
-printed row is absent from panel (d) iff its input does not expand `xy·`
+printed row is absent from panel (d) iff its input does not expand `ab·`
 (gray) or it is one of the two struck rows. -/
-theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bxd ≼ k) (hS : elec.S k o) :
+theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.S k o) :
     ¬ Figures.Elec.panelD.R k o ↔
-      (¬ bxy ≼ k ∨ (k = bxyx ∧ o = .win .x) ∨ (k = Figures.Elec.bxyy ∧ o = .win .y)) :=
+      (¬ bab ≼ k ∨ (k = baba ∧ o = .win .a) ∨ (k = Figures.Elec.babb ∧ o = .win .b)) :=
   Figures.Elec.panelD_gray k o hk hS
 
 /-- Fig. `fig:election-frames` caption and §2.1: "a seal that `output(⊥)`
@@ -150,54 +150,54 @@ alone does not require … Emitting `⊥` by itself would need no commitment,
 since every output still possible refines it."  At (b), `⊥` is a legal output,
 `Sealed_⊥` and `Excluded_⊥` are empty, and `output(⊥)` removes no row. -/
 theorem «fig:election-frames/bot-alone» :
-    Exposable (canon elec bxy) .bot ∧ (¬ ∃ k x, Sealed (canon elec bxy) .bot k x) ∧
-      (¬ ∃ k x, Excluded (canon elec bxy) .bot k x) ∧
-      outputTable (canon elec bxy) .bot = (canon elec bxy).R :=
+    Exposable (canon elec bab) .bot ∧ (¬ ∃ k x, Sealed (canon elec bab) .bot k x) ∧
+      (¬ ∃ k x, Excluded (canon elec bab) .bot k x) ∧
+      outputTable (canon elec bab) .bot = (canon elec bab).R :=
   Figures.Elec.bot_alone_at_b
 
 /-- Fig. `fig:nonmonotone-frame`: "Panel (b) under the equality order, after
 `output(⊥)`. … upper fiber `{⊥}`; determined."  Under `elecEq`, `output(⊥)`
-at `σ_S(xy·)` seals `xyx` and leaves the single row `(xy·,⊥)`. -/
+at `σ_S(ab·)` seals `aba` and leaves the single row `(ab·,⊥)`. -/
 theorem «fig:nonmonotone-frame» :
-    Sealed (canon elecEq bxy) ⟨.bot⟩ bxyx ⟨winner bxyx⟩ ∧
-      ∀ k o, outputTable (canon elecEq bxy) ⟨.bot⟩ k o ↔ (k = bxy ∧ o = ⟨.bot⟩) :=
+    Sealed (canon elecEq bab) ⟨.bot⟩ baba ⟨winner baba⟩ ∧
+      ∀ k o, outputTable (canon elecEq bab) ⟨.bot⟩ k o ↔ (k = bab ∧ o = ⟨.bot⟩) :=
   ⟨elecEq_bot_seals, elecEq_bot_single_row⟩
 
 /-- Fig. `fig:nonmonotone-frame` caption: "The seal the registrar chose in
 Figure `fig:election-frames`(d) is required here." -/
 theorem «fig:nonmonotone-frame/matches-d» (k : Ballots) (r : Res) :
-    Figures.Elec.panelD.R k r ↔ outputTable (canon elecEq bxy) ⟨.bot⟩ k ⟨r⟩ :=
+    Figures.Elec.panelD.R k r ↔ outputTable (canon elecEq bab) ⟨.bot⟩ k ⟨r⟩ :=
   Figures.Elec.panelD_matches_e k r
 
 /-- §2.1 "Output and consistency": "Hence `⊥` is a legal output in panels (a)
-and (b), and `x` in panel (c)." -/
+and (b), and `a` in panel (c)." -/
 theorem «sec:election-story/exposable-panels» :
-    Exposable (canon elec bxd) .bot ∧ Exposable (canon elec bxy) .bot ∧
-      Exposable (canon elec bxx) (.win .x) :=
+    Exposable (canon elec bad) .bot ∧ Exposable (canon elec bab) .bot ∧
+      Exposable (canon elec baa) (.win .a) :=
   elec_panels_exposable
 
 /-- §2.1: "under the equality order … `⊥` is incompatible with future
-winners, so emitting it requires a seal": at `σ_S(xy·)`, `⊥` is not
+winners, so emitting it requires a seal": at `σ_S(ab·)`, `⊥` is not
 a legal output under `elecEq`. -/
 theorem «sec:election-story/equality-order-seal» :
-    ¬ Exposable (canon elecEq bxy) ⟨.bot⟩ :=
+    ¬ Exposable (canon elecEq bab) ⟨.bot⟩ :=
   fun h => ((exposable_iff_empty _ _).1 h).1 ⟨_, _, elecEq_bot_seals⟩
 
 /-- §2.1: "The obstruction is a property solely of the table and its orders.
-Rows `(xy·,⊥)` and `(xyx,x)` have the common input expansion `xyx`, but under
-the equality order no output at `xyx` refines both outputs `⊥` and `x`." -/
+Rows `(ab·,⊥)` and `(aba,a)` have the common input expansion `aba`, but under
+the equality order no output at `aba` refines both outputs `⊥` and `a`." -/
 theorem «sec:election-story/obstruction» :
-    elecEq.S bxy ⟨.bot⟩ ∧ elecEq.S bxyx ⟨.win .x⟩ ∧ bxy ≼ bxyx ∧ bxyx ≼ bxyx ∧
-      ¬ ∃ u, elecEq.S bxyx u ∧ (⟨.bot⟩ : ResE) ≼ u ∧ (⟨.win .x⟩ : ResE) ≼ u :=
-  ⟨by show _ = _; rw [winner_bxy], by show _ = _; rw [winner_bxyx], bxy_le_bxyx, PO.refl _,
-   fun ⟨_, _, h₁, h₂⟩ => by cases (show (⟨.bot⟩ : ResE) = ⟨.win .x⟩ from h₁.trans h₂.symm)⟩
+    elecEq.S bab ⟨.bot⟩ ∧ elecEq.S baba ⟨.win .a⟩ ∧ bab ≼ baba ∧ baba ≼ baba ∧
+      ¬ ∃ u, elecEq.S baba u ∧ (⟨.bot⟩ : ResE) ≼ u ∧ (⟨.win .a⟩ : ResE) ≼ u :=
+  ⟨by show _ = _; rw [winner_bab], by show _ = _; rw [winner_baba], bab_le_baba, PO.refl _,
+   fun ⟨_, _, h₁, h₂⟩ => by cases (show (⟨.bot⟩ : ResE) = ⟨.win .a⟩ from h₁.trans h₂.symm)⟩
 
-/-- §2.1: "A run that emits `⊥` at `xy·` and one that receives `xyx` cannot be
-reconciled at `xyx`" (equality order).  The two runs end at
-`(xy·, S[in ⪰ xy·, out ⪰ ⊥])` and `σ_S(xyx)`. -/
+/-- §2.1: "A run that emits `⊥` at `ab·` and one that receives `aba` cannot be
+reconciled at `aba`" (equality order).  The two runs end at
+`(ab·, S[in ⪰ ab·, out ⪰ ⊥])` and `σ_S(aba)`. -/
 theorem «sec:election-story/not-reconciled» :
-    ¬ ConfluentAt [outputState (canon elecEq bxy) ⟨.bot⟩
-        ((elecEq_bot_single_row bxy _).2 ⟨rfl, rfl⟩).1, canon elecEq bxyx] bxyx :=
+    ¬ ConfluentAt [outputState (canon elecEq bab) ⟨.bot⟩
+        ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1, canon elecEq baba] baba :=
   elecEq_not_confluent
 
 /-- §2.1: "Input and output events form a transition system, and the
@@ -393,7 +393,7 @@ event `Out_[closePolls](⊥)` has an observably equivalent `output(⊥)` of the
 transition system, whose table contains panel (d)'s.  The general statement
 is Lemma `lem:canonical-equivalent` (`CC.canonical_equivalent`, §4.3). -/
 theorem «sec:functional-events/extra-commitments» (B : Basis elec) (hB : B Figures.closePolls) :
-    ∃ ρ', Exec (canon elec bxy) [.output .bot] ρ' ∧ ρ'.cur = bxy ∧
+    ∃ ρ', Exec (canon elec bab) [.output .bot] ρ' ∧ ρ'.cur = bab ∧
       ∀ k u, Figures.Elec.panelD.R k u → ρ'.R k u :=
   Figures.Elec.registrar_canonical B hB
 
@@ -440,7 +440,7 @@ theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO
 panel (b) … An input event may [reach a determined state] by retiring rows …
 and a commitment by sealing inputs …, as in panels (c) and (d)." -/
 theorem «sec:functional-events/determination-examples» :
-    elec.Functional ∧ ¬ Determined (canon elec bxy) ∧ Determined (canon elec bxx) ∧
+    elec.Functional ∧ ¬ Determined (canon elec bab) ∧ Determined (canon elec baa) ∧
       Determined Figures.Elec.panelD :=
   ⟨elec_functional, elec_panel_b_undetermined, elec_panel_c_determined,
    Figures.Elec.panelD_determined.1⟩
@@ -503,10 +503,10 @@ abbrev «eq:run-residual» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I)
   fun k u => sp.S k u ∧ i ≼ k ∧ ∀ o ∈ os, o ≼ u
 
 /-- Example after Lemma `lem:run-residual`: "in the equality-order variant …
-a run that emits `⊥` at `xy·` keeps `S[in ⪰ xy·, out ⪰ ⊥]`: the single row
-`(xy·,⊥)`." -/
+a run that emits `⊥` at `ab·` keeps `S[in ⪰ ab·, out ⪰ ⊥]`: the single row
+`(ab·,⊥)`." -/
 theorem «lem:run-residual/example» (k : Ballots) (o : ResE) :
-    outputTable (canon elecEq bxy) ⟨.bot⟩ k o ↔ (k = bxy ∧ o = ⟨.bot⟩) :=
+    outputTable (canon elecEq bab) ⟨.bot⟩ k o ↔ (k = bab ∧ o = ⟨.bot⟩) :=
   elecEq_bot_single_row k o
 
 /-- **Def. `def:confluence`** (Confluence at an input).  "A finite family of
@@ -557,14 +557,14 @@ theorem «thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
   functional_calm hf
 
 /-- Example after Theorem `thm:functional-calm`: "In the equality-order
-election, `f(xy·) = ⊥` and `f(xyx) = x` are incomparable: a run that emits `⊥`
-at `xy·` and one that accepts `xyx` are the two runs … that can never be
+election, `f(ab·) = ⊥` and `f(aba) = a` are incomparable: a run that emits `⊥`
+at `ab·` and one that accepts `aba` are the two runs … that can never be
 reconciled." -/
 theorem «thm:functional-calm/example» :
-    winner bxy = .bot ∧ winner bxyx = .win .x ∧ bxy ≼ bxyx ∧ ¬ elecEq.MonotoneF ∧
-      ¬ ConfluentAt [outputState (canon elecEq bxy) ⟨.bot⟩
-        ((elecEq_bot_single_row bxy _).2 ⟨rfl, rfl⟩).1, canon elecEq bxyx] bxyx :=
-  ⟨winner_bxy, winner_bxyx, bxy_le_bxyx, elecEq_not_monotone, elecEq_not_confluent⟩
+    winner bab = .bot ∧ winner baba = .win .a ∧ bab ≼ baba ∧ ¬ elecEq.MonotoneF ∧
+      ¬ ConfluentAt [outputState (canon elecEq bab) ⟨.bot⟩
+        ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1, canon elecEq baba] baba :=
+  ⟨winner_bab, winner_baba, bab_le_baba, elecEq_not_monotone, elecEq_not_confluent⟩
 
 /-- **Corollary `cor:state-by-input`** (State is fixed by input).  "In a
 consistent functional specification, every run ending at current input `i` is

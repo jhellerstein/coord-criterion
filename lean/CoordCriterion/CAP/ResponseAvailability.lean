@@ -1274,11 +1274,11 @@ theorem rpc_not_confluent :
 
 /-! ### The election under the equality order -/
 
-inductive Cand | x | y
+inductive Cand | a | b
   deriving DecidableEq
 
-/-- Outputs `⊥`, `x`, `y` under the equality order. -/
-inductive Win | bot | x | y
+/-- Outputs `⊥`, `a`, `b` under the equality order. -/
+inductive Win | bot | a | b
   deriving DecidableEq
 
 instance : PO Win where
@@ -1327,24 +1327,24 @@ def cnt (c : Cand) (v : Ballots) : Nat :=
 
 /-- The candidate with two ballots, or `⊥`. -/
 def winner (v : Ballots) : Win :=
-  if 2 ≤ cnt .x v then .x else if 2 ≤ cnt .y v then .y else .bot
+  if 2 ≤ cnt .a v then .a else if 2 ≤ cnt .b v then .b else .bot
 
 /-- The election of Figure `fig:nonmonotone-frame` (equality order on outputs). -/
 def electionEq : Spec Ballots Win := ⟨fun v o => o = winner v, fun v => ⟨winner v, rfl⟩⟩
 
-def bXY : Ballots := ⟨some .x, some .y, none⟩
-def bXYX : Ballots := ⟨some .x, some .y, some .x⟩
+def bAB : Ballots := ⟨some .a, some .b, none⟩
+def bABA : Ballots := ⟨some .a, some .b, some .a⟩
 
 /-- Input acceptance excludes the election under the equality order: at
-`xy·` the only answer is `⊥`, which has no refinement at `xyx`; so no system
+`ab·` the only answer is `⊥`, which has no refinement at `aba`; so no system
 has Response Availability for any obligation contained in `S`. -/
 theorem election_eq_no_ra {D : Type} (Sys : System electionEq D)
     (Q : (n : Nat) → Fin n → Table Ballots Win) (hQ : ∀ n p i o, Q n p i o → electionEq.S i o) :
     ¬ ResponseAvailability Sys Q := by
-  apply ra_excludes_forced_seal Sys Q (i := bXY) (j := bXYX) ⟨Or.inr rfl, Or.inr rfl, Or.inl rfl⟩
+  apply ra_excludes_forced_seal Sys Q (i := bAB) (j := bABA) ⟨Or.inr rfl, Or.inr rfl, Or.inl rfl⟩
   rintro o ho ⟨u, hu, hle⟩
-  have h1 : o = winner bXY := hQ _ _ _ _ ho
-  have h2 : u = winner bXYX := hu
+  have h1 : o = winner bAB := hQ _ _ _ _ ho
+  have h2 : u = winner bABA := hu
   have h3 : o = u := hle
   rw [h1, h2] at h3
   exact absurd h3 (by decide)

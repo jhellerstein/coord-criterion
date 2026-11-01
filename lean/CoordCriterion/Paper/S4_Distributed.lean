@@ -124,25 +124,25 @@ theorem «def:participant-run/is-run» {D : Type} {n : Nat} {sp : Spec I O}
   h.isRun
 
 /-- **Fig. participant-runs** (`fig:participant-runs`).  "Two histories
-from `σ_a = σ_S(x··)` to `σ_1 = (xy·, R_1)` … In Figure participant-runs, the
-input `xy·` reaches `q` directly or through a message from `p`.  The histories
-differ, but at either cut each participant run is `input(xy·)`, so both
+from `σ_a = σ_S(a··)` to `σ_1 = (ab·, R_1)` … In Figure participant-runs, the
+input `ab·` reaches `q` directly or through a message from `p`.  The histories
+differ, but at either cut each participant run is `input(ab·)`, so both
 endpoints are `(σ_1, σ_1)`."
 
 Lean, for the election `elec` and any message data `d`: the direct-delivery
 history `H_d` and the forwarded-delivery history `H_f` (where `p = 0` sends
-`m = (xy·, d)` and `q = 1` receives it) are both well formed, the endpoint of
-each final cut is `(σ_S(xy·), σ_S(xy·))`, and the histories differ.  Here
-`σ_1 = σ_S(xy·)`, whose table `R_1` is panel (b) of Fig. election-frames
+`m = (ab·, d)` and `q = 1` receives it) are both well formed, the endpoint of
+each final cut is `(σ_S(ab·), σ_S(ab·))`, and the histories differ.  Here
+`σ_1 = σ_S(ab·)`, whose table `R_1` is panel (b) of Fig. election-frames
 (`CC.Figures.Elec.panel_b`). -/
 theorem «fig:participant-runs» (D : Type) (d : D) :
-    (Dist.Hd CALM.Res D CALM.bxd CALM.bxy).WF CALM.elec ∧
-    (Dist.Hf CALM.Res CALM.bxd CALM.bxy d).WF CALM.elec ∧
-    (Dist.Hd CALM.Res D CALM.bxd CALM.bxy).Endpoint CALM.elec
-      (Dist.Hd CALM.Res D CALM.bxd CALM.bxy).InH (fun _ => canon CALM.elec CALM.bxy) ∧
-    (Dist.Hf CALM.Res CALM.bxd CALM.bxy d).Endpoint CALM.elec
-      (Dist.Hf CALM.Res CALM.bxd CALM.bxy d).InH (fun _ => canon CALM.elec CALM.bxy) ∧
-    (Dist.Hd CALM.Res D CALM.bxd CALM.bxy).ev ≠ (Dist.Hf CALM.Res CALM.bxd CALM.bxy d).ev :=
+    (Dist.Hd CALM.Res D CALM.bad CALM.bab).WF CALM.elec ∧
+    (Dist.Hf CALM.Res CALM.bad CALM.bab d).WF CALM.elec ∧
+    (Dist.Hd CALM.Res D CALM.bad CALM.bab).Endpoint CALM.elec
+      (Dist.Hd CALM.Res D CALM.bad CALM.bab).InH (fun _ => canon CALM.elec CALM.bab) ∧
+    (Dist.Hf CALM.Res CALM.bad CALM.bab d).Endpoint CALM.elec
+      (Dist.Hf CALM.Res CALM.bad CALM.bab d).InH (fun _ => canon CALM.elec CALM.bab) ∧
+    (Dist.Hd CALM.Res D CALM.bad CALM.bab).ev ≠ (Dist.Hf CALM.Res CALM.bad CALM.bab d).ev :=
   Dist.fig_participant_runs CALM.elec (by decide) ⟨_, rfl⟩ d
 
 /-- The general form of Fig. `fig:participant-runs`: for any specification and
@@ -297,15 +297,15 @@ poll-closing seal.  Closing the polls is the registrar's design decision,
 as fixing orderings is 2PL's."
 
 Lean: under any basis containing `closePolls`, `Out_{[closePolls]}(⊥)` from
-`σ_S(xy·)` is legal and ends at panel (d); yet `⊥` is a legal output there and
+`σ_S(ab·)` is legal and ends at panel (d); yet `⊥` is a legal output there and
 `Sealed_⊥`, `Excluded_⊥` are empty, so `output(⊥)` needs no commitment. -/
 theorem «sec:systems/registrar» :
     (∀ B : Basis CALM.elec, B Figures.closePolls →
-      SysStep B (canon CALM.elec CALM.bxy) (.output [Figures.closePolls] .bot)
+      SysStep B (canon CALM.elec CALM.bab) (.output [Figures.closePolls] .bot)
         Figures.Elec.panelD) ∧
-    Exposable (canon CALM.elec CALM.bxy) .bot ∧
-    (¬ ∃ k x, Sealed (canon CALM.elec CALM.bxy) .bot k x) ∧
-    (¬ ∃ k x, Excluded (canon CALM.elec CALM.bxy) .bot k x) :=
+    Exposable (canon CALM.elec CALM.bab) .bot ∧
+    (¬ ∃ k x, Sealed (canon CALM.elec CALM.bab) .bot k x) ∧
+    (¬ ∃ k x, Excluded (canon CALM.elec CALM.bab) .bot k x) :=
   ⟨Figures.Elec.registrar_step, Figures.Elec.bot_alone_at_b.1,
     Figures.Elec.bot_alone_at_b.2.1, Figures.Elec.bot_alone_at_b.2.2.1⟩
 
@@ -814,15 +814,15 @@ abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEven
   CoordFree es
 
 /-- "Closing the polls before every voter has voted seals the remaining
-ballots."  Lean: at panel (b) (`xy·`), closing the polls is defined and leaves
-no row at the remaining-ballot input `xyx`, which had the row `(xyx, x)`. -/
+ballots."  Lean: at panel (b) (`ab·`), closing the polls is defined and leaves
+no row at the remaining-ballot input `aba`, which had the row `(aba, a)`. -/
 theorem «sec:coordination/closing-before-voting-seals» :
-    (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec CALM.bxy) =
+    (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec CALM.bab) =
       some Figures.Elec.panelD ∧
-    (canon CALM.elec CALM.bxy).R CALM.bxyx (.win .x) ∧
-    ∀ o, ¬ Figures.Elec.panelD.R CALM.bxyx o := by
+    (canon CALM.elec CALM.bab).R CALM.baba (.win .a) ∧
+    ∀ o, ¬ Figures.Elec.panelD.R CALM.baba o := by
   refine ⟨Figures.Elec.close_at_b,
-    ⟨(by decide : CALM.Res.win .x = CALM.winner CALM.bxyx), by decide⟩, fun o h => ?_⟩
+    ⟨(by decide : CALM.Res.win .a = CALM.winner CALM.baba), by decide⟩, fun o h => ?_⟩
   have := (Figures.Elec.panelD_rows _ o).1 h
   exact absurd this.1 (by decide)
 

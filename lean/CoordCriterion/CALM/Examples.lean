@@ -377,12 +377,12 @@ theorem state_by_input_fails_relationally :
 
 /-! ## 10. The election example (Section `sec:election-story`)
 
-Three voters, ballots for `x` or `y`; the input is the ballots received so
+Three voters, ballots for `a` or `b`; the input is the ballots received so
 far (`none` = dot), ordered by extension; the output is the candidate with
 two ballots, or `⊥`.  `Res` carries the refinement order (`⊥ ≼` everything,
-`x`, `y` incomparable); `ResE` the equality order. -/
+`a`, `b` incomparable); `ResE` the equality order. -/
 
-inductive Cand | x | y
+inductive Cand | a | b
   deriving DecidableEq
 
 structure Ballots where
@@ -455,7 +455,7 @@ def cnt (c : Cand) (i : Ballots) : Nat :=
   (if i.b3 = some c then 1 else 0)
 
 def winner (i : Ballots) : Res :=
-  if 2 ≤ cnt .x i then .win .x else if 2 ≤ cnt .y i then .win .y else .bot
+  if 2 ≤ cnt .a i then .win .a else if 2 ≤ cnt .b i then .win .b else .bot
 
 /-- The election, under the refinement order. -/
 def elec : Spec Ballots Res where
@@ -484,69 +484,69 @@ theorem elec_monotone : elec.MonotoneF := by
 
 theorem elec_consistent : elec.Consistent := (functional_calm elec_functional).2 elec_monotone
 
-def bxd : Ballots := ⟨some .x, none, none⟩          -- x··
-def bxy : Ballots := ⟨some .x, some .y, none⟩       -- xy·
-def bxyx : Ballots := ⟨some .x, some .y, some .x⟩   -- xyx
-def bxx : Ballots := ⟨some .x, some .x, none⟩       -- xx·
+def bad : Ballots := ⟨some .a, none, none⟩          -- a··
+def bab : Ballots := ⟨some .a, some .b, none⟩       -- ab·
+def baba : Ballots := ⟨some .a, some .b, some .a⟩   -- aba
+def baa : Ballots := ⟨some .a, some .a, none⟩       -- aa·
 
-/-- `xy· ≼ xyx`, `f(xy·) = ⊥`, `f(xyx) = x`. -/
-theorem bxy_le_bxyx : bxy ≼ bxyx := by decide
-theorem winner_bxy : winner bxy = .bot := by decide
-theorem winner_bxyx : winner bxyx = .win .x := by decide
+/-- `ab· ≼ aba`, `f(ab·) = ⊥`, `f(aba) = a`. -/
+theorem bab_le_baba : bab ≼ baba := by decide
+theorem winner_bab : winner bab = .bot := by decide
+theorem winner_baba : winner baba = .win .a := by decide
 
 /-- Under the equality order the election is not monotone, hence not
 consistent. -/
 theorem elecEq_not_monotone : ¬ elecEq.MonotoneF := by
   intro h
-  have := h bxy bxyx ⟨winner bxy⟩ ⟨winner bxyx⟩ bxy_le_bxyx rfl rfl
-  rw [winner_bxy, winner_bxyx] at this
+  have := h bab baba ⟨winner bab⟩ ⟨winner baba⟩ bab_le_baba rfl rfl
+  rw [winner_bab, winner_baba] at this
   cases this
 
 theorem elecEq_not_consistent : ¬ elecEq.Consistent := fun h =>
   elecEq_not_monotone ((functional_calm elecEq_functional).1 h)
 
-/-- Panels (a)–(c): `⊥` is exposable at `σ_S(x··)` and `σ_S(xy·)`, and `x` at
-`σ_S(xx·)` (monotone order). -/
+/-- Panels (a)–(c): `⊥` is exposable at `σ_S(a··)` and `σ_S(ab·)`, and `a` at
+`σ_S(aa·)` (monotone order). -/
 theorem elec_panels_exposable :
-    Exposable (canon elec bxd) .bot ∧ Exposable (canon elec bxy) .bot ∧
-      Exposable (canon elec bxx) (.win .x) := by
+    Exposable (canon elec bad) .bot ∧ Exposable (canon elec bab) .bot ∧
+      Exposable (canon elec baa) (.win .a) := by
   have hb := (functional_exposure_boundary elec_functional).1 elec_monotone
-  refine ⟨hb _ ⟨_, [], ExecCF.nil _⟩ _ ⟨(by decide : Res.bot = winner bxd), PO.refl _⟩,
-          hb _ ⟨_, [], ExecCF.nil _⟩ _ ⟨(by decide : Res.bot = winner bxy), PO.refl _⟩,
-          hb _ ⟨_, [], ExecCF.nil _⟩ _ ⟨(by decide : Res.win .x = winner bxx), PO.refl _⟩⟩
+  refine ⟨hb _ ⟨_, [], ExecCF.nil _⟩ _ ⟨(by decide : Res.bot = winner bad), PO.refl _⟩,
+          hb _ ⟨_, [], ExecCF.nil _⟩ _ ⟨(by decide : Res.bot = winner bab), PO.refl _⟩,
+          hb _ ⟨_, [], ExecCF.nil _⟩ _ ⟨(by decide : Res.win .a = winner baa), PO.refl _⟩⟩
 
-/-- Panel (b) is undetermined (`⊥` at `xy·` and `x` at `xyx` remain). -/
-theorem elec_panel_b_undetermined : ¬ Determined (canon elec bxy) := by
+/-- Panel (b) is undetermined (`⊥` at `ab·` and `a` at `aba` remain). -/
+theorem elec_panel_b_undetermined : ¬ Determined (canon elec bab) := by
   rintro ⟨o, h⟩
-  have h1 := h bxy (winner bxy) ⟨rfl, PO.refl _⟩
-  have h2 := h bxyx (winner bxyx) ⟨rfl, bxy_le_bxyx⟩
-  rw [winner_bxy] at h1; rw [winner_bxyx, ← h1] at h2
+  have h1 := h bab (winner bab) ⟨rfl, PO.refl _⟩
+  have h2 := h baba (winner baba) ⟨rfl, bab_le_baba⟩
+  rw [winner_bab] at h1; rw [winner_baba, ← h1] at h2
   cases h2
 
-/-- Panel (c) is determined: every row at an expansion of `xx·` has output `x`. -/
-theorem elec_panel_c_determined : Determined (canon elec bxx) := by
-  refine ⟨.win .x, fun k u hk => ?_⟩
+/-- Panel (c) is determined: every row at an expansion of `aa·` has output `a`. -/
+theorem elec_panel_c_determined : Determined (canon elec baa) := by
+  refine ⟨.win .a, fun k u hk => ?_⟩
   obtain ⟨hS, hle⟩ := hk
   subst hS
   obtain ⟨c1, c2, c3⟩ := k
   obtain ⟨h1, h2, _⟩ := hle
-  simp only [bxx] at h1 h2
+  simp only [baa] at h1 h2
   have e1 := oleq_some h1
   have e2 := oleq_some h2
   subst e1; subst e2
   rcases c3 with _ | _ | _ <;> decide
 
 /-- Equality-order variant (Fig. `fig:nonmonotone-frame`): `output(⊥)` at
-`σ_S(xy·)` seals `xyx` ... -/
-theorem elecEq_bot_seals : Sealed (canon elecEq bxy) ⟨.bot⟩ bxyx ⟨winner bxyx⟩ :=
-  nonmono_seals elecEq_functional bxy_le_bxyx
-    (show (⟨Res.bot⟩ : ResE) = ⟨winner bxy⟩ by rw [winner_bxy]) rfl
-    (by rw [winner_bxyx]; intro h; cases h)
+`σ_S(ab·)` seals `aba` ... -/
+theorem elecEq_bot_seals : Sealed (canon elecEq bab) ⟨.bot⟩ baba ⟨winner baba⟩ :=
+  nonmono_seals elecEq_functional bab_le_baba
+    (show (⟨Res.bot⟩ : ResE) = ⟨winner bab⟩ by rw [winner_bab]) rfl
+    (by rw [winner_baba]; intro h; cases h)
 
-/-- ... and leaves the single row `(xy·, ⊥)`
-(`S[in ⪰ xy·, out ⪰ ⊥]`, the example after Lemma `lem:run-residual`). -/
+/-- ... and leaves the single row `(ab·, ⊥)`
+(`S[in ⪰ ab·, out ⪰ ⊥]`, the example after Lemma `lem:run-residual`). -/
 theorem elecEq_bot_single_row (k : Ballots) (o : ResE) :
-    outputTable (canon elecEq bxy) ⟨.bot⟩ k o ↔ (k = bxy ∧ o = ⟨.bot⟩) := by
+    outputTable (canon elecEq bab) ⟨.bot⟩ k o ↔ (k = bab ∧ o = ⟨.bot⟩) := by
   constructor
   · rintro ⟨⟨hS, hle⟩, hbo⟩
     subst hbo
@@ -555,38 +555,38 @@ theorem elecEq_bot_single_row (k : Ballots) (o : ResE) :
     have e1 := oleq_some h1
     have e2 := oleq_some h2
     subst e1; subst e2
-    have hS' : (⟨Res.bot⟩ : ResE) = ⟨winner ⟨some .x, some .y, c3⟩⟩ := hS
+    have hS' : (⟨Res.bot⟩ : ResE) = ⟨winner ⟨some .a, some .b, c3⟩⟩ := hS
     rcases c3 with _ | _ | _
     · exact ⟨rfl, rfl⟩
     · exact absurd hS' (by decide)
     · exact absurd hS' (by decide)
   · rintro ⟨rfl, rfl⟩
-    exact ⟨⟨by show (⟨Res.bot⟩ : ResE) = ⟨winner bxy⟩; rw [winner_bxy], PO.refl _⟩, rfl⟩
+    exact ⟨⟨by show (⟨Res.bot⟩ : ResE) = ⟨winner bab⟩; rw [winner_bab], PO.refl _⟩, rfl⟩
 
-/-- "A run that emits `⊥` at `xy·` and one that receives `xyx` cannot be
-reconciled at `xyx`" (equality order). -/
+/-- "A run that emits `⊥` at `ab·` and one that receives `aba` cannot be
+reconciled at `aba`" (equality order). -/
 theorem elecEq_not_confluent :
-    ¬ ConfluentAt [outputState (canon elecEq bxy) ⟨.bot⟩ ((elecEq_bot_single_row bxy _).2 ⟨rfl, rfl⟩).1,
-                   canon elecEq bxyx] bxyx := by
+    ¬ ConfluentAt [outputState (canon elecEq bab) ⟨.bot⟩ ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1,
+                   canon elecEq baba] baba := by
   intro h
-  have hrun : ∀ σ ∈ [outputState (canon elecEq bxy) ⟨.bot⟩
-      ((elecEq_bot_single_row bxy _).2 ⟨rfl, rfl⟩).1, canon elecEq bxyx], IsRun σ := by
+  have hrun : ∀ σ ∈ [outputState (canon elecEq bab) ⟨.bot⟩
+      ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1, canon elecEq baba], IsRun σ := by
     intro σ hσ
     rcases List.mem_cons.1 hσ with rfl | hσ
-    · exact ⟨bxy, _, Exec.cons (step_outputState _ _ _) (Exec.nil _)⟩
+    · exact ⟨bab, _, Exec.cons (step_outputState _ _ _) (Exec.nil _)⟩
     · rcases List.mem_cons.1 hσ with rfl | hσ
-      · exact ⟨bxyx, [], Exec.nil _⟩
+      · exact ⟨baba, [], Exec.nil _⟩
       · cases hσ
-  have hcur : ∀ σ ∈ [outputState (canon elecEq bxy) ⟨.bot⟩
-      ((elecEq_bot_single_row bxy _).2 ⟨rfl, rfl⟩).1, canon elecEq bxyx], σ.cur ≼ bxyx := by
+  have hcur : ∀ σ ∈ [outputState (canon elecEq bab) ⟨.bot⟩
+      ((elecEq_bot_single_row bab _).2 ⟨rfl, rfl⟩).1, canon elecEq baba], σ.cur ≼ baba := by
     intro σ hσ
     rcases List.mem_cons.1 hσ with rfl | hσ
-    · exact bxy_le_bxyx
+    · exact bab_le_baba
     · rcases List.mem_cons.1 hσ with rfl | hσ
       · exact PO.refl _
       · cases hσ
-  obtain ⟨u, _, hall⟩ := (survivor_test _ hrun bxyx hcur).1 h
-  have := (elecEq_bot_single_row bxyx u).1 (hall _ (List.mem_cons_self ..))
+  obtain ⟨u, _, hall⟩ := (survivor_test _ hrun baba hcur).1 h
+  have := (elecEq_bot_single_row baba u).1 (hall _ (List.mem_cons_self ..))
   exact absurd this.1 (by decide)
 
 /-! ## 11. The directed-fiber example (Section `sec:lifted-monotonicity`)
