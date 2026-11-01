@@ -11,7 +11,7 @@ import CoordCriterion.Foundations.Runs
 * `ce_of_pairs` — pairs of rows suffice for the common-expansion condition
   (`app:pairs-suffice`);
 * facts about the lifted output event (Def. lifted-output-event and the
-  paragraph after it): the Sealed/Retired/Rejected classification
+  paragraph after it): the Sealed/Retired/Excluded classification
   (`ruledOut_iff`), disjointness, the two commitments and their commutation
   (`seal_choose_comm`), the functional case;
 * `lifted_exposure_test` — Prop. exposability (lifted exposure test);
@@ -129,7 +129,7 @@ theorem ce_of_pairs {sp : Spec I O}
 section Classification
 variable {sp : Spec I O} (σ : State sp) (o : O)
 
-/-- Every row in `Sealed`, `Retired`, `Rejected` is ruled out by `o`. -/
+/-- Every row in `Sealed`, `Retired`, `Excluded` is ruled out by `o`. -/
 theorem sealed_ruledOut {k x} (h : Sealed σ o k x) : σ.R k x ∧ ¬ o ≼ x :=
   ⟨h.1, fun hox => h.2 ⟨x, h.1, hox⟩⟩
 
@@ -138,16 +138,16 @@ theorem sealed_retired_disjoint {k x} : ¬ (Sealed σ o k x ∧ Retired σ o k x
   obtain ⟨u, hu, hou, _⟩ := hr.2.2
   exact hs.2 ⟨u, hu, hou⟩
 
-theorem sealed_rejected_disjoint {k x} : ¬ (Sealed σ o k x ∧ Rejected σ o k x) :=
+theorem sealed_rejected_disjoint {k x} : ¬ (Sealed σ o k x ∧ Excluded σ o k x) :=
   fun ⟨hs, hj⟩ => hj.2.2.1 hs
 
-theorem retired_rejected_disjoint {k x} : ¬ (Retired σ o k x ∧ Rejected σ o k x) :=
+theorem retired_rejected_disjoint {k x} : ¬ (Retired σ o k x ∧ Excluded σ o k x) :=
   fun ⟨hr, hj⟩ => hj.2.2.2 hr
 
 /-- The three classes partition exactly the ruled-out rows `R \ R[out ⪰ o]`. -/
 theorem ruledOut_iff (k : I) (x : O) :
     (σ.R k x ∧ ¬ outputTable σ o k x) ↔
-      (Sealed σ o k x ∨ Retired σ o k x ∨ Rejected σ o k x) := by
+      (Sealed σ o k x ∨ Retired σ o k x ∨ Excluded σ o k x) := by
   constructor
   · rintro ⟨hR, hno⟩
     have hox : ¬ o ≼ x := fun h => hno ⟨hR, h⟩
@@ -165,9 +165,9 @@ theorem ruledOut_iff (k : I) (x : O) :
     exact ⟨this.1, fun h' => this.2 h'.2⟩
 
 /-- `Exposable` (every ruled-out row is retired) is the paper's
-"applies no commitment": `Sealed_o` and `Rejected_o` are empty. -/
+"applies no commitment": `Sealed_o` and `Excluded_o` are empty. -/
 theorem exposable_iff_no_commitment :
-    Exposable σ o ↔ (∀ k x, ¬ Sealed σ o k x) ∧ (∀ k x, ¬ Rejected σ o k x) := by
+    Exposable σ o ↔ (∀ k x, ¬ Sealed σ o k x) ∧ (∀ k x, ¬ Excluded σ o k x) := by
   constructor
   · intro h
     refine ⟨fun k x hs => ?_, fun k x hj => ?_⟩
@@ -199,10 +199,10 @@ def sealState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
   hasCur := ⟨o, ho, fun hs => hs.2 ⟨o, ho, PO.refl o⟩⟩
   above := fun k x h => σ.above k x h.1
 
-/-- The choice commitment `c_o(i,R) = (i, R \ Rejected_o)`, for `o ∈ R(i)`. -/
-def chooseState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
+/-- The exclusion commitment `x_o(i,R) = (i, R \ Excluded_o)`, for `o ∈ R(i)`. -/
+def excludeState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
   cur := σ.cur
-  R := fun k x => σ.R k x ∧ ¬ Rejected σ o k x
+  R := fun k x => σ.R k x ∧ ¬ Excluded σ o k x
   sub := fun k x h => σ.sub k x h.1
   hasCur := ⟨o, ho, fun hj => hj.2.1 (PO.refl o)⟩
   above := fun k x h => σ.above k x h.1
@@ -216,8 +216,8 @@ theorem sealState_kept (σ : State sp) (o : O) (ho) (k : I) (u : O) :
   · rintro ⟨h, hou⟩; exact ⟨⟨h, fun hs => hs.2 ⟨u, h, hou⟩⟩, hou⟩
 
 theorem chooseState_kept (σ : State sp) (o : O) (ho) (k : I) (u : O) :
-    ((chooseState σ o ho).R k u ∧ o ≼ u) ↔ (σ.R k u ∧ o ≼ u) := by
-  simp only [chooseState]
+    ((excludeState σ o ho).R k u ∧ o ≼ u) ↔ (σ.R k u ∧ o ≼ u) := by
+  simp only [excludeState]
   constructor
   · rintro ⟨⟨h, _⟩, hou⟩; exact ⟨h, hou⟩
   · rintro ⟨h, hou⟩; exact ⟨⟨h, fun hj => hj.2.1 hou⟩, hou⟩
@@ -232,9 +232,9 @@ theorem seal_retired (σ : State sp) (o : O) (ho) (k : I) (x : O) :
   · rintro ⟨h, hox, u, hu, hou, hxu⟩
     exact ⟨⟨h, fun hs => hs.2 ⟨u, hu, hou⟩⟩, hox, u, ((hk u).2 ⟨hu, hou⟩).1, hou, hxu⟩
 
-/-- Removing the sealed rows leaves `Rejected_o` unchanged. -/
+/-- Removing the sealed rows leaves `Excluded_o` unchanged. -/
 theorem seal_rejected (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    Rejected (sealState σ o ho) o k x ↔ Rejected σ o k x := by
+    Excluded (sealState σ o ho) o k x ↔ Excluded σ o k x := by
   have hret := seal_retired σ o ho k x
   have hk := sealState_kept σ o ho k
   constructor
@@ -260,7 +260,7 @@ theorem seal_sealed_empty (σ : State sp) (o : O) (ho) (k : I) (x : O) :
 
 /-- Removing the rejected rows leaves `Sealed_o` unchanged. -/
 theorem choose_sealed (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    Sealed (chooseState σ o ho) o k x ↔ Sealed σ o k x := by
+    Sealed (excludeState σ o ho) o k x ↔ Sealed σ o k x := by
   have hk := chooseState_kept σ o ho k
   constructor
   · rintro ⟨h, hno⟩
@@ -271,7 +271,7 @@ theorem choose_sealed (σ : State sp) (o : O) (ho) (k : I) (x : O) :
 
 /-- Removing the rejected rows leaves `Retired_o` unchanged. -/
 theorem choose_retired (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    Retired (chooseState σ o ho) o k x ↔ Retired σ o k x := by
+    Retired (excludeState σ o ho) o k x ↔ Retired σ o k x := by
   have hk := chooseState_kept σ o ho k
   constructor
   · rintro ⟨h, hox, u, hu, hou, hxu⟩
@@ -283,38 +283,38 @@ theorem choose_retired (σ : State sp) (o : O) (ho) (k : I) (x : O) :
 
 /-- After choosing, nothing is rejected. -/
 theorem choose_rejected_empty (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    ¬ Rejected (chooseState σ o ho) o k x := by
+    ¬ Excluded (excludeState σ o ho) o k x := by
   rintro ⟨⟨h, hnj⟩, hox, hns, hnr⟩
   exact hnj ⟨h, hox, fun hs => hns ((choose_sealed σ o ho k x).2 hs),
     fun hr => hnr ((choose_retired σ o ho k x).2 hr)⟩
 
-/-- The two commitments commute: both orders give `R \ (Sealed_o ∪ Rejected_o)`. -/
+/-- The two commitments commute: both orders give `R \ (Sealed_o ∪ Excluded_o)`. -/
 theorem seal_choose_comm (σ : State sp) (o : O) (ho : σ.R σ.cur o)
     (h1 : (sealState σ o ho).R (sealState σ o ho).cur o)
-    (h2 : (chooseState σ o ho).R (chooseState σ o ho).cur o) :
-    (chooseState (sealState σ o ho) o h1).R = (sealState (chooseState σ o ho) o h2).R := by
+    (h2 : (excludeState σ o ho).R (excludeState σ o ho).cur o) :
+    (excludeState (sealState σ o ho) o h1).R = (sealState (excludeState σ o ho) o h2).R := by
   funext k x
   apply propext
   -- unfold only the outer layer; use the invariance lemmas for the inner one
-  show ((sealState σ o ho).R k x ∧ ¬ Rejected (sealState σ o ho) o k x) ↔
-       ((chooseState σ o ho).R k x ∧ ¬ Sealed (chooseState σ o ho) o k x)
+  show ((sealState σ o ho).R k x ∧ ¬ Excluded (sealState σ o ho) o k x) ↔
+       ((excludeState σ o ho).R k x ∧ ¬ Sealed (excludeState σ o ho) o k x)
   rw [seal_rejected, choose_sealed]
-  simp only [sealState, chooseState]
+  simp only [sealState, excludeState]
   constructor
   · rintro ⟨⟨a, b⟩, c⟩; exact ⟨⟨a, c⟩, b⟩
   · rintro ⟨⟨a, b⟩, c⟩; exact ⟨⟨a, c⟩, b⟩
 
-/-- The choice commitment only narrows fibers: every input carrying a rejected
+/-- The exclusion commitment only narrows fibers: every input carrying an excluded
 row keeps a row refining `o`. -/
-theorem choice_narrows (σ : State sp) (o : O) {k x} (hj : Rejected σ o k x) :
+theorem choice_narrows (σ : State sp) (o : O) {k x} (hj : Excluded σ o k x) :
     ∃ u, σ.R k u ∧ o ≼ u := by
   apply Classical.byContradiction
   intro hno
   exact hj.2.2.1 ⟨hj.1, hno⟩
 
-/-- In a functional specification, `Retired_o` and `Rejected_o` are empty. -/
+/-- In a functional specification, `Retired_o` and `Excluded_o` are empty. -/
 theorem functional_retired_rejected_empty (hF : sp.Functional) (σ : State sp) (o : O)
-    (k : I) (x : O) : ¬ Retired σ o k x ∧ ¬ Rejected σ o k x := by
+    (k : I) (x : O) : ¬ Retired σ o k x ∧ ¬ Excluded σ o k x := by
   refine ⟨?_, ?_⟩
   · rintro ⟨h, hox, u, hu, hou, _⟩
     have : x = u := hF k x u (σ.sub _ _ h) (σ.sub _ _ hu)

@@ -148,10 +148,10 @@ theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bxd ≼ k) 
 /-- Fig. `fig:election-frames` caption and §2.1: "a seal that `output(⊥)`
 alone does not require … Emitting `⊥` by itself would need no commitment,
 since every output still possible refines it."  At (b), `⊥` is a legal output,
-`Sealed_⊥` and `Rejected_⊥` are empty, and `output(⊥)` removes no row. -/
+`Sealed_⊥` and `Excluded_⊥` are empty, and `output(⊥)` removes no row. -/
 theorem «fig:election-frames/bot-alone» :
     Exposable (canon elec bxy) .bot ∧ (¬ ∃ k x, Sealed (canon elec bxy) .bot k x) ∧
-      (¬ ∃ k x, Rejected (canon elec bxy) .bot k x) ∧
+      (¬ ∃ k x, Excluded (canon elec bxy) .bot k x) ∧
       outputTable (canon elec bxy) .bot = (canon elec bxy).R :=
   Figures.Elec.bot_alone_at_b
 
@@ -402,7 +402,7 @@ is a *legal output* when `output(o)` applies no commitment."
 
 Lean: `Exposable σ o` says that every row ruled out by `o` is refined by a
 kept row at the same input (it is retired, not sealed or chosen away); by
-`«def:exposable/no-commitment»` this is "`Sealed_o` and `Rejected_o` are
+`«def:exposable/no-commitment»` this is "`Sealed_o` and `Excluded_o` are
 empty", i.e. no commitment, in the sense of Def. `def:lifted-output-event`. -/
 abbrev «def:exposable» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Prop :=
@@ -412,7 +412,7 @@ abbrev «def:exposable» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 choice. -/
 theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
-    Exposable σ o ↔ (∀ k x, ¬ Sealed σ o k x) ∧ (∀ k x, ¬ Rejected σ o k x) :=
+    Exposable σ o ↔ (∀ k x, ¬ Sealed σ o k x) ∧ (∀ k x, ¬ Excluded σ o k x) :=
   exposable_iff_no_commitment σ o
 
 /-- "In a functional specification this means `R[out ⪰ o] = R`: the event

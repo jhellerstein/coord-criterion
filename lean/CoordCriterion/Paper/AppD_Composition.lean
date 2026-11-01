@@ -508,7 +508,7 @@ theorem «prop:invisible-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp 
 /-- The covering argument: "The proof covers the composite's commitments by
 those of `𝒮₁`. … Let `Out_γ(m)` be legal at `σ`, let `γ` leave `σ_c`, and let
 `ρ` be a composite state with `f(R_σ) ⊆ R_ρ`.  No row `(k,f(m'))` with
-`(k,m') ∈ R_{σ_c}` is in `Sealed_{f(m)}` or `Rejected_{f(m)}` at `ρ`. … So every
+`(k,m') ∈ R_{σ_c}` is in `Sealed_{f(m)}` or `Excluded_{f(m)}` at `ρ`. … So every
 row that the composite's canonical event for `f(m)` removes by commitment has
 had every preimage in `R_σ` removed by `γ`."  Lean: `Guard.coverage` (stated
 for any `σ_c` at which `m` is a legal output and any `ρ` containing `f(R_{σ_c})`)
@@ -517,12 +517,12 @@ theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : S
     {f : M → O} (hf : Monotone f) :
     (∀ {σc : State sp} {m : M}, Exposable σc m → ∀ {ρ : State (Guard.comp sp f)},
       (∀ k o, Guard.imgT f σc.R k o → ρ.R k o) →
-      ∀ k x, Guard.imgT f σc.R k x → ¬ Sealed ρ (f m) k x ∧ ¬ Rejected ρ (f m) k x) ∧
+      ∀ k x, Guard.imgT f σc.R k x → ¬ Sealed ρ (f m) k x ∧ ¬ Excluded ρ (f m) k x) ∧
     ∀ {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)} {m : M},
       SysStep B σ (.output γ m) τ → ∀ {ρ : State (Guard.comp sp f)},
       (∀ k o, Guard.imgT f σ.R k o → ρ.R k o) →
       ∃ σc, ApplySeq γ σ σc ∧
-        ∀ k x, (Sealed ρ (f m) k x ∨ Rejected ρ (f m) k x) →
+        ∀ k x, (Sealed ρ (f m) k x ∨ Excluded ρ (f m) k x) →
           ∀ m', σ.R k m' → f m' = x → ¬ σc.R k m' :=
   ⟨fun he _ hs => Guard.coverage hf he hs, fun h _ hs => Guard.coverage_step hf h hs⟩
 
@@ -550,7 +550,7 @@ image would remove `lo` and keep `hi`, violating Equation
 In the composite, `hi` is a legal output at the canonical state, since it retires
 `lo`."  Lean: `𝒮₁ = Comp.anyS`, `f = Guard.fLvl`. -/
 theorem «app:composition/no-pushforward» :
-    (∃ τ, (choiceC Comp.Two.y).app (canon Comp.anyS Comp.Pt.pt) = some τ ∧
+    (∃ τ, (excludeC Comp.Two.y).app (canon Comp.anyS Comp.Pt.pt) = some τ ∧
       ∀ c : Commitment (Guard.comp Comp.anyS Guard.fLvl),
         c.app (Guard.img Guard.fLvl (canon Comp.anyS Comp.Pt.pt)) ≠ some (Guard.img Guard.fLvl τ)) ∧
     Exposable (canon (Guard.comp Comp.anyS Guard.fLvl) Comp.Pt.pt) Guard.Lvl.hi :=
@@ -568,7 +568,7 @@ theorem «app:composition/monotone-needed» {M O : Type} [PO M] [PO O] (f : M �
           [.output (f m), .input m', .output (f m')] ρ) ↔ f m ≼ f m') :=
   ⟨Guard.identity_cf hmm, Guard.monotone_necessary f hmm⟩
 
-/-- "A downstream that must itself choose cannot delegate the choice either.
+/-- "A downstream that must itself exclude cannot delegate the exclusion either.
 If `𝒮₁` is the identity on one input, it admits no commitment at all.  If
 `𝒮₂` relates that input to two incomparable outputs, every output event of
 the composite at its canonical state applies a commitment, which `𝒮₁` cannot

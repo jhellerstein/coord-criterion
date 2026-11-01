@@ -44,7 +44,7 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
                                   (`CC.Commitment`/`SysStep` vs `CC.CAP`) coincide.
 * `choice_antichain`, `not_choice_of_two`
                                 — "neither [2PL nor MVTO commitment] is the
-                                  choice `c_o`" (generic form).
+                                  exclusion `x_o`" (generic form).
 -/
 
 namespace CC
@@ -265,7 +265,7 @@ theorem functional_excludes_vacuous (hf : sp.Functional) (σ τ : State sp) :
   exact hnu (this ▸ hw)
 
 theorem functional_not_rejected (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ Rejected σ o k x := by
+    ¬ Excluded σ o k x := by
   intro hr
   have : ∃ u, σ.R k u ∧ o ≼ u := Classical.byContradiction fun hn => hr.2.2.1 ⟨hr.1, hn⟩
   obtain ⟨u, hu, hou⟩ := this
@@ -275,7 +275,7 @@ theorem functional_not_rejected (hf : sp.Functional) (σ : State sp) (o : O) (k 
 /-- With one row per input, the canonical event applies at most the seal. -/
 theorem functional_kappa (hf : sp.Functional) (σ : State sp) (o : O) :
     kappa σ o = (if ∃ k x, Sealed σ o k x then [sealC o] else []) := by
-  have h2 : ¬ ∃ k x, Rejected σ o k x := fun ⟨k, x, h⟩ => functional_not_rejected hf σ o k x h
+  have h2 : ¬ ∃ k x, Excluded σ o k x := fun ⟨k, x, h⟩ => functional_not_rejected hf σ o k x h
   simp only [kappa, h2, ite_false, List.append_nil]
 
 /-- With one row per input, the seal `s_o` of Def. `def:lifted-output-event` is
@@ -813,16 +813,16 @@ theorem sysStep_commit_iff_CAP {B : Basis sp} {σ τ : State sp} {γ : List (Com
 
 end encodings
 
-/-! ### "Neither is the choice `c_o`" (generic form) -/
+/-! ### "Neither is the exclusion `x_o`" (generic form) -/
 
 section antichain
 variable {sp : Spec I O}
 
-/-- If the fiber at the current input is an antichain, `c_o` keeps only `o`
+/-- If the fiber at the current input is an antichain, `x_o` keeps only `o`
 there. -/
 theorem choice_antichain {σ : State sp} {o : O} (ho : σ.R σ.cur o)
     (hanti : ∀ x y, σ.R σ.cur x → σ.R σ.cur y → x ≼ y → x = y) :
-    ∀ x, (cmChooseState σ o).R σ.cur x ↔ x = o := by
+    ∀ x, (cmExcludeState σ o).R σ.cur x ↔ x = o := by
   intro x
   constructor
   · rintro ⟨hx, hnr⟩
@@ -839,11 +839,11 @@ theorem choice_antichain {σ : State sp} {o : O} (ho : σ.R σ.cur o)
     exact ⟨ho, not_rejected_of_ge (PO.refl x)⟩
 
 /-- A commitment that keeps two distinct rows at the current input of a state
-whose current fiber is an antichain is not `c_o` for any `o`. -/
+whose current fiber is an antichain is not `x_o` for any `o`. -/
 theorem not_choice_of_two {σ τ : State sp} {x y : O}
     (hanti : ∀ x y, σ.R σ.cur x → σ.R σ.cur y → x ≼ y → x = y)
     (hx : τ.R σ.cur x) (hy : τ.R σ.cur y) (hxy : x ≠ y) (o : O) :
-    (choiceC o).app σ ≠ some τ := by
+    (excludeC o).app σ ≠ some τ := by
   intro h
   obtain ⟨ho, _, rfl⟩ := chooseApp_eq.1 h
   have e1 := (choice_antichain ho hanti x).1 hx

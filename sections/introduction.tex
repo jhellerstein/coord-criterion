@@ -71,7 +71,7 @@ specification.
 
 Functions cannot capture settings like leader election or transaction
 ordering, where many outputs are within spec for a given input.  There,
-commitments gain a second job: \emph{choosing} among permitted outputs, as
+commitments gain a second job: \emph{excluding} some permitted outputs, as
 when a system picks one leader or one serial order.  We define \emph{Lifted
 Monotonicity}: as input \ingrows, some output permitted at the larger input
 \outrel whatever outputs were emitted at the smaller one.  \emph{Complete
@@ -83,7 +83,7 @@ Section~\ref{sec:distributed-execution} models distributed execution with partic
 exchanging messages and defines consistency over their histories; this is shown
 to be equivalent to consistency as defined above, so Functional and Complete
 CALM apply to distributed executions unchanged.  A commitment \emph{requires coordination} when another run could contradict it,
-by accepting an input it sealed or emitting an output it chose against, and
+by accepting an input it sealed or emitting an output it excluded, and
 \emph{distributed coordination} when that run is at another participant.
 
 Complete CALM leads to \emph{Complete CAP} (\S\ref{sec:complete-cap}).  Given a
@@ -95,8 +95,8 @@ registers follows directly.
 This paper makes five contributions:
 \begin{enumerate}
   \item \emph{Ordered relational specifications.} Tables over ordered input and
-        output domains describe permitted behavior; commitments seal input or choose
-        among outputs.
+        output domains describe permitted behavior; commitments seal input or exclude
+        outputs.
   \item \emph{Consistency as confluence.} One definition covers general
         consistency models and application-specific requirements, and it is
         equivalent to distributed consistency.

@@ -370,7 +370,7 @@ theorem example_commit_event_ABC {k : Inp T K} (h : Tri k A B C) :
       rw [lt_ABC hd] at this
       simp [hd.ab, hd.ac, hd.bc, Ne.symm hd.ab, Ne.symm hd.ac, Ne.symm hd.bc] at this
     have out : Sealed σ1 (o2 A B C) k (full (mk [A, B, C] Z)) ∨
-        Rejected σ1 (o2 A B C) k (full (mk [A, B, C] Z)) := by
+        Excluded σ1 (o2 A B C) k (full (mk [A, B, C] Z)) := by
       by_cases hS : Sealed σ1 (o2 A B C) k (full (mk [A, B, C] Z))
       · exact Or.inl hS
       · refine Or.inr ⟨rABC1, nle, hS, ?_⟩

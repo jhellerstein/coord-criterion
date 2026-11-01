@@ -54,7 +54,7 @@
 \newcommand{\catv}{\texttt{cat}}
 \newcommand{\Sealed}{\mathit{Sealed}}
 \newcommand{\Retired}{\mathit{Retired}}
-\newcommand{\Rejected}{\mathit{Rejected}}
+\newcommand{\Excluded}{\mathit{Excluded}}
 \newcommand{\retired}[1]{\textcolor{gray}{#1}}
 \newcommand{\sh}[1]{\cellcolor{gray!22}#1}
 % Full-width strike line through the row just ended; place after \\.
@@ -208,7 +208,7 @@ specification.
 
 Functions cannot capture settings like leader election or transaction
 ordering, where many outputs are within spec for a given input.  There,
-commitments gain a second job: \emph{choosing} among permitted outputs, as
+commitments gain a second job: \emph{excluding} some permitted outputs, as
 when a system picks one leader or one serial order.  We define \emph{Lifted
 Monotonicity}: as input \ingrows, some output permitted at the larger input
 \outrel whatever outputs were emitted at the smaller one.  \emph{Complete
@@ -220,7 +220,7 @@ Section~\ref{sec:distributed-execution} models distributed execution with partic
 exchanging messages and defines consistency over their histories; this is shown
 to be equivalent to consistency as defined above, so Functional and Complete
 CALM apply to distributed executions unchanged.  A commitment \emph{requires coordination} when another run could contradict it,
-by accepting an input it sealed or emitting an output it chose against, and
+by accepting an input it sealed or emitting an output it excluded, and
 \emph{distributed coordination} when that run is at another participant.
 
 Complete CALM leads to \emph{Complete CAP} (\S\ref{sec:complete-cap}).  Given a
@@ -232,8 +232,8 @@ registers follows directly.
 This paper makes five contributions:
 \begin{enumerate}
   \item \emph{Ordered relational specifications.} Tables over ordered input and
-        output domains describe permitted behavior; commitments seal input or choose
-        among outputs.
+        output domains describe permitted behavior; commitments seal input or exclude
+        outputs.
   \item \emph{Consistency as confluence.} One definition covers general
         consistency models and application-specific requirements, and it is
         equivalent to distributed consistency.
@@ -706,7 +706,7 @@ and~\ref{sec:crdt-instance} treat both.
 We now extend CALM theory to allow a fiber to contain several outputs.  The monotonicity property we want to test as input
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
-In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{choosing}
+In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{excluding}
 among permitted outputs.  Section~\ref{sec:ambiguity-story} introduces the issue by
 example.  Section~\ref{sec:lifted-monotonicity} defines relational
 specifications and Lifted
@@ -715,11 +715,11 @@ output events and classifies what they remove, and
 Section~\ref{sec:complete-calm-theorem} shows that the run-level results of
 Section~\ref{sec:executions} carry over and proves Complete CALM.
 
-\subsection{Output choice by example}
+\subsection{Output exclusion by example}
 \label{sec:ambiguity-story}
 
 Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
-several outputs in one fiber.  Transaction ordering requires a choice
+several outputs in one fiber.  Transaction ordering requires an exclusion
 between incompatible serialization orders.  For the discussion here, outputs are simply serial
 schedules, to which executions correspond via equivalence; Section~\ref{sec:hat-instance} studies more thorough
 transactional specifications.  Traceroute observations, by
@@ -766,11 +766,11 @@ contrast, can all be \outrelpast by a larger route set.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{Output choice and directedness.} The examples differ in what happens
+\paragraph{Output exclusion and directedness.} The examples differ in what happens
 to alternative outputs when one is emitted.  In panel~(f), neither
-serialization order \outrel the other, so emitting one requires a
-\emph{choice commitment} that removes the other while the input stays legal:
-emitting $[A,B]$ chooses it over $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
+serialization order \outrel the other, so emitting one requires an
+\emph{exclusion commitment} that removes the other while the input stays legal:
+emitting $[A,B]$ excludes $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output retirement}; every removed output is
 \outrelpast by a remaining one, so emitting the route observation loses no information
@@ -779,9 +779,9 @@ commitment: it is a \emph{legal output}.
 
 An output event can thus remove rows in three ways: by sealing inputs, as in
 Section~\ref{sec:functional-calm}; by retiring outputs, as in panel~(g); or by
-choosing among outputs, as in panel~(f).  The atomic event
+excluding outputs, as in panel~(f).  The atomic event
 $\mathsf{output}(o)$ does whichever of these $o$ requires, then emits $o$;
-sealing and choosing are commitments, retiring is not.
+sealing and excluding are commitments, retiring is not.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
 The difference between them is the order-theoretic concept of a \emph{directed} fiber:
@@ -947,20 +947,20 @@ emits $o$.  With several rows at one input, each removed row falls into one of
 three classes.  Consider a removed row $(i', o')$. If no row at $i'$ \outrel $o$, the row is in $\Sealed_o$,
 and the event \emph{seals} $i'$.  If a kept row at $i'$ \outrel $o'$,
 the row is in $\Retired_o$, and removing it is an \emph{output retirement}.
-Otherwise the row is in $\Rejected_o$: $i'$ stays legal, but the event
-\emph{chooses} against $o'$.  The seal $s_o$ removes $\Sealed_o$, and the choice
-$c_o$ removes $\Rejected_o$.  Both are commitments; output retirement is not.
+Otherwise the row is in $\Excluded_o$: $i'$ stays legal, but the event
+\emph{excludes} $o'$.  The seal $s_o$ removes $\Sealed_o$, and the exclusion
+$x_o$ removes $\Excluded_o$.  Both are commitments; output retirement is not.
 These are the three cases of Section~\ref{sec:ambiguity-story}: emitting
 $\bot$ under the equality order of Figure~\ref{fig:nonmonotone-frame} puts
 $xyx$ and $xyy$ in $\Sealed_o$; emitting $[A,B]$ in
-Figure~\ref{fig:ambiguity-frames}(f) puts $[B,A]$ in $\Rejected_o$; and the
+Figure~\ref{fig:ambiguity-frames}(f) puts $[B,A]$ in $\Excluded_o$; and the
 route sets removed in panel~(g) are in $\Retired_o$.
-In the functional case, $\Retired_o$ and $\Rejected_o$ are empty, so this is
+In the functional case, $\Retired_o$ and $\Excluded_o$ are empty, so this is
 the output event of Definition~\ref{def:output-event}.  Formal definitions
 are in \extended.
 
 As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
-commitment, that is, when $\Sealed_o$ and $\Rejected_o$ are empty.
+commitment, that is, when $\Sealed_o$ and $\Excluded_o$ are empty.
 Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
 remaining output at $j$ have a common \outnoun at $j$.
 
@@ -1139,7 +1139,7 @@ removed row is undominated by the rows remaining at its input: no remaining
 row there \outrel it.  It leaves the current
 input unchanged.  At each input where it removes rows, a commitment either
 removes every row there, \emph{sealing} that input, or removes some outputs
-and keeps others, \emph{choosing} among them.  An output event
+and keeps others, \emph{excluding} some of them.  An output event
 $\Out{\gamma}{o}$ applies a sequence $\gamma$ of commitments, retires rows,
 and emits $o$.
 A \emph{commitment event} $\mathsf{commit}(\gamma)$ applies such a sequence and
@@ -1149,14 +1149,14 @@ a \emph{commitment basis} $\mathcal B$ (a set of commitments) and a
 nondeterministic \emph{strategy} per participant that picks its next output,
 commitment, send, or receive event from its local history, applying only
 commitments from $\mathcal B$.  The full paper gives these definitions formally and shows
-that every seal and choice of Section~\ref{sec:complete-calm} is a commitment
+that every seal and exclusion of Section~\ref{sec:complete-calm} is a commitment
 in this sense.
 
 Two-phase locking (2PL) and multiversion timestamp
 ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
 $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped
-(Figure~\ref{fig:cc-commitments}).  Both are choices, but they leave
+(Figure~\ref{fig:cc-commitments}).  Both are exclusions, but they leave
 different alternatives open.  We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
 runs}.  Locks, timestamps, quorums, and consensus differ in how and when
@@ -1172,7 +1172,7 @@ and keeps at least the original's rows after each event (\extended).
 To illustrate, when 2PL orders $A$ before $B$ in a commitment event, the
 canonical run skips it; when 2PL later emits a serial order, so does the
 canonical run, and both end with the same table.  Whether a specification
-needs coordination thus depends on the seals and choices its outputs
+needs coordination thus depends on the seals and exclusions its outputs
 require, whatever mechanism makes them.
 
 \subsection{Coordination}
@@ -1181,8 +1181,8 @@ require, whatever mechanism makes them.
 A commitment is a binding decision that removes behavior the specification
 still permits.  Mutexes, locks, timestamps, and agreement protocols have a
 common semantic effect: each implements commitments, by sealing and
-choosing.  A commitment requires coordination only when another run could contradict it,
-by accepting an input it sealed or emitting an output it chose against; it
+excluding.  A commitment requires coordination only when another run could contradict it,
+by accepting an input it sealed or emitting an output it excluded; it
 requires distributed coordination when that run is at another participant.
 Running such a mechanism need not issue a commitment: closing the polls after every voter
 has voted still runs the mechanism, but no ballot is left to seal, so it
@@ -1192,7 +1192,7 @@ removes nothing the specification still permits and applies no commitment.
 \label{def:contradicts}
 Let an event of a run apply a commitment.  A run \emph{contradicts} the
 commitment if it accepts an input the commitment seals, or emits an output the
-commitment chooses against at the same input.
+commitment excludes at the same input.
 \end{definition}
 
 \begin{definition}[Coordination-requiring commitment, distributed coordination]
@@ -1224,12 +1224,12 @@ specification, every commitment requires coordination: some canonical run
 accepts each input that a commitment can seal and emits each permitted output,
 and that run may be at another participant.  For a specification, then,
 coordination-free means commitment-free.  For a system, the answer depends on
-which runs it can perform, and here seals and choices differ.  The environment
+which runs it can perform, and here seals and exclusions differ.  The environment
 may supply any input to any participant, so a seal requires distributed
 coordination whenever another participant may receive the sealed input.
-Outputs come only from strategies, and receives from other sends, so a choice
+Outputs come only from strategies, and receives from other sends, so an exclusion
 requires coordination only when some run of the system emits an output the
-choice rules out, and distributed coordination when such a run is at another
+exclusion rules out, and distributed coordination when such a run is at another
 participant.
 
 \begin{proposition}[Conflicting events cannot be reconciled]
@@ -1303,7 +1303,7 @@ specification at every common \indesc of their inputs.  When $E$ is every permit
 Monotonicity itself.  A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
-an input or make a choice that another could contradict.
+an input or make an exclusion that another could contradict.
 
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
@@ -1378,7 +1378,7 @@ commitment.
 
 The system in the proof needs no coordination.  Under Lifted Monotonicity for
 $E$, the canonical event
-for an explicit output seals nothing and chooses only against implicit
+for an explicit output seals nothing and excludes only implicit
 outputs, which the system never emits, so it is
 coordination-free (Definition~\ref{def:coordination-free}).  For $E=S$ it needs no
 commitment.  When Lifted Monotonicity for $E$ fails, some
@@ -1753,7 +1753,7 @@ its boundary.  Monotone programs need no coordination; for a non-monotone
 program, CALM said only that coordination was required somewhere, not what it
 had to accomplish or where it belonged.  Complete CALM says more.  A
 specification that is not monotone needs specific commitments: the seals and
-choices its outputs require. Every coordination mechanism, from locks to
+exclusions its outputs require. Every coordination mechanism, from locks to
 consensus, is a way of making these commitments.  The same analysis says which outputs
 need commitments, and whether another participant could contradict them, so
 that agreement is required and not just a local decision.  Proper coordination
@@ -1791,7 +1791,7 @@ Complete CALM extends the answer to specifications that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with Directed Outputs.  When it fails, some reachable output
 requires a commitment, and every commitment does one of two jobs: it seals
-input or it chooses among outputs.  Because commitments are explicit, the model
+input or it excludes outputs.  Because commitments are explicit, the model
 can also check where a composition coordinates
 (Section~\ref{sec:composition}).  A totally ordered log and a
 key-value store are both non-monotone at their ordinary specifications, yet

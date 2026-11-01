@@ -7,7 +7,7 @@ Namespace `CC`.  Further claims of these sections are in
 `Distributed/Systems.lean`.
 
 * `Commitment`                         — Def. commitment (eq. commitment-excludes)
-* `sealC`, `choiceC`                     — the canonical seal `s_o` and choice `c_o`
+* `sealC`, `excludeC`                     — the canonical seal `s_o` and exclusion `x_o`
                                          (eq. canonical-seal-commitment-relational)
 * `seal_choice_commute`                — "defined on each other's results and commute"
 * `SEvent`, `SysStep`, `SysExec`       — Def. output event of a system (`Out_γ(o)`), commit
@@ -76,8 +76,8 @@ theorem retired_keep {σ τ : State sp} {o : O}
 theorem rejected_keep {σ τ : State sp} {o : O}
     (hsub : ∀ k u, τ.R k u → σ.R k u)
     (hkeep : ∀ k u, σ.R k u → o ≼ u → τ.R k u) {k : I} {x : O} (hτ : τ.R k x) :
-    Rejected τ o k x ↔ Rejected σ o k x := by
-  unfold Rejected
+    Excluded τ o k x ↔ Excluded σ o k x := by
+  unfold Excluded
   rw [sealed_keep hsub hkeep hτ, retired_keep hsub hkeep hτ]
   exact ⟨fun h => ⟨hsub _ _ hτ, h.2⟩, fun h => ⟨hτ, h.2⟩⟩
 
@@ -86,16 +86,16 @@ theorem not_sealed_of_ge {σ : State sp} {o : O} {k : I} {u : O}
   fun hs => hs.2 ⟨u, h, hou⟩
 
 theorem not_rejected_of_ge {σ : State sp} {o : O} {k : I} {u : O}
-    (hou : o ≼ u) : ¬ Rejected σ o k u :=
+    (hou : o ≼ u) : ¬ Excluded σ o k u :=
   fun hr => hr.2.1 hou
 
-/-- A row ruled out by `o` that is neither sealed nor rejected is retired. -/
+/-- A row ruled out by `o` that is neither sealed nor excluded is retired. -/
 theorem retired_of {σ : State sp} {o : O} {k : I} {x : O}
-    (h : σ.R k x) (hx : ¬ o ≼ x) (hs : ¬ Sealed σ o k x) (hr : ¬ Rejected σ o k x) :
+    (h : σ.R k x) (hx : ¬ o ≼ x) (hs : ¬ Sealed σ o k x) (hr : ¬ Excluded σ o k x) :
     Retired σ o k x :=
   Classical.byContradiction fun ht => hr ⟨h, hx, hs, ht⟩
 
-/-! ### The canonical seal `s_o` and choice `c_o` -/
+/-! ### The canonical seal `s_o` and exclusion `x_o` -/
 
 /-- `(i, R ∖ Sealed_o)`. -/
 def cmSealState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
@@ -105,18 +105,18 @@ def cmSealState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
   hasCur := ⟨o, ho, not_sealed_of_ge ho (PO.refl o)⟩
   above := fun k x h => σ.above k x h.1
 
-/-- `(i, R ∖ Rejected_o)`. -/
-def cmChooseState (σ : State sp) (o : O) : State sp where
+/-- `(i, R ∖ Excluded_o)`. -/
+def cmExcludeState (σ : State sp) (o : O) : State sp where
   cur := σ.cur
-  R := fun k x => σ.R k x ∧ ¬ Rejected σ o k x
+  R := fun k x => σ.R k x ∧ ¬ Excluded σ o k x
   sub := fun k x h => σ.sub k x h.1
   hasCur := by
     obtain ⟨x, hx⟩ := σ.hasCur
     -- the current input keeps a row: either `x` itself, or the row it is
     -- retired to, or `x` is sealed — impossible since the current fiber
     -- contains a row `⪰ o` only when `o` is there; we argue directly.
-    by_cases hr : Rejected σ o σ.cur x
-    · -- `x` rejected ⇒ not sealed ⇒ some row `⪰ o` at `cur`, which is not rejected
+    by_cases hr : Excluded σ o σ.cur x
+    · -- `x` excluded ⇒ not sealed ⇒ some row `⪰ o` at `cur`, which is not excluded
       have hns := hr.2.2.1
       have : ∃ u, σ.R σ.cur u ∧ o ≼ u :=
         Classical.byContradiction fun hn => hns ⟨hx, hn⟩
@@ -130,14 +130,14 @@ theorem sealState_keep (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
   fun _ _ h hou => ⟨h, not_sealed_of_ge h hou⟩
 
 theorem chooseState_keep (σ : State sp) (o : O) :
-    ∀ k u, σ.R k u → o ≼ u → (cmChooseState σ o).R k u :=
+    ∀ k u, σ.R k u → o ≼ u → (cmExcludeState σ o).R k u :=
   fun _ _ h hou => ⟨h, not_rejected_of_ge hou⟩
 
 noncomputable def sealApp (o : O) (σ : State sp) : Option (State sp) :=
   if h : σ.R σ.cur o ∧ ∃ k x, Sealed σ o k x then some (cmSealState σ o h.1) else none
 
-noncomputable def chooseApp (o : O) (σ : State sp) : Option (State sp) :=
-  if σ.R σ.cur o ∧ ∃ k x, Rejected σ o k x then some (cmChooseState σ o) else none
+noncomputable def excludeApp (o : O) (σ : State sp) : Option (State sp) :=
+  if σ.R σ.cur o ∧ ∃ k x, Excluded σ o k x then some (cmExcludeState σ o) else none
 
 theorem sealApp_eq {o : O} {σ τ : State sp} :
     sealApp o σ = some τ ↔
@@ -153,9 +153,9 @@ theorem sealApp_eq {o : O} {σ τ : State sp} :
     exact h ⟨h1, h2⟩
 
 theorem chooseApp_eq {o : O} {σ τ : State sp} :
-    chooseApp o σ = some τ ↔
-      σ.R σ.cur o ∧ (∃ k x, Rejected σ o k x) ∧ cmChooseState σ o = τ := by
-  unfold chooseApp
+    excludeApp o σ = some τ ↔
+      σ.R σ.cur o ∧ (∃ k x, Excluded σ o k x) ∧ cmExcludeState σ o = τ := by
+  unfold excludeApp
   split
   · rename_i h
     simp only [Option.some.injEq]
@@ -183,10 +183,10 @@ noncomputable def sealC (o : O) : Commitment sp where
     have hs : Sealed σ o k u := Classical.byContradiction fun hn => hnu ⟨hu, hn⟩
     exact hw.2 ⟨hw.1, hs.2⟩
 
-/-- **The canonical choice `c_o` is a commitment.**  Defined at the states with
-`o ∈ R(i)` and `Rejected_o ≠ ∅`. -/
-noncomputable def choiceC (o : O) : Commitment sp where
-  app := chooseApp o
+/-- **The canonical exclusion `x_o` is a commitment.**  Defined at the states with
+`o ∈ R(i)` and `Excluded_o ≠ ∅`. -/
+noncomputable def excludeC (o : O) : Commitment sp where
+  app := excludeApp o
   cur_eq := by
     intro σ τ h; obtain ⟨_, _, rfl⟩ := chooseApp_eq.1 h; rfl
   sub := by
@@ -198,7 +198,7 @@ noncomputable def choiceC (o : O) : Commitment sp where
   excludes := by
     intro σ τ h k u w hu hnu hw huw
     obtain ⟨_, _, rfl⟩ := chooseApp_eq.1 h
-    have hr : Rejected σ o k u := Classical.byContradiction fun hn => hnu ⟨hu, hn⟩
+    have hr : Excluded σ o k u := Classical.byContradiction fun hn => hnu ⟨hu, hn⟩
     obtain ⟨hw, hnw⟩ := hw
     by_cases how : o ≼ w
     · exact hr.2.2.2 ⟨hu, hr.2.1, w, hw, how, huw⟩
@@ -207,28 +207,28 @@ noncomputable def choiceC (o : O) : Commitment sp where
       · obtain ⟨_, _, v, hv, hov, hwv⟩ := retired_of hw how hsw hnw
         exact hr.2.2.2 ⟨hu, hr.2.1, v, hv, hov, PO.trans huw hwv⟩
 
-/-- `R ∖ (Sealed_o ∪ Rejected_o)`. -/
+/-- `R ∖ (Sealed_o ∪ Excluded_o)`. -/
 def Pruned (σ : State sp) (o : O) : Table I O :=
-  fun k x => σ.R k x ∧ ¬ Sealed σ o k x ∧ ¬ Rejected σ o k x
+  fun k x => σ.R k x ∧ ¬ Sealed σ o k x ∧ ¬ Excluded σ o k x
 
-/-- **`s_o` and `c_o` are defined on each other's results and commute.**
-If both classes are nonempty, `s_o` then `c_o` and `c_o` then `s_o` are both
-defined and reach the same state, with table `R ∖ (Sealed_o ∪ Rejected_o)`. -/
+/-- **`s_o` and `x_o` are defined on each other's results and commute.**
+If both classes are nonempty, `s_o` then `x_o` and `x_o` then `s_o` are both
+defined and reach the same state, with table `R ∖ (Sealed_o ∪ Excluded_o)`. -/
 theorem seal_choice_commute {σ : State sp} {o : O}
-    (hS : ∃ k x, Sealed σ o k x) (hJ : ∃ k x, Rejected σ o k x) (ho : σ.R σ.cur o) :
+    (hS : ∃ k x, Sealed σ o k x) (hJ : ∃ k x, Excluded σ o k x) (ho : σ.R σ.cur o) :
     ∃ τ₁ τ₂ ρ₁ ρ₂ : State sp,
-      (sealC o).app σ = some τ₁ ∧ (choiceC o).app τ₁ = some ρ₁ ∧
-      (choiceC o).app σ = some τ₂ ∧ (sealC o).app τ₂ = some ρ₂ ∧
+      (sealC o).app σ = some τ₁ ∧ (excludeC o).app τ₁ = some ρ₁ ∧
+      (excludeC o).app σ = some τ₂ ∧ (sealC o).app τ₂ = some ρ₂ ∧
       ρ₁ = ρ₂ ∧ ρ₁.cur = σ.cur ∧ ρ₁.R = Pruned σ o := by
   let τ₁ := cmSealState σ o ho
-  let τ₂ := cmChooseState σ o
+  let τ₂ := cmExcludeState σ o
   have hs1 : ∀ k u, τ₁.R k u → σ.R k u := fun _ _ h => h.1
   have hk1 := sealState_keep σ o ho
   have hs2 : ∀ k u, τ₂.R k u → σ.R k u := fun _ _ h => h.1
   have hk2 := chooseState_keep σ o
   have ho1 : τ₁.R τ₁.cur o := ⟨ho, not_sealed_of_ge ho (PO.refl o)⟩
   have ho2 : τ₂.R τ₂.cur o := ⟨ho, not_rejected_of_ge (PO.refl o)⟩
-  have hJ1 : ∃ k x, Rejected τ₁ o k x := by
+  have hJ1 : ∃ k x, Excluded τ₁ o k x := by
     obtain ⟨k, x, hr⟩ := hJ
     have h1 : τ₁.R k x := ⟨hr.1, hr.2.2.1⟩
     exact ⟨k, x, (rejected_keep hs1 hk1 h1).2 hr⟩
@@ -236,13 +236,13 @@ theorem seal_choice_commute {σ : State sp} {o : O}
     obtain ⟨k, x, hs⟩ := hS
     have h2 : τ₂.R k x := ⟨hs.1, fun hr => hr.2.2.1 hs⟩
     exact ⟨k, x, (sealed_keep hs2 hk2 h2).2 hs⟩
-  refine ⟨τ₁, τ₂, cmChooseState τ₁ o, cmSealState τ₂ o ho2,
+  refine ⟨τ₁, τ₂, cmExcludeState τ₁ o, cmSealState τ₂ o ho2,
     sealApp_eq.2 ⟨ho, hS, rfl⟩, chooseApp_eq.2 ⟨ho1, hJ1, rfl⟩,
     chooseApp_eq.2 ⟨ho, hJ, rfl⟩, sealApp_eq.2 ⟨ho2, hS2, rfl⟩, ?_, rfl, ?_⟩
-  · refine State.ext' (σ := cmChooseState τ₁ o) (τ := cmSealState τ₂ o ho2) rfl ?_
+  · refine State.ext' (σ := cmExcludeState τ₁ o) (τ := cmSealState τ₂ o ho2) rfl ?_
     funext k x
     apply propext
-    show (τ₁.R k x ∧ ¬ Rejected τ₁ o k x) ↔ (τ₂.R k x ∧ ¬ Sealed τ₂ o k x)
+    show (τ₁.R k x ∧ ¬ Excluded τ₁ o k x) ↔ (τ₂.R k x ∧ ¬ Sealed τ₂ o k x)
     constructor
     · rintro ⟨h1, hr⟩
       have hr' := fun h => hr ((rejected_keep hs1 hk1 h1).2 h)
@@ -254,7 +254,7 @@ theorem seal_choice_commute {σ : State sp} {o : O}
       exact ⟨h1, fun h => h2.2 ((rejected_keep hs1 hk1 h1).1 h)⟩
   · funext k x
     apply propext
-    show (τ₁.R k x ∧ ¬ Rejected τ₁ o k x) ↔ Pruned σ o k x
+    show (τ₁.R k x ∧ ¬ Excluded τ₁ o k x) ↔ Pruned σ o k x
     constructor
     · rintro ⟨h1, hr⟩
       exact ⟨h1.1, h1.2, fun h => hr ((rejected_keep hs1 hk1 h1).2 h)⟩
@@ -263,7 +263,7 @@ theorem seal_choice_commute {σ : State sp} {o : O}
       exact ⟨h1, fun h' => hr ((rejected_keep hs1 hk1 h1).1 h')⟩
 
 /-- After `s_o`, nothing is sealed any more (so `s_o` is not reapplicable);
-after `c_o`, nothing is rejected. -/
+after `x_o`, nothing is excluded. -/
 theorem sealState_no_sealed (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
     ∀ k x, ¬ Sealed (cmSealState σ o ho) o k x := by
   intro k x hs
@@ -272,10 +272,10 @@ theorem sealState_no_sealed (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
     (sealState_keep σ o ho) h1).1 hs)
 
 theorem chooseState_no_rejected (σ : State sp) (o : O) :
-    ∀ k x, ¬ Rejected (cmChooseState σ o) o k x := by
+    ∀ k x, ¬ Excluded (cmExcludeState σ o) o k x := by
   intro k x hr
   have h1 := hr.1
-  exact h1.2 ((rejected_keep (σ := σ) (τ := cmChooseState σ o) (fun _ _ h => h.1)
+  exact h1.2 ((rejected_keep (σ := σ) (τ := cmExcludeState σ o) (fun _ _ h => h.1)
     (chooseState_keep σ o) h1).1 hr)
 
 /-! ### Sequences of commitments and the output event of a system -/
@@ -376,12 +376,12 @@ theorem SysExec.sub {B : Basis sp} {σ τ : State sp} {es : List (SEvent sp)}
 
 /-- **Lemma containment, (1).**  A legal `Out_γ(o)` keeps the current input,
 ends inside `R[out ⪰ o]`, and its commitments remove every row of `Sealed_o`
-and `Rejected_o` (computed at the starting state).  In particular `o ∈ R(i)`. -/
+and `Excluded_o` (computed at the starting state).  In particular `o ∈ R(i)`. -/
 theorem containment {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)} {o : O}
     (h : SysStep B σ (.output γ o) τ) :
     τ.cur = σ.cur ∧ σ.R σ.cur o ∧ (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧
     ∃ σc, ApplySeq γ σ σc ∧
-      ∀ k x, (Sealed σ o k x ∨ Rejected σ o k x) → ¬ σc.R k x := by
+      ∀ k x, (Sealed σ o k x ∨ Excluded σ o k x) → ¬ σc.R k x := by
   cases h with
   | output _ hγ ho hleg hcur hR =>
     have hsub := hγ.sub
@@ -398,11 +398,11 @@ theorem containment {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)
       · exact hs.2 ⟨u, hsub _ _ hu, hou⟩
       · exact hr.2.2.2 ⟨hr.1, hnx, u, hsub _ _ hu, hou, hxu⟩
 
-/-- Consequence of (1): an output whose `Sealed_o` or `Rejected_o` is nonempty
+/-- Consequence of (1): an output whose `Sealed_o` or `Excluded_o` is nonempty
 cannot be emitted by `Out_ε(o)`. -/
 theorem containment_nonempty {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)}
     {o : O} (h : SysStep B σ (.output γ o) τ)
-    (hne : ∃ k x, Sealed σ o k x ∨ Rejected σ o k x) : γ ≠ [] := by
+    (hne : ∃ k x, Sealed σ o k x ∨ Excluded σ o k x) : γ ≠ [] := by
   rintro rfl
   obtain ⟨_, _, _, σc, hγ, hrm⟩ := containment h
   cases hγ
@@ -412,17 +412,17 @@ theorem containment_nonempty {B : Basis sp} {σ τ : State sp} {γ : List (Commi
 /-- The canonical basis `B_S` (eq. canonical-commitment-basis-relational). -/
 def canonBasis (sp : Spec I O) : Basis sp := fun c =>
   ∃ o : O, (c = sealC o ∧ ∃ σ τ : State sp, (sealC o).app σ = some τ) ∨
-       (c = choiceC o ∧ ∃ σ τ : State sp, (choiceC o).app σ = some τ)
+       (c = excludeC o ∧ ∃ σ τ : State sp, (excludeC o).app σ = some τ)
 
-/-- `κ_o` at `σ`: `s_o` when `Sealed_o ≠ ∅`, then `c_o` when `Rejected_o ≠ ∅`. -/
+/-- `κ_o` at `σ`: `s_o` when `Sealed_o ≠ ∅`, then `x_o` when `Excluded_o ≠ ∅`. -/
 noncomputable def kappa (σ : State sp) (o : O) : List (Commitment sp) :=
   (if ∃ k x, Sealed σ o k x then [sealC o] else []) ++
-  (if ∃ k x, Rejected σ o k x then [choiceC o] else [])
+  (if ∃ k x, Excluded σ o k x then [excludeC o] else [])
 
 theorem kappa_apply (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
     (∀ c ∈ kappa σ o, canonBasis sp c) ∧
     ∃ σc, ApplySeq (kappa σ o) σ σc ∧ σc.cur = σ.cur ∧ σc.R = Pruned σ o := by
-  by_cases hS : ∃ k x, Sealed σ o k x <;> by_cases hJ : ∃ k x, Rejected σ o k x
+  by_cases hS : ∃ k x, Sealed σ o k x <;> by_cases hJ : ∃ k x, Excluded σ o k x
   · obtain ⟨τ₁, _, ρ₁, _, h1, h2, h3, _, _, hc, hR⟩ := seal_choice_commute hS hJ ho
     refine ⟨?_, ρ₁, ?_, hc, hR⟩
     · simp only [kappa, hS, hJ, ite_true, List.singleton_append, List.mem_cons,
@@ -442,15 +442,15 @@ theorem kappa_apply (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
     · funext k x; apply propext
       show (σ.R k x ∧ ¬ Sealed σ o k x) ↔ Pruned σ o k x
       exact ⟨fun ⟨a, b⟩ => ⟨a, b, fun h => hJ ⟨k, x, h⟩⟩, fun ⟨a, b, _⟩ => ⟨a, b⟩⟩
-  · have h1 : (choiceC o).app σ = some (cmChooseState σ o) := chooseApp_eq.2 ⟨ho, hJ, rfl⟩
-    refine ⟨?_, cmChooseState σ o, ?_, rfl, ?_⟩
+  · have h1 : (excludeC o).app σ = some (cmExcludeState σ o) := chooseApp_eq.2 ⟨ho, hJ, rfl⟩
+    refine ⟨?_, cmExcludeState σ o, ?_, rfl, ?_⟩
     · simp only [kappa, hS, hJ, ite_true, ite_false, List.nil_append, List.mem_cons,
         List.not_mem_nil, or_false]
       rintro c rfl; exact ⟨o, Or.inr ⟨rfl, σ, _, h1⟩⟩
     · simp only [kappa, hS, hJ, ite_true, ite_false, List.nil_append]
       exact ApplySeq.cons h1 (ApplySeq.nil _)
     · funext k x; apply propext
-      show (σ.R k x ∧ ¬ Rejected σ o k x) ↔ Pruned σ o k x
+      show (σ.R k x ∧ ¬ Excluded σ o k x) ↔ Pruned σ o k x
       exact ⟨fun ⟨a, b⟩ => ⟨a, fun h => hS ⟨k, x, h⟩, b⟩, fun ⟨a, _, b⟩ => ⟨a, b⟩⟩
   · refine ⟨?_, σ, ?_, rfl, ?_⟩
     · simp [kappa, hS, hJ]
@@ -505,9 +505,9 @@ theorem kappa_step_eq {B : Basis sp} {σ τ : State sp} {o : O}
     refine ⟨hcur, ?_⟩
     rw [hR, hγ.det hγ', pruned_out σ o σc' hR']
 
-/-- `Exposable` is exactly "`Sealed_o` and `Rejected_o` are empty". -/
+/-- `Exposable` is exactly "`Sealed_o` and `Excluded_o` are empty". -/
 theorem exposable_iff_empty (σ : State sp) (o : O) :
-    Exposable σ o ↔ (¬ ∃ k x, Sealed σ o k x) ∧ ¬ ∃ k x, Rejected σ o k x := by
+    Exposable σ o ↔ (¬ ∃ k x, Sealed σ o k x) ∧ ¬ ∃ k x, Excluded σ o k x := by
   constructor
   · intro he
     refine ⟨fun ⟨k, x, hs⟩ => ?_, fun ⟨k, x, hr⟩ => ?_⟩

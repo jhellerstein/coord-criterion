@@ -119,8 +119,8 @@ $B$ waits, and the scheduler applies $\mathsf{order}(A,B)$ in a commitment
 event, reporting nothing.  On complete rows without aborts,
 $\mathsf{order}(A,B)$ keeps exactly those with $A$ before $B$
 (Figure~\ref{fig:cc-commitments}(h)).  At the canonical state of $\{A,B,C\}$ it
-removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$, so it is a choice, and it
-is not the choice $c_o$ of any output $o$.  When a read is granted its lock,
+removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$, so it is an exclusion, and it
+is not the exclusion $x_o$ of any output $o$.  When a read is granted its lock,
 the scheduler applies $\mathsf{read}$ and reports the result.  When a commit
 request arrives, the scheduler applies $\mathsf{TxCommit}$ and releases the
 transaction's locks.
@@ -145,7 +145,7 @@ all issued ones, and the scheduler applies $\mathsf{stamp}(A)$, with $Z$ the
 transactions stamped before $A$, in a commitment event.  On complete rows
 without aborts, $\mathsf{stamp}(B)$ with $Z=\varnothing$ keeps exactly those
 with $B$ first (Figure~\ref{fig:cc-commitments}(i)); at the canonical state of
-$\{A,B,C\}$ it is a choice, and it is not the choice $c_o$ of any output.  When
+$\{A,B,C\}$ it is an exclusion, and it is not the exclusion $x_o$ of any output.  When
 a read of $x$ by $A$ arrives, it returns $A$'s own write of $x$ if $A$ has
 written $x$, and otherwise the committed version of $x$ with the largest
 timestamp below $A$'s; the scheduler applies $\mathsf{read}$ and reports the

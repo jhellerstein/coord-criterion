@@ -373,7 +373,7 @@ table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
 $\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
 $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
 $(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Sealed_{f(m)}$ or
-$\Rejected_{f(m)}$ at $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
+$\Excluded_{f(m)}$ at $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
 Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
 $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ retires $(k,f(m'))$.  So every row
 that the composite's canonical event for $f(m)$ removes by commitment has had
@@ -382,7 +382,7 @@ every preimage in $R_\sigma$ removed by $\gamma$.
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
 The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering
 argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
-$\Rejected_{f(m)}$, so $f(m)$ is a legal output at $f(\sigma)$.
+$\Excluded_{f(m)}$, so $f(m)$ is a legal output at $f(\sigma)$.
 \end{proof}
 
 Consider a store that answers each key from that key's commands, in log
@@ -397,7 +397,7 @@ coordination, and the composite does not see it.
 
 The commitments of $\Spec_1$ do not themselves push forward.  Let $\Spec_1$
 have one input with fiber $\{x,y\}$, $x$ and $y$ incomparable, and
-$f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The choice $c_y$ removes $x$
+$f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The exclusion $x_y$ removes $x$
 and keeps $y$.  Its image would remove $\mathit{lo}$ and keep $\mathit{hi}$,
 violating Equation~\ref{eq:commitment-excludes}, so no commitment of the
 composite has that effect.  In the composite, $\mathit{hi}$ is a legal output
@@ -407,7 +407,7 @@ Monotonicity of $f$ is needed.  Let $\Spec_1$ be the table of the identity on
 $M$, which needs no commitment.  For $m\preceq_M m'$, its run
 $\mathsf{output}(m)$, $\mathsf{input}(m')$, $\mathsf{output}(m')$ maps to a run
 of the composite exactly when $f(m)\OutputOrd f(m')$.  A downstream that must
-itself choose cannot delegate the choice either.  If $\Spec_1$ is the identity
+itself exclude cannot delegate the exclusion either.  If $\Spec_1$ is the identity
 on one input, it admits no commitment at all.  If $\Spec_2$ relates that input
 to two incomparable outputs, every output event of the composite at its
 canonical state applies a commitment, which $\Spec_1$ cannot make.

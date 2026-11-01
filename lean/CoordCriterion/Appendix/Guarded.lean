@@ -275,7 +275,7 @@ that image is sealed or rejected by `f m` at `ρ`: the composite's canonical
 event for `f m` removes by commitment only rows outside the image. -/
 theorem coverage (hf : Monotone f) {σc : State sp} {m : M} (hexp : Exposable σc m)
     {ρ : State (comp sp f)} (hsub : ∀ k o, imgT f σc.R k o → ρ.R k o) :
-    ∀ k x, imgT f σc.R k x → ¬ Sealed ρ (f m) k x ∧ ¬ Rejected ρ (f m) k x := by
+    ∀ k x, imgT f σc.R k x → ¬ Sealed ρ (f m) k x ∧ ¬ Excluded ρ (f m) k x := by
   rintro k x ⟨m', hm', rfl⟩
   by_cases hmm : m ≼ m'
   · exact ⟨fun hs => hs.2 ⟨f m', hsub _ _ ⟨m', hm', rfl⟩, hf _ _ hmm⟩,
@@ -294,7 +294,7 @@ theorem coverage_step (hf : Monotone f) {B : Basis sp} {σ τ : State sp}
     {γ : List (Commitment sp)} {m : M} (h : SysStep B σ (.output γ m) τ)
     {ρ : State (comp sp f)} (hsub : ∀ k o, imgT f σ.R k o → ρ.R k o) :
     ∃ σc, ApplySeq γ σ σc ∧
-      ∀ k x, (Sealed ρ (f m) k x ∨ Rejected ρ (f m) k x) →
+      ∀ k x, (Sealed ρ (f m) k x ∨ Excluded ρ (f m) k x) →
         ∀ m', σ.R k m' → f m' = x → ¬ σc.R k m' := by
   match h with
   | .output (σc := σc) _ hγ _ hexp _ _ =>
@@ -317,7 +317,7 @@ theorem invisible_step (hf : Monotone f) {B : Basis sp} {σ τ : State sp}
     Exposable (img f σ) (f m) := by
   obtain ⟨σc, hγ, hcov⟩ := coverage_step hf h (ρ := img f σ) (fun _ _ h => h)
   rw [exposable_iff_empty]
-  have key : ∀ k x, (Sealed (img f σ) (f m) k x ∨ Rejected (img f σ) (f m) k x) → False := by
+  have key : ∀ k x, (Sealed (img f σ) (f m) k x ∨ Excluded (img f σ) (f m) k x) → False := by
     intro k x hx
     have hR : (img f σ).R k x := by rcases hx with h | h <;> exact h.1
     obtain ⟨m', hm', rfl⟩ := hR
@@ -2005,7 +2005,7 @@ def fLvl : Two → Lvl
 
 theorem fLvl_monotone : Monotone fLvl := fun _ _ h => by cases h; exact PO.refl _
 
-theorem anyS_rejected_x : Rejected (canon anyS Pt.pt) Two.y Pt.pt Two.x := by
+theorem anyS_rejected_x : Excluded (canon anyS Pt.pt) Two.y Pt.pt Two.x := by
   refine ⟨⟨trivial, trivial⟩, fun h => Two.noConfusion h, fun hs => hs.2 ⟨.y, ⟨trivial, trivial⟩, rfl⟩, ?_⟩
   rintro ⟨_, _, u, _, hyu, hxu⟩
   have h1 : Two.y = u := hyu
@@ -2018,18 +2018,18 @@ canonical choice `c_y` is a commitment of `𝒫`: it removes `x` and keeps `y`.
 Its image removes `lo` and keeps `hi ≽ lo`, so no commitment of the composite
 takes the image state to the image of the result. -/
 theorem push_not_commitment :
-    ∃ τ, (choiceC Two.y).app (canon anyS Pt.pt) = some τ ∧
+    ∃ τ, (excludeC Two.y).app (canon anyS Pt.pt) = some τ ∧
       ∀ c : Commitment (comp anyS fLvl), c.app (img fLvl (canon anyS Pt.pt)) ≠ some (img fLvl τ) := by
-  refine ⟨cmChooseState (canon anyS Pt.pt) Two.y,
+  refine ⟨cmExcludeState (canon anyS Pt.pt) Two.y,
     chooseApp_eq.2 ⟨⟨trivial, trivial⟩, ⟨_, _, anyS_rejected_x⟩, rfl⟩, ?_⟩
   intro c hc
   have hlo : (img fLvl (canon anyS Pt.pt)).R Pt.pt Lvl.lo := ⟨.x, ⟨trivial, trivial⟩, rfl⟩
-  have hnlo : ¬ (img fLvl (cmChooseState (canon anyS Pt.pt) Two.y)).R Pt.pt Lvl.lo := by
+  have hnlo : ¬ (img fLvl (cmExcludeState (canon anyS Pt.pt) Two.y)).R Pt.pt Lvl.lo := by
     rintro ⟨m, ⟨_, hr⟩, hm⟩
     cases m with
     | x => exact hr anyS_rejected_x
     | y => exact Lvl.noConfusion hm
-  have hhi : (img fLvl (cmChooseState (canon anyS Pt.pt) Two.y)).R Pt.pt Lvl.hi :=
+  have hhi : (img fLvl (cmExcludeState (canon anyS Pt.pt) Two.y)).R Pt.pt Lvl.hi :=
     ⟨.y, ⟨⟨trivial, trivial⟩, not_rejected_of_ge (PO.refl _)⟩, rfl⟩
   exact c.excludes _ _ hc Pt.pt Lvl.lo Lvl.hi hlo hnlo hhi (Or.inl rfl)
 
@@ -2089,7 +2089,7 @@ theorem identity_cf {m m' : M} (hmm : m ≼ m') :
   exact .output o1 e1 (.input (Dist.step_canon_input _ hmm ⟨m', rfl⟩) (.output o2 e2 (.nil _)))
 
 open Dist (U1 B2 spU noBasis u1_eq) in
-/-- **A store that must choose cannot delegate the choice.**  With the
+/-- **A store that must exclude cannot delegate the exclusion.**  With the
 identity upstream on one input (which admits no commitment at all) and the
 store `spU` (two incomparable outputs), every output event of the composite at
 its canonical state applies a commitment, under any basis.  That commitment

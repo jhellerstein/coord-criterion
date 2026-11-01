@@ -4,14 +4,14 @@
 We now extend CALM theory to allow a fiber to contain several outputs.  The monotonicity property we want to test as input
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
-In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{choosing}
+In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{excluding}
 among permitted outputs.
 
-\subsection{Output choice by example}
+\subsection{Output exclusion by example}
 \label{sec:ambiguity-story}
 
 Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
-several outputs in one fiber.  Transaction ordering requires a choice
+several outputs in one fiber.  Transaction ordering requires an exclusion
 between incompatible serialization orders.  For the discussion here, outputs are simply serial
 schedules, to which executions correspond via equivalence; Section~\ref{sec:hat-instance} and
 Appendix~\ref{app:cc-bases} study more thorough transactional specifications.  Traceroute observations, by
@@ -58,11 +58,11 @@ contrast, can all be \outrelpast by a larger route set.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{Output choice and directedness.} The examples differ in what happens
+\paragraph{Output exclusion and directedness.} The examples differ in what happens
 to alternative outputs when one is emitted.  In panel~(f), neither
-serialization order \outrel the other, so emitting one requires a
-\emph{choice commitment} that removes the other while the input stays legal:
-emitting $[A,B]$ chooses it over $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
+serialization order \outrel the other, so emitting one requires an
+\emph{exclusion commitment} that removes the other while the input stays legal:
+emitting $[A,B]$ excludes $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output retirement}; every removed output is
 \outrelpast by a remaining one, so emitting the route observation loses no information
@@ -71,9 +71,9 @@ commitment: it is a \emph{legal output}.
 
 An output event can thus remove rows in three ways: by sealing inputs, as in
 Section~\ref{sec:functional-calm}; by retiring outputs, as in panel~(g); or by
-choosing among outputs, as in panel~(f).  The atomic event
+excluding outputs, as in panel~(f).  The atomic event
 $\mathsf{output}(o)$ does whichever of these $o$ requires, then emits $o$;
-sealing and choosing are commitments, retiring is not.
+sealing and excluding are commitments, retiring is not.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
 The difference between them is the order-theoretic concept of a \emph{directed} fiber:
@@ -265,20 +265,20 @@ emits $o$.  With several rows at one input, each removed row falls into one of
 three classes.  Consider a removed row $(i',o')$.  If no row at $i'$ \outrel $o$,
 the row is in $\Sealed_o$, and the event \emph{seals} $i'$.  If a kept row at
 $i'$ \outrel $o'$, the row is in $\Retired_o$, and removing it is an
-\emph{output retirement}.  Otherwise the row is in $\Rejected_o$: $i'$ stays
-legal, but the event \emph{chooses} against $o'$.  The seal $s_o$ removes $\Sealed_o$, and the choice
-$c_o$ removes $\Rejected_o$.  Both are commitments; output retirement is not.
+\emph{output retirement}.  Otherwise the row is in $\Excluded_o$: $i'$ stays
+legal, but the event \emph{excludes} $o'$.  The seal $s_o$ removes $\Sealed_o$, and the exclusion
+$x_o$ removes $\Excluded_o$.  Both are commitments; output retirement is not.
 These are the three cases of Section~\ref{sec:ambiguity-story}: emitting
 $\bot$ under the equality order of Figure~\ref{fig:nonmonotone-frame} puts
 $xyx$ and $xyy$ in $\Sealed_o$; emitting $[A,B]$ in
-Figure~\ref{fig:ambiguity-frames}(f) puts $[B,A]$ in $\Rejected_o$; and the
+Figure~\ref{fig:ambiguity-frames}(f) puts $[B,A]$ in $\Excluded_o$; and the
 route sets removed in panel~(g) are in $\Retired_o$.
-In the functional case, $\Retired_o$ and $\Rejected_o$ are empty, so this is
+In the functional case, $\Retired_o$ and $\Excluded_o$ are empty, so this is
 the output event of Definition~\ref{def:output-event}.
 Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
 As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
-commitment, that is, when $\Sealed_o$ and $\Rejected_o$ are empty.
+commitment, that is, when $\Sealed_o$ and $\Excluded_o$ are empty.
 Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
 remaining output at $j$ have a common \outnoun at $j$
 (Proposition~\ref{prop:exposability}).

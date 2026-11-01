@@ -233,10 +233,10 @@ abbrev «app:notation/Sealed» {sp : Spec I O} (σ : State sp) (o : O) : Table I
 (Eq. `eq:output-retirements`).  Lean: `Retired σ o`. -/
 abbrev «app:notation/Retired» {sp : Spec I O} (σ : State sp) (o : O) : Table I O := Retired σ o
 
-/-- *`Rejected_o`* — the rest (Eq. `eq:choice-removals`).  Lean:
-`Rejected σ o`. -/
+/-- *`Excluded_o`* — the rest (Eq. `eq:choice-removals`).  Lean:
+`Excluded σ o`. -/
 abbrev «app:notation/Rejected» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
-  Rejected σ o
+  Excluded σ o
 
 /-- *seal* (lifted) — remove `Sealed_o` (Def. `def:lifted-output-event`).
 Lean: `sealState σ o _`; as a commitment `CC.sealC o`. -/
@@ -248,9 +248,9 @@ noncomputable abbrev «app:notation/lifted-seal» {sp : Spec I O} : O → Commit
 abbrev «app:notation/output-retirement» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   Retired σ o
 
-/-- *choice* — remove `Rejected_o` (Def. `def:lifted-output-event`).  Lean:
-`chooseState σ o _`; as a commitment `CC.choiceC o`. -/
-noncomputable abbrev «app:notation/choice» {sp : Spec I O} : O → Commitment sp := choiceC
+/-- *choice* — remove `Excluded_o` (Def. `def:lifted-output-event`).  Lean:
+`excludeState σ o _`; as a commitment `CC.excludeC o`. -/
+noncomputable abbrev «app:notation/choice» {sp : Spec I O} : O → Commitment sp := excludeC
 
 /-! ## Distributed execution (Section `sec:distributed-execution`) -/
 

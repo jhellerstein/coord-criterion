@@ -816,7 +816,7 @@ theorem not_read {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
     exact hnr ((hR k0 r).2 ⟨hr, _, ⟨⟨_, hc', PO.refl _⟩, PO.refl _⟩,
       hrp, hle, single_eq⟩)
 
-/-- **No canonical choice `c_o` has the effect `τ`** at the canonical state of
+/-- **No canonical choice `x_o` has the effect `τ`** at the canonical state of
 `k0`, if `τ` keeps every row at `k0` that commits nothing, the complete row
 aborting everything, and some complete row aborting nothing (without reads),
 and removes some complete row at `k0` that reports no reads. -/
@@ -826,11 +826,11 @@ theorem not_choice {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
     (hc1X : ∀ t, ¬ c1.X t) (hc1 : τ.R k0 (full c1))
     {r : ROut T K} (hr : (canon (spec (T := T) (K := K) false) k0).R k0 r) (hrp : Decides false k0 r.o)
     (hrρ : ∀ a n, r.ρ a n = none) (hnr : ¬ τ.R k0 r) (o : ROut T K) :
-    (choiceC o).app (canon (spec (T := T) (K := K) false) k0) ≠ some τ := by
+    (excludeC o).app (canon (spec (T := T) (K := K) false) k0) ≠ some τ := by
   intro h
   obtain ⟨ho, _, e⟩ := chooseApp_eq.1 h
   let σ0 := canon (spec (T := T) (K := K) false) k0
-  have hR : ∀ k u, τ.R k u ↔ σ0.R k u ∧ ¬ Rejected σ0 o k u := by
+  have hR : ∀ k u, τ.R k u ↔ σ0.R k u ∧ ¬ Excluded σ0 o k u := by
     intro k u; rw [← e]; exact Iff.rfl
   -- a kept row at `k0` has a common refinement with `o` in `R(k0)`
   have compat : ∀ y, τ.R k0 y → ∃ u, σ0.R k0 u ∧ o ≼ u ∧ y ≼ u := by
@@ -1185,12 +1185,12 @@ theorem stamp_not_2PL (h : Tri k A B C) {τ : State (spec (T := T) (K := K) fals
   · exact not_read (stamp_keeps_uncommitted hτ) (perm_row h hm_id) (perm_part h hm_id)
       (fun _ _ => rfl) nABC T' n v e
 
-/-- **Neither figure commitment is a canonical choice `c_o`**, for any output
+/-- **Neither figure commitment is a canonical choice `x_o`**, for any output
 `o`, at the canonical state of `k`. -/
 theorem neither_is_choice (h : Tri k A B C) :
-    (∀ τ, (order A B).app (σ3 k) = some τ → ∀ o, (choiceC o).app (σ3 k) ≠ some τ) ∧
+    (∀ τ, (order A B).app (σ3 k) = some τ → ∀ o, (excludeC o).app (σ3 k) ≠ some τ) ∧
     (∀ τ, (stamp B (fun _ => False)).app (σ3 k) = some τ →
-      ∀ o, (choiceC o).app (σ3 k) ≠ some τ) := by
+      ∀ o, (excludeC o).app (σ3 k) ≠ some τ) := by
   have hd := h.d
   have hX : ∀ {l : List T} t, ¬ (mk l fun _ => False).X t := fun _ h => h
   refine ⟨fun τ hτ o => ?_, fun τ hτ o => ?_⟩

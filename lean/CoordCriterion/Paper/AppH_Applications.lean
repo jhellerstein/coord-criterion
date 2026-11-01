@@ -68,7 +68,7 @@ theorem «app:additional-applications/slot-conflict» {I Ep Vt Dc κ : Type} [PO
     (hU : ∀ k u, sp.S k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   slot_conflict slot hU ho ho' hd hd' hs hne
 
@@ -79,7 +79,7 @@ theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I
     {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   epoch_conflict ho ho' he he' hne
 
@@ -245,7 +245,7 @@ reachable without commitment, some current output rules out a sealed row and no
 rejected row, and every legal output event emitting it applies a commitment. -/
 theorem «app:additional-applications/complete-history-seal» {Ev : Type} (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
-      (∃ k x, Sealed τ o k x) ∧ (∀ k x, ¬ Rejected τ o k x) ∧
+      (∃ k x, Sealed τ o k x) ∧ (∀ k x, ¬ Excluded τ o k x) ∧
       ∀ (B : Basis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] :=
   completeSpec_seal_needed e
 

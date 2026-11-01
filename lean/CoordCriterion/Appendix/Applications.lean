@@ -11,9 +11,9 @@ Namespace `CC.Apps` (reuses the finite sets and generic commitment lemmas of
 * Committed authority:  `Auth`, `prefix_antisymm`, the output order of
   Eq. `authority-refinement` (`instPOAuth`); `safety_exposable` (if every
   remaining row refines the certified evidence `o`, then `o` is exposable and
-  `Out_ε(o)` is legal); `incompatible_rejected` (generic: two outputs at the
-  current input with no common refinement there ⇒ emitting one rejects the
-  other, is not exposable, and needs a commitment); `slot_conflict` and
+    `Out_ε(o)` is legal); `incompatible_rejected` (generic: two outputs at the
+    current input with no common refinement there ⇒ emitting one excludes the
+    other, is not exposable, and needs a commitment); `slot_conflict` and
   `epoch_conflict` instantiate it for competing decisions of one slot and for
   competing next epochs.  The decision claim needs the extra hypothesis that
   permitted outputs decide at most one value per epoch and slot (`SlotUnique`),
@@ -50,14 +50,14 @@ section Generic
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 /-- If `o, o' ∈ R(i)` have no common refinement in `R(i)`, emitting `o`
-rejects `(i,o')` (a choice), `o` is not exposable, and every legal output
+excludes `(i,o')` (an exclusion), `o` is not exposable, and every legal output
 event emitting `o` applies a commitment. -/
 theorem incompatible_rejected {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
     (ho' : σ.R σ.cur o') (hn : ¬ ∃ u, σ.R σ.cur u ∧ o ≼ u ∧ o' ≼ u) :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] := by
   have hno : ¬ o ≼ o' := fun h => hn ⟨o', ho', h, PO.refl _⟩
-  have hrej : Rejected σ o σ.cur o' :=
+  have hrej : Excluded σ o σ.cur o' :=
     ⟨ho', hno, fun hs => hs.2 ⟨o, ho, PO.refl _⟩,
      fun hr => let ⟨_, _, u, hu, h1, h2⟩ := hr; hn ⟨u, hu, h1, h2⟩⟩
   refine ⟨hrej, fun he => ?_, fun B γ τ hs => containment_nonempty hs ⟨_, _, Or.inr hrej⟩⟩
@@ -123,7 +123,7 @@ theorem slot_conflict {I : Type} [PO I] {κ : Type} (slot : Dc → κ)
     {sp : Spec I (Auth Ep Vt Dc)} (hU : ∀ k u, sp.S k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   incompatible_rejected ho ho' fun ⟨u, hu, h1, h2⟩ =>
     slot_no_common slot hd hd' hs hne ⟨u, hU _ _ (σ.sub _ _ hu), h1, h2⟩
@@ -142,7 +142,7 @@ rule did not fix the successor. -/
 theorem epoch_conflict {I : Type} [PO I] {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   incompatible_rejected ho ho' fun ⟨u, _, h1, h2⟩ => epoch_no_common he he' hne ⟨u, h1, h2⟩
 
@@ -677,7 +677,7 @@ nonempty, so every legal output event emitting it applies a commitment, and
 every such commitment seals each input where it removes rows. -/
 theorem completeSpec_seal_needed (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
-      (∃ k x, Sealed τ o k x) ∧ (∀ k x, ¬ Rejected τ o k x) ∧
+      (∃ k x, Sealed τ o k x) ∧ (∀ k x, ¬ Excluded τ o k x) ∧
       ∀ (B : Basis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] := by
   have hb := fun h => (completeSpec_not_monotone e).1
     ((functional_exposure_boundary (completeSpec_functional (Ev := Ev))).2 h)
@@ -688,7 +688,7 @@ theorem completeSpec_seal_needed (e : Ev) :
   apply Classical.byContradiction
   intro hne
   apply hno
-  have hrej : ∀ k x, ¬ Rejected τ o k x := by
+  have hrej : ∀ k x, ¬ Excluded τ o k x := by
     intro k x hr
     have : ∃ u, τ.R k u ∧ o ≼ u :=
       Classical.byContradiction fun hn => hr.2.2.1 ⟨hr.1, hn⟩

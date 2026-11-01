@@ -298,14 +298,14 @@ as fixing orderings is 2PL's."
 
 Lean: under any basis containing `closePolls`, `Out_{[closePolls]}(⊥)` from
 `σ_S(xy·)` is legal and ends at panel (d); yet `⊥` is a legal output there and
-`Sealed_⊥`, `Rejected_⊥` are empty, so `output(⊥)` needs no commitment. -/
+`Sealed_⊥`, `Excluded_⊥` are empty, so `output(⊥)` needs no commitment. -/
 theorem «sec:systems/registrar» :
     (∀ B : Basis CALM.elec, B Figures.closePolls →
       SysStep B (canon CALM.elec CALM.bxy) (.output [Figures.closePolls] .bot)
         Figures.Elec.panelD) ∧
     Exposable (canon CALM.elec CALM.bxy) .bot ∧
     (¬ ∃ k x, Sealed (canon CALM.elec CALM.bxy) .bot k x) ∧
-    (¬ ∃ k x, Rejected (canon CALM.elec CALM.bxy) .bot k x) :=
+    (¬ ∃ k x, Excluded (canon CALM.elec CALM.bxy) .bot k x) :=
   ⟨Figures.Elec.registrar_step, Figures.Elec.bot_alone_at_b.1,
     Figures.Elec.bot_alone_at_b.2.1, Figures.Elec.bot_alone_at_b.2.2.1⟩
 
@@ -330,20 +330,20 @@ theorem «eq:commitment-excludes» {sp : Spec I O} (c : Commitment sp) (σ τ : 
 
 /-- "The seals and choices of Definitions output-event and
 lifted-output-event satisfy this definition: a seal removes every row at the
-inputs it seals, and a choice removes the rows in `Rejected_o`."
+inputs it seals, and a choice removes the rows in `Excluded_o`."
 
-Lean: `sealC o`, `choiceC o : Commitment sp` (being of that type is the claim
+Lean: `sealC o`, `excludeC o : Commitment sp` (being of that type is the claim
 that they satisfy Def. commitment).  `s_o` is defined at `(i,R)` exactly when
-`o ∈ R(i)` and `Sealed_o ≠ ∅`, and then leaves `R ∖ Sealed_o`; `c_o` is defined
-exactly when `o ∈ R(i)` and `Rejected_o ≠ ∅`, and then leaves
-`R ∖ Rejected_o`.  For the seals of Def. output-event (one row per input) see
+`o ∈ R(i)` and `Sealed_o ≠ ∅`, and then leaves `R ∖ Sealed_o`; `x_o` is defined
+exactly when `o ∈ R(i)` and `Excluded_o ≠ ∅`, and then leaves
+`R ∖ Excluded_o`.  For the seals of Def. output-event (one row per input) see
 `«app:bases/canonical-are-commitments»`. -/
 theorem «sec:systems/seals-and-choices-are-commitments» {sp : Spec I O} (o : O)
     (σ τ : State sp) :
     ((sealC o : Commitment sp).app σ = some τ ↔
         ∃ h : σ.R σ.cur o, (∃ k x, Sealed σ o k x) ∧ cmSealState σ o h = τ) ∧
-    ((choiceC o : Commitment sp).app σ = some τ ↔
-        σ.R σ.cur o ∧ (∃ k x, Rejected σ o k x) ∧ cmChooseState σ o = τ) :=
+    ((excludeC o : Commitment sp).app σ = some τ ↔
+        σ.R σ.cur o ∧ (∃ k x, Excluded σ o k x) ∧ cmExcludeState σ o = τ) :=
   ⟨sealApp_eq, chooseApp_eq⟩
 
 /-- **Prop. commitments seal inputs or choose outputs** (`prop:seal-or-choose`).
@@ -510,26 +510,26 @@ theorem «eq:lifted-validity» {sp : Spec I O} (σc : State sp) (o : O) :
 
 /-- "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of
 Sections functional-calm–complete-calm: its commitments remove the rows in
-`Sealed_o` and `Rejected_o` (Lemma canonical-commitment-normal-form)…"
+`Sealed_o` and `Excluded_o` (Lemma canonical-commitment-normal-form)…"
 
 Lean: Lemma containment (1) (`CC.containment`): the event keeps the current
 input, `o ∈ R(i)`, the end table is inside `R[out ⪰ o]`, and the state `σc`
-left by `γ` has none of the rows of `Sealed_o`, `Rejected_o`. -/
+left by `γ` has none of the rows of `Sealed_o`, `Excluded_o`. -/
 theorem «sec:systems/legal-event-containment» {sp : Spec I O} {B : Basis sp}
     {σ τ : State sp} {γ : List (Commitment sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
     τ.cur = σ.cur ∧ σ.R σ.cur o ∧ (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧
-    ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, (Sealed σ o k x ∨ Rejected σ o k x) → ¬ σc.R k x :=
+    ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, (Sealed σ o k x ∨ Excluded σ o k x) → ¬ σc.R k x :=
   containment h
 
 /-- "… and `output(o)` is the case in which they remove exactly those."
 
-Lean: `κ_o` is `s_o` (if `Sealed_o ≠ ∅`) followed by `c_o` (if
-`Rejected_o ≠ ∅`); the canonical steps `CanonStep` (under `B_S`, output
+Lean: `κ_o` is `s_o` (if `Sealed_o ≠ ∅`) followed by `x_o` (if
+`Excluded_o ≠ ∅`); the canonical steps `CanonStep` (under `B_S`, output
 events `Out_{κ_o}(o)`) are exactly the steps of §§2–3 after erasing `γ`. -/
 theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
     (∀ (σ : State sp) (o : O), kappa σ o =
       (if ∃ k x, Sealed σ o k x then [sealC o] else []) ++
-      (if ∃ k x, Rejected σ o k x then [choiceC o] else [])) ∧
+      (if ∃ k x, Excluded σ o k x then [excludeC o] else [])) ∧
     (∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ →
       ∃ e' : Event I O, e.erase = some e' ∧ Step σ e' τ) ∧
     (∀ (σ τ : State sp) (e : Event I O), Step σ e τ →
@@ -597,16 +597,16 @@ theorem «sec:systems/two-systems-two-choices» {sp : Spec I O} (c : Commitment 
   obtain ⟨w, hw⟩ := commitment_not_seal_cur c h
   exact ⟨⟨w, hw⟩, fun _ => ⟨w, hw, fun u hu hnu => c.excludes σ τ h _ u w hu hnu hw⟩⟩
 
-/-- "… and neither is the choice `c_o` of Definition lifted-output-event."
+/-- "… and neither is the exclusion `x_o` of Definition lifted-output-event."
 At the canonical state of an input whose transactions `A`, `B`, `C` have each
 requested commit (Appendix G's specification), the results of
-`order(A,B)` and `stamp(B)` are not the result of `c_o` for any output `o`. -/
+`order(A,B)` and `stamp(B)` are not the result of `x_o` for any output `o`. -/
 theorem «sec:systems/neither-is-the-choice» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
     (h : Txn.Partial.Tri k A B C) :
     (∀ τ, (Txn.Partial.order A B).app (Txn.Partial.σ3 k) = some τ →
-      ∀ o, (choiceC o).app (Txn.Partial.σ3 k) ≠ some τ) ∧
+      ∀ o, (excludeC o).app (Txn.Partial.σ3 k) ≠ some τ) ∧
     (∀ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σ3 k) = some τ →
-      ∀ o, (choiceC o).app (Txn.Partial.σ3 k) ≠ some τ) :=
+      ∀ o, (excludeC o).app (Txn.Partial.σ3 k) ≠ some τ) :=
   Txn.Partial.neither_is_choice h
 
 /-- "We call the runs of Sections functional-calm–complete-calm canonical runs,
@@ -826,9 +826,9 @@ theorem «sec:coordination/closing-before-voting-seals» :
   have := (Figures.Elec.panelD_rows _ o).1 h
   exact absurd this.1 (by decide)
 
-/-- "Outputs, by contrast, come only from the system's strategies, so a choice
+/-- "Outputs, by contrast, come only from the system's strategies, so an exclusion
 requires coordination only when the system can perform a run that emits an
-output the choice rules out, and distributed coordination when such a run is
+output the exclusion rules out, and distributed coordination when such a run is
 at another participant."  Lean: `SysEmits` requires an output event in a
 produced history, hence one allowed by the participant's strategy.  The rest
 of the sentence is Def. `def:coordination` for the system's runs

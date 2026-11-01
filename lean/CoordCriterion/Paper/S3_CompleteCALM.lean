@@ -30,12 +30,12 @@ open CC CC.CALM
 /-! ## Output choice by example (`sec:ambiguity-story`) -/
 
 /-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row refines the removed one: a commitment."  After
-`output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Rejected_o` (a
+`output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Excluded_o` (a
 choice), neither sealed (the input keeps `[A,B]`) nor retired (no row refines
 both). -/
 theorem «fig:ambiguity-frames/f» :
     (∀ k o, outputTable (canon Figures.Txn.spec ()) .ab k o ↔ o = .ab) ∧
-      Rejected (canon Figures.Txn.spec ()) .ab () .ba ∧
+      Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ Sealed (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ Retired (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ ∃ u, Figures.Txn.spec.S () u ∧ Figures.Txn.TOut.ab ≼ u ∧ Figures.Txn.TOut.ba ≼ u :=
@@ -54,35 +54,35 @@ theorem «fig:ambiguity-frames/g» :
         Retired (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
         Retired (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 ∧
         (¬ ∃ k x, Sealed (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
-        (¬ ∃ k x, Rejected (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
+        (¬ ∃ k x, Excluded (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
         Exposable (canon Figures.Trace.spec ()) Figures.Trace.rS1) :=
   ⟨Figures.Trace.after_s1, Figures.Trace.removed_retired⟩
 
-/-- §3.1 "Output choice and directedness": "In panel (f) … emitting one
-requires a *choice commitment* that removes the other while the input stays
-legal: emitting `[A,B]` chooses it over `[B,A]`."  `[A,B]` is not a legal output,
+/-- §3.1 "Output exclusion and directedness": "In panel (f) … emitting one
+requires an *exclusion commitment* that removes the other while the input stays
+legal: emitting `[A,B]` excludes `[B,A]`."  `[A,B]` is not a legal output,
 every legal system output event emitting it carries a commitment, and the
-choice `c_[A,B]` applies, keeping `[A,B]` and removing `[B,A]`. -/
+exclusion `x_[A,B]` applies, keeping `[A,B]` and removing `[B,A]`. -/
 theorem «sec:ambiguity-story/choice» :
     (¬ Exposable (canon Figures.Txn.spec ()) .ab ∧
         ∀ (B : Basis Figures.Txn.spec) (γ : List (Commitment Figures.Txn.spec)) τ,
           SysStep B (canon Figures.Txn.spec ()) (.output γ .ab) τ → γ ≠ []) ∧
-      ((choiceC (sp := Figures.Txn.spec) .ab).app (canon Figures.Txn.spec ()) =
-          some (cmChooseState (canon Figures.Txn.spec ()) .ab) ∧
-        (cmChooseState (canon Figures.Txn.spec ()) .ab).R () .ab ∧
-        ¬ (cmChooseState (canon Figures.Txn.spec ()) .ab).R () .ba) :=
+      ((excludeC (sp := Figures.Txn.spec) .ab).app (canon Figures.Txn.spec ()) =
+          some (cmExcludeState (canon Figures.Txn.spec ()) .ab) ∧
+        (cmExcludeState (canon Figures.Txn.spec ()) .ab).R () .ab ∧
+        ¬ (cmExcludeState (canon Figures.Txn.spec ()) .ab).R () .ba) :=
   ⟨Figures.Txn.ab_not_exposable, Figures.Txn.choice_applies⟩
 
 /-- §3.1: "An output event can thus remove rows in three ways: by sealing
 inputs …; by retiring outputs …; or by choosing among outputs … sealing and
 choosing are commitments, retiring is not."  The rows ruled out by `o` are
-exactly `Sealed_o ∪ Retired_o ∪ Rejected_o`, and `o` is a legal output (no
-commitment) iff `Sealed_o` and `Rejected_o` are empty. -/
+exactly `Sealed_o ∪ Retired_o ∪ Excluded_o`, and `o` is a legal output (no
+commitment) iff `Sealed_o` and `Excluded_o` are empty. -/
 theorem «sec:ambiguity-story/three-ways» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
     (∀ k x, (σ.R k x ∧ ¬ outputTable σ o k x) ↔
-        (Sealed σ o k x ∨ Retired σ o k x ∨ Rejected σ o k x)) ∧
-      (Exposable σ o ↔ (∀ k x, ¬ Sealed σ o k x) ∧ (∀ k x, ¬ Rejected σ o k x)) :=
+        (Sealed σ o k x ∨ Retired σ o k x ∨ Excluded σ o k x)) ∧
+      (Exposable σ o ↔ (∀ k x, ¬ Sealed σ o k x) ∧ (∀ k x, ¬ Excluded σ o k x)) :=
   ⟨ruledOut_iff σ o, exposable_iff_no_commitment σ o⟩
 
 /-- §3.1: "Two transaction scheduling runs that emit `[A,B]` and `[B,A]` fail
@@ -301,12 +301,12 @@ Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
 `app:lifted-output-events`, and their entries in
 `Paper/AppC_CommitmentBases.lean`. -/
 
-/-- §3.4: "In the functional case, `Retired_o` and `Rejected_o` are empty, so
+/-- §3.4: "In the functional case, `Retired_o` and `Excluded_o` are empty, so
 this is the output event of Definition `def:output-event`."  Every commitment
 an output event applies in a functional specification is a seal. -/
 theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ Retired σ o k x ∧ ¬ Rejected σ o k x :=
+    ¬ Retired σ o k x ∧ ¬ Excluded σ o k x :=
   functional_retired_rejected_empty hf σ o k x
 
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/

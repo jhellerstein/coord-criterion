@@ -120,7 +120,7 @@ theorem consistentOn_outs {T : Table I O} (hc : ConsistentOn sp T) {j : I} (L : 
 /-! ### The canonical commitment `κ_u` (seal and choice applied together) -/
 
 /-- Rows the canonical event for `u` removes by commitment. -/
-def Rm (σ : State sp) (u : O) (k : I) (x : O) : Prop := Sealed σ u k x ∨ Rejected σ u k x
+def Rm (σ : State sp) (u : O) (k : I) (x : O) : Prop := Sealed σ u k x ∨ Excluded σ u k x
 
 theorem not_rm_of_le {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x) (h : u ≼ x) :
     ¬ Rm σ u k x := by
@@ -147,7 +147,7 @@ def kcState (σ : State sp) (u : O) (hu : σ.R σ.cur u) : State sp where
 
 open Classical in
 /-- The canonical commitment for `u`: defined when `u` is in the current fiber
-and some row must be removed by commitment; it removes `Sealed_u ∪ Rejected_u`.
+and some row must be removed by commitment; it removes `Sealed_u ∪ Excluded_u`.
 That this is a commitment (Eq. `commitment-excludes`) is checked here. -/
 noncomputable def kc (u : O) : Commitment sp where
   f := fun σ => if h : σ.R σ.cur u ∧ ∃ k x, Rm σ u k x then some (kcState σ u h.1) else none

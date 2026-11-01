@@ -52,16 +52,16 @@ It leaves the current input unchanged: $j=i$.
 
 The ordering commitment above fits: $\mathsf{order}(A,B)$ removes the serial
 orders with $B$ before $A$, each undominated by a surviving row with $A$
-before $B$.  The seals and choices of Definition~\ref{def:output-event}
+before $B$.  The seals and exclusions of Definition~\ref{def:output-event}
 and Section~\ref{sec:lifted-output-events} satisfy this definition, too: a
-seal removes every row at the inputs it seals, and a choice removes the
-rows in $\Rejected_o$.  The converse also holds:
+seal removes every row at the inputs it seals, and an exclusion removes the
+rows in $\Excluded_o$.  The converse also holds:
 
-\begin{proposition}[Commitments seal inputs or choose outputs]
+\begin{proposition}[Commitments seal inputs or exclude outputs]
 \label{prop:seal-or-choose}
 At each input where a commitment removes rows of the state it is applied to,
 it either removes every row there, \emph{sealing} that input, or removes some
-outputs and keeps others, \emph{choosing} among them.
+outputs and keeps others, \emph{excluding} some of them.
 \end{proposition}
 
 \begin{proof}
@@ -70,10 +70,10 @@ At an input $k$, either no row remains or some does.
 
 In a functional specification each fiber has one row, so every commitment seals.
 
-The seal-versus-choice distinction is run-dependent: it depends on the state
+The seal-versus-exclusion distinction is run-dependent: it depends on the state
 at which a commitment is applied.  Two commuting commitments may jointly empty
 a fiber; whichever is applied second seals that input, while the first only
-chooses there.
+excludes there.
 
 A system draws its commitments from a basis.
 
@@ -110,7 +110,7 @@ unchanged.
 
 A legal $\Out{\gamma}{o}$ issues at least the commitments of the $\mathsf{output}(o)$
 of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}: its commitments
-remove the rows in $\Sealed_o$ and $\Rejected_o$
+remove the rows in $\Sealed_o$ and $\Excluded_o$
 (Lemma~\ref{lem:canonical-commitment-normal-form}), and $\mathsf{output}(o)$ is
 the case in which they remove exactly those.  The environment observes $o$, not
 $\gamma$.
@@ -168,11 +168,11 @@ at work on a three-transaction version of the ordering fiber of
 Figure~\ref{fig:ambiguity-frames}(f).  2PL applies $\mathsf{order}(A,B)$
 when $B$ waits for a lock $A$ holds, leaving $C$'s position open (panel
 (h)); MVTO applies $\mathsf{stamp}(B)$ when $B$ receives the first
-timestamp, placing $B$ first (panel (i)).  Both are choices: rows survive
+timestamp, placing $B$ first (panel (i)).  Both are exclusions: rows survive
 at the input.  Each can be applied in a commitment event
 $\mathsf{commit}(\gamma)$ or as one commitment in the $\gamma$ of an output
-event that later emits a full serial order, and neither is the choice
-$c_o$ of Section~\ref{sec:lifted-output-events}.
+event that later emits a full serial order, and neither is the exclusion
+$x_o$ of Section~\ref{sec:lifted-output-events}.
 
 \begin{figure}[t]
   \centering
@@ -236,7 +236,7 @@ along the run.  Full proof in Appendix~\ref{app:bases}.
 \end{proof}
 
 In the remainder of the paper we therefore judge consistency on canonical
-runs.  Whether a specification needs coordination thus depends on the seals and choices its outputs require, whatever mechanism makes them.
+runs.  Whether a specification needs coordination thus depends on the seals and exclusions its outputs require, whatever mechanism makes them.
 
 To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
@@ -255,8 +255,8 @@ output required.
 A commitment is a binding decision that removes behavior the specification
 still permits.  Mutexes, locks, timestamps, and agreement protocols have a
 common semantic effect: each implements commitments, by sealing and
-choosing (Proposition~\ref{prop:seal-or-choose}).  A commitment requires coordination only when another run could contradict it,
-by accepting an input it sealed or emitting an output it chose against; it
+excluding (Proposition~\ref{prop:seal-or-choose}).  A commitment requires coordination only when another run could contradict it,
+by accepting an input it sealed or emitting an output it excluded; it
 requires distributed coordination when that run is at another participant.
 Running such a mechanism need not issue a commitment: closing the polls after every voter
 has voted still runs the mechanism, but no ballot is left to seal, so it
@@ -266,7 +266,7 @@ removes nothing the specification still permits and applies no commitment.
 \label{def:contradicts}
 Let a specification event of a run apply a commitment.  A run \emph{contradicts} the
 commitment if it accepts an input the commitment seals, or emits an output the
-commitment chooses against at the same input.
+commitment excludes at the same input.
 \end{definition}
 
 \begin{definition}[Coordination-requiring commitment]
@@ -311,19 +311,19 @@ commitment event occurs.  This is the sense of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 
 For a system, the answer depends on which runs it can perform, and here seals
-and choices differ.  The environment may supply any input to any participant,
+and exclusions differ.  The environment may supply any input to any participant,
 so a seal requires distributed coordination whenever another participant may receive
 the sealed input, whether or not one does in the run at hand.  Closing the
 polls before every voter has voted seals the remaining ballots, so it requires coordination, and distributed
-coordination when another polling station may accept a late ballot.  Outputs, by contrast, come only from the system's strategies, so a choice
+coordination when another polling station may accept a late ballot.  Outputs, by contrast, come only from the system's strategies, so an exclusion
 requires coordination only when the system can perform a run that emits an
-output the choice rules out, and distributed coordination when such a run is
+output the exclusion rules out, and distributed coordination when such a run is
 at another participant.  Receives are also outside the strategy: a
 participant receives whatever matching send another participant made.
 
 The next result explains why a commitment that requires distributed
-coordination calls for exclusion: a
-choice and an output it rules out, at different participants, leave states that cannot be reconciled at the current input.
+coordination calls for exclusion: an
+exclusion and an output it rules out, at different participants, leave states that cannot be reconciled at the current input.
 
 \begin{proposition}[Conflicting events cannot be reconciled]
 \label{thm:commitments-require-coordination}
@@ -347,11 +347,11 @@ too.  The environment may act on what it observes, through channels the system
 does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time}, and the reconciling input need not arrive.  Consistency
 therefore excludes every observable conflict, including a transient one.
 
-The first event's commitment is a choice against $x$, and it requires
+The first event's commitment is an exclusion of $x$, and it requires
 distributed coordination exactly when another participant may emit $x$.  The system must
 then exclude one of the two specification events: by a mutex or atomic instruction in shared
 memory, by agreement in a distributed system, or by a rule fixed in advance,
-such as assigning the choice to a single participant, so that only that
+such as assigning the exclusion to a single participant, so that only that
 participant's runs can contradict it and no runtime agreement is needed.  Seals are
 similar, with input in place of output, but the environment may deliver any
 input to any participant, so a seal avoids requiring distributed coordination only if no
@@ -425,7 +425,7 @@ specification at every common \indesc of their inputs.  When $E$ is every permit
 Monotonicity itself.  A partition does not
 change which commitments a specification needs; it removes the ability to make
 them jointly, since separated participants cannot agree to seal
-an input or make a choice that another could contradict.
+an input or make an exclusion that another could contradict.
 
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
@@ -519,12 +519,12 @@ coordinating within each side of a partition.  It cannot: the impossibility
 direction of the proof holds for every system, commitment-free or not.  Nor
 does the system in the proof need coordination.  Under Lifted Monotonicity for
 $E$, the canonical event
-for an explicit output seals nothing and chooses only against implicit
+for an explicit output seals nothing and excludes only implicit
 outputs, which the system never emits, so it is
 coordination-free (Definition~\ref{def:coordination-free}).  For $E=S$ it needs no
-commitment at all.  For a smaller $E$ such local choices can be necessary: if
+commitment at all.  For a smaller $E$ such local exclusions can be necessary: if
 $o\in E(i)$ and $x\in\fiber{i}\setminus E(i)$ have no common \outnoun at $i$,
-emitting $o$ must choose against $x$.  When Lifted Monotonicity for $E$ fails, some
+emitting $o$ must exclude $x$.  When Lifted Monotonicity for $E$ fails, some
 output of $E$ waits for another block, sacrificing Availability, or is emitted anyway, sacrificing Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}

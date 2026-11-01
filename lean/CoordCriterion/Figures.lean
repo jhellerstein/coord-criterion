@@ -232,11 +232,11 @@ theorem registrar_step (B : Basis elec) (hB : B closePolls) :
     exact ⟨fun h => ⟨h, Or.inl rfl⟩, fun h => h.1⟩
 
 /-- "Emitting `⊥` by itself would need no commitment": at (b), `⊥` is
-exposable, `Sealed_⊥` and `Rejected_⊥` are empty, and `output(⊥)` removes no
+exposable, `Sealed_⊥` and `Excluded_⊥` are empty, and `output(⊥)` removes no
 row; so the seal is not required by the output. -/
 theorem bot_alone_at_b :
     Exposable (canon elec bxy) .bot ∧ (¬ ∃ k x, Sealed (canon elec bxy) .bot k x) ∧
-      (¬ ∃ k x, Rejected (canon elec bxy) .bot k x) ∧
+      (¬ ∃ k x, Excluded (canon elec bxy) .bot k x) ∧
       outputTable (canon elec bxy) .bot = (canon elec bxy).R := by
   have he := elec_panels_exposable.2.1
   refine ⟨he, (exposable_iff_empty _ _).1 he |>.1, (exposable_iff_empty _ _).1 he |>.2, ?_⟩
@@ -361,10 +361,10 @@ theorem after_ab (k : Unit) (o : TOut) : outputTable (canon spec ()) .ab k o ↔
   ⟨fun h => h.2.symm, fun h => ⟨sR o, h.symm⟩⟩
 
 /-- "No remaining row refines the removed one": the row `[B,A]` is in
-`Rejected_o` (a choice), not sealed (the input keeps `[A,B]`) and not retired
+`Excluded_o` (an exclusion), not sealed (the input keeps `[A,B]`) and not retired
 (no row refines both). -/
 theorem ba_rejected :
-    Rejected (canon spec ()) .ab () .ba ∧ ¬ Sealed (canon spec ()) .ab () .ba ∧
+    Excluded (canon spec ()) .ab () .ba ∧ ¬ Sealed (canon spec ()) .ab () .ba ∧
       ¬ Retired (canon spec ()) .ab () .ba ∧
       ¬ ∃ u, spec.S () u ∧ TOut.ab ≼ u ∧ TOut.ba ≼ u := by
   have hns : ¬ Sealed (canon spec ()) .ab () .ba := fun h => h.2 ⟨.ab, sR _, rfl⟩
@@ -384,12 +384,12 @@ theorem ab_not_exposable : ¬ Exposable (canon spec ()) .ab ∧
   intro B γ τ h
   exact containment_nonempty h ⟨(), .ba, Or.inr ba_rejected.1⟩
 
-/-- The choice `c_[A,B]` applies at `{A,B}`; it removes `[B,A]` while the
+/-- The exclusion `x_[A,B]` applies at `{A,B}`; it removes `[B,A]` while the
 input stays legal (the row `[A,B]` remains). -/
 theorem choice_applies :
-    (choiceC (sp := spec) .ab).app (canon spec ()) = some (cmChooseState (canon spec ()) .ab) ∧
-      (cmChooseState (canon spec ()) .ab).R () .ab ∧
-      ¬ (cmChooseState (canon spec ()) .ab).R () .ba :=
+    (excludeC (sp := spec) .ab).app (canon spec ()) = some (cmExcludeState (canon spec ()) .ab) ∧
+      (cmExcludeState (canon spec ()) .ab).R () .ab ∧
+      ¬ (cmExcludeState (canon spec ()) .ab).R () .ba :=
   ⟨chooseApp_eq.2 ⟨sR _, ⟨(), .ba, ba_rejected.1⟩, rfl⟩,
    ⟨sR _, not_rejected_of_ge (PO.refl _)⟩, fun h => h.2 ba_rejected.1⟩
 
@@ -488,11 +488,11 @@ theorem after_s1 (x : RS) :
 
 /-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output retirements,
 each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is sealed or
-rejected, so `{s→s1}` is exposable. -/
+excluded, so `{s→s1}` is exposable. -/
 theorem removed_retired :
     (∀ x, (canon spec ()).R () x → (¬ outputTable (canon spec ()) rS1 () x ↔ (x = rA ∨ x = rA2))) ∧
     Retired (canon spec ()) rS1 () rA ∧ Retired (canon spec ()) rS1 () rA2 ∧
-    (¬ ∃ k x, Sealed (canon spec ()) rS1 k x) ∧ (¬ ∃ k x, Rejected (canon spec ()) rS1 k x) ∧
+    (¬ ∃ k x, Sealed (canon spec ()) rS1 k x) ∧ (¬ ∃ k x, Excluded (canon spec ()) rS1 k x) ∧
     Exposable (canon spec ()) rS1 := by
   have hall : (canon spec ()).R () rAll := (canonR _).2 (by decide)
   have hexp : Exposable (canon spec ()) rS1 := by
