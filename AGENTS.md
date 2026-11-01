@@ -53,7 +53,7 @@ current.
 * Plainspoken CIDR tone; surgical edits; define before use; no oversell; avoid
   "promise" except colloquially in §2.
 * Vocabulary macros: `\inrel` (expands), `\outrel` (refines), "fiber at k",
-  "row at k"; named sets `\Sealed_o`, `\Retired_o`, `\Rejected_o`.
+  "row at k"; named sets `\Sealed_o`, `\Subsumed_o`, `\Rejected_o`.
 * Do not edit the abstract or introduction without discussing it first.
 * Check priority and scope claims ("first", "only", "all", "no prior work",
   "for the first time") against the cited literature.  If the record does not

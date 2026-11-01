@@ -34,15 +34,15 @@ way when an output can be emitted without commitment.
   \begin{tabular}[t]{@{}l c@{}}
     \multicolumn{2}{@{}l}{(b) After $\mathsf{input}(ab\cdot)$}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+    \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
     \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
     $aba$ & \sh{$a$} \\
     $abb$ & \sh{$b$} \\
-    \retired{$aa\cdot$} & \retired{$a$} \\
-    \retired{$aaa$} & \retired{$a$} \\
-    \retired{$aab$} & \retired{$a$} \\
-    \retired{$a\cdot a$} & \retired{$a$} \\
-    \retired{$a\cdot b$} & \retired{$\bot$} \\
+    \grayrow{$aa\cdot$} & \grayrow{$a$} \\
+    \grayrow{$aaa$} & \grayrow{$a$} \\
+    \grayrow{$aab$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no commitment}
@@ -51,15 +51,15 @@ way when an output can be emitted without commitment.
   \begin{tabular}[t]{@{}l c@{}}
     \multicolumn{2}{@{}l}{(c) After $\mathsf{input}(aa\cdot)$ instead}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
-    \retired{$ab\cdot$} & \retired{$\bot$} \\
-    \retired{$aba$} & \retired{$a$} \\
-    \retired{$abb$} & \retired{$b$} \\
+    \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
+    \grayrow{$ab\cdot$} & \grayrow{$\bot$} \\
+    \grayrow{$aba$} & \grayrow{$a$} \\
+    \grayrow{$abb$} & \grayrow{$b$} \\
     \sh{$\mathbf{aa\cdot}$} & \sh{$a$} \\
     $aaa$ & \sh{$a$} \\
     $aab$ & \sh{$a$} \\
-    \retired{$a\cdot a$} & \retired{$a$} \\
-    \retired{$a\cdot b$} & \retired{$\bot$} \\
+    \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $a$ needs no commitment}
@@ -68,23 +68,23 @@ way when an output can be emitted without commitment.
   \begin{tabular}[t]{@{}l c@{}}
     \multicolumn{2}{@{}l}{(d) (b), then polls closed}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+    \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
     \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
-    \retired{$aba$} & \retired{$a$} \\ \strikerow
-    \retired{$abb$} & \retired{$b$} \\ \strikerow
-    \retired{$aa\cdot$} & \retired{$a$} \\
-    \retired{$aaa$} & \retired{$a$} \\
-    \retired{$aab$} & \retired{$a$} \\
-    \retired{$a\cdot a$} & \retired{$a$} \\
-    \retired{$a\cdot b$} & \retired{$\bot$} \\
+    \grayrow{$aba$} & \grayrow{$a$} \\ \strikerow
+    \grayrow{$abb$} & \grayrow{$b$} \\ \strikerow
+    \grayrow{$aa\cdot$} & \grayrow{$a$} \\
+    \grayrow{$aaa$} & \grayrow{$a$} \\
+    \grayrow{$aab$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
   \caption{The election specification and three states reached from it, showing rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
-  input and its upper fiber.  Gray: removed from the remainder table; struck
-  through if by a commitment, otherwise retired by an input event.  Panels (b)
+  input and its upper fiber.  Gray: lost after an input event; struck
+  through if removed by a commitment.  Panels (b)
   and (c) follow input events.  In (d) the registrar emits $\bot$ and also
   closes the polls, a seal $\mathsf{output}(\bot)$ alone does not require.}
   \label{fig:election-frames}
@@ -116,7 +116,7 @@ monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd a$.
 Each panel captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
 still possible from that input.  When $v_2$'s ballot for $b$ arrives, the event
-$\mathsf{input}(ab\cdot)$ produces panel~(b), retiring rows whose inputs no
+$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to lose rows whose inputs no
 longer \inrelbase the ballots received; such inputs are now illegal.  The \emph{upper fiber} is the set of
 outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
 $\{\bot,a,b\}$.
@@ -144,11 +144,11 @@ specification requires.
     \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}c@{}}
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-      \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+      \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
       \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
-      \retired{$aba$} & \retired{$a$} \\ \strikerow
-      \retired{$abb$} & \retired{$b$} \\ \strikerow
-      \retired{$aa\cdot$} & \retired{$a$} \\
+      \grayrow{$aba$} & \grayrow{$a$} \\ \strikerow
+      \grayrow{$abb$} & \grayrow{$b$} \\ \strikerow
+      \grayrow{$aa\cdot$} & \grayrow{$a$} \\
       % \multicolumn{2}{c}{$\ldots$}
     \end{tabular*}
   \end{minipage}\hfill
@@ -157,10 +157,10 @@ specification requires.
       \toprule
       $\mathrm{in}$ (cont.) & $\mathrm{out}$ (cont.) \\ \midrule
       % \multicolumn{2}{c}{$\ldots$} \\
-      \retired{$aaa$} & \retired{$a$} \\
-      \retired{$aab$} & \retired{$a$} \\
-      \retired{$a\cdot a$} & \retired{$a$} \\
-      \retired{$a\cdot b$} & \retired{$\bot$} \\
+      \grayrow{$aaa$} & \grayrow{$a$} \\
+      \grayrow{$aab$} & \grayrow{$a$} \\
+      \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+      \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
       \bottomrule
     \end{tabular*}
     {\footnotesize upper fiber $\{\bot\}$; determined}
@@ -317,7 +317,8 @@ For a state $(i,R)$ and legal input $j$ with $i\InputOrd j$, the input event is
   \bigl(j,\ R' = R[\mathrm{in}\InputGe j]\bigr).
   \label{eq:input-event}
 \end{equation}
-It makes $j$ current and \emph{retires} the rows whose input does not \inrelbase $j$. We call this \emph{input retirement}.
+It makes $j$ current and causes the remainder table to lose the rows whose
+input does not \inrelbase $j$.  We call this \emph{input loss}.
 
 An input event names the cumulative input $j$: everything received so far,
 including all of $i$, not just what arrived since $i$.  Thus $\mathsf{input}(j)$ then $\mathsf{input}(k)$ has the
@@ -375,7 +376,7 @@ output; a determined state goes further, since its current input determines
 the output of every input that may still arrive.  A functional specification
 can therefore have undetermined states, as in panel~(b) of
 Figure~\ref{fig:election-frames}.  \emph{Determination} is the process of
-reaching a determined state.  An input event may do so by retiring rows that
+reaching a determined state.  An input event may do so by causing the table to lose rows that
 no longer \inrelbase the input received, and a commitment by sealing inputs
 that would otherwise remain possible, as in panels (c) and (d), respectively.
 An event from a determined state always leads to another determined state:

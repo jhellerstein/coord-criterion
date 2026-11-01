@@ -7,7 +7,7 @@ import CoordCriterion.Appendix.TransactionBases.NoReads
 
 Covers `appendices/commitment-bases-general.tex` (`app:bases`): first the
 formal lifted output events (`app:lifted-output-events`: the sets `Sealed_o`,
-`Retired_o`, `Excluded_o`, Def. `def:lifted-output-event`, the remarks after
+`Subsumed_o`, `Excluded_o`, Def. `def:lifted-output-event`, the remarks after
 it, and Prop. `prop:exposability`), then (`app:commitment-bases`)
 the canonical basis and canonical event, the paragraph *The canonical seals and choices are
 commitments*, Lemma `lem:canonical-commitment-normal-form` (three parts),
@@ -52,23 +52,23 @@ abbrev «eq:seal-inputs» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
   Sealed σ o
 
-/-- **Eq. `eq:output-retirements`**: `Retired_o = {(k,x) ∈ R ∖ R[out ⪰ o] :
+/-- **Eq. `eq:output-retirements`**: `Subsumed_o = {(k,x) ∈ R ∖ R[out ⪰ o] :
 x ≼ u for some u ∈ R[out ⪰ o](k)}`. -/
 abbrev «eq:output-retirements» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
-  Retired σ o
+  Subsumed σ o
 
 /-- **Eq. `eq:choice-removals`**: `Excluded_o = (R ∖ R[out ⪰ o]) ∖ (Sealed_o ∪
-Retired_o)`. -/
+Subsumed_o)`. -/
 abbrev «eq:choice-removals» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
   Excluded σ o
 
 /-- **Def. `def:lifted-output-event`** (Lifted output event, output
-retirement).  "`output(o)` keeps exactly the rows whose outputs refine `o`
+subsumption).  "`output(o)` keeps exactly the rows whose outputs refine `o`
 and emits `o`, atomically, ending at `(i, R[out ⪰ o])`.  It removes the rows
-in `Retired_o`, each refined past by a kept row at the same input, by
-*output retirement*, which is not a commitment."
+in `Subsumed_o`, each refined past by a kept row at the same input, by
+*output subsumption*, which is not a commitment."
 
 Lean: the event is `Step σ (.output o) τ` with `τ.R = outputTable σ o`,
 the same transition as Def. `def:output-event`.  This declaration names the
@@ -105,32 +105,32 @@ theorem «eq:canonical-seal-commitment-relational» {I O : Type} [PO I] [PO O]
 
 /-- After Def. `def:lifted-output-event`: "In Figure `fig:ambiguity-frames`(f),
 emitting `[A,B]` places `[B,A]` in `Excluded_o` … In panel (g), the two
-removed route sets are in `Retired_o`." -/
+removed route sets are in `Subsumed_o`." -/
 theorem «def:lifted-output-event/examples» :
     Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧
-      Retired (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
-      Retired (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 :=
-  ⟨Figures.Txn.ba_rejected.1, Figures.Trace.removed_retired.2.1,
-   Figures.Trace.removed_retired.2.2.1⟩
+      Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
+      Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 :=
+  ⟨Figures.Txn.ba_rejected.1, Figures.Trace.removed_subsumed.2.1,
+   Figures.Trace.removed_subsumed.2.2.1⟩
 
 /-- "The three sets are disjoint." -/
 theorem «app:lifted-output-events/disjoint» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ (Sealed σ o k x ∧ Retired σ o k x) ∧ ¬ (Sealed σ o k x ∧ Excluded σ o k x) ∧
-      ¬ (Retired σ o k x ∧ Excluded σ o k x) :=
-  ⟨sealed_retired_disjoint σ o, sealed_rejected_disjoint σ o, retired_rejected_disjoint σ o⟩
+    ¬ (Sealed σ o k x ∧ Subsumed σ o k x) ∧ ¬ (Sealed σ o k x ∧ Excluded σ o k x) ∧
+      ¬ (Subsumed σ o k x ∧ Excluded σ o k x) :=
+  ⟨sealed_subsumed_disjoint σ o, sealed_rejected_disjoint σ o, subsumed_rejected_disjoint σ o⟩
 
 /-- "… removing the rows of either commitment leaves the other sets
 unchanged, so the event may apply `s_o` and `x_o` in either order." -/
 theorem «app:lifted-output-events/commute» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
-    (∀ k x, Retired (sealState σ o ho) o k x ↔ Retired σ o k x) ∧
+    (∀ k x, Subsumed (sealState σ o ho) o k x ↔ Subsumed σ o k x) ∧
       (∀ k x, Excluded (sealState σ o ho) o k x ↔ Excluded σ o k x) ∧
       (∀ k x, Sealed (excludeState σ o ho) o k x ↔ Sealed σ o k x) ∧
-      (∀ k x, Retired (excludeState σ o ho) o k x ↔ Retired σ o k x) ∧
+      (∀ k x, Subsumed (excludeState σ o ho) o k x ↔ Subsumed σ o k x) ∧
       (∀ h₁ h₂, (excludeState (sealState σ o ho) o h₁).R =
         (sealState (excludeState σ o ho) o h₂).R) :=
-  ⟨seal_retired σ o ho, seal_rejected σ o ho, choose_sealed σ o ho, choose_retired σ o ho,
+  ⟨seal_subsumed σ o ho, seal_rejected σ o ho, choose_sealed σ o ho, choose_subsumed σ o ho,
    seal_choose_comm σ o ho⟩
 
 /-- "The exclusion commitment only narrows fibers: at each input it touches, some
@@ -140,12 +140,12 @@ theorem «app:lifted-output-events/choice-narrows» {I O : Type} [PO I] [PO O]
     ∃ u, σ.R k u ∧ o ≼ u :=
   choice_narrows σ o h
 
-/-- "With one row per input, `Retired_o` and `Excluded_o` are empty; this is
+/-- "With one row per input, `Subsumed_o` and `Excluded_o` are empty; this is
 the functional output event of Definition `def:output-event`." -/
 theorem «app:lifted-output-events/functional» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ Retired σ o k x ∧ ¬ Excluded σ o k x :=
-  functional_retired_rejected_empty hf σ o k x
+    ¬ Subsumed σ o k x ∧ ¬ Excluded σ o k x :=
+  functional_subsumed_rejected_empty hf σ o k x
 
 /-- "Legality lifts with the event: `o` is a legal output when `output(o)`
 applies no commitment, that is, when `Sealed_o` and `Excluded_o` are empty." -/
@@ -260,7 +260,7 @@ theorem «app:bases/seal-is-commitment» {sp : Spec I O} (o : O) (σ τ : State 
 
 /-- *The canonical seals and exclusions are commitments* (`x_o`).  "For `x_o`,
 suppose some `x ∈ Excluded_o` at input `k` were refined by a row `y` that `x_o`
-leaves at `k` … so `x ∈ Retired_o`, a contradiction."
+leaves at `k` … so `x ∈ Subsumed_o`, a contradiction."
 
 Lean: `excludeC o : Commitment sp` is the commitment (its `excludes` field is
 this argument); it is defined exactly where the definition says and leaves
@@ -302,7 +302,7 @@ theorem «app:bases/seal-choice-commute» {sp : Spec I O} {σ : State sp} {o : O
 
 Lean, conjunct by conjunct.  (1) for any basis `B`: the event keeps the current
 input, ends inside `R[out ⪰ o]`, and the state `σc` left by `γ` (before
-retirement) contains no row of `Sealed_o ∪ Excluded_o` — "by commitment".
+subsumption) contains no row of `Sealed_o ∪ Excluded_o` — "by commitment".
 (2) `Out_{κ_o}(o)` is legal under `ℬ_S` and ends at `outState σ o ho`, whose
 table is `R[out ⪰ o]`; every legal `Out_γ(o)` ends inside that table.
 (3) `Out_ε(o)` is legal (under any basis) iff `o ∈ R(i)` is a legal output,

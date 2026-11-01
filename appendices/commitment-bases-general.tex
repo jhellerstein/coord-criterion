@@ -20,21 +20,21 @@ three disjoint classes, by how they can be removed:
 \begin{align}
   \Sealed_o&=\{(k,x)\in R:\ k\notin\mathrm{in}(R[\mathrm{out}\OutputGe o])\},
       \label{eq:seal-inputs}\\
-  \Retired_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:\notag\\
+  \Subsumed_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:\notag\\
     &\qquad\quad x\OutputOrd u\text{ for some }u\in R[\mathrm{out}\OutputGe o](k)\},
       \label{eq:output-retirements}\\
   \Excluded_o&=(R\setminus R[\mathrm{out}\OutputGe o])
-       \setminus(\Sealed_o\cup\Retired_o).
+       \setminus(\Sealed_o\cup\Subsumed_o).
       \label{eq:choice-removals}
 \end{align}
 
-\begin{definition}[Lifted output event, output retirement]
+\begin{definition}[Lifted output event, output subsumption]
 \label{def:lifted-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  The \emph{output event}
 $\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
 emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
-Equation~\ref{eq:output-action}.  It removes the rows in $\Retired_o$, each
-\outrelpast by a kept row at the same input, by \emph{output retirement},
+Equation~\ref{eq:output-action}.  It removes the rows in $\Subsumed_o$, each
+\outrelpast by a kept row at the same input, by \emph{output subsumption},
 which is not a commitment.
 \end{definition}
 
@@ -55,20 +55,20 @@ seal and the exclusion are \emph{commitments}:
 In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
 $\Excluded_o$: no row at $\{A,B\}$ \outrel both, so the event makes an exclusion.  In
 panel~(g), the two removed route
-sets are in $\Retired_o$, each \outrelpast by a retained route set, so the event retires
+sets are in $\Subsumed_o$, each \outrelpast by a retained route set, so the event subsumes
 them without commitment.
 
 The three sets are disjoint, and removing the rows of either commitment leaves
 the other sets unchanged, so the event may apply $s_o$ and $x_o$ in either
 order.  The exclusion commitment only narrows fibers: at each input it touches, some row
-that \outrel $o$ survives.  With one row per input, $\Retired_o$ and $\Excluded_o$
+that \outrel $o$ survives.  With one row per input, $\Subsumed_o$ and $\Excluded_o$
 are empty; this is the functional output event of
 Definition~\ref{def:output-event}.  Apart from these, a row leaves the
-remainder table only by input retirement (Section~\ref{sec:functional-events}).
+remainder table only by input loss (Section~\ref{sec:functional-events}).
 
 Legality lifts with the event: $o$ is a legal output when $\mathsf{output}(o)$
 applies no commitment, that is, when $\Sealed_o$ and $\Excluded_o$ are empty, though the
-event may still retire the rows in $\Retired_o$.  The exposure test lifts as well:
+event may still subsume the rows in $\Subsumed_o$.  The exposure test lifts as well:
 
 \begin{proposition}[Lifted exposure test]
 \label{prop:exposability}
@@ -84,7 +84,7 @@ $j\InputGe i$ and $x\in R(j)$, some $u\in R(j)$ \outrel both:
 
 \begin{proof}
 The event $\mathsf{output}(o)$ applies no commitment exactly when every
-ruled-out row $(j,x)$ lies in $\Retired_o$, that is, is \outrelpast by some row
+ruled-out row $(j,x)$ lies in $\Subsumed_o$, that is, is \outrelpast by some row
 $(j,u)$ \outrelpart $o$.  Rows that already \outrelbase $o$ satisfy the stated
 test with $u=x$, so this is exactly the stated test.
 \end{proof}
@@ -128,8 +128,8 @@ removes every row at the inputs of $\Sealed_o$, so nothing remains there to
 \outrelbase a removed row.  For $x_o$, suppose some $x\in \Excluded_o$ at input $k$ were
 \outrelpast by a row $y$ that $x_o$ leaves at $k$.  Since $x\notin\Sealed_o$,
 $k$ has a row \outrelpart $o$, so no row at $k$ is in $\Sealed_o$.  Either $y$ \outrel $o$, or
-$y\in \Retired_o$ and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is
-then \outrelpast by a row \outrelpart $o$, so $x\in \Retired_o$, a contradiction.  Since
+$y\in \Subsumed_o$ and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is
+then \outrelpast by a row \outrelpart $o$, so $x\in \Subsumed_o$, a contradiction.  Since
 $s_o$ and $x_o$ remove disjoint sets of rows and neither changes the other's
 (Appendix~\ref{app:lifted-output-events}), each is defined on the state the other
 leaves, and the canonical event may apply them in either order.
@@ -155,15 +155,15 @@ Let $(i,R)$ be a state and $o\in R(i)$.
 R[\mathrm{out}\OutputGe o]$, since its commitments only remove rows.  A row in
 $\Sealed_o$ or $\Excluded_o$ has no \outrelpart row in $R[\mathrm{out}\OutputGe
 o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
-retired, so a legal event must remove it by commitment.  (2) The canonical
+subsumed, so a legal event must remove it by commitment.  (2) The canonical
 commitments remove exactly the rows in $\Sealed_o$ and $\Excluded_o$, all
 of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
-o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $\Retired_o$, and its
+o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $\Subsumed_o$, and its
 \outrelpart row is in neither $\Sealed_o$ nor $\Excluded_o$, so it
 survives the commitments.  The event is therefore legal and ends at
 $R[\mathrm{out}\OutputGe o]$; by (1) no legal event keeps more.  (3) With no
 commitment, $R_c=R$, and a legal event ends at $R[\mathrm{out}\OutputGe o]$.
-It is legal exactly when every ruled-out row is in $\Retired_o$, that is, when $\Sealed_o$
+It is legal exactly when every ruled-out row is in $\Subsumed_o$, that is, when $\Sealed_o$
 and $\Excluded_o$ are empty, which makes $o$ a legal output.
 \end{proof}
 
@@ -227,7 +227,7 @@ their remainder tables are initially equal.  Suppose that before some event the
 original run's table $R$ and the canonical run's table $\widehat R$ satisfy
 $R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input
 event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$.
-It retires every row whose input does not \inrelbase $j$, keeping
+It causes the table to lose every row whose input does not \inrelbase $j$, keeping
 $R[\mathrm{in}\InputGe j]$ in the original run and
 $\widehat R[\mathrm{in}\InputGe j]$ in the canonical run.  Since
 $R\subseteq\widehat R$, the first remains contained in the second.  For a legal

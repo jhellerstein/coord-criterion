@@ -219,7 +219,7 @@ theorem functional_commit_iff_sealed {sp : Spec I O} (hf : sp.Functional) (σ : 
     intro hno
     have he : Exposable σ o := (exposable_iff_no_commitment σ o).2
       ⟨fun k x hs => hno ⟨k, x, hs⟩,
-       fun k x hr => (functional_retired_rejected_empty hf σ o k x).2 hr⟩
+       fun k x hr => (functional_subsumed_rejected_empty hf σ o k x).2 hr⟩
     exact hne ((exposable_iff_functional hf σ o).1 he)
   · rintro ⟨k, x, hs⟩ heq
     have he := (exposable_iff_functional hf σ o).2 heq

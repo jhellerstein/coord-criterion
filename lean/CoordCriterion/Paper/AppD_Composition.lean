@@ -249,7 +249,7 @@ incomparable, and let `𝒮₂` be the table of a function `f` that maps both to
 one value.  The composite has one row, so it satisfies Lifted Monotonicity. …
 every run of `𝒮₁` under the empty basis stays at the canonical state and emits
 nothing.  Then `𝒮₂` receives nothing.  Renaming `x,y` to `lo ≼ hi` makes `𝒮₁`
-Lifted-Monotone, since `hi` retires `lo`, and by case (3) the composite is
+Lifted-Monotone, since `hi` subsumes `lo`, and by case (3) the composite is
 unchanged."  Lean: `𝒮₁ = Dist.spU`; the second conjunct of
 `Guard.composite_monotone_not_enough` says such runs emit nothing;
 `Guard.noBasis_silent` is the run-level form; the renaming is
@@ -311,7 +311,7 @@ reaches without commitment carry the proofs.  First, every input
 a legal output.  A third fact concerns `𝒮₁`.  If an output `m` at the current
 input of a state `σ` of `𝒮₁` is a legal output, every `o ∈ P₂(m)` is a legal
 output at the image of `σ`. … Either way
-`(k,u)` is a row of the image that retires `(k,x)`."  Lean: the first two hold
+`(k,u)` is a row of the image that subsumes `(k,x)`."  Lean: the first two hold
 at every run state (`Guard.row_at`, `commonExpansion_exposable`, with the
 common-expansion condition of `𝒮₂|_{𝒮₁}` from `Guard.proper_iff_ce`); states
 reached without commitment are run states (`Guard.isRun_sysExec_empty`); the
@@ -547,14 +547,14 @@ one input with fiber `{x,y}`, `x` and `y` incomparable, and
 `f(x) = lo ≼ hi = f(y)`.  The choice `c_y` removes `x` and keeps `y`.  Its
 image would remove `lo` and keep `hi`, violating Equation
 `eq:commitment-excludes`, so no commitment of the composite has that effect.
-In the composite, `hi` is a legal output at the canonical state, since it retires
+In the composite, `hi` is a legal output at the canonical state, since it subsumes
 `lo`."  Lean: `𝒮₁ = Comp.anyS`, `f = Guard.fLvl`. -/
 theorem «app:composition/no-pushforward» :
     (∃ τ, (excludeC Comp.Two.y).app (canon Comp.anyS Comp.Pt.pt) = some τ ∧
       ∀ c : Commitment (Guard.comp Comp.anyS Guard.fLvl),
         c.app (Guard.img Guard.fLvl (canon Comp.anyS Comp.Pt.pt)) ≠ some (Guard.img Guard.fLvl τ)) ∧
     Exposable (canon (Guard.comp Comp.anyS Guard.fLvl) Comp.Pt.pt) Guard.Lvl.hi :=
-  ⟨Guard.push_not_commitment, Guard.choice_becomes_retirement.2⟩
+  ⟨Guard.push_not_commitment, Guard.choice_becomes_subsumption.2⟩
 
 /-- "Monotonicity of `f` is needed.  Let `𝒮₁` be the table of the identity on
 `M`, which needs no commitment.  For `m ≼ m'`, its run `output(m)`,

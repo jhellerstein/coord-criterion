@@ -18,7 +18,7 @@ emits.  The first sections treat a function store `graph f`; section
 * `img`, `imgT`, `img_canon`            — the composite table seen through `f`.
 * `push_not_commitment`                 — the pushforward of a `𝒫`-commitment
   need not be a commitment of the composite: a `𝒫`-choice can become a
-  retirement (`choice_becomes_retirement`).
+  subsumption (`choice_becomes_subsumption`).
 * `guarded_lockstep`, `guarded_run`     — **pushforward of runs**: if `f` is
   monotone, every run of `𝒫` under *any* basis, read through `f`, is a run of
   the composite in the transition system of Sections 2–3, whose table contains
@@ -2033,9 +2033,9 @@ theorem push_not_commitment :
     ⟨.y, ⟨⟨trivial, trivial⟩, not_rejected_of_ge (PO.refl _)⟩, rfl⟩
   exact c.excludes _ _ hc Pt.pt Lvl.lo Lvl.hi hlo hnlo hhi (Or.inl rfl)
 
-/-- **A choice of `𝒫` can become a retirement.**  In the composite, `hi` is
-exposable at the canonical state: `lo` is retired, not chosen against. -/
-theorem choice_becomes_retirement :
+/-- **A choice of `𝒫` can become a subsumption.**  In the composite, `hi` is
+exposable at the canonical state: `lo` is subsumed, not chosen against. -/
+theorem choice_becomes_subsumption :
     ¬ Exposable (canon anyS Pt.pt) Two.y ∧
       Exposable (canon (comp anyS fLvl) Pt.pt) Lvl.hi := by
   refine ⟨fun he => ?_, ?_⟩

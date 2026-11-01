@@ -53,9 +53,9 @@
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
 \newcommand{\Sealed}{\mathit{Sealed}}
-\newcommand{\Retired}{\mathit{Retired}}
+\newcommand{\Subsumed}{\mathit{Subsumed}}
 \newcommand{\Excluded}{\mathit{Excluded}}
-\newcommand{\retired}[1]{\textcolor{gray}{#1}}
+\newcommand{\grayrow}[1]{\textcolor{gray}{#1}}
 \newcommand{\sh}[1]{\cellcolor{gray!22}#1}
 % Full-width strike line through the row just ended; place after \\.
 \newcommand{\strikerow}{%
@@ -298,15 +298,15 @@ when an output can be emitted without commitment.
   \begin{tabular}[t]{@{}l c@{}}
     \multicolumn{2}{@{}l}{(b) After $\mathsf{input}(ab\cdot)$}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+    \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
     \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
     $aba$ & \sh{$a$} \\
     $abb$ & \sh{$b$} \\
-    \retired{$aa\cdot$} & \retired{$a$} \\
-    \retired{$aaa$} & \retired{$a$} \\
-    \retired{$aab$} & \retired{$a$} \\
-    \retired{$a\cdot a$} & \retired{$a$} \\
-    \retired{$a\cdot b$} & \retired{$\bot$} \\
+    \grayrow{$aa\cdot$} & \grayrow{$a$} \\
+    \grayrow{$aaa$} & \grayrow{$a$} \\
+    \grayrow{$aab$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no commitment}
@@ -315,15 +315,15 @@ when an output can be emitted without commitment.
   \begin{tabular}[t]{@{}l c@{}}
     \multicolumn{2}{@{}l}{(c) After $\mathsf{input}(aa\cdot)$ instead}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
-    \retired{$ab\cdot$} & \retired{$\bot$} \\
-    \retired{$aba$} & \retired{$a$} \\
-    \retired{$abb$} & \retired{$b$} \\
+    \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
+    \grayrow{$ab\cdot$} & \grayrow{$\bot$} \\
+    \grayrow{$aba$} & \grayrow{$a$} \\
+    \grayrow{$abb$} & \grayrow{$b$} \\
     \sh{$\mathbf{aa\cdot}$} & \sh{$a$} \\
     $aaa$ & \sh{$a$} \\
     $aab$ & \sh{$a$} \\
-    \retired{$a\cdot a$} & \retired{$a$} \\
-    \retired{$a\cdot b$} & \retired{$\bot$} \\
+    \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $a$ needs no commitment}
@@ -332,23 +332,23 @@ when an output can be emitted without commitment.
   \begin{tabular}[t]{@{}l c@{}}
     \multicolumn{2}{@{}l}{(d) (b), then polls closed}\\
     \rowhdr
-    \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+    \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
     \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
-    \retired{$aba$} & \retired{$a$} \\ \strikerow
-    \retired{$abb$} & \retired{$b$} \\ \strikerow
-    \retired{$aa\cdot$} & \retired{$a$} \\
-    \retired{$aaa$} & \retired{$a$} \\
-    \retired{$aab$} & \retired{$a$} \\
-    \retired{$a\cdot a$} & \retired{$a$} \\
-    \retired{$a\cdot b$} & \retired{$\bot$} \\
+    \grayrow{$aba$} & \grayrow{$a$} \\ \strikerow
+    \grayrow{$abb$} & \grayrow{$b$} \\ \strikerow
+    \grayrow{$aa\cdot$} & \grayrow{$a$} \\
+    \grayrow{$aaa$} & \grayrow{$a$} \\
+    \grayrow{$aab$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+    \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
   \caption{The election specification and three states reached from it, showing rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
-  input and its upper fiber.  Gray: removed from the remainder table; struck
-  through if by a commitment, otherwise retired by an input event.  Panels (b)
+  input and its upper fiber.  Gray: lost after an input event; struck
+  through if removed by a commitment.  Panels (b)
   and (c) follow input events.  In (d) the registrar emits $\bot$ and also
   closes the polls, a seal $\mathsf{output}(\bot)$ alone does not require.}
   \label{fig:election-frames}
@@ -381,7 +381,7 @@ monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd a$.
 Each panel captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
 still possible from that input.  When $v_2$'s ballot for $b$ arrives, the input event
-$\mathsf{input}(ab\cdot)$ produces panel~(b), retiring rows whose inputs no
+$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to lose rows whose inputs no
 longer \inrelbase the ballots received; such inputs are now illegal.  The \emph{upper fiber} is the set of
 outputs in the remaining rows at the current input and its \indescs: in panel~(b),
 $\{\bot,a,b\}$.
@@ -409,21 +409,21 @@ specification requires.
     \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}c@{}}
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
-      \retired{$a\cdot\cdot$} & \retired{$\bot$} \\
+      \grayrow{$a\cdot\cdot$} & \grayrow{$\bot$} \\
       \sh{$\mathbf{ab\cdot}$} & \sh{$\bot$} \\
-      \retired{$aba$} & \retired{$a$} \\ \strikerow
-      \retired{$abb$} & \retired{$b$} \\ \strikerow
-      \retired{$aa\cdot$} & \retired{$a$} \\
+      \grayrow{$aba$} & \grayrow{$a$} \\ \strikerow
+      \grayrow{$abb$} & \grayrow{$b$} \\ \strikerow
+      \grayrow{$aa\cdot$} & \grayrow{$a$} \\
     \end{tabular*}
   \end{minipage}\hfill
   \begin{minipage}[t]{0.44\linewidth}
     \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}c@{}}
       \toprule
       $\mathrm{in}$ (cont.) & $\mathrm{out}$ (cont.) \\ \midrule
-      \retired{$aaa$} & \retired{$a$} \\
-      \retired{$aab$} & \retired{$a$} \\
-      \retired{$a\cdot a$} & \retired{$a$} \\
-      \retired{$a\cdot b$} & \retired{$\bot$} \\
+      \grayrow{$aaa$} & \grayrow{$a$} \\
+      \grayrow{$aab$} & \grayrow{$a$} \\
+      \grayrow{$a\cdot a$} & \grayrow{$a$} \\
+      \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
       \bottomrule
     \end{tabular*}
     {\footnotesize upper fiber $\{\bot\}$; determined}
@@ -536,7 +536,7 @@ For a state $(i,R)$ and a legal input $j$, the \emph{input event}
   \bigl(j,\ R[\mathrm{in}\InputGe j]\bigr)
   \label{eq:input-event}
 \end{equation}
-makes $j$ current and \emph{retires} the rows whose input does not
+makes $j$ current and \emph{subsumes} the rows whose input does not
 \inrelbase $j$.  Because inputs are cumulative, $\mathsf{input}(j)$ then
 $\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.
 
@@ -736,7 +736,7 @@ contrast, can all be \outrelpast by a larger route set.
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
       $\{A,B\}$ & \sh{$[A,B]$} \\
-      \retired{$\{A,B\}$} & \retired{$[B,A]$} \\ \strikerow
+      \grayrow{$\{A,B\}$} & \grayrow{$[B,A]$} \\ \strikerow
       \bottomrule
     \end{tabular*}\par\smallskip
     {\footnotesize no remaining row \outrel the removed one: a commitment}
@@ -748,21 +748,21 @@ contrast, can all be \outrelpast by a larger route set.
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
       $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
-      \retired{$i$} & \retired{$\{s{\to}h\}$} \\
-      \retired{$i$} & \retired{$\{s{\to}h,\ s{\to}h{\to}\texttt{s2}\}$} \\
+      \grayrow{$i$} & \grayrow{$\{s{\to}h\}$} \\
+      \grayrow{$i$} & \grayrow{$\{s{\to}h,\ s{\to}h{\to}\texttt{s2}\}$} \\
       $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}h\}$} \\
       $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}h,\ s{\to}h{\to}\texttt{s2}\}$} \\
       \bottomrule
     \end{tabular*}\par\smallskip
     {\footnotesize each removed row is \outrelpast by a remaining one: an output
-    retirement}
+    subsumption}
   \end{minipage}
   \caption{Two specifications with several rows at one input, each after one output
   event.  (f) Serial orders of two concurrent transactions, under the equality
   order.  (g) Route sets from a source $s$ to a service on \texttt{s1} and
   \texttt{s2}, ordered by inclusion; $s$ reaches \texttt{s1} directly and
   \texttt{s2} through hop $h$.  Legend as in Figure~\ref{fig:election-frames};
-  gray alone may also mark an output retirement.}
+  here gray alone marks output subsumption.}
   \label{fig:ambiguity-frames}
 \end{figure}
 
@@ -772,16 +772,16 @@ serialization order \outrel the other, so emitting one requires an
 \emph{exclusion commitment} that removes the other while the input stays legal:
 emitting $[A,B]$ excludes $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
-removal an \emph{output retirement}; every removed output is
+removal an \emph{output subsumption}; every removed output is
 \outrelpast by a remaining one, so emitting the route observation loses no information
 according to the output order and needs no
 commitment: it is a \emph{legal output}.  
 
 An output event can thus remove rows in three ways: by sealing inputs, as in
-Section~\ref{sec:functional-calm}; by retiring outputs, as in panel~(g); or by
+Section~\ref{sec:functional-calm}; by subsuming outputs, as in panel~(g); or by
 excluding outputs, as in panel~(f).  The atomic event
 $\mathsf{output}(o)$ does whichever of these $o$ requires, then emits $o$;
-sealing and excluding are commitments, retiring is not.
+sealing and excluding are commitments, subsuming is not.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
 The difference between them is the order-theoretic concept of a \emph{directed} fiber:
@@ -947,16 +947,16 @@ $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
 emits $o$.  With several rows at one input, each removed row falls into one of
 three classes.  Consider a removed row $(i', o')$. If no row at $i'$ \outrel $o$, the row is in $\Sealed_o$,
 and the event \emph{seals} $i'$.  If a kept row at $i'$ \outrel $o'$,
-the row is in $\Retired_o$, and removing it is an \emph{output retirement}.
+the row is in $\Subsumed_o$, and removing it is an \emph{output subsumption}.
 Otherwise the row is in $\Excluded_o$: $i'$ stays legal, but the event
 \emph{excludes} $o'$.  The seal $s_o$ removes $\Sealed_o$, and the exclusion
-$x_o$ removes $\Excluded_o$.  Both are commitments; output retirement is not.
+$x_o$ removes $\Excluded_o$.  Both are commitments; output subsumption is not.
 These are the three cases of Section~\ref{sec:ambiguity-story}: emitting
 $\bot$ under the equality order of Figure~\ref{fig:nonmonotone-frame} puts
 $aba$ and $abb$ in $\Sealed_o$; emitting $[A,B]$ in
 Figure~\ref{fig:ambiguity-frames}(f) puts $[B,A]$ in $\Excluded_o$; and the
-route sets removed in panel~(g) are in $\Retired_o$.
-In the functional case, $\Retired_o$ and $\Excluded_o$ are empty, so this is
+route sets removed in panel~(g) are in $\Subsumed_o$.
+In the functional case, $\Subsumed_o$ and $\Excluded_o$ are empty, so this is
 the output event of Definition~\ref{def:output-event}.  Formal definitions
 are in \extended.
 
@@ -1086,7 +1086,7 @@ is not needed: here it follows directly from any consistent functional
 specification.
 With several outputs per input this fails even for consistent specifications:
 in Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
-$\{s{\to}\texttt{s1}\}$ has retired the route sets that omit it, while a run at
+$\{s{\to}\texttt{s1}\}$ has subsumed the route sets that omit it, while a run at
 the same input that emitted nothing keeps them.  Consistency then guarantees
 that such replicas can be reconciled, not that they agree.
 
@@ -1104,9 +1104,9 @@ that such replicas can be reconciled, not that they agree.
     $\{A,B,C\}$ & \sh{$[A,B,C]$} \\
     $\{A,B,C\}$ & \sh{$[A,C,B]$} \\
     $\{A,B,C\}$ & \sh{$[C,A,B]$} \\
-    \retired{$\{A,B,C\}$} & \retired{$[B,A,C]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[B,C,A]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[B,A,C]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[B,C,A]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[C,B,A]$} \\ \strikerow
     \bottomrule
   \end{tabular}
   \hfill
@@ -1116,10 +1116,10 @@ that such replicas can be reconciled, not that they agree.
     $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
     $\{A,B,C\}$ & \sh{$[B,A,C]$} \\
     $\{A,B,C\}$ & \sh{$[B,C,A]$} \\
-    \retired{$\{A,B,C\}$} & \retired{$[A,B,C]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[A,C,B]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,A,B]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[A,B,C]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[A,C,B]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[C,A,B]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[C,B,A]$} \\ \strikerow
     \bottomrule
   \end{tabular}
   \caption{Serial orders of three transactions after one commitment:
@@ -1141,7 +1141,7 @@ row there \outrel it.  It leaves the current
 input unchanged.  At each input where it removes rows, a commitment either
 removes every row there, \emph{sealing} that input, or removes some outputs
 and keeps others, \emph{excluding} some of them.  An output event
-$\Out{\gamma}{o}$ applies a sequence $\gamma$ of commitments, retires rows,
+$\Out{\gamma}{o}$ applies a sequence $\gamma$ of commitments, subsumes rows,
 and emits $o$.
 A \emph{commitment event} $\mathsf{commit}(\gamma)$ applies such a sequence and
 emits nothing, as when 2PL orders $A$ before $B$ while $B$ waits for $A$'s

@@ -81,7 +81,7 @@ A system draws its commitments from a basis.
 \label{def:system-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
 applies a sequence $\gamma=c_1\cdots c_n$ of commitments, each $c_m$
-defined at the state its predecessors leave, and then retires rows and
+defined at the state its predecessors leave, and then subsumes rows and
 emits $o$, all atomically.  The sequence may be empty, written
 $\varepsilon$.  Write $R_c$ for the table after $\gamma$ is applied.  The
 event is \emph{legal} when $o$ is a legal output at $(i,R_c)$:
@@ -91,7 +91,7 @@ event is \emph{legal} when $o$ is a legal output at $(i,R_c)$:
   \exists u\in R_c[\mathrm{out}\OutputGe o](k):\ x\OutputOrd u.
   \label{eq:lifted-validity}
 \end{equation}
-The event retires those discarded rows and ends at
+The event subsumes those discarded rows and ends at
 $(i,R_c[\mathrm{out}\OutputGe o])$.
 \end{definition}
 
@@ -185,9 +185,9 @@ $x_o$ of Section~\ref{sec:lifted-output-events}.
     $\{A,B,C\}$ & \sh{$[A,B,C]$} \\
     $\{A,B,C\}$ & \sh{$[A,C,B]$} \\
     $\{A,B,C\}$ & \sh{$[C,A,B]$} \\
-    \retired{$\{A,B,C\}$} & \retired{$[B,A,C]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[B,C,A]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[B,A,C]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[B,C,A]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[C,B,A]$} \\ \strikerow
     \bottomrule
   \end{tabular}
   \hfill
@@ -197,10 +197,10 @@ $x_o$ of Section~\ref{sec:lifted-output-events}.
     $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
     $\{A,B,C\}$ & \sh{$[B,A,C]$} \\
     $\{A,B,C\}$ & \sh{$[B,C,A]$} \\
-    \retired{$\{A,B,C\}$} & \retired{$[A,B,C]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[A,C,B]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,A,B]$} \\ \strikerow
-    \retired{$\{A,B,C\}$} & \retired{$[C,B,A]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[A,B,C]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[A,C,B]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[C,A,B]$} \\ \strikerow
+    \grayrow{$\{A,B,C\}$} & \grayrow{$[C,B,A]$} \\ \strikerow
     \bottomrule
   \end{tabular}
   \caption{Serial orders of three transactions after one commitment:
@@ -306,7 +306,7 @@ output.  Since any family of canonical runs forms a message-free history
 (Proposition~\ref{prop:distributed-consistency}), that run may be at another
 participant, so the coordination it requires is also distributed.  For a specification,
 then, coordination-free means commitment-free: every output event is some
-$\Out{\varepsilon}{o}$, which may still perform output retirements, and no
+$\Out{\varepsilon}{o}$, which may still perform output subsumptions, and no
 commitment event occurs.  This is the sense of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 

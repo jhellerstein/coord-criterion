@@ -228,12 +228,12 @@ theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consis
 
 /-- After Cor. `cor:convergence`: "With several outputs per input this fails
 even for consistent specifications: in Figure `fig:ambiguity-frames`(g), a
-run that emitted `{s→s1}` has retired the route sets that omit it, while a
+run that emitted `{s→s1}` has subsumed the route sets that omit it, while a
 run at the same input that emitted nothing keeps them.  Consistency then
 guarantees that such replicas can be reconciled, not that they agree."  The
 traceroute specification is consistent; the run that emitted `{s→s1}` and the
 canonical run end at the same input in different states (the first has
-retired `{s→a}`, the second keeps it); and the two are confluent at that
+subsumed `{s→a}`, the second keeps it); and the two are confluent at that
 input. -/
 theorem «cor:convergence/relational-fails» :
     Figures.Trace.spec.Consistent ∧
@@ -459,11 +459,11 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
 
 /-- **Def. output event, legal output event** (`def:system-output-event`).
 "An output event `Out_γ(o)` applies a sequence `γ = c₁⋯cₙ` of commitments,
-each `c_m` defined at the state its predecessors leave, and then retires
+each `c_m` defined at the state its predecessors leave, and then subsumes
 rows and emits `o`, all atomically.  The sequence may be empty, written
 `ε`.  Write `R_c` for the table after `γ` is applied.  The event is legal
 when `o` is a legal output at `(i, R_c)`: Eq. lifted-validity holds.  The event
-retires those discarded rows and ends at `(i, R_c[out ⪰ o])`."
+subsumes those discarded rows and ends at `(i, R_c[out ⪰ o])`."
 
 Lean: `SysStep B σ (.output γ o) τ` (also covering input events, unchanged).
 Eq. lifted-validity at the committed state is exactly `Exposable σc o`. -/
@@ -808,7 +808,7 @@ theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I
 
 /-- Def. `def:coordination-free`: "For a specification, then, coordination-free means
 commitment-free: every output event is some `Out_ε(o)`, which may still
-perform output retirements, and no commitment event occurs."  Lean: `CoordFree` (every output event is
+perform output subsumptions, and no commitment event occurs."  Lean: `CoordFree` (every output event is
 `Out_ε(o)`, and there is no commit event). -/
 abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   CoordFree es
@@ -842,7 +842,7 @@ theorem «sec:coordination/choices-by-strategies» {sp : Spec I O} {D : Type}
 /-- Def. `def:coordination-free`: coordination-free is the negation of coordinates,
 and coordination-free runs under any basis are exactly the commitment-free
 executions (`ExecCF`) of §3 after erasing `γ`.  `Out_ε(o)` ends at
-`R[out ⪰ o]`, so it may still retire rows (`«lem:canonical-commitment-normal-form»`
+`R[out ⪰ o]`, so it may still subsume rows (`«lem:canonical-commitment-normal-form»`
 (3) in the App. C file). -/
 theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
     (∀ es : List (SEvent sp), CoordFree es ↔ ¬ Coordinates es) ∧

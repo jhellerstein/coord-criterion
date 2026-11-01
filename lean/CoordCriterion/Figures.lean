@@ -148,7 +148,7 @@ theorem upper_c (o : Res) : (∃ k, (canon elec baa).R k o) ↔ o = .win .a := b
   · rintro rfl; exact ⟨baa, (by decide : Res.win .a = winner baa), PO.refl _⟩
 
 /-- Panel (b): the rows at printed inputs that remain are exactly
-`(ab·,⊥)`, `(aba,a)`, `(abb,b)`; the other printed rows are retired by
+`(ab·,⊥)`, `(aba,a)`, `(abb,b)`; the other printed rows are subsumed by
 `input(ab·)` (their input does not expand `ab·`). -/
 theorem panel_b (k : Ballots) (o : Res) (hk : bad ≼ k) :
     ((canon elec bab).R k o ↔
@@ -211,7 +211,7 @@ theorem panelD_struck (k : Ballots) (o : Res) :
   show ((o = winner k ∧ bab ≼ k) ∧ ¬ (k = bab ∧ o = .bot)) ↔ _
   ballot_cases k <;> rcases o with _ | ⟨_ | _⟩ <;> decide
 
-/-- The printed gray-only rows of (d) are those retired by `input(ab·)`;
+/-- The printed gray-only rows of (d) are those lost after `input(ab·)`;
 the current input is unchanged by the seal. -/
 theorem panelD_gray (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
     ¬ panelD.R k o ↔ (¬ bab ≼ k ∨ (k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b)) := by
@@ -291,7 +291,7 @@ theorem winner_determined (i : Ballots) (c : Cand) (h : winner i = .win c) :
 
 /-- **Decisive ballot vs. closing the polls.**  (1) A decisive ballot
 (`input(aa·)` at panel (a)) reaches a determined state and every row it
-removes is retired by input (its input no longer expands the current input).
+removes is lost after input (its input no longer expands the current input).
 (2) Closing the polls at (b) reaches a determined state and every row it
 removes is at a legal input expanding the current one (a commitment).
 (3) The results differ: in the election, closing the polls at any
@@ -361,14 +361,14 @@ theorem after_ab (k : Unit) (o : TOut) : outputTable (canon spec ()) .ab k o ↔
   ⟨fun h => h.2.symm, fun h => ⟨sR o, h.symm⟩⟩
 
 /-- "No remaining row refines the removed one": the row `[B,A]` is in
-`Excluded_o` (an exclusion), not sealed (the input keeps `[A,B]`) and not retired
+`Excluded_o` (an exclusion), not sealed (the input keeps `[A,B]`) and not subsumed
 (no row refines both). -/
 theorem ba_rejected :
     Excluded (canon spec ()) .ab () .ba ∧ ¬ Sealed (canon spec ()) .ab () .ba ∧
-      ¬ Retired (canon spec ()) .ab () .ba ∧
+      ¬ Subsumed (canon spec ()) .ab () .ba ∧
       ¬ ∃ u, spec.P () u ∧ TOut.ab ≼ u ∧ TOut.ba ≼ u := by
   have hns : ¬ Sealed (canon spec ()) .ab () .ba := fun h => h.2 ⟨.ab, sR _, rfl⟩
-  have hnr : ¬ Retired (canon spec ()) .ab () .ba := by
+  have hnr : ¬ Subsumed (canon spec ()) .ab () .ba := by
     rintro ⟨_, _, u, _, h1, h2⟩
     exact TOut.noConfusion (h1.trans h2.symm)
   refine ⟨⟨sR _, fun h => TOut.noConfusion h, hns, hnr⟩, hns, hnr, ?_⟩
@@ -486,12 +486,12 @@ theorem after_s1 (x : RS) :
   show (inFib x ∧ True) ∧ rS1 ≼ x ↔ _
   rs_cases x <;> decide
 
-/-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output retirements,
+/-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output subsumptions,
 each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is sealed or
 excluded, so `{s→s1}` is exposable. -/
-theorem removed_retired :
+theorem removed_subsumed :
     (∀ x, (canon spec ()).R () x → (¬ outputTable (canon spec ()) rS1 () x ↔ (x = rA ∨ x = rA2))) ∧
-    Retired (canon spec ()) rS1 () rA ∧ Retired (canon spec ()) rS1 () rA2 ∧
+    Subsumed (canon spec ()) rS1 () rA ∧ Subsumed (canon spec ()) rS1 () rA2 ∧
     (¬ ∃ k x, Sealed (canon spec ()) rS1 k x) ∧ (¬ ∃ k x, Excluded (canon spec ()) rS1 k x) ∧
     Exposable (canon spec ()) rS1 := by
   have hall : (canon spec ()).R () rAll := (canonR _).2 (by decide)
@@ -548,7 +548,7 @@ theorem union_survives (x y : RS) (hx : inFib x) (hy : inFib y) :
 
 /-- Remark after Prop. `prop:exposure-boundary`: a run that emitted
 `{s→s1}` and a run that emitted nothing reach the same input in different
-states; the first has retired `{s→a}`, the second keeps it. -/
+states; the first has subsumed `{s→a}`, the second keeps it. -/
 theorem state_depends_on_outputs :
     IsRun (outState (canon spec ()) rS1 ((canonR _).2 (by decide))) ∧ IsRun (canon spec ()) ∧
     (outState (canon spec ()) rS1 ((canonR _).2 (by decide))).cur = (canon spec ()).cur ∧

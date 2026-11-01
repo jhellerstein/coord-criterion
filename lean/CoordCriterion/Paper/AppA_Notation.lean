@@ -114,7 +114,7 @@ abbrev «app:notation/canonical-state» (sp : Spec I O) (i : I) : State sp := ca
 Lean: `Step σ (.input j) τ` (constructor `Step.input`). -/
 abbrev «app:notation/input-event» (j : I) : Event I O := .input j
 
-/-- *input retirement* — the rows `input(j)` removes (Eq. `eq:input-event`):
+/-- *input loss* — the rows `input(j)` removes (Eq. `eq:input-event`):
 rows of `R` whose input does not expand `j`.  No library name. -/
 abbrev «app:notation/input-retirement» {sp : Spec I O} (σ : State sp) (j : I) : Table I O :=
   fun k u => σ.R k u ∧ ¬ j ≼ k
@@ -229,9 +229,9 @@ abbrev «app:notation/ruled-out» {sp : Spec I O} (σ : State sp) (o : O) : Tabl
 (Eq. `eq:seal-inputs`).  Lean: `Sealed σ o`. -/
 abbrev «app:notation/Sealed» {sp : Spec I O} (σ : State sp) (o : O) : Table I O := Sealed σ o
 
-/-- *`Retired_o`* — ruled-out rows refined by a kept row at the same input
-(Eq. `eq:output-retirements`).  Lean: `Retired σ o`. -/
-abbrev «app:notation/Retired» {sp : Spec I O} (σ : State sp) (o : O) : Table I O := Retired σ o
+/-- *`Subsumed_o`* — ruled-out rows refined by a kept row at the same input
+(Eq. `eq:output-retirements`).  Lean: `Subsumed σ o`. -/
+abbrev «app:notation/Retired» {sp : Spec I O} (σ : State sp) (o : O) : Table I O := Subsumed σ o
 
 /-- *`Excluded_o`* — the rest (Eq. `eq:choice-removals`).  Lean:
 `Excluded σ o`. -/
@@ -242,11 +242,11 @@ abbrev «app:notation/Rejected» {sp : Spec I O} (σ : State sp) (o : O) : Table
 Lean: `sealState σ o _`; as a commitment `CC.sealC o`. -/
 noncomputable abbrev «app:notation/lifted-seal» {sp : Spec I O} : O → Commitment sp := sealC
 
-/-- *output retirement* — remove `Retired_o`, not a commitment
-(Def. `def:lifted-output-event`).  Lean: the rows `Retired σ o`, removed by
+/-- *output subsumption* — remove `Subsumed_o`, not a commitment
+(Def. `def:lifted-output-event`).  Lean: the rows `Subsumed σ o`, removed by
 `outputTable σ o` (no separate state). -/
 abbrev «app:notation/output-retirement» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
-  Retired σ o
+  Subsumed σ o
 
 /-- *choice* — remove `Excluded_o` (Def. `def:lifted-output-event`).  Lean:
 `excludeState σ o _`; as a commitment `CC.excludeC o`. -/
@@ -344,7 +344,7 @@ abbrev «app:notation/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp
     (init : Fin n → I) (H : CAP.History sp D n) : Prop :=
   CAP.Produced Sys n init H
 
-/-- *system output event `Out_γ(o)`* — applies commitments `γ`, retires,
+/-- *system output event `Out_γ(o)`* — applies commitments `γ`, subsumes,
 emits `o` (Def. `def:system-output-event`); when run by a system, `γ ⊆ B`
 (Def. `def:system`).  Lean: the event `SEvent.output γ o`, with transition
 `SysStep B σ (.output γ o) τ`. -/

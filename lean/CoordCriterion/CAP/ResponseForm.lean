@@ -128,8 +128,8 @@ theorem not_rm_of_le {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x) (h 
   · exact hs ⟨x, hx, h⟩
   · exact hn h
 
-/-- A kept row that does not expand `u` is retired. -/
-theorem retired_of_not_rm {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x)
+/-- A kept row that does not expand `u` is subsumed. -/
+theorem subsumed_of_not_rm {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x)
     (hrm : ¬ Rm σ u k x) (hn : ¬ u ≼ x) : ∃ v, σ.R k v ∧ u ≼ v ∧ x ≼ v := by
   apply Classical.byContradiction
   intro hv
@@ -176,7 +176,7 @@ noncomputable def kc (u : O) : Commitment sp where
       have hv : ∃ v, σ.R k v ∧ u ≼ v ∧ w ≼ v := by
         by_cases huw : u ≼ w
         · exact ⟨w, hw1, huw, PO.refl w⟩
-        · exact retired_of_not_rm hw1 hw2 huw
+        · exact subsumed_of_not_rm hw1 hw2 huw
       obtain ⟨v, hv1, hv2, hv3⟩ := hv
       rcases hrx with ⟨_, hs⟩ | ⟨_, hn, _, hret⟩
       · exact hs ⟨v, hv1, hv2⟩
@@ -205,11 +205,11 @@ theorem kc_legal {σ : State sp} {u : O} (hu : σ.R σ.cur u) :
   · refine ⟨[kc u], kcState σ u hu, Or.inr rfl, ?_, ⟨hu, not_rm_of_le hu (PO.refl u)⟩, ?_⟩
     · simp only [applySeq, kc]; rw [dite_eq_left_of_eq_true (eq_true ⟨hu, hrm⟩)]
     · intro k x hx hn
-      obtain ⟨v, hv1, hv2, hv3⟩ := retired_of_not_rm hx.1 hx.2 hn
+      obtain ⟨v, hv1, hv2, hv3⟩ := subsumed_of_not_rm hx.1 hx.2 hn
       exact ⟨v, ⟨hv1, not_rm_of_le hv1 hv2⟩, hv2, hv3⟩
   · refine ⟨[], σ, Or.inl rfl, rfl, hu, ?_⟩
     intro k x hx hn
-    exact retired_of_not_rm hx (fun h => hrm ⟨k, x, h⟩) hn
+    exact subsumed_of_not_rm hx (fun h => hrm ⟨k, x, h⟩) hn
 
 /-- Effect of a canonical event: it ends at `R[out ⪰ u]`. -/
 theorem kc_effect {σ σc τ : State sp} {u : O} {γ : List (Commitment sp)}

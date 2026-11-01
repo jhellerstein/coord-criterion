@@ -48,7 +48,7 @@ coincide with those of `Distributed/Commitments.lean` (`CC.Dist.toCAP`,
    exactly when `(i,o)` survives and Eq. `lifted-validity` holds, i.e.
    `Exposable` at the committed state, and ends at `R_c[out ⪰ o]`.  This is
    literally `Step σc (.output o) τ ∧ Exposable σc o`.  A commit event
-   `cmt γ` (`γ` nonempty) applies `γ` and stops there: no retirement, no
+   `cmt γ` (`γ` nonempty) applies `γ` and stops there: no subsumption, no
    output.
 5. *Strategies are nondeterministic* (relations from local history to
    allowed next events), and may depend on the participant set, the initial
@@ -145,7 +145,7 @@ variable {sp : Spec I O} {D : Type} {n : Nat}
 /-- A participant's local event list as a transition sequence (item 3 of
 Def. `def:distributed-history`): input events are `Step`s, output events are
 legal `Out γ o` events, commit events `Commit(γ)` (`γ` nonempty) apply `γ`
-with no retirement and no output, sends and receives leave the state
+with no subsumption and no output, sends and receives leave the state
 unchanged. -/
 inductive LRun : State sp → List (LEv sp D n) → State sp → Prop where
   | nil (σ : State sp) : LRun σ [] σ

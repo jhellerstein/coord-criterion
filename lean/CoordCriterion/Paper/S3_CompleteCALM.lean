@@ -31,32 +31,32 @@ open CC CC.CALM
 
 /-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row refines the removed one: a commitment."  After
 `output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Excluded_o` (a
-choice), neither sealed (the input keeps `[A,B]`) nor retired (no row refines
+choice), neither sealed (the input keeps `[A,B]`) nor subsumed (no row refines
 both). -/
 theorem «fig:ambiguity-frames/f» :
     (∀ k o, outputTable (canon Figures.Txn.spec ()) .ab k o ↔ o = .ab) ∧
       Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ Sealed (canon Figures.Txn.spec ()) .ab () .ba ∧
-      ¬ Retired (canon Figures.Txn.spec ()) .ab () .ba ∧
+      ¬ Subsumed (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ ∃ u, Figures.Txn.spec.P () u ∧ Figures.Txn.TOut.ab ≼ u ∧ Figures.Txn.TOut.ba ≼ u :=
   ⟨Figures.Txn.after_ab, Figures.Txn.ba_rejected⟩
 
 /-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is refined by a remaining one: an output
-retirement."  The remaining rows are `{s→s1}`, `{s→s1,s→a}`,
+subsumption."  The remaining rows are `{s→s1}`, `{s→s1,s→a}`,
 `{s→s1,s→a,s→a→s2}`; the removed `{s→a}` and `{s→a,s→a→s2}` are in
-`Retired_o`; nothing is sealed or rejected, so `{s→s1}` is a legal output. -/
+`Subsumed_o`; nothing is sealed or rejected, so `{s→s1}` is a legal output. -/
 theorem «fig:ambiguity-frames/g» :
     (∀ x, outputTable (canon Figures.Trace.spec ()) Figures.Trace.rS1 () x ↔
         (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rS1A ∨ x = Figures.Trace.rAll)) ∧
       ((∀ x, (canon Figures.Trace.spec ()).R () x →
           (¬ outputTable (canon Figures.Trace.spec ()) Figures.Trace.rS1 () x ↔
             (x = Figures.Trace.rA ∨ x = Figures.Trace.rA2))) ∧
-        Retired (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
-        Retired (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 ∧
+        Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
+        Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 ∧
         (¬ ∃ k x, Sealed (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
         (¬ ∃ k x, Excluded (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
         Exposable (canon Figures.Trace.spec ()) Figures.Trace.rS1) :=
-  ⟨Figures.Trace.after_s1, Figures.Trace.removed_retired⟩
+  ⟨Figures.Trace.after_s1, Figures.Trace.removed_subsumed⟩
 
 /-- §3.1 "Output exclusion and directedness": "In panel (f) … emitting one
 requires an *exclusion commitment* that removes the other while the input stays
@@ -74,14 +74,14 @@ theorem «sec:ambiguity-story/choice» :
   ⟨Figures.Txn.ab_not_exposable, Figures.Txn.choice_applies⟩
 
 /-- §3.1: "An output event can thus remove rows in three ways: by sealing
-inputs …; by retiring outputs …; or by choosing among outputs … sealing and
-choosing are commitments, retiring is not."  The rows ruled out by `o` are
-exactly `Sealed_o ∪ Retired_o ∪ Excluded_o`, and `o` is a legal output (no
+inputs …; by subsuming outputs …; or by choosing among outputs … sealing and
+choosing are commitments, subsuming is not."  The rows ruled out by `o` are
+exactly `Sealed_o ∪ Subsumed_o ∪ Excluded_o`, and `o` is a legal output (no
 commitment) iff `Sealed_o` and `Excluded_o` are empty. -/
 theorem «sec:ambiguity-story/three-ways» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
     (∀ k x, (σ.R k x ∧ ¬ outputTable σ o k x) ↔
-        (Sealed σ o k x ∨ Retired σ o k x ∨ Excluded σ o k x)) ∧
+        (Sealed σ o k x ∨ Subsumed σ o k x ∨ Excluded σ o k x)) ∧
       (Exposable σ o ↔ (∀ k x, ¬ Sealed σ o k x) ∧ (∀ k x, ¬ Excluded σ o k x)) :=
   ⟨ruledOut_iff σ o, exposable_iff_no_commitment σ o⟩
 
@@ -303,13 +303,13 @@ Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
 `app:lifted-output-events`, and their entries in
 `Paper/AppC_CommitmentBases.lean`. -/
 
-/-- §3.4: "In the functional case, `Retired_o` and `Excluded_o` are empty, so
+/-- §3.4: "In the functional case, `Subsumed_o` and `Excluded_o` are empty, so
 this is the output event of Definition `def:output-event`."  Every commitment
 an output event applies in a functional specification is a seal. -/
 theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ Retired σ o k x ∧ ¬ Excluded σ o k x :=
-  functional_retired_rejected_empty hf σ o k x
+    ¬ Subsumed σ o k x ∧ ¬ Excluded σ o k x :=
+  functional_subsumed_rejected_empty hf σ o k x
 
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/
 

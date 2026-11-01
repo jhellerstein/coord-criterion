@@ -10,7 +10,7 @@ events and their transition relation (`Event`, `Step`, `Exec`, `Reach`), the
 canonical state `σ_P(i)` (`canon`), exposability, Functional / Relational /
 Lifted Monotonicity, Directed Outputs, the common-expansion condition
 (`Spec.CommonExpansion`), consistency (`Spec.Consistent`), the
-Sealed/Retired/Excluded rows of a lifted output event, and commitment-free
+Sealed/Subsumed/Excluded rows of a lifted output event, and commitment-free
 executions (`ExecCF`, `ReachableCF`).  Paper
 correspondences are noted on each definition.
 
@@ -147,18 +147,18 @@ def Spec.CommonExpansion (sp : Spec I O) : Prop :=
     ∀ j : I, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
 
 /-- The three classes of rows ruled out by `o` (Eqs. seal-inputs,
-output-retirements, choice-removals). -/
+output-subsumptions, choice-removals). -/
 def Sealed {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ ∃ u, σ.R k u ∧ o ≼ u
 
-def Retired {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
+def Subsumed {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ∃ u, σ.R k u ∧ o ≼ u ∧ x ≼ u
 
 def Excluded {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
-  fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ¬ Sealed σ o k x ∧ ¬ Retired σ o k x
+  fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ¬ Sealed σ o k x ∧ ¬ Subsumed σ o k x
 
 /-- Exposable (Def. exposable): the output event applies no commitment,
-i.e. every ruled-out row is retired. -/
+i.e. every ruled-out row is subsumed. -/
 def Exposable {sp : Spec I O} (σ : State sp) (o : O) : Prop :=
   ∀ k x, σ.R k x → ¬ (o ≼ x) → ∃ u, σ.R k u ∧ o ≼ u ∧ x ≼ u
 

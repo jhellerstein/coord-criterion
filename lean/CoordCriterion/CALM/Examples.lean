@@ -362,7 +362,7 @@ def specTwo : Spec Pt Two where
 
 /-- Section `sec:complete-calm-theorem`, last paragraph: a consistent
 relational specification in which a run ends at a non-canonical state
-(emitting `hi` retires the row `(pt, lo)`). -/
+(emitting `hi` subsumes the row `(pt, lo)`). -/
 theorem state_by_input_fails_relationally :
     specTwo.Consistent ∧ ∃ τ : State specTwo, IsRun τ ∧ τ ≠ canon specTwo τ.cur := by
   refine ⟨?_, ?_⟩

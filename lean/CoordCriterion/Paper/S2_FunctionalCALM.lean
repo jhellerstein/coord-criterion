@@ -82,7 +82,7 @@ theorem «fig:election-frames/a» :
 
 /-- Fig. `fig:election-frames`(b) and §2.1 "Input and determination": "When
 `v₂`'s ballot for `b` arrives, the event `input(ab·)` produces panel (b),
-retiring rows whose inputs no longer expand the ballots received; such inputs
+causing the table to lose rows whose inputs no longer expand the ballots received; such inputs
 are now illegal. … in panel (b) it is `{⊥,a,b}`."  The CIDR version says "the
 input event `input(ab·)`".  Also "`⊥` needs no commitment" (`⊥` is a legal output). -/
 theorem «fig:election-frames/b» :
@@ -94,7 +94,7 @@ theorem «fig:election-frames/b» :
 
 /-- Fig. `fig:election-frames`(b), the printed rows: of the rows at inputs
 `⪰ a··`, exactly `(ab·,⊥)`, `(aba,a)`, `(abb,b)` remain; every other printed
-row is gray because its input does not expand `ab·` (input retirement). -/
+row is gray because its input does not expand `ab·` (input loss). -/
 theorem «fig:election-frames/b-rows» (k : Ballots) (o : Res) (hk : bad ≼ k) :
     ((canon elec bab).R k o ↔
         ((k = bab ∧ o = .bot) ∨ (k = baba ∧ o = .win .a) ∨
@@ -137,7 +137,7 @@ theorem «fig:election-frames/d» :
    Figures.Elec.panelD_rows, Figures.Elec.panelD_struck, Figures.Elec.panelD_determined⟩
 
 /-- Fig. `fig:election-frames`(d), legend: "Gray: removed from the remainder
-table; struck through if by a commitment, otherwise retired by an input event."  A
+table; struck through if by a commitment, otherwise lost after an input event."  A
 printed row is absent from panel (d) iff its input does not expand `ab·`
 (gray) or it is one of the two struck rows. -/
 theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
@@ -401,7 +401,7 @@ theorem «sec:functional-events/extra-commitments» (B : Basis elec) (hB : B Fig
 is a *legal output* when `output(o)` applies no commitment."
 
 Lean: `Exposable σ o` says that every row ruled out by `o` is refined by a
-kept row at the same input (it is retired, not sealed or chosen away); by
+kept row at the same input (it is subsumed, not sealed or chosen away); by
 `«def:exposable/no-commitment»` this is "`Sealed_o` and `Excluded_o` are
 empty", i.e. no commitment, in the sense of Def. `def:lifted-output-event`. -/
 abbrev «def:exposable» {I O : Type} [PO I] [PO O] {sp : Spec I O}
@@ -437,7 +437,7 @@ theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO
   determined_upper_fiber σ
 
 /-- "A functional specification can therefore have undetermined states, as in
-panel (b) … An input event may [reach a determined state] by retiring rows …
+panel (b) … An input event may [reach a determined state] by causing the table to lose rows …
 and a commitment by sealing inputs …, as in panels (c) and (d)." -/
 theorem «sec:functional-events/determination-examples» :
     elec.Functional ∧ ¬ Determined (canon elec bab) ∧ Determined (canon elec baa) ∧

@@ -481,7 +481,7 @@ def constK : Spec Two Pt := graph fun _ => Pt.pt
 
 /-- **Re-ordering the middle makes `𝒮₁` monotone.**  `anyS` (fiber `{x, y}`,
 incomparable) is not Lifted-Monotone; renamed into `lo ≼ hi` it is, its output
-`hi` is exposable at the canonical state (it retires `lo`), the renamed
+`hi` is exposable at the canonical state (it subsumes `lo`), the renamed
 constant store is Lifted-Monotone, and the composite is unchanged, hence
 Lifted-Monotone. -/
 theorem constant_store_reorder :

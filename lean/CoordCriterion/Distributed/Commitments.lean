@@ -65,11 +65,11 @@ theorem sealed_keep {σ τ : State sp} {o : O}
   rw [(classes_keep hsub hkeep k).1]
   exact ⟨fun h => ⟨hsub _ _ hτ, h.2⟩, fun h => ⟨hτ, h.2⟩⟩
 
-theorem retired_keep {σ τ : State sp} {o : O}
+theorem subsumed_keep {σ τ : State sp} {o : O}
     (hsub : ∀ k u, τ.R k u → σ.R k u)
     (hkeep : ∀ k u, σ.R k u → o ≼ u → τ.R k u) {k : I} {x : O} (hτ : τ.R k x) :
-    Retired τ o k x ↔ Retired σ o k x := by
-  unfold Retired
+    Subsumed τ o k x ↔ Subsumed σ o k x := by
+  unfold Subsumed
   rw [(classes_keep hsub hkeep k).2 x]
   exact ⟨fun h => ⟨hsub _ _ hτ, h.2⟩, fun h => ⟨hτ, h.2⟩⟩
 
@@ -78,7 +78,7 @@ theorem rejected_keep {σ τ : State sp} {o : O}
     (hkeep : ∀ k u, σ.R k u → o ≼ u → τ.R k u) {k : I} {x : O} (hτ : τ.R k x) :
     Excluded τ o k x ↔ Excluded σ o k x := by
   unfold Excluded
-  rw [sealed_keep hsub hkeep hτ, retired_keep hsub hkeep hτ]
+  rw [sealed_keep hsub hkeep hτ, subsumed_keep hsub hkeep hτ]
   exact ⟨fun h => ⟨hsub _ _ hτ, h.2⟩, fun h => ⟨hτ, h.2⟩⟩
 
 theorem not_sealed_of_ge {σ : State sp} {o : O} {k : I} {u : O}
@@ -89,10 +89,10 @@ theorem not_rejected_of_ge {σ : State sp} {o : O} {k : I} {u : O}
     (hou : o ≼ u) : ¬ Excluded σ o k u :=
   fun hr => hr.2.1 hou
 
-/-- A row ruled out by `o` that is neither sealed nor excluded is retired. -/
-theorem retired_of {σ : State sp} {o : O} {k : I} {x : O}
+/-- A row ruled out by `o` that is neither sealed nor excluded is subsumed. -/
+theorem subsumed_of {σ : State sp} {o : O} {k : I} {x : O}
     (h : σ.R k x) (hx : ¬ o ≼ x) (hs : ¬ Sealed σ o k x) (hr : ¬ Excluded σ o k x) :
-    Retired σ o k x :=
+    Subsumed σ o k x :=
   Classical.byContradiction fun ht => hr ⟨h, hx, hs, ht⟩
 
 /-! ### The canonical seal `s_o` and exclusion `x_o` -/
@@ -113,7 +113,7 @@ def cmExcludeState (σ : State sp) (o : O) : State sp where
   hasCur := by
     obtain ⟨x, hx⟩ := σ.hasCur
     -- the current input keeps a row: either `x` itself, or the row it is
-    -- retired to, or `x` is sealed — impossible since the current fiber
+    -- subsumed by another row, or `x` is sealed — impossible since the current fiber
     -- contains a row `⪰ o` only when `o` is there; we argue directly.
     by_cases hr : Excluded σ o σ.cur x
     · -- `x` excluded ⇒ not sealed ⇒ some row `⪰ o` at `cur`, which is not excluded
@@ -204,7 +204,7 @@ noncomputable def excludeC (o : O) : Commitment sp where
     · exact hr.2.2.2 ⟨hu, hr.2.1, w, hw, how, huw⟩
     · by_cases hsw : Sealed σ o k w
       · exact hr.2.2.1 ⟨hu, hsw.2⟩
-      · obtain ⟨_, _, v, hv, hov, hwv⟩ := retired_of hw how hsw hnw
+      · obtain ⟨_, _, v, hv, hov, hwv⟩ := subsumed_of hw how hsw hnw
         exact hr.2.2.2 ⟨hu, hr.2.1, v, hv, hov, PO.trans huw hwv⟩
 
 /-- `R ∖ (Sealed_o ∪ Excluded_o)`. -/
@@ -338,7 +338,7 @@ inductive SysStep (B : Basis sp) : State sp → SEvent sp → State sp → Prop 
       τ.cur = σ.cur → τ.R = outputTable σc o → SysStep B σ (.output γ o) τ
   /-- **Commit event** `Commit(γ)`: a nonempty sequence of basis commitments,
   each defined at the state its predecessors leave; it ends at the state the
-  sequence leaves, retires nothing and emits nothing. -/
+  sequence leaves, subsumes nothing and emits nothing. -/
   | commit {σ τ : State sp} {γ : List (Commitment sp)} :
       (∀ c ∈ γ, B c) → γ ≠ [] → ApplySeq γ σ τ → SysStep B σ (.commit γ) τ
 
@@ -484,7 +484,7 @@ theorem canonical_support (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
   · intro k x hx hnx
     rw [hR] at hx
     obtain ⟨hx, hs, hr⟩ := hx
-    obtain ⟨_, _, u, hu, hou, hxu⟩ := retired_of hx hnx hs hr
+    obtain ⟨_, _, u, hu, hou, hxu⟩ := subsumed_of hx hnx hs hr
     refine ⟨u, ?_, hou, hxu⟩
     rw [hR]; exact ⟨hu, not_sealed_of_ge hu hou, not_rejected_of_ge hou⟩
   · exact (pruned_out σ o σc hR).symm
@@ -517,7 +517,7 @@ theorem exposable_iff_empty (σ : State sp) (o : O) :
     · obtain ⟨u, hu, hou, hxu⟩ := he k x hr.1 hr.2.1
       exact hr.2.2.2 ⟨hr.1, hr.2.1, u, hu, hou, hxu⟩
   · rintro ⟨hS, hJ⟩ k x hx hnx
-    exact (retired_of hx hnx (fun h => hS ⟨k, x, h⟩) (fun h => hJ ⟨k, x, h⟩)).2.2
+    exact (subsumed_of hx hnx (fun h => hS ⟨k, x, h⟩) (fun h => hJ ⟨k, x, h⟩)).2.2
 
 /-- **Lemma containment, (3).**  `Out_ε(o)` is legal (under any basis) exactly
 when `o ∈ R(i)` is exposable, and then it ends at `(i, R[out ⪰ o])`. -/
