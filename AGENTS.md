@@ -91,7 +91,8 @@ Avoid:
 * Vague "boundary", "object", "machinery", "notion"; generic openers ("central
   goal", "core structures"); intensifiers ("crucially", "key insight").
 * Semicolon chains of three or more clauses; stacked appositives and
-  parentheticals; runs of "not X but Y"; slogan-like paragraph closers;
+  parentheticals; runs of "not X but Y"; slogan-like paragraph closers,
+  except the named CALM mnemonics placed next to their formal criteria;
   restating what was just said; "In other words" (use "Said differently",
   "Simply put").
 * Cute flourishes ("someone is watching"), "Simple as it is" (prefer "Despite

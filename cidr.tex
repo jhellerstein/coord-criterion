@@ -137,14 +137,14 @@ Confluence, and later refinements of CALM all map into the same framework.
 \section{Introduction}
 \label{sec:intro}
 
-Concurrent systems rely on coordination mechanisms ranging from mutexes and
-atomic instructions to database locks and consensus protocols.
-These mechanisms prevent concurrent actions from producing undesirable
-outcomes.  They also bring costs: overhead, latency, and
-availability in distributed settings.  Avoiding unnecessary coordination
-is therefore a central goal in distributed systems and databases.  This paper
-asks what coordination mechanisms fundamentally accomplish, and
-when that effect is intrinsically required.
+In systems, as in life, possibilities narrow.  Some are lost as the
+environment moves on.  Decisions remove others.  Incidental decisions remove
+only possibilities carried forward by those that remain.  Fateful decisions
+irrevocably exclude a possibility that nothing remaining can carry forward.
+
+We show that fateful decisions require coordination to preserve consistency
+across a system's runs, while incidental decisions do not.  This leaves a
+specification question: how can we tell whether progress will require one?
 
 The CALM Conjecture
 proposed a crisp, bidirectional answer: consistency can be achieved without
@@ -173,8 +173,8 @@ stay available under partition while others do not
 CALM's (\S\ref{sec:iconfluence-instance})?
 
 We answer such questions with a single criterion.  Our foundation is a minimalist
-specification model: a relational table pairing input values with
-corresponding outputs that are within spec.  The model is purely declarative: it
+  specification model: a \emph{table of possibilities} pairing input values
+  with corresponding outputs that are within spec.  The model is purely declarative: it
 describes what can be observed about a system, without fixing a language, protocol or placement.  The input domain $(I,\InputOrd)$ carries a partial order saying when one input
 \inrel another; the output domain $(O,\OutputOrd)$ carries one saying when one
 output \outrel another, preserving every claim the earlier one made.
@@ -193,28 +193,20 @@ a common state.
 
 Our first result, \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}), covers specifications that pair each
-input with one output: arbitrary functions between ordered domains.  It proves
-that consistency is equivalent to monotonicity: \(i\InputOrd j\) implies
-\(f(i)\OutputOrd f(j)\), so the output at \(j\) \outrel any output emitted at \(i\).
-When monotonicity fails, emitting some output requires irrevocably restricting
-later results to those that \outrelbase it.  We call this restriction a
-\emph{exclusion}.  An exclusion in this sense is not a transactional commit,
-though we will see throughout the paper how transactions rely on
-exclusions.  For a function, every exclusion is an \emph{input exclusion},
-ruling out later input that could contradict an output, as an election
-official does by closing the polls before announcing a result.  The functional
-case covers relational query languages and the usual CRDT state
-specification.
+input with one output.  It proves that consistency is equivalent to
+monotonicity: \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\), so the output at
+\(j\) \outrel any output emitted at \(i\).  The mnemonic is: \emph{Whenever we
+learn, our answers refine.}  If monotonicity fails, some output requires an
+input exclusion, ruling out later input that could contradict it.  The result
+covers relational query languages and the usual CRDT state specification.
 
 Functions cannot capture settings like leader election or transaction
-ordering, where many outputs are within spec for a given input.  There,
-exclusions gain a second job: \emph{excluding} some permitted outputs, as
-when a system picks one leader or one serial order.  We define \emph{Lifted
-Monotonicity}: as input \ingrows, some output permitted at the larger input
-\outrel whatever outputs were emitted at the smaller one.  \emph{Complete
-CALM} proves that consistency is equivalent to Lifted Monotonicity
-(\S\ref{sec:complete-calm-theorem}), allowing CALM to formally address
-the ambiguous specifications common in transactional and distributed systems.
+ordering, where several outputs are permitted at one input.  These also need
+Directed Outputs: whatever outputs are chosen must have a common \outnoun.
+Together the conditions are \emph{Lifted Monotonicity}, with two maxims:
+\emph{Whenever we learn, our answers refine; whatever we choose, our answers
+align.}  \emph{Complete CALM} proves that consistency is equivalent to Lifted
+Monotonicity (\S\ref{sec:complete-calm-theorem}).
 
 Section~\ref{sec:distributed-execution} models distributed execution with participants
 exchanging messages and defines consistency over their histories; this is shown
@@ -666,7 +658,7 @@ along the way.
 Knowing the input is therefore enough to know the state, and with it the one
 output.  Monotonicity also governs legality:
 
-\begin{proposition}[Exposure boundary]
+\begin{proposition}[Output-legality boundary]
 \label{prop:functional-exposure-boundary}
 A functional ordered specification is monotone if and only if every output at
 every state reachable without exclusion is legal.
@@ -998,7 +990,7 @@ both theorems hold for distributed histories.
 
 The same condition governs legality.
 
-\begin{proposition}[Exposure boundary]
+\begin{proposition}[Output-legality boundary]
 \label{prop:exposure-boundary}
 An ordered specification satisfies Lifted Monotonicity if and only
 if every output at every state reachable without exclusion is legal.
@@ -1006,7 +998,7 @@ if every output at every state reachable without exclusion is legal.
 
 \begin{proof}[Proof sketch]
 Under the common-\indesc condition, consistency supplies the common \outnoun
-the exposure test asks for.  Conversely, the exposure test at canonical
+the legal-output test asks for.  Conversely, the legal-output test at canonical
 states, one row at a time, builds the common \outnoun the condition
 asks for.  \fullproof
 \end{proof}
@@ -1165,7 +1157,8 @@ canonical run: one that accepts the same inputs, emits the same outputs,
 and keeps at least the original's rows after each event (\extended).
 \end{lemma}
 
-To illustrate, when 2PL orders $A$ before $B$ in an exclusion event, the
+For legal outputs, eager output is free and circumspection is incidental.  To
+illustrate, when 2PL orders $A$ before $B$ in an exclusion event, the
 canonical run skips it; when 2PL later emits a serial order, so does the
 canonical run, and both end with the same table.  Whether a specification
 needs coordination thus depends on the input and output exclusions its outputs
@@ -1513,11 +1506,11 @@ Fix any system for $\Spec_1$.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-(1) is Complete CALM and the exposure boundary
+(1) is Complete CALM and the output-legality boundary
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary})
 applied to $\Spec_2|_{\Spec_1}$.  (2) Each output event of $\Spec_1$ keeps
 only rows above its output, so each input $\Spec_2$ receives lies above the
-previous one, and by (1) every answer is legal.  (3) The exposure boundary
+previous one, and by (1) every answer is legal.  (3) The output-legality boundary
 of the composite fails at a canonical state, which is the image of a canonical
 state of $\Spec_1$.  \fullproof
 \end{proof}
@@ -1607,7 +1600,8 @@ replica, commits with their timestamp and write set, and deliveries of
 committed writes to replicas.  Inputs are ordered by
 downward-closed extension, and outputs are sets of read answers, ordered by
 inclusion.  For an isolation level $L$, defined by the phenomena it
-proscribes~\cite{adya1999weakconsistency}, $S_L$ permits an output when it
+proscribes~\cite{adya1999weakconsistency}, let $\Spec_L$ have table $P_L$,
+which permits an output when it
 extends to a history that answers every read, orders versions by timestamp,
 and exhibits none of them.  The explicit relation $E$ holds, at each
 input, the answers the read rule gives.
@@ -1616,7 +1610,7 @@ input, the answers the read rule gives.
 \begin{theorem}[HAT levels]
 \label{thm:hat-levels}
 Suppose each transaction's timestamp exceeds that of every version it reads.
-For read uncommitted and read committed, $E\subseteq S_L$ and $S_L$
+For read uncommitted and read committed, $E\subseteq P_L$ and $\Spec_L$
 satisfies Lifted Monotonicity for $E$, so by Complete CAP these levels stay
 available and consistent through partitions.  For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
@@ -1642,16 +1636,16 @@ In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
 is a set of versions, replicas merge states by union, and a set $T$ of
 transactions is \emph{invariant confluent} for an invariant $\mathcal I$ when
 the merge of any two reachable states satisfies $\mathcal I$.  We construct a
-specification $S_{\mathcal I}$ whose inputs are locally valid
+specification $\Spec_{\mathcal I}$ whose inputs are locally valid
 \emph{transaction histories}, partial orders of transactions in which one
 precedes another when the second's replica saw the first, ordered
 by extension.  Outputs are database states, ordered by inclusion;
-$S_{\mathcal I}$ permits at $h$ the state of any downward-closed
+$P_{\mathcal I}$ permits at $h$ the state of any downward-closed
 sub-history of $h$ whose merges all satisfy $\mathcal I$.
 
 \begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
-$T$ is invariant confluent if and only if $S_{\mathcal I}$ satisfies Lifted
+$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
 Monotonicity.
 \end{proposition}
 \proofinfull
@@ -1824,11 +1818,6 @@ and revising text, and checking mathematical arguments with Lean proofs.  All
 content was reviewed, validated, and approved by the author.
 \end{acks}
 
-% Keep the reference list within the 13-page CIDR format.
-\makeatletter
-\def\bibliofont{\fontsize{6.8}{7.2}\selectfont}
-\def\bibfont{\bibliofont}
-\makeatother
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references,cidr-extra}
 

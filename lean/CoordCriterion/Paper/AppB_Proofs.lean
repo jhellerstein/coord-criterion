@@ -135,7 +135,7 @@ theorem «proof:thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 /-- Proof of Prop. `prop:exposure-boundary`, (⇒): "Let `(i,R)` be reached by a
 run (exclusion-free or not) … Extend the run in two ways: by `output(o)`,
 and by `input(j)` followed by `output(x)`.  By consistency the two extended
-runs are confluent at `j` … the exposure test makes `o` a legal output."
+runs are confluent at `j` … the legal-output test makes `o` a legal output."
 Stated, as in the proof, at every run state. -/
 theorem «proof:prop:exposure-boundary/only-if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hc : sp.Consistent) {τ : State sp} (hτ : IsRun τ) {o : O} (ho : τ.R τ.cur o) :
@@ -144,7 +144,7 @@ theorem «proof:prop:exposure-boundary/only-if» {I O : Type} [PO I] [PO O] {sp 
 
 /-- Proof of Prop. `prop:exposure-boundary`, both directions; the converse is
 the paper's: "By totality pick `u₀ ∈ P(j)`.  For `r = 1,…,k` in turn, the
-exposure test for `o_r` at `σ_P(i_r)`, applied with `x = u_{r-1}`, gives
+legal-output test for `o_r` at `σ_P(i_r)`, applied with `x = u_{r-1}`, gives
 `u_r ∈ P(j)` refining both `o_r` and `u_{r-1}`." -/
 theorem «proof:prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.CommonExpansion ↔

@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-649 entries.
+650 entries.
 
 ### §2 Functional CALM
 
@@ -315,6 +315,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/neither-is-canonical-output-exclusion»` | theorem | "… and neither is the output exclusion `x_o^out` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and exclusion events apply only e… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Locks, timestamps, quorums, and consensus differ in how and when they decide. |
+| `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Free eager output and incidental circumspection). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:contradicts»` | abbrev | **Def. |
@@ -444,9 +445,9 @@ File `Paper/S6_Instances.lean`; paper source `sections/instances.tex`.
 | `«sec:iconfluence-instance/reachable»` | abbrev | "A state is reachable when it can be derived from `s₀` by applying transactions and merging states, with every state along the way satisfying `𝓘`." Lean: |
 | `«sec:iconfluence-instance/iconfluent-def»` | theorem | "`T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." Lean: |
 | `«sec:iconfluence-instance/bailis-definition»` | theorem | "Every reachable state descends from `s₀`, so `T` is invariant confluent exactly when `𝓘(s₁ ∪ s₂)` for all reachable `s₁` and `s₂`." This is the step from Ba… |
-| `«sec:iconfluence-instance/spec»` | theorem | "From an instance `(s₀, T, 𝓘)` of their model we construct a specification `S_𝓘` in ours as follows. |
+| `«sec:iconfluence-instance/spec»` | theorem | "From an instance `(s₀, T, 𝓘)` of their model we construct a specification `𝒮_𝓘` in ours as follows. |
 | `«prop:iconfluence-lm»` | theorem | **Proposition `prop:iconfluence-lm`** (Invariant confluence and Lifted Monotonicity): |
-| `«sec:iconfluence-instance/iconfluence-is-consistency»` | theorem | Invariant confluence is consistency of `S_𝓘`: |
+| `«sec:iconfluence-instance/iconfluence-is-consistency»` | theorem | Invariant confluence is consistency of `𝒮_𝓘`: |
 | `«sec:iconfluence-instance/uniqueness»` | theorem | The uniqueness example: |
 | `«sec:iconfluence-instance/concurrency-decides»` | theorem | "Concurrency, not the transactions alone, decides the outcome: |
 | `«sec:operational-models/later-sends»` | theorem | "An output of the machine is an input of the client that receives it, so a client's later sends happen after everything the machine had received when it emit… |
@@ -594,7 +595,7 @@ File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machi
 | `«app:iconfluence/pre-post-as-eval»` | theorem | "Because `h` is a partial order and transactions are inflationary (`t(s) ⊇ s`), `pre(e)` is the state of the sub-history strictly below `e` and `post(e)` is… |
 | `«app:iconfluence/valid-def»` | theorem | "A history is locally valid when every `pre(e)` and `post(e)` satisfies `𝓘` … It is valid when every downward-closed sub-history `c` has `𝓘(eval(c))`." |
 | `«app:iconfluence/valid-locally-valid»` | theorem | (Used in the proof) A valid history is locally valid, since `pre(e)` and `post(e)` are states of downward-closed sub-histories. |
-| `«app:iconfluence/inputs-closed»` | theorem | "The specification `S_𝓘` has the locally valid histories as inputs; a downward-closed sub-order of a locally valid history is locally valid, so the inputs ar… |
+| `«app:iconfluence/inputs-closed»` | theorem | "The specification `𝒮_𝓘` has the locally valid histories as inputs; a downward-closed sub-order of a locally valid history is locally valid, so the inputs ar… |
 | `«app:iconfluence/spec»` | theorem | "An output is a state, and `u` covers `s` when `s ⊆ u`. |
 | `«app:iconfluence/total»` | theorem | "Taking `g` empty gives `s₀`, so the specification is total." |
 | `«app:iconfluence/proof-common-expansion-form»` | theorem | "We use the common-expansion form of Lifted Monotonicity (Prop. |

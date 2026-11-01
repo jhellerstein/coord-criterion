@@ -281,7 +281,7 @@ to replicas.  The history preserves each client's program order and each
 replica's arrival order, and a transaction's reads precede its commit, which
 precedes its deliveries.  Inputs are ordered by
 downward-closed extension.  An output is a set of read answers, ordered by
-inclusion.  For an isolation level `L`, `S_L` permits an output at an input
+inclusion.  For an isolation level `L`, the table `P_L` of `𝒮_L` permits an output at an input
 when it extends to a history that answers every read, orders versions by
 timestamp, and exhibits none of the phenomena that `L` proscribes.  The
 explicit relation `E` holds, at each input, the answers that the read rule
@@ -291,13 +291,13 @@ replica, commits with their timestamp and write set, and deliveries of
 committed writes to replicas.  Inputs are ordered by
 downward-closed extension, and outputs are sets of read answers, ordered by
 inclusion.  For an isolation level `L`, defined by the phenomena it
-proscribes, `S_L` permits an output when it extends to a history that answers
+proscribes, let `𝒮_L` have table `P_L`, which permits an output when it extends to a history that answers
 every read, orders versions by timestamp, and exhibits none of them.  The
 explicit relation `E` holds, at each input, the answers the read rule gives.")
 Lean: inputs `HATSpec.Inp true` (events `rd`, `cm`, `dl`; legality `WF` plus
 the timestamp condition of Thm. `thm:hat-levels`, so that the theorem's
 hypothesis is part of the input domain; of program order only "reads precede
-their commit" is required); `S_L = HATSpec.spec L`; `E = HATSpec.hatA`, the
+their commit" is required); `𝒮_L = HATSpec.spec L`; `E = HATSpec.hatA`, the
 rows `(j, hatOut j)`.  A history (`HATSpec.CH`) returns, for each read, the
 initial version or one installed by another committed transaction; levels
 are item-only (`HATSpec.Level`: RU, RC, SI, RR, SER). -/
@@ -325,16 +325,16 @@ theorem «def:hat-spec/read-rule» :
 
 /-- **Theorem `thm:hat-levels`** (HAT levels): "Suppose each transaction's
 timestamp exceeds that of every version it reads.  For read uncommitted and
-read committed, `E ⊆ S_L` and `S_L` satisfies Lifted Monotonicity for `E`, so
+read committed, `E ⊆ P_L` and `𝒮_L` satisfies Lifted Monotonicity for `E`, so
 by Complete CAP these levels stay available and consistent through
 partitions.  For any level that proscribes Lost Update, including snapshot
 isolation, repeatable read, and serializability, no explicit relation
 that answers every read satisfies Lifted Monotonicity for it."  Lean:
-(1) for `L ∈ {RU, RC}`, `E ⊆ S_L`, Lifted Monotonicity for `E`
+(1) for `L ∈ {RU, RC}`, `E ⊆ P_L`, Lifted Monotonicity for `E`
 (`CAP.ConsistentOn`), and some system with Availability for `E` and
 Partition Consistency (`CAP.complete_cap_for`); (2) for any proscribed set
-`P` containing Lost Update (avoided by the serial history, so `S_P` is a
-specification), every `E ⊆ S_P` that answers every read fails Lifted
+`P` containing Lost Update (avoided by the serial history, so `𝒮_P` is a
+specification), every `E ⊆ P_P` that answers every read fails Lifted
 Monotonicity for `E`, and no system has Availability for `E` and Partition
 Consistency; (3) in particular for SI, RR, and serializability.  The
 hypothesis is the timestamp condition on inputs: under `E`, the version a
@@ -367,7 +367,7 @@ timestamp condition rules out the dependency cycles of G0 and G1c."  Lean:
 the candidates of a read are the same at every expansion containing it
 (`HATSpec.cand_iff`), so `hatOut` is monotone; under the timestamp condition
 every read- and write-dependency of HAT's history increases timestamps, so
-`hatOut j ∈ S_RC(j)`. -/
+`hatOut j ∈ P_RC(j)`. -/
 theorem «thm:hat-levels/answers-stable» :
     (∀ i j : HATSpec.Inp true, i ≼ j → HATSpec.hatOut i ≼ HATSpec.hatOut j) ∧
       ∀ j : HATSpec.Inp true, (HATSpec.spec .RC).P j (HATSpec.hatOut j) :=
@@ -395,14 +395,14 @@ theorem «thm:hat-levels/lost-update-pair» :
 transaction begins, as in the pseudocode of the extended version of Bailis et
 al., a transaction that reads a version with a higher timestamp and then
 overwrites it forms a G1c cycle, so read committed's read rule is not
-contained in `S_L`.  Taking the timestamp at commit, above every version
+contained in `P_L`.  Taking the timestamp at commit, above every version
 read, removes the cycle."  (CIDR version: "The condition is needed: with
 timestamps fixed at transaction begin, as in the pseudocode of [the extended
 version], a transaction that reads a higher-timestamped version and overwrites
 it forms a G1c cycle.")  Lean: (1) in the specification
 without the timestamp condition (`Inp false`), an input where `T₁` reads
 `T₂`'s version `(1,2)` and then commits `x` with timestamp `(1,1)` has HAT's
-answer outside `S_RC`; (2) the pseudocode itself, run with timestamps fixed at
+answer outside `P_RC`; (2) the pseudocode itself, run with timestamps fixed at
 `BEGIN` (`HATRC`), produces that G1c history; (3) with Lamport timestamps
 taken at commit, every run is PL-2 (no G1a, G0, G1c; distinct timestamps). -/
 theorem «sec:hat-instance/rc-timestamps» :
@@ -450,7 +450,7 @@ theorem «sec:iconfluence-instance/bailis-definition» {V Tx : Type} (M : IConf.
   ⟨IConf.s0_anc, IConf.reachPlus_iff, IConf.bailis_iff, IConf.bailisAnc_iff⟩
 
 /-- "From an instance `(s₀, T, 𝓘)` of their model we construct a
-specification `S_𝓘` in ours as follows.  Inputs are transaction histories:
+specification `𝒮_𝓘` in ours as follows.  Inputs are transaction histories:
 partial orders of events, each labeled by a transaction in `T`, where one
 event precedes another when the replica running the second saw the first.  A
 history expands each of its downward-closed sub-orders.  We keep the locally
@@ -467,17 +467,17 @@ theorem «sec:iconfluence-instance/spec» {V Tx : Type} (M : IConf.Model V Tx) (
   Iff.rfl
 
 /-- **Proposition `prop:iconfluence-lm`** (Invariant confluence and Lifted
-Monotonicity): "`T` is invariant confluent if and only if `S_𝓘` satisfies
+Monotonicity): "`T` is invariant confluent if and only if `𝒮_𝓘` satisfies
 Lifted Monotonicity." -/
 theorem «prop:iconfluence-lm» {V Tx : Type} (M : IConf.Model V Tx) :
     M.IConfluent ↔ (IConf.SI M).LiftedMono :=
   IConf.ic_iff_liftedMono M
 
-/-- Invariant confluence is consistency of `S_𝓘`: Prop. `prop:iconfluence-lm`
+/-- Invariant confluence is consistency of `𝒮_𝓘`: Prop. `prop:iconfluence-lm`
 read through "applying either CALM theorem" (§6 opening: "Each setting
 declares an input, an output, and their orders before applying either CALM
 theorem.").  The sentence that stated this directly was removed from §6.4;
-Lean: by Complete CALM, Lifted Monotonicity of `S_𝓘` is its consistency. -/
+Lean: by Complete CALM, Lifted Monotonicity of `𝒮_𝓘` is its consistency. -/
 theorem «sec:iconfluence-instance/iconfluence-is-consistency» {V Tx : Type} (M : IConf.Model V Tx) :
     M.IConfluent ↔ (IConf.SI M).Consistent :=
   (IConf.ic_iff_liftedMono M).trans (complete_calm _).symm
@@ -492,7 +492,7 @@ username version of the example): versions are the employees holding ID 7;
 `alloc a` creates employee `a` with ID 7 if the replica sees the ID unused;
 the invariant `uModel.Inv` is "at most one employee has ID 7"; `jU` has the
 unordered events `alloc 1`, `alloc 2`; `oneU n t` is the one-event history.
-Consequently `S_𝓘` fails Lifted Monotonicity and the transactions are not
+Consequently `𝒮_𝓘` fails Lifted Monotonicity and the transactions are not
 invariant confluent. -/
 theorem «sec:iconfluence-instance/uniqueness» :
     IConf.LocValid Inst.uModel Inst.jU ∧ Inst.oneU 0 1 ≼ Inst.jU ∧ Inst.oneU 1 2 ≼ Inst.jU ∧

@@ -154,7 +154,7 @@ theorem «app:lifted-output-events/exposable» {I O : Type} [PO I] [PO O] {sp : 
     Exposable σ o ↔ (∀ k x, ¬ InputExcluded σ o k x) ∧ (∀ k x, ¬ OutputExcluded σ o k x) :=
   exposable_iff_no_exclusion σ o
 
-/-- **Prop. `prop:exposability`** (Lifted exposure test).  "An output
+/-- **Prop. `prop:exposability`** (Legal-output test).  "An output
 `o ∈ R(i)` is a legal output at `(i,R)` if and only if, for every legal `j ⪰ i`
 and `x ∈ R(j)`, some `u ∈ R(j)` refines both: `o ≼ u` and `x ≼ u`."  (The
 Lean statement does not need the hypothesis `o ∈ R(i)`.) -/

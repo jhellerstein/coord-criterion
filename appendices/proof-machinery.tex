@@ -113,11 +113,11 @@ $x\in R(j)$.  Extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
 By consistency the two extended runs are confluent at $j$, so
 Proposition~\ref{prop:confluence} supplies a row $(j,u)$ in both tables.  Both
-tables are contained in $R$, so $u\in R(j)$ \outrel $o$ and $x$, and the exposure test
+tables are contained in $R$, so $u\in R(j)$ \outrel $o$ and $x$, and the legal-output test
 (Proposition~\ref{prop:exposability}) makes $o$ a legal output.
 Conversely, suppose every such output is a legal output, and let rows
 $(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality pick
-$u_0\in P(j)$.  For $r=1,\ldots,k$ in turn, the exposure test for $o_r$ at
+$u_0\in P(j)$.  For $r=1,\ldots,k$ in turn, the legal-output test for $o_r$ at
 $\sigma_P(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in P(j)$ \outrelpart both
 $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
 \end{proof}
@@ -231,13 +231,13 @@ state.  It is \emph{valid} when every downward-closed sub-history $c$ has
 $\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
 state.
 
-The specification $S_{\mathcal I}$ has the locally valid histories as inputs;
+The specification $\Spec_{\mathcal I}$ has the locally valid histories as inputs;
 a downward-closed sub-order of a locally valid history is locally valid, so the
 inputs are closed under the order.
 An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
 the system may expose the state of any valid sub-history:
 \[
-  S_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
+  P_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
   sub-history of }h\}.
 \]
 A replica may hold some transactions back, but whatever it exposes must be a
@@ -262,14 +262,14 @@ union of the pieces $c\cap g_r$, each a downward-closed sub-history of the valid
 $g_r$, so by the first step $\mathrm{eval}(c)$ is a union of reachable states.  Invariant
 confluence makes each successive union valid, and a valid merge of reachable
 states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Thus $g$ is valid, and
-$\mathrm{eval}(g)\in S_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
+$\mathrm{eval}(g)\in P_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
 For $k=0$, take $g$ empty.
 
 ($\Leftarrow$) Only Directed Outputs is needed.  Let $g_1$ and $g_2$ be valid
 histories, and let $j$ be their disjoint union, with events renamed apart and
 no order between the two parts.  Each event keeps its predecessors, and its
 $\mathrm{pre}$ and $\mathrm{post}$ are states of downward-closed sub-histories
-of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in S_{\mathcal I}(j)$.
+of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$.
 Directed Outputs gives a valid sub-history $g$ of $j$ with
 $\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$,
 so $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Every

@@ -173,7 +173,7 @@ particular when `g` maps distinct values to distinct values.  Then case (3)
 applies.  In general it need not.  Let `I` be the chain `x ⊑ y ⊑ z`,
 `M = {p,q}`, `f(x) = f(z) = p`, `f(y) = q`, and `g` constant.  The composite is
 constant, hence monotone.  Under any order on `M`, monotonicity of `f` gives
-`p ≼_M q ≼_M p`, so `p = q`, a contradiction.  By the exposure test for tables
+`p ≼_M q ≼_M p`, so `p = q`, a contradiction.  By the legal-output test for tables
 of functions, `f(i)` is a legal output at `σ(i)` exactly when `f(i) ≼_M f(k)` for
 every `k ⪰ i`, so the upstream under the empty basis cannot emit at one of the
 canonical states of `x` and `y`.  The stages can be repaired only by merging
@@ -181,7 +181,7 @@ canonical states of `x` and `y`.  The stages can be repaired only by merging
 reflexive, transitive relation, which exists exactly when `g ∘ f` is
 monotone); `Joint.injective_characterization` (for one-to-one `g`, stated for
 Lifted Monotonicity of the tables, with the pulled-back partial order
-`Joint.pullPO`); `Joint.graph_canon_exposable_iff` (the exposure test);
+`Joint.pullPO`); `Joint.graph_canon_exposable_iff` (the legal-output test);
 `Joint.no_order_counterexample` (`I = Joint.C3`, `M = Joint.Mid`; the
 empty-basis upstream stalls at some canonical state); `Joint.merge_needed`
 (any re-encoding `e` of `M`, into any partially ordered set, that makes the
@@ -231,7 +231,7 @@ At `i = false` the first stage would emit `true`, which is not below its
 output `false` at the larger input, so under the empty basis it cannot emit
 there.  Under the reversed order on `M`, negation is monotone in both stages,
 and by case (3) the composite is the identity in either order."  Lean:
-`Joint.graph_canon_exposable_iff` (the exposure test, in
+`Joint.graph_canon_exposable_iff` (the legal-output test, in
 `«app:composition/reach»`), `Joint.toggle_exposable_iff` (the first stage's
 output is a legal output at `σ(b)` exactly when `b = true`),
 `Joint.toggle_empty_basis`, `Joint.bool_toggle` (in
@@ -608,7 +608,7 @@ theorem «ex:committed-log-composition» {Cmd Stt R : Type} (δ : Stt → Cmd �
 any deterministic state machine `δ`, read function `rd`, and two distinct
 commands: "As in Example `ex:committed-log-composition`, `F` and `G ⋆ F` are
 non-monotone. … A longer log never contradicts such a response, so `G` is
-monotone.  By Complete CALM and the exposure boundary, every output of `G` at
+monotone.  By Complete CALM and the output-legality boundary, every output of `G` at
 every state reachable without exclusion is a legal output, so bare reads need no
 exclusion of their own."  Lean: `I = B = Inst.Pfx Cmd`, `A = Comp.Pt`,
 `J = Inst.Pfx Rd`; `logF`, `bareG δ rd σ₀`, whose outputs pair the executed
@@ -625,7 +625,7 @@ theorem «ex:bare-reads» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd → Stt × R
 /-- Inside Example `ex:bare-reads`: "Suppose instead that the specification
 demands the latest value, so that a read of `x` must return the value of `x`
 after all of `b`.  Then a bare read can be contradicted by an entry it has not
-seen, and `G` is not monotone.  By the exposure boundary some output of `G`
+seen, and `G` is not monotone.  By the output-legality boundary some output of `G`
 then needs an exclusion of the store's own."  Lean: `latestG δ rd σ₀`
 (untagged responses `(r, v)`, `v` the value after all of `b`); "an entry it has
 not seen" is a command `c` that changes what read `r` returns. -/

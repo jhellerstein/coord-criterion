@@ -332,7 +332,7 @@ theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (sp.Consistent ↔ sp.LiftedMono) ∧ (sp.Consistent ↔ sp.CommonExpansion) :=
   ⟨complete_calm sp, complete_calm_commonExpansion sp⟩
 
-/-- **Prop. `prop:exposure-boundary`** (Exposure boundary).  "An ordered
+/-- **Prop. `prop:exposure-boundary`** (Output-legality boundary).  "An ordered
 specification satisfies Lifted Monotonicity if and only if every output at
 every state reachable without exclusion is a legal output."  The proof sketch
 goes through the common-expansion condition (Prop.
@@ -344,8 +344,8 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
   (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
 
 /-- Prop. `prop:exposure-boundary`, proof sketch: "Under the common-expansion
-condition, consistency supplies the common refinement the exposure test asks
-for.  Conversely, the exposure test at canonical states, one row at a time,
+condition, consistency supplies the common refinement the legal-output test asks
+for.  Conversely, the legal-output test at canonical states, one row at a time,
 builds the common refinement the condition asks for."  The common-expansion
 form of the proposition. -/
 theorem «prop:exposure-boundary/common-expansion» {I O : Type} [PO I] [PO O] (sp : Spec I O) :

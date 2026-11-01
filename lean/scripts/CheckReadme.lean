@@ -149,6 +149,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/neither-is-canonical-output-exclusion»
 #check @CC.Paper.«sec:systems/run-under-basis»
 #check @CC.Paper.«sec:systems/canonical-equivalent»
+#check @CC.Paper.«cor:free-eager-output»
 #check @CC.Paper.«sec:systems/canonical-example»
 #check @CC.Paper.«sec:coordination/closing-after-voting»
 #check @CC.Paper.«def:contradicts»

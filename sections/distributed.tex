@@ -40,7 +40,7 @@ when and which to apply.
 A \emph{exclusion} is a partial function on
 specification states that removes a nonempty set of rows.  Each removed row is
 undominated by the rows that remain at its input: no remaining row there
-\outrel it.  Thus, whenever $c(i,R)=(j,R')$, we have $R'\subsetneq R$ and
+\outrel it.  Thus, whenever $e(i,R)=(j,R')$, we have $R'\subsetneq R$ and
 \begin{equation}
   (k,u)\in R\setminus R',\ (k,w)\in R'
   \quad\Longrightarrow\quad
@@ -73,7 +73,7 @@ A system draws its exclusions from a basis.
 \begin{definition}[Output event $\Out{\gamma}{o}$, legal output event]
 \label{def:system-output-event}
 Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
-applies a sequence $\gamma=c_1\cdots c_n$ of exclusions, each $c_m$
+applies a sequence $\gamma=e_1\cdots e_n$ of exclusions, each $e_m$
 defined at the state its predecessors leave, and then subsumes rows and
 emits $o$, all atomically.  The sequence may be empty, written
 $\varepsilon$.  Write $R_c$ for the table after $\gamma$ is applied.  The
@@ -91,7 +91,7 @@ $(i,R_c[\mathrm{out}\OutputGe o])$.
 \begin{definition}[Exclusion event]
 \label{def:exclusion-event}
 A \emph{exclusion event} $\mathsf{exclude}(\gamma)$ applies a nonempty
-sequence $\gamma=c_1\cdots c_n$ of exclusions, each defined at the state
+sequence $\gamma=e_1\cdots e_n$ of exclusions, each defined at the state
 its predecessors leave, and emits nothing.
 \end{definition}
 
@@ -226,6 +226,21 @@ event for its output removes
 (Lemma~\ref{lem:canonical-exclusion-normal-form}); exclusion events are
 dropped on the canonical side; the row containment extends event by event
 along the run.  Full proof in Appendix~\ref{app:bases}.
+\end{proof}
+
+\begin{corollary}[Free eager output and incidental circumspection]
+\label{cor:free-eager-output}
+\emph{Eager output is free}: emitting a legal output applies no exclusion and
+preserves every possibility up to refinement.  \emph{Circumspection is
+incidental}: every additional row preserved by deferring that output is
+already carried forward by a surviving refinement.
+\end{corollary}
+
+\begin{proof}[Proof sketch]
+By output legality, every row the canonical output event removes is subsumed
+by a surviving refinement (Proposition~\ref{prop:exposability}), proving both
+claims.  Canonical Run Universality says that canonical runs suffice when
+judging runs under any exclusion basis.
 \end{proof}
 
 In the remainder of the paper we therefore judge consistency on canonical

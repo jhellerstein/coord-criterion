@@ -95,9 +95,9 @@ theorem «app:iconfluence/valid-locally-valid» {V Tx : Type} (M : IConf.Model V
     {h : IConf.Hist Tx} (hv : IConf.Valid M h) : IConf.LocValid M h :=
   IConf.valid_locValid M hv
 
-/-! ## The specification `S_𝓘` -/
+/-! ## The specification `𝒮_𝓘` -/
 
-/-- "The specification `S_𝓘` has the locally valid histories as inputs; a
+/-- "The specification `𝒮_𝓘` has the locally valid histories as inputs; a
 downward-closed sub-order of a locally valid history is locally valid, so the
 inputs are closed under the order."  Lean: inputs are the subtype
 `IConf.Inp M`; closure is `Inst.locValid_sub`. -/
@@ -107,7 +107,7 @@ theorem «app:iconfluence/inputs-closed» {V Tx : Type} (M : IConf.Model V Tx)
 
 /-- "An output is a state, and `u` covers `s` when `s ⊆ u`. At input `h`, the
 system may expose the state of any valid sub-history:
-`S_𝓘(h) = {eval(g) : g a downward-closed, valid sub-history of h}`." -/
+`P_𝓘(h) = {eval(g) : g a downward-closed, valid sub-history of h}`." -/
 theorem «app:iconfluence/spec» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M)
     (s u : IConf.St V) :
     ((IConf.SI M).P h s ↔ ∃ g, g ≼ h.1 ∧ IConf.Valid M g ∧ IConf.eval M g = s) ∧
@@ -153,7 +153,7 @@ theorem «app:iconfluence/proof-merge-reachable» {V Tx : Type} (M : IConf.Model
     IConf.Reach M s₁ → IConf.Reach M s₂ → M.Inv (s₁.union s₂) → IConf.Reach M (s₁.union s₂) :=
   IConf.Reach.merge
 
-/-- (⇒): "`eval(g) ∈ S_𝓘(j)` covers every `eval(g_r)`.  For `k = 0`, take `g`
+/-- (⇒): "`eval(g) ∈ P_𝓘(j)` covers every `eval(g_r)`.  For `k = 0`, take `g`
 empty." -/
 theorem «app:iconfluence/proof-forward» {V Tx : Type} (M : IConf.Model V Tx) :
     M.IConfluent → (IConf.SI M).CommonExpansion :=
@@ -169,7 +169,7 @@ theorem «app:iconfluence/proof-disjoint-union» {V Tx : Type} (M : IConf.Model 
       IConf.eval M (IConf.Hist.dunion g₁ g₂) = (IConf.eval M g₁).union (IConf.eval M g₂) :=
   ⟨IConf.locValid_dunion M, IConf.eval_dunion M g₁ g₂⟩
 
-/-- (⇐): "… and `eval(g₁), eval(g₂) ∈ S_𝓘(j)`."  Lean: each part of the
+/-- (⇐): "… and `eval(g₁), eval(g₂) ∈ P_𝓘(j)`."  Lean: each part of the
 disjoint union, as a sub-history, is valid with the state of its component
 (`side g₁ g₂ 0 = g₁`, `side g₁ g₂ 1 = g₂`). -/
 theorem «app:iconfluence/proof-parts» {V Tx : Type} (M : IConf.Model V Tx) {g₁ g₂ : IConf.Hist Tx}

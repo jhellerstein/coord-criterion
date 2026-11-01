@@ -1,14 +1,14 @@
 \section{Introduction}
 \label{sec:intro}
 
-Concurrent systems rely on coordination mechanisms ranging from mutexes and
-atomic instructions to database locks and consensus protocols.
-These mechanisms prevent concurrent actions from producing undesirable
-outcomes.  They also bring costs: overhead, latency, and
-availability in distributed settings.  Avoiding unnecessary coordination
-is therefore a central goal in distributed systems and databases.  This paper
-asks what coordination mechanisms fundamentally accomplish, and
-when that effect is intrinsically required.
+In systems, as in life, possibilities narrow.  Some are lost as the
+environment moves on.  Decisions remove others.  Incidental decisions remove
+only possibilities carried forward by those that remain.  Fateful decisions
+irrevocably exclude a possibility that nothing remaining can carry forward.
+
+We show that fateful decisions require coordination to preserve consistency
+across a system's runs, while incidental decisions do not.  This leaves a
+specification question: how can we tell whether progress will require one?
 
 The CALM Conjecture
 proposed a crisp, bidirectional answer: consistency can be achieved without
@@ -37,8 +37,8 @@ stay available under partition while others do not
 CALM's (\S\ref{sec:iconfluence-instance})?
 
 We answer such questions with a single criterion.  Our foundation is a minimalist
-specification model: a relational table pairing input values with
-corresponding outputs that are within spec.  The model is purely declarative: it
+  specification model: a \emph{table of possibilities} pairing input values
+  with corresponding outputs that are within spec.  The model is purely declarative: it
 describes what can be observed about a system, without fixing a language, protocol or placement.  The input domain $(I,\InputOrd)$ carries a partial order saying when one input
 \inrel another; the output domain $(O,\OutputOrd)$ carries one saying when one
 output \outrel another, preserving every claim the earlier one made.
@@ -56,28 +56,20 @@ a common state.
 
 Our first result, \emph{Functional CALM}
 (\S\ref{sec:functional-calm-theorem}), covers specifications that pair each
-input with one output: arbitrary functions between ordered domains.  It proves
-that consistency is equivalent to monotonicity: \(i\InputOrd j\) implies
-\(f(i)\OutputOrd f(j)\), so the output at \(j\) \outrel any output emitted at \(i\).
-When monotonicity fails, emitting some output requires irrevocably restricting
-later results to those that \outrelbase it.  We call this restriction a
-\emph{exclusion}.  An exclusion in this sense is not a transactional commit,
-though we will see throughout the paper how transactions rely on
-exclusions.  For a function, every exclusion is an \emph{input exclusion},
-ruling out later input that could contradict an output, as an election
-official does by closing the polls before announcing a result.  The functional
-case covers relational query languages and the usual CRDT state
-specification.
+input with one output.  It proves that consistency is equivalent to
+monotonicity: \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\), so the output at
+\(j\) \outrel any output emitted at \(i\).  The mnemonic is: \emph{Whenever we
+learn, our answers refine.}  If monotonicity fails, some output requires an
+input exclusion, ruling out later input that could contradict it.  The result
+covers relational query languages and the usual CRDT state specification.
 
 Functions cannot capture settings like leader election or transaction
-ordering, where many outputs are within spec for a given input.  There,
-exclusions gain a second job: \emph{excluding} some permitted outputs, as
-when a system picks one leader or one serial order.  We define \emph{Lifted
-Monotonicity}: as input \ingrows, some output permitted at the larger input
-\outrel whatever outputs were emitted at the smaller one.  \emph{Complete
-CALM} proves that consistency is equivalent to Lifted Monotonicity
-(\S\ref{sec:complete-calm-theorem}), allowing CALM to formally address
-the ambiguous specifications common in transactional and distributed systems.
+ordering, where several outputs are permitted at one input.  These also need
+Directed Outputs: whatever outputs are chosen must have a common \outnoun.
+Together the conditions are \emph{Lifted Monotonicity}, with two maxims:
+\emph{Whenever we learn, our answers refine; whatever we choose, our answers
+align.}  \emph{Complete CALM} proves that consistency is equivalent to Lifted
+Monotonicity (\S\ref{sec:complete-calm-theorem}).
 
 Section~\ref{sec:distributed-execution} models distributed execution with participants
 exchanging messages and defines consistency over their histories; this is shown

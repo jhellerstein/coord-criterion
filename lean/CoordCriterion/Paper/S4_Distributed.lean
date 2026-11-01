@@ -629,6 +629,26 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : ExclusionBasis
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
     canonical_equivalent h
 
+/-- **Corollary `cor:free-eager-output`** (Free eager output and incidental
+circumspection).  "*Eager output is free*: emitting a legal output applies no
+exclusion and preserves every possibility up to refinement.
+*Circumspection is incidental*: every additional row preserved by deferring
+that output is already carried forward by a surviving refinement."
+
+Lean: for any exclusion basis, a legal output has a legal empty-exclusion
+output event; every row that event removes is in `Subsumed_o`.  Canonical Run
+Universality (`«sec:systems/canonical-equivalent»`) lifts the canonical account
+to arbitrary runs under a basis. -/
+theorem «cor:free-eager-output» {sp : Spec I O} (B : ExclusionBasis sp)
+    (σ : State sp) (o : O) (ho : σ.R σ.cur o) (hlegal : Exposable σ o) :
+    SysStep B σ (.output [] o) (outState σ o ho) ∧
+      ∀ k x, σ.R k x → ¬ outputTable σ o k x → Subsumed σ o k x := by
+  refine ⟨eps_step_iff.2 ⟨ho, hlegal, rfl, rfl⟩, ?_⟩
+  intro k x hx hn
+  have hox : ¬ o ≼ x := fun h => hn ⟨hx, h⟩
+  obtain ⟨u, hu, hou, hxu⟩ := hlegal k x hx hox
+  exact ⟨hx, hox, u, hu, hou, hxu⟩
+
 /-- *Canonical runs suffice*, example.  "Consider 2PL on an input of three
 transactions `A`, `B`, `C` that have each issued their operations and requested
 commit, where `B` waits for a lock that `A` holds.  When `B` begins to wait,
