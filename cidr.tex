@@ -437,9 +437,9 @@ specification requires.
 \end{figure}
 
 \paragraph{Output and consistency.}
-In a functional table, an output $o$ is \emph{exposable} when every output
-that could occur in future \outrel it---the entire upper fiber of the current input.  Hence $\bot$ is exposable
-in panels~(a) and~(b), and $x$ in panel~(c).  The atomic output event
+In a functional table, an output $o$ is a \emph{legal output} when every
+output that could occur in future \outrel it---the entire upper fiber of the
+current input.  Hence $\bot$ is legal in panels~(a) and~(b), and $x$ in panel~(c).  The atomic output event
 $\mathsf{output}(o)$ seals any legal input whose output does not \outrelbase
 $o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
 from then on, only rows whose outputs \outrelbase $o$ remain.  The emission
@@ -562,15 +562,15 @@ it seals are no longer legal.  Systems may issue more commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 extra commitments only restrict behavior (Section~\ref{sec:systems}).
 
-\begin{definition}[Exposable output]
+\begin{definition}[Legal output]
 \label{def:exposable}
-The output $o$ at $(i,R)$ is \emph{exposable} when $\mathsf{output}(o)$
+The output $o$ at $(i,R)$ is a \emph{legal output} when $\mathsf{output}(o)$
 applies no commitment.
 \end{definition}
 
-In a functional specification, $o$ is exposable exactly when $f(j)$ \outrel
-$o$ for every legal $j$.  An event from a determined state always leads
-to another determined state.
+In a functional specification, $o$ is a legal output exactly when $f(j)$
+\outrel $o$ for every legal $j$.  An event from a determined state always
+leads to another determined state.
 
 \paragraph{Runs and consistency.}
 We now consider the executions corresponding to a specification.
@@ -665,17 +665,17 @@ along the way.
 \proofinfull
 
 Knowing the input is therefore enough to know the state, and with it the one
-output.  Monotonicity also governs exposability:
+output.  Monotonicity also governs legality:
 
 \begin{proposition}[Exposure boundary]
 \label{prop:functional-exposure-boundary}
 A functional ordered specification is monotone if and only if every output at
-every state reachable without commitment is exposable.
+every state reachable without commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
 By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
-states. At $\sigma_S(i)$, $f(i)$ is exposable exactly
+states. At $\sigma_S(i)$, $f(i)$ is legal exactly
 when $f$ is monotone at $i$.
  \fullproof
 \end{proof}
@@ -775,7 +775,7 @@ emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output retirement}; every removed output is
 \outrelpast by a remaining one, so emitting the route observation loses no information
 according to the output order and needs no
-commitment: it is \emph{exposable}.  
+commitment: it is a \emph{legal output}.  
 
 An output event can thus remove rows in three ways: by sealing inputs, as in
 Section~\ref{sec:functional-calm}; by retiring outputs, as in panel~(g); or by
@@ -959,8 +959,9 @@ In the functional case, $\Retired_o$ and $\Rejected_o$ are empty, so this is
 the output event of Definition~\ref{def:output-event}.  Formal definitions
 are in \extended.
 
-As before, $o$ is exposable when $\mathsf{output}(o)$ applies no commitment,
-that is, when $\Sealed_o$ and $\Rejected_o$ are empty.  Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
+As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
+commitment, that is, when $\Sealed_o$ and $\Rejected_o$ are empty.
+Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
 remaining output at $j$ have a common \outnoun at $j$.
 
 \subsection{The Complete CALM theorem}
@@ -996,12 +997,12 @@ property of a specification: Lifted Monotonicity, which for a function is
 ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that
 both theorems hold for distributed histories.
 
-The same condition governs exposability.
+The same condition governs legality.
 
 \begin{proposition}[Exposure boundary]
 \label{prop:exposure-boundary}
 An ordered specification satisfies Lifted Monotonicity if and only
-if every output at every state reachable without commitment is exposable.
+if every output at every state reachable without commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -1370,7 +1371,7 @@ emit its row's output, and Partition Consistency then supplies the common
 \label{cor:complete-cap-S}
 Some system has Availability and Partition Consistency if and only if $\Spec$
 satisfies Lifted Monotonicity.  When it does, a commitment-free system has
-both: one whose strategies may emit any exposable output with no
+both: one whose strategies may emit any legal output with no
 commitment.
 \end{corollary}
 \proofinfull
@@ -1497,7 +1498,7 @@ $\Spec_1$.
 \label{def:proper-coordination}
 A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{proper} when
 $\Spec_2|_{\Spec_1}$ needs no commitment: every output at every state it
-reaches without commitment is exposable.
+reaches without commitment is legal.
 \end{definition}
 
 \begin{theorem}[Proper Coordination]
@@ -1520,7 +1521,7 @@ Fix any system for $\Spec_1$.
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary})
 applied to $\Spec_2|_{\Spec_1}$.  (2) Each output event of $\Spec_1$ keeps
 only rows above its output, so each input $\Spec_2$ receives lies above the
-previous one, and by (1) every answer is exposable.  (3) The exposure boundary
+previous one, and by (1) every answer is legal.  (3) The exposure boundary
 of the composite fails at a canonical state, which is the image of a canonical
 state of $\Spec_1$.  \fullproof
 \end{proof}

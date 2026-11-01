@@ -106,7 +106,7 @@ theorem «eq:curried-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B
 /-- "If every stage satisfies Lifted Monotonicity and `𝒮₁` runs under the
 empty basis, the pipeline emits only what `S₂ ∘ S₁` emits under the empty
 basis.  Its runs are runs of a Lifted-Monotone specification, at whose states
-every output is exposable (Proposition `prop:exposure-boundary`).  So the next
+every output is a legal output (Proposition `prop:exposure-boundary`).  So the next
 stage again has an empty-basis guard, and by induction no stage of the pipeline issues a commitment."  Lean: `Guard.pipeline_coordination_free`, via
 `Guard.exec_execCF`, for any system of `𝒮₂`. -/
 theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
@@ -174,7 +174,7 @@ applies.  In general it need not.  Let `I` be the chain `x ⊑ y ⊑ z`,
 `M = {p,q}`, `f(x) = f(z) = p`, `f(y) = q`, and `g` constant.  The composite is
 constant, hence monotone.  Under any order on `M`, monotonicity of `f` gives
 `p ≼_M q ≼_M p`, so `p = q`, a contradiction.  By the exposure test for tables
-of functions, `f(i)` is exposable at `σ(i)` exactly when `f(i) ≼_M f(k)` for
+of functions, `f(i)` is a legal output at `σ(i)` exactly when `f(i) ≼_M f(k)` for
 every `k ⪰ i`, so the upstream under the empty basis cannot emit at one of the
 canonical states of `x` and `y`.  The stages can be repaired only by merging
 `p` and `q` into one intermediate value."  Lean: `Joint.preorder_factorization` (the
@@ -226,14 +226,14 @@ theorem «app:composition/capped-counter» :
 
 /-- "For the boolean toggle, let `I`, `M`, and `O` be the booleans with `false`
 below `true`, and let both stages be negation.  The table of a function `f`
-has `f(i)` exposable at `σ(i)` exactly when `f(i) ≼_M f(k)` for all `k ⪰ i`.
+has `f(i)` a legal output at `σ(i)` exactly when `f(i) ≼_M f(k)` for all `k ⪰ i`.
 At `i = false` the first stage would emit `true`, which is not below its
 output `false` at the larger input, so under the empty basis it cannot emit
 there.  Under the reversed order on `M`, negation is monotone in both stages,
 and by case (3) the composite is the identity in either order."  Lean:
 `Joint.graph_canon_exposable_iff` (the exposure test, in
 `«app:composition/reach»`), `Joint.toggle_exposable_iff` (the first stage's
-output is exposable at `σ(b)` exactly when `b = true`),
+output is a legal output at `σ(b)` exactly when `b = true`),
 `Joint.toggle_empty_basis`, `Joint.bool_toggle` (in
 `«sec:composite-calm/cancellation»`). -/
 theorem «app:composition/boolean-toggle» (b : Bool) :
@@ -308,9 +308,9 @@ theorem «app:composition/pipeline-run» {M O : Type} [PO M] [PO O] {sk : Spec M
 /-- "In a proper pipeline, two facts about a state `τ` that `𝒮₂|_{𝒮₁}`
 reaches without commitment carry the proofs.  First, every input
 `j ⪰_M τ.cur` has a row in `τ` … Second, every output at the current input is
-exposable.  A third fact concerns `𝒮₁`.  If an output `m` at the current
-input of a state `σ` of `𝒮₁` is exposable, every `o ∈ S₂(m)` is exposable at
-the image of `σ`. … Either way
+a legal output.  A third fact concerns `𝒮₁`.  If an output `m` at the current
+input of a state `σ` of `𝒮₁` is a legal output, every `o ∈ S₂(m)` is a legal
+output at the image of `σ`. … Either way
 `(k,u)` is a row of the image that retires `(k,x)`."  Lean: the first two hold
 at every run state (`Guard.row_at`, `commonExpansion_exposable`, with the
 common-expansion condition of `𝒮₂|_{𝒮₁}` from `Guard.proper_iff_ce`); states
@@ -356,7 +356,7 @@ theorem «app:composition/guarded-lockstep» {I M O : Type} [PO I] [PO M] [PO O]
 
 /-- Proof of Theorem `thm:proper-coordination`(3): "The proof of
 Proposition `prop:exposure-boundary` derives the common-expansion condition
-from exposability at canonical states alone." -/
+from legality at canonical states alone." -/
 theorem «app:composition/canonical-states-suffice» {I O : Type} [PO I] [PO O] :
     ∀ {sp : Spec I O}, (∀ i o, sp.S i o → Exposable (canon sp i) o) → sp.CommonExpansion :=
   fun h => Guard.canon_exposable_commonExpansion h
@@ -407,7 +407,7 @@ theorem «cor:empty-store» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M} 
 /-- Proof of Corollary `cor:empty-store`: "Let `τ` be a state of the original
 and `τ'` a state of the replacement reached without commitment, with the same
 current input and `R_τ ⊆ R_τ'`. … If `Out_δ(x)` is legal at `τ`, then `x` is
-at the current input of `τ` and so of `τ'`, where it is exposable by the second
+at the current input of `τ` and so of `τ'`, where it is a legal output by the second
 fact. … Both start at `σ(m₁)`, so the containment holds after each event.  The
 replacement's strategy allows each erased event, since the original's allowed
 it before erasure."  Lean: `Guard.erase_lockstep` (for any downstream with the
@@ -462,7 +462,7 @@ removes whole fibers, so it seals. … Suppose that the store takes the lock
 only once its current log is nonempty.  Every log it can still receive then
 has the same first command, so the lock removes no row and is not a
 commitment.  Suppose instead that the store takes the lock at the empty log,
-ahead of the log.  Its output `f([])` was exposable without the lock, and the
+ahead of the log.  Its output `f([])` was a legal output without the lock, and the
 lock seals logs that `𝒮₁` can still offer.  At `σ_{𝒮₁}([b])`, `𝒮₁` can emit
 `[]` and then `[b]`.  The replacement emits `f([])`, receives `[b]`, and emits
 `f([b])`.  The locking store must take the lock at `[]`, which seals `[b]`, so
@@ -470,7 +470,7 @@ it cannot receive `[b]`."  Lean: `𝒮₁ = Inst.smrS1`; every log is an output
 (`Guard.smr_img`); the lock is `Guard.sealIn (Guard.bFirst b)` with store basis
 `Guard.mutexB b f`; at a nonempty log the lock is undefined
 (`Guard.lock_after_log`), so the late-lock store `Guard.lateLock b f` applies no
-commitment in any run (`Guard.lateLock_eps`); `f([])` is exposable at every
+commitment in any run (`Guard.lateLock_eps`); `f([])` is a legal output at every
 state with current log `[]` (`Guard.store_exposable`); the early-lock store
 `Guard.earlyLock b f` loses a run of its replacement (`Guard.early_lock_strict`,
 observable traces `Guard.Obs`). -/
@@ -496,7 +496,7 @@ theorem «app:composition/mutex-store» {Cmd O : Type} [PO O] {f : Inst.Pfx Cmd 
 /-- **Proposition `prop:invisible-coordination`** (Invisible coordination):
 "Let `f` be monotone, and let `𝒮₁` emit `m` at `σ` by `Out_γ(m)`.  If every
 row that `γ` removes has a row with the same input and the same image that `γ`
-keeps, then `f(m)` is exposable at `f(σ)`." -/
+keeps, then `f(m)` is a legal output at `f(σ)`." -/
 theorem «prop:invisible-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {f : M → O} (hf : Monotone f) {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)}
     {m : M} (h : SysStep B σ (.output γ m) τ)
@@ -511,7 +511,7 @@ those of `𝒮₁`. … Let `Out_γ(m)` be legal at `σ`, let `γ` leave `σ_c`,
 `(k,m') ∈ R_{σ_c}` is in `Sealed_{f(m)}` or `Rejected_{f(m)}` at `ρ`. … So every
 row that the composite's canonical event for `f(m)` removes by commitment has
 had every preimage in `R_σ` removed by `γ`."  Lean: `Guard.coverage` (stated
-for any `σ_c` at which `m` is exposable and any `ρ` containing `f(R_{σ_c})`)
+for any `σ_c` at which `m` is a legal output and any `ρ` containing `f(R_{σ_c})`)
 and `Guard.coverage_step`. -/
 theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {f : M → O} (hf : Monotone f) :
@@ -530,9 +530,9 @@ theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : S
 order.  Let `𝒮₁` have one input with fiber `{[a,b],[b,a]}`, for commands `a`
 and `b` on different keys, and let `f` send a log to the family of its
 subsequences on each key.  The two logs are incomparable with no common
-refinement, so `[a,b]` is not exposable, and `𝒮₁` must order them.  But
-`f([a,b]) = f([b,a])`, the composite has one row, and `f([a,b])` is
-exposable."  Lean: the per-key view `Guard.perKey key` is monotone;
+refinement, so `[a,b]` is not a legal output, and `𝒮₁` must order them.  But
+`f([a,b]) = f([b,a])`, the composite has one row, and `f([a,b])` is a legal
+output."  Lean: the per-key view `Guard.perKey key` is monotone;
 `𝒮₁ = Guard.abSpec a b`. -/
 theorem «app:composition/per-key» {Cmd K : Type} [DecidableEq K] (key : Cmd → K)
     {a b : Cmd} (hk : key a ≠ key b) :
@@ -547,7 +547,7 @@ one input with fiber `{x,y}`, `x` and `y` incomparable, and
 `f(x) = lo ≼ hi = f(y)`.  The choice `c_y` removes `x` and keeps `y`.  Its
 image would remove `lo` and keep `hi`, violating Equation
 `eq:commitment-excludes`, so no commitment of the composite has that effect.
-In the composite, `hi` is exposable at the canonical state, since it retires
+In the composite, `hi` is a legal output at the canonical state, since it retires
 `lo`."  Lean: `𝒮₁ = Comp.anyS`, `f = Guard.fLvl`. -/
 theorem «app:composition/no-pushforward» :
     (∃ τ, (choiceC Comp.Two.y).app (canon Comp.anyS Comp.Pt.pt) = some τ ∧
@@ -609,7 +609,7 @@ any deterministic state machine `δ`, read function `rd`, and two distinct
 commands: "As in Example `ex:committed-log-composition`, `F` and `G ⋆ F` are
 non-monotone. … A longer log never contradicts such a response, so `G` is
 monotone.  By Complete CALM and the exposure boundary, every output of `G` at
-every state reachable without commitment is exposable, so bare reads need no
+every state reachable without commitment is a legal output, so bare reads need no
 commitment of their own."  Lean: `I = B = Inst.Pfx Cmd`, `A = Comp.Pt`,
 `J = Inst.Pfx Rd`; `logF`, `bareG δ rd σ₀`, whose outputs pair the executed
 response log with a set (`Inst.Facts`) of tagged responses `(r, n, v)`, `v` the
@@ -760,7 +760,7 @@ theorem «app:components/feed-is-input» {I M O : Type} [PO I] [PO M] [PO O] {sp
 external observation admitted by a typed pipeline is a row of `S₂ ∘ S₁`.
 (2) If a pipeline is implementation-proper, the downstream run of every feed,
 with its commitments erased, is a commitment-free run of `𝒮₂`, in which every
-output is exposable.  (3) Contract properness does not imply implementation
+output is a legal output.  (3) Contract properness does not imply implementation
 properness: behind a log, the early-lock store is a contract-proper downstream
 implementation that still issues commitments.  (4) Contract properness does
 not imply feed availability for an arbitrarily typed downstream component:
@@ -771,7 +771,7 @@ permissive empty-basis component for `𝒮₂|_{𝒮₁}`, every admitted upstre
 boundary run has a feed, and the pipeline is implementation-proper."
 
 Lean: (1) `Pipeline.sound`.  (2) `implementationProper_downstream_execCF`
-(`ExecCF`: every output exposable).  "Contract-proper" is `Guard.Proper`,
+(`ExecCF`: every output is a legal output).  "Contract-proper" is `Guard.Proper`,
 which is `Pipeline.ContractProper` (`contractProper_iff_guardProper`).
 (3) For any command `b` and monotone `f` on logs, the log `Inst.smrS1` (empty
 basis) feeding the early-lock store `Guard.earlyLock b f`

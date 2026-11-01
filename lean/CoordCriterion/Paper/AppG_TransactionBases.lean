@@ -264,9 +264,9 @@ theorem «app:cc-bases/run-states» {T K : Type} {af : Bool} {i : Inp T K}
   ⟨hg.2, hg.1⟩
 
 /-- "So a read is reported by applying `read(A,k,v)` and then emitting the
-result, which is then exposable."  Precisely: after `read(A,k,v)`, adding the
+result, which is then a legal output."  Precisely: after `read(A,k,v)`, adding the
 result to a row that every remaining row refines gives a row, and emitting it is
-exposable.  (At any state with the two properties above.) -/
+a legal output.  (At any state with the two properties above.) -/
 theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v : Option T}
     {σ σ' : State (spec (T := T) (K := K) af)} (hg : Good σ)
     (h : (read A n v).app σ = some σ') {u : Partial.ROut T K} {k : Inp T K} (hu : σ'.R k u)
@@ -418,7 +418,7 @@ theorem «app:cc-bases/writer-before-A» {T K : Type} {A W B : T} {k : Inp T K}
 every remaining complete row commits `B`, for instance after `TxCommit(B)`,
 then every remaining complete row aborts `A`.  Emitting `A`'s abort, added to a
 row that reports the read and that every remaining row refines, is then
-exposable: the specification entails the abort."  (Lean also shows that no
+a legal output: the specification entails the abort."  (Lean also shows that no
 remaining row commits `A`.)  Stated at any state `τ` with the two properties of
 `«app:cc-bases/run-states»` whose table is contained in the one after the two
 stamps, at an input in which `A` writes `x`. -/
@@ -438,18 +438,18 @@ theorem «app:cc-bases/abort-entailed» {T K : Type} {A B : T} {ZA ZB : T → Pr
 operation, a read of `x`, arrives, then `B`'s read of `x`, and then `A`'s write
 of `x`, with further transactions free to arrive.  The scheduler applies
 `stamp(A)` and `stamp(B)` in commitment events and reports that `B` read the
-initial version of `x`.  Reporting the read is not exposable on its own, since
+initial version of `x`.  Reporting the read is not a legal output on its own, since
 at an input in which `A` writes `x` the row that commits `A` and then `B`
 cannot be completed with it; the output event that applies `read` and then
 reports the read is legal under `B_MVTO`.  After `A`'s write arrives, two
 completions remain at the input in which both then request commit: `B`
 committed with `A` aborted, and `A` committed with `B` aborted.  Emitting
-`A`'s abort is not exposable, and `abort(A)` and `abort(B)` are both defined
+`A`'s abort is not a legal output, and `abort(A)` and `abort(B)` are both defined
 and keep different completions.  MVTO's write rule aborts `A` at once, with the
 output event that applies `abort(A)` and reports the abort, which is legal
 under `B_MVTO`.  That abort is the scheduler's choice between two outcomes the
 specification still permits.  If instead the scheduler waits until `B`'s commit
-request arrives and applies `TxCommit(B)`, `A`'s abort becomes exposable."
+request arrives and applies `TxCommit(B)`, `A`'s abort becomes a legal output."
 
 (`C` is the further transaction: `stamp(B)` is defined because `C` may still
 arrive and be ordered before `B`.  `Ex.i1`–`Ex.i4` are the inputs after each
@@ -488,9 +488,9 @@ arrives, and the specification forces that abort only after the reader
 commits."  The first part is `«app:cc-bases/read-commits»`; the second is
 `«app:cc-bases/abort-entailed»` together with the run of
 `«app:cc-bases/abort-is-a-choice»`, restated here: after the write arrives,
-`A`'s abort is not exposable while `B` is undecided, the write rule's
+`A`'s abort is not a legal output while `B` is undecided, the write rule's
 `Out_[abort(A)]` is legal, and once `TxCommit(B)` has been applied the abort is
-exposable. -/
+a legal output. -/
 theorem «app:cc-bases/comparison» {T K : Type} {A B C : T} (h : Distinct3 A B C) (x : K) :
     ∃ σ5 σ7 : State (spec (T := T) (K := K) false),
       ¬ Exposable σ5 (addAbort (Ex.u B) A) ∧

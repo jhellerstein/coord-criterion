@@ -234,7 +234,7 @@ theorem «sec:proper-coordination/kvs-on-logs» {Cmd Stt R : Type} (δ : Stt →
 
 /-- **Definition `def:proper-coordination`** (Proper Coordination): "A pipeline
 in which `𝒮₁` guards `𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no commitment:
-every output at every state it reaches without commitment is exposable."  And,
+every output at every state it reaches without commitment is a legal output."  And,
 just before: "Write `𝒮₂|_{𝒮₁}` for `𝒮₂` restricted to the outputs of `𝒮₁`."
 Lean: `𝒮₂|_{𝒮₁}` is `Guard.rest sp sk = Joint.restrictTo (Joint.Img sp) sk`,
 whose inputs are the outputs of `sp` (a subtype of `M` with the order of `M`);
@@ -264,7 +264,7 @@ is a run of `S₂ ∘ S₁`); `Guard.proper_run` (more generally, any empty-basi
 run of `𝒮₂|_{𝒮₁}` that receives each output and answers it any number of
 times gives a run of `S₂ ∘ S₁` whose table contains the join); and
 `Guard.proper_confluent`.  (3) `Guard.proper_needs_commit` ("cannot emit": no
-such `m'` is exposable at `σ_{𝒮₁}(i)`, and under the empty basis no output
+such `m'` is a legal output at `σ_{𝒮₁}(i)`, and under the empty basis no output
 event there emits one).  The system for `𝒮₁` enters only through its basis,
 which is arbitrary. -/
 theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)

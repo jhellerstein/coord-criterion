@@ -110,7 +110,7 @@ commitments it applies.  In every state that a run under either basis reaches,
 each row has a complete \outnoun in the table at its input, and any output
 between two rows of the table at one input is itself a row of the table.  So a
 read is reported by applying $\mathsf{read}(A,k,v)$ and then emitting the
-result, which is then exposable.
+result, which is then a legal output.
 
 \paragraph{2PL.}
 When an operation of $B$ arrives, 2PL requests a lock on its key, shared for a
@@ -176,25 +176,25 @@ whether $B$ is decided.  Suppose $A$'s write of $x$ has arrived.  If every
 remaining complete row commits $B$, for instance after $\mathsf{TxCommit}(B)$,
 then every remaining complete row aborts $A$.  Emitting $A$'s abort, added to a
 row that reports the read and that every remaining row \outrel, is then
-exposable: the specification entails the abort.  While $B$ is undecided, it
+a legal output: the specification entails the abort.  While $B$ is undecided, it
 does not.  Consider a run in which $A$'s first operation, a read of $x$,
 arrives, then $B$'s read of $x$, and then $A$'s write of $x$, with further
 transactions free to arrive.  The scheduler applies $\mathsf{stamp}(A)$ and
 $\mathsf{stamp}(B)$ in commitment events and reports that $B$ read the initial
-version of $x$.  Reporting the read is not exposable on its own, since at an
+version of $x$.  Reporting the read is not a legal output on its own, since at an
 input in which $A$ writes $x$ the row that commits $A$ and then $B$ cannot be
 completed with it; the output event that applies $\mathsf{read}$ and then
 reports the read is legal under $\mathcal B_{\mathrm{MVTO}}$.  After $A$'s
 write arrives, two completions remain at the input in which both then request
 commit: $B$ committed with $A$ aborted, and $A$ committed with $B$ aborted.
-Emitting $A$'s abort is not exposable, and $\mathsf{abort}(A)$ and
+Emitting $A$'s abort is not a legal output, and $\mathsf{abort}(A)$ and
 $\mathsf{abort}(B)$ are both defined and keep different completions.  MVTO's
 write rule aborts $A$ at once, with the output event that applies
 $\mathsf{abort}(A)$ and reports the abort, which is legal under
 $\mathcal B_{\mathrm{MVTO}}$.  That abort is the scheduler's choice between two
 outcomes the specification still permits.  If instead the scheduler waits until
 $B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s abort
-becomes exposable.
+becomes a legal output.
 
 \paragraph{Comparison.}
 2PL issues commitments to relative orders, only between conflicting

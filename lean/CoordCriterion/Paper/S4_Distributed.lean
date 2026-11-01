@@ -297,7 +297,7 @@ poll-closing seal.  Closing the polls is the registrar's design decision,
 as fixing orderings is 2PL's."
 
 Lean: under any basis containing `closePolls`, `Out_{[closePolls]}(⊥)` from
-`σ_S(xy·)` is legal and ends at panel (d); yet `⊥` is exposable there and
+`σ_S(xy·)` is legal and ends at panel (d); yet `⊥` is a legal output there and
 `Sealed_⊥`, `Rejected_⊥` are empty, so `output(⊥)` needs no commitment. -/
 theorem «sec:systems/registrar» :
     (∀ B : Basis CALM.elec, B Figures.closePolls →
@@ -462,7 +462,7 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
 each `c_m` defined at the state its predecessors leave, and then retires
 rows and emits `o`, all atomically.  The sequence may be empty, written
 `ε`.  Write `R_c` for the table after `γ` is applied.  The event is legal
-when `o` is exposable at `(i, R_c)`: Eq. lifted-validity holds.  The event
+when `o` is a legal output at `(i, R_c)`: Eq. lifted-validity holds.  The event
 retires those discarded rows and ends at `(i, R_c[out ⪰ o])`."
 
 Lean: `SysStep B σ (.output γ o) τ` (also covering input events, unchanged).
@@ -541,7 +541,7 @@ a system's output events are legal events `Out_γ(o)` with `γ` drawn from its
 basis.
 
 Lean: in the `CC.CAP` history model an output event `out γ o` is a basis check,
-`applySeq`, and an exposable `output(o)` step at the committed state; this is
+`applySeq`, and a legal-output `output(o)` step at the committed state; this is
 exactly `SysStep` (first conjunct).  Erasure keeps `o` and drops `γ` (second
 conjunct). -/
 theorem «sec:systems/system-histories» {sp : Spec I O} {B : Basis sp} {σ τ : State sp}
@@ -945,7 +945,7 @@ participant, which manages its locks."
 coordination: in another run `B`'s request arrives first and the key's owner
 orders `B` before `A`.  But only runs at the key's owner can contradict it, so
 it does not require distributed coordination."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
-`ba` incomparable); emitting `ab` is a commitment (not exposable); in the
+`ba` incomparable); emitting `ab` is a commitment (not a legal output); in the
 system where only participant 0 may emit an order, another run (the owner
 choosing `ba`) contradicts it, but no other participant of a history does. -/
 theorem «sec:coordination/shared-nothing-single-key» (D : Type) :

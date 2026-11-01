@@ -84,7 +84,7 @@ theorem «fig:election-frames/a» :
 `v₂`'s ballot for `y` arrives, the event `input(xy·)` produces panel (b),
 retiring rows whose inputs no longer expand the ballots received; such inputs
 are now illegal. … in panel (b) it is `{⊥,x,y}`."  The CIDR version says "the
-input event `input(xy·)`".  Also "`⊥` needs no commitment" (`⊥` exposable). -/
+input event `input(xy·)`".  Also "`⊥` needs no commitment" (`⊥` is a legal output). -/
 theorem «fig:election-frames/b» :
     Step (canon elec bxd) (.input bxy) (canon elec bxy) ∧
       (∀ o : Res, ∃ k, (canon elec bxy).R k o) ∧ ¬ Determined (canon elec bxy) ∧
@@ -147,7 +147,7 @@ theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bxd ≼ k) 
 
 /-- Fig. `fig:election-frames` caption and §2.1: "a seal that `output(⊥)`
 alone does not require … Emitting `⊥` by itself would need no commitment,
-since every output still possible refines it."  At (b), `⊥` is exposable,
+since every output still possible refines it."  At (b), `⊥` is a legal output,
 `Sealed_⊥` and `Rejected_⊥` are empty, and `output(⊥)` removes no row. -/
 theorem «fig:election-frames/bot-alone» :
     Exposable (canon elec bxy) .bot ∧ (¬ ∃ k x, Sealed (canon elec bxy) .bot k x) ∧
@@ -169,7 +169,7 @@ theorem «fig:nonmonotone-frame/matches-d» (k : Ballots) (r : Res) :
     Figures.Elec.panelD.R k r ↔ outputTable (canon elecEq bxy) ⟨.bot⟩ k ⟨r⟩ :=
   Figures.Elec.panelD_matches_e k r
 
-/-- §2.1 "Output and consistency": "Hence `⊥` is exposable in panels (a)
+/-- §2.1 "Output and consistency": "Hence `⊥` is a legal output in panels (a)
 and (b), and `x` in panel (c)." -/
 theorem «sec:election-story/exposable-panels» :
     Exposable (canon elec bxd) .bot ∧ Exposable (canon elec bxy) .bot ∧
@@ -178,7 +178,7 @@ theorem «sec:election-story/exposable-panels» :
 
 /-- §2.1: "under the equality order … `⊥` is incompatible with future
 winners, so emitting it requires a seal": at `σ_S(xy·)`, `⊥` is not
-exposable under `elecEq`. -/
+a legal output under `elecEq`. -/
 theorem «sec:election-story/equality-order-seal» :
     ¬ Exposable (canon elecEq bxy) ⟨.bot⟩ :=
   fun h => ((exposable_iff_empty _ _).1 h).1 ⟨_, _, elecEq_bot_seals⟩
@@ -397,8 +397,8 @@ theorem «sec:functional-events/extra-commitments» (B : Basis elec) (hB : B Fig
       ∀ k u, Figures.Elec.panelD.R k u → ρ'.R k u :=
   Figures.Elec.registrar_canonical B hB
 
-/-- **Def. `def:exposable`** (Exposable output).  "The output `o` at `(i,R)`
-is *exposable* when `output(o)` applies no commitment."
+/-- **Def. `def:exposable`** (Legal output).  "The output `o` at `(i,R)`
+is a *legal output* when `output(o)` applies no commitment."
 
 Lean: `Exposable σ o` says that every row ruled out by `o` is refined by a
 kept row at the same input (it is retired, not sealed or chosen away); by
@@ -408,7 +408,7 @@ abbrev «def:exposable» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Prop :=
   Exposable σ o
 
-/-- Def. `def:exposable`: exposable ⇔ the event applies neither a seal nor a
+/-- Def. `def:exposable`: a legal output ⇔ the event applies neither a seal nor a
 choice. -/
 theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
@@ -417,7 +417,7 @@ theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I 
 
 /-- "In a functional specification this means `R[out ⪰ o] = R`: the event
 removes nothing.  As the only row at a legal input `j` is `(j, f(j))`, `o` is
-exposable exactly when `f(j)` refines `o` for every legal `j`." -/
+a legal output exactly when `f(j)` refines `o` for every legal `j`." -/
 theorem «sec:functional-events/functional-exposable» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
     (Exposable σ o ↔ outputTable σ o = σ.R) ∧ (Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x) :=
@@ -584,7 +584,7 @@ theorem «cor:state-by-input/input-suffices» {I O : Type} [PO I] [PO O] {sp : S
 
 /-- **Prop. `prop:functional-exposure-boundary`** (Exposure boundary).  "A
 functional ordered specification is monotone if and only if every output at
-every state reachable without commitment is exposable."  "An output at state
+every state reachable without commitment is a legal output."  "An output at state
 `τ`" is an `o` with `(τ.cur, o) ∈ τ.R`. -/
 theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O)
     (hf : sp.Functional) :

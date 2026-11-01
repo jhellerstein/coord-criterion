@@ -264,11 +264,11 @@ theorem «cor:complete-cap-S» (sp : Spec I O) (D : Type) :
      (partitionConsistency_iff_atEnd _).1 (cf_partitionConsistency h)⟩⟩
 
 /-- Corollary `cor:complete-cap-S`: "When it does, a commitment-free system has
-both: one whose strategies may emit any exposable output `o` with no
+both: one whose strategies may emit any legal output `o` with no
 commitment, by `Out_ε(o)`."
 
 Lean: `cfSystem` has empty basis and allows every event; an output event
-`Out ε o` is legal exactly when `o` is exposable.  Every history it produces
+`Out ε o` is legal exactly when `o` is a legal output.  Every history it produces
 is commitment-free. -/
 theorem «cor:complete-cap-S/commitment-free» (sp : Spec I O) (D : Type) (h : sp.LiftedMono) :
     («def:partition-notions» (cfSystem sp D) ∧ «def:partition-consistency» (cfSystem sp D)) ∧
@@ -326,8 +326,9 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
 /-- "For a smaller `E` such local choices can be necessary: if `o ∈ E(i)` and
 `x ∈ S(i) ∖ E(i)` have no common refinement at `i`, emitting `o` must choose
 against `x`."  Lean: one input, `S = {o, x}` incomparable, `E = {o}` (`lcA`): `S`
-satisfies Lifted Monotonicity for `E` (`ConsistentOn`), `o` is not exposable (so its output event must commit),
-and the canonical system `respSystem E` is coordination-free. -/
+satisfies Lifted Monotonicity for `E` (`ConsistentOn`), `o` is not a legal output
+(so its output event must commit), and the canonical system `respSystem E` is
+coordination-free. -/
 theorem «sec:complete-cap/local-choice-necessary» (D : Type) :
     ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
     (respSystem (sp := CAP.lcSpec) (D := D) CAP.lcA).CoordinationFree :=

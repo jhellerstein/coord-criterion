@@ -147,7 +147,7 @@ theorem «app:lifted-output-events/functional» {I O : Type} [PO I] [PO O] {sp :
     ¬ Retired σ o k x ∧ ¬ Rejected σ o k x :=
   functional_retired_rejected_empty hf σ o k x
 
-/-- "Exposability lifts with the event: `o` is exposable when `output(o)`
+/-- "Legality lifts with the event: `o` is a legal output when `output(o)`
 applies no commitment, that is, when `Sealed_o` and `Rejected_o` are empty." -/
 theorem «app:lifted-output-events/exposable» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
@@ -155,7 +155,7 @@ theorem «app:lifted-output-events/exposable» {I O : Type} [PO I] [PO O] {sp : 
   exposable_iff_no_commitment σ o
 
 /-- **Prop. `prop:exposability`** (Lifted exposure test).  "An output
-`o ∈ R(i)` is exposable at `(i,R)` if and only if, for every legal `j ⪰ i`
+`o ∈ R(i)` is a legal output at `(i,R)` if and only if, for every legal `j ⪰ i`
 and `x ∈ R(j)`, some `u ∈ R(j)` refines both: `o ≼ u` and `x ≼ u`."  (The
 Lean statement does not need the hypothesis `o ∈ R(i)`.) -/
 theorem «prop:exposability» {I O : Type} [PO I] [PO O] {sp : Spec I O}
@@ -298,16 +298,16 @@ theorem «app:bases/seal-choice-commute» {sp : Spec I O} {σ : State sp} {o : O
    `(i,R[out ⪰ o])`, so it retains every row that any legal `Out_γ(o)`
    retains."
 3. "If `Out_ε(o)` is legal, it takes `(i,R)` to `(i,R[out ⪰ o])`; it is legal
-   exactly when `o` is exposable."
+   exactly when `o` is a legal output."
 
 Lean, conjunct by conjunct.  (1) for any basis `B`: the event keeps the current
 input, ends inside `R[out ⪰ o]`, and the state `σc` left by `γ` (before
 retirement) contains no row of `Sealed_o ∪ Rejected_o` — "by commitment".
 (2) `Out_{κ_o}(o)` is legal under `ℬ_S` and ends at `outState σ o ho`, whose
 table is `R[out ⪰ o]`; every legal `Out_γ(o)` ends inside that table.
-(3) `Out_ε(o)` is legal (under any basis) iff `o ∈ R(i)` is exposable, and then
-ends at `(i, R[out ⪰ o])`; exposability is "`Sealed_o` and `Rejected_o` are
-empty". -/
+(3) `Out_ε(o)` is legal (under any basis) iff `o ∈ R(i)` is a legal output,
+and then ends at `(i, R[out ⪰ o])`; being a legal output is "`Sealed_o` and
+`Rejected_o` are empty". -/
 theorem «lem:canonical-commitment-normal-form» {sp : Spec I O} :
     (∀ {B : Basis sp} {σ τ : State sp} {γ : List (Commitment sp)} {o : O},
       SysStep B σ (.output γ o) τ →

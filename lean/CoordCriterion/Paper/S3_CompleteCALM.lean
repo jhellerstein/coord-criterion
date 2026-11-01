@@ -44,7 +44,7 @@ theorem «fig:ambiguity-frames/f» :
 /-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is refined by a remaining one: an output
 retirement."  The remaining rows are `{s→s1}`, `{s→s1,s→a}`,
 `{s→s1,s→a,s→a→s2}`; the removed `{s→a}` and `{s→a,s→a→s2}` are in
-`Retired_o`; nothing is sealed or rejected, so `{s→s1}` is exposable. -/
+`Retired_o`; nothing is sealed or rejected, so `{s→s1}` is a legal output. -/
 theorem «fig:ambiguity-frames/g» :
     (∀ x, outputTable (canon Figures.Trace.spec ()) Figures.Trace.rS1 () x ↔
         (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rS1A ∨ x = Figures.Trace.rAll)) ∧
@@ -60,7 +60,7 @@ theorem «fig:ambiguity-frames/g» :
 
 /-- §3.1 "Output choice and directedness": "In panel (f) … emitting one
 requires a *choice commitment* that removes the other while the input stays
-legal: emitting `[A,B]` chooses it over `[B,A]`."  `[A,B]` is not exposable,
+legal: emitting `[A,B]` chooses it over `[B,A]`."  `[A,B]` is not a legal output,
 every legal system output event emitting it carries a commitment, and the
 choice `c_[A,B]` applies, keeping `[A,B]` and removing `[B,A]`. -/
 theorem «sec:ambiguity-story/choice» :
@@ -76,7 +76,7 @@ theorem «sec:ambiguity-story/choice» :
 /-- §3.1: "An output event can thus remove rows in three ways: by sealing
 inputs …; by retiring outputs …; or by choosing among outputs … sealing and
 choosing are commitments, retiring is not."  The rows ruled out by `o` are
-exactly `Sealed_o ∪ Retired_o ∪ Rejected_o`, and `o` is exposable (no
+exactly `Sealed_o ∪ Retired_o ∪ Rejected_o`, and `o` is a legal output (no
 commitment) iff `Sealed_o` and `Rejected_o` are empty. -/
 theorem «sec:ambiguity-story/three-ways» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
@@ -332,7 +332,7 @@ theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 
 /-- **Prop. `prop:exposure-boundary`** (Exposure boundary).  "An ordered
 specification satisfies Lifted Monotonicity if and only if every output at
-every state reachable without commitment is exposable."  The proof sketch
+every state reachable without commitment is a legal output."  The proof sketch
 goes through the common-expansion condition (Prop.
 `prop:common-expansion-form`); `«prop:exposure-boundary/common-expansion»`
 is that form. -/

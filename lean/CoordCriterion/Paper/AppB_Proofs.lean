@@ -68,8 +68,8 @@ theorem «proof:cor:state-by-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}
   run_canon_of_mono hm hτ
 
 /-- Proof of Prop. `prop:functional-exposure-boundary`: monotone ⇒ every
-output at a state reachable without commitment is exposable (via
-Cor. `cor:state-by-input`); conversely, exposability at `σ_S(i)`, reached by
+output at a state reachable without commitment is a legal output (via
+Cor. `cor:state-by-input`); conversely, legality at `σ_S(i)`, reached by
 the empty run, is monotonicity. -/
 theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) (hf : sp.Functional) :
@@ -135,8 +135,8 @@ theorem «proof:thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 /-- Proof of Prop. `prop:exposure-boundary`, (⇒): "Let `(i,R)` be reached by a
 run (commitment-free or not) … Extend the run in two ways: by `output(o)`,
 and by `input(j)` followed by `output(x)`.  By consistency the two extended
-runs are confluent at `j` … the exposure test makes `o` exposable."  Stated,
-as in the proof, at every run state. -/
+runs are confluent at `j` … the exposure test makes `o` a legal output."
+Stated, as in the proof, at every run state. -/
 theorem «proof:prop:exposure-boundary/only-if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hc : sp.Consistent) {τ : State sp} (hτ : IsRun τ) {o : O} (ho : τ.R τ.cur o) :
     Exposable τ o :=

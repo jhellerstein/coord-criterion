@@ -46,9 +46,9 @@ theorem «eq:authority-refinement» {Ep Vt Dc : Type} (a b : Auth Ep Vt Dc) :
 
 /-- "Protocol safety guarantees that every output permitted at the current or
 any later input [refines] the certified evidence already emitted, so authority
-changes and certified decisions are [exposable] and need no further
+changes and certified decisions are [legal outputs] and need no further
 commitment."  Safety is the hypothesis that every remaining row refines `o`;
-the conclusion is that `o` is exposable and the commitment-free output event
+the conclusion is that `o` is a legal output and the commitment-free output event
 `Out_ε(o)` is legal (under any basis).  Generic in the specification. -/
 theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} {σ : State sp} {o : O} (ho : σ.R σ.cur o)
@@ -61,7 +61,7 @@ theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO
 different values `d ≠ d'` for the same epoch and slot (`slot d = slot d'`), in
 a specification whose permitted outputs decide at most one value per epoch and
 slot (`SlotUnique`, the paper's "at most one value per epoch and slot"):
-emitting one rejects the other, is not exposable, and every legal output event
+emitting one rejects the other, is not a legal output, and every legal output event
 emitting it applies a commitment (`γ ≠ []`). -/
 theorem «app:additional-applications/slot-conflict» {I Ep Vt Dc κ : Type} [PO I]
     (slot : Dc → κ) {sp : Spec I (Auth Ep Vt Dc)}

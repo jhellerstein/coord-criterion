@@ -137,7 +137,7 @@ general notion is Def. `def:commitment` (`«app:notation/commitment»`). -/
 abbrev «app:notation/output-event-commits» {sp : Spec I O} (σ : State sp) (o : O) : Prop :=
   ¬ Exposable σ o
 
-/-- *exposable* — `output(o)` applies no commitment (Def. `def:exposable`).
+/-- *legal output* — `output(o)` applies no commitment (Def. `def:exposable`).
 Lean: `Exposable σ o`. -/
 abbrev «app:notation/exposable» {sp : Spec I O} (σ : State sp) (o : O) : Prop := Exposable σ o
 

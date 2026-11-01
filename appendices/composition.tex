@@ -117,7 +117,7 @@ which is the plan of Proposition~\ref{prop:curried-query-plan} on tables of func
 If every stage satisfies Lifted Monotonicity and $\Spec_1$ runs under the
 empty basis, the pipeline emits only what $S_2\circ S_1$ emits under the empty
 basis.  Its runs are runs of a Lifted-Monotone
-specification, at whose states every output is exposable
+specification, at whose states every output is legal
 (Proposition~\ref{prop:exposure-boundary}).  So the next stage again has an
 empty-basis guard, and by induction no stage of the pipeline issues a commitment.
 
@@ -155,7 +155,7 @@ the chain $x\InputOrd y\InputOrd z$, $M=\{p,q\}$, $f(x)=f(z)=p$, $f(y)=q$, and
 $g$ constant.  The composite is constant, hence monotone.  Under any order on
 $M$, monotonicity of $f$ gives $p\preceq_M q\preceq_M p$, so $p=q$, a
 contradiction.  By the exposure test for tables of functions, $f(i)$ is
-exposable at $\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every
+a legal output at $\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every
 $k\InputGe i$, so the upstream under the empty basis cannot emit at one of the
 canonical states of $x$ and $y$.  The stages can be repaired only by merging
 $p$ and $q$ into one intermediate value.
@@ -174,7 +174,7 @@ $\mathcal S_2|_{\mathcal S_1}$ answers every count that $\mathcal S_1$ emits.
 
 For the boolean toggle, let $I$, $M$, and $O$ be the booleans with
 $\mathit{false}$ below $\mathit{true}$, and let both stages be negation.  The
-table of a function $f$ has $f(i)$ exposable at $\sigma(i)$ exactly when
+table of a function $f$ has $f(i)$ a legal output at $\sigma(i)$ exactly when
 $f(i)\preceq_M f(k)$ for all $k\InputGe i$.  At $i=\mathit{false}$ the first
 stage would emit $\mathit{true}$, which is not below its output
 $\mathit{false}$ at the larger input, so under the empty basis it cannot emit
@@ -185,8 +185,8 @@ Let $\mathcal S_1$ have one input $*$ and table $\{(*,x),(*,y)\}$ with $x,y$
 incomparable, and let $\mathcal S_2$ be the table of a function $f$ that maps
 both to one value.  The composite has one row, so it satisfies Lifted
 Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
-exposable, and under the empty basis an output event is legal only for an
-exposable output (Lemma~\ref{lem:canonical-commitment-normal-form}), and no
+a legal output, and under the empty basis an output event is legal only for a
+legal output (Lemma~\ref{lem:canonical-commitment-normal-form}), and no
 commitment event is possible, since its sequence is nonempty.  Input
 events only remove rows at other inputs, and there are none, so every run of
 $\mathcal S_1$ under the empty basis stays at the canonical state and emits
@@ -219,15 +219,15 @@ $\Spec_2|_{\Spec_1}$ reaches without commitment carry the proofs.  First,
 every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$: the
 common-\indesc condition gives $u\in S_2(j)$ that \outrel an output $v$ at the
 current input, and $(j,u)$ survives, since every output emitted so far is
-\outrelpast by $v$.  Second, every output at the current input is exposable.
+\outrelpast by $v$.  Second, every output at the current input is a legal output.
 A third fact concerns $\Spec_1$.  If an output $m$ at the current input of a
-state $\sigma$ of $\Spec_1$ is exposable, every $o\in S_2(m)$ is exposable at
-the image of $\sigma$.  Indeed,
+state $\sigma$ of $\Spec_1$ is a legal output, every $o\in S_2(m)$ is a legal
+output at the image of $\sigma$.  Indeed,
 let $(k,x)$ be a row of the image not \outrelpast by $o$, coming from
 $(k,m')\in R_\sigma$ and $(m',x)\in S_2$.  If $m\preceq_M m'$, the
 common-\indesc condition on the outputs of $\Spec_1$, for the rows $(m,o)$ and
 $(m',x)$ at $m'$, gives $u\in S_2(m')$ with $o,x\OutputOrd u$.  Otherwise
-exposability gives $(k,w)\in R_\sigma$ with $m,m'\preceq_M w$, and the
+legality gives $(k,w)\in R_\sigma$ with $m,m'\preceq_M w$, and the
 condition at $w$ gives $u\in S_2(w)$.  Either way $(k,u)$ is a row of the
 image that retires $(k,x)$.
 
@@ -243,7 +243,7 @@ Lifted Monotonicity of $\Spec_2$ on the outputs of $\Spec_1$.
 $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$ form a chain.
 $\Spec_2|_{\Spec_1}$ starts at $\sigma(m_1)$, which it reaches without
 commitment.  By the first two facts it can receive each $m_{r+1}$ and answer
-it by an exposable output, so it follows the run under the empty basis.
+it by a legal output, so it follows the run under the empty basis.
 
 Consider any run of the pipeline in which $\Spec_2|_{\Spec_1}$ runs under the
 empty basis, and replace each output $m_r$ of $\Spec_1$ by the answers to it.
@@ -276,11 +276,11 @@ R_{\rho_r}$ for every $r$, and the composite runs are confluent at $j$
 (Proposition~\ref{prop:confluence}).
 
 (3) The proof of Proposition~\ref{prop:exposure-boundary} derives the
-common-\indesc condition from exposability at canonical states alone.  If
+common-\indesc condition from legality at canonical states alone.  If
 Lifted Monotonicity fails for $S_2\circ S_1$, some $o$ with $(i,m)\in S_1$ and
-$o\in S_2(m)$ is therefore not exposable at $\sigma_{S_2\circ S_1}(i)$, the
+$o\in S_2(m)$ is therefore not a legal output at $\sigma_{S_2\circ S_1}(i)$, the
 image of $\sigma_{\Spec_1}(i)$.  By the third fact, no $m'\in S_1(i)$ with
-$o\in S_2(m')$ is exposable at $\sigma_{\Spec_1}(i)$.
+$o\in S_2(m')$ is a legal output at $\sigma_{\Spec_1}(i)$.
 \end{proof}
 
 Properness is needed in (3).  With $\Spec_1$ the identity on the booleans and
@@ -305,7 +305,7 @@ reached without commitment, with the same current input and $R_\tau\subseteq
 R_{\tau'}$.  If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
 $j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
 the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is legal at $\tau$, then $x$
-is at the current input of $\tau$ and so of $\tau'$, where it is exposable by
+is at the current input of $\tau$ and so of $\tau'$, where it is a legal output by
 the second fact.  Containment (Lemma~\ref{lem:canonical-commitment-normal-form})
 puts the original's resulting table inside $R_\tau[\mathrm{out}\OutputGe x]$,
 which is inside $R_{\tau'}[\mathrm{out}\OutputGe x]$, where
@@ -349,7 +349,7 @@ lock granted to $a$, which seals the logs that start with $b$.  Suppose that
 the store takes the lock only once its current log is nonempty.  Every log it
 can still receive then has the same first command, so the lock removes no row
 and is not a commitment.  Suppose instead that the store takes the lock at the
-empty log, ahead of the log.  Its output $f([\,])$ was exposable without the
+empty log, ahead of the log.  Its output $f([\,])$ was a legal output without the
 lock, and the lock seals logs that $\Spec_1$ can still offer.  At
 $\sigma_{\Spec_1}([b])$, $\Spec_1$ can emit $[\,]$ and then $[b]$.  The
 replacement emits $f([\,])$, receives $[b]$, and emits $f([b])$.  The locking
@@ -364,7 +364,7 @@ $f(\sigma)$ for the image of a state $\sigma$ of $\Spec_1$.
 \label{prop:invisible-coordination}
 Let $f$ be monotone, and let $\Spec_1$ emit $m$ at $\sigma$ by
 $\Out{\gamma}{m}$.  If every row that $\gamma$ removes has a row with the same
-input and the same image that $\gamma$ keeps, then $f(m)$ is exposable at
+input and the same image that $\gamma$ keeps, then $f(m)$ is a legal output at
 $f(\sigma)$.
 \end{proposition}
 
@@ -382,15 +382,16 @@ every preimage in $R_\sigma$ removed by $\gamma$.
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
 The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering
 argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
-$\Rejected_{f(m)}$, so $f(m)$ is exposable at $f(\sigma)$.
+$\Rejected_{f(m)}$, so $f(m)$ is a legal output at $f(\sigma)$.
 \end{proof}
 
 Consider a store that answers each key from that key's commands, in log
 order.  Let $\Spec_1$ have one input with fiber $\{[a,b],[b,a]\}$, for
 commands $a$ and $b$ on different keys, and let $f$ send a log to the family
 of its subsequences on each key.  The two logs are incomparable with no common
-\outnoun, so $[a,b]$ is not exposable, and $\Spec_1$ must order them.  But
-$f([a,b])=f([b,a])$, the composite has one row, and $f([a,b])$ is exposable.
+\outnoun, so $[a,b]$ is not a legal output, and $\Spec_1$ must order them.  But
+$f([a,b])=f([b,a])$, the composite has one row, and $f([a,b])$ is a legal
+output.
 The order of $a$ and $b$ is a commitment inside $\Spec_1$ that requires
 coordination, and the composite does not see it.
 
@@ -399,8 +400,8 @@ have one input with fiber $\{x,y\}$, $x$ and $y$ incomparable, and
 $f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The choice $c_y$ removes $x$
 and keeps $y$.  Its image would remove $\mathit{lo}$ and keep $\mathit{hi}$,
 violating Equation~\ref{eq:commitment-excludes}, so no commitment of the
-composite has that effect.  In the composite, $\mathit{hi}$ is exposable at the
-canonical state, since it retires $\mathit{lo}$.
+composite has that effect.  In the composite, $\mathit{hi}$ is a legal output
+at the canonical state, since it retires $\mathit{lo}$.
 
 Monotonicity of $f$ is needed.  Let $\Spec_1$ be the table of the identity on
 $M$, which needs no commitment.  For $m\preceq_M m'$, its run
@@ -449,7 +450,7 @@ Suppose first that each bare-read response records the log position it read
 from, as in ``$x=5$ as of entry 17.''  A longer log never contradicts such a
 response, so $G$ is monotone.  By Complete CALM and the exposure boundary,
 every output of $G$ at every state reachable without commitment is
-exposable, so bare reads need no commitment of their own.  Suppose instead
+legal, so bare reads need no commitment of their own.  Suppose instead
 that the specification demands the latest value, so that a read of $x$ must
 return the value of $x$ after all of $b$.  Then a bare read can be
 contradicted by an entry it has not seen, and $G$ is not monotone.  By the
@@ -529,7 +530,7 @@ their own, and they may issue commitments of their own.
       $S_2\circ S_1$.
 \item If a pipeline is implementation-proper, the downstream run of every
       feed, with its commitments erased, is a commitment-free run of
-      $\Spec_2$, in which every output is exposable.
+      $\Spec_2$, in which every output is legal.
 \item Contract properness does not imply implementation properness: behind a
       log, the early-lock store is a contract-proper downstream
       implementation that still issues commitments.
@@ -549,7 +550,7 @@ their own, and they may issue commitments of their own.
 
 (2) A run that applies no commitment has no commitment event, and each of its
 output events is $\Out{\varepsilon}{o}$, which is legal exactly when $o$ is
-exposable.
+a legal output.
 
 (3) The early-lock store above, fed by a log, is contract-proper, since the
 store's table satisfies Lifted Monotonicity on logs.  From the empty log it
@@ -560,12 +561,12 @@ the test of whether the count is below $10$.  The pipeline is
 contract-proper, since the test satisfies Lifted Monotonicity on the counts
 the counter offers.  An admitted run of the test from an offered count
 $m\le 9$ must emit yes, its answer at $m$.  While its current count is below
-$10$, its table keeps the row $(10,\mathit{no})$, so yes is not exposable;
+$10$, its table keeps the row $(10,\mathit{no})$, so yes is not a legal output;
 once the count reaches $10$, only no remains.  So no feed exists.
 
 (5) Let $m$ be the output of an admitted run of $C_1$.  By
 Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies
-Lifted Monotonicity, so every $o\in S_2(m)$ is exposable at $\sigma(m)$
+Lifted Monotonicity, so every $o\in S_2(m)$ is a legal output at $\sigma(m)$
 (Proposition~\ref{prop:exposure-boundary}).  The one-event run
 $\Out{\varepsilon}{o}$ from $\sigma(m)$ is then an admitted run of $C_2$.
 Under the empty basis no run applies a commitment.
@@ -605,7 +606,7 @@ projection discards a component.  A graph is an expression built from
 $\circ$, $\otimes$, and glue.
 
 The product behaves componentwise.  It satisfies Lifted Monotonicity exactly
-when both factors do, an output is exposable exactly when both components
+when both factors do, an output is a legal output exactly when both components
 are, and it needs no commitment exactly when neither factor does.  The
 converse directions need nonempty input domains.  A stage that merges the
 outputs of two guards is proper exactly when it satisfies Lifted Monotonicity

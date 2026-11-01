@@ -174,7 +174,7 @@ specification requires.
 \end{figure}
 
 \paragraph{Output and consistency.}
-In a functional table, an output $o$ is \emph{exposable} when every output that could occur in future \outrel it---the entire upper fiber of the current input.  Hence $\bot$ is exposable
+In a functional table, an output $o$ is a \emph{legal output} when every output that could occur in future \outrel it---the entire upper fiber of the current input.  Hence $\bot$ is legal
 in panels~(a) and~(b), and $x$ in panel~(c).  The atomic output event
 $\mathsf{output}(o)$ seals any legal input whose output does not \outrelbase
 $o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
@@ -357,15 +357,15 @@ ends at a state. A commitment removes rows that input alone would not: the input
 only commitments this section uses.  Systems may issue more commitments than an output requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but extra commitments only
 restrict behavior (Section~\ref{sec:systems}).
 
-\begin{definition}[Exposable output]
+\begin{definition}[Legal output]
 \label{def:exposable}
-The output $o$ at $(i,R)$ is \emph{exposable} when $\mathsf{output}(o)$
+The output $o$ at $(i,R)$ is a \emph{legal output} when $\mathsf{output}(o)$
 applies no commitment.
 \end{definition}
 
 In a functional specification this means $R[\mathrm{out}\OutputGe o]=R$: the
-event removes nothing.  As the only row at a legal input $j$ is $(j,f(j))$, $o$ is exposable
-exactly when $f(j)$ \outrel $o$ for every legal $j$.
+event removes nothing.  As the only row at a legal input $j$ is $(j,f(j))$,
+$o$ is legal exactly when $f(j)$ \outrel $o$ for every legal $j$.
 
 \paragraph{Determination.}
 A state is \emph{determined} when its upper fiber has one element: one result
@@ -523,17 +523,17 @@ single event $\mathsf{input}(j)$, which takes it to $\sigma_S(j)$, the state of 
 run that starts with all of the input.  Knowing the input is enough to know the state, and with it the one
 output $f(j)$.
 
-Monotonicity also governs exposability:
+Monotonicity also governs legality:
 
 \begin{proposition}[Exposure boundary]
 \label{prop:functional-exposure-boundary}
 A functional ordered specification is monotone if and only if every output at
-every state reachable without commitment is exposable.
+every state reachable without commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
 By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
-states. At $\sigma_S(i)$, which input alone reaches, $f(i)$ is exposable exactly
+states. At $\sigma_S(i)$, which input alone reaches, $f(i)$ is legal exactly
 when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
