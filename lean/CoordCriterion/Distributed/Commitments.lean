@@ -870,7 +870,7 @@ theorem canonical_equivalent_gen {B : Basis sp} {σ ρ : State sp} {es : List (S
       exact ⟨es', ρ', Lockstep.commit hs hct hsub' hl⟩
 
 /-- **Lemma canonical-equivalent.**  Every run under any basis `B` (from the
-canonical state `σ_S(i)`) has an observably equivalent canonical run from the
+canonical state `σ_P(i)`) has an observably equivalent canonical run from the
 same canonical state, in lockstep: after each event the canonical run's table
 contains the original's.  The canonical run is a run of Sections 2–3; it
 skips the original's commit events, which are unobservable. -/

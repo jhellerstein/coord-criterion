@@ -15,7 +15,7 @@ The decision specification `voteSpec n`: an input records, for each of the
 `n` fixed participants, its vote if received (`some true` = yes, `some false`
 = no, `none` = not yet received), ordered pointwise by "a vote, once received,
 does not change"; the output is the decision `undecided ≼ commit, abort`;
-`S(v)` is `abort` if some received vote is no, `commit` if every participant
+`P(v)` is `abort` if some received vote is no, `commit` if every participant
 voted yes, and `undecided` otherwise.
 
 * `voteSpec_functional`, `voteSpec_monotone`: it is a monotone function;
@@ -84,7 +84,7 @@ noncomputable def decide2PC {n : Nat} (v : Votes n) : Decision :=
 
 /-- The decision specification. -/
 noncomputable def voteSpec (n : Nat) : Spec (Votes n) Decision where
-  S v d := d = decide2PC v
+  P v d := d = decide2PC v
   total _ := ⟨_, rfl⟩
 
 /-- The decision detects whether the votes agree: it is `abort` exactly when
@@ -162,9 +162,9 @@ theorem voteSpec_exposable (n : Nat) :
 /-- The system that emits decisions by canonical output events is
 coordination-free, and so needs no distributed coordination. -/
 theorem voteSpec_coordinationFree (n : Nat) (D : Type) :
-    (respSystem (sp := voteSpec n) (D := D) (voteSpec n).S).CoordinationFree ∧
-      (respSystem (sp := voteSpec n) (D := D) (voteSpec n).S).CoordinationFreeH := by
-  have hce : ConsistentOn (voteSpec n) (voteSpec n).S :=
+    (respSystem (sp := voteSpec n) (D := D) (voteSpec n).P).CoordinationFree ∧
+      (respSystem (sp := voteSpec n) (D := D) (voteSpec n).P).CoordinationFreeH := by
+  have hce : ConsistentOn (voteSpec n) (voteSpec n).P :=
     (CALM.commonExpansion_iff_monoF (voteSpec_functional n)).2 (voteSpec_monotone n)
   exact ⟨respSystem_coordinationFree _ hce, respSystem_coordinationFreeH _ hce⟩
 

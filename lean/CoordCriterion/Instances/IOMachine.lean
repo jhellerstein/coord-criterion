@@ -1050,7 +1050,7 @@ executions, ordered by `⊑`; the row `(input β, G.obs q)` is present for
 each execution `β` that leaves the machine in state `q`.  It is total since
 every input comes from an execution. -/
 def spec [PO O] (k : ChanKind) (G : Machine C P Q O) : Spec (OccInp C P k G) O where
-  S h o := ∃ β s, Execution (sys k G) β s ∧ input β = h.val ∧ G.obs (s .mach) = o
+  P h o := ∃ β s, Execution (sys k G) β s ∧ input β = h.val ∧ G.obs (s .mach) = o
   total h := by
     obtain ⟨β, s, hx, hi⟩ := h.occ
     exact ⟨_, β, s, hx, hi, rfl⟩
@@ -1059,7 +1059,7 @@ section rows
 variable [PO O] {k : ChanKind} {G : Machine C P Q O}
 
 theorem spec_iff (h : OccInp C P k G) (o : O) :
-    (spec k G).S h o ↔ ∃ β f, Reach k G β f ∧ input β = h.val ∧ G.obs f.q = o := by
+    (spec k G).P h o ↔ ∃ β f, Reach k G β f ∧ input β = h.val ∧ G.obs f.q = o := by
   constructor
   · rintro ⟨β, s, hx, hi, ho⟩
     exact ⟨β, toFlat s, ⟨s, hx, rfl⟩, hi, ho⟩
@@ -1071,7 +1071,7 @@ def occOf {β : List (Act C P O)} {f : Flat C P Q} (h : Reach k G β f) : OccInp
   ⟨input β, by obtain ⟨s, hx, _⟩ := h; exact ⟨β, s, hx, rfl⟩⟩
 
 theorem spec_of_reach {β : List (Act C P O)} {f : Flat C P Q} (h : Reach k G β f) :
-    (spec k G).S (occOf h) (G.obs f.q) :=
+    (spec k G).P (occOf h) (G.obs f.q) :=
   (spec_iff _ _).2 ⟨β, f, h, rfl, rfl⟩
 
 end rows
@@ -1204,7 +1204,7 @@ theorem emitConfluent_of_commonExpansion (hR : OutReports G) :
     (spec (C := C) k G).CommonExpansion → EmitConfluent (C := C) k G := by
   intro hC fam hfam β s hx hle
   obtain ⟨l, hl, hp⟩ := choose_list (X := OccInp C P k G)
-    (p := fun r x => (spec k G).S x r.2 ∧ x.val ≼ input r.1) fam (fun r hr => by
+    (p := fun r x => (spec k G).P x r.2 ∧ x.val ≼ input r.1) fam (fun r hr => by
       obtain ⟨⟨s0, hs0⟩, c, hc⟩ := hfam r hr
       obtain ⟨β0, γ, he⟩ := List.append_of_mem hc
       have hR' : Reach k G ((β0 ++ [.out c r.2]) ++ γ) (toFlat s0) :=
@@ -1543,7 +1543,7 @@ theorem bag_fiber_of_run [PO O] {G : Machine C P Q O} {β : List (Act C P O)}
     (h : OccInp C P .bag G) (hh : h.val = input β) {γ : List (Act C P O)} {q : Q}
     (hγ : Execution (machA G) γ q) (hw : (recvs γ).Nodup)
     (hmem : ∀ e, e ∈ recvs γ ↔ h.val.mem e) :
-    (spec .bag G).S h (G.obs q) := by
+    (spec .bag G).P h (G.obs q) := by
   rw [hh] at hmem
   obtain ⟨β', s', hx', hi, hq', _⟩ := bag_arrival_run hx hout hγ hw hmem
   exact ⟨β', s', hx', hi.trans hh.symm, by rw [hq']⟩
@@ -1555,7 +1555,7 @@ once, in some order (interleaved with output and internal steps); with a
 FIFO channel, that order is a linear extension of `h`'s order.  (`γ` is the
 projection of a system execution onto the machine.) -/
 theorem fiber_sub_run [PO O] {G : Machine C P Q O} (h : OccInp C P k G) (o : O)
-    (hS : (spec k G).S h o) :
+    (hS : (spec k G).P h o) :
     ∃ γ : List (Act C P O), ∃ q, Execution (machA G) γ q ∧ G.obs q = o ∧
       (recvs γ).Nodup ∧ (∀ e, e ∈ recvs γ ↔ h.val.mem e) ∧
       (k = .fifo → (recvs γ).Pairwise fun a b => ¬ h.val.lt b a) := by
@@ -1587,7 +1587,7 @@ end arrival
 that preserves fibers. -/
 theorem liftedMono_transfer {I J : Type} [PO I] [PO J] [PO O] (sp : Spec I O) (sp' : Spec J O)
     (φ : I → J) (hle : ∀ a b, a ≼ b ↔ φ a ≼ φ b) (hsurj : ∀ j, ∃ i, φ i = j)
-    (hS : ∀ i o, sp.S i o ↔ sp'.S (φ i) o) : sp.LiftedMono ↔ sp'.LiftedMono := by
+    (hS : ∀ i o, sp.P i o ↔ sp'.P (φ i) o) : sp.LiftedMono ↔ sp'.LiftedMono := by
   constructor
   · intro hL i' j' hij X hX hA
     obtain ⟨i, rfl⟩ := hsurj i'
@@ -1829,14 +1829,14 @@ theorem word_surj (w : SM.Seq P) : ∃ h : OccInp Unit P .fifo G, word h = w := 
 fiber at `w` holds the observations at the end of every execution of the
 machine automaton whose receives carry the payloads `w` in order. -/
 def runSpec [PO O] (G : Machine Unit P Q O) : Spec (SM.Seq P) O where
-  S w o := ∃ γ q, Execution (machA G) γ q ∧ (recvs γ).map Ev.payload = w.ev ∧ G.obs q = o
+  P w o := ∃ γ q, Execution (machA G) γ q ∧ (recvs γ).map Ev.payload = w.ev ∧ G.obs q = o
   total w := by
     obtain ⟨q, hq⟩ := run_recvs_exists G G.q0 (evs 0 w.ev)
     exact ⟨_, _, q, ⟨_, rfl, hq⟩, by rw [recvs_map_recv, evs_payload], rfl⟩
 
 variable [PO O] in
 theorem word_fiber_run (h : OccInp Unit P .fifo G) (o : O) :
-    (spec .fifo G).S h o ↔ (runSpec G).S (word h) o := by
+    (spec .fifo G).P h o ↔ (runSpec G).P (word h) o := by
   constructor
   · intro hS
     obtain ⟨β, f, hr, hi, ho⟩ := (spec_iff _ _).1 hS
@@ -1869,7 +1869,7 @@ theorem fifo_single_run [PO O] (G : Machine Unit P Q O) :
       h.val.lt a b ∨ h.val.lt b a) ∧
     (∀ h h' : OccInp Unit P .fifo G, h ≼ h' ↔ word h ≼ word h') ∧
     (∀ w : SM.Seq P, ∃ h : OccInp Unit P .fifo G, word h = w) ∧
-    (∀ h o, (spec .fifo G).S h o ↔ (runSpec G).S (word h) o) ∧
+    (∀ h o, (spec .fifo G).P h o ↔ (runSpec G).P (word h) o) ∧
     ((spec (C := Unit) .fifo G).Consistent ↔ (runSpec G).Consistent) := by
   refine ⟨inp_chain, word_le_iff, word_surj, word_fiber_run, ?_⟩
   rw [complete_calm, complete_calm]
@@ -1912,7 +1912,7 @@ fiber at `h` comes from a run of `M` on an arrival order of `h`'s events;
 with a FIFO channel, the arrival order is a linear extension of `h`'s
 order. -/
 theorem fiber_sub [PO O] [DecidableEq C] {k : ChanKind} (h : OccInp C P k (ofSM M)) (o : O)
-    (hS : (spec k (ofSM M)).S h o) :
+    (hS : (spec k (ofSM M)).P h o) :
     ∃ w : List (Ev C P), w.Nodup ∧ (∀ e, e ∈ w ↔ h.val.mem e) ∧
       (∃ q, SM.Runs M M.q0 (w.map Ev.payload) q ∧ M.obs q = o) ∧
       (k = .fifo → w.Pairwise fun a b => ¬ h.val.lt b a) := by
@@ -1946,7 +1946,7 @@ theorem bag_fiber_of_outFree [PO O] [DecidableEq C] {β : List (Act C P O)}
     (hout : OutFree β) (h : OccInp C P .bag (ofSM M)) (hh : h.val = input β)
     {w : List (Ev C P)} (hw : w.Nodup) (hmem : ∀ e, e ∈ w ↔ h.val.mem e) {q : Q}
     (hq : SM.Runs M M.q0 (w.map Ev.payload) q) :
-    (spec .bag (ofSM M)).S h (M.obs q) := by
+    (spec .bag (ofSM M)).P h (M.obs q) := by
   rw [hh] at hmem
   obtain ⟨β', s', hx', _, hi, hq'⟩ := bag_arrival hx hout hw hmem hq
   exact ⟨β', s', hx', hi.trans hh.symm, by rw [hq']; rfl⟩
@@ -1954,7 +1954,7 @@ theorem bag_fiber_of_outFree [PO O] [DecidableEq C] {β : List (Act C P O)}
 /-- For a state machine, `runSpec` is the prefix encoding of
 `Instances/StateMachine.lean`. -/
 theorem runSpec_ofSM [PO O] (w : SM.Seq P) (o : O) :
-    (runSpec (ofSM M)).S w o ↔ (SM.induced M (SM.prefixAbs P)).S w o := by
+    (runSpec (ofSM M)).P w o ↔ (SM.induced M (SM.prefixAbs P)).P w o := by
   constructor
   · rintro ⟨γ, q, ⟨q0, hq0, hγ⟩, hw, rfl⟩
     have hq0' : q0 = M.q0 := hq0
@@ -1979,14 +1979,14 @@ theorem fifo_single [PO O] (M : SM.Machine Q P O) :
       h.val.lt a b ∨ h.val.lt b a) ∧
     (∀ h h' : OccInp Unit P .fifo (ofSM M), h ≼ h' ↔ word h ≼ word h') ∧
     (∀ w : SM.Seq P, ∃ h : OccInp Unit P .fifo (ofSM M), word h = w) ∧
-    (∀ h o, (spec .fifo (ofSM M)).S h o ↔ (SM.induced M (SM.prefixAbs P)).S (word h) o) ∧
+    (∀ h o, (spec .fifo (ofSM M)).P h o ↔ (SM.induced M (SM.prefixAbs P)).P (word h) o) ∧
     ((spec (C := Unit) .fifo (ofSM M)).Consistent ↔
       (SM.induced M (SM.prefixAbs P)).Consistent) ∧
     (SM.Deterministic M →
       ((spec (C := Unit) .fifo (ofSM M)).Consistent ↔ SM.TransMono M)) := by
   obtain ⟨h1, h2, h3, h4, _⟩ := fifo_single_run (ofSM (C := Unit) M)
-  have hf : ∀ h o, (spec .fifo (ofSM M)).S h o ↔
-      (SM.induced M (SM.prefixAbs P)).S (word h) o := fun h o =>
+  have hf : ∀ h o, (spec .fifo (ofSM M)).P h o ↔
+      (SM.induced M (SM.prefixAbs P)).P (word h) o := fun h o =>
     (h4 h o).trans (runSpec_ofSM _ _)
   have hcons : (spec (C := Unit) .fifo (ofSM M)).Consistent ↔
       (SM.induced M (SM.prefixAbs P)).Consistent := by
@@ -2054,7 +2054,7 @@ theorem run_of_runs_recvSM :
 transitions. -/
 theorem runSpec_stationary [PO O] {G : Machine Unit P Q O} (hs : Stationary G)
     (w : SM.Seq P) (o : O) :
-    (runSpec G).S w o ↔ (SM.induced (recvSM G) (SM.prefixAbs P)).S w o := by
+    (runSpec G).P w o ↔ (SM.induced (recvSM G) (SM.prefixAbs P)).P w o := by
   constructor
   · rintro ⟨γ, q, ⟨q0, hq0, hγ⟩, hw, rfl⟩
     have hq0' : q0 = G.q0 := hq0
@@ -2078,8 +2078,8 @@ theorem fifo_single_stationary [PO O] {G : Machine Unit P Q O} (hs : Stationary 
     (spec (C := Unit) .fifo G).Functional ∧
       ((spec (C := Unit) .fifo G).Consistent ↔ SM.TransMono (recvSM G)) := by
   obtain ⟨_, h2, h3, h4, _⟩ := fifo_single_run G
-  have hf : ∀ h o, (spec .fifo G).S h o ↔
-      (SM.induced (recvSM G) (SM.prefixAbs P)).S (word h) o := fun h o =>
+  have hf : ∀ h o, (spec .fifo G).P h o ↔
+      (SM.induced (recvSM G) (SM.prefixAbs P)).P (word h) o := fun h o =>
     (h4 h o).trans (runSpec_stationary hs _ _)
   have hcons : (spec (C := Unit) .fifo G).Consistent ↔
       (SM.induced (recvSM G) (SM.prefixAbs P)).Consistent := by

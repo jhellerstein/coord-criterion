@@ -58,7 +58,7 @@ theorem deploymentAvailability_iff_end (Sys : System sp D) (Dp : Deployment sp n
     exact ⟨fun q => cutHist H c q ++ ext q, ext, fun q => rfl, hw', hp', hpt', hloc, hni, hout⟩
 
 /-- The uniform deployment: every participant may emit the rows of `A`. -/
-def Deployment.uniform (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o) : Deployment sp n where
+def Deployment.uniform (A : Table I O) (hAS : ∀ i o, A i o → sp.P i o) : Deployment sp n where
   A := fun _ => A
   sub := fun _ => hAS
 
@@ -82,7 +82,7 @@ theorem availabilityFor_iff_at (A : Table I O) (Sys : System sp D) :
 /-- For the uniform deployment `A_p = A`, Deployment Availability is
 Availability for `A` over the deployment's participant set. -/
 theorem deploymentAvailability_uniform (Sys : System sp D) (A : Table I O)
-    (hAS : ∀ i o, A i o → sp.S i o) :
+    (hAS : ∀ i o, A i o → sp.P i o) :
     DeploymentAvailabilityEnd Sys (Deployment.uniform (n := n) A hAS) ↔
       AvailabilityForAt A Sys n := Iff.rfl
 
@@ -105,7 +105,7 @@ theorem monoAcrossPartitions_of_consistentOn (Dp : Deployment sp n) (B : Table I
 
 /-- For the uniform deployment, consistency on `A` implies monotonicity across
 partitions. -/
-theorem monoAcrossPartitions_uniform (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
+theorem monoAcrossPartitions_uniform (A : Table I O) (hAS : ∀ i o, A i o → sp.P i o)
     (hc : ConsistentOn sp A) : MonoAcrossPartitions (Deployment.uniform (n := n) A hAS) :=
   monoAcrossPartitions_of_consistentOn _ A (fun _ _ _ h => h) hc
 

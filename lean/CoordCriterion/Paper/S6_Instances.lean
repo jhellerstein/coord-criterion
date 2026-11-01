@@ -133,9 +133,9 @@ Ketsman's Thm. 2–3, cited, not formalized. -/
 theorem «sec:query-instance/all-nodes» :
     (∀ {i j : QRef.AllInp}, i.Complete → i ≼ j → i = j) ∧
     (∀ {I O : Type} [PO I] [PO O] (B : Spec I O) (A : Table I O),
-      (∀ i o, A i o → B.S i o) → (∀ i o j, A i o → i ≼ j → i = j) →
+      (∀ i o, A i o → B.P i o) → (∀ i o j, A i o → i ≼ j → i = j) →
       (∀ i o o', A i o → A i o' → o = o') → CAP.ConsistentOn B A) ∧
-    ((∀ i, QRef.treeAll.S i (QRef.star i.mem)) ∧
+    ((∀ i, QRef.treeAll.P i (QRef.star i.mem)) ∧
       CAP.ConsistentOn QRef.treeAll (fun i K => K = QRef.star i.mem) ∧
       (graph (fun i : QRef.AllInp => QRef.star i.mem)).Consistent) :=
   ⟨QRef.allInp_complete_maximal, fun B A => QRef.consistentOn_of_maximal B A, QRef.treeAll_star⟩
@@ -153,9 +153,9 @@ nested; the group's choice requires coordination, but not distributed coordinati
 reads Baccaert and Ketsman's Prop. 9–11 and is not formalized. -/
 theorem «sec:query-instance/pairing» :
     QRef.NodeMono id QRef.pairing ∧
-      (∀ a b K, a ≠ b → QRef.pairing.S (QRef.net fun x => x = a ∨ x = b) K → K.mem (a, b)) ∧
+      (∀ a b K, a ≠ b → QRef.pairing.P (QRef.net fun x => x = a ∨ x = b) K → K.mem (a, b)) ∧
       (∀ A : Table (QRef.ExtInp (QRef.netAdm (id : Nat → Nat))) (CALM.PSet (Nat × Nat)),
-        (∀ H, ∃ K, A H K) → (∀ H K, A H K → QRef.pairing.S H K) →
+        (∀ H, ∃ K, A H K) → (∀ H K, A H K → QRef.pairing.P H K) →
           ¬ CAP.ConsistentOn QRef.pairing A) :=
   ⟨QRef.pairing_nodeMono, QRef.pairing_pair, QRef.pairing_no_consistentOn⟩
 
@@ -343,14 +343,14 @@ it reads" and "exceeds every version delivered before its reads" agree.
 Part (2) holds with or without it. -/
 theorem «thm:hat-levels» (D : Type) :
     (∀ L, L = .RU ∨ L = .RC →
-      (∀ i o, HATSpec.hatA i o → (HATSpec.spec (lam := true) L).S i o) ∧
+      (∀ i o, HATSpec.hatA i o → (HATSpec.spec (lam := true) L).P i o) ∧
         CAP.ConsistentOn (HATSpec.spec (lam := true) L) HATSpec.hatA ∧
         ∃ Sys : CAP.System (HATSpec.spec (lam := true) L) D,
           CAP.AvailabilityFor HATSpec.hatA Sys ∧ CAP.PartitionConsistencyAtEnd Sys) ∧
     (∀ (P : (j : HATSpec.Inp true) → HATSpec.CH j → Prop) (hP : ∀ j, ¬ P j (HATSpec.serial j)),
       (∀ j (H : HATSpec.CH j), HATSpec.LostUpdate H → P j H) →
       ∀ (E : Table (HATSpec.Inp true) (IConf.St HATSpec.Fact)),
-        (∀ i o, E i o → (HATSpec.specP P hP).S i o) → (∀ i, ∃ o, E i o) →
+        (∀ i o, E i o → (HATSpec.specP P hP).P i o) → (∀ i, ∃ o, E i o) →
         (∀ i o e, E i o → HATSpec.IsRd i e → ∃ v, o (.read e v)) →
         ¬ CAP.ConsistentOn (HATSpec.specP P hP) E ∧
           ¬ ∃ Sys : CAP.System (HATSpec.specP P hP) D,
@@ -370,7 +370,7 @@ every read- and write-dependency of HAT's history increases timestamps, so
 `hatOut j ∈ S_RC(j)`. -/
 theorem «thm:hat-levels/answers-stable» :
     (∀ i j : HATSpec.Inp true, i ≼ j → HATSpec.hatOut i ≼ HATSpec.hatOut j) ∧
-      ∀ j : HATSpec.Inp true, (HATSpec.spec .RC).S j (HATSpec.hatOut j) :=
+      ∀ j : HATSpec.Inp true, (HATSpec.spec .RC).P j (HATSpec.hatOut j) :=
   ⟨HATSpec.hat_rule.2, HATSpec.hatOut_rc⟩
 
 /-- Proof sketch of Thm. `thm:hat-levels`: "For the converse, let two
@@ -406,7 +406,7 @@ answer outside `S_RC`; (2) the pseudocode itself, run with timestamps fixed at
 `BEGIN` (`HATRC`), produces that G1c history; (3) with Lamport timestamps
 taken at commit, every run is PL-2 (no G1a, G0, G1c; distinct timestamps). -/
 theorem «sec:hat-instance/rc-timestamps» :
-    (¬ HATSpec.Lamport HATSpec.wHist ∧ ¬ (HATSpec.spec .RC).S HATSpec.wInp (HATSpec.hatOut HATSpec.wInp)) ∧
+    (¬ HATSpec.Lamport HATSpec.wHist ∧ ¬ (HATSpec.spec .RC).P HATSpec.wInp (HATSpec.hatOut HATSpec.wInp)) ∧
       (HATRC.ww HATRC.wfinal (1, 1) (1, 2) ∧ HATRC.wr HATRC.wfinal (1, 2) (1, 1) ∧
         HATRC.G1c HATRC.wfinal ∧ ¬ HATRC.G1a HATRC.wfinal) ∧
       ∀ l, ((HATRC.run .lamport l).commits.map (·.ts)).Nodup ∧
@@ -463,7 +463,7 @@ order) with outputs `IConf.St V` under inclusion; full model in
 `Paper/AppB_InvariantConfluence`. -/
 theorem «sec:iconfluence-instance/spec» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M)
     (s : IConf.St V) :
-    (IConf.SI M).S h s ↔ ∃ g, g ≼ h.1 ∧ IConf.Valid M g ∧ IConf.eval M g = s :=
+    (IConf.SI M).P h s ↔ ∃ g, g ≼ h.1 ∧ IConf.Valid M g ∧ IConf.eval M g = s :=
   Iff.rfl
 
 /-- **Proposition `prop:iconfluence-lm`** (Invariant confluence and Lifted
@@ -498,7 +498,7 @@ theorem «sec:iconfluence-instance/uniqueness» :
     IConf.LocValid Inst.uModel Inst.jU ∧ Inst.oneU 0 1 ≼ Inst.jU ∧ Inst.oneU 1 2 ≼ Inst.jU ∧
       IConf.eval Inst.uModel Inst.jU 1 ∧ IConf.eval Inst.uModel Inst.jU 2 ∧
       ¬ Inst.uModel.Inv (IConf.eval Inst.uModel Inst.jU) ∧
-      (∀ u, (IConf.SI Inst.uModel).S ⟨Inst.jU, Inst.locValid_jU⟩ u →
+      (∀ u, (IConf.SI Inst.uModel).P ⟨Inst.jU, Inst.locValid_jU⟩ u →
         ¬ (IConf.eval Inst.uModel (Inst.oneU 0 1) ≼ u ∧ IConf.eval Inst.uModel (Inst.oneU 1 2) ≼ u)) ∧
       ¬ (IConf.SI Inst.uModel).LiftedMono ∧ ¬ Inst.uModel.IConfluent :=
   Inst.uniqueness_example
@@ -619,7 +619,7 @@ theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
       (.recv a ∈ β ∧ .recv b ∈ β) ∧ ∃ i j, IOM.SendAt β i a ∧ IOM.SendAt β j b ∧ IOM.HB β i j) ∧
     (∀ h h' : IOM.Inp C P, h ≼ h' ↔
       (∀ e, h.mem e → h'.mem e) ∧ ∀ a b, h.mem a → h.mem b → (h.lt a b ↔ h'.lt a b)) ∧
-    (∀ (h : IOM.OccInp C P k G) o, (IOM.spec k G).S h o ↔
+    (∀ (h : IOM.OccInp C P k G) o, (IOM.spec k G).P h o ↔
       ∃ β s, IOA.Execution (IOM.sys k G) β s ∧ IOM.input β = h.val ∧ G.obs (s .mach) = o) :=
   ⟨fun _ _ => Iff.rfl, fun _ _ _ => Iff.rfl, fun _ _ => Iff.rfl, fun _ _ => Iff.rfl⟩
 
@@ -687,7 +687,7 @@ emitted outputs (`IOM.emitConfluent_iff_liftedMono_of`). -/
 theorem «prop:induced-specification» {C P Q O : Type} [PO O] [DecidableEq C]
     (k : IOM.ChanKind) (G : IOM.Machine C P Q O) (G₁ : IOM.Machine Unit P Q O) :
     -- (1)
-    ((∀ h : IOM.OccInp C P k G, ∃ o, (IOM.spec k G).S h o) ∧
+    ((∀ h : IOM.OccInp C P k G, ∃ o, (IOM.spec k G).P h o) ∧
       ∀ (β γ : List (IOM.Act C P O)) (s : (IOM.sys (C := C) k G).St),
         IOA.Execution (IOM.sys k G) (β ++ γ) s → IOM.input β ≼ IOM.input (β ++ γ)) ∧
     -- (2)
@@ -695,12 +695,12 @@ theorem «prop:induced-specification» {C P Q O : Type} [PO O] [DecidableEq C]
         h.val.lt a b ∨ h.val.lt b a) ∧
       (∀ h h' : IOM.OccInp Unit P .fifo G₁, h ≼ h' ↔ IOM.word h ≼ IOM.word h') ∧
       (∀ w : SM.Seq P, ∃ h : IOM.OccInp Unit P .fifo G₁, IOM.word h = w) ∧
-      (∀ h o, (IOM.spec .fifo G₁).S h o ↔ (IOM.runSpec G₁).S (IOM.word h) o) ∧
+      (∀ h o, (IOM.spec .fifo G₁).P h o ↔ (IOM.runSpec G₁).P (IOM.word h) o) ∧
       (IOM.Stationary G₁ → SM.Deterministic (IOM.recvSM G₁) →
         (IOM.spec (C := Unit) .fifo G₁).Functional ∧
           ((IOM.spec (C := Unit) .fifo G₁).Consistent ↔ SM.TransMono (IOM.recvSM G₁)))) ∧
     -- (3)
-    ((∀ (h : IOM.OccInp C P k G) o, (IOM.spec k G).S h o →
+    ((∀ (h : IOM.OccInp C P k G) o, (IOM.spec k G).P h o →
         ∃ γ : List (IOM.Act C P O), ∃ q, IOA.Execution (IOM.machA G) γ q ∧ G.obs q = o ∧
           (IOM.recvs γ).Nodup ∧ (∀ e, e ∈ IOM.recvs γ ↔ h.val.mem e) ∧
           (k = .fifo → (IOM.recvs γ).Pairwise fun a b => ¬ h.val.lt b a)) ∧
@@ -709,7 +709,7 @@ theorem «prop:induced-specification» {C P Q O : Type} [PO O] [DecidableEq C]
         ∀ h : IOM.OccInp C P .bag G, h.val = IOM.input β →
         ∀ (γ : List (IOM.Act C P O)) q, IOA.Execution (IOM.machA G) γ q →
         (IOM.recvs γ).Nodup → (∀ e, e ∈ IOM.recvs γ ↔ h.val.mem e) →
-        (IOM.spec .bag G).S h (G.obs q)) ∧
+        (IOM.spec .bag G).P h (G.obs q)) ∧
     -- (4)
     (IOM.ObsConfluent (C := C) k G ↔ (IOM.spec (C := C) k G).LiftedMono) :=
   have h2 := IOM.fifo_single_run G₁
@@ -784,12 +784,12 @@ to the machine (`IOM.fork_halves`). -/
 theorem «sec:operational-models/both-halves» {C P : Type} [DecidableEq C]
     (k : IOM.ChanKind) :
     letI := IOM.lvlPO
-    (∀ h o, (IOM.forkOmit C P k).S h o →
+    (∀ h o, (IOM.forkOmit C P k).P h o →
       ∃ β s, IOA.Execution (IOM.sys k (IOM.fork C P)) β s ∧ IOM.input β = h.val ∧
         (IOM.fork C P).obs (s .mach) = o) ∧
     (IOM.forkOmit C P k).LiftedMono ∧
     (∀ β s, ∀ hx : IOA.Execution (IOM.sys k (IOM.fork C P)) β s,
-      ∃ o, (IOM.forkAdd C P k).S (IOM.occOfExec k (IOM.fork C P) hx) o ∧
+      ∃ o, (IOM.forkAdd C P k).P (IOM.occOfExec k (IOM.fork C P) hx) o ∧
         (IOM.fork C P).obs (s .mach) ≼ o) ∧
     (IOM.forkAdd C P k).LiftedMono ∧
     ¬ (IOM.spec (C := C) k (IOM.fork C P)).LiftedMono :=

@@ -5,7 +5,7 @@ The table collects the paper's notation and defined terms, in the order the
 sections introduce them, with a pointer to each definition.
 
 \paragraph{Relational notation.}
-To describe how execution narrows $S$, we use a compact relational notation.
+To describe how execution narrows $P$, we use a compact relational notation.
 For any relation
 $R\subseteq I\times O$, we select rows by writing a predicate on its
 columns $\mathrm{in}$ and $\mathrm{out}$ in square brackets: $R[\mathrm{in}\InputGe j]$ is the table of rows
@@ -28,7 +28,7 @@ rows at $k$.
   \toprule
   \multicolumn{3}{@{}l}{\textbf{Functional CALM (Section~\ref{sec:functional-calm})}}\\
   \midrule
-  specification & $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, total on $I$, one output per input; induced $f$ & Def.~\ref{def:functional-specification}\\
+  specification & $\Spec=(I,\InputOrd,O,\OutputOrd,P)$, total on $I$, one output per input; induced $f$ & Def.~\ref{def:functional-specification}\\
   \inrel; \indesc & $i\InputOrd j$: $j$ contains the input information in $i$ & Sec.~\ref{sec:functional-specifications}\\
   \outrel; \outnoun & $o\OutputOrd u$: $u$ preserves every visible claim in $o$ & Sec.~\ref{sec:functional-specifications}\\
   common \indesc; common \outnoun & an input that \inrel each; an output that \outrel each & Sec.~\ref{sec:functional-specifications}\\
@@ -37,7 +37,7 @@ rows at $k$.
   row at $k$; fiber $R(k)$ & a row $(k,u)$; $\mathrm{out}(R[\mathrm{in}=k])$ & Sec.~\ref{sec:functional-specifications}\\
   upper fiber & $\mathrm{out}(R[\mathrm{in}\InputGe k])$ & Sec.~\ref{sec:functional-specifications}\\
   state $(i,R)$; legal input & current input and remainder table, every row at an \indesc of $i$; an input with a row in $R$ & Def.~\ref{def:residual-state}\\
-  canonical state & $\sigma_S(i)=(i,S[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
+  canonical state & $\sigma_P(i)=(i,P[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
   input event; input retirement & $\mathsf{input}(j)$ keeps $R[\mathrm{in}\InputGe j]$; the rows it removes & Eq.~\ref{eq:input-event}\\
   output event; seal; commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; removing rows, it is a seal, a commitment & Def.~\ref{def:output-event}\\
   legal output & $\mathsf{output}(o)$ applies no commitment & Def.~\ref{def:exposable}\\
@@ -53,7 +53,7 @@ rows at $k$.
   \toprule
   \multicolumn{3}{@{}l}{\textbf{Complete CALM (Section~\ref{sec:complete-calm})}}\\
   \midrule
-  relational specification; ambiguous & $S\subseteq I\times O$ total on $I$; some fiber has several outputs & Def.~\ref{def:relational-specification}\\
+  relational specification; ambiguous & $P\subseteq I\times O$ total on $I$; some fiber has several outputs & Def.~\ref{def:relational-specification}\\
   stranded output; incompatible pair & an output at $i$ with no \outnoun at some \indesc; two outputs at $i$ with no common \outnoun there & Sec.~\ref{sec:lifted-monotonicity}\\
   Relational Monotonicity & every output keeps a \outnoun as input \ingrows & Def.~\ref{def:relational-monotonicity}\\
   compatible in $F$; directed; Directed Outputs & some $u\in F$ \outrel all; every finite subset compatible; every fiber directed & Def.~\ref{def:fiber-directedness}\\
@@ -89,7 +89,7 @@ rows at $k$.
   contradicts & accepts an input the commitment seals, or emits an output it excludes & Def.~\ref{def:contradicts}\\
   requires (distributed) coordination & a commitment some run (at another participant) contradicts & Def.~\ref{def:coordination}\\
   coordination-free & applies no commitment that requires coordination & Def.~\ref{def:coordination-free}\\
-  partitioned history; block; explicit relation $E$; explicit, implicit output & participants divided into two or more blocks, no message crosses blocks; $E\subseteq S$, the rows whose outputs must stay available; outputs of $E$, and the other permitted outputs & Defs.~\ref{def:partitioned-history}, \ref{def:partition-notions}\\
+  partitioned history; block; explicit relation $E$; explicit, implicit output & participants divided into two or more blocks, no message crosses blocks; $E\subseteq P$, the rows whose outputs must stay available; outputs of $E$, and the other permitted outputs & Defs.~\ref{def:partitioned-history}, \ref{def:partition-notions}\\
   Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable locally; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\
   Lifted Monotonicity for $E$ & every finite set of rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$ & Def.~\ref{def:lm-for-A}\\
   deployment & one explicit relation $E_p$ per participant & Def.~\ref{def:deployment}\\
@@ -103,12 +103,12 @@ rows at $k$.
   \toprule
   \multicolumn{3}{@{}l}{\textbf{Composition (Section~\ref{sec:composition})}}\\
   \midrule
-  sequential composition $S_2\circ S_1$ & $\{(i,o):\exists m.\ (i,m)\in S_1\land(m,o)\in S_2\}$, for stages sharing $(M,\preceq_M)$ & Eq.~\ref{eq:spec-composition}\\
+  sequential composition $P_2\circ P_1$ & $\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\}$, for stages sharing $(M,\preceq_M)$ & Eq.~\ref{eq:spec-composition}\\
   $\Spec_1$ guards $\Spec_2$ & $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs & Sec.~\ref{sec:sequential-composition}\\
   Lifted Monotonicity on $D$ & the common-\indesc condition for rows with inputs in $D$, at \indescs in $D$ & Sec.~\ref{sec:composite-calm}\\
   restriction $\Spec_2|_{\Spec_1}$ & $\Spec_2$ restricted to the outputs of $\Spec_1$ & Sec.~\ref{sec:proper-coordination}\\
   proper & $\Spec_2|_{\Spec_1}$ needs no commitment: every output at every state reached without commitment is legal & Def.~\ref{def:proper-coordination}\\
-  component; admitted run & a commitment basis and admitted runs, each from $\sigma(i)$ emitting a named $o$ with $(i,o)\in S$ & Def.~\ref{def:component}\\
+  component; admitted run & a commitment basis and admitted runs, each from $\sigma(i)$ emitting a named $o$ with $(i,o)\in P$ & Def.~\ref{def:component}\\
   typed pipeline; feed; external observation & components $C_1,C_2$ joined by feeds, an admitted run of $C_1$ ending at $m$ and one of $C_2$ from $\sigma(m)$; the pair $(i,o)$ a feed shows & Def.~\ref{def:typed-pipeline}\\
   contract-proper; implementation-proper & the pipeline of $\Spec_1$ and $\Spec_2$ is proper; no downstream run of a feed applies a commitment & Def.~\ref{def:typed-pipeline}\\
   \bottomrule

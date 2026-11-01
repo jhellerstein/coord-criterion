@@ -335,7 +335,7 @@ performs no commitment event."
 
 Lean: stated on histories, as the property that each participant's
 input/output events, annotated with commitment sequences, form a canonical run
-(`CanonExec`) from `σ_S(i_p)`.  A canonical step is never a commitment event
+(`CanonExec`) from `σ_P(i_p)`.  A canonical step is never a commitment event
 (`CanonStep`, third conjunct), so a canonical run has none
 (`«def:canonical-system/no-commitment-event»`).  There is no separate `CAP.System` instance
 named "canonical system" in the library. -/
@@ -424,13 +424,13 @@ theorem «app:bases/compound-commitment-event» {sp : Spec I O} {B B' : Basis sp
 /-! ## Runs under a basis -/
 
 /-- **Def. `def:run-under-basis`** (Run under a basis).  "A run under `ℬ` is
-a finite transition sequence from a canonical state `σ_S(i)` of input events,
+a finite transition sequence from a canonical state `σ_P(i)` of input events,
 legal output events `Out_γ(o)` (Definition system-output-event), and
 commitment events (Definition commitment-event) that use only commitments
 from `ℬ`."
 
 Lean: `RunUnder B es τ`, an execution of `SysStep B` (input, output and
-commit events `SEvent.commit γ`) from `σ_S(i)`. -/
+commit events `SEvent.commit γ`) from `σ_P(i)`. -/
 abbrev «def:run-under-basis» {sp : Spec I O} (B : Basis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   RunUnder B es τ
@@ -440,7 +440,7 @@ the runs under the canonical basis `ℬ_S` of Definition
 `def:canonical-commitment-basis` whose output events are all canonical; they
 are the runs of Sections functional-calm–complete-calm."
 
-Lean: an execution of canonical steps (`CanonStep`) from `σ_S(i)`. -/
+Lean: an execution of canonical steps (`CanonStep`) from `σ_P(i)`. -/
 abbrev «def:canonical-run» {sp : Spec I O} (i : I) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   CanonExec (canon sp i) es τ
@@ -476,8 +476,8 @@ abbrev «app:bases/observably-equivalent» {sp : Spec I O} (es es' : List (SEven
 under any commitment basis is observably equivalent to a canonical run.  After
 each event, the canonical run's remainder table contains the original run's."
 
-Lean: from a run under `B` from `σ_S(i)`, a canonical run from the same
-`σ_S(i)` in `Lockstep` (after each event: erasures agree, current inputs
+Lean: from a run under `B` from `σ_P(i)`, a canonical run from the same
+`σ_P(i)` in `Lockstep` (after each event: erasures agree, current inputs
 agree, and the canonical table contains the original's; a commitment event of
 the original is matched by no canonical event, and the canonical table still
 contains the original's, since a commitment only removes rows); its erasure is
@@ -496,7 +496,7 @@ theorem «lem:canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
 "Let runs under any commitment bases end at `(i_r,R_r)`, and let `j` be a common
 expansion of the `i_r`.  If some continuations, whose output and commitment
 events may apply any commitments, bring them to a common state with current input `j`, then some
-`u ∈ S(j)` refines every output emitted on every run."
+`u ∈ P(j)` refines every output emitted on every run."
 
 Lean: the finite family is indexed by `Fin m`; run `r` is under basis `B r`
 and its continuation under `B' r`.  The hypothesis that `j` is a common
@@ -506,7 +506,7 @@ theorem «cor:reconciliation-any-basis» {sp : Spec I O} {m : Nat} (B B' : Fin m
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
     (τ : State sp) (j : I) (hτ : τ.cur = j)
     (hcont : ∀ r, ∃ es', SysExec (B' r) (ρ r) es' τ) :
-    ∃ u, sp.S j u ∧ ∀ r, ∀ o ∈ outs ((es r).filterMap SEvent.erase), o ≼ u :=
+    ∃ u, sp.P j u ∧ ∀ r, ∀ o ∈ outs ((es r).filterMap SEvent.erase), o ≼ u :=
   Dist.reconciliation_any_basis B B' i es ρ hrun τ j hτ hcont
 
 /-- "The converse of Lemma canonical-equivalent fails: a canonical run need not

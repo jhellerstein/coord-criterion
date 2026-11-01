@@ -87,7 +87,7 @@ structure OperationalRun.Valid {sp : Spec I O} (B : Basis sp) (r : OperationalRu
     Prop where
   legal : SysExec B (canon sp r.input) r.events r.final
   emits : ∃ γ, SEvent.output γ r.output ∈ r.events
-  contract : sp.S r.input r.output
+  contract : sp.P r.input r.output
 
 /-- **A component implementation** of `sp`: a commitment basis, the admitted
 runs, and their soundness certificates.  `location` is metadata. -/
@@ -123,7 +123,7 @@ def Component.ofSys {sp : Spec I O} (K : Guard.Sys sp) (location : Option Locati
   location := location
   basis := K.basis
   accepts r := Guard.Produces K r.input r.events r.final ∧
-    (∃ γ, SEvent.output γ r.output ∈ r.events) ∧ sp.S r.input r.output
+    (∃ γ, SEvent.output γ r.output ∈ r.events) ∧ sp.P r.input r.output
   sound _ h := ⟨h.1.1, h.2.1, h.2.2⟩
 
 theorem Component.ofBasis_accepts {sp : Spec I O} (B : Basis sp) (location : Option LocationForm)
@@ -132,7 +132,7 @@ theorem Component.ofBasis_accepts {sp : Spec I O} (B : Basis sp) (location : Opt
 theorem Component.ofSys_accepts {sp : Spec I O} (K : Guard.Sys sp) (location : Option LocationForm)
     (r : OperationalRun sp) :
     (Component.ofSys K location).accepts r ↔ Guard.Produces K r.input r.events r.final ∧
-      (∃ γ, SEvent.output γ r.output ∈ r.events) ∧ sp.S r.input r.output := Iff.rfl
+      (∃ γ, SEvent.output γ r.output ∈ r.events) ∧ sp.P r.input r.output := Iff.rfl
 
 /-- A component implementation is **commitment-free** when no run it admits
 applies a commitment. -/
@@ -216,13 +216,13 @@ structure FeedWitness {upSpec : Spec I M} {downSpec : Spec M O}
   downAccepted : downstream.accepts downRun
   feed : upRun.output = downRun.input
 
-/-- **A binary typed pipeline**: implementations of `S₁ : I ↔ M` and
-`S₂ : M ↔ O`. -/
+/-- **A binary typed pipeline**: implementations of `P₁ : I ↔ M` and
+`P₂ : M ↔ O`. -/
 structure Pipeline (upSpec : Spec I M) (downSpec : Spec M O) where
   upstream : Component upSpec
   downstream : Component downSpec
 
-/-- The external contract `S₂ ∘ S₁`. -/
+/-- The external contract `P₂ ∘ P₁`. -/
 def Pipeline.compositeSpec {upSpec : Spec I M} {downSpec : Spec M O}
     (_p : Pipeline upSpec downSpec) : Spec I O := seq upSpec downSpec
 
@@ -237,19 +237,19 @@ def Pipeline.Accepts {upSpec : Spec I M} {downSpec : Spec M O}
     (p : Pipeline upSpec downSpec) (obs : BoundaryObservation I O) : Prop :=
   ∃ w : FeedWitness p.upstream p.downstream, w.boundary = obs
 
-/-- A feed witness joins a row of `S₁` and a row of `S₂` at the fed value. -/
+/-- A feed witness joins a row of `P₁` and a row of `P₂` at the fed value. -/
 theorem FeedWitness.contracts {upSpec : Spec I M} {downSpec : Spec M O}
     {upstream : Component upSpec} {downstream : Component downSpec}
     (w : FeedWitness upstream downstream) :
-    upSpec.S w.upRun.input w.upRun.output ∧ downSpec.S w.upRun.output w.downRun.output :=
+    upSpec.P w.upRun.input w.upRun.output ∧ downSpec.P w.upRun.output w.downRun.output :=
   ⟨(upstream.sound _ w.upAccepted).contract,
     w.feed ▸ (downstream.sound _ w.downAccepted).contract⟩
 
 /-- **Boundary safety**: every observation a pipeline admits is a row of
-`S₂ ∘ S₁`. -/
+`P₂ ∘ P₁`. -/
 theorem Pipeline.sound {upSpec : Spec I M} {downSpec : Spec M O}
     (p : Pipeline upSpec downSpec) {obs : BoundaryObservation I O} (h : p.Accepts obs) :
-    p.compositeSpec.S obs.input obs.output := by
+    p.compositeSpec.P obs.input obs.output := by
   obtain ⟨w, rfl⟩ := h
   exact ⟨w.upRun.output, w.contracts⟩
 
@@ -257,7 +257,7 @@ theorem Pipeline.sound {upSpec : Spec I M} {downSpec : Spec M O}
 
 /-- Lifted Monotonicity of `G` between inputs in `D`, in the joint-lift form. -/
 def JointMonoOn (D : M → Prop) (G : Spec M O) : Prop :=
-  ∀ i j, D i → D j → i ≼ j → JointLift (G.S i) (G.S j)
+  ∀ i j, D i → D j → i ≼ j → JointLift (G.P i) (G.P j)
 
 /-- The joint-lift form and the common-expansion form `Joint.CEOn` agree. -/
 theorem jointMonoOn_iff_ceOn (D : M → Prop) (G : Spec M O) : JointMonoOn D G ↔ CEOn G D := by
@@ -291,8 +291,8 @@ theorem jointMonoOn_iff_ceOn (D : M → Prop) (G : Spec M O) : JointMonoOn D G �
         exact hij)
     exact ⟨u, hu, fun x hx => hall (i, x) (List.mem_map.2 ⟨x, hx, rfl⟩)⟩
 
-/-- **Contract properness**: `S₂` satisfies Lifted Monotonicity on the values
-`S₁` can offer.  It mentions neither implementation. -/
+/-- **Contract properness**: `P₂` satisfies Lifted Monotonicity on the values
+`P₁` can offer.  It mentions neither implementation. -/
 def Pipeline.ContractProper {upSpec : Spec I M} {downSpec : Spec M O}
     (_p : Pipeline upSpec downSpec) : Prop :=
   CEOn downSpec (Img upSpec)
@@ -553,8 +553,8 @@ theorem Component.core_accepts {sp : Spec I M} (c : Component sp) {r : Operation
   have hin : r.output ∈ (emitted es').map Subtype.val := by rw [hem]; exact mem_emitted hγ
   obtain ⟨m', hm', hmv⟩ := List.mem_map.1 hin
   obtain ⟨γ', hγ'⟩ := emitted_mem hm'
-  have hc : (Guard.core sp).S r.input m' := by
-    show sp.S r.input m'.1
+  have hc : (Guard.core sp).P r.input m' := by
+    show sp.P r.input m'.1
     rw [hmv]; exact hv.contract
   exact ⟨⟨r.input, m', es', ρ'⟩,
     (c.core_accepts_iff _).2 ⟨⟨r, h, rfl, hmv, hem⟩, ⟨hx, ⟨γ', hγ'⟩, hc⟩⟩, rfl, hmv⟩
@@ -564,7 +564,7 @@ theorem Component.core_accepts {sp : Spec I M} (c : Component sp) {r : Operation
 def Pipeline.offered {sp : Spec I M} {sk : Spec M O} (c : Component sp)
     (k : Component (rest sp sk)) : Pipeline (Guard.core sp) (rest sp sk) := ⟨c.core, k⟩
 
-/-- Its external contract is still `S₂ ∘ S₁` (`Guard.seq_core`). -/
+/-- Its external contract is still `P₂ ∘ P₁` (`Guard.seq_core`). -/
 theorem offered_compositeSpec {sp : Spec I M} {sk : Spec M O} (c : Component sp)
     (k : Component (rest sp sk)) : (Pipeline.offered c k).compositeSpec = seq sp sk :=
   seq_core sp sk
@@ -610,7 +610,7 @@ theorem offered_available {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp 
 /-- **Theorem `thm:proper-coordination`(2), following, for the runs an
 implementation admits.**  In a proper pipeline, for every run an upstream
 implementation admits that emits `m :: ms`, the empty-basis `𝒮₂|_{𝒮₁}`
-follows it, and the merged trace is a run of `S₂ ∘ S₁` (`Guard.proper_follows`). -/
+follows it, and the merged trace is a run of `P₂ ∘ P₁` (`Guard.proper_follows`). -/
 theorem Component.proper_follows {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp sk)
     (c : Component sp) {r : OperationalRun sp} (h : c.accepts r) {m : M} {ms : List M}
     (he : emitted r.events = m :: ms) :
@@ -626,7 +626,7 @@ theorem Component.proper_follows {sp : Spec I M} {sk : Spec M O} (hP : Guard.Pro
 /-- **Theorem `thm:proper-coordination`(2), the composite run, for the runs an
 implementation admits** (`Guard.proper_run`): any empty-basis run of
 `𝒮₂|_{𝒮₁}` that receives each output of an admitted upstream run and answers
-it any number of times gives a run of `S₂ ∘ S₁` whose table contains the
+it any number of times gives a run of `P₂ ∘ P₁` whose table contains the
 join. -/
 theorem Component.proper_run {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp sk)
     (c : Component sp) {r : OperationalRun sp} (h : c.accepts r) {m : {m // Img sp m}}

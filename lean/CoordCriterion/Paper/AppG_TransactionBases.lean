@@ -110,7 +110,7 @@ theorem «app:cc-bases/complete» {T K : Type} (k : Inp T K) (r : Partial.ROut T
 /-- "Any output is permitted when some permitted complete output refines it,
 that is, when it can still be completed." -/
 theorem «app:cc-bases/permitted» {T K : Type} (k : Inp T K) (u : Partial.ROut T K) :
-    (spec false).S k u ↔ ∃ c, Complete false k c ∧ u ≼ c :=
+    (spec false).P k u ↔ ∃ c, Complete false k c ∧ u ≼ c :=
   Iff.rfl
 
 /-- The specification. -/
@@ -123,13 +123,13 @@ no reads, is a row of both specifications. -/
 theorem «app:cc-bases/figure-rows» {T K : Type} (af : Bool) (k : Inp T K)
     (hf : ∀ t, k.mem t → k.fin t) (o : Outcome T) (hp : Partitions k.txs o)
     (hX : ∀ t, ¬ o.X t) :
-    (spec (T := T) (K := K) af).S k (full o) :=
+    (spec (T := T) (K := K) af).P k (full o) :=
   ⟨full o, full_complete (decides_of_all_fin hf hp hX), PO.refl _⟩
 
 /-- "Every input has a permitted row: the one that aborts every transaction and
 reports nothing." -/
 theorem «app:cc-bases/total» {T K : Type} (k : Inp T K) :
-    (spec (T := T) (K := K) false).S k (full (allAbort k.txs)) :=
+    (spec (T := T) (K := K) false).P k (full (allAbort k.txs)) :=
   ⟨_, full_complete (allAbort_decides k), PO.refl _⟩
 
 /-- "Let `{A,B}` be an input in which `A` and `B` have each requested commit.
@@ -140,8 +140,8 @@ Directed Outputs, no Lifted Monotonicity.  (Such an input exists for any two
 transactions: `pairDone`.) -/
 theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} {A B : T} (h : A ≠ B) {k : Inp T K}
     (hk : ∀ t, k.mem t ↔ t = A ∨ t = B) (hf : ∀ t, k.mem t → k.fin t) :
-    (spec false).S k (full (ordPair A B h)) ∧
-    (spec false).S k (full (ordPair B A (Ne.symm h))) ∧
+    (spec false).P k (full (ordPair A B h)) ∧
+    (spec false).P k (full (ordPair B A (Ne.symm h))) ∧
     (¬ ∃ u : Partial.ROut T K, full (ordPair A B h) ≼ u ∧ full (ordPair B A (Ne.symm h)) ≼ u) ∧
     ¬ (spec (T := T) (K := K) false).DirectedOutputs ∧
     ¬ (spec (T := T) (K := K) false).LiftedMono :=
@@ -152,7 +152,7 @@ theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} {A B : T} (h : A ≠ B)
 `X = ∅`, where a complete output now commits exactly the transactions whose
 commit request is in the input and leaves the others undecided …" -/
 theorem «app:cc-bases/abort-free-spec» {T K : Type} (k : Inp T K) (u : Partial.ROut T K) :
-    (spec true).S k u ↔ ∃ c, Complete true k c ∧ u ≼ c ∧
+    (spec true).P k u ↔ ∃ c, Complete true k c ∧ u ≼ c ∧
       ∀ t, ¬ c.o.X t ∧ (c.o.dom t ↔ k.fin t) :=
   ⟨fun ⟨c, hc, h⟩ => ⟨c, hc, h, hc.1⟩, fun ⟨c, hc, h, _⟩ => ⟨c, hc, h⟩⟩
 

@@ -6,7 +6,7 @@ import CoordCriterion.CAP.AvailabilityAtEnd
 
 The paper's proof of (1)⇒(2) of Theorem `thm:complete-cap` uses only two
 participants at a time.  For rows `(i_1,o_1),…,(i_k,o_k)` with a common
-expansion `j` it builds `u_0,…,u_k ∈ S(j)`, each `u_m` refining
+expansion `j` it builds `u_0,…,u_k ∈ P(j)`, each `u_m` refining
 `o_1,…,o_m`: totality gives `u_0`, and the step from `u_{m-1}` to `u_m` puts
 one participant at `j` (emitting `u_{m-1}`) and one at `i_m` (emitting `o_m`)
 in separate blocks.  `cap_two_step` is that step; `cap_necessary_two`
@@ -20,17 +20,17 @@ namespace CAP
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
 /-- The induction step: two rows with a common expansion `j` have a common
-refinement in `S(j)`.  Two participants in separate blocks start at `i₁`
+refinement in `P(j)`.  Two participants in separate blocks start at `i₁`
 and `i₂`; by Availability each emits its output without messages; by
 Partition Consistency they reach one state `(j,R)`, whose row `(j,u)`
 refines both outputs. -/
 theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     (hP : PartitionConsistencyAtEnd Sys) {i₁ i₂ j : I} {o₁ o₂ : O}
-    (h₁ : sp.S i₁ o₁) (h₂ : sp.S i₂ o₂) (hj₁ : i₁ ≼ j) (hj₂ : i₂ ≼ j) :
-    ∃ u, sp.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u := by
+    (h₁ : sp.P i₁ o₁) (h₂ : sp.P i₂ o₂) (hj₁ : i₁ ≼ j) (hj₂ : i₂ ≼ j) :
+    ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u := by
   classical
   let row : Fin 2 → I × O := fun p => if p.val = 0 then (i₁, o₁) else (i₂, o₂)
-  have hrow : ∀ p, sp.S (row p).1 (row p).2 ∧ (row p).1 ≼ j := by
+  have hrow : ∀ p, sp.P (row p).1 (row p).2 ∧ (row p).1 ≼ j := by
     intro p; simp only [row]; split
     · exact ⟨h₁, hj₁⟩
     · exact ⟨h₂, hj₂⟩
@@ -94,7 +94,7 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
   exact ⟨u, τ.sub _ _ hu, by simpa [row] using href 0, by simpa [row] using href 1⟩
 
 /-- (1)⇒(2) of Theorem `thm:complete-cap`, by the paper's induction: from
-`u_{m-1}` (a common refinement in `S(j)` of the earlier rows) and the next
+`u_{m-1}` (a common refinement in `P(j)` of the earlier rows) and the next
 row, `cap_two_step` gives `u_m`; totality gives `u_0`. -/
 theorem cap_necessary_two (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     (hP : PartitionConsistencyAtEnd Sys) : sp.LiftedMono := by

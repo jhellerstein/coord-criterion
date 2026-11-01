@@ -266,16 +266,16 @@ a behavior on two disjoint networks have a common refinement at the merged
 network. -/
 def NodeMono {G : Type} (B : Spec (ExtInp (netAdm loc)) (PSet G)) : Prop :=
   ∀ H₁ H₂ : PSet F, (∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) →
-    ∀ K₁ K₂, B.S ⟨H₁⟩ K₁ → B.S ⟨H₂⟩ K₂ → ∃ K, B.S ⟨union H₁ H₂⟩ K ∧ K₁ ≼ K ∧ K₂ ≼ K
+    ∀ K₁ K₂, B.P ⟨H₁⟩ K₁ → B.P ⟨H₂⟩ K₂ → ∃ K, B.P ⟨union H₁ H₂⟩ K ∧ K₁ ≼ K ∧ K₂ ≼ K
 
 /-- The common-expansion condition asked only of two rows at disjoint
 networks: every common expansion `j` of their inputs has a common refinement
 of their outputs. -/
 def DisjointPairExpansion {G : Type} (B : Spec (ExtInp (netAdm loc)) (PSet G)) : Prop :=
   ∀ H₁ H₂ : PSet F, (∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) →
-    ∀ K₁ K₂, B.S ⟨H₁⟩ K₁ → B.S ⟨H₂⟩ K₂ →
+    ∀ K₁ K₂, B.P ⟨H₁⟩ K₁ → B.P ⟨H₂⟩ K₂ →
       ∀ j : ExtInp (netAdm loc), (⟨H₁⟩ : ExtInp (netAdm loc)) ≼ j →
-        (⟨H₂⟩ : ExtInp (netAdm loc)) ≼ j → ∃ u, B.S j u ∧ K₁ ≼ u ∧ K₂ ≼ u
+        (⟨H₂⟩ : ExtInp (netAdm loc)) ≼ j → ∃ u, B.P j u ∧ K₁ ≼ u ∧ K₂ ≼ u
 
 theorem le_union_left {H₁ H₂ : PSet F} (hd : ∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) :
     (⟨H₁⟩ : ExtInp (netAdm loc)) ≼ ⟨union H₁ H₂⟩ :=
@@ -373,7 +373,7 @@ section Pick
 
 /-- The pick behavior. -/
 def pick : Spec (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Bool)) where
-  S H K := (∀ x c, K.mem (x, c) → H.set.mem x) ∧ ∀ x c c', K.mem (x, c) → K.mem (x, c') → c = c'
+  P H K := (∀ x c, K.mem (x, c) → H.set.mem x) ∧ ∀ x c c', K.mem (x, c) → K.mem (x, c') → c = c'
   total _ := ⟨⟨fun _ => False⟩, fun _ _ h => h.elim, fun _ _ _ h => h.elim⟩
 
 theorem pick_nodeMono : NodeMono id pick := by
@@ -407,7 +407,7 @@ theorem pick_not_consistent : ¬ pick.Consistent := fun hc =>
 def pickTrue : Table (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Bool)) :=
   fun H K => K = ⟨fun p => H.set.mem p.1 ∧ p.2 = true⟩
 
-theorem pickTrue_sub : ∀ H K, pickTrue H K → pick.S H K := by
+theorem pickTrue_sub : ∀ H K, pickTrue H K → pick.P H K := by
   intro H K h
   subst h
   exact ⟨fun _ _ h => h.1, fun _ _ _ h h' => h.2.trans h'.2.symm⟩
@@ -449,11 +449,11 @@ def Adj (K : PSet (Nat × Nat)) (x y : Nat) : Prop := K.mem (x, y) ∨ K.mem (y,
 consistent on `A`. -/
 theorem no_consistentOn_of_triangle
     (B : Spec (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)))
-    (hpair : ∀ a b K, a ≠ b → B.S (net fun x => x = a ∨ x = b) K → Adj K a b)
-    (htri : ∀ K, B.S (net fun x => x = 0 ∨ x = 1 ∨ x = 2) K →
+    (hpair : ∀ a b K, a ≠ b → B.P (net fun x => x = a ∨ x = b) K → Adj K a b)
+    (htri : ∀ K, B.P (net fun x => x = 0 ∨ x = 1 ∨ x = 2) K →
       ¬ (Adj K 0 1 ∧ Adj K 1 2 ∧ Adj K 0 2))
     (A : Table (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)))
-    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → B.S H K) :
+    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → B.P H K) :
     ¬ CAP.ConsistentOn B A := by
   intro hc
   let H₀₁ := net fun x => x = 0 ∨ x = 1
@@ -501,7 +501,7 @@ theorem isMin_unique {H : PSet Nat} {m m' : Nat} (h : IsMin H m) (h' : IsMin H m
 
 /-- Spanning trees with parents smaller than children. -/
 def tree : Spec (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)) where
-  S H K := (∀ x y, K.mem (x, y) → H.set.mem x ∧ H.set.mem y ∧ y < x) ∧
+  P H K := (∀ x y, K.mem (x, y) → H.set.mem x ∧ H.set.mem y ∧ y < x) ∧
     (∀ x y y', K.mem (x, y) → K.mem (x, y') → y = y') ∧
     (∀ x z, H.set.mem x → H.set.mem z → z < x → ∃ y, K.mem (x, y))
   total H := ⟨⟨fun p => H.set.mem p.1 ∧ IsMin H.set p.2 ∧ p.2 < p.1⟩,
@@ -564,7 +564,7 @@ theorem tree_nodeMono : NodeMono id tree := by
             Nat.lt_of_le_of_lt (hm.2 z hz) hlt⟩))⟩
         · exact (hs ⟨z, hz, hlt⟩).elim
 
-theorem tree_pair : ∀ a b K, a ≠ b → tree.S (net fun x => x = a ∨ x = b) K → Adj K a b := by
+theorem tree_pair : ∀ a b K, a ≠ b → tree.P (net fun x => x = a ∨ x = b) K → Adj K a b := by
   intro a b K hab ⟨l, _, e⟩
   rcases Nat.lt_or_gt_of_ne hab with h | h
   · obtain ⟨y, hy⟩ := e b a (Or.inr rfl) (Or.inl rfl) h
@@ -578,7 +578,7 @@ theorem tree_pair : ∀ a b K, a ≠ b → tree.S (net fun x => x = a ∨ x = b)
     have hy' : y = b := by omega
     exact Or.inl (hy' ▸ hy)
 
-theorem tree_triangle : ∀ K, tree.S (net fun x => x = 0 ∨ x = 1 ∨ x = 2) K →
+theorem tree_triangle : ∀ K, tree.P (net fun x => x = 0 ∨ x = 1 ∨ x = 2) K →
     ¬ (Adj K 0 1 ∧ Adj K 1 2 ∧ Adj K 0 2) := by
   intro K ⟨l, u, _⟩ ⟨_, h12, h02⟩
   have h21 : K.mem (2, 1) := h12.elim (fun h => absurd (l _ _ h).2.2 (by decide)) id
@@ -586,7 +586,7 @@ theorem tree_triangle : ∀ K, tree.S (net fun x => x = 0 ∨ x = 1 ∨ x = 2) K
   exact absurd (u _ _ _ h21 h20) (by decide)
 
 theorem tree_no_consistentOn (A : Table (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)))
-    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → tree.S H K) : ¬ CAP.ConsistentOn tree A :=
+    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → tree.P H K) : ¬ CAP.ConsistentOn tree A :=
   no_consistentOn_of_triangle tree tree_pair tree_triangle A hA hsub
 
 end Tree
@@ -640,7 +640,7 @@ theorem allInp_complete_maximal {i j : AllInp} (hc : i.Complete) (h : i ≼ j) :
 /-- A functional choice at maximal inputs is consistent: rows with a common
 expansion are all at that expansion. -/
 theorem consistentOn_of_maximal {I O : Type} [PO I] [PO O] (B : Spec I O) (A : Table I O)
-    (hsub : ∀ i o, A i o → B.S i o) (hmax : ∀ i o j, A i o → i ≼ j → i = j)
+    (hsub : ∀ i o, A i o → B.P i o) (hmax : ∀ i o j, A i o → i ≼ j → i = j)
     (hfun : ∀ i o o', A i o → A i o' → o = o') : CAP.ConsistentOn B A := by
   intro rows hrows j hj
   cases rows with
@@ -658,7 +658,7 @@ theorem consistentOn_of_maximal {I O : Type} [PO I] [PO O] (B : Spec I O) (A : T
 
 /-- A choice that depends only on the membership is consistent. -/
 theorem consistentOn_of_membership {O : Type} [PO O] (B : Spec AllInp O) (f : PSet Nat → O)
-    (hf : ∀ i, B.S i (f i.mem)) : CAP.ConsistentOn B (fun i K => K = f i.mem) := by
+    (hf : ∀ i, B.P i (f i.mem)) : CAP.ConsistentOn B (fun i K => K = f i.mem) := by
   intro rows hrows j hj
   refine ⟨f j.mem, hf j, fun r hr => ?_⟩
   rw [hrows r hr, (hj r hr).1]
@@ -676,13 +676,13 @@ theorem graph_membership_consistent {O : Type} [PO O] (f : PSet Nat → O) :
 
 /-- Spanning trees of the whole membership, at every view. -/
 def treeAll : Spec AllInp (PSet (Nat × Nat)) where
-  S i K := tree.S (net i.mem.mem) K
+  P i K := tree.P (net i.mem.mem) K
   total _ := tree.total _
 
 /-- The star centred at the least member. -/
 def star (M : PSet Nat) : PSet (Nat × Nat) := ⟨fun p => M.mem p.1 ∧ IsMin M p.2 ∧ p.2 < p.1⟩
 
-theorem star_tree (M : PSet Nat) : tree.S (net M.mem) (star M) :=
+theorem star_tree (M : PSet Nat) : tree.P (net M.mem) (star M) :=
   ⟨fun _ _ h => ⟨h.1, h.2.1.1, h.2.2⟩,
     fun _ _ _ h h' => isMin_unique h.2.1 h'.2.1,
     fun _ z hx hz hlt =>
@@ -693,7 +693,7 @@ theorem star_tree (M : PSet Nat) : tree.S (net M.mem) (star M) :=
 spanning trees, the behavior is consistent on it, and as a specification it
 is consistent. -/
 theorem treeAll_star :
-    (∀ i, treeAll.S i (star i.mem)) ∧
+    (∀ i, treeAll.P i (star i.mem)) ∧
       CAP.ConsistentOn treeAll (fun i K => K = star i.mem) ∧
       (graph (fun i : AllInp => star i.mem)).Consistent :=
   ⟨fun i => star_tree i.mem, consistentOn_of_membership treeAll star (fun i => star_tree i.mem),
@@ -793,7 +793,7 @@ theorem exists_pairing : ∀ (n : Nat) (H : PSet Nat), (∀ x, H.mem x → x < n
 
 /-- The pairing behavior. -/
 def pairing : Spec (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)) where
-  S H K := IsPairing H.set K ∧ (FinSet H.set → NearPerfect H.set K)
+  P H K := IsPairing H.set K ∧ (FinSet H.set → NearPerfect H.set K)
   total H := by
     by_cases hf : FinSet H.set
     · obtain ⟨n, hn⟩ := hf
@@ -872,7 +872,7 @@ theorem pairing_nodeMono : NodeMono id pairing := by
     · exact (n₂ f₂ x z hx hz hxz).elim (Or.inl ∘ lift₂ _) (Or.inr ∘ lift₂ _)
 
 /-- Every output at a two-node network pairs its nodes. -/
-theorem pairing_pair : ∀ a b K, a ≠ b → pairing.S (net fun x => x = a ∨ x = b) K → K.mem (a, b) := by
+theorem pairing_pair : ∀ a b K, a ≠ b → pairing.P (net fun x => x = a ∨ x = b) K → K.mem (a, b) := by
   intro a b K hab ⟨⟨l, s, _⟩, np⟩
   have fin : FinSet (net fun x => x = a ∨ x = b).set :=
     ⟨a + b + 1, fun x (hx : x = a ∨ x = b) => by rcases hx with rfl | rfl <;> omega⟩
@@ -888,7 +888,7 @@ theorem pairing_pair : ∀ a b K, a ≠ b → pairing.S (net fun x => x = a ∨ 
 
 /-- No total sub-behavior of `pairing` has `pairing` consistent on it. -/
 theorem pairing_no_consistentOn (A : Table (ExtInp (netAdm (id : Nat → Nat))) (PSet (Nat × Nat)))
-    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → pairing.S H K) :
+    (hA : ∀ H, ∃ K, A H K) (hsub : ∀ H K, A H K → pairing.P H K) :
     ¬ CAP.ConsistentOn pairing A := by
   intro hc
   let H₀₁ := net fun x => x = 0 ∨ x = 1

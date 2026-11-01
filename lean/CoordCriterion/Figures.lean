@@ -31,7 +31,7 @@ section Close
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 theorem canon_R (sp : Spec I O) (i k : I) (u : O) :
-    (canon sp i).R k u ↔ (sp.S k u ∧ i ≼ k) := Iff.rfl
+    (canon sp i).R k u ↔ (sp.P k u ∧ i ≼ k) := Iff.rfl
 
 /-- The state after closing the polls: only the rows at the current input. -/
 def closeState (σ : State sp) : State sp where
@@ -93,7 +93,7 @@ def printed : List (Ballots × Res) :=
    (ba_a, .win .a), (ba_b, .bot)]
 
 /-- The printed outputs are the election's: every printed pair is a row. -/
-theorem printed_rows : ∀ r ∈ printed, elec.S r.1 r.2 := by
+theorem printed_rows : ∀ r ∈ printed, elec.P r.1 r.2 := by
   intro r hr
   simp only [printed, List.mem_cons, List.mem_nil_iff, or_false] at hr
   show r.2 = winner r.1
@@ -114,7 +114,7 @@ theorem shown_inputs (k : Ballots) :
 /-- The figure prints exactly the rows whose input `⪰ a··`: a pair is printed
 iff it is a row of the election at such an input. -/
 theorem printed_complete (k : Ballots) (o : Res) :
-    (k, o) ∈ printed ↔ (bad ≼ k ∧ elec.S k o) := by
+    (k, o) ∈ printed ↔ (bad ≼ k ∧ elec.P k o) := by
   constructor
   · intro hr
     refine ⟨?_, printed_rows _ hr⟩
@@ -153,7 +153,7 @@ theorem upper_c (o : Res) : (∃ k, (canon elec baa).R k o) ↔ o = .win .a := b
 theorem panel_b (k : Ballots) (o : Res) (hk : bad ≼ k) :
     ((canon elec bab).R k o ↔
       ((k = bab ∧ o = .bot) ∨ (k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b))) ∧
-    (elec.S k o → ¬ (canon elec bab).R k o → ¬ bab ≼ k) := by
+    (elec.P k o → ¬ (canon elec bab).R k o → ¬ bab ≼ k) := by
   rw [canon_R]
   show ((o = winner k ∧ bab ≼ k) ↔ _) ∧ (o = winner k → ¬ (o = winner k ∧ bab ≼ k) → _)
   revert hk
@@ -213,7 +213,7 @@ theorem panelD_struck (k : Ballots) (o : Res) :
 
 /-- The printed gray-only rows of (d) are those retired by `input(ab·)`;
 the current input is unchanged by the seal. -/
-theorem panelD_gray (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.S k o) :
+theorem panelD_gray (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
     ¬ panelD.R k o ↔ (¬ bab ≼ k ∨ (k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b)) := by
   rw [panelD_rows]
   have hS' : o = winner k := hS
@@ -349,7 +349,7 @@ instance : PO TOut where
   antisymm h _ := h
 
 def spec : Spec Unit TOut where
-  S _ _ := True
+  P _ _ := True
   total _ := ⟨.ab, trivial⟩
 
 theorem le_iff (a b : TOut) : a ≼ b ↔ a = b := Iff.rfl
@@ -366,7 +366,7 @@ theorem after_ab (k : Unit) (o : TOut) : outputTable (canon spec ()) .ab k o ↔
 theorem ba_rejected :
     Excluded (canon spec ()) .ab () .ba ∧ ¬ Sealed (canon spec ()) .ab () .ba ∧
       ¬ Retired (canon spec ()) .ab () .ba ∧
-      ¬ ∃ u, spec.S () u ∧ TOut.ab ≼ u ∧ TOut.ba ≼ u := by
+      ¬ ∃ u, spec.P () u ∧ TOut.ab ≼ u ∧ TOut.ba ≼ u := by
   have hns : ¬ Sealed (canon spec ()) .ab () .ba := fun h => h.2 ⟨.ab, sR _, rfl⟩
   have hnr : ¬ Retired (canon spec ()) .ab () .ba := by
     rintro ⟨_, _, u, _, h1, h2⟩
@@ -396,9 +396,9 @@ theorem choice_applies :
 /-- The two orders are incompatible: not directed, not monotone, not
 consistent. -/
 theorem not_monotone :
-    ¬ CompatibleIn (spec.S ()) [.ab, .ba] ∧ ¬ spec.DirectedOutputs ∧ ¬ spec.LiftedMono ∧
+    ¬ CompatibleIn (spec.P ()) [.ab, .ba] ∧ ¬ spec.DirectedOutputs ∧ ¬ spec.LiftedMono ∧
       ¬ spec.Consistent := by
-  have hc : ¬ CompatibleIn (spec.S ()) [.ab, .ba] := by
+  have hc : ¬ CompatibleIn (spec.P ()) [.ab, .ba] := by
     rintro ⟨u, hu, hall⟩
     exact ba_rejected.2.2.2 ⟨u, hu, hall _ (by simp), hall _ (by simp)⟩
   have hd : ¬ spec.DirectedOutputs := fun h => hc (h () [.ab, .ba] (by simp) (fun _ _ => trivial))
@@ -463,7 +463,7 @@ def inFib (x : RS) : Prop := x = rS1 ∨ x = rA ∨ x = rA2 ∨ x = rS1A ∨ x =
 instance (x : RS) : Decidable (inFib x) := inferInstanceAs (Decidable (_ ∨ _))
 
 def spec : Spec Unit RS where
-  S _ x := inFib x
+  P _ x := inFib x
   total _ := ⟨rS1, Or.inl rfl⟩
 
 def RS.union (x y : RS) : RS := ⟨x.s1 || y.s1, x.a || y.a, x.a2 || y.a2⟩

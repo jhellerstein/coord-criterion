@@ -6,7 +6,7 @@ import CoordCriterion.CompleteCALM.Theorem
 A declared specification `S` is *cofinal* in a specification `T` over the
 same ordered inputs and outputs when
 
-* (Realizability) every row of `S` is a row of `T`, and
+* (Realizability) every row of `P` is a row of `T`, and
 * (Domination) every row `(i, o)` of `T` is dominated by a row `(i, u)` of
   `S` at the same input, `o ≼ u`.
 
@@ -17,7 +17,7 @@ common-expansion form, and each direction uses both conditions.  No extra
 hypothesis is needed.  (Over the same inputs totality plays no role: the
 upper bound of a family of rows is an input of both specifications.  The
 Lean proof goes through `CofinalAlong id`, which reads the bound's preimage
-off a row of `S` and so cites `S.total`.)
+off a row of `P` and so cites `S.total`.)
 
 When the inputs differ, `CofinalAlong φ S T` compares `T` over inputs `I`
 with `S` over inputs `J` along a map `φ : I → J`:
@@ -43,19 +43,19 @@ section
 variable {I J O : Type} [PO I] [PO J] [PO O]
 
 /-- `S` is cofinal in `T` along `φ : I → J`: `φ` is an order embedding,
-every row of `S` is realized by a row of `T`, and every row of `T` is
-dominated by a row of `S` at the image of its input. -/
+every row of `P` is realized by a row of `T`, and every row of `T` is
+dominated by a row of `P` at the image of its input. -/
 structure CofinalAlong (φ : I → J) (S : Spec J O) (T : Spec I O) : Prop where
   emb : ∀ a b, a ≼ b ↔ φ a ≼ φ b
-  real : ∀ j o, S.S j o → ∃ i, φ i = j ∧ T.S i o
-  dom : ∀ i o, T.S i o → ∃ u, S.S (φ i) u ∧ o ≼ u
+  real : ∀ j o, S.P j o → ∃ i, φ i = j ∧ T.P i o
+  dom : ∀ i o, T.P i o → ∃ u, S.P (φ i) u ∧ o ≼ u
 
-/-- `S` is cofinal in `T` (same inputs): every row of `S` is a row of `T`
-(Realizability), and every row of `T` is dominated by a row of `S` at the
+/-- `S` is cofinal in `T` (same inputs): every row of `P` is a row of `T`
+(Realizability), and every row of `T` is dominated by a row of `P` at the
 same input (Domination). -/
 structure Cofinal (S T : Spec I O) : Prop where
-  real : ∀ i o, S.S i o → T.S i o
-  dom : ∀ i o, T.S i o → ∃ u, S.S i u ∧ o ≼ u
+  real : ∀ i o, S.P i o → T.P i o
+  dom : ∀ i o, T.P i o → ∃ u, S.P i u ∧ o ≼ u
 
 /-- Choice over a finite list. -/
 theorem choose_list' {R X : Type} {p : R → X → Prop} :
@@ -71,16 +71,16 @@ theorem choose_list' {R X : Type} {p : R → X → Prop} :
     · exact hp q hq
 
 /-- From `S` to `T`: if `φ` is monotone and injective, every row of `T` is
-dominated by a row of `S` at the image of its input, and rows of `S` at
+dominated by a row of `P` at the image of its input, and rows of `P` at
 images are rows of `T`, then the common-expansion condition passes from `S`
 to `T`. -/
 theorem commonExpansion_of_dominated (φ : I → J) {S : Spec J O} {T : Spec I O}
     (hmono : ∀ a b, a ≼ b → φ a ≼ φ b)
-    (hreal : ∀ i o, S.S (φ i) o → T.S i o)
-    (hdom : ∀ i o, T.S i o → ∃ u, S.S (φ i) u ∧ o ≼ u)
+    (hreal : ∀ i o, S.P (φ i) o → T.P i o)
+    (hdom : ∀ i o, T.P i o → ∃ u, S.P (φ i) u ∧ o ≼ u)
     (hS : S.CommonExpansion) : T.CommonExpansion := by
   intro rows hrows j hj
-  obtain ⟨l, hl, hp⟩ := choose_list' (p := fun (r : I × O) u => S.S (φ r.1) u ∧ r.2 ≼ u)
+  obtain ⟨l, hl, hp⟩ := choose_list' (p := fun (r : I × O) u => S.P (φ r.1) u ∧ r.2 ≼ u)
     rows fun r hr => hdom r.1 r.2 (hrows r hr)
   have hmem : ∀ q ∈ l, q.1 ∈ rows := fun q hq => hl ▸ List.mem_map_of_mem hq
   obtain ⟨u, hu, hall⟩ := hS (l.map fun q => (φ q.1.1, q.2))
@@ -96,17 +96,17 @@ theorem commonExpansion_of_dominated (φ : I → J) {S : Spec J O} {T : Spec I O
   obtain ⟨q, hq, rfl⟩ := List.mem_map.1 hr
   exact PO.trans (hp q hq).2 (hall _ (List.mem_map_of_mem hq))
 
-/-- From `T` to `S`: if `φ` reflects the order, every row of `S` is realized
+/-- From `T` to `S`: if `φ` reflects the order, every row of `P` is realized
 by a row of `T` at a preimage of its input, and every row of `T` is
-dominated by a row of `S`, then the common-expansion condition passes from
+dominated by a row of `P`, then the common-expansion condition passes from
 `T` to `S`.  (Totality of `S` makes `φ` surjective here.) -/
 theorem commonExpansion_of_realized (φ : I → J) {S : Spec J O} {T : Spec I O}
     (hrefl : ∀ a b, φ a ≼ φ b → a ≼ b)
-    (hreal : ∀ j o, S.S j o → ∃ i, φ i = j ∧ T.S i o)
-    (hdom : ∀ i o, T.S i o → ∃ u, S.S (φ i) u ∧ o ≼ u)
+    (hreal : ∀ j o, S.P j o → ∃ i, φ i = j ∧ T.P i o)
+    (hdom : ∀ i o, T.P i o → ∃ u, S.P (φ i) u ∧ o ≼ u)
     (hT : T.CommonExpansion) : S.CommonExpansion := by
   intro rows hrows j hj
-  obtain ⟨l, hl, hp⟩ := choose_list' (p := fun (r : J × O) i => φ i = r.1 ∧ T.S i r.2)
+  obtain ⟨l, hl, hp⟩ := choose_list' (p := fun (r : J × O) i => φ i = r.1 ∧ T.P i r.2)
     rows fun r hr => hreal r.1 r.2 (hrows r hr)
   have hmem : ∀ q ∈ l, q.1 ∈ rows := fun q hq => hl ▸ List.mem_map_of_mem hq
   obtain ⟨o0, ho0⟩ := S.total j
@@ -133,7 +133,7 @@ theorem CofinalAlong.inj {φ : I → J} {S : Spec J O} {T : Spec I O}
 
 /-- Rows of `S` at images are rows of `T`. -/
 theorem CofinalAlong.real' {φ : I → J} {S : Spec J O} {T : Spec I O}
-    (h : CofinalAlong φ S T) (i : I) (o : O) (ho : S.S (φ i) o) : T.S i o := by
+    (h : CofinalAlong φ S T) (i : I) (o : O) (ho : S.P (φ i) o) : T.P i o := by
   obtain ⟨i', e, h'⟩ := h.real _ o ho
   exact h.inj e ▸ h'
 
@@ -172,8 +172,8 @@ theorem Cofinal.along {S T : Spec I O} (h : Cofinal S T) : CofinalAlong id S T w
   real i o ho := ⟨i, rfl, h.real i o ho⟩
   dom := h.dom
 
-/-- **Cofinality lemma.**  If every row of `S` is a row of `T` and every
-row of `T` is dominated by a row of `S` at the same input, then `S`
+/-- **Cofinality lemma.**  If every row of `P` is a row of `T` and every
+row of `T` is dominated by a row of `P` at the same input, then `S`
 satisfies Lifted Monotonicity iff `T` does. -/
 theorem liftedMono_iff_of_cofinal {S T : Spec I O} (h : Cofinal S T) :
     S.LiftedMono ↔ T.LiftedMono :=

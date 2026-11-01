@@ -17,7 +17,7 @@ is local.
   system `respSystem A` of `complete_cap_for` is coordination-free.  Its
   canonical output events seal nothing, and the rows they remove lie outside
   `A`, which it never emits.
-* `every_row_emitted`: a system with Availability emits every row of `S`, so
+* `every_row_emitted`: a system with Availability emits every row of `P`, so
   every removal is contradicted; `availability_coordinationFree_iff`: such a
   system is coordination-free exactly when the commitments of its output and
   commit events remove no row; so it performs no commit event
@@ -121,7 +121,7 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
     rinv_of_produced A (compliant_of_eq_append (hp q) hH) hrun
   rw [← hcur] at hAo
   -- rows refining `o` at expansions of the current input are still present
-  have hkeep : ∀ k u, sp.S k u → σ.cur ≼ k → o ≼ u → σ.R k u := fun k u hSu hk hou =>
+  have hkeep : ∀ k u, sp.P k u → σ.cur ≼ k → o ≼ u → σ.R k u := fun k u hSu hk hou =>
     (hres k u).2 ⟨hSu, hk, fun e he => PO.trans (hge e he) hou⟩
   rcases hγ with rfl | rfl
   · exact localEvent_nil _ hap
@@ -154,11 +154,11 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
       have hRu := hkeep k u hSu hk hou
       exact hall u ⟨hRu, not_rm_of_le hRu hou⟩
 
-/-- A system with Availability emits every row of `S`: two participants start
+/-- A system with Availability emits every row of `P`: two participants start
 at `k` in separate blocks, and the first emits `x` locally, at current
 input `k`. -/
 theorem every_row_emitted (Sys : System sp D) (hA : AvailabilityAtEnd Sys) :
-    ∀ k x, sp.S k x → SysEmits Sys k x := by
+    ∀ k x, sp.P k x → SysEmits Sys k x := by
   intro k x hkx
   let init : Fin 2 → I := fun _ => k
   let H0 : History sp D 2 := fun _ => []
@@ -233,12 +233,12 @@ theorem availability_coordinationFree_noCommit (Sys : System sp D) (hA : Availab
 /-! ## Specifications: every commitment is contradicted by a canonical run -/
 
 /-- For a specification, every commitment is contradicted by some canonical
-run: from `σ_S(i)` with `i ≼ k`, the canonical run `input(k) output(x)`
-accepts `k` (when `i ≺ k`) and emits any `x ∈ S(k)` at current input `k`.  A
+run: from `σ_P(i)` with `i ≼ k`, the canonical run `input(k) output(x)`
+accepts `k` (when `i ≺ k`) and emits any `x ∈ P(k)` at current input `k`.  A
 commitment at a state with current input `i` seals only inputs `k ≻ i` and
 chooses only against rows `(k,x)` with `i ≼ k`, so some canonical run
 performs an event it rules out. -/
-theorem canonical_run_contradicts {i k : I} {x : O} (hik : i ≼ k) (hx : sp.S k x) :
+theorem canonical_run_contradicts {i k : I} {x : O} (hik : i ≼ k) (hx : sp.P k x) :
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k := by
   have hju : (canon sp i).R k x := ⟨hx, hik⟩
   let σ := canon sp i

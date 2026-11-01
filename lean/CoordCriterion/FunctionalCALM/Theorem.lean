@@ -22,7 +22,7 @@ variable {I O : Type} [PO I] [PO O]
 lies in the fiber of some input below the final current input. -/
 theorem exec_emitted {sp : Spec I O} {σ τ : State sp} {es : List (Event I O)}
     (hx : Exec σ es τ) :
-    σ.cur ≼ τ.cur ∧ ∀ o ∈ outs es, ∃ c, sp.S c o ∧ c ≼ τ.cur := by
+    σ.cur ≼ τ.cur ∧ ∀ o ∈ outs es, ∃ c, sp.P c o ∧ c ≼ τ.cur := by
   induction hx with
   | nil σ => exact ⟨PO.refl _, fun o ho => by simp [outs] at ho⟩
   | @cons σ τ ρ e es hs _ ih =>
@@ -61,7 +61,7 @@ theorem run_canon_of_mono {sp : Spec I O} (hm : sp.MonotoneF)
     exact hm c k o u (PO.trans hcτ hk) hc hS
 
 /-- The state `input i; output o` from `canon i` is a run state. -/
-theorem isRun_meet (sp : Spec I O) (i : I) (o : O) (h : sp.S i o) :
+theorem isRun_meet (sp : Spec I O) (i : I) (o : O) (h : sp.P i o) :
     IsRun (meetState sp i o h) := by
   refine ⟨i, ?_⟩
   have hR : (canon sp i).R i o := ⟨h, PO.refl i⟩

@@ -15,7 +15,7 @@ the paper, and, when the Lean reading differs, says how.  Proofs are
 one-line pointers into the library.
 
 Conventions are those of `Paper/S2_FunctionalCALM.lean`: `≼` is both orders,
-tables are predicates `I → O → Prop`, the fiber at `i` is `sp.S i`, a set of
+tables are predicates `I → O → Prop`, the fiber at `i` is `sp.P i`, a set of
 outputs is a predicate `O → Prop`, and finite sets of outputs or rows are
 `List`s.  The two figure specifications are `Figures.Txn.spec` (panel (f): one
 input `{A,B}`, modeled by `Unit`, outputs `[A,B]`/`[B,A]` under the equality
@@ -38,7 +38,7 @@ theorem «fig:ambiguity-frames/f» :
       Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ Sealed (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ Retired (canon Figures.Txn.spec ()) .ab () .ba ∧
-      ¬ ∃ u, Figures.Txn.spec.S () u ∧ Figures.Txn.TOut.ab ≼ u ∧ Figures.Txn.TOut.ba ≼ u :=
+      ¬ ∃ u, Figures.Txn.spec.P () u ∧ Figures.Txn.TOut.ab ≼ u ∧ Figures.Txn.TOut.ba ≼ u :=
   ⟨Figures.Txn.after_ab, Figures.Txn.ba_rejected⟩
 
 /-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is refined by a remaining one: an output
@@ -91,7 +91,7 @@ nor monotone nor consistent. -/
 theorem «sec:ambiguity-story/transactions-fail» :
     ¬ ConfluentAt [outState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR _),
         outState (canon Figures.Txn.spec ()) .ba (Figures.Txn.sR _)] () ∧
-      (¬ CompatibleIn (Figures.Txn.spec.S ()) [.ab, .ba] ∧ ¬ Figures.Txn.spec.DirectedOutputs ∧
+      (¬ CompatibleIn (Figures.Txn.spec.P ()) [.ab, .ba] ∧ ¬ Figures.Txn.spec.DirectedOutputs ∧
         ¬ Figures.Txn.spec.LiftedMono ∧ ¬ Figures.Txn.spec.Consistent) :=
   ⟨Figures.Txn.runs_not_confluent, Figures.Txn.not_monotone⟩
 
@@ -106,32 +106,34 @@ theorem «sec:ambiguity-story/traceroute-passes» (x y : Figures.Trace.RS)
 /-! ## Relational specifications and states (`sec:relational-specifications`) -/
 
 /-- **Def. `def:relational-specification`** (Ordered relational
-specification).  "`Spec = (I,≼,O,≼,S)`, `S ⊆ I × O`, where `(I,≼)` and
-`(O,≼)` are partially ordered sets and `S` is total on `I` … The fiber
-`S(i) = {o ∈ O : (i,o) ∈ S}` … may now contain several outputs.  A functional
-specification is the special case `S(i) = {f(i)}`."
+specification).  "`Spec = (I,≼,O,≼,P)`, `P ⊆ I × O`, where `(I,≼)` and
+`(O,≼)` are partially ordered sets.  `P` is the specification's *table of
+possibilities* and is total on `I`; a row `(i,o) ∈ P` is a possible
+input/output pair.  The fiber
+`P(i) = {o ∈ O : (i,o) ∈ P}` … may now contain several outputs.  A functional
+specification is the special case `P(i) = {f(i)}`."
 
-Lean: `Spec I O` (orders are the `PO` instances); the fiber `S(i)` is
-`sp.S i`; functional is `Spec.Functional`. -/
+Lean: `Spec I O` (orders are the `PO` instances); the fiber `P(i)` is
+`sp.P i`; functional is `Spec.Functional`. -/
 abbrev «def:relational-specification» (I O : Type) [PO I] [PO O] := Spec I O
 
-/-- **Eq. `eq:relational-specification`**: "`Spec = (I,≼,O,≼,S)`,
-`S ⊆ I × O`."  The orders are the `PO` instances; the relation `S ⊆ I × O` is a
+/-- **Eq. `eq:relational-specification`**: "`Spec = (I,≼,O,≼,P)`,
+`P ⊆ I × O`."  The orders are the `PO` instances; the relation `P ⊆ I × O` is a
 `Table I O` (a predicate on pairs).  A `Spec I O` is such a table together with
-totality: this is the `S` component. -/
+totality: this is the `P` component. -/
 abbrev «eq:relational-specification» (I O : Type) [PO I] [PO O] (sp : Spec I O) : Table I O :=
-  sp.S
+  sp.P
 
-/-- **Eq. `eq:fiber`**: "`S(i) = {o ∈ O : (i,o) ∈ S}`", as a predicate on
+/-- **Eq. `eq:fiber`**: "`P(i) = {o ∈ O : (i,o) ∈ P}`", as a predicate on
 outputs. -/
 abbrev «eq:fiber» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I) : O → Prop :=
-  fun o => sp.S i o
+  fun o => sp.P i o
 
 /-- Def. `def:relational-specification`, "ambiguous": some fiber has two
 distinct outputs.  (The library has no named notion; this is the reading.)
 Ambiguity is the negation of the functional dependency. -/
 theorem «def:relational-specification/ambiguous» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
-    (∃ i o o', sp.S i o ∧ sp.S i o' ∧ o ≠ o') ↔ ¬ sp.Functional :=
+    (∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o') ↔ ¬ sp.Functional :=
   ⟨fun ⟨i, o, o', h, h', hne⟩ hf => hne (hf i o o' h h'),
    fun hn => Classical.byContradiction fun h =>
      hn fun i o o' ho ho' => Classical.byContradiction fun hne => h ⟨i, o, o', ho, ho', hne⟩⟩
@@ -139,22 +141,22 @@ theorem «def:relational-specification/ambiguous» {I O : Type} [PO I] [PO O] (s
 /-- **Def. `def:ambiguous`** (Ambiguous specification).  "An ordered
 relational specification is *ambiguous* when some fiber contains more than
 one output."  Lean reading: there exist `i, o, o'` with `o ≠ o'` and both in
-`sp.S i`. -/
+`sp.P i`. -/
 abbrev «def:ambiguous» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
-  ∃ i o o', sp.S i o ∧ sp.S i o' ∧ o ≠ o'
+  ∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o'
 
 /-! ## Lifted Monotonicity (`sec:lifted-monotonicity`) -/
 
 /-- **Def. `def:relational-monotonicity`** (Relational Monotonicity).
-"`i ≼ j, o ∈ S(i) ⟹ ∃ u ∈ S(j) : o ≼ u`." -/
+"`i ≼ j, o ∈ P(i) ⟹ ∃ u ∈ P(j) : o ≼ u`." -/
 abbrev «def:relational-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.RelMono
 
 /-- **Eq. `eq:relational-monotonicity`**:
-"`i ≼ j, o ∈ S(i) ⟹ ∃ u ∈ S(j) : o ≼ u`" is the definition of
+"`i ≼ j, o ∈ P(i) ⟹ ∃ u ∈ P(j) : o ≼ u`" is the definition of
 `Spec.RelMono`. -/
 theorem «eq:relational-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
-    sp.RelMono ↔ ∀ i j o, i ≼ j → sp.S i o → ∃ u, sp.S j u ∧ o ≼ u :=
+    sp.RelMono ↔ ∀ i j o, i ≼ j → sp.P i o → ∃ u, sp.P j u ∧ o ≼ u :=
   Iff.rfl
 /-- After Def. `def:relational-monotonicity`: "For singleton fibers this is
 functional monotonicity." -/
@@ -175,9 +177,9 @@ abbrev «def:fiber-directedness» {O : Type} [PO O] (F : O → Prop) : Prop :=
   JointLift F F
 
 /-- **Def. `def:directed-outputs`** (Directed Outputs).  "An ordered
-relational specification has *Directed Outputs* when every fiber `S(i)` is
-directed."  Lean: `Spec.DirectedOutputs` is `∀ i, JointLift (sp.S i)
-(sp.S i)`. -/
+relational specification has *Directed Outputs* when every fiber `P(i)` is
+directed."  Lean: `Spec.DirectedOutputs` is `∀ i, JointLift (sp.P i)
+(sp.P i)`. -/
 abbrev «def:directed-outputs» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.DirectedOutputs
 
@@ -209,7 +211,7 @@ theorem «sec:lifted-monotonicity/figure-fibers» :
     (∀ x y, Figures.Trace.inFib x → Figures.Trace.inFib y →
         Figures.Trace.inFib (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y) ∧
       Figures.Trace.spec.DirectedOutputs ∧
-      ¬ CompatibleIn (Figures.Txn.spec.S ()) [.ab, .ba] :=
+      ¬ CompatibleIn (Figures.Txn.spec.P ()) [.ab, .ba] :=
   ⟨Figures.Trace.union_mem, Figures.Trace.directed.1, Figures.Txn.not_monotone.1⟩
 
 /-- **Eq. `eq:joint-output-order`** (joint lift).  "For nonempty `A,B ⊆ O`,
@@ -219,14 +221,14 @@ abbrev «eq:joint-output-order» {O : Type} [PO O] (A B : O → Prop) : Prop :=
   JointLift A B
 
 /-- **Def. `def:lifted-monotonicity`** (Lifted Monotonicity).  "`i ≼ j ⟹
-S(i) ⊑ S(j)`." -/
+P(i) ⊑ P(j)`." -/
 abbrev «def:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.LiftedMono
 
-/-- **Eq. `eq:lifted-monotonicity`**: "`i ≼ j ⟹ S(i) ⊑ S(j)`" is the
+/-- **Eq. `eq:lifted-monotonicity`**: "`i ≼ j ⟹ P(i) ⊑ P(j)`" is the
 definition of `Spec.LiftedMono`, with `⊑` the joint lift `JointLift`. -/
 theorem «eq:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
-    sp.LiftedMono ↔ ∀ i j, i ≼ j → JointLift (sp.S i) (sp.S j) :=
+    sp.LiftedMono ↔ ∀ i j, i ≼ j → JointLift (sp.P i) (sp.P j) :=
   Iff.rfl
 /-- After Def. `def:lifted-monotonicity`: "With singleton fibers it is
 functional monotonicity." -/
@@ -241,7 +243,7 @@ theorem «def:lifted-monotonicity/relmono-directed» {I O : Type} [PO I] [PO O]
   liftedMono_iff_relMono_directed sp
 
 /-- After Def. `def:lifted-monotonicity`: "In powerdomain terms, Relational
-Monotonicity is monotonicity of `i ↦ S(i)` under the Hoare preorder, which
+Monotonicity is monotonicity of `i ↦ P(i)` under the Hoare preorder, which
 asks only that each output in `A` have a refinement in `B`; the joint lift
 asks that every finite set of them have a common one.  The two agree when `B`
 is directed."  Lean: the Hoare preorder is `Front.HoareLe A B`
@@ -250,7 +252,7 @@ monotonicity of the fibers; (2) the joint lift implies the Hoare preorder;
 (3) for directed `B` (`JointLift B B`, Def. `def:fiber-directedness`) the two
 coincide. -/
 theorem «def:lifted-monotonicity/hoare» {I O : Type} [PO I] [PO O] :
-    (∀ sp : Spec I O, sp.RelMono ↔ ∀ i j, i ≼ j → Front.HoareLe (sp.S i) (sp.S j)) ∧
+    (∀ sp : Spec I O, sp.RelMono ↔ ∀ i j, i ≼ j → Front.HoareLe (sp.P i) (sp.P j)) ∧
       (∀ A B : O → Prop, JointLift A B → Front.HoareLe A B) ∧
       (∀ A B : O → Prop, JointLift B B → (Front.HoareLe A B ↔ JointLift A B)) :=
   ⟨Front.relMono_iff_hoare, fun _ _ => Front.jointLift_hoare,
@@ -261,28 +263,28 @@ joint lift is not reflexive: `A ⊑ A` holds exactly when `A` is directed, so
 the transaction fiber of Figure `fig:ambiguity-frames`(f) already fails it at
 `j = i`."  Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition
 directedness of `A` (Def. `def:fiber-directedness`); the panel (f) fiber
-`{[A,B],[B,A]}` is not directed, so `S(i) ⊑ S(i)` fails at `i = {A,B}`. -/
+`{[A,B],[B,A]}` is not directed, so `P(i) ⊑ P(i)` fails at `i = {A,B}`. -/
 theorem «def:lifted-monotonicity/not-reflexive» :
     (∀ (O : Type) [PO O] (A : O → Prop), Front.HoareLe A A) ∧
       (∀ (O : Type) [PO O] (A : O → Prop),
         JointLift A A ↔ ∀ X : List O, X ≠ [] → (∀ x ∈ X, A x) → CompatibleIn A X) ∧
-      ¬ JointLift (Figures.Txn.spec.S ()) (Figures.Txn.spec.S ()) :=
+      ¬ JointLift (Figures.Txn.spec.P ()) (Figures.Txn.spec.P ()) :=
   ⟨fun _ _ A => Front.HoareLe.refl A, fun _ _ _ => Iff.rfl,
    fun h => Figures.Txn.not_monotone.2.1 fun _ => h⟩
 
 /-- **Def. `def:common-expansion-condition`** (Common-expansion condition).
-"For every finite set of rows `(i₁,o₁),…,(i_k,o_k)` of `S` and every common
-expansion `j` of `i₁,…,i_k`, some `u ∈ S(j)` refines every `o_r`."  Lean:
+"For every finite set of rows `(i₁,o₁),…,(i_k,o_k)` of `P` and every common
+expansion `j` of `i₁,…,i_k`, some `u ∈ P(j)` refines every `o_r`."  Lean:
 `Spec.CommonExpansion`, the rows as a list. -/
 abbrev «def:common-expansion-condition» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.CommonExpansion
 
 /-- After Def. `def:common-expansion-condition`: "For the empty set of rows
-the condition asks only that `S(j)` be nonempty, which follows from `S` being
+the condition asks only that `P(j)` be nonempty, which follows from `P` being
 total on `I`." -/
 theorem «def:common-expansion-condition/empty» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) (j : I) :
-    (∃ u, sp.S j u ∧ ∀ r ∈ ([] : List (I × O)), r.2 ≼ u) :=
+    (∃ u, sp.P j u ∧ ∀ r ∈ ([] : List (I × O)), r.2 ≼ u) :=
   let ⟨u, hu⟩ := sp.total j; ⟨u, hu, fun _ h => nomatch h⟩
 
 /-- **Prop. `prop:common-expansion-form`** (Common-expansion form of Lifted
@@ -320,7 +322,7 @@ restates the lemma for the record. -/
 theorem «sec:complete-calm-theorem/lift-unchanged» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} {i : I} {es : List (Event I O)} {τ : State sp}
     (hx : Exec (canon sp i) es τ) :
-    ∀ k u, τ.R k u ↔ (sp.S k u ∧ τ.cur ≼ k ∧ ∀ o ∈ outs es, o ≼ u) :=
+    ∀ k u, τ.R k u ↔ (sp.P k u ∧ τ.cur ≼ k ∧ ∀ o ∈ outs es, o ≼ u) :=
   run_residual hx
 
 /-- **Theorem `thm:complete-calm`** (Complete CALM).  "An ordered

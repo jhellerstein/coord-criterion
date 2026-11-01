@@ -111,7 +111,7 @@ def Component.ofSystemOn (Sys : System sp D) (N : Nat → Prop)
   accepts r := ∃ (n : Nat) (init : Fin n → I) (H : History sp D n) (p : Fin n),
     N n ∧ WF init H ∧ Produced Sys n init H ∧ r.input = init p ∧ r.events = toSEvs (H p) ∧
       LRun (canon sp (init p)) (H p) r.final ∧ (∃ γ, SEvent.output γ r.output ∈ r.events) ∧
-      sp.S r.input r.output
+      sp.P r.input r.output
   sound := by
     rintro r ⟨n, init, H, p, _, _, hp, hin, hev, hl, he, hc⟩
     refine ⟨?_, he, hc⟩
@@ -137,7 +137,7 @@ theorem Component.ofSystemOn_accepts (Sys : System sp D) (N : Nat → Prop)
       ∃ (n : Nat) (init : Fin n → I) (H : History sp D n) (p : Fin n),
         N n ∧ WF init H ∧ Produced Sys n init H ∧ r.input = init p ∧ r.events = toSEvs (H p) ∧
         LRun (canon sp (init p)) (H p) r.final ∧ (∃ γ, SEvent.output γ r.output ∈ r.events) ∧
-        sp.S r.input r.output := Iff.rfl
+        sp.P r.input r.output := Iff.rfl
 
 /-- A system with the empty basis is a commitment-free implementation, in
 every form. -/

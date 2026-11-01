@@ -81,13 +81,13 @@ section Filter
 variable {I M O : Type} [PO I] [PO M] [PO O]
 
 /-- The middle values `𝒮₁` can produce. -/
-def Img (sp : Spec I M) (m : M) : Prop := ∃ i, sp.S i m
+def Img (sp : Spec I M) (m : M) : Prop := ∃ i, sp.P i m
 
 /-- **Common expansion on `D`**: the common-expansion condition for rows whose
 inputs lie in `D`, at expansions in `D`. -/
 def CEOn (sp : Spec M O) (D : M → Prop) : Prop :=
-  ∀ rows : List (M × O), (∀ r ∈ rows, D r.1 ∧ sp.S r.1 r.2) →
-    ∀ j, D j → (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.S j u ∧ ∀ r ∈ rows, r.2 ≼ u
+  ∀ rows : List (M × O), (∀ r ∈ rows, D r.1 ∧ sp.P r.1 r.2) →
+    ∀ j, D j → (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
 
 theorem ceOn_of_ce {sp : Spec M O} (h : sp.CommonExpansion) (D : M → Prop) : CEOn sp D :=
   fun rows hr j _ hj => h rows (fun r h' => (hr r h').2) j hj
@@ -112,7 +112,7 @@ instance subPO (D : M → Prop) : PO {m // D m} where
 
 /-- `𝒮` read as a specification on the inputs in `D`. -/
 def restrictTo (D : M → Prop) (sp : Spec M O) : Spec {m // D m} O :=
-  ⟨fun m o => sp.S m.1 o, fun m => sp.total m.1⟩
+  ⟨fun m o => sp.P m.1 o, fun m => sp.total m.1⟩
 
 /-- `CEOn sp D` says exactly that `sp` restricted to `D` satisfies Lifted
 Monotonicity. -/
@@ -139,7 +139,7 @@ theorem ceOn_iff_restrictTo (D : M → Prop) (sp : Spec M O) :
       (by
         intro r hr'
         obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr'
-        show sp.S p.2.1 p.1.2
+        show sp.P p.2.1 p.1.2
         rw [(hL2 p hp).2]
         exact (hr p.1 (hL2 p hp).1).2)
       ⟨j, hDj⟩
@@ -168,7 +168,7 @@ variable {I M O : Type} [PO I] [PO M] [PO O]
 abbrev comp (sp : Spec I M) (f : M → O) : Spec I O := seq sp (graph f)
 
 theorem comp_S {sp : Spec I M} {f : M → O} {i : I} {o : O} :
-    (comp sp f).S i o ↔ ∃ m, sp.S i m ∧ o = f m := Iff.rfl
+    (comp sp f).P i o ↔ ∃ m, sp.P i m ∧ o = f m := Iff.rfl
 
 /-- Image of a table under `f`. -/
 def imgT (f : M → O) (R : Table I M) : Table I O := fun k o => ∃ m, R k m ∧ o = f m
@@ -192,7 +192,7 @@ def img (f : M → O) (σ : State sp) : State (comp sp f) where
 theorem img_canon (f : M → O) (i : I) : img f (canon sp i) = canon (comp sp f) i := by
   refine State.ext' rfl ?_
   funext k o; apply propext
-  show (∃ m, (sp.S k m ∧ i ≼ k) ∧ o = f m) ↔ ((∃ m, sp.S k m ∧ o = f m) ∧ i ≼ k)
+  show (∃ m, (sp.P k m ∧ i ≼ k) ∧ o = f m) ↔ ((∃ m, sp.P k m ∧ o = f m) ∧ i ≼ k)
   exact ⟨fun ⟨m, ⟨h, hk⟩, ho⟩ => ⟨⟨m, h, ho⟩, hk⟩, fun ⟨⟨m, h, ho⟩, hk⟩ => ⟨m, ⟨h, hk⟩, ho⟩⟩
 
 /-! ### Erasing to the composite -/
@@ -571,7 +571,7 @@ end SealIn
 /-- Exposability at canonical states alone gives the common-expansion
 condition (the reverse direction of the exposure boundary uses only them). -/
 theorem canon_exposable_commonExpansion {I O : Type} [PO I] [PO O] {sp : Spec I O}
-    (hE : ∀ i o, sp.S i o → Exposable (canon sp i) o) : sp.CommonExpansion := by
+    (hE : ∀ i o, sp.P i o → Exposable (canon sp i) o) : sp.CommonExpansion := by
   intro rows
   induction rows with
   | nil =>
@@ -597,12 +597,12 @@ state at `i`, and every `𝒫`-output with that image needs a commitment there.
 So a guarded composite in which `𝒫` runs under the empty basis can never emit
 `f m` from the state it is in right after receiving `i`. -/
 theorem at_least_once_needed (hf : Monotone f) (hnot : ¬ (comp sp f).LiftedMono) :
-    ∃ i m, sp.S i m ∧ ¬ Exposable (canon (comp sp f) i) (f m) ∧
-      (∀ m', sp.S i m' → f m' = f m → ¬ Exposable (canon sp i) m') ∧
+    ∃ i m, sp.P i m ∧ ¬ Exposable (canon (comp sp f) i) (f m) ∧
+      (∀ m', sp.P i m' → f m' = f m → ¬ Exposable (canon sp i) m') ∧
       ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → f m' ≠ f m := by
-  have hall : ¬ ∀ i o, (comp sp f).S i o → Exposable (canon (comp sp f) i) o := fun h =>
+  have hall : ¬ ∀ i o, (comp sp f).P i o → Exposable (canon (comp sp f) i) o := fun h =>
     hnot ((liftedMono_iff_commonExpansion _).2 (canon_exposable_commonExpansion h))
-  obtain ⟨i, o, ⟨m, hm, rfl⟩, hne⟩ : ∃ i o, (comp sp f).S i o ∧
+  obtain ⟨i, o, ⟨m, hm, rfl⟩, hne⟩ : ∃ i o, (comp sp f).P i o ∧
       ¬ Exposable (canon (comp sp f) i) o :=
     Classical.byContradiction fun hn =>
       hall fun i o h => Classical.byContradiction fun he => hn ⟨i, o, h, he⟩
@@ -855,7 +855,7 @@ theorem graph_commonExpansion (hf : Monotone f) : (graph f).CommonExpansion :=
 joins `𝒫`'s table with `𝒦`'s, `{(k,x) : ∃ m, (k,m) ∈ R ∧ (m,x) ∈ K}`. -/
 def imgK (sk : Spec M O) (σ : State sp) : State (seq sp sk) where
   cur := σ.cur
-  R := fun k x => ∃ m, σ.R k m ∧ sk.S m x
+  R := fun k x => ∃ m, σ.R k m ∧ sk.P m x
   sub := fun k _ ⟨m, hm, hx⟩ => ⟨m, σ.sub k m hm, hx⟩
   hasCur := let ⟨m, hm⟩ := σ.hasCur; let ⟨x, hx⟩ := sk.total m; ⟨x, m, hm, hx⟩
   above := fun k _ ⟨m, hm, _⟩ => σ.above k m hm
@@ -864,16 +864,16 @@ def imgK (sk : Spec M O) (σ : State sp) : State (seq sp sk) where
 theorem imgK_canon (sk : Spec M O) (i : I) : imgK sk (canon sp i) = canon (seq sp sk) i := by
   refine State.ext' rfl ?_
   funext k o; apply propext
-  show (∃ m, (sp.S k m ∧ i ≼ k) ∧ sk.S m o) ↔ ((∃ m, sp.S k m ∧ sk.S m o) ∧ i ≼ k)
+  show (∃ m, (sp.P k m ∧ i ≼ k) ∧ sk.P m o) ↔ ((∃ m, sp.P k m ∧ sk.P m o) ∧ i ≼ k)
   exact ⟨fun ⟨m, ⟨h, hk⟩, ho⟩ => ⟨⟨m, h, ho⟩, hk⟩, fun ⟨⟨m, h, ho⟩, hk⟩ => ⟨m, ⟨h, hk⟩, ho⟩⟩
 
 /-- **A commitment-free output of `𝒫` maps to commitment-free outputs of the
 composite.**  If `𝒦` satisfies the common-expansion condition and `m` is
 exposable at `σ`, every `o ∈ K(m)` is exposable at the image of `σ`. -/
 theorem cf_stepK (hC : sk.CommonExpansion) {σ : State sp} {m : M} (hexp : Exposable σ m)
-    {o : O} (ho : sk.S m o) : Exposable (imgK sk σ) o := by
+    {o : O} (ho : sk.P m o) : Exposable (imgK sk σ) o := by
   rintro k x ⟨m', hm', hx⟩ _
-  have hrows : ∀ r ∈ [(m, o), (m', x)], sk.S r.1 r.2 := by
+  have hrows : ∀ r ∈ [(m, o), (m', x)], sk.P r.1 r.2 := by
     intro r hr
     simp only [List.mem_cons, List.not_mem_nil, or_false] at hr
     rcases hr with rfl | rfl
@@ -899,9 +899,9 @@ outputs lie in `D`, every image of an exposable `m ∈ D` is exposable at the
 image state. -/
 theorem cf_stepK_on {D : M → Prop} (hC : Joint.CEOn sk D) {σ : State sp}
     (hσ : ∀ k m, σ.R k m → D m) {m : M} (hm : D m) (hexp : Exposable σ m)
-    {o : O} (ho : sk.S m o) : Exposable (imgK sk σ) o := by
+    {o : O} (ho : sk.P m o) : Exposable (imgK sk σ) o := by
   rintro k x ⟨m', hm', hx⟩ _
-  have hrows : ∀ r ∈ [(m, o), (m', x)], D r.1 ∧ sk.S r.1 r.2 := by
+  have hrows : ∀ r ∈ [(m, o), (m', x)], D r.1 ∧ sk.P r.1 r.2 := by
     intro r hr
     simp only [List.mem_cons, List.not_mem_nil, or_false] at hr
     rcases hr with rfl | rfl
@@ -1117,16 +1117,16 @@ output `o` is not exposable at a canonical state `σ(i)`, and no `m` with
 one there. -/
 theorem composite_needs_commit (hC : Joint.CEOn sk (Joint.Img sp))
     (hnot : ¬ (seq sp sk).LiftedMono) :
-    ∃ i m o, sp.S i m ∧ sk.S m o ∧ ¬ Exposable (canon (seq sp sk) i) o ∧
-      (∀ m', sp.S i m' → sk.S m' o → ¬ Exposable (canon sp i) m') ∧
-      ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → ¬ sk.S m' o := by
-  have hall : ¬ ∀ i o, (seq sp sk).S i o → Exposable (canon (seq sp sk) i) o := fun h =>
+    ∃ i m o, sp.P i m ∧ sk.P m o ∧ ¬ Exposable (canon (seq sp sk) i) o ∧
+      (∀ m', sp.P i m' → sk.P m' o → ¬ Exposable (canon sp i) m') ∧
+      ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → ¬ sk.P m' o := by
+  have hall : ¬ ∀ i o, (seq sp sk).P i o → Exposable (canon (seq sp sk) i) o := fun h =>
     hnot ((liftedMono_iff_commonExpansion _).2 (canon_exposable_commonExpansion h))
-  obtain ⟨i, o, ⟨m, hm, hmo⟩, hne⟩ : ∃ i o, (seq sp sk).S i o ∧
+  obtain ⟨i, o, ⟨m, hm, hmo⟩, hne⟩ : ∃ i o, (seq sp sk).P i o ∧
       ¬ Exposable (canon (seq sp sk) i) o :=
     Classical.byContradiction fun hn =>
       hall fun i o h => Classical.byContradiction fun he => hn ⟨i, o, h, he⟩
-  have hcf : ∀ m', sp.S i m' → Exposable (canon sp i) m' → sk.S m' o →
+  have hcf : ∀ m', sp.P i m' → Exposable (canon sp i) m' → sk.P m' o →
       Exposable (canon (seq sp sk) i) o := by
     intro m' hm' he ho; rw [← imgK_canon sk i]
     exact cf_stepK_on hC (fun k m h => ⟨k, (canon sp i).sub k m h⟩) ⟨i, hm'⟩ he ho
@@ -1235,8 +1235,8 @@ theorem answer_run {σ : State sp} : ∀ (os : List O) {τK ρK : State sk} {esK
 /-- Phase before `𝒫`'s first output: the composite follows `𝒫`'s inputs. -/
 theorem merge_inputs {B : Basis sp} {σ ρ : State sp} {es : List (SEvent sp)}
     (h : SysExec B σ es ρ) (he : emitted es = []) :
-    ∀ ρ' : State (seq sp sk), Inv σ sk.S ρ' →
-      ∃ ρ'', Exec ρ' (merge es []) ρ'' ∧ Inv ρ sk.S ρ'' := by
+    ∀ ρ' : State (seq sp sk), Inv σ sk.P ρ' →
+      ∃ ρ'', Exec ρ' (merge es []) ρ'' ∧ Inv ρ sk.P ρ'' := by
   induction h with
   | nil σ => exact fun ρ' hI => ⟨ρ', .nil _, hI⟩
   | @cons σ τ ρ e es hs _ ih =>
@@ -1244,7 +1244,7 @@ theorem merge_inputs {B : Basis sp} {σ ρ : State sp} {es : List (SEvent sp)}
     cases e with
     | output γ m => cases he
     | commit γ =>
-      have hI' : Inv τ sk.S ρ' :=
+      have hI' : Inv τ sk.P ρ' :=
         ⟨hc.trans hs.commit_cur.symm, fun k m x hk hx => hI k m x (hs.sub _ _ hk) hx⟩
       exact ih he ρ' hI'
     | input j =>
@@ -1255,7 +1255,7 @@ theorem merge_inputs {B : Basis sp} {σ ρ : State sp} {es : List (SEvent sp)}
         have hρ : ρ'.R j x := hI j m x hm hx
         let ρ1 := inState ρ' j x hρ
         have hst : Step ρ' (.input j) ρ1 := Step.input ρ' ρ1 j ⟨x, hρ⟩ rfl rfl
-        have hI' : Inv τ sk.S ρ1 := by
+        have hI' : Inv τ sk.P ρ1 := by
           refine ⟨hcur.symm, fun k m' x' hk hx' => ?_⟩
           rw [hR] at hk
           exact ⟨hI k m' x' hk.1 hx', hk.2⟩
@@ -1365,7 +1365,7 @@ theorem composite_run (hC : sk.CommonExpansion) {B : Basis sp} {i : I} {es : Lis
   obtain ⟨σ₀, hx0, hx1⟩ := sysExec_append_inv hP
   cases hx1 with
   | @cons _ τ₀ _ _ _ hs hx1 =>
-  have hI0 : Inv (canon sp i) sk.S (canon (seq sp sk) i) :=
+  have hI0 : Inv (canon sp i) sk.P (canon (seq sp sk) i) :=
     ⟨rfl, fun k m' x hk hx => ⟨⟨m', hk.1, hx⟩, hk.2⟩⟩
   obtain ⟨ρ₀, hxA, hc0, hIA⟩ := merge_inputs (sk := sk) hx0 h0 _ hI0
   obtain ⟨σc, _, hγ, hσc, _, hcurτ, hRτ⟩ := sysStep_output_inv hs
@@ -1669,9 +1669,9 @@ theorem proper_of_ce (hC : sk.CommonExpansion) : Proper sp sk :=
 
 /-- `𝒮₁` with its outputs typed as outputs of `𝒮₁`. -/
 def core (sp : Spec I M) : Spec I {m // Img sp m} :=
-  ⟨fun i m => sp.S i m.1, fun i => let ⟨m, h⟩ := sp.total i; ⟨⟨m, i, h⟩, h⟩⟩
+  ⟨fun i m => sp.P i m.1, fun i => let ⟨m, h⟩ := sp.total i; ⟨⟨m, i, h⟩, h⟩⟩
 
-/-- The composite through `core 𝒮₁` and `𝒮₂|_{𝒮₁}` is `S₂ ∘ S₁`. -/
+/-- The composite through `core 𝒮₁` and `𝒮₂|_{𝒮₁}` is `P₂ ∘ P₁`. -/
 theorem seq_core (sp : Spec I M) (sk : Spec M O) : seq (core sp) (rest sp sk) = seq sp sk := by
   apply Spec.ext'
   funext i o; apply propext
@@ -1801,7 +1801,7 @@ theorem emitted_img {B : Basis sp} {σ ρ : State sp} {es : List (SEvent sp)}
 pipeline, let `𝒮₁` run under any basis, emitting `m :: ms`, and let
 `𝒮₂|_{𝒮₁}` run under the empty basis from `σ(m)`, receiving each later output
 and answering any number of times (possibly never).  Then `𝒮₁`'s run, with
-each output replaced by the answers to it, is a run of `S₂ ∘ S₁`.  Its table
+each output replaced by the answers to it, is a run of `P₂ ∘ P₁`.  Its table
 contains the join of the two tables, and the downstream's current input is
 below every output still in `𝒮₁`'s table. -/
 theorem proper_run (hP : Proper sp sk) {B : Basis sp} {i : I} {es : List (SEvent sp)}
@@ -1828,7 +1828,7 @@ theorem proper_run (hP : Proper sp sk) {B : Basis sp} {i : I} {es : List (SEvent
 /-- **Theorem (Proper Coordination) (2), following.**  In a proper pipeline,
 `𝒮₂|_{𝒮₁}` under the empty basis follows every run of `𝒮₁` under any basis:
 it starts at the first output `m`, answers it, and receives and answers each
-later output, with no commitment.  The result is a run of `S₂ ∘ S₁`. -/
+later output, with no commitment.  The result is a run of `P₂ ∘ P₁`. -/
 theorem proper_follows (hP : Proper sp sk) {B : Basis sp} {i : I} {es : List (SEvent sp)}
     {ρ : State sp} (hx : SysExec B (canon sp i) es ρ) {m : M} {ms : List M}
     (he : emitted es = m :: ms) :
@@ -1861,7 +1861,7 @@ theorem proper_follows (hP : Proper sp sk) {B : Basis sp} {i : I} {es : List (SE
 
 /-- **Theorem (Proper Coordination) (2), confluence.**  In a proper pipeline,
 consider triples of a state of `𝒮₁`, a run state of `𝒮₂|_{𝒮₁}` below every
-output in `𝒮₁`'s table, and a run state of `S₂ ∘ S₁` containing the join of
+output in `𝒮₁`'s table, and a run state of `P₂ ∘ P₁` containing the join of
 their tables.  If the states of `𝒮₁` can be continued (under any bases) to one
 state with current input `j`, the composite states are confluent at `j`. -/
 theorem proper_confluent (hP : Proper sp sk)
@@ -1904,14 +1904,14 @@ theorem proper_confluent (hP : Proper sp sk)
   exact hsub p hp j m u hI (hm' p hp) hpu
 
 /-- **Theorem (Proper Coordination) (3).**  In a proper pipeline, if
-`S₂ ∘ S₁` violates Lifted Monotonicity, some composite output `o` is not
+`P₂ ∘ P₁` violates Lifted Monotonicity, some composite output `o` is not
 exposable at a canonical state `σ(i)`, and `𝒮₁` must commit to emit any `m`
-with `o ∈ S₂(m)` there: no such `m` is exposable at `σ_{𝒮₁}(i)`, and under the
+with `o ∈ P₂(m)` there: no such `m` is exposable at `σ_{𝒮₁}(i)`, and under the
 empty basis no output event there emits one. -/
 theorem proper_needs_commit (hP : Proper sp sk) (hnot : ¬ (seq sp sk).LiftedMono) :
-    ∃ i m o, sp.S i m ∧ sk.S m o ∧ ¬ Exposable (canon (seq sp sk) i) o ∧
-      (∀ m', sp.S i m' → sk.S m' o → ¬ Exposable (canon sp i) m') ∧
-      ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → ¬ sk.S m' o :=
+    ∃ i m o, sp.P i m ∧ sk.P m o ∧ ¬ Exposable (canon (seq sp sk) i) o ∧
+      (∀ m', sp.P i m' → sk.P m' o → ¬ Exposable (canon sp i) m') ∧
+      ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → ¬ sk.P m' o :=
   composite_needs_commit (proper_iff.1 hP) hnot
 
 /-- A proper pipeline's downstream can drop its commitments: for any system
@@ -1933,7 +1933,7 @@ theorem proper_erase (hP : Proper sp sk) {U : List {m // Img sp m} → Prop}
 def liftU (P : Sys sp) (l : List {m // Img sp m}) : Prop := P.emits (l.map Subtype.val)
 
 /-- **Pipeline step.**  In a proper pipeline, with any system `P` for `𝒮₁` and
-any system `K` for `𝒮₂|_{𝒮₁}`, the pipeline emits only what `S₂ ∘ S₁` emits
+any system `K` for `𝒮₂|_{𝒮₁}`, the pipeline emits only what `P₂ ∘ P₁` emits
 under its canonical basis.  So a proper pipeline is itself a guard for a
 further stage. -/
 theorem proper_pipeline_step (hP : Proper sp sk) {P : Sys sp} {K : Sys (rest sp sk)}
@@ -2238,8 +2238,8 @@ theorem smr_proper {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt
     ¬ (smrS1 (Cmd := Cmd)).LiftedMono ∧ ¬ (comp smrS1 (execF δ σ0)).LiftedMono ∧
       Monotone (execF δ σ0) ∧ (∀ m, Joint.Img (smrS1 (Cmd := Cmd)) m) ∧
       Proper smrS1 (graph (execF δ σ0)) ∧
-      ∃ i m, smrS1.S i m ∧ ¬ Exposable (canon (comp smrS1 (execF δ σ0)) i) (execF δ σ0 m) ∧
-        ∀ m', smrS1.S i m' → execF δ σ0 m' = execF δ σ0 m → ¬ Exposable (canon smrS1 i) m' := by
+      ∃ i m, smrS1.P i m ∧ ¬ Exposable (canon (comp smrS1 (execF δ σ0)) i) (execF δ σ0 m) ∧
+        ∀ m', smrS1.P i m' → execF δ σ0 m' = execF δ σ0 m → ¬ Exposable (canon smrS1 i) m' := by
   obtain ⟨h1, h2, hf, _⟩ := Inst.smr_example δ σ0 hne
   obtain ⟨i, m, hm, hne', hall, _⟩ := at_least_once_needed hf h2
   exact ⟨h1, h2, hf, smr_img, proper_of_ce (graph_commonExpansion hf), i, m, hm, hne', hall⟩

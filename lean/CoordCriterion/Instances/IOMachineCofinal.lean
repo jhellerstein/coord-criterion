@@ -216,17 +216,17 @@ by an execution (Realizability), and every execution's final observation is
 dominated by a row of `D` at its input (Domination). -/
 structure MachineCofinal (φ : OccInp C P k G → J) (D : Spec J O) : Prop where
   emb : ∀ a b, a ≼ b ↔ φ a ≼ φ b
-  real : ∀ j o, D.S j o → ∃ β s, ∃ hx : Execution (sys k G) β s,
+  real : ∀ j o, D.P j o → ∃ β s, ∃ hx : Execution (sys k G) β s,
     φ (occOfExec k G hx) = j ∧ G.obs (s .mach) = o
   dom : ∀ β s, ∀ hx : Execution (sys k G) β s,
-    ∃ o, D.S (φ (occOfExec k G hx)) o ∧ G.obs (s .mach) ≼ o
+    ∃ o, D.P (φ (occOfExec k G hx)) o ∧ G.obs (s .mach) ≼ o
 
 /-- The obligations, for a declared specification over the occurring
 inputs themselves. -/
 structure MachineCofinalOcc (D : Spec (OccInp C P k G) O) : Prop where
-  real : ∀ h o, D.S h o → ∃ β s, Execution (sys k G) β s ∧ input β = h.val ∧ G.obs (s .mach) = o
+  real : ∀ h o, D.P h o → ∃ β s, Execution (sys k G) β s ∧ input β = h.val ∧ G.obs (s .mach) = o
   dom : ∀ β s, ∀ hx : Execution (sys k G) β s,
-    ∃ o, D.S (occOfExec k G hx) o ∧ G.obs (s .mach) ≼ o
+    ∃ o, D.P (occOfExec k G hx) o ∧ G.obs (s .mach) ≼ o
 
 variable {k G}
 
@@ -293,8 +293,8 @@ encoding of its receive transitions is cofinal in the induced
 specification along `word`. -/
 theorem fifo_stationary_cofinal (hs : Stationary G) :
     MachineCofinal .fifo G word (SM.induced (recvSM G) (SM.prefixAbs P)) := by
-  have hf : ∀ h o, (spec .fifo G).S h o ↔
-      (SM.induced (recvSM G) (SM.prefixAbs P)).S (word h) o := fun h o =>
+  have hf : ∀ h o, (spec .fifo G).P h o ↔
+      (SM.induced (recvSM G) (SM.prefixAbs P)).P (word h) o := fun h o =>
     (word_fiber_run h o).trans (runSpec_stationary hs _ _)
   refine ⟨word_le_iff, fun w o ho => ?_, fun β s hx => ?_⟩
   · obtain ⟨h, rfl⟩ := word_surj (G := G) w
@@ -350,7 +350,7 @@ attribute [local instance] natPO
 /-- The declared specification of `dip`: at every occurring input the only
 output is `2`.  It omits the transient observations `1` and `0`. -/
 def dipDecl (C P : Type) (k : ChanKind) : Spec (OccInp C P k (dip C P)) Nat where
-  S _ o := o = 2
+  P _ o := o = 2
   total _ := ⟨2, rfl⟩
 
 theorem dipDecl_liftedMono (k : ChanKind) : (dipDecl C P k).LiftedMono :=
@@ -435,18 +435,18 @@ def fork (C P : Type) : Machine C P Fork Lvl where
 
 /-- A declared specification that omits an output `fork` produces: `l` only. -/
 def forkOmit (C P : Type) (k : ChanKind) : Spec (OccInp C P k (fork C P)) Lvl where
-  S _ o := o = .l
+  P _ o := o = .l
   total _ := ⟨.l, rfl⟩
 
 /-- A declared specification that adds an output `fork` cannot produce:
 `top` only. -/
 def forkAdd (C P : Type) (k : ChanKind) : Spec (OccInp C P k (fork C P)) Lvl where
-  S _ o := o = .top
+  P _ o := o = .top
   total _ := ⟨.top, rfl⟩
 
 /-- A specification with a single output at every input is Lifted Monotone. -/
 theorem liftedMono_const {I : Type} [PO I] (sp : Spec I Lvl) (u : Lvl)
-    (h : ∀ i o, sp.S i o ↔ o = u) : sp.LiftedMono :=
+    (h : ∀ i o, sp.P i o ↔ o = u) : sp.LiftedMono :=
   fun _ j _ _ _ hA => ⟨u, (h j u).2 rfl, fun x hx => by
     rw [(h _ x).1 (hA x hx)]; exact PO.refl u⟩
 
@@ -498,11 +498,11 @@ satisfies Realizability (every input reaches `b` by one internal step) and
 `forkAdd` satisfies Domination (`top` refines every observation); both are
 Lifted Monotone, while the induced specification of `fork` is not. -/
 theorem fork_halves :
-    (∀ h o, (forkOmit C P k).S h o →
+    (∀ h o, (forkOmit C P k).P h o →
       ∃ β s, Execution (sys k (fork C P)) β s ∧ input β = h.val ∧ (fork C P).obs (s .mach) = o) ∧
     (forkOmit C P k).LiftedMono ∧
     (∀ β s, ∀ hx : Execution (sys k (fork C P)) β s,
-      ∃ o, (forkAdd C P k).S (occOfExec k (fork C P) hx) o ∧ (fork C P).obs (s .mach) ≼ o) ∧
+      ∃ o, (forkAdd C P k).P (occOfExec k (fork C P) hx) o ∧ (fork C P).obs (s .mach) ≼ o) ∧
     (forkAdd C P k).LiftedMono ∧
     ¬ (spec (C := C) k (fork C P)).LiftedMono := by
   refine ⟨fun h o ho => ?_, liftedMono_const _ .l fun _ _ => Iff.rfl,

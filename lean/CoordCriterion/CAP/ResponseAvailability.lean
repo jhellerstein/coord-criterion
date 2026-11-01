@@ -112,7 +112,7 @@ theorem cf_partitionConsistencyCF (hlm : sp.LiftedMono) :
   classical
   have hX : ∀ p, ∃ x : State sp × List (I × O),
       LRun (canon sp (init p)) ((H p).take (c p)) x.1 ∧ Residual x.1 (x.2.map Prod.snd) ∧
-      ∀ r ∈ x.2, sp.S r.1 r.2 ∧ r.1 ≼ x.1.cur := by
+      ∀ r ∈ x.2, sp.P r.1 r.2 ∧ r.1 ≼ x.1.cur := by
     intro p
     obtain ⟨τp, hp⟩ := hwf.1 p
     obtain ⟨σ, hσ⟩ := lrun_take hp (c p)
@@ -386,7 +386,7 @@ theorem answering_of_ra {Sys : System sp D} {Q : (n : Nat) → Fin n → Table I
 /-- **Lemma `lem:forced-answer`** as currently stated: the continuation adds
 only events of `q`, and no input event; it reaches a cut at which `j` still
 expands every current input and the emitted outputs have no common refinement
-in `S(j)`.  Only Answering is used. -/
+in `P(j)`.  Only Answering is used. -/
 theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
     (hAns : Answering Sys Q) {init : Fin n → I} {H : History sp D n}
     {comp : Fin n → Nat} (hwf : WF init H) (hprod : Produced Sys n init H)
@@ -394,7 +394,7 @@ theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O
     (halone : ∀ p, comp p = comp q → p = q) {σq : State sp}
     (hσq : LRun (canon sp (init q)) ((H q).take (c q)) σq) {j : I}
     (hj : ∀ p σ, LRun (canon sp (init p)) ((H p).take (c p)) σ → σ.cur ≼ j)
-    (hno : ∀ o, Q n q σq.cur o → ¬ ∃ u, sp.S j u ∧ o ≼ u) :
+    (hno : ∀ o, Q n q σq.cur o → ¬ ∃ u, sp.P j u ∧ o ≼ u) :
     ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
       Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
       (∀ p, p ≠ q → ext p = []) ∧ (∀ p j, LEv.inp j ∉ ext p) ∧
@@ -424,7 +424,7 @@ theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O
 seal": if no answer at `i` has a refinement at some `j ⪰ i`, no system has
 Response Availability (already for two participants, each alone). -/
 theorem ra_excludes_forced_seal (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
-    {i j : I} (hij : i ≼ j) (hno : ∀ o, Q 2 0 i o → ¬ ∃ u, sp.S j u ∧ o ≼ u) :
+    {i j : I} (hij : i ≼ j) (hno : ∀ o, Q 2 0 i o → ¬ ∃ u, sp.P j u ∧ o ≼ u) :
     ¬ ResponseAvailability Sys Q := by
   intro hRA
   let init : Fin 2 → I := fun _ => i
@@ -500,7 +500,7 @@ theorem locality_transfer {Sys : System sp D} (hrep : Sys.Replicated) {m N : Nat
 /-! ## Response interfaces -/
 
 /-- With `T = S`, consistency on `T` is the common-expansion condition. -/
-theorem consistentOn_S : ConsistentOn sp sp.S ↔ sp.CommonExpansion := Iff.rfl
+theorem consistentOn_S : ConsistentOn sp sp.P ↔ sp.CommonExpansion := Iff.rfl
 
 /-- The emitted rows of a canonical execution started at current input `i`. -/
 def emRows : I → List (Event I O) → List (I × O)
@@ -510,7 +510,7 @@ def emRows : I → List (Event I O) → List (I × O)
 
 theorem exec_emRows {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es τ) :
     (emRows σ.cur es).map Prod.snd = outs es ∧
-    ∀ r ∈ emRows σ.cur es, sp.S r.1 r.2 ∧ r.1 ≼ τ.cur := by
+    ∀ r ∈ emRows σ.cur es, sp.P r.1 r.2 ∧ r.1 ≼ τ.cur := by
   induction hx with
   | nil => exact ⟨rfl, by simp [emRows]⟩
   | @cons σ τ' ρ e es hs hr ih =>
@@ -539,7 +539,7 @@ def outSt (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
 
 /-- Remark after Def. `def:response-interface`: (for `T ⊆ S`) consistency on
 `T` is confluence of the canonical runs whose emitted rows lie in `T`. -/
-theorem consistentOn_iff_confluent (T : Table I O) (hTS : ∀ i o, T i o → sp.S i o) :
+theorem consistentOn_iff_confluent (T : Table I O) (hTS : ∀ i o, T i o → sp.P i o) :
     ConsistentOn sp T ↔
     ∀ fam : List (I × List (Event I O) × State sp),
       (∀ x ∈ fam, Exec (canon sp x.1) x.2.1 x.2.2 ∧ ∀ r ∈ emRows x.1 x.2.1, T r.1 r.2) →
@@ -592,7 +592,7 @@ theorem consistentOn_iff_confluent (T : Table I O) (hTS : ∀ i o, T i o → sp.
 
 /-- Consistency on `T` from a bound at each input. -/
 theorem consistentOn_of_bound {T : Table I O}
-    (h : ∀ j, ∃ u, sp.S j u ∧ ∀ i o, T i o → i ≼ j → o ≼ u) : ConsistentOn sp T := by
+    (h : ∀ j, ∃ u, sp.P j u ∧ ∀ i o, T i o → i ≼ j → o ≼ u) : ConsistentOn sp T := by
   intro rows hrows j hj
   obtain ⟨u, hu, hall⟩ := h j
   exact ⟨u, hu, fun r hr => hall r.1 r.2 (hrows r hr) (hj r hr)⟩
@@ -621,8 +621,8 @@ theorem lm_response_form (Q : Obligation sp) (h : sp.LiftedMono) :
 
 /-- A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is a
 response interface on which `S` is consistent. -/
-theorem subspec_lm_interface (Q : Obligation sp) (T : Spec I O) (hTQ : ∀ i o, T.S i o → Q.Q i o)
-    (h : T.LiftedMono) : ResponseInterface Q T.S ∧ ConsistentOn sp T.S := by
+theorem subspec_lm_interface (Q : Obligation sp) (T : Spec I O) (hTQ : ∀ i o, T.P i o → Q.Q i o)
+    (h : T.LiftedMono) : ResponseInterface Q T.P ∧ ConsistentOn sp T.P := by
   have hce := (liftedMono_iff_commonExpansion _).1 h
   refine ⟨⟨hTQ, T.total, ?_⟩, ?_⟩
   · intro i o j hio hij
@@ -638,7 +638,7 @@ theorem functional_response_iff (hf : sp.Functional) (Q : Obligation sp) :
     (∃ T, ResponseInterface Q T ∧ ConsistentOn sp T) ↔ sp.LiftedMono := by
   constructor
   · rintro ⟨T, ⟨hTQ, hTtot, _⟩, hc⟩
-    have hST : ∀ i o, sp.S i o → T i o := by
+    have hST : ∀ i o, sp.P i o → T i o := by
       intro i o hio
       obtain ⟨o', ho'⟩ := hTtot i
       have := hf i o o' hio (Q.sub _ _ (hTQ _ _ ho'))
@@ -866,7 +866,7 @@ theorem without_replication (Sys : System sp D) (Q : (n : Nat) → Fin n → Tab
     (hRPC : ResponsePC Sys) (hloc : LocalInit Sys) {n : Nat} (h2 : 2 ≤ n)
     (A : Fin n → Prop) (r : Fin n → I × O)
     (hr : ∀ p, A p → Tp Sys Q n p (r p).1 (r p).2) (j : I) (hj : ∀ p, A p → (r p).1 ≼ j) :
-    ∃ u, sp.S j u ∧ ∀ p, A p → (r p).2 ≼ u := by
+    ∃ u, sp.P j u ∧ ∀ p, A p → (r p).2 ≼ u := by
   classical
   let W : ∀ p, A p → LocAt Sys n p (r p).1 (r p).2 := fun p h => Classical.choice (hr p h).2.loc
   let init : Fin n → I := fun p => if h : A p then (W p h).init p else j
@@ -935,7 +935,7 @@ instance : PO In2 where
 
 instance (x y : In2) : Decidable (x ≼ y) := inferInstanceAs (Decidable (In2.leB x y = true))
 
-/-! ### The converse counterexample: `⊥ ≺ a`, `⊥ ≺ b`, `S(0) = {⊥, a}`, `S(1) = {b}` -/
+/-! ### The converse counterexample: `⊥ ≺ a`, `⊥ ≺ b`, `P(0) = {⊥, a}`, `P(1) = {b}` -/
 
 inductive O3 | bot | a | b
   deriving DecidableEq
@@ -965,7 +965,7 @@ abbrev cxSpec : Spec In2 O3 :=
 
 /-- `Q = S`. -/
 abbrev cxQ : Obligation cxSpec :=
-  ⟨cxSpec.S, fun _ _ h => h, cxSpec.total, fun _ _ _ _ h _ => h⟩
+  ⟨cxSpec.P, fun _ _ h => h, cxSpec.total, fun _ _ _ _ h _ => h⟩
 
 def cxTB : In2 → O3 → Bool
   | .lo, .bot => true
@@ -1067,7 +1067,7 @@ abbrev sp5 : Spec I5 O8 :=
     · exact ⟨.e1, rfl⟩
     · exact ⟨.e2, rfl⟩⟩
 
-abbrev Q5 : Obligation sp5 := ⟨sp5.S, fun _ _ h => h, sp5.total, fun _ _ _ _ h _ => h⟩
+abbrev Q5 : Obligation sp5 := ⟨sp5.P, fun _ _ h => h, sp5.total, fun _ _ _ _ h _ => h⟩
 
 def t5B : I5 → O8 → Bool
   | .i1, .a => true
@@ -1112,7 +1112,7 @@ theorem subspec_example_interface : ResponseInterface Q5 T5 ∧ ConsistentOn sp5
 /-- No total sub-specification of `S` satisfies Lifted Monotonicity (it would
 contain `(i₁,a)` and `(i₂,b)`, hence `d₁` or `d₂` at `j`, which has no
 refinement at `k₂` or `k₁` respectively). -/
-theorem subspec_example_noLM (T' : Spec I5 O8) (hsub : ∀ i o, T'.S i o → sp5.S i o) :
+theorem subspec_example_noLM (T' : Spec I5 O8) (hsub : ∀ i o, T'.P i o → sp5.P i o) :
     ¬ T'.LiftedMono := by
   intro hlm
   have hce := (liftedMono_iff_commonExpansion _).1 hlm
@@ -1148,7 +1148,7 @@ which `S` is consistent, although no total `T' ⊆ Q` satisfies Lifted
 Monotonicity. -/
 theorem subspec_counterexample :
     (ResponseInterface Q5 T5 ∧ ConsistentOn sp5 T5) ∧
-    ∀ T' : Spec I5 O8, (∀ i o, T'.S i o → Q5.Q i o) → ¬ T'.LiftedMono :=
+    ∀ T' : Spec I5 O8, (∀ i o, T'.P i o → Q5.Q i o) → ¬ T'.LiftedMono :=
   ⟨subspec_example_interface, fun T' h => subspec_example_noLM T' h⟩
 
 /-- "A participant that emits `d₁` or `d₂` seals `k₂` or `k₁`" (under any
@@ -1339,7 +1339,7 @@ def bABA : Ballots := ⟨some .a, some .b, some .a⟩
 `ab·` the only answer is `⊥`, which has no refinement at `aba`; so no system
 has Response Availability for any obligation contained in `S`. -/
 theorem election_eq_no_ra {D : Type} (Sys : System electionEq D)
-    (Q : (n : Nat) → Fin n → Table Ballots Win) (hQ : ∀ n p i o, Q n p i o → electionEq.S i o) :
+    (Q : (n : Nat) → Fin n → Table Ballots Win) (hQ : ∀ n p i o, Q n p i o → electionEq.P i o) :
     ¬ ResponseAvailability Sys Q := by
   apply ra_excludes_forced_seal Sys Q (i := bAB) (j := bABA) ⟨Or.inr rfl, Or.inr rfl, Or.inl rfl⟩
   rintro o ho ⟨u, hu, hle⟩
@@ -1378,7 +1378,7 @@ def s4B : In2 → O4 → Bool
 abbrev sp4 : Spec In2 O4 :=
   ⟨fun i o => s4B i o = true, by intro i; cases i; exact ⟨.a, rfl⟩; exact ⟨.a2, rfl⟩⟩
 
-abbrev Q4 : Obligation sp4 := ⟨sp4.S, fun _ _ h => h, sp4.total, fun _ _ _ _ h _ => h⟩
+abbrev Q4 : Obligation sp4 := ⟨sp4.P, fun _ _ h => h, sp4.total, fun _ _ _ _ h _ => h⟩
 
 def taB : In2 → O4 → Bool
   | .lo, .a | .hi, .a2 => true
@@ -1497,7 +1497,7 @@ the strategies depend. -/
 theorem without_replication_counterexample :
     ResponseAvailability mixSys (fun _ _ => Q4.Q) ∧ ResponsePC mixSys ∧
     Tp mixSys (fun _ _ => Q4.Q) 2 0 .lo .b ∧ Tp mixSys (fun _ _ => Q4.Q) 2 1 .lo .a ∧
-    ∀ j u, sp4.S j u → ¬ (O4.b ≼ u ∧ O4.a ≼ u) := by
+    ∀ j u, sp4.P j u → ¬ (O4.b ≼ u ∧ O4.a ≼ u) := by
   refine ⟨mixSys_ra, mixSys_rpc, ⟨rfl, ?_⟩, ⟨rfl, ?_⟩, ?_⟩
   · have := single_emit mixSys (n := 2) (by omega) (fun q => if q.val = 0 then .lo else .hi) 0
       (o := .b) ⟨rfl, rfl⟩ (by
@@ -1696,7 +1696,7 @@ theorem gilbert_lynch_answering (Sys : System regSpec D) :
       cases hσ with
       | inp hs hr => cases hr; rw [(step_input_inv hs).2.1]; exact h2_le
   have hno : ∀ o', regQn 2 1 (inpState (canon regSpec emptyH) h2 u2 hR2).cur o' →
-      ¬ ∃ u, regSpec.S hj u ∧ o' ≼ u := by
+      ¬ ∃ u, regSpec.P hj u ∧ o' ≼ u := by
     rintro o' ho' ⟨u, hu, hle⟩
     have ho'' : regQ 1 h2 o' := ho'
     exact hj_noread u hu (hle 1 _ (h2_answer ho''))

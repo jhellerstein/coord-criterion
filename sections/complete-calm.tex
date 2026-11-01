@@ -97,15 +97,16 @@ ambiguity of output.
 \label{def:relational-specification}
 An \emph{ordered relational specification} is
         \begin{equation}
-  \Spec=(I,\InputOrd,O,\OutputOrd,S),
-  \qquad S\subseteq I\times O,
+  \Spec=(I,\InputOrd,O,\OutputOrd,P),
+  \qquad P\subseteq I\times O,
   \label{eq:relational-specification}
         \end{equation}
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and $S$
-is total on $I$: every input appears in at least one row.  A row $(i,o)\in S$
-says that output $o$ is permitted at input $i$.  The fiber
+  where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and
+  $P\subseteq I\times O$ is its \emph{table of possibilities}.  The table $P$
+  is total on $I$: every input appears in at least one row.  A row $(i,o)\in P$
+  is a possible input/output pair: output $o$ is permitted at input $i$.  The fiber
         \begin{equation}
-  \fiber{i}=\{o\in O:(i,o)\in S\}
+  \fiber{i}=\{o\in O:(i,o)\in P\}
   \label{eq:fiber}
         \end{equation}
 of Section~\ref{sec:functional-specifications} may now contain several
@@ -235,13 +236,13 @@ $o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
 \begin{definition}[Common-\indesc condition]
 \label{def:common-expansion-condition}
 An ordered specification satisfies the \emph{common-\indesc condition} when,
-for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$ and every
-common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
+for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
+common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
 $o_r$.
 \end{definition}
 
-For the empty set of rows the condition asks only that $S(j)$ be nonempty, which
-follows from $S$ being total on $I$.
+For the empty set of rows the condition asks only that $P(j)$ be nonempty, which
+follows from $P$ being total on $I$.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
@@ -301,10 +302,10 @@ Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-If the common-\indesc condition holds, a common \outnoun $u\in S(j)$
+If the common-\indesc condition holds, a common \outnoun $u\in P(j)$
 of everything emitted survives in every run.
 If outputs emitted at inputs with a common \indesc $j$ are incompatible in
-$S(j)$, the runs that emit them share no row at $j$ and can never be
+$P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 

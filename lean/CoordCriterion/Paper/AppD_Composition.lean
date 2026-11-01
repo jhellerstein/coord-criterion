@@ -48,8 +48,8 @@ with table `ptable`. -/
 theorem «eq:parameterized-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B] [PO C]
     (F : Spec (I × A) B) (G : Spec (J × B) C) :
     (∀ (i : I) (j : J) (a : A) (c : C),
-        (Comp.par F G).S (i, (j, a)) c ↔ ∃ b, F.S (i, a) b ∧ G.S (j, b) c) ∧
-      ∀ x, ∃ c, (Comp.par F G).S x c :=
+        (Comp.par F G).P (i, (j, a)) c ↔ ∃ b, F.P (i, a) b ∧ G.P (j, b) c) ∧
+      ∀ x, ∃ c, (Comp.par F G).P x c :=
   ⟨fun _ _ _ _ => Iff.rfl, (Comp.par F G).total⟩
 
 /-- **Lemma `lem:parameterized-composition`** (Independently parameterized
@@ -96,15 +96,15 @@ theorem «eq:curried-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B
     Comp.par (graph f) (graph g) = graph (fun x : I × (J × A) => g (x.2.1, f (x.1, x.2.2))) ∧
       (Monotone f → Monotone g → Monotone (fun x : I × (J × A) => g (x.2.1, f (x.1, x.2.2)))) ∧
       (∀ i j, (fun a => g (j, f (i, a))) = (fun b => g (j, b)) ∘ (fun a => f (i, a))) ∧
-      Comp.curriedPlan (graph f).S (graph g).S =
-        (graph (fun x : I × (J × A) => g (x.2.1, f (x.1, x.2.2)))).S :=
+      Comp.curriedPlan (graph f).P (graph g).P =
+        (graph (fun x : I × (J × A) => g (x.2.1, f (x.1, x.2.2)))).P :=
   ⟨Comp.parameterized_graph f g, fun hf hg => Comp.parameterized_functional_composition hf hg,
     Inst.curried_sharp f g, Inst.curried_plan_graph f g⟩
 
 /-! ## Jointly monotone composites -/
 
 /-- "If every stage satisfies Lifted Monotonicity and `𝒮₁` runs under the
-empty basis, the pipeline emits only what `S₂ ∘ S₁` emits under the empty
+empty basis, the pipeline emits only what `P₂ ∘ P₁` emits under the empty
 basis.  Its runs are runs of a Lifted-Monotone specification, at whose states
 every output is a legal output (Proposition `prop:exposure-boundary`).  So the next
 stage again has an empty-basis guard, and by induction no stage of the pipeline issues a commitment."  Lean: `Guard.pipeline_coordination_free`, via
@@ -119,15 +119,15 @@ theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
 /-- Proof of Proposition `prop:joint-monotone`: "(1) is Lemma
 `lem:composition`, and also the case `D = M` of (2).  (2) Let `D` contain the
 outputs of `𝒮₁`. … All of `m_r` and `m` lie in `D`, so the condition for `𝒮₂`
-on `D` gives `o ∈ S₂(m)` that refines every `o_r`, and `(j,o) ∈ S₂ ∘ S₁`.  No
-closure property of `D` is used.  (3) The table `S₂ ∘ S₁` of Equation
+on `D` gives `o ∈ P₂(m)` that refines every `o_r`, and `(j,o) ∈ P₂ ∘ P₁`.  No
+closure property of `D` is used.  (3) The table `P₂ ∘ P₁` of Equation
 `eq:spec-composition` mentions no order on `M`, and Lifted Monotonicity of the
 composite uses only the orders on `I` and `O`.  So the composite under `≼_M` is
 the composite under the other order, which satisfies Lifted Monotonicity by
 (1).  The same holds after re-encoding the intermediate values.  A re-encoding
 is a map `e : M → M'` together with a decoding `e' : M' → M` that recovers
-every value, `e'(e(m)) = m`.  Replace `S₁` by `{(i,e(m)) : (i,m) ∈ S₁}` and
-`S₂` by `{(m',o) : (e'(m'),o) ∈ S₂}`.  A join through `e(m)` is a join through
+every value, `e'(e(m)) = m`.  Replace `P₁` by `{(i,e(m)) : (i,m) ∈ P₁}` and
+`P₂` by `{(m',o) : (e'(m'),o) ∈ P₂}`.  A join through `e(m)` is a join through
 `e'(e(m)) = m`, so the composite table is unchanged, whatever the orders on `M`
 and `M'`."  Lean: (1) `Comp.seq_liftedMono`, and a Lifted-Monotone `𝒮₂`
 satisfies it on all of `M` (`Joint.ceOn_of_ce`); (2)
@@ -142,7 +142,7 @@ theorem «app:composition/joint-monotone» {I M O : Type} [PO I] [instM : PO M] 
         (Comp.seq sp1 sp2).LiftedMono) ∧
       ∀ sp2 : Spec M O, sp2.LiftedMono → Joint.CEOn sp2 (fun _ => True)) ∧
     ((∀ {sp1 : Spec I M} {sp2 : Spec M O} {D : M → Prop}, sp1.LiftedMono →
-        (∀ i m, sp1.S i m → D m) → Joint.CEOn sp2 D → (Comp.seq sp1 sp2).LiftedMono) ∧
+        (∀ i m, sp1.P i m → D m) → Joint.CEOn sp2 D → (Comp.seq sp1 sp2).LiftedMono) ∧
       ∀ (D : M → Prop) (sp : Spec M O), Joint.CEOn sp D ↔ (Joint.restrictTo D sp).LiftedMono) ∧
     ((∀ (sp1 : Spec I M) (sp2 : Spec M O) (inst : PO M),
         @Comp.seq I M O _ inst _ (Joint.underOut inst sp1) (Joint.underIn inst sp2) =
@@ -220,7 +220,7 @@ Lean: `Joint.thr_ceOn`, `Joint.up_img`, `Joint.threshold` (the rest of the
 paragraph is `«sec:composite-calm/filtering»`); answering every count is
 `Guard.proper_follows` for this proper pipeline. -/
 theorem «app:composition/capped-counter» :
-    Joint.CEOn Joint.thr (fun m => ¬ Joint.Big m) ∧ (∀ i m, Joint.up.S i m → ¬ Joint.Big m) ∧
+    Joint.CEOn Joint.thr (fun m => ¬ Joint.Big m) ∧ (∀ i m, Joint.up.P i m → ¬ Joint.Big m) ∧
       Guard.Proper Joint.up Joint.thr :=
   ⟨Joint.thr_ceOn, fun _ _ h => Joint.up_img h, Joint.threshold.2.2.2⟩
 
@@ -270,15 +270,15 @@ theorem «app:composition/components-commit» :
 
 /-- "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write
 `R ⋈ T = {(k,x) : ∃ m. (k,m) ∈ R ∧ (m,x) ∈ T}`.  The image of a state
-`σ = (i,R)` of `𝒮₁` is the state `(i, R ⋈ S₂)` of `S₂ ∘ S₁`.  The image of
-`σ_{𝒮₁}(i)` is `σ_{S₂∘S₁}(i)`, since `S₁[in ⪰ i] ⋈ S₂` is the composite table
+`σ = (i,R)` of `𝒮₁` is the state `(i, R ⋈ P₂)` of `P₂ ∘ P₁`.  The image of
+`σ_{𝒮₁}(i)` is `σ_{P₂∘P₁}(i)`, since `P₁[in ⪰ i] ⋈ P₂` is the composite table
 restricted to the expansions of `i`."  Lean: the image is `Guard.imgK sk σ`;
 `Guard.imgK_canon`.  The function case is `Guard.img f σ = Guard.imgK (graph f) σ`
 and `Guard.img_canon`. -/
 theorem «app:composition/image-canon» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     (sk : Spec M O) (f : M → O) (i : I) :
     (∀ σ : State sp, (Guard.imgK sk σ).cur = σ.cur ∧
-      ∀ k x, (Guard.imgK sk σ).R k x ↔ ∃ m, σ.R k m ∧ sk.S m x) ∧
+      ∀ k x, (Guard.imgK sk σ).R k x ↔ ∃ m, σ.R k m ∧ sk.P m x) ∧
     Guard.imgK sk (canon sp i) = canon (Comp.seq sp sk) i ∧
       (∀ σ : State sp, Guard.img f σ = Guard.imgK (graph f) σ) ∧
       Guard.img f (canon sp i) = canon (Guard.comp sp f) i :=
@@ -309,7 +309,7 @@ theorem «app:composition/pipeline-run» {M O : Type} [PO M] [PO O] {sk : Spec M
 reaches without commitment carry the proofs.  First, every input
 `j ⪰_M τ.cur` has a row in `τ` … Second, every output at the current input is
 a legal output.  A third fact concerns `𝒮₁`.  If an output `m` at the current
-input of a state `σ` of `𝒮₁` is a legal output, every `o ∈ S₂(m)` is a legal
+input of a state `σ` of `𝒮₁` is a legal output, every `o ∈ P₂(m)` is a legal
 output at the image of `σ`. … Either way
 `(k,u)` is a row of the image that retires `(k,x)`."  Lean: the first two hold
 at every run state (`Guard.row_at`, `commonExpansion_exposable`, with the
@@ -321,7 +321,7 @@ theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp 
     (∀ τ : State (Guard.rest sp sk), IsRun τ → ∀ j, τ.cur ≼ j → ∃ u, τ.R j u) ∧
     (∀ τ : State (Guard.rest sp sk), IsRun τ → ∀ o, τ.R τ.cur o → Exposable τ o) ∧
     (∀ (σ τ : State (Guard.rest sp sk)) es, SysExec (fun _ => False) σ es τ → IsRun σ → IsRun τ) ∧
-    ∀ (σ : State sp) {m : M}, Exposable σ m → sp.S σ.cur m → ∀ {o}, sk.S m o →
+    ∀ (σ : State sp) {m : M}, Exposable σ m → sp.P σ.cur m → ∀ {o}, sk.P m o →
       Exposable (Guard.imgK sk σ) o := by
   have hC := Guard.proper_iff_ce.1 hP
   exact ⟨fun _ hτ _ hj => Guard.row_at hC hτ hj,
@@ -331,7 +331,7 @@ theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp 
       (fun k m h => ⟨k, σ.sub k m h⟩) ⟨_, hm⟩ he ho⟩
 
 /-- Proof of Theorem `thm:proper-coordination`(2): "Before the first output of
-`𝒮₁` we keep `ρ.cur = σ.cur` and `R_σ ⋈ S₂ ⊆ R_ρ`.  Afterwards we keep
+`𝒮₁` we keep `ρ.cur = σ.cur` and `R_σ ⋈ P₂ ⊆ R_ρ`.  Afterwards we keep
 `R_σ ⋈ T ⊆ R_ρ`, and every row `(k,m)` of `R_σ` has `m` above the current
 input of `𝒮₂|_{𝒮₁}`. … Each answer `o` has `(m,o) ∈ T`, so `(i,o) ∈ R_ρ`.  The
 composite's `output(o)` keeps `R_ρ[out ⪰ o]`, and `𝒮₂|_{𝒮₁}` keeps
@@ -344,8 +344,8 @@ and `Guard.proper_run`. -/
 theorem «app:composition/guarded-lockstep» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
     {sk : Spec M O} (hC : sk.CommonExpansion) {B : Basis sp} {σ ρ : State sp}
     {es : List (SEvent sp)} (h : SysExec B σ es ρ) :
-    (Guard.emitted es = [] → ∀ ρ' : State (Comp.seq sp sk), Guard.Inv σ sk.S ρ' →
-      ∃ ρ'', Exec ρ' (Guard.merge es []) ρ'' ∧ Guard.Inv ρ sk.S ρ'') ∧
+    (Guard.emitted es = [] → ∀ ρ' : State (Comp.seq sp sk), Guard.Inv σ sk.P ρ' →
+      ∃ ρ'', Exec ρ' (Guard.merge es []) ρ'' ∧ Guard.Inv ρ sk.P ρ'') ∧
     ∀ (ps : List (M × List O)) (τK ρK : State sk) (esK : List (SEvent sk))
       (ρ' : State (Comp.seq sp sk)), Guard.emitted es = ps.map Prod.fst →
       SysExec (fun _ => False) τK esK ρK → esK.filterMap SEvent.erase = Guard.blk ps → IsRun τK →
@@ -358,7 +358,7 @@ theorem «app:composition/guarded-lockstep» {I M O : Type} [PO I] [PO M] [PO O]
 Proposition `prop:exposure-boundary` derives the common-expansion condition
 from legality at canonical states alone." -/
 theorem «app:composition/canonical-states-suffice» {I O : Type} [PO I] [PO O] :
-    ∀ {sp : Spec I O}, (∀ i o, sp.S i o → Exposable (canon sp i) o) → sp.CommonExpansion :=
+    ∀ {sp : Spec I O}, (∀ i o, sp.P i o → Exposable (canon sp i) o) → sp.CommonExpansion :=
   fun h => Guard.canon_exposable_commonExpansion h
 
 /-- "Properness is needed in (3).  With `𝒮₁` the identity on the booleans and
@@ -422,11 +422,11 @@ theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M 
 
 /-- **Corollary `cor:pipelines`** (Pipelines): "In a proper pipeline, with any
 systems for `𝒮₁` and `𝒮₂|_{𝒮₁}`, the outputs of every run of the pipeline
-are emitted by a run of `S₂ ∘ S₁` under its canonical basis.  So the pipeline
+are emitted by a run of `P₂ ∘ P₁` under its canonical basis.  So the pipeline
 guards a further stage `𝒮₃`, and Theorem `thm:proper-coordination` applies
-with `S₂ ∘ S₁` in place of `𝒮₁`."  Lean: `Guard.proper_pipeline_step` (the
+with `P₂ ∘ P₁` in place of `𝒮₁`."  Lean: `Guard.proper_pipeline_step` (the
 outputs of the pipeline's runs, `Guard.GEmits (Guard.liftU P) K`, are emitted
-by the canonical-basis system of `S₂ ∘ S₁`); the theorem for `𝒮₃` is
+by the canonical-basis system of `P₂ ∘ P₁`); the theorem for `𝒮₃` is
 `«thm:proper-coordination»` with `sp := Comp.seq s1 s2`, whose (1) is restated
 here.  Associativity is `«sec:composition/associativity»`. -/
 theorem «cor:pipelines» {I M O Q : Type} [PO I] [PO M] [PO O] [PO Q] {s1 : Spec I M}
@@ -440,7 +440,7 @@ theorem «cor:pipelines» {I M O Q : Type} [PO I] [PO M] [PO O] [PO Q] {s1 : Spe
 /-- Proof of Corollary `cor:pipelines`: "By Corollary `cor:empty-store`, every
 run of the pipeline has one with the same outputs in which `𝒮₂|_{𝒮₁}` runs
 under the empty basis.  Theorem `thm:proper-coordination`(2), applied to it
-and a prefix of the run of `𝒮₁`, gives a run of `S₂ ∘ S₁` with these outputs,
+and a prefix of the run of `𝒮₁`, gives a run of `P₂ ∘ P₁` with these outputs,
 and the canonical event for each output (Lemma
 `lem:canonical-commitment-normal-form`) makes it a run under the canonical
 basis."  Lean: inside `Guard.proper_pipeline_step`, via `Guard.erase_simulates`,
@@ -582,7 +582,7 @@ theorem «app:composition/store-choice» :
 /-- **Example `ex:committed-log-composition`** (Replicated store), for any
 deterministic state machine `δ` and two distinct commands: "Then `𝒮₁` is
 non-monotone, since distinct next entries are incompatible outputs in one
-fiber.  So is the key-value store `S₂ ∘ S₁`, since concurrent commands ordered
+fiber.  So is the key-value store `P₂ ∘ P₁`, since concurrent commands ordered
 oppositely give incompatible responses. … Since `f` is monotone, the pipeline
 is proper, and by Theorem `thm:proper-coordination`(2) the store under the
 empty basis follows every run of the log.  By Theorem
@@ -597,9 +597,9 @@ theorem «ex:committed-log-composition» {Cmd Stt R : Type} (δ : Stt → Cmd �
     ¬ (Inst.smrS1 (Cmd := Cmd)).LiftedMono ∧
       ¬ (Guard.comp Inst.smrS1 (Inst.execF δ σ0)).LiftedMono ∧
       Monotone (Inst.execF δ σ0) ∧ Guard.Proper Inst.smrS1 (graph (Inst.execF δ σ0)) ∧
-      ∃ i m, Inst.smrS1.S i m ∧
+      ∃ i m, Inst.smrS1.P i m ∧
         ¬ Exposable (canon (Guard.comp Inst.smrS1 (Inst.execF δ σ0)) i) (Inst.execF δ σ0 m) ∧
-        ∀ m', Inst.smrS1.S i m' → Inst.execF δ σ0 m' = Inst.execF δ σ0 m →
+        ∀ m', Inst.smrS1.P i m' → Inst.execF δ σ0 m' = Inst.execF δ σ0 m →
           ¬ Exposable (canon Inst.smrS1 i) m' :=
   let h := Guard.smr_proper δ σ0 hne
   ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.2⟩
@@ -641,7 +641,7 @@ theorem «ex:bare-reads/latest-value» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd
 for a specification `𝒮` consists of a commitment basis `ℬ` and a set of
 admitted runs.  Each admitted run is a run under `ℬ` from a canonical state
 `σ(i)` (Definition `def:run-under-basis`), together with an output `o` that
-it emits, such that `(i,o) ∈ S`."
+it emits, such that `(i,o) ∈ P`."
 
 Lean: `Components.Component` (fields `basis`, `accepts`, `sound`,
 `location`); an admitted run is a `Components.OperationalRun` (input, named
@@ -666,7 +666,7 @@ abbrev «def:implementation-form» := Components.LocationForm
 /-- "A system for `𝒮` (Definition `def:system`) induces a component once its
 boundary observations are chosen.  An admitted boundary run is a participant
 run of a produced history together with a named emitted output `o` whose pair
-`(i,o)` with the run's initial input is a row of `S`; runs with no such output
+`(i,o)` with the run's initial input is a row of `P`; runs with no such output
 induce no observation.  The system's messages, partitions, and commitments
 stay inside the component.  Restricted to one-participant histories, the
 induced component is a process, and a replicated system induces a cluster. … The
@@ -757,7 +757,7 @@ theorem «app:components/feed-is-input» {I M O : Type} [PO I] [PO M] [PO O] {sp
   w.feed ▸ (C2.sound _ w.downAccepted).legal
 
 /-- **Proposition `prop:typed-pipelines`** (Typed pipelines): "(1) Every
-external observation admitted by a typed pipeline is a row of `S₂ ∘ S₁`.
+external observation admitted by a typed pipeline is a row of `P₂ ∘ P₁`.
 (2) If a pipeline is implementation-proper, the downstream run of every feed,
 with its commitments erased, is a commitment-free run of `𝒮₂`, in which every
 output is a legal output.  (3) Contract properness does not imply implementation
@@ -782,10 +782,10 @@ at an offered count, so the pipeline admits no observation
 `Component.ofBasis (emptyBasis (Guard.rest sp sk))`; the upstream is `C₁`
 retyped at its offered outputs (`Component.core`, through
 `Guard.core_lockstep`), which keeps each admitted run's input and output; the
-composite is still `S₂ ∘ S₁` (`offered_compositeSpec`). -/
+composite is still `P₂ ∘ P₁` (`offered_compositeSpec`). -/
 theorem «prop:typed-pipelines» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) :
-    (∀ (p : Components.Pipeline sp sk) obs, p.Accepts obs → (Comp.seq sp sk).S obs.input obs.output) ∧
+    (∀ (p : Components.Pipeline sp sk) obs, p.Accepts obs → (Comp.seq sp sk).P obs.input obs.output) ∧
     (∀ (p : Components.Pipeline sp sk), p.ImplementationProper → ∀ w : Components.FeedWitness p.upstream p.downstream,
       ExecCF (canon sk w.downRun.input) (w.downRun.events.filterMap SEvent.erase) w.downRun.final) ∧
     (∀ (Cmd O' : Type) [PO O'] (f : Inst.Pfx Cmd → O'), Monotone f → ∀ b : Cmd,
@@ -827,7 +827,7 @@ whole stream is `Guard.proper_follows`, the composite-run invariant
 `Guard.proper_needs_commit`.  For the runs an upstream component admits,
 `Component.proper_follows` wraps `Guard.proper_follows` (the empty-basis
 `𝒮₂|_{𝒮₁}` answers every output, and the merged trace is a run of
-`S₂ ∘ S₁`) and `Component.proper_run` wraps `Guard.proper_run`.  A silent
+`P₂ ∘ P₁`) and `Component.proper_run` wraps `Guard.proper_run`.  A silent
 downstream is vacuously implementation-proper and shows nothing
 (`implementationProper_silent`); on the offered interface, contract
 properness of the pipeline is Proper Coordination

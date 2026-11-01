@@ -120,7 +120,7 @@ theorem slot_no_common {κ : Type} (slot : Dc → κ) {o o' : Auth Ep Vt Dc} {d 
 /-- **Certifying one of two competing proposals is a commitment**, in any
 specification on these outputs whose permitted outputs are slot-unique. -/
 theorem slot_conflict {I : Type} [PO I] {κ : Type} (slot : Dc → κ)
-    {sp : Spec I (Auth Ep Vt Dc)} (hU : ∀ k u, sp.S k u → SlotUnique slot u.D)
+    {sp : Spec I (Auth Ep Vt Dc)} (hU : ∀ k u, sp.P k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
@@ -190,7 +190,7 @@ def ksetS (k : Nat) (I : KInput P Val) (m : PMap P Val) : Prop :=
   ∃ l : List Val, l.length ≤ k ∧ ∀ p a, m.f p = some a → a ∈ l
 
 def ksetSpec (P Val : Type) (k : Nat) : Spec (KInput P Val) (PMap P Val) where
-  S := ksetS k
+  P := ksetS k
   total _ := ⟨⟨fun _ => none⟩, by
     unfold ksetS
     refine ⟨?_, ?_, [], Nat.zero_le _, ?_⟩ <;> intro _ _ h <;> simp at h⟩
@@ -239,7 +239,7 @@ variable {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val}
 
 /-- At `p_r`'s proposal input, `{p_r ↦ v_r}` is permitted (`k ≥ 1`). -/
 theorem kset_single_row (hk : 1 ≤ k) (r : Fin (k + 1)) :
-    (ksetSpec P Val k).S (propIn p v r) (single p v r) := by
+    (ksetSpec P Val k).P (propIn p v r) (single p v r) := by
   show ksetS k _ _
   refine ⟨fun q a h => ?_, fun q a h => ?_, [v r], hk, fun q a h => ?_⟩
   · obtain ⟨rfl, _⟩ := single_some h; exact ⟨v r, List.mem_singleton_self _⟩
@@ -282,7 +282,7 @@ theorem allBut_at {r0 r : Fin (k + 1)} (hr : r ≠ r0) : (allBut p v r0).f (p r)
 include hp in
 /-- **Any `k` of the `k+1` rows have a common refinement at the union.** -/
 theorem kset_any_k (r0 : Fin (k + 1)) :
-    ∃ u, (ksetSpec P Val k).S (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u := by
+    ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u := by
   refine ⟨allBut p v r0, ?_, fun r hr q a h => ?_⟩
   · show ksetS k _ _
     refine ⟨fun q a h => ?_, fun q a h => ?_,
@@ -305,7 +305,7 @@ include hp hv
 /-- **All `k+1` rows have no common refinement at the union** (it would have
 `k+1` values). -/
 theorem kset_all_fail :
-    ¬ ∃ u, (ksetSpec P Val k).S (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u := by
+    ¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u := by
   rintro ⟨u, ⟨_, _, l, hl, hcov⟩, hall⟩
   have hsub : (List.finRange (k + 1)).map v ⊆ l := by
     intro a ha
@@ -369,7 +369,7 @@ def renS (N : FinSet P) (m : PMap P Nat) : Prop :=
   ∀ x n, m.f x = some n → 1 ≤ n ∧ n ≤ card N
 
 noncomputable def renSpec (P : Type) [DecidableEq P] : Spec (FinSet P) (PMap P Nat) where
-  S := renS
+  P := renS
   total N := by
     obtain ⟨l, hl, hm⟩ := N.2
     refine ⟨⟨fun x => if x ∈ l then some (l.idxOf x + 1) else none⟩, fun x => ?_, ?_, ?_⟩
@@ -401,7 +401,7 @@ def name1 (p : P) : PMap P Nat := ⟨fun x => if x = p then some 1 else none⟩
 theorem card_sing (p : P) : card (sing p) = 1 := card_eq _ (l := [p]) (by simp) fun _ => Iff.rfl
 
 /-- **At `{p}` the only output is `p ↦ 1`.** -/
-theorem ren_singleton_iff (p : P) (m : PMap P Nat) : (renSpec P).S (sing p) m ↔ m = name1 p := by
+theorem ren_singleton_iff (p : P) (m : PMap P Nat) : (renSpec P).P (sing p) m ↔ m = name1 p := by
   constructor
   · rintro ⟨hdom, _, hb⟩
     cases m with
@@ -441,7 +441,7 @@ theorem card_pair {p q : P} (h : p ≠ q) : card (pairSet p q h) = 2 :=
   card_eq _ (l := [p, q]) (by simp [h]) fun _ => Iff.rfl
 
 theorem name2_row {p q : P} (h : p ≠ q) {a b : Nat} (hab : a ≠ b) (ha : 1 ≤ a ∧ a ≤ 2)
-    (hb : 1 ≤ b ∧ b ≤ 2) : (renSpec P).S (pairSet p q h) (name2 p q a b) := by
+    (hb : 1 ≤ b ∧ b ≤ 2) : (renSpec P).P (pairSet p q h) (name2 p q a b) := by
   refine ⟨fun x => ?_, fun x y n hx hy => ?_, fun x n hx => ?_⟩
   · rw [pairSet_mem]
     by_cases h1 : x = p
@@ -460,8 +460,8 @@ theorem name2_row {p q : P} (h : p ≠ q) {a b : Nat} (hab : a ≠ b) (ha : 1 �
 /-- **Each of `p ↦ 1`, `q ↦ 1` has a refinement at `{p,q}`** (so Relational
 Monotonicity does not fail here). -/
 theorem ren_each_extends {p q : P} (h : p ≠ q) :
-    (∃ u, (renSpec P).S (pairSet p q h) u ∧ name1 p ≼ u) ∧
-    (∃ u, (renSpec P).S (pairSet p q h) u ∧ name1 q ≼ u) := by
+    (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 p ≼ u) ∧
+    (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 q ≼ u) := by
   refine ⟨⟨name2 p q 1 2, name2_row h (by decide) (by decide) (by decide), ?_⟩,
           ⟨name2 p q 2 1, name2_row h (by decide) (by decide) (by decide), ?_⟩⟩
   · intro x n hx
@@ -582,13 +582,13 @@ def IsPrefix (h : Hist Ev) (p : ESet Ev) : Prop :=
 
 /-- The prefix specification. -/
 def prefixSpec (Ev : Type) : Spec (Hist Ev) (ESet Ev) where
-  S := IsPrefix
+  P := IsPrefix
   total _ := ⟨⟨fun _ => False⟩, by
     show IsPrefix _ _
     exact ⟨fun _ h => h.elim, fun _ _ h => h.elim⟩⟩
 
 /-- The empty prefix is always permitted (no freshness or completeness). -/
-theorem prefix_empty (h : Hist Ev) : (prefixSpec Ev).S h ⟨fun _ => False⟩ :=
+theorem prefix_empty (h : Hist Ev) : (prefixSpec Ev).P h ⟨fun _ => False⟩ :=
   show IsPrefix _ _ from ⟨fun _ h => h.elim, fun _ _ h => h.elim⟩
 
 /-- **Old prefixes stay legal as history grows.** -/
@@ -629,7 +629,7 @@ instance instPOEqd (α : Type) : PO (Eqd α) where
 
 /-- The complete-history specification: output `h` at `h`. -/
 def completeSpec (Ev : Type) : Spec (Hist Ev) (Eqd (Hist Ev)) where
-  S h o := o = ⟨h⟩
+  P h o := o = ⟨h⟩
   total h := ⟨⟨h⟩, rfl⟩
 
 theorem completeSpec_functional : (completeSpec Ev).Functional :=

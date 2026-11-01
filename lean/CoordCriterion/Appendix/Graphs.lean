@@ -53,7 +53,7 @@ variable {Ia Ib Ma Mb : Type} [PO Ia] [PO Ib] [PO Ma] [PO Mb]
 /-- `𝒮_a ⊗ 𝒮_b`: rows `((i_a,i_b),(m_a,m_b))` with both component rows.  It
 is total because both components are. -/
 def prod (sa : Spec Ia Ma) (sb : Spec Ib Mb) : Spec (Ia × Ib) (Ma × Mb) where
-  S i m := sa.S i.1 m.1 ∧ sb.S i.2 m.2
+  P i m := sa.P i.1 m.1 ∧ sb.P i.2 m.2
   total i :=
     let ⟨a, ha⟩ := sa.total i.1
     let ⟨b, hb⟩ := sb.total i.2
@@ -221,12 +221,12 @@ theorem seq_tee_liftedMono_iff (S : Spec I M) : (seq S tee).LiftedMono ↔ S.Lif
 /-- Running `𝒮` twice on a copied input: `(𝒮 ⊗ 𝒮) ∘ Δ`. -/
 def dup (S : Spec I M) : Spec I (M × M) := seq tee (prod S S)
 
-theorem dup_S {S : Spec I M} {i : I} {p : M × M} : (dup S).S i p ↔ S.S i p.1 ∧ S.S i p.2 :=
+theorem dup_S {S : Spec I M} {i : I} {p : M × M} : (dup S).P i p ↔ S.P i p.1 ∧ S.P i p.2 :=
   ⟨fun ⟨q, hq, h⟩ => by have e : q = diag i := hq; subst e; exact h,
    fun h => ⟨diag i, rfl, h⟩⟩
 
 theorem seqTee_S {S : Spec I M} {i : I} {p : M × M} :
-    (seq S tee).S i p ↔ p.1 = p.2 ∧ S.S i p.1 :=
+    (seq S tee).P i p ↔ p.1 = p.2 ∧ S.P i p.1 :=
   ⟨fun ⟨m, hm, hp⟩ => by have e : p = diag m := hp; subst e; exact ⟨rfl, hm⟩,
    fun ⟨h1, h2⟩ => ⟨p.1, h2, Prod.ext rfl h1.symm⟩⟩
 
@@ -243,15 +243,15 @@ theorem dup_liftedMono_iff (S : Spec I M) : (dup S).LiftedMono ↔ S.LiftedMono 
   exact ⟨u.1, (dup_S.1 hu).1, fun r hr => (hall _ (List.mem_map.2 ⟨r, hr, rfl⟩)).1⟩
 
 /-- Copying a chosen output is one of the behaviours of running twice. -/
-theorem seqTee_le_dup (S : Spec I M) (i : I) (p : M × M) : (seq S tee).S i p → (dup S).S i p :=
+theorem seqTee_le_dup (S : Spec I M) (i : I) (p : M × M) : (seq S tee).P i p → (dup S).P i p :=
   fun h => let ⟨e, h⟩ := seqTee_S.1 h; dup_S.2 ⟨h, e ▸ h⟩
 
 /-- The two agree exactly when `𝒮` is functional: two copies of a
 nondeterministic stage may choose differently. -/
-theorem seqTee_eq_dup_iff (S : Spec I M) : (seq S tee).S = (dup S).S ↔ S.Functional := by
+theorem seqTee_eq_dup_iff (S : Spec I M) : (seq S tee).P = (dup S).P ↔ S.Functional := by
   constructor
   · intro h i o o' ho ho'
-    have : (seq S tee).S i (o, o') := by rw [h]; exact dup_S.2 ⟨ho, ho'⟩
+    have : (seq S tee).P i (o, o') := by rw [h]; exact dup_S.2 ⟨ho, ho'⟩
     exact (seqTee_S.1 this).1
   · intro hf
     funext i p; apply propext
@@ -383,7 +383,7 @@ section Offered
 variable {I M O : Type} [PO I] [PO M] [PO O]
 
 /-- The outputs `𝒮` offers when its inputs range over `D`. -/
-def ImgOn (D : I → Prop) (sp : Spec I M) (m : M) : Prop := ∃ i, D i ∧ sp.S i m
+def ImgOn (D : I → Prop) (sp : Spec I M) (m : M) : Prop := ∃ i, D i ∧ sp.P i m
 
 theorem imgOn_univ (sp : Spec I M) : ImgOn (fun _ => True) sp = Img sp :=
   funext fun _ => propext ⟨fun ⟨i, _, h⟩ => ⟨i, h⟩, fun ⟨i, h⟩ => ⟨i, trivial, h⟩⟩
@@ -398,7 +398,7 @@ this is `Joint.seq_liftedMono_img`. -/
 theorem ceOn_seq {s1 : Spec I M} {s2 : Spec M O} {D : I → Prop}
     (h1 : CEOn s1 D) (h2 : CEOn s2 (ImgOn D s1)) : CEOn (seq s1 s2) D := by
   intro rows hrows j hDj hj
-  obtain ⟨L, hL1, hL2⟩ := choose_list (fun (r : I × O) m => s1.S r.1 m ∧ s2.S m r.2)
+  obtain ⟨L, hL1, hL2⟩ := choose_list (fun (r : I × O) m => s1.P r.1 m ∧ s2.P m r.2)
     rows (fun r h => (hrows r h).2)
   obtain ⟨m, hm, hmall⟩ := h1 (L.map fun p => (p.1.1, p.2))
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr
@@ -476,7 +476,7 @@ theorem imgOn_seqTee {S : Spec I M} {D : I → Prop} (p : M × M) :
 
 /-- Running twice offers the pairs of outputs at a common input. -/
 theorem imgOn_dup {S : Spec I M} {D : I → Prop} (p : M × M) :
-    ImgOn D (dup S) p ↔ ∃ i, D i ∧ S.S i p.1 ∧ S.S i p.2 :=
+    ImgOn D (dup S) p ↔ ∃ i, D i ∧ S.P i p.1 ∧ S.P i p.2 :=
   ⟨fun ⟨i, hi, h⟩ => ⟨i, hi, dup_S.1 h⟩, fun ⟨i, hi, h⟩ => ⟨i, hi, dup_S.2 h⟩⟩
 
 end Offered

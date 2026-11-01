@@ -12,7 +12,7 @@ and `appendices/proof-machinery.tex`:
   `KSet.not_commonExpansion`, `KSet.not_liftedMono`,
   `KSet.atomic_k_at_a_time` (the general-`k` version of
   `app:additional-applications` is in `Appendix/Applications.lean`);
-* "the pairs must range over all rows of `S`, including those at `j`"
+* "the pairs must range over all rows of `P`, including those at `j`"
   (`rowsAtJ_needed`, on a four-input specification `In4`);
 * Corollary state-by-input does not carry over to relational specifications
   (`state_by_input_fails_relationally`);
@@ -79,7 +79,7 @@ def Perm (I m : PMap (k+1)) : Prop :=
 
 /-- The `k`-set agreement specification (total: the empty map is permitted). -/
 def spec : Spec (PMap (k+1)) (PMap (k+1)) where
-  S := Perm k
+  P := Perm k
   total _ := ⟨fun _ => none, by simp, by simp, [], by simp, by simp⟩
 
 /-- The single proposal / single decision `{p ↦ v}`. -/
@@ -103,7 +103,7 @@ theorem atom_le_J {n : Nat} (r : Fin n) : atom r r ≼ J n := by
   rfl
 
 /-- At `p_r`'s proposal input, `{p_r ↦ v_r}` is permitted (`k ≥ 1`). -/
-theorem proposal_row (hk : 1 ≤ k) (r : Fin (k+1)) : (spec k).S (atom r r) (atom r r) := by
+theorem proposal_row (hk : 1 ≤ k) (r : Fin (k+1)) : (spec k).P (atom r r) (atom r r) := by
   refine ⟨fun p v h => ⟨v, h⟩, fun p v h => ⟨p, h⟩, [r], by simpa using hk, ?_⟩
   intro p v h
   obtain ⟨_, rfl⟩ := atom_some h
@@ -123,7 +123,7 @@ theorem missing {n : Nat} (L : List (Fin n)) (h : L.length < n) : ∃ x, x ∉ L
   omega
 
 /-- `J` minus one participant is permitted at `J`. -/
-theorem allBut_perm (r₀ : Fin (k+1)) : (spec k).S (J (k+1)) (allBut r₀) := by
+theorem allBut_perm (r₀ : Fin (k+1)) : (spec k).P (J (k+1)) (allBut r₀) := by
   refine ⟨fun p _ _ => ⟨p, rfl⟩, ?_, (List.finRange (k+1)).erase r₀, ?_, ?_⟩
   · intro p v h
     unfold allBut at h
@@ -139,9 +139,9 @@ theorem allBut_perm (r₀ : Fin (k+1)) : (spec k).S (J (k+1)) (allBut r₀) := b
       exact (List.mem_erase_of_ne hp).2 (List.mem_finRange p)
 
 /-- "Any `k` of these `k+1` rows have a common refinement there": any list of
-at most `k` proposal rows is compatible in `S(J)`. -/
+at most `k` proposal rows is compatible in `P(J)`. -/
 theorem any_k_compatible (L : List (Fin (k+1))) (hL : L.length ≤ k) :
-    ∃ u, (spec k).S (J (k+1)) u ∧ ∀ r ∈ L, atom r r ≼ u := by
+    ∃ u, (spec k).P (J (k+1)) u ∧ ∀ r ∈ L, atom r r ≼ u := by
   obtain ⟨r₀, hr₀⟩ := missing L (by omega)
   refine ⟨allBut r₀, allBut_perm k r₀, fun r hr p v h => ?_⟩
   obtain ⟨hp, hv⟩ := atom_some h
@@ -151,7 +151,7 @@ theorem any_k_compatible (L : List (Fin (k+1))) (hL : L.length ≤ k) :
 
 /-- "All `k+1` do not, since it would have `k+1` values." -/
 theorem not_all_compatible :
-    ¬ ∃ u, (spec k).S (J (k+1)) u ∧ ∀ r : Fin (k+1), atom r r ≼ u := by
+    ¬ ∃ u, (spec k).P (J (k+1)) u ∧ ∀ r : Fin (k+1), atom r r ≼ u := by
   rintro ⟨u, ⟨_, _, L, hL, hran⟩, hall⟩
   have hs : List.finRange (k+1) ⊆ L := fun r _ =>
     hran r r (hall r r r (by simp [atom]))
@@ -180,7 +180,7 @@ theorem not_liftedMono (hk : 1 ≤ k) : ¬ (spec k).LiftedMono := by
   rw [liftedMono_iff_commonExpansion]; exact not_commonExpansion k hk
 
 /-- A permitted output at a single-proposal input is contained in it. -/
-theorem perm_atom_le {p v : Fin (k+1)} {o : PMap (k+1)} (h : (spec k).S (atom p v) o)
+theorem perm_atom_le {p v : Fin (k+1)} {o : PMap (k+1)} (h : (spec k).P (atom p v) o)
     {q w : Fin (k+1)} (hq : o q = some w) : q = p ∧ w = v := by
   obtain ⟨h1, h2, _⟩ := h
   obtain ⟨w', hw'⟩ := h1 q w hq
@@ -194,15 +194,15 @@ open Classical in
 single-proposal inputs does not suffice, even `k` rows at a time".  In this
 specification *every* family of at most `k` rows at single-proposal inputs
 (the minimal nonempty inputs), with any common expansion `j`, is compatible
-in `S(j)`; yet the common-expansion condition fails (`not_commonExpansion`).
+in `P(j)`; yet the common-expansion condition fails (`not_commonExpansion`).
 (Rows at the least input `∅` carry only the empty map, which every output
 refines, so adding them changes nothing.)  A row is `(p, v, o)`, at input
 `{(p,v)}`. -/
 theorem atomic_k_at_a_time (rows : List (Fin (k+1) × Fin (k+1) × PMap (k+1)))
     (hlen : rows.length ≤ k)
-    (hS : ∀ r ∈ rows, (spec k).S (atom r.1 r.2.1) r.2.2)
+    (hS : ∀ r ∈ rows, (spec k).P (atom r.1 r.2.1) r.2.2)
     (j : PMap (k+1)) (hj : ∀ r ∈ rows, atom r.1 r.2.1 ≼ j) :
-    ∃ u, (spec k).S j u ∧ ∀ r ∈ rows, r.2.2 ≼ u := by
+    ∃ u, (spec k).P j u ∧ ∀ r ∈ rows, r.2.2 ≼ u := by
   let u : PMap (k+1) := fun q =>
     if ∃ r ∈ rows, (r.2.2 q).isSome then j q else none
   -- each decided coordinate of a row output is that row's proposal, present in `j`
@@ -239,7 +239,7 @@ theorem atomic_k_at_a_time (rows : List (Fin (k+1) × Fin (k+1) × PMap (k+1)))
 
 end KSet
 
-/-! ## 8. "The pairs must range over all rows of `S`, including those at `j`"
+/-! ## 8. "The pairs must range over all rows of `P`, including those at `j`"
 
 A four-input specification: three incomparable inputs `a, b, c` below `top`.
 At `a, b, c` the only output is the corresponding singleton; at `top` the
@@ -266,7 +266,7 @@ def In4.idx : In4 → Fin 3
   | .a => 0 | .b => 1 | .c => 2 | .top => 0
 
 def spec4 : Spec In4 (PMap 3) where
-  S i o := match i with
+  P i o := match i with
     | .top => (∀ p v, o p = some v → v = p) ∧ ∃ w, o w = none
     | i => o = KSet.atom i.idx i.idx
   total i := by
@@ -277,8 +277,8 @@ def spec4 : Spec In4 (PMap 3) where
 /-- The pair condition restricted to rows whose inputs differ from the common
 expansion `j` holds. -/
 theorem spec4_pairs_off_j :
-    ∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.S i₁ o₁ → spec4.S i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
-      ∃ u, spec4.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u := by
+    ∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.P i₁ o₁ → spec4.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
+      ∃ u, spec4.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u := by
   intro i₁ o₁ i₂ o₂ j n1 n2 h1 h2 l1 l2
   have hj : j = .top := by
     rcases l1 with h | h
@@ -330,8 +330,8 @@ theorem spec4_not_ce : ¬ spec4.CommonExpansion := by
 
 /-- Pairs not ranging over rows at `j` do not suffice. -/
 theorem rowsAtJ_needed :
-    (∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.S i₁ o₁ → spec4.S i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
-      ∃ u, spec4.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ∧ ¬ spec4.CommonExpansion :=
+    (∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.P i₁ o₁ → spec4.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
+      ∃ u, spec4.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ∧ ¬ spec4.CommonExpansion :=
   ⟨spec4_pairs_off_j, spec4_not_ce⟩
 
 /-! ## 9. Corollary state-by-input does not carry over to relational specs -/
@@ -357,7 +357,7 @@ instance : PO Two where
 
 /-- One input, two outputs `lo ≼ hi`, both permitted. -/
 def specTwo : Spec Pt Two where
-  S _ _ := True
+  P _ _ := True
   total _ := ⟨.lo, trivial⟩
 
 /-- Section `sec:complete-calm-theorem`, last paragraph: a consistent
@@ -459,12 +459,12 @@ def winner (i : Ballots) : Res :=
 
 /-- The election, under the refinement order. -/
 def elec : Spec Ballots Res where
-  S i o := o = winner i
+  P i o := o = winner i
   total _ := ⟨_, rfl⟩
 
 /-- The election, under the equality order. -/
 def elecEq : Spec Ballots ResE where
-  S i o := o = ⟨winner i⟩
+  P i o := o = ⟨winner i⟩
   total _ := ⟨_, rfl⟩
 
 theorem elec_functional : elec.Functional := fun _ _ _ h h' => h.trans h'.symm
@@ -505,8 +505,8 @@ theorem elecEq_not_monotone : ¬ elecEq.MonotoneF := by
 theorem elecEq_not_consistent : ¬ elecEq.Consistent := fun h =>
   elecEq_not_monotone ((functional_calm elecEq_functional).1 h)
 
-/-- Panels (a)–(c): `⊥` is exposable at `σ_S(a··)` and `σ_S(ab·)`, and `a` at
-`σ_S(aa·)` (monotone order). -/
+/-- Panels (a)–(c): `⊥` is exposable at `σ_P(a··)` and `σ_P(ab·)`, and `a` at
+`σ_P(aa·)` (monotone order). -/
 theorem elec_panels_exposable :
     Exposable (canon elec bad) .bot ∧ Exposable (canon elec bab) .bot ∧
       Exposable (canon elec baa) (.win .a) := by
@@ -537,14 +537,14 @@ theorem elec_panel_c_determined : Determined (canon elec baa) := by
   rcases c3 with _ | _ | _ <;> decide
 
 /-- Equality-order variant (Fig. `fig:nonmonotone-frame`): `output(⊥)` at
-`σ_S(ab·)` seals `aba` ... -/
+`σ_P(ab·)` seals `aba` ... -/
 theorem elecEq_bot_seals : Sealed (canon elecEq bab) ⟨.bot⟩ baba ⟨winner baba⟩ :=
   nonmono_seals elecEq_functional bab_le_baba
     (show (⟨Res.bot⟩ : ResE) = ⟨winner bab⟩ by rw [winner_bab]) rfl
     (by rw [winner_baba]; intro h; cases h)
 
 /-- ... and leaves the single row `(ab·, ⊥)`
-(`S[in ⪰ ab·, out ⪰ ⊥]`, the example after Lemma `lem:run-residual`). -/
+(`P[in ⪰ ab·, out ⪰ ⊥]`, the example after Lemma `lem:run-residual`). -/
 theorem elecEq_bot_single_row (k : Ballots) (o : ResE) :
     outputTable (canon elecEq bab) ⟨.bot⟩ k o ↔ (k = bab ∧ o = ⟨.bot⟩) := by
   constructor
@@ -722,7 +722,7 @@ instance (F : Type) : PO (PSet F) where
 
 /-- The graph specification of a query `Q`. -/
 def querySpec {F A : Type} (Q : PSet F → PSet A) : Spec (PSet F) (PSet A) where
-  S J X := X = Q J
+  P J X := X = Q J
   total J := ⟨Q J, rfl⟩
 
 theorem querySpec_functional {F A : Type} (Q : PSet F → PSet A) :

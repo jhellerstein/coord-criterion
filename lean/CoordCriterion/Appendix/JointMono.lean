@@ -103,12 +103,12 @@ its outputs in `D`, and `𝒮₂` satisfies Lifted Monotonicity on `D`, then
 `𝒮₂ ∘ 𝒮₁` satisfies Lifted Monotonicity.  (`D` needs no closure property;
 `D = Img 𝒮₁` is the weakest choice, `seq_liftedMono_img`.) -/
 theorem seq_liftedMono_on {sp1 : Spec I M} {sp2 : Spec M O} {D : M → Prop}
-    (h1 : sp1.LiftedMono) (hD : ∀ i m, sp1.S i m → D m) (h2 : CEOn sp2 D) :
+    (h1 : sp1.LiftedMono) (hD : ∀ i m, sp1.P i m → D m) (h2 : CEOn sp2 D) :
     (seq sp1 sp2).LiftedMono := by
   have h1 := (liftedMono_iff_commonExpansion _).1 h1
   apply (liftedMono_iff_commonExpansion _).2
   intro rows hrows j hj
-  obtain ⟨L, hL1, hL2⟩ := choose_list (fun (r : I × O) m => sp1.S r.1 m ∧ sp2.S m r.2)
+  obtain ⟨L, hL1, hL2⟩ := choose_list (fun (r : I × O) m => sp1.P r.1 m ∧ sp2.P m r.2)
     rows hrows
   obtain ⟨m, hm, hmall⟩ := h1 (L.map fun p => (p.1.1, p.2))
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr; exact (hL2 p hp).2.1) j
@@ -167,7 +167,7 @@ theorem below_eq {a b : Nat} (ha : a ≤ 9) (hb : b ≤ 9) : below a = below b :
   show decide (a < 10) = decide (b < 10)
   simp [ha', hb']
 
-theorem up_img {i m : Nat} (h : up.S i m) : ¬ Big m := by
+theorem up_img {i m : Nat} (h : up.P i m) : ¬ Big m := by
   have e : m = min i 9 := h
   unfold Big; omega
 
@@ -213,11 +213,11 @@ variable {I M M' O : Type} [PO I] [PO M] [PO M'] [PO O]
 
 /-- `𝒮₁` with its outputs renamed by `e` (into a differently ordered `M'`). -/
 def pushOut (sp : Spec I M) (e : M → M') : Spec I M' :=
-  ⟨fun i m' => ∃ m, sp.S i m ∧ m' = e m, fun i => let ⟨m, h⟩ := sp.total i; ⟨e m, m, h, rfl⟩⟩
+  ⟨fun i m' => ∃ m, sp.P i m ∧ m' = e m, fun i => let ⟨m, h⟩ := sp.total i; ⟨e m, m, h, rfl⟩⟩
 
 /-- `𝒮₂` read on a renamed middle. -/
 def pullIn (sp : Spec M O) (e' : M' → M) : Spec M' O :=
-  ⟨fun m' o => sp.S (e' m') o, fun m' => sp.total (e' m')⟩
+  ⟨fun m' o => sp.P (e' m') o, fun m' => sp.total (e' m')⟩
 
 /-- **Re-ordering the middle does not change the composite.**  For a renaming
 `e : M → M'` with left inverse `e'`, `pullIn 𝒮₂ e' ∘ pushOut 𝒮₁ e = 𝒮₂ ∘ 𝒮₁`,
@@ -227,7 +227,7 @@ theorem reorder_seq (sp1 : Spec I M) (sp2 : Spec M O) (e : M → M') (e' : M' �
   apply Spec.ext'
   funext i o
   apply propext
-  show (∃ m', (∃ m, sp1.S i m ∧ m' = e m) ∧ sp2.S (e' m') o) ↔ ∃ m, sp1.S i m ∧ sp2.S m o
+  show (∃ m', (∃ m, sp1.P i m ∧ m' = e m) ∧ sp2.P (e' m') o) ↔ ∃ m, sp1.P i m ∧ sp2.P m o
   constructor
   · rintro ⟨_, ⟨m, h1, rfl⟩, h2⟩
     rw [h m] at h2
@@ -266,11 +266,11 @@ explicit `inst : PO M` would otherwise be picked up by instance resolution. -/
 
 /-- `𝒮₁` with the same table, its outputs ordered by `inst` instead. -/
 def underOut {instM : PO M} (inst : PO M) (sp : @Spec I M _ instM) : @Spec I M _ inst :=
-  @Spec.mk I M _ inst (@Spec.S I M _ instM sp) (@Spec.total I M _ instM sp)
+  @Spec.mk I M _ inst (@Spec.P I M _ instM sp) (@Spec.total I M _ instM sp)
 
 /-- `𝒮₂` with the same table, its inputs ordered by `inst` instead. -/
 def underIn {instM : PO M} (inst : PO M) (sp : @Spec M O instM _) : @Spec M O inst _ :=
-  @Spec.mk M O inst _ (@Spec.S M O instM _ sp) (@Spec.total M O instM _ sp)
+  @Spec.mk M O inst _ (@Spec.P M O instM _ sp) (@Spec.total M O instM _ sp)
 
 /-- **The composite does not depend on the order on `M`.**  The composite of
 the two stages read under `inst` is the composite under the given order
@@ -502,7 +502,7 @@ theorem constant_store_reorder :
     have h2 : Two.y = u := hall .y (by simp)
     exact Two.noConfusion (h1.trans h2.symm)
   · exact commonExpansion_exposable ((liftedMono_iff_commonExpansion _).1 hL)
-      ⟨Pt.pt, [], .nil _⟩ (show (pushOut anyS fLvl).S Pt.pt Lvl.hi ∧ Pt.pt ≼ Pt.pt from
+      ⟨Pt.pt, [], .nil _⟩ (show (pushOut anyS fLvl).P Pt.pt Lvl.hi ∧ Pt.pt ≼ Pt.pt from
         ⟨⟨.y, trivial, rfl⟩, trivial⟩)
 
 end ConstantStore

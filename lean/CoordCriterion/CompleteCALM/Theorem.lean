@@ -32,8 +32,8 @@ variable {I O : Type} [PO I] [PO O]
 `S i` together with a seed `u0 ∈ S j` has a common refinement in `S j`. -/
 theorem relMono_directed_acc {sp : Spec I O} (hR : sp.RelMono) (hD : sp.DirectedOutputs)
     {i j : I} (hij : i ≼ j) :
-    ∀ X : List O, (∀ x ∈ X, sp.S i x) → ∀ u0, sp.S j u0 →
-      ∃ u, sp.S j u ∧ u0 ≼ u ∧ ∀ x ∈ X, x ≼ u := by
+    ∀ X : List O, (∀ x ∈ X, sp.P i x) → ∀ u0, sp.P j u0 →
+      ∃ u, sp.P j u ∧ u0 ≼ u ∧ ∀ x ∈ X, x ≼ u := by
   intro X
   induction X with
   | nil => intro _ u0 hu0; exact ⟨u0, hu0, PO.refl _, by simp⟩
@@ -76,8 +76,8 @@ theorem liftedMono_iff_commonExpansion (sp : Spec I O) :
     obtain ⟨hR, hD⟩ := (liftedMono_iff_relMono_directed sp).1 hL
     intro rows hrows j hj
     -- accumulate one row at a time, starting from a totality witness
-    have acc : ∀ rows : List (I × O), (∀ r ∈ rows, sp.S r.1 r.2) →
-        (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.S j u ∧ ∀ r ∈ rows, r.2 ≼ u := by
+    have acc : ∀ rows : List (I × O), (∀ r ∈ rows, sp.P r.1 r.2) →
+        (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u := by
       intro rows
       induction rows with
       | nil => intro _ _; obtain ⟨u, hu⟩ := sp.total j; exact ⟨u, hu, by simp⟩
@@ -104,8 +104,8 @@ theorem liftedMono_iff_commonExpansion (sp : Spec I O) :
 (paragraph `app:pairs-suffice`; the converse is
 `CC.CALM.pairs_iff_commonExpansion`). -/
 theorem ce_of_pairs {sp : Spec I O}
-    (h : ∀ i₁ o₁ i₂ o₂ j, sp.S i₁ o₁ → sp.S i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
-      ∃ u, sp.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u) :
+    (h : ∀ i₁ o₁ i₂ o₂ j, sp.P i₁ o₁ → sp.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
+      ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u) :
     sp.CommonExpansion := by
   intro rows
   induction rows with
@@ -349,7 +349,7 @@ theorem lifted_exposure_test {sp : Spec I O} (σ : State sp) (o : O) :
 /-- From a run state, a row `(j,u)` with `j ⪰ cur` survives once `u` refines
 some output at the current input. -/
 theorem run_survive {sp : Spec I O} {σ : State sp} (hσ : IsRun σ) {j : I} {u v : O}
-    (hcj : σ.cur ≼ j) (hju : sp.S j u) (hv : σ.R σ.cur v) (hvu : v ≼ u) : σ.R j u := by
+    (hcj : σ.cur ≼ j) (hju : sp.P j u) (hv : σ.R σ.cur v) (hvu : v ≼ u) : σ.R j u := by
   obtain ⟨E, hE⟩ := hσ.residual
   have hEv := ((hE _ _).1 hv).2.2
   exact (hE j u).2 ⟨hju, hcj, fun o ho => PO.trans (hEv o ho) hvu⟩
@@ -372,7 +372,7 @@ theorem commonExpansion_consistent {sp : Spec I O} (hC : sp.CommonExpansion) :
   exact run_survive (hrun σ hσ) (hj σ hσ) hu σ.hasCur.choose_spec
     (hall (pick σ) (List.mem_map.2 ⟨σ, hσ, rfl⟩))
 
-theorem meetState_isRun (sp : Spec I O) (i : I) (o : O) (h : sp.S i o) :
+theorem meetState_isRun (sp : Spec I O) (i : I) (o : O) (h : sp.P i o) :
     IsRun (meetState sp i o h) :=
   ⟨i, reach_meet (residual_canon sp i) (show (canon sp i).R i o from ⟨h, PO.refl i⟩)⟩
 

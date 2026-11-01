@@ -666,7 +666,7 @@ confluent. -/
 theorem uniqueness_example :
     LocValid uModel jU ∧ oneU 0 1 ≼ jU ∧ oneU 1 2 ≼ jU ∧
       eval uModel jU 1 ∧ eval uModel jU 2 ∧ ¬ uModel.Inv (eval uModel jU) ∧
-      (∀ u, (SI uModel).S ⟨jU, locValid_jU⟩ u →
+      (∀ u, (SI uModel).P ⟨jU, locValid_jU⟩ u →
         ¬ (eval uModel (oneU 0 1) ≼ u ∧ eval uModel (oneU 1 2) ≼ u)) ∧
       ¬ (SI uModel).LiftedMono ∧ ¬ uModel.IConfluent := by
   have l1 : oneU 0 1 ≼ jU := oneU_le_jU 0 1 rfl
@@ -675,7 +675,7 @@ theorem uniqueness_example :
     eval_mono uModel l1 1 ((eval_oneU 0 1 1).2 rfl)
   have e2 : eval uModel jU 2 :=
     eval_mono uModel l2 2 ((eval_oneU 1 2 2).2 rfl)
-  have hno : ∀ u, (SI uModel).S ⟨jU, locValid_jU⟩ u →
+  have hno : ∀ u, (SI uModel).P ⟨jU, locValid_jU⟩ u →
       ¬ (eval uModel (oneU 0 1) ≼ u ∧ eval uModel (oneU 1 2) ≼ u) := by
     rintro u ⟨g, _, vg, rfl⟩ ⟨h1, h2⟩
     have := vg g (PO.refl g) 1 2 (h1 1 ((eval_oneU 0 1 1).2 rfl)) (h2 2 ((eval_oneU 1 2 2).2 rfl))
@@ -741,9 +741,9 @@ theorem curried_sharp (f : I × A → B) (g : J × B → C) (i : I) (j : J) :
 /-- "… which is the plan of Prop. `prop:curried-query-plan` on graph tables":
 the curried plan of two graph tables is the graph of `h`. -/
 theorem curried_plan_graph (f : I × A → B) (g : J × B → C) :
-    curriedPlan (graph f).S (graph g).S = (graph (fun x : I × (J × A) => g (x.2.1, f (x.1, x.2.2)))).S := by
+    curriedPlan (graph f).P (graph g).P = (graph (fun x : I × (J × A) => g (x.2.1, f (x.1, x.2.2)))).P := by
   rw [← curried_query_plan]
-  exact congrArg Spec.S (parameterized_graph f g)
+  exact congrArg Spec.P (parameterized_graph f g)
 
 end CompExamples
 
@@ -818,21 +818,21 @@ theorem exec_swap_incompatible (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c�
 
 /-! #### Example `ex:committed-log-composition`: every command goes through the log -/
 
-/-- `S₁`: at proposal stream `i`, the logs still permitted (logs of proposed
+/-- `P₁`: at proposal stream `i`, the logs still permitted (logs of proposed
 commands).  `I = M = Pfx Cmd`.  (The paper assumes each command is proposed
 at most once; the claims below do not need it.) -/
 def smrS1 : Spec (Pfx Cmd) (Pfx Cmd) :=
   ⟨fun i b => ∀ c ∈ b.l, c ∈ i.l, fun _ => ⟨⟨[]⟩, fun _ h => nomatch h⟩⟩
 
-/-- `S₂`: the responses obtained by executing the log. -/
+/-- `P₂`: the responses obtained by executing the log. -/
 def smrS2 (σ0 : Stt) : Spec (Pfx Cmd) (Pfx (Cmd × R)) := graph (execF δ σ0)
 
 /-- Example `ex:committed-log-composition`, for any deterministic state
 machine and any two distinct commands:
-* `S₁` (the log specification `𝒫`) violates Lifted Monotonicity (two next
+* `P₁` (the log specification `𝒫`) violates Lifted Monotonicity (two next
   entries in one fiber);
-* `S₂ ∘ S₁` violates it (opposite orders give incompatible responses);
-* execution is monotone, so `S₂` satisfies Lifted Monotonicity. -/
+* `P₂ ∘ P₁` violates it (opposite orders give incompatible responses);
+* execution is monotone, so `P₂` satisfies Lifted Monotonicity. -/
 theorem smr_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
     ¬ (smrS1 (Cmd := Cmd)).LiftedMono ∧
       ¬ (seq smrS1 (smrS2 δ σ0)).LiftedMono ∧
@@ -847,9 +847,9 @@ theorem smr_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
         rcases hz with rfl | rfl <;> intro c hc <;> simp_all)
     exact hne (pfx_head (l := []) (m := []) (hall ⟨[c₁]⟩ (by simp)) (hall ⟨[c₂]⟩ (by simp)))
   · intro h
-    have r1 : (seq smrS1 (smrS2 δ σ0)).S ⟨[c₁, c₂]⟩ (execF δ σ0 ⟨[c₁, c₂]⟩) :=
+    have r1 : (seq smrS1 (smrS2 δ σ0)).P ⟨[c₁, c₂]⟩ (execF δ σ0 ⟨[c₁, c₂]⟩) :=
       ⟨⟨[c₁, c₂]⟩, fun _ hc => hc, rfl⟩
-    have r2 : (seq smrS1 (smrS2 δ σ0)).S ⟨[c₁, c₂]⟩ (execF δ σ0 ⟨[c₂, c₁]⟩) :=
+    have r2 : (seq smrS1 (smrS2 δ σ0)).P ⟨[c₁, c₂]⟩ (execF δ σ0 ⟨[c₂, c₁]⟩) :=
       ⟨⟨[c₂, c₁]⟩, fun _ hc => perm_mem hc, rfl⟩
     obtain ⟨u, _, hall⟩ := h ⟨[c₁, c₂]⟩ ⟨[c₁, c₂]⟩ (PO.refl _)
       [execF δ σ0 ⟨[c₁, c₂]⟩, execF δ σ0 ⟨[c₂, c₁]⟩] (by simp) (by
@@ -957,9 +957,9 @@ theorem bare_read_example (σ0 : Stt) {c₁ c₂ : Cmd} (hne : c₁ ≠ c₂) :
     let x : Pfx Cmd × (Pfx Rd × Pt) := (⟨[c₁, c₂]⟩, (⟨[]⟩, .pt))
     let y1 : Pfx (Cmd × R) × Facts (Rd × Nat × V) := (execF δ σ0 ⟨[c₁, c₂]⟩, ⟨fun _ => False⟩)
     let y2 : Pfx (Cmd × R) × Facts (Rd × Nat × V) := (execF δ σ0 ⟨[c₂, c₁]⟩, ⟨fun _ => False⟩)
-    have r1 : (par logF (bareG δ rd σ0)).S x y1 :=
+    have r1 : (par logF (bareG δ rd σ0)).P x y1 :=
       ⟨⟨[c₁, c₂]⟩, fun _ hc => hc, rfl, fun _ hf => hf.elim, fun _ hr => nomatch hr⟩
-    have r2 : (par logF (bareG δ rd σ0)).S x y2 :=
+    have r2 : (par logF (bareG δ rd σ0)).P x y2 :=
       ⟨⟨[c₂, c₁]⟩, fun _ hc => perm_mem hc, rfl, fun _ hf => hf.elim, fun _ hr => nomatch hr⟩
     obtain ⟨u, _, hall⟩ := h x x (PO.refl _) [y1, y2] (by simp) (by
         intro z hz
@@ -987,7 +987,7 @@ def latestG (σ0 : Stt) : Spec (Pfx Rd × Pfx Cmd) (Pfx (Cmd × R) × Facts (Rd 
 /-- The response to read `r` before any entry, as an output of `latestG` at
 the empty log. -/
 theorem latestG_initial (σ0 : Stt) (r : Rd) :
-    (latestG δ rd σ0).S (⟨[r]⟩, ⟨[]⟩)
+    (latestG δ rd σ0).P (⟨[r]⟩, ⟨[]⟩)
       ((⟨[]⟩, ⟨fun f => f = (r, rd σ0 r)⟩) : Pfx (Cmd × R) × Facts (Rd × V)) := by
   refine ⟨rfl, fun f hf => ?_, fun r' hr' => ⟨(r, rd σ0 r), rfl, (List.mem_singleton.1 hr').symm⟩⟩
   have hf' : f = (r, rd σ0 r) := hf

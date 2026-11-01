@@ -121,7 +121,7 @@ theorem responsePC_iff_commonRefinement (Sys : System sp D) :
 /-- Theorem `thm:complete-cap` with Response Partition Consistency in place of
 Partition Consistency. -/
 theorem complete_cap_for_rpc (sp : Spec I O) (D : Type) (A : Table I O)
-    (hAS : ∀ i o, A i o → sp.S i o) :
+    (hAS : ∀ i o, A i o → sp.P i o) :
     (∃ Sys : System sp D, AvailabilityFor A Sys ∧ CommonRefinementAtEnd Sys) ↔
       ConsistentOn sp A :=
   ⟨fun ⟨Sys, hA, hC⟩ => consistentOn_of_availabilityFor A hAS Sys hA hC,
@@ -133,7 +133,7 @@ theorem complete_cap_for_rpc (sp : Spec I O) (D : Type) (A : Table I O)
 self-continuing `T ⊆ S`, every participant's current fiber meets `T`: some
 output of `T` at the current input refines everything the participant has
 emitted. -/
-theorem resp_fiber_meets (T : Table I O) (hTS : ∀ i o, T i o → sp.S i o)
+theorem resp_fiber_meets (T : Table I O) (hTS : ∀ i o, T i o → sp.P i o)
     (hTtot : ∀ i, ∃ o, T i o) (hTcont : ∀ i o j, T i o → i ≼ j → ∃ u, T j u ∧ o ≼ u)
     {n : Nat} {init : Fin n → I} {H : History sp D n}
     (hp : Produced (respSystem (sp := sp) (D := D) T) n init H) {p : Fin n} {σ : State sp}
@@ -265,13 +265,13 @@ theorem forced_answer_end (Sys : System sp D) (Q : (n : Nat) → Fin n → Table
     (halone : ∀ p, comp p = comp q → p = q) {σq : State sp}
     (hσq : LRun (canon sp (init q)) (H q) σq) {j : I}
     (hj : ∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j)
-    (hno : ∀ o, Q n q σq.cur o → ¬ ∃ u, sp.S j u ∧ o ≼ u) :
+    (hno : ∀ o, Q n q σq.cur o → ¬ ∃ u, sp.P j u ∧ o ≼ u) :
     ∃ ext : Fin n → List (LEv sp D n),
       WF init (fun p => H p ++ ext p) ∧ Produced Sys n init (fun p => H p ++ ext p) ∧
       Partitioned (fun p => H p ++ ext p) comp ∧
       (∀ p, p ≠ q → ext p = []) ∧ (∀ p j, LEv.inp j ∉ ext p) ∧
       (∀ p σ, LRun (canon sp (init p)) (H p ++ ext p) σ → σ.cur ≼ j) ∧
-      ¬ ∃ u, sp.S j u ∧ ∀ p γ o, LEv.out γ o ∈ H p ++ ext p → o ≼ u := by
+      ¬ ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ H p ++ ext p → o ≼ u := by
   obtain ⟨H', ext, hext, hwf', hprod', hpart', hoth, hni, _, hj', hno'⟩ :=
     forced_answer Sys Q ((answering_iff_end Sys Q).2 hAns) hwf hprod hpart (isCut_full hwf)
       halone (lrun_full.2 hσq) (fun p σ h => hj p σ (lrun_full.1 h)) hno

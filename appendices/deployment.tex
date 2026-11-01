@@ -11,7 +11,7 @@ condition on the specification that replaces Lifted Monotonicity for $E$.
 \begin{definition}[Deployment, emitted rows, partition]
 \label{def:deployment}
 A \emph{deployment} over a finite participant set $P$ assigns to each $p\in P$
-an explicit relation $E_p\subseteq S$, the rows $p$ may emit: $p$ performs an output event
+an explicit relation $E_p\subseteq P$, the rows $p$ may emit: $p$ performs an output event
 $\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) at current input
 $i$ only if $(i,o)\in E_p$.  The \emph{emitted rows} of a run are the pairs
 $(i,o)$ such that the run emits $o$ at current input $i$.  A \emph{partition} $\Pi$ of $P$ divides $P$ into
@@ -49,7 +49,7 @@ whose emitted outputs form a chain (each output event keeps only rows refining
 it), so a family whose emitted rows are all authorized only to $p$ is
 separable only when it emits a single row.  The converse can therefore fail.
 For example, let $P=\{p,q\}$, let every fiber be $\{a,b\}$ ordered by equality,
-and let $E_p=S$ and $E_q=\varnothing$, so that $p$ alone names a leader.  A run
+and let $E_p=P$ and $E_q=\varnothing$, so that $p$ alone names a leader.  A run
 of $p$ emits at most one distinct output and $q$ never emits, so every separable
 family consists of one row $(i,a)$ or $(i,b)$ beside a silent $q$, and that
 output lies in $\fiber{j}$ for every \indesc $j$ of $i$.  So $\Spec$ is
@@ -61,7 +61,7 @@ participant.  The causal register of Appendix~\ref{app:registers} is a further
 example, with no single authority, of monotonicity across partitions without
 Lifted Monotonicity; it need not satisfy this condition, since a set of rows lacking
 a common \outnoun may also contain rows of other participants.  If
-$|P|\ge2$ and $E_p=S$ for every $p$, every pair of rows can be split across a
+$|P|\ge2$ and $E_p=P$ for every $p$, every pair of rows can be split across a
 partition and every single row paired with a silent participant at the common
 \indesc; since pairs of rows suffice for the common-\indesc condition
 (Appendix~\ref{app:pairs-suffice}), monotonicity across partitions is then
@@ -77,7 +77,7 @@ local to $p$ (Definition~\ref{def:partition-notions}).
 
 This is Availability for $E_p$, one relation per participant.  For the uniform
 deployment $E_p=E$ it is Availability for $E$ on histories over $P$, and for
-$E_p=S$ it is Availability.
+$E_p=P$ it is Availability.
 
 A deployment is \emph{single-authority} when $E_q=\varnothing$ for every
 participant $q$ but one, as in the leader example above.  Every separable family
@@ -121,7 +121,7 @@ family of runs of a partitioned history, as Deployment Availability permits,
 have a common \outnoun $u\in\fiber{j}$ at every common \indesc $j$.  It does not follow that the deployment authorizes any
 participant to emit $u$; confluence through legal output events of the
 deployment would additionally require that authority, a condition we do not
-impose.  With $|P|\ge2$ and $E_p=S$ for every $p$, item~(2) is Lifted
+impose.  With $|P|\ge2$ and $E_p=P$ for every $p$, item~(2) is Lifted
 Monotonicity, and the proposition is the step behind
 Corollary~\ref{cor:complete-cap-S} stating that separable families are confluent
 at every common \indesc exactly when Lifted Monotonicity holds.

@@ -404,7 +404,7 @@ theorem posOf_ninc {inc : Nat → Prop} {lp : Nat → Nat} {B x : Nat} (h : ¬ i
 /-- **Atomic responses are explained by a linearization.**  If `E` is atomic,
 `h` has exactly the invoked operations of `E` (at their nodes) and only
 precedence edges from a response to a later invocation, then every response map
-`u` recording responses of `E` lies in the register fiber `S(h)`. -/
+`u` recording responses of `E` lies in the register fiber `P(h)`. -/
 theorem lin_to_regS {E : GExec N M} (hat : AtomicExec E) (h : Hist) (u : RMap)
     (h1 : ∀ a op, h.ops a = some op → ∃ i T, (T, Act.inv a op.kind) ∈ E.tr i)
     (h2 : ∀ i T a kd, (T, Act.inv a kd) ∈ E.tr i → h.ops a = some ⟨i.val, kd⟩)

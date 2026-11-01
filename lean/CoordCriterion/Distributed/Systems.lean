@@ -58,14 +58,14 @@ variable {I O : Type} [PO I] [PO O]
 
 section figure
 
-/-- `input(j)` at `σ_S(i)` reaches `σ_S(j)`. -/
-theorem step_canon_input (sp : Spec I O) {i j : I} (hij : i ≼ j) (hj : ∃ u, sp.S j u) :
+/-- `input(j)` at `σ_P(i)` reaches `σ_P(j)`. -/
+theorem step_canon_input (sp : Spec I O) {i j : I} (hij : i ≼ j) (hj : ∃ u, sp.P j u) :
     Step (canon sp i) (.input j) (canon sp j) := by
   obtain ⟨u, hu⟩ := hj
   refine Step.input _ _ j ⟨u, hu, hij⟩ rfl ?_
   funext k x
   apply propext
-  show (sp.S k x ∧ j ≼ k) ↔ ((sp.S k x ∧ i ≼ k) ∧ j ≼ k)
+  show (sp.P k x ∧ j ≼ k) ↔ ((sp.P k x ∧ i ≼ k) ∧ j ≼ k)
   exact ⟨fun ⟨h, hk⟩ => ⟨⟨h, PO.trans hij hk⟩, hk⟩, fun ⟨⟨h, _⟩, hk⟩ => ⟨h, hk⟩⟩
 
 variable {D : Type}
@@ -80,7 +80,7 @@ def Hf (O : Type) (i j : I) (d : D) : Dist.History I O D 2 :=
   ⟨fun _ => i, fun p => if p = 0 then [.io (.input j), .send 0 (some j, d)]
     else [.recv 0 (some j, d), .io (.input j)]⟩
 
-theorem fig_participant_runs (sp : Spec I O) {i j : I} (hij : i ≼ j) (hj : ∃ u, sp.S j u)
+theorem fig_participant_runs (sp : Spec I O) {i j : I} (hij : i ≼ j) (hj : ∃ u, sp.P j u)
     (d : D) :
     (Hd O D i j).WF sp ∧ (Hf O i j d).WF sp ∧
     (Hd O D i j).Endpoint sp (Hd O D i j).InH (fun _ => canon sp j) ∧
@@ -561,14 +561,14 @@ end compound
 
 /-- **Cor. reconciliation under any basis.**  Runs `r` under bases `B r`,
 continued under arbitrary bases `B' r` to one state with current input `j`:
-some `u ∈ S(j)` refines every output emitted on every run.  (The hypothesis
+some `u ∈ P(j)` refines every output emitted on every run.  (The hypothesis
 that `j` is a common expansion is not needed.) -/
 theorem reconciliation_any_basis {sp : Spec I O} {m : Nat} (B B' : Fin m → Basis sp)
     (i : Fin m → I) (es : Fin m → List (SEvent sp)) (ρ : Fin m → State sp)
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
     (τ : State sp) (j : I) (hτ : τ.cur = j)
     (hcont : ∀ r, ∃ es', SysExec (B' r) (ρ r) es' τ) :
-    ∃ u, sp.S j u ∧ ∀ r, ∀ o ∈ outs ((es r).filterMap SEvent.erase), o ≼ u := by
+    ∃ u, sp.P j u ∧ ∀ r, ∀ o ∈ outs ((es r).filterMap SEvent.erase), o ≼ u := by
   obtain ⟨u, hu⟩ := τ.hasCur
   rw [hτ] at hu
   refine ⟨u, τ.sub _ _ hu, fun r => ?_⟩
@@ -603,7 +603,7 @@ instance : PO B2 where
 
 /-- One input with two incomparable outputs. -/
 def spU : Spec U1 B2 where
-  S _ _ := True
+  P _ _ := True
   total _ := ⟨(true : Bool), trivial⟩
 
 /-- The empty basis. -/
@@ -645,7 +645,7 @@ theorem noBasis_full {σ ρ : State spU} {es : List (SEvent spU)} (h : SysExec n
 theorem canonU_full (i : U1) : ∀ k u, (canon spU i).R k u := fun _ _ => ⟨trivial, trivial⟩
 
 /-- **The converse of Lemma canonical-equivalent fails.**  The canonical run
-`output(true)` from `σ_S(*)` is observably equivalent to no run under the
+`output(true)` from `σ_P(*)` is observably equivalent to no run under the
 empty basis. -/
 theorem converse_fails :
     (∃ τ, Exec (canon spU ()) [.output (true : Bool)] τ) ∧
@@ -704,10 +704,10 @@ end converse
 
 /-- Under Lifted Monotonicity, runs with a common expansion `j` share a row
 `(j,u)`, and from each final state the commitment-free events `input(j)`,
-`Out_ε(u)` reach the same state `(j, S[in ⪰ j, out ⪰ u])`. -/
+`Out_ε(u)` reach the same state `(j, P[in ⪰ j, out ⪰ u])`. -/
 theorem reconcile_cf {sp : Spec I O} (hLM : sp.LiftedMono) (fam : List (State sp))
     (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (hj : ∀ σ ∈ fam, σ.cur ≼ j) :
-    ∃ u, ∃ hu : sp.S j u, (∀ σ ∈ fam, σ.R j u) ∧
+    ∃ u, ∃ hu : sp.P j u, (∀ σ ∈ fam, σ.R j u) ∧
       ∀ σ ∈ fam, ExecCF σ [.input j, .output u] (meetState sp j u hu) := by
   have hC := (liftedMono_iff_commonExpansion sp).1 hLM
   have hcons := (complete_calm sp).2 hLM
@@ -732,7 +732,7 @@ theorem reconcile_cf {sp : Spec I O} (hLM : sp.LiftedMono) (fam : List (State sp
     refine Step.output τ1 _ u ho rfl ?_
     funext k x
     apply propext
-    show (sp.S k x ∧ j ≼ k ∧ u ≼ x) ↔ ((σ.R k x ∧ j ≼ k) ∧ u ≼ x)
+    show (sp.P k x ∧ j ≼ k ∧ u ≼ x) ↔ ((σ.R k x ∧ j ≼ k) ∧ u ≼ x)
     constructor
     · rintro ⟨hS, hjk, hux⟩
       exact ⟨⟨(hres k x).2 ⟨hS, PO.trans (hj σ hσ) hjk,

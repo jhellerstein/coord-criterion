@@ -29,7 +29,7 @@ the last vote arrives.  Two readings of that abort are checked.
   (`CoordinationFreeH`, by `single_coordinationFreeH`).
 
 *As a choice* (`abortSpec`: the coordinator may abort until it decides, so
-`S(v) = {decide2PC v, abort}`):
+`P(v) = {decide2PC v, abort}`):
 
 * `abort_choice_yy`: at `yy·`, aborting is not exposable; its canonical
   commitment removes `(yyy, commit)` and keeps `(yyy, abort)`, so it chooses
@@ -99,7 +99,7 @@ noncomputable def cp {m : Nat} : Commitment (voteSpec m) :=
   Dist.toCAP (Figures.closePolls (sp := voteSpec m))
 
 /-- **The timeout abort seals every input that adds a missing vote.**  At
-`σ_S(v)` with a missing vote, closing the polls applies (it is a commitment);
+`σ_P(v)` with a missing vote, closing the polls applies (it is a commitment);
 it is a seal (wherever it removes a row it removes all); and every input that
 adds a missing vote `p`, yes (`b = true`) or no (`b = false`), had a row and
 keeps none.  Only the current input keeps rows, its row `(v, undecided)` when
@@ -326,11 +326,11 @@ theorem sealSysRepl_not_coordinationFreeH (D : Type) : ¬ (sealSysRepl D).Coordi
 
 /-! ## The timeout abort as a choice: `abortSpec` -/
 
-/-- The coordinator may abort until it decides: `S(v) = {decide2PC v, abort}`
+/-- The coordinator may abort until it decides: `P(v) = {decide2PC v, abort}`
 (so `{abort}` after a no vote, `{undecided, abort}` while votes are missing,
 `{commit, abort}` when all are yes). -/
 noncomputable def abortSpec (m : Nat) : Spec (Votes m) Decision where
-  S v d := d = decide2PC v ∨ d = .abort
+  P v d := d = decide2PC v ∨ d = .abort
   total _ := ⟨_, Or.inr rfl⟩
 
 theorem le_abort_or_commit (u : Decision) : u ≼ .abort ∨ u = .commit := by
@@ -433,7 +433,7 @@ theorem inv_lrun {m : Nat} {D : Type} {n : Nat} {σ ρ : State (abortSpec m)}
   | recv _ ih => exact ih (fun e he => hok e (List.mem_cons_of_mem _ he)) hI
 
 /-- **At `yy·`, aborting is a choice.**  `abort` is not exposable at
-`σ_S(yy·)`; its canonical output event `Out_{[κ_abort]}(abort)` is legal,
+`σ_P(yy·)`; its canonical output event `Out_{[κ_abort]}(abort)` is legal,
 removes `(yyy, commit)`, keeps `(yyy, abort)`, and seals no input. -/
 theorem abort_choice_yy :
     ¬ Exposable (canon (abortSpec 3) yyN) .abort ∧

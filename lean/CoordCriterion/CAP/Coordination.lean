@@ -318,7 +318,7 @@ theorem ord3_le_iff (x y : Ord3) : x ≼ y ↔ (x = y ∨ x = .bot) := Iff.rfl
 
 /-- One input; every order is permitted. -/
 def ordSpec : Spec Unit Ord3 where
-  S := fun _ _ => True
+  P := fun _ _ => True
   total := fun _ => ⟨.bot, trivial⟩
 
 theorem canon_ord_R (k : Unit) (x : Ord3) : (canon ordSpec ()).R k x :=
@@ -384,7 +384,7 @@ theorem ownerSys_coordinationFreeH (D : Type) : (ownerSys D).CoordinationFreeH :
     · obtain ⟨hu', rfl⟩ := kc_apply_some hap
       exact hall o ⟨hu', not_rm_of_le hu' (PO.refl o)⟩
 
-/-- A canonical output event of `u` at `σ_S(())`, as a one-event participant
+/-- A canonical output event of `u` at `σ_P(())`, as a one-event participant
 history. -/
 theorem ord_emit (u : Ord3) :
     ∃ γ τ, (γ = [] ∨ γ = [kc u]) ∧ applySeq (canon ordSpec ()) γ = some τ ∧
@@ -459,7 +459,7 @@ instance : PO Two where
 
 /-- One input, both outputs permitted. -/
 def lcSpec : Spec Unit Two where
-  S := fun _ _ => True
+  P := fun _ _ => True
   total := fun _ => ⟨.o, trivial⟩
 
 /-- Only `o` must stay available. -/

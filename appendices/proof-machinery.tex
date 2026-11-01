@@ -5,8 +5,8 @@
 \label{app:proofs-sec2}
 
 \begin{proof}[Proof of Lemma~\ref{lem:run-residual}]
-The run starts at the canonical state $\sigma_S(i_0)$, whose table is
-$S[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
+The run starts at the canonical state $\sigma_P(i_0)$, whose table is
+$P[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
 the rows with $\mathrm{in}\InputGe j$ (Equation~\ref{eq:input-event}), and each
 output event $\mathsf{output}(o)$ keeps only the rows with
 $\mathrm{out}\OutputGe o$ (Equation~\ref{eq:output-action}). The input
@@ -24,7 +24,7 @@ $u\in R_r(j)$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
 emitted on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
 same lemma leaves exactly
-$S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
+$P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
 starting run.
 \end{proof}
 
@@ -37,7 +37,7 @@ family of runs is therefore confluent at a common \indesc $j$ exactly
 when $f(j)$ \outrel every output emitted on any of them.  If $f$ is monotone,
 this holds, since each emitted $f(k)$ has $k\InputOrd j$.  If $f$ is not
 monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.  Of two
-runs from $\sigma_S(i)$, one that emits $f(i)$ no longer has the row
+runs from $\sigma_P(i)$, one that emits $f(i)$ no longer has the row
 $(k,f(k))$, while one that accepts $\mathsf{input}(k)$ keeps it; no row at $k$
 survives in both, so they are not confluent at $k$.
 \end{proof}
@@ -45,7 +45,7 @@ survives in both, so they are not confluent at $k$.
 \begin{proof}[Proof of Corollary~\ref{cor:state-by-input}]
 By Functional CALM (Theorem~\ref{thm:functional-calm}), the specification is
 monotone.  By Lemma~\ref{lem:run-residual}, the run's remainder table is
-$S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
+$P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
 \mathrm{out}\OutputGe o_m]$, where each $o_\ell=f(i_\ell)$ for some
 $i_\ell\InputOrd i$.  Every row whose input \inrel $i$ has the form $(k,f(k))$ with
 $i_\ell\InputOrd k$, so monotonicity gives $o_\ell\OutputOrd f(k)$, and the
@@ -54,10 +54,10 @@ output conditions remove nothing.
 
 \begin{proof}[Proof of Proposition~\ref{prop:functional-exposure-boundary}]
 Suppose $f$ is monotone, and let a commitment-free run reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
-$(i,R)=\sigma_S(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
+$(i,R)=\sigma_P(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
 $i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each, so $f(i)$ is a
 legal output (Definition~\ref{def:exposable}).
-Conversely, if every such output is a legal output, then at $\sigma_S(i)$,
+Conversely, if every such output is a legal output, then at $\sigma_P(i)$,
 which the empty run reaches, legality of $f(i)$ gives $f(i)\OutputOrd f(j)$
 for every \indesc $j$ of $i$, so $f$ is monotone.
 \end{proof}
@@ -98,11 +98,11 @@ Proposition~\ref{prop:confluence}.
 By Proposition~\ref{prop:common-expansion-form} it suffices to treat the
 common-\indesc condition.  ($\Leftarrow$) Let finitely many runs end at
 $(i_r,R_r)$ with common \indesc $j$.  Each output $o$ emitted on a run was
-emitted at some input $i_o\InputOrd j$, so $(i_o,o)$ is a row of $S$; the
+emitted at some input $i_o\InputOrd j$, so $(i_o,o)$ is a row of $P$; the
 condition supplies $u\in\fiber{j}$ \outrelpart all of them, and
 Lemma~\ref{lem:reconciliation} gives confluence.  ($\Rightarrow$) Given rows
 $(i_r,o_r)$ with common \indesc $j$, apply consistency and
-Lemma~\ref{lem:reconciliation} to the runs that start at $\sigma_S(i_r)$ and
+Lemma~\ref{lem:reconciliation} to the runs that start at $\sigma_P(i_r)$ and
 emit $o_r$; for the empty family, totality gives $\fiber{j}\neq\varnothing$.
 \end{proof}
 
@@ -117,8 +117,8 @@ tables are contained in $R$, so $u\in R(j)$ \outrel $o$ and $x$, and the exposur
 (Proposition~\ref{prop:exposability}) makes $o$ a legal output.
 Conversely, suppose every such output is a legal output, and let rows
 $(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality pick
-$u_0\in S(j)$.  For $r=1,\ldots,k$ in turn, the exposure test for $o_r$ at
-$\sigma_S(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in S(j)$ \outrelpart both
+$u_0\in P(j)$.  For $r=1,\ldots,k$ in turn, the exposure test for $o_r$ at
+$\sigma_P(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in P(j)$ \outrelpart both
 $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
 \end{proof}
 
@@ -127,7 +127,7 @@ $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
 If every two rows with a common \indesc $j$ have a common \outnoun in
 $\fiber{j}$, the condition holds for every finite family: replace the first
 two rows by a row $(j,u)$ at $j$ and repeat; a single row is paired with any
-row at $j$.  The pairs must range over all rows of $S$, including those at
+row at $j$.  The pairs must range over all rows of $P$, including those at
 $j$.  Restricting the families to rows at single-proposal inputs does not
 suffice, even $k$ rows at a time: in the $k$-set agreement example of
 Appendix~\ref{app:additional-applications}, every family of at most $k$ rows
@@ -198,7 +198,7 @@ $o_r$.
 \end{proof}
 
 \begin{proof}[Proof of Corollary~\ref{cor:complete-cap-S}]
-With $E=S$, Lifted Monotonicity for $E$ is the common-\indesc condition, which is
+With $E=P$, Lifted Monotonicity for $E$ is the common-\indesc condition, which is
 Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}).  When
 Lifted Monotonicity holds, every output at every state reachable without
 commitment is a legal output (Proposition~\ref{prop:exposure-boundary}).  The

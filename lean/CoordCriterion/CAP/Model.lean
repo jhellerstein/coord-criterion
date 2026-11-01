@@ -173,7 +173,7 @@ def RecvMatched (H : History sp D n) : Prop :=
     q ≠ p ∧ (H q)[k]? = some (LEv.send j d)
 
 /-- Def. `def:distributed-history`: matched receives, and each participant's
-events form a legal transition sequence from `σ_S(i_p)`. -/
+events form a legal transition sequence from `σ_P(i_p)`. -/
 def WF (init : Fin n → I) (H : History sp D n) : Prop :=
   (∀ p, ∃ τ, LRun (canon sp (init p)) (H p) τ) ∧ RecvMatched H
 
@@ -513,11 +513,11 @@ theorem exec_cur_le {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es 
       exact PO.trans this ih
     | output o => rw [← (step_output_inv hs).2.1]; exact ih
 
-/-- Each emitted output of a canonical execution is witnessed by a row of `S`
+/-- Each emitted output of a canonical execution is witnessed by a row of `P`
 at an input below the final current input. -/
 theorem exec_rows {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es τ) :
     ∃ rows : List (I × O), rows.map Prod.snd = outs es ∧
-      ∀ r ∈ rows, sp.S r.1 r.2 ∧ r.1 ≼ τ.cur := by
+      ∀ r ∈ rows, sp.P r.1 r.2 ∧ r.1 ≼ τ.cur := by
   induction hx with
   | nil => exact ⟨[], rfl, by simp⟩
   | @cons σ τ' ρ e es hs hr ih =>

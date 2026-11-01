@@ -365,7 +365,7 @@ variable (af : Bool)
 `A` and `B`, both having requested commit. -/
 theorem ab_ba_rows {A B : T} (h : A ≠ B) {k : Inp T K} (hk : ∀ t, k.mem t ↔ t = A ∨ t = B)
     (hf : ∀ t, k.mem t → k.fin t) :
-    (spec (T := T) (K := K) af).S k (full (ordPair A B h)) ∧ (spec (T := T) (K := K) af).S k (full (ordPair B A (Ne.symm h))) := by
+    (spec (T := T) (K := K) af).P k (full (ordPair A B h)) ∧ (spec (T := T) (K := K) af).P k (full (ordPair B A (Ne.symm h))) := by
   have p1 : Partitions k.txs (ordPair A B h) := fun t =>
     ⟨by rw [show k.txs.1 t ↔ _ from hk t]; exact ⟨Or.inr, fun h => h.elim False.elim id⟩,
       fun h => h.1⟩
@@ -737,7 +737,7 @@ section Canon
 /-- A row of the specification that commits nothing is refined by the complete
 output that aborts everything and reports the same reads. -/
 theorem uncommitted_completion {k : Inp T K} {y : ROut T K}
-    (hy : (spec (T := T) (K := K) false).S k y) (hd : ∀ t, ¬ y.o.dom t) :
+    (hy : (spec (T := T) (K := K) false).P k y) (hd : ∀ t, ¬ y.o.dom t) :
     Complete false k ⟨allAbort k.txs, y.ρ⟩ ∧ y ≼ ⟨allAbort k.txs, y.ρ⟩ := by
   obtain ⟨c, ⟨hp, _⟩, hle⟩ := hy
   refine ⟨⟨allAbort_decides k, fun a n v e => ?_⟩, ?_, fun _ _ _ h => h⟩
@@ -745,7 +745,7 @@ theorem uncommitted_completion {k : Inp T K} {y : ROut T K}
     exact ⟨x, h1, h2, fun h => h.elim⟩
   · refine ⟨fun t hX => ?_, fun t h => absurd h (hd t), fun a _ h _ => absurd h (hd a)⟩
     exact ((hp.1 t).1).2 (Or.inl (hle.1.1 t hX))
-where hy' : (spec (T := T) (K := K) false).S k y := hy
+where hy' : (spec (T := T) (K := K) false).P k y := hy
 
 /-- At a canonical state, a closure commitment for a condition that holds
 whenever nothing is committed keeps every row that commits nothing. -/
@@ -760,7 +760,7 @@ theorem keeps_uncommitted {k0 : Inp T K} {P : Outcome T → Prop}
 `k` and `v` present at `k`, is a row at `k`. -/
 theorem single_row {k : Inp T K} {a : T} {n : Nat} {x : K} {v : Option T}
     (hr : k.op a n = some (.rd x)) (hv : Valid k x v) :
-    (spec (T := T) (K := K) false).S k ⟨emptyO, single a n v⟩ := by
+    (spec (T := T) (K := K) false).P k ⟨emptyO, single a n v⟩ := by
   refine ⟨⟨allAbort k.txs, single a n v⟩, ⟨allAbort_decides k, fun b m w e => ?_⟩,
     emptyO_le _, fun _ _ _ h => h⟩
   simp only [single] at e
@@ -1215,7 +1215,7 @@ end Three
 
 /-- Rows below a row are rows (the table is closed downward). -/
 def DownClosed {af : Bool} (σ : State (spec (T := T) (K := K) af)) : Prop :=
-  ∀ k u w, σ.R k w → (spec (T := T) (K := K) af).S k u → u ≼ w → σ.R k u
+  ∀ k u w, σ.R k w → (spec (T := T) (K := K) af).P k u → u ≼ w → σ.R k u
 
 theorem downClosed_canon {af : Bool} (i : Inp T K) :
     DownClosed (canon (spec (T := T) (K := K) af) i) :=

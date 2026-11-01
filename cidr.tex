@@ -49,7 +49,7 @@
 \newcommand{\outnouns}{refinements\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
-\newcommand{\fiber}[1]{S(#1)}
+\newcommand{\fiber}[1]{P(#1)}
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
 \newcommand{\Sealed}{\mathit{Sealed}}
@@ -476,11 +476,11 @@ We now state these notions precisely.
 \begin{definition}[Functional ordered specification, total]
 \label{def:functional-specification}
 A \emph{functional ordered specification} is a tuple
-$\Spec=(I,\InputOrd,O,\OutputOrd,S)$,
+$\Spec=(I,\InputOrd,O,\OutputOrd,P)$,
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
-output types, and $S\subseteq I\times O$ is a typed relation with schema
-$(\mathrm{in},\mathrm{out})$ in which every
-input appears in at least one row ($S$ is \emph{total} on $I$) and at most one
+output types, and $P\subseteq I\times O$ is its \emph{table of possibilities}:
+a typed relation with schema $(\mathrm{in},\mathrm{out})$ in which every
+input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
 (a functional dependency).  The unique output paired with $i$ induces a
 function $f:I\to O$.
 \end{definition}
@@ -516,14 +516,14 @@ the set of outputs in $R$.
 
 \paragraph{States.}
 As illustrated by the non-gray text in the panels of Figure~\ref{fig:election-frames}, a \emph{specification state} is a pair $\sigma=(i,R)$ of a \emph{current
-input} $i$ and a \emph{remainder table} $R\subseteq S$ that contains a row at
+input} $i$ and a \emph{remainder table} $R\subseteq P$ that contains a row at
 $i$ and only rows at \indescs of $i$.  An input $k$ is \emph{legal} at
 $\sigma$ when $R$ contains a row at $k$.  Rows are never added during
 execution.  The \emph{canonical state at $i$}, the state of a system that has
 received $i$ and emitted nothing, has no rows removed: it keeps every row at $i$
 and its \indescs:
 \begin{equation}
-  \sigma_S(i)=\bigl(i,\ S[\mathrm{in}\InputGe i]\bigr).
+  \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
 \end{equation}
 The \emph{fiber} of $R$ at $k$ is $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The
@@ -578,7 +578,7 @@ We now consider the executions corresponding to a specification.
 \label{def:run}
 Input and output events are \emph{specification events}, or just \emph{events}.  A \emph{run} is a
 finite sequence of them from the
-canonical state $\sigma_S(i)$ at some input $i$.  It is
+canonical state $\sigma_P(i)$ at some input $i$.  It is
 \emph{commitment-free} when no output event in it applies a commitment; the
 states such runs reach are \emph{reachable without commitment}.
 \end{definition}
@@ -592,7 +592,7 @@ a run, the last input's selection subsumes the earlier ones.
 \label{lem:run-residual}
 If a run ends at current input $i$ after emitting
 $o_1,\ldots,o_m$, its remainder table is
-$S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
+$P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
   \mathrm{out}\OutputGe o_m]$.
 \end{lemma}
 \proofinfull
@@ -617,7 +617,7 @@ in every run.
 Runs ending at states $(i_r,R_r)$, $r=1,\ldots,k$, are confluent
 at $j$ if and only if some row $(j,u)$ at $j$ is in every $R_r$.  For any such
 $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes every final
-state to $\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
+state to $\bigl(j,\ P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -659,7 +659,7 @@ $aba$ are the two runs of Section~\ref{sec:election-story} that can never be rec
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
 In a consistent functional specification, every run ending at current
-input $i$ is in the canonical state $\sigma_S(i)$, whatever outputs it emitted
+input $i$ is in the canonical state $\sigma_P(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
 \proofinfull
@@ -675,14 +675,14 @@ every state reachable without commitment is legal.
 
 \begin{proof}[Proof sketch]
 By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
-states. At $\sigma_S(i)$, $f(i)$ is legal exactly
+states. At $\sigma_P(i)$, $f(i)$ is legal exactly
 when $f$ is monotone at $i$.
  \fullproof
 \end{proof}
 
 A monotone specification can thus emit every current
 output without commitment; if monotonicity fails at $i\InputOrd k$ with
-$f(i)\not\OutputOrd f(k)$, then at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$
+$f(i)\not\OutputOrd f(k)$, then at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$
 applies $s_{f(i)}$, sealing $k$.
 
 This is the familiar CALM dichotomy stated at the level of the specification
@@ -805,11 +805,12 @@ ambiguity of output.
 \begin{definition}[Ordered relational specification, ambiguity, ordered specification]
 \label{def:relational-specification}
 An \emph{ordered relational specification} is
-$\Spec=(I,\InputOrd,O,\OutputOrd,S)$ with $S\subseteq I\times O$,
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and $S$
-is total on $I$.  A row $(i,o)\in S$
-says that output $o$ is permitted at input $i$.  The fiber
-$\fiber{i}=\{o\in O:(i,o)\in S\}$ may now contain several
+$\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P\subseteq I\times O$,
+where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  The
+relation $P$ is the specification's \emph{table of possibilities} and is total
+on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
+permitted at input $i$.  The fiber
+$\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
 outputs; the specification is \emph{ambiguous} when some fiber does.  A
 functional specification is the special case $\fiber{i}=\{f(i)\}$.  We call
 either kind simply an \emph{ordered specification}.
@@ -916,13 +917,13 @@ $o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
 \begin{definition}[Common-\indesc condition]
 \label{def:common-expansion-condition}
 An ordered specification satisfies the \emph{common-\indesc condition} when,
-for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$ and every
-common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
+for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
+common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
 $o_r$.
 \end{definition}
 
-For the empty set of rows the condition asks only that $S(j)$ be nonempty, which
-follows from $S$ being total on $I$.
+For the empty set of rows the condition asks only that $P(j)$ be nonempty, which
+follows from $P$ being total on $I$.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
@@ -983,10 +984,10 @@ Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-If the common-\indesc condition holds, a common \outnoun $u\in S(j)$
+If the common-\indesc condition holds, a common \outnoun $u\in P(j)$
 of everything emitted survives in every run.
 If outputs emitted at inputs with a common \indesc $j$ are incompatible in
-$S(j)$, the runs that emit them share no row at $j$ and can never be
+$P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.  \fullproof
 \end{proof}
 
@@ -1033,7 +1034,7 @@ another participant could contradict; Complete CAP follows.
 \label{sec:distributed-consistency}
 
 A finite set $P$ of \emph{participants} each holds a specification state,
-starting at a canonical state $\sigma_S(i_p)$, and changes it only by its own
+starting at a canonical state $\sigma_P(i_p)$, and changes it only by its own
 specification events.  A participant learns input directly from the
 environment or in a message from another participant.  A
 \emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$
@@ -1051,7 +1052,7 @@ specification event, $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with
 a total local order on each participant's events, a matching send at another
 participant for each receive, and, for each participant $p$, specification
 events that in local order form a defined transition sequence from
-$\sigma_S(i_p)$.  A \emph{consistent cut} $C$ is a
+$\sigma_P(i_p)$.  A \emph{consistent cut} $C$ is a
 subset of history events closed under
 happens-before~\cite{lamport1978time,chandy1985distributed} (a term
 unrelated to our consistency).
@@ -1322,12 +1323,12 @@ any legal input event to any participant.
 A continuation of a partitioned history is \emph{local to} a participant $p$
 when the system produces it, it adds only history events of $p$'s block and no
 input events, and none of its receives takes a message sent from another
-block.  An \emph{explicit relation} $E\subseteq S$ is a set of rows
+block.  An \emph{explicit relation} $E\subseteq P$ is a set of rows
 $(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
 its fiber $\{o:(i,o)\in E\}$.  The system has \emph{Availability for $E$}
 when, in every partitioned history it produces, each participant $p$, ending
 in state $(i,R)$, can emit each output in $R(i)\cap E(i)$ in some continuation
-local to $p$.  \emph{Availability} is Availability for $S$.
+local to $p$.  \emph{Availability} is Availability for $P$.
 \end{definition}
 
 \begin{definition}[Partition Consistency]
@@ -1344,13 +1345,13 @@ $\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of ro
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \end{definition}
 
-With $E=S$, Lifted Monotonicity for $E$ is the common-\indesc condition
+With $E=P$, Lifted Monotonicity for $E$ is the common-\indesc condition
 (Definition~\ref{def:common-expansion-condition}).
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
 For an ordered specification $\Spec$ and an explicit relation
-$E\subseteq S$, the following are equivalent:
+$E\subseteq P$, the following are equivalent:
 \begin{enumerate}
   \item some system has Availability for $E$ and Partition Consistency;
   \item $\Spec$ satisfies Lifted Monotonicity for $E$.
@@ -1380,7 +1381,7 @@ The system in the proof needs no coordination.  Under Lifted Monotonicity for
 $E$, the canonical event
 for an explicit output seals nothing and excludes only implicit
 outputs, which the system never emits, so it is
-coordination-free (Definition~\ref{def:coordination-free}).  For $E=S$ it needs no
+coordination-free (Definition~\ref{def:coordination-free}).  For $E=P$ it needs no
 commitment.  When Lifted Monotonicity for $E$ fails, some
 output of $E$ waits for another block, sacrificing Availability, or is
 emitted anyway, sacrificing Partition Consistency.
@@ -1432,30 +1433,30 @@ Intuitively, sequential composition feeds the output of one specification to
 the input of the next.  The composite is again a table: it pairs an input of
 the first specification with every output that the second permits for some
 intermediate value that the first permits.  Formally, let
-$\Spec_1=(I,\InputOrd,M,\preceq_M,S_1)$ and
-$\Spec_2=(M,\preceq_M,O,\OutputOrd,S_2)$ be ordered relational specifications
+$\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
+$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be ordered relational specifications
 sharing the ordered domain $(M,\preceq_M)$.  Their \emph{sequential
 composition} has table
 \begin{equation}
-  S_2\circ S_1
-  =\pi_{I,O}(S_1\Join_M S_2)
-  =\{(i,o):\exists m.\ (i,m)\in S_1\land(m,o)\in S_2\},
+  P_2\circ P_1
+  =\pi_{I,O}(P_1\Join_M P_2)
+  =\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\},
   \label{eq:spec-composition}
 \end{equation}
-where $\pi$ and $\Join$ are relational projection and equijoin.  Since $S_1$
-is total on $I$ and $S_2$ is total on $M$, every $i\in I$ has a nonempty fiber
-in $S_2\circ S_1$.  When the two stages
+where $\pi$ and $\Join$ are relational projection and equijoin.  Since $P_1$
+is total on $I$ and $P_2$ is total on $M$, every $i\in I$ has a nonempty fiber
+in $P_2\circ P_1$.  When the two stages
 run as a pipeline, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs, and
 we say that $\Spec_1$ \emph{guards} $\Spec_2$.
 
 \begin{lemma}[Composition]
 \label{lem:composition}
 If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the
-ordered specification with table $S_2\circ S_1$.
+ordered specification with table $P_2\circ P_1$.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-Take rows of $S_2\circ S_1$ whose inputs have a common \indesc $j$.  The
+Take rows of $P_2\circ P_1$ whose inputs have a common \indesc $j$.  The
 common-\indesc condition for $\Spec_1$ gives an intermediate value at $j$
 that \outrel each row's, and that value is a common \indesc
 at which the condition for $\Spec_2$ supplies the common \outnoun.  \fullproof
@@ -1466,7 +1467,7 @@ By associativity the lemma extends to finite pipelines.
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-By Complete CALM, $S_2\circ S_1$ is consistent exactly when it
+By Complete CALM, $P_2\circ P_1$ is consistent exactly when it
 satisfies Lifted Monotonicity, and then no output needs a commitment.
 That test treats the composite as a single specification.  Suppose instead that
 each stage runs on its own, with its runs taking as input the outputs of the
@@ -1508,10 +1509,10 @@ Fix any system for $\Spec_1$.
   \item The pipeline is proper exactly when $\Spec_2|_{\Spec_1}$ satisfies
         Lifted Monotonicity.
   \item If it is proper, $\Spec_2|_{\Spec_1}$ under the empty basis follows
-        every run of $\Spec_1$.  The result is a run of $S_2\circ S_1$, and
+        every run of $\Spec_1$.  The result is a run of $P_2\circ P_1$, and
         whenever runs of $\Spec_1$ can be brought to a common state, the
         composite runs are confluent.
-  \item If it is proper and $S_2\circ S_1$ violates Lifted Monotonicity,
+  \item If it is proper and $P_2\circ P_1$ violates Lifted Monotonicity,
         $\Spec_1$ cannot emit some output without a commitment.
 \end{enumerate}
 \end{theorem}

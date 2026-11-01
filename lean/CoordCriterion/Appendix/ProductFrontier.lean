@@ -82,7 +82,7 @@ def prodTable (V : (p : Fin n) → I → W p → Prop) : Table I (PTd W) :=
 
 def prodSpec (V : (p : Fin n) → I → W p → Prop) (hne : ∀ p i, ∃ v, V p i v) :
     Spec I (PTd W) where
-  S := prodTable V
+  P := prodTable V
   total i := ⟨⟨fun _ => none⟩, fun p => Classical.choose (hne p i),
     fun p => Classical.choose_spec (hne p i), fun _ => Or.inl rfl⟩
 
@@ -96,7 +96,7 @@ def Antichain (V : (p : Fin n) → I → W p → Prop) : Prop :=
 /-- The owner deployment: `p` emits exactly the rows whose tuple is `⊥`
 outside coordinate `p`. -/
 def ownerD (sp : Spec I (PTd W)) : Deployment sp n where
-  A p i x := sp.S i x ∧ ∀ q, q ≠ p → x.t q = none
+  A p i x := sp.P i x ∧ ∀ q, q ≠ p → x.t q = none
   sub _ _ _ h := h.1
 
 /-- Every owner-authorized family (separable or not) has a common expansion
@@ -104,7 +104,7 @@ at every common expansion `j` of its current inputs. -/
 theorem product_common (V : (p : Fin n) → I → W p → Prop) (hne : ∀ p i, ∃ v, V p i v)
     (hc : Continue V) (F : Family (prodSpec V hne) n)
     (hA : Authorized (ownerD (prodSpec V hne)) F) (j : I) (hj : UB F j) :
-    ∃ u, (prodSpec V hne).S j u ∧ ∀ p r, Emits F p r → r.2 ≼ u := by
+    ∃ u, (prodSpec V hne).P j u ∧ ∀ p r, Emits F p r → r.2 ≼ u := by
   have key : ∀ p, ∃ w, V p j w ∧ ∀ r, Emits F p r → ∀ v, r.2.t p = some v → v ≼ w := by
     intro p
     cases hp : F p with
@@ -172,12 +172,12 @@ under its owner deployment.  `sp` is any specification whose table is that of
 `T`. -/
 theorem strengthening_not_monoAcross (hn : 2 ≤ n) (V : (p : Fin n) → I → W p → Prop)
     (hAC : Antichain V) (T : NormStr V) (sp : Spec I (PTd W))
-    (hsp : ∀ i x, sp.S i x ↔ T.table i x) (hLC : T.LocCons) (hst : T.Strict) :
+    (hsp : ∀ i x, sp.P i x ↔ T.table i x) (hLC : T.LocCons) (hst : T.Strict) :
     ¬ MonoAcrossPartitions (ownerD sp) := by
   intro hM
   obtain ⟨i, x, ⟨y, hyV, hxy⟩, hnot⟩ := hst
   have hny : ¬ T.sel i y := fun hs => hnot ⟨y, hs, hxy⟩
-  have hsing : ∀ p, sp.S i (restrictTo y p) := by
+  have hsing : ∀ p, sp.P i (restrictTo y p) := by
     intro p
     obtain ⟨z, hz, hzp⟩ := hLC i p (y p) (hyV p)
     refine (hsp _ _).2 ⟨z, hz, fun q => ?_⟩
@@ -261,7 +261,7 @@ theorem product_not_liftedMono (V : (p : Fin n) → I → W p → Prop) (hne : �
 monotone across partitions. -/
 theorem product_full_not_monoAcross (hn : 2 ≤ n) (V : (p : Fin n) → I → W p → Prop)
     (hne : ∀ p i, ∃ v, V p i v) (Dp : Deployment (prodSpec V hne) n)
-    (hA : ∀ p, Dp.A p = (prodSpec V hne).S)
+    (hA : ∀ p, Dp.A p = (prodSpec V hne).P)
     {p : Fin n} {i : I} {v w : W p} (hv : V p i v) (hw : V p i w)
     (hnb : ¬ ∃ t, V p i t ∧ v ≼ t ∧ w ≼ t) : ¬ MonoAcrossPartitions Dp :=
   fun h => product_not_liftedMono V hne hv hw hnb ((full_deployment_iff hn Dp hA).1 h)
@@ -323,7 +323,7 @@ def agree (I : Type) [PO I] : NormStr (W := fun _ => Disc Bool) (cfgV I) where
   sub _ _ _ _ := trivial
 
 def agreeSpec (I : Type) [PO I] : Spec I (PTd (fun _ : Fin 2 => Disc Bool)) where
-  S := (agree I).table
+  P := (agree I).table
   total _ := ⟨⟨fun _ => none⟩, fun _ => ⟨false⟩, rfl, fun _ => Or.inl rfl⟩
 
 theorem agree_locCons : (agree I).LocCons := fun _ _ v _ => ⟨fun _ => v, rfl, rfl⟩
@@ -349,7 +349,7 @@ theorem cfg_agree_not_monoAcross (i : I) : ¬ MonoAcrossPartitions (ownerD (agre
 /-- If participant `0` may emit every row and participant `1` none (a
 single-authority deployment), agreement is monotone across partitions. -/
 def agreeSingleD (I : Type) [PO I] : Deployment (agreeSpec I) 2 where
-  A p i x := p = 0 ∧ (agreeSpec I).S i x
+  A p i x := p = 0 ∧ (agreeSpec I).P i x
   sub _ _ _ h := h.2
 
 theorem cfg_agree_single_authority : MonoAcrossPartitions (agreeSingleD I) :=
@@ -364,7 +364,7 @@ theorem ptEmpty_le (x : PTd (fun _ : Fin 2 => Disc Bool)) : ptEmpty ≼ x := fun
 /-- One participant owns both coordinates: participant `0` may emit every
 row of agreement, participant `1` only the empty tuple. -/
 def agreeSoleOwnerD (I : Type) [PO I] : Deployment (agreeSpec I) 2 where
-  A p i x := (agreeSpec I).S i x ∧ (p = 1 → x = ptEmpty)
+  A p i x := (agreeSpec I).P i x ∧ (p = 1 → x = ptEmpty)
   sub _ _ _ h := h.1
 
 /-- Agreement is monotone across partitions under `agreeSoleOwnerD`: the
@@ -402,7 +402,7 @@ theorem cfg_product_conflict (i : I) :
     let E : List (I × PTd (fun _ : Fin 2 => Disc Bool)) :=
       [(i, single1 0 ⟨false⟩), (i, single1 0 ⟨true⟩), (i, single1 1 ⟨false⟩)]
     (∀ r ∈ E, ∃ p, (ownerD sp).A p r.1 r.2) ∧
-      (¬ ∃ u, sp.S i u ∧ ∀ r ∈ E, r.2 ≼ u) ∧
+      (¬ ∃ u, sp.P i u ∧ ∀ r ∈ E, r.2 ≼ u) ∧
       ¬ ∃ p, ∀ r ∈ E, ∀ q, (ownerD sp).A q r.1 r.2 → q = p := by
   intro sp E
   have hrow : ∀ (p : Fin 2) (v : Disc Bool), (ownerD sp).A p i (single1 p v) := by

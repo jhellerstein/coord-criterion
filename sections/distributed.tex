@@ -449,7 +449,7 @@ block.
 
 \begin{definition}[Explicit relation]
 \label{def:explicit-relation}
-An \emph{explicit relation} $E\subseteq S$ is a set of rows $(i,o)$ whose
+An \emph{explicit relation} $E\subseteq P$ is a set of rows $(i,o)$ whose
 output $o$ must stay available at input $i$; write $E(i)$ for its fiber
 $\{o:(i,o)\in E\}$.
 \end{definition}
@@ -459,7 +459,7 @@ $\{o:(i,o)\in E\}$.
 The system has \emph{Availability for $E$} when, in every partitioned history it
 produces, each participant $p$, ending in state $(i,R)$, can emit each
 output in $R(i)\cap E(i)$ in some continuation local to $p$.
-\emph{Availability} is Availability for $S$.
+\emph{Availability} is Availability for $P$.
 \end{definition}
 
 \begin{definition}[Partition Consistency]
@@ -476,14 +476,14 @@ $\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of ro
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \end{definition}
 
-With $E=S$, Lifted Monotonicity for $E$ is the common-\indesc condition
+With $E=P$, Lifted Monotonicity for $E$ is the common-\indesc condition
 (Definition~\ref{def:common-expansion-condition}).  Unlike Availability,
 Availability for a smaller $E$ can be met by a system whose output events issue commitments without coordination, as the remark after Corollary~\ref{cor:complete-cap-S} explains.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
 For an ordered specification $\Spec$ and an explicit relation
-$E\subseteq S$, the following are equivalent:
+$E\subseteq P$, the following are equivalent:
 \begin{enumerate}
   \item some system has Availability for $E$ and Partition Consistency;
   \item $\Spec$ satisfies Lifted Monotonicity for $E$.
@@ -509,7 +509,7 @@ commitment, by $\Out{\varepsilon}{o}$.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
-With $E=S$, Lifted Monotonicity for $E$ is Lifted Monotonicity itself, and the
+With $E=P$, Lifted Monotonicity for $E$ is Lifted Monotonicity itself, and the
 exposure boundary makes every
 output of the commitment-free system available.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
@@ -521,7 +521,7 @@ does the system in the proof need coordination.  Under Lifted Monotonicity for
 $E$, the canonical event
 for an explicit output seals nothing and excludes only implicit
 outputs, which the system never emits, so it is
-coordination-free (Definition~\ref{def:coordination-free}).  For $E=S$ it needs no
+coordination-free (Definition~\ref{def:coordination-free}).  For $E=P$ it needs no
 commitment at all.  For a smaller $E$ such local exclusions can be necessary: if
 $o\in E(i)$ and $x\in\fiber{i}\setminus E(i)$ have no common \outnoun at $i$,
 emitting $o$ must exclude $x$.  When Lifted Monotonicity for $E$ fails, some

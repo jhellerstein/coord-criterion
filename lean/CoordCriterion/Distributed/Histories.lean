@@ -400,7 +400,7 @@ theorem consistent_iff_distConsistent (sp : Spec I O) (D : Type) :
 
 /-- **Corollary (Convergence).**  At any consistent cut of any history of a
 consistent functional specification, a participant whose current input is
-`j` is in the canonical state `σ_S(j)`. -/
+`j` is in the canonical state `σ_P(j)`. -/
 theorem convergence {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consistent)
     (hf : sp.Functional) {H : History I O D n} {C : Pos n → Prop}
     {σs : Fin n → State sp} (hE : H.Endpoint sp C σs) (p : Fin n) {j : I}
@@ -432,8 +432,8 @@ the original ones; with `survivor_test`, honoring cannot change confluence. -/
 theorem honor_survivor {sp : Spec I O} (fam : List (State sp × List O × List O))
     (hres : ∀ x ∈ fam, Residual x.1 x.2.1)
     (hos : ∀ x ∈ fam, ∀ o ∈ x.2.2, ∃ y ∈ fam, o ∈ y.2.1) (j : I) :
-    (∃ u, sp.S j u ∧ ∀ x ∈ fam, honor x.1.R x.2.2 j u) ↔
-      (∃ u, sp.S j u ∧ ∀ x ∈ fam, x.1.R j u) := by
+    (∃ u, sp.P j u ∧ ∀ x ∈ fam, honor x.1.R x.2.2 j u) ↔
+      (∃ u, sp.P j u ∧ ∀ x ∈ fam, x.1.R j u) := by
   constructor
   · -- cannot help: honoring only removes rows
     rintro ⟨u, hu, h⟩
@@ -472,7 +472,7 @@ theorem honor_cut_confluent {D : Type} {n : Nat} {sp : Spec I O} {H : History I 
     (hW : H.WF sp) {C : Pos n → Prop} (hC : H.IsCut C) {σs : Fin n → State sp}
     (hE : H.Endpoint sp C σs) (os : Fin n → List O) (hos : ∀ p, ∀ o ∈ os p, H.EmittedIn C o)
     (j : I) (hj : ∀ p, (σs p).cur ≼ j) :
-    H.CutConfluentAt sp C j ↔ ∃ u, sp.S j u ∧ ∀ p, honor (σs p).R (os p) j u := by
+    H.CutConfluentAt sp C j ↔ ∃ u, sp.P j u ∧ ∀ p, honor (σs p).R (os p) j u := by
   obtain ⟨c, hc⟩ := History.endpoint_choose hE
   rw [cut_confluent_iff hW hC hE]
   have hsurv := survivor_test (List.ofFn σs)
@@ -502,7 +502,7 @@ end honor
 
 Inputs and outputs are `V3 = Fin 3` with `x ≼ y ↔ x = y ∨ y = 2`, and
 `S x y ↔ x = y` (functional and monotone, hence consistent).  Participant `p`
-is at `σ_S(0)`; participant `q` at `σ_S(1)` may emit `1`.  Honoring `1` at `p`
+is at `σ_P(0)`; participant `q` at `σ_P(1)` may emit `1`.  Honoring `1` at `p`
 leaves no row at `p`'s current input `0`, so `R[out ⪰ 1]` is not the table of
 a specification state (Def. specification state requires a row at the current
 input) — yet the row `(2,2)` survives, and the cut stays confluent at `2`.
@@ -530,7 +530,7 @@ instance : PO V3 where
       · exact h2.trans h1.symm
 
 def spV3 : Spec V3 V3 where
-  S x y := x = y
+  P x y := x = y
   total i := ⟨i, rfl⟩
 
 theorem honor_counterexample :

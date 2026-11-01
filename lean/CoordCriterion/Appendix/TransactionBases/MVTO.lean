@@ -415,7 +415,7 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
     le12 (nolt (aAll _)))⟩ rfl rfl) (good_close h1 (good_canon I1)))
   -- the row `[A,B]` at `j2` cannot report the read
   have noOwn : ¬ OwnW J B 0 x := fun ⟨_, hm, _⟩ => absurd hm (Nat.not_lt_zero _)
-  have noAB : ∀ {w : ROut T K}, (spec (T := T) (K := K) false).S J w → rAB A B ≼ w →
+  have noAB : ∀ {w : ROut T K}, (spec (T := T) (K := K) false).P J w → rAB A B ≼ w →
       w.ρ B 0 = some none → False := by
     intro w hw hle e
     obtain ⟨c, hc, hwc⟩ := hw

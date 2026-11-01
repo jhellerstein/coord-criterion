@@ -115,7 +115,7 @@ structure Abs (E I : Type) [PO I] where
 /-- The specification induced by `M` and `α`: rows `(α w, obs q)` with
 `q₀ →w q`.  Totality is part (1) of Proposition `prop:induced-specification`. -/
 def induced {I : Type} [PO I] [PO O] (M : Machine Q E O) (A : Abs E I) : Spec I O where
-  S i o := ∃ w q, A.α w = i ∧ Runs M M.q0 w q ∧ M.obs q = o
+  P i o := ∃ w q, A.α w = i ∧ Runs M M.q0 w q ∧ M.obs q = o
   total i := by
     obtain ⟨w, rfl⟩ := A.onto i
     obtain ⟨q, h⟩ := runs_exists M M.q0 w
@@ -251,7 +251,7 @@ noncomputable def stateAbs (M : Machine Q E O) [ReachAntisymm M] (hd : Determini
 
 /-- The table of part (3) is `{(q, obs q)}` over reachable states. -/
 theorem stateAbs_table (M : Machine Q E O) [ReachAntisymm M] [PO O] (hd : Deterministic M)
-    (i : RState M) (o : O) : (induced M (stateAbs M hd)).S i o ↔ o = M.obs i.q := by
+    (i : RState M) (o : O) : (induced M (stateAbs M hd)).P i o ↔ o = M.obs i.q := by
   constructor
   · rintro ⟨w, q, rfl, h, rfl⟩
     exact congrArg M.obs (runs_det hd h (reached_spec M w))
@@ -360,11 +360,11 @@ by the vote-counting machine under the first-ballot map has exactly the rows
 of the election of §2.1; in particular its fibers are singletons
 `{winner i}`. -/
 theorem election_induced :
-    (∀ i o, (induced voteMachine firstAbs).S i o ↔ elec.S i o) ∧
-      (∀ i o, (induced voteMachine firstAbs).S i o ↔ o = winner i) ∧
+    (∀ i o, (induced voteMachine firstAbs).P i o ↔ elec.P i o) ∧
+      (∀ i o, (induced voteMachine firstAbs).P i o ↔ o = winner i) ∧
       (∀ w w', firstBallots w = firstBallots w' →
         voteMachine.obs (reached voteMachine w) = voteMachine.obs (reached voteMachine w')) := by
-  have key : ∀ i o, (induced voteMachine firstAbs).S i o ↔ o = winner i := by
+  have key : ∀ i o, (induced voteMachine firstAbs).P i o ↔ o = winner i := by
     intro i o
     constructor
     · rintro ⟨w, q, rfl, h, rfl⟩

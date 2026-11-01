@@ -18,15 +18,15 @@ own proof routes:
   states are largest and input events move between them (`state_le_canon`,
   `input_canon`); determinism of events is `CC.step_det` (`Foundations/Runs`);
 * the explicit form of the survivor test, "`input(j)` then `output(u)` takes
-  every final state to `(j, S[in ⪰ j, out ⪰ u])`" (`survivor_exec`);
+  every final state to `(j, P[in ⪰ j, out ⪰ u])`" (`survivor_exec`);
 * functional remarks: exposability is "`f(j)` refines `o` at every legal `j`"
   (`exposable_iff_refines_all`); a functional output event commits iff it
   seals (`functional_commit_iff_sealed`); failure of monotonicity at
-  `i ≼ k` makes `output(f(i))` at `σ_S(i)` seal `k` (`nonmono_seals`);
+  `i ≼ k` makes `output(f(i))` at `σ_P(i)` seal `k` (`nonmono_seals`);
   RelMono / Lifted Monotonicity / the common-expansion condition are
   functional monotonicity for singleton fibers (`relMono_iff_monoF`,
   `liftedMono_iff_monoF`, `commonExpansion_iff_monoF`); in a consistent
-  functional spec `input(j)` alone takes every run to `σ_S(j)`
+  functional spec `input(j)` alone takes every run to `σ_P(j)`
   (`functional_meet_by_input`);
 * **Lemma `lem:reconciliation`** (`reconciliation`), stated over families of
   runs with their event lists; consistency over such families
@@ -112,7 +112,7 @@ theorem input_self {sp : Spec I O} {σ τ : State sp} (h : Step σ (.input σ.cu
     exact ⟨fun h => h.1, fun h => ⟨h, σ.above _ _ h⟩⟩
 
 /-- "The canonical state at `i` is the state at `i` with no rows removed": every state
-with current input `i` has its table inside `S[in ⪰ i]`. -/
+with current input `i` has its table inside `P[in ⪰ i]`. -/
 theorem state_le_canon {sp : Spec I O} (σ : State sp) :
     ∀ k x, σ.R k x → (canon sp σ.cur).R k x :=
   fun k x h => ⟨σ.sub k x h, σ.above k x h⟩
@@ -172,7 +172,7 @@ theorem isRun_step {sp : Spec I O} {τ ρ : State sp} {e : Event I O}
 
 /-- Prop. `prop:confluence`, second sentence: for a surviving row `(j,u)`,
 `input(j)` followed by `output(u)` takes every run state to
-`(j, S[in ⪰ j, out ⪰ u])` (`meetState`). -/
+`(j, P[in ⪰ j, out ⪰ u])` (`meetState`). -/
 theorem survivor_exec {sp : Spec I O} {σ : State sp} (hrun : IsRun σ) {j : I} {u : O}
     (hju : σ.R j u) : Exec σ [.input j, .output u] (meetState sp j u (σ.sub _ _ hju)) := by
   obtain ⟨E, hσ⟩ := hrun.residual
@@ -226,10 +226,10 @@ theorem functional_commit_iff_sealed {sp : Spec I O} (hf : sp.Functional) (σ : 
     exact ((exposable_iff_no_commitment σ o).1 he).1 k x hs
 
 /-- Paragraph after Prop. `prop:functional-exposure-boundary`: if
-monotonicity fails at `i ≼ k`, then at `σ_S(i)` the event `output(f(i))` seals
+monotonicity fails at `i ≼ k`, then at `σ_P(i)` the event `output(f(i))` seals
 `k`. -/
 theorem nonmono_seals {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
-    (hik : i ≼ k) (_hio : sp.S i o) (hku : sp.S k u) (hn : ¬ o ≼ u) :
+    (hik : i ≼ k) (_hio : sp.P i o) (hku : sp.P k u) (hn : ¬ o ≼ u) :
     Sealed (canon sp i) o k u := by
   refine ⟨⟨hku, hik⟩, ?_⟩
   rintro ⟨u', hu', hou'⟩
@@ -273,7 +273,7 @@ theorem commonExpansion_iff_monoF {sp : Spec I O} (hf : sp.Functional) :
 
 /-- Paragraph after Cor. `cor:state-by-input`: in a consistent functional
 specification, confluence at a common expansion `j` needs only `input(j)`:
-every run state below `j` reaches `σ_S(j)` by that one event. -/
+every run state below `j` reaches `σ_P(j)` by that one event. -/
 theorem functional_meet_by_input {sp : Spec I O} (hf : sp.Functional) (hc : sp.Consistent)
     {σ : State sp} (hrun : IsRun σ) {j : I} (hj : σ.cur ≼ j) :
     Exec σ [.input j] (canon sp j) := by
@@ -303,11 +303,11 @@ def emittedAll {sp : Spec I O} (fam : List (RunW sp)) : List O :=
   fam.flatMap (fun r => outs r.evs)
 
 /-- **Lemma `lem:reconciliation`.** Runs ending at `(i_r,R_r)` with common
-expansion `j` are confluent at `j` iff some `u ∈ S(j)` refines every output
+expansion `j` are confluent at `j` iff some `u ∈ P(j)` refines every output
 emitted on any of them. -/
 theorem reconciliation {sp : Spec I O} (fam : List (RunW sp)) (j : I)
     (hj : ∀ r ∈ fam, r.fin.cur ≼ j) :
-    ConfluentAt (fam.map RunW.fin) j ↔ ∃ u, sp.S j u ∧ ∀ o ∈ emittedAll fam, o ≼ u := by
+    ConfluentAt (fam.map RunW.fin) j ↔ ∃ u, sp.P j u ∧ ∀ o ∈ emittedAll fam, o ≼ u := by
   have hrun : ∀ σ ∈ fam.map RunW.fin, IsRun σ := by
     intro σ hσ
     obtain ⟨r, _, rfl⟩ := List.mem_map.1 hσ
@@ -357,10 +357,10 @@ theorem consistent_iff_runs {sp : Spec I O} :
     rwa [hmap] at this
 
 /-- Collect, for outputs each emitted at some input below `j`, a finite list
-of rows of `S` covering them. -/
+of rows of `P` covering them. -/
 theorem rows_of_outputs {sp : Spec I O} {j : I} :
-    ∀ E : List O, (∀ o ∈ E, ∃ c, sp.S c o ∧ c ≼ j) →
-      ∃ rows : List (I × O), (∀ r ∈ rows, sp.S r.1 r.2) ∧ (∀ r ∈ rows, r.1 ≼ j) ∧
+    ∀ E : List O, (∀ o ∈ E, ∃ c, sp.P c o ∧ c ≼ j) →
+      ∃ rows : List (I × O), (∀ r ∈ rows, sp.P r.1 r.2) ∧ (∀ r ∈ rows, r.1 ≼ j) ∧
         ∀ o ∈ E, ∃ r ∈ rows, r.2 = o := by
   intro E
   induction E with
@@ -385,13 +385,13 @@ theorem rows_of_outputs {sp : Spec I O} {j : I} :
         exact ⟨r, List.mem_cons_of_mem _ hr, e⟩
 
 /-- Thm. Complete CALM (⇐), paper route: each emitted output `o` was emitted
-at some `i_o ≼ j`, the condition supplies `u ∈ S(j)` refining all of them,
+at some `i_o ≼ j`, the condition supplies `u ∈ P(j)` refining all of them,
 and the reconciliation lemma gives confluence. -/
 theorem consistent_of_ce_paper {sp : Spec I O} (hC : sp.CommonExpansion) : sp.Consistent := by
   rw [consistent_iff_runs]
   intro fam j hj
   rw [reconciliation fam j hj]
-  have hE : ∀ o ∈ emittedAll fam, ∃ c, sp.S c o ∧ c ≼ j := by
+  have hE : ∀ o ∈ emittedAll fam, ∃ c, sp.P c o ∧ c ≼ j := by
     intro o ho
     obtain ⟨r, hr, hor⟩ := List.mem_flatMap.1 ho
     obtain ⟨c, hc, hcr⟩ := (exec_emitted r.exec).2 o hor
@@ -403,9 +403,9 @@ theorem consistent_of_ce_paper {sp : Spec I O} (hC : sp.CommonExpansion) : sp.Co
   exact hall r hr
 
 /-- Thm. Complete CALM (⇒), paper route: apply consistency and the
-reconciliation lemma to the runs that start at `σ_S(i_r)` and emit `o_r`
+reconciliation lemma to the runs that start at `σ_P(i_r)` and emit `o_r`
 (one `output` event each).  The empty family needs no separate case here
-(consistency of the empty family plus reconciliation gives `S(j) ≠ ∅`); the
+(consistency of the empty family plus reconciliation gives `P(j) ≠ ∅`); the
 paper's appeal to totality is equally valid. -/
 theorem ce_of_consistent_paper {sp : Spec I O} (hc : sp.Consistent) : sp.CommonExpansion := by
   intro rows hS j hJ
@@ -470,7 +470,7 @@ theorem exposable_of_consistent {sp : Spec I O} (hc : sp.Consistent)
 
 /-- **Prop. `prop:exposure-boundary`**, with the forward direction by the
 paper's route; the converse is `CC.exposure_boundary`, whose proof is the
-paper's (exposure test at `σ_S(i_r)`, one row at a time). -/
+paper's (exposure test at `σ_P(i_r)`, one row at a time). -/
 theorem exposure_boundary_paper (sp : Spec I O) :
     sp.CommonExpansion ↔
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
@@ -479,10 +479,10 @@ theorem exposure_boundary_paper (sp : Spec I O) :
 
 /-! ## 6. Pairs suffice -/
 
-/-- The pair condition, over all rows of `S` (including rows at `j`). -/
+/-- The pair condition, over all rows of `P` (including rows at `j`). -/
 def Pairs (sp : Spec I O) : Prop :=
-  ∀ i₁ o₁ i₂ o₂ j, sp.S i₁ o₁ → sp.S i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
-    ∃ u, sp.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u
+  ∀ i₁ o₁ i₂ o₂ j, sp.P i₁ o₁ → sp.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
+    ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u
 
 /-- Paragraph `app:pairs-suffice`: pairs suffice for the common-expansion
 condition (`CC.ce_of_pairs`; its proof is the paper's: fold a row at

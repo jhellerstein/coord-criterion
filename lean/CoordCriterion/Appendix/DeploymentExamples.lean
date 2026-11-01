@@ -106,7 +106,7 @@ theorem emits_none {n : Nat} {F : Family sp n} {p : Fin n}
   rintro ⟨m', hm', _⟩; rw [hp] at hm'; cases hm'
 
 theorem emits_le {n : Nat} {F : Family sp n} {j : I} (hj : UB F j) {p : Fin n} {r : I × O}
-    (h : Emits F p r) : sp.S r.1 r.2 ∧ r.1 ≼ j := by
+    (h : Emits F p r) : sp.P r.1 r.2 ∧ r.1 ≼ j := by
   obtain ⟨m, hm, hr⟩ := h
   exact ⟨(m.rows_spec.2 r hr).1, PO.trans (m.rows_spec.2 r hr).2 (hj p m hm)⟩
 
@@ -143,15 +143,15 @@ finite set of authorized rows lacking a common expansion at some common
 expansion of their inputs is authorized only to a single participant, then
 the specification is monotone across partitions. -/
 theorem monoAcross_of_sole_conflicts (Dp : Deployment sp n)
-    (h1 : ∀ p i o, Dp.A p i o → ∀ j, i ≼ j → ∃ u, sp.S j u ∧ o ≼ u)
+    (h1 : ∀ p i o, Dp.A p i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u)
     (h2 : ∀ E : List (I × O), (∀ r ∈ E, ∃ p, Dp.A p r.1 r.2) → ∀ j, (∀ r ∈ E, r.1 ≼ j) →
-      (¬ ∃ u, sp.S j u ∧ ∀ r ∈ E, r.2 ≼ u) →
+      (¬ ∃ u, sp.P j u ∧ ∀ r ∈ E, r.2 ≼ u) →
       ∃ p, ∀ r ∈ E, ∀ q, Dp.A q r.1 r.2 → q = p) :
     MonoAcrossPartitions Dp := by
   intro comp _ F hA hs j hj
   apply Classical.byContradiction
   intro hno
-  have hno' : ¬ ∃ u, sp.S j u ∧ ∀ r ∈ allRows F, r.2 ≼ u := by
+  have hno' : ¬ ∃ u, sp.P j u ∧ ∀ r ∈ allRows F, r.2 ≼ u := by
     rintro ⟨u, hu, hall⟩
     exact hno ⟨u, hu, fun p r he => hall r ((mem_allRows F r).2 ⟨p, he⟩)⟩
   obtain ⟨p, hp⟩ := h2 (allRows F)
@@ -193,10 +193,10 @@ monotonicity across partitions says only that each authorized row has an
 expansion at every expansion of its input. -/
 theorem single_authority_iff (hn : 2 ≤ n) (Dp : Deployment sp n) (p₀ : Fin n)
     (hSA : SingleAuthority Dp p₀) :
-    MonoAcrossPartitions Dp ↔ ∀ i o, Dp.A p₀ i o → ∀ j, i ≼ j → ∃ u, sp.S j u ∧ o ≼ u := by
+    MonoAcrossPartitions Dp ↔ ∀ i o, Dp.A p₀ i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u := by
   constructor
   · intro hM i o hio j hij
-    have hS : sp.S i o := Dp.sub _ _ _ hio
+    have hS : sp.P i o := Dp.sub _ _ _ hio
     let q : Fin n := if p₀.val = 0 then ⟨1, by omega⟩ else ⟨0, by omega⟩
     have hq : q ≠ p₀ := by
       intro h
@@ -245,7 +245,7 @@ open CC.Front (Disc)
 
 /-- Every fiber is `{a, b}` (`false`, `true`), ordered by equality. -/
 def leadSpec (I : Type) [PO I] : Spec I (Disc Bool) where
-  S := fun _ _ => True
+  P := fun _ _ => True
   total := fun _ => ⟨⟨false⟩, trivial⟩
 
 /-- `A_p = S` for `p = 0`, `A_q = ∅` for `q = 1`. -/

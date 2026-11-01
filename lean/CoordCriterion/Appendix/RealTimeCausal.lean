@@ -419,7 +419,7 @@ def RBlind (T : NormStr (W := fun _ => SMap α) (RView G)) : Prop :=
 /-- A real-time blind strengthening keeps every view of every replica. -/
 theorem rtc_locCons (T : NormStr (W := fun _ => SMap α) (RView G))
     (sp : Spec (RHist G) (PTd (fun _ : Fin n => SMap α)))
-    (hsp : ∀ i x, sp.S i x ↔ T.table i x) (hbl : RBlind T) : T.LocCons := by
+    (hsp : ∀ i x, sp.P i x ↔ T.table i x) (hbl : RBlind T) : T.LocCons := by
   intro i p v hv
   have hg := rview_good G hv
   obtain ⟨x, hx⟩ := sp.total (forceRt i hg)
@@ -433,7 +433,7 @@ deployment. -/
 theorem rtc_strengthening_not_monoAcross (hn : 2 ≤ n)
     (T : NormStr (W := fun _ => SMap α) (RView G))
     (sp : Spec (RHist G) (PTd (fun _ : Fin n => SMap α)))
-    (hsp : ∀ i x, sp.S i x ↔ T.table i x) (hbl : RBlind T) (hst : T.Strict) :
+    (hsp : ∀ i x, sp.P i x ↔ T.table i x) (hbl : RBlind T) (hst : T.Strict) :
     ¬ MonoAcrossPartitions (ownerD sp) :=
   strengthening_not_monoAcross hn (RView G) rview_antichain T sp hsp
     (rtc_locCons T sp hsp hbl) hst

@@ -15,7 +15,7 @@ terms, there is one declaration per term.  Names are
 pointer (Def./Sec./Eq.) into the paper.
 
 Some terms have no named Lean definition because the library states them
-inline (e.g. the fiber `S(i)` is just `sp.S i`).  For those, the abbreviation
+inline (e.g. the fiber `P(i)` is just `sp.P i`).  For those, the abbreviation
 below *is* the reading the library's statements use, and its docstring says
 so.
 
@@ -38,7 +38,7 @@ variable {I O : Type} [PO I] [PO O]
 
 /-! ## Functional CALM (Section `sec:functional-calm`) -/
 
-/-- *specification* — `Spec = (I,≼,O,≼,S)`, total on `I`, one output per
+/-- *specification* — `Spec = (I,≼,O,≼,P)`, total on `I`, one output per
 input; induced `f` (Def. `def:functional-specification`).  Lean: `Spec I O`
 with `Spec.Functional`. -/
 abbrev «app:notation/functional-specification» (I O : Type) [PO I] [PO O] :=
@@ -88,7 +88,7 @@ abbrev «app:notation/out» (R : Table I O) (o : O) : Prop := ∃ k, R k o
 
 /-- *row at `k`* — a row `(k,u)` (Sec. `sec:functional-specifications`):
 `R k u`.  *fiber `R(k)`* — `out(R[in = k])`: Lean `R k`, a predicate on
-outputs (for the specification, `sp.S k`). -/
+outputs (for the specification, `sp.P k`). -/
 abbrev «app:notation/fiber» (R : Table I O) (k : I) : O → Prop := R k
 
 /-- *upper fiber* — `out(R[in ⪰ k])` (Sec. `sec:functional-specifications`).
@@ -106,7 +106,7 @@ abbrev «app:notation/state» (sp : Spec I O) := State sp
 No library name: `∃ u, σ.R k u` (the hypothesis of `Step.input`). -/
 abbrev «app:notation/legal» {sp : Spec I O} (σ : State sp) (k : I) : Prop := ∃ u, σ.R k u
 
-/-- *canonical state* — `σ_S(i) = (i, S[in ⪰ i])` (Eq. `eq:canonical-state`).
+/-- *canonical state* — `σ_P(i) = (i, P[in ⪰ i])` (Eq. `eq:canonical-state`).
 Lean: `canon sp i`. -/
 abbrev «app:notation/canonical-state» (sp : Spec I O) (i : I) : State sp := canon sp i
 
@@ -168,7 +168,7 @@ abbrev «app:notation/confluent-at» {sp : Spec I O} (fam : List (State sp)) (j 
 
 /-! ## Complete CALM (Section `sec:complete-calm`) -/
 
-/-- *relational specification* — `S ⊆ I × O` total on `I`
+/-- *relational specification* — `P ⊆ I × O` total on `I`
 (Def. `def:relational-specification`).  Lean: `Spec I O`. -/
 abbrev «app:notation/relational-specification» (I O : Type) [PO I] [PO O] := Spec I O
 
@@ -176,19 +176,19 @@ abbrev «app:notation/relational-specification» (I O : Type) [PO I] [PO O] := S
 (Def. `def:ambiguous`).  No library name; equivalently
 `¬ sp.Functional` (`«def:relational-specification/ambiguous»`). -/
 abbrev «app:notation/ambiguous» (sp : Spec I O) : Prop :=
-  ∃ i o o', sp.S i o ∧ sp.S i o' ∧ o ≠ o'
+  ∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o'
 
 /-- *stranded output* — an output at `i` with no refinement at some
 expansion (Sec. `sec:lifted-monotonicity`).  No library name; its absence is
 `Spec.RelMono`. -/
 abbrev «app:notation/stranded-output» (sp : Spec I O) (i : I) (o : O) : Prop :=
-  sp.S i o ∧ ∃ j, i ≼ j ∧ ¬ ∃ u, sp.S j u ∧ o ≼ u
+  sp.P i o ∧ ∃ j, i ≼ j ∧ ¬ ∃ u, sp.P j u ∧ o ≼ u
 
 /-- *incompatible pair* — two outputs at `i` with no common refinement there
 (Sec. `sec:lifted-monotonicity`).  No library name; its absence (for all
 finite sets) is `Spec.DirectedOutputs`. -/
 abbrev «app:notation/incompatible-pair» (sp : Spec I O) (i : I) (o o' : O) : Prop :=
-  sp.S i o ∧ sp.S i o' ∧ ¬ CompatibleIn (sp.S i) [o, o']
+  sp.P i o ∧ sp.P i o' ∧ ¬ CompatibleIn (sp.P i) [o, o']
 
 /-- *Relational Monotonicity* — every output keeps a refinement as input
 grows (Def. `def:relational-monotonicity`).  Lean: `Spec.RelMono`. -/
@@ -210,12 +210,12 @@ abbrev «app:notation/directed-outputs» (sp : Spec I O) : Prop := sp.DirectedOu
 (Eq. `eq:joint-output-order`).  Lean: `JointLift A B`. -/
 abbrev «app:notation/joint-lift» (A B : O → Prop) : Prop := JointLift A B
 
-/-- *Lifted Monotonicity* — `i ≼ j ⇒ S(i) ⊑ S(j)`
+/-- *Lifted Monotonicity* — `i ≼ j ⇒ P(i) ⊑ P(j)`
 (Def. `def:lifted-monotonicity`).  Lean: `Spec.LiftedMono`. -/
 abbrev «app:notation/lifted-monotonicity» (sp : Spec I O) : Prop := sp.LiftedMono
 
 /-- *common-expansion condition* — rows with a common expansion `j` have a
-common refinement in `S(j)` (Def. `def:common-expansion-condition`).  Lean:
+common refinement in `P(j)` (Def. `def:common-expansion-condition`).  Lean:
 `Spec.CommonExpansion`. -/
 abbrev «app:notation/common-expansion-condition» (sp : Spec I O) : Prop := sp.CommonExpansion
 
@@ -428,22 +428,22 @@ class of `p` under the labelling `comp : Fin n → Nat`. -/
 abbrev «app:notation/block» {n : Nat} (comp : Fin n → Nat) (p : Fin n) : Fin n → Prop :=
   fun q => comp q = comp p
 
-/-- *explicit relation `E`; explicit, implicit output* — `E ⊆ S`, the rows
+/-- *explicit relation `E`; explicit, implicit output* — `E ⊆ P`, the rows
 whose outputs must stay available; outputs of `E`, and the other permitted
 outputs (Def. `def:explicit-relation`).  Lean: a table `E : Table I O` with
-`∀ i o, E i o → sp.S i o`. -/
+`∀ i o, E i o → sp.P i o`. -/
 abbrev «app:notation/explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
-  ∀ i o, E i o → sp.S i o
+  ∀ i o, E i o → sp.P i o
 
 /-- *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable locally
 (Def. `def:partition-notions`).  Lean: `CAP.AvailabilityFor E`; Availability
-is `E = S` (`CAP.AvailabilityAtEnd`). -/
+is `E = P` (`CAP.AvailabilityAtEnd`). -/
 abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (E : Table I O)
     (Sys : CAP.System sp D) : Prop :=
   CAP.AvailabilityFor E Sys
 
 /-- *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a
-common expansion `j` has a common refinement in `S(j)` (Def. `def:lm-for-A`).
+common expansion `j` has a common refinement in `P(j)` (Def. `def:lm-for-A`).
 Lean: `CAP.ConsistentOn`. -/
 abbrev «app:notation/lm-for-A» (sp : Spec I O) (E : Table I O) : Prop :=
   CAP.ConsistentOn sp E

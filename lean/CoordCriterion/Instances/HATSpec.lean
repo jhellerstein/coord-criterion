@@ -432,7 +432,7 @@ theorem serial_clean (j : Inp lam) (L : Level) : ¬ Proscribed L j (serial j) :=
 complete histories) that the serial history avoids: at input `j`, any set of
 read answers contained in a complete history of `j` exhibiting none of `P`. -/
 def specP (P : (j : Inp lam) → CH j → Prop) (hP : ∀ j, ¬ P j (serial j)) : Spec (Inp lam) (St Fact) where
-  S j F := ∃ H : CH j, F ≼ H.facts ∧ ¬ P j H
+  P j F := ∃ H : CH j, F ≼ H.facts ∧ ¬ P j H
   total j := ⟨fun _ => False, serial j, fun _ h => h.elim, hP j⟩
 
 /-- `spec L` (Def. `def:hat-spec`): `specP` for the phenomena level `L`
@@ -524,7 +524,7 @@ theorem hatHist_ans (j : Inp lam) {e : Nat} (he : IsRd j e) : Ans j e ((hatHist 
 
 /-- HAT's answers (patched timestamps) are read committed: every read- and
 write-dependency increases timestamps. -/
-theorem hatOut_rc (j : Inp true) : (spec .RC).S j (hatOut j) := by
+theorem hatOut_rc (j : Inp true) : (spec .RC).P j (hatOut j) := by
   refine ⟨hatHist j, ?_, ?_⟩
   · rintro (⟨e, v⟩) h
     have hr : IsRd j e := by obtain ⟨c, n, k, r, hr, -⟩ := h.1; exact ⟨c, n, k, r, hr⟩
@@ -541,7 +541,7 @@ theorem hatOut_rc (j : Inp true) : (spec .RC).S j (hatOut j) := by
     · exact no_cycle (fun _ _ ⟨_, h⟩ => next_lt h) h
     · exact no_cycle (fun a b h => h.elim (fun ⟨_, h⟩ => next_lt h) fun ⟨k, h⟩ => hwr k a b h) h
 
-theorem hatOut_ru (j : Inp true) : (spec .RU).S j (hatOut j) := by
+theorem hatOut_ru (j : Inp true) : (spec .RU).P j (hatOut j) := by
   obtain ⟨H, hF, hn⟩ := hatOut_rc j
   exact ⟨H, hF, fun h => hn (Or.inl h)⟩
 
@@ -558,11 +558,11 @@ the timestamp condition HAT's rows are permitted, so the specification
 satisfies Lifted Monotonicity for `hatA`, and by Complete CAP some system has
 Availability for `hatA` and Partition Consistency. -/
 theorem rc_available (L : Level) (hL : L = .RU ∨ L = .RC) (D : Type) :
-    (∀ i o, hatA i o → (spec (lam := true) L).S i o) ∧
+    (∀ i o, hatA i o → (spec (lam := true) L).P i o) ∧
       CAP.ConsistentOn (spec (lam := true) L) hatA ∧
       ∃ Sys : CAP.System (spec (lam := true) L) D,
         CAP.AvailabilityFor hatA Sys ∧ CAP.PartitionConsistencyAtEnd Sys := by
-  have hS : ∀ i o, hatA i o → (spec (lam := true) L).S i o := by
+  have hS : ∀ i o, hatA i o → (spec (lam := true) L).P i o := by
     rintro i o rfl
     rcases hL with rfl | rfl
     · exact hatOut_ru i
@@ -754,7 +754,7 @@ every complete history in which `T₂` read `x₀` has the anti-dependency
 `T₂ → T₁` and the write-dependency `T₁ → T₂` on `x`, a Lost Update. -/
 theorem lostUpdate_unavailableP (P : (j : Inp lam) → CH j → Prop) (hP : ∀ j, ¬ P j (serial j))
     (hLU : ∀ j (H : CH j), LostUpdate H → P j H) (D : Type)
-    (A : Table (Inp lam) (St Fact)) (hAS : ∀ i o, A i o → (specP P hP).S i o) (htot : ∀ i, ∃ o, A i o)
+    (A : Table (Inp lam) (St Fact)) (hAS : ∀ i o, A i o → (specP P hP).P i o) (htot : ∀ i, ∃ o, A i o)
     (hans : ∀ i o e, A i o → IsRd i e → ∃ v, o (.read e v)) :
     ¬ CAP.ConsistentOn (specP P hP) A ∧
       ¬ ∃ Sys : CAP.System (specP P hP) D, CAP.AvailabilityFor A Sys ∧ CAP.PartitionConsistencyAtEnd Sys := by
@@ -781,7 +781,7 @@ theorem lostUpdate_unavailableP (P : (j : Inp lam) → CH j → Prop) (hP : ∀ 
 
 /-- The named levels: snapshot isolation, repeatable read, serializability. -/
 theorem lostUpdate_unavailable (L : Level) (hL : L = .SI ∨ L = .RR ∨ L = .SER) (D : Type)
-    (A : Table (Inp lam) (St Fact)) (hAS : ∀ i o, A i o → (spec L).S i o) (htot : ∀ i, ∃ o, A i o)
+    (A : Table (Inp lam) (St Fact)) (hAS : ∀ i o, A i o → (spec L).P i o) (htot : ∀ i, ∃ o, A i o)
     (hans : ∀ i o e, A i o → IsRd i e → ∃ v, o (.read e v)) :
     ¬ CAP.ConsistentOn (spec L) A ∧
       ¬ ∃ Sys : CAP.System (spec L) D, CAP.AvailabilityFor A Sys ∧ CAP.PartitionConsistencyAtEnd Sys :=
@@ -893,7 +893,7 @@ read-dependency `T₂ → T₁`), and `T₁` then installs `x` with the smaller
 timestamp `(1,1)` (a write-dependency `T₁ → T₂`), a G1c cycle in every
 complete history extending HAT's answers. -/
 theorem timestamp_condition_needed :
-    ¬ Lamport wHist ∧ hatOut wInp (.read 2 (1, 2)) ∧ ¬ (spec .RC).S wInp (hatOut wInp) := by
+    ¬ Lamport wHist ∧ hatOut wInp (.read 2 (1, 2)) ∧ ¬ (spec .RC).P wInp (hatOut wInp) := by
   have hans : hatOut wInp (.read 2 (1, 2)) := by
     refine ⟨⟨1, 1, 0, 0, rfl, Or.inr ⟨1, 2, 1, 0, [0], rfl, ⟨by decide, by decide⟩, rfl⟩⟩, ?_⟩
     rintro v ⟨c, n, k, r, he, hv⟩

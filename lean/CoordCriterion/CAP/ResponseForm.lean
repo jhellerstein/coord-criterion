@@ -54,7 +54,7 @@ def ResponseAvailability (Sys : System sp D) (Q : (n : Nat) → Fin n → Table 
 /-- Response Partition Consistency of a cut at `j`
 (Def. `def:response-partition-consistency`). -/
 def RPCAt (H : History sp D n) (c : Fin n → Nat) (j : I) : Prop :=
-  ∃ u, sp.S j u ∧ ∀ p γ o, LEv.out γ o ∈ (H p).take (c p) → o ≼ u
+  ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ (H p).take (c p) → o ≼ u
 
 def ResponsePC (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
@@ -92,9 +92,9 @@ def System.Replicated (Sys : System sp D) : Prop :=
 /-- Def. `def:response-obligation` (uniform case). -/
 structure Obligation (sp : Spec I O) where
   Q : Table I O
-  sub : ∀ i o, Q i o → sp.S i o
+  sub : ∀ i o, Q i o → sp.P i o
   total : ∀ i, ∃ o, Q i o
-  up : ∀ i o u, Q i o → sp.S i u → o ≼ u → Q i u
+  up : ∀ i o u, Q i o → sp.P i u → o ≼ u → Q i u
 
 /-- Def. `def:response-interface`. -/
 def ResponseInterface (Q : Obligation sp) (T : Table I O) : Prop :=
@@ -104,10 +104,10 @@ def ResponseInterface (Q : Obligation sp) (T : Table I O) : Prop :=
 /-- `S` is consistent on `T`. -/
 def ConsistentOn (sp : Spec I O) (T : Table I O) : Prop :=
   ∀ rows : List (I × O), (∀ r ∈ rows, T r.1 r.2) →
-    ∀ j, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.S j u ∧ ∀ r ∈ rows, r.2 ≼ u
+    ∀ j, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
 
 theorem consistentOn_outs {T : Table I O} (hc : ConsistentOn sp T) {j : I} (L : List O)
-    (hL : ∀ o ∈ L, ∃ i, T i o ∧ i ≼ j) : ∃ u, sp.S j u ∧ ∀ o ∈ L, o ≼ u := by
+    (hL : ∀ o ∈ L, ∃ i, T i o ∧ i ≼ j) : ∃ u, sp.P j u ∧ ∀ o ∈ L, o ≼ u := by
   let rows : List (I × O) := L.attach.map (fun o => (Classical.choose (hL o.1 o.2), o.1))
   obtain ⟨u, hu, hall⟩ := hc rows
     (by intro r hr; simp only [rows, List.mem_map] at hr

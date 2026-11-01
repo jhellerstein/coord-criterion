@@ -80,14 +80,14 @@ theorem HoareLe.of_sub {A B : O → Prop} (h : ∀ o, A o → B o) : HoareLe A B
 /-! ### The Hoare preorder and the joint lift
 
 Remark after the Lifted Monotonicity paragraph: Relational Monotonicity is
-monotonicity of `i ↦ S(i)` under the Hoare preorder; the joint lift implies
+monotonicity of `i ↦ P(i)` under the Hoare preorder; the joint lift implies
 it; the two agree when the target is directed; the joint lift is reflexive
 exactly on directed sets. -/
 
-/-- Relational Monotonicity is monotonicity of `i ↦ S(i)` under the Hoare
+/-- Relational Monotonicity is monotonicity of `i ↦ P(i)` under the Hoare
 preorder. -/
 theorem relMono_iff_hoare (sp : Spec I O) :
-    sp.RelMono ↔ ∀ i j, i ≼ j → HoareLe (sp.S i) (sp.S j) :=
+    sp.RelMono ↔ ∀ i j, i ≼ j → HoareLe (sp.P i) (sp.P j) :=
   ⟨fun h i j hij o ho => h i j o hij ho, fun h i j o hij ho => h i j hij o ho⟩
 
 /-- The joint lift implies the Hoare preorder. -/
@@ -300,7 +300,7 @@ def HClass.of (A : O → Prop) (h : ∃ o, A o) : HClass O where
 
 /-- The transformed specification `i ↦ [X̂(i)]`: functional by construction. -/
 def hullSpec (sp : Spec I O) : Spec I (HClass O) where
-  S i c := c = HClass.of (hull sp.S i)
+  P i c := c = HClass.of (hull sp.P i)
     (let ⟨o, ho⟩ := sp.total i; ⟨o, i, PO.refl i, ho⟩)
   total i := ⟨_, rfl⟩
 
@@ -311,7 +311,7 @@ theorem hullSpec_functional (sp : Spec I O) : (hullSpec sp).Functional := by
 theorem hullSpec_mono (sp : Spec I O) : (hullSpec sp).MonotoneF := by
   intro i j o u hij ho hu
   subst ho; subst hu
-  exact (hoare_iff_down _ _).1 (hull_relMono sp.S i j hij)
+  exact (hoare_iff_down _ _).1 (hull_relMono sp.P i j hij)
 
 /-- The remembered-output specification is consistent (Functional CALM). -/
 theorem hullSpec_consistent (sp : Spec I O) : (hullSpec sp).Consistent :=
@@ -481,7 +481,7 @@ instance : PO (ClaimSet K P) where
 
 /-- The functional specification `h ↦ R(h)`. -/
 def fwdSpec (Rs : Restructuring K P) : Spec Rs.Hist (ClaimSet K P) where
-  S h c := c = ⟨Rs.R h⟩
+  P h c := c = ⟨Rs.R h⟩
   total h := ⟨_, rfl⟩
 
 theorem fwdSpec_mono (Rs : Restructuring K P) : (fwdSpec Rs).MonotoneF := by

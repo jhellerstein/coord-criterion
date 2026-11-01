@@ -7,7 +7,7 @@ Supports `sections/functional-calm.tex`, `sections/complete-calm.tex` and the
 notation of `appendices/notation.tex`: partial orders (`PO`), ordered
 specifications (`Spec`) and tables, states `(i, R)` (`State`), input/output
 events and their transition relation (`Event`, `Step`, `Exec`, `Reach`), the
-canonical state `σ_S(i)` (`canon`), exposability, Functional / Relational /
+canonical state `σ_P(i)` (`canon`), exposability, Functional / Relational /
 Lifted Monotonicity, Directed Outputs, the common-expansion condition
 (`Spec.CommonExpansion`), consistency (`Spec.Consistent`), the
 Sealed/Retired/Excluded rows of a lifted output event, and commitment-free
@@ -38,25 +38,25 @@ abbrev Table (I O : Type) := I → O → Prop
 section
 variable {I O : Type} [PO I] [PO O]
 
-/-- Ordered relational specification (Def. relational specification):
-a table total on inputs. -/
+  /-- Ordered relational specification (Def. relational specification):
+  its table of possibilities, total on inputs. -/
 structure Spec (I O : Type) [PO I] [PO O] where
-  S : Table I O
-  total : ∀ i, ∃ o, S i o
+  P : Table I O
+  total : ∀ i, ∃ o, P i o
 
 /-- Functional dependency (Def. functional specification). -/
 def Spec.Functional (sp : Spec I O) : Prop :=
-  ∀ i o o', sp.S i o → sp.S i o' → o = o'
+  ∀ i o o', sp.P i o → sp.P i o' → o = o'
 
 /-- Functional monotonicity (Def. functional monotonicity), stated on rows. -/
 def Spec.MonotoneF (sp : Spec I O) : Prop :=
-  ∀ i j o u, i ≼ j → sp.S i o → sp.S j u → o ≼ u
+  ∀ i j o u, i ≼ j → sp.P i o → sp.P j u → o ≼ u
 
 /-- Specification state (Def. specification state). -/
 structure State (sp : Spec I O) where
   cur : I
   R : Table I O
-  sub : ∀ k u, R k u → sp.S k u
+  sub : ∀ k u, R k u → sp.P k u
   hasCur : ∃ o, R cur o
   above : ∀ k u, R k u → cur ≼ k
 
@@ -68,7 +68,7 @@ theorem State.ext' {sp : Spec I O} {σ τ : State sp}
 /-- Canonical state at `i` (Eq. canonical-state). -/
 def canon (sp : Spec I O) (i : I) : State sp where
   cur := i
-  R := fun k u => sp.S k u ∧ i ≼ k
+  R := fun k u => sp.P k u ∧ i ≼ k
   sub := fun _ _ h => h.1
   hasCur := by
     obtain ⟨o, ho⟩ := sp.total i
@@ -131,20 +131,20 @@ def JointLift (A B : O → Prop) : Prop :=
 
 /-- Lifted Monotonicity (Def. lifted-monotonicity). -/
 def Spec.LiftedMono (sp : Spec I O) : Prop :=
-  ∀ i j, i ≼ j → JointLift (sp.S i) (sp.S j)
+  ∀ i j, i ≼ j → JointLift (sp.P i) (sp.P j)
 
 /-- Relational Monotonicity. -/
 def Spec.RelMono (sp : Spec I O) : Prop :=
-  ∀ i j o, i ≼ j → sp.S i o → ∃ u, sp.S j u ∧ o ≼ u
+  ∀ i j o, i ≼ j → sp.P i o → ∃ u, sp.P j u ∧ o ≼ u
 
 /-- Directed Outputs: every fiber is directed. -/
 def Spec.DirectedOutputs (sp : Spec I O) : Prop :=
-  ∀ i, JointLift (sp.S i) (sp.S i)
+  ∀ i, JointLift (sp.P i) (sp.P i)
 
 /-- Common-expansion condition (Def. common-expansion-condition). -/
 def Spec.CommonExpansion (sp : Spec I O) : Prop :=
-  ∀ rows : List (I × O), (∀ r ∈ rows, sp.S r.1 r.2) →
-    ∀ j : I, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.S j u ∧ ∀ r ∈ rows, r.2 ≼ u
+  ∀ rows : List (I × O), (∀ r ∈ rows, sp.P r.1 r.2) →
+    ∀ j : I, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
 
 /-- The three classes of rows ruled out by `o` (Eqs. seal-inputs,
 output-retirements, choice-removals). -/

@@ -207,22 +207,22 @@ Appendix~\ref{app:notation} collects the notation for reference.
 \label{def:functional-specification}
 A \emph{functional ordered specification} is a tuple
 \[
-  \Spec=(I,\InputOrd,O,\OutputOrd,S),
+  \Spec=(I,\InputOrd,O,\OutputOrd,P),
 \]
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
-output types, and $S\subseteq I\times O$ is a typed relation with schema
-$(\mathrm{in},\mathrm{out})$ in which every
-input appears in at least one row ($S$ is \emph{total} on $I$) and at most one
-(a functional dependency):
+  where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
+  output types, and $P\subseteq I\times O$ is its \emph{table of possibilities}:
+  a typed relation with schema $(\mathrm{in},\mathrm{out})$ in which every
+  input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
+  (a functional dependency):
 \[
-  (i,o)\in S\ \land\ (i,o')\in S
+  (i,o)\in P\ \land\ (i,o')\in P
   \quad\Longrightarrow\quad o=o'.
 \]
 \end{definition}
 
 The unique output paired with $i$ induces the function
 \[f:(I,\InputOrd)\to(O,\OutputOrd)\]
-with $S=\{(i,f(i)):i\in I\}.$
+with $P=\{(i,f(i)):i\in I\}.$
 We call
 $\InputOrd$ the \emph{input order}.  Because an output may depend on everything
 a system has received, we model inputs as \emph{cumulative}: an input
@@ -271,9 +271,9 @@ the panels of Figure~\ref{fig:election-frames}, is defined as follows.
 
 \begin{definition}[Specification state, current input, remainder table]
 \label{def:residual-state}
-Given a specification $\Spec=(I,\InputOrd,O,\OutputOrd,S)$, a \emph{specification state} is a
+Given a specification $\Spec=(I,\InputOrd,O,\OutputOrd,P)$, a \emph{specification state} is a
 pair $\sigma=(i,R)$, where $i\in I$ is the \emph{current input} and
-$R\subseteq S$ is the \emph{remainder table}, such that:
+$R\subseteq P$ is the \emph{remainder table}, such that:
 \begin{enumerate}
   \item $R$ contains a row at $i$; and
   \item $R$ contains only rows at \indescs of $i$: every row $(k,o)\in R$ satisfies $i\InputOrd k$.
@@ -286,11 +286,11 @@ An input $k$ is \emph{legal} at a state $\sigma=(i,R)$ when $R$ contains a row a
 \end{definition}
 
 Rows are never added during execution.  The \emph{canonical state at $i$} is
-the state at $i$ with no rows removed: it keeps every row of $S$ at $i$ and its
+the state at $i$ with no rows removed: it keeps every row of $P$ at $i$ and its
 \indescs, and it is the state of a system that has received $i$ and emitted
 nothing:
 \begin{equation}
-  \sigma_S(i)=\bigl(i,\ S[\mathrm{in}\InputGe i]\bigr).
+  \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
 \end{equation}
 An input event from a canonical state leads to another canonical state, and
@@ -402,7 +402,7 @@ specification events.
 \begin{definition}[Run]
 \label{def:run}
 A \emph{run} is any finite transition sequence of the transition system from the
-canonical state $\sigma_S(i)$ at some input $i$.
+canonical state $\sigma_P(i)$ at some input $i$.
 \end{definition}
 
 A run is \emph{commitment-free} when none of its output events applies a
@@ -419,7 +419,7 @@ subsumes the earlier ones.
 If a run ends at current input $i$ after emitting
 $o_1,\ldots,o_m$, its remainder table is
 \begin{equation}
-  S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
+  P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
     \mathrm{out}\OutputGe o_m],
   \label{eq:run-residual}
 \end{equation}
@@ -432,7 +432,7 @@ See Appendix~\ref{app:proofs-sec2}.
 
 For example, in the equality-order variant of
 Figure~\ref{fig:nonmonotone-frame}, a run that emits $\bot$ at $ab\cdot$ keeps
-$S[\mathrm{in}\InputGe ab\cdot,\ \mathrm{out}\OutputGe\bot]$: the single row
+$P[\mathrm{in}\InputGe ab\cdot,\ \mathrm{out}\OutputGe\bot]$: the single row
 $(ab\cdot,\bot)$, as the figure shows.
 
 To compare runs that end at different inputs, we consider a common \indesc
@@ -462,7 +462,7 @@ at $j$ if and only if some row at $j$ survives in every final state:
 \end{equation}
 For any such $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes
 every final state to the state
-$\bigl(j,\ S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
+$\bigl(j,\ P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -509,7 +509,7 @@ never changes the state, which depends only on the input.
 \begin{corollary}[State is fixed by input]
 \label{cor:state-by-input}
 In a consistent functional specification, every run ending at current
-input $i$ is in the canonical state $\sigma_S(i)$, whatever outputs it emitted
+input $i$ is in the canonical state $\sigma_P(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
 
@@ -519,7 +519,7 @@ of $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 To be confluent at a common \indesc $j$, each run therefore needs only the
-single event $\mathsf{input}(j)$, which takes it to $\sigma_S(j)$, the state of a
+single event $\mathsf{input}(j)$, which takes it to $\sigma_P(j)$, the state of a
 run that starts with all of the input.  Knowing the input is enough to know the state, and with it the one
 output $f(j)$.
 
@@ -533,13 +533,13 @@ every state reachable without commitment is legal.
 
 \begin{proof}[Proof sketch]
 By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
-states. At $\sigma_S(i)$, which input alone reaches, $f(i)$ is legal exactly
+states. At $\sigma_P(i)$, which input alone reaches, $f(i)$ is legal exactly
 when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
 A monotone specification can thus emit every current output without commitment;
 if monotonicity fails at $i\InputOrd k$ with $f(i)\not\OutputOrd f(k)$, then
-at $\sigma_S(i)$ the event $\mathsf{output}(f(i))$ applies $s_{f(i)}$, sealing $k$.
+at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$ applies $s_{f(i)}$, sealing $k$.
 
 Functional CALM is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read

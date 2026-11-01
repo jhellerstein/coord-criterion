@@ -64,7 +64,7 @@ abbrev «def:distributed-history» (I O D : Type) (n : Nat) := Dist.History I O 
 /-- Def. `def:distributed-history`, items 2–3: "for each receive, a matching
 send of the same message at another participant, each send matching at most
 one receive; and for each participant `p`, its specification events, in local
-order, form a defined transition sequence from `σ_S(i_p)`".
+order, form a defined transition sequence from `σ_P(i_p)`".
 
 Lean: `History.WF`.  "Each send matching at most one receive" is read as
 "send identifiers are unique"; `CC.Dist.WF0` drops this (see
@@ -124,7 +124,7 @@ theorem «def:participant-run/is-run» {D : Type} {n : Nat} {sp : Spec I O}
   h.isRun
 
 /-- **Fig. participant-runs** (`fig:participant-runs`).  "Two histories
-from `σ_a = σ_S(a··)` to `σ_1 = (ab·, R_1)` … In Figure participant-runs, the
+from `σ_a = σ_P(a··)` to `σ_1 = (ab·, R_1)` … In Figure participant-runs, the
 input `ab·` reaches `q` directly or through a message from `p`.  The histories
 differ, but at either cut each participant run is `input(ab·)`, so both
 endpoints are `(σ_1, σ_1)`."
@@ -132,8 +132,8 @@ endpoints are `(σ_1, σ_1)`."
 Lean, for the election `elec` and any message data `d`: the direct-delivery
 history `H_d` and the forwarded-delivery history `H_f` (where `p = 0` sends
 `m = (ab·, d)` and `q = 1` receives it) are both well formed, the endpoint of
-each final cut is `(σ_S(ab·), σ_S(ab·))`, and the histories differ.  Here
-`σ_1 = σ_S(ab·)`, whose table `R_1` is panel (b) of Fig. election-frames
+each final cut is `(σ_P(ab·), σ_P(ab·))`, and the histories differ.  Here
+`σ_1 = σ_P(ab·)`, whose table `R_1` is panel (b) of Fig. election-frames
 (`CC.Figures.Elec.panel_b`). -/
 theorem «fig:participant-runs» (D : Type) (d : D) :
     (Dist.Hd CALM.Res D CALM.bad CALM.bab).WF CALM.elec ∧
@@ -146,9 +146,9 @@ theorem «fig:participant-runs» (D : Type) (d : D) :
   Dist.fig_participant_runs CALM.elec (by decide) ⟨_, rfl⟩ d
 
 /-- The general form of Fig. `fig:participant-runs`: for any specification and
-any `i ≼ j` with a row at `j`, both histories end at `(σ_S(j), σ_S(j))`. -/
+any `i ≼ j` with a row at `j`, both histories end at `(σ_P(j), σ_P(j))`. -/
 theorem «fig:participant-runs/general» {D : Type} (sp : Spec I O) {i j : I} (hij : i ≼ j)
-    (hj : ∃ u, sp.S j u) (d : D) :
+    (hj : ∃ u, sp.P j u) (d : D) :
     (Dist.Hd O D i j).WF sp ∧ (Dist.Hf O i j d).WF sp ∧
     (Dist.Hd O D i j).Endpoint sp (Dist.Hd O D i j).InH (fun _ => canon sp j) ∧
     (Dist.Hf O i j d).Endpoint sp (Dist.Hf O i j d).InH (fun _ => canon sp j) ∧
@@ -213,12 +213,12 @@ theorem «sec:distributed-consistency/lifted-monotonicity» (sp : Spec I O) (D :
 
 /-- **Cor. convergence** (`cor:convergence`).  "In any history of a consistent
 functional specification, every participant whose current input at a
-consistent cut is `j` is in state `σ_S(j)`.  Participants with the same current
+consistent cut is `j` is in state `σ_P(j)`.  Participants with the same current
 input therefore agree, regardless of message paths, arrival order, or the
 outputs they emitted."
 
 Lean: `σs` is the endpoint of the cut; the first conjunct is "`σ_p(C) =
-σ_S(cur)`", the second "same current input ⇒ same state". -/
+σ_P(cur)`", the second "same current input ⇒ same state". -/
 theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consistent)
     (hf : sp.Functional) {H : Dist.History I O D n} {C : Dist.Pos n → Prop}
     {σs : Fin n → State sp} (hE : H.Endpoint sp C σs) :
@@ -286,7 +286,7 @@ theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
     {sp : Spec I O} {H : Dist.History I O D n} (hW : H.WF sp) {C : Dist.Pos n → Prop}
     (hC : H.IsCut C) {σs : Fin n → State sp} (hE : H.Endpoint sp C σs) (os : Fin n → List O)
     (hos : ∀ p, ∀ o ∈ os p, H.EmittedIn C o) (j : I) (hj : ∀ p, (σs p).cur ≼ j) :
-    H.CutConfluentAt sp C j ↔ ∃ u, sp.S j u ∧ ∀ p, Dist.honor (σs p).R (os p) j u :=
+    H.CutConfluentAt sp C j ↔ ∃ u, sp.P j u ∧ ∀ p, Dist.honor (σs p).R (os p) j u :=
   Dist.honor_cut_confluent hW hC hE os hos j hj
 
 /-! ## Systems (§4.3, `sec:systems`) -/
@@ -297,7 +297,7 @@ poll-closing seal.  Closing the polls is the registrar's design decision,
 as fixing orderings is 2PL's."
 
 Lean: under any basis containing `closePolls`, `Out_{[closePolls]}(⊥)` from
-`σ_S(ab·)` is legal and ends at panel (d); yet `⊥` is a legal output there and
+`σ_P(ab·)` is legal and ends at panel (d); yet `⊥` is a legal output there and
 `Sealed_⊥`, `Excluded_⊥` are empty, so `output(⊥)` needs no commitment. -/
 theorem «sec:systems/registrar» :
     (∀ B : Basis CALM.elec, B Figures.closePolls →
@@ -444,7 +444,7 @@ basis.  Systems for different specifications compose as components
 (Section `sec:proper-coordination`)."  Lean: `CAP.System sp D` carries one
 specification `sp` and one basis; its strategies `strat n init p` may differ
 by participant.  A deployment `Deploy.Deployment sp n` gives participant `p` a
-table `A p` inside `sp.S`.  The system is the component
+table `A p` inside `sp.P`.  The system is the component
 `Components.Component.ofSystemOn Sys N` of `sp`, with the system's basis and
 the participant runs of its produced histories as admitted runs. -/
 theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
@@ -453,7 +453,7 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
         (fun c => Sys.basis (Dist.toCAP c)) ∧
       (∀ r, (Components.Component.ofSystemOn Sys N location).accepts r →
         SysExec (fun c => Sys.basis (Dist.toCAP c)) (canon sp r.input) r.events r.final) ∧
-      ∀ (n : Nat) (Dp : Deploy.Deployment sp n) p k u, Dp.A p k u → sp.S k u :=
+      ∀ (n : Nat) (Dp : Deploy.Deployment sp n) p k u, Dp.A p k u → sp.P k u :=
   ⟨rfl, fun r h => ((Components.Component.ofSystemOn Sys N location).sound r h).legal,
     fun _ Dp => Dp.sub⟩
 
@@ -798,11 +798,11 @@ theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
 those of a specification, or those of a system implementing it.  For a
 specification, every commitment requires coordination: some canonical run
 accepts each input that a commitment can seal and emits each permitted
-output."  Lean: from `σ_S(i)` with `i ≼ k`, the
-canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ S(k)` at
+output."  Lean: from `σ_P(i)` with `i ≼ k`, the
+canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at
 current input `k`. -/
 theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I} {x : O}
-    (hik : i ≼ k) (hx : sp.S k x) :
+    (hik : i ≼ k) (hx : sp.P k x) :
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
@@ -912,17 +912,17 @@ theorem «thm:commitments-require-coordination/any-event» {sp : Spec I O}
   let h := Dist.conflicting_events (B1 := B1) (B2 := B2) h1 hno h2
   ⟨h.1, h.2.1, h.2.2, Dist.conflicting_events_reach h1 hno h2⟩
 
-/-- "The conflict is confined to the current input.  If `i ≺ j`, `S(i) = {o,x}`
-with `o` and `x` incomparable, and `S(j) = {u}` with `u` refining both, the two
+/-- "The conflict is confined to the current input.  If `i ≺ j`, `P(i) = {o,x}`
+with `o` and `x` incomparable, and `P(j) = {u}` with `u` refining both, the two
 states can be reconciled once `j` arrives.  Consistency still counts this as a failure,
 since it asks for confluence at the current input too."  (The rest of the paragraph, on the
 environment and transient conflicts, is the paper's modeling assumption.)
 
 Lean: the example of `CALM/TransientConflict.lean`: inputs `i ≺ j`, outputs
-`o`, `x` incomparable below `u`, `S(i) = {o,x}`, `S(j) = {u}`.  From
-`σ_S(i)`, the canonical events `output(o)` and `output(x)` are legal; after
+`o`, `x` incomparable below `u`, `P(i) = {o,x}`, `P(j) = {u}`.  From
+`σ_P(i)`, the canonical events `output(o)` and `output(x)` are legal; after
 `output(o)` no output at `i` refines `x`, so the two states have no common
-state with current input `i`; both reach `σ_S(j)` by `input(j)`, so they are
+state with current input `i`; both reach `σ_P(j)` by `input(j)`, so they are
 confluent at `j`; and the specification is neither consistent nor directed at
 `i` (so not Lifted Monotone). -/
 theorem «thm:commitments-require-coordination/confined-to-current-input» :
@@ -977,7 +977,7 @@ monotone, so it issues no commitment that requires coordination."
 
 Lean, for the decision (`CAP/TwoPhaseCommit.lean`): inputs record the votes
 of `n` fixed participants (`none` until received; a received vote does not
-change), outputs are `undecided ≼ commit, abort`, and `S` aborts on a no vote,
+change), outputs are `undecided ≼ commit, abort`, and `P` aborts on a no vote,
 commits when all voted yes, and is undecided otherwise.  This is a monotone
 function, hence consistent; no decision at a commitment-free reachable state
 needs a commitment; and the system that emits decisions by canonical output
@@ -989,8 +989,8 @@ that follows is `«sec:coordination/two-phase-commit-detects»`. -/
 theorem «sec:coordination/two-phase-commit» (n : Nat) (D : Type) :
     (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
       (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d, τ.R τ.cur d → Exposable τ d) ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFree ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFreeH :=
+      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).P).CoordinationFree ∧
+      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).P).CoordinationFreeH :=
   ⟨CAP.voteSpec_functional n, CAP.voteSpec_monotone n, CAP.voteSpec_consistent n,
    CAP.voteSpec_exposable n, CAP.voteSpec_coordinationFree n D⟩
 
@@ -1017,7 +1017,7 @@ vote, yes or no."  (CIDR version: "A coordinator that aborts on timeout,
 before the last vote arrives, issues a commitment, like closing the polls".)
 
 Lean (`CAP/TimeoutAbort.lean`), on the decision `voteSpec` of
-`«sec:coordination/two-phase-commit»`: at `σ_S(v)` with vote `p` missing,
+`«sec:coordination/two-phase-commit»`: at `σ_P(v)` with vote `p` missing,
 closing the polls (`Figures.closePolls`, a commitment) applies; it is a seal;
 every input `k ⪰ v` with `k p = some b`, for `b` yes or no, had the row
 `(k, decide2PC k)` and keeps none; the only rows left are `(v, decide2PC v)`
@@ -1086,7 +1086,7 @@ coordination (`CoordinationFreeH`).  The first clause (messages, clients cut
 off from owners) is not modeled; see `lean/README.md`. -/
 theorem «sec:coordination/shared-nothing-only-second» (n : Nat) (D : Type) :
     (CAP.ownerSys D).CoordinationFreeH ∧ ¬ (CAP.twoOwnerSys D).CoordinationFreeH ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFreeH :=
+      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).P).CoordinationFreeH :=
   ⟨CAP.ownerSys_coordinationFreeH D, CAP.twoOwnerSys_not_coordinationFreeH D,
     (CAP.voteSpec_coordinationFree n D).2⟩
 
@@ -1119,7 +1119,7 @@ theorem «sec:coordination/conflict-is-choice-commit» {sp : Spec I O} {B : Basi
   Dist.conflict_is_choice_commit h1 hx hno
 
 /-- "Under Lifted Monotonicity, participants at a common input `j` can each emit
-a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u`
+a `u ∈ P(j)` that refines everything emitted, without commitment; choosing `u`
 by a shared deterministic rule terminates once outputs stop."
 
 Lean: under Lifted Monotonicity, runs with common expansion `j` share a row
@@ -1128,7 +1128,7 @@ run), and from each final state the commitment-free events `input(j)`,
 `output(u)` reach the same state. -/
 theorem «sec:coordination/deterministic-reconciliation» {sp : Spec I O} (hLM : sp.LiftedMono)
     (fam : List (State sp)) (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (hj : ∀ σ ∈ fam, σ.cur ≼ j) :
-    ∃ u, ∃ hu : sp.S j u, (∀ σ ∈ fam, σ.R j u) ∧
+    ∃ u, ∃ hu : sp.P j u, (∀ σ ∈ fam, σ.R j u) ∧
       ∀ σ ∈ fam, ExecCF σ [.input j, .output u] (meetState sp j u hu) :=
   Dist.reconcile_cf hLM fam hrun j hj
 

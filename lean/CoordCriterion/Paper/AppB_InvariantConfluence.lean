@@ -110,13 +110,13 @@ system may expose the state of any valid sub-history:
 `S_𝓘(h) = {eval(g) : g a downward-closed, valid sub-history of h}`." -/
 theorem «app:iconfluence/spec» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M)
     (s u : IConf.St V) :
-    ((IConf.SI M).S h s ↔ ∃ g, g ≼ h.1 ∧ IConf.Valid M g ∧ IConf.eval M g = s) ∧
+    ((IConf.SI M).P h s ↔ ∃ g, g ≼ h.1 ∧ IConf.Valid M g ∧ IConf.eval M g = s) ∧
       (s ≼ u ↔ ∀ v, s v → u v) :=
   ⟨Iff.rfl, Iff.rfl⟩
 
 /-- "Taking `g` empty gives `s₀`, so the specification is total." -/
 theorem «app:iconfluence/total» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M) :
-    (IConf.SI M).S h M.s0 :=
+    (IConf.SI M).P h M.s0 :=
   ⟨IConf.Hist.empty, IConf.Hist.empty_le _, IConf.valid_empty M,
     IConf.eval_noev M IConf.Hist.empty_noev⟩
 

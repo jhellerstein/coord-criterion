@@ -278,7 +278,7 @@ theorem abortFree_decides (k : Inp T K) : ∃ o : Outcome T, Decides true k o :=
 (`af = true`): a row is permitted when some permitted complete output at the
 same input refines it. -/
 def spec (af : Bool) : Spec (Inp T K) (ROut T K) where
-  S k u := ∃ c, Complete af k c ∧ u ≼ c
+  P k u := ∃ c, Complete af k c ∧ u ≼ c
   total k := by
     cases af with
     | false => exact ⟨full (allAbort k.txs), _, full_complete (allAbort_decides k), PO.refl _⟩
@@ -345,12 +345,12 @@ section Rows
 variable {af : Bool}
 
 /-- Rows are closed downward (within the output order). -/
-theorem spec_down {k : Inp T K} {u w : ROut T K} (hw : (spec af).S k w) (h : u ≼ w) :
-    (spec af).S k u :=
+theorem spec_down {k : Inp T K} {u w : ROut T K} (hw : (spec af).P k w) (h : u ≼ w) :
+    (spec af).P k u :=
   let ⟨c, hc, hwc⟩ := hw; ⟨c, hc, PO.trans h hwc⟩
 
 /-- A row that is complete is a permitted complete output. -/
-theorem permitted_of_row {k : Inp T K} {c : ROut T K} (hc : (spec af).S k c)
+theorem permitted_of_row {k : Inp T K} {c : ROut T K} (hc : (spec af).P k c)
     (hp : Decides af k c.o) : Complete af k c := by
   obtain ⟨c', ⟨hp', hρ'⟩, hle⟩ := hc
   have e := same_o hp hp' hle
@@ -360,14 +360,14 @@ theorem permitted_of_row {k : Inp T K} {c : ROut T K} (hc : (spec af).S k c)
 
 /-- The read facts of any row are results of read operations of its input,
 returning versions present there. -/
-theorem row_read {k : Inp T K} {u : ROut T K} (hu : (spec af).S k u) {a : T} {n : Nat}
+theorem row_read {k : Inp T K} {u : ROut T K} (hu : (spec af).P k u) {a : T} {n : Nat}
     {v : Option T} (e : u.ρ a n = some v) : ∃ x, k.op a n = some (.rd x) ∧ Valid k x v := by
   obtain ⟨c, ⟨_, hρ⟩, hle⟩ := hu
   obtain ⟨x, h1, h2, _⟩ := hρ a n v (le_ρ hle e)
   exact ⟨x, h1, h2⟩
 
 /-- A row commits only transactions that have requested commit. -/
-theorem row_dom {k : Inp T K} {u : ROut T K} (hu : (spec af).S k u) {t : T}
+theorem row_dom {k : Inp T K} {u : ROut T K} (hu : (spec af).P k u) {t : T}
     (h : u.o.dom t) : k.fin t := by
   obtain ⟨c, ⟨hp, _⟩, hle⟩ := hu
   exact hp.dom_fin (hle.1.2.1 t h)
