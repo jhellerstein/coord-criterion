@@ -169,20 +169,23 @@ invariant confluence differs from CALM (\S\ref{sec:instances}).}
 \textcolor{reviewed}{Our answer begins with a simple observation.} \textcolor{reviewed}{In systems, as in life,
 possibilities narrow over time.} \textcolor{reviewed}{Some are out of our hands: the world moves on,
 and possibilities are lost.} \textcolor{reviewed}{Others are left for us to decide, and the
-consequences vary.} \textcolor{reviewed}{Incidental decisions close no doors: any possibilities
-they remove are carried forward by those that remain.} \textcolor{reviewed}{Fateful decisions make
-some outcomes impossible: they exclude a possibility that nothing remaining
-can carry forward.} \textcolor{reviewed}{Which specifications can be implemented without fateful
-decisions?}
+consequences vary.} \textcolor{reviewed}{Incidental decisions close no doors: each possibility
+they remove is covered by a more informative possibility that remains.} \textcolor{reviewed}{Fateful
+decisions make some outcomes impossible: they exclude a possibility that
+nothing remaining can cover.} \textcolor{reviewed}{Which specifications can be implemented without
+fateful decisions?}
 
 \textcolor{reviewed}{Our foundation is a possibly infinite \emph{possibility relation} $P$ pairing
 inputs with permitted outputs, depicted as rows in a table.} \textcolor{reviewed}{It describes
-observable behavior without fixing a language, protocol, or placement.} \textcolor{reviewed}{The input domain $(I,\InputOrd)$ has a partial order:
-$i\InputOrd j$ means that $j$ \inrel $i$ with more input from the environment.} \textcolor{reviewed}{The output domain $(O,\OutputOrd)$
-has its own partial order: $o\OutputOrd u$ means that $u$ \outrel $o$, carrying
-every claim in $o$ forward.} \textcolor{reviewed}{An \emph{exclusion} is a fateful system decision that
-removes one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
-$o\OutputOrd u$: the excluded possibilities are not carried forward.}
+observable behavior without fixing a language, protocol, or placement.} \textcolor{reviewed}{A
+designer declares the input and output types and their orders as part of the
+specification's semantics.} \textcolor{reviewed}{On inputs, $i\InputOrd j$ means that $j$ \inrel
+$i$ with more input from the environment.} \textcolor{reviewed}{On outputs, $u\OutputGe o$ means
+that $u$ subsumes all specification-relevant information in $o$; equivalently,
+$o\OutputOrd u$, and $u$ \outrel $o$.} \textcolor{reviewed}{An \emph{exclusion} is a fateful system
+decision that removes one or more rows $(i,o)$ for which no remaining row
+$(i,u)$ has $o\OutputOrd u$: no remaining possibility subsumes an excluded
+one.}
 
 \textcolor{reviewed}{State-machine-style specifications can be projected into this form, eliding
 operational details that are not externally observable
@@ -212,7 +215,7 @@ input and different outputs.} \textcolor{reviewed}{Each row offers the system a 
 so different runs may choose differently, as in leader election or
 transaction ordering.} \textcolor{reviewed}{Monotonicity under output choice requires outputs
 chosen by different runs to grow together.} \textcolor{reviewed}{We call this Directed Outputs:
-some larger permitted output carries them all forward, making those decisions
+some larger permitted output refines them all, making those decisions
 incidental.}
 
 \textcolor{reviewed}{Together, monotonicity under input growth and output choice form \emph{Lifted
@@ -1564,7 +1567,7 @@ along the run. Full proof in Appendix~\ref{app:bases}.
 \emph{Eager output is free}: emitting a legal output applies no exclusion and
 preserves every possibility up to refinement. \emph{Circumspection is
 incidental}: every additional row preserved by deferring that output is
-already carried forward by a surviving refinement.
+already covered by a surviving refinement.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
@@ -2548,7 +2551,7 @@ specifications, not conservative.}
 The possibility relation makes the boundary concrete. Possibilities may
 be lost as input grows. When a system emits an output, other possibilities
 may be subsumed by refinements that remain, an incidental decision, or
-excluded even though nothing remaining carries them forward, a fateful one. Only the latter removals are exclusions, and only they require coordination.
+excluded even though nothing remaining subsumes them, a fateful one. Only the latter removals are exclusions, and only they require coordination.
 
 \textcolor{reviewed}{A limitation of prior CALM work was that it was constructive on only one side of
 its boundary.} \textcolor{reviewed}{Monotone programs need no coordination; for a non-monotone

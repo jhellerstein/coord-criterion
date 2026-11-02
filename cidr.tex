@@ -173,21 +173,23 @@ invariant confluence differs from CALM (\S\ref{sec:instances}).
 Our answer begins with a simple observation.  In systems, as in life,
 possibilities narrow over time.  Some are out of our hands: the world moves on,
 and possibilities are lost.  Others are left for us to decide, and the
-consequences vary.  Incidental decisions close no doors: any possibilities
-they remove are carried forward by those that remain.  Fateful decisions make
-some outcomes impossible: they exclude a possibility that nothing remaining
-can carry forward.  Which specifications can be implemented without fateful
-decisions?
+consequences vary.  Incidental decisions close no doors: each possibility
+they remove is covered by a more informative possibility that remains.  Fateful
+decisions make some outcomes impossible: they exclude a possibility that
+nothing remaining can cover.  Which specifications can be implemented without
+fateful decisions?
 
 Our foundation is a possibly infinite \emph{possibility relation} $P$ pairing
 inputs with permitted outputs, depicted as rows in a table.  It describes
-observable behavior without fixing a language, protocol, or placement.  The input domain $(I,\InputOrd)$ has a partial order:
-$i\InputOrd j$ means that $j$ \inrel $i$ with more input from the environment.
-The output domain $(O,\OutputOrd)$
-has its own partial order: $o\OutputOrd u$ means that $u$ \outrel $o$, carrying
-every claim in $o$ forward.  An \emph{exclusion} is a fateful system decision that
-removes one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
-$o\OutputOrd u$: the excluded possibilities are not carried forward.
+observable behavior without fixing a language, protocol, or placement.  A
+designer declares the input and output types and their orders as part of the
+specification's semantics.  On inputs, $i\InputOrd j$ means that $j$ \inrel
+$i$ with more input from the environment.  On outputs, $u\OutputGe o$ means
+that $u$ subsumes all specification-relevant information in $o$; equivalently,
+$o\OutputOrd u$, and $u$ \outrel $o$.  An \emph{exclusion} is a fateful system
+decision that removes one or more rows $(i,o)$ for which no remaining row
+$(i,u)$ has $o\OutputOrd u$: no remaining possibility subsumes an excluded
+one.
 
 State-machine-style specifications can be projected into this form, eliding
 operational details that are not externally observable (\S\ref{sec:scope}).
@@ -218,7 +220,7 @@ input and different outputs.  Each row offers the system a possible output,
 so different runs may choose differently, as in leader election or
 transaction ordering.  Monotonicity under output choice requires outputs
 chosen by different runs to grow together.  We call this Directed Outputs:
-some larger permitted output carries them all forward, making those decisions
+some larger permitted output refines them all, making those decisions
 incidental.
 
 Together, monotonicity under input growth and output choice form \emph{Lifted

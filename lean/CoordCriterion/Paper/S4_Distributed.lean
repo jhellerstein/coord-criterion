@@ -609,7 +609,7 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : ExclusionBasis
 circumspection).  "*Eager output is free*: emitting a legal output applies no
 exclusion and preserves every possibility up to refinement.
 *Circumspection is incidental*: every additional row preserved by deferring
-that output is already carried forward by a surviving refinement."
+that output is already covered by a surviving refinement."
 
 Lean: for any exclusion basis, a legal output has a legal empty-exclusion
 output event; every row that event removes is in `Subsumed_o`.  Canonical Run
