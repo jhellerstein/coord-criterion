@@ -74,13 +74,16 @@ learn, our answers refine.}  If monotonicity fails, some output requires an
 input exclusion, ruling out later input that could contradict it.  The result
 covers relational query languages and the usual CRDT state specification.
 
-Functions cannot capture settings like leader election or transaction
-ordering, where several outputs are permitted at one input.  These also need
-Directed Outputs: whatever outputs are chosen must have a common \outnoun.
-Together the conditions are \emph{Lifted Monotonicity}, with two maxims:
-\emph{Whenever we learn, our answers refine; whatever we choose, our answers
-align.}  \emph{Complete CALM} proves that consistency is equivalent to Lifted
-Monotonicity (\S\ref{sec:complete-calm-theorem}).
+The functional case imposes a functional dependency on the table of
+possibilities, $\mathrm{in}\to\mathrm{out}$: each input permits one output.
+Specifications like leader election and transaction ordering drop that
+dependency, so the table may contain several rows with the same input.  Their
+criterion also needs Directed Outputs: whatever outputs are chosen among rows
+sharing an input must have a common \outnoun.  Together, the conditions are
+\emph{Lifted Monotonicity}, with two maxims: \emph{Whenever we learn, our
+answers refine; whatever we choose, our answers align.}  \emph{Complete CALM}
+proves that consistency is equivalent to Lifted Monotonicity
+(\S\ref{sec:complete-calm-theorem}).
 
 Section~\ref{sec:distributed-execution} models distributed execution with participants
 exchanging messages and defines consistency over their histories; this is shown
