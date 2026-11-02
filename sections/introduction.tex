@@ -28,7 +28,7 @@ when independently reached database states merge safely~\cite{bailis2014coordina
 Yet these results speak different formal languages, leaving unclear whether
 CALM encompasses CAP, whether CRDT join laws are necessary, why only some
 transactional isolation levels remain available during partition, and whether
-invariant confluence differs from CALM (Section~\ref{sec:instances}).
+invariant confluence differs from CALM (\S\ref{sec:instances}).
 
 Our answer begins with a simple observation.  In systems, as in life,
 possibilities narrow over time.  Some are out of our hands: the world moves on,
@@ -46,11 +46,13 @@ protocol, or placement.  The input domain $(I,\InputOrd)$ has a partial order:
 $i\InputOrd j$ means that $j$ \inrel $i$ with more input from the environment.
 The output domain $(O,\OutputOrd)$
 has its own partial order: $o\OutputOrd u$ means that $u$ \outrel $o$, carrying
-every claim in $o$ forward.
-State-machine-style specifications can be compiled into this form via standard techniques
-in formal verification,
-eliding operational details that are not externally observable (\S\ref{sec:operational-models}).
-Despite its simplicity, the model captures not only application invariants,
+every claim in $o$ forward.  An \emph{exclusion} is a system decision that
+removes one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
+$o\OutputOrd u$: the excluded possibilities are not carried forward.
+
+State-machine-style specifications can be projected into this form, eliding
+operational details that are not externally observable
+(\S\ref{sec:operational-models}).  Despite its simplicity, the model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability and
 causal consistency (Appendix~\ref{app:registers}), and transactional isolation
 levels (\S\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
@@ -59,36 +61,39 @@ A specification is \emph{consistent} when the executions it admits are
 \emph{confluent}: states reached along different paths can be brought to
 a common state.
 
-Our first result, \emph{Functional CALM}
-(\S\ref{sec:functional-calm-theorem}), covers specifications that pair each
-input with one output.  It proves that consistency is equivalent to
-monotonicity: \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\), so the output at
-\(j\) \outrel any output emitted at \(i\).  The mnemonic is: \emph{Whenever we
-learn, our answers refine.}  If monotonicity fails, some output requires a
-fateful decision: an input exclusion that rules out later input which could
-contradict it.  The result
-covers relational query languages and the usual CRDT state specification.
+Our results develop the criterion in two stages.
 
-The functional case imposes a functional dependency on the table of
-possibilities, $\mathrm{in}\to\mathrm{out}$: each input permits one output.
-Specifications like leader election and transaction ordering drop that
-dependency, so the table may contain several rows with the same input.  Their
-criterion also needs Directed Outputs, ensuring that output decisions are
-incidental: whatever outputs different runs choose, some permitted output
-carries them all forward.  Together, the conditions are
-\emph{Lifted Monotonicity}, with two maxims: \emph{Whenever we learn, our
-answers refine; whatever we choose, our answers align.}  \emph{Complete CALM}
-proves that consistency is equivalent to Lifted Monotonicity
+\paragraph{Monotone under input growth: Learn and refine.}
+Input growth records what a system may learn from the environment.
+Monotonicity requires its outputs to refine as input grows.  \emph{Functional
+CALM} (\S\ref{sec:functional-calm-theorem}) covers specifications that permit
+one output at each input.  It proves that consistency is equivalent to
+monotonicity: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.  If monotonicity
+fails, some output requires a fateful decision: an input exclusion that rules
+out later input which could contradict it.  The result covers relational query
+languages and the usual CRDT state specification.
+
+\paragraph{Monotone under output choice: Choose and align.}
+A second facet appears when the table contains several rows with the same
+input and different outputs.  Each row offers the system a possible output,
+so different runs may choose differently, as in leader election or
+transaction ordering.  Monotonicity under output choice requires outputs
+chosen by different runs to grow together.  We call this Directed Outputs:
+some larger permitted output carries them all forward, making those decisions
+incidental.
+
+Together, monotonicity under input growth and output choice form \emph{Lifted
+Monotonicity}, one condition on the table of possibilities.  \emph{Complete
+CALM} proves that consistency is equivalent to Lifted Monotonicity
 (\S\ref{sec:complete-calm-theorem}).
 
-Distributed histories have the same consistency criterion
-(Section~\ref{sec:distributed-execution}).  An exclusion \emph{requires
-coordination} when another run could contradict it, and \emph{distributed
-coordination} when that run is at another participant.  Complete CAP
-(Section~\ref{sec:complete-cap}) then says that a specification with Lifted
-Monotonicity can keep every permitted output available and confluent during a
-partition; any other cannot.  The Gilbert--Lynch theorem for linearizable
-registers follows directly.
+Distributed histories obey the same consistency criterion
+(\S\ref{sec:distributed-execution}).  An exclusion \emph{requires coordination}
+if another run can contradict it, and \emph{distributed coordination} if that
+run is at another participant.  Complete CAP (\S\ref{sec:complete-cap}) says
+Lifted Monotonicity exactly characterizes specifications that can keep every
+permitted output available and confluent during a partition.  The
+Gilbert--Lynch theorem follows directly.
 
 This paper makes five contributions:
 \begin{enumerate}
@@ -109,6 +114,6 @@ This paper makes five contributions:
 \end{enumerate}
 
 The paper develops these contributions in order, then relates the criterion
-to earlier results (Section~\ref{sec:instances}) and the broader CALM agenda
-(Section~\ref{sec:discussion}).  The appendices provide proofs and further
+to earlier results (\S\ref{sec:instances}) and the broader CALM agenda
+(\S\ref{sec:discussion}).  The appendices provide proofs and further
 applications; Appendix~\ref{app:notation} collects notation and defined terms.

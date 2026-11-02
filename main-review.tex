@@ -161,7 +161,7 @@ available under partition~\cite{bailis2013hat}; and invariant confluence asks
 when independently reached database states merge safely~\cite{bailis2014coordination}.} \textcolor{reviewed}{Yet these results speak different formal languages, leaving unclear whether
 CALM encompasses CAP, whether CRDT join laws are necessary, why only some
 transactional isolation levels remain available during partition, and whether
-invariant confluence differs from CALM (Section~\ref{sec:instances}).}
+invariant confluence differs from CALM (\S\ref{sec:instances}).}
 
 \textcolor{reviewed}{Our answer begins with a simple observation.} \textcolor{reviewed}{In systems, as in life,
 possibilities narrow over time.} \textcolor{reviewed}{Some are out of our hands: the world moves on,
@@ -178,9 +178,13 @@ declarative: it describes what can be observed, without fixing a language,
 protocol, or placement.} \textcolor{reviewed}{The input domain $(I,\InputOrd)$ has a partial order:
 $i\InputOrd j$ means that $j$ \inrel $i$ with more input from the environment.} \textcolor{reviewed}{The output domain $(O,\OutputOrd)$
 has its own partial order: $o\OutputOrd u$ means that $u$ \outrel $o$, carrying
-every claim in $o$ forward.} \textcolor{reviewed}{State-machine-style specifications can be compiled into this form via standard techniques
-in formal verification,
-eliding operational details that are not externally observable (\S\ref{sec:operational-models}).} Despite its simplicity, the model captures not only application invariants,
+every claim in $o$ forward.} \textcolor{reviewed}{An \emph{exclusion} is a system decision that
+removes one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
+$o\OutputOrd u$: the excluded possibilities are not carried forward.}
+
+\textcolor{reviewed}{State-machine-style specifications can be projected into this form, eliding
+operational details that are not externally observable
+(\S\ref{sec:operational-models}).} Despite its simplicity, the model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability and
 causal consistency (Appendix~\ref{app:registers}), and transactional isolation
 levels (\S\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
@@ -189,35 +193,38 @@ levels (\S\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 \emph{confluent}: states reached along different paths can be brought to
 a common state.}
 
-\textcolor{reviewed}{Our first result, \emph{Functional CALM}
-(\S\ref{sec:functional-calm-theorem}), covers specifications that pair each
-input with one output.} \textcolor{reviewed}{It proves that consistency is equivalent to
-monotonicity: \(i\InputOrd j\) implies \(f(i)\OutputOrd f(j)\), so the output at
-\(j\) \outrel any output emitted at \(i\).} \textcolor{reviewed}{The mnemonic is: \emph{Whenever we
-learn, our answers refine.}  If monotonicity fails, some output requires a
-fateful decision: an input exclusion that rules out later input which could
-contradict it.} \textcolor{reviewed}{The result
-covers relational query languages and the usual CRDT state specification.}
+\textcolor{reviewed}{Our results develop the criterion in two stages.}
 
-\textcolor{reviewed}{The functional case imposes a functional dependency on the table of
-possibilities, $\mathrm{in}\to\mathrm{out}$: each input permits one output.} \textcolor{reviewed}{Specifications like leader election and transaction ordering drop that
-dependency, so the table may contain several rows with the same input.} \textcolor{reviewed}{Their
-criterion also needs Directed Outputs, ensuring that output decisions are
-incidental: whatever outputs different runs choose, some permitted output
-carries them all forward.} \textcolor{reviewed}{Together, the conditions are
-\emph{Lifted Monotonicity}, with two maxims: \emph{Whenever we learn, our
-answers refine; whatever we choose, our answers align.}  \emph{Complete CALM}
-proves that consistency is equivalent to Lifted Monotonicity
+\paragraph{Monotone under input growth: Learn and refine.}
+\textcolor{reviewed}{Input growth records what a system may learn from the environment.} \textcolor{reviewed}{Monotonicity requires its outputs to refine as input grows.} \textcolor{reviewed}{\emph{Functional
+CALM} (\S\ref{sec:functional-calm-theorem}) covers specifications that permit
+one output at each input.} \textcolor{reviewed}{It proves that consistency is equivalent to
+monotonicity: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.} \textcolor{reviewed}{If monotonicity
+fails, some output requires a fateful decision: an input exclusion that rules
+out later input which could contradict it.} \textcolor{reviewed}{The result covers relational query
+languages and the usual CRDT state specification.}
+
+\paragraph{Monotone under output choice: Choose and align.}
+\textcolor{reviewed}{A second facet appears when the table contains several rows with the same
+input and different outputs.} \textcolor{reviewed}{Each row offers the system a possible output,
+so different runs may choose differently, as in leader election or
+transaction ordering.} \textcolor{reviewed}{Monotonicity under output choice requires outputs
+chosen by different runs to grow together.} \textcolor{reviewed}{We call this Directed Outputs:
+some larger permitted output carries them all forward, making those decisions
+incidental.}
+
+\textcolor{reviewed}{Together, monotonicity under input growth and output choice form \emph{Lifted
+Monotonicity}, one condition on the table of possibilities.} \textcolor{reviewed}{\emph{Complete
+CALM} proves that consistency is equivalent to Lifted Monotonicity
 (\S\ref{sec:complete-calm-theorem}).}
 
-\textcolor{reviewed}{Distributed histories have the same consistency criterion
-(Section~\ref{sec:distributed-execution}).} \textcolor{reviewed}{An exclusion \emph{requires
-coordination} when another run could contradict it, and \emph{distributed
-coordination} when that run is at another participant.} \textcolor{reviewed}{Complete CAP
-(Section~\ref{sec:complete-cap}) then says that a specification with Lifted
-Monotonicity can keep every permitted output available and confluent during a
-partition; any other cannot.} \textcolor{reviewed}{The Gilbert--Lynch theorem for linearizable
-registers follows directly.}
+\textcolor{reviewed}{Distributed histories obey the same consistency criterion
+(\S\ref{sec:distributed-execution}).} \textcolor{reviewed}{An exclusion \emph{requires coordination}
+if another run can contradict it, and \emph{distributed coordination} if that
+run is at another participant.} \textcolor{reviewed}{Complete CAP (\S\ref{sec:complete-cap}) says
+Lifted Monotonicity exactly characterizes specifications that can keep every
+permitted output available and confluent during a partition.} \textcolor{reviewed}{The
+Gilbert--Lynch theorem follows directly.}
 
 \textcolor{reviewed}{This paper makes five contributions:}
 \begin{enumerate}
@@ -243,8 +250,8 @@ registers follows directly.}
 \end{enumerate}
 
 The paper develops these contributions in order, then relates the criterion
-to earlier results (Section~\ref{sec:instances}) and the broader CALM agenda
-(Section~\ref{sec:discussion}). The appendices provide proofs and further
+to earlier results (\S\ref{sec:instances}) and the broader CALM agenda
+(\S\ref{sec:discussion}). The appendices provide proofs and further
 applications; Appendix~\ref{app:notation} collects notation and defined terms.
 
 \section{Functional CALM}
@@ -373,7 +380,7 @@ is \emph{determined}: input alone has resolved the outcome, without exclusion.}
 
 \textcolor{reviewed}{Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
-(Section~\ref{sec:systems}).} \textcolor{reviewed}{In this example, the system acts as a registrar, emitting $\bot$
+(\S\ref{sec:systems}).} \textcolor{reviewed}{In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
 $ab\cdot$ in the same output event.} \textcolor{reviewed}{Its irrevocable \emph{input exclusion}
 removes the still-possible $aba$ and $abb$ rows but leaves the current input
@@ -444,7 +451,7 @@ order no output at $aba$ \outrel both outputs $\bot$ and $a$.} \textcolor{review
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.}
 
 \textcolor{reviewed}{Input and output events form a transition system, and the specification is
-consistent when its runs are confluent.} For functional tables this corresponds exactly to monotonicity (Section~\ref{sec:functional-calm-theorem}). Appendix~\ref{app:notation} collects the notation for reference.
+consistent when its runs are confluent.} For functional tables this corresponds exactly to monotonicity (\S\ref{sec:functional-calm-theorem}). Appendix~\ref{app:notation} collects the notation for reference.
 
 \subsection{Specifications and states}
 \label{sec:functional-specifications}
@@ -600,7 +607,7 @@ $x_o^{\mathrm{in}}(i,R)=(i,R')$: it \emph{empties} the inputs of the removed row
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
 ends at a state. \textcolor{reviewed}{An exclusion removes rows that input alone would not: the inputs it empties are no longer legal.} Input exclusions of this form are the
 only exclusions this section uses. \textcolor{reviewed}{Systems may issue more exclusions than an output requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but extra exclusions only
-restrict behavior (Section~\ref{sec:systems}).}
+restrict behavior (\S\ref{sec:systems}).}
 
 \begin{definition}[Legal output]
 \label{def:exposable}
@@ -721,7 +728,7 @@ asks whether $(j,f(j))$ survives in every run.
 and output events a finite collection of runs has taken, any input \inrelpart all
 of theirs leaves a single state that every run can reach: one that keeps every
 promise any of them has made and accepts all of that input.} Proposition~\ref{prop:confluence} identifies that state. Consistency is a
-property of the specification, not of a protocol (Section~\ref{sec:scope}).
+property of the specification, not of a protocol (\S\ref{sec:scope}).
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
@@ -741,7 +748,7 @@ so the row $(j,f(j))$ at a common \indesc $j$ survives in every run.} \textcolor
 \indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$.} Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-\textcolor{reviewed}{\emph{Whenever we learn, our answers refine.}}
+\emph{Whenever we learn, our answers refine.}
 
 \textcolor{reviewed}{In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
 incomparable: a run that emits $\bot$ at $ab\cdot$ and one that accepts
@@ -923,7 +930,7 @@ contains more than one output.
 \textcolor{reviewed}{We call either kind simply an \emph{ordered specification}.}
 
 Specification states and input events
-(Sections~\ref{sec:functional-specifications} and~\ref{sec:functional-events})
+(\S\ref{sec:functional-specifications} and~\S\ref{sec:functional-events})
 apply unchanged to relational tables.
 
 \subsection{Lifted Monotonicity}
@@ -971,7 +978,7 @@ fiber $\fiber{i}$ is directed.}
 \end{definition}
 
 \textcolor{reviewed}{A singleton fiber is trivially directed.} \textcolor{reviewed}{As with common \indescs of inputs
-(Section~\ref{sec:functional-specifications}), a common \outnoun need not be
+(\S\ref{sec:functional-specifications}), a common \outnoun need not be
 least: directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
 join-semilattice.} For example, the fiber
@@ -1312,7 +1319,7 @@ of runs can be placed at separate participants that exchange no messages.} Full 
 \end{proof}
 
 Both notions are existence claims about transitions
-(Section~\ref{sec:scope}). By Complete CALM,
+(\S\ref{sec:scope}). By Complete CALM,
 which reduces to Functional CALM with one output per input, a specification
 has distributed consistency exactly when it satisfies Lifted Monotonicity. \textcolor{reviewed}{For functional specifications,
 Corollary~\ref{cor:state-by-input} also gives convergence:}
@@ -1485,7 +1492,7 @@ no theorem below depends on which participant issues an exclusion. Participants 
 special case in which they share one strategy
 (Appendix~\ref{app:cap-response}), and a deployment may limit what each one
 emits (Appendix~\ref{app:deployment}). Systems for different specifications
-compose as components (Section~\ref{sec:proper-coordination}).
+compose as components (\S\ref{sec:proper-coordination}).
 
 \paragraph{Two bases on three transactions.}
 We return to the concurrency protocols from the beginning of this
@@ -1737,7 +1744,7 @@ answer; only the second issues an exclusion that a run at another participant
 could contradict.
 
 Confluence is a safety property, and reaching it is liveness
-(Section~\ref{sec:scope}). Under Lifted
+(\S\ref{sec:scope}). Under Lifted
 Monotonicity, participants at a common input $j$ can each emit a
 $u\in\fiber{j}$ that \outrel everything emitted, without exclusion
 (Proposition~\ref{prop:exposure-boundary}); choosing $u$ by a shared
@@ -1915,7 +1922,7 @@ can also ask which component makes a composition's exclusions.} \textcolor{revie
 upstream component makes every exclusion the composition needs, and the
 downstream needs none on the inputs the upstream offers, we call the
 coordination \emph{proper}
-(Section~\ref{sec:proper-coordination}).} Proofs are in
+(\S\ref{sec:proper-coordination}).} Proofs are in
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
 
@@ -1955,7 +1962,7 @@ in Appendix~\ref{app:composition}.
 
 \textcolor{reviewed}{By associativity the lemma extends to finite pipelines.} For a function $f$,
 its table $\{(i,f(i))\}$ satisfies Lifted Monotonicity exactly when $f$ is
-monotone (Section~\ref{sec:lifted-monotonicity}).
+monotone (\S\ref{sec:lifted-monotonicity}).
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
@@ -2176,7 +2183,7 @@ input~\cite{shapiro2011crdt,burckhardt2014replicated,baquero2014operation,heller
 
 \textcolor{reviewed}{CRDT states form a join-semilattice, but $q$ needs less:
 Complete CALM requires only \emph{some} common \outnoun of query outputs
-(Section~\ref{sec:lifted-monotonicity}), not a least one.}
+(\S\ref{sec:lifted-monotonicity}), not a least one.}
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
@@ -2555,7 +2562,7 @@ for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties.} \textcolor{reviewed}{We
 ask what the specification itself requires, independent of any menu of
 levels.} Because the canonical exclusions are universal
-(Section~\ref{sec:systems}), the answer holds for every mechanism. \textcolor{reviewed}{Our
+(\S\ref{sec:systems}), the answer holds for every mechanism. \textcolor{reviewed}{Our
 composition results need no program logic, and the criteria are exact on
 specifications, not conservative.}
 
@@ -2607,7 +2614,7 @@ Monotonicity with Directed Outputs.} \textcolor{reviewed}{When it fails, some re
 requires an exclusion, and every exclusion is either an input exclusion or an
 output exclusion at each fiber it changes.} \textcolor{reviewed}{Because exclusions are explicit, the model
 can also check where a composition coordinates
-(Section~\ref{sec:composition}).} \textcolor{reviewed}{For example, a totally ordered log and a
+(\S\ref{sec:composition}).} \textcolor{reviewed}{For example, a totally ordered log and a
 key-value store are both non-monotone at their ordinary specifications, yet
 when the log guards the store, the log's exclusions are all the composition
 needs and the store makes none.} \textcolor{reviewed}{Multi-Paxos is one way to distribute those
@@ -2652,7 +2659,7 @@ rows at $k$.
 \noindent
 \begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
   \toprule
-  \multicolumn{3}{@{}l}{\textbf{Functional CALM (Section~\ref{sec:functional-calm})}}\\
+  \multicolumn{3}{@{}l}{\textbf{Functional CALM (\S\ref{sec:functional-calm})}}\\
   \midrule
   specification & $\Spec=(I,\InputOrd,O,\OutputOrd,P)$, total on $I$, one output per input; induced $f$ & Def.~\ref{def:functional-specification}\\
   \inrel; \indesc & $i\InputOrd j$: $j$ contains the input information in $i$ & Sec.~\ref{sec:functional-specifications}\\
@@ -2677,7 +2684,7 @@ rows at $k$.
 \noindent
 \begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
   \toprule
-  \multicolumn{3}{@{}l}{\textbf{Complete CALM (Section~\ref{sec:complete-calm})}}\\
+  \multicolumn{3}{@{}l}{\textbf{Complete CALM (\S\ref{sec:complete-calm})}}\\
   \midrule
   relational specification; ambiguous & $P\subseteq I\times O$ total on $I$; some fiber has several outputs & Def.~\ref{def:relational-specification}\\
   stranded output; incompatible pair & an output at $i$ with no \outnoun at some \indesc; two outputs at $i$ with no common \outnoun there & Sec.~\ref{sec:lifted-monotonicity}\\
@@ -2696,7 +2703,7 @@ rows at $k$.
 \noindent
 \begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
   \toprule
-  \multicolumn{3}{@{}l}{\textbf{Distributed execution (Section~\ref{sec:distributed-execution})}}\\
+  \multicolumn{3}{@{}l}{\textbf{Distributed execution (\S\ref{sec:distributed-execution})}}\\
   \midrule
   participant; message & holds a specification state; $m=(j,d)$, a cumulative input $j$ (or $\varnothing$) and other data $d$ & Sec.~\ref{sec:histories}\\
   specification event & an input or output event; in Section~\ref{sec:systems}, also an exclusion event & Defs.~\ref{def:run}, \ref{def:exclusion-event}\\
@@ -2727,7 +2734,7 @@ rows at $k$.
 \noindent
 \begin{tabular}{@{}p{.3\columnwidth}p{.5\columnwidth}p{.14\columnwidth}@{}}
   \toprule
-  \multicolumn{3}{@{}l}{\textbf{Composition (Section~\ref{sec:composition})}}\\
+  \multicolumn{3}{@{}l}{\textbf{Composition (\S\ref{sec:composition})}}\\
   \midrule
   sequential composition $P_2\circ P_1$ & $\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\}$, for stages sharing $(M,\preceq_M)$ & Eq.~\ref{eq:spec-composition}\\
   $\Spec_1$ guards $\Spec_2$ & $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs & Sec.~\ref{sec:sequential-composition}\\
@@ -2885,7 +2892,7 @@ message-free history, one participant per run, at its final cut.
 \paragraph{Exchanging outputs.}
 \label{app:exchanging-outputs}
 Suppose participants share their \emph{outputs} in the data $d$ of messages
-(Section~\ref{sec:distributed-consistency}). A participant that receives an
+(\S\ref{sec:distributed-consistency}). A participant that receives an
 output $o$ its sender has emitted has two
 options. If $o\in R(i)$ at its own current input $i$, it can emit $o$ itself;
 that is an ordinary output event, already covered by
@@ -2941,7 +2948,7 @@ by Complete CALM and Proposition~\ref{prop:distributed-consistency} it has
 Partition Consistency.
 \end{proof}
 
-\subsection{Invariant confluence (Section~\ref{sec:iconfluence-instance})}
+\subsection{Invariant confluence (\S\ref{sec:iconfluence-instance})}
 \label{app:iconfluence}
 
 The input records which transactions ran and what each one saw. A
@@ -3079,7 +3086,7 @@ order. The output exclusion only narrows fibers: at each input it touches, some 
 that \outrel $o$ survives. With one row per input, $\Subsumed_o$ and $\ExcludedOut_o$
 are empty; this is the functional output event of
 Definition~\ref{def:output-event}. Apart from these, a row leaves the
-remainder table only by input loss (Section~\ref{sec:functional-events}).
+remainder table only by input loss (\S\ref{sec:functional-events}).
 
 Legality lifts with the event: $o$ is a legal output when $\mathsf{output}(o)$
 applies no exclusion, that is, when $\ExcludedIn_o$ and $\ExcludedOut_o$ are empty, though the
@@ -3325,7 +3332,7 @@ table of $g\circ f$; apply Lemma~\ref{lem:composition}.
 
 Sequential composition cannot express a downstream component with input of
 its own, such as a replica that serves bare reads
-(Section~\ref{sec:composition}), so we give each component a separate
+(\S\ref{sec:composition}), so we give each component a separate
 input. Let
 \begin{align*}
   \Spec_F&=\bigl(I\times A,\preceq_I\times\preceq_A,B,\preceq_B,F\bigr),\\
@@ -3798,7 +3805,7 @@ exclusion.
 
 Receiving $m$ is the downstream run's initial input, not an exclusion of
 $C_2$. Glue stages that copy, merge, route, or adapt values
-(Section~\ref{app:dataflow-graphs}) are components with specifications of
+(\S\ref{app:dataflow-graphs}) are components with specifications of
 their own, and they may issue exclusions of their own.
 
 \begin{proposition}[Typed pipelines]
@@ -3891,7 +3898,7 @@ when both factors do, an output is a legal output exactly when both components
 are, and it needs no exclusion exactly when neither factor does. The
 converse directions need nonempty input domains. A stage that merges the
 outputs of two guards is proper exactly when it satisfies Lifted Monotonicity
-on the product of their outputs, and a merge by join is always proper. Composition with independent inputs (Section~\ref{sec:parameterized-composition})
+on the product of their outputs, and a merge by join is always proper. Composition with independent inputs (\S\ref{sec:parameterized-composition})
 is the product of $\Spec_1$ with the identity on $J$, followed by $\Spec_2$, so
 Lemma~\ref{lem:parameterized-composition} follows from the product and
 composition lemmas.
@@ -4297,7 +4304,7 @@ Partition Consistency in place of Partition Consistency. Confluence at $j$
 implies a common \outnoun at $j$ (Corollary~\ref{cor:reconciliation-any-basis}),
 and for a canonical system (Definition~\ref{def:canonical-system}) the two
 coincide by Lemma~\ref{lem:reconciliation}, applied to the participant runs
-(Section~\ref{sec:distributed-consistency}). With other exclusions the
+(\S\ref{sec:distributed-consistency}). With other exclusions the
 converse can fail: participants may prune their states so that they cannot
 be reconciled while their emitted outputs still have a common \outnoun.
 
@@ -4481,7 +4488,7 @@ obligation $Q_p(h)$ consists of the maps in $\fiber{h}$ that answer every read
 and acknowledge every write invoked at $p$. Every finite history has a
 linearization, so $Q_p$ is total, and it is upward closed within fibers. Real-time precedence belongs to the input: the environment invokes $b$ after
 seeing $a$'s response, so the edge from $a$ to $b$ is information it supplies
-(Section~\ref{sec:election-story}).
+(\S\ref{sec:election-story}).
 
 Real time is the order of history events in an execution: an \emph{interleaving}
 $\lambda$ of a distributed history is a linear order of its history events consistent
