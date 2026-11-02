@@ -138,23 +138,13 @@ Confluence, and later refinements of CALM all map into the same framework.
 \label{sec:intro}
 
 Concurrent systems rely on coordination mechanisms ranging from mutexes and
-atomic instructions to database locks and consensus protocols.  These
-mechanisms prevent concurrent actions from producing undesirable outcomes.
-They also bring costs: overhead, latency, and reduced availability in
-distributed settings.  Avoiding unnecessary coordination is therefore a
-central goal in distributed systems and databases.  To distinguish necessary
-coordination from implementation habit, we first ask what these mechanisms
-fundamentally accomplish.
-
-In systems, as in life, possibilities narrow over time.  Some are out of our
-hands: the environment moves on, and possibilities are lost.  Others are left
-for us to decide.  Incidental decisions close no doors: any possibilities they
-remove are carried forward by those that remain.  Fateful decisions make some
-outcomes impossible: they exclude a possibility that nothing remaining can
-carry forward.  Which specifications can be implemented without fateful
-decisions?  We first develop a criterion that answers this question, then
-relate any fateful decisions it identifies to coordination across a system's
-runs.
+atomic instructions to database locks and consensus protocols.
+These mechanisms prevent concurrent actions from producing undesirable
+outcomes.  They also bring costs: overhead, latency, and
+availability in distributed settings.  Avoiding unnecessary coordination
+is therefore a central goal in distributed systems and databases.  This paper
+asks what coordination mechanisms fundamentally accomplish, and
+when that effect is intrinsically required.
 
 The CALM Conjecture
 proposed a crisp, bidirectional answer: consistency can be achieved without
@@ -166,19 +156,30 @@ registers~\cite{brewer2000towards,gilbert2002cap}.  Both results are
 invoked far more broadly: CALM as a general rule that monotone programs
 need no coordination, CAP as a general constraint on distributed systems.  The folklore outgrew the proofs.
 
-CRDTs use inflationary updates over join-semilattices for coordination-free
+The need for a common criterion extends beyond CALM and CAP.  CRDTs use
+inflationary updates over join-semilattices for coordination-free
 convergence~\cite{shapiro2011crdt}; HATs identify transactional guarantees
-available under partition~\cite{bailis2013hat}; invariant confluence asks when
-independently reached database states merge safely~\cite{bailis2014coordination}.
-Their different formal languages obscure how CALM relates to CAP, whether CRDT
-join laws are necessary, and why transactional guarantees divide at
-availability (Section~\ref{sec:instances}).
+available under partition~\cite{bailis2013hat}; and invariant confluence asks
+when independently reached database states merge safely~\cite{bailis2014coordination}.
+Yet these results speak different formal languages, leaving unclear whether
+CALM encompasses CAP, whether CRDT join laws are necessary, why transactional
+guarantees divide at partition, and whether invariant confluence differs from
+CALM (Section~\ref{sec:instances}).
 
-We answer such questions with a single criterion.  Our foundation is a minimalist
-  specification model: a \emph{table of possibilities} pairing input values
-  with corresponding outputs that are within spec.  The model is purely declarative: it
-describes what can be observed about a system, without fixing a language, protocol or placement.  The input domain $(I,\InputOrd)$ carries a partial order saying when one input
-\inrel another; the output domain $(O,\OutputOrd)$ has a partial order:
+Our answer begins with a simple observation.  In systems, as in life,
+possibilities narrow over time.  Some are out of our hands: the world moves on,
+and possibilities are lost.  Others are left for us to decide, and the
+consequences vary.  Incidental decisions close no doors: any possibilities
+they remove are carried forward by those that remain.  Fateful decisions make
+some outcomes impossible: they exclude a possibility that nothing remaining
+can carry forward.  Which specifications can be implemented without fateful
+decisions?
+
+Our criterion uses a minimalist specification model: a \emph{table of
+possibilities} pairing inputs with permitted outputs.  The model is purely
+declarative: it describes what can be observed, without fixing a language,
+protocol, or placement.  The input domain $(I,\InputOrd)$ has a partial order
+saying when one input \inrel another; the output domain $(O,\OutputOrd)$ has a partial order:
 $o\OutputOrd u$ means that $u$ \outrel $o$, carrying $o$ forward by preserving
 every claim it made.
 State-machine-style specifications can be compiled into this form via standard techniques
@@ -214,17 +215,13 @@ answers refine; whatever we choose, our answers align.}  \emph{Complete CALM}
 proves that consistency is equivalent to Lifted Monotonicity
 (\S\ref{sec:complete-calm-theorem}).
 
-Section~\ref{sec:distributed-execution} models distributed execution with participants
-exchanging messages and defines consistency over their histories; this is shown
-to be equivalent to consistency as defined above, so Functional and Complete
-CALM apply to distributed executions unchanged.  An exclusion \emph{requires coordination} when another run could contradict it,
-by accepting an input its input exclusion ruled out or emitting an output it excluded, and
-\emph{distributed coordination} when that run is at another participant.
-
-Complete CALM leads to \emph{Complete CAP} (\S\ref{sec:complete-cap}).  Given a
-consistency guarantee expressed as a specification, Lifted Monotonicity says
-which side of CAP it falls on.  A specification with Lifted Monotonicity can keep every output it permits
-available and confluent during a partition; any other cannot. The Gilbert--Lynch theorem for linearizable
+Distributed histories have the same consistency criterion
+(Section~\ref{sec:distributed-execution}).  An exclusion \emph{requires
+coordination} when another run could contradict it, and \emph{distributed
+coordination} when that run is at another participant.  Complete CAP
+(Section~\ref{sec:complete-cap}) then says that a specification with Lifted
+Monotonicity can keep every permitted output available and confluent during a
+partition; any other cannot.  The Gilbert--Lynch theorem for linearizable
 registers follows directly.
 
 This paper makes five contributions:
@@ -245,13 +242,10 @@ This paper makes five contributions:
         stages can free downstream stages from issuing exclusions (\S\ref{sec:composition}).
 \end{enumerate}
 
-Section~\ref{sec:functional-calm} introduces the framework and proves
-Functional CALM; Section~\ref{sec:complete-calm} proves Complete CALM;
-Section~\ref{sec:distributed-execution} gives the distributed reading and
-Complete CAP; Section~\ref{sec:composition} composes specifications and
-characterizes proper coordination; Section~\ref{sec:instances} connects prior
-results.  The full paper~\cite{hellerstein2026completecalmfull} gives further
-intuition, proofs, and applications.
+The paper develops these contributions in order, then relates the criterion
+to earlier results (Section~\ref{sec:instances}).  The full
+paper~\cite{hellerstein2026completecalmfull} gives further intuition, proofs,
+and applications.
 
 % ======================================================================
 \section{Functional CALM}
