@@ -150,10 +150,15 @@ proposed a crisp, bidirectional answer: consistency can be achieved without
 coordination exactly when the specification is
 monotone~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it in both
 directions, but only for Datalog queries evaluated by relational
-transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.  Gilbert and Lynch proved Brewer's CAP conjecture, but only for linearizable
-registers~\cite{brewer2000towards,gilbert2002cap}.  Both results are
-invoked far more broadly: CALM as a general rule that monotone programs
-need no coordination, CAP as a general constraint on distributed systems.  The folklore outgrew the proofs.
+transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.  A
+closely related question appears in Brewer's CAP conjecture: which consistency
+guarantees can remain available when participants cannot communicate?
+Gilbert and Lynch proved its impossibility result, but only for linearizable
+registers~\cite{brewer2000towards,gilbert2002cap}.  The apparent connection
+between CALM and CAP has never been established in a common formalism.  Both
+results are invoked far more broadly: CALM as a general rule that monotone
+programs need no coordination, CAP as a general constraint on distributed
+systems.  The folklore outgrew the proofs.
 
 The need for a common criterion extends beyond CALM and CAP.  CRDTs use
 inflationary updates over join-semilattices for coordination-free
@@ -174,14 +179,13 @@ some outcomes impossible: they exclude a possibility that nothing remaining
 can carry forward.  Which specifications can be implemented without fateful
 decisions?
 
-The foundation of our results is a minimalist model of specification: a
-\emph{table of possibilities} pairing inputs with permitted outputs.  The model is purely
-declarative: it describes what can be observed, without fixing a language,
-protocol, or placement.  The input domain $(I,\InputOrd)$ has a partial order:
+Our foundation is a possibly infinite \emph{possibility relation} $P$ pairing
+inputs with permitted outputs, depicted as rows in a table.  It describes
+observable behavior without fixing a language, protocol, or placement.  The input domain $(I,\InputOrd)$ has a partial order:
 $i\InputOrd j$ means that $j$ \inrel $i$ with more input from the environment.
 The output domain $(O,\OutputOrd)$
 has its own partial order: $o\OutputOrd u$ means that $u$ \outrel $o$, carrying
-every claim in $o$ forward.  An \emph{exclusion} is a system decision that
+every claim in $o$ forward.  An \emph{exclusion} is a fateful system decision that
 removes one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
 $o\OutputOrd u$: the excluded possibilities are not carried forward.
 
@@ -218,7 +222,7 @@ some larger permitted output carries them all forward, making those decisions
 incidental.
 
 Together, monotonicity under input growth and output choice form \emph{Lifted
-Monotonicity}, one condition on the table of possibilities.  \emph{Complete
+Monotonicity}, our unified criterion on the possibility relation.  \emph{Complete
 CALM} proves that consistency is equivalent to Lifted Monotonicity
 (\S\ref{sec:complete-calm-theorem}).
 
@@ -248,10 +252,8 @@ This paper makes five contributions:
         stages can free downstream stages from issuing exclusions (\S\ref{sec:composition}).
 \end{enumerate}
 
-The paper develops these contributions in order, then relates the criterion
-to earlier results (\S\ref{sec:instances}).  The full
-paper~\cite{hellerstein2026completecalmfull} gives further intuition, proofs,
-and applications.
+The full paper~\cite{hellerstein2026completecalmfull} gives further
+intuition, proofs, and applications.
 
 % ======================================================================
 \section{Functional CALM}
@@ -471,7 +473,7 @@ We now state these notions precisely.
 A \emph{functional ordered specification} is a tuple
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$,
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
-output types, and $P\subseteq I\times O$ is its \emph{table of possibilities}:
+output types, and $P\subseteq I\times O$ is its \emph{possibility relation}:
 a typed relation with schema $(\mathrm{in},\mathrm{out})$ in which every
 input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
 (a functional dependency).  The unique output paired with $i$ induces a
@@ -794,7 +796,7 @@ ambiguity of output.
 An \emph{ordered relational specification} is
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P\subseteq I\times O$,
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  The
-relation $P$ is the specification's \emph{table of possibilities} and is total
+relation $P$ is the specification's \emph{possibility relation} and is total
 on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$.  The fiber
 $\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
@@ -1720,8 +1722,7 @@ analyses became enmeshed in the details of implementations, however
 declarative. Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in
 programs and conservatively injected coordination code in front of it.  Yet
 coordination code is itself non-monotone, so adding it to a Bloom program only
-adds more non-monotone syntax.  Jagannathan and colleagues moved the question
-from syntax to declared contracts and
+adds more non-monotone syntax.  Subsequent work moved the question from syntax to declared contracts and
 invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}.  Their tools pick,
 for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties.  We

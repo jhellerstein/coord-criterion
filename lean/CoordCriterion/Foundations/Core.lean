@@ -39,7 +39,7 @@ section
 variable {I O : Type} [PO I] [PO O]
 
   /-- Ordered relational specification (Def. relational specification):
-  its table of possibilities, total on inputs. -/
+  its possibility relation, total on inputs. -/
 structure Spec (I O : Type) [PO I] [PO O] where
   P : Table I O
   total : ∀ i, ∃ o, P i o

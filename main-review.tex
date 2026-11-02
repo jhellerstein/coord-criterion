@@ -87,7 +87,7 @@ general.} \textcolor{reviewed}{CALM, CAP, and CRDTs
 answer it for one class of programs, consistency models, or design patterns.} \textcolor{reviewed}{Their answers cannot
 be compared or combined, and together they leave basic questions open, such as how coordination repairs inconsistency.} \textcolor{reviewed}{We put them on common
 ground.} \textcolor{reviewed}{We provide a minimalist relational definition of a specification: a
-table of possibilities that includes, for each input, all outputs a system may produce.} \textcolor{reviewed}{Each
+possibility relation that includes, for each input, all outputs a system may produce.} \textcolor{reviewed}{Each
 column carries its own partial order, saying when one input \inrel another and
 when one output \outrel another.} \textcolor{reviewed}{A specification is \emph{consistent} when its
 runs are confluent: runs whose inputs have a common \indesc can always catch up
@@ -148,10 +148,14 @@ proposed a crisp, bidirectional answer: consistency can be achieved without
 coordination exactly when the specification is
 monotone~\cite{hellerstein2010declarative}.} \textcolor{reviewed}{Ameloot et al.\ proved it in both
 directions, but only for Datalog queries evaluated by relational
-transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.} \textcolor{reviewed}{Gilbert and Lynch proved Brewer's CAP conjecture, but only for linearizable
-registers~\cite{brewer2000towards,gilbert2002cap}.} \textcolor{reviewed}{Both results are
-invoked far more broadly: CALM as a general rule that monotone programs
-need no coordination, CAP as a general constraint on distributed systems.} \textcolor{reviewed}{The folklore outgrew the proofs.}
+transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.} \textcolor{reviewed}{A
+closely related question appears in Brewer's CAP conjecture: which consistency
+guarantees can remain available when participants cannot communicate?} \textcolor{reviewed}{Gilbert and Lynch proved its impossibility result, but only for linearizable
+registers~\cite{brewer2000towards,gilbert2002cap}.} \textcolor{reviewed}{The apparent connection
+between CALM and CAP has never been established in a common formalism.} \textcolor{reviewed}{Both
+results are invoked far more broadly: CALM as a general rule that monotone
+programs need no coordination, CAP as a general constraint on distributed
+systems.} \textcolor{reviewed}{The folklore outgrew the proofs.}
 
 \textcolor{reviewed}{The need for a common criterion extends beyond CALM and CAP.} \textcolor{reviewed}{CRDTs use
 inflationary updates over join-semilattices for coordination-free
@@ -171,13 +175,12 @@ some outcomes impossible: they exclude a possibility that nothing remaining
 can carry forward.} \textcolor{reviewed}{Which specifications can be implemented without fateful
 decisions?}
 
-\textcolor{reviewed}{The foundation of our results is a minimalist model of specification: a
-\emph{table of possibilities} pairing inputs with permitted outputs.} \textcolor{reviewed}{The model is purely
-declarative: it describes what can be observed, without fixing a language,
-protocol, or placement.} \textcolor{reviewed}{The input domain $(I,\InputOrd)$ has a partial order:
+\textcolor{reviewed}{Our foundation is a possibly infinite \emph{possibility relation} $P$ pairing
+inputs with permitted outputs, depicted as rows in a table.} \textcolor{reviewed}{It describes
+observable behavior without fixing a language, protocol, or placement.} \textcolor{reviewed}{The input domain $(I,\InputOrd)$ has a partial order:
 $i\InputOrd j$ means that $j$ \inrel $i$ with more input from the environment.} \textcolor{reviewed}{The output domain $(O,\OutputOrd)$
 has its own partial order: $o\OutputOrd u$ means that $u$ \outrel $o$, carrying
-every claim in $o$ forward.} \textcolor{reviewed}{An \emph{exclusion} is a system decision that
+every claim in $o$ forward.} \textcolor{reviewed}{An \emph{exclusion} is a fateful system decision that
 removes one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
 $o\OutputOrd u$: the excluded possibilities are not carried forward.}
 
@@ -213,7 +216,7 @@ some larger permitted output carries them all forward, making those decisions
 incidental.}
 
 \textcolor{reviewed}{Together, monotonicity under input growth and output choice form \emph{Lifted
-Monotonicity}, one condition on the table of possibilities.} \textcolor{reviewed}{\emph{Complete
+Monotonicity}, our unified criterion on the possibility relation.} \textcolor{reviewed}{\emph{Complete
 CALM} proves that consistency is equivalent to Lifted Monotonicity
 (\S\ref{sec:complete-calm-theorem}).}
 
@@ -462,7 +465,7 @@ consistent when its runs are confluent.} For functional tables this corresponds 
   \Spec=(I,\InputOrd,O,\OutputOrd,P),
 \]
 \textcolor{reviewed}{where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
-  output types, and $P\subseteq I\times O$ is its \emph{table of possibilities}:
+  output types, and $P\subseteq I\times O$ is its \emph{possibility relation}:
   a typed relation with schema $(\mathrm{in},\mathrm{out})$ in which every
   input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
   (a functional dependency):}
@@ -905,7 +908,8 @@ ambiguity of output.}
   \label{eq:relational-specification}
         \end{equation}
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and
-  $P\subseteq I\times O$ is its \emph{table of possibilities}. The table $P$
+  $P\subseteq I\times O$ is its \emph{possibility relation}. We depict $P$ as
+a table and call its members rows; it need not be finite. The relation $P$
   is total on $I$: every input appears in at least one row. \textcolor{reviewed}{A row $(i,o)\in P$
   is a possible input/output pair: output $o$ is permitted at input $i$.} The fiber
         \begin{equation}
@@ -2517,7 +2521,7 @@ proved it, but only for relational languages, which to date have
 still not become mainstream beyond query processing (more on this below).}
 
 This paper moves the declarations one level higher, from queries to
-specifications: all that matters is the table of possibilities pairing inputs
+specifications: all that matters is the possibility relation pairing inputs
 with permitted outputs. \textcolor{reviewed}{Eliding the query logic frees the analysis from any particular
 language and broadens what can be specified.} \textcolor{reviewed}{Prior work focused on implementing
 complex programs
@@ -2531,8 +2535,7 @@ analyses became enmeshed in the details of implementations, however
 declarative.} \textcolor{reviewed}{Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in
 programs and conservatively injected coordination code in front of it.} \textcolor{reviewed}{Yet
 coordination code is itself non-monotone, so adding it to a Bloom program only
-adds more non-monotone syntax.} \textcolor{reviewed}{Jagannathan and colleagues moved the question
-from syntax to declared contracts and
+adds more non-monotone syntax.} \textcolor{reviewed}{Subsequent work moved the question from syntax to declared contracts and
 invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}.} \textcolor{reviewed}{Their tools pick,
 for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties.} \textcolor{reviewed}{We
@@ -2542,7 +2545,7 @@ levels.} Because the canonical exclusions are universal
 composition results need no program logic, and the criteria are exact on
 specifications, not conservative.}
 
-The table of possibilities makes the boundary concrete. Possibilities may
+The possibility relation makes the boundary concrete. Possibilities may
 be lost as input grows. When a system emits an output, other possibilities
 may be subsumed by refinements that remain, an incidental decision, or
 excluded even though nothing remaining carries them forward, a fateful one. Only the latter removals are exclusions, and only they require coordination.
@@ -2576,7 +2579,7 @@ potential program synthesis and optimization.}
 \section{Conclusion}
 \label{sec:conclusion}
 
-A specification abstracts execution details away into a table of possibilities. The results here reduce to one question: can a participant act on what it knows
+A specification abstracts execution details away into a possibility relation. The results here reduce to one question: can a participant act on what it knows
 without excluding a possibility that another run may still need? \textcolor{reviewed}{Mutexes,
 locks, atomic instructions, and agreement protocols prevent such contradictions
 by applying exclusions.} \textcolor{reviewed}{Functional CALM answers the question for functions: a functional specification
