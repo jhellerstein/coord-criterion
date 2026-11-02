@@ -605,11 +605,10 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : ExclusionBasis
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
     canonical_equivalent h
 
-/-- **Corollary `cor:free-eager-output`** (Free eager output and incidental
-circumspection).  "*Eager output is free*: emitting a legal output applies no
-exclusion and preserves every possibility up to refinement.
-*Circumspection is incidental*: every additional row preserved by deferring
-that output is already covered by a surviving refinement."
+/-- **Corollary `cor:free-eager-output`** (Eager output is incidental).
+"Emitting a legal output is an incidental decision: it applies no exclusion,
+since every row it removes is subsumed by a row that survives.  Likewise,
+deferring an output avoids no exclusion."
 
 Lean: for any exclusion basis, a legal output has a legal empty-exclusion
 output event; every row that event removes is in `Subsumed_o`.  Canonical Run

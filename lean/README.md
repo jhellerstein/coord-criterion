@@ -314,7 +314,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/neither-is-canonical-exclusion»` | theorem | "… and neither is the exclusion `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each reque… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and exclusion events apply only e… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Locks, timestamps, quorums, and consensus differ in how and when they decide. |
-| `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Free eager output and incidental circumspection). |
+| `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:contradicts»` | abbrev | **Def. |
