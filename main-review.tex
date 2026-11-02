@@ -136,17 +136,24 @@ Confluence, and later refinements of CALM all map into the same framework.}
 \section{Introduction}
 \label{sec:intro}
 
-\textcolor{reviewed}{In systems, as in life, possibilities narrow over time.} Some are out of our
-hands: the environment moves on, and possibilities are lost. Others are left
-for us to decide. Incidental decisions close no doors: any possibilities they
-remove are carried forward by those that remain. Fateful decisions make some
-outcomes impossible: they exclude a possibility that nothing remaining can
-carry forward.
+\textcolor{reviewed}{Concurrent systems rely on coordination mechanisms ranging from mutexes and
+atomic instructions to database locks and consensus protocols.} \textcolor{reviewed}{These
+mechanisms prevent concurrent actions from producing undesirable outcomes.} \textcolor{reviewed}{They also bring costs: overhead, latency, and reduced availability in
+distributed settings.} \textcolor{reviewed}{Avoiding unnecessary coordination is therefore a
+central goal in distributed systems and databases.} \textcolor{reviewed}{To distinguish necessary
+coordination from implementation habit, we first ask what these mechanisms
+fundamentally accomplish.}
 
-\textcolor{reviewed}{We show that fateful decisions require coordination to preserve consistency
-across a system's runs, while incidental decisions do not.} This leaves an
-intrinsic question: can we tell from a specification whether its execution
-could require a fateful decision?
+\textcolor{reviewed}{In systems, as in life, possibilities narrow over time.} \textcolor{reviewed}{Some are out of our
+hands: the environment moves on, and possibilities are lost.} \textcolor{reviewed}{Others are left
+for us to decide.} \textcolor{reviewed}{Incidental decisions close no doors: any possibilities they
+remove are carried forward by those that remain.} \textcolor{reviewed}{Fateful decisions make some
+outcomes impossible: they exclude a possibility that nothing remaining can
+carry forward.} \textcolor{reviewed}{We show that fateful decisions require coordination to
+preserve consistency across a system's runs, while incidental decisions do
+not.} \textcolor{reviewed}{This turns the systems problem into an intrinsic specification question:
+can we tell from a specification whether its execution could require a
+fateful decision?}
 
 \textcolor{reviewed}{The CALM Conjecture
 proposed a crisp, bidirectional answer: consistency can be achieved without
@@ -158,20 +165,20 @@ registers~\cite{brewer2000towards,gilbert2002cap}.} \textcolor{reviewed}{Both re
 invoked far more broadly: CALM as a general rule that monotone programs
 need no coordination, CAP as a general constraint on distributed systems.} \textcolor{reviewed}{The folklore outgrew the proofs.}
 
-\textcolor{reviewed}{Related results reach similar conclusions from different starting points.} \textcolor{reviewed}{Conflict-free Replicated Data Types (CRDTs) use inflationary updates over
+Related results reach similar conclusions from different starting points. Conflict-free Replicated Data Types (CRDTs) use inflationary updates over
 join-semilattices to guarantee coordination-free
-convergence~\cite{shapiro2011crdt}.} \textcolor{reviewed}{Highly Available Transactions (HATs)
+convergence~\cite{shapiro2011crdt}. Highly Available Transactions (HATs)
 identify transactional guarantees that remain available under
-partition~\cite{bailis2013hat}.} \textcolor{reviewed}{Invariant confluence asks whether
+partition~\cite{bailis2013hat}. Invariant confluence asks whether
 independently reached, invariant-preserving database states can merge
-safely~\cite{bailis2014coordination}.} \textcolor{reviewed}{Because these results speak different
-formal languages, they do not translate directly.} \textcolor{reviewed}{Does CALM encompass CAP
-(\S\ref{sec:complete-cap})?} \textcolor{reviewed}{Are CRDT join laws necessary, or merely one
+safely~\cite{bailis2014coordination}. Because these results speak different
+formal languages, they do not translate directly. Does CALM encompass CAP
+(\S\ref{sec:complete-cap})? Are CRDT join laws necessary, or merely one
 sufficient discipline for coordination avoidance
-(\S\ref{sec:crdt-instance})?} \textcolor{reviewed}{Why do some transactional guarantees
+(\S\ref{sec:crdt-instance})? Why do some transactional guarantees
 stay available under partition while others do not
-(\S\ref{sec:hat-instance})?} \textcolor{reviewed}{Is invariant confluence a different test from
-CALM's (\S\ref{sec:iconfluence-instance})?}
+(\S\ref{sec:hat-instance})? Is invariant confluence a different test from
+CALM's (\S\ref{sec:iconfluence-instance})?
 
 \textcolor{reviewed}{We answer such questions with a single criterion.} \textcolor{reviewed}{Our foundation is a minimalist
   specification model: a \emph{table of possibilities} pairing input values
@@ -241,14 +248,14 @@ registers follows directly.}
         stages can free downstream stages from issuing exclusions (\S\ref{sec:composition}).}
 \end{enumerate}
 
-\textcolor{reviewed}{Section~\ref{sec:functional-calm} introduces the framework on an election and
+Section~\ref{sec:functional-calm} introduces the framework on an election and
 proves Functional CALM; Section~\ref{sec:complete-calm} generalizes it to
 ambiguous specifications and proves Complete CALM;
 Section~\ref{sec:distributed-execution} gives the distributed reading, defines
-coordination, and proves Complete CAP.} \textcolor{reviewed}{Section~\ref{sec:composition}
-composes specifications and characterizes proper coordination.} \textcolor{reviewed}{Section~\ref{sec:instances} recovers several earlier results as consequences
+coordination, and proves Complete CAP. Section~\ref{sec:composition}
+composes specifications and characterizes proper coordination. Section~\ref{sec:instances} recovers several earlier results as consequences
 of ours and compares other approaches; Section~\ref{sec:discussion} puts
-this paper into the broader context of the CALM agenda.} The appendices give the remaining proofs and further applications;
+this paper into the broader context of the CALM agenda. The appendices give the remaining proofs and further applications;
 Appendix~\ref{app:notation} collects notation and defined terms.
 
 \section{Functional CALM}

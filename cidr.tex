@@ -137,14 +137,25 @@ Confluence, and later refinements of CALM all map into the same framework.
 \section{Introduction}
 \label{sec:intro}
 
-In systems, as in life, possibilities narrow.  Some are lost as the
-environment moves on.  Decisions remove others.  Incidental decisions remove
-only possibilities carried forward by those that remain.  Fateful decisions
-irrevocably exclude a possibility that nothing remaining can carry forward.
+Concurrent systems rely on coordination mechanisms ranging from mutexes and
+atomic instructions to database locks and consensus protocols.  These
+mechanisms prevent concurrent actions from producing undesirable outcomes.
+They also bring costs: overhead, latency, and reduced availability in
+distributed settings.  Avoiding unnecessary coordination is therefore a
+central goal in distributed systems and databases.  To distinguish necessary
+coordination from implementation habit, we first ask what these mechanisms
+fundamentally accomplish.
 
-We show that fateful decisions require coordination to preserve consistency
-across a system's runs, while incidental decisions do not.  This leaves a
-specification question: how can we tell whether progress will require one?
+In systems, as in life, possibilities narrow over time.  Some are out of our
+hands: the environment moves on, and possibilities are lost.  Others are left
+for us to decide.  Incidental decisions close no doors: any possibilities they
+remove are carried forward by those that remain.  Fateful decisions make some
+outcomes impossible: they exclude a possibility that nothing remaining can
+carry forward.  We show that fateful decisions require coordination to
+preserve consistency across a system's runs, while incidental decisions do
+not.  This turns the systems problem into an intrinsic specification question:
+can we tell from a specification whether its execution could require a
+fateful decision?
 
 The CALM Conjecture
 proposed a crisp, bidirectional answer: consistency can be achieved without
@@ -156,21 +167,13 @@ registers~\cite{brewer2000towards,gilbert2002cap}.  Both results are
 invoked far more broadly: CALM as a general rule that monotone programs
 need no coordination, CAP as a general constraint on distributed systems.  The folklore outgrew the proofs.
 
-Related results reach similar conclusions from different starting points.
-Conflict-free Replicated Data Types (CRDTs) use inflationary updates over
-join-semilattices to guarantee coordination-free
-convergence~\cite{shapiro2011crdt}.  Highly Available Transactions (HATs)
-identify transactional guarantees that remain available under
-partition~\cite{bailis2013hat}.  Invariant confluence asks whether
-independently reached, invariant-preserving database states can merge
-safely~\cite{bailis2014coordination}.  Because these results speak different
-formal languages, they do not translate directly.  Does CALM encompass CAP
-(\S\ref{sec:complete-cap})?  Are CRDT join laws necessary, or merely one
-sufficient discipline for coordination avoidance
-(\S\ref{sec:crdt-instance})?  Why do some transactional guarantees
-stay available under partition while others do not
-(\S\ref{sec:hat-instance})?  Is invariant confluence a different test from
-CALM's (\S\ref{sec:iconfluence-instance})?
+CRDTs use inflationary updates over join-semilattices for coordination-free
+convergence~\cite{shapiro2011crdt}; HATs identify transactional guarantees
+available under partition~\cite{bailis2013hat}; invariant confluence asks when
+independently reached database states merge safely~\cite{bailis2014coordination}.
+Their different formal languages obscure how CALM relates to CAP, whether CRDT
+join laws are necessary, and why transactional guarantees divide at
+availability (Section~\ref{sec:instances}).
 
 We answer such questions with a single criterion.  Our foundation is a minimalist
   specification model: a \emph{table of possibilities} pairing input values
@@ -239,16 +242,13 @@ This paper makes five contributions:
         stages can free downstream stages from issuing exclusions (\S\ref{sec:composition}).
 \end{enumerate}
 
-Section~\ref{sec:functional-calm} introduces the framework on an election and
-proves Functional CALM; Section~\ref{sec:complete-calm} generalizes it to
-ambiguous specifications and proves Complete CALM;
-Section~\ref{sec:distributed-execution} gives the distributed reading, defines
-coordination, and proves Complete CAP.  Section~\ref{sec:composition}
-composes specifications and characterizes proper coordination.
-Section~\ref{sec:instances} recovers several earlier results as consequences
-of ours and compares other approaches; Section~\ref{sec:discussion} puts
-this paper into the broader context of the CALM agenda.  The full paper~\cite{hellerstein2026completecalmfull} gives more intuition and
-examples, the full details of all proofs, and further applications.
+Section~\ref{sec:functional-calm} introduces the framework and proves
+Functional CALM; Section~\ref{sec:complete-calm} proves Complete CALM;
+Section~\ref{sec:distributed-execution} gives the distributed reading and
+Complete CAP; Section~\ref{sec:composition} composes specifications and
+characterizes proper coordination; Section~\ref{sec:instances} connects prior
+results.  The full paper~\cite{hellerstein2026completecalmfull} gives further
+intuition, proofs, and applications.
 
 % ======================================================================
 \section{Functional CALM}
