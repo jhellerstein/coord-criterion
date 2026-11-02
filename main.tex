@@ -88,24 +88,23 @@ ground.  We provide a minimalist relational definition of a specification: a
 possibility relation that includes, for each input, all outputs a system may produce.  Each
 column carries its own partial order, saying when one input \inrel another and
 when one output \outrel another.  A specification is \emph{consistent} when its
-runs are confluent: runs whose inputs have a common \indesc can always catch up
-to a common state.  Possibilities narrow as input grows or outputs are emitted.
-Coordination shows up as an irrevocable \emph{exclusion} of possibilities: a
-fateful decision that removes rows from the table.
+  runs are confluent: runs whose inputs have a common \indesc can always catch up
+  to a common state.  Possibilities narrow as input grows or outputs are emitted.
+  An irrevocable \emph{exclusion} removes possibilities not subsumed by those
+  remaining; it requires coordination when another run could contradict it.
 
-We lift CALM out of its original setting.  \emph{Functional CALM} generalizes
-the CALM Theorem from Datalog queries to any function between ordered domains:
-such a specification is consistent exactly when it is monotone, and then no
-output ever needs coordination.  We extend CAP.  \emph{Complete CAP} covers
-any consistency guarantee: a system can keep every allowed output available
-and consistent across a partition if and only if its specification passes
-Lifted Monotonicity, and Gilbert and Lynch's theorem follows directly.  We also pose and answer two new questions.  \emph{Complete CALM} handles ambiguous specifications
-that allow several outputs for the same input, where the test becomes
-\emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
-larger input \outrel whatever was emitted at the smaller one.
-\emph{Proper Coordination} identifies which stage of a composition must coordinate,
-and certifies that the stages behind it need no coordination of their own.  Highly Available Transactions, Invariant
-Confluence, and later refinements of CALM all map into the same framework.
+  We lift CALM out of its original setting.  \emph{Functional CALM} generalizes
+  the CALM Theorem from Datalog queries to any function between ordered domains:
+  such a specification is consistent exactly when it is monotone, and then no
+  output requires exclusion.  \emph{Complete CALM} handles ambiguous specifications
+  that allow several outputs for the same input, where the test becomes
+  \emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
+  larger input \outrel whatever was emitted at the smaller one.  As a corollary,
+  \emph{Complete CAP} inherits the same criterion: the CAP trade-off arises
+  exactly when Lifted Monotonicity fails.
+  \emph{Proper Coordination} identifies which stage of a composition must coordinate,
+  and certifies that later stages need no coordination of their own.  Highly Available Transactions, Invariant
+  Confluence, and later refinements of CALM all map into the same framework.
 \end{abstract}
 
 \begin{CCSXML}

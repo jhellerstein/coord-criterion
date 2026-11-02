@@ -225,7 +225,8 @@ theorem «app:composition/capped-counter» :
   ⟨Joint.thr_ceOn, fun _ _ h => Joint.up_img h, Joint.threshold.2.2.2⟩
 
 /-- "For the boolean toggle, let `I`, `M`, and `O` be the booleans with `false`
-below `true`, and let both stages be negation.  The table of a function `f`
+below `true`, and let both stages be negation.  The functional specification
+induced by `f`
 has `f(i)` a legal output at `σ(i)` exactly when `f(i) ≼_M f(k)` for all `k ⪰ i`.
 At `i = false` the first stage would emit `true`, which is not below its
 output `false` at the larger input, so under the empty basis it cannot emit
@@ -244,8 +245,9 @@ theorem «app:composition/boolean-toggle» (b : Bool) :
   ⟨Joint.toggle_exposable_iff b, Joint.toggle_empty_basis,
     Joint.bool_toggle.2.2.2.2.2.trans Joint.bool_toggle.2.1⟩
 
-/-- "Let `𝒮₁` have one input `*` and table `{(*,x),(*,y)}` with `x,y`
-incomparable, and let `𝒮₂` be the table of a function `f` that maps both to
+/-- "Let `𝒮₁` have one input `*` and possibility relation `{(*,x),(*,y)}`
+with `x,y` incomparable, and let `𝒮₂` be the functional specification induced
+by a function `f` that maps both to
 one value.  The composite has one row, so it satisfies Lifted Monotonicity. …
 every run of `𝒮₁` under the empty basis stays at the canonical state and emits
 nothing.  Then `𝒮₂` receives nothing.  Renaming `x,y` to `lo ≼ hi` makes `𝒮₁`

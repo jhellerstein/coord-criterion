@@ -161,8 +161,9 @@ canonical states of $x$ and $y$.  The stages can be repaired only by merging
 $p$ and $q$ into one intermediate value.
 
 For the capped counter of Section~\ref{sec:composite-calm}, let $\mathcal S_1$
-be the table of the function $c(n)=\min(n,9)$ on $(\mathbb N,\le)$ and
-$\mathcal S_2$ the table of the test $t(n)=[n<10]$, whose two outputs are
+be the functional specification induced by $c(n)=\min(n,9)$ on
+$(\mathbb N,\le)$, and $\mathcal S_2$ that induced by the test $t(n)=[n<10]$,
+whose two outputs are
 incomparable.  $\mathcal S_2$
 violates Lifted Monotonicity, since $[9<10]$ and $[10<10]$ differ, but it
 satisfies it on $\{n\le 9\}$, so the composite is Lifted-Monotone by case (2).  At
@@ -181,8 +182,9 @@ $\mathit{false}$ at the larger input, so under the empty basis it cannot emit
 there.  Under the reversed order on $M$, negation is monotone in both stages,
 and by case (3) the composite is the identity in either order.
 
-Let $\mathcal S_1$ have one input $*$ and table $\{(*,x),(*,y)\}$ with $x,y$
-incomparable, and let $\mathcal S_2$ be the table of a function $f$ that maps
+Let $\mathcal S_1$ have one input $*$ and possibility relation
+$\{(*,x),(*,y)\}$ with $x,y$ incomparable, and let $\mathcal S_2$ be the
+functional specification induced by a function $f$ that maps
 both to one value.  The composite has one row, so it satisfies Lifted
 Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
 a legal output, and under the empty basis an output event is legal only for a
@@ -357,7 +359,8 @@ store must take the lock at $[\,]$, which empties $[b]$, so it cannot receive
 $[b]$.
 
 For a function store, some exclusions of $\Spec_1$ are invisible to the
-composite.  Let $\Spec_2$ be the table of a monotone function $f$, and write
+composite.  Let $\Spec_2$ be the functional specification induced by a
+monotone function $f$, and write
 $f(\sigma)$ for the image of a state $\sigma$ of $\Spec_1$.
 
 \begin{proposition}[Invisible coordination]
@@ -403,7 +406,8 @@ violating Equation~\ref{eq:exclusion-excludes}, so no exclusion of the
 composite has that effect.  In the composite, $\mathit{hi}$ is a legal output
 at the canonical state, since it subsumes $\mathit{lo}$.
 
-Monotonicity of $f$ is needed.  Let $\Spec_1$ be the table of the identity on
+Monotonicity of $f$ is needed.  Let $\Spec_1$ be the functional specification
+induced by the identity on
 $M$, which needs no exclusion.  For $m\preceq_M m'$, its run
 $\mathsf{output}(m)$, $\mathsf{input}(m')$, $\mathsf{output}(m')$ maps to a run
 of the composite exactly when $f(m)\OutputOrd f(m')$.  A downstream that must
@@ -418,7 +422,8 @@ Consider again state-machine replication, with every put and get passing
 through the log.  Take $I$ the proposal streams and $M$ the logs, both ordered
 by prefix, and $O$ the cumulative response histories, ordered by extension.
 Let $\Spec_1$ relate each proposal stream to the logs of its commands, and let
-the store $\Spec_2$ be the table of the function $f$ that executes a log on a
+the store $\Spec_2$ be the functional specification induced by the function
+$f$ that executes a log on a
 deterministic state machine, which is monotone in the prefix order.  Then
 $\Spec_1$ is non-monotone, since distinct next entries are incompatible
 outputs in one fiber.  So is the key-value store $P_2\circ P_1$, since

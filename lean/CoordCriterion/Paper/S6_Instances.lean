@@ -456,7 +456,7 @@ event precedes another when the replica running the second saw the first.  A
 history expands each of its downward-closed sub-orders.  We keep the locally
 valid histories, in which every transaction step preserves `𝓘` on its
 replica's state.  Outputs are database states, ordered by inclusion.  The
-specification table permits, at input `h`, the state of any downward-closed sub-history of
+possibility relation permits, at input `h`, the state of any downward-closed sub-history of
 `h` that is valid: every merge of what it contains satisfies `𝓘`."  Lean:
 `IConf.SI M` on inputs `IConf.Inp M` (locally valid histories, expansion
 order) with outputs `IConf.St V` under inclusion; full model in
