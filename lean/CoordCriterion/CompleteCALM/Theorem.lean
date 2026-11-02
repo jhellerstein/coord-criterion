@@ -10,10 +10,8 @@ import CoordCriterion.Foundations.Runs
   canonical statement; every other file uses it);
 * `ce_of_pairs` — pairs of rows suffice for the common-expansion condition
   (`app:pairs-suffice`);
-* facts about the lifted output event (Def. lifted-output-event and the
-  paragraph after it): the InputExcluded/Subsumed/OutputExcluded classification
-  (`ruledOut_iff`), disjointness, the two exclusions and their commutation
-  (`input_output_exclusion_states_commute`), the functional case;
+* facts about the lifted output event: the Subsumed/Excluded classification
+  (`ruledOut_iff`), disjointness, and the functional case;
 * `lifted_exposure_test` — Prop. exposability (lifted exposure test);
 * `complete_calm` — Thm. complete-calm;
 * `exposure_boundary` — Prop. exposure-boundary.
@@ -129,204 +127,43 @@ theorem ce_of_pairs {sp : Spec I O}
 section Classification
 variable {sp : Spec I O} (σ : State sp) (o : O)
 
-/-- Every row in `InputExcluded`, `Subsumed`, `OutputExcluded` is ruled out by `o`. -/
-theorem inputExcluded_ruledOut {k x} (h : InputExcluded σ o k x) : σ.R k x ∧ ¬ o ≼ x :=
-  ⟨h.1, fun hox => h.2 ⟨x, h.1, hox⟩⟩
+theorem subsumed_excluded_disjoint {k x} :
+    ¬ (Subsumed σ o k x ∧ Excluded σ o k x) :=
+  fun ⟨hr, he⟩ => he.2.2 hr
 
-theorem inputExcluded_subsumed_disjoint {k x} : ¬ (InputExcluded σ o k x ∧ Subsumed σ o k x) := by
-  rintro ⟨hs, hr⟩
-  obtain ⟨u, hu, hou, _⟩ := hr.2.2
-  exact hs.2 ⟨u, hu, hou⟩
-
-theorem inputExcluded_outputExcluded_disjoint {k x} : ¬ (InputExcluded σ o k x ∧ OutputExcluded σ o k x) :=
-  fun ⟨hs, hj⟩ => hj.2.2.1 hs
-
-theorem subsumed_outputExcluded_disjoint {k x} : ¬ (Subsumed σ o k x ∧ OutputExcluded σ o k x) :=
-  fun ⟨hr, hj⟩ => hj.2.2.2 hr
-
-/-- The three classes partition exactly the ruled-out rows `R \ R[out ⪰ o]`. -/
+/-- `Subsumed_o` and `Excluded_o` partition exactly the ruled-out rows. -/
 theorem ruledOut_iff (k : I) (x : O) :
     (σ.R k x ∧ ¬ outputTable σ o k x) ↔
-      (InputExcluded σ o k x ∨ Subsumed σ o k x ∨ OutputExcluded σ o k x) := by
+      (Subsumed σ o k x ∨ Excluded σ o k x) := by
   constructor
   · rintro ⟨hR, hno⟩
     have hox : ¬ o ≼ x := fun h => hno ⟨hR, h⟩
-    by_cases hs : InputExcluded σ o k x
-    · exact Or.inl hs
     by_cases hr : Subsumed σ o k x
-    · exact Or.inr (Or.inl hr)
-    exact Or.inr (Or.inr ⟨hR, hox, hs, hr⟩)
-  · intro h
-    have : σ.R k x ∧ ¬ o ≼ x := by
-      rcases h with hs | hr | hj
-      · exact inputExcluded_ruledOut σ o hs
-      · exact ⟨hr.1, hr.2.1⟩
-      · exact ⟨hj.1, hj.2.1⟩
-    exact ⟨this.1, fun h' => this.2 h'.2⟩
+    · exact Or.inl hr
+    · exact Or.inr ⟨hR, hox, hr⟩
+  · rintro (hr | he)
+    · exact ⟨hr.1, fun h => hr.2.1 h.2⟩
+    · exact ⟨he.1, fun h => he.2.1 h.2⟩
 
-/-- `Exposable` (every ruled-out row is subsumed) is the paper's
-"applies no exclusion": `Excluded^in_o` and `Excluded^out_o` are empty. -/
+/-- `Exposable` means that no row must be removed by exclusion. -/
 theorem exposable_iff_no_exclusion :
-    Exposable σ o ↔ (∀ k x, ¬ InputExcluded σ o k x) ∧ (∀ k x, ¬ OutputExcluded σ o k x) := by
+    Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x := by
   constructor
-  · intro h
-    refine ⟨fun k x hs => ?_, fun k x hj => ?_⟩
-    · obtain ⟨u, hu, hou, _⟩ := h k x hs.1 (inputExcluded_ruledOut σ o hs).2
-      exact hs.2 ⟨u, hu, hou⟩
-    · exact hj.2.2.2 ⟨hj.1, hj.2.1, h k x hj.1 hj.2.1⟩
-  · rintro ⟨hs, hj⟩ k x hR hox
-    rcases (ruledOut_iff σ o k x).1 ⟨hR, fun h => hox h.2⟩ with h | h | h
-    · exact absurd h (hs k x)
-    · exact h.2.2
-    · exact absurd h (hj k x)
-
-/-- Input exclusioning depends only on the input: an input-excluded input has all its rows inputExcluded. -/
-theorem inputExcluded_input {k x x'} (h : InputExcluded σ o k x) (h' : σ.R k x') : InputExcluded σ o k x' :=
-  ⟨h', h.2⟩
+  · intro h k x he
+    exact he.2.2 ⟨he.1, he.2.1, h k x he.1 he.2.1⟩
+  · intro he k x hR hox
+    exact Classical.byContradiction fun hn =>
+      he k x ⟨hR, hox, fun hs => hn hs.2.2⟩
 
 end Classification
 
-/-! ### The two exclusions as states, and their independence -/
-
-section Exclusions
-variable {sp : Spec I O}
-
-/-- The input exclusion `x_o^in(i,R) = (i, R \ Excluded^in_o)`, for `o ∈ R(i)`. -/
-def inputExclusionState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
-  cur := σ.cur
-  R := fun k x => σ.R k x ∧ ¬ InputExcluded σ o k x
-  sub := fun k x h => σ.sub k x h.1
-  hasCur := ⟨o, ho, fun hs => hs.2 ⟨o, ho, PO.refl o⟩⟩
-  above := fun k x h => σ.above k x h.1
-
-/-- The output exclusion `x_o^out(i,R) = (i, R \ Excluded^out_o)`, for `o ∈ R(i)`. -/
-def outputExclusionState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
-  cur := σ.cur
-  R := fun k x => σ.R k x ∧ ¬ OutputExcluded σ o k x
-  sub := fun k x h => σ.sub k x h.1
-  hasCur := ⟨o, ho, fun hj => hj.2.1 (PO.refl o)⟩
-  above := fun k x h => σ.above k x h.1
-
-/-- Helper: the kept rows `R[out ⪰ o]` are unchanged by either exclusion. -/
-theorem inputExclusionState_kept (σ : State sp) (o : O) (ho) (k : I) (u : O) :
-    ((inputExclusionState σ o ho).R k u ∧ o ≼ u) ↔ (σ.R k u ∧ o ≼ u) := by
-  simp only [inputExclusionState]
-  constructor
-  · rintro ⟨⟨h, _⟩, hou⟩; exact ⟨h, hou⟩
-  · rintro ⟨h, hou⟩; exact ⟨⟨h, fun hs => hs.2 ⟨u, h, hou⟩⟩, hou⟩
-
-theorem outputExclusionState_kept (σ : State sp) (o : O) (ho) (k : I) (u : O) :
-    ((outputExclusionState σ o ho).R k u ∧ o ≼ u) ↔ (σ.R k u ∧ o ≼ u) := by
-  simp only [outputExclusionState]
-  constructor
-  · rintro ⟨⟨h, _⟩, hou⟩; exact ⟨h, hou⟩
-  · rintro ⟨h, hou⟩; exact ⟨⟨h, fun hj => hj.2.1 hou⟩, hou⟩
-
-/-- Removing the inputExcluded rows leaves `Subsumed_o` unchanged. -/
-theorem inputExclusion_subsumed (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    Subsumed (inputExclusionState σ o ho) o k x ↔ Subsumed σ o k x := by
-  have hk := inputExclusionState_kept σ o ho k
-  constructor
-  · rintro ⟨h, hox, u, hu, hou, hxu⟩
-    exact ⟨h.1, hox, u, ((hk u).1 ⟨hu, hou⟩).1, hou, hxu⟩
-  · rintro ⟨h, hox, u, hu, hou, hxu⟩
-    exact ⟨⟨h, fun hs => hs.2 ⟨u, hu, hou⟩⟩, hox, u, ((hk u).2 ⟨hu, hou⟩).1, hou, hxu⟩
-
-/-- Removing the inputExcluded rows leaves `Excluded^out_o` unchanged. -/
-theorem inputExclusion_outputExcluded (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    OutputExcluded (inputExclusionState σ o ho) o k x ↔ OutputExcluded σ o k x := by
-  have hret := inputExclusion_subsumed σ o ho k x
-  have hk := inputExclusionState_kept σ o ho k
-  constructor
-  · rintro ⟨h, hox, _, hnr⟩
-    exact ⟨h.1, hox, h.2, fun hr => hnr (hret.2 hr)⟩
-  · rintro ⟨h, hox, hns, hnr⟩
-    refine ⟨⟨h, hns⟩, hox, ?_, fun hr => hnr (hret.1 hr)⟩
-    -- `k` is not inputExcluded in σ, so it keeps a row refining `o`, also after applying an input exclusion to
-    intro hs'
-    apply hns
-    refine ⟨h, ?_⟩
-    rintro ⟨u, hu, hou⟩
-    exact hs'.2 ⟨u, ((hk u).2 ⟨hu, hou⟩).1, hou⟩
-
-/-- After applying an input exclusion to, nothing is inputExcluded. -/
-theorem inputExclusion_inputExcluded_empty (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    ¬ InputExcluded (inputExclusionState σ o ho) o k x := by
-  rintro ⟨⟨_, hns⟩, hno⟩
-  apply hns
-  refine ⟨‹_›, ?_⟩
-  rintro ⟨u, hu, hou⟩
-  exact hno ⟨u, ((inputExclusionState_kept σ o ho k u).2 ⟨hu, hou⟩).1, hou⟩
-
-/-- Removing the outputExcluded rows leaves `Excluded^in_o` unchanged. -/
-theorem outputExclusion_inputExcluded (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    InputExcluded (outputExclusionState σ o ho) o k x ↔ InputExcluded σ o k x := by
-  have hk := outputExclusionState_kept σ o ho k
-  constructor
-  · rintro ⟨h, hno⟩
-    exact ⟨h.1, fun ⟨u, hu, hou⟩ => hno ⟨u, ((hk u).2 ⟨hu, hou⟩).1, hou⟩⟩
-  · rintro ⟨h, hno⟩
-    exact ⟨⟨h, fun hj => hj.2.2.1 ⟨h, hno⟩⟩,
-      fun ⟨u, hu, hou⟩ => hno ⟨u, ((hk u).1 ⟨hu, hou⟩).1, hou⟩⟩
-
-/-- Removing the outputExcluded rows leaves `Subsumed_o` unchanged. -/
-theorem outputExclusion_subsumed (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    Subsumed (outputExclusionState σ o ho) o k x ↔ Subsumed σ o k x := by
-  have hk := outputExclusionState_kept σ o ho k
-  constructor
-  · rintro ⟨h, hox, u, hu, hou, hxu⟩
-    exact ⟨h.1, hox, u, ((hk u).1 ⟨hu, hou⟩).1, hou, hxu⟩
-  · intro hr
-    obtain ⟨h, hox, u, hu, hou, hxu⟩ := hr
-    exact ⟨⟨h, fun hj => hj.2.2.2 ⟨h, hox, u, hu, hou, hxu⟩⟩, hox, u,
-      ((hk u).2 ⟨hu, hou⟩).1, hou, hxu⟩
-
-/-- After choosing, nothing is outputExcluded. -/
-theorem outputExclusion_outputExcluded_empty (σ : State sp) (o : O) (ho) (k : I) (x : O) :
-    ¬ OutputExcluded (outputExclusionState σ o ho) o k x := by
-  rintro ⟨⟨h, hnj⟩, hox, hns, hnr⟩
-  exact hnj ⟨h, hox, fun hs => hns ((outputExclusion_inputExcluded σ o ho k x).2 hs),
-    fun hr => hnr ((outputExclusion_subsumed σ o ho k x).2 hr)⟩
-
-/-- The two exclusions commute: both orders give `R \ (Excluded^in_o ∪ Excluded^out_o)`. -/
-theorem input_output_exclusion_states_commute (σ : State sp) (o : O) (ho : σ.R σ.cur o)
-    (h1 : (inputExclusionState σ o ho).R (inputExclusionState σ o ho).cur o)
-    (h2 : (outputExclusionState σ o ho).R (outputExclusionState σ o ho).cur o) :
-    (outputExclusionState (inputExclusionState σ o ho) o h1).R = (inputExclusionState (outputExclusionState σ o ho) o h2).R := by
-  funext k x
-  apply propext
-  -- unfold only the outer layer; use the invariance lemmas for the inner one
-  show ((inputExclusionState σ o ho).R k x ∧ ¬ OutputExcluded (inputExclusionState σ o ho) o k x) ↔
-       ((outputExclusionState σ o ho).R k x ∧ ¬ InputExcluded (outputExclusionState σ o ho) o k x)
-  rw [inputExclusion_outputExcluded, outputExclusion_inputExcluded]
-  simp only [inputExclusionState, outputExclusionState]
-  constructor
-  · rintro ⟨⟨a, b⟩, c⟩; exact ⟨⟨a, c⟩, b⟩
-  · rintro ⟨⟨a, b⟩, c⟩; exact ⟨⟨a, c⟩, b⟩
-
-/-- The output exclusion only narrows fibers: every input carrying an excluded
-row keeps a row refining `o`. -/
-theorem output_exclusion_narrows (σ : State sp) (o : O) {k x} (hj : OutputExcluded σ o k x) :
-    ∃ u, σ.R k u ∧ o ≼ u := by
-  apply Classical.byContradiction
-  intro hno
-  exact hj.2.2.1 ⟨hj.1, hno⟩
-
-/-- In a functional specification, `Subsumed_o` and `Excluded^out_o` are empty. -/
-theorem functional_subsumed_outputExcluded_empty (hF : sp.Functional) (σ : State sp) (o : O)
-    (k : I) (x : O) : ¬ Subsumed σ o k x ∧ ¬ OutputExcluded σ o k x := by
-  refine ⟨?_, ?_⟩
-  · rintro ⟨h, hox, u, hu, hou, _⟩
-    have : x = u := hF k x u (σ.sub _ _ h) (σ.sub _ _ hu)
-    subst this; exact hox hou
-  · rintro ⟨h, hox, hns, _⟩
-    apply hns
-    refine ⟨h, ?_⟩
-    rintro ⟨u, hu, hou⟩
-    have : x = u := hF k x u (σ.sub _ _ h) (σ.sub _ _ hu)
-    subst this; exact hox hou
-
-end Exclusions
+/-- In a functional specification, no ruled-out row is subsumed. -/
+theorem functional_subsumed_empty {sp : Spec I O} (hF : sp.Functional) (σ : State sp) (o : O)
+    (k : I) (x : O) : ¬ Subsumed σ o k x := by
+  rintro ⟨h, hox, u, hu, hou, _⟩
+  have : x = u := hF k x u (σ.sub _ _ h) (σ.sub _ _ hu)
+  subst this
+  exact hox hou
 
 /-! ### Prop. exposability: the lifted exposure test -/
 

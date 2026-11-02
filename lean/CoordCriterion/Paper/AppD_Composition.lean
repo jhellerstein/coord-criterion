@@ -212,7 +212,7 @@ table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table 
 test `t(n) = [n < 10]`, whose two outputs are incomparable.  `𝒮₂` violates
 Lifted Monotonicity, since `[9 < 10]` and `[10 < 10]` differ, but it satisfies
 it on `{n ≤ 9}`, so the composite is Lifted-Monotone by case (2).  At
-`σ_{𝒮₂}(m)` with `m ≤ 9`, emitting `[m < 10]` must input exclusion the row `(10, false)`,
+`σ_{𝒮₂}(m)` with `m ≤ 9`, emitting `[m < 10]` must exclusion the row `(10, false)`,
 so `𝒮₂` cannot emit under the empty basis.  The outputs of `𝒮₁` lie in
 `{n ≤ 9}`, so the pipeline is proper (Theorem `thm:proper-coordination`(1)).
 Under the empty basis, `𝒮₂|_{𝒮₁}` answers every count that `𝒮₁` emits."
@@ -458,14 +458,14 @@ allows every event, and `𝒮₂` the table of any monotone function `f` of the
 log.  Every log is an output of `𝒮₁`, so `𝒮₂|_{𝒮₁}` is `𝒮₂`.  For a set `Q`
 of logs, removing every row whose input is in `Q` is an exclusion of `𝒮₂` at
 any state whose current input is not in `Q` and which has such a row.  It
-removes whole fibers, so it input-excludes. … Suppose that the store takes the lock
+removes whole fibers, so it excludes. … Suppose that the store takes the lock
 only once its current log is nonempty.  Every log it can still receive then
 has the same first command, so the lock removes no row and is not a
 exclusion.  Suppose instead that the store takes the lock at the empty log,
 ahead of the log.  Its output `f([])` was a legal output without the lock, and the
-lock input-excludes logs that `𝒮₁` can still offer.  At `σ_{𝒮₁}([b])`, `𝒮₁` can emit
+lock excludes logs that `𝒮₁` can still offer.  At `σ_{𝒮₁}([b])`, `𝒮₁` can emit
 `[]` and then `[b]`.  The replacement emits `f([])`, receives `[b]`, and emits
-`f([b])`.  The locking store must take the lock at `[]`, which input-excludes `[b]`, so
+`f([b])`.  The locking store must take the lock at `[]`, which excludes `[b]`, so
 it cannot receive `[b]`."  Lean: `𝒮₁ = Inst.smrS1`; every log is an output
 (`Guard.smr_img`); the lock is `Guard.excludeInput (Guard.bFirst b)` with store basis
 `Guard.mutexB b f`; at a nonempty log the lock is undefined
@@ -517,12 +517,12 @@ theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : S
     {f : M → O} (hf : Monotone f) :
     (∀ {σc : State sp} {m : M}, Exposable σc m → ∀ {ρ : State (Guard.comp sp f)},
       (∀ k o, Guard.imgT f σc.R k o → ρ.R k o) →
-      ∀ k x, Guard.imgT f σc.R k x → ¬ InputExcluded ρ (f m) k x ∧ ¬ OutputExcluded ρ (f m) k x) ∧
+      ∀ k x, Guard.imgT f σc.R k x → ¬ Excluded ρ (f m) k x) ∧
     ∀ {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (Exclusion sp)} {m : M},
       SysStep B σ (.output γ m) τ → ∀ {ρ : State (Guard.comp sp f)},
       (∀ k o, Guard.imgT f σ.R k o → ρ.R k o) →
       ∃ σc, ApplySeq γ σ σc ∧
-        ∀ k x, (InputExcluded ρ (f m) k x ∨ OutputExcluded ρ (f m) k x) →
+        ∀ k x, Excluded ρ (f m) k x →
           ∀ m', σ.R k m' → f m' = x → ¬ σc.R k m' :=
   ⟨fun he _ hs => Guard.coverage hf he hs, fun h _ hs => Guard.coverage_step hf h hs⟩
 
@@ -544,17 +544,17 @@ theorem «app:composition/per-key» {Cmd K : Type} [DecidableEq K] (key : Cmd �
 
 /-- "The exclusions of `𝒮₁` do not themselves push forward.  Let `𝒮₁` have
 one input with fiber `{x,y}`, `x` and `y` incomparable, and
-`f(x) = lo ≼ hi = f(y)`.  The output exclusion `c_y` removes `x` and keeps `y`.  Its
+`f(x) = lo ≼ hi = f(y)`.  The exclusion `c_y` removes `x` and keeps `y`.  Its
 image would remove `lo` and keep `hi`, violating Equation
 `eq:exclusion-excludes`, so no exclusion of the composite has that effect.
 In the composite, `hi` is a legal output at the canonical state, since it subsumes
 `lo`."  Lean: `𝒮₁ = Comp.anyS`, `f = Guard.fLvl`. -/
 theorem «app:composition/no-pushforward» :
-    (∃ τ, (outputExclusion Comp.Two.y).app (canon Comp.anyS Comp.Pt.pt) = some τ ∧
+    (∃ τ, (canonicalExclusion Comp.Two.y).app (canon Comp.anyS Comp.Pt.pt) = some τ ∧
       ∀ c : Exclusion (Guard.comp Comp.anyS Guard.fLvl),
         c.app (Guard.img Guard.fLvl (canon Comp.anyS Comp.Pt.pt)) ≠ some (Guard.img Guard.fLvl τ)) ∧
     Exposable (canon (Guard.comp Comp.anyS Guard.fLvl) Comp.Pt.pt) Guard.Lvl.hi :=
-  ⟨Guard.push_not_exclusion, Guard.outputExclusion_becomes_subsumption.2⟩
+  ⟨Guard.push_not_exclusion, Guard.exclusion_becomes_subsumption.2⟩
 
 /-- "Monotonicity of `f` is needed.  Let `𝒮₁` be the table of the identity on
 `M`, which needs no exclusion.  For `m ≼ m'`, its run `output(m)`,
@@ -573,11 +573,11 @@ If `𝒮₁` is the identity on one input, it admits no exclusion at all.  If
 `𝒮₂` relates that input to two incomparable outputs, every output event of
 the composite at its canonical state applies an exclusion, which `𝒮₁` cannot
 make." -/
-theorem «app:composition/store-output-exclusion» :
+theorem «app:composition/store-exclusion» :
     (∀ (c : Exclusion (graph fun x : Dist.U1 => x)) σ τ, c.app σ ≠ some τ) ∧
     ∀ (B : ExclusionBasis (Comp.seq (graph fun x : Dist.U1 => x) Dist.spU)) γ o τ,
       SysStep B (canon _ ()) (.output γ o) τ → γ ≠ [] :=
-  Guard.store_outputExclusion_not_delegable
+  Guard.store_exclusion_not_delegable
 
 /-- **Example `ex:committed-log-composition`** (Replicated store), for any
 deterministic state machine `δ` and two distinct commands: "Then `𝒮₁` is
@@ -692,24 +692,24 @@ theorem «app:components/system-is-component» {I O : Type} [PO I] [PO O] {sp : 
     fun _ _ => Iff.rfl, Components.cfSystem_cluster_exclusionFree sp D⟩
 
 /-- "The two-phase commit decision of Section `sec:coordination` has both
-forms.  Run by the coordinator alone, it is a process, and its timeout input exclusion
+forms.  Run by the coordinator alone, it is a process, and its timeout exclusion
 requires coordination but not distributed coordination.  Replicated, it is a
-cluster, and the same input exclusion requires distributed coordination."  Lean:
-`CAP.Timeout.inputExclusionSys1` (the coordinator alone) as `Component.process` admits a
-run applying the input exclusion `CAP.Timeout.cp`, which requires coordination
+cluster, and the same exclusion requires distributed coordination."  Lean:
+`CAP.Timeout.pollClosingSys1` (the coordinator alone) as `Component.process` admits a
+run applying the exclusion `CAP.Timeout.cp`, which requires coordination
 (`¬ CoordinationFree`) but not distributed coordination
-(`CoordinationFreeH`); `CAP.Timeout.inputExclusionSysRepl` is replicated, its cluster
-form admits the same input exclusion, and that input exclusion requires distributed coordination
+(`CoordinationFreeH`); `CAP.Timeout.pollClosingSysRepl` is replicated, its cluster
+form admits the same exclusion, and that exclusion requires distributed coordination
 (`¬ CoordinationFreeH`). -/
 theorem «app:components/two-phase-commit» (D : Type) :
-    (∃ r, (Components.Component.process (CAP.Timeout.inputExclusionSys1 D)).accepts r ∧
+    (∃ r, (Components.Component.process (CAP.Timeout.pollClosingSys1 D)).accepts r ∧
       Coordinates r.events) ∧
-    ¬ (CAP.Timeout.inputExclusionSys1 D).CoordinationFree ∧ (CAP.Timeout.inputExclusionSys1 D).CoordinationFreeH ∧
-    (∃ r, (Components.Component.cluster (CAP.Timeout.inputExclusionSysRepl D)
-      (Components.inputExclusionSysRepl_replicated D)).accepts r ∧ Coordinates r.events) ∧
-    ¬ (CAP.Timeout.inputExclusionSysRepl D).CoordinationFreeH :=
-  let h := Components.inputExclusionSys1_process D
-  let h' := Components.inputExclusionSysRepl_cluster D
+    ¬ (CAP.Timeout.pollClosingSys1 D).CoordinationFree ∧ (CAP.Timeout.pollClosingSys1 D).CoordinationFreeH ∧
+    (∃ r, (Components.Component.cluster (CAP.Timeout.pollClosingSysRepl D)
+      (Components.pollClosingSysRepl_replicated D)).accepts r ∧ Coordinates r.events) ∧
+    ¬ (CAP.Timeout.pollClosingSysRepl D).CoordinationFreeH :=
+  let h := Components.pollClosingSys1_process D
+  let h' := Components.pollClosingSysRepl_cluster D
   ⟨h.1, h.2.2.1, h.2.2.2, h'.1, h'.2⟩
 
 /-- **Definition `def:typed-pipeline`** (Feed, typed pipeline, external

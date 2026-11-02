@@ -86,7 +86,7 @@ way when an output can be emitted without exclusion.
   input and its upper fiber.  Gray: lost after an input event; struck
   through if removed by an exclusion.  Panels (b)
   and (c) follow input events.  In (d) the registrar emits $\bot$ and also
-  closes the polls through an input exclusion that $\mathsf{output}(\bot)$ alone does not require.}
+  closes the polls through an exclusion that $\mathsf{output}(\bot)$ alone does not require.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -127,7 +127,7 @@ Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
 (\S\ref{sec:systems}).  In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
-$ab\cdot$ in the same output event.  Its irrevocable \emph{input exclusion}
+$ab\cdot$ in the same output event.  Its irrevocable \emph{exclusion}
 removes the still-possible $aba$ and $abb$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no exclusion, since every output still possible \outrel it;
@@ -167,7 +167,7 @@ specification requires.
   \end{minipage}\par\smallskip
   \end{minipage}
   \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
-  to preserve space.  The input exclusion that the registrar chose in Figure~\ref{fig:election-frames}(d) is required
+  to preserve space.  The exclusion that the registrar chose in Figure~\ref{fig:election-frames}(d) is required
   here.}
   \label{fig:nonmonotone-frame}
 \end{figure}
@@ -185,7 +185,7 @@ Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
 to itself).  Then $\bot$ is incompatible with future winners, so emitting it
-requires an input exclusion.  That change in the output order is Functional CALM in
+requires an exclusion.  That change in the output order is Functional CALM in
 miniature: the original order is monotone, so later outputs \outrelbase every
 earlier one; under the equality order, some outputs can be emitted
 only with an exclusion.
@@ -330,7 +330,7 @@ promise without assuming that clients tolerate retractions.  Later outputs
 must therefore \outrelbase earlier ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Since every later output must \outrelbase $o$, emitting $o$ requires an input exclusion that removes
+output the system may emit.  Since every later output must \outrelbase $o$, emitting $o$ requires an exclusion that removes
 every legal input whose output does not \outrelbase it.
 
 \begin{definition}[Output event]
@@ -345,15 +345,15 @@ to exactly the rows whose outputs
 \end{equation}
 \end{definition}
 
-\begin{definition}[Input exclusion]
-\label{def:input-exclusion}
-When $R'\neq R$ in Definition~\ref{def:output-event}, removing some row at an input $j\InputGe i$, we call this transition the \emph{input exclusion}
-$x_o^{\mathrm{in}}(i,R)=(i,R')$: it \emph{empties} the inputs of the removed rows, and it is a
-\emph{exclusion}.
+\begin{definition}[Canonical exclusion]
+\label{def:canonical-exclusion-functional}
+When $R'\neq R$ in Definition~\ref{def:output-event}, the transition applies the
+\emph{canonical exclusion} $x_o(i,R)=(i,R')$.  At each input $j$ whose row it
+removes, $x_o$ excludes input $j$.  It is an exclusion.
 \end{definition}
 
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
-ends at a state. An exclusion removes rows that input alone would not: the inputs it empties are no longer legal.  Input exclusions of this form are the
+ends at a state. An exclusion removes rows that input alone would not: the inputs it excludes are no longer legal.  Canonical exclusions of this form are the
 only exclusions this section uses.  Systems may issue more exclusions than an output requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but extra exclusions only
 restrict behavior (\S\ref{sec:systems}).
 
@@ -376,7 +376,7 @@ the output of every input that may still arrive.  A functional specification
 can therefore have undetermined states, as in panel~(b) of
 Figure~\ref{fig:election-frames}.  \emph{Determination} is the process of
 reaching a determined state.  An input event may do so through input loss,
-while an input exclusion may do so by emptying fibers that would otherwise
+while an exclusion may do so by emptying fibers that would otherwise
 remain possible, as in panels (c) and (d), respectively.
 An event from a determined state always leads to another determined state:
 events only remove rows, and a row at the current input always remains.
@@ -541,7 +541,7 @@ when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 
 A monotone specification can thus emit every current output without exclusion;
 if monotonicity fails at $i\InputOrd k$ with $f(i)\not\OutputOrd f(k)$, then
-at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$ applies $x_{f(i)}^{\mathrm{in}}$, an input exclusion at $k$.
+at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$ applies $x_{f(i)}$, which excludes input $k$.
 
 Functional CALM is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read

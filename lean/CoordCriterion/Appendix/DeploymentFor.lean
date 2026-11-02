@@ -17,8 +17,8 @@ proves the facts that connect the two:
   across partitions (`monoAcrossPartitions_of_consistentOn`); in particular
   consistency on `A` does for the uniform deployment, and Lifted Monotonicity
   does for every deployment;
-* when only one participant may emit, no output exclusion is distributed coordination
-  (`sole_emitter_outputExclusions`).
+* when only one participant may emit, no row-removing exclusion is distributed coordination
+  (`sole_emitter_rowRemovals`).
 -/
 
 namespace CC
@@ -109,12 +109,12 @@ theorem monoAcrossPartitions_uniform (A : Table I O) (hAS : ∀ i o, A i o → s
     (hc : ConsistentOn sp A) : MonoAcrossPartitions (Deployment.uniform (n := n) A hAS) :=
   monoAcrossPartitions_of_consistentOn _ A (fun _ _ _ h => h) hc
 
-/-! ## Single authority: output exclusions are not distributed coordination -/
+/-! ## Single authority: row-removing exclusions are not distributed coordination -/
 
-/-- The output-exclusion clause of `System.CoordinationFreeH`, for output events: no row
+/-- The row-removal clause of `System.CoordinationFreeH`, for output events: no row
 removed by an output event is emitted, at the same input, by another
 participant of the same history. -/
-def OutputExclusionsNotDistributed (Sys : System sp D) : Prop :=
+def RowRemovalsNotDistributed (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
     ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Exclusion sp)) (o : O)
       (σ σc : State sp),
@@ -123,20 +123,20 @@ def OutputExclusionsNotDistributed (Sys : System sp D) : Prop :=
         ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Exclusion sp)) (σ' : State sp),
           q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
 
-/-- If only one participant (index `0`) may perform output events, no output exclusion
+/-- If only one participant (index `0`) may perform output events, no row-removing exclusion
 is distributed coordination. -/
-theorem sole_emitter_outputExclusions (Sys : System sp D)
+theorem sole_emitter_rowRemovals (Sys : System sp D)
     (hsole : ∀ n init (p : Fin n) pre γ o, Sys.strat n init p pre (LEv.out γ o) → p.val = 0) :
-    OutputExclusionsNotDistributed Sys := by
+    RowRemovalsNotDistributed Sys := by
   intro n init H _ hp p a b γ o σ σc hH _ _ k x _ _
   rintro ⟨q, a', b', γ', σ', hqp, hq, _, _⟩
   have h1 := hsole n init p a γ o (hp p a _ b hH).2
   have h2 := hsole n init q a' γ' x (hp q a' _ b' hq).2
   exact hqp (Fin.ext (h2.trans h1.symm))
 
-/-- `System.CoordinationFreeH` includes the output-exclusion clause. -/
-theorem outputExclusionsNotDistributed_of_H {Sys : System sp D} (h : Sys.CoordinationFreeH) :
-    OutputExclusionsNotDistributed Sys :=
+/-- `System.CoordinationFreeH` includes the row-removal clause. -/
+theorem rowRemovalsNotDistributed_of_H {Sys : System sp D} (h : Sys.CoordinationFreeH) :
+    RowRemovalsNotDistributed Sys :=
   fun n init H hw hp p a b γ o σ σc hH hr ha k x hx hnx =>
     (h.1 n init H hw hp p a b γ o σ σc hH hr ha).1 k x hx hnx
 

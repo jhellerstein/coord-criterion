@@ -47,7 +47,7 @@ coincide with those of `Distributed/Exclusions.lean` (`CC.Dist.toCAP`,
    strictly row-removing, satisfying Eq. `exclusion-excludes`), then is legal
    exactly when `(i,o)` survives and Eq. `lifted-validity` holds, i.e.
    `Exposable` at the committed state, and ends at `R_c[out ⪰ o]`.  This is
-   literally `Step σc (.output o) τ ∧ Exposable σc o`.  A exclusion event
+   literally `Step σc (.output o) τ ∧ Exposable σc o`.  An exclusion event
    `cmt γ` (`γ` nonempty) applies `γ` and stops there: no subsumption, no
    output.
 5. *Strategies are nondeterministic* (relations from local history to

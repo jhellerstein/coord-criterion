@@ -22,7 +22,7 @@ one-line references to the library (`CoordCriterion/Appendix/Deployment*.lean`,
 `ProductFrontier.lean`, `Registers.lean`).
 
 Conventions used throughout (see `Appendix/Deployment.lean`, modeling
-output exclusions):
+row-removing exclusions):
 * the participant set `P` is `Fin n`; a deployment is `A : Fin n → Table I O`
   with `A p ⊆ P` (the paper's `E_p` is `A p`);
 * a partition `Π` is a labelling `comp : Fin n → Nat` with at least two
@@ -322,18 +322,18 @@ theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n
   single_authority_iff hn Dp p₀ hSA
 
 /-- "In a system whose other participants emit nothing, no other participant
-emits an output that the authority excludes, so its output exclusions do not
+emits an output that the authority excludes, so its row-removing exclusions do not
 require distributed coordination."  Lean: if only participant `0` may perform output
 events, no row removed by an output event is emitted, at the same input, by
 another participant of the same history. -/
 theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CAP.System sp D)
     (hsole : ∀ n init (p : Fin n) pre γ o, Sys.strat n init p pre (CAP.LEv.out γ o) → p.val = 0) :
-    OutputExclusionsNotDistributed Sys :=
-  sole_emitter_outputExclusions Sys hsole
+    RowRemovalsNotDistributed Sys :=
+  sole_emitter_rowRemovals Sys hsole
 
 /-- "They still require coordination when another run of the authority may choose
 differently, as for the lock manager of Section `sec:coordination`."  Lean:
-the owner system of §4.4 (only participant `0` may emit an order): its output exclusion
+the owner system of §4.4 (only participant `0` may emit an order): its row-removing exclusion
 is an exclusion, contradicted by another of its runs, but not at another
 participant. -/
 theorem «app:deployment/single-authority/coordination» (D : Type) :

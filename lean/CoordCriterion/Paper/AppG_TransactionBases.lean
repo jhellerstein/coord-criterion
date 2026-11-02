@@ -30,7 +30,7 @@ Library correspondence (`Appendix/TransactionBases/Spec.lean`, `Partial.lean`,
   a row is kept when a remaining complete row refines it and satisfies `Q`
   (`Keep`).
 * Protocol steps are modeled by the runs that the claims are about: the MVTO
-  run of `«app:cc-bases/abort-is-output-exclusion»` is driven by input events, one per
+  run of `«app:cc-bases/abort-is-exclusion»` is driven by input events, one per
   arriving operation.  What a scheduler does on an arrival (request a lock,
   issue a timestamp, apply the write rule) is otherwise prose.
 -/
@@ -288,16 +288,16 @@ theorem «app:cc-bases/fig-h» {T K : Type} {A B : T}
   fig_h h hp hX hA hB
 
 /-- "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps
-`[A,B,C]` and `[C,A,B]`, so it is an exclusion, and it is not the output exclusion `x_o^out` of
+`[A,B,C]` and `[C,A,B]`, so it is an exclusion, and it is not the exclusion `x_o` of
 any output `o`." -/
 theorem «app:cc-bases/order-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h : Tri k A B C) :
     ∃ τ, (order A B).app (σ3 k) = some τ ∧
       τ.R k (full (mk [A, B, C] fun _ => False)) ∧
       τ.R k (full (mk [C, A, B] fun _ => False)) ∧
       ¬ τ.R k (full (mk [B, A, C] fun _ => False)) ∧
-      ∀ o, (outputExclusion o).app (σ3 k) ≠ some τ :=
+      ∀ o, (canonicalExclusion o).app (σ3 k) ≠ some τ :=
   let ⟨τ, hτ, h1, h2, h3⟩ := order_at h
-  ⟨τ, hτ, h1, h2, h3, (neither_is_output_exclusion h).1 τ hτ⟩
+  ⟨τ, hτ, h1, h2, h3, (neither_is_canonical_exclusion h).1 τ hτ⟩
 
 /-- "A deadlock between `A` and `B` arises when `B` waits for a lock that `A`
 holds and an operation of `A` then waits for a lock that `B` holds: the
@@ -352,8 +352,8 @@ theorem «app:cc-bases/fig-i» {T K : Type} {B : T}
     τ.R k c ↔ σ.R k c ∧ ∀ D, k.mem D → D ≠ B → c.o.lt B D :=
   fig_i h hp hX hB
 
-/-- "… at the canonical state of `{A,B,C}` it is an output exclusion, and it is not the
-output exclusion `x_o^out` of any output": it keeps `[B,A,C]` and `[B,C,A]` and removes
+/-- "… at the canonical state of `{A,B,C}` it is an exclusion, and it is not the
+exclusion `x_o` of any output": it keeps `[B,A,C]` and `[B,C,A]` and removes
 `[A,B,C]` and `[C,B,A]`. -/
 theorem «app:cc-bases/stamp-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h : Tri k A B C) :
     ∃ τ, (stamp B (fun _ => False)).app (σ3 k) = some τ ∧
@@ -361,9 +361,9 @@ theorem «app:cc-bases/stamp-at-ABC» {T K : Type} {A B C : T} {k : Inp T K} (h 
       τ.R k (full (mk [B, C, A] fun _ => False)) ∧
       ¬ τ.R k (full (mk [A, B, C] fun _ => False)) ∧
       ¬ τ.R k (full (mk [C, B, A] fun _ => False)) ∧
-      ∀ o, (outputExclusion o).app (σ3 k) ≠ some τ :=
+      ∀ o, (canonicalExclusion o).app (σ3 k) ≠ some τ :=
   let ⟨τ, hτ, h1, h2, h3, h4⟩ := stamp_at h
-  ⟨τ, hτ, h1, h2, h3, h4, (neither_is_output_exclusion h).2 τ hτ⟩
+  ⟨τ, hτ, h1, h2, h3, h4, (neither_is_canonical_exclusion h).2 τ hτ⟩
 
 /-- *What a read is an exclusion to*, the row argument: "At an input in which
 `A` writes `x`, a complete row that satisfies both stamps and commits both `A`
@@ -456,7 +456,7 @@ arrive and be ordered before `B`.  `Ex.i1`–`Ex.i4` are the inputs after each
 arrival, `Ex.j2` the input in which both have requested commit; `Ex.u B` is the
 output reporting the read, `Ex.r1`/`Ex.r2` the two completions, `Ex.rAB` the
 row `[A,B]`.) -/
-theorem «app:cc-bases/abort-is-output-exclusion» {T K : Type} {A B C : T} (h : Distinct3 A B C)
+theorem «app:cc-bases/abort-is-exclusion» {T K : Type} {A B C : T} (h : Distinct3 A B C)
     (x : K) :
     ∃ σ1 σ2 σ3 σ3r σ4 σ5 σ6 σ7 σ8 : State (spec (T := T) (K := K) false),
       SysStep basisMVTO (canon _ (Ex.i1 (A := A) x)) (.exclude [stamp A (fun _ => False)]) σ1 ∧
@@ -487,7 +487,7 @@ commit.  The write rule settles this by aborting the writer when its write
 arrives, and the specification forces that abort only after the reader
 commits."  The first part is `«app:cc-bases/read-commits»`; the second is
 `«app:cc-bases/abort-entailed»` together with the run of
-`«app:cc-bases/abort-is-output-exclusion»`, restated here: after the write arrives,
+`«app:cc-bases/abort-is-exclusion»`, restated here: after the write arrives,
 `A`'s abort is not a legal output while `B` is undecided, the write rule's
 `Out_[abort(A)]` is legal, and once `TxCommit(B)` has been applied the abort is
 a legal output. -/

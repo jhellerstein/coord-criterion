@@ -149,7 +149,7 @@ def cap (n : Nat) : Nat := min n 9
 /-- The store: "is the count below `10`?", outputs ordered discretely. -/
 def below (n : Nat) : B2 := decide (n < 10)
 
-/-- Inputs the store would have to input exclusion. -/
+/-- Inputs the store would have to exclude. -/
 def Big (n : Nat) : Prop := 10 ≤ n
 
 def up : Spec Nat Nat := graph cap

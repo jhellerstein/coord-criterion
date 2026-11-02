@@ -21,8 +21,8 @@ own proof routes:
   every final state to `(j, P[in ⪰ j, out ⪰ u])`" (`survivor_exec`);
 * functional remarks: exposability is "`f(j)` refines `o` at every legal `j`"
   (`exposable_iff_refines_all`); a functional output event commits iff it
-  input-excludes (`functional_exclude_iff_inputExcluded`); failure of monotonicity at
-  `i ≼ k` makes `output(f(i))` at `σ_P(i)` input exclusion `k` (`nonmono_inputExcludes`);
+  excludes (`functional_exclude_iff_excluded`); failure of monotonicity at
+  `i ≼ k` makes `output(f(i))` at `σ_P(i)` exclusion `k` (`nonmono_excludes`);
   RelMono / Lifted Monotonicity / the common-expansion condition are
   functional monotonicity for singleton fibers (`relMono_iff_monoF`,
   `liftedMono_iff_monoF`, `commonExpansion_iff_monoF`); in a consistent
@@ -209,33 +209,29 @@ theorem exposable_iff_refines_all {sp : Spec I O} (hf : sp.Functional) (σ : Sta
     exact absurd (h k x hx) hn
 
 /-- Def. `def:output-event` vs. Def. `def:lifted-output-event`: in a
-functional specification the output event applies an exclusion (`R' ≠ R`) iff it input-excludes
+functional specification the output event applies an exclusion (`R' ≠ R`) iff it excludes
 some row. -/
-theorem functional_exclude_iff_inputExcluded {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
-    outputTable σ o ≠ σ.R ↔ ∃ k x, InputExcluded σ o k x := by
+theorem functional_exclude_iff_excluded {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
+    outputTable σ o ≠ σ.R ↔ ∃ k x, Excluded σ o k x := by
   constructor
   · intro hne
     apply Classical.byContradiction
     intro hno
     have he : Exposable σ o := (exposable_iff_no_exclusion σ o).2
-      ⟨fun k x hs => hno ⟨k, x, hs⟩,
-       fun k x hr => (functional_subsumed_outputExcluded_empty hf σ o k x).2 hr⟩
+      (fun k x hs => hno ⟨k, x, hs⟩)
     exact hne ((exposable_iff_functional hf σ o).1 he)
   · rintro ⟨k, x, hs⟩ heq
     have he := (exposable_iff_functional hf σ o).2 heq
-    exact ((exposable_iff_no_exclusion σ o).1 he).1 k x hs
+    exact (exposable_iff_no_exclusion σ o).1 he k x hs
 
 /-- Paragraph after Prop. `prop:functional-exposure-boundary`: if
-monotonicity fails at `i ≼ k`, then at `σ_P(i)` the event `output(f(i))` input-excludes
+monotonicity fails at `i ≼ k`, then at `σ_P(i)` the event `output(f(i))` excludes
 `k`. -/
-theorem nonmono_inputExcludes {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
+theorem nonmono_excludes {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
     (hik : i ≼ k) (_hio : sp.P i o) (hku : sp.P k u) (hn : ¬ o ≼ u) :
-    InputExcluded (canon sp i) o k u := by
-  refine ⟨⟨hku, hik⟩, ?_⟩
-  rintro ⟨u', hu', hou'⟩
-  have : u' = u := hf k u' u hu'.1 hku
-  subst this
-  exact hn hou'
+    Excluded (canon sp i) o k u := by
+  refine ⟨⟨hku, hik⟩, hn, ?_⟩
+  exact functional_subsumed_empty hf (canon sp i) o k u
 
 /-- "For singleton fibers [Relational Monotonicity] is functional
 monotonicity." -/

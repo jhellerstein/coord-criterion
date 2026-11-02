@@ -5,17 +5,17 @@ import CoordCriterion.CAP.AvailabilityFor
 
 Coordination, relative to a system, is an exclusion that some run of the
 system contradicts.  An output event of a participant removes rows from its
-state (by its exclusions `γ`) and may apply input exclusions (remove every row at them).
+state (by its exclusions `γ`) and may empty fibers (remove every row at some inputs).
 The event is *local* when no participant of any history the system produces
 emits a removed row's output at that row's input (`SysEmits`), and none
-accepts an input-excluded input (`SysAccepts`).  The same applies to an exclusion event,
+accepts an input whose fiber it empties (`SysAccepts`).  The same applies to an exclusion event,
 which applies exclusions without emitting.  A system is *coordination-free*
 when every output event and every exclusion event of every history it produces
 is local.
 
 * `respSystem_coordinationFree`: if `S` is consistent on `A`, the canonical
   system `respSystem A` of `complete_cap_for` is coordination-free.  Its
-  canonical output events input exclusion nothing, and the rows they remove lie outside
+  canonical output events empty no fiber, and the rows they remove lie outside
   `A`, which it never emits.
 * `every_row_emitted`: a system with Availability emits every row of `P`, so
   every removal is contradicted; `availability_coordinationFree_iff`: such a
@@ -46,7 +46,7 @@ def SysAccepts (Sys : System sp D) (k : I) : Prop :=
 
 /-- An output event's exclusions, taking `σ` to `σc`, are *local* to the
 system: no run of the system emits the output of a removed row at its input,
-and none accepts an input-excluded input.  (The same condition is applied to the
+and none accepts an input whose fiber it empties.  (The same condition is applied to the
 exclusions of an exclusion event.) -/
 def LocalEvent (Sys : System sp D) (σ σc : State sp) : Prop :=
   (∀ k x, σ.R k x → ¬ σc.R k x → ¬ SysEmits Sys k x) ∧
@@ -54,7 +54,7 @@ def LocalEvent (Sys : System sp D) (σ σc : State sp) : Prop :=
 
 /-- Runs that emit `emits k x` (output `x` at current input `k`) and accept
 `accepts k` *contradict* the exclusions taking `σ` to `σc`: they emit the
-output of a removed row at its input, or accept an input-excluded input (one whose
+output of a removed row at its input, or accept an input whose fiber it empties (one whose
 remaining rows are all removed). -/
 def Contradicts (emits : I → O → Prop) (accepts : I → Prop) (σ σc : State sp) : Prop :=
   (∃ k x, σ.R k x ∧ ¬ σc.R k x ∧ emits k x) ∨
@@ -105,7 +105,7 @@ theorem resp_emits_A {A : Table I O} {k : I} {x : O}
   rw [← hcur, h1]; exact hAx
 
 /-- **If `S` is consistent on `A`, `respSystem A` is coordination-free.**  Its
-output events are canonical events for outputs of `A`; they input exclusion nothing, and
+output events are canonical events for outputs of `A`; they empty no fiber, and
 every row they remove lies outside `A`, so no run of the system emits it. -/
 theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) :
     (respSystem (sp := sp) (D := D) A).CoordinationFree := by
@@ -142,9 +142,8 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
       have hRu := hkeep k u hSu hk hou
       apply hnx
       refine ⟨hx, ?_⟩
-      rintro (⟨_, hs⟩ | ⟨_, hn, _, hret⟩)
-      · exact hs ⟨u, hRu, hou⟩
-      · exact hret ⟨hx, hn, u, hRu, hou, hxu⟩
+      intro he
+      exact he.2.2 ⟨hx, he.2.1, u, hRu, hou, hxu⟩
     · rintro k ⟨x, hx⟩ hall _
       obtain ⟨_, hk, _⟩ := (hres k x).1 hx
       obtain ⟨u, hSu, hu'⟩ := hcons [(σ.cur, o)]
@@ -235,7 +234,7 @@ theorem availability_coordinationFree_noCommit (Sys : System sp D) (hA : Availab
 /-- For a specification, every exclusion is contradicted by some canonical
 run: from `σ_P(i)` with `i ≼ k`, the canonical run `input(k) output(x)`
 accepts `k` (when `i ≺ k`) and emits any `x ∈ P(k)` at current input `k`.  A
-exclusion at a state with current input `i` input-excludes only inputs `k ≻ i` and
+exclusion at a state with current input `i` can empty fibers only at inputs `k ≻ i` and
 chooses only against rows `(k,x)` with `i ≼ k`, so some canonical run
 performs an event it rules out. -/
 theorem canonical_run_contradicts {i k : I} {x : O} (hik : i ≼ k) (hx : sp.P k x) :

@@ -10,7 +10,7 @@ events and their transition relation (`Event`, `Step`, `Exec`, `Reach`), the
 canonical state `σ_P(i)` (`canon`), exposability, Functional / Relational /
 Lifted Monotonicity, Directed Outputs, the common-expansion condition
 (`Spec.CommonExpansion`), consistency (`Spec.Consistent`), the
-InputExcluded/Subsumed/OutputExcluded rows of a lifted output event, and exclusion-free
+Subsumed/Excluded rows of a lifted output event, and exclusion-free
 executions (`ExecCF`, `ReachableCF`).  Paper
 correspondences are noted on each definition.
 
@@ -146,16 +146,13 @@ def Spec.CommonExpansion (sp : Spec I O) : Prop :=
   ∀ rows : List (I × O), (∀ r ∈ rows, sp.P r.1 r.2) →
     ∀ j : I, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
 
-/-- The three classes of rows ruled out by `o` (Eqs. input-exclusion-removals,
-output-subsumptions, output-exclusion-removals). -/
-def InputExcluded {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
-  fun k x => σ.R k x ∧ ¬ ∃ u, σ.R k u ∧ o ≼ u
-
+/-- The two classes of rows ruled out by `o`: rows refined by a kept row,
+and rows that must be removed by exclusion. -/
 def Subsumed {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ∃ u, σ.R k u ∧ o ≼ u ∧ x ≼ u
 
-def OutputExcluded {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
-  fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ¬ InputExcluded σ o k x ∧ ¬ Subsumed σ o k x
+def Excluded {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
+  fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ¬ Subsumed σ o k x
 
 /-- Exposable (Def. exposable): the output event applies no exclusion,
 i.e. every ruled-out row is subsumed. -/

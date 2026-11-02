@@ -7,7 +7,7 @@ import CoordCriterion.CAP.LocalExclusion
 contradicted when *any* run of the system performs an event it rules out,
 including the same participant's alternative runs.  The paper's notion is
 narrower: an exclusion is contradicted when *another participant of the same
-history* accepts an input it input-excludes, or emits, at the same input, an output it
+history* accepts an input whose fiber it empties, or emits, at the same input, an output it
 chose against.  `System.CoordinationFreeH` is that notion, for the
 exclusions of output events and of exclusion events alike.
 
@@ -21,10 +21,10 @@ exclusions of output events and of exclusion events alike.
   this sense (`availability_not_coordinationFreeH`,
   `availability_not_coordinationFreeH_commit`).
 * Shared nothing (`ordSpec`): one owner choosing an order is coordination-free
-  (`ownerSys_coordinationFreeH`), although its output exclusion is an exclusion
+  (`ownerSys_coordinationFreeH`), although its row-removing exclusion is an exclusion
   (`ordSpec_ab_not_exposable`); two owners choosing are not
   (`twoOwnerSys_not_coordinationFreeH`).
-* Local output exclusion (`lcSpec`, `lcA`): `S` is consistent on `A = {o}`, emitting `o`
+* Local row-removing exclusion (`lcSpec`, `lcA`): `S` is consistent on `A = {o}`, emitting `o`
   must apply an exclusion against `x`, and `respSystem A` is coordination-free.
 -/
 
@@ -35,7 +35,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
 /-- The exclusions taking `σ` to `σc`, applied by participant `p` of `H`, are
 contradicted by no other participant of `H`: none emits a removed row's output
-at its input, and none accepts an input-excluded input. -/
+at its input, and none accepts an input whose fiber it empties. -/
 def LocalInH {n : Nat} (init : Fin n → I) (H : History sp D n) (p : Fin n) (σ σc : State sp) :
     Prop :=
   (∀ k x, σ.R k x → ¬ σc.R k x →
@@ -279,9 +279,7 @@ with `u` in the state. -/
 theorem rm_no_common {σ : State sp} {u : O} {k : I} {x : O} (h : Rm σ u k x) :
     ¬ ∃ w, σ.R k w ∧ u ≼ w ∧ x ≼ w := by
   rintro ⟨w, hw, huw, hxw⟩
-  rcases h with ⟨_, hs⟩ | ⟨hx, hn, _, hret⟩
-  · exact hs ⟨w, hw, huw⟩
-  · exact hret ⟨hx, hn, w, hw, huw, hxw⟩
+  exact h.2.2 ⟨h.1, h.2.1, w, hw, huw, hxw⟩
 
 /-- What a canonical output event's exclusions remove. -/
 theorem canonical_removed {σ σc : State sp} {u : O} {γ : List (Exclusion sp)}
@@ -354,7 +352,7 @@ noncomputable def twoOwnerSys (D : Type) : System ordSpec D where
 output), and nothing is removed when `bot` is emitted. -/
 theorem ord_removed {σ : State ordSpec} {u x : Ord3} (h : Rm σ u () x) (hu : σ.R () u) :
     u ≠ .bot ∧ x ≠ .bot := by
-  have hx : σ.R () x := by rcases h with h | h <;> exact h.1
+  have hx : σ.R () x := h.1
   constructor
   · rintro rfl
     exact rm_no_common h ⟨x, hx, by rw [ord3_le_iff]; exact Or.inr rfl, PO.refl _⟩
@@ -444,7 +442,7 @@ theorem twoOwnerSys_not_coordinationFreeH (D : Type) : ¬ (twoOwnerSys D).Coordi
   exact (hcf.1 2 init H hw hp 0 [] [] γ0 .ab (canon ordSpec ()) σ0 hH0 (.nil _) ha0).1
     () .ba (canon_ord_R _ _) hgone ⟨1, [], [], γ1, canon ordSpec (), by decide, hH1, .nil _, rfl⟩
 
-/-! ## A local output exclusion -/
+/-! ## A local row-removing exclusion -/
 
 /-- Two incomparable outputs. -/
 inductive Two where
@@ -519,7 +517,7 @@ theorem owner_history (D : Type) (u : Ord3) :
       | cons _ _ => simp at h
     · rw [hH1] at h; simp at h
 
-/-- **One owner coordinates.**  The owner's output exclusion of `A before B` is
+/-- **One owner coordinates.**  The owner's row-removing exclusion of `A before B` is
 contradicted by another run of the same system, in which the owner chooses
 `B before A`: locking on a single participant is coordination, though not
 distributed coordination (`ownerSys_coordinationFreeH`). -/

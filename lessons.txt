@@ -26,17 +26,17 @@ What keeps my word? (Refining outputs)
   There are two spec questions: is a current output legal (Lamport's Surveillance), and is there a maximal input (Eventual Consistency).
 
 3. Ambiguity isn't the problem; irreconcilable ambiguity is (traceroute vs. serial orders).
-- Only two kinds of exclusion: input exclusion and output exclusion.
+- One exclusion, with two effects at a fiber: exclude the input by removing every row, or exclude particular outputs while leaving the input legal.
 - Consistency As Lifted Monotonicity.
 
 §4 Distributed Execution
 
     4.1: distribution adds nothing to the criterion.
     4.1: convergence comes free from any consistent functional specification; a CRDT merge is not required.
-    4.2: Locks, timestamps, Paxos: different accents, same two words (input exclusion and output exclusion).
+    4.2: Locks, timestamps, Paxos: different accents for applying exclusions.
     4.3:
     - exclusion, coordination and distributed coordination are three different things.
-    Exclusion changes what's possible. An exclusion needs coordination when another run could contradict it, and distributed coordination when that run is at another participant. Waiting is irrelevant; "impatience" -- i.e. input exclusion --- is an exclusion.
+    Exclusion changes what's possible. An exclusion needs coordination when another run could contradict it, and distributed coordination when that run is at another participant. Waiting is irrelevant; "impatience" -- i.e. exclusion --- is an exclusion.
     - Waiting is free. Promising is cheap. Promising for someone else is expensive.
     - 2PC's unanimity vote detects agreement rather than creating it: the coordinator is a referee, not a matchmaker. Only its timeout abort is an exclusion, and that one stays at the coordinator.
     4.4: a partition doesn't change which exclusions you need; it removes the ability to make them jointly. (A partition doesn't change your promises; it takes away your phone.)
@@ -48,7 +48,7 @@ What keeps my word? (Refining outputs)
     Coordination is non-monotone, yet coordinated systems are consistent.
     Coordinate once, upstream. The log's exclusions are all that state-machine replication needs.
     A stage may need an exclusion even when the whole pipeline doesn't.
-    Moving the deadline into the input doesn't remove the promise; it moves who makes it (timer/punctuation upstream applies an input exclusion; the tally downstream only subsumes outputs).
+    Moving the deadline into the input doesn't remove the promise; it moves who makes it (timer/punctuation upstream applies an exclusion; the tally downstream only subsumes outputs).
 
 §6 Related Work
 

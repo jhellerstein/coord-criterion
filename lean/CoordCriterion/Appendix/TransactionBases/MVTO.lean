@@ -1,7 +1,7 @@
 import CoordCriterion.Appendix.TransactionBases.Partial
 
 /-!
-# MVTO's eager abort: a run in which aborting the writer is an output exclusion (Appendix G)
+# MVTO's eager abort: a run in which the exclusion removes an output (Appendix G)
 
 Namespace `CC.Txn.Partial`.  The specification of `Spec.lean`, the bases of
 `Partial.lean`.
@@ -12,9 +12,9 @@ Namespace `CC.Txn.Partial`.  The specification of `Spec.lean`, the bases of
   initial version; then `A`'s write of `x` arrives.  Reporting the read is not
   exposable on its own (the row committing `A` then `B`, at an input in which
   `A` writes `x`, cannot be completed with it); after `A`'s write, aborting `A`
-  is an output exclusion (two completions remain, `abort(A)` and `abort(B)` keep
-  different ones, and emitting `A`'s abort is not exposable), which MVTO's
-  write rule makes with `Out_[abort(A)]`; once `B`'s commit request arrives
+  applies an exclusion that leaves two completions (`abort(A)` and `abort(B)`) and
+  removes a different one for each emitted abort. Emitting `A`'s abort is not
+  exposable. MVTO's write rule applies this exclusion with `Out_[abort(A)]`; once `B`'s commit request arrives
   and `TxCommit(B)` is applied, `A`'s abort is exposable.
 * `writer_after_A` — the hypothesis on the version in
   `TwoStamps.no_both` cannot be dropped.

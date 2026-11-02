@@ -120,7 +120,7 @@ event, reporting nothing.  On complete rows without aborts,
 $\mathsf{order}(A,B)$ keeps exactly those with $A$ before $B$
 (Figure~\ref{fig:cc-exclusions}(h)).  At the canonical state of $\{A,B,C\}$ it
 removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$, so it is an exclusion, and it
-is not the canonical output exclusion $x_o^{\mathrm{out}}$ of any output $o$.  When a read is granted its lock,
+is not the canonical exclusion $x_o$ of any output $o$.  When a read is granted its lock,
 the scheduler applies $\mathsf{read}$ and reports the result.  When a commit
 request arrives, the scheduler applies $\mathsf{TxCommit}$ and releases the
 transaction's locks.
@@ -145,7 +145,7 @@ all issued ones, and the scheduler applies $\mathsf{stamp}(A)$, with $Z$ the
 transactions stamped before $A$, in an exclusion event.  On complete rows
 without aborts, $\mathsf{stamp}(B)$ with $Z=\varnothing$ keeps exactly those
 with $B$ first (Figure~\ref{fig:cc-exclusions}(i)); at the canonical state of
-$\{A,B,C\}$ it is an exclusion, and it is not the canonical output exclusion $x_o^{\mathrm{out}}$ of any output.  When
+$\{A,B,C\}$ it is an exclusion, and it is not the canonical exclusion $x_o$ of any output.  When
 a read of $x$ by $A$ arrives, it returns $A$'s own write of $x$ if $A$ has
 written $x$, and otherwise the committed version of $x$ with the largest
 timestamp below $A$'s; the scheduler applies $\mathsf{read}$ and reports the

@@ -5,7 +5,7 @@ import CoordCriterion.Distributed.Systems
 # Figure tables of Sections 2–3 and the discussion
 
 * Fig. `fig:election-frames`, panel (d) "(b), then polls closed", with the
-  registrar's input exclusion (`closePolls`, an exclusion in the sense of
+  registrar's exclusion (`closePolls`, an exclusion in the sense of
   Def. `def:exclusion`), the claims of Sec. `sec:election-story` and
   Sec. `sec:functional-events` about it, and the printed rows and upper
   fibers of panels (a)–(d) (`Elec.*`).  The figure prints exactly the rows
@@ -65,8 +65,8 @@ noncomputable def closePolls : Exclusion sp where
     obtain ⟨_, rfl⟩ := closeApp_eq.1 h
     exact absurd ⟨hu, hw.2⟩ hnu
 
-/-- It is an input exclusion: at every input where it removes a row, it removes all rows. -/
-theorem closePolls_inputExcludes {σ τ : State sp} (h : (closePolls (sp := sp)).app σ = some τ)
+/-- It is an exclusion: at every input where it removes a row, it removes all rows. -/
+theorem closePolls_excludes_input {σ τ : State sp} (h : (closePolls (sp := sp)).app σ = some τ)
     (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w := by
   obtain ⟨_, rfl⟩ := closeApp_eq.1 h
   obtain ⟨u, hu, hnu⟩ := hk
@@ -201,7 +201,7 @@ theorem panelD_cur : panelD.cur = bab := rfl
 theorem panelD_determined : Determined panelD ∧ ∀ k x, panelD.R k x → x = .bot :=
   ⟨⟨.bot, fun k x h => ((panelD_rows k x).1 h).2⟩, fun k x h => ((panelD_rows k x).1 h).2⟩
 
-/-- The input exclusion removes exactly the still-possible rows `(aba, a)` and `(abb, b)`
+/-- The exclusion removes exactly the still-possible rows `(aba, a)` and `(abb, b)`
 (struck through), and these inputs are legal at (b) and expand the current
 input: input alone would not have removed them. -/
 theorem panelD_struck (k : Ballots) (o : Res) :
@@ -212,7 +212,7 @@ theorem panelD_struck (k : Ballots) (o : Res) :
   ballot_cases k <;> rcases o with _ | ⟨_ | _⟩ <;> decide
 
 /-- The printed gray-only rows of (d) are those lost after `input(ab·)`;
-the current input is unchanged by the input exclusion. -/
+the current input is unchanged by the exclusion. -/
 theorem panelD_gray (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
     ¬ panelD.R k o ↔ (¬ bab ≼ k ∨ (k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b)) := by
   rw [panelD_rows]
@@ -233,14 +233,15 @@ theorem registrar_step (B : ExclusionBasis elec) (hB : B closePolls) :
 
 /-- "Emitting `⊥` by itself would need no exclusion": at (b), `⊥` is
 exposable, `Excluded^in_⊥` and `Excluded^out_⊥` are empty, and `output(⊥)` removes no
-row; so the input exclusion is not required by the output. -/
+row; so the exclusion is not required by the output. -/
 theorem bot_alone_at_b :
-    Exposable (canon elec bab) .bot ∧ (¬ ∃ k x, InputExcluded (canon elec bab) .bot k x) ∧
-      (¬ ∃ k x, OutputExcluded (canon elec bab) .bot k x) ∧
+    Exposable (canon elec bab) .bot ∧
+      (¬ ∃ k x, Excluded (canon elec bab) .bot k x) ∧
       outputTable (canon elec bab) .bot = (canon elec bab).R := by
   have he := elec_panels_exposable.2.1
-  refine ⟨he, (exposable_iff_empty _ _).1 he |>.1, (exposable_iff_empty _ _).1 he |>.2, ?_⟩
-  funext k x; apply propext
+  refine ⟨he, (exposable_iff_empty _ _).1 he, ?_⟩
+  funext k x
+  apply propext
   exact ⟨fun h => h.1, fun h => ⟨h, Or.inl rfl⟩⟩
 
 /-- Fig. `fig:nonmonotone-frame`: "the table matches Fig. (d)": panel (d)'s
@@ -250,7 +251,7 @@ theorem panelD_matches_e (k : Ballots) (r : Res) :
   rw [panelD_rows, elecEq_bot_single_row]
   exact ⟨fun ⟨h1, h2⟩ => ⟨h1, by rw [h2]⟩, fun ⟨h1, h2⟩ => ⟨h1, by cases h2; rfl⟩⟩
 
-/-- "Extran exclusions only restrict behavior": the registrar's run has an
+/-- "Extra exclusions only restrict behavior": the registrar's run has an
 observably equivalent run of the transition system (`input`/`output` events),
 whose table contains panel (d)'s. -/
 theorem registrar_canonical (B : ExclusionBasis elec) (hB : B closePolls) :
@@ -361,17 +362,16 @@ theorem after_ab (k : Unit) (o : TOut) : outputTable (canon spec ()) .ab k o ↔
   ⟨fun h => h.2.symm, fun h => ⟨sR o, h.symm⟩⟩
 
 /-- "No remaining row refines the removed one": the row `[B,A]` is in
-`Excluded^out_o` (an exclusion), not inputExcluded (the input keeps `[A,B]`) and not subsumed
+`Excluded_o` (an exclusion), not excluded (the input keeps `[A,B]`) and not subsumed
 (no row refines both). -/
-theorem ba_outputExcluded :
-    OutputExcluded (canon spec ()) .ab () .ba ∧ ¬ InputExcluded (canon spec ()) .ab () .ba ∧
+theorem ba_excluded :
+    Excluded (canon spec ()) .ab () .ba ∧
       ¬ Subsumed (canon spec ()) .ab () .ba ∧
       ¬ ∃ u, spec.P () u ∧ TOut.ab ≼ u ∧ TOut.ba ≼ u := by
-  have hns : ¬ InputExcluded (canon spec ()) .ab () .ba := fun h => h.2 ⟨.ab, sR _, rfl⟩
   have hnr : ¬ Subsumed (canon spec ()) .ab () .ba := by
     rintro ⟨_, _, u, _, h1, h2⟩
     exact TOut.noConfusion (h1.trans h2.symm)
-  refine ⟨⟨sR _, fun h => TOut.noConfusion h, hns, hnr⟩, hns, hnr, ?_⟩
+  refine ⟨⟨sR _, fun h => TOut.noConfusion h, hnr⟩, hnr, ?_⟩
   rintro ⟨u, _, h1, h2⟩
   exact TOut.noConfusion (h1.trans h2.symm)
 
@@ -380,18 +380,19 @@ legal system output event emitting it carries one. -/
 theorem ab_not_exposable : ¬ Exposable (canon spec ()) .ab ∧
     ∀ (B : ExclusionBasis spec) (γ : List (Exclusion spec)) τ,
       SysStep B (canon spec ()) (.output γ .ab) τ → γ ≠ [] := by
-  refine ⟨fun h => ((exposable_iff_empty _ _).1 h).2 ⟨(), .ba, ba_outputExcluded.1⟩, ?_⟩
+  refine ⟨fun h => (exposable_iff_empty _ _).1 h ⟨(), .ba, ba_excluded.1⟩, ?_⟩
   intro B γ τ h
-  exact containment_nonempty h ⟨(), .ba, Or.inr ba_outputExcluded.1⟩
+  exact containment_nonempty h ⟨(), .ba, ba_excluded.1⟩
 
 /-- The exclusion `x_[A,B]` applies at `{A,B}`; it removes `[B,A]` while the
 input stays legal (the row `[A,B]` remains). -/
-theorem outputExclusion_applies :
-    (outputExclusion (sp := spec) .ab).app (canon spec ()) = some (outputExcludeState (canon spec ()) .ab) ∧
-      (outputExcludeState (canon spec ()) .ab).R () .ab ∧
-      ¬ (outputExcludeState (canon spec ()) .ab).R () .ba :=
-  ⟨outputExclusionApp_eq.2 ⟨sR _, ⟨(), .ba, ba_outputExcluded.1⟩, rfl⟩,
-   ⟨sR _, not_outputExcluded_of_ge (PO.refl _)⟩, fun h => h.2 ba_outputExcluded.1⟩
+theorem exclusion_applies :
+    (canonicalExclusion (sp := spec) .ab).app (canon spec ()) =
+      some (excludeState (canon spec ()) .ab (sR .ab)) ∧
+      (excludeState (canon spec ()) .ab (sR .ab)).R () .ab ∧
+      ¬ (excludeState (canon spec ()) .ab (sR .ab)).R () .ba :=
+  ⟨excludeApp_eq.2 ⟨sR _, ⟨(), .ba, ba_excluded.1⟩, rfl⟩,
+   ⟨sR _, fun h => h.2.1 (PO.refl _)⟩, fun h => h.2 ba_excluded.1⟩
 
 /-- The two orders are incompatible: not directed, not monotone, not
 consistent. -/
@@ -400,7 +401,7 @@ theorem not_monotone :
       ¬ spec.Consistent := by
   have hc : ¬ CompatibleIn (spec.P ()) [.ab, .ba] := by
     rintro ⟨u, hu, hall⟩
-    exact ba_outputExcluded.2.2.2 ⟨u, hu, hall _ (by simp), hall _ (by simp)⟩
+    exact ba_excluded.2.2 ⟨u, hu, hall _ (by simp), hall _ (by simp)⟩
   have hd : ¬ spec.DirectedOutputs := fun h => hc (h () [.ab, .ba] (by simp) (fun _ _ => trivial))
   have hl : ¬ spec.LiftedMono := fun h => hc (h () () trivial [.ab, .ba] (by simp)
     (fun _ _ => trivial))
@@ -419,7 +420,7 @@ theorem runs_not_confluent :
     · exact ⟨(), _, Exec.cons (Step.output _ (outState _ _ _) _ (sR _) rfl rfl) (Exec.nil _)⟩
     · exact ⟨(), _, Exec.cons (Step.output _ (outState _ _ _) _ (sR _) rfl rfl) (Exec.nil _)⟩
   obtain ⟨u, hu, hall⟩ := (survivor_test _ hrun () (fun _ _ => trivial)).1 h
-  exact ba_outputExcluded.2.2.2 ⟨u, hu, (hall (outState (canon spec ()) .ab (sR _)) (by simp)).2,
+  exact ba_excluded.2.2 ⟨u, hu, (hall (outState (canon spec ()) .ab (sR _)) (by simp)).2,
     (hall (outState (canon spec ()) .ba (sR _)) (by simp)).2⟩
 
 end Txn
@@ -487,21 +488,20 @@ theorem after_s1 (x : RS) :
   rs_cases x <;> decide
 
 /-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output subsumptions,
-each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is inputExcluded or
+each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is excluded or
 excluded, so `{s→s1}` is exposable. -/
 theorem removed_subsumed :
     (∀ x, (canon spec ()).R () x → (¬ outputTable (canon spec ()) rS1 () x ↔ (x = rA ∨ x = rA2))) ∧
     Subsumed (canon spec ()) rS1 () rA ∧ Subsumed (canon spec ()) rS1 () rA2 ∧
-    (¬ ∃ k x, InputExcluded (canon spec ()) rS1 k x) ∧ (¬ ∃ k x, OutputExcluded (canon spec ()) rS1 k x) ∧
-    Exposable (canon spec ()) rS1 := by
+    (¬ ∃ k x, Excluded (canon spec ()) rS1 k x) ∧ Exposable (canon spec ()) rS1 := by
   have hall : (canon spec ()).R () rAll := (canonR _).2 (by decide)
   have hexp : Exposable (canon spec ()) rS1 := by
     intro k x hx _
     cases k
     exact ⟨rAll, hall, by decide, by have := (canonR x).1 hx; revert this; rs_cases x <;> decide⟩
-  obtain ⟨hS, hJ⟩ := (exposable_iff_empty _ _).1 hexp
+  have hE := (exposable_iff_empty _ _).1 hexp
   refine ⟨?_, ⟨(canonR _).2 (by decide), by decide, rAll, hall, by decide, by decide⟩,
-    ⟨(canonR _).2 (by decide), by decide, rAll, hall, by decide, by decide⟩, hS, hJ, hexp⟩
+    ⟨(canonR _).2 (by decide), by decide, rAll, hall, by decide, by decide⟩, hE, hexp⟩
   intro x hx
   rw [after_s1]
   have := (canonR x).1 hx

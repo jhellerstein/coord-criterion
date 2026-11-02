@@ -369,13 +369,10 @@ theorem example_exclusion_event_ABC {k : Inp T K} (h : Tri k A B C) :
       change (mk [A, B, C] Z).lt C B at this
       rw [lt_ABC hd] at this
       simp [hd.ab, hd.ac, hd.bc, Ne.symm hd.ab, Ne.symm hd.ac, Ne.symm hd.bc] at this
-    have out : InputExcluded σ1 (o2 A B C) k (full (mk [A, B, C] Z)) ∨
-        OutputExcluded σ1 (o2 A B C) k (full (mk [A, B, C] Z)) := by
-      by_cases hS : InputExcluded σ1 (o2 A B C) k (full (mk [A, B, C] Z))
-      · exact Or.inl hS
-      · refine Or.inr ⟨rABC1, nle, hS, ?_⟩
-        rintro ⟨_, _, u, _, hou, hxu⟩
-        exact u.o.irrefl _ (u.o.trans _ _ _ (lCB hou.1) (lBC hxu.1))
+    have out : Excluded σ1 (o2 A B C) k (full (mk [A, B, C] Z)) := by
+      refine ⟨rABC1, nle, ?_⟩
+      rintro ⟨_, _, u, _, hou, hxu⟩
+      exact u.o.irrefl _ (u.o.trans _ _ _ (lCB hou.1) (lBC hxu.1))
     cases hap with
     | cons ha hap =>
     cases hap with

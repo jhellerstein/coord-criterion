@@ -22,16 +22,16 @@ and `Distributed/Exclusions.lean`, stated in the paper's form (namespace
                                   assumption of `Dist.History.WF`.
 * `distConsistent_iff_liftedMono` — "distributed consistency exactly when
                                   Lifted Monotonicity" (Sec. distributed consistency).
-* `functional_excludes_vacuous`, `functional_kappa`, `functional_inputExclusion_eq`,
+* `functional_excludes_vacuous`, `functional_kappa`, `functional_excludeState_eq`,
   `functional_legal_ge`         — the one-row-per-input claims.
 * `canonLegal_iff`, `canonExec_unique`
                                 — Def. `def:canonical-system`: canonical
                                   histories are exactly those of Sec. histories.
-* `conflicting_outputs2`, `conflict_is_outputExclusion`
+* `conflicting_outputs2`, `conflict_removes_output`
                                 — Prop. `thm:exclusions-require-coordination`
                                   with independent bases, and "the conflict is
-                                  an output exclusion, not an input exclusion".
-* `sysStep_to_composite`, `sysStep_of_composite`, `composite_functional_inputExcludes`
+                                  an exclusion, not an exclusion".
+* `sysStep_to_composite`, `sysStep_of_composite`, `composite_functional_empties`
                                 — the remark after Lemma `lem:compound-exclusion`.
 * `reconciliation_any_basis`    — Cor. `cor:reconciliation-any-basis`.
 * `converse_fails`, `system_runs_hide_nonmonotonicity`
@@ -42,9 +42,9 @@ and `Distributed/Exclusions.lean`, stated in the paper's form (namespace
                                 — the two encodings of exclusions, system
                                   output events and exclusion events
                                   (`CC.Exclusion`/`SysStep` vs `CC.CAP`) coincide.
-* `outputExclusion_antichain`, `not_output_exclusion_of_two`
+* `canonicalExclusion_antichain`, `not_canonical_exclusion_of_two`
                                 — "neither [2PL nor MVTO exclusion] is the
-                                  exclusion `x_o^out`" (generic form).
+                                  exclusion `x_o`" (generic form).
 -/
 
 namespace CC
@@ -264,36 +264,25 @@ theorem functional_excludes_vacuous (hf : sp.Functional) (σ τ : State sp) :
   have : u = w := hf k u w (σ.sub _ _ hu) (τ.sub _ _ hw)
   exact hnu (this ▸ hw)
 
-theorem functional_not_outputExcluded (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ OutputExcluded σ o k x := by
-  intro hr
-  have : ∃ u, σ.R k u ∧ o ≼ u := Classical.byContradiction fun hn => hr.2.2.1 ⟨hr.1, hn⟩
-  obtain ⟨u, hu, hou⟩ := this
-  have : x = u := hf k x u (σ.sub _ _ hr.1) (σ.sub _ _ hu)
-  exact hr.2.1 (this ▸ hou)
-
-/-- With one row per input, the canonical event applies at most the input exclusion. -/
+/-- With one row per input, the canonical sequence contains the canonical exclusion
+exactly when some row must be removed. -/
 theorem functional_kappa (hf : sp.Functional) (σ : State sp) (o : O) :
-    kappa σ o = (if ∃ k x, InputExcluded σ o k x then [inputExclusion o] else []) := by
-  have h2 : ¬ ∃ k x, OutputExcluded σ o k x := fun ⟨k, x, h⟩ => functional_not_outputExcluded hf σ o k x h
-  simp only [kappa, h2, ite_false, List.append_nil]
+    kappa σ o = (if ∃ k x, Excluded σ o k x then [canonicalExclusion o] else []) := by
+  rfl
 
-/-- With one row per input, the input exclusion `x_o^in` of Def. `def:lifted-output-event` is
-the input exclusion of Def. `def:output-event`: it leaves `R[out ⪰ o]`. -/
-theorem functional_inputExclusion_eq (hf : sp.Functional) (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
-    (inputExcludeState σ o ho).R = outputTable σ o := by
+/-- With one row per input, removing the excluded rows leaves `R[out ⪰ o]`. -/
+theorem functional_excludeState_eq (hf : sp.Functional) (σ : State sp) (o : O)
+    (ho : σ.R σ.cur o) :
+    (excludeState σ o ho).R = outputTable σ o := by
   funext k x
   apply propext
-  show (σ.R k x ∧ ¬ InputExcluded σ o k x) ↔ (σ.R k x ∧ o ≼ x)
+  show (σ.R k x ∧ ¬ Excluded σ o k x) ↔ (σ.R k x ∧ o ≼ x)
   constructor
-  · rintro ⟨hx, hns⟩
-    refine ⟨hx, ?_⟩
-    have : ∃ u, σ.R k u ∧ o ≼ u := Classical.byContradiction fun hn => hns ⟨hx, hn⟩
-    obtain ⟨u, hu, hou⟩ := this
-    have : x = u := hf k x u (σ.sub _ _ hx) (σ.sub _ _ hu)
-    exact this ▸ hou
+  · rintro ⟨hx, hne⟩
+    refine ⟨hx, Classical.byContradiction fun hox => hne ⟨hx, hox, ?_⟩⟩
+    exact functional_subsumed_empty hf σ o k x
   · rintro ⟨hx, hox⟩
-    exact ⟨hx, fun hs => hs.2 ⟨x, hx, hox⟩⟩
+    exact ⟨hx, fun he => he.2.1 hox⟩
 
 /-- "With one row per input … legality says that every row the exclusions
 leave has an output that refines `o`." -/
@@ -387,7 +376,7 @@ theorem canonExec_unique {σ ρ ρ' : State sp} {es es' : List (SEvent sp)}
       obtain ⟨h1, h2⟩ := ih hr' he2
       exact ⟨by rw [h1], h2⟩
 
-/-- Every canonical annotation is in particular legal under `B_S`. -/
+/-- Every canonical annotation is in particular legal under `B_P`. -/
 theorem canonLegal_sysLegal {H : Dist.History I O D n} (h : CanonLegal sp H) :
     SysLegal (canonExclusionBasis sp) H := by
   intro p
@@ -428,11 +417,11 @@ theorem applySeq_removed {γ : List (Exclusion sp)} {σ σc : State sp}
       exact ⟨c', List.mem_cons_of_mem _ hc', α, β, h1, h2.trans (c.cur_eq σ τ hc), h3, h4⟩
     · exact ⟨c, List.mem_cons_self .., σ, τ, hc, rfl, hx, hτ⟩
 
-/-- "The conflict is at the current input, so it is an output exclusion, not an input exclusion":
+/-- "The conflict is at the current input, so it is an exclusion, not an exclusion":
 if `Out_γ(o)` leaves no output refining `x ∈ R(i)`, then some exclusion `c`
 of `γ` removes `(i, x)` while keeping a row at `i`, and no kept row at `i`
 refines `x`. -/
-theorem conflict_is_outputExclusion {B : ExclusionBasis sp} {σ σ' : State sp} {γ : List (Exclusion sp)}
+theorem conflict_removes_output {B : ExclusionBasis sp} {σ σ' : State sp} {γ : List (Exclusion sp)}
     {o x : O} (h1 : SysStep B σ (.output γ o) σ') (hx : σ.R σ.cur x)
     (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
     ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
@@ -489,11 +478,11 @@ theorem conflicting_events_reach {B B' : ExclusionBasis sp} {σ σ' t : State sp
   rw [hc] at hw
   exact hno w (reach_sub h1r _ _ hw) (ht _ _ (reach_sub h2r _ _ hw)).2
 
-/-- "The first event's exclusion is an output exclusion of `x`", for an exclusion
+/-- "The first event's exclusion is an exclusion of `x`", for an exclusion
 event: if `exclude(γ)` leaves no output refining `x ∈ R(i)`, then some
 exclusion `c` of `γ` removes `(i, x)` while keeping a row at `i`, and no kept
 row at `i` refines `x`. -/
-theorem conflict_is_output_exclusion_event {B : ExclusionBasis sp} {σ σ' : State sp}
+theorem conflict_is_exclusion_event {B : ExclusionBasis sp} {σ σ' : State sp}
     {γ : List (Exclusion sp)} {x : O} (h1 : SysStep B σ (.exclude γ) σ')
     (hx : σ.R σ.cur x) (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
     ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
@@ -549,11 +538,11 @@ theorem sysStep_exclude_composite_iff {B B' : ExclusionBasis sp} {σ τ : State 
     | exclude _ _ hγ =>
       exact SysStep.exclude hB (List.cons_ne_nil _ _) ((applySeq_composite c cs _ _).2 hγ)
 
-/-- "In a functional specification the composite … input-excludes." -/
-theorem composite_functional_inputExcludes (hf : sp.Functional) (c : Exclusion sp)
+/-- "In a functional specification the composite … excludes." -/
+theorem composite_functional_empties (hf : sp.Functional) (c : Exclusion sp)
     (cs : List (Exclusion sp)) {σ τ : State sp} (h : (composite c cs).app σ = some τ)
     (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w :=
-  functional_exclusion_input_excludes hf _ h k hk
+  functional_exclusion_empties_fiber hf _ h k hk
 
 end compound
 
@@ -798,7 +787,7 @@ theorem sysStep_iff_CAP {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (E
     | output _ _ ho hcur hR =>
       exact SysStep.output hb hγ' ho hleg (hcur.trans hγ'.cur_eq) hR
 
-/-- A exclusion event `Exclude(γ)` of `Distributed/Exclusions.lean` is exactly a
+/-- An exclusion event `Exclude(γ)` of `Distributed/Exclusions.lean` is exactly a
 legal `cmt γ` of `CAP/Model.lean`: basis exclusions, `γ ≠ ε`, and `applySeq`
 reaching the next state. -/
 theorem sysStep_exclude_iff_CAP {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (Exclusion sp)} :
@@ -813,41 +802,40 @@ theorem sysStep_exclude_iff_CAP {B : ExclusionBasis sp} {σ τ : State sp} {γ :
 
 end encodings
 
-/-! ### "Neither is the exclusion `x_o^out`" (generic form) -/
+/-! ### Canonical exclusion on an antichain fiber -/
 
 section antichain
 variable {sp : Spec I O}
 
-/-- If the fiber at the current input is an antichain, `x_o^out` keeps only `o`
+/-- If the current fiber is an antichain, the canonical exclusion keeps only `o`
 there. -/
-theorem outputExclusion_antichain {σ : State sp} {o : O} (ho : σ.R σ.cur o)
+theorem canonicalExclusion_antichain {σ : State sp} {o : O} (ho : σ.R σ.cur o)
     (hanti : ∀ x y, σ.R σ.cur x → σ.R σ.cur y → x ≼ y → x = y) :
-    ∀ x, (outputExcludeState σ o).R σ.cur x ↔ x = o := by
+    ∀ x, (excludeState σ o ho).R σ.cur x ↔ x = o := by
   intro x
   constructor
-  · rintro ⟨hx, hnr⟩
+  · rintro ⟨hx, hne⟩
     apply Classical.byContradiction
-    intro hne
-    have hnox : ¬ o ≼ x := fun h => hne (hanti o x ho hx h).symm
-    apply hnr
-    refine ⟨hx, hnox, fun hs => hs.2 ⟨o, ho, PO.refl o⟩, ?_⟩
+    intro hxo
+    apply hne
+    refine ⟨hx, fun h => hxo (hanti o x ho hx h).symm, ?_⟩
     rintro ⟨_, _, u, hu, hou, hxu⟩
     have e1 := hanti o u ho hu hou
     have e2 := hanti x u hx hu hxu
-    exact hne (e2.trans e1.symm)
+    exact hxo (e2.trans e1.symm)
   · rintro rfl
-    exact ⟨ho, not_outputExcluded_of_ge (PO.refl x)⟩
+    exact ⟨ho, fun he => he.2.1 (PO.refl x)⟩
 
-/-- An exclusion that keeps two distinct rows at the current input of a state
-whose current fiber is an antichain is not `x_o^out` for any `o`. -/
-theorem not_output_exclusion_of_two {σ τ : State sp} {x y : O}
+/-- An exclusion that keeps two distinct rows in an antichain current fiber is
+not the canonical exclusion for any output. -/
+theorem not_canonicalExclusion_of_two {σ τ : State sp} {x y : O}
     (hanti : ∀ x y, σ.R σ.cur x → σ.R σ.cur y → x ≼ y → x = y)
     (hx : τ.R σ.cur x) (hy : τ.R σ.cur y) (hxy : x ≠ y) (o : O) :
-    (outputExclusion o).app σ ≠ some τ := by
+    (canonicalExclusion o).app σ ≠ some τ := by
   intro h
-  obtain ⟨ho, _, rfl⟩ := outputExclusionApp_eq.1 h
-  have e1 := (outputExclusion_antichain ho hanti x).1 hx
-  have e2 := (outputExclusion_antichain ho hanti y).1 hy
+  obtain ⟨ho, _, rfl⟩ := excludeApp_eq.1 h
+  have e1 := (canonicalExclusion_antichain ho hanti x).1 hx
+  have e2 := (canonicalExclusion_antichain ho hanti y).1 hy
   exact hxy (e1.trans e2.symm)
 
 end antichain

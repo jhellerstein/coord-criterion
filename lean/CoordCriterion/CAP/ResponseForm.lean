@@ -6,7 +6,7 @@ import CoordCriterion.CAP.CompleteCAP
 * Def. `def:response-availability` / Response Partition Consistency
   (`ResponseAvailability`, `ResponsePC`, `RPCAt`);
 * replicated systems, obligations and response interfaces;
-* the canonical exclusion `κ_u` (input and output exclusions applied together);
+* the canonical exclusion `κ_u` (input and exclusions applied together);
 * Theorem `thm:complete-cap-response` in both directions
   (`complete_cap_response`).
 
@@ -117,16 +117,15 @@ theorem consistentOn_outs {T : Table I O} (hc : ConsistentOn sp T) {j : I} (L : 
   exact ⟨u, hu, fun o ho => hall _ (by
     simp only [rows, List.mem_map]; exact ⟨⟨o, ho⟩, List.mem_attach _ _, rfl⟩)⟩
 
-/-! ### The canonical exclusion `κ_u` (input and output exclusions applied together) -/
+/-! ### The canonical exclusion `κ_u` (input and exclusions applied together) -/
 
 /-- Rows the canonical event for `u` removes by exclusion. -/
-def Rm (σ : State sp) (u : O) (k : I) (x : O) : Prop := InputExcluded σ u k x ∨ OutputExcluded σ u k x
+def Rm (σ : State sp) (u : O) (k : I) (x : O) : Prop := Excluded σ u k x
 
 theorem not_rm_of_le {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x) (h : u ≼ x) :
     ¬ Rm σ u k x := by
-  rintro (⟨_, hs⟩ | ⟨_, hn, _⟩)
-  · exact hs ⟨x, hx, h⟩
-  · exact hn h
+  intro he
+  exact he.2.1 h
 
 /-- A kept row that does not expand `u` is subsumed. -/
 theorem subsumed_of_not_rm {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x)
@@ -134,9 +133,7 @@ theorem subsumed_of_not_rm {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k 
   apply Classical.byContradiction
   intro hv
   apply hrm
-  by_cases hs : ∃ v, σ.R k v ∧ u ≼ v
-  · exact Or.inr ⟨hx, hn, fun ⟨_, h⟩ => h hs, fun ⟨_, _, h⟩ => hv h⟩
-  · exact Or.inl ⟨hx, hs⟩
+  exact ⟨hx, hn, fun hs => hv hs.2.2⟩
 
 def kcState (σ : State sp) (u : O) (hu : σ.R σ.cur u) : State sp where
   cur := σ.cur
@@ -163,7 +160,7 @@ noncomputable def kc (u : O) : Exclusion sp where
     intro σ τ h; split at h
     · rename_i hh; cases h
       obtain ⟨k, x, hr⟩ := hh.2
-      have hx : σ.R k x := by rcases hr with h | h; exact h.1; exact h.1
+      have hx : σ.R k x := hr.1
       exact ⟨k, x, hx, fun h => h.2 hr⟩
     · cases h
   excl := by
@@ -178,9 +175,7 @@ noncomputable def kc (u : O) : Exclusion sp where
         · exact ⟨w, hw1, huw, PO.refl w⟩
         · exact subsumed_of_not_rm hw1 hw2 huw
       obtain ⟨v, hv1, hv2, hv3⟩ := hv
-      rcases hrx with ⟨_, hs⟩ | ⟨_, hn, _, hret⟩
-      · exact hs ⟨v, hv1, hv2⟩
-      · exact hret ⟨hx, hn, v, hv1, hv2, PO.trans hxw hv3⟩
+      exact hrx.2.2 ⟨hx, hrx.2.1, v, hv1, hv2, PO.trans hxw hv3⟩
     · cases h
 
 theorem kc_apply_some {σ : State sp} {u : O} {σc : State sp}

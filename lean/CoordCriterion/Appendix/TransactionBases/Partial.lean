@@ -18,16 +18,16 @@ Namespace `CC.Txn.Partial`.  The specification is in `Spec.lean`.
   completable; `read_emit`, `abort_emit` — after `read(B,n,v)` (resp.
   `abort(A)`), emitting the read (resp. the abort) is exposable.
 * `fig_h`, `fig_i`, `order_at`, `stamp_at`, `order_not_MVTO`, `stamp_not_2PL`,
-  `not_read`, `not_output_exclusion`, `neither_is_output_exclusion` — Fig. `fig:cc-exclusions`
+  `not_read`, `not_canonical_exclusion`, `neither_is_canonical_exclusion` — Fig. `fig:cc-exclusions`
   and the bases differ, at the canonical state of three transactions that have
   requested commit.
 * `deadlock`, `deadlock_complete`, `deadlock_commit`, `abortFree_deadlock`,
   `abortFree_never_both` — 2PL deadlock.
 * `stamps_row`, `TwoStamps.no_both`, `TwoStamps.read_no_both`,
   `TwoStamps.abort_entailed` — MVTO: what a reported read commits to, and when
-  `A`'s abort is entailed.  The run in which it is an output exclusion is in `MVTO.lean`.
+  `A`'s abort is entailed.  The run in which it is an exclusion is in `MVTO.lean`.
 
-Modeling output exclusions: the guards ("`A ∈ i`", "`A` has requested commit", "the
+Modeling exclusions: the guards ("`A ∈ i`", "`A` has requested commit", "the
 `n`-th operation of `A` is a read", etc.) are part of definedness.
 -/
 
@@ -710,7 +710,7 @@ theorem TwoStamps.abort_entailed {A B : T} {ZA ZB : T → Prop}
 
 end MVTO
 
-/-! ### Rows that commit nothing; reads and canonical output exclusions at a canonical state -/
+/-! ### Rows that commit nothing; reads and canonical exclusions at a canonical state -/
 
 /-- The output that decides nothing and reports nothing. -/
 def emptyO : Outcome T where
@@ -816,21 +816,21 @@ theorem not_read {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
     exact hnr ((hR k0 r).2 ⟨hr, _, ⟨⟨_, hc', PO.refl _⟩, PO.refl _⟩,
       hrp, hle, single_eq⟩)
 
-/-- **No canonical output exclusion `x_o^out` has the effect `τ`** at the canonical state of
+/-- **No canonical exclusion `x_o` has the effect `τ`** at the canonical state of
 `k0`, if `τ` keeps every row at `k0` that commits nothing, the complete row
 aborting everything, and some complete row aborting nothing (without reads),
 and removes some complete row at `k0` that reports no reads. -/
-theorem not_output_exclusion {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
+theorem not_canonical_exclusion {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
     (hi : ∀ y, (canon (spec (T := T) (K := K) false) k0).R k0 y → (∀ t, ¬ y.o.dom t) → τ.R k0 y)
     (ha : τ.R k0 (full (allAbort k0.txs))) {c1 : Outcome T} (hc1p : Decides false k0 c1)
     (hc1X : ∀ t, ¬ c1.X t) (hc1 : τ.R k0 (full c1))
     {r : ROut T K} (hr : (canon (spec (T := T) (K := K) false) k0).R k0 r) (hrp : Decides false k0 r.o)
     (hrρ : ∀ a n, r.ρ a n = none) (hnr : ¬ τ.R k0 r) (o : ROut T K) :
-    (outputExclusion o).app (canon (spec (T := T) (K := K) false) k0) ≠ some τ := by
+    (canonicalExclusion o).app (canon (spec (T := T) (K := K) false) k0) ≠ some τ := by
   intro h
-  obtain ⟨ho, _, e⟩ := outputExclusionApp_eq.1 h
+  obtain ⟨ho, _, e⟩ := excludeApp_eq.1 h
   let σ0 := canon (spec (T := T) (K := K) false) k0
-  have hR : ∀ k u, τ.R k u ↔ σ0.R k u ∧ ¬ OutputExcluded σ0 o k u := by
+  have hR : ∀ k u, τ.R k u ↔ σ0.R k u ∧ ¬ Excluded σ0 o k u := by
     intro k u; rw [← e]; exact Iff.rfl
   -- a kept row at `k0` has a common refinement with `o` in `R(k0)`
   have compat : ∀ y, τ.R k0 y → ∃ u, σ0.R k0 u ∧ o ≼ u ∧ y ≼ u := by
@@ -838,9 +838,8 @@ theorem not_output_exclusion {k0 : Inp T K} {τ : State (spec (T := T) (K := K) 
     obtain ⟨hy0, hnrej⟩ := (hR k0 y).1 hy
     by_cases hoy : o ≼ y
     · exact ⟨y, hy0, hoy, PO.refl _⟩
-    · have hns : ¬ InputExcluded σ0 o k0 y := fun hs => hs.2 ⟨o, ho, PO.refl _⟩
-      exact Classical.byContradiction fun hn =>
-        hnrej ⟨hy0, hoy, hns, fun ⟨_, _, u, hu, hou, hyu⟩ => hn ⟨u, hu, hou, hyu⟩⟩
+    · exact Classical.byContradiction fun hn =>
+        hnrej ⟨hy0, hoy, fun hs => hn hs.2.2⟩
   -- `o` decides nothing
   have hodom : ∀ t, ¬ o.o.dom t := by
     intro t hdt
@@ -876,7 +875,7 @@ theorem not_output_exclusion {k0 : Inp T K} {τ : State (spec (T := T) (K := K) 
     have hou : o ≼ ⟨r.o, o.ρ⟩ :=
       ⟨⟨fun t h => absurd h (hoX t), fun t h => absurd h (hodom t),
         fun a _ h _ => absurd h (hodom a)⟩, fun _ _ _ h => h⟩
-    refine hnr ((hR k0 r).2 ⟨hr, fun hrej => hrej.2.2.2 ?_⟩)
+    refine hnr ((hR k0 r).2 ⟨hr, fun hrej => hrej.2.2 ?_⟩)
     exact ⟨hr, hrej.2.1, _, hr', hou, hle⟩
 
 end Canon
@@ -1185,12 +1184,12 @@ theorem stamp_not_2PL (h : Tri k A B C) {τ : State (spec (T := T) (K := K) fals
   · exact not_read (stamp_keeps_uncommitted hτ) (perm_row h hm_id) (perm_part h hm_id)
       (fun _ _ => rfl) nABC T' n v e
 
-/-- **Neither figure exclusion is a canonical output exclusion `x_o^out`**, for any output
+/-- **Neither figure exclusion is a canonical exclusion `x_o`**, for any output
 `o`, at the canonical state of `k`. -/
-theorem neither_is_output_exclusion (h : Tri k A B C) :
-    (∀ τ, (order A B).app (σ3 k) = some τ → ∀ o, (outputExclusion o).app (σ3 k) ≠ some τ) ∧
+theorem neither_is_canonical_exclusion (h : Tri k A B C) :
+    (∀ τ, (order A B).app (σ3 k) = some τ → ∀ o, (canonicalExclusion o).app (σ3 k) ≠ some τ) ∧
     (∀ τ, (stamp B (fun _ => False)).app (σ3 k) = some τ →
-      ∀ o, (outputExclusion o).app (σ3 k) ≠ some τ) := by
+      ∀ o, (canonicalExclusion o).app (σ3 k) ≠ some τ) := by
   have hd := h.d
   have hX : ∀ {l : List T} t, ¬ (mk l fun _ => False).X t := fun _ h => h
   refine ⟨fun τ hτ o => ?_, fun τ hτ o => ?_⟩
@@ -1200,13 +1199,13 @@ theorem neither_is_output_exclusion (h : Tri k A B C) :
       (res_iff hτ (perm_part h hm_id)).2 ⟨perm_row h hm_id, by show ¬ _; d3 hd⟩
     have nBAC : ¬ τ.R k (full (mk [B, A, C] fun _ => False)) :=
       fun hm => ((res_iff hτ (perm_part h hm_bac)).1 hm).2 (by show _; d3 hd)
-    exact not_output_exclusion (order_keeps_uncommitted hτ) hA (perm_part h hm_id) hX rABC
+    exact not_canonical_exclusion (order_keeps_uncommitted hτ) hA (perm_part h hm_id) hX rABC
       (perm_row h hm_bac) (perm_part h hm_bac) (fun _ _ => rfl) nBAC o
   · obtain ⟨τ', hτ', rBAC, _, nABC, _⟩ := stamp_at h
     rw [hτ] at hτ'; cases hτ'
     have hA : τ.R _ (full (allAbort k.txs)) :=
       stamp_keeps_uncommitted hτ _ allAbort_row (fun _ h => h)
-    exact not_output_exclusion (stamp_keeps_uncommitted hτ) hA (perm_part h hm_bac) hX rBAC
+    exact not_canonical_exclusion (stamp_keeps_uncommitted hτ) hA (perm_part h hm_bac) hX rBAC
       (perm_row h hm_id) (perm_part h hm_id) (fun _ _ => rfl) nABC o
 
 end Three

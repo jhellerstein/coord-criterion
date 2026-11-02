@@ -11,7 +11,7 @@ Namespace `CC.Apps` (reuses the finite sets and generic exclusion lemmas of
 * Committed authority:  `Auth`, `prefix_antisymm`, the output order of
   Eq. `authority-refinement` (`instPOAuth`); `safety_exposable` (if every
   remaining row refines the certified evidence `o`, then `o` is exposable and
-    `Out_ε(o)` is legal); `incompatible_outputExcluded` (generic: two outputs at the
+    `Out_ε(o)` is legal); `incompatible_excluded` (generic: two outputs at the
     current input with no common refinement there ⇒ emitting one excludes the
     other, is not exposable, and needs an exclusion); `slot_conflict` and
   `epoch_conflict` instantiate it for competing decisions of one slot and for
@@ -28,7 +28,7 @@ Namespace `CC.Apps` (reuses the finite sets and generic exclusion lemmas of
   carrying the restricted order"), `prefixSpec`, `prefix_mono`,
   `prefix_union`, `prefixSpec_liftedMono`, `prefix_empty`;
   `completeSpec_functional`, `completeSpec_not_monotone`,
-  `completeSpec_inputExclusion_needed` (via Prop. `prop:functional-exposure-boundary`).
+  `completeSpec_exclusion_needed` (via Prop. `prop:functional-exposure-boundary`).
 
 Modeling choices: output types contain all partial maps / sets (permitted
 outputs are finite); "no common refinement" is proved in the whole output
@@ -52,16 +52,15 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O}
 /-- If `o, o' ∈ R(i)` have no common refinement in `R(i)`, emitting `o`
 excludes `(i,o')` (an exclusion), `o` is not exposable, and every legal output
 event emitting `o` applies an exclusion. -/
-theorem incompatible_outputExcluded {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
+theorem incompatible_excluded {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
     (ho' : σ.R σ.cur o') (hn : ¬ ∃ u, σ.R σ.cur u ∧ o ≼ u ∧ o' ≼ u) :
-    OutputExcluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : ExclusionBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] := by
   have hno : ¬ o ≼ o' := fun h => hn ⟨o', ho', h, PO.refl _⟩
-  have hrej : OutputExcluded σ o σ.cur o' :=
-    ⟨ho', hno, fun hs => hs.2 ⟨o, ho, PO.refl _⟩,
-     fun hr => let ⟨_, _, u, hu, h1, h2⟩ := hr; hn ⟨u, hu, h1, h2⟩⟩
-  refine ⟨hrej, fun he => ?_, fun B γ τ hs => containment_nonempty hs ⟨_, _, Or.inr hrej⟩⟩
-  exact ((exposable_iff_empty σ o).1 he).2 ⟨_, _, hrej⟩
+  have hrej : Excluded σ o σ.cur o' :=
+    ⟨ho', hno, fun hr => let ⟨_, _, u, hu, h1, h2⟩ := hr; hn ⟨u, hu, h1, h2⟩⟩
+  refine ⟨hrej, fun he => (exposable_iff_empty σ o).1 he ⟨_, _, hrej⟩,
+    fun B γ τ hs => containment_nonempty hs ⟨_, _, hrej⟩⟩
 
 /-- If every remaining row refines `o` (what protocol safety is assumed to
 guarantee for certified evidence), `o` is exposable and `Out_ε(o)` is legal. -/
@@ -123,9 +122,9 @@ theorem slot_conflict {I : Type} [PO I] {κ : Type} (slot : Dc → κ)
     {sp : Spec I (Auth Ep Vt Dc)} (hU : ∀ k u, sp.P k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
-    OutputExcluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : ExclusionBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
-  incompatible_outputExcluded ho ho' fun ⟨u, hu, h1, h2⟩ =>
+  incompatible_excluded ho ho' fun ⟨u, hu, h1, h2⟩ =>
     slot_no_common slot hd hd' hs hne ⟨u, hU _ _ (σ.sub _ _ hu), h1, h2⟩
 
 theorem epoch_no_common {o o' : Auth Ep Vt Dc} {e : List Ep} {a b : Ep}
@@ -142,9 +141,9 @@ rule did not fix the successor. -/
 theorem epoch_conflict {I : Type} [PO I] {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
-    OutputExcluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : ExclusionBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
-  incompatible_outputExcluded ho ho' fun ⟨u, _, h1, h2⟩ => epoch_no_common he he' hne ⟨u, h1, h2⟩
+  incompatible_excluded ho ho' fun ⟨u, _, h1, h2⟩ => epoch_no_common he he' hne ⟨u, h1, h2⟩
 
 /-! ### Partial maps ordered by extension -/
 
@@ -670,14 +669,14 @@ theorem completeSpec_not_monotone (e : Ev) :
   obtain ⟨u, hu, hall⟩ := hl _ _ (empty_le_single e) [⟨emptyHist⟩] (by simp) (by simp [completeSpec])
   exact hne ((hall _ (by simp)).trans hu)
 
-/-- **Some output can be exposed only after an exclusion that input-excludes an
+/-- **Some output can be exposed only after an exclusion that excludes an
 input** (Prop. `prop:functional-exposure-boundary`): there is a state
-reachable without exclusion and an output there whose `InputExcluded` class is
+reachable without exclusion and an output there whose `Excluded` class is
 nonempty, so every legal output event emitting it applies an exclusion, and
-every such exclusion input-excludes each input where it removes rows. -/
-theorem completeSpec_inputExclusion_needed (e : Ev) :
+every such exclusion excludes each input where it removes rows. -/
+theorem completeSpec_exclusion_needed (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
-      (∃ k x, InputExcluded τ o k x) ∧ (∀ k x, ¬ OutputExcluded τ o k x) ∧
+      (∃ k x, Excluded τ o k x) ∧
       ∀ (B : ExclusionBasis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] := by
   have hb := fun h => (completeSpec_not_monotone e).1
     ((functional_exposure_boundary (completeSpec_functional (Ev := Ev))).2 h)
@@ -688,20 +687,13 @@ theorem completeSpec_inputExclusion_needed (e : Ev) :
   apply Classical.byContradiction
   intro hne
   apply hno
-  have hrej : ∀ k x, ¬ OutputExcluded τ o k x := by
-    intro k x hr
-    have : ∃ u, τ.R k u ∧ o ≼ u :=
-      Classical.byContradiction fun hn => hr.2.2.1 ⟨hr.1, hn⟩
-    obtain ⟨u, hu, hou⟩ := this
-    have : u = x := completeSpec_functional k u x (τ.sub _ _ hu) (τ.sub _ _ hr.1)
-    exact hr.2.1 (this ▸ hou)
-  have hinputExcluded : ∃ k x, InputExcluded τ o k x := by
+  have hexcluded : ∃ k x, Excluded τ o k x := by
     apply Classical.byContradiction
-    intro hs
-    exact hne ((exposable_iff_empty τ o).2 ⟨hs, fun ⟨k, x, h⟩ => hrej k x h⟩)
-  obtain ⟨k, x, hs⟩ := hinputExcluded
-  exact ⟨τ, o, hτ, ho, ⟨k, x, hs⟩, hrej,
-    fun B γ τ' hst => containment_nonempty hst ⟨k, x, Or.inl hs⟩⟩
+    intro hE
+    exact hne ((exposable_iff_empty τ o).2 hE)
+  obtain ⟨k, x, he⟩ := hexcluded
+  exact ⟨τ, o, hτ, ho, ⟨k, x, he⟩,
+    fun B γ τ' hst => containment_nonempty hst ⟨k, x, he⟩⟩
 
 end Snapshots
 

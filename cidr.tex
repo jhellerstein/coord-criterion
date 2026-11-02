@@ -53,8 +53,7 @@
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
 \newcommand{\Subsumed}{\mathit{Subsumed}}
-\newcommand{\ExcludedIn}{\mathit{Excluded}^{\mathrm{in}}}
-\newcommand{\ExcludedOut}{\mathit{Excluded}^{\mathrm{out}}}
+\newcommand{\Excluded}{\mathit{Excluded}}
 \newcommand{\grayrow}[1]{\textcolor{gray}{#1}}
 \newcommand{\sh}[1]{\cellcolor{gray!22}#1}
 % Full-width strike line through the row just ended; place after \\.
@@ -205,7 +204,7 @@ Monotonicity requires its outputs to refine as input grows.  \emph{Functional
 CALM} (\S\ref{sec:functional-calm-theorem}) covers specifications that permit
 one output at each input.  It proves that consistency is equivalent to
 monotonicity: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.  If monotonicity
-fails, some output requires a fateful decision: an input exclusion that rules
+fails, some output requires a fateful decision: an exclusion that rules
 out later input which could contradict it.  The result covers relational query
 languages and the usual CRDT state specification.
 
@@ -345,7 +344,7 @@ when an output can be emitted without exclusion.
   input and its upper fiber.  Gray: lost after an input event; struck
   through if removed by an exclusion.  Panels (b)
   and (c) follow input events.  In (d) the registrar emits $\bot$ and also
-  applies an input exclusion that $\mathsf{output}(\bot)$ alone does not require.}
+  applies an exclusion that $\mathsf{output}(\bot)$ alone does not require.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -387,7 +386,7 @@ Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
 (\S\ref{sec:systems}).  In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
-$ab\cdot$ in the same output event.  Its irrevocable \emph{input exclusion}
+$ab\cdot$ in the same output event.  Its irrevocable \emph{exclusion}
 removes the still-possible $aba$ and $abb$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no exclusion, since every output still possible \outrel it;
@@ -426,7 +425,7 @@ specification requires.
   \end{minipage}
   \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
   to preserve space.  The
-  The registrar's input exclusion in Figure~\ref{fig:election-frames}(d) is required here.}
+  The registrar's exclusion in Figure~\ref{fig:election-frames}(d) is required here.}
   \label{fig:nonmonotone-frame}
 \end{figure}
 
@@ -444,7 +443,7 @@ Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
 to itself).  Then $\bot$ is incompatible with future winners, so emitting it
-requires an input exclusion.  That change in the output order is Functional CALM in
+requires an exclusion.  That change in the output order is Functional CALM in
 miniature: the original order is monotone, so later outputs \outrelbase every
 earlier one; under the equality order, some outputs can be emitted
 only with an exclusion.
@@ -538,7 +537,7 @@ A system controls what it tells the world.  We study what it can
 promise without assuming that clients tolerate retractions.  Later outputs
 must therefore \outrelbase earlier ones.
 
-\begin{definition}[Output event, input exclusion, exclusion]
+\begin{definition}[Output event, canonical exclusion]
 \label{def:output-event}
 Let $(i,o)$ be the row at the current input of a state $(i,R)$.  The
 \emph{output event} $\mathsf{output}(o)$ atomically restricts the remainder
@@ -547,13 +546,12 @@ table to the rows whose outputs \outrelbase $o$, and emits $o$:
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-When this removes a row, the transition is the \emph{input exclusion}
-$x_o^{\mathrm{in}}$: it
-\emph{empties} the inputs of the removed rows, and it is a \emph{exclusion}.
+When this removes a row, the transition applies the \emph{canonical exclusion}
+$x_o$.  At each input $k$ whose row it removes, $x_o$ excludes input $k$.
 \end{definition}
 
 An exclusion removes rows that input alone would not: the inputs
-it empties are no longer legal.  Systems may issue more exclusions than an output
+it excludes are no longer legal.  Systems may issue more exclusions than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 extra exclusions only restrict behavior (\S\ref{sec:systems}).
 
@@ -678,7 +676,7 @@ when $f$ is monotone at $i$.
 A monotone specification can thus emit every current
 output without exclusion; if monotonicity fails at $i\InputOrd k$ with
 $f(i)\not\OutputOrd f(k)$, then at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$
-applies $x_{f(i)}^{\mathrm{in}}$, an input exclusion at $k$.
+applies $x_{f(i)}$, which excludes input $k$.
 
 This is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read
@@ -701,15 +699,14 @@ and~\ref{sec:crdt-instance} treat both.
 We now extend CALM theory to allow a fiber to contain several outputs.  The monotonicity property we want to test as input
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
-Exclusions can empty an input fiber or narrow it.  We now turn to output
-exclusion among permitted outputs.  Section~\ref{sec:ambiguity-story}
+An exclusion can exclude an input entirely or exclude some outputs at that input.  We now turn to the latter effect.  Section~\ref{sec:ambiguity-story}
 introduces the issue by example.  Section~\ref{sec:lifted-monotonicity}
 defines relational specifications and Lifted Monotonicity.  Section~\ref{sec:lifted-output-events} lifts
 output events and classifies what they remove, and
 Section~\ref{sec:complete-calm-theorem} shows that the run-level results of
 Section~\ref{sec:executions} carry over and proves Complete CALM.
 
-\subsection{Output exclusion by example}
+\subsection{Exclusion by example}
 \label{sec:ambiguity-story}
 
 Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
@@ -760,10 +757,10 @@ contrast, can all be \outrelpast by a larger route set.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{Output exclusion and directedness.} The examples differ in what happens
+\paragraph{Exclusion and directedness.} The examples differ in what happens
 to alternative outputs when one is emitted.  In panel~(f), neither
 serialization order \outrel the other, so emitting one requires an
-\emph{output exclusion} that removes the other while the input stays legal:
+\emph{exclusion} that removes the other while the input stays legal:
 emitting $[A,B]$ excludes $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output subsumption}; every removed output is
@@ -771,11 +768,7 @@ removal an \emph{output subsumption}; every removed output is
 according to the output order and needs no
 exclusion: it is a \emph{legal output}.
 
-An output event can thus remove rows in three ways: by input exclusion, as in
-Section~\ref{sec:functional-calm}; by subsuming outputs, as in panel~(g); or by
-excluding outputs, as in panel~(f).  The atomic event
-$\mathsf{output}(o)$ does whichever of these $o$ requires, then emits $o$;
-input and output exclusions are exclusions, subsuming is not.
+An output event can thus remove rows in two ways: by exclusion, as in panel~(f) and Section~\ref{sec:functional-calm}, or by subsuming outputs, as in panel~(g).  At a given input, an exclusion may remove every row, excluding the input, or only some rows, excluding those outputs.  The atomic event $\mathsf{output}(o)$ does whichever $o$ requires, then emits $o$.  Subsuming is not exclusion.
 
 In Figure~\ref{fig:ambiguity-frames}, serialization requires exclusion; traceroute avoids it.
 The difference between them is the order-theoretic concept of a \emph{directed} fiber:
@@ -938,24 +931,21 @@ Lifted Monotonicity is a property of the table.  We now return to execution.
 For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
 again keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
-emits $o$.  With several rows at one input, each removed row falls into one of
-three classes.  Consider a removed row $(i', o')$. If no row at $i'$ \outrel $o$, the row is in $\ExcludedIn_o$,
-and the event \emph{empties} $i'$.  If a kept row at $i'$ \outrel $o'$,
-the row is in $\Subsumed_o$, and removing it is an \emph{output subsumption}.
-Otherwise the row is in $\ExcludedOut_o$: $i'$ stays legal, but the event
-\emph{excludes} $o'$.  The input exclusion $x_o^{\mathrm{in}}$ removes $\ExcludedIn_o$, and the output exclusion
-$x_o^{\mathrm{out}}$ removes $\ExcludedOut_o$.  Both are exclusions; output subsumption is not.
-These are the three cases of Section~\ref{sec:ambiguity-story}: emitting
-$\bot$ under the equality order of Figure~\ref{fig:nonmonotone-frame} puts
-$aba$ and $abb$ in $\ExcludedIn_o$; emitting $[A,B]$ in
-Figure~\ref{fig:ambiguity-frames}(f) puts $[B,A]$ in $\ExcludedOut_o$; and the
-route sets removed in panel~(g) are in $\Subsumed_o$.
-In the functional case, $\Subsumed_o$ and $\ExcludedOut_o$ are empty, so this is
-the output event of Definition~\ref{def:output-event}.  Formal definitions
-are in \extended.
+emits $o$.  Its removed rows fall into two classes.  A row is in
+$\Subsumed_o$ when a kept row at the same input \outrel it; its removal is an
+\emph{output subsumption}.  Every other removed row is in $\Excluded_o$ and is
+removed by the canonical exclusion $x_o$.  At an input $k$, $x_o$ excludes
+input $k$ if it removes every row there; otherwise it excludes each output
+whose row it removes at $k$.  Output subsumption is not exclusion.
+Emitting $\bot$ under the equality order of Figure~\ref{fig:nonmonotone-frame}
+puts the rows for $aba$ and $abb$ in $\Excluded_o$ and excludes those inputs;
+emitting $[A,B]$ in Figure~\ref{fig:ambiguity-frames}(f) puts the row for
+$[B,A]$ in $\Excluded_o$ and excludes that output at $\{A,B\}$; and the
+route sets removed in panel~(g) are in $\Subsumed_o$.  In the functional
+case, $\Subsumed_o$ is empty.  Formal definitions are in \extended.
 
 As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
-exclusion, that is, when $\ExcludedIn_o$ and $\ExcludedOut_o$ are empty.
+exclusion, exactly when $\Excluded_o$ is empty.
 Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
 remaining output at $j$ have a common \outnoun at $j$.
 
@@ -1129,9 +1119,8 @@ bring bespoke exclusions.  In general, a \emph{exclusion} is a partial
 function on specification states that removes a nonempty set of rows.  Each
 removed row is undominated by the rows remaining at its input: no remaining
 row there \outrel it.  It leaves the current
-input unchanged.  At each input where it removes rows, an exclusion either
-removes every row there, an \emph{input exclusion}, or removes some rows
-and keeps others, an \emph{output exclusion}.  An output event
+input unchanged.  At an input $k$, it excludes input $k$ if it removes every
+row there; otherwise it excludes each output whose row it removes at $k$.  An output event
 $\Out{\gamma}{o}$ applies a sequence $\gamma$ of exclusions, subsumes rows,
 and emits $o$.
 A \emph{exclusion event} $\mathsf{exclude}(\gamma)$ applies such a sequence and
@@ -1141,7 +1130,7 @@ a \emph{exclusion basis} $\mathcal B$ (a set of exclusions) and a
 nondeterministic \emph{strategy} per participant that picks its next output,
 exclusion, send, or receive event from its local history, applying only
 exclusions from $\mathcal B$.  The full paper gives these definitions formally and shows
-that every input and output exclusion of Section~\ref{sec:complete-calm} is an exclusion
+that every canonical exclusion of Section~\ref{sec:complete-calm} is an exclusion
 in this sense.
 
 Two-phase locking (2PL) and multiversion timestamp
@@ -1165,7 +1154,7 @@ For legal outputs, eager output is free and circumspection is incidental.  To
 illustrate, when 2PL orders $A$ before $B$ in an exclusion event, the
 canonical run skips it; when 2PL later emits a serial order, so does the
 canonical run, and both end with the same table.  Whether a specification
-needs coordination thus depends on the input and output exclusions its outputs
+needs coordination thus depends on the exclusions its outputs
 require, whatever mechanism makes them.
 
 \subsection{Coordination}
@@ -1173,7 +1162,7 @@ require, whatever mechanism makes them.
 
 An exclusion is a binding decision that removes behavior the specification
 still permits.  Mutexes, locks, timestamps, and agreement protocols all
-apply input or output exclusions.  An exclusion requires coordination only
+apply exclusions.  An exclusion requires coordination only
 when another run could contradict it, by accepting an input that its input
 exclusion ruled out or emitting an output that it ruled out.  It requires
 distributed coordination when that run is at another participant.
@@ -1184,7 +1173,7 @@ removes nothing the specification still permits and applies no exclusion.
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
 Let an event of a run apply an exclusion.  A run \emph{contradicts} the
-exclusion if it accepts an input its input exclusion emptied, or emits an output the
+exclusion if it accepts an input its exclusion emptied, or emits an output the
 exclusion excludes at the same input.
 \end{definition}
 
@@ -1214,11 +1203,11 @@ section.
 Whether an exclusion requires coordination depends on the set of runs: those
 of a specification, or those of a system implementing it.  For a
 specification, every exclusion requires coordination: some canonical run
-accepts each input that an input exclusion rules out and emits each permitted output,
+accepts each input that an exclusion rules out and emits each permitted output,
 and that run may be at another participant.  For a specification, then,
 coordination-free means exclusion-free.  For a system, the answer depends on
-which runs it can perform, and here input and output exclusions differ.  The environment
-may supply any input to any participant, so an input exclusion requires distributed
+which runs it can perform, and here exclusions differ.  The environment
+may supply any input to any participant, so an exclusion requires distributed
 coordination whenever another participant may receive the excluded input.
 Outputs come only from strategies, and receives from other sends, so an exclusion
 requires coordination only when some run of the system emits an output the
@@ -1295,8 +1284,7 @@ on different sides of a partition must have a common \outnoun in the
 specification at every common \indesc of their inputs.  When $E$ is every permitted row, this is Lifted
 Monotonicity itself.  A partition does not
 change which exclusions a specification needs; it removes the ability to make
-them jointly, since separated participants cannot jointly apply an input exclusion
-or an output exclusion that another participant could contradict.
+them jointly, since separated participants cannot jointly apply an exclusion that another participant could contradict.
 
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
@@ -1746,7 +1734,7 @@ A limitation of prior CALM work was that it was constructive on only one side of
 its boundary.  Monotone programs need no coordination; for a non-monotone
 program, CALM said only that coordination was required somewhere, not what it
 had to accomplish or where it belonged.  Complete CALM says more.  A
-specification that is not monotone needs specific exclusions: the input and output exclusions
+specification that is not monotone needs specific exclusions: the exclusions
 its outputs require. Every coordination mechanism, from locks to
 consensus, is a way of applying these exclusions.  The same analysis says which outputs
 need exclusions, and whether another participant could contradict them, so
@@ -1778,14 +1766,13 @@ contradicted by what it learns later?  Mutexes, locks, atomic instructions, and
 agreement protocols prevent such contradictions by issuing exclusions.
 Functional CALM answers the question for functions: a functional specification
 stays confluent as input arrives exactly when it is monotone, and then no
-output needs an input exclusion.  This generalizes the classic result from logical fact
+output needs an exclusion.  This generalizes the classic result from logical fact
 sets to arbitrary input and output orders.
 
 Complete CALM extends the answer to specifications that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with Directed Outputs.  When it fails, some reachable output
-requires an exclusion, and every exclusion is either an input exclusion or an
-output exclusion at each fiber it changes.  Because exclusions are explicit, the model
+requires an exclusion.  At each input it changes, an exclusion either excludes the input or excludes particular outputs.  Because exclusions are explicit, the model
 can also check where a composition coordinates
 (\S\ref{sec:composition}).  A totally ordered log and a
 key-value store are both non-monotone at their ordinary specifications, yet

@@ -123,16 +123,9 @@ abbrev «app:notation/input-loss» {sp : Spec I O} (σ : State sp) (j : I) : Tab
 (Def. `def:output-event`).  Lean: `Step σ (.output o) τ`. -/
 abbrev «app:notation/output-event» (o : O) : Event I O := .output o
 
-/-- *input exclusion* — the output event, when it removes rows (Def. `def:output-event`);
-in general `x_o^in(i,R) = (i, R ∖ Excluded^in_o)` (Def. `def:lifted-output-event`).
-Lean: `inputExcludeState σ o _` (as an exclusion: `CC.inputExclusion o`). -/
-abbrev «app:notation/input-exclusion-functional» {sp : Spec I O} (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
-    State sp :=
-  inputExclusionState σ o ho
-
 /-- *exclusion* (§2 sense) — an output event that removes rows
 (Def. `def:output-event`).  In a functional specification this is "`R' ≠ R`",
-equivalently "`Excluded^in_o ≠ ∅`" (`CALM.functional_exclude_iff_inputExcluded`).  The
+equivalently "`Excluded_o ≠ ∅`" (`CALM.functional_exclude_iff_excluded`).  The
 general notion is Def. `def:exclusion` (`«app:notation/exclusion»`). -/
 abbrev «app:notation/output-event-excludes» {sp : Spec I O} (σ : State sp) (o : O) : Prop :=
   ¬ Exposable σ o
@@ -225,32 +218,23 @@ abbrev «app:notation/common-expansion-condition» (sp : Spec I O) : Prop := sp.
 abbrev «app:notation/ruled-out» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ o ≼ x
 
-/-- *`Excluded^in_o`* — ruled-out rows at inputs with no row refining `o`
-(Eq. `eq:input-exclusion-removals`).  Lean: `InputExcluded σ o`. -/
-abbrev «app:notation/Excluded-in» {sp : Spec I O} (σ : State sp) (o : O) : Table I O := InputExcluded σ o
-
 /-- *`Subsumed_o`* — ruled-out rows refined by a kept row at the same input
 (Eq. `eq:output-subsumptions`).  Lean: `Subsumed σ o`. -/
 abbrev «app:notation/Subsumed» {sp : Spec I O} (σ : State sp) (o : O) : Table I O := Subsumed σ o
 
-/-- *`Excluded^out_o`* — the rest (Eq. `eq:output-exclusion-removals`).  Lean:
-`OutputExcluded σ o`. -/
-abbrev «app:notation/Excluded-out» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
-  OutputExcluded σ o
+/-- *`Excluded_o`* — every ruled-out row not in `Subsumed_o`. -/
+abbrev «app:notation/Excluded» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
+  Excluded σ o
 
-/-- *input exclusion* (lifted) — remove `Excluded^in_o` (Def. `def:lifted-output-event`).
-Lean: `inputExcludeState σ o _`; as an exclusion `CC.inputExclusion o`. -/
-noncomputable abbrev «app:notation/input-exclusion» {sp : Spec I O} : O → Exclusion sp := inputExclusion
+/-- *canonical exclusion* — remove `Excluded_o`. -/
+noncomputable abbrev «app:notation/canonical-exclusion» {sp : Spec I O} : O → Exclusion sp :=
+  canonicalExclusion
 
 /-- *output subsumption* — remove `Subsumed_o`, not an exclusion
 (Def. `def:lifted-output-event`).  Lean: the rows `Subsumed σ o`, removed by
 `outputTable σ o` (no separate state). -/
 abbrev «app:notation/output-subsumption» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   Subsumed σ o
-
-/-- *output exclusion* — remove `Excluded^out_o` (Def. `def:lifted-output-event`).  Lean:
-`outputExcludeState σ o _`; as an exclusion `CC.outputExclusion o`. -/
-noncomputable abbrev «app:notation/output-exclusion» {sp : Spec I O} : O → Exclusion sp := outputExclusion
 
 /-! ## Distributed execution (Section `sec:distributed-execution`) -/
 
@@ -382,9 +366,9 @@ exclusion events) agree; the lemma is `CC.canonical_equivalent`. -/
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- *contradicts* — accepts an input the exclusion input-excludes, or emits an output
+/-- *contradicts* — accepts an input the exclusion excludes, or emits an output
 it excludes (Def. `def:contradicts`).  Lean: `CAP.Contradicts emits
-accepts σ σc` (some removed row is emitted at its input, or some inputExcluded input is
+accepts σ σc` (some removed row is emitted at its input, or some excluded input is
 accepted). -/
 abbrev «app:notation/contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
     (σ σc : State sp) : Prop :=

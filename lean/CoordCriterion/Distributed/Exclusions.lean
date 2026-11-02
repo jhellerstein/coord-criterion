@@ -7,9 +7,8 @@ Namespace `CC`.  Further claims of these sections are in
 `Distributed/Systems.lean`.
 
 * `Exclusion`                         — Def. exclusion (eq. exclusion-excludes)
-* `inputExclusion`, `outputExclusion`                     — the canonical input exclusion `x_o^in` and output exclusion `x_o^out`
-                                         (eq. canonical-input-output-exclusion-relational)
-* `input_output_exclusion_commute`                — "defined on each other's results and commute"
+* `canonicalExclusion`                 — the canonical exclusion `x_o`
+* `excludeState`, `excludeApp`          — its resulting state and application
 * `SEvent`, `SysStep`, `SysExec`       — Def. output event of a system (`Out_γ(o)`), commit
                                          events `Exclude(γ)` (a nonempty basis sequence,
                                          applied without emitting), run under a basis;
@@ -17,7 +16,7 @@ Namespace `CC`.  Further claims of these sections are in
 * `containment`, `canonical_support`,
   `eps_step_iff`                       — Lemma canonical-exclusion-normal-form (1)–(3)
 * `composite`, `applySeq_composite`    — Lemma compound-exclusion
-* `input_or_output_exclusion`                     — Prop. input-or-output-exclusion
+* `exclusion_effect`                     — the two effects of an exclusion
 * `coordFree_execCF`, `execCF_coordFree` — Def. coordination vs. exclusion-free runs
 * `canonical_equivalent`               — Lemma canonical-equivalent (the canonical run
                                          skips exclusion events)
@@ -46,115 +45,48 @@ structure Exclusion (sp : Spec I O) where
   excludes : ∀ σ τ, app σ = some τ →
     ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w)
 
-/-! ### Invariance of the three classes under removals that keep `R[out ⪰ o]` -/
-
-theorem classes_keep {σ τ : State sp} {o : O}
-    (hsub : ∀ k u, τ.R k u → σ.R k u)
-    (hkeep : ∀ k u, σ.R k u → o ≼ u → τ.R k u) (k : I) :
-    ((∃ u, τ.R k u ∧ o ≼ u) ↔ (∃ u, σ.R k u ∧ o ≼ u)) ∧
-    ∀ x, ((∃ u, τ.R k u ∧ o ≼ u ∧ x ≼ u) ↔ (∃ u, σ.R k u ∧ o ≼ u ∧ x ≼ u)) :=
-  ⟨⟨fun ⟨u, h1, h2⟩ => ⟨u, hsub _ _ h1, h2⟩, fun ⟨u, h1, h2⟩ => ⟨u, hkeep _ _ h1 h2, h2⟩⟩,
-   fun _ => ⟨fun ⟨u, h1, h2, h3⟩ => ⟨u, hsub _ _ h1, h2, h3⟩,
-             fun ⟨u, h1, h2, h3⟩ => ⟨u, hkeep _ _ h1 h2, h2, h3⟩⟩⟩
-
-theorem inputExcluded_keep {σ τ : State sp} {o : O}
-    (hsub : ∀ k u, τ.R k u → σ.R k u)
-    (hkeep : ∀ k u, σ.R k u → o ≼ u → τ.R k u) {k : I} {x : O} (hτ : τ.R k x) :
-    InputExcluded τ o k x ↔ InputExcluded σ o k x := by
-  unfold InputExcluded
-  rw [(classes_keep hsub hkeep k).1]
-  exact ⟨fun h => ⟨hsub _ _ hτ, h.2⟩, fun h => ⟨hτ, h.2⟩⟩
+/-! ### The canonical exclusion -/
 
 theorem subsumed_keep {σ τ : State sp} {o : O}
     (hsub : ∀ k u, τ.R k u → σ.R k u)
     (hkeep : ∀ k u, σ.R k u → o ≼ u → τ.R k u) {k : I} {x : O} (hτ : τ.R k x) :
     Subsumed τ o k x ↔ Subsumed σ o k x := by
-  unfold Subsumed
-  rw [(classes_keep hsub hkeep k).2 x]
-  exact ⟨fun h => ⟨hsub _ _ hτ, h.2⟩, fun h => ⟨hτ, h.2⟩⟩
+  constructor
+  · rintro ⟨_, hox, u, hu, hou, hxu⟩
+    exact ⟨hsub _ _ hτ, hox, u, hsub _ _ hu, hou, hxu⟩
+  · rintro ⟨_, hox, u, hu, hou, hxu⟩
+    exact ⟨hτ, hox, u, hkeep _ _ hu hou, hou, hxu⟩
 
-theorem outputExcluded_keep {σ τ : State sp} {o : O}
+theorem excluded_keep {σ τ : State sp} {o : O}
     (hsub : ∀ k u, τ.R k u → σ.R k u)
     (hkeep : ∀ k u, σ.R k u → o ≼ u → τ.R k u) {k : I} {x : O} (hτ : τ.R k x) :
-    OutputExcluded τ o k x ↔ OutputExcluded σ o k x := by
-  unfold OutputExcluded
-  rw [inputExcluded_keep hsub hkeep hτ, subsumed_keep hsub hkeep hτ]
+    Excluded τ o k x ↔ Excluded σ o k x := by
+  unfold Excluded
+  rw [subsumed_keep hsub hkeep hτ]
   exact ⟨fun h => ⟨hsub _ _ hτ, h.2⟩, fun h => ⟨hτ, h.2⟩⟩
 
-theorem not_inputExcluded_of_ge {σ : State sp} {o : O} {k : I} {u : O}
-    (h : σ.R k u) (hou : o ≼ u) : ¬ InputExcluded σ o k u :=
-  fun hs => hs.2 ⟨u, h, hou⟩
+theorem not_excluded_of_ge {σ : State sp} {o : O} {k : I} {u : O}
+    (hou : o ≼ u) : ¬ Excluded σ o k u :=
+  fun he => he.2.1 hou
 
-theorem not_outputExcluded_of_ge {σ : State sp} {o : O} {k : I} {u : O}
-    (hou : o ≼ u) : ¬ OutputExcluded σ o k u :=
-  fun hr => hr.2.1 hou
-
-/-- A row ruled out by `o` that is neither inputExcluded nor excluded is subsumed. -/
-theorem subsumed_of {σ : State sp} {o : O} {k : I} {x : O}
-    (h : σ.R k x) (hx : ¬ o ≼ x) (hs : ¬ InputExcluded σ o k x) (hr : ¬ OutputExcluded σ o k x) :
-    Subsumed σ o k x :=
-  Classical.byContradiction fun ht => hr ⟨h, hx, hs, ht⟩
-
-/-! ### The canonical input exclusion `x_o^in` and output exclusion `x_o^out` -/
-
-/-- `(i, R ∖ Excluded^in_o)`. -/
-def inputExcludeState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
+/-- `(i, R ∖ Excluded_o)`. -/
+def excludeState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
   cur := σ.cur
-  R := fun k x => σ.R k x ∧ ¬ InputExcluded σ o k x
+  R := fun k x => σ.R k x ∧ ¬ Excluded σ o k x
   sub := fun k x h => σ.sub k x h.1
-  hasCur := ⟨o, ho, not_inputExcluded_of_ge ho (PO.refl o)⟩
+  hasCur := ⟨o, ho, not_excluded_of_ge (PO.refl o)⟩
   above := fun k x h => σ.above k x h.1
 
-/-- `(i, R ∖ Excluded^out_o)`. -/
-def outputExcludeState (σ : State sp) (o : O) : State sp where
-  cur := σ.cur
-  R := fun k x => σ.R k x ∧ ¬ OutputExcluded σ o k x
-  sub := fun k x h => σ.sub k x h.1
-  hasCur := by
-    obtain ⟨x, hx⟩ := σ.hasCur
-    -- the current input keeps a row: either `x` itself, or the row it is
-    -- subsumed by another row, or `x` is inputExcluded — impossible since the current fiber
-    -- contains a row `⪰ o` only when `o` is there; we argue directly.
-    by_cases hr : OutputExcluded σ o σ.cur x
-    · -- `x` excluded ⇒ not inputExcluded ⇒ some row `⪰ o` at `cur`, which is not excluded
-      have hns := hr.2.2.1
-      have : ∃ u, σ.R σ.cur u ∧ o ≼ u :=
-        Classical.byContradiction fun hn => hns ⟨hx, hn⟩
-      obtain ⟨u, hu, hou⟩ := this
-      exact ⟨u, hu, not_outputExcluded_of_ge hou⟩
-    · exact ⟨x, hx, hr⟩
-  above := fun k x h => σ.above k x h.1
-
-theorem inputExcludeState_keep (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
-    ∀ k u, σ.R k u → o ≼ u → (inputExcludeState σ o ho).R k u :=
-  fun _ _ h hou => ⟨h, not_inputExcluded_of_ge h hou⟩
-
-theorem outputExclusionState_keep (σ : State sp) (o : O) :
-    ∀ k u, σ.R k u → o ≼ u → (outputExcludeState σ o).R k u :=
-  fun _ _ h hou => ⟨h, not_outputExcluded_of_ge hou⟩
-
-noncomputable def inputExclusionApp (o : O) (σ : State sp) : Option (State sp) :=
-  if h : σ.R σ.cur o ∧ ∃ k x, InputExcluded σ o k x then some (inputExcludeState σ o h.1) else none
+theorem excludeState_keep (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
+    ∀ k u, σ.R k u → o ≼ u → (excludeState σ o ho).R k u :=
+  fun _ _ h hou => ⟨h, not_excluded_of_ge hou⟩
 
 noncomputable def excludeApp (o : O) (σ : State sp) : Option (State sp) :=
-  if σ.R σ.cur o ∧ ∃ k x, OutputExcluded σ o k x then some (outputExcludeState σ o) else none
+  if h : σ.R σ.cur o ∧ ∃ k x, Excluded σ o k x then some (excludeState σ o h.1) else none
 
-theorem inputExclusionApp_eq {o : O} {σ τ : State sp} :
-    inputExclusionApp o σ = some τ ↔
-      ∃ h : σ.R σ.cur o, (∃ k x, InputExcluded σ o k x) ∧ inputExcludeState σ o h = τ := by
-  unfold inputExclusionApp
-  split
-  · rename_i h
-    simp only [Option.some.injEq]
-    exact ⟨fun e => ⟨h.1, h.2, e⟩, fun ⟨_, _, e⟩ => e⟩
-  · rename_i h
-    simp only [reduceCtorEq, false_iff]
-    rintro ⟨h1, h2, _⟩
-    exact h ⟨h1, h2⟩
-
-theorem outputExclusionApp_eq {o : O} {σ τ : State sp} :
+theorem excludeApp_eq {o : O} {σ τ : State sp} :
     excludeApp o σ = some τ ↔
-      σ.R σ.cur o ∧ (∃ k x, OutputExcluded σ o k x) ∧ outputExcludeState σ o = τ := by
+      ∃ h : σ.R σ.cur o, (∃ k x, Excluded σ o k x) ∧ excludeState σ o h = τ := by
   unfold excludeApp
   split
   · rename_i h
@@ -165,118 +97,36 @@ theorem outputExclusionApp_eq {o : O} {σ τ : State sp} :
     rintro ⟨h1, h2, _⟩
     exact h ⟨h1, h2⟩
 
-/-- **The canonical input exclusion `x_o^in` is an exclusion.**  Defined at the states with
-`o ∈ R(i)` and `Excluded^in_o ≠ ∅`. -/
-noncomputable def inputExclusion (o : O) : Exclusion sp where
-  app := inputExclusionApp o
-  cur_eq := by
-    intro σ τ h; obtain ⟨_, _, rfl⟩ := inputExclusionApp_eq.1 h; rfl
-  sub := by
-    intro σ τ h k u hu; obtain ⟨_, _, rfl⟩ := inputExclusionApp_eq.1 h; exact hu.1
-  removes := by
-    intro σ τ h
-    obtain ⟨_, ⟨k, x, hs⟩, rfl⟩ := inputExclusionApp_eq.1 h
-    exact ⟨k, x, hs.1, fun h' => h'.2 hs⟩
-  excludes := by
-    intro σ τ h k u w hu hnu hw _
-    obtain ⟨_, _, rfl⟩ := inputExclusionApp_eq.1 h
-    have hs : InputExcluded σ o k u := Classical.byContradiction fun hn => hnu ⟨hu, hn⟩
-    exact hw.2 ⟨hw.1, hs.2⟩
-
-/-- **The canonical output exclusion `x_o^out` is an exclusion.**  Defined at the states with
-`o ∈ R(i)` and `Excluded^out_o ≠ ∅`. -/
-noncomputable def outputExclusion (o : O) : Exclusion sp where
+/-- The canonical exclusion for `o`, defined when `o` is in the current fiber
+and `Excluded_o` is nonempty. -/
+noncomputable def canonicalExclusion (o : O) : Exclusion sp where
   app := excludeApp o
   cur_eq := by
-    intro σ τ h; obtain ⟨_, _, rfl⟩ := outputExclusionApp_eq.1 h; rfl
+    intro σ τ h; obtain ⟨_, _, rfl⟩ := excludeApp_eq.1 h; rfl
   sub := by
-    intro σ τ h k u hu; obtain ⟨_, _, rfl⟩ := outputExclusionApp_eq.1 h; exact hu.1
+    intro σ τ h k u hu; obtain ⟨_, _, rfl⟩ := excludeApp_eq.1 h; exact hu.1
   removes := by
     intro σ τ h
-    obtain ⟨_, ⟨k, x, hr⟩, rfl⟩ := outputExclusionApp_eq.1 h
-    exact ⟨k, x, hr.1, fun h' => h'.2 hr⟩
+    obtain ⟨_, ⟨k, x, he⟩, rfl⟩ := excludeApp_eq.1 h
+    exact ⟨k, x, he.1, fun h' => h'.2 he⟩
   excludes := by
     intro σ τ h k u w hu hnu hw huw
-    obtain ⟨_, _, rfl⟩ := outputExclusionApp_eq.1 h
-    have hr : OutputExcluded σ o k u := Classical.byContradiction fun hn => hnu ⟨hu, hn⟩
+    obtain ⟨_, _, rfl⟩ := excludeApp_eq.1 h
+    have he : Excluded σ o k u := Classical.byContradiction fun hn => hnu ⟨hu, hn⟩
     obtain ⟨hw, hnw⟩ := hw
+    apply he.2.2
     by_cases how : o ≼ w
-    · exact hr.2.2.2 ⟨hu, hr.2.1, w, hw, how, huw⟩
-    · by_cases hsw : InputExcluded σ o k w
-      · exact hr.2.2.1 ⟨hu, hsw.2⟩
-      · obtain ⟨_, _, v, hv, hov, hwv⟩ := subsumed_of hw how hsw hnw
-        exact hr.2.2.2 ⟨hu, hr.2.1, v, hv, hov, PO.trans huw hwv⟩
+    · exact ⟨hu, he.2.1, w, hw, how, huw⟩
+    · have hsw : Subsumed σ o k w := Classical.byContradiction fun hs => hnw ⟨hw, how, hs⟩
+      obtain ⟨_, _, v, hv, hov, hwv⟩ := hsw
+      exact ⟨hu, he.2.1, v, hv, hov, PO.trans huw hwv⟩
 
-/-- `R ∖ (Excluded^in_o ∪ Excluded^out_o)`. -/
-def Pruned (σ : State sp) (o : O) : Table I O :=
-  fun k x => σ.R k x ∧ ¬ InputExcluded σ o k x ∧ ¬ OutputExcluded σ o k x
-
-/-- **`x_o^in` and `x_o^out` are defined on each other's results and commute.**
-If both classes are nonempty, `x_o^in` then `x_o^out` and `x_o^out` then `x_o^in` are both
-defined and reach the same state, with table `R ∖ (Excluded^in_o ∪ Excluded^out_o)`. -/
-theorem input_output_exclusion_commute {σ : State sp} {o : O}
-    (hS : ∃ k x, InputExcluded σ o k x) (hJ : ∃ k x, OutputExcluded σ o k x) (ho : σ.R σ.cur o) :
-    ∃ τ₁ τ₂ ρ₁ ρ₂ : State sp,
-      (inputExclusion o).app σ = some τ₁ ∧ (outputExclusion o).app τ₁ = some ρ₁ ∧
-      (outputExclusion o).app σ = some τ₂ ∧ (inputExclusion o).app τ₂ = some ρ₂ ∧
-      ρ₁ = ρ₂ ∧ ρ₁.cur = σ.cur ∧ ρ₁.R = Pruned σ o := by
-  let τ₁ := inputExcludeState σ o ho
-  let τ₂ := outputExcludeState σ o
-  have hs1 : ∀ k u, τ₁.R k u → σ.R k u := fun _ _ h => h.1
-  have hk1 := inputExcludeState_keep σ o ho
-  have hs2 : ∀ k u, τ₂.R k u → σ.R k u := fun _ _ h => h.1
-  have hk2 := outputExclusionState_keep σ o
-  have ho1 : τ₁.R τ₁.cur o := ⟨ho, not_inputExcluded_of_ge ho (PO.refl o)⟩
-  have ho2 : τ₂.R τ₂.cur o := ⟨ho, not_outputExcluded_of_ge (PO.refl o)⟩
-  have hJ1 : ∃ k x, OutputExcluded τ₁ o k x := by
-    obtain ⟨k, x, hr⟩ := hJ
-    have h1 : τ₁.R k x := ⟨hr.1, hr.2.2.1⟩
-    exact ⟨k, x, (outputExcluded_keep hs1 hk1 h1).2 hr⟩
-  have hS2 : ∃ k x, InputExcluded τ₂ o k x := by
-    obtain ⟨k, x, hs⟩ := hS
-    have h2 : τ₂.R k x := ⟨hs.1, fun hr => hr.2.2.1 hs⟩
-    exact ⟨k, x, (inputExcluded_keep hs2 hk2 h2).2 hs⟩
-  refine ⟨τ₁, τ₂, outputExcludeState τ₁ o, inputExcludeState τ₂ o ho2,
-    inputExclusionApp_eq.2 ⟨ho, hS, rfl⟩, outputExclusionApp_eq.2 ⟨ho1, hJ1, rfl⟩,
-    outputExclusionApp_eq.2 ⟨ho, hJ, rfl⟩, inputExclusionApp_eq.2 ⟨ho2, hS2, rfl⟩, ?_, rfl, ?_⟩
-  · refine State.ext' (σ := outputExcludeState τ₁ o) (τ := inputExcludeState τ₂ o ho2) rfl ?_
-    funext k x
-    apply propext
-    show (τ₁.R k x ∧ ¬ OutputExcluded τ₁ o k x) ↔ (τ₂.R k x ∧ ¬ InputExcluded τ₂ o k x)
-    constructor
-    · rintro ⟨h1, hr⟩
-      have hr' := fun h => hr ((outputExcluded_keep hs1 hk1 h1).2 h)
-      have h2 : τ₂.R k x := ⟨h1.1, hr'⟩
-      exact ⟨h2, fun h => h1.2 ((inputExcluded_keep hs2 hk2 h2).1 h)⟩
-    · rintro ⟨h2, hs⟩
-      have hs' := fun h => hs ((inputExcluded_keep hs2 hk2 h2).2 h)
-      have h1 : τ₁.R k x := ⟨h2.1, hs'⟩
-      exact ⟨h1, fun h => h2.2 ((outputExcluded_keep hs1 hk1 h1).1 h)⟩
-  · funext k x
-    apply propext
-    show (τ₁.R k x ∧ ¬ OutputExcluded τ₁ o k x) ↔ Pruned σ o k x
-    constructor
-    · rintro ⟨h1, hr⟩
-      exact ⟨h1.1, h1.2, fun h => hr ((outputExcluded_keep hs1 hk1 h1).2 h)⟩
-    · rintro ⟨h, hs, hr⟩
-      have h1 : τ₁.R k x := ⟨h, hs⟩
-      exact ⟨h1, fun h' => hr ((outputExcluded_keep hs1 hk1 h1).1 h')⟩
-
-/-- After `x_o^in`, nothing is inputExcluded any more (so `x_o^in` is not reapplicable);
-after `x_o^out`, nothing is excluded. -/
-theorem inputExcludeState_no_inputExcluded (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
-    ∀ k x, ¬ InputExcluded (inputExcludeState σ o ho) o k x := by
-  intro k x hs
-  have h1 := hs.1
-  exact h1.2 ((inputExcluded_keep (σ := σ) (τ := inputExcludeState σ o ho) (fun _ _ h => h.1)
-    (inputExcludeState_keep σ o ho) h1).1 hs)
-
-theorem outputExclusionState_no_outputExcluded (σ : State sp) (o : O) :
-    ∀ k x, ¬ OutputExcluded (outputExcludeState σ o) o k x := by
-  intro k x hr
-  have h1 := hr.1
-  exact h1.2 ((outputExcluded_keep (σ := σ) (τ := outputExcludeState σ o) (fun _ _ h => h.1)
-    (outputExclusionState_keep σ o) h1).1 hr)
+theorem excludeState_no_excluded (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
+    ∀ k x, ¬ Excluded (excludeState σ o ho) o k x := by
+  intro k x he
+  have hx := he.1
+  exact hx.2 ((excluded_keep (σ := σ) (τ := excludeState σ o ho)
+    (fun _ _ h => h.1) (excludeState_keep σ o ho) hx).1 he)
 
 /-! ### Sequences of exclusions and the output event of a system -/
 
@@ -360,7 +210,7 @@ theorem SysStep.sub {B : ExclusionBasis sp} {σ τ : State sp} {e : SEvent sp}
     intro k u hu; rw [hR] at hu; exact hγ.sub k u hu.1
   | exclude _ _ hγ => exact hγ.sub
 
-/-- A exclusion event keeps the current input. -/
+/-- An exclusion event keeps the current input. -/
 theorem SysStep.exclude_cur {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (Exclusion sp)}
     (h : SysStep B σ (.exclude γ) τ) : τ.cur = σ.cur := by
   cases h with
@@ -374,90 +224,59 @@ theorem SysExec.sub {B : ExclusionBasis sp} {σ τ : State sp} {es : List (SEven
 
 /-! ### Lemma canonical-exclusion-normal-form -/
 
-/-- **Lemma containment, (1).**  A legal `Out_γ(o)` keeps the current input,
-ends inside `R[out ⪰ o]`, and its exclusions remove every row of `Excluded^in_o`
-and `Excluded^out_o` (computed at the starting state).  In particular `o ∈ R(i)`. -/
+/-- A legal output event's exclusions remove every row in `Excluded_o`. -/
 theorem containment {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (Exclusion sp)} {o : O}
     (h : SysStep B σ (.output γ o) τ) :
     τ.cur = σ.cur ∧ σ.R σ.cur o ∧ (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧
-    ∃ σc, ApplySeq γ σ σc ∧
-      ∀ k x, (InputExcluded σ o k x ∨ OutputExcluded σ o k x) → ¬ σc.R k x := by
+    ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, Excluded σ o k x → ¬ σc.R k x := by
   cases h with
   | output _ hγ ho hleg hcur hR =>
     have hsub := hγ.sub
     refine ⟨hcur, ?_, ?_, _, hγ, ?_⟩
     · have := hsub _ _ ho; rwa [hγ.cur_eq] at this
     · intro k u hu; rw [hR] at hu; exact ⟨hsub _ _ hu.1, hu.2⟩
-    · intro k x hx hc
-      have hnx : ¬ o ≼ x := by
-        rcases hx with hs | hr
-        · exact fun hox => hs.2 ⟨x, hs.1, hox⟩
-        · exact hr.2.1
-      obtain ⟨u, hu, hou, hxu⟩ := hleg k x hc hnx
-      rcases hx with hs | hr
-      · exact hs.2 ⟨u, hsub _ _ hu, hou⟩
-      · exact hr.2.2.2 ⟨hr.1, hnx, u, hsub _ _ hu, hou, hxu⟩
+    · intro k x he hc
+      obtain ⟨u, hu, hou, hxu⟩ := hleg k x hc he.2.1
+      exact he.2.2 ⟨he.1, he.2.1, u, hsub _ _ hu, hou, hxu⟩
 
-/-- Consequence of (1): an output whose `Excluded^in_o` or `Excluded^out_o` is nonempty
-cannot be emitted by `Out_ε(o)`. -/
+/-- If `Excluded_o` is nonempty, the output event applies an exclusion. -/
 theorem containment_nonempty {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (Exclusion sp)}
     {o : O} (h : SysStep B σ (.output γ o) τ)
-    (hne : ∃ k x, InputExcluded σ o k x ∨ OutputExcluded σ o k x) : γ ≠ [] := by
+    (hne : ∃ k x, Excluded σ o k x) : γ ≠ [] := by
   rintro rfl
   obtain ⟨_, _, _, σc, hγ, hrm⟩ := containment h
   cases hγ
   obtain ⟨k, x, hx⟩ := hne
-  exact hrm k x hx (by rcases hx with h | h <;> exact h.1)
+  exact hrm k x hx hx.1
 
-/-- The canonical basis `B_S` (eq. canonical-exclusion-basis-relational). -/
+/-- The canonical basis `B_P`. -/
 def canonExclusionBasis (sp : Spec I O) : ExclusionBasis sp := fun c =>
-  ∃ o : O, (c = inputExclusion o ∧ ∃ σ τ : State sp, (inputExclusion o).app σ = some τ) ∨
-       (c = outputExclusion o ∧ ∃ σ τ : State sp, (outputExclusion o).app σ = some τ)
+  ∃ o : O, c = canonicalExclusion o ∧
+    ∃ σ τ : State sp, (canonicalExclusion o).app σ = some τ
 
-/-- `κ_o` at `σ`: `x_o^in` when `Excluded^in_o ≠ ∅`, then `x_o^out` when `Excluded^out_o ≠ ∅`. -/
+/-- `κ_o` is empty or the singleton canonical exclusion. -/
 noncomputable def kappa (σ : State sp) (o : O) : List (Exclusion sp) :=
-  (if ∃ k x, InputExcluded σ o k x then [inputExclusion o] else []) ++
-  (if ∃ k x, OutputExcluded σ o k x then [outputExclusion o] else [])
+  if ∃ k x, Excluded σ o k x then [canonicalExclusion o] else []
 
 theorem kappa_apply (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
     (∀ c ∈ kappa σ o, canonExclusionBasis sp c) ∧
-    ∃ σc, ApplySeq (kappa σ o) σ σc ∧ σc.cur = σ.cur ∧ σc.R = Pruned σ o := by
-  by_cases hS : ∃ k x, InputExcluded σ o k x <;> by_cases hJ : ∃ k x, OutputExcluded σ o k x
-  · obtain ⟨τ₁, _, ρ₁, _, h1, h2, h3, _, _, hc, hR⟩ := input_output_exclusion_commute hS hJ ho
-    refine ⟨?_, ρ₁, ?_, hc, hR⟩
-    · simp only [kappa, hS, hJ, ite_true, List.singleton_append, List.mem_cons,
-        List.not_mem_nil, or_false]
-      rintro c (rfl | rfl)
-      · exact ⟨o, Or.inl ⟨rfl, σ, τ₁, h1⟩⟩
-      · exact ⟨o, Or.inr ⟨rfl, σ, _, h3⟩⟩
-    · simp only [kappa, hS, hJ, ite_true, List.singleton_append]
-      exact ApplySeq.cons h1 (ApplySeq.cons h2 (ApplySeq.nil _))
-  · have h1 : (inputExclusion o).app σ = some (inputExcludeState σ o ho) := inputExclusionApp_eq.2 ⟨ho, hS, rfl⟩
-    refine ⟨?_, inputExcludeState σ o ho, ?_, rfl, ?_⟩
-    · simp only [kappa, hS, hJ, ite_true, ite_false, List.append_nil, List.mem_cons,
-        List.not_mem_nil, or_false]
-      rintro c rfl; exact ⟨o, Or.inl ⟨rfl, σ, _, h1⟩⟩
-    · simp only [kappa, hS, hJ, ite_true, ite_false, List.append_nil]
-      exact ApplySeq.cons h1 (ApplySeq.nil _)
-    · funext k x; apply propext
-      show (σ.R k x ∧ ¬ InputExcluded σ o k x) ↔ Pruned σ o k x
-      exact ⟨fun ⟨a, b⟩ => ⟨a, b, fun h => hJ ⟨k, x, h⟩⟩, fun ⟨a, b, _⟩ => ⟨a, b⟩⟩
-  · have h1 : (outputExclusion o).app σ = some (outputExcludeState σ o) := outputExclusionApp_eq.2 ⟨ho, hJ, rfl⟩
-    refine ⟨?_, outputExcludeState σ o, ?_, rfl, ?_⟩
-    · simp only [kappa, hS, hJ, ite_true, ite_false, List.nil_append, List.mem_cons,
-        List.not_mem_nil, or_false]
-      rintro c rfl; exact ⟨o, Or.inr ⟨rfl, σ, _, h1⟩⟩
-    · simp only [kappa, hS, hJ, ite_true, ite_false, List.nil_append]
-      exact ApplySeq.cons h1 (ApplySeq.nil _)
-    · funext k x; apply propext
-      show (σ.R k x ∧ ¬ OutputExcluded σ o k x) ↔ Pruned σ o k x
-      exact ⟨fun ⟨a, b⟩ => ⟨a, fun h => hS ⟨k, x, h⟩, b⟩, fun ⟨a, _, b⟩ => ⟨a, b⟩⟩
+    ∃ σc, ApplySeq (kappa σ o) σ σc ∧ σc.cur = σ.cur ∧ σc.R = (excludeState σ o ho).R := by
+  by_cases he : ∃ k x, Excluded σ o k x
+  · have happ : (canonicalExclusion o).app σ = some (excludeState σ o ho) :=
+      excludeApp_eq.2 ⟨ho, he, rfl⟩
+    refine ⟨?_, excludeState σ o ho, ?_, rfl, rfl⟩
+    · simp only [kappa, he, ite_true, List.mem_cons, List.not_mem_nil, or_false]
+      rintro c rfl
+      exact ⟨o, rfl, σ, excludeState σ o ho, happ⟩
+    · simp only [kappa, he, ite_true]
+      exact ApplySeq.cons happ (ApplySeq.nil _)
   · refine ⟨?_, σ, ?_, rfl, ?_⟩
-    · simp [kappa, hS, hJ]
-    · simp only [kappa, hS, hJ, ite_false, List.append_nil]
+    · simp [kappa, he]
+    · simp only [kappa, he, ite_false]
       exact ApplySeq.nil _
-    · funext k x; apply propext
-      exact ⟨fun h => ⟨h, fun h' => hS ⟨k, x, h'⟩, fun h' => hJ ⟨k, x, h'⟩⟩, fun h => h.1⟩
+    · funext k x
+      apply propext
+      exact ⟨fun h => ⟨h, fun hx => he ⟨k, x, hx⟩⟩, fun h => h.1⟩
 
 /-- The state `(i, R[out ⪰ o])`. -/
 def outState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
@@ -467,30 +286,31 @@ def outState (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
   hasCur := ⟨o, ho, PO.refl o⟩
   above := fun k x h => σ.above k x h.1
 
-theorem pruned_out (σ : State sp) (o : O) (σc : State sp) (hR : σc.R = Pruned σ o) :
+theorem excluded_out (σ : State sp) (o : O) (ho : σ.R σ.cur o) (σc : State sp)
+    (hR : σc.R = (excludeState σ o ho).R) :
     outputTable σc o = outputTable σ o := by
-  funext k u; apply propext
-  simp only [outputTable, hR, Pruned]
-  exact ⟨fun ⟨⟨a, _, _⟩, b⟩ => ⟨a, b⟩,
-    fun ⟨a, b⟩ => ⟨⟨a, not_inputExcluded_of_ge a b, not_outputExcluded_of_ge b⟩, b⟩⟩
+  funext k u
+  apply propext
+  simp only [outputTable, hR, excludeState]
+  exact ⟨fun ⟨⟨a, _⟩, b⟩ => ⟨a, b⟩,
+    fun ⟨a, b⟩ => ⟨⟨a, not_excluded_of_ge b⟩, b⟩⟩
 
-/-- **Lemma containment, (2) (canonical support).**  The canonical event
-`Out_{κ_o}(o)` is legal under `B_S` and ends at `(i, R[out ⪰ o])`. -/
+/-- The canonical event is legal and ends at `(i, R[out ⪰ o])`. -/
 theorem canonical_support (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
     SysStep (canonExclusionBasis sp) σ (.output (kappa σ o) o) (outState σ o ho) := by
   obtain ⟨hB, σc, hγ, hc, hR⟩ := kappa_apply σ o ho
   refine SysStep.output hB hγ ?_ ?_ rfl ?_
-  · rw [hR, hc]; exact ⟨ho, not_inputExcluded_of_ge ho (PO.refl o), not_outputExcluded_of_ge (PO.refl o)⟩
+  · rw [hR, hc]
+    exact ⟨ho, not_excluded_of_ge (PO.refl o)⟩
   · intro k x hx hnx
     rw [hR] at hx
-    obtain ⟨hx, hs, hr⟩ := hx
-    obtain ⟨_, _, u, hu, hou, hxu⟩ := subsumed_of hx hnx hs hr
-    refine ⟨u, ?_, hou, hxu⟩
-    rw [hR]; exact ⟨hu, not_inputExcluded_of_ge hu hou, not_outputExcluded_of_ge hou⟩
-  · exact (pruned_out σ o σc hR).symm
+    obtain ⟨hx, he⟩ := hx
+    have hs : Subsumed σ o k x := Classical.byContradiction fun hn => he ⟨hx, hnx, hn⟩
+    obtain ⟨_, _, u, hu, hou, hxu⟩ := hs
+    exact ⟨u, hR ▸ excludeState_keep σ o ho k u hu hou, hou, hxu⟩
+  · exact (excluded_out σ o ho σc hR).symm
 
-/-- (2), second half: every legal `Out_γ(o)` from `σ` keeps only rows that the
-canonical event keeps, and any `Out_{κ_o}(o)` step ends exactly at `R[out ⪰ o]`. -/
+/-- Every legal output event keeps only rows that the canonical event keeps. -/
 theorem canonical_maximal {B : ExclusionBasis sp} {σ τ : State sp} {γ : List (Exclusion sp)} {o : O}
     (h : SysStep B σ (.output γ o) τ) : ∀ k u, τ.R k u → outputTable σ o k u :=
   (containment h).2.2.1
@@ -501,23 +321,19 @@ theorem kappa_step_eq {B : ExclusionBasis sp} {σ τ : State sp} {o : O}
   have ho := (containment h).2.1
   obtain ⟨_, σc', hγ', _, hR'⟩ := kappa_apply σ o ho
   cases h with
-  | output _ hγ _ _ hcur hR =>
-    refine ⟨hcur, ?_⟩
-    rw [hR, hγ.det hγ', pruned_out σ o σc' hR']
+    | output _ hγ _ _ hcur hR =>
+      refine ⟨hcur, ?_⟩
+      rw [hR, hγ.det hγ', excluded_out σ o ho σc' hR']
 
-/-- `Exposable` is exactly "`Excluded^in_o` and `Excluded^out_o` are empty". -/
+/-- `Exposable` is exactly `Excluded_o = ∅`. -/
 theorem exposable_iff_empty (σ : State sp) (o : O) :
-    Exposable σ o ↔ (¬ ∃ k x, InputExcluded σ o k x) ∧ ¬ ∃ k x, OutputExcluded σ o k x := by
+    Exposable σ o ↔ ¬ ∃ k x, Excluded σ o k x := by
   constructor
-  · intro he
-    refine ⟨fun ⟨k, x, hs⟩ => ?_, fun ⟨k, x, hr⟩ => ?_⟩
-    · have hnx : ¬ o ≼ x := fun hox => hs.2 ⟨x, hs.1, hox⟩
-      obtain ⟨u, hu, hou, _⟩ := he k x hs.1 hnx
-      exact hs.2 ⟨u, hu, hou⟩
-    · obtain ⟨u, hu, hou, hxu⟩ := he k x hr.1 hr.2.1
-      exact hr.2.2.2 ⟨hr.1, hr.2.1, u, hu, hou, hxu⟩
-  · rintro ⟨hS, hJ⟩ k x hx hnx
-    exact (subsumed_of hx hnx (fun h => hS ⟨k, x, h⟩) (fun h => hJ ⟨k, x, h⟩)).2.2
+  · intro h ⟨k, x, he⟩
+    exact he.2.2 ⟨he.1, he.2.1, h k x he.1 he.2.1⟩
+  · intro he k x hx hnx
+    exact Classical.byContradiction fun hn =>
+      he ⟨k, x, hx, hnx, fun hs => hn hs.2.2⟩
 
 /-- **Lemma containment, (3).**  `Out_ε(o)` is legal (under any basis) exactly
 when `o ∈ R(i)` is exposable, and then it ends at `(i, R[out ⪰ o])`. -/
@@ -597,32 +413,30 @@ theorem applySeq_composite (c : Exclusion sp) (cs : List (Exclusion sp))
     cases h with
     | cons hc hn => cases hn; exact compApp_iff.1 hc
 
-/-! ### Proposition input-or-output-exclusion -/
+/-! ### Effect of an exclusion at an input -/
 
-/-- **Prop. input-or-output-exclusion.**  At each input `k` where an exclusion removes
-rows of the state it is applied to, it either input-excludes `k` (removes every row
-there) or chooses (removes some rows and keeps others; each removed output is
-refined by no kept one), and not both. -/
-theorem input_or_output_exclusion (c : Exclusion sp) {σ τ : State sp} (h : c.app σ = some τ)
-    (k : I) (_hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
-    ((∀ u, ¬ τ.R k u) ∨
-      (∃ w, τ.R k w ∧ ∀ u, σ.R k u → ¬ τ.R k u → ¬ (u ≼ w))) ∧
-    ¬ ((∀ u, ¬ τ.R k u) ∧ ∃ w, τ.R k w) := by
+/-- At an input where an exclusion removes rows, it either removes the whole
+fiber or leaves a row; in the latter case no removed row refines a survivor. -/
+theorem exclusion_effect (c : Exclusion sp) {σ τ : State sp} (h : c.app σ = some τ)
+  (k : I) (_hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
+  ((∀ u, ¬ τ.R k u) ∨
+    (∃ w, τ.R k w ∧ ∀ u, σ.R k u → ¬ τ.R k u → ¬ (u ≼ w))) ∧
+  ¬ ((∀ u, ¬ τ.R k u) ∧ ∃ w, τ.R k w) := by
   refine ⟨?_, fun ⟨h1, w, hw⟩ => h1 w hw⟩
   by_cases hrem : ∃ w, τ.R k w
   · obtain ⟨w, hw⟩ := hrem
     exact Or.inr ⟨w, hw, fun u hu hnu => c.excludes σ τ h k u w hu hnu hw⟩
   · exact Or.inl fun u hu => hrem ⟨u, hu⟩
 
-/-- An exclusion never input-excludes the current input. -/
-theorem exclusion_not_inputExclude_cur (c : Exclusion sp) {σ τ : State sp}
-    (h : c.app σ = some τ) : ∃ w, τ.R σ.cur w := by
+/-- An exclusion never empties the current fiber. -/
+theorem exclusion_preserves_current_fiber (c : Exclusion sp) {σ τ : State sp}
+  (h : c.app σ = some τ) : ∃ w, τ.R σ.cur w := by
   have := τ.hasCur; rwa [c.cur_eq σ τ h] at this
 
-/-- In a functional specification every exclusion input-excludes. -/
-theorem functional_exclusion_input_excludes (hf : sp.Functional) (c : Exclusion sp)
-    {σ τ : State sp} (_h : c.app σ = some τ) (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
-    ∀ w, ¬ τ.R k w := by
+/-- In a functional specification, removing one row empties its fiber. -/
+theorem functional_exclusion_empties_fiber (hf : sp.Functional) (c : Exclusion sp)
+  {σ τ : State sp} (_h : c.app σ = some τ) (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
+  ∀ w, ¬ τ.R k w := by
   intro w hw
   obtain ⟨u, hu, hnu⟩ := hk
   have : u = w := hf k u w (σ.sub _ _ hu) (τ.sub _ _ hw)
@@ -706,7 +520,7 @@ theorem execCF_coordFree (B : ExclusionBasis sp) {σ τ : State sp} {es : List (
 
 /-! ### Canonical runs and Lemma canonical-equivalent -/
 
-/-- A canonical step: a step under `B_S` whose output events are canonical
+/-- A canonical step: a step under `B_P` whose output events are canonical
 `Out_{κ_o}(o)` at the state where they occur; canonical runs have no commit
 events. -/
 def CanonStep (σ : State sp) (e : SEvent sp) (τ : State sp) : Prop :=
@@ -781,7 +595,7 @@ theorem canonExec_noCommit {σ τ : State sp} {es : List (SEvent sp)} (h : Canon
 
 /-- Two runs in lockstep: the original under `B`, the other canonical; at
 every observable step the events agree after erasure, current inputs agree,
-and the canonical table contains the original's.  A exclusion event of the
+and the canonical table contains the original's.  An exclusion event of the
 original is matched by no canonical event (the canonical run stays put, and
 the invariant still holds). -/
 inductive Lockstep (B : ExclusionBasis sp) :

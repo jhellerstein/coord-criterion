@@ -28,7 +28,7 @@ two narrow the specification differently.
 We saw a similar example with elections.  The registrar of
 Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the
 same event (Figure~\ref{fig:election-frames}(d)); the output event for
-$\bot$ does not require the poll-closing input exclusion.  Closing the polls is the
+$\bot$ does not require the poll-closing exclusion.  Closing the polls is the
 registrar's design decision, as fixing orderings is 2PL's.
 
 A system therefore dictates two things: a specification and a basis of
@@ -52,21 +52,7 @@ It leaves the current input unchanged: $j=i$.
 
 The ordering exclusion above fits: $\mathsf{order}(A,B)$ removes the serial
 orders with $B$ before $A$, each undominated by a surviving row with $A$
-before $B$.  The canonical input and output exclusions of
-Section~\ref{sec:lifted-output-events} satisfy this definition too.
-
-\begin{definition}[Input exclusion, output exclusion]
-\label{def:input-output-exclusion}
-At each input where an exclusion removes rows, it is an \emph{input
-exclusion} if it removes every row there, and an \emph{output exclusion} if
-it removes some rows and leaves some rows.  This classification is relative to
-the state where the exclusion is applied.  In particular, exclusions may
-jointly empty a fiber: an exclusion that earlier narrowed the fiber can be the
-input exclusion when applied last.
-\end{definition}
-
-In a functional specification each fiber has one row, so every exclusion is an
-input exclusion wherever it removes a row.
+before $B$.  The canonical exclusions of Section~\ref{sec:lifted-output-events} satisfy this definition too.
 
 A system draws its exclusions from a basis.
 
@@ -103,7 +89,7 @@ unchanged.
 
 A legal $\Out{\gamma}{o}$ issues at least the exclusions of the $\mathsf{output}(o)$
 of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}: its exclusions
-remove the rows in $\ExcludedIn_o$ and $\ExcludedOut_o$
+remove the rows in $\Excluded_o$
 (Lemma~\ref{lem:canonical-exclusion-normal-form}), and $\mathsf{output}(o)$ is
 the case in which they remove exactly those.  The environment observes $o$, not
 $\gamma$.
@@ -165,7 +151,7 @@ timestamp, placing $B$ first (panel (i)).  Both are exclusions: rows survive
 at the input.  Each can be applied in an exclusion event
 $\mathsf{exclude}(\gamma)$ or as one exclusion in the $\gamma$ of an output
 event that later emits a full serial order, and neither is the exclusion
-$x_o^{\mathrm{out}}$ of Section~\ref{sec:lifted-output-events}.
+$x_o$ of Section~\ref{sec:lifted-output-events}.
 
 \begin{figure}[t]
   \centering
@@ -244,7 +230,7 @@ judging runs under any exclusion basis.
 \end{proof}
 
 In the remainder of the paper we therefore judge consistency on canonical
-runs.  Whether a specification needs coordination thus depends on the input and output exclusions its outputs require, whatever mechanism makes them.
+runs.  Whether a specification needs coordination thus depends on the exclusions its outputs require, whatever mechanism makes them.
 
 To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
@@ -261,11 +247,8 @@ output required.
 \label{sec:coordination}
 
 An exclusion is a binding decision that removes behavior the specification
-still permits.  Mutexes, locks, timestamps, and agreement protocols all
-apply input or output exclusions
-(Definition~\ref{def:input-output-exclusion}).  An exclusion requires
-coordination only when another run could contradict it, by accepting an input
-that its input exclusion ruled out or emitting an output that it ruled out.
+still permits.  Mutexes, locks, timestamps, and agreement protocols all apply exclusions.  An exclusion requires
+coordination only when another run could contradict it, by accepting an input it excluded or emitting an output it excluded at that input.
 It requires distributed coordination when that run is at another participant.
 Running such a mechanism need not issue an exclusion: closing the polls after every voter
 has voted still runs the mechanism, but no ballot is left to exclude, so it
@@ -274,8 +257,8 @@ removes nothing the specification still permits and applies no exclusion.
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
 Let a specification event of a run apply an exclusion.  A run \emph{contradicts} the
-exclusion if it accepts an input its input exclusion emptied, or emits an output the
-exclusion excludes at the same input.
+exclusion if it accepts an input the exclusion excluded, or emits an output the
+exclusion excluded at the same input.
 \end{definition}
 
 \begin{definition}[Coordination-requiring exclusion]
@@ -310,7 +293,7 @@ section.
 Whether an exclusion requires coordination depends on the set of runs: those
 of a specification, or those of a system implementing it.  For a
 specification, every exclusion requires coordination: some canonical run
-accepts each input that an input exclusion rules out and emits each permitted
+accepts each input that an exclusion rules out and emits each permitted
 output.  Since any family of canonical runs forms a message-free history
 (Proposition~\ref{prop:distributed-consistency}), that run may be at another
 participant, so the coordination it requires is also distributed.  For a specification,
@@ -319,14 +302,12 @@ $\Out{\varepsilon}{o}$, which may still perform output subsumptions, and no
 exclusion event occurs.  This is the sense of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 
-For a system, the answer depends on which runs it can perform, and here input and output exclusions differ.  The environment may supply any input to any participant,
-so an input exclusion requires distributed coordination whenever another participant may receive
-the excluded input, whether or not one does in the run at hand.  Closing the
-polls before every voter has voted applies an input exclusion to the remaining ballots, so it requires coordination, and distributed
-coordination when another polling station may accept a late ballot.  Outputs, by contrast, come only from the system's strategies, so an output exclusion
-requires coordination only when the system can perform a run that emits an
-output the exclusion rules out, and distributed coordination when such a run is
-at another participant.  Receives are also outside the strategy: a
+For a system, the answer depends on which runs it can perform and on what the exclusion removes.  The environment may supply any input to any participant,
+so an exclusion that excludes an input requires distributed coordination whenever another participant may receive that input, whether or not one does in the run at hand.  Closing the
+polls before every voter has voted excludes the remaining ballot inputs, so it requires coordination, and distributed
+coordination when another polling station may accept a late ballot.  Outputs, by contrast, come only from the system's strategies, so an exclusion that excludes an output at an input
+requires coordination only when the system can perform a run that emits that
+output, and distributed coordination when such a run is at another participant.  Receives are also outside the strategy: a
 participant receives whatever matching send another participant made.
 
 The next result explains why an exclusion that requires distributed
@@ -355,15 +336,14 @@ too.  The environment may act on what it observes, through channels the system
 does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time}, and the reconciling input need not arrive.  Consistency
 therefore excludes every observable conflict, including a transient one.
 
-The first event's exclusion is an output exclusion of $x$, and it requires
+The first event excludes output $x$ at input $i$, and it requires
 distributed coordination exactly when another participant may emit $x$.  The system must
 then exclude one of the two specification events: by a mutex or atomic instruction in shared
 memory, by agreement in a distributed system, or by a rule fixed in advance,
 such as assigning the exclusion to a single participant, so that only that
-participant's runs can contradict it and no runtime agreement is needed.  Input exclusions are
-similar, with input in place of output, but the environment may deliver any
-input to any participant, so an input exclusion avoids requiring distributed coordination only if no
-other participant can receive the excluded input, a restriction on the
+participant's runs can contradict it and no runtime agreement is needed.  Excluding an input is similar, but the environment may deliver any input to any
+participant, so such an exclusion avoids requiring distributed coordination only if no
+other participant can receive that input, a restriction on the
 environment that our model does not make.
 
 \paragraph{Locks in a shared-nothing database.}
@@ -432,8 +412,7 @@ on different sides of a partition must have a common \outnoun in the
 specification at every common \indesc of their inputs.  When $E$ is every permitted row, this is Lifted
 Monotonicity itself.  A partition does not
 change which exclusions a specification needs; it removes the ability to make
-them jointly, since separated participants cannot jointly apply an input exclusion
-or an output exclusion that another participant could contradict.
+them jointly, since separated participants cannot jointly apply an exclusion that another participant could contradict.
 
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}

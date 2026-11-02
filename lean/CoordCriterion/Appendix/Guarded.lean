@@ -17,8 +17,8 @@ emits.  The first sections treat a function store `graph f`; section
 
 * `img`, `imgT`, `img_canon`            — the composite table seen through `f`.
 * `push_not_exclusion`                 — the pushforward of a `𝒫`-exclusion
-  need not be an exclusion of the composite: a `𝒫` output exclusion can become a
-  subsumption (`outputExclusion_becomes_subsumption`).
+  need not be an exclusion of the composite: a `𝒫` exclusion can become a
+  subsumption (`exclusion_becomes_subsumption`).
 * `guarded_lockstep`, `guarded_run`     — **pushforward of runs**: if `f` is
   monotone, every run of `𝒫` under *any* basis, read through `f`, is a run of
   the composite in the transition system of Sections 2–3, whose table contains
@@ -27,7 +27,7 @@ emits.  The first sections treat a function store `graph f`; section
   logs `𝒫` emits; outputs: their images) is exclusion-free, i.e. a run under
   the empty basis.
 * `coverage`, `coverage_step`           — **absorption**: every row the
-  composite's canonical output event must apply an input or output exclusion to has all of
+  composite's canonical output event must apply an input or exclusion to has all of
   its preimages removed by `𝒫`'s exclusions.
 * `invisible_step`, `cf_step`           — **invisible coordination**: if `𝒫`'s
   exclusions remove only rows with a surviving `f`-equivalent row, the
@@ -35,7 +35,7 @@ emits.  The first sections treat a function store `graph f`; section
 * `SysConsistent`, `GuardedRuns`, `guarded_consistent` — **delegation**: if
   the runs of the `𝒫`-system are consistent (confluent under arbitrary
   continuations), so are the guarded composite runs, judged on the composite.
-* Limits: `monotone_necessary` (`f` must be monotone), `store_outputExclusion_not_delegable`
+* Limits: `monotone_necessary` (`f` must be monotone), `store_exclusion_not_delegable`
   (a store that must choose cannot delegate it), `composite_monotone_not_enough`
   (Lifted Monotonicity of `𝒦 ∘ 𝒫` does not let `𝒫` drop its exclusions).
 * `PK`, `perKey`, `perKey_monotone`, `commute_example` — a per-key store:
@@ -271,30 +271,28 @@ theorem guarded_run (hf : Monotone f) {B : ExclusionBasis sp} {i : I} {es : List
 /-- **Coverage.**  Let `σc` be the state `𝒫`'s exclusions leave before it
 emits `m` (so `m ∈ R_c(i)` is exposable there), and let `ρ` be a composite
 state whose table contains the image of `σc`'s.  If `f` is monotone, no row of
-that image is inputExcluded or outputExcluded by `f m` at `ρ`: the composite's canonical
+that image is excluded or excluded by `f m` at `ρ`: the composite's canonical
 event for `f m` removes by exclusion only rows outside the image. -/
 theorem coverage (hf : Monotone f) {σc : State sp} {m : M} (hexp : Exposable σc m)
     {ρ : State (comp sp f)} (hsub : ∀ k o, imgT f σc.R k o → ρ.R k o) :
-    ∀ k x, imgT f σc.R k x → ¬ InputExcluded ρ (f m) k x ∧ ¬ OutputExcluded ρ (f m) k x := by
-  rintro k x ⟨m', hm', rfl⟩
+    ∀ k x, imgT f σc.R k x → ¬ Excluded ρ (f m) k x := by
+  rintro k x ⟨m', hm', rfl⟩ he
   by_cases hmm : m ≼ m'
-  · exact ⟨fun hs => hs.2 ⟨f m', hsub _ _ ⟨m', hm', rfl⟩, hf _ _ hmm⟩,
-      fun hr => hr.2.1 (hf _ _ hmm)⟩
+  · exact he.2.1 (hf _ _ hmm)
   · obtain ⟨u, hu, hmu, hm'u⟩ := hexp k m' hm' hmm
     have hρu : ρ.R k (f u) := hsub _ _ ⟨u, hu, rfl⟩
-    exact ⟨fun hs => hs.2 ⟨f u, hρu, hf _ _ hmu⟩,
-      fun hr => hr.2.2.2 ⟨hr.1, hr.2.1, f u, hρu, hf _ _ hmu, hf _ _ hm'u⟩⟩
+    exact he.2.2 ⟨he.1, he.2.1, f u, hρu, hf _ _ hmu, hf _ _ hm'u⟩
 
 /-- **Absorption, for an output event of `𝒫`.**  Let `Out_γ(m)` be a legal
 output event of `𝒫` under any basis, from `σ`, and `ρ` a composite state
 containing the image of `σ`'s table.  Every row `(k,x)` that the composite's
-canonical event for `f m` must apply an input or output exclusion to at `ρ` has had every
+canonical event for `f m` must apply an input or exclusion to at `ρ` has had every
 preimage in `σ` removed by `γ`. -/
 theorem coverage_step (hf : Monotone f) {B : ExclusionBasis sp} {σ τ : State sp}
     {γ : List (Exclusion sp)} {m : M} (h : SysStep B σ (.output γ m) τ)
     {ρ : State (comp sp f)} (hsub : ∀ k o, imgT f σ.R k o → ρ.R k o) :
     ∃ σc, ApplySeq γ σ σc ∧
-      ∀ k x, (InputExcluded ρ (f m) k x ∨ OutputExcluded ρ (f m) k x) →
+      ∀ k x, Excluded ρ (f m) k x →
         ∀ m', σ.R k m' → f m' = x → ¬ σc.R k m' := by
   match h with
   | .output (σc := σc) _ hγ _ hexp _ _ =>
@@ -302,9 +300,7 @@ theorem coverage_step (hf : Monotone f) {B : ExclusionBasis sp} {σ τ : State s
     have hsub' : ∀ k o, imgT f σc.R k o → ρ.R k o :=
       fun k o h' => hsub k o (imgT_mono hγ.sub k o h')
     have := coverage hf hexp hsub' k x ⟨m', hc, hfx.symm⟩
-    rcases hx with hs | hr
-    · exact this.1 hs
-    · exact this.2 hr
+    exact this hx
 
 /-- **Invisible coordination.**  If every row that `𝒫`'s exclusions `γ`
 remove has an `f`-equivalent row (same input, same image) that they keep, then
@@ -317,13 +313,13 @@ theorem invisible_step (hf : Monotone f) {B : ExclusionBasis sp} {σ τ : State 
     Exposable (img f σ) (f m) := by
   obtain ⟨σc, hγ, hcov⟩ := coverage_step hf h (ρ := img f σ) (fun _ _ h => h)
   rw [exposable_iff_empty]
-  have key : ∀ k x, (InputExcluded (img f σ) (f m) k x ∨ OutputExcluded (img f σ) (f m) k x) → False := by
+  have key : ∀ k x, Excluded (img f σ) (f m) k x → False := by
     intro k x hx
-    have hR : (img f σ).R k x := by rcases hx with h | h <;> exact h.1
+    have hR : (img f σ).R k x := hx.1
     obtain ⟨m', hm', rfl⟩ := hR
     obtain ⟨m'', hm'', he⟩ := hinv σc hγ k m' hm'
     exact hcov k _ hx m'' (hγ.sub _ _ hm'') he hm''
-  exact ⟨fun ⟨k, x, hs⟩ => key k x (Or.inl hs), fun ⟨k, x, hr⟩ => key k x (Or.inr hr)⟩
+  exact fun ⟨k, x, he⟩ => key k x he
 
 /-- An exclusion-free output event of `𝒫` maps to an exclusion-free output
 event of the composite. -/
@@ -331,7 +327,7 @@ theorem cf_step (hf : Monotone f) {σ : State sp} {m : M} (hexp : Exposable σ m
     Exposable (img f σ) (f m) := by
   rw [exposable_iff_empty]
   have key := coverage hf hexp (ρ := img f σ) (fun _ _ h => h)
-  exact ⟨fun ⟨k, x, hs⟩ => (key k x hs.1).1 hs, fun ⟨k, x, hr⟩ => (key k x hr.1).2 hr⟩
+  exact fun ⟨k, x, he⟩ => key k x he.1 he
 
 /-! ### The store runs with the empty basis -/
 
@@ -525,7 +521,7 @@ theorem guarded_confluent (fam : List (State sp × State (comp sp f)))
 
 /-! ### A store with its own exclusions -/
 
-section InputExclusion
+section Exclusion
 variable {J P : Type} [PO J] [PO P] {sq : Spec J P}
 
 /-- `(i, R ∖ R[in ∈ Q])`, for `Q` false at the current input. -/
@@ -551,7 +547,7 @@ theorem excludeInputApp_eq {Q : J → Prop} {σ τ : State sq} :
     rintro ⟨h1, h2, _⟩
     exact h ⟨h1, h2⟩
 
-/-- **Input exclusioning the inputs in `Q`** (defined when `Q` is false at the current
+/-- **Excluding the inputs in `Q`** (defined when `Q` is false at the current
 input and some remaining row has its input in `Q`) is an exclusion. -/
 noncomputable def excludeInput (Q : J → Prop) : Exclusion sq where
   app := excludeInputApp Q
@@ -566,7 +562,7 @@ noncomputable def excludeInput (Q : J → Prop) : Exclusion sq where
     obtain ⟨_, _, rfl⟩ := excludeInputApp_eq.1 h
     exact hnu ⟨hu, hw.2⟩
 
-end InputExclusion
+end Exclusion
 
 /-- Exposability at canonical states alone gives the common-expansion
 condition (the reverse direction of the exposure boundary uses only them). -/
@@ -2005,37 +2001,35 @@ def fLvl : Two → Lvl
 
 theorem fLvl_monotone : Monotone fLvl := fun _ _ h => by cases h; exact PO.refl _
 
-theorem anyS_outputExcluded_x : OutputExcluded (canon anyS Pt.pt) Two.y Pt.pt Two.x := by
-  refine ⟨⟨trivial, trivial⟩, fun h => Two.noConfusion h, fun hs => hs.2 ⟨.y, ⟨trivial, trivial⟩, rfl⟩, ?_⟩
+theorem anyS_excluded_x : Excluded (canon anyS Pt.pt) Two.y Pt.pt Two.x := by
+  refine ⟨⟨trivial, trivial⟩, fun h => Two.noConfusion h, ?_⟩
   rintro ⟨_, _, u, _, hyu, hxu⟩
-  have h1 : Two.y = u := hyu
-  have h2 : Two.x = u := hxu
-  exact Two.noConfusion (h2.trans h1.symm)
+  exact Two.noConfusion (hxu.trans hyu.symm)
 
 /-- **The pushforward of an exclusion need not be an exclusion.**  At the
 canonical state of `anyS` (one input, outputs `x`, `y` incomparable), the
-canonical output exclusion `c_y` is an exclusion of `𝒫`: it removes `x` and keeps `y`.
+canonical exclusion `c_y` is an exclusion of `𝒫`: it removes `x` and keeps `y`.
 Its image removes `lo` and keeps `hi ≽ lo`, so no exclusion of the composite
 takes the image state to the image of the result. -/
 theorem push_not_exclusion :
-    ∃ τ, (outputExclusion Two.y).app (canon anyS Pt.pt) = some τ ∧
+    ∃ τ, (canonicalExclusion Two.y).app (canon anyS Pt.pt) = some τ ∧
       ∀ c : Exclusion (comp anyS fLvl), c.app (img fLvl (canon anyS Pt.pt)) ≠ some (img fLvl τ) := by
-  refine ⟨outputExcludeState (canon anyS Pt.pt) Two.y,
-    outputExclusionApp_eq.2 ⟨⟨trivial, trivial⟩, ⟨_, _, anyS_outputExcluded_x⟩, rfl⟩, ?_⟩
+  refine ⟨excludeState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩,
+    excludeApp_eq.2 ⟨⟨trivial, trivial⟩, ⟨_, _, anyS_excluded_x⟩, rfl⟩, ?_⟩
   intro c hc
   have hlo : (img fLvl (canon anyS Pt.pt)).R Pt.pt Lvl.lo := ⟨.x, ⟨trivial, trivial⟩, rfl⟩
-  have hnlo : ¬ (img fLvl (outputExcludeState (canon anyS Pt.pt) Two.y)).R Pt.pt Lvl.lo := by
+  have hnlo : ¬ (img fLvl (excludeState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩)).R Pt.pt Lvl.lo := by
     rintro ⟨m, ⟨_, hr⟩, hm⟩
     cases m with
-    | x => exact hr anyS_outputExcluded_x
+    | x => exact hr anyS_excluded_x
     | y => exact Lvl.noConfusion hm
-  have hhi : (img fLvl (outputExcludeState (canon anyS Pt.pt) Two.y)).R Pt.pt Lvl.hi :=
-    ⟨.y, ⟨⟨trivial, trivial⟩, not_outputExcluded_of_ge (PO.refl _)⟩, rfl⟩
+  have hhi : (img fLvl (excludeState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩)).R Pt.pt Lvl.hi :=
+    ⟨.y, ⟨⟨trivial, trivial⟩, fun he => he.2.1 (PO.refl _)⟩, rfl⟩
   exact c.excludes _ _ hc Pt.pt Lvl.lo Lvl.hi hlo hnlo hhi (Or.inl rfl)
 
-/-- **An output exclusion of `𝒫` can become a subsumption.**  In the composite, `hi` is
+/-- **An exclusion of `𝒫` can become a subsumption.**  In the composite, `hi` is
 exposable at the canonical state: `lo` is subsumed, not chosen against. -/
-theorem outputExclusion_becomes_subsumption :
+theorem exclusion_becomes_subsumption :
     ¬ Exposable (canon anyS Pt.pt) Two.y ∧
       Exposable (canon (comp anyS fLvl) Pt.pt) Lvl.hi := by
   refine ⟨fun he => ?_, ?_⟩
@@ -2094,7 +2088,7 @@ identity upstream on one input (which admits no exclusion at all) and the
 store `spU` (two incomparable outputs), every output event of the composite at
 its canonical state applies an exclusion, under any basis.  That exclusion
 is the store's own. -/
-theorem store_outputExclusion_not_delegable :
+theorem store_exclusion_not_delegable :
     (∀ (c : Exclusion (graph fun x : U1 => x)) σ τ, c.app σ ≠ some τ) ∧
     ∀ (B : ExclusionBasis (seq (graph fun x : U1 => x) spU)) γ o τ,
       SysStep B (canon _ ()) (.output γ o) τ → γ ≠ [] := by
@@ -2134,7 +2128,7 @@ open Dist (U1 B2 spU noExclusionBasis u1_eq) in
 /-- **Lifted Monotonicity of the composite does not let `𝒫` drop its
 exclusions.**  With `𝒫 = spU` and a constant store, `𝒦 ∘ 𝒫` satisfies Lifted
 Monotonicity, yet `𝒫` under the empty basis never emits, so the store never
-receives anything.  `𝒫`'s output exclusion is invisible in the composite but still
+receives anything.  `𝒫`'s exclusion is invisible in the composite but still
 necessary for this implementation. -/
 theorem composite_monotone_not_enough :
     (comp spU (fun _ : B2 => ())).LiftedMono ∧
@@ -2248,7 +2242,7 @@ theorem smr_proper {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt
 first. -/
 def bFirst {Cmd : Type} (b : Cmd) (k : Pfx Cmd) : Prop := k.l.head? = some b
 
-/-- The mutex store's basis: its only exclusion input-excludes the logs in which `b`
+/-- The mutex store's basis: its only exclusion excludes the logs in which `b`
 comes first. -/
 noncomputable def mutexB {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : ExclusionBasis (graph f) :=
   fun c => c = excludeInput (bFirst b)
@@ -2270,7 +2264,7 @@ noncomputable def lateLock {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) :
 
 /-- **An uncontended lock decides nothing.**  Once the store's current log is
 nonempty, every log it can still receive has the same first command, so
-applying an input exclusion to the logs in which `b` comes first removes no row: it is not a
+applying an exclusion to the logs in which `b` comes first removes no row: it is not a
 exclusion there (the partial function is undefined). -/
 theorem lock_after_log {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd)
     (σ : State (graph f)) (h : σ.cur.l ≠ []) : (excludeInput (bFirst b)).app σ = none := by
@@ -2325,7 +2319,7 @@ theorem lateLock_eps {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd) {m : Pf
 canonical basis, `𝒫` can emit `[]` and then `[b]`.  The exclusion-erased
 replacement of the early-lock store follows this run, emitting `f []`,
 receiving `[b]`, and emitting `f [b]`.  The early-lock store cannot: its lock
-at `[]` input-excludes `[b]`. -/
+at `[]` excludes `[b]`. -/
 theorem early_lock_strict {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Monotone f) (b : Cmd) :
     ∃ l m tr, Obs (Sys.free (canonExclusionBasis (smrS1 (Cmd := Cmd)))).emits (eraseSys (earlyLock b f)) l m tr ∧
       ¬ Obs (Sys.free (canonExclusionBasis (smrS1 (Cmd := Cmd)))).emits (earlyLock b f) l m tr := by

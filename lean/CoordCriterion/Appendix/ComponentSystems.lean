@@ -21,13 +21,13 @@ form is metadata: the admitted runs and their certificates do not depend on it.
 * `Component.ofSystemOn`, `Component.process`, `Component.cluster`,
   `ofSystem_emptyExclusionBasis_exclusionFree`, `cfSystem_replicated`,
   `cfSystem_cluster_exclusionFree`.
-* `inputExclusion_run`, `inputExclusionSys1_process`, `inputExclusionSysRepl_replicated`,
-  `inputExclusionSysRepl_cluster` — the 2PC timeout-abort input exclusion (§4.4).  Run by the
-  coordinator alone (`CAP.Timeout.inputExclusionSys1`) the decision is a process
-  component that admits a run applying an exclusion; that input exclusion requires
+* `pollClosing_run`, `pollClosingSys1_process`, `pollClosingSysRepl_replicated`,
+  `pollClosingSysRepl_cluster` — the 2PC timeout-abort exclusion (§4.4).  Run by the
+  coordinator alone (`CAP.Timeout.pollClosingSys1`) the decision is a process
+  component that admits a run applying an exclusion; that fiber-emptying exclusion requires
   coordination but not distributed coordination
-  (`CAP.Timeout.inputExclusionSys1_local`).  Replicated (`CAP.Timeout.inputExclusionSysRepl`) it
-  is a cluster component, and the input exclusion requires distributed coordination.
+  (`CAP.Timeout.pollClosingSys1_local`).  Replicated (`CAP.Timeout.pollClosingSysRepl`) it
+  is a cluster component, and the exclusion requires distributed coordination.
   Exclusion, coordination relative to a run universe, and distributed
   coordination inside one component are different properties.
 
@@ -171,12 +171,12 @@ open CAP CAP.Timeout
 /-- A system whose coordinator may close the polls at `yy·` when it runs
 alone admits, in any form that allows one participant, a run applying a
 exclusion. -/
-theorem inputExclusion_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.basis cp)
+theorem pollClosing_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.basis cp)
     (hs : Sys.strat 1 (fun _ => yyN) 0 [] (.out [cp] .undecided)) (N : Nat → Prop) (hN : N 1)
     (location : Option LocationForm) :
     ∃ r, (Component.ofSystemOn Sys N location).accepts r ∧ Coordinates r.events := by
-  obtain ⟨happ, _, _, _⟩ := timeout_inputExcludes yyN 2 rfl
-  obtain ⟨-, -, -, -, hrows⟩ := timeout_inputExcludes_yy
+  obtain ⟨happ, _, _, _⟩ := timeout_closes_expansions yyN 2 rfl
+  obtain ⟨-, -, -, -, hrows⟩ := timeout_closes_yy
   let σ := canon (voteSpec 3) yyN
   let σc := Figures.closeState σ
   have ha : CAP.applySeq σ [cp] = some σc := by
@@ -205,35 +205,34 @@ theorem inputExclusion_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.ba
     rfl, hr0, ⟨_, by rw [hev]; exact List.mem_cons_self⟩, decide_yyN.symm⟩, ?_⟩
   exact Or.inl ⟨_, _, by rw [hev]; exact List.mem_cons_self, List.cons_ne_nil _ _⟩
 
-/-- **The timeout-abort input exclusion as a process component.**  The coordinator alone
-running the decision specification (`inputExclusionSys1`) is a process component that
+/-- **The timeout-abort exclusion as a process component.**  The coordinator alone
+running the decision specification (`pollClosingSys1`) is a process component that
 admits a run applying an exclusion (it closes the polls at `yy·`), so it is
-not exclusion-free.  That input exclusion requires coordination but not distributed
-coordination (`inputExclusionSys1_local`). -/
-theorem inputExclusionSys1_process (D : Type) :
-    (∃ r, (Component.process (inputExclusionSys1 D)).accepts r ∧ Coordinates r.events) ∧
-      ¬ (Component.process (inputExclusionSys1 D)).ExclusionFree ∧
-      ¬ (inputExclusionSys1 D).CoordinationFree ∧ (inputExclusionSys1 D).CoordinationFreeH := by
-  obtain ⟨r, hacc, hco⟩ := inputExclusion_run D (inputExclusionSys1 D) rfl ⟨rfl, rfl, rfl, rfl⟩ (· = 1) rfl
+not exclusion-free.  That exclusion requires coordination but not distributed
+coordination (`pollClosingSys1_local`). -/
+theorem pollClosingSys1_process (D : Type) :
+    (∃ r, (Component.process (pollClosingSys1 D)).accepts r ∧ Coordinates r.events) ∧
+      ¬ (Component.process (pollClosingSys1 D)).ExclusionFree ∧
+      ¬ (pollClosingSys1 D).CoordinationFree ∧ (pollClosingSys1 D).CoordinationFreeH := by
+  obtain ⟨r, hacc, hco⟩ := pollClosing_run D (pollClosingSys1 D) rfl ⟨rfl, rfl, rfl, rfl⟩ (· = 1) rfl
     (some .process)
   exact ⟨⟨r, hacc, hco⟩, fun hcf => (coordFree_iff_not _).1 (hcf r hacc) hco,
-    (inputExclusionSys1_local D).1, (inputExclusionSys1_local D).2⟩
+    (pollClosingSys1_local D).1, (pollClosingSys1_local D).2⟩
 
-/-- The replicated decision (`inputExclusionSysRepl`) is a replicated system. -/
-theorem inputExclusionSysRepl_replicated (D : Type) : (inputExclusionSysRepl D).Replicated :=
+/-- The replicated decision (`pollClosingSysRepl`) is a replicated system. -/
+theorem pollClosingSysRepl_replicated (D : Type) : (pollClosingSysRepl D).Replicated :=
   ⟨fun i _ e => match e with
     | .out γ u => γ = [cp] ∧ u = .undecided ∧ i = yyN
     | _ => False,
    fun _ _ _ _ e => by cases e <;> exact Iff.rfl⟩
 
-/-- **The timeout-abort input exclusion as a cluster component.**  Replicated, the same
-input exclusion is admitted by the cluster form, and it requires distributed
-coordination (`inputExclusionSysRepl_not_coordinationFreeH`). -/
-theorem inputExclusionSysRepl_cluster (D : Type) :
-    (∃ r, (Component.cluster (inputExclusionSysRepl D) (inputExclusionSysRepl_replicated D)).accepts r ∧
-      Coordinates r.events) ∧ ¬ (inputExclusionSysRepl D).CoordinationFreeH :=
-  ⟨inputExclusion_run D (inputExclusionSysRepl D) rfl ⟨rfl, rfl, rfl⟩ (fun _ => True) trivial (some .cluster),
-    inputExclusionSysRepl_not_coordinationFreeH D⟩
+/-- **The timeout-abort exclusion as a cluster component.**  Replicated, the same exclusion is admitted by the cluster form, and it requires distributed
+coordination (`pollClosingSysRepl_not_coordinationFreeH`). -/
+theorem pollClosingSysRepl_cluster (D : Type) :
+    (∃ r, (Component.cluster (pollClosingSysRepl D) (pollClosingSysRepl_replicated D)).accepts r ∧
+      Coordinates r.events) ∧ ¬ (pollClosingSysRepl D).CoordinationFreeH :=
+  ⟨pollClosing_run D (pollClosingSysRepl D) rfl ⟨rfl, rfl, rfl⟩ (fun _ => True) trivial (some .cluster),
+    pollClosingSysRepl_not_coordinationFreeH D⟩
 
 end Timeout
 

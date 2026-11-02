@@ -166,7 +166,7 @@ $\mathcal S_2$ the table of the test $t(n)=[n<10]$, whose two outputs are
 incomparable.  $\mathcal S_2$
 violates Lifted Monotonicity, since $[9<10]$ and $[10<10]$ differ, but it
 satisfies it on $\{n\le 9\}$, so the composite is Lifted-Monotone by case (2).  At
-$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must remove the row by input exclusion
+$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must remove the row by exclusion
 $(10,\mathit{false})$, so $\mathcal S_2$ cannot emit under the empty basis.
 The outputs of $\mathcal S_1$ lie in $\{n\le 9\}$, so the pipeline is proper
 (Theorem~\ref{thm:proper-coordination}(1)).  Under the empty basis,
@@ -372,8 +372,8 @@ The proof covers the composite's exclusions by those of $\Spec_1$.  For a
 table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
 $\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
 $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
-$(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\ExcludedIn_{f(m)}$ or
-$\ExcludedOut_{f(m)}$ at $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
+$(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is not in $\Excluded_{f(m)}$ at
+$\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
 Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
 $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ subsumes $(k,f(m'))$.  So every row
 that the composite's canonical event for $f(m)$ removes by exclusion has had
@@ -381,8 +381,8 @@ every preimage in $R_\sigma$ removed by $\gamma$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
 The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering
-argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\ExcludedIn_{f(m)}$ or
-$\ExcludedOut_{f(m)}$, so $f(m)$ is a legal output at $f(\sigma)$.
+argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in
+$\Excluded_{f(m)}$, so $f(m)$ is a legal output at $f(\sigma)$.
 \end{proof}
 
 Consider a store that answers each key from that key's commands, in log
@@ -493,8 +493,8 @@ partitions, and exclusions stay inside the component.  Restricted to
 one-participant histories, the induced component is a process, and a
 replicated system induces a cluster.  The two-phase commit decision of Section~\ref{sec:coordination} has
 both forms.  Run by the coordinator alone, it is a process, and its timeout
-input exclusion requires coordination but not distributed coordination.  Replicated, it
-is a cluster, and the same input exclusion requires distributed coordination.  The
+exclusion requires coordination but not distributed coordination.  Replicated, it
+is a cluster, and the same exclusion requires distributed coordination.  The
 \emph{maximally permissive} component under $\mathcal B$ admits every such
 run under $\mathcal B$.
 

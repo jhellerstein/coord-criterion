@@ -3,29 +3,26 @@
 
 This appendix first gives the formal definition of the lifted output events of
 Section~\ref{sec:lifted-output-events}.  It then supplies the details behind
-Section~\ref{sec:systems}: the
-input and output exclusions of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
+Section~\ref{sec:systems}: the canonical exclusions of
+Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
 are exclusions (Definition~\ref{def:exclusion}) and form a canonical basis,
 compound exclusions behave like single ones, and every run under any basis
 has an observably equivalent canonical run that retains at least as many rows
-after each event.  Exclusions are partial functions, so a basis may make a
+after each event.  Exclusions are partial functions, so a basis may make an
 exclusion available only at states satisfying a precondition of its own.
 
 \subsection{Lifted output events}
 \label{app:lifted-output-events}
 
 Fix a state $(i,R)$ and an output $o\in R(i)$.  A row is \emph{ruled out by}
-$o$ when its output does not \outrelbase $o$.  The ruled-out rows fall into
-three disjoint classes, by how they can be removed:
+$o$ when its output does not \outrelbase $o$.  The ruled-out rows fall into two
+disjoint sets:
 \begin{align}
-  \ExcludedIn_o&=\{(k,x)\in R:\ k\notin\mathrm{in}(R[\mathrm{out}\OutputGe o])\},
-      \label{eq:input-exclusion-removals}\\
   \Subsumed_o&=\{(k,x)\in R\setminus R[\mathrm{out}\OutputGe o]:\notag\\
     &\qquad\quad x\OutputOrd u\text{ for some }u\in R[\mathrm{out}\OutputGe o](k)\},
       \label{eq:output-subsumptions}\\
-  \ExcludedOut_o&=(R\setminus R[\mathrm{out}\OutputGe o])
-       \setminus(\ExcludedIn_o\cup\Subsumed_o).
-      \label{eq:output-exclusion-removals}
+  \Excluded_o&=(R\setminus R[\mathrm{out}\OutputGe o])\setminus\Subsumed_o.
+      \label{eq:exclusion-removals}
 \end{align}
 
 \begin{definition}[Lifted output event, output subsumption]
@@ -38,37 +35,30 @@ Equation~\ref{eq:output-action}.  It removes the rows in $\Subsumed_o$, each
 which is not an exclusion.
 \end{definition}
 
-\begin{definition}[Canonical input exclusion, canonical output exclusion]
-\label{def:canonical-input-output-exclusion}
-When $\ExcludedIn_o\neq\varnothing$, the output event
-(Definition~\ref{def:lifted-output-event}) applies the \emph{input exclusion} $x_o^{\mathrm{in}}$;
-when $\ExcludedOut_o\neq\varnothing$, it applies the \emph{output exclusion} $x_o^{\mathrm{out}}$.  The
-input and output exclusions are \emph{exclusions}:
+\begin{definition}[Canonical exclusion]
+\label{def:canonical-exclusion}
+When $\Excluded_o\neq\varnothing$, the output event applies the \emph{canonical
+exclusion} $x_o$:
 \begin{equation}
-  x_o^{\mathrm{in}}(i,R)=\bigl(i,\ R\setminus\ExcludedIn_o\bigr),
-  \qquad
-  x_o^{\mathrm{out}}(i,R)=\bigl(i,\ R\setminus\ExcludedOut_o\bigr).
-  \label{eq:canonical-input-output-exclusion-relational}
+  x_o(i,R)=\bigl(i,\ R\setminus\Excluded_o\bigr).
+  \label{eq:canonical-exclusion-relational}
 \end{equation}
+At an input $k$, it excludes input $k$ if it removes every row there; otherwise
+it excludes each output whose row it removes at $k$.
 \end{definition}
 
-In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places $[B,A]$ in
-$\ExcludedOut_o$: no row at $\{A,B\}$ \outrel both, so the event applies an output exclusion.  In
-panel~(g), the two removed route
-sets are in $\Subsumed_o$, each \outrelpast by a retained route set, so the event subsumes
-them without exclusion.
-
-The three sets are disjoint, and removing the rows of either exclusion leaves
-the other sets unchanged, so the event may apply $x_o^{\mathrm{in}}$ and $x_o^{\mathrm{out}}$ in either
-order.  The output exclusion only narrows fibers: at each input it touches, some row
-that \outrel $o$ survives.  With one row per input, $\Subsumed_o$ and $\ExcludedOut_o$
-are empty; this is the functional output event of
+In Figure~\ref{fig:ambiguity-frames}(f), emitting $[A,B]$ places the row for
+$[B,A]$ in $\Excluded_o$, so the event excludes that output at $\{A,B\}$.
+In panel~(g), the two removed route sets are in $\Subsumed_o$, each
+\outrelpast by a retained route set, so the event subsumes them without
+exclusion.  With one row per input, $\Subsumed_o$ is empty, and $x_o$ excludes
+each input whose row is removed; this is the functional output event of
 Definition~\ref{def:output-event}.  Apart from these, a row leaves the
 remainder table only by input loss (\S\ref{sec:functional-events}).
 
 Legality lifts with the event: $o$ is a legal output when $\mathsf{output}(o)$
-applies no exclusion, that is, when $\ExcludedIn_o$ and $\ExcludedOut_o$ are empty, though the
-event may still subsume the rows in $\Subsumed_o$.  The legal-output test lifts as well:
+applies no exclusion, exactly when $\Excluded_o$ is empty, though the event may
+still subsume the rows in $\Subsumed_o$.  The legal-output test lifts as well:
 
 \begin{proposition}[Legal-output test]
 \label{prop:exposability}
@@ -90,49 +80,37 @@ test with $u=x$, so this is exactly the stated test.
 \end{proof}
 
 This test marks the exclusion boundary: if it fails, emitting $o$ requires an
-input exclusion or an output exclusion.
+exclusion.
 
 \subsection{Exclusion bases and compound exclusions}
 \label{app:exclusion-bases}
 
 \begin{definition}[Canonical basis]
 \label{def:canonical-exclusion-basis}
-The \emph{canonical exclusion basis} collects the input and output exclusions of
-Definition~\ref{def:canonical-input-output-exclusion},
+The \emph{canonical exclusion basis} collects the canonical exclusions of
+Definition~\ref{def:canonical-exclusion},
 \begin{equation}
-  \mathcal B_S
-    =\{x_o^{\mathrm{in}}:o\in O,\ \operatorname{dom}(x_o^{\mathrm{in}})\neq\varnothing\}
-     \cup
-     \{x_o^{\mathrm{out}}:o\in O,\ \operatorname{dom}(x_o^{\mathrm{out}})\neq\varnothing\},
+  \mathcal B_P
+    =\{x_o:o\in O,\ \operatorname{dom}(x_o)\neq\varnothing\},
   \label{eq:canonical-exclusion-basis-relational}
 \end{equation}
-where $x_o^{\mathrm{in}}$ is defined at the states with $o\in R(i)$ and $\ExcludedIn_o\neq\varnothing$,
-and $x_o^{\mathrm{out}}$ at those with $o\in R(i)$ and $\ExcludedOut_o\neq\varnothing$.
+where $x_o$ is defined at the states with $o\in R(i)$ and $\Excluded_o\neq\varnothing$.
 \end{definition}
 
 \begin{definition}[Canonical event]
 \label{def:canonical-event}
-At $(i,R)$, let $\kappa_o$ apply $x_o^{\mathrm{in}}$ when $\ExcludedIn_o\neq\varnothing$ and
-$x_o^{\mathrm{out}}$ when $\ExcludedOut_o\neq\varnothing$, so $\kappa_o$ is one of $\varepsilon$,
-$x_o^{\mathrm{in}}$, $x_o^{\mathrm{out}}$, or $x_o^{\mathrm{in}}\,x_o^{\mathrm{out}}$.  The \emph{canonical event} for $o$ is
+At $(i,R)$, let $\kappa_o=\varepsilon$ when $\Excluded_o=\varnothing$, and
+$\kappa_o=[x_o]$ otherwise.  The \emph{canonical event} for $o$ is
 $\Out{\kappa_o}{o}$: the output event of
 Definition~\ref{def:lifted-output-event}, and with one row per input that of
 Definition~\ref{def:output-event}.
 \end{definition}
 
-\paragraph{The canonical input and output exclusions are exclusions.}
-With one row per input, Equation~\ref{eq:exclusion-excludes} holds vacuously,
-so the input exclusions of Definition~\ref{def:output-event} are exclusions.  With
-several outputs per input, the input exclusion $x_o^{\mathrm{in}}$ of Definition~\ref{def:lifted-output-event}
-removes every row at the inputs of $\ExcludedIn_o$, so nothing remains there to
-\outrelbase a removed row.  For $x_o^{\mathrm{out}}$, suppose some $x\in \ExcludedOut_o$ at input $k$ were
-\outrelpast by a row $y$ that $x_o^{\mathrm{out}}$ leaves at $k$.  Since $x\notin\ExcludedIn_o$,
-$k$ has a row \outrelpart $o$, so no row at $k$ is in $\ExcludedIn_o$.  Either $y$ \outrel $o$, or
-$y\in \Subsumed_o$ and is \outrelpast by a row \outrelpart $o$; by transitivity $x$ is
-then \outrelpast by a row \outrelpart $o$, so $x\in \Subsumed_o$, a contradiction.  Since
-$x_o^{\mathrm{in}}$ and $x_o^{\mathrm{out}}$ remove disjoint sets of rows and neither changes the other's
-(Appendix~\ref{app:lifted-output-events}), each is defined on the state the other
-leaves, and the canonical event may apply them in either order.
+\paragraph{The canonical exclusion is an exclusion.}
+Suppose a removed row $(k,x)\in\Excluded_o$ were \outrelpast by a row $(k,y)$
+that $x_o$ leaves.  Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
+\outrelpast by a row \outrelpart $o$.  By transitivity, $x$ is then
+\outrelpast by a row \outrelpart $o$, so $x\in\Subsumed_o$, a contradiction.
 
 \begin{lemma}[Containment, canonical support, and exclusion-free events]
 \label{lem:canonical-exclusion-normal-form}
@@ -140,7 +118,7 @@ Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{enumerate}
   \item Every legal output event $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
         $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows in
-        $\ExcludedIn_o$ and $\ExcludedOut_o$ by exclusion.
+        $\Excluded_o$ by exclusion.
   \item The canonical event $\Out{\kappa_o}{o}$ is legal and takes $(i,R)$ to
         $(i,R[\mathrm{out}\OutputGe o])$, so it retains every row that any legal
         $\Out{\gamma}{o}$ retains.
@@ -153,24 +131,23 @@ Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{proof}
 (1) A legal event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
 R[\mathrm{out}\OutputGe o]$, since its exclusions only remove rows.  A row in
-$\ExcludedIn_o$ or $\ExcludedOut_o$ has no \outrelpart row in $R[\mathrm{out}\OutputGe
+$\Excluded_o$ has no \outrelpart row in $R[\mathrm{out}\OutputGe
 o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
 subsumed, so a legal event must remove it by exclusion.  (2) The canonical
-exclusions remove exactly the rows in $\ExcludedIn_o$ and $\ExcludedOut_o$, all
+exclusion removes exactly the rows in $\Excluded_o$, all
 of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
 o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $\Subsumed_o$, and its
-\outrelpart row is in neither $\ExcludedIn_o$ nor $\ExcludedOut_o$, so it
-survives the exclusions.  The event is therefore legal and ends at
+\outrelpart row is not in $\Excluded_o$, so it
+survives the exclusion.  The event is therefore legal and ends at
 $R[\mathrm{out}\OutputGe o]$; by (1) no legal event keeps more.  (3) With no
 exclusion, $R_c=R$, and a legal event ends at $R[\mathrm{out}\OutputGe o]$.
-It is legal exactly when every ruled-out row is in $\Subsumed_o$, that is, when $\ExcludedIn_o$
-and $\ExcludedOut_o$ are empty, which makes $o$ a legal output.
+It is legal exactly when every ruled-out row is in $\Subsumed_o$, that is, when $\Excluded_o$ is empty, which makes $o$ a legal output.
 \end{proof}
 
 \begin{definition}[Canonical system]
 \label{def:canonical-system}
 A system (Definition~\ref{def:system}) is \emph{canonical} when its basis is
-$\mathcal B_S$ and each output event it performs is the canonical event $\Out{\kappa_o}{o}$ at the
+$\mathcal B_P$ and each output event it performs is the canonical event $\Out{\kappa_o}{o}$ at the
 participant's state where it occurs, and it performs no exclusion event; its histories
 are then exactly those of Section~\ref{sec:histories}.
 \end{definition}
@@ -208,7 +185,7 @@ $\mathcal B$.
 \begin{definition}[Canonical run]
 \label{def:canonical-run}
 The \emph{canonical runs} are the runs under the canonical basis
-$\mathcal B_S$ of Definition~\ref{def:canonical-exclusion-basis} whose output
+$\mathcal B_P$ of Definition~\ref{def:canonical-exclusion-basis} whose output
 events are all canonical; they are the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 \end{definition}

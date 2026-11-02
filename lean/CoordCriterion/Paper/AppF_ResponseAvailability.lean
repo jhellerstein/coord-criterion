@@ -148,11 +148,11 @@ theorem «def:response-availability(1)» (Sys : System sp D) (Q : (n : Nat) → 
   ⟨Iff.rfl, fun h n init H comp hw hp hpt p σ hσ => (h n init H comp hw hp hpt p σ hσ).1,
     answering_iff_end Sys Q⟩
 
-/-- "Input acceptance says that `p` never input-excludes an expansion of its current
+/-- "Input acceptance says that `p` never empties the fiber at an expansion of its current
 input."  Lean, at any cut, in particular the end of the history: where `p`
 is in state `σ`, an Input-acceptance continuation for `j` exists iff `p`'s
 table still has a row at `j`. -/
-theorem «def:response-availability/input-acceptance-no-input-exclusion» (Sys : System sp D)
+theorem «def:response-availability/input-acceptance-preserves-expansion» (Sys : System sp D)
     {init : Fin n → I} {H : History sp D n} {comp : Fin n → Nat} (hwf : WF init H)
     (hprod : Produced Sys n init H) (hpart : Partitioned H comp) {c : Fin n → Nat}
     (hcut : IsCut H c) {p : Fin n} {σ : State sp}
@@ -162,14 +162,14 @@ theorem «def:response-availability/input-acceptance-no-input-exclusion» (Sys :
         (∀ q, comp q ≠ comp p → ext q = []) ∧ LEv.inp j ∈ ext p) ↔ ∃ u, σ.R j u :=
   input_acceptance_iff Sys hwf hprod hpart hcut hσ j
 
-/-- "It excludes specifications whose answers require such an input exclusion": if no
+/-- "It excludes specifications whose answers require such a fiber-emptying exclusion": if no
 answer at `i` has a refinement at some `j ⪰ i`, no system has Response
 Availability (already with two participants, each alone). -/
-theorem «def:response-availability/excludes-forced-input-exclusion» (Sys : System sp D)
+theorem «def:response-availability/excludes-unavailable-expansion» (Sys : System sp D)
     (Q : (n : Nat) → Fin n → Table I O) {i j : I} (hij : i ≼ j)
     (hno : ∀ o, Q 2 0 i o → ¬ ∃ u, sp.P j u ∧ o ≼ u) :
     ¬ ResponseAvailabilityEnd Sys Q :=
-  fun h => ra_excludes_forced_inputExclusion Sys Q hij hno ((responseAvailability_iff_end Sys Q).2 h)
+  fun h => ra_excludes_unavailable_expansion Sys Q hij hno ((responseAvailability_iff_end Sys Q).2 h)
 
 /-- "… such as the election under the equality order
 (Figure `fig:nonmonotone-frame`)": no system for `electionEq` has Response
@@ -227,7 +227,7 @@ theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
 /-- "With other exclusions the converse can fail: participants may prune
 their states so that they cannot be reconciled while their emitted outputs
 still have a common refinement."  Witness: `uSpec` (inputs `lo ≺ hi`, one output) and the
-system `rnSys` whose basis is an exclusion applying an input exclusion to `hi`; in the history `rnH`
+system `rnSys` whose basis is an exclusion emptying the fiber at `hi`; in the history `rnH`
 the cut has RPC at `hi` but is not confluent there. -/
 theorem «def:response-partition-consistency/converse-fails» :
     WF (fun _ => In2.lo) rnH ∧ Produced rnSys 2 (fun _ => In2.lo) rnH ∧
@@ -486,12 +486,12 @@ theorem «app:cap-response/subspec-weaker» :
   subspec_counterexample
 
 /-- "Reconciling outputs need not lie in `T`: a participant that emits `d₁` or
-`d₂` input-excludes `k₂` or `k₁`."  Lean: after any run emitting `d₁` no row at `k₂`
+`d₂` empties the fiber at `k₂` or `k₁`."  Lean: after any run emitting `d₁` no row at `k₂`
 remains, and symmetrically. -/
-theorem «app:cap-response/subspec-input-excludes» {D : Type} {n : Nat} {σ τ : State sp5}
+theorem «app:cap-response/subspec-empties-fibers» {D : Type} {n : Nat} {σ τ : State sp5}
     {l : List (LEv sp5 D n)} (h : LRun σ l τ) {γ : List (Exclusion sp5)} :
     (LEv.out γ .d1 ∈ l → ∀ u, ¬ τ.R .k2 u) ∧ (LEv.out γ .d2 ∈ l → ∀ u, ¬ τ.R .k1 u) :=
-  ⟨fun hm u => emit_d1_inputExcludes_k2 h hm u, fun hm u => emit_d2_inputExcludes_k1 h hm u⟩
+  ⟨fun hm u => emit_d1_empties_k2 h hm u, fun hm u => emit_d2_empties_k1 h hm u⟩
 
 /-! ## Gilbert–Lynch with real-time precedence
 

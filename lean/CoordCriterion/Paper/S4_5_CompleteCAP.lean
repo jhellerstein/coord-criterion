@@ -292,12 +292,11 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
   consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP)
 
 /-- "Nor does the system in the proof need coordination.  Under Lifted
-Monotonicity for `E`, the canonical event for an explicit output input-excludes
-nothing and chooses only against implicit outputs, which the system never
+Monotonicity for `E`, the canonical event for an explicit output empties no fiber and chooses only against implicit outputs, which the system never
 emits, so it is coordination-free (Definition
 `def:coordination-free`)."  "The system in the proof" is the canonical system
 of the proof sketch of Theorem `thm:complete-cap`, `respSystem E`.  Lean: the system emits only rows of `E`, and no output
-event removes a row that any run of the system emits, or input-excludes an input any
+event removes a row that any run of the system emits, or empties an input fiber any
 run accepts. -/
 theorem «sec:complete-cap/proof-system-coordination-free» (E : Table I O)
     (hcons : ConsistentOn sp E) :
@@ -323,13 +322,13 @@ theorem «sec:complete-cap/A-eq-S-no-exclusion» (Sys : System sp D)
     ¬ Sys.CoordinationFreeH :=
   availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun hap hx hnx hqk
 
-/-- "For a smaller `E` such local output exclusions can be necessary: if `o ∈ E(i)` and
+/-- "For a smaller `E` such local row-removing exclusions can be necessary: if `o ∈ E(i)` and
 `x ∈ P(i) ∖ E(i)` have no common refinement at `i`, emitting `o` must choose
 against `x`."  Lean: one input, `P = {o, x}` incomparable, `E = {o}` (`lcA`): `P`
 satisfies Lifted Monotonicity for `E` (`ConsistentOn`), `o` is not a legal output
 (so its output event must apply an exclusion), and the canonical system `respSystem E` is
 coordination-free. -/
-theorem «sec:complete-cap/local-output-exclusion-necessary» (D : Type) :
+theorem «sec:complete-cap/local-row-removal-necessary» (D : Type) :
     ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
     (respSystem (sp := CAP.lcSpec) (D := D) CAP.lcA).CoordinationFree :=
   ⟨lcSpec_consistentOn, lcSpec_o_not_exposable,

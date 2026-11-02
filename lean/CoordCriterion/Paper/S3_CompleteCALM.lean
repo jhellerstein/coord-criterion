@@ -27,24 +27,23 @@ namespace CC.Paper
 
 open CC CC.CALM
 
-/-! ## Output exclusion by example (`sec:ambiguity-story`) -/
+/-! ## Exclusion by example (`sec:ambiguity-story`) -/
 
 /-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row refines the removed one: an exclusion."  After
-`output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Excluded^out_o` (a
-output exclusion), neither inputExcluded (the input keeps `[A,B]`) nor subsumed (no row refines
+`output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Excluded_o` (a
+exclusion), neither excluded (the input keeps `[A,B]`) nor subsumed (no row refines
 both). -/
 theorem «fig:ambiguity-frames/f» :
     (∀ k o, outputTable (canon Figures.Txn.spec ()) .ab k o ↔ o = .ab) ∧
-      OutputExcluded (canon Figures.Txn.spec ()) .ab () .ba ∧
-      ¬ InputExcluded (canon Figures.Txn.spec ()) .ab () .ba ∧
+      Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ Subsumed (canon Figures.Txn.spec ()) .ab () .ba ∧
       ¬ ∃ u, Figures.Txn.spec.P () u ∧ Figures.Txn.TOut.ab ≼ u ∧ Figures.Txn.TOut.ba ≼ u :=
-  ⟨Figures.Txn.after_ab, Figures.Txn.ba_outputExcluded⟩
+  ⟨Figures.Txn.after_ab, Figures.Txn.ba_excluded⟩
 
 /-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is refined by a remaining one: an output
 subsumption."  The remaining rows are `{s→s1}`, `{s→s1,s→a}`,
 `{s→s1,s→a,s→a→s2}`; the removed `{s→a}` and `{s→a,s→a→s2}` are in
-`Subsumed_o`; nothing is inputExcluded or outputExcluded, so `{s→s1}` is a legal output. -/
+`Subsumed_o`; nothing is excluded or excluded, so `{s→s1}` is a legal output. -/
 theorem «fig:ambiguity-frames/g» :
     (∀ x, outputTable (canon Figures.Trace.spec ()) Figures.Trace.rS1 () x ↔
         (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rS1A ∨ x = Figures.Trace.rAll)) ∧
@@ -53,36 +52,35 @@ theorem «fig:ambiguity-frames/g» :
             (x = Figures.Trace.rA ∨ x = Figures.Trace.rA2))) ∧
         Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA ∧
         Subsumed (canon Figures.Trace.spec ()) Figures.Trace.rS1 () Figures.Trace.rA2 ∧
-        (¬ ∃ k x, InputExcluded (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
-        (¬ ∃ k x, OutputExcluded (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
+        (¬ ∃ k x, Excluded (canon Figures.Trace.spec ()) Figures.Trace.rS1 k x) ∧
         Exposable (canon Figures.Trace.spec ()) Figures.Trace.rS1) :=
   ⟨Figures.Trace.after_s1, Figures.Trace.removed_subsumed⟩
 
-/-- §3.1 "Output exclusion and directedness": "In panel (f) … emitting one
-requires an *output exclusion* that removes the other while the input stays
+/-- §3.1 "Exclusion and directedness": "In panel (f) … emitting one
+requires an *exclusion* that removes the other while the input stays
 legal: emitting `[A,B]` excludes `[B,A]`."  `[A,B]` is not a legal output,
 every legal system output event emitting it carries an exclusion, and the
 exclusion `x_[A,B]` applies, keeping `[A,B]` and removing `[B,A]`. -/
-theorem «sec:ambiguity-story/output-exclusion» :
+theorem «sec:ambiguity-story/exclusion» :
     (¬ Exposable (canon Figures.Txn.spec ()) .ab ∧
         ∀ (B : ExclusionBasis Figures.Txn.spec) (γ : List (Exclusion Figures.Txn.spec)) τ,
           SysStep B (canon Figures.Txn.spec ()) (.output γ .ab) τ → γ ≠ []) ∧
-      ((outputExclusion (sp := Figures.Txn.spec) .ab).app (canon Figures.Txn.spec ()) =
-          some (outputExcludeState (canon Figures.Txn.spec ()) .ab) ∧
-        (outputExcludeState (canon Figures.Txn.spec ()) .ab).R () .ab ∧
-        ¬ (outputExcludeState (canon Figures.Txn.spec ()) .ab).R () .ba) :=
-  ⟨Figures.Txn.ab_not_exposable, Figures.Txn.outputExclusion_applies⟩
+      ((canonicalExclusion (sp := Figures.Txn.spec) .ab).app (canon Figures.Txn.spec ()) =
+          some (excludeState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)) ∧
+        (excludeState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)).R () .ab ∧
+        ¬ (excludeState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)).R () .ba) :=
+  ⟨Figures.Txn.ab_not_exposable, Figures.Txn.exclusion_applies⟩
 
-/-- §3.1: "An output event can thus remove rows in three ways: by applying an input exclusion to
-inputs …; by subsuming outputs …; or by choosing among outputs … applying an input exclusion to and
+/-- §3.1: "An output event can thus remove rows in three ways: by applying an exclusion to
+inputs …; by subsuming outputs …; or by choosing among outputs … applying an exclusion to and
 choosing are exclusions, subsuming is not."  The rows ruled out by `o` are
-exactly `Excluded^in_o ∪ Subsumed_o ∪ Excluded^out_o`, and `o` is a legal output (no
-exclusion) iff `Excluded^in_o` and `Excluded^out_o` are empty. -/
+exactly `Excluded_o ∪ Subsumed_o ∪ Excluded_o`, and `o` is a legal output (no
+exclusion) iff `Excluded_o` and `Excluded_o` are empty. -/
 theorem «sec:ambiguity-story/three-ways» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
     (∀ k x, (σ.R k x ∧ ¬ outputTable σ o k x) ↔
-        (InputExcluded σ o k x ∨ Subsumed σ o k x ∨ OutputExcluded σ o k x)) ∧
-      (Exposable σ o ↔ (∀ k x, ¬ InputExcluded σ o k x) ∧ (∀ k x, ¬ OutputExcluded σ o k x)) :=
+        (Subsumed σ o k x ∨ Excluded σ o k x)) ∧
+      (Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x) :=
   ⟨ruledOut_iff σ o, exposable_iff_no_exclusion σ o⟩
 
 /-- §3.1: "Two transaction scheduling runs that emit `[A,B]` and `[B,A]` fail
@@ -296,20 +294,21 @@ theorem «prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O
 
 /-! ## Lifted output events (`sec:lifted-output-events`)
 
-The body gives an informal summary; the formal definitions (`eq:input-exclusion-removals`,
-`eq:output-subsumptions`, `eq:output-exclusion-removals`, `def:lifted-output-event`,
-`eq:canonical-input-output-exclusion-relational`), the remarks after them, and
+The body gives an informal summary; the formal definitions
+(`eq:output-subsumptions`, `eq:exclusion-removals`,
+`def:lifted-output-event`, `eq:canonical-exclusion-relational`), the remarks after them, and
 Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
 `app:lifted-output-events`, and their entries in
 `Paper/AppC_ExclusionBases.lean`. -/
 
-/-- §3.4: "In the functional case, `Subsumed_o` and `Excluded^out_o` are empty, so
-this is the output event of Definition `def:output-event`."  Every exclusion
-an output event applies in a functional specification is an input exclusion. -/
+/-- §3.4: "In the functional case, `Subsumed_o` is empty, so this is the
+output event of Definition `def:output-event`."  Every removed row then belongs
+to `Excluded_o`; at each such input, the event excludes its sole output and
+therefore the input itself. -/
 theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) (k : I) (x : O) :
-    ¬ Subsumed σ o k x ∧ ¬ OutputExcluded σ o k x :=
-  functional_subsumed_outputExcluded_empty hf σ o k x
+    ¬ Subsumed σ o k x :=
+  functional_subsumed_empty hf σ o k x
 
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/
 

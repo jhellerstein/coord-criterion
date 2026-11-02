@@ -68,7 +68,7 @@ theorem «app:additional-applications/slot-conflict» {I Ep Vt Dc κ : Type} [PO
     (hU : ∀ k u, sp.P k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
-    OutputExcluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : ExclusionBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   slot_conflict slot hU ho ho' hd hd' hs hne
 
@@ -79,7 +79,7 @@ theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I
     {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
-    OutputExcluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
       ∀ (B : ExclusionBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   epoch_conflict ho ho' he he' hne
 
@@ -240,14 +240,14 @@ theorem «app:additional-applications/complete-history» {Ev : Type} (e : Ev) :
   ⟨fun _ _ => Iff.rfl, completeSpec_functional, completeSpec_not_monotone e⟩
 
 /-- "By Proposition `prop:functional-exposure-boundary`, some output can then be
-exposed only after an exclusion that input-excludes larger inputs."  At some state
-reachable without exclusion, some current output rules out an input-excluded row and no
-outputExcluded row, and every legal output event emitting it applies an exclusion. -/
-theorem «app:additional-applications/complete-history-input-exclusion» {Ev : Type} (e : Ev) :
+exposed only after an exclusion that excludes larger inputs."  At some state
+reachable without exclusion, some current output rules out an excluded row and no
+excluded row, and every legal output event emitting it applies an exclusion. -/
+theorem «app:additional-applications/complete-history-exclusion» {Ev : Type} (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
-      (∃ k x, InputExcluded τ o k x) ∧ (∀ k x, ¬ OutputExcluded τ o k x) ∧
+      (∃ k x, Excluded τ o k x) ∧
       ∀ (B : ExclusionBasis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] :=
-  completeSpec_inputExclusion_needed e
+  completeSpec_exclusion_needed e
 
 end Paper
 end CC

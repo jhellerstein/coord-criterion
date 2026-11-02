@@ -22,10 +22,10 @@ Contents (paper item ↦ Lean):
   confluence ⇒ RPC (`rpc_of_confluent`); for a canonical system they coincide
   (`canonical_rpc_iff_confluent`); with other exclusions the converse fails
   (`rpc_not_confluent`).
-* "Input acceptance says that `p` never input-excludes an expansion of its current
+* "Input acceptance says that `p` never empties the fiber at an expansion of its current
   input": `input_acceptance_iff`.
-* "It excludes specifications whose answers require such an input exclusion, such as the
-  election under the equality order": `ra_excludes_forced_inputExclusion`,
+* "It excludes specifications whose answers require such a fiber-emptying exclusion, such as the
+  election under the equality order": `ra_excludes_unavailable_expansion`,
   `election_eq_no_ra`.
 * "if an output permitted at every input answers, every specification is
   available": `trivially_available`.
@@ -334,7 +334,7 @@ theorem respSystem_canonical (T : Table I O) : CanonicalSystem (respSystem (sp :
 
 /-! ## Input acceptance, Answering, forced answers -/
 
-/-- "Input acceptance says that `p` never input-excludes an expansion of its current
+/-- "Input acceptance says that `p` never empties the fiber at an expansion of its current
 input": the Input-acceptance continuation for `j` exists iff `p`'s table at the
 cut still has a row at `j`. -/
 theorem input_acceptance_iff (Sys : System sp D) {init : Fin n → I} {H : History sp D n}
@@ -421,9 +421,9 @@ theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O
     rw [List.take_length, hext q]; exact List.mem_append_right _ hm
 
 /-- "Input acceptance … excludes specifications whose answers require such a
-input exclusion": if no answer at `i` has a refinement at some `j ⪰ i`, no system has
+fiber-emptying exclusion": if no answer at `i` has a refinement at some `j ⪰ i`, no system has
 Response Availability (already for two participants, each alone). -/
-theorem ra_excludes_forced_inputExclusion (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
+theorem ra_excludes_unavailable_expansion (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
     {i j : I} (hij : i ≼ j) (hno : ∀ o, Q 2 0 i o → ¬ ∃ u, sp.P j u ∧ o ≼ u) :
     ¬ ResponseAvailability Sys Q := by
   intro hRA
@@ -1151,9 +1151,9 @@ theorem subspec_counterexample :
     ∀ T' : Spec I5 O8, (∀ i o, T'.P i o → Q5.Q i o) → ¬ T'.LiftedMono :=
   ⟨subspec_example_interface, fun T' h => subspec_example_noLM T' h⟩
 
-/-- "A participant that emits `d₁` or `d₂` input-excludes `k₂` or `k₁`" (under any
+/-- "A participant that emits `d₁` or `d₂` empties the fiber at `k₂` or `k₁`" (under any
 basis). -/
-theorem emit_d1_inputExcludes_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
+theorem emit_d1_empties_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
     (h : LRun σ l τ) {γ : List (Exclusion sp5)} (hm : LEv.out γ .d1 ∈ l) (u : O8) :
     ¬ τ.R .k2 u := by
   intro hu
@@ -1161,7 +1161,7 @@ theorem emit_d1_inputExcludes_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : L
   have h2 := τ.sub _ _ hu
   cases u <;> revert h1 h2 <;> decide
 
-theorem emit_d2_inputExcludes_k1 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
+theorem emit_d2_empties_k1 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
     (h : LRun σ l τ) {γ : List (Exclusion sp5)} (hm : LEv.out γ .d2 ∈ l) (u : O8) :
     ¬ τ.R .k1 u := by
   intro hu
@@ -1173,7 +1173,7 @@ theorem emit_d2_inputExcludes_k1 {D : Type} {n : Nat} {σ τ : State sp5} {l : L
 
 abbrev uSpec : Spec In2 Unit := ⟨fun _ _ => True, fun _ => ⟨(), trivial⟩⟩
 
-def inputExcludeHiState (σ : State uSpec) (h : σ.cur = .lo) : State uSpec where
+def removeHiState (σ : State uSpec) (h : σ.cur = .lo) : State uSpec where
   cur := σ.cur
   R := fun k u => σ.R k u ∧ k = .lo
   sub := fun k u h => σ.sub k u h.1
@@ -1181,9 +1181,9 @@ def inputExcludeHiState (σ : State uSpec) (h : σ.cur = .lo) : State uSpec wher
   above := fun k u h => σ.above k u h.1
 
 open Classical in
-/-- An input exclusion of `hi` at current input `lo`. -/
-noncomputable def inputExcludeHi : Exclusion uSpec where
-  f := fun σ => if h : σ.cur = .lo ∧ ∃ u, σ.R .hi u then some (inputExcludeHiState σ h.1) else none
+/-- A fiber-emptying exclusion of `hi` at current input `lo`. -/
+noncomputable def removeHi : Exclusion uSpec where
+  f := fun σ => if h : σ.cur = .lo ∧ ∃ u, σ.R .hi u then some (removeHiState σ h.1) else none
   cur_eq := by
     intro σ τ h; split at h
     · cases h; rfl
@@ -1205,29 +1205,29 @@ noncomputable def inputExcludeHi : Exclusion uSpec where
       exact absurd ⟨hu, hw.2⟩ hnu
     · cases h
 
-theorem inputExcludeHi_apply :
-    applySeq (canon uSpec .lo) [inputExcludeHi] = some (inputExcludeHiState (canon uSpec .lo) rfl) := by
-  have hf : inputExcludeHi.f (canon uSpec .lo) = some (inputExcludeHiState (canon uSpec .lo) rfl) := by
-    simp only [inputExcludeHi]
+theorem removeHi_apply :
+    applySeq (canon uSpec .lo) [removeHi] = some (removeHiState (canon uSpec .lo) rfl) := by
+  have hf : removeHi.f (canon uSpec .lo) = some (removeHiState (canon uSpec .lo) rfl) := by
+    simp only [removeHi]
     rw [dite_eq_left_of_eq_true (eq_true ⟨rfl, (), trivial, rfl⟩)]
   simp only [applySeq, hf]
 
-noncomputable def rnSys : System uSpec Unit := ⟨fun c => c = inputExcludeHi, fun _ _ _ _ _ => True⟩
+noncomputable def rnSys : System uSpec Unit := ⟨fun c => c = removeHi, fun _ _ _ _ _ => True⟩
 
 noncomputable def rnH : History uSpec Unit 2 :=
-  fun p => if p.val = 0 then [LEv.out [inputExcludeHi] ()] else []
+  fun p => if p.val = 0 then [LEv.out [removeHi] ()] else []
 
-theorem rnH_run : ∃ τ, LRun (canon uSpec .lo) [LEv.out (D := Unit) (n := 2) [inputExcludeHi] ()] τ := by
-  let σc := inputExcludeHiState (canon uSpec .lo) rfl
+theorem rnH_run : ∃ τ, LRun (canon uSpec .lo) [LEv.out (D := Unit) (n := 2) [removeHi] ()] τ := by
+  let σc := removeHiState (canon uSpec .lo) rfl
   have hc : σc.R σc.cur () := ⟨⟨trivial, rfl⟩, rfl⟩
   have hexp : Exposable σc () := by
     intro k x _ hn; exact absurd trivial hn
-  exact ⟨outSt σc () hc, .out inputExcludeHi_apply (Step.output σc (outSt σc () hc) () hc rfl rfl) hexp
+  exact ⟨outSt σc () hc, .out removeHi_apply (Step.output σc (outSt σc () hc) () hc rfl rfl) hexp
     (.nil _)⟩
 
 /-- Remark after Def. `def:response-partition-consistency`, last sentence:
 with other exclusions the converse can fail.  Participant `0` emits `()` at
-`lo` while applying an input exclusion to `hi`; the emitted outputs have a common refinement at `hi`,
+`lo` while emptying the fiber at `hi`; the emitted outputs have a common refinement at `hi`,
 but the cut is not confluent at `hi`. -/
 theorem rpc_not_confluent :
     WF (fun _ => In2.lo) rnH ∧ Produced rnSys 2 (fun _ => In2.lo) rnH ∧
@@ -1236,7 +1236,7 @@ theorem rpc_not_confluent :
         σ.cur ≼ In2.hi) ∧
       RPCAt rnH (fun p => (rnH p).length) .hi ∧
       ¬ ConfluentCut (fun _ => In2.lo) rnH (fun p => (rnH p).length) .hi := by
-  have h0 : rnH 0 = [LEv.out [inputExcludeHi] ()] := rfl
+  have h0 : rnH 0 = [LEv.out [removeHi] ()] := rfl
   have h1 : rnH 1 = [] := rfl
   have hp : ∀ p : Fin 2, p = 0 ∨ p = 1 := by decide
   obtain ⟨g1, g2, g3, g4⟩ := locality_glue rnSys (init := fun _ => In2.lo) rnH _ (two_labels (by omega))
@@ -1261,11 +1261,11 @@ theorem rpc_not_confluent :
   · rintro ⟨H', ext, τ, hext, _, hτj, hτ⟩
     have hr := hτ 0
     rw [hext 0] at hr
-    have ht : (rnH 0).take (rnH 0).length = [LEv.out [inputExcludeHi] ()] := by rw [h0]; rfl
+    have ht : (rnH 0).take (rnH 0).length = [LEv.out [removeHi] ()] := by rw [h0]; rfl
     rw [ht, List.singleton_append] at hr
     cases hr with
     | out ha hs _ hr' =>
-      have he := Option.some.inj (ha.symm.trans inputExcludeHi_apply)
+      have he := Option.some.inj (ha.symm.trans removeHi_apply)
       subst he
       obtain ⟨u, hu⟩ := τ.hasCur
       rw [hτj] at hu
@@ -1341,7 +1341,7 @@ has Response Availability for any obligation contained in `S`. -/
 theorem election_eq_no_ra {D : Type} (Sys : System electionEq D)
     (Q : (n : Nat) → Fin n → Table Ballots Win) (hQ : ∀ n p i o, Q n p i o → electionEq.P i o) :
     ¬ ResponseAvailability Sys Q := by
-  apply ra_excludes_forced_inputExclusion Sys Q (i := bAB) (j := bABA) ⟨Or.inr rfl, Or.inr rfl, Or.inl rfl⟩
+  apply ra_excludes_unavailable_expansion Sys Q (i := bAB) (j := bABA) ⟨Or.inr rfl, Or.inr rfl, Or.inl rfl⟩
   rintro o ho ⟨u, hu, hle⟩
   have h1 : o = winner bAB := hQ _ _ _ _ ho
   have h2 : u = winner bABA := hu

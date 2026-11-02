@@ -293,7 +293,7 @@ theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
 
 /-- "The registrar … emits `⊥` and closes the polls in the same event
 (Figure election-frames(d)); the output event for `⊥` does not require the
-poll-closing input exclusion.  Closing the polls is the registrar's design decision,
+poll-closing exclusion.  Closing the polls is the registrar's design decision,
 as fixing orderings is 2PL's."
 
 Lean: under any basis containing `closePolls`, `Out_{[closePolls]}(⊥)` from
@@ -304,10 +304,9 @@ theorem «sec:systems/registrar» :
       SysStep B (canon CALM.elec CALM.bab) (.output [Figures.closePolls] .bot)
         Figures.Elec.panelD) ∧
     Exposable (canon CALM.elec CALM.bab) .bot ∧
-    (¬ ∃ k x, InputExcluded (canon CALM.elec CALM.bab) .bot k x) ∧
-    (¬ ∃ k x, OutputExcluded (canon CALM.elec CALM.bab) .bot k x) :=
+    (¬ ∃ k x, Excluded (canon CALM.elec CALM.bab) .bot k x) :=
   ⟨Figures.Elec.registrar_step, Figures.Elec.bot_alone_at_b.1,
-    Figures.Elec.bot_alone_at_b.2.1, Figures.Elec.bot_alone_at_b.2.2.1⟩
+    Figures.Elec.bot_alone_at_b.2.1⟩
 
   /-- **Def. exclusion** (`def:exclusion`).  "An exclusion is a partial function
   on specification states that removes a nonempty set of rows.  Each removed row
@@ -321,17 +320,6 @@ Lean: `app : State sp → Option (State sp)` with fields `cur_eq`, `sub`,
 `removes` (`R' ⊊ R`), `excludes` (Eq. exclusion-excludes). -/
 abbrev «def:exclusion» (sp : Spec I O) := Exclusion sp
 
-/-- **Def. input exclusion, output exclusion** (`def:input-output-exclusion`).
-At each input where an exclusion removes rows, it is an input exclusion when
-all rows at that input are removed, and an output exclusion when some rows are
-removed and some survive.  This classification depends on the state. -/
-theorem «def:input-output-exclusion» {sp : Spec I O} (c : Exclusion sp) {σ τ : State sp}
-    (h : c.app σ = some τ) (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
-    ((∀ u, ¬ τ.R k u) ∨
-      (∃ w, τ.R k w ∧ ∀ u, σ.R k u → ¬ τ.R k u → ¬ (u ≼ w))) ∧
-    ¬ ((∀ u, ¬ τ.R k u) ∧ ∃ w, τ.R k w) :=
-  input_or_output_exclusion c h k hk
-
 /-- **Eq. `eq:exclusion-excludes`**: whenever `c(i,R) = (i,R')`,
 "`(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w`" (field `Exclusion.excludes`). -/
 theorem «eq:exclusion-excludes» {sp : Spec I O} (c : Exclusion sp) (σ τ : State sp)
@@ -339,23 +327,13 @@ theorem «eq:exclusion-excludes» {sp : Spec I O} (c : Exclusion sp) (σ τ : St
     ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w) :=
   c.excludes σ τ h
 
-/-- "The input and output exclusions of Definitions output-event and
-lifted-output-event satisfy this definition: an input exclusion removes every row at the
-inputs it input-excludes, and an output exclusion removes the rows in `Excluded^out_o`."
-
-Lean: `inputExclusion o`, `outputExclusion o : Exclusion sp` (being of that type is the claim
-that they satisfy Def. exclusion).  `x_o^in` is defined at `(i,R)` exactly when
-`o ∈ R(i)` and `Excluded^in_o ≠ ∅`, and then leaves `R ∖ Excluded^in_o`; `x_o^out` is defined
-exactly when `o ∈ R(i)` and `Excluded^out_o ≠ ∅`, and then leaves
-`R ∖ Excluded^out_o`.  For the input exclusions of Def. output-event (one row per input) see
-`«app:bases/canonical-are-exclusions»`. -/
-theorem «sec:systems/canonical-input-output-exclusions» {sp : Spec I O} (o : O)
+/-- The canonical exclusion of Definition `def:canonical-exclusion` satisfies
+Definition `def:exclusion`. -/
+theorem «sec:systems/canonical-exclusion» {sp : Spec I O} (o : O)
     (σ τ : State sp) :
-    ((inputExclusion o : Exclusion sp).app σ = some τ ↔
-        ∃ h : σ.R σ.cur o, (∃ k x, InputExcluded σ o k x) ∧ inputExcludeState σ o h = τ) ∧
-    ((outputExclusion o : Exclusion sp).app σ = some τ ↔
-        σ.R σ.cur o ∧ (∃ k x, OutputExcluded σ o k x) ∧ outputExcludeState σ o = τ) :=
-  ⟨inputExclusionApp_eq, outputExclusionApp_eq⟩
+    (canonicalExclusion o : Exclusion sp).app σ = some τ ↔
+      ∃ h : σ.R σ.cur o, (∃ k x, Excluded σ o k x) ∧ excludeState σ o h = τ :=
+  excludeApp_eq
 
 /-- **Def. `def:local-history`** (Local history).  "A local history of
 participant `p` is a finite sequence of `p`'s history events, including the
@@ -498,26 +476,24 @@ theorem «eq:lifted-validity» {sp : Spec I O} (σc : State sp) (o : O) :
 
 /-- "A legal `Out_γ(o)` issues at least the exclusions of the `output(o)` of
 Sections functional-calm–complete-calm: its exclusions remove the rows in
-`Excluded^in_o` and `Excluded^out_o` (Lemma canonical-exclusion-normal-form)…"
+`Excluded_o` and `Excluded_o` (Lemma canonical-exclusion-normal-form)…"
 
 Lean: Lemma containment (1) (`CC.containment`): the event keeps the current
 input, `o ∈ R(i)`, the end table is inside `R[out ⪰ o]`, and the state `σc`
-left by `γ` has none of the rows of `Excluded^in_o`, `Excluded^out_o`. -/
+left by `γ` has none of the rows of `Excluded_o`. -/
 theorem «sec:systems/legal-event-containment» {sp : Spec I O} {B : ExclusionBasis sp}
     {σ τ : State sp} {γ : List (Exclusion sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
     τ.cur = σ.cur ∧ σ.R σ.cur o ∧ (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧
-    ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, (InputExcluded σ o k x ∨ OutputExcluded σ o k x) → ¬ σc.R k x :=
+    ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, Excluded σ o k x → ¬ σc.R k x :=
   containment h
 
 /-- "… and `output(o)` is the case in which they remove exactly those."
 
-Lean: `κ_o` is `x_o^in` (if `Excluded^in_o ≠ ∅`) followed by `x_o^out` (if
-`Excluded^out_o ≠ ∅`); the canonical steps `CanonStep` (under `B_S`, output
+Lean: `κ_o` is `[x_o]` when `Excluded_o ≠ ∅`, and empty otherwise; the canonical steps `CanonStep` (under `B_P`, output
 events `Out_{κ_o}(o)`) are exactly the steps of §§2–3 after erasing `γ`. -/
 theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
     (∀ (σ : State sp) (o : O), kappa σ o =
-      (if ∃ k x, InputExcluded σ o k x then [inputExclusion o] else []) ++
-      (if ∃ k x, OutputExcluded σ o k x then [outputExclusion o] else [])) ∧
+      (if ∃ k x, Excluded σ o k x then [canonicalExclusion o] else [])) ∧
     (∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ →
       ∃ e' : Event I O, e.erase = some e' ∧ Step σ e' τ) ∧
     (∀ (σ τ : State sp) (e : Event I O), Step σ e τ →
@@ -572,30 +548,30 @@ theorem «fig:cc-exclusions» {T K : Type}
   ⟨fun h => CC.Paper.«app:cc-bases/fig-h» h hp hX hA hB,
    fun h => CC.Paper.«app:cc-bases/fig-i» h hp hX hB⟩
 
-/-- "Both are output exclusions: rows survive at the input."
+/-- "Both are exclusions: rows survive at the input."
 
 Lean, for any exclusion (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): a
 exclusion keeps a row at the current input, so where it removes rows there it
 chooses — some row is kept and no removed row is refined by it. -/
-theorem «sec:systems/two-systems-two-output-exclusions» {sp : Spec I O} (c : Exclusion sp)
+theorem «sec:systems/two-systems-two-exclusions» {sp : Spec I O} (c : Exclusion sp)
     {σ τ : State sp} (h : c.app σ = some τ) :
     (∃ w, τ.R σ.cur w) ∧
     ((∃ u, σ.R σ.cur u ∧ ¬ τ.R σ.cur u) →
       ∃ w, τ.R σ.cur w ∧ ∀ u, σ.R σ.cur u → ¬ τ.R σ.cur u → ¬ u ≼ w) := by
-  obtain ⟨w, hw⟩ := exclusion_not_inputExclude_cur c h
+  obtain ⟨w, hw⟩ := exclusion_preserves_current_fiber c h
   exact ⟨⟨w, hw⟩, fun _ => ⟨w, hw, fun u hu hnu => c.excludes σ τ h _ u w hu hnu hw⟩⟩
 
-/-- "… and neither is the output exclusion `x_o^out` of Definition lifted-output-event."
+/-- "… and neither is the exclusion `x_o` of Definition lifted-output-event."
 At the canonical state of an input whose transactions `A`, `B`, `C` have each
 requested commit (Appendix G's specification), the results of
-`order(A,B)` and `stamp(B)` are not the result of `x_o^out` for any output `o`. -/
-theorem «sec:systems/neither-is-canonical-output-exclusion» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
+`order(A,B)` and `stamp(B)` are not the result of `x_o` for any output `o`. -/
+theorem «sec:systems/neither-is-canonical-exclusion» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
     (h : Txn.Partial.Tri k A B C) :
     (∀ τ, (Txn.Partial.order A B).app (Txn.Partial.σ3 k) = some τ →
-      ∀ o, (outputExclusion o).app (Txn.Partial.σ3 k) ≠ some τ) ∧
+      ∀ o, (canonicalExclusion o).app (Txn.Partial.σ3 k) ≠ some τ) ∧
     (∀ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σ3 k) = some τ →
-      ∀ o, (outputExclusion o).app (Txn.Partial.σ3 k) ≠ some τ) :=
-  Txn.Partial.neither_is_output_exclusion h
+      ∀ o, (canonicalExclusion o).app (Txn.Partial.σ3 k) ≠ some τ) :=
+  Txn.Partial.neither_is_canonical_exclusion h
 
 /-- "We call the runs of Sections functional-calm–complete-calm canonical runs,
 and a run under a basis `ℬ` is one whose output and exclusion events apply
@@ -705,7 +681,7 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 contradict it … it requires distributed coordination when that run is at
 another participant.  Running such a mechanism need not issue an exclusion: closing the
 polls after every voter has voted still runs the mechanism, but no ballot is
-left to input exclusion, so it removes nothing the specification still permits and
+left to exclusion, so it removes nothing the specification still permits and
 applies no exclusion."  At the canonical
 state of any full ballot, the poll-closing exclusion `closePolls` is undefined
 (it would remove no row). -/
@@ -716,14 +692,14 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
 
 /-- **Def. contradicting run** (`def:contradicts`).  "Let a specification event of a run
 apply an exclusion.  A run contradicts the exclusion if it accepts an input
-the exclusion input-excludes, or emits an output the exclusion excludes at the
+the exclusion excludes, or emits an output the exclusion excludes at the
 same input."  The events that apply exclusions are output events `Out_γ(o)`
 and exclusion events `Exclude(γ)`.
 
 Lean (`CC.CAP` model): `CAP.Contradicts emits accepts σ σc`, for exclusions
 taking `σ` to `σc` and runs described by the outputs they emit at each current
 input (`emits k x`) and the inputs they accept (`accepts k`): some removed row
-`(k,x)` is emitted at current input `k`, or some inputExcluded input `k` (one whose
+`(k,x)` is emitted at current input `k`, or some excluded input `k` (one whose
 remaining rows are all removed) is accepted. -/
 abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
     (σ σc : State sp) : Prop :=
@@ -737,7 +713,7 @@ contradicts it (Definition contradicts)."
 
 Lean, for a system: the exclusions taking `σ` to `σc` are contradicted
 (`«def:contradicts»`) by the runs of `Sys`: some produced history emits a
-removed row (`SysEmits`) or accepts an input-excluded input (`SysAccepts`); produced
+removed row (`SysEmits`) or accepts an excluded input (`SysAccepts`); produced
 histories range over all inputs the adversarial environment may supply. -/
 abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
     (σ σc : State sp) : Prop :=
@@ -805,7 +781,7 @@ theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
 /-- "Whether an exclusion requires coordination depends on the set of runs:
 those of a specification, or those of a system implementing it.  For a
 specification, every exclusion requires coordination: some canonical run
-accepts each input that an exclusion can input exclusion and emits each permitted
+accepts each input that an exclusion can exclusion and emits each permitted
 output."  Lean: from `σ_P(i)` with `i ≼ k`, the
 canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at
 current input `k`. -/
@@ -821,10 +797,10 @@ perform output subsumptions, and no exclusion event occurs."  Lean: `CoordFree` 
 abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   CoordFree es
 
-/-- "Closing the polls before every voter has voted input-excludes the remaining
+/-- "Closing the polls before every voter has voted excludes the remaining
 ballots."  Lean: at panel (b) (`ab·`), closing the polls is defined and leaves
 no row at the remaining-ballot input `aba`, which had the row `(aba, a)`. -/
-theorem «sec:coordination/closing-before-voting-input-excludes» :
+theorem «sec:coordination/closing-before-voting-excludes» :
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec CALM.bab) =
       some Figures.Elec.panelD ∧
     (canon CALM.elec CALM.bab).R CALM.baba (.win .a) ∧
@@ -841,7 +817,7 @@ at another participant."  Lean: `SysEmits` requires an output event in a
 produced history, hence one allowed by the participant's strategy.  The rest
 of the sentence is Def. `def:coordination` for the system's runs
 (`«def:coordination»`, `«def:coordination/distributed»`). -/
-theorem «sec:coordination/output-exclusions-by-strategies» {sp : Spec I O} {D : Type}
+theorem «sec:coordination/exclusions-by-strategies» {sp : Spec I O} {D : Type}
     (Sys : CAP.System sp D) {k : I} {x : O} (h : CAP.SysEmits Sys k x) :
     ∃ n init q pre γ, Sys.strat n init q pre (CAP.LEv.out γ x) := by
   obtain ⟨n, init, H, q, a, b, γ, σ, _, hp, hH, _, _⟩ := h
@@ -1020,13 +996,13 @@ theorem «sec:coordination/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n
 
 /-- Paragraph "Locks in a shared-nothing database", *No coordination*: "A
 coordinator that aborts on timeout, before the last vote arrives, does issue a
-exclusion: like closing the polls, it input-excludes every input that adds a missing
+exclusion: like closing the polls, it excludes every input that adds a missing
 vote, yes or no."  (CIDR version: "A coordinator that aborts on timeout,
 before the last vote arrives, issues an exclusion, like closing the polls".)
 
 Lean (`CAP/TimeoutAbort.lean`), on the decision `voteSpec` of
 `«sec:coordination/two-phase-commit»`: at `σ_P(v)` with vote `p` missing,
-closing the polls (`Figures.closePolls`, an exclusion) applies; it is an input exclusion;
+closing the polls (`Figures.closePolls`, an exclusion) applies; it is an exclusion;
 every input `k ⪰ v` with `k p = some b`, for `b` yes or no, had the row
 `(k, decide2PC k)` and keeps none; the only rows left are `(v, decide2PC v)`
 (with the polls closed, `undecided` is final: abort).  At `yy·` the struck
@@ -1042,7 +1018,7 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
         ∀ u, ¬ (Figures.closeState (canon (CAP.voteSpec m) v)).R k u) ∧
     (∀ k u, (Figures.closeState (canon (CAP.voteSpec m) v)).R k u ↔
       (k = v ∧ u = CAP.decide2PC v)) :=
-  CAP.Timeout.timeout_inputExcludes v p hp
+  CAP.Timeout.timeout_closes_expansions v p hp
 
 /-- Paragraph "Locks in a shared-nothing database", *No coordination*: "The
 decision is its own specification, run by the coordinator alone, so this is
@@ -1051,15 +1027,15 @@ when the decision is replicated for fault tolerance, as in Paxos Commit."
 (CIDR version: "but the decision is a specification only the coordinator
 runs: local coordination.")
 
-Lean (`CAP/TimeoutAbort.lean`), for the input exclusion of
+Lean (`CAP/TimeoutAbort.lean`), for the exclusion of
 `«sec:coordination/2pc-timeout-abort»` (closing the polls on `voteSpec` at
 `yy·`).  The decision specification is run by a system of its own, as each
 stage is in the composition section; the owners' specifications are separate
 systems.
 
-*Run by the coordinator alone* (`inputExclusionSys1`, whose strategies act only when
-the system has one participant): the input exclusion requires coordination, since
-another run of the coordinator from `yy·` accepts the inputExcluded late vote `yyy`
+*Run by the coordinator alone* (`pollClosingSys1`, whose strategies act only when
+the system has one participant): the exclusion requires coordination, since
+another run of the coordinator from `yy·` accepts the excluded late vote `yyy`
 (not `CoordinationFree`); but no history of the system applies an exclusion
 that another participant of the same history contradicts
 (`CoordinationFreeH`): local coordination.  The general fact is
@@ -1068,22 +1044,22 @@ that another participant of the same history contradicts
 *Replicated* (two or more participants run `voteSpec`): any system in which
 participant `0` of two, starting at `yy·`, may close the polls there is not
 `CoordinationFreeH`, since the environment may deliver `yyy` to the other
-participant; `inputExclusionSysRepl` (every participant at `yy·` may close the polls) is
+participant; `pollClosingSysRepl` (every participant at `yy·` may close the polls) is
 an instance.  Distributed coordination.  Paxos Commit itself is not modeled.
 
-Library lemmas not quoted here: the abort read as an output exclusion (`abortSpec`,
-`abort_outputExclusion_yy`, `coordSys_coordinationFreeH`,
+Library lemmas not quoted here: the abort read as an exclusion (`abortSpec`,
+`abort_canonicalExclusion_yy`, `coordSys_coordinationFreeH`,
 `replSys_not_coordinationFreeH`). -/
 theorem «sec:coordination/2pc-timeout-abort-local» (D : Type) :
-    (¬ (CAP.Timeout.inputExclusionSys1 D).CoordinationFree ∧
-      (CAP.Timeout.inputExclusionSys1 D).CoordinationFreeH) ∧
+    (¬ (CAP.Timeout.pollClosingSys1 D).CoordinationFree ∧
+      (CAP.Timeout.pollClosingSys1 D).CoordinationFreeH) ∧
     (∀ Sys : CAP.System (CAP.voteSpec 3) D, Sys.basis CAP.Timeout.cp →
       Sys.strat 2 (fun _ => CAP.Timeout.yyN) 0 [] (.out [CAP.Timeout.cp] .undecided) →
       ¬ Sys.CoordinationFreeH) ∧
-    ¬ (CAP.Timeout.inputExclusionSysRepl D).CoordinationFreeH :=
-  ⟨CAP.Timeout.inputExclusionSys1_local D,
-   fun Sys hb hs => CAP.Timeout.inputExclusion_not_coordinationFreeH Sys hb hs,
-   CAP.Timeout.inputExclusionSysRepl_not_coordinationFreeH D⟩
+    ¬ (CAP.Timeout.pollClosingSysRepl D).CoordinationFreeH :=
+  ⟨CAP.Timeout.pollClosingSys1_local D,
+   fun Sys hb hs => CAP.Timeout.pollClosing_not_coordinationFreeH Sys hb hs,
+   CAP.Timeout.pollClosingSysRepl_not_coordinationFreeH D⟩
 
 /-- Paragraph "Locks in a shared-nothing database": "All three exchange
 messages, and a client cut off from an owner cannot get its answer; only the
@@ -1098,33 +1074,33 @@ theorem «sec:coordination/shared-nothing-only-second» (n : Nat) (D : Type) :
   ⟨CAP.ownerSys_coordinationFreeH D, CAP.twoOwnerSys_not_coordinationFreeH D,
     (CAP.voteSpec_coordinationFree n D).2⟩
 
-/-- "The first event's exclusion is an output exclusion of `x`."
+/-- "The first event's exclusion is an exclusion of `x`."
 
 Lean: (a) every exclusion keeps a row at the current input; (b) in the
 setting of the proposition, some exclusion `c` of `γ` removes `(i,x)` while
 keeping a row at `i`, and no kept row at `i` refines `x`. -/
-theorem «sec:coordination/conflict-is-output-exclusion» {sp : Spec I O} :
+theorem «sec:coordination/conflict-is-exclusion» {sp : Spec I O} :
     (∀ (c : Exclusion sp) (σ τ : State sp), c.app σ = some τ → ∃ w, τ.R σ.cur w) ∧
     (∀ {B : ExclusionBasis sp} {σ σ' : State sp} {γ : List (Exclusion sp)} {o x : O},
       SysStep B σ (.output γ o) σ' → σ.R σ.cur x → (∀ w, σ'.R σ.cur w → ¬ x ≼ w) →
       ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
         ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w) :=
-  ⟨fun c _ _ h => exclusion_not_inputExclude_cur c h, fun h1 hx hno => Dist.conflict_is_outputExclusion h1 hx hno⟩
+  ⟨fun c _ _ h => exclusion_preserves_current_fiber c h, fun h1 hx hno => Dist.conflict_removes_output h1 hx hno⟩
 
-/-- "The first event's exclusion is an output exclusion of `x`", when the first
+/-- "The first event's exclusion is an exclusion of `x`", when the first
 event is an exclusion event `exclude(γ)`, as the proposition allows ("an output
 or exclusion event").
 
 Lean: if `exclude(γ)` leaves no output at `i` refining `x ∈ R(i)`, some
 exclusion `c` of `γ` removes `(i,x)` while keeping a row at `i`, and no kept
 row at `i` refines `x`. -/
-theorem «sec:coordination/conflict-is-output-exclusion-event» {sp : Spec I O} {B : ExclusionBasis sp}
+theorem «sec:coordination/conflict-is-exclusion-event» {sp : Spec I O} {B : ExclusionBasis sp}
     {σ σ' : State sp} {γ : List (Exclusion sp)} {x : O}
     (h1 : SysStep B σ (.exclude γ) σ') (hx : σ.R σ.cur x)
     (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
     ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
       ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w :=
-  Dist.conflict_is_output_exclusion_event h1 hx hno
+  Dist.conflict_is_exclusion_event h1 hx hno
 
 /-- "Under Lifted Monotonicity, participants at a common input `j` can each emit
 a `u ∈ P(j)` that refines everything emitted, without exclusion; choosing `u`
