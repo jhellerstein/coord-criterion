@@ -151,23 +151,24 @@ proposed a crisp, bidirectional answer: consistency can be achieved without
 coordination exactly when the specification is
 monotone~\cite{hellerstein2010declarative}.} \textcolor{reviewed}{Ameloot et al.\ proved it in both
 directions, but only for Datalog queries evaluated by relational
-transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.} \textcolor{reviewed}{A
-closely related question appears in Brewer's CAP conjecture: which consistency
-guarantees can remain available when participants cannot communicate?} \textcolor{reviewed}{Gilbert and Lynch proved its impossibility result, but only for linearizable
-registers~\cite{brewer2000towards,gilbert2002cap}.} \textcolor{reviewed}{The apparent connection
-between CALM and CAP has never been established in a common formalism.} \textcolor{reviewed}{Both
-results are invoked far more broadly: CALM as a general rule that monotone
-programs need no coordination, CAP as a general constraint on distributed
-systems.} \textcolor{reviewed}{The folklore outgrew the proofs.}
+transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.} Gilbert and Lynch proved Brewer's CAP conjecture, but only for linearizable
+registers~\cite{brewer2000towards,gilbert2002cap}. \textcolor{reviewed}{Both results are invoked
+far more broadly: CALM as a general rule that monotone programs need no
+coordination, CAP as a general constraint on distributed systems.} \textcolor{reviewed}{The
+folklore outgrew the proofs.}
 
-\textcolor{reviewed}{The need for a common criterion extends beyond CALM and CAP.} \textcolor{reviewed}{CRDTs use
-inflationary updates over join-semilattices for coordination-free
-convergence~\cite{shapiro2011crdt}; HATs identify transactional guarantees
-available under partition~\cite{bailis2013hat}; and invariant confluence asks
-when independently reached database states merge safely~\cite{bailis2014coordination}.} \textcolor{reviewed}{Yet these results speak different formal languages, leaving unclear whether
-CALM encompasses CAP, whether CRDT join laws are necessary, why only some
-transactional isolation levels remain available during partition, and whether
-invariant confluence differs from CALM (\S\ref{sec:instances}).}
+Related results reach similar conclusions from different starting points. CRDTs use inflationary updates over join-semilattices for coordination-free
+convergence~\cite{shapiro2011crdt}. HATs identify transactional guarantees
+that remain available under partition~\cite{bailis2013hat}. Invariant
+confluence asks whether independently reached, invariant-preserving database
+states can merge safely~\cite{bailis2014coordination}. Because these results
+speak different formal languages, they do not translate directly. Does CALM
+encompass CAP (Section~\ref{sec:complete-cap})? Are CRDT join laws necessary,
+or merely one sufficient discipline for coordination avoidance
+(Section~\ref{sec:crdt-instance})? Why do some transactional guarantees stay
+available under partition while others do not
+(Section~\ref{sec:hat-instance})? Is invariant confluence a different test
+from CALM's (Section~\ref{sec:iconfluence-instance})?
 
 \textcolor{reviewed}{Our answer begins with a simple observation.} \textcolor{reviewed}{In systems, as in life,
 possibilities narrow over time.} \textcolor{reviewed}{Some are out of our hands: the world moves on,
@@ -188,14 +189,15 @@ $u\OutputGe o$ means that $u$ subsumes all specification-relevant information
 in $o$; equivalently, $o\OutputOrd u$, and $u$ \emph{\outrel} $o$.} \textcolor{reviewed}{An \emph{\commitment} is a fateful system
 decision that removes one or more rows $(i,o)$ for which no remaining row
 $(i,u)$ has $o\OutputOrd u$: no remaining possibility subsumes an excluded
-one.}
+one.} A \commitment in this sense is not a transactional commit, though
+transactions rely on \commitments throughout the paper.
 
 \textcolor{reviewed}{State-machine-style specifications can be projected into this form, eliding
 operational details that are not externally observable
-(\S\ref{sec:operational-models}).} Despite its simplicity, the model captures not only application invariants,
+(Section~\ref{sec:operational-models}).} Despite its simplicity, the model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability and
 causal consistency (Appendix~\ref{app:registers}), and transactional isolation
-levels (\S\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
+levels (Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
 \textcolor{reviewed}{A specification is \emph{consistent} when the executions it admits are
 \emph{confluent}: states reached along different paths can be brought to
@@ -205,7 +207,7 @@ a common state.}
 
 \paragraph{Learn and refine.}
 \textcolor{reviewed}{Input growth records what a system may learn from the environment.} \textcolor{reviewed}{Monotonicity under input growth requires outputs to refine as input grows.} \textcolor{reviewed}{\emph{Functional
-CALM} (\S\ref{sec:functional-calm-theorem}) covers specifications that permit
+CALM} (Section~\ref{sec:functional-calm-theorem}) covers specifications that permit
 one output at each input.} \textcolor{reviewed}{It proves that consistency is equivalent to
 monotonicity: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.} \textcolor{reviewed}{If monotonicity
 fails, some output requires a fateful decision: a \commitment that rules
@@ -224,12 +226,12 @@ incidental.}
 \textcolor{reviewed}{Together, monotonicity under input growth and output choice form \emph{Lifted
 Monotonicity}, our unified criterion on the possibility relation.} \textcolor{reviewed}{\emph{Complete
 CALM} proves that consistency is equivalent to Lifted Monotonicity
-(\S\ref{sec:complete-calm-theorem}).}
+(Section~\ref{sec:complete-calm-theorem}).}
 
 \textcolor{reviewed}{Distributed histories obey the same consistency criterion
-(\S\ref{sec:distributed-execution}).} \textcolor{reviewed}{A \commitment \emph{requires coordination}
+(Section~\ref{sec:distributed-execution}).} \textcolor{reviewed}{A \commitment \emph{requires coordination}
 if another run can contradict it, and \emph{distributed coordination} if that
-run is at another participant.} \textcolor{reviewed}{Complete CAP (\S\ref{sec:complete-cap}) says
+run is at another participant.} \textcolor{reviewed}{Complete CAP (Section~\ref{sec:complete-cap}) says
 Lifted Monotonicity exactly characterizes specifications that can keep every
 permitted output available and confluent during a partition.} \textcolor{reviewed}{The
 Gilbert--Lynch theorem follows directly.}
@@ -255,13 +257,19 @@ Gilbert--Lynch theorem follows directly.}
 \item
 \textcolor{reviewed}{\emph{Composition and Proper Coordination.} Specifications
         compose by equijoin, and we show that in a composition, upstream
-        stages can free downstream stages from issuing \commitments (\S\ref{sec:composition}).}
+        stages can free downstream stages from issuing \commitments (Section~\ref{sec:composition}).}
 \end{enumerate}
 
-The paper develops these contributions in order, then relates the criterion
-to earlier results (\S\ref{sec:instances}) and the broader CALM agenda
-(\S\ref{sec:discussion}). The appendices provide proofs and further
-applications; Appendix~\ref{app:notation} collects notation and defined terms.
+Section~\ref{sec:functional-calm} introduces the framework on an election and
+proves Functional CALM; Section~\ref{sec:complete-calm} generalizes it to
+ambiguous specifications and proves Complete CALM;
+Section~\ref{sec:distributed-execution} gives the distributed reading, defines
+coordination, and proves Complete CAP. Section~\ref{sec:composition} composes
+specifications and characterizes Proper Coordination. Section~\ref{sec:instances} recovers earlier results as consequences of ours
+and compares other approaches; Section~\ref{sec:discussion} puts this paper
+into the broader context of the CALM agenda. The appendices provide proofs
+and further applications; Appendix~\ref{app:notation} collects notation and
+defined terms.
 
 \section{Functional CALM}
 \label{sec:functional-calm}
@@ -389,7 +397,7 @@ is \emph{determined}: input alone has resolved the outcome, without \commitment.
 
 \textcolor{reviewed}{Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
-(\S\ref{sec:systems}).} \textcolor{reviewed}{In this example, the system acts as a registrar, emitting $\bot$
+(Section~\ref{sec:systems}).} \textcolor{reviewed}{In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
 $ab\cdot$ in the same output event.} \textcolor{reviewed}{Its irrevocable \emph{\commitment}
 removes the still-possible $aba$ and $abb$ rows but leaves the current input
@@ -460,7 +468,7 @@ order no output at $aba$ \outrel both outputs $\bot$ and $a$.} \textcolor{review
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.}
 
 \textcolor{reviewed}{Input and output events form a transition system, and the specification is
-consistent when its runs are confluent.} For functional tables this corresponds exactly to monotonicity (\S\ref{sec:functional-calm-theorem}). Appendix~\ref{app:notation} collects the notation for reference.
+consistent when its runs are confluent.} For functional tables this corresponds exactly to monotonicity (Section~\ref{sec:functional-calm-theorem}). Appendix~\ref{app:notation} collects the notation for reference.
 
 \subsection{Specifications and states}
 \label{sec:functional-specifications}
@@ -618,7 +626,7 @@ ends at a state. \textcolor{reviewed}{A \commitment removes rows that input alon
 after the canonical \commitment above, their inputs are no longer legal.} Canonical \commitments of this form are the only \commitments this section
 uses. \textcolor{reviewed}{Systems may issue more \commitments than an output requires, as the
 registrar does in Figure~\ref{fig:election-frames}(d), but extra \commitments
-only restrict behavior (\S\ref{sec:systems}).}
+only restrict behavior (Section~\ref{sec:systems}).}
 
 \begin{definition}[Legal output]
 \label{def:exposable}
@@ -744,7 +752,7 @@ asks whether $(j,f(j))$ survives in every run.
 and output events a finite collection of runs has taken, any input \inrelpart all
 of theirs leaves a single state that every run can reach: one that keeps every
 promise any of them has made and accepts all of that input.} Proposition~\ref{prop:confluence} identifies that state. Consistency is a
-property of the specification, not of a protocol (\S\ref{sec:scope}).
+property of the specification, not of a protocol (Section~\ref{sec:scope}).
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
@@ -763,8 +771,6 @@ monotone.}
 so the row $(j,f(j))$ at a common \indesc $j$ survives in every run.} \textcolor{reviewed}{If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
 \indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$.} Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
-
-\emph{Whenever we learn, our answers refine.}
 
 \textcolor{reviewed}{In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
 incomparable: a run that emits $\bot$ at $ab\cdot$ and one that accepts
@@ -898,7 +904,7 @@ according to the output order and needs no
 
 \textcolor{reviewed}{An output event can thus remove rows in two ways: by \commitment, as in panel~(f) and Section~\ref{sec:functional-calm}, or by subsuming outputs, as in panel~(g).} \textcolor{reviewed}{At a given input, a \commitment may remove every row, ruling out the input, or only some rows, ruling out those outputs.} \textcolor{reviewed}{The atomic event $\mathsf{output}(o)$ does whichever $o$ requires, then emits $o$.} \textcolor{reviewed}{Subsuming is not \commitment.}
 
-\textcolor{reviewed}{In Figure~\ref{fig:ambiguity-frames}, serialization requires \commitment; traceroute avoids it.} \textcolor{reviewed}{The difference between them is the order-theoretic concept of a \emph{directed} fiber:
+\textcolor{reviewed}{The difference between serialization and traceroute is the order-theoretic concept of a \emph{directed} fiber:
 every finite set of outputs in a given fiber has a common \outnoun in that fiber.} \textcolor{reviewed}{Directedness at a single input is not sufficient, however;
 we must also \outrelbase prior outputs as input \ingrows.} \textcolor{reviewed}{\emph{Lifted Monotonicity}
 combines the requirements: as input \ingrows from $i$ to $j$, some output
@@ -944,7 +950,7 @@ contains more than one output.
 \textcolor{reviewed}{We call either kind simply an \emph{ordered specification}.}
 
 Specification states and input events
-(\S\ref{sec:functional-specifications} and~\S\ref{sec:functional-events})
+(Sections~\ref{sec:functional-specifications} and~\ref{sec:functional-events})
 apply unchanged to relational tables.
 
 \subsection{Lifted Monotonicity}
@@ -992,7 +998,7 @@ fiber $\fiber{i}$ is directed.}
 \end{definition}
 
 \textcolor{reviewed}{A singleton fiber is trivially directed.} \textcolor{reviewed}{As with common \indescs of inputs
-(\S\ref{sec:functional-specifications}), a common \outnoun need not be
+(Section~\ref{sec:functional-specifications}), a common \outnoun need not be
 least: directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
 join-semilattice.} For example, the fiber
@@ -1126,9 +1132,6 @@ of everything emitted survives in every run.} \textcolor{reviewed}{If outputs em
 $P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.} Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
-
-\emph{Whenever we learn, our answers refine.  Whatever we choose, our
-answers align.}
 
 \textcolor{reviewed}{The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
 logic language.} \textcolor{reviewed}{The new, more general expansion is Consistency As Lifted Monotonicity.} \textcolor{reviewed}{The condition that characterizes consistency is now a
@@ -1403,8 +1406,7 @@ registrar's design decision, as fixing orderings is 2PL's.
 
 A system therefore dictates two things: a specification and a basis of
 \commitments its participants may issue; each participant's strategy decides
-when and which to apply. A \commitment is a fateful decision: it rules out
-behavior that the specification still permits.
+when and which to apply.
 
 \begin{definition}[\Commitment]
 \label{def:commitment}
@@ -1502,7 +1504,7 @@ no theorem below depends on which participant issues a \commitment. Participants
 special case in which they share one strategy
 (Appendix~\ref{app:cap-response}), and a deployment may limit what each one
 emits (Appendix~\ref{app:deployment}). Systems for different specifications
-compose as components (\S\ref{sec:proper-coordination}).
+compose as components (Section~\ref{sec:proper-coordination}).
 
 \paragraph{Two bases on three transactions.}
 We return to the concurrency protocols from the beginning of this
@@ -1584,9 +1586,9 @@ along the run. Full proof in Appendix~\ref{app:bases}.
 
 \begin{corollary}[Eager output is incidental]
 \label{cor:free-eager-output}
-Emitting a legal output is an incidental decision: it applies no \commitment,
-since every row it removes is subsumed by a row that survives. Likewise,
-deferring an output avoids no \commitment.
+The canonical event for a legal output applies no \commitment: every row it
+removes is subsumed by a row that survives. Likewise, deferring the output
+avoids no \commitment.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
@@ -1704,9 +1706,10 @@ separate runs.} \textcolor{reviewed}{This requires distributed coordination when
 occur at different participants.}
 
 \paragraph{Locks in a shared-nothing database.}
-\textcolor{reviewed}{The distinction between coordination and distributed coordination appears in
-a database partitioned by key, in which each key is owned by one participant
-that manages its locks~\cite{stonebraker1986sharednothing}.}
+\textcolor{reviewed}{Ownership changes which runs can contradict a \commitment.} \textcolor{reviewed}{The distinction
+between coordination and distributed coordination appears in a database
+partitioned by key, in which each key is owned by one participant that manages
+its locks~\cite{stonebraker1986sharednothing}.}
 
 \emph{Local coordination.}  Ordering two transactions on one key requires
 coordination: in another run $B$'s request arrives first and the key's owner

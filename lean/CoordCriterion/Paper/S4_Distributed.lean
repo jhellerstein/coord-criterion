@@ -622,9 +622,9 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : CommitmentBasi
     canonical_equivalent h
 
 /-- **Corollary `cor:free-eager-output`** (Eager output is incidental).
-"Emitting a legal output is an incidental decision: it applies no commitment,
-since every row it removes is subsumed by a row that survives.  Likewise,
-deferring an output avoids no commitment."
+"The canonical event for a legal output applies no commitment: every row it
+removes is subsumed by a row that survives.  Likewise, deferring the output
+avoids no commitment."
 
 Lean: for any commitment basis, a legal output has a legal empty-commitment
 output event; every row that event removes is in `Subsumed_o`.  Canonical Run
@@ -926,9 +926,10 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
-/-- Paragraph "Locks in a shared-nothing database": "The distinction between
-coordination and distributed coordination appears in a database partitioned
-by key, in which each key is owned by one participant that manages its locks."
+/-- Paragraph "Locks in a shared-nothing database": "Ownership changes which
+runs can contradict a commitment.  The distinction between coordination and
+distributed coordination appears in a database partitioned by key, in which
+each key is owned by one participant that manages its locks."
 
 *Local coordination.*  "Ordering two transactions on one key requires
 coordination: in another run `B`'s request arrives first and the key's owner

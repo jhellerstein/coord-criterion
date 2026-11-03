@@ -1174,8 +1174,8 @@ canonical run: one that accepts the same inputs, emits the same outputs,
 and keeps at least the original's rows after each event (\extended).
 \end{lemma}
 
-Emitting a legal output is an incidental decision: it applies no \commitment,
-and deferring it avoids none.  To
+The canonical event for a legal output applies no \commitment, and deferring
+that output avoids none.  To
 illustrate, when 2PL orders $A$ before $B$ in a \commitment event, the
 canonical run skips it.  If 2PL later emits $[A,C,B]$, the canonical run can
 emit the same output because that row was present all along.  Every surviving
@@ -1260,9 +1260,10 @@ row-removing event and the contradictory emission of $x$ from occurring in
 separate runs.  This requires distributed coordination when those runs can
 occur at different participants.
 
-The distinction between coordination and distributed coordination appears in
-a shared-nothing database in which each key is owned by one participant that
-manages its locks~\cite{stonebraker1986sharednothing}.  \emph{Local
+Ownership changes which runs can contradict a \commitment.  The distinction
+between coordination and distributed coordination appears in a shared-nothing
+database in which each key is owned by one participant that manages its
+locks~\cite{stonebraker1986sharednothing}.  \emph{Local
 coordination.}  Ordering two transactions on one key requires coordination, but only runs at
 the key's owner can contradict it, so it does not require distributed
 coordination.  \emph{Distributed coordination.}  A transaction that spans keys
@@ -1693,7 +1694,10 @@ Complete CALM assesses its consistency directly.
   Our conditions are semantic.  Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
 liveness, and cost belong to the operational model in which a specification
-is realized.
+is realized.  Free termination likewise corresponds to a determined canonical
+state in our model, but Power et al.\ additionally study fairness and eventual
+response, liveness concerns whose semantic generalization remains future
+work~\cite{power2025freetermination}.
 
 % ======================================================================
 \section{Discussion}

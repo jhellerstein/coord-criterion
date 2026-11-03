@@ -33,8 +33,7 @@ registrar's design decision, as fixing orderings is 2PL's.
 
 A system therefore dictates two things: a specification and a basis of
 \commitments its participants may issue; each participant's strategy decides
-when and which to apply.  A \commitment is a fateful decision: it rules out
-behavior that the specification still permits.
+when and which to apply.
 
 \begin{definition}[\Commitment]
 \label{def:commitment}
@@ -134,7 +133,7 @@ Participants may behave differently; a replicated (SPMD) system is the
 special case in which they share one strategy
 (Appendix~\ref{app:cap-response}), and a deployment may limit what each one
 emits (Appendix~\ref{app:deployment}).  Systems for different specifications
-compose as components (\S\ref{sec:proper-coordination}).
+compose as components (Section~\ref{sec:proper-coordination}).
 
 \paragraph{Two bases on three transactions.}
 We return to the concurrency protocols from the beginning of this
@@ -216,9 +215,9 @@ along the run.  Full proof in Appendix~\ref{app:bases}.
 
 \begin{corollary}[Eager output is incidental]
 \label{cor:free-eager-output}
-Emitting a legal output is an incidental decision: it applies no \commitment,
-since every row it removes is subsumed by a row that survives.  Likewise,
-deferring an output avoids no \commitment.
+The canonical event for a legal output applies no \commitment: every row it
+removes is subsumed by a row that survives.  Likewise, deferring the output
+avoids no \commitment.
 \end{corollary}
 
 \begin{proof}[Proof sketch]
@@ -337,9 +336,10 @@ separate runs.  This requires distributed coordination when those runs can
 occur at different participants.
 
 \paragraph{Locks in a shared-nothing database.}
-The distinction between coordination and distributed coordination appears in
-a database partitioned by key, in which each key is owned by one participant
-that manages its locks~\cite{stonebraker1986sharednothing}.
+Ownership changes which runs can contradict a \commitment.  The distinction
+between coordination and distributed coordination appears in a database
+partitioned by key, in which each key is owned by one participant that manages
+its locks~\cite{stonebraker1986sharednothing}.
 
 \emph{Local coordination.}  Ordering two transactions on one key requires
 coordination: in another run $B$'s request arrives first and the key's owner

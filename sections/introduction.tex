@@ -15,25 +15,26 @@ proposed a crisp, bidirectional answer: consistency can be achieved without
 coordination exactly when the specification is
 monotone~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it in both
 directions, but only for Datalog queries evaluated by relational
-transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.  A
-closely related question appears in Brewer's CAP conjecture: which consistency
-guarantees can remain available when participants cannot communicate?
-Gilbert and Lynch proved its impossibility result, but only for linearizable
-registers~\cite{brewer2000towards,gilbert2002cap}.  The apparent connection
-between CALM and CAP has never been established in a common formalism.  Both
-results are invoked far more broadly: CALM as a general rule that monotone
-programs need no coordination, CAP as a general constraint on distributed
-systems.  The folklore outgrew the proofs.
+transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.
+Gilbert and Lynch proved Brewer's CAP conjecture, but only for linearizable
+registers~\cite{brewer2000towards,gilbert2002cap}.  Both results are invoked
+far more broadly: CALM as a general rule that monotone programs need no
+coordination, CAP as a general constraint on distributed systems.  The
+folklore outgrew the proofs.
 
-The need for a common criterion extends beyond CALM and CAP.  CRDTs use
-inflationary updates over join-semilattices for coordination-free
-convergence~\cite{shapiro2011crdt}; HATs identify transactional guarantees
-available under partition~\cite{bailis2013hat}; and invariant confluence asks
-when independently reached database states merge safely~\cite{bailis2014coordination}.
-Yet these results speak different formal languages, leaving unclear whether
-CALM encompasses CAP, whether CRDT join laws are necessary, why only some
-transactional isolation levels remain available during partition, and whether
-invariant confluence differs from CALM (\S\ref{sec:instances}).
+Related results reach similar conclusions from different starting points.
+CRDTs use inflationary updates over join-semilattices for coordination-free
+convergence~\cite{shapiro2011crdt}.  HATs identify transactional guarantees
+that remain available under partition~\cite{bailis2013hat}.  Invariant
+confluence asks whether independently reached, invariant-preserving database
+states can merge safely~\cite{bailis2014coordination}.  Because these results
+speak different formal languages, they do not translate directly.  Does CALM
+encompass CAP (Section~\ref{sec:complete-cap})?  Are CRDT join laws necessary,
+or merely one sufficient discipline for coordination avoidance
+(Section~\ref{sec:crdt-instance})?  Why do some transactional guarantees stay
+available under partition while others do not
+(Section~\ref{sec:hat-instance})?  Is invariant confluence a different test
+from CALM's (Section~\ref{sec:iconfluence-instance})?
 
 Our answer begins with a simple observation.  In systems, as in life,
 possibilities narrow over time.  Some are out of our hands: the world moves on,
@@ -54,14 +55,15 @@ $u\OutputGe o$ means that $u$ subsumes all specification-relevant information
 in $o$; equivalently, $o\OutputOrd u$, and $u$ \emph{\outrel} $o$.  An \emph{\commitment} is a fateful system
 decision that removes one or more rows $(i,o)$ for which no remaining row
 $(i,u)$ has $o\OutputOrd u$: no remaining possibility subsumes an excluded
-one.
+one.  A \commitment in this sense is not a transactional commit, though
+transactions rely on \commitments throughout the paper.
 
 State-machine-style specifications can be projected into this form, eliding
 operational details that are not externally observable
-(\S\ref{sec:operational-models}).  Despite its simplicity, the model captures not only application invariants,
+(Section~\ref{sec:operational-models}).  Despite its simplicity, the model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability and
 causal consistency (Appendix~\ref{app:registers}), and transactional isolation
-levels (\S\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
+levels (Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
 A specification is \emph{consistent} when the executions it admits are
 \emph{confluent}: states reached along different paths can be brought to
@@ -72,7 +74,7 @@ Our results develop the criterion in two stages.
 \paragraph{Learn and refine.}
 Input growth records what a system may learn from the environment.
 Monotonicity under input growth requires outputs to refine as input grows.  \emph{Functional
-CALM} (\S\ref{sec:functional-calm-theorem}) covers specifications that permit
+CALM} (Section~\ref{sec:functional-calm-theorem}) covers specifications that permit
 one output at each input.  It proves that consistency is equivalent to
 monotonicity: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.  If monotonicity
 fails, some output requires a fateful decision: a \commitment that rules
@@ -91,12 +93,12 @@ incidental.
 Together, monotonicity under input growth and output choice form \emph{Lifted
 Monotonicity}, our unified criterion on the possibility relation.  \emph{Complete
 CALM} proves that consistency is equivalent to Lifted Monotonicity
-(\S\ref{sec:complete-calm-theorem}).
+(Section~\ref{sec:complete-calm-theorem}).
 
 Distributed histories obey the same consistency criterion
-(\S\ref{sec:distributed-execution}).  A \commitment \emph{requires coordination}
+(Section~\ref{sec:distributed-execution}).  A \commitment \emph{requires coordination}
 if another run can contradict it, and \emph{distributed coordination} if that
-run is at another participant.  Complete CAP (\S\ref{sec:complete-cap}) says
+run is at another participant.  Complete CAP (Section~\ref{sec:complete-cap}) says
 Lifted Monotonicity exactly characterizes specifications that can keep every
 permitted output available and confluent during a partition.  The
 Gilbert--Lynch theorem follows directly.
@@ -117,10 +119,17 @@ This paper makes five contributions:
         that must stay available.
   \item \emph{Composition and Proper Coordination.} Specifications
         compose by equijoin, and we show that in a composition, upstream
-        stages can free downstream stages from issuing \commitments (\S\ref{sec:composition}).
+        stages can free downstream stages from issuing \commitments (Section~\ref{sec:composition}).
 \end{enumerate}
 
-The paper develops these contributions in order, then relates the criterion
-to earlier results (\S\ref{sec:instances}) and the broader CALM agenda
-(\S\ref{sec:discussion}).  The appendices provide proofs and further
-applications; Appendix~\ref{app:notation} collects notation and defined terms.
+Section~\ref{sec:functional-calm} introduces the framework on an election and
+proves Functional CALM; Section~\ref{sec:complete-calm} generalizes it to
+ambiguous specifications and proves Complete CALM;
+Section~\ref{sec:distributed-execution} gives the distributed reading, defines
+coordination, and proves Complete CAP.  Section~\ref{sec:composition} composes
+specifications and characterizes Proper Coordination.
+Section~\ref{sec:instances} recovers earlier results as consequences of ours
+and compares other approaches; Section~\ref{sec:discussion} puts this paper
+into the broader context of the CALM agenda.  The appendices provide proofs
+and further applications; Appendix~\ref{app:notation} collects notation and
+defined terms.
