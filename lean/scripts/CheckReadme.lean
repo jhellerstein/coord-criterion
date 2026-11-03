@@ -163,7 +163,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:coordination-free/distributed-of-free»
 #check @CC.Paper.«prop:canonical-contradiction»
 #check @CC.Paper.«prop:canonical-contradiction/canonical-run»
-#check @CC.Paper.«def:coordination-free/specification»
 #check @CC.Paper.«cor:canonical-coordination»
 #check @CC.Paper.«cor:canonical-coordination/specification-level»
 #check @CC.Paper.«def:coordination-free/commitment-free-runs»

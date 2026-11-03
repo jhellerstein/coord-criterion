@@ -251,24 +251,27 @@ earlier than the output required.
 Having separated a system's observable behavior from when and how it makes
 \commitments, we now ask which \commitments require coordination.  The idea is
 simple: a \commitment requires coordination if another run can contradict it.
-We formalize that notion next.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
-Let a specification event of a run apply a \commitment.  A run \emph{contradicts} the
+Let a specification event of a run $r$ apply a \commitment.  A run $r'$ \emph{contradicts} that
 \commitment if it accepts an input whose fiber the \commitment emptied, or emits
 an output whose row the \commitment removed.
 \end{definition}
 
-We judge coordination against a specified set of runs $\mathcal R$.  For a
-specification, $\mathcal R$ is its set of canonical runs.  For a system,
-$\mathcal R$ is the set of runs it can perform under any inputs the environment
-may supply.
+We distinguish the behavior permitted by a specification from the behavior
+admitted by a particular system.  Write $\mathcal R_P^\top$ for the set of all
+canonical runs of $P$.  By Lemma~\ref{lem:canonical-equivalent}, it is maximal
+at the observable interface: every run under any \commitment basis has the
+same input and output events as some run in $\mathcal R_P^\top$.  A system $A$
+implementing $P$ may admit fewer such behaviors because its strategies
+restrict which events it can perform; write $\mathcal R_A$ for the runs it
+produces.
 
 \begin{definition}[Coordination-requiring \commitment]
 \label{def:coordination}
-A \commitment \emph{requires coordination} relative to $\mathcal R$ when some
-run in $\mathcal R$ contradicts it (Definition~\ref{def:contradicts}).
+For any set of runs $\mathcal R$, a \commitment \emph{requires coordination}
+relative to $\mathcal R$ when some run in $\mathcal R$ contradicts it (Definition~\ref{def:contradicts}).
 \end{definition}
 
 \begin{definition}[Distributed coordination]
@@ -285,10 +288,11 @@ A run or history is \emph{coordination-free} relative to $\mathcal R$ when it
 applies no \commitment that requires coordination relative to $\mathcal R$.
 \end{definition}
 
-\emph{Coordination} is an operational mechanism that prevents one run from
-contradicting a \commitment applied by another.  The definitions identify the
-\commitments that need such a mechanism; they do not model how a system provides
-it.  Running such a mechanism need not apply a \commitment.  For example, closing the polls after
+Up to this point we have defined the circumstances where coordination is
+required, but not the mechanisms used to achieve it.  Mutexes, locks, atomic
+instructions, agreement protocols, ownership, and sequencers are familiar
+examples.  However, note that running such a mechanism may not apply a
+\commitment.  For example, closing the polls after
 every voter has voted removes nothing the specification still permits.
 
 \begin{proposition}[Canonical runs contradict every \commitment]
@@ -303,32 +307,21 @@ the fiber at $k$, the canonical run that accepts $k$ contradicts it.
 Otherwise, the canonical run that accepts $k$ and emits $x$ contradicts it.
 \end{proof}
 
-Thus, relative to the specification's canonical runs, every \commitment
-requires coordination.  The run applying the \commitment and a canonical run
-that contradicts it can also be placed at separate participants in a
-message-free history, by the construction in the proof of
-Proposition~\ref{prop:distributed-consistency}.  Hence every \commitment
-requires distributed coordination as well.
-
-\begin{corollary}[Canonical coordination]
-\label{cor:canonical-coordination}
-Relative to canonical runs, coordination-free is equivalent to
-\commitment-free.
-\end{corollary}
-
-\begin{proof}
-By Proposition~\ref{prop:canonical-contradiction}, every \commitment applied by
-the run requires coordination.  A \commitment-free run applies none.
-\end{proof}
+Thus, relative to $\mathcal R_P^\top$, every \commitment requires coordination,
+and coordination-free is equivalent to \commitment-free.  The run applying the
+\commitment and a canonical run that contradicts it can also be placed at
+separate participants in a message-free history, by the construction in the
+proof of Proposition~\ref{prop:distributed-consistency}.  Hence every
+\commitment requires distributed coordination as well.
 
 Here \commitment-free means that every output event is some
 $\Out{\varepsilon}{o}$, which may still perform output subsumptions, and no
 \commitment event occurs.  This is the sense of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 
-This is a specification-level judgment.  An application-specific system is
-judged against the runs it can perform, and its strategies may admit no run
-that contradicts a particular \commitment.
+This is a specification-level judgment.  A particular system $A$ is judged
+instead relative to $\mathcal R_A$, which may contain no run that contradicts
+a given \commitment.
 
 \begin{proposition}[Conflicting events cannot be reconciled]
 \label{thm:commitments-require-coordination}

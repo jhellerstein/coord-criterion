@@ -702,7 +702,10 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 /-- §4.4: "Having separated a system's observable behavior from when and
 how it makes commitments, we now ask which commitments require coordination.
 The idea is simple: a commitment requires coordination if another run can
-contradict it.  We formalize that notion next."  "Running such a mechanism need not apply
+contradict it."  "Up to this point we have defined the circumstances where
+coordination is required, but not the mechanisms used to achieve it.  Mutexes,
+locks, atomic instructions, agreement protocols, ownership, and sequencers are
+familiar examples.  However, note that running such a mechanism may not apply
 a commitment.  For example, closing the polls after every voter has voted
 removes nothing the specification still permits."  At the canonical state of
 any full ballot, the poll-closing commitment `closePolls` is undefined (it would
@@ -713,9 +716,9 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
   Figures.Elec.close_after_voting i hfull
 
 /-- **Def. contradicting run** (`def:contradicts`).  "Let a specification event of a run
-apply a commitment.  A run contradicts the commitment if it accepts an input
-whose fiber the commitment emptied, or emits an output whose row the commitment
-removed."  The events that apply commitments are output events `Out_γ(o)`
+`r` apply a commitment.  A run `r'` contradicts that commitment if it accepts
+an input whose fiber the commitment emptied, or emits an output whose row the
+commitment removed."  The events that apply commitments are output events `Out_γ(o)`
 and commitment events `Apply(γ)`.
 
 Lean (`CC.CAP` model): `CAP.Contradicts emits accepts σ σc`, for commitments
@@ -727,12 +730,15 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
-/-- **Def. `def:coordination`** (Coordination-requiring commitment).
-"We judge coordination against a specified set of runs `𝓡`.  For a
-specification, `𝓡` is its set of canonical runs.  For a system, `𝓡` is the set
-of runs it can perform under any inputs the environment may supply.  An
-commitment requires coordination relative to `𝓡` when some run in `𝓡`
-contradicts it (Definition contradicts)."
+  /-- **Def. `def:coordination`** (Coordination-requiring commitment).
+  "We distinguish the behavior permitted by a specification from the behavior
+  admitted by a particular system.  Write `𝓡_P^⊤` for all canonical runs of
+  `P`.  By Canonical Run Universality it is maximal at the observable
+  interface: every run under any commitment basis has the same input and
+  output events as some run in `𝓡_P^⊤`.  A system `A` implementing `P` may
+  admit fewer such behaviors because its strategies restrict which events it
+  can perform; write `𝓡_A` for the runs it produces.  A commitment requires
+  coordination relative to `𝓡` when some run in `𝓡` contradicts it."
 
 Lean, for a system: the commitments taking `σ` to `σc` are contradicted
 (`«def:contradicts»`) by the runs of `Sys`: some produced history emits a
@@ -819,33 +825,21 @@ theorem «prop:canonical-contradiction» {sp : Spec I O} {B : CommitmentBasis sp
   obtain ⟨ρ, he, hc⟩ := CAP.canonical_run_contradicts hik (σ.sub k x hx)
   exact ⟨k, x, ρ, hx, hnx, he, hc⟩
 
-/-- Supporting form: from `σ_P(i)` with `i ≼ k`, the canonical run
-`σ_P(i)` with `i ≼ k`, the
-canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at
-current input `k`. -/
+  /-- Supporting form: from `σ_P(i)` with `i ≼ k`, the canonical run
+  `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at current input
+  `k`. -/
 theorem «prop:canonical-contradiction/canonical-run» {sp : Spec I O} {i k : I} {x : O}
     (hik : i ≼ k) (hx : sp.P k x) :
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
-/-- Def. `def:coordination-free`: "The run applying the commitment and a
-canonical run that contradicts it can be placed at separate participants in a
-message-free history, by the construction in the proof of Proposition
-`prop:distributed-consistency`.  Thus, when `𝓡` is the specification's set of
-canonical runs, every commitment requires distributed coordination.  This is a
-specification-level judgment: the specification permits a contradicting run
-at another participant.  It does not imply that every application-specific
-system can perform that run; a system is judged instead against the runs it
-can perform.  For a specification, coordination-free therefore means
-commitment-free: every output event is some `Out_ε(o)`, which may still
-perform output subsumptions, and no commitment event occurs."  Lean: `CoordFree` (every output event is
-`Out_ε(o)`, and there is no commitment event). -/
-abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-  CoordFree es
-
-/-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
-"Relative to canonical runs, coordination-free is equivalent to
-commitment-free."
+  /-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
+  "Thus, relative to `𝓡_P^⊤`, every commitment requires coordination, and
+  coordination-free is equivalent to commitment-free.  The run applying the
+  commitment and a canonical run that contradicts it can also be placed at
+  separate participants in a message-free history, by the construction in the
+  proof of Proposition `prop:distributed-consistency`.  Hence every commitment
+  requires distributed coordination as well."
 
 Lean: `CoordFree es ↔ ¬ Coordinates es`; `Coordinates` means that an output
 event has `γ ≠ ε` or a commitment event occurs. -/
