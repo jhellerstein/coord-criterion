@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-633 entries.
+636 entries.
 
 ### §2 Functional CALM
 
@@ -327,8 +327,11 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:coordination-free/local-iff»` | theorem | Def. |
 | `«def:coordination-free/distributed»` | abbrev | Def. |
 | `«def:coordination-free/distributed-of-free»` | theorem | Def. |
-| `«sec:coordination/specification-contradicted»` | theorem | "Every commitment is contradicted by a canonical run. |
+| `«prop:canonical-contradiction»` | theorem | **Proposition `prop:canonical-contradiction`** (Canonical runs contradict every commitment). |
+| `«prop:canonical-contradiction/canonical-run»` | theorem | Supporting form: |
 | `«def:coordination-free/specification»` | abbrev | Def. |
+| `«cor:canonical-coordination»` | theorem | **Corollary `cor:canonical-coordination`** (Canonical coordination). |
+| `«cor:canonical-coordination/specification-level»` | abbrev | After Cor. |
 | `«def:coordination-free/commitment-free-runs»` | theorem | Def. |
 | `«thm:commitments-require-coordination»` | theorem | **Prop. |
 | `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |

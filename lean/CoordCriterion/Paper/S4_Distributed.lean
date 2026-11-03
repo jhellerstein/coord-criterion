@@ -699,8 +699,10 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
-/-- §4.4: "A commitment creates a coordination problem only if another run can
-exercise behavior that it removes."  "Running such a mechanism need not apply
+/-- §4.4: "Having separated a system's observable behavior from when and
+how it makes commitments, we now ask which commitments require coordination.
+The idea is simple: a commitment requires coordination if another run can
+contradict it.  We formalize that notion next."  "Running such a mechanism need not apply
 a commitment.  For example, closing the polls after every voter has voted
 removes nothing the specification still permits."  At the canonical state of
 any full ballot, the poll-closing commitment `closePolls` is undefined (it would
@@ -760,7 +762,7 @@ abbrev «def:coordination/distributed» {sp : Spec I O} {D : Type} {n : Nat}
 /-- Def. `def:coordination`, for a specification (`𝓡` the canonical runs): a
 run applies a commitment that requires coordination exactly when it applies a
 commitment at all (`Coordinates`: some output event has `γ ≠ ε`, or there is a
-commitment event); see `«sec:coordination/specification-contradicted»`. -/
+commitment event); see `«prop:canonical-contradiction»`. -/
 abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   Coordinates es
 
@@ -800,15 +802,28 @@ theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
     «def:coordination-free/distributed» Sys :=
   CAP.coordinationFree_to_H h
 
-/-- "Every commitment is contradicted by a canonical run.  Choose any row
-`(k,x)` that the commitment removes.  There are two cases.  If the commitment
-empties the fiber at `k`, a canonical run that accepts `k` contradicts it.
-Otherwise, a canonical run that accepts `k` and emits `x` contradicts it."
-Lean: from
+/-- **Proposition `prop:canonical-contradiction`** (Canonical runs contradict
+every commitment).  "Every commitment applied in a run from a canonical state
+`σ_P(i)` is contradicted by a canonical run from `σ_P(i)`."
+
+Lean states the output-row witness directly: an applied commitment removes
+some `(k,x)`, and the canonical run from the same `σ_P(i)` accepts `k` and
+emits `x`.  This witnesses `CAP.Contradicts` through its output clause. -/
+theorem «prop:canonical-contradiction» {sp : Spec I O} {B : CommitmentBasis sp}
+    {i : I} {es : List (SEvent sp)} {σ τ : State sp} {c : Commitment sp}
+    (hrun : SysExec B (canon sp i) es σ) (happ : c.app σ = some τ) :
+    ∃ k x ρ, σ.R k x ∧ ¬ τ.R k x ∧
+      Exec (canon sp i) [.input k, .output x] ρ ∧ ρ.cur = k := by
+  obtain ⟨k, x, hx, hnx⟩ := c.removes σ τ happ
+  have hik : i ≼ k := (hrun.sub k x hx).2
+  obtain ⟨ρ, he, hc⟩ := CAP.canonical_run_contradicts hik (σ.sub k x hx)
+  exact ⟨k, x, ρ, hx, hnx, he, hc⟩
+
+/-- Supporting form: from `σ_P(i)` with `i ≼ k`, the canonical run
 `σ_P(i)` with `i ≼ k`, the
 canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at
 current input `k`. -/
-theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I} {x : O}
+theorem «prop:canonical-contradiction/canonical-run» {sp : Spec I O} {i k : I} {x : O}
     (hik : i ≼ k) (hx : sp.P k x) :
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
@@ -826,6 +841,29 @@ commitment-free: every output event is some `Out_ε(o)`, which may still
 perform output subsumptions, and no commitment event occurs."  Lean: `CoordFree` (every output event is
 `Out_ε(o)`, and there is no commitment event). -/
 abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+  CoordFree es
+
+/-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
+"Relative to canonical runs, coordination-free is equivalent to
+commitment-free."
+
+Lean: `CoordFree es ↔ ¬ Coordinates es`; `Coordinates` means that an output
+event has `γ ≠ ε` or a commitment event occurs. -/
+theorem «cor:canonical-coordination» {sp : Spec I O} (es : List (SEvent sp)) :
+    CoordFree es ↔ ¬ Coordinates es :=
+  coordFree_iff_not es
+
+/-- After Cor. `cor:canonical-coordination`: "Here commitment-free means that
+every output event is some `Out_ε(o)`, which may still perform output
+subsumptions, and no commitment event occurs.  This is the sense of Sections
+functional-calm–complete-calm.  This is a specification-level judgment.  An
+application-specific system is judged against the runs it can perform, and its
+strategies may admit no run that contradicts a particular commitment."
+
+Lean: `CoordFree`; for systems, coordination-freedom is instead
+`System.CoordinationFree`, quantified over the system's produced runs. -/
+abbrev «cor:canonical-coordination/specification-level» {sp : Spec I O}
+    (es : List (SEvent sp)) : Prop :=
   CoordFree es
 
 /-- Def. `def:coordination-free`: coordination-free is the negation of coordinates,

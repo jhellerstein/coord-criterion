@@ -157,18 +157,16 @@ far more broadly: CALM as a general rule that monotone programs need no
 coordination, CAP as a general constraint on distributed systems.} \textcolor{reviewed}{The
 folklore outgrew the proofs.}
 
-Related results reach similar conclusions from different starting points. CRDTs use inflationary updates over join-semilattices for coordination-free
-convergence~\cite{shapiro2011crdt}. HATs identify transactional guarantees
-that remain available under partition~\cite{bailis2013hat}. Invariant
-confluence asks whether independently reached, invariant-preserving database
-states can merge safely~\cite{bailis2014coordination}. Because these results
-speak different formal languages, they do not translate directly. Does CALM
-encompass CAP (Section~\ref{sec:complete-cap})? Are CRDT join laws necessary,
-or merely one sufficient discipline for coordination avoidance
-(Section~\ref{sec:crdt-instance})? Why do some transactional guarantees stay
-available under partition while others do not
-(Section~\ref{sec:hat-instance})? Is invariant confluence a different test
-from CALM's (Section~\ref{sec:iconfluence-instance})?
+\textcolor{reviewed}{The need for a common criterion extends beyond CALM and CAP.} \textcolor{reviewed}{CRDTs use
+inflationary updates over join-semilattices for coordination-free
+convergence~\cite{shapiro2011crdt}; HATs identify transactional guarantees
+available under partition~\cite{bailis2013hat}; and invariant confluence asks
+when independently reached, invariant-preserving database states merge
+safely~\cite{bailis2014coordination}.} \textcolor{reviewed}{Yet these results speak different formal
+languages, leaving unclear whether CALM encompasses CAP, whether CRDT join laws
+are necessary, why only some transactional isolation levels remain available
+during partition, and whether invariant confluence differs from CALM
+(\S\ref{sec:instances}).}
 
 \textcolor{reviewed}{Our answer begins with a simple observation.} \textcolor{reviewed}{In systems, as in life,
 possibilities narrow over time.} \textcolor{reviewed}{Some are out of our hands: the world moves on,
@@ -260,16 +258,10 @@ Gilbert--Lynch theorem follows directly.}
         stages can free downstream stages from issuing \commitments (Section~\ref{sec:composition}).}
 \end{enumerate}
 
-Section~\ref{sec:functional-calm} introduces the framework on an election and
-proves Functional CALM; Section~\ref{sec:complete-calm} generalizes it to
-ambiguous specifications and proves Complete CALM;
-Section~\ref{sec:distributed-execution} gives the distributed reading, defines
-coordination, and proves Complete CAP. Section~\ref{sec:composition} composes
-specifications and characterizes Proper Coordination. Section~\ref{sec:instances} recovers earlier results as consequences of ours
-and compares other approaches; Section~\ref{sec:discussion} puts this paper
-into the broader context of the CALM agenda. The appendices provide proofs
-and further applications; Appendix~\ref{app:notation} collects notation and
-defined terms.
+The paper develops these contributions in order, then relates the criterion to
+earlier results (Section~\ref{sec:instances}) and the broader CALM agenda
+(Section~\ref{sec:discussion}). The appendices provide proofs and further
+applications; Appendix~\ref{app:notation} collects notation and defined terms.
 
 \section{Functional CALM}
 \label{sec:functional-calm}
@@ -1619,8 +1611,9 @@ earlier than the output required.
 \subsection{Coordination}
 \label{sec:coordination}
 
-\textcolor{reviewed}{A \commitment creates a coordination problem only if another run can exercise
-behavior that it removes.}
+\textcolor{reviewed}{Having separated a system's observable behavior from when and how it makes
+\commitments, we now ask which \commitments require coordination.} \textcolor{reviewed}{The idea is
+simple: a \commitment requires coordination if another run can contradict it.} \textcolor{reviewed}{We formalize that notion next.}
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
@@ -1660,24 +1653,43 @@ contradicting a \commitment applied by another.} \textcolor{reviewed}{The defini
 it.} Running such a mechanism need not apply a \commitment. For example, closing the polls after
 every voter has voted removes nothing the specification still permits.
 
-\textcolor{reviewed}{Every \commitment is contradicted by a canonical run.} Choose any row $(k,x)$
-that the \commitment removes. There are two cases. If the \commitment empties
-the fiber at $k$, a canonical run that accepts $k$ contradicts it. Otherwise,
-a canonical run that accepts $k$ and emits $x$ contradicts it. \textcolor{reviewed}{Hence, when
-$\mathcal R$ is the specification's set of canonical runs, every \commitment
-requires coordination.}
+\begin{proposition}[Canonical runs contradict every \commitment]
+\label{prop:canonical-contradiction}
+\textcolor{reviewed}{Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
+contradicted by a canonical run from $\sigma_P(i)$.}
+\end{proposition}
 
-\textcolor{reviewed}{The run applying the \commitment and a canonical run that contradicts it can be
-placed at separate participants in a message-free history, by the construction
-in the proof of Proposition~\ref{prop:distributed-consistency}.} Thus every
-\commitment also requires distributed coordination when $\mathcal R$ is the
-specification's set of canonical runs. This is a specification-level
-judgment: the specification permits a contradicting run at another
-participant. It does not imply that every application-specific system can
-perform that run; a system is judged instead against the runs it can perform. For a specification, coordination-free therefore means \commitment-free: every
-output event is some $\Out{\varepsilon}{o}$, which may still perform output
-subsumptions, and no \commitment event occurs. This is the sense of
+\begin{proof}[Proof sketch]
+\textcolor{reviewed}{Choose a row $(k,x)$ that the \commitment removes.} \textcolor{reviewed}{If the \commitment empties
+the fiber at $k$, the canonical run that accepts $k$ contradicts it.} \textcolor{reviewed}{Otherwise, the canonical run that accepts $k$ and emits $x$ contradicts it.}
+\end{proof}
+
+\textcolor{reviewed}{Thus, relative to the specification's canonical runs, every \commitment
+requires coordination.} \textcolor{reviewed}{The run applying the \commitment and a canonical run
+that contradicts it can also be placed at separate participants in a
+message-free history, by the construction in the proof of
+Proposition~\ref{prop:distributed-consistency}.} \textcolor{reviewed}{Hence every \commitment
+requires distributed coordination as well.}
+
+\begin{corollary}[Canonical coordination]
+\label{cor:canonical-coordination}
+\textcolor{reviewed}{Relative to canonical runs, coordination-free is equivalent to
+\commitment-free.}
+\end{corollary}
+
+\begin{proof}
+\textcolor{reviewed}{By Proposition~\ref{prop:canonical-contradiction}, every \commitment applied by
+the run requires coordination.} \textcolor{reviewed}{A \commitment-free run applies none.}
+\end{proof}
+
+Here \commitment-free means that every output event is some
+$\Out{\varepsilon}{o}$, which may still perform output subsumptions, and no
+\commitment event occurs. This is the sense of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
+
+\textcolor{reviewed}{This is a specification-level judgment.} \textcolor{reviewed}{An application-specific system is
+judged against the runs it can perform, and its strategies may admit no run
+that contradicts a particular \commitment.}
 
 \begin{proposition}[Conflicting events cannot be reconciled]
 \label{thm:commitments-require-coordination}
@@ -1706,10 +1718,9 @@ separate runs.} \textcolor{reviewed}{This requires distributed coordination when
 occur at different participants.}
 
 \paragraph{Locks in a shared-nothing database.}
-\textcolor{reviewed}{Ownership changes which runs can contradict a \commitment.} \textcolor{reviewed}{The distinction
-between coordination and distributed coordination appears in a database
-partitioned by key, in which each key is owned by one participant that manages
-its locks~\cite{stonebraker1986sharednothing}.}
+\textcolor{reviewed}{Ownership changes which runs can contradict a \commitment.} \textcolor{reviewed}{In a database
+partitioned by key, each key is owned by one participant that manages its
+locks~\cite{stonebraker1986sharednothing}.}
 
 \emph{Local coordination.}  Ordering two transactions on one key requires
 coordination: in another run $B$'s request arrives first and the key's owner

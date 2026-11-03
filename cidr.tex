@@ -1187,8 +1187,10 @@ require, whatever mechanism makes them.
 \subsection{Coordination}
 \label{sec:coordination}
 
-A \commitment creates a coordination problem only if another run can exercise
-behavior that it removes.
+Having separated a system's observable behavior from when and how it makes
+\commitments, we now ask which \commitments require coordination.  The idea is
+simple: a \commitment requires coordination if another run can contradict it.
+We formalize that notion next.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
@@ -1222,17 +1224,39 @@ contradicting a \commitment applied by another.  The definitions identify the
 mechanism need not apply a \commitment: closing the polls after every voter has
 voted removes nothing the specification still permits.
 
-Every \commitment is contradicted by a canonical run.  Choose a row $(k,x)$ it
-removes.  If it empties the fiber at $k$, a canonical run that accepts $k$
-contradicts it; otherwise, one that accepts $k$ and emits $x$ does.
+\begin{proposition}[Canonical runs contradict every \commitment]
+\label{prop:canonical-contradiction}
+Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
+contradicted by a canonical run from $\sigma_P(i)$.
+\end{proposition}
 
-The run applying the \commitment and its contradicting canonical run can occupy
-separate participants in a message-free history, by the construction in the proof of
-Proposition~\ref{prop:distributed-consistency}.  Thus, when $\mathcal R$ is the
-specification's canonical runs, every \commitment requires distributed
-coordination.  This does not imply the same of a particular system, which is
-judged against its own runs.  At the specification level, coordination-free
-therefore means \commitment-free.
+\begin{proof}[Proof sketch]
+Choose a row $(k,x)$ that the \commitment removes.  If it empties the fiber at
+$k$, the canonical run that accepts $k$ contradicts it.  Otherwise, the
+canonical run that accepts $k$ and emits $x$ contradicts it.
+\end{proof}
+
+Thus, relative to the specification's canonical runs, every \commitment
+requires coordination.  The run applying the \commitment and a canonical run
+that contradicts it can also occupy separate participants in a message-free
+history, by the construction in the proof of
+Proposition~\ref{prop:distributed-consistency}.  Hence every \commitment
+requires distributed coordination as well.
+
+\begin{corollary}[Canonical coordination]
+\label{cor:canonical-coordination}
+Relative to canonical runs, coordination-free is equivalent to
+\commitment-free.
+\end{corollary}
+
+\begin{proof}
+By Proposition~\ref{prop:canonical-contradiction}, every \commitment applied by
+the run requires coordination.  A \commitment-free run applies none.
+\end{proof}
+
+This is a specification-level judgment.  An application-specific system is
+judged against the runs it can perform, and its strategies may admit no run
+that contradicts a particular \commitment.
 
 \begin{proposition}[Conflicting events cannot be reconciled]
 \label{thm:commitments-require-coordination}
@@ -1260,9 +1284,8 @@ row-removing event and the contradictory emission of $x$ from occurring in
 separate runs.  This requires distributed coordination when those runs can
 occur at different participants.
 
-Ownership changes which runs can contradict a \commitment.  The distinction
-between coordination and distributed coordination appears in a shared-nothing
-database in which each key is owned by one participant that manages its
+Ownership changes which runs can contradict a \commitment.  In a shared-nothing
+database, each key is owned by one participant that manages its
 locks~\cite{stonebraker1986sharednothing}.  \emph{Local
 coordination.}  Ordering two transactions on one key requires coordination, but only runs at
 the key's owner can contradict it, so it does not require distributed

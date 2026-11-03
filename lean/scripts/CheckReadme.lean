@@ -161,8 +161,11 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:coordination-free/local-iff»
 #check @CC.Paper.«def:coordination-free/distributed»
 #check @CC.Paper.«def:coordination-free/distributed-of-free»
-#check @CC.Paper.«sec:coordination/specification-contradicted»
+#check @CC.Paper.«prop:canonical-contradiction»
+#check @CC.Paper.«prop:canonical-contradiction/canonical-run»
 #check @CC.Paper.«def:coordination-free/specification»
+#check @CC.Paper.«cor:canonical-coordination»
+#check @CC.Paper.«cor:canonical-coordination/specification-level»
 #check @CC.Paper.«def:coordination-free/commitment-free-runs»
 #check @CC.Paper.«thm:commitments-require-coordination»
 #check @CC.Paper.«thm:commitments-require-coordination/any-bases»
