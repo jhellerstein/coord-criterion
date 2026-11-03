@@ -172,7 +172,7 @@ theorem «sec:query-instance/deterministic-behaviors» {F N G : Type} (loc : F �
 The opening paragraph ("A CRDT guarantees that replicas receiving the same
 updates converge to equivalent states … But the Strong Eventual Consistency
 property it offers provides no guarantee on what the environment may observe,
-and is subject to Lamport's "anomalous behavior" (§`sec:coordination`).
+and is subject to Lamport's "anomalous behavior" (§`sec:functional-events`).
 Laddad et al. proposed monotonicity as the right test for safe observation
 from CRDT state.") cites rather than proves; its two-phase-set example is
 checked in `«sec:crdt-instance/two-phase»` below. -/

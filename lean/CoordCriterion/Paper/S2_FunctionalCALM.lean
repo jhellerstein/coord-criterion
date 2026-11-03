@@ -522,6 +522,13 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 *consistent* when every finite family of runs is confluent at every common
 expansion of their current inputs."
 
+"Consistency requires confluence at every common expansion, not merely at
+some later one.  The reason is observability: the environment may act on
+conflicting outputs through channels the system does not see, as in Lamport's
+'anomalous behavior,' and a reconciling input may never arrive.  Thus a
+conflict is a consistency failure even if later input could resolve it."  The
+observability claim is the paper's modeling rationale.
+
 Lean: `Spec.Consistent`. -/
 abbrev «def:consistency» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.Consistent

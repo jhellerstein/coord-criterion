@@ -249,13 +249,8 @@ earlier than the output required.
 \subsection{Coordination}
 \label{sec:coordination}
 
-An exclusion is a binding decision that removes behavior the specification
-still permits.  Mutexes, locks, timestamps, and agreement protocols all apply exclusions.  An exclusion requires
-coordination only when another run could contradict it, by accepting an input whose fiber it emptied or emitting an output whose row it removed.
-It requires distributed coordination when that run is at another participant.
-Running such a mechanism need not issue an exclusion: closing the polls after every voter
-has voted still runs the mechanism, but no ballot is left to exclude, so it
-removes nothing the specification still permits and applies no exclusion.
+An exclusion creates a coordination problem only if another run can exercise
+behavior that it removes.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
@@ -264,16 +259,8 @@ exclusion if it accepts an input whose fiber the exclusion emptied, or emits
 an output whose row the exclusion removed.
 \end{definition}
 
-Every exclusion is contradicted by a canonical run.  Choose any row $(k,x)$
-that the exclusion removes.  There are two cases.  If the exclusion empties
-the fiber at $k$, a canonical run that accepts $k$ contradicts it.  Otherwise,
-a canonical run that accepts $k$ and emits $x$ contradicts it.  Hence every
-exclusion requires coordination among canonical runs.  This need not hold for
-an application-specific system: although its exclusion basis permits the
-exclusion, its strategies may permit no run that emits the removed output.
-
-We therefore judge coordination against a specified set of runs $\mathcal R$.
-For a specification, $\mathcal R$ is its set of canonical runs.  For a system,
+We judge coordination against a specified set of runs $\mathcal R$.  For a
+specification, $\mathcal R$ is its set of canonical runs.  For a system,
 $\mathcal R$ is the set of runs it can perform under any inputs the environment
 may supply.
 
@@ -297,25 +284,31 @@ A run or history is \emph{coordination-free} relative to $\mathcal R$ when it
 applies no exclusion that requires coordination relative to $\mathcal R$.
 \end{definition}
 
-\emph{Coordination} is any operational mechanism, such as agreement, locking,
-ownership, or a single sequencer, that ensures the runs of a system make no
-exclusions that contradict one another.  The definition does not model such
-mechanisms.  It identifies the exclusions that need one; how a system can
-provide it, or why it sometimes cannot, is the subject of the rest of this
-section.
+\emph{Coordination} is an operational mechanism that prevents one run from
+contradicting an exclusion applied by another.  The definitions identify the
+exclusions that need such a mechanism; they do not model how a system provides
+it.  Running such a mechanism need not apply an exclusion.  For example, closing the polls after
+every voter has voted removes nothing the specification still permits.
+
+Every exclusion is contradicted by a canonical run.  Choose any row $(k,x)$
+that the exclusion removes.  There are two cases.  If the exclusion empties
+the fiber at $k$, a canonical run that accepts $k$ contradicts it.  Otherwise,
+a canonical run that accepts $k$ and emits $x$ contradicts it.  Hence, when
+$\mathcal R$ is the specification's set of canonical runs, every exclusion
+requires coordination.
 
 The run applying the exclusion and a canonical run that contradicts it can be
 placed at separate participants in a message-free history, by the construction
 in the proof of Proposition~\ref{prop:distributed-consistency}.  Thus every
-exclusion of a specification requires distributed coordination.  For a
-specification, then, coordination-free means exclusion-free: every output event is some
-$\Out{\varepsilon}{o}$, which may still perform output subsumptions, and no
-exclusion event occurs.  This is the sense of
+exclusion also requires distributed coordination when $\mathcal R$ is the
+specification's set of canonical runs.  This is a specification-level
+judgment: the specification permits a contradicting run at another
+participant.  It does not imply that every application-specific system can
+perform that run; a system is judged instead against the runs it can perform.
+For a specification, coordination-free therefore means exclusion-free: every
+output event is some $\Out{\varepsilon}{o}$, which may still perform output
+subsumptions, and no exclusion event occurs.  This is the sense of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
-
-The next result explains why an exclusion that requires distributed
-coordination calls for agreement: an
-exclusion and an output it rules out, at different participants, leave states that cannot be reconciled at the current input.
 
 \begin{proposition}[Conflicting events cannot be reconciled]
 \label{thm:exclusions-require-coordination}
@@ -331,29 +324,22 @@ the first none does; since specification events never add rows, no row at $i$ ca
 to both.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
-The conflict is confined to the current input.  If $i\InputOrd j$,
-$\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and $\fiber{j}=\{u\}$ with
-$u$ \outrelpart both, the two states can be reconciled once $j$ arrives.  Consistency still
-counts this as a failure, since it asks for confluence at the current input
-too.  The environment may act on what it observes, through channels the system
-does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time}, and the reconciling input need not arrive.  Consistency
-therefore excludes every observable conflict, including a transient one.
+The proposition rules out reconciliation at $i$, not forever.  For example,
+suppose $i\InputOrd j$, $\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and
+$\fiber{j}=\{u\}$ with $u$ \outrelpart both.  The states that emit $o$ and $x$
+cannot be reconciled at $i$, although accepting $j$ reconciles them.  As
+explained after Definition~\ref{def:consistency}, consistency nevertheless
+counts the conflict at $i$ as a failure.
 
-The first event excludes output $x$ at input $i$, and it requires
-distributed coordination exactly when another participant may emit $x$.  The system must
-then exclude one of the two specification events: by a mutex or atomic instruction in shared
-memory, by agreement in a distributed system, or by a rule fixed in advance,
-such as assigning the exclusion to a single participant, so that only that
-participant's runs can contradict it and no runtime agreement is needed.  Excluding an input is similar, but the environment may deliver any input to any
-participant, so such an exclusion avoids requiring distributed coordination only if no
-other participant can receive that input, a restriction on the
-environment that our model does not make.
+The proposition has an operational consequence: a system must prevent the
+row-removing event and the contradictory emission of $x$ from occurring in
+separate runs.  This requires distributed coordination when those runs can
+occur at different participants.
 
 \paragraph{Locks in a shared-nothing database.}
-Ownership changes which runs can contradict an exclusion.  The three cases of
-the definitions all arise in a database partitioned by key, in which each key
-is owned by one participant, which manages its
-locks~\cite{stonebraker1986sharednothing}.
+The distinction between coordination and distributed coordination appears in
+a database partitioned by key, in which each key is owned by one participant
+that manages its locks~\cite{stonebraker1986sharednothing}.
 
 \emph{Local coordination.}  Ordering two transactions on one key requires
 coordination: in another run $B$'s request arrives first and the key's owner
@@ -381,17 +367,6 @@ replicated for fault tolerance, as in Paxos Commit~\cite{gray2006consensus}.
 Two-phase commit can still block: if the coordinator fails after the owners
 prepare, they must wait for its decision.  That is a loss of availability,
 not an exclusion that another participant could contradict.
-
-All three exchange messages, and a client cut off from an owner cannot get its
-answer; only the second issues an exclusion that a run at another participant
-could contradict.
-
-Confluence is a safety property, and reaching it is liveness
-(\S\ref{sec:scope}).  Under Lifted
-Monotonicity, participants at a common input $j$ can each emit a
-$u\in\fiber{j}$ that \outrel everything emitted, without exclusion
-(Proposition~\ref{prop:exposure-boundary}); choosing $u$ by a shared
-deterministic rule terminates once outputs stop.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}

@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-636 entries.
+633 entries.
 
 ### §2 Functional CALM
 
@@ -285,6 +285,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:distributed-consistency»` | theorem | **Prop. |
 | `«prop:distributed-consistency/literal-matching»` | theorem | Prop. |
 | `«sec:distributed-consistency/lifted-monotonicity»` | theorem | "By Complete CALM, which reduces to Functional CALM with one output per input, a specification has distributed consistency exactly when it satisfies Lifted M… |
+| `«sec:distributed-consistency/constructive-continuation»` | theorem | "Under Lifted Monotonicity, this confluence has a concrete witness. |
 | `«cor:convergence»` | theorem | **Cor. |
 | `«cor:convergence/relational-fails»` | theorem | After Cor. |
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
@@ -326,24 +327,20 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:coordination-free/local-iff»` | theorem | Def. |
 | `«def:coordination-free/distributed»` | abbrev | Def. |
 | `«def:coordination-free/distributed-of-free»` | theorem | Def. |
-| `«sec:coordination/specification-contradicted»` | theorem | "Every exclusion is contradicted by a canonical run." Lean: |
+| `«sec:coordination/specification-contradicted»` | theorem | "Every exclusion is contradicted by a canonical run. |
 | `«def:coordination-free/specification»` | abbrev | Def. |
 | `«def:coordination-free/exclusion-free-runs»` | theorem | Def. |
 | `«thm:exclusions-require-coordination»` | theorem | **Prop. |
 | `«thm:exclusions-require-coordination/any-bases»` | theorem | Prop. |
 | `«thm:exclusions-require-coordination/reach»` | theorem | Prop. |
 | `«thm:exclusions-require-coordination/any-event»` | theorem | Prop. |
-| `«thm:exclusions-require-coordination/confined-to-current-input»` | theorem | "The conflict is confined to the current input. |
+| `«thm:exclusions-require-coordination/confined-to-current-input»` | theorem | "The proposition rules out reconciliation at `i`, not forever. |
 | `«sec:coordination/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database", *Distributed coordination*: |
 | `«sec:coordination/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
 | `«sec:coordination/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
 | `«sec:coordination/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
 | `«sec:coordination/2pc-timeout-abort-local»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
-| `«sec:coordination/shared-nothing-only-second»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/conflict-is-exclusion»` | theorem | "The first event's exclusion is an exclusion of `x`." Lean: |
-| `«sec:coordination/conflict-is-exclusion-event»` | theorem | "The first event's exclusion is an exclusion of `x`", when the first event is an exclusion event `exclude(γ)`, as the proposition allows ("an output or exclu… |
-| `«sec:coordination/deterministic-reconciliation»` | theorem | "Under Lifted Monotonicity, participants at a common input `j` can each emit a `u ∈ P(j)` that refines everything emitted, without exclusion; choosing `u` by… |
 
 ### §4.5 Complete CAP
 

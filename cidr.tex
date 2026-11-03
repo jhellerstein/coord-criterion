@@ -607,6 +607,12 @@ inputs, each can be continued to a
 common state with current input $j$.  They are then \emph{confluent at} $j$.
 \end{definition}
 
+Consistency requires confluence at every common \indesc, not merely at some
+later one.  The reason is observability: the environment may act on conflicting
+outputs through channels the system does not see, as in Lamport's ``anomalous
+behavior''~\cite{lamport1978time}, and a reconciling input may never arrive.
+Thus a conflict is a consistency failure even if later input could resolve it.
+
 Confluence has a simple test: some row at the common \indesc must survive
 in every run.
 
@@ -1067,7 +1073,16 @@ of runs can be placed at separate participants that exchange no messages.  \full
 \end{proof}
 
 By Complete CALM, then, a specification has distributed consistency exactly
-when it satisfies Lifted Monotonicity.  For functional specifications,
+when it satisfies Lifted Monotonicity.  Under Lifted Monotonicity, this
+confluence has a concrete witness.  For participant runs with common \indesc $j$,
+the survivor test supplies a $u\in\fiber{j}$ that survives in every endpoint;
+by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted.  At
+each participant, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ reaches
+the same state without exclusion (Proposition~\ref{prop:exposure-boundary}).  This is an existence witness in the
+transition system; choosing $u$, communicating it, and scheduling the
+transitions belong to the operational model (\S\ref{sec:scope}).
+
+For functional specifications,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
 arrival order, or the outputs they emitted.  This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
@@ -1169,10 +1184,8 @@ require, whatever mechanism makes them.
 \subsection{Coordination}
 \label{sec:coordination}
 
-Mutexes, locks, timestamps, and agreement protocols can apply exclusions, but
-running such a mechanism need not.  Closing the polls after every voter has
-voted, for example, removes nothing the specification still permits and
-applies no exclusion.
+An exclusion creates a coordination problem only if another run can exercise
+behavior that it removes.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
@@ -1181,18 +1194,9 @@ exclusion if it accepts an input whose fiber the exclusion emptied, or emits
 an output whose row the exclusion removed.
 \end{definition}
 
-Every exclusion is contradicted by a canonical run.  Choose any row $(k,x)$
-that the exclusion removes.  There are two cases.  If the exclusion empties
-the fiber at $k$, a canonical run that accepts $k$ contradicts it.  Otherwise,
-a canonical run that accepts $k$ and emits $x$ contradicts it.  Hence every
-exclusion requires coordination among canonical runs.  This need not hold for
-an application-specific system: although its exclusion basis permits the
-exclusion, its strategies may permit no run that emits the removed output.
-
-We therefore judge coordination against a specified set of runs $\mathcal R$.
-For a specification, $\mathcal R$ is its set of canonical runs.  For a system,
-$\mathcal R$ is the set of runs it can perform under any inputs the environment
-may supply.
+We judge coordination against a specified set of runs $\mathcal R$: the
+canonical runs of a specification, or the runs a system can perform under any
+environment inputs.
 
 \begin{definition}[Coordination-requiring exclusion, distributed coordination]
 \label{def:coordination}
@@ -1209,12 +1213,23 @@ A run or history is \emph{coordination-free} relative to $\mathcal R$ when it
 applies no exclusion that requires coordination relative to $\mathcal R$.
 \end{definition}
 
-\emph{Coordination} is any operational mechanism, such as agreement, locking,
-ownership, or a single sequencer, that ensures the runs of a system make no
-exclusions that contradict one another.  The definition does not model such
-mechanisms.  It identifies the exclusions that need one; how a system can
-provide it, or why it sometimes cannot, is the subject of the rest of this
-section.
+\emph{Coordination} is an operational mechanism that prevents one run from
+contradicting an exclusion applied by another.  The definitions identify the
+exclusions that need such a mechanism, not how a system provides it.  A
+mechanism need not apply an exclusion: closing the polls after every voter has
+voted removes nothing the specification still permits.
+
+Every exclusion is contradicted by a canonical run.  Choose a row $(k,x)$ it
+removes.  If it empties the fiber at $k$, a canonical run that accepts $k$
+contradicts it; otherwise, one that accepts $k$ and emits $x$ does.
+
+The run applying the exclusion and its contradicting canonical run can occupy
+separate participants in a message-free history, by the construction in the proof of
+Proposition~\ref{prop:distributed-consistency}.  Thus, when $\mathcal R$ is the
+specification's canonical runs, every exclusion requires distributed
+coordination.  This does not imply the same of a particular system, which is
+judged against its own runs.  At the specification level, coordination-free
+therefore means exclusion-free.
 
 \begin{proposition}[Conflicting events cannot be reconciled]
 \label{thm:exclusions-require-coordination}
@@ -1230,19 +1245,22 @@ the first none does; since events never add rows, no row at $i$ can be common
 to both.  \fullproof
 \end{proof}
 
-The conflict may be transient: an input $j$ \inrelpart $i$ might reconcile the
-two outputs.  Consistency still counts it as a failure.  The environment may act
-on inconsistencies it observes, through channels the system does
-not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time}, and the
-reconciling input need not arrive.  The system must exclude one of the
-two events: by a mutex or atomic instruction in shared memory,
-or by agreement in a distributed system.
+The proposition rules out reconciliation at $i$, not forever.  For example,
+suppose $i\InputOrd j$, $\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and
+$\fiber{j}=\{u\}$ with $u$ \outrelpart both.  The states that emit $o$ and $x$
+cannot be reconciled at $i$, although accepting $j$ reconciles them.  As
+explained after Definition~\ref{def:consistency}, consistency nevertheless
+counts the conflict at $i$ as a failure.
 
-Ownership changes which runs can contradict an exclusion.  The three cases of
-the definitions all arise in a shared-nothing database in which each key is
-owned by one participant, which manages its
-locks~\cite{stonebraker1986sharednothing}.  \emph{Local coordination.}
-Ordering two transactions on one key requires coordination, but only runs at
+The proposition has an operational consequence: a system must prevent the
+row-removing event and the contradictory emission of $x$ from occurring in
+separate runs.  This requires distributed coordination when those runs can
+occur at different participants.
+
+The distinction between coordination and distributed coordination appears in
+a shared-nothing database in which each key is owned by one participant that
+manages its locks~\cite{stonebraker1986sharednothing}.  \emph{Local
+coordination.}  Ordering two transactions on one key requires coordination, but only runs at
 the key's owner can contradict it, so it does not require distributed
 coordination.  \emph{Distributed coordination.}  A transaction that spans keys
 needs one order, but each key's owner orders its part, and the owners of two
@@ -1261,9 +1279,6 @@ coordinator runs: local coordination.
 Two-phase commit can still block: if the coordinator fails after the owners
 prepare, they must wait for its decision.  That is a loss of availability,
 not an exclusion that another participant could contradict.
-All three exchange messages; only the second issues a
-exclusion that another participant could contradict.
-
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
 
@@ -1675,7 +1690,10 @@ Complete CALM assesses its consistency directly.
   Our conditions are semantic.  Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
 liveness, and cost belong to the operational model in which a specification
-is realized.
+is realized.  Free termination likewise corresponds to a determined canonical
+state in our model, but Power et al.\ additionally study fairness and eventual
+response, liveness concerns whose semantic generalization remains future
+work~\cite{power2025freetermination}.
 
 % ======================================================================
 \section{Discussion}

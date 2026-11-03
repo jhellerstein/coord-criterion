@@ -211,6 +211,23 @@ theorem «sec:distributed-consistency/lifted-monotonicity» (sp : Spec I O) (D :
     Dist.DistConsistent sp D ↔ sp.LiftedMono :=
   Dist.distConsistent_iff_liftedMono sp D
 
+/-- "Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common expansion `j`, the survivor test supplies a
+`u ∈ P(j)` that survives in every endpoint; by Lemma run-residual, `u` refines
+everything they have emitted.  At each participant, `input(j)` followed by
+`output(u)` reaches the same state without exclusion (Proposition
+`prop:exposure-boundary`).  This is an existence
+witness in the transition system; choosing `u`, communicating it, and
+scheduling the transitions belong to the operational model."
+
+Lean: `Dist.reconcile_cf` supplies `u`, proves that `(j,u)` survives in every
+endpoint, and gives the exclusion-free two-event continuation from each one. -/
+theorem «sec:distributed-consistency/constructive-continuation» {sp : Spec I O}
+    (hLM : sp.LiftedMono) (fam : List (State sp))
+    (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (hj : ∀ σ ∈ fam, σ.cur ≼ j) :
+    ∃ u, ∃ hu : sp.P j u, (∀ σ ∈ fam, σ.R j u) ∧
+      ∀ σ ∈ fam, ExecCF σ [.input j, .output u] (meetState sp j u hu) :=
+  Dist.reconcile_cf hLM fam hrun j hj
+
 /-- **Cor. convergence** (`cor:convergence`).  "In any history of a consistent
 functional specification, every participant whose current input at a
 consistent cut is `j` is in state `σ_P(j)`.  Participants with the same current
@@ -683,14 +700,12 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
-/-- §4.4: "An exclusion requires coordination only when another run could
-contradict it … it requires distributed coordination when that run is at
-another participant.  Running such a mechanism need not issue an exclusion: closing the
-polls after every voter has voted still runs the mechanism, but no ballot is
-left to exclusion, so it removes nothing the specification still permits and
-applies no exclusion."  At the canonical
-state of any full ballot, the poll-closing exclusion `closePolls` is undefined
-(it would remove no row). -/
+/-- §4.4: "An exclusion creates a coordination problem only if another run can
+exercise behavior that it removes."  "Running such a mechanism need not apply
+an exclusion.  For example, closing the polls after every voter has voted
+removes nothing the specification still permits."  At the canonical state of
+any full ballot, the poll-closing exclusion `closePolls` is undefined (it would
+remove no row). -/
 theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
     (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
@@ -712,15 +727,7 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
   CAP.Contradicts emits accepts σ σc
 
 /-- **Def. `def:coordination`** (Coordination-requiring exclusion).
-"Every exclusion is contradicted by a canonical run.  Choose any row `(k,x)`
-that the exclusion removes.  There are two cases.  If the exclusion empties
-the fiber at `k`, a canonical run that accepts `k` contradicts it.  Otherwise,
-a canonical run that accepts `k` and emits `x` contradicts it.  Hence every
-exclusion requires coordination among canonical runs.  This need not hold for
-an application-specific system: although its exclusion basis permits the
-exclusion, its strategies may permit no run that emits the removed output.
-
-We therefore judge coordination against a specified set of runs `𝓡`.  For a
+"We judge coordination against a specified set of runs `𝓡`.  For a
 specification, `𝓡` is its set of canonical runs.  For a system, `𝓡` is the set
 of runs it can perform under any inputs the environment may supply.  An
 exclusion requires coordination relative to `𝓡` when some run in `𝓡`
@@ -794,7 +801,11 @@ theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
     «def:coordination-free/distributed» Sys :=
   CAP.coordinationFree_to_H h
 
-/-- "Every exclusion is contradicted by a canonical run."  Lean: from
+/-- "Every exclusion is contradicted by a canonical run.  Choose any row
+`(k,x)` that the exclusion removes.  There are two cases.  If the exclusion
+empties the fiber at `k`, a canonical run that accepts `k` contradicts it.
+Otherwise, a canonical run that accepts `k` and emits `x` contradicts it."
+Lean: from
 `σ_P(i)` with `i ≼ k`, the
 canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at
 current input `k`. -/
@@ -806,9 +817,13 @@ theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I
 /-- Def. `def:coordination-free`: "The run applying the exclusion and a
 canonical run that contradicts it can be placed at separate participants in a
 message-free history, by the construction in the proof of Proposition
-`prop:distributed-consistency`.  Thus every exclusion of a specification
-requires distributed coordination.  For a specification, then,
-coordination-free means exclusion-free: every output event is some `Out_ε(o)`, which may still
+`prop:distributed-consistency`.  Thus, when `𝓡` is the specification's set of
+canonical runs, every exclusion requires distributed coordination.  This is a
+specification-level judgment: the specification permits a contradicting run
+at another participant.  It does not imply that every application-specific
+system can perform that run; a system is judged instead against the runs it
+can perform.  For a specification, coordination-free therefore means
+exclusion-free: every output event is some `Out_ε(o)`, which may still
 perform output subsumptions, and no exclusion event occurs."  Lean: `CoordFree` (every output event is
 `Out_ε(o)`, and there is no exclusion event). -/
 abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
@@ -887,11 +902,12 @@ theorem «thm:exclusions-require-coordination/any-event» {sp : Spec I O}
   let h := Dist.conflicting_events (B1 := B1) (B2 := B2) h1 hno h2
   ⟨h.1, h.2.1, h.2.2, Dist.conflicting_events_reach h1 hno h2⟩
 
-/-- "The conflict is confined to the current input.  If `i ≺ j`, `P(i) = {o,x}`
-with `o` and `x` incomparable, and `P(j) = {u}` with `u` refining both, the two
-states can be reconciled once `j` arrives.  Consistency still counts this as a failure,
-since it asks for confluence at the current input too."  (The rest of the paragraph, on the
-environment and transient conflicts, is the paper's modeling assumption.)
+/-- "The proposition rules out reconciliation at `i`, not forever.  For
+example, suppose `i ≺ j`, `P(i) = {o,x}` with `o` and `x` incomparable, and
+`P(j) = {u}` with `u` refining both.  The states that emit `o` and `x` cannot
+be reconciled at `i`, although accepting `j` reconciles them.  As explained
+after Definition `def:consistency`, consistency nevertheless counts the
+conflict at `i` as a failure."
 
 Lean: the example of `CALM/TransientConflict.lean`: inputs `i ≺ j`, outputs
 `o`, `x` incomparable below `u`, `P(i) = {o,x}`, `P(j) = {u}`.  From
@@ -911,10 +927,9 @@ theorem «thm:exclusions-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
-/-- Paragraph "Locks in a shared-nothing database": "Ownership changes which
-runs can contradict an exclusion.  The three cases of the definitions all
-arise in a database partitioned by key, in which each key is owned by one
-participant, which manages its locks."
+/-- Paragraph "Locks in a shared-nothing database": "The distinction between
+coordination and distributed coordination appears in a database partitioned
+by key, in which each key is owned by one participant that manages its locks."
 
 *Local coordination.*  "Ordering two transactions on one key requires
 coordination: in another run `B`'s request arrives first and the key's owner
@@ -1051,60 +1066,5 @@ theorem «sec:coordination/2pc-timeout-abort-local» (D : Type) :
   ⟨CAP.Timeout.pollClosingSys1_local D,
    fun Sys hb hs => CAP.Timeout.pollClosing_not_coordinationFreeH Sys hb hs,
    CAP.Timeout.pollClosingSysRepl_not_coordinationFreeH D⟩
-
-/-- Paragraph "Locks in a shared-nothing database": "All three exchange
-messages, and a client cut off from an owner cannot get its answer; only the
-second issues an exclusion that a run at another participant could
-contradict."  Lean, for the second clause: of the three systems, only the
-two-owner system of the distributed case fails to be free of distributed
-coordination (`CoordinationFreeH`).  The first clause (messages, clients cut
-off from owners) is not modeled; see `lean/README.md`. -/
-theorem «sec:coordination/shared-nothing-only-second» (n : Nat) (D : Type) :
-    (CAP.ownerSys D).CoordinationFreeH ∧ ¬ (CAP.twoOwnerSys D).CoordinationFreeH ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).P).CoordinationFreeH :=
-  ⟨CAP.ownerSys_coordinationFreeH D, CAP.twoOwnerSys_not_coordinationFreeH D,
-    (CAP.voteSpec_coordinationFree n D).2⟩
-
-/-- "The first event's exclusion is an exclusion of `x`."
-
-Lean: (a) every exclusion keeps a row at the current input; (b) in the
-setting of the proposition, some exclusion `c` of `γ` removes `(i,x)` while
-keeping a row at `i`, and no kept row at `i` refines `x`. -/
-theorem «sec:coordination/conflict-is-exclusion» {sp : Spec I O} :
-    (∀ (c : Exclusion sp) (σ τ : State sp), c.app σ = some τ → ∃ w, τ.R σ.cur w) ∧
-    (∀ {B : ExclusionBasis sp} {σ σ' : State sp} {γ : List (Exclusion sp)} {o x : O},
-      SysStep B σ (.output γ o) σ' → σ.R σ.cur x → (∀ w, σ'.R σ.cur w → ¬ x ≼ w) →
-      ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
-        ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w) :=
-  ⟨fun c _ _ h => exclusion_preserves_current_fiber c h, fun h1 hx hno => Dist.conflict_removes_output h1 hx hno⟩
-
-/-- "The first event's exclusion is an exclusion of `x`", when the first
-event is an exclusion event `exclude(γ)`, as the proposition allows ("an output
-or exclusion event").
-
-Lean: if `exclude(γ)` leaves no output at `i` refining `x ∈ R(i)`, some
-exclusion `c` of `γ` removes `(i,x)` while keeping a row at `i`, and no kept
-row at `i` refines `x`. -/
-theorem «sec:coordination/conflict-is-exclusion-event» {sp : Spec I O} {B : ExclusionBasis sp}
-    {σ σ' : State sp} {γ : List (Exclusion sp)} {x : O}
-    (h1 : SysStep B σ (.exclude γ) σ') (hx : σ.R σ.cur x)
-    (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
-    ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
-      ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w :=
-  Dist.conflict_is_exclusion_event h1 hx hno
-
-/-- "Under Lifted Monotonicity, participants at a common input `j` can each emit
-a `u ∈ P(j)` that refines everything emitted, without exclusion; choosing `u`
-by a shared deterministic rule terminates once outputs stop."
-
-Lean: under Lifted Monotonicity, runs with common expansion `j` share a row
-`(j,u)` (which, by Lemma run-residual, refines every output emitted on each
-run), and from each final state the exclusion-free events `input(j)`,
-`output(u)` reach the same state. -/
-theorem «sec:coordination/deterministic-reconciliation» {sp : Spec I O} (hLM : sp.LiftedMono)
-    (fam : List (State sp)) (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (hj : ∀ σ ∈ fam, σ.cur ≼ j) :
-    ∃ u, ∃ hu : sp.P j u, (∀ σ ∈ fam, σ.R j u) ∧
-      ∀ σ ∈ fam, ExecCF σ [.input j, .output u] (meetState sp j u hu) :=
-  Dist.reconcile_cf hLM fam hrun j hj
 
 end CC.Paper
