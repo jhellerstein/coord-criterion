@@ -251,7 +251,7 @@ earlier than the output required.
 
 An exclusion is a binding decision that removes behavior the specification
 still permits.  Mutexes, locks, timestamps, and agreement protocols all apply exclusions.  An exclusion requires
-coordination only when another run could contradict it, by accepting an input it excluded or emitting an output it excluded at that input.
+coordination only when another run could contradict it, by accepting an input whose fiber it emptied or emitting an output whose row it removed.
 It requires distributed coordination when that run is at another participant.
 Running such a mechanism need not issue an exclusion: closing the polls after every voter
 has voted still runs the mechanism, but no ballot is left to exclude, so it
@@ -260,24 +260,35 @@ removes nothing the specification still permits and applies no exclusion.
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
 Let a specification event of a run apply an exclusion.  A run \emph{contradicts} the
-exclusion if it accepts an input the exclusion excluded, or emits an output the
-exclusion excluded at the same input.
+exclusion if it accepts an input whose fiber the exclusion emptied, or emits
+an output whose row the exclusion removed.
 \end{definition}
+
+Every exclusion is contradicted by a canonical run.  Choose any row $(k,x)$
+that the exclusion removes.  There are two cases.  If the exclusion empties
+the fiber at $k$, a canonical run that accepts $k$ contradicts it.  Otherwise,
+a canonical run that accepts $k$ and emits $x$ contradicts it.  Hence every
+exclusion requires coordination among canonical runs.  This need not hold for
+an application-specific system: although its exclusion basis permits the
+exclusion, its strategies may permit no run that emits the removed output.
+
+We therefore judge coordination against a specified set of runs $\mathcal R$.
+For a specification, $\mathcal R$ is its set of canonical runs.  For a system,
+$\mathcal R$ is the set of runs it can perform under any inputs the environment
+may supply.
 
 \begin{definition}[Coordination-requiring exclusion]
 \label{def:coordination}
-Let $\mathcal R$ be a set of runs: for a specification, its canonical runs;
-for a system, the runs it can perform under any inputs the environment may
-supply.  An exclusion \emph{requires coordination} relative to $\mathcal R$
-when some run in $\mathcal R$ contradicts it
-(Definition~\ref{def:contradicts}).
+An exclusion \emph{requires coordination} relative to $\mathcal R$ when some
+run in $\mathcal R$ contradicts it (Definition~\ref{def:contradicts}).
 \end{definition}
 
 \begin{definition}[Distributed coordination]
 \label{def:distributed-coordination}
-An exclusion \emph{requires distributed coordination} relative to $\mathcal R$
-when the run that contradicts it is at another participant of the same
-history.
+Suppose participant $p$ applies an exclusion in a history.  The exclusion
+\emph{requires distributed coordination} relative to $\mathcal R$ when some
+run in $\mathcal R$ at another participant $q\ne p$ of that history
+contradicts it.
 \end{definition}
 
 \begin{definition}[Coordination-free]
@@ -293,25 +304,14 @@ mechanisms.  It identifies the exclusions that need one; how a system can
 provide it, or why it sometimes cannot, is the subject of the rest of this
 section.
 
-Whether an exclusion requires coordination depends on the set of runs: those
-of a specification, or those of a system implementing it.  For a
-specification, every exclusion requires coordination: some canonical run
-accepts each input that an exclusion rules out and emits each permitted
-output.  Since any family of canonical runs forms a message-free history
-(Proposition~\ref{prop:distributed-consistency}), that run may be at another
-participant, so the coordination it requires is also distributed.  For a specification,
-then, coordination-free means exclusion-free: every output event is some
+The run applying the exclusion and a canonical run that contradicts it can be
+placed at separate participants in a message-free history, by the construction
+in the proof of Proposition~\ref{prop:distributed-consistency}.  Thus every
+exclusion of a specification requires distributed coordination.  For a
+specification, then, coordination-free means exclusion-free: every output event is some
 $\Out{\varepsilon}{o}$, which may still perform output subsumptions, and no
 exclusion event occurs.  This is the sense of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
-
-For a system, the answer depends on which runs it can perform and on what the exclusion removes.  The environment may supply any input to any participant,
-so an exclusion that excludes an input requires distributed coordination whenever another participant may receive that input, whether or not one does in the run at hand.  Closing the
-polls before every voter has voted excludes the remaining ballot inputs, so it requires coordination, and distributed
-coordination when another polling station may accept a late ballot.  Outputs, by contrast, come only from the system's strategies, so an exclusion that excludes an output at an input
-requires coordination only when the system can perform a run that emits that
-output, and distributed coordination when such a run is at another participant.  Receives are also outside the strategy: a
-participant receives whatever matching send another participant made.
 
 The next result explains why an exclusion that requires distributed
 coordination calls for agreement: an

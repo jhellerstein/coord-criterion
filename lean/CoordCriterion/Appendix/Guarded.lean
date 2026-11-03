@@ -2242,7 +2242,7 @@ theorem smr_proper {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt
 first. -/
 def bFirst {Cmd : Type} (b : Cmd) (k : Pfx Cmd) : Prop := k.l.head? = some b
 
-/-- The mutex store's basis: its only exclusion excludes the logs in which `b`
+/-- The mutex store's basis: its only exclusion removes the logs in which `b`
 comes first. -/
 noncomputable def mutexB {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : ExclusionBasis (graph f) :=
   fun c => c = excludeInput (bFirst b)

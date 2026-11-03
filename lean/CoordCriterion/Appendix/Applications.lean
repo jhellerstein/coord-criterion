@@ -669,11 +669,11 @@ theorem completeSpec_not_monotone (e : Ev) :
   obtain ⟨u, hu, hall⟩ := hl _ _ (empty_le_single e) [⟨emptyHist⟩] (by simp) (by simp [completeSpec])
   exact hne ((hall _ (by simp)).trans hu)
 
-/-- **Some output can be exposed only after an exclusion that excludes an
-input** (Prop. `prop:functional-exposure-boundary`): there is a state
+/-- **Some output can be exposed only after an exclusion that empties an
+input's fiber** (Prop. `prop:functional-exposure-boundary`): there is a state
 reachable without exclusion and an output there whose `Excluded` class is
-nonempty, so every legal output event emitting it applies an exclusion, and
-every such exclusion excludes each input where it removes rows. -/
+nonempty, so every legal output event emitting it applies an exclusion; at
+each input it changes, the exclusion empties the fiber. -/
 theorem completeSpec_exclusion_needed (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
       (∃ k x, Excluded τ o k x) ∧

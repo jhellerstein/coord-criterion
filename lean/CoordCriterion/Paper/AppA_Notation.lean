@@ -366,8 +366,8 @@ exclusion events) agree; the lemma is `CC.canonical_equivalent`. -/
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- *contradicts* — accepts an input the exclusion excludes, or emits an output
-it excludes (Def. `def:contradicts`).  Lean: `CAP.Contradicts emits
+/-- *contradicts* — accepts an input whose fiber an exclusion emptied, or
+emits an output whose row it removed (Def. `def:contradicts`).  Lean: `CAP.Contradicts emits
 accepts σ σc` (some removed row is emitted at its input, or some excluded input is
 accepted). -/
 abbrev «app:notation/contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
@@ -382,8 +382,8 @@ abbrev «app:notation/coordination» {sp : Spec I O} {D : Type} (Sys : CAP.Syste
     (σ σc : State sp) : Prop :=
   CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
 
-/-- *requires distributed coordination* — an exclusion some run at another
-participant contradicts (Def. `def:distributed-coordination`).  Lean: the
+/-- *requires distributed coordination* — an exclusion applied by `p` that
+some run at another participant `q ≠ p` contradicts (Def. `def:distributed-coordination`).  Lean: the
 exclusions of participant `p` of `H` are contradicted by a participant
 `q ≠ p` of `H`. -/
 abbrev «app:notation/distributed-coordination» {sp : Spec I O} {D : Type} {n : Nat}

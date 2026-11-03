@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-638 entries.
+636 entries.
 
 ### §2 Functional CALM
 
@@ -326,10 +326,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:coordination-free/local-iff»` | theorem | Def. |
 | `«def:coordination-free/distributed»` | abbrev | Def. |
 | `«def:coordination-free/distributed-of-free»` | theorem | Def. |
-| `«sec:coordination/specification-contradicted»` | theorem | "Whether an exclusion requires coordination depends on the set of runs: |
+| `«sec:coordination/specification-contradicted»` | theorem | "Every exclusion is contradicted by a canonical run." Lean: |
 | `«def:coordination-free/specification»` | abbrev | Def. |
-| `«sec:coordination/closing-before-voting-excludes»` | theorem | "Closing the polls before every voter has voted excludes the remaining ballots." Lean: |
-| `«sec:coordination/exclusions-by-strategies»` | theorem | "Outputs, by contrast, come only from the system's strategies, so an exclusion requires coordination only when the system can perform a run that emits an out… |
 | `«def:coordination-free/exclusion-free-runs»` | theorem | Def. |
 | `«thm:exclusions-require-coordination»` | theorem | **Prop. |
 | `«thm:exclusions-require-coordination/any-bases»` | theorem | Prop. |
@@ -524,9 +522,9 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose exclusions come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, exclusions and exclusion events erased; every run has a canonical one (Lem. |
-| `«app:notation/contradicts»` | abbrev | *contradicts* — accepts an input the exclusion excludes, or emits an output it excludes (Def. |
+| `«app:notation/contradicts»` | abbrev | *contradicts* — accepts an input whose fiber an exclusion emptied, or emits an output whose row it removed (Def. |
 | `«app:notation/coordination»` | abbrev | *requires coordination* — an exclusion some run contradicts (Def. |
-| `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — an exclusion some run at another participant contradicts (Def. |
+| `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — an exclusion applied by `p` that some run at another participant `q ≠ p` contradicts (Def. |
 | `«app:notation/coordination-free»` | abbrev | *coordination-free* — applies no exclusion that requires coordination (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more blocks, no message crosses blocks (Def. |
 | `«app:notation/block»` | abbrev | *block* — one of the two or more classes into which a partitioned history divides the participants (Def. |

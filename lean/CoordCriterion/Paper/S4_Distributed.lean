@@ -698,8 +698,8 @@ theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
 
 /-- **Def. contradicting run** (`def:contradicts`).  "Let a specification event of a run
 apply an exclusion.  A run contradicts the exclusion if it accepts an input
-the exclusion excludes, or emits an output the exclusion excludes at the
-same input."  The events that apply exclusions are output events `Out_γ(o)`
+whose fiber the exclusion emptied, or emits an output whose row the exclusion
+removed."  The events that apply exclusions are output events `Out_γ(o)`
 and exclusion events `Exclude(γ)`.
 
 Lean (`CC.CAP` model): `CAP.Contradicts emits accepts σ σc`, for exclusions
@@ -711,9 +711,18 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
-/-- **Def. `def:coordination`** (Coordination-requiring exclusion).  "Let
-`𝓡` be a set of runs: for a specification, its canonical runs; for a system,
-the runs it can perform under any inputs the environment may supply.  A
+/-- **Def. `def:coordination`** (Coordination-requiring exclusion).
+"Every exclusion is contradicted by a canonical run.  Choose any row `(k,x)`
+that the exclusion removes.  There are two cases.  If the exclusion empties
+the fiber at `k`, a canonical run that accepts `k` contradicts it.  Otherwise,
+a canonical run that accepts `k` and emits `x` contradicts it.  Hence every
+exclusion requires coordination among canonical runs.  This need not hold for
+an application-specific system: although its exclusion basis permits the
+exclusion, its strategies may permit no run that emits the removed output.
+
+We therefore judge coordination against a specified set of runs `𝓡`.  For a
+specification, `𝓡` is its set of canonical runs.  For a system, `𝓡` is the set
+of runs it can perform under any inputs the environment may supply.  An
 exclusion requires coordination relative to `𝓡` when some run in `𝓡`
 contradicts it (Definition contradicts)."
 
@@ -725,9 +734,10 @@ abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
     (σ σc : State sp) : Prop :=
   CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
 
-/-- **Def. `def:distributed-coordination`** (Distributed coordination).  "A
-exclusion requires distributed coordination relative to `𝓡` when the run
-that contradicts it is at another participant of the same history."
+/-- **Def. `def:distributed-coordination`** (Distributed coordination).
+"Suppose participant `p` applies an exclusion in a history.  The exclusion
+requires distributed coordination relative to `𝓡` when some run in `𝓡` at
+another participant `q ≠ p` of that history contradicts it."
 
 Lean: the exclusions taking `σ` to `σc`, applied by participant `p` of `H`,
 are contradicted by a participant `q ≠ p` of `H` (`OtherEmits`,
@@ -784,11 +794,8 @@ theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
     «def:coordination-free/distributed» Sys :=
   CAP.coordinationFree_to_H h
 
-/-- "Whether an exclusion requires coordination depends on the set of runs:
-those of a specification, or those of a system implementing it.  For a
-specification, every exclusion requires coordination: some canonical run
-accepts each input that an exclusion can exclusion and emits each permitted
-output."  Lean: from `σ_P(i)` with `i ≼ k`, the
+/-- "Every exclusion is contradicted by a canonical run."  Lean: from
+`σ_P(i)` with `i ≼ k`, the
 canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at
 current input `k`. -/
 theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I} {x : O}
@@ -796,38 +803,16 @@ theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
-/-- Def. `def:coordination-free`: "For a specification, then, coordination-free means
-exclusion-free: every output event is some `Out_ε(o)`, which may still
+/-- Def. `def:coordination-free`: "The run applying the exclusion and a
+canonical run that contradicts it can be placed at separate participants in a
+message-free history, by the construction in the proof of Proposition
+`prop:distributed-consistency`.  Thus every exclusion of a specification
+requires distributed coordination.  For a specification, then,
+coordination-free means exclusion-free: every output event is some `Out_ε(o)`, which may still
 perform output subsumptions, and no exclusion event occurs."  Lean: `CoordFree` (every output event is
 `Out_ε(o)`, and there is no exclusion event). -/
 abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   CoordFree es
-
-/-- "Closing the polls before every voter has voted excludes the remaining
-ballots."  Lean: at panel (b) (`ab·`), closing the polls is defined and leaves
-no row at the remaining-ballot input `aba`, which had the row `(aba, a)`. -/
-theorem «sec:coordination/closing-before-voting-excludes» :
-    (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec CALM.bab) =
-      some Figures.Elec.panelD ∧
-    (canon CALM.elec CALM.bab).R CALM.baba (.win .a) ∧
-    ∀ o, ¬ Figures.Elec.panelD.R CALM.baba o := by
-  refine ⟨Figures.Elec.close_at_b,
-    ⟨(by decide : CALM.Res.win .a = CALM.winner CALM.baba), by decide⟩, fun o h => ?_⟩
-  have := (Figures.Elec.panelD_rows _ o).1 h
-  exact absurd this.1 (by decide)
-
-/-- "Outputs, by contrast, come only from the system's strategies, so an exclusion
-requires coordination only when the system can perform a run that emits an
-output the exclusion rules out, and distributed coordination when such a run is
-at another participant."  Lean: `SysEmits` requires an output event in a
-produced history, hence one allowed by the participant's strategy.  The rest
-of the sentence is Def. `def:coordination` for the system's runs
-(`«def:coordination»`, `«def:coordination/distributed»`). -/
-theorem «sec:coordination/exclusions-by-strategies» {sp : Spec I O} {D : Type}
-    (Sys : CAP.System sp D) {k : I} {x : O} (h : CAP.SysEmits Sys k x) :
-    ∃ n init q pre γ, Sys.strat n init q pre (CAP.LEv.out γ x) := by
-  obtain ⟨n, init, H, q, a, b, γ, σ, _, hp, hH, _, _⟩ := h
-  exact ⟨n, init, q, a, γ, ((hp q) a _ b hH).2⟩
 
 /-- Def. `def:coordination-free`: coordination-free is the negation of coordinates,
 and coordination-free runs under any basis are exactly the exclusion-free

@@ -162,8 +162,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:coordination-free/distributed-of-free»
 #check @CC.Paper.«sec:coordination/specification-contradicted»
 #check @CC.Paper.«def:coordination-free/specification»
-#check @CC.Paper.«sec:coordination/closing-before-voting-excludes»
-#check @CC.Paper.«sec:coordination/exclusions-by-strategies»
 #check @CC.Paper.«def:coordination-free/exclusion-free-runs»
 #check @CC.Paper.«thm:exclusions-require-coordination»
 #check @CC.Paper.«thm:exclusions-require-coordination/any-bases»

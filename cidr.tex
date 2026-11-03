@@ -704,7 +704,8 @@ and~\ref{sec:crdt-instance} treat both.
 We now extend CALM theory to allow a fiber to contain several outputs.  The monotonicity property we want to test as input
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
-An exclusion can exclude an input entirely or exclude some outputs at that input.  We now turn to the latter effect.  Section~\ref{sec:ambiguity-story}
+An exclusion can empty an input's fiber or remove some output rows while it
+remains nonempty.  We now turn to the latter effect.  Section~\ref{sec:ambiguity-story}
 introduces the issue by example.  Section~\ref{sec:lifted-monotonicity}
 defines relational specifications and Lifted Monotonicity.  Section~\ref{sec:lifted-output-events} lifts
 output events and classifies what they remove, and
@@ -1168,31 +1169,38 @@ require, whatever mechanism makes them.
 \subsection{Coordination}
 \label{sec:coordination}
 
-An exclusion is a binding decision that removes behavior the specification
-still permits.  Mutexes, locks, timestamps, and agreement protocols all
-apply exclusions.  An exclusion requires coordination only
-when another run could contradict it, by accepting an input that its input
-exclusion ruled out or emitting an output that it ruled out.  It requires
-distributed coordination when that run is at another participant.
-Running such a mechanism need not issue an exclusion: closing the polls after every voter
-has voted still runs the mechanism, but no ballot is left to exclude, so it
-removes nothing the specification still permits and applies no exclusion.
+Mutexes, locks, timestamps, and agreement protocols can apply exclusions, but
+running such a mechanism need not.  Closing the polls after every voter has
+voted, for example, removes nothing the specification still permits and
+applies no exclusion.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
 Let an event of a run apply an exclusion.  A run \emph{contradicts} the
-exclusion if it accepts an input its exclusion emptied, or emits an output the
-exclusion excludes at the same input.
+exclusion if it accepts an input whose fiber the exclusion emptied, or emits
+an output whose row the exclusion removed.
 \end{definition}
+
+Every exclusion is contradicted by a canonical run.  Choose any row $(k,x)$
+that the exclusion removes.  There are two cases.  If the exclusion empties
+the fiber at $k$, a canonical run that accepts $k$ contradicts it.  Otherwise,
+a canonical run that accepts $k$ and emits $x$ contradicts it.  Hence every
+exclusion requires coordination among canonical runs.  This need not hold for
+an application-specific system: although its exclusion basis permits the
+exclusion, its strategies may permit no run that emits the removed output.
+
+We therefore judge coordination against a specified set of runs $\mathcal R$.
+For a specification, $\mathcal R$ is its set of canonical runs.  For a system,
+$\mathcal R$ is the set of runs it can perform under any inputs the environment
+may supply.
 
 \begin{definition}[Coordination-requiring exclusion, distributed coordination]
 \label{def:coordination}
-Let $\mathcal R$ be a set of runs: for a specification, its canonical runs;
-for a system, the runs it can perform under any inputs the environment may
-supply.  An exclusion \emph{requires coordination} relative to $\mathcal R$
-when some run in $\mathcal R$ contradicts it
-(Definition~\ref{def:contradicts}).  It \emph{requires distributed
-coordination} when that run is at another participant of the same history.
+An exclusion \emph{requires coordination} relative to $\mathcal R$ when some
+run in $\mathcal R$ contradicts it
+(Definition~\ref{def:contradicts}).  If participant $p$ applies the exclusion
+in a history, it \emph{requires distributed coordination} when a run at
+another participant $q\ne p$ of that history contradicts it.
 \end{definition}
 
 \begin{definition}[Coordination-free]
@@ -1207,20 +1215,6 @@ exclusions that contradict one another.  The definition does not model such
 mechanisms.  It identifies the exclusions that need one; how a system can
 provide it, or why it sometimes cannot, is the subject of the rest of this
 section.
-
-Whether an exclusion requires coordination depends on the set of runs: those
-of a specification, or those of a system implementing it.  For a
-specification, every exclusion requires coordination: some canonical run
-accepts each input that an exclusion rules out and emits each permitted output,
-and that run may be at another participant.  For a specification, then,
-coordination-free means exclusion-free.  For a system, the answer depends on
-which runs it can perform, and here exclusions differ.  The environment
-may supply any input to any participant, so an exclusion requires distributed
-coordination whenever another participant may receive the excluded input.
-Outputs come only from strategies, and receives from other sends, so an exclusion
-requires coordination only when some run of the system emits an output the
-exclusion rules out, and distributed coordination when such a run is at another
-participant.
 
 \begin{proposition}[Conflicting events cannot be reconciled]
 \label{thm:exclusions-require-coordination}
@@ -1779,7 +1773,8 @@ sets to arbitrary input and output orders.
 Complete CALM extends the answer to specifications that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with Directed Outputs.  When it fails, some reachable output
-requires an exclusion.  At each input it changes, an exclusion either excludes the input or excludes particular outputs.  Because exclusions are explicit, the model
+requires an exclusion.  At each input it changes, an exclusion either empties
+the fiber or removes particular output rows.  Because exclusions are explicit, the model
 can also check where a composition coordinates
 (\S\ref{sec:composition}).  A totally ordered log and a
 key-value store are both non-monotone at their ordinary specifications, yet
