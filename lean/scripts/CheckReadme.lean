@@ -164,9 +164,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:canonical-contradiction»
 #check @CC.Paper.«prop:canonical-contradiction/canonical-run»
 #check @CC.Paper.«cor:canonical-coordination»
-#check @CC.Paper.«cor:canonical-coordination/specification-level»
 #check @CC.Paper.«def:coordination-free/commitment-free-runs»
-#check @CC.Paper.«thm:commitments-require-coordination»
 #check @CC.Paper.«thm:commitments-require-coordination/any-bases»
 #check @CC.Paper.«thm:commitments-require-coordination/reach»
 #check @CC.Paper.«thm:commitments-require-coordination/any-event»

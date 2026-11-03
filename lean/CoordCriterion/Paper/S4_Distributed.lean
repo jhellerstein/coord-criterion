@@ -702,14 +702,13 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 /-- §4.4: "Having separated a system's observable behavior from when and
 how it makes commitments, we now ask which commitments require coordination.
 The idea is simple: a commitment requires coordination if another run can
-contradict it."  "Up to this point we have defined the circumstances where
-coordination is required, but not the mechanisms used to achieve it.  Mutexes,
-locks, atomic instructions, agreement protocols, ownership, and sequencers are
-familiar examples.  However, note that running such a mechanism may not apply
-a commitment.  For example, closing the polls after every voter has voted
-removes nothing the specification still permits."  At the canonical state of
-any full ballot, the poll-closing commitment `closePolls` is undefined (it would
-remove no row). -/
+contradict it."  "The proposition says what a coordination mechanism must
+accomplish: prevent a commitment and a run that contradicts it from occurring
+independently.  The definitions diagnose the requirement, not its
+implementation.  Mutexes, locks, atomic instructions, agreement protocols,
+ownership, and sequencers are familiar implementations.  Using one need not
+apply a commitment."  At the canonical state of any full ballot, the
+poll-closing commitment `closePolls` is undefined (it would remove no row). -/
 theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
     (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
@@ -834,31 +833,19 @@ theorem «prop:canonical-contradiction/canonical-run» {sp : Spec I O} {i k : I}
   CAP.canonical_run_contradicts hik hx
 
   /-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
-  "Thus, relative to `𝓡_P^⊤`, every commitment requires coordination, and
-  coordination-free is equivalent to commitment-free.  The run applying the
-  commitment and a canonical run that contradicts it can also be placed at
-  separate participants in a message-free history, by the construction in the
-  proof of Proposition `prop:distributed-consistency`.  Hence every commitment
-  requires distributed coordination as well."
+  "Thus, relative to `𝓡_P^⊤`, every commitment requires coordination, so a run
+  is coordination-free exactly when it makes no commitments; output
+  subsumption remains permitted.  The run applying the commitment and a
+  canonical run that contradicts it can also be placed at separate participants
+  in a message-free history, by the construction in the proof of Proposition
+  `prop:distributed-consistency`.  Hence every commitment requires distributed
+  coordination as well."
 
 Lean: `CoordFree es ↔ ¬ Coordinates es`; `Coordinates` means that an output
 event has `γ ≠ ε` or a commitment event occurs. -/
 theorem «cor:canonical-coordination» {sp : Spec I O} (es : List (SEvent sp)) :
     CoordFree es ↔ ¬ Coordinates es :=
   coordFree_iff_not es
-
-/-- After Cor. `cor:canonical-coordination`: "Here commitment-free means that
-every output event is some `Out_ε(o)`, which may still perform output
-subsumptions, and no commitment event occurs.  This is the sense of Sections
-functional-calm–complete-calm.  This is a specification-level judgment.  An
-application-specific system is judged against the runs it can perform, and its
-strategies may admit no run that contradicts a particular commitment."
-
-Lean: `CoordFree`; for systems, coordination-freedom is instead
-`System.CoordinationFree`, quantified over the system's produced runs. -/
-abbrev «cor:canonical-coordination/specification-level» {sp : Spec I O}
-    (es : List (SEvent sp)) : Prop :=
-  CoordFree es
 
 /-- Def. `def:coordination-free`: coordination-free is the negation of coordinates,
 and coordination-free runs under any basis are exactly the commitment-free
@@ -875,26 +862,31 @@ theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
   ⟨coordFree_iff_not, fun _ _ _ _ h hf => coordFree_execCF h hf,
     fun B _ _ _ h => execCF_coordFree B h⟩
 
-/-- **Prop. conflicting events cannot be reconciled**
-(`thm:commitments-require-coordination`).  "From a state `(i,R)`, let one
-run perform an output or commitment event after which no output at `i` refines `x`,
-and let another run perform an output event that emits `x`.  The two resulting
-states cannot be brought to a common state with current input `i`."
+  /-- **Prop. contradicting runs cannot reconcile at the conflict input**
+  (`thm:commitments-require-coordination`).  "Consider a run that applies a
+  commitment and another run that contradicts it at input `k`.  Their resulting
+  states have no common continuation to a state `(k,R')`."
 
-Lean: this entry takes the first event to be an output event; for a
-commitment event (indeed any event) see `…/any-event`.  `x ∈ R(i)` follows from the legality of `Out_{γ'}(x)`.  "Brought to a
-common state" is: by executions under a basis `B''` (any; for different bases
-see `…/any-bases`, for the transition system of §§2–3 see `…/reach`). -/
-theorem «thm:commitments-require-coordination» {sp : Spec I O} {B B' B'' : CommitmentBasis sp}
-    {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
-    (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
-    γ ≠ [] ∧
-    ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
-        (∃ es, SysExec B'' σ' es ρ) ∧ (∃ es, SysExec B'' t es ρ) :=
-  conflicting_outputs h1 hno h2
+  Lean: `CommitmentContradictsAt σ σc τ k` covers both proof cases.  Its first
+  clause is an emitted output `x` whose row the commitment removed; its second
+  is an accepted input whose fiber the commitment emptied.  The conclusion
+  permits arbitrary, independent bases for the two continuations. -/
+  theorem «thm:commitments-require-coordination» {sp : Spec I O}
+      {B1 B2 : CommitmentBasis sp} {c : Commitment sp} {σ σc τ : State sp} {k : I}
+      (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
+      ¬ ∃ ρ : State sp, ρ.cur = k ∧
+          (∃ es, SysExec B1 σc es ρ) ∧ (∃ es, SysExec B2 τ es ρ) :=
+    Dist.commitment_contradiction_sysExec happ hcontra
 
-/-- Prop. `thm:commitments-require-coordination`, with the two continuations
+  /-- Prop. `thm:commitments-require-coordination`, with continuations in the
+  transition system of Sections 2--3. -/
+  theorem «thm:commitments-require-coordination/reach-general» {sp : Spec I O}
+      {c : Commitment sp} {σ σc τ : State sp} {k : I}
+      (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
+      ¬ ∃ ρ : State sp, ρ.cur = k ∧ Reach σc ρ ∧ Reach τ ρ :=
+    Dist.commitment_contradiction_reach happ hcontra
+
+  /-- Supporting output-only form of Prop. `thm:commitments-require-coordination`.
 under different bases. -/
 theorem «thm:commitments-require-coordination/any-bases» {sp : Spec I O}
     {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
@@ -958,15 +950,14 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
-/-- Paragraph "Locks in a shared-nothing database": "Ownership changes which
-runs can contradict a commitment.  The distinction between coordination and
-distributed coordination appears in a database partitioned by key, in which
-each key is owned by one participant that manages its locks."
+/-- Paragraph "Locks in a shared-nothing database": "Consider a database
+partitioned by key, with each key owned and locked by one participant.
+Ownership can keep coordination local."
 
 *Local coordination.*  "Ordering two transactions on one key requires
-coordination: in another run `B`'s request arrives first and the key's owner
-orders `B` before `A`.  But only runs at the key's owner can contradict it, so
-it does not require distributed coordination."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
+coordination because, in another run, `B`'s request may arrive first and the
+owner may order `B` before `A`.  Only the key's owner can produce that
+contradicting run, so no distributed coordination is required."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
 `ba` incomparable); emitting `ab` is a commitment (not a legal output); in the
 system where only participant 0 may emit an order, another run (the owner
 choosing `ba`) contradicts it, but no other participant of a history does. -/
@@ -976,11 +967,11 @@ theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
   ⟨CAP.ordSpec_ab_not_exposable, CAP.ownerSys_not_coordinationFree D,
     CAP.ownerSys_coordinationFreeH D⟩
 
-/-- Paragraph "Locks in a shared-nothing database", *Distributed
-coordination*: "A transaction that spans keys needs one order, but each key's
-owner orders its part, and the owners of two keys can order the same pair of
-transactions oppositely.  Each ordering then requires distributed
-coordination, and the owners must agree."  Lean: when two participants may
+/-- Paragraph "Locks in a shared-nothing database": *Distributed
+coordination*: "A transaction spanning two keys is different.  Each owner
+orders its own part, and the two owners can order the same pair of transactions
+oppositely.  Each ordering then requires distributed coordination: the owners
+must agree on one order."  Lean: when two participants may
 each emit an order, some history has one emit `ab` (removing `ba`) and the
 other emit `ba`, so the system is not free of distributed coordination.
 "The owners must agree" is the paper's reading of that (some mechanism must
@@ -990,12 +981,10 @@ theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
     ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=
   CAP.twoOwnerSys_not_coordinationFreeH D
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*:
-"Two-phase commit adds no coordination beyond the owners' own.  Each owner's
-prepare is its own commitment, local coordination as in the first case.  The
-unanimous vote that combines them, however, requires no coordination at all:
-the coordinator's unanimity decision over a fixed set of participants is
-monotone, so it issues no commitment that requires coordination."
+/-- Paragraph "Locks in a shared-nothing database": "Two-phase commit adds
+no further coordination requirement.  Each owner's prepare reflects its own
+commitment, with the local coordination just described.  The coordinator then
+makes the monotone decision whether all owners prepared."
 
 Lean, for the decision (`CAP/TwoPhaseCommit.lean`): inputs record the votes
 of `n` fixed participants (`none` until received; a received vote does not
@@ -1016,9 +1005,9 @@ theorem «sec:coordination/two-phase-commit» (n : Nat) (D : Type) :
   ⟨CAP.voteSpec_functional n, CAP.voteSpec_monotone n, CAP.voteSpec_consistent n,
    CAP.voteSpec_exposable n, CAP.voteSpec_coordinationFree n D⟩
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "The
-coordinator does not make the owners agree; it detects whether their local
-commitments already agree, and aborts when they do not."  Lean, for the
+/-- Paragraph "Locks in a shared-nothing database": "The coordinator detects
+whether the owners' commitments agree and aborts when they do not.  It does not
+make the owners agree."  Lean, for the
 decision of `CAP/TwoPhaseCommit.lean` (each vote reports whether the owner's
 prepare succeeded): the decision is `abort` exactly when some received vote is
 no and `commit` exactly when every vote is yes, so once every vote is in it
@@ -1032,10 +1021,9 @@ theorem «sec:coordination/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n
     ((∀ p, v p ≠ none) → (CAP.decide2PC v = .abort ↔ ¬ ∀ p, v p = some true)) :=
   CAP.decide2PC_detects v
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "A
-coordinator that aborts on timeout, before the last vote arrives, does issue a
-commitment: like closing the polls, it excludes every input that adds a missing
-vote, yes or no."  (CIDR version: "A coordinator that aborts on timeout,
+/-- Paragraph "Locks in a shared-nothing database": "If the coordinator
+instead aborts on timeout before the last vote arrives, that abort applies
+another commitment, like closing the polls."  (CIDR version: "A coordinator that aborts on timeout,
 before the last vote arrives, issues a commitment, like closing the polls".)
 
 Lean (`CAP/TimeoutAbort.lean`), on the decision `voteSpec` of
@@ -1058,12 +1046,9 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
       (k = v ∧ u = CAP.decide2PC v)) :=
   CAP.Timeout.timeout_closes_expansions v p hp
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "The
-decision is its own specification, run by the coordinator alone, so this is
-local coordination, as in the first case; it becomes distributed coordination
-when the decision is replicated for fault tolerance, as in Paxos Commit."
-(CIDR version: "but the decision is a specification only the coordinator
-runs: local coordination.")
+/-- Paragraph "Locks in a shared-nothing database": "The timeout decision
+requires only local coordination when one participant makes it, but distributed
+coordination when replicated for fault tolerance, as in Paxos Commit."
 
 Lean (`CAP/TimeoutAbort.lean`), for the commitment of
 `«sec:coordination/2pc-timeout-abort»` (closing the polls on `voteSpec` at

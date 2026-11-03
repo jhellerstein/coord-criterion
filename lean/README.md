@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-635 entries.
+633 entries.
 
 ### §2 Functional CALM
 
@@ -330,19 +330,17 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:canonical-contradiction»` | theorem | **Proposition `prop:canonical-contradiction`** (Canonical runs contradict every commitment). |
 | `«prop:canonical-contradiction/canonical-run»` | theorem | Supporting form: |
 | `«cor:canonical-coordination»` | theorem | **Corollary `cor:canonical-coordination`** (Canonical coordination). |
-| `«cor:canonical-coordination/specification-level»` | abbrev | After Cor. |
 | `«def:coordination-free/commitment-free-runs»` | theorem | Def. |
-| `«thm:commitments-require-coordination»` | theorem | **Prop. |
-| `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
+| `«thm:commitments-require-coordination/any-bases»` | theorem | Supporting output-only form of Prop. |
 | `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/any-event»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/confined-to-current-input»` | theorem | "The proposition rules out reconciliation at `i`, not forever. |
 | `«sec:coordination/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database", *Distributed coordination*: |
-| `«sec:coordination/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
-| `«sec:coordination/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
-| `«sec:coordination/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
-| `«sec:coordination/2pc-timeout-abort-local»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
+| `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:coordination/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:coordination/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:coordination/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:coordination/2pc-timeout-abort-local»` | theorem | Paragraph "Locks in a shared-nothing database": |
 
 ### §4.5 Complete CAP
 

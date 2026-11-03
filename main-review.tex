@@ -1618,8 +1618,8 @@ simple: a \commitment requires coordination if another run can contradict it.}
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
 \textcolor{reviewed}{Let a specification event of a run $r$ apply a \commitment.} \textcolor{reviewed}{A run $r'$ \emph{contradicts} that
-\commitment if it accepts an input whose fiber the \commitment emptied, or emits
-an output whose row the \commitment removed.}
+\commitment at input $k$ if it accepts $k$ after the \commitment emptied its
+fiber, or emits at $k$ an output whose row the \commitment removed.}
 \end{definition}
 
 \textcolor{reviewed}{We distinguish the behavior permitted by a specification from the behavior
@@ -1651,13 +1651,6 @@ contradicts it.
 applies no \commitment that requires coordination relative to $\mathcal R$.}
 \end{definition}
 
-\textcolor{reviewed}{Up to this point we have defined the circumstances where coordination is
-required, but not the mechanisms used to achieve it.} \textcolor{reviewed}{Mutexes, locks, atomic
-instructions, agreement protocols, ownership, and sequencers are familiar
-examples.} \textcolor{reviewed}{However, note that running such a mechanism may not apply a
-\commitment.} \textcolor{reviewed}{For example, closing the polls after
-every voter has voted removes nothing the specification still permits.}
-
 \begin{proposition}[Canonical runs contradict every \commitment]
 \label{prop:canonical-contradiction}
 \textcolor{reviewed}{Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
@@ -1670,76 +1663,69 @@ the fiber at $k$, the canonical run that accepts $k$ contradicts it.} \textcolor
 \end{proof}
 
 \textcolor{reviewed}{Thus, relative to $\mathcal R_P^\top$, every \commitment requires coordination,
-and coordination-free is equivalent to \commitment-free.} \textcolor{reviewed}{The run applying the
-\commitment and a canonical run that contradicts it can also be placed at
-separate participants in a message-free history, by the construction in the
-proof of Proposition~\ref{prop:distributed-consistency}.} \textcolor{reviewed}{Hence every
-\commitment requires distributed coordination as well.}
+so a run is coordination-free exactly when it makes no \commitments; output
+subsumption remains permitted.} \textcolor{reviewed}{The run applying the \commitment and a canonical
+run that contradicts it can also be placed at separate participants in a
+message-free history, by the construction in the proof of
+Proposition~\ref{prop:distributed-consistency}.} \textcolor{reviewed}{Hence every \commitment
+requires distributed coordination as well.}
 
-Here \commitment-free means that every output event is some
-$\Out{\varepsilon}{o}$, which may still perform output subsumptions, and no
-\commitment event occurs. This is the sense of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
-
-\textcolor{reviewed}{This is a specification-level judgment.} \textcolor{reviewed}{A particular system $A$ is judged
-instead relative to $\mathcal R_A$, which may contain no run that contradicts
-a given \commitment.}
-
-\begin{proposition}[Conflicting events cannot be reconciled]
+\begin{proposition}[Contradicting runs cannot reconcile at the conflict input]
 \label{thm:commitments-require-coordination}
-\textcolor{reviewed}{From a state $(i,R)$, let one run perform an output or \commitment event after which no
-output at $i$ \outrel $x$, and let another run perform an output event that
-emits $x$.} \textcolor{reviewed}{The two resulting states cannot be brought to a common state with
-current input $i$.}
+\textcolor{reviewed}{Consider a run that applies a \commitment and another run that contradicts it
+at input $k$.} \textcolor{reviewed}{Their resulting states have no common continuation to a state
+$(k,R')$.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-\textcolor{reviewed}{After the second event every output at $i$ \outrel $x$, and after
-the first none does; since specification events never add rows, no row at $i$ can be common
-to both.} Full proof in Appendix~\ref{app:proofs-sec4}.
+\textcolor{reviewed}{If the contradicting run accepts $k$, the \commitment emptied its fiber; since
+events never add rows, the first run cannot reach a state with current input
+$k$.} \textcolor{reviewed}{Otherwise, the contradicting run emitted some output $x$ at $k$ whose
+row the \commitment removed.} \textcolor{reviewed}{The \commitment leaves no row at $k$ that
+\outrel $x$, whereas every row at $k$ after the emission does, so no row there
+can be common to both runs.} Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
-\textcolor{reviewed}{The proposition rules out reconciliation at $i$, not forever.} \textcolor{reviewed}{For example,
+\textcolor{reviewed}{The proposition rules out reconciliation at the conflict input, not forever.} \textcolor{reviewed}{For example,
 suppose $i\InputOrd j$, $\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and
 $\fiber{j}=\{u\}$ with $u$ \outrelpart both.} \textcolor{reviewed}{The states that emit $o$ and $x$
 cannot be reconciled at $i$, although accepting $j$ reconciles them.} \textcolor{reviewed}{As
 explained after Definition~\ref{def:consistency}, consistency nevertheless
 counts the conflict at $i$ as a failure.}
 
-\textcolor{reviewed}{The proposition has an operational consequence: a system must prevent the
-row-removing event and the contradictory emission of $x$ from occurring in
-separate runs.} \textcolor{reviewed}{This requires distributed coordination when those runs can
-occur at different participants.}
+\textcolor{reviewed}{The proposition says what a coordination mechanism must accomplish: prevent a
+\commitment and a run that contradicts it from occurring independently.} \textcolor{reviewed}{This
+requires distributed coordination when those runs can occur at different
+participants.} \textcolor{reviewed}{The definitions diagnose the requirement, not its
+implementation.} Mutexes, locks, atomic instructions, agreement protocols,
+ownership, and sequencers are familiar implementations. Using one need not
+apply a \commitment: closing the polls after every voter has voted, for example,
+removes nothing the specification still permits.
 
 \paragraph{Locks in a shared-nothing database.}
-\textcolor{reviewed}{Ownership changes which runs can contradict a \commitment.} \textcolor{reviewed}{In a database
-partitioned by key, each key is owned by one participant that manages its
-locks~\cite{stonebraker1986sharednothing}.}
+\textcolor{reviewed}{Consider a database partitioned by key, with each key owned and locked by one
+participant~\cite{stonebraker1986sharednothing}.} \textcolor{reviewed}{Ownership can keep
+coordination local.} Ordering two transactions on one key requires
+coordination because, in another run, $B$'s request may arrive first and the
+owner may order $B$ before $A$. Only the key's owner can produce that
+contradicting run, so no distributed coordination is required.
 
-\emph{Local coordination.}  Ordering two transactions on one key requires
-coordination: in another run $B$'s request arrives first and the key's owner
-orders $B$ before $A$. But only runs at the key's owner can contradict it, so
-it does not require distributed coordination.
+A transaction spanning two keys is different. Each owner orders its own part,
+and the two owners can order the same pair of transactions oppositely. Each
+ordering then requires distributed coordination: the owners must agree on one
+order.
 
-\textcolor{reviewed}{\emph{Distributed coordination.}  A transaction that spans keys needs one
-order, but each key's owner orders its part, and the owners of two keys can
-order the same pair of transactions oppositely.} \textcolor{reviewed}{Each ordering then requires
-distributed coordination, and the owners must agree.}
-
-\textcolor{reviewed}{\emph{No coordination.}  Two-phase commit adds no coordination beyond the
-owners' own.} \textcolor{reviewed}{Each owner's prepare is its own \commitment, local coordination
-as in the first case.} \textcolor{reviewed}{The unanimous vote that combines them, however,
-requires no coordination at all: the coordinator's unanimity decision over a
-fixed set of participants is monotone, so it issues no \commitment that
-requires coordination.} \textcolor{reviewed}{The coordinator does not make the
-owners agree; it detects whether their local \commitments already agree, and
-aborts when they do not.} A coordinator that aborts on timeout, before the last vote arrives, does issue a
-\commitment: like closing the polls, it empties every input that adds a missing
-vote, yes or no. The decision is its own specification, run by the coordinator
-alone, so this is local coordination, as in the first case; it becomes distributed coordination when the decision is
-replicated for fault tolerance, as in Paxos Commit~\cite{gray2006consensus}. \textcolor{reviewed}{Two-phase commit can still block: if the coordinator fails after the owners
-prepare, they must wait for its decision.} \textcolor{reviewed}{That is a loss of availability,
-not a \commitment that another participant could contradict.}
+\textcolor{reviewed}{Two-phase commit adds no further coordination requirement.} Each owner's
+prepare reflects its own \commitment, with the local coordination just
+described. The coordinator then makes the monotone decision whether all
+owners prepared; it detects whether their \commitments agree and aborts when
+they do not. It does not make the owners agree. If the coordinator instead
+aborts on timeout before the last vote arrives, that abort applies another
+\commitment, like closing the polls. \textcolor{reviewed}{The timeout decision requires only local
+coordination when one participant makes it, but distributed coordination when
+replicated for fault tolerance, as in Paxos Commit~\cite{gray2006consensus}.} Ordinary two-phase commit can still block if the coordinator fails after
+prepare. Blocking is a loss of availability, not a \commitment that another
+participant could contradict.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}

@@ -27,10 +27,12 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
 * `canonLegal_iff`, `canonExec_unique`
                                 — Def. `def:canonical-system`: canonical
                                   histories are exactly those of Sec. histories.
+* `CommitmentContradictsAt`, `commitment_contradiction_sysExec`,
+  `commitment_contradiction_reach`
+                                — Prop. `thm:commitments-require-coordination`,
+                                  for accepted-input and emitted-output contradictions.
 * `conflicting_outputs2`, `conflict_removes_output`
-                                — Prop. `thm:commitments-require-coordination`
-                                  with independent bases, and "the conflict is
-                                  a commitment, not a commitment".
+                                — supporting output-only forms.
 * `sysStep_to_composite`, `sysStep_of_composite`, `composite_functional_empties`
                                 — the remark after Lemma `lem:compound-commitment`.
 * `reconciliation_any_basis`    — Cor. `cor:reconciliation-any-basis`.
@@ -389,6 +391,61 @@ end canonical_system
 
 section conflict
 variable {sp : Spec I O}
+
+/-- A state `τ` contradicts the application of a commitment from `σ` to
+`σc` at input `k`.  The first clause models emitting a removed row: every row
+of `τ` at `k` refines the emitted output `x`.  The second models accepting an
+input whose nonempty fiber the commitment emptied. -/
+def CommitmentContradictsAt (σ σc τ : State sp) (k : I) : Prop :=
+  (∃ x, σ.R k x ∧ ¬ σc.R k x ∧ ∀ w, τ.R k w → x ≼ w) ∨
+  (∃ x, σ.R k x) ∧ (∀ x, ¬ σc.R k x) ∧ τ.cur = k
+
+/-- A commitment and a state that contradicts it at `k` have no common
+continuation with current input `k`, even when the two continuations use
+arbitrary, different commitment bases. -/
+theorem commitment_contradiction_sysExec {B1 B2 : CommitmentBasis sp}
+    {c : Commitment sp} {σ σc τ : State sp} {k : I}
+    (happ : c.app σ = some σc) (hcontra : CommitmentContradictsAt σ σc τ k) :
+    ¬ ∃ ρ : State sp, ρ.cur = k ∧
+        (∃ es, SysExec B1 σc es ρ) ∧ (∃ es, SysExec B2 τ es ρ) := by
+  rintro ⟨ρ, hcur, ⟨es1, h1⟩, ⟨es2, h2⟩⟩
+  obtain ⟨w, hw⟩ := ρ.hasCur
+  rw [hcur] at hw
+  have hσc := h1.sub k w hw
+  have hτ := h2.sub k w hw
+  rcases hcontra with ⟨x, hx, hnx, hrefines⟩ | ⟨_, hempty, _⟩
+  · exact (c.unsubsumed σ σc happ k x w hx hnx hσc) (hrefines w hτ)
+  · exact hempty w hσc
+
+/-- The same contradiction rules out a common continuation in the transition
+system of Sections 2--3. -/
+theorem commitment_contradiction_reach {c : Commitment sp} {σ σc τ : State sp} {k : I}
+    (happ : c.app σ = some σc) (hcontra : CommitmentContradictsAt σ σc τ k) :
+    ¬ ∃ ρ : State sp, ρ.cur = k ∧ Reach σc ρ ∧ Reach τ ρ := by
+  rintro ⟨ρ, hcur, h1, h2⟩
+  obtain ⟨w, hw⟩ := ρ.hasCur
+  rw [hcur] at hw
+  have hσc := reach_sub h1 k w hw
+  have hτ := reach_sub h2 k w hw
+  rcases hcontra with ⟨x, hx, hnx, hrefines⟩ | ⟨_, hempty, _⟩
+  · exact (c.unsubsumed σ σc happ k x w hx hnx hσc) (hrefines w hτ)
+  · exact hempty w hσc
+
+/-- The state after emitting `x` has only rows refining `x`, so it contradicts
+any commitment that removed `(k,x)`. -/
+theorem commitmentContradictsAt_of_output {B : CommitmentBasis sp}
+    {σ σc υ τ : State sp} {k : I}
+    {γ : List (Commitment sp)} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x)
+    (hout : SysStep B υ (.output γ x) τ) : CommitmentContradictsAt σ σc τ k := by
+  obtain ⟨_, _, hcontain, _⟩ := containment hout
+  exact Or.inl ⟨x, hx, hnx, fun w hw => (hcontain k w hw).2⟩
+
+/-- A state whose current input is `k` contradicts any commitment that emptied
+a previously nonempty fiber at `k`. -/
+theorem commitmentContradictsAt_of_empty {σ σc τ : State sp} {k : I}
+    (hnonempty : ∃ x, σ.R k x) (hempty : ∀ x, ¬ σc.R k x)
+    (hcur : τ.cur = k) : CommitmentContradictsAt σ σc τ k :=
+  Or.inr ⟨hnonempty, hempty, hcur⟩
 
 /-- The two continuations may use different bases. -/
 theorem conflicting_outputs2 {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp}
