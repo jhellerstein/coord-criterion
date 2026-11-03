@@ -1158,8 +1158,10 @@ and keeps at least the original's rows after each event (\extended).
 Emitting a legal output is an incidental decision: it applies no exclusion,
 and deferring it avoids none.  To
 illustrate, when 2PL orders $A$ before $B$ in an exclusion event, the
-canonical run skips it; when 2PL later emits a serial order, so does the
-canonical run, and both end with the same table.  Whether a specification
+canonical run skips it.  If 2PL later emits $[A,C,B]$, the canonical run can
+emit the same output because that row was present all along.  Every surviving
+refinement of $[A,C,B]$ already orders $A$ before $B$, so the earlier exclusion
+makes no further difference to the final table.  Whether a specification
 needs coordination thus depends on the exclusions its outputs
 require, whatever mechanism makes them.
 

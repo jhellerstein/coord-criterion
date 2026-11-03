@@ -628,12 +628,16 @@ theorem «cor:free-eager-output» {sp : Spec I O} (B : ExclusionBasis sp)
 transactions `A`, `B`, `C` that have each issued their operations and requested
 commit, where `B` waits for a lock that `A` holds.  When `B` begins to wait,
 2PL applies `order(A,B)` in an exclusion event, before any output, keeping only
-the rows that can be completed without committing `B` before `A`.  The
-canonical run skips that event, so it keeps every row, including the one
-completed by `[B,A,C]`.  When 2PL later emits `[A,C,B]`, it applies no further
-exclusion ordering `A` and `B`, and the canonical run emits the same output;
-both end with the same table.  The lock issued its exclusion to `A` before `B`
-earlier than any output required."
+rows that can be completed without placing `B` before `A`.  The canonical run
+skips that event, so it keeps every row, including the one completed by
+`[B,A,C]`.  Suppose 2PL later emits `[A,C,B]`; its output event commits all
+three transactions and orders `A` before `C` before `B`.  The canonical run
+can emit the same output because that row was present all along.  Every row
+retained afterward refines `[A,C,B]`, so it satisfies all of 2PL's decisions,
+including the earlier order of `A` before `B`.  Thus the canonical final table
+is contained in 2PL's, while Canonical Run Universality gives the reverse
+containment.  The tables are equal: the lock made the `A`-before-`B` decision
+earlier than the output required."
 
 Lean (`CC.Txn.Partial.CommitEx.example_exclusion_event_ABC`), at any input `k`
 whose transactions `A`, `B`, `C` have each issued their operations and requested
@@ -643,12 +647,15 @@ the canonical state `σ₀` to `σ₁`; `σ₁` keeps exactly the rows of `σ₀
 complete refinement in `σ₀` that does not commit `B` before `A` (aborting `A`
 or `B` counts), so it keeps `[A,B,C]` and removes `[B,A,C]`;
 (b) the canonical run stays at `σ₀`, which has `[B,A,C]`;
-(c) 2PL's `Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)]([A,C,B])`
-is a legal `B_2PL` step from `σ₁`, `Out_[TxCommit(A),TxCommit(B),TxCommit(C)]([A,C,B])`
-is not (the row `[A,B,C]` survives those exclusions), and the canonical run
-emits `[A,C,B]` with `κ`;
-(d) both end at the same state, and the runs are a `Lockstep` pair whose
-exclusion event is matched by no canonical event. -/
+(c) 2PL's
+`Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)]([A,C,B])`
+is a legal `B_2PL` step from `σ₁`; the canonical run can emit `[A,C,B]`
+because that row was present at `σ₀`.  Every row it retains afterward refines
+`[A,C,B]`, hence satisfies those five exclusions and the earlier `order(A,B)`;
+(d) the canonical final table is therefore contained in 2PL's, while Canonical
+Run Universality gives the reverse containment.  The two runs end at the same
+state and form a `Lockstep` pair whose exclusion event is matched by no
+canonical event. -/
 theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
     (h : Txn.Partial.Tri k A B C) :
     let σ0 := Txn.Partial.σ3 k

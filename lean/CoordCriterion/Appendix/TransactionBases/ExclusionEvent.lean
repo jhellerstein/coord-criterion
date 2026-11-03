@@ -163,13 +163,14 @@ aborts or reads.
 (b) The canonical run skips that event: it is still at `σ₀`, which has the row
     `[B,A,C]`.
 (c) 2PL then emits `[A,C,B]` with `TxCommit(A), TxCommit(B), TxCommit(C),
-    order(A,C), order(C,B)`: a legal `B_2PL` step.  It applies no further
-    exclusion on the order of `A` and `B`; the `TxCommit` exclusions alone do
-    not suffice (`Out_[TxCommit(A),TxCommit(B),TxCommit(C)]([A,C,B])` is not
-    legal, since the row `[A,B,C]` survives them).  The canonical run emits the
-    same output.
-(d) Both runs end at the same state, and they are a `Lockstep` pair in which
-    the exclusion event is matched by no canonical event. -/
+    order(A,C), order(C,B)`: a legal `B_2PL` step.  The canonical run can emit
+    the same output because that row was present at `σ₀`.  Every row it retains
+    afterward refines `[A,C,B]`, hence satisfies all five exclusions in the
+    output event and the earlier `order(A,B)`.
+(d) The canonical final table is therefore contained in 2PL's; Canonical Run
+    Universality gives the reverse containment.  The two runs end at the same
+    state, and form a `Lockstep` pair in which the exclusion event is matched
+    by no canonical event. -/
 theorem example_exclusion_event_ABC {k : Inp T K} (h : Tri k A B C) :
     ∃ σ1 τ2 τ2' : State (spec (T := T) (K := K) false),
       -- (a)

@@ -1581,14 +1581,18 @@ runs. \textcolor{reviewed}{Whether a specification needs coordination thus depen
 
 To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
-where $B$ waits for a lock that $A$ holds. When $B$ begins to wait, 2PL applies $\mathsf{order}(A,B)$ in a
-exclusion event, before any output, keeping only the rows that can be
-completed without placing $B$ before $A$. The canonical run skips that
-event, so it keeps every row, including the one completed by $[B,A,C]$. When
-2PL later emits $[A,C,B]$, it applies no further exclusion that orders $A$ and
-$B$, and the canonical run emits the same output; both end with the same
-table. The lock applied its exclusion establishing $A$ before $B$ earlier than any
-output required.
+where $B$ waits for a lock that $A$ holds. When $B$ begins to wait, 2PL applies
+$\mathsf{order}(A,B)$ in an exclusion event, before any output, keeping only
+rows that can be completed without placing $B$ before $A$. The canonical run
+skips that event, so it keeps every row, including the one completed by
+$[B,A,C]$. Suppose 2PL later emits $[A,C,B]$; its output event commits all
+three transactions and orders $A$ before $C$ before $B$. The canonical run
+can emit the same output because that row was present all along. Every row
+retained afterward refines $[A,C,B]$, so it satisfies all of 2PL's decisions,
+including the earlier order of $A$ before $B$. Thus the canonical final table
+is contained in 2PL's, while Canonical Run Universality gives the reverse
+containment. The tables are equal: the lock made the $A$-before-$B$ decision
+earlier than the output required.
 
 \subsection{Coordination}
 \label{sec:coordination}
