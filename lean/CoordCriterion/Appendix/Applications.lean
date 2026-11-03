@@ -5,7 +5,7 @@ import CoordCriterion.FunctionalCALM.Theorem
 /-!
 # Additional applications (Appendix I, `app:additional-applications`)
 
-Namespace `CC.Apps` (reuses the finite sets and generic exclusion lemmas of
+Namespace `CC.Apps` (reuses the finite sets and generic commitment lemmas of
 `Appendix/TransactionBases/NoReads.lean`).
 
 * Committed authority:  `Auth`, `prefix_antisymm`, the output order of
@@ -13,7 +13,7 @@ Namespace `CC.Apps` (reuses the finite sets and generic exclusion lemmas of
   remaining row refines the certified evidence `o`, then `o` is exposable and
     `Out_ε(o)` is legal); `incompatible_excluded` (generic: two outputs at the
     current input with no common refinement there ⇒ emitting one excludes the
-    other, is not exposable, and needs an exclusion); `slot_conflict` and
+    other, is not exposable, and needs a commitment); `slot_conflict` and
   `epoch_conflict` instantiate it for competing decisions of one slot and for
   competing next epochs.  The decision claim needs the extra hypothesis that
   permitted outputs decide at most one value per epoch and slot (`SlotUnique`),
@@ -28,7 +28,7 @@ Namespace `CC.Apps` (reuses the finite sets and generic exclusion lemmas of
   carrying the restricted order"), `prefixSpec`, `prefix_mono`,
   `prefix_union`, `prefixSpec_liftedMono`, `prefix_empty`;
   `completeSpec_functional`, `completeSpec_not_monotone`,
-  `completeSpec_exclusion_needed` (via Prop. `prop:functional-exposure-boundary`).
+  `completeSpec_commitment_needed` (via Prop. `prop:functional-exposure-boundary`).
 
 Modeling choices: output types contain all partial maps / sets (permitted
 outputs are finite); "no common refinement" is proved in the whole output
@@ -50,12 +50,12 @@ section Generic
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 /-- If `o, o' ∈ R(i)` have no common refinement in `R(i)`, emitting `o`
-excludes `(i,o')` (an exclusion), `o` is not exposable, and every legal output
-event emitting `o` applies an exclusion. -/
+excludes `(i,o')` (a commitment), `o` is not exposable, and every legal output
+event emitting `o` applies a commitment. -/
 theorem incompatible_excluded {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
     (ho' : σ.R σ.cur o') (hn : ¬ ∃ u, σ.R σ.cur u ∧ o ≼ u ∧ o' ≼ u) :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : ExclusionBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] := by
+      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] := by
   have hno : ¬ o ≼ o' := fun h => hn ⟨o', ho', h, PO.refl _⟩
   have hrej : Excluded σ o σ.cur o' :=
     ⟨ho', hno, fun hr => let ⟨_, _, u, hu, h1, h2⟩ := hr; hn ⟨u, hu, h1, h2⟩⟩
@@ -65,7 +65,7 @@ theorem incompatible_excluded {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
 /-- If every remaining row refines `o` (what protocol safety is assumed to
 guarantee for certified evidence), `o` is exposable and `Out_ε(o)` is legal. -/
 theorem safety_exposable {σ : State sp} {o : O} (ho : σ.R σ.cur o)
-    (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : ExclusionBasis sp) :
+    (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : CommitmentBasis sp) :
     Exposable σ o ∧ SysStep B σ (.output [] o) (outState σ o ho) :=
   have he : Exposable σ o := fun k x hx hn => absurd (hsafe k x hx) hn
   ⟨he, eps_step_iff.2 ⟨ho, he, rfl, rfl⟩⟩
@@ -116,14 +116,14 @@ theorem slot_no_common {κ : Type} (slot : Dc → κ) {o o' : Auth Ep Vt Dc} {d 
     ¬ ∃ u : Auth Ep Vt Dc, SlotUnique slot u.D ∧ o ≼ u ∧ o' ≼ u :=
   fun ⟨_, hU, h1, h2⟩ => hne (hU _ _ (h1.2.2 d hd) (h2.2.2 d' hd') hs)
 
-/-- **Certifying one of two competing proposals is an exclusion**, in any
+/-- **Certifying one of two competing proposals is a commitment**, in any
 specification on these outputs whose permitted outputs are slot-unique. -/
 theorem slot_conflict {I : Type} [PO I] {κ : Type} (slot : Dc → κ)
     {sp : Spec I (Auth Ep Vt Dc)} (hU : ∀ k u, sp.P k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : ExclusionBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   incompatible_excluded ho ho' fun ⟨u, hu, h1, h2⟩ =>
     slot_no_common slot hd hd' hs hne ⟨u, hU _ _ (σ.sub _ _ hu), h1, h2⟩
 
@@ -136,13 +136,13 @@ theorem epoch_no_common {o o' : Auth Ep Vt Dc} {e : List Ep} {a b : Ep}
   simp only [List.cons_append, List.nil_append, List.cons.injEq] at this
   exact hne this.1.symm
 
-/-- **Competing next epochs would require an exclusion** if the succession
+/-- **Competing next epochs would require a commitment** if the succession
 rule did not fix the successor. -/
 theorem epoch_conflict {I : Type} [PO I] {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : ExclusionBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   incompatible_excluded ho ho' fun ⟨u, _, h1, h2⟩ => epoch_no_common he he' hne ⟨u, h1, h2⟩
 
 /-! ### Partial maps ordered by extension -/
@@ -669,15 +669,15 @@ theorem completeSpec_not_monotone (e : Ev) :
   obtain ⟨u, hu, hall⟩ := hl _ _ (empty_le_single e) [⟨emptyHist⟩] (by simp) (by simp [completeSpec])
   exact hne ((hall _ (by simp)).trans hu)
 
-/-- **Some output can be exposed only after an exclusion that empties an
+/-- **Some output can be exposed only after a commitment that empties an
 input's fiber** (Prop. `prop:functional-exposure-boundary`): there is a state
-reachable without exclusion and an output there whose `Excluded` class is
-nonempty, so every legal output event emitting it applies an exclusion; at
-each input it changes, the exclusion empties the fiber. -/
-theorem completeSpec_exclusion_needed (e : Ev) :
+reachable without commitment and an output there whose `Excluded` class is
+nonempty, so every legal output event emitting it applies a commitment; at
+each input it changes, the commitment empties the fiber. -/
+theorem completeSpec_commitment_needed (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
       (∃ k x, Excluded τ o k x) ∧
-      ∀ (B : ExclusionBasis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] := by
+      ∀ (B : CommitmentBasis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] := by
   have hb := fun h => (completeSpec_not_monotone e).1
     ((functional_exposure_boundary (completeSpec_functional (Ev := Ev))).2 h)
   apply Classical.byContradiction

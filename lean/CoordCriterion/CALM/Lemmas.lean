@@ -22,7 +22,7 @@ own proof routes:
 * functional remarks: exposability is "`f(j)` refines `o` at every legal `j`"
   (`exposable_iff_refines_all`); a functional output event commits iff it
   excludes (`functional_exclude_iff_excluded`); failure of monotonicity at
-  `i ≼ k` makes `output(f(i))` at `σ_P(i)` exclusion `k` (`nonmono_excludes`);
+  `i ≼ k` makes `output(f(i))` at `σ_P(i)` commitment `k` (`nonmono_excludes`);
   RelMono / Lifted Monotonicity / the common-expansion condition are
   functional monotonicity for singleton fibers (`relMono_iff_monoF`,
   `liftedMono_iff_monoF`, `commonExpansion_iff_monoF`); in a consistent
@@ -35,7 +35,7 @@ own proof routes:
   (`complete_calm_paper`, `complete_calm_paper_lm`);
 * **Prop. exposure boundary by the paper's route** (forward direction via
   consistency and the survivor test, `exposable_of_consistent`, which holds
-  at every run state, not only exclusion-free ones;
+  at every run state, not only commitment-free ones;
   `exposure_boundary_paper`);
 * **Pairs suffice** (`app:pairs-suffice`): `pairs_iff_commonExpansion`, from
   `CC.ce_of_pairs` (`CompleteCALM/Theorem.lean`).
@@ -209,7 +209,7 @@ theorem exposable_iff_refines_all {sp : Spec I O} (hf : sp.Functional) (σ : Sta
     exact absurd (h k x hx) hn
 
 /-- Def. `def:output-event` vs. Def. `def:lifted-output-event`: in a
-functional specification the output event applies an exclusion (`R' ≠ R`) iff it excludes
+functional specification the output event applies a commitment (`R' ≠ R`) iff it excludes
 some row. -/
 theorem functional_exclude_iff_excluded {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
     outputTable σ o ≠ σ.R ↔ ∃ k x, Excluded σ o k x := by
@@ -217,12 +217,12 @@ theorem functional_exclude_iff_excluded {sp : Spec I O} (hf : sp.Functional) (σ
   · intro hne
     apply Classical.byContradiction
     intro hno
-    have he : Exposable σ o := (exposable_iff_no_exclusion σ o).2
+    have he : Exposable σ o := (exposable_iff_no_commitment σ o).2
       (fun k x hs => hno ⟨k, x, hs⟩)
     exact hne ((exposable_iff_functional hf σ o).1 he)
   · rintro ⟨k, x, hs⟩ heq
     have he := (exposable_iff_functional hf σ o).2 heq
-    exact (exposable_iff_no_exclusion σ o).1 he k x hs
+    exact (exposable_iff_no_commitment σ o).1 he k x hs
 
 /-- Paragraph after Prop. `prop:functional-exposure-boundary`: if
 monotonicity fails at `i ≼ k`, then at `σ_P(i)` the event `output(f(i))` excludes

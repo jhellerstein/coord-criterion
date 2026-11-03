@@ -8,7 +8,7 @@ Supports the sentences of the paragraph "Locks in a shared-nothing database"
 of `sections/distributed.tex` on a coordinator that aborts on timeout, before
 the last vote arrives.  Two readings of that abort are checked.
 
-*As an exclusion that empties fibers* (closing the polls on the decision specification `voteSpec`):
+*As a commitment that empties fibers* (closing the polls on the decision specification `voteSpec`):
 
 * `timeout_closes_expansions`: at an input with a missing vote, closing the polls
   (`Figures.closePolls`) applies, empties fibers, and empties the fiber at every input that adds a
@@ -23,16 +23,16 @@ the last vote arrives.  Two readings of that abort are checked.
   This is the replicated case (`pollClosingSysRepl`: every participant at `yy·` may
   close the polls).
 * `pollClosingSys1_local`: when the decision specification is run by the coordinator
-  alone (a system whose strategies act only with one participant), the fiber-emptying exclusion
+  alone (a system whose strategies act only with one participant), the fiber-emptying commitment
   requires coordination (not `CoordinationFree`: another run of the
   coordinator accepts `yyy`) but not distributed coordination
   (`CoordinationFreeH`, by `single_coordinationFreeH`).
 
-*As a row-removing exclusion* (`abortSpec`: the coordinator may abort until it decides, so
+*As a row-removing commitment* (`abortSpec`: the coordinator may abort until it decides, so
 `P(v) = {decide2PC v, abort}`):
 
-* `abort_canonicalExclusion_yy`: at `yy·`, aborting is not exposable; its canonical
-  exclusion removes `(yyy, commit)` and keeps `(yyy, abort)`, so it chooses
+* `abort_canonicalCommitment_yy`: at `yy·`, aborting is not exposable; its canonical
+  commitment removes `(yyy, commit)` and keeps `(yyy, abort)`, so it chooses
   against commit and empties no fiber.
 * `coordSys_not_coordinationFree`, `coordSys_coordinationFreeH`: when only the
   coordinator decides, aborting requires coordination (another run of the
@@ -42,7 +42,7 @@ the last vote arrives.  Two readings of that abort are checked.
   (the decision replicated), one aborts at `yy·` while the other, after the
   late vote `yyy`, commits: distributed coordination.
 
-Modeling row-removing exclusions: three owners' votes (`Votes 3`) for the examples; the
+Modeling row-removing commitments: three owners' votes (`Votes 3`) for the examples; the
 coordinator's timeout is an output event of the system, its clock is not
 modeled; histories have two participants (or one).
 -/
@@ -91,15 +91,15 @@ theorem decide_yyN : decide2PC yyN = .undecided := by
 theorem complete_max {m : Nat} {v w : Votes m} (hv : ∀ p, v p ≠ none) (h : v ≼ w) : v = w :=
   funext fun p => (h p).resolve_left (hv p)
 
-/-! ## The timeout abort as an exclusion that empties fibers: closing the polls on `voteSpec` -/
+/-! ## The timeout abort as a commitment that empties fibers: closing the polls on `voteSpec` -/
 
 /-- Closing the polls (Fig. `fig:election-frames`(d)) on the decision
 specification. -/
-noncomputable def cp {m : Nat} : Exclusion (voteSpec m) :=
+noncomputable def cp {m : Nat} : Commitment (voteSpec m) :=
   Dist.toCAP (Figures.closePolls (sp := voteSpec m))
 
 /-- **The timeout abort empties the fiber at every input that adds a missing vote.**  At
-`σ_P(v)` with a missing vote, closing the polls applies (it is an exclusion);
+`σ_P(v)` with a missing vote, closing the polls applies (it is a commitment);
 it empties fibers (wherever it removes a row it removes all); and every input that
 adds a missing vote `p`, yes (`b = true`) or no (`b = false`), had a row and
 keeps none.  Only the current input keeps rows, its row `(v, undecided)` when
@@ -146,7 +146,7 @@ theorem timeout_closes_yy :
 
 /-- A participant's one-event run `Out_γ(u)`, given the committed state. -/
 theorem lrun_out {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type} {n : Nat} {σ σc : State sp'}
-    {γ : List (Exclusion sp')} {u : O} (ha : applySeq σ γ = some σc)
+    {γ : List (Commitment sp')} {u : O} (ha : applySeq σ γ = some σc)
     (hu : σc.R σc.cur u) (hex : Exposable σc u) :
     ∃ τ, LRun (D := D) (n := n) σ [LEv.out γ u] τ := by
   let τ : State sp' :=
@@ -154,10 +154,10 @@ theorem lrun_out {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type} {n : Nat
       hasCur := ⟨u, hu, PO.refl u⟩, above := fun k x h => σc.above k x h.1 }
   exact ⟨τ, .out ha (Step.output σc τ u hu rfl rfl) hex (.nil τ)⟩
 
-/-- **A fiber-emptying exclusion requires distributed coordination, even if only the coordinator
+/-- **A fiber-emptying commitment requires distributed coordination, even if only the coordinator
 decides.**  In any system whose coordinator (participant `0` of two, both
 starting at `yy·`) may close the polls at `yy·`, some history has the other
-participant accept `yyy`, whose fiber the exclusion empties (the environment may deliver the
+participant accept `yyy`, whose fiber the commitment empties (the environment may deliver the
 late vote to any participant). -/
 theorem pollClosing_not_coordinationFreeH {D : Type} (Sys : System (voteSpec 3) D)
     (hb : Sys.basis cp) (hs : Sys.strat 2 (fun _ => yyN) 0 [] (.out [cp] .undecided)) :
@@ -229,7 +229,7 @@ theorem pollClosingSys_not_coordinationFreeH (D : Type) :
 /-! ## Poll closing run by the coordinator alone -/
 
 /-- In a one-participant history no other participant can contradict a
-exclusion. -/
+commitment. -/
 theorem localInH_one {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
     (init : Fin 1 → I) (H : History sp' D 1) (p : Fin 1) (σ σc : State sp') :
     LocalInH init H p σ σc := by
@@ -239,8 +239,8 @@ theorem localInH_one {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
 
 /-- **A system run by one participant needs no distributed coordination.**
 If the strategies act only when the system has one participant, no history of
-the system applies an exclusion that another participant of the same history
-contradicts: with more participants no output or exclusion event occurs, and
+the system applies a commitment that another participant of the same history
+contradicts: with more participants no output or commitment event occurs, and
 with one there is no other participant. -/
 theorem single_coordinationFreeH {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
     (Sys : System sp' D) (h1 : ∀ n init p pre e, Sys.strat n init p pre e → n = 1) :
@@ -249,7 +249,7 @@ theorem single_coordinationFreeH {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D 
     fun n init H _ hp p a b γ σ σc hH _ _ => ?_⟩
   · have hn := h1 _ _ _ _ _ (hp p a (.out γ o) b hH).2
     subst hn; exact localInH_one init H p σ σc
-  · have hn := h1 _ _ _ _ _ (hp p a (.exclude γ) b hH).2
+  · have hn := h1 _ _ _ _ _ (hp p a (.commitment γ) b hH).2
     subst hn; exact localInH_one init H p σ σc
 
 /-- The coordinator alone runs the decision specification: the system has one
@@ -261,9 +261,9 @@ noncomputable def pollClosingSys1 (D : Type) : System (voteSpec 3) D where
     | .out γ u => n = 1 ∧ γ = [cp] ∧ u = .undecided ∧ init p = yyN
     | _ => False
 
-/-- **Poll closing run by the coordinator alone: local coordination.**  The exclusion
+/-- **Poll closing run by the coordinator alone: local coordination.**  The commitment
 requires coordination (another run of the coordinator, from `yy·`, accepts the
-late-vote `yyy`), but no history of `pollClosingSys1` applies an exclusion
+late-vote `yyy`), but no history of `pollClosingSys1` applies a commitment
 requiring distributed coordination. -/
 theorem pollClosingSys1_local (D : Type) :
     ¬ (pollClosingSys1 D).CoordinationFree ∧ (pollClosingSys1 D).CoordinationFreeH := by
@@ -324,7 +324,7 @@ noncomputable def pollClosingSysRepl (D : Type) : System (voteSpec 3) D where
 theorem pollClosingSysRepl_not_coordinationFreeH (D : Type) : ¬ (pollClosingSysRepl D).CoordinationFreeH :=
   pollClosing_not_coordinationFreeH (pollClosingSysRepl D) rfl ⟨rfl, rfl, rfl⟩
 
-/-! ## The timeout abort as a row-removing exclusion: `abortSpec` -/
+/-! ## The timeout abort as a row-removing commitment: `abortSpec` -/
 
 /-- The coordinator may abort until it decides: `P(v) = {decide2PC v, abort}`
 (so `{abort}` after a no vote, `{undecided, abort}` while votes are missing,
@@ -364,7 +364,7 @@ def Inv {m : Nat} (σ : State (abortSpec m)) : Prop :=
 theorem inv_canon {m : Nat} (i : Votes m) : Inv (canon (abortSpec m) i) :=
   fun _ _ h _ => ⟨Or.inr rfl, h.2⟩
 
-/-- The canonical exclusion for `u` keeps the `abort` rows at other
+/-- The canonical commitment for `u` keeps the `abort` rows at other
 inputs. -/
 theorem kc_keeps_abort {m : Nat} {σ : State (abortSpec m)} {u : Decision} (hu : σ.R σ.cur u)
     (hI : Inv σ) {k : Votes m} {x : Decision} (hx : σ.R k x) (hk : k ≠ σ.cur) :
@@ -375,9 +375,9 @@ theorem kc_keeps_abort {m : Nat} {σ : State (abortSpec m)} {u : Decision} (hu :
   · exact not_rm_of_le ha h
   · exact absurd (rows_at_cur_of_commit hu hx) hk
 
-/-- A canonical exclusion empties no input fiber. -/
+/-- A canonical commitment empties no input fiber. -/
 theorem kc_preserves_fibers {m : Nat} {σ σc : State (abortSpec m)} {u : Decision}
-    {γ : List (Exclusion (abortSpec m))} (hγ : γ = [] ∨ γ = [kc u])
+    {γ : List (Commitment (abortSpec m))} (hγ : γ = [] ∨ γ = [kc u])
     (hI : Inv σ) (ha : applySeq σ γ = some σc) (k : Votes m) (hk : ∃ x, σ.R k x) :
     ∃ x, σc.R k x := by
   obtain ⟨x, hx⟩ := hk
@@ -428,14 +428,14 @@ theorem inv_lrun {m : Nat} {D : Type} {n : Nat} {σ ρ : State (abortSpec m)}
       rcases le_abort_or_commit o with h | rfl
       · exact h
       · exact absurd (rows_at_cur_of_commit ho hk.1) hne
-  | exclude _ _ _ _ => exact absurd (hok _ List.mem_cons_self) id
+  | commitment _ _ _ _ => exact absurd (hok _ List.mem_cons_self) id
   | send _ ih => exact ih (fun e he => hok e (List.mem_cons_of_mem _ he)) hI
   | recv _ ih => exact ih (fun e he => hok e (List.mem_cons_of_mem _ he)) hI
 
-/-- **At `yy·`, aborting is a row-removing exclusion.**  `abort` is not exposable at
+/-- **At `yy·`, aborting is a row-removing commitment.**  `abort` is not exposable at
 `σ_P(yy·)`; its canonical output event `Out_{[κ_abort]}(abort)` is legal,
 removes `(yyy, commit)`, keeps `(yyy, abort)`, and empties no input fiber. -/
-theorem abort_canonicalExclusion_yy :
+theorem abort_canonicalCommitment_yy :
     ¬ Exposable (canon (abortSpec 3) yyN) .abort ∧
     ∃ σc, applySeq (canon (abortSpec 3) yyN) [kc .abort] = some σc ∧
       σc.R σc.cur .abort ∧ Exposable σc .abort ∧
@@ -498,7 +498,7 @@ theorem coordSys_ok {m : Nat} {D : Type} :
   cases e with
   | inp _ => trivial
   | out γ u => exact h.2.1
-  | exclude _ => exact h.2.elim
+  | commitment _ => exact h.2.elim
   | send _ _ => exact h.elim
   | recv _ _ _ _ => exact h.elim
 
@@ -508,7 +508,7 @@ theorem replSys_ok {m : Nat} {D : Type} :
   cases e with
   | inp _ => trivial
   | out γ u => exact h.2
-  | exclude _ => exact h.2.elim
+  | commitment _ => exact h.2.elim
   | send _ _ => exact h.elim
   | recv _ _ _ _ => exact h.elim
 
@@ -516,7 +516,7 @@ theorem replSys_ok {m : Nat} {D : Type} :
 participant emits a decision, and no canonical output event of the
 coordinator empties an input fiber, so no other participant can contradict it. -/
 theorem coordSys_coordinationFreeH (m : Nat) (D : Type) : (coordSys m D).CoordinationFreeH := by
-  refine ⟨?_, fun n init H _ hp p a b γ σ σc hH _ _ => (hp p a (.exclude γ) b hH).2.elim⟩
+  refine ⟨?_, fun n init H _ hp p a b γ σ σc hH _ _ => (hp p a (.commitment γ) b hH).2.elim⟩
   intro n init H _ hp p a b γ o σ σc hH hrun hap
   obtain ⟨_, hγ, hp0⟩ := hp p a (.out γ o) b hH
   have hI : Inv σ := inv_lrun hrun (prefix_ok coordSys_ok hp hH) (inv_canon _)
@@ -533,7 +533,7 @@ theorem one_emit {m : Nat} (D : Type) (Sys : System (abortSpec m) D) (i : Votes 
     (hS : ∀ γ u, (γ = [] ∨ γ = [kc u]) → Sys.strat 1 (fun _ => i) 0 [] (.out γ u))
     (hb : ∀ u, Sys.basis (kc u)) (u : Decision)
     (hu : (canon (abortSpec m) i).R i u) :
-    ∃ (γ : List (Exclusion (abortSpec m))) (σc : State (abortSpec m)) (H : History (abortSpec m) D 1), (γ = [] ∨ γ = [kc u]) ∧
+    ∃ (γ : List (Commitment (abortSpec m))) (σc : State (abortSpec m)) (H : History (abortSpec m) D 1), (γ = [] ∨ γ = [kc u]) ∧
       applySeq (canon (abortSpec m) i) γ = some σc ∧ Exposable σc u ∧
       WF (fun _ => i) H ∧ Produced Sys 1 (fun _ => i) H ∧ H 0 = [] ++ LEv.out γ u :: [] := by
   obtain ⟨γ, σc, hγ, ha, hcu, hex⟩ := kc_legal hu
@@ -567,7 +567,7 @@ theorem coordSys_not_coordinationFree (D : Type) : ¬ (coordSys 3 D).Coordinatio
   obtain ⟨γ1, _, H', _, _, _, hw', hp', hH1⟩ :=
     one_emit D (coordSys 3 D) yyy (hS yyy) hb .commit ⟨Or.inl decide_yyy.symm, PO.refl _⟩
   have hcy : (canon (abortSpec 3) yyN).R yyy .commit := ⟨Or.inl decide_yyy.symm, yyN_le_yyy⟩
-  -- the abort's exclusions remove `(yyy, commit)`
+  -- the abort's commitments remove `(yyy, commit)`
   have hnc : ¬ σc.R yyy .commit := by
     intro hc
     obtain ⟨u, _, h1, h2⟩ := hex0 yyy .commit hc (fun h => by cases (abort_le_iff _).1 h)
@@ -606,7 +606,7 @@ theorem replSys_not_coordinationFreeH (D : Type) : ¬ (replSys 3 D).Coordination
     rcases hfin r with rfl | rfl
     · exact ⟨τ0, hr0⟩
     · exact ⟨τ1, by rw [hH1]; exact lrun_append.2 ⟨_, hin, hr1⟩⟩
-  have hbasis : ∀ (u : Decision) (γ : List (Exclusion (abortSpec 3))),
+  have hbasis : ∀ (u : Decision) (γ : List (Commitment (abortSpec 3))),
       (γ = [] ∨ γ = [kc u]) → ∀ c ∈ γ, (replSys 3 D).basis c := by
     intro u γ hγ c hc
     rcases hγ with rfl | rfl

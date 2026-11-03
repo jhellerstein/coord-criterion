@@ -119,7 +119,7 @@ empty basis, the pipeline emits only what $P_2\circ P_1$ emits under the empty
 basis.  Its runs are runs of a Lifted-Monotone
 specification, at whose states every output is legal
 (Proposition~\ref{prop:exposure-boundary}).  So the next stage again has an
-empty-basis guard, and by induction no stage of the pipeline issues an exclusion.
+empty-basis guard, and by induction no stage of the pipeline issues a \commitment.
 
 \begin{proof}[Proof of Proposition~\ref{prop:joint-monotone}]
 (1) is Lemma~\ref{lem:composition}, and also the case $D=M$ of (2).
@@ -167,7 +167,7 @@ whose two outputs are
 incomparable.  $\mathcal S_2$
 violates Lifted Monotonicity, since $[9<10]$ and $[10<10]$ differ, but it
 satisfies it on $\{n\le 9\}$, so the composite is Lifted-Monotone by case (2).  At
-$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must remove the row by exclusion
+$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must remove the row by \commitment
 $(10,\mathit{false})$, so $\mathcal S_2$ cannot emit under the empty basis.
 The outputs of $\mathcal S_1$ lie in $\{n\le 9\}$, so the pipeline is proper
 (Theorem~\ref{thm:proper-coordination}(1)).  Under the empty basis,
@@ -188,8 +188,8 @@ functional specification induced by a function $f$ that maps
 both to one value.  The composite has one row, so it satisfies Lifted
 Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
 a legal output, and under the empty basis an output event is legal only for a
-legal output (Lemma~\ref{lem:canonical-exclusion-normal-form}), and no
-exclusion event is possible, since its sequence is nonempty.  Input
+legal output (Lemma~\ref{lem:canonical-commitment-normal-form}), and no
+\commitment event is possible, since its sequence is nonempty.  Input
 events only remove rows at other inputs, and there are none, so every run of
 $\mathcal S_1$ under the empty basis stays at the canonical state and emits
 nothing.  Then $\mathcal S_2$ receives nothing.  Renaming $x,y$ to
@@ -217,7 +217,7 @@ number of outputs, possibly none.  The environment observes $\mathsf{input}(j)$
 and the outputs of $\Spec_2|_{\Spec_1}$.
 
 In a proper pipeline, two facts about a state $\tau$ that
-$\Spec_2|_{\Spec_1}$ reaches without exclusion carry the proofs.  First,
+$\Spec_2|_{\Spec_1}$ reaches without \commitment carry the proofs.  First,
 every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$: the
 common-\indesc condition gives $u\in P_2(j)$ that \outrel an output $v$ at the
 current input, and $(j,u)$ survives, since every output emitted so far is
@@ -236,15 +236,15 @@ image that subsumes $(k,x)$.
 \begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
 (1) By Theorem~\ref{thm:complete-calm} and
 Proposition~\ref{prop:exposure-boundary}, $\Spec_2|_{\Spec_1}$ needs no
-exclusion exactly when it satisfies Lifted Monotonicity.  Its rows have
+\commitment exactly when it satisfies Lifted Monotonicity.  Its rows have
 inputs among the outputs of $\Spec_1$, and so do its \indescs.  So this is
 Lifted Monotonicity of $\Spec_2$ on the outputs of $\Spec_1$.
 
 (2) After $\Out{\gamma}{m}$ every row of $\Spec_1$ \outrel $m$
-(Lemma~\ref{lem:canonical-exclusion-normal-form}), so the outputs
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so the outputs
 $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$ form a chain.
 $\Spec_2|_{\Spec_1}$ starts at $\sigma(m_1)$, which it reaches without
-exclusion.  By the first two facts it can receive each $m_{r+1}$ and answer
+\commitment.  By the first two facts it can receive each $m_{r+1}$ and answer
 it by a legal output, so it follows the run under the empty basis.
 
 Consider any run of the pipeline in which $\Spec_2|_{\Spec_1}$ runs under the
@@ -287,11 +287,11 @@ $o\in P_2(m')$ is a legal output at $\sigma_{\Spec_1}(i)$.
 
 Properness is needed in (3).  With $\Spec_1$ the identity on the booleans and
 $\Spec_2$ negation, the composite is negation, which violates Lifted
-Monotonicity, yet $\Spec_1$ needs no exclusion.
+Monotonicity, yet $\Spec_1$ needs no \commitment.
 
-The \emph{exclusion-erased replacement} of a system has the empty basis and
+The \emph{\commitment-erased replacement} of a system has the empty basis and
 the same strategy, with each $\Out{\delta}{x}$ replaced by
-$\Out{\varepsilon}{x}$ and its exclusion events dropped.
+$\Out{\varepsilon}{x}$ and its \commitment events dropped.
 
 \begin{corollary}[Empty store]
 \label{cor:empty-store}
@@ -303,12 +303,12 @@ replacement's table contains the original's.
 
 \begin{proof}
 Let $\tau$ be a state of the original and $\tau'$ a state of the replacement
-reached without exclusion, with the same current input and $R_\tau\subseteq
+reached without \commitment, with the same current input and $R_\tau\subseteq
 R_{\tau'}$.  If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
 $j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
 the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is legal at $\tau$, then $x$
 is at the current input of $\tau$ and so of $\tau'$, where it is a legal output by
-the second fact.  Containment (Lemma~\ref{lem:canonical-exclusion-normal-form})
+the second fact.  Containment (Lemma~\ref{lem:canonical-commitment-normal-form})
 puts the original's resulting table inside $R_\tau[\mathrm{out}\OutputGe x]$,
 which is inside $R_{\tau'}[\mathrm{out}\OutputGe x]$, where
 $\Out{\varepsilon}{x}$ ends.  Both start at $\sigma(m_1)$, so the containment
@@ -333,7 +333,7 @@ same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis.
 Theorem~\ref{thm:proper-coordination}(2), applied to it and a prefix of the
 run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs, and the
 canonical event for each output
-(Lemma~\ref{lem:canonical-exclusion-normal-form}) makes it a run under the
+(Lemma~\ref{lem:canonical-commitment-normal-form}) makes it a run under the
 canonical basis.  By induction the same holds along a pipeline
 $\Spec_n\circ\cdots\circ\Spec_1$ in which each prefix properly guards the next
 stage.  Composition is associative, so the bracketing does not matter.
@@ -344,13 +344,13 @@ specification of Example~\ref{ex:committed-log-composition}, under its
 canonical basis with a strategy that allows every event, and $\Spec_2$ the
 table of any monotone function $f$ of the log.  Every log is an output of
 $\Spec_1$, so $\Spec_2|_{\Spec_1}$ is $\Spec_2$.  For a set $Q$ of logs,
-removing every row whose input is in $Q$ is an exclusion of $\Spec_2$ at any
+removing every row whose input is in $Q$ is a \commitment of $\Spec_2$ at any
 state whose current input is not in $Q$ and which has such a row.  It removes
 whole fibers, so it empties.  Consider two writes $a$ and $b$ to one key, and a
 lock granted to $a$, which empties the logs that start with $b$.  Suppose that
 the store takes the lock only once its current log is nonempty.  Every log it
 can still receive then has the same first command, so the lock removes no row
-and is not an exclusion.  Suppose instead that the store takes the lock at the
+and is not a \commitment.  Suppose instead that the store takes the lock at the
 empty log, ahead of the log.  Its output $f([\,])$ was a legal output without the
 lock, and the lock empties logs that $\Spec_1$ can still offer.  At
 $\sigma_{\Spec_1}([b])$, $\Spec_1$ can emit $[\,]$ and then $[b]$.  The
@@ -358,7 +358,7 @@ replacement emits $f([\,])$, receives $[b]$, and emits $f([b])$.  The locking
 store must take the lock at $[\,]$, which empties $[b]$, so it cannot receive
 $[b]$.
 
-For a function store, some exclusions of $\Spec_1$ are invisible to the
+For a function store, some \commitments of $\Spec_1$ are invisible to the
 composite.  Let $\Spec_2$ be the functional specification induced by a
 monotone function $f$, and write
 $f(\sigma)$ for the image of a state $\sigma$ of $\Spec_1$.
@@ -371,7 +371,7 @@ input and the same image that $\gamma$ keeps, then $f(m)$ is a legal output at
 $f(\sigma)$.
 \end{proposition}
 
-The proof covers the composite's exclusions by those of $\Spec_1$.  For a
+The proof covers the composite's \commitments by those of $\Spec_1$.  For a
 table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
 $\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
 $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
@@ -379,7 +379,7 @@ $(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is not in $\Excluded_{f(m)}$ at
 $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
 Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
 $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ subsumes $(k,f(m'))$.  So every row
-that the composite's canonical event for $f(m)$ removes by exclusion has had
+that the composite's canonical event for $f(m)$ removes by \commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
@@ -395,26 +395,26 @@ of its subsequences on each key.  The two logs are incomparable with no common
 \outnoun, so $[a,b]$ is not a legal output, and $\Spec_1$ must order them.  But
 $f([a,b])=f([b,a])$, the composite has one row, and $f([a,b])$ is a legal
 output.
-The order of $a$ and $b$ is an exclusion inside $\Spec_1$ that requires
+The order of $a$ and $b$ is a \commitment inside $\Spec_1$ that requires
 coordination, and the composite does not see it.
 
-The exclusions of $\Spec_1$ do not themselves push forward.  Let $\Spec_1$
+The \commitments of $\Spec_1$ do not themselves push forward.  Let $\Spec_1$
 have one input with fiber $\{x,y\}$, $x$ and $y$ incomparable, and
-$f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The exclusion $e_y$ removes $x$
+$f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The \commitment $e_y$ removes $x$
 and keeps $y$.  Its image would remove $\mathit{lo}$ and keep $\mathit{hi}$,
-violating Equation~\ref{eq:exclusion-excludes}, so no exclusion of the
+violating Equation~\ref{eq:commitment-unsubsumed}, so no \commitment of the
 composite has that effect.  In the composite, $\mathit{hi}$ is a legal output
 at the canonical state, since it subsumes $\mathit{lo}$.
 
 Monotonicity of $f$ is needed.  Let $\Spec_1$ be the functional specification
 induced by the identity on
-$M$, which needs no exclusion.  For $m\preceq_M m'$, its run
+$M$, which needs no \commitment.  For $m\preceq_M m'$, its run
 $\mathsf{output}(m)$, $\mathsf{input}(m')$, $\mathsf{output}(m')$ maps to a run
 of the composite exactly when $f(m)\OutputOrd f(m')$.  A downstream that must
-itself exclude cannot delegate the exclusion either.  If $\Spec_1$ is the identity
-on one input, it admits no exclusion at all.  If $\Spec_2$ relates that input
+itself exclude cannot delegate the \commitment either.  If $\Spec_1$ is the identity
+on one input, it admits no \commitment at all.  If $\Spec_2$ relates that input
 to two incomparable outputs, every output event of the composite at its
-canonical state applies an exclusion, which $\Spec_1$ cannot make.
+canonical state applies a \commitment, which $\Spec_1$ cannot make.
 
 \begin{example}[Replicated store]
 \label{ex:committed-log-composition}
@@ -432,9 +432,9 @@ Multi-Paxos runs $\Spec_1$ under its own basis, deciding one log slot at a
 time~\cite{schneider1990smr,lamport2001paxos}.  Since $f$ is monotone, the
 pipeline is proper, and by Theorem~\ref{thm:proper-coordination}(2) the store
 under the empty basis follows every run of the log.  By
-Theorem~\ref{thm:proper-coordination}(3), the log's exclusions cannot be
+Theorem~\ref{thm:proper-coordination}(3), the log's \commitments cannot be
 dropped.  By Corollary~\ref{cor:empty-store}, replicas whose store takes locks
-of its own can run it with no exclusions at all.
+of its own can run it with no \commitments at all.
 \end{example}
 
 \begin{example}[Bare reads]
@@ -454,12 +454,12 @@ and $G\star F$ are non-monotone.
 Suppose first that each bare-read response records the log position it read
 from, as in ``$x=5$ as of entry 17.''  A longer log never contradicts such a
 response, so $G$ is monotone.  By Complete CALM and the output-legality boundary,
-every output of $G$ at every state reachable without exclusion is
-legal, so bare reads need no exclusion of their own.  Suppose instead
+every output of $G$ at every state reachable without \commitment is
+legal, so bare reads need no \commitment of their own.  Suppose instead
 that the specification demands the latest value, so that a read of $x$ must
 return the value of $x$ after all of $b$.  Then a bare read can be
 contradicted by an entry it has not seen, and $G$ is not monotone.  By the
-exposure boundary some output of $G$ then needs an exclusion of the store's
+exposure boundary some output of $G$ then needs a \commitment of the store's
 own.  Bare reads then need coordination, typically by going through the log.
 \end{example}
 
@@ -473,7 +473,7 @@ bases, and participants compose without one shared history.
 
 \begin{definition}[Component, admitted run]
 \label{def:component}
-A \emph{component} for a specification $\Spec$ consists of an exclusion basis
+A \emph{component} for a specification $\Spec$ consists of a \commitment basis
 $\mathcal B$ and a set of \emph{admitted runs}.  Each admitted run is a run
 under $\mathcal B$ from a canonical state $\sigma(i)$
 (Definition~\ref{def:run-under-basis}), together with an output $o$ that it
@@ -494,12 +494,12 @@ its boundary observations are chosen.  An admitted boundary run is a
 participant run of a produced history together with a named emitted output
 $o$ whose pair $(i,o)$ with the run's initial input is a row of $P$; runs
 with no such output induce no observation.  The system's messages,
-partitions, and exclusions stay inside the component.  Restricted to
+partitions, and \commitments stay inside the component.  Restricted to
 one-participant histories, the induced component is a process, and a
 replicated system induces a cluster.  The two-phase commit decision of Section~\ref{sec:coordination} has
 both forms.  Run by the coordinator alone, it is a process, and its timeout
-exclusion requires coordination but not distributed coordination.  Replicated, it
-is a cluster, and the same exclusion requires distributed coordination.  The
+\commitment requires coordination but not distributed coordination.  Replicated, it
+is a cluster, and the same \commitment requires distributed coordination.  The
 \emph{maximally permissive} component under $\mathcal B$ admits every such
 run under $\mathcal B$.
 
@@ -511,7 +511,7 @@ A \emph{feed} pairs an admitted run of $C_1$, with input $i$ and output $m$,
 with an admitted run of $C_2$ from $\sigma(m)$, with output $o$.  The
 \emph{typed pipeline} of $C_1$ and $C_2$ shows the \emph{external
 observation} $(i,o)$ of each feed; the value $m$, both runs, and their
-exclusions stay hidden.
+\commitments stay hidden.
 \end{definition}
 
 \begin{definition}[Contract-proper, implementation-proper]
@@ -519,13 +519,13 @@ exclusions stay hidden.
 A typed pipeline is \emph{contract-proper} when the pipeline of $\Spec_1$
 and $\Spec_2$ is proper (Definition~\ref{def:proper-coordination}), and
 \emph{implementation-proper} when no downstream run of a feed applies a
-exclusion.
+\commitment.
 \end{definition}
 
-Receiving $m$ is the downstream run's initial input, not an exclusion of
+Receiving $m$ is the downstream run's initial input, not a \commitment of
 $C_2$.  Glue stages that copy, merge, route, or adapt values
 (\S\ref{app:dataflow-graphs}) are components with specifications of
-their own, and they may issue exclusions of their own.
+their own, and they may issue \commitments of their own.
 
 \begin{proposition}[Typed pipelines]
 \label{prop:typed-pipelines}
@@ -534,11 +534,11 @@ their own, and they may issue exclusions of their own.
 \item Every external observation admitted by a typed pipeline is a row of
       $P_2\circ P_1$.
 \item If a pipeline is implementation-proper, the downstream run of every
-      feed, with its exclusions erased, is an exclusion-free run of
+      feed, with its \commitments erased, is a \commitment-free run of
       $\Spec_2$, in which every output is legal.
 \item Contract properness does not imply implementation properness: behind a
       log, the early-lock store is a contract-proper downstream
-      implementation that still issues exclusions.
+      implementation that still issues \commitments.
 \item Contract properness does not imply feed availability for an
       arbitrarily typed downstream component: behind the capped counter, the
       maximally permissive empty-basis component for the unrestricted
@@ -553,13 +553,13 @@ their own, and they may issue exclusions of their own.
 \begin{proof}
 (1) The two runs of a feed certify $(i,m)\in P_1$ and $(m,o)\in P_2$.
 
-(2) A run that applies no exclusion has no exclusion event, and each of its
+(2) A run that applies no \commitment has no \commitment event, and each of its
 output events is $\Out{\varepsilon}{o}$, which is legal exactly when $o$ is
 a legal output.
 
 (3) The early-lock store above, fed by a log, is contract-proper, since the
 store's table satisfies Lifted Monotonicity on logs.  From the empty log it
-admits a run whose output event takes the lock, an exclusion.
+admits a run whose output event takes the lock, a \commitment.
 
 (4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
 the test of whether the count is below $10$.  The pipeline is
@@ -574,7 +574,7 @@ Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies
 Lifted Monotonicity, so every $o\in P_2(m)$ is a legal output at $\sigma(m)$
 (Proposition~\ref{prop:exposure-boundary}).  The one-event run
 $\Out{\varepsilon}{o}$ from $\sigma(m)$ is then an admitted run of $C_2$.
-Under the empty basis no run applies an exclusion.
+Under the empty basis no run applies a \commitment.
 \end{proof}
 
 Item (5) covers one boundary output.
@@ -612,7 +612,7 @@ $\circ$, $\otimes$, and glue.
 
 The product behaves componentwise.  It satisfies Lifted Monotonicity exactly
 when both factors do, an output is a legal output exactly when both components
-are, and it needs no exclusion exactly when neither factor does.  The
+are, and it needs no \commitment exactly when neither factor does.  The
 converse directions need nonempty input domains.  A stage that merges the
 outputs of two guards is proper exactly when it satisfies Lifted Monotonicity
 on the product of their outputs, and a merge by join is always proper.

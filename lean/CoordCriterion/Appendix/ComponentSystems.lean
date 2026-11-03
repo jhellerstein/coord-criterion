@@ -15,20 +15,20 @@ process form (`Component.process`); a replicated system
 form is metadata: the admitted runs and their certificates do not depend on it.
 
 * `toSEv`, `toSEvs`, `lrun_sysExec` — a participant run of `CAP/Model.lean`,
-  with its sends and receives dropped and exclusions transported by
+  with its sends and receives dropped and commitments transported by
   `Dist.ofCAP`, is an execution under the basis
-  (`Dist.sysStep_iff_CAP`, `Dist.sysStep_exclude_iff_CAP`).
+  (`Dist.sysStep_iff_CAP`, `Dist.sysStep_commitment_iff_CAP`).
 * `Component.ofSystemOn`, `Component.process`, `Component.cluster`,
-  `ofSystem_emptyExclusionBasis_exclusionFree`, `cfSystem_replicated`,
-  `cfSystem_cluster_exclusionFree`.
+  `ofSystem_emptyCommitmentBasis_commitmentFree`, `cfSystem_replicated`,
+  `cfSystem_cluster_commitmentFree`.
 * `pollClosing_run`, `pollClosingSys1_process`, `pollClosingSysRepl_replicated`,
-  `pollClosingSysRepl_cluster` — the 2PC timeout-abort exclusion (§4.4).  Run by the
+  `pollClosingSysRepl_cluster` — the 2PC timeout-abort commitment (§4.4).  Run by the
   coordinator alone (`CAP.Timeout.pollClosingSys1`) the decision is a process
-  component that admits a run applying an exclusion; that fiber-emptying exclusion requires
+  component that admits a run applying a commitment; that fiber-emptying commitment requires
   coordination but not distributed coordination
   (`CAP.Timeout.pollClosingSys1_local`).  Replicated (`CAP.Timeout.pollClosingSysRepl`) it
-  is a cluster component, and the exclusion requires distributed coordination.
-  Exclusion, coordination relative to a run universe, and distributed
+  is a cluster component, and the commitment requires distributed coordination.
+  Commitment, coordination relative to a run universe, and distributed
   coordination inside one component are different properties.
 
 Modeling choice: a component run is one participant's run of a produced,
@@ -44,28 +44,28 @@ open CAP (System LEv LRun History WF Produced)
 section Embedding
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
-/-- A local event as a system event: inputs, output events, and exclusion events
+/-- A local event as a system event: inputs, output events, and commitment events
 are kept, sends and receives are dropped. -/
 def toSEv : LEv sp D n → Option (SEvent sp)
   | .inp j => some (.input j)
   | .out γ o => some (.output (γ.map Dist.ofCAP) o)
-  | .exclude γ => some (.exclude (γ.map Dist.ofCAP))
+  | .commitment γ => some (.commitment (γ.map Dist.ofCAP))
   | .send _ _ => none
   | .recv _ _ _ _ => none
 
 /-- A participant's local event list as system events. -/
 def toSEvs (l : List (LEv sp D n)) : List (SEvent sp) := l.filterMap toSEv
 
-theorem map_toCAP_ofCAP : ∀ γ : List (CAP.Exclusion sp), (γ.map Dist.ofCAP).map Dist.toCAP = γ
+theorem map_toCAP_ofCAP : ∀ γ : List (CAP.Commitment sp), (γ.map Dist.ofCAP).map Dist.toCAP = γ
   | [] => rfl
   | c :: γ => by simp only [List.map_cons, Dist.toCAP_ofCAP, map_toCAP_ofCAP γ]
 
 /-- **A participant run is an execution under the basis.**  If every
-exclusion its output and exclusion events apply satisfies `P`, the translated
+commitment its output and commitment events apply satisfies `P`, the translated
 run is an execution under `{c | P (toCAP c)}`. -/
-theorem lrun_sysExec (P : CAP.Exclusion sp → Prop) {σ τ : State sp} {l : List (LEv sp D n)}
+theorem lrun_sysExec (P : CAP.Commitment sp → Prop) {σ τ : State sp} {l : List (LEv sp D n)}
     (h : LRun σ l τ) (hB : ∀ γ o, LEv.out γ o ∈ l → ∀ c ∈ γ, P c)
-    (hC : ∀ γ, LEv.exclude γ ∈ l → ∀ c ∈ γ, P c) :
+    (hC : ∀ γ, LEv.commitment γ ∈ l → ∀ c ∈ γ, P c) :
     SysExec (fun c => P (Dist.toCAP c)) σ (toSEvs l) τ := by
   induction h with
   | nil => exact .nil _
@@ -82,15 +82,15 @@ theorem lrun_sysExec (P : CAP.Exclusion sp → Prop) {σ τ : State sp} {l : Lis
       Dist.sysStep_iff_CAP.2 ⟨hb, σc, by rw [map_toCAP_ofCAP]; exact ha, hs, hx⟩
     exact .cons hst (ih (fun γ o hm => hB γ o (List.mem_cons_of_mem _ hm))
       (fun γ hm => hC γ (List.mem_cons_of_mem _ hm)))
-  | @exclude σ τ' ρ γ es hne ha _ ih =>
+  | @commitment σ τ' ρ γ es hne ha _ ih =>
     have hb : ∀ c ∈ γ.map Dist.ofCAP, P (Dist.toCAP c) := by
       intro c hc
       obtain ⟨c', hc', rfl⟩ := List.mem_map.1 hc
       rw [Dist.toCAP_ofCAP]
       exact hC γ List.mem_cons_self c' hc'
     have hne' : γ.map Dist.ofCAP ≠ [] := fun h => hne (List.map_eq_nil_iff.1 h)
-    have hst : SysStep (fun c => P (Dist.toCAP c)) σ (.exclude (γ.map Dist.ofCAP)) τ' :=
-      Dist.sysStep_exclude_iff_CAP.2 ⟨hb, hne', by rw [map_toCAP_ofCAP]; exact ha⟩
+    have hst : SysStep (fun c => P (Dist.toCAP c)) σ (.commitment (γ.map Dist.ofCAP)) τ' :=
+      Dist.sysStep_commitment_iff_CAP.2 ⟨hb, hne', by rw [map_toCAP_ofCAP]; exact ha⟩
     exact .cons hst (ih (fun γ o hm => hB γ o (List.mem_cons_of_mem _ hm))
       (fun γ hm => hC γ (List.mem_cons_of_mem _ hm)))
   | send _ ih =>
@@ -139,27 +139,27 @@ theorem Component.ofSystemOn_accepts (Sys : System sp D) (N : Nat → Prop)
         LRun (canon sp (init p)) (H p) r.final ∧ (∃ γ, SEvent.output γ r.output ∈ r.events) ∧
         sp.P r.input r.output := Iff.rfl
 
-/-- A system with the empty basis is an exclusion-free implementation, in
+/-- A system with the empty basis is a commitment-free implementation, in
 every form. -/
-theorem ofSystem_emptyExclusionBasis_exclusionFree (Sys : System sp D) (hB : ∀ c, ¬ Sys.basis c)
+theorem ofSystem_emptyCommitmentBasis_commitmentFree (Sys : System sp D) (hB : ∀ c, ¬ Sys.basis c)
     (N : Nat → Prop) (location : Option LocationForm) :
-    (Component.ofSystemOn Sys N location).ExclusionFree := by
+    (Component.ofSystemOn Sys N location).CommitmentFree := by
   intro r h
   have hx := ((Component.ofSystemOn Sys N location).sound r h).legal
-  have hx' : SysExec (emptyExclusionBasis sp) (canon sp r.input) r.events r.final := by
-    have e : (Component.ofSystemOn Sys N location).basis = emptyExclusionBasis sp :=
+  have hx' : SysExec (emptyCommitmentBasis sp) (canon sp r.input) r.events r.final := by
+    have e : (Component.ofSystemOn Sys N location).basis = emptyCommitmentBasis sp :=
       funext fun c => propext ⟨fun h => hB _ h, False.elim⟩
     rw [e] at hx; exact hx
-  exact sysExec_emptyExclusionBasis_coordFree hx'
+  exact sysExec_emptyCommitmentBasis_coordFree hx'
 
-/-- The exclusion-free system of Theorem `thm:complete-cap` is replicated. -/
+/-- The commitment-free system of Theorem `thm:complete-cap` is replicated. -/
 theorem cfSystem_replicated (sp : Spec I O) (D : Type) : (CAP.cfSystem sp D).Replicated :=
   ⟨fun _ _ _ => True, fun _ _ _ _ _ => Iff.rfl⟩
 
-/-- Its cluster form is an exclusion-free implementation. -/
-theorem cfSystem_cluster_exclusionFree (sp : Spec I O) (D : Type) :
-    (Component.cluster (CAP.cfSystem sp D) (cfSystem_replicated sp D)).ExclusionFree :=
-  ofSystem_emptyExclusionBasis_exclusionFree _ (fun _ h => h) _ _
+/-- Its cluster form is a commitment-free implementation. -/
+theorem cfSystem_cluster_commitmentFree (sp : Spec I O) (D : Type) :
+    (Component.cluster (CAP.cfSystem sp D) (cfSystem_replicated sp D)).CommitmentFree :=
+  ofSystem_emptyCommitmentBasis_commitmentFree _ (fun _ h => h) _ _
 
 end Embedding
 
@@ -170,7 +170,7 @@ open CAP CAP.Timeout
 
 /-- A system whose coordinator may close the polls at `yy·` when it runs
 alone admits, in any form that allows one participant, a run applying a
-exclusion. -/
+commitment. -/
 theorem pollClosing_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.basis cp)
     (hs : Sys.strat 1 (fun _ => yyN) 0 [] (.out [cp] .undecided)) (N : Nat → Prop) (hN : N 1)
     (location : Option LocationForm) :
@@ -205,14 +205,14 @@ theorem pollClosing_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.basis
     rfl, hr0, ⟨_, by rw [hev]; exact List.mem_cons_self⟩, decide_yyN.symm⟩, ?_⟩
   exact Or.inl ⟨_, _, by rw [hev]; exact List.mem_cons_self, List.cons_ne_nil _ _⟩
 
-/-- **The timeout-abort exclusion as a process component.**  The coordinator alone
+/-- **The timeout-abort commitment as a process component.**  The coordinator alone
 running the decision specification (`pollClosingSys1`) is a process component that
-admits a run applying an exclusion (it closes the polls at `yy·`), so it is
-not exclusion-free.  That exclusion requires coordination but not distributed
+admits a run applying a commitment (it closes the polls at `yy·`), so it is
+not commitment-free.  That commitment requires coordination but not distributed
 coordination (`pollClosingSys1_local`). -/
 theorem pollClosingSys1_process (D : Type) :
     (∃ r, (Component.process (pollClosingSys1 D)).accepts r ∧ Coordinates r.events) ∧
-      ¬ (Component.process (pollClosingSys1 D)).ExclusionFree ∧
+      ¬ (Component.process (pollClosingSys1 D)).CommitmentFree ∧
       ¬ (pollClosingSys1 D).CoordinationFree ∧ (pollClosingSys1 D).CoordinationFreeH := by
   obtain ⟨r, hacc, hco⟩ := pollClosing_run D (pollClosingSys1 D) rfl ⟨rfl, rfl, rfl, rfl⟩ (· = 1) rfl
     (some .process)
@@ -226,7 +226,7 @@ theorem pollClosingSysRepl_replicated (D : Type) : (pollClosingSysRepl D).Replic
     | _ => False,
    fun _ _ _ _ e => by cases e <;> exact Iff.rfl⟩
 
-/-- **The timeout-abort exclusion as a cluster component.**  Replicated, the same exclusion is admitted by the cluster form, and it requires distributed
+/-- **The timeout-abort commitment as a cluster component.**  Replicated, the same commitment is admitted by the cluster form, and it requires distributed
 coordination (`pollClosingSysRepl_not_coordinationFreeH`). -/
 theorem pollClosingSysRepl_cluster (D : Type) :
     (∃ r, (Component.cluster (pollClosingSysRepl D) (pollClosingSysRepl_replicated D)).accepts r ∧

@@ -23,9 +23,9 @@ Conventions: `≼` is both orders; a table is `Table I O := I → O → Prop`;
 a set of outputs is a predicate `O → Prop`; finite families are `List`s;
 participants are `Fin n`.  §4 has two encodings of systems: `CC.Dist`
 (`Distributed/`) for histories and distributed consistency, `CC`
-(`Distributed/Exclusions.lean`) for exclusions and system output events,
+(`Distributed/Commitments.lean`) for commitments and system output events,
 and the self-contained `CC.CAP` model (`CAP/Model.lean`) for Complete CAP;
-`CC.Dist.sysStep_iff_CAP` shows the two exclusion/output-event encodings
+`CC.Dist.sysStep_iff_CAP` shows the two commitment/output-event encodings
 agree.
 -/
 
@@ -123,14 +123,14 @@ abbrev «app:notation/input-loss» {sp : Spec I O} (σ : State sp) (j : I) : Tab
 (Def. `def:output-event`).  Lean: `Step σ (.output o) τ`. -/
 abbrev «app:notation/output-event» (o : O) : Event I O := .output o
 
-/-- *exclusion* (§2 sense) — an output event that removes rows
+/-- *commitment* (§2 sense) — an output event that removes rows
 (Def. `def:output-event`).  In a functional specification this is "`R' ≠ R`",
 equivalently "`Excluded_o ≠ ∅`" (`CALM.functional_exclude_iff_excluded`).  The
-general notion is Def. `def:exclusion` (`«app:notation/exclusion»`). -/
+general notion is Def. `def:commitment` (`«app:notation/commitment»`). -/
 abbrev «app:notation/output-event-excludes» {sp : Spec I O} (σ : State sp) (o : O) : Prop :=
   ¬ Exposable σ o
 
-/-- *legal output* — `output(o)` applies no exclusion (Def. `def:exposable`).
+/-- *legal output* — `output(o)` applies no commitment (Def. `def:exposable`).
 Lean: `Exposable σ o`. -/
 abbrev «app:notation/exposable» {sp : Spec I O} (σ : State sp) (o : O) : Prop := Exposable σ o
 
@@ -143,9 +143,9 @@ abbrev «app:notation/determined» {sp : Spec I O} (σ : State sp) : Prop := Det
 Lean: `Exec (canon sp i) es τ`; `IsRun τ` for "`τ` ends a run". -/
 abbrev «app:notation/run» {sp : Spec I O} (τ : State sp) : Prop := IsRun τ
 
-/-- *exclusion-free* — no output event commits (Def. `def:run`).  Lean:
-`ExecCF σ es τ`; reachable without exclusion: `ReachableCF τ`. -/
-abbrev «app:notation/exclusion-free» {sp : Spec I O} (σ : State sp) (es : List (Event I O))
+/-- *commitment-free* — no output event commits (Def. `def:run`).  Lean:
+`ExecCF σ es τ`; reachable without commitment: `ReachableCF τ`. -/
+abbrev «app:notation/commitment-free» {sp : Spec I O} (σ : State sp) (es : List (Event I O))
     (τ : State sp) : Prop :=
   ExecCF σ es τ
 
@@ -226,11 +226,11 @@ abbrev «app:notation/Subsumed» {sp : Spec I O} (σ : State sp) (o : O) : Table
 abbrev «app:notation/Excluded» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   Excluded σ o
 
-/-- *canonical exclusion* — remove `Excluded_o`. -/
-noncomputable abbrev «app:notation/canonical-exclusion» {sp : Spec I O} : O → Exclusion sp :=
-  canonicalExclusion
+/-- *canonical commitment* — remove `Excluded_o`. -/
+noncomputable abbrev «app:notation/canonical-commitment» {sp : Spec I O} : O → Commitment sp :=
+  canonicalCommitment
 
-/-- *output subsumption* — remove `Subsumed_o`, not an exclusion
+/-- *output subsumption* — remove `Subsumed_o`, not a commitment
 (Def. `def:lifted-output-event`).  Lean: the rows `Subsumed σ o`, removed by
 `outputTable σ o` (no separate state). -/
 abbrev «app:notation/output-subsumption» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
@@ -271,7 +271,7 @@ abbrev «app:notation/consistent-cut» {D : Type} {n : Nat} (H : Dist.History I 
     (C : Dist.Pos n → Prop) : Prop :=
   H.IsCut C
 
-/-- *participant run; endpoint* — `p`'s input, output, and exclusion events at `C`;
+/-- *participant run; endpoint* — `p`'s input, output, and commitment events at `C`;
 `(σ_p(C))_{p ∈ P}` (Def. `def:participant-run`).  Lean:
 `Dist.History.Endpoint sp H C σs` says `σs p` is the final state of `p`'s
 participant run `ioOf ((H.ev p).take c)` at `C`. -/
@@ -298,13 +298,13 @@ Lean: `Dist.DistConsistent sp D`, for message data `D`. -/
 abbrev «app:notation/distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
   Dist.DistConsistent sp D
 
-/-- *exclusion* — partial function on states removing rows, none refined by
-a remaining row at the same input (Def. `def:exclusion`).  Lean:
-`CC.Exclusion sp` (and the equivalent `CC.CAP.Exclusion sp`). -/
-abbrev «app:notation/exclusion» (sp : Spec I O) := Exclusion sp
+/-- *commitment* — partial function on states removing rows, none refined by
+a remaining row at the same input (Def. `def:commitment`).  Lean:
+`CC.Commitment sp` (and the equivalent `CC.CAP.Commitment sp`). -/
+abbrev «app:notation/commitment» (sp : Spec I O) := Commitment sp
 
 /-- *local history; strategy* — `p`'s history events in order;
-`θ_p(λ)`, the output, exclusion, and send events `p` may perform next
+`θ_p(λ)`, the output, commitment, and send events `p` may perform next
 (Def. `def:strategy`).  Lean (`CC.CAP`): a local history is a list
 `pre : List (CAP.LEv sp D n)`; the strategy is the field `System.strat`
 (`strat n init p pre e`: `p` may perform `e` after `pre`), a relation, i.e.
@@ -313,40 +313,40 @@ abbrev «app:notation/strategy» {sp : Spec I O} {D : Type} (Sys : CAP.System sp
     (n : Nat) → (Fin n → I) → Fin n → List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop :=
   Sys.strat
 
-/-- *system* — an exclusion basis `𝓑` and a strategy per participant
+/-- *system* — a commitment basis `𝓑` and a strategy per participant
 (Def. `def:system`).  Lean: `CAP.System sp D` (fields `basis`, `strat`). -/
 abbrev «app:notation/system» (sp : Spec I O) (D : Type) := CAP.System sp D
 
-/-- *basis* (Def. `def:system`: "An exclusion basis is a set of exclusions
-shared by all participants").  Lean: `ExclusionBasis sp := Exclusion sp → Prop`
+/-- *basis* (Def. `def:system`: "A commitment basis is a set of commitments
+shared by all participants").  Lean: `CommitmentBasis sp := Commitment sp → Prop`
 (in `CC.CAP`: the field `System.basis`). -/
-abbrev «app:notation/basis» (sp : Spec I O) := ExclusionBasis sp
+abbrev «app:notation/basis» (sp : Spec I O) := CommitmentBasis sp
 
 /-- *produced* — every non-input event permitted by its strategy and using
-only exclusions from `𝓑` (Def. `def:system`).  Lean: `CAP.Produced`. -/
+only commitments from `𝓑` (Def. `def:system`).  Lean: `CAP.Produced`. -/
 abbrev «app:notation/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) (n : Nat)
     (init : Fin n → I) (H : CAP.History sp D n) : Prop :=
   CAP.Produced Sys n init H
 
-/-- *system output event `Out_γ(o)`* — applies exclusions `γ`, subsumes,
+/-- *system output event `Out_γ(o)`* — applies commitments `γ`, subsumes,
 emits `o` (Def. `def:system-output-event`); when run by a system, `γ ⊆ B`
 (Def. `def:system`).  Lean: the event `SEvent.output γ o`, with transition
 `SysStep B σ (.output γ o) τ`. -/
-abbrev «app:notation/system-output-event» {sp : Spec I O} (B : ExclusionBasis sp) :
+abbrev «app:notation/system-output-event» {sp : Spec I O} (B : CommitmentBasis sp) :
     State sp → SEvent sp → State sp → Prop :=
   SysStep B
 
-/-- *exclusion event `exclude(γ)`* — applies a nonempty sequence `γ` of
-exclusions, emits nothing (Def. `def:exclusion-event`); when run by a
-system, `γ ⊆ B` (Def. `def:system`).  Lean: the event `SEvent.exclude γ`,
-with transition `SysStep B σ (.exclude γ) τ`. -/
-abbrev «app:notation/exclusion-event» {sp : Spec I O} (B : ExclusionBasis sp) (σ : State sp)
-    (γ : List (Exclusion sp)) (τ : State sp) : Prop :=
-  SysStep B σ (.exclude γ) τ
+/-- *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of
+commitments, emits nothing (Def. `def:commitment-event`); when run by a
+system, `γ ⊆ B` (Def. `def:system`).  Lean: the event `SEvent.commitment γ`,
+with transition `SysStep B σ (.commitment γ) τ`. -/
+abbrev «app:notation/commitment-event» {sp : Spec I O} (B : CommitmentBasis sp) (σ : State sp)
+    (γ : List (Commitment sp)) (τ : State sp) : Prop :=
+  SysStep B σ (.commitment γ) τ
 
-/-- *run under a basis* — specification events whose exclusions come from the basis
+/-- *run under a basis* — specification events whose commitments come from the basis
 (Def. `def:run-under-basis`).  Lean: `RunUnder B es τ`. -/
-abbrev «app:notation/run-under-basis» {sp : Spec I O} (B : ExclusionBasis sp) (es : List (SEvent sp))
+abbrev «app:notation/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
@@ -358,15 +358,15 @@ abbrev «app:notation/canonical-run» {sp : Spec I O} (σ : State sp) (es : List
     (τ : State sp) : Prop :=
   CanonExec σ es τ
 
-/-- *observably equivalent* — same input and output events, exclusions and
-exclusion events erased; every run has a canonical one
+/-- *observably equivalent* — same input and output events, commitments and
+commitment events erased; every run has a canonical one
 (Lem. `lem:canonical-equivalent`).  Lean: two event lists are observably
 equivalent when their images under `filterMap SEvent.erase` (which drops
-exclusion events) agree; the lemma is `CC.canonical_equivalent`. -/
+commitment events) agree; the lemma is `CC.canonical_equivalent`. -/
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- *contradicts* — accepts an input whose fiber an exclusion emptied, or
+/-- *contradicts* — accepts an input whose fiber a commitment emptied, or
 emits an output whose row it removed (Def. `def:contradicts`).  Lean: `CAP.Contradicts emits
 accepts σ σc` (some removed row is emitted at its input, or some excluded input is
 accepted). -/
@@ -374,25 +374,25 @@ abbrev «app:notation/contradicts» {sp : Spec I O} (emits : I → O → Prop) (
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
-/-- *requires coordination* — an exclusion some run contradicts
-(Def. `def:coordination`).  Lean, for a system: the exclusions taking `σ` to
+/-- *requires coordination* — a commitment some run contradicts
+(Def. `def:coordination`).  Lean, for a system: the commitments taking `σ` to
 `σc` are contradicted by the runs of `Sys` (`SysEmits`, `SysAccepts`); for a
-specification, coordination is exclusion (`Coordinates es`). -/
+specification, coordination is commitment (`Coordinates es`). -/
 abbrev «app:notation/coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
     (σ σc : State sp) : Prop :=
   CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
 
-/-- *requires distributed coordination* — an exclusion applied by `p` that
+/-- *requires distributed coordination* — a commitment applied by `p` that
 some run at another participant `q ≠ p` contradicts (Def. `def:distributed-coordination`).  Lean: the
-exclusions of participant `p` of `H` are contradicted by a participant
+commitments of participant `p` of `H` are contradicted by a participant
 `q ≠ p` of `H`. -/
 abbrev «app:notation/distributed-coordination» {sp : Spec I O} {D : Type} {n : Nat}
     (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp) : Prop :=
   CAP.Contradicts (CAP.OtherEmits init H p) (CAP.OtherAccepts H p) σ σc
 
-/-- *coordination-free* — applies no exclusion that requires coordination
+/-- *coordination-free* — applies no commitment that requires coordination
 (Def. `def:coordination-free`).  Lean, for a system:
-`CAP.System.CoordinationFree` (no output or exclusion event's exclusions are
+`CAP.System.CoordinationFree` (no output or commitment event's commitments are
 contradicted by any run of the system); `CAP.System.CoordinationFreeH` for
 distributed coordination; for a specification, `CoordFree es`. -/
 abbrev «app:notation/coordination-free» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :

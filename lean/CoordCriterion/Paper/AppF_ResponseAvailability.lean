@@ -162,7 +162,7 @@ theorem «def:response-availability/input-acceptance-preserves-expansion» (Sys 
         (∀ q, comp q ≠ comp p → ext q = []) ∧ LEv.inp j ∈ ext p) ↔ ∃ u, σ.R j u :=
   input_acceptance_iff Sys hwf hprod hpart hcut hσ j
 
-/-- "It excludes specifications whose answers require such a fiber-emptying exclusion": if no
+/-- "It excludes specifications whose answers require such a fiber-emptying commitment": if no
 answer at `i` has a refinement at some `j ⪰ i`, no system has Response
 Availability (already with two participants, each alone). -/
 theorem «def:response-availability/excludes-unavailable-expansion» (Sys : System sp D)
@@ -224,10 +224,10 @@ theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
     RPCAt H c j ↔ ConfluentCut init H c j :=
   canonical_rpc_iff_confluent hS hwf hp hcut hj
 
-/-- "With other exclusions the converse can fail: participants may prune
+/-- "With other commitments the converse can fail: participants may prune
 their states so that they cannot be reconciled while their emitted outputs
 still have a common refinement."  Witness: `uSpec` (inputs `lo ≺ hi`, one output) and the
-system `rnSys` whose basis is an exclusion emptying the fiber at `hi`; in the history `rnH`
+system `rnSys` whose basis is a commitment emptying the fiber at `hi`; in the history `rnH`
 the cut has RPC at `hi` but is not confluent there. -/
 theorem «def:response-partition-consistency/converse-fails» :
     WF (fun _ => In2.lo) rnH ∧ Produced rnSys 2 (fun _ => In2.lo) rnH ∧
@@ -489,7 +489,7 @@ theorem «app:cap-response/subspec-weaker» :
 `d₂` empties the fiber at `k₂` or `k₁`."  Lean: after any run emitting `d₁` no row at `k₂`
 remains, and symmetrically. -/
 theorem «app:cap-response/subspec-empties-fibers» {D : Type} {n : Nat} {σ τ : State sp5}
-    {l : List (LEv sp5 D n)} (h : LRun σ l τ) {γ : List (Exclusion sp5)} :
+    {l : List (LEv sp5 D n)} (h : LRun σ l τ) {γ : List (Commitment sp5)} :
     (LEv.out γ .d1 ∈ l → ∀ u, ¬ τ.R .k2 u) ∧ (LEv.out γ .d2 ∈ l → ∀ u, ¬ τ.R .k1 u) :=
   ⟨fun hm u => emit_d1_empties_k2 h hm u, fun hm u => emit_d2_empties_k1 h hm u⟩
 

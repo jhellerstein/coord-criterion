@@ -1,15 +1,15 @@
 import CoordCriterion.Appendix.TransactionBases.Spec
 
 /-!
-# Exclusion bases for 2PL and MVTO (Appendix G, `app:cc-bases`)
+# Commitment bases for 2PL and MVTO (Appendix G, `app:cc-bases`)
 
 Namespace `CC.Txn.Partial`.  The specification is in `Spec.lean`.
 
 * `ab_ba_rows`, `ab_ba_no_common`, `spec_not_liftedMono` — not monotone.
-* `Keep`, `closeC`, `closeC_app_iff`, `keep_complete` — a *closure exclusion*
+* `Keep`, `closeC`, `closeC_app_iff`, `keep_complete` — a *closure commitment*
   for a condition `Q` on complete outputs keeps a row when some remaining
   complete row at the same input refines it and satisfies `Q`; it is a
-  exclusion (Def. `def:exclusion`) for every `Q`.  (Removing exactly the
+  commitment (Def. `def:commitment`) for every `Q`.  (Removing exactly the
   rows that fail an up-closed condition would leave rows with no remaining
   completion, e.g. a row committing `A` and `B` whose read forces a third
   transaction between them against the stamps; the closure form removes them.)
@@ -18,16 +18,16 @@ Namespace `CC.Txn.Partial`.  The specification is in `Spec.lean`.
   completable; `read_emit`, `abort_emit` — after `read(B,n,v)` (resp.
   `abort(A)`), emitting the read (resp. the abort) is exposable.
 * `fig_h`, `fig_i`, `order_at`, `stamp_at`, `order_not_MVTO`, `stamp_not_2PL`,
-  `not_read`, `not_canonical_exclusion`, `neither_is_canonical_exclusion` — Fig. `fig:cc-exclusions`
+  `not_read`, `not_canonical_commitment`, `neither_is_canonical_commitment` — Fig. `fig:cc-commitments`
   and the bases differ, at the canonical state of three transactions that have
   requested commit.
 * `deadlock`, `deadlock_complete`, `deadlock_commit`, `abortFree_deadlock`,
   `abortFree_never_both` — 2PL deadlock.
 * `stamps_row`, `TwoStamps.no_both`, `TwoStamps.read_no_both`,
   `TwoStamps.abort_entailed` — MVTO: what a reported read commits to, and when
-  `A`'s abort is entailed.  The run in which it is an exclusion is in `MVTO.lean`.
+  `A`'s abort is entailed.  The run in which it is a commitment is in `MVTO.lean`.
 
-Modeling exclusions: the guards ("`A ∈ i`", "`A` has requested commit", "the
+Modeling commitments: the guards ("`A ∈ i`", "`A` has requested commit", "the
 `n`-th operation of `A` is a read", etc.) are part of definedness.
 -/
 
@@ -41,7 +41,7 @@ set_option linter.unusedSimpArgs false
 
 variable {T K : Type}
 
-/-! ### Closure exclusions -/
+/-! ### Closure commitments -/
 
 section Closure
 variable {af : Bool}
@@ -85,11 +85,11 @@ theorem closeApp_eq {G : State (spec (T := T) (K := K) af) → Prop} {Q : ROut T
     rintro ⟨h', _⟩
     exact h h'
 
-/-- **A closure exclusion is an exclusion** (Def. `def:exclusion`), for every
+/-- **A closure commitment is a commitment** (Def. `def:commitment`), for every
 condition `Q`: a removed row has no remaining complete row above it satisfying
 `Q`, so no kept row refines it (a kept row's complete witness would serve). -/
 noncomputable def closeC (G : State (spec (T := T) (K := K) af) → Prop) (Q : ROut T K → Prop) :
-    Exclusion (spec (T := T) (K := K) af) where
+    Commitment (spec (T := T) (K := K) af) where
   app := closeApp G Q
   cur_eq := by
     intro σ τ h; obtain ⟨_, rfl⟩ := closeApp_eq.1 h; rfl
@@ -99,7 +99,7 @@ noncomputable def closeC (G : State (spec (T := T) (K := K) af) → Prop) (Q : R
     intro σ τ h
     obtain ⟨hd, rfl⟩ := closeApp_eq.1 h
     exact hd.2.2
-  excludes := by
+  unsubsumed := by
     intro σ τ h k u w hu hnu hw huw
     obtain ⟨_, rfl⟩ := closeApp_eq.1 h
     obtain ⟨_, c, hc, hp, hwc, hq⟩ := hw
@@ -135,7 +135,7 @@ theorem keep_complete {σ : State (spec (T := T) (K := K) af)} {P : Outcome T �
   · rintro ⟨h, hq⟩
     exact ⟨h, c, h, hp, PO.refl _, hq⟩
 
-/-- After a closure exclusion, every row has a remaining complete refinement
+/-- After a closure commitment, every row has a remaining complete refinement
 satisfying `Q`. -/
 theorem after_completion {G : State (spec (T := T) (K := K) af) → Prop} {Q : ROut T K → Prop}
     {σ τ : State (spec (T := T) (K := K) af)} (h : (closeC G Q).app σ = some τ) {k : Inp T K} {u : ROut T K}
@@ -144,7 +144,7 @@ theorem after_completion {G : State (spec (T := T) (K := K) af) → Prop} {Q : R
   obtain ⟨_, c, hc, hp, hle, hq⟩ := (hR k u).1 hu
   exact ⟨c, (hR k c).2 ⟨hc, c, hc, hp, PO.refl _, hq⟩, hp, hle, hq⟩
 
-/-- After a closure exclusion for a condition on `(L,X)`, every complete row
+/-- After a closure commitment for a condition on `(L,X)`, every complete row
 of every smaller table satisfies it. -/
 theorem after_complete {G : State (spec (T := T) (K := K) af) → Prop} {P : Outcome T → Prop}
     {σ τ : State (spec (T := T) (K := K) af)} (h : (closeC G (fun c => P c.o)).app σ = some τ)
@@ -175,7 +175,7 @@ theorem not_mem_close {G : State (spec (T := T) (K := K) af) → Prop} {P : Outc
     {c : ROut T K} (hp : Decides af k c.o) (hn : ¬ P c.o) : ¬ τ.R k c :=
   fun hm => hn (after_complete h (R := τ.R) (fun _ _ h => h) hm hp)
 
-/-- Membership of a complete row in the result of a closure exclusion for a
+/-- Membership of a complete row in the result of a closure commitment for a
 condition on `(L,X)`. -/
 theorem res_iff {G : State (spec (T := T) (K := K) af) → Prop} {P : Outcome T → Prop}
     {σ τ : State (spec (T := T) (K := K) af)} (hτ : (closeC G (fun c => P c.o)).app σ = some τ)
@@ -184,7 +184,7 @@ theorem res_iff {G : State (spec (T := T) (K := K) af) → Prop} {P : Outcome T 
 
 end Closure
 
-/-! ### The exclusions and the bases -/
+/-! ### The commitments and the bases -/
 
 /-- `order(A,B)`: no committed `B` before a committed `A`. -/
 def OrderOK (A B : T) (o : Outcome T) : Prop := ¬ o.lt B A
@@ -201,40 +201,40 @@ section Bases
 variable {af : Bool}
 
 /-- `order(A,B)`, for distinct `A, B` of the current input. -/
-noncomputable def order (A B : T) : Exclusion (spec (T := T) (K := K) af) :=
+noncomputable def order (A B : T) : Commitment (spec (T := T) (K := K) af) :=
   closeC (fun σ => A ≠ B ∧ σ.cur.mem A ∧ σ.cur.mem B) (fun c => OrderOK A B c.o)
 /-- `TxCommit(A)`, for `A` whose commit request is in the current input. -/
-noncomputable def commit (A : T) : Exclusion (spec (T := T) (K := K) af) :=
+noncomputable def commit (A : T) : Commitment (spec (T := T) (K := K) af) :=
   closeC (fun σ => σ.cur.fin A) (fun c => CommitOK A c.o)
 /-- `abort(A)`, for `A` in the current input. -/
-noncomputable def abort (A : T) : Exclusion (spec (T := T) (K := K) af) :=
+noncomputable def abort (A : T) : Commitment (spec (T := T) (K := K) af) :=
   closeC (fun σ => σ.cur.mem A) (fun c => AbortOK A c.o)
 /-- `stamp(A)` given `Z ⊆ i` with `A ∈ i ∖ Z`. -/
-noncomputable def stamp (A : T) (Z : T → Prop) : Exclusion (spec (T := T) (K := K) af) :=
+noncomputable def stamp (A : T) (Z : T → Prop) : Commitment (spec (T := T) (K := K) af) :=
   closeC (fun σ => σ.cur.mem A ∧ ¬ Z A ∧ ∀ z, Z z → σ.cur.mem z) (fun c => StampOK A Z c.o)
 /-- `read(A,n,v)`, for `A` whose `n`-th operation in the current input is a
 read: that read returns `v`. -/
-noncomputable def read (A : T) (n : Nat) (v : Option T) : Exclusion (spec (T := T) (K := K) af) :=
+noncomputable def read (A : T) (n : Nat) (v : Option T) : Commitment (spec (T := T) (K := K) af) :=
   closeC (fun σ => ∃ x, σ.cur.op A n = some (.rd x)) (fun c => c.ρ A n = some v)
 
 /-- `B_2PL = {order, TxCommit, abort, read}`. -/
-def basis2PL : ExclusionBasis (spec (T := T) (K := K) af) := fun c =>
+def basis2PL : CommitmentBasis (spec (T := T) (K := K) af) := fun c =>
   (∃ A B, c = order A B) ∨ (∃ A, c = commit A) ∨ (∃ A, c = abort A) ∨
     (∃ A n v, c = read A n v)
 
 /-- `B_MVTO = {stamp, TxCommit, abort, read}`. -/
-def basisMVTO : ExclusionBasis (spec (T := T) (K := K) af) := fun c =>
+def basisMVTO : CommitmentBasis (spec (T := T) (K := K) af) := fun c =>
   (∃ A Z, c = stamp A Z) ∨ (∃ A, c = commit A) ∨ (∃ A, c = abort A) ∨
     (∃ A n v, c = read A n v)
 
-/-- A closure exclusion. -/
-def IsClosure (c : Exclusion (spec (T := T) (K := K) af)) : Prop := ∃ G Q, c = closeC G Q
+/-- A closure commitment. -/
+def IsClosure (c : Commitment (spec (T := T) (K := K) af)) : Prop := ∃ G Q, c = closeC G Q
 
-theorem basis2PL_closure {c : Exclusion (spec (T := T) (K := K) af)} (h : basis2PL c) :
+theorem basis2PL_closure {c : Commitment (spec (T := T) (K := K) af)} (h : basis2PL c) :
     IsClosure c := by
   rcases h with ⟨_, _, rfl⟩ | ⟨_, rfl⟩ | ⟨_, rfl⟩ | ⟨_, _, _, rfl⟩ <;> exact ⟨_, _, rfl⟩
 
-theorem basisMVTO_closure {c : Exclusion (spec (T := T) (K := K) af)} (h : basisMVTO c) :
+theorem basisMVTO_closure {c : Commitment (spec (T := T) (K := K) af)} (h : basisMVTO c) :
     IsClosure c := by
   rcases h with ⟨_, _, rfl⟩ | ⟨_, rfl⟩ | ⟨_, rfl⟩ | ⟨_, _, _, rfl⟩ <;> exact ⟨_, _, rfl⟩
 
@@ -308,7 +308,7 @@ theorem good_close {G : State (spec (T := T) (K := K) af) → Prop} {Q : ROut T 
   · obtain ⟨c, hc, hp, hle, _⟩ := after_completion h hx
     exact ⟨c, hc, hp, hle⟩
 
-theorem good_applySeq {γ : List (Exclusion (spec (T := T) (K := K) af))}
+theorem good_applySeq {γ : List (Commitment (spec (T := T) (K := K) af))}
     {σ ρ : State (spec (T := T) (K := K) af)} (hγ : ∀ c ∈ γ, IsClosure c) (h : ApplySeq γ σ ρ) (hg : Good σ) :
     Good ρ := by
   induction h with
@@ -317,17 +317,17 @@ theorem good_applySeq {γ : List (Exclusion (spec (T := T) (K := K) af))}
     obtain ⟨G, Q, rfl⟩ := hγ c (by simp)
     exact ih (fun c' h' => hγ c' (by simp [h'])) (good_close hc hg)
 
-theorem good_sysStep {B : ExclusionBasis (spec (T := T) (K := K) af)} (hB : ∀ c, B c → IsClosure c)
+theorem good_sysStep {B : CommitmentBasis (spec (T := T) (K := K) af)} (hB : ∀ c, B c → IsClosure c)
     {σ τ : State (spec (T := T) (K := K) af)} {e : SEvent (spec (T := T) (K := K) af)} (h : SysStep B σ e τ) (hg : Good σ) :
     Good τ := by
   cases h with
   | input h => exact good_input h hg
   | output hγ happ _ _ _ hR =>
       exact good_outputTable hR (good_applySeq (fun c hc => hB c (hγ c hc)) happ hg)
-  | exclude hγ _ happ =>
+  | commitment hγ _ happ =>
     exact good_applySeq (fun c hc => hB c (hγ c hc)) happ hg
 
-theorem good_sysExec {B : ExclusionBasis (spec (T := T) (K := K) af)} (hB : ∀ c, B c → IsClosure c)
+theorem good_sysExec {B : CommitmentBasis (spec (T := T) (K := K) af)} (hB : ∀ c, B c → IsClosure c)
     {σ τ : State (spec (T := T) (K := K) af)} {es : List (SEvent (spec (T := T) (K := K) af))} (h : SysExec B σ es τ)
     (hg : Good σ) : Good τ := by
   induction h with
@@ -482,7 +482,7 @@ input in which both have requested commit: the two commit requests are never
 both accepted. -/
 theorem abortFree_never_both {A B : T} {σ σ1 σ1' σ2 : State (spec (T := T) (K := K) true)}
     (h1 : (order A B).app σ = some σ1) (hs : ∀ k u, σ1'.R k u → σ1.R k u)
-    (h2 : (order B A).app σ1' = some σ2) (Bs : ExclusionBasis (spec (T := T) (K := K) true))
+    (h2 : (order B A).app σ1' = some σ2) (Bs : CommitmentBasis (spec (T := T) (K := K) true))
     {es : List (SEvent (spec (T := T) (K := K) true))} {τ : State (spec (T := T) (K := K) true)} (hx : SysExec Bs σ2 es τ) :
     ¬ (τ.cur.fin A ∧ τ.cur.fin B) :=
   let ⟨_, ho⟩ := τ.hasCur
@@ -542,7 +542,7 @@ theorem addRead_le {u c : ROut T K} (h : u ≼ c) {B : T} {n : Nat} {v : Option 
 section Emit
 variable {af : Bool}
 
-/-- **Reporting a read after `read(B,n,v)` applies no further exclusion.**  At
+/-- **Reporting a read after `read(B,n,v)` applies no further commitment.**  At
 a good state, after `read(B,n,v)`, if every row refines `u` and `u` is a row,
 then `u` with the read fact added is a row at the same input, and emitting it is
 exposable. -/
@@ -575,7 +575,7 @@ theorem abort_exposable {A : T} {τ : State (spec (T := T) (K := K) false)} (hg 
   exact ⟨up _ u hu, fun k w hw _ => ⟨addAbort w A, up k w hw,
     addAbort_mono (hall k w hw) A, le_addAbort w A⟩⟩
 
-/-- **Reporting an abort after `abort(A)` applies no further exclusion.** -/
+/-- **Reporting an abort after `abort(A)` applies no further commitment.** -/
 theorem abort_emit {A : T} {σ σ' : State (spec (T := T) (K := K) false)} (hg : Good σ)
     (h : (abort A).app σ = some σ') {u : ROut T K} (hu : σ'.R σ'.cur u)
     (hall : ∀ k w, σ'.R k w → u ≼ w) :
@@ -684,7 +684,7 @@ this read returned `v` (initial, or written by a transaction stamped before
 `A`), and whose complete rows all commit `B` (for example after
 `TxCommit(B)`).  Then no row of `τ` commits `A`, every complete row aborts `A`,
 and if `u` is a row at the current input then so is `u` with `A` aborted, and
-emitting it is exposable: it applies no exclusion. -/
+emitting it is exposable: it applies no commitment. -/
 theorem TwoStamps.abort_entailed {A B : T} {ZA ZB : T → Prop}
     {σ σ2 : State (spec (T := T) (K := K) false)} (H : TwoStamps A B ZA ZB σ σ2) {x : K}
     {n : Nat} {v : Option T} (hv : ∀ W, v = some W → ZA W) {τ : State (spec (T := T) (K := K) false)}
@@ -710,7 +710,7 @@ theorem TwoStamps.abort_entailed {A B : T} {ZA ZB : T → Prop}
 
 end MVTO
 
-/-! ### Rows that commit nothing; reads and canonical exclusions at a canonical state -/
+/-! ### Rows that commit nothing; reads and canonical commitments at a canonical state -/
 
 /-- The output that decides nothing and reports nothing. -/
 def emptyO : Outcome T where
@@ -747,7 +747,7 @@ theorem uncommitted_completion {k : Inp T K} {y : ROut T K}
     exact ((hp.1 t).1).2 (Or.inl (hle.1.1 t hX))
 where hy' : (spec (T := T) (K := K) false).P k y := hy
 
-/-- At a canonical state, a closure exclusion for a condition that holds
+/-- At a canonical state, a closure commitment for a condition that holds
 whenever nothing is committed keeps every row that commits nothing. -/
 theorem keeps_uncommitted {k0 : Inp T K} {P : Outcome T → Prop}
     (hP : ∀ o : Outcome T, (∀ a b, ¬ o.lt a b) → P o) {k : Inp T K} {y : ROut T K}
@@ -788,7 +788,7 @@ theorem add_forced {k : Inp T K} {r : ROut T K} (hr : Complete false k r)
   obtain ⟨rfl, hw⟩ := forced_version h4
   refine ⟨x, h1, h2, fun _ => ⟨fun ⟨m, _, hm⟩ => absurd (Inp.op_writes hm) (hw a), fun _ w _ hww => hw w hww⟩⟩
 
-/-- **No read exclusion has the effect `τ`** at the canonical state of `k0`,
+/-- **No read commitment has the effect `τ`** at the canonical state of `k0`,
 if `τ` keeps every row at `k0` that commits nothing and removes some complete
 row at `k0` that reports no reads. -/
 theorem not_read {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
@@ -816,19 +816,19 @@ theorem not_read {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
     exact hnr ((hR k0 r).2 ⟨hr, _, ⟨⟨_, hc', PO.refl _⟩, PO.refl _⟩,
       hrp, hle, single_eq⟩)
 
-/-- **No canonical exclusion `x_o` has the effect `τ`** at the canonical state of
+/-- **No canonical commitment `x_o` has the effect `τ`** at the canonical state of
 `k0`, if `τ` keeps every row at `k0` that commits nothing, the complete row
 aborting everything, and some complete row aborting nothing (without reads),
 and removes some complete row at `k0` that reports no reads. -/
-theorem not_canonical_exclusion {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
+theorem not_canonical_commitment {k0 : Inp T K} {τ : State (spec (T := T) (K := K) false)}
     (hi : ∀ y, (canon (spec (T := T) (K := K) false) k0).R k0 y → (∀ t, ¬ y.o.dom t) → τ.R k0 y)
     (ha : τ.R k0 (full (allAbort k0.txs))) {c1 : Outcome T} (hc1p : Decides false k0 c1)
     (hc1X : ∀ t, ¬ c1.X t) (hc1 : τ.R k0 (full c1))
     {r : ROut T K} (hr : (canon (spec (T := T) (K := K) false) k0).R k0 r) (hrp : Decides false k0 r.o)
     (hrρ : ∀ a n, r.ρ a n = none) (hnr : ¬ τ.R k0 r) (o : ROut T K) :
-    (canonicalExclusion o).app (canon (spec (T := T) (K := K) false) k0) ≠ some τ := by
+    (canonicalCommitment o).app (canon (spec (T := T) (K := K) false) k0) ≠ some τ := by
   intro h
-  obtain ⟨ho, _, e⟩ := excludeApp_eq.1 h
+  obtain ⟨ho, _, e⟩ := commitmentApp_eq.1 h
   let σ0 := canon (spec (T := T) (K := K) false) k0
   have hR : ∀ k u, τ.R k u ↔ σ0.R k u ∧ ¬ Excluded σ0 o k u := by
     intro k u; rw [← e]; exact Iff.rfl
@@ -880,7 +880,7 @@ theorem not_canonical_exclusion {k0 : Inp T K} {τ : State (spec (T := T) (K := 
 
 end Canon
 
-/-! ### Figure `fig:cc-exclusions` -/
+/-! ### Figure `fig:cc-commitments` -/
 
 section Figure
 variable {af : Bool}
@@ -1107,11 +1107,11 @@ theorem stamp_keeps_uncommitted {τ : State (spec (T := T) (K := K) false)}
     (keeps_uncommitted (P := StampOK B (fun _ => False))
       (fun _ ho => ⟨fun D _ _ => ho D B, fun _ h => h.elim⟩) hy hd)
 
-/-- **`order(A,B)` is no MVTO exclusion**: at the canonical state of `k`, no
-exclusion of `B_MVTO` has the effect of `order(A,B)`. -/
+/-- **`order(A,B)` is no MVTO commitment**: at the canonical state of `k`, no
+commitment of `B_MVTO` has the effect of `order(A,B)`. -/
 theorem order_not_MVTO (h : Tri k A B C) {τ : State (spec (T := T) (K := K) false)}
     (hτ : (order A B).app (σ3 k) = some τ) :
-    ∀ c : Exclusion (spec (T := T) (K := K) false), basisMVTO c → c.app (σ3 k) ≠ some τ := by
+    ∀ c : Commitment (spec (T := T) (K := K) false), basisMVTO c → c.app (σ3 k) ≠ some τ := by
   have hd := h.d
   have rABC : τ.R k (full (mk [A, B, C] fun _ => False)) :=
     (res_iff hτ (perm_part h hm_id)).2 ⟨perm_row h hm_id, by show ¬ _; d3 hd⟩
@@ -1138,11 +1138,11 @@ theorem order_not_MVTO (h : Tri k A B C) {τ : State (spec (T := T) (K := K) fal
   · exact not_read (order_keeps_uncommitted hτ) (perm_row h hm_bac) (perm_part h hm_bac)
       (fun _ _ => rfl) nBAC T' n v e
 
-/-- **`stamp(B)` (no earlier stamps) is no 2PL exclusion**: at the canonical
-state of `k`, no exclusion of `B_2PL` has its effect. -/
+/-- **`stamp(B)` (no earlier stamps) is no 2PL commitment**: at the canonical
+state of `k`, no commitment of `B_2PL` has its effect. -/
 theorem stamp_not_2PL (h : Tri k A B C) {τ : State (spec (T := T) (K := K) false)}
     (hτ : (stamp B (fun _ => False)).app (σ3 k) = some τ) :
-    ∀ c : Exclusion (spec (T := T) (K := K) false), basis2PL c → c.app (σ3 k) ≠ some τ := by
+    ∀ c : Commitment (spec (T := T) (K := K) false), basis2PL c → c.app (σ3 k) ≠ some τ := by
   have hd := h.d
   have sOK : ∀ {l : List T}, StampOK B (fun _ => False) (mk l fun _ => False) ↔
       ∀ D, D ≠ B → ¬ (mk l fun _ => False).lt D B :=
@@ -1184,12 +1184,12 @@ theorem stamp_not_2PL (h : Tri k A B C) {τ : State (spec (T := T) (K := K) fals
   · exact not_read (stamp_keeps_uncommitted hτ) (perm_row h hm_id) (perm_part h hm_id)
       (fun _ _ => rfl) nABC T' n v e
 
-/-- **Neither figure exclusion is a canonical exclusion `x_o`**, for any output
+/-- **Neither figure commitment is a canonical commitment `x_o`**, for any output
 `o`, at the canonical state of `k`. -/
-theorem neither_is_canonical_exclusion (h : Tri k A B C) :
-    (∀ τ, (order A B).app (σ3 k) = some τ → ∀ o, (canonicalExclusion o).app (σ3 k) ≠ some τ) ∧
+theorem neither_is_canonical_commitment (h : Tri k A B C) :
+    (∀ τ, (order A B).app (σ3 k) = some τ → ∀ o, (canonicalCommitment o).app (σ3 k) ≠ some τ) ∧
     (∀ τ, (stamp B (fun _ => False)).app (σ3 k) = some τ →
-      ∀ o, (canonicalExclusion o).app (σ3 k) ≠ some τ) := by
+      ∀ o, (canonicalCommitment o).app (σ3 k) ≠ some τ) := by
   have hd := h.d
   have hX : ∀ {l : List T} t, ¬ (mk l fun _ => False).X t := fun _ h => h
   refine ⟨fun τ hτ o => ?_, fun τ hτ o => ?_⟩
@@ -1199,13 +1199,13 @@ theorem neither_is_canonical_exclusion (h : Tri k A B C) :
       (res_iff hτ (perm_part h hm_id)).2 ⟨perm_row h hm_id, by show ¬ _; d3 hd⟩
     have nBAC : ¬ τ.R k (full (mk [B, A, C] fun _ => False)) :=
       fun hm => ((res_iff hτ (perm_part h hm_bac)).1 hm).2 (by show _; d3 hd)
-    exact not_canonical_exclusion (order_keeps_uncommitted hτ) hA (perm_part h hm_id) hX rABC
+    exact not_canonical_commitment (order_keeps_uncommitted hτ) hA (perm_part h hm_id) hX rABC
       (perm_row h hm_bac) (perm_part h hm_bac) (fun _ _ => rfl) nBAC o
   · obtain ⟨τ', hτ', rBAC, _, nABC, _⟩ := stamp_at h
     rw [hτ] at hτ'; cases hτ'
     have hA : τ.R _ (full (allAbort k.txs)) :=
       stamp_keeps_uncommitted hτ _ allAbort_row (fun _ h => h)
-    exact not_canonical_exclusion (stamp_keeps_uncommitted hτ) hA (perm_part h hm_bac) hX rBAC
+    exact not_canonical_commitment (stamp_keeps_uncommitted hτ) hA (perm_part h hm_bac) hX rBAC
       (perm_row h hm_id) (perm_part h hm_id) (fun _ _ => rfl) nABC o
 
 end Three

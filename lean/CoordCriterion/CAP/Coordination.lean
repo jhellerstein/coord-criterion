@@ -1,31 +1,31 @@
-import CoordCriterion.CAP.LocalExclusion
+import CoordCriterion.CAP.LocalCommitment
 
 /-!
 # Coordination within a history
 
-`System.CoordinationFree` (`CAP/LocalExclusion.lean`) counts an exclusion as
+`System.CoordinationFree` (`CAP/LocalCommitment.lean`) counts a commitment as
 contradicted when *any* run of the system performs an event it rules out,
 including the same participant's alternative runs.  The paper's notion is
-narrower: an exclusion is contradicted when *another participant of the same
+narrower: a commitment is contradicted when *another participant of the same
 history* accepts an input whose fiber it empties, or emits, at the same input, an output it
 chose against.  `System.CoordinationFreeH` is that notion, for the
-exclusions of output events and of exclusion events alike.
+commitments of output events and of commitment events alike.
 
 * `coordinationFree_to_H`: the older notion implies the new one; hence
   `respSystem_coordinationFreeH`.
 * `availability_contradicts_removal` (output events) and
-  `availability_contradicts_exclusion_event` (exclusion events): with Availability
+  `availability_contradicts_commitment_event` (commitment events): with Availability
   (`A = S`), a row removed by a participant whose prefix is receive-free is
   emitted, in the same history, by any other participant whose initial input
   lies below the row's input; so such a system is not coordination-free in
   this sense (`availability_not_coordinationFreeH`,
   `availability_not_coordinationFreeH_commit`).
 * Shared nothing (`ordSpec`): one owner choosing an order is coordination-free
-  (`ownerSys_coordinationFreeH`), although its row-removing exclusion is an exclusion
+  (`ownerSys_coordinationFreeH`), although its row-removing commitment is a commitment
   (`ordSpec_ab_not_exposable`); two owners choosing are not
   (`twoOwnerSys_not_coordinationFreeH`).
-* Local row-removing exclusion (`lcSpec`, `lcA`): `S` is consistent on `A = {o}`, emitting `o`
-  must apply an exclusion against `x`, and `respSystem A` is coordination-free.
+* Local row-removing commitment (`lcSpec`, `lcA`): `S` is consistent on `A = {o}`, emitting `o`
+  must apply a commitment against `x`, and `respSystem A` is coordination-free.
 -/
 
 namespace CC
@@ -33,13 +33,13 @@ namespace CAP
 
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
-/-- The exclusions taking `σ` to `σc`, applied by participant `p` of `H`, are
+/-- The commitments taking `σ` to `σc`, applied by participant `p` of `H`, are
 contradicted by no other participant of `H`: none emits a removed row's output
 at its input, and none accepts an input whose fiber it empties. -/
 def LocalInH {n : Nat} (init : Fin n → I) (H : History sp D n) (p : Fin n) (σ σc : State sp) :
     Prop :=
   (∀ k x, σ.R k x → ¬ σc.R k x →
-    ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Exclusion sp)) (σ' : State sp),
+    ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
       q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k) ∧
   (∀ k, (∃ x, σ.R k x) → (∀ x, ¬ σc.R k x) →
     ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)), q ≠ p ∧ H q = a' ++ LEv.inp k :: b')
@@ -47,14 +47,14 @@ def LocalInH {n : Nat} (init : Fin n → I) (H : History sp D n) (p : Fin n) (σ
 /-- Some participant `q ≠ p` of `H` emits `x` at current input `k`. -/
 def OtherEmits {n : Nat} (init : Fin n → I) (H : History sp D n) (p : Fin n) (k : I) (x : O) :
     Prop :=
-  ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Exclusion sp)) (σ' : State sp),
+  ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
     q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
 
 /-- Some participant `q ≠ p` of `H` accepts `k`. -/
 def OtherAccepts {n : Nat} (H : History sp D n) (p : Fin n) (k : I) : Prop :=
   ∃ (q : Fin n) (a' b' : List (LEv sp D n)), q ≠ p ∧ H q = a' ++ LEv.inp k :: b'
 
-/-- `p`'s exclusions are local to `H` exactly when no other participant of
+/-- `p`'s commitments are local to `H` exactly when no other participant of
 `H` contradicts them. -/
 theorem localInH_iff_not_contradicts {n : Nat} (init : Fin n → I) (H : History sp D n)
     (p : Fin n) (σ σc : State sp) :
@@ -67,17 +67,17 @@ theorem localInH_iff_not_contradicts {n : Nat} (init : Fin n → I) (H : History
     exact ⟨fun k x hx hnx he => h (Or.inl ⟨k, x, hx, hnx, he⟩),
       fun k hk hall ha => h (Or.inr ⟨k, hk, hall, ha⟩)⟩
 
-/-- Coordination-free within histories: no output event's or exclusion event's
-exclusions are contradicted by another participant of the same history. -/
+/-- Coordination-free within histories: no output event's or commitment event's
+commitments are contradicted by another participant of the same history. -/
 def System.CoordinationFreeH (Sys : System sp D) : Prop :=
   (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
-    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Exclusion sp)) (o : O)
+    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (o : O)
       (σ σc : State sp),
       H p = a ++ LEv.out γ o :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
       LocalInH init H p σ σc) ∧
   (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
-    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Exclusion sp)) (σ σc : State sp),
-      H p = a ++ LEv.exclude γ :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
+    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ σc : State sp),
+      H p = a ++ LEv.commitment γ :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
       LocalInH init H p σ σc)
 
 theorem localEvent_to_H {Sys : System sp D} {n : Nat} {init : Fin n → I} {H : History sp D n}
@@ -119,7 +119,7 @@ theorem availability_contradicts_gen (Sys : System sp D) (hA : AvailabilityAtEnd
     {k : I} {x : O} (hx : σ.R k x) (hqk : init q ≼ k) :
     ∃ H' : History sp D n, WF init H' ∧ Produced Sys n init H' ∧
       H' p = a ++ [e] ∧
-      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Exclusion sp)) (σ' : State sp),
+      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
         H' q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k := by
   classical
   let H1 : History sp D n := fun r =>
@@ -210,30 +210,30 @@ prefix lets the history drop everything else.) -/
 theorem availability_contradicts_removal (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (Exclusion sp)} {o : O} {σ σc : State sp}
+    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O} {σ σc : State sp}
     (hH : H p = a ++ LEv.out γ o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
     (_hrun : LRun (canon sp (init p)) a σ) (_hap : applySeq σ γ = some σc)
     {k : I} {x : O} (hx : σ.R k x) (hqk : init q ≼ k) :
     ∃ H' : History sp D n, WF init H' ∧ Produced Sys n init H' ∧
       H' p = a ++ [LEv.out γ o] ∧
-      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Exclusion sp)) (σ' : State sp),
+      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
         H' q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k :=
   availability_contradicts_gen Sys hA hw hp hqp hH hnr (fun _ _ _ _ h => by cases h) hx hqk
 
-/-- The same for an exclusion event: with Availability, a row `(k,x)` removed by
-an exclusion event `Exclude(γ)` of `p`, whose local prefix is receive-free, is
+/-- The same for a commitment event: with Availability, a row `(k,x)` removed by
+a commitment event `Apply(γ)` of `p`, whose local prefix is receive-free, is
 emitted at input `k` by another participant `q` (initial input below `k`) of a
-history that keeps `p`'s prefix and exclusion event. -/
-theorem availability_contradicts_exclusion_event (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
+history that keeps `p`'s prefix and commitment event. -/
+theorem availability_contradicts_commitment_event (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (Exclusion sp)} {σ σc : State sp}
-    (hH : H p = a ++ LEv.exclude γ :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
+    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {σ σc : State sp}
+    (hH : H p = a ++ LEv.commitment γ :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
     (_hrun : LRun (canon sp (init p)) a σ) (_hap : applySeq σ γ = some σc)
     {k : I} {x : O} (hx : σ.R k x) (hqk : init q ≼ k) :
     ∃ H' : History sp D n, WF init H' ∧ Produced Sys n init H' ∧
-      H' p = a ++ [LEv.exclude γ] ∧
-      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Exclusion sp)) (σ' : State sp),
+      H' p = a ++ [LEv.commitment γ] ∧
+      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
         H' q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k :=
   availability_contradicts_gen Sys hA hw hp hqp hH hnr (fun _ _ _ _ h => by cases h) hx hqk
 
@@ -243,7 +243,7 @@ coordination-free within histories. -/
 theorem availability_not_coordinationFreeH (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (Exclusion sp)} {o : O} {σ σc : State sp}
+    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O} {σ σc : State sp}
     (hH : H p = a ++ LEv.out γ o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
     (hrun : LRun (canon sp (init p)) a σ) (hap : applySeq σ γ = some σc)
     {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x) (hqk : init q ≼ k) :
@@ -254,35 +254,35 @@ theorem availability_not_coordinationFreeH (Sys : System sp D) (hA : Availabilit
   exact (hcf.1 n init H' hw' hp' p a [] γ o σ σc hH' hrun hap).1 k x hx hnx
     ⟨q, a', b', γ', σ', hqp, hq, hr, hc⟩
 
-/-- Likewise a system with Availability whose exclusion event removes a row
+/-- Likewise a system with Availability whose commitment event removes a row
 (receive-free prefix, another participant below the row's input) is not
 coordination-free within histories. -/
 theorem availability_not_coordinationFreeH_commit (Sys : System sp D)
     (hA : AvailabilityAtEnd Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (Exclusion sp)} {σ σc : State sp}
-    (hH : H p = a ++ LEv.exclude γ :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
+    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {σ σc : State sp}
+    (hH : H p = a ++ LEv.commitment γ :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
     (hrun : LRun (canon sp (init p)) a σ) (hap : applySeq σ γ = some σc)
     {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x) (hqk : init q ≼ k) :
     ¬ Sys.CoordinationFreeH := by
   intro hcf
   obtain ⟨H', hw', hp', hH', a', b', γ', σ', hq, hr, hc⟩ :=
-    availability_contradicts_exclusion_event Sys hA hw hp hqp hH hnr hrun hap hx hqk
+    availability_contradicts_commitment_event Sys hA hw hp hqp hH hnr hrun hap hx hqk
   exact (hcf.2 n init H' hw' hp' p a [] γ σ σc hH' hrun hap).1 k x hx hnx
     ⟨q, a', b', γ', σ', hqp, hq, hr, hc⟩
 
 /-! ## Removed rows of a canonical event -/
 
-/-- A row removed by the canonical exclusion for `u` has no common refinement
+/-- A row removed by the canonical commitment for `u` has no common refinement
 with `u` in the state. -/
 theorem rm_no_common {σ : State sp} {u : O} {k : I} {x : O} (h : Rm σ u k x) :
     ¬ ∃ w, σ.R k w ∧ u ≼ w ∧ x ≼ w := by
   rintro ⟨w, hw, huw, hxw⟩
   exact h.2.2 ⟨h.1, h.2.1, w, hw, huw, hxw⟩
 
-/-- What a canonical output event's exclusions remove. -/
-theorem canonical_removed {σ σc : State sp} {u : O} {γ : List (Exclusion sp)}
+/-- What a canonical output event's commitments remove. -/
+theorem canonical_removed {σ σc : State sp} {u : O} {γ : List (Commitment sp)}
     (hγ : γ = [] ∨ γ = [kc u]) (hap : applySeq σ γ = some σc) {k : I} {x : O}
     (hx : σ.R k x) (hnx : ¬ σc.R k x) : Rm σ u k x ∧ ∃ hu : σ.R σ.cur u, σc = kcState σ u hu := by
   rcases hγ with rfl | rfl
@@ -322,7 +322,7 @@ def ordSpec : Spec Unit Ord3 where
 theorem canon_ord_R (k : Unit) (x : Ord3) : (canon ordSpec ()).R k x :=
   ⟨trivial, trivial⟩
 
-/-- Emitting `A before B` is an exclusion: it is not exposable, since it must
+/-- Emitting `A before B` is a commitment: it is not exposable, since it must
 choose against `B before A`. -/
 theorem ordSpec_ab_not_exposable : ¬ Exposable (canon ordSpec ()) .ab := by
   intro h
@@ -362,7 +362,7 @@ theorem ord_removed {σ : State ordSpec} {u x : Ord3} (h : Rm σ u () x) (hu : �
 /-- **One owner is coordination-free.**  Only the owner chooses an order, and
 no other participant emits one. -/
 theorem ownerSys_coordinationFreeH (D : Type) : (ownerSys D).CoordinationFreeH := by
-  refine ⟨?_, fun n init H _ hp p a b γ σ σc hH _ _ => (hp p a (.exclude γ) b hH).2.elim⟩
+  refine ⟨?_, fun n init H _ hp p a b γ σ σc hH _ _ => (hp p a (.commitment γ) b hH).2.elim⟩
   intro n init H _ hp p a b γ o σ σc hH _ hap
   have hAl := hp p a (.out γ o) b hH
   obtain ⟨_, hγ, hown⟩ := hAl
@@ -416,7 +416,7 @@ theorem twoOwnerSys_not_coordinationFreeH (D : Type) : ¬ (twoOwnerSys D).Coordi
     rcases hfin r with rfl | rfl
     · exact ⟨ρ0, hr0⟩
     · exact ⟨ρ1, hr1⟩
-  have hbasis : ∀ (u : Ord3) (γ : List (Exclusion ordSpec)), (γ = [] ∨ γ = [kc u]) →
+  have hbasis : ∀ (u : Ord3) (γ : List (Commitment ordSpec)), (γ = [] ∨ γ = [kc u]) →
       ∀ c ∈ γ, (twoOwnerSys D).basis c := by
     intro u γ hγ c hc
     rcases hγ with rfl | rfl
@@ -433,7 +433,7 @@ theorem twoOwnerSys_not_coordinationFreeH (D : Type) : ¬ (twoOwnerSys D).Coordi
       cases a with
       | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact ⟨hbasis _ _ hγ1, hγ1⟩
       | cons _ _ => simp at h
-  -- after participant 0's exclusions the row `((), ba)` is gone
+  -- after participant 0's commitments the row `((), ba)` is gone
   have hgone : ¬ σ0.R () .ba := by
     intro hba
     obtain ⟨u, _, h1, h2⟩ := hex0 () .ba hba (by rw [ord3_le_iff]; simp)
@@ -442,7 +442,7 @@ theorem twoOwnerSys_not_coordinationFreeH (D : Type) : ¬ (twoOwnerSys D).Coordi
   exact (hcf.1 2 init H hw hp 0 [] [] γ0 .ab (canon ordSpec ()) σ0 hH0 (.nil _) ha0).1
     () .ba (canon_ord_R _ _) hgone ⟨1, [], [], γ1, canon ordSpec (), by decide, hH1, .nil _, rfl⟩
 
-/-! ## A local row-removing exclusion -/
+/-! ## A local row-removing commitment -/
 
 /-- Two incomparable outputs. -/
 inductive Two where
@@ -467,7 +467,7 @@ theorem lcSpec_consistentOn : ConsistentOn lcSpec lcA := by
   intro rows hrows _ _
   exact ⟨.o, trivial, fun r hr => (hrows r hr : r.2 = .o) ▸ rfl⟩
 
-/-- Emitting `o` must apply an exclusion: it excludes `x`. -/
+/-- Emitting `o` must apply a commitment: it excludes `x`. -/
 theorem lcSpec_o_not_exposable : ¬ Exposable (canon lcSpec ()) .o := by
   intro h
   obtain ⟨u, _, h1, h2⟩ := h () .x ⟨trivial, trivial⟩ (by intro h; cases h)
@@ -484,7 +484,7 @@ theorem lc_coordinationFreeH (D : Type) :
 /-- A history in which the owner (participant `0`) emits `u` by its canonical
 output event and participant `1` is idle. -/
 theorem owner_history (D : Type) (u : Ord3) :
-    ∃ (γ : List (Exclusion ordSpec)) (σc : State ordSpec) (H : History ordSpec D 2),
+    ∃ (γ : List (Commitment ordSpec)) (σc : State ordSpec) (H : History ordSpec D 2),
       (γ = [] ∨ γ = [kc u]) ∧ applySeq (canon ordSpec ()) γ = some σc ∧ Exposable σc u ∧
       WF (fun _ => ()) H ∧ Produced (ownerSys D) 2 (fun _ => ()) H ∧
       H 0 = [] ++ LEv.out γ u :: [] := by
@@ -517,7 +517,7 @@ theorem owner_history (D : Type) (u : Ord3) :
       | cons _ _ => simp at h
     · rw [hH1] at h; simp at h
 
-/-- **One owner coordinates.**  The owner's row-removing exclusion of `A before B` is
+/-- **One owner coordinates.**  The owner's row-removing commitment of `A before B` is
 contradicted by another run of the same system, in which the owner chooses
 `B before A`: locking on a single participant is coordination, though not
 distributed coordination (`ownerSys_coordinationFreeH`). -/

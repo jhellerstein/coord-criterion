@@ -11,7 +11,7 @@ import CoordCriterion.CALM.Examples
 import CoordCriterion.CALM.TransientConflict
 -- §4.1–4.4 Distributed histories, consistency, systems, coordination; Appendix C
 import CoordCriterion.Distributed.Histories
-import CoordCriterion.Distributed.Exclusions
+import CoordCriterion.Distributed.Commitments
 import CoordCriterion.Distributed.Systems
 -- §4.5 Complete CAP; Appendix F (response availability, Gilbert–Lynch)
 import CoordCriterion.CAP.Model
@@ -20,7 +20,7 @@ import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.Necessity
 import CoordCriterion.CAP.Forced
 import CoordCriterion.CAP.AvailabilityFor
-import CoordCriterion.CAP.LocalExclusion
+import CoordCriterion.CAP.LocalCommitment
 import CoordCriterion.CAP.Coordination
 import CoordCriterion.CAP.TwoPhaseCommit
 import CoordCriterion.CAP.TimeoutAbort
@@ -58,7 +58,7 @@ import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Appendix.TransactionBases.Spec
 import CoordCriterion.Appendix.TransactionBases.Partial
 import CoordCriterion.Appendix.TransactionBases.MVTO
-import CoordCriterion.Appendix.TransactionBases.ExclusionEvent
+import CoordCriterion.Appendix.TransactionBases.CommitmentEvent
 -- Frontier results (not in the paper; kept for future work) and registers (Appendix E)
 import CoordCriterion.Appendix.Frontiers
 import CoordCriterion.Appendix.ProductFrontier

@@ -46,13 +46,13 @@ of emitted outputs, the leader example, single-authority deployments),
    different blocks, or the set of emitted rows is a singleton `{r₀}` and
    some participant of the family whose run emits nothing lies in a block
    different from that of a participant emitting `r₀`.
-5. *Deployment Availability.*  The paper's "exclusions whose authority is
+5. *Deployment Availability.*  The paper's "commitments whose authority is
    entirely within the participant's block" is not defined anywhere (the
-   paper defines no authority of an exclusion).  We read locality exactly as
+   paper defines no authority of a commitment).  We read locality exactly as
    in `CC.CAP.Availability`: the continuation is produced, stays partitioned
    by the same blocks, adds events only at the participant's block,
    adds no input event, and contains an output event `Out γ o` of the
-   participant (so `γ` is any sequence of basis exclusions).  The only
+   participant (so `γ` is any sequence of basis commitments).  The only
    change is that `o` must be authorized: `A p σ.cur o`.  Since a deployment
    fixes the participant set, Deployment Availability is stated for histories
    over `Fin n` only.

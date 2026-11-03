@@ -17,7 +17,7 @@ proves the facts that connect the two:
   across partitions (`monoAcrossPartitions_of_consistentOn`); in particular
   consistency on `A` does for the uniform deployment, and Lifted Monotonicity
   does for every deployment;
-* when only one participant may emit, no row-removing exclusion is distributed coordination
+* when only one participant may emit, no row-removing commitment is distributed coordination
   (`sole_emitter_rowRemovals`).
 -/
 
@@ -109,21 +109,21 @@ theorem monoAcrossPartitions_uniform (A : Table I O) (hAS : ∀ i o, A i o → s
     (hc : ConsistentOn sp A) : MonoAcrossPartitions (Deployment.uniform (n := n) A hAS) :=
   monoAcrossPartitions_of_consistentOn _ A (fun _ _ _ h => h) hc
 
-/-! ## Single authority: row-removing exclusions are not distributed coordination -/
+/-! ## Single authority: row-removing commitments are not distributed coordination -/
 
 /-- The row-removal clause of `System.CoordinationFreeH`, for output events: no row
 removed by an output event is emitted, at the same input, by another
 participant of the same history. -/
 def RowRemovalsNotDistributed (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
-    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Exclusion sp)) (o : O)
+    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (o : O)
       (σ σc : State sp),
       H p = a ++ LEv.out γ o :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
       ∀ k x, σ.R k x → ¬ σc.R k x →
-        ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Exclusion sp)) (σ' : State sp),
+        ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
           q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
 
-/-- If only one participant (index `0`) may perform output events, no row-removing exclusion
+/-- If only one participant (index `0`) may perform output events, no row-removing commitment
 is distributed coordination. -/
 theorem sole_emitter_rowRemovals (Sys : System sp D)
     (hsole : ∀ n init (p : Fin n) pre γ o, Sys.strat n init p pre (LEv.out γ o) → p.val = 0) :

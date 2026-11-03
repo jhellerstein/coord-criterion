@@ -573,7 +573,7 @@ theorem final_contra (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : F
     (hinj : ∀ p q, comp p = comp q → p = q)
     {A B : List (LEv regSpec D 2)} (hA : H 0 = LEv.inp h1 :: A) (hB : H 1 = LEv.inp h2 :: B)
     (hAi : ∀ j, LEv.inp j ∉ A) (hBi : ∀ j, LEv.inp j ∉ B)
-    {γ γ' : List (Exclusion regSpec)} {o o' : RMap}
+    {γ γ' : List (Commitment regSpec)} {o o' : RMap}
     (ho : LEv.out γ o ∈ A) (hoQ : regQ 0 h1 o) (ho' : LEv.out γ' o' ∈ B)
     (ho'Q : regQ 1 h2 o') : False := by
   have hnr := norecv_of_inj hwf hpart hinj

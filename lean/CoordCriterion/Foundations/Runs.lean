@@ -153,7 +153,7 @@ theorem survivor_test {sp : Spec I O} (fam : List (State sp))
     have := reach_meet hE (hall σ hσ)
     exact this
 
-/-- Exclusion-free executions are executions. -/
+/-- Commitment-free executions are executions. -/
 theorem ExecCF.toExec {sp : Spec I O} {σ τ : State sp} {es : List (Event I O)}
     (h : ExecCF σ es τ) : Exec σ es τ := by
   induction h with

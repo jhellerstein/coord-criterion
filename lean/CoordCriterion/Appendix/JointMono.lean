@@ -5,7 +5,7 @@ import CoordCriterion.Appendix.Guarded
 
 Namespace `CC.Joint`.  When is a composite `𝒮₂ ∘ 𝒮₁` monotone although a stage
 is not, and what does that mean for running the pipeline without
-exclusion?  Three mechanisms, and the limit of the third.
+commitment?  Three mechanisms, and the limit of the third.
 
 1. **Filtering.**  `𝒮₁` never produces the inputs on which `𝒮₂` is not
    monotone.
@@ -26,13 +26,13 @@ exclusion?  Three mechanisms, and the limit of the third.
    re-encoding (`seq_liftedMono_reencode`), have a Lifted-Monotone composite.
    * Boolean toggle (`bool_toggle`, the paper's example): with `false ≼ true`
      on the middle both negation stages violate monotonicity and the first
-     cannot emit at `false` without exclusion (`toggle_exposable_iff`,
+     cannot emit at `false` without commitment (`toggle_exposable_iff`,
      `toggle_empty_basis`); with the reversed order on the middle both stages
      are monotone; the composite is the identity either way.
    * Double complement (`double_complement`; no longer cited in the paper,
      which uses the boolean toggle): with `⊆` on the middle sets both
      complement stages violate monotonicity and the first can emit, without
-     exclusion, only the empty set (`compl_exposable_iff`,
+     commitment, only the empty set (`compl_exposable_iff`,
      `compl_empty_basis`); with `⊇` on the middle both stages are monotone; the
      composite is the identity either way.
    * Constant store (`constant_store_reorder`): declaring `x ≼ y` makes the
@@ -62,9 +62,9 @@ open Comp Guard Classical
 section Basics
 variable {I M : Type} [PO I] [PO M]
 
-/-- Under the empty basis an output event applies no exclusion, so it emits
+/-- Under the empty basis an output event applies no commitment, so it emits
 an exposable output of the current fiber. -/
-theorem empty_step {sq : Spec I M} {σ τ : State sq} {γ : List (Exclusion sq)} {o : M}
+theorem empty_step {sq : Spec I M} {σ τ : State sq} {γ : List (Commitment sq)} {o : M}
     (h : SysStep (fun _ => False) σ (.output γ o) τ) :
     γ = [] ∧ σ.R σ.cur o ∧ Exposable σ o := by
   cases γ with
@@ -76,7 +76,7 @@ theorem empty_step {sq : Spec I M} {σ τ : State sq} {γ : List (Exclusion sq)}
     exact ⟨rfl, ho, he⟩
 
 /-- **Exposure at a canonical state of a function.**  Emitting `f i` at
-`σ(i)` is exclusion-free iff `f i ≼ f k` for every `k ⪰ i`. -/
+`σ(i)` is commitment-free iff `f i ≼ f k` for every `k ⪰ i`. -/
 theorem graph_canon_exposable_iff (f : I → M) (i : I) :
     Exposable (canon (graph f) i) (f i) ↔ ∀ k, i ≼ k → f i ≼ f k := by
   constructor
@@ -184,7 +184,7 @@ theorem below_9_10 : ¬ (below 9 ≼ below 10) := by
 /-- **Threshold store behind a capped counter.**  (1) The store is not
 Lifted-Monotone; (2) under the empty basis it cannot emit at any canonical
 state below `10`; (3) the composite is Lifted-Monotone; (4) the pipeline is
-proper: the store restricted to the counter's outputs needs no exclusion. -/
+proper: the store restricted to the counter's outputs needs no commitment. -/
 theorem threshold :
     ¬ thr.LiftedMono ∧
     (∀ m, m ≤ 9 → ∀ γ o τ, ¬ SysStep (fun _ => False) (canon thr m) (.output γ o) τ) ∧
@@ -336,8 +336,8 @@ theorem compl_not_monotone [Nonempty U] : ¬ Monotone (compl (U := U)) := by
   obtain ⟨u⟩ := (inferInstance : Nonempty U)
   exact h ⟨fun _ => False⟩ ⟨fun _ => True⟩ (fun _ h => h.elim) u (fun h => h) trivial
 
-/-- **The exclusion-free complement stage emits only `∅`.**  Under `⊆` on
-the middle, emitting `Uᶜ ∖ X` at `σ(X)` without exclusion is possible only
+/-- **The commitment-free complement stage emits only `∅`.**  Under `⊆` on
+the middle, emitting `Uᶜ ∖ X` at `σ(X)` without commitment is possible only
 for `X = U`. -/
 theorem compl_exposable_iff (X : PSet U) :
     Exposable (canon (graph compl) X) (compl X) ↔ ∀ u, X.mem u := by
@@ -349,7 +349,7 @@ theorem compl_exposable_iff (X : PSet U) :
   · intro hX K _ u hu
     exact absurd (hX u) hu
 
-theorem compl_empty_basis {X : PSet U} {γ : List (Exclusion (graph (compl (U := U))))}
+theorem compl_empty_basis {X : PSet U} {γ : List (Commitment (graph (compl (U := U))))}
     {o : PSet U} {τ : State (graph compl)}
     (h : SysStep (fun _ => False) (canon (graph compl) X) (.output γ o) τ) : ∀ u, ¬ o.mem u := by
   obtain ⟨_, ho, he⟩ := empty_step h
@@ -400,8 +400,8 @@ instance boolPO : PO Bool where
 theorem not_not_monotone : ¬ Monotone not :=
   fun h => Bool.noConfusion (h false true (fun _ => rfl) rfl)
 
-/-- **The exclusion-free toggle stage emits only at `true`.**  Under
-`false ≼ true` on the middle, emitting `!b` at `σ(b)` without exclusion is
+/-- **The commitment-free toggle stage emits only at `true`.**  Under
+`false ≼ true` on the middle, emitting `!b` at `σ(b)` without commitment is
 possible only for `b = true`. -/
 theorem toggle_exposable_iff (b : Bool) :
     Exposable (canon (graph not) b) (!b) ↔ b = true := by
@@ -415,7 +415,7 @@ theorem toggle_exposable_iff (b : Bool) :
 
 /-- At input `false` the toggle stage cannot emit under the empty basis: its
 output `true` is not below its output `false` at the larger input `true`. -/
-theorem toggle_empty_basis {γ : List (Exclusion (graph not))} {o : Bool}
+theorem toggle_empty_basis {γ : List (Commitment (graph not))} {o : Bool}
     {τ : State (graph not)} :
     ¬ SysStep (fun _ => False) (canon (graph not) false) (.output γ o) τ := by
   intro h
@@ -452,10 +452,10 @@ theorem bool_toggle :
       cases a <;> cases b <;> simp_all [Function.comp, PO.le]
 
 /-- Without properness, (3) fails: with `𝒮₁` the identity on `Bool` (which
-needs no exclusion) and `𝒮₂` negation, the composite is negation, which
+needs no commitment) and `𝒮₂` negation, the composite is negation, which
 violates Lifted Monotonicity, yet `𝒮₁` emits every output without
-exclusion. -/
-theorem needs_exclusion_needs_proper :
+commitment. -/
+theorem needs_commitment_needs_proper :
     ¬ (seq (graph (id : Bool → Bool)) (graph not)).LiftedMono ∧
       ∀ τ : State (graph (id : Bool → Bool)), ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o := by
   refine ⟨fun h => not_not_monotone ?_, (exposure_boundary _).1
@@ -512,7 +512,7 @@ end ConstantStore
 section Char
 variable {I M O : Type} [PO I] [PO O]
 
-/-- **An exclusion-free functional upstream is monotone.**  If the empty-basis
+/-- **A commitment-free functional upstream is monotone.**  If the empty-basis
 system of `graph f` can emit at every canonical state, `f` is monotone (so
 `graph f` is Lifted-Monotone). -/
 theorem cf_upstream_monotone [PO M] {f : I → M}

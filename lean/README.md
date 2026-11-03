@@ -169,7 +169,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«fig:nonmonotone-frame»` | theorem | Fig. |
 | `«fig:nonmonotone-frame/matches-d»` | theorem | Fig. |
 | `«sec:election-story/exposable-panels»` | theorem | §2.1 "Output and consistency": |
-| `«sec:election-story/equality-order-exclusion»` | theorem | §2.1: |
+| `«sec:election-story/equality-order-commitment»` | theorem | §2.1: |
 | `«sec:election-story/obstruction»` | theorem | §2.1: |
 | `«sec:election-story/not-reconciled»` | theorem | §2.1: |
 | `«sec:election-story/consistency»` | theorem | §2.1: |
@@ -188,13 +188,13 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:input-event/legal-expands»` | theorem | The paper's input event asks for `j` legal *and* `i ≼ j`; the second follows from the first, since the remainder table contains only rows at expansions of `i`. |
 | `«sec:functional-events/input-cumulative»` | theorem | "`input(j)` then `input(k)` has the effect of `input(k)` alone; `input(i)` at `(i,R)` has no effect." |
 | `«def:output-event»` | abbrev | **Def. |
-| `«def:canonical-exclusion-functional»` | abbrev | **Def. |
+| `«def:canonical-commitment-functional»` | abbrev | **Def. |
 | `«eq:output-action»` | theorem | **Eq. |
-| `«def:output-event/exclude-iff-excluded»` | theorem | Def. |
+| `«def:output-event/commitment-iff-excluded»` | theorem | Def. |
 | `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` refines itself, so the event always ends at a state." |
-| `«sec:functional-events/extra-exclusions»` | theorem | "Systems may issue more exclusions than an output requires, as the registrar does in Figure `fig:election-frames`(d), but extra exclusions only restrict beha… |
+| `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments than an output requires, as the registrar does in Figure `fig:election-frames`(d), but extra commitments only restrict be… |
 | `«def:exposable»` | abbrev | **Def. |
-| `«def:exposable/no-exclusion»` | theorem | Def. |
+| `«def:exposable/no-commitment»` | theorem | Def. |
 | `«sec:functional-events/functional-exposable»` | theorem | "In a functional specification this means `R[out ⪰ o] = R`: |
 | `«sec:functional-events/determined»` | abbrev | §2.3 "Determination": |
 | `«sec:functional-events/determined-one-element»` | theorem | "Determined": |
@@ -203,7 +203,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«def:specification-event»` | abbrev | **Def. |
 | `«def:transition-system»` | abbrev | **Def. |
 | `«def:run»` | abbrev | **Def. |
-| `«def:run/reachable-without-exclusion»` | abbrev | "A run is *exclusion-free* when none of its output events applies a exclusion. |
+| `«def:run/reachable-without-commitment»` | abbrev | "A run is *commitment-free* when none of its output events applies a commitment. |
 | `«lem:run-residual»` | theorem | **Lemma `lem:run-residual`** (Rows remaining after a run). |
 | `«eq:run-residual»` | abbrev | **Eq. |
 | `«lem:run-residual/example»` | theorem | Example after Lemma `lem:run-residual`: |
@@ -227,7 +227,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 |---|---|---|
 | `«fig:ambiguity-frames/f»` | theorem | Fig. |
 | `«fig:ambiguity-frames/g»` | theorem | Fig. |
-| `«sec:ambiguity-story/exclusion»` | theorem | §3.1 "Exclusion and directedness": |
+| `«sec:ambiguity-story/commitment»` | theorem | §3.1 "Commitment and directedness": |
 | `«sec:ambiguity-story/three-ways»` | theorem | §3.1: |
 | `«sec:ambiguity-story/transactions-fail»` | theorem | §3.1: |
 | `«sec:ambiguity-story/traceroute-passes»` | theorem | §3.1: |
@@ -256,7 +256,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:common-expansion-condition/empty»` | theorem | After Def. |
 | `«prop:common-expansion-form»` | theorem | **Prop. |
 | `«sec:lifted-output-events/functional»` | theorem | §3.4: |
-| `«sec:complete-calm-theorem/lift-unchanged»` | theorem | "Specification states, input events, runs, exclusion-free runs, and consistency are defined as before, and the results of Section `sec:executions` … lift unc… |
+| `«sec:complete-calm-theorem/lift-unchanged»` | theorem | "Specification states, input events, runs, commitment-free runs, and consistency are defined as before, and the results of Section `sec:executions` … lift un… |
 | `«thm:complete-calm»` | theorem | **Theorem `thm:complete-calm`** (Complete CALM). |
 | `«prop:exposure-boundary»` | theorem | **Prop. |
 | `«prop:exposure-boundary/common-expansion»` | theorem | Prop. |
@@ -291,10 +291,10 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
 | `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which history events occur next at the receiver, but it never directly changes the receiver's specification state, and no… |
 | `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
-| `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing exc… |
-| `«def:exclusion»` | abbrev | **Def. |
-| `«eq:exclusion-excludes»` | theorem | **Eq. |
-| `«sec:systems/canonical-exclusion»` | theorem | The canonical exclusion of Definition `def:canonical-exclusion` satisfies Definition `def:exclusion`. |
+| `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing com… |
+| `«def:commitment»` | abbrev | **Def. |
+| `«eq:commitment-unsubsumed»` | theorem | **Eq. |
+| `«sec:systems/canonical-commitment»` | theorem | The canonical commitment of Definition `def:canonical-commitment` satisfies Definition `def:commitment`. |
 | `«def:local-history»` | abbrev | **Def. |
 | `«def:strategy»` | abbrev | **Def. |
 | `«def:system»` | abbrev | **Def. |
@@ -303,17 +303,17 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:system/restrict»` | theorem | Def. |
 | `«sec:systems/one-specification»` | theorem | After Def. |
 | `«def:system-output-event»` | abbrev | **Def. |
-| `«def:exclusion-event»` | abbrev | **Def. |
-| `«sec:systems/exclusion-event-unobserved»` | theorem | After Def. |
+| `«def:commitment-event»` | abbrev | **Def. |
+| `«sec:systems/commitment-event-unobserved»` | theorem | After Def. |
 | `«eq:lifted-validity»` | theorem | **Eq. |
-| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` issues at least the exclusions of the `output(o)` of Sections functional-calm–complete-calm: |
+| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of Sections functional-calm–complete-calm: |
 | `«sec:systems/output-is-canonical-event»` | theorem | "… and `output(o)` is the case in which they remove exactly those." Lean: |
 | `«sec:systems/system-histories»` | theorem | "The environment observes `o`, not `γ`." Together with Def. |
 | `«sec:systems/bases-differ»` | theorem | Opener of §4.2: |
-| `«fig:cc-exclusions»` | theorem | Fig. |
-| `«sec:systems/two-systems-two-exclusions»` | theorem | "Both are exclusions: |
-| `«sec:systems/neither-is-canonical-exclusion»` | theorem | "… and neither is the exclusion `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each reque… |
-| `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and exclusion events apply only e… |
+| `«fig:cc-commitments»` | theorem | Fig. |
+| `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments: |
+| `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
+| `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Locks, timestamps, quorums, and consensus differ in how and when they decide. |
 | `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
@@ -327,14 +327,14 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:coordination-free/local-iff»` | theorem | Def. |
 | `«def:coordination-free/distributed»` | abbrev | Def. |
 | `«def:coordination-free/distributed-of-free»` | theorem | Def. |
-| `«sec:coordination/specification-contradicted»` | theorem | "Every exclusion is contradicted by a canonical run. |
+| `«sec:coordination/specification-contradicted»` | theorem | "Every commitment is contradicted by a canonical run. |
 | `«def:coordination-free/specification»` | abbrev | Def. |
-| `«def:coordination-free/exclusion-free-runs»` | theorem | Def. |
-| `«thm:exclusions-require-coordination»` | theorem | **Prop. |
-| `«thm:exclusions-require-coordination/any-bases»` | theorem | Prop. |
-| `«thm:exclusions-require-coordination/reach»` | theorem | Prop. |
-| `«thm:exclusions-require-coordination/any-event»` | theorem | Prop. |
-| `«thm:exclusions-require-coordination/confined-to-current-input»` | theorem | "The proposition rules out reconciliation at `i`, not forever. |
+| `«def:coordination-free/commitment-free-runs»` | theorem | Def. |
+| `«thm:commitments-require-coordination»` | theorem | **Prop. |
+| `«thm:commitments-require-coordination/any-bases»` | theorem | Prop. |
+| `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
+| `«thm:commitments-require-coordination/any-event»` | theorem | Prop. |
+| `«thm:commitments-require-coordination/confined-to-current-input»` | theorem | "The proposition rules out reconciliation at `i`, not forever. |
 | `«sec:coordination/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database", *Distributed coordination*: |
 | `«sec:coordination/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database", *No coordination*: |
@@ -368,11 +368,11 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/lm-for-S»` | theorem | "With `E = P`, Lifted Monotonicity for `E` is the common-expansion condition." |
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered specification `P` and an explicit relation `E ⊆ P`, the following are equivalent: |
 | `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `P` satisfies Lifted Monotonicity." |
-| `«cor:complete-cap-S/exclusion-free»` | theorem | Corollary `cor:complete-cap-S`: |
-| `«sec:complete-cap/necessity-any-system»` | theorem | "A system might hope to keep more outputs available by issuing exclusions, coordinating within each side of a partition. |
+| `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
+| `«sec:complete-cap/necessity-any-system»` | theorem | "A system might hope to keep more outputs available by issuing commitments, coordinating within each side of a partition. |
 | `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Nor does the system in the proof need coordination. |
-| `«sec:complete-cap/A-eq-S-no-exclusion»` | theorem | "For `E = P` it needs no exclusion at all." Lean: |
-| `«sec:complete-cap/local-row-removal-necessary»` | theorem | "For a smaller `E` such local row-removing exclusions can be necessary: |
+| `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `E = P` it needs no commitment at all." Lean: |
+| `«sec:complete-cap/local-row-removal-necessary»` | theorem | "For a smaller `E` such local row-removing commitments can be necessary: |
 | `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another block, sacrificing Availability, or is emitted anyway, sacrificing Partition Co… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Consider a register specification whose inputs are sets of operations with their real-time precedence, and whose outputs answer every operation of the input… |
@@ -476,11 +476,11 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/input-event»` | abbrev | *input event* — `input(j)` keeps `R[in ⪰ j]` (Eq. |
 | `«app:notation/input-loss»` | abbrev | *input loss* — the rows `input(j)` removes (Eq. |
 | `«app:notation/output-event»` | abbrev | *output event* — `output(o)` keeps `R[out ⪰ o]` and emits `o` (Def. |
-| `«app:notation/output-event-excludes»` | abbrev | *exclusion* (§2 sense) — an output event that removes rows (Def. |
-| `«app:notation/exposable»` | abbrev | *legal output* — `output(o)` applies no exclusion (Def. |
+| `«app:notation/output-event-excludes»` | abbrev | *commitment* (§2 sense) — an output event that removes rows (Def. |
+| `«app:notation/exposable»` | abbrev | *legal output* — `output(o)` applies no commitment (Def. |
 | `«app:notation/determined»` | abbrev | *determined* — the upper fiber has one element; *determination* — reaching such a state (Sec. |
 | `«app:notation/run»` | abbrev | *run* — finite sequence of specification events from a canonical state (Def. |
-| `«app:notation/exclusion-free»` | abbrev | *exclusion-free* — no output event commits (Def. |
+| `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
 | `«app:notation/consistent»` | abbrev | *consistent* — every finite family of runs can reach one common state at each common expansion `j` (Def. |
 | `«app:notation/confluent-at»` | abbrev | *confluent at `j`* (Def. |
 | `«app:notation/relational-specification»` | abbrev | *relational specification* — `P ⊆ I × O` total on `I` (Def. |
@@ -497,32 +497,32 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/ruled-out»` | abbrev | *ruled out by `o`* — a row whose output does not refine `o` (Sec. |
 | `«app:notation/Subsumed»` | abbrev | *`Subsumed_o`* — ruled-out rows refined by a kept row at the same input (Eq. |
 | `«app:notation/Excluded»` | abbrev | *`Excluded_o`* — every ruled-out row not in `Subsumed_o`. |
-| `«app:notation/canonical-exclusion»` | abbrev | *canonical exclusion* — remove `Excluded_o`. |
-| `«app:notation/output-subsumption»` | abbrev | *output subsumption* — remove `Subsumed_o`, not an exclusion (Def. |
+| `«app:notation/canonical-commitment»` | abbrev | *canonical commitment* — remove `Excluded_o`. |
+| `«app:notation/output-subsumption»` | abbrev | *output subsumption* — remove `Subsumed_o`, not a commitment (Def. |
 | `«app:notation/participant»` | abbrev | *participant* — holds a specification state (Sec. |
 | `«app:notation/message»` | abbrev | *message* — `m = (j,d)`, a cumulative input `j` (or `∅`) and other data `d` (Sec. |
 | `«app:notation/distributed-history»` | abbrev | *distributed history* — locally ordered input, output, send and receive events (Def. |
 | `«app:notation/history-event»` | abbrev | *history event* — (Def. |
 | `«app:notation/happens-before»` | abbrev | *happens-before* — closure of local orders and send-before-receive (Def. |
 | `«app:notation/consistent-cut»` | abbrev | *consistent cut* — a set of history events closed under happens-before (Def. |
-| `«app:notation/endpoint»` | abbrev | *participant run; endpoint* — `p`'s input, output, and exclusion events at `C`; `(σ_p(C))_{p ∈ P}` (Def. |
+| `«app:notation/endpoint»` | abbrev | *participant run; endpoint* — `p`'s input, output, and commitment events at `C`; `(σ_p(C))_{p ∈ P}` (Def. |
 | `«app:notation/continuation»` | abbrev | *continuation* — a history extending `C` (Sec. |
 | `«app:notation/cut-confluent-at»` | abbrev | *cut confluent at `j`* — some continuation brings every participant to one state `(j,R)` (Sec. |
 | `«app:notation/distributed-consistency»` | abbrev | *distributed consistency* — every consistent cut of every history is confluent at every common expansion (Def. |
-| `«app:notation/exclusion»` | abbrev | *exclusion* — partial function on states removing rows, none refined by a remaining row at the same input (Def. |
-| `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, exclusion, and send events `p` may perform next (Def. |
-| `«app:notation/system»` | abbrev | *system* — an exclusion basis `𝓑` and a strategy per participant (Def. |
+| `«app:notation/commitment»` | abbrev | *commitment* — partial function on states removing rows, none refined by a remaining row at the same input (Def. |
+| `«app:notation/strategy»` | abbrev | *local history; strategy* — `p`'s history events in order; `θ_p(λ)`, the output, commitment, and send events `p` may perform next (Def. |
+| `«app:notation/system»` | abbrev | *system* — a commitment basis `𝓑` and a strategy per participant (Def. |
 | `«app:notation/basis»` | abbrev | *basis* (Def. |
-| `«app:notation/produced»` | abbrev | *produced* — every non-input event permitted by its strategy and using only exclusions from `𝓑` (Def. |
-| `«app:notation/system-output-event»` | abbrev | *system output event `Out_γ(o)`* — applies exclusions `γ`, subsumes, emits `o` (Def. |
-| `«app:notation/exclusion-event»` | abbrev | *exclusion event `exclude(γ)`* — applies a nonempty sequence `γ` of exclusions, emits nothing (Def. |
-| `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose exclusions come from the basis (Def. |
+| `«app:notation/produced»` | abbrev | *produced* — every non-input event permitted by its strategy and using only commitments from `𝓑` (Def. |
+| `«app:notation/system-output-event»` | abbrev | *system output event `Out_γ(o)`* — applies commitments `γ`, subsumes, emits `o` (Def. |
+| `«app:notation/commitment-event»` | abbrev | *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of commitments, emits nothing (Def. |
+| `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
-| `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, exclusions and exclusion events erased; every run has a canonical one (Lem. |
-| `«app:notation/contradicts»` | abbrev | *contradicts* — accepts an input whose fiber an exclusion emptied, or emits an output whose row it removed (Def. |
-| `«app:notation/coordination»` | abbrev | *requires coordination* — an exclusion some run contradicts (Def. |
-| `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — an exclusion applied by `p` that some run at another participant `q ≠ p` contradicts (Def. |
-| `«app:notation/coordination-free»` | abbrev | *coordination-free* — applies no exclusion that requires coordination (Def. |
+| `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments and commitment events erased; every run has a canonical one (Lem. |
+| `«app:notation/contradicts»` | abbrev | *contradicts* — accepts an input whose fiber a commitment emptied, or emits an output whose row it removed (Def. |
+| `«app:notation/coordination»` | abbrev | *requires coordination* — a commitment some run contradicts (Def. |
+| `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — a commitment applied by `p` that some run at another participant `q ≠ p` contradicts (Def. |
+| `«app:notation/coordination-free»` | abbrev | *coordination-free* — applies no commitment that requires coordination (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more blocks, no message crosses blocks (Def. |
 | `«app:notation/block»` | abbrev | *block* — one of the two or more classes into which a partitioned history divides the participants (Def. |
 | `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`; explicit, implicit output* — `E ⊆ P`, the rows whose outputs must stay available; outputs of `E`, and the other permitted outputs (Def. |
@@ -567,7 +567,7 @@ File `Paper/AppB_ProofsDistributed.lean`; paper source `appendices/proof-machine
 | `«app:exchanging-outputs»` | theorem | *Exchanging outputs* (table level). |
 | `«app:exchanging-outputs/cut»` | theorem | *Exchanging outputs* (history level). |
 | `«app:exchanging-outputs/honored-table-not-state»` | theorem | *Exchanging outputs.* "This restriction is a table, not a specification state: |
-| `«proof:thm:exclusions-require-coordination»` | theorem | Proof of Prop. |
+| `«proof:thm:commitments-require-coordination»` | theorem | Proof of Prop. |
 | `«thm:complete-cap/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1): |
 | `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2): |
 | `«cor:complete-cap-S/proof-cf-continuations»` | theorem | Proof of Corollary `cor:complete-cap-S`: |
@@ -602,45 +602,45 @@ File `Paper/AppB_InvariantConfluence.lean`; paper source `appendices/proof-machi
 | `«app:iconfluence/proof-backward»` | theorem | (⇐): |
 | `«app:iconfluence/proof-directed-suffices»` | theorem | (⇐): |
 
-### Appendix C: Exclusion bases
+### Appendix C: Commitment bases
 
-File `Paper/AppC_ExclusionBases.lean`; paper source `appendices/exclusion-bases-general.tex`.
+File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-bases-general.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
 | `«eq:output-subsumptions»` | abbrev | **Eq. |
-| `«eq:exclusion-removals»` | abbrev | **Eq. |
+| `«eq:commitment-removals»` | abbrev | **Eq. |
 | `«def:lifted-output-event»` | abbrev | **Def. |
-| `«def:canonical-exclusion»` | abbrev | **Def. |
-| `«eq:canonical-exclusion-relational»` | theorem | **Eq. |
+| `«def:canonical-commitment»` | abbrev | **Def. |
+| `«eq:canonical-commitment-relational»` | theorem | **Eq. |
 | `«def:lifted-output-event/examples»` | theorem | The ambiguity example excludes `[B,A]`; the routing example only subsumes its removed route sets. |
 | `«app:lifted-output-events/disjoint»` | theorem | `Subsumed_o` and `Excluded_o` are disjoint. |
 | `«app:lifted-output-events/functional»` | theorem | With one row per input, no ruled-out row is subsumed. |
-| `«app:lifted-output-events/exposable»` | theorem | A legal output applies no exclusion exactly when `Excluded_o` is empty. |
+| `«app:lifted-output-events/exposable»` | theorem | A legal output applies no commitment exactly when `Excluded_o` is empty. |
 | `«prop:exposability»` | theorem | **Prop. |
 | `«eq:safe-exposure»` | abbrev | **Eq. |
-| `«def:canonical-exclusion-basis»` | abbrev | **Def. |
-| `«eq:canonical-exclusion-basis-relational»` | theorem | **Eq. |
+| `«def:canonical-commitment-basis»` | abbrev | **Def. |
+| `«eq:canonical-commitment-basis-relational»` | theorem | **Eq. |
 | `«def:canonical-event»` | abbrev | **Def. |
-| `«app:bases/canonical-exclusion-is-exclusion»` | theorem | The canonical exclusion is defined precisely when the output is in the current fiber and `Excluded_o` is nonempty. |
-| `«lem:canonical-exclusion-normal-form»` | theorem | **Lemma `lem:canonical-exclusion-normal-form`**: |
+| `«app:bases/canonical-commitment-is-commitment»` | theorem | The canonical commitment is defined precisely when the output is in the current fiber and `Excluded_o` is nonempty. |
+| `«lem:canonical-commitment-normal-form»` | theorem | **Lemma `lem:canonical-commitment-normal-form`**: |
 | `«def:canonical-system»` | abbrev | **Def. |
 | `«def:canonical-system/histories»` | theorem | Def. |
-| `«def:canonical-system/no-exclusion-event»` | theorem | Def. |
-| `«lem:compound-exclusion»` | abbrev | **Lemma compound exclusions are exclusions** (`lem:compound-exclusion`). |
-| `«lem:compound-exclusion/defined»` | theorem | Lemma `lem:compound-exclusion`: |
-| `«app:bases/compound-output-event»` | theorem | "A compound output event therefore has the same effect as an event that applies the composite exclusion alone, and Lemma canonical-exclusion-normal-form cove… |
-| `«app:bases/compound-exclusion-event»` | theorem | A compound exclusion event has the same effect as an exclusion event that applies the composite exclusion alone: |
+| `«def:canonical-system/no-commitment-event»` | theorem | Def. |
+| `«lem:compound-commitment»` | abbrev | **Lemma compound commitments are commitments** (`lem:compound-commitment`). |
+| `«lem:compound-commitment/defined»` | theorem | Lemma `lem:compound-commitment`: |
+| `«app:bases/compound-output-event»` | theorem | "A compound output event therefore has the same effect as an event that applies the composite commitment alone, and Lemma canonical-commitment-normal-form co… |
+| `«app:bases/compound-commitment-event»` | theorem | A compound commitment event has the same effect as a commitment event that applies the composite commitment alone: |
 | `«def:run-under-basis»` | abbrev | **Def. |
 | `«def:canonical-run»` | abbrev | **Def. |
 | `«def:run-under-basis/canonical-run»` | abbrev | Legacy sub-label pointing at `«def:canonical-run»`. |
 | `«def:run-under-basis/canonical-runs-are-runs»` | theorem | Def. |
-| `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once exclusion sequences are erased and exclusion events dropped: |
+| `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once commitment sequences are erased and commitment events dropped: |
 | `«lem:canonical-equivalent»` | theorem | **Lemma canonical equivalents** (`lem:canonical-equivalent`). |
 | `«cor:reconciliation-any-basis»` | theorem | **Cor. |
 | `«app:bases/converse-fails»` | theorem | "The converse of Lemma canonical-equivalent fails: |
-| `«app:bases/basis-2PL»` | abbrev | *Application-specific exclusions.* "Locks and timestamps are exclusions of this kind: |
-| `«app:bases/basis-MVTO»` | abbrev | *Application-specific exclusions*: |
+| `«app:bases/basis-2PL»` | abbrev | *Application-specific commitments.* "Locks and timestamps are commitments of this kind: |
+| `«app:bases/basis-MVTO»` | abbrev | *Application-specific commitments*: |
 
 ### Appendix D: Proofs and details for composition
 
@@ -663,11 +663,11 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/components-commit»` | theorem | "Let `𝒮₁` have one input `*` and possibility relation `{(*,x),(*,y)}` with `x,y` incomparable, and let `𝒮₂` be the functional specification induced by a func… |
 | `«app:composition/image-canon»` | theorem | "For tables `R` of `𝒮₁` and `T` of `𝒮₂` we write `R ⋈ T = {(k,x) : |
 | `«app:composition/pipeline-run»` | theorem | "A run of the pipeline is a run of `𝒮₁` under `ℬ`, together with a run of `𝒮₂\|_{𝒮₁}` from `σ(m₁)`, where `m₁` is the first output of `𝒮₁`. |
-| `«app:composition/store-facts»` | theorem | "In a proper pipeline, two facts about a state `τ` that `𝒮₂\|_{𝒮₁}` reaches without exclusion carry the proofs. |
+| `«app:composition/store-facts»` | theorem | "In a proper pipeline, two facts about a state `τ` that `𝒮₂\|_{𝒮₁}` reaches without commitment carry the proofs. |
 | `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:proper-coordination`(2): |
 | `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:proper-coordination`(3): |
 | `«app:composition/properness-needed»` | theorem | "Properness is needed in (3). |
-| `«app:composition/replacement»` | theorem | "The exclusion-erased replacement of a system has the empty basis and the same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)` and its exclusion events… |
+| `«app:composition/replacement»` | theorem | "The commitment-erased replacement of a system has the empty basis and the same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)` and its commitment even… |
 | `«cor:empty-store»` | theorem | **Corollary `cor:empty-store`** (Empty store): |
 | `«app:composition/empty-store»` | theorem | Proof of Corollary `cor:empty-store`: |
 | `«cor:pipelines»` | theorem | **Corollary `cor:pipelines`** (Pipelines): |
@@ -676,9 +676,9 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«prop:invisible-coordination»` | theorem | **Proposition `prop:invisible-coordination`** (Invisible coordination): |
 | `«app:composition/coverage»` | theorem | The covering argument: |
 | `«app:composition/per-key»` | theorem | "Consider a store that answers each key from that key's commands, in log order. |
-| `«app:composition/no-pushforward»` | theorem | "The exclusions of `𝒮₁` do not themselves push forward. |
+| `«app:composition/no-pushforward»` | theorem | "The commitments of `𝒮₁` do not themselves push forward. |
 | `«app:composition/monotone-needed»` | theorem | "Monotonicity of `f` is needed. |
-| `«app:composition/store-exclusion»` | theorem | "A downstream that must itself exclude cannot delegate the exclusion either. |
+| `«app:composition/store-commitment»` | theorem | "A downstream that must itself exclude cannot delegate the commitment either. |
 | `«ex:committed-log-composition»` | theorem | **Example `ex:committed-log-composition`** (Replicated store), for any deterministic state machine `δ` and two distinct commands: |
 | `«ex:bare-reads»` | theorem | **Example `ex:bare-reads`** (Bare reads), position-tagged responses, for any deterministic state machine `δ`, read function `rd`, and two distinct commands: |
 | `«ex:bare-reads/latest-value»` | theorem | Inside Example `ex:bare-reads`: |
@@ -688,7 +688,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision of Section `sec:coordination` has both forms. |
 | `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Feed, typed pipeline, external observation). |
 | `«def:proper-pipeline»` | theorem | **Definition `def:proper-pipeline`** (Contract-proper, implementation-proper). |
-| `«app:components/feed-is-input»` | theorem | "Receiving `m` is the downstream run's initial input, not an exclusion of `C₂`." Lean: |
+| `«app:components/feed-is-input»` | theorem | "Receiving `m` is the downstream run's initial input, not a commitment of `C₂`." Lean: |
 | `«prop:typed-pipelines»` | theorem | **Proposition `prop:typed-pipelines`** (Typed pipelines): |
 | `«app:components/follows»` | theorem | "Item (5) covers one boundary output. |
 
@@ -725,7 +725,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `E_q = ∅` for every participant `q` but one, as in the leader example above." |
 | `«app:deployment/single-authority/shape»` | theorem | "Every separable family is then one row emitted by the single authority beside a silent participant …" |
 | `«app:deployment/single-authority»` | theorem | "… and monotonicity across partitions says only that each such row has an expansion at every expansion of its input." (With `\|P\| ≥ 2`, so that some partition… |
-| `«app:deployment/single-authority/not-distributed»` | theorem | "In a system whose other participants emit nothing, no other participant emits an output that the authority excludes, so its row-removing exclusions do not r… |
+| `«app:deployment/single-authority/not-distributed»` | theorem | "In a system whose other participants emit nothing, no other participant emits an output that the authority excludes, so its row-removing commitments do not… |
 | `«app:deployment/single-authority/coordination»` | theorem | "They still require coordination when another run of the authority may choose differently, as for the lock manager of Section `sec:coordination`." Lean: |
 | `«thm:complete-cap-deployment»` | theorem | **Proposition `thm:complete-cap-deployment`** (Partition compatibility under a deployment). |
 | `«thm:complete-cap-deployment/proof»` | theorem | Proof of Prop. |
@@ -771,13 +771,13 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«def:response-availability/at-cuts»` | theorem | Def. |
 | `«def:response-availability(1)»` | theorem | Def. |
 | `«def:response-availability/input-acceptance-preserves-expansion»` | theorem | "Input acceptance says that `p` never empties the fiber at an expansion of its current input." Lean, at any cut, in particular the end of the history: |
-| `«def:response-availability/excludes-unavailable-expansion»` | theorem | "It excludes specifications whose answers require such a fiber-emptying exclusion": |
+| `«def:response-availability/excludes-unavailable-expansion»` | theorem | "It excludes specifications whose answers require such a fiber-emptying commitment": |
 | `«def:response-availability/election-equality-order»` | theorem | "… such as the election under the equality order (Figure `fig:nonmonotone-frame`)": |
 | `«def:response-partition-consistency»` | theorem | **Def. |
 | `«def:response-partition-consistency/converse-part»` | theorem | "This is the part of Partition Consistency that the converse of Theorem `thm:complete-cap` uses, so that theorem also holds with Response Partition Consisten… |
 | `«def:response-partition-consistency/of-confluent»` | theorem | "Confluence at `j` implies a common refinement at `j` (Corollary `cor:reconciliation-any-basis`)." Lean, at any cut, in particular the final one. |
 | `«def:response-partition-consistency/canonical»` | theorem | "for a canonical system (Definition `def:canonical-system`) the two coincide by Lemma `lem:reconciliation`, applied to the participant runs." Lean, at any cu… |
-| `«def:response-partition-consistency/converse-fails»` | theorem | "With other exclusions the converse can fail: |
+| `«def:response-partition-consistency/converse-fails»` | theorem | "With other commitments the converse can fail: |
 | `«app:cap-response/replicated»` | theorem | "A system is *replicated* (SPMD: |
 | `«lem:locality»` | theorem | **Lemma `lem:locality` (Locality).** "For each of some participants `p`, let `ℓ_p` be a local history that `p`'s strategy can produce from initial input `i_p… |
 | `«def:response-interface»` | theorem | **Def. |
@@ -818,7 +818,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 
 ### Appendix G: 2PL and MVTO
 
-File `Paper/AppG_TransactionBases.lean`; paper source `appendices/exclusion-bases.tex`.
+File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bases.tex`.
 
 | Lean name (`CC.Paper.…`) | Kind | Paper statement (first sentence of the docstring) |
 |---|---|---|
@@ -843,25 +843,25 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/exclusion-base
 | `«app:cc-bases/abort»` | abbrev | `abort(A)`, for `A ∈ i`. |
 | `«app:cc-bases/stamp»` | abbrev | `stamp(A)`, for `A ∈ i ∖ Z`, `Z ⊆ i`. |
 | `«app:cc-bases/read»` | abbrev | `read(A,k,v)`, for `A ∈ i` whose `k`-th operation in `i` is a read. |
-| `«app:cc-bases/each-is-exclusion»` | theorem | "Each is an exclusion (Definition `def:exclusion`). |
+| `«app:cc-bases/each-is-commitment»` | theorem | "Each is a commitment (Definition `def:commitment`). |
 | `«app:cc-bases/complete-kept-iff»` | theorem | "… for them a complete row is kept exactly when it satisfies the condition, since two permitted complete outputs at one input, one refining the other, have t… |
 | `«app:cc-bases/bases»` | theorem | "The bases are `B_2PL = {order, TxCommit, abort, read}` and `B_MVTO = {stamp, TxCommit, abort, read}`, over all transactions, positions, and versions." |
 | `«app:cc-bases/bases-differ»` | theorem | "… and differ in how they order. |
 | `«app:cc-bases/run-states»` | theorem | "In every state that a run under either basis reaches, each row has a complete refinement in the table at its input, and any output between two rows of the t… |
 | `«app:cc-bases/read-emit»` | theorem | "So a read is reported by applying `read(A,k,v)` and then emitting the result, which is then a legal output." Precisely: |
-| `«app:cc-bases/fig-h»` | theorem | "If `A` holds that lock in a conflicting mode, `B` waits, and the scheduler applies `order(A,B)` in an exclusion event, reporting nothing. |
-| `«app:cc-bases/order-at-ABC»` | theorem | "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps `[A,B,C]` and `[C,A,B]`, so it is an exclusion, and it is not the exclusion `x_o` of any… |
+| `«app:cc-bases/fig-h»` | theorem | "If `A` holds that lock in a conflicting mode, `B` waits, and the scheduler applies `order(A,B)` in a commitment event, reporting nothing. |
+| `«app:cc-bases/order-at-ABC»` | theorem | "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps `[A,B,C]` and `[C,A,B]`, so it is a commitment, and it is not the commitment `x_o` of any… |
 | `«app:cc-bases/deadlock»` | theorem | "A deadlock between `A` and `B` arises when `B` waits for a lock that `A` holds and an operation of `A` then waits for a lock that `B` holds: |
 | `«app:cc-bases/deadlock-resolution»` | theorem | "Once the scheduler applies `TxCommit(A)`, every remaining complete row aborts `B`, and `TxCommit(B)` is never again defined." |
 | `«app:cc-bases/abort-free-waits-forever»` | theorem | "Under the abort-free specification, once both orderings have been applied, no remaining row is at an input in which both `A` and `B` have requested commit. |
-| `«app:cc-bases/fig-i»` | theorem | "On complete rows without aborts, `stamp(B)` with `Z = ∅` keeps exactly those with `B` first (Figure `fig:cc-exclusions`(i))." |
-| `«app:cc-bases/stamp-at-ABC»` | theorem | "… at the canonical state of `{A,B,C}` it is an exclusion, and it is not the exclusion `x_o` of any output": |
-| `«app:cc-bases/mvto-row»` | theorem | *What a read is an exclusion to*, the row argument: |
+| `«app:cc-bases/fig-i»` | theorem | "On complete rows without aborts, `stamp(B)` with `Z = ∅` keeps exactly those with `B` first (Figure `fig:cc-commitments`(i))." |
+| `«app:cc-bases/stamp-at-ABC»` | theorem | "… at the canonical state of `{A,B,C}` it is a commitment, and it is not the commitment `x_o` of any output": |
+| `«app:cc-bases/mvto-row»` | theorem | *What a read is a commitment to*, the row argument: |
 | `«app:cc-bases/read-commits»` | theorem | "Hence, after the two stamps, no row that reports the read and is at an input in which `A` writes `x` commits both `A` and `B`. |
 | `«app:cc-bases/writer-before-A»` | theorem | "The condition on the version is needed. |
 | `«app:cc-bases/abort-entailed»` | theorem | *When the abort is entailed.* "Suppose `A`'s write of `x` has arrived. |
-| `«app:cc-bases/abort-is-exclusion»` | theorem | "While `B` is undecided, it does not. |
-| `«app:cc-bases/comparison»` | theorem | "Under MVTO, a later transaction's read of an older version is an exclusion that, if the writer writes that key, the writer and the reader do not both commit. |
+| `«app:cc-bases/abort-is-commitment»` | theorem | "While `B` is undecided, it does not. |
+| `«app:cc-bases/comparison»` | theorem | "Under MVTO, a later transaction's read of an older version is a commitment that, if the writer writes that key, the writer and the reader do not both commit. |
 
 ### Appendix H: Additional applications
 
@@ -872,8 +872,8 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/additional-applica
 | `«app:additional-applications/authority-output»` | abbrev | "An output is a triple `(E,V,D)`: |
 | `«eq:authority-refinement»` | theorem | Eq. |
 | `«app:additional-applications/safety-exposable»` | theorem | "Protocol safety guarantees that every output permitted at the current or any later input [refines] the certified evidence already emitted, so authority chan… |
-| `«app:additional-applications/slot-conflict»` | theorem | "Competing proposals for an undecided slot have incompatible extensions of `D`, so certifying one is an exclusion." Two current outputs deciding different va… |
-| `«app:additional-applications/epoch-conflict»` | theorem | "If the succession rule were not fixed, competing next epochs would require one [an exclusion] as well." Two current outputs extending the chain `e` by diffe… |
+| `«app:additional-applications/slot-conflict»` | theorem | "Competing proposals for an undecided slot have incompatible extensions of `D`, so certifying one is a commitment." Two current outputs deciding different va… |
+| `«app:additional-applications/epoch-conflict»` | theorem | "If the succession rule were not fixed, competing next epochs would require one [a commitment] as well." Two current outputs extending the chain `e` by diffe… |
 | `«app:additional-applications/kset-input»` | abbrev | "An input is a finite set of proposals `(p,v)`, at most one per participant, ordered by inclusion." |
 | `«app:additional-applications/pmap-order»` | theorem | "Outputs are partial decision maps `m : |
 | `«app:additional-applications/kset-permitted»` | theorem | "At input `I`, `m` is permitted when it decides only participants that propose in `I`, every value in its range is proposed in `I` (validity), and its range… |
@@ -892,6 +892,6 @@ File `Paper/AppH_Applications.lean`; paper source `appendices/additional-applica
 | `«app:additional-applications/prefix-monotone»` | theorem | "Old prefixes stay legal as history grows, and finite unions of prefixes are prefixes, so it satisfies Lifted Monotonicity." |
 | `«app:additional-applications/prefix-empty»` | theorem | "… it guarantees neither freshness nor completeness": |
 | `«app:additional-applications/complete-history»` | theorem | "A specification that requires the complete history, with output `h` at `h` and outputs ordered by equality, is functional and not monotone: |
-| `«app:additional-applications/complete-history-exclusion»` | theorem | "By Proposition `prop:functional-exposure-boundary`, some output can then be exposed only after an exclusion that excludes larger inputs." At some state reac… |
+| `«app:additional-applications/complete-history-commitment»` | theorem | "By Proposition `prop:functional-exposure-boundary`, some output can then be exposed only after a commitment that excludes larger inputs." At some state reac… |
 
 <!-- END PAPER INDEX -->

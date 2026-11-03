@@ -4,14 +4,14 @@
 We now extend CALM theory to allow a fiber to contain several outputs.  The monotonicity property we want to test as input
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
-An exclusion may empty an input's fiber or remove some output rows while the
+A \commitment may empty an input's fiber or remove some output rows while the
 fiber remains nonempty.  We now turn to the latter effect.
 
-\subsection{Exclusion by example}
+\subsection{\Commitment by example}
 \label{sec:ambiguity-story}
 
 Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
-several outputs in one fiber.  Transaction ordering requires an exclusion
+several outputs in one fiber.  Transaction ordering requires a \commitment
 between incompatible serialization orders.  For the discussion here, outputs are simply serial
 schedules, to which executions correspond via equivalence; Section~\ref{sec:hat-instance} and
 Appendix~\ref{app:cc-bases} study more thorough transactional specifications.  Traceroute observations, by
@@ -31,7 +31,7 @@ contrast, can all be \outrelpast by a larger route set.
       \grayrow{$\{A,B\}$} & \grayrow{$[B,A]$} \\ \strikerow
       \bottomrule
     \end{tabular*}\par\smallskip
-    {\footnotesize no remaining row \outrel the removed one: an exclusion}
+    {\footnotesize no remaining row \outrel the removed one: a \commitment}
   \end{minipage}\hfill
   \begin{minipage}[t]{0.6\columnwidth}
     \raggedright
@@ -58,20 +58,20 @@ contrast, can all be \outrelpast by a larger route set.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{Exclusion and directedness.} The examples differ in what happens
+\paragraph{\Commitment and directedness.} The examples differ in what happens
 to alternative outputs when one is emitted.  In panel~(f), neither
 serialization order \outrel the other, so emitting one requires an
-exclusion that removes the other while the input stays legal:
+\commitment that removes the other while the input stays legal:
 emitting $[A,B]$ excludes $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
 removal an \emph{output subsumption}; every removed output is
 \outrelpast by a remaining one, so emitting the route observation loses no information
 according to the output order and needs no
-exclusion: it is a \emph{legal output}.
+\commitment: it is a \emph{legal output}.
 
-An output event can thus remove rows in two ways: by exclusion, as in panel~(f) and Section~\ref{sec:functional-calm}, or by subsuming outputs, as in panel~(g).  At a given input, an exclusion may remove every row, excluding the input, or only some rows, excluding those outputs.  The atomic event $\mathsf{output}(o)$ does whichever $o$ requires, then emits $o$.  Subsuming is not exclusion.
+An output event can thus remove rows in two ways: by \commitment, as in panel~(f) and Section~\ref{sec:functional-calm}, or by subsuming outputs, as in panel~(g).  At a given input, a \commitment may remove every row, ruling out the input, or only some rows, ruling out those outputs.  The atomic event $\mathsf{output}(o)$ does whichever $o$ requires, then emits $o$.  Subsuming is not \commitment.
 
-In Figure~\ref{fig:ambiguity-frames}, serialization requires exclusion; traceroute avoids it.
+In Figure~\ref{fig:ambiguity-frames}, serialization requires \commitment; traceroute avoids it.
 The difference between them is the order-theoretic concept of a \emph{directed} fiber:
 every finite set of outputs in a given fiber has a common \outnoun in that fiber.
 Directedness at a single input is not sufficient, however;
@@ -262,21 +262,21 @@ $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
 emits $o$.  Its removed rows fall into two classes.  A row is in
 $\Subsumed_o$ when a kept row at the same input \outrel it; its removal is an
 \emph{output subsumption}.  Every other removed row is in $\Excluded_o$ and is
-removed by the canonical exclusion $x_o$.  At an input $k$, $x_o$ excludes
-input $k$ if it removes every row there; otherwise it excludes each output
-whose row it removes at $k$.  Output subsumption is not exclusion.
+removed by the canonical \commitment $x_o$.  At an input $k$, $x_o$ rules out
+$k$ if it removes every row there; otherwise it rules out each output whose
+row it removes at $k$.  Output subsumption is not \commitment.
 
 These are the cases of Section~\ref{sec:ambiguity-story}: emitting $\bot$ under
 the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows for
-$aba$ and $abb$ in $\Excluded_o$ and excludes those inputs; emitting $[A,B]$
+$aba$ and $abb$ in $\Excluded_o$ and rules out those inputs; emitting $[A,B]$
 in Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in
-$\Excluded_o$ and excludes that output at $\{A,B\}$; and the route sets removed
+$\Excluded_o$ and rules out that output at $\{A,B\}$; and the route sets removed
 in panel~(g) are in $\Subsumed_o$.  In the functional case, $\Subsumed_o$ is
 empty, so this is the output event of Definition~\ref{def:output-event}.
 Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
 As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
-exclusion, exactly when $\Excluded_o$ is empty.  Equivalently, at every legal
+\commitment, exactly when $\Excluded_o$ is empty.  Equivalently, at every legal
 \indesc $j$ of $i$, $o$ and each remaining output at $j$ have a common
 \outnoun at $j$ (Proposition~\ref{prop:exposability}).
 
@@ -285,7 +285,7 @@ exclusion, exactly when $\Excluded_o$ is empty.  Equivalently, at every legal
 
 A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
 Equation~\ref{eq:output-action}.  Specification states, input events, runs,
-exclusion-free runs, and consistency are defined as before, and the results
+\commitment-free runs, and consistency are defined as before, and the results
 of Section~\ref{sec:executions} used output events only through that
 equation.  They lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
@@ -319,7 +319,7 @@ The same condition governs legality.
 \begin{proposition}[Output-legality boundary]
 \label{prop:exposure-boundary}
 An ordered specification satisfies Lifted Monotonicity if and only
-if every output at every state reachable without exclusion is legal.
+if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]

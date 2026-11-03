@@ -68,7 +68,7 @@ theorem «fig:election-frames/printed-rows» (k : Ballots) (o : Res) :
   Figures.Elec.printed_complete k o
 
 /-- Fig. `fig:election-frames`(a): "Initial state, current input `a··` …
-upper fiber `{⊥,a,b}`; undetermined; `⊥` needs no exclusion."  Panel (a) is
+upper fiber `{⊥,a,b}`; undetermined; `⊥` needs no commitment."  Panel (a) is
 the canonical state `σ_P(a··)`; "upper fiber is all of `{⊥,a,b}`" is stated
 as "every output occurs in some remaining row". -/
 theorem «fig:election-frames/a» :
@@ -84,7 +84,7 @@ theorem «fig:election-frames/a» :
 `v₂`'s ballot for `b` arrives, the event `input(ab·)` produces panel (b),
 causing the table to lose rows whose inputs no longer expand the ballots received; such inputs
 are now illegal. … in panel (b) it is `{⊥,a,b}`."  The CIDR version says "the
-input event `input(ab·)`".  Also "`⊥` needs no exclusion" (`⊥` is a legal output). -/
+input event `input(ab·)`".  Also "`⊥` needs no commitment" (`⊥` is a legal output). -/
 theorem «fig:election-frames/b» :
     Step (canon elec bad) (.input bab) (canon elec bab) ∧
       (∀ o : Res, ∃ k, (canon elec bab).R k o) ∧ ¬ Determined (canon elec bab) ∧
@@ -104,8 +104,8 @@ theorem «fig:election-frames/b-rows» (k : Ballots) (o : Res) (hk : bad ≼ k) 
 
 /-- Fig. `fig:election-frames`(c) and §2.1: "If `v₂` instead votes for `a`,
 as in panel (c), the upper fiber is `{a}`.  The state is *determined*: input
-alone has resolved the outcome, without exclusion"; caption: "`a` needs no
-exclusion". -/
+alone has resolved the outcome, without commitment"; caption: "`a` needs no
+commitment". -/
 theorem «fig:election-frames/c» :
     Step (canon elec bad) (.input baa) (canon elec baa) ∧
       (∀ o, (∃ k, (canon elec baa).R k o) ↔ o = .win .a) ∧
@@ -115,18 +115,18 @@ theorem «fig:election-frames/c» :
 
 /-- Fig. `fig:election-frames`(d) and §2.1: "the system acts as a registrar,
 emitting `⊥` and closing the polls at `ab·` in the same output event.  Its
-irrevocable *exclusion* removes the still-possible `aba` and `abb` rows
+irrevocable *commitment* removes the still-possible `aba` and `abb` rows
 but leaves the current input unchanged, and so makes `⊥` the final result."
 
-Closing the polls is the exclusion `Figures.closePolls` (an exclusion in the
-sense of Def. `def:exclusion`, §4.3), and it is an exclusion; the registrar's
+Closing the polls is the commitment `Figures.closePolls` (a commitment in the
+sense of Def. `def:commitment`, §4.3), and it is a commitment; the registrar's
 event is the system output event `Out_[closePolls](⊥)` of §4.3, legal under
 any basis containing `closePolls`.  It ends at `panelD`, whose only row is
 `(ab·,⊥)`; the rows it removes beyond `(b)` are exactly `(aba,a)`, `(abb,b)`
 (the struck rows); the state is determined with result `⊥`. -/
 theorem «fig:election-frames/d» :
     (Figures.closePolls (sp := elec)).app (canon elec bab) = some Figures.Elec.panelD ∧
-      (∀ B : ExclusionBasis elec, B Figures.closePolls →
+      (∀ B : CommitmentBasis elec, B Figures.closePolls →
         SysStep B (canon elec bab) (.output [Figures.closePolls] .bot) Figures.Elec.panelD) ∧
       Figures.Elec.panelD.cur = bab ∧
       (∀ k o, Figures.Elec.panelD.R k o ↔ (k = bab ∧ o = .bot)) ∧
@@ -137,7 +137,7 @@ theorem «fig:election-frames/d» :
    Figures.Elec.panelD_rows, Figures.Elec.panelD_struck, Figures.Elec.panelD_determined⟩
 
 /-- Fig. `fig:election-frames`(d), legend: "Gray: removed from the remainder
-table; struck through if by an exclusion, otherwise lost after an input event."  A
+table; struck through if by a commitment, otherwise lost after an input event."  A
 printed row is absent from panel (d) iff its input does not expand `ab·`
 (gray) or it is one of the two struck rows. -/
 theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
@@ -145,10 +145,10 @@ theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bad ≼ k) 
       (¬ bab ≼ k ∨ (k = baba ∧ o = .win .a) ∨ (k = Figures.Elec.babb ∧ o = .win .b)) :=
   Figures.Elec.panelD_gray k o hk hS
 
-/-- Fig. `fig:election-frames` caption and §2.1: "an exclusion that `output(⊥)`
-alone does not require … Emitting `⊥` by itself would need no exclusion,
+/-- Fig. `fig:election-frames` caption and §2.1: "a commitment that `output(⊥)`
+alone does not require … Emitting `⊥` by itself would need no commitment,
 since every output still possible refines it."  At (b), `⊥` is a legal output,
-`Excluded^in_⊥` and `Excluded^out_⊥` are empty, and `output(⊥)` removes no row. -/
+  `Excluded_o` is empty, and `output(⊥)` removes no row. -/
 theorem «fig:election-frames/bot-alone» :
     Exposable (canon elec bab) .bot ∧ (¬ ∃ k x, Excluded (canon elec bab) .bot k x) ∧
       outputTable (canon elec bab) .bot = (canon elec bab).R :=
@@ -162,7 +162,7 @@ theorem «fig:nonmonotone-frame» :
       ∀ k o, outputTable (canon elecEq bab) ⟨.bot⟩ k o ↔ (k = bab ∧ o = ⟨.bot⟩) :=
   ⟨elecEq_bot_excludes, elecEq_bot_single_row⟩
 
-/-- Fig. `fig:nonmonotone-frame` caption: "The exclusion the registrar chose in
+/-- Fig. `fig:nonmonotone-frame` caption: "The commitment the registrar chose in
 Figure `fig:election-frames`(d) is required here." -/
 theorem «fig:nonmonotone-frame/matches-d» (k : Ballots) (r : Res) :
     Figures.Elec.panelD.R k r ↔ outputTable (canon elecEq bab) ⟨.bot⟩ k ⟨r⟩ :=
@@ -176,9 +176,9 @@ theorem «sec:election-story/exposable-panels» :
   elec_panels_exposable
 
 /-- §2.1: "under the equality order … `⊥` is incompatible with future
-winners, so emitting it requires an exclusion": at `σ_P(ab·)`, `⊥` is not
+winners, so emitting it requires a commitment": at `σ_P(ab·)`, `⊥` is not
 a legal output under `elecEq`. -/
-theorem «sec:election-story/equality-order-exclusion» :
+theorem «sec:election-story/equality-order-commitment» :
     ¬ Exposable (canon elecEq bab) ⟨.bot⟩ :=
   fun h => (exposable_iff_empty _ _).1 h ⟨_, _, elecEq_bot_excludes⟩
 
@@ -347,21 +347,21 @@ Lean: `Step σ (.output o) τ` (constructor `Step.output`) requires
 `σ.R σ.cur o` and sets `τ.R = outputTable σ o = R[out ⪰ o]`.  The general
 definition is used for every specification (it is also Def.
 `def:lifted-output-event`); in a functional specification "`R' ≠ R`" is
-exactly "some row is in `Excluded_o`" (`«def:output-event/exclude-iff-excluded»`). -/
+exactly "some row is in `Excluded_o`" (`«def:output-event/commitment-iff-excluded»`). -/
 abbrev «def:output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
   outputTable σ o
 
-/-- **Def. `def:canonical-exclusion-functional`**.  "When `R' ≠ R` in Definition `def:output-event`,
-removing some row at an input `j ⪰ i`, we call this transition the *exclusion*
-`x_o(i,R) = (i,R')`: it *empties* the fibers of the removed rows, and it is an
-*exclusion*."
+  /-- **Def. `def:canonical-commitment-functional`**.  "When `R' ≠ R` in
+  Definition `def:output-event`, the transition applies the *canonical
+  commitment* `x_o(i,R) = (i,R')`.  For every row it removes, no row remains at
+  the same input.  It is a commitment."
 
-Lean: `canonicalExclusion o : Exclusion sp` (`excludeApp o`): the exclusion that removes the
+Lean: `canonicalCommitment o : Commitment sp` (`commitmentApp o`): the commitment that removes the
 rows in `Excluded_o`, defined at states where `o ∈ R(i)` and `Excluded_o ≠ ∅`. -/
-noncomputable abbrev «def:canonical-exclusion-functional» {I O : Type} [PO I] [PO O] {sp : Spec I O} (o : O) :
-    Exclusion sp :=
-  canonicalExclusion o
+noncomputable abbrev «def:canonical-commitment-functional» {I O : Type} [PO I] [PO O] {sp : Spec I O} (o : O) :
+    Commitment sp :=
+  canonicalCommitment o
 
 /-- **Eq. `eq:output-action`**: "`(i,R) --output(o)--> (i, R' = R[out ⪰ o])`".
 The new table `R[out ⪰ o]` is `outputTable σ o`: the rows of `R` whose output
@@ -373,7 +373,7 @@ theorem «eq:output-action» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 /-- Def. `def:output-event`: in a functional specification, the output event
 changes the table (`R' ≠ R`) iff it excludes some row. -/
-theorem «def:output-event/exclude-iff-excluded» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+theorem «def:output-event/commitment-iff-excluded» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hf : sp.Functional) (σ : State sp) (o : O) :
     outputTable σ o ≠ σ.R ↔ ∃ k x, Excluded σ o k x :=
   functional_exclude_iff_excluded hf σ o
@@ -385,34 +385,33 @@ theorem «sec:functional-events/output-ends-at-state» {I O : Type} [PO I] [PO O
     Step σ (.output o) (outputState σ o h) ∧ (outputState σ o h).R σ.cur o :=
   ⟨step_outputState σ o h, ⟨h, PO.refl o⟩⟩
 
-/-- "Systems may issue more exclusions than an output requires, as the
-registrar does in Figure `fig:election-frames`(d), but extra exclusions only
+/-- "Systems may issue more commitments than an output requires, as the
+registrar does in Figure `fig:election-frames`(d), but extra commitments only
 restrict behavior (Section `sec:systems`)."  For the registrar of panel (d): its
 event `Out_[closePolls](⊥)` has an observably equivalent `output(⊥)` of the
 transition system, whose table contains panel (d)'s.  The general statement
 is Lemma `lem:canonical-equivalent` (`CC.canonical_equivalent`, §4.3). -/
-theorem «sec:functional-events/extra-exclusions» (B : ExclusionBasis elec) (hB : B Figures.closePolls) :
+theorem «sec:functional-events/extra-commitments» (B : CommitmentBasis elec) (hB : B Figures.closePolls) :
     ∃ ρ', Exec (canon elec bab) [.output .bot] ρ' ∧ ρ'.cur = bab ∧
       ∀ k u, Figures.Elec.panelD.R k u → ρ'.R k u :=
   Figures.Elec.registrar_canonical B hB
 
 /-- **Def. `def:exposable`** (Legal output).  "The output `o` at `(i,R)`
-is a *legal output* when `output(o)` applies no exclusion."
+is a *legal output* when `output(o)` applies no commitment."
 
-Lean: `Exposable σ o` says that every row ruled out by `o` is refined by a
-kept row at the same input (it is subsumed, not excluded or chosen away); by
-`«def:exposable/no-exclusion»` this is "`Excluded_o` and `Excluded_o` are
-empty", i.e. no exclusion, in the sense of Def. `def:lifted-output-event`. -/
+  Lean: `Exposable σ o` says that every row ruled out by `o` is refined by a
+  kept row at the same input (it is subsumed, not committed away); by
+  `«def:exposable/no-commitment»` this is "`Excluded_o` is empty", i.e. no
+  commitment, in the sense of Def. `def:lifted-output-event`. -/
 abbrev «def:exposable» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Prop :=
   Exposable σ o
 
-/-- Def. `def:exposable`: a legal output ⇔ the event applies neither an exclusion nor an
-exclusion. -/
-theorem «def:exposable/no-exclusion» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+  /-- Def. `def:exposable`: a legal output applies no commitment. -/
+theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
     Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x :=
-  exposable_iff_no_exclusion σ o
+  exposable_iff_no_commitment σ o
 
 /-- "In a functional specification this means `R[out ⪰ o] = R`: the event
 removes nothing.  As the only row at a legal input `j` is `(j, f(j))`, `o` is
@@ -437,7 +436,7 @@ theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO
 
 /-- "A functional specification can therefore have undetermined states, as in
 panel (b) … An input event may [reach a determined state] by causing the table to lose rows …
-and an exclusion by applying an exclusion to inputs …, as in panels (c) and (d)." -/
+and a commitment by applying a commitment to inputs …, as in panels (c) and (d)." -/
 theorem «sec:functional-events/determination-examples» :
     elec.Functional ∧ ¬ Determined (canon elec bab) ∧ Determined (canon elec baa) ∧
       Determined Figures.Elec.panelD :=
@@ -475,11 +474,11 @@ that `τ` is the final state of some run (`∃ i es, Exec (canon sp i) es τ`). 
 abbrev «def:run» {I O : Type} [PO I] [PO O] {sp : Spec I O} (τ : State sp) : Prop :=
   IsRun τ
 
-/-- "A run is *exclusion-free* when none of its output events applies a
-exclusion.  A state is
-*reachable without exclusion* when some exclusion-free run reaches it."
+/-- "A run is *commitment-free* when none of its output events applies a
+commitment.  A state is
+*reachable without commitment* when some commitment-free run reaches it."
 Lean: `ExecCF` and `ReachableCF`. -/
-abbrev «def:run/reachable-without-exclusion» {I O : Type} [PO I] [PO O] {sp : Spec I O}
+abbrev «def:run/reachable-without-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (τ : State sp) : Prop :=
   ReachableCF τ
 
@@ -590,7 +589,7 @@ theorem «cor:state-by-input/input-suffices» {I O : Type} [PO I] [PO O] {sp : S
 
 /-- **Prop. `prop:functional-exposure-boundary`** (Output-legality boundary).  "A
 functional ordered specification is monotone if and only if every output at
-every state reachable without exclusion is a legal output."  "An output at state
+every state reachable without commitment is a legal output."  "An output at state
 `τ`" is an `o` with `(τ.cur, o) ∈ τ.R`. -/
 theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O)
     (hf : sp.Functional) :
@@ -598,9 +597,9 @@ theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : S
   functional_exposure_boundary hf
 
 /-- After Prop. `prop:functional-exposure-boundary`: "A monotone specification
-can thus emit every current output without exclusion; if monotonicity fails at
+can thus emit every current output without commitment; if monotonicity fails at
 `i ≼ k` with `f(i) ⋠ f(k)`, then at `σ_P(i)` the event `output(f(i))` applies
-`s_{f(i)}`, applying an exclusion to `k`." -/
+`s_{f(i)}`, applying a commitment to `k`." -/
 theorem «prop:functional-exposure-boundary/nonmonotone-excludes» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
     (hik : i ≼ k) (hio : sp.P i o) (hku : sp.P k u) (hn : ¬ o ≼ u) :

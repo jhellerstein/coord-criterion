@@ -6,32 +6,32 @@ ordered input and output domains.
 The results here reduce to one question: can a participant act on what it knows
 without excluding a possibility that another run may still need?  Mutexes,
 locks, atomic instructions, and agreement protocols prevent such contradictions
-by applying exclusions.
+by applying \commitments.
 Functional CALM answers the question for functions: a functional specification
 stays confluent as input arrives exactly when it is monotone, and then no
-output needs an exclusion.  This generalizes the classic result from logical fact
+output needs a \commitment.  This generalizes the classic result from logical fact
 sets to arbitrary input and output orders.
 
 Complete CALM extends the answer to specifications that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with Directed Outputs.  When it fails, some reachable output
-requires an exclusion.  At each input it changes, an exclusion either empties the fiber or removes
-particular output rows.  Because exclusions are explicit, the model
+requires a \commitment.  At each input it changes, a \commitment either empties the fiber or removes
+particular output rows.  Because \commitments are explicit, the model
 can also check where a composition coordinates
 (\S\ref{sec:composition}).  For example, a totally ordered log and a
 key-value store are both non-monotone at their ordinary specifications, yet
-when the log guards the store, the log's exclusions are all the composition
+when the log guards the store, the log's \commitments are all the composition
 needs and the store makes none.  Multi-Paxos is one way to distribute those
-exclusions.
+\commitments.
 
 Complete CAP is the partition form of the same equivalence.  A system can keep a guarantee's explicit outputs available, and consistent, through partitions exactly when they have a common \outnoun at every common \indesc of their inputs; when every output is explicit, this is Lifted Monotonicity.
 
 The generality of our specification model opens a range of new questions
-regarding the ambiguity of specifications and their exclusions. One direction
+regarding the ambiguity of specifications and their \commitments. One direction
 extends the boolean criteria of this paper to metrics: a Determination
-Complexity theory that assesses \emph{how many} exclusions are intrinsically
+Complexity theory that assesses \emph{how many} \commitments are intrinsically
 needed to determine a specification. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
-the exclusions made in a run, which brings formal models of provenance to
+the \commitments made in a run, which brings formal models of provenance to
 concurrent systems. A third direction is to provide general-purpose static
 analysis of CALM and proper coordination in a real programming framework.

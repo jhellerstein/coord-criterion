@@ -14,17 +14,17 @@ framework of `CC.CAP` (histories, systems, cuts, `ResponseAvailability`,
 
 Contents (paper item ↦ Lean):
 
-* Partition Consistency with *exclusion-free, receive-free* continuations
-  for the exclusion-free system (strong reading of Def. `def:partition-consistency`,
+* Partition Consistency with *commitment-free, receive-free* continuations
+  for the commitment-free system (strong reading of Def. `def:partition-consistency`,
   where the confluence continuation is a history of Section `sec:histories`):
   `cf_partitionConsistencyCF`, `complete_cap_strong`.
 * Remark after Def. `def:response-partition-consistency`:
   confluence ⇒ RPC (`rpc_of_confluent`); for a canonical system they coincide
-  (`canonical_rpc_iff_confluent`); with other exclusions the converse fails
+  (`canonical_rpc_iff_confluent`); with other commitments the converse fails
   (`rpc_not_confluent`).
 * "Input acceptance says that `p` never empties the fiber at an expansion of its current
   input": `input_acceptance_iff`.
-* "It excludes specifications whose answers require such a fiber-emptying exclusion, such as the
+* "It excludes specifications whose answers require such a fiber-emptying commitment, such as the
   election under the equality order": `ra_excludes_unavailable_expansion`,
   `election_eq_no_ra`.
 * "if an output permitted at every input answers, every specification is
@@ -67,10 +67,10 @@ theorem full_cut' {init : Fin n → I} {H : History sp D n} (hwf : WF init H) :
   obtain ⟨_, hs⟩ := hwf.2 p a q k j d b h
   exact (List.getElem?_eq_some_iff.1 hs).1
 
-/-! ## Partition Consistency with exclusion-free continuations -/
+/-! ## Partition Consistency with commitment-free continuations -/
 
 /-- Def. `def:partition-consistency`, strong reading: the confluence
-continuation adds only exclusion-free output events and no receives (so it is
+continuation adds only commitment-free output events and no receives (so it is
 a history of Section `sec:histories`). -/
 def PartitionConsistencyCF (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
@@ -89,7 +89,7 @@ theorem partitionConsistency_of_CF {Sys : System sp D} (h : PartitionConsistency
   obtain ⟨H', ext, τ, hext, hwf', hτ, hrun, _, _⟩ := h n init H comp hwf hprod hpart c hc j hj
   exact ⟨H', ext, τ, hext, hwf', hτ, hrun⟩
 
-theorem toL_out : ∀ (es : List (Event I O)) (γ : List (Exclusion sp)) (o : O),
+theorem toL_out : ∀ (es : List (Event I O)) (γ : List (Commitment sp)) (o : O),
     LEv.out γ o ∈ toL (sp := sp) (D := D) (n := n) es → γ = []
   | [], _, _, h => by simp [toL] at h
   | .input _ :: es, γ, o, h => by
@@ -104,7 +104,7 @@ theorem toL_out : ∀ (es : List (Event I O)) (γ : List (Exclusion sp)) (o : O)
       · exact toL_out es γ o h
 
 /-- (2)⇒(1) of Theorem `thm:complete-cap`, Partition Consistency part, with
-exclusion-free confluence continuations. -/
+commitment-free confluence continuations. -/
 theorem cf_partitionConsistencyCF (hlm : sp.LiftedMono) :
     PartitionConsistencyCF (cfSystem sp D) := by
   have hce := (liftedMono_iff_commonExpansion _).1 hlm
@@ -163,7 +163,7 @@ theorem complete_cap_strong (sp : Spec I O) (D : Type) :
 
 /-- Confluence of a cut at `j` implies Response Partition Consistency at `j`
 (Cor. `cor:reconciliation-any-basis` at the distributed level; any
-exclusions, before and after the cut). -/
+commitments, before and after the cut). -/
 theorem rpc_of_confluent {init : Fin n → I} {H : History sp D n} {c : Fin n → Nat} {j : I}
     (h : ConfluentCut init H c j) : RPCAt H c j := by
   obtain ⟨H', ext, τ, hext, _, hτj, hτ⟩ := h
@@ -176,15 +176,15 @@ theorem rpc_of_confluent {init : Fin n → I} {H : History sp D n} {c : Fin n �
   exact lrun_out_mem h2 hm j u ((lrun_mono h3).2 j u hu)
 
 /-- Every output event of `l` is a canonical event `Out κ_o o` (`κ_o = kc o`)
-or `Out ε o`, and `l` has no exclusion event. -/
+or `Out ε o`, and `l` has no commitment event. -/
 def CanonOut (l : List (LEv sp D n)) : Prop :=
-  (∀ γ o, LEv.out γ o ∈ l → γ = [] ∨ γ = [kc o]) ∧ ∀ γ, LEv.exclude γ ∉ l
+  (∀ γ o, LEv.out γ o ∈ l → γ = [] ∨ γ = [kc o]) ∧ ∀ γ, LEv.commitment γ ∉ l
 
 /-- Def. `def:canonical-system`: every output event a strategy allows is a
-canonical event, and strategies allow no exclusion event. -/
+canonical event, and strategies allow no commitment event. -/
 def CanonicalSystem (Sys : System sp D) : Prop :=
   (∀ n init p pre γ o, Sys.strat n init p pre (LEv.out γ o) → γ = [] ∨ γ = [kc o]) ∧
-  ∀ n init p pre γ, ¬ Sys.strat n init p pre (LEv.exclude γ)
+  ∀ n init p pre γ, ¬ Sys.strat n init p pre (LEv.commitment γ)
 
 theorem lrun_canon_exec {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     (hc : CanonOut l) : ∃ es, Exec σ es τ ∧ ∀ o ∈ outs es, ∃ γ, LEv.out γ o ∈ l := by
@@ -206,7 +206,7 @@ theorem lrun_canon_exec {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ 
     rcases ho with rfl | ho
     · exact ⟨γ, List.mem_cons_self ..⟩
     · obtain ⟨γ', h⟩ := hm o' ho; exact ⟨γ', List.mem_cons_of_mem _ h⟩
-  | exclude _ _ _ _ => exact absurd (List.mem_cons_self ..) (hc.2 _)
+  | commitment _ _ _ _ => exact absurd (List.mem_cons_self ..) (hc.2 _)
   | @send σ ρ j d es _ ih =>
     obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
       fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
@@ -421,7 +421,7 @@ theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O
     rw [List.take_length, hext q]; exact List.mem_append_right _ hm
 
 /-- "Input acceptance … excludes specifications whose answers require such a
-fiber-emptying exclusion": if no answer at `i` has a refinement at some `j ⪰ i`, no system has
+fiber-emptying commitment": if no answer at `i` has a refinement at some `j ⪰ i`, no system has
 Response Availability (already for two participants, each alone). -/
 theorem ra_excludes_unavailable_expansion (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
     {i j : I} (hij : i ≼ j) (hno : ∀ o, Q 2 0 i o → ¬ ∃ u, sp.P j u ∧ o ≼ u) :
@@ -704,7 +704,7 @@ theorem rpc_pointwise {Sys : System sp D}
 participant set `Fin n`. -/
 def IsoEmitAt (Sys : System sp D) (n : Nat) (p : Fin n) (i : I) (o : O) : Prop :=
   ∃ (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat) (a b : List (LEv sp D n))
-    (γ : List (Exclusion sp)) (σ : State sp),
+    (γ : List (Commitment sp)) (σ : State sp),
     WF init H ∧ Produced Sys n init H ∧ Partitioned H comp ∧ H p = a ++ .out γ o :: b ∧
     (∀ q k j d, LEv.recv q k j d ∉ a) ∧ LRun (canon sp (init p)) a σ ∧ σ.cur = i
 
@@ -716,7 +716,7 @@ def Tp (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) (n : Nat) (p 
 structure LocAt (Sys : System sp D) (n : Nat) (p : Fin n) (i : I) (o : O) where
   init : Fin n → I
   a : List (LEv sp D n)
-  γ : List (Exclusion sp)
+  γ : List (Commitment sp)
   comp : Compliant (Allowed Sys n init p) (a ++ [LEv.out γ o])
   norecv : ∀ q k j d, LEv.recv q k j d ∉ a
   run : ∃ τ, LRun (canon sp (init p)) (a ++ [LEv.out γ o]) τ
@@ -1154,7 +1154,7 @@ theorem subspec_counterexample :
 /-- "A participant that emits `d₁` or `d₂` empties the fiber at `k₂` or `k₁`" (under any
 basis). -/
 theorem emit_d1_empties_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
-    (h : LRun σ l τ) {γ : List (Exclusion sp5)} (hm : LEv.out γ .d1 ∈ l) (u : O8) :
+    (h : LRun σ l τ) {γ : List (Commitment sp5)} (hm : LEv.out γ .d1 ∈ l) (u : O8) :
     ¬ τ.R .k2 u := by
   intro hu
   have h1 := lrun_out_mem h hm .k2 u hu
@@ -1162,14 +1162,14 @@ theorem emit_d1_empties_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (L
   cases u <;> revert h1 h2 <;> decide
 
 theorem emit_d2_empties_k1 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
-    (h : LRun σ l τ) {γ : List (Exclusion sp5)} (hm : LEv.out γ .d2 ∈ l) (u : O8) :
+    (h : LRun σ l τ) {γ : List (Commitment sp5)} (hm : LEv.out γ .d2 ∈ l) (u : O8) :
     ¬ τ.R .k1 u := by
   intro hu
   have h1 := lrun_out_mem h hm .k1 u hu
   have h2 := τ.sub _ _ hu
   cases u <;> revert h1 h2 <;> decide
 
-/-! ### With other exclusions, RPC does not imply confluence -/
+/-! ### With other commitments, RPC does not imply confluence -/
 
 abbrev uSpec : Spec In2 Unit := ⟨fun _ _ => True, fun _ => ⟨(), trivial⟩⟩
 
@@ -1181,8 +1181,8 @@ def removeHiState (σ : State uSpec) (h : σ.cur = .lo) : State uSpec where
   above := fun k u h => σ.above k u h.1
 
 open Classical in
-/-- A fiber-emptying exclusion of `hi` at current input `lo`. -/
-noncomputable def removeHi : Exclusion uSpec where
+/-- A fiber-emptying commitment of `hi` at current input `lo`. -/
+noncomputable def removeHi : Commitment uSpec where
   f := fun σ => if h : σ.cur = .lo ∧ ∃ u, σ.R .hi u then some (removeHiState σ h.1) else none
   cur_eq := by
     intro σ τ h; split at h
@@ -1226,7 +1226,7 @@ theorem rnH_run : ∃ τ, LRun (canon uSpec .lo) [LEv.out (D := Unit) (n := 2) [
     (.nil _)⟩
 
 /-- Remark after Def. `def:response-partition-consistency`, last sentence:
-with other exclusions the converse can fail.  Participant `0` emits `()` at
+with other commitments the converse can fail.  Participant `0` emits `()` at
 `lo` while emptying the fiber at `hi`; the emitted outputs have a common refinement at `hi`,
 but the cut is not confluent at `hi`. -/
 theorem rpc_not_confluent :
@@ -1548,7 +1548,7 @@ theorem final_rpc (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : Fin 
     (hinj : ∀ p q, comp p = comp q → p = q)
     {A B : List (LEv regSpec D 2)} (hA : H 0 = LEv.inp h1 :: A) (hB : H 1 = LEv.inp h2 :: B)
     (hAi : ∀ j, LEv.inp j ∉ A) (hBi : ∀ j, LEv.inp j ∉ B)
-    {γ : List (Exclusion regSpec)} {o : RMap}
+    {γ : List (Commitment regSpec)} {o : RMap}
     (ho : LEv.out γ o ∈ A) (hoQ : regQ 0 h1 o) :
     RPCAt H (fun p => (H p).length) hj := by
   have hnr := norecv_of_inj hwf hpart hinj

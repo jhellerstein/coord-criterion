@@ -3,7 +3,7 @@ import CoordCriterion.Foundations.Runs
 /-!
 # A conflict confined to the current input (Section 4.4)
 
-Supports the remark after Prop. `thm:exclusions-require-coordination`
+Supports the remark after Prop. `thm:commitments-require-coordination`
 ("Conflicting events cannot be reconciled") in
 `sections/distributed.tex`: the conflict is confined to the current input.
 

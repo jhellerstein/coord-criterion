@@ -53,7 +53,7 @@ output conditions remove nothing.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:functional-exposure-boundary}]
-Suppose $f$ is monotone, and let an exclusion-free run reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
+Suppose $f$ is monotone, and let a \commitment-free run reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
 $(i,R)=\sigma_P(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
 $i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each, so $f(i)$ is a
 legal output (Definition~\ref{def:exposable}).
@@ -108,7 +108,7 @@ emit $o_r$; for the empty family, totality gives $\fiber{j}\neq\varnothing$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
 Suppose the common-\indesc condition holds; by Theorem~\ref{thm:complete-calm}, the
-specification is consistent.  Let $(i,R)$ be reached by a run (exclusion-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
+specification is consistent.  Let $(i,R)$ be reached by a run (\commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
 $x\in R(j)$.  Extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
 By consistency the two extended runs are confluent at $j$, so
@@ -163,9 +163,9 @@ emitted in the cut (Lemma~\ref{lem:run-residual}), including $o$, which was prev
 The confluence of a cut therefore depends on which outputs were emitted,
 not on who has heard about them.
 
-\begin{proof}[Proof of Proposition~\ref{thm:exclusions-require-coordination}]
+\begin{proof}[Proof of Proposition~\ref{thm:commitments-require-coordination}]
 After the second event every output at $i$ \outrel $x$, by containment
-(Lemma~\ref{lem:canonical-exclusion-normal-form}); after the first, none does.
+(Lemma~\ref{lem:canonical-commitment-normal-form}); after the first, none does.
 A common state with current input $i$ has a row at $i$, and since specification events never
 add rows, that row would be in both states.
 \end{proof}
@@ -174,8 +174,8 @@ add rows, that row would be in both states.
 Suppose $\Spec$ satisfies Lifted Monotonicity for $E$.  Take the system whose strategies emit,
 by the canonical output event $\mathsf{output}(o)$ of
 Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber.
-That event is always legal and applies whatever exclusions $o$ requires
-(Lemma~\ref{lem:canonical-exclusion-normal-form}), so the system has
+That event is always legal and applies whatever \commitments $o$ requires
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so the system has
 Availability for $E$.  Every output it emits is a row of $E$ at an input below
 the current one, so at a common \indesc $j$ of the current inputs the emitted
 outputs have a common \outnoun in $\fiber{j}$.  For a system that emits only
@@ -193,7 +193,7 @@ they then reach one state $(j,R)$, which has some row $(j,u)$
 (Definition~\ref{def:residual-state}); this $u$ is the one we seek.  Rows are
 never added, so $(j,u)$ was already in each $p_r$'s table just after it
 emitted $o_r$.  Emitting an output keeps only rows whose output \outrel it
-(Lemma~\ref{lem:canonical-exclusion-normal-form}), so $u$ \outrel every
+(Lemma~\ref{lem:canonical-commitment-normal-form}), so $u$ \outrel every
 $o_r$.
 \end{proof}
 
@@ -201,8 +201,8 @@ $o_r$.
 With $E=P$, Lifted Monotonicity for $E$ is the common-\indesc condition, which is
 Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}).  When
 Lifted Monotonicity holds, every output at every state reachable without
-exclusion is a legal output (Proposition~\ref{prop:exposure-boundary}).  The
-exclusion-free system never leaves such states, so it has Availability, and
+\commitment is a legal output (Proposition~\ref{prop:exposure-boundary}).  The
+\commitment-free system never leaves such states, so it has Availability, and
 by Complete CALM and Proposition~\ref{prop:distributed-consistency} it has
 Partition Consistency.
 \end{proof}

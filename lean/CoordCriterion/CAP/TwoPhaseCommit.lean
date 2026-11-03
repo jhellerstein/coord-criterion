@@ -7,7 +7,7 @@ import CoordCriterion.CALM.Lemmas
 Supports the paragraph "Locks in a shared-nothing database" of
 `sections/distributed.tex`, case "No coordination": "the coordinator's
 unanimity decision over a fixed set of participants is monotone, so it issues
-no exclusion that requires coordination."  `decide2PC_detects` checks the
+no commitment that requires coordination."  `decide2PC_detects` checks the
 sentence after it: the decision aborts exactly when the votes do not all say
 yes.
 
@@ -21,15 +21,15 @@ voted yes, and `undecided` otherwise.
 * `voteSpec_functional`, `voteSpec_monotone`: it is a monotone function;
 * `voteSpec_consistent`, `voteSpec_liftedMono`: hence consistent;
 * `voteSpec_exposable`: every decision at every state reachable without
-  exclusion is exposable (no output event of the decision needs a
-  exclusion);
+  commitment is exposable (no output event of the decision needs a
+  commitment);
 * `voteSpec_coordinationFree`: the system that emits decisions by canonical
   output events (`respSystem S`) is coordination-free, so in particular
   needs no distributed coordination.
 
 Modeling choice: the protocol steps of 2PC (prepare messages, the
 coordinator's log, timeouts) are not modeled; only the decision rule is.  That
-each owner's prepare is its own exclusion, coordination at that owner only,
+each owner's prepare is its own commitment, coordination at that owner only,
 is the single-owner pattern of `ownerSys` (`CAP/Coordination.lean`).
 -/
 
@@ -154,7 +154,7 @@ theorem voteSpec_consistent (n : Nat) : (voteSpec n).Consistent :=
 theorem voteSpec_liftedMono (n : Nat) : (voteSpec n).LiftedMono :=
   (CALM.liftedMono_iff_monoF (voteSpec_functional n)).2 (voteSpec_monotone n)
 
-/-- No decision ever needs an exclusion. -/
+/-- No decision ever needs a commitment. -/
 theorem voteSpec_exposable (n : Nat) :
     ∀ τ : State (voteSpec n), ReachableCF τ → ∀ d, τ.R τ.cur d → Exposable τ d :=
   (functional_exposure_boundary (voteSpec_functional n)).1 (voteSpec_monotone n)

@@ -52,7 +52,7 @@ corollary forbids (`gilbert_lynch_client`).
    event whose input is the node's *view* (its invoked operations, with no
    precedence edges); a response becomes an output event emitting the node's
    *response map* (first response to each operation), with the canonical
-   exclusion `κ_u` when the map is not exposable; a send is a send.  The
+   commitment `κ_u` when the map is not exposable; a send is a send.  The
    participant may also re-emit its current map, since Answering requires an
    output event even when nothing is pending.  `atomic_view`: an atomic
    algorithm's response map in the execution where the node is alone lies in
@@ -497,7 +497,7 @@ abbrev PL (N : Nat) (M : Type) (n : Nat) := List (LEv regSpec (Fin N × M) n)
 /-- `Corr p t L`: the timed trace `t` of node `p` corresponds to participant
 `p`'s local history `L`.  An invocation is an input event whose input is the
 node's new view; a response is an output event emitting the trace's response
-map (with the canonical exclusion, if needed); a send is a send; and the
+map (with the canonical commitment, if needed); a send is a send; and the
 participant may re-emit its current response map (`stut`).  Each action is
 timed by the index of its event in `L`. -/
 inductive Corr (p : Nat) : List (Nat × Act N M) → PL N M n → Prop where
@@ -507,18 +507,18 @@ inductive Corr (p : Nat) : List (Nat × Act N M) → PL N M n → Prop where
       (∀ b, firstInv (acts t) b ≠ none → firstResp (acts t) b ≠ none) →
       Corr p (t ++ [(L.length, .inv a k)]) (L ++ [.inp (viewOf p (acts t ++ [.inv a k]))])
   | resp {t : List (Nat × Act N M)} {L : PL N M n} {a : Nat} {r : Resp}
-      {γ : List (Exclusion regSpec)} :
+      {γ : List (Commitment regSpec)} :
       Corr p t L → (γ = [] ∨ γ = [kc (rmap (acts t ++ [.resp a r]))]) →
       Corr p (t ++ [(L.length, .resp a r)]) (L ++ [.out γ (rmap (acts t ++ [.resp a r]))])
   | send {t : List (Nat × Act N M)} {L : PL N M n} {d : Fin N} {m : M} :
       Corr p t L → Corr p (t ++ [(L.length, .send d m)]) (L ++ [.send none (d, m)])
-  | stut {t : List (Nat × Act N M)} {L : PL N M n} {γ : List (Exclusion regSpec)} :
+  | stut {t : List (Nat × Act N M)} {L : PL N M n} {γ : List (Commitment regSpec)} :
       Corr p t L → (γ = [] ∨ γ = [kc (rmap (acts t))]) →
       Corr p t (L ++ [.out γ (rmap (acts t))])
 
-/-- A correspondence never produces an exclusion event. -/
+/-- A correspondence never produces a commitment event. -/
 theorem corr_no_cmt {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Corr p t L) :
-    ∀ γ, LEv.exclude γ ∉ L := by
+    ∀ γ, LEv.commitment γ ∉ L := by
   induction h with
   | nil => intro γ hm; cases hm
   | inv _ _ _ ih | resp _ _ ih | send _ ih | stut _ _ ih =>
@@ -844,7 +844,7 @@ theorem corr_state {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Cor
 It may perform an event exactly when its local history, with that event, is
 the translation of a run of node `p` (invocations ↦ inputs of the node's view,
 responses ↦ output events of the node's response map, sends ↦ sends); the
-basis is the canonical exclusions. -/
+basis is the canonical commitments. -/
 noncomputable def sysOf (A : Alg N M) : System regSpec (Fin N × M) where
   basis := fun c => ∃ u, c = kc u
   strat := fun n _ p pre e => ∃ hp : p.val < N, ∃ t, Corr (n := n) p.val t (pre ++ [e]) ∧
@@ -909,7 +909,7 @@ theorem corr_of_produced (A : Alg N M) {init : Fin n → Hist} {p : Fin n} (hp :
         rwa [viewOf_snoc_inv _ _ _ _ hf, ← hop] at this
       · rw [acts_snoc]; exact nrun_append.2 ⟨s, hs, .cons hs' (.nil _)⟩
     | out γ o => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
-    | exclude γ =>
+    | commitment γ =>
       dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, _⟩ := hA
       exact absurd (List.mem_append_right _ (List.mem_singleton_self _)) (corr_no_cmt h1 γ)
     | send j d => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
@@ -1539,7 +1539,7 @@ theorem final_contra_c {D : Type} (Sys : System regSpec D) (hRPC : RealizedRPCC 
     (hinj : ∀ p q, comp p = comp q → p = q)
     {A B : List (LEv regSpec D 2)} (hA : H 0 = LEv.inp h1 :: A) (hB : H 1 = LEv.inp h2 :: B)
     (hAi : ∀ j, LEv.inp j ∉ A) (hBi : ∀ j, LEv.inp j ∉ B)
-    {γ γ' : List (Exclusion regSpec)} {o o' : RMap}
+    {γ γ' : List (Commitment regSpec)} {o o' : RMap}
     (ho : LEv.out γ o ∈ A) (hoQ : regQ 0 h1 o) (ho' : LEv.out γ' o' ∈ B)
     (ho'Q : regQ 1 h2 o') : False := by
   have hnr := norecv_of_inj hwf hpart hinj

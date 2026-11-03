@@ -10,7 +10,7 @@ events and their transition relation (`Event`, `Step`, `Exec`, `Reach`), the
 canonical state `σ_P(i)` (`canon`), exposability, Functional / Relational /
 Lifted Monotonicity, Directed Outputs, the common-expansion condition
 (`Spec.CommonExpansion`), consistency (`Spec.Consistent`), the
-Subsumed/Excluded rows of a lifted output event, and exclusion-free
+Subsumed/Excluded rows of a lifted output event, and commitment-free
 executions (`ExecCF`, `ReachableCF`).  Paper
 correspondences are noted on each definition.
 
@@ -147,19 +147,19 @@ def Spec.CommonExpansion (sp : Spec I O) : Prop :=
     ∀ j : I, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
 
 /-- The two classes of rows ruled out by `o`: rows refined by a kept row,
-and rows that must be removed by exclusion. -/
+and rows that must be removed by commitment. -/
 def Subsumed {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ∃ u, σ.R k u ∧ o ≼ u ∧ x ≼ u
 
 def Excluded {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ¬ Subsumed σ o k x
 
-/-- Exposable (Def. exposable): the output event applies no exclusion,
+/-- Exposable (Def. exposable): the output event applies no commitment,
 i.e. every ruled-out row is subsumed. -/
 def Exposable {sp : Spec I O} (σ : State sp) (o : O) : Prop :=
   ∀ k x, σ.R k x → ¬ (o ≼ x) → ∃ u, σ.R k u ∧ o ≼ u ∧ x ≼ u
 
-/-- Exclusion-free execution: every output event emits an exposable output. -/
+/-- Commitment-free execution: every output event emits an exposable output. -/
 inductive ExecCF {sp : Spec I O} : State sp → List (Event I O) → State sp → Prop where
   | nil (σ : State sp) : ExecCF σ [] σ
   | input {σ τ ρ : State sp} {j : I} {es : List (Event I O)} :
@@ -167,7 +167,7 @@ inductive ExecCF {sp : Spec I O} : State sp → List (Event I O) → State sp �
   | output {σ τ ρ : State sp} {o : O} {es : List (Event I O)} :
       Step σ (.output o) τ → Exposable σ o → ExecCF τ es ρ → ExecCF σ (.output o :: es) ρ
 
-/-- Reachable without exclusion. -/
+/-- Reachable without commitment. -/
 def ReachableCF {sp : Spec I O} (τ : State sp) : Prop :=
   ∃ i es, ExecCF (canon sp i) es τ
 

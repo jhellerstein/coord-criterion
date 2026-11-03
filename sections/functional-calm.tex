@@ -4,7 +4,7 @@
 This section focuses on functional specifications, in which each input has a
 single specified output.  We walk through the framework informally on an
 election, make it precise, and prove Functional CALM, identifying along the
-way when an output can be emitted without exclusion.
+way when an output can be emitted without \commitment.
 
 \subsection{The framework by example}
 \label{sec:election-story}
@@ -28,7 +28,7 @@ way when an output can be emitted without exclusion.
     $a\cdot b$ & \sh{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
-    \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no exclusion}
+    \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no \commitment}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
@@ -45,7 +45,7 @@ way when an output can be emitted without exclusion.
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
-    \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no exclusion}
+    \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no \commitment}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
@@ -62,7 +62,7 @@ way when an output can be emitted without exclusion.
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
     \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined}\\
-    \multicolumn{2}{@{}l}{\footnotesize $a$ needs no exclusion}
+    \multicolumn{2}{@{}l}{\footnotesize $a$ needs no \commitment}
   \end{tabular}
   \hfill
   \begin{tabular}[t]{@{}l c@{}}
@@ -84,9 +84,9 @@ way when an output can be emitted without exclusion.
   \caption{The election specification and three states reached from it, showing rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
   input and its upper fiber.  Gray: lost after an input event; struck
-  through if removed by an exclusion.  Panels (b)
+  through if removed by a \commitment.  Panels (b)
   and (c) follow input events.  In (d) the registrar emits $\bot$ and also
-  closes the polls through an exclusion that $\mathsf{output}(\bot)$ alone does not require.}
+  closes the polls through a \commitment that $\mathsf{output}(\bot)$ alone does not require.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -121,16 +121,16 @@ longer \inrelbase the ballots received; such inputs are now illegal.  The \emph{
 outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
 $\{\bot,a,b\}$.
 If $v_2$ instead votes for $a$, as in panel~(c), the upper fiber is $\{a\}$.  The state
-is \emph{determined}: input alone has resolved the outcome, without exclusion.
+is \emph{determined}: input alone has resolved the outcome, without \commitment.
 
 Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
 (\S\ref{sec:systems}).  In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
-$ab\cdot$ in the same output event.  Its irrevocable \emph{exclusion}
+$ab\cdot$ in the same output event.  Its irrevocable \emph{\commitment}
 removes the still-possible $aba$ and $abb$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
-would need no exclusion, since every output still possible \outrel it;
+would need no \commitment, since every output still possible \outrel it;
 closing the polls is a further decision by the system, not something the
 specification requires.
 
@@ -167,7 +167,7 @@ specification requires.
   \end{minipage}\par\smallskip
   \end{minipage}
   \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
-  to preserve space.  The exclusion that the registrar chose in Figure~\ref{fig:election-frames}(d) is required
+  to preserve space.  The \commitment that the registrar chose in Figure~\ref{fig:election-frames}(d) is required
   here.}
   \label{fig:nonmonotone-frame}
 \end{figure}
@@ -185,10 +185,10 @@ Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
 for no winner (the \emph{equality order}, under which each element is related only
 to itself).  Then $\bot$ is incompatible with future winners, so emitting it
-requires an exclusion.  That change in the output order is Functional CALM in
+requires a \commitment.  That change in the output order is Functional CALM in
 miniature: the original order is monotone, so later outputs \outrelbase every
 earlier one; under the equality order, some outputs can be emitted
-only with an exclusion.
+only with a \commitment.
 
 The obstruction is a property solely of the table and its orders.  Rows $(ab\cdot,\bot)$ and
 $(aba,a)$ have the common input \indesc $aba$, but under the equality
@@ -330,7 +330,7 @@ promise without assuming that clients tolerate retractions.  Later outputs
 must therefore \outrelbase earlier ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Since every later output must \outrelbase $o$, emitting $o$ requires an exclusion that removes
+output the system may emit.  Since every later output must \outrelbase $o$, emitting $o$ requires a \commitment that removes
 every legal input whose output does not \outrelbase it.
 
 \begin{definition}[Output event]
@@ -345,22 +345,25 @@ to exactly the rows whose outputs
 \end{equation}
 \end{definition}
 
-\begin{definition}[Canonical exclusion]
-\label{def:canonical-exclusion-functional}
+\begin{definition}[Canonical \commitment]
+\label{def:canonical-commitment-functional}
 When $R'\neq R$ in Definition~\ref{def:output-event}, the transition applies the
-\emph{canonical exclusion} $x_o(i,R)=(i,R')$.  At each input $j$ whose row it
-removes, $x_o$ excludes input $j$.  It is an exclusion.
+\emph{canonical \commitment} $x_o(i,R)=(i,R')$.  For every row it removes, no
+row remains at the same input.  It is a \commitment.
 \end{definition}
 
 The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
-ends at a state. An exclusion removes rows that input alone would not: the inputs it excludes are no longer legal.  Canonical exclusions of this form are the
-only exclusions this section uses.  Systems may issue more exclusions than an output requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but extra exclusions only
-restrict behavior (\S\ref{sec:systems}).
+ends at a state. A \commitment removes rows that input alone would preserve;
+after the canonical \commitment above, their inputs are no longer legal.
+Canonical \commitments of this form are the only \commitments this section
+uses.  Systems may issue more \commitments than an output requires, as the
+registrar does in Figure~\ref{fig:election-frames}(d), but extra \commitments
+only restrict behavior (\S\ref{sec:systems}).
 
 \begin{definition}[Legal output]
 \label{def:exposable}
 The output $o$ at $(i,R)$ is a \emph{legal output} when $\mathsf{output}(o)$
-applies no exclusion.
+applies no \commitment.
 \end{definition}
 
 In a functional specification this means $R[\mathrm{out}\OutputGe o]=R$: the
@@ -376,7 +379,7 @@ the output of every input that may still arrive.  A functional specification
 can therefore have undetermined states, as in panel~(b) of
 Figure~\ref{fig:election-frames}.  \emph{Determination} is the process of
 reaching a determined state.  An input event may do so through input loss,
-while an exclusion may do so by emptying fibers that would otherwise
+while a \commitment may do so by emptying fibers that would otherwise
 remain possible, as in panels (c) and (d), respectively.
 An event from a determined state always leads to another determined state:
 events only remove rows, and a row at the current input always remains.
@@ -405,9 +408,9 @@ A \emph{run} is any finite transition sequence of the transition system from the
 canonical state $\sigma_P(i)$ at some input $i$.
 \end{definition}
 
-A run is \emph{exclusion-free} when none of its output events applies a
-exclusion.  A state is \emph{reachable without exclusion} when
-some exclusion-free run reaches it.
+A run is \emph{\commitment-free} when none of its output events applies a
+\commitment.  A state is \emph{reachable without \commitment} when
+some \commitment-free run reaches it.
 
 A run's state has a simple description.  Input events keep only rows whose
 input \inrel the current one, and output events keep only rows whose outputs
@@ -536,7 +539,7 @@ Monotonicity also governs legality:
 \begin{proposition}[Output-legality boundary]
 \label{prop:functional-exposure-boundary}
 A functional ordered specification is monotone if and only if every output at
-every state reachable without exclusion is legal.
+every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
@@ -545,7 +548,7 @@ states. At $\sigma_P(i)$, which input alone reaches, $f(i)$ is legal exactly
 when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-A monotone specification can thus emit every current output without exclusion;
+A monotone specification can thus emit every current output without \commitment;
 if monotonicity fails at $i\InputOrd k$ with $f(i)\not\OutputOrd f(k)$, then
 at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$ applies $x_{f(i)}$, which excludes input $k$.
 

@@ -145,8 +145,8 @@ theorem ruledOut_iff (k : I) (x : O) :
     · exact ⟨hr.1, fun h => hr.2.1 h.2⟩
     · exact ⟨he.1, fun h => he.2.1 h.2⟩
 
-/-- `Exposable` means that no row must be removed by exclusion. -/
-theorem exposable_iff_no_exclusion :
+/-- `Exposable` means that no row must be removed by commitment. -/
+theorem exposable_iff_no_commitment :
     Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x := by
   constructor
   · intro h k x he
@@ -169,7 +169,7 @@ theorem functional_subsumed_empty {sp : Spec I O} (hF : sp.Functional) (σ : Sta
 
 /-- **Lifted exposure test.** `o ∈ R(i)` is exposable at `(i,R)` iff for every
 legal `j ⪰ i` and `x ∈ R(j)` some `u ∈ R(j)` refines both `o` and `x`.
-(Exposability is equivalently "no exclusion", `exposable_iff_no_exclusion`.) -/
+(Exposability is equivalently "no commitment", `exposable_iff_no_commitment`.) -/
 theorem lifted_exposure_test {sp : Spec I O} (σ : State sp) (o : O) :
     Exposable σ o ↔
       ∀ j, σ.cur ≼ j → ∀ x, σ.R j x → ∃ u, σ.R j u ∧ o ≼ u ∧ x ≼ u := by
@@ -262,7 +262,7 @@ theorem complete_calm_commonExpansion (sp : Spec I O) :
 
 
 /-- Forward direction, in the stronger form: under the common-expansion
-condition every output at every *run* state (not only exclusion-free ones)
+condition every output at every *run* state (not only commitment-free ones)
 is exposable. -/
 theorem commonExpansion_exposable {sp : Spec I O} (hC : sp.CommonExpansion)
     {τ : State sp} (hτ : IsRun τ) {o : O} (ho : τ.R τ.cur o) : Exposable τ o := by

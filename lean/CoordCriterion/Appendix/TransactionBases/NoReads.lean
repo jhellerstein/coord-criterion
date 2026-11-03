@@ -1,16 +1,16 @@
-import CoordCriterion.Distributed.Exclusions
+import CoordCriterion.Distributed.Commitments
 import CoordCriterion.CompleteCALM.Theorem
 
 /-!
 # Transaction bases without read results (Appendix G, `app:cc-bases`)
 
-Exclusion bases for two-phase locking (2PL) and multiversion timestamp
+Commitment bases for two-phase locking (2PL) and multiversion timestamp
 ordering (MVTO), for the simpler specification whose outputs are complete
 `(L,X)` (no undecided transactions, no read results).  Appendix G's
 specification, with operation sequences as inputs and partial outputs
 `(L,X,ρ)`, is in `Spec.lean` and `Partial.lean`, which reuse the finite sets,
 outcomes and pair rows defined here.  This file is still used by Appendix C
-(`Paper/AppC_ExclusionBases.lean`).  Namespace `CC.Txn`.
+(`Paper/AppC_CommitmentBases.lean`).  Namespace `CC.Txn`.
 
 * `FinSet`, `Outcome`, `txnSpec`, `abortFreeSpec` — the specification
   (inputs: finite sets of transactions under inclusion; outputs `(L,X)` under
@@ -22,16 +22,16 @@ outcomes and pair rows defined here.  This file is still used by Appendix C
 * `partitions_antichain` — the appendix's argument: at a fixed input a
   permitted output that refines another equals it.
 * `filterC` — any row filter, defined when some row at the current input
-  satisfies it and some row of `R` fails it, is an exclusion
-  (Def. `def:exclusion`, Eq. `exclusion-excludes`) in a specification whose
+  satisfies it and some row of `R` fails it, is a commitment
+  (Def. `def:commitment`, Eq. `commitment-unsubsumed`) in a specification whose
   fibers are antichains; `filterC_app_iff` is the definedness/effect statement.
 * `orderC`, `commitC`, `abortC`, `stampC`, `basis2PL`, `basisMVTO` — the
-  exclusions and bases, for either specification.
+  commitments and bases, for either specification.
 * `deadlock_rows`, `deadlock_state`, `deadlock_forces_abort` — 2PL deadlock.
 * `abortFree_order_blocks`, `abortFree_order_blocks_forever` — under the
   abort-free specification `order(B,A)` is undefined once `order(A,B)` is
   applied, at every later state.
-* `orderP_abortFree`, `stampP_first_abortFree` — Fig. `fig:cc-exclusions`
+* `orderP_abortFree`, `stampP_first_abortFree` — Fig. `fig:cc-commitments`
   (h) is `order(A,B)`, (i) is `stamp(B)` with `Z = ∅`.
 * `stamp_order_row` — MVTO: the abort-free row ordered by the stamps satisfies
   every `stamp` and `commit` condition, so the specification does not itself
@@ -295,11 +295,11 @@ theorem filterApp_none {G : State sp → Prop} {P : I → O → Prop} {σ : Stat
   · rename_i h; simp only [reduceCtorEq, false_iff]; exact fun hn => hn h
   · rename_i h; simp only [true_iff]; exact h
 
-/-- **Each row filter is an exclusion** (Def. `def:exclusion`) when fibers are
+/-- **Each row filter is a commitment** (Def. `def:commitment`) when fibers are
 antichains: a removed row and a kept row at the same input differ, and
 permitted outputs at one input are comparable only when equal. -/
 noncomputable def filterC (hA : Antichain sp) (G : State sp → Prop) (P : I → O → Prop) :
-    Exclusion sp where
+    Commitment sp where
   app := filterApp G P
   cur_eq := by
     intro σ τ h; obtain ⟨_, rfl⟩ := filterApp_eq.1 h; rfl
@@ -310,14 +310,14 @@ noncomputable def filterC (hA : Antichain sp) (G : State sp → Prop) (P : I →
     obtain ⟨hd, rfl⟩ := filterApp_eq.1 h
     obtain ⟨k, u, hu, hnp⟩ := hd.2.2
     exact ⟨k, u, hu, fun h' => hnp h'.2⟩
-  excludes := by
+  unsubsumed := by
     intro σ τ h k u w hu hnu hw huw
     obtain ⟨_, rfl⟩ := filterApp_eq.1 h
     have e : u = w := hA k u w (σ.sub _ _ hu) (σ.sub _ _ hw.1) huw
     subst e
     exact hnu ⟨hu, hw.2⟩
 
-/-- Definedness and effect of a filter exclusion: defined exactly when the
+/-- Definedness and effect of a filter commitment: defined exactly when the
 guard holds, some row of `R` at `i` satisfies `P`, and some row of `R` fails
 it; it then retains the rows of `R` satisfying `P`. -/
 theorem filterC_app_iff (hA : Antichain sp) {G : State sp → Prop} {P : I → O → Prop}
@@ -347,7 +347,7 @@ theorem exposable_iff_refines (hA : Antichain sp) (σ : State sp) (o : O) :
 
 end Generic
 
-/-! ### The exclusions and bases -/
+/-! ### The commitments and bases -/
 
 /-- `order(A,B)`: `A ∈ X`, or `B ∈ X`, or `A <_L B`. -/
 def orderP (A B : T) : FinSet T → Outcome T → Prop := fun _ o => o.X A ∨ o.X B ∨ o.lt A B
@@ -366,25 +366,25 @@ section Bases
 variable (sp : Spec (FinSet T) (Outcome T)) (hA : Antichain sp)
 
 /-- `order(A,B)`, for distinct `A, B` in the current input. -/
-noncomputable def orderC (A B : T) : Exclusion sp :=
+noncomputable def orderC (A B : T) : Commitment sp :=
   filterC hA (fun σ => A ≠ B ∧ σ.cur.1 A ∧ σ.cur.1 B) (orderP A B)
-noncomputable def commitC (A : T) : Exclusion sp := filterC hA (fun _ => True) (commitP A)
-noncomputable def abortC (A : T) : Exclusion sp := filterC hA (fun _ => True) (abortP A)
+noncomputable def commitC (A : T) : Commitment sp := filterC hA (fun _ => True) (commitP A)
+noncomputable def abortC (A : T) : Commitment sp := filterC hA (fun _ => True) (abortP A)
 /-- `stamp(A)`, given `Z ⊆ i`. -/
-noncomputable def stampC (A : T) (Z : T → Prop) : Exclusion sp :=
+noncomputable def stampC (A : T) (Z : T → Prop) : Commitment sp :=
   filterC hA (fun σ => ∀ z, Z z → σ.cur.1 z) (stampP A Z)
 
 /-- `B_2PL = {order, commit, abort}`, over all transactions. -/
-def basis2PL : ExclusionBasis sp := fun c =>
+def basis2PL : CommitmentBasis sp := fun c =>
   (∃ A B, c = orderC sp hA A B) ∨ (∃ A, c = commitC sp hA A) ∨ (∃ A, c = abortC sp hA A)
 
 /-- `B_MVTO = {stamp, commit, abort}`, over all transactions. -/
-def basisMVTO : ExclusionBasis sp := fun c =>
+def basisMVTO : CommitmentBasis sp := fun c =>
   (∃ A Z, c = stampC sp hA A Z) ∨ (∃ A, c = commitC sp hA A) ∨ (∃ A, c = abortC sp hA A)
 
 end Bases
 
-/-- The exclusions for the specification and the abort-free one. -/
+/-- The commitments for the specification and the abort-free one. -/
 noncomputable abbrev orderT (A B : T) := orderC (txnSpec T) txn_antichain A B
 noncomputable abbrev orderAF (A B : T) := orderC (abortFreeSpec T) abortFree_antichain A B
 
@@ -446,12 +446,12 @@ theorem abortFree_order_blocks {A B : T} {σ σ1 : State (abortFreeSpec T)}
 /-- ... in particular at every state any later execution, under any basis,
 reaches: `order(B,A)` is never defined again. -/
 theorem abortFree_order_blocks_forever {A B : T} {σ σ1 : State (abortFreeSpec T)}
-    (h : (orderAF A B).app σ = some σ1) (Bs : ExclusionBasis (abortFreeSpec T))
+    (h : (orderAF A B).app σ = some σ1) (Bs : CommitmentBasis (abortFreeSpec T))
     {es : List (SEvent (abortFreeSpec T))} {τ : State (abortFreeSpec T)}
     (hx : SysExec Bs σ1 es τ) : (orderAF B A).app τ = none :=
   abortFree_order_blocks h τ hx.sub
 
-/-! ### Figure `fig:cc-exclusions` and MVTO -/
+/-! ### Figure `fig:cc-commitments` and MVTO -/
 
 /-- Fig. (h): under the abort-free specification, `order(A,B)` keeps exactly
 the rows with `A` before `B`. -/

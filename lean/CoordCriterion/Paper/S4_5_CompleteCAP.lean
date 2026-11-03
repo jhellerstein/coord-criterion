@@ -58,7 +58,7 @@ specification at every common expansion of their inputs.  When `E` is every
 permitted row, this is Lifted Monotonicity itself."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
 `«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`).  The
-closing sentences ("A partition does not change which exclusions a
+closing sentences ("A partition does not change which commitments a
 specification needs; …") are intuition for those results. -/
 theorem «sec:complete-cap/intro» (sp : Spec I O) (D : Type) (E : Table I O)
     (hES : ∀ i o, E i o → sp.P i o) :
@@ -100,7 +100,7 @@ an adversarial environment that may supply any legal input event to any
 participant."  This entry is the system half; the environment half is
 `«sec:complete-cap/environment»`.
 
-Lean: `System sp D` has an exclusion basis and a nondeterministic strategy
+Lean: `System sp D` has a commitment basis and a nondeterministic strategy
 `strat n init p pre e` for every `n`, `init : Fin n → I`, participant `p`.
 "Depending only on the local history" is the definition of `Produced`: each
 event of `p` is checked against `p`'s own local prefix only. -/
@@ -263,14 +263,14 @@ theorem «cor:complete-cap-S» (sp : Spec I O) (D : Type) :
    fun h => ⟨cfSystem sp D, (availability_iff_atEnd _).1 (cf_availability h),
      (partitionConsistency_iff_atEnd _).1 (cf_partitionConsistency h)⟩⟩
 
-/-- Corollary `cor:complete-cap-S`: "When it does, an exclusion-free system has
+/-- Corollary `cor:complete-cap-S`: "When it does, a commitment-free system has
 both: one whose strategies may emit any legal output `o` with no
-exclusion, by `Out_ε(o)`."
+commitment, by `Out_ε(o)`."
 
 Lean: `cfSystem` has empty basis and allows every event; an output event
 `Out ε o` is legal exactly when `o` is a legal output.  Every history it produces
-is exclusion-free. -/
-theorem «cor:complete-cap-S/exclusion-free» (sp : Spec I O) (D : Type) (h : sp.LiftedMono) :
+is commitment-free. -/
+theorem «cor:complete-cap-S/commitment-free» (sp : Spec I O) (D : Type) (h : sp.LiftedMono) :
     («def:partition-notions» (cfSystem sp D) ∧ «def:partition-consistency» (cfSystem sp D)) ∧
     ∀ (N : Nat) (init : Fin N → I) (H : History sp D N),
       Produced (cfSystem sp D) N init H → ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
@@ -281,10 +281,10 @@ theorem «cor:complete-cap-S/exclusion-free» (sp : Spec I O) (D : Type) (h : sp
 /-! ### Remarks after the corollary -/
 
 /-- "A system might hope to keep more outputs available by issuing
-exclusions, coordinating within each side of a partition.  It cannot: the
-impossibility direction of the proof holds for every system, exclusion-free
+commitments, coordinating within each side of a partition.  It cannot: the
+impossibility direction of the proof holds for every system, commitment-free
 or not."  Lean: necessity holds for an arbitrary system (any basis, any
-nondeterministic local strategies, so any exclusions its output and commit
+nondeterministic local strategies, so any commitments its output and commit
 events issue). -/
 theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o, E i o → sp.P i o)
     (Sys : System sp D) (hA : «def:partition-notions/for» E Sys)
@@ -304,29 +304,29 @@ theorem «sec:complete-cap/proof-system-coordination-free» (E : Table I O)
     ∀ k x, SysEmits (respSystem (sp := sp) (D := D) E) k x → E k x :=
   ⟨respSystem_coordinationFree E hcons, fun _ _ h => resp_emits_A h⟩
 
-/-- "For `E = P` it needs no exclusion at all."  Lean: with Availability,
+/-- "For `E = P` it needs no commitment at all."  Lean: with Availability,
 any removal of a row `(k,x)` by an output event whose local prefix is
 receive-free is contradicted in some produced history by another participant
 whose initial input is below `k` (it requires distributed coordination); so
 such a system avoids requiring distributed coordination only if those events
-remove nothing.  The same holds for exclusion events
+remove nothing.  The same holds for commitment events
 (`CAP.availability_not_coordinationFreeH_commit`). -/
-theorem «sec:complete-cap/A-eq-S-no-exclusion» (Sys : System sp D)
+theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     (hA : «def:partition-notions» Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (Exclusion sp)} {o : O} {σ σc : State sp}
+    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O} {σ σc : State sp}
     (hH : H p = a ++ LEv.out γ o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
     (hrun : LRun (canon sp (init p)) a σ) (hap : applySeq σ γ = some σc)
     {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x) (hqk : init q ≼ k) :
     ¬ Sys.CoordinationFreeH :=
   availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun hap hx hnx hqk
 
-/-- "For a smaller `E` such local row-removing exclusions can be necessary: if `o ∈ E(i)` and
+/-- "For a smaller `E` such local row-removing commitments can be necessary: if `o ∈ E(i)` and
 `x ∈ P(i) ∖ E(i)` have no common refinement at `i`, emitting `o` must choose
 against `x`."  Lean: one input, `P = {o, x}` incomparable, `E = {o}` (`lcA`): `P`
 satisfies Lifted Monotonicity for `E` (`ConsistentOn`), `o` is not a legal output
-(so its output event must apply an exclusion), and the canonical system `respSystem E` is
+(so its output event must apply a commitment), and the canonical system `respSystem E` is
 coordination-free. -/
 theorem «sec:complete-cap/local-row-removal-necessary» (D : Type) :
     ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧

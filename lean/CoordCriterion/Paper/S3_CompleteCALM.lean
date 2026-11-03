@@ -27,12 +27,11 @@ namespace CC.Paper
 
 open CC CC.CALM
 
-/-! ## Exclusion by example (`sec:ambiguity-story`) -/
+/-! ## Commitment by example (`sec:ambiguity-story`) -/
 
-/-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row refines the removed one: an exclusion."  After
-`output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Excluded_o` (a
-exclusion), neither excluded (the input keeps `[A,B]`) nor subsumed (no row refines
-both). -/
+  /-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row refines the removed one: a commitment."  After
+  `output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Excluded_o`,
+  requires a commitment, and is not subsumed (no row refines both). -/
 theorem «fig:ambiguity-frames/f» :
     (∀ k o, outputTable (canon Figures.Txn.spec ()) .ab k o ↔ o = .ab) ∧
       Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧
@@ -43,7 +42,7 @@ theorem «fig:ambiguity-frames/f» :
 /-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is refined by a remaining one: an output
 subsumption."  The remaining rows are `{s→s1}`, `{s→s1,s→a}`,
 `{s→s1,s→a,s→a→s2}`; the removed `{s→a}` and `{s→a,s→a→s2}` are in
-`Subsumed_o`; nothing is excluded or excluded, so `{s→s1}` is a legal output. -/
+  `Subsumed_o`; nothing is in `Excluded_o`, so `{s→s1}` is a legal output. -/
 theorem «fig:ambiguity-frames/g» :
     (∀ x, outputTable (canon Figures.Trace.spec ()) Figures.Trace.rS1 () x ↔
         (x = Figures.Trace.rS1 ∨ x = Figures.Trace.rS1A ∨ x = Figures.Trace.rAll)) ∧
@@ -56,32 +55,31 @@ theorem «fig:ambiguity-frames/g» :
         Exposable (canon Figures.Trace.spec ()) Figures.Trace.rS1) :=
   ⟨Figures.Trace.after_s1, Figures.Trace.removed_subsumed⟩
 
-/-- §3.1 "Exclusion and directedness": "In panel (f) … emitting one
-requires an *exclusion* that removes the other while the input stays
+/-- §3.1 "Commitment and directedness": "In panel (f) … emitting one
+requires an *commitment* that removes the other while the input stays
 legal: emitting `[A,B]` excludes `[B,A]`."  `[A,B]` is not a legal output,
-every legal system output event emitting it carries an exclusion, and the
-exclusion `x_[A,B]` applies, keeping `[A,B]` and removing `[B,A]`. -/
-theorem «sec:ambiguity-story/exclusion» :
+every legal system output event emitting it carries a commitment, and the
+commitment `x_[A,B]` applies, keeping `[A,B]` and removing `[B,A]`. -/
+theorem «sec:ambiguity-story/commitment» :
     (¬ Exposable (canon Figures.Txn.spec ()) .ab ∧
-        ∀ (B : ExclusionBasis Figures.Txn.spec) (γ : List (Exclusion Figures.Txn.spec)) τ,
+        ∀ (B : CommitmentBasis Figures.Txn.spec) (γ : List (Commitment Figures.Txn.spec)) τ,
           SysStep B (canon Figures.Txn.spec ()) (.output γ .ab) τ → γ ≠ []) ∧
-      ((canonicalExclusion (sp := Figures.Txn.spec) .ab).app (canon Figures.Txn.spec ()) =
-          some (excludeState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)) ∧
-        (excludeState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)).R () .ab ∧
-        ¬ (excludeState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)).R () .ba) :=
-  ⟨Figures.Txn.ab_not_exposable, Figures.Txn.exclusion_applies⟩
+      ((canonicalCommitment (sp := Figures.Txn.spec) .ab).app (canon Figures.Txn.spec ()) =
+          some (commitmentState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)) ∧
+        (commitmentState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)).R () .ab ∧
+        ¬ (commitmentState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)).R () .ba) :=
+  ⟨Figures.Txn.ab_not_exposable, Figures.Txn.commitment_applies⟩
 
-/-- §3.1: "An output event can thus remove rows in three ways: by applying an exclusion to
-inputs …; by subsuming outputs …; or by choosing among outputs … applying an exclusion to and
-choosing are exclusions, subsuming is not."  The rows ruled out by `o` are
-exactly `Excluded_o ∪ Subsumed_o ∪ Excluded_o`, and `o` is a legal output (no
-exclusion) iff `Excluded_o` and `Excluded_o` are empty. -/
+  /-- §3.1: "An output event can thus remove rows in two ways: by commitment …
+  or by subsuming outputs … Subsuming is not commitment."  The rows ruled out
+  by `o` are exactly `Subsumed_o ∪ Excluded_o`, and `o` is a legal output (no
+  commitment) iff `Excluded_o` is empty. -/
 theorem «sec:ambiguity-story/three-ways» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) :
     (∀ k x, (σ.R k x ∧ ¬ outputTable σ o k x) ↔
         (Subsumed σ o k x ∨ Excluded σ o k x)) ∧
       (Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x) :=
-  ⟨ruledOut_iff σ o, exposable_iff_no_exclusion σ o⟩
+  ⟨ruledOut_iff σ o, exposable_iff_no_commitment σ o⟩
 
 /-- §3.1: "Two transaction scheduling runs that emit `[A,B]` and `[B,A]` fail
 it": they are not confluent at `{A,B}`; the specification is neither directed
@@ -295,11 +293,11 @@ theorem «prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O
 /-! ## Lifted output events (`sec:lifted-output-events`)
 
 The body gives an informal summary; the formal definitions
-(`eq:output-subsumptions`, `eq:exclusion-removals`,
-`def:lifted-output-event`, `eq:canonical-exclusion-relational`), the remarks after them, and
+(`eq:output-subsumptions`, `eq:commitment-removals`,
+`def:lifted-output-event`, `eq:canonical-commitment-relational`), the remarks after them, and
 Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
 `app:lifted-output-events`, and their entries in
-`Paper/AppC_ExclusionBases.lean`. -/
+`Paper/AppC_CommitmentBases.lean`. -/
 
 /-- §3.4: "In the functional case, `Subsumed_o` is empty, so this is the
 output event of Definition `def:output-event`."  Every removed row then belongs
@@ -312,7 +310,7 @@ theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
 
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/
 
-/-- "Specification states, input events, runs, exclusion-free runs, and
+/-- "Specification states, input events, runs, commitment-free runs, and
 consistency are defined as before, and the results of Section
 `sec:executions` … lift unchanged."  In Lean there is nothing to lift: the
 transition system, Lemma `lem:run-residual` and Prop. `prop:confluence` are
@@ -333,7 +331,7 @@ theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 
 /-- **Prop. `prop:exposure-boundary`** (Output-legality boundary).  "An ordered
 specification satisfies Lifted Monotonicity if and only if every output at
-every state reachable without exclusion is a legal output."  The proof sketch
+every state reachable without commitment is a legal output."  The proof sketch
 goes through the common-expansion condition (Prop.
 `prop:common-expansion-form`); `«prop:exposure-boundary/common-expansion»`
 is that form. -/

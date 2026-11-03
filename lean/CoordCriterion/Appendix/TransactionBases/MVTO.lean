@@ -1,7 +1,7 @@
 import CoordCriterion.Appendix.TransactionBases.Partial
 
 /-!
-# MVTO's eager abort: a run in which the exclusion removes an output (Appendix G)
+# MVTO's eager abort: a run in which the commitment removes an output (Appendix G)
 
 Namespace `CC.Txn.Partial`.  The specification of `Spec.lean`, the bases of
 `Partial.lean`.
@@ -12,9 +12,9 @@ Namespace `CC.Txn.Partial`.  The specification of `Spec.lean`, the bases of
   initial version; then `A`'s write of `x` arrives.  Reporting the read is not
   exposable on its own (the row committing `A` then `B`, at an input in which
   `A` writes `x`, cannot be completed with it); after `A`'s write, aborting `A`
-  applies an exclusion that leaves two completions (`abort(A)` and `abort(B)`) and
+  applies a commitment that leaves two completions (`abort(A)` and `abort(B)`) and
   removes a different one for each emitted abort. Emitting `A`'s abort is not
-  exposable. MVTO's write rule applies this exclusion with `Out_[abort(A)]`; once `B`'s commit request arrives
+  exposable. MVTO's write rule applies this commitment with `Out_[abort(A)]`; once `B`'s commit request arrives
   and `TxCommit(B)` is applied, `A`'s abort is exposable.
 * `writer_after_A` — the hypothesis on the version in
   `TwoStamps.no_both` cannot be dropped.
@@ -55,7 +55,7 @@ def inSt {af : Bool} (σ : State (spec (T := T) (K := K) af)) (j : Inp T K) (u :
   hasCur := ⟨u, h, PO.refl j⟩
   above _ _ h := h.2
 
-theorem inSt_step {af : Bool} {B : ExclusionBasis (spec (T := T) (K := K) af)}
+theorem inSt_step {af : Bool} {B : CommitmentBasis (spec (T := T) (K := K) af)}
     (σ : State (spec (T := T) (K := K) af)) (j : Inp T K) (u : ROut T K) (h : σ.R j u) :
     SysStep B σ (.input j) (inSt σ j u h) :=
   SysStep.input (Step.input _ _ j ⟨u, h⟩ rfl rfl)
@@ -252,8 +252,8 @@ third transaction `C` that may still arrive).  Inputs: `i1` (`A` has issued a
 read of `x`), `i2` (and `B` a read of `x`), `i3` (and `A` a write of `x`),
 `i4` (and `B` its commit request); `j2` adds `A`'s commit request.
 
-1. `A`'s first operation: `Exclude([stamp(A)])`.  `B`'s arrives: `input(i2)`,
-   `Exclude([stamp(B)])` with `Z = {A}`.
+1. `A`'s first operation: `Apply([stamp(A)])`.  `B`'s arrives: `input(i2)`,
+   `Apply([stamp(B)])` with `Z = {A}`.
 2. Reporting `B`'s read as the initial version is not exposable: the row
    `[A,B]` at `j2`, where `A` writes `x`, cannot be completed with it.
    `read(B,0,initial)` removes that row, and `Out_[read(B,0,initial)](u)` is
@@ -264,14 +264,14 @@ read of `x`), `i2` (and `B` a read of `x`), `i3` (and `A` a write of `x`),
    keep different completions.  MVTO's write rule emits `A`'s abort with
    `Out_[abort(A)]`.
 4. Alternatively, `B`'s commit request arrives: `input(i4)`,
-   `Exclude([TxCommit(B)])`; then `A`'s abort is exposable, and `Out_ε` emits
+   `Apply([TxCommit(B)])`; then `A`'s abort is exposable, and `Out_ε` emits
    it. -/
 theorem mvto_run (h : Distinct3 A B C) (x : K) :
     ∃ σ1 σ2 σ3 σ3r σ4 σ5 σ6 σ7 σ8 : State (spec (T := T) (K := K) false),
       -- 1
-      SysStep basisMVTO (canon _ (i1 (A := A) x)) (.exclude [stamp A (fun _ => False)]) σ1 ∧
+      SysStep basisMVTO (canon _ (i1 (A := A) x)) (.commitment [stamp A (fun _ => False)]) σ1 ∧
       SysStep basisMVTO σ1 (.input (i2 h x)) σ2 ∧
-      SysStep basisMVTO σ2 (.exclude [stamp B (· = A)]) σ3 ∧
+      SysStep basisMVTO σ2 (.commitment [stamp B (· = A)]) σ3 ∧
       -- 2
       σ3.R (j2 h x) (rAB A B) ∧ ¬ Exposable σ3 (u B) ∧
       (read B 0 none).app σ3 = some σ3r ∧ ¬ σ3r.R (j2 h x) (rAB A B) ∧
@@ -287,7 +287,7 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
       (∃ τe, SysStep basisMVTO σ5 (.output [abort A] (addAbort (u B) A)) τe) ∧
       -- 4
       SysStep basisMVTO σ5 (.input (i4 h x)) σ6 ∧
-      SysStep basisMVTO σ6 (.exclude [commit B]) σ7 ∧
+      SysStep basisMVTO σ6 (.commitment [commit B]) σ7 ∧
       Exposable σ7 (addAbort (u B) A) ∧
       SysStep basisMVTO σ7 (.output [] (addAbort (u B) A)) σ8 := by
   -- names
@@ -379,8 +379,8 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
   have m1 : ∀ {k : Inp T K} {w c : ROut T K}, w ≼ c → Complete false k c → I1 ≼ k →
       StampOK A (fun _ => False) c.o → σ1.R k w := fun hw hc hk hs =>
     mem_close h1 (r0 hw hc hk) (r0 (PO.refl _) hc hk) hc.1 hw hs
-  have step1 : SysStep basisMVTO σ0 (.exclude [stamp A (fun _ => False)]) σ1 :=
-    SysStep.exclude (fun c hc => by
+  have step1 : SysStep basisMVTO σ0 (.commitment [stamp A (fun _ => False)]) σ1 :=
+    SysStep.commitment (fun c hc => by
         simp only [List.mem_singleton] at hc; subst hc; exact Or.inl ⟨A, _, rfl⟩)
       (List.cons_ne_nil _ _) (ApplySeq.cons h1' (ApplySeq.nil _))
   have cur1 : σ1.cur = I1 := (closeC_app_iff.1 h1).2.1
@@ -407,8 +407,8 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
       I2 ≼ k → StampOK A (fun _ => False) c.o → StampOK B (· = A) c.o → σ3.R k w :=
     fun hw hc hk hk2 hs hs' =>
       mem_close h3 (m2 hw hc hk hk2 hs) (m2 (PO.refl _) hc hk hk2 hs) hc.1 hw hs'
-  have step3 : SysStep basisMVTO σ2 (.exclude [stamp B (· = A)]) σ3 :=
-    SysStep.exclude (fun c hc => by
+  have step3 : SysStep basisMVTO σ2 (.commitment [stamp B (· = A)]) σ3 :=
+    SysStep.commitment (fun c hc => by
         simp only [List.mem_singleton] at hc; subst hc; exact Or.inl ⟨B, _, rfl⟩)
       (List.cons_ne_nil _ _) (ApplySeq.cons h3' (ApplySeq.nil _))
   have good3 : Good σ3 := good_close h3 (good_input (Step.input _ _ _ ⟨_, (m1 (PO.refl _) cAll2
@@ -539,8 +539,8 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
        ((i4_mem (h := h) (x := x) B).2 (Or.inr rfl))⟩
   have hC' : (commit (K := K) B).app σ6 = some σ7 := hC
   have cur7 : σ7.cur = I4 := (closeC_app_iff.1 hC).2.1
-  have step7 : SysStep basisMVTO σ6 (.exclude [commit B]) σ7 :=
-    SysStep.exclude (fun c hc => by
+  have step7 : SysStep basisMVTO σ6 (.commitment [commit B]) σ7 :=
+    SysStep.commitment (fun c hc => by
         simp only [List.mem_singleton] at hc; subst hc; exact Or.inr (Or.inl ⟨B, rfl⟩))
       (List.cons_ne_nil _ _) (ApplySeq.cons hC' (ApplySeq.nil _))
   -- `A`'s abort is entailed

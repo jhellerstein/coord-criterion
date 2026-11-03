@@ -9,38 +9,38 @@ Namespace `CC.Guard`.  An upstream specification `𝒫 : Spec I M` (e.g. a log
 authority, Paxos) feeds a downstream store `𝒦 = graph f` with `f : M → O`
 (e.g. deterministic execution of the log).  The environment observes only the
 composite `𝒦 ∘ 𝒫 = comp 𝒫 f`.  In the *guarded* composite, `𝒫` runs as a
-system under an arbitrary basis `B` (Paxos's own exclusions), and the store
+system under an arbitrary basis `B` (Paxos's own commitments), and the store
 runs as a system of its own, e.g. with the empty basis, answering whenever `𝒫`
 emits.  The first sections treat a function store `graph f`; section
 `General` treats any Lifted-Monotone store.  We say
-"`𝒫` guards `𝒦`", or "`𝒦` delegates exclusion to `𝒫`".
+"`𝒫` guards `𝒦`", or "`𝒦` delegates commitment to `𝒫`".
 
 * `img`, `imgT`, `img_canon`            — the composite table seen through `f`.
-* `push_not_exclusion`                 — the pushforward of a `𝒫`-exclusion
-  need not be an exclusion of the composite: a `𝒫` exclusion can become a
-  subsumption (`exclusion_becomes_subsumption`).
+* `push_not_commitment`                 — the pushforward of a `𝒫`-commitment
+  need not be a commitment of the composite: a `𝒫` commitment can become a
+  subsumption (`commitment_becomes_subsumption`).
 * `guarded_lockstep`, `guarded_run`     — **pushforward of runs**: if `f` is
   monotone, every run of `𝒫` under *any* basis, read through `f`, is a run of
   the composite in the transition system of Sections 2–3, whose table contains
   the image of `𝒫`'s table after every event.
 * `emitted_chain`, `store_cf`, `store_run` — the store's own run (inputs: the
-  logs `𝒫` emits; outputs: their images) is exclusion-free, i.e. a run under
+  logs `𝒫` emits; outputs: their images) is commitment-free, i.e. a run under
   the empty basis.
 * `coverage`, `coverage_step`           — **absorption**: every row the
-  composite's canonical output event must apply an input or exclusion to has all of
-  its preimages removed by `𝒫`'s exclusions.
+  composite's canonical output event must apply an input or commitment to has all of
+  its preimages removed by `𝒫`'s commitments.
 * `invisible_step`, `cf_step`           — **invisible coordination**: if `𝒫`'s
-  exclusions remove only rows with a surviving `f`-equivalent row, the
-  composite event is exclusion-free.
+  commitments remove only rows with a surviving `f`-equivalent row, the
+  composite event is commitment-free.
 * `SysConsistent`, `GuardedRuns`, `guarded_consistent` — **delegation**: if
   the runs of the `𝒫`-system are consistent (confluent under arbitrary
   continuations), so are the guarded composite runs, judged on the composite.
-* Limits: `monotone_necessary` (`f` must be monotone), `store_exclusion_not_delegable`
+* Limits: `monotone_necessary` (`f` must be monotone), `store_commitment_not_delegable`
   (a store that must choose cannot delegate it), `composite_monotone_not_enough`
-  (Lifted Monotonicity of `𝒦 ∘ 𝒫` does not let `𝒫` drop its exclusions).
+  (Lifted Monotonicity of `𝒦 ∘ 𝒫` does not let `𝒫` drop its commitments).
 * `PK`, `perKey`, `perKey_monotone`, `commute_example` — a per-key store:
   `𝒫` must choose the order of commands on different keys, the composite
-  needs no exclusion.
+  needs no commitment.
 * `Sys`, `Produces`, `Sys.free`, `Sys.emits` — a system for one participant
   (a basis and a strategy), the runs it produces, and the output sequences it
   emits.
@@ -51,7 +51,7 @@ emits.  The first sections treat a function store `graph f`; section
   pipeline as runs of the composite.  `GRun`, `Shaped`, `blk` — a run of the
   pipeline: the store receives each upstream output and answers it any number
   of times, possibly never.  `eraseSys`, `Obs`, `erase_simulates` — the
-  exclusion-erased replacement.  `grun_composite`, `GEmits`, `pipeline_step`,
+  commitment-erased replacement.  `grun_composite`, `GEmits`, `pipeline_step`,
   `pipeline_coordination_free` — pipelines.
 * Proper Coordination (section `ProperCoord`): `rest sp sk` is `𝒮₂|_{𝒮₁}`,
   `NeedsNoCommit`, `Proper` (Def.); `proper_iff`, `proper_iff_consistent`
@@ -198,12 +198,12 @@ theorem img_canon (f : M → O) (i : I) : img f (canon sp i) = canon (comp sp f)
 /-! ### Erasing to the composite -/
 
 /-- What the environment observes of a `𝒫`-event, through the store:
-`input j` stays, `Out_γ(m)` becomes `output (f m)`, and an exclusion event is
+`input j` stays, `Out_γ(m)` becomes `output (f m)`, and a commitment event is
 unobservable. -/
 def obs (f : M → O) : SEvent sp → Option (Event I O)
   | .input j => some (.input j)
   | .output _ m => some (.output (f m))
-  | .exclude _ => none
+  | .commitment _ => none
 
 /-! ### Pushforward of runs -/
 
@@ -212,7 +212,7 @@ composite state `σ'` with the same current input whose table contains the
 image of `σ`'s, every execution of `𝒫` under any basis `B`, read through `f`,
 is an execution of the composite (in the transition system of Sections 2–3),
 and the containment persists. -/
-theorem guarded_lockstep (hf : Monotone f) {B : ExclusionBasis sp} {σ ρ : State sp}
+theorem guarded_lockstep (hf : Monotone f) {B : CommitmentBasis sp} {σ ρ : State sp}
     {es : List (SEvent sp)} (h : SysExec B σ es ρ) :
     ∀ σ' : State (comp sp f), σ'.cur = σ.cur → (∀ k o, imgT f σ.R k o → σ'.R k o) →
       ∃ ρ', Exec σ' (es.filterMap (obs f)) ρ' ∧ ρ'.cur = ρ.cur ∧
@@ -251,28 +251,28 @@ theorem guarded_lockstep (hf : Monotone f) {B : ExclusionBasis sp} {σ ρ : Stat
         exact ⟨hsub _ _ ⟨m', a, rfl⟩, hf _ _ b⟩
       obtain ⟨ρ', hx, hc', hs'⟩ := ih τ' (by rw [hcur]; exact hc) hsub'
       exact ⟨ρ', Exec.cons hst hx, hc', hs'⟩
-    | exclude γ =>
+    | commitment γ =>
       -- unobservable: the composite stays put
-      obtain ⟨ρ', hx, hc', hs'⟩ := ih σ' (by rw [hs.exclude_cur]; exact hc)
+      obtain ⟨ρ', hx, hc', hs'⟩ := ih σ' (by rw [hs.commitment_cur]; exact hc)
         (fun k o h' => hsub k o (imgT_mono hs.sub k o h'))
       exact ⟨ρ', hx, hc', hs'⟩
 
 /-- **Pushforward of runs.**  If `f` is monotone, every run of `𝒫` under any
 basis, read through `f`, is a run of the composite from the same canonical
 state, and its final table contains the image of `𝒫`'s final table. -/
-theorem guarded_run (hf : Monotone f) {B : ExclusionBasis sp} {i : I} {es : List (SEvent sp)}
+theorem guarded_run (hf : Monotone f) {B : CommitmentBasis sp} {i : I} {es : List (SEvent sp)}
     {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
     ∃ ρ', Exec (canon (comp sp f) i) (es.filterMap (obs f)) ρ' ∧ ρ'.cur = ρ.cur ∧
       ∀ k o, imgT f ρ.R k o → ρ'.R k o :=
   guarded_lockstep hf h _ rfl (by rw [← img_canon f i]; exact fun _ _ h => h)
 
-/-! ### Absorption: the composite's exclusions are covered by `𝒫`'s -/
+/-! ### Absorption: the composite's commitments are covered by `𝒫`'s -/
 
-/-- **Coverage.**  Let `σc` be the state `𝒫`'s exclusions leave before it
+/-- **Coverage.**  Let `σc` be the state `𝒫`'s commitments leave before it
 emits `m` (so `m ∈ R_c(i)` is exposable there), and let `ρ` be a composite
 state whose table contains the image of `σc`'s.  If `f` is monotone, no row of
 that image is excluded or excluded by `f m` at `ρ`: the composite's canonical
-event for `f m` removes by exclusion only rows outside the image. -/
+event for `f m` removes by commitment only rows outside the image. -/
 theorem coverage (hf : Monotone f) {σc : State sp} {m : M} (hexp : Exposable σc m)
     {ρ : State (comp sp f)} (hsub : ∀ k o, imgT f σc.R k o → ρ.R k o) :
     ∀ k x, imgT f σc.R k x → ¬ Excluded ρ (f m) k x := by
@@ -286,10 +286,10 @@ theorem coverage (hf : Monotone f) {σc : State sp} {m : M} (hexp : Exposable σ
 /-- **Absorption, for an output event of `𝒫`.**  Let `Out_γ(m)` be a legal
 output event of `𝒫` under any basis, from `σ`, and `ρ` a composite state
 containing the image of `σ`'s table.  Every row `(k,x)` that the composite's
-canonical event for `f m` must apply an input or exclusion to at `ρ` has had every
+canonical event for `f m` must apply an input or commitment to at `ρ` has had every
 preimage in `σ` removed by `γ`. -/
-theorem coverage_step (hf : Monotone f) {B : ExclusionBasis sp} {σ τ : State sp}
-    {γ : List (Exclusion sp)} {m : M} (h : SysStep B σ (.output γ m) τ)
+theorem coverage_step (hf : Monotone f) {B : CommitmentBasis sp} {σ τ : State sp}
+    {γ : List (Commitment sp)} {m : M} (h : SysStep B σ (.output γ m) τ)
     {ρ : State (comp sp f)} (hsub : ∀ k o, imgT f σ.R k o → ρ.R k o) :
     ∃ σc, ApplySeq γ σ σc ∧
       ∀ k x, Excluded ρ (f m) k x →
@@ -302,12 +302,12 @@ theorem coverage_step (hf : Monotone f) {B : ExclusionBasis sp} {σ τ : State s
     have := coverage hf hexp hsub' k x ⟨m', hc, hfx.symm⟩
     exact this hx
 
-/-- **Invisible coordination.**  If every row that `𝒫`'s exclusions `γ`
+/-- **Invisible coordination.**  If every row that `𝒫`'s commitments `γ`
 remove has an `f`-equivalent row (same input, same image) that they keep, then
-at the image state the composite emits `f m` with no exclusion: `γ` is
+at the image state the composite emits `f m` with no commitment: `γ` is
 coordination inside `𝒫` that the composite does not see. -/
-theorem invisible_step (hf : Monotone f) {B : ExclusionBasis sp} {σ τ : State sp}
-    {γ : List (Exclusion sp)} {m : M} (h : SysStep B σ (.output γ m) τ)
+theorem invisible_step (hf : Monotone f) {B : CommitmentBasis sp} {σ τ : State sp}
+    {γ : List (Commitment sp)} {m : M} (h : SysStep B σ (.output γ m) τ)
     (hinv : ∀ (σc : State sp), ApplySeq γ σ σc →
       ∀ k m', σ.R k m' → ∃ m'', σc.R k m'' ∧ f m'' = f m') :
     Exposable (img f σ) (f m) := by
@@ -321,7 +321,7 @@ theorem invisible_step (hf : Monotone f) {B : ExclusionBasis sp} {σ τ : State 
     exact hcov k _ hx m'' (hγ.sub _ _ hm'') he hm''
   exact fun ⟨k, x, he⟩ => key k x he
 
-/-- An exclusion-free output event of `𝒫` maps to an exclusion-free output
+/-- A commitment-free output event of `𝒫` maps to a commitment-free output
 event of the composite. -/
 theorem cf_step (hf : Monotone f) {σ : State sp} {m : M} (hexp : Exposable σ m) :
     Exposable (img f σ) (f m) := by
@@ -336,7 +336,7 @@ def emitted : List (SEvent sp) → List M
   | [] => []
   | .input _ :: es => emitted es
   | .output _ m :: es => m :: emitted es
-  | .exclude _ :: es => emitted es
+  | .commitment _ :: es => emitted es
 
 /-- `l` is a chain starting above the optional lower bound. -/
 def ChainFrom : Option M → List M → Prop
@@ -346,7 +346,7 @@ def ChainFrom : Option M → List M → Prop
 
 /-- **The outputs of a run under any basis form a chain**, each refining the
 ones before it. -/
-theorem emitted_chain {B : ExclusionBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
+theorem emitted_chain {B : CommitmentBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
     (h : SysExec B σ es ρ) :
     ∀ lo : Option M, (∀ a, lo = some a → ∀ k u, σ.R k u → a ≼ u) →
       ChainFrom lo (emitted es) := by
@@ -357,7 +357,7 @@ theorem emitted_chain {B : ExclusionBasis sp} {σ ρ : State sp} {es : List (SEv
     cases e with
     | input j =>
       exact ih lo (fun a ha k u hu => hlo a ha k u (hs.sub k u hu))
-    | exclude γ =>
+    | commitment γ =>
       exact ih lo (fun a ha k u hu => hlo a ha k u (hs.sub k u hu))
     | output γ m =>
       obtain ⟨_, hm, hin, _⟩ := containment hs
@@ -371,7 +371,7 @@ def storeEvs (f : M → O) : List M → List (Event M O)
   | [] => []
   | m :: ms => .input m :: .output (f m) :: storeEvs f ms
 
-/-- At the store's canonical state at `a`, emitting `f a` is exclusion-free
+/-- At the store's canonical state at `a`, emitting `f a` is commitment-free
 and returns to the same state. -/
 theorem store_out (hf : Monotone f) (a : M) :
     Step (canon (graph f) a) (.output (f a)) (canon (graph f) a) ∧
@@ -384,7 +384,7 @@ theorem store_out (hf : Monotone f) (a : M) :
     obtain ⟨hx1, hx2⟩ := hx
     exact absurd (hx1 ▸ hf _ _ hx2 : f a ≼ x) hnx
 
-/-- **The store's run is exclusion-free.**  Fed a chain of upstream outputs,
+/-- **The store's run is commitment-free.**  Fed a chain of upstream outputs,
 the store moves through its canonical states, emitting each image by an
 exposable output. -/
 theorem store_cf (hf : Monotone f) :
@@ -402,8 +402,8 @@ theorem store_cf (hf : Monotone f) :
 /-- **The store runs with the empty basis.**  For any run of `𝒫` under any
 basis that emits `m :: ms`, the store's run — start at `m`, emit `f m`, then
 receive and answer each later output — is a run under the empty basis that
-applies no exclusion. -/
-theorem store_run (hf : Monotone f) {B : ExclusionBasis sp} {σ ρ : State sp}
+applies no commitment. -/
+theorem store_run (hf : Monotone f) {B : CommitmentBasis sp} {σ ρ : State sp}
     {es : List (SEvent sp)} (h : SysExec B σ es ρ) {m : M} {ms : List M}
     (he : emitted es = m :: ms) :
     ∃ es' : List (SEvent (graph f)),
@@ -422,7 +422,7 @@ finite family of them can be brought, under arbitrary continuations (any
 basis), to one common state at each common expansion of their inputs. -/
 def SysConsistent (R : State sp → Prop) : Prop :=
   ∀ fam : List (State sp), (∀ σ ∈ fam, R σ) → ∀ j : I, (∀ σ ∈ fam, σ.cur ≼ j) →
-    ∃ τ : State sp, τ.cur = j ∧ ∀ σ ∈ fam, ∃ (B : ExclusionBasis sp) (es : List (SEvent sp)),
+    ∃ τ : State sp, τ.cur = j ∧ ∀ σ ∈ fam, ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)),
       SysExec B σ es τ
 
 /-- For the canonical runs of a specification, this is consistency. -/
@@ -440,10 +440,10 @@ theorem sysConsistent_isRun_iff (sp : Spec I M) : SysConsistent (IsRun (sp := sp
     refine ⟨τ, hτ, fun σ hσ => ?_⟩
     obtain ⟨es, hx⟩ := hall σ hσ
     obtain ⟨es', _, hc⟩ := exec_canonExec hx
-    exact ⟨canonExclusionBasis sp, es', canonExec_sysExec hc⟩
+    exact ⟨canonCommitmentBasis sp, es', canonExec_sysExec hc⟩
 
 /-- Runs of `𝒫` under basis `B`. -/
-def SysRuns (B : ExclusionBasis sp) (σ : State sp) : Prop := ∃ i es, SysExec B (canon sp i) es σ
+def SysRuns (B : CommitmentBasis sp) (σ : State sp) : Prop := ∃ i es, SysExec B (canon sp i) es σ
 
 /-- The guarded composite runs over `R`: composite runs whose table contains
 the image of the table of some `σ ∈ R` at the same current input. -/
@@ -453,7 +453,7 @@ def GuardedRuns (R : State sp → Prop) (f : M → O) (ρ : State (comp sp f)) :
 /-- **Guarded consistency.**  If the runs `R` of a `𝒫`-system are consistent,
 then every finite family of guarded composite runs is confluent at every
 common expansion, in the composite's own transition system.  No
-monotonicity of `𝒫`, and no exclusion of the composite, is assumed. -/
+monotonicity of `𝒫`, and no commitment of the composite, is assumed. -/
 theorem guarded_consistent {R : State sp → Prop} (h : SysConsistent R) :
     ∀ fam : List (State (comp sp f)), (∀ ρ ∈ fam, GuardedRuns R f ρ) →
       ∀ j : I, (∀ ρ ∈ fam, ρ.cur ≼ j) → ConfluentAt fam j := by
@@ -482,7 +482,7 @@ consistent set of runs of a `𝒫`-system with any basis `B`.  Then:
    composite endpoint (the composite table contains the image of `𝒫`'s);
 2. the store's part of every such run is a run of `𝒦` under the empty basis;
 3. the guarded composite runs are consistent. -/
-theorem delegation (hf : Monotone f) (B : ExclusionBasis sp) {R : State sp → Prop}
+theorem delegation (hf : Monotone f) (B : CommitmentBasis sp) {R : State sp → Prop}
     (hcons : SysConsistent R) :
     (∀ i es ρ, SysExec B (canon sp i) es ρ → R ρ →
       ∃ ρ', Exec (canon (comp sp f) i) (es.filterMap (obs f)) ρ' ∧ GuardedRuns R f ρ') ∧
@@ -504,7 +504,7 @@ continued (under any bases) to one state with current input `j`, then the
 theorem guarded_confluent (fam : List (State sp × State (comp sp f)))
     (hrun : ∀ p ∈ fam, IsRun p.2) (hsub : ∀ p ∈ fam, ∀ k o, imgT f p.1.R k o → p.2.R k o)
     (j : I) (hj : ∀ p ∈ fam, p.2.cur ≼ j)
-    (hP : ∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : ExclusionBasis sp) (es : List (SEvent sp)),
+    (hP : ∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)),
       SysExec B p.1 es τ) :
     ConfluentAt (fam.map Prod.snd) j := by
   obtain ⟨τ, hτ, hall⟩ := hP
@@ -519,9 +519,9 @@ theorem guarded_confluent (fam : List (State sp × State (comp sp f)))
   obtain ⟨B, es, hx⟩ := hall p hp
   exact hsub p hp _ _ ⟨m, hx.sub _ _ hm, rfl⟩
 
-/-! ### A store with its own exclusions -/
+/-! ### A store with its own commitments -/
 
-section Exclusion
+section Commitment
 variable {J P : Type} [PO J] [PO P] {sq : Spec J P}
 
 /-- `(i, R ∖ R[in ∈ Q])`, for `Q` false at the current input. -/
@@ -548,8 +548,8 @@ theorem excludeInputApp_eq {Q : J → Prop} {σ τ : State sq} :
     exact h ⟨h1, h2⟩
 
 /-- **Excluding the inputs in `Q`** (defined when `Q` is false at the current
-input and some remaining row has its input in `Q`) is an exclusion. -/
-noncomputable def excludeInput (Q : J → Prop) : Exclusion sq where
+input and some remaining row has its input in `Q`) is a commitment. -/
+noncomputable def excludeInput (Q : J → Prop) : Commitment sq where
   app := excludeInputApp Q
   cur_eq := by intro σ τ h; obtain ⟨_, _, rfl⟩ := excludeInputApp_eq.1 h; rfl
   sub := by intro σ τ h k u hu; obtain ⟨_, _, rfl⟩ := excludeInputApp_eq.1 h; exact hu.1
@@ -557,12 +557,12 @@ noncomputable def excludeInput (Q : J → Prop) : Exclusion sq where
     intro σ τ h
     obtain ⟨_, ⟨k, x, hx, hQ⟩, rfl⟩ := excludeInputApp_eq.1 h
     exact ⟨k, x, hx, fun h' => h'.2 hQ⟩
-  excludes := by
+  unsubsumed := by
     intro σ τ h k u w hu hnu hw _
     obtain ⟨_, _, rfl⟩ := excludeInputApp_eq.1 h
     exact hnu ⟨hu, hw.2⟩
 
-end Exclusion
+end Commitment
 
 /-- Exposability at canonical states alone gives the common-expansion
 condition (the reverse direction of the exposure boundary uses only them). -/
@@ -589,7 +589,7 @@ theorem canon_exposable_commonExpansion {I O : Type} [PO I] [PO O] {sp : Spec I 
 
 /-- **At least once is not vacuous.**  If `𝒦 ∘ 𝒫` violates Lifted
 Monotonicity, some composite output `f m` is not exposable at the canonical
-state at `i`, and every `𝒫`-output with that image needs an exclusion there.
+state at `i`, and every `𝒫`-output with that image needs a commitment there.
 So a guarded composite in which `𝒫` runs under the empty basis can never emit
 `f m` from the state it is in right after receiving `i`. -/
 theorem at_least_once_needed (hf : Monotone f) (hnot : ¬ (comp sp f).LiftedMono) :
@@ -614,8 +614,8 @@ theorem at_least_once_needed (hf : Monotone f) (hnot : ¬ (comp sp f).LiftedMono
 
 /-! ### Systems and strategies -/
 
-/-- Exclusions applied in an execution under `B` come from `B`. -/
-theorem sysExec_basis {I O : Type} [PO I] [PO O] {sp : Spec I O} {B : ExclusionBasis sp}
+/-- Commitments applied in an execution under `B` come from `B`. -/
+theorem sysExec_basis {I O : Type} [PO I] [PO O] {sp : Spec I O} {B : CommitmentBasis sp}
     {σ ρ : State sp} {es : List (SEvent sp)} (h : SysExec B σ es ρ) :
     ∀ γ o, SEvent.output γ o ∈ es → ∀ c ∈ γ, B c := by
   induction h with
@@ -641,11 +641,11 @@ section Systems
 variable {J X : Type} [PO J] [PO X] {sq : Spec J X}
 
 /-- **A system for one participant** (Defs. `def:strategy`, `def:system`): a
-exclusion basis and a nondeterministic strategy.  `strat i a e` says that,
+commitment basis and a nondeterministic strategy.  `strat i a e` says that,
 started at the canonical state at `i`, after local history `a` the participant
 may perform the output event `e`.  Input events come from the environment. -/
 structure Sys (sq : Spec J X) where
-  basis : ExclusionBasis sq
+  basis : CommitmentBasis sq
   strat : J → List (SEvent sq) → SEvent sq → Prop
 
 /-- The events a system allows after local history `a`: every input, and the
@@ -653,7 +653,7 @@ output events its strategy chooses. -/
 def Allowed (S : Sys sq) (i : J) (a : List (SEvent sq)) : SEvent sq → Prop
   | .input _ => True
   | .output γ o => S.strat i a (.output γ o)
-  | .exclude γ => S.strat i a (.exclude γ)
+  | .commitment γ => S.strat i a (.commitment γ)
 
 /-- Every event of `l` is allowed given its prefix. -/
 def Compliant {E : Type} (A : List E → E → Prop) (l : List E) : Prop :=
@@ -665,7 +665,7 @@ def Produces (S : Sys sq) (i : J) (es : List (SEvent sq)) (ρ : State sq) : Prop
   SysExec S.basis (canon sq i) es ρ ∧ Compliant (Allowed S i) es
 
 /-- The system with basis `B` whose strategy allows every event. -/
-def Sys.free (B : ExclusionBasis sq) : Sys sq := ⟨B, fun _ _ _ => True⟩
+def Sys.free (B : CommitmentBasis sq) : Sys sq := ⟨B, fun _ _ _ => True⟩
 
 theorem compliant_nil {E : Type} {A : List E → E → Prop} : Compliant A [] := by
   intro a e b h; simp at h
@@ -680,21 +680,21 @@ theorem compliant_snoc {E : Type} {A : List E → E → Prop} {l : List E} {e : 
     obtain ⟨rfl, _⟩ := List.append_inj' h' rfl
     exact hl a e' b' rfl
 
-theorem compliant_free {B : ExclusionBasis sq} {i : J} (es : List (SEvent sq)) :
+theorem compliant_free {B : CommitmentBasis sq} {i : J} (es : List (SEvent sq)) :
     Compliant (Allowed (Sys.free B) i) es := by
   intro a e _ _; cases e <;> trivial
 
-theorem produces_free {B : ExclusionBasis sq} {i : J} {es : List (SEvent sq)} {ρ : State sq} :
+theorem produces_free {B : CommitmentBasis sq} {i : J} {es : List (SEvent sq)} {ρ : State sq} :
     Produces (Sys.free B) i es ρ ↔ SysExec B (canon sq i) es ρ :=
   ⟨fun h => h.1, fun h => ⟨h, compliant_free es⟩⟩
 
-theorem sysExec_snoc {B : ExclusionBasis sq} {σ τ ρ : State sq} {a : List (SEvent sq)} {e : SEvent sq}
+theorem sysExec_snoc {B : CommitmentBasis sq} {σ τ ρ : State sq} {a : List (SEvent sq)} {e : SEvent sq}
     (h : SysExec B σ a τ) (hs : SysStep B τ e ρ) : SysExec B σ (a ++ [e]) ρ := by
   induction h with
   | nil => exact .cons hs (.nil _)
   | cons h1 _ ih => exact .cons h1 (ih hs)
 
-theorem sysExec_append_inv {B : ExclusionBasis sq} :
+theorem sysExec_append_inv {B : CommitmentBasis sq} :
     ∀ {a b : List (SEvent sq)} {σ ρ : State sq}, SysExec B σ (a ++ b) ρ →
       ∃ τ, SysExec B σ a τ ∧ SysExec B τ b ρ
   | [], _, σ, _, h => ⟨σ, .nil σ, h⟩
@@ -702,12 +702,12 @@ theorem sysExec_append_inv {B : ExclusionBasis sq} :
     let ⟨τ, h1, h2⟩ := sysExec_append_inv hr
     ⟨τ, .cons hs h1, h2⟩
 
-/-- Drop the exclusions: `Out_δ(o) ↦ Out_ε(o)`, and exclusion events are dropped
+/-- Drop the commitments: `Out_δ(o) ↦ Out_ε(o)`, and commitment events are dropped
 (a list `l` erases to `l.filterMap eraseC`). -/
 def eraseC : SEvent sq → Option (SEvent sq)
   | .input j => some (.input j)
   | .output _ o => some (.output [] o)
-  | .exclude _ => none
+  | .commitment _ => none
 
 theorem erase_eraseC (e : SEvent sq) : (eraseC e).bind SEvent.erase = e.erase := by
   cases e <;> rfl
@@ -732,7 +732,7 @@ theorem map_erase_of_eraseC {l l' : List (SEvent sq)}
     l.filterMap SEvent.erase = l'.filterMap SEvent.erase := by
   rw [← map_erase_eraseC l, h, map_erase_eraseC]
 
-/-- **Exclusion-erased replacement.**  Same strategy, empty basis, and each
+/-- **Commitment-erased replacement.**  Same strategy, empty basis, and each
 `Out_δ(o)` replaced by `Out_ε(o)`: after a local history, it allows an event
 when the original allows one with the same erasure after a history with the
 same erasure. -/
@@ -752,13 +752,13 @@ theorem compliant_eraseSys {S : Sys sq} {i : J} {es : List (SEvent sq)}
   subst h1
   cases e with
   | input j => cases he; trivial
-  | exclude _ => cases he
+  | commitment _ => cases he
   | output δ o =>
     cases he
     exact ⟨l₁ ++ n, .output δ o, by rw [List.filterMap_append, hfn, List.append_nil,
       filterMap_eraseC_idem], rfl, hA⟩
 
-/-- The empty-basis system applies no exclusion. -/
+/-- The empty-basis system applies no commitment. -/
 theorem eraseSys_eps {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq}
     (h : Produces (eraseSys S) i es ρ) : ∀ γ o, SEvent.output γ o ∈ es → γ = [] := by
   intro γ o hm
@@ -766,12 +766,12 @@ theorem eraseSys_eps {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq
   | nil => rfl
   | cons c _ => exact (sysExec_basis h.1 _ _ hm c List.mem_cons_self).elim
 
-/-- The empty-basis system performs no exclusion event: an exclusion event applies a
-nonempty sequence of basis exclusions. -/
+/-- The empty-basis system performs no commitment event: a commitment event applies a
+nonempty sequence of basis commitments. -/
 theorem eraseSys_noCommit {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq}
-    (h : Produces (eraseSys S) i es ρ) : ∀ γ, SEvent.exclude γ ∉ es := by
+    (h : Produces (eraseSys S) i es ρ) : ∀ γ, SEvent.commitment γ ∉ es := by
   have key : ∀ {σ : State sq} {es : List (SEvent sq)} {ρ : State sq},
-      SysExec (fun _ => False) σ es ρ → ∀ γ, SEvent.exclude γ ∉ es := by
+      SysExec (fun _ => False) σ es ρ → ∀ γ, SEvent.commitment γ ∉ es := by
     intro σ es ρ hx
     induction hx with
     | nil => intro _ h; cases h
@@ -780,30 +780,30 @@ theorem eraseSys_noCommit {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : Sta
       rcases List.mem_cons.1 hm with he | hm
       · subst he
         cases hs with
-        | exclude hb hne _ =>
+        | commitment hb hne _ =>
           cases γ with
           | nil => exact hne rfl
           | cons c _ => exact hb c List.mem_cons_self
       · exact ih γ hm
   exact key h.1
 
-/-- A system whose strategy never allows an exclusion event produces none. -/
+/-- A system whose strategy never allows a commitment event produces none. -/
 theorem produces_noCommit {S : Sys sq} {i : J} {es : List (SEvent sq)} {ρ : State sq}
-    (hS : ∀ a γ, ¬ S.strat i a (.exclude γ)) (h : Produces S i es ρ) :
-    ∀ γ, SEvent.exclude γ ∉ es := by
+    (hS : ∀ a γ, ¬ S.strat i a (.commitment γ)) (h : Produces S i es ρ) :
+    ∀ γ, SEvent.commitment γ ∉ es := by
   intro γ hm
   obtain ⟨a, c, rfl⟩ := List.append_of_mem hm
   exact hS a γ (h.2 a _ c rfl)
 
-/-- Without exclusion events, erasure keeps the length. -/
-theorem length_filterMap_erase {es : List (SEvent sq)} (h : ∀ γ, SEvent.exclude γ ∉ es) :
+/-- Without commitment events, erasure keeps the length. -/
+theorem length_filterMap_erase {es : List (SEvent sq)} (h : ∀ γ, SEvent.commitment γ ∉ es) :
     (es.filterMap SEvent.erase).length = es.length := by
   induction es with
   | nil => rfl
   | cons e es ih =>
     have ih' := ih (fun γ hm => h γ (List.mem_cons_of_mem _ hm))
     cases e with
-    | exclude γ => exact absurd List.mem_cons_self (h γ)
+    | commitment γ => exact absurd List.mem_cons_self (h γ)
     | input _ => simp [SEvent.erase, ih']
     | output _ _ => simp [SEvent.erase, ih']
 
@@ -812,7 +812,7 @@ def lastIn : J → List (SEvent sq) → J
   | i, [] => i
   | _, .input j :: l => lastIn j l
   | i, .output _ _ :: l => lastIn i l
-  | i, .exclude _ :: l => lastIn i l
+  | i, .commitment _ :: l => lastIn i l
 
 theorem lastIn_eraseC (i : J) (l : List (SEvent sq)) :
     lastIn i (l.filterMap eraseC) = lastIn i l := by
@@ -820,7 +820,7 @@ theorem lastIn_eraseC (i : J) (l : List (SEvent sq)) :
   | nil => rfl
   | cons e l ih => cases e <;> exact ih _
 
-theorem sysExec_lastIn {B : ExclusionBasis sq} {σ ρ : State sq} {es : List (SEvent sq)}
+theorem sysExec_lastIn {B : CommitmentBasis sq} {σ ρ : State sq} {es : List (SEvent sq)}
     (h : SysExec B σ es ρ) : ρ.cur = lastIn σ.cur es := by
   induction h with
   | nil => rfl
@@ -830,7 +830,7 @@ theorem sysExec_lastIn {B : ExclusionBasis sq} {σ ρ : State sq} {es : List (SE
       match hs with
       | .input (.input _ _ _ _ hc _) => rw [ih, hc]; rfl
     | output γ o => rw [ih, (containment hs).1]; rfl
-    | exclude γ => rw [ih, hs.exclude_cur]; rfl
+    | commitment γ => rw [ih, hs.commitment_cur]; rfl
 
 end Systems
 
@@ -863,7 +863,7 @@ theorem imgK_canon (sk : Spec M O) (i : I) : imgK sk (canon sp i) = canon (seq s
   show (∃ m, (sp.P k m ∧ i ≼ k) ∧ sk.P m o) ↔ ((∃ m, sp.P k m ∧ sk.P m o) ∧ i ≼ k)
   exact ⟨fun ⟨m, ⟨h, hk⟩, ho⟩ => ⟨⟨m, h, ho⟩, hk⟩, fun ⟨⟨m, h, ho⟩, hk⟩ => ⟨m, ⟨h, hk⟩, ho⟩⟩
 
-/-- **An exclusion-free output of `𝒫` maps to exclusion-free outputs of the
+/-- **A commitment-free output of `𝒫` maps to commitment-free outputs of the
 composite.**  If `𝒦` satisfies the common-expansion condition and `m` is
 exposable at `σ`, every `o ∈ K(m)` is exposable at the image of `σ`. -/
 theorem cf_stepK (hC : sk.CommonExpansion) {σ : State sp} {m : M} (hexp : Exposable σ m)
@@ -934,14 +934,14 @@ theorem isRun_step {J X : Type} [PO J] [PO X] {sq : Spec J X} {τ ρ : State sq}
   obtain ⟨i, es, hx⟩ := h
   exact ⟨i, es ++ [e], (Dist.exec_append _ _).2 ⟨τ, hx, .cons hs (.nil _)⟩⟩
 
-theorem sysStep_output_inv {J X : Type} [PO J] [PO X] {sq : Spec J X} {B : ExclusionBasis sq}
-    {σ τ : State sq} {γ : List (Exclusion sq)} {o : X} (h : SysStep B σ (.output γ o) τ) :
+theorem sysStep_output_inv {J X : Type} [PO J] [PO X] {sq : Spec J X} {B : CommitmentBasis sq}
+    {σ τ : State sq} {γ : List (Commitment sq)} {o : X} (h : SysStep B σ (.output γ o) τ) :
     ∃ σc, (∀ c ∈ γ, B c) ∧ ApplySeq γ σ σc ∧ σc.R σc.cur o ∧ Exposable σc o ∧
       τ.cur = σ.cur ∧ τ.R = outputTable σc o := by
   cases h with
   | output hB hγ ho hexp hc hR => exact ⟨_, hB, hγ, ho, hexp, hc, hR⟩
 
-/-- An empty-basis step is observable (no exclusion event is legal under the empty
+/-- An empty-basis step is observable (no commitment event is legal under the empty
 basis) and is a step of the transition system of Sections 2–3. -/
 theorem sysStep_empty_erase {J X : Type} [PO J] [PO X] {sq : Spec J X} {σ τ : State sq}
     {e : SEvent sq} (h : SysStep (fun _ => False) σ e τ) :
@@ -952,7 +952,7 @@ theorem sysStep_empty_erase {J X : Type} [PO J] [PO X] {sq : Spec J X} {σ τ : 
     cases hγ with
     | nil => exact ⟨_, rfl, Step.output _ _ _ ho hcur hR⟩
     | cons _ _ => exact (hb _ List.mem_cons_self).elim
-  | exclude hb hne _ =>
+  | commitment hb hne _ =>
     obtain ⟨c, hc⟩ := List.exists_mem_of_ne_nil _ hne
     exact (hb c hc).elim
 
@@ -1056,7 +1056,7 @@ theorem emits_chain {P : Sys sp} {l : List M} (h : P.emits l) : ChainFrom none l
   exact emitted_chain hP.1 none (fun _ h => by cases h)
 
 /-- From a run state, the store answers every chain of later inputs without
-exclusion. -/
+commitment. -/
 theorem follow (hC : sk.CommonExpansion) :
     ∀ (ms : List M) (τ : State sk), IsRun τ → ChainFrom (some τ.cur) ms →
       ∃ ps ρ, ps.map Prod.fst = ms ∧ ExecCF τ (storeTr ps) ρ ∧ IsRun ρ
@@ -1074,7 +1074,7 @@ theorem follow (hC : sk.CommonExpansion) :
       .input h1 (.output h2 (commonExpansion_exposable hC hr1 ho) hx), hρ⟩
 
 /-- **The empty-basis store follows every chain.**  Fed a chain `m :: ms`, it
-answers `m` and every later input without exclusion. -/
+answers `m` and every later input without commitment. -/
 theorem store_follows (hC : sk.CommonExpansion) {m : M} {ms : List M}
     (hc : ChainFrom (some m) ms) :
     ∃ o ps esK ρ, ps.map Prod.fst = ms ∧ esK.filterMap SEvent.erase = .output o :: storeTr ps ∧
@@ -1106,7 +1106,7 @@ theorem noStore_follows (hC : sk.CommonExpansion) {U : List M → Prop} {m : M} 
   · rw [map_fst_single, hps]; exact List.prefix_refl _
   · rw [he, storeTr_blk]; rfl
 
-/-- **`𝒫` must apply an exclusion when the composite is not monotone.**  If `𝒦` satisfies
+/-- **`𝒫` must apply a commitment when the composite is not monotone.**  If `𝒦` satisfies
 Lifted Monotonicity on the outputs of `𝒫` and `𝒦 ∘ 𝒫` does not, some composite
 output `o` is not exposable at a canonical state `σ(i)`, and no `m` with
 `o ∈ K(m)` is exposable at `σ_𝒫(i)`: under the empty basis `𝒫` can never emit
@@ -1145,7 +1145,7 @@ def merge : List (SEvent sp) → List (List O) → List (Event I O)
   | .input j :: es, oss => .input j :: merge es oss
   | .output _ _ :: es, os :: oss => os.map Event.output ++ merge es oss
   | .output _ _ :: es, [] => merge es []
-  | .exclude _ :: es, oss => merge es oss
+  | .commitment _ :: es, oss => merge es oss
 
 /-- Lockstep invariant: same current input, and the composite table contains
 the join of `𝒫`'s table with the table `T`. -/
@@ -1159,9 +1159,9 @@ theorem emitted_split : ∀ {es : List (SEvent sp)} {m : M} {ms : List M},
   | .input j :: es, m, ms, h => by
     obtain ⟨es₀, γ, es₁, rfl, h0, h1⟩ := emitted_split (es := es) h
     exact ⟨.input j :: es₀, γ, es₁, rfl, h0, h1⟩
-  | .exclude δ :: es, m, ms, h => by
+  | .commitment δ :: es, m, ms, h => by
     obtain ⟨es₀, γ, es₁, rfl, h0, h1⟩ := emitted_split (es := es) h
-    exact ⟨.exclude δ :: es₀, γ, es₁, rfl, h0, h1⟩
+    exact ⟨.commitment δ :: es₀, γ, es₁, rfl, h0, h1⟩
   | .output γ m' :: es, m, ms, h => by
     simp only [emitted, List.cons.injEq] at h
     obtain ⟨rfl, rfl⟩ := h
@@ -1173,9 +1173,9 @@ theorem emitted_prefix : ∀ {es : List (SEvent sp)} {l : List M}, l <+: emitted
   | .input j :: es, l, h => by
     obtain ⟨es₀, es₁, rfl, h0⟩ := emitted_prefix (es := es) h
     exact ⟨.input j :: es₀, es₁, rfl, h0⟩
-  | .exclude δ :: es, l, h => by
+  | .commitment δ :: es, l, h => by
     obtain ⟨es₀, es₁, rfl, h0⟩ := emitted_prefix (es := es) h
-    exact ⟨.exclude δ :: es₀, es₁, rfl, h0⟩
+    exact ⟨.commitment δ :: es₀, es₁, rfl, h0⟩
   | .output γ m :: es, [], _ => ⟨[], _, rfl, rfl⟩
   | .output γ m :: es, a :: l, h => by
     obtain ⟨rfl, h'⟩ := List.cons_prefix_cons.1 h
@@ -1183,7 +1183,7 @@ theorem emitted_prefix : ∀ {es : List (SEvent sp)} {l : List M}, l <+: emitted
     exact ⟨.output γ a :: es₀, es₁, rfl, by simp [emitted, h0]⟩
 
 omit [PO O] in
-theorem merge_split : ∀ {es₀ : List (SEvent sp)} (γ : List (Exclusion sp)) (m : M)
+theorem merge_split : ∀ {es₀ : List (SEvent sp)} (γ : List (Commitment sp)) (m : M)
     (es₁ : List (SEvent sp)) (os : List O) (oss : List (List O)), emitted es₀ = [] →
     merge (es₀ ++ .output γ m :: es₁) (os :: oss) =
       merge es₀ [] ++ (os.map Event.output ++ merge es₁ oss)
@@ -1191,7 +1191,7 @@ theorem merge_split : ∀ {es₀ : List (SEvent sp)} (γ : List (Exclusion sp)) 
   | .input j :: es₀, γ, m, es₁, os, oss, h => by
     simp only [List.cons_append, merge]
     rw [merge_split (es₀ := es₀) γ m es₁ os oss h]
-  | .exclude δ :: es₀, γ, m, es₁, os, oss, h => by
+  | .commitment δ :: es₀, γ, m, es₁, os, oss, h => by
     simp only [List.cons_append, merge]
     rw [merge_split (es₀ := es₀) γ m es₁ os oss h]
   | .output _ _ :: _, _, _, _, _, _, h => by cases h
@@ -1211,7 +1211,7 @@ theorem answer_run {σ : State sp} : ∀ (os : List O) {τK ρK : State sk} {esK
     obtain ⟨e, esK', rfl, he, htr'⟩ := sysExec_empty_cons hK htr
     cases e with
     | input _ => cases he
-    | exclude _ => cases he
+    | commitment _ => cases he
     | output γ o' =>
     cases he
     cases hK with
@@ -1229,7 +1229,7 @@ theorem answer_run {σ : State sp} : ∀ (os : List O) {τK ρK : State sk} {esK
       exact ⟨ρ'', .cons hst hx, hI'', hcur.trans hc2⟩
 
 /-- Phase before `𝒫`'s first output: the composite follows `𝒫`'s inputs. -/
-theorem merge_inputs {B : ExclusionBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
+theorem merge_inputs {B : CommitmentBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
     (h : SysExec B σ es ρ) (he : emitted es = []) :
     ∀ ρ' : State (seq sp sk), Inv σ sk.P ρ' →
       ∃ ρ'', Exec ρ' (merge es []) ρ'' ∧ Inv ρ sk.P ρ'' := by
@@ -1239,9 +1239,9 @@ theorem merge_inputs {B : ExclusionBasis sp} {σ ρ : State sp} {es : List (SEve
     intro ρ' ⟨hc, hI⟩
     cases e with
     | output γ m => cases he
-    | exclude γ =>
+    | commitment γ =>
       have hI' : Inv τ sk.P ρ' :=
-        ⟨hc.trans hs.exclude_cur.symm, fun k m x hk hx => hI k m x (hs.sub _ _ hk) hx⟩
+        ⟨hc.trans hs.commitment_cur.symm, fun k m x hk hx => hI k m x (hs.sub _ _ hk) hx⟩
       exact ih he ρ' hI'
     | input j =>
       match hs with
@@ -1261,7 +1261,7 @@ theorem merge_inputs {B : ExclusionBasis sp} {σ ρ : State sp} {es : List (SEve
 /-- Phase after the store has started: `𝒫`, the empty-basis store, and the
 composite.  Each output of `𝒫` is received by the store, which answers it any
 number of times. -/
-theorem merge_lockstep (hC : sk.CommonExpansion) {B : ExclusionBasis sp} {σ ρ : State sp}
+theorem merge_lockstep (hC : sk.CommonExpansion) {B : CommitmentBasis sp} {σ ρ : State sp}
     {es : List (SEvent sp)} (h : SysExec B σ es ρ) :
     ∀ (ps : List (M × List O)) (τK ρK : State sk) (esK : List (SEvent sk))
       (ρ' : State (seq sp sk)),
@@ -1301,9 +1301,9 @@ theorem merge_lockstep (hC : sk.CommonExpansion) {B : ExclusionBasis sp} {σ ρ 
           intro k m hk; rw [hR] at hk; exact habove k m hk.1
         obtain ⟨ρ'', hx2, hI'', hab⟩ := ih ps τK ρK esK ρ1 he hK htr hτK habove' hI'
         exact ⟨ρ'', .cons hst hx2, hI'', hab⟩
-    | exclude γ =>
+    | commitment γ =>
       have hI' : Inv τ τK.R ρ' :=
-        ⟨hc.trans hs.exclude_cur.symm, fun k m x hk hx => hI k m x (hs.sub _ _ hk) hx⟩
+        ⟨hc.trans hs.commitment_cur.symm, fun k m x hk hx => hI k m x (hs.sub _ _ hk) hx⟩
       exact ih ps τK ρK esK ρ' he hK htr hτK (fun k m hk => habove k m (hs.sub _ _ hk)) hI'
     | output γ m =>
       obtain ⟨σc, _, hγ, hσc, _, hcurτ, hRτ⟩ := sysStep_output_inv hs
@@ -1317,7 +1317,7 @@ theorem merge_lockstep (hC : sk.CommonExpansion) {B : ExclusionBasis sp} {σ ρ 
         obtain ⟨e1, esK1, rfl, he1, htr1⟩ := sysExec_empty_cons hK htr
         cases e1 with
         | output _ _ => cases he1
-        | exclude _ => cases he1
+        | commitment _ => cases he1
         | input m1 =>
         cases he1
         obtain ⟨A, Bk, rfl, hA, hB⟩ := List.filterMap_eq_append_iff.1 htr1
@@ -1349,7 +1349,7 @@ Then `𝒫`'s run, with each output replaced by the store's answers to it, is a
 run of `𝒦 ∘ 𝒫` from `σ(i)`.  Its table contains the join of `𝒫`'s final table
 with the store's, and the store's state is a run state below every remaining
 output of `𝒫`. -/
-theorem composite_run (hC : sk.CommonExpansion) {B : ExclusionBasis sp} {i : I} {es : List (SEvent sp)}
+theorem composite_run (hC : sk.CommonExpansion) {B : CommitmentBasis sp} {i : I} {es : List (SEvent sp)}
     {ρ : State sp} (hP : SysExec B (canon sp i) es ρ) {m : M} {ms : List M}
     (he : emitted es = m :: ms) {os : List O} {ps : List (M × List O)}
     (hps : ps.map Prod.fst = ms) {esK : List (SEvent sk)} {ρK : State sk}
@@ -1394,7 +1394,7 @@ theorem guarded_confluentK (hC : sk.CommonExpansion)
     (hsub : ∀ p ∈ fam, ∀ k m x, p.1.R k m → p.2.1.R m x → p.2.2.R k x)
     (habove : ∀ p ∈ fam, ∀ k m, p.1.R k m → p.2.1.cur ≼ m)
     (j : I) (hj : ∀ p ∈ fam, p.2.2.cur ≼ j)
-    (hP : ∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : ExclusionBasis sp) (es : List (SEvent sp)),
+    (hP : ∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)),
       SysExec B p.1 es τ) :
     ConfluentAt (fam.map fun p => p.2.2) j := by
   obtain ⟨τ, hτ, hall⟩ := hP
@@ -1435,10 +1435,10 @@ def Obs (U : List M → Prop) (K : Sys sk) (l : List M) (m : M) (tr : List (Even
 
 /-- **Erasure, lockstep.**  If `𝒦` satisfies the common-expansion condition,
 then from any run state `σ'` with the same current input whose table contains
-`σ`'s, every store execution under any basis, with its exclusions erased, is
+`σ`'s, every store execution under any basis, with its commitments erased, is
 an execution under the empty basis, and the containment persists after each
 event. -/
-theorem erase_lockstep (hC : sk.CommonExpansion) {BK : ExclusionBasis sk} {σ ρ : State sk}
+theorem erase_lockstep (hC : sk.CommonExpansion) {BK : CommitmentBasis sk} {σ ρ : State sk}
     {es : List (SEvent sk)} (h : SysExec BK σ es ρ) :
     ∀ σ' : State sk, IsRun σ' → σ'.cur = σ.cur → (∀ k u, σ.R k u → σ'.R k u) →
       ∃ ρ', SysExec (fun _ => False) σ' (es.filterMap eraseC) ρ' ∧ IsRun ρ' ∧ ρ'.cur = ρ.cur ∧
@@ -1470,9 +1470,9 @@ theorem erase_lockstep (hC : sk.CommonExpansion) {BK : ExclusionBasis sk} {σ ρ
       obtain ⟨ρ', hx2, hr', hc', hs''⟩ :=
         ih τ' (isRun_step hr st) (by show σ'.cur = τ.cur; rw [hc, hcur]) hs'
       exact ⟨ρ', .cons hst hx2, hr', hc', hs''⟩
-    | exclude γ =>
+    | commitment γ =>
       -- dropped by the erasure
-      exact ih σ' hr (by rw [hc, hs.exclude_cur]) (fun k u hu => hsub _ _ (hs.sub _ _ hu))
+      exact ih σ' hr (by rw [hc, hs.commitment_cur]) (fun k u hu => hsub _ _ (hs.sub _ _ hu))
 
 /-- **(a) The replacement emits everything the original does.**  If `𝒦`
 satisfies Lifted Monotonicity, every guarded composite run of a store system
@@ -1512,7 +1512,7 @@ theorem emitted_eq_outs {J X : Type} [PO J] [PO X] {sq : Spec J X} :
   | [] => rfl
   | .input _ :: es => emitted_eq_outs es
   | .output _ _ :: es => congrArg _ (emitted_eq_outs es)
-  | .exclude _ :: es => emitted_eq_outs es
+  | .commitment _ :: es => emitted_eq_outs es
 
 omit [PO M] [PO O] in
 theorem outs_append : ∀ a b : List (Event M O), outs (a ++ b) = outs a ++ outs b
@@ -1538,7 +1538,7 @@ theorem outs_merge : ∀ (es : List (SEvent sp)) (oss : List (List O)),
   | [], [], _ => rfl
   | [], _ :: _, h => by cases h
   | .input _ :: es, oss, h => outs_merge es oss h
-  | .exclude _ :: es, oss, h => outs_merge es oss h
+  | .commitment _ :: es, oss, h => outs_merge es oss h
   | .output _ _ :: es, os :: oss, h => by
     show outs (os.map Event.output ++ merge es oss) = os ++ oss.flatten
     rw [outs_append, outs_output, outs_merge es oss (by simpa [emitted] using h)]
@@ -1575,7 +1575,7 @@ Lifted-Monotone `𝒦` (any store system) emits only what `𝒦 ∘ 𝒫` emits 
 canonical basis.  So the guarded composite is itself an upstream system for a
 further stage. -/
 theorem pipeline_step (hC : sk.CommonExpansion) {P : Sys sp} {K : Sys sk} {l' : List O}
-    (h : GEmits P.emits K l') : (Sys.free (canonExclusionBasis (seq sp sk))).emits l' := by
+    (h : GEmits P.emits K l') : (Sys.free (canonCommitmentBasis (seq sp sk))).emits l' := by
   obtain ⟨l, m, esK, hg, rfl⟩ := h
   obtain ⟨i, es₀, σ₀, ρ', oss, _, _, hlen, hfl, hx⟩ := grun_composite hC hg
   obtain ⟨es', he', hc⟩ := exec_canonExec hx
@@ -1583,7 +1583,7 @@ theorem pipeline_step (hC : sk.CommonExpansion) {P : Sys sp} {K : Sys sk} {l' : 
   rw [emitted_eq_outs, he', outs_merge es₀ _ hlen, hfl]
 
 /-- Under the common-expansion condition, every execution from a run state
-is exclusion-free. -/
+is commitment-free. -/
 theorem exec_execCF {J X : Type} [PO J] [PO X] {sq : Spec J X} (hC : sq.CommonExpansion)
     {σ τ : State sq} {es : List (Event J X)} (h : Exec σ es τ) (hσ : IsRun σ) :
     ExecCF σ es τ := by
@@ -1596,16 +1596,16 @@ theorem exec_execCF {J X : Type} [PO J] [PO X] {sq : Spec J X} (hC : sq.CommonEx
       have ho : σ.R σ.cur o := by cases hs with | output _ _ ho _ _ => exact ho
       exact .output hs (commonExpansion_exposable hC hσ ho) (ih (isRun_step hσ hs))
 
-/-- **A monotone pipeline needs no exclusion anywhere** (the base case of the
+/-- **A monotone pipeline needs no commitment anywhere** (the base case of the
 pipeline induction).  If `𝒫` and `𝒦` both satisfy Lifted Monotonicity, so
 does `𝒦 ∘ 𝒫`, and the guarded composite of `𝒫` under the empty basis with any
 store system emits only what `𝒦 ∘ 𝒫` emits under the empty basis: it is again
 an upstream with the empty basis. -/
 theorem pipeline_coordination_free (hP : sp.LiftedMono) (hK : sk.LiftedMono)
     {K : Sys sk} {l' : List O}
-    (h : GEmits (Sys.free (fun _ : Exclusion sp => False)).emits K l') :
+    (h : GEmits (Sys.free (fun _ : Commitment sp => False)).emits K l') :
     (seq sp sk).LiftedMono ∧
-      (Sys.free (fun _ : Exclusion (seq sp sk) => False)).emits l' := by
+      (Sys.free (fun _ : Commitment (seq sp sk) => False)).emits l' := by
   have hL := seq_liftedMono hP hK
   have hC := (liftedMono_iff_commonExpansion _).1 hK
   have hCs := (liftedMono_iff_commonExpansion _).1 hL
@@ -1622,7 +1622,7 @@ end General
 
 `𝒮₁ = sp` guards `𝒮₂ = sk`.  `𝒮₂|_{𝒮₁}` is `rest sp sk`, the downstream
 restricted to the outputs of the upstream (`Joint.restrictTo (Joint.Img sp)`).
-The pipeline is proper when `𝒮₂|_{𝒮₁}` needs no exclusion.  The definition
+The pipeline is proper when `𝒮₂|_{𝒮₁}` needs no commitment.  The definition
 does not mention the system that runs `𝒮₁`, so every result below holds for
 every system for `𝒮₁`. -/
 
@@ -1634,13 +1634,13 @@ variable {sk : Spec M O}
 abbrev rest (sp : Spec I M) (sk : Spec M O) : Spec {m // Img sp m} O :=
   restrictTo (Img sp) sk
 
-/-- A specification **needs no exclusion**: every output at every state it
-reaches without exclusion is exposable. -/
+/-- A specification **needs no commitment**: every output at every state it
+reaches without commitment is exposable. -/
 def NeedsNoCommit {J X : Type} [PO J] [PO X] (sq : Spec J X) : Prop :=
   ∀ τ : State sq, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o
 
 /-- **Definition (Proper Coordination).**  The pipeline in which `𝒮₁` guards
-`𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no exclusion. -/
+`𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no commitment. -/
 def Proper (sp : Spec I M) (sk : Spec M O) : Prop := NeedsNoCommit (rest sp sk)
 
 /-- Proper means the common-expansion condition for `𝒮₂|_{𝒮₁}` (the exposure
@@ -1674,11 +1674,11 @@ theorem seq_core (sp : Spec I M) (sk : Spec M O) : seq (core sp) (rest sp sk) = 
   exact ⟨fun ⟨m, h1, h2⟩ => ⟨m.1, h1, h2⟩, fun ⟨m, h1, h2⟩ => ⟨⟨m, i, h1⟩, h1, h2⟩⟩
 
 /-- The input skeleton of a system event: `some (some j)` for an input,
-`some none` for an output, and nothing for an exclusion event. -/
+`some none` for an output, and nothing for a commitment event. -/
 def skel {J X : Type} [PO J] [PO X] {sq : Spec J X} : SEvent sq → Option (Option J)
   | .input j => some (some j)
   | .output _ _ => some none
-  | .exclude _ => none
+  | .commitment _ => none
 
 omit [PO O] in
 /-- The composite trace depends only on where `𝒫`'s inputs and outputs are. -/
@@ -1686,9 +1686,9 @@ theorem merge_congr {N : Type} [PO N] {sq : Spec I N} :
     ∀ (es : List (SEvent sp)) (es' : List (SEvent sq)) (oss : List (List O)),
       es.filterMap skel = es'.filterMap skel → merge es oss = merge es' oss
   | [], [], _, _ => rfl
-  | .exclude _ :: es, es', oss, h => by
+  | .commitment _ :: es, es', oss, h => by
     simp only [merge]; exact merge_congr es es' oss (by rwa [List.filterMap_cons_none rfl] at h)
-  | es, .exclude _ :: es', oss, h => by
+  | es, .commitment _ :: es', oss, h => by
     simp only [merge]; exact merge_congr es es' oss (by rwa [List.filterMap_cons_none rfl] at h)
   | [], .input _ :: _, _, h => by simp [skel] at h
   | [], .output _ _ :: _, _, h => by simp [skel] at h
@@ -1712,10 +1712,10 @@ termination_by es es' => es.length + es'.length
 any basis is matched, event for event, by an execution of `core 𝒮₁` under its
 canonical basis from any state with the same current input and a larger table;
 the containment persists. -/
-theorem core_lockstep {B : ExclusionBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
+theorem core_lockstep {B : CommitmentBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
     (h : SysExec B σ es ρ) :
     ∀ σ' : State (core sp), σ'.cur = σ.cur → (∀ k m, σ.R k m.1 → σ'.R k m) →
-      ∃ es' ρ', SysExec (canonExclusionBasis (core sp)) σ' es' ρ' ∧ es'.filterMap skel = es.filterMap skel ∧
+      ∃ es' ρ', SysExec (canonCommitmentBasis (core sp)) σ' es' ρ' ∧ es'.filterMap skel = es.filterMap skel ∧
         (emitted es').map Subtype.val = emitted es ∧ ρ'.cur = ρ.cur ∧
         ∀ k m, ρ.R k m.1 → ρ'.R k m := by
   induction h with
@@ -1743,8 +1743,8 @@ theorem core_lockstep {B : ExclusionBasis sp} {σ ρ : State sp} {es : List (SEv
           exact ⟨hsub k m' h1, h2⟩)
       exact ⟨.output _ _ :: es', ρ', .cons (canonical_support σ' _ hm') hx, by simp [skel, hsk],
         by simp [emitted, hem], hcρ, hsρ⟩
-    | exclude γ =>
-      obtain ⟨es', ρ', hx, hsk, hem, hcρ, hsρ⟩ := ih σ' (by rw [hs.exclude_cur]; exact hc)
+    | commitment γ =>
+      obtain ⟨es', ρ', hx, hsk, hem, hcρ, hsρ⟩ := ih σ' (by rw [hs.commitment_cur]; exact hc)
         (fun k m hk => hsub k m (hs.sub _ _ hk))
       exact ⟨es', ρ', hx, by rw [List.filterMap_cons_none rfl]; exact hsk, hem, hcρ, hsρ⟩
 
@@ -1779,14 +1779,14 @@ theorem chain_lift {D : M → Prop} :
   | _, _ :: _, ⟨h1, h2⟩ => ⟨h1, chain_lift h2⟩
 
 /-- Everything a system emits is in the image of its specification. -/
-theorem emitted_img {B : ExclusionBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
+theorem emitted_img {B : CommitmentBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
     (h : SysExec B σ es ρ) : ∀ m ∈ emitted es, Img sp m := by
   induction h with
   | nil => intro m hm; cases hm
   | @cons σ τ ρ e es hs _ ih =>
     cases e with
     | input j => intro m hm; exact ih m hm
-    | exclude γ => intro m hm; exact ih m hm
+    | commitment γ => intro m hm; exact ih m hm
     | output γ m' =>
       intro m hm
       rcases List.mem_cons.1 hm with rfl | hm
@@ -1800,7 +1800,7 @@ and answering any number of times (possibly never).  Then `𝒮₁`'s run, with
 each output replaced by the answers to it, is a run of `P₂ ∘ P₁`.  Its table
 contains the join of the two tables, and the downstream's current input is
 below every output still in `𝒮₁`'s table. -/
-theorem proper_run (hP : Proper sp sk) {B : ExclusionBasis sp} {i : I} {es : List (SEvent sp)}
+theorem proper_run (hP : Proper sp sk) {B : CommitmentBasis sp} {i : I} {es : List (SEvent sp)}
     {ρ : State sp} (hx : SysExec B (canon sp i) es ρ) {m : {m // Img sp m}}
     {ms : List {m // Img sp m}} (he : emitted es = m.1 :: ms.map Subtype.val) {os : List O}
     {ps : List ({m // Img sp m} × List O)} (hps : ps.map Prod.fst = ms)
@@ -1824,8 +1824,8 @@ theorem proper_run (hP : Proper sp sk) {B : ExclusionBasis sp} {i : I} {es : Lis
 /-- **Theorem (Proper Coordination) (2), following.**  In a proper pipeline,
 `𝒮₂|_{𝒮₁}` under the empty basis follows every run of `𝒮₁` under any basis:
 it starts at the first output `m`, answers it, and receives and answers each
-later output, with no exclusion.  The result is a run of `P₂ ∘ P₁`. -/
-theorem proper_follows (hP : Proper sp sk) {B : ExclusionBasis sp} {i : I} {es : List (SEvent sp)}
+later output, with no commitment.  The result is a run of `P₂ ∘ P₁`. -/
+theorem proper_follows (hP : Proper sp sk) {B : CommitmentBasis sp} {i : I} {es : List (SEvent sp)}
     {ρ : State sp} (hx : SysExec B (canon sp i) es ρ) {m : M} {ms : List M}
     (he : emitted es = m :: ms) :
     ∃ (hm : Img sp m) (o : O) (ps : List ({m // Img sp m} × O))
@@ -1866,7 +1866,7 @@ theorem proper_confluent (hP : Proper sp sk)
     (hsub : ∀ p ∈ fam, ∀ k m x (h : Img sp m), p.1.R k m → p.2.1.R ⟨m, h⟩ x → p.2.2.R k x)
     (habove : ∀ p ∈ fam, ∀ k m, p.1.R k m → p.2.1.cur.1 ≼ m)
     (j : I) (hj : ∀ p ∈ fam, p.2.2.cur ≼ j)
-    (hS : ∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : ExclusionBasis sp) (es : List (SEvent sp)),
+    (hS : ∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)),
       SysExec B p.1 es τ) :
     ConfluentAt (fam.map fun p => p.2.2) j := by
   have hC := proper_iff_ce.1 hP
@@ -1901,7 +1901,7 @@ theorem proper_confluent (hP : Proper sp sk)
 
 /-- **Theorem (Proper Coordination) (3).**  In a proper pipeline, if
 `P₂ ∘ P₁` violates Lifted Monotonicity, some composite output `o` is not
-exposable at a canonical state `σ(i)`, and `𝒮₁` must apply an exclusion to emit any `m`
+exposable at a canonical state `σ(i)`, and `𝒮₁` must apply a commitment to emit any `m`
 with `o ∈ P₂(m)` there: no such `m` is exposable at `σ_{𝒮₁}(i)`, and under the
 empty basis no output event there emits one. -/
 theorem proper_needs_commit (hP : Proper sp sk) (hnot : ¬ (seq sp sk).LiftedMono) :
@@ -1910,8 +1910,8 @@ theorem proper_needs_commit (hP : Proper sp sk) (hnot : ¬ (seq sp sk).LiftedMon
       ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → ¬ sk.P m' o :=
   composite_needs_commit (proper_iff.1 hP) hnot
 
-/-- A proper pipeline's downstream can drop its exclusions: for any system
-`K` for `𝒮₂|_{𝒮₁}`, its exclusion-erased replacement has every guarded run of
+/-- A proper pipeline's downstream can drop its commitments: for any system
+`K` for `𝒮₂|_{𝒮₁}`, its commitment-erased replacement has every guarded run of
 `K`, with the same trace and a larger table. -/
 theorem proper_erase (hP : Proper sp sk) {U : List {m // Img sp m} → Prop}
     {K : Sys (rest sp sk)} {l : List {m // Img sp m}} {m : {m // Img sp m}}
@@ -1933,7 +1933,7 @@ any system `K` for `𝒮₂|_{𝒮₁}`, the pipeline emits only what `P₂ ∘ 
 under its canonical basis.  So a proper pipeline is itself a guard for a
 further stage. -/
 theorem proper_pipeline_step (hP : Proper sp sk) {P : Sys sp} {K : Sys (rest sp sk)}
-    {l' : List O} (h : GEmits (liftU P) K l') : (Sys.free (canonExclusionBasis (seq sp sk))).emits l' := by
+    {l' : List O} (h : GEmits (liftU P) K l') : (Sys.free (canonCommitmentBasis (seq sp sk))).emits l' := by
   have hC := proper_iff_ce.1 hP
   obtain ⟨l, m, esK, hg, rfl⟩ := h
   obtain ⟨hR, _, _⟩ := erase_simulates hC hg
@@ -1965,11 +1965,11 @@ theorem store_exposable (hf : Monotone f) (σ : State (graph f)) : Exposable σ 
   have e : x = f k := σ.sub k x hx
   exact absurd (e ▸ hf _ _ (σ.above k x hx)) hnx
 
-/-- **A store exclusion is never needed.**  If `f` is monotone, wherever the
+/-- **A store commitment is never needed.**  If `f` is monotone, wherever the
 store's `Out_δ(x)` is legal, so is `Out_ε(x)`, and it keeps at least the same
 rows. -/
-theorem store_eps (hf : Monotone f) {BK : ExclusionBasis (graph f)} {σ τ : State (graph f)}
-    {δ : List (Exclusion (graph f))} {x : O} (h : SysStep BK σ (.output δ x) τ) :
+theorem store_eps (hf : Monotone f) {BK : CommitmentBasis (graph f)} {σ τ : State (graph f)}
+    {δ : List (Commitment (graph f))} {x : O} (h : SysStep BK σ (.output δ x) τ) :
     ∃ τ', SysStep BK σ (.output [] x) τ' ∧ ∀ k u, τ.R k u → τ'.R k u := by
   obtain ⟨_, ho, hin, _⟩ := containment h
   have e : x = f σ.cur := σ.sub _ _ ho
@@ -1979,7 +1979,7 @@ theorem store_eps (hf : Monotone f) {BK : ExclusionBasis (graph f)} {σ τ : Sta
 /-- The image through a function store is the image through its table. -/
 theorem img_eq_imgK (f : M → O) (σ : State sp) : img f σ = imgK (graph f) σ := rfl
 
-/-! ### The pushforward of an exclusion need not be an exclusion -/
+/-! ### The pushforward of a commitment need not be a commitment -/
 
 section Push
 
@@ -2006,30 +2006,30 @@ theorem anyS_excluded_x : Excluded (canon anyS Pt.pt) Two.y Pt.pt Two.x := by
   rintro ⟨_, _, u, _, hyu, hxu⟩
   exact Two.noConfusion (hxu.trans hyu.symm)
 
-/-- **The pushforward of an exclusion need not be an exclusion.**  At the
+/-- **The pushforward of a commitment need not be a commitment.**  At the
 canonical state of `anyS` (one input, outputs `x`, `y` incomparable), the
-canonical exclusion `c_y` is an exclusion of `𝒫`: it removes `x` and keeps `y`.
-Its image removes `lo` and keeps `hi ≽ lo`, so no exclusion of the composite
+canonical commitment `c_y` is a commitment of `𝒫`: it removes `x` and keeps `y`.
+Its image removes `lo` and keeps `hi ≽ lo`, so no commitment of the composite
 takes the image state to the image of the result. -/
-theorem push_not_exclusion :
-    ∃ τ, (canonicalExclusion Two.y).app (canon anyS Pt.pt) = some τ ∧
-      ∀ c : Exclusion (comp anyS fLvl), c.app (img fLvl (canon anyS Pt.pt)) ≠ some (img fLvl τ) := by
-  refine ⟨excludeState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩,
-    excludeApp_eq.2 ⟨⟨trivial, trivial⟩, ⟨_, _, anyS_excluded_x⟩, rfl⟩, ?_⟩
+theorem push_not_commitment :
+    ∃ τ, (canonicalCommitment Two.y).app (canon anyS Pt.pt) = some τ ∧
+      ∀ c : Commitment (comp anyS fLvl), c.app (img fLvl (canon anyS Pt.pt)) ≠ some (img fLvl τ) := by
+  refine ⟨commitmentState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩,
+    commitmentApp_eq.2 ⟨⟨trivial, trivial⟩, ⟨_, _, anyS_excluded_x⟩, rfl⟩, ?_⟩
   intro c hc
   have hlo : (img fLvl (canon anyS Pt.pt)).R Pt.pt Lvl.lo := ⟨.x, ⟨trivial, trivial⟩, rfl⟩
-  have hnlo : ¬ (img fLvl (excludeState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩)).R Pt.pt Lvl.lo := by
+  have hnlo : ¬ (img fLvl (commitmentState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩)).R Pt.pt Lvl.lo := by
     rintro ⟨m, ⟨_, hr⟩, hm⟩
     cases m with
     | x => exact hr anyS_excluded_x
     | y => exact Lvl.noConfusion hm
-  have hhi : (img fLvl (excludeState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩)).R Pt.pt Lvl.hi :=
+  have hhi : (img fLvl (commitmentState (canon anyS Pt.pt) Two.y ⟨trivial, trivial⟩)).R Pt.pt Lvl.hi :=
     ⟨.y, ⟨⟨trivial, trivial⟩, fun he => he.2.1 (PO.refl _)⟩, rfl⟩
-  exact c.excludes _ _ hc Pt.pt Lvl.lo Lvl.hi hlo hnlo hhi (Or.inl rfl)
+  exact c.unsubsumed _ _ hc Pt.pt Lvl.lo Lvl.hi hlo hnlo hhi (Or.inl rfl)
 
-/-- **An exclusion of `𝒫` can become a subsumption.**  In the composite, `hi` is
+/-- **A commitment of `𝒫` can become a subsumption.**  In the composite, `hi` is
 exposable at the canonical state: `lo` is subsumed, not chosen against. -/
-theorem exclusion_becomes_subsumption :
+theorem commitment_becomes_subsumption :
     ¬ Exposable (canon anyS Pt.pt) Two.y ∧
       Exposable (canon (comp anyS fLvl) Pt.pt) Lvl.hi := by
   refine ⟨fun he => ?_, ?_⟩
@@ -2047,7 +2047,7 @@ end Push
 section Limits
 
 /-- **`f` must be monotone.**  Take `𝒫` to be the identity on `M` (which needs
-no exclusion).  For `m ≼ m'`, its run `output m, input m', output m'`, read
+no commitment).  For `m ≼ m'`, its run `output m, input m', output m'`, read
 through `f`, is a run of the composite exactly when `f m ≼ f m'`. -/
 theorem monotone_necessary (f : M → O) {m m' : M} (hmm : m ≼ m') :
     (∃ ρ, Exec (canon (comp (graph fun x : M => x) f) m)
@@ -2073,7 +2073,7 @@ theorem monotone_necessary (f : M → O) {m m' : M} (hmm : m ≼ m') :
         (.cons (Step.input τ1 τ2 m' ⟨_, r1⟩ rfl rfl)
           (.cons (Step.output τ2 (outState τ2 (f m') r2) _ r2 rfl rfl) (.nil _)))⟩
 
-/-- … and the identity `𝒫` runs it without exclusion. -/
+/-- … and the identity `𝒫` runs it without commitment. -/
 theorem identity_cf {m m' : M} (hmm : m ≼ m') :
     ExecCF (canon (graph fun x : M => x) m) [.output m, .input m', .output m']
       (canon (graph fun x : M => x) m') := by
@@ -2082,15 +2082,15 @@ theorem identity_cf {m m' : M} (hmm : m ≼ m') :
   obtain ⟨o2, e2⟩ := store_out hid m'
   exact .output o1 e1 (.input (Dist.step_canon_input _ hmm ⟨m', rfl⟩) (.output o2 e2 (.nil _)))
 
-open Dist (U1 B2 spU noExclusionBasis u1_eq) in
-/-- **A store that must exclude cannot delegate the exclusion.**  With the
-identity upstream on one input (which admits no exclusion at all) and the
+open Dist (U1 B2 spU noCommitmentBasis u1_eq) in
+/-- **A store that must exclude cannot delegate the commitment.**  With the
+identity upstream on one input (which admits no commitment at all) and the
 store `spU` (two incomparable outputs), every output event of the composite at
-its canonical state applies an exclusion, under any basis.  That exclusion
+its canonical state applies a commitment, under any basis.  That commitment
 is the store's own. -/
-theorem store_exclusion_not_delegable :
-    (∀ (c : Exclusion (graph fun x : U1 => x)) σ τ, c.app σ ≠ some τ) ∧
-    ∀ (B : ExclusionBasis (seq (graph fun x : U1 => x) spU)) γ o τ,
+theorem store_commitment_not_delegable :
+    (∀ (c : Commitment (graph fun x : U1 => x)) σ τ, c.app σ ≠ some τ) ∧
+    ∀ (B : CommitmentBasis (seq (graph fun x : U1 => x) spU)) γ o τ,
       SysStep B (canon _ ()) (.output γ o) τ → γ ≠ [] := by
   refine ⟨fun c σ τ h => ?_, fun B γ o τ hs hγ => ?_⟩
   · obtain ⟨k, u, _, hnu⟩ := c.removes σ τ h
@@ -2105,16 +2105,16 @@ theorem store_exclusion_not_delegable :
     have e2 : (!o : Bool) = u := h2
     exact hne (e1.trans e2.symm)
 
-open Dist (U1 B2 spU noExclusionBasis u1_eq spU_not_exposable noExclusionBasis_full) in
+open Dist (U1 B2 spU noCommitmentBasis u1_eq spU_not_exposable noCommitmentBasis_full) in
 /-- Under the empty basis, `spU` never emits. -/
-theorem noExclusionBasis_silent {σ ρ : State spU} {es : List (SEvent spU)}
-    (h : SysExec noExclusionBasis σ es ρ) (hfull : ∀ k u, σ.R k u) :
+theorem noCommitmentBasis_silent {σ ρ : State spU} {es : List (SEvent spU)}
+    (h : SysExec noCommitmentBasis σ es ρ) (hfull : ∀ k u, σ.R k u) :
     ∀ γ o, SEvent.output γ o ∉ es := by
   induction h with
   | nil => intro _ _ h; cases h
   | @cons σ τ ρ e es hs hrest ih =>
     intro γ o hm
-    have hτ : ∀ k u, τ.R k u := noExclusionBasis_full (.cons hs (.nil _)) hfull
+    have hτ : ∀ k u, τ.R k u := noCommitmentBasis_full (.cons hs (.nil _)) hfull
     rcases List.mem_cons.1 hm with he | hm
     · subst he
       cases hs with
@@ -2124,25 +2124,25 @@ theorem noExclusionBasis_silent {σ ρ : State spU} {es : List (SEvent spU)}
         | nil => cases hγ; exact spU_not_exposable σ hfull _ hleg
     · exact ih hτ γ o hm
 
-open Dist (U1 B2 spU noExclusionBasis u1_eq) in
+open Dist (U1 B2 spU noCommitmentBasis u1_eq) in
 /-- **Lifted Monotonicity of the composite does not let `𝒫` drop its
-exclusions.**  With `𝒫 = spU` and a constant store, `𝒦 ∘ 𝒫` satisfies Lifted
+commitments.**  With `𝒫 = spU` and a constant store, `𝒦 ∘ 𝒫` satisfies Lifted
 Monotonicity, yet `𝒫` under the empty basis never emits, so the store never
-receives anything.  `𝒫`'s exclusion is invisible in the composite but still
+receives anything.  `𝒫`'s commitment is invisible in the composite but still
 necessary for this implementation. -/
 theorem composite_monotone_not_enough :
     (comp spU (fun _ : B2 => ())).LiftedMono ∧
-      ∀ es ρ, SysExec noExclusionBasis (canon spU ()) es ρ → emitted es = [] := by
+      ∀ es ρ, SysExec noCommitmentBasis (canon spU ()) es ρ → emitted es = [] := by
   refine ⟨fun i j _ X _ _ => ⟨(), ⟨true, trivial, rfl⟩, fun x _ => trivial⟩, ?_⟩
   intro es ρ hx
-  have hs := noExclusionBasis_silent hx (fun _ _ => ⟨trivial, trivial⟩)
+  have hs := noCommitmentBasis_silent hx (fun _ _ => ⟨trivial, trivial⟩)
   clear hx
   induction es with
   | nil => rfl
   | cons e es ih =>
     cases e with
     | input j => exact ih (fun γ o h => hs γ o (List.mem_cons_of_mem _ h))
-    | exclude γ => exact ih (fun γ o h => hs γ o (List.mem_cons_of_mem _ h))
+    | commitment γ => exact ih (fun γ o h => hs γ o (List.mem_cons_of_mem _ h))
     | output γ o => exact absurd (List.mem_cons_self ..) (hs γ o)
 
 end Limits
@@ -2224,7 +2224,7 @@ theorem smr_img {Cmd : Type} (m : Pfx Cmd) : Joint.Img (smrS1 (Cmd := Cmd)) m :=
 /-- **The replicated store coordinates exactly once.**  For any deterministic
 state machine and two distinct commands, the log specification `𝒫 = smrS1`
 and the composite violate Lifted Monotonicity, execution is monotone, and the
-pipeline is proper; some composite output needs an exclusion, which `𝒫` must
+pipeline is proper; some composite output needs a commitment, which `𝒫` must
 make.  Every log is an output of `𝒫`, so the restriction to its outputs
 removes no input. -/
 theorem smr_proper {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt)
@@ -2242,30 +2242,30 @@ theorem smr_proper {Cmd Stt R : Type} (δ : Stt → Cmd → Stt × R) (σ0 : Stt
 first. -/
 def bFirst {Cmd : Type} (b : Cmd) (k : Pfx Cmd) : Prop := k.l.head? = some b
 
-/-- The mutex store's basis: its only exclusion removes the logs in which `b`
+/-- The mutex store's basis: its only commitment removes the logs in which `b`
 comes first. -/
-noncomputable def mutexB {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : ExclusionBasis (graph f) :=
+noncomputable def mutexB {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : CommitmentBasis (graph f) :=
   fun c => c = excludeInput (bFirst b)
 
 /-- **Early lock.**  The store's strategy takes the lock at its first event if
 the log is still empty, and applies nothing otherwise (in particular it
-performs no exclusion event). -/
+performs no commitment event). -/
 noncomputable def earlyLock {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : Sys (graph f) where
   basis := mutexB b f
   strat m a e := (∀ δ x, e = .output δ x →
     ((a = [] ∧ m = ⟨[]⟩) → δ = [excludeInput (bFirst b)]) ∧ (¬ (a = [] ∧ m = ⟨[]⟩) → δ = [])) ∧
-    ∀ γ, e ≠ .exclude γ
+    ∀ γ, e ≠ .commitment γ
 
 /-- **Late lock.**  The store's strategy takes the lock only once its current
-log is nonempty, and may also apply nothing; it performs no exclusion event. -/
+log is nonempty, and may also apply nothing; it performs no commitment event. -/
 noncomputable def lateLock {Cmd O : Type} [PO O] (b : Cmd) (f : Pfx Cmd → O) : Sys (graph f) where
   basis := mutexB b f
-  strat m a e := (∀ δ x, e = .output δ x → δ = [] ∨ (lastIn m a).l ≠ []) ∧ ∀ γ, e ≠ .exclude γ
+  strat m a e := (∀ δ x, e = .output δ x → δ = [] ∨ (lastIn m a).l ≠ []) ∧ ∀ γ, e ≠ .commitment γ
 
 /-- **An uncontended lock decides nothing.**  Once the store's current log is
 nonempty, every log it can still receive has the same first command, so
-applying an exclusion to the logs in which `b` comes first removes no row: it is not a
-exclusion there (the partial function is undefined). -/
+applying a commitment to the logs in which `b` comes first removes no row: it is not a
+commitment there (the partial function is undefined). -/
 theorem lock_after_log {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd)
     (σ : State (graph f)) (h : σ.cur.l ≠ []) : (excludeInput (bFirst b)).app σ = none := by
   cases hc : (excludeInput (bFirst b)).app σ with
@@ -2279,8 +2279,8 @@ theorem lock_after_log {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd)
     rw [ht, hl] at hQ; rw [hl]
     simpa using hQ
 
-/-- A store with the lock basis whose strategy offers an exclusion only at a
-nonempty log applies no exclusion in any run it produces: its lock events
+/-- A store with the lock basis whose strategy offers a commitment only at a
+nonempty log applies no commitment in any run it produces: its lock events
 are never legal. -/
 theorem lock_eps {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd) {K : Sys (graph f)}
     (hB : K.basis = mutexB b f)
@@ -2309,20 +2309,20 @@ theorem lock_eps {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd) {K : Sys (g
             rw [lock_after_log b σ (by rw [hcur]; exact hne)] at happ
             cases happ
 
-/-- Every run the late-lock store produces applies no exclusion. -/
+/-- Every run the late-lock store produces applies no commitment. -/
 theorem lateLock_eps {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (b : Cmd) {m : Pfx Cmd}
     {esK : List (SEvent (graph f))} {ρ : State (graph f)} (h : Produces (lateLock b f) m esK ρ) :
     ∀ γ x, SEvent.output γ x ∈ esK → γ = [] :=
   lock_eps (K := lateLock b f) b rfl (fun _ _ δ x h => h.1 δ x rfl) h
 
 /-- **A redundant store can lose behaviour.**  With `𝒫 = smrS1` under its
-canonical basis, `𝒫` can emit `[]` and then `[b]`.  The exclusion-erased
+canonical basis, `𝒫` can emit `[]` and then `[b]`.  The commitment-erased
 replacement of the early-lock store follows this run, emitting `f []`,
 receiving `[b]`, and emitting `f [b]`.  The early-lock store cannot: its lock
 at `[]` excludes `[b]`. -/
 theorem early_lock_strict {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Monotone f) (b : Cmd) :
-    ∃ l m tr, Obs (Sys.free (canonExclusionBasis (smrS1 (Cmd := Cmd)))).emits (eraseSys (earlyLock b f)) l m tr ∧
-      ¬ Obs (Sys.free (canonExclusionBasis (smrS1 (Cmd := Cmd)))).emits (earlyLock b f) l m tr := by
+    ∃ l m tr, Obs (Sys.free (canonCommitmentBasis (smrS1 (Cmd := Cmd)))).emits (eraseSys (earlyLock b f)) l m tr ∧
+      ¬ Obs (Sys.free (canonCommitmentBasis (smrS1 (Cmd := Cmd)))).emits (earlyLock b f) l m tr := by
   let e : Pfx Cmd := ⟨[]⟩
   let kb : Pfx Cmd := ⟨[b]⟩
   -- `𝒫`, at input `[b]`, emits `[]` and then `[b]`
@@ -2331,7 +2331,7 @@ theorem early_lock_strict {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Monoto
   have hexpP : Exposable σP e := fun _ x _ hn => absurd ⟨x.l, rfl⟩ hn
   let τ1 := outState σP e ho
   have ho2 : τ1.R τ1.cur kb := ⟨⟨fun _ h => h, PO.refl _⟩, ⟨[b], rfl⟩⟩
-  have hP : SysExec (canonExclusionBasis smrS1) σP [.output [] e, .output (kappa τ1 kb) kb]
+  have hP : SysExec (canonCommitmentBasis smrS1) σP [.output [] e, .output (kappa τ1 kb) kb]
       (outState τ1 kb ho2) :=
     .cons (τ := τ1) (eps_step_iff.2 ⟨ho, hexpP, rfl, rfl⟩)
       (.cons (canonical_support τ1 kb ho2) (.nil _))
@@ -2373,11 +2373,11 @@ theorem early_lock_strict {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Monoto
   all_goals try (simp at hlen; done)
   cases e1 with
   | input j => simp [SEvent.erase] at hl
-  | exclude γ => exact absurd List.mem_cons_self (hnc γ)
+  | commitment γ => exact absurd List.mem_cons_self (hnc γ)
   | output δ₀ x₀ =>
   cases e2 with
   | output γ y => simp [SEvent.erase] at hl
-  | exclude γ => exact absurd (List.mem_cons_of_mem _ List.mem_cons_self) (hnc γ)
+  | commitment γ => exact absurd (List.mem_cons_of_mem _ List.mem_cons_self) (hnc γ)
   | input j =>
   have hj : j = kb := by simp [SEvent.erase] at hl; exact hl.2.1
   subst hj
