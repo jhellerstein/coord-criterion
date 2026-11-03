@@ -6,7 +6,7 @@ import CoordCriterion.CAP.TwoPhaseCommit
 import CoordCriterion.CAP.TimeoutAbort
 import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Paper.AppG_TransactionBases
-import CoordCriterion.Appendix.TransactionBases.CommitEvent
+import CoordCriterion.Appendix.TransactionBases.CommitmentEvent
 import CoordCriterion.Appendix.ComponentSystems
 import CoordCriterion.Appendix.Deployment
 
@@ -22,7 +22,7 @@ Coordination (it stops before §4.5 The Complete CAP Theorem).  The paragraph
 
 How to read this file.  Read it side by side with the paper.  Entries appear in
 paper order under headers named after the paper's subsections.  Each numbered
-result is named by its LaTeX label (`«def:commitment»`, `«prop:seal-or-choose»`,
+result is named by its LaTeX label (`«def:commitment»`,
 …); an unlabeled claim of the text is named `«<enclosing label>/<slug>»`.  Each
 docstring quotes the paper (LaTeX lightly turned into Unicode) and, where the
 Lean statement reads differently, says how the two correspond.  Statements are
@@ -57,14 +57,14 @@ order *is* item 1, the total local order.  The initial inputs `i_p` are
 `H.init`.  "Commitment events are a third kind of specification event, so a
 distributed history may contain them" (§4.2, after Def.
 `def:commitment-event`); histories a system produces are modeled with them as
-`CAP.LEv.cmt γ` in `CAP/Model.lean`, whose well-formedness includes them in
+`CAP.LEv.commitment γ` in `CAP/Model.lean`, whose well-formedness includes them in
 item 3. -/
 abbrev «def:distributed-history» (I O D : Type) (n : Nat) := Dist.History I O D n
 
 /-- Def. `def:distributed-history`, items 2–3: "for each receive, a matching
 send of the same message at another participant, each send matching at most
 one receive; and for each participant `p`, its specification events, in local
-order, form a defined transition sequence from `σ_S(i_p)`".
+order, form a defined transition sequence from `σ_P(i_p)`".
 
 Lean: `History.WF`.  "Each send matching at most one receive" is read as
 "send identifiers are unique"; `CC.Dist.WF0` drops this (see
@@ -124,31 +124,31 @@ theorem «def:participant-run/is-run» {D : Type} {n : Nat} {sp : Spec I O}
   h.isRun
 
 /-- **Fig. participant-runs** (`fig:participant-runs`).  "Two histories
-from `σ_a = σ_S(x··)` to `σ_1 = (xy·, R_1)` … In Figure participant-runs, the
-input `xy·` reaches `q` directly or through a message from `p`.  The histories
-differ, but at either cut each participant run is `input(xy·)`, so both
+from `σ_a = σ_P(a··)` to `σ_1 = (ab·, R_1)` … In Figure participant-runs, the
+input `ab·` reaches `q` directly or through a message from `p`.  The histories
+differ, but at either cut each participant run is `input(ab·)`, so both
 endpoints are `(σ_1, σ_1)`."
 
 Lean, for the election `elec` and any message data `d`: the direct-delivery
 history `H_d` and the forwarded-delivery history `H_f` (where `p = 0` sends
-`m = (xy·, d)` and `q = 1` receives it) are both well formed, the endpoint of
-each final cut is `(σ_S(xy·), σ_S(xy·))`, and the histories differ.  Here
-`σ_1 = σ_S(xy·)`, whose table `R_1` is panel (b) of Fig. election-frames
+`m = (ab·, d)` and `q = 1` receives it) are both well formed, the endpoint of
+each final cut is `(σ_P(ab·), σ_P(ab·))`, and the histories differ.  Here
+`σ_1 = σ_P(ab·)`, whose table `R_1` is panel (b) of Fig. election-frames
 (`CC.Figures.Elec.panel_b`). -/
 theorem «fig:participant-runs» (D : Type) (d : D) :
-    (Dist.Hd CALM.Res D CALM.bxd CALM.bxy).WF CALM.elec ∧
-    (Dist.Hf CALM.Res CALM.bxd CALM.bxy d).WF CALM.elec ∧
-    (Dist.Hd CALM.Res D CALM.bxd CALM.bxy).Endpoint CALM.elec
-      (Dist.Hd CALM.Res D CALM.bxd CALM.bxy).InH (fun _ => canon CALM.elec CALM.bxy) ∧
-    (Dist.Hf CALM.Res CALM.bxd CALM.bxy d).Endpoint CALM.elec
-      (Dist.Hf CALM.Res CALM.bxd CALM.bxy d).InH (fun _ => canon CALM.elec CALM.bxy) ∧
-    (Dist.Hd CALM.Res D CALM.bxd CALM.bxy).ev ≠ (Dist.Hf CALM.Res CALM.bxd CALM.bxy d).ev :=
+    (Dist.Hd CALM.Res D CALM.bad CALM.bab).WF CALM.elec ∧
+    (Dist.Hf CALM.Res CALM.bad CALM.bab d).WF CALM.elec ∧
+    (Dist.Hd CALM.Res D CALM.bad CALM.bab).Endpoint CALM.elec
+      (Dist.Hd CALM.Res D CALM.bad CALM.bab).InH (fun _ => canon CALM.elec CALM.bab) ∧
+    (Dist.Hf CALM.Res CALM.bad CALM.bab d).Endpoint CALM.elec
+      (Dist.Hf CALM.Res CALM.bad CALM.bab d).InH (fun _ => canon CALM.elec CALM.bab) ∧
+    (Dist.Hd CALM.Res D CALM.bad CALM.bab).ev ≠ (Dist.Hf CALM.Res CALM.bad CALM.bab d).ev :=
   Dist.fig_participant_runs CALM.elec (by decide) ⟨_, rfl⟩ d
 
 /-- The general form of Fig. `fig:participant-runs`: for any specification and
-any `i ≼ j` with a row at `j`, both histories end at `(σ_S(j), σ_S(j))`. -/
+any `i ≼ j` with a row at `j`, both histories end at `(σ_P(j), σ_P(j))`. -/
 theorem «fig:participant-runs/general» {D : Type} (sp : Spec I O) {i j : I} (hij : i ≼ j)
-    (hj : ∃ u, sp.S j u) (d : D) :
+    (hj : ∃ u, sp.P j u) (d : D) :
     (Dist.Hd O D i j).WF sp ∧ (Dist.Hf O i j d).WF sp ∧
     (Dist.Hd O D i j).Endpoint sp (Dist.Hd O D i j).InH (fun _ => canon sp j) ∧
     (Dist.Hf O i j d).Endpoint sp (Dist.Hf O i j d).InH (fun _ => canon sp j) ∧
@@ -211,14 +211,31 @@ theorem «sec:distributed-consistency/lifted-monotonicity» (sp : Spec I O) (D :
     Dist.DistConsistent sp D ↔ sp.LiftedMono :=
   Dist.distConsistent_iff_liftedMono sp D
 
+/-- "Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common expansion `j`, the survivor test supplies a
+`u ∈ P(j)` that survives in every endpoint; by Lemma run-residual, `u` refines
+everything they have emitted.  At each participant, `input(j)` followed by
+`output(u)` reaches the same state without commitment (Proposition
+`prop:exposure-boundary`).  This is an existence
+witness in the transition system; choosing `u`, communicating it, and
+scheduling the transitions belong to the operational model."
+
+Lean: `Dist.reconcile_cf` supplies `u`, proves that `(j,u)` survives in every
+endpoint, and gives the commitment-free two-event continuation from each one. -/
+theorem «sec:distributed-consistency/constructive-continuation» {sp : Spec I O}
+    (hLM : sp.LiftedMono) (fam : List (State sp))
+    (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (hj : ∀ σ ∈ fam, σ.cur ≼ j) :
+    ∃ u, ∃ hu : sp.P j u, (∀ σ ∈ fam, σ.R j u) ∧
+      ∀ σ ∈ fam, ExecCF σ [.input j, .output u] (meetState sp j u hu) :=
+  Dist.reconcile_cf hLM fam hrun j hj
+
 /-- **Cor. convergence** (`cor:convergence`).  "In any history of a consistent
 functional specification, every participant whose current input at a
-consistent cut is `j` is in state `σ_S(j)`.  Participants with the same current
+consistent cut is `j` is in state `σ_P(j)`.  Participants with the same current
 input therefore agree, regardless of message paths, arrival order, or the
 outputs they emitted."
 
 Lean: `σs` is the endpoint of the cut; the first conjunct is "`σ_p(C) =
-σ_S(cur)`", the second "same current input ⇒ same state". -/
+σ_P(cur)`", the second "same current input ⇒ same state". -/
 theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consistent)
     (hf : sp.Functional) {H : Dist.History I O D n} {C : Dist.Pos n → Prop}
     {σs : Fin n → State sp} (hE : H.Endpoint sp C σs) :
@@ -228,12 +245,12 @@ theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consis
 
 /-- After Cor. `cor:convergence`: "With several outputs per input this fails
 even for consistent specifications: in Figure `fig:ambiguity-frames`(g), a
-run that emitted `{s→s1}` has retired the route sets that omit it, while a
+run that emitted `{s→s1}` has subsumed the route sets that omit it, while a
 run at the same input that emitted nothing keeps them.  Consistency then
 guarantees that such replicas can be reconciled, not that they agree."  The
 traceroute specification is consistent; the run that emitted `{s→s1}` and the
 canonical run end at the same input in different states (the first has
-retired `{s→a}`, the second keeps it); and the two are confluent at that
+subsumed `{s→a}`, the second keeps it); and the two are confluent at that
 input. -/
 theorem «cor:convergence/relational-fails» :
     Figures.Trace.spec.Consistent ∧
@@ -286,88 +303,53 @@ theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
     {sp : Spec I O} {H : Dist.History I O D n} (hW : H.WF sp) {C : Dist.Pos n → Prop}
     (hC : H.IsCut C) {σs : Fin n → State sp} (hE : H.Endpoint sp C σs) (os : Fin n → List O)
     (hos : ∀ p, ∀ o ∈ os p, H.EmittedIn C o) (j : I) (hj : ∀ p, (σs p).cur ≼ j) :
-    H.CutConfluentAt sp C j ↔ ∃ u, sp.S j u ∧ ∀ p, Dist.honor (σs p).R (os p) j u :=
+    H.CutConfluentAt sp C j ↔ ∃ u, sp.P j u ∧ ∀ p, Dist.honor (σs p).R (os p) j u :=
   Dist.honor_cut_confluent hW hC hE os hos j hj
 
 /-! ## Systems (§4.3, `sec:systems`) -/
 
 /-- "The registrar … emits `⊥` and closes the polls in the same event
 (Figure election-frames(d)); the output event for `⊥` does not require the
-poll-closing seal.  Closing the polls is the registrar's design decision,
+poll-closing commitment.  Closing the polls is the registrar's design decision,
 as fixing orderings is 2PL's."
 
 Lean: under any basis containing `closePolls`, `Out_{[closePolls]}(⊥)` from
-`σ_S(xy·)` is legal and ends at panel (d); yet `⊥` is exposable there and
-`Sealed_⊥`, `Rejected_⊥` are empty, so `output(⊥)` needs no commitment. -/
+`σ_P(ab·)` is legal and ends at panel (d); yet `⊥` is a legal output there and
+  `Excluded_o` is empty, so `output(⊥)` needs no commitment. -/
 theorem «sec:systems/registrar» :
-    (∀ B : Basis CALM.elec, B Figures.closePolls →
-      SysStep B (canon CALM.elec CALM.bxy) (.output [Figures.closePolls] .bot)
+    (∀ B : CommitmentBasis CALM.elec, B Figures.closePolls →
+      SysStep B (canon CALM.elec CALM.bab) (.output [Figures.closePolls] .bot)
         Figures.Elec.panelD) ∧
-    Exposable (canon CALM.elec CALM.bxy) .bot ∧
-    (¬ ∃ k x, Sealed (canon CALM.elec CALM.bxy) .bot k x) ∧
-    (¬ ∃ k x, Rejected (canon CALM.elec CALM.bxy) .bot k x) :=
+    Exposable (canon CALM.elec CALM.bab) .bot ∧
+    (¬ ∃ k x, Excluded (canon CALM.elec CALM.bab) .bot k x) :=
   ⟨Figures.Elec.registrar_step, Figures.Elec.bot_alone_at_b.1,
-    Figures.Elec.bot_alone_at_b.2.1, Figures.Elec.bot_alone_at_b.2.2.1⟩
+    Figures.Elec.bot_alone_at_b.2.1⟩
 
   /-- **Def. commitment** (`def:commitment`).  "A commitment is a partial function
-  on specification states that removes a nonempty set of rows.  Each removed row
-  is undominated by the rows that remain at its input: no remaining row there
-  refines it.  Thus, whenever
+  on specification states that removes a nonempty set of rows.  No row it
+  removes is subsumed by a row that remains at the same input.  Thus, whenever
   `c(i,R) = (j,R')`, we have `R' ⊊ R` and
-  `(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w` (Eq. commitment-excludes).  It leaves
+  `(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w` (Eq. commitment-unsubsumed).  It leaves
   the current input unchanged: `j=i`."
 
 Lean: `app : State sp → Option (State sp)` with fields `cur_eq`, `sub`,
-`removes` (`R' ⊊ R`), `excludes` (Eq. commitment-excludes). -/
+  `removes` (`R' ⊊ R`), `unsubsumed` (Eq. commitment-unsubsumed). -/
 abbrev «def:commitment» (sp : Spec I O) := Commitment sp
 
-/-- **Eq. `eq:commitment-excludes`**: whenever `c(i,R) = (i,R')`,
-"`(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w`" (field `Commitment.excludes`). -/
-theorem «eq:commitment-excludes» {sp : Spec I O} (c : Commitment sp) (σ τ : State sp)
+/-- **Eq. `eq:commitment-unsubsumed`**: whenever `c(i,R) = (i,R')`,
+"`(k,u) ∈ R ∖ R', (k,w) ∈ R' ⟹ u ⋠ w`" (field `Commitment.unsubsumed`). -/
+theorem «eq:commitment-unsubsumed» {sp : Spec I O} (c : Commitment sp) (σ τ : State sp)
     (h : c.app σ = some τ) :
     ∀ k u w, σ.R k u → ¬ τ.R k u → τ.R k w → ¬ (u ≼ w) :=
-  c.excludes σ τ h
+  c.unsubsumed σ τ h
 
-/-- "The seals and choices of Definitions output-event and
-lifted-output-event satisfy this definition: a seal removes every row at the
-inputs it seals, and a choice removes the rows in `Rejected_o`."
-
-Lean: `sealC o`, `choiceC o : Commitment sp` (being of that type is the claim
-that they satisfy Def. commitment).  `s_o` is defined at `(i,R)` exactly when
-`o ∈ R(i)` and `Sealed_o ≠ ∅`, and then leaves `R ∖ Sealed_o`; `c_o` is defined
-exactly when `o ∈ R(i)` and `Rejected_o ≠ ∅`, and then leaves
-`R ∖ Rejected_o`.  For the seals of Def. output-event (one row per input) see
-`«app:bases/canonical-are-commitments»`. -/
-theorem «sec:systems/seals-and-choices-are-commitments» {sp : Spec I O} (o : O)
+/-- The canonical commitment of Definition `def:canonical-commitment` satisfies
+Definition `def:commitment`. -/
+theorem «sec:systems/canonical-commitment» {sp : Spec I O} (o : O)
     (σ τ : State sp) :
-    ((sealC o : Commitment sp).app σ = some τ ↔
-        ∃ h : σ.R σ.cur o, (∃ k x, Sealed σ o k x) ∧ cmSealState σ o h = τ) ∧
-    ((choiceC o : Commitment sp).app σ = some τ ↔
-        σ.R σ.cur o ∧ (∃ k x, Rejected σ o k x) ∧ cmChooseState σ o = τ) :=
-  ⟨sealApp_eq, chooseApp_eq⟩
-
-/-- **Prop. commitments seal inputs or choose outputs** (`prop:seal-or-choose`).
-"At each input where a commitment removes rows of the state it is applied to,
-it either removes every row there, sealing that input, or removes some outputs
-and keeps others, choosing among them."
-
-Lean: at such an input `k`, either no row remains (seal) or some row `w`
-remains that refines no removed row (choice; Eq. commitment-excludes); and not
-both for this commitment at this state.  Thus the classification is
-run-dependent when earlier commitments have changed the state. -/
-theorem «prop:seal-or-choose» {sp : Spec I O} (c : Commitment sp) {σ τ : State sp}
-    (h : c.app σ = some τ) (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
-    ((∀ u, ¬ τ.R k u) ∨
-      (∃ w, τ.R k w ∧ ∀ u, σ.R k u → ¬ τ.R k u → ¬ (u ≼ w))) ∧
-    ¬ ((∀ u, ¬ τ.R k u) ∧ ∃ w, τ.R k w) :=
-  seal_or_choose c h k hk
-
-/-- "In a functional specification each fiber has one row, so every commitment
-seals." -/
-theorem «prop:seal-or-choose/functional» {sp : Spec I O} (hf : sp.Functional)
-    (c : Commitment sp) {σ τ : State sp} (h : c.app σ = some τ) (k : I)
-    (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w :=
-  functional_commitment_seals hf c h k hk
+    (canonicalCommitment o : Commitment sp).app σ = some τ ↔
+      ∃ h : σ.R σ.cur o, (∃ k x, Excluded σ o k x) ∧ commitmentState σ o h = τ :=
+  commitmentApp_eq
 
 /-- **Def. `def:local-history`** (Local history).  "A local history of
 participant `p` is a finite sequence of `p`'s history events, including the
@@ -375,7 +357,7 @@ messages it has received."
 
 Lean: for a `CAP.History sp D n`, participant `p`'s local history is
 `H p : List (CAP.LEv sp D n)`; the events are inputs, outputs, sends,
-receives, and commitment events `CAP.LEv.cmt γ`. -/
+receives, and commitment events `CAP.LEv.commitment γ`. -/
 abbrev «def:local-history» (sp : Spec I O) (D : Type) (n : Nat) :=
   List (CAP.LEv sp D n)
 
@@ -388,7 +370,7 @@ matching sends."
 
 Lean (the `CC.CAP` system model): a strategy for `p` is a relation from local
 histories (`List (CAP.LEv sp D n)`) to next events; local events include
-commitment events `CAP.LEv.cmt γ`.  Its value on input events
+commitment events `CAP.LEv.commitment γ`.  Its value on input events
 is ignored: `CAP.Allowed` always allows inputs. -/
 abbrev «def:strategy» (sp : Spec I O) (D : Type) (n : Nat) :=
   List (CAP.LEv sp D n) → CAP.LEv sp D n → Prop
@@ -400,12 +382,12 @@ commitments from `ℬ`."
 
 Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
 participant of every finite participant set and initial inputs, as §4.5 later
-requires) with `System.BasisRespecting`.  Its commitments are
+requires) with `System.CommitmentBasisRespecting`.  Its commitments are
 `CAP.Commitment`, equivalent to `CC.Commitment` (`CC.Dist.toCAP`,
 `CC.Dist.ofCAP`).  The library's `CAP.System` does not require basis respect;
 `«def:system/restrict»` shows this loses nothing. -/
 abbrev «def:system» (sp : Spec I O) (D : Type) :=
-  {Sys : CAP.System sp D // Sys.BasisRespecting}
+  {Sys : CAP.System sp D // Sys.CommitmentBasisRespecting}
 
 /-- **Def. `def:produced-history`** (Produced history).  "A distributed
 history produced by a system consists of input events supplied by the
@@ -423,7 +405,7 @@ For a basis-respecting system this is the library's `CAP.Produced`: every
 event other than an input is permitted by the strategy at the local history
 before it (`CAP.allowed_iff_stratAllowed`). -/
 theorem «def:system/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
-    (h : Sys.BasisRespecting) (n : Nat) (init : Fin n → I) (H : CAP.History sp D n) :
+    (h : Sys.CommitmentBasisRespecting) (n : Nat) (init : Fin n → I) (H : CAP.History sp D n) :
     CAP.Produced Sys n init H ↔ ∀ p, CAP.Compliant (CAP.StratAllowed Sys n init p) (H p) :=
   ⟨fun hp p a e b hab => (CAP.allowed_iff_stratAllowed h n init p a e).1 (hp p a e b hab),
    fun hp p a e b hab => (CAP.allowed_iff_stratAllowed h n init p a e).2 (hp p a e b hab)⟩
@@ -433,7 +415,7 @@ basis loses nothing.  Restricting any system's strategies to basis
 commitments gives a basis-respecting system that allows exactly the same
 events, hence produces the same histories. -/
 theorem «def:system/restrict» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
-    Sys.restrict.BasisRespecting ∧
+    Sys.restrict.CommitmentBasisRespecting ∧
       ∀ n init p pre e, CAP.Allowed Sys.restrict n init p pre e ↔ CAP.Allowed Sys n init p pre e :=
   ⟨Sys.restrict_basisRespecting, Sys.restrict_allowed⟩
 
@@ -444,7 +426,7 @@ basis.  Systems for different specifications compose as components
 (Section `sec:proper-coordination`)."  Lean: `CAP.System sp D` carries one
 specification `sp` and one basis; its strategies `strat n init p` may differ
 by participant.  A deployment `Deploy.Deployment sp n` gives participant `p` a
-table `A p` inside `sp.S`.  The system is the component
+table `A p` inside `sp.P`.  The system is the component
 `Components.Component.ofSystemOn Sys N` of `sp`, with the system's basis and
 the participant runs of its produced histories as admitted runs. -/
 theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
@@ -453,48 +435,48 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
         (fun c => Sys.basis (Dist.toCAP c)) ∧
       (∀ r, (Components.Component.ofSystemOn Sys N location).accepts r →
         SysExec (fun c => Sys.basis (Dist.toCAP c)) (canon sp r.input) r.events r.final) ∧
-      ∀ (n : Nat) (Dp : Deploy.Deployment sp n) p k u, Dp.A p k u → sp.S k u :=
+      ∀ (n : Nat) (Dp : Deploy.Deployment sp n) p k u, Dp.A p k u → sp.P k u :=
   ⟨rfl, fun r h => ((Components.Component.ofSystemOn Sys N location).sound r h).legal,
     fun _ Dp => Dp.sub⟩
 
 /-- **Def. output event, legal output event** (`def:system-output-event`).
 "An output event `Out_γ(o)` applies a sequence `γ = c₁⋯cₙ` of commitments,
-each `c_m` defined at the state its predecessors leave, and then retires
+each `c_m` defined at the state its predecessors leave, and then subsumes
 rows and emits `o`, all atomically.  The sequence may be empty, written
 `ε`.  Write `R_c` for the table after `γ` is applied.  The event is legal
-when `o` is exposable at `(i, R_c)`: Eq. lifted-validity holds.  The event
-retires those discarded rows and ends at `(i, R_c[out ⪰ o])`."
+when `o` is a legal output at `(i, R_c)`: Eq. lifted-validity holds.  The event
+subsumes those discarded rows and ends at `(i, R_c[out ⪰ o])`."
 
 Lean: `SysStep B σ (.output γ o) τ` (also covering input events, unchanged).
 Eq. lifted-validity at the committed state is exactly `Exposable σc o`. -/
-abbrev «def:system-output-event» {sp : Spec I O} (B : Basis sp) (σ : State sp)
+abbrev «def:system-output-event» {sp : Spec I O} (B : CommitmentBasis sp) (σ : State sp)
     (e : SEvent sp) (τ : State sp) : Prop :=
   SysStep B σ e τ
 
-/-- **Def. commitment event** (`def:commitment-event`).  "A commitment event
-`commit(γ)` applies a nonempty sequence `γ = c₁⋯cₙ` of commitments, each
+  /-- **Def. commitment event** (`def:commitment-event`).  "A commitment event
+  `apply(γ)` applies a nonempty sequence `γ = c₁⋯cₙ` of commitments, each
 defined at the state its predecessors leave, and emits nothing."
 
-Lean: `SysStep B σ (.commit γ) τ` (constructor `SysStep.commit`: every
+Lean: `SysStep B σ (.commitment γ) τ` (constructor `SysStep.commitment`: every
 `c ∈ γ` is in `B`, `γ ≠ []`, and `ApplySeq γ σ τ`).  In the `CC.CAP` history
-model the local event is `CAP.LEv.cmt γ`. -/
-abbrev «def:commitment-event» {sp : Spec I O} (B : Basis sp) (σ : State sp)
+model the local event is `CAP.LEv.commitment γ`. -/
+abbrev «def:commitment-event» {sp : Spec I O} (B : CommitmentBasis sp) (σ : State sp)
     (γ : List (Commitment sp)) (τ : State sp) : Prop :=
-  SysStep B σ (.commit γ) τ
+  SysStep B σ (.commitment γ) τ
 
 /-- After Def. `def:commitment-event`: "A commitment event lets a system decide
 before any output needs the decision.  The environment observes nothing from
 it."  Lean: a commitment event is exactly a nonempty basis sequence applied in
 order; it keeps the current input and only removes rows, and its erasure is
-empty (`SEvent.erase (.commit γ) = none`). -/
-theorem «sec:systems/commitment-event-unobserved» {sp : Spec I O} {B : Basis sp}
+empty (`SEvent.erase (.commitment γ) = none`). -/
+theorem «sec:systems/commitment-event-unobserved» {sp : Spec I O} {B : CommitmentBasis sp}
     {σ τ : State sp} {γ : List (Commitment sp)} :
-    (SysStep B σ (.commit γ) τ ↔ (∀ c ∈ γ, B c) ∧ γ ≠ [] ∧ ApplySeq γ σ τ) ∧
-    (SysStep B σ (.commit γ) τ → τ.cur = σ.cur ∧ ∀ k u, τ.R k u → σ.R k u) ∧
-    (SEvent.commit γ : SEvent sp).erase = none :=
-  ⟨⟨fun h => by cases h with | commit hb hne ha => exact ⟨hb, hne, ha⟩,
-    fun ⟨hb, hne, ha⟩ => SysStep.commit hb hne ha⟩,
-   fun h => ⟨h.commit_cur, h.sub⟩, rfl⟩
+    (SysStep B σ (.commitment γ) τ ↔ (∀ c ∈ γ, B c) ∧ γ ≠ [] ∧ ApplySeq γ σ τ) ∧
+    (SysStep B σ (.commitment γ) τ → τ.cur = σ.cur ∧ ∀ k u, τ.R k u → σ.R k u) ∧
+    (SEvent.commitment γ : SEvent sp).erase = none :=
+  ⟨⟨fun h => by cases h with | commitment hb hne ha => exact ⟨hb, hne, ha⟩,
+    fun ⟨hb, hne, ha⟩ => SysStep.commitment hb hne ha⟩,
+   fun h => ⟨h.commitment_cur, h.sub⟩, rfl⟩
 
 /-- **Eq. `eq:lifted-validity`**: "`(k,x) ∈ R_c ∖ R_c[out ⪰ o] ⟹
 ∃ u ∈ R_c[out ⪰ o](k) : x ≼ u`."  At the committed state `σc` (table `R_c`),
@@ -508,28 +490,26 @@ theorem «eq:lifted-validity» {sp : Spec I O} (σc : State sp) (o : O) :
    fun h k x hx hn => let ⟨u, ⟨hu, hou⟩, hxu⟩ := h k x hx (fun hk => hn hk.2)
       ⟨u, hu, hou, hxu⟩⟩
 
-/-- "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of
-Sections functional-calm–complete-calm: its commitments remove the rows in
-`Sealed_o` and `Rejected_o` (Lemma canonical-commitment-normal-form)…"
+  /-- "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of
+  Sections functional-calm–complete-calm: its commitments remove the rows in
+  `Excluded_o` (Lemma canonical-commitment-normal-form)…"
 
 Lean: Lemma containment (1) (`CC.containment`): the event keeps the current
 input, `o ∈ R(i)`, the end table is inside `R[out ⪰ o]`, and the state `σc`
-left by `γ` has none of the rows of `Sealed_o`, `Rejected_o`. -/
-theorem «sec:systems/legal-event-containment» {sp : Spec I O} {B : Basis sp}
+left by `γ` has none of the rows of `Excluded_o`. -/
+theorem «sec:systems/legal-event-containment» {sp : Spec I O} {B : CommitmentBasis sp}
     {σ τ : State sp} {γ : List (Commitment sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
     τ.cur = σ.cur ∧ σ.R σ.cur o ∧ (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧
-    ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, (Sealed σ o k x ∨ Rejected σ o k x) → ¬ σc.R k x :=
+    ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, Excluded σ o k x → ¬ σc.R k x :=
   containment h
 
 /-- "… and `output(o)` is the case in which they remove exactly those."
 
-Lean: `κ_o` is `s_o` (if `Sealed_o ≠ ∅`) followed by `c_o` (if
-`Rejected_o ≠ ∅`); the canonical steps `CanonStep` (under `B_S`, output
+Lean: `κ_o` is `[x_o]` when `Excluded_o ≠ ∅`, and empty otherwise; the canonical steps `CanonStep` (under `B_P`, output
 events `Out_{κ_o}(o)`) are exactly the steps of §§2–3 after erasing `γ`. -/
 theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
     (∀ (σ : State sp) (o : O), kappa σ o =
-      (if ∃ k x, Sealed σ o k x then [sealC o] else []) ++
-      (if ∃ k x, Rejected σ o k x then [choiceC o] else [])) ∧
+      (if ∃ k x, Excluded σ o k x then [canonicalCommitment o] else [])) ∧
     (∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ →
       ∃ e' : Event I O, e.erase = some e' ∧ Step σ e' τ) ∧
     (∀ (σ τ : State sp) (e : Event I O), Step σ e τ →
@@ -541,10 +521,10 @@ a system's output events are legal events `Out_γ(o)` with `γ` drawn from its
 basis.
 
 Lean: in the `CC.CAP` history model an output event `out γ o` is a basis check,
-`applySeq`, and an exposable `output(o)` step at the committed state; this is
+`applySeq`, and a legal-output `output(o)` step at the committed state; this is
 exactly `SysStep` (first conjunct).  Erasure keeps `o` and drops `γ` (second
 conjunct). -/
-theorem «sec:systems/system-histories» {sp : Spec I O} {B : Basis sp} {σ τ : State sp}
+theorem «sec:systems/system-histories» {sp : Spec I O} {B : CommitmentBasis sp} {σ τ : State sp}
     {γ : List (Commitment sp)} {o : O} :
     (SysStep B σ (.output γ o) τ ↔
       (∀ c ∈ γ, B c) ∧ ∃ σc, CAP.applySeq σ (γ.map Dist.toCAP) = some σc ∧
@@ -584,36 +564,36 @@ theorem «fig:cc-commitments» {T K : Type}
   ⟨fun h => CC.Paper.«app:cc-bases/fig-h» h hp hX hA hB,
    fun h => CC.Paper.«app:cc-bases/fig-i» h hp hX hB⟩
 
-/-- "Both are choices: rows survive at the input."
+/-- "Both are commitments: rows survive at the input."
 
 Lean, for any commitment (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): a
 commitment keeps a row at the current input, so where it removes rows there it
 chooses — some row is kept and no removed row is refined by it. -/
-theorem «sec:systems/two-systems-two-choices» {sp : Spec I O} (c : Commitment sp)
+theorem «sec:systems/two-systems-two-commitments» {sp : Spec I O} (c : Commitment sp)
     {σ τ : State sp} (h : c.app σ = some τ) :
     (∃ w, τ.R σ.cur w) ∧
     ((∃ u, σ.R σ.cur u ∧ ¬ τ.R σ.cur u) →
       ∃ w, τ.R σ.cur w ∧ ∀ u, σ.R σ.cur u → ¬ τ.R σ.cur u → ¬ u ≼ w) := by
-  obtain ⟨w, hw⟩ := commitment_not_seal_cur c h
-  exact ⟨⟨w, hw⟩, fun _ => ⟨w, hw, fun u hu hnu => c.excludes σ τ h _ u w hu hnu hw⟩⟩
+  obtain ⟨w, hw⟩ := commitment_preserves_current_fiber c h
+  exact ⟨⟨w, hw⟩, fun _ => ⟨w, hw, fun u hu hnu => c.unsubsumed σ τ h _ u w hu hnu hw⟩⟩
 
-/-- "… and neither is the choice `c_o` of Definition lifted-output-event."
+/-- "… and neither is the commitment `x_o` of Definition lifted-output-event."
 At the canonical state of an input whose transactions `A`, `B`, `C` have each
 requested commit (Appendix G's specification), the results of
-`order(A,B)` and `stamp(B)` are not the result of `c_o` for any output `o`. -/
-theorem «sec:systems/neither-is-the-choice» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
+`order(A,B)` and `stamp(B)` are not the result of `x_o` for any output `o`. -/
+theorem «sec:systems/neither-is-canonical-commitment» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
     (h : Txn.Partial.Tri k A B C) :
     (∀ τ, (Txn.Partial.order A B).app (Txn.Partial.σ3 k) = some τ →
-      ∀ o, (choiceC o).app (Txn.Partial.σ3 k) ≠ some τ) ∧
+      ∀ o, (canonicalCommitment o).app (Txn.Partial.σ3 k) ≠ some τ) ∧
     (∀ τ, (Txn.Partial.stamp B (fun _ => False)).app (Txn.Partial.σ3 k) = some τ →
-      ∀ o, (choiceC o).app (Txn.Partial.σ3 k) ≠ some τ) :=
-  Txn.Partial.neither_is_choice h
+      ∀ o, (canonicalCommitment o).app (Txn.Partial.σ3 k) ≠ some τ) :=
+  Txn.Partial.neither_is_canonical_commitment h
 
 /-- "We call the runs of Sections functional-calm–complete-calm canonical runs,
 and a run under a basis `ℬ` is one whose output and commitment events apply
 only commitments from `ℬ` (Definition run-under-basis)."  (Formal definitions:
 `«def:run-under-basis»` in `Paper/AppC_CommitmentBases.lean`.) -/
-abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : Basis sp) (es : List (SEvent sp))
+abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
@@ -631,9 +611,9 @@ Lean: the first clause is `«sec:systems/legal-event-containment»` (Lemma
 `lem:canonical-commitment-normal-form`); this entry is the second, as
 `«lem:canonical-equivalent»`; `Lockstep` records the per-event containment
 (a commitment event of the original is matched by no canonical event), and
-`SEvent.erase (.commit γ) = none`, so commitment events disappear from the
+`SEvent.erase (.commitment γ) = none`, so commitment events disappear from the
 erasure `es.filterMap SEvent.erase`. -/
-theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i : I}
+theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : CommitmentBasis sp} {i : I}
     {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
     ∃ es' ρ', Lockstep B (canon sp i) es ρ (canon sp i) es' ρ' ∧
       es.filterMap SEvent.erase = es'.filterMap SEvent.erase ∧
@@ -641,18 +621,41 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : Basis sp} {i :
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
     canonical_equivalent h
 
+/-- **Corollary `cor:free-eager-output`** (Eager output is incidental).
+"The canonical event for a legal output applies no commitment: every row it
+removes is subsumed by a row that survives.  Likewise, deferring the output
+avoids no commitment."
+
+Lean: for any commitment basis, a legal output has a legal empty-commitment
+output event; every row that event removes is in `Subsumed_o`.  Canonical Run
+Universality (`«sec:systems/canonical-equivalent»`) lifts the canonical account
+to arbitrary runs under a basis. -/
+theorem «cor:free-eager-output» {sp : Spec I O} (B : CommitmentBasis sp)
+    (σ : State sp) (o : O) (ho : σ.R σ.cur o) (hlegal : Exposable σ o) :
+    SysStep B σ (.output [] o) (outState σ o ho) ∧
+      ∀ k x, σ.R k x → ¬ outputTable σ o k x → Subsumed σ o k x := by
+  refine ⟨eps_step_iff.2 ⟨ho, hlegal, rfl, rfl⟩, ?_⟩
+  intro k x hx hn
+  have hox : ¬ o ≼ x := fun h => hn ⟨hx, h⟩
+  obtain ⟨u, hu, hou, hxu⟩ := hlegal k x hx hox
+  exact ⟨hx, hox, u, hu, hou, hxu⟩
+
 /-- *Canonical runs suffice*, example.  "Consider 2PL on an input of three
 transactions `A`, `B`, `C` that have each issued their operations and requested
 commit, where `B` waits for a lock that `A` holds.  When `B` begins to wait,
 2PL applies `order(A,B)` in a commitment event, before any output, keeping only
-the rows that can be completed without committing `B` before `A`.  The
-canonical run skips that event, so it keeps every row, including the one
-completed by `[B,A,C]`.  When 2PL later emits `[A,C,B]`, it applies no further
-commitment ordering `A` and `B`, and the canonical run emits the same output;
-both end with the same table.  The lock issued its commitment to `A` before `B`
-earlier than any output required."
+rows that can be completed without placing `B` before `A`.  The canonical run
+skips that event, so it keeps every row, including the one completed by
+`[B,A,C]`.  Suppose 2PL later emits `[A,C,B]`; its output event commits all
+three transactions and orders `A` before `C` before `B`.  The canonical run
+can emit the same output because that row was present all along.  Every row
+retained afterward refines `[A,C,B]`, so it satisfies all of 2PL's decisions,
+including the earlier order of `A` before `B`.  Thus the canonical final table
+is contained in 2PL's, while Canonical Run Universality gives the reverse
+containment.  The tables are equal: the lock made the `A`-before-`B` decision
+earlier than the output required."
 
-Lean (`CC.Txn.Partial.CommitEx.example_commit_event_ABC`), at any input `k`
+Lean (`CC.Txn.Partial.CommitEx.example_commitment_event_ABC`), at any input `k`
 whose transactions `A`, `B`, `C` have each issued their operations and requested
 commit; rows are serial orders without aborts or reads:
 (a) the commitment event `commit([order(A,B)])` is a legal `B_2PL` step from
@@ -660,12 +663,15 @@ the canonical state `σ₀` to `σ₁`; `σ₁` keeps exactly the rows of `σ₀
 complete refinement in `σ₀` that does not commit `B` before `A` (aborting `A`
 or `B` counts), so it keeps `[A,B,C]` and removes `[B,A,C]`;
 (b) the canonical run stays at `σ₀`, which has `[B,A,C]`;
-(c) 2PL's `Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)]([A,C,B])`
-is a legal `B_2PL` step from `σ₁`, `Out_[TxCommit(A),TxCommit(B),TxCommit(C)]([A,C,B])`
-is not (the row `[A,B,C]` survives those commitments), and the canonical run
-emits `[A,C,B]` with `κ`;
-(d) both end at the same state, and the runs are a `Lockstep` pair whose
-commitment event is matched by no canonical event. -/
+(c) 2PL's
+`Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)]([A,C,B])`
+is a legal `B_2PL` step from `σ₁`; the canonical run can emit `[A,C,B]`
+because that row was present at `σ₀`.  Every row it retains afterward refines
+`[A,C,B]`, hence satisfies those five commitments and the earlier `order(A,B)`;
+(d) the canonical final table is therefore contained in 2PL's, while Canonical
+Run Universality gives the reverse containment.  The two runs end at the same
+state and form a `Lockstep` pair whose commitment event is matched by no
+canonical event. -/
 theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
     (h : Txn.Partial.Tri k A B C) :
     let σ0 := Txn.Partial.σ3 k
@@ -674,7 +680,7 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
     let row := fun (l : List T) => Txn.Partial.full (K := K) (Txn.Partial.mk l fun _ => False)
     ∃ σ1 τ2 τ2' : State (Txn.Partial.spec (T := T) (K := K) false),
       -- (a)
-      SysStep Txn.Partial.basis2PL σ0 (.commit [Txn.Partial.order A B]) σ1 ∧ σ1.cur = k ∧
+      SysStep Txn.Partial.basis2PL σ0 (.commitment [Txn.Partial.order A B]) σ1 ∧ σ1.cur = k ∧
       (∀ k' w, σ1.R k' w ↔ σ0.R k' w ∧
         ∃ c, σ0.R k' c ∧ Txn.Partial.Decides false k' c.o ∧ w ≼ c ∧ ¬ c.o.lt B A) ∧
       σ1.R k (row [A, B, C]) ∧ ¬ σ1.R k (row [B, A, C]) ∧
@@ -687,57 +693,64 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
       CanonStep σ0 (.output (kappa σ0 o2) o2) τ2' ∧
       -- (d)
       τ2 = τ2' ∧
-      Lockstep Txn.Partial.basis2PL σ0 [.commit [Txn.Partial.order A B], .output γ2 o2] τ2
+      Lockstep Txn.Partial.basis2PL σ0 [.commitment [Txn.Partial.order A B], .output γ2 o2] τ2
         σ0 [.output (kappa σ0 o2) o2] τ2' :=
-  Txn.Partial.CommitEx.example_commit_event_ABC h
+  Txn.Partial.CommitEx.example_commitment_event_ABC h
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
-/-- §4.4: "A commitment requires coordination only when another run could
-contradict it … it requires distributed coordination when that run is at
-another participant.  Running such a mechanism need not issue a commitment: closing the
-polls after every voter has voted still runs the mechanism, but no ballot is
-left to seal, so it removes nothing the specification still permits and
-applies no commitment."  At the canonical
-state of any full ballot, the poll-closing commitment `closePolls` is undefined
-(it would remove no row). -/
+/-- §4.4: "Having separated a system's observable behavior from when and
+how it makes commitments, we now ask which commitments require coordination.
+The idea is simple: a commitment requires coordination if another run can
+contradict it."  "The proposition says what a coordination mechanism must
+accomplish: prevent a commitment and a run that contradicts it from occurring
+independently.  The definitions diagnose the requirement, not its
+implementation.  Mutexes, locks, atomic instructions, agreement protocols,
+ownership, and sequencers are familiar implementations.  Using one need not
+apply a commitment."  At the canonical state of any full ballot, the
+poll-closing commitment `closePolls` is undefined (it would remove no row). -/
 theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
     (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
   Figures.Elec.close_after_voting i hfull
 
 /-- **Def. contradicting run** (`def:contradicts`).  "Let a specification event of a run
-apply a commitment.  A run contradicts the commitment if it accepts an input
-the commitment seals, or emits an output the commitment chooses against at the
-same input."  The events that apply commitments are output events `Out_γ(o)`
-and commit events `Commit(γ)`.
+`r` apply a commitment.  A run `r'` contradicts that commitment if it accepts
+an input whose fiber the commitment emptied, or emits an output whose row the
+commitment removed."  The events that apply commitments are output events `Out_γ(o)`
+and commitment events `Apply(γ)`.
 
 Lean (`CC.CAP` model): `CAP.Contradicts emits accepts σ σc`, for commitments
 taking `σ` to `σc` and runs described by the outputs they emit at each current
 input (`emits k x`) and the inputs they accept (`accepts k`): some removed row
-`(k,x)` is emitted at current input `k`, or some sealed input `k` (one whose
+`(k,x)` is emitted at current input `k`, or some excluded input `k` (one whose
 remaining rows are all removed) is accepted. -/
 abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
-/-- **Def. `def:coordination`** (Coordination-requiring commitment).  "Let
-`𝓡` be a set of runs: for a specification, its canonical runs; for a system,
-the runs it can perform under any inputs the environment may supply.  A
-commitment requires coordination relative to `𝓡` when some run in `𝓡`
-contradicts it (Definition contradicts)."
+  /-- **Def. `def:coordination`** (Coordination-requiring commitment).
+  "We distinguish the behavior permitted by a specification from the behavior
+  admitted by a particular system.  Write `𝓡_P^⊤` for all canonical runs of
+  `P`.  By Canonical Run Universality it is maximal at the observable
+  interface: every run under any commitment basis has the same input and
+  output events as some run in `𝓡_P^⊤`.  A system `A` implementing `P` may
+  admit fewer such behaviors because its strategies restrict which events it
+  can perform; write `𝓡_A` for the runs it produces.  A commitment requires
+  coordination relative to `𝓡` when some run in `𝓡` contradicts it."
 
 Lean, for a system: the commitments taking `σ` to `σc` are contradicted
 (`«def:contradicts»`) by the runs of `Sys`: some produced history emits a
-removed row (`SysEmits`) or accepts a sealed input (`SysAccepts`); produced
+removed row (`SysEmits`) or accepts an excluded input (`SysAccepts`); produced
 histories range over all inputs the adversarial environment may supply. -/
 abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
     (σ σc : State sp) : Prop :=
   CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
 
-/-- **Def. `def:distributed-coordination`** (Distributed coordination).  "A
-commitment requires distributed coordination relative to `𝓡` when the run
-that contradicts it is at another participant of the same history."
+/-- **Def. `def:distributed-coordination`** (Distributed coordination).
+"Suppose participant `p` applies a commitment in a history.  The commitment
+requires distributed coordination relative to `𝓡` when some run in `𝓡` at
+another participant `q ≠ p` of that history contradicts it."
 
 Lean: the commitments taking `σ` to `σc`, applied by participant `p` of `H`,
 are contradicted by a participant `q ≠ p` of `H` (`OtherEmits`,
@@ -754,7 +767,7 @@ abbrev «def:coordination/distributed» {sp : Spec I O} {D : Type} {n : Nat}
 /-- Def. `def:coordination`, for a specification (`𝓡` the canonical runs): a
 run applies a commitment that requires coordination exactly when it applies a
 commitment at all (`Coordinates`: some output event has `γ ≠ ε`, or there is a
-commit event); see `«sec:coordination/specification-contradicted»`. -/
+commitment event); see `«prop:canonical-contradiction»`. -/
 abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
   Coordinates es
 
@@ -763,7 +776,7 @@ coordination-free relative to `𝓡` when it applies no commitment that requires
 coordination relative to `𝓡`."
 
 Lean, for a system: `System.CoordinationFree` says the commitments of every
-output event and every commit event of every produced history are local
+output event and every commitment event of every produced history are local
 (`LocalEvent`), which is the negation of `«def:coordination»`
 (`«def:coordination-free/local-iff»`). -/
 abbrev «def:coordination-free» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
@@ -781,7 +794,7 @@ theorem «def:coordination-free/local-iff» {sp : Spec I O} {D : Type} :
   ⟨CAP.localEvent_iff_not_contradicts, CAP.localInH_iff_not_contradicts⟩
 
 /-- Def. `def:coordination-free`, distributed: no commitment of an output or
-commit event of a produced history requires distributed coordination.  Lean:
+commitment event of a produced history requires distributed coordination.  Lean:
 `System.CoordinationFreeH` (every such event is `LocalInH`). -/
 abbrev «def:coordination-free/distributed» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
     Prop :=
@@ -794,89 +807,89 @@ theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
     «def:coordination-free/distributed» Sys :=
   CAP.coordinationFree_to_H h
 
-/-- "Whether a commitment requires coordination depends on the set of runs:
-those of a specification, or those of a system implementing it.  For a
-specification, every commitment requires coordination: some canonical run
-accepts each input that a commitment can seal and emits each permitted
-output."  Lean: from `σ_S(i)` with `i ≼ k`, the
-canonical run `input(k) output(x)` accepts `k` and emits any `x ∈ S(k)` at
-current input `k`. -/
-theorem «sec:coordination/specification-contradicted» {sp : Spec I O} {i k : I} {x : O}
-    (hik : i ≼ k) (hx : sp.S k x) :
+/-- **Proposition `prop:canonical-contradiction`** (Canonical runs contradict
+every commitment).  "Every commitment applied in a run from a canonical state
+`σ_P(i)` is contradicted by a canonical run from `σ_P(i)`."
+
+Lean states the output-row witness directly: an applied commitment removes
+some `(k,x)`, and the canonical run from the same `σ_P(i)` accepts `k` and
+emits `x`.  This witnesses `CAP.Contradicts` through its output clause. -/
+theorem «prop:canonical-contradiction» {sp : Spec I O} {B : CommitmentBasis sp}
+    {i : I} {es : List (SEvent sp)} {σ τ : State sp} {c : Commitment sp}
+    (hrun : SysExec B (canon sp i) es σ) (happ : c.app σ = some τ) :
+    ∃ k x ρ, σ.R k x ∧ ¬ τ.R k x ∧
+      Exec (canon sp i) [.input k, .output x] ρ ∧ ρ.cur = k := by
+  obtain ⟨k, x, hx, hnx⟩ := c.removes σ τ happ
+  have hik : i ≼ k := (hrun.sub k x hx).2
+  obtain ⟨ρ, he, hc⟩ := CAP.canonical_run_contradicts hik (σ.sub k x hx)
+  exact ⟨k, x, ρ, hx, hnx, he, hc⟩
+
+  /-- Supporting form: from `σ_P(i)` with `i ≼ k`, the canonical run
+  `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at current input
+  `k`. -/
+theorem «prop:canonical-contradiction/canonical-run» {sp : Spec I O} {i k : I} {x : O}
+    (hik : i ≼ k) (hx : sp.P k x) :
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
-/-- Def. `def:coordination-free`: "For a specification, then, coordination-free means
-commitment-free: every output event is some `Out_ε(o)`, which may still
-perform output retirements, and no commitment event occurs."  Lean: `CoordFree` (every output event is
-`Out_ε(o)`, and there is no commit event). -/
-abbrev «def:coordination-free/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-  CoordFree es
+  /-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
+  "Thus, relative to `𝓡_P^⊤`, every commitment requires coordination, so a run
+  is coordination-free exactly when it makes no commitments; output
+  subsumption remains permitted.  The run applying the commitment and a
+  canonical run that contradicts it can also be placed at separate participants
+  in a message-free history, by the construction in the proof of Proposition
+  `prop:distributed-consistency`.  Hence every commitment requires distributed
+  coordination as well."
 
-/-- "Closing the polls before every voter has voted seals the remaining
-ballots."  Lean: at panel (b) (`xy·`), closing the polls is defined and leaves
-no row at the remaining-ballot input `xyx`, which had the row `(xyx, x)`. -/
-theorem «sec:coordination/closing-before-voting-seals» :
-    (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec CALM.bxy) =
-      some Figures.Elec.panelD ∧
-    (canon CALM.elec CALM.bxy).R CALM.bxyx (.win .x) ∧
-    ∀ o, ¬ Figures.Elec.panelD.R CALM.bxyx o := by
-  refine ⟨Figures.Elec.close_at_b,
-    ⟨(by decide : CALM.Res.win .x = CALM.winner CALM.bxyx), by decide⟩, fun o h => ?_⟩
-  have := (Figures.Elec.panelD_rows _ o).1 h
-  exact absurd this.1 (by decide)
-
-/-- "Outputs, by contrast, come only from the system's strategies, so a choice
-requires coordination only when the system can perform a run that emits an
-output the choice rules out, and distributed coordination when such a run is
-at another participant."  Lean: `SysEmits` requires an output event in a
-produced history, hence one allowed by the participant's strategy.  The rest
-of the sentence is Def. `def:coordination` for the system's runs
-(`«def:coordination»`, `«def:coordination/distributed»`). -/
-theorem «sec:coordination/choices-by-strategies» {sp : Spec I O} {D : Type}
-    (Sys : CAP.System sp D) {k : I} {x : O} (h : CAP.SysEmits Sys k x) :
-    ∃ n init q pre γ, Sys.strat n init q pre (CAP.LEv.out γ x) := by
-  obtain ⟨n, init, H, q, a, b, γ, σ, _, hp, hH, _, _⟩ := h
-  exact ⟨n, init, q, a, γ, ((hp q) a _ b hH).2⟩
+Lean: `CoordFree es ↔ ¬ Coordinates es`; `Coordinates` means that an output
+event has `γ ≠ ε` or a commitment event occurs. -/
+theorem «cor:canonical-coordination» {sp : Spec I O} (es : List (SEvent sp)) :
+    CoordFree es ↔ ¬ Coordinates es :=
+  coordFree_iff_not es
 
 /-- Def. `def:coordination-free`: coordination-free is the negation of coordinates,
 and coordination-free runs under any basis are exactly the commitment-free
 executions (`ExecCF`) of §3 after erasing `γ`.  `Out_ε(o)` ends at
-`R[out ⪰ o]`, so it may still retire rows (`«lem:canonical-commitment-normal-form»`
+`R[out ⪰ o]`, so it may still subsume rows (`«lem:canonical-commitment-normal-form»`
 (3) in the App. C file). -/
 theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
     (∀ es : List (SEvent sp), CoordFree es ↔ ¬ Coordinates es) ∧
-    (∀ (B : Basis sp) (σ τ : State sp) (es : List (SEvent sp)),
+    (∀ (B : CommitmentBasis sp) (σ τ : State sp) (es : List (SEvent sp)),
       SysExec B σ es τ → CoordFree es → ExecCF σ (es.filterMap SEvent.erase) τ) ∧
-    (∀ (B : Basis sp) (σ τ : State sp) (es : List (Event I O)), ExecCF σ es τ →
+    (∀ (B : CommitmentBasis sp) (σ τ : State sp) (es : List (Event I O)), ExecCF σ es τ →
       ∃ es' : List (SEvent sp), es'.filterMap SEvent.erase = es ∧ CoordFree es' ∧
         SysExec B σ es' τ) :=
   ⟨coordFree_iff_not, fun _ _ _ _ h hf => coordFree_execCF h hf,
     fun B _ _ _ h => execCF_coordFree B h⟩
 
-/-- **Prop. conflicting events cannot be reconciled**
-(`thm:commitments-require-coordination`).  "From a state `(i,R)`, let one
-run perform an output or commitment event after which no output at `i` refines `x`,
-and let another run perform an output event that emits `x`.  The two resulting
-states cannot be brought to a common state with current input `i`."
+  /-- **Prop. contradicting runs cannot reconcile at the conflict input**
+  (`thm:commitments-require-coordination`).  "Consider a run that applies a
+  commitment and another run that contradicts it at input `k`.  Their resulting
+  states have no common continuation to a state `(k,R')`."
 
-Lean: this entry takes the first event to be an output event; for a
-commitment event (indeed any event) see `…/any-event`.  `x ∈ R(i)` follows from the legality of `Out_{γ'}(x)`.  "Brought to a
-common state" is: by executions under a basis `B''` (any; for different bases
-see `…/any-bases`, for the transition system of §§2–3 see `…/reach`). -/
-theorem «thm:commitments-require-coordination» {sp : Spec I O} {B B' B'' : Basis sp}
-    {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
-    (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
-    γ ≠ [] ∧
-    ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
-        (∃ es, SysExec B'' σ' es ρ) ∧ (∃ es, SysExec B'' t es ρ) :=
-  conflicting_outputs h1 hno h2
+  Lean: `CommitmentContradictsAt σ σc τ k` covers both proof cases.  Its first
+  clause is an emitted output `x` whose row the commitment removed; its second
+  is an accepted input whose fiber the commitment emptied.  The conclusion
+  permits arbitrary, independent bases for the two continuations. -/
+  theorem «thm:commitments-require-coordination» {sp : Spec I O}
+      {B1 B2 : CommitmentBasis sp} {c : Commitment sp} {σ σc τ : State sp} {k : I}
+      (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
+      ¬ ∃ ρ : State sp, ρ.cur = k ∧
+          (∃ es, SysExec B1 σc es ρ) ∧ (∃ es, SysExec B2 τ es ρ) :=
+    Dist.commitment_contradiction_sysExec happ hcontra
 
-/-- Prop. `thm:commitments-require-coordination`, with the two continuations
+  /-- Prop. `thm:commitments-require-coordination`, with continuations in the
+  transition system of Sections 2--3. -/
+  theorem «thm:commitments-require-coordination/reach-general» {sp : Spec I O}
+      {c : Commitment sp} {σ σc τ : State sp} {k : I}
+      (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
+      ¬ ∃ ρ : State sp, ρ.cur = k ∧ Reach σc ρ ∧ Reach τ ρ :=
+    Dist.commitment_contradiction_reach happ hcontra
+
+  /-- Supporting output-only form of Prop. `thm:commitments-require-coordination`.
 under different bases. -/
 theorem «thm:commitments-require-coordination/any-bases» {sp : Spec I O}
-    {B B' B1 B2 : Basis sp} {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
+    {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
     (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
@@ -885,7 +898,7 @@ theorem «thm:commitments-require-coordination/any-bases» {sp : Spec I O}
 
 /-- Prop. `thm:commitments-require-coordination`, with continuations in the
 transition system of §§2–3. -/
-theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : Basis sp}
+theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : CommitmentBasis sp}
     {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
     (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
@@ -893,7 +906,7 @@ theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : B
   conflicting_outputs_reach h1 hno h2
 
 /-- Prop. `thm:commitments-require-coordination` with the first event any
-event, in particular a commitment event `commit(γ)`: "let one run perform an
+event, in particular a commitment event `apply(γ)`: "let one run perform an
 output or commitment event after which no output at `i` refines `x`".
 
 Lean: for any event `e` taking `σ` to `σ'` with no output at `i` refining `x`,
@@ -901,28 +914,29 @@ and `Out_{γ'}(x)` taking `σ` to `t`, no state with current input `i` is
 reachable from both, under any bases or in the transition system of §§2–3; if
 `e` is an output or commitment event, its commitment sequence is nonempty. -/
 theorem «thm:commitments-require-coordination/any-event» {sp : Spec I O}
-    {B B' B1 B2 : Basis sp} {σ σ' t : State sp} {e : SEvent sp}
+    {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp} {e : SEvent sp}
     {γ' : List (Commitment sp)} {x : O}
     (h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
-    (∀ γ o, e = .output γ o → γ ≠ []) ∧ (∀ γ, e = .commit γ → γ ≠ []) ∧
+    (∀ γ o, e = .output γ o → γ ≠ []) ∧ (∀ γ, e = .commitment γ → γ ≠ []) ∧
     (¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
         (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ)) ∧
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
   let h := Dist.conflicting_events (B1 := B1) (B2 := B2) h1 hno h2
   ⟨h.1, h.2.1, h.2.2, Dist.conflicting_events_reach h1 hno h2⟩
 
-/-- "The conflict is confined to the current input.  If `i ≺ j`, `S(i) = {o,x}`
-with `o` and `x` incomparable, and `S(j) = {u}` with `u` refining both, the two
-states can be reconciled once `j` arrives.  Consistency still counts this as a failure,
-since it asks for confluence at the current input too."  (The rest of the paragraph, on the
-environment and transient conflicts, is the paper's modeling assumption.)
+/-- "The proposition rules out reconciliation at `i`, not forever.  For
+example, suppose `i ≺ j`, `P(i) = {o,x}` with `o` and `x` incomparable, and
+`P(j) = {u}` with `u` refining both.  The states that emit `o` and `x` cannot
+be reconciled at `i`, although accepting `j` reconciles them.  As explained
+after Definition `def:consistency`, consistency nevertheless counts the
+conflict at `i` as a failure."
 
 Lean: the example of `CALM/TransientConflict.lean`: inputs `i ≺ j`, outputs
-`o`, `x` incomparable below `u`, `S(i) = {o,x}`, `S(j) = {u}`.  From
-`σ_S(i)`, the canonical events `output(o)` and `output(x)` are legal; after
+`o`, `x` incomparable below `u`, `P(i) = {o,x}`, `P(j) = {u}`.  From
+`σ_P(i)`, the canonical events `output(o)` and `output(x)` are legal; after
 `output(o)` no output at `i` refines `x`, so the two states have no common
-state with current input `i`; both reach `σ_S(j)` by `input(j)`, so they are
+state with current input `i`; both reach `σ_P(j)` by `input(j)`, so they are
 confluent at `j`; and the specification is neither consistent nor directed at
 `i` (so not Lifted Monotone). -/
 theorem «thm:commitments-require-coordination/confined-to-current-input» :
@@ -936,16 +950,15 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
-/-- Paragraph "Locks in a shared-nothing database": "Ownership changes which
-runs can contradict a commitment.  The three cases of the definitions all
-arise in a database partitioned by key, in which each key is owned by one
-participant, which manages its locks."
+/-- Paragraph "Locks in a shared-nothing database": "Consider a database
+partitioned by key, with each key owned and locked by one participant.
+Ownership can keep coordination local."
 
 *Local coordination.*  "Ordering two transactions on one key requires
-coordination: in another run `B`'s request arrives first and the key's owner
-orders `B` before `A`.  But only runs at the key's owner can contradict it, so
-it does not require distributed coordination."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
-`ba` incomparable); emitting `ab` is a commitment (not exposable); in the
+coordination because, in another run, `B`'s request may arrive first and the
+owner may order `B` before `A`.  Only the key's owner can produce that
+contradicting run, so no distributed coordination is required."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
+`ba` incomparable); emitting `ab` is a commitment (not a legal output); in the
 system where only participant 0 may emit an order, another run (the owner
 choosing `ba`) contradicts it, but no other participant of a history does. -/
 theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
@@ -954,11 +967,11 @@ theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
   ⟨CAP.ordSpec_ab_not_exposable, CAP.ownerSys_not_coordinationFree D,
     CAP.ownerSys_coordinationFreeH D⟩
 
-/-- Paragraph "Locks in a shared-nothing database", *Distributed
-coordination*: "A transaction that spans keys needs one order, but each key's
-owner orders its part, and the owners of two keys can order the same pair of
-transactions oppositely.  Each ordering then requires distributed
-coordination, and the owners must agree."  Lean: when two participants may
+/-- Paragraph "Locks in a shared-nothing database": *Distributed
+coordination*: "A transaction spanning two keys is different.  Each owner
+orders its own part, and the two owners can order the same pair of transactions
+oppositely.  Each ordering then requires distributed coordination: the owners
+must agree on one order."  Lean: when two participants may
 each emit an order, some history has one emit `ab` (removing `ba`) and the
 other emit `ba`, so the system is not free of distributed coordination.
 "The owners must agree" is the paper's reading of that (some mechanism must
@@ -968,16 +981,14 @@ theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
     ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=
   CAP.twoOwnerSys_not_coordinationFreeH D
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*:
-"Two-phase commit adds no coordination beyond the owners' own.  Each owner's
-prepare is its own commitment, local coordination as in the first case.  The
-unanimous vote that combines them, however, requires no coordination at all:
-the coordinator's unanimity decision over a fixed set of participants is
-monotone, so it issues no commitment that requires coordination."
+/-- Paragraph "Locks in a shared-nothing database": "Two-phase commit adds
+no further coordination requirement.  Each owner's prepare reflects its own
+commitment, with the local coordination just described.  The coordinator then
+makes the monotone decision whether all owners prepared."
 
 Lean, for the decision (`CAP/TwoPhaseCommit.lean`): inputs record the votes
 of `n` fixed participants (`none` until received; a received vote does not
-change), outputs are `undecided ≼ commit, abort`, and `S` aborts on a no vote,
+change), outputs are `undecided ≼ commit, abort`, and `P` aborts on a no vote,
 commits when all voted yes, and is undecided otherwise.  This is a monotone
 function, hence consistent; no decision at a commitment-free reachable state
 needs a commitment; and the system that emits decisions by canonical output
@@ -989,14 +1000,14 @@ that follows is `«sec:coordination/two-phase-commit-detects»`. -/
 theorem «sec:coordination/two-phase-commit» (n : Nat) (D : Type) :
     (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
       (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d, τ.R τ.cur d → Exposable τ d) ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFree ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFreeH :=
+      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).P).CoordinationFree ∧
+      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).P).CoordinationFreeH :=
   ⟨CAP.voteSpec_functional n, CAP.voteSpec_monotone n, CAP.voteSpec_consistent n,
    CAP.voteSpec_exposable n, CAP.voteSpec_coordinationFree n D⟩
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "The
-coordinator does not make the owners agree; it detects whether their local
-commitments already agree, and aborts when they do not."  Lean, for the
+/-- Paragraph "Locks in a shared-nothing database": "The coordinator detects
+whether the owners' commitments agree and aborts when they do not.  It does not
+make the owners agree."  Lean, for the
 decision of `CAP/TwoPhaseCommit.lean` (each vote reports whether the owner's
 prepare succeeded): the decision is `abort` exactly when some received vote is
 no and `commit` exactly when every vote is yes, so once every vote is in it
@@ -1010,15 +1021,14 @@ theorem «sec:coordination/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n
     ((∀ p, v p ≠ none) → (CAP.decide2PC v = .abort ↔ ¬ ∀ p, v p = some true)) :=
   CAP.decide2PC_detects v
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "A
-coordinator that aborts on timeout, before the last vote arrives, does issue a
-commitment: like closing the polls, it seals every input that adds a missing
-vote, yes or no."  (CIDR version: "A coordinator that aborts on timeout,
+/-- Paragraph "Locks in a shared-nothing database": "If the coordinator
+instead aborts on timeout before the last vote arrives, that abort applies
+another commitment, like closing the polls."  (CIDR version: "A coordinator that aborts on timeout,
 before the last vote arrives, issues a commitment, like closing the polls".)
 
 Lean (`CAP/TimeoutAbort.lean`), on the decision `voteSpec` of
-`«sec:coordination/two-phase-commit»`: at `σ_S(v)` with vote `p` missing,
-closing the polls (`Figures.closePolls`, a commitment) applies; it is a seal;
+`«sec:coordination/two-phase-commit»`: at `σ_P(v)` with vote `p` missing,
+closing the polls (`Figures.closePolls`, a commitment) applies; it is a commitment;
 every input `k ⪰ v` with `k p = some b`, for `b` yes or no, had the row
 `(k, decide2PC k)` and keeps none; the only rows left are `(v, decide2PC v)`
 (with the polls closed, `undecided` is final: abort).  At `yy·` the struck
@@ -1034,24 +1044,22 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
         ∀ u, ¬ (Figures.closeState (canon (CAP.voteSpec m) v)).R k u) ∧
     (∀ k u, (Figures.closeState (canon (CAP.voteSpec m) v)).R k u ↔
       (k = v ∧ u = CAP.decide2PC v)) :=
-  CAP.Timeout.timeout_seals v p hp
+  CAP.Timeout.timeout_closes_expansions v p hp
 
-/-- Paragraph "Locks in a shared-nothing database", *No coordination*: "The
-decision is its own specification, run by the coordinator alone, so this is
-local coordination, as in the first case; it becomes distributed coordination
-when the decision is replicated for fault tolerance, as in Paxos Commit."
-(CIDR version: "but the decision is a specification only the coordinator
-runs: local coordination.")
+/-- Paragraph "Locks in a shared-nothing database": "The timeout decision
+requires only local coordination when a single coordinator makes it.  It
+requires distributed coordination when the coordinator is replicated for
+fault tolerance, as in Paxos Commit."
 
-Lean (`CAP/TimeoutAbort.lean`), for the seal of
+Lean (`CAP/TimeoutAbort.lean`), for the commitment of
 `«sec:coordination/2pc-timeout-abort»` (closing the polls on `voteSpec` at
 `yy·`).  The decision specification is run by a system of its own, as each
 stage is in the composition section; the owners' specifications are separate
 systems.
 
-*Run by the coordinator alone* (`sealSys1`, whose strategies act only when
-the system has one participant): the seal requires coordination, since
-another run of the coordinator from `yy·` accepts the sealed late vote `yyy`
+*Run by the coordinator alone* (`pollClosingSys1`, whose strategies act only when
+the system has one participant): the commitment requires coordination, since
+another run of the coordinator from `yy·` accepts the excluded late vote `yyy`
 (not `CoordinationFree`); but no history of the system applies a commitment
 that another participant of the same history contradicts
 (`CoordinationFreeH`): local coordination.  The general fact is
@@ -1060,76 +1068,21 @@ that another participant of the same history contradicts
 *Replicated* (two or more participants run `voteSpec`): any system in which
 participant `0` of two, starting at `yy·`, may close the polls there is not
 `CoordinationFreeH`, since the environment may deliver `yyy` to the other
-participant; `sealSysRepl` (every participant at `yy·` may close the polls) is
+participant; `pollClosingSysRepl` (every participant at `yy·` may close the polls) is
 an instance.  Distributed coordination.  Paxos Commit itself is not modeled.
 
-Library lemmas not quoted here: the abort read as a choice (`abortSpec`,
-`abort_choice_yy`, `coordSys_coordinationFreeH`,
+Library lemmas not quoted here: the abort read as a commitment (`abortSpec`,
+`abort_canonicalCommitment_yy`, `coordSys_coordinationFreeH`,
 `replSys_not_coordinationFreeH`). -/
 theorem «sec:coordination/2pc-timeout-abort-local» (D : Type) :
-    (¬ (CAP.Timeout.sealSys1 D).CoordinationFree ∧
-      (CAP.Timeout.sealSys1 D).CoordinationFreeH) ∧
+    (¬ (CAP.Timeout.pollClosingSys1 D).CoordinationFree ∧
+      (CAP.Timeout.pollClosingSys1 D).CoordinationFreeH) ∧
     (∀ Sys : CAP.System (CAP.voteSpec 3) D, Sys.basis CAP.Timeout.cp →
       Sys.strat 2 (fun _ => CAP.Timeout.yyN) 0 [] (.out [CAP.Timeout.cp] .undecided) →
       ¬ Sys.CoordinationFreeH) ∧
-    ¬ (CAP.Timeout.sealSysRepl D).CoordinationFreeH :=
-  ⟨CAP.Timeout.sealSys1_local D,
-   fun Sys hb hs => CAP.Timeout.seal_not_coordinationFreeH Sys hb hs,
-   CAP.Timeout.sealSysRepl_not_coordinationFreeH D⟩
-
-/-- Paragraph "Locks in a shared-nothing database": "All three exchange
-messages, and a client cut off from an owner cannot get its answer; only the
-second issues a commitment that a run at another participant could
-contradict."  Lean, for the second clause: of the three systems, only the
-two-owner system of the distributed case fails to be free of distributed
-coordination (`CoordinationFreeH`).  The first clause (messages, clients cut
-off from owners) is not modeled; see `lean/README.md`. -/
-theorem «sec:coordination/shared-nothing-only-second» (n : Nat) (D : Type) :
-    (CAP.ownerSys D).CoordinationFreeH ∧ ¬ (CAP.twoOwnerSys D).CoordinationFreeH ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).S).CoordinationFreeH :=
-  ⟨CAP.ownerSys_coordinationFreeH D, CAP.twoOwnerSys_not_coordinationFreeH D,
-    (CAP.voteSpec_coordinationFree n D).2⟩
-
-/-- "The first event's commitment is a choice against `x`."
-
-Lean: (a) every commitment keeps a row at the current input; (b) in the
-setting of the proposition, some commitment `c` of `γ` removes `(i,x)` while
-keeping a row at `i`, and no kept row at `i` refines `x`. -/
-theorem «sec:coordination/conflict-is-choice» {sp : Spec I O} :
-    (∀ (c : Commitment sp) (σ τ : State sp), c.app σ = some τ → ∃ w, τ.R σ.cur w) ∧
-    (∀ {B : Basis sp} {σ σ' : State sp} {γ : List (Commitment sp)} {o x : O},
-      SysStep B σ (.output γ o) σ' → σ.R σ.cur x → (∀ w, σ'.R σ.cur w → ¬ x ≼ w) →
-      ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
-        ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w) :=
-  ⟨fun c _ _ h => commitment_not_seal_cur c h, fun h1 hx hno => Dist.conflict_is_choice h1 hx hno⟩
-
-/-- "The first event's commitment is a choice against `x`", when the first
-event is a commitment event `commit(γ)`, as the proposition allows ("an output
-or commitment event").
-
-Lean: if `commit(γ)` leaves no output at `i` refining `x ∈ R(i)`, some
-commitment `c` of `γ` removes `(i,x)` while keeping a row at `i`, and no kept
-row at `i` refines `x`. -/
-theorem «sec:coordination/conflict-is-choice-commit» {sp : Spec I O} {B : Basis sp}
-    {σ σ' : State sp} {γ : List (Commitment sp)} {x : O}
-    (h1 : SysStep B σ (.commit γ) σ') (hx : σ.R σ.cur x)
-    (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
-    ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
-      ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w :=
-  Dist.conflict_is_choice_commit h1 hx hno
-
-/-- "Under Lifted Monotonicity, participants at a common input `j` can each emit
-a `u ∈ S(j)` that refines everything emitted, without commitment; choosing `u`
-by a shared deterministic rule terminates once outputs stop."
-
-Lean: under Lifted Monotonicity, runs with common expansion `j` share a row
-`(j,u)` (which, by Lemma run-residual, refines every output emitted on each
-run), and from each final state the commitment-free events `input(j)`,
-`output(u)` reach the same state. -/
-theorem «sec:coordination/deterministic-reconciliation» {sp : Spec I O} (hLM : sp.LiftedMono)
-    (fam : List (State sp)) (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (hj : ∀ σ ∈ fam, σ.cur ≼ j) :
-    ∃ u, ∃ hu : sp.S j u, (∀ σ ∈ fam, σ.R j u) ∧
-      ∀ σ ∈ fam, ExecCF σ [.input j, .output u] (meetState sp j u hu) :=
-  Dist.reconcile_cf hLM fam hrun j hj
+    ¬ (CAP.Timeout.pollClosingSysRepl D).CoordinationFreeH :=
+  ⟨CAP.Timeout.pollClosingSys1_local D,
+   fun Sys hb hs => CAP.Timeout.pollClosing_not_coordinationFreeH Sys hb hs,
+   CAP.Timeout.pollClosingSysRepl_not_coordinationFreeH D⟩
 
 end CC.Paper

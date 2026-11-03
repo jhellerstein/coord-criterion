@@ -58,7 +58,7 @@ import CoordCriterion.Appendix.TransactionBases.NoReads
 import CoordCriterion.Appendix.TransactionBases.Spec
 import CoordCriterion.Appendix.TransactionBases.Partial
 import CoordCriterion.Appendix.TransactionBases.MVTO
-import CoordCriterion.Appendix.TransactionBases.CommitEvent
+import CoordCriterion.Appendix.TransactionBases.CommitmentEvent
 -- Frontier results (not in the paper; kept for future work) and registers (Appendix E)
 import CoordCriterion.Appendix.Frontiers
 import CoordCriterion.Appendix.ProductFrontier

@@ -11,9 +11,9 @@ Namespace `CC.Apps` (reuses the finite sets and generic commitment lemmas of
 * Committed authority:  `Auth`, `prefix_antisymm`, the output order of
   Eq. `authority-refinement` (`instPOAuth`); `safety_exposable` (if every
   remaining row refines the certified evidence `o`, then `o` is exposable and
-  `Out_ε(o)` is legal); `incompatible_rejected` (generic: two outputs at the
-  current input with no common refinement there ⇒ emitting one rejects the
-  other, is not exposable, and needs a commitment); `slot_conflict` and
+    `Out_ε(o)` is legal); `incompatible_excluded` (generic: two outputs at the
+    current input with no common refinement there ⇒ emitting one excludes the
+    other, is not exposable, and needs a commitment); `slot_conflict` and
   `epoch_conflict` instantiate it for competing decisions of one slot and for
   competing next epochs.  The decision claim needs the extra hypothesis that
   permitted outputs decide at most one value per epoch and slot (`SlotUnique`),
@@ -28,7 +28,7 @@ Namespace `CC.Apps` (reuses the finite sets and generic commitment lemmas of
   carrying the restricted order"), `prefixSpec`, `prefix_mono`,
   `prefix_union`, `prefixSpec_liftedMono`, `prefix_empty`;
   `completeSpec_functional`, `completeSpec_not_monotone`,
-  `completeSpec_seal_needed` (via Prop. `prop:functional-exposure-boundary`).
+  `completeSpec_commitment_needed` (via Prop. `prop:functional-exposure-boundary`).
 
 Modeling choices: output types contain all partial maps / sets (permitted
 outputs are finite); "no common refinement" is proved in the whole output
@@ -50,23 +50,22 @@ section Generic
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 /-- If `o, o' ∈ R(i)` have no common refinement in `R(i)`, emitting `o`
-rejects `(i,o')` (a choice), `o` is not exposable, and every legal output
+excludes `(i,o')` (a commitment), `o` is not exposable, and every legal output
 event emitting `o` applies a commitment. -/
-theorem incompatible_rejected {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
+theorem incompatible_excluded {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
     (ho' : σ.R σ.cur o') (hn : ¬ ∃ u, σ.R σ.cur u ∧ o ≼ u ∧ o' ≼ u) :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] := by
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] := by
   have hno : ¬ o ≼ o' := fun h => hn ⟨o', ho', h, PO.refl _⟩
-  have hrej : Rejected σ o σ.cur o' :=
-    ⟨ho', hno, fun hs => hs.2 ⟨o, ho, PO.refl _⟩,
-     fun hr => let ⟨_, _, u, hu, h1, h2⟩ := hr; hn ⟨u, hu, h1, h2⟩⟩
-  refine ⟨hrej, fun he => ?_, fun B γ τ hs => containment_nonempty hs ⟨_, _, Or.inr hrej⟩⟩
-  exact ((exposable_iff_empty σ o).1 he).2 ⟨_, _, hrej⟩
+  have hrej : Excluded σ o σ.cur o' :=
+    ⟨ho', hno, fun hr => let ⟨_, _, u, hu, h1, h2⟩ := hr; hn ⟨u, hu, h1, h2⟩⟩
+  refine ⟨hrej, fun he => (exposable_iff_empty σ o).1 he ⟨_, _, hrej⟩,
+    fun B γ τ hs => containment_nonempty hs ⟨_, _, hrej⟩⟩
 
 /-- If every remaining row refines `o` (what protocol safety is assumed to
 guarantee for certified evidence), `o` is exposable and `Out_ε(o)` is legal. -/
 theorem safety_exposable {σ : State sp} {o : O} (ho : σ.R σ.cur o)
-    (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : Basis sp) :
+    (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : CommitmentBasis sp) :
     Exposable σ o ∧ SysStep B σ (.output [] o) (outState σ o ho) :=
   have he : Exposable σ o := fun k x hx hn => absurd (hsafe k x hx) hn
   ⟨he, eps_step_iff.2 ⟨ho, he, rfl, rfl⟩⟩
@@ -120,12 +119,12 @@ theorem slot_no_common {κ : Type} (slot : Dc → κ) {o o' : Auth Ep Vt Dc} {d 
 /-- **Certifying one of two competing proposals is a commitment**, in any
 specification on these outputs whose permitted outputs are slot-unique. -/
 theorem slot_conflict {I : Type} [PO I] {κ : Type} (slot : Dc → κ)
-    {sp : Spec I (Auth Ep Vt Dc)} (hU : ∀ k u, sp.S k u → SlotUnique slot u.D)
+    {sp : Spec I (Auth Ep Vt Dc)} (hU : ∀ k u, sp.P k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
-  incompatible_rejected ho ho' fun ⟨u, hu, h1, h2⟩ =>
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+  incompatible_excluded ho ho' fun ⟨u, hu, h1, h2⟩ =>
     slot_no_common slot hd hd' hs hne ⟨u, hU _ _ (σ.sub _ _ hu), h1, h2⟩
 
 theorem epoch_no_common {o o' : Auth Ep Vt Dc} {e : List Ep} {a b : Ep}
@@ -142,9 +141,9 @@ rule did not fix the successor. -/
 theorem epoch_conflict {I : Type} [PO I] {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
-  incompatible_rejected ho ho' fun ⟨u, _, h1, h2⟩ => epoch_no_common he he' hne ⟨u, h1, h2⟩
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+  incompatible_excluded ho ho' fun ⟨u, _, h1, h2⟩ => epoch_no_common he he' hne ⟨u, h1, h2⟩
 
 /-! ### Partial maps ordered by extension -/
 
@@ -190,7 +189,7 @@ def ksetS (k : Nat) (I : KInput P Val) (m : PMap P Val) : Prop :=
   ∃ l : List Val, l.length ≤ k ∧ ∀ p a, m.f p = some a → a ∈ l
 
 def ksetSpec (P Val : Type) (k : Nat) : Spec (KInput P Val) (PMap P Val) where
-  S := ksetS k
+  P := ksetS k
   total _ := ⟨⟨fun _ => none⟩, by
     unfold ksetS
     refine ⟨?_, ?_, [], Nat.zero_le _, ?_⟩ <;> intro _ _ h <;> simp at h⟩
@@ -239,7 +238,7 @@ variable {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val}
 
 /-- At `p_r`'s proposal input, `{p_r ↦ v_r}` is permitted (`k ≥ 1`). -/
 theorem kset_single_row (hk : 1 ≤ k) (r : Fin (k + 1)) :
-    (ksetSpec P Val k).S (propIn p v r) (single p v r) := by
+    (ksetSpec P Val k).P (propIn p v r) (single p v r) := by
   show ksetS k _ _
   refine ⟨fun q a h => ?_, fun q a h => ?_, [v r], hk, fun q a h => ?_⟩
   · obtain ⟨rfl, _⟩ := single_some h; exact ⟨v r, List.mem_singleton_self _⟩
@@ -282,7 +281,7 @@ theorem allBut_at {r0 r : Fin (k + 1)} (hr : r ≠ r0) : (allBut p v r0).f (p r)
 include hp in
 /-- **Any `k` of the `k+1` rows have a common refinement at the union.** -/
 theorem kset_any_k (r0 : Fin (k + 1)) :
-    ∃ u, (ksetSpec P Val k).S (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u := by
+    ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u := by
   refine ⟨allBut p v r0, ?_, fun r hr q a h => ?_⟩
   · show ksetS k _ _
     refine ⟨fun q a h => ?_, fun q a h => ?_,
@@ -305,7 +304,7 @@ include hp hv
 /-- **All `k+1` rows have no common refinement at the union** (it would have
 `k+1` values). -/
 theorem kset_all_fail :
-    ¬ ∃ u, (ksetSpec P Val k).S (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u := by
+    ¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u := by
   rintro ⟨u, ⟨_, _, l, hl, hcov⟩, hall⟩
   have hsub : (List.finRange (k + 1)).map v ⊆ l := by
     intro a ha
@@ -369,7 +368,7 @@ def renS (N : FinSet P) (m : PMap P Nat) : Prop :=
   ∀ x n, m.f x = some n → 1 ≤ n ∧ n ≤ card N
 
 noncomputable def renSpec (P : Type) [DecidableEq P] : Spec (FinSet P) (PMap P Nat) where
-  S := renS
+  P := renS
   total N := by
     obtain ⟨l, hl, hm⟩ := N.2
     refine ⟨⟨fun x => if x ∈ l then some (l.idxOf x + 1) else none⟩, fun x => ?_, ?_, ?_⟩
@@ -401,7 +400,7 @@ def name1 (p : P) : PMap P Nat := ⟨fun x => if x = p then some 1 else none⟩
 theorem card_sing (p : P) : card (sing p) = 1 := card_eq _ (l := [p]) (by simp) fun _ => Iff.rfl
 
 /-- **At `{p}` the only output is `p ↦ 1`.** -/
-theorem ren_singleton_iff (p : P) (m : PMap P Nat) : (renSpec P).S (sing p) m ↔ m = name1 p := by
+theorem ren_singleton_iff (p : P) (m : PMap P Nat) : (renSpec P).P (sing p) m ↔ m = name1 p := by
   constructor
   · rintro ⟨hdom, _, hb⟩
     cases m with
@@ -441,7 +440,7 @@ theorem card_pair {p q : P} (h : p ≠ q) : card (pairSet p q h) = 2 :=
   card_eq _ (l := [p, q]) (by simp [h]) fun _ => Iff.rfl
 
 theorem name2_row {p q : P} (h : p ≠ q) {a b : Nat} (hab : a ≠ b) (ha : 1 ≤ a ∧ a ≤ 2)
-    (hb : 1 ≤ b ∧ b ≤ 2) : (renSpec P).S (pairSet p q h) (name2 p q a b) := by
+    (hb : 1 ≤ b ∧ b ≤ 2) : (renSpec P).P (pairSet p q h) (name2 p q a b) := by
   refine ⟨fun x => ?_, fun x y n hx hy => ?_, fun x n hx => ?_⟩
   · rw [pairSet_mem]
     by_cases h1 : x = p
@@ -460,8 +459,8 @@ theorem name2_row {p q : P} (h : p ≠ q) {a b : Nat} (hab : a ≠ b) (ha : 1 �
 /-- **Each of `p ↦ 1`, `q ↦ 1` has a refinement at `{p,q}`** (so Relational
 Monotonicity does not fail here). -/
 theorem ren_each_extends {p q : P} (h : p ≠ q) :
-    (∃ u, (renSpec P).S (pairSet p q h) u ∧ name1 p ≼ u) ∧
-    (∃ u, (renSpec P).S (pairSet p q h) u ∧ name1 q ≼ u) := by
+    (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 p ≼ u) ∧
+    (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 q ≼ u) := by
   refine ⟨⟨name2 p q 1 2, name2_row h (by decide) (by decide) (by decide), ?_⟩,
           ⟨name2 p q 2 1, name2_row h (by decide) (by decide) (by decide), ?_⟩⟩
   · intro x n hx
@@ -582,13 +581,13 @@ def IsPrefix (h : Hist Ev) (p : ESet Ev) : Prop :=
 
 /-- The prefix specification. -/
 def prefixSpec (Ev : Type) : Spec (Hist Ev) (ESet Ev) where
-  S := IsPrefix
+  P := IsPrefix
   total _ := ⟨⟨fun _ => False⟩, by
     show IsPrefix _ _
     exact ⟨fun _ h => h.elim, fun _ _ h => h.elim⟩⟩
 
 /-- The empty prefix is always permitted (no freshness or completeness). -/
-theorem prefix_empty (h : Hist Ev) : (prefixSpec Ev).S h ⟨fun _ => False⟩ :=
+theorem prefix_empty (h : Hist Ev) : (prefixSpec Ev).P h ⟨fun _ => False⟩ :=
   show IsPrefix _ _ from ⟨fun _ h => h.elim, fun _ _ h => h.elim⟩
 
 /-- **Old prefixes stay legal as history grows.** -/
@@ -629,7 +628,7 @@ instance instPOEqd (α : Type) : PO (Eqd α) where
 
 /-- The complete-history specification: output `h` at `h`. -/
 def completeSpec (Ev : Type) : Spec (Hist Ev) (Eqd (Hist Ev)) where
-  S h o := o = ⟨h⟩
+  P h o := o = ⟨h⟩
   total h := ⟨⟨h⟩, rfl⟩
 
 theorem completeSpec_functional : (completeSpec Ev).Functional :=
@@ -670,15 +669,15 @@ theorem completeSpec_not_monotone (e : Ev) :
   obtain ⟨u, hu, hall⟩ := hl _ _ (empty_le_single e) [⟨emptyHist⟩] (by simp) (by simp [completeSpec])
   exact hne ((hall _ (by simp)).trans hu)
 
-/-- **Some output can be exposed only after a commitment that seals an
-input** (Prop. `prop:functional-exposure-boundary`): there is a state
-reachable without commitment and an output there whose `Sealed` class is
-nonempty, so every legal output event emitting it applies a commitment, and
-every such commitment seals each input where it removes rows. -/
-theorem completeSpec_seal_needed (e : Ev) :
+/-- **Some output can be exposed only after a commitment that empties an
+input's fiber** (Prop. `prop:functional-exposure-boundary`): there is a state
+reachable without commitment and an output there whose `Excluded` class is
+nonempty, so every legal output event emitting it applies a commitment; at
+each input it changes, the commitment empties the fiber. -/
+theorem completeSpec_commitment_needed (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
-      (∃ k x, Sealed τ o k x) ∧ (∀ k x, ¬ Rejected τ o k x) ∧
-      ∀ (B : Basis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] := by
+      (∃ k x, Excluded τ o k x) ∧
+      ∀ (B : CommitmentBasis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] := by
   have hb := fun h => (completeSpec_not_monotone e).1
     ((functional_exposure_boundary (completeSpec_functional (Ev := Ev))).2 h)
   apply Classical.byContradiction
@@ -688,20 +687,13 @@ theorem completeSpec_seal_needed (e : Ev) :
   apply Classical.byContradiction
   intro hne
   apply hno
-  have hrej : ∀ k x, ¬ Rejected τ o k x := by
-    intro k x hr
-    have : ∃ u, τ.R k u ∧ o ≼ u :=
-      Classical.byContradiction fun hn => hr.2.2.1 ⟨hr.1, hn⟩
-    obtain ⟨u, hu, hou⟩ := this
-    have : u = x := completeSpec_functional k u x (τ.sub _ _ hu) (τ.sub _ _ hr.1)
-    exact hr.2.1 (this ▸ hou)
-  have hseal : ∃ k x, Sealed τ o k x := by
+  have hexcluded : ∃ k x, Excluded τ o k x := by
     apply Classical.byContradiction
-    intro hs
-    exact hne ((exposable_iff_empty τ o).2 ⟨hs, fun ⟨k, x, h⟩ => hrej k x h⟩)
-  obtain ⟨k, x, hs⟩ := hseal
-  exact ⟨τ, o, hτ, ho, ⟨k, x, hs⟩, hrej,
-    fun B γ τ' hst => containment_nonempty hst ⟨k, x, Or.inl hs⟩⟩
+    intro hE
+    exact hne ((exposable_iff_empty τ o).2 hE)
+  obtain ⟨k, x, he⟩ := hexcluded
+  exact ⟨τ, o, hτ, ho, ⟨k, x, he⟩,
+    fun B γ τ' hst => containment_nonempty hst ⟨k, x, he⟩⟩
 
 end Snapshots
 

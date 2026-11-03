@@ -12,7 +12,7 @@ Consistency is unchanged and measured in `S`.
 
 `complete_cap_for`: some system has Availability for `A` and Partition
 Consistency iff `S` is consistent on `A` (every finite family of rows of `A`
-with a common expansion `j` has a common refinement in `S(j)`).  The paper
+with a common expansion `j` has a common refinement in `P(j)`).  The paper
 calls this condition *Lifted Monotonicity for `A`* (Def. `def:lm-for-A`); the
 library keeps the name `ConsistentOn`.
 
@@ -44,7 +44,7 @@ def AvailabilityFor (A : Table I O) (Sys : System sp D) : Prop :=
 
 /-- With `A = S`, Availability for `A` is the paper's Availability. -/
 theorem availabilityFor_S (Sys : System sp D) :
-    AvailabilityFor sp.S Sys ↔ AvailabilityAtEnd Sys :=
+    AvailabilityFor sp.P Sys ↔ AvailabilityAtEnd Sys :=
   ⟨fun h n init H comp hw hp hpt p σ hσ o ho => h n init H comp hw hp hpt p σ hσ o ho (σ.sub _ _ ho),
    fun h n init H comp hw hp hpt p σ hσ o ho _ => h n init H comp hw hp hpt p σ hσ o ho⟩
 
@@ -53,7 +53,7 @@ theorem availabilityFor_S (Sys : System sp D) :
 /-- (⇒): if some system keeps `A` available and the emitted outputs
 reconcilable, `S` is consistent on `A`.  One participant per row, each alone
 in its block, plus one at `j`. -/
-theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
+theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o → sp.P i o)
     (Sys : System sp D) (hA : AvailabilityFor A Sys) (hC : CommonRefinementAtEnd Sys) :
     ConsistentOn sp A := by
   intro rows hrows j hj
@@ -81,7 +81,7 @@ theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o �
     · have hinit : init p = (rows[p.val]'hp).1 := by simp [init, hp]
       have hArow : A (rows[p.val]'hp).1 (rows[p.val]'hp).2 := hrows _ (List.getElem_mem ..)
       have ho : (canon sp (init p)).R (canon sp (init p)).cur (rows[p.val]'hp).2 := by
-        show sp.S (init p) _ ∧ init p ≼ init p
+        show sp.P (init p) _ ∧ init p ≼ init p
         rw [hinit]; exact ⟨hAS _ _ hArow, PO.refl _⟩
       have hAo : A (canon sp (init p)).cur (rows[p.val]'hp).2 := by
         show A (init p) _; rw [hinit]; exact hArow
@@ -191,7 +191,7 @@ has Availability for `A` and Partition Consistency iff `S` is consistent on
 `A`.  The forward direction needs only a common refinement of the emitted
 outputs, for any system. -/
 theorem complete_cap_for (sp : Spec I O) (D : Type) (A : Table I O)
-    (hAS : ∀ i o, A i o → sp.S i o) :
+    (hAS : ∀ i o, A i o → sp.P i o) :
     (∃ Sys : System sp D, AvailabilityFor A Sys ∧ PartitionConsistencyAtEnd Sys) ↔
       ConsistentOn sp A :=
   ⟨fun ⟨Sys, hA, hP⟩ => consistentOn_of_availabilityFor A hAS Sys hA (commonRefinement_of_pc hP),
@@ -199,9 +199,9 @@ theorem complete_cap_for (sp : Spec I O) (D : Type) (A : Table I O)
 
 /-- With `A = S` this is Theorem `thm:complete-cap`. -/
 theorem complete_cap_for_S (sp : Spec I O) (D : Type) :
-    (∃ Sys : System sp D, AvailabilityFor sp.S Sys ∧ PartitionConsistencyAtEnd Sys) ↔
+    (∃ Sys : System sp D, AvailabilityFor sp.P Sys ∧ PartitionConsistencyAtEnd Sys) ↔
       sp.LiftedMono := by
-  rw [complete_cap_for sp D sp.S (fun _ _ h => h)]
+  rw [complete_cap_for sp D sp.P (fun _ _ h => h)]
   exact (liftedMono_iff_commonExpansion sp).symm
 
 end CAP

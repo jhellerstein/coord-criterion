@@ -40,32 +40,32 @@ open CC.Comp (Monotone graph)
 /-! ## Sequential composition (`sec:sequential-composition`) -/
 
 /-- Eq. `eq:spec-composition`:
-`S₂ ∘ S₁ = π_{I,O}(S₁ ⋈_M S₂) = {(i,o) : ∃ m. (i,m) ∈ S₁ ∧ (m,o) ∈ S₂}`. -/
+`P₂ ∘ P₁ = π_{I,O}(P₁ ⋈_M P₂) = {(i,o) : ∃ m. (i,m) ∈ P₁ ∧ (m,o) ∈ P₂}`. -/
 theorem «eq:spec-composition» {I M O : Type} (S1 : Table I M) (S2 : Table M O) (i : I) (o : O) :
     Comp.tcomp S1 S2 i o ↔ ∃ m, S1 i m ∧ S2 m o :=
   Iff.rfl
 
-/-- "Since `S₁` is total on `I` and `S₂` is total on `M` (it has a row at
-every `m ∈ M`), every `i ∈ I` has a nonempty fiber in `S₂ ∘ S₁`."  Lean: the
+/-- "Since `P₁` is total on `I` and `P₂` is total on `M` (it has a row at
+every `m ∈ M`), every `i ∈ I` has a nonempty fiber in `P₂ ∘ P₁`."  Lean: the
 composition is the specification `Comp.seq sp1 sp2`, whose table is
 `tcomp`; totality is its `total` field. -/
 theorem «sec:composition/seq-total» {I M O : Type} [PO I] [PO M] [PO O]
     (sp1 : Spec I M) (sp2 : Spec M O) :
-    (Comp.seq sp1 sp2).S = Comp.tcomp sp1.S sp2.S ∧ ∀ i, ∃ o, Comp.tcomp sp1.S sp2.S i o :=
+    (Comp.seq sp1 sp2).P = Comp.tcomp sp1.P sp2.P ∧ ∀ i, ∃ o, Comp.tcomp sp1.P sp2.P i o :=
   ⟨rfl, (Comp.seq sp1 sp2).total⟩
 
-/-- Totality of `S₂` on *all* of `M` is needed (not stated in the paper; it
-explains the hypothesis above).  If `S₂` is total only on a proper subset of
+/-- Totality of `P₂` on *all* of `M` is needed (not stated in the paper; it
+explains the hypothesis above).  If `P₂` is total only on a proper subset of
 `M`, Lemma `lem:composition` fails even when the composed table is total. -/
 theorem «sec:composition/middle-totality-needed» :
     Comp.s1.LiftedMono ∧ (Comp.restrict Comp.t2).LiftedMono ∧
-      (∀ i, ∃ o, Comp.tcomp Comp.s1.S Comp.t2 i o) ∧
-      ¬ (Comp.restrict (Comp.tcomp Comp.s1.S Comp.t2)).LiftedMono :=
+      (∀ i, ∃ o, Comp.tcomp Comp.s1.P Comp.t2 i o) ∧
+      ¬ (Comp.restrict (Comp.tcomp Comp.s1.P Comp.t2)).LiftedMono :=
   Comp.restricted_middle_counterexample
 
 /-- **Lemma `lem:composition`** (Composition): "If `Spec₁` and `Spec₂`
 satisfy Lifted Monotonicity, then so does the ordered specification with
-table `S₂ ∘ S₁`." -/
+table `P₂ ∘ P₁`." -/
 theorem «lem:composition» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M} {sp2 : Spec M O}
     (h1 : sp1.LiftedMono) (h2 : sp2.LiftedMono) : (Comp.seq sp1 sp2).LiftedMono :=
   Comp.seq_liftedMono h1 h2
@@ -87,7 +87,7 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
 /-! ## Composite CALM (`sec:composite-calm`) -/
 
 /-- "The composite is itself an ordered specification.  By Complete CALM,
-specification `S₂ ∘ S₁` is consistent exactly when it satisfies Lifted
+specification `P₂ ∘ P₁` is consistent exactly when it satisfies Lifted
 Monotonicity, and then no output needs a commitment (Theorem
 `thm:complete-calm`, Proposition `prop:exposure-boundary`)." -/
 theorem «sec:composite-calm/complete-calm» {I M O : Type} [PO I] [PO M] [PO O]
@@ -171,12 +171,12 @@ theorem «sec:composite-calm/cancellation» :
   Joint.bool_toggle
 
 /-- **Proposition `prop:joint-monotone`** (Jointly monotone composites): "The
-composite `S₂ ∘ S₁` satisfies Lifted Monotonicity, and so is consistent and
+composite `P₂ ∘ P₁` satisfies Lifted Monotonicity, and so is consistent and
 needs no commitment, in each of the following cases.  (1) `𝒮₁` and `𝒮₂`
 satisfy Lifted Monotonicity.  (2) `𝒮₁` satisfies Lifted Monotonicity; `𝒮₂`
 satisfies it on `𝒮₁`'s outputs.  (3) `𝒮₁` and `𝒮₂` satisfy Lifted
 Monotonicity via a different order on `M`."  And, just
-before: "We say that `S₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when
+before: "We say that `P₂` satisfies Lifted Monotonicity on a set `D ⊆ M` when
 its restriction to inputs in `D` does."  Lean: the hypothesis is the
 disjunction of the three cases; "on `D`" is `Joint.CEOn`, which is
 equivalent to Lifted Monotonicity of the restriction to `D`
@@ -234,7 +234,7 @@ theorem «sec:proper-coordination/kvs-on-logs» {Cmd Stt R : Type} (δ : Stt →
 
 /-- **Definition `def:proper-coordination`** (Proper Coordination): "A pipeline
 in which `𝒮₁` guards `𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no commitment:
-every output at every state it reaches without commitment is exposable."  And,
+every output at every state it reaches without commitment is a legal output."  And,
 just before: "Write `𝒮₂|_{𝒮₁}` for `𝒮₂` restricted to the outputs of `𝒮₁`."
 Lean: `𝒮₂|_{𝒮₁}` is `Guard.rest sp sk = Joint.restrictTo (Joint.Img sp) sk`,
 whose inputs are the outputs of `sp` (a subtype of `M` with the order of `M`);
@@ -245,33 +245,33 @@ theorem «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
     (Guard.Proper sp sk ↔
       ∀ τ : State (Guard.rest sp sk), ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o) ∧
       Guard.rest sp sk = Joint.restrictTo (Joint.Img sp) sk ∧
-      ∀ (m : {m // Joint.Img sp m}) o, (Guard.rest sp sk).S m o ↔ sk.S m.1 o :=
+      ∀ (m : {m // Joint.Img sp m}) o, (Guard.rest sp sk).P m o ↔ sk.P m.1 o :=
   ⟨Iff.rfl, rfl, fun _ _ => Iff.rfl⟩
 
 /-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Fix any
 system for `𝒮₁`.  (1) The pipeline is proper exactly when `𝒮₂` satisfies
 Lifted Monotonicity on the outputs of `𝒮₁`.  (2) If it is proper, `𝒮₂|_{𝒮₁}`
 under the empty basis follows every run of `𝒮₁`.  The result is a run of
-`S₂ ∘ S₁`, and whenever runs of `𝒮₁` can be brought to a common state, the
-composite runs are confluent.  (3) If it is proper and `S₂ ∘ S₁` violates
+`P₂ ∘ P₁`, and whenever runs of `𝒮₁` can be brought to a common state, the
+composite runs are confluent.  (3) If it is proper and `P₂ ∘ P₁` violates
 Lifted Monotonicity, `𝒮₁` cannot emit some output without a commitment."
 Lean: (1) `Guard.proper_iff` ("on the outputs" is `Joint.CEOn sk (Joint.Img sp)`),
 with `Guard.proper_iff_consistent` (Complete CALM on `𝒮₂|_{𝒮₁}`).  (2) For
 every run of `𝒮₁` under any basis `B` emitting `m :: ms`:
 `Guard.proper_follows` (the empty-basis `𝒮₂|_{𝒮₁}` starts at `σ(m)`, answers
 `m`, and receives and answers each later output, and the result, `Guard.merge`,
-is a run of `S₂ ∘ S₁`); `Guard.proper_run` (more generally, any empty-basis
+is a run of `P₂ ∘ P₁`); `Guard.proper_run` (more generally, any empty-basis
 run of `𝒮₂|_{𝒮₁}` that receives each output and answers it any number of
-times gives a run of `S₂ ∘ S₁` whose table contains the join); and
+times gives a run of `P₂ ∘ P₁` whose table contains the join); and
 `Guard.proper_confluent`.  (3) `Guard.proper_needs_commit` ("cannot emit": no
-such `m'` is exposable at `σ_{𝒮₁}(i)`, and under the empty basis no output
+such `m'` is a legal output at `σ_{𝒮₁}(i)`, and under the empty basis no output
 event there emits one).  The system for `𝒮₁` enters only through its basis,
 which is arbitrary. -/
 theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Spec I M)
     (sk : Spec M O) :
     (Guard.Proper sp sk ↔ Joint.CEOn sk (Joint.Img sp)) ∧
     (Guard.Proper sp sk ↔ (Guard.rest sp sk).Consistent) ∧
-    (Guard.Proper sp sk → ∀ (B : Basis sp) i es (ρ : State sp) m ms,
+    (Guard.Proper sp sk → ∀ (B : CommitmentBasis sp) i es (ρ : State sp) m ms,
       SysExec B (canon sp i) es ρ → Guard.emitted es = m :: ms →
       ∃ (hm : Joint.Img sp m) (o : O) (ps : List ({m // Joint.Img sp m} × O))
         (esK : List (SEvent (Guard.rest sp sk))) (ρK : State (Guard.rest sp sk)),
@@ -280,7 +280,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
         ∃ ρ' : State (Comp.seq sp sk),
           Exec (canon (Comp.seq sp sk) i) (Guard.merge es ([o] :: ps.map fun p => [p.2])) ρ' ∧
           ρ'.cur = ρ.cur) ∧
-    (Guard.Proper sp sk → ∀ (B : Basis sp) i es (ρ : State sp) (m : {m // Joint.Img sp m}) ms os
+    (Guard.Proper sp sk → ∀ (B : CommitmentBasis sp) i es (ρ : State sp) (m : {m // Joint.Img sp m}) ms os
       (ps : List ({m // Joint.Img sp m} × List O)) esK (ρK : State (Guard.rest sp sk)),
       SysExec B (canon sp i) es ρ → Guard.emitted es = m.1 :: ms.map Subtype.val →
       ps.map Prod.fst = ms → SysExec (fun _ => False) (canon (Guard.rest sp sk) m) esK ρK →
@@ -295,13 +295,13 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
       (∀ p ∈ fam, ∀ k m x (h : Joint.Img sp m), p.1.R k m → p.2.1.R ⟨m, h⟩ x → p.2.2.R k x) →
       (∀ p ∈ fam, ∀ k m, p.1.R k m → p.2.1.cur.1 ≼ m) →
       ∀ j : I, (∀ p ∈ fam, p.2.2.cur ≼ j) →
-      (∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : Basis sp) (es : List (SEvent sp)),
+      (∃ τ : State sp, τ.cur = j ∧ ∀ p ∈ fam, ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)),
         SysExec B p.1 es τ) →
       ConfluentAt (fam.map fun p => p.2.2) j) ∧
     (Guard.Proper sp sk → ¬ (Comp.seq sp sk).LiftedMono →
-      ∃ i m o, sp.S i m ∧ sk.S m o ∧ ¬ Exposable (canon (Comp.seq sp sk) i) o ∧
-        (∀ m', sp.S i m' → sk.S m' o → ¬ Exposable (canon sp i) m') ∧
-        ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → ¬ sk.S m' o) :=
+      ∃ i m o, sp.P i m ∧ sk.P m o ∧ ¬ Exposable (canon (Comp.seq sp sk) i) o ∧
+        (∀ m', sp.P i m' → sk.P m' o → ¬ Exposable (canon sp i) m') ∧
+        ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → ¬ sk.P m' o) :=
   ⟨Guard.proper_iff, Guard.proper_iff_consistent,
     fun hP _ _ _ _ _ _ hx he => Guard.proper_follows hP hx he,
     fun hP _ _ _ _ _ _ _ _ _ _ hx he hps hK htr => Guard.proper_run hP hx he hps hK htr,
@@ -329,7 +329,7 @@ or as a replicated cluster.  The stages around it observe only its admitted
 boundary runs, each pairing an input with an emitted output permitted by its
 specification.  Components with different specifications form typed pipelines
 (Appendix `app:components`).  The pipeline hides the intermediate value and the two
-component runs; every external pair it presents is a row of `S₂ ∘ S₁`.  A
+component runs; every external pair it presents is a row of `P₂ ∘ P₁`.  A
 typed pipeline is contract-proper when it is proper in the sense of
 Definition `def:proper-coordination`.  Contract properness concerns the
 specifications.  Implementation properness additionally concerns the runs
@@ -348,11 +348,11 @@ is `Components.offered_available` (Prop. `prop:typed-pipelines`(3)–(5) in
 theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO O]
     (sp : Spec I M) (sk : Spec M O) :
     (∀ (p : Components.Pipeline sp sk) obs, p.Accepts obs →
-      (Comp.seq sp sk).S obs.input obs.output) ∧
+      (Comp.seq sp sk).P obs.input obs.output) ∧
     (∀ p : Components.Pipeline sp sk, p.ContractProper ↔ Guard.Proper sp sk) ∧
     (Guard.Proper sp sk → ∀ (C1 : Components.Component sp) r, C1.accepts r →
       let p := Components.Pipeline.offered (sk := sk) C1
-        (Components.Component.ofBasis (Components.emptyBasis _))
+        (Components.Component.ofCommitmentBasis (Components.emptyCommitmentBasis _))
       p.ImplementationProper ∧ ∃ w : Components.FeedWitness p.upstream p.downstream,
         w.upRun.input = r.input ∧ w.upRun.output.1 = r.output ∧ CoordFree w.downRun.events) :=
   ⟨fun p _ h => p.sound h, Components.contractProper_iff_guardProper,

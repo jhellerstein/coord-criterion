@@ -326,12 +326,12 @@ theorem empty_causal (h : Hist α) : CausalFib G h emptyMap :=
 
 /-- The causal register. -/
 def causalSpec : Spec (Hist α) (SMap α) where
-  S := CausalFib G
+  P := CausalFib G
   total h := ⟨emptyMap, empty_causal G h⟩
 
 /-- The linearizable register. -/
 def linSpec : Spec (Hist α) (SMap α) where
-  S := LinFib G
+  P := LinFib G
   total h := ⟨emptyMap, empty_wellDom G h,
     let ⟨lt, hs, he⟩ := lin_exists h; ⟨lt, hs, he, fun _ _ e => by cases e⟩⟩
 
@@ -582,7 +582,7 @@ theorem lin_view {h : Hist α} {T : α → α → Prop} (hT : STO h.mem T) (hE :
 
 /-- The linearizable product specification. -/
 def linSpecP : Spec (Hist α) (PTd (fun _ : Fin n => SMap α)) where
-  S := (linNS G).table
+  P := (linNS G).table
   total h := by
     obtain ⟨T, hT, hE⟩ := lin_exists h
     have hv := fun q => lin_view G hT hE q
@@ -870,8 +870,8 @@ theorem lin_ρ2 : LinFib G2 h2 ρ2 := by
       exact ex_h2 rfl (by decide) (by decide)
     · simp [h3] at e
 
-theorem lin_ρ1' : (linSpec G2).S h2 ρ1 := lin_ρ1
-theorem lin_ρ2' : (linSpec G2).S h2 ρ2 := lin_ρ2
+theorem lin_ρ1' : (linSpec G2).P h2 ρ1 := lin_ρ1
+theorem lin_ρ2' : (linSpec G2).P h2 ρ2 := lin_ρ2
 
 /-- **Appendix `app:registers`**: the linearizable register is not monotone
 across the partition `{{p},{q}}` under any deployment authorizing `p`'s

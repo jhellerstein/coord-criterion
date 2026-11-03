@@ -9,12 +9,12 @@ their operations (any) and requested commit.
 
 When `B` requests a lock that `A` holds, 2PL makes `B` wait.  The wait commits
 `B` to serialize after `A` before anything is reported: it is the commitment
-event `Commit([order(A,B)])`, which applies `order(A,B)` and emits nothing.
+event `Apply([order(A,B)])`, which applies `order(A,B)` and emits nothing.
 Later, the output event emitting the serial order `[A,C,B]` applies no further
 commitment ordering `A` and `B`; it applies `TxCommit` for each transaction and
 the ordering commitments `order(A,C)`, `order(C,B)` that place `C`.
 
-* `example_commit_event_ABC` — the 2PL run `Commit([order(A,B)])`,
+* `example_commitment_event_ABC` — the 2PL run `Apply([order(A,B)])`,
   `Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)]([A,C,B])`
   under `B_2PL`, its canonical run `Out_{κ}([A,C,B])`, their `Lockstep` pair
   (Lemma `lem:canonical-equivalent`, the commitment event matched by no
@@ -140,7 +140,7 @@ macro "d5 " h:term : tactic =>
     Ne.symm ($h).ab, Ne.symm ($h).ac, Ne.symm ($h).bc])
 
 /-- Inversion of a system output event. -/
-theorem output_inv {sp : Spec (Inp T K) (ROut T K)} {Bs : Basis sp} {σ τ : State sp}
+theorem output_inv {sp : Spec (Inp T K) (ROut T K)} {Bs : CommitmentBasis sp} {σ τ : State sp}
     {γ : List (Commitment sp)} {o : ROut T K} (h : SysStep Bs σ (.output γ o) τ) :
     ∃ σc, (∀ c ∈ γ, Bs c) ∧ ApplySeq γ σ σc ∧ σc.R σc.cur o ∧ Exposable σc o ∧
       τ.cur = σ.cur ∧ τ.R = outputTable σc o := by
@@ -155,7 +155,7 @@ issued their operations and requested commit; `B` waits for a lock `A` holds.
 `σ₀` is the canonical state of `k`; rows are written as serial orders without
 aborts or reads.
 
-(a) When `B` begins to wait, the commitment event `Commit([order(A,B)])` is a
+(a) When `B` begins to wait, the commitment event `Apply([order(A,B)])` is a
     legal `B_2PL` step from `σ₀` to `σ₁`, before any output.  It keeps the
     current input and keeps exactly the rows of `σ₀` that have a complete
     refinement in `σ₀` that does not commit `B` before `A` (aborting `A` or `B`
@@ -163,17 +163,18 @@ aborts or reads.
 (b) The canonical run skips that event: it is still at `σ₀`, which has the row
     `[B,A,C]`.
 (c) 2PL then emits `[A,C,B]` with `TxCommit(A), TxCommit(B), TxCommit(C),
-    order(A,C), order(C,B)`: a legal `B_2PL` step.  It applies no further
-    commitment on the order of `A` and `B`; the `TxCommit` commitments alone do
-    not suffice (`Out_[TxCommit(A),TxCommit(B),TxCommit(C)]([A,C,B])` is not
-    legal, since the row `[A,B,C]` survives them).  The canonical run emits the
-    same output.
-(d) Both runs end at the same state, and they are a `Lockstep` pair in which
-    the commitment event is matched by no canonical event. -/
-theorem example_commit_event_ABC {k : Inp T K} (h : Tri k A B C) :
+    order(A,C), order(C,B)`: a legal `B_2PL` step.  The canonical run can emit
+    the same output because that row was present at `σ₀`.  Every row it retains
+    afterward refines `[A,C,B]`, hence satisfies all five commitments in the
+    output event and the earlier `order(A,B)`.
+(d) The canonical final table is therefore contained in 2PL's; Canonical Run
+    Universality gives the reverse containment.  The two runs end at the same
+    state, and form a `Lockstep` pair in which the commitment event is matched
+    by no canonical event. -/
+theorem example_commitment_event_ABC {k : Inp T K} (h : Tri k A B C) :
     ∃ σ1 τ2 τ2' : State (spec (T := T) (K := K) false),
       -- (a)
-      SysStep basis2PL (σ3 k) (.commit [order A B]) σ1 ∧ σ1.cur = k ∧
+      SysStep basis2PL (σ3 k) (.commitment [order A B]) σ1 ∧ σ1.cur = k ∧
       (∀ k' w, σ1.R k' w ↔ (σ3 k).R k' w ∧
         ∃ c, (σ3 k).R k' c ∧ Decides false k' c.o ∧ w ≼ c ∧ ¬ c.o.lt B A) ∧
       σ1.R k (full (mk [A, B, C] fun _ => False)) ∧
@@ -186,7 +187,7 @@ theorem example_commit_event_ABC {k : Inp T K} (h : Tri k A B C) :
       CanonStep (σ3 k) (.output (kappa (σ3 k) (o2 A B C)) (o2 A B C)) τ2' ∧
       -- (d)
       τ2 = τ2' ∧
-      Lockstep basis2PL (σ3 k) [.commit [order A B], .output (γ2 A B C) (o2 A B C)] τ2
+      Lockstep basis2PL (σ3 k) [.commitment [order A B], .output (γ2 A B C) (o2 A B C)] τ2
         (σ3 k) [.output (kappa (σ3 k) (o2 A B C)) (o2 A B C)] τ2' := by
   have hd := h.d
   let σ0 := σ3 (T := T) (K := K) k
@@ -238,13 +239,13 @@ theorem example_commit_event_ABC {k : Inp T K} (h : Tri k A B C) :
       rcases ht with e | e <;> rw [e]
       · exact hA
       · exact hB
-  -- (a) the commitment event `Commit([order(A,B)])`
+  -- (a) the commitment event `Apply([order(A,B)])`
   obtain ⟨σ1, h1, cur1, nBAC1, m1⟩ := step_close (G := fun σ : State (spec (T := T) (K := K) false) =>
       A ≠ B ∧ σ.cur.mem A ∧ σ.cur.mem B) (P := OrderOK A B) (σ := σ0) (k := k) rfl
     ⟨hd.ab, hA, hB⟩ (r0 pACB) pACB (by d5 hd) (r0 pBAC) pBAC (by d5 hd)
   have h1' : (order (K := K) A B).app σ0 = some σ1 := h1
-  have stepC : SysStep basis2PL σ0 (.commit [order A B]) σ1 :=
-    SysStep.commit (fun c hc => by
+  have stepC : SysStep basis2PL σ0 (.commitment [order A B]) σ1 :=
+    SysStep.commitment (fun c hc => by
         simp only [List.mem_singleton] at hc; subst hc; exact Or.inl ⟨A, B, rfl⟩)
       (List.cons_ne_nil _ _) (ApplySeq.cons h1' (ApplySeq.nil _))
   have keep1 : ∀ k' w, σ1.R k' w ↔ σ0.R k' w ∧
@@ -369,13 +370,10 @@ theorem example_commit_event_ABC {k : Inp T K} (h : Tri k A B C) :
       change (mk [A, B, C] Z).lt C B at this
       rw [lt_ABC hd] at this
       simp [hd.ab, hd.ac, hd.bc, Ne.symm hd.ab, Ne.symm hd.ac, Ne.symm hd.bc] at this
-    have out : Sealed σ1 (o2 A B C) k (full (mk [A, B, C] Z)) ∨
-        Rejected σ1 (o2 A B C) k (full (mk [A, B, C] Z)) := by
-      by_cases hS : Sealed σ1 (o2 A B C) k (full (mk [A, B, C] Z))
-      · exact Or.inl hS
-      · refine Or.inr ⟨rABC1, nle, hS, ?_⟩
-        rintro ⟨_, _, u, _, hou, hxu⟩
-        exact u.o.irrefl _ (u.o.trans _ _ _ (lCB hou.1) (lBC hxu.1))
+    have out : Excluded σ1 (o2 A B C) k (full (mk [A, B, C] Z)) := by
+      refine ⟨rABC1, nle, ?_⟩
+      rintro ⟨_, _, u, _, hou, hxu⟩
+      exact u.o.irrefl _ (u.o.trans _ _ _ (lCB hou.1) (lBC hxu.1))
     cases hap with
     | cons ha hap =>
     cases hap with
@@ -388,7 +386,7 @@ theorem example_commit_event_ABC {k : Inp T K} (h : Tri k A B C) :
     have hcC : CommitOK C (mk [A, B, C] Z) := by simp [CommitOK, mk_X, Z]
     exact hrm k _ out (keep_row hc (keep_row hb (keep_row ha rABC1 pABC hcA) pABC hcB) pABC hcC)
   refine ⟨σ1, τ2, τ2', stepC, cur1, keep1, rABC1, nBAC1, r0 pBAC, step2, nonly, cstep, eq2, ?_⟩
-  exact Lockstep.commit stepC cur1 s1
+  exact Lockstep.commitment stepC cur1 s1
     (Lockstep.cons step2 cstep rfl (by rw [eq2]) sub2 (Lockstep.nil τ2 τ2'))
 
 end CommitEx

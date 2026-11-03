@@ -22,7 +22,7 @@ def outs : List (Event I O) → List O
 
 /-- A state's table has the residual shape for emitted outputs `E`. -/
 def Residual {sp : Spec I O} (σ : State sp) (E : List O) : Prop :=
-  ∀ k u, σ.R k u ↔ (sp.S k u ∧ σ.cur ≼ k ∧ ∀ o ∈ E, o ≼ u)
+  ∀ k u, σ.R k u ↔ (sp.P k u ∧ σ.cur ≼ k ∧ ∀ o ∈ E, o ≼ u)
 
 theorem residual_canon (sp : Spec I O) (i : I) : Residual (canon sp i) [] := by
   intro k u
@@ -75,10 +75,10 @@ theorem residual_exec {sp : Spec I O} {σ τ : State sp} {es : List (Event I O)}
 
 /-- **Lemma run-residual.** A run ending at current input `τ.cur` after
 emitting `outs es` has remainder table
-`S[in ⪰ τ.cur, out ⪰ o₁, …, out ⪰ oₘ]`. -/
+`P[in ⪰ τ.cur, out ⪰ o₁, …, out ⪰ oₘ]`. -/
 theorem run_residual {sp : Spec I O} {i : I} {es : List (Event I O)} {τ : State sp}
     (hx : Exec (canon sp i) es τ) :
-    ∀ k u, τ.R k u ↔ (sp.S k u ∧ τ.cur ≼ k ∧ ∀ o ∈ outs es, o ≼ u) := by
+    ∀ k u, τ.R k u ↔ (sp.P k u ∧ τ.cur ≼ k ∧ ∀ o ∈ outs es, o ≼ u) := by
   have := residual_exec (residual_canon sp i) hx
   simpa [Residual] using this
 
@@ -104,9 +104,9 @@ theorem reach_sub {sp : Spec I O} {σ τ : State sp} (h : Reach σ τ) :
 
 /-- The state reached by `input j; output u` from a residual state whose
 table contains `(j,u)`. -/
-def meetState (sp : Spec I O) (j : I) (u : O) (hju : sp.S j u) : State sp where
+def meetState (sp : Spec I O) (j : I) (u : O) (hju : sp.P j u) : State sp where
   cur := j
-  R := fun k x => sp.S k x ∧ j ≼ k ∧ u ≼ x
+  R := fun k x => sp.P k x ∧ j ≼ k ∧ u ≼ x
   sub := fun _ _ h => h.1
   hasCur := ⟨u, hju, PO.refl j, PO.refl u⟩
   above := fun _ _ h => h.2.1
@@ -141,7 +141,7 @@ with common expansion `j`, are confluent at `j` iff some row at `j`
 survives in every final state. -/
 theorem survivor_test {sp : Spec I O} (fam : List (State sp))
     (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (_hj : ∀ σ ∈ fam, σ.cur ≼ j) :
-    ConfluentAt fam j ↔ ∃ u, sp.S j u ∧ ∀ σ ∈ fam, σ.R j u := by
+    ConfluentAt fam j ↔ ∃ u, sp.P j u ∧ ∀ σ ∈ fam, σ.R j u := by
   constructor
   · rintro ⟨τ, hτ, hreach⟩
     obtain ⟨u, hu⟩ := τ.hasCur

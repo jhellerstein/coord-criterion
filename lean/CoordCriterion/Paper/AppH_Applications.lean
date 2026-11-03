@@ -46,13 +46,13 @@ theorem «eq:authority-refinement» {Ep Vt Dc : Type} (a b : Auth Ep Vt Dc) :
 
 /-- "Protocol safety guarantees that every output permitted at the current or
 any later input [refines] the certified evidence already emitted, so authority
-changes and certified decisions are [exposable] and need no further
+changes and certified decisions are [legal outputs] and need no further
 commitment."  Safety is the hypothesis that every remaining row refines `o`;
-the conclusion is that `o` is exposable and the commitment-free output event
+the conclusion is that `o` is a legal output and the commitment-free output event
 `Out_ε(o)` is legal (under any basis).  Generic in the specification. -/
 theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} {σ : State sp} {o : O} (ho : σ.R σ.cur o)
-    (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : Basis sp) :
+    (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : CommitmentBasis sp) :
     Exposable σ o ∧ SysStep B σ (.output [] o) (outState σ o ho) :=
   safety_exposable ho hsafe B
 
@@ -61,15 +61,15 @@ theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO
 different values `d ≠ d'` for the same epoch and slot (`slot d = slot d'`), in
 a specification whose permitted outputs decide at most one value per epoch and
 slot (`SlotUnique`, the paper's "at most one value per epoch and slot"):
-emitting one rejects the other, is not exposable, and every legal output event
+emitting one rejects the other, is not a legal output, and every legal output event
 emitting it applies a commitment (`γ ≠ []`). -/
 theorem «app:additional-applications/slot-conflict» {I Ep Vt Dc κ : Type} [PO I]
     (slot : Dc → κ) {sp : Spec I (Auth Ep Vt Dc)}
-    (hU : ∀ k u, sp.S k u → SlotUnique slot u.D)
+    (hU : ∀ k u, sp.P k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   slot_conflict slot hU ho ho' hd hd' hs hne
 
 /-- "If the succession rule were not fixed, competing next epochs would require
@@ -79,8 +79,8 @@ theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I
     {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
-    Rejected σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : Basis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+    Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
+      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
   epoch_conflict ho ho' he he' hne
 
 /-! ## `k`-set agreement: no `k`-wise test suffices -/
@@ -99,7 +99,7 @@ range has at most `k` values."  (The range is covered by a list of length
 `≤ k`.) -/
 theorem «app:additional-applications/kset-permitted» {P Val : Type} (k : Nat)
     (I : KInput P Val) (m : PMap P Val) :
-    (ksetSpec P Val k).S I m ↔
+    (ksetSpec P Val k).P I m ↔
       (∀ p a, m.f p = some a → ∃ b, I.1.1 (p, b)) ∧
       (∀ p a, m.f p = some a → ∃ q, I.1.1 (q, a)) ∧
       ∃ l : List Val, l.length ≤ k ∧ ∀ p a, m.f p = some a → a ∈ l :=
@@ -109,7 +109,7 @@ theorem «app:additional-applications/kset-permitted» {P Val : Type} (k : Nat)
 Participants and values are indexed by `r : Fin (k+1)`. -/
 theorem «app:additional-applications/kset-proposal-row» {P Val : Type} [DecidableEq P]
     {k : Nat} {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hk : 1 ≤ k) (r : Fin (k + 1)) :
-    (ksetSpec P Val k).S (propIn p v r) (single p v r) :=
+    (ksetSpec P Val k).P (propIn p v r) (single p v r) :=
   kset_single_row hk r
 
 /-- "… and the union of the proposal inputs is a common [expansion]" (an input
@@ -126,14 +126,14 @@ omitted index `r₀`, a permitted output at the union refines every
 theorem «app:additional-applications/kset-any-k» {P Val : Type} [DecidableEq P] {k : Nat}
     {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hp : ∀ r r', p r = p r' → r = r')
     (r0 : Fin (k + 1)) :
-    ∃ u, (ksetSpec P Val k).S (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u :=
+    ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u :=
   kset_any_k hp r0
 
 /-- "… all `k+1` do not, since it would have `k+1` values." -/
 theorem «app:additional-applications/kset-all-fail» {P Val : Type} [DecidableEq P] {k : Nat}
     {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hp : ∀ r r', p r = p r' → r = r')
     (hv : ∀ r r', v r = v r' → r = r') :
-    ¬ ∃ u, (ksetSpec P Val k).S (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u :=
+    ¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u :=
   kset_all_fail hp hv
 
 /-- "So the common-[expansion] condition fails and the specification is not
@@ -163,7 +163,7 @@ theorem «app:additional-applications/consensus» {P Val : Type} [DecidableEq P]
 /-- Eq. `tight-renaming`: "the outputs at `N` are the injective maps
 `m : N → {1,…,|N|}`" (total on `N`, undefined outside `N`; `card N` is `|N|`). -/
 theorem «eq:tight-renaming» {P : Type} [DecidableEq P] (N : FinSet P) (m : PMap P Nat) :
-    (renSpec P).S N m ↔
+    (renSpec P).P N m ↔
       (∀ x, N.1 x ↔ ∃ n, m.f x = some n) ∧
       (∀ x y n, m.f x = some n → m.f y = some n → x = y) ∧
       ∀ x n, m.f x = some n → 1 ≤ n ∧ n ≤ card N :=
@@ -172,15 +172,15 @@ theorem «eq:tight-renaming» {P : Type} [DecidableEq P] (N : FinSet P) (m : PMa
 /-- "At `{p}` the only output is `p ↦ 1`, and at `{q}` it is `q ↦ 1`." -/
 theorem «app:additional-applications/renaming-singletons» {P : Type} [DecidableEq P]
     (p q : P) (m : PMap P Nat) :
-    ((renSpec P).S (sing p) m ↔ m = name1 p) ∧ ((renSpec P).S (sing q) m ↔ m = name1 q) :=
+    ((renSpec P).P (sing p) m ↔ m = name1 p) ∧ ((renSpec P).P (sing q) m ↔ m = name1 q) :=
   ⟨ren_singleton_iff p m, ren_singleton_iff q m⟩
 
 /-- "Each has a [refinement] at `{p,q}`, so Relational Monotonicity does not
 fail here, but no injective map extends both." -/
 theorem «app:additional-applications/renaming-each-extends» {P : Type} [DecidableEq P]
     {p q : P} (h : p ≠ q) :
-    (∃ u, (renSpec P).S (pairSet p q h) u ∧ name1 p ≼ u) ∧
-    (∃ u, (renSpec P).S (pairSet p q h) u ∧ name1 q ≼ u) ∧
+    (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 p ≼ u) ∧
+    (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 q ≼ u) ∧
     ¬ ∃ u : PMap P Nat, Injective u ∧ name1 p ≼ u ∧ name1 q ≼ u :=
   ⟨(ren_each_extends h).1, (ren_each_extends h).2, ren_no_injective_extends_both h⟩
 
@@ -210,15 +210,15 @@ theorem «app:additional-applications/history-order» {Ev : Type} (h h' : Hist E
 /-- "The *prefix* specification permits at `h` any downward-closed subset of
 `h`, with outputs ordered by inclusion." -/
 theorem «app:additional-applications/prefix-spec» {Ev : Type} (h : Hist Ev) (p : ESet Ev) :
-    (prefixSpec Ev).S h p ↔ (∀ x, p.mem x → h.s.1 x) ∧ ∀ a b, p.mem b → h.lt a b → p.mem a :=
+    (prefixSpec Ev).P h p ↔ (∀ x, p.mem x → h.s.1 x) ∧ ∀ a b, p.mem b → h.lt a b → p.mem a :=
   Iff.rfl
 
 /-- "Old prefixes stay legal as history grows, and finite unions of prefixes are
 prefixes, so it satisfies Lifted Monotonicity." -/
 theorem «app:additional-applications/prefix-monotone» {Ev : Type} :
-    (∀ {h h' : Hist Ev} (p : ESet Ev), h ≼ h' → (prefixSpec Ev).S h p → (prefixSpec Ev).S h' p) ∧
-    (∀ (j : Hist Ev) (ps : List (ESet Ev)), (∀ p ∈ ps, (prefixSpec Ev).S j p) →
-      (prefixSpec Ev).S j ⟨fun x => ∃ p ∈ ps, p.mem x⟩) ∧
+    (∀ {h h' : Hist Ev} (p : ESet Ev), h ≼ h' → (prefixSpec Ev).P h p → (prefixSpec Ev).P h' p) ∧
+    (∀ (j : Hist Ev) (ps : List (ESet Ev)), (∀ p ∈ ps, (prefixSpec Ev).P j p) →
+      (prefixSpec Ev).P j ⟨fun x => ∃ p ∈ ps, p.mem x⟩) ∧
     (prefixSpec Ev).LiftedMono :=
   ⟨fun _ hle hp => prefix_mono hle hp, fun _ ps hps => prefix_union ps hps,
     prefixSpec_liftedMono⟩
@@ -226,7 +226,7 @@ theorem «app:additional-applications/prefix-monotone» {Ev : Type} :
 /-- "… it guarantees neither freshness nor completeness": the empty prefix is
 permitted at every history. -/
 theorem «app:additional-applications/prefix-empty» {Ev : Type} (h : Hist Ev) :
-    (prefixSpec Ev).S h ⟨fun _ => False⟩ :=
+    (prefixSpec Ev).P h ⟨fun _ => False⟩ :=
   prefix_empty h
 
 /-- "A specification that requires the complete history, with output `h` at `h`
@@ -234,20 +234,20 @@ and outputs ordered by equality, is functional and not monotone: its required
 output changes whenever an environment event arrives."  (Not monotone as soon as there is an
 event `e`: `∅ ⊑ {e}`.) -/
 theorem «app:additional-applications/complete-history» {Ev : Type} (e : Ev) :
-    (∀ h o, (completeSpec Ev).S h o ↔ o = ⟨h⟩) ∧
+    (∀ h o, (completeSpec Ev).P h o ↔ o = ⟨h⟩) ∧
     (completeSpec Ev).Functional ∧ ¬ (completeSpec Ev).MonotoneF ∧
       ¬ (completeSpec Ev).LiftedMono :=
   ⟨fun _ _ => Iff.rfl, completeSpec_functional, completeSpec_not_monotone e⟩
 
 /-- "By Proposition `prop:functional-exposure-boundary`, some output can then be
-exposed only after a commitment that seals larger inputs."  At some state
-reachable without commitment, some current output rules out a sealed row and no
-rejected row, and every legal output event emitting it applies a commitment. -/
-theorem «app:additional-applications/complete-history-seal» {Ev : Type} (e : Ev) :
+exposed only after a commitment that excludes larger inputs."  At some state
+reachable without commitment, some current output rules out an excluded row and no
+excluded row, and every legal output event emitting it applies a commitment. -/
+theorem «app:additional-applications/complete-history-commitment» {Ev : Type} (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
-      (∃ k x, Sealed τ o k x) ∧ (∀ k x, ¬ Rejected τ o k x) ∧
-      ∀ (B : Basis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] :=
-  completeSpec_seal_needed e
+      (∃ k x, Excluded τ o k x) ∧
+      ∀ (B : CommitmentBasis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] :=
+  completeSpec_commitment_needed e
 
 end Paper
 end CC

@@ -22,9 +22,13 @@
 \newcommand{\OutputOrd}{\preceq_O}
 \newcommand{\InputGe}{\succeq_I}
 \newcommand{\OutputGe}{\succeq_O}
-% Output event emitting #2 after applying the commitment sequence #1
-% (\varepsilon = no commitment).
+% Output event emitting #2 after applying the \commitment sequence #1
+% (\varepsilon = no \commitment).
 \newcommand{\Out}[2]{\mathsf{output}_{#1}(#2)}
+\newcommand{\commitment}{commitment\xspace}
+\newcommand{\commitments}{commitments\xspace}
+\newcommand{\Commitment}{Commitment\xspace}
+\newcommand{\Commitments}{Commitments\xspace}
 \newcommand{\LiftedOrd}{\trianglelefteq}
 % Order vocabulary (role-based names; change the words here).
 % Input order:  "j \inrel i" means i \InputOrd j (non-strict); inputs \ingrow;
@@ -49,13 +53,12 @@
 \newcommand{\outnouns}{refinements\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
-\newcommand{\fiber}[1]{S(#1)}
+\newcommand{\fiber}[1]{P(#1)}
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
-\newcommand{\Sealed}{\mathit{Sealed}}
-\newcommand{\Retired}{\mathit{Retired}}
-\newcommand{\Rejected}{\mathit{Rejected}}
-\newcommand{\retired}[1]{\textcolor{gray}{#1}}
+\newcommand{\Subsumed}{\mathit{Subsumed}}
+\newcommand{\Excluded}{\mathit{Excluded}}
+\newcommand{\grayrow}[1]{\textcolor{gray}{#1}}
 \newcommand{\sh}[1]{\cellcolor{gray!22}#1}
 % Full-width strike line through the row just ended; place after \\.
 \newcommand{\strikerow}{%
@@ -86,26 +89,26 @@ general.  CALM, CAP, and CRDTs
 answer it for one class of programs, consistency models, or design patterns.  Their answers cannot
 be compared or combined, and together they leave basic questions open, such as how coordination repairs inconsistency.  We put them on common
 ground.  We provide a minimalist relational definition of a specification: a
-table that includes, for each input, all outputs a system may produce.  Each
+possibility relation that includes, for each input, all outputs a system may produce.  Each
 column carries its own partial order, saying when one input \inrel another and
 when one output \outrel another.  A specification is \emph{consistent} when its
-runs are confluent: runs whose inputs have a common \indesc can always catch up
-to a common state.  Coordination shows up as an irrevocable \emph{commitment}
-to constrain the system by removing rows from the specification table.
+  runs are confluent: runs whose inputs have a common \indesc can always catch up
+  to a common state.  Possibilities narrow as input grows or outputs are emitted.
+  An irrevocable \emph{\commitment} removes possibilities not subsumed by those
+  remaining; it requires coordination when another run could contradict it.
 
-We lift CALM out of its original setting.  \emph{Functional CALM} generalizes
-the CALM Theorem from Datalog queries to any function between ordered domains:
-such a specification is consistent exactly when it is monotone, and then no
-output ever needs coordination.  We extend CAP.  \emph{Complete CAP} covers
-any consistency guarantee: a system can keep every allowed output available
-and consistent across a partition if and only if its specification passes
-Lifted Monotonicity, and Gilbert and Lynch's theorem follows directly.  We also pose and answer two new questions.  \emph{Complete CALM} handles ambiguous specifications
-that allow several outputs for the same input, where the test becomes
-\emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
-larger input \outrel whatever was emitted at the smaller one.
-\emph{Proper Coordination} identifies which stage of a composition must coordinate,
-and certifies that the stages behind it need no coordination of their own.  Highly Available Transactions, Invariant
-Confluence, and later refinements of CALM all map into the same framework.
+  We lift CALM out of its original setting.  \emph{Functional CALM} generalizes
+  the CALM Theorem from Datalog queries to any function between ordered domains:
+  such a specification is consistent exactly when it is monotone, and then no
+  output requires \commitment.  \emph{Complete CALM} handles ambiguous specifications
+  that allow several outputs for the same input, where the test becomes
+  \emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
+  larger input \outrel whatever was emitted at the smaller one.  As a corollary,
+  \emph{Complete CAP} inherits the same criterion: the CAP trade-off arises
+  exactly when Lifted Monotonicity fails.
+  \emph{Proper Coordination} identifies which stage of a composition must coordinate,
+  and certifies that later stages need no coordination of their own.  Highly Available Transactions, Invariant
+  Confluence, and later refinements of CALM all map into the same framework.
 \end{abstract}
 
 \begin{CCSXML}

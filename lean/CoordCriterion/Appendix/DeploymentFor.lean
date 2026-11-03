@@ -17,8 +17,8 @@ proves the facts that connect the two:
   across partitions (`monoAcrossPartitions_of_consistentOn`); in particular
   consistency on `A` does for the uniform deployment, and Lifted Monotonicity
   does for every deployment;
-* when only one participant may emit, no choice is distributed coordination
-  (`sole_emitter_choices`).
+* when only one participant may emit, no row-removing commitment is distributed coordination
+  (`sole_emitter_rowRemovals`).
 -/
 
 namespace CC
@@ -58,7 +58,7 @@ theorem deploymentAvailability_iff_end (Sys : System sp D) (Dp : Deployment sp n
     exact ⟨fun q => cutHist H c q ++ ext q, ext, fun q => rfl, hw', hp', hpt', hloc, hni, hout⟩
 
 /-- The uniform deployment: every participant may emit the rows of `A`. -/
-def Deployment.uniform (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o) : Deployment sp n where
+def Deployment.uniform (A : Table I O) (hAS : ∀ i o, A i o → sp.P i o) : Deployment sp n where
   A := fun _ => A
   sub := fun _ => hAS
 
@@ -82,7 +82,7 @@ theorem availabilityFor_iff_at (A : Table I O) (Sys : System sp D) :
 /-- For the uniform deployment `A_p = A`, Deployment Availability is
 Availability for `A` over the deployment's participant set. -/
 theorem deploymentAvailability_uniform (Sys : System sp D) (A : Table I O)
-    (hAS : ∀ i o, A i o → sp.S i o) :
+    (hAS : ∀ i o, A i o → sp.P i o) :
     DeploymentAvailabilityEnd Sys (Deployment.uniform (n := n) A hAS) ↔
       AvailabilityForAt A Sys n := Iff.rfl
 
@@ -105,16 +105,16 @@ theorem monoAcrossPartitions_of_consistentOn (Dp : Deployment sp n) (B : Table I
 
 /-- For the uniform deployment, consistency on `A` implies monotonicity across
 partitions. -/
-theorem monoAcrossPartitions_uniform (A : Table I O) (hAS : ∀ i o, A i o → sp.S i o)
+theorem monoAcrossPartitions_uniform (A : Table I O) (hAS : ∀ i o, A i o → sp.P i o)
     (hc : ConsistentOn sp A) : MonoAcrossPartitions (Deployment.uniform (n := n) A hAS) :=
   monoAcrossPartitions_of_consistentOn _ A (fun _ _ _ h => h) hc
 
-/-! ## Single authority: choices are not distributed coordination -/
+/-! ## Single authority: row-removing commitments are not distributed coordination -/
 
-/-- The choice clause of `System.CoordinationFreeH`, for output events: no row
+/-- The row-removal clause of `System.CoordinationFreeH`, for output events: no row
 removed by an output event is emitted, at the same input, by another
 participant of the same history. -/
-def ChoicesNotDistributed (Sys : System sp D) : Prop :=
+def RowRemovalsNotDistributed (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
     ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (o : O)
       (σ σc : State sp),
@@ -123,20 +123,20 @@ def ChoicesNotDistributed (Sys : System sp D) : Prop :=
         ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
           q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
 
-/-- If only one participant (index `0`) may perform output events, no choice
+/-- If only one participant (index `0`) may perform output events, no row-removing commitment
 is distributed coordination. -/
-theorem sole_emitter_choices (Sys : System sp D)
+theorem sole_emitter_rowRemovals (Sys : System sp D)
     (hsole : ∀ n init (p : Fin n) pre γ o, Sys.strat n init p pre (LEv.out γ o) → p.val = 0) :
-    ChoicesNotDistributed Sys := by
+    RowRemovalsNotDistributed Sys := by
   intro n init H _ hp p a b γ o σ σc hH _ _ k x _ _
   rintro ⟨q, a', b', γ', σ', hqp, hq, _, _⟩
   have h1 := hsole n init p a γ o (hp p a _ b hH).2
   have h2 := hsole n init q a' γ' x (hp q a' _ b' hq).2
   exact hqp (Fin.ext (h2.trans h1.symm))
 
-/-- `System.CoordinationFreeH` includes the choice clause. -/
-theorem choicesNotDistributed_of_H {Sys : System sp D} (h : Sys.CoordinationFreeH) :
-    ChoicesNotDistributed Sys :=
+/-- `System.CoordinationFreeH` includes the row-removal clause. -/
+theorem rowRemovalsNotDistributed_of_H {Sys : System sp D} (h : Sys.CoordinationFreeH) :
+    RowRemovalsNotDistributed Sys :=
   fun n init H hw hp p a b γ o σ σc hH hr ha k x hx hnx =>
     (h.1 n init H hw hp p a b γ o σ σc hH hr ha).1 k x hx hnx
 

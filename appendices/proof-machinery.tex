@@ -5,8 +5,8 @@
 \label{app:proofs-sec2}
 
 \begin{proof}[Proof of Lemma~\ref{lem:run-residual}]
-The run starts at the canonical state $\sigma_S(i_0)$, whose table is
-$S[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
+The run starts at the canonical state $\sigma_P(i_0)$, whose table is
+$P[\mathrm{in}\InputGe i_0]$. Each input event $\mathsf{input}(j)$ keeps only
 the rows with $\mathrm{in}\InputGe j$ (Equation~\ref{eq:input-event}), and each
 output event $\mathsf{output}(o)$ keeps only the rows with
 $\mathrm{out}\OutputGe o$ (Equation~\ref{eq:output-action}). The input
@@ -24,7 +24,7 @@ $u\in R_r(j)$.  By
 Lemma~\ref{lem:run-residual}, $(j,u)\in R_r$ says that $u$ \outrel every output
 emitted on run $r$.  After $\mathsf{input}(j)$ and $\mathsf{output}(u)$, the
 same lemma leaves exactly
-$S[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
+$P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]$, independent of the
 starting run.
 \end{proof}
 
@@ -37,7 +37,7 @@ family of runs is therefore confluent at a common \indesc $j$ exactly
 when $f(j)$ \outrel every output emitted on any of them.  If $f$ is monotone,
 this holds, since each emitted $f(k)$ has $k\InputOrd j$.  If $f$ is not
 monotone, some $i\InputOrd k$ has $f(i)\not\OutputOrd f(k)$.  Of two
-runs from $\sigma_S(i)$, one that emits $f(i)$ no longer has the row
+runs from $\sigma_P(i)$, one that emits $f(i)$ no longer has the row
 $(k,f(k))$, while one that accepts $\mathsf{input}(k)$ keeps it; no row at $k$
 survives in both, so they are not confluent at $k$.
 \end{proof}
@@ -45,7 +45,7 @@ survives in both, so they are not confluent at $k$.
 \begin{proof}[Proof of Corollary~\ref{cor:state-by-input}]
 By Functional CALM (Theorem~\ref{thm:functional-calm}), the specification is
 monotone.  By Lemma~\ref{lem:run-residual}, the run's remainder table is
-$S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
+$P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
 \mathrm{out}\OutputGe o_m]$, where each $o_\ell=f(i_\ell)$ for some
 $i_\ell\InputOrd i$.  Every row whose input \inrel $i$ has the form $(k,f(k))$ with
 $i_\ell\InputOrd k$, so monotonicity gives $o_\ell\OutputOrd f(k)$, and the
@@ -53,13 +53,13 @@ output conditions remove nothing.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:functional-exposure-boundary}]
-Suppose $f$ is monotone, and let a commitment-free run reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
-$(i,R)=\sigma_S(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
-$i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each, so $f(i)$ is exposable
-(Definition~\ref{def:exposable}).
-Conversely, if every such output is exposable, then at $\sigma_S(i)$, which the
-empty run reaches, exposability of $f(i)$ gives $f(i)\OutputOrd f(j)$ for every
-\indesc $j$ of $i$, so $f$ is monotone.
+Suppose $f$ is monotone, and let a \commitment-free run reach $(i,R)$.  By Functional CALM and Corollary~\ref{cor:state-by-input},
+$(i,R)=\sigma_P(i)$, so the legal $j\InputGe i$ are exactly the \indescs of
+$i$, and monotonicity gives $f(i)\OutputOrd f(j)$ at each, so $f(i)$ is a
+legal output (Definition~\ref{def:exposable}).
+Conversely, if every such output is a legal output, then at $\sigma_P(i)$,
+which the empty run reaches, legality of $f(i)$ gives $f(i)\OutputOrd f(j)$
+for every \indesc $j$ of $i$, so $f$ is monotone.
 \end{proof}
 
 \subsection{Proofs for Section~\ref{sec:complete-calm}}
@@ -98,27 +98,27 @@ Proposition~\ref{prop:confluence}.
 By Proposition~\ref{prop:common-expansion-form} it suffices to treat the
 common-\indesc condition.  ($\Leftarrow$) Let finitely many runs end at
 $(i_r,R_r)$ with common \indesc $j$.  Each output $o$ emitted on a run was
-emitted at some input $i_o\InputOrd j$, so $(i_o,o)$ is a row of $S$; the
+emitted at some input $i_o\InputOrd j$, so $(i_o,o)$ is a row of $P$; the
 condition supplies $u\in\fiber{j}$ \outrelpart all of them, and
 Lemma~\ref{lem:reconciliation} gives confluence.  ($\Rightarrow$) Given rows
 $(i_r,o_r)$ with common \indesc $j$, apply consistency and
-Lemma~\ref{lem:reconciliation} to the runs that start at $\sigma_S(i_r)$ and
+Lemma~\ref{lem:reconciliation} to the runs that start at $\sigma_P(i_r)$ and
 emit $o_r$; for the empty family, totality gives $\fiber{j}\neq\varnothing$.
 \end{proof}
 
 \begin{proof}[Proof of Proposition~\ref{prop:exposure-boundary}]
 Suppose the common-\indesc condition holds; by Theorem~\ref{thm:complete-calm}, the
-specification is consistent.  Let $(i,R)$ be reached by a run (commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
+specification is consistent.  Let $(i,R)$ be reached by a run (\commitment-free or not), and let $o\in R(i)$, $j\InputGe i$ legal, and
 $x\in R(j)$.  Extend the run in two ways: by $\mathsf{output}(o)$, and by
 $\mathsf{input}(j)$ followed by $\mathsf{output}(x)$.
 By consistency the two extended runs are confluent at $j$, so
 Proposition~\ref{prop:confluence} supplies a row $(j,u)$ in both tables.  Both
-tables are contained in $R$, so $u\in R(j)$ \outrel $o$ and $x$, and the exposure test
-(Proposition~\ref{prop:exposability}) makes $o$ exposable.
-Conversely, suppose every such output is exposable, and let rows
+tables are contained in $R$, so $u\in R(j)$ \outrel $o$ and $x$, and the legal-output test
+(Proposition~\ref{prop:exposability}) makes $o$ a legal output.
+Conversely, suppose every such output is a legal output, and let rows
 $(i_1,o_1),\ldots,(i_k,o_k)$ have common \indesc $j$.  By totality pick
-$u_0\in S(j)$.  For $r=1,\ldots,k$ in turn, the exposure test for $o_r$ at
-$\sigma_S(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in S(j)$ \outrelpart both
+$u_0\in P(j)$.  For $r=1,\ldots,k$ in turn, the legal-output test for $o_r$ at
+$\sigma_P(i_r)$, applied with $x=u_{r-1}$, gives $u_r\in P(j)$ \outrelpart both
 $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
 \end{proof}
 
@@ -127,7 +127,7 @@ $o_r$ and $u_{r-1}$.  Then $u_k$ \outrel every $o_r$.
 If every two rows with a common \indesc $j$ have a common \outnoun in
 $\fiber{j}$, the condition holds for every finite family: replace the first
 two rows by a row $(j,u)$ at $j$ and repeat; a single row is paired with any
-row at $j$.  The pairs must range over all rows of $S$, including those at
+row at $j$.  The pairs must range over all rows of $P$, including those at
 $j$.  Restricting the families to rows at single-proposal inputs does not
 suffice, even $k$ rows at a time: in the $k$-set agreement example of
 Appendix~\ref{app:additional-applications}, every family of at most $k$ rows
@@ -146,7 +146,7 @@ message-free history, one participant per run, at its final cut.
 \paragraph{Exchanging outputs.}
 \label{app:exchanging-outputs}
 Suppose participants share their \emph{outputs} in the data $d$ of messages
-(Section~\ref{sec:distributed-consistency}).  A participant that receives an
+(\S\ref{sec:distributed-consistency}).  A participant that receives an
 output $o$ its sender has emitted has two
 options.  If $o\in R(i)$ at its own current input $i$, it can emit $o$ itself;
 that is an ordinary output event, already covered by
@@ -174,7 +174,7 @@ add rows, that row would be in both states.
 Suppose $\Spec$ satisfies Lifted Monotonicity for $E$.  Take the system whose strategies emit,
 by the canonical output event $\mathsf{output}(o)$ of
 Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber.
-That event is always legal and applies whatever commitments $o$ requires
+That event is always legal and applies whatever \commitments $o$ requires
 (Lemma~\ref{lem:canonical-commitment-normal-form}), so the system has
 Availability for $E$.  Every output it emits is a row of $E$ at an input below
 the current one, so at a common \indesc $j$ of the current inputs the emitted
@@ -198,16 +198,16 @@ $o_r$.
 \end{proof}
 
 \begin{proof}[Proof of Corollary~\ref{cor:complete-cap-S}]
-With $E=S$, Lifted Monotonicity for $E$ is the common-\indesc condition, which is
+With $E=P$, Lifted Monotonicity for $E$ is the common-\indesc condition, which is
 Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}).  When
 Lifted Monotonicity holds, every output at every state reachable without
-commitment is exposable (Proposition~\ref{prop:exposure-boundary}).  The
-commitment-free system never leaves such states, so it has Availability, and
+\commitment is a legal output (Proposition~\ref{prop:exposure-boundary}).  The
+\commitment-free system never leaves such states, so it has Availability, and
 by Complete CALM and Proposition~\ref{prop:distributed-consistency} it has
 Partition Consistency.
 \end{proof}
 
-\subsection{Invariant confluence (Section~\ref{sec:iconfluence-instance})}
+\subsection{Invariant confluence (\S\ref{sec:iconfluence-instance})}
 \label{app:iconfluence}
 
 The input records which transactions ran and what each one saw.  A
@@ -231,13 +231,13 @@ state.  It is \emph{valid} when every downward-closed sub-history $c$ has
 $\mathcal I(\mathrm{eval}(c))$: every merge of what it contains is a valid
 state.
 
-The specification $S_{\mathcal I}$ has the locally valid histories as inputs;
+The specification $\Spec_{\mathcal I}$ has the locally valid histories as inputs;
 a downward-closed sub-order of a locally valid history is locally valid, so the
 inputs are closed under the order.
 An output is a state, and $u$ \outrel $s$ when $s\subseteq u$.  At input $h$,
 the system may expose the state of any valid sub-history:
 \[
-  S_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
+  P_{\mathcal I}(h)=\{\mathrm{eval}(g):g\text{ a downward-closed, valid
   sub-history of }h\}.
 \]
 A replica may hold some transactions back, but whatever it exposes must be a
@@ -262,14 +262,14 @@ union of the pieces $c\cap g_r$, each a downward-closed sub-history of the valid
 $g_r$, so by the first step $\mathrm{eval}(c)$ is a union of reachable states.  Invariant
 confluence makes each successive union valid, and a valid merge of reachable
 states is reachable, so $\mathcal I(\mathrm{eval}(c))$.  Thus $g$ is valid, and
-$\mathrm{eval}(g)\in S_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
+$\mathrm{eval}(g)\in P_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$.
 For $k=0$, take $g$ empty.
 
 ($\Leftarrow$) Only Directed Outputs is needed.  Let $g_1$ and $g_2$ be valid
 histories, and let $j$ be their disjoint union, with events renamed apart and
 no order between the two parts.  Each event keeps its predecessors, and its
 $\mathrm{pre}$ and $\mathrm{post}$ are states of downward-closed sub-histories
-of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in S_{\mathcal I}(j)$.
+of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$.
 Directed Outputs gives a valid sub-history $g$ of $j$ with
 $\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$,
 so $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$.  Every

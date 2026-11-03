@@ -5,11 +5,11 @@ import CoordCriterion.Distributed.Systems
 # Figure tables of Sections 2–3 and the discussion
 
 * Fig. `fig:election-frames`, panel (d) "(b), then polls closed", with the
-  registrar's seal (`closePolls`, a commitment in the sense of
+  registrar's commitment (`closePolls`, a commitment in the sense of
   Def. `def:commitment`), the claims of Sec. `sec:election-story` and
   Sec. `sec:functional-events` about it, and the printed rows and upper
   fibers of panels (a)–(d) (`Elec.*`).  The figure prints exactly the rows
-  whose input ⪰ `x··`, as its caption says (`Elec.printed_complete`).
+  whose input ⪰ `a··`, as its caption says (`Elec.printed_complete`).
 * Fig. `fig:ambiguity-frames`(f), transaction ordering (`Txn.*`), and (g),
   traceroute (`Trace.*`), as printed (one input; the rows at it), with the
   claims of Sec. `sec:ambiguity-story`, Sec. `sec:lifted-monotonicity`,
@@ -31,7 +31,7 @@ section Close
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 theorem canon_R (sp : Spec I O) (i k : I) (u : O) :
-    (canon sp i).R k u ↔ (sp.S k u ∧ i ≼ k) := Iff.rfl
+    (canon sp i).R k u ↔ (sp.P k u ∧ i ≼ k) := Iff.rfl
 
 /-- The state after closing the polls: only the rows at the current input. -/
 def closeState (σ : State sp) : State sp where
@@ -53,7 +53,7 @@ theorem closeApp_eq {σ τ : State sp} :
 
 /-- Closing the polls is a commitment (Def. `def:commitment`): it keeps the
 current input, only removes rows, removes one, and every input where it
-removes a row keeps none, so Eq. `commitment-excludes` holds vacuously. -/
+removes a row keeps none, so Eq. `commitment-unsubsumed` holds vacuously. -/
 noncomputable def closePolls : Commitment sp where
   app := closeApp
   cur_eq σ τ h := by obtain ⟨_, rfl⟩ := closeApp_eq.1 h; rfl
@@ -61,12 +61,12 @@ noncomputable def closePolls : Commitment sp where
   removes σ τ h := by
     obtain ⟨⟨k, u, hu, hk⟩, rfl⟩ := closeApp_eq.1 h
     exact ⟨k, u, hu, fun h' => hk h'.2⟩
-  excludes σ τ h k u w hu hnu hw := by
+  unsubsumed σ τ h k u w hu hnu hw := by
     obtain ⟨_, rfl⟩ := closeApp_eq.1 h
     exact absurd ⟨hu, hw.2⟩ hnu
 
-/-- It is a seal: at every input where it removes a row, it removes all rows. -/
-theorem closePolls_seals {σ τ : State sp} (h : (closePolls (sp := sp)).app σ = some τ)
+/-- It is a commitment: at every input where it removes a row, it removes all rows. -/
+theorem closePolls_excludes_input {σ τ : State sp} (h : (closePolls (sp := sp)).app σ = some τ)
     (k : I) (hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) : ∀ w, ¬ τ.R k w := by
   obtain ⟨_, rfl⟩ := closeApp_eq.1 h
   obtain ⟨u, hu, hnu⟩ := hk
@@ -80,20 +80,20 @@ end Close
 namespace Elec
 open CC.CALM
 
-def bxyy : Ballots := ⟨some .x, some .y, some .y⟩   -- xyy
-def bxxx : Ballots := ⟨some .x, some .x, some .x⟩   -- xxx
-def bxxy : Ballots := ⟨some .x, some .x, some .y⟩   -- xxy
-def bx_x : Ballots := ⟨some .x, none, some .x⟩      -- x·x
-def bx_y : Ballots := ⟨some .x, none, some .y⟩      -- x·y
+def babb : Ballots := ⟨some .a, some .b, some .b⟩   -- abb
+def baaa : Ballots := ⟨some .a, some .a, some .a⟩   -- aaa
+def baab : Ballots := ⟨some .a, some .a, some .b⟩   -- aab
+def ba_a : Ballots := ⟨some .a, none, some .a⟩      -- a·a
+def ba_b : Ballots := ⟨some .a, none, some .b⟩      -- a·b
 
 /-- The nine inputs printed in each panel, in order, with their outputs. -/
 def printed : List (Ballots × Res) :=
-  [(bxd, .bot), (bxy, .bot), (bxyx, .win .x), (bxyy, .win .y),
-   (bxx, .win .x), (bxxx, .win .x), (bxxy, .win .x),
-   (bx_x, .win .x), (bx_y, .bot)]
+  [(bad, .bot), (bab, .bot), (baba, .win .a), (babb, .win .b),
+   (baa, .win .a), (baaa, .win .a), (baab, .win .a),
+   (ba_a, .win .a), (ba_b, .bot)]
 
 /-- The printed outputs are the election's: every printed pair is a row. -/
-theorem printed_rows : ∀ r ∈ printed, elec.S r.1 r.2 := by
+theorem printed_rows : ∀ r ∈ printed, elec.P r.1 r.2 := by
   intro r hr
   simp only [printed, List.mem_cons, List.mem_nil_iff, or_false] at hr
   show r.2 = winner r.1
@@ -105,16 +105,16 @@ macro "ballot_cases" k:ident : tactic =>
              rcases b1 with _ | _ | _ <;> rcases b2 with _ | _ | _ <;>
              rcases b3 with _ | _ | _))
 
-/-- The inputs `⪰ x··` are nine: the seven printed ones and `x·x`, `x·y`. -/
+/-- The inputs `⪰ a··` are nine: the seven printed ones and `a·a`, `a·b`. -/
 theorem shown_inputs (k : Ballots) :
-    bxd ≼ k ↔ (k = bxd ∨ k = bxy ∨ k = bxyx ∨ k = bxyy ∨ k = bxx ∨ k = bxxx ∨ k = bxxy ∨
-      k = bx_x ∨ k = bx_y) := by
+    bad ≼ k ↔ (k = bad ∨ k = bab ∨ k = baba ∨ k = babb ∨ k = baa ∨ k = baaa ∨ k = baab ∨
+      k = ba_a ∨ k = ba_b) := by
   ballot_cases k <;> decide
 
-/-- The figure prints exactly the rows whose input `⪰ x··`: a pair is printed
+/-- The figure prints exactly the rows whose input `⪰ a··`: a pair is printed
 iff it is a row of the election at such an input. -/
 theorem printed_complete (k : Ballots) (o : Res) :
-    (k, o) ∈ printed ↔ (bxd ≼ k ∧ elec.S k o) := by
+    (k, o) ∈ printed ↔ (bad ≼ k ∧ elec.P k o) := by
   constructor
   · intro hr
     refine ⟨?_, printed_rows _ hr⟩
@@ -129,45 +129,45 @@ theorem printed_complete (k : Ballots) (o : Res) :
 
 /-- Upper fibers of panels (a) and (b): `{⊥, x, y}`. -/
 theorem upper_ab (o : Res) :
-    (∃ k, (canon elec bxd).R k o) ∧ (∃ k, (canon elec bxy).R k o) := by
+    (∃ k, (canon elec bad).R k o) ∧ (∃ k, (canon elec bab).R k o) := by
   rcases o with _ | ⟨_ | _⟩
-  · exact ⟨⟨bxd, (by decide : Res.bot = winner bxd), PO.refl _⟩,
-      ⟨bxy, (by decide : Res.bot = winner bxy), PO.refl _⟩⟩
-  · exact ⟨⟨bxx, (by decide : Res.win .x = winner bxx), by decide⟩,
-      ⟨bxyx, (by decide : Res.win .x = winner bxyx), by decide⟩⟩
-  · exact ⟨⟨bxyy, (by decide : Res.win .y = winner bxyy), by decide⟩,
-      ⟨bxyy, (by decide : Res.win .y = winner bxyy), by decide⟩⟩
+  · exact ⟨⟨bad, (by decide : Res.bot = winner bad), PO.refl _⟩,
+      ⟨bab, (by decide : Res.bot = winner bab), PO.refl _⟩⟩
+  · exact ⟨⟨baa, (by decide : Res.win .a = winner baa), by decide⟩,
+      ⟨baba, (by decide : Res.win .a = winner baba), by decide⟩⟩
+  · exact ⟨⟨babb, (by decide : Res.win .b = winner babb), by decide⟩,
+      ⟨babb, (by decide : Res.win .b = winner babb), by decide⟩⟩
 
 /-- Upper fiber of panel (c): `{x}`. -/
-theorem upper_c (o : Res) : (∃ k, (canon elec bxx).R k o) ↔ o = .win .x := by
+theorem upper_c (o : Res) : (∃ k, (canon elec baa).R k o) ↔ o = .win .a := by
   constructor
   · rintro ⟨k, hk⟩
     obtain ⟨o', ho'⟩ := elec_panel_c_determined
-    exact (ho' k o hk).trans ((ho' bxx (.win .x) ⟨(by decide : Res.win .x = winner bxx),
+    exact (ho' k o hk).trans ((ho' baa (.win .a) ⟨(by decide : Res.win .a = winner baa),
       PO.refl _⟩).symm)
-  · rintro rfl; exact ⟨bxx, (by decide : Res.win .x = winner bxx), PO.refl _⟩
+  · rintro rfl; exact ⟨baa, (by decide : Res.win .a = winner baa), PO.refl _⟩
 
 /-- Panel (b): the rows at printed inputs that remain are exactly
-`(xy·,⊥)`, `(xyx,x)`, `(xyy,y)`; the other printed rows are retired by
-`input(xy·)` (their input does not expand `xy·`). -/
-theorem panel_b (k : Ballots) (o : Res) (hk : bxd ≼ k) :
-    ((canon elec bxy).R k o ↔
-      ((k = bxy ∧ o = .bot) ∨ (k = bxyx ∧ o = .win .x) ∨ (k = bxyy ∧ o = .win .y))) ∧
-    (elec.S k o → ¬ (canon elec bxy).R k o → ¬ bxy ≼ k) := by
+`(ab·,⊥)`, `(aba,a)`, `(abb,b)`; the other printed rows are subsumed by
+`input(ab·)` (their input does not expand `ab·`). -/
+theorem panel_b (k : Ballots) (o : Res) (hk : bad ≼ k) :
+    ((canon elec bab).R k o ↔
+      ((k = bab ∧ o = .bot) ∨ (k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b))) ∧
+    (elec.P k o → ¬ (canon elec bab).R k o → ¬ bab ≼ k) := by
   rw [canon_R]
-  show ((o = winner k ∧ bxy ≼ k) ↔ _) ∧ (o = winner k → ¬ (o = winner k ∧ bxy ≼ k) → _)
+  show ((o = winner k ∧ bab ≼ k) ↔ _) ∧ (o = winner k → ¬ (o = winner k ∧ bab ≼ k) → _)
   revert hk
   ballot_cases k <;> rcases o with _ | ⟨_ | _⟩ <;> decide
 
 /-! ### Panel (d): (b), then polls closed -/
 
 /-- The state of panel (d). -/
-noncomputable def panelD : State elec := closeState (canon elec bxy)
+noncomputable def panelD : State elec := closeState (canon elec bab)
 
-/-- Closing the polls is defined at panel (b) (the row `(xyx, x)` is at
+/-- Closing the polls is defined at panel (b) (the row `(aba, a)` is at
 another input) and yields panel (d). -/
-theorem close_at_b : (closePolls (sp := elec)).app (canon elec bxy) = some panelD :=
-  closeApp_eq.2 ⟨⟨bxyx, .win .x, ⟨(by decide : Res.win .x = winner bxyx), by decide⟩,
+theorem close_at_b : (closePolls (sp := elec)).app (canon elec bab) = some panelD :=
+  closeApp_eq.2 ⟨⟨baba, .win .a, ⟨(by decide : Res.win .a = winner baba), by decide⟩,
     by decide⟩, rfl⟩
 
 /-- Closing the polls after every voter has voted applies no commitment: at the
@@ -187,34 +187,34 @@ theorem close_after_voting (i : Ballots) (hfull : i.b1.isSome ∧ i.b2.isSome �
     ballot_cases i <;> ballot_cases k <;> decide
   · rfl
 
-/-- Panel (d)'s remainder table is the single row `(xy·, ⊥)`. -/
-theorem panelD_rows (k : Ballots) (o : Res) : panelD.R k o ↔ (k = bxy ∧ o = .bot) := by
+/-- Panel (d)'s remainder table is the single row `(ab·, ⊥)`. -/
+theorem panelD_rows (k : Ballots) (o : Res) : panelD.R k o ↔ (k = bab ∧ o = .bot) := by
   constructor
   · rintro ⟨⟨hS, _⟩, rfl⟩
     exact ⟨rfl, hS.trans (by decide)⟩
   · rintro ⟨rfl, rfl⟩
-    exact ⟨⟨(by decide : Res.bot = winner bxy), PO.refl _⟩, rfl⟩
+    exact ⟨⟨(by decide : Res.bot = winner bab), PO.refl _⟩, rfl⟩
 
-theorem panelD_cur : panelD.cur = bxy := rfl
+theorem panelD_cur : panelD.cur = bab := rfl
 
 /-- "Upper fiber `{⊥}`; determined; `⊥` is the result." -/
 theorem panelD_determined : Determined panelD ∧ ∀ k x, panelD.R k x → x = .bot :=
   ⟨⟨.bot, fun k x h => ((panelD_rows k x).1 h).2⟩, fun k x h => ((panelD_rows k x).1 h).2⟩
 
-/-- The seal removes exactly the still-possible rows `(xyx, x)` and `(xyy, y)`
+/-- The commitment removes exactly the still-possible rows `(aba, a)` and `(abb, b)`
 (struck through), and these inputs are legal at (b) and expand the current
 input: input alone would not have removed them. -/
 theorem panelD_struck (k : Ballots) (o : Res) :
-    ((canon elec bxy).R k o ∧ ¬ panelD.R k o) ↔
-      ((k = bxyx ∧ o = .win .x) ∨ (k = bxyy ∧ o = .win .y)) := by
+    ((canon elec bab).R k o ∧ ¬ panelD.R k o) ↔
+      ((k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b)) := by
   rw [canon_R, panelD_rows]
-  show ((o = winner k ∧ bxy ≼ k) ∧ ¬ (k = bxy ∧ o = .bot)) ↔ _
+  show ((o = winner k ∧ bab ≼ k) ∧ ¬ (k = bab ∧ o = .bot)) ↔ _
   ballot_cases k <;> rcases o with _ | ⟨_ | _⟩ <;> decide
 
-/-- The printed gray-only rows of (d) are those retired by `input(xy·)`;
-the current input is unchanged by the seal. -/
-theorem panelD_gray (k : Ballots) (o : Res) (hk : bxd ≼ k) (hS : elec.S k o) :
-    ¬ panelD.R k o ↔ (¬ bxy ≼ k ∨ (k = bxyx ∧ o = .win .x) ∨ (k = bxyy ∧ o = .win .y)) := by
+/-- The printed gray-only rows of (d) are those lost after `input(ab·)`;
+the current input is unchanged by the commitment. -/
+theorem panelD_gray (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
+    ¬ panelD.R k o ↔ (¬ bab ≼ k ∨ (k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b)) := by
   rw [panelD_rows]
   have hS' : o = winner k := hS
   subst hS'
@@ -223,8 +223,8 @@ theorem panelD_gray (k : Ballots) (o : Res) (hk : bxd ≼ k) (hS : elec.S k o) :
 
 /-- The registrar's output event: `Out_{[closePolls]}(⊥)` at (b) is legal (under
 any basis containing `closePolls`) and ends at panel (d). -/
-theorem registrar_step (B : Basis elec) (hB : B closePolls) :
-    SysStep B (canon elec bxy) (.output [closePolls] .bot) panelD := by
+theorem registrar_step (B : CommitmentBasis elec) (hB : B closePolls) :
+    SysStep B (canon elec bab) (.output [closePolls] .bot) panelD := by
   refine SysStep.output (fun c hc => by simp at hc; subst hc; exact hB)
     (ApplySeq.cons close_at_b (ApplySeq.nil _)) ((panelD_rows _ _).2 ⟨rfl, rfl⟩) ?_ rfl ?_
   · intro k x _ hx; exact absurd (Or.inl rfl) hx
@@ -232,29 +232,30 @@ theorem registrar_step (B : Basis elec) (hB : B closePolls) :
     exact ⟨fun h => ⟨h, Or.inl rfl⟩, fun h => h.1⟩
 
 /-- "Emitting `⊥` by itself would need no commitment": at (b), `⊥` is
-exposable, `Sealed_⊥` and `Rejected_⊥` are empty, and `output(⊥)` removes no
-row; so the seal is not required by the output. -/
+exposable, `Excluded_⊥` is empty, and `output(⊥)` removes no
+row; so the commitment is not required by the output. -/
 theorem bot_alone_at_b :
-    Exposable (canon elec bxy) .bot ∧ (¬ ∃ k x, Sealed (canon elec bxy) .bot k x) ∧
-      (¬ ∃ k x, Rejected (canon elec bxy) .bot k x) ∧
-      outputTable (canon elec bxy) .bot = (canon elec bxy).R := by
+    Exposable (canon elec bab) .bot ∧
+      (¬ ∃ k x, Excluded (canon elec bab) .bot k x) ∧
+      outputTable (canon elec bab) .bot = (canon elec bab).R := by
   have he := elec_panels_exposable.2.1
-  refine ⟨he, (exposable_iff_empty _ _).1 he |>.1, (exposable_iff_empty _ _).1 he |>.2, ?_⟩
-  funext k x; apply propext
+  refine ⟨he, (exposable_iff_empty _ _).1 he, ?_⟩
+  funext k x
+  apply propext
   exact ⟨fun h => h.1, fun h => ⟨h, Or.inl rfl⟩⟩
 
 /-- Fig. `fig:nonmonotone-frame`: "the table matches Fig. (d)": panel (d)'s
 remainder table is that of `output(⊥)` at (b) under the equality order. -/
 theorem panelD_matches_e (k : Ballots) (r : Res) :
-    panelD.R k r ↔ outputTable (canon elecEq bxy) ⟨.bot⟩ k ⟨r⟩ := by
+    panelD.R k r ↔ outputTable (canon elecEq bab) ⟨.bot⟩ k ⟨r⟩ := by
   rw [panelD_rows, elecEq_bot_single_row]
   exact ⟨fun ⟨h1, h2⟩ => ⟨h1, by rw [h2]⟩, fun ⟨h1, h2⟩ => ⟨h1, by cases h2; rfl⟩⟩
 
 /-- "Extra commitments only restrict behavior": the registrar's run has an
 observably equivalent run of the transition system (`input`/`output` events),
 whose table contains panel (d)'s. -/
-theorem registrar_canonical (B : Basis elec) (hB : B closePolls) :
-    ∃ ρ', Exec (canon elec bxy) [.output .bot] ρ' ∧ ρ'.cur = bxy ∧
+theorem registrar_canonical (B : CommitmentBasis elec) (hB : B closePolls) :
+    ∃ ρ', Exec (canon elec bab) [.output .bot] ρ' ∧ ρ'.cur = bab ∧
       ∀ k u, panelD.R k u → ρ'.R k u := by
   obtain ⟨_, ρ', _, _, hx, hc, hsub⟩ :=
     canonical_equivalent (SysExec.cons (registrar_step B hB) (SysExec.nil _))
@@ -263,10 +264,10 @@ theorem registrar_canonical (B : Basis elec) (hB : B closePolls) :
 /-! ### Sec. `sec:discussion`: decisive ballot vs. closing the polls -/
 
 /-- Fill missing ballots with `x`. -/
-def fillX (i : Ballots) : Ballots :=
-  ⟨some (i.b1.getD .x), some (i.b2.getD .x), some (i.b3.getD .x)⟩
+def fillA (i : Ballots) : Ballots :=
+  ⟨some (i.b1.getD .a), some (i.b2.getD .a), some (i.b3.getD .a)⟩
 
-theorem fillX_spec (i : Ballots) : i ≼ fillX i ∧ (winner i = .bot → winner (fillX i) = .win .x) := by
+theorem fillA_spec (i : Ballots) : i ≼ fillA i ∧ (winner i = .bot → winner (fillA i) = .win .a) := by
   ballot_cases i <;> decide
 
 /-- A determined canonical state of the election has a winner. -/
@@ -274,8 +275,8 @@ theorem determined_has_winner (i : Ballots) (h : Determined (canon elec i)) : wi
   intro hb
   obtain ⟨o, ho⟩ := h
   have h1 := ho i (winner i) ⟨rfl, PO.refl _⟩
-  have h2 := ho (fillX i) (winner (fillX i)) ⟨rfl, (fillX_spec i).1⟩
-  rw [(fillX_spec i).2 hb] at h2; rw [hb] at h1
+  have h2 := ho (fillA i) (winner (fillA i)) ⟨rfl, (fillA_spec i).1⟩
+  rw [(fillA_spec i).2 hb] at h2; rw [hb] at h1
   rw [← h1] at h2; cases h2
 
 /-- A canonical state whose current input has a winner is determined. -/
@@ -290,18 +291,18 @@ theorem winner_determined (i : Ballots) (c : Cand) (h : winner i = .win c) :
   · exact hS.trans hm.symm
 
 /-- **Decisive ballot vs. closing the polls.**  (1) A decisive ballot
-(`input(xx·)` at panel (a)) reaches a determined state and every row it
-removes is retired by input (its input no longer expands the current input).
+(`input(aa·)` at panel (a)) reaches a determined state and every row it
+removes is lost after input (its input no longer expands the current input).
 (2) Closing the polls at (b) reaches a determined state and every row it
 removes is at a legal input expanding the current one (a commitment).
 (3) The results differ: in the election, closing the polls at any
 undetermined canonical state leaves the single result `⊥`, while every
 determined canonical state has a winner. -/
 theorem decisive_vs_close :
-    (Step (canon elec bxd) (.input bxx) (canon elec bxx) ∧ Determined (canon elec bxx) ∧
-      ∀ k u, (canon elec bxd).R k u → ¬ (canon elec bxx).R k u → ¬ bxx ≼ k) ∧
-    (Determined panelD ∧ ∀ k u, (canon elec bxy).R k u → ¬ panelD.R k u →
-      bxy ≼ k ∧ k ≠ bxy) ∧
+    (Step (canon elec bad) (.input baa) (canon elec baa) ∧ Determined (canon elec baa) ∧
+      ∀ k u, (canon elec bad).R k u → ¬ (canon elec baa).R k u → ¬ baa ≼ k) ∧
+    (Determined panelD ∧ ∀ k u, (canon elec bab).R k u → ¬ panelD.R k u →
+      bab ≼ k ∧ k ≠ bab) ∧
     (∀ i, ¬ Determined (canon elec i) →
       (closePolls (sp := elec)).app (canon elec i) = some (closeState (canon elec i)) ∧
       ∀ k x, (closeState (canon elec i)).R k x → x = .bot) ∧
@@ -317,11 +318,11 @@ theorem decisive_vs_close :
       | bot => rfl
       | win c => exact absurd (winner_determined i c hw) hnd
     refine ⟨closeApp_eq.2 ⟨?_, rfl⟩, ?_⟩
-    · refine ⟨fillX i, winner (fillX i), ⟨rfl, (fillX_spec i).1⟩, fun he => ?_⟩
+    · refine ⟨fillA i, winner (fillA i), ⟨rfl, (fillA_spec i).1⟩, fun he => ?_⟩
       show False
-      have : winner i = .win .x := by
-        have e : fillX i = i := he
-        rw [← e]; exact (fillX_spec i).2 hb
+      have : winner i = .win .a := by
+        have e : fillA i = i := he
+        rw [← e]; exact (fillA_spec i).2 hb
       rw [hb] at this; cases this
     · rintro k x ⟨⟨hS, _⟩, rfl⟩
       exact hS.trans hb
@@ -349,7 +350,7 @@ instance : PO TOut where
   antisymm h _ := h
 
 def spec : Spec Unit TOut where
-  S _ _ := True
+  P _ _ := True
   total _ := ⟨.ab, trivial⟩
 
 theorem le_iff (a b : TOut) : a ≼ b ↔ a = b := Iff.rfl
@@ -361,46 +362,46 @@ theorem after_ab (k : Unit) (o : TOut) : outputTable (canon spec ()) .ab k o ↔
   ⟨fun h => h.2.symm, fun h => ⟨sR o, h.symm⟩⟩
 
 /-- "No remaining row refines the removed one": the row `[B,A]` is in
-`Rejected_o` (a choice), not sealed (the input keeps `[A,B]`) and not retired
+`Excluded_o` (a commitment), not excluded (the input keeps `[A,B]`) and not subsumed
 (no row refines both). -/
-theorem ba_rejected :
-    Rejected (canon spec ()) .ab () .ba ∧ ¬ Sealed (canon spec ()) .ab () .ba ∧
-      ¬ Retired (canon spec ()) .ab () .ba ∧
-      ¬ ∃ u, spec.S () u ∧ TOut.ab ≼ u ∧ TOut.ba ≼ u := by
-  have hns : ¬ Sealed (canon spec ()) .ab () .ba := fun h => h.2 ⟨.ab, sR _, rfl⟩
-  have hnr : ¬ Retired (canon spec ()) .ab () .ba := by
+theorem ba_excluded :
+    Excluded (canon spec ()) .ab () .ba ∧
+      ¬ Subsumed (canon spec ()) .ab () .ba ∧
+      ¬ ∃ u, spec.P () u ∧ TOut.ab ≼ u ∧ TOut.ba ≼ u := by
+  have hnr : ¬ Subsumed (canon spec ()) .ab () .ba := by
     rintro ⟨_, _, u, _, h1, h2⟩
     exact TOut.noConfusion (h1.trans h2.symm)
-  refine ⟨⟨sR _, fun h => TOut.noConfusion h, hns, hnr⟩, hns, hnr, ?_⟩
+  refine ⟨⟨sR _, fun h => TOut.noConfusion h, hnr⟩, hnr, ?_⟩
   rintro ⟨u, _, h1, h2⟩
   exact TOut.noConfusion (h1.trans h2.symm)
 
 /-- Emitting `[A,B]` is not exposable: it requires a commitment, and every
 legal system output event emitting it carries one. -/
 theorem ab_not_exposable : ¬ Exposable (canon spec ()) .ab ∧
-    ∀ (B : Basis spec) (γ : List (Commitment spec)) τ,
+    ∀ (B : CommitmentBasis spec) (γ : List (Commitment spec)) τ,
       SysStep B (canon spec ()) (.output γ .ab) τ → γ ≠ [] := by
-  refine ⟨fun h => ((exposable_iff_empty _ _).1 h).2 ⟨(), .ba, ba_rejected.1⟩, ?_⟩
+  refine ⟨fun h => (exposable_iff_empty _ _).1 h ⟨(), .ba, ba_excluded.1⟩, ?_⟩
   intro B γ τ h
-  exact containment_nonempty h ⟨(), .ba, Or.inr ba_rejected.1⟩
+  exact containment_nonempty h ⟨(), .ba, ba_excluded.1⟩
 
-/-- The choice `c_[A,B]` applies at `{A,B}`; it removes `[B,A]` while the
+/-- The commitment `x_[A,B]` applies at `{A,B}`; it removes `[B,A]` while the
 input stays legal (the row `[A,B]` remains). -/
-theorem choice_applies :
-    (choiceC (sp := spec) .ab).app (canon spec ()) = some (cmChooseState (canon spec ()) .ab) ∧
-      (cmChooseState (canon spec ()) .ab).R () .ab ∧
-      ¬ (cmChooseState (canon spec ()) .ab).R () .ba :=
-  ⟨chooseApp_eq.2 ⟨sR _, ⟨(), .ba, ba_rejected.1⟩, rfl⟩,
-   ⟨sR _, not_rejected_of_ge (PO.refl _)⟩, fun h => h.2 ba_rejected.1⟩
+theorem commitment_applies :
+    (canonicalCommitment (sp := spec) .ab).app (canon spec ()) =
+      some (commitmentState (canon spec ()) .ab (sR .ab)) ∧
+      (commitmentState (canon spec ()) .ab (sR .ab)).R () .ab ∧
+      ¬ (commitmentState (canon spec ()) .ab (sR .ab)).R () .ba :=
+  ⟨commitmentApp_eq.2 ⟨sR _, ⟨(), .ba, ba_excluded.1⟩, rfl⟩,
+   ⟨sR _, fun h => h.2.1 (PO.refl _)⟩, fun h => h.2 ba_excluded.1⟩
 
 /-- The two orders are incompatible: not directed, not monotone, not
 consistent. -/
 theorem not_monotone :
-    ¬ CompatibleIn (spec.S ()) [.ab, .ba] ∧ ¬ spec.DirectedOutputs ∧ ¬ spec.LiftedMono ∧
+    ¬ CompatibleIn (spec.P ()) [.ab, .ba] ∧ ¬ spec.DirectedOutputs ∧ ¬ spec.LiftedMono ∧
       ¬ spec.Consistent := by
-  have hc : ¬ CompatibleIn (spec.S ()) [.ab, .ba] := by
+  have hc : ¬ CompatibleIn (spec.P ()) [.ab, .ba] := by
     rintro ⟨u, hu, hall⟩
-    exact ba_rejected.2.2.2 ⟨u, hu, hall _ (by simp), hall _ (by simp)⟩
+    exact ba_excluded.2.2 ⟨u, hu, hall _ (by simp), hall _ (by simp)⟩
   have hd : ¬ spec.DirectedOutputs := fun h => hc (h () [.ab, .ba] (by simp) (fun _ _ => trivial))
   have hl : ¬ spec.LiftedMono := fun h => hc (h () () trivial [.ab, .ba] (by simp)
     (fun _ _ => trivial))
@@ -419,7 +420,7 @@ theorem runs_not_confluent :
     · exact ⟨(), _, Exec.cons (Step.output _ (outState _ _ _) _ (sR _) rfl rfl) (Exec.nil _)⟩
     · exact ⟨(), _, Exec.cons (Step.output _ (outState _ _ _) _ (sR _) rfl rfl) (Exec.nil _)⟩
   obtain ⟨u, hu, hall⟩ := (survivor_test _ hrun () (fun _ _ => trivial)).1 h
-  exact ba_rejected.2.2.2 ⟨u, hu, (hall (outState (canon spec ()) .ab (sR _)) (by simp)).2,
+  exact ba_excluded.2.2 ⟨u, hu, (hall (outState (canon spec ()) .ab (sR _)) (by simp)).2,
     (hall (outState (canon spec ()) .ba (sR _)) (by simp)).2⟩
 
 end Txn
@@ -463,7 +464,7 @@ def inFib (x : RS) : Prop := x = rS1 ∨ x = rA ∨ x = rA2 ∨ x = rS1A ∨ x =
 instance (x : RS) : Decidable (inFib x) := inferInstanceAs (Decidable (_ ∨ _))
 
 def spec : Spec Unit RS where
-  S _ x := inFib x
+  P _ x := inFib x
   total _ := ⟨rS1, Or.inl rfl⟩
 
 def RS.union (x y : RS) : RS := ⟨x.s1 || y.s1, x.a || y.a, x.a2 || y.a2⟩
@@ -486,22 +487,21 @@ theorem after_s1 (x : RS) :
   show (inFib x ∧ True) ∧ rS1 ≼ x ↔ _
   rs_cases x <;> decide
 
-/-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output retirements,
-each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is sealed or
-rejected, so `{s→s1}` is exposable. -/
-theorem removed_retired :
+/-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output subsumptions,
+each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is excluded or
+excluded, so `{s→s1}` is exposable. -/
+theorem removed_subsumed :
     (∀ x, (canon spec ()).R () x → (¬ outputTable (canon spec ()) rS1 () x ↔ (x = rA ∨ x = rA2))) ∧
-    Retired (canon spec ()) rS1 () rA ∧ Retired (canon spec ()) rS1 () rA2 ∧
-    (¬ ∃ k x, Sealed (canon spec ()) rS1 k x) ∧ (¬ ∃ k x, Rejected (canon spec ()) rS1 k x) ∧
-    Exposable (canon spec ()) rS1 := by
+    Subsumed (canon spec ()) rS1 () rA ∧ Subsumed (canon spec ()) rS1 () rA2 ∧
+    (¬ ∃ k x, Excluded (canon spec ()) rS1 k x) ∧ Exposable (canon spec ()) rS1 := by
   have hall : (canon spec ()).R () rAll := (canonR _).2 (by decide)
   have hexp : Exposable (canon spec ()) rS1 := by
     intro k x hx _
     cases k
     exact ⟨rAll, hall, by decide, by have := (canonR x).1 hx; revert this; rs_cases x <;> decide⟩
-  obtain ⟨hS, hJ⟩ := (exposable_iff_empty _ _).1 hexp
+  have hE := (exposable_iff_empty _ _).1 hexp
   refine ⟨?_, ⟨(canonR _).2 (by decide), by decide, rAll, hall, by decide, by decide⟩,
-    ⟨(canonR _).2 (by decide), by decide, rAll, hall, by decide, by decide⟩, hS, hJ, hexp⟩
+    ⟨(canonR _).2 (by decide), by decide, rAll, hall, by decide, by decide⟩, hE, hexp⟩
   intro x hx
   rw [after_s1]
   have := (canonR x).1 hx
@@ -548,7 +548,7 @@ theorem union_survives (x y : RS) (hx : inFib x) (hy : inFib y) :
 
 /-- Remark after Prop. `prop:exposure-boundary`: a run that emitted
 `{s→s1}` and a run that emitted nothing reach the same input in different
-states; the first has retired `{s→a}`, the second keeps it. -/
+states; the first has subsumed `{s→a}`, the second keeps it. -/
 theorem state_depends_on_outputs :
     IsRun (outState (canon spec ()) rS1 ((canonR _).2 (by decide))) ∧ IsRun (canon spec ()) ∧
     (outState (canon spec ()) rS1 ((canonR _).2 (by decide))).cur = (canon spec ()).cur ∧

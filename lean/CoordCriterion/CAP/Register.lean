@@ -28,10 +28,10 @@ Consistency, `gilbert_lynch_full`).
    ids present and strictly increasing along `prec`; this is the same as a
    total order of the operations extending `prec`.  A read's value is the
    value of the last write (all writes of `h`, acknowledged or not) before it,
-   or `v0` if none.  The fiber `S(h)` (`regS`) consists of the maps explained
+   or `v0` if none.  The fiber `P(h)` (`regS`) consists of the maps explained
    by some linearization: every answered id is an operation of `h`, writes are
    answered `ack`, reads by their linearized value.
-5. *Obligation.*  `regQ p h` is the set of maps of `S(h)` that answer every
+5. *Obligation.*  `regQ p h` is the set of maps of `P(h)` that answer every
    operation of `h` whose replica is `p`.  We prove it total (`regQ_total`;
    this needs the existence of linearizations, `lin_exists`) and upward
    closed within fibers (`regQ_upward`).  The obligation for participant
@@ -276,7 +276,7 @@ theorem readVal_exists (h : Hist) (pos : Nat → Nat) (k : Nat) : ∃ v, ReadVal
 
 /-- The register specification. -/
 def regSpec : Spec Hist RMap where
-  S := regS
+  P := regS
   total h := by
     obtain ⟨pos, hl⟩ := lin_exists h
     exact ⟨⟨fun _ => none⟩, pos, hl, fun _ _ h => by cases h⟩
@@ -518,7 +518,7 @@ theorem h2_le : h2 ≼ hj :=
   ⟨fun a op h => by obtain ⟨rfl, rfl⟩ := h2_ops h; rfl, fun _ _ h => h.elim⟩
 
 /-- Every linearization of `j` places the write before the read, so no map of
-`S(j)` answers the read with `v0`. -/
+`P(j)` answers the read with `v0`. -/
 theorem hj_noread (u : RMap) (hu : regS hj u) (h : u.f 1 = some (.val v0)) : False := by
   obtain ⟨pos, hl, hex⟩ := hu
   obtain ⟨op, hop, hok⟩ := hex 1 _ h

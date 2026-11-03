@@ -70,7 +70,7 @@ variable {I O : Type} [PO I] [PO O]
 /-- Def. `def:deployment`: a deployment over participants `Fin n`. -/
 structure Deployment (sp : Spec I O) (n : Nat) where
   A : Fin n → Table I O
-  sub : ∀ p k u, A p k u → sp.S k u
+  sub : ∀ p k u, A p k u → sp.P k u
 
 /-- A partition: two or more nonempty blocks. -/
 def IsPartition {n : Nat} (comp : Fin n → Nat) : Prop := ∃ p q, comp p ≠ comp q
@@ -120,7 +120,7 @@ def UB (F : Family sp n) (j : I) : Prop := ∀ p m, F p = some m → m.fin.cur �
 /-- Def. `def:monotone-across-partitions`: monotone across `comp`. -/
 def MonoAcross (Dp : Deployment sp n) (comp : Fin n → Nat) : Prop :=
   ∀ F : Family sp n, Authorized Dp F → Separable F comp →
-    ∀ j, UB F j → ∃ u, sp.S j u ∧ ∀ p r, Emits F p r → r.2 ≼ u
+    ∀ j, UB F j → ∃ u, sp.P j u ∧ ∀ p r, Emits F p r → r.2 ≼ u
 
 /-- Def. `def:monotone-across-partitions`: monotone across every partition. -/
 def MonoAcrossPartitions (Dp : Deployment sp n) : Prop :=
@@ -131,7 +131,7 @@ at `j` survives in every remainder table of the family. -/
 def PartitionSurvivor (Dp : Deployment sp n) : Prop :=
   ∀ comp : Fin n → Nat, IsPartition comp →
     ∀ F : Family sp n, Authorized Dp F → Separable F comp →
-      ∀ j, UB F j → ∃ u, sp.S j u ∧ ∀ p m, F p = some m → m.fin.R j u
+      ∀ j, UB F j → ∃ u, sp.P j u ∧ ∀ p m, F p = some m → m.fin.R j u
 
 /-- The final states of the family's runs. -/
 def famStates (F : Family sp n) : List (State sp) :=
@@ -148,7 +148,7 @@ def PartitionConfluent (Dp : Deployment sp n) : Prop :=
 
 theorem emitted_exec {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es τ) :
     (emitted σ.cur es).map Prod.snd = outs es ∧
-      ∀ r ∈ emitted σ.cur es, sp.S r.1 r.2 ∧ r.1 ≼ τ.cur := by
+      ∀ r ∈ emitted σ.cur es, sp.P r.1 r.2 ∧ r.1 ≼ τ.cur := by
   induction hx with
   | nil => exact ⟨rfl, by simp [emitted]⟩
   | @cons σ τ' ρ e es hs hr ih =>
@@ -169,14 +169,14 @@ theorem emitted_exec {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es
       · exact ih.2 r hr'
 
 theorem PRun.rows_spec (m : PRun sp) :
-    m.rows.map Prod.snd = outs m.es ∧ ∀ r ∈ m.rows, sp.S r.1 r.2 ∧ r.1 ≼ m.fin.cur :=
+    m.rows.map Prod.snd = outs m.es ∧ ∀ r ∈ m.rows, sp.P r.1 r.2 ∧ r.1 ≼ m.fin.cur :=
   emitted_exec m.exec
 
 theorem PRun.mem_outs (m : PRun sp) {o : O} : o ∈ outs m.es ↔ ∃ r ∈ m.rows, r.2 = o := by
   rw [← m.rows_spec.1, List.mem_map]
 
 theorem PRun.residual (m : PRun sp) :
-    ∀ k u, m.fin.R k u ↔ (sp.S k u ∧ m.fin.cur ≼ k ∧ ∀ r ∈ m.rows, r.2 ≼ u) := by
+    ∀ k u, m.fin.R k u ↔ (sp.P k u ∧ m.fin.cur ≼ k ∧ ∀ r ∈ m.rows, r.2 ≼ u) := by
   intro k u
   rw [run_residual m.exec k u]
   constructor
@@ -187,8 +187,8 @@ theorem PRun.residual (m : PRun sp) :
     obtain ⟨r, hr, rfl⟩ := m.mem_outs.1 ho
     exact h3 r hr
 
-/-- The one-output run `output o` from `σ_S(i)`. -/
-def oneShot (sp : Spec I O) (i : I) (o : O) (h : sp.S i o) : PRun sp where
+/-- The one-output run `output o` from `σ_P(i)`. -/
+def oneShot (sp : Spec I O) (i : I) (o : O) (h : sp.P i o) : PRun sp where
   init := i
   es := [.output o]
   fin := meetState sp i o h
@@ -198,20 +198,20 @@ def oneShot (sp : Spec I O) (i : I) (o : O) (h : sp.S i o) : PRun sp where
     apply propext
     simp only [meetState, outputTable, canon, and_assoc]
 
-@[simp] theorem oneShot_rows (i : I) (o : O) (h : sp.S i o) :
+@[simp] theorem oneShot_rows (i : I) (o : O) (h : sp.P i o) :
     (oneShot sp i o h).rows = [(i, o)] := rfl
 
-@[simp] theorem oneShot_cur (i : I) (o : O) (h : sp.S i o) :
+@[simp] theorem oneShot_cur (i : I) (o : O) (h : sp.P i o) :
     (oneShot sp i o h).fin.cur = i := rfl
 
 /-! ## Prop. `thm:complete-cap-deployment` -/
 
 /-- The per-family core: for a family with common expansion `j`, a row at `j`
 survives in every remainder table iff the emitted outputs have a common
-expansion in `S(j)`. -/
+expansion in `P(j)`. -/
 theorem survivor_iff_compatible (F : Family sp n) {j : I} (hj : UB F j) :
-    (∃ u, sp.S j u ∧ ∀ p m, F p = some m → m.fin.R j u) ↔
-      (∃ u, sp.S j u ∧ ∀ p r, Emits F p r → r.2 ≼ u) := by
+    (∃ u, sp.P j u ∧ ∀ p m, F p = some m → m.fin.R j u) ↔
+      (∃ u, sp.P j u ∧ ∀ p r, Emits F p r → r.2 ≼ u) := by
   constructor
   · rintro ⟨u, hu, hall⟩
     refine ⟨u, hu, ?_⟩
@@ -241,7 +241,7 @@ survivor test, Prop. `prop:confluence`). -/
 theorem partition_compatibility_confluent (Dp : Deployment sp n) :
     PartitionConfluent Dp ↔ MonoAcrossPartitions Dp := by
   have key : ∀ (F : Family sp n) (j : I), UB F j →
-      (ConfluentAt (famStates F) j ↔ ∃ u, sp.S j u ∧ ∀ p m, F p = some m → m.fin.R j u) := by
+      (ConfluentAt (famStates F) j ↔ ∃ u, sp.P j u ∧ ∀ p m, F p = some m → m.fin.R j u) := by
     intro F j hj
     have hrun : ∀ σ ∈ famStates F, IsRun σ := by
       intro σ hσ
@@ -318,7 +318,7 @@ theorem pairFam_some {m₀ m₁ : PRun sp} {p : Fin n} {m : PRun sp}
 
 /-- With at least two participants and the deployment that lets every
 participant emit every row, monotonicity across partitions is monotonicity. -/
-theorem full_deployment_iff (hn : 2 ≤ n) (Dp : Deployment sp n) (hA : ∀ p, Dp.A p = sp.S) :
+theorem full_deployment_iff (hn : 2 ≤ n) (Dp : Deployment sp n) (hA : ∀ p, Dp.A p = sp.P) :
     MonoAcrossPartitions Dp ↔ sp.LiftedMono := by
   refine ⟨fun h => ?_, fun h => monoAcrossPartitions_of_liftedMono h Dp⟩
   apply (liftedMono_iff_commonExpansion sp).2
@@ -393,7 +393,7 @@ theorem deploymentAvailability_of_availability (Sys : System sp D) (Dp : Deploym
 Availability of Section `sec:complete-cap` (at the deployment's participant
 set). -/
 theorem deploymentAvailability_full (Sys : System sp D) (Dp : Deployment sp n)
-    (hA : ∀ p, Dp.A p = sp.S) : DeploymentAvailability Sys Dp ↔ AvailabilityAt Sys n := by
+    (hA : ∀ p, Dp.A p = sp.P) : DeploymentAvailability Sys Dp ↔ AvailabilityAt Sys n := by
   refine ⟨fun h => ?_, deploymentAvailability_of_availability Sys Dp⟩
   intro init H comp hwf hp hpart c hc p σ hσ o ho
   exact h init H comp hwf hp hpart c hc p σ hσ o ho (by rw [hA p]; exact σ.sub _ _ ho)

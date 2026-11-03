@@ -55,8 +55,8 @@ theorem «app:exchanging-outputs» {sp : Spec I O}
     (fam : List (State sp × List O × List O))
     (hres : ∀ x ∈ fam, Residual x.1 x.2.1)
     (hos : ∀ x ∈ fam, ∀ o ∈ x.2.2, ∃ y ∈ fam, o ∈ y.2.1) (j : I) :
-    (∃ u, sp.S j u ∧ ∀ x ∈ fam, Dist.honor x.1.R x.2.2 j u) ↔
-      (∃ u, sp.S j u ∧ ∀ x ∈ fam, x.1.R j u) :=
+    (∃ u, sp.P j u ∧ ∀ x ∈ fam, Dist.honor x.1.R x.2.2 j u) ↔
+      (∃ u, sp.P j u ∧ ∀ x ∈ fam, x.1.R j u) :=
   Dist.honor_survivor fam hres hos j
 
 /-- *Exchanging outputs* (history level).  "The confluence of a cut therefore
@@ -68,7 +68,7 @@ theorem «app:exchanging-outputs/cut» {D : Type} {n : Nat}
     {sp : Spec I O} {H : Dist.History I O D n} (hW : H.WF sp) {C : Dist.Pos n → Prop}
     (hC : H.IsCut C) {σs : Fin n → State sp} (hE : H.Endpoint sp C σs) (os : Fin n → List O)
     (hos : ∀ p, ∀ o ∈ os p, H.EmittedIn C o) (j : I) (hj : ∀ p, (σs p).cur ≼ j) :
-    H.CutConfluentAt sp C j ↔ ∃ u, sp.S j u ∧ ∀ p, Dist.honor (σs p).R (os p) j u :=
+    H.CutConfluentAt sp C j ↔ ∃ u, sp.P j u ∧ ∀ p, Dist.honor (σs p).R (os p) j u :=
   Dist.honor_cut_confluent hW hC hE os hos j hj
 
 /-- *Exchanging outputs.*  "This restriction is a table, not a specification
@@ -76,7 +76,7 @@ state: it may have no row at the participant's current input, so silent
 honoring is not a specification event."
 
 Lean: a functional, monotone specification on `Fin 3` (`Dist.spV3`); `q` at
-`σ_S(1)` may emit `1`; honoring `1` at `p`'s `σ_S(0)` leaves no row at `p`'s
+`σ_P(1)` may emit `1`; honoring `1` at `p`'s `σ_P(0)` leaves no row at `p`'s
 current input `0`, although the row `(2,2)` survives. -/
 theorem «app:exchanging-outputs/honored-table-not-state» :
     (canon Dist.spV3 (Dist.v 1)).R (Dist.v 1) (Dist.v 1) ∧
@@ -85,17 +85,16 @@ theorem «app:exchanging-outputs/honored-table-not-state» :
     (canon Dist.spV3 (Dist.v 1)).R (Dist.v 2) (Dist.v 2) :=
   Dist.honor_counterexample
 
-/-- Proof of Prop. `thm:commitments-require-coordination`: "After the second
-event every output at `i` refines `x`, by containment …; after the first, none
-does.  A common state with current input `i` has a row at `i`, and since specification events never
-add rows, that row would be in both states."  Stated with
-continuations in the transition system of §§2–3. -/
-theorem «proof:thm:commitments-require-coordination» {sp : Spec I O} {B B' : Basis sp}
-    {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
-    (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
-    ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
-  conflicting_outputs_reach h1 hno h2
+/-- Proof of Prop. `thm:commitments-require-coordination`.  The two
+clauses of `CommitmentContradictsAt` are the proof's two cases: an accepted
+input whose fiber the commitment emptied, or an emitted output whose row it
+removed.  In either case, because transitions never add rows, no state with
+current input `k` is reachable from both resulting states. -/
+theorem «proof:thm:commitments-require-coordination» {sp : Spec I O}
+    {c : Commitment sp} {σ σc τ : State sp} {k : I}
+    (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
+    ¬ ∃ ρ : State sp, ρ.cur = k ∧ Reach σc ρ ∧ Reach τ ρ :=
+  Dist.commitment_contradiction_reach happ hcontra
 
 end Distributed
 
@@ -125,7 +124,7 @@ Availability for `E`, each `p_r` can emit `o_r`.  By Partition Consistency,
 they then reach one state `(j,R)`, which has some row `(j,u)` … so `u`
 refines every `o_r`."  Lean: only a common refinement of the emitted outputs
 is used (implied by Partition Consistency). -/
-theorem «thm:complete-cap/proof-necessity» (E : Table I O) (hES : ∀ i o, E i o → sp.S i o)
+theorem «thm:complete-cap/proof-necessity» (E : Table I O) (hES : ∀ i o, E i o → sp.P i o)
     (Sys : System sp D) (hA : AvailabilityFor E Sys) (hC : CommonRefinementAtEnd Sys) :
     ConsistentOn sp E :=
   consistentOn_of_availabilityFor E hES Sys hA hC

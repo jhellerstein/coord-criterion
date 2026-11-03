@@ -14,12 +14,12 @@ with no further agreement.
 
 That puzzle is explained by our framework.  Specifications are
 tables, so they compose by equijoin, and composition preserves Lifted
-Monotonicity.  Because commitments are explicit, we
-can also ask which component makes a composition's commitments.  When the
-upstream component makes every commitment the composition needs, and the
+Monotonicity.  Because \commitments are explicit, we
+can also ask which component makes a composition's \commitments.  When the
+upstream component makes every \commitment the composition needs, and the
 downstream needs none on the inputs the upstream offers, we call the
 coordination \emph{proper}
-(Section~\ref{sec:proper-coordination}).  Proofs are in
+(\S\ref{sec:proper-coordination}).  Proofs are in
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
 
@@ -27,19 +27,19 @@ Intuitively, sequential composition feeds the output of one specification to
 the input of the next.  The composite is again a table: it pairs an input of
 the first specification with every output that the second permits for some
 intermediate value that the first permits.  Formally, let
-$\Spec_1=(I,\InputOrd,M,\preceq_M,S_1)$ and
-$\Spec_2=(M,\preceq_M,O,\OutputOrd,S_2)$ be ordered relational specifications
+$\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
+$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be ordered relational specifications
 sharing the ordered domain $(M,\preceq_M)$.  Their \emph{sequential
 composition} has table
 \begin{equation}
-  S_2\circ S_1
-  =\pi_{I,O}(S_1\Join_M S_2)
-  =\{(i,o):\exists m.\ (i,m)\in S_1\land(m,o)\in S_2\},
+  P_2\circ P_1
+  =\pi_{I,O}(P_1\Join_M P_2)
+  =\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\},
   \label{eq:spec-composition}
 \end{equation}
-where $\pi$ and $\Join$ are relational projection and equijoin.  Since $S_1$
-is total on $I$ and $S_2$ is total on $M$ (it has a row at every $m\in M$),
-every $i\in I$ has a nonempty fiber in $S_2\circ S_1$.  When the two stages
+where $\pi$ and $\Join$ are relational projection and equijoin.  Since $P_1$
+is total on $I$ and $P_2$ is total on $M$ (it has a row at every $m\in M$),
+every $i\in I$ has a nonempty fiber in $P_2\circ P_1$.  When the two stages
 run as a pipeline, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs, and
 we say that $\Spec_1$ \emph{guards} $\Spec_2$.
 Appendix~\ref{sec:parameterized-composition} gives each stage an input of its
@@ -48,11 +48,11 @@ own as well, as when a store serves reads that bypass the log
 
 \begin{lemma}[Composition]
 \label{lem:composition}
-If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the ordered specification with table $S_2\circ S_1$.
+If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the ordered specification with table $P_2\circ P_1$.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-Take rows of $S_2\circ S_1$ whose inputs have a common \indesc $j$.  The
+Take rows of $P_2\circ P_1$ whose inputs have a common \indesc $j$.  The
 common-\indesc condition for $\Spec_1$ gives an intermediate value at $j$ that \outrel each row's, and that value is a common \indesc
 at which the condition for $\Spec_2$ supplies the common \outnoun.  Full proof
 in Appendix~\ref{app:composition}.
@@ -60,24 +60,24 @@ in Appendix~\ref{app:composition}.
 
 By associativity the lemma extends to finite pipelines.  For a function $f$,
 its table $\{(i,f(i))\}$ satisfies Lifted Monotonicity exactly when $f$ is
-monotone (Section~\ref{sec:lifted-monotonicity}). 
+monotone (\S\ref{sec:lifted-monotonicity}).
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-The composite is itself an ordered specification.  By Complete CALM, specification $S_2\circ S_1$ is consistent exactly when it
-satisfies Lifted Monotonicity, and then no output needs a commitment
+The composite is itself an ordered specification.  By Complete CALM, specification $P_2\circ P_1$ is consistent exactly when it
+satisfies Lifted Monotonicity, and then no output needs a \commitment
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).
 That test treats the composite as a single specification.  Suppose instead that
 each stage runs on its own, with its runs taking as input the outputs of the
-stage before.  A stage may then need a commitment even when the composite
+stage before.  A stage may then need a \commitment even when the composite
 needs none.  A composite can be jointly monotone, with no stage needing a
-commitment, in three ways.  The orders on $I$ and $O$ are part of the composite's contract
+\commitment, in three ways.  The orders on $I$ and $O$ are part of the composite's contract
 with its environment.  The order on $M$ is not: the composite's table never
 mentions it, and some order on $M$ may make both stages monotone.
 
 First, every stage is monotone.  By Lemma~\ref{lem:composition} the pipeline
-is monotone, and no stage need make a commitment (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+is monotone, and no stage need make a \commitment (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
 client query $q$ over the replica state $s$ is the composition $q\circ s$, and
 compositions of monotone functions are monotone
 (Corollary~\ref{cor:functional-composition}), so
@@ -96,13 +96,13 @@ true for $I$, $O$ and $M$.  Consider a double-toggle: two stages that
 each negate a boolean compose to the identity. Neither is monotone, but under the reversed order on
 $M$, both are (Appendix~\ref{app:composition}).
 
-We say that $S_2$ satisfies Lifted Monotonicity \emph{on} a set $D\subseteq M$
+We say that $P_2$ satisfies Lifted Monotonicity \emph{on} a set $D\subseteq M$
 when its restriction to inputs in $D$ does.
 
 \begin{proposition}[Jointly monotone composites]
 \label{prop:joint-monotone}
-The composite $S_2\circ S_1$ satisfies Lifted Monotonicity, and so is
-consistent and needs no commitment, in each of the following cases.
+The composite $P_2\circ P_1$ satisfies Lifted Monotonicity, and so is
+consistent and needs no \commitment, in each of the following cases.
 \begin{enumerate}
   \item $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity.
   \item $\Spec_1$ satisfies Lifted Monotonicity; $\Spec_2$ satisfies it on
@@ -121,7 +121,7 @@ proof in Appendix~\ref{app:composition}.
 \end{proof}
 
 The three cases do not cover every monotone composite
-(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue a commitment even though the composite is monotone.
+(Appendix~\ref{app:composition}).  When no case applies, some stage may have to issue a \commitment even though the composite is monotone.
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
@@ -130,7 +130,7 @@ The replicated store of the opening extends the filtering case of
 Proposition~\ref{prop:joint-monotone}(2).  The key-value store is not monotone
 on its own, but it is monotone on what the log offers: a log fixes the order
 of commands, and a longer log only extends the responses.  Unlike the
-filtering case, the upstream must issue a commitment to offer only such inputs.
+filtering case, the upstream must issue a \commitment to offer only such inputs.
 
 Let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
@@ -139,8 +139,8 @@ $\Spec_1$.
 \begin{definition}[Proper Coordination]
 \label{def:proper-coordination}
 A pipeline in which $\Spec_1$ guards $\Spec_2$ is \emph{proper} when
-$\Spec_2|_{\Spec_1}$ needs no commitment: every output at every state it
-reaches without commitment is exposable.
+$\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state it
+reaches without \commitment is legal.
 \end{definition}
 
 \begin{theorem}[Proper Coordination]
@@ -150,20 +150,20 @@ Fix any system for $\Spec_1$.
   \item The pipeline is proper exactly when $\Spec_2$ satisfies Lifted
         Monotonicity on the outputs of $\Spec_1$.
   \item If it is proper, $\Spec_2|_{\Spec_1}$ under the empty basis follows
-        every run of $\Spec_1$.  The result is a run of $S_2\circ S_1$, and
+        every run of $\Spec_1$.  The result is a run of $P_2\circ P_1$, and
         whenever runs of $\Spec_1$ can be brought to a common state, the
         composite runs are confluent.
-  \item If it is proper and $S_2\circ S_1$ violates Lifted Monotonicity,
-        $\Spec_1$ cannot emit some output without a commitment.
+  \item If it is proper and $P_2\circ P_1$ violates Lifted Monotonicity,
+        $\Spec_1$ cannot emit some output without a \commitment.
 \end{enumerate}
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-(1) is Complete CALM and the exposure boundary
+(1) is Complete CALM and the output-legality boundary
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary})
 applied to $\Spec_2|_{\Spec_1}$.  (2) Each output event of $\Spec_1$ keeps
 only rows above its output, so each input $\Spec_2$ receives lies above the
-previous one, and by (1) every answer is exposable.  (3) The exposure boundary
+previous one, and by (1) every answer is legal.  (3) The output-legality boundary
 of the composite fails at a canonical state, which is the image of a canonical
 state of $\Spec_1$.  Full proof in Appendix~\ref{app:composition}.
 \end{proof}
@@ -171,7 +171,7 @@ state of $\Spec_1$.  Full proof in Appendix~\ref{app:composition}.
 The theorem holds whatever basis $\Spec_1$ uses, and a proper pipeline is
 itself a guard for a further stage (Corollary~\ref{cor:pipelines}).  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
-logs needs no commitment.
+logs needs no \commitment.
 
 We call a system for one specification, viewed through a chosen set of sound
 boundary observations, a \emph{component}.  A component may run as one
@@ -180,7 +180,7 @@ admitted boundary runs, each pairing an input with an emitted output
 permitted by its specification.  Components with different specifications
 form typed pipelines (Appendix~\ref{app:components}).  The pipeline hides the
 intermediate value and the two component runs; every external pair it
-presents is a row of $S_2\circ S_1$.  A typed pipeline is
+presents is a row of $P_2\circ P_1$.  A typed pipeline is
 \emph{contract-proper} when it is proper in the sense of
 Definition~\ref{def:proper-coordination}.  Contract properness concerns the
 specifications.  \emph{Implementation properness} additionally concerns the

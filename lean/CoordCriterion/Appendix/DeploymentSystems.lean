@@ -7,7 +7,7 @@ import CoordCriterion.Distributed.Systems
 The remark after Prop. `thm:complete-cap-deployment`: for the runs of a
 *system* (`CC.CAP` local runs, with arbitrary commitments in output events),
 if the specification is monotone across partitions then every separable,
-authorized family of system runs has a common refinement in `S(j)` at every
+authorized family of system runs has a common refinement in `P(j)` at every
 common expansion `j` (`system_monoAcross`), in particular the participant
 runs at a cut of a partitioned history (`history_monoAcross`).  Proved via
 `CC.Dist.sysStep_iff_CAP` and Lemma `canonical_equivalent` (system runs are
@@ -38,7 +38,7 @@ def emittedL (c : I) : List (LEv sp D m) → List (I × O)
   | [] => []
   | .inp j :: es => emittedL j es
   | .out _ o :: es => (c, o) :: emittedL c es
-  | .cmt _ :: es => emittedL c es
+  | .commitment _ :: es => emittedL c es
   | .send _ _ :: es => emittedL c es
   | .recv _ _ _ _ :: es => emittedL c es
 
@@ -48,7 +48,7 @@ def toS : List (LEv sp D m) → List (SEvent sp)
   | [] => []
   | .inp j :: es => .input j :: toS es
   | .out γ o :: es => .output (γ.map Dist.ofCAP) o :: toS es
-  | .cmt γ :: es => .commit (γ.map Dist.ofCAP) :: toS es
+  | .commitment γ :: es => .commitment (γ.map Dist.ofCAP) :: toS es
   | .send _ _ :: es => toS es
   | .recv _ _ _ _ :: es => toS es
 
@@ -68,8 +68,8 @@ theorem lrun_sysExec {σ τ : State sp} {l : List (LEv sp D m)} (h : LRun σ l �
   | @out σ σc τ ρ γ o es hγ hs hexp _ ih =>
     refine SysExec.cons (Dist.sysStep_iff_CAP.2 ⟨fun _ _ => trivial, σc, ?_, hs, hexp⟩) ih
     rw [map_ofCAP_toCAP]; exact hγ
-  | cmt hne hγ _ ih =>
-    refine SysExec.cons (SysStep.commit (fun _ _ => trivial) ?_ ?_) ih
+  | commitment hne hγ _ ih =>
+    refine SysExec.cons (SysStep.commitment (fun _ _ => trivial) ?_ ?_) ih
     · intro h; exact hne (List.map_eq_nil_iff.1 h)
     · rw [Dist.applySeq_iff_CAP, map_ofCAP_toCAP]; exact hγ
   | send _ ih => exact ih
@@ -83,7 +83,7 @@ theorem emitted_toS (c : I) (l : List (LEv sp D m)) :
     cases e with
     | inp j => exact ih j
     | out γ o => simp only [toS, List.filterMap_cons, SEvent.erase, emitted, emittedL, ih]
-    | cmt γ => exact ih c
+    | commitment γ => exact ih c
     | send _ _ => exact ih c
     | recv _ _ _ _ => exact ih c
 
@@ -155,11 +155,11 @@ theorem toF_silent (F : SFamily sp D m n) (q : Fin n) : Silent F.toF q ↔ SSile
 across `comp` (under the deployment), then for every family of *system*
 participant runs whose emitted rows lie in their participants' `A_p` and
 which is separable under `comp`, and every common expansion `j` of the runs'
-current inputs, some `u ∈ S(j)` refines every emitted output. -/
+current inputs, some `u ∈ P(j)` refines every emitted output. -/
 theorem system_monoAcross (Dp : Deployment sp n) {comp : Fin n → Nat}
     (hmono : MonoAcross Dp comp) (F : SFamily sp D m n) (ha : SAuthorized Dp F)
     (hs : SSeparable F comp) (j : I) (hj : SUB F j) :
-    ∃ u, sp.S j u ∧ ∀ p r, SEmits F p r → r.2 ≼ u := by
+    ∃ u, sp.P j u ∧ ∀ p r, SEmits F p r → r.2 ≼ u := by
   have ha' : Authorized Dp F.toF := fun p r h => ha p r ((toF_emits F p r).1 h)
   have hs' : Separable F.toF comp := by
     rcases hs with ⟨p, q, r, r', h1, h2, h3⟩ | ⟨r₀, p, q, h1, h2, h3, h4⟩
@@ -187,7 +187,7 @@ theorem history_monoAcross (Dp : Deployment sp n) (hmono : MonoAcrossPartitions 
     (hsep : SSeparable (fun p => some ⟨init p, (H p).take (c p), σ p, hσ p⟩) comp)
     (hauth : ∀ p r, r ∈ emittedL (init p) ((H p).take (c p)) → Dp.A p r.1 r.2)
     (j : I) (hj : ∀ p, (σ p).cur ≼ j) :
-    ∃ u, sp.S j u ∧ ∀ p r, r ∈ emittedL (init p) ((H p).take (c p)) → r.2 ≼ u := by
+    ∃ u, sp.P j u ∧ ∀ p r, r ∈ emittedL (init p) ((H p).take (c p)) → r.2 ≼ u := by
   let F : SFamily sp D n n := fun p => some ⟨init p, (H p).take (c p), σ p, hσ p⟩
   have hF : ∀ p r, SEmits F p r ↔ r ∈ emittedL (init p) ((H p).take (c p)) := by
     intro p r

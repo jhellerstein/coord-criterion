@@ -6,7 +6,7 @@ import CoordCriterion.CAP.CompleteCAP
 * Def. `def:response-availability` / Response Partition Consistency
   (`ResponseAvailability`, `ResponsePC`, `RPCAt`);
 * replicated systems, obligations and response interfaces;
-* the canonical commitment `κ_u` (seal and choice applied together);
+* the canonical commitment `κ_u` (input and commitments applied together);
 * Theorem `thm:complete-cap-response` in both directions
   (`complete_cap_response`).
 
@@ -54,7 +54,7 @@ def ResponseAvailability (Sys : System sp D) (Q : (n : Nat) → Fin n → Table 
 /-- Response Partition Consistency of a cut at `j`
 (Def. `def:response-partition-consistency`). -/
 def RPCAt (H : History sp D n) (c : Fin n → Nat) (j : I) : Prop :=
-  ∃ u, sp.S j u ∧ ∀ p γ o, LEv.out γ o ∈ (H p).take (c p) → o ≼ u
+  ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ (H p).take (c p) → o ≼ u
 
 def ResponsePC (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
@@ -71,14 +71,14 @@ def ResponsePC (Sys : System sp D) : Prop :=
 inductive LEvN (sp : Spec I O) (D : Type) where
   | inp (j : I)
   | out (γ : List (Commitment sp)) (o : O)
-  | cmt (γ : List (Commitment sp))
+  | commitment (γ : List (Commitment sp))
   | send (j : Option I) (d : D)
   | recv (q : Nat) (k : Nat) (j : Option I) (d : D)
 
 def LEv.erase : LEv sp D n → LEvN sp D
   | .inp j => .inp j
   | .out γ o => .out γ o
-  | .cmt γ => .cmt γ
+  | .commitment γ => .commitment γ
   | .send j d => .send j d
   | .recv q k j d => .recv q.val k j d
 
@@ -92,9 +92,9 @@ def System.Replicated (Sys : System sp D) : Prop :=
 /-- Def. `def:response-obligation` (uniform case). -/
 structure Obligation (sp : Spec I O) where
   Q : Table I O
-  sub : ∀ i o, Q i o → sp.S i o
+  sub : ∀ i o, Q i o → sp.P i o
   total : ∀ i, ∃ o, Q i o
-  up : ∀ i o u, Q i o → sp.S i u → o ≼ u → Q i u
+  up : ∀ i o u, Q i o → sp.P i u → o ≼ u → Q i u
 
 /-- Def. `def:response-interface`. -/
 def ResponseInterface (Q : Obligation sp) (T : Table I O) : Prop :=
@@ -104,10 +104,10 @@ def ResponseInterface (Q : Obligation sp) (T : Table I O) : Prop :=
 /-- `S` is consistent on `T`. -/
 def ConsistentOn (sp : Spec I O) (T : Table I O) : Prop :=
   ∀ rows : List (I × O), (∀ r ∈ rows, T r.1 r.2) →
-    ∀ j, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.S j u ∧ ∀ r ∈ rows, r.2 ≼ u
+    ∀ j, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
 
 theorem consistentOn_outs {T : Table I O} (hc : ConsistentOn sp T) {j : I} (L : List O)
-    (hL : ∀ o ∈ L, ∃ i, T i o ∧ i ≼ j) : ∃ u, sp.S j u ∧ ∀ o ∈ L, o ≼ u := by
+    (hL : ∀ o ∈ L, ∃ i, T i o ∧ i ≼ j) : ∃ u, sp.P j u ∧ ∀ o ∈ L, o ≼ u := by
   let rows : List (I × O) := L.attach.map (fun o => (Classical.choose (hL o.1 o.2), o.1))
   obtain ⟨u, hu, hall⟩ := hc rows
     (by intro r hr; simp only [rows, List.mem_map] at hr
@@ -117,26 +117,23 @@ theorem consistentOn_outs {T : Table I O} (hc : ConsistentOn sp T) {j : I} (L : 
   exact ⟨u, hu, fun o ho => hall _ (by
     simp only [rows, List.mem_map]; exact ⟨⟨o, ho⟩, List.mem_attach _ _, rfl⟩)⟩
 
-/-! ### The canonical commitment `κ_u` (seal and choice applied together) -/
+/-! ### The canonical commitment `κ_u` (input and commitments applied together) -/
 
 /-- Rows the canonical event for `u` removes by commitment. -/
-def Rm (σ : State sp) (u : O) (k : I) (x : O) : Prop := Sealed σ u k x ∨ Rejected σ u k x
+def Rm (σ : State sp) (u : O) (k : I) (x : O) : Prop := Excluded σ u k x
 
 theorem not_rm_of_le {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x) (h : u ≼ x) :
     ¬ Rm σ u k x := by
-  rintro (⟨_, hs⟩ | ⟨_, hn, _⟩)
-  · exact hs ⟨x, hx, h⟩
-  · exact hn h
+  intro he
+  exact he.2.1 h
 
-/-- A kept row that does not expand `u` is retired. -/
-theorem retired_of_not_rm {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x)
+/-- A kept row that does not expand `u` is subsumed. -/
+theorem subsumed_of_not_rm {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x)
     (hrm : ¬ Rm σ u k x) (hn : ¬ u ≼ x) : ∃ v, σ.R k v ∧ u ≼ v ∧ x ≼ v := by
   apply Classical.byContradiction
   intro hv
   apply hrm
-  by_cases hs : ∃ v, σ.R k v ∧ u ≼ v
-  · exact Or.inr ⟨hx, hn, fun ⟨_, h⟩ => h hs, fun ⟨_, _, h⟩ => hv h⟩
-  · exact Or.inl ⟨hx, hs⟩
+  exact ⟨hx, hn, fun hs => hv hs.2.2⟩
 
 def kcState (σ : State sp) (u : O) (hu : σ.R σ.cur u) : State sp where
   cur := σ.cur
@@ -147,8 +144,8 @@ def kcState (σ : State sp) (u : O) (hu : σ.R σ.cur u) : State sp where
 
 open Classical in
 /-- The canonical commitment for `u`: defined when `u` is in the current fiber
-and some row must be removed by commitment; it removes `Sealed_u ∪ Rejected_u`.
-That this is a commitment (Eq. `commitment-excludes`) is checked here. -/
+  and some row must be removed by commitment; it removes `Excluded_u`.
+That this is a commitment (Eq. `commitment-unsubsumed`) is checked here. -/
 noncomputable def kc (u : O) : Commitment sp where
   f := fun σ => if h : σ.R σ.cur u ∧ ∃ k x, Rm σ u k x then some (kcState σ u h.1) else none
   cur_eq := by
@@ -163,7 +160,7 @@ noncomputable def kc (u : O) : Commitment sp where
     intro σ τ h; split at h
     · rename_i hh; cases h
       obtain ⟨k, x, hr⟩ := hh.2
-      have hx : σ.R k x := by rcases hr with h | h; exact h.1; exact h.1
+      have hx : σ.R k x := hr.1
       exact ⟨k, x, hx, fun h => h.2 hr⟩
     · cases h
   excl := by
@@ -176,11 +173,9 @@ noncomputable def kc (u : O) : Commitment sp where
       have hv : ∃ v, σ.R k v ∧ u ≼ v ∧ w ≼ v := by
         by_cases huw : u ≼ w
         · exact ⟨w, hw1, huw, PO.refl w⟩
-        · exact retired_of_not_rm hw1 hw2 huw
+        · exact subsumed_of_not_rm hw1 hw2 huw
       obtain ⟨v, hv1, hv2, hv3⟩ := hv
-      rcases hrx with ⟨_, hs⟩ | ⟨_, hn, _, hret⟩
-      · exact hs ⟨v, hv1, hv2⟩
-      · exact hret ⟨hx, hn, v, hv1, hv2, PO.trans hxw hv3⟩
+      exact hrx.2.2 ⟨hx, hrx.2.1, v, hv1, hv2, PO.trans hxw hv3⟩
     · cases h
 
 theorem kc_apply_some {σ : State sp} {u : O} {σc : State sp}
@@ -205,11 +200,11 @@ theorem kc_legal {σ : State sp} {u : O} (hu : σ.R σ.cur u) :
   · refine ⟨[kc u], kcState σ u hu, Or.inr rfl, ?_, ⟨hu, not_rm_of_le hu (PO.refl u)⟩, ?_⟩
     · simp only [applySeq, kc]; rw [dite_eq_left_of_eq_true (eq_true ⟨hu, hrm⟩)]
     · intro k x hx hn
-      obtain ⟨v, hv1, hv2, hv3⟩ := retired_of_not_rm hx.1 hx.2 hn
+      obtain ⟨v, hv1, hv2, hv3⟩ := subsumed_of_not_rm hx.1 hx.2 hn
       exact ⟨v, ⟨hv1, not_rm_of_le hv1 hv2⟩, hv2, hv3⟩
   · refine ⟨[], σ, Or.inl rfl, rfl, hu, ?_⟩
     intro k x hx hn
-    exact retired_of_not_rm hx (fun h => hrm ⟨k, x, h⟩) hn
+    exact subsumed_of_not_rm hx (fun h => hrm ⟨k, x, h⟩) hn
 
 /-- Effect of a canonical event: it ends at `R[out ⪰ u]`. -/
 theorem kc_effect {σ σc τ : State sp} {u : O} {γ : List (Commitment sp)}
@@ -230,7 +225,7 @@ def curOf (i0 : I) : List (LEvN sp D) → I
   | [] => i0
   | .inp j :: l => curOf j l
   | .out _ _ :: l => curOf i0 l
-  | .cmt _ :: l => curOf i0 l
+  | .commitment _ :: l => curOf i0 l
   | .send _ _ :: l => curOf i0 l
   | .recv _ _ _ _ :: l => curOf i0 l
 
@@ -238,7 +233,7 @@ def emittedOf : List (LEvN sp D) → List O
   | [] => []
   | .out _ o :: l => o :: emittedOf l
   | .inp _ :: l => emittedOf l
-  | .cmt _ :: l => emittedOf l
+  | .commitment _ :: l => emittedOf l
   | .send _ _ :: l => emittedOf l
   | .recv _ _ _ _ :: l => emittedOf l
 
@@ -332,9 +327,9 @@ theorem rinv_run (T : Table I O) {N : Nat} {init : Fin N → I} {p : Fin N} :
       rcases List.mem_append.1 ho with ho | ho
       · exact hge o ho
       · simp at ho; subst ho; exact PO.refl _
-  | @cmt σ τ' ρ γ es _ _ _ _ =>
+  | @commitment σ τ' ρ γ es _ _ _ _ =>
     intro pre hc _
-    have := hc [] (.cmt γ) es rfl
+    have := hc [] (.commitment γ) es rfl
     simp [Allowed, respSystem, respF, LEv.erase] at this
   | @send σ ρ j d es _ _ =>
     intro pre hc _
@@ -467,7 +462,7 @@ receives, leave the state unchanged). -/
 def tr {m N : Nat} : LEv sp D m → LEv sp D N
   | .inp j => .inp j
   | .out γ o => .out γ o
-  | .cmt γ => .cmt γ
+  | .commitment γ => .commitment γ
   | .send j d => .send j d
   | .recv _ _ j d => .send j d
 
@@ -477,7 +472,7 @@ theorem lrun_tr {m N : Nat} {σ τ : State sp} {l : List (LEv sp D m)} (h : LRun
   | nil => exact .nil _
   | inp hs _ ih => exact .inp hs ih
   | out ha hs hx _ ih => exact .out ha hs hx ih
-  | cmt hne ha _ ih => exact .cmt hne ha ih
+  | commitment hne ha _ ih => exact .commitment hne ha ih
   | send _ ih => exact .send ih
   | recv _ ih => exact .send ih
 
@@ -490,7 +485,7 @@ theorem lrun_tr_inv {m N : Nat} {l : List (LEv sp D m)} :
     cases e with
     | inp j => cases h with | inp hs hr => exact .inp hs (ih hr)
     | out γ o => cases h with | out ha hs hx hr => exact .out ha hs hx (ih hr)
-    | cmt γ => cases h with | cmt hne ha hr => exact .cmt hne ha (ih hr)
+    | commitment γ => cases h with | commitment hne ha hr => exact .commitment hne ha (ih hr)
     | send j d => cases h with | send hr => exact .send (ih hr)
     | recv q k j d => cases h with | send hr => exact .recv (ih hr)
 
@@ -530,7 +525,7 @@ theorem compliant_tr {Sys : System sp D} {F : I → List (LEvN sp D) → LEvN sp
   | out γ o =>
     refine ⟨hA.1, (hF _ _ _ _ _).2 ?_⟩
     rw [hi, hpre]; exact (hF _ _ _ _ _).1 hA.2
-  | cmt γ =>
+  | commitment γ =>
     refine ⟨hA.1, (hF _ _ _ _ _).2 ?_⟩
     rw [hi, hpre]; exact (hF _ _ _ _ _).1 hA.2
   | send j d =>

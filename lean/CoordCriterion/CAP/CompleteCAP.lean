@@ -30,14 +30,14 @@ variable {sp : Spec I O} {D : Type} {n : Nat}
 /-! ## The commitment-free system -/
 
 theorem cf_allowed {N : Nat} {init : Fin N → I} {p : Fin N} {pre : List (LEv sp D N)}
-    {e : LEv sp D N} (he : ∀ γ o, e = .out γ o → γ = []) (hc : ∀ γ, e = .cmt γ → γ = []) :
+    {e : LEv sp D N} (he : ∀ γ o, e = .out γ o → γ = []) (hc : ∀ γ, e = .commitment γ → γ = []) :
     Allowed (cfSystem sp D) N init p pre e := by
   cases e with
   | inp => trivial
   | out γ o =>
     have := he γ o rfl; subst this
     exact ⟨by simp, trivial⟩
-  | cmt γ =>
+  | commitment γ =>
     have := hc γ rfl; subst this
     exact ⟨by simp, trivial⟩
   | send => trivial
@@ -55,7 +55,7 @@ theorem compliant_cf_out {N : Nat} {init : Fin N → I} {p : Fin N} {l : List (L
 
 theorem compliant_cf_cmt {N : Nat} {init : Fin N → I} {p : Fin N} {l : List (LEv sp D N)}
     (h : Compliant (Allowed (cfSystem sp D) N init p) l) :
-    ∀ γ, LEv.cmt γ ∈ l → γ = [] := by
+    ∀ γ, LEv.commitment γ ∈ l → γ = [] := by
   intro γ hm
   obtain ⟨a, b, hab⟩ := List.append_of_mem hm
   have := (h a _ b hab).1
@@ -114,7 +114,7 @@ theorem cf_availability (hlm : sp.LiftedMono) : Availability (cfSystem sp D) := 
       exact hm.1
     · intro γ hγ
       subst hγ
-      have hm : LEv.cmt γ ∈ ext q := by rw [he]; simp
+      have hm : LEv.commitment γ ∈ ext q := by rw [he]; simp
       simp only [ext] at hm; split at hm <;> simp at hm
   · intro q hq
     have : q ≠ p := fun h => hq (h ▸ rfl)
@@ -128,7 +128,7 @@ theorem cf_partitionConsistency (hlm : sp.LiftedMono) :
   classical
   have hX : ∀ p, ∃ x : State sp × List (I × O),
       LRun (canon sp (init p)) ((H p).take (c p)) x.1 ∧ Residual x.1 (x.2.map Prod.snd) ∧
-      ∀ r ∈ x.2, sp.S r.1 r.2 ∧ r.1 ≼ x.1.cur := by
+      ∀ r ∈ x.2, sp.P r.1 r.2 ∧ r.1 ≼ x.1.cur := by
     intro p
     obtain ⟨τp, hp⟩ := hwf.1 p
     obtain ⟨σ, hσ⟩ := lrun_take hp (c p)
@@ -204,7 +204,7 @@ theorem cap_necessary (Sys : System sp D) (hA : Availability Sys)
     · have hσ : LRun (canon sp (init p)) ((H0 p).take 0) (canon sp (init p)) := .nil _
       have hinit : init p = (rows[p.val]'hp).1 := by simp [init, hp]
       have ho : (canon sp (init p)).R (canon sp (init p)).cur (rows[p.val]'hp).2 := by
-        show sp.S (init p) _ ∧ init p ≼ init p
+        show sp.P (init p) _ ∧ init p ≼ init p
         rw [hinit]; exact ⟨hrows _ (List.getElem_mem ..), PO.refl _⟩
       obtain ⟨H', ext, hext, hwf', hprod', hpart', _, hnoinp, γ, hγ⟩ :=
         hA N init H0 comp hwf0 hprod0 hpart0 (fun _ => 0) hcut0 p _ hσ _ ho
@@ -300,7 +300,7 @@ theorem lrun_emit_row {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l 
     rcases List.mem_cons.1 hm with he | hm'
     · cases he; exact ⟨_, hsub _ _ (step_output_inv hs).1⟩
     · obtain ⟨k, hk⟩ := ih hm'; exact ⟨k, hsub _ _ (step_sub hs k o hk)⟩
-  | @cmt σ τ' ρ γ' es _ ha _ ih =>
+  | @commitment σ τ' ρ γ' es _ ha _ ih =>
     obtain ⟨k, hk⟩ := ih (by simpa using hm)
     exact ⟨k, (applySeq_spec γ' σ τ' ha).2 _ _ hk⟩
   | send _ ih => exact ih (by simpa using hm)
@@ -355,7 +355,7 @@ theorem compliant_strat {Sys : System sp D} {N : Nat} {init : Fin N → I} {p : 
   cases e with
   | inp j => exact absurd (by rw [h]; simp) (hn j)
   | out γ o => exact by simpa using hA.2
-  | cmt γ => exact by simpa using hA.2
+  | commitment γ => exact by simpa using hA.2
   | send => simpa [Allowed] using hA
   | recv => simpa [Allowed] using hA
 
@@ -387,7 +387,7 @@ instance : PO Unit where
 
 /-- One input, fiber `{a, b, top}`. -/
 def triSpec : Spec Unit Tri where
-  S := fun _ _ => True
+  P := fun _ _ => True
   total := fun _ => ⟨.a, trivial⟩
 
 theorem triSpec_liftedMono : triSpec.LiftedMono := by

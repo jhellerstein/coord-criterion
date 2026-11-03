@@ -19,7 +19,7 @@ composition is the library's `Comp.seq`; the values an upstream can offer are
 `Joint.Img`; restricted common expansion is `Joint.CEOn`.
 
 * `LocationForm`, `OperationalRun`, `OperationalRun.Valid`, `Component`,
-  `Component.ofBasis`, `Component.ofSys`, `emptyBasis` — the boundary.  The
+  `Component.ofCommitmentBasis`, `Component.ofSys`, `emptyCommitmentBasis` — the boundary.  The
   location form (process, cluster, composite) is metadata and occurs in no
   proof obligation.
 * `BoundaryObservation`, `FeedWitness`, `Pipeline`, `Pipeline.compositeSpec`,
@@ -30,7 +30,7 @@ composition is the library's `Comp.seq`; the values an upstream can offer are
   `contractProper_iff_rest`, `contractProper_liftedMono`.
 * `Pipeline.ImplementationProper` (implementation properness: every downstream run admitted
   in a feed uses no commitment), `implementationProper_of_downstream_commitmentFree`,
-  `implementationProper_downstream_execCF`, `ofBasis_empty_commitmentFree`.
+  `implementationProper_downstream_execCF`, `ofCommitmentBasis_empty_commitmentFree`.
 * Contract properness does not give implementation properness or availability:
   `Component.silent` (admits nothing; vacuously implementation-proper), `early_lock_component`
   (a contract-proper pipeline whose downstream deliberately commits),
@@ -49,7 +49,7 @@ composition is the library's `Comp.seq`; the values an upstream can offer are
 Modeling choices: an `OperationalRun` names its initial input and one emitted
 output; `Valid.contract` asks that this pair be a row of the specification.
 "Commitment-free" is the library's `CoordFree` (no output event applies a
-commitment, no commit event).  It is a property of runs, not coordination,
+commitment, no commitment event).  It is a property of runs, not coordination,
 which the paper judges relative to a run universe.  Receiving the feed value
 is the downstream's initial input, not a commitment.
 -/
@@ -83,26 +83,26 @@ structure OperationalRun (sp : Spec I O) where
 /-- The certificate for an admitted run: it is an execution under the basis
 from the canonical state at its input, it emits its named output, and the
 input/output pair is a row of the specification. -/
-structure OperationalRun.Valid {sp : Spec I O} (B : Basis sp) (r : OperationalRun sp) :
+structure OperationalRun.Valid {sp : Spec I O} (B : CommitmentBasis sp) (r : OperationalRun sp) :
     Prop where
   legal : SysExec B (canon sp r.input) r.events r.final
   emits : ∃ γ, SEvent.output γ r.output ∈ r.events
-  contract : sp.S r.input r.output
+  contract : sp.P r.input r.output
 
 /-- **A component implementation** of `sp`: a commitment basis, the admitted
 runs, and their soundness certificates.  `location` is metadata. -/
 structure Component (sp : Spec I O) where
   location : Option LocationForm := none
-  basis : Basis sp
+  basis : CommitmentBasis sp
   accepts : OperationalRun sp → Prop
   sound : ∀ r, accepts r → r.Valid basis
 
 /-- The empty commitment basis. -/
-abbrev emptyBasis (sp : Spec I O) : Basis sp := fun _ => False
+abbrev emptyCommitmentBasis (sp : Spec I O) : CommitmentBasis sp := fun _ => False
 
 /-- The maximally permissive implementation under a basis: it admits every
 valid run. -/
-def Component.ofBasis {sp : Spec I O} (B : Basis sp) (location : Option LocationForm := none) :
+def Component.ofCommitmentBasis {sp : Spec I O} (B : CommitmentBasis sp) (location : Option LocationForm := none) :
     Component sp where
   location := location
   basis := B
@@ -111,7 +111,7 @@ def Component.ofBasis {sp : Spec I O} (B : Basis sp) (location : Option Location
 
 /-- The implementation that admits no run. -/
 def Component.silent (sp : Spec I O) : Component sp where
-  basis := emptyBasis sp
+  basis := emptyCommitmentBasis sp
   accepts _ := False
   sound _ h := False.elim h
 
@@ -123,16 +123,16 @@ def Component.ofSys {sp : Spec I O} (K : Guard.Sys sp) (location : Option Locati
   location := location
   basis := K.basis
   accepts r := Guard.Produces K r.input r.events r.final ∧
-    (∃ γ, SEvent.output γ r.output ∈ r.events) ∧ sp.S r.input r.output
+    (∃ γ, SEvent.output γ r.output ∈ r.events) ∧ sp.P r.input r.output
   sound _ h := ⟨h.1.1, h.2.1, h.2.2⟩
 
-theorem Component.ofBasis_accepts {sp : Spec I O} (B : Basis sp) (location : Option LocationForm)
-    (r : OperationalRun sp) : (Component.ofBasis B location).accepts r ↔ r.Valid B := Iff.rfl
+theorem Component.ofCommitmentBasis_accepts {sp : Spec I O} (B : CommitmentBasis sp) (location : Option LocationForm)
+    (r : OperationalRun sp) : (Component.ofCommitmentBasis B location).accepts r ↔ r.Valid B := Iff.rfl
 
 theorem Component.ofSys_accepts {sp : Spec I O} (K : Guard.Sys sp) (location : Option LocationForm)
     (r : OperationalRun sp) :
     (Component.ofSys K location).accepts r ↔ Guard.Produces K r.input r.events r.final ∧
-      (∃ γ, SEvent.output γ r.output ∈ r.events) ∧ sp.S r.input r.output := Iff.rfl
+      (∃ γ, SEvent.output γ r.output ∈ r.events) ∧ sp.P r.input r.output := Iff.rfl
 
 /-- A component implementation is **commitment-free** when no run it admits
 applies a commitment. -/
@@ -140,8 +140,8 @@ def Component.CommitmentFree {sp : Spec I O} (c : Component sp) : Prop :=
   ∀ r, c.accepts r → CoordFree r.events
 
 /-- An execution under the empty basis applies no commitment. -/
-theorem sysExec_emptyBasis_coordFree {sp : Spec I O} {σ τ : State sp} {es : List (SEvent sp)}
-    (h : SysExec (emptyBasis sp) σ es τ) : CoordFree es := by
+theorem sysExec_emptyCommitmentBasis_coordFree {sp : Spec I O} {σ τ : State sp} {es : List (SEvent sp)}
+    (h : SysExec (emptyCommitmentBasis sp) σ es τ) : CoordFree es := by
   induction h with
   | nil => exact ⟨(fun _ _ h => by cases h), (fun _ h => by cases h)⟩
   | @cons σ τ ρ e es hs _ ih =>
@@ -157,7 +157,7 @@ theorem sysExec_emptyBasis_coordFree {sp : Spec I O} {σ τ : State sp} {es : Li
     · rcases List.mem_cons.1 hm with he | hm
       · subst he
         cases hs with
-        | commit hb hne _ =>
+        | commitment hb hne _ =>
           cases γ with
           | nil => exact absurd rfl hne
           | cons c _ => exact (hb c List.mem_cons_self).elim
@@ -165,9 +165,9 @@ theorem sysExec_emptyBasis_coordFree {sp : Spec I O} {σ τ : State sp} {es : Li
 
 /-- The maximally permissive implementation under the empty basis is
 commitment-free. -/
-theorem ofBasis_empty_commitmentFree {sp : Spec I O} (location : Option LocationForm := none) :
-    (Component.ofBasis (emptyBasis sp) location).CommitmentFree :=
-  fun r h => sysExec_emptyBasis_coordFree ((Component.ofBasis_accepts _ _ r).1 h).legal
+theorem ofCommitmentBasis_empty_commitmentFree {sp : Spec I O} (location : Option LocationForm := none) :
+    (Component.ofCommitmentBasis (emptyCommitmentBasis sp) location).CommitmentFree :=
+  fun r h => sysExec_emptyCommitmentBasis_coordFree ((Component.ofCommitmentBasis_accepts _ _ r).1 h).legal
 
 /-- Every run of a commitment-free implementation erases to a commitment-free
 execution from the canonical state at its input. -/
@@ -177,13 +177,13 @@ theorem Component.CommitmentFree.execCF {sp : Spec I O} {c : Component sp}
   coordFree_execCF (c.sound r h).legal (hc r h)
 
 /-- The strategy that allows every event admits exactly the valid runs. -/
-theorem ofSys_free {sp : Spec I O} (B : Basis sp) (location : Option LocationForm)
+theorem ofSys_free {sp : Spec I O} (B : CommitmentBasis sp) (location : Option LocationForm)
     (r : OperationalRun sp) :
     (Component.ofSys (Guard.Sys.free B) location).accepts r ↔
-      (Component.ofBasis B location).accepts r :=
+      (Component.ofCommitmentBasis B location).accepts r :=
   ⟨fun h => let h := (Component.ofSys_accepts _ _ r).1 h
-      (Component.ofBasis_accepts _ _ r).2 ⟨h.1.1, h.2.1, h.2.2⟩,
-    fun h => let h := (Component.ofBasis_accepts _ _ r).1 h
+      (Component.ofCommitmentBasis_accepts _ _ r).2 ⟨h.1.1, h.2.1, h.2.2⟩,
+    fun h => let h := (Component.ofCommitmentBasis_accepts _ _ r).1 h
       (Component.ofSys_accepts _ _ r).2 ⟨produces_free.2 h.legal, h.emits, h.contract⟩⟩
 
 /-- The commitment-erased replacement of any one-participant system
@@ -216,13 +216,13 @@ structure FeedWitness {upSpec : Spec I M} {downSpec : Spec M O}
   downAccepted : downstream.accepts downRun
   feed : upRun.output = downRun.input
 
-/-- **A binary typed pipeline**: implementations of `S₁ : I ↔ M` and
-`S₂ : M ↔ O`. -/
+/-- **A binary typed pipeline**: implementations of `P₁ : I ↔ M` and
+`P₂ : M ↔ O`. -/
 structure Pipeline (upSpec : Spec I M) (downSpec : Spec M O) where
   upstream : Component upSpec
   downstream : Component downSpec
 
-/-- The external contract `S₂ ∘ S₁`. -/
+/-- The external contract `P₂ ∘ P₁`. -/
 def Pipeline.compositeSpec {upSpec : Spec I M} {downSpec : Spec M O}
     (_p : Pipeline upSpec downSpec) : Spec I O := seq upSpec downSpec
 
@@ -237,19 +237,19 @@ def Pipeline.Accepts {upSpec : Spec I M} {downSpec : Spec M O}
     (p : Pipeline upSpec downSpec) (obs : BoundaryObservation I O) : Prop :=
   ∃ w : FeedWitness p.upstream p.downstream, w.boundary = obs
 
-/-- A feed witness joins a row of `S₁` and a row of `S₂` at the fed value. -/
+/-- A feed witness joins a row of `P₁` and a row of `P₂` at the fed value. -/
 theorem FeedWitness.contracts {upSpec : Spec I M} {downSpec : Spec M O}
     {upstream : Component upSpec} {downstream : Component downSpec}
     (w : FeedWitness upstream downstream) :
-    upSpec.S w.upRun.input w.upRun.output ∧ downSpec.S w.upRun.output w.downRun.output :=
+    upSpec.P w.upRun.input w.upRun.output ∧ downSpec.P w.upRun.output w.downRun.output :=
   ⟨(upstream.sound _ w.upAccepted).contract,
     w.feed ▸ (downstream.sound _ w.downAccepted).contract⟩
 
 /-- **Boundary safety**: every observation a pipeline admits is a row of
-`S₂ ∘ S₁`. -/
+`P₂ ∘ P₁`. -/
 theorem Pipeline.sound {upSpec : Spec I M} {downSpec : Spec M O}
     (p : Pipeline upSpec downSpec) {obs : BoundaryObservation I O} (h : p.Accepts obs) :
-    p.compositeSpec.S obs.input obs.output := by
+    p.compositeSpec.P obs.input obs.output := by
   obtain ⟨w, rfl⟩ := h
   exact ⟨w.upRun.output, w.contracts⟩
 
@@ -257,7 +257,7 @@ theorem Pipeline.sound {upSpec : Spec I M} {downSpec : Spec M O}
 
 /-- Lifted Monotonicity of `G` between inputs in `D`, in the joint-lift form. -/
 def JointMonoOn (D : M → Prop) (G : Spec M O) : Prop :=
-  ∀ i j, D i → D j → i ≼ j → JointLift (G.S i) (G.S j)
+  ∀ i j, D i → D j → i ≼ j → JointLift (G.P i) (G.P j)
 
 /-- The joint-lift form and the common-expansion form `Joint.CEOn` agree. -/
 theorem jointMonoOn_iff_ceOn (D : M → Prop) (G : Spec M O) : JointMonoOn D G ↔ CEOn G D := by
@@ -291,8 +291,8 @@ theorem jointMonoOn_iff_ceOn (D : M → Prop) (G : Spec M O) : JointMonoOn D G �
         exact hij)
     exact ⟨u, hu, fun x hx => hall (i, x) (List.mem_map.2 ⟨x, hx, rfl⟩)⟩
 
-/-- **Contract properness**: `S₂` satisfies Lifted Monotonicity on the values
-`S₁` can offer.  It mentions neither implementation. -/
+/-- **Contract properness**: `P₂` satisfies Lifted Monotonicity on the values
+`P₁` can offer.  It mentions neither implementation. -/
 def Pipeline.ContractProper {upSpec : Spec I M} {downSpec : Spec M O}
     (_p : Pipeline upSpec downSpec) : Prop :=
   CEOn downSpec (Img upSpec)
@@ -355,7 +355,7 @@ open Inst (Pfx smrS1)
 
 /-- The log at the empty proposal stream emits the empty log, under any
 basis. -/
-theorem smr_empty_run {Cmd : Type} (B : Basis (smrS1 (Cmd := Cmd))) :
+theorem smr_empty_run {Cmd : Type} (B : CommitmentBasis (smrS1 (Cmd := Cmd))) :
     ∃ ρ, SysExec B (canon smrS1 ⟨[]⟩) [.output [] ⟨[]⟩] ρ := by
   have ho : (canon (smrS1 (Cmd := Cmd)) ⟨[]⟩).R ⟨[]⟩ ⟨[]⟩ := ⟨(fun _ h => nomatch h), PO.refl _⟩
   have hex : Exposable (canon (smrS1 (Cmd := Cmd)) ⟨[]⟩) ⟨[]⟩ :=
@@ -370,30 +370,30 @@ log, a run whose output event takes the lock. -/
 theorem early_lock_component {Cmd O : Type} [PO O] {f : Pfx Cmd → O} (hf : Monotone f)
     (b : Cmd) :
     let p : Pipeline (smrS1 (Cmd := Cmd)) (graph f) :=
-      ⟨Component.ofBasis (emptyBasis _), Component.ofSys (earlyLock b f)⟩
+      ⟨Component.ofCommitmentBasis (emptyCommitmentBasis _), Component.ofSys (earlyLock b f)⟩
     p.ContractProper ∧ ¬ p.ImplementationProper := by
   intro p
   refine ⟨ceOn_of_ce (graph_commonExpansion hf) _, fun hp => ?_⟩
-  obtain ⟨ρ, hρ⟩ := smr_empty_run (Cmd := Cmd) (emptyBasis _)
+  obtain ⟨ρ, hρ⟩ := smr_empty_run (Cmd := Cmd) (emptyCommitmentBasis _)
   let e : Pfx Cmd := ⟨[]⟩
   let kb : Pfx Cmd := ⟨[b]⟩
   let σ0 := canon (graph f) e
   have hn : ¬ bFirst b σ0.cur := fun h => by change (none : Option Cmd) = some b at h; cases h
   have hrow : ∃ k x, σ0.R k x ∧ bFirst b k := ⟨kb, f kb, ⟨rfl, ⟨[b], rfl⟩⟩, rfl⟩
-  have happ : (sealIn (bFirst b) : Commitment (graph f)).app σ0 =
-      some (sealInState σ0 (bFirst b) hn) := sealInApp_eq.2 ⟨hn, hrow, rfl⟩
-  let σc := sealInState σ0 (bFirst b) hn
+  have happ : (excludeInput (bFirst b) : Commitment (graph f)).app σ0 =
+      some (excludeInputState σ0 (bFirst b) hn) := excludeInputApp_eq.2 ⟨hn, hrow, rfl⟩
+  let σc := excludeInputState σ0 (bFirst b) hn
   have ho : σc.R σc.cur (f e) := ⟨⟨rfl, PO.refl _⟩, hn⟩
-  have hstep : SysStep (mutexB b f) σ0 (.output [sealIn (bFirst b)] (f e)) (outState σc (f e) ho) :=
+  have hstep : SysStep (mutexB b f) σ0 (.output [excludeInput (bFirst b)] (f e)) (outState σc (f e) ho) :=
     .output (fun c hc => by simp at hc; exact hc) (.cons happ (.nil _)) ho
       (store_exposable hf σc) rfl rfl
-  have hstrat : Guard.Allowed (earlyLock b f) e [] (.output [sealIn (bFirst b)] (f e)) :=
+  have hstrat : Guard.Allowed (earlyLock b f) e [] (.output [excludeInput (bFirst b)] (f e)) :=
     ⟨fun δ x h => by cases h; exact ⟨fun _ => rfl, fun hn' => absurd ⟨rfl, rfl⟩ hn'⟩,
       fun _ h => by cases h⟩
   let w : FeedWitness p.upstream p.downstream :=
     { upRun := ⟨⟨[]⟩, ⟨[]⟩, [.output [] ⟨[]⟩], ρ⟩
-      downRun := ⟨e, f e, [.output [sealIn (bFirst b)] (f e)], outState σc (f e) ho⟩
-      upAccepted := (Component.ofBasis_accepts _ _ _).2
+      downRun := ⟨e, f e, [.output [excludeInput (bFirst b)] (f e)], outState σc (f e) ho⟩
+      upAccepted := (Component.ofCommitmentBasis_accepts _ _ _).2
         ⟨hρ, ⟨[], List.mem_cons_self⟩, fun _ h => nomatch h⟩
       downAccepted := (Component.ofSys_accepts _ _ _).2
         ⟨⟨.cons hstep (.nil _), compliant_snoc (l := []) compliant_nil hstrat⟩,
@@ -409,16 +409,16 @@ open Dist (B2)
 /-- Along an empty-basis execution of the threshold store, `(10, no)` stays
 while the current count is at most `9`, and the answer yes is never emitted. -/
 theorem thr_never_yes {σ τ : State thr} {es : List (SEvent thr)}
-    (h : SysExec (emptyBasis thr) σ es τ) :
+    (h : SysExec (emptyCommitmentBasis thr) σ es τ) :
     (σ.cur ≤ 9 → σ.R 10 false) → ∀ γ : List (Commitment thr), SEvent.output γ (true : B2) ∉ es := by
   induction h with
   | nil => intro _ _ h; cases h
   | @cons σ τ ρ e es hs _ ih =>
     intro hinv γ hm
     cases e with
-    | commit δ =>
+    | commitment δ =>
       cases hs with
-      | commit hb hne _ =>
+      | commitment hb hne _ =>
         cases δ with
         | nil => exact hne rfl
         | cons c _ => exact (hb c List.mem_cons_self).elim
@@ -464,13 +464,13 @@ run at every input; but the maximally permissive empty-basis implementation
 of the threshold test admits no run at any offered value, so the pipeline
 admits no observation. -/
 theorem threshold_component :
-    let p : Pipeline up thr := ⟨Component.ofBasis (emptyBasis _), Component.ofBasis (emptyBasis _)⟩
+    let p : Pipeline up thr := ⟨Component.ofCommitmentBasis (emptyCommitmentBasis _), Component.ofCommitmentBasis (emptyCommitmentBasis _)⟩
     p.ContractProper ∧ (∀ i, ∃ r, p.upstream.accepts r ∧ r.input = i) ∧
       (∀ r, p.downstream.accepts r → ¬ Img up r.input) ∧ ∀ obs, ¬ p.Accepts obs := by
   intro p
   have hdown : ∀ r, p.downstream.accepts r → ¬ Img up r.input := by
     intro r hr ⟨i, hi⟩
-    have hr : r.Valid (emptyBasis thr) := hr
+    have hr : r.Valid (emptyCommitmentBasis thr) := hr
     have hm : r.input ≤ 9 := by
       have e : r.input = min i 9 := hi
       omega
@@ -485,7 +485,7 @@ theorem threshold_component :
     have hex : Exposable (canon up i) (cap i) :=
       store_exposable (f := cap) cap_monotone (canon up i)
     exact ⟨⟨i, cap i, [.output [] (cap i)], outState _ _ ho⟩,
-      (Component.ofBasis_accepts _ _ _).2
+      (Component.ofCommitmentBasis_accepts _ _ _).2
         ⟨.cons (τ := outState _ _ ho) (eps_step_iff.2 ⟨ho, hex, rfl, rfl⟩) (.nil _),
           ⟨[], List.mem_cons_self⟩, rfl⟩, rfl⟩
   · rintro obs ⟨w, _⟩
@@ -506,7 +506,7 @@ theorem mem_emitted {sp : Spec I M} {γ : List (Commitment sp)} {m : M} :
     · exact List.mem_cons_self
     · cases e with
       | input _ => exact (mem_emitted h' : m ∈ emitted es)
-      | commit _ => exact (mem_emitted h' : m ∈ emitted es)
+      | commitment _ => exact (mem_emitted h' : m ∈ emitted es)
       | output _ _ => exact List.mem_cons_of_mem _ (mem_emitted h')
 
 theorem emitted_mem {sp : Spec I M} {m : M} :
@@ -517,7 +517,7 @@ theorem emitted_mem {sp : Spec I M} {m : M} :
     | input _ =>
       obtain ⟨γ, hγ⟩ := emitted_mem (es := es) h
       exact ⟨γ, List.mem_cons_of_mem _ hγ⟩
-    | commit _ =>
+    | commitment _ =>
       obtain ⟨γ, hγ⟩ := emitted_mem (es := es) h
       exact ⟨γ, List.mem_cons_of_mem _ hγ⟩
     | output γ' m' =>
@@ -532,16 +532,16 @@ that match an admitted run of `c` in input, named output, and emitted
 outputs. -/
 def Component.core {sp : Spec I M} (c : Component sp) : Component (Guard.core sp) where
   location := c.location
-  basis := canonBasis (Guard.core sp)
+  basis := canonCommitmentBasis (Guard.core sp)
   accepts r' := (∃ r, c.accepts r ∧ r'.input = r.input ∧ r'.output.1 = r.output ∧
-      (emitted r'.events).map Subtype.val = emitted r.events) ∧ r'.Valid (canonBasis (Guard.core sp))
+      (emitted r'.events).map Subtype.val = emitted r.events) ∧ r'.Valid (canonCommitmentBasis (Guard.core sp))
   sound _ h := h.2
 
 theorem Component.core_accepts_iff {sp : Spec I M} (c : Component sp)
     (r' : OperationalRun (Guard.core sp)) :
     c.core.accepts r' ↔ (∃ r, c.accepts r ∧ r'.input = r.input ∧ r'.output.1 = r.output ∧
       (emitted r'.events).map Subtype.val = emitted r.events) ∧
-      r'.Valid (canonBasis (Guard.core sp)) := Iff.rfl
+      r'.Valid (canonCommitmentBasis (Guard.core sp)) := Iff.rfl
 
 /-- Every admitted run of `c` has a retyped counterpart (`Guard.core_lockstep`). -/
 theorem Component.core_accepts {sp : Spec I M} (c : Component sp) {r : OperationalRun sp}
@@ -553,8 +553,8 @@ theorem Component.core_accepts {sp : Spec I M} (c : Component sp) {r : Operation
   have hin : r.output ∈ (emitted es').map Subtype.val := by rw [hem]; exact mem_emitted hγ
   obtain ⟨m', hm', hmv⟩ := List.mem_map.1 hin
   obtain ⟨γ', hγ'⟩ := emitted_mem hm'
-  have hc : (Guard.core sp).S r.input m' := by
-    show sp.S r.input m'.1
+  have hc : (Guard.core sp).P r.input m' := by
+    show sp.P r.input m'.1
     rw [hmv]; exact hv.contract
   exact ⟨⟨r.input, m', es', ρ'⟩,
     (c.core_accepts_iff _).2 ⟨⟨r, h, rfl, hmv, hem⟩, ⟨hx, ⟨γ', hγ'⟩, hc⟩⟩, rfl, hmv⟩
@@ -564,7 +564,7 @@ theorem Component.core_accepts {sp : Spec I M} (c : Component sp) {r : Operation
 def Pipeline.offered {sp : Spec I M} {sk : Spec M O} (c : Component sp)
     (k : Component (rest sp sk)) : Pipeline (Guard.core sp) (rest sp sk) := ⟨c.core, k⟩
 
-/-- Its external contract is still `S₂ ∘ S₁` (`Guard.seq_core`). -/
+/-- Its external contract is still `P₂ ∘ P₁` (`Guard.seq_core`). -/
 theorem offered_compositeSpec {sp : Spec I M} {sk : Spec M O} (c : Component sp)
     (k : Component (rest sp sk)) : (Pipeline.offered c k).compositeSpec = seq sp sk :=
   seq_core sp sk
@@ -587,7 +587,7 @@ whose downstream run, from the fed value, emits one exposable answer.  The
 pipeline is implementation-proper. -/
 theorem offered_available {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp sk)
     (c : Component sp) {r : OperationalRun sp} (h : c.accepts r) :
-    let p := Pipeline.offered (sk := sk) c (Component.ofBasis (emptyBasis _))
+    let p := Pipeline.offered (sk := sk) c (Component.ofCommitmentBasis (emptyCommitmentBasis _))
     p.ImplementationProper ∧ ∃ w : FeedWitness p.upstream p.downstream,
       w.upRun.input = r.input ∧ w.upRun.output.1 = r.output ∧ CoordFree w.downRun.events := by
   intro p
@@ -597,20 +597,20 @@ theorem offered_available {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp 
   let τ := canon (rest sp sk) r'.output
   have ho' : τ.R τ.cur o := ⟨ho, PO.refl _⟩
   have hex : Exposable τ o := commonExpansion_exposable hC ⟨_, [], .nil _⟩ ho'
-  have hx : SysExec (emptyBasis (rest sp sk)) τ [.output [] o] (outState τ o ho') :=
+  have hx : SysExec (emptyCommitmentBasis (rest sp sk)) τ [.output [] o] (outState τ o ho') :=
     .cons (τ := outState τ o ho') (eps_step_iff.2 ⟨ho', hex, rfl, rfl⟩) (.nil _)
   let w : FeedWitness p.upstream p.downstream :=
     { upRun := r', downRun := ⟨r'.output, o, [.output [] o], outState τ o ho'⟩
       upAccepted := hr'
-      downAccepted := (Component.ofBasis_accepts _ _ _).2 ⟨hx, ⟨[], List.mem_cons_self⟩, ho⟩
+      downAccepted := (Component.ofCommitmentBasis_accepts _ _ _).2 ⟨hx, ⟨[], List.mem_cons_self⟩, ho⟩
       feed := rfl }
-  exact ⟨implementationProper_of_downstream_commitmentFree p (ofBasis_empty_commitmentFree _),
-    w, hin, hout, sysExec_emptyBasis_coordFree hx⟩
+  exact ⟨implementationProper_of_downstream_commitmentFree p (ofCommitmentBasis_empty_commitmentFree _),
+    w, hin, hout, sysExec_emptyCommitmentBasis_coordFree hx⟩
 
 /-- **Theorem `thm:proper-coordination`(2), following, for the runs an
 implementation admits.**  In a proper pipeline, for every run an upstream
 implementation admits that emits `m :: ms`, the empty-basis `𝒮₂|_{𝒮₁}`
-follows it, and the merged trace is a run of `S₂ ∘ S₁` (`Guard.proper_follows`). -/
+follows it, and the merged trace is a run of `P₂ ∘ P₁` (`Guard.proper_follows`). -/
 theorem Component.proper_follows {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp sk)
     (c : Component sp) {r : OperationalRun sp} (h : c.accepts r) {m : M} {ms : List M}
     (he : emitted r.events = m :: ms) :
@@ -626,14 +626,14 @@ theorem Component.proper_follows {sp : Spec I M} {sk : Spec M O} (hP : Guard.Pro
 /-- **Theorem `thm:proper-coordination`(2), the composite run, for the runs an
 implementation admits** (`Guard.proper_run`): any empty-basis run of
 `𝒮₂|_{𝒮₁}` that receives each output of an admitted upstream run and answers
-it any number of times gives a run of `S₂ ∘ S₁` whose table contains the
+it any number of times gives a run of `P₂ ∘ P₁` whose table contains the
 join. -/
 theorem Component.proper_run {sp : Spec I M} {sk : Spec M O} (hP : Guard.Proper sp sk)
     (c : Component sp) {r : OperationalRun sp} (h : c.accepts r) {m : {m // Img sp m}}
     {ms : List {m // Img sp m}} (he : emitted r.events = m.1 :: ms.map Subtype.val) {os : List O}
     {ps : List ({m // Img sp m} × List O)} (hps : ps.map Prod.fst = ms)
     {esK : List (SEvent (rest sp sk))} {ρK : State (rest sp sk)}
-    (hK : SysExec (emptyBasis _) (canon (rest sp sk) m) esK ρK)
+    (hK : SysExec (emptyCommitmentBasis _) (canon (rest sp sk) m) esK ρK)
     (htr : esK.filterMap SEvent.erase = os.map Event.output ++ blk ps) :
     ∃ ρ' : State (seq sp sk),
       Exec (canon (seq sp sk) r.input) (merge r.events (os :: ps.map Prod.snd)) ρ' ∧

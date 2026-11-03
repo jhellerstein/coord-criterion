@@ -23,7 +23,7 @@ outcomes and pair rows defined here.  This file is still used by Appendix C
   permitted output that refines another equals it.
 * `filterC` — any row filter, defined when some row at the current input
   satisfies it and some row of `R` fails it, is a commitment
-  (Def. `def:commitment`, Eq. `commitment-excludes`) in a specification whose
+  (Def. `def:commitment`, Eq. `commitment-unsubsumed`) in a specification whose
   fibers are antichains; `filterC_app_iff` is the definedness/effect statement.
 * `orderC`, `commitC`, `abortC`, `stampC`, `basis2PL`, `basisMVTO` — the
   commitments and bases, for either specification.
@@ -142,12 +142,12 @@ def listOrder [DecidableEq T] (l : List T) : Outcome T where
 
 /-- **The specification** of Appendix `app:cc-bases`. -/
 def txnSpec (T : Type) : Spec (FinSet T) (Outcome T) where
-  S k o := Partitions k o
+  P k o := Partitions k o
   total k := ⟨allAbort k, fun _ => ⟨⟨Or.inl, fun h => h.elim id False.elim⟩, fun h => h.2⟩⟩
 
 /-- **The abort-free specification**: the same rows with `X = ∅`. -/
 def abortFreeSpec (T : Type) : Spec (FinSet T) (Outcome T) where
-  S k o := Partitions k o ∧ ∀ t, ¬ o.X t
+  P k o := Partitions k o ∧ ∀ t, ¬ o.X t
   total k := by
     classical
     obtain ⟨l, _, hl⟩ := k.2
@@ -180,12 +180,12 @@ theorem pairSet_mem {A B : T} {h : A ≠ B} (t : T) : (pairSet A B h).1 t ↔ t 
   show t ∈ [A, B] ↔ _
   simp
 
-theorem ordPair_row {A B : T} (h : A ≠ B) : (abortFreeSpec T).S (pairSet A B h) (ordPair A B h) :=
+theorem ordPair_row {A B : T} (h : A ≠ B) : (abortFreeSpec T).P (pairSet A B h) (ordPair A B h) :=
   ⟨fun t => ⟨by rw [pairSet_mem]; exact ⟨Or.inr, fun h => h.elim False.elim id⟩,
     fun h => h.1⟩, fun _ h => h⟩
 
 theorem ordPair_row' {A B : T} (h : A ≠ B) :
-    (abortFreeSpec T).S (pairSet A B h) (ordPair B A (Ne.symm h)) :=
+    (abortFreeSpec T).P (pairSet A B h) (ordPair B A (Ne.symm h)) :=
   ⟨fun t => ⟨by
       rw [pairSet_mem]
       show _ ↔ False ∨ (t = B ∨ t = A)
@@ -201,7 +201,7 @@ theorem ab_ba_no_common_refinement {A B : T} (h : A ≠ B) :
   exact u.irrefl A (u.trans _ _ _ hab hba)
 
 theorem not_directed_of {I O : Type} [PO I] [PO O] {sp : Spec I O} {i : I} {o1 o2 : O}
-    (h1 : sp.S i o1) (h2 : sp.S i o2) (hn : ¬ ∃ u, o1 ≼ u ∧ o2 ≼ u) :
+    (h1 : sp.P i o1) (h2 : sp.P i o2) (hn : ¬ ∃ u, o1 ≼ u ∧ o2 ≼ u) :
     ¬ sp.DirectedOutputs ∧ ¬ sp.LiftedMono := by
   have hd : ¬ sp.DirectedOutputs := by
     intro hD
@@ -247,7 +247,7 @@ section Generic
 variable {I O : Type} [PO I] [PO O]
 
 /-- Fibers are antichains. -/
-def Antichain (sp : Spec I O) : Prop := ∀ k u w, sp.S k u → sp.S k w → u ≼ w → u = w
+def Antichain (sp : Spec I O) : Prop := ∀ k u w, sp.P k u → sp.P k w → u ≼ w → u = w
 
 theorem txn_antichain : Antichain (txnSpec T) :=
   fun _ _ _ hu hw hle => partitions_antichain hu hw hle
@@ -310,7 +310,7 @@ noncomputable def filterC (hA : Antichain sp) (G : State sp → Prop) (P : I →
     obtain ⟨hd, rfl⟩ := filterApp_eq.1 h
     obtain ⟨k, u, hu, hnp⟩ := hd.2.2
     exact ⟨k, u, hu, fun h' => hnp h'.2⟩
-  excludes := by
+  unsubsumed := by
     intro σ τ h k u w hu hnu hw huw
     obtain ⟨_, rfl⟩ := filterApp_eq.1 h
     have e : u = w := hA k u w (σ.sub _ _ hu) (σ.sub _ _ hw.1) huw
@@ -375,11 +375,11 @@ noncomputable def stampC (A : T) (Z : T → Prop) : Commitment sp :=
   filterC hA (fun σ => ∀ z, Z z → σ.cur.1 z) (stampP A Z)
 
 /-- `B_2PL = {order, commit, abort}`, over all transactions. -/
-def basis2PL : Basis sp := fun c =>
+def basis2PL : CommitmentBasis sp := fun c =>
   (∃ A B, c = orderC sp hA A B) ∨ (∃ A, c = commitC sp hA A) ∨ (∃ A, c = abortC sp hA A)
 
 /-- `B_MVTO = {stamp, commit, abort}`, over all transactions. -/
-def basisMVTO : Basis sp := fun c =>
+def basisMVTO : CommitmentBasis sp := fun c =>
   (∃ A Z, c = stampC sp hA A Z) ∨ (∃ A, c = commitC sp hA A) ∨ (∃ A, c = abortC sp hA A)
 
 end Bases
@@ -446,7 +446,7 @@ theorem abortFree_order_blocks {A B : T} {σ σ1 : State (abortFreeSpec T)}
 /-- ... in particular at every state any later execution, under any basis,
 reaches: `order(B,A)` is never defined again. -/
 theorem abortFree_order_blocks_forever {A B : T} {σ σ1 : State (abortFreeSpec T)}
-    (h : (orderAF A B).app σ = some σ1) (Bs : Basis (abortFreeSpec T))
+    (h : (orderAF A B).app σ = some σ1) (Bs : CommitmentBasis (abortFreeSpec T))
     {es : List (SEvent (abortFreeSpec T))} {τ : State (abortFreeSpec T)}
     (hx : SysExec Bs σ1 es τ) : (orderAF B A).app τ = none :=
   abortFree_order_blocks h τ hx.sub
@@ -455,7 +455,7 @@ theorem abortFree_order_blocks_forever {A B : T} {σ σ1 : State (abortFreeSpec 
 
 /-- Fig. (h): under the abort-free specification, `order(A,B)` keeps exactly
 the rows with `A` before `B`. -/
-theorem orderP_abortFree {k : FinSet T} {o : Outcome T} (h : (abortFreeSpec T).S k o) (A B : T) :
+theorem orderP_abortFree {k : FinSet T} {o : Outcome T} (h : (abortFreeSpec T).P k o) (A B : T) :
     orderP A B k o ↔ o.lt A B := by
   constructor
   · rintro (h' | h' | h')
@@ -466,7 +466,7 @@ theorem orderP_abortFree {k : FinSet T} {o : Outcome T} (h : (abortFreeSpec T).S
 
 /-- Fig. (i): under the abort-free specification, `stamp(B)` with `Z = ∅`
 keeps exactly the rows with `B` first. -/
-theorem stampP_first_abortFree {k : FinSet T} {o : Outcome T} (h : (abortFreeSpec T).S k o)
+theorem stampP_first_abortFree {k : FinSet T} {o : Outcome T} (h : (abortFreeSpec T).P k o)
     (B : T) : stampP B (fun _ => False) k o ↔ ∀ D, k.1 D → D ≠ B → o.lt B D := by
   constructor
   · intro hs D hD hne
@@ -480,7 +480,7 @@ theorem stampP_first_abortFree {k : FinSet T} {o : Outcome T} (h : (abortFreeSpe
 /-- **MVTO: no abort is forced by this specification.**  An abort-free row whose
 order is the stamp order (`Z` = transactions of `k` before `A`) satisfies
 `stamp(A)` and `commit(A)` for every `A ∈ k`. -/
-theorem stamp_order_row {k : FinSet T} {o : Outcome T} (h : (abortFreeSpec T).S k o)
+theorem stamp_order_row {k : FinSet T} {o : Outcome T} (h : (abortFreeSpec T).P k o)
     {A : T} (hA : k.1 A) :
     stampP A (fun z => k.1 z ∧ o.lt z A) k o ∧ commitP A k o := by
   have dom_of : ∀ t, k.1 t → o.dom t := fun t ht =>

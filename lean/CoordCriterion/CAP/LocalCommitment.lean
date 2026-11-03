@@ -5,22 +5,22 @@ import CoordCriterion.CAP.AvailabilityFor
 
 Coordination, relative to a system, is a commitment that some run of the
 system contradicts.  An output event of a participant removes rows from its
-state (by its commitments `γ`) and may seal inputs (remove every row at them).
+state (by its commitments `γ`) and may empty fibers (remove every row at some inputs).
 The event is *local* when no participant of any history the system produces
 emits a removed row's output at that row's input (`SysEmits`), and none
-accepts a sealed input (`SysAccepts`).  The same applies to a commit event,
+accepts an input whose fiber it empties (`SysAccepts`).  The same applies to a commitment event,
 which applies commitments without emitting.  A system is *coordination-free*
-when every output event and every commit event of every history it produces
+when every output event and every commitment event of every history it produces
 is local.
 
 * `respSystem_coordinationFree`: if `S` is consistent on `A`, the canonical
   system `respSystem A` of `complete_cap_for` is coordination-free.  Its
-  canonical output events seal nothing, and the rows they remove lie outside
+  canonical output events empty no fiber, and the rows they remove lie outside
   `A`, which it never emits.
-* `every_row_emitted`: a system with Availability emits every row of `S`, so
+* `every_row_emitted`: a system with Availability emits every row of `P`, so
   every removal is contradicted; `availability_coordinationFree_iff`: such a
   system is coordination-free exactly when the commitments of its output and
-  commit events remove no row; so it performs no commit event
+  commitment events remove no row; so it performs no commitment event
   (`availability_coordinationFree_noCommit`).
 -/
 
@@ -46,15 +46,15 @@ def SysAccepts (Sys : System sp D) (k : I) : Prop :=
 
 /-- An output event's commitments, taking `σ` to `σc`, are *local* to the
 system: no run of the system emits the output of a removed row at its input,
-and none accepts a sealed input.  (The same condition is applied to the
-commitments of a commit event.) -/
+and none accepts an input whose fiber it empties.  (The same condition is applied to the
+commitments of a commitment event.) -/
 def LocalEvent (Sys : System sp D) (σ σc : State sp) : Prop :=
   (∀ k x, σ.R k x → ¬ σc.R k x → ¬ SysEmits Sys k x) ∧
   (∀ k, (∃ x, σ.R k x) → (∀ x, ¬ σc.R k x) → ¬ SysAccepts Sys k)
 
 /-- Runs that emit `emits k x` (output `x` at current input `k`) and accept
 `accepts k` *contradict* the commitments taking `σ` to `σc`: they emit the
-output of a removed row at its input, or accept a sealed input (one whose
+output of a removed row at its input, or accept an input whose fiber it empties (one whose
 remaining rows are all removed). -/
 def Contradicts (emits : I → O → Prop) (accepts : I → Prop) (σ σc : State sp) : Prop :=
   (∃ k x, σ.R k x ∧ ¬ σc.R k x ∧ emits k x) ∨
@@ -82,7 +82,7 @@ def System.CoordinationFree (Sys : System sp D) : Prop :=
       LocalEvent Sys σ σc) ∧
   (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
     ∀ (q : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ σc : State sp),
-      H q = a ++ LEv.cmt γ :: b → LRun (canon sp (init q)) a σ → applySeq σ γ = some σc →
+      H q = a ++ LEv.commitment γ :: b → LRun (canon sp (init q)) a σ → applySeq σ γ = some σc →
       LocalEvent Sys σ σc)
 
 /-- An output event with no commitment is local. -/
@@ -105,14 +105,14 @@ theorem resp_emits_A {A : Table I O} {k : I} {x : O}
   rw [← hcur, h1]; exact hAx
 
 /-- **If `S` is consistent on `A`, `respSystem A` is coordination-free.**  Its
-output events are canonical events for outputs of `A`; they seal nothing, and
+output events are canonical events for outputs of `A`; they empty no fiber, and
 every row they remove lies outside `A`, so no run of the system emits it. -/
 theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) :
     (respSystem (sp := sp) (D := D) A).CoordinationFree := by
   refine ⟨?_, fun n init H _ hp q a b γ σ σc hH _ _ => ?_⟩
   rotate_left
-  · -- `respSystem A` performs no commit event
-    have := (hp q a (.cmt γ) b hH).2
+  · -- `respSystem A` performs no commitment event
+    have := (hp q a (.commitment γ) b hH).2
     simp [respSystem, respF, LEv.erase] at this
   intro n init H _ hp q a b γ o σ σc hH hrun hap
   have hAl := hp q a (.out γ o) b hH
@@ -121,7 +121,7 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
     rinv_of_produced A (compliant_of_eq_append (hp q) hH) hrun
   rw [← hcur] at hAo
   -- rows refining `o` at expansions of the current input are still present
-  have hkeep : ∀ k u, sp.S k u → σ.cur ≼ k → o ≼ u → σ.R k u := fun k u hSu hk hou =>
+  have hkeep : ∀ k u, sp.P k u → σ.cur ≼ k → o ≼ u → σ.R k u := fun k u hSu hk hou =>
     (hres k u).2 ⟨hSu, hk, fun e he => PO.trans (hge e he) hou⟩
   rcases hγ with rfl | rfl
   · exact localEvent_nil _ hap
@@ -142,9 +142,8 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
       have hRu := hkeep k u hSu hk hou
       apply hnx
       refine ⟨hx, ?_⟩
-      rintro (⟨_, hs⟩ | ⟨_, hn, _, hret⟩)
-      · exact hs ⟨u, hRu, hou⟩
-      · exact hret ⟨hx, hn, u, hRu, hou, hxu⟩
+      intro he
+      exact he.2.2 ⟨hx, he.2.1, u, hRu, hou, hxu⟩
     · rintro k ⟨x, hx⟩ hall _
       obtain ⟨_, hk, _⟩ := (hres k x).1 hx
       obtain ⟨u, hSu, hu'⟩ := hcons [(σ.cur, o)]
@@ -154,11 +153,11 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
       have hRu := hkeep k u hSu hk hou
       exact hall u ⟨hRu, not_rm_of_le hRu hou⟩
 
-/-- A system with Availability emits every row of `S`: two participants start
+/-- A system with Availability emits every row of `P`: two participants start
 at `k` in separate blocks, and the first emits `x` locally, at current
 input `k`. -/
 theorem every_row_emitted (Sys : System sp D) (hA : AvailabilityAtEnd Sys) :
-    ∀ k x, sp.S k x → SysEmits Sys k x := by
+    ∀ k x, sp.P k x → SysEmits Sys k x := by
   intro k x hkx
   let init : Fin 2 → I := fun _ => k
   let H0 : History sp D 2 := fun _ => []
@@ -182,7 +181,7 @@ theorem every_row_emitted (Sys : System sp D) (hA : AvailabilityAtEnd Sys) :
 
 /-- With Availability (`A = S`), coordination is commitment: a system with
 Availability is coordination-free exactly when the commitments of its output
-events and commit events remove no row. -/
+events and commitment events remove no row. -/
 theorem availability_coordinationFree_iff (Sys : System sp D) (hA : AvailabilityAtEnd Sys) :
     Sys.CoordinationFree ↔
       (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
@@ -192,7 +191,7 @@ theorem availability_coordinationFree_iff (Sys : System sp D) (hA : Availability
           applySeq σ γ = some σc → ∀ k x, σ.R k x → σc.R k x) ∧
       (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
         ∀ (q : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ σc : State sp),
-          H q = a ++ LEv.cmt γ :: b → LRun (canon sp (init q)) a σ →
+          H q = a ++ LEv.commitment γ :: b → LRun (canon sp (init q)) a σ →
           applySeq σ γ = some σc → ∀ k x, σ.R k x → σc.R k x) := by
   have keep : ∀ {σ σc : State sp}, LocalEvent Sys σ σc → ∀ k x, σ.R k x → σc.R k x :=
     fun {σ} {_} hl k x hx => Classical.byContradiction fun hnx =>
@@ -213,19 +212,19 @@ theorem availability_coordinationFree_iff (Sys : System sp D) (hA : Availability
         loc (h2 n init H hw hp q a b γ σ σc hH hrun hap)⟩
 
 /-- Hence a coordination-free system with Availability performs no commit
-event: a commit event's (nonempty) commitments remove a row, which some run
+event: a commitment event's (nonempty) commitments remove a row, which some run
 of the system emits. -/
 theorem availability_coordinationFree_noCommit (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     (hcf : Sys.CoordinationFree) {n : Nat} {init : Fin n → I} {H : History sp D n}
     (hw : WF init H) (hp : Produced Sys n init H) (q : Fin n) (γ : List (Commitment sp)) :
-    LEv.cmt γ ∉ H q := by
+    LEv.commitment γ ∉ H q := by
   intro hm
   obtain ⟨a, b, hH⟩ := List.append_of_mem hm
   obtain ⟨τ, hτ⟩ := hw.1 q
   rw [hH] at hτ
   obtain ⟨σ, hσ, hrest⟩ := lrun_append.1 hτ
   cases hrest with
-  | cmt hne hap _ =>
+  | commitment hne hap _ =>
     obtain ⟨k, x, hx, hnx⟩ := applySeq_removes hne hap
     exact hnx (((availability_coordinationFree_iff Sys hA).1 hcf).2 n init H hw hp q a b γ σ _
       hH hσ hap k x hx)
@@ -233,12 +232,12 @@ theorem availability_coordinationFree_noCommit (Sys : System sp D) (hA : Availab
 /-! ## Specifications: every commitment is contradicted by a canonical run -/
 
 /-- For a specification, every commitment is contradicted by some canonical
-run: from `σ_S(i)` with `i ≼ k`, the canonical run `input(k) output(x)`
-accepts `k` (when `i ≺ k`) and emits any `x ∈ S(k)` at current input `k`.  A
-commitment at a state with current input `i` seals only inputs `k ≻ i` and
+run: from `σ_P(i)` with `i ≼ k`, the canonical run `input(k) output(x)`
+accepts `k` (when `i ≺ k`) and emits any `x ∈ P(k)` at current input `k`.  A
+commitment at a state with current input `i` can empty fibers only at inputs `k ≻ i` and
 chooses only against rows `(k,x)` with `i ≼ k`, so some canonical run
 performs an event it rules out. -/
-theorem canonical_run_contradicts {i k : I} {x : O} (hik : i ≼ k) (hx : sp.S k x) :
+theorem canonical_run_contradicts {i k : I} {x : O} (hik : i ≼ k) (hx : sp.P k x) :
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k := by
   have hju : (canon sp i).R k x := ⟨hx, hik⟩
   let σ := canon sp i

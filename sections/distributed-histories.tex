@@ -4,7 +4,7 @@
 \label{sec:histories}
 
 A finite set $P$ of \emph{participants} each holds a specification state,
-starting at a canonical state $\sigma_S(i_p)$, and changes it only by its own
+starting at a canonical state $\sigma_P(i_p)$, and changes it only by its own
 specification events.  A participant learns input directly from the
 environment or in a message from another participant.  Participants exchange
 messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$.  A
@@ -27,7 +27,7 @@ $\mathsf{receive}(m)$, with:
   \item for each receive, a matching send of the same message at another
         participant, each send matching at most one receive; and
   \item for each participant $p$, its specification events, in local order,
-        form a defined transition sequence from $\sigma_S(i_p)$: each
+        form a defined transition sequence from $\sigma_P(i_p)$: each
         is legal at the state where it occurs.
 \end{enumerate}
 \end{definition}
@@ -77,15 +77,15 @@ $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
     \fill (4.15,5.5) circle (1.7pt);
     \fill (4.15,3.9) circle (1.7pt);
     \node[below,fill=white,inner sep=.5pt] at (4.15,5.5)
-      {$\mathsf{input}(xy\cdot)$};
+      {$\mathsf{input}(ab\cdot)$};
     \node[above,fill=white,inner sep=.5pt] at (4.15,3.9)
-      {$\mathsf{input}(xy\cdot)$};
+      {$\mathsf{input}(ab\cdot)$};
     \node[anchor=east] at (1.8,6.2) {$\mathsf{env}$};
     \node[anchor=east] at (1.8,3.2) {$\mathsf{env}$};
       \draw[->] (1.95,6.14) -- node[midway,above,sloped,fill=white,inner sep=.5pt]
-        {$xy\cdot$} (4.03,5.65);
+        {$ab\cdot$} (4.03,5.65);
       \draw[->] (1.95,3.26) -- node[midway,below,sloped,fill=white,inner sep=.5pt]
-        {$xy\cdot$} (4.03,3.75);
+        {$ab\cdot$} (4.03,3.75);
     \draw[dashed] (6.45,3.55) -- (6.45,5.85);
     \node[above] at (6.45,5.85) {$C_d$};
     \node[anchor=west] at (6.6,5.5) {$\sigma_1$};
@@ -101,10 +101,10 @@ $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
     \draw[->] (1.4,-.95) -- (8.15,-.95);
     \node[anchor=east] at (1.75,1.35) {$\mathsf{env}$};
       \draw[->] (1.9,1.29) -- node[midway,above,sloped,fill=white,inner sep=.5pt]
-        {$xy\cdot$} (3.35,.8);
+        {$ab\cdot$} (3.35,.8);
     \fill (3.5,.65) circle (1.7pt);
     \node[below,fill=white,inner sep=.5pt] at (3.5,.65)
-      {$\mathsf{input}(xy\cdot)$};
+      {$\mathsf{input}(ab\cdot)$};
     \fill (5.25,.65) circle (1.7pt);
     \node[above,fill=white,inner sep=.5pt] at (5.25,.65)
       {$\mathsf{send}(m)$};
@@ -112,25 +112,25 @@ $\operatorname{end}(H,C)=(\sigma_p(C))_{p\in P}$.
     \node[below,fill=white,inner sep=.5pt] at (6.0,-.95)
       {$\mathsf{receive}(m)$};
     \draw[->] (5.25,.53) -- node[midway,right,fill=white,inner sep=.5pt]
-      {$m=(xy\cdot,d_m)$} (5.95,-.8);
+      {$m=(ab\cdot,d_m)$} (5.95,-.8);
     \fill (7.55,-.95) circle (1.7pt);
     \node[below,fill=white,inner sep=.5pt] at (7.55,-.95)
-      {$\mathsf{input}(xy\cdot)$};
+      {$\mathsf{input}(ab\cdot)$};
     \draw[dashed] (8.2,-1.3) -- (8.2,1.0);
     \node[above] at (8.2,1.0) {$C_f$};
     \node[anchor=west] at (8.35,.65) {$\sigma_1$};
     \node[anchor=west] at (8.35,-.95) {$\sigma_1$};
   \end{tikzpicture}
-  \caption{Two histories from $\sigma_a=\sigma_S(x\cdot\cdot)=(x\cdot\cdot,R_0)$ to
-  $\sigma_1=(xy\cdot,R_1)$, with $R_0$ and $R_1$ the tables of
+  \caption{Two histories from $\sigma_a=\sigma_P(a\cdot\cdot)=(a\cdot\cdot,R_0)$ to
+  $\sigma_1=(ab\cdot,R_1)$, with $R_0$ and $R_1$ the tables of
   Figure~\ref{fig:election-frames}(a) and~(b).  In (a) each participant records
-  $\mathsf{input}(xy\cdot)$ directly; in (b) $q$ records it after receiving $m$.  Dashed lines are consistent cuts.}
+  $\mathsf{input}(ab\cdot)$ directly; in (b) $q$ records it after receiving $m$.  Dashed lines are consistent cuts.}
   \label{fig:participant-runs}
 \end{figure}
 
-In Figure~\ref{fig:participant-runs}, the input $xy\cdot$ reaches $q$
+In Figure~\ref{fig:participant-runs}, the input $ab\cdot$ reaches $q$
 directly or through a message from $p$.  The histories differ, but at either
-cut each participant run is $\mathsf{input}(xy\cdot)$, so both endpoints are
+cut each participant run is $\mathsf{input}(ab\cdot)$, so both endpoints are
 $(\sigma_1,\sigma_1)$.
 
 \subsection{Distributed consistency}
@@ -164,10 +164,17 @@ The participant runs at a cut are a family of runs, and any family
 of runs can be placed at separate participants that exchange no messages.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
-Both notions are existence claims about transitions
-(Section~\ref{sec:scope}).  By Complete CALM,
-which reduces to Functional CALM with one output per input, a specification
-has distributed consistency exactly when it satisfies Lifted Monotonicity.
+By Complete CALM, which reduces to Functional CALM with one output per input,
+a specification has distributed consistency exactly when it satisfies Lifted
+Monotonicity.  Under Lifted Monotonicity, this confluence has a concrete witness.  For
+participant runs with common \indesc $j$, the survivor test supplies a
+$u\in\fiber{j}$ that survives in every endpoint; by
+Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted.  At
+each participant, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ reaches
+the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).  This is an existence witness in the
+transition system; choosing $u$, communicating it, and scheduling the
+transitions belong to the operational model (\S\ref{sec:scope}).
+
 For functional specifications,
 Corollary~\ref{cor:state-by-input} also gives convergence:
 
@@ -175,7 +182,7 @@ Corollary~\ref{cor:state-by-input} also gives convergence:
 \label{cor:convergence}
 In any history of a consistent functional specification, every
 participant whose current input at a consistent cut is $j$ is in state
-$\sigma_S(j)$.  Participants with the same current input therefore agree,
+$\sigma_P(j)$.  Participants with the same current input therefore agree,
 regardless of message paths, arrival order, or the outputs they emitted.
 \end{corollary}
 
@@ -189,7 +196,7 @@ have received the same updates are in equivalent states.  The semilattice merge 
 needed: here it follows directly from any consistent functional specification.  With several outputs per input
 this fails even for consistent specifications: in
 Figure~\ref{fig:ambiguity-frames}(g), a run that emitted $\{s{\to}\texttt{s1}\}$
-has retired the route sets that omit it, while a run at the same input that
+has subsumed the route sets that omit it, while a run at the same input that
 emitted nothing keeps them.  Consistency then guarantees that such replicas can
 be reconciled, not that they agree.
 

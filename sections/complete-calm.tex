@@ -4,14 +4,14 @@
 We now extend CALM theory to allow a fiber to contain several outputs.  The monotonicity property we want to test as input
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
-In addition to seal commitments on inputs, we now have a second kind of commitment: \emph{choosing}
-among permitted outputs.
+A \commitment may empty an input's fiber or remove some output rows while the
+fiber remains nonempty.  We now turn to the latter effect.
 
-\subsection{Output choice by example}
+\subsection{\Commitment by example}
 \label{sec:ambiguity-story}
 
 Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
-several outputs in one fiber.  Transaction ordering requires a choice
+several outputs in one fiber.  Transaction ordering requires a \commitment
 between incompatible serialization orders.  For the discussion here, outputs are simply serial
 schedules, to which executions correspond via equivalence; Section~\ref{sec:hat-instance} and
 Appendix~\ref{app:cc-bases} study more thorough transactional specifications.  Traceroute observations, by
@@ -28,10 +28,10 @@ contrast, can all be \outrelpast by a larger route set.
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
       $\{A,B\}$ & \sh{$[A,B]$} \\
-      \retired{$\{A,B\}$} & \retired{$[B,A]$} \\ \strikerow
+      \grayrow{$\{A,B\}$} & \grayrow{$[B,A]$} \\ \strikerow
       \bottomrule
     \end{tabular*}\par\smallskip
-    {\footnotesize no remaining row \outrel the removed one: a commitment}
+    {\footnotesize no remaining row \outrel the removed one: a \commitment}
   \end{minipage}\hfill
   \begin{minipage}[t]{0.6\columnwidth}
     \raggedright
@@ -40,43 +40,38 @@ contrast, can all be \outrelpast by a larger route set.
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
       $i$ & \sh{$\{s{\to}\texttt{s1}\}$} \\
-      \retired{$i$} & \retired{$\{s{\to}a\}$} \\
-      \retired{$i$} & \retired{$\{s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
-      $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a\}$} \\
-      $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}a,\ s{\to}a{\to}\texttt{s2}\}$} \\
+      \grayrow{$i$} & \grayrow{$\{s{\to}h\}$} \\
+      \grayrow{$i$} & \grayrow{$\{s{\to}h,\ s{\to}h{\to}\texttt{s2}\}$} \\
+      $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}h\}$} \\
+      $i$ & \sh{$\{s{\to}\texttt{s1},\ s{\to}h,\ s{\to}h{\to}\texttt{s2}\}$} \\
       \bottomrule
     \end{tabular*}\par\smallskip
     {\footnotesize each removed row is \outrelpast by a remaining one: an output
-    retirement}
+    subsumption}
   \end{minipage}
   \caption{Two specifications with several rows at one input, each after one output
   event.  (f) Serial orders of two concurrent transactions, under the equality
   order.  (g) Route sets from a source $s$ to a service on \texttt{s1} and
   \texttt{s2}, ordered by inclusion; $s$ reaches \texttt{s1} directly and
-  \texttt{s2} through hop $a$.  Legend as in Figure~\ref{fig:election-frames};
-  gray alone may also mark an output retirement.}
+  \texttt{s2} through hop $h$.  Legend as in Figure~\ref{fig:election-frames};
+  here gray alone marks output subsumption.}
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{Output choice and directedness.} The examples differ in what happens
+\paragraph{\Commitment and directedness.} The examples differ in what happens
 to alternative outputs when one is emitted.  In panel~(f), neither
-serialization order \outrel the other, so emitting one requires a
-\emph{choice commitment} that removes the other while the input stays legal:
-emitting $[A,B]$ chooses it over $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
+serialization order \outrel the other, so emitting one requires an
+\commitment that removes the other while the input stays legal:
+emitting $[A,B]$ excludes $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
 emitted observation and the outputs of the rows it removes.  We call such
-removal an \emph{output retirement}; every removed output is
+removal an \emph{output subsumption}; every removed output is
 \outrelpast by a remaining one, so emitting the route observation loses no information
 according to the output order and needs no
-commitment: it is \emph{exposable}.  
+\commitment: it is a \emph{legal output}.
 
-An output event can thus remove rows in three ways: by sealing inputs, as in
-Section~\ref{sec:functional-calm}; by retiring outputs, as in panel~(g); or by
-choosing among outputs, as in panel~(f).  The atomic event
-$\mathsf{output}(o)$ does whichever of these $o$ requires, then emits $o$;
-sealing and choosing are commitments, retiring is not.
+An output event can thus remove rows in two ways: by \commitment, as in panel~(f) and Section~\ref{sec:functional-calm}, or by subsuming outputs, as in panel~(g).  At a given input, a \commitment may remove every row, ruling out the input, or only some rows, ruling out those outputs.  The atomic event $\mathsf{output}(o)$ does whichever $o$ requires, then emits $o$.  Subsuming is not \commitment.
 
-In Figure~\ref{fig:ambiguity-frames}, serialization requires commitment; traceroute avoids it.
-The difference between them is the order-theoretic concept of a \emph{directed} fiber:
+The difference between serialization and traceroute is the order-theoretic concept of a \emph{directed} fiber:
 every finite set of outputs in a given fiber has a common \outnoun in that fiber.
 Directedness at a single input is not sufficient, however;
 we must also \outrelbase prior outputs as input \ingrows. \emph{Lifted Monotonicity}
@@ -97,15 +92,17 @@ ambiguity of output.
 \label{def:relational-specification}
 An \emph{ordered relational specification} is
         \begin{equation}
-  \Spec=(I,\InputOrd,O,\OutputOrd,S),
-  \qquad S\subseteq I\times O,
+  \Spec=(I,\InputOrd,O,\OutputOrd,P),
+  \qquad P\subseteq I\times O,
   \label{eq:relational-specification}
         \end{equation}
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and $S$
-is total on $I$: every input appears in at least one row.  A row $(i,o)\in S$
-says that output $o$ is permitted at input $i$.  The fiber
+  where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and
+  $P\subseteq I\times O$ is its \emph{possibility relation}.  We depict $P$ as
+a table and call its members rows; it need not be finite.  The relation $P$
+  is total on $I$: every input appears in at least one row.  A row $(i,o)\in P$
+  is a possible input/output pair: output $o$ is permitted at input $i$.  The fiber
         \begin{equation}
-  \fiber{i}=\{o\in O:(i,o)\in S\}
+  \fiber{i}=\{o\in O:(i,o)\in P\}
   \label{eq:fiber}
         \end{equation}
 of Section~\ref{sec:functional-specifications} may now contain several
@@ -235,13 +232,13 @@ $o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
 \begin{definition}[Common-\indesc condition]
 \label{def:common-expansion-condition}
 An ordered specification satisfies the \emph{common-\indesc condition} when,
-for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $S$ and every
-common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in S(j)$ \outrel every
+for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
+common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
 $o_r$.
 \end{definition}
 
-For the empty set of rows the condition asks only that $S(j)$ be nonempty, which
-follows from $S$ being total on $I$.
+For the empty set of rows the condition asks only that $P(j)$ be nonempty, which
+follows from $P$ being total on $I$.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
@@ -261,33 +258,33 @@ Relational Monotonicity carries each $o_r$ to some
 For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
 again keeps exactly the rows whose outputs \outrelbase $o$, ending at
 $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
-emits $o$.  With several rows at one input, each removed row falls into one of
-three classes.  Consider a removed row $(i',o')$.  If no row at $i'$ \outrel $o$,
-the row is in $\Sealed_o$, and the event \emph{seals} $i'$.  If a kept row at
-$i'$ \outrel $o'$, the row is in $\Retired_o$, and removing it is an
-\emph{output retirement}.  Otherwise the row is in $\Rejected_o$: $i'$ stays
-legal, but the event \emph{chooses} against $o'$.  The seal $s_o$ removes $\Sealed_o$, and the choice
-$c_o$ removes $\Rejected_o$.  Both are commitments; output retirement is not.
-These are the three cases of Section~\ref{sec:ambiguity-story}: emitting
-$\bot$ under the equality order of Figure~\ref{fig:nonmonotone-frame} puts
-$xyx$ and $xyy$ in $\Sealed_o$; emitting $[A,B]$ in
-Figure~\ref{fig:ambiguity-frames}(f) puts $[B,A]$ in $\Rejected_o$; and the
-route sets removed in panel~(g) are in $\Retired_o$.
-In the functional case, $\Retired_o$ and $\Rejected_o$ are empty, so this is
-the output event of Definition~\ref{def:output-event}.
+emits $o$.  Its removed rows fall into two classes.  A row is in
+$\Subsumed_o$ when a kept row at the same input \outrel it; its removal is an
+\emph{output subsumption}.  Every other removed row is in $\Excluded_o$ and is
+removed by the canonical \commitment $x_o$.  At an input $k$, $x_o$ rules out
+$k$ if it removes every row there; otherwise it rules out each output whose
+row it removes at $k$.  Output subsumption is not \commitment.
+
+These are the cases of Section~\ref{sec:ambiguity-story}: emitting $\bot$ under
+the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows for
+$aba$ and $abb$ in $\Excluded_o$ and rules out those inputs; emitting $[A,B]$
+in Figure~\ref{fig:ambiguity-frames}(f) puts the row for $[B,A]$ in
+$\Excluded_o$ and rules out that output at $\{A,B\}$; and the route sets removed
+in panel~(g) are in $\Subsumed_o$.  In the functional case, $\Subsumed_o$ is
+empty, so this is the output event of Definition~\ref{def:output-event}.
 Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
-As before, $o$ is exposable when $\mathsf{output}(o)$ applies no commitment,
-that is, when $\Sealed_o$ and $\Rejected_o$ are empty.  Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
-remaining output at $j$ have a common \outnoun at $j$
-(Proposition~\ref{prop:exposability}).
+As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
+\commitment, exactly when $\Excluded_o$ is empty.  Equivalently, at every legal
+\indesc $j$ of $i$, $o$ and each remaining output at $j$ have a common
+\outnoun at $j$ (Proposition~\ref{prop:exposability}).
 
 \subsection{The Complete CALM theorem}
 \label{sec:complete-calm-theorem}
 
 A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
 Equation~\ref{eq:output-action}.  Specification states, input events, runs,
-commitment-free runs, and consistency are defined as before, and the results
+\commitment-free runs, and consistency are defined as before, and the results
 of Section~\ref{sec:executions} used output events only through that
 equation.  They lift unchanged: the rows remaining after a run
 (Lemma~\ref{lem:run-residual}) and the survivor test
@@ -300,10 +297,10 @@ Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-If the common-\indesc condition holds, a common \outnoun $u\in S(j)$
+If the common-\indesc condition holds, a common \outnoun $u\in P(j)$
 of everything emitted survives in every run.
 If outputs emitted at inputs with a common \indesc $j$ are incompatible in
-$S(j)$, the runs that emit them share no row at $j$ and can never be
+$P(j)$, the runs that emit them share no row at $j$ and can never be
 reconciled there.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
@@ -313,17 +310,17 @@ The condition that characterizes consistency is now a
 property of a specification: Lifted Monotonicity, which for a function is
 ordinary monotonicity.
 
-The same condition governs exposability.
+The same condition governs legality.
 
-\begin{proposition}[Exposure boundary]
+\begin{proposition}[Output-legality boundary]
 \label{prop:exposure-boundary}
 An ordered specification satisfies Lifted Monotonicity if and only
-if every output at every state reachable without commitment is exposable.
+if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
 Under the common-\indesc condition, consistency supplies the common \outnoun
-the exposure test asks for.  Conversely, the exposure test at canonical
+the legal-output test asks for.  Conversely, the legal-output test at canonical
 states, one row at a time, builds the common \outnoun the condition
 asks for.  Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}

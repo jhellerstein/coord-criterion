@@ -472,7 +472,7 @@ theorem Inp.le_def {M : Model V Tx} (a b : Inp M) : (a ≼ b) = (a.1 ≼ b.1) :=
 /-- The specification `S_I`: at input `h`, expose the state of any
 downward-closed valid sub-history of `h`. -/
 def SI (M : Model V Tx) : Spec (Inp M) (St V) where
-  S h s := ∃ g, g ≼ h.1 ∧ Valid M g ∧ eval M g = s
+  P h s := ∃ g, g ≼ h.1 ∧ Valid M g ∧ eval M g = s
   total _ := ⟨_, Hist.empty, Hist.empty_le _, valid_empty M, rfl⟩
 
 /-! ## (⇒) Invariant confluence gives the common-expansion condition -/

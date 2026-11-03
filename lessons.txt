@@ -1,5 +1,14 @@
 Pithy Lessons:
 
+Headline mnemonic:
+- Functional CALM needs one maxim: "Whenever we learn, our answers refine."
+- Complete CALM needs both: "Whenever we learn, our answers refine. Whatever we choose, our answers align."
+  - Learn and refine = Relational Monotonicity.
+  - Choose and align = Directed Outputs.
+  - Together = Lifted Monotonicity.
+
+Possibilities narrow in three ways: some are lost as the environment moves on; some are subsumed by incidental decisions; some are excluded by fateful decisions. Coordination is needed for the fateful kind.
+
 2.1 *Specifications: a spec is a map from expanding inputs to refining outputs*.
 What could I learn? (Growing inputs)
 What can I say? (Table)
@@ -13,21 +22,21 @@ What keeps my word? (Refining outputs)
 
 2.4: Functional CALM: Consistent Means Monotone.
 
-2.4 (Corollary "state is fixed by input"): For functional specs, the only thing that matters is which input you reach. 
-There are two spec questions: is a current output exposable (Lamport's Surveillance), and is there a maximal input (Eventual Consistency).
+  2.4 (Corollary "state is fixed by input"): For functional specs, the only thing that matters is which input you reach.
+  There are two spec questions: is a current output legal (Lamport's Surveillance), and is there a maximal input (Eventual Consistency).
 
 3. Ambiguity isn't the problem; irreconcilable ambiguity is (traceroute vs. serial orders).
-- Only two kinds of commitment: seal an input, or choose among outputs.
+- One commitment, with two effects at a fiber: exclude the input by removing every row, or exclude particular outputs while leaving the input legal.
 - Consistency As Lifted Monotonicity.
 
 §4 Distributed Execution
 
     4.1: distribution adds nothing to the criterion.
     4.1: convergence comes free from any consistent functional specification; a CRDT merge is not required.
-    4.2: Locks, timestamps, Paxos: different accents, same two words (seal and choose).
-    4.3: 
+    4.2: Locks, timestamps, Paxos: different accents for applying commitments.
+    4.3:
     - commitment, coordination and distributed coordination are three different things.
-    Commitment changes what's possible. A commitment needs coordination when another run could contradict it, and distributed coordination when that run is at another participant. Waiting is irrelevant; "impatience" -- i.e. sealing input --- is a commitment.
+    Commitment changes what's possible. A commitment needs coordination when another run could contradict it, and distributed coordination when that run is at another participant. Waiting is irrelevant; "impatience" -- i.e. commitment --- is a commitment.
     - Waiting is free. Promising is cheap. Promising for someone else is expensive.
     - 2PC's unanimity vote detects agreement rather than creating it: the coordinator is a referee, not a matchmaker. Only its timeout abort is a commitment, and that one stays at the coordinator.
     4.4: a partition doesn't change which commitments you need; it removes the ability to make them jointly. (A partition doesn't change your promises; it takes away your phone.)
@@ -39,7 +48,7 @@ There are two spec questions: is a current output exposable (Lamport's Surveilla
     Coordination is non-monotone, yet coordinated systems are consistent.
     Coordinate once, upstream. The log's commitments are all that state-machine replication needs.
     A stage may need a commitment even when the whole pipeline doesn't.
-    Moving the deadline into the input doesn't remove the promise; it moves who makes it (timer/punctuation upstream seals; the tally downstream only retires).
+    Moving the deadline into the input doesn't remove the promise; it moves who makes it (timer/punctuation upstream applies a commitment; the tally downstream only subsumes outputs).
 
 §6 Related Work
 

@@ -18,8 +18,8 @@ the pairs $(i,o)$ such that it emits $o$ at current input $i$.
 \begin{definition}[Response obligation, answering]
 \label{def:response-obligation}
 A \emph{response obligation} assigns to each participant $p$ a relation
-$Q_p\subseteq S$ that is total on $I$ and upward closed within fibers: if
-$(i,o)\in Q_p$, $(i,u)\in S$, and $o\OutputOrd u$, then $(i,u)\in Q_p$.  An
+$Q_p\subseteq P$ that is total on $I$ and upward closed within fibers: if
+$(i,o)\in Q_p$, $(i,u)\in P$, and $o\OutputOrd u$, then $(i,u)\in Q_p$.  An
 output in $Q_p(i)$ \emph{answers} at $i$ for $p$.
 \end{definition}
 
@@ -52,8 +52,8 @@ input $i$, satisfies two conditions.
 \end{enumerate}
 \end{definition}
 
-Input acceptance says that $p$ never seals an \indesc of its current input.
-It excludes specifications whose answers require such a seal, such as the
+Input acceptance says that $p$ never applies a \commitment to an \indesc of its current input.
+It excludes specifications whose answers require such a \commitment, such as the
 election under the equality order (Figure~\ref{fig:nonmonotone-frame}), and it
 matches Gilbert and Lynch's
 requirement that nodes accept every request.
@@ -72,7 +72,7 @@ Partition Consistency in place of Partition Consistency.  Confluence at $j$
 implies a common \outnoun at $j$ (Corollary~\ref{cor:reconciliation-any-basis}),
 and for a canonical system (Definition~\ref{def:canonical-system}) the two
 coincide by Lemma~\ref{lem:reconciliation}, applied to the participant runs
-(Section~\ref{sec:distributed-consistency}).  With other commitments the
+(\S\ref{sec:distributed-consistency}).  With other \commitments the
 converse can fail: participants may prune their states so that they cannot
 be reconciled while their emitted outputs still have a common \outnoun.
 
@@ -112,7 +112,7 @@ $(i,o)\in T$ and $i\InputOrd j$, then some $u\in T(j)$ \outrel $o$.
 \end{definition}
 
 Lifted Monotonicity for $T$ is that of Definition~\ref{def:lm-for-A}, and
-the reconciling output may lie outside $T$.  With $T=S$ it is the
+the reconciling output may lie outside $T$.  With $T=P$ it is the
 common-\indesc condition of Proposition~\ref{prop:common-expansion-form}, and
 by Lemma~\ref{lem:reconciliation} it is confluence of the canonical runs whose
 emitted rows lie in $T$.
@@ -122,8 +122,8 @@ serve.  Consider the system of the proof of Theorem~\ref{thm:complete-cap} for
 $E=T$, which emits by the canonical output event any output of $T$ in the
 current fiber.  Its emitted outputs form a chain
 $o_1\OutputOrd\cdots\OutputOrd o_m$, so by Lemma~\ref{lem:run-residual} its
-table is $S[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_m]$, or
-$S[\mathrm{in}\InputGe i]$ before any emission.  Self-continuation applied to
+table is $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_m]$, or
+$P[\mathrm{in}\InputGe i]$ before any emission.  Self-continuation applied to
 the row of $o_m$, or totality of $T$, gives some $u\in T(i)$ in that table.
 So every participant's fiber intersects $T$, and Availability for $T$ gives
 Answering.  The same argument at an input $k\InputGe i$ leaves a row at $k$,
@@ -168,14 +168,14 @@ with initial input $i$ alone in its block, gives a row of $T$ at $i$.
 witness, record $\mathsf{input}(j)$ by Input acceptance (truncating just after
 it), and answer by Answering with some $u\in Q(j)$.  By
 Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual} the table
-before that emission is contained in $S[\mathrm{in}\InputGe j,\
+before that emission is contained in $P[\mathrm{in}\InputGe j,\
 \mathrm{out}\OutputGe o]$, so $o\OutputOrd u$ and $(j,u)\in T$.
 \emph{Lifted Monotonicity for $T$:} given rows $(i_r,o_r)$ of $T$ with common \indesc
 $j$, replay each witness on its own participant, truncated after the
 emission, and add a participant with initial input $j$.  By
 Lemma~\ref{lem:locality} this is a partitioned history of the system, and
 Response Partition Consistency of that history gives $u\in\fiber{j}$
-\outrelpart every $o_r$.  If there are no rows, totality of $S$ gives some
+\outrelpart every $o_r$.  If there are no rows, totality of $P$ gives some
 $u\in\fiber{j}$.
 \end{proof}
 
@@ -190,7 +190,7 @@ draw on each $T_p$ at most once.
 
 \subsection{Choosing versus requiring every output}
 
-Theorem~\ref{thm:complete-cap} with $E=S$ requires every permitted output to
+Theorem~\ref{thm:complete-cap} with $E=P$ requires every permitted output to
 stay available; Theorem~\ref{thm:complete-cap-response} lets the system choose
 which outputs to serve.  Lifted Monotonicity implies the conditions of that
 theorem for every uniform obligation, with $T=Q$.  If $(i,o)\in Q$ and $i\InputOrd j$, Relational Monotonicity gives
@@ -200,12 +200,12 @@ closure puts $w$ in $Q(j)$; the common-\indesc condition gives Lifted Monotonici
 
 The converse fails.  Let $I=\{0,1\}$ with $0\InputOrd 1$, $\bot\OutputOrd a$ and
 $\bot\OutputOrd b$ with $a,b$ incomparable, $\fiber{0}=\{\bot,a\}$,
-$\fiber{1}=\{b\}$, and $Q=S$.  Lifted Monotonicity fails at $(0,a)$, but $\Spec$
+$\fiber{1}=\{b\}$, and $Q=P$.  Lifted Monotonicity fails at $(0,a)$, but $\Spec$
 satisfies Lifted Monotonicity for the response interface $\{(0,\bot),(1,b)\}$: a system that
 answers $\bot$ at $0$ never emits the output that conflicts with $b$.
 
 For a functional specification the two coincide: a total $T\subseteq Q\subseteq
-S$ equals $S$, and both self-continuation and Lifted Monotonicity for $S$ are
+P$ equals $P$, and both self-continuation and Lifted Monotonicity for $P$ are
 monotonicity.
 
 A total $T\subseteq Q$ that satisfies Lifted Monotonicity as a specification
@@ -214,7 +214,7 @@ condition is
 weaker.  Let $I=\{i_1,i_2,j,k_1,k_2\}$ with $i_1,i_2\InputOrd j\InputOrd
 k_1,k_2$ and no other relations, so $k_1$ and $k_2$ have no common \indesc.
 Let $\fiber{i_1}=\{a\}$, $\fiber{i_2}=\{b\}$, $\fiber{j}=\{c_1,c_2,d_1,d_2\}$,
-$\fiber{k_1}=\{e_1\}$, $\fiber{k_2}=\{e_2\}$, and $Q=S$, where $\OutputOrd$ is
+$\fiber{k_1}=\{e_1\}$, $\fiber{k_2}=\{e_2\}$, and $Q=P$, where $\OutputOrd$ is
 the least order with $a\OutputOrd c_1$, $b\OutputOrd c_2$, $c_1,c_2\OutputOrd
 d_1,d_2$, $c_1,c_2,d_1\OutputOrd e_1$, and $c_1,c_2,d_2\OutputOrd e_2$.  Then
 $T=\{(i_1,a),(i_2,b),(j,c_1),(j,c_2),(k_1,e_1),(k_2,e_2)\}$ is a response
@@ -222,7 +222,7 @@ interface for which $\Spec$ satisfies Lifted Monotonicity: $d_1$ reconciles fami
 $e_1$ or $e_2$ those at $k_1$ or $k_2$.  A sub-specification with Lifted
 Monotonicity must contain $(i_1,a)$ and $(i_2,b)$, hence $d_1$ or $d_2$ at $j$,
 which has no \outnoun at $k_2$ or $k_1$ respectively.  Reconciling outputs
-need not lie in $T$: a participant that emits $d_1$ or $d_2$ seals $k_2$ or
+need not lie in $T$: a participant that emits $d_1$ or $d_2$ applies a \commitment to $k_2$ or
 $k_1$.
 
 \subsection{Gilbert--Lynch with real-time precedence}
@@ -264,7 +264,7 @@ and acknowledge every write invoked at $p$.  Every finite history has a
 linearization, so $Q_p$ is total, and it is upward closed within fibers.
 Real-time precedence belongs to the input: the environment invokes $b$ after
 seeing $a$'s response, so the edge from $a$ to $b$ is information it supplies
-(Section~\ref{sec:election-story}).
+(\S\ref{sec:election-story}).
 
 Real time is the order of history events in an execution: an \emph{interleaving}
 $\lambda$ of a distributed history is a linear order of its history events consistent

@@ -15,17 +15,17 @@ guarded composition and Proper Coordination are in
 * `par_liftedMono`                 — Lemma lem:parameterized-composition
 * `parameterized_graph`, `parameterized_functional_composition`
                                    — Eq. curried-composition (graph instance)
-* `restricted_middle_counterexample` — why `S₂` must be total on all of `M`
+* `restricted_middle_counterexample` — why `P₂` must be total on all of `M`
 
 Modeling choices.
 
 * `Spec I O` is total on its whole input type (the paper's convention of
   restricting every specification to inputs with a nonempty fiber).  Because
-  `S₁` is total on `I` and `S₂` is total on `M`, the composed table is total on
+  `P₁` is total on `I` and `P₂` is total on `M`, the composed table is total on
   `I`, so the paper's "restrict the composed input domain to inputs with a
   nonempty fiber" is vacuous; `seq` and `par` are genuine `Spec`s.  The
   counterexample `restricted_middle_counterexample` shows this totality of
-  `S₂` on *all* of `M` (not just on the outputs `S₁` happens to produce) is
+  `P₂` on *all* of `M` (not just on the outputs `P₁` happens to produce) is
   necessary for Lemma lem:composition.
 * Products carry the componentwise order (`instPOProd`).  The composed input
   `I × J × A` of independently parameterized composition is `I × (J × A)`.
@@ -49,7 +49,7 @@ theorem prod_le_iff {α β : Type} [PO α] [PO β] {p q : α × β} :
     p ≼ q ↔ p.1 ≼ q.1 ∧ p.2 ≼ q.2 := Iff.rfl
 
 /-- Specifications are determined by their tables. -/
-theorem Spec.ext' {I O : Type} [PO I] [PO O] {a b : Spec I O} (h : a.S = b.S) : a = b := by
+theorem Spec.ext' {I O : Type} [PO I] [PO O] {a b : Spec I O} (h : a.P = b.P) : a = b := by
   cases a; cases b; cases h; rfl
 
 /-- Choosing a witness for each element of a finite list (no choice axiom
@@ -76,7 +76,7 @@ theorem choose_list {α β : Type} (P : α → β → Prop) :
 section Seq
 variable {I M O : Type} [PO I] [PO M] [PO O]
 
-/-- `S₂ ∘ S₁ = π_{I,O}(S₁ ⋈_M S₂)` (Eq. spec-composition). -/
+/-- `P₂ ∘ P₁ = π_{I,O}(P₁ ⋈_M P₂)` (Eq. spec-composition). -/
 def tcomp (S1 : Table I M) (S2 : Table M O) : Table I O :=
   fun i o => ∃ m, S1 i m ∧ S2 m o
 
@@ -92,9 +92,9 @@ theorem tcomp_assoc {P : Type} (S1 : Table I M) (S2 : Table M O) (S3 : Table O P
   · rintro ⟨m, h1, o, h2, h3⟩; exact ⟨o, ⟨m, h1, h2⟩, h3⟩
 
 /-- The sequential composition as an ordered specification; it is total
-because `S₁` is total on `I` and `S₂` is total on `M`. -/
+because `P₁` is total on `I` and `P₂` is total on `M`. -/
 def seq (sp1 : Spec I M) (sp2 : Spec M O) : Spec I O where
-  S := tcomp sp1.S sp2.S
+  P := tcomp sp1.P sp2.P
   total i := by
     obtain ⟨m, hm⟩ := sp1.total i
     obtain ⟨o, ho⟩ := sp2.total m
@@ -105,9 +105,9 @@ theorem seq_liftedMono {sp1 : Spec I M} {sp2 : Spec M O}
     (h1 : sp1.LiftedMono) (h2 : sp2.LiftedMono) : (seq sp1 sp2).LiftedMono := by
   rw [liftedMono_iff_commonExpansion] at *
   intro rows hrows j hj
-  obtain ⟨L, hL1, hL2⟩ := choose_list (fun (r : I × O) m => sp1.S r.1 m ∧ sp2.S m r.2)
+  obtain ⟨L, hL1, hL2⟩ := choose_list (fun (r : I × O) m => sp1.P r.1 m ∧ sp2.P m r.2)
     rows hrows
-  -- upstream: the witnesses `m_r` have a common expansion `m ∈ S₁(j)`
+  -- upstream: the witnesses `m_r` have a common expansion `m ∈ P₁(j)`
   obtain ⟨m, hm, hmall⟩ := h1 (L.map fun p => (p.1.1, p.2))
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr; exact (hL2 p hp).2.1) j
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr; exact hj _ (hL2 p hp).1)
@@ -127,7 +127,7 @@ def Monotone {α β : Type} [PO α] [PO β] (f : α → β) : Prop := ∀ x y, x
 
 /-- The graph table `{(x, f x)}` as a specification. -/
 def graph {α β : Type} [PO α] [PO β] (f : α → β) : Spec α β where
-  S x y := y = f x
+  P x y := y = f x
   total x := ⟨f x, rfl⟩
 
 theorem graph_liftedMono_iff {α β : Type} [PO α] [PO β] (f : α → β) :
@@ -171,7 +171,7 @@ def ptable (F : Table (I × A) B) (G : Table (J × B) C) : Table (I × (J × A))
   fun x c => ∃ b, F (x.1, x.2.2) b ∧ G (x.2.1, b) c
 
 def par (F : Spec (I × A) B) (G : Spec (J × B) C) : Spec (I × (J × A)) C where
-  S := ptable F.S G.S
+  P := ptable F.P G.P
   total x := by
     obtain ⟨b, hb⟩ := F.total (x.1, x.2.2)
     obtain ⟨c, hc⟩ := G.total (x.2.1, b)
@@ -206,7 +206,7 @@ theorem par_liftedMono {F : Spec (I × A) B} {G : Spec (J × B) C}
   rw [liftedMono_iff_commonExpansion] at *
   intro rows hrows x hx
   obtain ⟨L, hL1, hL2⟩ := choose_list
-    (fun (r : (I × (J × A)) × C) b => F.S (r.1.1, r.1.2.2) b ∧ G.S (r.1.2.1, b) r.2)
+    (fun (r : (I × (J × A)) × C) b => F.P (r.1.1, r.1.2.2) b ∧ G.P (r.1.2.1, b) r.2)
     rows hrows
   obtain ⟨b, hb, hball⟩ := hF (L.map fun p => ((p.1.1.1, p.1.1.2.2), p.2))
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr; exact (hL2 p hp).2.1)
@@ -277,10 +277,10 @@ theorem two_ne : ¬ (Two.x ≼ Two.y) := fun h => Two.noConfusion h
 
 /-! #### The middle domain must be all of `M`
 
-If `S₂` is only total on a proper subset of `M` (its "domain" in the
+If `P₂` is only total on a proper subset of `M` (its "domain" in the
 restricted-fiber convention) then Lemma lem:composition fails, even though
 the composed table is total on `I`.  So the lemma genuinely uses that the
-input domain of `S₂` is all of `(M, ≼_M)`, not merely the outputs of `S₁`. -/
+input domain of `P₂` is all of `(M, ≼_M)`, not merely the outputs of `P₁`. -/
 
 /-- `a, b` incomparable, both below `t`. -/
 inductive M3 where
@@ -315,14 +315,14 @@ instance {α β : Type} [PO α] (T : Table α β) : PO (Dom T) where
 def restrict {α β : Type} [PO α] [PO β] (T : Table α β) : Spec (Dom T) β :=
   ⟨fun x y => T x.1 y, fun x => x.2⟩
 
-/-- `S₁(a) = S₁(b) = {a}`, `S₁(t) = {b, t}`. -/
+/-- `P₁(a) = P₁(b) = {a}`, `P₁(t) = {b, t}`. -/
 def s1Tab : M3 → M3 → Prop
   | .t, m => m = .b ∨ m = .t
   | _, m => m = .a
 
 def s1 : Spec M3 M3 := ⟨s1Tab, fun i => by cases i <;> first | exact ⟨_, Or.inr rfl⟩ | exact ⟨_, rfl⟩⟩
 
-/-- `S₂(a) = {x}`, `S₂(b) = {y}`, no row at `t`: domain `{a, b}`. -/
+/-- `P₂(a) = {x}`, `P₂(b) = {y}`, no row at `t`: domain `{a, b}`. -/
 def t2 : M3 → Two → Prop
   | .a, o => o = .x
   | .b, o => o = .y
@@ -363,13 +363,13 @@ theorem restrict_t2_liftedMono : (restrict t2).LiftedMono := by
   rw [hi] at h
   exact t2_fun h hu
 
-/-- **Counterexample.** `S₁` satisfies Lifted Monotonicity, `S₂` satisfies it
-on its own input domain `{a, b} ⊊ M`, the composed table `S₂ ∘ S₁` has a row
+/-- **Counterexample.** `P₁` satisfies Lifted Monotonicity, `P₂` satisfies it
+on its own input domain `{a, b} ⊊ M`, the composed table `P₂ ∘ P₁` has a row
 at every input, but the composition violates Lifted Monotonicity. -/
 theorem restricted_middle_counterexample :
-    s1.LiftedMono ∧ (restrict t2).LiftedMono ∧ (∀ i, ∃ o, tcomp s1.S t2 i o) ∧
-      ¬ (restrict (tcomp s1.S t2)).LiftedMono := by
-  have htot : ∀ i, ∃ o, tcomp s1.S t2 i o := by
+    s1.LiftedMono ∧ (restrict t2).LiftedMono ∧ (∀ i, ∃ o, tcomp s1.P t2 i o) ∧
+      ¬ (restrict (tcomp s1.P t2)).LiftedMono := by
+  have htot : ∀ i, ∃ o, tcomp s1.P t2 i o := by
     intro i
     cases i
     · exact ⟨.x, .a, rfl, rfl⟩

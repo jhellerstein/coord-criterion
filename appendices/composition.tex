@@ -10,11 +10,11 @@ the replicated store with bare reads.
 \begin{proof}[Proof of Lemma~\ref{lem:composition}]
 We verify the common-\indesc condition
 (Proposition~\ref{prop:common-expansion-form}).  Let rows $(i_r,o_r)$ of
-$S_2\circ S_1$, finitely many, have common \indesc $j$, and choose $m_r$ with
-$(i_r,m_r)\in S_1$ and $(m_r,o_r)\in S_2$.  The condition for $\Spec_1$ gives
-$m\in S_1(j)$ \outrelpart every $m_r$.  Then $m$ is a common \indesc of the
+$P_2\circ P_1$, finitely many, have common \indesc $j$, and choose $m_r$ with
+$(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The condition for $\Spec_1$ gives
+$m\in P_1(j)$ \outrelpart every $m_r$.  Then $m$ is a common \indesc of the
 inputs of the rows $(m_r,o_r)$, and the condition for $\Spec_2$ gives
-$u\in S_2(m)$ \outrelpart every $o_r$.  So $(j,u)\in S_2\circ S_1$ is the
+$u\in P_2(m)$ \outrelpart every $o_r$.  So $(j,u)\in P_2\circ P_1$ is the
 required common \outnoun.
 \end{proof}
 
@@ -37,7 +37,7 @@ table of $g\circ f$; apply Lemma~\ref{lem:composition}.
 
 Sequential composition cannot express a downstream component with input of
 its own, such as a replica that serves bare reads
-(Section~\ref{sec:composition}), so we give each component a separate
+(\S\ref{sec:composition}), so we give each component a separate
 input.  Let
 \begin{align*}
   \Spec_F&=\bigl(I\times A,\preceq_I\times\preceq_A,B,\preceq_B,F\bigr),\\
@@ -115,31 +115,31 @@ which is the plan of Proposition~\ref{prop:curried-query-plan} on tables of func
 \subsection{Jointly monotone composites}
 
 If every stage satisfies Lifted Monotonicity and $\Spec_1$ runs under the
-empty basis, the pipeline emits only what $S_2\circ S_1$ emits under the empty
+empty basis, the pipeline emits only what $P_2\circ P_1$ emits under the empty
 basis.  Its runs are runs of a Lifted-Monotone
-specification, at whose states every output is exposable
+specification, at whose states every output is legal
 (Proposition~\ref{prop:exposure-boundary}).  So the next stage again has an
-empty-basis guard, and by induction no stage of the pipeline issues a commitment.
+empty-basis guard, and by induction no stage of the pipeline issues a \commitment.
 
 \begin{proof}[Proof of Proposition~\ref{prop:joint-monotone}]
 (1) is Lemma~\ref{lem:composition}, and also the case $D=M$ of (2).
 
-(2) Let $D$ contain the outputs of $\Spec_1$.  Take rows $(i_r,o_r)$ of $S_2\circ
-S_1$ with a common \indesc $j$, and intermediate values $m_r$ with
-$(i_r,m_r)\in S_1$ and $(m_r,o_r)\in S_2$.  The common-\indesc condition for
-$\Spec_1$ gives $m\in S_1(j)$ that \outrel every $m_r$.  All of $m_r$ and $m$
-lie in $D$, so the condition for $\Spec_2$ on $D$ gives $o\in S_2(m)$ that
-\outrel every $o_r$, and $(j,o)\in S_2\circ S_1$.  No closure property of $D$
+(2) Let $D$ contain the outputs of $\Spec_1$.  Take rows $(i_r,o_r)$ of $P_2\circ
+P_1$ with a common \indesc $j$, and intermediate values $m_r$ with
+$(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The common-\indesc condition for
+$\Spec_1$ gives $m\in P_1(j)$ that \outrel every $m_r$.  All of $m_r$ and $m$
+lie in $D$, so the condition for $\Spec_2$ on $D$ gives $o\in P_2(m)$ that
+\outrel every $o_r$, and $(j,o)\in P_2\circ P_1$.  No closure property of $D$
 is used.
 
-(3) The table $S_2\circ S_1$ of Equation~\ref{eq:spec-composition} mentions
+(3) The table $P_2\circ P_1$ of Equation~\ref{eq:spec-composition} mentions
 no order on $M$, and Lifted Monotonicity of the composite uses only the orders
 on $I$ and $O$.  So the composite under $\preceq_M$ is the composite under the
 other order, which satisfies Lifted Monotonicity by (1).  The same holds after
 re-encoding the intermediate values.  A re-encoding is a map $e:M\to M'$
 together with a decoding $e':M'\to M$ that recovers every value,
-$e'(e(m))=m$.  Replace $S_1$ by $\{(i,e(m)):(i,m)\in S_1\}$ and $S_2$ by
-$\{(m',o):(e'(m'),o)\in S_2\}$.  A join through $e(m)$ is a join through
+$e'(e(m))=m$.  Replace $P_1$ by $\{(i,e(m)):(i,m)\in P_1\}$ and $P_2$ by
+$\{(m',o):(e'(m'),o)\in P_2\}$.  A join through $e(m)$ is a join through
 $e'(e(m))=m$, so the composite table is unchanged, whatever the orders on $M$
 and $M'$.
 \end{proof}
@@ -154,19 +154,20 @@ distinct values.  Then case (3) applies.  In general it need not.  Let $I$ be
 the chain $x\InputOrd y\InputOrd z$, $M=\{p,q\}$, $f(x)=f(z)=p$, $f(y)=q$, and
 $g$ constant.  The composite is constant, hence monotone.  Under any order on
 $M$, monotonicity of $f$ gives $p\preceq_M q\preceq_M p$, so $p=q$, a
-contradiction.  By the exposure test for tables of functions, $f(i)$ is
-exposable at $\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every
+contradiction.  By the legal-output test for tables of functions, $f(i)$ is
+a legal output at $\sigma(i)$ exactly when $f(i)\preceq_M f(k)$ for every
 $k\InputGe i$, so the upstream under the empty basis cannot emit at one of the
 canonical states of $x$ and $y$.  The stages can be repaired only by merging
 $p$ and $q$ into one intermediate value.
 
 For the capped counter of Section~\ref{sec:composite-calm}, let $\mathcal S_1$
-be the table of the function $c(n)=\min(n,9)$ on $(\mathbb N,\le)$ and
-$\mathcal S_2$ the table of the test $t(n)=[n<10]$, whose two outputs are
+be the functional specification induced by $c(n)=\min(n,9)$ on
+$(\mathbb N,\le)$, and $\mathcal S_2$ that induced by the test $t(n)=[n<10]$,
+whose two outputs are
 incomparable.  $\mathcal S_2$
 violates Lifted Monotonicity, since $[9<10]$ and $[10<10]$ differ, but it
 satisfies it on $\{n\le 9\}$, so the composite is Lifted-Monotone by case (2).  At
-$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must seal the row
+$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must remove the row by \commitment
 $(10,\mathit{false})$, so $\mathcal S_2$ cannot emit under the empty basis.
 The outputs of $\mathcal S_1$ lie in $\{n\le 9\}$, so the pipeline is proper
 (Theorem~\ref{thm:proper-coordination}(1)).  Under the empty basis,
@@ -174,37 +175,38 @@ $\mathcal S_2|_{\mathcal S_1}$ answers every count that $\mathcal S_1$ emits.
 
 For the boolean toggle, let $I$, $M$, and $O$ be the booleans with
 $\mathit{false}$ below $\mathit{true}$, and let both stages be negation.  The
-table of a function $f$ has $f(i)$ exposable at $\sigma(i)$ exactly when
+table of a function $f$ has $f(i)$ a legal output at $\sigma(i)$ exactly when
 $f(i)\preceq_M f(k)$ for all $k\InputGe i$.  At $i=\mathit{false}$ the first
 stage would emit $\mathit{true}$, which is not below its output
 $\mathit{false}$ at the larger input, so under the empty basis it cannot emit
 there.  Under the reversed order on $M$, negation is monotone in both stages,
 and by case (3) the composite is the identity in either order.
 
-Let $\mathcal S_1$ have one input $*$ and table $\{(*,x),(*,y)\}$ with $x,y$
-incomparable, and let $\mathcal S_2$ be the table of a function $f$ that maps
+Let $\mathcal S_1$ have one input $*$ and possibility relation
+$\{(*,x),(*,y)\}$ with $x,y$ incomparable, and let $\mathcal S_2$ be the
+functional specification induced by a function $f$ that maps
 both to one value.  The composite has one row, so it satisfies Lifted
 Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
-exposable, and under the empty basis an output event is legal only for an
-exposable output (Lemma~\ref{lem:canonical-commitment-normal-form}), and no
-commitment event is possible, since its sequence is nonempty.  Input
+a legal output, and under the empty basis an output event is legal only for a
+legal output (Lemma~\ref{lem:canonical-commitment-normal-form}), and no
+\commitment event is possible, since its sequence is nonempty.  Input
 events only remove rows at other inputs, and there are none, so every run of
 $\mathcal S_1$ under the empty basis stays at the canonical state and emits
 nothing.  Then $\mathcal S_2$ receives nothing.  Renaming $x,y$ to
 $\mathit{lo}\preceq\mathit{hi}$ makes $\mathcal S_1$ Lifted-Monotone, since
-$\mathit{hi}$ retires $\mathit{lo}$, and by case (3) the composite is
+$\mathit{hi}$ subsumes $\mathit{lo}$, and by case (3) the composite is
 unchanged.
 
 \subsection{Proper Coordination}
 
 Throughout, $\Spec_1$ guards $\Spec_2$, and $\mathcal B$ is the basis of the
 system for $\Spec_1$.  The inputs of $\Spec_2|_{\Spec_1}$ are the outputs of
-$\Spec_1$, ordered by $\preceq_M$, and its rows are the rows of $S_2$ at those
+$\Spec_1$, ordered by $\preceq_M$, and its rows are the rows of $P_2$ at those
 inputs.  For tables $R$ of $\Spec_1$ and $T$ of $\Spec_2$ we write $R\Join
 T=\{(k,x):\exists m.\ (k,m)\in R\land(m,x)\in T\}$.  The \emph{image} of a
-state $\sigma=(i,R)$ of $\Spec_1$ is the state $(i,R\Join S_2)$ of
-$S_2\circ S_1$.  The image of $\sigma_{\Spec_1}(i)$ is
-$\sigma_{S_2\circ S_1}(i)$, since $S_1[\mathrm{in}\InputGe i]\Join S_2$ is the
+state $\sigma=(i,R)$ of $\Spec_1$ is the state $(i,R\Join P_2)$ of
+$P_2\circ P_1$.  The image of $\sigma_{\Spec_1}(i)$ is
+$\sigma_{P_2\circ P_1}(i)$, since $P_1[\mathrm{in}\InputGe i]\Join P_2$ is the
 composite table restricted to the \indescs of $i$.
 
 A run of the pipeline is a run of $\Spec_1$ under $\mathcal B$, together with
@@ -215,26 +217,26 @@ number of outputs, possibly none.  The environment observes $\mathsf{input}(j)$
 and the outputs of $\Spec_2|_{\Spec_1}$.
 
 In a proper pipeline, two facts about a state $\tau$ that
-$\Spec_2|_{\Spec_1}$ reaches without commitment carry the proofs.  First,
+$\Spec_2|_{\Spec_1}$ reaches without \commitment carry the proofs.  First,
 every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$: the
-common-\indesc condition gives $u\in S_2(j)$ that \outrel an output $v$ at the
+common-\indesc condition gives $u\in P_2(j)$ that \outrel an output $v$ at the
 current input, and $(j,u)$ survives, since every output emitted so far is
-\outrelpast by $v$.  Second, every output at the current input is exposable.
+\outrelpast by $v$.  Second, every output at the current input is a legal output.
 A third fact concerns $\Spec_1$.  If an output $m$ at the current input of a
-state $\sigma$ of $\Spec_1$ is exposable, every $o\in S_2(m)$ is exposable at
-the image of $\sigma$.  Indeed,
+state $\sigma$ of $\Spec_1$ is a legal output, every $o\in P_2(m)$ is a legal
+output at the image of $\sigma$.  Indeed,
 let $(k,x)$ be a row of the image not \outrelpast by $o$, coming from
-$(k,m')\in R_\sigma$ and $(m',x)\in S_2$.  If $m\preceq_M m'$, the
+$(k,m')\in R_\sigma$ and $(m',x)\in P_2$.  If $m\preceq_M m'$, the
 common-\indesc condition on the outputs of $\Spec_1$, for the rows $(m,o)$ and
-$(m',x)$ at $m'$, gives $u\in S_2(m')$ with $o,x\OutputOrd u$.  Otherwise
-exposability gives $(k,w)\in R_\sigma$ with $m,m'\preceq_M w$, and the
-condition at $w$ gives $u\in S_2(w)$.  Either way $(k,u)$ is a row of the
-image that retires $(k,x)$.
+$(m',x)$ at $m'$, gives $u\in P_2(m')$ with $o,x\OutputOrd u$.  Otherwise
+legality gives $(k,w)\in R_\sigma$ with $m,m'\preceq_M w$, and the
+condition at $w$ gives $u\in P_2(w)$.  Either way $(k,u)$ is a row of the
+image that subsumes $(k,x)$.
 
 \begin{proof}[Proof of Theorem~\ref{thm:proper-coordination}]
 (1) By Theorem~\ref{thm:complete-calm} and
 Proposition~\ref{prop:exposure-boundary}, $\Spec_2|_{\Spec_1}$ needs no
-commitment exactly when it satisfies Lifted Monotonicity.  Its rows have
+\commitment exactly when it satisfies Lifted Monotonicity.  Its rows have
 inputs among the outputs of $\Spec_1$, and so do its \indescs.  So this is
 Lifted Monotonicity of $\Spec_2$ on the outputs of $\Spec_1$.
 
@@ -242,18 +244,18 @@ Lifted Monotonicity of $\Spec_2$ on the outputs of $\Spec_1$.
 (Lemma~\ref{lem:canonical-commitment-normal-form}), so the outputs
 $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$ form a chain.
 $\Spec_2|_{\Spec_1}$ starts at $\sigma(m_1)$, which it reaches without
-commitment.  By the first two facts it can receive each $m_{r+1}$ and answer
-it by an exposable output, so it follows the run under the empty basis.
+\commitment.  By the first two facts it can receive each $m_{r+1}$ and answer
+it by a legal output, so it follows the run under the empty basis.
 
 Consider any run of the pipeline in which $\Spec_2|_{\Spec_1}$ runs under the
 empty basis, and replace each output $m_r$ of $\Spec_1$ by the answers to it.
 Let $\sigma$ be the state of $\Spec_1$, $T$ the table of
 $\Spec_2|_{\Spec_1}$, and $\rho$ the composite's state.  Before the first
 output of $\Spec_1$ we keep $\rho.\mathrm{cur}=\sigma.\mathrm{cur}$ and
-$R_\sigma\Join S_2\subseteq R_\rho$.  Afterwards we keep $R_\sigma\Join
+$R_\sigma\Join P_2\subseteq R_\rho$.  Afterwards we keep $R_\sigma\Join
 T\subseteq R_\rho$, and every row $(k,m)$ of $R_\sigma$ has $m$ above the
 current input of $\Spec_2|_{\Spec_1}$.  Both hold at the start, where the
-image of $\sigma_{\Spec_1}(i)$ is $\sigma_{S_2\circ S_1}(i)$.  For
+image of $\sigma_{\Spec_1}(i)$ is $\sigma_{P_2\circ P_1}(i)$.  For
 $\mathsf{input}(j)$ of $\Spec_1$, a row $(j,m)$ of $R_\sigma$ and, by the first
 fact, a row $(m,x)$ of $T$ give $(j,x)\in R_\rho$, so the input is legal, and
 both events keep the rows at \indescs of $j$.  For a legal $\Out{\gamma}{m}$
@@ -270,26 +272,26 @@ $\tau_1,\ldots,\tau_n$, and the composite runs at $\rho_1,\ldots,\rho_n$, and
 let each $\sigma_r$ continue under some basis to a common state with a row
 $(j,m)$.  Events never add rows, so $(j,m)\in R_{\sigma_r}$, and $m$ is above
 the current input of each $\tau_r$.  Let $v_r$ be an output at the current
-input of $\tau_r$.  The common-\indesc condition gives $u\in S_2(m)$ that
+input of $\tau_r$.  The common-\indesc condition gives $u\in P_2(m)$ that
 \outrel every $v_r$, and $(m,u)$ survives in every $\tau_r$.  So $(j,u)\in
 R_{\rho_r}$ for every $r$, and the composite runs are confluent at $j$
 (Proposition~\ref{prop:confluence}).
 
 (3) The proof of Proposition~\ref{prop:exposure-boundary} derives the
-common-\indesc condition from exposability at canonical states alone.  If
-Lifted Monotonicity fails for $S_2\circ S_1$, some $o$ with $(i,m)\in S_1$ and
-$o\in S_2(m)$ is therefore not exposable at $\sigma_{S_2\circ S_1}(i)$, the
-image of $\sigma_{\Spec_1}(i)$.  By the third fact, no $m'\in S_1(i)$ with
-$o\in S_2(m')$ is exposable at $\sigma_{\Spec_1}(i)$.
+common-\indesc condition from legality at canonical states alone.  If
+Lifted Monotonicity fails for $P_2\circ P_1$, some $o$ with $(i,m)\in P_1$ and
+$o\in P_2(m)$ is therefore not a legal output at $\sigma_{P_2\circ P_1}(i)$, the
+image of $\sigma_{\Spec_1}(i)$.  By the third fact, no $m'\in P_1(i)$ with
+$o\in P_2(m')$ is a legal output at $\sigma_{\Spec_1}(i)$.
 \end{proof}
 
 Properness is needed in (3).  With $\Spec_1$ the identity on the booleans and
 $\Spec_2$ negation, the composite is negation, which violates Lifted
-Monotonicity, yet $\Spec_1$ needs no commitment.
+Monotonicity, yet $\Spec_1$ needs no \commitment.
 
-The \emph{commitment-erased replacement} of a system has the empty basis and
+The \emph{\commitment-erased replacement} of a system has the empty basis and
 the same strategy, with each $\Out{\delta}{x}$ replaced by
-$\Out{\varepsilon}{x}$ and its commitment events dropped.
+$\Out{\varepsilon}{x}$ and its \commitment events dropped.
 
 \begin{corollary}[Empty store]
 \label{cor:empty-store}
@@ -301,11 +303,11 @@ replacement's table contains the original's.
 
 \begin{proof}
 Let $\tau$ be a state of the original and $\tau'$ a state of the replacement
-reached without commitment, with the same current input and $R_\tau\subseteq
+reached without \commitment, with the same current input and $R_\tau\subseteq
 R_{\tau'}$.  If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
 $j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
 the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is legal at $\tau$, then $x$
-is at the current input of $\tau$ and so of $\tau'$, where it is exposable by
+is at the current input of $\tau$ and so of $\tau'$, where it is a legal output by
 the second fact.  Containment (Lemma~\ref{lem:canonical-commitment-normal-form})
 puts the original's resulting table inside $R_\tau[\mathrm{out}\OutputGe x]$,
 which is inside $R_{\tau'}[\mathrm{out}\OutputGe x]$, where
@@ -320,16 +322,16 @@ The converse fails: the early lock below loses a run that its replacement has.
 \label{cor:pipelines}
 In a proper pipeline, with any systems for $\Spec_1$ and
 $\Spec_2|_{\Spec_1}$, the outputs of every run of the pipeline are emitted by
-a run of $S_2\circ S_1$ under its canonical basis.  So the pipeline guards a
+a run of $P_2\circ P_1$ under its canonical basis.  So the pipeline guards a
 further stage $\Spec_3$, and Theorem~\ref{thm:proper-coordination} applies
-with $S_2\circ S_1$ in place of $\Spec_1$.
+with $P_2\circ P_1$ in place of $\Spec_1$.
 \end{corollary}
 
 \begin{proof}
 By Corollary~\ref{cor:empty-store}, every run of the pipeline has one with the
 same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis.
 Theorem~\ref{thm:proper-coordination}(2), applied to it and a prefix of the
-run of $\Spec_1$, gives a run of $S_2\circ S_1$ with these outputs, and the
+run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs, and the
 canonical event for each output
 (Lemma~\ref{lem:canonical-commitment-normal-form}) makes it a run under the
 canonical basis.  By induction the same holds along a pipeline
@@ -342,74 +344,77 @@ specification of Example~\ref{ex:committed-log-composition}, under its
 canonical basis with a strategy that allows every event, and $\Spec_2$ the
 table of any monotone function $f$ of the log.  Every log is an output of
 $\Spec_1$, so $\Spec_2|_{\Spec_1}$ is $\Spec_2$.  For a set $Q$ of logs,
-removing every row whose input is in $Q$ is a commitment of $\Spec_2$ at any
+removing every row whose input is in $Q$ is a \commitment of $\Spec_2$ at any
 state whose current input is not in $Q$ and which has such a row.  It removes
-whole fibers, so it seals.  Consider two writes $a$ and $b$ to one key, and a
-lock granted to $a$, which seals the logs that start with $b$.  Suppose that
+whole fibers, so it empties.  Consider two writes $a$ and $b$ to one key, and a
+lock granted to $a$, which empties the logs that start with $b$.  Suppose that
 the store takes the lock only once its current log is nonempty.  Every log it
 can still receive then has the same first command, so the lock removes no row
-and is not a commitment.  Suppose instead that the store takes the lock at the
-empty log, ahead of the log.  Its output $f([\,])$ was exposable without the
-lock, and the lock seals logs that $\Spec_1$ can still offer.  At
+and is not a \commitment.  Suppose instead that the store takes the lock at the
+empty log, ahead of the log.  Its output $f([\,])$ was a legal output without the
+lock, and the lock empties logs that $\Spec_1$ can still offer.  At
 $\sigma_{\Spec_1}([b])$, $\Spec_1$ can emit $[\,]$ and then $[b]$.  The
 replacement emits $f([\,])$, receives $[b]$, and emits $f([b])$.  The locking
-store must take the lock at $[\,]$, which seals $[b]$, so it cannot receive
+store must take the lock at $[\,]$, which empties $[b]$, so it cannot receive
 $[b]$.
 
-For a function store, some commitments of $\Spec_1$ are invisible to the
-composite.  Let $\Spec_2$ be the table of a monotone function $f$, and write
+For a function store, some \commitments of $\Spec_1$ are invisible to the
+composite.  Let $\Spec_2$ be the functional specification induced by a
+monotone function $f$, and write
 $f(\sigma)$ for the image of a state $\sigma$ of $\Spec_1$.
 
 \begin{proposition}[Invisible coordination]
 \label{prop:invisible-coordination}
 Let $f$ be monotone, and let $\Spec_1$ emit $m$ at $\sigma$ by
 $\Out{\gamma}{m}$.  If every row that $\gamma$ removes has a row with the same
-input and the same image that $\gamma$ keeps, then $f(m)$ is exposable at
+input and the same image that $\gamma$ keeps, then $f(m)$ is a legal output at
 $f(\sigma)$.
 \end{proposition}
 
-The proof covers the composite's commitments by those of $\Spec_1$.  For a
+The proof covers the composite's \commitments by those of $\Spec_1$.  For a
 table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
 $\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
 $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
-$(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Sealed_{f(m)}$ or
-$\Rejected_{f(m)}$ at $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
+$(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is not in $\Excluded_{f(m)}$ at
+$\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
 Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
-$m'\preceq_M u$, and $(k,f(u))\in R_\rho$ retires $(k,f(m'))$.  So every row
-that the composite's canonical event for $f(m)$ removes by commitment has had
+$m'\preceq_M u$, and $(k,f(u))\in R_\rho$ subsumes $(k,f(m'))$.  So every row
+that the composite's canonical event for $f(m)$ removes by \commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
 The hypothesis gives $f(R_{\sigma_c})=f(R_\sigma)$.  By the covering
-argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in $\Sealed_{f(m)}$ or
-$\Rejected_{f(m)}$, so $f(m)$ is exposable at $f(\sigma)$.
+argument with $\rho=f(\sigma)$, no row of $f(\sigma)$ is in
+$\Excluded_{f(m)}$, so $f(m)$ is a legal output at $f(\sigma)$.
 \end{proof}
 
 Consider a store that answers each key from that key's commands, in log
 order.  Let $\Spec_1$ have one input with fiber $\{[a,b],[b,a]\}$, for
 commands $a$ and $b$ on different keys, and let $f$ send a log to the family
 of its subsequences on each key.  The two logs are incomparable with no common
-\outnoun, so $[a,b]$ is not exposable, and $\Spec_1$ must order them.  But
-$f([a,b])=f([b,a])$, the composite has one row, and $f([a,b])$ is exposable.
-The order of $a$ and $b$ is a commitment inside $\Spec_1$ that requires
+\outnoun, so $[a,b]$ is not a legal output, and $\Spec_1$ must order them.  But
+$f([a,b])=f([b,a])$, the composite has one row, and $f([a,b])$ is a legal
+output.
+The order of $a$ and $b$ is a \commitment inside $\Spec_1$ that requires
 coordination, and the composite does not see it.
 
-The commitments of $\Spec_1$ do not themselves push forward.  Let $\Spec_1$
+The \commitments of $\Spec_1$ do not themselves push forward.  Let $\Spec_1$
 have one input with fiber $\{x,y\}$, $x$ and $y$ incomparable, and
-$f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The choice $c_y$ removes $x$
+$f(x)=\mathit{lo}\OutputOrd\mathit{hi}=f(y)$.  The \commitment $e_y$ removes $x$
 and keeps $y$.  Its image would remove $\mathit{lo}$ and keep $\mathit{hi}$,
-violating Equation~\ref{eq:commitment-excludes}, so no commitment of the
-composite has that effect.  In the composite, $\mathit{hi}$ is exposable at the
-canonical state, since it retires $\mathit{lo}$.
+violating Equation~\ref{eq:commitment-unsubsumed}, so no \commitment of the
+composite has that effect.  In the composite, $\mathit{hi}$ is a legal output
+at the canonical state, since it subsumes $\mathit{lo}$.
 
-Monotonicity of $f$ is needed.  Let $\Spec_1$ be the table of the identity on
-$M$, which needs no commitment.  For $m\preceq_M m'$, its run
+Monotonicity of $f$ is needed.  Let $\Spec_1$ be the functional specification
+induced by the identity on
+$M$, which needs no \commitment.  For $m\preceq_M m'$, its run
 $\mathsf{output}(m)$, $\mathsf{input}(m')$, $\mathsf{output}(m')$ maps to a run
 of the composite exactly when $f(m)\OutputOrd f(m')$.  A downstream that must
-itself choose cannot delegate the choice either.  If $\Spec_1$ is the identity
-on one input, it admits no commitment at all.  If $\Spec_2$ relates that input
+itself exclude cannot delegate the \commitment either.  If $\Spec_1$ is the identity
+on one input, it admits no \commitment at all.  If $\Spec_2$ relates that input
 to two incomparable outputs, every output event of the composite at its
-canonical state applies a commitment, which $\Spec_1$ cannot make.
+canonical state applies a \commitment, which $\Spec_1$ cannot make.
 
 \begin{example}[Replicated store]
 \label{ex:committed-log-composition}
@@ -417,18 +422,19 @@ Consider again state-machine replication, with every put and get passing
 through the log.  Take $I$ the proposal streams and $M$ the logs, both ordered
 by prefix, and $O$ the cumulative response histories, ordered by extension.
 Let $\Spec_1$ relate each proposal stream to the logs of its commands, and let
-the store $\Spec_2$ be the table of the function $f$ that executes a log on a
+the store $\Spec_2$ be the functional specification induced by the function
+$f$ that executes a log on a
 deterministic state machine, which is monotone in the prefix order.  Then
 $\Spec_1$ is non-monotone, since distinct next entries are incompatible
-outputs in one fiber.  So is the key-value store $S_2\circ S_1$, since
+outputs in one fiber.  So is the key-value store $P_2\circ P_1$, since
 concurrent commands ordered oppositely give incompatible responses.
 Multi-Paxos runs $\Spec_1$ under its own basis, deciding one log slot at a
 time~\cite{schneider1990smr,lamport2001paxos}.  Since $f$ is monotone, the
 pipeline is proper, and by Theorem~\ref{thm:proper-coordination}(2) the store
 under the empty basis follows every run of the log.  By
-Theorem~\ref{thm:proper-coordination}(3), the log's commitments cannot be
+Theorem~\ref{thm:proper-coordination}(3), the log's \commitments cannot be
 dropped.  By Corollary~\ref{cor:empty-store}, replicas whose store takes locks
-of its own can run it with no commitments at all.
+of its own can run it with no \commitments at all.
 \end{example}
 
 \begin{example}[Bare reads]
@@ -447,13 +453,13 @@ and $G\star F$ are non-monotone.
 
 Suppose first that each bare-read response records the log position it read
 from, as in ``$x=5$ as of entry 17.''  A longer log never contradicts such a
-response, so $G$ is monotone.  By Complete CALM and the exposure boundary,
-every output of $G$ at every state reachable without commitment is
-exposable, so bare reads need no commitment of their own.  Suppose instead
+response, so $G$ is monotone.  By Complete CALM and the output-legality boundary,
+every output of $G$ at every state reachable without \commitment is
+legal, so bare reads need no \commitment of their own.  Suppose instead
 that the specification demands the latest value, so that a read of $x$ must
 return the value of $x$ after all of $b$.  Then a bare read can be
 contradicted by an entry it has not seen, and $G$ is not monotone.  By the
-exposure boundary some output of $G$ then needs a commitment of the store's
+exposure boundary some output of $G$ then needs a \commitment of the store's
 own.  Bare reads then need coordination, typically by going through the log.
 \end{example}
 
@@ -467,11 +473,11 @@ bases, and participants compose without one shared history.
 
 \begin{definition}[Component, admitted run]
 \label{def:component}
-A \emph{component} for a specification $\Spec$ consists of a commitment basis
+A \emph{component} for a specification $\Spec$ consists of a \commitment basis
 $\mathcal B$ and a set of \emph{admitted runs}.  Each admitted run is a run
 under $\mathcal B$ from a canonical state $\sigma(i)$
 (Definition~\ref{def:run-under-basis}), together with an output $o$ that it
-emits, such that $(i,o)\in S$.
+emits, such that $(i,o)\in P$.
 \end{definition}
 
 \begin{definition}[Implementation form]
@@ -486,14 +492,14 @@ justify the component's admitted runs.
 A system for $\Spec$ (Definition~\ref{def:system}) induces a component once
 its boundary observations are chosen.  An admitted boundary run is a
 participant run of a produced history together with a named emitted output
-$o$ whose pair $(i,o)$ with the run's initial input is a row of $S$; runs
+$o$ whose pair $(i,o)$ with the run's initial input is a row of $P$; runs
 with no such output induce no observation.  The system's messages,
-partitions, and commitments stay inside the component.  Restricted to
+partitions, and \commitments stay inside the component.  Restricted to
 one-participant histories, the induced component is a process, and a
 replicated system induces a cluster.  The two-phase commit decision of Section~\ref{sec:coordination} has
 both forms.  Run by the coordinator alone, it is a process, and its timeout
-seal requires coordination but not distributed coordination.  Replicated, it
-is a cluster, and the same seal requires distributed coordination.  The
+\commitment requires coordination but not distributed coordination.  Replicated, it
+is a cluster, and the same \commitment requires distributed coordination.  The
 \emph{maximally permissive} component under $\mathcal B$ admits every such
 run under $\mathcal B$.
 
@@ -505,7 +511,7 @@ A \emph{feed} pairs an admitted run of $C_1$, with input $i$ and output $m$,
 with an admitted run of $C_2$ from $\sigma(m)$, with output $o$.  The
 \emph{typed pipeline} of $C_1$ and $C_2$ shows the \emph{external
 observation} $(i,o)$ of each feed; the value $m$, both runs, and their
-commitments stay hidden.
+\commitments stay hidden.
 \end{definition}
 
 \begin{definition}[Contract-proper, implementation-proper]
@@ -513,26 +519,26 @@ commitments stay hidden.
 A typed pipeline is \emph{contract-proper} when the pipeline of $\Spec_1$
 and $\Spec_2$ is proper (Definition~\ref{def:proper-coordination}), and
 \emph{implementation-proper} when no downstream run of a feed applies a
-commitment.
+\commitment.
 \end{definition}
 
-Receiving $m$ is the downstream run's initial input, not a commitment of
+Receiving $m$ is the downstream run's initial input, not a \commitment of
 $C_2$.  Glue stages that copy, merge, route, or adapt values
-(Section~\ref{app:dataflow-graphs}) are components with specifications of
-their own, and they may issue commitments of their own.
+(\S\ref{app:dataflow-graphs}) are components with specifications of
+their own, and they may issue \commitments of their own.
 
 \begin{proposition}[Typed pipelines]
 \label{prop:typed-pipelines}
 \leavevmode
 \begin{enumerate}
 \item Every external observation admitted by a typed pipeline is a row of
-      $S_2\circ S_1$.
+      $P_2\circ P_1$.
 \item If a pipeline is implementation-proper, the downstream run of every
-      feed, with its commitments erased, is a commitment-free run of
-      $\Spec_2$, in which every output is exposable.
+      feed, with its \commitments erased, is a \commitment-free run of
+      $\Spec_2$, in which every output is legal.
 \item Contract properness does not imply implementation properness: behind a
       log, the early-lock store is a contract-proper downstream
-      implementation that still issues commitments.
+      implementation that still issues \commitments.
 \item Contract properness does not imply feed availability for an
       arbitrarily typed downstream component: behind the capped counter, the
       maximally permissive empty-basis component for the unrestricted
@@ -545,30 +551,30 @@ their own, and they may issue commitments of their own.
 \end{proposition}
 
 \begin{proof}
-(1) The two runs of a feed certify $(i,m)\in S_1$ and $(m,o)\in S_2$.
+(1) The two runs of a feed certify $(i,m)\in P_1$ and $(m,o)\in P_2$.
 
-(2) A run that applies no commitment has no commitment event, and each of its
+(2) A run that applies no \commitment has no \commitment event, and each of its
 output events is $\Out{\varepsilon}{o}$, which is legal exactly when $o$ is
-exposable.
+a legal output.
 
 (3) The early-lock store above, fed by a log, is contract-proper, since the
 store's table satisfies Lifted Monotonicity on logs.  From the empty log it
-admits a run whose output event takes the lock, a commitment.
+admits a run whose output event takes the lock, a \commitment.
 
 (4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
 the test of whether the count is below $10$.  The pipeline is
 contract-proper, since the test satisfies Lifted Monotonicity on the counts
 the counter offers.  An admitted run of the test from an offered count
 $m\le 9$ must emit yes, its answer at $m$.  While its current count is below
-$10$, its table keeps the row $(10,\mathit{no})$, so yes is not exposable;
+$10$, its table keeps the row $(10,\mathit{no})$, so yes is not a legal output;
 once the count reaches $10$, only no remains.  So no feed exists.
 
 (5) Let $m$ be the output of an admitted run of $C_1$.  By
 Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies
-Lifted Monotonicity, so every $o\in S_2(m)$ is exposable at $\sigma(m)$
+Lifted Monotonicity, so every $o\in P_2(m)$ is a legal output at $\sigma(m)$
 (Proposition~\ref{prop:exposure-boundary}).  The one-event run
 $\Out{\varepsilon}{o}$ from $\sigma(m)$ is then an admitted run of $C_2$.
-Under the empty basis no run applies a commitment.
+Under the empty basis no run applies a \commitment.
 \end{proof}
 
 Item (5) covers one boundary output.
@@ -605,12 +611,12 @@ projection discards a component.  A graph is an expression built from
 $\circ$, $\otimes$, and glue.
 
 The product behaves componentwise.  It satisfies Lifted Monotonicity exactly
-when both factors do, an output is exposable exactly when both components
-are, and it needs no commitment exactly when neither factor does.  The
+when both factors do, an output is a legal output exactly when both components
+are, and it needs no \commitment exactly when neither factor does.  The
 converse directions need nonempty input domains.  A stage that merges the
 outputs of two guards is proper exactly when it satisfies Lifted Monotonicity
 on the product of their outputs, and a merge by join is always proper.
-Composition with independent inputs (Section~\ref{sec:parameterized-composition})
+Composition with independent inputs (\S\ref{sec:parameterized-composition})
 is the product of $\Spec_1$ with the identity on $J$, followed by $\Spec_2$, so
 Lemma~\ref{lem:parameterized-composition} follows from the product and
 composition lemmas.

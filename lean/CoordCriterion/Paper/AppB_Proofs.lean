@@ -32,16 +32,16 @@ output."  The inductive step: one event preserves the residual shape,
 appending its output (if any) to the emitted list. -/
 theorem «proof:lem:run-residual» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     {σ τ : State sp} {e : Event I O} {E : List O}
-    (hσ : ∀ k u, σ.R k u ↔ (sp.S k u ∧ σ.cur ≼ k ∧ ∀ o ∈ E, o ≼ u)) (hs : Step σ e τ) :
-    ∀ k u, τ.R k u ↔ (sp.S k u ∧ τ.cur ≼ k ∧ ∀ o ∈ E ++ outs [e], o ≼ u) :=
+    (hσ : ∀ k u, σ.R k u ↔ (sp.P k u ∧ σ.cur ≼ k ∧ ∀ o ∈ E, o ≼ u)) (hs : Step σ e τ) :
+    ∀ k u, τ.R k u ↔ (sp.P k u ∧ τ.cur ≼ k ∧ ∀ o ∈ E ++ outs [e], o ≼ u) :=
   residual_step hσ hs
 
 /-- Proof of Prop. `prop:confluence`: "A common state with current input `j`
 has a row at `j`, and since rows are never added, that row belongs to every
 `R_r`.  Conversely … After `input(j)` and `output(u)`, the same lemma leaves
-exactly `S[in ⪰ j, out ⪰ u]`, independent of the starting run."  The two
+exactly `P[in ⪰ j, out ⪰ u]`, independent of the starting run."  The two
 steps: events only remove rows; and the explicit continuation to
-`meetState sp j u _ = (j, S[in ⪰ j, out ⪰ u])`. -/
+`meetState sp j u _ = (j, P[in ⪰ j, out ⪰ u])`. -/
 theorem «proof:prop:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O} :
     (∀ {σ τ : State sp}, Reach σ τ → ∀ k u, τ.R k u → σ.R k u) ∧
       (∀ {σ : State sp}, IsRun σ → ∀ {j : I} {u : O} (hju : σ.R j u),
@@ -52,7 +52,7 @@ theorem «proof:prop:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O} :
 family of runs is therefore confluent at a common expansion `j` exactly when
 `f(j)` refines every output emitted on any of them.  If `f` is monotone, this
 holds … If `f` is not monotone, some `i ≼ k` has `f(i) ⋠ f(k)`.  Of two runs
-from `σ_S(i)`, one that emits `f(i)` no longer has the row `(k,f(k))`, while
+from `σ_P(i)`, one that emits `f(i)` no longer has the row `(k,f(k))`, while
 one that accepts `input(k)` keeps it; no row at `k` survives in both, so they
 are not confluent at `k`."  The theorem, along the library route. -/
 theorem «proof:thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
@@ -68,8 +68,8 @@ theorem «proof:cor:state-by-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}
   run_canon_of_mono hm hτ
 
 /-- Proof of Prop. `prop:functional-exposure-boundary`: monotone ⇒ every
-output at a state reachable without commitment is exposable (via
-Cor. `cor:state-by-input`); conversely, exposability at `σ_S(i)`, reached by
+output at a state reachable without commitment is a legal output (via
+Cor. `cor:state-by-input`); conversely, legality at `σ_P(i)`, reached by
 the empty run, is monotonicity. -/
 theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) (hf : sp.Functional) :
@@ -79,11 +79,11 @@ theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
 /-! ## Proofs for Section 3 -/
 
 /-- Proof of Prop. `prop:common-expansion-form`: "Suppose Lifted
-Monotonicity … Relational Monotonicity gives, for each `r`, a `u_r ∈ S(j)`
-with `o_r ≼ u_r`.  The `u_r` all lie in the one fiber `S(j)`, which is
-directed, so some `u ∈ S(j)` refines every `u_r`, hence every `o_r`.
+Monotonicity … Relational Monotonicity gives, for each `r`, a `u_r ∈ P(j)`
+with `o_r ≼ u_r`.  The `u_r` all lie in the one fiber `P(j)`, which is
+directed, so some `u ∈ P(j)` refines every `u_r`, hence every `o_r`.
 Conversely, … the rows `{(i,x) : x ∈ X}` have common expansion `j`, so some
-`u ∈ S(j)` refines all of `X`."  Both directions. -/
+`u ∈ P(j)` refines all of `X`."  Both directions. -/
 theorem «proof:prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion :=
   liftedMono_iff_commonExpansion sp
@@ -91,13 +91,13 @@ theorem «proof:prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Sp
 /-- **Lemma `lem:reconciliation`** (Reconciliation).  "Let runs end at
 `(i_r,R_r)`, `r = 1,…,m`, let `j` be a common expansion of the `i_r`, and let
 `X` be the set of outputs emitted on any of them.  The runs are confluent at
-`j` if and only if some `u ∈ S(j)` refines every output in `X`."
+`j` if and only if some `u ∈ P(j)` refines every output in `X`."
 
 Lean: the runs are a list `fam` of runs with their events, `X` is
 `emittedAll fam`. -/
 theorem «lem:reconciliation» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (fam : List (RunW sp)) (j : I) (hj : ∀ r ∈ fam, r.fin.cur ≼ j) :
-    ConfluentAt (fam.map RunW.fin) j ↔ ∃ u, sp.S j u ∧ ∀ o ∈ emittedAll fam, o ≼ u :=
+    ConfluentAt (fam.map RunW.fin) j ↔ ∃ u, sp.P j u ∧ ∀ o ∈ emittedAll fam, o ≼ u :=
   reconciliation fam j hj
 
 /-- Lemma `lem:reconciliation` quantifies over runs with their events;
@@ -110,8 +110,8 @@ theorem «lem:reconciliation/consistency-over-runs» {I O : Type} [PO I] [PO O]
   consistent_iff_runs
 
 /-- Proof of Thm. `thm:complete-calm`, (⇐): "Each output `o` emitted on a run
-was emitted at some input `i_o ≼ j`, so `(i_o,o)` is a row of `S`; the
-condition supplies `u ∈ S(j)` refining all of them, and
+was emitted at some input `i_o ≼ j`, so `(i_o,o)` is a row of `P`; the
+condition supplies `u ∈ P(j)` refining all of them, and
 Lemma `lem:reconciliation` gives confluence." -/
 theorem «proof:thm:complete-calm/if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hC : sp.CommonExpansion) : sp.Consistent :=
@@ -119,9 +119,9 @@ theorem «proof:thm:complete-calm/if» {I O : Type} [PO I] [PO O] {sp : Spec I O
 
 /-- Proof of Thm. `thm:complete-calm`, (⇒): "Given rows `(i_r,o_r)` with
 common expansion `j`, apply consistency and Lemma `lem:reconciliation` to the
-runs that start at `σ_S(i_r)` and emit `o_r`; for the empty family, totality
-gives `S(j) ≠ ∅`."  (Lean needs no separate empty case: consistency of the
-empty family and the lemma already give `S(j) ≠ ∅`.) -/
+runs that start at `σ_P(i_r)` and emit `o_r`; for the empty family, totality
+gives `P(j) ≠ ∅`."  (Lean needs no separate empty case: consistency of the
+empty family and the lemma already give `P(j) ≠ ∅`.) -/
 theorem «proof:thm:complete-calm/only-if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hc : sp.Consistent) : sp.CommonExpansion :=
   ce_of_consistent_paper hc
@@ -135,17 +135,17 @@ theorem «proof:thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 /-- Proof of Prop. `prop:exposure-boundary`, (⇒): "Let `(i,R)` be reached by a
 run (commitment-free or not) … Extend the run in two ways: by `output(o)`,
 and by `input(j)` followed by `output(x)`.  By consistency the two extended
-runs are confluent at `j` … the exposure test makes `o` exposable."  Stated,
-as in the proof, at every run state. -/
+runs are confluent at `j` … the legal-output test makes `o` a legal output."
+Stated, as in the proof, at every run state. -/
 theorem «proof:prop:exposure-boundary/only-if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hc : sp.Consistent) {τ : State sp} (hτ : IsRun τ) {o : O} (ho : τ.R τ.cur o) :
     Exposable τ o :=
   exposable_of_consistent hc hτ ho
 
 /-- Proof of Prop. `prop:exposure-boundary`, both directions; the converse is
-the paper's: "By totality pick `u₀ ∈ S(j)`.  For `r = 1,…,k` in turn, the
-exposure test for `o_r` at `σ_S(i_r)`, applied with `x = u_{r-1}`, gives
-`u_r ∈ S(j)` refining both `o_r` and `u_{r-1}`." -/
+the paper's: "By totality pick `u₀ ∈ P(j)`.  For `r = 1,…,k` in turn, the
+legal-output test for `o_r` at `σ_P(i_r)`, applied with `x = u_{r-1}`, gives
+`u_r ∈ P(j)` refining both `o_r` and `u_{r-1}`." -/
 theorem «proof:prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.CommonExpansion ↔
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
@@ -154,22 +154,22 @@ theorem «proof:prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I
 /-! ### Pairs suffice for the common-expansion condition (`app:pairs-suffice`) -/
 
 /-- `app:pairs-suffice`: "If every two rows with a common expansion `j` have a
-common refinement in `S(j)`, the condition holds for every finite family:
+common refinement in `P(j)`, the condition holds for every finite family:
 replace the first two rows by a row `(j,u)` at `j` and repeat; a single row is
 paired with any row at `j`."  `CALM.Pairs sp` is the pair condition over all
-rows of `S`; it is equivalent to the common-expansion condition. -/
+rows of `P`; it is equivalent to the common-expansion condition. -/
 theorem «app:pairs-suffice» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
-    (∀ i₁ o₁ i₂ o₂ j, sp.S i₁ o₁ → sp.S i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
-        ∃ u, sp.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ↔ sp.CommonExpansion :=
+    (∀ i₁ o₁ i₂ o₂ j, sp.P i₁ o₁ → sp.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
+        ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ↔ sp.CommonExpansion :=
   pairs_iff_commonExpansion sp
 
-/-- `app:pairs-suffice`: "The pairs must range over all rows of `S`, including
+/-- `app:pairs-suffice`: "The pairs must range over all rows of `P`, including
 those at `j`."  On a four-input specification, every two rows at inputs other
 than the common expansion are compatible there, but the common-expansion
 condition fails. -/
 theorem «app:pairs-suffice/rows-at-j» :
-    (∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.S i₁ o₁ → spec4.S i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
-        ∃ u, spec4.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ∧ ¬ spec4.CommonExpansion :=
+    (∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.P i₁ o₁ → spec4.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
+        ∃ u, spec4.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ∧ ¬ spec4.CommonExpansion :=
   rowsAtJ_needed
 
 /-- `app:pairs-suffice`: "Restricting the families to rows at single-proposal
@@ -182,12 +182,12 @@ Lean: `k`-set agreement with participants and values `Fin (k+1)`
 A row at a single-proposal input `{(p,v)}` is a triple `(p, v, o)`. -/
 theorem «app:pairs-suffice/k-at-a-time» (k : Nat) (hk : 1 ≤ k) :
     (∀ (rows : List (Fin (k+1) × Fin (k+1) × PMap (k+1))), rows.length ≤ k →
-        (∀ r ∈ rows, (KSet.spec k).S (KSet.atom r.1 r.2.1) r.2.2) →
+        (∀ r ∈ rows, (KSet.spec k).P (KSet.atom r.1 r.2.1) r.2.2) →
         ∀ j : PMap (k+1), (∀ r ∈ rows, KSet.atom r.1 r.2.1 ≼ j) →
-          ∃ u, (KSet.spec k).S j u ∧ ∀ r ∈ rows, r.2.2 ≼ u) ∧
-      (∀ r : Fin (k+1), (KSet.spec k).S (KSet.atom r r) (KSet.atom r r) ∧
+          ∃ u, (KSet.spec k).P j u ∧ ∀ r ∈ rows, r.2.2 ≼ u) ∧
+      (∀ r : Fin (k+1), (KSet.spec k).P (KSet.atom r r) (KSet.atom r r) ∧
         KSet.atom r r ≼ KSet.J (k+1)) ∧
-      ¬ ∃ u, (KSet.spec k).S (KSet.J (k+1)) u ∧ ∀ r : Fin (k+1), KSet.atom r r ≼ u :=
+      ¬ ∃ u, (KSet.spec k).P (KSet.J (k+1)) u ∧ ∀ r : Fin (k+1), KSet.atom r r ≼ u :=
   ⟨KSet.atomic_k_at_a_time k, fun r => ⟨KSet.proposal_row k hk r, KSet.J_common k r⟩,
    KSet.not_all_compatible k⟩
 

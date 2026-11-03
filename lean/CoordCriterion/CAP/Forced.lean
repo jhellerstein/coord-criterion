@@ -47,12 +47,12 @@ theorem answering_of_availability {Sys : System sp D} (hA : AvailabilityAtEnd Sy
 
 /-- The part of Partition Consistency the two-row case uses: at the end of
 every produced partitioned history, for every common expansion `j` of the
-current inputs, some `u ∈ S(j)` refines every emitted output. -/
+current inputs, some `u ∈ P(j)` refines every emitted output. -/
 def CommonRefinementAtEnd (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →
     ∀ j : I, (∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j) →
-    ∃ u, sp.S j u ∧ ∀ p γ o, LEv.out γ o ∈ H p → o ≼ u
+    ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ H p → o ≼ u
 
 /-- Partition Consistency gives a common refinement: the common state `(j,R)`
 has a row `(j,u)`, and rows are never added. -/
@@ -69,7 +69,7 @@ theorem commonRefinement_of_pc {Sys : System sp D} (hP : PartitionConsistencyAtE
 /-- The two-row case with a weaker hypothesis: two participants in separate
 blocks, starting at `init 0` and `init 1` from the empty history, can each
 emit `outs p` without messages or inputs (`hE`).  A common refinement of the
-emitted outputs (`hC`, implied by Partition Consistency) then lies in `S(j)`. -/
+emitted outputs (`hC`, implied by Partition Consistency) then lies in `P(j)`. -/
 theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)
     (init : Fin 2 → I) (outs : Fin 2 → O) {j : I} (hj : ∀ p, init p ≼ j)
     (hE : ∀ p : Fin 2, ∃ ext : Fin 2 → List (LEv sp D 2),
@@ -77,7 +77,7 @@ theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)
       Produced Sys 2 init (fun q => ([] : List (LEv sp D 2)) ++ ext q) ∧
       Partitioned (fun q => ([] : List (LEv sp D 2)) ++ ext q) (fun q => q.val) ∧
       (∀ q j, LEv.inp j ∉ ext q) ∧ ∃ γ, LEv.out γ (outs p) ∈ ext p) :
-    ∃ u, sp.S j u ∧ ∀ p, outs p ≼ u := by
+    ∃ u, sp.P j u ∧ ∀ p, outs p ≼ u := by
   classical
   let comp : Fin 2 → Nat := fun p => p.val
   have hcomp2 : ∃ p q : Fin 2, comp p ≠ comp q := ⟨0, 1, by simp [comp]⟩
@@ -121,13 +121,13 @@ outputs permitted at `i₁` and `i₂`, Answering suffices in place of
 Availability, and a common refinement in place of Partition Consistency. -/
 theorem cap_two_step_forced (Sys : System sp D) (hA : AnsweringAtEnd Sys)
     (hC : CommonRefinementAtEnd Sys) {i₁ i₂ j : I} {o₁ o₂ : O}
-    (h₁ : ∀ o, sp.S i₁ o → o = o₁) (h₂ : ∀ o, sp.S i₂ o → o = o₂)
+    (h₁ : ∀ o, sp.P i₁ o → o = o₁) (h₂ : ∀ o, sp.P i₂ o → o = o₂)
     (hj₁ : i₁ ≼ j) (hj₂ : i₂ ≼ j) :
-    ∃ u, sp.S j u ∧ o₁ ≼ u ∧ o₂ ≼ u := by
+    ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u := by
   classical
   let init : Fin 2 → I := fun p => if p.val = 0 then i₁ else i₂
   let outs : Fin 2 → O := fun p => if p.val = 0 then o₁ else o₂
-  have hforced : ∀ p o, sp.S (init p) o → o = outs p := by
+  have hforced : ∀ p o, sp.P (init p) o → o = outs p := by
     intro p o h; simp only [init, outs] at h ⊢; split
     · next hp => simp only [hp, ↓reduceIte] at h; exact h₁ o h
     · next hp => simp only [hp, ↓reduceIte] at h; exact h₂ o h
@@ -195,7 +195,7 @@ theorem regFull_total (h : Hist) : ∃ ρ, regFull h ρ := by
 
 /-- The complete-response register specification. -/
 def regFullSpec : Spec Hist RMap where
-  S := regFull
+  P := regFull
   total := regFull_total
 
 /-- The acknowledgment of the write, the only output at `h1`. -/
