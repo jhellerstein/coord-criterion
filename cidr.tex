@@ -93,7 +93,7 @@ general.  CALM, CAP, and CRDTs
 answer it for one class of programs, consistency models, or design patterns.  Their answers cannot
 be compared or combined, and together they leave basic questions open, such as how coordination repairs inconsistency.  We put them on common
 ground.  We provide a minimalist relational definition of a specification: a
-table that includes, for each input, all outputs a system may produce.  Each
+possibility table that includes, for each input, all outputs a system may produce.  Each
 column carries its own partial order, saying when one input \inrel another and
 when one output \outrel another.  A specification is \emph{consistent} when its
 runs are confluent: runs whose inputs have a common \indesc can always catch up
@@ -106,8 +106,8 @@ the CALM Theorem from Datalog queries to any function between ordered domains:
 such a specification is consistent exactly when it is monotone, and then no
 output requires \commitment.  \emph{Complete CALM} handles ambiguous specifications
 that allow several outputs for the same input, where the test becomes
-\emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
-larger input \outrel whatever was emitted at the smaller one.  As a corollary,
+\emph{Lifted Monotonicity}: at every input, some permitted output \outrel
+whatever could have been emitted up to that point.  As a corollary,
 \emph{Complete CAP} inherits the same criterion: the CAP trade-off arises
 exactly when Lifted Monotonicity fails.
 \emph{Proper Coordination} identifies which stage of a composition must coordinate,
@@ -149,51 +149,52 @@ is therefore a central goal in distributed systems and databases.  This paper
 asks what coordination mechanisms fundamentally accomplish, and
 when that effect is intrinsically required.
 
-The CALM Conjecture
-proposed a crisp, bidirectional answer: consistency can be achieved without
-coordination exactly when the specification is
-monotone~\cite{hellerstein2010declarative}.  Ameloot et al.\ proved it in both
-directions, but only for Datalog queries evaluated by relational
-transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.  A
-closely related question appears in Brewer's CAP conjecture: which consistency
-guarantees can remain available when participants cannot communicate?
-Gilbert and Lynch proved its impossibility result, but only for linearizable
-registers~\cite{brewer2000towards,gilbert2002cap}.  The apparent connection
-between CALM and CAP has never been established in a common formalism.  Both
-results are invoked far more broadly: CALM as a general rule that monotone
-programs need no coordination, CAP as a general constraint on distributed
-systems.  The folklore outgrew the proofs.
+The CALM Conjecture proposed a crisp, bidirectional answer: consistency can be
+achieved without coordination exactly when the specification is
+monotone~\cite{hellerstein2010declarative}.  But the original proof applied only
+in a restricted setting: Datalog queries evaluated by relational transducer
+networks~\cite{ameloot2013relational,hellerstein2020keeping}. A closely related
+question appeared in the CAP conjecture: which consistency guarantees can
+remain available when participants cannot communicate? Again, the original proof
+applied only in a restricted setting: linearizable
+registers~\cite{brewer2000towards,gilbert2002cap}.  Both results
+are invoked far more broadly: CALM as a general rule that monotone programs need
+no coordination, CAP as a general constraint on distributed systems. The
+folklore outgrew the proofs.
 
-The need for a common criterion extends beyond CALM and CAP.  CRDTs use
+The apparent connection between CALM and CAP was never established in a common
+formalism; nearby results only complicate the picture. CRDTs use
 inflationary updates over join-semilattices for coordination-free
 convergence~\cite{shapiro2011crdt}; HATs identify transactional guarantees
 available under partition~\cite{bailis2013hat}; and invariant confluence asks
-when independently reached database states merge safely~\cite{bailis2014coordination}.
-Yet these results speak different formal languages, leaving unclear whether
-CALM encompasses CAP, whether CRDT join laws are necessary, why only some
+when independently reached database states merge
+safely~\cite{bailis2014coordination}. These diverse formal languages across the
+results leave cross-cutting questions unclear, including: whether CALM
+encompasses CAP, whether CRDT join laws are necessary, why only some
 transactional isolation levels remain available during partition, and whether
 invariant confluence differs from CALM (\S\ref{sec:instances}).
 
-Our answer begins with a simple observation.  In systems, as in life,
+Our answer begins with a simple intuition.  In systems, as in life,
 possibilities narrow over time.  Some are out of our hands: the world moves on,
 and possibilities are lost.  Others are left for us to decide, and the
-consequences vary.  Incidental decisions close no doors: each possibility
-they remove is covered by a more informative possibility that remains.  Fateful
-decisions make some outcomes impossible: they exclude a possibility that
-nothing remaining can cover.  Which specifications can be implemented without
-fateful decisions?
+consequences vary.  Incidental decisions close no doors: each possibility they
+remove is covered by some alternative outcome. Fateful decisions are the ones
+that make some outcomes impossible: they exclude a possibility that nothing
+remaining can cover. The question, then, is which specifications can be
+implemented without fateful decisions?
 
-Our foundation is a \emph{possibility relation} $P\subseteq I\times O$, which
-may be infinite, pairing inputs with permitted outputs and depicted as rows in
-a table.  It describes observable behavior without fixing a language,
-protocol, or placement.  A designer equips the input domain $I$ and output
-domain $O$ with partial orders that declare the specification's semantics.  On inputs, $i\InputOrd j$ means that $j$
-\emph{\inrel} $i$ with more input from the environment.  On outputs,
-$u\OutputGe o$ means that $u$ subsumes all specification-relevant information
-in $o$; equivalently, $o\OutputOrd u$, and $u$ \emph{\outrel} $o$.  An \emph{\commitment} is a fateful system
-decision that removes one or more rows $(i,o)$ for which no remaining row
-$(i,u)$ has $o\OutputOrd u$: no remaining possibility subsumes an excluded
-one.
+We begin with a simple declarative notion of specifications, independent of any
+language, protocol, or placement. The designer of a
+specification provides a \emph{possibility relation} or table $P\subseteq I\times O$,
+which may be infinite. Each row is a possibility that pairs an input to a
+permitted output.  The designer provides the input domain $I$ and
+output domain $O$ with partial orders that declare the specification's
+semantics.  On inputs, $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more
+input from the environment.  On outputs, $u\OutputGe o$ means that $u$ subsumes
+all specification-relevant information in $o$; equivalently, $o\OutputOrd u$,
+and $u$ \emph{\outrel} $o$.  An \emph{\commitment} is a fateful system decision
+that removes one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
+$o\OutputOrd u$: no remaining possibility subsumes an excluded one.
 
 State-machine-style specifications can be projected into this form, eliding
 operational details that are not externally observable (\S\ref{sec:scope}).
