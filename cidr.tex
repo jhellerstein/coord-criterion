@@ -1281,15 +1281,13 @@ is different: the owners can order the same pair oppositely, so they must use
 distributed coordination to agree on one order.
 
 Two-phase commit adds no further coordination requirement.  Each owner's
-prepare reflects its own \commitment; the coordinator's monotone decision only
-detects whether those \commitments agree, aborting when they do not.  A timeout
-abort before the last vote applies another \commitment, like closing the
-polls.  It requires local coordination when one coordinator makes it, and
-distributed coordination when replicated for fault tolerance, as in Paxos
-Commit~\cite{gray2006consensus}.  Ordinary two-phase commit can still block
-after prepare; that is a loss of availability, not a \commitment another
-participant could contradict.
-\subsection{The Complete CAP Theorem}
+prepare reports the \commitment it has already made; the coordinator's
+monotone decision only detects whether those \commitments agree, aborting when
+they do not.  A timeout abort before the last vote applies another \commitment,
+like closing the polls.  It requires local coordination when a single
+coordinator makes it.  It requires distributed coordination when the
+coordinator is replicated for fault tolerance, as in Paxos
+Commit~\cite{gray2006consensus}.  \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
 
 Brewer conjectured that a distributed system cannot be consistent, available,

@@ -1047,8 +1047,9 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
   CAP.Timeout.timeout_closes_expansions v p hp
 
 /-- Paragraph "Locks in a shared-nothing database": "The timeout decision
-requires only local coordination when one participant makes it, but distributed
-coordination when replicated for fault tolerance, as in Paxos Commit."
+requires only local coordination when a single coordinator makes it.  It
+requires distributed coordination when the coordinator is replicated for
+fault tolerance, as in Paxos Commit."
 
 Lean (`CAP/TimeoutAbort.lean`), for the commitment of
 `«sec:coordination/2pc-timeout-abort»` (closing the polls on `voteSpec` at
