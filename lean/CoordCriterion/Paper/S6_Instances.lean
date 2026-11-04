@@ -516,11 +516,14 @@ theorem «sec:iconfluence-instance/concurrency-decides» :
 
 /-! ## General operational specification models (`sec:operational-models`)
 
-The opening paragraph ("Labeled transition systems and I/O automata provide
-general operational models of components … Thus our specification model does
-not replace an operational formalism; it is a semantic projection designed to
-make the intrinsic coordination question comparable across such
-formalisms.") positions the model; it states no claim of its own.
+The opening paragraph ("An I/O specification declaratively relates
+cumulative inputs to permitted outputs.  An I/O automaton instead defines
+operational states, input, output, and internal actions, and a transition
+relation.  Projecting its externally visible behavior can yield an I/O
+specification. … Thus our specification model does not replace an operational
+formalism; it is a semantic projection designed to make the intrinsic
+coordination question comparable across such formalisms.") positions the model;
+it states no claim of its own.
 
 "Compiling a state machine": "Automata are a traditional way to model
 operational behavior abstractly.  Our model keeps only the inputs and outputs
