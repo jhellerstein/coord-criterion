@@ -12,7 +12,7 @@ The specification: inputs `i ≺ j` (a two-element chain), outputs `o`, `x`,
 `P(j) = {u}`.  From the canonical state `σ_P(i)`:
 
 * `output(o)` and `output(x)` are legal (`step_o`, `step_x`);
-* after `output(o)` no output at `i` refines `x` (`tO_no_refine_x`), so the
+* after `output(o)` no output at `i` extends `x` (`tO_no_refine_x`), so the
   two states cannot reach a common state with current input `i`
   (`not_meet_at_i`);
 * yet both perform `input(j)` and reach the same state `σ_P(j)`
@@ -111,7 +111,7 @@ theorem step_o : Step σi (.output .o) tO := .output _ _ _ ⟨rfl, rfl⟩ rfl rf
 /-- `output(x)` is legal at `σ_P(i)`. -/
 theorem step_x : Step σi (.output .x) tX := .output _ _ _ ⟨rfl, rfl⟩ rfl rfl
 
-/-- After `output(o)`, no output at `i` refines `x`. -/
+/-- After `output(o)`, no output at `i` extends `x`. -/
 theorem tO_no_refine_x : ∀ y, tO.R .i y → ¬ (Out.x ≼ y) := by
   intro y h
   have h' : rows .i y = true := h.1.1
@@ -174,7 +174,7 @@ theorem not_consistent : ¬ spec.Consistent := by
   obtain ⟨ρ, hc, hr⟩ := h [tO, tX] hfam .i hle
   exact not_meet_at_i ⟨ρ, hc, hr tO (by simp), hr tX (by simp)⟩
 
-/-- `o` and `x` have no common refinement in `P(i)`. -/
+/-- `o` and `x` have no common output extension in `P(i)`. -/
 theorem no_bound_at_i : ¬ CompatibleIn (spec.P .i) [.o, .x] := by
   rintro ⟨w, hw, hb⟩
   have h1 := hb .o (by simp)
@@ -182,7 +182,7 @@ theorem no_bound_at_i : ¬ CompatibleIn (spec.P .i) [.o, .x] := by
   revert hw h1 h2
   cases w <;> decide
 
-/-- Directed Outputs fails at `i`. -/
+/-- Directed fibers fail at `i`. -/
 theorem not_directedOutputs : ¬ spec.DirectedOutputs := fun h =>
   no_bound_at_i (h .i [.o, .x] (by simp) (by
     intro y hy

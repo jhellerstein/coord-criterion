@@ -137,7 +137,7 @@ theorem reach_meet {sp : Spec I O} {σ : State sp} {E : List O} (hσ : Residual 
   exact ⟨[.input j, .output u], Exec.cons s1 (Exec.cons s2 (Exec.nil _))⟩
 
 /-- **Proposition (Survivor test).** Runs ending at the states of `fam`,
-with common expansion `j`, are confluent at `j` iff some row at `j`
+with common input extension `j`, are confluent at `j` iff some row at `j`
 survives in every final state. -/
 theorem survivor_test {sp : Spec I O} (fam : List (State sp))
     (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (_hj : ∀ σ ∈ fam, σ.cur ≼ j) :

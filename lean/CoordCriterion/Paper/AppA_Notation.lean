@@ -44,22 +44,22 @@ with `Spec.Functional`. -/
 abbrev «app:notation/functional-specification» (I O : Type) [PO I] [PO O] :=
   { sp : Spec I O // sp.Functional }
 
-/-- *expands; expansion* — `i ≼ j`: `j` contains the input information in `i`
+/-- *extends; input extension* — `i ≼ j`: `j` contains the input information in `i`
 (Sec. `sec:functional-specifications`).  Lean: `PO.le` on `I`, written `≼`. -/
 abbrev «app:notation/expands» (i j : I) : Prop := i ≼ j
 
-/-- *refines; refinement* — `o ≼ u`: `u` preserves every visible claim in `o`
+/-- *extends; output extension* — `o ≼ u`: `u` preserves every visible claim in `o`
 (Sec. `sec:functional-specifications`).  Lean: `PO.le` on `O`, written `≼`. -/
 abbrev «app:notation/refines» (o u : O) : Prop := o ≼ u
 
-/-- *common expansion* — an input that expands each
+/-- *common input extension* — an input that extends each
 (Sec. `sec:functional-specifications`).  No library name: statements write
 `∀ i ∈ is, i ≼ j` (or `∀ σ ∈ fam, σ.cur ≼ j`). -/
 abbrev «app:notation/common-expansion» (is : List I) (j : I) : Prop := ∀ i ∈ is, i ≼ j
 
-/-- *common refinement* — an output that refines each
+/-- *common output extension* — an output that extends each
 (Sec. `sec:functional-specifications`).  No library name: statements write
-`∀ o ∈ os, o ≼ u`; "a common refinement in `F`" is `CompatibleIn F os`. -/
+`∀ o ∈ os, o ≼ u`; "a common output extension in `F`" is `CompatibleIn F os`. -/
 abbrev «app:notation/common-refinement» (os : List O) (u : O) : Prop := ∀ o ∈ os, o ≼ u
 
 /-- *monotone (functional)* — `i ≼ j ⇒ f(i) ≼ f(j)`
@@ -91,15 +91,15 @@ abbrev «app:notation/out» (R : Table I O) (o : O) : Prop := ∃ k, R k o
 outputs (for the specification, `sp.P k`). -/
 abbrev «app:notation/fiber» (R : Table I O) (k : I) : O → Prop := R k
 
-/-- *upper fiber* — `out(R[in ⪰ k])` (Sec. `sec:functional-specifications`).
+/-- *future-output set* — `out(R[in ⪰ k])` (Sec. `sec:functional-specifications`).
 No library name: statements write `∃ k', k ≼ k' ∧ R k' o`; for a state
-`(i,R)` the upper fiber at `i` is `∃ k, σ.R k o` (`R` holds only rows at
-expansions of `i`). -/
+`(i,R)` the future-output set at `i` is `∃ k, σ.R k o` (`R` holds only rows at
+input extensions of `i`). -/
 abbrev «app:notation/upper-fiber» (R : Table I O) (k : I) (o : O) : Prop :=
   ∃ k', k ≼ k' ∧ R k' o
 
 /-- *state `(i,R)`* — current input and remainder table, every row at an
-expansion of `i` (Def. `def:residual-state`).  Lean: `State sp`. -/
+input extension of `i` (Def. `def:residual-state`).  Lean: `State sp`. -/
 abbrev «app:notation/state» (sp : Spec I O) := State sp
 
 /-- *legal input* — an input with a row in `R` (Def. `def:legal-input`).
@@ -115,7 +115,7 @@ Lean: `Step σ (.input j) τ` (constructor `Step.input`). -/
 abbrev «app:notation/input-event» (j : I) : Event I O := .input j
 
 /-- *input loss* — the rows `input(j)` removes (Eq. `eq:input-event`):
-rows of `R` whose input does not expand `j`.  No library name. -/
+rows of `R` whose input does not extend `j`.  No library name. -/
 abbrev «app:notation/input-loss» {sp : Spec I O} (σ : State sp) (j : I) : Table I O :=
   fun k u => σ.R k u ∧ ¬ j ≼ k
 
@@ -134,7 +134,7 @@ abbrev «app:notation/output-event-excludes» {sp : Spec I O} (σ : State sp) (o
 Lean: `Exposable σ o`. -/
 abbrev «app:notation/exposable» {sp : Spec I O} (σ : State sp) (o : O) : Prop := Exposable σ o
 
-/-- *determined* — the upper fiber has one element; *determination* —
+/-- *determined* — the future-output set has one element; *determination* —
 reaching such a state (Sec. `sec:functional-events`).  Lean:
 `CALM.Determined σ`. -/
 abbrev «app:notation/determined» {sp : Spec I O} (σ : State sp) : Prop := Determined σ
@@ -150,7 +150,7 @@ abbrev «app:notation/commitment-free» {sp : Spec I O} (σ : State sp) (es : Li
   ExecCF σ es τ
 
 /-- *consistent* — every finite family of runs can reach one common state at
-each common expansion `j` (Def. `def:consistency`).  Lean:
+each common input extension `j` (Def. `def:consistency`).  Lean:
 `Spec.Consistent`. -/
 abbrev «app:notation/consistent» (sp : Spec I O) : Prop := sp.Consistent
 
@@ -171,23 +171,23 @@ abbrev «app:notation/relational-specification» (I O : Type) [PO I] [PO O] := S
 abbrev «app:notation/nondeterministic» (sp : Spec I O) : Prop :=
   ∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o'
 
-/-- *stranded output* — an output at `i` with no refinement at some
-expansion (Sec. `sec:lifted-monotonicity`).  No library name; its absence is
+/-- *stranded output* — an output at `i` with no output extension at some
+input extension (Sec. `sec:lifted-monotonicity`).  No library name; its absence is
 `Spec.RelMono`. -/
 abbrev «app:notation/stranded-output» (sp : Spec I O) (i : I) (o : O) : Prop :=
   sp.P i o ∧ ∃ j, i ≼ j ∧ ¬ ∃ u, sp.P j u ∧ o ≼ u
 
-/-- *incompatible pair* — two outputs at `i` with no common refinement there
+/-- *incompatible pair* — two outputs at `i` with no common output extension there
 (Sec. `sec:lifted-monotonicity`).  No library name; its absence (for all
 finite sets) is `Spec.DirectedOutputs`. -/
 abbrev «app:notation/incompatible-pair» (sp : Spec I O) (i : I) (o o' : O) : Prop :=
   sp.P i o ∧ sp.P i o' ∧ ¬ CompatibleIn (sp.P i) [o, o']
 
-/-- *Relational Monotonicity* — every output keeps a refinement as input
+/-- *Relational Monotonicity* — every output keeps an output extension as input
 grows (Def. `def:relational-monotonicity`).  Lean: `Spec.RelMono`. -/
 abbrev «app:notation/relational-monotonicity» (sp : Spec I O) : Prop := sp.RelMono
 
-/-- *compatible in `F`* — some `u ∈ F` refines all
+/-- *compatible in `F`* — some `u ∈ F` extends all
 (Def. `def:fiber-directedness`).  Lean: `CompatibleIn F X`. -/
 abbrev «app:notation/compatible-in» (F : O → Prop) (X : List O) : Prop := CompatibleIn F X
 
@@ -195,7 +195,7 @@ abbrev «app:notation/compatible-in» (F : O → Prop) (X : List O) : Prop := Co
 (Def. `def:fiber-directedness`).  Lean: `JointLift F F`. -/
 abbrev «app:notation/directed» (F : O → Prop) : Prop := JointLift F F
 
-/-- *Directed Outputs* — every fiber directed (Def. `def:directed-outputs`).
+/-- *directed fibers* — every fiber directed (Def. `def:directed-outputs`).
 Lean: `Spec.DirectedOutputs`. -/
 abbrev «app:notation/directed-outputs» (sp : Spec I O) : Prop := sp.DirectedOutputs
 
@@ -207,18 +207,18 @@ abbrev «app:notation/joint-lift» (A B : O → Prop) : Prop := JointLift A B
 (Def. `def:lifted-monotonicity`).  Lean: `Spec.LiftedMono`. -/
 abbrev «app:notation/lifted-monotonicity» (sp : Spec I O) : Prop := sp.LiftedMono
 
-/-- *common-expansion condition* — rows with a common expansion `j` have a
-common refinement in `P(j)` (Def. `def:common-expansion-condition`).  Lean:
+/-- *common-extension condition* — rows with a common input extension `j` have a
+common output extension in `P(j)` (Def. `def:common-expansion-condition`).  Lean:
 `Spec.CommonExpansion`. -/
 abbrev «app:notation/common-expansion-condition» (sp : Spec I O) : Prop := sp.CommonExpansion
 
-/-- *ruled out by `o`* — a row whose output does not refine `o`
+/-- *ruled out by `o`* — a row whose output does not extend `o`
 (Sec. `sec:lifted-output-events`).  No library name: `σ.R k x ∧ ¬ o ≼ x`
 (equivalently in `R ∖ outputTable σ o`, `CC.ruledOut_iff`). -/
 abbrev «app:notation/ruled-out» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ o ≼ x
 
-/-- *`Subsumed_o`* — ruled-out rows refined by a kept row at the same input
+/-- *`Subsumed_o`* — ruled-out rows extended by a kept row at the same input
 (Eq. `eq:output-subsumptions`).  Lean: `Subsumed σ o`. -/
 abbrev «app:notation/Subsumed» {sp : Spec I O} (σ : State sp) (o : O) : Table I O := Subsumed σ o
 
@@ -293,12 +293,12 @@ abbrev «app:notation/cut-confluent-at» {D : Type} {n : Nat} (sp : Spec I O)
   H.CutConfluentAt sp C j
 
 /-- *distributed consistency* — every consistent cut of every history is
-confluent at every common expansion (Def. `def:distributed-consistency`).
+confluent at every common input extension (Def. `def:distributed-consistency`).
 Lean: `Dist.DistConsistent sp D`, for message data `D`. -/
 abbrev «app:notation/distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
   Dist.DistConsistent sp D
 
-/-- *commitment* — partial function on states removing rows, none refined by
+/-- *commitment* — partial function on states removing rows, none extended by
 a remaining row at the same input (Def. `def:commitment`).  Lean:
 `CC.Commitment sp` (and the equivalent `CC.CAP.Commitment sp`). -/
 abbrev «app:notation/commitment» (sp : Spec I O) := Commitment sp
@@ -426,7 +426,7 @@ abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (E : Table I O)
   CAP.AvailabilityFor E Sys
 
 /-- *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a
-common expansion `j` has a common refinement in `P(j)` (Def. `def:lm-for-A`).
+common input extension `j` has a common output extension in `P(j)` (Def. `def:lm-for-A`).
 Lean: `CAP.ConsistentOn`. -/
 abbrev «app:notation/lm-for-A» (sp : Spec I O) (E : Table I O) : Prop :=
   CAP.ConsistentOn sp E

@@ -18,9 +18,9 @@ Consistency, `gilbert_lynch_full`).
    An operation history `Hist` is a finite partial map from operation ids
    (`Nat`) to operations together with a strict partial order `prec`
    (real-time precedence) on the ids present.  Finiteness is the Prop
-   `∃ N, ∀ a ≥ N, ops a = none`, so that the expansion order is antisymmetric
+   `∃ N, ∀ a ≥ N, ops a = none`, so that the input-extension order is antisymmetric
    (histories are equal when their maps and precedence relations are).
-2. *Expansion* `h ≼ h'`: every operation of `h` is in `h'` (same id, same
+2. *Input extension* `h ≼ h'`: every operation of `h` is in `h'` (same id, same
    operation) and every precedence edge of `h` is in `h'`.
 3. *Outputs* are response maps `RMap` (id ↦ optional `ack` / `val v`),
    ordered by extension.
@@ -54,7 +54,7 @@ Consistency, `gilbert_lynch_full`).
 8. *The atomicity hypothesis* `RealizedRPC`: Response Partition Consistency
    (`CAP.RPCAt`) at the realized history of every prefix of every interleaving
    of every well-formed, produced, partitioned history, **whenever the
-   realized history is a common expansion of the current inputs** (which is
+   realized history is a common input extension of the current inputs** (which is
    the precondition of Def. `def:response-partition-consistency`).  This is the
    weakest reading of the corollary's hypothesis, so the impossibility is the
    strongest one.  The paper claims the precondition always holds; it does
@@ -62,11 +62,11 @@ Consistency, `gilbert_lynch_full`).
 
 ## Notes on the corollary's hypotheses
 
-* The hypothesis "at `h_C` whenever `h_C` is a common expansion of the
+* The hypothesis "at `h_C` whenever `h_C` is a common input extension of the
   current inputs at `C`" (as the paper now states it) cannot be dropped: the
   adversarial environment may supply, in one input event, two operations at
   the same replica with a precedence edge between them; no response
-  separates them, so the edge is not realized and `h_C` does not expand the
+  separates them, so the edge is not realized and `h_C` does not extend the
   current inputs (`realized_not_expansion`).  In the history of the proof
   the precondition holds (proved here).
 * Invocations and responses are read as in the paper: the invocation of `a`
@@ -379,7 +379,7 @@ theorem realized_mono {H : RHist D n} {pos : Fin n → Nat → Nat} {m m' : Nat}
 /-- Atomicity (Corollary `cor:gilbert-lynch`): Response Partition Consistency
 at the realized history of every prefix of every interleaving of every
 partitioned history the system produces, whenever that realized history is a
-common expansion of the current inputs. -/
+common input extension of the current inputs. -/
 def RealizedRPC (Sys : System regSpec D) : Prop :=
   ∀ (n : Nat) (init : Fin n → Hist) (H : RHist D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →
@@ -565,7 +565,7 @@ theorem inp_head {α : Type} {e : α} {A : List α} {P : α → Prop} (hA : ∀ 
 
 /-- The final step of the proof: in the constructed history, the realized
 history `j` of the full prefix of the interleaving "all of `p`, then all of
-`q`" is a common expansion of the current inputs, and Response Partition
+`q`" is a common input extension of the current inputs, and Response Partition
 Consistency there fails. -/
 theorem final_contra (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : Fin 2 → Hist}
     {H : RHist D 2} {comp : Fin 2 → Nat}
@@ -736,7 +736,7 @@ theorem gilbert_lynch (Sys : System regSpec D) :
     rw [hext4 1, List.take_length, e31]; rfl
   exact final_contra Sys hRPC wf4 prod4 part4 hinj e40 e41 hni2 hni4 hmo hQo hmo' hQo'
 
-/-- Full Response Partition Consistency (at every common expansion) implies
+/-- Full Response Partition Consistency (at every common input extension) implies
 the realized-history form, so the impossibility holds for it too. -/
 theorem realizedRPC_of_responsePC {Sys : System regSpec D} (h : ResponsePC Sys) :
     RealizedRPC Sys := by
@@ -747,7 +747,7 @@ theorem gilbert_lynch_full (Sys : System regSpec D) :
     ¬ (ResponseAvailability Sys regQn ∧ ResponsePC Sys) :=
   fun ⟨hRA, hRPC⟩ => gilbert_lynch Sys ⟨hRA, realizedRPC_of_responsePC hRPC⟩
 
-/-! ## The realized history need not expand the current inputs -/
+/-! ## The realized history need not extend the current inputs -/
 
 /-- Two operations at replica 0 with a precedence edge, supplied in one
 input event. -/
@@ -768,12 +768,12 @@ def jab : Hist where
   irrefl := fun _ h => h
   trans := fun _ _ _ h => h.elim
 
-/-- **Counterexample** to the paper's claim that `h_C` is a common expansion
+/-- **Counterexample** to the paper's claim that `h_C` is a common input extension
 of every participant's current input: for every system, the history in which
 the environment hands replica 0 the input `hab` (a write and a read at
 replica 0 with the write preceding the read) in a single input event has
 realized history `jab` (no edge, since no response separates the two
-invocations), which does not expand replica 0's current input `hab`. -/
+invocations), which does not extend replica 0's current input `hab`. -/
 theorem realized_not_expansion (Sys : System regSpec D) :
     ∃ (init : Fin 2 → Hist) (H : RHist D 2) (comp : Fin 2 → Nat) (pos : Fin 2 → Nat → Nat)
       (m : Nat) (c : Fin 2 → Nat) (j : Hist),

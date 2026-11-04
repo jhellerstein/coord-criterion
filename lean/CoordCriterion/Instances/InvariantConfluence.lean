@@ -7,7 +7,7 @@ Proposition `prop:iconfluence-lm`.  We formalize the Bailis et al. model as pres
 (Section `sec:iconfluence-instance`, Appendix `app:iconfluence`) and prove
 
 * `CC.IConf.ic_iff_liftedMono`       : `T` invariant confluent ↔ `S_I` has Lifted Monotonicity;
-* `CC.IConf.ic_iff_commonExpansion`  : the same with the common-expansion form.
+* `CC.IConf.ic_iff_commonExpansion`  : the same with the common-extension form.
 
 The equivalence with Bailis et al.'s own Def. 6 is in
 `Instances/BailisDefinition.lean`; the worked examples are in
@@ -28,8 +28,8 @@ The equivalence with Bailis et al.'s own Def. 6 is in
   Every finite partial order admits such a numbering, so this loses no
   generality; it makes the event-by-event recursion for `pre`/`post` a plain
   recursion on `Nat`.  Since only events carry data, structural equality of
-  histories is extensional, and the expansion order is antisymmetric.
-* **Expansion order** on histories: `a ≼ b` iff `a` is a downward-closed
+  histories is extensional, and the input-extension order is antisymmetric.
+* **Input-extension order** on histories: `a ≼ b` iff `a` is a downward-closed
   sub-order of `b` in which every event keeps its label and exactly its
   predecessors: labels of `a` are labels of `b`, and
   `a.lt x y ↔ b.lt x y ∧ y ∈ a`.  (Paper: "`b` \inrel `a`".)
@@ -109,7 +109,7 @@ def ev (h : Hist Tx) (e : Nat) : Prop := h.lab e ≠ none
 theorem ext' {a b : Hist Tx} (h₁ : a.lab = b.lab) (h₂ : a.lt = b.lt) : a = b := by
   cases a; cases b; cases h₁; cases h₂; rfl
 
-/-- `a` is a downward-closed sub-history of `b` (`b` expands `a`). -/
+/-- `a` is a downward-closed sub-history of `b` (`b` extends `a`). -/
 def le (a b : Hist Tx) : Prop :=
   (∀ e t, a.lab e = some t → b.lab e = some t) ∧ (∀ x y, a.lt x y ↔ (b.lt x y ∧ a.ev y))
 
@@ -458,7 +458,7 @@ theorem valid_reach {g : Hist Tx} (hg : Valid M g) : Reach M (eval M g) := by
 
 end Valid
 
-/-- Inputs of `S_I`: locally valid histories, ordered by expansion. -/
+/-- Inputs of `S_I`: locally valid histories, ordered by input extension. -/
 def Inp (M : Model V Tx) := {h : Hist Tx // LocValid M h}
 
 instance (M : Model V Tx) : PO (Inp M) where
@@ -475,7 +475,7 @@ def SI (M : Model V Tx) : Spec (Inp M) (St V) where
   P h s := ∃ g, g ≼ h.1 ∧ Valid M g ∧ eval M g = s
   total _ := ⟨_, Hist.empty, Hist.empty_le _, valid_empty M, rfl⟩
 
-/-! ## (⇒) Invariant confluence gives the common-expansion condition -/
+/-! ## (⇒) Invariant confluence gives the common-extension condition -/
 
 section Forward
 variable (M : Model V Tx)
@@ -874,7 +874,7 @@ end Backward
 
 /-! ## Proposition `prop:iconfluence-lm` -/
 
-/-- The common-expansion condition implies Lifted Monotonicity (the easy
+/-- The common-extension condition implies Lifted Monotonicity (the easy
 direction of Prop. `common-expansion-form`, proved here for any spec). -/
 theorem commonExpansion_liftedMono {I O : Type} [PO I] [PO O] (sp : Spec I O)
     (h : sp.CommonExpansion) : sp.LiftedMono := by
@@ -893,11 +893,11 @@ theorem commonExpansion_liftedMono {I O : Type} [PO I] [PO O] (sp : Spec I O)
 theorem ic_iff_liftedMono (M : Model V Tx) : M.IConfluent ↔ (SI M).LiftedMono :=
   ⟨fun h => commonExpansion_liftedMono _ (ic_commonExpansion M h), lm_ic M⟩
 
-/-- The same with the common-expansion form of Lifted Monotonicity. -/
+/-- The same with the common-extension form of Lifted Monotonicity. -/
 theorem ic_iff_commonExpansion (M : Model V Tx) : M.IConfluent ↔ (SI M).CommonExpansion :=
   ⟨ic_commonExpansion M, fun h => lm_ic M (commonExpansion_liftedMono _ h)⟩
 
-/-- In fact Directed Outputs (the `i = j` case of Lifted Monotonicity) already
+/-- In fact directed fibers (the `i = j` case of Lifted Monotonicity) already
 implies invariant confluence for `S_I`; we record that `pair_inv` only uses it. -/
 theorem directed_ic (M : Model V Tx) (h : (SI M).DirectedOutputs) : M.IConfluent := by
   apply lm_ic M

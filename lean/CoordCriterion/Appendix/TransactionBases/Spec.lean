@@ -276,7 +276,7 @@ theorem abortFree_decides (k : Inp T K) : ∃ o : Outcome T, Decides true k o :=
 
 /-- **The specification** (`af = false`) and its abort-free variant
 (`af = true`): a row is permitted when some permitted complete output at the
-same input refines it. -/
+same input extends it. -/
 def spec (af : Bool) : Spec (Inp T K) (ROut T K) where
   P k u := ∃ c, Complete af k c ∧ u ≼ c
   total k := by

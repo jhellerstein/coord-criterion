@@ -127,7 +127,7 @@ theorem printed_complete (k : Ballots) (o : Res) :
     rcases (shown_inputs k).1 hk with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
       simp [printed] <;> decide
 
-/-- Upper fibers of panels (a) and (b): `{⊥, x, y}`. -/
+/-- Future-output sets of panels (a) and (b): `{⊥, x, y}`. -/
 theorem upper_ab (o : Res) :
     (∃ k, (canon elec bad).R k o) ∧ (∃ k, (canon elec bab).R k o) := by
   rcases o with _ | ⟨_ | _⟩
@@ -138,7 +138,7 @@ theorem upper_ab (o : Res) :
   · exact ⟨⟨babb, (by decide : Res.win .b = winner babb), by decide⟩,
       ⟨babb, (by decide : Res.win .b = winner babb), by decide⟩⟩
 
-/-- Upper fiber of panel (c): `{x}`. -/
+/-- Future-output set of panel (c): `{x}`. -/
 theorem upper_c (o : Res) : (∃ k, (canon elec baa).R k o) ↔ o = .win .a := by
   constructor
   · rintro ⟨k, hk⟩
@@ -149,7 +149,7 @@ theorem upper_c (o : Res) : (∃ k, (canon elec baa).R k o) ↔ o = .win .a := b
 
 /-- Panel (b): the rows at printed inputs that remain are exactly
 `(ab·,⊥)`, `(aba,a)`, `(abb,b)`; the other printed rows are subsumed by
-`input(ab·)` (their input does not expand `ab·`). -/
+`input(ab·)` (their input does not extend `ab·`). -/
 theorem panel_b (k : Ballots) (o : Res) (hk : bad ≼ k) :
     ((canon elec bab).R k o ↔
       ((k = bab ∧ o = .bot) ∨ (k = baba ∧ o = .win .a) ∨ (k = babb ∧ o = .win .b))) ∧
@@ -197,12 +197,12 @@ theorem panelD_rows (k : Ballots) (o : Res) : panelD.R k o ↔ (k = bab ∧ o = 
 
 theorem panelD_cur : panelD.cur = bab := rfl
 
-/-- "Upper fiber `{⊥}`; determined; `⊥` is the result." -/
+/-- "Future-output set `{⊥}`; determined; `⊥` is the result." -/
 theorem panelD_determined : Determined panelD ∧ ∀ k x, panelD.R k x → x = .bot :=
   ⟨⟨.bot, fun k x h => ((panelD_rows k x).1 h).2⟩, fun k x h => ((panelD_rows k x).1 h).2⟩
 
 /-- The commitment removes exactly the still-possible rows `(aba, a)` and `(abb, b)`
-(struck through), and these inputs are legal at (b) and expand the current
+(struck through), and these inputs are legal at (b) and extend the current
 input: input alone would not have removed them. -/
 theorem panelD_struck (k : Ballots) (o : Res) :
     ((canon elec bab).R k o ∧ ¬ panelD.R k o) ↔
@@ -292,9 +292,9 @@ theorem winner_determined (i : Ballots) (c : Cand) (h : winner i = .win c) :
 
 /-- **Decisive ballot vs. closing the polls.**  (1) A decisive ballot
 (`input(aa·)` at panel (a)) reaches a determined state and every row it
-removes is lost after input (its input no longer expands the current input).
+removes is lost after input (its input no longer extends the current input).
 (2) Closing the polls at (b) reaches a determined state and every row it
-removes is at a legal input expanding the current one (a commitment).
+removes is at a legal input extending the current one (a commitment).
 (3) The results differ: in the election, closing the polls at any
 undetermined canonical state leaves the single result `⊥`, while every
 determined canonical state has a winner. -/
@@ -361,9 +361,9 @@ theorem sR (o : TOut) : (canon spec ()).R () o := ⟨trivial, trivial⟩
 theorem after_ab (k : Unit) (o : TOut) : outputTable (canon spec ()) .ab k o ↔ o = .ab :=
   ⟨fun h => h.2.symm, fun h => ⟨sR o, h.symm⟩⟩
 
-/-- "No remaining row refines the removed one": the row `[B,A]` is in
+/-- "No remaining row extends the removed one": the row `[B,A]` is in
 `Excluded_o` (a commitment), not excluded (the input keeps `[A,B]`) and not subsumed
-(no row refines both). -/
+(no row extends both). -/
 theorem ba_excluded :
     Excluded (canon spec ()) .ab () .ba ∧
       ¬ Subsumed (canon spec ()) .ab () .ba ∧
@@ -472,7 +472,7 @@ def RS.union (x y : RS) : RS := ⟨x.s1 || y.s1, x.a || y.a, x.a2 || y.a2⟩
 macro "rs_cases" x:ident : tactic =>
   `(tactic| (obtain ⟨b1, b2, b3⟩ := $x:ident; cases b1 <;> cases b2 <;> cases b3))
 
-/-- The union of two route sets of the fiber is in the fiber and refines both. -/
+/-- The union of two route sets of the fiber is in the fiber and extends both. -/
 theorem union_mem (x y : RS) (hx : inFib x) (hy : inFib y) :
     inFib (x.union y) ∧ x ≼ x.union y ∧ y ≼ x.union y := by
   revert hx hy; rs_cases x <;> (rs_cases y) <;> decide
@@ -488,7 +488,7 @@ theorem after_s1 (x : RS) :
   rs_cases x <;> decide
 
 /-- The two removed rows `{s→a}` and `{s→a, s→a→s2}` are output subsumptions,
-each refined by the remaining `{s→s1,s→a,s→a→s2}`; nothing is excluded or
+each extended by the remaining `{s→s1,s→a,s→a→s2}`; nothing is excluded or
 excluded, so `{s→s1}` is exposable. -/
 theorem removed_subsumed :
     (∀ x, (canon spec ()).R () x → (¬ outputTable (canon spec ()) rS1 () x ↔ (x = rA ∨ x = rA2))) ∧
@@ -508,7 +508,7 @@ theorem removed_subsumed :
   revert this; rs_cases x <;> decide
 
 /-- "The traceroute fiber is directed": every nonempty finite set of route
-sets in it has a common refinement in it (its union). -/
+sets in it has a common output extension in it (its union). -/
 theorem directed : spec.DirectedOutputs ∧ spec.LiftedMono ∧ spec.Consistent := by
   have key : ∀ X : List RS, (∀ x ∈ X, inFib x) → ∀ x0, inFib x0 →
       ∃ u, inFib u ∧ x0 ≼ u ∧ ∀ x ∈ X, x ≼ u := by

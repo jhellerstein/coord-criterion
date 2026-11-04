@@ -53,8 +53,8 @@ Sanity checks:
   its input (`extend_int`).
 
 Testing side: a violation of Lifted Monotonicity is witnessed by finitely
-many executions and one execution `β` whose input expands theirs, such that
-no execution with the input of `β` refines them all
+many executions and one execution `β` whose input extends theirs, such that
+no execution with the input of `β` extends them all
 (`not_liftedMono_iff_witness`).  The last clause quantifies over all
 executions with that input.  It is implied by a check over the machine
 automaton's own runs on arrival orders of that input
@@ -137,8 +137,8 @@ variable [PO O] (k : ChanKind) (G : Machine C P Q O)
 
 /-- **A violation is witnessed by finitely many executions and one input.**
 Lifted Monotonicity fails iff there are finitely many executions `βᵣ` and an
-execution `β` whose input expands each of theirs, such that no execution
-with the input of `β` ends with an observation refining every `βᵣ`'s.  The
+execution `β` whose input extends each of theirs, such that no execution
+with the input of `β` ends with an observation extending every `βᵣ`'s.  The
 last clause ranges over all executions with that input. -/
 theorem not_liftedMono_iff_witness :
     ¬ (spec (C := C) k G).LiftedMono ↔
@@ -423,7 +423,7 @@ def Fork.obs : Fork → Lvl
 
 /-- Receives leave the state unchanged; an internal step moves to `b` or to
 `c` from any state; no outputs.  Every input has executions ending in `b`
-and in `c`, whose observations `l` and `r` have no common refinement among
+and in `c`, whose observations `l` and `r` have no common output extension among
 observations. -/
 def fork (C P : Type) : Machine C P Fork Lvl where
   q0 := .a
@@ -463,7 +463,7 @@ theorem fork_step {β : List (Act C P Lvl)} {s : (sys (C := C) k (fork C P)).St}
 
 /-- `fork` is not Lifted Monotone: from the empty execution, one internal
 step reaches `l` and another `r`, at the same (empty) input, and no
-observation refines both. -/
+observation extends both. -/
 theorem fork_not_liftedMono : ¬ (spec (C := C) k (fork C P)).LiftedMono := by
   obtain ⟨s0, hx0, _⟩ := (reach_nil (k := k) (G := fork C P)).2 rfl
   obtain ⟨sb, hxb, hb⟩ := fork_step k hx0 .b (Or.inl rfl)
@@ -495,7 +495,7 @@ theorem fork_not_liftedMono : ¬ (spec (C := C) k (fork C P)).LiftedMono := by
 
 /-- **Neither obligation alone preserves Lifted Monotonicity.**  `forkOmit`
 satisfies Realizability (every input reaches `b` by one internal step) and
-`forkAdd` satisfies Domination (`top` refines every observation); both are
+`forkAdd` satisfies Domination (`top` extends every observation); both are
 Lifted Monotone, while the induced specification of `fork` is not. -/
 theorem fork_halves :
     (∀ h o, (forkOmit C P k).P h o →

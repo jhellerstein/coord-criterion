@@ -21,7 +21,7 @@ states are `IConf.St V := V → Prop` ordered by inclusion, merged by
 event ids with transactions and carries a strict order `lt` (visibility),
 numbered along a linear extension; `a ≼ b` means `a` is a downward-closed
 sub-order of `b` in which every event keeps its label and exactly its
-predecessors (the paper's "`b` expands `a`").  A downward-closed sub-history
+predecessors (the paper's "`b` extends `a`").  A downward-closed sub-history
 is written `j.restrict P _` for a downward-closed id predicate `P`; the
 disjoint union is `Hist.dunion` (even/odd ids); adding an event above all
 others is `Hist.addTop`.
@@ -37,7 +37,7 @@ events, each labeled by a transaction in `T`; `e' < e` means that `e'` was
 visible to the replica that ran `e`."  Lean: `IConf.Hist Tx`. -/
 abbrev «app:iconfluence/history» (Tx : Type) : Type := IConf.Hist Tx
 
-/-- "History `h'` expands `h` when `h` is a downward-closed sub-order of `h'`,
+/-- "History `h'` extends `h` when `h` is a downward-closed sub-order of `h'`,
 so an event keeps exactly the predecessors it had."  Lean: `h ≼ h'` unfolds
 to: labels of `h` are labels of `h'`, and `h.lt x y ↔ h'.lt x y ∧ y ∈ h`. -/
 theorem «app:iconfluence/expansion-order» {Tx : Type} (h h' : IConf.Hist Tx) :
@@ -122,7 +122,7 @@ theorem «app:iconfluence/total» {V Tx : Type} (M : IConf.Model V Tx) (h : ICon
 
 /-! ## Proof of Proposition `prop:iconfluence-lm` -/
 
-/-- "We use the common-expansion form of Lifted Monotonicity
+/-- "We use the common-extension form of Lifted Monotonicity
 (Prop. `prop:common-expansion-form`)."  Lean: the proposition in that form. -/
 theorem «app:iconfluence/proof-common-expansion-form» {V Tx : Type} (M : IConf.Model V Tx) :
     M.IConfluent ↔ (IConf.SI M).CommonExpansion :=
@@ -187,7 +187,7 @@ theorem «app:iconfluence/proof-halves» {V Tx : Type} (M : IConf.Model V Tx)
       IConf.Hist.half c 0 ≼ g₁ ∧ IConf.Hist.half c 1 ≼ g₂ :=
   ⟨IConf.eval_half M hc, IConf.Hist.half_le hc (by decide), IConf.Hist.half_le hc (by decide)⟩
 
-/-- (⇐): "Directed Outputs gives a valid sub-history `g` of `j` with
+/-- (⇐): "directedness of the fibers gives a valid sub-history `g` of `j` with
 `eval(g) ⊇ eval(g₁) ∪ eval(g₂) = eval(j) ⊇ eval(g)`, so
 `𝓘(eval(g₁) ∪ eval(g₂))`. … `j` is valid.  Valid histories are therefore
 closed under disjoint union, and under adding an event above all others when
@@ -216,7 +216,7 @@ theorem «app:iconfluence/proof-backward» {V Tx : Type} (M : IConf.Model V Tx) 
     (IConf.SI M).LiftedMono → M.IConfluent :=
   IConf.lm_ic M
 
-/-- (⇐): "Only Directed Outputs is needed." -/
+/-- (⇐): "Only directedness of the fibers is needed." -/
 theorem «app:iconfluence/proof-directed-suffices» {V Tx : Type} (M : IConf.Model V Tx) :
     (IConf.SI M).DirectedOutputs → M.IConfluent :=
   IConf.directed_ic M

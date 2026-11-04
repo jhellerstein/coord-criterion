@@ -47,7 +47,7 @@ question for any declared guarantee.  To state the question, we must separate
 the outputs that participants must keep available from the outputs that the
 specification permits.  A participant acts on its local history during a
 partition, while consistency compares the participants' outputs at a common
-expansion of their inputs.  Their common refinement need not be emitted by
+input extension of their inputs.  Their common output extension need not be emitted by
 any participant.  It may exist only as the client's combined observation.
 
 Consider a register initialized to `v₀`.  During a partition, participant
@@ -56,18 +56,18 @@ Consider a register initialized to `v₀`.  During a partition, participant
 collects both observes the write acknowledgment together with the read answer
 `v₀`.  The register specification permits this combined output at the input
 containing both operations: a linearization may put the concurrent read
-before the write.  The combined output refines both local outputs and
+before the write.  The combined output extends both local outputs and
 provides a proof of their consistency, although no participant need ever
 emit it.
 
 We therefore encode a guarantee as an I/O specification together with an
 explicit relation `E ⊆ P`: the rows whose outputs must remain locally
 available.  Outputs in `P ∖ E` need only remain permitted as possible common
-refinements.  Complete CAP says that such a guarantee can stay available and
+output extensions.  Complete CAP says that such a guarantee can stay available and
 consistent through partitions exactly when the specification satisfies
 Lifted Monotonicity for `E`: outputs selected by `E` on different sides of a
-partition must have a common refinement in the specification at every common
-expansion of their inputs.  When `E = P`, this is Lifted Monotonicity
+partition must have a common output extension in the specification at every common
+input extension of their inputs.  When `E = P`, this is Lifted Monotonicity
 itself."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
 `«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`).  The
@@ -211,7 +211,7 @@ theorem «def:partition-notions/at-cuts» (Sys : System sp D) :
 
 /-- **Def. `def:partition-consistency` (Partition Consistency).**  "The system
 has Partition Consistency when the final cut of every partitioned history it
-produces is confluent at every common expansion of the participants' current
+produces is confluent at every common input extension of the participants' current
 inputs.  The continuation
 that confluence asks for need not stay partitioned and need not be produced by
 the system." -/
@@ -241,11 +241,11 @@ theorem «def:partition-consistency/at-cuts» (Sys : System sp D) :
 
 /-- **Def. `def:lm-for-A` (Lifted Monotonicity for `E`).**  "`P` satisfies
 Lifted Monotonicity for `E` when every finite set of rows of `E` with a common
-expansion `j` has a common refinement in `P(j)`."  Lean: `ConsistentOn sp E`
+input extension `j` has a common output extension in `P(j)`."  Lean: `ConsistentOn sp E`
 (the library name predates the paper's term); finite sets are lists. -/
 abbrev «def:lm-for-A» (sp : Spec I O) (E : Table I O) : Prop := ConsistentOn sp E
 
-/-- "With `E = P`, Lifted Monotonicity for `E` is the common-expansion
+/-- "With `E = P`, Lifted Monotonicity for `E` is the common-extension
 condition." -/
 theorem «sec:complete-cap/lm-for-S» (sp : Spec I O) :
     «def:lm-for-A» sp sp.P ↔ sp.CommonExpansion :=
@@ -337,7 +337,7 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
   availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun hap hx hnx hqk
 
 /-- "For a smaller `E` such local row-removing commitments can be necessary: if `o ∈ E(i)` and
-`x ∈ P(i) ∖ E(i)` have no common refinement at `i`, emitting `o` must choose
+`x ∈ P(i) ∖ E(i)` have no common output extension at `i`, emitting `o` must choose
 against `x`."  Lean: one input, `P = {o, x}` incomparable, `E = {o}` (`lcA`): `P`
 satisfies Lifted Monotonicity for `E` (`ConsistentOn`), `o` is not a legal output
 (so its output event must apply a commitment), and the canonical system `respSystem E` is
@@ -376,19 +376,19 @@ with their real-time precedence, and whose outputs answer every operation of
 the input as some linearization does.  Let `p`'s input contain only a write of
 `v ≠ v_0`, and `q`'s only a read.  The fiber at `p`'s input holds only the
 write's acknowledgment; the fiber at `q`'s input, which contains no write,
-holds only the answer `v_0` to the read.  At the common expansion where the
+holds only the answer `v_0` to the read.  At the common input extension where the
 write precedes the read, every output in the fiber answers that same read with
 `v`.  That contradicts the answer `v_0`; it is not a later read observing a
-newer value.  So no output there refines `v_0`, and `P` does not satisfy
+newer value.  So no output there extends `v_0`, and `P` does not satisfy
 Lifted Monotonicity."
 
 Lean: the complete-response register `regFullSpec` (an output is a response
 map, operation id ↦ response, explained by some linearization and answering
 every operation); `h1` is the write of `v = 1` (operation `0`), `h2` the read
-(operation `1`), `hj` both with the write before the read, a common expansion
+(operation `1`), `hj` both with the write before the read, a common input extension
 of `h1` and `h2`; `v0 = 0`.  The fibers at `h1` and `h2` are singletons; every
 output at `hj` answers the same operation `1` with `1`, so none answers it
-with `v0` (a refinement keeps every answer of the map it refines); hence
+with `v0` (an output extension keeps every answer of the map it extends); hence
 Lifted Monotonicity fails. -/
 theorem «sec:complete-cap/gl-register» :
     (∀ o, CC.GL.regFull CC.GL.h1 o → o = CC.GL.ackMap) ∧
@@ -413,14 +413,14 @@ yields Gilbert and Lynch's theorem exactly.  Place `p` and `q` in separate
 blocks.  Availability is used only to make `p` acknowledge the write and
 `q` answer the read; each fiber holds a single output, so any response will
 do, which is Gilbert and Lynch's availability.  Partition Consistency is used
-only to demand a common refinement of those two answers, a single
+only to demand a common output extension of those two answers, a single
 linearization that explains both, which is Gilbert and Lynch's consistency."
 
 Lean: the two-row case of the proof, for outputs forced at their inputs, with
 Answering (each participant can emit *some* output) in place of Availability
-and a common refinement of the emitted outputs (`CommonRefinementAtEnd`) in
+and a common output extension of the emitted outputs (`CommonRefinementAtEnd`) in
 place of Partition Consistency; the proof runs the two participants in
-separate blocks.  For the register, a common refinement lies in
+separate blocks.  For the register, a common output extension lies in
 `regFull hj`, so it is explained by a single linearization of `hj`, by the
 definition of the fiber.  That Answering and `CommonRefinementAtEnd` are
 Gilbert and Lynch's availability and consistency is the reading of
@@ -432,7 +432,7 @@ theorem «sec:complete-cap/gl-two-row-forced» (Sys : System sp D)
     ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u :=
   cap_two_step_forced Sys hA hC h₁ h₂ hj₁ hj₂
 
-/-- "Their theorem is a case of Complete CAP" … "No such refinement
+/-- "Their theorem is a case of Complete CAP" … "No such output extension
 exists.":  no system for the register lets every request receive a response
 and keeps the emitted responses reconcilable (explained by one
 linearization). -/

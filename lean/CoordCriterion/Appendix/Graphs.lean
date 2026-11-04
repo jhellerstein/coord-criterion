@@ -282,7 +282,7 @@ instance : PO Bit where
     intro a b h1 h2
     cases a <;> cases b <;> simp_all
 
-/-- One input; the stage may output `lo` or `hi`.  It is LM (`hi` refines
+/-- One input; the stage may output `lo` or `hi`.  It is LM (`hi` extends
 both), but not functional. -/
 def coin : Spec Pt Bit := ⟨fun _ _ => True, fun _ => ⟨.lo, trivial⟩⟩
 

@@ -10,9 +10,9 @@ Namespace `CC.Apps` (reuses the finite sets and generic commitment lemmas of
 
 * Committed authority:  `Auth`, `prefix_antisymm`, the output order of
   Eq. `authority-refinement` (`instPOAuth`); `safety_exposable` (if every
-  remaining row refines the certified evidence `o`, then `o` is exposable and
+  remaining row extends the certified evidence `o`, then `o` is exposable and
     `Out_ε(o)` is legal); `incompatible_excluded` (generic: two outputs at the
-    current input with no common refinement there ⇒ emitting one excludes the
+    current input with no common output extension there ⇒ emitting one excludes the
     other, is not exposable, and needs a commitment); `slot_conflict` and
   `epoch_conflict` instantiate it for competing decisions of one slot and for
   competing next epochs.  The decision claim needs the extra hypothesis that
@@ -31,7 +31,7 @@ Namespace `CC.Apps` (reuses the finite sets and generic commitment lemmas of
   `completeSpec_commitment_needed` (via Prop. `prop:functional-exposure-boundary`).
 
 Modeling choices: output types contain all partial maps / sets (permitted
-outputs are finite); "no common refinement" is proved in the whole output
+outputs are finite); "no common output extension" is proved in the whole output
 type, which is stronger.  Decidable equality is assumed on participants and
 values (harmless).  The negative side of Complete CAP is
 `¬ ∃ Sys, Availability Sys ∧ PartitionConsistency Sys` from
@@ -49,7 +49,7 @@ open CC.Txn
 section Generic
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
-/-- If `o, o' ∈ R(i)` have no common refinement in `R(i)`, emitting `o`
+/-- If `o, o' ∈ R(i)` have no common output extension in `R(i)`, emitting `o`
 excludes `(i,o')` (a commitment), `o` is not exposable, and every legal output
 event emitting `o` applies a commitment. -/
 theorem incompatible_excluded {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
@@ -62,7 +62,7 @@ theorem incompatible_excluded {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
   refine ⟨hrej, fun he => (exposable_iff_empty σ o).1 he ⟨_, _, hrej⟩,
     fun B γ τ hs => containment_nonempty hs ⟨_, _, hrej⟩⟩
 
-/-- If every remaining row refines `o` (what protocol safety is assumed to
+/-- If every remaining row extends `o` (what protocol safety is assumed to
 guarantee for certified evidence), `o` is exposable and `Out_ε(o)` is legal. -/
 theorem safety_exposable {σ : State sp} {o : O} (ho : σ.R σ.cur o)
     (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : CommitmentBasis sp) :
@@ -109,7 +109,7 @@ instance instPOAuth (Ep Vt Dc : Type) : PO (Auth Ep Vt Dc) where
 def SlotUnique {κ : Type} (slot : Dc → κ) (D : Dc → Prop) : Prop :=
   ∀ d d', D d → D d' → slot d = slot d' → d = d'
 
-/-- Competing decisions for one slot have no common refinement among outputs
+/-- Competing decisions for one slot have no common output extension among outputs
 that decide at most one value per slot. -/
 theorem slot_no_common {κ : Type} (slot : Dc → κ) {o o' : Auth Ep Vt Dc} {d d' : Dc}
     (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
@@ -248,7 +248,7 @@ theorem kset_single_row (hk : 1 ≤ k) (r : Fin (k + 1)) :
 variable (hp : ∀ r r', p r = p r' → r = r')
 include hp
 
-/-- The union of the proposal inputs is a common expansion. -/
+/-- The union of the proposal inputs is a common input extension. -/
 theorem kset_union_upper (r : Fin (k + 1)) : propIn p v r ≼ unionIn p v hp := by
   intro x hx
   simp only [propIn, FinSet.ofList, List.mem_singleton] at hx
@@ -279,7 +279,7 @@ theorem allBut_at {r0 r : Fin (k + 1)} (hr : r ≠ r0) : (allBut p v r0).f (p r)
   rw [this]
 
 include hp in
-/-- **Any `k` of the `k+1` rows have a common refinement at the union.** -/
+/-- **Any `k` of the `k+1` rows have a common output extension at the union.** -/
 theorem kset_any_k (r0 : Fin (k + 1)) :
     ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, r ≠ r0 → single p v r ≼ u := by
   refine ⟨allBut p v r0, ?_, fun r hr q a h => ?_⟩
@@ -301,7 +301,7 @@ theorem kset_any_k (r0 : Fin (k + 1)) :
 variable (hv : ∀ r r', v r = v r' → r = r')
 include hp hv
 
-/-- **All `k+1` rows have no common refinement at the union** (it would have
+/-- **All `k+1` rows have no common output extension at the union** (it would have
 `k+1` values). -/
 theorem kset_all_fail :
     ¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u := by
@@ -316,7 +316,7 @@ theorem kset_all_fail :
   rw [List.length_map, List.length_finRange] at this
   omega
 
-/-- **The common-expansion condition fails.** -/
+/-- **The common-extension condition fails.** -/
 theorem kset_not_commonExpansion (hk : 1 ≤ k) : ¬ (ksetSpec P Val k).CommonExpansion := by
   intro hce
   let rows := (List.finRange (k + 1)).map fun r => (propIn p v r, single p v r)
@@ -456,7 +456,7 @@ theorem name2_row {p q : P} (h : p ≠ q) {a b : Nat} (hab : a ≠ b) (ha : 1 �
       · simp only [Option.some.injEq] at hx; omega
       · exact nomatch hx
 
-/-- **Each of `p ↦ 1`, `q ↦ 1` has a refinement at `{p,q}`** (so Relational
+/-- **Each of `p ↦ 1`, `q ↦ 1` has an output extension at `{p,q}`** (so Relational
 Monotonicity does not fail here). -/
 theorem ren_each_extends {p q : P} (h : p ≠ q) :
     (∃ u, (renSpec P).P (pairSet p q h) u ∧ name1 p ≼ u) ∧
@@ -477,7 +477,7 @@ theorem ren_no_injective_extends_both {p q : P} (h : p ≠ q) :
     ¬ ∃ u : PMap P Nat, Injective u ∧ name1 p ≼ u ∧ name1 q ≼ u :=
   fun ⟨u, hi, h1, h2⟩ => h (hi p q 1 (h1 p 1 (by simp [name1])) (h2 q 1 (by simp [name1])))
 
-/-- Hence the common-expansion condition fails at `{p}`, `{q}` ⊑ `{p,q}`. -/
+/-- Hence the common-extension condition fails at `{p}`, `{q}` ⊑ `{p,q}`. -/
 theorem ren_not_commonExpansion {p q : P} (h : p ≠ q) : ¬ (renSpec P).CommonExpansion := by
   intro hce
   obtain ⟨u, hu, hall⟩ := hce [(sing p, name1 p), (sing q, name1 q)]
@@ -496,8 +496,8 @@ theorem ren_not_commonExpansion {p q : P} (h : p ≠ q) : ¬ (renSpec P).CommonE
         simp only [sing, FinSet.ofList, List.mem_singleton] at hx <;> simp [hx])
   exact ren_no_injective_extends_both h ⟨u, hu.2.1, hall (sing p, name1 p) (by simp), hall (sing q, name1 q) (by simp)⟩
 
-/-- **Directed Outputs fails at `{p,q}`**: `{p↦1,q↦2}` and `{p↦2,q↦1}` have no
-common refinement; so Lifted Monotonicity fails. -/
+/-- **Directed fibers fail at `{p,q}`**: `{p↦1,q↦2}` and `{p↦2,q↦1}` have no
+common output extension; so Lifted Monotonicity fails. -/
 theorem ren_not_directed {p q : P} (h : p ≠ q) :
     (¬ ∃ u, name2 p q 1 2 ≼ u ∧ name2 p q 2 1 ≼ u) ∧
     ¬ (renSpec P).DirectedOutputs ∧ ¬ (renSpec P).LiftedMono := by
@@ -672,7 +672,7 @@ theorem completeSpec_not_monotone (e : Ev) :
 /-- **Some output can be exposed only after a commitment that empties an
 input's fiber** (Prop. `prop:functional-exposure-boundary`): there is a state
 reachable without commitment and an output there whose `Excluded` class is
-nonempty, so every legal output event emitting it applies a commitment; at
+nonempty, so every commitment-sufficient output event emitting it applies a commitment; at
 each input it changes, the commitment empties the fiber. -/
 theorem completeSpec_commitment_needed (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧

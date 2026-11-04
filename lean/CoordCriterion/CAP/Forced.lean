@@ -14,7 +14,7 @@ version of the two-row case.
 For the register whose outputs answer every operation of the input
 (`GL.regFullSpec`), the write's acknowledgment and the isolated read's `v0`
 are such forced outputs, and no output at the history where the write
-precedes the read refines the read's `v0`.  So no system for it has Answering
+precedes the read extends the read's `v0`.  So no system for it has Answering
 and keeps emitted outputs reconcilable (`CommonRefinementAtEnd`, the part of
 Partition Consistency the argument uses): `GL.gilbert_lynch_direct`, the
 Gilbert–Lynch theorem by the Complete CAP argument.
@@ -46,15 +46,15 @@ theorem answering_of_availability {Sys : System sp D} (hA : AvailabilityAtEnd Sy
   exact ⟨o, ho, hA n init H comp hw hp hpt p σ hσ o ho⟩
 
 /-- The part of Partition Consistency the two-row case uses: at the end of
-every produced partitioned history, for every common expansion `j` of the
-current inputs, some `u ∈ P(j)` refines every emitted output. -/
+every produced partitioned history, for every common input extension `j` of the
+current inputs, some `u ∈ P(j)` extends every emitted output. -/
 def CommonRefinementAtEnd (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →
     ∀ j : I, (∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j) →
     ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ H p → o ≼ u
 
-/-- Partition Consistency gives a common refinement: the common state `(j,R)`
+/-- Partition Consistency gives a common output extension: the common state `(j,R)`
 has a row `(j,u)`, and rows are never added. -/
 theorem commonRefinement_of_pc {Sys : System sp D} (hP : PartitionConsistencyAtEnd Sys) :
     CommonRefinementAtEnd Sys := by
@@ -68,7 +68,7 @@ theorem commonRefinement_of_pc {Sys : System sp D} (hP : PartitionConsistencyAtE
 
 /-- The two-row case with a weaker hypothesis: two participants in separate
 blocks, starting at `init 0` and `init 1` from the empty history, can each
-emit `outs p` without messages or inputs (`hE`).  A common refinement of the
+emit `outs p` without messages or inputs (`hE`).  A common output extension of the
 emitted outputs (`hC`, implied by Partition Consistency) then lies in `P(j)`. -/
 theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)
     (init : Fin 2 → I) (outs : Fin 2 → O) {j : I} (hj : ∀ p, init p ≼ j)
@@ -118,7 +118,7 @@ theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)
 
 /-- The two-row case with forced outputs: if `o₁` and `o₂` are the only
 outputs permitted at `i₁` and `i₂`, Answering suffices in place of
-Availability, and a common refinement in place of Partition Consistency. -/
+Availability, and a common output extension in place of Partition Consistency. -/
 theorem cap_two_step_forced (Sys : System sp D) (hA : AnsweringAtEnd Sys)
     (hC : CommonRefinementAtEnd Sys) {i₁ i₂ j : I} {o₁ o₂ : O}
     (h₁ : ∀ o, sp.P i₁ o → o = o₁) (h₂ : ∀ o, sp.P i₂ o → o = o₂)
@@ -267,7 +267,7 @@ theorem hj_reads_write (u : RMap) (hu : regFull hj u) : u.f 1 = some (.val 1) :=
 complete-response register lets every participant answer and keeps the
 emitted outputs reconcilable: the write's acknowledgment at `h1` and the
 read's `v0` at `h2` are forced, and no output at `hj`, where the write
-precedes the read, refines `v0`. -/
+precedes the read, extends `v0`. -/
 theorem gilbert_lynch_direct {D : Type} (Sys : System regFullSpec D) :
     ¬ (AnsweringAtEnd Sys ∧ CommonRefinementAtEnd Sys) := by
   rintro ⟨hA, hC⟩

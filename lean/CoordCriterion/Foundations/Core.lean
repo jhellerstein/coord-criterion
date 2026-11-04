@@ -8,7 +8,7 @@ notation of `appendices/notation.tex`: partial orders (`PO`), ordered
 specifications (`Spec`) and tables, states `(i, R)` (`State`), input/output
 events and their transition relation (`Event`, `Step`, `Exec`, `Reach`), the
 canonical state `σ_P(i)` (`canon`), exposability, Functional / Relational /
-Lifted Monotonicity, Directed Outputs, the common-expansion condition
+Lifted Monotonicity, directed fibers, the common-extension condition
 (`Spec.CommonExpansion`), consistency (`Spec.Consistent`), the
 Subsumed/Excluded rows of a lifted output event, and commitment-free
 executions (`ExecCF`, `ReachableCF`).  Paper
@@ -23,7 +23,7 @@ namespace CC
 
 universe u
 
-/-- A partial order.  `le a b` reads "`b` expands/refines `a`". -/
+/-- A partial order.  `le a b` reads "`b` extends `a`". -/
 class PO (α : Type u) where
   le : α → α → Prop
   refl : ∀ a, le a a
@@ -137,16 +137,16 @@ def Spec.LiftedMono (sp : Spec I O) : Prop :=
 def Spec.RelMono (sp : Spec I O) : Prop :=
   ∀ i j o, i ≼ j → sp.P i o → ∃ u, sp.P j u ∧ o ≼ u
 
-/-- Directed Outputs: every fiber is directed. -/
+/-- directed fibers: every fiber is directed. -/
 def Spec.DirectedOutputs (sp : Spec I O) : Prop :=
   ∀ i, JointLift (sp.P i) (sp.P i)
 
-/-- Common-expansion condition (Def. common-expansion-condition). -/
+/-- Common-extension condition (Def. common-extension-condition). -/
 def Spec.CommonExpansion (sp : Spec I O) : Prop :=
   ∀ rows : List (I × O), (∀ r ∈ rows, sp.P r.1 r.2) →
     ∀ j : I, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
 
-/-- The two classes of rows ruled out by `o`: rows refined by a kept row,
+/-- The two classes of rows ruled out by `o`: rows extended by a kept row,
 and rows that must be removed by commitment. -/
 def Subsumed {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ (o ≼ x) ∧ ∃ u, σ.R k u ∧ o ≼ u ∧ x ≼ u

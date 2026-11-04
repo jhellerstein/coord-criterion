@@ -287,7 +287,7 @@ theorem functional_commitmentState_eq (hf : sp.Functional) (σ : State sp) (o : 
     exact ⟨hx, fun he => he.2.1 hox⟩
 
 /-- "With one row per input … legality says that every row the commitments
-leave has an output that refines `o`." -/
+leave has an output that extends `o`." -/
 theorem functional_legal_ge (hf : sp.Functional) {B : CommitmentBasis sp} {σ τ : State sp}
     {γ : List (Commitment sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
     ∃ σc, ApplySeq γ σ σc ∧ (∀ k x, σc.R k x → o ≼ x) ∧ τ.R = σc.R := by
@@ -315,7 +315,7 @@ def CanonLegal (sp : Spec I O) (H : Dist.History I O D n) : Prop :=
   ∀ p, ∃ es : List (SEvent sp), es.filterMap SEvent.erase = Dist.ioOf (H.ev p) ∧
     ∃ τ, CanonExec (canon sp (H.init p)) es τ
 
-/-- The same with legal events `Out_γ(o)` from a basis `B`. -/
+/-- The same with commitment-sufficient output events `Out_γ(o)` from a basis `B`. -/
 def SysLegal (B : CommitmentBasis sp) (H : Dist.History I O D n) : Prop :=
   ∀ p, ∃ es : List (SEvent sp), es.filterMap SEvent.erase = Dist.ioOf (H.ev p) ∧
     ∃ τ, SysExec B (canon sp (H.init p)) es τ
@@ -387,14 +387,14 @@ theorem canonLegal_sysLegal {H : Dist.History I O D n} (h : CanonLegal sp H) :
 
 end canonical_system
 
-/-! ### Prop. `thm:commitments-require-coordination`, refinements -/
+/-! ### Prop. `thm:commitments-require-coordination`, output extensions -/
 
 section conflict
 variable {sp : Spec I O}
 
 /-- A state `τ` contradicts the application of a commitment from `σ` to
 `σc` at input `k`.  The first clause models emitting a removed row: every row
-of `τ` at `k` refines the emitted output `x`.  The second models accepting an
+of `τ` at `k` extends the emitted output `x`.  The second models accepting an
 input whose nonempty fiber the commitment emptied. -/
 def CommitmentContradictsAt (σ σc τ : State sp) (k : I) : Prop :=
   (∃ x, σ.R k x ∧ ¬ σc.R k x ∧ ∀ w, τ.R k w → x ≼ w) ∨
@@ -431,7 +431,7 @@ theorem commitment_contradiction_reach {c : Commitment sp} {σ σc τ : State sp
   · exact (c.unsubsumed σ σc happ k x w hx hnx hσc) (hrefines w hτ)
   · exact hempty w hσc
 
-/-- The state after emitting `x` has only rows refining `x`, so it contradicts
+/-- The state after emitting `x` has only rows extending `x`, so it contradicts
 any commitment that removed `(k,x)`. -/
 theorem commitmentContradictsAt_of_output {B : CommitmentBasis sp}
     {σ σc υ τ : State sp} {k : I}
@@ -475,9 +475,9 @@ theorem applySeq_removed {γ : List (Commitment sp)} {σ σc : State sp}
     · exact ⟨c, List.mem_cons_self .., σ, τ, hc, rfl, hx, hτ⟩
 
 /-- "The conflict is at the current input, so it is a commitment, not a commitment":
-if `Out_γ(o)` leaves no output refining `x ∈ R(i)`, then some commitment `c`
+if `Out_γ(o)` leaves no output extending `x ∈ R(i)`, then some commitment `c`
 of `γ` removes `(i, x)` while keeping a row at `i`, and no kept row at `i`
-refines `x`. -/
+extends `x`. -/
 theorem conflict_removes_output {B : CommitmentBasis sp} {σ σ' : State sp} {γ : List (Commitment sp)}
     {o x : O} (h1 : SysStep B σ (.output γ o) σ') (hx : σ.R σ.cur x)
     (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
@@ -499,7 +499,7 @@ theorem conflict_removes_output {B : CommitmentBasis sp} {σ σ' : State sp} {γ
 
 /-- Prop. `thm:commitments-require-coordination` for any first event: if an
 event `e` (input, output, or commitment event) takes `σ` to `σ'` with no output
-at `i` refining `x`, and `Out_γ'(x)` takes `σ` to `t`, then no state with
+at `i` extending `x`, and `Out_γ'(x)` takes `σ` to `t`, then no state with
 current input `i` is reachable (under any bases) from both.  If `e` is an
 output event `Out_γ(o)`, then `γ ≠ ε`; a commitment event has `γ ≠ ε` by
 definition. -/
@@ -536,9 +536,9 @@ theorem conflicting_events_reach {B B' : CommitmentBasis sp} {σ σ' t : State s
   exact hno w (reach_sub h1r _ _ hw) (ht _ _ (reach_sub h2r _ _ hw)).2
 
 /-- "The first event's commitment is a commitment of `x`", for a commitment
-event: if `apply(γ)` leaves no output refining `x ∈ R(i)`, then some
+event: if `apply(γ)` leaves no output extending `x ∈ R(i)`, then some
 commitment `c` of `γ` removes `(i, x)` while keeping a row at `i`, and no kept
-row at `i` refines `x`. -/
+row at `i` extends `x`. -/
 theorem conflict_is_commitment_event {B : CommitmentBasis sp} {σ σ' : State sp}
     {γ : List (Commitment sp)} {x : O} (h1 : SysStep B σ (.commitment γ) σ')
     (hx : σ.R σ.cur x) (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
@@ -607,8 +607,8 @@ end compound
 
 /-- **Cor. reconciliation under any basis.**  Runs `r` under bases `B r`,
 continued under arbitrary bases `B' r` to one state with current input `j`:
-some `u ∈ P(j)` refines every output emitted on every run.  (The hypothesis
-that `j` is a common expansion is not needed.) -/
+some `u ∈ P(j)` extends every output emitted on every run.  (The hypothesis
+that `j` is a common input extension is not needed.) -/
 theorem reconciliation_any_basis {sp : Spec I O} {m : Nat} (B B' : Fin m → CommitmentBasis sp)
     (i : Fin m → I) (es : Fin m → List (SEvent sp)) (ρ : Fin m → State sp)
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))
@@ -748,7 +748,7 @@ end converse
 
 /-! ### Deterministic reconciliation needs no commitment -/
 
-/-- Under Lifted Monotonicity, runs with a common expansion `j` share a row
+/-- Under Lifted Monotonicity, runs with a common input extension `j` share a row
 `(j,u)`, and from each final state the commitment-free events `input(j)`,
 `Out_ε(u)` reach the same state `(j, P[in ⪰ j, out ⪰ u])`. -/
 theorem reconcile_cf {sp : Spec I O} (hLM : sp.LiftedMono) (fam : List (State sp))

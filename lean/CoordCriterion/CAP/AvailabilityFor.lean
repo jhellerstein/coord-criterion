@@ -12,13 +12,13 @@ Consistency is unchanged and measured in `S`.
 
 `complete_cap_for`: some system has Availability for `A` and Partition
 Consistency iff `S` is consistent on `A` (every finite family of rows of `A`
-with a common expansion `j` has a common refinement in `P(j)`).  The paper
+with a common input extension `j` has a common output extension in `P(j)`).  The paper
 calls this condition *Lifted Monotonicity for `A`* (Def. `def:lm-for-A`); the
 library keeps the name `ConsistentOn`.
 
-* `A = S` is the interface form: consistency on `S` is the common-expansion
+* `A = S` is the interface form: consistency on `S` is the common-extension
   condition, i.e. Lifted Monotonicity (`availabilityFor_S`).
-* Necessity uses only a common refinement of the emitted outputs
+* Necessity uses only a common output extension of the emitted outputs
   (`CommonRefinementAtEnd`), and holds for any system.
 * Sufficiency uses the canonical system `respSystem A`, which emits any output
   of `A` in its current fiber by the canonical event.
@@ -163,7 +163,7 @@ theorem availabilityFor_resp (A : Table I O) :
 
 /-- (⇐): if `S` is consistent on `A`, `respSystem A` has Partition
 Consistency: its emitted outputs are rows of `A`, so they have a common
-refinement, and for a canonical system that is confluence. -/
+output extension, and for a canonical system that is confluence. -/
 theorem pc_resp (A : Table I O) (hcons : ConsistentOn sp A) :
     PartitionConsistencyAtEnd (respSystem (sp := sp) (D := D) A) := by
   apply (partitionConsistency_iff_atEnd _).1
@@ -188,7 +188,7 @@ theorem pc_resp (A : Table I O) (hcons : ConsistentOn sp A) :
 
 /-- **Complete CAP for an explicit relation.**  For `A ⊆ S`: some system
 has Availability for `A` and Partition Consistency iff `S` is consistent on
-`A`.  The forward direction needs only a common refinement of the emitted
+`A`.  The forward direction needs only a common output extension of the emitted
 outputs, for any system. -/
 theorem complete_cap_for (sp : Spec I O) (D : Type) (A : Table I O)
     (hAS : ∀ i o, A i o → sp.P i o) :

@@ -78,14 +78,14 @@ theorem keep_row {G : State (spec (T := T) (K := K) false) → Prop} {P : Outcom
     τ.R k r :=
   ((closeC_app_iff.1 h).2.2 k r).2 ((keep_complete hp).2 ⟨hr, hP⟩)
 
-/-! ### Rows refining `[A,C,B]` -/
+/-! ### Rows extending `[A,C,B]` -/
 
 section Rows
 variable {k : Inp T K} (h : Tri k A B C)
 include h
 
 /-- A complete row at an input above `k` that commits `A`, `B`, `C` and
-satisfies the three orders refines `[A,C,B]`. -/
+satisfies the three orders extends `[A,C,B]`. -/
 theorem acb_le {k' : Inp T K} {o : Outcome T} (hp : Decides false k' o) (hk : k ≼ k')
     (cA : CommitOK A o) (cB : CommitOK B o) (cC : CommitOK C o) (oAC : OrderOK A C o)
     (oCB : OrderOK C B o) (oAB : OrderOK A B o) : mk [A, C, B] (fun _ => False) ≼ o := by
@@ -114,7 +114,7 @@ theorem acb_le {k' : Inp T K} {o : Outcome T} (hp : Decides false k' o) (hk : k 
       simp [hAC, hCB, hAB, nCA, nBC, nBA, irr, hd.ab, hd.ac, hd.bc, Ne.symm hd.ab,
         Ne.symm hd.ac, Ne.symm hd.bc]
 
-/-- A complete row refining `[A,C,B]` satisfies the six conditions. -/
+/-- A complete row extending `[A,C,B]` satisfies the six conditions. -/
 theorem le_acb {k' : Inp T K} {o : Outcome T} (hp : Decides false k' o)
     (hle : mk [A, C, B] (fun _ => False) ≼ o) :
     CommitOK A o ∧ CommitOK B o ∧ CommitOK C o ∧ OrderOK A C o ∧ OrderOK C B o ∧
@@ -158,14 +158,14 @@ aborts or reads.
 (a) When `B` begins to wait, the commitment event `Apply([order(A,B)])` is a
     legal `B_2PL` step from `σ₀` to `σ₁`, before any output.  It keeps the
     current input and keeps exactly the rows of `σ₀` that have a complete
-    refinement in `σ₀` that does not commit `B` before `A` (aborting `A` or `B`
+    output extension in `σ₀` that does not commit `B` before `A` (aborting `A` or `B`
     counts); in particular it keeps `[A,B,C]` and removes `[B,A,C]`.
 (b) The canonical run skips that event: it is still at `σ₀`, which has the row
     `[B,A,C]`.
 (c) 2PL then emits `[A,C,B]` with `TxCommit(A), TxCommit(B), TxCommit(C),
     order(A,C), order(C,B)`: a legal `B_2PL` step.  The canonical run can emit
     the same output because that row was present at `σ₀`.  Every row it retains
-    afterward refines `[A,C,B]`, hence satisfies all five commitments in the
+    afterward extends `[A,C,B]`, hence satisfies all five commitments in the
     output event and the earlier `order(A,B)`.
 (d) The canonical final table is therefore contained in 2PL's; Canonical Run
     Universality gives the reverse containment.  The two runs end at the same

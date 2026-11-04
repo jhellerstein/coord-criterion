@@ -83,8 +83,8 @@ variable {I M O : Type} [PO I] [PO M] [PO O]
 /-- The middle values `𝒮₁` can produce. -/
 def Img (sp : Spec I M) (m : M) : Prop := ∃ i, sp.P i m
 
-/-- **Common expansion on `D`**: the common-expansion condition for rows whose
-inputs lie in `D`, at expansions in `D`. -/
+/-- **Common input extension on `D`**: the common-extension condition for rows whose
+inputs lie in `D`, at input extensions in `D`. -/
 def CEOn (sp : Spec M O) (D : M → Prop) : Prop :=
   ∀ rows : List (M × O), (∀ r ∈ rows, D r.1 ∧ sp.P r.1 r.2) →
     ∀ j, D j → (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u
@@ -344,7 +344,7 @@ def ChainFrom : Option M → List M → Prop
   | none, b :: l => ChainFrom (some b) l
   | some a, b :: l => a ≼ b ∧ ChainFrom (some b) l
 
-/-- **The outputs of a run under any basis form a chain**, each refining the
+/-- **The outputs of a run under any basis form a chain**, each extending the
 ones before it. -/
 theorem emitted_chain {B : CommitmentBasis sp} {σ ρ : State sp} {es : List (SEvent sp)}
     (h : SysExec B σ es ρ) :
@@ -419,7 +419,7 @@ theorem store_run (hf : Monotone f) {B : CommitmentBasis sp} {σ ρ : State sp}
 
 /-- A set `R` of run endpoints of a `𝒫`-system is **consistent** when every
 finite family of them can be brought, under arbitrary continuations (any
-basis), to one common state at each common expansion of their inputs. -/
+basis), to one common state at each common input extension of their inputs. -/
 def SysConsistent (R : State sp → Prop) : Prop :=
   ∀ fam : List (State sp), (∀ σ ∈ fam, R σ) → ∀ j : I, (∀ σ ∈ fam, σ.cur ≼ j) →
     ∃ τ : State sp, τ.cur = j ∧ ∀ σ ∈ fam, ∃ (B : CommitmentBasis sp) (es : List (SEvent sp)),
@@ -452,7 +452,7 @@ def GuardedRuns (R : State sp → Prop) (f : M → O) (ρ : State (comp sp f)) :
 
 /-- **Guarded consistency.**  If the runs `R` of a `𝒫`-system are consistent,
 then every finite family of guarded composite runs is confluent at every
-common expansion, in the composite's own transition system.  No
+common input extension, in the composite's own transition system.  No
 monotonicity of `𝒫`, and no commitment of the composite, is assumed. -/
 theorem guarded_consistent {R : State sp → Prop} (h : SysConsistent R) :
     ∀ fam : List (State (comp sp f)), (∀ ρ ∈ fam, GuardedRuns R f ρ) →
@@ -564,7 +564,7 @@ noncomputable def excludeInput (Q : J → Prop) : Commitment sq where
 
 end Commitment
 
-/-- Exposability at canonical states alone gives the common-expansion
+/-- Exposability at canonical states alone gives the common-extension
 condition (the reverse direction of the exposure boundary uses only them). -/
 theorem canon_exposable_commonExpansion {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hE : ∀ i o, sp.P i o → Exposable (canon sp i) o) : sp.CommonExpansion := by
@@ -838,7 +838,7 @@ end Systems
 
 From here on the store is any ordered relational specification
 `sk : Spec M O` satisfying Lifted Monotonicity (used through the
-common-expansion condition).  The function case is `sk = graph f` with `f`
+common-extension condition).  The function case is `sk = graph f` with `f`
 monotone (`graph_commonExpansion`). -/
 
 section General
@@ -864,7 +864,7 @@ theorem imgK_canon (sk : Spec M O) (i : I) : imgK sk (canon sp i) = canon (seq s
   exact ⟨fun ⟨m, ⟨h, hk⟩, ho⟩ => ⟨⟨m, h, ho⟩, hk⟩, fun ⟨⟨m, h, ho⟩, hk⟩ => ⟨m, ⟨h, hk⟩, ho⟩⟩
 
 /-- **A commitment-free output of `𝒫` maps to commitment-free outputs of the
-composite.**  If `𝒦` satisfies the common-expansion condition and `m` is
+composite.**  If `𝒦` satisfies the common-extension condition and `m` is
 exposable at `σ`, every `o ∈ K(m)` is exposable at the image of `σ`. -/
 theorem cf_stepK (hC : sk.CommonExpansion) {σ : State sp} {m : M} (hexp : Exposable σ m)
     {o : O} (ho : sk.P m o) : Exposable (imgK sk σ) o := by
@@ -919,7 +919,7 @@ theorem cf_stepK_on {D : M → Prop} (hC : Joint.CEOn sk D) {σ : State sp}
     exact ⟨u, ⟨w, hw, hu⟩, hall _ h1, hall _ h2⟩
 
 /-- **The store finds a row at every later input.**  At a run state of a
-specification satisfying the common-expansion condition, every input above
+specification satisfying the common-extension condition, every input above
 the current one has a surviving row. -/
 theorem row_at (hC : sk.CommonExpansion) {τ : State sk} (hτ : IsRun τ) {j : M}
     (hj : τ.cur ≼ j) : ∃ u, τ.R j u := by
@@ -1433,7 +1433,7 @@ guarded runs. -/
 def Obs (U : List M → Prop) (K : Sys sk) (l : List M) (m : M) (tr : List (Event M O)) : Prop :=
   ∃ esK, GRun U K l m esK ∧ esK.filterMap SEvent.erase = tr
 
-/-- **Erasure, lockstep.**  If `𝒦` satisfies the common-expansion condition,
+/-- **Erasure, lockstep.**  If `𝒦` satisfies the common-extension condition,
 then from any run state `σ'` with the same current input whose table contains
 `σ`'s, every store execution under any basis, with its commitments erased, is
 an execution under the empty basis, and the containment persists after each
@@ -1582,7 +1582,7 @@ theorem pipeline_step (hC : sk.CommonExpansion) {P : Sys sp} {K : Sys sk} {l' : 
   refine ⟨i, es', ρ', produces_free.2 (canonExec_sysExec hc), ?_⟩
   rw [emitted_eq_outs, he', outs_merge es₀ _ hlen, hfl]
 
-/-- Under the common-expansion condition, every execution from a run state
+/-- Under the common-extension condition, every execution from a run state
 is commitment-free. -/
 theorem exec_execCF {J X : Type} [PO J] [PO X] {sq : Spec J X} (hC : sq.CommonExpansion)
     {σ τ : State sq} {es : List (Event J X)} (h : Exec σ es τ) (hσ : IsRun σ) :
@@ -1643,7 +1643,7 @@ def NeedsNoCommit {J X : Type} [PO J] [PO X] (sq : Spec J X) : Prop :=
 `𝒮₂` is proper when `𝒮₂|_{𝒮₁}` needs no commitment. -/
 def Proper (sp : Spec I M) (sk : Spec M O) : Prop := NeedsNoCommit (rest sp sk)
 
-/-- Proper means the common-expansion condition for `𝒮₂|_{𝒮₁}` (the exposure
+/-- Proper means the common-extension condition for `𝒮₂|_{𝒮₁}` (the exposure
 boundary). -/
 theorem proper_iff_ce : Proper sp sk ↔ (rest sp sk).CommonExpansion :=
   (exposure_boundary _).symm

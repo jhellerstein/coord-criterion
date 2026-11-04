@@ -43,8 +43,8 @@ theorem «proof:prop:distributed-consistency» (sp : Spec I O) (D : Type) :
 /-- *Exchanging outputs* (table level).  "It can silently honor `o` by
 restricting its table to `R[out ⪰ o]` … Silent honoring cannot change
 confluence in either direction.  It cannot help, because it only removes rows
-… It cannot hurt, because a row that survives at a common expansion already
-refines every output emitted in the cut (Lemma run-residual), including `o`."
+… It cannot hurt, because a row that survives at a common input extension already
+extends every output emitted in the cut (Lemma run-residual), including `o`."
 
 Lean: each family member is a state with the residual shape for its emitted
 outputs (the shape of every run, `IsRun.residual`) and a list of honored
@@ -122,7 +122,7 @@ theorem «thm:complete-cap/proof-sufficiency» (E : Table I O) (h : ConsistentOn
 per row, starting at input `i_r`, each in its own block … By
 Availability for `E`, each `p_r` can emit `o_r`.  By Partition Consistency,
 they then reach one state `(j,R)`, which has some row `(j,u)` … so `u`
-refines every `o_r`."  Lean: only a common refinement of the emitted outputs
+extends every `o_r`."  Lean: only a common output extension of the emitted outputs
 is used (implied by Partition Consistency). -/
 theorem «thm:complete-cap/proof-necessity» (E : Table I O) (hES : ∀ i o, E i o → sp.P i o)
     (Sys : System sp D) (hA : AvailabilityFor E Sys) (hC : CommonRefinementAtEnd Sys) :

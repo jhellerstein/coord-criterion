@@ -49,8 +49,8 @@ theorem «proof:prop:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O} :
   ⟨reach_sub, fun h _ _ hju => survivor_exec h hju⟩
 
 /-- Proof of Thm. `thm:functional-calm`: "By Prop. `prop:confluence`, a finite
-family of runs is therefore confluent at a common expansion `j` exactly when
-`f(j)` refines every output emitted on any of them.  If `f` is monotone, this
+family of runs is therefore confluent at a common input extension `j` exactly when
+`f(j)` extends every output emitted on any of them.  If `f` is monotone, this
 holds … If `f` is not monotone, some `i ≼ k` has `f(i) ⋠ f(k)`.  Of two runs
 from `σ_P(i)`, one that emits `f(i)` no longer has the row `(k,f(k))`, while
 one that accepts `input(k)` keeps it; no row at `k` survives in both, so they
@@ -81,17 +81,17 @@ theorem «proof:prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O]
 /-- Proof of Prop. `prop:common-expansion-form`: "Suppose Lifted
 Monotonicity … Relational Monotonicity gives, for each `r`, a `u_r ∈ P(j)`
 with `o_r ≼ u_r`.  The `u_r` all lie in the one fiber `P(j)`, which is
-directed, so some `u ∈ P(j)` refines every `u_r`, hence every `o_r`.
-Conversely, … the rows `{(i,x) : x ∈ X}` have common expansion `j`, so some
-`u ∈ P(j)` refines all of `X`."  Both directions. -/
+directed, so some `u ∈ P(j)` extends every `u_r`, hence every `o_r`.
+Conversely, … the rows `{(i,x) : x ∈ X}` have common input extension `j`, so some
+`u ∈ P(j)` extends all of `X`."  Both directions. -/
 theorem «proof:prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion :=
   liftedMono_iff_commonExpansion sp
 
 /-- **Lemma `lem:reconciliation`** (Reconciliation).  "Let runs end at
-`(i_r,R_r)`, `r = 1,…,m`, let `j` be a common expansion of the `i_r`, and let
+`(i_r,R_r)`, `r = 1,…,m`, let `j` be a common input extension of the `i_r`, and let
 `X` be the set of outputs emitted on any of them.  The runs are confluent at
-`j` if and only if some `u ∈ P(j)` refines every output in `X`."
+`j` if and only if some `u ∈ P(j)` extends every output in `X`."
 
 Lean: the runs are a list `fam` of runs with their events, `X` is
 `emittedAll fam`. -/
@@ -111,14 +111,14 @@ theorem «lem:reconciliation/consistency-over-runs» {I O : Type} [PO I] [PO O]
 
 /-- Proof of Thm. `thm:complete-calm`, (⇐): "Each output `o` emitted on a run
 was emitted at some input `i_o ≼ j`, so `(i_o,o)` is a row of `P`; the
-condition supplies `u ∈ P(j)` refining all of them, and
+condition supplies `u ∈ P(j)` extending all of them, and
 Lemma `lem:reconciliation` gives confluence." -/
 theorem «proof:thm:complete-calm/if» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (hC : sp.CommonExpansion) : sp.Consistent :=
   consistent_of_ce_paper hC
 
 /-- Proof of Thm. `thm:complete-calm`, (⇒): "Given rows `(i_r,o_r)` with
-common expansion `j`, apply consistency and Lemma `lem:reconciliation` to the
+common input extension `j`, apply consistency and Lemma `lem:reconciliation` to the
 runs that start at `σ_P(i_r)` and emit `o_r`; for the empty family, totality
 gives `P(j) ≠ ∅`."  (Lean needs no separate empty case: consistency of the
 empty family and the lemma already give `P(j) ≠ ∅`.) -/
@@ -145,19 +145,19 @@ theorem «proof:prop:exposure-boundary/only-if» {I O : Type} [PO I] [PO O] {sp 
 /-- Proof of Prop. `prop:exposure-boundary`, both directions; the converse is
 the paper's: "By totality pick `u₀ ∈ P(j)`.  For `r = 1,…,k` in turn, the
 legal-output test for `o_r` at `σ_P(i_r)`, applied with `x = u_{r-1}`, gives
-`u_r ∈ P(j)` refining both `o_r` and `u_{r-1}`." -/
+`u_r ∈ P(j)` extending both `o_r` and `u_{r-1}`." -/
 theorem «proof:prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.CommonExpansion ↔
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   exposure_boundary_paper sp
 
-/-! ### Pairs suffice for the common-expansion condition (`app:pairs-suffice`) -/
+/-! ### Pairs suffice for the common-extension condition (`app:pairs-suffice`) -/
 
-/-- `app:pairs-suffice`: "If every two rows with a common expansion `j` have a
-common refinement in `P(j)`, the condition holds for every finite family:
+/-- `app:pairs-suffice`: "If every two rows with a common input extension `j` have a
+common output extension in `P(j)`, the condition holds for every finite family:
 replace the first two rows by a row `(j,u)` at `j` and repeat; a single row is
 paired with any row at `j`."  `CALM.Pairs sp` is the pair condition over all
-rows of `P`; it is equivalent to the common-expansion condition. -/
+rows of `P`; it is equivalent to the common-extension condition. -/
 theorem «app:pairs-suffice» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (∀ i₁ o₁ i₂ o₂ j, sp.P i₁ o₁ → sp.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
         ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u) ↔ sp.CommonExpansion :=
@@ -165,7 +165,7 @@ theorem «app:pairs-suffice» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 
 /-- `app:pairs-suffice`: "The pairs must range over all rows of `P`, including
 those at `j`."  On a four-input specification, every two rows at inputs other
-than the common expansion are compatible there, but the common-expansion
+than the common input extension are compatible there, but the common-extension
 condition fails. -/
 theorem «app:pairs-suffice/rows-at-j» :
     (∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.P i₁ o₁ → spec4.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
@@ -175,7 +175,7 @@ theorem «app:pairs-suffice/rows-at-j» :
 /-- `app:pairs-suffice`: "Restricting the families to rows at single-proposal
 inputs does not suffice, even `k` rows at a time: in the `k`-set agreement
 example …, every family of at most `k` rows at such inputs is compatible at
-each common expansion, but the `k+1` proposal rows are not."
+each common input extension, but the `k+1` proposal rows are not."
 
 Lean: `k`-set agreement with participants and values `Fin (k+1)`
 (`CALM.KSet.spec k`, one instance suffices for the counterexample), `k ≥ 1`.
@@ -192,7 +192,7 @@ theorem «app:pairs-suffice/k-at-a-time» (k : Nat) (hk : 1 ≤ k) :
    KSet.not_all_compatible k⟩
 
 /-- Consequence for `app:pairs-suffice`: the `k`-set agreement specification
-fails the common-expansion condition, hence is not monotone. -/
+fails the common-extension condition, hence is not monotone. -/
 theorem «app:pairs-suffice/k-set-not-monotone» (k : Nat) (hk : 1 ≤ k) :
     ¬ (KSet.spec k).CommonExpansion ∧ ¬ (KSet.spec k).LiftedMono :=
   ⟨KSet.not_commonExpansion k hk, KSet.not_liftedMono k hk⟩

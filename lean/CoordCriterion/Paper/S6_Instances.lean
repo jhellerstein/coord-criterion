@@ -56,7 +56,7 @@ iff a program is monotone … Functional CALM does not replace the details of
 that theorem.  It abstracts the result to a property that can be compared
 with specifications outside Datalog.").  The abstraction is
 `«eq:query-monotonicity»` (§2); the transducer theorem itself is cited, not
-formalized.  The entries below check the mapping of its refinements into our
+formalized.  The entries below check the mapping of its output extensions into our
 frame (`Instances/QueryRefinements.lean`); the operational statements of
 those papers (placement policies, transducers, which orders their placement
 models justify) are cited, not formalized. -/
@@ -65,11 +65,11 @@ models justify) are cited, not formalized. -/
 `Q(I) ⊆ Q(I ∪ J)` for every `J` whose facts each contain a value that does
 not occur in `I`.  It is domain-disjoint-monotone when this holds for every
 `J` whose facts use only such values.  Each is Functional CALM under a
-different input order. … When the order lets `I ∪ J` expand `I` only for such
+different input order. … When the order lets `I ∪ J` extend `I` only for such
 `J`, each condition is functional monotonicity."  Lean: facts carry values
 `vals : F → V → Prop`; `ExtInp (distinctAdm vals)` and
 `ExtInp (disjointAdm vals)` order instances by domain-distinct and
-domain-disjoint expansion (nullary facts are never domain disjoint, as in
+domain-disjoint input extension (nullary facts are never domain disjoint, as in
 Ameloot et al.).  For each order, the weaker monotonicity is monotonicity of
 `J ↦ Q(J)`, and by Functional CALM the graph is consistent exactly when it
 holds.  With every fact admissible the order is inclusion and the condition
@@ -98,16 +98,16 @@ theorem «sec:query-instance/one-fact-version» :
   ⟨QRef.noCycle2_oneFact, QRef.noCycle2_not_disjointMono, QRef.noCycle2_not_distinctMono⟩
 
 /-- Sec. `sec:query-instance`: "Under inclusion of outputs, with inputs
-expanding only by facts at new nodes, a behavior is a relational
+extending only by facts at new nodes, a behavior is a relational
 specification.  A transducer computes a behavior if every fair run ends at a
 permitted output, and so implements a sub-behavior `A`. … Their
-characterization, node monotonicity of `A`, is the common-expansion condition
+characterization, node monotonicity of `A`, is the common-extension condition
 on `A` for two rows at disjoint networks.  Complete CAP extends it to
 overlapping networks"  Lean: inputs are `ExtInp (netAdm loc)` (located facts,
-network expansion, so the network `Netw loc H` is read off the input) and a
+network input extension, so the network `Netw loc H` is read off the input) and a
 behavior is any `Spec` on them.  Node monotonicity is equivalent to the
-common-expansion condition for two rows at disjoint networks and any common
-expansion `j` (`QRef.DisjointPairExpansion`); the full common-expansion
+common-extension condition for two rows at disjoint networks and any common
+input extension `j` (`QRef.DisjointPairExpansion`); the full common-extension
 condition implies it.  The transducer model, its notion of computing a
 behavior (Inf. Syst. 2026, Def. 4, Lemma 4), and its characterization theorem
 (Def. 6, Thm. 5) are cited, not formalized. -/
@@ -121,7 +121,7 @@ theorem «sec:query-instance/node-monotonicity» {F N G : Type} (loc : F → N)
 /-- Sec. `sec:query-instance`: "A list of all nodes lets nodes wait for
 everyone and choose consistently."  Lean: the list puts the membership in the
 input (`QRef.AllInp`: membership `mem` and the nodes heard from, `view ⊆
-mem`; an input expands another only at the same membership).  A complete
+mem`; an input extends another only at the same membership).  A complete
 view is maximal, and a choice of one output at each maximal input is a table
 for which any behavior containing it satisfies Lifted Monotonicity
 (`CAP.ConsistentOn`, Def. `def:lm-for-A`, the condition of Theorem
@@ -146,7 +146,7 @@ with `c` at `{b,c}`."  Lean, with node names as input (`loc = id`, inputs
 `QRef.net P`): `QRef.pairing` permits symmetric pairings in which, on a
 finite network, at most one node is unpaired.  It is node monotone, every
 output at a two-node network pairs its nodes, and no total sub-behavior `A`
-has `pairing` satisfy Lifted Monotonicity for it (rows at `{0,1}` and `{1,2}`, common expansion
+has `pairing` satisfy Lifted Monotonicity for it (rows at `{0,1}` and `{1,2}`, common input extension
 `{0,1,2}`).  The surrounding prose (isolated nodes must emit; their
 construction waits for a group to confirm itself; groups sharing a node are
 nested; the group's choice requires coordination, but not distributed coordination)
@@ -161,7 +161,7 @@ theorem «sec:query-instance/pairing» :
 
 /-- Sec. `sec:query-instance`: "For deterministic behaviors the two conditions
 coincide."  Lean: for the graph of `b`, node monotonicity is monotonicity
-under network expansion, which by Functional CALM is consistency. -/
+under network input extension, which by Functional CALM is consistency. -/
 theorem «sec:query-instance/deterministic-behaviors» {F N G : Type} (loc : F → N)
     (b : QRef.ExtInp (QRef.netAdm loc) → CALM.PSet G) :
     (QRef.NodeMono loc (graph b) ↔ Monotone b) ∧ ((graph b).Consistent ↔ Monotone b) :=
@@ -185,7 +185,7 @@ theorem «sec:crdt-instance/state-function» {D : Type} [PO D] [Inst.JSL D] (s0 
   Inst.st_lub s0 U
 
 /-- Sec. `sec:crdt-instance`: "Then `U ⊆ V` implies `s(U) ⊑ s(V)`, and
-`s(U₁) ⊔ s(U₂) = s(U₁ ∪ U₂)` is the least state refining both." -/
+`s(U₁) ⊔ s(U₂) = s(U₁ ∪ U₂)` is the least state extending both." -/
 theorem «sec:crdt-instance/state-monotone» {D : Type} [PO D] [Inst.JSL D] (s0 : D) :
     Monotone (Inst.st s0 : Inst.FSet D → D) ∧
       (∀ U₁ U₂ : Inst.FSet D, Inst.JSL.join (Inst.st s0 U₁) (Inst.st s0 U₂) = Inst.st s0 (U₁.union U₂)) ∧
@@ -245,11 +245,11 @@ theorem «sec:crdt-instance/semilattice» {D : Type} (m : Inst.CAI D) :
   Inst.cai_semilattice m
 
 /-- Sec. `sec:crdt-instance`: "CRDT states form a join-semilattice, but `q`
-needs less: Complete CALM requires only some common refinement of query
+needs less: Complete CALM requires only some common output extension of query
 outputs (Section `sec:lifted-monotonicity`), not a least one."  Lean: on the state
 lattice `B2 × B2`, a monotone observation `qY` into a five-element order makes
 `q ∘ s` consistent, yet its outputs `a = q(s({(tt,ff)}))` and
-`b = q(s({(ff,tt)}))` have common refinements (`c`, and also `d`) but no
+`b = q(s({(ff,tt)}))` have common output extensions (`c`, and also `d`) but no
 least one. -/
 theorem «sec:crdt-instance/some-refinement» :
     (graph (fun U : Inst.FSet (Inst.B2 × Inst.B2) => Inst.qY (Inst.st (Inst.B2.ff, Inst.B2.ff) U))).Consistent ∧
@@ -364,7 +364,7 @@ theorem «thm:hat-levels» (D : Type) :
 /-- Proof sketch of Thm. `thm:hat-levels`: "A read's answer under `E` depends
 only on the history preceding it, so later input never changes it, and the
 timestamp condition rules out the dependency cycles of G0 and G1c."  Lean:
-the candidates of a read are the same at every expansion containing it
+the candidates of a read are the same at every input extension containing it
 (`HATSpec.cand_iff`), so `hatOut` is monotone; under the timestamp condition
 every read- and write-dependency of HAT's history increases timestamps, so
 `hatOut j ∈ P_RC(j)`. -/
@@ -453,12 +453,12 @@ theorem «sec:iconfluence-instance/bailis-definition» {V Tx : Type} (M : IConf.
 specification `𝒮_𝓘` in ours as follows.  Inputs are transaction histories:
 partial orders of events, each labeled by a transaction in `T`, where one
 event precedes another when the replica running the second saw the first.  A
-history expands each of its downward-closed sub-orders.  We keep the locally
+history extends each of its downward-closed sub-orders.  We keep the locally
 valid histories, in which every transaction step preserves `𝓘` on its
 replica's state.  Outputs are database states, ordered by inclusion.  The
 possibility relation permits, at input `h`, the state of any downward-closed sub-history of
 `h` that is valid: every merge of what it contains satisfies `𝓘`."  Lean:
-`IConf.SI M` on inputs `IConf.Inp M` (locally valid histories, expansion
+`IConf.SI M` on inputs `IConf.Inp M` (locally valid histories, input extension
 order) with outputs `IConf.St V` under inclusion; full model in
 `Paper/AppB_InvariantConfluence`. -/
 theorem «sec:iconfluence-instance/spec» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M)
@@ -485,9 +485,9 @@ theorem «sec:iconfluence-instance/iconfluence-is-consistency» {V Tx : Type} (M
 /-- The uniqueness example: "The uniqueness constraint of Bailis et al.'s
 payroll example shows the failure directly.  Two replicas each create an
 employee and assign ID 7, which each sees is unused.  The history in which
-neither creation saw the other is locally valid and expands both
+neither creation saw the other is locally valid and extends both
 one-creation histories, but its state has two employees with ID 7, so no
-state it permits refines both."  Lean (library names from an earlier
+state it permits extends both."  Lean (library names from an earlier
 username version of the example): versions are the employees holding ID 7;
 `alloc a` creates employee `a` with ID 7 if the replica sees the ID unused;
 the invariant `uModel.Inv` is "at most one employee has ID 7"; `jU` has the
@@ -638,7 +638,7 @@ abbrev «def:execution-input» {C P O : Type} (β : List (IOM.Act C P O)) : IOM.
 
 /-- **Prop. `prop:induced-specification`** (Induced specifications).
 "(1) The induced specification is an I/O specification, and the input of
-an execution only expands as the execution continues.  (2) When there is one
+an execution only extends as the execution continues.  (2) When there is one
 client and its state-machine events arrive in the order it sent them, every input is a
 chain, inputs correspond to state-machine event sequences ordered by prefix, and the fiber
 at a sequence collects the observations of the machine's runs that receive it
@@ -651,8 +651,8 @@ receives each state-machine event of `h` once, interleaved with output and inter
 If the channel may reorder and clients observe no outputs, every such run is
 reached, whatever the order of its receives.  (4) The machine's observations
 are confluent across its executions—for executions with inputs `h₁,…,hₖ` and
-any input `h` that occurs and expands each `hᵣ`, some execution with input `h`
-ends in an observation that refines each of theirs—exactly when the induced
+any input `h` that occurs and extends each `hᵣ`, some execution with input `h`
+ends in an observation that extends each of theirs—exactly when the induced
 specification satisfies Lifted Monotonicity."
 
 Lean, part by part, for a general machine `G`; a run of the machine is an
@@ -683,7 +683,7 @@ every run of the machine that receives each of its state-machine events once, in
 order, is in the fiber (`IOM.bag_arrival_run` gives the execution);
 (4) `IOM.ObsConfluent k G` is the confluence condition on observations at the
 end of executions, and `IOM.confluent_iff_liftedMono`.  The proof follows the
-paper's sketch; (4) unfolds the fiber in the common-expansion condition
+paper's sketch; (4) unfolds the fiber in the common-extension condition
 (`IOM.obsConfluent_iff_commonExpansion`) and applies
 `liftedMono_iff_commonExpansion`.  The library also proves the version for
 emitted outputs (`IOM.emitConfluent_iff_liftedMono_of`). -/
@@ -736,14 +736,14 @@ These sentences describe tools and practice and are argued in prose only (see
 the README); the refutation claim is the next entry. -/
 
 /-- "If Lifted Monotonicity fails, finitely many executions show it:
-executions with inputs `h₁,…,hₖ`, and a common expansion `h` at which no
-execution's observation refines all of theirs."
+executions with inputs `h₁,…,hₖ`, and a common input extension `h` at which no
+execution's observation extends all of theirs."
 
 Lean (general machine `G`, either channel): `IOM.not_liftedMono_iff_witness`.
 Lifted Monotonicity of the induced specification fails iff there are a
-finite list of executions `βᵣ` and an execution `β` whose input expands each
+finite list of executions `βᵣ` and an execution `β` whose input extends each
 `input βᵣ`, such that every execution `β'` with `input β' = input β` ends in
-an observation that fails to refine some `βᵣ`'s.  The common expansion `h`
+an observation that fails to extend some `βᵣ`'s.  The common input extension `h`
 is the input of `β`; it is an input that occurs, as every input of the
 induced specification is.  The library also gives finite certificates for
 the last clause (`IOM.not_liftedMono_of_fiber_list`,
@@ -772,7 +772,7 @@ Monotonicity can be checked on `D` instead.  Two things must be shown, and
 both are needed, because neither half alone preserves Lifted Monotonicity:
 if `D` omits an output the machine can produce, it may hide an
 incompatibility, and if `D` adds an output the machine cannot produce, it may
-supply a common refinement that no execution reaches."  The examples of rules
+supply a common output extension that no execution reaches."  The examples of rules
 ("the set of ballots received", "the largest timestamp seen") are
 illustrations, argued in prose only (see the README).
 
@@ -806,7 +806,7 @@ specification does, and so exactly when the machine's observations are
 confluent across its executions."  With the obligations: "*Realizability.*
 Every output that `D` allows at an input is the observation of some execution
 with that input.  *Domination.*  Every execution's final observation is
-refined by some output that `D` allows at its input."  The remark "`D` need
+extended by some output that `D` allows at its input."  The remark "`D` need
 not match the machine exactly: it may leave out observations that others
 refine, such as transient intermediate states" is illustrated by
 `IOM.dip_liftedMono_via_cofinal` (a declared specification that omits two
@@ -816,14 +816,14 @@ Lean (general machine `G`, either channel): `D : Spec J O` over an ordered
 input type `J`, and `φ : OccInp C P k G → J`.  `IOM.MachineCofinal k G φ D`
 bundles: `φ` is an order embedding (`emb`); Realizability over executions
 (`real`: every row `(j, o)` of `D` is `(φ (input β), obs)` for an execution
-`β`); Domination (`dom`: every execution's final observation is refined by
+`β`); Domination (`dom`: every execution's final observation is extended by
 a row of `D` at the image of its input).  The paper's order isomorphism is
 an order embedding that is onto; ontoness is not assumed, since Realizability
 and totality of `D` imply it.  The conclusion is
 `IOM.liftedMono_iff_of_machineCofinal`: `D.LiftedMono ↔ (spec k G).LiftedMono`,
 `D.LiftedMono ↔ ObsConfluent k G`, and also `D` consistent iff the induced
 specification is.  The proof follows the sketch: both directions go through
-the common-expansion form (`commonExpansion_of_dominated`,
+the common-extension form (`commonExpansion_of_dominated`,
 `commonExpansion_of_realized` in `CompleteCALM/Cofinal.lean`).
 
 The closing paragraph ("Both obligations are standard in the verification

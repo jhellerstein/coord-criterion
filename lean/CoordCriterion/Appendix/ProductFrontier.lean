@@ -99,8 +99,8 @@ def ownerD (sp : Spec I (PTd W)) : Deployment sp n where
   A p i x := sp.P i x ∧ ∀ q, q ≠ p → x.t q = none
   sub _ _ _ h := h.1
 
-/-- Every owner-authorized family (separable or not) has a common expansion
-at every common expansion `j` of its current inputs. -/
+/-- Every owner-authorized family (separable or not) has a common output extension
+at every common input extension `j` of its current inputs. -/
 theorem product_common (V : (p : Fin n) → I → W p → Prop) (hne : ∀ p i, ∃ v, V p i v)
     (hc : Continue V) (F : Family (prodSpec V hne) n)
     (hA : Authorized (ownerD (prodSpec V hne)) F) (j : I) (hj : UB F j) :
@@ -143,7 +143,7 @@ theorem product_monoAcross (V : (p : Fin n) → I → W p → Prop) (hne : ∀ p
   fun _ _ F hA _ j hj => product_common V hne hc F hA j hj
 
 /-- ... so (Prop. `thm:complete-cap-deployment`) every separable run family
-is confluent at every common expansion of its current inputs. -/
+is confluent at every common input extension of its current inputs. -/
 theorem product_confluent (V : (p : Fin n) → I → W p → Prop) (hne : ∀ p i, ∃ v, V p i v)
     (hc : Continue V) : PartitionConfluent (ownerD (prodSpec V hne)) :=
   (partition_compatibility_confluent _).2 (product_monoAcross V hne hc)
@@ -368,7 +368,7 @@ def agreeSoleOwnerD (I : Type) [PO I] : Deployment (agreeSpec I) 2 where
   sub _ _ _ h := h.1
 
 /-- Agreement is monotone across partitions under `agreeSoleOwnerD`: the
-residual output of participant `0`'s run refines all its rows, every output of
+residual output of participant `0`'s run extends all its rows, every output of
 participant `1` is `⊥`, and agreement does not depend on the input. -/
 theorem cfg_agree_sole_owner : MonoAcrossPartitions (agreeSoleOwnerD I) := by
   intro comp _ F hA _ j _
@@ -396,7 +396,7 @@ theorem cfg_agree_sole_owner : MonoAcrossPartitions (agreeSoleOwnerD I) := by
 
 /-- The product interface does not satisfy the sufficient condition stated
 after the leader example: three authorized rows, `e_0(0)`, `e_0(1)`, `e_1(0)`,
-lack a common expansion but are authorized to two participants. -/
+lack a common output extension but are authorized to two participants. -/
 theorem cfg_product_conflict (i : I) :
     let sp := prodSpec (W := fun _ => Disc Bool) (cfgV I) cfgV_ne
     let E : List (I × PTd (fun _ : Fin 2 => Disc Bool)) :=

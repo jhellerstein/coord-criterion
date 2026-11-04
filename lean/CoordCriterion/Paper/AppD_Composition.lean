@@ -119,7 +119,7 @@ theorem «app:composition/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
 /-- Proof of Proposition `prop:joint-monotone`: "(1) is Lemma
 `lem:composition`, and also the case `D = M` of (2).  (2) Let `D` contain the
 outputs of `𝒮₁`. … All of `m_r` and `m` lie in `D`, so the condition for `𝒮₂`
-on `D` gives `o ∈ P₂(m)` that refines every `o_r`, and `(j,o) ∈ P₂ ∘ P₁`.  No
+on `D` gives `o ∈ P₂(m)` that extends every `o_r`, and `(j,o) ∈ P₂ ∘ P₁`.  No
 closure property of `D` is used.  (3) The table `P₂ ∘ P₁` of Equation
 `eq:spec-composition` mentions no order on `M`, and Lifted Monotonicity of the
 composite uses only the orders on `I` and `O`.  So the composite under `≼_M` is
@@ -274,7 +274,7 @@ theorem «app:composition/components-commit» :
 `R ⋈ T = {(k,x) : ∃ m. (k,m) ∈ R ∧ (m,x) ∈ T}`.  The image of a state
 `σ = (i,R)` of `𝒮₁` is the state `(i, R ⋈ P₂)` of `P₂ ∘ P₁`.  The image of
 `σ_{𝒮₁}(i)` is `σ_{P₂∘P₁}(i)`, since `P₁[in ⪰ i] ⋈ P₂` is the composite table
-restricted to the expansions of `i`."  Lean: the image is `Guard.imgK sk σ`;
+restricted to the input extensions of `i`."  Lean: the image is `Guard.imgK sk σ`;
 `Guard.imgK_canon`.  The function case is `Guard.img f σ = Guard.imgK (graph f) σ`
 and `Guard.img_canon`. -/
 theorem «app:composition/image-canon» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
@@ -315,7 +315,7 @@ input of a state `σ` of `𝒮₁` is a legal output, every `o ∈ P₂(m)` is a
 output at the image of `σ`. … Either way
 `(k,u)` is a row of the image that subsumes `(k,x)`."  Lean: the first two hold
 at every run state (`Guard.row_at`, `commonExpansion_exposable`, with the
-common-expansion condition of `𝒮₂|_{𝒮₁}` from `Guard.proper_iff_ce`); states
+common-extension condition of `𝒮₂|_{𝒮₁}` from `Guard.proper_iff_ce`); states
 reached without commitment are run states (`Guard.isRun_sysExec_empty`); the
 third is `Guard.cf_stepK_on`. -/
 theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M}
@@ -338,7 +338,7 @@ theorem «app:composition/store-facts» {I M O : Type} [PO I] [PO M] [PO O] {sp 
 input of `𝒮₂|_{𝒮₁}`. … Each answer `o` has `(m,o) ∈ T`, so `(i,o) ∈ R_ρ`.  The
 composite's `output(o)` keeps `R_ρ[out ⪰ o]`, and `𝒮₂|_{𝒮₁}` keeps
 `T[out ⪰ o]`, so the join stays inside the composite's table."  Lean, for a
-downstream with the common-expansion condition (here `𝒮₂|_{𝒮₁}`, whose inputs
+downstream with the common-extension condition (here `𝒮₂|_{𝒮₁}`, whose inputs
 are typed as outputs of `𝒮₁`, `Guard.core_lockstep`): `Guard.Inv`; before the
 first output `Guard.merge_inputs`; afterwards `Guard.merge_lockstep`, with the
 answers to one input `Guard.answer_run`; assembled in `Guard.composite_run`
@@ -357,7 +357,7 @@ theorem «app:composition/guarded-lockstep» {I M O : Type} [PO I] [PO M] [PO O]
   ⟨fun he ρ' hI => Guard.merge_inputs h he ρ' hI, Guard.merge_lockstep hC h⟩
 
 /-- Proof of Theorem `thm:proper-coordination`(3): "The proof of
-Proposition `prop:exposure-boundary` derives the common-expansion condition
+Proposition `prop:exposure-boundary` derives the common-extension condition
 from legality at canonical states alone." -/
 theorem «app:composition/canonical-states-suffice» {I O : Type} [PO I] [PO O] :
     ∀ {sp : Spec I O}, (∀ i o, sp.P i o → Exposable (canon sp i) o) → sp.CommonExpansion :=
@@ -413,7 +413,7 @@ at the current input of `τ` and so of `τ'`, where it is a legal output by the 
 fact. … Both start at `σ(m₁)`, so the containment holds after each event.  The
 replacement's strategy allows each erased event, since the original's allowed
 it before erasure."  Lean: `Guard.erase_lockstep` (for any downstream with the
-common-expansion condition) and `Guard.compliant_eraseSys`. -/
+common-extension condition) and `Guard.compliant_eraseSys`. -/
 theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M O}
     (hC : sk.CommonExpansion) {BK : CommitmentBasis sk} {σ ρ : State sk}
     {es : List (SEvent sk)} (h : SysExec BK σ es ρ) (σ' : State sk) (hr : IsRun σ')
@@ -532,7 +532,7 @@ theorem «app:composition/coverage» {I M O : Type} [PO I] [PO M] [PO O] {sp : S
 order.  Let `𝒮₁` have one input with fiber `{[a,b],[b,a]}`, for commands `a`
 and `b` on different keys, and let `f` send a log to the family of its
 subsequences on each key.  The two logs are incomparable with no common
-refinement, so `[a,b]` is not a legal output, and `𝒮₁` must order them.  But
+output extension, so `[a,b]` is not a legal output, and `𝒮₁` must order them.  But
 `f([a,b]) = f([b,a])`, the composite has one row, and `f([a,b])` is a legal
 output."  Lean: the per-key view `Guard.perKey key` is monotone;
 `𝒮₁ = Guard.abSpec a b`. -/

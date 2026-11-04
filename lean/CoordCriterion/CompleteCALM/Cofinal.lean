@@ -13,7 +13,7 @@ same ordered inputs and outputs when
 Then `S` satisfies Lifted Monotonicity iff `T` does, and (by Complete CALM)
 `S` is consistent iff `T` is (`liftedMono_iff_of_cofinal`,
 `consistent_iff_of_cofinal`).  Both directions go through the
-common-expansion form, and each direction uses both conditions.  No extra
+common-extension form, and each direction uses both conditions.  No extra
 hypothesis is needed.  (Over the same inputs totality plays no role: the
 upper bound of a family of rows is an input of both specifications.  The
 Lean proof goes through `CofinalAlong id`, which reads the bound's preimage
@@ -72,7 +72,7 @@ theorem choose_list' {R X : Type} {p : R → X → Prop} :
 
 /-- From `S` to `T`: if `φ` is monotone and injective, every row of `T` is
 dominated by a row of `P` at the image of its input, and rows of `P` at
-images are rows of `T`, then the common-expansion condition passes from `S`
+images are rows of `T`, then the common-extension condition passes from `S`
 to `T`. -/
 theorem commonExpansion_of_dominated (φ : I → J) {S : Spec J O} {T : Spec I O}
     (hmono : ∀ a b, a ≼ b → φ a ≼ φ b)
@@ -98,7 +98,7 @@ theorem commonExpansion_of_dominated (φ : I → J) {S : Spec J O} {T : Spec I O
 
 /-- From `T` to `S`: if `φ` reflects the order, every row of `P` is realized
 by a row of `T` at a preimage of its input, and every row of `T` is
-dominated by a row of `P`, then the common-expansion condition passes from
+dominated by a row of `P`, then the common-extension condition passes from
 `T` to `S`.  (Totality of `S` makes `φ` surjective here.) -/
 theorem commonExpansion_of_realized (φ : I → J) {S : Spec J O} {T : Spec I O}
     (hrefl : ∀ a b, φ a ≼ φ b → a ≼ b)
@@ -184,7 +184,7 @@ theorem consistent_iff_of_cofinal {S T : Spec I O} (h : Cofinal S T) :
     S.Consistent ↔ T.Consistent :=
   (liftedMono_iff_of_cofinalAlong h.along).2
 
-/-- The common-expansion form of the cofinality lemma. -/
+/-- The common-extension form of the cofinality lemma. -/
 theorem commonExpansion_iff_of_cofinal {S T : Spec I O} (h : Cofinal S T) :
     S.CommonExpansion ↔ T.CommonExpansion := by
   rw [← liftedMono_iff_commonExpansion, ← liftedMono_iff_commonExpansion]

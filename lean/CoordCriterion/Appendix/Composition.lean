@@ -107,11 +107,11 @@ theorem seq_liftedMono {sp1 : Spec I M} {sp2 : Spec M O}
   intro rows hrows j hj
   obtain ⟨L, hL1, hL2⟩ := choose_list (fun (r : I × O) m => sp1.P r.1 m ∧ sp2.P m r.2)
     rows hrows
-  -- upstream: the witnesses `m_r` have a common expansion `m ∈ P₁(j)`
+  -- upstream: the witnesses `m_r` have a common input extension `m ∈ P₁(j)`
   obtain ⟨m, hm, hmall⟩ := h1 (L.map fun p => (p.1.1, p.2))
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr; exact (hL2 p hp).2.1) j
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr; exact hj _ (hL2 p hp).1)
-  -- downstream: the rows `(m_r, o_r)` have common input expansion `m`
+  -- downstream: the rows `(m_r, o_r)` have common input extension `m`
   obtain ⟨u, hu, huall⟩ := h2 (L.map fun p => (p.2, p.1.2))
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr; exact (hL2 p hp).2.2) m
     (by intro r hr; obtain ⟨p, hp, rfl⟩ := List.mem_map.1 hr

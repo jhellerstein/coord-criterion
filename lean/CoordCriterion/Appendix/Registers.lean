@@ -246,7 +246,7 @@ instance : PO (Hist α) where
        fun hab => (h2.2.2 a b (h'.hb_mem a b hab).1 (h'.hb_mem a b hab).2).2 hab⟩
     cases h; cases h'; simp only at em eh; subst em; subst eh; rfl
 
-/-- "An expansion never adds an operation to the causal past of an existing
+/-- "An input extension never adds an operation to the causal past of an existing
 one." -/
 theorem no_new_past {h h' : Hist α} (hle : h ≼ h') {a b : α} (hab : h'.hb a b)
     (hb : h.mem b) : h.mem a := hle.2.1 a b hab hb
@@ -335,7 +335,7 @@ def linSpec : Spec (Hist α) (SMap α) where
   total h := ⟨emptyMap, empty_wellDom G h,
     let ⟨lt, hs, he⟩ := lin_exists h; ⟨lt, hs, he, fun _ _ e => by cases e⟩⟩
 
-/-- Extending a serialization of `h` to an expansion `j` by appending the new
+/-- Extending a serialization of `h` to an input extension `j` by appending the new
 operations in an order extending `→`: the result is a serialization of `j`
 and explains the same reads. -/
 theorem ser_extend {h j : Hist α} (hle : h ≼ j) {p : Fin n} {lt : α → α → Prop}
@@ -392,7 +392,7 @@ def replicaD : Deployment (causalSpec G) n where
   sub _ _ _ h := h.1
 
 /-- Every replica-authorized family of causal-register runs (separable or
-not) has a common expansion at every common expansion of its current
+not) has a common output extension at every common input extension of its current
 inputs. -/
 theorem causal_common (F : Family (causalSpec G) n) (hA : Authorized (replicaD G) F)
     (j : Hist α) (hj : UB F j) :

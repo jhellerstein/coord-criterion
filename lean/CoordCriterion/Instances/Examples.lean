@@ -325,14 +325,14 @@ theorem crdt_query_mono_not_required :
   have := h B2.ff B2.tt trivial
   simp [B2.neg, PO.le, B2.le] at this
 
-/-! ### Observations need only some common refinement
+/-! ### Observations need only some common output extension
 
-Complete CALM asks for some common refinement of outputs, not a least one.
+Complete CALM asks for some common output extension of outputs, not a least one.
 Take the CRDT state `B2 × B2` (componentwise join) and an observation into
 `Y5`, where `a` and `b` have the two incomparable upper bounds `c` and `d`
 and hence no join.  The observation is monotone, so `q ∘ s` is consistent,
 and its outputs `a = q(s({(tt,ff)}))` and `b = q(s({(ff,tt)}))` have no least
-common refinement. -/
+common output extension. -/
 
 inductive Y5 where
   | bot | a | b | c | d
@@ -455,7 +455,7 @@ theorem qThr_mono (k : Nat) : Monotone (qThr (A := A) k) :=
   fun _ _ h ⟨l, hn, hl, hm⟩ => ⟨l, hn, hl, fun x hx => h x (hm x hx)⟩
 
 /-- `Q_100 = q_100 ∘ s` is monotone: once true it stays true in every
-expansion `V ⊇ U`. -/
+input extension `V ⊇ U`. -/
 theorem Q100_mono (s0 : IConf.St A) :
     Monotone (fun U : FSet (IConf.St A) => qThr 100 (st s0 U)) :=
   crdt_query_of_mono s0 (qThr_mono 100)
@@ -659,7 +659,7 @@ theorem locValid_jU : LocValid uModel jU := by
     (post_antichain jU (fun _ _ h => h) e t ht b).1 hb]
 
 /-- The uniqueness example: the history `jU` in which neither creation saw
-the other is locally valid and expands both one-creation histories; its
+the other is locally valid and extends both one-creation histories; its
 state has two employees with ID 7; no state `S_I` permits at `jU` covers both rows; hence
 `S_I` fails Lifted Monotonicity and the transactions are not invariant
 confluent. -/

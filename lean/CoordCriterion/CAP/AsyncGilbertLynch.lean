@@ -67,7 +67,7 @@ corollary forbids (`gilbert_lynch_client`).
    algorithm (times = positions); its realized history records exactly the
    invoked operations and the real-time precedence; atomicity of that
    execution puts the union of all emitted maps in the fiber at `h_C`
-   (`lin_to_regS`).  The precondition that `h_C` expand the current inputs is
+   (`lin_to_regS`).  The precondition that `h_C` extend the current inputs is
    not needed.
 
 The corollary is used in a *client form* (`AnsweringC`, `RealizedRPCC`): its

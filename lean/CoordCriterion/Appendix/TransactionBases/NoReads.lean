@@ -18,9 +18,9 @@ outcomes and pair rows defined here.  This file is still used by Appendix C
   input).  `abortFreeSpec` is "the same rows with `X = ∅`".
 * `ab_ba_no_common_refinement`, `txnSpec_not_liftedMono`,
   `abortFreeSpec_not_liftedMono` — "the rows `([A,B],∅)` and `([B,A],∅)` have no
-  common refinement, so the specification is not monotone".
+  common output extension, so the specification is not monotone".
 * `partitions_antichain` — the appendix's argument: at a fixed input a
-  permitted output that refines another equals it.
+  permitted output that extends another equals it.
 * `filterC` — any row filter, defined when some row at the current input
   satisfies it and some row of `R` fails it, is a commitment
   (Def. `def:commitment`, Eq. `commitment-unsubsumed`) in a specification whose
@@ -37,7 +37,7 @@ outcomes and pair rows defined here.  This file is still used by Appendix C
   every `stamp` and `commit` condition, so the specification does not itself
   force an abort.
 * `exposable_iff_refines` — in an antichain-fiber specification, `o` is
-  exposable at `σ` iff every remaining row refines `o` (what
+  exposable at `σ` iff every remaining row extends `o` (what
   Prop. `prop:exposability` decides here).
 
 Modeling choices: outputs `(L,X)` are arbitrary (not necessarily finite)
@@ -192,7 +192,7 @@ theorem ordPair_row' {A B : T} (h : A ≠ B) :
       exact ⟨fun h => Or.inr h.symm, fun h => h.elim False.elim Or.symm⟩,
     fun h => h.1⟩, fun _ h => h⟩
 
-/-- `([A,B],∅)` and `([B,A],∅)` have no common refinement in `O` at all. -/
+/-- `([A,B],∅)` and `([B,A],∅)` have no common output extension in `O` at all. -/
 theorem ab_ba_no_common_refinement {A B : T} (h : A ≠ B) :
     ¬ ∃ u : Outcome T, ordPair A B h ≼ u ∧ ordPair B A (Ne.symm h) ≼ u := by
   rintro ⟨u, h1, h2⟩
@@ -224,7 +224,7 @@ theorem abortFreeSpec_not_liftedMono {A B : T} (h : A ≠ B) :
 /-! ### Fibers are antichains -/
 
 /-- **The appendix's argument.**  At a fixed input, a permitted output that
-refines another equals it, because both pairs partition the input. -/
+extends another equals it, because both pairs partition the input. -/
 theorem partitions_antichain {k : FinSet T} {o o' : Outcome T}
     (h : Partitions k o) (h' : Partitions k o') (hle : o ≼ o') : o = o' := by
   have hX : ∀ t, o.X t ↔ o'.X t := by
@@ -333,7 +333,7 @@ theorem filterC_app_iff (hA : Antichain sp) {G : State sp → Prop} {P : I → O
     funext k u; exact (propext (hR k u)).symm
 
 /-- In an antichain-fiber specification, `o` is exposable at `σ` exactly when
-every remaining row (at every input) refines `o`. -/
+every remaining row (at every input) extends `o`. -/
 theorem exposable_iff_refines (hA : Antichain sp) (σ : State sp) (o : O) :
     Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x := by
   constructor

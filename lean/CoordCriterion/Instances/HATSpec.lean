@@ -11,7 +11,7 @@ that Theorem `thm:complete-cap` (`CAP.complete_cap_for`) decides which
 isolation levels stay available.
 
 **Inputs** are event histories with happens-before (`IConf.Hist Ev`, ordered
-by downward-closed expansion), as in the induced specifications of §6.5:
+by downward-closed input extension), as in the induced specifications of §6.5:
 events received by servers, with each client's program order and each
 replica's arrival order.  Events (`Ev`):
 
@@ -111,7 +111,7 @@ def Lamport (h : Hist Ev) : Prop :=
     h.lab d = some (.dl c' n' k r) → h.lt d e → h.lab f = some (.cm c n t ks) →
     h.lab g = some (.cm c' n' t' ks') → tsLt t' t
 
-/-- Inputs: legal event histories, ordered by downward-closed expansion; with
+/-- Inputs: legal event histories, ordered by downward-closed input extension; with
 `lam = true`, satisfying the timestamp condition. -/
 abbrev Inp (lam : Bool) := {h : Hist Ev // WF h ∧ (lam = true → Lamport h)}
 
@@ -468,7 +468,7 @@ theorem ans_exists (j : Inp lam) {e : Nat} (he : IsRd j e) : ∃ v, Ans j e v :=
 theorem ans_unique {j : Inp lam} {e : Nat} {v v' : Ts} (h : Ans j e v) (h' : Ans j e v') : v = v' :=
   max_unique h h'
 
-/-- Candidates are stable under expansion. -/
+/-- Candidates are stable under input extension. -/
 theorem cand_iff {i j : Inp lam} (hij : i ≼ j) {e : Nat} (he : i.1.ev e) (v : Ts) :
     Cand i e v ↔ Cand j e v := by
   constructor

@@ -11,7 +11,7 @@ that these end-of-history forms agree with the cut forms of
 facts that connect the response form with Theorem `thm:complete-cap`:
 
 * Response Partition Consistency, at the end of histories, is exactly the
-  common-refinement condition `CommonRefinementAtEnd` that the converse of
+  common-output extension condition `CommonRefinementAtEnd` that the converse of
   Theorem `thm:complete-cap` uses (`responsePC_iff_commonRefinement`), and
   Theorem `thm:complete-cap` holds with it in place of Partition Consistency
   (`complete_cap_for_rpc`);
@@ -101,7 +101,7 @@ theorem answering_iff_end (Sys : System sp D) (Q : (n : Nat) → Fin n → Table
       (wf_cutHist hw hc) (produced_cutHist hp c) (partitioned_cutHist hpt c) p σ hσ
     exact ⟨fun q => cutHist H c q ++ ext q, ext, fun q => rfl, hw', hp', hpt', hloc, hni, hout⟩
 
-/-! ## Response Partition Consistency is the common-refinement condition -/
+/-! ## Response Partition Consistency is the common-output extension condition -/
 
 /-- Def. `def:response-partition-consistency`, at the end of histories, is
 `CommonRefinementAtEnd`: the condition the converse of Theorem
@@ -131,7 +131,7 @@ theorem complete_cap_for_rpc (sp : Spec I O) (D : Type) (A : Table I O)
 
 /-- In the system of the proof of Theorem `thm:complete-cap` for a total,
 self-continuing `T ⊆ S`, every participant's current fiber meets `T`: some
-output of `T` at the current input refines everything the participant has
+output of `T` at the current input extends everything the participant has
 emitted. -/
 theorem resp_fiber_meets (T : Table I O) (hTS : ∀ i o, T i o → sp.P i o)
     (hTtot : ∀ i, ∃ o, T i o) (hTcont : ∀ i o j, T i o → i ≼ j → ∃ u, T j u ∧ o ≼ u)

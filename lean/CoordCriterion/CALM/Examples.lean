@@ -109,7 +109,7 @@ theorem proposal_row (hk : 1 ≤ k) (r : Fin (k+1)) : (spec k).P (atom r r) (ato
   obtain ⟨_, rfl⟩ := atom_some h
   simp
 
-/-- The union of the proposal inputs is a common expansion. -/
+/-- The union of the proposal inputs is a common input extension. -/
 theorem J_common (r : Fin (k+1)) : atom r r ≼ J (k+1) := atom_le_J r
 
 /-- Pigeonhole: a list of fewer than `n` elements of `Fin n` misses one. -/
@@ -138,7 +138,7 @@ theorem allBut_perm (r₀ : Fin (k+1)) : (spec k).P (J (k+1)) (allBut r₀) := b
     · simp only [hp, ↓reduceIte] at h; cases h
       exact (List.mem_erase_of_ne hp).2 (List.mem_finRange p)
 
-/-- "Any `k` of these `k+1` rows have a common refinement there": any list of
+/-- "Any `k` of these `k+1` rows have a common output extension there": any list of
 at most `k` proposal rows is compatible in `P(J)`. -/
 theorem any_k_compatible (L : List (Fin (k+1))) (hL : L.length ≤ k) :
     ∃ u, (spec k).P (J (k+1)) u ∧ ∀ r ∈ L, atom r r ≼ u := by
@@ -159,7 +159,7 @@ theorem not_all_compatible :
   rw [List.length_finRange] at this
   omega
 
-/-- "So the common-expansion condition fails" (`k ≥ 1`). -/
+/-- "So the common-extension condition fails" (`k ≥ 1`). -/
 theorem not_commonExpansion (hk : 1 ≤ k) : ¬ (spec k).CommonExpansion := by
   intro hC
   obtain ⟨u, hu, hall⟩ := hC ((List.finRange (k+1)).map fun r => (atom r r, atom r r))
@@ -193,10 +193,10 @@ open Classical in
 /-- Paragraph `app:pairs-suffice`: "restricting the families to rows at
 single-proposal inputs does not suffice, even `k` rows at a time".  In this
 specification *every* family of at most `k` rows at single-proposal inputs
-(the minimal nonempty inputs), with any common expansion `j`, is compatible
-in `P(j)`; yet the common-expansion condition fails (`not_commonExpansion`).
+(the minimal nonempty inputs), with any common input extension `j`, is compatible
+in `P(j)`; yet the common-extension condition fails (`not_commonExpansion`).
 (Rows at the least input `∅` carry only the empty map, which every output
-refines, so adding them changes nothing.)  A row is `(p, v, o)`, at input
+extends, so adding them changes nothing.)  A row is `(p, v, o)`, at input
 `{(p,v)}`. -/
 theorem atomic_k_at_a_time (rows : List (Fin (k+1) × Fin (k+1) × PMap (k+1)))
     (hlen : rows.length ≤ k)
@@ -244,8 +244,8 @@ end KSet
 A four-input specification: three incomparable inputs `a, b, c` below `top`.
 At `a, b, c` the only output is the corresponding singleton; at `top` the
 permitted outputs are the sub-maps of `J` that omit some participant.  Every
-two rows *not at the common expansion* are compatible there, but the
-common-expansion condition fails. -/
+two rows *not at the common input extension* are compatible there, but the
+common-extension condition fails. -/
 
 inductive In4 | a | b | c | top
   deriving DecidableEq
@@ -275,7 +275,7 @@ def spec4 : Spec In4 (PMap 3) where
     all_goals exact ⟨_, rfl⟩
 
 /-- The pair condition restricted to rows whose inputs differ from the common
-expansion `j` holds. -/
+input extension `j` holds. -/
 theorem spec4_pairs_off_j :
     ∀ i₁ o₁ i₂ o₂ j, i₁ ≠ j → i₂ ≠ j → spec4.P i₁ o₁ → spec4.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
       ∃ u, spec4.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u := by
@@ -379,7 +379,7 @@ theorem state_by_input_fails_relationally :
 
 Three voters, ballots for `a` or `b`; the input is the ballots received so
 far (`none` = dot), ordered by extension; the output is the candidate with
-two ballots, or `⊥`.  `Res` carries the refinement order (`⊥ ≼` everything,
+two ballots, or `⊥`.  `Res` carries the output-extension order (`⊥ ≼` everything,
 `a`, `b` incomparable); `ResE` the equality order. -/
 
 inductive Cand | a | b
@@ -457,7 +457,7 @@ def cnt (c : Cand) (i : Ballots) : Nat :=
 def winner (i : Ballots) : Res :=
   if 2 ≤ cnt .a i then .win .a else if 2 ≤ cnt .b i then .win .b else .bot
 
-/-- The election, under the refinement order. -/
+/-- The election, under the output-extension order. -/
 def elec : Spec Ballots Res where
   P i o := o = winner i
   total _ := ⟨_, rfl⟩
@@ -523,7 +523,7 @@ theorem elec_panel_b_undetermined : ¬ Determined (canon elec bab) := by
   rw [winner_bab] at h1; rw [winner_baba, ← h1] at h2
   cases h2
 
-/-- Panel (c) is determined: every row at an expansion of `aa·` has output `a`. -/
+/-- Panel (c) is determined: every row at an input extension of `aa·` has output `a`. -/
 theorem elec_panel_c_determined : Determined (canon elec baa) := by
   refine ⟨.win .a, fun k u hk => ?_⟩
   obtain ⟨hS, hle⟩ := hk
@@ -616,12 +616,12 @@ instance : PO F5 where
 
 instance (s t : F5) : Decidable (s ≼ t) := inferInstanceAs (Decidable (F5.sub s t))
 
-/-- The fiber is directed: `{a,b,c,d}` refines every member. -/
+/-- The fiber is directed: `{a,b,c,d}` extends every member. -/
 theorem f5_directed : JointLift (fun _ : F5 => True) (fun _ : F5 => True) := by
   intro X _ _
   exact ⟨.abcd, trivial, fun x _ => by cases x <;> decide⟩
 
-/-- `{a}` and `{b}` have exactly the common refinements `{a,b,c}`, `{a,b,d}`,
+/-- `{a}` and `{b}` have exactly the common output extensions `{a,b,c}`, `{a,b,d}`,
 `{a,b,c,d}` in the fiber; the two minimal ones are incomparable. -/
 theorem f5_common_refinements (u : F5) : (F5.a ≼ u ∧ F5.b ≼ u) ↔ (u = .abc ∨ u = .abd ∨ u = .abcd) := by
   cases u <;> decide
@@ -646,7 +646,7 @@ theorem f5_compatible : CompatibleIn (fun _ : F5 => True) [F5.abc, F5.abd] :=
 
 "Transaction schedules ordered by subsequence form a partial order in which
 two independent transactions `a` and `b` have two incomparable minimal common
-expansions, `ab` and `ba`."  A schedule is a list of transactions; `s ≼ t`
+input extensions, `ab` and `ba`."  A schedule is a list of transactions; `s ≼ t`
 is `List.Sublist s t`.  "Independent" is read as `a ≠ b`. -/
 
 /-- Transaction schedules over `T`. -/
@@ -670,8 +670,8 @@ theorem two_le_length {T : Type} {a b : T} (hab : a ≠ b) {l : List T} (ha : a 
     simp at ha hb; exact absurd (ha.trans hb.symm) hab
   | _ :: _ :: _, _, _ => simp
 
-/-- `ab` is a common expansion of `a` and `b`, minimal among common
-expansions. -/
+/-- `ab` is a common input extension of `a` and `b`, minimal among common
+input extensions. -/
 theorem sched_minimal {T : Type} {a b : T} (hab : a ≠ b) :
     (⟨[a]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧
       ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →
@@ -683,7 +683,7 @@ theorem sched_minimal {T : Type} {a b : T} (hab : a ≠ b) :
   cases u; simp only at this; subst this; rfl
 
 /-- "Two independent transactions `a` and `b` have two incomparable minimal
-common expansions, `ab` and `ba`." -/
+common input extensions, `ab` and `ba`." -/
 theorem sched_two_minimal {T : Type} {a b : T} (hab : a ≠ b) :
     ((⟨[a]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧ (⟨[b]⟩ : Sched T) ≼ ⟨[a, b]⟩ ∧
       ∀ u : Sched T, (⟨[a]⟩ : Sched T) ≼ u → (⟨[b]⟩ : Sched T) ≼ u →

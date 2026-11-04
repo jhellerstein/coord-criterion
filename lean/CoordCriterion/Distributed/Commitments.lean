@@ -224,7 +224,7 @@ theorem SysExec.sub {B : CommitmentBasis sp} {σ τ : State sp} {es : List (SEve
 
 /-! ### Lemma canonical-commitment-normal-form -/
 
-/-- A legal output event's commitments remove every row in `Excluded_o`. -/
+/-- A commitment-sufficient output event's commitments remove every row in `Excluded_o`. -/
 theorem containment {B : CommitmentBasis sp} {σ τ : State sp} {γ : List (Commitment sp)} {o : O}
     (h : SysStep B σ (.output γ o) τ) :
     τ.cur = σ.cur ∧ σ.R σ.cur o ∧ (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧
@@ -310,7 +310,7 @@ theorem canonical_support (σ : State sp) (o : O) (ho : σ.R σ.cur o) :
     exact ⟨u, hR ▸ commitmentState_keep σ o ho k u hu hou, hou, hxu⟩
   · exact (commitment_out σ o ho σc hR).symm
 
-/-- Every legal output event keeps only rows that the canonical event keeps. -/
+/-- Every commitment-sufficient output event keeps only rows that the canonical event keeps. -/
 theorem canonical_maximal {B : CommitmentBasis sp} {σ τ : State sp} {γ : List (Commitment sp)} {o : O}
     (h : SysStep B σ (.output γ o) τ) : ∀ k u, τ.R k u → outputTable σ o k u :=
   (containment h).2.2.1
@@ -416,7 +416,7 @@ theorem applySeq_composite (c : Commitment sp) (cs : List (Commitment sp))
 /-! ### Effect of a commitment at an input -/
 
 /-- At an input where a commitment removes rows, it either removes the whole
-fiber or leaves a row; in the latter case no removed row refines a survivor. -/
+fiber or leaves a row; in the latter case no removed row extends a survivor. -/
 theorem commitment_effect (c : Commitment sp) {σ τ : State sp} (h : c.app σ = some τ)
   (k : I) (_hk : ∃ u, σ.R k u ∧ ¬ τ.R k u) :
   ((∀ u, ¬ τ.R k u) ∨
@@ -713,7 +713,7 @@ theorem canonical_equivalent {B : CommitmentBasis sp} {i : I} {es : List (SEvent
 /-! ### Proposition thm:commitments-require-coordination -/
 
 /-- **Prop. conflicting output events cannot be reconciled.**  Let `x ∈ R(i)`.  If
-`Out_γ(o)` takes `σ` to `σ'` with no output in `R'(i)` refining `x`, then
+`Out_γ(o)` takes `σ` to `σ'` with no output in `R'(i)` extending `x`, then
 `γ ≠ ε`; and if `Out_γ'(x)` takes `σ` to `t`, then no state with current input
 `i` is reachable (under any basis) from both `σ'` and `t`. -/
 theorem conflicting_outputs {B B' B'' : CommitmentBasis sp} {σ σ' t : State sp}

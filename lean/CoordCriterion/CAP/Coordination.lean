@@ -274,7 +274,7 @@ theorem availability_not_coordinationFreeH_commit (Sys : System sp D)
 
 /-! ## Removed rows of a canonical event -/
 
-/-- A row removed by the canonical commitment for `u` has no common refinement
+/-- A row removed by the canonical commitment for `u` has no common output extension
 with `u` in the state. -/
 theorem rm_no_common {σ : State sp} {u : O} {k : I} {x : O} (h : Rm σ u k x) :
     ¬ ∃ w, σ.R k w ∧ u ≼ w ∧ x ≼ w := by
@@ -348,7 +348,7 @@ noncomputable def twoOwnerSys (D : Type) : System ordSpec D where
     | .out γ u => γ = [] ∨ γ = [kc u]
     | _ => False
 
-/-- `bot` is never removed by a canonical event (it is refined by the emitted
+/-- `bot` is never removed by a canonical event (it is extended by the emitted
 output), and nothing is removed when `bot` is emitted. -/
 theorem ord_removed {σ : State ordSpec} {u x : Ord3} (h : Rm σ u () x) (hu : σ.R () u) :
     u ≠ .bot ∧ x ≠ .bot := by

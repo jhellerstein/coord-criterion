@@ -33,7 +33,7 @@ documented.
 
 Global reading conventions: sets are predicates, finite families are `List`s
 or functions on `Fin n`, the participant set `P` is `Fin n`, `≼` is the
-specification's order (`a ≼ b`: `b` refines/expands `a`), a state `(i,R)` is a
+specification's order (`a ≼ b`: `b` extends `a`), a state `(i,R)` is a
 `State sp` with `cur = i` and table `R`, and `R[out ⪰ o]` is `outputTable σ o`.
 -/
 
@@ -183,7 +183,7 @@ theorem «sec:distributed-consistency/cut-confluent-iff-runs» {D : Type} {n : N
 /-- **Def. distributed consistency** (`def:distributed-consistency`).  "An
 I/O specification has distributed consistency when, for every finite
 participant set, every consistent cut of every history is confluent at every
-common expansion of the participants' current inputs."
+common input extension of the participants' current inputs."
 
 Lean: for message data of type `D`; "every finite participant set" is "every
 `n`" (participants `Fin n`). -/
@@ -211,8 +211,8 @@ theorem «sec:distributed-consistency/lifted-monotonicity» (sp : Spec I O) (D :
     Dist.DistConsistent sp D ↔ sp.LiftedMono :=
   Dist.distConsistent_iff_liftedMono sp D
 
-/-- "Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common expansion `j`, the survivor test supplies a
-`u ∈ P(j)` that survives in every endpoint; by Lemma run-residual, `u` refines
+/-- "Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common input extension `j`, the survivor test supplies a
+`u ∈ P(j)` that survives in every endpoint; by Lemma run-residual, `u` extends
 everything they have emitted.  At each participant, `input(j)` followed by
 `output(u)` reaches the same state without commitment (Proposition
 `prop:exposure-boundary`).  This is an existence
@@ -439,7 +439,7 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
   ⟨rfl, fun r h => ((Components.Component.ofSystemOn Sys N location).sound r h).legal,
     fun _ Dp => Dp.sub⟩
 
-/-- **Def. output event, legal output event** (`def:system-output-event`).
+/-- **Def. output event, commitment-sufficient output event** (`def:system-output-event`).
 "An output event `Out_γ(o)` applies a sequence `γ = c₁⋯cₙ` of commitments,
 each `c_m` defined at the state its predecessors leave, and then subsumes
 rows and emits `o`, all atomically.  The sequence may be empty, written
@@ -517,7 +517,7 @@ theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
   ⟨fun _ _ => rfl, fun _ _ _ => canonStep_step, fun _ _ _ => step_canonStep⟩
 
 /-- "The environment observes `o`, not `γ`."  Together with Def. `def:system`:
-a system's output events are legal events `Out_γ(o)` with `γ` drawn from its
+a system's output events are commitment-sufficient output events `Out_γ(o)` with `γ` drawn from its
 basis.
 
 Lean: in the `CC.CAP` history model an output event `out γ o` is a basis check,
@@ -568,7 +568,7 @@ theorem «fig:cc-commitments» {T K : Type}
 
 Lean, for any commitment (in particular `Txn.Partial.order`, `Txn.Partial.stamp`): a
 commitment keeps a row at the current input, so where it removes rows there it
-chooses — some row is kept and no removed row is refined by it. -/
+chooses — some row is kept and no removed row is extended by it. -/
 theorem «sec:systems/two-systems-two-commitments» {sp : Spec I O} (c : Commitment sp)
     {σ τ : State sp} (h : c.app σ = some τ) :
     (∃ w, τ.R σ.cur w) ∧
@@ -649,7 +649,7 @@ skips that event, so it keeps every row, including the one completed by
 `[B,A,C]`.  Suppose 2PL later emits `[A,C,B]`; its output event commits all
 three transactions and orders `A` before `C` before `B`.  The canonical run
 can emit the same output because that row was present all along.  Every row
-retained afterward refines `[A,C,B]`, so it satisfies all of 2PL's decisions,
+retained afterward extends `[A,C,B]`, so it satisfies all of 2PL's decisions,
 including the earlier order of `A` before `B`.  Thus the canonical final table
 is contained in 2PL's, while Canonical Run Universality gives the reverse
 containment.  The tables are equal: the lock made the `A`-before-`B` decision
@@ -660,13 +660,13 @@ whose transactions `A`, `B`, `C` have each issued their operations and requested
 commit; rows are serial orders without aborts or reads:
 (a) the commitment event `commit([order(A,B)])` is a legal `B_2PL` step from
 the canonical state `σ₀` to `σ₁`; `σ₁` keeps exactly the rows of `σ₀` with a
-complete refinement in `σ₀` that does not commit `B` before `A` (aborting `A`
+complete output extension in `σ₀` that does not commit `B` before `A` (aborting `A`
 or `B` counts), so it keeps `[A,B,C]` and removes `[B,A,C]`;
 (b) the canonical run stays at `σ₀`, which has `[B,A,C]`;
 (c) 2PL's
 `Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)]([A,C,B])`
 is a legal `B_2PL` step from `σ₁`; the canonical run can emit `[A,C,B]`
-because that row was present at `σ₀`.  Every row it retains afterward refines
+because that row was present at `σ₀`.  Every row it retains afterward extends
 `[A,C,B]`, hence satisfies those five commitments and the earlier `order(A,B)`;
 (d) the canonical final table is therefore contained in 2PL's, while Canonical
 Run Universality gives the reverse containment.  The two runs end at the same
@@ -906,9 +906,9 @@ theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : C
 
 /-- Prop. `thm:commitments-require-coordination` with the first event any
 event, in particular a commitment event `apply(γ)`: "let one run perform an
-output or commitment event after which no output at `i` refines `x`".
+output or commitment event after which no output at `i` extends `x`".
 
-Lean: for any event `e` taking `σ` to `σ'` with no output at `i` refining `x`,
+Lean: for any event `e` taking `σ` to `σ'` with no output at `i` extending `x`,
 and `Out_{γ'}(x)` taking `σ` to `t`, no state with current input `i` is
 reachable from both, under any bases or in the transition system of §§2–3; if
 `e` is an output or commitment event, its commitment sequence is nonempty. -/
@@ -926,7 +926,7 @@ theorem «thm:commitments-require-coordination/any-event» {sp : Spec I O}
 
 /-- "The proposition rules out reconciliation at `i`, not forever.  For
 example, suppose `i ≺ j`, `P(i) = {o,x}` with `o` and `x` incomparable, and
-`P(j) = {u}` with `u` refining both.  The states that emit `o` and `x` cannot
+`P(j) = {u}` with `u` extending both.  The states that emit `o` and `x` cannot
 be reconciled at `i`, although accepting `j` reconciles them.  As explained
 after Definition `def:consistency`, consistency nevertheless counts the
 conflict at `i` as a failure."
@@ -934,7 +934,7 @@ conflict at `i` as a failure."
 Lean: the example of `CALM/TransientConflict.lean`: inputs `i ≺ j`, outputs
 `o`, `x` incomparable below `u`, `P(i) = {o,x}`, `P(j) = {u}`.  From
 `σ_P(i)`, the canonical events `output(o)` and `output(x)` are legal; after
-`output(o)` no output at `i` refines `x`, so the two states have no common
+`output(o)` no output at `i` extends `x`, so the two states have no common
 state with current input `i`; both reach `σ_P(j)` by `input(j)`, so they are
 confluent at `j`; and the specification is neither consistent nor directed at
 `i` (so not Lifted Monotone). -/

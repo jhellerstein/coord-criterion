@@ -83,7 +83,7 @@ theorem availability_iff_atEnd (Sys : System sp D) :
     exact ⟨fun q => cutHist H c q ++ ext q, ext, fun q => rfl, hw', hp', hpt', hloc, hni, hout⟩
 
 /-- Partition Consistency stated at the end of each produced partitioned
-history: its final cut is confluent at every common expansion of the
+history: its final cut is confluent at every common input extension of the
 participants' current inputs. -/
 def PartitionConsistencyAtEnd (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),

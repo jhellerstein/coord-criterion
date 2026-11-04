@@ -5,10 +5,10 @@ import CoordCriterion.Foundations.Runs
 # Complete CALM (Section 3, `sections/complete-calm.tex`)
 
 * `liftedMono_iff_relMono_directed` — Lifted Monotonicity ↔ Relational
-  Monotonicity ∧ Directed Outputs (paragraph after Def. lifted-monotonicity);
-* `liftedMono_iff_commonExpansion` — Prop. common-expansion-form (the single
+  Monotonicity ∧ directed fibers (paragraph after Def. lifted-monotonicity);
+* `liftedMono_iff_commonExpansion` — Prop. common-extension-form (the single
   canonical statement; every other file uses it);
-* `ce_of_pairs` — pairs of rows suffice for the common-expansion condition
+* `ce_of_pairs` — pairs of rows suffice for the common-extension condition
   (`app:pairs-suffice`);
 * facts about the lifted output event: the Subsumed/Excluded classification
   (`ruledOut_iff`), disjointness, and the functional case;
@@ -24,10 +24,10 @@ namespace CC
 
 variable {I O : Type} [PO I] [PO O]
 
-/-! ### Lifted Monotonicity = Relational Monotonicity + Directed Outputs -/
+/-! ### Lifted Monotonicity = Relational Monotonicity + directed fibers -/
 
-/-- Accumulator lemma: from RelMono and Directed Outputs, any finite list in
-`S i` together with a seed `u0 ∈ S j` has a common refinement in `S j`. -/
+/-- Accumulator lemma: from RelMono and directed fibers, any finite list in
+`S i` together with a seed `u0 ∈ S j` has a common output extension in `S j`. -/
 theorem relMono_directed_acc {sp : Spec I O} (hR : sp.RelMono) (hD : sp.DirectedOutputs)
     {i j : I} (hij : i ≼ j) :
     ∀ X : List O, (∀ x ∈ X, sp.P i x) → ∀ u0, sp.P j u0 →
@@ -65,7 +65,7 @@ theorem liftedMono_iff_relMono_directed (sp : Spec I O) :
       obtain ⟨u, hu, h0u, hall⟩ := relMono_directed_acc hR hD hij (x :: X') hX u0 hu0
       exact ⟨u, hu, hall⟩
 
-/-! ### Prop. common-expansion-form -/
+/-! ### Prop. common-extension-form -/
 
 theorem liftedMono_iff_commonExpansion (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion := by
@@ -98,7 +98,7 @@ theorem liftedMono_iff_commonExpansion (sp : Spec I O) :
       (by intro r hr; obtain ⟨x, _, rfl⟩ := List.mem_map.1 hr; exact hij)
     exact ⟨u, hu, fun x hx => hall (i, x) (List.mem_map.2 ⟨x, hx, rfl⟩)⟩
 
-/-- Pairs of rows suffice for the common-expansion condition
+/-- Pairs of rows suffice for the common-extension condition
 (paragraph `app:pairs-suffice`; the converse is
 `CC.CALM.pairs_iff_commonExpansion`). -/
 theorem ce_of_pairs {sp : Spec I O}
@@ -168,7 +168,7 @@ theorem functional_subsumed_empty {sp : Spec I O} (hF : sp.Functional) (σ : Sta
 /-! ### Prop. exposability: the lifted exposure test -/
 
 /-- **Lifted exposure test.** `o ∈ R(i)` is exposable at `(i,R)` iff for every
-legal `j ⪰ i` and `x ∈ R(j)` some `u ∈ R(j)` refines both `o` and `x`.
+legal `j ⪰ i` and `x ∈ R(j)` some `u ∈ R(j)` extends both `o` and `x`.
 (Exposability is equivalently "no commitment", `exposable_iff_no_commitment`.) -/
 theorem lifted_exposure_test {sp : Spec I O} (σ : State sp) (o : O) :
     Exposable σ o ↔
@@ -183,7 +183,7 @@ theorem lifted_exposure_test {sp : Spec I O} (σ : State sp) (o : O) :
 
 /-! ### Thm. Complete CALM -/
 
-/-- From a run state, a row `(j,u)` with `j ⪰ cur` survives once `u` refines
+/-- From a run state, a row `(j,u)` with `j ⪰ cur` survives once `u` extends
 some output at the current input. -/
 theorem run_survive {sp : Spec I O} {σ : State sp} (hσ : IsRun σ) {j : I} {u v : O}
     (hcj : σ.cur ≼ j) (hju : sp.P j u) (hv : σ.R σ.cur v) (hvu : v ≼ u) : σ.R j u := by
@@ -194,7 +194,7 @@ theorem run_survive {sp : Spec I O} {σ : State sp} (hσ : IsRun σ) {j : I} {u 
 theorem commonExpansion_consistent {sp : Spec I O} (hC : sp.CommonExpansion) :
     sp.Consistent := by
   intro fam hrun j hj
-  -- one row per run: (cur, some output still at cur), which refines all emitted
+  -- one row per run: (cur, some output still at cur), which extends all emitted
   let pick : State sp → I × O := fun σ => (σ.cur, σ.hasCur.choose)
   obtain ⟨u, hu, hall⟩ := hC (fam.map pick)
     (by
@@ -261,7 +261,7 @@ theorem complete_calm_commonExpansion (sp : Spec I O) :
 /-! ### Prop. exposure-boundary -/
 
 
-/-- Forward direction, in the stronger form: under the common-expansion
+/-- Forward direction, in the stronger form: under the common-extension
 condition every output at every *run* state (not only commitment-free ones)
 is exposable. -/
 theorem commonExpansion_exposable {sp : Spec I O} (hC : sp.CommonExpansion)

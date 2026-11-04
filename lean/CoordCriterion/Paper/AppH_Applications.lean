@@ -14,7 +14,7 @@ statements are written out in terms of library definitions of
 `Appendix/Applications.lean` (namespace `CC.Apps`), and proofs point there.
 
 Common modeling choices (see `Appendix/Applications.lean`): output types
-contain all partial maps / sets, and "no common refinement" is proved in the
+contain all partial maps / sets, and "no common output extension" is proved in the
 whole output type (stronger than among permitted outputs); "not monotone" is
 `¬ LiftedMono`; "the negative side of Complete CAP" is
 `¬ ∃ Sys, CAP.Availability Sys ∧ CAP.PartitionConsistency Sys`, obtained from
@@ -45,9 +45,9 @@ theorem «eq:authority-refinement» {Ep Vt Dc : Type} (a b : Auth Ep Vt Dc) :
   Iff.rfl
 
 /-- "Protocol safety guarantees that every output permitted at the current or
-any later input [refines] the certified evidence already emitted, so authority
+any later input [extends] the certified evidence already emitted, so authority
 changes and certified decisions are [legal outputs] and need no further
-commitment."  Safety is the hypothesis that every remaining row refines `o`;
+commitment."  Safety is the hypothesis that every remaining row extends `o`;
 the conclusion is that `o` is a legal output and the commitment-free output event
 `Out_ε(o)` is legal (under any basis).  Generic in the specification. -/
 theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO O]
@@ -61,7 +61,7 @@ theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO
 different values `d ≠ d'` for the same epoch and slot (`slot d = slot d'`), in
 a specification whose permitted outputs decide at most one value per epoch and
 slot (`SlotUnique`, the paper's "at most one value per epoch and slot"):
-emitting one rejects the other, is not a legal output, and every legal output event
+emitting one rejects the other, is not a legal output, and every commitment-sufficient output event
 emitting it applies a commitment (`γ ≠ []`). -/
 theorem «app:additional-applications/slot-conflict» {I Ep Vt Dc κ : Type} [PO I]
     (slot : Dc → κ) {sp : Spec I (Auth Ep Vt Dc)}
@@ -112,7 +112,7 @@ theorem «app:additional-applications/kset-proposal-row» {P Val : Type} [Decida
     (ksetSpec P Val k).P (propIn p v r) (single p v r) :=
   kset_single_row hk r
 
-/-- "… and the union of the proposal inputs is a common [expansion]" (an input
+/-- "… and the union of the proposal inputs is a common input extension" (an input
 because the `p_r` are distinct). -/
 theorem «app:additional-applications/kset-union» {P Val : Type} [DecidableEq P] {k : Nat}
     {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hp : ∀ r r', p r = p r' → r = r')
@@ -120,8 +120,8 @@ theorem «app:additional-applications/kset-union» {P Val : Type} [DecidableEq P
     propIn p v r ≼ unionIn p v hp :=
   kset_union_upper hp r
 
-/-- "Any `k` of these `k+1` rows have a common [refinement] there": for each
-omitted index `r₀`, a permitted output at the union refines every
+/-- "Any `k` of these `k+1` rows have a common output extension there": for each
+omitted index `r₀`, a permitted output at the union extends every
 `{p_r ↦ v_r}`, `r ≠ r₀`. -/
 theorem «app:additional-applications/kset-any-k» {P Val : Type} [DecidableEq P] {k : Nat}
     {p : Fin (k + 1) → P} {v : Fin (k + 1) → Val} (hp : ∀ r r', p r = p r' → r = r')
@@ -136,7 +136,7 @@ theorem «app:additional-applications/kset-all-fail» {P Val : Type} [DecidableE
     ¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u :=
   kset_all_fail hp hv
 
-/-- "So the common-[expansion] condition fails and the specification is not
+/-- "So the common-extension condition fails and the specification is not
 monotone (Proposition `prop:common-expansion-form`); a partition separating the
 `p_r` gives the negative side of Complete CAP." -/
 theorem «app:additional-applications/kset-not-monotone» {P Val : Type} [DecidableEq P]
@@ -175,7 +175,7 @@ theorem «app:additional-applications/renaming-singletons» {P : Type} [Decidabl
     ((renSpec P).P (sing p) m ↔ m = name1 p) ∧ ((renSpec P).P (sing q) m ↔ m = name1 q) :=
   ⟨ren_singleton_iff p m, ren_singleton_iff q m⟩
 
-/-- "Each has a [refinement] at `{p,q}`, so Relational Monotonicity does not
+/-- "Each has an output extension at `{p,q}`, so Relational Monotonicity does not
 fail here, but no injective map extends both." -/
 theorem «app:additional-applications/renaming-each-extends» {P : Type} [DecidableEq P]
     {p q : P} (h : p ≠ q) :
@@ -184,8 +184,8 @@ theorem «app:additional-applications/renaming-each-extends» {P : Type} [Decida
     ¬ ∃ u : PMap P Nat, Injective u ∧ name1 p ≼ u ∧ name1 q ≼ u :=
   ⟨(ren_each_extends h).1, (ren_each_extends h).2, ren_no_injective_extends_both h⟩
 
-/-- "Directed Outputs also fails at `{p,q}`: `{p↦1,q↦2}` and `{p↦2,q↦1}` have
-no common [refinement].  The specification therefore fails Lifted Monotonicity,
+/-- "Directed fibers also fail at `{p,q}`: `{p↦1,q↦2}` and `{p↦2,q↦1}` have
+no common output extension.  The specification therefore fails Lifted Monotonicity,
 and by Theorem `thm:complete-cap` a partition separating `p` and `q` rules out
 Availability with Partition Consistency." -/
 theorem «app:additional-applications/renaming-not-monotone» {P : Type} [DecidableEq P]
@@ -242,7 +242,7 @@ theorem «app:additional-applications/complete-history» {Ev : Type} (e : Ev) :
 /-- "By Proposition `prop:functional-exposure-boundary`, some output can then be
 exposed only after a commitment that excludes larger inputs."  At some state
 reachable without commitment, some current output rules out an excluded row and no
-excluded row, and every legal output event emitting it applies a commitment. -/
+excluded row, and every commitment-sufficient output event emitting it applies a commitment. -/
 theorem «app:additional-applications/complete-history-commitment» {Ev : Type} (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
       (∃ k x, Excluded τ o k x) ∧

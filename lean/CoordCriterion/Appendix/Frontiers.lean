@@ -149,7 +149,7 @@ theorem hull_relMono (X : Table I O) : HRelMono (hull X) :=
   fun _ _ h => HoareLe.of_sub (hull_mono X h)
 
 /-- Eq. `hull-coverage`: every relaxation satisfying Relational Monotonicity
-expands every output seen so far. -/
+extends every output seen so far. -/
 theorem hull_least (X A : Table I O) (hA : Relaxation X A) (hM : HRelMono A) (i : I) :
     HoareLe (hull X i) (A i) := by
   rintro o ⟨j, hji, hx⟩

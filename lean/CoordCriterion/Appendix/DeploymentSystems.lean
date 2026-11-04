@@ -7,8 +7,8 @@ import CoordCriterion.Distributed.Systems
 The remark after Prop. `thm:complete-cap-deployment`: for the runs of a
 *system* (`CC.CAP` local runs, with arbitrary commitments in output events),
 if the specification is monotone across partitions then every separable,
-authorized family of system runs has a common refinement in `P(j)` at every
-common expansion `j` (`system_monoAcross`), in particular the participant
+authorized family of system runs has a common output extension in `P(j)` at every
+common input extension `j` (`system_monoAcross`), in particular the participant
 runs at a cut of a partitioned history (`history_monoAcross`).  Proved via
 `CC.Dist.sysStep_iff_CAP` and Lemma `canonical_equivalent` (system runs are
 equivalent to canonical runs, `lrun_sysExec`, `SRun.canonical`).  "It does not
@@ -154,8 +154,8 @@ theorem toF_silent (F : SFamily sp D m n) (q : Fin n) : Silent F.toF q ↔ SSile
 /-- **The deployment remark, end to end.**  If the specification is monotone
 across `comp` (under the deployment), then for every family of *system*
 participant runs whose emitted rows lie in their participants' `A_p` and
-which is separable under `comp`, and every common expansion `j` of the runs'
-current inputs, some `u ∈ P(j)` refines every emitted output. -/
+which is separable under `comp`, and every common input extension `j` of the runs'
+current inputs, some `u ∈ P(j)` extends every emitted output. -/
 theorem system_monoAcross (Dp : Deployment sp n) {comp : Fin n → Nat}
     (hmono : MonoAcross Dp comp) (F : SFamily sp D m n) (ha : SAuthorized Dp F)
     (hs : SSeparable F comp) (j : I) (hj : SUB F j) :
@@ -201,7 +201,7 @@ theorem history_monoAcross (Dp : Deployment sp n) (hmono : MonoAcrossPartitions 
 `u`": with fiber `{a, b, top}` (`a, b ≤ top`), `A_0 = {a}`, `A_1 = {b}`, the
 specification is monotone (hence monotone across partitions), the family
 "`0` emits `a`, `1` emits `b`" is authorized and separable, and its only common
-refinement `top` is authorized to no participant. -/
+output extension `top` is authorized to no participant. -/
 def triD : Deployment CAP.triSpec 2 where
   A p _ u := if p = 0 then u = .a else u = .b
   sub _ _ _ _ := trivial

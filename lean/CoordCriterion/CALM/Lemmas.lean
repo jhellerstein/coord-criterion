@@ -19,11 +19,11 @@ own proof routes:
   `input_canon`); determinism of events is `CC.step_det` (`Foundations/Runs`);
 * the explicit form of the survivor test, "`input(j)` then `output(u)` takes
   every final state to `(j, P[in ⪰ j, out ⪰ u])`" (`survivor_exec`);
-* functional remarks: exposability is "`f(j)` refines `o` at every legal `j`"
+* functional remarks: exposability is "`f(j)` extends `o` at every legal `j`"
   (`exposable_iff_refines_all`); a functional output event commits iff it
   excludes (`functional_exclude_iff_excluded`); failure of monotonicity at
   `i ≼ k` makes `output(f(i))` at `σ_P(i)` commitment `k` (`nonmono_excludes`);
-  RelMono / Lifted Monotonicity / the common-expansion condition are
+  RelMono / Lifted Monotonicity / the common-extension condition are
   functional monotonicity for singleton fibers (`relMono_iff_monoF`,
   `liftedMono_iff_monoF`, `commonExpansion_iff_monoF`); in a consistent
   functional spec `input(j)` alone takes every run to `σ_P(j)`
@@ -130,7 +130,7 @@ theorem input_canon {sp : Spec I O} {i j : I} {τ : State sp}
     simp only [inputTable, canon]
     exact ⟨fun h => ⟨h.1.1, h.2⟩, fun h => ⟨⟨h.1, PO.trans hu.2 h.2⟩, h.2⟩⟩
 
-/-- Determined state: the upper fiber `out(R)` has exactly one element
+/-- Determined state: the future-output set `out(R)` has exactly one element
 (it is nonempty by `hasCur`). -/
 def Determined {sp : Spec I O} (σ : State sp) : Prop :=
   ∃ o, ∀ k x, σ.R k x → x = o
@@ -194,7 +194,7 @@ theorem survivor_exec {sp : Spec I O} {σ : State sp} (hrun : IsRun σ) {j : I} 
 /-! ## 3. Functional remarks -/
 
 /-- Remark after Def. `def:exposable`: in a functional specification, `o` is
-exposable at `(i,R)` iff `f(j)` refines `o` at every legal input `j`. -/
+exposable at `(i,R)` iff `f(j)` extends `o` at every legal input `j`. -/
 theorem exposable_iff_refines_all {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
     Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x := by
   constructor
@@ -261,14 +261,14 @@ theorem liftedMono_iff_monoF {sp : Spec I O} (hf : sp.Functional) :
   rw [liftedMono_iff_relMono_directed, ← relMono_iff_monoF hf]
   exact ⟨fun h => h.1, fun h => ⟨h, functional_directed hf⟩⟩
 
-/-- "For functions, both [Lifted Monotonicity and the common-expansion
+/-- "For functions, both [Lifted Monotonicity and the common-extension
 condition] are monotonicity." -/
 theorem commonExpansion_iff_monoF {sp : Spec I O} (hf : sp.Functional) :
     sp.CommonExpansion ↔ sp.MonotoneF := by
   rw [← liftedMono_iff_commonExpansion, liftedMono_iff_monoF hf]
 
 /-- Paragraph after Cor. `cor:state-by-input`: in a consistent functional
-specification, confluence at a common expansion `j` needs only `input(j)`:
+specification, confluence at a common input extension `j` needs only `input(j)`:
 every run state below `j` reaches `σ_P(j)` by that one event. -/
 theorem functional_meet_by_input {sp : Spec I O} (hf : sp.Functional) (hc : sp.Consistent)
     {σ : State sp} (hrun : IsRun σ) {j : I} (hj : σ.cur ≼ j) :
@@ -299,7 +299,7 @@ def emittedAll {sp : Spec I O} (fam : List (RunW sp)) : List O :=
   fam.flatMap (fun r => outs r.evs)
 
 /-- **Lemma `lem:reconciliation`.** Runs ending at `(i_r,R_r)` with common
-expansion `j` are confluent at `j` iff some `u ∈ P(j)` refines every output
+input extension `j` are confluent at `j` iff some `u ∈ P(j)` extends every output
 emitted on any of them. -/
 theorem reconciliation {sp : Spec I O} (fam : List (RunW sp)) (j : I)
     (hj : ∀ r ∈ fam, r.fin.cur ≼ j) :
@@ -381,7 +381,7 @@ theorem rows_of_outputs {sp : Spec I O} {j : I} :
         exact ⟨r, List.mem_cons_of_mem _ hr, e⟩
 
 /-- Thm. Complete CALM (⇐), paper route: each emitted output `o` was emitted
-at some `i_o ≼ j`, the condition supplies `u ∈ P(j)` refining all of them,
+at some `i_o ≼ j`, the condition supplies `u ∈ P(j)` extending all of them,
 and the reconciliation lemma gives confluence. -/
 theorem consistent_of_ce_paper {sp : Spec I O} (hC : sp.CommonExpansion) : sp.Consistent := by
   rw [consistent_iff_runs]
@@ -420,7 +420,7 @@ theorem ce_of_consistent_paper {sp : Spec I O} (hc : sp.Consistent) : sp.CommonE
   refine List.mem_flatMap.2 ⟨mk ⟨r, hr⟩, List.mem_map.2 ⟨⟨r, hr⟩, List.mem_attach _ _, rfl⟩, ?_⟩
   simp [mk, outs]
 
-/-- **Thm. Complete CALM** (common-expansion form), by the paper's route. -/
+/-- **Thm. Complete CALM** (common-extension form), by the paper's route. -/
 theorem complete_calm_paper (sp : Spec I O) : sp.Consistent ↔ sp.CommonExpansion :=
   ⟨ce_of_consistent_paper, consistent_of_ce_paper⟩
 
@@ -433,7 +433,7 @@ theorem complete_calm_paper_lm (sp : Spec I O) : sp.Consistent ↔ sp.LiftedMono
 /-- Prop. `prop:exposure-boundary` (⇒), paper route: extend the run by
 `output(o)` and by `input(j); output(x)`; consistency makes the two extended
 runs confluent at `j`; the survivor row `(j,u)` lies in both tables, both
-contained in `R`, so `u ∈ R(j)` refines `o` and `x`; the lifted exposure test
+contained in `R`, so `u ∈ R(j)` extends `o` and `x`; the lifted exposure test
 then makes `o` exposable.  Holds at every run state. -/
 theorem exposable_of_consistent {sp : Spec I O} (hc : sp.Consistent)
     {τ : State sp} (hτ : IsRun τ) {o : O} (ho : τ.R τ.cur o) : Exposable τ o := by
@@ -480,7 +480,7 @@ def Pairs (sp : Spec I O) : Prop :=
   ∀ i₁ o₁ i₂ o₂ j, sp.P i₁ o₁ → sp.P i₂ o₂ → i₁ ≼ j → i₂ ≼ j →
     ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u
 
-/-- Paragraph `app:pairs-suffice`: pairs suffice for the common-expansion
+/-- Paragraph `app:pairs-suffice`: pairs suffice for the common-extension
 condition (`CC.ce_of_pairs`; its proof is the paper's: fold a row at
 `j` into the family one row at a time). -/
 theorem pairs_iff_commonExpansion (sp : Spec I O) : Pairs sp ↔ sp.CommonExpansion := by

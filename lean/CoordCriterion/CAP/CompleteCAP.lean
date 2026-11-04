@@ -288,7 +288,7 @@ any local history. -/
 def System.Deterministic (Sys : System sp D) : Prop :=
   ∀ n init p pre e e', Sys.strat n init p pre e → Sys.strat n init p pre e' → e = e'
 
-/-- An output emitted after `o` on a run expands `o`. -/
+/-- An output emitted after `o` on a run extends `o`. -/
 theorem lrun_emit_row {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     {γ : List (Commitment sp)} {o : O} (hm : LEv.out γ o ∈ l) : ∃ k, σ.R k o := by
   induction h with

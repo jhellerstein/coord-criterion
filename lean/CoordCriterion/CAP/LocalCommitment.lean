@@ -120,7 +120,7 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
   obtain ⟨hcur, hres, _, _⟩ :=
     rinv_of_produced A (compliant_of_eq_append (hp q) hH) hrun
   rw [← hcur] at hAo
-  -- rows refining `o` at expansions of the current input are still present
+  -- rows extending `o` at input extensions of the current input are still present
   have hkeep : ∀ k u, sp.P k u → σ.cur ≼ k → o ≼ u → σ.R k u := fun k u hSu hk hou =>
     (hres k u).2 ⟨hSu, hk, fun e he => PO.trans (hge e he) hou⟩
   rcases hγ with rfl | rfl

@@ -189,7 +189,7 @@ theorem induced_prefix [PO O] (M : Machine Q E O) (hd : Deterministic M) :
     rw [runs_det hd h h']
   exact ⟨hf, (functional_calm hf).trans (prefix_mono_iff M hd)⟩
 
-/-- Remark: under the prefix order two sequences have a common expansion only
+/-- Remark: under the prefix order two sequences have a common input extension only
 when one extends the other. -/
 theorem prefix_common_expansion (a b c : Seq E) (ha : a ≼ c) (hb : b ≼ c) : a ≼ b ∨ b ≼ a := by
   obtain ⟨v, hv⟩ := ha

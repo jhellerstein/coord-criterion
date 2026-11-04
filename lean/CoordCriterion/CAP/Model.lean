@@ -20,7 +20,7 @@ Appendix `app:cap-response` (on top of `Foundations` and
   `def:partition-consistency`): `Partitioned`, `Availability`,
   `PartitionConsistency`;
 * run and history lemmas used by the proofs, and `ce_exposable` (under the
-  common-expansion condition every output of a run state's fiber is
+  common-extension condition every output of a run state's fiber is
   exposable).
 
 `Distributed/Systems.lean` proves that these commitments and output events
@@ -368,7 +368,7 @@ theorem lrun_mono {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ) 
   | send _ ih => exact ih
   | recv _ ih => exact ih
 
-/-- After a run that emits `o`, every remaining row's output expands `o`
+/-- After a run that emits `o`, every remaining row's output extends `o`
 (containment, Lemma `lem:canonical-commitment-normal-form`(1)). -/
 theorem lrun_out_mem {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     {γ : List (Commitment sp)} {o : O} (hm : LEv.out γ o ∈ l) :
@@ -457,9 +457,9 @@ theorem lrun_cf {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     exact ih (fun γ o hm => hcf γ o (List.mem_cons_of_mem _ hm))
       (fun γ hm => hnc γ (List.mem_cons_of_mem _ hm))
 
-/-! ## Lifted Monotonicity and the common-expansion condition -/
+/-! ## Lifted Monotonicity and the common-extension condition -/
 
-/-- Under the common-expansion condition every output in the current fiber of
+/-- Under the common-extension condition every output in the current fiber of
 a residual state (in particular any run state) is exposable. -/
 theorem ce_exposable (hce : sp.CommonExpansion) {σ : State sp} {E : List O}
     (hσ : Residual σ E) {o : O} (ho : σ.R σ.cur o) : Exposable σ o := by
@@ -487,7 +487,7 @@ theorem toL_norecv : ∀ (es : List (Event I O)) (q : Fin n) (k : Nat) (j : Opti
   | .input _ :: es, q, k, j, d => by simp [toL]; exact toL_norecv es q k j d
   | .output _ :: es, q, k, j, d => by simp [toL]; exact toL_norecv es q k j d
 
-/-- Under the common-expansion condition a canonical execution from a residual
+/-- Under the common-extension condition a canonical execution from a residual
 state is realized by `Out ε` events. -/
 theorem exec_to_lrun (hce : sp.CommonExpansion) {σ τ : State sp} {es : List (Event I O)}
     (hx : Exec σ es τ) {E : List O} (hσ : Residual σ E) :

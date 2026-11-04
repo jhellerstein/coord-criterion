@@ -357,7 +357,7 @@ theorem rview_ne : ∀ (p : Fin n) (i : RHist G), ∃ v, RView G p i v := by
   obtain ⟨w, hw, _⟩ := rgood_extend hg
   exact ⟨w, hw⟩
 
-/-- An expansion keeps a view's reads, their causal pasts, and real-time
+/-- An input extension keeps a view's reads, their causal pasts, and real-time
 precedence among them. -/
 theorem rview_good_up {i j : RHist G} (hle : i ≼ j) {p : Fin n} {v : SMap α}
     (hv : RView G p i v) : RGood G j p v := by

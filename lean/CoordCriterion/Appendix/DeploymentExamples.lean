@@ -16,9 +16,9 @@ proposition in `Appendix/Deployment.lean`, all for the definitions of
 * the leader example (fibers `{a,b}` ordered by equality, `A_p = S`,
   `A_q = ∅`, arbitrary input poset): `lead_monoAcross`, `lead_not_liftedMono`,
   `lead_separable_shape`, `lead_run_one_output`;
-* the sufficient condition "each authorized row has an expansion at every
-  expansion of its input, and every set of authorized rows lacking a common
-  expansion is authorized only to one participant"
+* the sufficient condition "each authorized row has an input extension at every
+  input extension of its input, and every set of authorized rows lacking a common
+  input extension is authorized only to one participant"
   (`monoAcross_of_sole_conflicts`).
 -/
 
@@ -62,7 +62,7 @@ theorem exec_chain {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es �
         · exact hleg
         · have := ih.2 r hr; rw [hR] at this; exact this.1
 
-/-- "Each output event keeps only rows refining it": a participant run's
+/-- "Each output event keeps only rows extending it": a participant run's
 emitted outputs form a chain in emission order. -/
 theorem rows_chain (m : PRun sp) :
     List.Pairwise (fun a b : I × O => a.2 ≼ b.2) m.rows :=
@@ -80,7 +80,7 @@ theorem pairwise_max : ∀ (l : List (I × O)), l ≠ [] →
     · exact List.rel_of_pairwise_cons hp hr
     · exact hmax r' hr'
 
-/-- The last emitted row of a run refines every output the run emitted. -/
+/-- The last emitted row of a run extends every output the run emitted. -/
 theorem rows_max (m : PRun sp) (h : m.rows ≠ []) :
     ∃ r ∈ m.rows, ∀ r' ∈ m.rows, r'.2 ≼ r.2 :=
   pairwise_max m.rows h (rows_chain m)
@@ -138,9 +138,9 @@ theorem sole_rows_two_not_separable (Dp : Deployment sp n) (F : Family sp n)
   exact hne ((h q r h1).2.trans (h q' r' h2).2.symm)
 
 /-- The sufficient condition stated after the leader example: if each
-authorized row has an expansion at every expansion of its input, and every
-finite set of authorized rows lacking a common expansion at some common
-expansion of their inputs is authorized only to a single participant, then
+authorized row has an input extension at every input extension of its input, and every
+finite set of authorized rows lacking a common output extension at some common
+input extension of their inputs is authorized only to a single participant, then
 the specification is monotone across partitions. -/
 theorem monoAcross_of_sole_conflicts (Dp : Deployment sp n)
     (h1 : ∀ p i o, Dp.A p i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u)
@@ -190,7 +190,7 @@ theorem single_authority_shape (Dp : Deployment sp n) (p₀ : Fin n)
 
 /-- Under a single-authority deployment (with at least two participants),
 monotonicity across partitions says only that each authorized row has an
-expansion at every expansion of its input. -/
+input extension at every input extension of its input. -/
 theorem single_authority_iff (hn : 2 ≤ n) (Dp : Deployment sp n) (p₀ : Fin n)
     (hSA : SingleAuthority Dp p₀) :
     MonoAcrossPartitions Dp ↔ ∀ i o, Dp.A p₀ i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u := by
@@ -261,7 +261,7 @@ theorem lead_monoAcross : MonoAcrossPartitions (leadD I) :=
     fun _ o _ j _ => ⟨o, trivial, PO.refl o⟩
 
 /-- ... yet it is not monotone (`(i,a)` and `(i,b)` have no common
-expansion), for any nonempty input poset. -/
+output extension), for any nonempty input poset. -/
 theorem lead_not_liftedMono (i : I) : ¬ (leadSpec I).LiftedMono := by
   intro h
   obtain ⟨u, _, hall⟩ := h i i (PO.refl i) [⟨false⟩, ⟨true⟩] (by simp) (fun _ _ => trivial)

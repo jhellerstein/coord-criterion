@@ -4,7 +4,7 @@ import CoordCriterion.CompleteCALM.Theorem
 import CoordCriterion.Instances.Examples
 
 /-!
-# Refinements of relational-transducer CALM (Section 6.1)
+# Variants of relational-transducer CALM (Section 6.1)
 
 Supports the second paragraph of `sec:query-instance` and the paragraph on
 Baccaert and Ketsman that follows it (`sections/instances.tex`).  The
@@ -15,7 +15,7 @@ the mapping into our frame.
   is domain-distinct-monotone (resp. domain-disjoint-monotone) when
   `Q(I) ⊆ Q(I ∪ J)` for every `J` whose facts each contain a value not in
   `adom(I)` (resp. are non-nullary and use only such values).  We declare the
-  input order "`K` expands `I` when `I ⊆ K` and every fact of `K \ I` is
+  input order "`K` extends `I` when `I ⊆ K` and every fact of `K \ I` is
   admissible for `I`" (`ExtInp`), for an admissibility predicate that is
   antitone in `I` (`Adm`).  Each weaker monotonicity is exactly monotonicity of
   `J ↦ Q(J)` under the matching order (`rmono_iff_monotone`), so Functional
@@ -25,13 +25,13 @@ the mapping into our frame.
   weaker: the query "no 2-cycle" passes the one-fact domain-distinct test but
   is not domain-disjoint-monotone (`noCycle2_*`).
 * Behaviors (Baccaert and Ketsman, PODS 2023; Inf. Syst. 2026).  Inputs are
-  located facts, ordered by network expansion (new facts only at new nodes,
+  located facts, ordered by network input extension (new facts only at new nodes,
   `netAdm`), so the network is read off the input, and a behavior is a
   relational specification on them.  A transducer computes a behavior when
   every run lands in it, so an implementation realizes a sub-behavior; the
   comparison is Complete CAP with that sub-behavior as explicit relation
   (`CAP.ConsistentOn`).  Node monotonicity (`NodeMono`) is the
-  common-expansion condition asked only of two rows at disjoint networks
+  common-extension condition asked only of two rows at disjoint networks
   (`nodeMono_iff_disjointPair`), so consistency implies it
   (`nodeMono_of_consistent`).  Choice alone does not separate the two: the
   node-monotone `pick` has a non-directed fiber, yet `pick` is consistent on
@@ -68,14 +68,14 @@ theorem PSet.ext' {F : Type} {s t : PSet F} (h : ∀ x, s.mem x ↔ t.mem x) : s
 /-- Union of instances. -/
 def union {F : Type} (I J : PSet F) : PSet F := ⟨fun f => I.mem f ∨ J.mem f⟩
 
-/-! ## Restricted expansion orders -/
+/-! ## Restricted input-extension orders -/
 
 /-- An admissibility predicate on new facts, antitone in the instance. -/
 structure Adm (F : Type) where
   ok : PSet F → F → Prop
   anti : ∀ {I J : PSet F} {f : F}, I ≼ J → ok J f → ok I f
 
-/-- Instances ordered by admissible expansion. -/
+/-- Instances ordered by admissible input extension. -/
 structure ExtInp {F : Type} (a : Adm F) where
   set : PSet F
 
@@ -92,13 +92,13 @@ instance {F : Type} (a : Adm F) : PO (ExtInp a) where
     have : I.set = K.set := PO.antisymm h₁.1 h₂.1
     cases I; cases K; cases this; rfl
 
-/-- Monotonicity restricted to admissible expansions:
+/-- Monotonicity restricted to admissible input extensions:
 `Q(I) ⊆ Q(I ∪ J)` whenever every fact of `J` is admissible for `I`. -/
 def RMono {F A : Type} (a : Adm F) (Q : PSet F → PSet A) : Prop :=
   ∀ I J : PSet F, (∀ f, J.mem f → a.ok I f) → Q I ≼ Q (union I J)
 
 /-- The restricted monotonicity of `Q` is monotonicity of `J ↦ Q(J)` under
-the admissible-expansion order. -/
+the admissible-input-extension order. -/
 theorem rmono_iff_monotone {F A : Type} (a : Adm F) (Q : PSet F → PSet A) :
     RMono a Q ↔ Monotone (fun I : ExtInp a => Q I.set) := by
   constructor
@@ -114,14 +114,14 @@ theorem rmono_iff_monotone {F A : Type} (a : Adm F) (Q : PSet F → PSet A) :
   · intro h I J hJ
     exact h ⟨I⟩ ⟨union I J⟩ ⟨fun _ hf => Or.inl hf, fun f hf hI => hf.elim (absurd · hI) (hJ f)⟩
 
-/-- By Functional CALM, the graph of `Q` over the admissible-expansion order is
-consistent exactly when `Q` is monotone for admissible expansions. -/
+/-- By Functional CALM, the graph of `Q` over the admissible-input-extension order is
+consistent exactly when `Q` is monotone for admissible input extensions. -/
 theorem rmono_iff_consistent {F A : Type} (a : Adm F) (Q : PSet F → PSet A) :
     (graph (fun I : ExtInp a => Q I.set)).Consistent ↔ RMono a Q := by
   rw [functional_calm (Inst.graph_functional _), Inst.graph_monotoneF_iff]
   exact (rmono_iff_monotone a Q).symm
 
-/-! ## Domain-distinct and domain-disjoint expansion -/
+/-! ## Domain-distinct and domain-disjoint input extension -/
 
 section Domain
 variable {F V : Type} (vals : F → V → Prop)
@@ -140,12 +140,12 @@ def DisjointFrom (I : PSet F) (f : F) : Prop :=
 theorem inAdom_mono {I J : PSet F} (h : I ≼ J) {v : V} : InAdom vals I v → InAdom vals J v :=
   fun ⟨f, hf, hv⟩ => ⟨f, h f hf, hv⟩
 
-/-- Domain-distinct expansion. -/
+/-- Domain-distinct input extension. -/
 def distinctAdm : Adm F where
   ok := DistinctFrom vals
   anti h := fun ⟨v, hv, hn⟩ => ⟨v, hv, fun hI => hn (inAdom_mono vals h hI)⟩
 
-/-- Domain-disjoint expansion. -/
+/-- Domain-disjoint input extension. -/
 def disjointAdm : Adm F where
   ok := DisjointFrom vals
   anti h := fun ⟨hne, hall⟩ => ⟨hne, fun v hv hI => hall v hv (inAdom_mono vals h hI)⟩
@@ -166,14 +166,14 @@ theorem disjointMono_of_distinctMono {A : Type} {Q : PSet F → PSet A}
     ⟨v, hv, hall v hv⟩
 
 /-- Domain-distinct monotonicity is Functional CALM under the
-domain-distinct expansion order. -/
+domain-distinct input-extension order. -/
 theorem distinctMono_iff {A : Type} (Q : PSet F → PSet A) :
     (DistinctMono vals Q ↔ Monotone (fun I : ExtInp (distinctAdm vals) => Q I.set)) ∧
       ((graph (fun I : ExtInp (distinctAdm vals) => Q I.set)).Consistent ↔ DistinctMono vals Q) :=
   ⟨rmono_iff_monotone (distinctAdm vals) Q, rmono_iff_consistent (distinctAdm vals) Q⟩
 
 /-- Domain-disjoint monotonicity is Functional CALM under the
-domain-disjoint expansion order. -/
+domain-disjoint input-extension order. -/
 theorem disjointMono_iff {A : Type} (Q : PSet F → PSet A) :
     (DisjointMono vals Q ↔ Monotone (fun I : ExtInp (disjointAdm vals) => Q I.set)) ∧
       ((graph (fun I : ExtInp (disjointAdm vals) => Q I.set)).Consistent ↔ DisjointMono vals Q) :=
@@ -256,20 +256,20 @@ variable {F N : Type} (loc : F → N)
 /-- `x ∈ netw(H)`. -/
 def Netw (H : PSet F) (x : N) : Prop := ∃ f, H.mem f ∧ loc f = x
 
-/-- Network expansion: new facts only at nodes outside `netw(H)`. -/
+/-- Network input extension: new facts only at nodes outside `netw(H)`. -/
 def netAdm : Adm F where
   ok H f := ¬ Netw loc H (loc f)
   anti h hn := fun ⟨g, hg, hl⟩ => hn ⟨g, h g hg, hl⟩
 
 /-- Node monotonicity (Baccaert–Ketsman, Inf. Syst. 2026, Def. 7): outputs of
-a behavior on two disjoint networks have a common refinement at the merged
+a behavior on two disjoint networks have a common output extension at the merged
 network. -/
 def NodeMono {G : Type} (B : Spec (ExtInp (netAdm loc)) (PSet G)) : Prop :=
   ∀ H₁ H₂ : PSet F, (∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) →
     ∀ K₁ K₂, B.P ⟨H₁⟩ K₁ → B.P ⟨H₂⟩ K₂ → ∃ K, B.P ⟨union H₁ H₂⟩ K ∧ K₁ ≼ K ∧ K₂ ≼ K
 
-/-- The common-expansion condition asked only of two rows at disjoint
-networks: every common expansion `j` of their inputs has a common refinement
+/-- The common-extension condition asked only of two rows at disjoint
+networks: every common input extension `j` of their inputs has a common output extension
 of their outputs. -/
 def DisjointPairExpansion {G : Type} (B : Spec (ExtInp (netAdm loc)) (PSet G)) : Prop :=
   ∀ H₁ H₂ : PSet F, (∀ x, Netw loc H₁ x → ¬ Netw loc H₂ x) →
@@ -285,10 +285,10 @@ theorem le_union_right {H₁ H₂ : PSet F} (hd : ∀ x, Netw loc H₁ x → ¬ 
     (⟨H₂⟩ : ExtInp (netAdm loc)) ≼ ⟨union H₁ H₂⟩ :=
   ⟨fun _ hf => Or.inr hf, fun f hf hn => hf.elim (fun h1 h2 => hd _ ⟨f, h1, rfl⟩ h2) (absurd · hn)⟩
 
-/-- Node monotonicity is the common-expansion condition for two rows at
-disjoint networks.  The merged network is one common expansion; any other `j`
+/-- Node monotonicity is the common-extension condition for two rows at
+disjoint networks.  The merged network is one common input extension; any other `j`
 adds facts only at further new nodes, and node monotonicity with those facts
-carries the refinement to `j`. -/
+carries the output extension to `j`. -/
 theorem nodeMono_iff_disjointPair {G : Type} (B : Spec (ExtInp (netAdm loc)) (PSet G)) :
     NodeMono loc B ↔ DisjointPairExpansion loc B := by
   constructor
@@ -324,7 +324,7 @@ theorem nodeMono_of_consistent {G : Type} {B : Spec (ExtInp (netAdm loc)) (PSet 
   exact ⟨u, hu, hall (⟨H₁⟩, K₁) (by simp), hall (⟨H₂⟩, K₂) (by simp)⟩
 
 /-- For a deterministic behavior `b`, node monotonicity is monotonicity under
-network expansion, hence (Functional CALM) consistency. -/
+network input extension, hence (Functional CALM) consistency. -/
 theorem nodeMono_graph_iff {G : Type} (b : ExtInp (netAdm loc) → PSet G) :
     (NodeMono loc (graph b) ↔ Monotone b) ∧ ((graph b).Consistent ↔ Monotone b) := by
   refine ⟨⟨fun h H K hHK => ?_, fun hm H₁ H₂ hd K₁ K₂ h₁ h₂ => ?_⟩, ?_⟩
@@ -350,7 +350,7 @@ end Behaviors
 /-! ### Node names as input
 
 The examples below take as input a set of node names (`Node@x()`, located at
-`x`), so `loc = id` and network expansion is inclusion. -/
+`x`), so `loc = id` and network input extension is inclusion. -/
 
 /-- The network with node set `P`. -/
 def net (P : Nat → Prop) : ExtInp (netAdm (id : Nat → Nat)) := ⟨⟨P⟩⟩
@@ -428,8 +428,8 @@ end Pick
 Baccaert and Ketsman's `Top_span` (Inf. Syst. 2026, Example 8) permits every
 spanning tree of the network.  At a two-node network every tree has the one
 edge; a tree on three nodes has two edges.  The networks `{0,1}`, `{1,2}`,
-`{0,2}` overlap pairwise and have the common expansion `{0,1,2}`, so the
-common-expansion condition on any total sub-behavior asks for a tree on
+`{0,2}` overlap pairwise and have the common input extension `{0,1,2}`, so the
+common-extension condition on any total sub-behavior asks for a tree on
 `{0,1,2}` with all three edges (`no_consistentOn_of_triangle`).
 
 `tree` is a concrete such behavior: spanning trees in which every node other
@@ -595,7 +595,7 @@ end Tree
 
 Baccaert and Ketsman's `All` constraint gives every node the list of all
 nodes.  We model it by putting the membership `mem` into the input, beside
-the nodes heard from so far (`view ⊆ mem`).  An input then expands another
+the nodes heard from so far (`view ⊆ mem`).  An input then extends another
 only when the membership is the same, so an input whose view is the whole
 membership is maximal: a node that has heard from every member has nothing
 left to wait for.  Any functional choice at maximal inputs is consistent
@@ -614,7 +614,7 @@ structure AllInp where
   view : PSet Nat
   sub : view ≼ mem
 
-/-- An input expands another when the membership is the same and the view
+/-- An input extends another when the membership is the same and the view
 grows. -/
 instance : PO AllInp where
   le i j := i.mem = j.mem ∧ i.view ≼ j.view
@@ -638,7 +638,7 @@ theorem allInp_complete_maximal {i j : AllInp} (hc : i.Complete) (h : i ≼ j) :
   exact PO.antisymm h ⟨h.1.symm, hv⟩
 
 /-- A functional choice at maximal inputs is consistent: rows with a common
-expansion are all at that expansion. -/
+input extension are all at that input extension. -/
 theorem consistentOn_of_maximal {I O : Type} [PO I] [PO O] (B : Spec I O) (A : Table I O)
     (hsub : ∀ i o, A i o → B.P i o) (hmax : ∀ i o j, A i o → i ≼ j → i = j)
     (hfun : ∀ i o o', A i o → A i o' → o = o') : CAP.ConsistentOn B A := by

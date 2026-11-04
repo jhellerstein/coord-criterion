@@ -29,9 +29,9 @@ open CC CC.CALM
 
 /-! ## Commitment by example (`sec:ambiguity-story`) -/
 
-  /-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row refines the removed one: a commitment."  After
+  /-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row extends the removed one: a commitment."  After
   `output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Excluded_o`,
-  requires a commitment, and is not subsumed (no row refines both). -/
+  requires a commitment, and is not subsumed (no row extends both). -/
 theorem «fig:ambiguity-frames/f» :
     (∀ k o, outputTable (canon Figures.Txn.spec ()) .ab k o ↔ o = .ab) ∧
       Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧
@@ -39,7 +39,7 @@ theorem «fig:ambiguity-frames/f» :
       ¬ ∃ u, Figures.Txn.spec.P () u ∧ Figures.Txn.TOut.ab ≼ u ∧ Figures.Txn.TOut.ba ≼ u :=
   ⟨Figures.Txn.after_ab, Figures.Txn.ba_excluded⟩
 
-/-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is refined by a remaining one: an output
+/-- Fig. `fig:ambiguity-frames`(g): "(g) After `{s→s1}` … each removed row is extended by a remaining one: an output
 subsumption."  The remaining rows are `{s→s1}`, `{s→s1,s→a}`,
 `{s→s1,s→a,s→a→s2}`; the removed `{s→a}` and `{s→a,s→a→s2}` are in
   `Subsumed_o`; nothing is in `Excluded_o`, so `{s→s1}` is a legal output. -/
@@ -163,7 +163,7 @@ theorem «def:relational-monotonicity/functional» {I O : Type} [PO I] [PO O] {s
   relMono_iff_monoF hf
 
 /-- "For a set `F ⊆ O` of outputs, outputs `o₁,…,o_k` are *compatible in
-`F`* if some `u ∈ F` refines all of them."  Lean: `CompatibleIn F X`, with
+`F`* if some `u ∈ F` extends all of them."  Lean: `CompatibleIn F X`, with
 the outputs as a list `X`. -/
 abbrev «sec:lifted-monotonicity/compatible» {O : Type} [PO O] (F : O → Prop) (X : List O) : Prop :=
   CompatibleIn F X
@@ -174,8 +174,8 @@ abbrev «sec:lifted-monotonicity/compatible» {O : Type} [PO O] (F : O → Prop)
 abbrev «def:fiber-directedness» {O : Type} [PO O] (F : O → Prop) : Prop :=
   JointLift F F
 
-/-- **Def. `def:directed-outputs`** (Directed Outputs).  "An interface
-specification has *Directed Outputs* when every fiber `P(i)` is
+/-- **Def. `def:directed-outputs`** (directed fibers).  "An interface
+specification has *directed fibers* when every fiber `P(i)` is
 directed."  Lean: `Spec.DirectedOutputs` is `∀ i, JointLift (sp.P i)
 (sp.P i)`. -/
 abbrev «def:directed-outputs» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
@@ -188,8 +188,8 @@ theorem «def:fiber-directedness/singleton» {I O : Type} [PO I] [PO O] {sp : Sp
   functional_directed hf
 
 /-- "The fiber `{{a},{b},{a,b,c},{a,b,d},{a,b,c,d}}` under inclusion is
-directed, since `{a,b,c,d}` refines every member, yet `{a}` and `{b}` have two
-incomparable minimal common refinements.  Compatibility likewise does not
+directed, since `{a,b,c,d}` extends every member, yet `{a}` and `{b}` have two
+incomparable minimal common output extensions.  Compatibility likewise does not
 require comparability: … as `{a,b,c}` and `{a,b,d}` do."  The fiber is the
 type `F5` (all of it). -/
 theorem «sec:lifted-monotonicity/directed-example» :
@@ -202,7 +202,7 @@ theorem «sec:lifted-monotonicity/directed-example» :
   ⟨f5_directed, f5_common_refinements, f5_minimal_incomparable, f5_compatible⟩
 
 /-- "Thus the traceroute fiber is directed: the union of finitely many
-route sets in it is again in the fiber and refines each.  The two
+route sets in it is again in the fiber and extends each.  The two
 transaction orders in Figure `fig:ambiguity-frames`(f), by contrast, are
 incompatible." -/
 theorem «sec:lifted-monotonicity/figure-fibers» :
@@ -235,14 +235,14 @@ theorem «def:lifted-monotonicity/functional» {I O : Type} [PO I] [PO O] {sp : 
   liftedMono_iff_monoF hf
 
 /-- After Def. `def:lifted-monotonicity`: "So Lifted Monotonicity holds
-exactly when both [Relational Monotonicity and Directed Outputs] do." -/
+exactly when both [Relational Monotonicity and directed fibers] do." -/
 theorem «def:lifted-monotonicity/relmono-directed» {I O : Type} [PO I] [PO O]
     (sp : Spec I O) : sp.LiftedMono ↔ sp.RelMono ∧ sp.DirectedOutputs :=
   liftedMono_iff_relMono_directed sp
 
 /-- After Def. `def:lifted-monotonicity`: "In powerdomain terms, Relational
 Monotonicity is monotonicity of `i ↦ P(i)` under the Hoare preorder, which
-asks only that each output in `A` have a refinement in `B`; the joint lift
+asks only that each output in `A` have an output extension in `B`; the joint lift
 asks that every finite set of them have a common one.  The two agree when `B`
 is directed."  Lean: the Hoare preorder is `Front.HoareLe A B`
 (`∀ a ∈ A, ∃ b ∈ B, a ≼ b`); (1) Relational Monotonicity is Hoare
@@ -270,9 +270,9 @@ theorem «def:lifted-monotonicity/not-reflexive» :
   ⟨fun _ _ A => Front.HoareLe.refl A, fun _ _ _ => Iff.rfl,
    fun h => Figures.Txn.not_monotone.2.1 fun _ => h⟩
 
-/-- **Def. `def:common-expansion-condition`** (Common-expansion condition).
+/-- **Def. `def:common-expansion-condition`** (Common-extension condition).
 "For every finite set of rows `(i₁,o₁),…,(i_k,o_k)` of `P` and every common
-expansion `j` of `i₁,…,i_k`, some `u ∈ P(j)` refines every `o_r`."  Lean:
+input extension `j` of `i₁,…,i_k`, some `u ∈ P(j)` extends every `o_r`."  Lean:
 `Spec.CommonExpansion`, the rows as a list. -/
 abbrev «def:common-expansion-condition» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   sp.CommonExpansion
@@ -285,9 +285,9 @@ theorem «def:common-expansion-condition/empty» {I O : Type} [PO I] [PO O]
     (∃ u, sp.P j u ∧ ∀ r ∈ ([] : List (I × O)), r.2 ≼ u) :=
   let ⟨u, hu⟩ := sp.total j; ⟨u, hu, fun _ h => nomatch h⟩
 
-/-- **Prop. `prop:common-expansion-form`** (Common-expansion form of Lifted
+/-- **Prop. `prop:common-expansion-form`** (Common-extension form of Lifted
 Monotonicity).  "An I/O specification satisfies Lifted
-Monotonicity if and only if it satisfies the common-expansion condition." -/
+Monotonicity if and only if it satisfies the common-extension condition." -/
 theorem «prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion :=
   liftedMono_iff_commonExpansion sp
@@ -326,7 +326,7 @@ theorem «sec:complete-calm-theorem/lift-unchanged» {I O : Type} [PO I] [PO O]
 
 /-- **Theorem `thm:complete-calm`** (Complete CALM).  "An ordered
 specification is consistent if and only if it satisfies Lifted Monotonicity,
-equivalently the common-expansion condition." -/
+equivalently the common-extension condition." -/
 theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (sp.Consistent ↔ sp.LiftedMono) ∧ (sp.Consistent ↔ sp.CommonExpansion) :=
   ⟨complete_calm sp, complete_calm_commonExpansion sp⟩
@@ -334,7 +334,7 @@ theorem «thm:complete-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
 /-- **Prop. `prop:exposure-boundary`** (Output-legality boundary).  "An ordered
 specification satisfies Lifted Monotonicity if and only if every output at
 every state reachable without commitment is a legal output."  The proof sketch
-goes through the common-expansion condition (Prop.
+goes through the common-extension condition (Prop.
 `prop:common-expansion-form`); `«prop:exposure-boundary/common-expansion»`
 is that form. -/
 theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
@@ -342,10 +342,10 @@ theorem «prop:exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
       ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   (liftedMono_iff_commonExpansion sp).trans (exposure_boundary sp)
 
-/-- Prop. `prop:exposure-boundary`, proof sketch: "Under the common-expansion
-condition, consistency supplies the common refinement the legal-output test asks
+/-- Prop. `prop:exposure-boundary`, proof sketch: "Under the common-extension
+condition, consistency supplies the common output extension the legal-output test asks
 for.  Conversely, the legal-output test at canonical states, one row at a time,
-builds the common refinement the condition asks for."  The common-expansion
+builds the common output extension the condition asks for."  The common-extension
 form of the proposition. -/
 theorem «prop:exposure-boundary/common-expansion» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.CommonExpansion ↔

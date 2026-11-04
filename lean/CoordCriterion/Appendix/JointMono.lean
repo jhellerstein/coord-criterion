@@ -10,7 +10,7 @@ commitment?  Three mechanisms, and the limit of the third.
 1. **Filtering.**  `𝒮₁` never produces the inputs on which `𝒮₂` is not
    monotone.
    * `CEOn`, `ceOn_iff_restrictTo` (in `Appendix/Guarded.lean`) — `𝒮₂`
-     satisfies the common-expansion condition on a set `D` of middle values
+     satisfies the common-extension condition on a set `D` of middle values
      (equivalently: `𝒮₂` restricted to `D` is Lifted-Monotone).
    * `seq_liftedMono_on` — if `𝒮₁` is Lifted-Monotone with outputs in `D`
      and `𝒮₂` is Lifted-Monotone on `D`, the composite is Lifted-Monotone.

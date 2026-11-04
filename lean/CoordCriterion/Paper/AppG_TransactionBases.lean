@@ -27,7 +27,7 @@ Library correspondence (`Appendix/TransactionBases/Spec.lean`, `Partial.lean`,
   variant); a permitted complete output is `Complete false k r`.
 * The commitments are *closure commitments* `closeC G Q`: the guard `G` is the
   appendix's "for `A ∈ i`" etc., the condition `Q` is on complete outputs, and
-  a row is kept when a remaining complete row refines it and satisfies `Q`
+  a row is kept when a remaining complete row extends it and satisfies `Q`
   (`Keep`).
 * Protocol steps are modeled by the runs that the claims are about: the MVTO
   run of `«app:cc-bases/abort-is-commitment»` is driven by input events, one per
@@ -61,7 +61,7 @@ says which version the `k`-th operation of a transaction, a read of a key `x`,
 returned …"  Written `(L,X,ρ)`. -/
 abbrev «app:cc-bases/output» (T K : Type) := Partial.ROut T K
 
-/-- "One output refines another when it extends all three parts …"
+/-- "One output extends another when it extends all three parts …"
 `(L,X,ρ) ⪯ (L',X',ρ') ⟺ X ⊆ X', dom L ⊆ dom L', L'|_{dom L} = L, ρ ⊆ ρ'`. -/
 theorem «app:cc-bases/output-order» {T K : Type} (r r' : Partial.ROut T K) :
     r ≼ r' ↔
@@ -107,7 +107,7 @@ theorem «app:cc-bases/complete» {T K : Type} (k : Inp T K) (r : Partial.ROut T
         ∃ x, k.op a n = some (.rd x) ∧ Valid k x v ∧ (r.o.dom a → ReadOK k r.o a n x v) :=
   Iff.rfl
 
-/-- "Any output is permitted when some permitted complete output refines it,
+/-- "Any output is permitted when some permitted complete output extends it,
 that is, when it can still be completed." -/
 theorem «app:cc-bases/permitted» {T K : Type} (k : Inp T K) (u : Partial.ROut T K) :
     (spec false).P k u ↔ ∃ c, Complete false k c ∧ u ≼ c :=
@@ -134,9 +134,9 @@ theorem «app:cc-bases/total» {T K : Type} (k : Inp T K) :
 
 /-- "Let `{A,B}` be an input in which `A` and `B` have each requested commit.
 The rows `({A,B},([A,B],∅,∅))` and `({A,B},([B,A],∅,∅))` of Figure
-ambiguity-frames(f) have no common refinement, which would order `A` both before
+ambiguity-frames(f) have no common output extension, which would order `A` both before
 and after `B`, so the specification is not monotone."  Not monotone: no
-Directed Outputs, no Lifted Monotonicity.  (Such an input exists for any two
+directed fibers, no Lifted Monotonicity.  (Such an input exists for any two
 transactions: `pairDone`.) -/
 theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} {A B : T} (h : A ≠ B) {k : Inp T K}
     (hk : ∀ t, k.mem t ↔ t = A ∨ t = B) (hf : ∀ t, k.mem t → k.fin t) :
@@ -206,9 +206,9 @@ noncomputable abbrev «app:cc-bases/stamp» {T K : Type} {af : Bool} (A : T) (Z 
 noncomputable abbrev «app:cc-bases/read» {T K : Type} {af : Bool} (A : T) (n : Nat)
     (v : Option T) : Commitment (spec (T := T) (K := K) af) := read A n v
 
-/-- "Each is a commitment (Definition `def:commitment`).  If a kept row refines
-another row at the same input, the complete row that keeps it also refines the
-other, which is therefore kept; so no removed row is refined by a kept one, as
+/-- "Each is a commitment (Definition `def:commitment`).  If a kept row extends
+another row at the same input, the complete row that keeps it also extends the
+other, which is therefore kept; so no removed row is extended by a kept one, as
 Equation `eq:commitment-unsubsumed` requires."  Every closure commitment, for
 every guard and condition, is a `Commitment` (`closeC`); this states
 Eq. `commitment-unsubsumed` for it. -/
@@ -219,7 +219,7 @@ theorem «app:cc-bases/each-is-commitment» {T K : Type} {af : Bool}
   (closeC G Q).unsubsumed σ τ h
 
 /-- "… for them a complete row is kept exactly when it satisfies the condition,
-since two permitted complete outputs at one input, one refining the other, have
+since two permitted complete outputs at one input, one extending the other, have
 the same serial order and abort set."  (In both specifications.) -/
 theorem «app:cc-bases/complete-kept-iff» {T K : Type} {af : Bool}
     {σ : State (spec (T := T) (K := K) af)} {P : Outcome T → Prop} {k : Inp T K}
@@ -253,7 +253,7 @@ theorem «app:cc-bases/bases-differ» {T K : Type} {A B C : T} {k : Inp T K}
   ⟨⟨τ, hτ, order_not_MVTO h hτ⟩, ⟨τ', hτ', stamp_not_2PL h hτ'⟩⟩
 
 /-- "In every state that a run under either basis reaches, each row has a
-complete refinement in the table at its input, and any output between two rows
+complete output extension in the table at its input, and any output between two rows
 of the table at one input is itself a row of the table."  (`Good`.) -/
 theorem «app:cc-bases/run-states» {T K : Type} {af : Bool} {i : Inp T K}
     {es : List (SEvent (spec (T := T) (K := K) af))} {τ : State (spec af)}
@@ -265,7 +265,7 @@ theorem «app:cc-bases/run-states» {T K : Type} {af : Bool} {i : Inp T K}
 
 /-- "So a read is reported by applying `read(A,k,v)` and then emitting the
 result, which is then a legal output."  Precisely: after `read(A,k,v)`, adding the
-result to a row that every remaining row refines gives a row, and emitting it is
+result to a row that every remaining row extends gives a row, and emitting it is
 a legal output.  (At any state with the two properties above.) -/
 theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v : Option T}
     {σ σ' : State (spec (T := T) (K := K) af)} (hg : Good σ)
@@ -417,7 +417,7 @@ theorem «app:cc-bases/writer-before-A» {T K : Type} {A W B : T} {k : Inp T K}
 /-- *When the abort is entailed.*  "Suppose `A`'s write of `x` has arrived.  If
 every remaining complete row commits `B`, for instance after `TxCommit(B)`,
 then every remaining complete row aborts `A`.  Emitting `A`'s abort, added to a
-row that reports the read and that every remaining row refines, is then
+row that reports the read and that every remaining row extends, is then
 a legal output: the specification entails the abort."  (Lean also shows that no
 remaining row commits `A`.)  Stated at any state `τ` with the two properties of
 `«app:cc-bases/run-states»` whose table is contained in the one after the two

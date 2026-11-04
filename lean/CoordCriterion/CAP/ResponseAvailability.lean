@@ -22,7 +22,7 @@ Contents (paper item ↦ Lean):
   confluence ⇒ RPC (`rpc_of_confluent`); for a canonical system they coincide
   (`canonical_rpc_iff_confluent`); with other commitments the converse fails
   (`rpc_not_confluent`).
-* "Input acceptance says that `p` never empties the fiber at an expansion of its current
+* "Input acceptance says that `p` never empties the fiber at an input extension of its current
   input": `input_acceptance_iff`.
 * "It excludes specifications whose answers require such a fiber-emptying commitment, such as the
   election under the equality order": `ra_excludes_unavailable_expansion`,
@@ -45,7 +45,7 @@ Contents (paper item ↦ Lean):
 * Corollary `cor:gilbert-lynch`, proved along the paper's route through
   `forced_answer`, from Answering alone: `gilbert_lynch_answering`,
   `gilbert_lynch_via_forced_answer`.
-* "a single emitted output has no refinement in the fiber at some expansion of
+* "a single emitted output has no output extension in the fiber at some input extension of
   its input, a failure of Relational Monotonicity": `reg_not_relMono`; `Q_p`
   is an obligation (`regQ_obligation`).
 -/
@@ -317,7 +317,7 @@ theorem canonOut_of_produced {Sys : System sp D} (hS : CanonicalSystem Sys) {ini
     exact hS.2 _ _ _ _ _ (hp p a _ b hab).2
 
 /-- Remark after Def. `def:response-partition-consistency`: for a canonical
-system, at a common expansion `j` of the current inputs, Response Partition
+system, at a common input extension `j` of the current inputs, Response Partition
 Consistency and confluence coincide. -/
 theorem canonical_rpc_iff_confluent {Sys : System sp D} (hS : CanonicalSystem Sys)
     {init : Fin n → I} {H : History sp D n} (hwf : WF init H) (hp : Produced Sys n init H)
@@ -334,7 +334,7 @@ theorem respSystem_canonical (T : Table I O) : CanonicalSystem (respSystem (sp :
 
 /-! ## Input acceptance, Answering, forced answers -/
 
-/-- "Input acceptance says that `p` never empties the fiber at an expansion of its current
+/-- "Input acceptance says that `p` never empties the fiber at an input extension of its current
 input": the Input-acceptance continuation for `j` exists iff `p`'s table at the
 cut still has a row at `j`. -/
 theorem input_acceptance_iff (Sys : System sp D) {init : Fin n → I} {H : History sp D n}
@@ -385,7 +385,7 @@ theorem answering_of_ra {Sys : System sp D} {Q : (n : Nat) → Fin n → Table I
 
 /-- **Lemma `lem:forced-answer`** as currently stated: the continuation adds
 only events of `q`, and no input event; it reaches a cut at which `j` still
-expands every current input and the emitted outputs have no common refinement
+extends every current input and the emitted outputs have no common output extension
 in `P(j)`.  Only Answering is used. -/
 theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
     (hAns : Answering Sys Q) {init : Fin n → I} {H : History sp D n}
@@ -421,7 +421,7 @@ theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O
     rw [List.take_length, hext q]; exact List.mem_append_right _ hm
 
 /-- "Input acceptance … excludes specifications whose answers require such a
-fiber-emptying commitment": if no answer at `i` has a refinement at some `j ⪰ i`, no system has
+fiber-emptying commitment": if no answer at `i` has an output extension at some `j ⪰ i`, no system has
 Response Availability (already for two participants, each alone). -/
 theorem ra_excludes_unavailable_expansion (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O)
     {i j : I} (hij : i ≼ j) (hno : ∀ o, Q 2 0 i o → ¬ ∃ u, sp.P j u ∧ o ≼ u) :
@@ -499,7 +499,7 @@ theorem locality_transfer {Sys : System sp D} (hrep : Sys.Replicated) {m N : Nat
 
 /-! ## Response interfaces -/
 
-/-- With `T = S`, consistency on `T` is the common-expansion condition. -/
+/-- With `T = S`, consistency on `T` is the common-extension condition. -/
 theorem consistentOn_S : ConsistentOn sp sp.P ↔ sp.CommonExpansion := Iff.rfl
 
 /-- The emitted rows of a canonical execution started at current input `i`. -/
@@ -772,7 +772,7 @@ theorem LocAt.replay {Sys : System sp D} {n : Nat} (h2 : 2 ≤ n) {p : Fin n} {i
   exact w.cur σa ha
 
 /-- Answering at a participant of a singleton-block history yields an
-isolated emission by that participant, refining its earlier outputs. -/
+isolated emission by that participant, extending its earlier outputs. -/
 theorem answer_iso_at {Sys : System sp D} {Q : (n : Nat) → Fin n → Table I O}
     (hRA : ResponseAvailability Sys Q) {N : Nat} {init : Fin N → I}
     {H : History sp D N} (hwf : WF init H) (hprod : Produced Sys N init H)
@@ -1111,7 +1111,7 @@ theorem subspec_example_interface : ResponseInterface Q5 T5 ∧ ConsistentOn sp5
 
 /-- No total sub-specification of `S` satisfies Lifted Monotonicity (it would
 contain `(i₁,a)` and `(i₂,b)`, hence `d₁` or `d₂` at `j`, which has no
-refinement at `k₂` or `k₁` respectively). -/
+output extension at `k₂` or `k₁` respectively). -/
 theorem subspec_example_noLM (T' : Spec I5 O8) (hsub : ∀ i o, T'.P i o → sp5.P i o) :
     ¬ T'.LiftedMono := by
   intro hlm
@@ -1227,7 +1227,7 @@ theorem rnH_run : ∃ τ, LRun (canon uSpec .lo) [LEv.out (D := Unit) (n := 2) [
 
 /-- Remark after Def. `def:response-partition-consistency`, last sentence:
 with other commitments the converse can fail.  Participant `0` emits `()` at
-`lo` while emptying the fiber at `hi`; the emitted outputs have a common refinement at `hi`,
+`lo` while emptying the fiber at `hi`; the emitted outputs have a common output extension at `hi`,
 but the cut is not confluent at `hi`. -/
 theorem rpc_not_confluent :
     WF (fun _ => In2.lo) rnH ∧ Produced rnSys 2 (fun _ => In2.lo) rnH ∧
@@ -1336,7 +1336,7 @@ def bAB : Ballots := ⟨some .a, some .b, none⟩
 def bABA : Ballots := ⟨some .a, some .b, some .a⟩
 
 /-- Input acceptance excludes the election under the equality order: at
-`ab·` the only answer is `⊥`, which has no refinement at `aba`; so no system
+`ab·` the only answer is `⊥`, which has no output extension at `aba`; so no system
 has Response Availability for any obligation contained in `S`. -/
 theorem election_eq_no_ra {D : Type} (Sys : System electionEq D)
     (Q : (n : Nat) → Fin n → Table Ballots Win) (hQ : ∀ n p i o, Q n p i o → electionEq.P i o) :
@@ -1491,7 +1491,7 @@ theorem single_emit {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} (Sys :
 /-- **Counterexample to Remark "Without replication" as stated.**  A
 (non-replicated) system has Response Availability and Response Partition
 Consistency, yet the family `(lo, b) ∈ T₀`, `(lo, a) ∈ T₁` — drawing on each
-`T_p` once, with common expansion `lo` — has no common refinement at any
+`T_p` once, with common input extension `lo` — has no common output extension at any
 input.  The witnesses come from different choices of initial inputs, on which
 the strategies depend. -/
 theorem without_replication_counterexample :
@@ -1529,7 +1529,7 @@ open GL
 
 variable {D : Type}
 
-/-- "A single emitted output has no refinement in the fiber at some expansion
+/-- "A single emitted output has no output extension in the fiber at some input extension
 of its input, a failure of Relational Monotonicity." -/
 theorem reg_not_relMono : ¬ regSpec.RelMono := by
   intro h
@@ -1541,7 +1541,7 @@ theorem reg_not_relMono : ¬ regSpec.RelMono := by
 two-replica history (write invoked and answered at `p`, read invoked at `q`,
 then only non-input events), the full prefix of the interleaving "all of `p`,
 then all of `q`" has realized history `j` (write, read, write → read), which
-expands both current inputs; so atomicity gives RPC at `j` there. -/
+extends both current inputs; so atomicity gives RPC at `j` there. -/
 theorem final_rpc (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : Fin 2 → Hist}
     {H : RHist D 2} {comp : Fin 2 → Nat}
     (hwf : WF init H) (hprod : Produced Sys 2 init H) (hpart : Partitioned H comp)

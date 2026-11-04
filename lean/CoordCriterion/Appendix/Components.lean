@@ -16,7 +16,7 @@ initial input and the downstream's output.
 Adapted from the opaque component layer of the foundation development
 (`det_foundation`, `DetFoundation/Composition/Components.lean`).  Sequential
 composition is the library's `Comp.seq`; the values an upstream can offer are
-`Joint.Img`; restricted common expansion is `Joint.CEOn`.
+`Joint.Img`; restricted common input extension is `Joint.CEOn`.
 
 * `LocationForm`, `OperationalRun`, `OperationalRun.Valid`, `Component`,
   `Component.ofCommitmentBasis`, `Component.ofSys`, `emptyCommitmentBasis` — the boundary.  The
@@ -259,7 +259,7 @@ theorem Pipeline.sound {upSpec : Spec I M} {downSpec : Spec M O}
 def JointMonoOn (D : M → Prop) (G : Spec M O) : Prop :=
   ∀ i j, D i → D j → i ≼ j → JointLift (G.P i) (G.P j)
 
-/-- The joint-lift form and the common-expansion form `Joint.CEOn` agree. -/
+/-- The joint-lift form and the common-extension form `Joint.CEOn` agree. -/
 theorem jointMonoOn_iff_ceOn (D : M → Prop) (G : Spec M O) : JointMonoOn D G ↔ CEOn G D := by
   constructor
   · intro hG rows hrows j hDj hj

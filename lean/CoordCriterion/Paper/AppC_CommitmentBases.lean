@@ -6,7 +6,7 @@ import CoordCriterion.Appendix.TransactionBases.NoReads
 # Paper Appendix C: Output events and commitment bases (statement layer)
 
 This file mirrors `appendices/commitment-bases-general.tex`.  A ruled-out row is
-`Subsumed` when a surviving row at the same input refines it, and `Excluded`
+`Subsumed` when a surviving row at the same input extends it, and `Excluded`
 otherwise.  The canonical event applies at most one `canonicalCommitment`.
 -/
 
@@ -20,7 +20,7 @@ section LiftedOutputEvents
 
 open CC.CALM
 
-/-- **Eq. `eq:output-subsumptions`**: ruled-out rows refined by a kept row at the
+/-- **Eq. `eq:output-subsumptions`**: ruled-out rows extended by a kept row at the
 same input. -/
 abbrev «eq:output-subsumptions» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   Subsumed σ o
@@ -30,7 +30,7 @@ abbrev «eq:commitment-removals» {sp : Spec I O} (σ : State sp) (o : O) : Tabl
   Excluded σ o
 
 /-- **Def. `def:lifted-output-event`**.  The output event keeps exactly the rows
-whose outputs refine `o`; removed rows with a surviving refinement are removed
+whose outputs refine `o`; removed rows with a surviving output extension are removed
 by output subsumption. -/
 abbrev «def:lifted-output-event» {sp : Spec I O}
     (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp :=
@@ -81,7 +81,7 @@ theorem «prop:exposability» {sp : Spec I O} (σ : State sp) (o : O) :
       ∃ u, σ.R j u ∧ o ≼ u ∧ x ≼ u :=
   lifted_exposure_test σ o
 
-/-- **Eq. `eq:safe-exposure`**, the per-row common-refinement test. -/
+/-- **Eq. `eq:safe-exposure`**, the per-row common-output extension test. -/
 abbrev «eq:safe-exposure» {sp : Spec I O}
     (σ : State sp) (o : O) (j : I) (x : O) : Prop :=
   ∃ u, σ.R j u ∧ o ≼ u ∧ x ≼ u
@@ -229,7 +229,7 @@ theorem «app:bases/compound-commitment-event» {sp : Spec I O} {B B' : Commitme
 
 /-- **Def. `def:run-under-basis`** (Run under a basis).  "A run under `ℬ` is
 a finite transition sequence from a canonical state `σ_P(i)` of input events,
-legal output events `Out_γ(o)` (Definition system-output-event), and
+commitment-sufficient output events `Out_γ(o)` (Definition system-output-event), and
 commitment events (Definition commitment-event) that use only commitments
 from `ℬ`."
 
@@ -298,13 +298,13 @@ theorem «lem:canonical-equivalent» {sp : Spec I O} {B : CommitmentBasis sp} {i
 
 /-- **Cor. reconciliation under any basis** (`cor:reconciliation-any-basis`).
 "Let runs under any commitment bases end at `(i_r,R_r)`, and let `j` be a common
-expansion of the `i_r`.  If some continuations, whose output and commitment
+input extension of the `i_r`.  If some continuations, whose output and commitment
 events may apply any commitments, bring them to a common state with current input `j`, then some
-`u ∈ P(j)` refines every output emitted on every run."
+`u ∈ P(j)` extends every output emitted on every run."
 
 Lean: the finite family is indexed by `Fin m`; run `r` is under basis `B r`
 and its continuation under `B' r`.  The hypothesis that `j` is a common
-expansion is not needed (it follows from reaching a state with input `j`). -/
+input extension is not needed (it follows from reaching a state with input `j`). -/
 theorem «cor:reconciliation-any-basis» {sp : Spec I O} {m : Nat} (B B' : Fin m → CommitmentBasis sp)
     (i : Fin m → I) (es : Fin m → List (SEvent sp)) (ρ : Fin m → State sp)
     (hrun : ∀ r, SysExec (B r) (canon sp (i r)) (es r) (ρ r))

@@ -87,7 +87,7 @@ theorem decide_yyN : decide2PC yyN = .undecided := by
     obtain ⟨p, hp⟩ := h.1.1 hd
     revert hp; revert p; show ∀ p : Fin 3, yyN p = some false → _; decide
 
-/-- A complete vote vector has no strict expansion. -/
+/-- A complete vote vector has no strict input extension. -/
 theorem complete_max {m : Nat} {v w : Votes m} (hv : ∀ p, v p ≠ none) (h : v ≼ w) : v = w :=
   funext fun p => (h p).resolve_left (hv p)
 

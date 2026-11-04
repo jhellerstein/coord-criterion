@@ -148,7 +148,7 @@ theorem «def:response-availability(1)» (Sys : System sp D) (Q : (n : Nat) → 
   ⟨Iff.rfl, fun h n init H comp hw hp hpt p σ hσ => (h n init H comp hw hp hpt p σ hσ).1,
     answering_iff_end Sys Q⟩
 
-/-- "Input acceptance says that `p` never empties the fiber at an expansion of its current
+/-- "Input acceptance says that `p` never empties the fiber at an input extension of its current
 input."  Lean, at any cut, in particular the end of the history: where `p`
 is in state `σ`, an Input-acceptance continuation for `j` exists iff `p`'s
 table still has a row at `j`. -/
@@ -163,7 +163,7 @@ theorem «def:response-availability/input-acceptance-preserves-expansion» (Sys 
   input_acceptance_iff Sys hwf hprod hpart hcut hσ j
 
 /-- "It excludes specifications whose answers require such a fiber-emptying commitment": if no
-answer at `i` has a refinement at some `j ⪰ i`, no system has Response
+answer at `i` has an output extension at some `j ⪰ i`, no system has Response
 Availability (already with two participants, each alone). -/
 theorem «def:response-availability/excludes-unavailable-expansion» (Sys : System sp D)
     (Q : (n : Nat) → Fin n → Table I O) {i j : I} (hij : i ≼ j)
@@ -183,8 +183,8 @@ theorem «def:response-availability/election-equality-order» (Sys : System elec
 
 /-- **Def. `def:response-partition-consistency`**: "A system has Response
 Partition Consistency when, in every partitioned history it produces and at
-every common expansion `j` of the participants' current inputs, some
-`u ∈ P(j)` refines every output emitted in the history."  Lean: this is
+every common input extension `j` of the participants' current inputs, some
+`u ∈ P(j)` extends every output emitted in the history."  Lean: this is
 `CommonRefinementAtEnd`; the library's cut form `ResponsePC` is equivalent. -/
 theorem «def:response-partition-consistency» (Sys : System sp D) :
     (CommonRefinementAtEnd Sys ↔
@@ -206,7 +206,7 @@ theorem «def:response-partition-consistency/converse-part» (A : Table I O)
       ConsistentOn sp A) :=
   ⟨fun _ h => commonRefinement_of_pc h, complete_cap_for_rpc sp D A hAS⟩
 
-/-- "Confluence at `j` implies a common refinement at `j` (Corollary
+/-- "Confluence at `j` implies a common output extension at `j` (Corollary
 `cor:reconciliation-any-basis`)."  Lean, at any cut, in particular the final
 one. -/
 theorem «def:response-partition-consistency/of-confluent» {init : Fin n → I}
@@ -226,7 +226,7 @@ theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
 
 /-- "With other commitments the converse can fail: participants may prune
 their states so that they cannot be reconciled while their emitted outputs
-still have a common refinement."  Witness: `uSpec` (inputs `lo ≺ hi`, one output) and the
+still have a common output extension."  Witness: `uSpec` (inputs `lo ≺ hi`, one output) and the
 system `rnSys` whose basis is a commitment emptying the fiber at `hi`; in the history `rnH`
 the cut has RPC at `hi` but is not confluent there. -/
 theorem «def:response-partition-consistency/converse-fails» :
@@ -299,7 +299,7 @@ theorem «lem:locality» :
 self-continuing): "For a uniform
 obligation `Q`, a response interface is an explicit relation `T ⊆ Q`
 that is total on `I` and self-continuing: if `(i,o) ∈ T` and `i ⪯ j`, then
-some `u ∈ T(j)` refines `o`." -/
+some `u ∈ T(j)` extends `o`." -/
 theorem «def:response-interface» (Q : Obligation sp) (T : Table I O) :
     ResponseInterface Q T ↔
       (∀ i o, T i o → Q.Q i o) ∧ (∀ i, ∃ o, T i o) ∧
@@ -315,7 +315,7 @@ theorem «def:response-interface/lm-for-T» (T : Table I O) :
         ∀ j, (∀ r ∈ rows, r.1 ≼ j) → ∃ u, sp.P j u ∧ ∀ r ∈ rows, r.2 ≼ u :=
   Iff.rfl
 
-/-- "With `T = P` it is the common-expansion condition of Proposition
+/-- "With `T = P` it is the common-extension condition of Proposition
 `prop:common-expansion-form`." -/
 theorem «def:response-interface/T-eq-S» : ConsistentOn sp sp.P ↔ sp.CommonExpansion :=
   consistentOn_S
@@ -398,7 +398,7 @@ of `Q_p` emitted by `p` in isolated emissions.  First conjunct: each `T_p` is
 contained in `Q_p`, total and self-continuing (from Response Availability).
 Second conjunct (from Response Partition Consistency and `LocalInit`): a
 family drawing row `r p` from `T_p` for the participants `p` in `A` has a
-common refinement at every common expansion `j`. -/
+common output extension at every common input extension `j`. -/
 theorem «app:cap-response/without-replication» (Sys : System sp D)
     (Q : (n : Nat) → Fin n → Table I O) {n : Nat} (h2 : 2 ≤ n) :
     (ResponseAvailabilityEnd Sys Q → ∀ p : Fin n,
@@ -416,7 +416,7 @@ theorem «app:cap-response/without-replication» (Sys : System sp D)
 only through its own participant's") is needed: the non-replicated system
 `mixSys` has Response Availability and Response Partition Consistency, yet
 the rows `(lo, b) ∈ T₀` and `(lo, a) ∈ T₁`, drawing on each `T_p` once, have
-no common refinement at any input. -/
+no common output extension at any input. -/
 theorem «app:cap-response/without-replication/local-init-needed» :
     ResponseAvailabilityEnd mixSys (fun _ _ => Q4.Q) ∧ CommonRefinementAtEnd mixSys ∧
     Tp mixSys (fun _ _ => Q4.Q) 2 0 .lo .b ∧ Tp mixSys (fun _ _ => Q4.Q) 2 1 .lo .a ∧
@@ -504,12 +504,12 @@ only at the precedence an execution realizes."  (The §4.5 derivation is
 ### Lemma `lem:forced-answer` -/
 
 /-- **Lemma `lem:forced-answer` (Forced answer).**  "Let `i ⪯ j`, and suppose
-no output in `Q_q(i)` has a refinement in `P(j)`.  In a system with Answering
+no output in `Q_q(i)` has an output extension in `P(j)`.  In a system with Answering
 for `(Q_p)`, consider a partitioned history that the system produces, in which
-`q` is alone in its block, `q`'s current input is `i`, and `j` expands
+`q` is alone in its block, `q`'s current input is `i`, and `j` extends
 every participant's current input.  Then some continuation within `q`'s
 block that adds only history events of `q`, and no input event, has emitted
-outputs with no common refinement in `P(j)`."
+outputs with no common output extension in `P(j)`."
 
 Lean: `i` is `σq.cur`; "`q` alone" is `halone`; `i ⪯ j` follows from `hj`.
 The continuation keeps `j` above every current input. -/
@@ -533,7 +533,7 @@ theorem «lem:forced-answer» (Sys : System sp D) (Q : (n : Nat) → Fin n → T
 
 Lean model (`CAP/Register.lean`, namespace `CC.GL`): an input `Hist` is a
 finite map from operation ids to operations (replica, read / write `v`) with a
-strict partial order `prec` of real-time precedence; expansion is inclusion of
+strict partial order `prec` of real-time precedence; input extension is inclusion of
 operations and edges.  An output `RMap` is a response map, ordered by
 extension.  "Real-time precedence belongs to the input …" is a modeling
 remark, reflected in `prec` being part of `Hist`. -/
@@ -593,13 +593,13 @@ theorem «app:cap-response/realized-history» (H : CC.GL.RHist D n) (pos : Fin n
         ∃ p k, CC.GL.IsResp H a opa p k ∧ ∀ p' k', CC.GL.IsInv H b opb p' k' → pos p k < pos p' k') :=
   Iff.rfl
 
-/-- "If `C' ⊆ C` is also a prefix, `h_C` expands `h_{C'}`." -/
+/-- "If `C' ⊆ C` is also a prefix, `h_C` extends `h_{C'}`." -/
 theorem «app:cap-response/realized-mono» {H : CC.GL.RHist D n} {pos : Fin n → Nat → Nat}
     {m m' : Nat} {j j' : CC.GL.Hist} (hm : m' ≤ m) (h' : CC.GL.Realized H pos m' j')
     (h : CC.GL.Realized H pos m j) : j' ≼ j :=
   CC.GL.realized_mono hm h' h
 
-/-- "The realized history need not be a common expansion of the participants'
+/-- "The realized history need not be a common input extension of the participants'
 current inputs: an input event may introduce two operations with an edge
 between them before either responds." -/
 theorem «app:cap-response/realized-not-expansion» (Sys : System CC.GL.regSpec D) :
@@ -628,8 +628,8 @@ theorem «app:cap-response/client-history» (H : CC.GL.RHist D 2) :
 linearizable register has Answering for `(Q_p)` together with the following,
 both required only of client histories: for every partitioned client history
 it produces, interleaving `λ`, and prefix `C` of `λ` such that `h_C` is a
-common expansion of the current inputs at `C`, the outputs emitted in `C`
-have a common refinement in `P(h_C)`."
+common input extension of the current inputs at `C`, the outputs emitted in `C`
+have a common output extension in `P(h_C)`."
 
 Lean: `AnsweringCEnd` is Answering for `Q_p = regQ p` at the end of client
 histories; `RealizedRPCC` is the second hypothesis.  Both are written out
@@ -670,7 +670,7 @@ theorem «cor:gilbert-lynch/via-forced-answer» (Sys : System CC.GL.regSpec D) :
     ¬ (Answering Sys CC.GL.regQn ∧ CC.GL.RealizedRPC Sys) :=
   gilbert_lynch_answering Sys
 
-/-- "A system with Response Availability, and with a common refinement at
+/-- "A system with Response Availability, and with a common output extension at
 `h_C` for every prefix `C` of every partitioned history, satisfies these
 hypotheses, so the corollary excludes it too."  Lean: the implications, the
 resulting impossibility, and the variant with full Response Partition
@@ -691,7 +691,7 @@ Lean the obligation `CC.GL.regQn n p = regQ p.val` depends on `p`, while the
 theorem takes `fun _ _ => Q.Q`.) -/
 
 /-- (Section `sec:complete-cap`, repeated here for reference.)  "a single
-emitted output has no refinement in the fiber at some expansion of its input,
+emitted output has no output extension in the fiber at some input extension of its input,
 a failure of Relational Monotonicity." -/
 theorem «cor:gilbert-lynch/not-relMono» : ¬ CC.GL.regSpec.RelMono :=
   reg_not_relMono
@@ -735,7 +735,7 @@ theorem «prop:gl-async» {N : Nat} {M : Type} (hN : 2 ≤ N) (A : CC.AsyncGL.Al
 /-- Proof sketch of Prop. `prop:gl-async`: "Translate the algorithm into a
 system with the canonical basis.  …  Availability, applied to each unanswered
 operation of the view, gives Answering.  …  atomicity gives a common
-refinement in `P(h_C)`.  The corollary excludes the algorithm."  Lean: the
+output extension in `P(h_C)`.  The corollary excludes the algorithm."  Lean: the
 translation `sysOf A` satisfies both client-form hypotheses. -/
 theorem «prop:gl-async/proof» {N : Nat} {M : Type} (hN : 2 ≤ N) (A : CC.AsyncGL.Alg N M) :
     (CC.AsyncGL.Atomic A → CC.AsyncGL.Available A →

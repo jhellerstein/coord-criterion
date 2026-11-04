@@ -8,7 +8,7 @@ Namespace `CC.Txn.Partial`.  The specification is in `Spec.lean`.
 * `ab_ba_rows`, `ab_ba_no_common`, `spec_not_liftedMono` — not monotone.
 * `Keep`, `closeC`, `closeC_app_iff`, `keep_complete` — a *closure commitment*
   for a condition `Q` on complete outputs keeps a row when some remaining
-  complete row at the same input refines it and satisfies `Q`; it is a
+  complete row at the same input extends it and satisfies `Q`; it is a
   commitment (Def. `def:commitment`) for every `Q`.  (Removing exactly the
   rows that fail an up-closed condition would leave rows with no remaining
   completion, e.g. a row committing `A` and `B` whose read forces a third
@@ -47,7 +47,7 @@ section Closure
 variable {af : Bool}
 
 /-- Row `(k,u)` of `σ` is kept by the condition `Q` on complete outputs: some
-row of `σ` at `k` that is complete at `k`, refines `u`, and satisfies `Q`,
+row of `σ` at `k` that is complete at `k`, extends `u`, and satisfies `Q`,
 remains. -/
 def Keep (σ : State (spec (T := T) (K := K) af)) (Q : ROut T K → Prop) (k : Inp T K)
     (u : ROut T K) : Prop :=
@@ -87,7 +87,7 @@ theorem closeApp_eq {G : State (spec (T := T) (K := K) af) → Prop} {Q : ROut T
 
 /-- **A closure commitment is a commitment** (Def. `def:commitment`), for every
 condition `Q`: a removed row has no remaining complete row above it satisfying
-`Q`, so no kept row refines it (a kept row's complete witness would serve). -/
+`Q`, so no kept row extends it (a kept row's complete witness would serve). -/
 noncomputable def closeC (G : State (spec (T := T) (K := K) af) → Prop) (Q : ROut T K → Prop) :
     Commitment (spec (T := T) (K := K) af) where
   app := closeApp G Q
@@ -135,7 +135,7 @@ theorem keep_complete {σ : State (spec (T := T) (K := K) af)} {P : Outcome T �
   · rintro ⟨h, hq⟩
     exact ⟨h, c, h, hp, PO.refl _, hq⟩
 
-/-- After a closure commitment, every row has a remaining complete refinement
+/-- After a closure commitment, every row has a remaining complete output extension
 satisfying `Q`. -/
 theorem after_completion {G : State (spec (T := T) (K := K) af) → Prop} {Q : ROut T K → Prop}
     {σ τ : State (spec (T := T) (K := K) af)} (h : (closeC G Q).app σ = some τ) {k : Inp T K} {u : ROut T K}
@@ -265,7 +265,7 @@ variable {af : Bool}
 def Convex (σ : State (spec (T := T) (K := K) af)) : Prop :=
   ∀ k x y c, σ.R k x → σ.R k c → x ≼ y → y ≼ c → σ.R k y
 
-/-- Every row has a complete refinement in the table at the same input. -/
+/-- Every row has a complete output extension in the table at the same input. -/
 def Completable (σ : State (spec (T := T) (K := K) af)) : Prop :=
   ∀ k x, σ.R k x → ∃ c, σ.R k c ∧ Decides af k c.o ∧ x ≼ c
 
@@ -377,7 +377,7 @@ theorem ab_ba_rows {A B : T} (h : A ≠ B) {k : Inp T K} (hk : ∀ t, k.mem t �
   exact ⟨⟨_, full_complete (decides_of_all_fin hf p1 fun _ h => h), PO.refl _⟩,
     ⟨_, full_complete (decides_of_all_fin hf p2 fun _ h => h), PO.refl _⟩⟩
 
-/-- `([A,B],∅,∅)` and `([B,A],∅,∅)` have no common refinement at all. -/
+/-- `([A,B],∅,∅)` and `([B,A],∅,∅)` have no common output extension at all. -/
 theorem ab_ba_no_common {A B : T} (h : A ≠ B) :
     ¬ ∃ u : ROut T K, full (ordPair A B h) ≼ u ∧ full (ordPair B A (Ne.symm h)) ≼ u :=
   fun ⟨u, h1, h2⟩ => ab_ba_no_common_refinement h ⟨u.o, h1.1, h2.1⟩
@@ -543,7 +543,7 @@ section Emit
 variable {af : Bool}
 
 /-- **Reporting a read after `read(B,n,v)` applies no further commitment.**  At
-a good state, after `read(B,n,v)`, if every row refines `u` and `u` is a row,
+a good state, after `read(B,n,v)`, if every row extends `u` and `u` is a row,
 then `u` with the read fact added is a row at the same input, and emitting it is
 exposable. -/
 theorem read_emit {B : T} {n : Nat} {v : Option T} {σ σ' : State (spec (T := T) (K := K) af)}
@@ -562,7 +562,7 @@ theorem read_emit {B : T} {n : Nat} {v : Option T} {σ σ' : State (spec (T := T
       have := le_ρ hle e; rw [hq] at this; cases this; rfl)⟩⟩
 
 /-- At a good state of the specification whose complete rows all abort `A`, if
-every row refines `u` and `u` is a row at the current input, then `u` with `A`
+every row extends `u` and `u` is a row at the current input, then `u` with `A`
 aborted is a row there, and emitting it is exposable. -/
 theorem abort_exposable {A : T} {τ : State (spec (T := T) (K := K) false)} (hg : Good τ)
     (hX : ∀ k c, τ.R k c → Decides false k c.o → c.o.X A) {u : ROut T K}
@@ -734,7 +734,7 @@ theorem single_eq {A : T} {n : Nat} {v : Option T} : single A n v A n = some v :
 
 section Canon
 
-/-- A row of the specification that commits nothing is refined by the complete
+/-- A row of the specification that commits nothing is extended by the complete
 output that aborts everything and reports the same reads. -/
 theorem uncommitted_completion {k : Inp T K} {y : ROut T K}
     (hy : (spec (T := T) (K := K) false).P k y) (hd : ∀ t, ¬ y.o.dom t) :
@@ -832,7 +832,7 @@ theorem not_canonical_commitment {k0 : Inp T K} {τ : State (spec (T := T) (K :=
   let σ0 := canon (spec (T := T) (K := K) false) k0
   have hR : ∀ k u, τ.R k u ↔ σ0.R k u ∧ ¬ Excluded σ0 o k u := by
     intro k u; rw [← e]; exact Iff.rfl
-  -- a kept row at `k0` has a common refinement with `o` in `R(k0)`
+  -- a kept row at `k0` has a common output extension with `o` in `R(k0)`
   have compat : ∀ y, τ.R k0 y → ∃ u, σ0.R k0 u ∧ o ≼ u ∧ y ≼ u := by
     intro y hy
     obtain ⟨hy0, hnrej⟩ := (hR k0 y).1 hy

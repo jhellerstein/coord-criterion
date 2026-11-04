@@ -127,7 +127,7 @@ theorem not_rm_of_le {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x) (h 
   intro he
   exact he.2.1 h
 
-/-- A kept row that does not expand `u` is subsumed. -/
+/-- A kept row that does not extend `u` is subsumed. -/
 theorem subsumed_of_not_rm {σ : State sp} {u : O} {k : I} {x : O} (hx : σ.R k x)
     (hrm : ¬ Rm σ u k x) (hn : ¬ u ≼ x) : ∃ v, σ.R k v ∧ u ≼ v ∧ x ≼ v := by
   apply Classical.byContradiction
@@ -169,7 +169,7 @@ noncomputable def kc (u : O) : Commitment sp where
       intro k x w hx hnx hw hxw
       have hrx : Rm σ u k x := Classical.byContradiction fun h => hnx ⟨hx, h⟩
       obtain ⟨hw1, hw2⟩ := hw
-      -- some row at `k` expands both `u` and `w`
+      -- some row at `k` extends both `u` and `w`
       have hv : ∃ v, σ.R k v ∧ u ≼ v ∧ w ≼ v := by
         by_cases huw : u ≼ w
         · exact ⟨w, hw1, huw, PO.refl w⟩
@@ -259,7 +259,7 @@ theorem mem_emittedOf {L : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O
     · cases e <;> simp [LEv.erase, emittedOf, ih h']
 
 /-- The strategy: ignore messages, never send; emit, by the canonical event,
-some `u ∈ T(i)` at the current input `i` that expands every earlier output. -/
+some `u ∈ T(i)` at the current input `i` that extends every earlier output. -/
 noncomputable def respF (T : Table I O) (i0 : I) (pre : List (LEvN sp D)) : LEvN sp D → Prop
   | .out γ u => (γ = [] ∨ γ = [kc u]) ∧ T (curOf i0 pre) u ∧ ∀ o ∈ emittedOf pre, o ≼ u
   | _ => False
@@ -397,7 +397,7 @@ theorem response_sufficient (Q : Obligation sp) (T : Table I O)
   refine ⟨⟨respF T, fun _ _ _ _ _ => Iff.rfl⟩, ?_, ?_⟩
   · intro N init H comp hwf hprod hpart c hcut p σ hσ
     obtain ⟨h1, h2, _, h4⟩ := rinv_of_produced T (compliant_take (hprod p) (c p)) hσ
-    -- rows available at any `k ⪰ σ.cur` in `T`, expanding every emitted output
+    -- rows available at any `k ⪰ σ.cur` in `T`, extending every emitted output
     have havail : ∀ k, σ.cur ≼ k → ∃ u, T k u ∧ ∀ o ∈ emittedOf (((H p).take (c p)).map LEv.erase), o ≼ u := by
       intro k hk
       rcases h4 with h4 | ⟨i, om, hom, hi, hall⟩
@@ -616,7 +616,7 @@ theorem cut_of_norecv {N : Nat} {H : History sp D N} (hnr : ∀ p q k j d, LEv.r
   have := take_split h; rw [this]; simp
 
 /-- Answering, applied at a participant of a singleton-block history,
-yields an isolated emission that expands every output the participant has
+yields an isolated emission that extends every output the participant has
 already emitted. -/
 theorem answer_iso {Sys : System sp D} {Q : Obligation sp}
     (hRA : ResponseAvailability Sys (fun _ _ => Q.Q)) {N : Nat} {init : Fin N → I}

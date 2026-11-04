@@ -30,8 +30,8 @@ row-removing commitments):
 * a participant run family is `F : Fin n → Option (PRun sp)`: participant `p`
   belongs to the family iff `F p = some m`, and `m` is a canonical run from
   `σ_P(m.init)`; `Emits F p r` says `p`'s run emits row `r = (i, o)`;
-* "`j` is a common expansion of the participants' current inputs" is `UB F j`;
-* "`u` refines `o`" is `o ≼ u`.
+* "`j` is a common input extension of the participants' current inputs" is `UB F j`;
+* "`u` extends `o`" is `o ≼ u`.
 -/
 
 namespace CC
@@ -108,7 +108,7 @@ theorem «def:deployment/separable» (F : Family sp n) (comp : Fin n → Nat) :
 /-- **Definition `def:monotone-across-partitions`** (Monotone across
 partitions).  "Relative to a deployment, `P` is *monotone across `Π`* when,
 for every participant run family separable under `Π` and every common
-expansion `j` of its participants' current inputs, some `u ∈ P(j)` refines
+input extension `j` of its participants' current inputs, some `u ∈ P(j)` extends
 every emitted output.  It is *monotone across partitions* when it is monotone
 across every partition of `P`." -/
 theorem «def:monotone-across-partitions» (Dp : Deployment sp n) :
@@ -138,8 +138,8 @@ theorem «app:deployment/lm-implies-mono-across» (hlm : sp.LiftedMono)
   monoAcrossPartitions_of_liftedMono hlm Dp
 
 /-- "Rows authorized only to `p` can be emitted only by `p`'s run, whose
-emitted outputs form a chain (each output event keeps only rows refining
-it)."  The chain is in emission order; its last row refines every emitted
+emitted outputs form a chain (each output event keeps only rows extending
+it)."  The chain is in emission order; its last row extends every emitted
 output. -/
 theorem «app:deployment/run-outputs-chain» (m : PRun sp) :
     List.Pairwise (fun a b : I × O => a.2 ≼ b.2) m.rows ∧
@@ -186,7 +186,7 @@ theorem «app:deployment/leader-example/separable-shape» {I : Type} [PO I]
   lead_separable_shape F hA comp hs
 
 /-- "So `P` is monotone across partitions, yet `(i,a)` and `(i,b)` have no
-common expansion and Lifted Monotonicity fails."  (Any input `i` witnesses the
+common output extension and Lifted Monotonicity fails."  (Any input `i` witnesses the
 failure.) -/
 theorem «app:deployment/leader-example» (I : Type) [PO I] (i : I) :
     MonoAcrossPartitions (leadD I) ∧ ¬ (leadSpec I).LiftedMono :=
@@ -195,9 +195,9 @@ theorem «app:deployment/leader-example» (I : Type) [PO I] (i : I) :
 section Deployment2
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
-/-- "The same happens whenever each authorized row has an expansion at every
-expansion of its input and every set of authorized rows lacking a common
-expansion at some common expansion is authorized only to a single
+/-- "The same happens whenever each authorized row has an input extension at every
+input extension of its input and every set of authorized rows lacking a common
+input extension at some common input extension is authorized only to a single
 participant."  Finite sets of rows are lists. -/
 theorem «app:deployment/sufficient-condition» (Dp : Deployment sp n)
     (h1 : ∀ p i o, Dp.A p i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u)
@@ -219,9 +219,9 @@ theorem «app:deployment/further-examples» :
   ⟨causal_monoAcross G2, causal_not_liftedMono⟩
 
 /-- "… they need not satisfy this condition, since a set of rows lacking a
-common expansion may also contain rows of other participants."  Witness: in
+common output extension may also contain rows of other participants."  Witness: in
 the configuration product interface, the rows `e_0(0)`, `e_0(1)`, `e_1(0)` are
-authorized, lack a common expansion, and are not authorized to a single
+authorized, lack a common output extension, and are not authorized to a single
 participant. -/
 theorem «app:deployment/further-examples/condition-fails» {I : Type} [PO I] (i : I) :
     let sp := prodSpec (W := fun _ => Front.Disc Bool) (cfgV I) cfgV_ne
@@ -237,7 +237,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
 /-- "If `|P| ≥ 2` and `E_p = P` for every `p`, every pair of rows can be split
 across a partition and every single row paired with a silent participant at
-the common expansion; since pairs of rows suffice for the common-expansion
+the common input extension; since pairs of rows suffice for the common-extension
 condition (Appendix `app:pairs-suffice`), monotonicity across partitions is
 then Lifted Monotonicity." -/
 theorem «app:deployment/full-deployment» (hn : 2 ≤ n) (Dp : Deployment sp n)
@@ -314,7 +314,7 @@ theorem «app:deployment/single-authority/shape» (Dp : Deployment sp n) (p₀ :
   single_authority_shape Dp p₀ hSA F hA comp hs
 
 /-- "… and monotonicity across partitions says only that each such row has an
-expansion at every expansion of its input."  (With `|P| ≥ 2`, so that some
+input extension at every input extension of its input."  (With `|P| ≥ 2`, so that some
 partition exists.) -/
 theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n) (p₀ : Fin n)
     (hSA : SingleAuthority Dp p₀) :
@@ -347,7 +347,7 @@ theorem «app:deployment/single-authority/coordination» (D : Type) :
 /-- **Proposition `thm:complete-cap-deployment`** (Partition compatibility
 under a deployment).  "Fix a deployment.  The following are equivalent.
 (1) For every partition `Π`, every participant run family separable under
-`Π` is confluent at every common expansion `j` of its participants' current
+`Π` is confluent at every common input extension `j` of its participants' current
 inputs.  (2) `P` is monotone across partitions."
 
 Lean: item (1) is `PartitionConfluent Dp`, written out on the left;
@@ -362,10 +362,10 @@ theorem «thm:complete-cap-deployment» (Dp : Deployment sp n) :
 
 /-- Proof of Prop. `thm:complete-cap-deployment`: "By Lemma
 `lem:reconciliation`, the family is confluent at `j` if and only if some
-`u ∈ P(j)` refines every output in `X`.  The two conditions thus agree family
+`u ∈ P(j)` extends every output in `X`.  The two conditions thus agree family
 by family."  Lean: the per-family step in survivor form (some row at `j`
 survives in every remainder table iff the emitted outputs have a common
-expansion in `P(j)`), and the proposition in survivor form. -/
+input extension in `P(j)`), and the proposition in survivor form. -/
 theorem «thm:complete-cap-deployment/proof» (Dp : Deployment sp n) :
     (∀ (F : Family sp n) (j : I), UB F j →
       ((∃ u, sp.P j u ∧ ∀ p m, F p = some m → m.fin.R j u) ↔
@@ -387,7 +387,7 @@ theorem «app:deployment/system-runs/canonical» {D : Type} {m : Nat} (r : SRun 
 
 /-- "So if `P` is monotone across partitions, the outputs emitted by a
 separable family of runs of a partitioned history, as Deployment Availability
-permits, have a common expansion `u ∈ P(j)` at every common expansion `j`."
+permits, have a common output extension `u ∈ P(j)` at every common input extension `j`."
 
 Lean: first for any separable authorized family of system runs (under `Π`),
 then for the participants' runs to a cut of a history partitioned by `comp`. -/
@@ -410,13 +410,13 @@ theorem «app:deployment/system-runs» {D : Type} {m : Nat} (Dp : Deployment sp 
 end Deployment3
 
 /-- "It does not follow that the deployment authorizes any participant to emit
-`u`; confluence through legal output events of the deployment would
+`u`; confluence through commitment-sufficient output events of the deployment would
 additionally require that authority, a condition we do not impose."
 
 Lean witness: one input, fiber `{a, b, top}` with `a, b < top` (`CAP.triSpec`),
 `E_0 = {a}`, `E_1 = {b}`: the specification is monotone across partitions, the
 family "`0` emits `a`, `1` emits `b`" is authorized and separable, its only
-common refinement is `top`, and no participant may emit `top`. -/
+common output extension is `top`, and no participant may emit `top`. -/
 theorem «app:deployment/unauthorized-refinement» :
     MonoAcrossPartitions triD ∧
     ∃ (F : Family CAP.triSpec 2) (comp : Fin 2 → Nat), IsPartition comp ∧
@@ -427,7 +427,7 @@ theorem «app:deployment/unauthorized-refinement» :
 /-- "With `|P| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted
 Monotonicity, and the proposition is the step behind Corollary
 `cor:complete-cap-S` stating that separable families are confluent at every
-common expansion exactly when Lifted Monotonicity holds." -/
+common input extension exactly when Lifted Monotonicity holds." -/
 theorem «app:deployment/full-deployment-step» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     {n : Nat} (hn : 2 ≤ n) (Dp : Deployment sp n) (hA : ∀ p, Dp.A p = sp.P) :
     PartitionConfluent Dp ↔ sp.LiftedMono :=
@@ -454,7 +454,7 @@ theorem «app:registers/history-order» (h h' : Hist α) :
       (∀ a b, h.mem a → h.mem b → (h'.hb a b ↔ h.hb a b))) :=
   Iff.rfl
 
-/-- "Thus an expansion never adds an operation to the causal past of an
+/-- "Thus an input extension never adds an operation to the causal past of an
 existing one." -/
 theorem «app:registers/no-new-past» {h h' : Hist α} (hle : h ≼ h') {a b : α}
     (hab : h'.hb a b) (hb : h.mem b) : h.mem a :=
@@ -507,7 +507,7 @@ theorem «app:registers/two-write-history» :
   h2_shape
 
 /-- "Under linearizability, if `p` reads cat the order has `w_p(x,dog)` before
-`w_q(x,cat)`; if `q` reads dog it has the opposite.  No source map refines
+`w_q(x,cat)`; if `q` reads dog it has the opposite.  No source map extends
 both, so the register is not monotone across the partition `{{p},{q}}` under
 any deployment authorizing these two reads."
 
@@ -537,7 +537,7 @@ causal register is monotone across partitions, for every history. … Separabili
 is not used."
 
 Lean: `replicaD G`; the statement holds for every signature `G` (hence every
-history), and the common refinement exists for every authorized family,
+history), and the common output extension exists for every authorized family,
 separable or not.  By Prop. `thm:complete-cap-deployment` the separable
 families are confluent. -/
 theorem «app:registers/causal-monotone-across» (G : OpSig α n) :
@@ -570,7 +570,7 @@ end Registers2
 /-- "Two answers to the same read remain incompatible, but only the reading
 replica may emit either."  The causal register is not monotone: `r_p ↦ w_p` and
 `r_p ↦ w_q` are both causal outputs at the two-write history and have no
-common expansion; both are authorized only to `p` under `replicaD`. -/
+common output extension; both are authorized only to `p` under `replicaD`. -/
 theorem «app:registers/same-read-incompatible» :
     (causalSpec G2).P h2 ρa ∧ (causalSpec G2).P h2 ρ1 ∧ ¬ (causalSpec G2).LiftedMono :=
   ⟨causal_ρa, causal_ρ1, causal_not_liftedMono⟩
@@ -601,7 +601,7 @@ theorem «thm:product-frontier» {I : Type} [PO I] {W : Fin n → Type} [∀ p, 
 /-- "Consider the histories of Appendix `app:registers` with a second strict
 partial order `≺`: `a ≺ b` when `a` ended before `b` began.  We assume that
 `a → b` implies `a ≺ b`, so replicas propagate only completed writes, and that
-`→` totally orders the operations of each replica.  One input expands another
+`→` totally orders the operations of each replica.  One input extends another
 when it does as a history and `≺` agrees on the old operations."
 
 Lean: `RHist G` (fields `rt`, `hb_rt`, `po`) and its order. -/

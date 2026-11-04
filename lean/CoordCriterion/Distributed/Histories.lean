@@ -438,7 +438,7 @@ theorem honor_survivor {sp : Spec I O} (fam : List (State sp × List O × List O
   · -- cannot help: honoring only removes rows
     rintro ⟨u, hu, h⟩
     exact ⟨u, hu, fun x hx => (h x hx).1⟩
-  · -- cannot hurt: a surviving row already refines every emitted output
+  · -- cannot hurt: a surviving row already extends every emitted output
     rintro ⟨u, hu, h⟩
     refine ⟨u, hu, fun x hx => ⟨h x hx, fun o ho => ?_⟩⟩
     obtain ⟨y, hy, hoy⟩ := hos x hx o ho

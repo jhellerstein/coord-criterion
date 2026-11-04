@@ -16,7 +16,7 @@ one-line pointers into the library; the full statement is always written out.
 
 Library conventions used throughout (see `Foundations/Core.lean`):
 * `≼` is the input order on `I` and the output order on `O` (`PO.le`);
-  `i ≼ j` reads "`j` expands `i`", `o ≼ u` reads "`u` refines `o`";
+  `i ≼ j` reads "`j` extends `i`", `o ≼ u` reads "`u` extends `o`";
 * a table is a predicate `Table I O := I → O → Prop`; a set of outputs is a
   predicate `O → Prop`; finite families are `List`s;
 * a specification `sp : Spec I O` has table `sp.P` and totality `sp.total`;
@@ -26,7 +26,7 @@ Library conventions used throughout (see `Foundations/Core.lean`):
 
 The election itself (`elec`, `elecEq`, ballots `bad = a··`, `bab = ab·`,
 `baba = aba`, `baa = aa·`, …) is defined in `CALM/Examples.lean` and
-`Figures.lean`; `elec` uses the refinement order on results (`⊥ ≼` each
+`Figures.lean`; `elec` uses the output-extension order on results (`⊥ ≼` each
 winner), `elecEq` the equality order.
 -/
 
@@ -42,7 +42,7 @@ theorem «sec:election-story/input-order» :
     bad ≼ bab ∧ ¬ baa ≼ bab ∧ ¬ bab ≼ baa := by decide
 
 /-- "The *output order* says which announcements are safe to build on: `⊥`
-claims nothing, so either winner refines it, while `a` and `b` are
+claims nothing, so either winner extends it, while `a` and `b` are
 incomparable." -/
 theorem «sec:election-story/output-order» :
     Res.bot ≼ Res.win .a ∧ Res.bot ≼ Res.win .b ∧
@@ -51,7 +51,7 @@ theorem «sec:election-story/output-order» :
 
 /-- "The functional table is *monotone* … Here, for example, the input
 sequence `a·· ⪯ ab· ⪯ aba` monotonically produces the output sequence
-`⊥ ⪯ ⊥ ⪯ a`."  The election (refinement order) is monotone, and the chain is
+`⊥ ⪯ ⊥ ⪯ a`."  The election (output-extension order) is monotone, and the chain is
 as stated. -/
 theorem «sec:election-story/monotone» :
     elec.MonotoneF ∧
@@ -60,7 +60,7 @@ theorem «sec:election-story/monotone» :
       (Res.bot ≼ Res.bot ∧ Res.bot ≼ Res.win .a) :=
   ⟨elec_monotone, by decide, by decide, ⟨Or.inl rfl, Or.inl rfl⟩⟩
 
-/-- Fig. `fig:election-frames`: "Only rows whose input expands `a··` are
+/-- Fig. `fig:election-frames`: "Only rows whose input extends `a··` are
 shown."  The nine printed pairs (`Figures.Elec.printed`) are exactly the rows
 of the election at inputs `⪰ a··`. -/
 theorem «fig:election-frames/printed-rows» (k : Ballots) (o : Res) :
@@ -68,8 +68,8 @@ theorem «fig:election-frames/printed-rows» (k : Ballots) (o : Res) :
   Figures.Elec.printed_complete k o
 
 /-- Fig. `fig:election-frames`(a): "Initial state, current input `a··` …
-upper fiber `{⊥,a,b}`; undetermined; `⊥` needs no commitment."  Panel (a) is
-the canonical state `σ_P(a··)`; "upper fiber is all of `{⊥,a,b}`" is stated
+future-output set `{⊥,a,b}`; undetermined; `⊥` needs no commitment."  Panel (a) is
+the canonical state `σ_P(a··)`; "future-output set is all of `{⊥,a,b}`" is stated
 as "every output occurs in some remaining row". -/
 theorem «fig:election-frames/a» :
     (∀ o : Res, ∃ k, (canon elec bad).R k o) ∧ ¬ Determined (canon elec bad) ∧
@@ -82,7 +82,7 @@ theorem «fig:election-frames/a» :
 
 /-- Fig. `fig:election-frames`(b) and §2.1 "Input and determination": "When
 `v₂`'s ballot for `b` arrives, the event `input(ab·)` produces panel (b),
-causing the table to lose rows whose inputs no longer expand the ballots received; such inputs
+causing the table to lose rows whose inputs no longer extend the ballots received; such inputs
 are now illegal. … in panel (b) it is `{⊥,a,b}`."  The CIDR version says "the
 input event `input(ab·)`".  Also "`⊥` needs no commitment" (`⊥` is a legal output). -/
 theorem «fig:election-frames/b» :
@@ -94,7 +94,7 @@ theorem «fig:election-frames/b» :
 
 /-- Fig. `fig:election-frames`(b), the printed rows: of the rows at inputs
 `⪰ a··`, exactly `(ab·,⊥)`, `(aba,a)`, `(abb,b)` remain; every other printed
-row is gray because its input does not expand `ab·` (input loss). -/
+row is gray because its input does not extend `ab·` (input loss). -/
 theorem «fig:election-frames/b-rows» (k : Ballots) (o : Res) (hk : bad ≼ k) :
     ((canon elec bab).R k o ↔
         ((k = bab ∧ o = .bot) ∨ (k = baba ∧ o = .win .a) ∨
@@ -103,7 +103,7 @@ theorem «fig:election-frames/b-rows» (k : Ballots) (o : Res) (hk : bad ≼ k) 
   Figures.Elec.panel_b k o hk
 
 /-- Fig. `fig:election-frames`(c) and §2.1: "If `v₂` instead votes for `a`,
-as in panel (c), the upper fiber is `{a}`.  The state is *determined*: input
+as in panel (c), the future-output set is `{a}`.  The state is *determined*: input
 alone has resolved the outcome, without commitment"; caption: "`a` needs no
 commitment". -/
 theorem «fig:election-frames/c» :
@@ -138,7 +138,7 @@ theorem «fig:election-frames/d» :
 
 /-- Fig. `fig:election-frames`(d), legend: "Gray: removed from the remainder
 table; struck through if by a commitment, otherwise lost after an input event."  A
-printed row is absent from panel (d) iff its input does not expand `ab·`
+printed row is absent from panel (d) iff its input does not extend `ab·`
 (gray) or it is one of the two struck rows. -/
 theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
     ¬ Figures.Elec.panelD.R k o ↔
@@ -147,7 +147,7 @@ theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bad ≼ k) 
 
 /-- Fig. `fig:election-frames` caption and §2.1: "a commitment that `output(⊥)`
 alone does not require … Emitting `⊥` by itself would need no commitment,
-since every output still possible refines it."  At (b), `⊥` is a legal output,
+since every output still possible extends it."  At (b), `⊥` is a legal output,
   `Excluded_o` is empty, and `output(⊥)` removes no row. -/
 theorem «fig:election-frames/bot-alone» :
     Exposable (canon elec bab) .bot ∧ (¬ ∃ k x, Excluded (canon elec bab) .bot k x) ∧
@@ -155,7 +155,7 @@ theorem «fig:election-frames/bot-alone» :
   Figures.Elec.bot_alone_at_b
 
 /-- Fig. `fig:nonmonotone-frame`: "Panel (b) under the equality order, after
-`output(⊥)`. … upper fiber `{⊥}`; determined."  Under `elecEq`, `output(⊥)`
+`output(⊥)`. … future-output set `{⊥}`; determined."  Under `elecEq`, `output(⊥)`
 at `σ_P(ab·)` excludes `aba` and leaves the single row `(ab·,⊥)`. -/
 theorem «fig:nonmonotone-frame» :
     Excluded (canon elecEq bab) ⟨.bot⟩ baba ⟨winner baba⟩ ∧
@@ -183,8 +183,8 @@ theorem «sec:election-story/equality-order-commitment» :
   fun h => (exposable_iff_empty _ _).1 h ⟨_, _, elecEq_bot_excludes⟩
 
 /-- §2.1: "The obstruction is a property solely of the table and its orders.
-Rows `(ab·,⊥)` and `(aba,a)` have the common input expansion `aba`, but under
-the equality order no output at `aba` refines both outputs `⊥` and `a`." -/
+Rows `(ab·,⊥)` and `(aba,a)` have the common input extension `aba`, but under
+the equality order no output at `aba` extends both outputs `⊥` and `a`." -/
 theorem «sec:election-story/obstruction» :
     elecEq.P bab ⟨.bot⟩ ∧ elecEq.P baba ⟨.win .a⟩ ∧ bab ≼ baba ∧ baba ≼ baba ∧
       ¬ ∃ u, elecEq.P baba u ∧ (⟨.bot⟩ : ResE) ≼ u ∧ (⟨.win .a⟩ : ResE) ≼ u :=
@@ -202,7 +202,7 @@ theorem «sec:election-story/not-reconciled» :
 /-- §2.1: "Input and output events form a transition system, and the
 specification is consistent when its runs are confluent.  For functional
 tables this corresponds exactly to monotonicity": the election is consistent
-under the refinement order and not under the equality order. -/
+under the output-extension order and not under the equality order. -/
 theorem «sec:election-story/consistency» :
     elec.Consistent ∧ ¬ elecEq.Consistent :=
   ⟨elec_consistent, elecEq_not_consistent⟩
@@ -234,11 +234,11 @@ theorem «def:functional-specification/induced-function» {I O : Type} [PO I] [P
 
 /-- "Neither need be unique or least: for example, two independent
 transactions `a` and `b`, with schedules ordered by subsequence, have two
-incomparable minimal common expansions, `ab` and `ba`."
+incomparable minimal common input extensions, `ab` and `ba`."
 
 Lean: schedules `Sched T` are lists ordered by `List.Sublist` (a `PO`
 instance); "independent" is read as `a ≠ b`.  Both `ab` and `ba` are common
-expansions of `a` and `b`, each minimal among common expansions, and they are
+input extensions of `a` and `b`, each minimal among common input extensions, and they are
 incomparable. -/
 theorem «sec:functional-specifications/subsequence-example» {T : Type} {a b : T}
     (hab : a ≠ b) :
@@ -280,7 +280,7 @@ theorem «def:functional-monotonicity/via-f» {I O : Type} [PO I] [PO O]
 /-- **Def. `def:residual-state`** (Specification state, current input,
 remainder table).  "A pair `σ = (i,R)`, where `i ∈ I` is the *current input*
 and `R ⊆ P` is the *remainder table*, such that: (1) `R` contains a row at
-`i`; and (2) `R` contains only rows at expansions of `i`."
+`i`; and (2) `R` contains only rows at input extensions of `i`."
 
 Lean: `State sp` with fields `cur`, `R`, `sub` (`R ⊆ P`), `hasCur` (1) and
 `above` (2). -/
@@ -297,7 +297,7 @@ abbrev «eq:canonical-state» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I)
   canon sp i
 
 /-- "The *canonical state at `i`* is the state at `i` with no rows removed: it
-keeps every row of `P` at `i` and its expansions":
+keeps every row of `P` at `i` and its input extensions":
 every state's table is contained in that of the canonical state at its
 current input. -/
 theorem «eq:canonical-state/largest» {I O : Type} [PO I] [PO O] {sp : Spec I O}
@@ -324,7 +324,7 @@ abbrev «eq:input-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 /-- The paper's input event asks for `j` legal *and* `i ≼ j`; the second
 follows from the first, since the remainder table contains only rows at
-expansions of `i`. -/
+input extensions of `i`. -/
 theorem «eq:input-event/legal-expands» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (j : I) (h : ∃ u, σ.R j u) : σ.cur ≼ j :=
   legal_above σ j h
@@ -365,7 +365,7 @@ noncomputable abbrev «def:canonical-commitment-functional» {I O : Type} [PO I]
 
 /-- **Eq. `eq:output-action`**: "`(i,R) --output(o)--> (i, R' = R[out ⪰ o])`".
 The new table `R[out ⪰ o]` is `outputTable σ o`: the rows of `R` whose output
-refines `o`. -/
+extends `o`. -/
 theorem «eq:output-action» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) (k : I) (u : O) :
     outputTable σ o k u ↔ σ.R k u ∧ o ≼ u :=
@@ -378,7 +378,7 @@ theorem «def:output-event/commitment-iff-excluded» {I O : Type} [PO I] [PO O] 
     outputTable σ o ≠ σ.R ↔ ∃ k x, Excluded σ o k x :=
   functional_exclude_iff_excluded hf σ o
 
-/-- "The current row `(i,o)` remains, since `o` refines itself, so the event
+/-- "The current row `(i,o)` remains, since `o` extends itself, so the event
 always ends at a state." -/
 theorem «sec:functional-events/output-ends-at-state» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (σ : State sp) (o : O) (h : σ.R σ.cur o) :
@@ -399,7 +399,7 @@ theorem «sec:functional-events/extra-commitments» (B : CommitmentBasis elec) (
 /-- **Def. `def:exposable`** (Legal output).  "The output `o` at `(i,R)`
 is a *legal output* when `output(o)` applies no commitment."
 
-  Lean: `Exposable σ o` says that every row ruled out by `o` is refined by a
+  Lean: `Exposable σ o` says that every row ruled out by `o` is extended by a
   kept row at the same input (it is subsumed, not committed away); by
   `«def:exposable/no-commitment»` this is "`Excluded_o` is empty", i.e. no
   commitment, in the sense of Def. `def:lifted-output-event`. -/
@@ -415,20 +415,20 @@ theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I 
 
 /-- "In a functional specification this means `R[out ⪰ o] = R`: the event
 removes nothing.  As the only row at a legal input `j` is `(j, f(j))`, `o` is
-a legal output exactly when `f(j)` refines `o` for every legal `j`." -/
+a legal output exactly when `f(j)` extends `o` for every legal `j`." -/
 theorem «sec:functional-events/functional-exposable» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
     (Exposable σ o ↔ outputTable σ o = σ.R) ∧ (Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x) :=
   ⟨exposable_iff_functional hf σ o, exposable_iff_refines_all hf σ o⟩
 
-/-- §2.3 "Determination": "A state is *determined* when its upper fiber has
+/-- §2.3 "Determination": "A state is *determined* when its future-output set has
 one element."  Lean: `CALM.Determined σ` is `∃ o, ∀ k x, σ.R k x → x = o`;
-the upper fiber `out(R)` is nonempty, so this is "has exactly one element". -/
+the future-output set `out(R)` is nonempty, so this is "has exactly one element". -/
 abbrev «sec:functional-events/determined» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) : Prop :=
   Determined σ
 
-/-- "Determined": upper fiber has exactly one element. -/
+/-- "Determined": future-output set has exactly one element. -/
 theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (σ : State sp) :
     Determined σ ↔ ∃ o, (∃ k, σ.R k o) ∧ ∀ k x, σ.R k x → x = o :=
@@ -492,8 +492,8 @@ theorem «lem:run-residual» {I O : Type} [PO I] [PO O] {sp : Spec I O}
   run_residual hx
 
 /-- **Eq. `eq:run-residual`**: the table
-`P[in ⪰ i, out ⪰ o₁, …, out ⪰ oₘ]`, "the rows whose input expands `i` and
-whose output refines each `o_r`"; the emitted outputs are a list.
+`P[in ⪰ i, out ⪰ o₁, …, out ⪰ oₘ]`, "the rows whose input extends `i` and
+whose output extends each `o_r`"; the emitted outputs are a list.
 Lemma `lem:run-residual` says a run's remainder table is this table at its
 current input and `outs es`. -/
 abbrev «eq:run-residual» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I)
@@ -509,7 +509,7 @@ theorem «lem:run-residual/example» (k : Ballots) (o : ResE) :
 
 /-- **Def. `def:confluence`** (Confluence at an input).  "A finite family of
 runs ending at states `(i₁,R₁),…,(i_k,R_k)` is *confluent at* `j`, a common
-expansion of their current inputs, when each can be continued to a common
+input extension of their current inputs, when each can be continued to a common
 state with current input `j`."
 
 Lean: `ConfluentAt fam j` (`∃ τ, τ.cur = j ∧ ∀ σ ∈ fam, Reach σ τ`). -/
@@ -519,9 +519,9 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
 /-- **Def. `def:consistency`** (Consistency).  "An I/O specification is
 *consistent* when every finite family of runs is confluent at every common
-expansion of their current inputs."
+input extension of their current inputs."
 
-"Consistency requires confluence at every common expansion, not merely at
+"Consistency requires confluence at every common input extension, not merely at
 some later one.  The reason is observability: the environment may act on
 conflicting outputs through channels the system does not see, as in Lamport's
 'anomalous behavior,' and a reconciling input may never arrive.  Thus a
@@ -579,7 +579,7 @@ theorem «cor:state-by-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     τ = canon sp τ.cur :=
   state_by_input hf hc hτ
 
-/-- After Cor. `cor:state-by-input`: "To be confluent at a common expansion
+/-- After Cor. `cor:state-by-input`: "To be confluent at a common input extension
 `j`, each run therefore needs only the single event `input(j)`, which takes it
 to `σ_P(j)`." -/
 theorem «cor:state-by-input/input-suffices» {I O : Type} [PO I] [PO O] {sp : Spec I O}

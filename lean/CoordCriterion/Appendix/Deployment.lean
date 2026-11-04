@@ -114,7 +114,7 @@ def Separable (F : Family sp n) (comp : Fin n → Nat) : Prop :=
   (∃ r₀ p q, Emits F p r₀ ∧ (∀ p' r, Emits F p' r → r = r₀) ∧
      Silent F q ∧ comp q ≠ comp p)
 
-/-- `j` is a common expansion of the family's current inputs. -/
+/-- `j` is a common input extension of the family's current inputs. -/
 def UB (F : Family sp n) (j : I) : Prop := ∀ p m, F p = some m → m.fin.cur ≼ j
 
 /-- Def. `def:monotone-across-partitions`: monotone across `comp`. -/
@@ -206,9 +206,9 @@ def oneShot (sp : Spec I O) (i : I) (o : O) (h : sp.P i o) : PRun sp where
 
 /-! ## Prop. `thm:complete-cap-deployment` -/
 
-/-- The per-family core: for a family with common expansion `j`, a row at `j`
+/-- The per-family core: for a family with common input extension `j`, a row at `j`
 survives in every remainder table iff the emitted outputs have a common
-expansion in `P(j)`. -/
+output extension in `P(j)`. -/
 theorem survivor_iff_compatible (F : Family sp n) {j : I} (hj : UB F j) :
     (∃ u, sp.P j u ∧ ∀ p m, F p = some m → m.fin.R j u) ↔
       (∃ u, sp.P j u ∧ ∀ p r, Emits F p r → r.2 ≼ u) := by

@@ -6,7 +6,7 @@ import CoordCriterion.CAP.AvailabilityAtEnd
 
 The paper's proof of (1)⇒(2) of Theorem `thm:complete-cap` uses only two
 participants at a time.  For rows `(i_1,o_1),…,(i_k,o_k)` with a common
-expansion `j` it builds `u_0,…,u_k ∈ P(j)`, each `u_m` refining
+input extension `j` it builds `u_0,…,u_k ∈ P(j)`, each `u_m` extending
 `o_1,…,o_m`: totality gives `u_0`, and the step from `u_{m-1}` to `u_m` puts
 one participant at `j` (emitting `u_{m-1}`) and one at `i_m` (emitting `o_m`)
 in separate blocks.  `cap_two_step` is that step; `cap_necessary_two`
@@ -19,11 +19,11 @@ namespace CAP
 
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
-/-- The induction step: two rows with a common expansion `j` have a common
-refinement in `P(j)`.  Two participants in separate blocks start at `i₁`
+/-- The induction step: two rows with a common input extension `j` have a common
+output extension in `P(j)`.  Two participants in separate blocks start at `i₁`
 and `i₂`; by Availability each emits its output without messages; by
 Partition Consistency they reach one state `(j,R)`, whose row `(j,u)`
-refines both outputs. -/
+extends both outputs. -/
 theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     (hP : PartitionConsistencyAtEnd Sys) {i₁ i₂ j : I} {o₁ o₂ : O}
     (h₁ : sp.P i₁ o₁) (h₂ : sp.P i₂ o₂) (hj₁ : i₁ ≼ j) (hj₂ : i₂ ≼ j) :
@@ -76,7 +76,7 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
   have hprodc : Produced Sys 2 init Lf := fun p => (hLs p).2.2.1
   have hpartc : Partitioned Lf comp :=
     ⟨hcomp2, fun p a q k j' d b h => absurd h (hnrecv p a q k j' d b)⟩
-  -- no inputs were added, so `j` is still a common expansion
+  -- no inputs were added, so `j` is still a common input extension
   have hjall : ∀ p σ, LRun (canon sp (init p)) (Lf p) σ → σ.cur ≼ j := by
     intro p σ h
     rw [lrun_noinp h (hLs p).2.2.2.1]
@@ -85,7 +85,7 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
   obtain ⟨τ, hτj, ext'', _, hτ⟩ := hP 2 init Lf comp hwfc hprodc hpartc j hjall
   obtain ⟨u, hu⟩ := τ.hasCur
   rw [hτj] at hu
-  -- rows are never added, and emitting `o` keeps only rows refining `o`
+  -- rows are never added, and emitting `o` keeps only rows extending `o`
   have href : ∀ p : Fin 2, (row p).2 ≼ u := by
     intro p
     obtain ⟨σ', h2, h3⟩ := lrun_append.1 (hτ p)
@@ -94,7 +94,7 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
   exact ⟨u, τ.sub _ _ hu, by simpa [row] using href 0, by simpa [row] using href 1⟩
 
 /-- (1)⇒(2) of Theorem `thm:complete-cap`, by the paper's induction: from
-`u_{m-1}` (a common refinement in `P(j)` of the earlier rows) and the next
+`u_{m-1}` (a common output extension in `P(j)` of the earlier rows) and the next
 row, `cap_two_step` gives `u_m`; totality gives `u_0`. -/
 theorem cap_necessary_two (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     (hP : PartitionConsistencyAtEnd Sys) : sp.LiftedMono := by

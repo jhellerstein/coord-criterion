@@ -1095,8 +1095,8 @@ variable [PO O] [DecidableEq C] (k : ChanKind) (G : Machine C P Q O)
 
 /-- The machine's outputs are confluent across executions: for every finite
 family of executions `βᵣ` ending in states `sᵣ`, and every execution `β`
-whose input expands every input of the family, some execution with the same
-input as `β` leaves the machine with an observation that refines the
+whose input extends every input of the family, some execution with the same
+input as `β` leaves the machine with an observation that extends the
 observation at the end of every `βᵣ`. -/
 def ObsConfluent : Prop :=
   ∀ fam : List (List (Act C P O) × (sys (C := C) k G).St),
@@ -1168,7 +1168,7 @@ theorem fstep_out {f f' : Flat C P Q} {c : C} {o : O} (h : FStep k G f (.out c o
   cases h; assumption
 
 /-- If every state can report its observation, emitted-output confluence
-implies the common-expansion condition. -/
+implies the common-extension condition. -/
 theorem commonExpansion_of_emitConfluent (hE : OutEnabled G) :
     EmitConfluent (C := C) k G → (spec (C := C) k G).CommonExpansion := by
   intro hE' rows hrows j hj
@@ -1198,7 +1198,7 @@ theorem commonExpansion_of_emitConfluent (hE : OutEnabled G) :
   obtain ⟨q, hq, rfl⟩ := List.mem_map.1 hr
   exact ho (q.2, q.1.2) (List.mem_map_of_mem hq)
 
-/-- If outputs report observations, the common-expansion condition implies
+/-- If outputs report observations, the common-extension condition implies
 emitted-output confluence. -/
 theorem emitConfluent_of_commonExpansion (hR : OutReports G) :
     (spec (C := C) k G).CommonExpansion → EmitConfluent (C := C) k G := by
