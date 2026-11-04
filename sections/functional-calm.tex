@@ -81,7 +81,7 @@ way when an output can be emitted without \commitment.
     \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
-  \caption{The election specification and three states reached from it, showing rows
+  \caption{The election specification and three states reached from it, limited to rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
   input and its future-output set.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
@@ -91,7 +91,7 @@ way when an output can be emitted without \commitment.
 \end{figure*}
 
 We introduce the framework with a small election, illustrated in
-Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
+Figure~\ref{fig:election-frames}.  Each row of the possibility table pairs
 the ballots received so far with the permitted result; the column orders say how inputs \ingrow and which later outputs \outrelbase earlier ones.
 
 Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
@@ -100,10 +100,11 @@ is no winner.  An input is the ballots received so far, written as a
 three-character string with a dot for a ballot not yet received.  For brevity,
 the figure shows only inputs \inrelpart $a\cdot\cdot$.
 
-The two orders are where a designer makes decisions.  The \emph{input order}
-records accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
+The two orders require thoughtful design.  The \emph{input order}
+must record accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
 $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output order} says which
-announcements are safe to build on: $\bot$ claims nothing, so either winner
+announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$.
+$\bot$ claims nothing, so either winner
 \outrel it, while $a$ and $b$ are incomparable.  In general, the functional table is \emph{monotone}
 when
 \[
@@ -113,25 +114,25 @@ Here, for example, the input sequence $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba
 monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd a$.
 
 \paragraph{Input and determination.}
-Each panel captures the specification state: a pair of a \emph{current input}
+Each panel of Figure~\ref{fig:election-frames} captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
-still possible from that input.  When $v_2$'s ballot for $b$ arrives, the event
-$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to lose rows whose inputs no
+still possible from that input.  When $v_2$'s ballot for $b$ arrives, the input event
+$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to passively lose rows whose inputs no
 longer \inrelbase the ballots received; such inputs are now illegal.  The
 \emph{future-output set} consists of the outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
 $\{\bot,a,b\}$.
-If $v_2$ instead votes for $a$, as in panel~(c), the future-output set is $\{a\}$.  The state
-is \emph{determined}: input alone has resolved the outcome, without \commitment.
+If $v_2$ instead votes for $a$ (panel~(c)), the future-output set is $\{a\}$.  The state
+is \emph{determined}; in this case input alone resolved the outcome, without \commitment.
 
 Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
 (Section~\ref{sec:systems}).  In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
 $ab\cdot$ in the same output event.  Its irrevocable \emph{\commitment}
-removes the still-possible $aba$ and $abb$ rows but leaves the current input
+to close the polls removes the still-possible $aba$ and $abb$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no \commitment, since every output still possible \outrel it;
-closing the polls is a further decision by the system, not something the
+closing the polls is a further fateful decision by the system, not something the
 specification requires.
 
 \begin{figure}[t]
@@ -167,19 +168,18 @@ specification requires.
   \end{minipage}\par\smallskip
   \end{minipage}
   \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
-  to preserve space.  The \commitment that the registrar chose in Figure~\ref{fig:election-frames}(d) is required
-  here.}
+  to preserve space.  The registrar's \commitment in Figure~\ref{fig:election-frames}(d) is required here.}
   \label{fig:nonmonotone-frame}
 \end{figure}
 
 \paragraph{Output and consistency.}
-In a functional table, an output $o$ is a \emph{legal output} when every output that could occur in future \outrel it---the entire future-output set of the current input.  Hence $\bot$ is legal
-in panels~(a) and~(b), and $a$ in panel~(c).  The atomic output event
-$\mathsf{output}(o)$ empties any legal input whose output does not \outrelbase
-$o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
-from then on, only rows whose outputs \outrelbase $o$ remain.  The emission
-matters because the environment is powerful and unpredictable; it may use $o$
-when choosing later input.
+In a functional table, an output is a \emph{legal output} when every item in
+the future-output set \outrel it; no future output contradicts it.  Hence $\bot$ is legal
+in panels~(a) and~(b), and $a$ in panel~(c).
+At the time of emission, an output must be legal; otherwise the environment could act on a value that
+is later contradicted.
+The output event $\mathsf{output}(o)$ therefore atomically empties any legal input whose
+output does \emph{not} extend $o$, then emits $o$.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
@@ -190,7 +190,7 @@ miniature: the original order is monotone, so later outputs \outrelbase every
 earlier one; under the equality order, some outputs can be emitted
 only with a \commitment.
 
-The obstruction is a property solely of the table and its orders.  Rows $(ab\cdot,\bot)$ and
+The need to issue a \commitment is a property solely of the table and its orders.  Rows $(ab\cdot,\bot)$ and
 $(aba,a)$ have the common input \indesc $aba$, but under the equality
 order no output at $aba$ \outrel both outputs $\bot$ and $a$.  A run that emits
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.

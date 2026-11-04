@@ -179,29 +179,27 @@ available during partition, and whether invariant confluence differs from CALM
 (Section~\ref{sec:instances}).}
 
 \subsection{The Model: \Spectype[s]}
-\textcolor{reviewed}{In systems, as in life,
-possibilities narrow over time.} \textcolor{reviewed}{Sometimes the world moves on,
-and possibilities are lost to us.} \textcolor{reviewed}{Other choices are left for us to decide, with
-varying consequences.} \textcolor{reviewed}{Incidental decisions close no doors: each possibility they
-remove is covered by some alternative.} \textcolor{reviewed}{Fateful decisions
-are the ones that matter: they exclude a possibility that nothing
-remaining can cover.} \textcolor{reviewed}{Can we say which scenarios require
-fateful decisions?}
+\textcolor{reviewed}{In systems, as in life, our possibilities narrow over time.} \textcolor{reviewed}{Sometimes the world
+moves on, and possibilities are lost to us.} \textcolor{reviewed}{Sometimes possibilities disappear
+because we must decide among them.} \textcolor{reviewed}{A decision is incidental when
+every possibility it removes is covered by an alternative that remains.} \textcolor{reviewed}{A
+decision is fateful when it rules out a possibility that no remaining
+alternative can cover.} \textcolor{reviewed}{When must a system make a fateful decision?}
 
-\textcolor{reviewed}{We ground the problem in a simple declarative model of \spectype[s],
-independent of any language, protocol, or placement.} \textcolor{reviewed}{The designer of a
-specification provides a \emph{possibility relation} $P\subseteq
-I\times O$: a table that may be infinite, like a mathematical function.} \textcolor{reviewed}{Each row in
-this table is a possibility observable from the outside: it pairs a cumulative input to a
-permitted output.} \textcolor{reviewed}{The design includes the input domain $I$ and output domain
-$O$, with partial orders that help capture the specification's semantics.} \textcolor{reviewed}{On
-inputs, $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input from the
-environment.} \textcolor{reviewed}{On outputs, $u\OutputGe o$ means that $u$ subsumes all
-specification-relevant information in $o$; we say
-$u$ \emph{\outrel} $o$.} \textcolor{reviewed}{A \emph{\commitment} is an irrevocable, fateful system decision,
-removing one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
-$o\OutputOrd u$: the output $o$ is no longer covered by any $u$,
-and its possibility is gone.}
+\textcolor{reviewed}{We ground the problem in a simple model of \emph{\spectype[s]}, independent of
+any language, protocol, or placement.} \textcolor{reviewed}{The designer of a specification provides a
+\emph{possibility relation} $P\subseteq I\times O$: a virtual table that may be
+infinite, like a mathematical function.} \textcolor{reviewed}{Each row in this table is a possibility
+observable from the outside: it pairs a cumulative input to a permitted output.} \textcolor{reviewed}{The design includes the input domain $I$ and output domain $O$, with partial
+orders that help capture the specification's semantics.} \textcolor{reviewed}{On inputs, the order is
+accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
+from the environment.} \textcolor{reviewed}{On outputs, the order is subsumption: $o\OutputOrd u$
+means that  $u$ \emph{\outrel} $o$ by subsuming all specification-relevant
+information in $o$.} \textcolor{reviewed}{These are both application-specific notions that must be
+captured well for a specification to be faithful.} \textcolor{reviewed}{A \emph{\commitment} is an
+irrevocable, fateful system decision, removing one or more rows
+$(i,o)$ for which no remaining row $(i,u)$ has $o\OutputOrd u$: the output $o$
+is no longer covered by any $u$, and its possibility is gone.}
 
 \textcolor{reviewed}{State-machine-style specifications can be projected into this form, skipping
 operational details that are not externally observable (Section~\ref{sec:operational-models}).} Despite its simplicity, our model captures not only application invariants,
@@ -218,7 +216,7 @@ is general, accommodating narrower notions from prior literature.} \textcolor{re
 expressivity of our model.} \textcolor{reviewed}{It comes via two invariants.} \textcolor{reviewed}{The first is always
 required; the second addresses nondeterministic specifications.}
 
-\textcolor{reviewed}{\emph{1. Learn and refine.} As execution progresses, input grows: the system learns more from
+\textcolor{reviewed}{\emph{Learn and refine.} As execution progresses, input grows: the system learns more from
 the environment.} \textcolor{reviewed}{For specifications that permit only one output at each input, the possibility table is a function
 and monotonicity is standard: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.} \textcolor{reviewed}{\emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem}) proves that consistency is equivalent to
 monotonicity in this setting.}
@@ -231,7 +229,7 @@ monotonicity in this setting.}
 
 
 
-\textcolor{reviewed}{\emph{2. Choose and align.} Prior work on CALM and CRDTs addresses functional
+\textcolor{reviewed}{\emph{Choose and align.} Prior work on CALM and CRDTs addresses functional
 settings.} \textcolor{reviewed}{\emph{Nondeterministic specifications}, including leader election and transaction
 scheduling, are not functions: many outputs are within spec for a given input.} \textcolor{reviewed}{This requires an additional monotonicity invariant.} \textcolor{reviewed}{When many runs of a system
 choose different outputs for the same input, those choices
@@ -246,25 +244,29 @@ Lifted Monotonicity exactly characterizes specifications that can keep every
 permitted output available and confluent during a partition.} \textcolor{reviewed}{The
 Gilbert--Lynch theorem follows directly.}
 
-\paragraph{Contributions.}
+\subsection{Contributions}
 \textcolor{reviewed}{We make contributions in three categories:}
-\begin{enumerate}
-\item
-\textcolor{reviewed}{\emph{A unified model.} The observable behavior of a system is captured via \spectype[s]: a possibility relation over
-        ordered input and output domains.} \textcolor{reviewed}{Consistency is defined as confluence, uniformly capturing general
-        consistency models, application-specific requirements, and distributed consistency.}
-\item
-\textcolor{reviewed}{\emph{A unified criterion.} For functions between ordered domains,
+
+\textcolor{reviewed}{\noindent
+\emph{1. A unified model.} A system's observable behavior is captured via
+        \spectype[s].} \textcolor{reviewed}{Consistency is defined as
+        confluence of the runs a specification allows, unifying general consistency models,
+        application-specific requirements, and distributed consistency.}
+
+\textcolor{reviewed}{\noindent
+\emph{2. A unified criterion.} For functions between ordered domains,
         Functional CALM shows that consistency is equivalent to monotonicity.} \textcolor{reviewed}{For nondeterministic specifications,
         we prove Complete CALM: Consistency As Lifted Monotonicity.} \textcolor{reviewed}{Complete CAP is a corollary:
-        the tradeoff holds only under failure of Lifted Monotonicity.}
-\item
-\textcolor{reviewed}{\emph{\Commitments, Composition and Proper Coordination.} We define \commitments to capture how
+        the CAP tradeoff holds only under failure of Lifted Monotonicity.}
+
+\textcolor{reviewed}{\noindent
+\emph{3. \Commitments, Composition and Proper Coordination.} We define \commitments to capture how
         systems exclude possibilities that are not covered by alternatives.} \textcolor{reviewed}{We then show how specifications
         compose by equijoin, so that, in composition, upstream
         stages can free downstream stages from issuing \commitments.}
-\end{enumerate}
 
+\vspace{0.5em}
+\noindent
 The paper develops these contributions in order, then relates the criterion to
 earlier results (Section~\ref{sec:instances}) and the broader CALM agenda
 (Section~\ref{sec:discussion}). The appendices provide proofs and further
@@ -353,7 +355,7 @@ way when an output can be emitted without \commitment.
     \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
-  \caption{The election specification and three states reached from it, showing rows
+  \caption{The election specification and three states reached from it, limited to rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
   input and its future-output set.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
@@ -363,7 +365,7 @@ way when an output can be emitted without \commitment.
 \end{figure*}
 
 \textcolor{reviewed}{We introduce the framework with a small election, illustrated in
-Figure~\ref{fig:election-frames}.} \textcolor{reviewed}{Each row of the specification table pairs
+Figure~\ref{fig:election-frames}.} \textcolor{reviewed}{Each row of the possibility table pairs
 the ballots received so far with the permitted result; the column orders say how inputs \ingrow and which later outputs \outrelbase earlier ones.}
 
 \textcolor{reviewed}{Three voters $v_1,v_2,v_3$ each cast at most one immutable ballot for $a$ or
@@ -372,10 +374,10 @@ is no winner.} \textcolor{reviewed}{An input is the ballots received so far, wri
 three-character string with a dot for a ballot not yet received.} \textcolor{reviewed}{For brevity,
 the figure shows only inputs \inrelpart $a\cdot\cdot$.}
 
-\textcolor{reviewed}{The two orders are where a designer makes decisions.} \textcolor{reviewed}{The \emph{input order}
-records accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
+\textcolor{reviewed}{The two orders require thoughtful design.} \textcolor{reviewed}{The \emph{input order}
+must record accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
 $aa\cdot$ and $ab\cdot$ are incomparable.} \textcolor{reviewed}{The \emph{output order} says which
-announcements are safe to build on: $\bot$ claims nothing, so either winner
+announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$.} \textcolor{reviewed}{$\bot$ claims nothing, so either winner
 \outrel it, while $a$ and $b$ are incomparable.} \textcolor{reviewed}{In general, the functional table is \emph{monotone}
 when}
 \[
@@ -385,24 +387,24 @@ when}
 monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd a$.}
 
 \paragraph{Input and determination.}
-\textcolor{reviewed}{Each panel captures the specification state: a pair of a \emph{current input}
+\textcolor{reviewed}{Each panel of Figure~\ref{fig:election-frames} captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
-still possible from that input.} \textcolor{reviewed}{When $v_2$'s ballot for $b$ arrives, the event
-$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to lose rows whose inputs no
-longer \inrelbase the ballots received; such inputs are now illegal.} \textcolor{reviewed}{The \emph{future-output set} is the set of
-outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
-$\{\bot,a,b\}$.} \textcolor{reviewed}{If $v_2$ instead votes for $a$, as in panel~(c), the future-output set is $\{a\}$.} \textcolor{reviewed}{The state
-is \emph{determined}: input alone has resolved the outcome, without \commitment.}
+still possible from that input.} \textcolor{reviewed}{When $v_2$'s ballot for $b$ arrives, the input event
+$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to passively lose rows whose inputs no
+longer \inrelbase the ballots received; such inputs are now illegal.} \textcolor{reviewed}{The
+\emph{future-output set} consists of the outputs in the remaining rows at the current input and its \indescs; in panel~(b) it is
+$\{\bot,a,b\}$.} \textcolor{reviewed}{If $v_2$ instead votes for $a$ (panel~(c)), the future-output set is $\{a\}$.} \textcolor{reviewed}{The state
+is \emph{determined}; in this case input alone resolved the outcome, without \commitment.}
 
 \textcolor{reviewed}{Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
 (Section~\ref{sec:systems}).} \textcolor{reviewed}{In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
 $ab\cdot$ in the same output event.} \textcolor{reviewed}{Its irrevocable \emph{\commitment}
-removes the still-possible $aba$ and $abb$ rows but leaves the current input
+to close the polls removes the still-possible $aba$ and $abb$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.} \textcolor{reviewed}{Emitting $\bot$ by itself
 would need no \commitment, since every output still possible \outrel it;
-closing the polls is a further decision by the system, not something the
+closing the polls is a further fateful decision by the system, not something the
 specification requires.}
 
 \begin{figure}[t]
@@ -438,19 +440,16 @@ specification requires.}
   \end{minipage}\par\smallskip
   \end{minipage}
   \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
-  to preserve space.  The \commitment that the registrar chose in Figure~\ref{fig:election-frames}(d) is required
-  here.}
+  to preserve space.  The registrar's \commitment in Figure~\ref{fig:election-frames}(d) is required here.}
   \label{fig:nonmonotone-frame}
 \end{figure}
 
 \paragraph{Output and consistency.}
-\textcolor{reviewed}{In a functional table, an output $o$ is a \emph{legal output} when every output that could occur in future \outrel it---the entire future-output set of the current input.} \textcolor{reviewed}{Hence $\bot$ is legal
-in panels~(a) and~(b), and $a$ in panel~(c).} \textcolor{reviewed}{The atomic output event
-$\mathsf{output}(o)$ empties any legal input whose output does not \outrelbase
-$o$, then emits $o$, in one transition.} \textcolor{reviewed}{Emitting $o$ is a promise:
-from then on, only rows whose outputs \outrelbase $o$ remain.} \textcolor{reviewed}{The emission
-matters because the environment is powerful and unpredictable; it may use $o$
-when choosing later input.}
+\textcolor{reviewed}{In a functional table, an output is a \emph{legal output} when every item in
+the future-output set \outrel it; no future output contradicts it.} \textcolor{reviewed}{Hence $\bot$ is legal
+in panels~(a) and~(b), and $a$ in panel~(c).} \textcolor{reviewed}{At the time of emission, an output must be legal; otherwise the environment could act on a value that
+is later contradicted.} \textcolor{reviewed}{The output event $\mathsf{output}(o)$ therefore atomically empties any legal input whose
+output does \emph{not} extend $o$, then emits $o$.}
 
 \textcolor{reviewed}{Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
@@ -461,7 +460,7 @@ miniature: the original order is monotone, so later outputs \outrelbase every
 earlier one; under the equality order, some outputs can be emitted
 only with a \commitment.}
 
-\textcolor{reviewed}{The obstruction is a property solely of the table and its orders.} \textcolor{reviewed}{Rows $(ab\cdot,\bot)$ and
+\textcolor{reviewed}{The need to issue a \commitment is a property solely of the table and its orders.} \textcolor{reviewed}{Rows $(ab\cdot,\bot)$ and
 $(aba,a)$ have the common input \indesc $aba$, but under the equality
 order no output at $aba$ \outrel both outputs $\bot$ and $a$.} \textcolor{reviewed}{A run that emits
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.}
@@ -500,13 +499,12 @@ means that $j$ contains at least the input information in $i$. We say that $j$
 \emph{\inrel} $i$, or is an \emph{\indesc} of $i$; every input is an \indesc of itself. \textcolor{reviewed}{We call $\OutputOrd$ the
 \emph{output order}: $o\OutputOrd u$ means that $u$ preserves every
 externally visible claim in $o$ and may add more, and we say that $u$
-\emph{\outrel} $o$.} We use these two verbs only in these senses: inputs
-\ingrow, and outputs are \outrelpast. We write $\InputGe$ and
-$\OutputGe$ for the converse orders.
+\emph{\outrel} $o$.} In either domain, we call the element above another
+an extension. We write $\InputGe$ and $\OutputGe$ for the converse orders.
 
-\textcolor{reviewed}{A \emph{common \indesc} of inputs
-$i_1,\ldots,i_k$ is an input $j$ that \inrel every $i_r$, and a
-\emph{common \outnoun} of outputs is an output that \outrel each of them.} \textcolor{reviewed}{Neither need be unique or least: for example, two independent transactions $u$ and $v$, with schedules ordered by subsequence, have two incomparable minimal common \indescs, $uv$ and $vu$.} A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
+\textcolor{reviewed}{A \emph{common \indesc} $j$ of
+$i_1,\ldots,i_k$ is an input that \inrel every $i_r$, and a
+\emph{common \outnoun} of $o_1,\ldots,o_k$ is an output that \outrel each $o_r$.} \textcolor{reviewed}{Neither need be unique or least: for example, two independent transactions $u$ and $v$, with schedules ordered by subsequence, have two incomparable minimal common \indescs, $uv$ and $vu$.} A row $(k,u)$ is \emph{\outrelpast} by another row $(k,w)$ at the same input
 when $w$ \outrel $u$.
 
 \begin{definition}[Functional monotonicity]
@@ -991,13 +989,13 @@ one fiber.} \textcolor{reviewed}{For a set $F\subseteq O$ of outputs, outputs $o
 $X\subseteq F$ is compatible in $F$.}
 \end{definition}
 
-\begin{definition}[directed fibers]
+\begin{definition}[Directed fibers]
 \label{def:directed-outputs}
 \textcolor{reviewed}{An \spectype has \emph{directed fibers} when every
 fiber $\fiber{i}$ is directed.}
 \end{definition}
 
-\textcolor{reviewed}{A singleton fiber is trivially directed.} \textcolor{reviewed}{As with common \indescs of inputs
+\textcolor{reviewed}{A singleton fiber is trivially directed.} \textcolor{reviewed}{As with common \indescs,
 (Section~\ref{sec:functional-specifications}), a common \outnoun need not be
 least: directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
@@ -1040,10 +1038,11 @@ under the joint lift:}
 
 \textcolor{reviewed}{With singleton fibers it is functional monotonicity
 (Definition~\ref{def:functional-monotonicity}).} As the reading above shows,
-it implies Relational Monotonicity and directed fibers; conversely, for
-$i\InputOrd j$ and finite nonempty $X\subseteq\fiber{i}$, Relational
-Monotonicity gives each $x\in X$ a \outnoun in $\fiber{j}$, and Directed
-Outputs gives those a common \outnoun in $\fiber{j}$. So Lifted Monotonicity
+it implies Relational Monotonicity and the specification has directed fibers;
+conversely, for $i\InputOrd j$ and finite nonempty $X\subseteq\fiber{i}$,
+Relational Monotonicity gives each $x\in X$ a \outnoun in $\fiber{j}$, and
+because the specification has directed fibers, those outputs have a common
+\outnoun in $\fiber{j}$. So Lifted Monotonicity
 holds exactly when both do. In powerdomain terms, Relational Monotonicity
 is monotonicity of $i\mapsto\fiber{i}$ under the Hoare
 preorder~\cite{abramsky1994domain}, which asks only that each output in $A$
@@ -1078,9 +1077,9 @@ if it satisfies the common-extension condition.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-\textcolor{reviewed}{Relational Monotonicity carries each $o_r$ to some
-\outnoun in the fiber at $j$, and directedness of that fiber gives those a common
-\outnoun there.} Full proof in Appendix~\ref{app:proofs-sec3}.
+Relational Monotonicity carries each $o_r$ to some
+\outnoun in the fiber at $j$, and because the specification has directed
+fibers, those outputs have a common \outnoun there. Full proof in Appendix~\ref{app:proofs-sec3}.
 \end{proof}
 
 \subsection{Lifted output events}
@@ -1435,7 +1434,8 @@ applies a sequence $\gamma=e_1\cdots e_n$ of \commitments, each $e_m$
 defined at the state its predecessors leave, and then subsumes rows and
 emits $o$, all atomically. The sequence may be empty, written
 $\varepsilon$. Write $R_c$ for the table after $\gamma$ is applied. The
-event is \emph{commitment-sufficient} when applying $\gamma$ leaves $o$ as a legal output at $(i,R_c)$:
+event is \emph{commitment-sufficient} when applying $\gamma$ leaves $o$
+as a legal output at $(i,R_c)$:
 \begin{equation}
   (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
   \quad\Longrightarrow\quad
@@ -1458,7 +1458,7 @@ kind of specification event, so a distributed history may contain them;
 Definitions~\ref{def:distributed-history} and~\ref{def:participant-run} apply
 unchanged.
 
-A legal $\Out{\gamma}{o}$ issues at least the \commitments of the $\mathsf{output}(o)$
+A commitment-sufficient $\Out{\gamma}{o}$ issues at least the \commitments of the $\mathsf{output}(o)$
 of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}: its \commitments
 remove the rows in $\Excluded_o$
 (Lemma~\ref{lem:canonical-commitment-normal-form}), and $\mathsf{output}(o)$ is
@@ -1593,7 +1593,7 @@ avoids no \commitment.
 
 \begin{proof}[Proof sketch]
 By output legality, every row the canonical output event removes is subsumed
-by a surviving refinement (Proposition~\ref{prop:exposability}), proving both
+by a surviving output extension (Proposition~\ref{prop:exposability}), proving both
 claims. Canonical Run Universality says that canonical runs suffice when
 judging runs under any \commitment basis.
 \end{proof}
@@ -1610,7 +1610,7 @@ skips that event, so it keeps every row, including the one completed by
 $[B,A,C]$. Suppose 2PL later emits $[A,C,B]$; its output event commits all
 three transactions and orders $A$ before $C$ before $B$. The canonical run
 can emit the same output because that row was present all along. Every row
-retained afterward refines $[A,C,B]$, so it satisfies all of 2PL's decisions,
+retained afterward extends $[A,C,B]$, so it satisfies all of 2PL's decisions,
 including the earlier order of $A$ before $B$. Thus the canonical final table
 is contained in 2PL's, while Canonical Run Universality gives the reverse
 containment. The tables are equal: the lock made the $A$-before-$B$ decision
@@ -2316,18 +2316,18 @@ preserves the declared invariants.
 
 \subsection{General operational specification models}
 \label{sec:operational-models}
-Labeled transition systems and I/O automata provide general operational models
-of components, including input, output, and internal actions, composition, and
-implementation (simulation) relations~\cite{lynch1987io,lynch1996distributed}. They answer how a declared
-machine may execute and how one machine implements another. Our goal is
-narrower: the possibility relation, its orders, and its remainder tables expose which observable
-alternatives remain, which removals preserve prior information, and which are
-binding \commitments. Section~\ref{sec:distributed-execution} provides a projection from
-distributed histories, connecting our abstraction back to
-participant-local executions and message causality. Thus our specification model
-does not replace an operational formalism; it is a semantic
-projection designed to make the intrinsic coordination question comparable
-across such formalisms.
+An I/O specification declaratively relates cumulative inputs to permitted
+outputs. An I/O automaton instead defines operational states, input, output,
+and internal actions, and a transition relation~\cite{lynch1987io,lynch1996distributed}. Projecting its externally visible behavior can yield an I/O specification. Such operational models answer how a declared machine may execute and how one
+machine implements another. Our goal is narrower: the possibility relation,
+its orders, and its remainder tables expose which observable alternatives
+remain, which removals preserve prior information, and which are binding
+\commitments. Section~\ref{sec:distributed-execution} provides a projection
+from distributed histories, connecting our abstraction back to
+participant-local executions and message causality. Thus our specification
+model does not replace an operational formalism; it is a semantic projection
+designed to make the intrinsic coordination question comparable across such
+formalisms.
 
 \paragraph{Compiling a state machine.}
 \textcolor{reviewed}{Automata are a traditional way to model operational behavior
@@ -2386,7 +2386,7 @@ specification as the specification.
 \begin{enumerate}
 \item
 The induced specification is an \spectype, and the input
-        of an execution only expands as the execution continues.
+        of an execution only extends as the execution continues.
 \item
 When there is one client and its state-machine events arrive in the order it sent
         them, every input is a chain, inputs correspond to state-machine event sequences
@@ -2406,7 +2406,7 @@ Every observation in the fiber at $h$ is reached by a run of the
 \item
 The machine's observations are confluent across its executions---for
         executions with inputs $h_1,\ldots,h_k$ and any input $h$ that occurs
-        and expands each $h_r$, some execution with input $h$ ends in an
+        and extends each $h_r$, some execution with input $h$ ends in an
         observation that \outrel each of theirs---exactly when the induced
         specification satisfies Lifted Monotonicity.
 \end{enumerate}
@@ -2574,7 +2574,7 @@ specifications, not conservative.}
 
 The possibility relation makes the boundary concrete. Possibilities may
 be lost as input grows. When a system emits an output, other possibilities
-may be subsumed by refinements that remain, an incidental decision, or
+may be subsumed by output extensions that remain, an incidental decision, or
 excluded even though nothing remaining subsumes them, a fateful one. Only the latter removals are \commitments, and only they require coordination.
 
 \textcolor{reviewed}{A limitation of prior CALM work was that it was constructive on only one side of
@@ -2616,8 +2616,8 @@ output needs a \commitment.} \textcolor{reviewed}{This generalizes the classic r
 sets to arbitrary input and output orders.}
 
 \textcolor{reviewed}{Complete CALM extends the answer to specifications that offer several outputs
-for one input.} \textcolor{reviewed}{The test is Lifted Monotonicity, which combines Relational
-Monotonicity with directed fibers.} \textcolor{reviewed}{When it fails, some reachable output
+for one input.} The test is Lifted Monotonicity, which combines Relational
+Monotonicity with the requirement that the specification has directed fibers. \textcolor{reviewed}{When it fails, some reachable output
 requires a \commitment.} \textcolor{reviewed}{At each input it changes, a \commitment either empties the fiber or removes
 particular output rows.} \textcolor{reviewed}{Because \commitments are explicit, the model
 can also check where a composition coordinates
@@ -2726,7 +2726,7 @@ rows at $k$.
   \commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
   local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, \commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
     system; basis; produced & a \commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only \commitments from $\mathcal B$ & Def.~\ref{def:system}\\
-  system output event $\Out{\gamma}{o}$ & applies \commitments $\gamma$, subsumes, emits $o$ & Def.~\ref{def:system-output-event}\\
+  system output event $\Out{\gamma}{o}$; commitment-sufficient & applies \commitments $\gamma$, subsumes, and emits $o$; applying $\gamma$ leaves $o$ legal & Def.~\ref{def:system-output-event}\\
   \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments, emits nothing & Def.~\ref{def:commitment-event}\\
   run under a basis; canonical run & specification events whose \commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitments and \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
@@ -2773,7 +2773,7 @@ the rows with $\mathrm{in}\InputGe j$ (Equation~\ref{eq:input-event}), and each
 output event $\mathsf{output}(o)$ keeps only the rows with
 $\mathrm{out}\OutputGe o$ (Equation~\ref{eq:output-action}). The input
 conditions reduce to the last one, $\mathrm{in}\InputGe i$, because each later
-input is an expansion of the earlier ones. One output condition remains for each
+input is an extension of the earlier ones. One output condition remains for each
 emitted output.
 \end{proof}
 
@@ -2928,7 +2928,7 @@ add rows, that row would be in both states.
 \begin{proof}[Proof of Theorem~\ref{thm:complete-cap}]
 \textcolor{reviewed}{Suppose $\Spec$ satisfies Lifted Monotonicity for $E$.} Take the system whose strategies emit,
 by the canonical output event $\mathsf{output}(o)$ of
-Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber. That event is always legal and applies whatever \commitments $o$ requires
+Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber. That event is always commitment-sufficient and applies whatever \commitments $o$ requires
 (Lemma~\ref{lem:canonical-commitment-normal-form}), so the system has
 Availability for $E$. Every output it emits is a row of $E$ at an input below
 the current one, so at a common \indesc $j$ of the current inputs the emitted
@@ -3020,7 +3020,7 @@ $\mathrm{eval}(g)\in P_{\mathcal I}(j)$ \outrel every $\mathrm{eval}(g_r)$. For 
 histories, and let $j$ be their disjoint union, with events renamed apart and
 no order between the two parts. Each event keeps its predecessors, and its
 $\mathrm{pre}$ and $\mathrm{post}$ are states of downward-closed sub-histories
-of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$. directedness of that fiber gives a valid sub-history $g$ of $j$ with
+of a valid $g_r$, so $j$ is locally valid and $\mathrm{eval}(g_1),\mathrm{eval}(g_2)\in P_{\mathcal I}(j)$. Because the specification has directed fibers, there is a valid sub-history $g$ of $j$ with
 $\mathrm{eval}(g)\supseteq\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2)=\mathrm{eval}(j)\supseteq\mathrm{eval}(g)$,
 so $\mathcal I(\mathrm{eval}(g_1)\cup\mathrm{eval}(g_2))$. Every
 downward-closed $c\subseteq j$ is the disjoint union of $c\cap g_1$ and $c\cap
@@ -3240,13 +3240,13 @@ $R\subseteq\widehat R$; we show that the inclusion holds afterward. An input
 event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$. It causes the table to lose every row whose input does not \inrelbase $j$, keeping
 $R[\mathrm{in}\InputGe j]$ in the original run and
 $\widehat R[\mathrm{in}\InputGe j]$ in the canonical run. Since
-$R\subseteq\widehat R$, the first remains contained in the second. For a legal
+$R\subseteq\widehat R$, the first remains contained in the second. For a commitment-sufficient
 output event $\Out{\gamma}{o}$ with $o\in R(i)$ taking $R$ to $R'$, containment
 (Lemma~\ref{lem:canonical-commitment-normal-form}(1)) gives
 $R'\subseteq R[\mathrm{out}\OutputGe o]$. Since
 $o\in R(i)\subseteq\widehat R(i)$, canonical support
 (Lemma~\ref{lem:canonical-commitment-normal-form}(2)) applies at $\widehat R$:
-$\Out{\kappa_o}{o}$, with $\kappa_o$ taken at $(i,\widehat R)$, is legal and
+$\Out{\kappa_o}{o}$, with $\kappa_o$ taken at $(i,\widehat R)$, is commitment-sufficient and
 takes $\widehat R$ to $\widehat R[\mathrm{out}\OutputGe o]$, which contains
 $R[\mathrm{out}\OutputGe o]$. A \commitment event keeps the current input and
 only removes rows, so the canonical run skips it and the inclusion still
@@ -3470,7 +3470,7 @@ $\{(*,x),(*,y)\}$ with $x,y$ incomparable, and let $\mathcal S_2$ be the
 functional specification induced by a function $f$ that maps
 both to one value. The composite has one row, so it satisfies Lifted
 Monotonicity. At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
-a legal output, and under the empty basis an output event is legal only for a
+a legal output, and under the empty basis an output event is commitment-sufficient only for a
 legal output (Lemma~\ref{lem:canonical-commitment-normal-form}), and no
 \commitment event is possible, since its sequence is nonempty. Input
 events only remove rows at other inputs, and there are none, so every run of
@@ -3538,7 +3538,7 @@ current input of $\Spec_2|_{\Spec_1}$. Both hold at the start, where the
 image of $\sigma_{\Spec_1}(i)$ is $\sigma_{P_2\circ P_1}(i)$. For
 $\mathsf{input}(j)$ of $\Spec_1$, a row $(j,m)$ of $R_\sigma$ and, by the first
 fact, a row $(m,x)$ of $T$ give $(j,x)\in R_\rho$, so the input is legal, and
-both events keep the rows at \indescs of $j$. For a legal $\Out{\gamma}{m}$
+both events keep the rows at \indescs of $j$. For a commitment-sufficient $\Out{\gamma}{m}$
 at input $i$, containment gives $(i,m)\in R_\sigma$ and a resulting table
 inside $R_\sigma[\mathrm{out}\succeq_M m]$. $\Spec_2|_{\Spec_1}$ receives $m$
 and keeps $T[\mathrm{in}\succeq_M m]$. Each answer $o$ has $(m,o)\in T$, so
@@ -3586,7 +3586,7 @@ Let $\tau$ be a state of the original and $\tau'$ a state of the replacement
 reached without \commitment, with the same current input and $R_\tau\subseteq
 R_{\tau'}$. If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
 $j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
-the rows at \indescs of $j$. If $\Out{\delta}{x}$ is legal at $\tau$, then $x$
+the rows at \indescs of $j$. If $\Out{\delta}{x}$ is commitment-sufficient at $\tau$, then $x$
 is at the current input of $\tau$ and so of $\tau'$, where it is a legal output by
 the second fact. Containment (Lemma~\ref{lem:canonical-commitment-normal-form})
 puts the original's resulting table inside $R_\tau[\mathrm{out}\OutputGe x]$,
@@ -3652,7 +3652,7 @@ $f(\sigma)$.
 
 The proof covers the composite's \commitments by those of $\Spec_1$. For a
 table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$. Let
-$\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
+$\Out{\gamma}{m}$ be commitment-sufficient at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
 $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$. No row
 $(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is not in $\Excluded_{f(m)}$ at
 $\rho$. If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$. Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
@@ -3964,7 +3964,7 @@ every $E_p$, it is monotone across partitions: the emitted rows of a family are
 rows of that relation at inputs below $j$. So Lifted Monotonicity for $E$ suffices for
 the uniform deployment $E_p=E$, and Lifted Monotonicity suffices for every
 deployment. Rows authorized only to $p$ can be emitted only by $p$'s run,
-whose emitted outputs form a chain (each output event keeps only rows refining
+whose emitted outputs form a chain (each output event keeps only output rows extending
 it), so a family whose emitted rows are all authorized only to $p$ is
 separable only when it emits a single row. The converse can therefore fail. For example, let $P=\{p,q\}$, let every fiber be $\{a,b\}$ ordered by equality,
 and let $E_p=P$ and $E_q=\varnothing$, so that $p$ alone names a leader. A run
@@ -4414,9 +4414,10 @@ draw on each $T_p$ at most once.
 Theorem~\ref{thm:complete-cap} with $E=P$ requires every permitted output to
 stay available; Theorem~\ref{thm:complete-cap-response} lets the system choose
 which outputs to serve. Lifted Monotonicity implies the conditions of that
-theorem for every uniform obligation, with $T=Q$. If $(i,o)\in Q$ and $i\InputOrd j$, Relational Monotonicity gives
+the theorem for every uniform obligation, with $T=Q$. If $(i,o)\in Q$ and $i\InputOrd j$, Relational Monotonicity gives
 $u\in\fiber{j}$ with $o\OutputOrd u$, totality gives some $q\in Q(j)$,
-directedness of that fiber gives $w\in\fiber{j}$ \outrelpart $u$ and $q$, and upward
+and because the specification has directed fibers, some $w\in\fiber{j}$
+\outrelpart $u$ and $q$; upward
 closure puts $w$ in $Q(j)$; the common-extension condition gives Lifted Monotonicity for $Q$.
 
 The converse fails. Let $I=\{0,1\}$ with $0\InputOrd 1$, $\bot\OutputOrd a$ and
@@ -4546,7 +4547,7 @@ view: the operations invoked at $p$, with no precedence. A response becomes an
 output event emitting $p$'s response map, and $p$ may also re-emit its current
 map. With every message lost, $p$'s history is node $p$'s run in the
 execution where it is alone, and atomicity of that execution puts the map in
-the fiber at the view, so the output events are legal. Availability, applied
+the fiber at the view, so the output events are commitment-sufficient. Availability, applied
 to each unanswered operation of the view, gives Answering. An interleaving of
 a client history is an execution of the algorithm whose real-time order is the
 precedence of $h_C$, so atomicity gives a common \outnoun in $\fiber{h_C}$. The corollary excludes the algorithm.
@@ -4752,12 +4753,12 @@ $\mathsf{stamp}(B)$ in \commitment events and reports that $B$ read the initial
 version of $x$. Reporting the read is not a legal output on its own, since at an
 input in which $A$ writes $x$ the row that commits $A$ and then $B$ cannot be
 completed with it; the output event that applies $\mathsf{read}$ and then
-reports the read is legal under $\mathcal B_{\mathrm{MVTO}}$. After $A$'s
+reports the read is commitment-sufficient under $\mathcal B_{\mathrm{MVTO}}$. After $A$'s
 write arrives, two completions remain at the input in which both then request
 commit: $B$ committed with $A$ aborted, and $A$ committed with $B$ aborted. Emitting $A$'s abort is not a legal output, and $\mathsf{abort}(A)$ and
 $\mathsf{abort}(B)$ are both defined and keep different completions. MVTO's
 write rule aborts $A$ at once, with the output event that applies
-$\mathsf{abort}(A)$ and reports the abort, which is legal under
+$\mathsf{abort}(A)$ and reports the abort, which is commitment-sufficient under
 $\mathcal B_{\mathrm{MVTO}}$. That abort is the scheduler's choice between two
 outcomes the specification still permits. If instead the scheduler waits until
 $B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s abort
@@ -4833,7 +4834,8 @@ the injective maps
   \label{eq:tight-renaming}
 \end{equation}
 At $\{p\}$ the only output is $p\mapsto1$, and at $\{q\}$ it is $q\mapsto1$. Each has a \outnoun at $\{p,q\}$, so Relational Monotonicity does not fail
-here, but no injective map extends both. directed fibers also fails at
+here, but no injective map extends both. The specification also lacks directed
+fibers at
 $\{p,q\}$: $\{p\mapsto1,q\mapsto2\}$ and $\{p\mapsto2,q\mapsto1\}$ have no
 common \outnoun. The specification therefore fails Lifted Monotonicity, and
 by Corollary~\ref{cor:complete-cap-S} a partition separating $p$ and $q$ rules out

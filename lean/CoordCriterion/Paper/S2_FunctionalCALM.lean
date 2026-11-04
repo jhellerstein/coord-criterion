@@ -168,8 +168,9 @@ theorem «fig:nonmonotone-frame/matches-d» (k : Ballots) (r : Res) :
     Figures.Elec.panelD.R k r ↔ outputTable (canon elecEq bab) ⟨.bot⟩ k ⟨r⟩ :=
   Figures.Elec.panelD_matches_e k r
 
-/-- §2.1 "Output and consistency": "Hence `⊥` is a legal output in panels (a)
-and (b), and `a` in panel (c)." -/
+/-- §2.1 "Output and consistency": "An output is a *legal output* when every
+item in the future-output set extends it; no future output contradicts it.
+Hence `⊥` is a legal output in panels (a) and (b), and `a` in panel (c)." -/
 theorem «sec:election-story/exposable-panels» :
     Exposable (canon elec bad) .bot ∧ Exposable (canon elec bab) .bot ∧
       Exposable (canon elec baa) (.win .a) :=
@@ -182,8 +183,9 @@ theorem «sec:election-story/equality-order-commitment» :
     ¬ Exposable (canon elecEq bab) ⟨.bot⟩ :=
   fun h => (exposable_iff_empty _ _).1 h ⟨_, _, elecEq_bot_excludes⟩
 
-/-- §2.1: "The obstruction is a property solely of the table and its orders.
-Rows `(ab·,⊥)` and `(aba,a)` have the common input extension `aba`, but under
+/-- §2.1: "The need to issue a commitment is a property solely of the table and
+its orders.  Rows `(ab·,⊥)` and `(aba,a)` have the common input extension
+`aba`, but under
 the equality order no output at `aba` extends both outputs `⊥` and `a`." -/
 theorem «sec:election-story/obstruction» :
     elecEq.P bab ⟨.bot⟩ ∧ elecEq.P baba ⟨.win .a⟩ ∧ bab ≼ baba ∧ baba ≼ baba ∧
