@@ -116,32 +116,32 @@ that $x_o$ leaves.  Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
 \label{lem:canonical-commitment-normal-form}
 Let $(i,R)$ be a state and $o\in R(i)$.
 \begin{enumerate}
-  \item Every legal output event $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
+  \item Every commitment-sufficient output event $\Out{\gamma}{o}$ takes $(i,R)$ to some $(i,R')$ with
         $R'\subseteq R[\mathrm{out}\OutputGe o]$, and removes the rows in
         $\Excluded_o$ by \commitment.
-  \item The canonical event $\Out{\kappa_o}{o}$ is legal and takes $(i,R)$ to
-        $(i,R[\mathrm{out}\OutputGe o])$, so it retains every row that any legal
+  \item The canonical event $\Out{\kappa_o}{o}$ is commitment-sufficient and takes $(i,R)$ to
+        $(i,R[\mathrm{out}\OutputGe o])$, so it retains every row that any commitment-sufficient
         $\Out{\gamma}{o}$ retains.
-  \item If $\Out{\varepsilon}{o}$ is legal, it takes $(i,R)$
-        to $(i,R[\mathrm{out}\OutputGe o])$; it is legal exactly when $o$ is
+  \item If $\Out{\varepsilon}{o}$ is commitment-sufficient, it takes $(i,R)$
+        to $(i,R[\mathrm{out}\OutputGe o])$; it is commitment-sufficient exactly when $o$ is
         a legal output.
 \end{enumerate}
 \end{lemma}
 
 \begin{proof}
-(1) A legal event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
+(1) A commitment-sufficient output event ends at $R_c[\mathrm{out}\OutputGe o]\subseteq
 R[\mathrm{out}\OutputGe o]$, since its \commitments only remove rows.  A row in
 $\Excluded_o$ has no \outrelpart row in $R[\mathrm{out}\OutputGe
 o](k)$, and hence none in $R_c[\mathrm{out}\OutputGe o](k)$; it cannot be
-subsumed, so a legal event must remove it by \commitment.  (2) The canonical
+subsumed, so a commitment-sufficient output event must remove it by \commitment.  (2) The canonical
 \commitment removes exactly the rows in $\Excluded_o$, all
 of them ruled out by $o$, so $R_c[\mathrm{out}\OutputGe o]=R[\mathrm{out}\OutputGe
 o]$, which contains $(i,o)$.  Every remaining ruled-out row is in $\Subsumed_o$, and its
 \outrelpart row is not in $\Excluded_o$, so it
-survives the \commitment.  The event is therefore legal and ends at
-$R[\mathrm{out}\OutputGe o]$; by (1) no legal event keeps more.  (3) With no
-\commitment, $R_c=R$, and a legal event ends at $R[\mathrm{out}\OutputGe o]$.
-It is legal exactly when every ruled-out row is in $\Subsumed_o$, that is, when $\Excluded_o$ is empty, which makes $o$ a legal output.
+survives the \commitment.  The event is therefore commitment-sufficient and ends at
+$R[\mathrm{out}\OutputGe o]$; by (1) no commitment-sufficient output event keeps more.  (3) With no
+\commitment, $R_c=R$, and a commitment-sufficient output event ends at $R[\mathrm{out}\OutputGe o]$.
+It is commitment-sufficient exactly when every ruled-out row is in $\Subsumed_o$, that is, when $\Excluded_o$ is empty, which makes $o$ a legal output.
 \end{proof}
 
 \begin{definition}[Canonical system]
@@ -176,7 +176,7 @@ touches, so it empties.
 \begin{definition}[Run under a basis]
 \label{def:run-under-basis}
 Fix a \commitment basis $\mathcal B$.  A \emph{run under $\mathcal B$} is a
-finite transition sequence from a canonical state $\sigma_P(i)$ of input events, legal output events $\Out{\gamma}{o}$
+finite transition sequence from a canonical state $\sigma_P(i)$ of input events, commitment-sufficient output events $\Out{\gamma}{o}$
 (Definition~\ref{def:system-output-event}), and \commitment events
 (Definition~\ref{def:commitment-event}) that use only \commitments from
 $\mathcal B$.
@@ -207,13 +207,13 @@ event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$.
 It causes the table to lose every row whose input does not \inrelbase $j$, keeping
 $R[\mathrm{in}\InputGe j]$ in the original run and
 $\widehat R[\mathrm{in}\InputGe j]$ in the canonical run.  Since
-$R\subseteq\widehat R$, the first remains contained in the second.  For a legal
+$R\subseteq\widehat R$, the first remains contained in the second.  For a commitment-sufficient
 output event $\Out{\gamma}{o}$ with $o\in R(i)$ taking $R$ to $R'$, containment
 (Lemma~\ref{lem:canonical-commitment-normal-form}(1)) gives
 $R'\subseteq R[\mathrm{out}\OutputGe o]$.  Since
 $o\in R(i)\subseteq\widehat R(i)$, canonical support
 (Lemma~\ref{lem:canonical-commitment-normal-form}(2)) applies at $\widehat R$:
-$\Out{\kappa_o}{o}$, with $\kappa_o$ taken at $(i,\widehat R)$, is legal and
+$\Out{\kappa_o}{o}$, with $\kappa_o$ taken at $(i,\widehat R)$, is commitment-sufficient and
 takes $\widehat R$ to $\widehat R[\mathrm{out}\OutputGe o]$, which contains
 $R[\mathrm{out}\OutputGe o]$.  A \commitment event keeps the current input and
 only removes rows, so the canonical run skips it and the inclusion still

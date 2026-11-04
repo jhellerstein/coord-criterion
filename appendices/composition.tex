@@ -187,7 +187,7 @@ $\{(*,x),(*,y)\}$ with $x,y$ incomparable, and let $\mathcal S_2$ be the
 functional specification induced by a function $f$ that maps
 both to one value.  The composite has one row, so it satisfies Lifted
 Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
-a legal output, and under the empty basis an output event is legal only for a
+a legal output, and under the empty basis an output event is commitment-sufficient only for a
 legal output (Lemma~\ref{lem:canonical-commitment-normal-form}), and no
 \commitment event is possible, since its sequence is nonempty.  Input
 events only remove rows at other inputs, and there are none, so every run of
@@ -258,7 +258,7 @@ current input of $\Spec_2|_{\Spec_1}$.  Both hold at the start, where the
 image of $\sigma_{\Spec_1}(i)$ is $\sigma_{P_2\circ P_1}(i)$.  For
 $\mathsf{input}(j)$ of $\Spec_1$, a row $(j,m)$ of $R_\sigma$ and, by the first
 fact, a row $(m,x)$ of $T$ give $(j,x)\in R_\rho$, so the input is legal, and
-both events keep the rows at \indescs of $j$.  For a legal $\Out{\gamma}{m}$
+both events keep the rows at \indescs of $j$.  For a commitment-sufficient $\Out{\gamma}{m}$
 at input $i$, containment gives $(i,m)\in R_\sigma$ and a resulting table
 inside $R_\sigma[\mathrm{out}\succeq_M m]$.  $\Spec_2|_{\Spec_1}$ receives $m$
 and keeps $T[\mathrm{in}\succeq_M m]$.  Each answer $o$ has $(m,o)\in T$, so
@@ -306,7 +306,7 @@ Let $\tau$ be a state of the original and $\tau'$ a state of the replacement
 reached without \commitment, with the same current input and $R_\tau\subseteq
 R_{\tau'}$.  If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
 $j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
-the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is legal at $\tau$, then $x$
+the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is commitment-sufficient at $\tau$, then $x$
 is at the current input of $\tau$ and so of $\tau'$, where it is a legal output by
 the second fact.  Containment (Lemma~\ref{lem:canonical-commitment-normal-form})
 puts the original's resulting table inside $R_\tau[\mathrm{out}\OutputGe x]$,
@@ -373,7 +373,7 @@ $f(\sigma)$.
 
 The proof covers the composite's \commitments by those of $\Spec_1$.  For a
 table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
-$\Out{\gamma}{m}$ be legal at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
+$\Out{\gamma}{m}$ be commitment-sufficient at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
 $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
 $(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is not in $\Excluded_{f(m)}$ at
 $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
@@ -554,7 +554,7 @@ their own, and they may issue \commitments of their own.
 (1) The two runs of a feed certify $(i,m)\in P_1$ and $(m,o)\in P_2$.
 
 (2) A run that applies no \commitment has no \commitment event, and each of its
-output events is $\Out{\varepsilon}{o}$, which is legal exactly when $o$ is
+output events is $\Out{\varepsilon}{o}$, which is commitment-sufficient exactly when $o$ is
 a legal output.
 
 (3) The early-lock store above, fed by a log, is contract-proper, since the

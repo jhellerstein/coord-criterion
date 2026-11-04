@@ -35,13 +35,13 @@ rows at $k$.
   monotone (functional) & $i\InputOrd j\Rightarrow f(i)\OutputOrd f(j)$ & Def.~\ref{def:functional-monotonicity}\\
   selection; $\mathrm{in}(R)$, $\mathrm{out}(R)$ & $R[\text{predicate on }\mathrm{in},\mathrm{out}]$; inputs and outputs in $R$ & Sec.~\ref{sec:functional-specifications}\\
   row at $k$; fiber $R(k)$ & a row $(k,u)$; $\mathrm{out}(R[\mathrm{in}=k])$ & Sec.~\ref{sec:functional-specifications}\\
-  upper fiber & $\mathrm{out}(R[\mathrm{in}\InputGe k])$ & Sec.~\ref{sec:functional-specifications}\\
+  future-output set & $\mathrm{out}(R[\mathrm{in}\InputGe k])$ & Sec.~\ref{sec:functional-specifications}\\
   state $(i,R)$; legal input & current input and remainder table, every row at an \indesc of $i$; an input with a row in $R$ & Def.~\ref{def:residual-state}\\
   canonical state & $\sigma_P(i)=(i,P[\mathrm{in}\InputGe i])$ & Eq.~\ref{eq:canonical-state}\\
   input event; input loss & $\mathsf{input}(j)$ keeps $R[\mathrm{in}\InputGe j]$; the rows it removes & Eq.~\ref{eq:input-event}\\
   output event; \commitment & $\mathsf{output}(o)$ keeps $R[\mathrm{out}\OutputGe o]$ and emits $o$; when it removes rows, that removal is a \commitment & Def.~\ref{def:output-event}\\
   legal output & $\mathsf{output}(o)$ applies no \commitment & Def.~\ref{def:exposable}\\
-  determined; determination & the upper fiber has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
+  determined; determination & the future-output set has one element; reaching such a state & Sec.~\ref{sec:functional-events}\\
   run; \commitment-free & finite sequence of specification events from a canonical state; no output event issues a \commitment & Def.~\ref{def:run}\\
   consistent; confluent at $j$ & every finite family of runs can reach one common state at each common \indesc $j$ & Def.~\ref{def:consistency}\\
   \bottomrule
@@ -56,7 +56,7 @@ rows at $k$.
   \spectype; nondeterministic & $P\subseteq I\times O$ total on $I$; some fiber has several outputs & Def.~\ref{def:relational-specification}\\
   stranded output; incompatible pair & an output at $i$ with no \outnoun at some \indesc; two outputs at $i$ with no common \outnoun there & Sec.~\ref{sec:lifted-monotonicity}\\
   Relational Monotonicity & every output keeps a \outnoun as input \ingrows & Def.~\ref{def:relational-monotonicity}\\
-  compatible in $F$; directed; Directed Outputs & some $u\in F$ \outrel all; every finite subset compatible; every fiber directed & Def.~\ref{def:fiber-directedness}\\
+  compatible in $F$; directed; directed fibers & some $u\in F$ \outrel all; every finite subset compatible; every fiber directed & Def.~\ref{def:fiber-directedness}\\
   joint lift $A\LiftedOrd B$ & every nonempty finite $X\subseteq A$ is compatible in $B$ & Eq.~\ref{eq:joint-output-order}\\
   Lifted Monotonicity & $i\InputOrd j\Rightarrow\fiber{i}\LiftedOrd\fiber{j}$ & Def.~\ref{def:lifted-monotonicity}\\
   common-\indesc condition & rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$ & Def.~\ref{def:common-expansion-condition}\\
@@ -82,7 +82,7 @@ rows at $k$.
   \commitment & partial function on states removing rows, none \outrelpast by a remaining row at the same input & Def.~\ref{def:commitment}\\
   local history; strategy & $p$'s history events in order; $\theta_p(\lambda)$, the output, \commitment, and send events $p$ may perform next & Def.~\ref{def:strategy}\\
     system; basis; produced & a \commitment basis $\mathcal B$ and a strategy per participant; every event other than an input or receive permitted by its strategy and using only \commitments from $\mathcal B$ & Def.~\ref{def:system}\\
-  system output event $\Out{\gamma}{o}$ & applies \commitments $\gamma$, subsumes, emits $o$ & Def.~\ref{def:system-output-event}\\
+  system output event $\Out{\gamma}{o}$; commitment-sufficient & applies \commitments $\gamma$, subsumes, and emits $o$; applying $\gamma$ leaves $o$ legal & Def.~\ref{def:system-output-event}\\
   \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments, emits nothing & Def.~\ref{def:commitment-event}\\
   run under a basis; canonical run & specification events whose \commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitments and \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\

@@ -184,13 +184,13 @@ $\mathsf{stamp}(B)$ in \commitment events and reports that $B$ read the initial
 version of $x$.  Reporting the read is not a legal output on its own, since at an
 input in which $A$ writes $x$ the row that commits $A$ and then $B$ cannot be
 completed with it; the output event that applies $\mathsf{read}$ and then
-reports the read is legal under $\mathcal B_{\mathrm{MVTO}}$.  After $A$'s
+reports the read is commitment-sufficient under $\mathcal B_{\mathrm{MVTO}}$.  After $A$'s
 write arrives, two completions remain at the input in which both then request
 commit: $B$ committed with $A$ aborted, and $A$ committed with $B$ aborted.
 Emitting $A$'s abort is not a legal output, and $\mathsf{abort}(A)$ and
 $\mathsf{abort}(B)$ are both defined and keep different completions.  MVTO's
 write rule aborts $A$ at once, with the output event that applies
-$\mathsf{abort}(A)$ and reports the abort, which is legal under
+$\mathsf{abort}(A)$ and reports the abort, which is commitment-sufficient under
 $\mathcal B_{\mathrm{MVTO}}$.  That abort is the scheduler's choice between two
 outcomes the specification still permits.  If instead the scheduler waits until
 $B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s abort
