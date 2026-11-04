@@ -183,29 +183,28 @@ available during partition, and whether invariant confluence differs from CALM
 We now turn to unifying these ideas under a single formalism.
 
 \subsection{The Model: \Spectype[s]}
-In systems, as in life,
-possibilities narrow over time.  Sometimes the world moves on,
-and possibilities are lost to us.  Other choices are left for us to decide, with
-varying consequences.  Incidental decisions close no doors: each possibility they
-remove is covered by some alternative. Fateful decisions
-are the ones that matter: they exclude a possibility that nothing
-remaining can cover.  Can we say which scenarios require
-fateful decisions?
+In systems, as in life, our possibilities narrow over time. Sometimes the world
+moves on, and possibilities are lost to us. Sometimes possibilities disappear
+because we must decide among them. A decision is incidental when
+every possibility it removes is covered by an alternative that remains. A
+decision is fateful when it rules out a possibility that no remaining
+alternative can cover. When must a system make a fateful decision?
 
-We ground the problem in a simple declarative model of \spectype[s],
-independent of any language, protocol, or placement. The designer of a
-specification provides a \emph{possibility relation} $P\subseteq
-I\times O$: a table that may be infinite, like a mathematical function. Each row in
-this table is a possibility observable from the outside: it pairs a cumulative input to a
-permitted output. The design includes the input domain $I$ and output domain
-$O$, with partial orders that help capture the specification's semantics.  On
-inputs, $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input from the
-environment.  On outputs, $u\OutputGe o$ means that $u$ subsumes all
-specification-relevant information in $o$; we say
-$u$ \emph{\outrel} $o$.  A \emph{\commitment} is an irrevocable, fateful system decision,
-removing one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
-$o\OutputOrd u$: the output $o$ is no longer covered by any $u$,
-and its possibility is gone.
+We ground the problem in a simple model of \emph{\spectype[s]}, independent of
+any language, protocol, or placement. The designer of a specification provides a
+\emph{possibility relation} $P\subseteq I\times O$: a virtual table that may be
+infinite, like a mathematical function. Each row in this table is a possibility
+observable from the outside: it pairs a cumulative input to a permitted output.
+The design includes the input domain $I$ and output domain $O$, with partial
+orders that help capture the specification's semantics.  On inputs, the order is
+accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
+from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
+means that  $u$ \emph{\outrel} $o$ by subsuming all specification-relevant
+information in $o$. These are both application-specific notions that must be
+captured well for a specification to be faithful. A \emph{\commitment} is an
+irrevocable, fateful system decision, removing one or more rows
+$(i,o)$ for which no remaining row $(i,u)$ has $o\OutputOrd u$: the output $o$
+is no longer covered by any $u$, and its possibility is gone.
 
 State-machine-style specifications can be projected into this form, skipping
 operational details that are not externally observable (\S\ref{sec:scope}).
@@ -224,7 +223,7 @@ Our monotonicity criterion requires more care: it must capture the full
 expressivity of our model. It comes via two invariants. The first is always
 required; the second addresses nondeterministic specifications.
 
-\emph{1. Learn and refine.} As execution progresses, input grows: the system learns more from
+\emph{Learn and refine.} As execution progresses, input grows: the system learns more from
 the environment.
 For specifications that permit only one output at each input, the possibility table is a function
 and monotonicity is standard: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.
@@ -239,7 +238,7 @@ monotonicity in this setting.
 % out later input which could contradict it.  The result covers the relational query
 % languages of prior CALM papers, and the usual CRDT state specification.
 
-\emph{2. Choose and align.} Prior work on CALM and CRDTs addresses functional
+\emph{Choose and align.} Prior work on CALM and CRDTs addresses functional
 settings. \emph{Nondeterministic specifications}, including leader election and transaction
 scheduling, are not functions: many outputs are within spec for a given input.
 This requires an additional monotonicity invariant.  When many runs of a system
@@ -259,22 +258,29 @@ Lifted Monotonicity exactly characterizes specifications that can keep every
 permitted output available and confluent during a partition.  The
 Gilbert--Lynch theorem follows directly.
 
-\paragraph{Contributions.}
+\subsection{Contributions}
 We make contributions in three categories:
-\begin{enumerate}
-  \item \emph{A unified model.} The observable behavior of a system is captured via \spectype[s]: a possibility relation over
-        ordered input and output domains. Consistency is defined as confluence, uniformly capturing general
-        consistency models, application-specific requirements, and distributed consistency.
-  \item \emph{A unified criterion.} For functions between ordered domains,
+
+\noindent
+\emph{1. A unified model.} A system's observable behavior is captured via
+        \spectype[s]. Consistency is defined as
+        confluence of the runs a specification allows, unifying general consistency models,
+        application-specific requirements, and distributed consistency.
+
+\noindent
+\emph{2. A unified criterion.} For functions between ordered domains,
         Functional CALM shows that consistency is equivalent to monotonicity. For nondeterministic specifications,
         we prove Complete CALM: Consistency As Lifted Monotonicity. Complete CAP is a corollary:
-        the tradeoff holds only under failure of Lifted Monotonicity.
-  \item \emph{\Commitments, Composition and Proper Coordination.} We define \commitments to capture how
+        the CAP tradeoff holds only under failure of Lifted Monotonicity.
+
+\noindent
+\emph{3. \Commitments, Composition and Proper Coordination.} We define \commitments to capture how
         systems exclude possibilities that are not covered by alternatives. We then show how specifications
         compose by equijoin, so that, in composition, upstream
         stages can free downstream stages from issuing \commitments.
-\end{enumerate}
 
+\vspace{0.5em}
+\noindent
 The full paper~\cite{hellerstein2026completecalmfull} gives further
 intuition, proofs, and applications.
 
@@ -364,7 +370,7 @@ when an output can be emitted without \commitment.
     \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
-  \caption{The election specification and three states reached from it, showing rows
+  \caption{The election specification and three states reached from it, limited to rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
   input and its future-output set.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
@@ -374,7 +380,7 @@ when an output can be emitted without \commitment.
 \end{figure*}
 
 We introduce the framework with a small election, illustrated in
-Figure~\ref{fig:election-frames}.  Each row of the specification table pairs
+Figure~\ref{fig:election-frames}.  Each row of the possibility table pairs
 the ballots received so far with the permitted result; the column orders
 say how inputs \ingrow and which later outputs \outrelbase earlier ones.
 
@@ -384,10 +390,11 @@ is no winner.  An input is the ballots received so far, written as a
 three-character string with a dot for a ballot not yet received.  For brevity,
 the figure shows only inputs \inrelpart $a\cdot\cdot$.
 
-The two orders are where a designer makes decisions.  The \emph{input order}
-records accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
+The two orders require thoughtful design.  The \emph{input order}
+must record accumulated ballots, one per voter: $ab\cdot$ \inrel $a\cdot\cdot$, while
 $aa\cdot$ and $ab\cdot$ are incomparable.  The \emph{output order} says which
-announcements are safe to build on: $\bot$ claims nothing, so either winner
+announcements are safe to build on: $\{\bot \OutputOrd a, \bot \OutputOrd b\}$. 
+$\bot$ claims nothing, so either winner
 \outrel it, while $a$ and $b$ are incomparable.  In general, the functional table is \emph{monotone}
 when
 \[
@@ -397,26 +404,26 @@ Here, for example, the input sequence $a\cdot\cdot\InputOrd ab\cdot\InputOrd aba
 monotonically produces the output sequence $\bot\OutputOrd\bot\OutputOrd a$.
 
 \paragraph{Input and determination.}
-Each panel captures the specification state: a pair of a \emph{current input}
+Each panel of Figure~\ref{fig:election-frames} captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
 still possible from that input.  When $v_2$'s ballot for $b$ arrives, the input event
-$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to lose rows whose inputs no
+$\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to passively lose rows whose inputs no
 longer \inrelbase the ballots received; such inputs are now illegal.  The
 \emph{future-output set} consists of the outputs in the remaining rows at the
 current input and its \indescs: in panel~(b),
 $\{\bot,a,b\}$.
 If $v_2$ instead votes for $a$ (panel~(c)), the future-output set is $\{a\}$.  The state
-is \emph{determined}: input alone resolved the outcome, without \commitment.
+is \emph{determined}; in this case input alone resolved the outcome, without \commitment.
 
 Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
 (\S\ref{sec:systems}).  In this example, the system acts as a registrar, emitting $\bot$
 and closing the polls at
 $ab\cdot$ in the same output event.  Its irrevocable \emph{\commitment}
-removes the still-possible $aba$ and $abb$ rows but leaves the current input
+to close the polls removes the still-possible $aba$ and $abb$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no \commitment, since every output still possible \outrel it;
-closing the polls is a further decision by the system, not something the
+closing the polls is a further fateful decision by the system, not something the
 specification requires.
 
 \begin{figure}[t]
@@ -456,14 +463,14 @@ specification requires.
 \end{figure}
 
 \paragraph{Output and consistency.}
-In a functional table, an output $o$ is a \emph{legal output} when every
-output that could occur in future \outrel it---the entire future-output set of the
-current input.  Hence $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  The atomic output event
-$\mathsf{output}(o)$ empties any legal input whose output does not \outrelbase
-$o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
-from then on, only rows whose outputs \outrelbase $o$ remain.  The emission
-matters because the environment is powerful and unpredictable; it may use $o$
-when choosing later input.
+In a functional table, an output is a \emph{legal output} when every item in
+the future-output set \outrel it; no future output contradicts it.  Hence $\bot$ is legal
+in panels~(a) and~(b), and $a$ in panel~(c). 
+At the time of
+emission, an output must be legal; otherwise the environment could act on a value that
+is later contradicted.
+The output event \(\mathsf{output}(o)\) therefore atomically empties any legal input whose
+output does \emph{not} extend \(o\), then emits \(o\). 
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
@@ -474,7 +481,7 @@ miniature: the original order is monotone, so later outputs \outrelbase every
 earlier one; under the equality order, some outputs can be emitted
 only with a \commitment.
 
-The obstruction is a property solely of the table and its orders.  Rows $(ab\cdot,\bot)$ and
+The need to issue a \commitment is a property solely of the table and its orders.  Rows $(ab\cdot,\bot)$ and
 $(aba,a)$ have the common \indesc $aba$, but under the equality
 order no output at $aba$ \outrel both outputs $\bot$ and $a$.  A run that emits
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.
