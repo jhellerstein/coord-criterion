@@ -30,7 +30,7 @@ abbrev «eq:commitment-removals» {sp : Spec I O} (σ : State sp) (o : O) : Tabl
   Excluded σ o
 
 /-- **Def. `def:lifted-output-event`**.  The output event keeps exactly the rows
-whose outputs refine `o`; removed rows with a surviving output extension are removed
+whose outputs extend `o`; removed rows with a surviving output extension are removed
 by output subsumption. -/
 abbrev «def:lifted-output-event» {sp : Spec I O}
     (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp :=

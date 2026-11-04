@@ -8,7 +8,7 @@ the replicated store with bare reads.
 \subsection{Sequential composition}
 
 \begin{proof}[Proof of Lemma~\ref{lem:composition}]
-We verify the common-\indesc condition
+We verify the common-extension condition
 (Proposition~\ref{prop:common-expansion-form}).  Let rows $(i_r,o_r)$ of
 $P_2\circ P_1$, finitely many, have common \indesc $j$, and choose $m_r$ with
 $(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The condition for $\Spec_1$ gives
@@ -70,7 +70,7 @@ with table $G\star F$ satisfies Lifted Monotonicity.
 \begin{proof}
 Let rows $((i_r,j_r,a_r),c_r)$, finitely many, have common \indesc $(i,j,a)$,
 with witnesses $b_r$ from Equation~\ref{eq:parameterized-composition}.  The
-common-\indesc condition for $\Spec_F$ at $(i,a)$ gives $b\in F(i,a)$
+common-extension condition for $\Spec_F$ at $(i,a)$ gives $b\in F(i,a)$
 \outrelpart every $b_r$.  Then $(j,b)$ is a common \indesc of the
 $(j_r,b_r)$, and the condition for $\Spec_G$ gives $c\in G(j,b)$ \outrelpart
 every $c_r$.  So $((i,j,a),c)\in G\star F$ is the required common \outnoun.
@@ -126,7 +126,7 @@ empty-basis guard, and by induction no stage of the pipeline issues a \commitmen
 
 (2) Let $D$ contain the outputs of $\Spec_1$.  Take rows $(i_r,o_r)$ of $P_2\circ
 P_1$ with a common \indesc $j$, and intermediate values $m_r$ with
-$(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The common-\indesc condition for
+$(i_r,m_r)\in P_1$ and $(m_r,o_r)\in P_2$.  The common-extension condition for
 $\Spec_1$ gives $m\in P_1(j)$ that \outrel every $m_r$.  All of $m_r$ and $m$
 lie in $D$, so the condition for $\Spec_2$ on $D$ gives $o\in P_2(m)$ that
 \outrel every $o_r$, and $(j,o)\in P_2\circ P_1$.  No closure property of $D$
@@ -219,7 +219,7 @@ and the outputs of $\Spec_2|_{\Spec_1}$.
 In a proper pipeline, two facts about a state $\tau$ that
 $\Spec_2|_{\Spec_1}$ reaches without \commitment carry the proofs.  First,
 every input $j\succeq_M\tau.\mathrm{cur}$ has a row in $\tau$: the
-common-\indesc condition gives $u\in P_2(j)$ that \outrel an output $v$ at the
+common-extension condition gives $u\in P_2(j)$ that \outrel an output $v$ at the
 current input, and $(j,u)$ survives, since every output emitted so far is
 \outrelpast by $v$.  Second, every output at the current input is a legal output.
 A third fact concerns $\Spec_1$.  If an output $m$ at the current input of a
@@ -227,7 +227,7 @@ state $\sigma$ of $\Spec_1$ is a legal output, every $o\in P_2(m)$ is a legal
 output at the image of $\sigma$.  Indeed,
 let $(k,x)$ be a row of the image not \outrelpast by $o$, coming from
 $(k,m')\in R_\sigma$ and $(m',x)\in P_2$.  If $m\preceq_M m'$, the
-common-\indesc condition on the outputs of $\Spec_1$, for the rows $(m,o)$ and
+common-extension condition on the outputs of $\Spec_1$, for the rows $(m,o)$ and
 $(m',x)$ at $m'$, gives $u\in P_2(m')$ with $o,x\OutputOrd u$.  Otherwise
 legality gives $(k,w)\in R_\sigma$ with $m,m'\preceq_M w$, and the
 condition at $w$ gives $u\in P_2(w)$.  Either way $(k,u)$ is a row of the
@@ -272,13 +272,13 @@ $\tau_1,\ldots,\tau_n$, and the composite runs at $\rho_1,\ldots,\rho_n$, and
 let each $\sigma_r$ continue under some basis to a common state with a row
 $(j,m)$.  Events never add rows, so $(j,m)\in R_{\sigma_r}$, and $m$ is above
 the current input of each $\tau_r$.  Let $v_r$ be an output at the current
-input of $\tau_r$.  The common-\indesc condition gives $u\in P_2(m)$ that
+input of $\tau_r$.  The common-extension condition gives $u\in P_2(m)$ that
 \outrel every $v_r$, and $(m,u)$ survives in every $\tau_r$.  So $(j,u)\in
 R_{\rho_r}$ for every $r$, and the composite runs are confluent at $j$
 (Proposition~\ref{prop:confluence}).
 
 (3) The proof of Proposition~\ref{prop:exposure-boundary} derives the
-common-\indesc condition from legality at canonical states alone.  If
+common-extension condition from legality at canonical states alone.  If
 Lifted Monotonicity fails for $P_2\circ P_1$, some $o$ with $(i,m)\in P_1$ and
 $o\in P_2(m)$ is therefore not a legal output at $\sigma_{P_2\circ P_1}(i)$, the
 image of $\sigma_{\Spec_1}(i)$.  By the third fact, no $m'\in P_1(i)$ with

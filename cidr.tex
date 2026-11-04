@@ -32,25 +32,25 @@
 \newcommand{\LiftedOrd}{\trianglelefteq}
 % Order vocabulary (role-based names; change the words here).
 % Input order:  "j \inrel i" means i \InputOrd j (non-strict); inputs \ingrow;
-%   a common \indesc of inputs \inrel each of them (articles: "an \indesc").
-% Output order: "u \outrel o" means o \OutputOrd u; a common \outnoun of
-%   outputs refines each of them.
-\newcommand{\inrel}{expands\xspace}     % relation, 3rd person
-\newcommand{\inrelbase}{expand\xspace}  % relation, base form
-\newcommand{\inrelpart}{expanding\xspace}% relation, participle
-\newcommand{\inrelpast}{expanded\xspace}% relation, past participle
-\newcommand{\ingrows}{expands\xspace}        % growth, 3rd person
-\newcommand{\ingrow}{expand\xspace}          % growth, base form
-\newcommand{\inmore}{more expanded\xspace}    % informal comparative
-\newcommand{\indesc}{expansion\xspace}      % noun
-\newcommand{\indescs}{expansions\xspace}
-\newcommand{\Indesc}{Expansion\xspace}
-\newcommand{\outrel}{refines\xspace}         % relation, 3rd person
-\newcommand{\outrelbase}{refine\xspace}      % relation, base form
-\newcommand{\outrelpart}{refining\xspace}    % relation, participle
-\newcommand{\outrelpast}{refined\xspace}     % relation, past participle
-\newcommand{\outnoun}{refinement\xspace}     % noun
-\newcommand{\outnouns}{refinements\xspace}
+%   a common \indesc \inrel each input (articles: "an \indesc").
+% Output order: "u \outrel o" means o \OutputOrd u; a common \outnoun
+%   \outrel each output.
+\newcommand{\inrel}{extends\xspace}          % relation, 3rd person
+\newcommand{\inrelbase}{extend\xspace}       % relation, base form
+\newcommand{\inrelpart}{extending\xspace}    % relation, participle
+\newcommand{\inrelpast}{extended\xspace}     % relation, past participle
+\newcommand{\ingrows}{grows\xspace}          % growth, 3rd person
+\newcommand{\ingrow}{grow\xspace}            % growth, base form
+\newcommand{\inmore}{more extended\xspace}   % informal comparative
+\newcommand{\indesc}{input extension\xspace} % noun
+\newcommand{\indescs}{input extensions\xspace}
+\newcommand{\Indesc}{Input extension\xspace}
+\newcommand{\outrel}{extends\xspace}          % relation, 3rd person
+\newcommand{\outrelbase}{extend\xspace}       % relation, base form
+\newcommand{\outrelpart}{extending\xspace}    % relation, participle
+\newcommand{\outrelpast}{extended\xspace}     % relation, past participle
+\newcommand{\outnoun}{output extension\xspace}% noun
+\newcommand{\outnouns}{output extensions\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
 % The name of the specification model; optional suffix supports \spectype[s].
@@ -310,7 +310,7 @@ when an output can be emitted without \commitment.
     $a\cdot a$ & \sh{$a$} \\
     $a\cdot b$ & \sh{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot,a,b\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -327,7 +327,7 @@ when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot,a,b\}$; undetermined}\\
+    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot,a,b\}$; undetermined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -344,7 +344,7 @@ when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{a\}$; determined}\\
+    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{a\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $a$ needs no \commitment}
   \end{tabular}
   \hfill
@@ -361,12 +361,12 @@ when an output can be emitted without \commitment.
     \grayrow{$a\cdot a$} & \grayrow{$a$} \\
     \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
     \bottomrule
-    \multicolumn{2}{@{}l}{\footnotesize upper fiber $\{\bot\}$; determined}\\
+    \multicolumn{2}{@{}l}{\footnotesize future-output set $\{\bot\}$; determined}\\
     \multicolumn{2}{@{}l}{\footnotesize $\bot$ is the result}
   \end{tabular}
   \caption{The election specification and three states reached from it, showing rows
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
-  input and its upper fiber.  Gray: lost after an input event; struck
+  input and its future-output set.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
   and (c) follow input events.  In (d) the registrar emits $\bot$ and also
   applies a \commitment that $\mathsf{output}(\bot)$ alone does not require.}
@@ -401,10 +401,11 @@ Each panel captures the specification state: a pair of a \emph{current input}
 and a \emph{remainder table} of rows
 still possible from that input.  When $v_2$'s ballot for $b$ arrives, the input event
 $\mathsf{input}(ab\cdot)$ produces panel~(b), causing the table to lose rows whose inputs no
-longer \inrelbase the ballots received; such inputs are now illegal.  The \emph{upper fiber} is the set of
-outputs in the remaining rows at the current input and its \indescs: in panel~(b),
+longer \inrelbase the ballots received; such inputs are now illegal.  The
+\emph{future-output set} consists of the outputs in the remaining rows at the
+current input and its \indescs: in panel~(b),
 $\{\bot,a,b\}$.
-If $v_2$ instead votes for $a$ (panel~(c)), the upper fiber is $\{a\}$.  The state
+If $v_2$ instead votes for $a$ (panel~(c)), the future-output set is $\{a\}$.  The state
 is \emph{determined}: input alone resolved the outcome, without \commitment.
 
 Panel~(d), by contrast, involves the \emph{system}: the implementation that
@@ -445,7 +446,7 @@ specification requires.
       \grayrow{$a\cdot b$} & \grayrow{$\bot$} \\
       \bottomrule
     \end{tabular*}
-    {\footnotesize upper fiber $\{\bot\}$; determined}
+    {\footnotesize future-output set $\{\bot\}$; determined}
   \end{minipage}\par\smallskip
   \end{minipage}
   \caption{Panel (b) under the equality order, after $\mathsf{output}(\bot)$, wrapped
@@ -456,7 +457,7 @@ specification requires.
 
 \paragraph{Output and consistency.}
 In a functional table, an output $o$ is a \emph{legal output} when every
-output that could occur in future \outrel it---the entire upper fiber of the
+output that could occur in future \outrel it---the entire future-output set of the
 current input.  Hence $\bot$ is legal in panels~(a) and~(b), and $a$ in panel~(c).  The atomic output event
 $\mathsf{output}(o)$ empties any legal input whose output does not \outrelbase
 $o$, then emits $o$, in one transition.  Emitting $o$ is a promise:
@@ -474,7 +475,7 @@ earlier one; under the equality order, some outputs can be emitted
 only with a \commitment.
 
 The obstruction is a property solely of the table and its orders.  Rows $(ab\cdot,\bot)$ and
-$(aba,a)$ have the common input \indesc $aba$, but under the equality
+$(aba,a)$ have the common \indesc $aba$, but under the equality
 order no output at $aba$ \outrel both outputs $\bot$ and $a$.  A run that emits
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.
 
@@ -509,8 +510,8 @@ the input information in $i$.  We say that $j$ \emph{\inrel} $i$, or is an
 \emph{\indesc} of $i$.  We call $\OutputOrd$ the \emph{output order}:
 $o\OutputOrd u$ means that $u$ preserves every externally visible claim in $o$
 and may add more, and we say that $u$ \emph{\outrel} $o$.  A \emph{common
-\indesc} of inputs is an input that \inrel each of them, and a \emph{common
-\outnoun} of outputs is an output that \outrel each of them.  Neither need be
+\indesc} $j$ of $i_1,\ldots,i_k$ is an input that \inrel every $i_r$, and a
+\emph{common \outnoun} of $o_1,\ldots,o_k$ is an output that \outrel each $o_r$.  Neither need be
 unique or least: for example, two independent transactions $u$ and $v$, with schedules
 ordered by subsequence, have two incomparable minimal common \indescs, $uv$
 and $vu$.
@@ -545,7 +546,7 @@ and its \indescs:
   \label{eq:canonical-state}
 \end{equation}
 The \emph{fiber} of $R$ at $k$ is $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The
-\emph{upper fiber} of $(i,R)$ is $\mathrm{out}(R)$, and the state is \emph{determined} when it has one element.
+\emph{future-output set} of $(i,R)$ is $\mathrm{out}(R)$, and the state is \emph{determined} when it has one element.
 
 \paragraph{Events.}
 For a state $(i,R)$ and a legal input $j$, the \emph{input event}
@@ -873,14 +874,14 @@ For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 
 Second, we rule out incompatible pairs.
 
-\begin{definition}[Directed fiber, Directed Outputs]
+\begin{definition}[Directed fiber, directed fibers]
 \label{def:fiber-directedness}
 A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
-$X\subseteq F$ is compatible in $F$.  An \spectype has
-\emph{Directed Outputs} when every fiber $\fiber{i}$ is directed.
+$X\subseteq F$ is compatible in $F$.  An \spectype has \emph{directed fibers} when every fiber
+$\fiber{i}$ is directed.
 \end{definition}
 
-A singleton fiber is trivially directed.  As with common \indescs of inputs, a
+A singleton fiber is trivially directed.  As with common \indescs, a
 common \outnoun need not be
 least: directedness requires some upper bound within the fiber for each finite
 set, not a least one or a fixed merge operator, so it is weaker than a
@@ -891,7 +892,7 @@ join-semilattice.  For example, the fiber
 under inclusion is directed, since $\{a,b,c,d\}$ \outrel every member, yet $\{a\}$ and $\{b\}$ have two
 incomparable minimal common \outnouns.  Thus
 the traceroute fiber is directed: the union of finitely many route sets in
-it is again in the fiber and refines each. The two transaction orders in
+it is again in the fiber and extends each. The two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.
 
 \paragraph{Lifted Monotonicity.}
@@ -924,19 +925,19 @@ under the joint lift:
 
 With singleton fibers it is functional monotonicity
 (Definition~\ref{def:functional-monotonicity}). Lifted
-Monotonicity holds exactly when Relational Monotonicity and Directed Outputs
+Monotonicity holds exactly when Relational Monotonicity and directed fibers
 both do.
 
-\paragraph{The common-\indesc condition.}
+\paragraph{The common-extension condition.}
 Lifted Monotonicity compares an input with its
-own expansions. Runs may emit outputs at incomparable inputs, say
+own input extensions. Runs may emit outputs at incomparable inputs, say
 $o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
 \indesc $j$ of both. The next condition asks exactly that: a common
 \outnoun of $o_1$ and $o_2$ in the fiber at $j$.
 
-\begin{definition}[Common-\indesc condition]
+\begin{definition}[Common-extension condition]
 \label{def:common-expansion-condition}
-An \spectype satisfies the \emph{common-\indesc condition} when,
+An \spectype satisfies the \emph{common-extension condition} when,
 for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
 common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
 $o_r$.
@@ -945,16 +946,16 @@ $o_r$.
 For the empty set of rows the condition asks only that $P(j)$ be nonempty, which
 follows from $P$ being total on $I$.
 
-\begin{proposition}[Common-\indesc form of Lifted Monotonicity]
+\begin{proposition}[Common-extension form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
 An \spectype satisfies Lifted Monotonicity if and only
-if it satisfies the common-\indesc condition.
+if it satisfies the common-extension condition.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
 Relational Monotonicity carries each $o_r$ to some
-\outnoun in the fiber at $j$, and Directed Outputs gives those a common
-\outnoun there.  \fullproof
+\outnoun in the fiber at $j$, and directedness of that fiber gives those a
+common \outnoun there.  \fullproof
 \end{proof}
 
 \subsection{Lifted output events}
@@ -996,11 +997,11 @@ reduces to Lifted Monotonicity.
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
 An \spectype is consistent if and only if it satisfies Lifted
-Monotonicity, equivalently the common-\indesc condition.
+Monotonicity, equivalently the common-extension condition.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
-If the common-\indesc condition holds, a common \outnoun $u\in P(j)$
+If the common-extension condition holds, a common \outnoun $u\in P(j)$
 of everything emitted survives in every run.
 If outputs emitted at inputs with a common \indesc $j$ are incompatible in
 $P(j)$, the runs that emit them share no row at $j$ and can never be
@@ -1008,7 +1009,7 @@ reconciled there.  \fullproof
 \end{proof}
 
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
-logic language.  The new, more general expansion is Consistency As Lifted Monotonicity.
+logic language.  The new, more general result is Consistency As Lifted Monotonicity.
 The condition that characterizes consistency is now a
 property of a specification: Lifted Monotonicity, which for a function is
 ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that
@@ -1023,7 +1024,7 @@ if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Under the common-\indesc condition, consistency supplies the common \outnoun
+Under the common-extension condition, consistency supplies the common \outnoun
 the legal-output test asks for.  Conversely, the legal-output test at canonical
 states, one row at a time, builds the common \outnoun the condition
 asks for.  \fullproof
@@ -1163,7 +1164,9 @@ input, and it leaves the current input unchanged.  At an input $k$, a
 \commitment may remove every row, ruling out $k$, or only some rows, ruling out
 those outputs.  An output event
 $\Out{\gamma}{o}$ applies a sequence $\gamma$ of \commitments, subsumes rows,
-and emits $o$.
+and emits $o$.  It is \emph{commitment-sufficient} when the sequence applies
+and leaves $o$ as a legal output; systems perform only commitment-sufficient
+output events.
 A \emph{\commitment event} $\mathsf{apply}(\gamma)$ applies such a sequence and
 emits nothing, as when 2PL orders $A$ before $B$ while $B$ waits for $A$'s
 lock; it is a third kind of specification event.  A \emph{system} consists of
@@ -1196,7 +1199,7 @@ that output avoids none.  To
 illustrate, when 2PL orders $A$ before $B$ in a \commitment event, the
 canonical run skips it.  If 2PL later emits $[A,C,B]$, the canonical run can
 emit the same output because that row was present all along.  Every surviving
-refinement of $[A,C,B]$ already orders $A$ before $B$, so the earlier \commitment
+output extension of $[A,C,B]$ already orders $A$ before $B$, so the earlier \commitment
 makes no further difference to the final table.  Whether a specification
 needs coordination thus depends on the \commitments its outputs
 require, whatever mechanism makes them.
@@ -1391,7 +1394,7 @@ $\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of ro
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \end{definition}
 
-With $E=P$, Lifted Monotonicity for $E$ is the common-\indesc condition
+With $E=P$, Lifted Monotonicity for $E$ is the common-extension condition
 (Definition~\ref{def:common-expansion-condition}).
 
 \begin{theorem}[Complete CAP]
@@ -1502,7 +1505,7 @@ If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the
 
 \begin{proof}[Proof sketch]
 Take rows of $P_2\circ P_1$ whose inputs have a common \indesc $j$.  The
-common-\indesc condition for $\Spec_1$ gives an intermediate value at $j$
+common-extension condition for $\Spec_1$ gives an intermediate value at $j$
 that \outrel each row's, and that value is a common \indesc
 at which the condition for $\Spec_2$ supplies the common \outnoun.  \fullproof
 \end{proof}
@@ -1617,7 +1620,7 @@ order as given.
 Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
 permitted located outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}; under
 inclusion, a behavior is an \spectype.  Their characterization,
-\emph{node monotonicity}, is the common-\indesc condition for two rows at
+\emph{node monotonicity}, is the common-extension condition for two rows at
 disjoint networks, and Complete CAP extends it to overlapping networks
 (see \extended).
 
@@ -1838,7 +1841,7 @@ sets to arbitrary input and output orders.
 
 Complete CALM extends the answer to specifications that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
-Monotonicity with Directed Outputs.  When it fails, some reachable output
+Monotonicity with directed fibers.  When it fails, some reachable output
 requires a \commitment.  At each input it changes, a \commitment either empties
 the fiber or removes particular output rows.  Because \commitments are explicit, the model
 can also check where a composition coordinates

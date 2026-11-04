@@ -340,7 +340,7 @@ theorem «sec:functional-events/input-cumulative» {I O : Type} [PO I] [PO O]
 
 /-- **Def. `def:output-event`** (Output event).  "Let `(i,R)` be a state and
 `(i,o)` its row at the current input.  The *output event* `output(o)` …
-restricts the remainder table to exactly the rows whose outputs refine `o`,
+restricts the remainder table to exactly the rows whose outputs extend `o`,
 and emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`."
 
 Lean: `Step σ (.output o) τ` (constructor `Step.output`) requires

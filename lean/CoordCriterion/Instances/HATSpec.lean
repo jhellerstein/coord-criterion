@@ -111,7 +111,7 @@ def Lamport (h : Hist Ev) : Prop :=
     h.lab d = some (.dl c' n' k r) → h.lt d e → h.lab f = some (.cm c n t ks) →
     h.lab g = some (.cm c' n' t' ks') → tsLt t' t
 
-/-- Inputs: legal event histories, ordered by downward-closed input extension; with
+/-- Inputs: legal event histories, ordered by downward-closed extension; with
 `lam = true`, satisfying the timestamp condition. -/
 abbrev Inp (lam : Bool) := {h : Hist Ev // WF h ∧ (lam = true → Lamport h)}
 
