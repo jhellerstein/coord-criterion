@@ -43,19 +43,32 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 /-! ## §4.5 The Complete CAP Theorem -/
 
 /-- Section `sec:complete-cap`, opening: "Complete CAP answers that broader
-question for any declared guarantee.  A guarantee is encoded as an ordered
-specification together with a designated subset `E` of its rows: those whose
-outputs must stay available.  This separates what participants must be able to
-emit from what may be observed.  Outputs of `E` are *explicit*: some
-participant must be able to emit them on its own.  The other permitted outputs
-are *implicit*: none need ever be emitted, but an observer outside the system
-may collect outputs from every side, and the specification decides whether
-that collection is permitted.  Complete CAP says that such a guarantee can be
-kept available and consistent through partitions exactly when the
-specification satisfies Lifted Monotonicity for `E`: explicit outputs emitted
-on different sides of a partition must have a common refinement in the
-specification at every common expansion of their inputs.  When `E` is every
-permitted row, this is Lifted Monotonicity itself."  Lean: Theorem `thm:complete-cap` and
+question for any declared guarantee.  To state the question, we must separate
+the outputs that participants must keep available from the outputs that the
+specification permits.  A participant acts on its local history during a
+partition, while consistency compares the participants' outputs at a common
+expansion of their inputs.  Their common refinement need not be emitted by
+any participant.  It may exist only as the client's combined observation.
+
+Consider a register initialized to `v₀`.  During a partition, participant
+`p` receives a write `w(v)` and emits its acknowledgment, while participant
+`q` receives a concurrent read `r` and returns `v₀`.  A client that later
+collects both observes the write acknowledgment together with the read answer
+`v₀`.  The register specification permits this combined output at the input
+containing both operations: a linearization may put the concurrent read
+before the write.  The combined output refines both local outputs and
+provides a proof of their consistency, although no participant need ever
+emit it.
+
+We therefore encode a guarantee as an ordered specification together with an
+explicit relation `E ⊆ P`: the rows whose outputs must remain locally
+available.  Outputs in `P ∖ E` need only remain permitted as possible common
+refinements.  Complete CAP says that such a guarantee can stay available and
+consistent through partitions exactly when the specification satisfies
+Lifted Monotonicity for `E`: outputs selected by `E` on different sides of a
+partition must have a common refinement in the specification at every common
+expansion of their inputs.  When `E = P`, this is Lifted Monotonicity
+itself."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
 `«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`).  The
 closing sentences ("A partition does not change which commitments a
@@ -292,7 +305,8 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
   consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP)
 
 /-- "Nor does the system in the proof need coordination.  Under Lifted
-Monotonicity for `E`, the canonical event for an explicit output empties no fiber and chooses only against implicit outputs, which the system never
+Monotonicity for `E`, the canonical event for an output selected by `E`
+empties nothing and excludes only rows outside `E`, which the system never
 emits, so it is coordination-free (Definition
 `def:coordination-free`)."  "The system in the proof" is the canonical system
 of the proof sketch of Theorem `thm:complete-cap`, `respSystem E`.  Lean: the system emits only rows of `E`, and no output

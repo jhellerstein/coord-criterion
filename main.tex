@@ -83,32 +83,33 @@
 }
 
 \begin{abstract}
-When does a distributed system intrinsically need coordination?  The
-literature has lacked a formalism in which the question can be posed in
-general.  CALM, CAP, and CRDTs
-answer it for one class of programs, consistency models, or design patterns.  Their answers cannot
-be compared or combined, and together they leave basic questions open, such as how coordination repairs inconsistency.  We put them on common
+When does a distributed system intrinsically need coordination?  The literature
+has lacked a common formalism for the question.  CALM, CAP, and CRDTs answer it
+for one class of programs, consistency models, or design patterns.  Their
+answers cannot be compared or combined, and together they leave basic questions
+open, such as how coordination repairs inconsistency.  We put them on common
 ground.  We provide a minimalist relational definition of a specification: a
-possibility relation that includes, for each input, all outputs a system may produce.  Each
-column carries its own partial order, saying when one input \inrel another and
-when one output \outrel another.  A specification is \emph{consistent} when its
-  runs are confluent: runs whose inputs have a common \indesc can always catch up
-  to a common state.  Possibilities narrow as input grows or outputs are emitted.
-  An irrevocable \emph{\commitment} removes possibilities not subsumed by those
-  remaining; it requires coordination when another run could contradict it.
+possibility table that includes, for each input, all outputs a system may
+produce.  Each column carries its own partial order, saying when one input
+\inrel another and when one output \outrel another.  A specification is
+\emph{consistent} when its runs are confluent: runs whose inputs have a common
+\indesc can always catch up to a common state.  Possibilities narrow as input
+grows or outputs are emitted. An irrevocable \emph{\commitment} removes
+possibilities not subsumed by those remaining; it requires coordination when
+another run could contradict it.
 
-  We lift CALM out of its original setting.  \emph{Functional CALM} generalizes
-  the CALM Theorem from Datalog queries to any function between ordered domains:
-  such a specification is consistent exactly when it is monotone, and then no
-  output requires \commitment.  \emph{Complete CALM} handles ambiguous specifications
-  that allow several outputs for the same input, where the test becomes
-  \emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
-  larger input \outrel whatever was emitted at the smaller one.  As a corollary,
-  \emph{Complete CAP} inherits the same criterion: the CAP trade-off arises
-  exactly when Lifted Monotonicity fails.
-  \emph{Proper Coordination} identifies which stage of a composition must coordinate,
-  and certifies that later stages need no coordination of their own.  Highly Available Transactions, Invariant
-  Confluence, and later refinements of CALM all map into the same framework.
+In this unified setting, \emph{Functional CALM} generalizes
+the CALM Theorem from Datalog queries to any function between ordered domains:
+such a specification is consistent exactly when it is monotone: no
+\commitment is required. We then go further: \emph{Complete CALM} handles ambiguous specifications
+that allow several outputs for the same input, where the test becomes
+\emph{Lifted Monotonicity}: at every input, some permitted output \outrel
+whatever could have been emitted up to that point.
+\emph{Complete CAP} is a corollary: the CAP trade-off arises
+exactly when Lifted Monotonicity fails.
+\emph{Proper Coordination} identifies which stage of a composition must coordinate,
+and certifies that later stages need no coordination of their own.  Highly Available Transactions, Invariant
+Confluence, and later refinements of CALM all map into the same framework.
 \end{abstract}
 
 \begin{CCSXML}

@@ -85,30 +85,31 @@
 
 \begin{abstract}
 
-\textcolor{reviewed}{When does a distributed system intrinsically need coordination?} \textcolor{reviewed}{The
-literature has lacked a formalism in which the question can be posed in
-general.} \textcolor{reviewed}{CALM, CAP, and CRDTs
-answer it for one class of programs, consistency models, or design patterns.} \textcolor{reviewed}{Their answers cannot
-be compared or combined, and together they leave basic questions open, such as how coordination repairs inconsistency.} \textcolor{reviewed}{We put them on common
+\textcolor{reviewed}{When does a distributed system intrinsically need coordination?} \textcolor{reviewed}{The literature
+has lacked a common formalism for the question.} \textcolor{reviewed}{CALM, CAP, and CRDTs answer it
+for one class of programs, consistency models, or design patterns.} \textcolor{reviewed}{Their
+answers cannot be compared or combined, and together they leave basic questions
+open, such as how coordination repairs inconsistency.} \textcolor{reviewed}{We put them on common
 ground.} \textcolor{reviewed}{We provide a minimalist relational definition of a specification: a
-possibility relation that includes, for each input, all outputs a system may produce.} \textcolor{reviewed}{Each
-column carries its own partial order, saying when one input \inrel another and
-when one output \outrel another.} \textcolor{reviewed}{A specification is \emph{consistent} when its
-  runs are confluent: runs whose inputs have a common \indesc can always catch up
-  to a common state.} \textcolor{reviewed}{Possibilities narrow as input grows or outputs are emitted.} \textcolor{reviewed}{An irrevocable \emph{\commitment} removes possibilities not subsumed by those
-  remaining; it requires coordination when another run could contradict it.}
+possibility table that includes, for each input, all outputs a system may
+produce.} \textcolor{reviewed}{Each column carries its own partial order, saying when one input
+\inrel another and when one output \outrel another.} \textcolor{reviewed}{A specification is
+\emph{consistent} when its runs are confluent: runs whose inputs have a common
+\indesc can always catch up to a common state.} \textcolor{reviewed}{Possibilities narrow as input
+grows or outputs are emitted.} \textcolor{reviewed}{An irrevocable \emph{\commitment} removes
+possibilities not subsumed by those remaining; it requires coordination when
+another run could contradict it.}
 
-\textcolor{reviewed}{We lift CALM out of its original setting.} \textcolor{reviewed}{\emph{Functional CALM} generalizes
-  the CALM Theorem from Datalog queries to any function between ordered domains:
-  such a specification is consistent exactly when it is monotone, and then no
-  output requires \commitment.} \textcolor{reviewed}{\emph{Complete CALM} handles ambiguous specifications
-  that allow several outputs for the same input, where the test becomes
-  \emph{Lifted Monotonicity}: as input \ingrows, some output permitted at the
-  larger input \outrel whatever was emitted at the smaller one.} \textcolor{reviewed}{As a corollary,
-  \emph{Complete CAP} inherits the same criterion: the CAP trade-off arises
-  exactly when Lifted Monotonicity fails.} \textcolor{reviewed}{\emph{Proper Coordination} identifies which stage of a composition must coordinate,
-  and certifies that later stages need no coordination of their own.} \textcolor{reviewed}{Highly Available Transactions, Invariant
-  Confluence, and later refinements of CALM all map into the same framework.}
+\textcolor{reviewed}{In this unified setting, \emph{Functional CALM} generalizes
+the CALM Theorem from Datalog queries to any function between ordered domains:
+such a specification is consistent exactly when it is monotone: no
+\commitment is required.} \textcolor{reviewed}{We then go further: \emph{Complete CALM} handles ambiguous specifications
+that allow several outputs for the same input, where the test becomes
+\emph{Lifted Monotonicity}: at every input, some permitted output \outrel
+whatever could have been emitted up to that point.} \textcolor{reviewed}{\emph{Complete CAP} is a corollary: the CAP trade-off arises
+exactly when Lifted Monotonicity fails.} \textcolor{reviewed}{\emph{Proper Coordination} identifies which stage of a composition must coordinate,
+and certifies that later stages need no coordination of their own.} \textcolor{reviewed}{Highly Available Transactions, Invariant
+Confluence, and later refinements of CALM all map into the same framework.}
 
 \end{abstract}
 
@@ -139,123 +140,126 @@ when one output \outrel another.} \textcolor{reviewed}{A specification is \emph{
 \label{sec:intro}
 
 \textcolor{reviewed}{Concurrent systems rely on coordination mechanisms ranging from mutexes and
-atomic instructions to database locks and consensus protocols.} \textcolor{reviewed}{These mechanisms prevent concurrent actions from producing undesirable
-outcomes.} \textcolor{reviewed}{They also bring costs: overhead, latency, and
-availability in distributed settings.} \textcolor{reviewed}{Avoiding unnecessary coordination
-is therefore a central goal in distributed systems and databases.} \textcolor{reviewed}{This paper
-asks what coordination mechanisms fundamentally accomplish, and
-when that effect is intrinsically required.}
+atomic instructions to database locks and consensus protocols.} \textcolor{reviewed}{These mechanisms
+prevent concurrent actions from producing undesirable outcomes.} \textcolor{reviewed}{They also bring
+costs: overhead, latency, and availability in distributed settings.} \textcolor{reviewed}{Avoiding
+unnecessary coordination is therefore a central goal in distributed systems and
+databases.} \textcolor{reviewed}{But when is coordination avoidable, and when is it intrinsically
+required?} \textcolor{reviewed}{Various answers are scattered across the literature in incompatible
+forms.} \textcolor{reviewed}{We unify those results via a common formalism, and use it to address new
+questions: when do non-deterministic specifications require coordination, what does
+coordination achieve, and how do we know when it is properly applied?}
 
-\textcolor{reviewed}{The CALM Conjecture
-proposed a crisp, bidirectional answer: consistency can be achieved without
-coordination exactly when the specification is
-monotone~\cite{hellerstein2010declarative}.} \textcolor{reviewed}{Ameloot et al.\ proved it in both
-directions, but only for Datalog queries evaluated by relational
-transducer networks~\cite{ameloot2013relational,hellerstein2020keeping}.} Gilbert and Lynch proved Brewer's CAP conjecture, but only for linearizable
-registers~\cite{brewer2000towards,gilbert2002cap}. \textcolor{reviewed}{Both results are invoked
-far more broadly: CALM as a general rule that monotone programs need no
-coordination, CAP as a general constraint on distributed systems.} \textcolor{reviewed}{The
-folklore outgrew the proofs.}
+\textcolor{reviewed}{The CALM Conjecture proposed a crisp, bidirectional criterion:
+consistency can be achieved without coordination exactly when a specification
+is monotone~\cite{hellerstein2010declarative}.} \textcolor{reviewed}{But the original proof applied
+only in a restricted setting: Datalog queries evaluated by relational transducer
+networks~\cite{ameloot2013relational,hellerstein2020keeping}.} \textcolor{reviewed}{A related
+question comes from the CAP conjecture: which consistency guarantees can remain
+available when participants cannot communicate?} \textcolor{reviewed}{There, the original proof
+applied in a different restricted setting: linearizable
+registers~\cite{brewer2000towards,gilbert2002cap}.} \textcolor{reviewed}{Both results are invoked
+quite broadly: CALM as a general rule that monotone programs need no
+coordination, CAP as a general constraint on distributed systems.} \textcolor{reviewed}{The folklore
+outgrew the proofs.}
 
-\textcolor{reviewed}{The need for a common criterion extends beyond CALM and CAP.} \textcolor{reviewed}{CRDTs use
+\textcolor{reviewed}{The apparent connection between CALM and CAP was never established in a common
+formalism, and nearby results only complicate the picture.} \textcolor{reviewed}{CRDTs use
 inflationary updates over join-semilattices for coordination-free
 convergence~\cite{shapiro2011crdt}; HATs identify transactional guarantees
-available under partition~\cite{bailis2013hat}; and invariant confluence asks
-when independently reached, invariant-preserving database states merge
-safely~\cite{bailis2014coordination}.} \textcolor{reviewed}{Yet these results speak different formal
-languages, leaving unclear whether CALM encompasses CAP, whether CRDT join laws
-are necessary, why only some transactional isolation levels remain available
-during partition, and whether invariant confluence differs from CALM
-(\S\ref{sec:instances}).}
+available under partition~\cite{bailis2013hat}; invariant confluence asks when
+independently reached database states merge
+safely~\cite{bailis2014coordination}.} \textcolor{reviewed}{The diverse formalisms leave cross-cutting
+questions unclear, including whether CALM encompasses CAP, whether CRDT join
+laws are necessary, why only some transactional isolation levels remain
+available during partition, and whether invariant confluence differs from CALM
+(Section~\ref{sec:instances}).}
 
-\textcolor{reviewed}{Our answer begins with a simple observation.} \textcolor{reviewed}{In systems, as in life,
-possibilities narrow over time.} \textcolor{reviewed}{Some are out of our hands: the world moves on,
-and possibilities are lost.} \textcolor{reviewed}{Others are left for us to decide, and the
-consequences vary.} \textcolor{reviewed}{Incidental decisions close no doors: each possibility
-they remove is covered by a more informative possibility that remains.} \textcolor{reviewed}{Fateful
-decisions make some outcomes impossible: they exclude a possibility that
-nothing remaining can cover.} \textcolor{reviewed}{Which specifications can be implemented without
+\subsection{The Model: Possibility Relations}
+\textcolor{reviewed}{In systems, as in life,
+possibilities narrow over time.} \textcolor{reviewed}{Sometimes the world moves on,
+and possibilities are lost to us.} \textcolor{reviewed}{Other choices are left for us to decide, with
+varying consequences.} \textcolor{reviewed}{Incidental decisions close no doors: each possibility they
+remove is covered by some alternative.} \textcolor{reviewed}{Fateful decisions
+are the ones that matter: they exclude a possibility that nothing
+remaining can cover.} \textcolor{reviewed}{Can we say which scenarios require
 fateful decisions?}
 
-\textcolor{reviewed}{Our foundation is a \emph{possibility relation} $P\subseteq I\times O$, which
-may be infinite, pairing inputs with permitted outputs and depicted as rows in
-a table.} \textcolor{reviewed}{It describes observable behavior without fixing a language,
-protocol, or placement.} \textcolor{reviewed}{A designer equips the input domain $I$ and output
-domain $O$ with partial orders that declare the specification's semantics.} \textcolor{reviewed}{On inputs, $i\InputOrd j$ means that $j$
-\emph{\inrel} $i$ with more input from the environment.} \textcolor{reviewed}{On outputs,
-$u\OutputGe o$ means that $u$ subsumes all specification-relevant information
-in $o$; equivalently, $o\OutputOrd u$, and $u$ \emph{\outrel} $o$.} \textcolor{reviewed}{An \emph{\commitment} is a fateful system
-decision that removes one or more rows $(i,o)$ for which no remaining row
-$(i,u)$ has $o\OutputOrd u$: no remaining possibility subsumes an excluded
-one.} A \commitment in this sense is not a transactional commit, though
-transactions rely on \commitments throughout the paper.
+\textcolor{reviewed}{We ground the problem in a simple declarative specification model,
+independent of any language, protocol, or placement.} \textcolor{reviewed}{The designer of a
+specification provides a \emph{possibility relation} $P\subseteq
+I\times O$: a table that may be infinite, like a mathematical function.} \textcolor{reviewed}{Each row in
+this table is a possibility observable from the outside: it pairs a cumulative input to a
+permitted output.} \textcolor{reviewed}{The design includes the input domain $I$ and output domain
+$O$, with partial orders that help capture the specification's semantics.} \textcolor{reviewed}{On
+inputs, $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input from the
+environment.} \textcolor{reviewed}{On outputs, $u\OutputGe o$ means that $u$ subsumes all
+specification-relevant information in $o$; we say
+$u$ \emph{\outrel} $o$.} \textcolor{reviewed}{A \emph{\commitment} is an irrevocable, fateful system decision,
+removing one or more rows $(i,o)$ for which no remaining row $(i,u)$ has
+$o\OutputOrd u$: the output $o$ is no longer covered by any $u$,
+and its possibility is gone.}
 
-\textcolor{reviewed}{State-machine-style specifications can be projected into this form, eliding
-operational details that are not externally observable
-(Section~\ref{sec:operational-models}).} Despite its simplicity, the model captures not only application invariants,
+\textcolor{reviewed}{State-machine-style specifications can be projected into this form, skipping
+operational details that are not externally observable (Section~\ref{sec:operational-models}).} Despite its simplicity, our model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability and
 causal consistency (Appendix~\ref{app:registers}), and transactional isolation
 levels (Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
-\textcolor{reviewed}{A specification is \emph{consistent} when the executions it admits are
-\emph{confluent}: states reached along different paths can be brought to
-a common state.}
+\subsection{The Criterion: Lifted Monotonicity}
+\textcolor{reviewed}{With this model in hand, we are ready to define the key aspects of CALM:
+Consistency and Monotonicity.} \textcolor{reviewed}{A specification is \emph{consistent} when
+the executions it admits are \emph{confluent}: states reached along
+different paths can be brought to a common state.} \textcolor{reviewed}{We will see that this definition
+is general, accommodating narrower notions from prior literature.} \textcolor{reviewed}{Our monotonicity criterion requires more care: it must capture the full
+expressivity of our model.} \textcolor{reviewed}{It comes via two invariants.} \textcolor{reviewed}{The first is always
+required; the second addresses non-deterministic specifications.}
 
-\textcolor{reviewed}{Our results develop the criterion in two stages.}
+\textcolor{reviewed}{\emph{1. Learn and refine.} As execution progresses, input grows: the system learns more from
+the environment.} \textcolor{reviewed}{For specifications that permit only one output at each input, the possibility table is a function
+and monotonicity is standard: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.} \textcolor{reviewed}{\emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem}) proves that consistency is equivalent to
+monotonicity in this setting.}
 
-\paragraph{Learn and refine.}
-\textcolor{reviewed}{Input growth records what a system may learn from the environment.} \textcolor{reviewed}{Monotonicity under input growth requires outputs to refine as input grows.} \textcolor{reviewed}{\emph{Functional
-CALM} (Section~\ref{sec:functional-calm-theorem}) covers specifications that permit
-one output at each input.} \textcolor{reviewed}{It proves that consistency is equivalent to
-monotonicity: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.} \textcolor{reviewed}{If monotonicity
-fails, some output requires a fateful decision: a \commitment that rules
-out later input which could contradict it.} \textcolor{reviewed}{The result covers relational query
-languages and the usual CRDT state specification.}
 
-\paragraph{Choose and align.}
-\textcolor{reviewed}{A second facet appears when the table contains several rows with the same
-input and different outputs.} \textcolor{reviewed}{Each row offers the system a possible output,
-so different runs may choose differently, as in leader election or
-transaction ordering.} \textcolor{reviewed}{Monotonicity under output choice requires outputs
-chosen by different runs to grow together.} \textcolor{reviewed}{We call this Directed Outputs:
-some larger permitted output refines them all, making those decisions
-incidental.}
 
-\textcolor{reviewed}{Together, monotonicity under input growth and output choice form \emph{Lifted
-Monotonicity}, our unified criterion on the possibility relation.} \textcolor{reviewed}{\emph{Complete
-CALM} proves that consistency is equivalent to Lifted Monotonicity
-(Section~\ref{sec:complete-calm-theorem}).}
 
-\textcolor{reviewed}{Distributed histories obey the same consistency criterion
-(Section~\ref{sec:distributed-execution}).} \textcolor{reviewed}{A \commitment \emph{requires coordination}
-if another run can contradict it, and \emph{distributed coordination} if that
-run is at another participant.} \textcolor{reviewed}{Complete CAP (Section~\ref{sec:complete-cap}) says
+
+
+
+
+
+\textcolor{reviewed}{\emph{2. Choose and align.} Prior work on CALM and CRDTs addresses functional
+settings.} \textcolor{reviewed}{Some specifications, including leader election and transaction
+scheduling, are not functions: many outputs are within spec for a given input.} \textcolor{reviewed}{This requires an additional monotonicity invariant.} \textcolor{reviewed}{When many runs of a system
+choose different outputs for the same input, those choices
+must \outrelbase together---the outputs are \emph{directed}, in order theory terms.} \textcolor{reviewed}{Together, monotonicity under input growth and output choice make all output decisions incidental.} \textcolor{reviewed}{We call the pair of invariants \emph{Lifted Monotonicity}.} \textcolor{reviewed}{\emph{Complete CALM} proves that consistency is equivalent to Lifted
+Monotonicity (Section~\ref{sec:complete-calm-theorem}).}
+
+\textcolor{reviewed}{What of coordination?} \textcolor{reviewed}{A \commitment \emph{requires coordination}
+if another run can contradict it; it is \emph{distributed coordination} if that
+run is at another participant.} \textcolor{reviewed}{Distributed histories are captured under the same consistency criteria as centralized ones
+(Section~\ref{sec:distributed-execution}).} \textcolor{reviewed}{Complete CAP (Section~\ref{sec:complete-cap}) says
 Lifted Monotonicity exactly characterizes specifications that can keep every
 permitted output available and confluent during a partition.} \textcolor{reviewed}{The
 Gilbert--Lynch theorem follows directly.}
 
-\textcolor{reviewed}{This paper makes five contributions:}
+\paragraph{Contributions.}
+\textcolor{reviewed}{We make contributions in three categories:}
 \begin{enumerate}
 \item
-\textcolor{reviewed}{\emph{Ordered relational specifications.} A possibility relation over
-        ordered input and output domains describes permitted behavior;
-        \commitments remove possibilities.}
+\textcolor{reviewed}{\emph{A unified model.} The observable behavior of a system is captured via ordered relational specifications: a possibility relation over
+        ordered input and output domains.} \textcolor{reviewed}{Consistency is defined as confluence, uniformly capturing general
+        consistency models, application-specific requirements, and distributed consistency.}
 \item
-\textcolor{reviewed}{\emph{Consistency as confluence.} One definition covers general
-        consistency models and application-specific requirements, and it is
-        equivalent to distributed consistency.}
+\textcolor{reviewed}{\emph{A unified criterion.} For functions between ordered domains,
+        Functional CALM shows that consistency is equivalent to monotonicity.} \textcolor{reviewed}{For non-functional specifications,
+        we prove Complete CALM: Consistency As Lifted Monotonicity.} \textcolor{reviewed}{Complete CAP is a corollary:
+        the tradeoff holds only under failure of Lifted Monotonicity.}
 \item
-\textcolor{reviewed}{\emph{Functional CALM.} For functions between ordered domains,
-        consistency is equivalent to monotonicity.}
-\item
-\textcolor{reviewed}{\emph{Complete CALM and CAP.} In general, consistency is equivalent
-        to Lifted Monotonicity, and Complete CAP gives the matching
-        availability boundary under partition for any declared set of outputs
-        that must stay available.}
-\item
-\textcolor{reviewed}{\emph{Composition and Proper Coordination.} Specifications
-        compose by equijoin, and we show that in a composition, upstream
-        stages can free downstream stages from issuing \commitments (Section~\ref{sec:composition}).}
+\textcolor{reviewed}{\emph{\Commitments, Composition and Proper Coordination.} We define \commitments to capture how
+        systems exclude possibilities that are not covered by alternatives.} \textcolor{reviewed}{We then show how specifications
+        compose by equijoin, so that, in composition, upstream
+        stages can free downstream stages from issuing \commitments.}
 \end{enumerate}
 
 The paper develops these contributions in order, then relates the criterion to
@@ -1732,20 +1736,36 @@ Commit~\cite{gray2006consensus}.}
 and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
 proved it for a linearizable register~\cite{gilbert2002cap}.} \textcolor{reviewed}{Their theorem
 concerns one guarantee, not which guarantees can stay available and
-consistent through a partition.} \textcolor{reviewed}{Complete CAP answers that broader question for any declared guarantee.} \textcolor{reviewed}{A
-guarantee is encoded as an ordered specification together with a designated
-subset $E$ of its rows: those whose outputs must stay available.} \textcolor{reviewed}{This
-separates what participants must be able to emit from what may be observed.} \textcolor{reviewed}{Outputs of $E$ are \emph{explicit}: some participant must be able to emit them
-on its own.} \textcolor{reviewed}{The other permitted outputs are \emph{implicit}: none need ever be
-emitted, but an observer outside the system may collect outputs from every
-side, and the specification decides whether that collection is permitted.} \textcolor{reviewed}{Complete CAP says that such a guarantee can be
-kept available and consistent through partitions exactly when the
-specification satisfies Lifted Monotonicity for $E$: explicit outputs emitted
-on different sides of a partition must have a common \outnoun in the
-specification at every common \indesc of their inputs.} \textcolor{reviewed}{When $E$ is every permitted row, this is Lifted
-Monotonicity itself.} \textcolor{reviewed}{A partition does not
-change which \commitments a specification needs; it removes the ability to make
-them jointly, since separated participants cannot jointly apply a \commitment that another participant could contradict.}
+consistent through a partition.} \textcolor{reviewed}{Complete CAP answers that broader question
+for any declared guarantee.}
+
+\textcolor{reviewed}{To state the question, we must separate the outputs that participants must
+keep available from the outputs that the specification permits.} \textcolor{reviewed}{A participant
+acts on its local history during a partition, while consistency compares the
+participants' outputs at a common \indesc of their inputs.} \textcolor{reviewed}{Their common
+\outnoun need not be emitted by any participant.} \textcolor{reviewed}{It may exist only as the
+client's combined observation.}
+
+\textcolor{reviewed}{Consider a register initialized to $v_0$.} \textcolor{reviewed}{During a partition, participant
+$p$ receives a write $w(v)$ and emits its acknowledgment, while participant
+$q$ receives a concurrent read $r$ and returns $v_0$.} \textcolor{reviewed}{A client that later
+collects both observes the write acknowledgment together with the read answer
+$v_0$.} \textcolor{reviewed}{The register specification permits this combined output at the input
+containing both operations: a linearization may put the concurrent read before
+the write.} \textcolor{reviewed}{The combined output \outrel both local outputs and provides a proof
+of their consistency, although no participant need ever emit it.}
+
+\textcolor{reviewed}{We therefore encode a guarantee as an ordered specification together with an
+explicit relation $E\subseteq P$: the rows whose outputs must remain locally
+available.} \textcolor{reviewed}{Outputs in $P\setminus E$ need only remain permitted as possible
+common \outnouns.} \textcolor{reviewed}{Complete CAP says that such a guarantee can stay available
+and consistent through partitions exactly when the specification satisfies
+Lifted Monotonicity for $E$: outputs selected by $E$ on different sides of a
+partition must have a common \outnoun in the specification at every common
+\indesc of their inputs.} \textcolor{reviewed}{When $E=P$, this is Lifted Monotonicity itself.} \textcolor{reviewed}{A
+partition does not change which \commitments a specification needs; it removes
+the ability to make them jointly, since separated participants cannot jointly
+apply a \commitment that another participant could contradict.}
 
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
@@ -1839,9 +1859,8 @@ A system might hope to keep more outputs available by issuing \commitments,
 coordinating within each side of a partition. It cannot: the impossibility
 direction of the proof holds for every system, \commitment-free or not. Nor
 does the system in the proof need coordination. \textcolor{reviewed}{Under Lifted Monotonicity for
-$E$, the canonical event
-for an explicit output empties nothing and excludes only implicit
-outputs, which the system never emits, so it is
+$E$, the canonical event for an output selected by $E$ empties nothing and
+excludes only rows outside $E$, which the system never emits, so it is
 coordination-free (Definition~\ref{def:coordination-free}).} \textcolor{reviewed}{For $E=P$ it needs no
 \commitment at all.} For a smaller $E$ such local \commitments can be necessary: if
 $o\in E(i)$ and $x\in\fiber{i}\setminus E(i)$ have no common \outnoun at $i$,
@@ -2594,7 +2613,11 @@ when the log guards the store, the log's \commitments are all the composition
 needs and the store makes none.} \textcolor{reviewed}{Multi-Paxos is one way to distribute those
 \commitments.}
 
-\textcolor{reviewed}{Complete CAP is the partition form of the same equivalence.} \textcolor{reviewed}{A system can keep a guarantee's explicit outputs available, and consistent, through partitions exactly when they have a common \outnoun at every common \indesc of their inputs; when every output is explicit, this is Lifted Monotonicity.}
+\textcolor{reviewed}{Complete CAP is the partition form of the same equivalence.} \textcolor{reviewed}{A system can keep
+the outputs selected by a guarantee's explicit relation available, and
+consistent, through partitions exactly when they have a common \outnoun at
+every common \indesc of their inputs; when the relation selects every output,
+this is Lifted Monotonicity.}
 
 \textcolor{reviewed}{The generality of our specification model opens a range of new questions
 regarding the ambiguity of specifications and their \commitments.} \textcolor{reviewed}{One direction
@@ -2697,7 +2720,7 @@ rows at $k$.
   contradicts & accepts an input that a \commitment ruled out, or emits an output a \commitment ruled out & Def.~\ref{def:contradicts}\\
   requires (distributed) coordination & a \commitment some run (at another participant) contradicts & Def.~\ref{def:coordination}\\
   coordination-free & applies no \commitment that requires coordination & Def.~\ref{def:coordination-free}\\
-  partitioned history; block; explicit relation $E$; explicit, implicit output & participants divided into two or more blocks, no message crosses blocks; $E\subseteq P$, the rows whose outputs must stay available; outputs of $E$, and the other permitted outputs & Defs.~\ref{def:partitioned-history}, \ref{def:partition-notions}\\
+  partitioned history; block; explicit relation $E$ & participants divided into two or more blocks, no message crosses blocks; $E\subseteq P$, the rows whose outputs must stay available & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
   Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable locally; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\
   Lifted Monotonicity for $E$ & every finite set of rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$ & Def.~\ref{def:lm-for-A}\\
   deployment & one explicit relation $E_p$ per participant & Def.~\ref{def:deployment}\\

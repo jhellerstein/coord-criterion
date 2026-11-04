@@ -412,10 +412,9 @@ class of `p` under the labelling `comp : Fin n → Nat`. -/
 abbrev «app:notation/block» {n : Nat} (comp : Fin n → Nat) (p : Fin n) : Fin n → Prop :=
   fun q => comp q = comp p
 
-/-- *explicit relation `E`; explicit, implicit output* — `E ⊆ P`, the rows
-whose outputs must stay available; outputs of `E`, and the other permitted
-outputs (Def. `def:explicit-relation`).  Lean: a table `E : Table I O` with
-`∀ i o, E i o → sp.P i o`. -/
+  /-- *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay
+  available (Def. `def:explicit-relation`).  Lean: a table `E : Table I O` with
+  `∀ i o, E i o → sp.P i o`. -/
 abbrev «app:notation/explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.P i o
 

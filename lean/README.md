@@ -525,7 +525,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/coordination-free»` | abbrev | *coordination-free* — applies no commitment that requires coordination (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more blocks, no message crosses blocks (Def. |
 | `«app:notation/block»` | abbrev | *block* — one of the two or more classes into which a partitioned history divides the participants (Def. |
-| `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`; explicit, implicit output* — `E ⊆ P`, the rows whose outputs must stay available; outputs of `E`, and the other permitted outputs (Def. |
+| `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay available (Def. |
 | `«app:notation/availability»` | abbrev | *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable locally (Def. |
 | `«app:notation/lm-for-A»` | abbrev | *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a common expansion `j` has a common refinement in `P(j)` (Def. |
 | `«app:notation/deployment»` | abbrev | *deployment* — one explicit relation `E_p` per participant (Def. |

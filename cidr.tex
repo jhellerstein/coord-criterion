@@ -108,7 +108,7 @@ such a specification is consistent exactly when it is monotone: no
 \commitment is required. We then go further: \emph{Complete CALM} handles ambiguous specifications
 that allow several outputs for the same input, where the test becomes
 \emph{Lifted Monotonicity}: at every input, some permitted output \outrel
-whatever could have been emitted up to that point. 
+whatever could have been emitted up to that point.
 \emph{Complete CAP} is a corollary: the CAP trade-off arises
 exactly when Lifted Monotonicity fails.
 \emph{Proper Coordination} identifies which stage of a composition must coordinate,
@@ -150,7 +150,7 @@ databases.  But when is coordination avoidable, and when is it intrinsically
 required? Various answers are scattered across the literature in incompatible
 forms. We unify those results via a common formalism, and use it to address new
 questions: when do non-deterministic specifications require coordination, what does
-coordination achieve, and how do we know when is it properly applied?
+coordination achieve, and how do we know when it is properly applied?
 
 The CALM Conjecture proposed a crisp, bidirectional criterion:
 consistency can be achieved without coordination exactly when a specification
@@ -191,7 +191,7 @@ We ground the problem in a simple declarative specification model,
 independent of any language, protocol, or placement. The designer of a
 specification provides a \emph{possibility relation} $P\subseteq
 I\times O$: a table that may be infinite, like a mathematical function. Each row in
-this table is a possible state observable from the outside: it pairs a cumulative input to a
+this table is a possibility observable from the outside: it pairs a cumulative input to a
 permitted output. The design includes the input domain $I$ and output domain
 $O$, with partial orders that help capture the specification's semantics.  On
 inputs, $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input from the
@@ -214,17 +214,17 @@ With this model in hand, we are ready to define the key aspects of CALM:
 Consistency and Monotonicity. A specification is \emph{consistent} when
 the executions it admits are \emph{confluent}: states reached along
 different paths can be brought to a common state. We will see that this definition
-is general, accomodating narrower notions from prior literature.
+is general, accommodating narrower notions from prior literature.
 Our monotonicity criterion requires more care: it must capture the full
 expressivity of our model. It comes via two invariants. The first is always
 required; the second addresses non-deterministic specifications.
 
 \emph{1. Learn and refine.} As execution progresses, input grows: the system learns more from
-the environment. 
+the environment.
 For specifications that permit only one output at each input, the possibility table is a function
 and monotonicity is standard: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.
 \emph{Functional CALM} (\S\ref{sec:functional-calm-theorem}) proves that consistency is equivalent to
-monotonicity in this setting. 
+monotonicity in this setting.
 % Emitting a monotone function's output is always an incidental choice:
 % the output at any \inrelpast input is \outrelpart: it covers the earlier output.
 % This setting generalizes Datalog-based CALM papers as well as CRDT state specifications.
@@ -246,9 +246,8 @@ We call the pair of invariants \emph{Lifted Monotonicity}.
 Monotonicity (\S\ref{sec:complete-calm-theorem}).
 
 What of coordination?  A \commitment \emph{requires coordination}
-if another run can contradict it with an output that is incomparable in $\OutputOrd$;
-it is \emph{distributed coordination} if that
-run is at another participant.  
+if another run can contradict it; it is \emph{distributed coordination} if that
+run is at another participant.
 Distributed histories are captured under the same consistency criteria as centralized ones
 (\S\ref{sec:distributed-execution}). Complete CAP (\S\ref{sec:complete-cap}) says
 Lifted Monotonicity exactly characterizes specifications that can keep every
@@ -1306,22 +1305,36 @@ Brewer conjectured that a distributed system cannot be consistent, available,
 and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
 proved it for a linearizable register~\cite{gilbert2002cap}.  Their theorem
 concerns one guarantee, not which guarantees can stay available and
-consistent through a partition.  Complete CAP answers that broader question for any declared guarantee.  A
-guarantee is encoded as an ordered specification together with a designated
-subset $E$ of its rows: those whose outputs must stay available.  This
-separates what participants must be able to emit from what may be observed.
-Outputs of $E$ are \emph{explicit}: some participant must be able to emit them
-on its own.  The other permitted outputs are \emph{implicit}: none need ever be
-emitted, but an observer outside the system may collect outputs from every
-side, and the specification decides whether that collection is permitted.
-Complete CAP says that such a guarantee can be
-kept available and consistent through partitions exactly when the
-specification satisfies Lifted Monotonicity for $E$: explicit outputs emitted
-on different sides of a partition must have a common \outnoun in the
-specification at every common \indesc of their inputs.  When $E$ is every permitted row, this is Lifted
-Monotonicity itself.  A partition does not
-change which \commitments a specification needs; it removes the ability to make
-them jointly, since separated participants cannot jointly apply a \commitment that another participant could contradict.
+consistent through a partition.  Complete CAP answers that broader question
+for any declared guarantee.
+
+To state the question, we must separate the outputs that participants must
+keep available from the outputs that the specification permits.  A participant
+acts on its local history during a partition, while consistency compares the
+participants' outputs at a common \indesc of their inputs.  Their common
+\outnoun need not be emitted by any participant.  It may exist only as the
+client's combined observation.
+
+Consider a register initialized to $v_0$.  During a partition, participant
+$p$ receives a write $w(v)$ and emits its acknowledgment, while participant
+$q$ receives a concurrent read $r$ and returns $v_0$.  A client that later
+collects both observes the write acknowledgment together with the read answer
+$v_0$.  The register specification permits this combined output at the input
+containing both operations: a linearization may put the concurrent read before
+the write.  The combined output \outrel both local outputs and provides a proof
+of their consistency, although no participant need ever emit it.
+
+We therefore encode a guarantee as an ordered specification together with an
+explicit relation $E\subseteq P$: the rows whose outputs must remain locally
+available.  Outputs in $P\setminus E$ need only remain permitted as possible
+common \outnouns.  Complete CAP says that such a guarantee can stay available
+and consistent through partitions exactly when the specification satisfies
+Lifted Monotonicity for $E$: outputs selected by $E$ on different sides of a
+partition must have a common \outnoun in the specification at every common
+\indesc of their inputs.  When $E=P$, this is Lifted Monotonicity itself.  A
+partition does not change which \commitments a specification needs; it removes
+the ability to make them jointly, since separated participants cannot jointly
+apply a \commitment that another participant could contradict.
 
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
@@ -1395,9 +1408,8 @@ both: one whose strategies may emit any legal output with no
 \proofinfull
 
 The system in the proof needs no coordination.  Under Lifted Monotonicity for
-$E$, the canonical event
-for an explicit output empties nothing and excludes only implicit
-outputs, which the system never emits, so it is
+$E$, the canonical event for an output selected by $E$ empties nothing and
+excludes only rows outside $E$, which the system never emits, so it is
 coordination-free (Definition~\ref{def:coordination-free}).  For $E=P$ it needs no
 \commitment.  When Lifted Monotonicity for $E$ fails, some
 output of $E$ waits for another block, sacrificing Availability, or is
@@ -1821,9 +1833,10 @@ needs and the store makes none.  Multi-Paxos is one way to distribute those
 \commitments.
 
 Complete CAP is the partition form of the same equivalence.  A system can keep
-a guarantee's explicit outputs available, and consistent, through partitions
-exactly when they have a common \outnoun at every common \indesc of their inputs;
-when every output is explicit, this is Lifted Monotonicity.
+the outputs selected by a guarantee's explicit relation available, and
+consistent, through partitions exactly when they have a common \outnoun at
+every common \indesc of their inputs; when the relation selects every output,
+this is Lifted Monotonicity.
 
 The generality of our specification model opens a range of new questions
 regarding the ambiguity of specifications and their \commitments. One direction
