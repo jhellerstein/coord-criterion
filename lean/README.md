@@ -234,8 +234,8 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:relational-specification»` | abbrev | **Def. |
 | `«eq:relational-specification»` | abbrev | **Eq. |
 | `«eq:fiber»` | abbrev | **Eq. |
-| `«def:relational-specification/ambiguous»` | theorem | Def. |
-| `«def:ambiguous»` | abbrev | **Def. |
+| `«def:relational-specification/nondeterministic»` | theorem | Def. |
+| `«def:nondeterministic»` | abbrev | **Def. |
 | `«def:relational-monotonicity»` | abbrev | **Def. |
 | `«eq:relational-monotonicity»` | theorem | **Eq. |
 | `«def:relational-monotonicity/functional»` | theorem | After Def. |
@@ -366,7 +366,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-consistency/at-cuts»` | theorem | Def. |
 | `«def:lm-for-A»` | abbrev | **Def. |
 | `«sec:complete-cap/lm-for-S»` | theorem | "With `E = P`, Lifted Monotonicity for `E` is the common-expansion condition." |
-| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an ordered specification `P` and an explicit relation `E ⊆ P`, the following are equivalent: |
+| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an interface specification `P` and an explicit relation `E ⊆ P`, the following are equivalent: |
 | `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `P` satisfies Lifted Monotonicity." |
 | `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
 | `«sec:complete-cap/necessity-any-system»` | theorem | "A system might hope to keep more outputs available by issuing commitments, coordinating within each side of a partition. |
@@ -395,7 +395,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone (Section `sec:lifted-monotonicity`)." Lean: |
-| `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an ordered specification. |
+| `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an interface specification. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |
 | `«sec:composite-calm/all-monotone»` | theorem | "First, every stage is monotone. |
 | `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
@@ -483,8 +483,8 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
 | `«app:notation/consistent»` | abbrev | *consistent* — every finite family of runs can reach one common state at each common expansion `j` (Def. |
 | `«app:notation/confluent-at»` | abbrev | *confluent at `j`* (Def. |
-| `«app:notation/relational-specification»` | abbrev | *relational specification* — `P ⊆ I × O` total on `I` (Def. |
-| `«app:notation/ambiguous»` | abbrev | *ambiguous* — some fiber has several outputs (Def. |
+| `«app:notation/relational-specification»` | abbrev | *interface specification* — `P ⊆ I × O` total on `I` (Def. |
+| `«app:notation/nondeterministic»` | abbrev | *nondeterministic* — some fiber has several outputs (Def. |
 | `«app:notation/stranded-output»` | abbrev | *stranded output* — an output at `i` with no refinement at some expansion (Sec. |
 | `«app:notation/incompatible-pair»` | abbrev | *incompatible pair* — two outputs at `i` with no common refinement there (Sec. |
 | `«app:notation/relational-monotonicity»` | abbrev | *Relational Monotonicity* — every output keeps a refinement as input grows (Def. |
@@ -613,7 +613,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«def:lifted-output-event»` | abbrev | **Def. |
 | `«def:canonical-commitment»` | abbrev | **Def. |
 | `«eq:canonical-commitment-relational»` | theorem | **Eq. |
-| `«def:lifted-output-event/examples»` | theorem | The ambiguity example excludes `[B,A]`; the routing example only subsumes its removed route sets. |
+| `«def:lifted-output-event/examples»` | theorem | The transaction-order example excludes `[B,A]`; the routing example only subsumes its removed route sets. |
 | `«app:lifted-output-events/disjoint»` | theorem | `Subsumed_o` and `Excluded_o` are disjoint. |
 | `«app:lifted-output-events/functional»` | theorem | With one row per input, no ruled-out row is subsumed. |
 | `«app:lifted-output-events/exposable»` | theorem | A legal output applies no commitment exactly when `Excluded_o` is empty. |
@@ -785,7 +785,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«def:response-interface/T-eq-S»` | theorem | "With `T = P` it is the common-expansion condition of Proposition `prop:common-expansion-form`." |
 | `«def:response-interface/confluence»` | theorem | "and by Lemma `lem:reconciliation` it is confluence of the canonical runs whose emitted rows lie in `T`." Lean: |
 | `«app:cap-response/serve-interface»` | theorem | "A response interface is an explicit relation that a system can always serve. |
-| `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).** "For an ordered relational specification `P` and a uniform obligation `Q`, the… |
+| `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).** "For an interface specification `P` and a uniform obligation `Q`, the following… |
 | `«thm:complete-cap-response/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap-response`, (2⇒1): |
 | `«app:cap-response/without-replication»` | theorem | **Remark "Without replication"**: |
 | `«app:cap-response/without-replication/local-init-needed»` | theorem | The `LocalInit` hypothesis ("each strategy depends on the initial inputs only through its own participant's") is needed: |

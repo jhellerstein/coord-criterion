@@ -161,14 +161,14 @@ abbrev «app:notation/confluent-at» {sp : Spec I O} (fam : List (State sp)) (j 
 
 /-! ## Complete CALM (Section `sec:complete-calm`) -/
 
-/-- *relational specification* — `P ⊆ I × O` total on `I`
+/-- *interface specification* — `P ⊆ I × O` total on `I`
 (Def. `def:relational-specification`).  Lean: `Spec I O`. -/
 abbrev «app:notation/relational-specification» (I O : Type) [PO I] [PO O] := Spec I O
 
-/-- *ambiguous* — some fiber has several outputs
-(Def. `def:ambiguous`).  No library name; equivalently
-`¬ sp.Functional` (`«def:relational-specification/ambiguous»`). -/
-abbrev «app:notation/ambiguous» (sp : Spec I O) : Prop :=
+/-- *nondeterministic* — some fiber has several outputs
+(Def. `def:nondeterministic`).  No library name; equivalently
+`¬ sp.Functional` (`«def:relational-specification/nondeterministic»`). -/
+abbrev «app:notation/nondeterministic» (sp : Spec I O) : Prop :=
   ∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o'
 
 /-- *stranded output* — an output at `i` with no refinement at some

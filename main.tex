@@ -53,6 +53,9 @@
 \newcommand{\outnouns}{refinements\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
+% The name of the specification model; optional suffix supports \spectype[s].
+\newcommand{\spectype}[1][]{interface specification#1\xspace}
+\newcommand{\Spectype}[1][]{Interface specification#1\xspace}
 \newcommand{\fiber}[1]{P(#1)}
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
@@ -88,7 +91,7 @@ has lacked a common formalism for the question.  CALM, CAP, and CRDTs answer it
 for one class of programs, consistency models, or design patterns.  Their
 answers cannot be compared or combined, and together they leave basic questions
 open, such as how coordination repairs inconsistency.  We put them on common
-ground.  We provide a minimalist relational definition of a specification: a
+ground.  We define a minimalist \spectype: a
 possibility table that includes, for each input, all outputs a system may
 produce.  Each column carries its own partial order, saying when one input
 \inrel another and when one output \outrel another.  A specification is
@@ -101,7 +104,7 @@ another run could contradict it.
 In this unified setting, \emph{Functional CALM} generalizes
 the CALM Theorem from Datalog queries to any function between ordered domains:
 such a specification is consistent exactly when it is monotone: no
-\commitment is required. We then go further: \emph{Complete CALM} handles ambiguous specifications
+\commitment is required. We then go further: \emph{Complete CALM} handles nondeterministic specifications
 that allow several outputs for the same input, where the test becomes
 \emph{Lifted Monotonicity}: at every input, some permitted output \outrel
 whatever could have been emitted up to that point.

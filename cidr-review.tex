@@ -53,6 +53,9 @@
 \newcommand{\outnouns}{refinements\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
+% The name of the specification model; optional suffix supports \spectype[s].
+\newcommand{\spectype}[1][]{interface specification#1\xspace}
+\newcommand{\Spectype}[1][]{Interface specification#1\xspace}
 \newcommand{\fiber}[1]{P(#1)}
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
@@ -96,7 +99,7 @@ has lacked a common formalism for the question.  CALM, CAP, and CRDTs answer it
 for one class of programs, consistency models, or design patterns.  Their
 answers cannot be compared or combined, and together they leave basic questions
 open, such as how coordination repairs inconsistency.  We put them on common
-ground.  We provide a minimalist relational definition of a specification: a
+ground.  We define a minimalist \spectype: a
 possibility table that includes, for each input, all outputs a system may
 produce.  Each column carries its own partial order, saying when one input
 \inrel another and when one output \outrel another.  A specification is
@@ -109,7 +112,7 @@ another run could contradict it.
 In this unified setting, \emph{Functional CALM} generalizes
 the CALM Theorem from Datalog queries to any function between ordered domains:
 such a specification is consistent exactly when it is monotone: no
-\commitment is required. We then go further: \emph{Complete CALM} handles ambiguous specifications
+\commitment is required. We then go further: \emph{Complete CALM} handles nondeterministic specifications
 that allow several outputs for the same input, where the test becomes
 \emph{Lifted Monotonicity}: at every input, some permitted output \outrel
 whatever could have been emitted up to that point.
@@ -142,16 +145,16 @@ Confluence, and later refinements of CALM all map into the same framework.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 56 & 4685\\
-formal definition/notation & 17 & 627\\
-related-work detail & 4 & 562\\
+unclassified & 58 & 4833\\
+related-work detail & 4 & 561\\
+formal definition/notation & 15 & 499\\
 signposting & 13 & 354\\
-explanation & 7 & 180\\
+explanation & 6 & 151\\
 example & 3 & 116\\
 result & 1 & 72\\
 formal caution & 1 & 60\\
 \end{tabular}\par\smallskip\textbf{Largest removals}\par
-1. unclassified, 1374 words: \textit{We now make the mapping precise, and then explain how ...}\par
+1. unclassified, 1372 words: \textit{We now make the mapping precise, and then explain how ...}\par
 2. unclassified, 406 words: \textit{The environment observes nothing from it.}\par
 3. unclassified, 360 words: \textit{The orders on [math] and [math] are part of the ...}\par
 4. signposting, 264 words: \textit{See Appendix .}\par
@@ -159,7 +162,7 @@ formal caution & 1 & 60\\
 6. unclassified, 180 words: \textit{We call a system for one specification, viewed through a ...}\par
 7. formal definition/notation, 167 words: \textit{In a functional specification this means [math]: the event removes ...}\par
 8. unclassified, 165 words: \textit{No row it removes is subsumed by a row that ...}\par
-9. related-work detail, 161 words: \textit{Under inclusion of outputs, with inputs only by facts at ...}\par
+9. related-work detail, 160 words: \textit{Under inclusion of outputs, with inputs only by facts at ...}\par
 10. unclassified, 152 words: \textit{A read's answer under [math] depends only on the history ...}\par
 11. unclassified, 139 words: \textit{Specifications are declarative, and admit many implementations.}\par
 12. unclassified, 136 words: \textit{Zinn et al. gave transducers partial knowledge of how data ...}\par
@@ -179,7 +182,7 @@ unnecessary coordination is therefore a central goal in distributed systems and
 databases. But when is coordination avoidable, and when is it intrinsically
 required? Various answers are scattered across the literature in incompatible
 forms. We unify those results via a common formalism, and use it to address new
-questions: when do non-deterministic specifications require coordination, what does
+questions: when do nondeterministic specifications require coordination, what does
 coordination achieve, and how do we know when it is properly applied?
 
 The CALM Conjecture proposed a crisp, bidirectional criterion:
@@ -217,7 +220,7 @@ are the ones that matter: they exclude a possibility that nothing
 remaining can cover. Can we say which scenarios require
 fateful decisions?
 
-We ground the problem in a simple declarative specification model,
+We ground the problem in a simple declarative model of \spectype[s],
 independent of any language, protocol, or placement. The designer of a
 specification provides a \emph{possibility relation} $P\subseteq
 I\times O$: a table that may be infinite, like a mathematical function. Each row in
@@ -245,7 +248,7 @@ the executions it admits are \emph{confluent}: states reached along
 different paths can be brought to a common state. We will see that this definition
 is general, accommodating narrower notions from prior literature. Our monotonicity criterion requires more care: it must capture the full
 expressivity of our model. It comes via two invariants. The first is always
-required; the second addresses non-deterministic specifications.
+required; the second addresses nondeterministic specifications.
 
 \emph{1. Learn and refine.} As execution progresses, input grows: the system learns more from
 the environment. For specifications that permit only one output at each input, the possibility table is a function
@@ -261,7 +264,7 @@ monotonicity in this setting.}
 
 
 \emph{2. Choose and align.} Prior work on CALM and CRDTs addresses functional
-settings. Some specifications, including leader election and transaction
+settings. \emph{Nondeterministic specifications}, including leader election and transaction
 scheduling, are not functions: many outputs are within spec for a given input. This requires an additional monotonicity invariant. When many runs of a system
 choose different outputs for the same input, those choices
 must \outrelbase together---the outputs are \emph{directed}, in order theory terms. Together, monotonicity under input growth and output choice make all output decisions incidental. We call the pair of invariants \emph{Lifted Monotonicity}. \textcolor{newblue}{\emph{Complete CALM} proves that consistency is equivalent to Lifted
@@ -279,12 +282,12 @@ Gilbert--Lynch theorem follows directly.
 We make contributions in three categories:
 \begin{enumerate}
 \item
-\emph{A unified model.} The observable behavior of a system is captured via ordered relational specifications: a possibility relation over
+\emph{A unified model.} The observable behavior of a system is captured via \spectype[s]: a possibility relation over
         ordered input and output domains. Consistency is defined as confluence, uniformly capturing general
         consistency models, application-specific requirements, and distributed consistency.
 \item
 \emph{A unified criterion.} For functions between ordered domains,
-        Functional CALM shows that consistency is equivalent to monotonicity. For non-functional specifications,
+        Functional CALM shows that consistency is equivalent to monotonicity. For nondeterministic specifications,
         we prove Complete CALM: Consistency As Lifted Monotonicity. Complete CAP is a corollary:
         the tradeoff holds only under failure of Lifted Monotonicity.
 \item
@@ -302,7 +305,7 @@ intuition, proofs, and applications.}
 \label{sec:functional-calm}
 
 This section focuses on functional specifications, in which each input has a
-single specified output. \removednote{\textbf{unclassified}, 28 words, rank 49; \textit{We walk through the framework informally on an election, make it precise, and prove Functional CALM, ...}} \textcolor{newblue}{We walk through the framework informally on an
+single specified output. \removednote{\textbf{unclassified}, 28 words, rank 48; \textit{We walk through the framework informally on an election, make it precise, and prove Functional CALM, ...}} \textcolor{newblue}{We walk through the framework informally on an
 election (\S\ref{sec:election-story}), state it precisely
 (\S\ref{sec:framework-brief}), and
 prove Functional CALM (\S\ref{sec:functional-calm-theorem}), identifying
@@ -497,7 +500,7 @@ order no output at $aba$ \outrel both outputs $\bot$ and $a$. A run that emits
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.
 
 Input and output events form a transition system, and the specification is
-consistent when its runs are confluent. \removednote{\textbf{unclassified}, 15 words, rank 69; \textit{For functional tables this corresponds exactly to monotonicity (Section ).}} \textcolor{newblue}{Section~\ref{sec:functional-calm-theorem} shows that for functional tables
+consistent when its runs are confluent. \removednote{\textbf{unclassified}, 15 words, rank 70; \textit{For functional tables this corresponds exactly to monotonicity (Section ).}} \textcolor{newblue}{Section~\ref{sec:functional-calm-theorem} shows that for functional tables
 this corresponds exactly to monotonicity.}
 
 \subsection{The framework in brief}
@@ -508,16 +511,16 @@ this corresponds exactly to monotonicity.}
 
 \textcolor{newblue}{We now state these notions precisely.}
 
-\begin{definition}[Functional ordered specification, total]
+\begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
-\textcolor{newblue}{A \emph{functional ordered specification} is a tuple
+\textcolor{newblue}{A \emph{functional \spectype} is a tuple
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$,
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
 output types, and $P\subseteq I\times O$ is its \emph{possibility relation}:
 a typed relation with schema $(\mathrm{in},\mathrm{out})$ in which every
 input appears in at least one row ($P$ is \emph{total} on $I$) and at most one
 (a functional dependency).} \textcolor{newblue}{The unique output paired with $i$ induces a
-function $f:I\to O$.} \removednote{\textbf{unclassified}, 8 words, rank 83; \textit{with [math] We call [math] the input order .}}
+function $f:I\to O$.} \removednote{\textbf{unclassified}, 8 words, rank 82; \textit{with [math] We call [math] the input order .}}
 \end{definition}
 
 \textcolor{newblue}{Because an output may depend on everything a system has received, we model
@@ -530,7 +533,7 @@ and may add more, and we say that $u$ \emph{\outrel} $o$. \removednote{\textbf{f
 \outnoun} of outputs is an output that \outrel each of them.} Neither need be
 unique or least: for example, two independent transactions $u$ and $v$, with schedules
 ordered by subsequence, have two incomparable minimal common \indescs, $uv$
-and $vu$. \removednote{\textbf{unclassified}, 17 words, rank 65; \textit{A row [math] is by another row [math] at the same input when [math] [math].}} \removednote{\textbf{formal definition/notation}, 12 words, rank 76; \textit{A functional ordered specification [math], with induced function [math], is monotone if}} \removednote{\textbf{unclassified}, 15 words, rank 70; \textit{Thus an output emitted on partial input is by the output at every .}}
+and $vu$. \removednote{\textbf{unclassified}, 17 words, rank 66; \textit{A row [math] is by another row [math] at the same input when [math] [math].}} \removednote{\textbf{unclassified}, 11 words, rank 80; \textit{A functional [math], with induced function [math], is monotone if}} \removednote{\textbf{unclassified}, 15 words, rank 71; \textit{Thus an output emitted on partial input is by the output at every .}}
 
 \begin{definition}[Functional monotonicity, monotone]
 \label{def:functional-monotonicity}
@@ -554,7 +557,7 @@ the set of outputs in $R$.} \removednote{\textbf{formal definition/notation}, 88
 input} $i$ and a \emph{remainder table} $R\subseteq P$ that contains a row at
 $i$ and only rows at \indescs of $i$.} \textcolor{newblue}{An input $k$ is \emph{legal} at
 $\sigma$ when $R$ contains a row at $k$.} Rows are never added during
-execution. \removednote{\textbf{unclassified}, 40 words, rank 38; \textit{The canonical state at [math] is the state at [math] with no rows removed: it keeps ...}} \removednote{\textbf{unclassified}, 17 words, rank 66; \textit{An input event from a canonical state leads to another canonical state, and runs start at ...}} \textcolor{newblue}{The \emph{canonical state at $i$}, the state of a system that has
+execution. \removednote{\textbf{unclassified}, 40 words, rank 38; \textit{The canonical state at [math] is the state at [math] with no rows removed: it keeps ...}} \removednote{\textbf{unclassified}, 17 words, rank 67; \textit{An input event from a canonical state leads to another canonical state, and runs start at ...}} \textcolor{newblue}{The \emph{canonical state at $i$}, the state of a system that has
 received $i$ and emitted nothing, has no rows removed: it keeps every row at $i$
 and its \indescs:}
 \begin{equation}
@@ -583,17 +586,17 @@ must therefore \outrelbase earlier ones. \removednote{\textbf{explanation}, 44 w
 \label{def:output-event}
 \textcolor{newblue}{Let $(i,o)$ be the row at the current input of a state $(i,R)$.} \textcolor{newblue}{The
 \emph{output event} $\mathsf{output}(o)$ atomically restricts the remainder
-table to the rows whose outputs \outrelbase $o$, and emits $o$:} \removednote{\textbf{unclassified}, 11 words, rank 82; \textit{When [math] in Definition , the transition applies the canonical [math].}; labels def:canonical-commitment-functional}
+table to the rows whose outputs \outrelbase $o$, and emits $o$:} \removednote{\textbf{unclassified}, 11 words, rank 81; \textit{When [math] in Definition , the transition applies the canonical [math].}; labels def:canonical-commitment-functional}
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
 \textcolor{newblue}{When this removes a row, the transition applies the \emph{canonical \commitment}
-$x_o$.} For every row it removes, no row remains at the same input. \removednote{\textbf{unclassified}, 21 words, rank 59; \textit{It is a .}}
+$x_o$.} For every row it removes, no row remains at the same input. \removednote{\textbf{unclassified}, 21 words, rank 60; \textit{It is a .}}
 \end{definition}
 
 \textcolor{newblue}{A \commitment removes rows that input alone would preserve; afterward, their
-inputs are no longer legal.} \removednote{\textbf{unclassified}, 12 words, rank 77; \textit{Canonical of this form are the only this section uses.}} \textcolor{newblue}{Systems may issue more \commitments than an output
+inputs are no longer legal.} \removednote{\textbf{unclassified}, 12 words, rank 75; \textit{Canonical of this form are the only this section uses.}} \textcolor{newblue}{Systems may issue more \commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 extra \commitments only restrict behavior (\S\ref{sec:systems}).}
 
@@ -633,15 +636,15 @@ $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
 \textcolor{newblue}{\proofinfull}
 
 To compare runs that end at different inputs, we consider a common \indesc
-of those inputs. \removednote{\textbf{unclassified}, 0 words, rank 97; labels def:confluence}
+of those inputs. \removednote{\textbf{unclassified}, 0 words, rank 96; labels def:confluence}
 
 \begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
-\textcolor{newblue}{An ordered specification is \emph{consistent} when every finite family of
+\textcolor{newblue}{An \spectype is \emph{consistent} when every finite family of
 runs is confluent: if the runs end at states
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common \indesc of their current
 inputs, each can be continued to a
-common state with current input $j$.} \removednote{\textbf{unclassified}, 21 words, rank 60; \textit{An ordered specification is consistent when every finite family of runs is confluent at every common ...}} \textcolor{newblue}{They are then \emph{confluent at} $j$.}
+common state with current input $j$.} \removednote{\textbf{unclassified}, 20 words, rank 62; \textit{An is consistent when every finite family of runs is confluent at every common of their ...}} \textcolor{newblue}{They are then \emph{confluent at} $j$.}
 \end{definition}
 
 Consistency requires confluence at every common \indesc, not merely at some
@@ -655,7 +658,7 @@ in every run.
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
 \textcolor{newblue}{Runs ending at states $(i_r,R_r)$, $r=1,\ldots,k$, are confluent
-at $j$ if and only if some row $(j,u)$ at $j$ is in every $R_r$.} \removednote{\textbf{formal definition/notation}, 0 words, rank 98; labels eq:reconciliation} \textcolor{newblue}{For any such
+at $j$ if and only if some row $(j,u)$ at $j$ is in every $R_r$.} \removednote{\textbf{formal definition/notation}, 0 words, rank 97; labels eq:reconciliation} \textcolor{newblue}{For any such
 $u$, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ takes every final
 state to $\bigl(j,\ P[\mathrm{in}\InputGe j,\ \mathrm{out}\OutputGe u]\bigr)$.}
 \end{proposition}
@@ -668,7 +671,7 @@ in every run. \removednote{\textbf{explanation}, 25 words, rank 52; \textit{Full
 Consistency guarantees runs never diverge irreparably: no ``split brain''. Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
 of theirs leaves a single state that every run can reach: one that keeps every
-promise any of them has made and accepts all of that input. \removednote{\textbf{unclassified}, 16 words, rank 67; \textit{Proposition identifies that state.}} \textcolor{newblue}{Consistency is a property of the specification.} \textcolor{newblue}{It describes no protocol and
+promise any of them has made and accepts all of that input. \removednote{\textbf{unclassified}, 16 words, rank 68; \textit{Proposition identifies that state.}} \textcolor{newblue}{Consistency is a property of the specification.} \textcolor{newblue}{It describes no protocol and
 promises no delivery or termination.}
 
 \subsection{The Functional CALM theorem}
@@ -679,14 +682,14 @@ table and orders alone. Functional CALM shows that these coincide. \textcolor{ne
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
-A functional ordered specification is consistent if and only if it is
+A functional \spectype is consistent if and only if it is
 monotone.
 \end{theorem}
 
 \begin{proof}[Proof sketch]
 A monotone $f$ only emits outputs that all of its future outputs \outrelbase,
 so the row $(j,f(j))$ at a common \indesc $j$ survives in every run. If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
-\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$. \removednote{\textbf{explanation}, 4 words, rank 86; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+\indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$. \removednote{\textbf{explanation}, 4 words, rank 85; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
@@ -706,14 +709,14 @@ output.} Monotonicity also governs legality:
 
 \begin{proposition}[Output-legality boundary]
 \label{prop:functional-exposure-boundary}
-A functional ordered specification is monotone if and only if every output at
+A functional \spectype is monotone if and only if every output at
 every state reachable without \commitment is legal.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
 By Corollary~\ref{cor:state-by-input}, monotone $f$ reaches only canonical
 states. \textcolor{newblue}{At $\sigma_P(i)$, $f(i)$ is legal exactly
-when $f$ is monotone at $i$.} \removednote{\textbf{explanation}, 4 words, rank 87; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+when $f$ is monotone at $i$.} \removednote{\textbf{explanation}, 4 words, rank 86; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 A monotone specification can thus emit every current
@@ -727,7 +730,7 @@ both as consistency and as confluence; Definition~\ref{def:consistency} equates 
 inclusion and output tables $Q(J)$ ordered by inclusion. \textcolor{newblue}{Functional
 monotonicity becomes $J\subseteq J'\Rightarrow Q(J)\subseteq Q(J')$,
 the standard definition of a monotone query~\cite{abiteboul1995foundations},
-which positive Datalog satisfies and negation may not.} \removednote{\textbf{formal definition/notation}, 0 words, rank 99; labels eq:query-monotonicity} Functional CALM
+which positive Datalog satisfies and negation may not.} \removednote{\textbf{formal definition/notation}, 0 words, rank 98; labels eq:query-monotonicity} Functional CALM
 generalizes the statement to arbitrary input and
 output orders, whatever formalism expresses the specification. CRDT state specifications have the same functional shape,
 with received payloads ordered by inclusion and states by the semilattice
@@ -743,7 +746,7 @@ We now extend CALM theory to allow a fiber to contain several outputs. The monot
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$? \textcolor{newblue}{A \commitment can empty an input's fiber or remove some output rows while it
 remains nonempty.} We now turn to the latter effect. \textcolor{newblue}{Section~\ref{sec:ambiguity-story}
 introduces the issue by example.} \textcolor{newblue}{Section~\ref{sec:lifted-monotonicity}
-defines relational specifications and Lifted Monotonicity.} \textcolor{newblue}{Section~\ref{sec:lifted-output-events} lifts
+defines \spectype[s] and Lifted Monotonicity.} \textcolor{newblue}{Section~\ref{sec:lifted-output-events} lifts
 output events and classifies what they remove, and
 Section~\ref{sec:complete-calm-theorem} shows that the run-level results of
 Section~\ref{sec:executions} carry over and proves Complete CALM.}
@@ -829,19 +832,18 @@ survives in both.
 \label{sec:lifted-monotonicity}
 
 We begin with our most general definition of a specification, which admits
-ambiguity of output.
-\begin{definition}[Ordered relational specification, ambiguity, ordered specification]
+output nondeterminism.
+\begin{definition}[\Spectype, nondeterminism]
 \label{def:relational-specification}
-\textcolor{newblue}{An \emph{ordered relational specification} is
+\textcolor{newblue}{An \emph{\spectype} is
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P\subseteq I\times O$,
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.} \removednote{\textbf{formal definition/notation}, 45 words, rank 34; \textit{where [math] and [math] are partially ordered sets and [math] is its possibility relation .}; labels eq:relational-specification} \textcolor{newblue}{The
 relation $P$ is the specification's \emph{possibility relation} and is total
 on $I$.} A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$. \textcolor{newblue}{The fiber
 $\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
-outputs; the specification is \emph{ambiguous} when some fiber does.} \removednote{\textbf{formal definition/notation}, 7 words, rank 84; \textit{of Section may now contain several outputs.}; labels eq:fiber} A
-functional specification is the special case $\fiber{i}=\{f(i)\}$. \removednote{\textbf{unclassified}, 14 words, rank 71; \textit{An ordered relational specification is ambiguous when some fiber contains more than one output.}; labels def:ambiguous} We call
-either kind simply an \emph{ordered specification}. \removednote{\textbf{unclassified}, 12 words, rank 78; \textit{Specification states and input events (Sections and ) apply unchanged to relational tables.}} \removednote{\textbf{unclassified}, 12 words, rank 79; \textit{As input from [math] to [math], two things can go wrong.}}
+outputs; the \spectype is \emph{nondeterministic} when some fiber does.} \removednote{\textbf{formal definition/notation}, 7 words, rank 83; \textit{of Section may now contain several outputs.}; labels eq:fiber} A
+functional \spectype is the special case $\fiber{i}=\{f(i)\}$. \removednote{\textbf{unclassified}, 24 words, rank 56; \textit{An is nondeterministic when some fiber contains more than one output.}; labels def:nondeterministic} \removednote{\textbf{unclassified}, 12 words, rank 76; \textit{As input from [math] to [math], two things can go wrong.}}
 \end{definition}
 
 \textcolor{newblue}{Specification states and input events
@@ -861,7 +863,7 @@ First, we rule out stranded outputs.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
-An ordered relational specification satisfies \emph{Relational Monotonicity}
+An \spectype satisfies \emph{Relational Monotonicity}
 when every output keeps some \outnoun as input \ingrows:
         \begin{equation}
   i\InputOrd j,\ o\in\fiber{i}
@@ -883,7 +885,7 @@ Second, we rule out incompatible pairs.
 \begin{definition}[Directed fiber, Directed Outputs]
 \label{def:fiber-directedness}
 A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
-$X\subseteq F$ is compatible in $F$. \removednote{\textbf{unclassified}, 0 words, rank 100; labels def:directed-outputs} An ordered relational specification has
+$X\subseteq F$ is compatible in $F$. \removednote{\textbf{unclassified}, 0 words, rank 99; labels def:directed-outputs} An \spectype has
 \emph{Directed Outputs} when every fiber $\fiber{i}$ is directed.
 \end{definition}
 
@@ -918,7 +920,7 @@ $j=i$, this rules out incompatible pairs.
 
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
-An ordered relational specification satisfies \emph{Lifted Monotonicity}, and
+An \spectype satisfies \emph{Lifted Monotonicity}, and
 is called \emph{monotone}, when the mapping $i\mapsto\fiber{i}$ is monotone
 under the joint lift:
         \begin{equation}
@@ -943,7 +945,7 @@ $o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
 
 \begin{definition}[Common-\indesc condition]
 \label{def:common-expansion-condition}
-An ordered specification satisfies the \emph{common-\indesc condition} when,
+An \spectype satisfies the \emph{common-\indesc condition} when,
 for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
 common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
 $o_r$.
@@ -954,14 +956,14 @@ follows from $P$ being total on $I$.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
-An ordered relational specification satisfies Lifted Monotonicity if and only
+An \spectype satisfies Lifted Monotonicity if and only
 if it satisfies the common-\indesc condition.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
 Relational Monotonicity carries each $o_r$ to some
 \outnoun in the fiber at $j$, and Directed Outputs gives those a common
-\outnoun there. \removednote{\textbf{signposting}, 4 words, rank 88; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+\outnoun there. \removednote{\textbf{signposting}, 4 words, rank 87; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \subsection{Lifted output events}
@@ -978,7 +980,7 @@ it rules out each output whose row it removes at $k$. Output subsumption is not 
 puts the rows for $aba$ and $abb$ in $\Excluded_o$ and rules out those inputs;
 emitting $[A,B]$ in Figure~\ref{fig:ambiguity-frames}(f) puts the row for
 $[B,A]$ in $\Excluded_o$ and rules out that output at $\{A,B\}$; and the
-route sets removed in panel~(g) are in $\Subsumed_o$.} \removednote{\textbf{unclassified}, 20 words, rank 62; \textit{In the functional case, [math] is empty, so this is the output event of Definition .}} \textcolor{newblue}{In the functional
+route sets removed in panel~(g) are in $\Subsumed_o$.} \removednote{\textbf{unclassified}, 20 words, rank 63; \textit{In the functional case, [math] is empty, so this is the output event of Definition .}} \textcolor{newblue}{In the functional
 case, $\Subsumed_o$ is empty.} \textcolor{newblue}{Formal definitions are in \extended.}
 
 As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
@@ -999,7 +1001,7 @@ reduces to Lifted Monotonicity.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-An ordered specification is consistent if and only if it satisfies Lifted
+An \spectype is consistent if and only if it satisfies Lifted
 Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
@@ -1007,7 +1009,7 @@ Monotonicity, equivalently the common-\indesc condition.
 If the common-\indesc condition holds, a common \outnoun $u\in P(j)$
 of everything emitted survives in every run. If outputs emitted at inputs with a common \indesc $j$ are incompatible in
 $P(j)$, the runs that emit them share no row at $j$ and can never be
-reconciled there. \removednote{\textbf{signposting}, 4 words, rank 89; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+reconciled there. \removednote{\textbf{signposting}, 4 words, rank 88; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
@@ -1020,7 +1022,7 @@ The same condition governs legality.
 
 \begin{proposition}[Output-legality boundary]
 \label{prop:exposure-boundary}
-An ordered specification satisfies Lifted Monotonicity if and only
+An \spectype satisfies Lifted Monotonicity if and only
 if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
@@ -1028,7 +1030,7 @@ if every output at every state reachable without \commitment is legal.
 Under the common-\indesc condition, consistency supplies the common \outnoun
 the legal-output test asks for. Conversely, the legal-output test at canonical
 states, one row at a time, builds the common \outnoun the condition
-asks for. \removednote{\textbf{signposting}, 4 words, rank 90; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+asks for. \removednote{\textbf{signposting}, 4 words, rank 89; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 For functions, both are monotonicity, so Complete CALM and
@@ -1041,7 +1043,7 @@ Proposition~\ref{prop:functional-exposure-boundary}.
 
 Consistency compares independent runs. A distributed execution places one run
 at each participant, and the only change from our framework's perspective is
-that participants can learn about inputs at other participants via messages. \removednote{\textbf{signposting}, 20 words, rank 63; \textit{Functional CALM and Complete CALM therefore have a natural distributed reading, including a convergence guarantee derived ...}} \textcolor{newblue}{Functional CALM and Complete CALM therefore have a natural distributed reading,
+that participants can learn about inputs at other participants via messages. \removednote{\textbf{signposting}, 20 words, rank 64; \textit{Functional CALM and Complete CALM therefore have a natural distributed reading, including a convergence guarantee derived ...}} \textcolor{newblue}{Functional CALM and Complete CALM therefore have a natural distributed reading,
 which Section~\ref{sec:histories} makes precise.} We then define systems, whose
 \commitments may exceed those the specification requires, and \commitments that require distributed coordination, which a run at
 another participant could contradict; Complete CAP follows.
@@ -1053,12 +1055,12 @@ another participant could contradict; Complete CAP follows.
 A finite set $P$ of \emph{participants} each holds a specification state,
 starting at a canonical state $\sigma_P(i_p)$, and changes it only by its own
 specification events. A participant learns input directly from the
-environment or in a message from another participant. \removednote{\textbf{formal definition/notation}, 7 words, rank 85; \textit{Participants exchange messages by [math] and [math].}} \textcolor{newblue}{A
+environment or in a message from another participant. \removednote{\textbf{formal definition/notation}, 7 words, rank 84; \textit{Participants exchange messages by [math] and [math].}} \textcolor{newblue}{A
 \emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$
 if it carries none, and arbitrary application-specific data $d$; one can envision timestamps, version
 vectors, state identities, and so on.} \textcolor{newblue}{A receive does not change the specification state; a
 participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own
-$\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.} \removednote{\textbf{formal definition/notation}, 116 words, rank 15; \textit{Fix an ordered specification, participants [math], and an initial input [math] for each.}; labels def:happens-before, def:consistent-cut} \textcolor{newblue}{Data can
+$\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.} \removednote{\textbf{unclassified}, 115 words, rank 15; \textit{Fix an , participants [math], and an initial input [math] for each.}; labels def:happens-before, def:consistent-cut} \textcolor{newblue}{Data can
 influence a system's subsequent actions (\S\ref{sec:systems}), but never directly changes the state.}
 
 \begin{definition}[Distributed history, history event, happens-before, consistent cut]
@@ -1072,16 +1074,16 @@ events that in local order form a defined transition sequence from
 $\sigma_P(i_p)$.} \textcolor{newblue}{A \emph{consistent cut} $C$ is a
 subset of history events closed under
 happens-before~\cite{lamport1978time,chandy1985distributed} (a term
-unrelated to our consistency).} \removednote{\textbf{formal definition/notation}, 20 words, rank 64; \textit{A consistent cut contains a prefix of each participant's history events, so by item 3 it ...}; labels def:participant-run}
+unrelated to our consistency).} \removednote{\textbf{formal definition/notation}, 20 words, rank 65; \textit{A consistent cut contains a prefix of each participant's history events, so by item 3 it ...}; labels def:participant-run}
 \end{definition}
 
 \textcolor{newblue}{At a consistent cut $C$, the specification events of $C$ at participant $p$,
 in local order, form its \emph{participant run}.} \removednote{\textbf{unclassified}, 40 words, rank 39; \textit{The endpoint of a consistent cut [math] is [math].}; labels def:endpoint, fig:participant-runs} \removednote{\textbf{formal definition/notation}, 39 words, rank 43; \textit{A continuation of a history at a consistent cut [math] is a history [math] that extends ...}} \textcolor{newblue}{The cut is
 \emph{confluent at} $j$, for a common \indesc $j$ of the participants'
 current inputs, when some continuation of $C$ brings every participant to the
-same state $(j,R)$.} \removednote{\textbf{formal definition/notation}, 22 words, rank 57; \textit{History events at different participants are independent, so this holds exactly when the participant runs at ...}; labels def:distributed-consistency} \textcolor{newblue}{A specification has \emph{distributed consistency} when,
+same state $(j,R)$.} \removednote{\textbf{formal definition/notation}, 22 words, rank 58; \textit{History events at different participants are independent, so this holds exactly when the participant runs at ...}; labels def:distributed-consistency} \textcolor{newblue}{A specification has \emph{distributed consistency} when,
 for every finite participant set, every consistent cut of every history is
-confluent at every such $j$.} \removednote{\textbf{unclassified}, 13 words, rank 74; \textit{An ordered specification is consistent if and only if it has distributed consistency.}}
+confluent at every such $j$.} \removednote{\textbf{unclassified}, 12 words, rank 77; \textit{An is consistent if and only if it has distributed consistency.}}
 
 \begin{proposition}[Consistency and distributed consistency]
 \label{prop:distributed-consistency}
@@ -1090,7 +1092,7 @@ confluent at every such $j$.} \removednote{\textbf{unclassified}, 13 words, rank
 
 \begin{proof}[Proof sketch]
 The participant runs at a cut are a family of runs, and any family
-of runs can be placed at separate participants that exchange no messages. \removednote{\textbf{signposting}, 4 words, rank 91; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+of runs can be placed at separate participants that exchange no messages. \removednote{\textbf{signposting}, 4 words, rank 90; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{By Complete CALM, then, a specification has distributed consistency exactly
@@ -1271,7 +1273,7 @@ events never add rows, the first run cannot reach a state with current input
 $k$. Otherwise, the contradicting run emitted some output $x$ at $k$ whose
 row the \commitment removed. The \commitment leaves no row at $k$ that
 \outrel $x$, whereas every row at $k$ after the emission does, so no row there
-can be common to both runs. \removednote{\textbf{signposting}, 4 words, rank 92; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+can be common to both runs. \removednote{\textbf{signposting}, 4 words, rank 91; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 The proposition rules out reconciliation at the conflict input, not forever. For example,
@@ -1329,7 +1331,7 @@ containing both operations: a linearization may put the concurrent read before
 the write. The combined output \outrel both local outputs and provides a proof
 of their consistency, although no participant need ever emit it.
 
-We therefore encode a guarantee as an ordered specification together with an
+We therefore encode a guarantee as an \spectype together with an
 explicit relation $E\subseteq P$: the rows whose outputs must remain locally
 available. Outputs in $P\setminus E$ need only remain permitted as possible
 common \outnouns. Complete CAP says that such a guarantee can stay available
@@ -1351,14 +1353,14 @@ block; participants still receive environment input and emit outputs.
 \textcolor{newblue}{We fix a system, with a strategy for each participant of every finite
 participant set and every choice of initial inputs, each depending only on
 local history, and an adversarial environment that may supply
-any legal input event to any participant.} \removednote{\textbf{unclassified}, 0 words, rank 101; labels def:local-continuation}
+any legal input event to any participant.} \removednote{\textbf{unclassified}, 0 words, rank 100; labels def:local-continuation}
 
 \begin{definition}[Explicit relation, Availability]
 \label{def:partition-notions}
 A continuation of a partitioned history is \emph{local to} a participant $p$
 when the system produces it, it adds only history events of $p$'s block and no
 input events, and none of its receives takes a message sent from another
-block. \removednote{\textbf{unclassified}, 0 words, rank 102; labels def:explicit-relation} An \emph{explicit relation} $E\subseteq P$ is a set of rows
+block. \removednote{\textbf{unclassified}, 0 words, rank 101; labels def:explicit-relation} An \emph{explicit relation} $E\subseteq P$ is a set of rows
 $(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
 its fiber $\{o:(i,o)\in E\}$. The system has \emph{Availability for $E$}
 when, in every partitioned history it produces, each participant $p$, ending
@@ -1385,7 +1387,7 @@ With $E=P$, Lifted Monotonicity for $E$ is the common-\indesc condition
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
-For an ordered specification $\Spec$ and an explicit relation
+For an \spectype $\Spec$ and an explicit relation
 $E\subseteq P$, the following are equivalent:
 \begin{enumerate}
 \item
@@ -1402,7 +1404,7 @@ Availability for $E$, and Lifted Monotonicity for $E$ gives the outputs it emits
 common \outnoun at every common \indesc of their inputs. Conversely, given one
 participant per row of $E$, each in its own block, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
-\outnoun. \removednote{\textbf{signposting}, 4 words, rank 93; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+\outnoun. \removednote{\textbf{signposting}, 4 words, rank 92; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \begin{corollary}
@@ -1461,7 +1463,7 @@ can also ask which component makes a composition's \commitments. When the
 upstream component makes every \commitment the composition needs, and the
 downstream needs none on the inputs the upstream offers, we call the
 coordination \emph{proper}
-(\S\ref{sec:proper-coordination}). \removednote{\textbf{signposting}, 4 words, rank 94; \textit{Proofs are in Appendix .}}
+(\S\ref{sec:proper-coordination}). \removednote{\textbf{signposting}, 4 words, rank 93; \textit{Proofs are in Appendix .}}
 \label{sec:sequential-composition}
 
 Intuitively, sequential composition feeds the output of one specification to
@@ -1469,7 +1471,7 @@ the input of the next. The composite is again a table: it pairs an input of
 the first specification with every output that the second permits for some
 intermediate value that the first permits. Formally, let
 $\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
-$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be ordered relational specifications
+$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be \spectype[s]
 sharing the ordered domain $(M,\preceq_M)$. Their \emph{sequential
 composition} has table
 \begin{equation}
@@ -1482,22 +1484,22 @@ where $\pi$ and $\Join$ are relational projection and equijoin. \textcolor{newbl
 is total on $I$ and $P_2$ is total on $M$, every $i\in I$ has a nonempty fiber
 in $P_2\circ P_1$.} When the two stages
 run as a pipeline, $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs, and
-we say that $\Spec_1$ \emph{guards} $\Spec_2$. \removednote{\textbf{signposting}, 22 words, rank 58; \textit{Appendix gives each stage an input of its own as well, as when a store serves ...}}
+we say that $\Spec_1$ \emph{guards} $\Spec_2$. \removednote{\textbf{signposting}, 22 words, rank 59; \textit{Appendix gives each stage an input of its own as well, as when a store serves ...}}
 
 \begin{lemma}[Composition]
 \label{lem:composition}
 If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the
-ordered specification with table $P_2\circ P_1$.
+\spectype with table $P_2\circ P_1$.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
 Take rows of $P_2\circ P_1$ whose inputs have a common \indesc $j$. The
 common-\indesc condition for $\Spec_1$ gives an intermediate value at $j$
 that \outrel each row's, and that value is a common \indesc
-at which the condition for $\Spec_2$ supplies the common \outnoun. \removednote{\textbf{signposting}, 4 words, rank 95; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+at which the condition for $\Spec_2$ supplies the common \outnoun. \removednote{\textbf{signposting}, 4 words, rank 94; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
-By associativity the lemma extends to finite pipelines. \removednote{\textbf{formal definition/notation}, 16 words, rank 68; \textit{For a function [math], its table [math] satisfies Lifted Monotonicity exactly when [math] is monotone ().}} \removednote{\textbf{explanation}, 29 words, rank 48; \textit{The composite is itself an ordered specification.}}
+By associativity the lemma extends to finite pipelines. \removednote{\textbf{formal definition/notation}, 16 words, rank 69; \textit{For a function [math], its table [math] satisfies Lifted Monotonicity exactly when [math] is monotone ().}} \removednote{\textbf{unclassified}, 28 words, rank 49; \textit{The composite is itself an .}}
 
 \subsection{Composite CALM}
 \label{sec:composite-calm}
@@ -1513,7 +1515,7 @@ as when a monotone client query observes CRDT state
 monotone: a counter capped at $9$ never produces the counts at which a test
 of whether the count is below $10$ answers no.} \textcolor{newblue}{These cases do not cover every monotone composite
 (see \extended).} \textcolor{newblue}{When none applies, some stage may have to issue a \commitment even though the
-composite is monotone.} \removednote{\textbf{signposting}, 12 words, rank 80; \textit{The replicated store of the opening extends the filtering case of Proposition (2).}}
+composite is monotone.} \removednote{\textbf{signposting}, 12 words, rank 78; \textit{The replicated store of the opening extends the filtering case of Proposition (2).}}
 
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
@@ -1560,7 +1562,7 @@ applied to $\Spec_2|_{\Spec_1}$. (2) Each output event of $\Spec_1$ keeps
 only rows above its output, so each input $\Spec_2$ receives lies above the
 previous one, and by (1) every answer is legal. (3) The output-legality boundary
 of the composite fails at a canonical state, which is the image of a canonical
-state of $\Spec_1$. \removednote{\textbf{signposting}, 4 words, rank 96; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
+state of $\Spec_1$. \removednote{\textbf{signposting}, 4 words, rank 95; \textit{Full proof in Appendix .}} \textcolor{newblue}{\fullproof}
 \end{proof}
 
 \textcolor{newblue}{The theorem holds whatever basis $\Spec_1$ uses, and a proper pipeline is
@@ -1603,7 +1605,7 @@ order as given.
 
 \textcolor{newblue}{Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
 permitted located outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}; under
-inclusion, a behavior is a relational specification.} \removednote{\textbf{related-work detail}, 161 words, rank 9; \textit{Under inclusion of outputs, with inputs only by facts at new nodes, a behavior is a ...}} \removednote{\textbf{related-work detail}, 45 words, rank 35; \textit{A CRDT guarantees that replicas receiving the same updates converge to equivalent states, whatever the order ...}} \textcolor{newblue}{Their characterization,
+inclusion, a behavior is an \spectype.} \removednote{\textbf{related-work detail}, 160 words, rank 9; \textit{Under inclusion of outputs, with inputs only by facts at new nodes, a behavior is an ...}} \removednote{\textbf{related-work detail}, 45 words, rank 35; \textit{A CRDT guarantees that replicas receiving the same updates converge to equivalent states, whatever the order ...}} \textcolor{newblue}{Their characterization,
 \emph{node monotonicity}, is the common-\indesc condition for two rows at
 disjoint networks, and Complete CAP extends it to overlapping networks
 (see \extended).}
@@ -1615,9 +1617,9 @@ disjoint networks, and Complete CAP extends it to overlapping networks
 equivalent states, but the Strong Eventual Consistency property it offers
 provides no guarantee on what the environment may observe.} Laddad et al.\
 proposed monotonicity as the right test for safe observation from CRDT
-state~\cite{laddad2022keep}. \removednote{\textbf{example}, 24 words, rank 56; \textit{Their example is a two-phase set, whose state [math] merges by componentwise union.}} We make the proposed test precise with
+state~\cite{laddad2022keep}. \removednote{\textbf{example}, 24 words, rank 57; \textit{Their example is a two-phase set, whose state [math] merges by componentwise union.}} We make the proposed test precise with
 Functional CALM. Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice. The input is the finite set $U$ of immutable payloads received so far, ordered
-by inclusion, and the replica's state is $s(U)=s_0\sqcup\bigsqcup U$. \removednote{\textbf{formal definition/notation}, 12 words, rank 81; \textit{Then [math] implies [math], and [math] is the least state both .}} A
+by inclusion, and the replica's state is $s(U)=s_0\sqcup\bigsqcup U$. \removednote{\textbf{formal definition/notation}, 12 words, rank 79; \textit{Then [math] implies [math], and [math] is the least state both .}} A
 client observation $q:D\to(Y,\preceq_Y)$ gives the client-visible
 specification $q\circ s$. By Functional CALM, $q\circ s$ is consistent
 exactly when $U\subseteq V$ implies $q(s(U))\preceq_Y q(s(V))$. Monotonicity
@@ -1718,7 +1720,7 @@ declared row is produced by some execution.} \textcolor{newblue}{Such proofs are
 mechanized~\cite{hawblitzel2015ironfleet}, and Lifted Monotonicity is then
 checked on the declared specification; \extended{} gives the details.} Work that
 models systems as state machines therefore maps naturally into our model, where
-Complete CALM assesses its consistency directly. \removednote{\textbf{unclassified}, 1374 words, rank 1; \textit{We now make the mapping precise, and then explain how it is used in practice.}; labels def:execution-input, def:induced-specification, prop:induced-specification, prop:declared-specification}
+Complete CALM assesses its consistency directly. \removednote{\textbf{unclassified}, 1372 words, rank 1; \textit{We now make the mapping precise, and then explain how it is used in practice.}; labels def:execution-input, def:induced-specification, prop:induced-specification, prop:declared-specification}
 
 Our conditions are semantic. \removednote{\textbf{formal caution}, 60 words, rank 27; \textit{Confluence guarantees that a common exists, not that a deployed system reaches it.}} \textcolor{newblue}{Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
@@ -1777,7 +1779,7 @@ invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}. Their tools pick,
 for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties. We
 ask what the specification itself requires, independent of any menu of
-levels. \removednote{\textbf{unclassified}, 13 words, rank 75; \textit{Because the canonical are universal (), the answer holds for every mechanism.}} \textcolor{newblue}{By Canonical Run Universality (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.} Our
+levels. \removednote{\textbf{unclassified}, 13 words, rank 74; \textit{Because the canonical are universal (), the answer holds for every mechanism.}} \textcolor{newblue}{By Canonical Run Universality (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.} Our
 composition results need no program logic, and the criteria are exact on
 specifications, not conservative. \removednote{\textbf{unclassified}, 54 words, rank 29; \textit{The possibility relation makes the boundary concrete.}}
 
@@ -1838,7 +1840,7 @@ every common \indesc of their inputs; when the relation selects every output,
 this is Lifted Monotonicity.
 
 The generality of our specification model opens a range of new questions
-regarding the ambiguity of specifications and their \commitments. One direction
+regarding the nondeterminism of specifications and their \commitments. One direction
 extends the boolean criteria of this paper to metrics: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
 needed to determine a specification. Another is Determination Provenance: a

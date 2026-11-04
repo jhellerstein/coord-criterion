@@ -99,10 +99,10 @@ theorem «sec:ambiguity-story/traceroute-passes» (x y : Figures.Trace.RS)
       (outState (canon Figures.Trace.spec ()) y ((Figures.Trace.canonR y).2 hy)).R () (x.union y) :=
   Figures.Trace.union_survives x y hx hy
 
-/-! ## Relational specifications and states (`sec:relational-specifications`) -/
+/-! ## Interface specifications and states (`sec:relational-specifications`) -/
 
-/-- **Def. `def:relational-specification`** (Ordered relational
-specification).  "`Spec = (I,≼,O,≼,P)`, `P ⊆ I × O`, where `(I,≼)` and
+/-- **Def. `def:relational-specification`** (Interface specification).
+"`Spec = (I,≼,O,≼,P)`, `P ⊆ I × O`, where `(I,≼)` and
 `(O,≼)` are partially ordered sets.  `P` is the specification's *table of
 possibilities* and is total on `I`; a row `(i,o) ∈ P` is a possible
 input/output pair.  The fiber
@@ -125,20 +125,20 @@ outputs. -/
 abbrev «eq:fiber» {I O : Type} [PO I] [PO O] (sp : Spec I O) (i : I) : O → Prop :=
   fun o => sp.P i o
 
-/-- Def. `def:relational-specification`, "ambiguous": some fiber has two
-distinct outputs.  (The library has no named notion; this is the reading.)
-Ambiguity is the negation of the functional dependency. -/
-theorem «def:relational-specification/ambiguous» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
+/-- Def. `def:relational-specification`, "nondeterministic": some fiber has
+two distinct outputs.  (The library has no named notion; this is the reading.)
+Nondeterminism is the negation of the functional dependency. -/
+theorem «def:relational-specification/nondeterministic» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     (∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o') ↔ ¬ sp.Functional :=
   ⟨fun ⟨i, o, o', h, h', hne⟩ hf => hne (hf i o o' h h'),
    fun hn => Classical.byContradiction fun h =>
      hn fun i o o' ho ho' => Classical.byContradiction fun hne => h ⟨i, o, o', ho, ho', hne⟩⟩
 
-/-- **Def. `def:ambiguous`** (Ambiguous specification).  "An ordered
-relational specification is *ambiguous* when some fiber contains more than
-one output."  Lean reading: there exist `i, o, o'` with `o ≠ o'` and both in
-`sp.P i`. -/
-abbrev «def:ambiguous» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
+/-- **Def. `def:nondeterministic`** (Nondeterministic specification).  "An
+interface specification is *nondeterministic* when some fiber
+contains more than one output."  Lean reading: there exist `i, o, o'` with
+`o ≠ o'` and both in `sp.P i`. -/
+abbrev «def:nondeterministic» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   ∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o'
 
 /-! ## Lifted Monotonicity (`sec:lifted-monotonicity`) -/
@@ -172,8 +172,8 @@ abbrev «sec:lifted-monotonicity/compatible» {O : Type} [PO O] (F : O → Prop)
 abbrev «def:fiber-directedness» {O : Type} [PO O] (F : O → Prop) : Prop :=
   JointLift F F
 
-/-- **Def. `def:directed-outputs`** (Directed Outputs).  "An ordered
-relational specification has *Directed Outputs* when every fiber `P(i)` is
+/-- **Def. `def:directed-outputs`** (Directed Outputs).  "An interface
+specification has *Directed Outputs* when every fiber `P(i)` is
 directed."  Lean: `Spec.DirectedOutputs` is `∀ i, JointLift (sp.P i)
 (sp.P i)`. -/
 abbrev «def:directed-outputs» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
@@ -284,7 +284,7 @@ theorem «def:common-expansion-condition/empty» {I O : Type} [PO I] [PO O]
   let ⟨u, hu⟩ := sp.total j; ⟨u, hu, fun _ h => nomatch h⟩
 
 /-- **Prop. `prop:common-expansion-form`** (Common-expansion form of Lifted
-Monotonicity).  "An ordered relational specification satisfies Lifted
+Monotonicity).  "An interface specification satisfies Lifted
 Monotonicity if and only if it satisfies the common-expansion condition." -/
 theorem «prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion :=

@@ -60,7 +60,7 @@ before the write.  The combined output refines both local outputs and
 provides a proof of their consistency, although no participant need ever
 emit it.
 
-We therefore encode a guarantee as an ordered specification together with an
+We therefore encode a guarantee as an interface specification together with an
 explicit relation `E ⊆ P`: the rows whose outputs must remain locally
 available.  Outputs in `P ∖ E` need only remain permitted as possible common
 refinements.  Complete CAP says that such a guarantee can stay available and
@@ -253,7 +253,7 @@ theorem «sec:complete-cap/lm-for-S» (sp : Spec I O) :
 
 /-! ### Theorem `thm:complete-cap` -/
 
-/-- **Theorem `thm:complete-cap` (Complete CAP).**  "For an ordered specification
+/-- **Theorem `thm:complete-cap` (Complete CAP).**  "For an interface specification
 `P` and an explicit relation `E ⊆ P`, the following are
 equivalent: (1) some system has Availability for `E` and Partition
 Consistency; (2) `P` satisfies Lifted Monotonicity for `E`."

@@ -83,14 +83,14 @@ with many outputs per input.  Two transaction scheduling runs that emit $[A,B]$ 
 two traceroute runs that emit different route sets pass it, since their union
 survives in both.
 
-\subsection{Relational specifications and states}
+\subsection{\Spectype[s] and states}
 \label{sec:relational-specifications}
 
 We begin with our most general definition of a specification, which admits
-ambiguity of output.
-\begin{definition}[Ordered relational specification]
+output nondeterminism.
+\begin{definition}[\Spectype]
 \label{def:relational-specification}
-An \emph{ordered relational specification} is
+An \emph{\spectype} is
         \begin{equation}
   \Spec=(I,\InputOrd,O,\OutputOrd,P),
   \qquad P\subseteq I\times O,
@@ -106,16 +106,15 @@ a table and call its members rows; it need not be finite.  The relation $P$
   \label{eq:fiber}
         \end{equation}
 of Section~\ref{sec:functional-specifications} may now contain several
-outputs.  A functional specification is the special case $\fiber{i}=\{f(i)\}$.
+  outputs.  A functional \spectype is the special case $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
-\begin{definition}[Ambiguous specification]
-\label{def:ambiguous}
-An ordered relational specification is \emph{ambiguous} when some fiber
+\begin{definition}[Nondeterministic \spectype]
+\label{def:nondeterministic}
+An \spectype is \emph{nondeterministic} when some fiber
 contains more than one output.
 \end{definition}
 
-We call either kind simply an \emph{ordered specification}.
 
 Specification states and input events
 (Sections~\ref{sec:functional-specifications} and~\ref{sec:functional-events})
@@ -134,7 +133,7 @@ First, we rule out stranded outputs.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
-An ordered relational specification satisfies \emph{Relational Monotonicity}
+An \spectype satisfies \emph{Relational Monotonicity}
 when every output keeps some \outnoun as input \ingrows:
         \begin{equation}
   i\InputOrd j,\ o\in\fiber{i}
@@ -162,7 +161,7 @@ $X\subseteq F$ is compatible in $F$.
 
 \begin{definition}[Directed Outputs]
 \label{def:directed-outputs}
-An ordered relational specification has \emph{Directed Outputs} when every
+An \spectype has \emph{Directed Outputs} when every
 fiber $\fiber{i}$ is directed.
 \end{definition}
 
@@ -196,7 +195,7 @@ $j=i$, this rules out incompatible pairs.
 
 \begin{definition}[Lifted Monotonicity]
 \label{def:lifted-monotonicity}
-An ordered relational specification satisfies \emph{Lifted Monotonicity}, and
+An \spectype satisfies \emph{Lifted Monotonicity}, and
 is called \emph{monotone}, when the mapping $i\mapsto\fiber{i}$ is monotone
 under the joint lift:
         \begin{equation}
@@ -231,7 +230,7 @@ $o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
 
 \begin{definition}[Common-\indesc condition]
 \label{def:common-expansion-condition}
-An ordered specification satisfies the \emph{common-\indesc condition} when,
+An \spectype satisfies the \emph{common-\indesc condition} when,
 for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
 common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
 $o_r$.
@@ -242,7 +241,7 @@ follows from $P$ being total on $I$.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
-An ordered relational specification satisfies Lifted Monotonicity if and only
+An \spectype satisfies Lifted Monotonicity if and only
 if it satisfies the common-\indesc condition.
 \end{proposition}
 
@@ -292,7 +291,7 @@ equation.  They lift unchanged: the rows remaining after a run
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-An ordered specification is consistent if and only if it satisfies Lifted
+An \spectype is consistent if and only if it satisfies Lifted
 Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
@@ -314,7 +313,7 @@ The same condition governs legality.
 
 \begin{proposition}[Output-legality boundary]
 \label{prop:exposure-boundary}
-An ordered specification satisfies Lifted Monotonicity if and only
+An \spectype satisfies Lifted Monotonicity if and only
 if every output at every state reachable without \commitment is legal.
 \end{proposition}
 

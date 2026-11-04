@@ -53,6 +53,9 @@
 \newcommand{\outnouns}{refinements\xspace}
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
+% The name of the specification model; optional suffix supports \spectype[s].
+\newcommand{\spectype}[1][]{interface specification#1\xspace}
+\newcommand{\Spectype}[1][]{Interface specification#1\xspace}
 \newcommand{\fiber}[1]{P(#1)}
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
@@ -92,7 +95,7 @@ has lacked a common formalism for the question.  CALM, CAP, and CRDTs answer it
 for one class of programs, consistency models, or design patterns.  Their
 answers cannot be compared or combined, and together they leave basic questions
 open, such as how coordination repairs inconsistency.  We put them on common
-ground.  We provide a minimalist relational definition of a specification: a
+ground.  We define a minimalist \spectype: a
 possibility table that includes, for each input, all outputs a system may
 produce.  Each column carries its own partial order, saying when one input
 \inrel another and when one output \outrel another.  A specification is
@@ -187,7 +190,7 @@ are the ones that matter: they exclude a possibility that nothing
 remaining can cover.  Can we say which scenarios require
 fateful decisions?
 
-We ground the problem in a simple declarative specification model,
+We ground the problem in a simple declarative model of \spectype[s],
 independent of any language, protocol, or placement. The designer of a
 specification provides a \emph{possibility relation} $P\subseteq
 I\times O$: a table that may be infinite, like a mathematical function. Each row in
@@ -257,7 +260,7 @@ Gilbert--Lynch theorem follows directly.
 \paragraph{Contributions.}
 We make contributions in three categories:
 \begin{enumerate}
-  \item \emph{A unified model.} The observable behavior of a system is captured via ordered relational specifications: a possibility relation over
+  \item \emph{A unified model.} The observable behavior of a system is captured via \spectype[s]: a possibility relation over
         ordered input and output domains. Consistency is defined as confluence, uniformly capturing general
         consistency models, application-specific requirements, and distributed consistency.
   \item \emph{A unified criterion.} For functions between ordered domains,
@@ -486,9 +489,9 @@ this corresponds exactly to monotonicity.
 
 We now state these notions precisely.
 
-\begin{definition}[Functional ordered specification, total]
+\begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
-A \emph{functional ordered specification} is a tuple
+A \emph{functional \spectype} is a tuple
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$,
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered input and
 output types, and $P\subseteq I\times O$ is its \emph{possibility relation}:
@@ -615,7 +618,7 @@ of those inputs.
 
 \begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
-An ordered specification is \emph{consistent} when every finite family of
+An \spectype is \emph{consistent} when every finite family of
 runs is confluent: if the runs end at states
 $(i_1,R_1),\ldots,(i_k,R_k)$ and $j$ is a common \indesc of their current
 inputs, each can be continued to a
@@ -659,7 +662,7 @@ table and orders alone.  Functional CALM shows that these coincide.  Full proofs
 
 \begin{theorem}[Functional CALM]
 \label{thm:functional-calm}
-A functional ordered specification is consistent if and only if it is
+A functional \spectype is consistent if and only if it is
 monotone.
 \end{theorem}
 
@@ -688,7 +691,7 @@ output.  Monotonicity also governs legality:
 
 \begin{proposition}[Output-legality boundary]
 \label{prop:functional-exposure-boundary}
-A functional ordered specification is monotone if and only if every output at
+A functional \spectype is monotone if and only if every output at
 every state reachable without \commitment is legal.
 \end{proposition}
 
@@ -728,7 +731,7 @@ output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
 A \commitment can empty an input's fiber or remove some output rows while it
 remains nonempty.  We now turn to the latter effect.  Section~\ref{sec:ambiguity-story}
 introduces the issue by example.  Section~\ref{sec:lifted-monotonicity}
-defines relational specifications and Lifted Monotonicity.  Section~\ref{sec:lifted-output-events} lifts
+defines \spectype[s] and Lifted Monotonicity.  Section~\ref{sec:lifted-output-events} lifts
 output events and classifies what they remove, and
 Section~\ref{sec:complete-calm-theorem} shows that the run-level results of
 Section~\ref{sec:executions} carry over and proves Complete CALM.
@@ -815,19 +818,18 @@ survives in both.
 \label{sec:lifted-monotonicity}
 
 We begin with our most general definition of a specification, which admits
-ambiguity of output.
-\begin{definition}[Ordered relational specification, ambiguity, ordered specification]
+output nondeterminism.
+\begin{definition}[\Spectype, nondeterminism]
 \label{def:relational-specification}
-An \emph{ordered relational specification} is
+An \emph{\spectype} is
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P\subseteq I\times O$,
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  The
 relation $P$ is the specification's \emph{possibility relation} and is total
 on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$.  The fiber
 $\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
-outputs; the specification is \emph{nondeterministic} when some fiber does.  A
-functional specification is the special case $\fiber{i}=\{f(i)\}$.  We call
-either kind simply an \emph{ordered specification}.
+outputs; the \spectype is \emph{nondeterministic} when some fiber does.  A
+functional \spectype is the special case $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
 Specification states and input events
@@ -847,7 +849,7 @@ First, we rule out stranded outputs.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
-An ordered relational specification satisfies \emph{Relational Monotonicity}
+An \spectype satisfies \emph{Relational Monotonicity}
 when every output keeps some \outnoun as input \ingrows:
         \begin{equation}
   i\InputOrd j,\ o\in\fiber{i}
@@ -870,7 +872,7 @@ Second, we rule out incompatible pairs.
 \begin{definition}[Directed fiber, Directed Outputs]
 \label{def:fiber-directedness}
 A fiber $F\subseteq O$ is \emph{directed} when every nonempty finite
-$X\subseteq F$ is compatible in $F$.  An ordered relational specification has
+$X\subseteq F$ is compatible in $F$.  An \spectype has
 \emph{Directed Outputs} when every fiber $\fiber{i}$ is directed.
 \end{definition}
 
@@ -905,7 +907,7 @@ $j=i$, this rules out incompatible pairs.
 
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
-An ordered relational specification satisfies \emph{Lifted Monotonicity}, and
+An \spectype satisfies \emph{Lifted Monotonicity}, and
 is called \emph{monotone}, when the mapping $i\mapsto\fiber{i}$ is monotone
 under the joint lift:
         \begin{equation}
@@ -930,7 +932,7 @@ $o_1$ at $i_1$ and $o_2$ at $i_2$, and can be reconciled only at a common
 
 \begin{definition}[Common-\indesc condition]
 \label{def:common-expansion-condition}
-An ordered specification satisfies the \emph{common-\indesc condition} when,
+An \spectype satisfies the \emph{common-\indesc condition} when,
 for every finite set of rows $(i_1,o_1),\ldots,(i_k,o_k)$ of $P$ and every
 common \indesc $j$ of $i_1,\ldots,i_k$, some $u\in P(j)$ \outrel every
 $o_r$.
@@ -941,7 +943,7 @@ follows from $P$ being total on $I$.
 
 \begin{proposition}[Common-\indesc form of Lifted Monotonicity]
 \label{prop:common-expansion-form}
-An ordered relational specification satisfies Lifted Monotonicity if and only
+An \spectype satisfies Lifted Monotonicity if and only
 if it satisfies the common-\indesc condition.
 \end{proposition}
 
@@ -989,7 +991,7 @@ reduces to Lifted Monotonicity.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
-An ordered specification is consistent if and only if it satisfies Lifted
+An \spectype is consistent if and only if it satisfies Lifted
 Monotonicity, equivalently the common-\indesc condition.
 \end{theorem}
 
@@ -1012,7 +1014,7 @@ The same condition governs legality.
 
 \begin{proposition}[Output-legality boundary]
 \label{prop:exposure-boundary}
-An ordered specification satisfies Lifted Monotonicity if and only
+An \spectype satisfies Lifted Monotonicity if and only
 if every output at every state reachable without \commitment is legal.
 \end{proposition}
 
@@ -1324,7 +1326,7 @@ containing both operations: a linearization may put the concurrent read before
 the write.  The combined output \outrel both local outputs and provides a proof
 of their consistency, although no participant need ever emit it.
 
-We therefore encode a guarantee as an ordered specification together with an
+We therefore encode a guarantee as an \spectype together with an
 explicit relation $E\subseteq P$: the rows whose outputs must remain locally
 available.  Outputs in $P\setminus E$ need only remain permitted as possible
 common \outnouns.  Complete CAP says that such a guarantee can stay available
@@ -1380,7 +1382,7 @@ With $E=P$, Lifted Monotonicity for $E$ is the common-\indesc condition
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
-For an ordered specification $\Spec$ and an explicit relation
+For an \spectype $\Spec$ and an explicit relation
 $E\subseteq P$, the following are equivalent:
 \begin{enumerate}
   \item some system has Availability for $E$ and Partition Consistency;
@@ -1463,7 +1465,7 @@ the input of the next.  The composite is again a table: it pairs an input of
 the first specification with every output that the second permits for some
 intermediate value that the first permits.  Formally, let
 $\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
-$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be ordered relational specifications
+$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be \spectype[s]
 sharing the ordered domain $(M,\preceq_M)$.  Their \emph{sequential
 composition} has table
 \begin{equation}
@@ -1481,7 +1483,7 @@ we say that $\Spec_1$ \emph{guards} $\Spec_2$.
 \begin{lemma}[Composition]
 \label{lem:composition}
 If $\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity, then so does the
-ordered specification with table $P_2\circ P_1$.
+\spectype with table $P_2\circ P_1$.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
@@ -1600,7 +1602,7 @@ order as given.
 
 Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
 permitted located outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}; under
-inclusion, a behavior is a relational specification.  Their characterization,
+inclusion, a behavior is an \spectype.  Their characterization,
 \emph{node monotonicity}, is the common-\indesc condition for two rows at
 disjoint networks, and Complete CAP extends it to overlapping networks
 (see \extended).
@@ -1839,7 +1841,7 @@ every common \indesc of their inputs; when the relation selects every output,
 this is Lifted Monotonicity.
 
 The generality of our specification model opens a range of new questions
-regarding the ambiguity of specifications and their \commitments. One direction
+regarding the nondeterminism of specifications and their \commitments. One direction
 extends the boolean criteria of this paper to metrics: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
 needed to determine a specification. Another is Determination Provenance: a

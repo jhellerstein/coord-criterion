@@ -75,8 +75,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:relational-specification»
 #check @CC.Paper.«eq:relational-specification»
 #check @CC.Paper.«eq:fiber»
-#check @CC.Paper.«def:relational-specification/ambiguous»
-#check @CC.Paper.«def:ambiguous»
+#check @CC.Paper.«def:relational-specification/nondeterministic»
+#check @CC.Paper.«def:nondeterministic»
 #check @CC.Paper.«def:relational-monotonicity»
 #check @CC.Paper.«eq:relational-monotonicity»
 #check @CC.Paper.«def:relational-monotonicity/functional»
@@ -290,7 +290,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/consistent»
 #check @CC.Paper.«app:notation/confluent-at»
 #check @CC.Paper.«app:notation/relational-specification»
-#check @CC.Paper.«app:notation/ambiguous»
+#check @CC.Paper.«app:notation/nondeterministic»
 #check @CC.Paper.«app:notation/stranded-output»
 #check @CC.Paper.«app:notation/incompatible-pair»
 #check @CC.Paper.«app:notation/relational-monotonicity»

@@ -48,7 +48,7 @@ theorem «eq:canonical-commitment-relational» {sp : Spec I O}
       ∀ k x, (commitmentState σ o ho).R k x ↔ σ.R k x ∧ ¬ Excluded σ o k x :=
   ⟨rfl, fun _ _ => Iff.rfl⟩
 
-/-- The ambiguity example excludes `[B,A]`; the routing example only subsumes
+/-- The transaction-order example excludes `[B,A]`; the routing example only subsumes
 its removed route sets. -/
 theorem «def:lifted-output-event/examples» :
     Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧

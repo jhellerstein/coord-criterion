@@ -181,7 +181,7 @@ theorem «sec:distributed-consistency/cut-confluent-iff-runs» {D : Type} {n : N
   Dist.cut_confluent_iff hW hC hE j
 
 /-- **Def. distributed consistency** (`def:distributed-consistency`).  "An
-ordered specification has distributed consistency when, for every finite
+interface specification has distributed consistency when, for every finite
 participant set, every consistent cut of every history is confluent at every
 common expansion of the participants' current inputs."
 
@@ -191,7 +191,7 @@ abbrev «def:distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
   Dist.DistConsistent sp D
 
 /-- **Prop. consistency and distributed consistency**
-(`prop:distributed-consistency`).  "An ordered specification is consistent if
+(`prop:distributed-consistency`).  "An interface specification is consistent if
 and only if it has distributed consistency." -/
 theorem «prop:distributed-consistency» (sp : Spec I O) (D : Type) :
     sp.Consistent ↔ Dist.DistConsistent sp D :=
