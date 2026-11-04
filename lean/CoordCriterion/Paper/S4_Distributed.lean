@@ -181,7 +181,7 @@ theorem «sec:distributed-consistency/cut-confluent-iff-runs» {D : Type} {n : N
   Dist.cut_confluent_iff hW hC hE j
 
 /-- **Def. distributed consistency** (`def:distributed-consistency`).  "An
-interface specification has distributed consistency when, for every finite
+I/O specification has distributed consistency when, for every finite
 participant set, every consistent cut of every history is confluent at every
 common expansion of the participants' current inputs."
 
@@ -191,7 +191,7 @@ abbrev «def:distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
   Dist.DistConsistent sp D
 
 /-- **Prop. consistency and distributed consistency**
-(`prop:distributed-consistency`).  "An interface specification is consistent if
+(`prop:distributed-consistency`).  "An I/O specification is consistent if
 and only if it has distributed consistency." -/
 theorem «prop:distributed-consistency» (sp : Spec I O) (D : Type) :
     sp.Consistent ↔ Dist.DistConsistent sp D :=
@@ -832,14 +832,13 @@ theorem «prop:canonical-contradiction/canonical-run» {sp : Spec I O} {i k : I}
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
-  /-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
-  "Thus, relative to `𝓡_P^⊤`, every commitment requires coordination, so a run
-  is coordination-free exactly when it makes no commitments; output
-  subsumption remains permitted.  The run applying the commitment and a
-  canonical run that contradicts it can also be placed at separate participants
-  in a message-free history, by the construction in the proof of Proposition
-  `prop:distributed-consistency`.  Hence every commitment requires distributed
-  coordination as well."
+/-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
+"Relative to `𝓡_P^⊤`, a run is coordination-free if and only if it applies no
+commitment.  Output subsumption remains permitted.  Given two distinct
+participants both initialized at `i`, the run applying a commitment from
+`σ_P(i)` and a canonical run that contradicts it can occupy separate
+participants in a message-free history.  The commitment therefore requires
+distributed coordination relative to that history's runs."
 
 Lean: `CoordFree es ↔ ¬ Coordinates es`; `Coordinates` means that an output
 event has `γ ≠ ε` or a commitment event occurs. -/

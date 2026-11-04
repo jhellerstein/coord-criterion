@@ -161,7 +161,7 @@ abbrev «app:notation/confluent-at» {sp : Spec I O} (fam : List (State sp)) (j 
 
 /-! ## Complete CALM (Section `sec:complete-calm`) -/
 
-/-- *interface specification* — `P ⊆ I × O` total on `I`
+/-- *I/O specification* — `P ⊆ I × O` total on `I`
 (Def. `def:relational-specification`).  Lean: `Spec I O`. -/
 abbrev «app:notation/relational-specification» (I O : Type) [PO I] [PO O] := Spec I O
 

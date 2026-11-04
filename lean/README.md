@@ -366,7 +366,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-consistency/at-cuts»` | theorem | Def. |
 | `«def:lm-for-A»` | abbrev | **Def. |
 | `«sec:complete-cap/lm-for-S»` | theorem | "With `E = P`, Lifted Monotonicity for `E` is the common-expansion condition." |
-| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an interface specification `P` and an explicit relation `E ⊆ P`, the following are equivalent: |
+| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an I/O specification `P` and an explicit relation `E ⊆ P`, the following are equivalent: |
 | `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `P` satisfies Lifted Monotonicity." |
 | `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
 | `«sec:complete-cap/necessity-any-system»` | theorem | "A system might hope to keep more outputs available by issuing commitments, coordinating within each side of a partition. |
@@ -395,7 +395,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone (Section `sec:lifted-monotonicity`)." Lean: |
-| `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an interface specification. |
+| `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |
 | `«sec:composite-calm/all-monotone»` | theorem | "First, every stage is monotone. |
 | `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
@@ -483,7 +483,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/commitment-free»` | abbrev | *commitment-free* — no output event commits (Def. |
 | `«app:notation/consistent»` | abbrev | *consistent* — every finite family of runs can reach one common state at each common expansion `j` (Def. |
 | `«app:notation/confluent-at»` | abbrev | *confluent at `j`* (Def. |
-| `«app:notation/relational-specification»` | abbrev | *interface specification* — `P ⊆ I × O` total on `I` (Def. |
+| `«app:notation/relational-specification»` | abbrev | *I/O specification* — `P ⊆ I × O` total on `I` (Def. |
 | `«app:notation/nondeterministic»` | abbrev | *nondeterministic* — some fiber has several outputs (Def. |
 | `«app:notation/stranded-output»` | abbrev | *stranded output* — an output at `i` with no refinement at some expansion (Sec. |
 | `«app:notation/incompatible-pair»` | abbrev | *incompatible pair* — two outputs at `i` with no common refinement there (Sec. |
@@ -785,7 +785,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«def:response-interface/T-eq-S»` | theorem | "With `T = P` it is the common-expansion condition of Proposition `prop:common-expansion-form`." |
 | `«def:response-interface/confluence»` | theorem | "and by Lemma `lem:reconciliation` it is confluence of the canonical runs whose emitted rows lie in `T`." Lean: |
 | `«app:cap-response/serve-interface»` | theorem | "A response interface is an explicit relation that a system can always serve. |
-| `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).** "For an interface specification `P` and a uniform obligation `Q`, the following… |
+| `«thm:complete-cap-response»` | theorem | **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).** "For an I/O specification `P` and a uniform obligation `Q`, the following are e… |
 | `«thm:complete-cap-response/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap-response`, (2⇒1): |
 | `«app:cap-response/without-replication»` | theorem | **Remark "Without replication"**: |
 | `«app:cap-response/without-replication/local-init-needed»` | theorem | The `LocalInit` hypothesis ("each strategy depends on the initial inputs only through its own participant's") is needed: |

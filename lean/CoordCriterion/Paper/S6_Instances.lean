@@ -634,7 +634,7 @@ abbrev «def:execution-input» {C P O : Type} (β : List (IOM.Act C P O)) : IOM.
   IOM.input β
 
 /-- **Prop. `prop:induced-specification`** (Induced specifications).
-"(1) The induced specification is an interface specification, and the input of
+"(1) The induced specification is an I/O specification, and the input of
 an execution only expands as the execution continues.  (2) When there is one
 client and its state-machine events arrive in the order it sent them, every input is a
 chain, inputs correspond to state-machine event sequences ordered by prefix, and the fiber
@@ -796,7 +796,7 @@ theorem «sec:operational-models/both-halves» {C P : Type} [DecidableEq C]
   IOM.fork_halves k
 
 /-- **Prop. `prop:declared-specification`** (Declared specifications).  "Let
-`D` be an interface specification whose inputs correspond, by an order
+`D` be an I/O specification whose inputs correspond, by an order
 isomorphism, to the inputs that occur.  If `D` satisfies realizability and
 domination, then `D` satisfies Lifted Monotonicity exactly when the induced
 specification does, and so exactly when the machine's observations are

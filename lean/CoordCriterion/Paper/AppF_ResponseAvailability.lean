@@ -356,7 +356,7 @@ theorem «app:cap-response/serve-interface» (Q : Obligation sp) (T : Table I O)
 /-! ### Theorem `thm:complete-cap-response` -/
 
 /-- **Theorem `thm:complete-cap-response` (Complete CAP with chosen responses).**
-"For an interface specification `P` and a uniform obligation `Q`,
+"For an I/O specification `P` and a uniform obligation `Q`,
 the following are equivalent: (1) some replicated system has Response
 Availability for `Q` and Response Partition Consistency; (2) `P` satisfies
 Lifted Monotonicity for some response interface `T ⊆ Q`; (3) for some response interface

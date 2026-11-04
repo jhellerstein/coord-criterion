@@ -99,9 +99,9 @@ theorem «sec:ambiguity-story/traceroute-passes» (x y : Figures.Trace.RS)
       (outState (canon Figures.Trace.spec ()) y ((Figures.Trace.canonR y).2 hy)).R () (x.union y) :=
   Figures.Trace.union_survives x y hx hy
 
-/-! ## Interface specifications and states (`sec:relational-specifications`) -/
+/-! ## I/O specifications and states (`sec:relational-specifications`) -/
 
-/-- **Def. `def:relational-specification`** (Interface specification).
+/-- **Def. `def:relational-specification`** (I/O specification).
 "`Spec = (I,≼,O,≼,P)`, `P ⊆ I × O`, where `(I,≼)` and
 `(O,≼)` are partially ordered sets.  `P` is the specification's *table of
 possibilities* and is total on `I`; a row `(i,o) ∈ P` is a possible
@@ -134,10 +134,12 @@ theorem «def:relational-specification/nondeterministic» {I O : Type} [PO I] [P
    fun hn => Classical.byContradiction fun h =>
      hn fun i o o' ho ho' => Classical.byContradiction fun hne => h ⟨i, o, o', ho, ho', hne⟩⟩
 
-/-- **Def. `def:nondeterministic`** (Nondeterministic specification).  "An
-interface specification is *nondeterministic* when some fiber
-contains more than one output."  Lean reading: there exist `i, o, o'` with
-`o ≠ o'` and both in `sp.P i`. -/
+/-- **Def. `def:nondeterministic`** (Nondeterministic I/O specification).  "An
+I/O specification is *nondeterministic* when some fiber contains more than one
+output.  Specification nondeterminism describes permitted results, not a
+strategy's method of choosing among them, and does not by itself imply a
+commitment."  Lean reading: there exist `i, o, o'` with `o ≠ o'` and both in
+`sp.P i`. -/
 abbrev «def:nondeterministic» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   ∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o'
 
@@ -284,7 +286,7 @@ theorem «def:common-expansion-condition/empty» {I O : Type} [PO I] [PO O]
   let ⟨u, hu⟩ := sp.total j; ⟨u, hu, fun _ h => nomatch h⟩
 
 /-- **Prop. `prop:common-expansion-form`** (Common-expansion form of Lifted
-Monotonicity).  "An interface specification satisfies Lifted
+Monotonicity).  "An I/O specification satisfies Lifted
 Monotonicity if and only if it satisfies the common-expansion condition." -/
 theorem «prop:common-expansion-form» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ sp.CommonExpansion :=

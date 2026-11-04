@@ -54,8 +54,8 @@
 \setlength{\emergencystretch}{1.5em}
 \newcommand{\Spec}{\mathcal{S}}
 % The name of the specification model; optional suffix supports \spectype[s].
-\newcommand{\spectype}[1][]{interface specification#1\xspace}
-\newcommand{\Spectype}[1][]{Interface specification#1\xspace}
+\newcommand{\spectype}[1][]{I/O specification#1\xspace}
+\newcommand{\Spectype}[1][]{I/O specification#1\xspace}
 \newcommand{\fiber}[1]{P(#1)}
 \newcommand{\dog}{\texttt{dog}}
 \newcommand{\catv}{\texttt{cat}}
@@ -98,8 +98,8 @@ open, such as how coordination repairs inconsistency.  We put them on common
 ground.  We define a minimalist \spectype: a
 possibility table that includes, for each input, all outputs a system may
 produce.  Each column carries its own partial order, saying when one input
-\inrel another and when one output \outrel another.  A specification is
-\emph{consistent} when its runs are confluent: runs whose inputs have a common
+\inrel another and when one output \outrel another.  An \spectype is
+\emph{consistent} when all its possible runs are confluent: runs whose inputs have a common
 \indesc can always catch up to a common state.  Possibilities narrow as input
 grows or outputs are emitted. An irrevocable \emph{\commitment} removes
 possibilities not subsumed by those remaining; it requires coordination when
@@ -180,7 +180,7 @@ laws are necessary, why only some transactional isolation levels remain
 available during partition, and whether invariant confluence differs from CALM
 (\S\ref{sec:instances}).
 
-\subsection{The Model: Possibility Relations}
+\subsection{The Model: \Spectype[s]}
 In systems, as in life,
 possibilities narrow over time.  Sometimes the world moves on,
 and possibilities are lost to us.  Other choices are left for us to decide, with
@@ -215,7 +215,7 @@ causal consistency, and transactional isolation levels
 \subsection{The Criterion: Lifted Monotonicity}
 With this model in hand, we are ready to define the key aspects of CALM:
 Consistency and Monotonicity. A specification is \emph{consistent} when
-the executions it admits are \emph{confluent}: states reached along
+all its possible executions are \emph{confluent}: states reached along
 different paths can be brought to a common state. We will see that this definition
 is general, accommodating narrower notions from prior literature.
 Our monotonicity criterion requires more care: it must capture the full
@@ -829,7 +829,9 @@ on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$.  The fiber
 $\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
 outputs; the \spectype is \emph{nondeterministic} when some fiber does.  A
-functional \spectype is the special case $\fiber{i}=\{f(i)\}$.
+functional \spectype is the special case $\fiber{i}=\{f(i)\}$.  Specification
+nondeterminism describes permitted results, not a strategy's method of choosing
+among them, and does not by itself imply a \commitment.
 \end{definition}
 
 Specification states and input events
@@ -1247,13 +1249,23 @@ $k$, the canonical run that accepts $k$ contradicts it.  Otherwise, the
 canonical run that accepts $k$ and emits $x$ contradicts it.
 \end{proof}
 
-Thus, relative to $\mathcal R_P^\top$, every \commitment requires coordination,
-so a run is coordination-free exactly when it makes no \commitments; output
-subsumption remains permitted.  The run applying the \commitment and a canonical
-run that contradicts it can also occupy separate participants in a message-free
-history, by the construction in the proof of
-Proposition~\ref{prop:distributed-consistency}.  Hence every \commitment
-requires distributed coordination as well.
+\begin{corollary}[Canonical coordination]
+\label{cor:canonical-coordination}
+Relative to $\mathcal R_P^\top$, a run is coordination-free if and only if it
+applies no \commitment.
+\end{corollary}
+
+\begin{proof}
+Every applied \commitment has a contradicting run in $\mathcal R_P^\top$ by
+Proposition~\ref{prop:canonical-contradiction}; the converse is immediate.
+\end{proof}
+
+Output subsumption remains permitted.  Given two distinct participants both
+initialized at $i$, the run applying a \commitment from $\sigma_P(i)$ and a
+canonical run that contradicts it can occupy separate participants in a
+message-free history, by the construction in the proof of
+Proposition~\ref{prop:distributed-consistency}.  The \commitment therefore
+requires distributed coordination relative to that history's runs.
 
 \begin{proposition}[Contradicting runs cannot reconcile at the conflict input]
 \label{thm:commitments-require-coordination}

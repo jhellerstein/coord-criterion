@@ -64,7 +64,7 @@ theorem «sec:composition/middle-totality-needed» :
   Comp.restricted_middle_counterexample
 
 /-- **Lemma `lem:composition`** (Composition): "If `Spec₁` and `Spec₂`
-satisfy Lifted Monotonicity, then so does the interface specification with
+satisfy Lifted Monotonicity, then so does the I/O specification with
 table `P₂ ∘ P₁`." -/
 theorem «lem:composition» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M} {sp2 : Spec M O}
     (h1 : sp1.LiftedMono) (h2 : sp2.LiftedMono) : (Comp.seq sp1 sp2).LiftedMono :=
@@ -86,7 +86,7 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
 
 /-! ## Composite CALM (`sec:composite-calm`) -/
 
-/-- "The composite is itself an interface specification.  By Complete CALM,
+/-- "The composite is itself an I/O specification.  By Complete CALM,
 specification `P₂ ∘ P₁` is consistent exactly when it satisfies Lifted
 Monotonicity, and then no output needs a commitment (Theorem
 `thm:complete-calm`, Proposition `prop:exposure-boundary`)." -/

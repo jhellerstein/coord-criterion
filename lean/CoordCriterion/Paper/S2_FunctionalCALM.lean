@@ -517,7 +517,7 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (fam : List (State sp)) (j : I) : Prop :=
   ConfluentAt fam j
 
-/-- **Def. `def:consistency`** (Consistency).  "An interface specification is
+/-- **Def. `def:consistency`** (Consistency).  "An I/O specification is
 *consistent* when every finite family of runs is confluent at every common
 expansion of their current inputs."
 
@@ -588,7 +588,7 @@ theorem «cor:state-by-input/input-suffices» {I O : Type} [PO I] [PO O] {sp : S
   functional_meet_by_input hf hc hrun hj
 
 /-- **Prop. `prop:functional-exposure-boundary`** (Output-legality boundary).  "A
-functional interface specification is monotone if and only if every output at
+functional I/O specification is monotone if and only if every output at
 every state reachable without commitment is a legal output."  "An output at state
 `τ`" is an `o` with `(τ.cur, o) ∈ τ.R`. -/
 theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : Spec I O)
