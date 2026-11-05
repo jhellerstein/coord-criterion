@@ -497,8 +497,11 @@ this corresponds exactly to monotonicity.
 \label{sec:functional-events}
 \label{sec:executions}
 
-We now state these notions precisely.
+We now make the functional framework precise: first functional I/O
+specifications and monotonicity, then a transition system that models their
+runs, and finally consistency as confluence of those runs.
 
+\paragraph{Specifications and monotonicity.}
 \begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
 A \emph{functional \spectype} is a tuple
@@ -540,16 +543,16 @@ rows, and commas separate conjuncts: $R[\mathrm{in}\InputGe j,\
 output \outrel $o$.  We say that a row $(k,u)$ is \emph{at} $k$, and $\mathrm{out}(R)$ is
 the set of outputs in $R$.
 
-We next define a transition system for our abstract I/O specifications.
+We next define the transition system.
 
-\paragraph{States.}
-As illustrated by the non-gray text in the panels of Figure~\ref{fig:election-frames}, a \emph{specification state} is a pair $\sigma=(i,R)$ of a \emph{current
-input} $i$ and a \emph{remainder table} $R\subseteq P$ that contains a row at
-$i$ and only rows at \indescs of $i$.  An input $k$ is \emph{legal} at
-$\sigma$ when $R$ contains a row at $k$.  Rows are never added during
-execution.  The \emph{canonical state at $i$}, the state of a system that has
-received $i$ and emitted nothing, has no rows removed: it keeps every row at $i$
-and its \indescs:
+\paragraph{States: remaining possibilities.}
+As illustrated by the non-gray text in Figure~\ref{fig:election-frames}, a
+\emph{specification state} $\sigma=(i,R)$ records the current input and the
+possibilities still open: $i$ is the \emph{current input}, and $R\subseteq P$
+is the \emph{remainder table}.  The table $R$ contains a row at $i$ and only
+rows at \indescs of $i$.  An input $k$ is \emph{legal} when $R$ contains a
+row at $k$.  Rows are never added during execution.  The \emph{canonical state
+at $i$} has received $i$, emitted nothing, and removed no rows:
 \begin{equation}
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
@@ -557,20 +560,22 @@ and its \indescs:
 The \emph{fiber} of $R$ at $k$ is $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The
 \emph{future-output set} of $(i,R)$ is $\mathrm{out}(R)$, and the state is \emph{determined} when it has one element.
 
-\paragraph{Events.}
+\paragraph{Events: narrowing possibilities.}
+Each event applies a selection predicate on one column of the remainder table.
 For a state $(i,R)$ and a legal input $j$, the \emph{input event}
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{input}(j)}
   \bigl(j,\ R[\mathrm{in}\InputGe j]\bigr)
   \label{eq:input-event}
 \end{equation}
-makes $j$ current and \emph{subsumes} the rows whose input does not
+makes $j$ current and drops the rows whose input does not
 \inrelbase $j$.  Because inputs are cumulative, $\mathsf{input}(j)$ then
 $\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.
 
-A system controls what it tells the world.  We study what it can
-promise without assuming that clients tolerate retractions.  Later outputs
-must therefore \outrelbase earlier ones.
+A system controls what it tells the world.  An output is a promise to the
+outside world, so later outputs must \outrelbase it.
+
+Selecting on the output column may require a \commitment.
 
 \begin{definition}[Output event, canonical \commitment]
 \label{def:output-event}
@@ -625,8 +630,8 @@ $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_1,\ \ldots,\
 \end{lemma}
 \proofinfull
 
-To compare runs that end at different inputs, we consider a common \indesc
-of those inputs.
+Different runs may retain different rows.  At a common \indesc $j$ of their
+current inputs, they can meet only if they still share a possible row at $j$.
 
 \begin{definition}[Consistency, confluence at an input]
 \label{def:consistency}
@@ -643,8 +648,7 @@ outputs through channels the system does not see, as in Lamport's ``anomalous
 behavior''~\cite{lamport1978time}, and a reconciling input may never arrive.
 Thus a conflict is a consistency failure even if later input could resolve it.
 
-Confluence has a simple test: some row at the common \indesc must survive
-in every run.
+In fact, sharing such a row is also sufficient.
 
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
