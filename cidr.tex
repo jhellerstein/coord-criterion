@@ -18,6 +18,14 @@
 \newtheorem{example}{Example}
 \newtheorem{remark}{Remark}
 
+% Use \paragraph as minor section-like header
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {-.5\baselineskip \@plus -2\p@ \@minus -.2\p@}%
+  {-0.5em}%
+  {\normalfont\bfseries}}
+\makeatother
+
 \newcommand{\InputOrd}{\preceq_I}
 \newcommand{\OutputOrd}{\preceq_O}
 \newcommand{\InputGe}{\succeq_I}
@@ -182,7 +190,7 @@ available during partition, and whether invariant confluence differs from CALM
 
 We now turn to unifying these ideas under a single formalism.
 
-\subsection{The Model: \Spectype[s]}
+\paragraph{The Model: \Spectype[s].}
 In systems, as in life, our possibilities narrow over time. Sometimes the world
 moves on, and possibilities are lost to us. Sometimes possibilities disappear
 because we must decide among them. A decision is incidental when
@@ -213,7 +221,7 @@ but also general-purpose consistency definitions such as linearizability,
 causal consistency, and transactional isolation levels
 (\S\ref{sec:complete-cap}, \S\ref{sec:hat-instance}, and \extended).
 
-\subsection{The Criterion: Lifted Monotonicity}
+\paragraph{The Criterion: Lifted Monotonicity.}
 With this model in hand, we are ready to define the key aspects of CALM:
 Consistency and Monotonicity. A specification is \emph{consistent} when
 all its possible executions are \emph{confluent}: states reached along
@@ -258,7 +266,7 @@ Lifted Monotonicity exactly characterizes specifications that can keep every
 permitted output available and confluent during a partition.  The
 Gilbert--Lynch theorem follows directly.
 
-\subsection{Contributions}
+\paragraph{Contributions.}
 We make contributions in three categories:
 
 \noindent
@@ -497,11 +505,11 @@ this corresponds exactly to monotonicity.
 \label{sec:functional-events}
 \label{sec:executions}
 
-We now make the functional framework precise: first functional I/O
+We now make the functional framework precise: functional I/O
 specifications and monotonicity, then a transition system that models their
 runs, and finally consistency as confluence of those runs.
 
-\paragraph{Specifications and monotonicity.}
+\paragraph{Specifications and monotonicity.} We begin with specifications.
 \begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
 A \emph{functional \spectype} is a tuple
@@ -526,7 +534,7 @@ unique or least: for example, two independent transactions $u$ and $v$, with sch
 ordered by subsequence, have two incomparable minimal common \indescs, $uv$
 and $vu$.
 
-\begin{definition}[Functional monotonicity, monotone]
+\begin{definition}[Functional monotonicity]
 \label{def:functional-monotonicity}
 $\Spec$ is \emph{monotone} if
 \begin{equation}
@@ -557,8 +565,10 @@ at $i$} has received $i$, emitted nothing, and removed no rows:
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
 \end{equation}
-The \emph{fiber} of $R$ at $k$ is $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The
-\emph{future-output set} of $(i,R)$ is $\mathrm{out}(R)$, and the state is \emph{determined} when it has one element.
+The \emph{fiber} of $R$ at $k$ is all the matching outputs to $k$: $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The
+\emph{future-output set} of $(i,R)$ is $\mathrm{out}(R)$: all the remaining outputs possible at $i$. 
+The state is \emph{determined} when 
+the future-output set has one unique element.
 
 \paragraph{Events: narrowing possibilities.}
 Each event applies a selection predicate on one column of the remainder table.
