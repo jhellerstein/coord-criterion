@@ -6,7 +6,7 @@ at each participant, and the only change from our framework's
 perspective is that participants can learn about inputs at other participants
 via messages.  Functional CALM and Complete CALM therefore have a natural
 distributed reading, including a convergence guarantee derived from the
-specification (Corollary~\ref{cor:convergence}).  We then define systems, whose \commitments may exceed those the specification
+spec (Corollary~\ref{cor:convergence}).  We then define systems, whose \commitments may exceed those the spec
 requires, and \commitments that require distributed coordination, which a run at
 another participant could contradict; Complete CAP follows.
 
@@ -15,7 +15,7 @@ another participant could contradict; Complete CAP follows.
 \subsection{Systems}
 \label{sec:systems}
 
-Specifications are declarative, and admit many implementations.  For
+Specs are declarative, and admit many implementations.  For
 example, serializability can be enforced by any of a number of concurrency
 control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
 Appendix~\ref{app:cc-bases}).  Two-phase locking (2PL) uses locks on
@@ -23,7 +23,7 @@ operations: when $B$ waits for a lock $A$ holds, $\mathsf{order}(A,B)$
 fixes $A$ before $B$.  Multiversion timestamp ordering
 (MVTO)~\cite{bernstein1981concurrency} uses timestamps:
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped.  The
-two narrow the specification differently.
+two narrow the spec differently.
 
 We saw a similar example with elections.  The registrar of
 Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the
@@ -31,7 +31,7 @@ same event (Figure~\ref{fig:election-frames}(d)); the output event for
 $\bot$ does not require the poll-closing \commitment.  Closing the polls is the
 registrar's design decision, as fixing orderings is 2PL's.
 
-A system therefore dictates two things: a specification and a basis of
+A system therefore dictates two things: a spec and a basis of
 \commitments its participants may issue; each participant's strategy decides
 when and which to apply.
 
@@ -128,12 +128,12 @@ supplied by the environment, receives of matching sends, and output,
 \commitment, and send events chosen by the participants' strategies.
 \end{definition}
 
-A system implements one specification, so its participants share the basis;
+A system implements one spec, so its participants share the basis;
 no theorem below depends on which participant issues a \commitment.
 Participants may behave differently; a replicated (SPMD) system is the
 special case in which they share one strategy
 (Appendix~\ref{app:cap-response}), and a deployment may limit what each one
-emits (Appendix~\ref{app:deployment}).  Systems for different specifications
+emits (Appendix~\ref{app:deployment}).  Systems for different specs
 compose as components (Section~\ref{sec:proper-coordination}).
 
 \paragraph{Two bases on three transactions.}
@@ -229,7 +229,7 @@ judging runs under any \commitment basis.
 \end{proof}
 
 In the remainder of the paper we therefore judge consistency on canonical
-runs.  Whether a specification needs coordination thus depends on the \commitments its outputs require, whatever mechanism makes them.
+runs.  Whether a spec needs coordination thus depends on the \commitments its outputs require, whatever mechanism makes them.
 
 To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
@@ -260,7 +260,7 @@ Let a specification event of a run $r$ apply a \commitment.  A run $r'$ \emph{co
 fiber, or emits at $k$ an output whose row the \commitment removed.
 \end{definition}
 
-We distinguish the behavior permitted by a specification from the behavior
+We distinguish the behavior permitted by a spec from the behavior
 admitted by a particular system.  Write $\mathcal R_P^\top$ for the set of all
 canonical runs of $P$.  By Lemma~\ref{lem:canonical-equivalent}, it is maximal
 at the observable interface: every run under any \commitment basis has the
@@ -349,7 +349,7 @@ participants.  The definitions diagnose the requirement, not its
 implementation.  Mutexes, locks, atomic instructions, agreement protocols,
 ownership, and sequencers are familiar implementations.  Using one need not
 apply a \commitment: closing the polls after every voter has voted, for example,
-removes nothing the specification still permits.
+removes nothing the spec still permits.
 
 \paragraph{Locks in a shared-nothing database.}
 Consider a database partitioned by key, with each key owned and locked by one
@@ -386,7 +386,7 @@ consistent through a partition.  Complete CAP answers that broader question
 for any declared guarantee.
 
 To state the question, we must separate the outputs that participants must
-keep available from the outputs that the specification permits.  A participant
+keep available from the outputs that the spec permits.  A participant
 acts on its local history during a partition, while consistency compares the
 participants' outputs at a common \indesc of their inputs.  Their common
 \outnoun need not be emitted by any participant.  It may exist only as the
@@ -396,7 +396,7 @@ Consider a register initialized to $v_0$.  During a partition, participant
 $p$ receives a write $w(v)$ and emits its acknowledgment, while participant
 $q$ receives a concurrent read $r$ and returns $v_0$.  A client that later
 collects both observes the write acknowledgment together with the read answer
-$v_0$.  The register specification permits this combined output at the input
+$v_0$.  The register spec permits this combined output at the input
 containing both operations: a linearization may put the concurrent read before
 the write.  The combined output \outrel both local outputs and provides a proof
 of their consistency, although no participant need ever emit it.
@@ -405,11 +405,11 @@ We therefore encode a guarantee as an \spectype together with an
 explicit relation $E\subseteq P$: the rows whose outputs must remain locally
 available.  Outputs in $P\setminus E$ need only remain permitted as possible
 common \outnouns.  Complete CAP says that such a guarantee can stay available
-and consistent through partitions exactly when the specification satisfies
+and consistent through partitions exactly when the spec satisfies
 Lifted Monotonicity for $E$: outputs selected by $E$ on different sides of a
-partition must have a common \outnoun in the specification at every common
+partition must have a common \outnoun in the spec at every common
 \indesc of their inputs.  When $E=P$, this is Lifted Monotonicity itself.  A
-partition does not change which \commitments a specification needs; it removes
+partition does not change which \commitments a spec needs; it removes
 the ability to make them jointly, since separated participants cannot jointly
 apply a \commitment that another participant could contradict.
 
@@ -513,7 +513,7 @@ emitting $o$ must exclude $x$.  When Lifted Monotonicity for $E$ fails, some
 output of $E$ waits for another block, sacrificing Availability, or is emitted anyway, sacrificing Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}
-Their theorem is a case of Complete CAP.  Consider a register specification
+Their theorem is a case of Complete CAP.  Consider a register spec
 whose inputs are sets of operations with their real-time precedence, and whose
 outputs answer every operation of the input as some linearization
 does~\cite{herlihy1990linearizability}.  Let $p$'s input contain only a write
