@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-633 entries.
+631 entries.
 
 ### §2 Functional CALM
 
@@ -485,8 +485,6 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/confluent-at»` | abbrev | *confluent at `j`* (Def. |
 | `«app:notation/relational-specification»` | abbrev | *I/O specification* — `P ⊆ I × O` total on `I` (Def. |
 | `«app:notation/nondeterministic»` | abbrev | *nondeterministic* — some fiber has several outputs (Def. |
-| `«app:notation/stranded-output»` | abbrev | *stranded output* — an output at `i` with no output extension at some input extension (Sec. |
-| `«app:notation/incompatible-pair»` | abbrev | *incompatible pair* — two outputs at `i` with no common output extension there (Sec. |
 | `«app:notation/relational-monotonicity»` | abbrev | *Relational Monotonicity* — every output keeps an output extension as input grows (Def. |
 | `«app:notation/compatible-in»` | abbrev | *compatible in `F`* — some `u ∈ F` extends all (Def. |
 | `«app:notation/directed»` | abbrev | *directed* — every (nonempty) finite subset compatible (Def. |

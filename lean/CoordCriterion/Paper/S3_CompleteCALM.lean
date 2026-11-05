@@ -27,7 +27,9 @@ namespace CC.Paper
 
 open CC CC.CALM
 
-/-! ## Commitment by example (`sec:ambiguity-story`) -/
+/-! ## Nondeterministic specs and Lifted Monotonicity
+(`sec:relational-specifications`, `sec:ambiguity-story`,
+`sec:lifted-monotonicity`) -/
 
   /-- Fig. `fig:ambiguity-frames`(f): "(f) After `[A,B]` … no remaining row extends the removed one: a commitment."  After
   `output([A,B])` only `({A,B},[A,B])` remains; `[B,A]` is in `Excluded_o`,
@@ -99,8 +101,6 @@ theorem «sec:ambiguity-story/traceroute-passes» (x y : Figures.Trace.RS)
       (outState (canon Figures.Trace.spec ()) y ((Figures.Trace.canonR y).2 hy)).R () (x.union y) :=
   Figures.Trace.union_survives x y hx hy
 
-/-! ## I/O specifications and states (`sec:relational-specifications`) -/
-
 /-- **Def. `def:relational-specification`** (I/O specification).
 "`Spec = (I,≼,O,≼,P)`, `P ⊆ I × O`, where `(I,≼)` and
 `(O,≼)` are partially ordered sets.  `P` is the specification's *table of
@@ -142,8 +142,6 @@ commitment."  Lean reading: there exist `i, o, o'` with `o ≠ o'` and both in
 `sp.P i`. -/
 abbrev «def:nondeterministic» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=
   ∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o'
-
-/-! ## Lifted Monotonicity (`sec:lifted-monotonicity`) -/
 
 /-- **Def. `def:relational-monotonicity`** (Relational Monotonicity).
 "`i ≼ j, o ∈ P(i) ⟹ ∃ u ∈ P(j) : o ≼ u`." -/

@@ -291,8 +291,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/confluent-at»
 #check @CC.Paper.«app:notation/relational-specification»
 #check @CC.Paper.«app:notation/nondeterministic»
-#check @CC.Paper.«app:notation/stranded-output»
-#check @CC.Paper.«app:notation/incompatible-pair»
 #check @CC.Paper.«app:notation/relational-monotonicity»
 #check @CC.Paper.«app:notation/compatible-in»
 #check @CC.Paper.«app:notation/directed»
