@@ -125,7 +125,7 @@ def Spec.Consistent (sp : Spec I O) : Prop :=
 def CompatibleIn (F : O → Prop) (X : List O) : Prop :=
   ∃ u, F u ∧ ∀ x ∈ X, x ≼ u
 
-/-- Joint lift of the output order (Eq. joint-output-order). -/
+/-- Joint refinement lift of the output order (Eq. joint-output-order). -/
 def JointLift (A B : O → Prop) : Prop :=
   ∀ X : List O, X ≠ [] → (∀ x ∈ X, A x) → CompatibleIn B X
 

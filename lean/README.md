@@ -133,7 +133,7 @@ first and supporting claims and examples follow.
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | Closure exclusions; 2PL/MVTO bases; bases differ at three transactions that requested commit; deadlock (and under abort-free: the two commit requests are never both accepted); MVTO: what a reported read commits to, when the writer's abort is entailed |
 | `Appendix/TransactionBases/MVTO.lean` | `CC.Txn.Partial` | App. G | MVTO's eager abort as a run driven by operation arrivals: stamps, the read report, the write arrival, `Out_[abort(A)]` applies an exclusion that removes the commit-`A` completions while keeping the same inputs legal, and the abort becomes exposable after `TxCommit(B)`; the version condition is needed |
 | `Appendix/TransactionBases/CommitEvent.lean` | `CC.Txn.Partial.CommitEx` | §4.3 | 2PL exclusion event `Exclude([order(A,B)])` when `B` waits for `A`'s lock, at three transactions that requested commit, then `[A,C,B]`; lockstep with the canonical run, same final state |
-| `Appendix/Frontiers.lean` | `CC.Front` | §3 (Hoare remark); otherwise not in paper | Hoare preorder vs. the joint lift; remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
+| `Appendix/Frontiers.lean` | `CC.Front` | §3 (Hoare remark); otherwise not in paper | Hoare preorder vs. the joint refinement lift; remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
 | `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. E (real-time causal) | Thm. independent products (`thm:product-frontier`), configuration example |
 | `Appendix/Graphs.lean` | `CC.Graph` | not in paper | Products, tee vs. running twice, merge, partition; stage expressions with per-node offered-domain test; Proper Coordination for products; parameterized composition as a product |
 | `Appendix/Registers.lean` | `CC.Deploy` | App. E (registers) | Causal and linearizable registers, two-write history, causal-register frontier |
@@ -489,7 +489,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/compatible-in»` | abbrev | *compatible in `F`* — some `u ∈ F` extends all (Def. |
 | `«app:notation/directed»` | abbrev | *directed* — every (nonempty) finite subset compatible (Def. |
 | `«app:notation/directed-outputs»` | abbrev | *directed fibers* — every fiber directed (Def. |
-| `«app:notation/joint-lift»` | abbrev | *joint lift `A ⊑ B`* — every nonempty finite `X ⊆ A` is compatible in `B` (Eq. |
+| `«app:notation/joint-lift»` | abbrev | *joint refinement lift `A ⊑ B`* — every nonempty finite `X ⊆ A` is compatible in `B` (Eq. |
 | `«app:notation/lifted-monotonicity»` | abbrev | *Lifted Monotonicity* — `i ≼ j ⇒ P(i) ⊑ P(j)` (Def. |
 | `«app:notation/common-expansion-condition»` | abbrev | *common-extension condition* — rows with a common input extension `j` have a common output extension in `P(j)` (Def. |
 | `«app:notation/ruled-out»` | abbrev | *ruled out by `o`* — a row whose output does not extend `o` (Sec. |

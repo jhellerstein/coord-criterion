@@ -92,9 +92,10 @@ thorough transactional specs.
 The transaction schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting
 either requires a \commitment that removes the other.  In the traceroute spec,
 every removed route set is \outrelpast by a remaining one that also \outrelbase
-the emitted observation.  Its removal is \emph{output subsumption}, not
-\commitment.  Directedness formalizes this distinction; Relational
-Monotonicity additionally accounts for input growth.
+the emitted observation, making its removal \emph{output subsumption} rather
+than \commitment.  Lifted Monotonicity combines directedness, which requires
+common \outnouns within each fiber, with Relational Monotonicity, which
+accounts for input growth.
 
 \label{sec:lifted-monotonicity}
 \begin{definition}[Relational Monotonicity]
@@ -150,7 +151,7 @@ $A,B\subseteq O$, define
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-the \emph{joint lift} of $\OutputOrd$.  We apply it with $A=\fiber{i}$ and
+the \emph{joint refinement lift} of $\OutputOrd$.  We apply it with $A=\fiber{i}$ and
 $B=\fiber{j}$ for $i\InputOrd j$.  When $X$ is a single output $o$, it asks
 that $o$ have a \outnoun in $\fiber{j}$, which is Relational Monotonicity.
 When $X$ holds several outputs, it asks that they have a common \outnoun in
@@ -160,7 +161,7 @@ $\fiber{j}$; with $j=i$, this is directedness.
 \label{def:lifted-monotonicity}
 An \spectype satisfies \emph{Lifted Monotonicity}, and
 is called \emph{monotone}, when the mapping $i\mapsto\fiber{i}$ is monotone
-under the joint lift:
+under the joint refinement lift:
         \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
@@ -179,9 +180,9 @@ because the spec has directed fibers, those outputs have a common
 holds exactly when both do.  In powerdomain terms, Relational Monotonicity
 is monotonicity of $i\mapsto\fiber{i}$ under the Hoare
 preorder~\cite{abramsky1994domain}, which asks only that each output in $A$
-have a \outnoun in $B$; the joint lift asks that every finite set of them have
+have a \outnoun in $B$; the joint refinement lift asks that every finite set of them have
 a common one.  The two agree when $B$ is directed.  Unlike the Hoare preorder,
-the joint lift is not reflexive: $A\LiftedOrd A$ holds exactly when $A$ is
+the joint refinement lift is not reflexive: $A\LiftedOrd A$ holds exactly when $A$ is
 directed, so the transaction fiber of Figure~\ref{fig:ambiguity-frames}(f)
 already fails it at $j=i$.
 

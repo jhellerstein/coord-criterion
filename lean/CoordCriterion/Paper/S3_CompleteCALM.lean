@@ -210,7 +210,7 @@ theorem «sec:lifted-monotonicity/figure-fibers» :
       ¬ CompatibleIn (Figures.Txn.spec.P ()) [.ab, .ba] :=
   ⟨Figures.Trace.union_mem, Figures.Trace.directed.1, Figures.Txn.not_monotone.1⟩
 
-/-- **Eq. `eq:joint-output-order`** (joint lift).  "For nonempty `A,B ⊆ O`,
+/-- **Eq. `eq:joint-output-order`** (joint refinement lift).  "For nonempty `A,B ⊆ O`,
 `A ⊑ B ⟺ every nonempty finite X ⊆ A is compatible in B`."  Lean:
 `JointLift A B`, with `X` a nonempty list. -/
 abbrev «eq:joint-output-order» {O : Type} [PO O] (A B : O → Prop) : Prop :=
@@ -222,7 +222,7 @@ abbrev «def:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) : 
   sp.LiftedMono
 
 /-- **Eq. `eq:lifted-monotonicity`**: "`i ≼ j ⟹ P(i) ⊑ P(j)`" is the
-definition of `Spec.LiftedMono`, with `⊑` the joint lift `JointLift`. -/
+definition of `Spec.LiftedMono`, with `⊑` the joint refinement lift `JointLift`. -/
 theorem «eq:lifted-monotonicity» {I O : Type} [PO I] [PO O] (sp : Spec I O) :
     sp.LiftedMono ↔ ∀ i j, i ≼ j → JointLift (sp.P i) (sp.P j) :=
   Iff.rfl
@@ -240,11 +240,11 @@ theorem «def:lifted-monotonicity/relmono-directed» {I O : Type} [PO I] [PO O]
 
 /-- After Def. `def:lifted-monotonicity`: "In powerdomain terms, Relational
 Monotonicity is monotonicity of `i ↦ P(i)` under the Hoare preorder, which
-asks only that each output in `A` have an output extension in `B`; the joint lift
+asks only that each output in `A` have an output extension in `B`; the joint refinement lift
 asks that every finite set of them have a common one.  The two agree when `B`
 is directed."  Lean: the Hoare preorder is `Front.HoareLe A B`
 (`∀ a ∈ A, ∃ b ∈ B, a ≼ b`); (1) Relational Monotonicity is Hoare
-monotonicity of the fibers; (2) the joint lift implies the Hoare preorder;
+monotonicity of the fibers; (2) the joint refinement lift implies the Hoare preorder;
 (3) for directed `B` (`JointLift B B`, Def. `def:fiber-directedness`) the two
 coincide. -/
 theorem «def:lifted-monotonicity/hoare» {I O : Type} [PO I] [PO O] :
@@ -255,7 +255,7 @@ theorem «def:lifted-monotonicity/hoare» {I O : Type} [PO I] [PO O] :
    fun _ _ => Front.hoare_iff_jointLift_of_directed⟩
 
 /-- After Def. `def:lifted-monotonicity`: "Unlike the Hoare preorder, the
-joint lift is not reflexive: `A ⊑ A` holds exactly when `A` is directed, so
+joint refinement lift is not reflexive: `A ⊑ A` holds exactly when `A` is directed, so
 the transaction fiber of Figure `fig:ambiguity-frames`(f) already fails it at
 `j = i`."  Lean: the Hoare preorder is reflexive; `A ⊑ A` is by definition
 directedness of `A` (Def. `def:fiber-directedness`); the panel (f) fiber

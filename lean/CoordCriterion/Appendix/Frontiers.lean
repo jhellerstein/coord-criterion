@@ -77,11 +77,11 @@ theorem HoareLe.trans {A B C : O → Prop} (h1 : HoareLe A B) (h2 : HoareLe B C)
 theorem HoareLe.of_sub {A B : O → Prop} (h : ∀ o, A o → B o) : HoareLe A B :=
   fun a ha => ⟨a, h a ha, PO.refl a⟩
 
-/-! ### The Hoare preorder and the joint lift
+/-! ### The Hoare preorder and the joint refinement lift
 
 Remark after the Lifted Monotonicity paragraph: Relational Monotonicity is
-monotonicity of `i ↦ P(i)` under the Hoare preorder; the joint lift implies
-it; the two agree when the target is directed; the joint lift is reflexive
+monotonicity of `i ↦ P(i)` under the Hoare preorder; the joint refinement lift implies
+it; the two agree when the target is directed; the joint refinement lift is reflexive
 exactly on directed sets. -/
 
 /-- Relational Monotonicity is monotonicity of `i ↦ P(i)` under the Hoare
@@ -90,7 +90,7 @@ theorem relMono_iff_hoare (sp : Spec I O) :
     sp.RelMono ↔ ∀ i j, i ≼ j → HoareLe (sp.P i) (sp.P j) :=
   ⟨fun h i j hij o ho => h i j o hij ho, fun h i j o hij ho => h i j hij o ho⟩
 
-/-- The joint lift implies the Hoare preorder. -/
+/-- The joint refinement lift implies the Hoare preorder. -/
 theorem jointLift_hoare {A B : O → Prop} (h : JointLift A B) : HoareLe A B :=
   fun a ha =>
     let ⟨u, hu, hall⟩ := h [a] (by simp) (by simp [ha])

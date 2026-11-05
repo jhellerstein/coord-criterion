@@ -187,7 +187,7 @@ abbrev «app:notation/directed» (F : O → Prop) : Prop := JointLift F F
 Lean: `Spec.DirectedOutputs`. -/
 abbrev «app:notation/directed-outputs» (sp : Spec I O) : Prop := sp.DirectedOutputs
 
-/-- *joint lift `A ⊑ B`* — every nonempty finite `X ⊆ A` is compatible in `B`
+/-- *joint refinement lift `A ⊑ B`* — every nonempty finite `X ⊆ A` is compatible in `B`
 (Eq. `eq:joint-output-order`).  Lean: `JointLift A B`. -/
 abbrev «app:notation/joint-lift» (A B : O → Prop) : Prop := JointLift A B
 
