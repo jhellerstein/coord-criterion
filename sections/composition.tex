@@ -6,13 +6,13 @@ coordination is itself non-monotone.  A key-value store with mutable keys is
 non-monotone~\cite{alvaro2011bloom}.  State-machine
 replication~\cite{schneider1990smr} wraps it in a log.  Clients send requests,
 the log puts the requested commands in one order, and the key-value store
-executes the log and answers each request.  The log's specification is also not
+executes the log and answers each request.  The log's spec is also not
 monotone: when two commands arrive concurrently, either may be appended next,
 and the two alternative orders have no common \outnoun.  Yet replicated stores are consistent, coordinating only in the log.  Multi-Paxos agrees on each
 log entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
 with no further agreement.
 
-That puzzle is explained by our framework.  Specifications are
+That puzzle is explained by our framework.  Specs are
 tables, so they compose by equijoin, and composition preserves Lifted
 Monotonicity.  Because \commitments are explicit, we
 can also ask which component makes a composition's \commitments.  When the
@@ -23,9 +23,9 @@ coordination \emph{proper}
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
 
-Intuitively, sequential composition feeds the output of one specification to
+Intuitively, sequential composition feeds the output of one spec to
 the input of the next.  The composite is again a table: it pairs an input of
-the first specification with every output that the second permits for some
+the first spec with every output that the second permits for some
 intermediate value that the first permits.  Formally, let
 $\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
 $\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be \spectype[s]
@@ -65,10 +65,10 @@ monotone (\S\ref{sec:lifted-monotonicity}).
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-The composite is itself an \spectype.  By Complete CALM, specification $P_2\circ P_1$ is consistent exactly when it
+The composite is itself an \spectype.  By Complete CALM, spec $P_2\circ P_1$ is consistent exactly when it
 satisfies Lifted Monotonicity, and then no output needs a \commitment
 (Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}).
-That test treats the composite as a single specification.  Suppose instead that
+That test treats the composite as a single spec.  Suppose instead that
 each stage runs on its own, with its runs taking as input the outputs of the
 stage before.  A stage may then need a \commitment even when the composite
 needs none.  A composite can be jointly monotone, with no stage needing a
@@ -173,17 +173,17 @@ itself a guard for a further stage (Corollary~\ref{cor:pipelines}).  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
 logs needs no \commitment.
 
-We call a system for one specification, viewed through a chosen set of sound
+We call a system for one spec, viewed through a chosen set of sound
 boundary observations, a \emph{component}.  A component may run as one
 process or as a replicated cluster.  The stages around it observe only its
 admitted boundary runs, each pairing an input with an emitted output
-permitted by its specification.  Components with different specifications
+permitted by its spec.  Components with different specs
 form typed pipelines (Appendix~\ref{app:components}).  The pipeline hides the
 intermediate value and the two component runs; every external pair it
 presents is a row of $P_2\circ P_1$.  A typed pipeline is
 \emph{contract-proper} when it is proper in the sense of
 Definition~\ref{def:proper-coordination}.  Contract properness concerns the
-specifications.  \emph{Implementation properness} additionally concerns the
+specs.  \emph{Implementation properness} additionally concerns the
 runs admitted by the selected downstream component.  A downstream
 implementation may still take locks, or admit too few runs to follow its
 upstream.  The maximally permissive empty-basis component for

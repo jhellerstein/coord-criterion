@@ -87,7 +87,7 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
 /-! ## Composite CALM (`sec:composite-calm`) -/
 
 /-- "The composite is itself an I/O specification.  By Complete CALM,
-specification `P₂ ∘ P₁` is consistent exactly when it satisfies Lifted
+spec `P₂ ∘ P₁` is consistent exactly when it satisfies Lifted
 Monotonicity, and then no output needs a commitment (Theorem
 `thm:complete-calm`, Proposition `prop:exposure-boundary`)." -/
 theorem «sec:composite-calm/complete-calm» {I M O : Type} [PO I] [PO M] [PO O]
@@ -323,16 +323,16 @@ theorem «sec:proper-coordination/locks-overhead» {Cmd Stt R : Type} (δ : Stt 
   let h := Guard.smr_proper δ σ0 hne
   ⟨h.2.2.2.1, h.2.2.2.2.1⟩
 
-/-- "We call a system for one specification, viewed through a chosen set of
+/-- "We call a system for one spec, viewed through a chosen set of
 sound boundary observations, a component.  A component may run as one process
 or as a replicated cluster.  The stages around it observe only its admitted
 boundary runs, each pairing an input with an emitted output permitted by its
-specification.  Components with different specifications form typed pipelines
+spec.  Components with different specs form typed pipelines
 (Appendix `app:components`).  The pipeline hides the intermediate value and the two
 component runs; every external pair it presents is a row of `P₂ ∘ P₁`.  A
 typed pipeline is contract-proper when it is proper in the sense of
 Definition `def:proper-coordination`.  Contract properness concerns the
-specifications.  Implementation properness additionally concerns the runs
+specs.  Implementation properness additionally concerns the runs
 admitted by the selected downstream component.  A downstream implementation
 may still take locks, or admit too few runs to follow its upstream.  The
 maximally permissive empty-basis component for `𝒮₂|_{𝒮₁}` does neither."
