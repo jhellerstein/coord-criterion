@@ -1,7 +1,7 @@
 \section{Functional CALM}
 \label{sec:functional-calm}
 
-This section focuses on functional specifications, in which each input has a
+This section focuses on functional specs, in which each input has a
 single specified output.  We walk through the framework informally on an
 election, make it precise, and prove Functional CALM, identifying along the
 way when an output can be emitted without \commitment.
@@ -133,7 +133,7 @@ to close the polls removes the still-possible $aba$ and $abb$ rows but leaves th
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no \commitment, since every output still possible \outrel it;
 closing the polls is a further fateful decision by the system, not something the
-specification requires.
+spec requires.
 
 \begin{figure}[t]
   \centering
@@ -194,7 +194,7 @@ $(aba,a)$ have the common input \indesc $aba$, but under the equality
 order no output at $aba$ \outrel both outputs $\bot$ and $a$.  A run that emits
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.
 
-Input and output events form a transition system, and the specification is
+Input and output events form a transition system, and the spec is
 consistent when its runs are confluent.  For functional tables this corresponds exactly to monotonicity (Section~\ref{sec:functional-calm-theorem}).
 Appendix~\ref{app:notation} collects the notation for reference.
 
@@ -261,9 +261,9 @@ table of rows whose input \inrel $j$ and whose output \outrel $o$.  We say that 
 $(k,u)$ is \emph{at} $k$, and $\mathrm{out}(R)$ is the set of outputs that
 appear in $R$.
 
-A specification describes every permitted input/output pair.  During execution,
+A spec describes every permitted input/output pair.  During execution,
 input arrives and outputs are emitted, so only some of those pairs remain
-possible.  The changing state of the specification, illustrated by the non-gray text in
+possible.  The changing state of the spec, illustrated by the non-gray text in
 the panels of Figure~\ref{fig:election-frames}, is defined as follows.
 
 \begin{definition}[Specification state, current input, remainder table]
@@ -375,7 +375,7 @@ A state is \emph{determined} when its future-output set has one element: one res
 remains, whatever legal input still arrives.  This is a property of the state
 alone.  Under the functional dependency each input determines its own
 output; a determined state goes further, since its current input determines
-the output of every input that may still arrive.  A functional specification
+the output of every input that may still arrive.  A functional spec
 can therefore have undetermined states, as in panel~(b) of
 Figure~\ref{fig:election-frames}.  \emph{Determination} is the process of
 reaching a determined state.  An input event may do so through input loss,
@@ -387,7 +387,7 @@ events only remove rows, and a row at the current input always remains.
 \subsection{Executions and consistency}
 \label{sec:executions}
 
-When runs take different paths through the specification, can they still be
+When runs take different paths through the spec, can they still be
 brought to a common state?  The answer reduces to a check on a single row.
 
 \begin{definition}[Specification event]
@@ -484,7 +484,7 @@ Rows are never added, so the row of a common state at $j$ was there
 in every run.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-In a functional specification the only row at $j$ is $(j,f(j))$, so the test
+In a functional spec the only row at $j$ is $(j,f(j))$, so the test
 asks whether $(j,f(j))$ survives in every run.
 
 Consistency guarantees runs never diverge irreparably: no ``split brain''.  Whatever input
@@ -492,12 +492,12 @@ and output events a finite collection of runs has taken, any input \inrelpart al
 of theirs leaves a single state that every run can reach: one that honors all
 of their emitted outputs and accepts all of that input.
 Proposition~\ref{prop:confluence} identifies that state.  Consistency is a
-property of the specification, not of a protocol (Section~\ref{sec:scope}).
+property of the spec, not of a protocol (Section~\ref{sec:scope}).
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
-Consistency is defined by a specification's executions, monotonicity by its
+Consistency is defined by a spec's executions, monotonicity by its
 table and orders alone.  Functional CALM shows that these coincide.
 
 \begin{theorem}[Functional CALM]
@@ -547,15 +547,15 @@ states. At $\sigma_P(i)$, which input alone reaches, $f(i)$ is legal exactly
 when $f$ is monotone at $i$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
 
-A monotone specification can thus emit every current output without \commitment;
-if monotonicity fails at $i\InputOrd k$ with $f(i)\not\OutputOrd f(k)$, then
-at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$ applies $x_{f(i)}$, which excludes input $k$.
+A monotone spec can thus emit every current output without \commitment. If a
+spec is non-monotone, then for some $i\InputOrd k$,
+$f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event
+$\mathsf{output}(f(i))$ applies $x_{f(i)}$ and excludes input $k$.
 
-Functional CALM is the familiar CALM dichotomy stated at the level of the specification
-rather than inside a particular programming language.  The C in CALM has been read
-both as consistency and as confluence; Definition~\ref{def:consistency} equates them.
-Classical CALM fits the pattern with inputs $J$ as sets of facts ordered by
-inclusion and output tables $Q(J)$ ordered by inclusion.  Functional
+Functional CALM is the familiar CALM dichotomy stated at the level of the spec
+rather than inside a particular programming language.
+Classical CALM fits, with inputs $J$ as sets of facts ordered by
+inclusion and output views $Q(J)$ ordered by inclusion.  Functional
 monotonicity becomes
         \begin{equation}
   J\subseteq J'
@@ -563,8 +563,8 @@ monotonicity becomes
   Q(J)\subseteq Q(J'),
   \label{eq:query-monotonicity}
         \end{equation}
-the standard definition of a monotone query~\cite{abiteboul1995foundations},
-which positive Datalog satisfies and negation may not.  Functional CALM
+the standard definition of a monotone query~\cite{abiteboul1995foundations};
+positive Datalog satisfies it, and negation may not.  Functional CALM
 generalizes the statement to arbitrary input and
-output orders, whatever formalism expresses the specification.  CRDT state specifications have the same functional shape, with received payloads ordered by inclusion and states by the semilattice order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
+output orders, whatever formalism expresses the spec.  CRDT state specs have the same functional shape, with received payloads ordered by inclusion and states by the semilattice order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} treat both.

@@ -479,7 +479,7 @@ theorem «app:cap-response/lm-subspec» (Q : Obligation sp) (T : Spec I O)
 /-- "… but the condition is weaker."  The five-input example: `I = {i₁, i₂,
 j, k₁, k₂}` (`sp5`, `Q5 = P`), `T = {(i₁,a),(i₂,b),(j,c₁),(j,c₂),(k₁,e₁),
 (k₂,e₂)}` (`T5`) is a response interface for which `P` satisfies Lifted Monotonicity, but no
-subspec of `Q` satisfies Lifted Monotonicity. -/
+sub-specification of `Q` satisfies Lifted Monotonicity. -/
 theorem «app:cap-response/subspec-weaker» :
     (ResponseInterface Q5 T5 ∧ ConsistentOn sp5 T5) ∧
     ∀ T' : Spec I5 O8, (∀ i o, T'.P i o → Q5.Q i o) → ¬ T'.LiftedMono :=

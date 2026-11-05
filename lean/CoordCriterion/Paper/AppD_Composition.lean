@@ -640,7 +640,7 @@ theorem «ex:bare-reads/latest-value» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd
 /-! ## Components and typed pipelines (`app:components`) -/
 
 /-- **Definition `def:component`** (Component, admitted run).  "A component
-for a spec `𝒮` consists of a commitment basis `ℬ` and a set of
+for a specification `𝒮` consists of a commitment basis `ℬ` and a set of
 admitted runs.  Each admitted run is a run under `ℬ` from a canonical state
 `σ(i)` (Definition `def:run-under-basis`), together with an output `o` that
 it emits, such that `(i,o) ∈ P`."
@@ -767,7 +767,7 @@ properness: behind a log, the early-lock store is a contract-proper downstream
 implementation that still issues commitments.  (4) Contract properness does
 not imply feed availability for an arbitrarily typed downstream component:
 behind the capped counter, the maximally permissive empty-basis component for
-the unrestricted threshold spec admits no feed at an offered count.
+the unrestricted threshold specification admits no feed at an offered count.
 (5) If, in a contract-proper pipeline, the downstream is instead the maximally
 permissive empty-basis component for `𝒮₂|_{𝒮₁}`, every admitted upstream
 boundary run has a feed, and the pipeline is implementation-proper."

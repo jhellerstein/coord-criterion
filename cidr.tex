@@ -198,23 +198,23 @@ every possibility it removes is covered by an alternative that remains. A
 decision is fateful when it rules out a possibility that no remaining
 alternative can cover. When must a system make a fateful decision?
 
-We ground the problem in a simple model of \emph{\spectype[s]}, independent of
-any language, protocol, or placement. The designer of a specification provides a
-\emph{possibility relation} $P\subseteq I\times O$: a virtual table that may be
-infinite, like a mathematical function. Each row in this table is a possibility
-observable from the outside: it pairs a cumulative input to a permitted output.
-The design includes the input domain $I$ and output domain $O$, with partial
-orders that help capture the specification's semantics.  On inputs, the order is
-accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
+We ground the problem in a simple model of \emph{\spectype[s]}, or \emph{specs}
+for short, independent of any language, protocol, or placement. The designer of
+a spec provides a \emph{possibility relation} $P\subseteq I\times O$: a virtual
+table that may be infinite, like a mathematical function. Each row in this table
+is a possibility observable from the outside: it pairs a cumulative input to a
+permitted output. The design includes the input domain $I$ and output domain $O$,
+with partial orders that help capture the spec's semantics.  On inputs, the order
+is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
-means that  $u$ \emph{\outrel} $o$ by subsuming all specification-relevant
-information in $o$. These are both application-specific notions that must be
-captured well for a specification to be faithful. A \emph{\commitment} is an
+means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
+$o$. These are both application-specific notions that must be captured well for
+a spec to be faithful. A \emph{\commitment} is an
 irrevocable, fateful system decision, removing one or more rows
 $(i,o)$ for which no remaining row $(i,u)$ has $o\OutputOrd u$: the output $o$
 is no longer covered by any $u$, and its possibility is gone.
 
-State-machine-style specifications can be projected into this form, skipping
+State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (\S\ref{sec:scope}).
 Despite its simplicity, our model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability,
@@ -223,17 +223,17 @@ causal consistency, and transactional isolation levels
 
 \paragraph{The Criterion: Lifted Monotonicity.}
 With this model in hand, we are ready to define the key aspects of CALM:
-Consistency and Monotonicity. A specification is \emph{consistent} when
+Consistency and Monotonicity. A spec is \emph{consistent} when
 all its possible executions are \emph{confluent}: states reached along
 different paths can be brought to a common state. We will see that this definition
 is general, accommodating narrower notions from prior literature.
 Our monotonicity criterion requires more care: it must capture the full
 expressivity of our model. It comes via two invariants. The first is always
-required; the second addresses nondeterministic specifications.
+required; the second addresses nondeterministic specs.
 
 \emph{Learn and refine.} As execution progresses, input grows: the system learns more from
 the environment.
-For specifications that permit only one output at each input, the possibility table is a function
+For specs that permit only one output at each input, the possibility table is a function
 and monotonicity is standard: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.
 \emph{Functional CALM} (\S\ref{sec:functional-calm-theorem}) proves that consistency is equivalent to
 monotonicity in this setting.
@@ -247,7 +247,7 @@ monotonicity in this setting.
 % languages of prior CALM papers, and the usual CRDT state specification.
 
 \emph{Choose and align.} Prior work on CALM and CRDTs addresses functional
-settings. \emph{Nondeterministic specifications}, including leader election and transaction
+settings. \emph{Nondeterministic specs}, including leader election and transaction
 scheduling, are not functions: many outputs are within spec for a given input.
 This requires an additional monotonicity invariant.  When many runs of a system
 choose different outputs for the same input, those choices
@@ -262,7 +262,7 @@ if another run can contradict it; it is \emph{distributed coordination} if that
 run is at another participant.
 Distributed histories are captured under the same consistency criteria as centralized ones
 (\S\ref{sec:distributed-execution}). Complete CAP (\S\ref{sec:complete-cap}) says
-Lifted Monotonicity exactly characterizes specifications that can keep every
+Lifted Monotonicity exactly characterizes specs that can keep every
 permitted output available and confluent during a partition.  The
 Gilbert--Lynch theorem follows directly.
 
@@ -272,18 +272,18 @@ We make contributions in three categories:
 \noindent
 \emph{1. A unified model.} A system's observable behavior is captured via
         \spectype[s]. Consistency is defined as
-        confluence of the runs a specification allows, unifying general consistency models,
+        confluence of the runs a spec allows, unifying general consistency models,
         application-specific requirements, and distributed consistency.
 
 \noindent
 \emph{2. A unified criterion.} For functions between ordered domains,
-        Functional CALM shows that consistency is equivalent to monotonicity. For nondeterministic specifications,
+        Functional CALM shows that consistency is equivalent to monotonicity. For nondeterministic specs,
         we prove Complete CALM: Consistency As Lifted Monotonicity. Complete CAP is a corollary:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 
 \noindent
 \emph{3. \Commitments, Composition and Proper Coordination.} We define \commitments to capture how
-        systems exclude possibilities that are not covered by alternatives. We then show how specifications
+        systems exclude possibilities that are not covered by alternatives. We then show how specs
         compose by equijoin, so that, in composition, upstream
         stages can free downstream stages from issuing \commitments.
 
@@ -296,7 +296,7 @@ intuition, proofs, and applications.
 \section{Functional CALM}
 \label{sec:functional-calm}
 
-This section focuses on functional specifications, in which each input has a
+This section focuses on functional specs, in which each input has a
 single specified output.  We walk through the framework informally on an
 election (\S\ref{sec:election-story}), state it precisely
 (\S\ref{sec:framework-brief}), and
@@ -432,7 +432,7 @@ to close the polls removes the still-possible $aba$ and $abb$ rows but leaves th
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no \commitment, since every output still possible \outrel it;
 closing the polls is a further fateful decision by the system, not something the
-specification requires.
+spec requires.
 
 \begin{figure}[t]
   \centering
@@ -492,7 +492,7 @@ $(aba,a)$ have the common \indesc $aba$, but under the equality
 order no output at $aba$ \outrel both outputs $\bot$ and $a$.  A run that emits
 $\bot$ at $ab\cdot$ and one that receives $aba$ cannot be reconciled at $aba$.
 
-Input and output events form a transition system, and the specification is
+Input and output events form a transition system, and the spec is
 consistent when its runs are confluent.
 Section~\ref{sec:functional-calm-theorem} shows that for functional tables
 this corresponds exactly to monotonicity.
@@ -504,10 +504,10 @@ this corresponds exactly to monotonicity.
 \label{sec:executions}
 
 We now make the functional framework precise: functional I/O
-specifications and monotonicity, then a transition system that models their
+specs and monotonicity, then a transition system that models their
 runs, and finally consistency as confluence of those runs.
 
-\paragraph{Specifications and monotonicity.} We begin with specifications.
+\paragraph{Specs and monotonicity.} We begin with specs.
 \begin{definition}[Functional \spectype, total]
 \label{def:functional-specification}
 A \emph{functional \spectype} is a tuple
@@ -614,7 +614,7 @@ extra \commitments only restrict behavior (\S\ref{sec:systems}).
 An event from a determined state always leads to another determined state.
 
 \paragraph{Runs and consistency.}
-We now consider the executions corresponding to a specification.
+We now consider the executions corresponding to a spec.
 \begin{definition}[Specification event, run, \commitment-free]
 \label{def:run}
 Input and output events are \emph{specification events}, or just \emph{events}.  A \emph{run} is a
@@ -676,14 +676,15 @@ in every run.  \fullproof
 
 Consistency ensures that runs never diverge irreparably: no ``split brain''.  Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
-of theirs leaves a single commonly-reachable state for every run and contradicts no prior output.
-Consistency is a property of the specification.  It describes no protocol and
+of theirs leaves a single state that every run can reach and that contradicts no
+prior output.
+Consistency is a property of the spec.  It describes no protocol and
 promises no delivery or termination.
 
 \subsection{The Functional CALM theorem}
 \label{sec:functional-calm-theorem}
 
-Consistency is defined by a specification's executions, monotonicity by its
+Consistency is defined by a spec's executions, monotonicity by its
 table and orders alone.  Functional CALM shows that these coincide.  Full proofs are in \extended.
 
 \begin{theorem}[Functional CALM]
@@ -707,7 +708,8 @@ input $i$ is in the canonical state $\sigma_P(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
 \begin{proof}[Proof sketch]
-By monotonicity: outputs a run emits remove no row at an input extension of $i$.
+By monotonicity, the outputs a run emits remove no row at an input extension of
+$i$.
 \fullproof
 \end{proof}
 
@@ -727,12 +729,12 @@ when $f$ is monotone at $i$.
  \fullproof
 \end{proof}
 
-A monotone specification can thus emit every current
-output without \commitment. In a non-monotone specification, some $i\InputOrd k$ with
-$f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$
-must exclude $k$.
+A monotone spec can thus emit every current output without \commitment. If a
+spec is non-monotone, then for some $i\InputOrd k$,
+$f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event
+$\mathsf{output}(f(i))$ must exclude $k$.
 
-This is the familiar CALM dichotomy stated at the level of the specification
+This is the familiar CALM dichotomy stated at the level of the spec
 rather than inside a particular programming language.  
 Classical CALM fits, with inputs $J$ as sets of facts ordered by
 inclusion and output views $Q(J)$ ordered by inclusion.  Functional
@@ -740,7 +742,7 @@ monotonicity becomes $J\subseteq J'\Rightarrow Q(J)\subseteq Q(J')$,
 the standard definition of a monotone query~\cite{abiteboul1995foundations};
 positive Datalog satisfies it, and negation may not.  Functional CALM
 generalizes the statement to arbitrary input and
-output orders, whatever formalism expresses the specification.  CRDT state specifications have the same functional shape,
+output orders, whatever formalism expresses the spec.  CRDT state specs have the same functional shape,
 with received payloads ordered by inclusion and states by the semilattice
 order~\cite{shapiro2011crdt}; Sections~\ref{sec:query-instance}
 and~\ref{sec:crdt-instance} treat both.
@@ -763,11 +765,11 @@ Section~\ref{sec:executions} carry over and proves Complete CALM.
 \subsection{\Commitment by example}
 \label{sec:ambiguity-story}
 
-Figure~\ref{fig:ambiguity-frames} contrasts two specifications that permit
+Figure~\ref{fig:ambiguity-frames} contrasts two specs that permit
 several outputs in one fiber.  Transaction ordering requires a \commitment
 between incompatible serialization orders.  For the discussion here, outputs are simply serial
 schedules, to which executions correspond via equivalence; Section~\ref{sec:hat-instance} studies more thorough
-transactional specifications.  Traceroute observations, by
+transactional specs.  Traceroute observations, by
 contrast, can all be \outrelpast by a larger route set.
 
 \begin{figure}[t]
@@ -802,7 +804,7 @@ contrast, can all be \outrelpast by a larger route set.
     {\footnotesize each removed row is \outrelpast by a remaining one: an output
     subsumption}
   \end{minipage}
-  \caption{Two specifications with several rows at one input, each after one output
+  \caption{Two specs with several rows at one input, each after one output
   event.  (f) Serial orders of two concurrent transactions, under the equality
   order.  (g) Route sets from a source $s$ to a service on \texttt{s1} and
   \texttt{s2}, ordered by inclusion; $s$ reaches \texttt{s1} directly and
@@ -841,14 +843,14 @@ survives in both.
 \label{sec:relational-specifications}
 \label{sec:lifted-monotonicity}
 
-We begin with our most general definition of a specification, which admits
+We begin with our most general definition of a spec, which admits
 output nondeterminism.
 \begin{definition}[\Spectype, nondeterminism]
 \label{def:relational-specification}
 An \emph{\spectype} is
 $\Spec=(I,\InputOrd,O,\OutputOrd,P)$ with $P\subseteq I\times O$,
 where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets.  The
-relation $P$ is the specification's \emph{possibility relation} and is total
+relation $P$ is the spec's \emph{possibility relation} and is total
 on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$.  The fiber
 $\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
@@ -1034,7 +1036,7 @@ reconciled there.  \fullproof
 The name CALM, for Consistency As Logical Monotonicity, tied the idea to a
 logic language.  The new, more general result is Consistency As Lifted Monotonicity.
 The condition that characterizes consistency is now a
-property of a specification: Lifted Monotonicity, which for a function is
+property of a spec: Lifted Monotonicity, which for a function is
 ordinary monotonicity.  Section~\ref{sec:distributed-consistency} shows that
 both theorems hold for distributed histories.
 
@@ -1066,7 +1068,7 @@ at each participant, and the only change from our framework's perspective is
 that participants can learn about inputs at other participants via messages.
 Functional CALM and Complete CALM therefore have a natural distributed reading,
 which Section~\ref{sec:histories} makes precise.  We then define systems, whose
-\commitments may exceed those the specification requires, and \commitments that require distributed coordination, which a run at
+\commitments may exceed those the spec requires, and \commitments that require distributed coordination, which a run at
 another participant could contradict; Complete CAP follows.
 
 \subsection{Distributed histories and consistency}
@@ -1116,7 +1118,7 @@ The participant runs at a cut are a family of runs, and any family
 of runs can be placed at separate participants that exchange no messages.  \fullproof
 \end{proof}
 
-By Complete CALM, then, a specification has distributed consistency exactly
+By Complete CALM, then, a spec has distributed consistency exactly
 when it satisfies Lifted Monotonicity.  Under Lifted Monotonicity, this
 confluence has a concrete witness.  For participant runs with common \indesc $j$,
 the survivor test supplies a $u\in\fiber{j}$ that survives in every endpoint;
@@ -1126,14 +1128,14 @@ the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).  
 transition system; choosing $u$, communicating it, and scheduling the
 transitions belong to the operational model (\S\ref{sec:scope}).
 
-For functional specifications,
+For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
 arrival order, or the outputs they emitted.  This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
 asks of replicated state.  The semilattice merge of CRDTs suffices for it but
 is not needed: here it follows directly from any consistent functional
-specification.
-With several outputs per input this fails even for consistent specifications:
+spec.
+With several outputs per input this fails even for consistent specs:
 in Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
 $\{s{\to}\texttt{s1}\}$ has subsumed the route sets that omit it, while a run at
 the same input that emitted nothing keeps them.  Consistency then guarantees
@@ -1223,7 +1225,7 @@ illustrate, when 2PL orders $A$ before $B$ in a \commitment event, the
 canonical run skips it.  If 2PL later emits $[A,C,B]$, the canonical run can
 emit the same output because that row was present all along.  Every surviving
 output extension of $[A,C,B]$ already orders $A$ before $B$, so the earlier \commitment
-makes no further difference to the final table.  Whether a specification
+makes no further difference to the final table.  Whether a spec
 needs coordination thus depends on the \commitments its outputs
 require, whatever mechanism makes them.
 
@@ -1241,7 +1243,7 @@ that \commitment at input $k$ if it accepts $k$ after the \commitment emptied
 its fiber, or emits at $k$ an output whose row the \commitment removed.
 \end{definition}
 
-We distinguish the behavior permitted by a specification from the behavior
+We distinguish the behavior permitted by a spec from the behavior
 admitted by a particular system.  Write $\mathcal R_P^\top$ for the set of all
 canonical runs of $P$.  By Lemma~\ref{lem:canonical-equivalent}, it is maximal
 at the observable interface: every run under any \commitment basis has the
@@ -1351,7 +1353,7 @@ consistent through a partition.  Complete CAP answers that broader question
 for any declared guarantee.
 
 To state the question, we must separate the outputs that participants must
-keep available from the outputs that the specification permits.  A participant
+keep available from the outputs that the spec permits.  A participant
 acts on its local history during a partition, while consistency compares the
 participants' outputs at a common \indesc of their inputs.  Their common
 \outnoun need not be emitted by any participant.  It may exist only as the
@@ -1361,7 +1363,7 @@ Consider a register initialized to $v_0$.  During a partition, participant
 $p$ receives a write $w(v)$ and emits its acknowledgment, while participant
 $q$ receives a concurrent read $r$ and returns $v_0$.  A client that later
 collects both observes the write acknowledgment together with the read answer
-$v_0$.  The register specification permits this combined output at the input
+$v_0$.  The register spec permits this combined output at the input
 containing both operations: a linearization may put the concurrent read before
 the write.  The combined output \outrel both local outputs and provides a proof
 of their consistency, although no participant need ever emit it.
@@ -1370,11 +1372,11 @@ We therefore encode a guarantee as an \spectype together with an
 explicit relation $E\subseteq P$: the rows whose outputs must remain locally
 available.  Outputs in $P\setminus E$ need only remain permitted as possible
 common \outnouns.  Complete CAP says that such a guarantee can stay available
-and consistent through partitions exactly when the specification satisfies
+and consistent through partitions exactly when the spec satisfies
 Lifted Monotonicity for $E$: outputs selected by $E$ on different sides of a
-partition must have a common \outnoun in the specification at every common
+partition must have a common \outnoun in the spec at every common
 \indesc of their inputs.  When $E=P$, this is Lifted Monotonicity itself.  A
-partition does not change which \commitments a specification needs; it removes
+partition does not change which \commitments a spec needs; it removes
 the ability to make them jointly, since separated participants cannot jointly
 apply a \commitment that another participant could contradict.
 
@@ -1458,7 +1460,7 @@ output of $E$ waits for another block, sacrificing Availability, or is
 emitted anyway, sacrificing Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}
-Their theorem is a case of Complete CAP.  Consider a register specification
+Their theorem is a case of Complete CAP.  Consider a register spec
 whose inputs are sets of operations with their real-time precedence, and whose
 outputs answer every operation of the input as some linearization
 does~\cite{herlihy1990linearizability}.  Let $p$'s input contain only a write
@@ -1483,14 +1485,14 @@ coordination is itself non-monotone.  A key-value store with mutable keys is
 non-monotone~\cite{alvaro2011bloom}.  State-machine
 replication~\cite{schneider1990smr} wraps it in a log.  Clients send requests,
 the log puts the requested commands in one order, and the key-value store
-executes the log and answers each request.  The log's specification is also not
+executes the log and answers each request.  The log's spec is also not
 monotone: when two commands arrive concurrently, either may be appended next,
 and the two alternative orders have no common \outnoun.  Yet replicated stores are
 consistent, coordinating only in the log.  Multi-Paxos agrees on each
 log entry~\cite{lamport2001paxos}, and the replicas then execute the log
 with no further agreement.
 
-That puzzle is explained by our framework.  Specifications are
+That puzzle is explained by our framework.  Specs are
 tables, so they compose by equijoin, and composition preserves Lifted
 Monotonicity.  Because \commitments are explicit, we
 can also ask which component makes a composition's \commitments.  When the
@@ -1500,9 +1502,9 @@ coordination \emph{proper}
 (\S\ref{sec:proper-coordination}).
 \label{sec:sequential-composition}
 
-Intuitively, sequential composition feeds the output of one specification to
+Intuitively, sequential composition feeds the output of one spec to
 the input of the next.  The composite is again a table: it pairs an input of
-the first specification with every output that the second permits for some
+the first spec with every output that the second permits for some
 intermediate value that the first permits.  Formally, let
 $\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
 $\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be \spectype[s]
@@ -1540,7 +1542,7 @@ By associativity the lemma extends to finite pipelines.
 
 By Complete CALM, $P_2\circ P_1$ is consistent exactly when it
 satisfies Lifted Monotonicity, and then no output needs a \commitment.
-That test treats the composite as a single specification.  Suppose instead that
+That test treats the composite as a single spec.  Suppose instead that
 each stage runs on its own, with its runs taking as input the outputs of the
 stage before.  A stage may then need a \commitment even when the composite
 needs none.  A composite can be jointly monotone, with no stage needing a
@@ -1628,7 +1630,7 @@ relational languages on transducer networks: coordination-free evaluation is pos
 iff a program is monotone,
 under its data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.
 Functional CALM does not replace the details of that theorem.  It abstracts
-the result to a property that can be compared with specifications outside
+the result to a property that can be compared with specs outside
 Datalog. Subsequent extensions to the original CALM Theorem become changes to the input domain
 and its order.
 When transducers know
@@ -1659,7 +1661,7 @@ Functional CALM.  Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice.
 The input is the finite set $U$ of immutable payloads received so far, ordered
 by inclusion, and the replica's state is $s(U)=s_0\sqcup\bigsqcup U$.  A
 client observation $q:D\to(Y,\preceq_Y)$ gives the client-visible
-specification $q\circ s$.  By Functional CALM, $q\circ s$ is consistent
+spec $q\circ s$.  By Functional CALM, $q\circ s$ is consistent
 exactly when $U\subseteq V$ implies $q(s(U))\preceq_Y q(s(V))$.  Monotonicity
 of $q$ on all of $D$ suffices, but $q$ need only be monotone between reachable
 states.  The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set
@@ -1719,7 +1721,7 @@ In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
 is a set of versions, replicas merge states by union, and a set $T$ of
 transactions is \emph{invariant confluent} for an invariant $\mathcal I$ when
 the merge of any two reachable states satisfies $\mathcal I$.  We construct a
-specification $\Spec_{\mathcal I}$ whose inputs are locally valid
+spec $\Spec_{\mathcal I}$ whose inputs are locally valid
 \emph{transaction histories}, partial orders of transactions in which one
 precedes another when the second's replica saw the first, ordered
 by extension.  Outputs are database states, ordered by inclusion;
@@ -1748,22 +1750,22 @@ mapping is straightforward: for each input, record the outputs of the runs that
 consume it.  Two standard approaches then apply, both used widely and with
 success.  Model checkers explore runs on bounded
 inputs~\cite{flanagan2005dpor,newcombe2015aws};
-their input/output pairs become a finite specification in our model that can be tested for
+their input/output pairs become a finite spec in our model that can be tested for
 violations of Lifted Monotonicity.  The only additional requirement is on the
 checker's bounds: any input it reports on must have had all its executions
 explored. The more comprehensive approach is to use
-formal proofs to declare a specification and show, by the standard obligations
+formal proofs to declare a spec and show, by the standard obligations
 of refinement~\cite{abadi1991refinement,lynch1995forward}, that it represents
 the machine: every execution's output is dominated by a declared one, and every
 declared row is produced by some execution.  Such proofs are routinely
 mechanized~\cite{hawblitzel2015ironfleet}, and Lifted Monotonicity is then
-checked on the declared specification; \extended{} gives the details.  Work that
+checked on the declared spec; \extended{} gives the details.  Work that
 models systems as state machines therefore maps naturally into our model, where
 Complete CALM assesses its consistency directly.
 
   Our conditions are semantic.  Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
-liveness, and cost belong to the operational model in which a specification
+liveness, and cost belong to the operational model in which a spec
 is realized.  Free termination likewise corresponds to a determined canonical
 state in our model, but Power et al.\ additionally study fairness and eventual
 response, liveness concerns whose semantic generalization remains future
@@ -1799,7 +1801,7 @@ proved it, but only for relational languages, which to date have
 still not become mainstream beyond query processing (more on this below).
 
 This paper moves the declarations one level higher, from queries to views: all
-that matters about a specification is the single view mapping a program's inputs
+that matters about a spec is the single view mapping a program's inputs
 to its output. Eliding the query logic frees the analysis from any particular
 language and broadens what can be specified. Prior work focused on implementing
 complex programs
@@ -1818,16 +1820,16 @@ adds more non-monotone syntax.  Subsequent work moved the question from syntax t
 invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}.  Their tools pick,
 for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties.  We
-ask what the specification itself requires, independent of any menu of
+ask what the spec itself requires, independent of any menu of
 levels.  By Canonical Run Universality (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.  Our
 composition results need no program logic, and the criteria are exact on
-specifications, not conservative.
+specs, not conservative.
 
 A limitation of prior CALM work was that it was constructive on only one side of
 its boundary.  Monotone programs need no coordination; for a non-monotone
 program, CALM said only that coordination was required somewhere, not what it
 had to accomplish or where it belonged.  Complete CALM says more.  A
-specification that is not monotone needs specific \commitments: the \commitments
+spec that is not monotone needs specific \commitments: the \commitments
 its outputs require. Every coordination mechanism, from locks to
 consensus, is a way of applying these \commitments.  The same analysis says which outputs
 need \commitments, and whether another participant could contradict them, so
@@ -1853,23 +1855,23 @@ potential program synthesis and optimization.
 \section{Conclusion}
 \label{sec:conclusion}
 
-A specification abstracts execution details away, and the results here reduce
+A spec abstracts execution details away, and the results here reduce
 to a single question: can a participant act on what it knows without being
 contradicted by what it learns later?  Mutexes, locks, atomic instructions, and
 agreement protocols prevent such contradictions by issuing \commitments.
-Functional CALM answers the question for functions: a functional specification
+Functional CALM answers the question for functions: a functional spec
 stays confluent as input arrives exactly when it is monotone, and then no
 output needs a \commitment.  This generalizes the classic result from logical fact
 sets to arbitrary input and output orders.
 
-Complete CALM extends the answer to specifications that offer several outputs
+Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers.  When it fails, some reachable output
 requires a \commitment.  At each input it changes, a \commitment either empties
 the fiber or removes particular output rows.  Because \commitments are explicit, the model
 can also check where a composition coordinates
 (\S\ref{sec:composition}).  A totally ordered log and a
-key-value store are both non-monotone at their ordinary specifications, yet
+key-value store are both non-monotone at their ordinary specs, yet
 when the log guards the store, the log's \commitments are all the composition
 needs and the store makes none.  Multi-Paxos is one way to distribute those
 \commitments.
@@ -1881,10 +1883,10 @@ every common \indesc of their inputs; when the relation selects every output,
 this is Lifted Monotonicity.
 
 The generality of our specification model opens a range of new questions
-regarding the nondeterminism of specifications and their \commitments. One direction
+regarding the nondeterminism of specs and their \commitments. One direction
 extends the boolean criteria of this paper to metrics: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
-needed to determine a specification. Another is Determination Provenance: a
+needed to determine a spec. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
 the \commitments made in a run, which brings formal models of provenance to
 concurrent systems. A third direction is to provide general-purpose static

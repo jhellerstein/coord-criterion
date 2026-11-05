@@ -434,7 +434,7 @@ theorem «sec:functional-events/determined-one-element» {I O : Type} [PO I] [PO
     Determined σ ↔ ∃ o, (∃ k, σ.R k o) ∧ ∀ k x, σ.R k x → x = o :=
   determined_upper_fiber σ
 
-/-- "A functional specification can therefore have undetermined states, as in
+/-- "A functional spec can therefore have undetermined states, as in
 panel (b) … An input event may [reach a determined state] by causing the table to lose rows …
 and a commitment by applying a commitment to inputs …, as in panels (c) and (d)." -/
 theorem «sec:functional-events/determination-examples» :
@@ -601,10 +601,10 @@ theorem «prop:functional-exposure-boundary» {I O : Type} [PO I] [PO O] (sp : S
     sp.MonotoneF ↔ ∀ τ : State sp, ReachableCF τ → ∀ o, τ.R τ.cur o → Exposable τ o :=
   functional_exposure_boundary hf
 
-/-- After Prop. `prop:functional-exposure-boundary`: "A monotone specification
-can thus emit every current output without commitment; if monotonicity fails at
-`i ≼ k` with `f(i) ⋠ f(k)`, then at `σ_P(i)` the event `output(f(i))` applies
-`s_{f(i)}`, applying a commitment to `k`." -/
+/-- After Prop. `prop:functional-exposure-boundary`: "A monotone spec can
+thus emit every current output without commitment. If a spec is non-monotone,
+then for some `i ≼ k`, `f(i) ⋠ f(k)`, so at `σ_P(i)` the event `output(f(i))`
+applies `x_{f(i)}` and excludes `k`." -/
 theorem «prop:functional-exposure-boundary/nonmonotone-excludes» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) {i k : I} {o u : O}
     (hik : i ≼ k) (hio : sp.P i o) (hku : sp.P k u) (hn : ¬ o ≼ u) :

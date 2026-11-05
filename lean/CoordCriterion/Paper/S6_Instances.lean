@@ -598,7 +598,7 @@ theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
   IOM.send_after_out ⟨s, hx, rfl⟩ hm hrv hrm hj hmj hc
 
 /-- **Def. `def:induced-specification`** (Induced specification).  "The
-spec *induced* by `M` and its environment pairs each input
+specification *induced* by `M` and its environment pairs each input
 (Definition `def:execution-input`) that occurs with the machine's observation
 at the end of every execution with that input."
 
@@ -637,14 +637,14 @@ abbrev «def:execution-input» {C P O : Type} (β : List (IOM.Act C P O)) : IOM.
   IOM.input β
 
 /-- **Prop. `prop:induced-specification`** (Induced specifications).
-"(1) The induced spec is an I/O specification, and the input of
+"(1) The induced specification is an I/O specification, and the input of
 an execution only extends as the execution continues.  (2) When there is one
 client and its state-machine events arrive in the order it sent them, every input is a
 chain, inputs correspond to state-machine event sequences ordered by prefix, and the fiber
 at a sequence collects the observations of the machine's runs that receive it
 in order, interleaved with output and internal steps.  If output and internal
 steps leave the state unchanged and receiving is deterministic, the
-spec is functional and consistent exactly when `obs(q) ⪯ obs(q')`
+specification is functional and consistent exactly when `obs(q) ⪯ obs(q')`
 for every receive transition `q → q'` from a reachable state.  (3) Every
 observation in the fiber at `h` is reached by a run of the machine that
 receives each state-machine event of `h` once, interleaved with output and internal steps.
@@ -653,7 +653,7 @@ reached, whatever the order of its receives.  (4) The machine's observations
 are confluent across its executions—for executions with inputs `h₁,…,hₖ` and
 any input `h` that occurs and extends each `hᵣ`, some execution with input `h`
 ends in an observation that extends each of theirs—exactly when the induced
-spec satisfies Lifted Monotonicity."
+specification satisfies Lifted Monotonicity."
 
 Lean, part by part, for a general machine `G`; a run of the machine is an
 execution `γ` of the machine automaton `IOM.machA G` (its receives
@@ -802,7 +802,7 @@ theorem «sec:operational-models/both-halves» {C P : Type} [DecidableEq C]
 `D` be an I/O specification whose inputs correspond, by an order
 isomorphism, to the inputs that occur.  If `D` satisfies realizability and
 domination, then `D` satisfies Lifted Monotonicity exactly when the induced
-spec does, and so exactly when the machine's observations are
+specification does, and so exactly when the machine's observations are
 confluent across its executions."  With the obligations: "*Realizability.*
 Every output that `D` allows at an input is the observation of some execution
 with that input.  *Domination.*  Every execution's final observation is

@@ -45,23 +45,23 @@ every possibility it removes is covered by an alternative that remains. A
 decision is fateful when it rules out a possibility that no remaining
 alternative can cover. When must a system make a fateful decision?
 
-We ground the problem in a simple model of \emph{\spectype[s]}, independent of
-any language, protocol, or placement. The designer of a specification provides a
-\emph{possibility relation} $P\subseteq I\times O$: a virtual table that may be
-infinite, like a mathematical function. Each row in this table is a possibility
-observable from the outside: it pairs a cumulative input to a permitted output.
-The design includes the input domain $I$ and output domain $O$, with partial
-orders that help capture the specification's semantics.  On inputs, the order is
-accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
+We ground the problem in a simple model of \emph{\spectype[s]}, or \emph{specs}
+for short, independent of any language, protocol, or placement. The designer of
+a spec provides a \emph{possibility relation} $P\subseteq I\times O$: a virtual
+table that may be infinite, like a mathematical function. Each row in this table
+is a possibility observable from the outside: it pairs a cumulative input to a
+permitted output. The design includes the input domain $I$ and output domain $O$,
+with partial orders that help capture the spec's semantics.  On inputs, the order
+is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
-means that  $u$ \emph{\outrel} $o$ by subsuming all specification-relevant
-information in $o$. These are both application-specific notions that must be
-captured well for a specification to be faithful. A \emph{\commitment} is an
+means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
+$o$. These are both application-specific notions that must be captured well for
+a spec to be faithful. A \emph{\commitment} is an
 irrevocable, fateful system decision, removing one or more rows
 $(i,o)$ for which no remaining row $(i,u)$ has $o\OutputOrd u$: the output $o$
 is no longer covered by any $u$, and its possibility is gone.
 
-State-machine-style specifications can be projected into this form, skipping
+State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (Section~\ref{sec:operational-models}).
 Despite its simplicity, our model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability and
@@ -70,17 +70,17 @@ levels (Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
 \subsection{The Criterion: Lifted Monotonicity}
 With this model in hand, we are ready to define the key aspects of CALM:
-Consistency and Monotonicity. A specification is \emph{consistent} when
+Consistency and Monotonicity. A spec is \emph{consistent} when
 all its possible executions are \emph{confluent}: states reached along
 different paths can be brought to a common state. We will see that this definition
 is general, accommodating narrower notions from prior literature.
 Our monotonicity criterion requires more care: it must capture the full
 expressivity of our model. It comes via two invariants. The first is always
-required; the second addresses nondeterministic specifications.
+required; the second addresses nondeterministic specs.
 
 \emph{Learn and refine.} As execution progresses, input grows: the system learns more from
 the environment.
-For specifications that permit only one output at each input, the possibility table is a function
+For specs that permit only one output at each input, the possibility table is a function
 and monotonicity is standard: $i\InputOrd j$ implies $f(i)\OutputOrd f(j)$.
 \emph{Functional CALM} (Section~\ref{sec:functional-calm-theorem}) proves that consistency is equivalent to
 monotonicity in this setting.
@@ -94,7 +94,7 @@ monotonicity in this setting.
 % languages of prior CALM papers, and the usual CRDT state specification.
 
 \emph{Choose and align.} Prior work on CALM and CRDTs addresses functional
-settings. \emph{Nondeterministic specifications}, including leader election and transaction
+settings. \emph{Nondeterministic specs}, including leader election and transaction
 scheduling, are not functions: many outputs are within spec for a given input.
 This requires an additional monotonicity invariant.  When many runs of a system
 choose different outputs for the same input, those choices
@@ -109,7 +109,7 @@ if another run can contradict it; it is \emph{distributed coordination} if that
 run is at another participant.
 Distributed histories are captured under the same consistency criteria as centralized ones
 (Section~\ref{sec:distributed-execution}). Complete CAP (Section~\ref{sec:complete-cap}) says
-Lifted Monotonicity exactly characterizes specifications that can keep every
+Lifted Monotonicity exactly characterizes specs that can keep every
 permitted output available and confluent during a partition.  The
 Gilbert--Lynch theorem follows directly.
 
@@ -119,18 +119,18 @@ We make contributions in three categories:
 \noindent
 \emph{1. A unified model.} A system's observable behavior is captured via
         \spectype[s]. Consistency is defined as
-        confluence of the runs a specification allows, unifying general consistency models,
+        confluence of the runs a spec allows, unifying general consistency models,
         application-specific requirements, and distributed consistency.
 
 \noindent
 \emph{2. A unified criterion.} For functions between ordered domains,
-        Functional CALM shows that consistency is equivalent to monotonicity. For nondeterministic specifications,
+        Functional CALM shows that consistency is equivalent to monotonicity. For nondeterministic specs,
         we prove Complete CALM: Consistency As Lifted Monotonicity. Complete CAP is a corollary:
         the CAP tradeoff holds only under failure of Lifted Monotonicity.
 
 \noindent
 \emph{3. \Commitments, Composition and Proper Coordination.} We define \commitments to capture how
-        systems exclude possibilities that are not covered by alternatives. We then show how specifications
+        systems exclude possibilities that are not covered by alternatives. We then show how specs
         compose by equijoin, so that, in composition, upstream
         stages can free downstream stages from issuing \commitments.
 
