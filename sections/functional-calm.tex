@@ -228,7 +228,7 @@ a system has received, we model inputs as \emph{cumulative}: an input
 records everything received so far, not a single message, and $i\InputOrd j$
 means that $j$ contains at least the input information in $i$.  We say that $j$
 \emph{\inrel} $i$, or is an \emph{\indesc} of $i$; every input is an \indesc of itself. We call $\OutputOrd$ the
-\emph{output order}: $o\OutputOrd u$ means that $u$ preserves every
+\emph{output order}: $o\OutputOrd u$ means that $u$ subsumes every
 externally visible claim in $o$ and may add more, and we say that $u$
 \emph{\outrel} $o$.  In either domain, we call the element above another
 an extension.  We write $\InputGe$ and $\OutputGe$ for the converse orders.
@@ -294,8 +294,9 @@ nothing:
 An input event from a canonical state leads to another canonical state, and
 runs start at one.
 
-The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
-$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  A functional fiber has at most one value.
+The \emph{fiber} of a table $R$ at input $k$ is the set of outputs paired
+with $k$: $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  A functional fiber has at
+most one value.
 The \emph{future-output set} at $k$, $\mathrm{out}(R[\mathrm{in}\InputGe k])$,
 collects the outputs in the fibers at $k$ and its \indescs.
 For a state $\sigma=(i, R)$ the future-output set at $i$ is $\mathrm{out}(R)$---the
@@ -329,15 +330,26 @@ promise without assuming that clients tolerate retractions.  Later outputs
 must therefore \outrelbase earlier ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit.  Since every later output must \outrelbase $o$, emitting $o$ requires a \commitment that removes
-every legal input whose output does not \outrelbase it.
+output the system may emit.
+
+\begin{definition}[Legal output]
+\label{def:exposable}
+The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
+future-output set \outrel $o$.
+\end{definition}
+
+Equivalently, as the only row at a legal input $j$ is $(j,f(j))$, $o$ is legal
+exactly when $f(j)$ \outrel $o$ for every legal $j$.
+
+Since every later output must \outrelbase $o$, emitting a non-legal $o$ requires
+a \commitment that removes every legal input whose output does not \outrelbase
+it.
 
 \begin{definition}[Output event]
 \label{def:output-event}
-Let $(i,R)$ be a state and $(i,o)$ its row at the current input.  The
-\emph{output event} $\mathsf{output}(o)$ performs two steps atomically: it restricts the remainder table
-to exactly the rows whose outputs
-\outrelbase $o$, and emits $o$ to the environment:
+At a state $(i,R)$ with current output $o$, the \emph{output event}
+$\mathsf{output}(o)$ performs two steps atomically: it keeps exactly the rows
+whose outputs \outrelbase $o$, and emits $o$ to the environment:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R' = R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
@@ -346,28 +358,19 @@ to exactly the rows whose outputs
 
 \begin{definition}[Canonical \commitment]
 \label{def:canonical-commitment-functional}
-When $R'\neq R$ in Definition~\ref{def:output-event}, the transition applies the
+When $o$ is not legal, equivalently $R'\neq R$, the transition applies the
 \emph{canonical \commitment} $x_o(i,R)=(i,R')$.  For every row it removes, no
 row remains at the same input.  It is a \commitment.
 \end{definition}
 
-The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
-ends at a state. A \commitment removes rows that input alone would preserve;
-after the canonical \commitment above, their inputs are no longer legal.
-Canonical \commitments of this form are the only \commitments this section
-uses.  Systems may issue more \commitments than an output requires, as the
-registrar does in Figure~\ref{fig:election-frames}(d), but extra \commitments
-only restrict behavior (Section~\ref{sec:systems}).
-
-\begin{definition}[Legal output]
-\label{def:exposable}
-The output $o$ at $(i,R)$ is a \emph{legal output} when $\mathsf{output}(o)$
-applies no \commitment.
-\end{definition}
-
-In a functional specification this means $R[\mathrm{out}\OutputGe o]=R$: the
-event removes nothing.  As the only row at a legal input $j$ is $(j,f(j))$,
-$o$ is legal exactly when $f(j)$ \outrel $o$ for every legal $j$.
+Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  The
+current row $(i,o)$ remains, since $o$ \outrel itself, so the event always ends
+at a state. A \commitment removes rows that input alone would preserve; after
+the canonical \commitment above, their inputs are no longer legal.  Canonical
+\commitments of this form are the only \commitments this section uses.  Systems
+may issue more \commitments than an output requires, as the registrar does in
+Figure~\ref{fig:election-frames}(d), but extra \commitments only restrict
+behavior (Section~\ref{sec:systems}).
 
 \paragraph{Determination.}
 A state is \emph{determined} when its future-output set has one element: one result

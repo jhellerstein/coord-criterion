@@ -340,10 +340,9 @@ theorem «sec:functional-events/input-cumulative» {I O : Type} [PO I] [PO O]
       (∀ {σ τ : State sp}, Step σ (.input σ.cur) τ → τ = σ) :=
   ⟨input_input, input_self⟩
 
-/-- **Def. `def:output-event`** (Output event).  "Let `(i,R)` be a state and
-`(i,o)` its row at the current input.  The *output event* `output(o)` …
-restricts the remainder table to exactly the rows whose outputs extend `o`,
-and emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`."
+/-- **Def. `def:output-event`** (Output event).  "At a state `(i,R)` with
+current output `o`, the *output event* `output(o)` keeps exactly the rows whose
+outputs extend `o`, and emits `o`: `(i,R) --output(o)--> (i, R[out ⪰ o])`."
 
 Lean: `Step σ (.output o) τ` (constructor `Step.output`) requires
 `σ.R σ.cur o` and sets `τ.R = outputTable σ o = R[out ⪰ o]`.  The general
@@ -354,9 +353,9 @@ abbrev «def:output-event» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     (σ : State sp) (o : O) : Table I O :=
   outputTable σ o
 
-  /-- **Def. `def:canonical-commitment-functional`**.  "When `R' ≠ R` in
-  Definition `def:output-event`, the transition applies the *canonical
-  commitment* `x_o(i,R) = (i,R')`.  For every row it removes, no row remains at
+  /-- **Def. `def:canonical-commitment-functional`**.  "When `o` is not legal,
+  equivalently `R' ≠ R`, the transition applies the *canonical commitment*
+  `x_o(i,R) = (i,R')`.  For every row it removes, no row remains at
   the same input.  It is a commitment."
 
 Lean: `canonicalCommitment o : Commitment sp` (`commitmentApp o`): the commitment that removes the
@@ -399,9 +398,9 @@ theorem «sec:functional-events/extra-commitments» (B : CommitmentBasis elec) (
   Figures.Elec.registrar_canonical B hB
 
 /-- **Def. `def:exposable`** (Legal output).  "The output `o` at `(i,R)`
-is a *legal output* when `output(o)` applies no commitment."
+is a *legal output* when every output in the future-output set extends `o`."
 
-  Lean: `Exposable σ o` says that every row ruled out by `o` is extended by a
+Lean: `Exposable σ o` says that every row ruled out by `o` is extended by a
   kept row at the same input (it is subsumed, not committed away); by
   `«def:exposable/no-commitment»` this is "`Excluded_o` is empty", i.e. no
   commitment, in the sense of Def. `def:lifted-output-event`. -/
@@ -415,9 +414,8 @@ theorem «def:exposable/no-commitment» {I O : Type} [PO I] [PO O] {sp : Spec I 
     Exposable σ o ↔ ∀ k x, ¬ Excluded σ o k x :=
   exposable_iff_no_commitment σ o
 
-/-- "In a functional specification this means `R[out ⪰ o] = R`: the event
-removes nothing.  As the only row at a legal input `j` is `(j, f(j))`, `o` is
-a legal output exactly when `f(j)` extends `o` for every legal `j`." -/
+/-- "Equivalently, as the only row at a legal input `j` is `(j, f(j))`,
+`o` is legal exactly when `f(j)` extends `o` for every legal `j`." -/
 theorem «sec:functional-events/functional-exposable» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} (hf : sp.Functional) (σ : State sp) (o : O) :
     (Exposable σ o ↔ outputTable σ o = σ.R) ∧ (Exposable σ o ↔ ∀ k x, σ.R k x → o ≼ x) :=

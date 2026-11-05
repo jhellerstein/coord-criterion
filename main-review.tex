@@ -18,6 +18,14 @@
 \newtheorem{example}{Example}
 \newtheorem{remark}{Remark}
 
+% Use \paragraph as a compact minor section header.
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+  {-.5\baselineskip \@plus -2\p@ \@minus -.2\p@}%
+  {-0.5em}%
+  {\normalfont\bfseries}}
+\makeatother
+
 \newcommand{\InputOrd}{\preceq_I}
 \newcommand{\OutputOrd}{\preceq_O}
 \newcommand{\InputGe}{\succeq_I}
@@ -497,7 +505,7 @@ a system has received, we model inputs as \emph{cumulative}: an input
 records everything received so far, not a single message, and $i\InputOrd j$
 means that $j$ contains at least the input information in $i$. We say that $j$
 \emph{\inrel} $i$, or is an \emph{\indesc} of $i$; every input is an \indesc of itself. \textcolor{reviewed}{We call $\OutputOrd$ the
-\emph{output order}: $o\OutputOrd u$ means that $u$ preserves every
+\emph{output order}: $o\OutputOrd u$ means that $u$ subsumes every
 externally visible claim in $o$ and may add more, and we say that $u$
 \emph{\outrel} $o$.} In either domain, we call the element above another
 an extension. We write $\InputGe$ and $\OutputGe$ for the converse orders.
@@ -549,7 +557,7 @@ $R$ contains only rows at \indescs of $i$: every row $(k,o)\in R$ satisfies $i\I
 
 \begin{definition}[Legal input]
 \label{def:legal-input}
-\textcolor{reviewed}{An input $k$ is \emph{legal} at a state $\sigma=(i,R)$ when $R$ contains a row at $k$.}
+An input $k$ is \emph{legal} at a state $\sigma=(i,R)$ when $R$ contains a row at $k$.
 \end{definition}
 
 \textcolor{reviewed}{Rows are never added during execution.} The \emph{canonical state at $i$} is
@@ -563,8 +571,9 @@ nothing:
 An input event from a canonical state leads to another canonical state, and
 runs start at one.
 
-The \emph{fiber} of a table $R$ at input $k$ is the set of outputs
-$R(k)=\mathrm{out}(R[\mathrm{in}=k])$. A functional fiber has at most one value. The \emph{future-output set} at $k$, $\mathrm{out}(R[\mathrm{in}\InputGe k])$,
+\textcolor{reviewed}{The \emph{fiber} of a table $R$ at input $k$ is the set of outputs paired
+with $k$: $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.} A functional fiber has at
+most one value. The \emph{future-output set} at $k$, $\mathrm{out}(R[\mathrm{in}\InputGe k])$,
 collects the outputs in the fibers at $k$ and its \indescs. For a state $\sigma=(i, R)$ the future-output set at $i$ is $\mathrm{out}(R)$---the
 outputs still possible.
 
@@ -591,20 +600,31 @@ effect of $\mathsf{input}(k)$ alone; $\mathsf{input}(i)$ at
 $(i,R)$ has no effect.
 
 \paragraph{Output events.}
-\textcolor{reviewed}{A system controls what it tells the world.} \textcolor{reviewed}{We study what it can
-promise without assuming that clients tolerate retractions.} \textcolor{reviewed}{Later outputs
-must therefore \outrelbase earlier ones.}
+\textcolor{reviewed}{A system controls what it tells the world.} We study what it can
+promise without assuming that clients tolerate retractions. Later outputs
+must therefore \outrelbase earlier ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
-output the system may emit. Since every later output must \outrelbase $o$, emitting $o$ requires a \commitment that removes
-every legal input whose output does not \outrelbase it.
+output the system may emit.
+
+\begin{definition}[Legal output]
+\label{def:exposable}
+\textcolor{reviewed}{The output $o$ at $(i,R)$ is a \emph{legal output} when every output in the
+future-output set \outrel $o$.}
+\end{definition}
+
+Equivalently, as the only row at a legal input $j$ is $(j,f(j))$, $o$ is legal
+exactly when $f(j)$ \outrel $o$ for every legal $j$.
+
+Since every later output must \outrelbase $o$, emitting a non-legal $o$ requires
+a \commitment that removes every legal input whose output does not \outrelbase
+it.
 
 \begin{definition}[Output event]
 \label{def:output-event}
-Let $(i,R)$ be a state and $(i,o)$ its row at the current input. \textcolor{reviewed}{The
-\emph{output event} $\mathsf{output}(o)$ performs two steps atomically: it restricts the remainder table
-to exactly the rows whose outputs
-\outrelbase $o$, and emits $o$ to the environment:}
+\textcolor{reviewed}{At a state $(i,R)$ with current output $o$, the \emph{output event}
+$\mathsf{output}(o)$ performs two steps atomically: it keeps exactly the rows
+whose outputs \outrelbase $o$, and emits $o$ to the environment:}
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R' = R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
@@ -613,27 +633,19 @@ to exactly the rows whose outputs
 
 \begin{definition}[Canonical \commitment]
 \label{def:canonical-commitment-functional}
-When $R'\neq R$ in Definition~\ref{def:output-event}, the transition applies the
+When $o$ is not legal, equivalently $R'\neq R$, the transition applies the
 \emph{canonical \commitment} $x_o(i,R)=(i,R')$. \textcolor{reviewed}{For every row it removes, no
 row remains at the same input.} It is a \commitment.
 \end{definition}
 
-The current row $(i,o)$ remains, since $o$ \outrel itself, so the event always
-ends at a state. \textcolor{reviewed}{A \commitment removes rows that input alone would preserve;
-after the canonical \commitment above, their inputs are no longer legal.} Canonical \commitments of this form are the only \commitments this section
-uses. \textcolor{reviewed}{Systems may issue more \commitments than an output requires, as the
-registrar does in Figure~\ref{fig:election-frames}(d), but extra \commitments
-only restrict behavior (Section~\ref{sec:systems}).}
-
-\begin{definition}[Legal output]
-\label{def:exposable}
-\textcolor{reviewed}{The output $o$ at $(i,R)$ is a \emph{legal output} when $\mathsf{output}(o)$
-applies no \commitment.}
-\end{definition}
-
-In a functional specification this means $R[\mathrm{out}\OutputGe o]=R$: the
-event removes nothing. As the only row at a legal input $j$ is $(j,f(j))$,
-$o$ is legal exactly when $f(j)$ \outrel $o$ for every legal $j$.
+\textcolor{reviewed}{Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.} The
+current row $(i,o)$ remains, since $o$ \outrel itself, so the event always ends
+at a state. \textcolor{reviewed}{A \commitment removes rows that input alone would preserve; after
+the canonical \commitment above, their inputs are no longer legal.} Canonical
+\commitments of this form are the only \commitments this section uses. \textcolor{reviewed}{Systems
+may issue more \commitments than an output requires, as the registrar does in
+Figure~\ref{fig:election-frames}(d), but extra \commitments only restrict
+behavior (Section~\ref{sec:systems}).}
 
 \paragraph{Determination.}
 A state is \emph{determined} when its future-output set has one element: one result
@@ -702,8 +714,8 @@ Figure~\ref{fig:nonmonotone-frame}, a run that emits $\bot$ at $ab\cdot$ keeps
 $P[\mathrm{in}\InputGe ab\cdot,\ \mathrm{out}\OutputGe\bot]$: the single row
 $(ab\cdot,\bot)$, as the figure shows.
 
-\textcolor{reviewed}{To compare runs that end at different inputs, we consider a common \indesc
-of those inputs.}
+To compare runs that end at different inputs, we consider a common \indesc
+of those inputs.
 
 \begin{definition}[Confluence at an input]
 \label{def:confluence}
@@ -721,8 +733,8 @@ later one.} \textcolor{reviewed}{The reason is observability: the environment ma
 outputs through channels the system does not see, as in Lamport's ``anomalous
 behavior''~\cite{lamport1978time}, and a reconciling input may never arrive.} \textcolor{reviewed}{Thus a conflict is a consistency failure even if later input could resolve it.}
 
-\textcolor{reviewed}{Confluence has a simple test: some row at the common \indesc must survive
-in every run.}
+Confluence has a simple test: some row at the common \indesc must survive
+in every run.
 
 \begin{proposition}[Survivor test]
 \label{prop:confluence}
@@ -1103,7 +1115,8 @@ $\Excluded_o$ and rules out that output at $\{A,B\}$; and the route sets removed
 in panel~(g) are in $\Subsumed_o$.} In the functional case, $\Subsumed_o$ is
 empty, so this is the output event of Definition~\ref{def:output-event}. Appendix~\ref{app:lifted-output-events} gives the formal definitions.
 
-\textcolor{reviewed}{As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
+\textcolor{reviewed}{With several outputs at one input, legality is more permissive: an output
+event may remove rows by output subsumption without applying a \commitment.} \textcolor{reviewed}{As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
 \commitment, exactly when $\Excluded_o$ is empty.} \textcolor{reviewed}{Equivalently, at every legal
 \indesc $j$ of $i$, $o$ and each remaining output at $j$ have a common
 \outnoun at $j$ (Proposition~\ref{prop:exposability}).}

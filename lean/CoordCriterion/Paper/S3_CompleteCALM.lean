@@ -301,8 +301,11 @@ Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
 `app:lifted-output-events`, and their entries in
 `Paper/AppC_CommitmentBases.lean`. -/
 
-/-- §3.4: "In the functional case, `Subsumed_o` is empty, so this is the
-output event of Definition `def:output-event`."  Every removed row then belongs
+  /-- §3.4: "With several outputs at one input, legality is more permissive:
+  an output event may remove rows by output subsumption without applying a
+  commitment. … `o` is a legal output exactly when `Excluded_o` is empty."
+
+  In the functional case, `Subsumed_o` is empty, so every removed row belongs
 to `Excluded_o`; at each such input, the event excludes its sole output and
 therefore the input itself. -/
 theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]

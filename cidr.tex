@@ -565,10 +565,10 @@ at $i$} has received $i$, emitted nothing, and removed no rows:
   \sigma_P(i)=\bigl(i,\ P[\mathrm{in}\InputGe i]\bigr).
   \label{eq:canonical-state}
 \end{equation}
-The \emph{fiber} of $R$ at $k$ is all the matching outputs to $k$: $R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The
-\emph{future-output set} of $(i,R)$ is $\mathrm{out}(R)$: all the remaining outputs possible at $i$. 
-The state is \emph{determined} when 
-the future-output set has one unique element.
+The \emph{fiber} of $R$ at $k$ is the set of outputs paired with $k$:
+$R(k)=\mathrm{out}(R[\mathrm{in}=k])$.  The \emph{future-output set} of
+$(i,R)$ is $\mathrm{out}(R)$: all outputs still possible from $i$.  The state
+is \emph{determined} when its future-output set has one element.
 
 \paragraph{Events: narrowing possibilities.}
 Each event applies a selection predicate on one column of the remainder table.
@@ -585,35 +585,35 @@ $\mathsf{input}(k)$ has the effect of $\mathsf{input}(k)$ alone.
 A system controls what it tells the world.  An output is a promise to the
 outside world, so later outputs must \outrelbase it.
 
+\begin{definition}[Legal output]
+\label{def:exposable}
+At a state $(i,R)$, let $o$ be the unique output at the current input.  The
+output $o$ is \emph{legal} when every output in the future-output set \outrel
+$o$.
+\end{definition}
+
 Selecting on the output column may require a \commitment.
 
 \begin{definition}[Output event, canonical \commitment]
 \label{def:output-event}
-Let $(i,o)$ be the row at the current input of a state $(i,R)$.  The
-\emph{output event} $\mathsf{output}(o)$ atomically restricts the remainder
-table to the rows whose outputs \outrelbase $o$, and emits $o$:
+At a state $(i,R)$ with current output $o$, the \emph{output event}
+$\mathsf{output}(o)$ atomically keeps the rows whose outputs \outrelbase $o$,
+and emits $o$:
 \begin{equation}
   (i,R)\xrightarrow{\mathsf{output}(o)}\bigl(i,\ R[\mathrm{out}\OutputGe o]\bigr).
   \label{eq:output-action}
 \end{equation}
-When this removes a row, the transition applies the \emph{canonical \commitment}
+If $o$ is not legal, the transition applies the \emph{canonical \commitment}
 $x_o$.  For every row it removes, no row remains at the same input.
 \end{definition}
 
-A \commitment removes rows that input alone would preserve; afterward, their
+Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  A
+\commitment removes rows that input alone would preserve; afterward, their
 inputs are no longer legal.  Systems may issue more \commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
 extra \commitments only restrict behavior (\S\ref{sec:systems}).
 
-\begin{definition}[Legal output]
-\label{def:exposable}
-The output $o$ at $(i,R)$ is a \emph{legal output} when $\mathsf{output}(o)$
-applies no \commitment.
-\end{definition}
-
-In a functional specification, $o$ is a legal output exactly when $f(j)$
-\outrel $o$ for every legal $j$.  An event from a determined state always
-leads to another determined state.
+An event from a determined state always leads to another determined state.
 
 \paragraph{Runs and consistency.}
 We now consider the executions corresponding to a specification.
@@ -1000,6 +1000,8 @@ $[B,A]$ in $\Excluded_o$ and rules out that output at $\{A,B\}$; and the
 route sets removed in panel~(g) are in $\Subsumed_o$.  In the functional
 case, $\Subsumed_o$ is empty.  Formal definitions are in \extended.
 
+With several outputs at one input, legality is more permissive: an output
+event may remove rows by output subsumption without applying a \commitment.
 As before, $o$ is a legal output when $\mathsf{output}(o)$ applies no
 \commitment, exactly when $\Excluded_o$ is empty.
 Equivalently, at every legal \indesc $j$ of $i$, $o$ and each
