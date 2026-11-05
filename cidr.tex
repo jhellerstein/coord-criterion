@@ -780,7 +780,7 @@ among them, and does not by itself imply a \commitment. Specification states and
 (\S\ref{sec:framework-brief}) apply unchanged to relational tables.
 
 Figure~\ref{fig:ambiguity-frames} contrasts two specs with several outputs
-in one fiber: serial schedules for two transactions and route sets observed by a
+in one fiber: serial schedules for two transactions, and route sets observed by a
 traceroute-like tool.  For the discussion here, transaction outputs are simply
 serial schedules, to which executions correspond via equivalence;
 Section~\ref{sec:hat-instance} studies more thorough transactional specs.
@@ -934,13 +934,15 @@ removed by the canonical \commitment $x_o$.  At an input $k$, $x_o$ removes
 only the rows in $\Excluded_o(k)$.  If those are all the rows at $k$, it rules
 out $k$; otherwise it rules out only those outputs.  Rows in $\Subsumed_o(k)$
 are removed separately by output subsumption and have a kept \outnoun at $k$,
-so they cannot cause the event to rule out $k$.
-Emitting $\bot$ under the equality order of Figure~\ref{fig:nonmonotone-frame}
+so they cannot cause the event to rule out $k$.  In the functional
+case, $\Subsumed_o$ is empty.  Formal definitions are in \extended.
+
+Returning to Figure~\ref{fig:nonmonotone-frame},
+emitting $\bot$ under the equality order 
 puts the rows for $aba$ and $abb$ in $\Excluded_o$ and rules out those inputs;
 emitting $[A,B]$ in Figure~\ref{fig:ambiguity-frames}(f) puts the row for
 $[B,A]$ in $\Excluded_o$ and rules out that output at $\{A,B\}$; and the
-route sets removed in panel~(g) are in $\Subsumed_o$.  In the functional
-case, $\Subsumed_o$ is empty.  Formal definitions are in \extended.
+route sets removed in panel~(g) are in $\Subsumed_o$.
 
 With several outputs at one input, legality is more permissive: an output
 event may remove rows by output subsumption without applying a \commitment.
