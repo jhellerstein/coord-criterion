@@ -60,7 +60,7 @@ theorem «proof:thm:functional-calm» {I O : Type} [PO I] [PO O] (sp : Spec I O)
   functional_calm hf
 
 /-- Proof of Cor. `cor:state-by-input`: "By Functional CALM …, the
-specification is monotone. … monotonicity gives `o_ℓ ≼ f(k)`, and the output
+spec is monotone. … monotonicity gives `o_ℓ ≼ f(k)`, and the output
 conditions remove nothing."  The key step: in a monotone specification every
 run state is canonical. -/
 theorem «proof:cor:state-by-input» {I O : Type} [PO I] [PO O] {sp : Spec I O}

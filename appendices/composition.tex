@@ -63,7 +63,7 @@ nonempty fiber.
 
 \begin{lemma}[Independently parameterized composition]
 \label{lem:parameterized-composition}
-If $\Spec_F$ and $\Spec_G$ satisfy Lifted Monotonicity, then the specification
+If $\Spec_F$ and $\Spec_G$ satisfy Lifted Monotonicity, then the spec
 with table $G\star F$ satisfies Lifted Monotonicity.
 \end{lemma}
 
@@ -117,7 +117,7 @@ which is the plan of Proposition~\ref{prop:curried-query-plan} on tables of func
 If every stage satisfies Lifted Monotonicity and $\Spec_1$ runs under the
 empty basis, the pipeline emits only what $P_2\circ P_1$ emits under the empty
 basis.  Its runs are runs of a Lifted-Monotone
-specification, at whose states every output is legal
+spec, at whose states every output is legal
 (Proposition~\ref{prop:exposure-boundary}).  So the next stage again has an
 empty-basis guard, and by induction no stage of the pipeline issues a \commitment.
 
@@ -161,7 +161,7 @@ canonical states of $x$ and $y$.  The stages can be repaired only by merging
 $p$ and $q$ into one intermediate value.
 
 For the capped counter of Section~\ref{sec:composite-calm}, let $\mathcal S_1$
-be the functional specification induced by $c(n)=\min(n,9)$ on
+be the functional spec induced by $c(n)=\min(n,9)$ on
 $(\mathbb N,\le)$, and $\mathcal S_2$ that induced by the test $t(n)=[n<10]$,
 whose two outputs are
 incomparable.  $\mathcal S_2$
@@ -184,7 +184,7 @@ and by case (3) the composite is the identity in either order.
 
 Let $\mathcal S_1$ have one input $*$ and possibility relation
 $\{(*,x),(*,y)\}$ with $x,y$ incomparable, and let $\mathcal S_2$ be the
-functional specification induced by a function $f$ that maps
+functional spec induced by a function $f$ that maps
 both to one value.  The composite has one row, so it satisfies Lifted
 Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
 a legal output, and under the empty basis an output event is commitment-sufficient only for a
@@ -340,7 +340,7 @@ stage.  Composition is associative, so the bracketing does not matter.
 \end{proof}
 
 Consider locks in the store behind the log.  Let $\Spec_1$ be the log
-specification of Example~\ref{ex:committed-log-composition}, under its
+spec of Example~\ref{ex:committed-log-composition}, under its
 canonical basis with a strategy that allows every event, and $\Spec_2$ the
 table of any monotone function $f$ of the log.  Every log is an output of
 $\Spec_1$, so $\Spec_2|_{\Spec_1}$ is $\Spec_2$.  For a set $Q$ of logs,
@@ -359,7 +359,7 @@ store must take the lock at $[\,]$, which empties $[b]$, so it cannot receive
 $[b]$.
 
 For a function store, some \commitments of $\Spec_1$ are invisible to the
-composite.  Let $\Spec_2$ be the functional specification induced by a
+composite.  Let $\Spec_2$ be the functional spec induced by a
 monotone function $f$, and write
 $f(\sigma)$ for the image of a state $\sigma$ of $\Spec_1$.
 
@@ -422,7 +422,7 @@ Consider again state-machine replication, with every put and get passing
 through the log.  Take $I$ the proposal streams and $M$ the logs, both ordered
 by prefix, and $O$ the cumulative response histories, ordered by extension.
 Let $\Spec_1$ relate each proposal stream to the logs of its commands, and let
-the store $\Spec_2$ be the functional specification induced by the function
+the store $\Spec_2$ be the functional spec induced by the function
 $f$ that executes a log on a
 deterministic state machine, which is monotone in the prefix order.  Then
 $\Spec_1$ is non-monotone, since distinct next entries are incompatible
@@ -456,7 +456,7 @@ from, as in ``$x=5$ as of entry 17.''  A longer log never contradicts such a
 response, so $G$ is monotone.  By Complete CALM and the output-legality boundary,
 every output of $G$ at every state reachable without \commitment is
 legal, so bare reads need no \commitment of their own.  Suppose instead
-that the specification demands the latest value, so that a read of $x$ must
+that the spec demands the latest value, so that a read of $x$ must
 return the value of $x$ after all of $b$.  Then a bare read can be
 contradicted by an entry it has not seen, and $G$ is not monotone.  By the
 exposure boundary some output of $G$ then needs a \commitment of the store's
@@ -468,12 +468,12 @@ own.  Bare reads then need coordination, typically by going through the log.
 
 Theorem~\ref{thm:proper-coordination} fixes a system for each stage and
 follows the pipeline event by event.  Here each stage is seen from outside,
-through a typed boundary, so that stages with different specifications,
+through a typed boundary, so that stages with different specs,
 bases, and participants compose without one shared history.
 
 \begin{definition}[Component, admitted run]
 \label{def:component}
-A \emph{component} for a specification $\Spec$ consists of a \commitment basis
+A \emph{component} for a spec $\Spec$ consists of a \commitment basis
 $\mathcal B$ and a set of \emph{admitted runs}.  Each admitted run is a run
 under $\mathcal B$ from a canonical state $\sigma(i)$
 (Definition~\ref{def:run-under-basis}), together with an output $o$ that it
@@ -524,7 +524,7 @@ and $\Spec_2$ is proper (Definition~\ref{def:proper-coordination}), and
 
 Receiving $m$ is the downstream run's initial input, not a \commitment of
 $C_2$.  Glue stages that copy, merge, route, or adapt values
-(\S\ref{app:dataflow-graphs}) are components with specifications of
+(\S\ref{app:dataflow-graphs}) are components with specs of
 their own, and they may issue \commitments of their own.
 
 \begin{proposition}[Typed pipelines]
@@ -542,7 +542,7 @@ their own, and they may issue \commitments of their own.
 \item Contract properness does not imply feed availability for an
       arbitrarily typed downstream component: behind the capped counter, the
       maximally permissive empty-basis component for the unrestricted
-      threshold specification admits no feed at an offered count.
+      threshold spec admits no feed at an offered count.
 \item If, in a contract-proper pipeline, the downstream is instead the
       maximally permissive empty-basis component for $\Spec_2|_{\Spec_1}$,
       every admitted upstream boundary run has a feed, and the pipeline is
