@@ -190,9 +190,13 @@ Lean: for message data of type `D`; "every finite participant set" is "every
 abbrev «def:distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
   Dist.DistConsistent sp D
 
-/-- **Prop. consistency and distributed consistency**
-(`prop:distributed-consistency`).  "An I/O specification is consistent if
-and only if it has distributed consistency." -/
+  /-- **Prop. consistency and distributed consistency**
+  (`prop:distributed-consistency`).  "An I/O specification is consistent if
+  and only if it has distributed consistency."
+
+  The converse uses unrestricted placement: "participants have no assigned
+  roles, so any spec run may occur at any participant."  The
+  placement-sensitive alternative is Appendix `app:deployment`. -/
 theorem «prop:distributed-consistency» (sp : Spec I O) (D : Type) :
     sp.Consistent ↔ Dist.DistConsistent sp D :=
   Dist.consistent_iff_distConsistent sp D
