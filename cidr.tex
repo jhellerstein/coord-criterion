@@ -674,10 +674,9 @@ Rows are never added, so the row of a common state at $j$ was there
 in every run.  \fullproof
 \end{proof}
 
-Consistency guarantees runs never diverge irreparably: no ``split brain''.  Whatever input
+Consistency ensures that runs never diverge irreparably: no ``split brain''.  Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
-of theirs leaves a single state that every run can reach: one that honors all
-of their emitted outputs and accepts all of that input.
+of theirs leaves a single commonly-reachable state for every run and contradicts no prior output.
 Consistency is a property of the specification.  It describes no protocol and
 promises no delivery or termination.
 
@@ -707,7 +706,10 @@ In a consistent functional specification, every run ending at current
 input $i$ is in the canonical state $\sigma_P(i)$, whatever outputs it emitted
 along the way.
 \end{corollary}
-\proofinfull
+\begin{proof}[Proof sketch]
+By monotonicity: outputs a run emits remove no row at an input extension of $i$.
+\fullproof
+\end{proof}
 
 Knowing the input is therefore enough to know the state, and with it the one
 output.  Monotonicity also governs legality:
@@ -726,9 +728,9 @@ when $f$ is monotone at $i$.
 \end{proof}
 
 A monotone specification can thus emit every current
-output without \commitment; if monotonicity fails at $i\InputOrd k$ with
-$f(i)\not\OutputOrd f(k)$, then at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$
-applies $x_{f(i)}$, which excludes input $k$.
+output without \commitment. In a non-monotone specification, some $i\InputOrd k$ with
+$f(i)\not\OutputOrd f(k)$, so at $\sigma_P(i)$ the event $\mathsf{output}(f(i))$
+must exclude $k$.
 
 This is the familiar CALM dichotomy stated at the level of the specification
 rather than inside a particular programming language.  The C in CALM has been read
