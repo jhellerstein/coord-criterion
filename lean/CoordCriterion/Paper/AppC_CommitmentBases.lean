@@ -48,7 +48,15 @@ theorem «eq:canonical-commitment-relational» {sp : Spec I O}
       ∀ k x, (commitmentState σ o ho).R k x ↔ σ.R k x ∧ ¬ Excluded σ o k x :=
   ⟨rfl, fun _ _ => Iff.rfl⟩
 
-/-- The transaction-order example excludes `[B,A]`; the routing example only subsumes
+  /-- A subsumed row has a kept output extension at the same input.  Thus output
+  subsumption cannot by itself empty that input's fiber. -/
+  theorem «def:canonical-commitment/subsumed-keeps-fiber» {sp : Spec I O}
+      (σ : State sp) (o : O) (k : I) (x : O) (h : Subsumed σ o k x) :
+      ∃ u, outputTable σ o k u ∧ x ≼ u := by
+    obtain ⟨_, _, u, hu, hou, hxu⟩ := h
+    exact ⟨u, ⟨hu, hou⟩, hxu⟩
+
+  /-- The transaction-order example excludes `[B,A]`; the routing example only subsumes
 its removed route sets. -/
 theorem «def:lifted-output-event/examples» :
     Excluded (canon Figures.Txn.spec ()) .ab () .ba ∧

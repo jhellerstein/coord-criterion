@@ -299,7 +299,13 @@ Prop. `prop:exposability` with `eq:safe-exposure` are in Appendix
 `app:lifted-output-events`, and their entries in
 `Paper/AppC_CommitmentBases.lean`. -/
 
-  /-- §3.4: "With several outputs at one input, legality is more permissive:
+  /-! At an input `k`, the canonical commitment removes only rows in
+  `Excluded_o(k)`.  Rows in `Subsumed_o(k)` are removed separately by output
+  subsumption and have a kept output extension at `k`, so they cannot cause the
+  event to rule out `k`.  This is formalized by
+  `«def:canonical-commitment/subsumed-keeps-fiber»`. -/
+
+  /-- §3.2: "With several outputs at one input, legality is more permissive:
   an output event may remove rows by output subsumption without applying a
   commitment. … `o` is a legal output exactly when `Excluded_o` is empty."
 

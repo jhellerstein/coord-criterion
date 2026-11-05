@@ -255,7 +255,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«def:common-expansion-condition»` | abbrev | **Def. |
 | `«def:common-expansion-condition/empty»` | theorem | After Def. |
 | `«prop:common-expansion-form»` | theorem | **Prop. |
-| `«sec:lifted-output-events/functional»` | theorem | §3.4: |
+| `«sec:lifted-output-events/functional»` | theorem | §3.2: |
 | `«sec:complete-calm-theorem/lift-unchanged»` | theorem | "Specification states, input events, runs, commitment-free runs, and consistency are defined as before, and the results of Section `sec:executions` … lift un… |
 | `«thm:complete-calm»` | theorem | **Theorem `thm:complete-calm`** (Complete CALM). |
 | `«prop:exposure-boundary»` | theorem | **Prop. |
