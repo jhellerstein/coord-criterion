@@ -54,7 +54,7 @@ Theorem of Ameloot et al. proves an operational result for relational
 languages on transducer networks: coordination-free evaluation is possible
 iff a program is monotone … Functional CALM does not replace the details of
 that theorem.  It abstracts the result to a property that can be compared
-with specifications outside Datalog.").  The abstraction is
+with specs outside Datalog.").  The abstraction is
 `«eq:query-monotonicity»` (§2); the transducer theorem itself is cited, not
 formalized.  The entries below check the mapping of its output extensions into our
 frame (`Instances/QueryRefinements.lean`); the operational statements of
@@ -450,7 +450,7 @@ theorem «sec:iconfluence-instance/bailis-definition» {V Tx : Type} (M : IConf.
   ⟨IConf.s0_anc, IConf.reachPlus_iff, IConf.bailis_iff, IConf.bailisAnc_iff⟩
 
 /-- "From an instance `(s₀, T, 𝓘)` of their model we construct a
-specification `𝒮_𝓘` in ours as follows.  Inputs are transaction histories:
+spec `𝒮_𝓘` in ours as follows.  Inputs are transaction histories:
 partial orders of events, each labeled by a transaction in `T`, where one
 event precedes another when the replica running the second saw the first.  A
 history extends each of its downward-closed sub-orders.  We keep the locally
@@ -516,11 +516,11 @@ theorem «sec:iconfluence-instance/concurrency-decides» :
 
 /-! ## General operational specification models (`sec:operational-models`)
 
-The opening paragraph ("An I/O specification declaratively relates
+The opening paragraph ("An I/O spec declaratively relates
 cumulative inputs to permitted outputs.  An I/O automaton instead defines
 operational states, input, output, and internal actions, and a transition
 relation.  Projecting its externally visible behavior can yield an I/O
-specification. … Thus our specification model does not replace an operational
+spec. … Thus our specification model does not replace an operational
 formalism; it is a semantic projection designed to make the intrinsic
 coordination question comparable across such formalisms.") positions the model;
 it states no claim of its own.
@@ -598,7 +598,7 @@ theorem «sec:operational-models/later-sends» {C P Q O : Type} [DecidableEq C]
   IOM.send_after_out ⟨s, hx, rfl⟩ hm hrv hrm hj hmj hc
 
 /-- **Def. `def:induced-specification`** (Induced specification).  "The
-specification *induced* by `M` and its environment pairs each input
+spec *induced* by `M` and its environment pairs each input
 (Definition `def:execution-input`) that occurs with the machine's observation
 at the end of every execution with that input."
 
@@ -612,8 +612,8 @@ distributed execution in the sense of Section `sec:distributed-execution`.
 client sent after which outputs, so the input remembers what the
 environment's choices depended on.") explain the model and state no claim of
 their own.  The sentence "Distributing the machine is then direct: … among
-participants Section `sec:distributed-execution` applies, with the induced
-specification as the specification." is argued in prose only (see the
+participants Section `sec:distributed-execution` applies, using the induced
+spec." is argued in prose only (see the
 README). -/
 theorem «def:induced-specification» {C P Q O : Type} [PO O] (k : IOM.ChanKind)
     (G : IOM.Machine C P Q O) :
@@ -637,14 +637,14 @@ abbrev «def:execution-input» {C P O : Type} (β : List (IOM.Act C P O)) : IOM.
   IOM.input β
 
 /-- **Prop. `prop:induced-specification`** (Induced specifications).
-"(1) The induced specification is an I/O specification, and the input of
+"(1) The induced spec is an I/O specification, and the input of
 an execution only extends as the execution continues.  (2) When there is one
 client and its state-machine events arrive in the order it sent them, every input is a
 chain, inputs correspond to state-machine event sequences ordered by prefix, and the fiber
 at a sequence collects the observations of the machine's runs that receive it
 in order, interleaved with output and internal steps.  If output and internal
 steps leave the state unchanged and receiving is deterministic, the
-specification is functional and consistent exactly when `obs(q) ⪯ obs(q')`
+spec is functional and consistent exactly when `obs(q) ⪯ obs(q')`
 for every receive transition `q → q'` from a reachable state.  (3) Every
 observation in the fiber at `h` is reached by a run of the machine that
 receives each state-machine event of `h` once, interleaved with output and internal steps.
@@ -653,7 +653,7 @@ reached, whatever the order of its receives.  (4) The machine's observations
 are confluent across its executions—for executions with inputs `h₁,…,hₖ` and
 any input `h` that occurs and extends each `hᵣ`, some execution with input `h`
 ends in an observation that extends each of theirs—exactly when the induced
-specification satisfies Lifted Monotonicity."
+spec satisfies Lifted Monotonicity."
 
 Lean, part by part, for a general machine `G`; a run of the machine is an
 execution `γ` of the machine automaton `IOM.machA G` (its receives
@@ -722,13 +722,13 @@ theorem «prop:induced-specification» {C P Q O : Type} [PO O] [DecidableEq C]
       IOM.bag_fiber_of_run hx hout h hh hγ hw hmem⟩,
     (IOM.confluent_iff_liftedMono k G).1⟩
 
-/-! "Testing and proof": "The induced specification is defined by every
+/-! "Testing and proof": "The induced spec is defined by every
 finite execution of the machine and its environment.  There are infinitely
-many such executions, so the induced specification is a semantic object: we
+many such executions, so the induced spec is a semantic object: we
 can reason about it, but not list it.  Two standard approaches make that
 reasoning practical."  This frames the paragraph.  "The first is testing.  A
 simulator or model checker runs the machine and its environment on bounded
-inputs; the input/output pairs it collects form a finite specification in our
+inputs; the input/output pairs it collects form a finite spec in our
 model, which can be checked for violations of Lifted Monotonicity.  This is
 routine engineering practice and has found serious bugs in production
 systems.  Testing suits refutation."
@@ -748,7 +748,7 @@ is the input of `β`; it is an input that occurs, as every input of the
 induced specification is.  The library also gives finite certificates for
 the last clause (`IOM.not_liftedMono_of_fiber_list`,
 `IOM.not_liftedMono_of_machine_cert`); the first of these is the paper's next
-sentence, "A violation found in the finite specification is such a witness
+sentence, "A violation found in the finite spec is such a witness
 when the exploration covers every execution with input `h`, so that its fiber
 there is complete": a finite list containing every observation at `h`, each
 failing to refine some `βᵣ`'s, refutes Lifted Monotonicity.  The next sentence ("Testing cannot
@@ -764,8 +764,8 @@ theorem «sec:operational-models/testing-witness» {C P Q O : Type} [PO O]
             ∃ r ∈ fam, ¬ G.obs (r.2 .mach) ≼ G.obs (s' .mach) :=
   IOM.not_liftedMono_iff_witness k G
 
-/-- "The second is proof.  Instead of computing the induced specification,
-a designer writes one down.  A *declared* specification `D` gives, for
+/-- "The second is proof.  Instead of computing the induced spec,
+a designer writes one down.  A *declared* spec `D` gives, for
 each input, a set of outputs by a rule … it does not enumerate executions.
 The proof then shows that `D` describes the machine well enough that Lifted
 Monotonicity can be checked on `D` instead.  Two things must be shown, and
@@ -802,7 +802,7 @@ theorem «sec:operational-models/both-halves» {C P : Type} [DecidableEq C]
 `D` be an I/O specification whose inputs correspond, by an order
 isomorphism, to the inputs that occur.  If `D` satisfies realizability and
 domination, then `D` satisfies Lifted Monotonicity exactly when the induced
-specification does, and so exactly when the machine's observations are
+spec does, and so exactly when the machine's observations are
 confluent across its executions."  With the obligations: "*Realizability.*
 Every output that `D` allows at an input is the observation of some execution
 with that input.  *Domination.*  Every execution's final observation is
