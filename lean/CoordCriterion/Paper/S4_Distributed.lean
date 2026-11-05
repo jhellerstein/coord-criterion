@@ -205,7 +205,7 @@ theorem «prop:distributed-consistency/literal-matching» (sp : Spec I O) (D : T
   Dist.consistent_iff_distConsistent0 sp D
 
 /-- "By Complete CALM, which reduces to Functional CALM with one output per
-input, a specification has distributed consistency exactly when it satisfies
+input, a spec has distributed consistency exactly when it satisfies
 Lifted Monotonicity." -/
 theorem «sec:distributed-consistency/lifted-monotonicity» (sp : Spec I O) (D : Type) :
     Dist.DistConsistent sp D ↔ sp.LiftedMono :=
@@ -244,7 +244,7 @@ theorem «cor:convergence» {D : Type} {n : Nat} {sp : Spec I O} (hc : sp.Consis
   ⟨fun p => Dist.convergence hc hf hE p rfl, Dist.convergence_agree hc hf hE⟩
 
 /-- After Cor. `cor:convergence`: "With several outputs per input this fails
-even for consistent specifications: in Figure `fig:ambiguity-frames`(g), a
+even for consistent specs: in Figure `fig:ambiguity-frames`(g), a
 run that emitted `{s→s1}` has subsumed the route sets that omit it, while a
 run at the same input that emitted nothing keeps them.  Consistency then
 guarantees that such replicas can be reconciled, not that they agree."  The
@@ -419,10 +419,10 @@ theorem «def:system/restrict» {sp : Spec I O} {D : Type} (Sys : CAP.System sp 
       ∀ n init p pre e, CAP.Allowed Sys.restrict n init p pre e ↔ CAP.Allowed Sys n init p pre e :=
   ⟨Sys.restrict_basisRespecting, Sys.restrict_allowed⟩
 
-/-- After Def. `def:system`: "A system thus implements one specification.  Its
+/-- After Def. `def:system`: "A system thus implements one spec.  Its
 participants may behave differently, and a deployment may limit what each one
 emits (Appendix `app:deployment`), but all of them work from the same table and
-basis.  Systems for different specifications compose as components
+basis.  Systems for different specs compose as components
 (Section `sec:proper-coordination`)."  Lean: `CAP.System sp D` carries one
 specification `sp` and one basis; its strategies `strat n init p` may differ
 by participant.  A deployment `Deploy.Deployment sp n` gives participant `p` a
@@ -730,7 +730,7 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
   CAP.Contradicts emits accepts σ σc
 
   /-- **Def. `def:coordination`** (Coordination-requiring commitment).
-  "We distinguish the behavior permitted by a specification from the behavior
+  "We distinguish the behavior permitted by a spec from the behavior
   admitted by a particular system.  Write `𝓡_P^⊤` for all canonical runs of
   `P`.  By Canonical Run Universality it is maximal at the observable
   interface: every run under any commitment basis has the same input and

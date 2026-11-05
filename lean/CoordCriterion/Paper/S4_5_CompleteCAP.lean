@@ -45,7 +45,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 /-- Section `sec:complete-cap`, opening: "Complete CAP answers that broader
 question for any declared guarantee.  To state the question, we must separate
 the outputs that participants must keep available from the outputs that the
-specification permits.  A participant acts on its local history during a
+spec permits.  A participant acts on its local history during a
 partition, while consistency compares the participants' outputs at a common
 input extension of their inputs.  Their common output extension need not be emitted by
 any participant.  It may exist only as the client's combined observation.
@@ -54,7 +54,7 @@ Consider a register initialized to `v₀`.  During a partition, participant
 `p` receives a write `w(v)` and emits its acknowledgment, while participant
 `q` receives a concurrent read `r` and returns `v₀`.  A client that later
 collects both observes the write acknowledgment together with the read answer
-`v₀`.  The register specification permits this combined output at the input
+`v₀`.  The register spec permits this combined output at the input
 containing both operations: a linearization may put the concurrent read
 before the write.  The combined output extends both local outputs and
 provides a proof of their consistency, although no participant need ever
@@ -64,15 +64,15 @@ We therefore encode a guarantee as an I/O specification together with an
 explicit relation `E ⊆ P`: the rows whose outputs must remain locally
 available.  Outputs in `P ∖ E` need only remain permitted as possible common
 output extensions.  Complete CAP says that such a guarantee can stay available and
-consistent through partitions exactly when the specification satisfies
+consistent through partitions exactly when the spec satisfies
 Lifted Monotonicity for `E`: outputs selected by `E` on different sides of a
-partition must have a common output extension in the specification at every common
+partition must have a common output extension in the spec at every common
 input extension of their inputs.  When `E = P`, this is Lifted Monotonicity
 itself."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
 `«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`).  The
 closing sentences ("A partition does not change which commitments a
-specification needs; …") are intuition for those results. -/
+spec needs; …") are intuition for those results. -/
 theorem «sec:complete-cap/intro» (sp : Spec I O) (D : Type) (E : Table I O)
     (hES : ∀ i o, E i o → sp.P i o) :
     ((∃ Sys : System sp D, AvailabilityFor E Sys ∧ PartitionConsistencyAtEnd Sys) ↔
@@ -371,7 +371,7 @@ theorem «sec:complete-cap/deterministic-strategies» (D : Type) :
 
 /-! ### Paragraph "Gilbert and Lynch" -/
 
-/-- "Consider a register specification whose inputs are sets of operations
+/-- "Consider a register spec whose inputs are sets of operations
 with their real-time precedence, and whose outputs answer every operation of
 the input as some linearization does.  Let `p`'s input contain only a write of
 `v ≠ v_0`, and `q`'s only a read.  The fiber at `p`'s input holds only the
