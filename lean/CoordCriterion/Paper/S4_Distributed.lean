@@ -745,82 +745,62 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
   CAP.Contradicts emits accepts σ σc
 
   /-- **Def. `def:coordination`** (Coordination-requiring commitment).
-  "We distinguish the behavior permitted by a spec from the behavior
-  admitted by a particular system.  Write `𝓡_P^⊤` for all canonical runs of
-  `P`.  By Canonical Run Universality it is maximal at the observable
-  interface: every run under any commitment basis has the same input and
-  output events as some run in `𝓡_P^⊤`.  A system `A` implementing `P` may
-  admit fewer such behaviors because its strategies restrict which events it
-  can perform; write `𝓡_A` for the runs it produces.  A commitment requires
-  coordination relative to `𝓡` when some run in `𝓡` contradicts it."
+  "A commitment requires coordination when some canonical run permitted by the
+  declared specification contradicts it."  System strategies choose which run
+  occurs, but do not narrow this adversarial comparison set.
 
-Lean, for a system: the commitments taking `σ` to `σc` are contradicted
-(`«def:contradicts»`) by the runs of `Sys`: some produced history emits a
-removed row (`SysEmits`) or accepts an excluded input (`SysAccepts`); produced
-histories range over all inputs the adversarial environment may supply. -/
-abbrev «def:coordination» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
-    (σ σc : State sp) : Prop :=
-  CAP.Contradicts (CAP.SysEmits Sys) (CAP.SysAccepts Sys) σ σc
+  Lean uses the event-list form justified by Proposition
+  `prop:canonical-contradiction`: under the full canonical run set, an event list
+  requires coordination exactly when it applies a nonempty commitment sequence
+  in an output event or contains a commitment event. -/
+  abbrev «def:coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+    Coordinates es
 
-/-- **Def. `def:distributed-coordination`** (Distributed coordination).
-"Suppose participant `p` applies a commitment in a history.  The commitment
-requires distributed coordination relative to `𝓡` when some run in `𝓡` at
-another participant `q ≠ p` of that history contradicts it."
+  /-- **Def. `def:distributed-coordination`** (Distributed coordination).
+  "A coordinating commitment requires distributed coordination when its
+  contradicting canonical run can be assigned to another participant."
 
-Lean: the commitments taking `σ` to `σc`, applied by participant `p` of `H`,
-are contradicted by a participant `q ≠ p` of `H` (`OtherEmits`,
-`OtherAccepts`). -/
-abbrev «def:distributed-coordination» {sp : Spec I O} {D : Type} {n : Nat}
-    (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp) : Prop :=
-  CAP.Contradicts (CAP.OtherEmits init H p) (CAP.OtherAccepts H p) σ σc
+  At the core level placement is unrestricted, so this has the same event-level
+  test as `def:coordination`.  Appendix `app:deployment` explicitly restricts
+  which rows each participant may emit and therefore qualifies this placement
+  argument. -/
+  abbrev «def:distributed-coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+    Coordinates es
 
-/-- Legacy sub-label pointing at `«def:distributed-coordination»`. -/
-abbrev «def:coordination/distributed» {sp : Spec I O} {D : Type} {n : Nat}
-    (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp) : Prop :=
-  CAP.Contradicts (CAP.OtherEmits init H p) (CAP.OtherAccepts H p) σ σc
+  /-- Legacy sub-label pointing at `«def:distributed-coordination»`. -/
+  abbrev «def:coordination/distributed» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+    Coordinates es
 
-/-- Def. `def:coordination`, for a specification (`𝓡` the canonical runs): a
-run applies a commitment that requires coordination exactly when it applies a
-commitment at all (`Coordinates`: some output event has `γ ≠ ε`, or there is a
-commitment event); see `«prop:canonical-contradiction»`. -/
-abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-  Coordinates es
+  /-- Def. `def:coordination`, explicit specification-level alias. -/
+  abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+    Coordinates es
 
-/-- **Def. coordination-free** (`def:coordination-free`).  "A run or history is
-coordination-free relative to `𝓡` when it applies no commitment that requires
-coordination relative to `𝓡`."
+  /-- **Def. coordination-free** (`def:coordination-free`).  "A run or history is
+  coordination-free when it applies no commitment that requires coordination
+  relative to the declared specification."
 
-Lean, for a system: `System.CoordinationFree` says the commitments of every
-output event and every commitment event of every produced history are local
-(`LocalEvent`), which is the negation of `«def:coordination»`
-(`«def:coordination-free/local-iff»`). -/
-abbrev «def:coordination-free» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) : Prop :=
-  Sys.CoordinationFree
+  By Proposition `prop:canonical-contradiction`, this is precisely `CoordFree`:
+  output events use `ε` and no commitment event occurs.  This definition does
+  not depend on which histories a concrete system happens to produce. -/
+  abbrev «def:coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+    CoordFree es
 
-/-- Def. `def:coordination-free`: an event is local (`LocalEvent`) exactly when
-its commitments do not require coordination relative to the system's runs
-(`«def:coordination»`); within a history, `LocalInH` is the negation of
-requiring distributed coordination (`«def:coordination/distributed»`). -/
-theorem «def:coordination-free/local-iff» {sp : Spec I O} {D : Type} :
-    (∀ (Sys : CAP.System sp D) (σ σc : State sp),
-      CAP.LocalEvent Sys σ σc ↔ ¬ «def:coordination» Sys σ σc) ∧
-    (∀ {n : Nat} (init : Fin n → I) (H : CAP.History sp D n) (p : Fin n) (σ σc : State sp),
-      CAP.LocalInH init H p σ σc ↔ ¬ «def:coordination/distributed» init H p σ σc) :=
-  ⟨CAP.localEvent_iff_not_contradicts, CAP.localInH_iff_not_contradicts⟩
+  /-- Def. `def:coordination-free`: the specification-relative event-list form
+  is exactly the negation of requiring coordination. -/
+  theorem «def:coordination-free/local-iff» {sp : Spec I O} (es : List (SEvent sp)) :
+      «def:coordination-free» es ↔ ¬ «def:coordination» es :=
+    coordFree_iff_not es
 
-/-- Def. `def:coordination-free`, distributed: no commitment of an output or
-commitment event of a produced history requires distributed coordination.  Lean:
-`System.CoordinationFreeH` (every such event is `LocalInH`). -/
-abbrev «def:coordination-free/distributed» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D) :
-    Prop :=
-  Sys.CoordinationFreeH
+  /-- Under unrestricted core placement, distributed coordination has the same
+  event-level test. -/
+  abbrev «def:coordination-free/distributed» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+    CoordFree es
 
-/-- Def. `def:coordination-free`: a coordination-free system has no distributed
-coordination. -/
-theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {D : Type}
-    {Sys : CAP.System sp D} (h : «def:coordination-free» Sys) :
-    «def:coordination-free/distributed» Sys :=
-  CAP.coordinationFree_to_H h
+  /-- Coordination freedom implies freedom from distributed coordination in the
+  unrestricted-placement model. -/
+  theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {es : List (SEvent sp)}
+      (h : «def:coordination-free» es) : «def:coordination-free/distributed» es :=
+    h
 
 /-- **Proposition `prop:canonical-contradiction`** (Canonical runs contradict
 every commitment).  "Every commitment applied in a run from a canonical state
@@ -964,60 +944,55 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   open CALM.Transient in
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
-/-- Paragraph "Locks in a shared-nothing database": "Consider a database
-partitioned by key, with each key owned and locked by one participant.
-Ownership can keep coordination local."
+  /-- Paragraph "Locks in a shared-nothing database": ordering two transactions
+  chooses between the spec-permitted orders.  Hence the canonical event for
+  `ab` applies a commitment and requires coordination relative to `ordSpec`,
+  independently of whether a concrete strategy suppresses `ba`.  Assigning
+  ownership can make that coordination local only through an explicit
+  deployment restriction (Appendix `app:deployment`). -/
+  theorem «sec:coordination/shared-nothing-single-key» :
+      ¬ Exposable (canon CAP.ordSpec ()) .ab ∧
+        ∃ τ, SysStep (canonCommitmentBasis CAP.ordSpec) (canon CAP.ordSpec ())
+          (.output (kappa (canon CAP.ordSpec ()) .ab) .ab) τ ∧
+          Coordinates [SEvent.output (kappa (canon CAP.ordSpec ()) .ab) .ab] := by
+    have hn := CAP.ordSpec_ab_not_exposable
+    have ho : (canon CAP.ordSpec ()).R (canon CAP.ordSpec ()).cur .ab := CAP.canon_ord_R _ _
+    refine ⟨hn, outState _ _ ho, canonical_support _ _ ho, Or.inl ⟨_, .ab, List.mem_cons_self, ?_⟩⟩
+    intro he
+    have hs : SysStep (canonCommitmentBasis CAP.ordSpec) (canon CAP.ordSpec ())
+        (.output [] .ab) (outState (canon CAP.ordSpec ()) .ab ho) := by simpa [he] using canonical_support _ _ ho
+    exact hn (eps_step_iff.1 hs).2.1
 
-*Local coordination.*  "Ordering two transactions on one key requires
-coordination because, in another run, `B`'s request may arrive first and the
-owner may order `B` before `A`.  Only the key's owner can produce that
-contradicting run, so no distributed coordination is required."  Lean: a spec with outputs `⊥ ≤ ab, ba` (`ab`,
-`ba` incomparable); emitting `ab` is a commitment (not a legal output); in the
-system where only participant 0 may emit an order, another run (the owner
-choosing `ba`) contradicts it, but no other participant of a history does. -/
-theorem «sec:coordination/shared-nothing-single-key» (D : Type) :
-    ¬ Exposable (canon CAP.ordSpec ()) .ab ∧ ¬ (CAP.ownerSys D).CoordinationFree ∧
-      (CAP.ownerSys D).CoordinationFreeH :=
-  ⟨CAP.ordSpec_ab_not_exposable, CAP.ownerSys_not_coordinationFree D,
-    CAP.ownerSys_coordinationFreeH D⟩
-
-/-- Paragraph "Locks in a shared-nothing database": *Distributed
-coordination*: "A transaction spanning two keys is different.  Each owner
-orders its own part, and the two owners can order the same pair of transactions
-oppositely.  Each ordering then requires distributed coordination: the owners
-must agree on one order."  Lean: when two participants may
-each emit an order, some history has one emit `ab` (removing `ba`) and the
-other emit `ba`, so the system is not free of distributed coordination.
-"The owners must agree" is the paper's reading of that (some mechanism must
-exclude one of the two events), not a separate claim.  The case that follows
-is `«sec:coordination/two-phase-commit»`. -/
-theorem «sec:coordination/shared-nothing-cross-key» (D : Type) :
-    ¬ (CAP.twoOwnerSys D).CoordinationFreeH :=
-  CAP.twoOwnerSys_not_coordinationFreeH D
+  /-- With unrestricted placement, a canonical run choosing `ba` may occupy a
+  different participant from the run choosing `ab`; the same event therefore
+  requires distributed coordination.  Per-key ownership changes this conclusion
+  only when represented by a deployment restriction. -/
+  theorem «sec:coordination/shared-nothing-cross-key» :
+      Coordinates [SEvent.output (kappa (canon CAP.ordSpec ()) .ab) .ab] :=
+    («sec:coordination/shared-nothing-single-key»).2.choose_spec.2
 
 /-- Paragraph "Locks in a shared-nothing database": "Two-phase commit adds
 no further coordination requirement.  Each owner's prepare reflects its own
 commitment, with the local coordination just described.  The coordinator then
 makes the monotone decision whether all owners prepared."
 
-Lean, for the decision (`CAP/TwoPhaseCommit.lean`): inputs record the votes
-of `n` fixed participants (`none` until received; a received vote does not
-change), outputs are `undecided ≼ commit, abort`, and `P` aborts on a no vote,
-commits when all voted yes, and is undecided otherwise.  This is a monotone
-function, hence consistent; no decision at a commitment-free reachable state
-needs a commitment; and the system that emits decisions by canonical output
-events is coordination-free (`CoordinationFree`), so a fortiori needs no
-distributed coordination (`CoordinationFreeH`).  The prepare half is the
-single-owner pattern of `«sec:coordination/shared-nothing-single-key»`; the
-protocol itself (messages, logging, blocking) is not modeled.  The sentence
-that follows is `«sec:coordination/two-phase-commit-detects»`. -/
-theorem «sec:coordination/two-phase-commit» (n : Nat) (D : Type) :
-    (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
-      (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d, τ.R τ.cur d → Exposable τ d) ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).P).CoordinationFree ∧
-      (CAP.respSystem (sp := CAP.voteSpec n) (D := D) (CAP.voteSpec n).P).CoordinationFreeH :=
-  ⟨CAP.voteSpec_functional n, CAP.voteSpec_monotone n, CAP.voteSpec_consistent n,
-   CAP.voteSpec_exposable n, CAP.voteSpec_coordinationFree n D⟩
+  Lean, for the decision (`CAP/TwoPhaseCommit.lean`): inputs record the votes
+  of `n` fixed participants (`none` until received; a received vote does not
+  change), outputs are `undecided ≼ commit, abort`, and `P` aborts on a no vote,
+  commits when all voted yes, and is undecided otherwise.  This is a monotone
+  function, hence consistent.  Every decision at a commitment-free reachable
+  state is exposable and therefore has a legal `Out_ε` event: the decision step
+  itself applies no commitment.  The prepare half belongs to the owners'
+  specifications; messages, logging, and blocking are not modeled here. -/
+  theorem «sec:coordination/two-phase-commit» (n : Nat) :
+      (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
+        (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d,
+          ∀ hd : τ.R τ.cur d, Exposable τ d ∧
+            SysStep (fun _ => False) τ (.output [] d) (outState τ d hd)) := by
+    refine ⟨CAP.voteSpec_functional n, CAP.voteSpec_monotone n, CAP.voteSpec_consistent n, ?_⟩
+    intro τ hr d hd
+    have he := CAP.voteSpec_exposable n τ hr d hd
+    exact ⟨he, eps_step_iff.2 ⟨hd, he, rfl, rfl⟩⟩
 
 /-- Paragraph "Locks in a shared-nothing database": "The coordinator detects
 whether the owners' commitments agree and aborts when they do not.  It does not
@@ -1060,43 +1035,24 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
       (k = v ∧ u = CAP.decide2PC v)) :=
   CAP.Timeout.timeout_closes_expansions v p hp
 
-/-- Paragraph "Locks in a shared-nothing database": "The timeout decision
-requires only local coordination when a single coordinator makes it.  It
-requires distributed coordination when the coordinator is replicated for
-fault tolerance, as in Paxos Commit."
-
-Lean (`CAP/TimeoutAbort.lean`), for the commitment of
-`«sec:coordination/2pc-timeout-abort»` (closing the polls on `voteSpec` at
-`yy·`).  The decision specification is run by a system of its own, as each
-stage is in the composition section; the owners' specifications are separate
-systems.
-
-*Run by the coordinator alone* (`pollClosingSys1`, whose strategies act only when
-the system has one participant): the commitment requires coordination, since
-another run of the coordinator from `yy·` accepts the excluded late vote `yyy`
-(not `CoordinationFree`); but no history of the system applies a commitment
-that another participant of the same history contradicts
-(`CoordinationFreeH`): local coordination.  The general fact is
-`single_coordinationFreeH`.
-
-*Replicated* (two or more participants run `voteSpec`): any system in which
-participant `0` of two, starting at `yy·`, may close the polls there is not
-`CoordinationFreeH`, since the environment may deliver `yyy` to the other
-participant; `pollClosingSysRepl` (every participant at `yy·` may close the polls) is
-an instance.  Distributed coordination.  Paxos Commit itself is not modeled.
-
-Library lemmas not quoted here: the abort read as a commitment (`abortSpec`,
-`abort_canonicalCommitment_yy`, `coordSys_coordinationFreeH`,
-`replSys_not_coordinationFreeH`). -/
-theorem «sec:coordination/2pc-timeout-abort-local» (D : Type) :
-    (¬ (CAP.Timeout.pollClosingSys1 D).CoordinationFree ∧
-      (CAP.Timeout.pollClosingSys1 D).CoordinationFreeH) ∧
-    (∀ Sys : CAP.System (CAP.voteSpec 3) D, Sys.basis CAP.Timeout.cp →
-      Sys.strat 2 (fun _ => CAP.Timeout.yyN) 0 [] (.out [CAP.Timeout.cp] .undecided) →
-      ¬ Sys.CoordinationFreeH) ∧
-    ¬ (CAP.Timeout.pollClosingSysRepl D).CoordinationFreeH :=
-  ⟨CAP.Timeout.pollClosingSys1_local D,
-   fun Sys hb hs => CAP.Timeout.pollClosing_not_coordinationFreeH Sys hb hs,
-   CAP.Timeout.pollClosingSysRepl_not_coordinationFreeH D⟩
+  /-- A timeout before the final vote applies the nonempty poll-closing
+  commitment.  Relative to the declared `voteSpec`, it requires coordination:
+  canonical runs still include late votes.  Under unrestricted placement the
+  contradicting canonical run can be assigned to another participant, so the
+  same event also requires distributed coordination.  A single-coordinator
+  locality claim requires an explicit deployment restriction. -/
+  theorem «sec:coordination/2pc-timeout-abort-local» :
+      let c : Commitment (CAP.voteSpec 3) := Dist.ofCAP CAP.Timeout.cp
+      ∃ τ, c.app (canon (CAP.voteSpec 3) CAP.Timeout.yyN) = some τ ∧
+        Coordinates [SEvent.commitment [c]] ∧
+        ∃ k x ρ, (canon (CAP.voteSpec 3) CAP.Timeout.yyN).R k x ∧ ¬ τ.R k x ∧
+          Exec (canon (CAP.voteSpec 3) CAP.Timeout.yyN) [.input k, .output x] ρ ∧ ρ.cur = k := by
+    let c : Commitment (CAP.voteSpec 3) := Dist.ofCAP CAP.Timeout.cp
+    have happ0 := (CAP.Timeout.timeout_closes_expansions CAP.Timeout.yyN 2 rfl).1
+    have happ : c.app (canon (CAP.voteSpec 3) CAP.Timeout.yyN) =
+        some (Figures.closeState (canon (CAP.voteSpec 3) CAP.Timeout.yyN)) := happ0
+    refine ⟨_, happ, Or.inr ⟨[c], List.mem_cons_self⟩, ?_⟩
+    exact «prop:canonical-contradiction» (B := fun _ => True) (es := [])
+      (σ := canon (CAP.voteSpec 3) CAP.Timeout.yyN) (τ := _) (c := c) (.nil _) happ
 
 end CC.Paper

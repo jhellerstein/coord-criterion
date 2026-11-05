@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-631 entries.
+614 entries.
 
 ### §2 Functional CALM
 
@@ -319,14 +319,6 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
 | `«def:contradicts»` | abbrev | **Def. |
-| `«def:coordination»` | abbrev | **Def. |
-| `«def:distributed-coordination»` | abbrev | **Def. |
-| `«def:coordination/distributed»` | abbrev | Legacy sub-label pointing at `«def:distributed-coordination»`. |
-| `«def:coordination/specification»` | abbrev | Def. |
-| `«def:coordination-free»` | abbrev | **Def. |
-| `«def:coordination-free/local-iff»` | theorem | Def. |
-| `«def:coordination-free/distributed»` | abbrev | Def. |
-| `«def:coordination-free/distributed-of-free»` | theorem | Def. |
 | `«prop:canonical-contradiction»` | theorem | **Proposition `prop:canonical-contradiction`** (Canonical runs contradict every commitment). |
 | `«prop:canonical-contradiction/canonical-run»` | theorem | Supporting form: |
 | `«cor:canonical-coordination»` | theorem | **Corollary `cor:canonical-coordination`** (Canonical coordination). |
@@ -335,12 +327,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«thm:commitments-require-coordination/reach»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/any-event»` | theorem | Prop. |
 | `«thm:commitments-require-coordination/confined-to-current-input»` | theorem | "The proposition rules out reconciliation at `i`, not forever. |
-| `«sec:coordination/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/shared-nothing-cross-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:coordination/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/2pc-timeout-abort-local»` | theorem | Paragraph "Locks in a shared-nothing database": |
 
 ### §4.5 Complete CAP
 
@@ -370,9 +358,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `P` satisfies Lifted Monotonicity." |
 | `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
 | `«sec:complete-cap/necessity-any-system»` | theorem | "A system might hope to keep more outputs available by issuing commitments, coordinating within each side of a partition. |
-| `«sec:complete-cap/proof-system-coordination-free»` | theorem | "Nor does the system in the proof need coordination. |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | "For `E = P` it needs no commitment at all." Lean: |
-| `«sec:complete-cap/local-row-removal-necessary»` | theorem | "For a smaller `E` such local row-removing commitments can be necessary: |
 | `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another block, sacrificing Availability, or is emitted anyway, sacrificing Partition Co… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Consider a register spec whose inputs are sets of operations with their real-time precedence, and whose outputs answer every operation of the input as some… |
@@ -518,9 +504,6 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments and commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/contradicts»` | abbrev | *contradicts* — accepts an input whose fiber a commitment emptied, or emits an output whose row it removed (Def. |
-| `«app:notation/coordination»` | abbrev | *requires coordination* — a commitment some run contradicts (Def. |
-| `«app:notation/distributed-coordination»` | abbrev | *requires distributed coordination* — a commitment applied by `p` that some run at another participant `q ≠ p` contradicts (Def. |
-| `«app:notation/coordination-free»` | abbrev | *coordination-free* — applies no commitment that requires coordination (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more blocks, no message crosses blocks (Def. |
 | `«app:notation/block»` | abbrev | *block* — one of the two or more classes into which a partitioned history divides the participants (Def. |
 | `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay available (Def. |
