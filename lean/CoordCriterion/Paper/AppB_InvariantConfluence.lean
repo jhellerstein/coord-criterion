@@ -97,7 +97,7 @@ theorem «app:iconfluence/valid-locally-valid» {V Tx : Type} (M : IConf.Model V
 
 /-! ## The specification `𝒮_𝓘` -/
 
-/-- "The specification `𝒮_𝓘` has the locally valid histories as inputs; a
+/-- "The spec `𝒮_𝓘` has the locally valid histories as inputs; a
 downward-closed sub-order of a locally valid history is locally valid, so the
 inputs are closed under the order."  Lean: inputs are the subtype
 `IConf.Inp M`; closure is `Inst.locValid_sub`. -/
@@ -114,7 +114,7 @@ theorem «app:iconfluence/spec» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf
       (s ≼ u ↔ ∀ v, s v → u v) :=
   ⟨Iff.rfl, Iff.rfl⟩
 
-/-- "Taking `g` empty gives `s₀`, so the specification is total." -/
+/-- "Taking `g` empty gives `s₀`, so the spec is total." -/
 theorem «app:iconfluence/total» {V Tx : Type} (M : IConf.Model V Tx) (h : IConf.Inp M) :
     (IConf.SI M).P h M.s0 :=
   ⟨IConf.Hist.empty, IConf.Hist.empty_le _, IConf.valid_empty M,

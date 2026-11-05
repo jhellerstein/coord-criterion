@@ -136,7 +136,7 @@ theorem «app:additional-applications/kset-all-fail» {P Val : Type} [DecidableE
     ¬ ∃ u, (ksetSpec P Val k).P (unionIn p v hp) u ∧ ∀ r, single p v r ≼ u :=
   kset_all_fail hp hv
 
-/-- "So the common-extension condition fails and the specification is not
+/-- "So the common-extension condition fails and the spec is not
 monotone (Proposition `prop:common-expansion-form`); a partition separating the
 `p_r` gives the negative side of Complete CAP." -/
 theorem «app:additional-applications/kset-not-monotone» {P Val : Type} [DecidableEq P]
@@ -185,7 +185,7 @@ theorem «app:additional-applications/renaming-each-extends» {P : Type} [Decida
   ⟨(ren_each_extends h).1, (ren_each_extends h).2, ren_no_injective_extends_both h⟩
 
 /-- "Directed fibers also fail at `{p,q}`: `{p↦1,q↦2}` and `{p↦2,q↦1}` have
-no common output extension.  The specification therefore fails Lifted Monotonicity,
+no common output extension.  The spec therefore fails Lifted Monotonicity,
 and by Theorem `thm:complete-cap` a partition separating `p` and `q` rules out
 Availability with Partition Consistency." -/
 theorem «app:additional-applications/renaming-not-monotone» {P : Type} [DecidableEq P]
@@ -207,7 +207,7 @@ theorem «app:additional-applications/history-order» {Ev : Type} (h h' : Hist E
       ∀ a b, h.s.1 a → h.s.1 b → (h.lt a b ↔ h'.lt a b) :=
   Iff.rfl
 
-/-- "The *prefix* specification permits at `h` any downward-closed subset of
+/-- "The *prefix* spec permits at `h` any downward-closed subset of
 `h`, with outputs ordered by inclusion." -/
 theorem «app:additional-applications/prefix-spec» {Ev : Type} (h : Hist Ev) (p : ESet Ev) :
     (prefixSpec Ev).P h p ↔ (∀ x, p.mem x → h.s.1 x) ∧ ∀ a b, p.mem b → h.lt a b → p.mem a :=
@@ -229,7 +229,7 @@ theorem «app:additional-applications/prefix-empty» {Ev : Type} (h : Hist Ev) :
     (prefixSpec Ev).P h ⟨fun _ => False⟩ :=
   prefix_empty h
 
-/-- "A specification that requires the complete history, with output `h` at `h`
+/-- "A spec that requires the complete history, with output `h` at `h`
 and outputs ordered by equality, is functional and not monotone: its required
 output changes whenever an environment event arrives."  (Not monotone as soon as there is an
 event `e`: `∅ ⊑ {e}`.) -/

@@ -105,7 +105,7 @@ theorem «eq:curried-composition» {I J A B C : Type} [PO I] [PO J] [PO A] [PO B
 
 /-- "If every stage satisfies Lifted Monotonicity and `𝒮₁` runs under the
 empty basis, the pipeline emits only what `P₂ ∘ P₁` emits under the empty
-basis.  Its runs are runs of a Lifted-Monotone specification, at whose states
+basis.  Its runs are runs of a Lifted-Monotone spec, at whose states
 every output is a legal output (Proposition `prop:exposure-boundary`).  So the next
 stage again has an empty-basis guard, and by induction no stage of the pipeline issues a commitment."  Lean: `Guard.pipeline_coordination_free`, via
 `Guard.exec_execCF`, for any system of `𝒮₂`. -/
@@ -246,7 +246,7 @@ theorem «app:composition/boolean-toggle» (b : Bool) :
     Joint.bool_toggle.2.2.2.2.2.trans Joint.bool_toggle.2.1⟩
 
 /-- "Let `𝒮₁` have one input `*` and possibility relation `{(*,x),(*,y)}`
-with `x,y` incomparable, and let `𝒮₂` be the functional specification induced
+with `x,y` incomparable, and let `𝒮₂` be the functional spec induced
 by a function `f` that maps both to
 one value.  The composite has one row, so it satisfies Lifted Monotonicity. …
 every run of `𝒮₁` under the empty basis stays at the canonical state and emits
@@ -454,7 +454,7 @@ theorem «app:composition/pipelines» {I M O : Type} [PO I] [PO M] [PO O] {sp : 
     (h : Guard.GEmits P.emits K l') : (Guard.Sys.free (canonCommitmentBasis (Comp.seq sp sk))).emits l' :=
   Guard.pipeline_step ((liftedMono_iff_commonExpansion sk).1 hK) h
 
-/-- "Let `𝒮₁` be the log specification of Example
+/-- "Let `𝒮₁` be the log spec of Example
 `ex:committed-log-composition`, under its canonical basis with a strategy that
 allows every event, and `𝒮₂` the table of any monotone function `f` of the
 log.  Every log is an output of `𝒮₁`, so `𝒮₂|_{𝒮₁}` is `𝒮₂`.  For a set `Q`
@@ -640,7 +640,7 @@ theorem «ex:bare-reads/latest-value» {Cmd Stt R Rd V : Type} (δ : Stt → Cmd
 /-! ## Components and typed pipelines (`app:components`) -/
 
 /-- **Definition `def:component`** (Component, admitted run).  "A component
-for a specification `𝒮` consists of a commitment basis `ℬ` and a set of
+for a spec `𝒮` consists of a commitment basis `ℬ` and a set of
 admitted runs.  Each admitted run is a run under `ℬ` from a canonical state
 `σ(i)` (Definition `def:run-under-basis`), together with an output `o` that
 it emits, such that `(i,o) ∈ P`."
@@ -767,7 +767,7 @@ properness: behind a log, the early-lock store is a contract-proper downstream
 implementation that still issues commitments.  (4) Contract properness does
 not imply feed availability for an arbitrarily typed downstream component:
 behind the capped counter, the maximally permissive empty-basis component for
-the unrestricted threshold specification admits no feed at an offered count.
+the unrestricted threshold spec admits no feed at an offered count.
 (5) If, in a contract-proper pipeline, the downstream is instead the maximally
 permissive empty-basis component for `𝒮₂|_{𝒮₁}`, every admitted upstream
 boundary run has a feed, and the pipeline is implementation-proper."

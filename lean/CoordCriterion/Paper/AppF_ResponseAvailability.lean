@@ -77,7 +77,7 @@ used throughout. -/
 abbrev «def:uniform-obligation» (sp : Spec I O) : Type := Obligation sp
 
 /-- "Response availability is only as strong as `Q_p`: if an output permitted
-at every input answers, every specification is available."  Lean: indeed the
+at every input answers, every spec is available."  Lean: indeed the
 conditions of Theorem `thm:complete-cap-response` (Response Availability and Response Partition Consistency
 for a replicated system) then holds. -/
 theorem «app:cap-response/trivially-available» (Q : Obligation sp) (o0 : O)
@@ -162,7 +162,7 @@ theorem «def:response-availability/input-acceptance-preserves-expansion» (Sys 
         (∀ q, comp q ≠ comp p → ext q = []) ∧ LEv.inp j ∈ ext p) ↔ ∃ u, σ.R j u :=
   input_acceptance_iff Sys hwf hprod hpart hcut hσ j
 
-/-- "It excludes specifications whose answers require such a fiber-emptying commitment": if no
+/-- "It excludes specs whose answers require such a fiber-emptying commitment": if no
 answer at `i` has an output extension at some `j ⪰ i`, no system has Response
 Availability (already with two participants, each alone). -/
 theorem «def:response-availability/excludes-unavailable-expansion» (Sys : System sp D)
@@ -452,7 +452,7 @@ theorem «app:cap-response/converse-fails» (D : Type) :
    fun ⟨Sys, hA, hP⟩ => (converse_counterexample_systems D).2
      ⟨Sys, (availability_iff_atEnd _).2 hA, (partitionConsistency_iff_atEnd _).2 hP⟩⟩
 
-/-- "For a functional specification the two coincide: a total `T ⊆ Q ⊆ P`
+/-- "For a functional spec the two coincide: a total `T ⊆ Q ⊆ P`
 equals `P`, and both self-continuation and Lifted Monotonicity for `P` are
 monotonicity."  First conjunct: at the level of interfaces; second: at the
 level of systems (the conditions of Theorem `thm:complete-cap-response` ⇔ Availability and Partition
@@ -469,7 +469,7 @@ theorem «app:cap-response/functional-coincide» (hf : sp.Functional) (Q : Oblig
   · rintro ⟨Sys, hA, hP⟩
     exact ⟨Sys, (availability_iff_atEnd _).2 hA, (partitionConsistency_iff_atEnd _).2 hP⟩
 
-/-- "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a specification is
+/-- "A total `T ⊆ Q` that satisfies Lifted Monotonicity as a spec is
 a response interface for which `P` satisfies Lifted Monotonicity". -/
 theorem «app:cap-response/lm-subspec» (Q : Obligation sp) (T : Spec I O)
     (hTQ : ∀ i o, T.P i o → Q.Q i o) (h : T.LiftedMono) :
@@ -479,7 +479,7 @@ theorem «app:cap-response/lm-subspec» (Q : Obligation sp) (T : Spec I O)
 /-- "… but the condition is weaker."  The five-input example: `I = {i₁, i₂,
 j, k₁, k₂}` (`sp5`, `Q5 = P`), `T = {(i₁,a),(i₂,b),(j,c₁),(j,c₂),(k₁,e₁),
 (k₂,e₂)}` (`T5`) is a response interface for which `P` satisfies Lifted Monotonicity, but no
-sub-specification of `Q` satisfies Lifted Monotonicity. -/
+subspec of `Q` satisfies Lifted Monotonicity. -/
 theorem «app:cap-response/subspec-weaker» :
     (ResponseInterface Q5 T5 ∧ ConsistentOn sp5 T5) ∧
     ∀ T' : Spec I5 O8, (∀ i o, T'.P i o → Q5.Q i o) → ¬ T'.LiftedMono :=

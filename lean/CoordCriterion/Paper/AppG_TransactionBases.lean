@@ -135,7 +135,7 @@ theorem «app:cc-bases/total» {T K : Type} (k : Inp T K) :
 /-- "Let `{A,B}` be an input in which `A` and `B` have each requested commit.
 The rows `({A,B},([A,B],∅,∅))` and `({A,B},([B,A],∅,∅))` of Figure
 ambiguity-frames(f) have no common output extension, which would order `A` both before
-and after `B`, so the specification is not monotone."  Not monotone: no
+and after `B`, so the spec is not monotone."  Not monotone: no
 directed fibers, no Lifted Monotonicity.  (Such an input exists for any two
 transactions: `pairDone`.) -/
 theorem «app:cc-bases/ab-ba-not-monotone» {T K : Type} {A B : T} (h : A ≠ B) {k : Inp T K}
@@ -326,7 +326,7 @@ theorem «app:cc-bases/deadlock-resolution» {T K : Type} {A B : T}
     (∀ k c, τ.R k c → Decides false k c.o → c.o.X B) ∧ (commit B).app τ = none :=
   deadlock_commit h1 hs h2 hs' h3 τ hτ
 
-/-- "Under the abort-free specification, once both orderings have been applied,
+/-- "Under the abort-free spec, once both orderings have been applied,
 no remaining row is at an input in which both `A` and `B` have requested
 commit.  The system never accepts both requests, so at least one of `A` and
 `B` waits forever."  The second part: no state that any later execution (under
@@ -418,7 +418,7 @@ theorem «app:cc-bases/writer-before-A» {T K : Type} {A W B : T} {k : Inp T K}
 every remaining complete row commits `B`, for instance after `TxCommit(B)`,
 then every remaining complete row aborts `A`.  Emitting `A`'s abort, added to a
 row that reports the read and that every remaining row extends, is then
-a legal output: the specification entails the abort."  (Lean also shows that no
+a legal output: the spec entails the abort."  (Lean also shows that no
 remaining row commits `A`.)  Stated at any state `τ` with the two properties of
 `«app:cc-bases/run-states»` whose table is contained in the one after the two
 stamps, at an input in which `A` writes `x`. -/
@@ -448,7 +448,7 @@ committed with `A` aborted, and `A` committed with `B` aborted.  Emitting
 and keep different completions.  MVTO's write rule aborts `A` at once, with the
 output event that applies `abort(A)` and reports the abort, which is legal
 under `B_MVTO`.  That abort is the scheduler's choice between two outcomes the
-specification still permits.  If instead the scheduler waits until `B`'s commit
+spec still permits.  If instead the scheduler waits until `B`'s commit
 request arrives and applies `TxCommit(B)`, `A`'s abort becomes a legal output."
 
 (`C` is the further transaction: `stamp(B)` is defined because `C` may still
@@ -484,7 +484,7 @@ theorem «app:cc-bases/abort-is-commitment» {T K : Type} {A B C : T} (h : Disti
 /-- "Under MVTO, a later transaction's read of an older version is a commitment
 that, if the writer writes that key, the writer and the reader do not both
 commit.  The write rule settles this by aborting the writer when its write
-arrives, and the specification forces that abort only after the reader
+arrives, and the spec forces that abort only after the reader
 commits."  The first part is `«app:cc-bases/read-commits»`; the second is
 `«app:cc-bases/abort-entailed»` together with the run of
 `«app:cc-bases/abort-is-commitment»`, restated here: after the write arrives,

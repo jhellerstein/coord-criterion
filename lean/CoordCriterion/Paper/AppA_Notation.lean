@@ -38,7 +38,7 @@ variable {I O : Type} [PO I] [PO O]
 
 /-! ## Functional CALM (Section `sec:functional-calm`) -/
 
-/-- *specification* — `Spec = (I,≼,O,≼,P)`, total on `I`, one output per
+/-- *spec* — `Spec = (I,≼,O,≼,P)`, total on `I`, one output per
 input; induced `f` (Def. `def:functional-specification`).  Lean: `Spec I O`
 with `Spec.Functional`. -/
 abbrev «app:notation/functional-specification» (I O : Type) [PO I] [PO O] :=
