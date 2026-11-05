@@ -713,8 +713,11 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 
 /-- §4.4: "Having separated a system's observable behavior from when and
 how it makes commitments, we now ask which commitments require coordination.
-The idea is simple: a commitment requires coordination if another run can
-contradict it."  "The proposition says what a coordination mechanism must
+A commitment need not. Suppose a scheduler is constrained always to order `A`
+before `B`. Its `order(A,B)` action is a commitment because it removes the
+permitted `B`-before-`A` rows, but no run admitted by that scheduler contradicts
+the decision. Relative to all runs permitted by the spec, it does require
+coordination."  "The proposition says what a coordination mechanism must
 accomplish: prevent a commitment and a run that contradicts it from occurring
 independently.  The definitions diagnose the requirement, not its
 implementation.  Mutexes, locks, atomic instructions, agreement protocols,

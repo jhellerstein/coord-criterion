@@ -1181,8 +1181,14 @@ Canonical Run Universality lets a canonical run skip a system’s early commitme
 \label{sec:coordination}
 
 Having separated a system's observable behavior from when and how it makes
-\commitments, we now ask which \commitments require coordination.  The idea is
-simple: a \commitment requires coordination if another run can contradict it.
+\commitments, we now ask which \commitments require coordination.  A commitment
+need not.  Suppose a scheduler is constrained always to order $A$ before $B$.
+Its $\mathsf{order}(A,B)$ action is a \commitment because it removes the
+permitted $B$-before-$A$ rows, but no run admitted by that scheduler contradicts
+the decision.  Relative to the scheduler's runs, the commitment requires no
+coordination.  Relative to all runs permitted by the spec, it does: those runs
+include one that orders $B$ before $A$.  Thus whether a \commitment requires
+coordination depends on the runs under consideration.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}
