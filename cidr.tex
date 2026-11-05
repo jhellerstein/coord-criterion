@@ -37,7 +37,6 @@
 \newcommand{\commitments}{commitments\xspace}
 \newcommand{\Commitment}{Commitment\xspace}
 \newcommand{\Commitments}{Commitments\xspace}
-\newcommand{\LiftedOrd}{\trianglelefteq}
 % Order vocabulary (role-based names; change the words here).
 % Input order:  "j \inrel i" means i \InputOrd j (non-strict); inputs \ingrow;
 %   a common \indesc \inrel each input (articles: "an \indesc").
@@ -831,12 +830,10 @@ The transaction schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting
 either requires a \commitment that removes the other.  In the traceroute spec,
 every removed route set is \outrelpast by a remaining one that also \outrelbase
 the emitted observation.  Its removal is \emph{output subsumption}, not
-\commitment.  Directedness formalizes this distinction; Relational
-Monotonicity additionally accounts for input growth.
-
-Lifted Monotonicity has two requirements.  First, each output must retain some
-\outnoun as input \ingrows.  Second, the outputs in each fiber must have common
-\outnouns.  Relational Monotonicity states the first requirement.
+\commitment.  Lifted Monotonicity combines two properties: Relational
+Monotonicity requires each output to retain some \outnoun as input \ingrows,
+while directedness requires the outputs in each fiber to have common \outnouns.
+We define them in turn.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -881,31 +878,11 @@ it is again in the fiber and extends each. The two transaction orders in
 Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.
 
 \paragraph{Lifted Monotonicity.}
-To state both requirements at once, lift $\OutputOrd$ to sets.  For nonempty
-$A,B\subseteq O$, define
-        \begin{equation}
-  A\LiftedOrd B
-  \;\Longleftrightarrow\;
-  \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
-  \label{eq:joint-output-order}
-        \end{equation}
-the \emph{joint lift} of $\OutputOrd$.  We apply it with $A=\fiber{i}$ and
-$B=\fiber{j}$ for $i\InputOrd j$.  When $X$ is a single output $o$, it asks
-that $o$ have a \outnoun in $\fiber{j}$, which gives the first requirement.  When
-$X$ holds several outputs, it asks that they have a common \outnoun in
-$\fiber{j}$; with $j=i$, this gives the second.
-
 \begin{definition}[Lifted Monotonicity, monotone specification]
 \label{def:lifted-monotonicity}
-An \spectype satisfies \emph{Lifted Monotonicity}, and
-is called \emph{monotone}, when the mapping $i\mapsto\fiber{i}$ is monotone
-under the joint lift:
-        \begin{equation}
-  i\InputOrd j
-  \quad\Longrightarrow\quad
-  \fiber{i}\LiftedOrd\fiber{j}.
-  \label{eq:lifted-monotonicity}
-        \end{equation}
+An \spectype satisfies \emph{Lifted Monotonicity}, and is called
+\emph{monotone}, when, for every $i\InputOrd j$ and every nonempty finite
+$X\subseteq\fiber{i}$, some $u\in\fiber{j}$ \outrel every member of $X$.
 \end{definition}
 
 With singleton fibers it is functional monotonicity

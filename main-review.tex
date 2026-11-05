@@ -933,11 +933,12 @@ thorough transactional specs.}
 \end{figure}
 
 \textcolor{reviewed}{The transaction schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting
-either requires a \commitment that removes the other.} \textcolor{reviewed}{In the traceroute spec,
+either requires a \commitment that removes the other.} In the traceroute spec,
 every removed route set is \outrelpast by a remaining one that also \outrelbase
-the emitted observation.} \textcolor{reviewed}{Its removal is \emph{output subsumption}, not
-\commitment.} \textcolor{reviewed}{Directedness formalizes this distinction; Relational
-Monotonicity additionally accounts for input growth.}
+the emitted observation, making its removal \emph{output subsumption} rather
+than \commitment. Lifted Monotonicity combines directedness, which requires
+common \outnouns within each fiber, with Relational Monotonicity, which
+accounts for input growth.
 
 \label{sec:lifted-monotonicity}
 \begin{definition}[Relational Monotonicity]
@@ -984,24 +985,24 @@ the traceroute fiber is directed: the union of finitely many route sets in it is
 Figure~\ref{fig:ambiguity-frames}(f), by contrast, are incompatible.}
 
 \paragraph{Lifted Monotonicity.}
-\textcolor{reviewed}{To state both requirements at once, lift $\OutputOrd$ to sets.} \textcolor{reviewed}{For nonempty
-$A,B\subseteq O$, define}
+To state both requirements at once, lift $\OutputOrd$ to sets. For nonempty
+$A,B\subseteq O$, define
         \begin{equation}
   A\LiftedOrd B
   \;\Longleftrightarrow\;
   \text{every nonempty finite }X\subseteq A\text{ is compatible in }B,
   \label{eq:joint-output-order}
         \end{equation}
-\textcolor{reviewed}{the \emph{joint lift} of $\OutputOrd$.} \textcolor{reviewed}{We apply it with $A=\fiber{i}$ and
-$B=\fiber{j}$ for $i\InputOrd j$.} When $X$ is a single output $o$, it asks
-that $o$ have a \outnoun in $\fiber{j}$, which is Relational Monotonicity. \textcolor{reviewed}{When $X$ holds several outputs, it asks that they have a common \outnoun in
-$\fiber{j}$; with $j=i$, this is directedness.}
+the \emph{joint refinement lift} of $\OutputOrd$. We apply it with $A=\fiber{i}$ and
+$B=\fiber{j}$ for $i\InputOrd j$. When $X$ is a single output $o$, it asks
+that $o$ have a \outnoun in $\fiber{j}$, which is Relational Monotonicity. When $X$ holds several outputs, it asks that they have a common \outnoun in
+$\fiber{j}$; with $j=i$, this is directedness.
 
 \begin{definition}[Lifted Monotonicity]
 \label{def:lifted-monotonicity}
-\textcolor{reviewed}{An \spectype satisfies \emph{Lifted Monotonicity}, and
+An \spectype satisfies \emph{Lifted Monotonicity}, and
 is called \emph{monotone}, when the mapping $i\mapsto\fiber{i}$ is monotone
-under the joint lift:}
+under the joint refinement lift:
         \begin{equation}
   i\InputOrd j
   \quad\Longrightarrow\quad
@@ -1020,9 +1021,9 @@ because the spec has directed fibers, those outputs have a common
 holds exactly when both do. In powerdomain terms, Relational Monotonicity
 is monotonicity of $i\mapsto\fiber{i}$ under the Hoare
 preorder~\cite{abramsky1994domain}, which asks only that each output in $A$
-have a \outnoun in $B$; the joint lift asks that every finite set of them have
+have a \outnoun in $B$; the joint refinement lift asks that every finite set of them have
 a common one. The two agree when $B$ is directed. Unlike the Hoare preorder,
-the joint lift is not reflexive: $A\LiftedOrd A$ holds exactly when $A$ is
+the joint refinement lift is not reflexive: $A\LiftedOrd A$ holds exactly when $A$ is
 directed, so the transaction fiber of Figure~\ref{fig:ambiguity-frames}(f)
 already fails it at $j=i$.
 
@@ -2675,7 +2676,7 @@ rows at $k$.
   \spectype; nondeterministic & $P\subseteq I\times O$ total on $I$; some fiber has several outputs & Def.~\ref{def:relational-specification}\\
   Relational Monotonicity & every output keeps a \outnoun as input \ingrows & Def.~\ref{def:relational-monotonicity}\\
   compatible in $F$; directed; directed fibers & some $u\in F$ \outrel all; every finite subset compatible; every fiber directed & Def.~\ref{def:fiber-directedness}\\
-  joint lift $A\LiftedOrd B$ & every nonempty finite $X\subseteq A$ is compatible in $B$ & Eq.~\ref{eq:joint-output-order}\\
+  joint refinement lift $A\LiftedOrd B$ & every nonempty finite $X\subseteq A$ is compatible in $B$ & Eq.~\ref{eq:joint-output-order}\\
   Lifted Monotonicity & $i\InputOrd j\Rightarrow\fiber{i}\LiftedOrd\fiber{j}$ & Def.~\ref{def:lifted-monotonicity}\\
   common-extension condition & rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$ & Def.~\ref{def:common-expansion-condition}\\
   ruled out by $o$ & a row whose output does not \outrelbase $o$ & App.~\ref{app:lifted-output-events}\\
