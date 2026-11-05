@@ -751,11 +751,12 @@ and~\ref{sec:crdt-instance} treat both.
 \section{Complete CALM}
 \label{sec:complete-calm}
 
-We now extend CALM theory to allow a fiber to contain several outputs.  The monotonicity property we want to test as input
+We now extend CALM theory to nondeterministic specs.  The monotonicity property we want to test as input
 \ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
 output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
-A \commitment can empty an input's fiber or remove some output rows while it
-remains nonempty.  We now turn to the latter effect.  Section~\ref{sec:ambiguity-story}
+A \commitment can either empty $i$'s fiber entirely as in the functional case,
+or choose a subset of output rows to remain.
+We now turn to the latter effect.  Section~\ref{sec:ambiguity-story}
 introduces the issue by example.  Section~\ref{sec:lifted-monotonicity}
 defines \spectype[s] and Lifted Monotonicity.  Section~\ref{sec:lifted-output-events} lifts
 output events and classifies what they remove, and
@@ -778,7 +779,7 @@ contrast, can all be \outrelpast by a larger route set.
   \setlength{\tabcolsep}{4pt}
   \begin{minipage}[t]{0.36\columnwidth}
     \raggedright
-    (f) After $[A,B]$\par\smallskip
+    (f) After emitting $[A,B]$\par\smallskip
     \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}l@{}}
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
@@ -790,7 +791,7 @@ contrast, can all be \outrelpast by a larger route set.
   \end{minipage}\hfill
   \begin{minipage}[t]{0.6\columnwidth}
     \raggedright
-    (g) After $\{s{\to}\texttt{s1}\}$\par\smallskip
+    (g) After emitting $\{s{\to}\texttt{s1}\}$\par\smallskip
     \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}l@{}}
       \toprule
       $\mathrm{in}$ & $\mathrm{out}$ \\ \midrule
@@ -813,13 +814,14 @@ contrast, can all be \outrelpast by a larger route set.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{\Commitment and directedness.} The examples differ in what happens
-to alternative outputs when one is emitted.  In panel~(f), neither
-serialization order \outrel the other, so emitting one requires an
+\paragraph{\Commitment and directedness.} The examples in Figure~\ref{fig:ambiguity-frames} differ in what happens
+to alternative outputs when one is emitted.  Panel~(f) shows two serial schedules, neither
+order \outrel the other, so emitting one requires an
 \emph{\commitment} that removes the other while the input stays legal:
-emitting $[A,B]$ excludes $[B,A]$.  In panel~(g), larger route sets \outrelbase both the
-emitted observation and the outputs of the rows it removes.  We call such
-removal an \emph{output subsumption}; every removed output is
+emitting $[A,B]$ excludes $[B,A]$.  Panel~(g) shows a spec for a traceroute-like tool. Rows with larger
+route sets \outrelbase both the
+emitted output $\{s{\to}\texttt{s1}\}$ and the outputs of the rows it removes.  We call such
+removals \emph{output subsumptions}; every removed output is
 \outrelpast by a remaining one, so emitting the route observation loses no information
 according to the output order and needs no
 \commitment: it is a \emph{legal output}.
