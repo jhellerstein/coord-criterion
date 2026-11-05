@@ -3,6 +3,7 @@ import CoordCriterion.CAP.AvailabilityAtEnd
 import CoordCriterion.CAP.Necessity
 import CoordCriterion.CAP.Forced
 import CoordCriterion.CAP.Coordination
+import CoordCriterion.Distributed.Commitments
 import CoordCriterion.CAP.AsyncGilbertLynch
 import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.Registers
@@ -304,19 +305,17 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
     (hP : «def:partition-consistency» Sys) : «def:lm-for-A» sp E :=
   consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP)
 
-/-- "Nor does the system in the proof need coordination.  Under Lifted
-Monotonicity for `E`, the canonical event for an output selected by `E`
-empties nothing and excludes only rows outside `E`, which the system never
-emits, so it is coordination-free (Definition
-`def:coordination-free`)."  "The system in the proof" is the canonical system
-of the proof sketch of Theorem `thm:complete-cap`, `respSystem E`.  Lean: the system emits only rows of `E`, and no output
-event removes a row that any run of the system emits, or empties an input fiber any
-run accepts. -/
-theorem «sec:complete-cap/proof-system-coordination-free» (E : Table I O)
-    (hcons : ConsistentOn sp E) :
-    (respSystem (sp := sp) (D := D) E).CoordinationFree ∧
-    ∀ k x, SysEmits (respSystem (sp := sp) (D := D) E) k x → E k x :=
-  ⟨respSystem_coordinationFree E hcons, fun _ _ h => resp_emits_A h⟩
+  /-- "For `E = P` the proof system needs no commitment at all."  The theorem
+  gives the commitment-free system used for full Availability.  This statement
+  is specification-relative: restricting a strategy to a smaller `E` does not
+  make row-removing commitments coordination-free relative to `P`. -/
+  theorem «sec:complete-cap/proof-system-coordination-free» (sp : Spec I O) (D : Type)
+      (h : sp.LiftedMono) :
+      («def:partition-notions» (cfSystem sp D) ∧
+        «def:partition-consistency» (cfSystem sp D)) ∧
+      ∀ (N : Nat) (init : Fin N → I) (H : History sp D N),
+        Produced (cfSystem sp D) N init H → ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
+    «cor:complete-cap-S/commitment-free» sp D h
 
 /-- "For `E = P` it needs no commitment at all."  Lean: with Availability,
 any removal of a row `(k,x)` by an output event whose local prefix is
@@ -329,24 +328,33 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     (hA : «def:partition-notions» Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O} {σ σc : State sp}
+    {a b : List (LEv sp D n)} {γ : List (CAP.Commitment sp)} {o : O} {σ σc : State sp}
     (hH : H p = a ++ LEv.out γ o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
-    (hrun : LRun (canon sp (init p)) a σ) (hap : applySeq σ γ = some σc)
+    (hrun : LRun (canon sp (init p)) a σ) (hap : CAP.applySeq σ γ = some σc)
     {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x) (hqk : init q ≼ k) :
     ¬ Sys.CoordinationFreeH :=
   availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun hap hx hnx hqk
 
-/-- "For a smaller `E` such local row-removing commitments can be necessary: if `o ∈ E(i)` and
-`x ∈ P(i) ∖ E(i)` have no common output extension at `i`, emitting `o` must choose
-against `x`."  Lean: one input, `P = {o, x}` incomparable, `E = {o}` (`lcA`): `P`
-satisfies Lifted Monotonicity for `E` (`ConsistentOn`), `o` is not a legal output
-(so its output event must apply a commitment), and the canonical system `respSystem E` is
-coordination-free. -/
-theorem «sec:complete-cap/local-row-removal-necessary» (D : Type) :
-    ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
-    (respSystem (sp := CAP.lcSpec) (D := D) CAP.lcA).CoordinationFree :=
-  ⟨lcSpec_consistentOn, lcSpec_o_not_exposable,
-    respSystem_coordinationFree CAP.lcA lcSpec_consistentOn⟩
+  /-- "For a smaller `E` row-removing commitments can be necessary: if `o ∈ E(i)` and
+  `x ∈ P(i) ∖ E(i)` have no common output extension at `i`, emitting `o` must choose
+  against `x`."  Lean: one input, `P = {o, x}` incomparable and `E = {o}`.
+  `P` satisfies Lifted Monotonicity for `E`, but `o` is not exposable.  Thus no
+  empty-commitment output event for `o` is legal, while the canonical output
+  event is legal and applies a nonempty commitment.  Suppressing `x` in a
+  strategy does not remove this specification-level coordination requirement. -/
+  theorem «sec:complete-cap/local-row-removal-necessary» :
+      ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
+      ∃ τ, SysStep (canonCommitmentBasis CAP.lcSpec) (canon CAP.lcSpec ())
+          (.output (kappa (canon CAP.lcSpec ()) .o) .o) τ ∧
+        Coordinates [SEvent.output (kappa (canon CAP.lcSpec ()) .o) .o] := by
+    have hn := CAP.lcSpec_o_not_exposable
+    have ho : (canon CAP.lcSpec ()).R (canon CAP.lcSpec ()).cur .o := ⟨trivial, trivial⟩
+    refine ⟨lcSpec_consistentOn, hn, outState _ _ ho, canonical_support _ _ ho,
+      Or.inl ⟨_, .o, List.mem_cons_self, ?_⟩⟩
+    intro he
+    have hs : SysStep (canonCommitmentBasis CAP.lcSpec) (canon CAP.lcSpec ())
+        (.output [] .o) (outState (canon CAP.lcSpec ()) .o ho) := by simpa [he] using canonical_support _ _ ho
+    exact hn (eps_step_iff.1 hs).2.1
 
 /-- "When Lifted Monotonicity for `E` fails, some output of `E` waits for
 another block, sacrificing Availability, or is emitted anyway, sacrificing
