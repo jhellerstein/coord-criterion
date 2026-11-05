@@ -753,7 +753,7 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
   `prop:canonical-contradiction`: under the full canonical run set, an event list
   requires coordination exactly when it applies a nonempty commitment sequence
   in an output event or contains a commitment event. -/
-  abbrev «def:coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «def:coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
     Coordinates es
 
   /-- **Def. `def:distributed-coordination`** (Distributed coordination).
@@ -764,15 +764,15 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
   test as `def:coordination`.  Appendix `app:deployment` explicitly restricts
   which rows each participant may emit and therefore qualifies this placement
   argument. -/
-  abbrev «def:distributed-coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «def:distributed-coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
     Coordinates es
 
   /-- Legacy sub-label pointing at `«def:distributed-coordination»`. -/
-  abbrev «def:coordination/distributed» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «def:coordination/distributed» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
     Coordinates es
 
   /-- Def. `def:coordination`, explicit specification-level alias. -/
-  abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
     Coordinates es
 
   /-- **Def. coordination-free** (`def:coordination-free`).  "A run or history is
@@ -782,23 +782,23 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
   By Proposition `prop:canonical-contradiction`, this is precisely `CoordFree`:
   output events use `ε` and no commitment event occurs.  This definition does
   not depend on which histories a concrete system happens to produce. -/
-  abbrev «def:coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «def:coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
     CoordFree es
 
   /-- Def. `def:coordination-free`: the specification-relative event-list form
   is exactly the negation of requiring coordination. -/
-  theorem «def:coordination-free/local-iff» {sp : Spec I O} (es : List (SEvent sp)) :
+theorem «def:coordination-free/local-iff» {sp : Spec I O} (es : List (SEvent sp)) :
       «def:coordination-free» es ↔ ¬ «def:coordination» es :=
     coordFree_iff_not es
 
   /-- Under unrestricted core placement, distributed coordination has the same
   event-level test. -/
-  abbrev «def:coordination-free/distributed» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «def:coordination-free/distributed» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
     CoordFree es
 
   /-- Coordination freedom implies freedom from distributed coordination in the
   unrestricted-placement model. -/
-  theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {es : List (SEvent sp)}
+theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {es : List (SEvent sp)}
       (h : «def:coordination-free» es) : «def:coordination-free/distributed» es :=
     h
 
@@ -828,12 +828,10 @@ theorem «prop:canonical-contradiction/canonical-run» {sp : Spec I O} {i k : I}
   CAP.canonical_run_contradicts hik hx
 
 /-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
-"Relative to `𝓡_P^⊤`, a run is coordination-free if and only if it applies no
-commitment.  Output subsumption remains permitted.  Given two distinct
-participants both initialized at `i`, the run applying a commitment from
-`σ_P(i)` and a canonical run that contradicts it can occupy separate
-participants in a message-free history.  The commitment therefore requires
-distributed coordination relative to that history's runs."
+"A run is coordination-free if and only if it applies no commitment."
+Output subsumption remains permitted.  Under unrestricted placement, a
+canonical contradicting run may occupy another participant; a deployment can
+prevent that placement without erasing the spec-level contradiction.
 
 Lean: `CoordFree es ↔ ¬ Coordinates es`; `Coordinates` means that an output
 event has `γ ≠ ε` or a commitment event occurs. -/
@@ -865,7 +863,7 @@ theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
   clause is an emitted output `x` whose row the commitment removed; its second
   is an accepted input whose fiber the commitment emptied.  The conclusion
   permits arbitrary, independent bases for the two continuations. -/
-  theorem «thm:commitments-require-coordination» {sp : Spec I O}
+theorem «thm:commitments-require-coordination» {sp : Spec I O}
       {B1 B2 : CommitmentBasis sp} {c : Commitment sp} {σ σc τ : State sp} {k : I}
       (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
       ¬ ∃ ρ : State sp, ρ.cur = k ∧
@@ -874,7 +872,7 @@ theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
 
   /-- Prop. `thm:commitments-require-coordination`, with continuations in the
   transition system of Sections 2--3. -/
-  theorem «thm:commitments-require-coordination/reach-general» {sp : Spec I O}
+theorem «thm:commitments-require-coordination/reach-general» {sp : Spec I O}
       {c : Commitment sp} {σ σc τ : State sp} {k : I}
       (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
       ¬ ∃ ρ : State sp, ρ.cur = k ∧ Reach σc ρ ∧ Reach τ ρ :=
@@ -950,7 +948,7 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   independently of whether a concrete strategy suppresses `ba`.  Assigning
   ownership can make that coordination local only through an explicit
   deployment restriction (Appendix `app:deployment`). -/
-  theorem «sec:coordination/shared-nothing-single-key» :
+theorem «sec:coordination/shared-nothing-single-key» :
       ¬ Exposable (canon CAP.ordSpec ()) .ab ∧
         ∃ τ, SysStep (canonCommitmentBasis CAP.ordSpec) (canon CAP.ordSpec ())
           (.output (kappa (canon CAP.ordSpec ()) .ab) .ab) τ ∧
@@ -967,7 +965,7 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   different participant from the run choosing `ab`; the same event therefore
   requires distributed coordination.  Per-key ownership changes this conclusion
   only when represented by a deployment restriction. -/
-  theorem «sec:coordination/shared-nothing-cross-key» :
+theorem «sec:coordination/shared-nothing-cross-key» :
       Coordinates [SEvent.output (kappa (canon CAP.ordSpec ()) .ab) .ab] :=
     («sec:coordination/shared-nothing-single-key»).2.choose_spec.2
 
@@ -984,7 +982,7 @@ makes the monotone decision whether all owners prepared."
   state is exposable and therefore has a legal `Out_ε` event: the decision step
   itself applies no commitment.  The prepare half belongs to the owners'
   specifications; messages, logging, and blocking are not modeled here. -/
-  theorem «sec:coordination/two-phase-commit» (n : Nat) :
+theorem «sec:coordination/two-phase-commit» (n : Nat) :
       (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
         (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d,
           ∀ hd : τ.R τ.cur d, Exposable τ d ∧
@@ -1041,7 +1039,7 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
   contradicting canonical run can be assigned to another participant, so the
   same event also requires distributed coordination.  A single-coordinator
   locality claim requires an explicit deployment restriction. -/
-  theorem «sec:coordination/2pc-timeout-abort-local» :
+theorem «sec:coordination/2pc-timeout-abort-local» :
       let c : Commitment (CAP.voteSpec 3) := Dist.ofCAP CAP.Timeout.cp
       ∃ τ, c.app (canon (CAP.voteSpec 3) CAP.Timeout.yyN) = some τ ∧
         Coordinates [SEvent.commitment [c]] ∧

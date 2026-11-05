@@ -366,21 +366,21 @@ abbrev «app:notation/contradicts» {sp : Spec I O} (emits : I → O → Prop) (
   canonical run permitted by the declared specification (Def.
   `def:coordination`).  At event-list level this is `Coordinates es`: an output
   event has a nonempty commitment sequence or a commitment event occurs. -/
-  abbrev «app:notation/coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «app:notation/coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
     Coordinates es
 
   /-- *requires distributed coordination* — a coordinating commitment whose
   contradicting canonical run can be assigned to another participant (Def.
   `def:distributed-coordination`).  Core placement is unrestricted, so the
   event-level test is `Coordinates`; a deployment may restrict placement. -/
-  abbrev «app:notation/distributed-coordination» {sp : Spec I O}
+abbrev «app:notation/distributed-coordination» {sp : Spec I O}
       (es : List (SEvent sp)) : Prop :=
     Coordinates es
 
   /-- *coordination-free* — applies no commitment that requires coordination
   relative to the declared specification (Def. `def:coordination-free`).
   Lean: `CoordFree es`, equivalently `¬ Coordinates es`. -/
-  abbrev «app:notation/coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
+abbrev «app:notation/coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
     CoordFree es
 
 /-- *partitioned history* — participants divided into two or more blocks, no

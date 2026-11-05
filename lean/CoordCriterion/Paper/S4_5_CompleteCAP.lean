@@ -309,7 +309,7 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
   gives the commitment-free system used for full Availability.  This statement
   is specification-relative: restricting a strategy to a smaller `E` does not
   make row-removing commitments coordination-free relative to `P`. -/
-  theorem «sec:complete-cap/proof-system-coordination-free» (sp : Spec I O) (D : Type)
+theorem «sec:complete-cap/proof-system-coordination-free» (sp : Spec I O) (D : Type)
       (h : sp.LiftedMono) :
       («def:partition-notions» (cfSystem sp D) ∧
         «def:partition-consistency» (cfSystem sp D)) ∧
@@ -317,13 +317,11 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
         Produced (cfSystem sp D) N init H → ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
     «cor:complete-cap-S/commitment-free» sp D h
 
-/-- "For `E = P` it needs no commitment at all."  Lean: with Availability,
-any removal of a row `(k,x)` by an output event whose local prefix is
-receive-free is contradicted in some produced history by another participant
-whose initial input is below `k` (it requires distributed coordination); so
-such a system avoids requiring distributed coordination only if those events
-remove nothing.  The same holds for commitment events
-(`CAP.availability_not_coordinationFreeH_commit`). -/
+  /-- Supporting operational lemma for the full-availability case.  If an output
+  event in a receive-free local prefix removes a row and another participant can
+  start below that row's input, Availability realizes the contradictory choice
+  at the other participant.  This is not the definition of coordination, which
+  is specification-relative above. -/
 theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     (hA : «def:partition-notions» Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
@@ -342,7 +340,7 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
   empty-commitment output event for `o` is legal, while the canonical output
   event is legal and applies a nonempty commitment.  Suppressing `x` in a
   strategy does not remove this specification-level coordination requirement. -/
-  theorem «sec:complete-cap/local-row-removal-necessary» :
+theorem «sec:complete-cap/local-row-removal-necessary» :
       ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
       ∃ τ, SysStep (canonCommitmentBasis CAP.lcSpec) (canon CAP.lcSpec ())
           (.output (kappa (canon CAP.lcSpec ()) .o) .o) τ ∧
