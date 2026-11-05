@@ -331,6 +331,12 @@ theorem «sec:systems/registrar» :
   ⟨Figures.Elec.registrar_step, Figures.Elec.bot_alone_at_b.1,
     Figures.Elec.bot_alone_at_b.2.1⟩
 
+  /-! The systems section generalizes the earlier construction: "Sections
+  functional-calm–complete-calm used only the canonical commitment `x_o`
+  required by an output. Systems may commit earlier or remove additional
+  alternatives … We therefore allow bespoke system commitments."  The formal
+  definition follows. -/
+
   /-- **Def. commitment** (`def:commitment`).  "A commitment is a partial function
   on specification states that removes a nonempty set of rows.  No row it
   removes is subsumed by a row that remains at the same input.  Thus, whenever

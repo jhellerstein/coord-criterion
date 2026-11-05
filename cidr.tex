@@ -1132,16 +1132,15 @@ spec.
   \label{fig:cc-commitments}
 \end{figure}
 
-Our canonical model couples \commitments to outputs.
-Many systems apply \commitments before an output needs them.  The registrar can
-emit $\bot$ without closing the polls, while a lock manager can fix an order
-between ongoing transactions without emitting it.  We therefore let systems
-bring bespoke \commitments.  In general, a \emph{\commitment} is a fateful
-decision: a partial function on specification states that removes a nonempty
-set of rows, such that no row it removes is subsumed by a row that remains at the same
-input. It leaves the current input unchanged.  At an input $k$, a
-\commitment may remove every row, ruling out $k$, or only some rows, ruling out
-those outputs.  An output event
+Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only
+the canonical \commitment $x_o$ required by an output.  Systems may commit
+earlier or remove additional alternatives: the registrar may close the polls
+before announcing a result, and a lock manager may fix an order before emitting
+it.  We therefore allow bespoke system \commitments.  A \emph{\commitment} is
+a partial function on specification states that removes a nonempty set of rows,
+none subsumed by a row that remains at the same input, while leaving the current
+input unchanged.  As before, removing every row at an input rules out that
+input; removing only some rules out those outputs.  An output event
 $\Out{\gamma}{o}$ applies a sequence $\gamma$ of \commitments, subsumes rows,
 and emits $o$.  It is \emph{commitment-sufficient} when the sequence applies
 and leaves $o$ as a legal output; systems perform only commitment-sufficient

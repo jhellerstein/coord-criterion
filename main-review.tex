@@ -1322,9 +1322,9 @@ of runs can be placed at separate participants that exchange no messages.} Full 
 \end{proof}
 
 \paragraph{Scope.}
-\textcolor{reviewed}{The converse in Proposition~\ref{prop:distributed-consistency}
+The converse in Proposition~\ref{prop:distributed-consistency}
 assumes unrestricted placement: participants have no assigned roles at this
-level, so any spec run may occur at any participant.} \textcolor{reviewed}{A deployment can instead
+level, so any spec run may occur at any participant. \textcolor{reviewed}{A deployment can instead
 restrict which rows each participant may emit, confining incompatible runs to
 one participant.} Appendix~\ref{app:deployment} develops the resulting
 placement-sensitive criterion, monotonicity across partitions.
@@ -1358,12 +1358,12 @@ Each participant run is a run; apply Corollary~\ref{cor:state-by-input}.
 This is the convergence that strong eventual
 consistency~\cite{shapiro2011crdt} asks of replicated state---replicas that
 have received the same updates are in equivalent states. \textcolor{reviewed}{The semilattice merge of CRDTs suffices for it but is not
-needed: here it follows directly from any consistent functional spec.} \textcolor{reviewed}{With several outputs per input
+needed: here it follows directly from any consistent functional spec.} With several outputs per input
 this fails even for consistent specs: in
 Figure~\ref{fig:ambiguity-frames}(g), a run that emitted $\{s{\to}\texttt{s1}\}$
 has subsumed the route sets that omit it, while a run at the same input that
-emitted nothing keeps them.} \textcolor{reviewed}{Consistency then guarantees that such replicas can
-be reconciled, not that they agree.}
+emitted nothing keeps them. Consistency then guarantees that such replicas can
+be reconciled, not that they agree.
 
 \paragraph{Message data.}
 The data $d$ of a message is any application state other than input that a
@@ -1396,7 +1396,10 @@ same event (Figure~\ref{fig:election-frames}(d)); the output event for
 $\bot$ does not require the poll-closing \commitment. Closing the polls is the
 registrar's design decision, as fixing orderings is 2PL's.
 
-A system therefore dictates two things: a spec and a basis of
+\textcolor{reviewed}{Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
+canonical \commitment $x_o$ required by an output.} Systems may commit earlier
+or remove additional alternatives, as the examples above do. \textcolor{reviewed}{We therefore
+allow bespoke system \commitments.} A system dictates a spec and a basis of
 \commitments its participants may issue; each participant's strategy decides
 when and which to apply.
 
