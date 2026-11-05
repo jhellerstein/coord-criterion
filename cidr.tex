@@ -954,12 +954,11 @@ remaining output at $j$ have a common \outnoun at $j$.
 
 A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
 Equation~\ref{eq:output-action}.  States, input events, runs,
-\commitment-free runs, and consistency are defined as before, and the results
-of Section~\ref{sec:executions} used output events only through that
-equation.  They lift unchanged: the rows remaining after a run
-(Lemma~\ref{lem:run-residual}) and the survivor test
-(Proposition~\ref{prop:confluence}).  Thus consistency
-reduces to Lifted Monotonicity.
+\commitment-free runs, and consistency are defined as before.  The results of
+Section~\ref{sec:executions} depend on output events only through that equation,
+so the rows-remaining lemma (Lemma~\ref{lem:run-residual}) and survivor test
+(Proposition~\ref{prop:confluence}) apply unchanged.  Thus consistency reduces
+to Lifted Monotonicity.
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -1005,28 +1004,37 @@ Proposition~\ref{prop:functional-exposure-boundary}.
 \section{Distributed Execution}
 \label{sec:distributed-execution}
 
-Consistency compares independent runs.  A distributed execution places one run
-at each participant, and the only change from our framework's perspective is
-that participants can learn about inputs at other participants via messages.
-Functional CALM and Complete CALM therefore have a natural distributed reading,
-which Section~\ref{sec:histories} makes precise.  We then define systems, whose
-\commitments may exceed those the spec requires, and \commitments that require distributed coordination, which a run at
-another participant could contradict; Complete CAP follows.
+This section gives Functional CALM and Complete CALM a distributed reading,
+including a convergence guarantee for functional specs.  We then define
+systems, whose \commitments may exceed those the spec requires, and identify
+the commitments that require distributed coordination; Complete CAP follows.
 
 \subsection{Distributed histories and consistency}
 \label{sec:histories}
 \label{sec:distributed-consistency}
 
-A finite set $P$ of \emph{participants} each holds a specification state,
-starting at a canonical state $\sigma_P(i_p)$, and changes it only by its own
-specification events.  A participant learns input directly from the
-environment or in a message from another participant.  A
-\emph{message} $m=(j,d)$ carries a cumulative input $j$, or $\varnothing$
-if it carries none, and arbitrary application-specific data $d$; one can envision timestamps, version
-vectors, state identities, and so on.  A receive does not change the specification state; a
-participant at $(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own
+Until now, runs have been independent: each state changes only through that
+run's input and output events.  We now place one such run at each participant in
+a finite set $P$.  Participant $p$ starts in the canonical state
+$\sigma_P(i_p)$ and still changes its state only through its own specification
+events.  The new ingredient is communication.  Besides learning input directly
+from the environment, a participant can learn cumulative input from another
+participant.
+
+Participants exchange messages by $\mathsf{send}(m)$ and
+$\mathsf{receive}(m)$.  A \emph{message} $m=(j,d)$ carries a cumulative input
+$j$, or $\varnothing$ if it carries none, and arbitrary application-specific
+data $d$; one can envision timestamps, version vectors, state identities, and
+so on.  A receive does not change the specification state; a participant at
+$(i,R)$ that receives $(j,d)$ may incorporate $j$ by its own
 $\mathsf{input}(k)$ for a legal common \indesc $k$ of $i$ and $j$.  Data can
-influence a system's subsequent actions (\S\ref{sec:systems}), but never directly changes the state.
+influence a system's subsequent actions (\S\ref{sec:systems}), but never
+directly changes the state.
+
+Send and receive events connect the participants' locally ordered runs.  Adding
+an edge from each send to its matching receive gives the standard model of a
+distributed history; the transitive closure of these edges and the local orders
+is happens-before.
 
 \begin{definition}[Distributed history, history event, happens-before, consistent cut]
 \label{def:distributed-history}

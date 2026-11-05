@@ -320,10 +320,12 @@ theorem «sec:lifted-output-events/functional» {I O : Type} [PO I] [PO O]
 /-! ## The Complete CALM theorem (`sec:complete-calm-theorem`) -/
 
 /-- "Specification states, input events, runs, commitment-free runs, and
-consistency are defined as before, and the results of Section
-`sec:executions` … lift unchanged."  In Lean there is nothing to lift: the
-transition system, Lemma `lem:run-residual` and Prop. `prop:confluence` are
-stated for arbitrary (relational) specifications from the start; this
+consistency are defined as before. The results of Section `sec:executions`
+depend on output events only through Equation `eq:output-action`, so the
+rows-remaining lemma and survivor test apply unchanged." In Lean there is
+nothing to lift: the transition system, Lemma `lem:run-residual` and Prop.
+`prop:confluence` are stated for arbitrary (relational) specifications from the
+start; this
 restates the lemma for the record. -/
 theorem «sec:complete-calm-theorem/lift-unchanged» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} {i : I} {es : List (Event I O)} {τ : State sp}

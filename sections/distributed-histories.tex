@@ -3,17 +3,27 @@
 \subsection{Distributed histories}
 \label{sec:histories}
 
-A finite set $P$ of \emph{participants} each holds a specification state,
-starting at a canonical state $\sigma_P(i_p)$, and changes it only by its own
-specification events.  A participant learns input directly from the
-environment or in a message from another participant.  Participants exchange
-messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$.  A
-\emph{message} is a pair $m=(j,d)$ of a cumulative input $j$, or $\varnothing$
-if it carries none, and arbitrary application-specific data $d$; one can
-envision timestamps, version vectors, state identities, and so on.  A receive does not change
-the specification state; a participant at $(i,R)$ that receives $(j,d)$ with
+Until now, runs have been independent: each state changes only through that
+run's input and output events.  We now place one such run at each participant in
+a finite set $P$.  Participant $p$ starts in the canonical state
+$\sigma_P(i_p)$ and still changes its state only through its own specification
+events.  The new ingredient is communication.  Besides learning input directly
+from the environment, a participant can learn cumulative input from another
+participant.
+
+Participants exchange messages by $\mathsf{send}(m)$ and
+$\mathsf{receive}(m)$.  A \emph{message} is a pair $m=(j,d)$ of a cumulative
+input $j$, or $\varnothing$ if it carries none, and arbitrary
+application-specific data $d$; one can envision timestamps, version vectors,
+state identities, and so on.  A receive does not change the specification
+state; a participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
 legal common \indesc $k$ of $i$ and $j$, when one exists.
+
+Send and receive events connect the participants' locally ordered runs.  Adding
+an edge from each send to its matching receive gives the standard model of a
+distributed history; the transitive closure of these edges and the local orders
+is happens-before.
 
 \begin{definition}[Distributed history, history event]
 \label{def:distributed-history}

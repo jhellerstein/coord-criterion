@@ -1091,11 +1091,11 @@ event may remove rows by output subsumption without applying a \commitment.} \te
 
 \textcolor{reviewed}{A lifted output event ends at $(i,R[\mathrm{out}\OutputGe o])$, as in
 Equation~\ref{eq:output-action}.} \textcolor{reviewed}{Specification states, input events, runs,
-\commitment-free runs, and consistency are defined as before, and the results
-of Section~\ref{sec:executions} used output events only through that
-equation.} \textcolor{reviewed}{They lift unchanged: the rows remaining after a run
-(Lemma~\ref{lem:run-residual}) and the survivor test
-(Proposition~\ref{prop:confluence}).} \textcolor{reviewed}{Thus consistency reduces to Lifted Monotonicity.}
+\commitment-free runs, and consistency are defined as before.} \textcolor{reviewed}{The results of
+Section~\ref{sec:executions} depend on output events only through that equation,
+so the rows-remaining lemma (Lemma~\ref{lem:run-residual}) and survivor test
+(Proposition~\ref{prop:confluence}) apply unchanged.} \textcolor{reviewed}{Thus consistency reduces
+to Lifted Monotonicity.}
 
 \begin{theorem}[Complete CALM]
 \label{thm:complete-calm}
@@ -1137,30 +1137,37 @@ Proposition~\ref{prop:functional-exposure-boundary}.}
 \section{Distributed Execution}
 \label{sec:distributed-execution}
 
-\textcolor{reviewed}{Consistency compares independent runs.} \textcolor{reviewed}{A distributed execution places one run
-at each participant, and the only change from our framework's
-perspective is that participants can learn about inputs at other participants
-via messages.} Functional CALM and Complete CALM therefore have a natural
-distributed reading, including a convergence guarantee derived from the
-spec (Corollary~\ref{cor:convergence}). \textcolor{reviewed}{We then define systems, whose \commitments may exceed those the spec
-requires, and \commitments that require distributed coordination, which a run at
-another participant could contradict; Complete CAP follows.}
+\textcolor{reviewed}{This section gives Functional CALM and Complete CALM a distributed reading,
+including a convergence guarantee for functional specs
+(Corollary~\ref{cor:convergence}).} \textcolor{reviewed}{We then define systems, whose \commitments
+may exceed those the spec requires, and identify the commitments that require
+distributed coordination; Complete CAP follows.}
 
 
 \subsection{Distributed histories}
 \label{sec:histories}
 
-\textcolor{reviewed}{A finite set $P$ of \emph{participants} each holds a specification state,
-starting at a canonical state $\sigma_P(i_p)$, and changes it only by its own
-specification events.} \textcolor{reviewed}{A participant learns input directly from the
-environment or in a message from another participant.} Participants exchange
-messages by $\mathsf{send}(m)$ and $\mathsf{receive}(m)$. \textcolor{reviewed}{A
-\emph{message} is a pair $m=(j,d)$ of a cumulative input $j$, or $\varnothing$
-if it carries none, and arbitrary application-specific data $d$; one can
-envision timestamps, version vectors, state identities, and so on.} \textcolor{reviewed}{A receive does not change
-the specification state; a participant at $(i,R)$ that receives $(j,d)$ with
+\textcolor{reviewed}{Until now, runs have been independent: each state changes only through that
+run's input and output events.} \textcolor{reviewed}{We now place one such run at each participant in
+a finite set $P$.} \textcolor{reviewed}{Participant $p$ starts in the canonical state
+$\sigma_P(i_p)$ and still changes its state only through its own specification
+events.} \textcolor{reviewed}{The new ingredient is communication.} \textcolor{reviewed}{Besides learning input directly
+from the environment, a participant can learn cumulative input from another
+participant.}
+
+\textcolor{reviewed}{Participants exchange messages by $\mathsf{send}(m)$ and
+$\mathsf{receive}(m)$.} \textcolor{reviewed}{A \emph{message} is a pair $m=(j,d)$ of a cumulative
+input $j$, or $\varnothing$ if it carries none, and arbitrary
+application-specific data $d$; one can envision timestamps, version vectors,
+state identities, and so on.} \textcolor{reviewed}{A receive does not change the specification
+state; a participant at $(i,R)$ that receives $(j,d)$ with
 $j\neq\varnothing$ may incorporate $j$ by its own $\mathsf{input}(k)$ for a
 legal common \indesc $k$ of $i$ and $j$, when one exists.}
+
+\textcolor{reviewed}{Send and receive events connect the participants' locally ordered runs.} \textcolor{reviewed}{Adding
+an edge from each send to its matching receive gives the standard model of a
+distributed history; the transitive closure of these edges and the local orders
+is happens-before.}
 
 \begin{definition}[Distributed history, history event]
 \label{def:distributed-history}
