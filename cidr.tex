@@ -816,7 +816,7 @@ contrast, can all be \outrelpast by a larger route set.
 
 \paragraph{\Commitment and directedness.} The examples in Figure~\ref{fig:ambiguity-frames} differ in what happens
 to alternative outputs when one is emitted.  Panel~(f) shows two serial schedules, neither
-order \outrel the other, so emitting one requires an
+order \outrel the other, so emitting one requires a
 \emph{\commitment} that removes the other while the input stays legal:
 emitting $[A,B]$ excludes $[B,A]$.  Panel~(g) shows a spec for a traceroute-like tool. Rows with larger
 route sets \outrelbase both the
@@ -857,25 +857,24 @@ on $I$.  A row $(i,o)\in P$ is a possible input/output pair: output $o$ is
 permitted at input $i$.  The fiber
 $\fiber{i}=\{o\in O:(i,o)\in P\}$ may now contain several
 outputs; the \spectype is \emph{nondeterministic} when some fiber does.  A
-functional \spectype is the special case $\fiber{i}=\{f(i)\}$.  Specification
-nondeterminism describes permitted results, not a strategy's method of choosing
-among them, and does not by itself imply a \commitment.
+functional \spectype is the special case $\fiber{i}=\{f(i)\}$.
 \end{definition}
 
-Specification states and input events
+Specification nondeterminism describes permitted results, not a strategy's method of choosing
+among them, and does not by itself imply a \commitment. Specification states and input events
 (\S\ref{sec:framework-brief})
 apply unchanged to relational tables; Section~\ref{sec:lifted-output-events} lifts
 output events.
 
+\paragraph{Problems in nondeterministic specs.}
 As input
-\ingrows from $i$ to $j$, can some output in the fiber at $j$ \outrelbase
-whatever outputs runs emit at $i$?  Two things can go wrong.  A
-\emph{stranded output} is an output in the fiber at $i$ with no \outnoun in
-the fiber at some \indesc $j$.  An \emph{incompatible pair} is two outputs in
-the fiber at $i$ with no common \outnoun there.  We rule out
-each, combine them, and restate the result in the form runs need.
+\ingrows from $i$ to $j$, two properties can prevent the fiber at $j$ \outrelpart
+outputs that runs emit at $i$.  
+A
+\emph{stranded output} in the fiber at $i$ is one with no \outnoun in
+the fiber at $j$.  An \emph{incompatible pair} is two outputs in $i$'s fiber, with no common \outnoun there.
 
-First, we rule out stranded outputs.
+We rule out both cases, starting with stranded outputs.
 
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
@@ -890,14 +889,13 @@ when every output keeps some \outnoun as input \ingrows:
 \end{definition}
 
 For singleton fibers this is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.  It treats each output separately,
-so it does not rule out incompatible pairs, which concern several outputs in
-one fiber.
+Equation~\ref{eq:functional-monotonicity}.  
+Next, we rule out incompatible pairs at a single input.
 For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
 \emph{incompatible in $F$} otherwise.
 
-Second, we rule out incompatible pairs.
+
 
 \begin{definition}[Directed fiber, directed fibers]
 \label{def:fiber-directedness}
