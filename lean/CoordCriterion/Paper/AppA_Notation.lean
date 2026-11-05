@@ -171,18 +171,6 @@ abbrev «app:notation/relational-specification» (I O : Type) [PO I] [PO O] := S
 abbrev «app:notation/nondeterministic» (sp : Spec I O) : Prop :=
   ∃ i o o', sp.P i o ∧ sp.P i o' ∧ o ≠ o'
 
-/-- *stranded output* — an output at `i` with no output extension at some
-input extension (Sec. `sec:lifted-monotonicity`).  No library name; its absence is
-`Spec.RelMono`. -/
-abbrev «app:notation/stranded-output» (sp : Spec I O) (i : I) (o : O) : Prop :=
-  sp.P i o ∧ ∃ j, i ≼ j ∧ ¬ ∃ u, sp.P j u ∧ o ≼ u
-
-/-- *incompatible pair* — two outputs at `i` with no common output extension there
-(Sec. `sec:lifted-monotonicity`).  No library name; its absence (for all
-finite sets) is `Spec.DirectedOutputs`. -/
-abbrev «app:notation/incompatible-pair» (sp : Spec I O) (i : I) (o o' : O) : Prop :=
-  sp.P i o ∧ sp.P i o' ∧ ¬ CompatibleIn (sp.P i) [o, o']
-
 /-- *Relational Monotonicity* — every output keeps an output extension as input
 grows (Def. `def:relational-monotonicity`).  Lean: `Spec.RelMono`. -/
 abbrev «app:notation/relational-monotonicity» (sp : Spec I O) : Prop := sp.RelMono
