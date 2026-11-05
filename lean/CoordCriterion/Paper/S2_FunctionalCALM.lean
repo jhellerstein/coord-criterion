@@ -521,12 +521,17 @@ abbrev «def:confluence» {I O : Type} [PO I] [PO O] {sp : Spec I O}
 *consistent* when every finite family of runs is confluent at every common
 input extension of their current inputs."
 
-"Consistency requires confluence at every common input extension, not merely at
-some later one.  The reason is observability: the environment may act on
-conflicting outputs through channels the system does not see, as in Lamport's
-'anomalous behavior,' and a reconciling input may never arrive.  Thus a
-conflict is a consistency failure even if later input could resolve it."  The
-observability claim is the paper's modeling rationale.
+  "Consistency requires confluence at every common input extension, not merely
+  at some later one.  Otherwise conflicting outputs can escape before
+  reconciliation.  In the equality-order election, `f(ab·)=⊥` and `f(aba)=a`
+  are incomparable.  One run can emit `⊥` at `ab·`, while another accepts
+  `aba` and can emit `a`.  The runs cannot reconcile at their common input
+  extension `aba`, and waiting cannot retract either output from the
+  environment.  More generally, even when later input could reconcile the
+  internal states, the environment may already have acted on their outputs
+  through channels the system does not see, as in Lamport's 'anomalous
+  behavior'; the reconciling input may never arrive."  The observability claim
+  is the paper's modeling rationale.
 
 Lean: `Spec.Consistent`. -/
 abbrev «def:consistency» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Prop :=

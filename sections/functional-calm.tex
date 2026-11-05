@@ -174,12 +174,11 @@ specification requires.
 
 \paragraph{Output and consistency.}
 In a functional table, an output is a \emph{legal output} when every item in
-the future-output set \outrel it; no future output contradicts it.  Hence $\bot$ is legal
+the future-output set \outrel it.  Hence $\bot$ is legal
 in panels~(a) and~(b), and $a$ in panel~(c).
-At the time of emission, an output must be legal; otherwise the environment could act on a value that
-is later contradicted.
-The output event $\mathsf{output}(o)$ therefore atomically empties any legal input whose
-output does \emph{not} extend $o$, then emits $o$.
+At the time of emission, an output must be legal.  The output event
+$\mathsf{output}(o)$ therefore atomically empties any legal input whose output
+does \emph{not} extend $o$, then emits $o$.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
@@ -306,7 +305,7 @@ outputs still possible.
 \label{sec:functional-events}
 
 Two events change state: input events incorporate new information, while
-output events record promises to the outside world.  Each may remove rows from
+output events record what the system has emitted.  Each may remove rows from
 the remainder table.
 
 \paragraph{Input events.}
@@ -325,9 +324,8 @@ effect of $\mathsf{input}(k)$ alone; $\mathsf{input}(i)$ at
 $(i,R)$ has no effect.
 
 \paragraph{Output events.}
-A system controls what it tells the world.  We study what it can
-promise without assuming that clients tolerate retractions.  Later outputs
-must therefore \outrelbase earlier ones.
+A system controls what it tells the world.  Later outputs must \outrelbase
+earlier ones.
 
 At state $(i,R)$, the current input has a unique row $(i,o)$, so $o$ is the only
 output the system may emit.
@@ -455,10 +453,15 @@ runs is confluent at every common \indesc of their current inputs.
 \end{definition}
 
 Consistency requires confluence at every common \indesc, not merely at some
-later one.  The reason is observability: the environment may act on conflicting
-outputs through channels the system does not see, as in Lamport's ``anomalous
-behavior''~\cite{lamport1978time}, and a reconciling input may never arrive.
-Thus a conflict is a consistency failure even if later input could resolve it.
+later one.  Otherwise conflicting outputs can escape before reconciliation.
+In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
+incomparable.  One run can emit $\bot$ at $ab\cdot$, while another accepts
+$aba$ and can emit $a$.  The runs cannot reconcile at their common \indesc
+$aba$, and waiting cannot retract either output from the environment.  More
+generally, even when later input could reconcile the internal states, the
+environment may already have acted on their outputs through channels the system
+does not see, as in Lamport's ``anomalous behavior''~\cite{lamport1978time};
+the reconciling input may never arrive.
 
 Confluence has a simple test: some row at the common \indesc must survive
 in every run.
@@ -486,8 +489,8 @@ asks whether $(j,f(j))$ survives in every run.
 
 Consistency guarantees runs never diverge irreparably: no ``split brain''.  Whatever input
 and output events a finite collection of runs has taken, any input \inrelpart all
-of theirs leaves a single state that every run can reach: one that keeps every
-promise any of them has made and accepts all of that input.
+of theirs leaves a single state that every run can reach: one that honors all
+of their emitted outputs and accepts all of that input.
 Proposition~\ref{prop:confluence} identifies that state.  Consistency is a
 property of the specification, not of a protocol (Section~\ref{sec:scope}).
 
@@ -509,10 +512,6 @@ so the row $(j,f(j))$ at a common \indesc $j$ survives in every run.
 If $f$ is not monotone, a run that emits $f(i)$ and a run that accepts an
 \indesc $k$ of $i$ with $f(i)\not\OutputOrd f(k)$ can never be reconciled at $k$.  Full proof in Appendix~\ref{app:proofs-sec2}.
 \end{proof}
-
-In the equality-order election, $f(ab\cdot)=\bot$ and $f(aba)=a$ are
-incomparable: a run that emits $\bot$ at $ab\cdot$ and one that accepts
-$aba$ are the two runs of Section~\ref{sec:election-story} that can never be reconciled.
 
 In the functional case, consistency has a strong consequence: emitting outputs
 never changes the state, which depends only on the input.
