@@ -844,21 +844,53 @@ and~\ref{sec:crdt-instance} treat both.}
 \section{Complete CALM}
 \label{sec:complete-calm}
 
-\textcolor{reviewed}{We now extend CALM theory to allow a fiber to contain several outputs.} \textcolor{reviewed}{The monotonicity property we want to test as input
-\ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
-output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?} \textcolor{reviewed}{A \commitment may empty an input's fiber or remove some output rows while the
-fiber remains nonempty.} \textcolor{reviewed}{We now turn to the latter effect.}
+\textcolor{reviewed}{We now extend CALM theory to nondeterministic specs, whose fibers may contain
+several outputs.}
 
-\subsection{\Commitment by example}
+\subsection{Nondeterministic specs and Lifted Monotonicity}
+\label{sec:relational-specifications}
+
+\begin{definition}[\Spectype]
+\label{def:relational-specification}
+\textcolor{reviewed}{An \emph{\spectype} is}
+        \begin{equation}
+  \Spec=(I,\InputOrd,O,\OutputOrd,P),
+  \qquad P\subseteq I\times O,
+  \label{eq:relational-specification}
+        \end{equation}
+where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and
+  $P\subseteq I\times O$ is its \emph{possibility relation}. We depict $P$ as
+a table and call its members rows; it need not be finite. The relation $P$
+  is total on $I$: every input appears in at least one row. \textcolor{reviewed}{A row $(i,o)\in P$
+  is a possible input/output pair: output $o$ is permitted at input $i$.} The fiber
+        \begin{equation}
+  \fiber{i}=\{o\in O:(i,o)\in P\}
+  \label{eq:fiber}
+        \end{equation}
+of Section~\ref{sec:functional-specifications} may now contain several
+  outputs. \textcolor{reviewed}{A functional \spectype is the special case $\fiber{i}=\{f(i)\}$.}
+\end{definition}
+
+\begin{definition}[Nondeterministic \spectype]
+\label{def:nondeterministic}
+An \spectype is \emph{nondeterministic} when some fiber
+contains more than one output. \textcolor{reviewed}{Specification nondeterminism describes
+permitted results, not a strategy's method of choosing among them, and does not
+by itself imply a \commitment.}
+\end{definition}
+
+Specification states and input events
+(Sections~\ref{sec:functional-specifications} and~\ref{sec:functional-events})
+apply unchanged to relational tables.
+
+\textcolor{reviewed}{Figure~\ref{fig:ambiguity-frames} contrasts two specs with several outputs in
+one fiber: serial schedules for two transactions and route sets observed by a
+traceroute-like tool.} \textcolor{reviewed}{For the discussion here, transaction outputs are simply
+serial schedules, to which executions correspond via equivalence;
+Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study more
+thorough transactional specs.}
+
 \label{sec:ambiguity-story}
-
-\textcolor{reviewed}{Figure~\ref{fig:ambiguity-frames} contrasts two specs that permit
-several outputs in one fiber.} \textcolor{reviewed}{Transaction ordering requires a \commitment
-between incompatible serialization orders.} \textcolor{reviewed}{For the discussion here, outputs are simply serial
-schedules, to which executions correspond via equivalence; Section~\ref{sec:hat-instance} and
-Appendix~\ref{app:cc-bases} study more thorough transactional specs.} \textcolor{reviewed}{Traceroute observations, by
-contrast, can all be \outrelpast by a larger route set.}
-
 \begin{figure}[t]
   \centering
   \small
@@ -900,81 +932,14 @@ contrast, can all be \outrelpast by a larger route set.}
   \label{fig:ambiguity-frames}
 \end{figure}
 
-\paragraph{\Commitment and directedness.}
-\textcolor{reviewed}{The examples differ in what happens
-to alternative outputs when one is emitted.} \textcolor{reviewed}{In panel~(f), neither
-serialization order \outrel the other, so emitting one requires an
-\commitment that removes the other while the input stays legal:
-emitting $[A,B]$ excludes $[B,A]$.} \textcolor{reviewed}{In panel~(g), larger route sets \outrelbase both the
-emitted observation and the outputs of the rows it removes.} \textcolor{reviewed}{We call such
-removal an \emph{output subsumption}; every removed output is
-\outrelpast by a remaining one, so emitting the route observation loses no information
-according to the output order and needs no
-\commitment: it is a \emph{legal output}.}
+\textcolor{reviewed}{The transaction schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting
+either requires a \commitment that removes the other.} \textcolor{reviewed}{In the traceroute spec,
+every removed route set is \outrelpast by a remaining one that also \outrelbase
+the emitted observation.} \textcolor{reviewed}{Its removal is \emph{output subsumption}, not
+\commitment.} \textcolor{reviewed}{Directedness formalizes this distinction; Relational
+Monotonicity additionally accounts for input growth.}
 
-\textcolor{reviewed}{An output event can thus remove rows in two ways: by \commitment, as in panel~(f) and Section~\ref{sec:functional-calm}, or by subsuming outputs, as in panel~(g).} \textcolor{reviewed}{At a given input, a \commitment may remove every row, ruling out the input, or only some rows, ruling out those outputs.} \textcolor{reviewed}{The atomic event $\mathsf{output}(o)$ does whichever $o$ requires, then emits $o$.} \textcolor{reviewed}{Subsuming is not \commitment.}
-
-\textcolor{reviewed}{The difference between serialization and traceroute is the order-theoretic concept of a \emph{directed} fiber:
-every finite set of outputs in a given fiber has a common \outnoun in that fiber.} \textcolor{reviewed}{Directedness at a single input is not sufficient, however;
-we must also \outrelbase prior outputs as input \ingrows.} \textcolor{reviewed}{\emph{Lifted Monotonicity}
-combines the requirements: as input \ingrows from $i$ to $j$, some output
-in the fiber at $j$ \outrel whatever outputs runs emit at $i$.} \textcolor{reviewed}{Equivalently,
-outputs emitted at inputs with a common \indesc $j$ must have a common
-\outnoun in the fiber at $j$: the same test as in Section~\ref{sec:election-story}, but
-with many outputs per input.} \textcolor{reviewed}{Two transaction scheduling runs that emit $[A,B]$ and $[B,A]$ fail it;
-two traceroute runs that emit different route sets pass it, since their union
-survives in both.}
-
-\subsection{\Spectype[s] and states}
-\label{sec:relational-specifications}
-
-\textcolor{reviewed}{We begin with our most general definition of a spec, which admits
-output nondeterminism.}
-\begin{definition}[\Spectype]
-\label{def:relational-specification}
-\textcolor{reviewed}{An \emph{\spectype} is}
-        \begin{equation}
-  \Spec=(I,\InputOrd,O,\OutputOrd,P),
-  \qquad P\subseteq I\times O,
-  \label{eq:relational-specification}
-        \end{equation}
-where $(I,\InputOrd)$ and $(O,\OutputOrd)$ are partially ordered sets and
-  $P\subseteq I\times O$ is its \emph{possibility relation}. We depict $P$ as
-a table and call its members rows; it need not be finite. The relation $P$
-  is total on $I$: every input appears in at least one row. \textcolor{reviewed}{A row $(i,o)\in P$
-  is a possible input/output pair: output $o$ is permitted at input $i$.} The fiber
-        \begin{equation}
-  \fiber{i}=\{o\in O:(i,o)\in P\}
-  \label{eq:fiber}
-        \end{equation}
-of Section~\ref{sec:functional-specifications} may now contain several
-  outputs. \textcolor{reviewed}{A functional \spectype is the special case $\fiber{i}=\{f(i)\}$.}
-\end{definition}
-
-\begin{definition}[Nondeterministic \spectype]
-\label{def:nondeterministic}
-An \spectype is \emph{nondeterministic} when some fiber
-contains more than one output. \textcolor{reviewed}{Specification nondeterminism describes
-permitted results, not a strategy's method of choosing among them, and does not
-by itself imply a \commitment.}
-\end{definition}
-
-
-Specification states and input events
-(Sections~\ref{sec:functional-specifications} and~\ref{sec:functional-events})
-apply unchanged to relational tables.
-
-\subsection{Lifted Monotonicity}
 \label{sec:lifted-monotonicity}
-
-As input \ingrows from $i$ to $j$, two things can go wrong. \textcolor{reviewed}{A
-\emph{stranded output} is an output in the fiber at $i$ with no \outnoun in
-the fiber at some \indesc $j$.} \textcolor{reviewed}{An \emph{incompatible pair} is two outputs in
-the fiber at $i$ with no common \outnoun there.} \textcolor{reviewed}{We rule out
-each, combine them, and restate the result in the form runs need.}
-
-\textcolor{reviewed}{First, we rule out stranded outputs.}
-
 \begin{definition}[Relational Monotonicity]
 \label{def:relational-monotonicity}
 \textcolor{reviewed}{An \spectype satisfies \emph{Relational Monotonicity}
@@ -988,13 +953,10 @@ when every output keeps some \outnoun as input \ingrows:}
 \end{definition}
 
 \textcolor{reviewed}{For singleton fibers this is functional monotonicity,
-Equation~\ref{eq:functional-monotonicity}.} \textcolor{reviewed}{It treats each output separately,
-so it does not rule out incompatible pairs, which concern several outputs in
-one fiber.} \textcolor{reviewed}{For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
+Equation~\ref{eq:functional-monotonicity}.} It treats each output separately,
+so it does not require several outputs in one fiber to have a common \outnoun. \textcolor{reviewed}{For a set $F\subseteq O$ of outputs, outputs $o_1,\ldots,o_k$ are
 \emph{compatible in $F$} if some $u\in F$ \outrel all of them, and
 \emph{incompatible in $F$} otherwise.}
-
-\textcolor{reviewed}{Second, we rule out incompatible pairs.}
 
 \begin{definition}[Directed fiber]
 \label{def:fiber-directedness}
@@ -1031,10 +993,9 @@ $A,B\subseteq O$, define}
   \label{eq:joint-output-order}
         \end{equation}
 \textcolor{reviewed}{the \emph{joint lift} of $\OutputOrd$.} \textcolor{reviewed}{We apply it with $A=\fiber{i}$ and
-$B=\fiber{j}$ for $i\InputOrd j$.} \textcolor{reviewed}{When $X$ is a single output $o$, it asks
-that $o$ have a \outnoun in $\fiber{j}$, which rules out stranded outputs.} \textcolor{reviewed}{When $X$
-holds several outputs, it asks that they have a common \outnoun in $\fiber{j}$; with
-$j=i$, this rules out incompatible pairs.}
+$B=\fiber{j}$ for $i\InputOrd j$.} When $X$ is a single output $o$, it asks
+that $o$ have a \outnoun in $\fiber{j}$, which is Relational Monotonicity. \textcolor{reviewed}{When $X$ holds several outputs, it asks that they have a common \outnoun in
+$\fiber{j}$; with $j=i$, this is directedness.}
 
 \begin{definition}[Lifted Monotonicity]
 \label{def:lifted-monotonicity}
@@ -2712,7 +2673,6 @@ rows at $k$.
   \multicolumn{3}{@{}l}{\textbf{Complete CALM (\S\ref{sec:complete-calm})}}\\
   \midrule
   \spectype; nondeterministic & $P\subseteq I\times O$ total on $I$; some fiber has several outputs & Def.~\ref{def:relational-specification}\\
-  stranded output; incompatible pair & an output at $i$ with no \outnoun at some \indesc; two outputs at $i$ with no common \outnoun there & Sec.~\ref{sec:lifted-monotonicity}\\
   Relational Monotonicity & every output keeps a \outnoun as input \ingrows & Def.~\ref{def:relational-monotonicity}\\
   compatible in $F$; directed; directed fibers & some $u\in F$ \outrel all; every finite subset compatible; every fiber directed & Def.~\ref{def:fiber-directedness}\\
   joint lift $A\LiftedOrd B$ & every nonempty finite $X\subseteq A$ is compatible in $B$ & Eq.~\ref{eq:joint-output-order}\\

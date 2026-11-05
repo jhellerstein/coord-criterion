@@ -1,11 +1,8 @@
 \section{Complete CALM}
 \label{sec:complete-calm}
 
-We now extend CALM theory to allow a fiber to contain several outputs.  The monotonicity property we want to test as input
-\ingrows from $i$ to $j\InputGe i$ must be lifted to sets: can \emph{some}
-output in the fiber at $j$ \outrelbase \emph{whatever} outputs runs emit at $i$?
-A \commitment may empty an input's fiber or remove some output rows while the
-fiber remains nonempty.  We now turn to the latter effect.
+We now extend CALM theory to nondeterministic specs, whose fibers may contain
+several outputs.
 
 \subsection{Nondeterministic specs and Lifted Monotonicity}
 \label{sec:relational-specifications}
@@ -42,6 +39,13 @@ by itself imply a \commitment.
 Specification states and input events
 (Sections~\ref{sec:functional-specifications} and~\ref{sec:functional-events})
 apply unchanged to relational tables.
+
+Figure~\ref{fig:ambiguity-frames} contrasts two specs with several outputs in
+one fiber: serial schedules for two transactions and route sets observed by a
+traceroute-like tool.  For the discussion here, transaction outputs are simply
+serial schedules, to which executions correspond via equivalence;
+Section~\ref{sec:hat-instance} and Appendix~\ref{app:cc-bases} study more
+thorough transactional specs.
 
 \label{sec:ambiguity-story}
 \begin{figure}[t]
@@ -85,14 +89,12 @@ apply unchanged to relational tables.
   \label{fig:ambiguity-frames}
 \end{figure}
 
-Figure~\ref{fig:ambiguity-frames} contrasts the two effects of an output
-when a fiber contains several possibilities.  Under the equality order,
-emitting the transaction schedule $[A,B]$ removes the incompatible schedule
-$[B,A]$ and therefore requires a \commitment.  Emitting the traceroute
-observation $\{s{\to}\texttt{s1}\}$ only subsumes route sets: each removed row
-has a remaining \outnoun, so the output is legal.  Directedness formalizes
-this distinction within one fiber, while Relational Monotonicity requires
-outputs to keep extensions as input grows.
+The transaction schedules $[A,B]$ and $[B,A]$ are incompatible, so emitting
+either requires a \commitment that removes the other.  In the traceroute spec,
+every removed route set is \outrelpast by a remaining one that also \outrelbase
+the emitted observation.  Its removal is \emph{output subsumption}, not
+\commitment.  Directedness formalizes this distinction; Relational
+Monotonicity additionally accounts for input growth.
 
 \label{sec:lifted-monotonicity}
 \begin{definition}[Relational Monotonicity]
