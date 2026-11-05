@@ -1069,12 +1069,12 @@ The participant runs at a cut are a family of runs, and any family
 of runs can be placed at separate participants that exchange no messages.  \fullproof
 \end{proof}
 
-\paragraph{Scope.} The converse in Proposition~\ref{prop:distributed-consistency}
-assumes unrestricted placement: participants have no assigned roles at this
-level, so any spec run may occur at any participant.  A deployment can instead
+Note that the converse in Proposition~\ref{prop:distributed-consistency}
+assumes unrestricted placement: any spec run may occur at any participant.  
+A deployment can instead
 restrict which rows each participant may emit, confining incompatible runs to
 one participant.  The placement-sensitive criterion is then monotonicity across
-partitions; \extended develops this richer model.
+partitions; \extended\ develops this richer model.
 
 By Complete CALM, then, a spec has distributed consistency exactly
 when it satisfies Lifted Monotonicity.  Under Lifted Monotonicity, this
@@ -1089,15 +1089,10 @@ transitions belong to the operational model (\S\ref{sec:scope}).
 For functional specs,
 Corollary~\ref{cor:state-by-input} also gives convergence: participants with
 the same current input are in the same state, regardless of message paths,
-arrival order, or the outputs they emitted.  This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
+arrival order, or outputs emitted.  This is the convergence that strong eventual consistency~\cite{shapiro2011crdt}
 asks of replicated state.  The semilattice merge of CRDTs suffices for it but
-is not needed: here it follows directly from any consistent functional
+is not needed: it follows directly from any consistent functional
 spec.
-With several outputs per input this fails even for consistent specs:
-in Figure~\ref{fig:ambiguity-frames}(g), a run that emitted
-$\{s{\to}\texttt{s1}\}$ has subsumed the route sets that omit it, while a run at
-the same input that emitted nothing keeps them.  Consistency then guarantees
-that such replicas can be reconciled, not that they agree.
 
 \subsection{Systems}
 \label{sec:systems}
