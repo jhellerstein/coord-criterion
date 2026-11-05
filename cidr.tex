@@ -1132,28 +1132,31 @@ spec.
   \label{fig:cc-commitments}
 \end{figure}
 
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only
-the canonical \commitment $x_o$ required by an output.  Systems may commit
-earlier or remove additional alternatives: the registrar may close the polls
-before announcing a result, and a lock manager may fix an order before emitting
-it.  We therefore allow bespoke system \commitments.  A \emph{\commitment} is
-a partial function on specification states that removes a nonempty set of rows,
-none subsumed by a row that remains at the same input, while leaving the current
+Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
+canonical \commitment $x_o$ required by an output.  Systems may commit earlier
+or remove additional alternatives: the registrar may close the polls before
+announcing a result, and a lock manager may fix an order before emitting it.  We
+therefore allow bespoke system \commitments.  A \emph{\commitment} is a partial
+function on specification states that removes a nonempty set of rows, none
+subsumed by a row that remains at the same input, while leaving the current
 input unchanged.  As before, removing every row at an input rules out that
 input; removing only some rules out those outputs.  An output event
 $\Out{\gamma}{o}$ applies a sequence $\gamma$ of \commitments, subsumes rows,
-and emits $o$.  It is \emph{commitment-sufficient} when the sequence applies
-and leaves $o$ as a legal output; systems perform only commitment-sufficient
-output events.
-A \emph{\commitment event} $\mathsf{apply}(\gamma)$ applies such a sequence and
-emits nothing, as when 2PL orders $A$ before $B$ while $B$ waits for $A$'s
-lock; it is a third kind of specification event.  A \emph{system} consists of
-a \emph{\commitment basis} $\mathcal B$ (a set of \commitments) and a
+and emits $o$.  It is \emph{commitment-sufficient} when the sequence applies and
+leaves $o$ as a legal output. We require output events to be
+commitment-sufficient so that every fateful row removal is represented
+explicitly as a commitment, rather than hidden in the act of emission. A
+\emph{\commitment event} $\mathsf{apply}(\gamma)$ applies such a sequence and
+emits nothing, as when 2PL orders $A$ before $B$ while $B$ waits for $A$'s lock;
+it is a third kind of specification event.  
+
+A \emph{system} consists of a
+\emph{\commitment basis} $\mathcal B$ (a set of \commitments) and a
 nondeterministic \emph{strategy} per participant that picks its next output,
 \commitment, send, or receive event from its local history, applying only
-\commitments from $\mathcal B$.  The full paper gives these definitions formally and shows
-that every canonical \commitment of Section~\ref{sec:complete-calm} is a \commitment
-in this sense.
+\commitments from $\mathcal B$.  The full paper gives these definitions formally
+and shows that every canonical \commitment of Section~\ref{sec:complete-calm} is
+a \commitment in this sense.
 
 Two-phase locking (2PL) and multiversion timestamp
 ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
@@ -1172,15 +1175,7 @@ canonical run: one that accepts the same inputs, emits the same outputs,
 and keeps at least the original's rows after each event (\extended).
 \end{lemma}
 
-The canonical event for a legal output applies no \commitment, and deferring
-that output avoids none.  To
-illustrate, when 2PL orders $A$ before $B$ in a \commitment event, the
-canonical run skips it.  If 2PL later emits $[A,C,B]$, the canonical run can
-emit the same output because that row was present all along.  Every surviving
-output extension of $[A,C,B]$ already orders $A$ before $B$, so the earlier \commitment
-makes no further difference to the final table.  Whether a spec
-needs coordination thus depends on the \commitments its outputs
-require, whatever mechanism makes them.
+Canonical Run Universality lets a canonical run skip a system’s early commitments. When 2PL orders (A) before (B) in a commitment event, the canonical run skips that event. If 2PL later emits ([A,C,B]), the corresponding canonical output event removes every row that the earlier (A)-before-(B) commitment removed. By then, applying that commitment would remove nothing further. Whether a spec needs coordination therefore depends on the commitments its outputs require, not on when or by what mechanism the system makes them.
 
 \subsection{Coordination}
 \label{sec:coordination}
