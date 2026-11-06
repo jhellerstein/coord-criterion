@@ -315,7 +315,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments: |
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
-| `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Locks, timestamps, quorums, and consensus differ in how and when they decide. |
+| `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* The model preserves how systems make decisions. |
 | `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:coordination/closing-after-voting»` | theorem | §4.4: |

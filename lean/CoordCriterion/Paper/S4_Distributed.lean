@@ -317,7 +317,12 @@ theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
     H.CutConfluentAt sp C j ↔ ∃ u, sp.P j u ∧ ∀ p, Dist.honor (σs p).R (os p) j u :=
   Dist.honor_cut_confluent hW hC hE os hos j hj
 
-/-! ## Systems (§4.3, `sec:systems`) -/
+/-! ## Systems and canonical runs (§4.3, `sec:systems`)
+
+The section connects specification semantics to concrete systems.  Commitment
+bases and strategies preserve when and how a system commits; Canonical Run
+Universality then normalizes every resulting run to a canonical counterpart
+with the same observable behavior. -/
 
 /-- "The registrar … emits `⊥` and closes the polls in the same event
 (Figure election-frames(d)); the output event for `⊥` does not require the
@@ -613,15 +618,12 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) 
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *Canonical runs suffice.*  "Locks, timestamps, quorums, and consensus
-differ in how and when they decide.  Yet every output event of any system
-removes at least the rows that the canonical event for its output removes
-(Lemma canonical-commitment-normal-form), and every run under any basis has an
-observably equivalent canonical run: one that accepts the same inputs, emits
-the same outputs, and keeps at least the original's rows after each event; its
-commitment events erase to nothing (Lemma canonical-equivalent, Appendix
-bases).  In the remainder of the paper we therefore judge consistency on
-canonical runs."
+/-- *Canonical runs suffice.*  The model preserves how systems make decisions.
+For coordination analysis, however, every run they produce can be normalized
+to a canonical run.  "Every run under any commitment basis is observably
+equivalent to a canonical run: one that accepts the same inputs, emits the same
+outputs, and keeps at least the original's rows after each event; its commitment
+events erase to nothing" (Lemma canonical-equivalent, Appendix bases).
 
 Lean: the first clause is `«sec:systems/legal-event-containment»` (Lemma
 `lem:canonical-commitment-normal-form`); this entry is the second, as
@@ -668,8 +670,11 @@ can emit the same output because that row was present all along.  Every row
 retained afterward extends `[A,C,B]`, so it satisfies all of 2PL's decisions,
 including the earlier order of `A` before `B`.  Thus the canonical final table
 is contained in 2PL's, while Canonical Run Universality gives the reverse
-containment.  The tables are equal: the lock made the `A`-before-`B` decision
-earlier than the output required."
+  containment.  The tables are equal: the lock made the `A`-before-`B` decision
+  earlier than the output required.  Canonical Run Universality is therefore a
+  normalization result.  Commitment bases and strategies describe how a system
+  makes a decision; canonical runs suffice to expose the spec-permitted
+  behaviors that can contradict it."
 
 Lean (`CC.Txn.Partial.CommitEx.example_commitment_event_ABC`), at any input `k`
 whose transactions `A`, `B`, `C` have each issued their operations and requested

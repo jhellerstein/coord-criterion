@@ -3,16 +3,24 @@
 
 This section gives Functional CALM and Complete CALM a distributed reading,
 including a convergence guarantee for functional specs
-(Corollary~\ref{cor:convergence}).  We then define systems, whose \commitments
-may exceed those the spec requires, and identify the commitments that require
-distributed coordination; Complete CAP follows.
+(Corollary~\ref{cor:convergence}).  We then represent systems by their
+\commitment bases and strategies, normalize their runs for analysis, and
+identify the \commitments that require distributed coordination; Complete CAP
+follows.
 
 \input{sections/distributed-histories.tex}
 
-\subsection{Systems}
+\subsection{Systems and canonical runs}
 \label{sec:systems}
 
-Specs are declarative, and admit many implementations.  For
+We now connect specification semantics to concrete systems.  A \commitment
+basis and strategy capture when and how a system commits.  Canonical Run
+Universality then gives every resulting run a canonical counterpart with the
+same observable behavior.  The coordination criterion can therefore use
+canonical runs as comparison behaviors without reproducing each system's basis
+or strategy.
+
+Specs admit many implementations.  For
 example, serializability can be enforced by any of a number of concurrency
 control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
 Appendix~\ref{app:cc-bases}).  Two-phase locking (2PL) uses locks on
@@ -190,14 +198,14 @@ $x_o$ of Section~\ref{sec:lifted-output-events}.
 \end{figure}
 
 \paragraph{Canonical runs suffice.}
-The analysis in the rest of the paper works with canonical runs rather
-than with every possible basis.  We call the runs of
-Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and
-\commitment events apply only \commitments from $\mathcal B$
+The model preserves how systems make decisions.  For coordination analysis,
+however, every run they produce can be normalized to a canonical run.  We call
+the runs of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
+\emph{canonical runs}, and a \emph{run under a basis} $\mathcal B$ is one whose
+output and \commitment events apply only \commitments from $\mathcal B$
 (Definition~\ref{def:run-under-basis}).  Locks, timestamps, quorums, and
-consensus differ in how and when they decide; what the environment sees
-does not, as the next lemma shows.
+consensus differ in how and when they decide; the next lemma isolates their
+observable behavior from those choices.
 
 \begin{lemma}[Canonical Run Universality]
 \label{lem:canonical-equivalent}
@@ -229,9 +237,6 @@ claims.  Canonical Run Universality says that canonical runs suffice when
 judging runs under any \commitment basis.
 \end{proof}
 
-In the remainder of the paper we therefore judge consistency on canonical
-runs.  Whether a spec needs coordination thus depends on the \commitments its outputs require, whatever mechanism makes them.
-
 To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
 where $B$ waits for a lock that $A$ holds.  When $B$ begins to wait, 2PL applies
@@ -245,7 +250,10 @@ retained afterward extends $[A,C,B]$, so it satisfies all of 2PL's decisions,
 including the earlier order of $A$ before $B$.  Thus the canonical final table
 is contained in 2PL's, while Canonical Run Universality gives the reverse
 containment.  The tables are equal: the lock made the $A$-before-$B$ decision
-earlier than the output required.
+earlier than the output required.  Canonical Run Universality is therefore a
+normalization result.  Commitment bases and strategies describe how a system
+makes a decision; canonical runs suffice to expose the spec-permitted behaviors
+that can contradict it.
 
 \subsection{Coordination}
 \label{sec:coordination}
