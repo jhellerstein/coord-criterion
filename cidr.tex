@@ -623,6 +623,9 @@ canonical state $\sigma_P(i)$ at some input $i$.  It is
 states such runs reach are \emph{reachable without \commitment}.
 \end{definition}
 
+We do not consider operational restrictions about which runs could occur; if
+such restrictions are known, they need to be captured in the spec.
+
 Input events keep only rows whose input \inrel the current one, and output
 events keep only rows whose outputs \outrelbase what has been emitted.  Both
 steps are relational selections, and selections commute.
@@ -1069,13 +1072,10 @@ The participant runs at a cut are a family of runs, and any family
 of runs can be placed at separate participants that exchange no messages.  \fullproof
 \end{proof}
 
-\paragraph{Scope.} Distributed consistency is a worst-case analysis over the
-full latitude of the declared spec.  Participants have no assigned roles at
-this level, so any canonical run permitted by the spec may occur at any
-participant; a system's strategy cannot erase a counterexample by suppressing
-that run.  If the intended contract excludes the behavior, it needs a tighter
-spec.  A deployment can separately restrict which rows each participant may
-emit; \extended develops the resulting placement-sensitive criterion.
+\paragraph{Scope.} Participants have no assigned roles at this level, so any
+run permitted by the spec may occur at any participant.  A deployment can
+instead restrict which rows each participant may emit; \extended develops the
+resulting placement-sensitive criterion.
 
 By Complete CALM, then, a spec has distributed consistency exactly
 when it satisfies Lifted Monotonicity.  Under Lifted Monotonicity, this
@@ -1158,12 +1158,8 @@ nondeterministic \emph{strategy} per participant that picks its next output,
 and shows that every canonical \commitment of Section~\ref{sec:complete-calm} is
 a \commitment in this sense.
 
-A system is checked against the full latitude of its declared spec.  Its
-strategies select actual events; we do not assume they realize every permitted
-behavior.  But suppressing a permitted behavior does not remove it from the
-adversarial analysis: any canonical run of the spec may contradict a
-\commitment.  If the intended contract excludes that behavior, it needs a
-tighter spec.  A deployment can separately restrict which participants may emit
+A system's strategies select actual events; they need not realize every run the
+spec permits.  A deployment can separately restrict which participants may emit
 which rows (\extended).
 
 Two-phase locking (2PL) and multiversion timestamp
@@ -1195,11 +1191,9 @@ require, not on when or by what mechanism the system makes them.
 \label{sec:coordination}
 
 Having separated a system's observable behavior from when and how it makes
-\commitments, we now ask which \commitments require coordination.  We answer
-against the full latitude of the declared spec: a \commitment requires
-coordination if any canonical run permitted by the spec contradicts it.  A
-system cannot erase that requirement merely by suppressing the contradicting
-run; such a restriction belongs in a tighter spec.
+\commitments, we now ask which \commitments require coordination.  A
+\commitment requires coordination when a canonical run permitted by the spec
+contradicts it.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}

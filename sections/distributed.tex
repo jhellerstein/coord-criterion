@@ -128,12 +128,8 @@ supplied by the environment, receives of matching sends, and output,
 \commitment, and send events chosen by the participants' strategies.
 \end{definition}
 
-A system is checked against the full latitude of its declared spec.  Its
-strategies select the events of an actual execution; we do not assume they
-realize every behavior the spec permits.  But suppressing a permitted behavior
-does not remove it from the adversarial analysis: any canonical run of the spec
-may contradict a \commitment.  If the intended contract excludes that behavior,
-it needs a tighter spec.  A deployment can separately restrict which
+A system's strategies select the events of an actual execution; they need not
+realize every run the spec permits.  A deployment can separately restrict which
 participants may emit which rows (Appendix~\ref{app:deployment}).
 
 Participants may behave differently; a replicated (SPMD) system is the special
@@ -255,11 +251,9 @@ earlier than the output required.
 \label{sec:coordination}
 
 Having separated a system's observable behavior from when and how it makes
-\commitments, we now ask which \commitments require coordination.  We answer
-against the full latitude of the declared spec: a \commitment requires
-coordination if any canonical run permitted by the spec contradicts it.  A
-system cannot erase that requirement merely by suppressing the contradicting
-run; such a restriction belongs in a tighter spec.
+\commitments, we now ask which \commitments require coordination.  A
+\commitment requires coordination when a canonical run permitted by the spec
+contradicts it.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicts}

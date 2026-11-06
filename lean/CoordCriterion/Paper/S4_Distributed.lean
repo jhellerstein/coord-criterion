@@ -190,15 +190,13 @@ Lean: for message data of type `D`; "every finite participant set" is "every
 abbrev «def:distributed-consistency» (sp : Spec I O) (D : Type) : Prop :=
   Dist.DistConsistent sp D
 
-  /-- **Prop. consistency and distributed consistency**
-  (`prop:distributed-consistency`).  "An I/O specification is consistent if
-  and only if it has distributed consistency."
+/-- **Prop. consistency and distributed consistency**
+(`prop:distributed-consistency`).  "An I/O specification is consistent if
+and only if it has distributed consistency."
 
-  The paper's scope caveat names the assumption explicitly: "The converse in
-  Proposition `prop:distributed-consistency` assumes unrestricted placement:
-  participants have no assigned roles at this level, so any spec run may occur
-  at any participant."  The placement-sensitive alternative is Appendix
-  `app:deployment`. -/
+The paper's scope caveat adds that participants have no assigned roles at this
+level, so any spec run may occur at any participant.  The placement-sensitive
+alternative is Appendix `app:deployment`. -/
 theorem «prop:distributed-consistency» (sp : Spec I O) (D : Type) :
     sp.Consistent ↔ Dist.DistConsistent sp D :=
   Dist.consistent_iff_distConsistent sp D
@@ -431,16 +429,15 @@ theorem «def:system/restrict» {sp : Spec I O} {D : Type} (Sys : CAP.System sp 
       ∀ n init p pre e, CAP.Allowed Sys.restrict n init p pre e ↔ CAP.Allowed Sys n init p pre e :=
   ⟨Sys.restrict_basisRespecting, Sys.restrict_allowed⟩
 
-/-- After Def. `def:system`: "A system thus implements one spec.  Its
-participants may behave differently, and a deployment may limit what each one
-emits (Appendix `app:deployment`), but all of them work from the same table and
-basis.  Systems for different specs compose as components
-(Section `sec:proper-coordination`)."  Lean: `CAP.System sp D` carries one
-specification `sp` and one basis; its strategies `strat n init p` may differ
-by participant.  A deployment `Deploy.Deployment sp n` gives participant `p` a
-table `A p` inside `sp.P`.  The system is the component
-`Components.Component.ofSystemOn Sys N` of `sp`, with the system's basis and
-the participant runs of its produced histories as admitted runs. -/
+/-- After Def. `def:system`: "A system's strategies select the events of an
+actual execution; they need not realize every run the spec permits.  A
+deployment can separately restrict which participants may emit which rows."
+Lean: `CAP.System sp D` carries one specification `sp` and one basis; its
+strategies `strat n init p` may differ by participant.  A deployment
+`Deploy.Deployment sp n` gives participant `p` a table `A p` inside `sp.P`.
+The system is the component `Components.Component.ofSystemOn Sys N` of `sp`,
+with the system's basis and the participant runs of its produced histories as
+admitted runs. -/
 theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.System sp D)
     (N : Nat → Prop) (location : Option Components.LocationForm) :
     (Components.Component.ofSystemOn Sys N location).basis =
@@ -744,12 +741,11 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
-  /-- **Def. `def:coordination`** (Coordination-requiring commitment).
-  "A commitment requires coordination when some canonical run permitted by the
-  declared specification contradicts it."  System strategies choose which run
-  occurs, but do not narrow this adversarial comparison set.
+/-- **Def. `def:coordination`** (Coordination-requiring commitment).
+"A commitment requires coordination when a canonical run permitted by the
+spec contradicts it."
 
-  Lean uses the event-list form justified by Proposition
+Lean uses the event-list form justified by Proposition
   `prop:canonical-contradiction`: under the full canonical run set, an event list
   requires coordination exactly when it applies a nonempty commitment sequence
   in an output event or contains a commitment event. -/

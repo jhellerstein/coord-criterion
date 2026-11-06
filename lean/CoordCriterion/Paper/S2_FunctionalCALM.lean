@@ -468,6 +468,9 @@ abbrev «def:transition-system» {I O : Type} [PO I] [PO O] (sp : Spec I O) : Pr
 
 /-- **Def. `def:run`** (Run).  "A *run* is any finite transition sequence of
 the transition system from the canonical state `σ_P(i)` at some input `i`."
+The following scope convention says: "We do not consider operational
+restrictions about which runs could occur; if such restrictions are known,
+they need to be captured in the spec."
 
 Lean: `Exec σ es τ` is execution along the event list `es`; `IsRun τ` says
 that `τ` is the final state of some run (`∃ i es, Exec (canon sp i) es τ`). -/
