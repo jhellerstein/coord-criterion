@@ -1144,18 +1144,18 @@ announcing a result, and a lock manager may fix an order before emitting it.  We
 therefore allow bespoke system \commitments.  A \emph{\commitment} is a partial
 function on specification states that removes a nonempty set of rows, none
 subsumed by a row that remains at the same input, while leaving the current
-input unchanged.  As before, removing every row at an input rules out that
-input; removing only some rules out those outputs.  An output event
+input unchanged.  As before, at any input, removing rows rules out their outputs;
+removing every row at that input rules out the input as well.  An output event
 $\Out{\gamma}{o}$ applies a sequence $\gamma$ of \commitments, subsumes rows,
 and emits $o$.  It is \emph{commitment-sufficient} when the sequence applies and
 leaves $o$ as a legal output. We require output events to be
 commitment-sufficient so that every fateful row removal is represented
 explicitly as a commitment, rather than hidden in the act of emission. A
 \emph{\commitment event} $\mathsf{apply}(\gamma)$ applies such a sequence and
-emits nothing, as when 2PL orders $A$ before $B$ while $B$ waits for $A$'s lock;
-it is a third kind of specification event.  
+emits nothing, as when 2PL orders $A$ before $B$ while $B$ waits for $A$'s lock.
+Commitment events are a third kind of specification event.  
 
-A \emph{system} consists of a \emph{\commitment basis} $\mathcal B$ and a
+A \emph{system} consists of an I/O spec, a \emph{\commitment basis} $\mathcal B$ and a
 nondeterministic \emph{strategy} per participant that picks its next output,
 \commitment, send, or receive event from its local history, applying only
 \commitments from $\mathcal B$.  The full paper gives these definitions formally
@@ -1166,13 +1166,14 @@ Two-phase locking (2PL) and multiversion timestamp
 ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
 $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped
-(Figure~\ref{fig:cc-commitments}).  Both are \commitments, but they leave
-different alternatives open.  Commitment bases and strategies thus preserve
-meaningful differences among systems.  The next result shows that coordination
-analysis need not be parameterized by those differences.  We call the runs of
+(Figure~\ref{fig:cc-commitments}).  Both are \commitments, but each leaves different possibilities afterward.
+
+Commitment bases and strategies capture these meaningful differences among
+systems.  Those differences matter for describing which \commitments a system
+makes and when.  Nonetheless, our coordination criterion can ignore these
+distinctions.  We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}.  Locks, timestamps, quorums, and consensus differ in how and when
-they decide; what the environment sees does not, as the next lemma shows.
+runs}.  The next lemma justifies using them as a common comparison model.
 
 \begin{lemma}[Canonical Run Universality]
 \label{lem:canonical-equivalent}
@@ -1181,14 +1182,11 @@ canonical run: one that accepts the same inputs, emits the same outputs,
 and keeps at least the original's rows after each event (\extended).
 \end{lemma}
 
-This lemma lets a canonical run skip a system's early \commitments. 2PL may
-order $A$ before $B$ in a \commitment event $\mathsf{apply}(\gamma)$ that the
-canonical run skips. If 2PL later emits $[A,C,B]$, the corresponding canonical
-output event removes every row that $\gamma$ removed, and possibly others. At that point,
-$\gamma$ is no longer applicable: every
-remaining row already orders $A$ before $B$. Whether a spec needs coordination
-depends only on the \commitments its outputs require, not on their timing or
-bundling in a system's commitment basis.
+Hence whether a spec needs coordination depends only on the
+\commitments its outputs require, not on their timing or representation in a
+system's \commitment basis.  We can therefore assess any system's
+\commitments against canonical runs, without parameterizing the criterion by
+that system's basis or strategy.
 
 \subsection{Coordination}
 \label{sec:coordination}
