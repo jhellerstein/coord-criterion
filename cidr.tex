@@ -272,7 +272,7 @@ We make contributions in three categories:
 \emph{1. A unified model.} A system's observable behavior is captured via
         \spectype[s]. Consistency is defined as
         confluence of the runs a spec allows, unifying general consistency models,
-        application-specific requirements, and distributed consistency.
+        application-specific requirements, and their distributed executions.
 
 \noindent
 \emph{2. A unified criterion.} For functions between ordered domains,
@@ -1014,7 +1014,7 @@ including a convergence guarantee for functional specs.  We then define
 systems, whose \commitments may exceed those the spec requires, distinguish
 coordination from distributed coordination, and prove Complete CAP.
 
-\subsection{Distributed histories and consistency}
+\subsection{Distributed histories and consistent cuts}
 \label{sec:histories}
 \label{sec:distributed-consistency}
 
@@ -1055,30 +1055,34 @@ unrelated to our consistency).
 \end{definition}
 
 At a consistent cut $C$, the specification events of $C$ at participant $p$,
-in local order, form its \emph{participant run}.  The cut is
-\emph{confluent at} $j$, for a common \indesc $j$ of the participants'
-current inputs, when some continuation of $C$ brings every participant to the
-same state $(j,R)$.  A specification has \emph{distributed consistency} when,
-for every finite participant set, every consistent cut of every history is
-confluent at every such $j$.
+in local order, form its \emph{participant run}, ending in some state
+$\sigma_p$.  For a common \indesc $j$ of the participants' current inputs,
+confluence asks whether some continuation brings every participant to the same
+state $(j,R)$.
 
-\begin{proposition}[Consistency and distributed consistency]
-\label{prop:distributed-consistency}
-Consistency is equivalent to distributed consistency.
-\end{proposition}
+\begin{corollary}[Complete CALM at consistent cuts]
+\label{cor:distributed-calm}
+A spec satisfies Lifted Monotonicity if and only if, in every finite
+distributed history, every consistent cut is confluent at every common
+\indesc of the participants' current inputs.
+\end{corollary}
 
 \begin{proof}[Proof sketch]
-The participant runs at a cut are a family of runs, and any family
-of runs can be placed at separate participants that exchange no messages.  \fullproof
+The participant runs at a cut are a finite family of runs, so Complete CALM
+gives the forward direction.  Conversely, any finite family of runs can be
+placed at participants that exchange no messages.  \fullproof
 \end{proof}
 
-By Complete CALM, then, a spec has distributed consistency exactly
-when it satisfies Lifted Monotonicity.  Under Lifted Monotonicity, this
-confluence has a concrete witness.  For participant runs with common \indesc $j$,
-the survivor test supplies a $u\in\fiber{j}$ that survives in every endpoint;
-by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have emitted.  At
-each participant, $\mathsf{input}(j)$ followed by $\mathsf{output}(u)$ reaches
-the same state without \commitment (Proposition~\ref{prop:exposure-boundary}).  This is an existence witness in the
+The converse uses the unrestricted placement of our distributed-history model;
+Section~\ref{sec:coordination} sketches the deployment-sensitive variant
+formalized in \extended.
+
+The forward direction has a concrete witness.  For participant runs with common
+\indesc $j$, the survivor test supplies a $u\in\fiber{j}$ that survives in every
+endpoint; by Lemma~\ref{lem:run-residual}, $u$ \outrel everything they have
+emitted.  At each participant, $\mathsf{input}(j)$ followed by
+$\mathsf{output}(u)$ reaches the same state without \commitment
+(Proposition~\ref{prop:exposure-boundary}).  This is an existence witness in the
 transition system; choosing $u$, communicating it, and scheduling the
 transitions belong to the operational model (\S\ref{sec:scope}).
 
@@ -1244,8 +1248,8 @@ removing those rows from the spec or restricting which inputs the environment
 may deliver.  A \commitment made by participant $p$ requires \emph{distributed
 coordination} when a contradicting canonical run can be placed at another
 participant $q\ne p$.  Under unrestricted placement with at least two
-participants, the construction in the proof of
-Proposition~\ref{prop:distributed-consistency} can place every such run at
+participants, the construction used for
+Corollary~\ref{cor:distributed-calm} can place every such run at
 another participant.  Ownership can instead confine contradictory output
 choices to one participant, making the coordination local.  Deployments and
 their criterion, monotonicity across partitions, are formalized in \extended.

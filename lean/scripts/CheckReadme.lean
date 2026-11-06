@@ -119,6 +119,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:distributed-consistency»
 #check @CC.Paper.«prop:distributed-consistency/literal-matching»
 #check @CC.Paper.«sec:distributed-consistency/lifted-monotonicity»
+#check @CC.Paper.«cor:distributed-calm»
 #check @CC.Paper.«sec:distributed-consistency/constructive-continuation»
 #check @CC.Paper.«cor:convergence»
 #check @CC.Paper.«cor:convergence/relational-fails»

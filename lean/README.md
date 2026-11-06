@@ -147,7 +147,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-633 entries.
+634 entries.
 
 ### §2 Functional CALM
 
@@ -285,7 +285,8 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:distributed-consistency»` | theorem | **Prop. |
 | `«prop:distributed-consistency/literal-matching»` | theorem | Prop. |
 | `«sec:distributed-consistency/lifted-monotonicity»` | theorem | "By Complete CALM, which reduces to Functional CALM with one output per input, a spec has distributed consistency exactly when it satisfies Lifted Monotonici… |
-| `«sec:distributed-consistency/constructive-continuation»` | theorem | "Under Lifted Monotonicity, this confluence has a concrete witness. |
+| `«cor:distributed-calm»` | theorem | **Corollary `cor:distributed-calm`** (Complete CALM at consistent cuts). |
+| `«sec:distributed-consistency/constructive-continuation»` | theorem | "The forward direction has a concrete witness. |
 | `«cor:convergence»` | theorem | **Cor. |
 | `«cor:convergence/relational-fails»` | theorem | After Cor. |
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |

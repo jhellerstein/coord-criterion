@@ -211,7 +211,18 @@ theorem «sec:distributed-consistency/lifted-monotonicity» (sp : Spec I O) (D :
     Dist.DistConsistent sp D ↔ sp.LiftedMono :=
   Dist.distConsistent_iff_liftedMono sp D
 
-/-- "Under Lifted Monotonicity, this confluence has a concrete witness.  For participant runs with common input extension `j`, the survivor test supplies a
+/-- **Corollary `cor:distributed-calm`** (Complete CALM at consistent cuts).
+"A spec satisfies Lifted Monotonicity if and only if, in every finite
+distributed history, every consistent cut is confluent at every common input
+extension of the participants' current inputs."
+
+Lean: `DistConsistent sp D` is precisely the quantified consistent-cut
+property for message data `D`. -/
+theorem «cor:distributed-calm» (sp : Spec I O) (D : Type) :
+    sp.LiftedMono ↔ Dist.DistConsistent sp D :=
+  (Dist.distConsistent_iff_liftedMono sp D).symm
+
+/-- "The forward direction has a concrete witness.  For participant runs with common input extension `j`, the survivor test supplies a
 `u ∈ P(j)` that survives in every endpoint; by Lemma run-residual, `u` extends
 everything they have emitted.  At each participant, `input(j)` followed by
 `output(u)` reaches the same state without commitment (Proposition
