@@ -1097,9 +1097,10 @@ spec.
 \subsection{Systems and canonical runs}
 \label{sec:systems}
 
-Concrete systems differ in when and how they make decisions.  We represent
-those differences, then show that their observable behavior has a common
-canonical form.
+A spec describes which behaviors are permitted, but not how a system chooses
+among them.  We now model those choices.  We also show that they need not
+impact our criterion: coordination analysis can be based on canonical runs,
+regardless of system implementation choices.
 
 \begin{figure}[t]
   \centering
@@ -1166,7 +1167,9 @@ ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
 $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped
 (Figure~\ref{fig:cc-commitments}).  Both are \commitments, but they leave
-different alternatives open.  We call the runs of
+different alternatives open.  Commitment bases and strategies thus preserve
+meaningful differences among systems.  The next result shows that coordination
+analysis need not be parameterized by those differences.  We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
 runs}.  Locks, timestamps, quorums, and consensus differ in how and when
 they decide; what the environment sees does not, as the next lemma shows.

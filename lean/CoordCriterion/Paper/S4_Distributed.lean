@@ -319,9 +319,10 @@ theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
 
 /-! ## Systems and canonical runs (§4.3, `sec:systems`)
 
-Concrete systems differ in when and how they make decisions.  The section
-represents those differences, then shows that their observable behavior has a
-common canonical form. -/
+A spec describes which behaviors are permitted, but not how a system chooses
+among them.  The section models those choices, then shows that they need not
+impact the criterion: coordination analysis can use canonical runs regardless
+of system implementation choices. -/
 
 /-- "The registrar … emits `⊥` and closes the polls in the same event
 (Figure election-frames(d)); the output event for `⊥` does not require the
@@ -617,15 +618,15 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) 
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *Canonical runs suffice.*  "Locks, timestamps, quorums, and consensus
-differ in how and when they decide.  Yet every output event of any system
-removes at least the rows that the canonical event for its output removes
-(Lemma canonical-commitment-normal-form), and every run under any basis has an
-observably equivalent canonical run: one that accepts the same inputs, emits
-the same outputs, and keeps at least the original's rows after each event; its
-commitment events erase to nothing (Lemma canonical-equivalent, Appendix
-bases).  In the remainder of the paper we therefore judge consistency on
-canonical runs."
+/-- *Canonical runs suffice.*  "Commitment bases and strategies preserve
+meaningful differences among systems.  The next result shows that coordination
+analysis need not be parameterized by those differences."  Every output event
+of any system removes at least the rows that the canonical event for its output
+removes (Lemma canonical-commitment-normal-form), and every run under any basis
+has an observably equivalent canonical run: one that accepts the same inputs,
+emits the same outputs, and keeps at least the original's rows after each event;
+its commitment events erase to nothing (Lemma canonical-equivalent, Appendix
+bases).
 
 Lean: the first clause is `«sec:systems/legal-event-containment»` (Lemma
 `lem:canonical-commitment-normal-form`); this entry is the second, as
@@ -673,7 +674,9 @@ retained afterward extends `[A,C,B]`, so it satisfies all of 2PL's decisions,
 including the earlier order of `A` before `B`.  Thus the canonical final table
 is contained in 2PL's, while Canonical Run Universality gives the reverse
   containment.  The tables are equal: the lock made the `A`-before-`B` decision
-  earlier than the output required."
+  earlier than the output required.  Whether a spec needs coordination therefore
+  depends only on the commitments its outputs require, not on their timing or
+  representation in a system's commitment basis."
 
 Lean (`CC.Txn.Partial.CommitEx.example_commitment_event_ABC`), at any input `k`
 whose transactions `A`, `B`, `C` have each issued their operations and requested
