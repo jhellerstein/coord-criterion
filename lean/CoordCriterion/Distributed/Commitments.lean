@@ -20,7 +20,7 @@ Namespace `CC`.  Further claims of these sections are in
 * `coordFree_execCF`, `execCF_coordFree` — Def. coordination vs. commitment-free runs
 * `canonical_equivalent`               — Lemma canonical-equivalent (the canonical run
                                          skips commitment events)
-* `conflicting_outputs`                — Prop. thm:commitments-require-coordination
+* `conflicting_outputs`                — Prop. prop:commitment-conflict
 -/
 
 namespace CC
@@ -710,7 +710,7 @@ theorem canonical_equivalent {B : CommitmentBasis sp} {i : I} {es : List (SEvent
   | cons _ _ _ hct hsub _ ih => exact ih hct.symm hsub
   | commitment _ hct hsub _ ih => exact ih hct.symm hsub
 
-/-! ### Proposition thm:commitments-require-coordination -/
+/-! ### Proposition prop:commitment-conflict -/
 
 /-- **Prop. conflicting output events cannot be reconciled.**  Let `x ∈ R(i)`.  If
 `Out_γ(o)` takes `σ` to `σ'` with no output in `R'(i)` extending `x`, then

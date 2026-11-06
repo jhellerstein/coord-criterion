@@ -29,7 +29,7 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
                                   histories are exactly those of Sec. histories.
 * `CommitmentContradictsAt`, `commitment_contradiction_sysExec`,
   `commitment_contradiction_reach`
-                                — Prop. `thm:commitments-require-coordination`,
+                                — Prop. `prop:commitment-conflict`,
                                   for accepted-input and emitted-output contradictions.
 * `conflicting_outputs2`, `conflict_removes_output`
                                 — supporting output-only forms.
@@ -387,7 +387,7 @@ theorem canonLegal_sysLegal {H : Dist.History I O D n} (h : CanonLegal sp H) :
 
 end canonical_system
 
-/-! ### Prop. `thm:commitments-require-coordination`, output extensions -/
+/-! ### Prop. `prop:commitment-conflict`, output extensions -/
 
 section conflict
 variable {sp : Spec I O}
@@ -497,7 +497,7 @@ theorem conflict_removes_output {B : CommitmentBasis sp} {σ σ' : State sp} {γ
     obtain ⟨w, hw⟩ := β.hasCur
     exact ⟨w, hβc ▸ hw⟩
 
-/-- Prop. `thm:commitments-require-coordination` for any first event: if an
+/-- Prop. `prop:commitment-conflict` for any first event: if an
 event `e` (input, output, or commitment event) takes `σ` to `σ'` with no output
 at `i` extending `x`, and `Out_γ'(x)` takes `σ` to `t`, then no state with
 current input `i` is reachable (under any bases) from both.  If `e` is an

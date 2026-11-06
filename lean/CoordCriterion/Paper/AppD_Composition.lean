@@ -739,8 +739,8 @@ commitment."
 
 Lean: `Pipeline.ContractProper` (equivalent to `Guard.Proper` by
 `contractProper_iff_guardProper`), `Pipeline.ImplementationProper`.
-"Applies a commitment" is the negation of the library's `CoordFree`
-(`«def:coordination-free/commitment-free-runs»`). -/
+"Applies no commitment" is witnessed by empty commitment sequences and the
+absence of commitment events. -/
 theorem «def:proper-pipeline» {I M O : Type} [PO I] [PO M] [PO O] {sp1 : Spec I M}
     {sp2 : Spec M O} (p : Components.Pipeline sp1 sp2) :
     (p.ContractProper ↔ Guard.Proper sp1 sp2) ∧

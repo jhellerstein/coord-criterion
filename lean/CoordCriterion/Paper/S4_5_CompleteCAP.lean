@@ -308,8 +308,8 @@ theorem «sec:complete-cap/necessity-any-system» (E : Table I O) (hES : ∀ i o
   /-- "For `E = P` the proof system needs no commitment at all."  The theorem
   gives the commitment-free system used for full Availability.  This statement
   is specification-relative: restricting a strategy to a smaller `E` does not
-  make row-removing commitments coordination-free relative to `P`. -/
-theorem «sec:complete-cap/proof-system-coordination-free» (sp : Spec I O) (D : Type)
+  turn row-removing commitments into commitment-free steps relative to `P`. -/
+theorem «sec:complete-cap/proof-system-commitment-free» (sp : Spec I O) (D : Type)
       (h : sp.LiftedMono) :
       («def:partition-notions» (cfSystem sp D) ∧
         «def:partition-consistency» (cfSystem sp D)) ∧
@@ -320,8 +320,7 @@ theorem «sec:complete-cap/proof-system-coordination-free» (sp : Spec I O) (D :
   /-- Supporting operational lemma for the full-availability case.  If an output
   event in a receive-free local prefix removes a row and another participant can
   start below that row's input, Availability realizes the contradictory choice
-  at the other participant.  This is not the definition of coordination, which
-  is specification-relative above. -/
+  at the other participant. -/
 theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     (hA : «def:partition-notions» Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
@@ -339,16 +338,15 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
   `P` satisfies Lifted Monotonicity for `E`, but `o` is not exposable.  Thus no
   empty-commitment output event for `o` is legal, while the canonical output
   event is legal and applies a nonempty commitment.  Suppressing `x` in a
-  strategy does not remove this specification-level coordination requirement. -/
+  strategy does not make the specification event commitment-free. -/
 theorem «sec:complete-cap/local-row-removal-necessary» :
       ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
       ∃ τ, SysStep (canonCommitmentBasis CAP.lcSpec) (canon CAP.lcSpec ())
           (.output (kappa (canon CAP.lcSpec ()) .o) .o) τ ∧
-        Coordinates [SEvent.output (kappa (canon CAP.lcSpec ()) .o) .o] := by
+        kappa (canon CAP.lcSpec ()) .o ≠ [] := by
     have hn := CAP.lcSpec_o_not_exposable
     have ho : (canon CAP.lcSpec ()).R (canon CAP.lcSpec ()).cur .o := ⟨trivial, trivial⟩
-    refine ⟨lcSpec_consistentOn, hn, outState _ _ ho, canonical_support _ _ ho,
-      Or.inl ⟨_, .o, List.mem_cons_self, ?_⟩⟩
+    refine ⟨lcSpec_consistentOn, hn, outState _ _ ho, canonical_support _ _ ho, ?_⟩
     intro he
     have hs : SysStep (canonCommitmentBasis CAP.lcSpec) (canon CAP.lcSpec ())
         (.output [] .o) (outState (canon CAP.lcSpec ()) .o ho) := by simpa [he] using canonical_support _ _ ho
