@@ -22,7 +22,7 @@ form is metadata: the admitted runs and their certificates do not depend on it.
   `ofSystem_emptyCommitmentBasis_commitmentFree`, `cfSystem_replicated`,
   `cfSystem_cluster_commitmentFree`.
 * `pollClosing_run`, `pollClosingSys1_process`, `pollClosingSysRepl_replicated`,
-  `pollClosingSysRepl_cluster` — the 2PC timeout-abort commitment (§4.4).  Run by the
+  `pollClosingSysRepl_cluster` — the 2PC timeout-abort commitment (§4.3).  Run by the
   coordinator alone (`CAP.Timeout.pollClosingSys1`) the decision is a process
   component that admits a run applying a commitment; that fiber-emptying commitment requires
   coordination but not distributed coordination

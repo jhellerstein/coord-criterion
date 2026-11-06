@@ -2,7 +2,7 @@ import CoordCriterion.CAP.Coordination
 import CoordCriterion.CALM.Lemmas
 
 /-!
-# Two-phase commit: counting votes over a fixed membership (§4.4)
+# Two-phase commit: counting votes over a fixed membership (§4.3)
 
 Supports the paragraph "Locks in a shared-nothing database" of
 `sections/distributed.tex`, case "No coordination": "the coordinator's

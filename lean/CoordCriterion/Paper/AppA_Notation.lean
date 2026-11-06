@@ -354,11 +354,10 @@ commitment events) agree; the lemma is `CC.canonical_equivalent`. -/
 abbrev «app:notation/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- *contradicts* — accepts an input whose fiber a commitment emptied, or
-emits an output whose row it removed (Def. `def:contradicts`).  Lean: `CAP.Contradicts emits
-accepts σ σc` (some removed row is emitted at its input, or some excluded input is
-accepted). -/
-abbrev «app:notation/contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
+/-- Supporting notation for a canonical run that contradicts a commitment in
+Proposition `prop:canonical-commitment-witness`: it accepts an input whose fiber
+the commitment emptied, or emits an output whose row it removed. -/
+abbrev appCommitmentContradictedBy {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 

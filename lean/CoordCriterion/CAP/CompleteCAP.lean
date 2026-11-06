@@ -63,8 +63,8 @@ theorem compliant_cf_cmt {N : Nat} {init : Fin N → I} {p : Fin N} {l : List (L
   | nil => rfl
   | cons c _ => exact absurd (this c (List.mem_cons_self ..)) id
 
-/-- Every history the commitment-free system produces is coordination-free
-(Def. `def:coordination-free`): each output event is some `Out ε o`. -/
+/-- Every history the commitment-free system produces has only
+empty-commitment output events. -/
 theorem cfSystem_coordinationFree {N : Nat} {init : Fin N → I} {H : History sp D N}
     (h : Produced (cfSystem sp D) N init H) : ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
   fun p => compliant_cf_out (h p)

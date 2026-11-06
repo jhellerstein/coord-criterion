@@ -321,21 +321,21 @@ theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n
     MonoAcrossPartitions Dp ↔ ∀ i o, Dp.A p₀ i o → ∀ j, i ≼ j → ∃ u, sp.P j u ∧ o ≼ u :=
   single_authority_iff hn Dp p₀ hSA
 
-/-- "In a system whose other participants emit nothing, no other participant
-emits an output that the authority excludes, so its row-removing commitments do not
-require distributed coordination."  Lean: if only participant `0` may perform output
-events, no row removed by an output event is emitted, at the same input, by
-another participant of the same history. -/
+/-- "The deployment can prevent the contrary choice from being placed at
+another participant."  Lean: if only participant `0` may perform output events,
+no row removed by an output event is emitted, at the same input, by another
+participant of the same history. -/
 theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CAP.System sp D)
     (hsole : ∀ n init (p : Fin n) pre γ o, Sys.strat n init p pre (CAP.LEv.out γ o) → p.val = 0) :
     RowRemovalsNotDistributed Sys :=
   sole_emitter_rowRemovals Sys hsole
 
-/-- "They still require coordination when another run of the authority may choose
-differently, as for the lock manager of Section `sec:coordination`."  Lean:
-the owner system of §4.4 (only participant `0` may emit an order): its row-removing commitment
-is a commitment, contradicted by another of its runs, but not at another
-participant. -/
+/-- "It does not change the semantic conflict: a canonical run still
+contradicts the authority's commitment.  For example, another canonical run of
+the spec contradicts a lock manager's choice even when only the manager is
+authorized to emit the result."  Lean: the owner system's row-removing event is
+a commitment, and the library's operational predicates record that the conflict
+is local rather than cross-participant. -/
 theorem «app:deployment/single-authority/coordination» (D : Type) :
     ¬ Exposable (canon CAP.ordSpec ()) .ab ∧ ¬ (CAP.ownerSys D).CoordinationFree ∧
       (CAP.ownerSys D).CoordinationFreeH :=

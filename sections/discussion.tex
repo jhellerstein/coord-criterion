@@ -56,17 +56,19 @@ The possibility relation makes the boundary concrete.  Possibilities may
 be lost as input grows.  When a system emits an output, other possibilities
 may be subsumed by output extensions that remain, an incidental decision, or
 excluded even though nothing remaining subsumes them, a fateful one.
-Only the latter removals are \commitments, and only they require coordination.
+Only the latter removals are \commitments.  Coordination mechanisms enforce
+them.
 
 A limitation of prior CALM work was that it was constructive on only one side of
 its boundary.  Monotone programs need no coordination; for a non-monotone
 program, CALM said only that coordination was required somewhere, not what it
 had to accomplish or where it belonged.  Complete CALM says more.  A
 spec that is not monotone needs the specific \commitments its outputs
-require. Every coordination mechanism, from locks to
-consensus, is a way of applying these \commitments.  The same analysis says which outputs
-need \commitments, and whether another participant could contradict them, so
-that agreement is required and not just a local decision.  Proper coordination
+require.  Every coordination mechanism, from locks to consensus, is a way of
+applying these \commitments.  The same analysis says which outputs need
+\commitments and whether conflicting choices can arise at another participant.
+That tells an implementation when it needs agreement rather than a local
+decision.  Proper coordination
 then places the \commitments in a composition: it identifies the stage that
 must make them, as the log does in state-machine replication, and certifies
 that the stages behind it need none of their own.

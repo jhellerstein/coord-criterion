@@ -152,8 +152,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/canonical-equivalent»
 #check @CC.Paper.«cor:free-eager-output»
 #check @CC.Paper.«sec:systems/canonical-example»
-#check @CC.Paper.«sec:coordination/closing-after-voting»
-#check @CC.Paper.«def:contradicts»
+#check @CC.Paper.«sec:systems/closing-after-voting»
 #check @CC.Paper.«prop:canonical-commitment-witness»
 #check @CC.Paper.«prop:canonical-commitment-witness/canonical-run»
 #check @CC.Paper.«prop:commitment-conflict»
@@ -162,11 +161,11 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:commitment-conflict/reach»
 #check @CC.Paper.«prop:commitment-conflict/any-event»
 #check @CC.Paper.«prop:commitment-conflict/confined-to-current-input»
-#check @CC.Paper.«sec:coordination/shared-nothing-single-key»
-#check @CC.Paper.«sec:coordination/two-phase-commit»
-#check @CC.Paper.«sec:coordination/two-phase-commit-detects»
-#check @CC.Paper.«sec:coordination/2pc-timeout-abort»
-#check @CC.Paper.«sec:coordination/2pc-timeout-abort-local»
+#check @CC.Paper.«sec:systems/shared-nothing-single-key»
+#check @CC.Paper.«sec:systems/two-phase-commit»
+#check @CC.Paper.«sec:systems/two-phase-commit-detects»
+#check @CC.Paper.«sec:systems/2pc-timeout-abort»
+#check @CC.Paper.«sec:systems/2pc-timeout-abort-local»
 #check @CC.Paper.«sec:complete-cap/intro»
 #check @CC.Paper.«def:partitioned-history»
 #check @CC.Paper.«def:partitioned-history/unfolded»
@@ -315,7 +314,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:notation/run-under-basis»
 #check @CC.Paper.«app:notation/canonical-run»
 #check @CC.Paper.«app:notation/observably-equivalent»
-#check @CC.Paper.«app:notation/contradicts»
 #check @CC.Paper.«app:notation/partitioned-history»
 #check @CC.Paper.«app:notation/block»
 #check @CC.Paper.«app:notation/explicit-relation»

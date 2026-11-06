@@ -6,10 +6,10 @@ import CoordCriterion.Distributed.Commitments
 import CoordCriterion.CAP.ResponseForm
 
 /-!
-# Systems, canonical systems, and coordination (Sections 4.1–4.4, Appendix C)
+# Systems, canonical systems, and commitments (Sections 4.1–4.3, Appendix C)
 
 Claims of `sections/distributed-histories.tex`, `sections/distributed.tex`
-(through `sec:coordination`) and `appendices/commitment-bases-general.tex`
+(through the commitment-conflict examples) and `appendices/commitment-bases-general.tex`
 (`app:bases`) beyond the core development of `Distributed/Histories.lean`
 and `Distributed/Commitments.lean`, stated in the paper's form (namespace
 `CC.Dist`):

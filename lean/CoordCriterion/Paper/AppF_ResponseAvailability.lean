@@ -498,7 +498,7 @@ theorem «app:cap-response/subspec-empties-fibers» {D : Type} {n : Nat} {σ τ 
 "Section `sec:complete-cap` derives the Gilbert–Lynch theorem from the
 converse of Theorem `thm:complete-cap`, with real-time precedence supplied as
 input.  Here precedence comes from real time, and consistency is required
-only at the precedence an execution realizes."  (The §4.5 derivation is
+only at the precedence an execution realizes."  (The §4.4 derivation is
 `«sec:complete-cap/gilbert-lynch»` in `Paper/S4_5_CompleteCAP.lean`.)
 
 ### Lemma `lem:forced-answer` -/

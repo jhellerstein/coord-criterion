@@ -693,16 +693,15 @@ theorem «app:components/system-is-component» {I O : Type} [PO I] [PO O] {sp : 
   ⟨rfl, fun _ => rfl, fun _ _ ⟨n, init, H, p, _, h⟩ => ⟨n, init, H, p, trivial, h⟩,
     fun _ _ => Iff.rfl, Components.cfSystem_cluster_commitmentFree sp D⟩
 
-/-- "The two-phase commit decision of Section `sec:coordination` has both
-forms.  Run by the coordinator alone, it is a process, and its timeout commitment
-requires coordination but not distributed coordination.  Replicated, it is a
-cluster, and the same commitment requires distributed coordination."  Lean:
-`CAP.Timeout.pollClosingSys1` (the coordinator alone) as `Component.process` admits a
-run applying the commitment `CAP.Timeout.cp`, which requires coordination
-(`¬ CoordinationFree`) but not distributed coordination
-(`CoordinationFreeH`); `CAP.Timeout.pollClosingSysRepl` is replicated, its cluster
-form admits the same commitment, and that commitment requires distributed coordination
-(`¬ CoordinationFreeH`). -/
+/-- "The two-phase commit decision discussed after Proposition
+`prop:commitment-conflict` has both forms.  Run by the coordinator alone, it is
+a process, so no conflicting choice is placed at another participant.
+Replicated, it is a cluster, and a conflicting choice can be placed at another
+participant.  In both cases the timeout has the same semantic effect: it
+applies a commitment contradicted by a canonical run."  Lean additionally
+records the distinction with the library's operational coordination predicates:
+`CAP.Timeout.pollClosingSys1` is not `CoordinationFree` but is
+`CoordinationFreeH`, while the replicated system is not `CoordinationFreeH`. -/
 theorem «app:components/two-phase-commit» (D : Type) :
     (∃ r, (Components.Component.process (CAP.Timeout.pollClosingSys1 D)).accepts r ∧
       Coordinates r.events) ∧

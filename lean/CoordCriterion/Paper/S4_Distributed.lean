@@ -11,13 +11,13 @@ import CoordCriterion.Appendix.ComponentSystems
 import CoordCriterion.Appendix.Deployment
 
 /-!
-# Paper §4.1–4.4: Distributed Execution (statement layer)
+# Paper §4.1–4.3: Distributed Execution (statement layer)
 
 Covers `sections/distributed-histories.tex` (§4.1 Distributed histories, §4.2
 Distributed consistency, with the paragraph *Message data*) and
-`sections/distributed.tex` from §4.3 Systems through the end of §4.4
-Coordination (it stops before §4.5 The Complete CAP Theorem).  The paragraph
-*Exchanging outputs* and the proofs of §4 are in Appendix B
+`sections/distributed.tex` §4.3 Systems and canonical runs (it stops before
+§4.4 The Complete CAP Theorem).  The paragraph *Exchanging outputs* and the
+proofs of §4 are in Appendix B
 (`Paper/AppB_ProofsDistributed.lean`).
 
 How to read this file.  Read it side by side with the paper.  Entries appear in
@@ -320,9 +320,9 @@ theorem «sec:distributed-consistency/sharing-outputs» {D : Type} {n : Nat}
 /-! ## Systems and canonical runs (§4.3, `sec:systems`)
 
 A spec describes which behaviors are permitted, but not how a system chooses
-among them.  The section models those choices, then shows that they need not
-impact the criterion: coordination analysis can use canonical runs regardless
-of system implementation choices. -/
+among them.  The section models those choices, then shows that their commitments
+can be assessed against canonical runs regardless of system implementation
+choices. -/
 
 /-- "The registrar … emits `⊥` and closes the polls in the same event
 (Figure election-frames(d)); the output event for `⊥` does not require the
@@ -403,7 +403,7 @@ basis* `ℬ`, a set of commitments shared by all participants, and a strategy
 commitments from `ℬ`."
 
 Lean: `CAP.System` (basis + strategies `strat n init p`, one for every
-participant of every finite participant set and initial inputs, as §4.5 later
+participant of every finite participant set and initial inputs, as §4.4 later
 requires) with `System.CommitmentBasisRespecting`.  Its commitments are
 `CAP.Commitment`, equivalent to `CC.Commitment` (`CC.Dist.toCAP`,
 `CC.Dist.ofCAP`).  The library's `CAP.System` does not require basis respect;
@@ -619,8 +619,8 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) 
   RunUnder B es τ
 
 /-- *Canonical runs suffice.*  "Commitment bases and strategies preserve
-meaningful differences among systems.  The next result shows that coordination
-analysis need not be parameterized by those differences."  Every output event
+meaningful differences among systems.  The next result shows that our analysis
+need not be parameterized by those differences."  Every output event
 of any system removes at least the rows that the canonical event for its output
 removes (Lemma canonical-commitment-normal-form), and every run under any basis
 has an observably equivalent canonical run: one that accepts the same inputs,
@@ -674,9 +674,9 @@ retained afterward extends `[A,C,B]`, so it satisfies all of 2PL's decisions,
 including the earlier order of `A` before `B`.  Thus the canonical final table
 is contained in 2PL's, while Canonical Run Universality gives the reverse
   containment.  The tables are equal: the lock made the `A`-before-`B` decision
-  earlier than the output required.  Whether a spec needs coordination therefore
-  depends only on the commitments its outputs require, not on their timing or
-  representation in a system's commitment basis."
+  earlier than the output required.  The commitments required by a spec's
+  outputs therefore do not depend on their timing or representation in a
+  system's commitment basis."
 
 Lean (`CC.Txn.Partial.CommitEx.example_commitment_event_ABC`), at any input `k`
 whose transactions `A`, `B`, `C` have each issued their operations and requested
@@ -720,32 +720,22 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
         σ0 [.output (kappa σ0 o2) o2] τ2' :=
   Txn.Partial.CommitEx.example_commitment_event_ABC h
 
-/-! ## Coordination (§4.4, `sec:coordination`) -/
+/-! ## Commitment witnesses and mechanisms (§4.3, `sec:systems`) -/
 
-/-- §4.4: Having separated a system's observable behavior from when and
-how it makes commitments, we relate those semantic effects to operational
-coordination mechanisms.  Mutexes, locks, atomic instructions, agreement
-protocols, ownership, and sequencers are familiar mechanisms.  A system may
-use one without applying a commitment, and it may apply a commitment without
-identifying any particular mechanism.  At the canonical state of any full ballot, the
-poll-closing commitment `closePolls` is undefined (it would remove no row). -/
-theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
+/-- Commitment witnesses and mechanisms: after separating a system's
+observable behavior from how it makes commitments, the paper explains that
+coordination mechanisms enforce these semantic effects.  At the canonical state
+of any full ballot, the poll-closing commitment `closePolls` is undefined because
+it would remove no row. -/
+theorem «sec:systems/closing-after-voting» (i : CALM.Ballots)
     (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
   Figures.Elec.close_after_voting i hfull
 
-/-- **Def. contradicting run** (`def:contradicts`).  "Let a specification event of a run
-`r` apply a commitment.  A run `r'` contradicts that commitment if it accepts
-an input whose fiber the commitment emptied, or emits an output whose row the
-commitment removed."  The events that apply commitments are output events `Out_γ(o)`
-and commitment events `Apply(γ)`.
-
-Lean (`CC.CAP` model): `CAP.Contradicts emits accepts σ σc`, for commitments
-taking `σ` to `σc` and runs described by the outputs they emit at each current
-input (`emits k x`) and the inputs they accept (`accepts k`): some removed row
-`(k,x)` is emitted at current input `k`, or some excluded input `k` (one whose
-remaining rows are all removed) is accepted. -/
-abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
+/-- Supporting predicate for Proposition `prop:canonical-commitment-witness`.
+`CAP.Contradicts emits accepts σ σc` says a run emits a removed row or accepts
+an input whose remaining fiber was emptied. -/
+abbrev commitmentContradictedBy {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
@@ -865,7 +855,7 @@ theorem «prop:commitment-conflict/confined-to-current-input» :
   chooses between the specification-permitted orders.  The canonical event for
   `ab` therefore applies a nonempty commitment.  Locks and ownership are
   operational mechanisms that can enforce this choice. -/
-theorem «sec:coordination/shared-nothing-single-key» :
+theorem «sec:systems/shared-nothing-single-key» :
       ¬ Exposable (canon CAP.ordSpec ()) .ab ∧
         ∃ τ, SysStep (canonCommitmentBasis CAP.ordSpec) (canon CAP.ordSpec ())
           (.output (kappa (canon CAP.ordSpec ()) .ab) .ab) τ ∧
@@ -891,7 +881,7 @@ prepared.
   state is exposable and therefore has a legal `Out_ε` event: the decision step
   itself applies no commitment.  The prepare half belongs to the owners'
   specifications; messages, logging, and blocking are not modeled here. -/
-theorem «sec:coordination/two-phase-commit» (n : Nat) :
+theorem «sec:systems/two-phase-commit» (n : Nat) :
       (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
         (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d,
           ∀ hd : τ.R τ.cur d, Exposable τ d ∧
@@ -908,10 +898,10 @@ decision of `CAP/TwoPhaseCommit.lean` (each vote reports whether the owner's
 prepare succeeded): the decision is `abort` exactly when some received vote is
 no and `commit` exactly when every vote is yes, so once every vote is in it
 aborts exactly when the votes do not all say yes.  "Does not make the owners
-agree" follows from the monotone decision in `«sec:coordination/two-phase-commit»`;
+agree" follows from the monotone decision in `«sec:systems/two-phase-commit»`;
 that a yes vote reports a successful local prepare is the protocol, not
 modeled. -/
-theorem «sec:coordination/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n) :
+theorem «sec:systems/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n) :
     (CAP.decide2PC v = .abort ↔ ∃ p, v p = some false) ∧
     (CAP.decide2PC v = .commit ↔ ∀ p, v p = some true) ∧
     ((∀ p, v p ≠ none) → (CAP.decide2PC v = .abort ↔ ¬ ∀ p, v p = some true)) :=
@@ -923,13 +913,13 @@ another commitment, like closing the polls."  (CIDR version: "A coordinator that
 before the last vote arrives, issues a commitment, like closing the polls".)
 
 Lean (`CAP/TimeoutAbort.lean`), on the decision `voteSpec` of
-`«sec:coordination/two-phase-commit»`: at `σ_P(v)` with vote `p` missing,
+`«sec:systems/two-phase-commit»`: at `σ_P(v)` with vote `p` missing,
 closing the polls (`Figures.closePolls`, a commitment) applies; it is a commitment;
 every input `k ⪰ v` with `k p = some b`, for `b` yes or no, had the row
 `(k, decide2PC k)` and keeps none; the only rows left are `(v, decide2PC v)`
 (with the polls closed, `undecided` is final: abort).  At `yy·` the struck
 rows include `(yyy, commit)` and `(yyn, abort)`. -/
-theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : Fin m)
+theorem «sec:systems/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : Fin m)
     (hp : v p = none) :
     CAP.Timeout.cp.f (canon (CAP.voteSpec m) v) =
         some (Figures.closeState (canon (CAP.voteSpec m) v)) ∧
@@ -945,7 +935,7 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
   /-- A timeout before the final vote applies the nonempty poll-closing
   commitment.  The commitment removes rows for canonical runs containing late
   votes. -/
-theorem «sec:coordination/2pc-timeout-abort-local» :
+theorem «sec:systems/2pc-timeout-abort-local» :
       let c : Commitment (CAP.voteSpec 3) := Dist.ofCAP CAP.Timeout.cp
       ∃ τ, c.app (canon (CAP.voteSpec 3) CAP.Timeout.yyN) = some τ ∧
         ∃ k x ρ, (canon (CAP.voteSpec 3) CAP.Timeout.yyN).R k x ∧ ¬ τ.R k x ∧

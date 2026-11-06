@@ -16,7 +16,7 @@ Corollary `cor:complete-cap-S`.  The results themselves are stated in
 
 How to read this file: open the appendix next to it.  Entries follow the
 appendix's order.  A "Proof of …" paragraph is a declaration `«proof:<label>»`
-(or, for entries carried over from §4.5, `«<label>/proof-…»`) whose statement
+(or, for entries carried over from §4.4, `«<label>/proof-…»`) whose statement
 is the result proved or the key step of the written proof.  Conventions are
 those of `Paper/S4_Distributed.lean` and `Paper/S4_5_CompleteCAP.lean`;
 proofs are one-line pointers into the library.

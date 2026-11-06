@@ -149,8 +149,9 @@ output at a two-node network pairs its nodes, and no total sub-behavior `A`
 has `pairing` satisfy Lifted Monotonicity for it (rows at `{0,1}` and `{1,2}`, common input extension
 `{0,1,2}`).  The surrounding prose (isolated nodes must emit; their
 construction waits for a group to confirm itself; groups sharing a node are
-nested; the group's choice requires coordination, but not distributed coordination)
-reads Baccaert and Ketsman's Prop. 9–11 and is not formalized. -/
+nested; the group's choice needs a commitment, but placement keeps the conflict
+at the shared node) reads Baccaert and Ketsman's Prop. 9–11 and is not
+formalized. -/
 theorem «sec:query-instance/pairing» :
     QRef.NodeMono id QRef.pairing ∧
       (∀ a b K, a ≠ b → QRef.pairing.P (QRef.net fun x => x = a ∨ x = b) K → K.mem (a, b)) ∧

@@ -48,10 +48,9 @@ common-extension condition on $A$ for two rows at disjoint networks.  Complete
 CAP extends it to overlapping networks, since Availability lets no participant
 wait.  Delays are finite, so their construction waits: a group's smallest node
 chooses once every member confirms the group.  Groups sharing a node are
-nested.  The choice therefore requires coordination.  Because the shared
-node is the only participant placed to choose for that group, the placement
-does not require distributed coordination
-(Definition~\ref{def:distributed-coordination}).  Pairing off nodes, leaving at
+nested.  The choice therefore needs a \commitment.  Because the shared node is
+the only participant placed to choose for that group, the conflict does not
+cross participants.  Pairing off nodes, leaving at
 most one unpaired, is node monotone, yet every $A$ pairs $b$ with $a$ at $\{a,b\}$ and
 with $c$ at $\{b,c\}$.  For deterministic behaviors the two conditions
 coincide.
@@ -154,9 +153,10 @@ request is eventually answered, is a response obligation in our terms
 real-time causal consistency is achievable, and no stronger semantics is.
 With real-time precedence recorded in the input, we recover both halves
 (Appendix~\ref{app:rtc}).  The spec is the real-time causal product
-interface, in which each replica answers its own reads.  It is
-coordination-free, and no strict strengthening of it is, provided that the
-strengthening, like their implementations, does not consult real time.  One-way convergence needs no
+interface, in which each replica answers its own reads.  Its implementation
+uses no coordination mechanism, and no strict strengthening shares that
+property, provided that the strengthening, like their implementations, does not
+consult real time.  One-way convergence needs no
 separate assumption, since the input records which writes each replica has
 received.
 

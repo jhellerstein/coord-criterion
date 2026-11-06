@@ -31,12 +31,11 @@ fair-execution definitions to the finite forms used in
 arrival makes a lock wait, issues a timestamp, or triggers the write rule;
 Appendix G, where Lean checks the exclusions those steps apply and the MVTO
 run driven by arrivals); the
-protocol steps of two-phase commit in §4.4 (prepare messages, logging,
-blocking; Lean checks only that the vote-counting decision is monotone,
-needs no coordination, and aborts exactly when the votes do not all say yes);
-the remark closing §4.4's shared-nothing paragraph that all three cases
-exchange messages and that a client cut off from an owner cannot get its
-answer; the
+  protocol steps of two-phase commit in §4.3 (prepare messages, logging,
+  blocking; Lean checks only that the vote-counting decision is monotone,
+  applies no commitment, and aborts exactly when the votes do not all say yes);
+  the placement discussion closing §4.3 (Lean checks the local and replicated
+  cases with its internal operational predicates); the
 operational results that §6.1 cites (the transducer theorems of Ameloot et
 al., Zinn et al., and Baccaert and Ketsman, which input order a placement
 model justifies, and their notion of coordination; for Baccaert and Ketsman
@@ -95,18 +94,18 @@ first and supporting claims and examples follow.
 | `CompleteCALM/Cofinal.lean` | `CC` | §6.5 | Cofinality (used by Prop. declared-specification): a declared spec whose rows are rows of `T` and dominate every row of `T` (same inputs, or along an order embedding) is Lifted Monotone / consistent iff `T` is |
 | `CALM/Lemmas.lean` | `CC.CALM` | §2–§3, App. B | Event facts, functional remarks, Lemma reconciliation, paper proof routes, pairs suffice |
 | `CALM/Examples.lean` | `CC.CALM` | §2–§3, App. B | `k`-set agreement (pairs), rows at `j`, relational state-by-input, election, directed fiber |
-| `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §4.4 | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
+| `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §4.3 | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
 | `Figures.lean` | `CC.Figures` | §2–§3, §7 | Figure tables: election frames, ambiguity frames; decisive ballot vs. closing the polls |
 | `Distributed/Histories.lean` | `CC.Dist` | §4.1–4.2 | Histories, cuts, Prop. distributed consistency, Cor. convergence, exchanging outputs |
 | `Distributed/Exclusions.lean` | `CC` | §4.3–4.4, App. C | Exclusions, the canonical exclusion for an output, system output events `Out_γ(o)` and exclusion events `Exclude(γ)` (a nonempty sequence of basis exclusions applied without emitting; erased to nothing), normal form, coordination (an output event with `γ ≠ ε` or an exclusion event), canonical-equivalent (the canonical run skips exclusion events), conflicting outputs |
 | `Distributed/Systems.lean` | `CC.Dist` | §4.1–4.4, App. C | Figure participant-runs, consistency without unique send ids, canonical systems, reconciliation under any basis, encodings of output and exclusion events agree |
 | `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: exclusions, histories (local events: inputs, output events `out γ o`, exclusion events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
-| `CAP/CompleteCAP.lean` | `CC.CAP` | §4.5 | Thm. Complete CAP; deterministic strategies do not suffice |
-| `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.4 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
+| `CAP/CompleteCAP.lean` | `CC.CAP` | §4.4 | Thm. Complete CAP; deterministic strategies do not suffice |
+| `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.3 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
 | `CAP/TimeoutAbort.lean` | `CC.CAP.Timeout` | §4.3 | Two-phase commit aborting on timeout: on the vote-decision specification, closing the polls excludes every future input that adds a missing vote; run by the coordinator alone this is local coordination, replicated it is distributed; on a specification where abort remains allowed until a decision, aborting excludes the commit outputs at later inputs while keeping those inputs legal, so it is local coordination when only the coordinator decides and distributed when the decision is replicated |
 | `CAP/ResponseForm.lean` | `CC.CAP` | App. F | Response Availability, Response Partition Consistency, Thm. Complete CAP (response form) |
 | `CAP/Register.lean` | `CC.GL` | App. F | Linearizable register, realized histories, Cor. Gilbert–Lynch |
-| `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.5, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |
+| `CAP/ResponseAvailability.lean` | `CC.CAP` | §4.4, App. F | Strong (2)⇒(1), RPC vs. confluence, input acceptance, Lemma locality, without replication, choosing vs. requiring every output, Lemma forced-answer, GL via forced answer |
 | `CAP/AsyncGilbertLynch.lean` | `CC.AsyncGL` | App. F | Gilbert–Lynch Theorem 1 (asynchronous model) by reduction to the corollary |
 | `CAP/ChosenAvailability.lean` | `CC.CAP`, `CC.AsyncGL` | App. F | End-of-history forms of Response Availability / RPC / Answering; RPC is the converse's common-refinement condition; a response interface as a chosen explicit relation; Lemma forced-answer and Cor. Gilbert–Lynch at the end of histories |
 | `Instances/InvariantConfluence.lean` | `CC.IConf` | §6, App. B | Bailis et al. model; Prop. invariant confluence ⇔ LM |
@@ -147,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-620 entries.
+618 entries.
 
 ### §2 Functional CALM
 
@@ -262,7 +261,7 @@ File `Paper/S3_CompleteCALM.lean`; paper source `sections/complete-calm.tex`.
 | `«prop:exposure-boundary/common-expansion»` | theorem | Prop. |
 | `«prop:exposure-boundary/functional»` | theorem | After Prop. |
 
-### §4.1–4.4 Distributed execution
+### §4.1–4.3 Distributed execution
 
 File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.tex, sections/distributed.tex`.
 
@@ -318,8 +317,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Commitment bases and strategies preserve meaningful differences among systems. |
 | `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
-| `«sec:coordination/closing-after-voting»` | theorem | §4.4: |
-| `«def:contradicts»` | abbrev | **Def. |
+| `«sec:systems/closing-after-voting»` | theorem | Commitment witnesses and mechanisms: |
 | `«prop:canonical-commitment-witness»` | theorem | **Proposition `prop:canonical-commitment-witness`** (Canonical commitment witness). |
 | `«prop:canonical-commitment-witness/canonical-run»` | theorem | Supporting form: |
 | `«prop:commitment-conflict»` | theorem | **Prop. |
@@ -328,13 +326,13 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:commitment-conflict/reach»` | theorem | Prop. |
 | `«prop:commitment-conflict/any-event»` | theorem | Prop. |
 | `«prop:commitment-conflict/confined-to-current-input»` | theorem | "The proposition rules out reconciliation at `i`, not forever. |
-| `«sec:coordination/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database": |
-| `«sec:coordination/2pc-timeout-abort-local»` | theorem | A timeout before the final vote applies the nonempty poll-closing commitment. |
+| `«sec:systems/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:systems/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:systems/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:systems/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database": |
+| `«sec:systems/2pc-timeout-abort-local»` | theorem | A timeout before the final vote applies the nonempty poll-closing commitment. |
 
-### §4.5 Complete CAP
+### §4.4 Complete CAP
 
 File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 
@@ -509,7 +507,6 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments and commitment events erased; every run has a canonical one (Lem. |
-| `«app:notation/contradicts»` | abbrev | *contradicts* — accepts an input whose fiber a commitment emptied, or emits an output whose row it removed (Def. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more blocks, no message crosses blocks (Def. |
 | `«app:notation/block»` | abbrev | *block* — one of the two or more classes into which a partitioned history divides the participants (Def. |
 | `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay available (Def. |
@@ -672,7 +669,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«def:component»` | abbrev | **Definition `def:component`** (Component, admitted run). |
 | `«def:implementation-form»` | abbrev | **Definition `def:implementation-form`** (Implementation form). |
 | `«app:components/system-is-component»` | theorem | "A system for `𝒮` (Definition `def:system`) induces a component once its boundary observations are chosen. |
-| `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision of Section `sec:coordination` has both forms. |
+| `«app:components/two-phase-commit»` | theorem | "The two-phase commit decision discussed after Proposition `prop:commitment-conflict` has both forms. |
 | `«def:typed-pipeline»` | theorem | **Definition `def:typed-pipeline`** (Feed, typed pipeline, external observation). |
 | `«def:proper-pipeline»` | theorem | **Definition `def:proper-pipeline`** (Contract-proper, implementation-proper). |
 | `«app:components/feed-is-input»` | theorem | "Receiving `m` is the downstream run's initial input, not a commitment of `C₂`." Lean: |
@@ -712,8 +709,8 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/single-authority/def»` | theorem | "A deployment is *single-authority* when `E_q = ∅` for every participant `q` but one, as in the leader example above." |
 | `«app:deployment/single-authority/shape»` | theorem | "Every separable family is then one row emitted by the single authority beside a silent participant …" |
 | `«app:deployment/single-authority»` | theorem | "… and monotonicity across partitions says only that each such row has an input extension at every input extension of its input." (With `\|P\| ≥ 2`, so that so… |
-| `«app:deployment/single-authority/not-distributed»` | theorem | "In a system whose other participants emit nothing, no other participant emits an output that the authority excludes, so its row-removing commitments do not… |
-| `«app:deployment/single-authority/coordination»` | theorem | "They still require coordination when another run of the authority may choose differently, as for the lock manager of Section `sec:coordination`." Lean: |
+| `«app:deployment/single-authority/not-distributed»` | theorem | "The deployment can prevent the contrary choice from being placed at another participant." Lean: |
+| `«app:deployment/single-authority/coordination»` | theorem | "It does not change the semantic conflict: |
 | `«thm:complete-cap-deployment»` | theorem | **Proposition `thm:complete-cap-deployment`** (Partition compatibility under a deployment). |
 | `«thm:complete-cap-deployment/proof»` | theorem | Proof of Prop. |
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |

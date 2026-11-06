@@ -56,10 +56,11 @@ is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.  On outputs, the order is subsumption: $o\OutputOrd u$
 means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
-a spec to be faithful. A \emph{\commitment} is an
-irrevocable, fateful system decision, removing one or more rows
-$(i,o)$ for which no remaining row $(i,u)$ has $o\OutputOrd u$: the output $o$
-is no longer covered by any $u$, and its possibility is gone.
+a spec to be faithful. Coordination mechanisms constrain which concurrent
+outcomes can occur.  We call their relevant semantic effect a
+\emph{\commitment}: an irrevocable, fateful system decision that removes one or
+more rows $(i,o)$ for which no remaining row $(i,u)$ has $o\OutputOrd u$.  The
+output $o$ is no longer covered by any $u$, and its possibility is gone.
 
 State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (Section~\ref{sec:operational-models}).
@@ -104,9 +105,10 @@ We call the pair of invariants \emph{Lifted Monotonicity}.
 \emph{Complete CALM} proves that consistency is equivalent to Lifted
 Monotonicity (Section~\ref{sec:complete-calm-theorem}).
 
-What of coordination?  A \commitment \emph{requires coordination}
-if another run can contradict it; it is \emph{distributed coordination} if that
-run is at another participant.
+What of coordination?  Locks, agreement protocols, and other coordination
+mechanisms enforce \commitments.  Our criterion identifies the \commitments a
+spec's outputs require, independently of the mechanism used.  Placement
+determines whether conflicting choices can arise at different participants.
 Distributed histories are captured under the same consistency criteria as centralized ones
 (Section~\ref{sec:distributed-execution}). Complete CAP (Section~\ref{sec:complete-cap}) says
 Lifted Monotonicity exactly characterizes specs that can keep every

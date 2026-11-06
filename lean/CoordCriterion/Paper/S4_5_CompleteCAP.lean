@@ -9,7 +9,7 @@ import CoordCriterion.Appendix.DeploymentExamples
 import CoordCriterion.Appendix.Registers
 
 /-!
-# Paper §4.5, "The Complete CAP Theorem" (`sections/distributed.tex`)
+# Paper §4.4, "The Complete CAP Theorem" (`sections/distributed.tex`)
 
 Statement layer for Section `sec:complete-cap`, from the subsection header to
 the end of `sections/distributed.tex`: Definitions `def:partitioned-history`,
@@ -41,7 +41,7 @@ open CC CC.CAP
 
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
-/-! ## §4.5 The Complete CAP Theorem -/
+/-! ## §4.4 The Complete CAP Theorem -/
 
 /-- Section `sec:complete-cap`, opening: "Complete CAP answers that broader
 question for any declared guarantee.  To state the question, we must separate

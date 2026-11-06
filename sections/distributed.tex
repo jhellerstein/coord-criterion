@@ -3,9 +3,9 @@
 
 This section gives Functional CALM and Complete CALM a distributed reading,
 including a convergence guarantee for functional specs
-(Corollary~\ref{cor:convergence}).  We then define systems, whose \commitments
-may exceed those the spec requires, and identify the commitments that require
-distributed coordination; Complete CAP follows.
+(Corollary~\ref{cor:convergence}).  We then define systems, relate their runs to
+canonical runs, and show how coordination mechanisms enforce \commitments;
+Complete CAP follows.
 
 \input{sections/distributed-histories.tex}
 
@@ -13,9 +13,9 @@ distributed coordination; Complete CAP follows.
 \label{sec:systems}
 
 A spec describes which behaviors are permitted, but not how a system chooses
-among them.  We now model those choices.  We also show that they need not
-impact our criterion: coordination analysis can be based on canonical runs,
-regardless of system implementation choices.
+among them.  We now model those choices.  We also show that we can assess their
+\commitments against canonical runs, regardless of system implementation
+choices.
 
 For example, serializability can be enforced by any of a number of concurrency
 control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
@@ -195,14 +195,14 @@ $x_o$ of Section~\ref{sec:lifted-output-events}.
 
 \paragraph{Canonical runs suffice.}
 Commitment bases and strategies preserve meaningful differences among systems.
-The next result shows that coordination analysis need not be parameterized by
-those differences.  We call the runs of
+The next result shows that our analysis need not be parameterized by those
+differences.  We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
 runs}, and a \emph{run under a basis} $\mathcal B$ is one whose output and
 \commitment events apply only \commitments from $\mathcal B$
 (Definition~\ref{def:run-under-basis}).  Locks, timestamps, quorums, and
-consensus differ in how and when they decide; what the environment sees
-does not, as the next lemma shows.
+consensus differ in how and when they decide.  The next lemma relates their
+runs to a common canonical model.
 
 \begin{lemma}[Canonical Run Universality]
 \label{lem:canonical-equivalent}
@@ -247,84 +247,28 @@ retained afterward extends $[A,C,B]$, so it satisfies all of 2PL's decisions,
 including the earlier order of $A$ before $B$.  Thus the canonical final table
 is contained in 2PL's, while Canonical Run Universality gives the reverse
 containment.  The tables are equal: the lock made the $A$-before-$B$ decision
-earlier than the output required.  Whether a spec needs coordination therefore
-depends only on the \commitments its outputs require, not on their timing or
-representation in a system's \commitment basis.
+earlier than the output required.  The \commitments required by a spec's outputs
+therefore do not depend on their timing or representation in a system's
+\commitment basis.
 
-\subsection{Coordination}
-\label{sec:coordination}
+A canonical run \emph{contradicts} a \commitment at input $k$ if it accepts $k$
+after the \commitment emptied its fiber, or emits at $k$ an output whose row the
+\commitment removed.
 
-Having separated a system's observable behavior from when and how it makes
-\commitments, we now ask which \commitments require coordination.  A
-\commitment requires coordination when a canonical run permitted by the spec
-contradicts it.
-
-\begin{definition}[Contradicting run]
-\label{def:contradicts}
-Let a specification event of a run $r$ apply a \commitment.  A canonical run
-$r'$ of the same spec \emph{contradicts} that \commitment at input $k$ if it
-accepts $k$ after the \commitment emptied its fiber, or emits at $k$ an output
-whose row the \commitment removed.
-\end{definition}
-
-Write $\mathcal R_P^\top$ for the set of all canonical runs of $P$.  By
-Lemma~\ref{lem:canonical-equivalent}, it is maximal at the observable interface:
-every run under any \commitment basis has the same input and output events as
-some run in $\mathcal R_P^\top$.
-
-\begin{definition}[Coordination-requiring \commitment]
-\label{def:coordination}
-A \commitment \emph{requires coordination} when some run in
-$\mathcal R_P^\top$ contradicts it (Definition~\ref{def:contradicts}).
-\end{definition}
-
-\begin{definition}[Distributed coordination]
-\label{def:distributed-coordination}
-Fix a placement of rows at participants, unrestricted unless a deployment is
-specified.  Suppose participant $p$ applies a \commitment in a history.  The
-\commitment \emph{requires distributed coordination} under that placement when
-the placement allows a canonical run that contradicts it at another participant
-$q\ne p$.
-\end{definition}
-
-\begin{definition}[Coordination-free]
-\label{def:coordination-free}
-A run or history is \emph{coordination-free} when it applies no \commitment
-that requires coordination.
-\end{definition}
-
-\begin{proposition}[Canonical runs contradict every \commitment]
-\label{prop:canonical-contradiction}
+\begin{proposition}[Canonical alternatives witness commitments]
+\label{prop:canonical-commitment-witness}
 Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
 contradicted by a canonical run from $\sigma_P(i)$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
 Choose a row $(k,x)$ that the \commitment removes.  If the \commitment empties
-the fiber at $k$, the canonical run that accepts $k$ contradicts it.
-Otherwise, the canonical run that accepts $k$ and emits $x$ contradicts it.
+the fiber at $k$, the canonical run that accepts $k$ contradicts it.  Otherwise,
+the canonical run that accepts $k$ and emits $x$ contradicts it.
 \end{proof}
 
-\begin{corollary}[Canonical coordination]
-\label{cor:canonical-coordination}
-A run is coordination-free if and only if it applies no \commitment.
-\end{corollary}
-
-\begin{proof}
-Every applied \commitment has a contradicting canonical run by
-Proposition~\ref{prop:canonical-contradiction}; the converse is immediate.
-\end{proof}
-
-Output subsumption remains permitted.  Under unrestricted placement, a
-canonical run that contradicts a \commitment can occupy another participant in
-a message-free history, by the construction in the proof of
-Proposition~\ref{prop:distributed-consistency}.  The \commitment then requires
-distributed coordination.  A deployment may prevent that placement by
-restricting which participant may emit the contradicting row
-(Appendix~\ref{app:deployment}).
-
-\begin{proposition}[Contradicting runs cannot reconcile at the conflict input]
-\label{thm:commitments-require-coordination}
+\begin{proposition}[Commitment conflict]
+\label{prop:commitment-conflict}
 Consider a run that applies a \commitment and another run that contradicts it
 at input $k$.  Their resulting states have no common continuation to a state
 $(k,R')$.
@@ -339,47 +283,43 @@ row the \commitment removed.  The \commitment leaves no row at $k$ that
 can be common to both runs.  Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
-The proposition rules out reconciliation at the conflict input, not forever.  For example,
-suppose $i\InputOrd j$, $\fiber{i}=\{o,x\}$ with $o$ and $x$ incomparable, and
-$\fiber{j}=\{u\}$ with $u$ \outrelpart both.  The states that emit $o$ and $x$
-cannot be reconciled at $i$, although accepting $j$ reconciles them.  As
-explained after Definition~\ref{def:consistency}, consistency nevertheless
-counts the conflict at $i$ as a failure.
+The proposition rules out reconciliation at the conflict input, not forever.
+For example, suppose $i\InputOrd j$, $\fiber{i}=\{o,x\}$ with $o$ and $x$
+incomparable, and $\fiber{j}=\{u\}$ with $u$ \outrelpart both.  The states that
+emit $o$ and $x$ cannot be reconciled at $i$, although accepting $j$ reconciles
+them.  As explained after Definition~\ref{def:consistency}, consistency
+nevertheless counts the conflict at $i$ as a failure.
 
-The proposition says what a coordination mechanism must accomplish: prevent a
-\commitment and a run that contradicts it from occurring independently.  This
-requires distributed coordination when those runs can occur at different
-participants.  The definitions diagnose the requirement, not its
-implementation.  Mutexes, locks, atomic instructions, agreement protocols,
-ownership, and sequencers are familiar implementations.  Using one need not
-apply a \commitment: closing the polls after every voter has voted, for example,
-removes nothing the spec still permits.
+Output subsumption remains permitted.  The propositions say what a coordination
+mechanism must accomplish: enforce a \commitment so that the conflicting
+behavior cannot occur independently.  Mutexes, locks, atomic instructions,
+validation, agreement protocols, ownership, and sequencers are familiar
+choices.  Using one need not apply a \commitment: closing the polls after every
+voter has voted, for example, removes nothing the spec still permits.
+
+\paragraph{Placement.}
+Whether a coordination mechanism must span participants depends on who can make
+each choice.  A deployment records which outputs each participant may produce.
+With unrestricted placement, conflicting choices can arise at different
+participants; ownership can keep them at one.  Appendix~\ref{app:deployment}
+formalizes this distinction as monotonicity across partitions.
 
 \paragraph{Locks in a shared-nothing database.}
 Consider a database partitioned by key, with each key owned and locked by one
-participant~\cite{stonebraker1986sharednothing}.  Ownership is a deployment
-that can keep coordination local.  Ordering two transactions on one key
-requires coordination because a canonical run may order $B$ before $A$.
-Under this deployment only the key's owner may emit either order, so the
-contradicting run cannot be placed at another participant and no distributed
-coordination is required.
-
-A transaction spanning two keys is different.  Each owner orders its own part,
-and the two owners can order the same pair of transactions oppositely.  Each
-ordering then requires distributed coordination: the owners must agree on one
+participant~\cite{stonebraker1986sharednothing}.  Ordering two transactions on
+one key makes a \commitment, but ownership keeps both choices at that owner.  A
+transaction spanning two keys is different: each owner orders its own part, and
+the two owners can order the same pair oppositely.  They must agree on one
 order.
 
-Two-phase commit adds no further coordination requirement.  Each owner's
-prepare reports the \commitment it has already made.  The coordinator then
-makes the monotone decision whether all owners prepared; it detects whether
-their \commitments agree and aborts when they do not.  It does not make the
-owners agree.  If the coordinator instead aborts on timeout before the last
-vote arrives, that abort applies another \commitment, like closing the polls.
-With one coordinator, its deployment places both the abort and its contradictory
-run at that participant, so the decision requires only local coordination.  A
-replicated coordinator places those alternatives at different participants and
-therefore requires distributed coordination, as in Paxos
-Commit~\cite{gray2006consensus}.
+Two-phase commit adds no further \commitment.  Each owner's prepare reports the
+\commitment it has already made.  The coordinator then makes the monotone
+decision whether all owners prepared; it detects whether their \commitments
+agree and aborts when they do not.  It does not make the owners agree.  If the
+coordinator instead aborts on timeout before the last vote arrives, that abort
+applies another \commitment, like closing the polls.  One coordinator can make
+that choice locally.  Replicated coordinators instead use distributed
+agreement, as in Paxos Commit~\cite{gray2006consensus}.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
@@ -514,8 +454,8 @@ coordinating within each side of a partition.  It cannot: the impossibility
 direction of the proof holds for every system, \commitment-free or not.  For
 $E=P$, the system in the proof needs no \commitment at all.  For a smaller $E$,
 its canonical output events may exclude rows in $P\setminus E$ and therefore
-apply \commitments that require coordination under the declared spec; serving
-only $E$ does not make those choices coordination-free.  When Lifted
+apply \commitments under the declared spec; serving only $E$ does not remove
+those \commitments.  When Lifted
 Monotonicity for $E$ fails, some output of $E$ waits for another block,
 sacrificing Availability, or is emitted anyway, sacrificing Partition
 Consistency.

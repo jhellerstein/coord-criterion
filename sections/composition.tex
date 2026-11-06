@@ -1,9 +1,9 @@
 \section{Composition and Proper Coordination}
 \label{sec:composition}
 
-Coordination poses a puzzle.  A non-monotone program needs coordination, yet
-coordination is itself non-monotone.  A key-value store with mutable keys is
-non-monotone~\cite{alvaro2011bloom}.  State-machine
+The replicated store poses a puzzle.  Its key-value store with mutable keys is
+non-monotone~\cite{alvaro2011bloom}, and the coordination mechanism that orders
+its commands is non-monotone too.  State-machine
 replication~\cite{schneider1990smr} wraps it in a log.  Clients send requests,
 the log puts the requested commands in one order, and the key-value store
 executes the log and answers each request.  The log's spec is also not
@@ -17,8 +17,8 @@ tables, so they compose by equijoin, and composition preserves Lifted
 Monotonicity.  Because \commitments are explicit, we
 can also ask which component makes a composition's \commitments.  When the
 upstream component makes every \commitment the composition needs, and the
-downstream needs none on the inputs the upstream offers, we call the
-coordination \emph{proper}
+downstream needs none on the inputs the upstream offers, we say the pipeline's
+coordination is \emph{proper}
 (\S\ref{sec:proper-coordination}).  Proofs are in
 Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}

@@ -460,7 +460,7 @@ that the spec demands the latest value, so that a read of $x$ must
 return the value of $x$ after all of $b$.  Then a bare read can be
 contradicted by an entry it has not seen, and $G$ is not monotone.  By the
 exposure boundary some output of $G$ then needs a \commitment of the store's
-own.  Bare reads then need coordination, typically by going through the log.
+own.  Implementations typically enforce it by routing reads through the log.
 \end{example}
 
 \subsection{Components and typed pipelines}
@@ -485,8 +485,8 @@ emits, such that $(i,o)\in P$.
 A component may carry an \emph{implementation form}, $\mathsf{Process}$,
 $\mathsf{Cluster}$, or $\mathsf{Composite}$, which records how it is
 realized.  The implementation form plays no role in typed composition; it
-determines which internal system model and coordination classification
-justify the component's admitted runs.
+records which internal system model and coordination mechanisms justify the
+component's admitted runs.
 \end{definition}
 
 A system for $\Spec$ (Definition~\ref{def:system}) induces a component once
@@ -496,8 +496,8 @@ $o$ whose pair $(i,o)$ with the run's initial input is a row of $P$; runs
 with no such output induce no observation.  The system's messages,
 partitions, and \commitments stay inside the component.  Restricted to
 one-participant histories, the induced component is a process, and a
-replicated system induces a cluster.  The two-phase commit decision of Section~\ref{sec:coordination} has
-both forms.  Run by the coordinator alone, it is a process, so no conflicting
+replicated system induces a cluster.  The two-phase commit decision discussed
+after Proposition~\ref{prop:commitment-conflict} has both forms.  Run by the coordinator alone, it is a process, so no conflicting
 choice is placed at another participant.  Replicated, it is a cluster, and a
 conflicting choice can be placed at another participant.  In both cases the
 timeout has the same semantic effect: it applies a \commitment contradicted by
