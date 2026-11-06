@@ -257,8 +257,8 @@ We call the pair of invariants \emph{Lifted Monotonicity}.
 Monotonicity (\S\ref{sec:complete-calm-theorem}).
 
 What of coordination?  A \commitment \emph{requires coordination}
-if another run can contradict it; it is \emph{distributed coordination} if that
-run is at another participant.
+if another run can contradict it; it requires \emph{distributed coordination}
+if that run can occur at another participant under the placement.
 Distributed histories are captured under the same consistency criteria as centralized ones
 (\S\ref{sec:distributed-execution}). Complete CAP (\S\ref{sec:complete-cap}) says
 Lifted Monotonicity exactly characterizes specs that can keep every
@@ -1011,8 +1011,8 @@ Proposition~\ref{prop:functional-exposure-boundary}.
 
 This section gives Functional CALM and Complete CALM a distributed reading,
 including a convergence guarantee for functional specs.  We then define
-systems, whose \commitments may exceed those the spec requires, and identify
-the commitments that require distributed coordination; Complete CAP follows.
+systems, whose \commitments may exceed those the spec requires, distinguish
+coordination from distributed coordination, and prove Complete CAP.
 
 \subsection{Distributed histories and consistency}
 \label{sec:histories}
@@ -1153,10 +1153,6 @@ nondeterministic \emph{strategy} per participant that picks its next output,
 and shows that every canonical \commitment of Section~\ref{sec:complete-calm} is
 a \commitment in this sense.
 
-A system's strategies select actual events; they need not realize every run the
-spec permits.  A deployment can separately restrict which participants may emit
-which rows (\extended).
-
 Two-phase locking (2PL) and multiversion timestamp
 ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
 $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
@@ -1174,13 +1170,14 @@ canonical run: one that accepts the same inputs, emits the same outputs,
 and keeps at least the original's rows after each event (\extended).
 \end{lemma}
 
-Canonical Run Universality lets a canonical run skip a system’s early
-commitments. When 2PL orders (A) before (B) in a commitment event, the canonical
-run skips that event. If 2PL later emits ([A,C,B]), the corresponding canonical
-output event removes every row that the earlier (A)-before-(B) commitment
-removed. By then, applying that commitment would remove nothing further. Whether
-a spec needs coordination therefore depends on the commitments its outputs
-require, not on when or by what mechanism the system makes them.
+Canonical Run Universality lets a canonical run skip a system's early
+\commitments.  When 2PL orders $A$ before $B$ in a \commitment event, the
+canonical run skips that event.  If 2PL later emits $[A,C,B]$, the corresponding
+canonical output event removes every row that the earlier $A$-before-$B$
+\commitment removed.  By then, applying that \commitment would remove nothing
+further.  Whether a spec needs coordination therefore depends on the
+\commitments its outputs require, not on when or by what mechanism the system
+makes them.
 
 \subsection{Coordination}
 \label{sec:coordination}
@@ -1203,14 +1200,10 @@ Lemma~\ref{lem:canonical-equivalent}, it is maximal at the observable interface:
 every run under any \commitment basis has the same input and output events as
 some run in $\mathcal R_P^\top$.
 
-\begin{definition}[Coordination-requiring \commitment, distributed coordination]
+\begin{definition}[Coordination-requiring \commitment]
 \label{def:coordination}
 A \commitment \emph{requires coordination} when some run in
-$\mathcal R_P^\top$ contradicts it (Definition~\ref{def:contradicts}).  For a
-placement of rows at participants, unrestricted unless a deployment is
-specified, a \commitment applied by participant $p$ \emph{requires distributed
-coordination} when the placement allows a contradicting canonical run at
-another participant $q\ne p$.
+$\mathcal R_P^\top$ contradicts it (Definition~\ref{def:contradicts}).
 \end{definition}
 
 \begin{definition}[Coordination-free]
@@ -1241,12 +1234,21 @@ Every applied \commitment has a contradicting canonical run by
 Proposition~\ref{prop:canonical-contradiction}; the converse is immediate.
 \end{proof}
 
-Output subsumption remains permitted.  Under unrestricted placement, a
-canonical run that contradicts a \commitment can occupy another participant in
-a message-free history, by the construction in the proof of
-Proposition~\ref{prop:distributed-consistency}.  The \commitment then requires
-distributed coordination.  A deployment may prevent that placement by
-restricting which participant may emit the contradicting row (\extended).
+Thus coordination and \commitment coincide at the specification level;
+output subsumption remains permitted.
+
+\paragraph{Placement and distributed coordination.}
+Whether coordination must cross participants depends on placement.  A
+\emph{deployment} assigns to each participant the rows it may emit, without
+removing those rows from the spec or restricting which inputs the environment
+may deliver.  A \commitment made by participant $p$ requires \emph{distributed
+coordination} when a contradicting canonical run can be placed at another
+participant $q\ne p$.  Under unrestricted placement with at least two
+participants, the construction in the proof of
+Proposition~\ref{prop:distributed-consistency} can place every such run at
+another participant.  Ownership can instead confine contradictory output
+choices to one participant, making the coordination local.  Deployments and
+their criterion, monotonicity across partitions, are formalized in \extended.
 
 \begin{proposition}[Contradicting runs cannot reconcile at the conflict input]
 \label{thm:commitments-require-coordination}
@@ -1279,20 +1281,21 @@ implementation.  Locks, agreement protocols, ownership, and sequencers are
 familiar implementations; using one need not apply a \commitment.
 
 Consider a shared-nothing database in which each key is owned and locked by
-one participant~\cite{stonebraker1986sharednothing}.  Ownership can keep
-coordination local.  Ordering two transactions on one key requires
-coordination because the owner may order them oppositely in another run, but
-no other participant can produce that run.  A transaction spanning two keys
-is different: the owners can order the same pair oppositely, so they must use
+one participant~\cite{stonebraker1986sharednothing}.  Ownership is a deployment
+that can keep coordination local.  Ordering two transactions on one key
+requires coordination because a canonical run may order them oppositely, but
+the deployment places both choices at the owner.  A transaction spanning two
+keys is different: it places the choices at different owners, so they must use
 distributed coordination to agree on one order.
 
 Two-phase commit adds no further coordination requirement.  Each owner's
 prepare reports the \commitment it has already made; the coordinator's
 monotone decision only detects whether those \commitments agree, aborting when
 they do not.  A timeout abort before the last vote applies another \commitment,
-like closing the polls.  It requires local coordination when a single
-coordinator makes it.  It requires distributed coordination when the
-coordinator is replicated for fault tolerance, as in Paxos
+like closing the polls.  A deployment with one coordinator places both the
+abort and its contradicting run there, keeping coordination local.  Replicating
+the coordinator places those alternatives at different participants and
+requires distributed coordination, as in Paxos
 Commit~\cite{gray2006consensus}.  \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
 

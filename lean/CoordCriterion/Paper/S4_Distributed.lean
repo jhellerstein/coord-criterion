@@ -820,10 +820,15 @@ theorem «prop:canonical-contradiction/canonical-run» {sp : Spec I O} {i k : I}
   CAP.canonical_run_contradicts hik hx
 
 /-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
-"A run is coordination-free if and only if it applies no commitment."
-Output subsumption remains permitted.  Under unrestricted placement, a
-canonical contradicting run may occupy another participant; a deployment can
-prevent that placement without erasing the spec-level contradiction.
+"A run is coordination-free if and only if it applies no commitment."  Thus
+coordination and commitment coincide at the specification level; output
+subsumption remains permitted.
+
+The following CIDR paragraph sketches placement and distributed coordination:
+a deployment assigns rows to participants without removing them from the spec;
+under unrestricted placement a contradicting canonical run can occupy another
+participant, while ownership can confine both choices to one.  Appendix
+`app:deployment` formalizes the distinction as monotonicity across partitions.
 
 Lean: `CoordFree es ↔ ¬ Coordinates es`; `Coordinates` means that an output
 event has `γ ≠ ε` or a commitment event occurs. -/
