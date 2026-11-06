@@ -10,7 +10,7 @@ import CoordCriterion.CAP.Coordination
 Statement layer for the subsection *Proofs for Section 4* of Appendix
 `app:proofs`: the proofs of Prop. `prop:distributed-consistency`, the
 paragraph *Exchanging outputs* (`app:exchanging-outputs`), and the proofs of
-Prop. `thm:commitments-require-coordination`, Theorem `thm:complete-cap`, and
+Prop. `prop:commitment-conflict`, Theorem `thm:complete-cap`, and
 Corollary `cor:complete-cap-S`.  The results themselves are stated in
 `Paper/S4_Distributed.lean` and `Paper/S4_5_CompleteCAP.lean`.
 
@@ -85,12 +85,12 @@ theorem «app:exchanging-outputs/honored-table-not-state» :
     (canon Dist.spV3 (Dist.v 1)).R (Dist.v 2) (Dist.v 2) :=
   Dist.honor_counterexample
 
-/-- Proof of Prop. `thm:commitments-require-coordination`.  The two
+/-- Proof of Prop. `prop:commitment-conflict`.  The two
 clauses of `CommitmentContradictsAt` are the proof's two cases: an accepted
 input whose fiber the commitment emptied, or an emitted output whose row it
 removed.  In either case, because transitions never add rows, no state with
 current input `k` is reachable from both resulting states. -/
-theorem «proof:thm:commitments-require-coordination» {sp : Spec I O}
+theorem «proof:prop:commitment-conflict» {sp : Spec I O}
     {c : Commitment sp} {σ σc τ : State sp} {k : I}
     (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
     ¬ ∃ ρ : State sp, ρ.cur = k ∧ Reach σc ρ ∧ Reach τ ρ :=

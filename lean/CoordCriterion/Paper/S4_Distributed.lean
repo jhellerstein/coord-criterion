@@ -722,18 +722,12 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 
 /-! ## Coordination (§4.4, `sec:coordination`) -/
 
-/-- §4.4: "Having separated a system's observable behavior from when and
-how it makes commitments, we now ask which commitments require coordination.
-A commitment need not. Suppose a scheduler is constrained always to order `A`
-before `B`. Its `order(A,B)` action is a commitment because it removes the
-permitted `B`-before-`A` rows, but no run admitted by that scheduler contradicts
-the decision. Relative to all runs permitted by the spec, it does require
-coordination."  "The proposition says what a coordination mechanism must
-accomplish: prevent a commitment and a run that contradicts it from occurring
-independently.  The definitions diagnose the requirement, not its
-implementation.  Mutexes, locks, atomic instructions, agreement protocols,
-ownership, and sequencers are familiar implementations.  Using one need not
-apply a commitment."  At the canonical state of any full ballot, the
+/-- §4.4: Having separated a system's observable behavior from when and
+how it makes commitments, we relate those semantic effects to operational
+coordination mechanisms.  Mutexes, locks, atomic instructions, agreement
+protocols, ownership, and sequencers are familiar mechanisms.  A system may
+use one without applying a commitment, and it may apply a commitment without
+identifying any particular mechanism.  At the canonical state of any full ballot, the
 poll-closing commitment `closePolls` is undefined (it would remove no row). -/
 theorem «sec:coordination/closing-after-voting» (i : CALM.Ballots)
     (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
@@ -755,71 +749,13 @@ abbrev «def:contradicts» {sp : Spec I O} (emits : I → O → Prop) (accepts :
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
-/-- **Def. `def:coordination`** (Coordination-requiring commitment).
-"A commitment requires coordination when a canonical run permitted by the
-spec contradicts it."
+/-- **Proposition `prop:canonical-commitment-witness`** (Canonical commitment
+witness).  Every commitment applied in a run from a canonical state `σ_P(i)`
+removes some row `(k,x)` that a canonical run from `σ_P(i)` can still select.
 
-Lean uses the event-list form justified by Proposition
-  `prop:canonical-contradiction`: under the full canonical run set, an event list
-  requires coordination exactly when it applies a nonempty commitment sequence
-  in an output event or contains a commitment event. -/
-abbrev «def:coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-    Coordinates es
-
-  /-- **Def. `def:distributed-coordination`** (Distributed coordination).
-  "A coordinating commitment requires distributed coordination when its
-  contradicting canonical run can be assigned to another participant."
-
-  At the core level placement is unrestricted, so this has the same event-level
-  test as `def:coordination`.  Appendix `app:deployment` explicitly restricts
-  which rows each participant may emit and therefore qualifies this placement
-  argument. -/
-abbrev «def:distributed-coordination» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-    Coordinates es
-
-  /-- Legacy sub-label pointing at `«def:distributed-coordination»`. -/
-abbrev «def:coordination/distributed» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-    Coordinates es
-
-  /-- Def. `def:coordination`, explicit specification-level alias. -/
-abbrev «def:coordination/specification» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-    Coordinates es
-
-  /-- **Def. coordination-free** (`def:coordination-free`).  "A run or history is
-  coordination-free when it applies no commitment that requires coordination
-  relative to the declared specification."
-
-  By Proposition `prop:canonical-contradiction`, this is precisely `CoordFree`:
-  output events use `ε` and no commitment event occurs.  This definition does
-  not depend on which histories a concrete system happens to produce. -/
-abbrev «def:coordination-free» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-    CoordFree es
-
-  /-- Def. `def:coordination-free`: the specification-relative event-list form
-  is exactly the negation of requiring coordination. -/
-theorem «def:coordination-free/local-iff» {sp : Spec I O} (es : List (SEvent sp)) :
-      «def:coordination-free» es ↔ ¬ «def:coordination» es :=
-    coordFree_iff_not es
-
-  /-- Under unrestricted core placement, distributed coordination has the same
-  event-level test. -/
-abbrev «def:coordination-free/distributed» {sp : Spec I O} (es : List (SEvent sp)) : Prop :=
-    CoordFree es
-
-  /-- Coordination freedom implies freedom from distributed coordination in the
-  unrestricted-placement model. -/
-theorem «def:coordination-free/distributed-of-free» {sp : Spec I O} {es : List (SEvent sp)}
-      (h : «def:coordination-free» es) : «def:coordination-free/distributed» es :=
-    h
-
-/-- **Proposition `prop:canonical-contradiction`** (Canonical runs contradict
-every commitment).  "Every commitment applied in a run from a canonical state
-`σ_P(i)` is contradicted by a canonical run from `σ_P(i)`."
-
-Lean states the output-row witness directly: an applied commitment removes
-some `(k,x)`, and the canonical run from the same `σ_P(i)` accepts `k` and
-emits `x`.  This witnesses `CAP.Contradicts` through its output clause. -/
-theorem «prop:canonical-contradiction» {sp : Spec I O} {B : CommitmentBasis sp}
+Lean states the witness directly: the canonical run accepts `k` and emits `x`.
+This also witnesses `CAP.Contradicts` through its output clause. -/
+theorem «prop:canonical-commitment-witness» {sp : Spec I O} {B : CommitmentBasis sp}
     {i : I} {es : List (SEvent sp)} {σ τ : State sp} {c : Commitment sp}
     (hrun : SysExec B (canon sp i) es σ) (happ : c.app σ = some τ) :
     ∃ k x ρ, σ.R k x ∧ ¬ τ.R k x ∧
@@ -832,45 +768,13 @@ theorem «prop:canonical-contradiction» {sp : Spec I O} {B : CommitmentBasis sp
   /-- Supporting form: from `σ_P(i)` with `i ≼ k`, the canonical run
   `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at current input
   `k`. -/
-theorem «prop:canonical-contradiction/canonical-run» {sp : Spec I O} {i k : I} {x : O}
+theorem «prop:canonical-commitment-witness/canonical-run» {sp : Spec I O} {i k : I} {x : O}
     (hik : i ≼ k) (hx : sp.P k x) :
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
-/-- **Corollary `cor:canonical-coordination`** (Canonical coordination).
-"A run is coordination-free if and only if it applies no commitment."  Thus
-coordination and commitment coincide at the specification level; output
-subsumption remains permitted.
-
-The following CIDR paragraph sketches placement and distributed coordination:
-a deployment assigns rows to participants without removing them from the spec;
-under unrestricted placement a contradicting canonical run can occupy another
-participant, while ownership can confine both choices to one.  Appendix
-`app:deployment` formalizes the distinction as monotonicity across partitions.
-
-Lean: `CoordFree es ↔ ¬ Coordinates es`; `Coordinates` means that an output
-event has `γ ≠ ε` or a commitment event occurs. -/
-theorem «cor:canonical-coordination» {sp : Spec I O} (es : List (SEvent sp)) :
-    CoordFree es ↔ ¬ Coordinates es :=
-  coordFree_iff_not es
-
-/-- Def. `def:coordination-free`: coordination-free is the negation of coordinates,
-and coordination-free runs under any basis are exactly the commitment-free
-executions (`ExecCF`) of §3 after erasing `γ`.  `Out_ε(o)` ends at
-`R[out ⪰ o]`, so it may still subsume rows (`«lem:canonical-commitment-normal-form»`
-(3) in the App. C file). -/
-theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
-    (∀ es : List (SEvent sp), CoordFree es ↔ ¬ Coordinates es) ∧
-    (∀ (B : CommitmentBasis sp) (σ τ : State sp) (es : List (SEvent sp)),
-      SysExec B σ es τ → CoordFree es → ExecCF σ (es.filterMap SEvent.erase) τ) ∧
-    (∀ (B : CommitmentBasis sp) (σ τ : State sp) (es : List (Event I O)), ExecCF σ es τ →
-      ∃ es' : List (SEvent sp), es'.filterMap SEvent.erase = es ∧ CoordFree es' ∧
-        SysExec B σ es' τ) :=
-  ⟨coordFree_iff_not, fun _ _ _ _ h hf => coordFree_execCF h hf,
-    fun B _ _ _ h => execCF_coordFree B h⟩
-
-  /-- **Prop. contradicting runs cannot reconcile at the conflict input**
-  (`thm:commitments-require-coordination`).  "Consider a run that applies a
+/-- **Prop. contradicting runs cannot reconcile at the conflict input**
+  (`prop:commitment-conflict`).  "Consider a run that applies a
   commitment and another run that contradicts it at input `k`.  Their resulting
   states have no common continuation to a state `(k,R')`."
 
@@ -878,24 +782,24 @@ theorem «def:coordination-free/commitment-free-runs» {sp : Spec I O} :
   clause is an emitted output `x` whose row the commitment removed; its second
   is an accepted input whose fiber the commitment emptied.  The conclusion
   permits arbitrary, independent bases for the two continuations. -/
-theorem «thm:commitments-require-coordination» {sp : Spec I O}
+theorem «prop:commitment-conflict» {sp : Spec I O}
       {B1 B2 : CommitmentBasis sp} {c : Commitment sp} {σ σc τ : State sp} {k : I}
       (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
       ¬ ∃ ρ : State sp, ρ.cur = k ∧
           (∃ es, SysExec B1 σc es ρ) ∧ (∃ es, SysExec B2 τ es ρ) :=
     Dist.commitment_contradiction_sysExec happ hcontra
 
-  /-- Prop. `thm:commitments-require-coordination`, with continuations in the
+  /-- Prop. `prop:commitment-conflict`, with continuations in the
   transition system of Sections 2--3. -/
-theorem «thm:commitments-require-coordination/reach-general» {sp : Spec I O}
+theorem «prop:commitment-conflict/reach-general» {sp : Spec I O}
       {c : Commitment sp} {σ σc τ : State sp} {k : I}
       (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
       ¬ ∃ ρ : State sp, ρ.cur = k ∧ Reach σc ρ ∧ Reach τ ρ :=
     Dist.commitment_contradiction_reach happ hcontra
 
-  /-- Supporting output-only form of Prop. `thm:commitments-require-coordination`.
+  /-- Supporting output-only form of Prop. `prop:commitment-conflict`.
 under different bases. -/
-theorem «thm:commitments-require-coordination/any-bases» {sp : Spec I O}
+theorem «prop:commitment-conflict/any-bases» {sp : Spec I O}
     {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
     (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
@@ -903,16 +807,16 @@ theorem «thm:commitments-require-coordination/any-bases» {sp : Spec I O}
         (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ) :=
   Dist.conflicting_outputs2 h1 hno h2
 
-/-- Prop. `thm:commitments-require-coordination`, with continuations in the
+/-- Prop. `prop:commitment-conflict`, with continuations in the
 transition system of §§2–3. -/
-theorem «thm:commitments-require-coordination/reach» {sp : Spec I O} {B B' : CommitmentBasis sp}
+theorem «prop:commitment-conflict/reach» {sp : Spec I O} {B B' : CommitmentBasis sp}
     {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
     (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
     (h2 : SysStep B' σ (.output γ' x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
   conflicting_outputs_reach h1 hno h2
 
-/-- Prop. `thm:commitments-require-coordination` with the first event any
+/-- Prop. `prop:commitment-conflict` with the first event any
 event, in particular a commitment event `apply(γ)`: "let one run perform an
 output or commitment event after which no output at `i` extends `x`".
 
@@ -920,7 +824,7 @@ Lean: for any event `e` taking `σ` to `σ'` with no output at `i` extending `x`
 and `Out_{γ'}(x)` taking `σ` to `t`, no state with current input `i` is
 reachable from both, under any bases or in the transition system of §§2–3; if
 `e` is an output or commitment event, its commitment sequence is nonempty. -/
-theorem «thm:commitments-require-coordination/any-event» {sp : Spec I O}
+theorem «prop:commitment-conflict/any-event» {sp : Spec I O}
     {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp} {e : SEvent sp}
     {γ' : List (Commitment sp)} {x : O}
     (h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
@@ -946,7 +850,7 @@ Lean: the example of `CALM/TransientConflict.lean`: inputs `i ≺ j`, outputs
 state with current input `i`; both reach `σ_P(j)` by `input(j)`, so they are
 confluent at `j`; and the specification is neither consistent nor directed at
 `i` (so not Lifted Monotone). -/
-theorem «thm:commitments-require-coordination/confined-to-current-input» :
+theorem «prop:commitment-conflict/confined-to-current-input» :
     open CALM.Transient in
     Step σi (.output .o) tO ∧ Step σi (.output .x) tX ∧
     (∀ y, tO.R .i y → ¬ (Out.x ≼ y)) ∧
@@ -958,36 +862,26 @@ theorem «thm:commitments-require-coordination/confined-to-current-input» :
   ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
     not_consistent, not_directedOutputs, not_liftedMono⟩
   /-- Paragraph "Locks in a shared-nothing database": ordering two transactions
-  chooses between the spec-permitted orders.  Hence the canonical event for
-  `ab` applies a commitment and requires coordination relative to `ordSpec`,
-  independently of whether a concrete strategy suppresses `ba`.  Assigning
-  ownership can make that coordination local only through an explicit
-  deployment restriction (Appendix `app:deployment`). -/
+  chooses between the specification-permitted orders.  The canonical event for
+  `ab` therefore applies a nonempty commitment.  Locks and ownership are
+  operational mechanisms that can enforce this choice. -/
 theorem «sec:coordination/shared-nothing-single-key» :
       ¬ Exposable (canon CAP.ordSpec ()) .ab ∧
         ∃ τ, SysStep (canonCommitmentBasis CAP.ordSpec) (canon CAP.ordSpec ())
           (.output (kappa (canon CAP.ordSpec ()) .ab) .ab) τ ∧
-          Coordinates [SEvent.output (kappa (canon CAP.ordSpec ()) .ab) .ab] := by
+          kappa (canon CAP.ordSpec ()) .ab ≠ [] := by
     have hn := CAP.ordSpec_ab_not_exposable
     have ho : (canon CAP.ordSpec ()).R (canon CAP.ordSpec ()).cur .ab := CAP.canon_ord_R _ _
-    refine ⟨hn, outState _ _ ho, canonical_support _ _ ho, Or.inl ⟨_, .ab, List.mem_cons_self, ?_⟩⟩
+    refine ⟨hn, outState _ _ ho, canonical_support _ _ ho, ?_⟩
     intro he
     have hs : SysStep (canonCommitmentBasis CAP.ordSpec) (canon CAP.ordSpec ())
-        (.output [] .ab) (outState (canon CAP.ordSpec ()) .ab ho) := by simpa [he] using canonical_support _ _ ho
+        (.output [] .ab) (outState (canon CAP.ordSpec ()) .ab ho) := by
+      simpa [he] using canonical_support _ _ ho
     exact hn (eps_step_iff.1 hs).2.1
 
-  /-- With unrestricted placement, a canonical run choosing `ba` may occupy a
-  different participant from the run choosing `ab`; the same event therefore
-  requires distributed coordination.  Per-key ownership changes this conclusion
-  only when represented by a deployment restriction. -/
-theorem «sec:coordination/shared-nothing-cross-key» :
-      Coordinates [SEvent.output (kappa (canon CAP.ordSpec ()) .ab) .ab] :=
-    («sec:coordination/shared-nothing-single-key»).2.choose_spec.2
-
-/-- Paragraph "Locks in a shared-nothing database": "Two-phase commit adds
-no further coordination requirement.  Each owner's prepare reflects its own
-commitment, with the local coordination just described.  The coordinator then
-makes the monotone decision whether all owners prepared."
+/-- Paragraph "Locks in a shared-nothing database": two-phase commit combines
+local prepares with the coordinator's monotone decision whether all owners
+prepared.
 
   Lean, for the decision (`CAP/TwoPhaseCommit.lean`): inputs record the votes
   of `n` fixed participants (`none` until received; a received vote does not
@@ -1014,7 +908,7 @@ decision of `CAP/TwoPhaseCommit.lean` (each vote reports whether the owner's
 prepare succeeded): the decision is `abort` exactly when some received vote is
 no and `commit` exactly when every vote is yes, so once every vote is in it
 aborts exactly when the votes do not all say yes.  "Does not make the owners
-agree" is the coordination-freedom of `«sec:coordination/two-phase-commit»`;
+agree" follows from the monotone decision in `«sec:coordination/two-phase-commit»`;
 that a yes vote reports a successful local prepare is the protocol, not
 modeled. -/
 theorem «sec:coordination/two-phase-commit-detects» {n : Nat} (v : CAP.Votes n) :
@@ -1049,23 +943,19 @@ theorem «sec:coordination/2pc-timeout-abort» {m : Nat} (v : CAP.Votes m) (p : 
   CAP.Timeout.timeout_closes_expansions v p hp
 
   /-- A timeout before the final vote applies the nonempty poll-closing
-  commitment.  Relative to the declared `voteSpec`, it requires coordination:
-  canonical runs still include late votes.  Under unrestricted placement the
-  contradicting canonical run can be assigned to another participant, so the
-  same event also requires distributed coordination.  A single-coordinator
-  locality claim requires an explicit deployment restriction. -/
+  commitment.  The commitment removes rows for canonical runs containing late
+  votes. -/
 theorem «sec:coordination/2pc-timeout-abort-local» :
       let c : Commitment (CAP.voteSpec 3) := Dist.ofCAP CAP.Timeout.cp
       ∃ τ, c.app (canon (CAP.voteSpec 3) CAP.Timeout.yyN) = some τ ∧
-        Coordinates [SEvent.commitment [c]] ∧
         ∃ k x ρ, (canon (CAP.voteSpec 3) CAP.Timeout.yyN).R k x ∧ ¬ τ.R k x ∧
           Exec (canon (CAP.voteSpec 3) CAP.Timeout.yyN) [.input k, .output x] ρ ∧ ρ.cur = k := by
     let c : Commitment (CAP.voteSpec 3) := Dist.ofCAP CAP.Timeout.cp
     have happ0 := (CAP.Timeout.timeout_closes_expansions CAP.Timeout.yyN 2 rfl).1
     have happ : c.app (canon (CAP.voteSpec 3) CAP.Timeout.yyN) =
         some (Figures.closeState (canon (CAP.voteSpec 3) CAP.Timeout.yyN)) := happ0
-    refine ⟨_, happ, Or.inr ⟨[c], List.mem_cons_self⟩, ?_⟩
-    exact «prop:canonical-contradiction» (B := fun _ => True) (es := [])
+    refine ⟨_, happ, ?_⟩
+    exact «prop:canonical-commitment-witness» (B := fun _ => True) (es := [])
       (σ := canon (CAP.voteSpec 3) CAP.Timeout.yyN) (τ := _) (c := c) (.nil _) happ
 
 end CC.Paper
