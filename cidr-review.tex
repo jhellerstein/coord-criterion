@@ -152,10 +152,10 @@ Confluence, and later refinements of CALM all map into the same framework.
 \maketitle
 \noindent{\color{cutred}\footnotesize\textbf{Removals by category}\par
 \begin{tabular}{lrr}category & blocks & words\\\hline
-unclassified & 64 & 5454\\
+unclassified & 65 & 5502\\
 related-work detail & 4 & 578\\
-formal definition/notation & 10 & 394\\
 signposting & 11 & 345\\
+formal definition/notation & 9 & 344\\
 explanation & 6 & 129\\
 formal caution & 2 & 77\\
 example & 2 & 77\\
@@ -164,7 +164,7 @@ result & 1 & 72\\
 1. unclassified, 1369 words: \textit{We now make the mapping precise, and then explain how ...}\par
 2. unclassified, 626 words: \textit{A system dictates a spec and a basis of its ...}\par
 3. unclassified, 360 words: \textit{The orders on [math] and [math] are part of the ...}\par
-4. unclassified, 300 words: \textit{Every output event of any system removes at least the ...}\par
+4. unclassified, 299 words: \textit{Every output event of any system removes at least the ...}\par
 5. signposting, 279 words: \textit{See Appendix .}\par
 6. related-work detail, 258 words: \textit{An invariant is a predicate that every state must satisfy.}\par
 7. formal definition/notation, 205 words: \textit{A continuation of a history at a consistent cut [math] ...}\par
@@ -603,7 +603,7 @@ earlier ones. \removednote{\textbf{explanation}, 21 words, rank 57; \textit{At s
 \label{def:exposable}
 \textcolor{newblue}{At a state $(i,R)$, let $o$ be the unique output at the current input.} \textcolor{newblue}{The
 output $o$ is \emph{legal} when every output in the future-output set \outrel
-$o$.} \removednote{\textbf{unclassified}, 49 words, rank 33; \textit{Equivalently, as the only row at a legal input [math] is [math], [math] is legal exactly ...}}
+$o$.} \removednote{\textbf{unclassified}, 49 words, rank 32; \textit{Equivalently, as the only row at a legal input [math] is [math], [math] is legal exactly ...}}
 \end{definition}
 
 \textcolor{newblue}{Selecting on the output column may require a \commitment.}
@@ -1014,10 +1014,9 @@ Proposition~\ref{prop:functional-exposure-boundary}.
 \label{sec:distributed-execution}
 
 \textcolor{newblue}{This section gives Functional CALM and Complete CALM a distributed reading,
-including a convergence guarantee for functional specs.} \textcolor{newblue}{We then represent
-systems by their \commitment bases and strategies, normalize their runs for
-analysis, distinguish coordination from distributed coordination, and prove
-Complete CAP.}
+including a convergence guarantee for functional specs.} \textcolor{newblue}{We then define
+systems, whose \commitments may exceed those the spec requires, distinguish
+coordination from distributed coordination, and prove Complete CAP.}
 
 \subsection{Distributed histories and consistent cuts}
 \label{sec:histories}
@@ -1102,12 +1101,9 @@ spec.} \removednote{\textbf{unclassified}, 148 words, rank 11; \textit{With seve
 \subsection{Systems and canonical runs}
 \label{sec:systems}
 
-We now connect specification semantics to concrete systems. A \commitment
-basis and strategy capture when and how a system commits. Canonical Run
-Universality then gives every resulting run a canonical counterpart with the
-same observable behavior. The coordination criterion can therefore use
-canonical runs as comparison behaviors without reproducing each system's basis
-or strategy. \removednote{\textbf{unclassified}, 110 words, rank 16; \textit{Specs admit many implementations.}}
+Concrete systems differ in when and how they make decisions. We represent
+those differences, then show that their observable behavior has a common
+canonical form. \removednote{\textbf{unclassified}, 113 words, rank 16; \textit{Specs are declarative, and admit many implementations.}}
 
 \begin{figure}[t]
   \centering
@@ -1148,7 +1144,7 @@ Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
 canonical \commitment $x_o$ required by an output. \removednote{\textbf{unclassified}, 13 words, rank 74; \textit{Systems may commit earlier or remove additional alternatives, as the examples above do.}} \textcolor{newblue}{Systems may commit earlier
 or remove additional alternatives: the registrar may close the polls before
 announcing a result, and a lock manager may fix an order before emitting it.} We
-therefore allow bespoke system \commitments. \removednote{\textbf{unclassified}, 626 words, rank 2; \textit{A system dictates a spec and a basis of its participants may issue; each participant's strategy ...}; labels def:commitment, eq:commitment-unsubsumed, def:system-output-event, eq:lifted-validity, def:commitment-event, def:local-history, def:strategy, def:system, def:produced-history} \textcolor{newblue}{A \emph{\commitment} is a partial
+therefore allow bespoke system \commitments. \removednote{\textbf{unclassified}, 626 words, rank 2; \textit{A system dictates a spec and a basis of its participants may issue; each participant's strategy ...}; labels def:commitment, eq:commitment-unsubsumed, def:system-output-event, eq:lifted-validity, def:commitment-event, def:local-history, def:strategy, def:system, def:produced-history} \removednote{\textbf{unclassified}, 46 words, rank 33; \textit{The analysis in the rest of the paper works with canonical runs rather than with every ...}} \textcolor{newblue}{A \emph{\commitment} is a partial
 function on specification states that removes a nonempty set of rows, none
 subsumed by a row that remains at the same input, while leaving the current
 input unchanged.} \textcolor{newblue}{As before, removing every row at an input rules out that
@@ -1174,18 +1170,16 @@ ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
 $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped
 (Figure~\ref{fig:cc-commitments}).} \textcolor{newblue}{Both are \commitments, but they leave
-different alternatives open.} \textcolor{newblue}{The model therefore preserves how systems make
-decisions.} For coordination analysis, however, every run they produce can be
-normalized to a canonical run. \removednote{\textbf{formal definition/notation}, 50 words, rank 32; \textit{We call the runs of Sections -- canonical runs , and a run under a basis ...}} \textcolor{newblue}{We call the runs of
+different alternatives open.} \textcolor{newblue}{We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}.} \textcolor{newblue}{Locks, timestamps, quorums, and consensus differ in how and when
-they decide; what the environment sees does not, as the next lemma shows.}
+runs}.} Locks, timestamps, quorums, and consensus differ in how and when
+they decide; what the environment sees does not, as the next lemma shows.
 
 \begin{lemma}[Canonical Run Universality]
 \label{lem:canonical-equivalent}
 \textcolor{newblue}{Every run under any \commitment basis is \emph{observably equivalent} to a
 canonical run: one that accepts the same inputs, emits the same outputs,
-and keeps at least the original's rows after each event (\extended).} \removednote{\textbf{unclassified}, 300 words, rank 4; \textit{Every output event of any system removes at least the rows the canonical event for its ...}; labels cor:free-eager-output}
+and keeps at least the original's rows after each event (\extended).} \removednote{\textbf{unclassified}, 299 words, rank 4; \textit{Every output event of any system removes at least the rows the canonical event for its ...}; labels cor:free-eager-output}
 \end{lemma}
 
 \textcolor{newblue}{This lemma lets a canonical run skip a system's early \commitments. 2PL may
@@ -1195,8 +1189,7 @@ output event removes every row that $\gamma$ removed, and possibly others.} \tex
 $\gamma$ is no longer applicable: every
 remaining row already orders $A$ before $B$.} \textcolor{newblue}{Whether a spec needs coordination
 depends only on the \commitments its outputs require, not on their timing or
-bundling in a system's commitment basis.} \textcolor{newblue}{Canonical Run Universality is the
-normalization result that makes this separation possible.}
+bundling in a system's commitment basis.}
 
 \subsection{Coordination}
 \label{sec:coordination}

@@ -1010,10 +1010,9 @@ Proposition~\ref{prop:functional-exposure-boundary}.
 \label{sec:distributed-execution}
 
 This section gives Functional CALM and Complete CALM a distributed reading,
-including a convergence guarantee for functional specs.  We then represent
-systems by their \commitment bases and strategies, normalize their runs for
-analysis, distinguish coordination from distributed coordination, and prove
-Complete CAP.
+including a convergence guarantee for functional specs.  We then define
+systems, whose \commitments may exceed those the spec requires, distinguish
+coordination from distributed coordination, and prove Complete CAP.
 
 \subsection{Distributed histories and consistent cuts}
 \label{sec:histories}
@@ -1098,12 +1097,9 @@ spec.
 \subsection{Systems and canonical runs}
 \label{sec:systems}
 
-We now connect specification semantics to concrete systems.  A \commitment
-basis and strategy capture when and how a system commits.  Canonical Run
-Universality then gives every resulting run a canonical counterpart with the
-same observable behavior.  The coordination criterion can therefore use
-canonical runs as comparison behaviors without reproducing each system's basis
-or strategy.
+Concrete systems differ in when and how they make decisions.  We represent
+those differences, then show that their observable behavior has a common
+canonical form.
 
 \begin{figure}[t]
   \centering
@@ -1170,9 +1166,7 @@ ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
 $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped
 (Figure~\ref{fig:cc-commitments}).  Both are \commitments, but they leave
-different alternatives open.  The model therefore preserves how systems make
-decisions.  For coordination analysis, however, every run they produce can be
-normalized to a canonical run.  We call the runs of
+different alternatives open.  We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
 runs}.  Locks, timestamps, quorums, and consensus differ in how and when
 they decide; what the environment sees does not, as the next lemma shows.
@@ -1191,8 +1185,7 @@ output event removes every row that $\gamma$ removed, and possibly others. At th
 $\gamma$ is no longer applicable: every
 remaining row already orders $A$ before $B$. Whether a spec needs coordination
 depends only on the \commitments its outputs require, not on their timing or
-bundling in a system's commitment basis.  Canonical Run Universality is the
-normalization result that makes this separation possible.
+bundling in a system's commitment basis.
 
 \subsection{Coordination}
 \label{sec:coordination}
