@@ -5,11 +5,11 @@ Theorem~\ref{thm:complete-cap} fixes one explicit relation $E$ for all
 participants.  A deployment fixes one for each participant: the rows that
 participant may emit.  It models a system that assigns authority, such as a
 key owned by one participant or a replica that answers only its own reads.
-This appendix states Availability for a deployment and characterizes the
-condition on the spec that replaces Lifted Monotonicity for $E$.  A deployment
-is an explicit placement qualification for distributed claims.  It assigns
-specification rows to participants without removing those rows from the spec
-or narrowing the canonical runs against which ordinary coordination is judged.
+This appendix states Availability for a deployment and characterizes when the
+choices authorized at different participants remain compatible across a
+partition.  A deployment assigns specification rows to participants without
+removing those rows from the spec or narrowing the canonical runs against which
+\commitments are compared.
 
 \begin{definition}[Deployment, emitted rows, partition]
 \label{def:deployment}
@@ -88,19 +88,18 @@ is then one row emitted by the single authority beside a silent participant, and
 monotonicity across partitions says only that each such row has a \outnoun at
 every \indesc of its input.  Placement-sensitive models such as
 relational-transducer CALM~\cite{ameloot2013relational,ameloot2015weaker} also
-admit this case.  The deployment can prevent a contradicting run from being
-placed at another participant, so an authority's \commitment may not require
-\emph{distributed} coordination under that placement.  The same \commitment
-still requires coordination: $\mathcal R_P^\top$ contains a canonical run that
-contradicts it, regardless of which behaviors a system's strategies choose.
-For example, a lock manager's choice is contradicted by another canonical run
-of the spec even when only the manager is authorized to emit the result.  A
-deployment therefore localizes where a conflict can occur; it does not erase
-the conflict or turn the \commitment into a coordination-free one.  If a system
-must exclude the contrary behavior altogether, that behavioral restriction
-belongs in a tighter spec.  A deployment also does not restrict which inputs a
-participant receives, and the environment may deliver any input to any
-participant.
+admit this case.  The deployment can prevent the contrary choice from being
+placed at another participant.  It does not change the semantic conflict:
+$\mathcal R_P^\top$ still contains a canonical run that contradicts the
+authority's \commitment, regardless of which behaviors a system's strategies
+choose.  For example, another canonical run of the spec contradicts a lock
+manager's choice even when only the manager is authorized to emit the result.
+A deployment therefore says whether the conflicting choices can occur at
+different participants; it does not erase the conflict or the \commitment.  If
+a system must exclude the contrary behavior altogether, that behavioral
+restriction belongs in a tighter spec.  A deployment also does not restrict
+which inputs a participant receives, and the environment may deliver any input
+to any participant.
 
 \begin{proposition}[Partition compatibility under a deployment]
 \label{thm:complete-cap-deployment}
