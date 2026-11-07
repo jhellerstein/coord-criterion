@@ -313,7 +313,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments: |
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
-| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Every output event of a system is the canonical event for its output, which preserves the containment of tables (Lemma output-cont… |
+| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Dropping the commitment events from a run under any commitment basis yields a canonical run that is observably equivalent to it: |
 | `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |

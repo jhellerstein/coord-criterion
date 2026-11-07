@@ -607,14 +607,14 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) 
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *Observable equivalence.*  "Every output event of a system is the
-canonical event for its output, which preserves the containment of tables
-(Lemma output-containment); commitment events are dropped on the canonical
-side; the row containment extends event by event along the run."  Every run
-under any basis has an observably equivalent canonical run: one that accepts
-the same inputs, emits the same outputs, and keeps at least the original's
-rows after each event; its commitment events erase to nothing (Lemma
-canonical-equivalent, Appendix bases).
+/-- *Observable equivalence.*  "Dropping the commitment events from a run
+under any commitment basis yields a canonical run that is observably
+equivalent to it: it accepts the same inputs and emits the same outputs, and
+after each event it keeps at least the original's rows."  Proof sketch:
+"Commitment events only remove rows, so dropping them can only keep more.  An
+input or output event applied to a larger table keeps a larger table (Lemma
+output-containment for outputs), and the canonical run can perform it because
+the original's rows are among its own."
 
 Lean: `«lem:canonical-equivalent»`; `Lockstep` records the per-event
 containment (a commitment event of the original is matched by no canonical

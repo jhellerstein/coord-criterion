@@ -292,9 +292,10 @@ state is fixed by the context. -/
 abbrev «app:bases/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
-/-- **Lemma Observable Equivalence** (`lem:canonical-equivalent`).  "Every run
-under any commitment basis is observably equivalent to a canonical run.  After
-each event, the canonical run's remainder table contains the original run's."
+/-- **Lemma Observable Equivalence** (`lem:canonical-equivalent`).  "Dropping
+the commitment events from a run under any commitment basis yields a canonical
+run that is observably equivalent to it: it accepts the same inputs and emits
+the same outputs, and after each event it keeps at least the original's rows."
 
 Lean: from a run under `B` from `σ_P(i)`, a canonical run from the same
 `σ_P(i)` in `Lockstep` (after each event: erasures agree, current inputs
