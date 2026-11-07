@@ -43,8 +43,9 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
 /-! ## §4.4 The Complete CAP Theorem -/
 
-/-- Section `sec:complete-cap`, opening: "Complete CAP answers that broader
-question for any declared guarantee.  To state the question, we must separate
+/-- Section `sec:complete-cap`, opening: "Complete CAP asks and answers a
+broader question: which specifications are subject to Brewer's conjecture, and
+which are not?  To state the broader question, we must separate
 the outputs that participants must keep available from the full set of
 outputs that the spec permits.  The first is a subset of the second.  During a
 partition, each participant emits outputs from its own local history.  The
