@@ -361,17 +361,17 @@ abbrev appCommitmentContradictedBy {sp : Spec I O} (emits : I → O → Prop) (a
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
-  /-- *partitioned history* — participants divided into two or more blocks, no
-message crosses blocks (Def. `def:partitioned-history`).  Lean:
-`CAP.Partitioned H comp` (at least two blocks, no cross-block receive). -/
+  /-- *partitioned history* — participants divided into two or more sides, no
+message crosses sides (Def. `def:partitioned-history`).  Lean:
+`CAP.Partitioned H comp` (at least two sides, no cross-side receive). -/
 abbrev «app:notation/partitioned-history» {sp : Spec I O} {D : Type} {n : Nat}
     (H : CAP.History sp D n) (comp : Fin n → Nat) : Prop :=
   CAP.Partitioned H comp
 
-/-- *block* — one of the two or more classes into which a partitioned history
+/-- *side* — one of the two or more classes into which a partitioned history
 divides the participants (Def. `def:partitioned-history`).  Lean: the label
 class of `p` under the labelling `comp : Fin n → Nat`. -/
-abbrev «app:notation/block» {n : Nat} (comp : Fin n → Nat) (p : Fin n) : Fin n → Prop :=
+abbrev «app:notation/side» {n : Nat} (comp : Fin n → Nat) (p : Fin n) : Fin n → Prop :=
   fun q => comp q = comp p
 
   /-- *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay

@@ -359,7 +359,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/proof-system-commitment-free»` | theorem | "For `E = P` the proof system needs no commitment at all." The theorem gives the commitment-free system used for full Availability. |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | Supporting operational lemma for the full-availability case. |
 | `«sec:complete-cap/local-row-removal-necessary»` | theorem | "For a smaller `E` row-removing commitments can be necessary: |
-| `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another block, sacrificing Availability, or is emitted anyway, sacrificing Partition Co… |
+| `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another side, sacrificing Availability, or is emitted anyway, sacrificing Partition Con… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Consider a register spec whose inputs are sets of operations with their real-time precedence, and whose outputs answer every operation of the input as some… |
 | `«sec:complete-cap/gl-no-system»` | theorem | "By Complete CAP, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem." Lean: |
@@ -503,8 +503,8 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
-| `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more blocks, no message crosses blocks (Def. |
-| `«app:notation/block»` | abbrev | *block* — one of the two or more classes into which a partitioned history divides the participants (Def. |
+| `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more sides, no message crosses sides (Def. |
+| `«app:notation/side»` | abbrev | *side* — one of the two or more classes into which a partitioned history divides the participants (Def. |
 | `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay available (Def. |
 | `«app:notation/availability»` | abbrev | *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable locally (Def. |
 | `«app:notation/lm-for-A»` | abbrev | *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a common input extension `j` has a common output extension in `P(j)` (Def. |

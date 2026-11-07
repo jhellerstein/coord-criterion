@@ -86,11 +86,11 @@ theorem «sec:complete-cap/intro» (sp : Spec I O) (D : Type) (E : Table I O)
 /-! ### Definition `def:partitioned-history` (Partitioned history) -/
 
 /-- **Def. `def:partitioned-history` (Partitioned history).**  "A partitioned
-history divides the participants into two or more blocks and contains no
-receive whose matching send lies in another block; participants still
+history divides the participants into two or more sides and contains no
+receive whose matching send lies on another side; participants still
 receive environment input and emit outputs."
 
-Lean: a block labelling `comp : Fin n → Nat` with two distinct labels and
+Lean: a side labelling `comp : Fin n → Nat` with two distinct labels and
 no receive from a participant with another label. -/
 abbrev «def:partitioned-history» (H : History sp D n) (comp : Fin n → Nat) : Prop :=
   Partitioned H comp
@@ -140,8 +140,8 @@ theorem «sec:complete-cap/environment» (Sys : System sp D) (init : Fin n → I
 
 /-- **Def. `def:local-continuation`** (Local continuation).  "A continuation
 of a partitioned history is *local to* a participant `p` when the system
-produces it, it adds only history events of `p`'s block and no input events,
-and none of its receives takes a message sent from another block."
+produces it, it adds only history events of `p`'s side and no input events,
+and none of its receives takes a message sent from another side."
 
 Lean: "local to `p`" is unfolded as `Produced … ∧ Partitioned … comp ∧
 (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ q j, inp j ∉ ext q)` in the
@@ -363,7 +363,7 @@ theorem «sec:complete-cap/local-row-removal-necessary» :
       fun ⟨_, hs⟩ => hn (eps_step_iff.1 hs).2.1⟩
 
 /-- "When Lifted Monotonicity for `E` fails, some output of `E` waits for
-another block, sacrificing Availability, or is emitted anyway, sacrificing
+another side, sacrificing Availability, or is emitted anyway, sacrificing
 Partition Consistency." -/
 theorem «sec:complete-cap/lm-for-A-fails» (E : Table I O) (hES : ∀ i o, E i o → sp.P i o)
     (hno : ¬ ConsistentOn sp E) (Sys : System sp D) :
@@ -423,8 +423,8 @@ theorem «sec:complete-cap/gl-no-system» (Sys : System CC.GL.regFullSpec D) :
   CC.GL.gilbert_lynch_direct_cap Sys
 
 /-- "The proof needs less than the full hypotheses here, which is why it
-yields Gilbert and Lynch's theorem exactly.  Place `p` and `q` in separate
-blocks.  Availability is used only to make `p` acknowledge the write and
+yields Gilbert and Lynch's theorem exactly.  Place `p` and `q` on separate
+sides.  Availability is used only to make `p` acknowledge the write and
 `q` answer the read; each fiber holds a single output, so any response will
 do, which is Gilbert and Lynch's availability.  Partition Consistency is used
 only to demand a common output extension of those two answers, a single
@@ -433,8 +433,8 @@ linearization that explains both, which is Gilbert and Lynch's consistency."
 Lean: the two-row case of the proof, for outputs forced at their inputs, with
 Answering (each participant can emit *some* output) in place of Availability
 and a common output extension of the emitted outputs (`CommonRefinementAtEnd`) in
-place of Partition Consistency; the proof runs the two participants in
-separate blocks.  For the register, a common output extension lies in
+place of Partition Consistency; the proof runs the two participants on
+separate sides.  For the register, a common output extension lies in
 `regFull hj`, so it is explained by a single linearization of `hj`, by the
 definition of the fiber.  That Answering and `CommonRefinementAtEnd` are
 Gilbert and Lynch's availability and consistency is the reading of

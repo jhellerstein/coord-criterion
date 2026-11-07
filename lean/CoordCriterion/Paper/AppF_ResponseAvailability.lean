@@ -6,7 +6,7 @@ import CoordCriterion.CAP.ChosenAvailability
 # Paper Appendix F, "Choosing the Explicit Relation" (`appendices/cap-response.tex`)
 
 Statement layer for Appendix `app:cap-response`, in paper order: the response
-obligation, continuations within a block, Response Availability, Response
+obligation, continuations within a side, Response Availability, Response
 Partition Consistency and the remarks on them, replicated systems, Lemma
 `lem:locality`, response interfaces and how a system serves one, Theorem
 `thm:complete-cap-response`, the remark "Without replication", choosing versus
@@ -88,16 +88,16 @@ theorem «app:cap-response/trivially-available» (Q : Obligation sp) (o0 : O)
 /-! ### Definition `def:response-availability` -/
 
 /-- **Def. `def:response-availability`**: "A continuation of a partitioned
-history is within `p`'s block when the system produces it, it adds only history
-events of `p`'s block, and none of its receives takes a message sent from
-another block. … A system has Response Availability for `(Q_p)` when, in
+history is within `p`'s side when the system produces it, it adds only history
+events of `p`'s side, and none of its receives takes a message sent from
+another side. … A system has Response Availability for `(Q_p)` when, in
 every partitioned history it produces, each participant `p`, ending with
 current input `i`, satisfies two conditions.  (1) *Answering.*  In some
-continuation within `p`'s block that adds no input event at `p`, `p`
+continuation within `p`'s side that adds no input event at `p`, `p`
 emits some output in `Q_p(i)`.  (2) *Input acceptance.*  For every `j ⪰ i`,
-in some continuation within `p`'s block, `p` records `input(j)`."
+in some continuation within `p`'s side, `p` records `input(j)`."
 
-Lean: "within `p`'s block" is `Produced … ∧ Partitioned … comp ∧
+Lean: "within `p`'s side" is `Produced … ∧ Partitioned … comp ∧
 (∀ q, comp q ≠ comp p → ext q = [])`; a continuation local to `p` adds,
 besides, no input event. -/
 abbrev «def:response-availability» (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) :
@@ -259,8 +259,8 @@ theorem «app:cap-response/replicated» (Sys : System sp D) :
 
 /-- **Lemma `lem:locality` (Locality).**  "For each of some participants `p`,
 let `ℓ_p` be a local history that `p`'s strategy can produce from initial
-input `i_p` and that contains no receive.  Placing each `ℓ_p` in its own
-block, with at least two blocks and any further participants idle,
+input `i_p` and that contains no receive.  Placing each `ℓ_p` on its own
+side, with at least two sides and any further participants idle,
 gives a partitioned history that the system produces.  If the system is
 replicated, a receive-free local history that the strategy can produce for one
 participant it can produce for any participant with the same initial input,
@@ -506,9 +506,9 @@ only at the precedence an execution realizes."  (The §4.4 derivation is
 /-- **Lemma `lem:forced-answer` (Forced answer).**  "Let `i ⪯ j`, and suppose
 no output in `Q_q(i)` has an output extension in `P(j)`.  In a system with Answering
 for `(Q_p)`, consider a partitioned history that the system produces, in which
-`q` is alone in its block, `q`'s current input is `i`, and `j` extends
+`q` is alone on its side, `q`'s current input is `i`, and `j` extends
 every participant's current input.  Then some continuation within `q`'s
-block that adds only history events of `q`, and no input event, has emitted
+side that adds only history events of `q`, and no input event, has emitted
 outputs with no common output extension in `P(j)`."
 
 Lean: `i` is `σq.cur`; "`q` alone" is `halone`; `i ⪯ j` follows from `hj`.

@@ -1672,8 +1672,8 @@ separates the participants.}
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
 \textcolor{reviewed}{A \emph{partitioned history} divides the participants into two or more
-blocks and contains no receive whose matching send lies in another
-block; participants still receive environment input and emit outputs.}
+sides and contains no receive whose matching send lies on another
+side; participants still receive environment input and emit outputs.}
 \end{definition}
 
 \textcolor{reviewed}{We fix a system, with a strategy for each participant of every finite
@@ -1684,9 +1684,9 @@ any legal input event to any participant.}
 \begin{definition}[Local continuation]
 \label{def:local-continuation}
 \textcolor{reviewed}{A continuation of a partitioned history is \emph{local to} a participant $p$
-when the system produces it, it adds only history events of $p$'s block and no
+when the system produces it, it adds only history events of $p$'s side and no
 input events, and none of its receives takes a message sent from another
-block.}
+side.}
 \end{definition}
 
 \begin{definition}[Explicit relation]
@@ -1745,7 +1745,7 @@ $E\subseteq P$, the following are equivalent:}
 $E$ by the canonical output event of Section~\ref{sec:complete-calm}.} \textcolor{reviewed}{It has
 Availability for $E$, and Lifted Monotonicity for $E$ gives the outputs it emits a
 common \outnoun at every common \indesc of their inputs.} \textcolor{reviewed}{Conversely, given one
-participant per row of $E$, each in its own block, Availability lets each
+participant per row of $E$, each on its own side, Availability lets each
 emit its row's output, and Partition Consistency then supplies the common
 \outnoun.} Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
@@ -1773,7 +1773,7 @@ apply \commitments under the declared spec; serving only $E$ does not remove
 those \commitments.} \textcolor{reviewed}{A partition does not change the intrinsic \commitments a spec needs; rather,
 it prevents separated participants from jointly enforcing those \commitments
 via coordination.} \textcolor{reviewed}{When Lifted
-Monotonicity for $E$ fails, some output of $E$ waits for another block,
+Monotonicity for $E$ fails, some output of $E$ waits for another side,
 sacrificing Availability, or is emitted anyway, sacrificing Partition
 Consistency.}
 
@@ -1790,8 +1790,8 @@ the answer $v_0$; it is not a later read observing a newer value.} \textcolor{re
 there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.}
 
 \textcolor{reviewed}{By Complete CAP, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem.} The proof needs less than the full hypotheses here, which
-is why it yields Gilbert and Lynch's theorem exactly. Place $p$ and $q$ in
-separate blocks. Availability is used only to make $p$ acknowledge the
+is why it yields Gilbert and Lynch's theorem exactly. Place $p$ and $q$ on
+separate sides. Availability is used only to make $p$ acknowledge the
 write and $q$ answer the read; each fiber holds a single output, so any
 response will do, which is Gilbert and Lynch's availability. Partition
 Consistency is used only to demand a common \outnoun of those two answers, a
@@ -2629,7 +2629,7 @@ rows at $k$.
   run under a basis; canonical run & specification events whose \commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
   conflicting runs & a run applies a \commitment removing $(k,x)$; another issues $\mathsf{input}(k)$ then $\mathsf{output}(x)$; not confluent at $k$ & Prop.~\ref{prop:commitment-conflict}\\
-  partitioned history; block; explicit relation $E$ & participants divided into two or more blocks, no message crosses blocks; $E\subseteq P$, the rows whose outputs are placed at a participant or covered by an availability condition & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
+  partitioned history; side; explicit relation $E$ & participants divided into two or more sides, no message crosses sides; $E\subseteq P$, the rows whose outputs are placed at a participant or covered by an availability condition & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
   Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable locally; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\
   Lifted Monotonicity for $E$ & every finite set of rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$ & Def.~\ref{def:lm-for-A}\\
   deployment & one explicit relation $E_p$ per participant & Def.~\ref{def:deployment}\\
@@ -2841,7 +2841,7 @@ Conversely, suppose some system has Availability for $E$ and Partition
 Consistency. Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common
 \indesc $j$; we find some $u\in\fiber{j}$ that \outrel every $o_r$. If $k=0$,
 $\Spec$ is total, so $j$ appears in some row $(j,u)$. Otherwise, take one
-participant $p_r$ per row, starting at input $i_r$, each in its own block,
+participant $p_r$ per row, starting at input $i_r$, each on its own side,
 and a second participant for the row if $k=1$. Each runs without messages. By Availability for $E$, each $p_r$ can emit $o_r$. By Partition Consistency,
 they then reach one state $(j,R)$, which has some row $(j,u)$
 (Definition~\ref{def:residual-state}); this $u$ is the one we seek. Rows are
@@ -3763,7 +3763,7 @@ an explicit relation $E_p\subseteq P$, the rows $p$ may emit: $p$ performs an ou
 $\mathsf{output}(o)$ (Definition~\ref{def:system-output-event}) at current input
 $i$ only if $(i,o)\in E_p$. The \emph{emitted rows} of a run are the pairs
 $(i,o)$ such that the run emits $o$ at current input $i$. A \emph{partition} $\Pi$ of $P$ divides $P$ into
-two or more nonempty blocks, as in a partitioned history
+two or more nonempty sides, as in a partitioned history
 (Definition~\ref{def:partitioned-history}).
 \end{definition}
 
@@ -3771,9 +3771,9 @@ two or more nonempty blocks, as in a partitioned history
 \label{def:participant-run-family}
 A \emph{participant run family} assigns to each of finitely many participants
 $p\in P$ an initial input and a canonical run whose emitted rows lie in $E_p$. A participant whose run emits no output is \emph{silent}. The family is
-\emph{separable under $\Pi$} when either participants in at least two
-blocks emit, or exactly one distinct row is emitted and some silent
-participant lies in another block.
+\emph{separable under $\Pi$} when either participants on at least two
+sides emit, or exactly one distinct row is emitted and some silent
+participant lies on another side.
 \end{definition}
 
 \begin{definition}[Monotone across partitions]
@@ -4088,10 +4088,10 @@ The obligation is part of the declared spec. Response availability
 is only as strong as $Q_p$: if an output permitted at every input answers,
 every spec is available.
 
-\textcolor{reviewed}{A continuation of a partitioned history is \emph{within $p$'s block} when
-the system produces it, it adds only history events of $p$'s block, and none of its
-receives takes a message sent from another block.} A continuation local to
-$p$ (Definition~\ref{def:partition-notions}) is one within $p$'s block
+\textcolor{reviewed}{A continuation of a partitioned history is \emph{within $p$'s side} when
+the system produces it, it adds only history events of $p$'s side, and none of its
+receives takes a message sent from another side.} A continuation local to
+$p$ (Definition~\ref{def:partition-notions}) is one within $p$'s side
 that adds no input event.
 
 \begin{definition}[Response Availability]
@@ -4101,11 +4101,11 @@ partitioned history it produces, each participant $p$, ending with current
 input $i$, satisfies two conditions.
 \begin{enumerate}
 \item
-\emph{Answering.}  In some continuation within $p$'s block that
+\emph{Answering.}  In some continuation within $p$'s side that
         adds no input event at $p$, $p$ emits some output in $Q_p(i)$.
 \item
 \emph{Input acceptance.}  For every $j\InputGe i$, in some
-        continuation within $p$'s block, $p$ records $\mathsf{input}(j)$.
+        continuation within $p$'s side, $p$ records $\mathsf{input}(j)$.
 \end{enumerate}
 \end{definition}
 
@@ -4141,7 +4141,7 @@ participants.
 \begin{lemma}[Locality]
 \label{lem:locality}
 For each of some participants $p$, let $\ell_p$ be a local history that $p$'s
-strategy can produce from initial input $i_p$ and that contains no receive. Placing each $\ell_p$ in its own block, with at least two blocks and
+strategy can produce from initial input $i_p$ and that contains no receive. Placing each $\ell_p$ on its own side, with at least two sides and
 any further participants
 idle, gives a partitioned history that the system produces. If the system is
 replicated, a receive-free local history that the strategy can produce for one participant
@@ -4211,13 +4211,13 @@ Consistency.
 (1$\Rightarrow$2.)  Call an emission \emph{isolated} when its participant has
 received no message before it, and let $T$ be the set of rows $(i,o)$ with
 $o\in Q(i)$ emitted in an isolated emission in some partitioned history of the
-system; such a history and participant are a \emph{witness} for $(i,o)$. Then $T\subseteq Q$. When a participant is alone in its block, every
+system; such a history and participant are a \emph{witness} for $(i,o)$. Then $T\subseteq Q$. When a participant is alone on its side, every
 continuation that Response Availability supplies adds only its own history events and,
 being partitioned, no receive, so the emission it yields is isolated. By
 Lemma~\ref{lem:locality}, a witness's local history up to the emission can be
-replayed by a participant alone in its block, with an idle participant
-forming a second block. \emph{Totality:} for each $i$, Answering in the empty history, for a participant
-with initial input $i$ alone in its block, gives a row of $T$ at $i$. \emph{Self-continuation:} given $(i,o)\in T$ and $j\InputGe i$, replay the
+replayed by a participant alone on its side, with an idle participant
+forming a second side. \emph{Totality:} for each $i$, Answering in the empty history, for a participant
+with initial input $i$ alone on its side, gives a row of $T$ at $i$. \emph{Self-continuation:} given $(i,o)\in T$ and $j\InputGe i$, replay the
 witness, record $\mathsf{input}(j)$ by Input acceptance (truncating just after
 it), and answer by Answering with some $u\in Q(j)$. By
 Lemmas~\ref{lem:canonical-equivalent} and~\ref{lem:run-residual} the table
@@ -4289,8 +4289,8 @@ only at the precedence an execution realizes.
 Let $i\InputOrd j$, and suppose no output in $Q_q(i)$ has a \outnoun in
 $\fiber{j}$. In a system with Answering for $(Q_p)$
 (Definition~\ref{def:response-availability}(1)), consider a partitioned
-history that the system produces, in which $q$ is alone in its block,
-$q$'s current input is $i$, and $j$ \inrel every participant's current input. Then some continuation within $q$'s block that adds only history events of $q$,
+history that the system produces, in which $q$ is alone on its side,
+$q$'s current input is $i$, and $j$ \inrel every participant's current input. Then some continuation within $q$'s side that adds only history events of $q$,
 and no input event, has emitted outputs with no common \outnoun in
 $\fiber{j}$.
 \end{lemma}
@@ -4342,7 +4342,7 @@ the outputs emitted in $C$ have a common \outnoun in $\fiber{h_C}$.
 \end{corollary}
 
 \begin{proof}
-Let replicas $p$ and $q$ start with empty inputs in separate blocks, and
+Let replicas $p$ and $q$ start with empty inputs on separate sides, and
 invoke a write of $\dog\neq v_0$ at $p$. Answering gives a continuation in
 which $p$ acknowledges it. Then invoke a read $r_q$ at $q$, after the
 acknowledgment in $\lambda$. The history is a client history. No message

@@ -26,7 +26,7 @@ row-removing commitments):
 * the participant set `P` is `Fin n`; a deployment is `A : Fin n → Table I O`
   with `A p ⊆ P` (the paper's `E_p` is `A p`);
 * a partition `Π` is a labelling `comp : Fin n → Nat` with at least two
-  distinct labels (`IsPartition`); blocks are the label classes;
+  distinct labels (`IsPartition`); sides are the label classes;
 * a participant run family is `F : Fin n → Option (PRun sp)`: participant `p`
   belongs to the family iff `F p = some m`, and `m` is a canonical run from
   `σ_P(m.init)`; `Emits F p r` says `p`'s run emits row `r = (i, o)`;
@@ -69,8 +69,8 @@ theorem «def:deployment/emitted-rows» (m : PRun sp) (c j : I) (o : O)
   ⟨rfl, rfl, rfl, rfl⟩
 
 /-- Def. `def:deployment`: "A *partition* `Π` of `P` divides `P` into two or
-more nonempty blocks."  A labelling `comp : Fin n → Nat` with two
-participants in different blocks. -/
+more nonempty sides."  A labelling `comp : Fin n → Nat` with two
+participants on different sides. -/
 theorem «def:deployment/partition» (comp : Fin n → Nat) :
     IsPartition comp ↔ ∃ p q, comp p ≠ comp q :=
   Iff.rfl
@@ -80,8 +80,8 @@ silent participant, separable run family).  "A *participant run family*
 assigns to each of finitely many participants `p ∈ P` an initial input and a
 canonical run whose emitted rows lie in `E_p`.  A participant whose run emits
 no output is *silent*.  The family is *separable under `Π`* when either
-participants in at least two blocks emit, or exactly one distinct row is
-emitted and some silent participant lies in another block."
+participants on at least two sides emit, or exactly one distinct row is
+emitted and some silent participant lies on another side."
 
 Lean: a family is `Fin n → Option (PRun sp)`; `Authorized Dp F` enforces
 "emitted rows lie in `E_p`"; `Silent F q` and `Separable F comp` carry the
@@ -96,8 +96,8 @@ theorem «def:deployment/family» (Dp : Deployment sp n) (F : Family sp n) :
   ⟨Iff.rfl, fun _ => Iff.rfl⟩
 
 /-- Def. `def:participant-run-family`: "The family is *separable under `Π`*
-when either participants in at least two blocks emit, or exactly one distinct
-row is emitted and some silent participant lies in another block." -/
+when either participants on at least two sides emit, or exactly one distinct
+row is emitted and some silent participant lies on another side." -/
 theorem «def:deployment/separable» (F : Family sp n) (comp : Fin n → Nat) :
     Separable F comp ↔
       ((∃ p q r r', Emits F p r ∧ Emits F q r' ∧ comp p ≠ comp q) ∨
