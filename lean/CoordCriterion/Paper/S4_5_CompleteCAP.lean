@@ -45,11 +45,14 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
 /-- Section `sec:complete-cap`, opening: "Complete CAP answers that broader
 question for any declared guarantee.  To state the question, we must separate
-the outputs that participants must keep available from the outputs that the
-spec permits.  A participant acts on its local history during a
-partition, while consistency compares the participants' outputs at a common
-input extension of their inputs.  Their common output extension need not be emitted by
-any participant.  It may exist only as the client's combined observation.
+the outputs that participants must keep available from the full set of
+outputs that the spec permits.  The first is a subset of the second.  During a
+partition, each participant emits outputs from its own local history.  The
+spec also permits outputs that no single participant emits, such as the
+conclusion a client draws after collecting outputs from several participants.
+Consistency compares the participants' outputs at a common input extension of
+their inputs, and their common output extension may be such a combined
+output: it need not be emitted by any participant.
 
 Consider a register initialized to `v₀`.  During a partition, participant
 `p` receives a write `w(v)` and emits its acknowledgment, while participant

@@ -1380,12 +1380,12 @@ outputs always remain those of a canonical run.}
 
 For example, serializability can be enforced by any of a number of concurrency
 control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
-Appendix~\ref{app:cc-bases}). Two-phase locking (2PL) orders transactions
+Appendix~\ref{app:cc-bases}). \textcolor{reviewed}{Two-phase locking (2PL) orders transactions
 pairwise through lock requests: when $B$ waits for a lock $A$ holds,
-$\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else. Multiversion
+$\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else.} \textcolor{reviewed}{Multiversion
 timestamp ordering (MVTO)~\cite{bernstein1981concurrency} orders them totally
 through timestamp assignment: $\mathsf{stamp}(B)$ fixes $B$ before any
-transaction not yet stamped. The
+transaction not yet stamped.} The
 two narrow the spec differently.
 
 We saw a similar example with elections. When the registrar of
@@ -1643,17 +1643,19 @@ agreement, as in Paxos Commit~\cite{gray2006consensus}.
 
 \textcolor{reviewed}{Brewer conjectured that a distributed system cannot be consistent, available,
 and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
-proved it for a linearizable register~\cite{gilbert2002cap}.} \textcolor{reviewed}{Their theorem
+proved it for a linearizable register~\cite{gilbert2002cap}.} Their theorem
 concerns one guarantee, not which guarantees can stay available and
-consistent through a partition.} \textcolor{reviewed}{Complete CAP answers that broader question
-for any declared guarantee.}
+consistent through a partition. Complete CAP answers that broader question
+for any declared guarantee.
 
 \textcolor{reviewed}{To state the question, we must separate the outputs that participants must
-keep available from the outputs that the spec permits.} \textcolor{reviewed}{A participant
-acts on its local history during a partition, while consistency compares the
-participants' outputs at a common \indesc of their inputs.} \textcolor{reviewed}{Their common
-\outnoun need not be emitted by any participant.} \textcolor{reviewed}{It may exist only as the
-client's combined observation.}
+keep available from the full set of outputs that the spec permits.} \textcolor{reviewed}{The first is a subset of the
+second.} \textcolor{reviewed}{During a partition, each participant emits outputs from its own local history.} \textcolor{reviewed}{The spec
+also permits outputs that no single participant emits, such as the conclusion a
+client draws after collecting outputs from several participants.} \textcolor{reviewed}{Consistency
+compares the participants' outputs at a common \indesc of their inputs, and
+their common \outnoun may be such a combined output: it need not be emitted by
+any participant.}
 
 \textcolor{reviewed}{Consider a register initialized to $v_0$.} \textcolor{reviewed}{During a partition, participant
 $p$ receives a write $w(v)$ and emits its acknowledgment, while participant
