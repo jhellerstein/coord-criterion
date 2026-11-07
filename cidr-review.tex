@@ -1199,33 +1199,28 @@ paper. \removednote{\textbf{unclassified}, 339 words, rank 3; \textit{The regist
 
 Brewer conjectured that a distributed system cannot be consistent, available,
 and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
-proved it as an impossibility result for a linearizable register~\cite{gilbert2002cap}. Complete CAP asks and answers a broader question: which specifications are subject to Brewer's
+proved it as an impossibility result for a linearizable register~\cite{gilbert2002cap}. Complete CAP asks and answers a broader question: which specifications are subject to the CAP
 conjecture, and which are not?
 
-To state the broader question, we must separate the outputs that participants must
-keep available from the full set of outputs that the spec permits. The first is a subset of the
-second. During a partition, each participant emits outputs from its own local history. The spec
-also permits outputs that no single participant emits, such as the conclusion a
-client draws after collecting outputs from several participants. Consistency
-compares the participants' outputs at a common \indesc of their inputs, and
-their common \outnoun may be such a combined output: it need not be emitted by
-any participant.
+To pose the question properly, note that the outputs that each participant emits---and
+needs to keep available---are not enough to judge consistency. The spec
+must also model what an observer (e.g., a client) can eventually conclude by collecting
+outputs from multiple participants.
 
-To see this distinction, consider a racing read and write that go to different
+To see why, consider a racing read and write that go to different
 participants. The register is initialized to $v_0$. Participant $p$ receives
 write $w(v)$ and emits its acknowledgment; concurrently, participant $q$
 receives the read $r$ and returns $v_0$. A client may later collect both the
 write acknowledgment and read answer $v_0$. A linearizable register spec has a
-row that captures this scenario, pairing an input containing both operations
-with the combined output; this reflects that a linearization may put the
+row that allows this situation: that pair of requests forms an input, and the
+combined responses are an output. That row reflects that a linearization may put the
 concurrent read before the write. However, no participant emits this combined
-output. Nonetheless, it \outrel both local outputs and provides a proof of their
-consistency.
+output, nor is the combined output needed for availability. Nonetheless, it \outrel
+both local outputs, provides a proof of their consistency, and must be in the spec.
 
 We therefore pair a spec with an explicit relation $E\subseteq P$: the
 rows whose outputs participants must keep locally available. Outputs in
-$P\setminus E$ remain permitted, for example as combined outputs, but no
-participant need emit them. Complete CAP says that participants can keep the
+$P\setminus E$, such as combined outputs, need only remain permitted. Complete CAP says that participants can keep the
 outputs of $E$ available and remain consistent through partitions exactly when
 the spec satisfies Lifted Monotonicity for $E$: outputs of $E$ emitted on
 different sides of a partition must have a common \outnoun in the spec at

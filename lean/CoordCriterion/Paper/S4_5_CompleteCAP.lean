@@ -44,36 +44,34 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 /-! ## §4.4 The Complete CAP Theorem -/
 
 /-- Section `sec:complete-cap`, opening: "Complete CAP asks and answers a
-broader question: which specifications are subject to Brewer's conjecture, and
-which are not?  To state the broader question, we must separate
-the outputs that participants must keep available from the full set of
-outputs that the spec permits.  The first is a subset of the second.  During a
-partition, each participant emits outputs from its own local history.  The
-spec also permits outputs that no single participant emits, such as the
-conclusion a client draws after collecting outputs from several participants.
-Consistency compares the participants' outputs at a common input extension of
-their inputs, and their common output extension may be such a combined
-output: it need not be emitted by any participant.
+broader question: which specifications are subject to the CAP conjecture, and
+which are not?
 
-To see this distinction, consider a racing read and write that go to different
-participants.  The register is initialized to `v₀`.
-Participant `p` receives write `w(v)` and emits its acknowledgment;
-concurrently, participant `q` receives the read `r` and returns `v₀`.  A client
-may later collect both the write acknowledgment and read answer `v₀`.  A
-linearizable register spec has a row that captures this scenario, pairing an
-input containing both operations with the combined output; this reflects that
-a linearization may put the concurrent read before the write.  However, no
-participant emits this combined output.  Nonetheless, it extends both local
-outputs and provides a proof of their consistency.
+To pose the question properly, note that the outputs that each participant
+emits—and needs to keep available—are not enough to judge consistency.  The
+spec must also model what an observer (e.g., a client) can eventually conclude
+by collecting outputs from multiple participants.
+
+To see why, consider a racing read and write that go to different
+participants.  The register is initialized to `v₀`.  Participant `p` receives
+write `w(v)` and emits its acknowledgment; concurrently, participant `q`
+receives the read `r` and returns `v₀`.  A client may later collect both the
+write acknowledgment and read answer `v₀`.  A linearizable register spec has a
+row that allows this situation: that pair of requests forms an input, and the
+combined responses are an output.  That row reflects that a linearization may
+put the concurrent read before the write.  However, no participant emits this
+combined output, nor is the combined output needed for availability.
+Nonetheless, it extends both local outputs, provides a proof of their
+consistency, and must be in the spec.
 
 We therefore pair a spec with an explicit relation `E ⊆ P`: the rows whose
-outputs participants must keep locally available.  Outputs in `P ∖ E` remain
-permitted, for example as combined outputs, but no participant need emit them.
-Complete CAP says that participants can keep the outputs of `E` available and
-remain consistent through partitions exactly when the spec satisfies Lifted
-Monotonicity for `E`: outputs of `E` emitted on different sides of a partition
-must have a common output extension in the spec at every common input
-extension of their inputs.  When `E = P`, this is Lifted Monotonicity
+outputs participants must keep locally available.  Outputs in `P ∖ E`, such as
+combined outputs, need only remain permitted.  Complete CAP says that
+participants can keep the outputs of `E` available and remain consistent
+through partitions exactly when the spec satisfies Lifted Monotonicity for
+`E`: outputs of `E` emitted on different sides of a partition must have a
+common output extension in the spec at every common input extension of their
+inputs.  When `E = P`, this is Lifted Monotonicity
 itself."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
 `«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`).  The
