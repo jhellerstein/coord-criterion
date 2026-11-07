@@ -64,16 +64,11 @@ variable {I M : Type} [PO I] [PO M]
 
 /-- Under the empty basis an output event applies no commitment, so it emits
 an exposable output of the current fiber. -/
-theorem empty_step {sq : Spec I M} {σ τ : State sq} {γ : List (Commitment sq)} {o : M}
-    (h : SysStep (fun _ => False) σ (.output γ o) τ) :
-    γ = [] ∧ σ.R σ.cur o ∧ Exposable σ o := by
-  cases γ with
-  | cons c _ =>
-    cases h with
-    | output hb _ _ _ _ _ => exact (hb c List.mem_cons_self).elim
-  | nil =>
-    obtain ⟨ho, he, _, _⟩ := eps_step_iff.1 h
-    exact ⟨rfl, ho, he⟩
+theorem empty_step {sq : Spec I M} {σ τ : State sq} {o : M}
+    (h : SysStep (fun _ => False) σ (.output o) τ) :
+    σ.R σ.cur o ∧ Exposable σ o := by
+  obtain ⟨ho, he, _, _⟩ := eps_step_iff.1 h
+  exact ⟨ho, he⟩
 
 /-- **Exposure at a canonical state of a function.**  Emitting `f i` at
 `σ(i)` is commitment-free iff `f i ≼ f k` for every `k ⪰ i`. -/
@@ -187,14 +182,14 @@ state below `10`; (3) the composite is Lifted-Monotone; (4) the pipeline is
 proper: the store restricted to the counter's outputs needs no commitment. -/
 theorem threshold :
     ¬ thr.LiftedMono ∧
-    (∀ m, m ≤ 9 → ∀ γ o τ, ¬ SysStep (fun _ => False) (canon thr m) (.output γ o) τ) ∧
+    (∀ m, m ≤ 9 → ∀ o τ, ¬ SysStep (fun _ => False) (canon thr m) (.output o) τ) ∧
     (seq up thr).LiftedMono ∧
     Proper up thr := by
   refine ⟨?_, ?_, ?_, ?_⟩
   · intro h
     exact below_9_10 ((graph_liftedMono_iff below).1 h 9 10 (show 9 ≤ 10 by omega))
-  · intro m hm γ o τ hs
-    obtain ⟨_, ho, he⟩ := empty_step hs
+  · intro m hm o τ hs
+    obtain ⟨ho, he⟩ := empty_step hs
     have e : o = below m := ho.1
     subst e
     have := (graph_canon_exposable_iff below m).1 he 10 (show m ≤ 10 by omega)
@@ -349,10 +344,10 @@ theorem compl_exposable_iff (X : PSet U) :
   · intro hX K _ u hu
     exact absurd (hX u) hu
 
-theorem compl_empty_basis {X : PSet U} {γ : List (Commitment (graph (compl (U := U))))}
-    {o : PSet U} {τ : State (graph compl)}
-    (h : SysStep (fun _ => False) (canon (graph compl) X) (.output γ o) τ) : ∀ u, ¬ o.mem u := by
-  obtain ⟨_, ho, he⟩ := empty_step h
+theorem compl_empty_basis {X : PSet U}
+    {o : PSet U} {τ : State (graph (compl (U := U)))}
+    (h : SysStep (fun _ => False) (canon (graph compl) X) (.output o) τ) : ∀ u, ¬ o.mem u := by
+  obtain ⟨ho, he⟩ := empty_step h
   have e : o = compl X := ho.1
   subst e
   intro u hu
@@ -415,11 +410,11 @@ theorem toggle_exposable_iff (b : Bool) :
 
 /-- At input `false` the toggle stage cannot emit under the empty basis: its
 output `true` is not below its output `false` at the larger input `true`. -/
-theorem toggle_empty_basis {γ : List (Commitment (graph not))} {o : Bool}
+theorem toggle_empty_basis {o : Bool}
     {τ : State (graph not)} :
-    ¬ SysStep (fun _ => False) (canon (graph not) false) (.output γ o) τ := by
+    ¬ SysStep (fun _ => False) (canon (graph not) false) (.output o) τ := by
   intro h
-  obtain ⟨_, ho, he⟩ := empty_step h
+  obtain ⟨ho, he⟩ := empty_step h
   have e : o = !false := ho.1
   subst e
   exact Bool.noConfusion ((toggle_exposable_iff false).1 he)
@@ -516,11 +511,11 @@ variable {I M O : Type} [PO I] [PO O]
 system of `graph f` can emit at every canonical state, `f` is monotone (so
 `graph f` is Lifted-Monotone). -/
 theorem cf_upstream_monotone [PO M] {f : I → M}
-    (h : ∀ i, ∃ γ o τ, SysStep (fun _ => False) (canon (graph f) i) (.output γ o) τ) :
+    (h : ∀ i, ∃ o τ, SysStep (fun _ => False) (canon (graph f) i) (.output o) τ) :
     Monotone f := by
   intro x y hxy
-  obtain ⟨γ, o, τ, hs⟩ := h x
-  obtain ⟨_, ho, he⟩ := empty_step hs
+  obtain ⟨o, τ, hs⟩ := h x
+  obtain ⟨ho, he⟩ := empty_step hs
   have e : o = f x := ho.1
   subst e
   exact (graph_canon_exposable_iff f x).1 he y hxy
@@ -619,15 +614,15 @@ its empty-basis system stalls at some canonical state. -/
 theorem no_order_counterexample :
     (∀ _inst : PO Mid, (seq (graph fz) (graph gz)).LiftedMono) ∧
     (∀ _inst : PO Mid, ¬ (graph fz).LiftedMono) ∧
-    ∀ _inst : PO Mid, ∃ i, ∀ γ o τ,
-      ¬ SysStep (fun _ => False) (canon (graph fz) i) (.output γ o) τ := by
+    ∀ _inst : PO Mid, ∃ i, ∀ o τ,
+      ¬ SysStep (fun _ => False) (canon (graph fz) i) (.output o) τ := by
   refine ⟨fun inst => ?_, fun inst h => no_order_monotone inst ((graph_liftedMono_iff _).1 h),
     fun inst => ?_⟩
   · rw [seq_graph]
     exact (graph_liftedMono_iff _).2 fun _ _ _ => trivial
   · exact Classical.byContradiction fun hn => no_order_monotone inst
       (cf_upstream_monotone fun i => Classical.byContradiction fun hi =>
-        hn ⟨i, fun γ o τ hs => hi ⟨γ, o, τ, hs⟩⟩)
+        hn ⟨i, fun o τ hs => hi ⟨o, τ, hs⟩⟩)
 
 end Counterexample
 

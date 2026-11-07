@@ -6,7 +6,7 @@ import CoordCriterion.CAP.CompleteCAP
 * Def. `def:response-availability` / Response Partition Consistency
   (`ResponseAvailability`, `ResponsePC`, `RPCAt`);
 * replicated systems, obligations and response interfaces;
-* the canonical commitment `κ_u` (input and commitments applied together);
+* the canonical commitment `kc u` (`x_u`, `kcap u` of `CAP/Model.lean`);
 * Theorem `thm:complete-cap-response` in both directions
   (`complete_cap_response`).
 
@@ -45,7 +45,7 @@ def ResponseAvailability (Sys : System sp D) (Q : (n : Nat) → Fin n → Table 
       (∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
         Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
         (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
-        ∃ γ o, Q n p σ.cur o ∧ LEv.out γ o ∈ ext p) ∧
+        ∃ o, Q n p σ.cur o ∧ LEv.out o ∈ ext p) ∧
       -- Input acceptance
       (∀ j, σ.cur ≼ j → ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
         Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
@@ -54,7 +54,7 @@ def ResponseAvailability (Sys : System sp D) (Q : (n : Nat) → Fin n → Table 
 /-- Response Partition Consistency of a cut at `j`
 (Def. `def:response-partition-consistency`). -/
 def RPCAt (H : History sp D n) (c : Fin n → Nat) (j : I) : Prop :=
-  ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ (H p).take (c p) → o ≼ u
+  ∃ u, sp.P j u ∧ ∀ p o, LEv.out o ∈ (H p).take (c p) → o ≼ u
 
 def ResponsePC (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
@@ -70,14 +70,14 @@ def ResponsePC (Sys : System sp D) : Prop :=
 /-- Participant-independent local events (receives name the sender by number). -/
 inductive LEvN (sp : Spec I O) (D : Type) where
   | inp (j : I)
-  | out (γ : List (Commitment sp)) (o : O)
+  | out (o : O)
   | commitment (γ : List (Commitment sp))
   | send (j : Option I) (d : D)
   | recv (q : Nat) (k : Nat) (j : Option I) (d : D)
 
 def LEv.erase : LEv sp D n → LEvN sp D
   | .inp j => .inp j
-  | .out γ o => .out γ o
+  | .out o => .out o
   | .commitment γ => .commitment γ
   | .send j d => .send j d
   | .recv q k j d => .recv q.val k j d
@@ -142,41 +142,13 @@ def kcState (σ : State sp) (u : O) (hu : σ.R σ.cur u) : State sp where
   hasCur := ⟨u, hu, not_rm_of_le hu (PO.refl u)⟩
   above := fun k x h => σ.above k x h.1
 
-open Classical in
 /-- The canonical commitment for `u`: defined when `u` is in the current fiber
-  and some row must be removed by commitment; it removes `Excluded_u`.
-That this is a commitment (Eq. `commitment-unsubsumed`) is checked here. -/
-noncomputable def kc (u : O) : Commitment sp where
-  f := fun σ => if h : σ.R σ.cur u ∧ ∃ k x, Rm σ u k x then some (kcState σ u h.1) else none
-  cur_eq := by
-    intro σ τ h; split at h
-    · cases h; rfl
-    · cases h
-  sub := by
-    intro σ τ h; split at h
-    · cases h; exact fun k x h => h.1
-    · cases h
-  strict := by
-    intro σ τ h; split at h
-    · rename_i hh; cases h
-      obtain ⟨k, x, hr⟩ := hh.2
-      have hx : σ.R k x := hr.1
-      exact ⟨k, x, hx, fun h => h.2 hr⟩
-    · cases h
-  excl := by
-    intro σ τ h; split at h
-    · cases h
-      intro k x w hx hnx hw hxw
-      have hrx : Rm σ u k x := Classical.byContradiction fun h => hnx ⟨hx, h⟩
-      obtain ⟨hw1, hw2⟩ := hw
-      -- some row at `k` extends both `u` and `w`
-      have hv : ∃ v, σ.R k v ∧ u ≼ v ∧ w ≼ v := by
-        by_cases huw : u ≼ w
-        · exact ⟨w, hw1, huw, PO.refl w⟩
-        · exact subsumed_of_not_rm hw1 hw2 huw
-      obtain ⟨v, hv1, hv2, hv3⟩ := hv
-      exact hrx.2.2 ⟨hx, hrx.2.1, v, hv1, hv2, PO.trans hxw hv3⟩
-    · cases h
+  and some row must be removed by commitment; it removes `Excluded_u`.  It is
+`kcap u` (`CAP/Model.lean`), i.e. `x_u` of `Distributed/Commitments.lean`. -/
+noncomputable abbrev kc (u : O) : Commitment sp := kcap u
+
+theorem kcState_eq (σ : State sp) (u : O) (hu : σ.R σ.cur u) :
+    kcState σ u hu = commitmentState σ u hu := rfl
 
 theorem kc_apply_some {σ : State sp} {u : O} {σc : State sp}
     (h : applySeq σ [kc u] = some σc) :
@@ -185,20 +157,19 @@ theorem kc_apply_some {σ : State sp} {u : O} {σc : State sp}
   split at h
   · rename_i τ1 h1
     cases h
-    simp only [kc] at h1
-    split at h1
-    · rename_i hh; cases h1; exact ⟨hh.1, rfl⟩
-    · cases h1
+    obtain ⟨hu, _, rfl⟩ := commitmentApp_eq.1 h1
+    exact ⟨hu, rfl⟩
   · cases h
 
 /-- The canonical event for `u` is legal at any state with `u` in the current
-fiber (Lemma `lem:canonical-commitment-normal-form`(2)). -/
+fiber. -/
 theorem kc_legal {σ : State sp} {u : O} (hu : σ.R σ.cur u) :
     ∃ γ σc, (γ = [] ∨ γ = [kc u]) ∧ applySeq σ γ = some σc ∧ σc.R σc.cur u ∧
       Exposable σc u := by
   by_cases hrm : ∃ k x, Rm σ u k x
   · refine ⟨[kc u], kcState σ u hu, Or.inr rfl, ?_, ⟨hu, not_rm_of_le hu (PO.refl u)⟩, ?_⟩
-    · simp only [applySeq, kc]; rw [dite_eq_left_of_eq_true (eq_true ⟨hu, hrm⟩)]
+    · simp only [applySeq]; rw [show (kc u).f σ = some (kcState σ u hu) from
+        commitmentApp_eq.2 ⟨hu, hrm, rfl⟩]
     · intro k x hx hn
       obtain ⟨v, hv1, hv2, hv3⟩ := subsumed_of_not_rm hx.1 hx.2 hn
       exact ⟨v, ⟨hv1, not_rm_of_le hv1 hv2⟩, hv2, hv3⟩
@@ -224,14 +195,14 @@ theorem kc_effect {σ σc τ : State sp} {u : O} {γ : List (Commitment sp)}
 def curOf (i0 : I) : List (LEvN sp D) → I
   | [] => i0
   | .inp j :: l => curOf j l
-  | .out _ _ :: l => curOf i0 l
+  | .out _ :: l => curOf i0 l
   | .commitment _ :: l => curOf i0 l
   | .send _ _ :: l => curOf i0 l
   | .recv _ _ _ _ :: l => curOf i0 l
 
 def emittedOf : List (LEvN sp D) → List O
   | [] => []
-  | .out _ o :: l => o :: emittedOf l
+  | .out o :: l => o :: emittedOf l
   | .inp _ :: l => emittedOf l
   | .commitment _ :: l => emittedOf l
   | .send _ _ :: l => emittedOf l
@@ -249,8 +220,8 @@ theorem emittedOf_append (a b : List (LEvN sp D)) :
   | nil => rfl
   | cons e a ih => cases e <;> simp [emittedOf, ih]
 
-theorem mem_emittedOf {L : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O}
-    (h : LEv.out γ o ∈ L) : o ∈ emittedOf (L.map LEv.erase) := by
+theorem mem_emittedOf {L : List (LEv sp D n)} {o : O}
+    (h : LEv.out o ∈ L) : o ∈ emittedOf (L.map LEv.erase) := by
   induction L with
   | nil => cases h
   | cons e L ih =>
@@ -261,7 +232,7 @@ theorem mem_emittedOf {L : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O
 /-- The strategy: ignore messages, never send; emit, by the canonical event,
 some `u ∈ T(i)` at the current input `i` that extends every earlier output. -/
 noncomputable def respF (T : Table I O) (i0 : I) (pre : List (LEvN sp D)) : LEvN sp D → Prop
-  | .out γ u => (γ = [] ∨ γ = [kc u]) ∧ T (curOf i0 pre) u ∧ ∀ o ∈ emittedOf pre, o ≼ u
+  | .out u => T (curOf i0 pre) u ∧ ∀ o ∈ emittedOf pre, o ≼ u
   | _ => False
 
 noncomputable def respSystem (T : Table I O) : System sp D where
@@ -300,19 +271,19 @@ theorem rinv_run (T : Table I O) {N : Nat} {init : Fin N → I} {p : Fin N} :
     · rw [hE]; rcases h4 with h4 | ⟨i, om, hom, hi, hall⟩
       · exact Or.inl h4
       · exact Or.inr ⟨i, om, hom, PO.trans hi hle, hall⟩
-  | @out σ σc τ' ρ γ u es ha hs _ _ ih =>
+  | @out σ τ' ρ u es hs _ ih =>
     intro pre hc hi
-    have hA := hc [] (.out γ u) es (by simp)
+    have hA := hc [] (.out u) es (by simp)
     simp only [List.append_nil] at hA
-    obtain ⟨_, hγ, hT, hge⟩ := hA
-    have hstep := kc_effect hγ ha hs
-    have := ih (pre ++ [.out γ u]) (fun a e b hab => by
-      have := hc (.out γ u :: a) e b (by simp [hab]); simpa using this)
+    obtain ⟨_, hT, hge⟩ := hA
+    have hstep := hs
+    have := ih (pre ++ [.out u]) (fun a e b hab => by
+      have := hc (.out u :: a) e b (by simp [hab]); simpa using this)
     simp only [List.append_assoc, List.singleton_append] at this
     apply this
     obtain ⟨hu, hcur, _⟩ := step_output_inv hstep
     obtain ⟨h1, h2, h3, h4⟩ := hi
-    have hE : emittedOf ((pre ++ [LEv.out γ u]).map LEv.erase) =
+    have hE : emittedOf ((pre ++ [LEv.out u]).map LEv.erase) =
         emittedOf (pre.map LEv.erase) ++ [u] := by
       simp [emittedOf_append, LEv.erase, emittedOf]
     refine ⟨?_, ?_, ?_, ?_⟩
@@ -409,21 +380,13 @@ theorem response_sufficient (Q : Obligation sp) (T : Table I O)
       obtain ⟨u, hu, hge⟩ := havail σ.cur (PO.refl _)
       have hRu : σ.R σ.cur u :=
         (h2 _ _).2 ⟨Q.sub _ _ (hTQ _ _ hu), PO.refl _, hge⟩
-      obtain ⟨γ, σc, hγ, ha, hcu, hexp⟩ := kc_legal hRu
-      have hcc : σc.cur = σ.cur := (applySeq_spec γ σ σc ha).1
-      let τ : State sp :=
-        { cur := σc.cur, R := outputTable σc u, sub := fun k x h => σc.sub k x h.1,
-          hasCur := ⟨u, hcu, PO.refl u⟩, above := fun k x h => σc.above k x h.1 }
-      have hstep : Step σc (.output u) τ := Step.output σc τ u hcu rfl rfl
+      have hstep := step_output_outState hRu
       obtain ⟨H', ext, hext, hwf', hprod', hpart', hp, hq⟩ :=
-        extend_single (respSystem T) hwf hprod hpart hcut hσ (e := .out γ u)
-          (by intro q k j d h; cases h) (.out ha hstep hexp (.nil τ))
-          ⟨by intro c' hc'; rcases hγ with rfl | rfl
-              · cases hc'
-              · simp at hc'; exact ⟨u, hc'⟩,
-           hγ, by rw [← h1]; exact hu, hge⟩
+        extend_single (respSystem T) hwf hprod hpart hcut hσ (e := .out u)
+          (by intro q k j d h; cases h) (.out hstep (.nil _))
+          ⟨fun _ _ => Or.inr ⟨u, rfl⟩, by rw [← h1]; exact hu, hge⟩
       refine ⟨H', ext, hext, hwf', hprod', hpart', fun q hq' => hq q (fun h => hq' (h ▸ rfl)),
-        by rw [hp]; simp, γ, u, hTQ _ _ hu, by rw [hp]; simp⟩
+        by rw [hp]; simp, u, hTQ _ _ hu, by rw [hp]; simp⟩
     · -- Input acceptance
       intro j hj
       obtain ⟨w, hw, hge⟩ := havail j hj
@@ -449,7 +412,7 @@ theorem response_sufficient (Q : Obligation sp) (T : Table I O)
       obtain ⟨_, _, h3, _⟩ := rinv_of_produced T (compliant_take (hprod p) (c p)) hσ
       obtain ⟨i, hi, hle⟩ := h3 o ho
       exact ⟨i, hi, PO.trans hle (hj p σ hσ)⟩)
-    refine ⟨u, hu, fun p γ o hm => hall o ?_⟩
+    refine ⟨u, hu, fun p o hm => hall o ?_⟩
     simp only [L, List.mem_flatMap]
     exact ⟨p, List.mem_finRange p, mem_emittedOf hm⟩
 
@@ -461,7 +424,7 @@ theorem response_sufficient (Q : Obligation sp) (T : Table I O)
 receives, leave the state unchanged). -/
 def tr {m N : Nat} : LEv sp D m → LEv sp D N
   | .inp j => .inp j
-  | .out γ o => .out γ o
+  | .out o => .out o
   | .commitment γ => .commitment γ
   | .send j d => .send j d
   | .recv _ _ j d => .send j d
@@ -471,7 +434,7 @@ theorem lrun_tr {m N : Nat} {σ τ : State sp} {l : List (LEv sp D m)} (h : LRun
   induction h with
   | nil => exact .nil _
   | inp hs _ ih => exact .inp hs ih
-  | out ha hs hx _ ih => exact .out ha hs hx ih
+  | out hs _ ih => exact .out hs ih
   | commitment hne ha _ ih => exact .commitment hne ha ih
   | send _ ih => exact .send ih
   | recv _ ih => exact .send ih
@@ -484,7 +447,7 @@ theorem lrun_tr_inv {m N : Nat} {l : List (LEv sp D m)} :
     intro σ τ h
     cases e with
     | inp j => cases h with | inp hs hr => exact .inp hs (ih hr)
-    | out γ o => cases h with | out ha hs hx hr => exact .out ha hs hx (ih hr)
+    | out o => cases h with | out hs hr => exact .out hs (ih hr)
     | commitment γ => cases h with | commitment hne ha hr => exact .commitment hne ha (ih hr)
     | send j d => cases h with | send hr => exact .send (ih hr)
     | recv q k j d => cases h with | send hr => exact .recv (ih hr)
@@ -522,8 +485,8 @@ theorem compliant_tr {Sys : System sp D} {F : I → List (LEvN sp D) → LEvN sp
   have hpre : (l1.map (tr (N := N))).map LEv.erase = l1.map LEv.erase := erase_tr hnr1
   cases e with
   | inp j => trivial
-  | out γ o =>
-    refine ⟨hA.1, (hF _ _ _ _ _).2 ?_⟩
+  | out o =>
+    refine ⟨fun σ hσ => hA.1 σ (by rw [hi] at hσ; exact lrun_tr_inv hσ), (hF _ _ _ _ _).2 ?_⟩
     rw [hi, hpre]; exact (hF _ _ _ _ _).1 hA.2
   | commitment γ =>
     refine ⟨hA.1, (hF _ _ _ _ _).2 ?_⟩
@@ -566,8 +529,8 @@ theorem glue {Sys : System sp D} {N : Nat} (hN : 2 ≤ N) {init : Fin N → I}
 history produced by the system. -/
 def IsoEmit (Sys : System sp D) (i : I) (o : O) : Prop :=
   ∃ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat) (p : Fin n)
-    (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ : State sp),
-    WF init H ∧ Produced Sys n init H ∧ Partitioned H comp ∧ H p = a ++ .out γ o :: b ∧
+    (a b : List (LEv sp D n)) (σ : State sp),
+    WF init H ∧ Produced Sys n init H ∧ Partitioned H comp ∧ H p = a ++ .out o :: b ∧
     (∀ q k j d, LEv.recv q k j d ∉ a) ∧ LRun (canon sp (init p)) a σ ∧ σ.cur = i
 
 /-- Local data of an isolated emission. -/
@@ -576,21 +539,20 @@ structure LocW (Sys : System sp D) (i : I) (o : O) where
   init : Fin n → I
   p : Fin n
   a : List (LEv sp D n)
-  γ : List (Commitment sp)
-  comp : Compliant (Allowed Sys n init p) (a ++ [LEv.out γ o])
+  comp : Compliant (Allowed Sys n init p) (a ++ [LEv.out o])
   norecv : ∀ q k j d, LEv.recv q k j d ∉ a
-  run : ∃ τ, LRun (canon sp (init p)) (a ++ [LEv.out γ o]) τ
+  run : ∃ τ, LRun (canon sp (init p)) (a ++ [LEv.out o]) τ
   cur : ∀ σ, LRun (canon sp (init p)) a σ → σ.cur = i
 
 theorem IsoEmit.loc {Sys : System sp D} {i : I} {o : O} (h : IsoEmit Sys i o) :
     Nonempty (LocW Sys i o) := by
-  obtain ⟨n, init, H, _, p, a, b, γ, σ, hwf, hprod, _, hH, hnr, hσ, hcur⟩ := h
-  have hH' : H p = (a ++ [LEv.out γ o]) ++ b := by simp [hH]
+  obtain ⟨n, init, H, _, p, a, b, σ, hwf, hprod, _, hH, hnr, hσ, hcur⟩ := h
+  have hH' : H p = (a ++ [LEv.out o]) ++ b := by simp [hH]
   obtain ⟨τ, hτ⟩ := hwf.1 p
   rw [hH'] at hτ
   obtain ⟨τ1, h1, _⟩ := lrun_append.1 hτ
   have hc := hprod p; rw [hH'] at hc
-  exact ⟨⟨n, init, p, a, γ, compliant_prefix hc, hnr, ⟨τ1, h1⟩,
+  exact ⟨⟨n, init, p, a, compliant_prefix hc, hnr, ⟨τ1, h1⟩,
     fun σ' h => by rw [lrun_det h hσ]; exact hcur⟩⟩
 
 /-- Replaying an isolated emission at a participant with the same initial input. -/
@@ -598,9 +560,9 @@ theorem LocW.replay {Sys : System sp D} {F : I → List (LEvN sp D) → LEvN sp 
     (hF : ∀ n init p pre e, Sys.strat n init p pre e ↔ F (init p) (pre.map LEv.erase) e.erase)
     {i : I} {o : O} (w : LocW Sys i o) {N : Nat} {init' : Fin N → I} {p' : Fin N}
     (hi : init' p' = w.init w.p) :
-    Compliant (Allowed Sys N init' p') ((w.a ++ [LEv.out w.γ o]).map tr) ∧
-    (∀ q k j d, LEv.recv q k j d ∉ (w.a ++ [LEv.out w.γ o]).map (tr (N := N))) ∧
-    (∃ τ, LRun (canon sp (init' p')) ((w.a ++ [LEv.out w.γ o]).map (tr (N := N))) τ) ∧
+    Compliant (Allowed Sys N init' p') ((w.a ++ [LEv.out o]).map tr) ∧
+    (∀ q k j d, LEv.recv q k j d ∉ (w.a ++ [LEv.out o]).map (tr (N := N))) ∧
+    (∃ τ, LRun (canon sp (init' p')) ((w.a ++ [LEv.out o]).map (tr (N := N))) τ) ∧
     (∀ σ, LRun (canon sp (init' p')) (w.a.map (tr (N := N))) σ → σ.cur = i) := by
   refine ⟨compliant_tr hF hi w.comp ?_, fun q k j d => tr_norecv _ q k j d, ?_, ?_⟩
   · intro q k j d hm
@@ -624,11 +586,11 @@ theorem answer_iso {Sys : System sp D} {Q : Obligation sp}
     (hpart : Partitioned H (fun p => p.val)) {c : Fin N → Nat} (hcut : IsCut H c)
     {p : Fin N} {σ : State sp} (hσ : LRun (canon sp (init p)) ((H p).take (c p)) σ) :
     ∃ u, Q.Q σ.cur u ∧ IsoEmit Sys σ.cur u ∧
-      ∀ γ0 o, LEv.out γ0 o ∈ (H p).take (c p) → o ≼ u := by
-  obtain ⟨⟨H', ext, hext, hwf', hprod', hpart', _, hnoinp, γ, u, hQ, hm⟩, _⟩ :=
+      ∀ o, LEv.out o ∈ (H p).take (c p) → o ≼ u := by
+  obtain ⟨⟨H', ext, hext, hwf', hprod', hpart', _, hnoinp, u, hQ, hm⟩, _⟩ :=
     hRA N init H _ hwf hprod hpart c hcut p σ hσ
   obtain ⟨a, b, hab⟩ := List.append_of_mem hm
-  have hH' : H' p = ((H p).take (c p) ++ a) ++ LEv.out γ u :: b := by rw [hext p, hab]; simp
+  have hH' : H' p = ((H p).take (c p) ++ a) ++ LEv.out u :: b := by rw [hext p, hab]; simp
   have hnr := norecv_singletons hwf' hpart'
   obtain ⟨τ, hτ⟩ := hwf'.1 p
   have hτ' := hτ; rw [hH'] at hτ'
@@ -636,12 +598,12 @@ theorem answer_iso {Sys : System sp D} {Q : Obligation sp}
   obtain ⟨σ1, h1, h2⟩ := lrun_append.1 hσa
   have hcur : σa.cur = σ.cur := by
     rw [lrun_noinp h2 (fun j hj => hnoinp j (by rw [hab]; simp [hj])), lrun_det h1 hσ]
-  refine ⟨u, hQ, ⟨N, init, H', _, p, _, b, γ, σa, hwf', hprod', hpart', hH', ?_, hσa, hcur⟩, ?_⟩
+  refine ⟨u, hQ, ⟨N, init, H', _, p, _, b, σa, hwf', hprod', hpart', hH', ?_, hσa, hcur⟩, ?_⟩
   · intro q k j d hm'
     exact hnr p q k j d (by rw [hH']; exact List.mem_append_left _ hm')
-  · intro γ0 o ho
+  · intro o ho
     obtain ⟨l1, l2, hl⟩ := List.append_of_mem ho
-    have : LRun (canon sp (init p)) (l1 ++ LEv.out γ0 o :: (l2 ++ ext p)) τ := by
+    have : LRun (canon sp (init p)) (l1 ++ LEv.out o :: (l2 ++ ext p)) τ := by
       rw [hext p, hl] at hτ; simpa using hτ
     exact lrun_later_le this (List.mem_append_right _ hm)
 
@@ -655,14 +617,14 @@ theorem response_necessary (Q : Obligation sp) (Sys : System sp D) (hrep : Sys.R
   let T : Table I O := fun i o => Q.Q i o ∧ IsoEmit Sys i o
   -- replaying one isolated emission at participant `0` of two
   have replay2 : ∀ {i o} (w : LocW Sys i o),
-      let L : History sp D 2 := fun q => if q.val = 0 then (w.a ++ [LEv.out w.γ o]).map tr else []
+      let L : History sp D 2 := fun q => if q.val = 0 then (w.a ++ [LEv.out o]).map tr else []
       let init : Fin 2 → I := fun _ => w.init w.p
       WF init L ∧ Produced Sys 2 init L ∧ Partitioned L (fun p => p.val) ∧
       IsCut L (fun p => (L p).length) ∧
       ∀ σ, LRun (canon sp (init 0)) ((L 0).take (L 0).length) σ → σ.cur = i := by
     intro i o w L init
     have hr := w.replay hF (N := 2) (init' := init) (p' := 0) rfl
-    have hL0 : L 0 = (w.a ++ [LEv.out w.γ o]).map tr := rfl
+    have hL0 : L 0 = (w.a ++ [LEv.out o]).map tr := rfl
     obtain ⟨h1, h2, h3, h4⟩ := glue (Sys := Sys) (by omega) (init := init) L
       (fun p => by
         by_cases hp : p.val = 0
@@ -696,7 +658,7 @@ theorem response_necessary (Q : Obligation sp) (Sys : System sp D) (hrep : Sys.R
     intro i o j hT hij
     let w := Classical.choice hT.2.loc
     obtain ⟨h1, h2, h3, h4, hcur⟩ := replay2 w
-    let L : History sp D 2 := fun q => if q.val = 0 then (w.a ++ [LEv.out w.γ o]).map tr else []
+    let L : History sp D 2 := fun q => if q.val = 0 then (w.a ++ [LEv.out o]).map tr else []
     let init : Fin 2 → I := fun _ => w.init w.p
     obtain ⟨τ1, hτ1⟩ := h1.1 0
     have hτ1' : LRun (canon sp (init 0)) ((L 0).take (L 0).length) τ1 := by
@@ -728,10 +690,10 @@ theorem response_necessary (Q : Obligation sp) (Sys : System sp D) (hrep : Sys.R
       | inp hs hr => cases hr; exact (step_input_inv hs).2.1
     obtain ⟨u, hQ, hiso, hge⟩ := answer_iso hRA hwf2 hprod2 hpart2 hc2 hσ2
     rw [hj2] at hQ hiso
-    refine ⟨u, ⟨hQ, hiso⟩, hge w.γ o ?_⟩
+    refine ⟨u, ⟨hQ, hiso⟩, hge o ?_⟩
     rw [htake]
     exact List.mem_append_left _ (List.mem_append_left _
-      (List.mem_map.2 ⟨LEv.out w.γ o, by simp, rfl⟩))
+      (List.mem_map.2 ⟨LEv.out o, by simp, rfl⟩))
   · -- consistency on `T`
     intro rows hrows j hj
     by_cases hne : rows = []
@@ -749,13 +711,13 @@ theorem response_necessary (Q : Obligation sp) (Sys : System sp D) (hrep : Sys.R
       if h : p.val < rows.length then (W ⟨p.val, h⟩).init (W ⟨p.val, h⟩).p else j
     let L : History sp D N := fun p =>
       if h : p.val < rows.length then
-        ((W ⟨p.val, h⟩).a ++ [LEv.out (W ⟨p.val, h⟩).γ rows[p.val].2]).map tr
+        ((W ⟨p.val, h⟩).a ++ [LEv.out rows[p.val].2]).map tr
       else []
     have hrep : ∀ (p : Fin N) (h : p.val < rows.length), _ := fun p h =>
       (W ⟨p.val, h⟩).replay hF (N := N) (init' := init) (p' := p)
         (by simp only [init, h, ↓reduceDIte])
     have hLp : ∀ (p : Fin N) (h : p.val < rows.length), L p =
-        ((W ⟨p.val, h⟩).a ++ [LEv.out (W ⟨p.val, h⟩).γ rows[p.val].2]).map tr :=
+        ((W ⟨p.val, h⟩).a ++ [LEv.out rows[p.val].2]).map tr :=
       fun p h => by simp only [L, h, ↓reduceDIte]
     have hLn : ∀ (p : Fin N), ¬ p.val < rows.length → L p = [] :=
       fun p h => by simp only [L, h, ↓reduceDIte]
@@ -787,9 +749,9 @@ theorem response_necessary (Q : Obligation sp) (Sys : System sp D) (hrep : Sys.R
     refine ⟨u, hu, fun r hr => ?_⟩
     obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.1 hr
     let p : Fin N := ⟨i, by omega⟩
-    apply hall p (W ⟨i, hi⟩).γ
+    apply hall p
     rw [List.take_length, hLp p hi]
-    exact List.mem_map.2 ⟨LEv.out _ _, List.mem_append_right _ (List.mem_singleton_self _), rfl⟩
+    exact List.mem_map.2 ⟨LEv.out _, List.mem_append_right _ (List.mem_singleton_self _), rfl⟩
 
 /-- **Theorem `thm:complete-cap-response`** (response form of Complete CAP),
 for a uniform obligation `Q`. -/

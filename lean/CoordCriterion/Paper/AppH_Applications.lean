@@ -48,12 +48,12 @@ theorem «eq:authority-refinement» {Ep Vt Dc : Type} (a b : Auth Ep Vt Dc) :
 any later input [extends] the certified evidence already emitted, so authority
 changes and certified decisions are [legal outputs] and need no further
 commitment."  Safety is the hypothesis that every remaining row extends `o`;
-the conclusion is that `o` is a legal output and the commitment-free output event
-`Out_ε(o)` is legal (under any basis).  Generic in the specification. -/
+the conclusion is that `o` is a legal output, so its output event
+`output(o)` applies no commitment and is available under any basis.  Generic in the specification. -/
 theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO O]
     {sp : Spec I O} {σ : State sp} {o : O} (ho : σ.R σ.cur o)
     (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : CommitmentBasis sp) :
-    Exposable σ o ∧ SysStep B σ (.output [] o) (outState σ o ho) :=
+    Exposable σ o ∧ SysStep B σ (.output o) (outState σ o ho) :=
   safety_exposable ho hsafe B
 
 /-- "Competing proposals for an undecided slot have incompatible extensions of
@@ -61,26 +61,28 @@ theorem «app:additional-applications/safety-exposable» {I O : Type} [PO I] [PO
 different values `d ≠ d'` for the same epoch and slot (`slot d = slot d'`), in
 a specification whose permitted outputs decide at most one value per epoch and
 slot (`SlotUnique`, the paper's "at most one value per epoch and slot"):
-emitting one rejects the other, is not a legal output, and every commitment-sufficient output event
-emitting it applies a commitment (`γ ≠ []`). -/
+emitting one rejects the other, is not a legal output, and its output event
+applies a commitment, the canonical commitment `x_o`, which the basis must
+contain. -/
 theorem «app:additional-applications/slot-conflict» {I Ep Vt Dc κ : Type} [PO I]
     (slot : Dc → κ) {sp : Spec I (Auth Ep Vt Dc)}
     (hU : ∀ k u, sp.P k u → SlotUnique slot u.D)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+      ∀ (B : CommitmentBasis sp) τ, SysStep B σ (.output o) τ → B (canonicalCommitment o) :=
   slot_conflict slot hU ho ho' hd hd' hs hne
 
 /-- "If the succession rule were not fixed, competing next epochs would require
 one [a commitment] as well."  Two current outputs extending the chain `e` by
-different next epochs `a ≠ b`. -/
+different next epochs `a ≠ b`: as for slots, emitting one is not a legal
+output, and its output event applies `x_o`, which the basis must contain. -/
 theorem «app:additional-applications/epoch-conflict» {I Ep Vt Dc : Type} [PO I]
     {sp : Spec I (Auth Ep Vt Dc)} {σ : State sp}
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+      ∀ (B : CommitmentBasis sp) τ, SysStep B σ (.output o) τ → B (canonicalCommitment o) :=
   epoch_conflict ho ho' he he' hne
 
 /-! ## `k`-set agreement: no `k`-wise test suffices -/
@@ -242,11 +244,13 @@ theorem «app:additional-applications/complete-history» {Ev : Type} (e : Ev) :
 /-- "By Proposition `prop:functional-exposure-boundary`, some output can then be
 exposed only after a commitment that excludes larger inputs."  At some state
 reachable without commitment, some current output rules out an excluded row and no
-excluded row, and every commitment-sufficient output event emitting it applies a commitment. -/
+excluded row, and the output event emitting it applies a commitment, `x_o`,
+which the basis must contain. -/
 theorem «app:additional-applications/complete-history-commitment» {Ev : Type} (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
       (∃ k x, Excluded τ o k x) ∧
-      ∀ (B : CommitmentBasis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] :=
+      ∀ (B : CommitmentBasis (completeSpec Ev)) τ', SysStep B τ (.output o) τ' →
+        B (canonicalCommitment o) :=
   completeSpec_commitment_needed e
 
 end Paper

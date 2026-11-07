@@ -21,7 +21,7 @@ library keeps the name `ConsistentOn`.
 * Necessity uses only a common output extension of the emitted outputs
   (`CommonRefinementAtEnd`), and holds for any system.
 * Sufficiency uses the canonical system `respSystem A`, which emits any output
-  of `A` in its current fiber by the canonical event.
+  of `A` in its current fiber by its output event `output(o)`.
 -/
 
 namespace CC
@@ -40,7 +40,7 @@ def AvailabilityFor (A : Table I O) (Sys : System sp D) : Prop :=
       Partitioned (fun q => H q ++ ext q) comp ∧
       (∀ q, comp q ≠ comp p → ext q = []) ∧
       (∀ q j, LEv.inp j ∉ ext q) ∧
-      ∃ γ, LEv.out γ o ∈ ext p
+      LEv.out o ∈ ext p
 
 /-- With `A = S`, Availability for `A` is the paper's Availability. -/
 theorem availabilityFor_S (Sys : System sp D) :
@@ -75,7 +75,7 @@ theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o �
   have hL : ∀ p : Fin N, ∃ L : List (LEv sp D N),
       (∃ τ, LRun (canon sp (init p)) L τ) ∧ (∀ (q : Fin N) k j d, LEv.recv q k j d ∉ L) ∧
       Compliant (Allowed Sys N init p) L ∧ (∀ j, LEv.inp j ∉ L) ∧
-      ∀ h : p.val < rows.length, ∃ γ, LEv.out γ (rows[p.val]'h).2 ∈ L := by
+      ∀ h : p.val < rows.length, LEv.out (rows[p.val]'h).2 ∈ L := by
     intro p
     by_cases hp : p.val < rows.length
     · have hinit : init p = (rows[p.val]'hp).1 := by simp [init, hp]
@@ -85,10 +85,10 @@ theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o �
         rw [hinit]; exact ⟨hAS _ _ hArow, PO.refl _⟩
       have hAo : A (canon sp (init p)).cur (rows[p.val]'hp).2 := by
         show A (init p) _; rw [hinit]; exact hArow
-      obtain ⟨ext, hwf', hprod', hpart', _, hnoinp, γ, hγ⟩ :=
+      obtain ⟨ext, hwf', hprod', hpart', _, hnoinp, hγ⟩ :=
         hA N init H0 comp hwf0 hprod0 hpart0 p _ (.nil _) _ ho hAo
       have hH' : H0 p ++ ext p = ext p := by simp [H0]
-      refine ⟨ext p, ?_, ?_, ?_, hnoinp p, fun _ => ⟨γ, hγ⟩⟩
+      refine ⟨ext p, ?_, ?_, ?_, hnoinp p, fun _ => hγ⟩
       · obtain ⟨τ, h⟩ := hwf'.1 p; exact ⟨τ, hH' ▸ h⟩
       · intro q k j d hm
         obtain ⟨a, b, hab⟩ := List.append_of_mem hm
@@ -121,8 +121,7 @@ theorem consistentOn_of_availabilityFor (A : Table I O) (hAS : ∀ i o, A i o �
   obtain ⟨u, hu, hall⟩ := hC N init Lf comp hwfc hprodc hpartc j hjall
   refine ⟨u, hu, fun r hr => ?_⟩
   obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.1 hr
-  obtain ⟨γ, hγ⟩ := (hLs ⟨i, by omega⟩).2.2.2.2 hi
-  exact hall _ γ _ hγ
+  exact hall _ _ ((hLs ⟨i, by omega⟩).2.2.2.2 hi)
 
 /-! ## Sufficiency -/
 
@@ -139,22 +138,15 @@ theorem availabilityFor_resp (A : Table I O) :
   obtain ⟨h1, h2, _, _⟩ := rinv_of_produced A (compliant_take (hprod p) (c p)) hσ'
   have hge : ∀ o' ∈ emittedOf (((H p).take (c p)).map LEv.erase), o' ≼ o :=
     ((h2 _ _).1 hR).2.2
-  obtain ⟨γ, σc, hγ, ha, hco, hexp⟩ := kc_legal hR
-  let τ : State sp :=
-    { cur := σc.cur, R := outputTable σc o, sub := fun k x h => σc.sub k x h.1,
-      hasCur := ⟨o, hco, PO.refl o⟩, above := fun k x h => σc.above k x h.1 }
-  have hstep : Step σc (.output o) τ := Step.output σc τ o hco rfl rfl
+  have hstep := step_output_outState hR
   obtain ⟨H', ext, hext, hwf', hprod', hpart', hp, hq⟩ :=
-    extend_single (respSystem A) hwf hprod hpart hcut hσ' (e := .out γ o)
-      (by intro q k j d h; cases h) (.out ha hstep hexp (.nil τ))
-      ⟨by intro c' hc'; rcases hγ with rfl | rfl
-          · cases hc'
-          · simp at hc'; exact ⟨o, hc'⟩,
-       hγ, by rw [← h1]; exact hAo, hge⟩
+    extend_single (respSystem A) hwf hprod hpart hcut hσ' (e := .out o)
+      (by intro q k j d h; cases h) (.out hstep (.nil _))
+      ⟨fun _ _ => Or.inr ⟨o, rfl⟩, by rw [← h1]; exact hAo, hge⟩
   have hH' : H' = fun q => H q ++ ext q := by
     funext q; rw [hext q]; simp [c]
   subst hH'
-  refine ⟨ext, hwf', hprod', hpart', fun q hq' => hq q (fun h => hq' (h ▸ rfl)), ?_, γ, ?_⟩
+  refine ⟨ext, hwf', hprod', hpart', fun q hq' => hq q (fun h => hq' (h ▸ rfl)), ?_, ?_⟩
   · intro q j
     by_cases hqp : q = p
     · subst hqp; rw [hp]; simp
@@ -180,7 +172,8 @@ theorem pc_resp (A : Table I O) (hcons : ConsistentOn sp A) :
     obtain ⟨_, _, h3, _⟩ := rinv_of_produced A (compliant_take (hprod p) (c p)) hσ
     obtain ⟨i, hi, hle⟩ := h3 o ho
     exact ⟨i, hi, PO.trans hle (hj p σ hσ)⟩)
-  refine ⟨u, hu, fun p γ o hm => hall o ?_⟩
+  refine ⟨u, hu, fun p o hm => hall o ?_⟩
+
   simp only [L, List.mem_flatMap]
   exact ⟨p, List.mem_finRange p, mem_emittedOf hm⟩
 

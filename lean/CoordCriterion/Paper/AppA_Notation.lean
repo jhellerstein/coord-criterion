@@ -316,10 +316,10 @@ abbrev «app:notation/produced» {sp : Spec I O} {D : Type} (Sys : CAP.System sp
     (init : Fin n → I) (H : CAP.History sp D n) : Prop :=
   CAP.Produced Sys n init H
 
-/-- *system output event `Out_γ(o)`* — applies commitments `γ`, subsumes,
-emits `o` (Def. `def:system-output-event`); when run by a system, `γ ⊆ B`
-(Def. `def:system`).  Lean: the event `SEvent.output γ o`, with transition
-`SysStep B σ (.output γ o) τ`. -/
+/-- *system output event* — the lifted output event `output(o)`; when `o` is
+not legal, its commitment `x_o` must be in the basis (Def.
+`def:system-output-event`).  Lean: the event `SEvent.output o`, with transition
+`SysStep B σ (.output o) τ`. -/
 abbrev «app:notation/system-output-event» {sp : Spec I O} (B : CommitmentBasis sp) :
     State sp → SEvent sp → State sp → Prop :=
   SysStep B
@@ -339,15 +339,15 @@ abbrev «app:notation/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp)
   RunUnder B es τ
 
 /-- *canonical run* — a run of Sections 2–3 (Def. `def:run-under-basis`).
-Lean: `CanonExec σ es τ` (output events `Out_{κ_o}(o)` under the canonical
-basis); `CC.canonExec_exec` / `CC.exec_canonExec` identify these with
+Lean: `CanonExec σ es τ` (runs under the canonical basis with no
+commitment events); `CC.canonExec_exec` / `CC.exec_canonExec` identify these with
 `Exec`. -/
 abbrev «app:notation/canonical-run» {sp : Spec I O} (σ : State sp) (es : List (SEvent sp))
     (τ : State sp) : Prop :=
   CanonExec σ es τ
 
-/-- *observably equivalent* — same input and output events, commitments and
-commitment events erased; every run has a canonical one
+/-- *observably equivalent* — same input and output events, commitment
+events erased; every run has a canonical one
 (Lem. `lem:canonical-equivalent`).  Lean: two event lists are observably
 equivalent when their images under `filterMap SEvent.erase` (which drops
 commitment events) agree; the lemma is `CC.canonical_equivalent`. -/

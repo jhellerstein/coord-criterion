@@ -113,21 +113,24 @@ theorem «fig:election-frames/c» :
   ⟨Dist.step_canon_input elec (by decide) ⟨_, rfl⟩, Figures.Elec.upper_c,
    elec_panel_c_determined, elec_panels_exposable.2.2⟩
 
-/-- Fig. `fig:election-frames`(d) and §2.1: "the system acts as a registrar,
-emitting `⊥` and closing the polls at `ab·` in the same output event.  Its
-irrevocable *commitment* removes the still-possible `aba` and `abb` rows
-but leaves the current input unchanged, and so makes `⊥` the final result."
+/-- Fig. `fig:election-frames`(d) and §2.1: "the system acts as a registrar:
+when it emits `⊥` at `ab·`, it also closes the polls.  Its irrevocable
+*commitment* removes the still-possible `aba` and `abb` rows but leaves the
+current input unchanged, and so makes `⊥` the final result."  Caption: "In (d)
+the registrar closes the polls, a commitment that emitting `⊥` does not
+require, and emits `⊥`."
 
 Closing the polls is the commitment `Figures.closePolls` (a commitment in the
-sense of Def. `def:commitment`, §4.3), and it is a commitment; the registrar's
-event is the system output event `Out_[closePolls](⊥)` of §4.3, legal under
-any basis containing `closePolls`.  It ends at `panelD`, whose only row is
+sense of Def. `def:commitment`, §4.3); the registrar applies it in the
+commitment event `apply([closePolls])` and then emits `⊥` by `output(⊥)`, a
+run under any basis containing `closePolls`.  It ends at `panelD`, whose only row is
 `(ab·,⊥)`; the rows it removes beyond `(b)` are exactly `(aba,a)`, `(abb,b)`
 (the struck rows); the state is determined with result `⊥`. -/
 theorem «fig:election-frames/d» :
     (Figures.closePolls (sp := elec)).app (canon elec bab) = some Figures.Elec.panelD ∧
       (∀ B : CommitmentBasis elec, B Figures.closePolls →
-        SysStep B (canon elec bab) (.output [Figures.closePolls] .bot) Figures.Elec.panelD) ∧
+        SysExec B (canon elec bab) [.commitment [Figures.closePolls], .output .bot]
+          Figures.Elec.panelD) ∧
       Figures.Elec.panelD.cur = bab ∧
       (∀ k o, Figures.Elec.panelD.R k o ↔ (k = bab ∧ o = .bot)) ∧
       (∀ k o, ((canon elec bab).R k o ∧ ¬ Figures.Elec.panelD.R k o) ↔
@@ -145,8 +148,8 @@ theorem «fig:election-frames/d-gray» (k : Ballots) (o : Res) (hk : bad ≼ k) 
       (¬ bab ≼ k ∨ (k = baba ∧ o = .win .a) ∨ (k = Figures.Elec.babb ∧ o = .win .b)) :=
   Figures.Elec.panelD_gray k o hk hS
 
-/-- Fig. `fig:election-frames` caption and §2.1: "a commitment that `output(⊥)`
-alone does not require … Emitting `⊥` by itself would need no commitment,
+/-- Fig. `fig:election-frames` caption and §2.1: "a commitment that emitting
+`⊥` does not require … Emitting `⊥` by itself would need no commitment,
 since every output still possible extends it."  At (b), `⊥` is a legal output,
   `Excluded_o` is empty, and `output(⊥)` removes no row. -/
 theorem «fig:election-frames/bot-alone» :
@@ -387,10 +390,11 @@ theorem «sec:functional-events/output-ends-at-state» {I O : Type} [PO I] [PO O
   ⟨step_outputState σ o h, ⟨h, PO.refl o⟩⟩
 
 /-- "Systems may issue more commitments than an output requires, as the
-registrar does in Figure `fig:election-frames`(d), but extra commitments only
-restrict behavior (Section `sec:systems`)."  For the registrar of panel (d): its
-event `Out_[closePolls](⊥)` has an observably equivalent `output(⊥)` of the
-transition system, whose table contains panel (d)'s.  The general statement
+registrar does in Figure `fig:election-frames`(d), but such extra commitments
+are a system's choice, not the spec's (Section `sec:systems`)."  For the
+registrar of panel (d): its run `apply([closePolls])`, `output(⊥)` has an
+observably equivalent `output(⊥)` of the transition system, whose table
+contains panel (d)'s.  The general statement
 is Lemma `lem:canonical-equivalent` (`CC.canonical_equivalent`, §4.3). -/
 theorem «sec:functional-events/extra-commitments» (B : CommitmentBasis elec) (hB : B Figures.closePolls) :
     ∃ ρ', Exec (canon elec bab) [.output .bot] ρ' ∧ ρ'.cur = bab ∧

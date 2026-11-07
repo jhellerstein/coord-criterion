@@ -26,11 +26,11 @@ fixes $A$ before $B$.  Multiversion timestamp ordering
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped.  The
 two narrow the spec differently.
 
-We saw a similar example with elections.  The registrar of
-Section~\ref{sec:election-story} emits $\bot$ and closes the polls in the
-same event (Figure~\ref{fig:election-frames}(d)); the output event for
-$\bot$ does not require the poll-closing \commitment.  Closing the polls is the
-registrar's design decision, as fixing orderings is 2PL's.
+We saw a similar example with elections.  When the registrar of
+Section~\ref{sec:election-story} emits $\bot$, it also closes the polls
+(Figure~\ref{fig:election-frames}(d)), although emitting $\bot$ does not
+require the poll-closing \commitment.  Closing the polls is the registrar's
+design decision, as fixing orderings is 2PL's.
 
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
 canonical \commitment $x_o$ required by an output.  Systems may commit earlier
@@ -59,23 +59,13 @@ before $B$.  The canonical \commitments of Section~\ref{sec:lifted-output-events
 
 A system draws its \commitments from a basis.
 
-\begin{definition}[Output event $\Out{\gamma}{o}$, commitment-sufficient output event]
+\begin{definition}[System output event]
 \label{def:system-output-event}
-Let $(i,R)$ be a state and $o\in R(i)$.  An output event $\Out{\gamma}{o}$
-applies a sequence $\gamma=e_1\cdots e_n$ of \commitments, each $e_m$
-defined at the state its predecessors leave, and then subsumes rows and
-emits $o$, all atomically.  The sequence may be empty, written
-$\varepsilon$.  Write $R_c$ for the table after $\gamma$ is applied.  The
-event is \emph{commitment-sufficient} when applying $\gamma$ leaves $o$
-as a legal output at $(i,R_c)$:
-\begin{equation}
-  (k,x)\in R_c\setminus R_c[\mathrm{out}\OutputGe o]
-  \quad\Longrightarrow\quad
-  \exists u\in R_c[\mathrm{out}\OutputGe o](k):\ x\OutputOrd u.
-  \label{eq:lifted-validity}
-\end{equation}
-The event subsumes those discarded rows and ends at
-$(i,R_c[\mathrm{out}\OutputGe o])$.
+Let $(i,R)$ be a state and $o\in R(i)$.  A system emits $o$ by the output
+event $\mathsf{output}(o)$ of Section~\ref{sec:lifted-output-events}, which
+ends at $(i,R[\mathrm{out}\OutputGe o])$.  When $o$ is not a legal output,
+the event applies the canonical \commitment $x_o$, which must then belong to
+the system's basis.
 \end{definition}
 
 \begin{definition}[\Commitment event]
@@ -85,18 +75,11 @@ sequence $\gamma=e_1\cdots e_n$ of \commitments, each defined at the state
 its predecessors leave, and emits nothing.
 \end{definition}
 
-A \commitment event lets a system apply \commitments before any output needs them.
-The environment observes nothing from it.  \Commitment events are a third
-kind of specification event, so a distributed history may contain them;
-Definitions~\ref{def:distributed-history} and~\ref{def:participant-run} apply
+A system applies its own \commitments only in \commitment events.  A \commitment event may precede an output event, which then
+has less to remove.  The environment observes nothing from a \commitment event.
+\Commitment events are a third kind of specification event, so a distributed
+history may contain them; Definitions~\ref{def:distributed-history} and~\ref{def:participant-run} apply
 unchanged.
-
-A commitment-sufficient $\Out{\gamma}{o}$ issues at least the \commitments of the $\mathsf{output}(o)$
-of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}: its \commitments
-remove the rows in $\Excluded_o$
-(Lemma~\ref{lem:canonical-commitment-normal-form}), and $\mathsf{output}(o)$ is
-the case in which they remove exactly those.  The environment observes $o$, not
-$\gamma$.
 
 \begin{definition}[Local history]
 \label{def:local-history}
@@ -155,10 +138,9 @@ Figure~\ref{fig:ambiguity-frames}(f).  2PL applies $\mathsf{order}(A,B)$
 when $B$ waits for a lock $A$ holds, leaving $C$'s position open (panel
 (h)); MVTO applies $\mathsf{stamp}(B)$ when $B$ receives the first
 timestamp, placing $B$ first (panel (i)).  Both are \commitments: rows survive
-at the input.  Each can be applied in a \commitment event
-$\mathsf{apply}(\gamma)$ or as one \commitment in the $\gamma$ of an output
-event that later emits a full serial order, and neither is the \commitment
-$x_o$ of Section~\ref{sec:lifted-output-events}.
+at the input.  Each is applied in a \commitment event
+$\mathsf{apply}(\gamma)$, and neither is the \commitment $x_o$ of
+Section~\ref{sec:lifted-output-events}.
 
 \begin{figure}[t]
   \centering
@@ -213,11 +195,10 @@ events erase to nothing.
 \end{lemma}
 
 \begin{proof}[Proof sketch]
-Every output event of any system removes at least the rows the canonical
-event for its output removes
-(Lemma~\ref{lem:canonical-commitment-normal-form}); \commitment events are
-dropped on the canonical side; the row containment extends event by event
-along the run.  Full proof in Appendix~\ref{app:bases}.
+Every output event of a system is the canonical event for its output, which
+preserves the containment of tables (Lemma~\ref{lem:output-containment});
+\commitment events are dropped on the canonical side; the row containment
+extends event by event along the run.  Full proof in Appendix~\ref{app:bases}.
 \end{proof}
 
 \begin{corollary}[Eager output is incidental]
@@ -240,8 +221,9 @@ where $B$ waits for a lock that $A$ holds.  When $B$ begins to wait, 2PL applies
 $\mathsf{order}(A,B)$ in a \commitment event, before any output, keeping only
 rows that can be completed without placing $B$ before $A$.  The canonical run
 skips that event, so it keeps every row, including the one completed by
-$[B,A,C]$.  Suppose 2PL later emits $[A,C,B]$; its output event commits all
-three transactions and orders $A$ before $C$ before $B$.  The canonical run
+$[B,A,C]$.  Suppose 2PL later commits all three transactions and orders $A$
+before $C$ before $B$ in a \commitment event, and then emits $[A,C,B]$.  The
+canonical run
 can emit the same output because that row was present all along.  Every row
 retained afterward extends $[A,C,B]$, so it satisfies all of 2PL's decisions,
 including the earlier order of $A$ before $B$.  Thus the canonical final table
@@ -427,8 +409,8 @@ emit its row's output, and Partition Consistency then supplies the common
 \label{cor:complete-cap-S}
 Some system has Availability and Partition Consistency if and only if $\Spec$
 satisfies Lifted Monotonicity.  When it does, a \commitment-free system has
-both: one whose strategies may emit any legal output $o$ with no
-\commitment, by $\Out{\varepsilon}{o}$.
+both: one with the empty basis, whose strategies may emit any legal output
+$o$ by $\mathsf{output}(o)$, which applies no \commitment.
 \end{corollary}
 
 \begin{proof}[Proof sketch]

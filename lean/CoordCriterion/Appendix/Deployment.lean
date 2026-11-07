@@ -363,7 +363,7 @@ def AvailabilityAt (Sys : System sp D) (n : Nat) : Prop :=
       Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
       (∀ q, comp q ≠ comp p → ext q = []) ∧
       (∀ q j, LEv.inp j ∉ ext q) ∧
-      ∃ γ, LEv.out γ o ∈ ext p
+      LEv.out o ∈ ext p
 
 theorem availability_iff (Sys : System sp D) :
     Availability Sys ↔ ∀ n, AvailabilityAt Sys n := Iff.rfl
@@ -381,7 +381,7 @@ def DeploymentAvailability (Sys : System sp D) (Dp : Deployment sp n) : Prop :=
       Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
       (∀ q, comp q ≠ comp p → ext q = []) ∧
       (∀ q j, LEv.inp j ∉ ext q) ∧
-      ∃ γ, LEv.out γ o ∈ ext p
+      LEv.out o ∈ ext p
 
 /-- Availability implies Deployment Availability for every deployment. -/
 theorem deploymentAvailability_of_availability (Sys : System sp D) (Dp : Deployment sp n)

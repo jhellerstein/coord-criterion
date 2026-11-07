@@ -221,15 +221,18 @@ theorem panelD_gray (k : Ballots) (o : Res) (hk : bad ≼ k) (hS : elec.P k o) :
   revert hk
   ballot_cases k <;> decide
 
-/-- The registrar's output event: `Out_{[closePolls]}(⊥)` at (b) is legal (under
-any basis containing `closePolls`) and ends at panel (d). -/
+/-- The registrar closes the polls when it emits `⊥`: at (b), the commitment
+event `apply([closePolls])` followed by `output(⊥)` is a run under any basis
+containing `closePolls`; `⊥` is legal after the commitment, and the run ends
+at panel (d). -/
 theorem registrar_step (B : CommitmentBasis elec) (hB : B closePolls) :
-    SysStep B (canon elec bab) (.output [closePolls] .bot) panelD := by
-  refine SysStep.output (fun c hc => by simp at hc; subst hc; exact hB)
-    (ApplySeq.cons close_at_b (ApplySeq.nil _)) ((panelD_rows _ _).2 ⟨rfl, rfl⟩) ?_ rfl ?_
-  · intro k x _ hx; exact absurd (Or.inl rfl) hx
+    SysExec B (canon elec bab) [.commitment [closePolls], .output .bot] panelD := by
+  refine .cons (SysStep.commitment (fun c hc => by simp at hc; subst hc; exact hB)
+    (List.cons_ne_nil _ _) (ApplySeq.cons close_at_b (ApplySeq.nil _))) (.cons ?_ (.nil _))
+  refine legal_output_step (Step.output _ _ _ ((panelD_rows _ _).2 ⟨rfl, rfl⟩) rfl ?_) ?_
   · funext k x; apply propext
     exact ⟨fun h => ⟨h, Or.inl rfl⟩, fun h => h.1⟩
+  · intro k x _ hx; exact absurd (Or.inl rfl) hx
 
 /-- "Emitting `⊥` by itself would need no commitment": at (b), `⊥` is
 exposable, `Excluded_⊥` is empty, and `output(⊥)` removes no
@@ -251,14 +254,14 @@ theorem panelD_matches_e (k : Ballots) (r : Res) :
   rw [panelD_rows, elecEq_bot_single_row]
   exact ⟨fun ⟨h1, h2⟩ => ⟨h1, by rw [h2]⟩, fun ⟨h1, h2⟩ => ⟨h1, by cases h2; rfl⟩⟩
 
-/-- "Extra commitments only restrict behavior": the registrar's run has an
-observably equivalent run of the transition system (`input`/`output` events),
-whose table contains panel (d)'s. -/
+/-- "Extra commitments are a system's choice, not the spec's": the
+registrar's run has an observably equivalent run of the transition system
+(`input`/`output` events), whose table contains panel (d)'s. -/
 theorem registrar_canonical (B : CommitmentBasis elec) (hB : B closePolls) :
     ∃ ρ', Exec (canon elec bab) [.output .bot] ρ' ∧ ρ'.cur = bab ∧
       ∀ k u, panelD.R k u → ρ'.R k u := by
   obtain ⟨_, ρ', _, _, hx, hc, hsub⟩ :=
-    canonical_equivalent (SysExec.cons (registrar_step B hB) (SysExec.nil _))
+    canonical_equivalent (registrar_step B hB)
   exact ⟨ρ', hx, hc, hsub⟩
 
 /-! ### Sec. `sec:discussion`: decisive ballot vs. closing the polls -/
@@ -376,13 +379,17 @@ theorem ba_excluded :
   exact TOut.noConfusion (h1.trans h2.symm)
 
 /-- Emitting `[A,B]` is not exposable: it requires a commitment, and every
-legal system output event emitting it carries one. -/
+system output event emitting it applies `x_[A,B]`, which must belong to the
+system's basis. -/
 theorem ab_not_exposable : ¬ Exposable (canon spec ()) .ab ∧
-    ∀ (B : CommitmentBasis spec) (γ : List (Commitment spec)) τ,
-      SysStep B (canon spec ()) (.output γ .ab) τ → γ ≠ [] := by
-  refine ⟨fun h => (exposable_iff_empty _ _).1 h ⟨(), .ba, ba_excluded.1⟩, ?_⟩
-  intro B γ τ h
-  exact containment_nonempty h ⟨(), .ba, ba_excluded.1⟩
+    ∀ (B : CommitmentBasis spec) τ,
+      SysStep B (canon spec ()) (.output .ab) τ → B (canonicalCommitment .ab) := by
+  have hn : ¬ Exposable (canon spec ()) .ab :=
+    fun h => (exposable_iff_empty _ _).1 h ⟨(), .ba, ba_excluded.1⟩
+  refine ⟨hn, ?_⟩
+  intro B τ h
+  cases h with
+  | output _ hb => exact hb.resolve_left hn
 
 /-- The commitment `x_[A,B]` applies at `{A,B}`; it removes `[B,A]` while the
 input stays legal (the row `[A,B]` remains). -/

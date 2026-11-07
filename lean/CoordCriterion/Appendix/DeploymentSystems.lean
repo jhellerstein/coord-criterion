@@ -5,7 +5,7 @@ import CoordCriterion.Distributed.Systems
 # Deployment remark: system runs (Appendix `app:deployment`)
 
 The remark after Prop. `thm:complete-cap-deployment`: for the runs of a
-*system* (`CC.CAP` local runs, with arbitrary commitments in output events),
+*system* (`CC.CAP` local runs, with arbitrary commitments in commitment events),
 if the specification is monotone across partitions then every separable,
 authorized family of system runs has a common output extension in `P(j)` at every
 common input extension `j` (`system_monoAcross`), in particular the participant
@@ -24,8 +24,8 @@ open Classical
 /-! ## 4. App. `app:deployment`: the proposition applies to the runs of a system
 
 A system participant's run is a `CC.CAP` local run (`LRun`) from a canonical
-state: input events, output events `out γ o` with arbitrary commitment
-sequences `γ`, sends and receives.  Its emitted rows are the pairs
+state: input events, output events `out o`, commitment events with arbitrary
+commitment sequences `γ`, sends and receives.  Its emitted rows are the pairs
 `(current input, o)` of its output events. -/
 
 open CC.CAP (LEv LRun)
@@ -37,7 +37,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {m : Nat}
 def emittedL (c : I) : List (LEv sp D m) → List (I × O)
   | [] => []
   | .inp j :: es => emittedL j es
-  | .out _ o :: es => (c, o) :: emittedL c es
+  | .out o :: es => (c, o) :: emittedL c es
   | .commitment _ :: es => emittedL c es
   | .send _ _ :: es => emittedL c es
   | .recv _ _ _ _ :: es => emittedL c es
@@ -47,7 +47,7 @@ dropped, commitments transported by `Dist.ofCAP`). -/
 def toS : List (LEv sp D m) → List (SEvent sp)
   | [] => []
   | .inp j :: es => .input j :: toS es
-  | .out γ o :: es => .output (γ.map Dist.ofCAP) o :: toS es
+  | .out o :: es => .output o :: toS es
   | .commitment γ :: es => .commitment (γ.map Dist.ofCAP) :: toS es
   | .send _ _ :: es => toS es
   | .recv _ _ _ _ :: es => toS es
@@ -65,9 +65,7 @@ theorem lrun_sysExec {σ τ : State sp} {l : List (LEv sp D m)} (h : LRun σ l �
   induction h with
   | nil => exact SysExec.nil _
   | inp hs _ ih => exact SysExec.cons (SysStep.input hs) ih
-  | @out σ σc τ ρ γ o es hγ hs hexp _ ih =>
-    refine SysExec.cons (Dist.sysStep_iff_CAP.2 ⟨fun _ _ => trivial, σc, ?_, hs, hexp⟩) ih
-    rw [map_ofCAP_toCAP]; exact hγ
+  | out hs _ ih => exact SysExec.cons (Dist.sysStep_iff_CAP.2 ⟨hs, Or.inr trivial⟩) ih
   | commitment hne hγ _ ih =>
     refine SysExec.cons (SysStep.commitment (fun _ _ => trivial) ?_ ?_) ih
     · intro h; exact hne (List.map_eq_nil_iff.1 h)
@@ -82,7 +80,7 @@ theorem emitted_toS (c : I) (l : List (LEv sp D m)) :
   | cons e es ih =>
     cases e with
     | inp j => exact ih j
-    | out γ o => simp only [toS, List.filterMap_cons, SEvent.erase, emitted, emittedL, ih]
+    | out o => simp only [toS, List.filterMap_cons, SEvent.erase, emitted, emittedL, ih]
     | commitment γ => exact ih c
     | send _ _ => exact ih c
     | recv _ _ _ _ => exact ih c

@@ -11,9 +11,12 @@ Namespace `CC.Apps` (reuses the finite sets and generic commitment lemmas of
 * Committed authority:  `Auth`, `prefix_antisymm`, the output order of
   Eq. `authority-refinement` (`instPOAuth`); `safety_exposable` (if every
   remaining row extends the certified evidence `o`, then `o` is exposable and
-    `Out_ε(o)` is legal); `incompatible_excluded` (generic: two outputs at the
-    current input with no common output extension there ⇒ emitting one excludes the
-    other, is not exposable, and needs a commitment); `slot_conflict` and
+    the output event `output(o)` is legal under any basis);
+    `needs_canonical` (an output event emitting a non-exposable `o` needs the
+    canonical commitment `x_o` in the basis); `incompatible_excluded` (generic:
+    two outputs at the current input with no common output extension there ⇒
+    emitting one excludes the other, is not exposable, and needs a
+    commitment); `slot_conflict` and
   `epoch_conflict` instantiate it for competing decisions of one slot and for
   competing next epochs.  The decision claim needs the extra hypothesis that
   permitted outputs decide at most one value per epoch and slot (`SlotUnique`),
@@ -49,26 +52,34 @@ open CC.Txn
 section Generic
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O}
 
+/-- An output event emitting an output that is not exposable applies the
+canonical commitment `x_o`, so `x_o` is in the basis. -/
+theorem needs_canonical {B : CommitmentBasis sp} {σ τ : State sp} {o : O}
+    (hs : SysStep B σ (.output o) τ) (hne : ¬ Exposable σ o) : B (canonicalCommitment o) := by
+  cases hs with
+  | output _ hb => exact hb.resolve_left hne
+
 /-- If `o, o' ∈ R(i)` have no common output extension in `R(i)`, emitting `o`
-excludes `(i,o')` (a commitment), `o` is not exposable, and every legal output
-event emitting `o` applies a commitment. -/
+excludes `(i,o')` (a commitment), `o` is not exposable, and every output event
+`output(o)` applies the canonical commitment `x_o`, which must be in the basis. -/
 theorem incompatible_excluded {σ : State sp} {o o' : O} (ho : σ.R σ.cur o)
     (ho' : σ.R σ.cur o') (hn : ¬ ∃ u, σ.R σ.cur u ∧ o ≼ u ∧ o' ≼ u) :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] := by
+      ∀ (B : CommitmentBasis sp) τ, SysStep B σ (.output o) τ → B (canonicalCommitment o) := by
   have hno : ¬ o ≼ o' := fun h => hn ⟨o', ho', h, PO.refl _⟩
   have hrej : Excluded σ o σ.cur o' :=
     ⟨ho', hno, fun hr => let ⟨_, _, u, hu, h1, h2⟩ := hr; hn ⟨u, hu, h1, h2⟩⟩
-  refine ⟨hrej, fun he => (exposable_iff_empty σ o).1 he ⟨_, _, hrej⟩,
-    fun B γ τ hs => containment_nonempty hs ⟨_, _, hrej⟩⟩
+  have hne : ¬ Exposable σ o := fun he => (exposable_iff_empty σ o).1 he ⟨_, _, hrej⟩
+  exact ⟨hrej, hne, fun B τ hs => needs_canonical hs hne⟩
 
 /-- If every remaining row extends `o` (what protocol safety is assumed to
-guarantee for certified evidence), `o` is exposable and `Out_ε(o)` is legal. -/
+guarantee for certified evidence), `o` is exposable and the output event
+`output(o)` is legal under any basis. -/
 theorem safety_exposable {σ : State sp} {o : O} (ho : σ.R σ.cur o)
     (hsafe : ∀ k x, σ.R k x → o ≼ x) (B : CommitmentBasis sp) :
-    Exposable σ o ∧ SysStep B σ (.output [] o) (outState σ o ho) :=
+    Exposable σ o ∧ SysStep B σ (.output o) (outState σ o ho) :=
   have he : Exposable σ o := fun k x hx hn => absurd (hsafe k x hx) hn
-  ⟨he, eps_step_iff.2 ⟨ho, he, rfl, rfl⟩⟩
+  ⟨he, legal_output_step (step_output_outState ho) he⟩
 
 end Generic
 
@@ -123,7 +134,7 @@ theorem slot_conflict {I : Type} [PO I] {κ : Type} (slot : Dc → κ)
     {σ : State sp} {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o')
     {d d' : Dc} (hd : o.D d) (hd' : o'.D d') (hs : slot d = slot d') (hne : d ≠ d') :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+      ∀ (B : CommitmentBasis sp) τ, SysStep B σ (.output o) τ → B (canonicalCommitment o) :=
   incompatible_excluded ho ho' fun ⟨u, hu, h1, h2⟩ =>
     slot_no_common slot hd hd' hs hne ⟨u, hU _ _ (σ.sub _ _ hu), h1, h2⟩
 
@@ -142,7 +153,7 @@ theorem epoch_conflict {I : Type} [PO I] {sp : Spec I (Auth Ep Vt Dc)} {σ : Sta
     {o o' : Auth Ep Vt Dc} (ho : σ.R σ.cur o) (ho' : σ.R σ.cur o') {e : List Ep} {a b : Ep}
     (he : o.E = e ++ [a]) (he' : o'.E = e ++ [b]) (hne : a ≠ b) :
     Excluded σ o σ.cur o' ∧ ¬ Exposable σ o ∧
-      ∀ (B : CommitmentBasis sp) γ τ, SysStep B σ (.output γ o) τ → γ ≠ [] :=
+      ∀ (B : CommitmentBasis sp) τ, SysStep B σ (.output o) τ → B (canonicalCommitment o) :=
   incompatible_excluded ho ho' fun ⟨u, _, h1, h2⟩ => epoch_no_common he he' hne ⟨u, h1, h2⟩
 
 /-! ### Partial maps ordered by extension -/
@@ -672,12 +683,14 @@ theorem completeSpec_not_monotone (e : Ev) :
 /-- **Some output can be exposed only after a commitment that empties an
 input's fiber** (Prop. `prop:functional-exposure-boundary`): there is a state
 reachable without commitment and an output there whose `Excluded` class is
-nonempty, so every commitment-sufficient output event emitting it applies a commitment; at
-each input it changes, the commitment empties the fiber. -/
+nonempty, so every output event `output(o)` there applies the canonical
+commitment `x_o`, which must be in the basis; at each input it changes, the
+commitment empties the fiber. -/
 theorem completeSpec_commitment_needed (e : Ev) :
     ∃ (τ : State (completeSpec Ev)) (o : Eqd (Hist Ev)), ReachableCF τ ∧ τ.R τ.cur o ∧
       (∃ k x, Excluded τ o k x) ∧
-      ∀ (B : CommitmentBasis (completeSpec Ev)) γ τ', SysStep B τ (.output γ o) τ' → γ ≠ [] := by
+      ∀ (B : CommitmentBasis (completeSpec Ev)) τ', SysStep B τ (.output o) τ' →
+        B (canonicalCommitment o) := by
   have hb := fun h => (completeSpec_not_monotone e).1
     ((functional_exposure_boundary (completeSpec_functional (Ev := Ev))).2 h)
   apply Classical.byContradiction
@@ -693,7 +706,7 @@ theorem completeSpec_commitment_needed (e : Ev) :
     exact hne ((exposable_iff_empty τ o).2 hE)
   obtain ⟨k, x, he⟩ := hexcluded
   exact ⟨τ, o, hτ, ho, ⟨k, x, he⟩,
-    fun B γ τ' hst => containment_nonempty hst ⟨k, x, he⟩⟩
+    fun B τ' hst => needs_canonical hst fun hx => (exposable_iff_empty τ o).1 hx ⟨k, x, he⟩⟩
 
 end Snapshots
 

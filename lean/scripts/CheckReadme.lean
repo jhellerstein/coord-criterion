@@ -140,8 +140,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:system-output-event»
 #check @CC.Paper.«def:commitment-event»
 #check @CC.Paper.«sec:systems/commitment-event-unobserved»
-#check @CC.Paper.«eq:lifted-validity»
-#check @CC.Paper.«sec:systems/legal-event-containment»
+#check @CC.Paper.«sec:systems/commitment-then-output»
 #check @CC.Paper.«sec:systems/output-is-canonical-event»
 #check @CC.Paper.«sec:systems/system-histories»
 #check @CC.Paper.«sec:systems/bases-differ»
@@ -383,14 +382,15 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«def:canonical-commitment-basis»
 #check @CC.Paper.«eq:canonical-commitment-basis-relational»
 #check @CC.Paper.«def:canonical-event»
+#check @CC.Paper.«app:bases/canonical-event-effect»
 #check @CC.Paper.«app:bases/canonical-commitment-is-commitment»
-#check @CC.Paper.«lem:canonical-commitment-normal-form»
+#check @CC.Paper.«lem:output-containment»
 #check @CC.Paper.«def:canonical-system»
 #check @CC.Paper.«def:canonical-system/histories»
 #check @CC.Paper.«def:canonical-system/no-commitment-event»
 #check @CC.Paper.«lem:compound-commitment»
 #check @CC.Paper.«lem:compound-commitment/defined»
-#check @CC.Paper.«app:bases/compound-output-event»
+#check @CC.Paper.«app:bases/compound-functional»
 #check @CC.Paper.«app:bases/compound-commitment-event»
 #check @CC.Paper.«def:run-under-basis»
 #check @CC.Paper.«def:canonical-run»

@@ -28,7 +28,7 @@ def AvailabilityAtEnd (Sys : System sp D) : Prop :=
       Partitioned (fun q => H q ++ ext q) comp ∧
       (∀ q, comp q ≠ comp p → ext q = []) ∧
       (∀ q j, LEv.inp j ∉ ext q) ∧
-      ∃ γ, LEv.out γ o ∈ ext p
+      LEv.out o ∈ ext p
 
 /-- The history restricted to a cut. -/
 def cutHist (H : History sp D n) (c : Fin n → Nat) : History sp D n :=

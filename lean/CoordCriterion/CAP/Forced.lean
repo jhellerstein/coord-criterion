@@ -36,7 +36,7 @@ def AnsweringAtEnd (Sys : System sp D) : Prop :=
       Partitioned (fun q => H q ++ ext q) comp ∧
       (∀ q, comp q ≠ comp p → ext q = []) ∧
       (∀ q j, LEv.inp j ∉ ext q) ∧
-      ∃ γ, LEv.out γ o ∈ ext p
+      LEv.out o ∈ ext p
 
 /-- Availability implies Answering: the current fiber is nonempty. -/
 theorem answering_of_availability {Sys : System sp D} (hA : AvailabilityAtEnd Sys) :
@@ -52,7 +52,7 @@ def CommonRefinementAtEnd (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →
     ∀ j : I, (∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j) →
-    ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ H p → o ≼ u
+    ∃ u, sp.P j u ∧ ∀ p o, LEv.out o ∈ H p → o ≼ u
 
 /-- Partition Consistency gives a common output extension: the common state `(j,R)`
 has a row `(j,u)`, and rows are never added. -/
@@ -62,7 +62,7 @@ theorem commonRefinement_of_pc {Sys : System sp D} (hP : PartitionConsistencyAtE
   obtain ⟨τ, hτj, ext, _, hτ⟩ := hP n init H comp hw hp hpt j hj
   obtain ⟨u, hu⟩ := τ.hasCur
   rw [hτj] at hu
-  refine ⟨u, τ.sub _ _ hu, fun p γ o hγ => ?_⟩
+  refine ⟨u, τ.sub _ _ hu, fun p o hγ => ?_⟩
   obtain ⟨σ', h2, h3⟩ := lrun_append.1 (hτ p)
   exact lrun_out_mem h2 hγ j u ((lrun_mono h3).2 j u hu)
 
@@ -76,7 +76,7 @@ theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)
       WF init (fun q => ([] : List (LEv sp D 2)) ++ ext q) ∧
       Produced Sys 2 init (fun q => ([] : List (LEv sp D 2)) ++ ext q) ∧
       Partitioned (fun q => ([] : List (LEv sp D 2)) ++ ext q) (fun q => q.val) ∧
-      (∀ q j, LEv.inp j ∉ ext q) ∧ ∃ γ, LEv.out γ (outs p) ∈ ext p) :
+      (∀ q j, LEv.inp j ∉ ext q) ∧ LEv.out (outs p) ∈ ext p) :
     ∃ u, sp.P j u ∧ ∀ p, outs p ≼ u := by
   classical
   let comp : Fin 2 → Nat := fun p => p.val
@@ -84,10 +84,10 @@ theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)
   have hL : ∀ p : Fin 2, ∃ L : List (LEv sp D 2),
       (∃ τ, LRun (canon sp (init p)) L τ) ∧ (∀ (q : Fin 2) k j d, LEv.recv q k j d ∉ L) ∧
       Compliant (Allowed Sys 2 init p) L ∧ (∀ j, LEv.inp j ∉ L) ∧
-      ∃ γ, LEv.out γ (outs p) ∈ L := by
+      LEv.out (outs p) ∈ L := by
     intro p
-    obtain ⟨ext, hwf', hprod', hpart', hnoinp, γ, hγ⟩ := hE p
-    refine ⟨ext p, ?_, ?_, ?_, hnoinp p, ⟨γ, hγ⟩⟩
+    obtain ⟨ext, hwf', hprod', hpart', hnoinp, hγ⟩ := hE p
+    refine ⟨ext p, ?_, ?_, ?_, hnoinp p, hγ⟩
     · obtain ⟨τ, h⟩ := hwf'.1 p; exact ⟨τ, by simpa using h⟩
     · intro q k j d hm
       obtain ⟨a, b, hab⟩ := List.append_of_mem hm
@@ -113,8 +113,7 @@ theorem two_core (Sys : System sp D) (hC : CommonRefinementAtEnd Sys)
     exact hj p
   obtain ⟨u, hu, hall⟩ := hC 2 init Lf comp hwfc hprodc hpartc j hjall
   refine ⟨u, hu, fun p => ?_⟩
-  obtain ⟨γ, hγ⟩ := (hLs p).2.2.2.2
-  exact hall p γ _ hγ
+  exact hall p _ (hLs p).2.2.2.2
 
 /-- The two-row case with forced outputs: if `o₁` and `o₂` are the only
 outputs permitted at `i₁` and `i₂`, Answering suffices in place of

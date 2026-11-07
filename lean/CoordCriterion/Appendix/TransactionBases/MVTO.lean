@@ -14,8 +14,10 @@ Namespace `CC.Txn.Partial`.  The specification of `Spec.lean`, the bases of
   `A` writes `x`, cannot be completed with it); after `A`'s write, aborting `A`
   applies a commitment that leaves two completions (`abort(A)` and `abort(B)`) and
   removes a different one for each emitted abort. Emitting `A`'s abort is not
-  exposable. MVTO's write rule applies this commitment with `Out_[abort(A)]`; once `B`'s commit request arrives
-  and `TxCommit(B)` is applied, `A`'s abort is exposable.
+  exposable. MVTO's write rule applies this commitment with the commitment
+  event `apply([abort(A)])`, after which emitting `A`'s abort is legal; once
+  `B`'s commit request arrives and `TxCommit(B)` is applied, `A`'s abort is
+  exposable.
 * `writer_after_A` — the hypothesis on the version in
   `TwoStamps.no_both` cannot be dropped.
 -/
@@ -256,16 +258,16 @@ read of `x`), `i2` (and `B` a read of `x`), `i3` (and `A` a write of `x`),
    `Apply([stamp(B)])` with `Z = {A}`.
 2. Reporting `B`'s read as the initial version is not exposable: the row
    `[A,B]` at `j2`, where `A` writes `x`, cannot be completed with it.
-   `read(B,0,initial)` removes that row, and `Out_[read(B,0,initial)](u)` is
-   legal.
+   The commitment event `Apply([read(B,0,initial)])` removes that row, after
+   which the output event `output(u)` is legal.
 3. `A`'s write arrives: `input(i3)`.  At `j2` both completions remain, `r1`
    (`B` committed, `A` aborted) and `r2` (`A` committed, `B` aborted); emitting
    `A`'s abort is not exposable; `abort(A)` and `abort(B)` are both defined and
-   keep different completions.  MVTO's write rule emits `A`'s abort with
-   `Out_[abort(A)]`.
+   keep different completions.  MVTO's write rule applies the commitment event
+   `Apply([abort(A)])` and then emits `A`'s abort with a legal output event.
 4. Alternatively, `B`'s commit request arrives: `input(i4)`,
-   `Apply([TxCommit(B)])`; then `A`'s abort is exposable, and `Out_ε` emits
-   it. -/
+   `Apply([TxCommit(B)])`; then `A`'s abort is exposable, and the output event
+   emits it. -/
 theorem mvto_run (h : Distinct3 A B C) (x : K) :
     ∃ σ1 σ2 σ3 σ3r σ4 σ5 σ6 σ7 σ8 : State (spec (T := T) (K := K) false),
       -- 1
@@ -275,7 +277,8 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
       -- 2
       σ3.R (j2 h x) (rAB A B) ∧ ¬ Exposable σ3 (u B) ∧
       (read B 0 none).app σ3 = some σ3r ∧ ¬ σ3r.R (j2 h x) (rAB A B) ∧
-      SysStep basisMVTO σ3 (.output [read B 0 none] (u B)) σ4 ∧
+      SysStep basisMVTO σ3 (.commitment [read B 0 none]) σ3r ∧ Exposable σ3r (u B) ∧
+      SysStep basisMVTO σ3r (.output (u B)) σ4 ∧
       -- 3
       SysStep basisMVTO σ4 (.input (i3 h x)) σ5 ∧
       σ5.R (j2 h x) (r1 A B) ∧ σ5.R (j2 h x) (r2 A B) ∧
@@ -284,12 +287,14 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
         τA.R (j2 h x) (r1 A B) ∧ ¬ τA.R (j2 h x) (r2 A B)) ∧
       (∃ τB, (abort B).app σ5 = some τB ∧
         τB.R (j2 h x) (r2 A B) ∧ ¬ τB.R (j2 h x) (r1 A B)) ∧
-      (∃ τe, SysStep basisMVTO σ5 (.output [abort A] (addAbort (u B) A)) τe) ∧
+      (∃ τA τe, SysStep basisMVTO σ5 (.commitment [abort A]) τA ∧
+        Exposable τA (addAbort (u B) A) ∧
+        SysStep basisMVTO τA (.output (addAbort (u B) A)) τe) ∧
       -- 4
       SysStep basisMVTO σ5 (.input (i4 h x)) σ6 ∧
       SysStep basisMVTO σ6 (.commitment [commit B]) σ7 ∧
       Exposable σ7 (addAbort (u B) A) ∧
-      SysStep basisMVTO σ7 (.output [] (addAbort (u B) A)) σ8 := by
+      SysStep basisMVTO σ7 (.output (addAbort (u B) A)) σ8 := by
   -- names
   let I1 := i1 (K := K) (A := A) x
   let I2 := i2 h x
@@ -449,18 +454,20 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
       c.ρ B 0 = some none → σ3r.R k w :=
     fun hw hc hk hk2 hs hs' hq =>
       mem_close h3r (m3 hw hc hk hk2 hs hs') (m3 (PO.refl _) hc hk hk2 hs hs') hc.1 hw hq
-  -- σ4: `Out_[read(B,0,initial)](u)`
+  -- σ4: `Apply([read(B,0,initial)])`, then `output(u)`
   have e0 : σ3r.R I2 (full emptyO) :=
     m3r (full_le _) (caR i2_opB) le12 (PO.refl _) (nolt (aAll _)) (nolt (aAll _))
       (addRead_ρ _ B 0 none)
   obtain ⟨u3, uexp⟩ := read_emit good3 h3r e0 (fun _ w _ => full_le w)
   have u3' : σ3r.R σ3r.cur (u B) := by rw [cur3r]; exact u3
   let σ4 := outState σ3r (u B) u3'
-  have step4 : SysStep basisMVTO σ3 (.output [read B 0 none] (u B)) σ4 :=
-    SysStep.output (fun c hc => by
+  have step3r : SysStep basisMVTO σ3 (.commitment [read B 0 none]) σ3r :=
+    SysStep.commitment (fun c hc => by
         simp only [List.mem_singleton] at hc; subst hc
         exact Or.inr (Or.inr (Or.inr ⟨B, 0, none, rfl⟩)))
-      (ApplySeq.cons h3r' (ApplySeq.nil _)) u3' uexp ((closeC_app_iff.1 h3r).2.1) rfl
+      (List.cons_ne_nil _ _) (ApplySeq.cons h3r' (ApplySeq.nil _))
+  have step4 : SysStep basisMVTO σ3r (.output (u B)) σ4 :=
+    legal_output_step (step_output_outState u3') uexp
   have m4 : ∀ {k : Inp T K} {w c : ROut T K}, w ≼ c → Complete false k c → I1 ≼ k →
       I2 ≼ k → StampOK A (fun _ => False) c.o → StampOK B (· = A) c.o →
       c.ρ B 0 = some none → u B ≼ w → σ4.R k w :=
@@ -516,11 +523,13 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
   have uA : τA.R τA.cur (u B) := by
     rw [curA]; exact mem_close hA u5 aR5 (allAbort_decides _) (u_le B _) (fun h => h)
   obtain ⟨uA', expA⟩ := abort_emit good5 hA' uA (fun k w hw => hall5 k w ((abort A).sub _ _ hA' k w hw))
-  have stepE : SysStep basisMVTO σ5 (.output [abort A] (addAbort (u B) A))
-      (outState τA (addAbort (u B) A) uA') :=
-    SysStep.output (fun c hc => by
+  have stepA : SysStep basisMVTO σ5 (.commitment [abort A]) τA :=
+    SysStep.commitment (fun c hc => by
         simp only [List.mem_singleton] at hc; subst hc; exact Or.inr (Or.inr (Or.inl ⟨A, rfl⟩)))
-      (ApplySeq.cons hA' (ApplySeq.nil _)) uA' expA curA rfl
+      (List.cons_ne_nil _ _) (ApplySeq.cons hA' (ApplySeq.nil _))
+  have stepE : SysStep basisMVTO τA (.output (addAbort (u B) A))
+      (outState τA (addAbort (u B) A) uA') :=
+    legal_output_step (step_output_outState uA') expA
   -- lazy: `B`'s commit request arrives
   have aR5' : σ5.R I4 (aR B I4) :=
     m5 (PO.refl _) (caR i4_opB) le14 le24 (nolt (aAll _)) (nolt (aAll _)) hρu (u_le B _) le34
@@ -562,8 +571,8 @@ theorem mvto_run (h : Distinct3 A B C) (x : K) :
     rw [cur7]; exact mem_close hC u6 r1_6 dr1' (u_le B _) ok1
   obtain ⟨hm, hex⟩ := hent u7
   refine ⟨σ1, σ2, σ3, σ3r, σ4, σ5, σ6, σ7, outState σ7 _ hm, step1, step2, step3, rAB3, nexp3,
-    h3r', nAB3r, step4, step5, r1_5, r2_5, nexp5, ?_, ?_, ⟨_, stepE⟩, step6, step7, hex,
-    SysStep.output (fun c hc => by cases hc) (ApplySeq.nil _) hm hex rfl rfl⟩
+    h3r', nAB3r, step3r, uexp, step4, step5, r1_5, r2_5, nexp5, ?_, ?_, ⟨_, _, stepA, expA, stepE⟩,
+    step6, step7, hex, legal_output_step (step_output_outState hm) hex⟩
   · exact ⟨τA, hA', mem_close hA r1_5 r1_5 dr1 (PO.refl _) nA1,
       not_mem_close hA dr2 (fun hn => hn (show A ∈ [A] by simp))⟩
   · exact ⟨τB, hB, mem_close hB r2_5 r2_5 dr2 (PO.refl _) nB2,

@@ -47,15 +47,15 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
   have hL : ∀ p : Fin 2, ∃ L : List (LEv sp D 2),
       (∃ τ, LRun (canon sp (init p)) L τ) ∧ (∀ (q : Fin 2) k j d, LEv.recv q k j d ∉ L) ∧
       Compliant (Allowed Sys 2 init p) L ∧ (∀ j, LEv.inp j ∉ L) ∧
-      ∃ γ, LEv.out γ (row p).2 ∈ L := by
+      LEv.out (row p).2 ∈ L := by
     intro p
     have hσ : LRun (canon sp (init p)) (H0 p) (canon sp (init p)) := .nil _
     have ho : (canon sp (init p)).R (canon sp (init p)).cur (row p).2 :=
       ⟨(hrow p).1, PO.refl _⟩
-    obtain ⟨ext, hwf', hprod', hpart', _, hnoinp, γ, hγ⟩ :=
+    obtain ⟨ext, hwf', hprod', hpart', _, hnoinp, hγ⟩ :=
       hA 2 init H0 comp hwf0 hprod0 hpart0 p _ hσ _ ho
     have hH' : H0 p ++ ext p = ext p := by simp [H0]
-    refine ⟨ext p, ?_, ?_, ?_, hnoinp p, ⟨γ, hγ⟩⟩
+    refine ⟨ext p, ?_, ?_, ?_, hnoinp p, hγ⟩
     · obtain ⟨τ, h⟩ := hwf'.1 p; exact ⟨τ, hH' ▸ h⟩
     · intro q k j d hm
       obtain ⟨a, b, hab⟩ := List.append_of_mem hm
@@ -89,7 +89,7 @@ theorem cap_two_step (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
   have href : ∀ p : Fin 2, (row p).2 ≼ u := by
     intro p
     obtain ⟨σ', h2, h3⟩ := lrun_append.1 (hτ p)
-    obtain ⟨γ, hγ⟩ := (hLs p).2.2.2.2
+    have hγ := (hLs p).2.2.2.2
     exact lrun_out_mem h2 hγ j u ((lrun_mono h3).2 j u hu)
   exact ⟨u, τ.sub _ _ hu, by simpa [row] using href 0, by simpa [row] using href 1⟩
 

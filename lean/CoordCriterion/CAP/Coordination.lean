@@ -39,16 +39,16 @@ at its input, and none accepts an input whose fiber it empties. -/
 def LocalInH {n : Nat} (init : Fin n → I) (H : History sp D n) (p : Fin n) (σ σc : State sp) :
     Prop :=
   (∀ k x, σ.R k x → ¬ σc.R k x →
-    ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
-      q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k) ∧
+    ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (σ' : State sp),
+      q ≠ p ∧ H q = a' ++ LEv.out x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k) ∧
   (∀ k, (∃ x, σ.R k x) → (∀ x, ¬ σc.R k x) →
     ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)), q ≠ p ∧ H q = a' ++ LEv.inp k :: b')
 
 /-- Some participant `q ≠ p` of `H` emits `x` at current input `k`. -/
 def OtherEmits {n : Nat} (init : Fin n → I) (H : History sp D n) (p : Fin n) (k : I) (x : O) :
     Prop :=
-  ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
-    q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
+  ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (σ' : State sp),
+    q ≠ p ∧ H q = a' ++ LEv.out x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
 
 /-- Some participant `q ≠ p` of `H` accepts `k`. -/
 def OtherAccepts {n : Nat} (H : History sp D n) (p : Fin n) (k : I) : Prop :=
@@ -68,13 +68,14 @@ theorem localInH_iff_not_contradicts {n : Nat} (init : Fin n → I) (H : History
       fun k hk hall ha => h (Or.inr ⟨k, hk, hall, ha⟩)⟩
 
 /-- Coordination-free within histories: no output event's or commitment event's
-commitments are contradicted by another participant of the same history. -/
+commitments are contradicted by another participant of the same history.  An
+output event `output(o)` at `σ` leaves `kcState σ o` (it removes `Excluded_o`,
+by `x_o`, when `o` is not legal). -/
 def System.CoordinationFreeH (Sys : System sp D) : Prop :=
   (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
-    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (o : O)
-      (σ σc : State sp),
-      H p = a ++ LEv.out γ o :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
-      LocalInH init H p σ σc) ∧
+    ∀ (p : Fin n) (a b : List (LEv sp D n)) (o : O) (σ : State sp),
+      H p = a ++ LEv.out o :: b → LRun (canon sp (init p)) a σ →
+      ∀ ho : σ.R σ.cur o, LocalInH init H p σ (kcState σ o ho)) ∧
   (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
     ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ σc : State sp),
       H p = a ++ LEv.commitment γ :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
@@ -83,17 +84,17 @@ def System.CoordinationFreeH (Sys : System sp D) : Prop :=
 theorem localEvent_to_H {Sys : System sp D} {n : Nat} {init : Fin n → I} {H : History sp D n}
     (hw : WF init H) (hp : Produced Sys n init H) (p : Fin n) {σ σc : State sp}
     (hl : LocalEvent Sys σ σc) : LocalInH init H p σ σc := by
-  refine ⟨fun k x hx hnx ⟨q, a', b', γ', σ', _, hq, hr, hc⟩ => ?_,
+  refine ⟨fun k x hx hnx ⟨q, a', b', σ', _, hq, hr, hc⟩ => ?_,
     fun k hk hall ⟨q, a', b', _, hq⟩ => ?_⟩
-  · exact hl.1 k x hx hnx ⟨n, init, H, q, a', b', γ', σ', hw, hp, hq, hr, hc⟩
+  · exact hl.1 k x hx hnx ⟨n, init, H, q, a', b', σ', hw, hp, hq, hr, hc⟩
   · exact hl.2 k hk hall ⟨n, init, H, q, a', b', hw, hp, hq⟩
 
 /-- A contradiction within a history is a contradiction by a run of the
 system. -/
 theorem coordinationFree_to_H {Sys : System sp D} (h : Sys.CoordinationFree) :
     Sys.CoordinationFreeH :=
-  ⟨fun n init H hw hp p a b γ o σ σc hH hrun hap =>
-    localEvent_to_H hw hp p (h.1 n init H hw hp p a b γ o σ σc hH hrun hap),
+  ⟨fun n init H hw hp p a b o σ hH hrun ho =>
+    localEvent_to_H hw hp p (h.1 n init H hw hp p a b o σ hH hrun ho),
    fun n init H hw hp p a b γ σ σc hH hrun hap =>
     localEvent_to_H hw hp p (h.2 n init H hw hp p a b γ σ σc hH hrun hap)⟩
 
@@ -119,8 +120,8 @@ theorem availability_contradicts_gen (Sys : System sp D) (hA : AvailabilityAtEnd
     {k : I} {x : O} (hx : σ.R k x) (hqk : init q ≼ k) :
     ∃ H' : History sp D n, WF init H' ∧ Produced Sys n init H' ∧
       H' p = a ++ [e] ∧
-      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
-        H' q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k := by
+      ∃ (a' b' : List (LEv sp D n)) (σ' : State sp),
+        H' q = a' ++ LEv.out x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k := by
   classical
   let H1 : History sp D n := fun r =>
     if r = p then a ++ [e] else if r = q then [LEv.inp k] else []
@@ -179,15 +180,15 @@ theorem availability_contradicts_gen (Sys : System sp D) (hA : AvailabilityAtEnd
       fun r a'' q' kk j d b'' h => absurd h (hnrecv r a'' q' kk j d b'')⟩
   have hτ1 : LRun (canon sp (init q)) (H1 q) τ1 := by rw [h1q]; exact hlq
   have hxτ : τ1.R τ1.cur x := ⟨hRk, PO.refl k⟩
-  obtain ⟨ext, hw', hp', _, hloc, hni, γ', hγ'⟩ :=
+  obtain ⟨ext, hw', hp', _, hloc, hni, hγ'⟩ :=
     hA n init H1 comp hw1 hp1 hpart1 q τ1 hτ1 x hxτ
   refine ⟨fun r => H1 r ++ ext r, hw', hp', ?_, ?_⟩
   · have : ext p = [] := hloc p (fun h => hqp (Fin.ext h).symm)
     show H1 p ++ ext p = _
     rw [this, h1p, List.append_nil]
   · obtain ⟨a2, b2, hab⟩ := List.append_of_mem hγ'
-    refine ⟨LEv.inp k :: a2, b2, γ', ?_⟩
-    have hHq : (fun r => H1 r ++ ext r) q = (LEv.inp k :: a2) ++ LEv.out γ' x :: b2 := by
+    refine ⟨LEv.inp k :: a2, b2, ?_⟩
+    have hHq : (fun r => H1 r ++ ext r) q = (LEv.inp k :: a2) ++ LEv.out x :: b2 := by
       show H1 q ++ ext q = _; rw [h1q, hab]; simp
     obtain ⟨τ, hτ⟩ := hw'.1 q
     rw [hHq] at hτ
@@ -210,14 +211,14 @@ prefix lets the history drop everything else.) -/
 theorem availability_contradicts_removal (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O} {σ σc : State sp}
-    (hH : H p = a ++ LEv.out γ o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
-    (_hrun : LRun (canon sp (init p)) a σ) (_hap : applySeq σ γ = some σc)
+    {a b : List (LEv sp D n)} {o : O} {σ : State sp}
+    (hH : H p = a ++ LEv.out o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
+    (_hrun : LRun (canon sp (init p)) a σ)
     {k : I} {x : O} (hx : σ.R k x) (hqk : init q ≼ k) :
     ∃ H' : History sp D n, WF init H' ∧ Produced Sys n init H' ∧
-      H' p = a ++ [LEv.out γ o] ∧
-      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
-        H' q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k :=
+      H' p = a ++ [LEv.out o] ∧
+      ∃ (a' b' : List (LEv sp D n)) (σ' : State sp),
+        H' q = a' ++ LEv.out x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k :=
   availability_contradicts_gen Sys hA hw hp hqp hH hnr (fun _ _ _ _ h => by cases h) hx hqk
 
 /-- The same for a commitment event: with Availability, a row `(k,x)` removed by
@@ -233,8 +234,8 @@ theorem availability_contradicts_commitment_event (Sys : System sp D) (hA : Avai
     {k : I} {x : O} (hx : σ.R k x) (hqk : init q ≼ k) :
     ∃ H' : History sp D n, WF init H' ∧ Produced Sys n init H' ∧
       H' p = a ++ [LEv.commitment γ] ∧
-      ∃ (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
-        H' q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k :=
+      ∃ (a' b' : List (LEv sp D n)) (σ' : State sp),
+        H' q = a' ++ LEv.out x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k :=
   availability_contradicts_gen Sys hA hw hp hqp hH hnr (fun _ _ _ _ h => by cases h) hx hqk
 
 /-- Consequently a system with Availability whose output event removes a row
@@ -243,16 +244,16 @@ coordination-free within histories. -/
 theorem availability_not_coordinationFreeH (Sys : System sp D) (hA : AvailabilityAtEnd Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (Commitment sp)} {o : O} {σ σc : State sp}
-    (hH : H p = a ++ LEv.out γ o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
-    (hrun : LRun (canon sp (init p)) a σ) (hap : applySeq σ γ = some σc)
-    {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x) (hqk : init q ≼ k) :
+    {a b : List (LEv sp D n)} {o : O} {σ : State sp}
+    (hH : H p = a ++ LEv.out o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
+    (hrun : LRun (canon sp (init p)) a σ) (ho : σ.R σ.cur o)
+    {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ (kcState σ o ho).R k x) (hqk : init q ≼ k) :
     ¬ Sys.CoordinationFreeH := by
   intro hcf
-  obtain ⟨H', hw', hp', hH', a', b', γ', σ', hq, hr, hc⟩ :=
-    availability_contradicts_removal Sys hA hw hp hqp hH hnr hrun hap hx hqk
-  exact (hcf.1 n init H' hw' hp' p a [] γ o σ σc hH' hrun hap).1 k x hx hnx
-    ⟨q, a', b', γ', σ', hqp, hq, hr, hc⟩
+  obtain ⟨H', hw', hp', hH', a', b', σ', hq, hr, hc⟩ :=
+    availability_contradicts_removal Sys hA hw hp hqp hH hnr hrun hx hqk
+  exact (hcf.1 n init H' hw' hp' p a [] o σ hH' hrun ho).1 k x hx hnx
+    ⟨q, a', b', σ', hqp, hq, hr, hc⟩
 
 /-- Likewise a system with Availability whose commitment event removes a row
 (receive-free prefix, another participant below the row's input) is not
@@ -267,12 +268,12 @@ theorem availability_not_coordinationFreeH_commit (Sys : System sp D)
     {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x) (hqk : init q ≼ k) :
     ¬ Sys.CoordinationFreeH := by
   intro hcf
-  obtain ⟨H', hw', hp', hH', a', b', γ', σ', hq, hr, hc⟩ :=
+  obtain ⟨H', hw', hp', hH', a', b', σ', hq, hr, hc⟩ :=
     availability_contradicts_commitment_event Sys hA hw hp hqp hH hnr hrun hap hx hqk
   exact (hcf.2 n init H' hw' hp' p a [] γ σ σc hH' hrun hap).1 k x hx hnx
-    ⟨q, a', b', γ', σ', hqp, hq, hr, hc⟩
+    ⟨q, a', b', σ', hqp, hq, hr, hc⟩
 
-/-! ## Removed rows of a canonical event -/
+/-! ## Removed rows of an output event -/
 
 /-- A row removed by the canonical commitment for `u` has no common output extension
 with `u` in the state. -/
@@ -281,14 +282,11 @@ theorem rm_no_common {σ : State sp} {u : O} {k : I} {x : O} (h : Rm σ u k x) :
   rintro ⟨w, hw, huw, hxw⟩
   exact h.2.2 ⟨h.1, h.2.1, w, hw, huw, hxw⟩
 
-/-- What a canonical output event's commitments remove. -/
-theorem canonical_removed {σ σc : State sp} {u : O} {γ : List (Commitment sp)}
-    (hγ : γ = [] ∨ γ = [kc u]) (hap : applySeq σ γ = some σc) {k : I} {x : O}
-    (hx : σ.R k x) (hnx : ¬ σc.R k x) : Rm σ u k x ∧ ∃ hu : σ.R σ.cur u, σc = kcState σ u hu := by
-  rcases hγ with rfl | rfl
-  · simp [applySeq] at hap; subst hap; exact absurd hx hnx
-  · obtain ⟨hu, rfl⟩ := kc_apply_some hap
-    refine ⟨Classical.byContradiction fun h => hnx ⟨hx, h⟩, hu, rfl⟩
+/-- What an output event `output(u)` removes by commitment: rows of `Excluded_u`. -/
+theorem canonical_removed {σ : State sp} {u : O} (hu : σ.R σ.cur u) {k : I} {x : O}
+    (hx : σ.R k x) (hnx : ¬ (kcState σ u hu).R k x) : Rm σ u k x :=
+  Classical.byContradiction fun h => hnx ⟨hx, h⟩
+
 
 /-! ## Shared nothing: one owner orders, or two -/
 
@@ -332,12 +330,13 @@ theorem ordSpec_ab_not_exposable : ¬ Exposable (canon ordSpec ()) .ab := by
   rcases h1 with rfl | h1 <;> simp_all
 
 /-- The owner (participant `0`) may emit any order; every other participant
-may emit only `bot`.  Output events are canonical. -/
+may emit only `bot`.  Its basis holds the canonical commitments, so each output
+event may apply `x_u`. -/
 noncomputable def ownerSys (D : Type) : System ordSpec D where
   basis := fun c => ∃ u, c = kc u
   strat := fun _ _ p _ e =>
     match e with
-    | .out γ u => (γ = [] ∨ γ = [kc u]) ∧ (u = .bot ∨ p.val = 0)
+    | .out u => u = .bot ∨ p.val = 0
     | _ => False
 
 /-- Two owners: every participant may emit any order. -/
@@ -345,10 +344,10 @@ noncomputable def twoOwnerSys (D : Type) : System ordSpec D where
   basis := fun c => ∃ u, c = kc u
   strat := fun _ _ _ _ e =>
     match e with
-    | .out γ u => γ = [] ∨ γ = [kc u]
+    | .out _ => True
     | _ => False
 
-/-- `bot` is never removed by a canonical event (it is extended by the emitted
+/-- `bot` is never removed by an output event (it is extended by the emitted
 output), and nothing is removed when `bot` is emitted. -/
 theorem ord_removed {σ : State ordSpec} {u x : Ord3} (h : Rm σ u () x) (hu : σ.R () u) :
     u ≠ .bot ∧ x ≠ .bot := by
@@ -363,47 +362,48 @@ theorem ord_removed {σ : State ordSpec} {u x : Ord3} (h : Rm σ u () x) (hu : �
 no other participant emits one. -/
 theorem ownerSys_coordinationFreeH (D : Type) : (ownerSys D).CoordinationFreeH := by
   refine ⟨?_, fun n init H _ hp p a b γ σ σc hH _ _ => (hp p a (.commitment γ) b hH).2.elim⟩
-  intro n init H _ hp p a b γ o σ σc hH _ hap
-  have hAl := hp p a (.out γ o) b hH
-  obtain ⟨_, hγ, hown⟩ := hAl
+  intro n init H _ hp p a b o σ hH _ hu
+  have hAl := hp p a (.out o) b hH
+  obtain ⟨_, hown⟩ := hAl
   refine ⟨fun k x hx hnx => ?_, fun k ⟨x, hx⟩ hall => ?_⟩
-  · rintro ⟨q, a', b', γ', σ', hqp, hq, _, _⟩
-    obtain ⟨hrm, hu, _⟩ := canonical_removed hγ hap hx hnx
+  · rintro ⟨q, a', b', σ', hqp, hq, _, _⟩
+    have hrm := canonical_removed hu hx hnx
     cases k
     obtain ⟨hob, hxb⟩ := ord_removed hrm hu
     have hp0 : p.val = 0 := hown.resolve_left hob
-    obtain ⟨_, _, hqx⟩ := hp q a' (.out γ' x) b' hq
+    obtain ⟨_, hqx⟩ := hp q a' (.out x) b' hq
     have hq0 : q.val = 0 := hqx.resolve_left hxb
     exact hqp (Fin.ext (hq0.trans hp0.symm))
   · rintro ⟨q, a', b', _, _⟩
     cases k
-    rcases hγ with rfl | rfl
-    · simp [applySeq] at hap; subst hap; exact hall x hx
-    · obtain ⟨hu', rfl⟩ := kc_apply_some hap
-      exact hall o ⟨hu', not_rm_of_le hu' (PO.refl o)⟩
+    exact hall o ⟨hu, not_rm_of_le hu (PO.refl o)⟩
 
-/-- A canonical output event of `u` at `σ_P(())`, as a one-event participant
+/-- The output event of `u` at `σ_P(())`, as a one-event participant
 history. -/
 theorem ord_emit (u : Ord3) :
-    ∃ γ τ, (γ = [] ∨ γ = [kc u]) ∧ applySeq (canon ordSpec ()) γ = some τ ∧
-      Exposable τ u ∧ ∃ ρ, LRun (D := D) (n := 2) (canon ordSpec ()) [LEv.out γ u] ρ := by
-  have hu : (canon ordSpec ()).R (canon ordSpec ()).cur u := canon_ord_R _ _
-  obtain ⟨γ, σc, hγ, ha, hcu, hexp⟩ := kc_legal hu
-  let τ : State ordSpec :=
-    { cur := σc.cur, R := outputTable σc u, sub := fun k x h => σc.sub k x h.1,
-      hasCur := ⟨u, hcu, PO.refl u⟩, above := fun k x h => σc.above k x h.1 }
-  exact ⟨γ, σc, hγ, ha, hexp, τ, .out ha (Step.output σc τ u hcu rfl rfl) hexp (.nil τ)⟩
+    ∃ ρ, LRun (D := D) (n := 2) (canon ordSpec ()) [LEv.out u] ρ :=
+  ⟨_, .out (step_output_outState (canon_ord_R _ _)) (.nil _)⟩
+
+/-- Emitting `A before B` at `σ_P(())` removes `B before A`. -/
+theorem ord_ab_removes_ba (hu : (canon ordSpec ()).R (canon ordSpec ()).cur .ab) :
+    ¬ (kcState (canon ordSpec ()) .ab hu).R () .ba := by
+  rintro ⟨_, hn⟩
+  apply hn
+  refine ⟨canon_ord_R _ _, by rw [ord3_le_iff]; simp, ?_⟩
+  rintro ⟨_, _, v, _, h1, h2⟩
+  rw [ord3_le_iff] at h1 h2
+  rcases h1 with rfl | h1 <;> simp_all
 
 /-- **Two owners coordinate.**  Participant `0` emits `A before B`, choosing
 against `B before A`, which participant `1` emits in the same history. -/
 theorem twoOwnerSys_not_coordinationFreeH (D : Type) : ¬ (twoOwnerSys D).CoordinationFreeH := by
   intro hcf
-  obtain ⟨γ0, σ0, hγ0, ha0, hex0, ρ0, hr0⟩ := ord_emit (D := D) .ab
-  obtain ⟨γ1, _, hγ1, _, _, ρ1, hr1⟩ := ord_emit (D := D) .ba
+  obtain ⟨ρ0, hr0⟩ := ord_emit (D := D) .ab
+  obtain ⟨ρ1, hr1⟩ := ord_emit (D := D) .ba
   let init : Fin 2 → Unit := fun _ => ()
-  let H : History ordSpec D 2 := fun r => if r.val = 0 then [LEv.out γ0 .ab] else [LEv.out γ1 .ba]
-  have hH0 : H 0 = [] ++ LEv.out γ0 .ab :: [] := rfl
-  have hH1 : H 1 = [] ++ LEv.out γ1 .ba :: [] := rfl
+  let H : History ordSpec D 2 := fun r => if r.val = 0 then [LEv.out .ab] else [LEv.out .ba]
+  have hH0 : H 0 = [] ++ LEv.out .ab :: [] := rfl
+  have hH1 : H 1 = [] ++ LEv.out .ba :: [] := rfl
   have hfin : ∀ r : Fin 2, r = 0 ∨ r = 1 := by decide
   have hnr : ∀ r a q k j d b, H r ≠ a ++ LEv.recv q k j d :: b := by
     intro r a q k j d b h
@@ -416,31 +416,21 @@ theorem twoOwnerSys_not_coordinationFreeH (D : Type) : ¬ (twoOwnerSys D).Coordi
     rcases hfin r with rfl | rfl
     · exact ⟨ρ0, hr0⟩
     · exact ⟨ρ1, hr1⟩
-  have hbasis : ∀ (u : Ord3) (γ : List (Commitment ordSpec)), (γ = [] ∨ γ = [kc u]) →
-      ∀ c ∈ γ, (twoOwnerSys D).basis c := by
-    intro u γ hγ c hc
-    rcases hγ with rfl | rfl
-    · cases hc
-    · simp at hc; exact ⟨u, hc⟩
   have hp : Produced (twoOwnerSys D) 2 init H := by
     intro r a e b h
     rcases hfin r with rfl | rfl
     · rw [hH0] at h
       cases a with
-      | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact ⟨hbasis _ _ hγ0, hγ0⟩
+      | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, trivial⟩
       | cons _ _ => simp at h
     · rw [hH1] at h
       cases a with
-      | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact ⟨hbasis _ _ hγ1, hγ1⟩
+      | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, trivial⟩
       | cons _ _ => simp at h
-  -- after participant 0's commitments the row `((), ba)` is gone
-  have hgone : ¬ σ0.R () .ba := by
-    intro hba
-    obtain ⟨u, _, h1, h2⟩ := hex0 () .ba hba (by rw [ord3_le_iff]; simp)
-    rw [ord3_le_iff] at h1 h2
-    rcases h1 with rfl | h1 <;> simp_all
-  exact (hcf.1 2 init H hw hp 0 [] [] γ0 .ab (canon ordSpec ()) σ0 hH0 (.nil _) ha0).1
-    () .ba (canon_ord_R _ _) hgone ⟨1, [], [], γ1, canon ordSpec (), by decide, hH1, .nil _, rfl⟩
+  have hu : (canon ordSpec ()).R (canon ordSpec ()).cur .ab := canon_ord_R _ _
+  exact (hcf.1 2 init H hw hp 0 [] [] .ab (canon ordSpec ()) hH0 (.nil _) hu).1
+    () .ba (canon_ord_R _ _) (ord_ab_removes_ba hu)
+    ⟨1, [], [], canon ordSpec (), by decide, hH1, .nil _, rfl⟩
 
 /-! ## A local row-removing commitment -/
 
@@ -481,16 +471,15 @@ theorem lc_coordinationFreeH (D : Type) :
 
 /-! ## One owner coordinates, but not distributedly -/
 
-/-- A history in which the owner (participant `0`) emits `u` by its canonical
-output event and participant `1` is idle. -/
+/-- A history in which the owner (participant `0`) emits `u` by its output
+event and participant `1` is idle. -/
 theorem owner_history (D : Type) (u : Ord3) :
-    ∃ (γ : List (Commitment ordSpec)) (σc : State ordSpec) (H : History ordSpec D 2),
-      (γ = [] ∨ γ = [kc u]) ∧ applySeq (canon ordSpec ()) γ = some σc ∧ Exposable σc u ∧
+    ∃ H : History ordSpec D 2,
       WF (fun _ => ()) H ∧ Produced (ownerSys D) 2 (fun _ => ()) H ∧
-      H 0 = [] ++ LEv.out γ u :: [] := by
-  obtain ⟨γ, σc, hγ, ha, hex, ρ, hr⟩ := ord_emit (D := D) u
-  let H : History ordSpec D 2 := fun r => if r.val = 0 then [LEv.out γ u] else []
-  have hH0 : H 0 = [] ++ LEv.out γ u :: [] := rfl
+      H 0 = [] ++ LEv.out u :: [] := by
+  obtain ⟨ρ, hr⟩ := ord_emit (D := D) u
+  let H : History ordSpec D 2 := fun r => if r.val = 0 then [LEv.out u] else []
+  have hH0 : H 0 = [] ++ LEv.out u :: [] := rfl
   have hH1 : H 1 = [] := rfl
   have hfin : ∀ r : Fin 2, r = 0 ∨ r = 1 := by decide
   have hnr : ∀ r a q k j d b, H r ≠ a ++ LEv.recv q k j d :: b := by
@@ -499,8 +488,7 @@ theorem owner_history (D : Type) (u : Ord3) :
     rcases hfin r with rfl | rfl
     · rw [hH0] at hm; simp at hm
     · rw [hH1] at hm; simp at hm
-  refine ⟨γ, σc, H, hγ, ha, hex, ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩,
-    ?_, hH0⟩
+  refine ⟨H, ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩, ?_, hH0⟩
   · rcases hfin r with rfl | rfl
     · exact ⟨ρ, hr⟩
     · exact ⟨_, .nil _⟩
@@ -510,10 +498,7 @@ theorem owner_history (D : Type) (u : Ord3) :
       cases a with
       | nil =>
         simp at h; obtain ⟨rfl, _⟩ := h
-        refine ⟨fun c hc => ?_, hγ, Or.inr rfl⟩
-        rcases hγ with rfl | rfl
-        · cases hc
-        · simp at hc; exact ⟨u, hc⟩
+        exact ⟨fun _ _ => Or.inr ⟨u, rfl⟩, Or.inr rfl⟩
       | cons _ _ => simp at h
     · rw [hH1] at h; simp at h
 
@@ -523,15 +508,12 @@ contradicted by another run of the same system, in which the owner chooses
 distributed coordination (`ownerSys_coordinationFreeH`). -/
 theorem ownerSys_not_coordinationFree (D : Type) : ¬ (ownerSys D).CoordinationFree := by
   intro hcf
-  obtain ⟨γ0, σ0, H, _, ha0, hex0, hw, hp, hH0⟩ := owner_history D .ab
-  obtain ⟨γ1, _, H', _, _, _, hw', hp', hH0'⟩ := owner_history D .ba
-  have hgone : ¬ σ0.R () .ba := by
-    intro hba
-    obtain ⟨u, _, h1, h2⟩ := hex0 () .ba hba (by rw [ord3_le_iff]; simp)
-    rw [ord3_le_iff] at h1 h2
-    rcases h1 with rfl | h1 <;> simp_all
-  exact (hcf.1 2 _ H hw hp 0 [] [] γ0 .ab (canon ordSpec ()) σ0 hH0 (.nil _) ha0).1
-    () .ba (canon_ord_R _ _) hgone ⟨2, _, H', 0, [], [], γ1, canon ordSpec (), hw', hp', hH0', .nil _, rfl⟩
+  obtain ⟨H, hw, hp, hH0⟩ := owner_history D .ab
+  obtain ⟨H', hw', hp', hH0'⟩ := owner_history D .ba
+  have hu : (canon ordSpec ()).R (canon ordSpec ()).cur .ab := canon_ord_R _ _
+  exact (hcf.1 2 _ H hw hp 0 [] [] .ab (canon ordSpec ()) hH0 (.nil _) hu).1
+    () .ba (canon_ord_R _ _) (ord_ab_removes_ba hu)
+    ⟨2, _, H', 0, [], [], canon ordSpec (), hw', hp', hH0', .nil _, rfl⟩
 
 end CAP
 end CC

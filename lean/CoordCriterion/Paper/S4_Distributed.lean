@@ -324,17 +324,18 @@ among them.  The section models those choices, then shows that their commitments
 can be assessed against canonical runs regardless of system implementation
 choices. -/
 
-/-- "The registrar … emits `⊥` and closes the polls in the same event
-(Figure election-frames(d)); the output event for `⊥` does not require the
-poll-closing commitment.  Closing the polls is the registrar's design decision,
-as fixing orderings is 2PL's."
+/-- "When the registrar of Section election-story emits `⊥`, it also closes
+the polls (Figure election-frames(d)), although emitting `⊥` does not require
+the poll-closing commitment.  Closing the polls is the registrar's design
+decision, as fixing orderings is 2PL's."
 
-Lean: under any basis containing `closePolls`, `Out_{[closePolls]}(⊥)` from
-`σ_P(ab·)` is legal and ends at panel (d); yet `⊥` is a legal output there and
-  `Excluded_o` is empty, so `output(⊥)` needs no commitment. -/
+Lean: under any basis containing `closePolls`, the commitment event
+`apply([closePolls])` followed by `output(⊥)` from `σ_P(ab·)` is a run ending
+at panel (d); yet `⊥` is a legal output there and `Excluded_o` is empty, so
+`output(⊥)` needs no commitment. -/
 theorem «sec:systems/registrar» :
     (∀ B : CommitmentBasis CALM.elec, B Figures.closePolls →
-      SysStep B (canon CALM.elec CALM.bab) (.output [Figures.closePolls] .bot)
+      SysExec B (canon CALM.elec CALM.bab) [.commitment [Figures.closePolls], .output .bot]
         Figures.Elec.panelD) ∧
     Exposable (canon CALM.elec CALM.bab) .bot ∧
     (¬ ∃ k x, Excluded (canon CALM.elec CALM.bab) .bot k x) :=
@@ -462,16 +463,16 @@ theorem «sec:systems/one-specification» {sp : Spec I O} {D : Type} (Sys : CAP.
   ⟨rfl, fun r h => ((Components.Component.ofSystemOn Sys N location).sound r h).legal,
     fun _ Dp => Dp.sub⟩
 
-/-- **Def. output event, commitment-sufficient output event** (`def:system-output-event`).
-"An output event `Out_γ(o)` applies a sequence `γ = c₁⋯cₙ` of commitments,
-each `c_m` defined at the state its predecessors leave, and then subsumes
-rows and emits `o`, all atomically.  The sequence may be empty, written
-`ε`.  Write `R_c` for the table after `γ` is applied.  The event is legal
-when `o` is a legal output at `(i, R_c)`: Eq. lifted-validity holds.  The event
-subsumes those discarded rows and ends at `(i, R_c[out ⪰ o])`."
+/-- **Def. system output event** (`def:system-output-event`).  "Let `(i,R)`
+be a state and `o ∈ R(i)`.  A system emits `o` by the output event `output(o)`
+of Section lifted-output-events, which ends at `(i, R[out ⪰ o])`.  When `o` is
+not a legal output, the event applies the canonical commitment `x_o`, which
+must then belong to the system's basis."
 
-Lean: `SysStep B σ (.output γ o) τ` (also covering input events, unchanged).
-Eq. lifted-validity at the committed state is exactly `Exposable σc o`. -/
+Lean: `SysStep B σ e τ` (also covering input and commitment events); its
+output constructor `SysStep.output` is a `Step σ (.output o) τ` of §§2–3 with
+the side condition `Exposable σ o ∨ B (canonicalCommitment o)`
+(`«sec:systems/system-histories»`). -/
 abbrev «def:system-output-event» {sp : Spec I O} (B : CommitmentBasis sp) (σ : State sp)
     (e : SEvent sp) (τ : State sp) : Prop :=
   SysStep B σ e τ
@@ -487,9 +488,10 @@ abbrev «def:commitment-event» {sp : Spec I O} (B : CommitmentBasis sp) (σ : S
     (γ : List (Commitment sp)) (τ : State sp) : Prop :=
   SysStep B σ (.commitment γ) τ
 
-/-- After Def. `def:commitment-event`: "A commitment event lets a system decide
-before any output needs the decision.  The environment observes nothing from
-it."  Lean: a commitment event is exactly a nonempty basis sequence applied in
+/-- After Def. `def:commitment-event`: "A system applies its own commitments
+only in commitment events.  A commitment event may precede an output event,
+which then has less to remove.  The environment observes nothing from a
+commitment event."  Lean: a commitment event is exactly a nonempty basis sequence applied in
 order; it keeps the current input and only removes rows, and its erasure is
 empty (`SEvent.erase (.commitment γ) = none`). -/
 theorem «sec:systems/commitment-event-unobserved» {sp : Spec I O} {B : CommitmentBasis sp}
@@ -501,58 +503,43 @@ theorem «sec:systems/commitment-event-unobserved» {sp : Spec I O} {B : Commitm
     fun ⟨hb, hne, ha⟩ => SysStep.commitment hb hne ha⟩,
    fun h => ⟨h.commitment_cur, h.sub⟩, rfl⟩
 
-/-- **Eq. `eq:lifted-validity`**: "`(k,x) ∈ R_c ∖ R_c[out ⪰ o] ⟹
-∃ u ∈ R_c[out ⪰ o](k) : x ≼ u`."  At the committed state `σc` (table `R_c`),
-this condition is exactly `Exposable σc o`, the legality premise of
-`SysStep.output`. -/
-theorem «eq:lifted-validity» {sp : Spec I O} (σc : State sp) (o : O) :
-    Exposable σc o ↔
-      ∀ k x, σc.R k x → ¬ outputTable σc o k x → ∃ u, outputTable σc o k u ∧ x ≼ u :=
-  ⟨fun h k x hx hn => let ⟨u, hu, hou, hxu⟩ := h k x hx (fun hox => hn ⟨hx, hox⟩)
-      ⟨u, ⟨hu, hou⟩, hxu⟩,
-   fun h k x hx hn => let ⟨u, ⟨hu, hou⟩, hxu⟩ := h k x hx (fun hk => hn hk.2)
-      ⟨u, hu, hou, hxu⟩⟩
+/-- After Def. `def:commitment-event`: "A commitment event may precede an
+output event, which then has less to remove."  Lean: an old-style compound
+step (commitments `γ` from the basis, then a legal output at the committed
+state) is the commitment event followed by the output event; and an output
+event after a commitment event removes only rows of the committed table. -/
+theorem «sec:systems/commitment-then-output» {sp : Spec I O} {B : CommitmentBasis sp} :
+    (∀ {σ σc τ : State sp} {γ : List (Commitment sp)} {o : O},
+      (∀ c ∈ γ, B c) → ApplySeq γ σ σc → σc.R σc.cur o → Exposable σc o →
+      τ.cur = σ.cur → τ.R = outputTable σc o →
+      SysExec B σ ((if γ = [] then [] else [.commitment γ]) ++ [.output o]) τ) ∧
+    (∀ {σc τ : State sp} {o : O}, SysStep B σc (.output o) τ →
+      τ.R = outputTable σc o) :=
+  ⟨fun hB hγ ho hleg hcur hR => split_output hB hγ ho hleg hcur hR,
+   fun h => (containment h).2.2.2⟩
 
-  /-- "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of
-  Sections functional-calm–complete-calm: its commitments remove the rows in
-  `Excluded_o` (Lemma canonical-commitment-normal-form)…"
-
-Lean: Lemma containment (1) (`CC.containment`): the event keeps the current
-input, `o ∈ R(i)`, the end table is inside `R[out ⪰ o]`, and the state `σc`
-left by `γ` has none of the rows of `Excluded_o`. -/
-theorem «sec:systems/legal-event-containment» {sp : Spec I O} {B : CommitmentBasis sp}
-    {σ τ : State sp} {γ : List (Commitment sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
-    τ.cur = σ.cur ∧ σ.R σ.cur o ∧ (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧
-    ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, Excluded σ o k x → ¬ σc.R k x :=
-  containment h
-
-/-- "… and `output(o)` is the case in which they remove exactly those."
-
-Lean: `κ_o` is `[x_o]` when `Excluded_o ≠ ∅`, and empty otherwise; the canonical steps `CanonStep` (under `B_P`, output
-events `Out_{κ_o}(o)`) are exactly the steps of §§2–3 after erasing `γ`. -/
+/-- Every output event of a system is the canonical event: the canonical
+steps `CanonStep` (under `B_P`, no commitment events) are exactly the steps
+of §§2–3. -/
 theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
-    (∀ (σ : State sp) (o : O), kappa σ o =
-      (if ∃ k x, Excluded σ o k x then [canonicalCommitment o] else [])) ∧
     (∀ (σ τ : State sp) (e : SEvent sp), CanonStep σ e τ →
       ∃ e' : Event I O, e.erase = some e' ∧ Step σ e' τ) ∧
     (∀ (σ τ : State sp) (e : Event I O), Step σ e τ →
       ∃ e' : SEvent sp, e'.erase = some e ∧ CanonStep σ e' τ) :=
-  ⟨fun _ _ => rfl, fun _ _ _ => canonStep_step, fun _ _ _ => step_canonStep⟩
+  ⟨fun _ _ _ => canonStep_step, fun _ _ _ => step_canonStep⟩
 
-/-- "The environment observes `o`, not `γ`."  Together with Def. `def:system`:
-a system's output events are commitment-sufficient output events `Out_γ(o)` with `γ` drawn from its
-basis.
+/-- Def. `def:system-output-event` together with Def. `def:system`: a
+system's output event is a `Step σ (.output o) τ` of §§2–3, with `x_o` in the
+basis when `o` is not legal.
 
-Lean: in the `CC.CAP` history model an output event `out γ o` is a basis check,
-`applySeq`, and a legal-output `output(o)` step at the committed state; this is
-exactly `SysStep` (first conjunct).  Erasure keeps `o` and drops `γ` (second
+Lean: in the `CC.CAP` history model an output event `out o` is exactly this
+step (first conjunct, `CAP.kcap o` is `x_o`); erasure keeps `o` (second
 conjunct). -/
 theorem «sec:systems/system-histories» {sp : Spec I O} {B : CommitmentBasis sp} {σ τ : State sp}
-    {γ : List (Commitment sp)} {o : O} :
-    (SysStep B σ (.output γ o) τ ↔
-      (∀ c ∈ γ, B c) ∧ ∃ σc, CAP.applySeq σ (γ.map Dist.toCAP) = some σc ∧
-        Step σc (.output o) τ ∧ Exposable σc o) ∧
-    (SEvent.output γ o).erase = some (Event.output o : Event I O) :=
+    {o : O} :
+    (SysStep B σ (.output o) τ ↔
+      Step σ (.output o) τ ∧ (Exposable σ o ∨ B (Dist.ofCAP (CAP.kcap o)))) ∧
+    (SEvent.output o : SEvent sp).erase = some (Event.output o : Event I O) :=
   ⟨Dist.sysStep_iff_CAP, rfl⟩
 
 /-- Opener of §4.2: "Two-phase locking (2PL) uses locks on operations: when
@@ -620,20 +607,19 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) 
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *Observable equivalence.*  Every output event
-of any system removes at least the rows that the canonical event for its output
-removes (Lemma canonical-commitment-normal-form), and every run under any basis
-has an observably equivalent canonical run: one that accepts the same inputs,
-emits the same outputs, and keeps at least the original's rows after each event;
-its commitment events erase to nothing (Lemma canonical-equivalent, Appendix
-bases).
+/-- *Observable equivalence.*  "Every output event of a system is the
+canonical event for its output, which preserves the containment of tables
+(Lemma output-containment); commitment events are dropped on the canonical
+side; the row containment extends event by event along the run."  Every run
+under any basis has an observably equivalent canonical run: one that accepts
+the same inputs, emits the same outputs, and keeps at least the original's
+rows after each event; its commitment events erase to nothing (Lemma
+canonical-equivalent, Appendix bases).
 
-Lean: the first clause is `«sec:systems/legal-event-containment»` (Lemma
-`lem:canonical-commitment-normal-form`); this entry is the second, as
-`«lem:canonical-equivalent»`; `Lockstep` records the per-event containment
-(a commitment event of the original is matched by no canonical event), and
-`SEvent.erase (.commitment γ) = none`, so commitment events disappear from the
-erasure `es.filterMap SEvent.erase`. -/
+Lean: `«lem:canonical-equivalent»`; `Lockstep` records the per-event
+containment (a commitment event of the original is matched by no canonical
+event), and `SEvent.erase (.commitment γ) = none`, so commitment events
+disappear from the erasure `es.filterMap SEvent.erase`. -/
 theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : CommitmentBasis sp} {i : I}
     {es : List (SEvent sp)} {ρ : State sp} (h : SysExec B (canon sp i) es ρ) :
     ∃ es' ρ', Lockstep B (canon sp i) es ρ (canon sp i) es' ρ' ∧
@@ -647,15 +633,16 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : CommitmentBasi
 removes is subsumed by a row that survives.  Likewise, deferring the output
 avoids no commitment."
 
-Lean: for any commitment basis, a legal output has a legal empty-commitment
-output event; every row that event removes is in `Subsumed_o`.  Observable
+Lean: for any commitment basis, the output event of a legal output is
+available (it applies no commitment, so it needs nothing from the basis);
+every row that event removes is in `Subsumed_o`.  Observable
 Equivalence (`«sec:systems/canonical-equivalent»`) lifts the canonical account
 to arbitrary runs under a basis. -/
 theorem «cor:free-eager-output» {sp : Spec I O} (B : CommitmentBasis sp)
     (σ : State sp) (o : O) (ho : σ.R σ.cur o) (hlegal : Exposable σ o) :
-    SysStep B σ (.output [] o) (outState σ o ho) ∧
+    SysStep B σ (.output o) (outState σ o ho) ∧
       ∀ k x, σ.R k x → ¬ outputTable σ o k x → Subsumed σ o k x := by
-  refine ⟨eps_step_iff.2 ⟨ho, hlegal, rfl, rfl⟩, ?_⟩
+  refine ⟨legal_output_step (step_output_outState ho) hlegal, ?_⟩
   intro k x hx hn
   have hox : ¬ o ≼ x := fun h => hn ⟨hx, h⟩
   obtain ⟨u, hu, hou, hxu⟩ := hlegal k x hx hox
@@ -667,8 +654,9 @@ commit, where `B` waits for a lock that `A` holds.  When `B` begins to wait,
 2PL applies `order(A,B)` in a commitment event, before any output, keeping only
 rows that can be completed without placing `B` before `A`.  The canonical run
 skips that event, so it keeps every row, including the one completed by
-`[B,A,C]`.  Suppose 2PL later emits `[A,C,B]`; its output event commits all
-three transactions and orders `A` before `C` before `B`.  The canonical run
+`[B,A,C]`.  Suppose 2PL later commits all three transactions and orders `A`
+before `C` before `B` in a commitment event, and then emits `[A,C,B]`.  The
+canonical run
 can emit the same output because that row was present all along.  Every row
 retained afterward extends `[A,C,B]`, so it satisfies all of 2PL's decisions,
 including the earlier order of `A` before `B`.  Thus the canonical final table
@@ -681,19 +669,21 @@ is contained in 2PL's, while Observable Equivalence gives the reverse
 Lean (`CC.Txn.Partial.CommitEx.example_commitment_event_ABC`), at any input `k`
 whose transactions `A`, `B`, `C` have each issued their operations and requested
 commit; rows are serial orders without aborts or reads:
-(a) the commitment event `commit([order(A,B)])` is a legal `B_2PL` step from
+(a) the commitment event `apply(order(A,B))` is a legal `B_2PL` step from
 the canonical state `σ₀` to `σ₁`; `σ₁` keeps exactly the rows of `σ₀` with a
 complete output extension in `σ₀` that does not commit `B` before `A` (aborting `A`
 or `B` counts), so it keeps `[A,B,C]` and removes `[B,A,C]`;
 (b) the canonical run stays at `σ₀`, which has `[B,A,C]`;
-(c) 2PL's
-`Out_[TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B)]([A,C,B])`
-is a legal `B_2PL` step from `σ₁`; the canonical run can emit `[A,C,B]`
-because that row was present at `σ₀`.  Every row it retains afterward extends
+(c) 2PL's commitment event
+`apply(TxCommit(A),TxCommit(B),TxCommit(C),order(A,C),order(C,B))` is a legal
+`B_2PL` step from `σ₁` to `σ₂`, after which `[A,C,B]` is a legal output and
+`output([A,C,B])` is a legal `B_2PL` step (the three `TxCommit`s alone do not
+make it legal); the canonical run can emit `[A,C,B]` because that row was
+present at `σ₀`.  Every row it retains afterward extends
 `[A,C,B]`, hence satisfies those five commitments and the earlier `order(A,B)`;
 (d) the canonical final table is therefore contained in 2PL's, while Observable
 Equivalence gives the reverse containment.  The two runs end at the same
-state and form a `Lockstep` pair whose commitment event is matched by no
+state and form a `Lockstep` pair whose commitment events are matched by no
 canonical event. -/
 theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}
     (h : Txn.Partial.Tri k A B C) :
@@ -701,7 +691,7 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
     let o2 := Txn.Partial.CommitEx.o2 (K := K) A B C
     let γ2 := Txn.Partial.CommitEx.γ2 (K := K) A B C
     let row := fun (l : List T) => Txn.Partial.full (K := K) (Txn.Partial.mk l fun _ => False)
-    ∃ σ1 τ2 τ2' : State (Txn.Partial.spec (T := T) (K := K) false),
+    ∃ σ1 σ2 τ2 τ2' : State (Txn.Partial.spec (T := T) (K := K) false),
       -- (a)
       SysStep Txn.Partial.basis2PL σ0 (.commitment [Txn.Partial.order A B]) σ1 ∧ σ1.cur = k ∧
       (∀ k' w, σ1.R k' w ↔ σ0.R k' w ∧
@@ -710,14 +700,17 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
       -- (b)
       σ0.R k (row [B, A, C]) ∧
       -- (c)
-      SysStep Txn.Partial.basis2PL σ1 (.output γ2 o2) τ2 ∧
-      (¬ ∃ τ, SysStep Txn.Partial.basis2PL σ1
-        (.output [Txn.Partial.commit A, Txn.Partial.commit B, Txn.Partial.commit C] o2) τ) ∧
-      CanonStep σ0 (.output (kappa σ0 o2) o2) τ2' ∧
+      SysStep Txn.Partial.basis2PL σ1 (.commitment γ2) σ2 ∧ Exposable σ2 o2 ∧
+      SysStep Txn.Partial.basis2PL σ2 (.output o2) τ2 ∧
+      (¬ ∃ ρ, SysStep Txn.Partial.basis2PL σ1
+        (.commitment [Txn.Partial.commit A, Txn.Partial.commit B, Txn.Partial.commit C]) ρ ∧
+        Exposable ρ o2) ∧
+      CanonStep σ0 (.output o2) τ2' ∧
       -- (d)
       τ2 = τ2' ∧
-      Lockstep Txn.Partial.basis2PL σ0 [.commitment [Txn.Partial.order A B], .output γ2 o2] τ2
-        σ0 [.output (kappa σ0 o2) o2] τ2' :=
+      Lockstep Txn.Partial.basis2PL σ0
+        [.commitment [Txn.Partial.order A B], .commitment γ2, .output o2] τ2
+        σ0 [.output o2] τ2' :=
   Txn.Partial.CommitEx.example_commitment_event_ABC h
 
 
@@ -803,9 +796,9 @@ theorem «prop:commitment-conflict/reach-general» {sp : Spec I O}
   /-- Supporting output-only form of Prop. `prop:commitment-conflict`.
 under different bases. -/
 theorem «prop:commitment-conflict/any-bases» {sp : Spec I O}
-    {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
-    (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
+    {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp} {o x : O}
+    (h1 : SysStep B σ (.output o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
+    (h2 : SysStep B' σ (.output x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
         (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ) :=
   Dist.conflicting_outputs2 h1 hno h2
@@ -813,9 +806,9 @@ theorem «prop:commitment-conflict/any-bases» {sp : Spec I O}
 /-- Prop. `prop:commitment-conflict`, with continuations in the
 transition system of §§2–3. -/
 theorem «prop:commitment-conflict/reach» {sp : Spec I O} {B B' : CommitmentBasis sp}
-    {σ σ' t : State sp} {γ γ' : List (Commitment sp)} {o x : O}
-    (h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
+    {σ σ' t : State sp} {o x : O}
+    (h1 : SysStep B σ (.output o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
+    (h2 : SysStep B' σ (.output x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
   conflicting_outputs_reach h1 hno h2
 
@@ -824,15 +817,16 @@ event, in particular a commitment event `apply(γ)`: "let one run perform an
 output or commitment event after which no output at `i` extends `x`".
 
 Lean: for any event `e` taking `σ` to `σ'` with no output at `i` extending `x`,
-and `Out_{γ'}(x)` taking `σ` to `t`, no state with current input `i` is
+and `output(x)` taking `σ` to `t`, no state with current input `i` is
 reachable from both, under any bases or in the transition system of §§2–3; if
-`e` is an output or commitment event, its commitment sequence is nonempty. -/
+`e` is an output event `output(o)`, then `o` is not legal, so `e` applies
+`x_o`; if `e` is a commitment event, its sequence is nonempty. -/
 theorem «prop:commitment-conflict/any-event» {sp : Spec I O}
     {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp} {e : SEvent sp}
-    {γ' : List (Commitment sp)} {x : O}
+    {x : O}
     (h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
-    (∀ γ o, e = .output γ o → γ ≠ []) ∧ (∀ γ, e = .commitment γ → γ ≠ []) ∧
+    (h2 : SysStep B' σ (.output x) t) :
+    (∀ o, e = .output o → ¬ Exposable σ o) ∧ (∀ γ, e = .commitment γ → γ ≠ []) ∧
     (¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
         (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ)) ∧
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
@@ -848,14 +842,14 @@ prepared.
   change), outputs are `undecided ≼ commit, abort`, and `P` aborts on a no vote,
   commits when all voted yes, and is undecided otherwise.  This is a monotone
   function, hence consistent.  Every decision at a commitment-free reachable
-  state is exposable and therefore has a legal `Out_ε` event: the decision step
-  itself applies no commitment.  The prepare half belongs to the owners'
+  state is exposable, so its output event is available under the empty basis:
+  the decision step itself applies no commitment.  The prepare half belongs to the owners'
   specifications; messages, logging, and blocking are not modeled here. -/
 theorem «sec:systems/two-phase-commit» (n : Nat) :
       (CAP.voteSpec n).Functional ∧ (CAP.voteSpec n).MonotoneF ∧ (CAP.voteSpec n).Consistent ∧
         (∀ τ : State (CAP.voteSpec n), ReachableCF τ → ∀ d,
           ∀ hd : τ.R τ.cur d, Exposable τ d ∧
-            SysStep (fun _ => False) τ (.output [] d) (outState τ d hd)) := by
+            SysStep (fun _ => False) τ (.output d) (outState τ d hd)) := by
     refine ⟨CAP.voteSpec_functional n, CAP.voteSpec_monotone n, CAP.voteSpec_consistent n, ?_⟩
     intro τ hr d hd
     have he := CAP.voteSpec_exposable n τ hr d hd

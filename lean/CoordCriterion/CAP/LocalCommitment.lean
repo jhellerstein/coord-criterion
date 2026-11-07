@@ -4,8 +4,10 @@ import CoordCriterion.CAP.AvailabilityFor
 # Local commitments and coordination relative to a system
 
 Coordination, relative to a system, is a commitment that some run of the
-system contradicts.  An output event of a participant removes rows from its
-state (by its commitments `γ`) and may empty fibers (remove every row at some inputs).
+system contradicts.  An output event `output(o)` of a participant removes rows
+from its state (the rows `Excluded_o`, by the canonical commitment `x_o` it
+applies when `o` is not legal; their remainder is `kcState σ o`) and may empty
+fibers (remove every row at some inputs).
 The event is *local* when no participant of any history the system produces
 emits a removed row's output at that row's input (`SysEmits`), and none
 accepts an input whose fiber it empties (`SysAccepts`).  The same applies to a commitment event,
@@ -15,12 +17,12 @@ is local.
 
 * `respSystem_coordinationFree`: if `S` is consistent on `A`, the canonical
   system `respSystem A` of `complete_cap_for` is coordination-free.  Its
-  canonical output events empty no fiber, and the rows they remove lie outside
-  `A`, which it never emits.
+  output events empty no fiber, and the rows they remove lie outside `A`,
+  which it never emits.
 * `every_row_emitted`: a system with Availability emits every row of `P`, so
   every removal is contradicted; `availability_coordinationFree_iff`: such a
-  system is coordination-free exactly when the commitments of its output and
-  commitment events remove no row; so it performs no commitment event
+  system is coordination-free exactly when its output and commitment events
+  remove no row (by commitment); so it performs no commitment event
   (`availability_coordinationFree_noCommit`).
 -/
 
@@ -33,8 +35,8 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 at current input `k`. -/
 def SysEmits (Sys : System sp D) (k : I) (x : O) : Prop :=
   ∃ (n : Nat) (init : Fin n → I) (H : History sp D n) (q : Fin n)
-    (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ : State sp),
-    WF init H ∧ Produced Sys n init H ∧ H q = a ++ LEv.out γ x :: b ∧
+    (a b : List (LEv sp D n)) (σ : State sp),
+    WF init H ∧ Produced Sys n init H ∧ H q = a ++ LEv.out x :: b ∧
     LRun (canon sp (init q)) a σ ∧ σ.cur = k
 
 /-- Some participant of some well-formed history the system produces records
@@ -44,10 +46,11 @@ def SysAccepts (Sys : System sp D) (k : I) : Prop :=
     (a b : List (LEv sp D n)),
     WF init H ∧ Produced Sys n init H ∧ H q = a ++ LEv.inp k :: b
 
-/-- An output event's commitments, taking `σ` to `σc`, are *local* to the
+/-- The commitments of an event, taking `σ` to `σc`, are *local* to the
 system: no run of the system emits the output of a removed row at its input,
-and none accepts an input whose fiber it empties.  (The same condition is applied to the
-commitments of a commitment event.) -/
+and none accepts an input whose fiber it empties.  (For an output event
+`output(o)`, `σc = kcState σ o`; for a commitment event `Apply(γ)`, `σc` is the
+result of applying `γ`.) -/
 def LocalEvent (Sys : System sp D) (σ σc : State sp) : Prop :=
   (∀ k x, σ.R k x → ¬ σc.R k x → ¬ SysEmits Sys k x) ∧
   (∀ k, (∃ x, σ.R k x) → (∀ x, ¬ σc.R k x) → ¬ SysAccepts Sys k)
@@ -73,19 +76,20 @@ theorem localEvent_iff_not_contradicts (Sys : System sp D) (σ σc : State sp) :
       fun k hk hall ha => h (Or.inr ⟨k, hk, hall, ha⟩)⟩
 
 /-- A system is coordination-free when every output event and every commit
-event of every history it produces is local. -/
+event of every history it produces is local.  An output event `output(o)` at
+`σ` removes the rows `Excluded_o` (by `x_o`, when `o` is not legal), leaving
+`kcState σ o`. -/
 def System.CoordinationFree (Sys : System sp D) : Prop :=
   (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
-    ∀ (q : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (o : O)
-      (σ σc : State sp),
-      H q = a ++ LEv.out γ o :: b → LRun (canon sp (init q)) a σ → applySeq σ γ = some σc →
-      LocalEvent Sys σ σc) ∧
+    ∀ (q : Fin n) (a b : List (LEv sp D n)) (o : O) (σ : State sp),
+      H q = a ++ LEv.out o :: b → LRun (canon sp (init q)) a σ →
+      ∀ ho : σ.R σ.cur o, LocalEvent Sys σ (kcState σ o ho)) ∧
   (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
     ∀ (q : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ σc : State sp),
       H q = a ++ LEv.commitment γ :: b → LRun (canon sp (init q)) a σ → applySeq σ γ = some σc →
       LocalEvent Sys σ σc)
 
-/-- An output event with no commitment is local. -/
+/-- Applying no commitment is local. -/
 theorem localEvent_nil (Sys : System sp D) {σ σc : State sp}
     (h : applySeq σ ([] : List (Commitment sp)) = some σc) : LocalEvent Sys σ σc := by
   simp [applySeq] at h; subst h
@@ -98,15 +102,15 @@ theorem compliant_of_eq_append {E : Type} {A : List E → E → Prop} {l a b : L
 /-- `respSystem A` emits only outputs of `A` at the current input. -/
 theorem resp_emits_A {A : Table I O} {k : I} {x : O}
     (h : SysEmits (respSystem (sp := sp) (D := D) A) k x) : A k x := by
-  obtain ⟨n, init, H, q, a, b, γ, σ, _, hp, hH, hrun, hcur⟩ := h
-  have hAl := hp q a (.out γ x) b hH
-  obtain ⟨_, _, hAx, _⟩ := hAl
+  obtain ⟨n, init, H, q, a, b, σ, _, hp, hH, hrun, hcur⟩ := h
+  have hAl := hp q a (.out x) b hH
+  obtain ⟨_, hAx, _⟩ := hAl
   obtain ⟨h1, _⟩ := rinv_of_produced A (compliant_of_eq_append (hp q) hH) hrun
   rw [← hcur, h1]; exact hAx
 
 /-- **If `S` is consistent on `A`, `respSystem A` is coordination-free.**  Its
-output events are canonical events for outputs of `A`; they empty no fiber, and
-every row they remove lies outside `A`, so no run of the system emits it. -/
+output events emit outputs of `A`; they empty no fiber, and every row they
+remove lies outside `A`, so no run of the system emits it. -/
 theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) :
     (respSystem (sp := sp) (D := D) A).CoordinationFree := by
   refine ⟨?_, fun n init H _ hp q a b γ σ σc hH _ _ => ?_⟩
@@ -114,44 +118,41 @@ theorem respSystem_coordinationFree (A : Table I O) (hcons : ConsistentOn sp A) 
   · -- `respSystem A` performs no commitment event
     have := (hp q a (.commitment γ) b hH).2
     simp [respSystem, respF, LEv.erase] at this
-  intro n init H _ hp q a b γ o σ σc hH hrun hap
-  have hAl := hp q a (.out γ o) b hH
-  obtain ⟨_, hγ, hAo, hge⟩ := hAl
+  intro n init H _ hp q a b o σ hH hrun hu
+  have hAl := hp q a (.out o) b hH
+  obtain ⟨_, hAo, hge⟩ := hAl
   obtain ⟨hcur, hres, _, _⟩ :=
     rinv_of_produced A (compliant_of_eq_append (hp q) hH) hrun
   rw [← hcur] at hAo
   -- rows extending `o` at input extensions of the current input are still present
   have hkeep : ∀ k u, sp.P k u → σ.cur ≼ k → o ≼ u → σ.R k u := fun k u hSu hk hou =>
     (hres k u).2 ⟨hSu, hk, fun e he => PO.trans (hge e he) hou⟩
-  rcases hγ with rfl | rfl
-  · exact localEvent_nil _ hap
-  · obtain ⟨hu, rfl⟩ := kc_apply_some hap
-    constructor
-    · intro k x hx hnx hemit
-      have hAx := resp_emits_A hemit
-      obtain ⟨_, hk, _⟩ := (hres k x).1 hx
-      obtain ⟨u, hSu, hall⟩ := hcons [(σ.cur, o), (k, x)]
-        (by intro r hr; simp at hr; rcases hr with rfl | rfl
-            · exact hAo
-            · exact hAx) k
-        (by intro r hr; simp at hr; rcases hr with rfl | rfl
-            · exact hk
-            · exact PO.refl k)
-      have hou : o ≼ u := hall (σ.cur, o) (by simp)
-      have hxu : x ≼ u := hall (k, x) (by simp)
-      have hRu := hkeep k u hSu hk hou
-      apply hnx
-      refine ⟨hx, ?_⟩
-      intro he
-      exact he.2.2 ⟨hx, he.2.1, u, hRu, hou, hxu⟩
-    · rintro k ⟨x, hx⟩ hall _
-      obtain ⟨_, hk, _⟩ := (hres k x).1 hx
-      obtain ⟨u, hSu, hu'⟩ := hcons [(σ.cur, o)]
-        (by intro r hr; simp at hr; subst hr; exact hAo) k
-        (by intro r hr; simp at hr; subst hr; exact hk)
-      have hou : o ≼ u := hu' (σ.cur, o) (by simp)
-      have hRu := hkeep k u hSu hk hou
-      exact hall u ⟨hRu, not_rm_of_le hRu hou⟩
+  constructor
+  · intro k x hx hnx hemit
+    have hAx := resp_emits_A hemit
+    obtain ⟨_, hk, _⟩ := (hres k x).1 hx
+    obtain ⟨u, hSu, hall⟩ := hcons [(σ.cur, o), (k, x)]
+      (by intro r hr; simp at hr; rcases hr with rfl | rfl
+          · exact hAo
+          · exact hAx) k
+      (by intro r hr; simp at hr; rcases hr with rfl | rfl
+          · exact hk
+          · exact PO.refl k)
+    have hou : o ≼ u := hall (σ.cur, o) (by simp)
+    have hxu : x ≼ u := hall (k, x) (by simp)
+    have hRu := hkeep k u hSu hk hou
+    apply hnx
+    refine ⟨hx, ?_⟩
+    intro he
+    exact he.2.2 ⟨hx, he.2.1, u, hRu, hou, hxu⟩
+  · rintro k ⟨x, hx⟩ hall _
+    obtain ⟨_, hk, _⟩ := (hres k x).1 hx
+    obtain ⟨u, hSu, hu'⟩ := hcons [(σ.cur, o)]
+      (by intro r hr; simp at hr; subst hr; exact hAo) k
+      (by intro r hr; simp at hr; subst hr; exact hk)
+    have hou : o ≼ u := hu' (σ.cur, o) (by simp)
+    have hRu := hkeep k u hSu hk hou
+    exact hall u ⟨hRu, not_rm_of_le hRu hou⟩
 
 /-- A system with Availability emits every row of `P`: two participants start
 at `k` in separate blocks, and the first emits `x` locally, at current
@@ -167,28 +168,27 @@ theorem every_row_emitted (Sys : System sp D) (hA : AvailabilityAtEnd Sys) :
   have hpart0 : Partitioned H0 (fun q => q.val) :=
     ⟨⟨0, 1, by simp⟩, by intro p a q k j d b h; simp [H0] at h⟩
   have ho : (canon sp (init 0)).R (canon sp (init 0)).cur x := ⟨hkx, PO.refl k⟩
-  obtain ⟨ext, hwf', hprod', _, _, hni, γ, hγ⟩ :=
+  obtain ⟨ext, hwf', hprod', _, _, hni, hγ⟩ :=
     hA 2 init H0 (fun q => q.val) hwf0 hprod0 hpart0 0 _ (.nil _) x ho
   obtain ⟨a, b, hab⟩ := List.append_of_mem hγ
-  have hH : (fun q => H0 q ++ ext q) 0 = a ++ LEv.out γ x :: b := by
+  have hH : (fun q => H0 q ++ ext q) 0 = a ++ LEv.out x :: b := by
     show [] ++ ext 0 = _; rw [List.nil_append]; exact hab
   obtain ⟨τ, hτ⟩ := hwf'.1 0
   rw [hH] at hτ
   obtain ⟨σ, hσ, _⟩ := lrun_append.1 hτ
   have hcur : σ.cur = k :=
     lrun_noinp hσ (fun j hj => hni 0 j (by rw [hab]; exact List.mem_append_left _ hj))
-  exact ⟨2, init, _, 0, a, b, γ, σ, hwf', hprod', hH, hσ, hcur⟩
+  exact ⟨2, init, _, 0, a, b, σ, hwf', hprod', hH, hσ, hcur⟩
 
 /-- With Availability (`A = S`), coordination is commitment: a system with
-Availability is coordination-free exactly when the commitments of its output
-events and commitment events remove no row. -/
+Availability is coordination-free exactly when its output events and
+commitment events remove no row (by commitment). -/
 theorem availability_coordinationFree_iff (Sys : System sp D) (hA : AvailabilityAtEnd Sys) :
     Sys.CoordinationFree ↔
       (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
-        ∀ (q : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (o : O)
-          (σ σc : State sp),
-          H q = a ++ LEv.out γ o :: b → LRun (canon sp (init q)) a σ →
-          applySeq σ γ = some σc → ∀ k x, σ.R k x → σc.R k x) ∧
+        ∀ (q : Fin n) (a b : List (LEv sp D n)) (o : O) (σ : State sp),
+          H q = a ++ LEv.out o :: b → LRun (canon sp (init q)) a σ →
+          ∀ ho : σ.R σ.cur o, ∀ k x, σ.R k x → (kcState σ o ho).R k x) ∧
       (∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
         ∀ (q : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (σ σc : State sp),
           H q = a ++ LEv.commitment γ :: b → LRun (canon sp (init q)) a σ →
@@ -201,13 +201,14 @@ theorem availability_coordinationFree_iff (Sys : System sp D) (hA : Availability
       fun k ⟨x, hx⟩ hall => absurd (hkeep k x hx) (hall x)⟩
   constructor
   · rintro ⟨h1, h2⟩
-    exact ⟨fun n init H hw hp q a b γ o σ σc hH hrun hap =>
-        keep (h1 n init H hw hp q a b γ o σ σc hH hrun hap),
+    exact ⟨fun n init H hw hp q a b o σ hH hrun ho =>
+        keep (h1 n init H hw hp q a b o σ hH hrun ho),
       fun n init H hw hp q a b γ σ σc hH hrun hap =>
         keep (h2 n init H hw hp q a b γ σ σc hH hrun hap)⟩
   · rintro ⟨h1, h2⟩
-    exact ⟨fun n init H hw hp q a b γ o σ σc hH hrun hap =>
-        loc (h1 n init H hw hp q a b γ o σ σc hH hrun hap),
+    exact ⟨fun n init H hw hp q a b o σ hH hrun ho =>
+        loc (h1 n init H hw hp q a b o σ hH hrun ho),
+
       fun n init H hw hp q a b γ σ σc hH hrun hap =>
         loc (h2 n init H hw hp q a b γ σ σc hH hrun hap)⟩
 

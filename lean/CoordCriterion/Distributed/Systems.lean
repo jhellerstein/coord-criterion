@@ -22,8 +22,8 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
                                   assumption of `Dist.History.WF`.
 * `distConsistent_iff_liftedMono` — "distributed consistency exactly when
                                   Lifted Monotonicity" (Sec. distributed consistency).
-* `functional_commitment_unsubsumed`, `functional_kappa`, `functional_commitmentState_eq`,
-  `functional_legal_ge`         — the one-row-per-input claims.
+* `functional_commitment_unsubsumed`, `functional_commitmentState_eq`
+                                — the one-row-per-input claims.
 * `canonLegal_iff`, `canonExec_unique`
                                 — Def. `def:canonical-system`: canonical
                                   histories are exactly those of Sec. histories.
@@ -33,7 +33,7 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
                                   for accepted-input and emitted-output contradictions.
 * `conflicting_outputs2`, `conflict_removes_output`
                                 — supporting output-only forms.
-* `sysStep_to_composite`, `sysStep_of_composite`, `composite_functional_empties`
+* `sysStep_commitment_composite_iff`, `composite_functional_empties`
                                 — the remark after Lemma `lem:compound-commitment`.
 * `reconciliation_any_basis`    — Cor. `cor:reconciliation-any-basis`.
 * `converse_fails`, `system_runs_hide_nonmonotonicity`
@@ -266,12 +266,6 @@ theorem functional_commitment_unsubsumed (hf : sp.Functional) (σ τ : State sp)
   have : u = w := hf k u w (σ.sub _ _ hu) (τ.sub _ _ hw)
   exact hnu (this ▸ hw)
 
-/-- With one row per input, the canonical sequence contains the canonical commitment
-exactly when some row must be removed. -/
-theorem functional_kappa (hf : sp.Functional) (σ : State sp) (o : O) :
-    kappa σ o = (if ∃ k x, Excluded σ o k x then [canonicalCommitment o] else []) := by
-  rfl
-
 /-- With one row per input, removing the excluded rows leaves `R[out ⪰ o]`. -/
 theorem functional_commitmentState_eq (hf : sp.Functional) (σ : State sp) (o : O)
     (ho : σ.R σ.cur o) :
@@ -286,21 +280,6 @@ theorem functional_commitmentState_eq (hf : sp.Functional) (σ : State sp) (o : 
   · rintro ⟨hx, hox⟩
     exact ⟨hx, fun he => he.2.1 hox⟩
 
-/-- "With one row per input … legality says that every row the commitments
-leave has an output that extends `o`." -/
-theorem functional_legal_ge (hf : sp.Functional) {B : CommitmentBasis sp} {σ τ : State sp}
-    {γ : List (Commitment sp)} {o : O} (h : SysStep B σ (.output γ o) τ) :
-    ∃ σc, ApplySeq γ σ σc ∧ (∀ k x, σc.R k x → o ≼ x) ∧ τ.R = σc.R := by
-  match h with
-  | .output (σc := σc) _ hγ _ hleg _ hR =>
-    have hge : ∀ k x, σc.R k x → o ≼ x := fun k x hx => Classical.byContradiction fun hnx => by
-      obtain ⟨u, hu, hou, _⟩ := hleg k x hx hnx
-      have : x = u := hf k x u (σc.sub _ _ hx) (σc.sub _ _ hu)
-      exact hnx (this ▸ hou)
-    exact ⟨σc, hγ, hge, by
-      rw [hR]; funext k x; apply propext
-      exact ⟨fun h => h.1, fun h => ⟨h, hge k x h⟩⟩⟩
-
 end functional
 
 /-! ### Def. `def:canonical-system`: canonical histories are those of Sec. histories -/
@@ -308,14 +287,13 @@ end functional
 section canonical_system
 variable {sp : Spec I O} {D : Type} {n : Nat}
 
-/-- Annotating each participant's input/output events of `H` with commitment
-sequences gives a legal canonical run (every output event is `Out_{κ_o}(o)`
-at the state where it occurs). -/
+/-- Each participant's input/output events of `H`, read as system events,
+form a canonical run (no commitment events). -/
 def CanonLegal (sp : Spec I O) (H : Dist.History I O D n) : Prop :=
   ∀ p, ∃ es : List (SEvent sp), es.filterMap SEvent.erase = Dist.ioOf (H.ev p) ∧
     ∃ τ, CanonExec (canon sp (H.init p)) es τ
 
-/-- The same with commitment-sufficient output events `Out_γ(o)` from a basis `B`. -/
+/-- The same for a run under a basis `B`, which may add commitment events. -/
 def SysLegal (B : CommitmentBasis sp) (H : Dist.History I O D n) : Prop :=
   ∀ p, ∃ es : List (SEvent sp), es.filterMap SEvent.erase = Dist.ioOf (H.ev p) ∧
     ∃ τ, SysExec B (canon sp (H.init p)) es τ
@@ -362,14 +340,12 @@ theorem canonExec_unique {σ ρ ρ' : State sp} {es es' : List (SEvent sp)}
         | input j =>
           cases e' with
           | input j' => cases ha; cases ha'; rfl
-          | output _ _ => cases ha; cases ha'
+          | output _ => cases ha; cases ha'
           | commitment _ => cases ha'
-        | output γ o =>
+        | output o =>
           cases e' with
           | input _ => cases ha; cases ha'
-          | output γ' o' =>
-            cases ha; cases ha'
-            rw [hs.2.1 γ o rfl, hs'.2.1 γ' o rfl]
+          | output o' => cases ha; cases ha'; rfl
           | commitment _ => cases ha'
         | commitment _ => cases ha
       subst hee
@@ -435,8 +411,8 @@ theorem commitment_contradiction_reach {c : Commitment sp} {σ σc τ : State sp
 any commitment that removed `(k,x)`. -/
 theorem commitmentContradictsAt_of_output {B : CommitmentBasis sp}
     {σ σc υ τ : State sp} {k : I}
-    {γ : List (Commitment sp)} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x)
-    (hout : SysStep B υ (.output γ x) τ) : CommitmentContradictsAt σ σc τ k := by
+    {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x)
+    (hout : SysStep B υ (.output x) τ) : CommitmentContradictsAt σ σc τ k := by
   obtain ⟨_, _, hcontain, _⟩ := containment hout
   exact Or.inl ⟨x, hx, hnx, fun w hw => (hcontain k w hw).2⟩
 
@@ -449,9 +425,9 @@ theorem commitmentContradictsAt_of_empty {σ σc τ : State sp} {k : I}
 
 /-- The two continuations may use different bases. -/
 theorem conflicting_outputs2 {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp}
-    {γ γ' : List (Commitment sp)} {o x : O}
-    (_h1 : SysStep B σ (.output γ o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
+    {o x : O}
+    (_h1 : SysStep B σ (.output o) σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
+    (h2 : SysStep B' σ (.output x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
         (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ) := by
   obtain ⟨_, _, ht, _⟩ := containment h2
@@ -474,46 +450,44 @@ theorem applySeq_removed {γ : List (Commitment sp)} {σ σc : State sp}
       exact ⟨c', List.mem_cons_of_mem _ hc', α, β, h1, h2.trans (c.cur_eq σ τ hc), h3, h4⟩
     · exact ⟨c, List.mem_cons_self .., σ, τ, hc, rfl, hx, hτ⟩
 
-/-- "The conflict is at the current input, so it is a commitment, not a commitment":
-if `Out_γ(o)` leaves no output extending `x ∈ R(i)`, then some commitment `c`
-of `γ` removes `(i, x)` while keeping a row at `i`, and no kept row at `i`
-extends `x`. -/
-theorem conflict_removes_output {B : CommitmentBasis sp} {σ σ' : State sp} {γ : List (Commitment sp)}
-    {o x : O} (h1 : SysStep B σ (.output γ o) σ') (hx : σ.R σ.cur x)
+/-- "The conflict is at the current input, so it rules out an output, not
+an input": if `output(o)` leaves no output extending `x ∈ R(i)`, then the
+canonical commitment `x_o` that the event applies removes `(i, x)` while
+keeping a row at `i`, and no kept row at `i` extends `x`. -/
+theorem conflict_removes_output {B : CommitmentBasis sp} {σ σ' : State sp}
+    {o x : O} (h1 : SysStep B σ (.output o) σ') (hx : σ.R σ.cur x)
     (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w) :
-    ∃ c ∈ γ, ∃ α β : State sp, c.app α = some β ∧ α.cur = σ.cur ∧ α.R σ.cur x ∧
+    ∃ β : State sp, (canonicalCommitment o).app σ = some β ∧ β.cur = σ.cur ∧
       ¬ β.R σ.cur x ∧ (∃ w, β.R σ.cur w) ∧ ∀ w, β.R σ.cur w → ¬ x ≼ w := by
-  match h1 with
-  | .output (σc := σc) _ hγ _ hleg _ hR =>
-    have hnc : ¬ σc.R σ.cur x := by
-      intro hcx
-      by_cases hox : o ≼ x
-      · exact hno x (by rw [hR]; exact ⟨hcx, hox⟩) (PO.refl x)
-      · obtain ⟨u, hu, hou, hxu⟩ := hleg _ _ hcx hox
-        exact hno u (by rw [hR]; exact ⟨hu, hou⟩) hxu
-    obtain ⟨c, hc, α, β, hab, hαc, hαx, hβx⟩ := applySeq_removed hγ hx hnc
-    have hβc : β.cur = σ.cur := (c.cur_eq α β hab).trans hαc
-    refine ⟨c, hc, α, β, hab, hαc, hαx, hβx, ?_, fun w hw => c.unsubsumed α β hab _ x w hαx hβx hw⟩
-    obtain ⟨w, hw⟩ := β.hasCur
-    exact ⟨w, hβc ▸ hw⟩
+  obtain ⟨_, ho, _, hR⟩ := containment h1
+  have hex : Excluded σ o σ.cur x := by
+    have hox : ¬ o ≼ x := fun h => hno x (by rw [hR]; exact ⟨hx, h⟩) (PO.refl x)
+    refine ⟨hx, hox, ?_⟩
+    rintro ⟨_, _, u, hu, hou, hxu⟩
+    exact hno u (by rw [hR]; exact ⟨hu, hou⟩) hxu
+  have happ : (canonicalCommitment o).app σ = some (commitmentState σ o ho) :=
+    commitmentApp_eq.2 ⟨ho, ⟨_, _, hex⟩, rfl⟩
+  have hnβ : ¬ (commitmentState σ o ho).R σ.cur x := fun h => h.2 hex
+  exact ⟨_, happ, rfl, hnβ, ⟨o, ho, not_excluded_of_ge (PO.refl o)⟩,
+    fun w hw => (canonicalCommitment o).unsubsumed σ _ happ _ x w hx hnβ hw⟩
 
 /-- Prop. `prop:commitment-conflict` for any first event: if an
 event `e` (input, output, or commitment event) takes `σ` to `σ'` with no output
-at `i` extending `x`, and `Out_γ'(x)` takes `σ` to `t`, then no state with
+at `i` extending `x`, and `output(x)` takes `σ` to `t`, then no state with
 current input `i` is reachable (under any bases) from both.  If `e` is an
-output event `Out_γ(o)`, then `γ ≠ ε`; a commitment event has `γ ≠ ε` by
-definition. -/
+output event `output(o)`, then `o` is not legal, so the event applies `x_o`;
+a commitment event has `γ ≠ ε` by definition. -/
 theorem conflicting_events {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State sp}
-    {e : SEvent sp} {γ' : List (Commitment sp)} {x : O}
+    {e : SEvent sp} {x : O}
     (h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
-    (∀ γ o, e = .output γ o → γ ≠ []) ∧
+    (h2 : SysStep B' σ (.output x) t) :
+    (∀ o, e = .output o → ¬ Exposable σ o) ∧
     (∀ γ, e = .commitment γ → γ ≠ []) ∧
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧
         (∃ es, SysExec B1 σ' es ρ) ∧ (∃ es, SysExec B2 t es ρ) := by
   obtain ⟨_, _, ht, _⟩ := containment h2
   refine ⟨?_, ?_, ?_⟩
-  · rintro γ o rfl
+  · rintro o rfl
     exact (conflicting_outputs (B'' := B) h1 hno h2).1
   · rintro γ rfl
     cases h1 with
@@ -525,9 +499,9 @@ theorem conflicting_events {B B' B1 B2 : CommitmentBasis sp} {σ σ' t : State s
 
 /-- The same with reachability by the transition system of Sections 2–3. -/
 theorem conflicting_events_reach {B B' : CommitmentBasis sp} {σ σ' t : State sp}
-    {e : SEvent sp} {γ' : List (Commitment sp)} {x : O}
+    {e : SEvent sp} {x : O}
     (_h1 : SysStep B σ e σ') (hno : ∀ w, σ'.R σ.cur w → ¬ x ≼ w)
-    (h2 : SysStep B' σ (.output γ' x) t) :
+    (h2 : SysStep B' σ (.output x) t) :
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ := by
   obtain ⟨_, _, ht, _⟩ := containment h2
   rintro ⟨ρ, hc, h1r, h2r⟩
@@ -560,23 +534,6 @@ end conflict
 
 section compound
 variable {sp : Spec I O}
-
-theorem sysStep_to_composite {B B' : CommitmentBasis sp} {σ τ : State sp} {c : Commitment sp}
-    {cs : List (Commitment sp)} {o : O} (hB' : B' (composite c cs))
-    (h : SysStep B σ (.output (c :: cs) o) τ) :
-    SysStep B' σ (.output [composite c cs] o) τ := by
-  match h with
-  | .output _ hγ ho hleg hcur hR =>
-    exact SysStep.output (fun c' hc' => (List.mem_singleton.1 hc') ▸ hB')
-      ((applySeq_composite c cs _ _).1 hγ) ho hleg hcur hR
-
-theorem sysStep_of_composite {B B' : CommitmentBasis sp} {σ τ : State sp} {c : Commitment sp}
-    {cs : List (Commitment sp)} {o : O} (hB : ∀ c' ∈ c :: cs, B c')
-    (h : SysStep B' σ (.output [composite c cs] o) τ) :
-    SysStep B σ (.output (c :: cs) o) τ := by
-  match h with
-  | .output _ hγ ho hleg hcur hR =>
-    exact SysStep.output hB ((applySeq_composite c cs _ _).2 hγ) ho hleg hcur hR
 
 /-- A compound commitment event `commit(c cs)` has the same effect as
 `commit(composite c cs)`. -/
@@ -677,12 +634,7 @@ theorem noCommitmentBasis_full {σ ρ : State spU} {es : List (SEvent spU)} (h :
     apply ih
     match e, hs with
     | _, .input (.input _ _ _ _ _ hR) => intro k u; rw [hR]; exact ⟨hσ k u, trivial⟩
-    | _, .output (γ := γ) hb hγ _ hleg _ _ =>
-      cases γ with
-      | cons c _ => exact (hb c (List.mem_cons_self ..)).elim
-      | nil =>
-        cases hγ
-        exact (spU_not_exposable σ hσ _ hleg).elim
+    | _, .output _ hb => exact (spU_not_exposable σ hσ _ (hb.resolve_right id)).elim
     | _, .commitment (γ := γ) hb hne _ =>
       cases γ with
       | nil => exact absurd rfl hne
@@ -707,14 +659,9 @@ theorem converse_fails :
     rename_i e _ _
     cases e with
     | input _ => simp [SEvent.erase] at he
-    | output γ o =>
+    | output o =>
       cases hs with
-      | output hb hγ _ hleg _ _ =>
-        cases γ with
-        | cons c _ => exact hb c (List.mem_cons_self ..)
-        | nil =>
-          cases hγ
-          exact spU_not_exposable _ (canonU_full ()) _ hleg
+      | output _ hb => exact spU_not_exposable _ (canonU_full ()) _ (hb.resolve_right id)
     | commitment γ =>
       cases hs with
       | commitment hb hne _ =>
@@ -750,7 +697,7 @@ end converse
 
 /-- Under Lifted Monotonicity, runs with a common input extension `j` share a row
 `(j,u)`, and from each final state the commitment-free events `input(j)`,
-`Out_ε(u)` reach the same state `(j, P[in ⪰ j, out ⪰ u])`. -/
+`output(u)` reach the same state `(j, P[in ⪰ j, out ⪰ u])`. -/
 theorem reconcile_cf {sp : Spec I O} (hLM : sp.LiftedMono) (fam : List (State sp))
     (hrun : ∀ σ ∈ fam, IsRun σ) (j : I) (hj : ∀ σ ∈ fam, σ.cur ≼ j) :
     ∃ u, ∃ hu : sp.P j u, (∀ σ ∈ fam, σ.R j u) ∧
@@ -825,24 +772,18 @@ theorem applySeq_iff_CAP {γ : List (Commitment sp)} {σ ρ : State sp} :
       · intro h; cases h with | cons hc' h' => rw [hc] at hc'; cases hc'; exact h'
       · intro h; exact ApplySeq.cons hc h
 
-/-- A legal `Out_γ(o)` of `Distributed/Commitments.lean` is exactly a legal `out γ o` of
-`CAP/Model.lean` (`applySeq`, then `Step` and `Exposable` at the committed
-state), with the commitments transported by `toCAP`. -/
-theorem sysStep_iff_CAP {B : CommitmentBasis sp} {σ τ : State sp} {γ : List (Commitment sp)} {o : O} :
-    SysStep B σ (.output γ o) τ ↔
-      (∀ c ∈ γ, B c) ∧ ∃ σc, CAP.applySeq σ (γ.map toCAP) = some σc ∧
-        Step σc (.output o) τ ∧ Exposable σc o := by
+/-- The canonical commitment of `CAP/Model.lean` is `x_o` transported. -/
+theorem toCAP_canonical (o : O) : toCAP (canonicalCommitment (sp := sp) o) = CAP.kcap o := rfl
+
+/-- A system output event `output(o)` of `Distributed/Commitments.lean` is
+exactly an `out o` of `CAP/Model.lean` (a `Step`), with the basis condition
+on `x_o` (`CAP.kcap o`) when `o` is not legal. -/
+theorem sysStep_iff_CAP {B : CommitmentBasis sp} {σ τ : State sp} {o : O} :
+    SysStep B σ (.output o) τ ↔
+      Step σ (.output o) τ ∧ (Exposable σ o ∨ B (ofCAP (CAP.kcap o))) := by
   constructor
-  · intro h
-    match h with
-    | .output hb hγ ho hleg hcur hR =>
-      exact ⟨hb, _, applySeq_iff_CAP.1 hγ,
-        Step.output _ _ o ho (hcur.trans hγ.cur_eq.symm) hR, hleg⟩
-  · rintro ⟨hb, σc, hγ, hs, hleg⟩
-    have hγ' := applySeq_iff_CAP.2 hγ
-    cases hs with
-    | output _ _ ho hcur hR =>
-      exact SysStep.output hb hγ' ho hleg (hcur.trans hγ'.cur_eq) hR
+  · intro h; cases h with | output hs hb => exact ⟨hs, hb⟩
+  · rintro ⟨hs, hb⟩; exact SysStep.output hs hb
 
 /-- A commitment event `Apply(γ)` of `Distributed/Commitments.lean` is exactly a
 legal `cmt γ` of `CAP/Model.lean`: basis commitments, `γ ≠ ε`, and `applySeq`

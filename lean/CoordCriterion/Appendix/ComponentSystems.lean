@@ -48,7 +48,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 are kept, sends and receives are dropped. -/
 def toSEv : LEv sp D n → Option (SEvent sp)
   | .inp j => some (.input j)
-  | .out γ o => some (.output (γ.map Dist.ofCAP) o)
+  | .out o => some (.output o)
   | .commitment γ => some (.commitment (γ.map Dist.ofCAP))
   | .send _ _ => none
   | .recv _ _ _ _ => none
@@ -61,28 +61,29 @@ theorem map_toCAP_ofCAP : ∀ γ : List (CAP.Commitment sp), (γ.map Dist.ofCAP)
   | c :: γ => by simp only [List.map_cons, Dist.toCAP_ofCAP, map_toCAP_ofCAP γ]
 
 /-- **A participant run is an execution under the basis.**  If every
-commitment its output and commitment events apply satisfies `P`, the translated
-run is an execution under `{c | P (toCAP c)}`. -/
+commitment its commitment events apply satisfies `P`, and every output event
+emits an output that is legal where it occurs or whose canonical commitment
+`x_o` (`CAP.kcap o`) satisfies `P`, the translated run is an execution under
+`{c | P (toCAP c)}`. -/
 theorem lrun_sysExec (P : CAP.Commitment sp → Prop) {σ τ : State sp} {l : List (LEv sp D n)}
-    (h : LRun σ l τ) (hB : ∀ γ o, LEv.out γ o ∈ l → ∀ c ∈ γ, P c)
+    (h : LRun σ l τ)
+    (hB : ∀ a o b, l = a ++ LEv.out o :: b → ∀ σ', LRun σ a σ' →
+      Exposable σ' o ∨ P (CAP.kcap o))
     (hC : ∀ γ, LEv.commitment γ ∈ l → ∀ c ∈ γ, P c) :
     SysExec (fun c => P (Dist.toCAP c)) σ (toSEvs l) τ := by
   induction h with
   | nil => exact .nil _
-  | inp hs _ ih =>
-    exact .cons (.input hs) (ih (fun γ o hm => hB γ o (List.mem_cons_of_mem _ hm))
-      (fun γ hm => hC γ (List.mem_cons_of_mem _ hm)))
-  | @out σ σc τ' ρ γ o es ha hs hx _ ih =>
-    have hb : ∀ c ∈ γ.map Dist.ofCAP, P (Dist.toCAP c) := by
-      intro c hc
-      obtain ⟨c', hc', rfl⟩ := List.mem_map.1 hc
-      rw [Dist.toCAP_ofCAP]
-      exact hB γ o List.mem_cons_self c' hc'
-    have hst : SysStep (fun c => P (Dist.toCAP c)) σ (.output (γ.map Dist.ofCAP) o) τ' :=
-      Dist.sysStep_iff_CAP.2 ⟨hb, σc, by rw [map_toCAP_ofCAP]; exact ha, hs, hx⟩
-    exact .cons hst (ih (fun γ o hm => hB γ o (List.mem_cons_of_mem _ hm))
-      (fun γ hm => hC γ (List.mem_cons_of_mem _ hm)))
-  | @commitment σ τ' ρ γ es hne ha _ ih =>
+  | @inp σ τ' ρ j es hs hr ih =>
+    exact .cons (.input hs) (ih (fun a o b he σ' hσ' => hB (.inp j :: a) o b (by rw [he]; rfl) σ'
+        (.inp hs hσ')) (fun γ hm => hC γ (List.mem_cons_of_mem _ hm)))
+  | @out σ τ' ρ o es hs hr ih =>
+    have hb : Exposable σ o ∨ P (Dist.toCAP (Dist.ofCAP (CAP.kcap o))) := by
+      rw [Dist.toCAP_ofCAP]; exact hB [] o es rfl σ (.nil _)
+    have hst : SysStep (fun c => P (Dist.toCAP c)) σ (.output o) τ' :=
+      Dist.sysStep_iff_CAP.2 ⟨hs, hb⟩
+    exact .cons hst (ih (fun a o' b he σ' hσ' => hB (.out o :: a) o' b (by rw [he]; rfl) σ'
+        (.out hs hσ')) (fun γ hm => hC γ (List.mem_cons_of_mem _ hm)))
+  | @commitment σ τ' ρ γ es hne ha hr ih =>
     have hb : ∀ c ∈ γ.map Dist.ofCAP, P (Dist.toCAP c) := by
       intro c hc
       obtain ⟨c', hc', rfl⟩ := List.mem_map.1 hc
@@ -91,13 +92,13 @@ theorem lrun_sysExec (P : CAP.Commitment sp → Prop) {σ τ : State sp} {l : Li
     have hne' : γ.map Dist.ofCAP ≠ [] := fun h => hne (List.map_eq_nil_iff.1 h)
     have hst : SysStep (fun c => P (Dist.toCAP c)) σ (.commitment (γ.map Dist.ofCAP)) τ' :=
       Dist.sysStep_commitment_iff_CAP.2 ⟨hb, hne', by rw [map_toCAP_ofCAP]; exact ha⟩
-    exact .cons hst (ih (fun γ o hm => hB γ o (List.mem_cons_of_mem _ hm))
-      (fun γ hm => hC γ (List.mem_cons_of_mem _ hm)))
-  | send _ ih =>
-    exact ih (fun γ o hm => hB γ o (List.mem_cons_of_mem _ hm))
+    exact .cons hst (ih (fun a o b he σ' hσ' => hB (.commitment γ :: a) o b (by rw [he]; rfl) σ'
+        (.commitment hne ha hσ')) (fun γ hm => hC γ (List.mem_cons_of_mem _ hm)))
+  | @send σ ρ j d es hr ih =>
+    exact ih (fun a o b he σ' hσ' => hB (.send j d :: a) o b (by rw [he]; rfl) σ' (.send hσ'))
       (fun γ hm => hC γ (List.mem_cons_of_mem _ hm))
-  | recv _ ih =>
-    exact ih (fun γ o hm => hB γ o (List.mem_cons_of_mem _ hm))
+  | @recv σ ρ q k j d es hr ih =>
+    exact ih (fun a o b he σ' hσ' => hB (.recv q k j d :: a) o b (by rw [he]; rfl) σ' (.recv hσ'))
       (fun γ hm => hC γ (List.mem_cons_of_mem _ hm))
 
 /-- **A system as a component implementation.**  Its basis is the system's,
@@ -110,15 +111,14 @@ def Component.ofSystemOn (Sys : System sp D) (N : Nat → Prop)
   basis c := Sys.basis (Dist.toCAP c)
   accepts r := ∃ (n : Nat) (init : Fin n → I) (H : History sp D n) (p : Fin n),
     N n ∧ WF init H ∧ Produced Sys n init H ∧ r.input = init p ∧ r.events = toSEvs (H p) ∧
-      LRun (canon sp (init p)) (H p) r.final ∧ (∃ γ, SEvent.output γ r.output ∈ r.events) ∧
+      LRun (canon sp (init p)) (H p) r.final ∧ (SEvent.output r.output ∈ r.events) ∧
       sp.P r.input r.output
   sound := by
     rintro r ⟨n, init, H, p, _, _, hp, hin, hev, hl, he, hc⟩
     refine ⟨?_, he, hc⟩
     rw [hin, hev]
-    refine lrun_sysExec Sys.basis hl (fun γ o hm => ?_) (fun γ hm => ?_)
-    · obtain ⟨a, b, hab⟩ := List.append_of_mem hm
-      exact (hp p a _ b hab).1
+    refine lrun_sysExec Sys.basis hl (fun a o b hab σ' hσ' => ?_) (fun γ hm => ?_)
+    · exact (hp p a _ b hab).1 σ' hσ'
     · obtain ⟨a, b, hab⟩ := List.append_of_mem hm
       exact (hp p a _ b hab).1
 
@@ -136,7 +136,7 @@ theorem Component.ofSystemOn_accepts (Sys : System sp D) (N : Nat → Prop)
     (Component.ofSystemOn Sys N location).accepts r ↔
       ∃ (n : Nat) (init : Fin n → I) (H : History sp D n) (p : Fin n),
         N n ∧ WF init H ∧ Produced Sys n init H ∧ r.input = init p ∧ r.events = toSEvs (H p) ∧
-        LRun (canon sp (init p)) (H p) r.final ∧ (∃ γ, SEvent.output γ r.output ∈ r.events) ∧
+        LRun (canon sp (init p)) (H p) r.final ∧ (SEvent.output r.output ∈ r.events) ∧
         sp.P r.input r.output := Iff.rfl
 
 /-- A system with the empty basis is a commitment-free implementation, in
@@ -170,22 +170,23 @@ open CAP CAP.Timeout
 
 /-- A system whose coordinator may close the polls at `yy·` when it runs
 alone admits, in any form that allows one participant, a run applying a
-commitment. -/
+commitment: the commitment event `apply(cp)`, then `output(undecided)`. -/
 theorem pollClosing_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.basis cp)
-    (hs : Sys.strat 1 (fun _ => yyN) 0 [] (.out [cp] .undecided)) (N : Nat → Prop) (hN : N 1)
-    (location : Option LocationForm) :
-    ∃ r, (Component.ofSystemOn Sys N location).accepts r ∧ Coordinates r.events := by
-  obtain ⟨happ, _, _, _⟩ := timeout_closes_expansions yyN 2 rfl
+    (hs : Sys.strat 1 (fun _ => yyN) 0 [] (.commitment [cp]))
+    (hs' : Sys.strat 1 (fun _ => yyN) 0 [.commitment [cp]] (.out .undecided))
+    (N : Nat → Prop) (hN : N 1) (location : Option LocationForm) :
+    ∃ r, (Component.ofSystemOn Sys N location).accepts r ∧
+      Coordinates (canon (voteSpec 3) r.input) r.events := by
   obtain ⟨-, -, -, -, hrows⟩ := timeout_closes_yy
   let σ := canon (voteSpec 3) yyN
   let σc := Figures.closeState σ
-  have ha : CAP.applySeq σ [cp] = some σc := by
-    simp only [CAP.applySeq]
-    rw [show cp.f σ = some σc from happ]
+  obtain ⟨_, hr1⟩ := closePolls_lrun (D := D) (n := 1)
   have hu : σc.R σc.cur .undecided := (hrows _ _).2 ⟨rfl, rfl⟩
   have hex : Exposable σc .undecided := fun _ _ _ hn => absurd (Or.inl rfl) hn
-  obtain ⟨τ0, hr0⟩ := lrun_out (D := D) (n := 1) ha hu hex
-  let H : History (voteSpec 3) D 1 := fun _ => [LEv.out [cp] .undecided]
+  let τ0 := outState σc .undecided hu
+  have hr0 : LRun (D := D) (n := 1) σ [LEv.commitment [cp], LEv.out .undecided] τ0 :=
+    CAP.lrun_append.2 ⟨σc, hr1, .out (step_output_outState hu) (.nil _)⟩
+  let H : History (voteSpec 3) D 1 := fun _ => [LEv.commitment [cp], LEv.out .undecided]
   have hw : WF (fun _ => yyN) H := by
     refine ⟨fun _ => ⟨τ0, hr0⟩, fun r a q k j d b h => ?_⟩
     have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
@@ -194,16 +195,22 @@ theorem pollClosing_run (D : Type) (Sys : System (voteSpec 3) D) (hb : Sys.basis
     intro r a e b h
     have hr : r = 0 := Subsingleton.elim _ _
     subst hr
-    cases a with
-    | nil =>
-      simp [H] at h; obtain ⟨rfl, _⟩ := h
+    match a, h with
+    | [], h =>
+      simp only [H, List.nil_append, List.cons.injEq] at h
+      obtain ⟨rfl, _⟩ := h
       exact ⟨fun c hc => by simp at hc; subst hc; exact hb, hs⟩
-    | cons _ _ => simp [H] at h
+    | [x], h =>
+      simp only [H, List.cons_append, List.nil_append, List.cons.injEq] at h
+      obtain ⟨rfl, rfl, _⟩ := h
+      exact ⟨fun σ' hσ' => Or.inl (CAP.lrun_det hσ' hr1 ▸ hex), hs'⟩
+    | _ :: _ :: _, h => simp [H] at h
   let r : OperationalRun (voteSpec 3) := ⟨yyN, .undecided, toSEvs (H 0), τ0⟩
-  have hev : r.events = [.output [Dist.ofCAP cp] .undecided] := rfl
+  have hev : r.events = [.commitment [Dist.ofCAP cp], .output .undecided] := rfl
   refine ⟨r, (Component.ofSystemOn_accepts _ _ _ _).2 ⟨1, fun _ => yyN, H, 0, hN, hw, hp, rfl,
-    rfl, hr0, ⟨_, by rw [hev]; exact List.mem_cons_self⟩, decide_yyN.symm⟩, ?_⟩
-  exact Or.inl ⟨_, _, by rw [hev]; exact List.mem_cons_self, List.cons_ne_nil _ _⟩
+    rfl, hr0, by rw [hev]; exact List.mem_cons_of_mem _ List.mem_cons_self, decide_yyN.symm⟩, ?_⟩
+  rintro ⟨τ, hx⟩
+  exact hx.noCommit_of_empty _ (by rw [hev]; exact List.mem_cons_self)
 
 /-- **The timeout-abort commitment as a process component.**  The coordinator alone
 running the decision specification (`pollClosingSys1`) is a process component that
@@ -211,18 +218,20 @@ admits a run applying a commitment (it closes the polls at `yy·`), so it is
 not commitment-free.  That commitment requires coordination but not distributed
 coordination (`pollClosingSys1_local`). -/
 theorem pollClosingSys1_process (D : Type) :
-    (∃ r, (Component.process (pollClosingSys1 D)).accepts r ∧ Coordinates r.events) ∧
+    (∃ r, (Component.process (pollClosingSys1 D)).accepts r ∧
+        Coordinates (canon (voteSpec 3) r.input) r.events) ∧
       ¬ (Component.process (pollClosingSys1 D)).CommitmentFree ∧
       ¬ (pollClosingSys1 D).CoordinationFree ∧ (pollClosingSys1 D).CoordinationFreeH := by
-  obtain ⟨r, hacc, hco⟩ := pollClosing_run D (pollClosingSys1 D) rfl ⟨rfl, rfl, rfl, rfl⟩ (· = 1) rfl
-    (some .process)
-  exact ⟨⟨r, hacc, hco⟩, fun hcf => (coordFree_iff_not _).1 (hcf r hacc) hco,
+  obtain ⟨r, hacc, hco⟩ := pollClosing_run D (pollClosingSys1 D) rfl ⟨rfl, rfl, rfl⟩
+    ⟨rfl, rfl, rfl⟩ (· = 1) rfl (some .process)
+  exact ⟨⟨r, hacc, hco⟩, fun hcf => hco (hcf r hacc),
     (pollClosingSys1_local D).1, (pollClosingSys1_local D).2⟩
 
 /-- The replicated decision (`pollClosingSysRepl`) is a replicated system. -/
 theorem pollClosingSysRepl_replicated (D : Type) : (pollClosingSysRepl D).Replicated :=
   ⟨fun i _ e => match e with
-    | .out γ u => γ = [cp] ∧ u = .undecided ∧ i = yyN
+    | .commitment γ => γ = [cp] ∧ i = yyN
+    | .out u => u = .undecided ∧ i = yyN
     | _ => False,
    fun _ _ _ _ e => by cases e <;> exact Iff.rfl⟩
 
@@ -230,8 +239,10 @@ theorem pollClosingSysRepl_replicated (D : Type) : (pollClosingSysRepl D).Replic
 coordination (`pollClosingSysRepl_not_coordinationFreeH`). -/
 theorem pollClosingSysRepl_cluster (D : Type) :
     (∃ r, (Component.cluster (pollClosingSysRepl D) (pollClosingSysRepl_replicated D)).accepts r ∧
-      Coordinates r.events) ∧ ¬ (pollClosingSysRepl D).CoordinationFreeH :=
-  ⟨pollClosing_run D (pollClosingSysRepl D) rfl ⟨rfl, rfl, rfl⟩ (fun _ => True) trivial (some .cluster),
+      Coordinates (canon (voteSpec 3) r.input) r.events) ∧
+      ¬ (pollClosingSysRepl D).CoordinationFreeH :=
+  ⟨pollClosing_run D (pollClosingSysRepl D) rfl ⟨rfl, rfl⟩ ⟨rfl, rfl⟩ (fun _ => True) trivial
+      (some .cluster),
     pollClosingSysRepl_not_coordinationFreeH D⟩
 
 end Timeout

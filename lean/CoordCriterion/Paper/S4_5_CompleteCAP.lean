@@ -197,7 +197,7 @@ theorem «def:partition-notions/unfolded» (Sys : System sp D) :
           Partitioned (fun q => H q ++ ext q) comp ∧
           (∀ q, comp q ≠ comp p → ext q = []) ∧
           (∀ q j, LEv.inp j ∉ ext q) ∧
-          ∃ γ, LEv.out γ o ∈ ext p :=
+          LEv.out o ∈ ext p :=
   Iff.rfl
 
 /-- Def. `def:partition-notions`: asking at every consistent cut of every
@@ -278,16 +278,20 @@ theorem «cor:complete-cap-S» (sp : Spec I O) (D : Type) :
      (partitionConsistency_iff_atEnd _).1 (cf_partitionConsistency h)⟩⟩
 
 /-- Corollary `cor:complete-cap-S`: "When it does, a commitment-free system has
-both: one whose strategies may emit any legal output `o` with no
-commitment, by `Out_ε(o)`."
+both: one with the empty basis, whose strategies may emit any legal output `o`
+by `output(o)`, which applies no commitment."
 
-Lean: `cfSystem` has empty basis and allows every event; an output event
-`Out ε o` is legal exactly when `o` is a legal output.  Every history it produces
-is commitment-free. -/
+Lean: `cfSystem` has empty basis and allows every event; with the empty basis
+an output event is allowed exactly when `o` is a legal output at the
+participant's state.  Every history it produces is commitment-free: it has no
+commitment event, and every output event emits a legal output. -/
 theorem «cor:complete-cap-S/commitment-free» (sp : Spec I O) (D : Type) (h : sp.LiftedMono) :
     («def:partition-notions» (cfSystem sp D) ∧ «def:partition-consistency» (cfSystem sp D)) ∧
     ∀ (N : Nat) (init : Fin N → I) (H : History sp D N),
-      Produced (cfSystem sp D) N init H → ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
+      Produced (cfSystem sp D) N init H →
+        (∀ p γ, LEv.commitment γ ∈ H p → γ = []) ∧
+        ∀ p a o b, H p = a ++ LEv.out o :: b →
+          ∀ σ, LRun (canon sp (init p)) a σ → Exposable σ o :=
   ⟨⟨(availability_iff_atEnd _).1 (complete_cap_cf sp D h).1,
       (partitionConsistency_iff_atEnd _).1 (complete_cap_cf sp D h).2⟩,
     fun _ _ _ => cfSystem_coordinationFree⟩
@@ -314,43 +318,45 @@ theorem «sec:complete-cap/proof-system-commitment-free» (sp : Spec I O) (D : T
       («def:partition-notions» (cfSystem sp D) ∧
         «def:partition-consistency» (cfSystem sp D)) ∧
       ∀ (N : Nat) (init : Fin N → I) (H : History sp D N),
-        Produced (cfSystem sp D) N init H → ∀ p γ o, LEv.out γ o ∈ H p → γ = [] :=
+        Produced (cfSystem sp D) N init H →
+        (∀ p γ, LEv.commitment γ ∈ H p → γ = []) ∧
+        ∀ p a o b, H p = a ++ LEv.out o :: b →
+          ∀ σ, LRun (canon sp (init p)) a σ → Exposable σ o :=
     «cor:complete-cap-S/commitment-free» sp D h
 
   /-- Supporting operational lemma for the full-availability case.  If an output
-  event in a receive-free local prefix removes a row and another participant can
-  start below that row's input, Availability realizes the contradictory choice
-  at the other participant. -/
+  event `output(o)` in a receive-free local prefix removes a row by its canonical
+  commitment `x_o` (leaving `kcState σ o`) and another participant can start
+  below that row's input, Availability realizes the contradictory choice at the
+  other participant.  The same holds for a commitment event
+  (`availability_not_coordinationFreeH_commit`). -/
 theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     (hA : «def:partition-notions» Sys)
     {n : Nat} {init : Fin n → I} {H : History sp D n} (hw : WF init H)
     (hp : Produced Sys n init H) {p q : Fin n} (hqp : q ≠ p)
-    {a b : List (LEv sp D n)} {γ : List (CAP.Commitment sp)} {o : O} {σ σc : State sp}
-    (hH : H p = a ++ LEv.out γ o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
-    (hrun : LRun (canon sp (init p)) a σ) (hap : CAP.applySeq σ γ = some σc)
-    {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ σc.R k x) (hqk : init q ≼ k) :
+    {a b : List (LEv sp D n)} {o : O} {σ : State sp}
+    (hH : H p = a ++ LEv.out o :: b) (hnr : ∀ q' k j d, LEv.recv q' k j d ∉ a)
+    (hrun : LRun (canon sp (init p)) a σ) (ho : σ.R σ.cur o)
+    {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ (kcState σ o ho).R k x) (hqk : init q ≼ k) :
     ¬ Sys.CoordinationFreeH :=
-  availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun hap hx hnx hqk
+  availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun ho hx hnx hqk
 
   /-- "For a smaller `E` row-removing commitments can be necessary: if `o ∈ E(i)` and
   `x ∈ P(i) ∖ E(i)` have no common output extension at `i`, emitting `o` must choose
   against `x`."  Lean: one input, `P = {o, x}` incomparable and `E = {o}`.
-  `P` satisfies Lifted Monotonicity for `E`, but `o` is not exposable.  Thus no
-  empty-commitment output event for `o` is legal, while the canonical output
-  event is legal and applies a nonempty commitment.  Suppressing `x` in a
-  strategy does not make the specification event commitment-free. -/
+  `P` satisfies Lifted Monotonicity for `E`, but `o` is not exposable.  Thus the
+  output event for `o` is not available under the empty basis, while the
+  canonical output event is available under `ℬ_P` and applies the commitment
+  `x_o`.  Suppressing `x` in a strategy does not make the specification event
+  commitment-free. -/
 theorem «sec:complete-cap/local-row-removal-necessary» :
       ConsistentOn CAP.lcSpec CAP.lcA ∧ ¬ Exposable (canon CAP.lcSpec ()) .o ∧
-      ∃ τ, SysStep (canonCommitmentBasis CAP.lcSpec) (canon CAP.lcSpec ())
-          (.output (kappa (canon CAP.lcSpec ()) .o) .o) τ ∧
-        kappa (canon CAP.lcSpec ()) .o ≠ [] := by
+      (∃ τ, SysStep (canonCommitmentBasis CAP.lcSpec) (canon CAP.lcSpec ()) (.output .o) τ) ∧
+      ¬ ∃ τ, SysStep (fun _ => False) (canon CAP.lcSpec ()) (.output .o) τ := by
     have hn := CAP.lcSpec_o_not_exposable
     have ho : (canon CAP.lcSpec ()).R (canon CAP.lcSpec ()).cur .o := ⟨trivial, trivial⟩
-    refine ⟨lcSpec_consistentOn, hn, outState _ _ ho, canonical_support _ _ ho, ?_⟩
-    intro he
-    have hs : SysStep (canonCommitmentBasis CAP.lcSpec) (canon CAP.lcSpec ())
-        (.output [] .o) (outState (canon CAP.lcSpec ()) .o ho) := by simpa [he] using canonical_support _ _ ho
-    exact hn (eps_step_iff.1 hs).2.1
+    exact ⟨lcSpec_consistentOn, hn, ⟨outState _ _ ho, canonical_support _ _ ho⟩,
+      fun ⟨_, hs⟩ => hn (eps_step_iff.1 hs).2.1⟩
 
 /-- "When Lifted Monotonicity for `E` fails, some output of `E` waits for
 another block, sacrificing Availability, or is emitted anyway, sacrificing

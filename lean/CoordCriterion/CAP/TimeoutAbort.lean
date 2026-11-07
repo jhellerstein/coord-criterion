@@ -15,7 +15,9 @@ the last vote arrives.  Two readings of that abort are checked.
   missing vote, yes or no; at `yy·` it removes `(yyy, commit)` and
   `(yyn, abort)` (`timeout_closes_yy`).
 * `pollClosing_not_coordinationFreeH`: any system in which the coordinator
-  (participant `0` of two) may close the polls at `yy·` requires *distributed*
+  (participant `0` of two) may close the polls at `yy·` (a commitment event
+  `Apply([cp])`) requires *distributed*
+
   coordination, whatever the other participants' strategies: the environment
   may deliver the late vote `yyy` to another participant
   (inputs are always allowed, `Allowed`).  In particular `pollClosingSys`, where only
@@ -37,7 +39,7 @@ the last vote arrives.  Two readings of that abort are checked.
 * `coordSys_not_coordinationFree`, `coordSys_coordinationFreeH`: when only the
   coordinator decides, aborting requires coordination (another run of the
   coordinator commits at `yyy`) but not distributed coordination: no
-  canonical output event of the coordinator empties an input fiber.
+  output event of the coordinator empties an input fiber.
 * `replSys_not_coordinationFreeH`: when two participants may each decide
   (the decision replicated), one aborts at `yy·` while the other, after the
   late vote `yyy`, commits: distributed coordination.
@@ -144,40 +146,37 @@ theorem timeout_closes_yy :
   refine ⟨hy1, hn1, hy2, hn2, fun k u => ?_⟩
   rw [h4, decide_yyN]
 
-/-- A participant's one-event run `Out_γ(u)`, given the committed state. -/
-theorem lrun_out {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type} {n : Nat} {σ σc : State sp'}
-    {γ : List (Commitment sp')} {u : O} (ha : applySeq σ γ = some σc)
-    (hu : σc.R σc.cur u) (hex : Exposable σc u) :
-    ∃ τ, LRun (D := D) (n := n) σ [LEv.out γ u] τ := by
-  let τ : State sp' :=
-    { cur := σc.cur, R := outputTable σc u, sub := fun k x h => σc.sub k x h.1,
-      hasCur := ⟨u, hu, PO.refl u⟩, above := fun k x h => σc.above k x h.1 }
-  exact ⟨τ, .out ha (Step.output σc τ u hu rfl rfl) hex (.nil τ)⟩
+/-- Closing the polls at `σ_P(yy·)` as a one-event participant run: the
+commitment event `Apply([cp])`. -/
+theorem closePolls_lrun {D : Type} {n : Nat} :
+    applySeq (canon (voteSpec 3) yyN) [cp] =
+        some (Figures.closeState (canon (voteSpec 3) yyN)) ∧
+      LRun (D := D) (n := n) (canon (voteSpec 3) yyN) [LEv.commitment [cp]]
+        (Figures.closeState (canon (voteSpec 3) yyN)) := by
+  obtain ⟨happ, _, _, _⟩ := timeout_closes_expansions yyN 2 rfl
+  have ha : applySeq (canon (voteSpec 3) yyN) [cp] =
+      some (Figures.closeState (canon (voteSpec 3) yyN)) := by
+    simp only [applySeq]
+    rw [happ]
+  exact ⟨ha, .commitment (by simp) ha (.nil _)⟩
 
 /-- **A fiber-emptying commitment requires distributed coordination, even if only the coordinator
 decides.**  In any system whose coordinator (participant `0` of two, both
-starting at `yy·`) may close the polls at `yy·`, some history has the other
-participant accept `yyy`, whose fiber the commitment empties (the environment may deliver the
-late vote to any participant). -/
+starting at `yy·`) may close the polls at `yy·` (a commitment event), some
+history has the other participant accept `yyy`, whose fiber the commitment
+empties (the environment may deliver the late vote to any participant). -/
 theorem pollClosing_not_coordinationFreeH {D : Type} (Sys : System (voteSpec 3) D)
-    (hb : Sys.basis cp) (hs : Sys.strat 2 (fun _ => yyN) 0 [] (.out [cp] .undecided)) :
+    (hb : Sys.basis cp) (hs : Sys.strat 2 (fun _ => yyN) 0 [] (.commitment [cp])) :
     ¬ Sys.CoordinationFreeH := by
   intro hcf
-  obtain ⟨happ, _, _, _⟩ := timeout_closes_expansions yyN 2 rfl
-  obtain ⟨hcy, -, hsy, -, hrows⟩ := timeout_closes_yy
+  obtain ⟨hcy, -, hsy, -, -⟩ := timeout_closes_yy
   let σ := canon (voteSpec 3) yyN
-  let σc := Figures.closeState σ
-  have ha : applySeq σ [cp] = some σc := by
-    simp only [applySeq]
-    rw [show cp.f σ = some σc from happ]
-  have hu : σc.R σc.cur .undecided := (hrows _ _).2 ⟨rfl, rfl⟩
-  have hex : Exposable σc .undecided := fun _ _ _ hn => absurd (Or.inl rfl) hn
-  obtain ⟨τ0, hr0⟩ := lrun_out (D := D) (n := 2) ha hu hex
+  obtain ⟨ha, hr0⟩ := closePolls_lrun (D := D) (n := 2)
   have hr1 : LRun (D := D) (n := 2) σ [LEv.inp yyy] (canon _ yyy) :=
     .inp (Dist.step_canon_input _ yyN_le_yyy ⟨_, rfl⟩) (.nil _)
   let H : History (voteSpec 3) D 2 := fun r =>
-    if r.val = 0 then [LEv.out [cp] .undecided] else [LEv.inp yyy]
-  have hH0 : H 0 = [] ++ LEv.out [cp] .undecided :: [] := rfl
+    if r.val = 0 then [LEv.commitment [cp]] else [LEv.inp yyy]
+  have hH0 : H 0 = [] ++ LEv.commitment [cp] :: [] := rfl
   have hH1 : H 1 = [] ++ LEv.inp yyy :: [] := rfl
   have hfin : ∀ r : Fin 2, r = 0 ∨ r = 1 := by decide
   have hnr : ∀ r a q k j d b, H r ≠ a ++ LEv.recv q k j d :: b := by
@@ -189,7 +188,7 @@ theorem pollClosing_not_coordinationFreeH {D : Type} (Sys : System (voteSpec 3) 
   have hw : WF (fun _ => yyN) H := by
     refine ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩
     rcases hfin r with rfl | rfl
-    · exact ⟨τ0, hr0⟩
+    · exact ⟨_, hr0⟩
     · exact ⟨_, hr1⟩
   have hp : Produced Sys 2 (fun _ => yyN) H := by
     intro r a e b h
@@ -204,26 +203,29 @@ theorem pollClosing_not_coordinationFreeH {D : Type} (Sys : System (voteSpec 3) 
       cases a with
       | nil => simp at h; obtain ⟨rfl, _⟩ := h; trivial
       | cons _ _ => simp at h
-  exact (hcf.1 2 _ H hw hp 0 [] [] [cp] .undecided σ σc hH0 (.nil _) ha).2 yyy
+  exact (hcf.2 2 _ H hw hp 0 [] [] [cp] σ _ hH0 (.nil _) ha).2 yyy
     ⟨_, hcy⟩ hsy ⟨1, [], [], by decide, hH1⟩
 
 /-- Only the coordinator (participant `0`) decides, by closing the polls at
-`yy·`; the owners' strategies never decide. -/
+`yy·` (a commitment event) and emitting `undecided`, final once the polls are
+closed; the owners' strategies never decide. -/
 noncomputable def pollClosingSys (D : Type) : System (voteSpec 3) D where
   basis := fun c => c = cp
   strat := fun _ init p _ e =>
     match e with
-    | .out γ u => γ = [cp] ∧ u = .undecided ∧ p.val = 0 ∧ init p = yyN
+    | .commitment γ => γ = [cp] ∧ p.val = 0 ∧ init p = yyN
+    | .out u => u = .undecided ∧ p.val = 0 ∧ init p = yyN
     | _ => False
 
 theorem pollClosingSys_only_coordinator (D : Type) :
-    ∀ n init p pre γ u, (pollClosingSys D).strat n init p pre (.out γ u) → p.val = 0 :=
-  fun _ _ _ _ _ _ h => h.2.2.1
+    (∀ n init p pre u, (pollClosingSys D).strat n init p pre (.out u) → p.val = 0) ∧
+    ∀ n init p pre γ, (pollClosingSys D).strat n init p pre (.commitment γ) → p.val = 0 :=
+  ⟨fun _ _ _ _ _ h => h.2.1, fun _ _ _ _ _ h => h.2.1⟩
 
 /-- Emptying those fibers requires coordination, and distributed coordination. -/
 theorem pollClosingSys_not_coordinationFreeH (D : Type) :
     ¬ (pollClosingSys D).CoordinationFree ∧ ¬ (pollClosingSys D).CoordinationFreeH := by
-  have h := pollClosing_not_coordinationFreeH (pollClosingSys D) rfl ⟨rfl, rfl, rfl, rfl⟩
+  have h := pollClosing_not_coordinationFreeH (pollClosingSys D) rfl ⟨rfl, rfl, rfl⟩
   exact ⟨fun hcf => h (coordinationFree_to_H hcf), h⟩
 
 /-! ## Poll closing run by the coordinator alone -/
@@ -235,7 +237,7 @@ theorem localInH_one {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
     LocalInH init H p σ σc := by
   have h : ∀ q : Fin 1, q ≠ p → False := fun q hq =>
     hq (Fin.ext (by have := q.isLt; have := p.isLt; omega))
-  exact ⟨fun _ _ _ _ ⟨q, _, _, _, _, hq, _⟩ => h q hq, fun _ _ _ ⟨q, _, _, hq, _⟩ => h q hq⟩
+  exact ⟨fun _ _ _ _ ⟨q, _, _, _, hq, _⟩ => h q hq, fun _ _ _ ⟨q, _, _, hq, _⟩ => h q hq⟩
 
 /-- **A system run by one participant needs no distributed coordination.**
 If the strategies act only when the system has one participant, no history of
@@ -245,20 +247,21 @@ with one there is no other participant. -/
 theorem single_coordinationFreeH {I O : Type} [PO I] [PO O] {sp' : Spec I O} {D : Type}
     (Sys : System sp' D) (h1 : ∀ n init p pre e, Sys.strat n init p pre e → n = 1) :
     Sys.CoordinationFreeH := by
-  refine ⟨fun n init H _ hp p a b γ o σ σc hH _ _ => ?_,
+  refine ⟨fun n init H _ hp p a b o σ hH _ ho => ?_,
     fun n init H _ hp p a b γ σ σc hH _ _ => ?_⟩
-  · have hn := h1 _ _ _ _ _ (hp p a (.out γ o) b hH).2
-    subst hn; exact localInH_one init H p σ σc
+  · have hn := h1 _ _ _ _ _ (hp p a (.out o) b hH).2
+    subst hn; exact localInH_one init H p σ _
   · have hn := h1 _ _ _ _ _ (hp p a (.commitment γ) b hH).2
     subst hn; exact localInH_one init H p σ σc
 
 /-- The coordinator alone runs the decision specification: the system has one
-participant, which closes the polls at `yy·`. -/
+participant, which closes the polls at `yy·` and emits `undecided`. -/
 noncomputable def pollClosingSys1 (D : Type) : System (voteSpec 3) D where
   basis := fun c => c = cp
   strat := fun n init p _ e =>
     match e with
-    | .out γ u => n = 1 ∧ γ = [cp] ∧ u = .undecided ∧ init p = yyN
+    | .commitment γ => n = 1 ∧ γ = [cp] ∧ init p = yyN
+    | .out u => n = 1 ∧ u = .undecided ∧ init p = yyN
     | _ => False
 
 /-- **Poll closing run by the coordinator alone: local coordination.**  The commitment
@@ -268,21 +271,14 @@ requiring distributed coordination. -/
 theorem pollClosingSys1_local (D : Type) :
     ¬ (pollClosingSys1 D).CoordinationFree ∧ (pollClosingSys1 D).CoordinationFreeH := by
   refine ⟨fun hcf => ?_, single_coordinationFreeH _ fun n init p pre e h => ?_⟩
-  · obtain ⟨happ, _, _, _⟩ := timeout_closes_expansions yyN 2 rfl
-    obtain ⟨-, -, hsy, -, hrows⟩ := timeout_closes_yy
+  · obtain ⟨-, -, hsy, -, -⟩ := timeout_closes_yy
     have hcy : (canon (voteSpec 3) yyN).R yyy (decide2PC yyy) := ⟨rfl, yyN_le_yyy⟩
     let σ := canon (voteSpec 3) yyN
-    let σc := Figures.closeState σ
-    have ha : applySeq σ [cp] = some σc := by
-      simp only [applySeq]
-      rw [show cp.f σ = some σc from happ]
-    have hu : σc.R σc.cur .undecided := (hrows _ _).2 ⟨rfl, rfl⟩
-    have hex : Exposable σc .undecided := fun _ _ _ hn => absurd (Or.inl rfl) hn
-    obtain ⟨τ0, hr0⟩ := lrun_out (D := D) (n := 1) ha hu hex
+    obtain ⟨ha, hr0⟩ := closePolls_lrun (D := D) (n := 1)
     -- the coordinator closes the polls at `yy·`
-    let H : History (voteSpec 3) D 1 := fun _ => [LEv.out [cp] .undecided]
+    let H : History (voteSpec 3) D 1 := fun _ => [LEv.commitment [cp]]
     have hw : WF (fun _ => yyN) H := by
-      refine ⟨fun _ => ⟨τ0, hr0⟩, fun r a q k j d b h => ?_⟩
+      refine ⟨fun _ => ⟨_, hr0⟩, fun r a q k j d b h => ?_⟩
       have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
       simp [H] at hm
     have hp : Produced (pollClosingSys1 D) 1 (fun _ => yyN) H := by
@@ -290,7 +286,7 @@ theorem pollClosingSys1_local (D : Type) :
       cases a with
       | nil =>
         simp [H] at h; obtain ⟨rfl, _⟩ := h
-        exact ⟨fun c hc => by simp at hc; subst hc; rfl, rfl, rfl, rfl, rfl⟩
+        exact ⟨fun c hc => by simp at hc; subst hc; rfl, rfl, rfl, rfl⟩
       | cons _ _ => simp [H] at h
     -- another run of the coordinator, from `yy·`, accepts the late vote
     let H' : History (voteSpec 3) D 1 := fun _ => [LEv.inp yyy]
@@ -305,10 +301,11 @@ theorem pollClosingSys1_local (D : Type) :
       cases a with
       | nil => simp [H'] at h; obtain ⟨rfl, _⟩ := h; trivial
       | cons _ _ => simp [H'] at h
-    exact (hcf.1 1 _ H hw hp 0 [] [] [cp] .undecided σ σc rfl (.nil _) ha).2 yyy
+    exact (hcf.2 1 _ H hw hp 0 [] [] [cp] σ _ rfl (.nil _) ha).2 yyy
       ⟨_, hcy⟩ hsy ⟨1, _, H', 0, [], [], hw', hp', rfl⟩
   · cases e with
-    | out γ u => exact h.1
+    | out u => exact h.1
+    | commitment γ => exact h.1
     | _ => exact h.elim
 
 /-- The decision replicated: every participant starting at `yy·` may close
@@ -317,12 +314,13 @@ noncomputable def pollClosingSysRepl (D : Type) : System (voteSpec 3) D where
   basis := fun c => c = cp
   strat := fun _ init p _ e =>
     match e with
-    | .out γ u => γ = [cp] ∧ u = .undecided ∧ init p = yyN
+    | .commitment γ => γ = [cp] ∧ init p = yyN
+    | .out u => u = .undecided ∧ init p = yyN
     | _ => False
 
 /-- **Poll closing replicated: distributed coordination.** -/
 theorem pollClosingSysRepl_not_coordinationFreeH (D : Type) : ¬ (pollClosingSysRepl D).CoordinationFreeH :=
-  pollClosing_not_coordinationFreeH (pollClosingSysRepl D) rfl ⟨rfl, rfl, rfl⟩
+  pollClosing_not_coordinationFreeH (pollClosingSysRepl D) rfl ⟨rfl, rfl⟩
 
 /-! ## The timeout abort as a row-removing commitment: `abortSpec` -/
 
@@ -375,23 +373,20 @@ theorem kc_keeps_abort {m : Nat} {σ : State (abortSpec m)} {u : Decision} (hu :
   · exact not_rm_of_le ha h
   · exact absurd (rows_at_cur_of_commit hu hx) hk
 
-/-- A canonical commitment empties no input fiber. -/
-theorem kc_preserves_fibers {m : Nat} {σ σc : State (abortSpec m)} {u : Decision}
-    {γ : List (Commitment (abortSpec m))} (hγ : γ = [] ∨ γ = [kc u])
-    (hI : Inv σ) (ha : applySeq σ γ = some σc) (k : Votes m) (hk : ∃ x, σ.R k x) :
-    ∃ x, σc.R k x := by
+/-- The canonical commitment `x_u` (applied by the output event `output(u)`)
+empties no input fiber. -/
+theorem kc_preserves_fibers {m : Nat} {σ : State (abortSpec m)} {u : Decision}
+    (hu : σ.R σ.cur u) (hI : Inv σ) (k : Votes m) (hk : ∃ x, σ.R k x) :
+    ∃ x, (kcState σ u hu).R k x := by
   obtain ⟨x, hx⟩ := hk
-  rcases hγ with rfl | rfl
-  · simp [applySeq] at ha; subst ha; exact ⟨x, hx⟩
-  · obtain ⟨hu, rfl⟩ := kc_apply_some ha
-    by_cases hkc : k = σ.cur
-    · subst hkc; exact (kcState σ u hu).hasCur
-    · exact ⟨_, kc_keeps_abort hu hI hx hkc⟩
+  by_cases hkc : k = σ.cur
+  · subst hkc; exact (kcState σ u hu).hasCur
+  · exact ⟨_, kc_keeps_abort hu hI hx hkc⟩
 
-/-- Events whose strategies are the canonical output events. -/
+/-- The system events of `coordSys` and `replSys`: inputs and output events. -/
 def OkEv {m : Nat} {D : Type} {n : Nat} : LEv (abortSpec m) D n → Prop
   | .inp _ => True
-  | .out γ u => γ = [] ∨ γ = [kc u]
+  | .out _ => True
   | _ => False
 
 theorem inv_lrun {m : Nat} {D : Type} {n : Nat} {σ ρ : State (abortSpec m)}
@@ -410,21 +405,14 @@ theorem inv_lrun {m : Nat} {D : Type} {n : Nat} {σ ρ : State (abortSpec m)}
       obtain ⟨u, hu⟩ := hj
       subst h
       exact PO.antisymm (σ.above _ _ hu) hk.2
-  | @out σ σc τ ρ γ o es ha hs _ _ ih =>
+  | @out σ τ ρ o es hs _ ih =>
     apply ih (fun e he => hok e (List.mem_cons_of_mem _ he))
-    have hγ : γ = [] ∨ γ = [kc o] := hok _ List.mem_cons_self
-    have hIc : Inv σc := by
-      rcases hγ with rfl | rfl
-      · simp [applySeq] at ha; subst ha; exact hI
-      · obtain ⟨hu, rfl⟩ := kc_apply_some ha
-        intro k x hk hne
-        exact kc_keeps_abort hu hI hk.1 hne
     cases hs with
     | output _ _ ho hcur hR =>
       intro k x hk hne
       rw [hR] at hk ⊢
       rw [hcur] at hne
-      refine ⟨hIc k x hk.1 hne, ?_⟩
+      refine ⟨hI k x hk.1 hne, ?_⟩
       rcases le_abort_or_commit o with h | rfl
       · exact h
       · exact absurd (rows_at_cur_of_commit ho hk.1) hne
@@ -432,9 +420,22 @@ theorem inv_lrun {m : Nat} {D : Type} {n : Nat} {σ ρ : State (abortSpec m)}
   | send _ ih => exact ih (fun e he => hok e (List.mem_cons_of_mem _ he)) hI
   | recv _ ih => exact ih (fun e he => hok e (List.mem_cons_of_mem _ he)) hI
 
+/-- At `σ_P(yy·)` the output event `output(abort)` removes `(yyy, commit)`. -/
+theorem abort_removes_commit (hu : (canon (abortSpec 3) yyN).R (canon (abortSpec 3) yyN).cur .abort) :
+    ¬ (kcState (canon (abortSpec 3) yyN) .abort hu).R yyy .commit := by
+  rintro ⟨_, hn⟩
+  apply hn
+  have hnle : ¬ (Decision.abort ≼ Decision.commit) := fun h => by cases (abort_le_iff _).1 h
+  refine ⟨⟨Or.inl decide_yyy.symm, yyN_le_yyy⟩, hnle, ?_⟩
+
+  rintro ⟨_, _, v, _, h1, h2⟩
+  rw [abort_le_iff] at h1; subst h1
+  rcases h2 with h | h <;> cases h
+
 /-- **At `yy·`, aborting is a row-removing commitment.**  `abort` is not exposable at
-`σ_P(yy·)`; its canonical output event `Out_{[κ_abort]}(abort)` is legal,
-removes `(yyy, commit)`, keeps `(yyy, abort)`, and empties no input fiber. -/
+`σ_P(yy·)`; its output event `output(abort)` applies the canonical commitment
+`x_abort`, after which `abort` is legal; it removes `(yyy, commit)`, keeps
+`(yyy, abort)`, and empties no input fiber. -/
 theorem abort_canonicalCommitment_yy :
     ¬ Exposable (canon (abortSpec 3) yyN) .abort ∧
     ∃ σc, applySeq (canon (abortSpec 3) yyN) [kc .abort] = some σc ∧
@@ -443,7 +444,6 @@ theorem abort_canonicalCommitment_yy :
       ∀ k, (∃ x, (canon (abortSpec 3) yyN).R k x) → ∃ x, σc.R k x := by
   let σ := canon (abortSpec 3) yyN
   have hcy : σ.R yyy .commit := ⟨Or.inl decide_yyy.symm, yyN_le_yyy⟩
-  have hay : σ.R yyy .abort := ⟨Or.inr rfl, yyN_le_yyy⟩
   have hnot : ¬ Exposable σ .abort := by
     intro h
     obtain ⟨u, hu, h1, h2⟩ := h yyy .commit hcy (fun h => by cases (abort_le_iff _).1 h)
@@ -457,30 +457,26 @@ theorem abort_canonicalCommitment_yy :
     · exact h
   subst hγ'
   obtain ⟨hu', rfl⟩ := kc_apply_some ha
-  refine ⟨hnot, _, ha, hcu, hex, hcy, ?_, kc_keeps_abort hu' (inv_canon _) hcy ?_,
-    kc_preserves_fibers (Or.inr rfl) (inv_canon _) ha⟩
-  · intro hc
-    obtain ⟨u, hu, h1, h2⟩ := hex yyy .commit hc (fun h => by cases (abort_le_iff _).1 h)
-    rw [abort_le_iff] at h1; subst h1
-    rcases h2 with h | h <;> cases h
-  · intro h; have := congrFun h 2; cases this
+  refine ⟨hnot, _, ha, hcu, hex, hcy, abort_removes_commit hu',
+    kc_keeps_abort hu' (inv_canon _) hcy ?_, kc_preserves_fibers hu' (inv_canon _)⟩
+  intro h; have := congrFun h 2; cases this
 
-/-- Only the coordinator (participant `0`) decides, by canonical output
-events. -/
+/-- Only the coordinator (participant `0`) decides, by output events (each
+applying the canonical commitment of its output when needed). -/
 noncomputable def coordSys (m : Nat) (D : Type) : System (abortSpec m) D where
   basis := fun c => ∃ u, c = kc u
   strat := fun _ _ p _ e =>
     match e with
-    | .out γ u => (γ = [] ∨ γ = [kc u]) ∧ p.val = 0
+    | .out _ => p.val = 0
     | _ => False
 
-/-- Every participant may decide, by canonical output events (the decision
+/-- Every participant may decide, by output events (the decision
 replicated). -/
 noncomputable def replSys (m : Nat) (D : Type) : System (abortSpec m) D where
   basis := fun c => ∃ u, c = kc u
   strat := fun _ _ _ _ e =>
     match e with
-    | .out γ u => γ = [] ∨ γ = [kc u]
+    | .out _ => True
     | _ => False
 
 theorem prefix_ok {m : Nat} {D : Type} {n : Nat} {Sys : System (abortSpec m) D}
@@ -497,7 +493,7 @@ theorem coordSys_ok {m : Nat} {D : Type} :
   intro n init p pre e h
   cases e with
   | inp _ => trivial
-  | out γ u => exact h.2.1
+  | out _ => trivial
   | commitment _ => exact h.2.elim
   | send _ _ => exact h.elim
   | recv _ _ _ _ => exact h.elim
@@ -507,39 +503,38 @@ theorem replSys_ok {m : Nat} {D : Type} :
   intro n init p pre e h
   cases e with
   | inp _ => trivial
-  | out γ u => exact h.2
+  | out _ => trivial
   | commitment _ => exact h.2.elim
   | send _ _ => exact h.elim
   | recv _ _ _ _ => exact h.elim
 
 /-- **Only the coordinator decides: no distributed coordination.**  No other
-participant emits a decision, and no canonical output event of the
-coordinator empties an input fiber, so no other participant can contradict it. -/
+participant emits a decision, and no output event of the coordinator empties
+an input fiber, so no other participant can contradict it. -/
 theorem coordSys_coordinationFreeH (m : Nat) (D : Type) : (coordSys m D).CoordinationFreeH := by
   refine ⟨?_, fun n init H _ hp p a b γ σ σc hH _ _ => (hp p a (.commitment γ) b hH).2.elim⟩
-  intro n init H _ hp p a b γ o σ σc hH hrun hap
-  obtain ⟨_, hγ, hp0⟩ := hp p a (.out γ o) b hH
+  intro n init H _ hp p a b o σ hH hrun ho
+  obtain ⟨_, hp0⟩ := hp p a (.out o) b hH
   have hI : Inv σ := inv_lrun hrun (prefix_ok coordSys_ok hp hH) (inv_canon _)
   refine ⟨fun k x _ _ => ?_, fun k hk hall => ?_⟩
-  · rintro ⟨q, a', b', γ', σ', hqp, hq, _, _⟩
-    have hq0 : q.val = 0 := (hp q a' (.out γ' x) b' hq).2.2
+  · rintro ⟨q, a', b', σ', hqp, hq, _, _⟩
+    have hq0 : q.val = 0 := (hp q a' (.out x) b' hq).2
     exact hqp (Fin.ext (hq0.trans hp0.symm))
-  · obtain ⟨x, hx⟩ := kc_preserves_fibers hγ hI hap k hk
+  · obtain ⟨x, hx⟩ := kc_preserves_fibers ho hI k hk
     exact absurd hx (hall x)
 
 /-- A one-participant history in which the coordinator, starting at `i`,
-emits `u ∈ R(i)` by its canonical output event. -/
+emits `u ∈ R(i)` by its output event. -/
 theorem one_emit {m : Nat} (D : Type) (Sys : System (abortSpec m) D) (i : Votes m)
-    (hS : ∀ γ u, (γ = [] ∨ γ = [kc u]) → Sys.strat 1 (fun _ => i) 0 [] (.out γ u))
+    (hS : ∀ u, Sys.strat 1 (fun _ => i) 0 [] (.out u))
     (hb : ∀ u, Sys.basis (kc u)) (u : Decision)
     (hu : (canon (abortSpec m) i).R i u) :
-    ∃ (γ : List (Commitment (abortSpec m))) (σc : State (abortSpec m)) (H : History (abortSpec m) D 1), (γ = [] ∨ γ = [kc u]) ∧
-      applySeq (canon (abortSpec m) i) γ = some σc ∧ Exposable σc u ∧
-      WF (fun _ => i) H ∧ Produced Sys 1 (fun _ => i) H ∧ H 0 = [] ++ LEv.out γ u :: [] := by
-  obtain ⟨γ, σc, hγ, ha, hcu, hex⟩ := kc_legal hu
-  obtain ⟨τ, hr⟩ := lrun_out (D := D) (n := 1) ha hcu hex
-  let H : History (abortSpec m) D 1 := fun _ => [LEv.out γ u]
-  refine ⟨γ, σc, H, hγ, ha, hex, ⟨fun r => ⟨τ, hr⟩, fun r a q k j d b h => ?_⟩, ?_, rfl⟩
+    ∃ H : History (abortSpec m) D 1,
+      WF (fun _ => i) H ∧ Produced Sys 1 (fun _ => i) H ∧ H 0 = [] ++ LEv.out u :: [] := by
+  have hr : LRun (D := D) (n := 1) (canon (abortSpec m) i) [LEv.out u] _ :=
+    .out (step_output_outState (σ := canon (abortSpec m) i) hu) (.nil _)
+  let H : History (abortSpec m) D 1 := fun _ => [LEv.out u]
+  refine ⟨H, ⟨fun r => ⟨_, hr⟩, fun r a q k j d b h => ?_⟩, ?_, rfl⟩
   · have hm : LEv.recv q k j d ∈ H r := by rw [h]; simp
     simp [H] at hm
   · intro r a e b h
@@ -548,10 +543,7 @@ theorem one_emit {m : Nat} (D : Type) (Sys : System (abortSpec m) D) (i : Votes 
     cases a with
     | nil =>
       simp [H] at h; obtain ⟨rfl, _⟩ := h
-      refine ⟨fun c hc => ?_, hS γ u hγ⟩
-      rcases hγ with rfl | rfl
-      · cases hc
-      · simp at hc; subst hc; exact hb u
+      exact ⟨fun _ _ => Or.inr (hb u), hS u⟩
     | cons _ _ => simp [H] at h
 
 /-- **Only the coordinator decides: coordination.**  The coordinator's abort
@@ -559,22 +551,19 @@ at `yy·` excludes `(yyy, commit)`, which another run of the same
 coordinator emits after all yes votes arrive. -/
 theorem coordSys_not_coordinationFree (D : Type) : ¬ (coordSys 3 D).CoordinationFree := by
   intro hcf
-  have hS : ∀ (i : Votes 3) γ u, (γ = [] ∨ γ = [kc u]) →
-      (coordSys 3 D).strat 1 (fun _ => i) 0 [] (.out γ u) := fun _ _ _ h => ⟨h, rfl⟩
+  have hS : ∀ (i : Votes 3) u, (coordSys 3 D).strat 1 (fun _ => i) 0 [] (.out u) :=
+    fun _ _ => rfl
   have hb : ∀ u, (coordSys 3 D).basis (kc u) := fun u => ⟨u, rfl⟩
-  obtain ⟨γ0, σc, H, hγ0, ha0, hex0, hw, hp, hH0⟩ :=
+  obtain ⟨H, hw, hp, hH0⟩ :=
     one_emit D (coordSys 3 D) yyN (hS yyN) hb .abort ⟨Or.inr rfl, PO.refl _⟩
-  obtain ⟨γ1, _, H', _, _, _, hw', hp', hH1⟩ :=
+  obtain ⟨H', hw', hp', hH1⟩ :=
     one_emit D (coordSys 3 D) yyy (hS yyy) hb .commit ⟨Or.inl decide_yyy.symm, PO.refl _⟩
   have hcy : (canon (abortSpec 3) yyN).R yyy .commit := ⟨Or.inl decide_yyy.symm, yyN_le_yyy⟩
-  -- the abort's commitments remove `(yyy, commit)`
-  have hnc : ¬ σc.R yyy .commit := by
-    intro hc
-    obtain ⟨u, _, h1, h2⟩ := hex0 yyy .commit hc (fun h => by cases (abort_le_iff _).1 h)
-    rw [abort_le_iff] at h1; subst h1
-    rcases h2 with h | h <;> cases h
-  exact (hcf.1 1 _ H hw hp 0 [] [] γ0 .abort _ σc hH0 (.nil _) ha0).1 yyy .commit hcy hnc
-    ⟨1, _, H', 0, [], [], γ1, canon _ yyy, hw', hp', hH1, .nil _, rfl⟩
+  have hu : (canon (abortSpec 3) yyN).R (canon (abortSpec 3) yyN).cur .abort :=
+    ⟨Or.inr rfl, PO.refl _⟩
+  -- the abort's commitment removes `(yyy, commit)`
+  exact (hcf.1 1 _ H hw hp 0 [] [] .abort _ hH0 (.nil _) hu).1 yyy .commit hcy
+    (abort_removes_commit hu) ⟨1, _, H', 0, [], [], canon _ yyy, hw', hp', hH1, .nil _, rfl⟩
 
 /-- **A replicated decision: distributed coordination.**  Two participants
 start at `yy·`; one aborts, the other receives the late yes vote and commits,
@@ -583,17 +572,17 @@ theorem replSys_not_coordinationFreeH (D : Type) : ¬ (replSys 3 D).Coordination
   intro hcf
   let σ := canon (abortSpec 3) yyN
   have hu : σ.R σ.cur .abort := ⟨Or.inr rfl, PO.refl _⟩
-  obtain ⟨γ0, σc0, hγ0, ha0, hcu0, hex0⟩ := kc_legal hu
-  obtain ⟨τ0, hr0⟩ := lrun_out (D := D) (n := 2) ha0 hcu0 hex0
+  have hr0 : LRun (D := D) (n := 2) σ [LEv.out .abort] _ :=
+    .out (step_output_outState hu) (.nil _)
   have hc1 : (canon (abortSpec 3) yyy).R yyy .commit := ⟨Or.inl decide_yyy.symm, PO.refl _⟩
-  obtain ⟨γ1, σc1, hγ1, ha1, hcu1, hex1⟩ := kc_legal hc1
-  obtain ⟨τ1, hr1⟩ := lrun_out (D := D) (n := 2) ha1 hcu1 hex1
+  have hr1 : LRun (D := D) (n := 2) (canon (abortSpec 3) yyy) [LEv.out .commit] _ :=
+    .out (step_output_outState (σ := canon (abortSpec 3) yyy) hc1) (.nil _)
   have hs : Step σ (.input yyy) (canon _ yyy) := Dist.step_canon_input _ yyN_le_yyy ⟨_, Or.inr rfl⟩
   have hin : LRun (D := D) (n := 2) σ [LEv.inp yyy] (canon _ yyy) := .inp hs (.nil _)
   let H : History (abortSpec 3) D 2 := fun r =>
-    if r.val = 0 then [LEv.out γ0 .abort] else [LEv.inp yyy, LEv.out γ1 .commit]
-  have hH0 : H 0 = [] ++ LEv.out γ0 .abort :: [] := rfl
-  have hH1 : H 1 = [LEv.inp yyy] ++ LEv.out γ1 .commit :: [] := rfl
+    if r.val = 0 then [LEv.out .abort] else [LEv.inp yyy, LEv.out .commit]
+  have hH0 : H 0 = [] ++ LEv.out .abort :: [] := rfl
+  have hH1 : H 1 = [LEv.inp yyy] ++ LEv.out .commit :: [] := rfl
   have hfin : ∀ r : Fin 2, r = 0 ∨ r = 1 := by decide
   have hnr : ∀ r a q k j d b, H r ≠ a ++ LEv.recv q k j d :: b := by
     intro r a q k j d b h
@@ -604,34 +593,25 @@ theorem replSys_not_coordinationFreeH (D : Type) : ¬ (replSys 3 D).Coordination
   have hw : WF (fun _ => yyN) H := by
     refine ⟨fun r => ?_, fun r a q k j d b h => absurd h (hnr r a q k j d b)⟩
     rcases hfin r with rfl | rfl
-    · exact ⟨τ0, hr0⟩
-    · exact ⟨τ1, by rw [hH1]; exact lrun_append.2 ⟨_, hin, hr1⟩⟩
-  have hbasis : ∀ (u : Decision) (γ : List (Commitment (abortSpec 3))),
-      (γ = [] ∨ γ = [kc u]) → ∀ c ∈ γ, (replSys 3 D).basis c := by
-    intro u γ hγ c hc
-    rcases hγ with rfl | rfl
-    · cases hc
-    · simp at hc; exact ⟨u, hc⟩
+    · exact ⟨_, hr0⟩
+    · exact ⟨_, by rw [hH1]; exact lrun_append.2 ⟨_, hin, hr1⟩⟩
   have hp : Produced (replSys 3 D) 2 (fun _ => yyN) H := by
     intro r a e b h
     rcases hfin r with rfl | rfl
     · rw [hH0] at h
       cases a with
-      | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact ⟨hbasis _ _ hγ0, hγ0⟩
+      | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, trivial⟩
       | cons _ _ => simp at h
     · rw [hH1] at h
       match a, h with
       | [], h => simp at h; obtain ⟨rfl, _⟩ := h; trivial
-      | [_], h => simp at h; obtain ⟨_, rfl, _⟩ := h; exact ⟨hbasis _ _ hγ1, hγ1⟩
+      | [_], h =>
+        simp at h; obtain ⟨_, rfl, _⟩ := h
+        exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, trivial⟩
       | _ :: _ :: _, h => simp at h
   have hcy : σ.R yyy .commit := ⟨Or.inl decide_yyy.symm, yyN_le_yyy⟩
-  have hnc : ¬ σc0.R yyy .commit := by
-    intro hc
-    obtain ⟨u, _, h1, h2⟩ := hex0 yyy .commit hc (fun h => by cases (abort_le_iff _).1 h)
-    rw [abort_le_iff] at h1; subst h1
-    rcases h2 with h | h <;> cases h
-  exact (hcf.1 2 _ H hw hp 0 [] [] γ0 .abort σ σc0 hH0 (.nil _) ha0).1 yyy .commit hcy hnc
-    ⟨1, [LEv.inp yyy], [], γ1, canon _ yyy, by decide, hH1, hin, rfl⟩
+  exact (hcf.1 2 _ H hw hp 0 [] [] .abort σ hH0 (.nil _) hu).1 yyy .commit hcy
+    (abort_removes_commit hu) ⟨1, [LEv.inp yyy], [], canon _ yyy, by decide, hH1, hin, rfl⟩
 
 end Timeout
 end CAP

@@ -106,10 +106,29 @@ theorem «eq:canonical-commitment-basis-relational» {sp : Spec I O} (c : Commit
       ∃ σ τ : State sp, (canonicalCommitment o).app σ = some τ :=
   Iff.rfl
 
-/-- **Def. `def:canonical-event`**.  `κ_o` is empty or `[x_o]`. -/
+/-- **Def. `def:canonical-event`**.  "The canonical event for `o` at `(i,R)`
+is the output event `output(o)` of Definition lifted-output-event, which
+applies `x_o` when `Excluded_o ≠ ∅` and no commitment otherwise; with one row
+per input it is the output event of Definition output-event."  Every system
+output event is therefore canonical: `SEvent.output o` carries no commitment
+sequence (`app:bases/canonical-event-effect`). -/
 noncomputable abbrev «def:canonical-event» {sp : Spec I O}
-    (σ : State sp) (o : O) : SEvent sp :=
-  SEvent.output (kappa σ o) o
+    (_σ : State sp) (o : O) : SEvent sp :=
+  SEvent.output o
+
+/-- Def. `def:canonical-event`: the canonical event is available under `ℬ_P`
+at every `o ∈ R(i)` and ends at `(i, R[out ⪰ o])`; it applies `x_o` exactly
+when `Excluded_o ≠ ∅`, in which case `x_o` is defined there. -/
+theorem «app:bases/canonical-event-effect» {sp : Spec I O} (σ : State sp) (o : O)
+    (ho : σ.R σ.cur o) :
+    SysStep (canonCommitmentBasis sp) σ («def:canonical-event» σ o) (outState σ o ho) ∧
+    (¬ Exposable σ o ↔ ∃ k x, Excluded σ o k x) ∧
+    (¬ Exposable σ o →
+      (canonicalCommitment o).app σ = some (commitmentState σ o ho)) :=
+  ⟨canonical_support σ o ho,
+   ⟨fun h => Classical.byContradiction fun h' => h ((exposable_iff_empty σ o).2 h'),
+    fun h h' => (exposable_iff_empty σ o).1 h' h⟩,
+   canonicalCommitment_applies ho⟩
 
 /-- The canonical commitment is defined precisely when the output is in the
 current fiber and `Excluded_o` is nonempty. -/
@@ -119,36 +138,43 @@ theorem «app:bases/canonical-commitment-is-commitment» {sp : Spec I O}
       ∃ h : σ.R σ.cur o, (∃ k x, Excluded σ o k x) ∧ commitmentState σ o h = τ :=
   commitmentApp_eq
 
-/-- **Lemma `lem:canonical-commitment-normal-form`**: containment, canonical
-support, and the commitment-free case. -/
-theorem «lem:canonical-commitment-normal-form» {sp : Spec I O} :
-    (∀ {B : CommitmentBasis sp} {σ τ : State sp} {γ : List (Commitment sp)} {o : O},
-      SysStep B σ (.output γ o) τ →
-      τ.cur = σ.cur ∧ σ.R σ.cur o ∧
-        (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧
-        ∃ σc, ApplySeq γ σ σc ∧ ∀ k x, Excluded σ o k x → ¬ σc.R k x) ∧
-    (∀ (σ : State sp) (o : O) (ho : σ.R σ.cur o),
-      SysStep (canonCommitmentBasis sp) σ (.output (kappa σ o) o) (outState σ o ho) ∧
-      ∀ {B : CommitmentBasis sp} {τ : State sp} {γ : List (Commitment sp)},
-        SysStep B σ (.output γ o) τ → ∀ k u, τ.R k u → outputTable σ o k u) ∧
+/-- **Lemma `lem:output-containment`** (Output containment).  "(1) The output
+event `output(o)` takes `(i,R)` to `(i,R[out ⪰ o])`.  It applies a commitment,
+`x_o`, exactly when `o` is not a legal output.  (2) If `(i,R̂)` is a state with
+`R ⊆ R̂`, then `o ∈ R̂(i)`, and `output(o)` takes `(i,R̂)` to
+`(i,R̂[out ⪰ o])`, which contains `R[out ⪰ o]`."
+
+Lean: (1) every system output event (under any basis) keeps the current input,
+needs `o ∈ R(i)`, and ends at `R[out ⪰ o]`; it applies `x_o` exactly when
+`Excluded_o ≠ ∅`, i.e. when `o` is not exposable; under the empty basis it is
+available exactly for a legal `o`.  (2) monotonicity of `R ↦ R[out ⪰ o]`, and
+the canonical event at `R̂` under `ℬ_P`. -/
+theorem «lem:output-containment» {sp : Spec I O} :
     (∀ {B : CommitmentBasis sp} {σ τ : State sp} {o : O},
-      SysStep B σ (.output [] o) τ ↔
-        σ.R σ.cur o ∧ Exposable σ o ∧ τ.cur = σ.cur ∧ τ.R = outputTable σ o) :=
-  ⟨fun h => containment h,
-   fun σ o ho => ⟨canonical_support σ o ho, fun h => canonical_maximal h⟩,
-   eps_step_iff⟩
+      SysStep B σ (.output o) τ →
+      τ.cur = σ.cur ∧ σ.R σ.cur o ∧
+        (∀ k u, τ.R k u → σ.R k u ∧ o ≼ u) ∧ τ.R = outputTable σ o) ∧
+    (∀ (σ : State sp) (o : O), Exposable σ o ↔ ¬ ∃ k x, Excluded σ o k x) ∧
+    (∀ {σ τ : State sp} {o : O},
+      SysStep (fun _ => False) σ (.output o) τ ↔
+        σ.R σ.cur o ∧ Exposable σ o ∧ τ.cur = σ.cur ∧ τ.R = outputTable σ o) ∧
+    (∀ {σ σ' : State sp} {o : O}, σ'.cur = σ.cur → (∀ k u, σ.R k u → σ'.R k u) →
+      σ.R σ.cur o → ∃ ho' : σ'.R σ'.cur o,
+        SysStep (canonCommitmentBasis sp) σ' (.output o) (outState σ' o ho') ∧
+        ∀ k u, outputTable σ o k u → outputTable σ' o k u) :=
+  ⟨fun h => containment h, exposable_iff_empty, eps_step_iff,
+   fun hc hsub ho => ⟨hc ▸ hsub _ _ ho, canonical_support _ _ _,
+     outputTable_mono hsub _⟩⟩
 
 /-! ## Canonical system -/
 
 /-- **Def. canonical system** (`def:canonical-system`).  "A system is canonical
-when its basis is `ℬ_P` and each output event it performs is the canonical
-event `Out_{κ_o}(o)` at the participant's state where it occurs, and it
-performs no commitment event."
+when its basis is `ℬ_P` and it performs no commitment event."
 
 Lean: stated on histories, as the property that each participant's
-input/output events, annotated with commitment sequences, form a canonical run
+input/output events, read as system events, form a canonical run
 (`CanonExec`) from `σ_P(i_p)`.  A canonical step is never a commitment event
-(`CanonStep`, third conjunct), so a canonical run has none
+(`CanonStep`, second conjunct), so a canonical run has none
 (`«def:canonical-system/no-commitment-event»`).  There is no separate `CAP.System` instance
 named "canonical system" in the library. -/
 abbrev «def:canonical-system» {D : Type} {n : Nat} (sp : Spec I O)
@@ -197,33 +223,16 @@ theorem «lem:compound-commitment/defined» {sp : Spec I O} (c : Commitment sp)
     (ApplySeq (c :: cs) σ ρ ↔ ApplySeq [composite c cs] σ ρ) :=
   ⟨compApp_iff, applySeq_composite c cs σ ρ⟩
 
-/-- "A compound output event therefore has the same effect as an event that
-applies the composite commitment alone, and Lemma
-canonical-commitment-normal-form covers it as stated.  In a functional
-specification the composite removes every row at each input it touches, so it
-excludes those inputs."
-
-Lean: (a) `Out_{c::cs}(o)` under `B` is the event `Out_{[composite]}(o)` under
-any basis `B'` containing the composite, and back; (b) in a functional
-specification the composite excludes every input where it removes a row. -/
-theorem «app:bases/compound-output-event» {sp : Spec I O} :
-    (∀ {B B' : CommitmentBasis sp} {σ τ : State sp} {c : Commitment sp} {cs : List (Commitment sp)}
-        {o : O}, B' (composite c cs) →
-        SysStep B σ (.output (c :: cs) o) τ → SysStep B' σ (.output [composite c cs] o) τ) ∧
-    (∀ {B B' : CommitmentBasis sp} {σ τ : State sp} {c : Commitment sp} {cs : List (Commitment sp)}
-        {o : O}, (∀ c' ∈ c :: cs, B c') →
-        SysStep B' σ (.output [composite c cs] o) τ → SysStep B σ (.output (c :: cs) o) τ) ∧
-    (sp.Functional → ∀ (c : Commitment sp) (cs : List (Commitment sp)) {σ τ : State sp},
+/-- "In a functional spec the composite removes every row at each input it
+touches, so it empties." -/
+theorem «app:bases/compound-functional» {sp : Spec I O} :
+    sp.Functional → ∀ (c : Commitment sp) (cs : List (Commitment sp)) {σ τ : State sp},
         (composite c cs).app σ = some τ →
-        ∀ k, (∃ u, σ.R k u ∧ ¬ τ.R k u) → ∀ w, ¬ τ.R k w) :=
-  ⟨Dist.sysStep_to_composite, Dist.sysStep_of_composite,
-    fun hf c cs _ _ h k hk => Dist.composite_functional_empties hf c cs h k hk⟩
+        ∀ k, (∃ u, σ.R k u ∧ ¬ τ.R k u) → ∀ w, ¬ τ.R k w :=
+  fun hf c cs _ _ h k hk => Dist.composite_functional_empties hf c cs h k hk
 
-/-- A compound commitment event has the same effect as a commitment event that
-applies the composite commitment alone: "A compound output event
-(Definition `def:system-output-event`), or a compound commitment event,
-therefore has the same effect as an event that applies the composite
-commitment alone".
+/-- "A compound commitment event therefore has the same effect as one that
+applies the composite commitment alone."
 
 Lean: `commit(c::cs)` under `B` is `commit([composite])` under any basis `B'`
 containing the composite, and back. -/
@@ -237,9 +246,8 @@ theorem «app:bases/compound-commitment-event» {sp : Spec I O} {B B' : Commitme
 
 /-- **Def. `def:run-under-basis`** (Run under a basis).  "A run under `ℬ` is
 a finite transition sequence from a canonical state `σ_P(i)` of input events,
-commitment-sufficient output events `Out_γ(o)` (Definition system-output-event), and
-commitment events (Definition commitment-event) that use only commitments
-from `ℬ`."
+output events (Definition system-output-event), and commitment events
+(Definition commitment-event) that use only commitments from `ℬ`."
 
 Lean: `RunUnder B es τ`, an execution of `SysStep B` (input, output and
 commitment events `SEvent.commitment γ`) from `σ_P(i)`. -/
@@ -249,8 +257,8 @@ abbrev «def:run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) (es : Li
 
 /-- **Def. `def:canonical-run`** (Canonical run).  "The *canonical runs* are
 the runs under the canonical basis `ℬ_P` of Definition
-`def:canonical-commitment-basis` whose output events are all canonical; they
-are the runs of Sections functional-calm–complete-calm."
+`def:canonical-commitment-basis` with no commitment events; they are the runs
+of Sections functional-calm–complete-calm."
 
 Lean: an execution of canonical steps (`CanonStep`) from `σ_P(i)`. -/
 abbrev «def:canonical-run» {sp : Spec I O} (i : I) (es : List (SEvent sp))
@@ -274,12 +282,11 @@ theorem «def:run-under-basis/canonical-runs-are-runs» {sp : Spec I O} :
   ⟨canonExec_exec, exec_canonExec, canonExec_sysExec⟩
 
 /-- "Call two runs observably equivalent when they start at the same canonical
-state and agree once commitment sequences are erased and commitment events
-dropped: wherever one has `input(j)` the other does, and wherever one has
-`Out_γ(o)` the other has `Out_{γ'}(o)` for some `γ'`."
+state and agree once commitment events are dropped: wherever one has
+`input(j)` the other does, and wherever one has `output(o)` the other does."
 
-Lean: the event lists agree after `filterMap SEvent.erase`, which erases `γ`
-and drops commitment events (`SEvent.erase (.commitment γ) = none`); the common start
+Lean: the event lists agree after `filterMap SEvent.erase`, which drops
+commitment events (`SEvent.erase (.commitment γ) = none`); the common start
 state is fixed by the context. -/
 abbrev «app:bases/observably-equivalent» {sp : Spec I O} (es es' : List (SEvent sp)) : Prop :=
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
@@ -346,8 +353,8 @@ theorem «app:bases/converse-fails» :
 /-! ## Application-specific commitments -/
 
 /-- *Application-specific commitments.*  "Locks and timestamps are commitments
-of this kind: two-phase locking issues a commitment to an order among some transactions, and
-timestamp assignment places one transaction relative to all others."
+of this kind: two-phase locking applies a commitment that fixes an order among some
+transactions, and timestamp assignment places one transaction relative to all others."
 
 Lean: for any transaction specification whose fibers are antichains, the 2PL
 basis `{order, commit, abort}`; the commitments are `Txn.orderC`,

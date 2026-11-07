@@ -60,12 +60,14 @@ theorem «fig:ambiguity-frames/g» :
 /-- §3.1 "Commitment and directedness": "In panel (f) … emitting one
 requires an *commitment* that removes the other while the input stays
 legal: emitting `[A,B]` excludes `[B,A]`."  `[A,B]` is not a legal output,
-every legal system output event emitting it carries a commitment, and the
+every system output event emitting it applies `x_[A,B]` (which must then be
+in the system's basis), and the
 commitment `x_[A,B]` applies, keeping `[A,B]` and removing `[B,A]`. -/
 theorem «sec:ambiguity-story/commitment» :
     (¬ Exposable (canon Figures.Txn.spec ()) .ab ∧
-        ∀ (B : CommitmentBasis Figures.Txn.spec) (γ : List (Commitment Figures.Txn.spec)) τ,
-          SysStep B (canon Figures.Txn.spec ()) (.output γ .ab) τ → γ ≠ []) ∧
+        ∀ (B : CommitmentBasis Figures.Txn.spec) τ,
+          SysStep B (canon Figures.Txn.spec ()) (.output .ab) τ →
+            B (canonicalCommitment .ab)) ∧
       ((canonicalCommitment (sp := Figures.Txn.spec) .ab).app (canon Figures.Txn.spec ()) =
           some (commitmentState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)) ∧
         (commitmentState (canon Figures.Txn.spec ()) .ab (Figures.Txn.sR .ab)).R () .ab ∧

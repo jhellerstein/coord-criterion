@@ -97,9 +97,9 @@ first and supporting claims and examples follow.
 | `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §2 (after Def. consistency) | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
 | `Figures.lean` | `CC.Figures` | §2–§3, §7 | Figure tables: election frames, ambiguity frames; decisive ballot vs. closing the polls |
 | `Distributed/Histories.lean` | `CC.Dist` | §4.1–4.2 | Histories, cuts, Prop. distributed consistency, Cor. convergence, exchanging outputs |
-| `Distributed/Exclusions.lean` | `CC` | §4.3–4.4, App. C | Exclusions, the canonical exclusion for an output, system output events `Out_γ(o)` and exclusion events `Exclude(γ)` (a nonempty sequence of basis exclusions applied without emitting; erased to nothing), normal form, coordination (an output event with `γ ≠ ε` or an exclusion event), canonical-equivalent (the canonical run skips exclusion events), conflicting outputs |
+| `Distributed/Exclusions.lean` | `CC` | §4.3–4.4, App. C | Exclusions, the canonical exclusion for an output, system output events `output(o)` (the lifted output event, whose canonical exclusion must be in the basis when `o` is not legal) and exclusion events `Exclude(γ)` (a nonempty sequence of basis exclusions applied without emitting; erased to nothing), output containment, coordination (a run that is not a run under the empty basis), canonical-equivalent (the canonical run skips exclusion events), conflicting outputs |
 | `Distributed/Systems.lean` | `CC.Dist` | §4.1–4.4, App. C | Figure participant-runs, consistency without unique send ids, canonical systems, reconciliation under any basis, encodings of output and exclusion events agree |
-| `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: exclusions, histories (local events: inputs, output events `out γ o`, exclusion events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
+| `CAP/Model.lean` | `CC.CAP` | §4.1–4.5 | System model for Complete CAP: exclusions, histories (local events: inputs, output events `out o`, exclusion events `cmt γ`, sends, receives), cuts, systems, Availability, Partition Consistency |
 | `CAP/CompleteCAP.lean` | `CC.CAP` | §4.4 | Thm. Complete CAP; deterministic strategies do not suffice |
 | `CAP/TwoPhaseCommit.lean` | `CC.CAP` | §4.3 | Two-phase commit: vote counting over a fixed membership is monotone, consistent, and coordination-free |
 | `CAP/TimeoutAbort.lean` | `CC.CAP.Timeout` | §4.3 | Two-phase commit aborting on timeout: on the vote-decision specification, closing the polls excludes every future input that adds a missing vote; run by the coordinator alone this is local coordination, replicated it is distributed; on a specification where abort remains allowed until a decision, aborting excludes the commit outputs at later inputs while keeping those inputs legal, so it is local coordination when only the coordinator decides and distributed when the decision is replicated |
@@ -130,7 +130,7 @@ first and supporting claims and examples follow.
 | `Appendix/TransactionBases/NoReads.lean` | `CC.Txn` | §4.3, App. C | Complete `(L,X)` outcomes, finite sets, filter exclusions on antichain fibers (used by Fig. cc-exclusions in §4.3 and App. C) |
 | `Appendix/TransactionBases/Spec.lean` | `CC.Txn.Partial` | App. G | The specification: inputs are transactions with operation sequences (prefix order, frozen after the commit request); outputs `(L,X,ρ)` with reads by position; complete outputs, read rule, abort-free variant |
 | `Appendix/TransactionBases/Partial.lean` | `CC.Txn.Partial` | App. G | Closure exclusions; 2PL/MVTO bases; bases differ at three transactions that requested commit; deadlock (and under abort-free: the two commit requests are never both accepted); MVTO: what a reported read commits to, when the writer's abort is entailed |
-| `Appendix/TransactionBases/MVTO.lean` | `CC.Txn.Partial` | App. G | MVTO's eager abort as a run driven by operation arrivals: stamps, the read report, the write arrival, `Out_[abort(A)]` applies an exclusion that removes the commit-`A` completions while keeping the same inputs legal, and the abort becomes exposable after `TxCommit(B)`; the version condition is needed |
+| `Appendix/TransactionBases/MVTO.lean` | `CC.Txn.Partial` | App. G | MVTO's eager abort as a run driven by operation arrivals: stamps, the read report, the write arrival, the exclusion event `apply(abort(A))` removes the commit-`A` completions while keeping the same inputs legal, and the abort becomes exposable after `TxCommit(B)`; the version condition is needed |
 | `Appendix/TransactionBases/CommitEvent.lean` | `CC.Txn.Partial.CommitEx` | §4.3 | 2PL exclusion event `Exclude([order(A,B)])` when `B` waits for `A`'s lock, at three transactions that requested commit, then `[A,C,B]`; lockstep with the canonical run, same final state |
 | `Appendix/Frontiers.lean` | `CC.Front` | §3 (Hoare remark); otherwise not in paper | Hoare preorder vs. the joint refinement lift; remembered-output hull, Table lookup-lift, Hoare quotient, persistent forwarding |
 | `Appendix/ProductFrontier.lean` | `CC.Deploy` | App. E (real-time causal) | Thm. independent products (`thm:product-frontier`), configuration example |
@@ -191,7 +191,7 @@ File `Paper/S2_FunctionalCALM.lean`; paper source `sections/functional-calm.tex`
 | `«eq:output-action»` | theorem | **Eq. |
 | `«def:output-event/commitment-iff-excluded»` | theorem | Def. |
 | `«sec:functional-events/output-ends-at-state»` | theorem | "The current row `(i,o)` remains, since `o` extends itself, so the event always ends at a state." |
-| `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments than an output requires, as the registrar does in Figure `fig:election-frames`(d), but extra commitments only restrict be… |
+| `«sec:functional-events/extra-commitments»` | theorem | "Systems may issue more commitments than an output requires, as the registrar does in Figure `fig:election-frames`(d), but such extra commitments are a syste… |
 | `«def:exposable»` | abbrev | **Def. |
 | `«def:exposable/no-commitment»` | theorem | Def. |
 | `«sec:functional-events/functional-exposable»` | theorem | "Equivalently, as the only row at a legal input `j` is `(j, f(j))`, `o` is legal exactly when `f(j)` extends `o` for every legal `j`." |
@@ -291,7 +291,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«cor:convergence/relational-fails-minimal»` | theorem | The same failure on a minimal example: |
 | `«sec:distributed-consistency/message-data»` | theorem | *Message data.* "Data can influence which history events occur next at the receiver, but it never directly changes the receiver's specification state, and no… |
 | `«sec:distributed-consistency/sharing-outputs»` | theorem | *Message data*: |
-| `«sec:systems/registrar»` | theorem | "The registrar … emits `⊥` and closes the polls in the same event (Figure election-frames(d)); the output event for `⊥` does not require the poll-closing com… |
+| `«sec:systems/registrar»` | theorem | "When the registrar of Section election-story emits `⊥`, it also closes the polls (Figure election-frames(d)), although emitting `⊥` does not require the pol… |
 | `«def:commitment»` | abbrev | **Def. |
 | `«eq:commitment-unsubsumed»` | theorem | **Eq. |
 | `«sec:systems/canonical-commitment»` | theorem | The canonical commitment of Definition `def:canonical-commitment` satisfies Definition `def:commitment`. |
@@ -305,16 +305,15 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:system-output-event»` | abbrev | **Def. |
 | `«def:commitment-event»` | abbrev | **Def. |
 | `«sec:systems/commitment-event-unobserved»` | theorem | After Def. |
-| `«eq:lifted-validity»` | theorem | **Eq. |
-| `«sec:systems/legal-event-containment»` | theorem | "A legal `Out_γ(o)` issues at least the commitments of the `output(o)` of Sections functional-calm–complete-calm: |
-| `«sec:systems/output-is-canonical-event»` | theorem | "… and `output(o)` is the case in which they remove exactly those." Lean: |
-| `«sec:systems/system-histories»` | theorem | "The environment observes `o`, not `γ`." Together with Def. |
+| `«sec:systems/commitment-then-output»` | theorem | After Def. |
+| `«sec:systems/output-is-canonical-event»` | theorem | Every output event of a system is the canonical event: |
+| `«sec:systems/system-histories»` | theorem | Def. |
 | `«sec:systems/bases-differ»` | theorem | Opener of §4.2: |
 | `«fig:cc-commitments»` | theorem | Fig. |
 | `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments: |
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
-| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* Every output event of any system removes at least the rows that the canonical event for its output removes (Lemma canonical-commitm… |
+| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Every output event of a system is the canonical event for its output, which preserves the containment of tables (Lemma output-cont… |
 | `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |
@@ -500,11 +499,11 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/system»` | abbrev | *system* — a commitment basis `𝓑` and a strategy per participant (Def. |
 | `«app:notation/basis»` | abbrev | *basis* (Def. |
 | `«app:notation/produced»` | abbrev | *produced* — every non-input event permitted by its strategy and using only commitments from `𝓑` (Def. |
-| `«app:notation/system-output-event»` | abbrev | *system output event `Out_γ(o)`* — applies commitments `γ`, subsumes, emits `o` (Def. |
+| `«app:notation/system-output-event»` | abbrev | *system output event* — the lifted output event `output(o)`; when `o` is not legal, its commitment `x_o` must be in the basis (Def. |
 | `«app:notation/commitment-event»` | abbrev | *commitment event `apply(γ)`* — applies a nonempty sequence `γ` of commitments, emits nothing (Def. |
 | `«app:notation/run-under-basis»` | abbrev | *run under a basis* — specification events whose commitments come from the basis (Def. |
 | `«app:notation/canonical-run»` | abbrev | *canonical run* — a run of Sections 2–3 (Def. |
-| `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitments and commitment events erased; every run has a canonical one (Lem. |
+| `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more blocks, no message crosses blocks (Def. |
 | `«app:notation/block»` | abbrev | *block* — one of the two or more classes into which a partitioned history divides the participants (Def. |
 | `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay available (Def. |
@@ -604,20 +603,21 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«def:canonical-commitment-basis»` | abbrev | **Def. |
 | `«eq:canonical-commitment-basis-relational»` | theorem | **Eq. |
 | `«def:canonical-event»` | abbrev | **Def. |
+| `«app:bases/canonical-event-effect»` | theorem | Def. |
 | `«app:bases/canonical-commitment-is-commitment»` | theorem | The canonical commitment is defined precisely when the output is in the current fiber and `Excluded_o` is nonempty. |
-| `«lem:canonical-commitment-normal-form»` | theorem | **Lemma `lem:canonical-commitment-normal-form`**: |
+| `«lem:output-containment»` | theorem | **Lemma `lem:output-containment`** (Output containment). |
 | `«def:canonical-system»` | abbrev | **Def. |
 | `«def:canonical-system/histories»` | theorem | Def. |
 | `«def:canonical-system/no-commitment-event»` | theorem | Def. |
 | `«lem:compound-commitment»` | abbrev | **Lemma compound commitments are commitments** (`lem:compound-commitment`). |
 | `«lem:compound-commitment/defined»` | theorem | Lemma `lem:compound-commitment`: |
-| `«app:bases/compound-output-event»` | theorem | "A compound output event therefore has the same effect as an event that applies the composite commitment alone, and Lemma canonical-commitment-normal-form co… |
-| `«app:bases/compound-commitment-event»` | theorem | A compound commitment event has the same effect as a commitment event that applies the composite commitment alone: |
+| `«app:bases/compound-functional»` | theorem | "In a functional spec the composite removes every row at each input it touches, so it empties." |
+| `«app:bases/compound-commitment-event»` | theorem | "A compound commitment event therefore has the same effect as one that applies the composite commitment alone." Lean: |
 | `«def:run-under-basis»` | abbrev | **Def. |
 | `«def:canonical-run»` | abbrev | **Def. |
 | `«def:run-under-basis/canonical-run»` | abbrev | Legacy sub-label pointing at `«def:canonical-run»`. |
 | `«def:run-under-basis/canonical-runs-are-runs»` | theorem | Def. |
-| `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once commitment sequences are erased and commitment events dropped: |
+| `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once commitment events are dropped: |
 | `«lem:canonical-equivalent»` | theorem | **Lemma Observable Equivalence** (`lem:canonical-equivalent`). |
 | `«cor:reconciliation-any-basis»` | theorem | **Cor. |
 | `«app:bases/converse-fails»` | theorem | "The converse of Lemma canonical-equivalent fails: |
@@ -649,7 +649,7 @@ File `Paper/AppD_Composition.lean`; paper source `appendices/composition.tex`.
 | `«app:composition/guarded-lockstep»` | theorem | Proof of Theorem `thm:proper-coordination`(2): |
 | `«app:composition/canonical-states-suffice»` | theorem | Proof of Theorem `thm:proper-coordination`(3): |
 | `«app:composition/properness-needed»` | theorem | "Properness is needed in (3). |
-| `«app:composition/replacement»` | theorem | "The commitment-erased replacement of a system has the empty basis and the same strategy, with each `Out_δ(x)` replaced by `Out_ε(x)` and its commitment even… |
+| `«app:composition/replacement»` | theorem | "The commitment-erased replacement of a system has the empty basis and the same strategy, with its commitment events dropped." Lean: |
 | `«cor:empty-store»` | theorem | **Corollary `cor:empty-store`** (Empty store): |
 | `«app:composition/empty-store»` | theorem | Proof of Corollary `cor:empty-store`: |
 | `«cor:pipelines»` | theorem | **Corollary `cor:pipelines`** (Pipelines): |
@@ -713,7 +713,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«thm:complete-cap-deployment/proof»` | theorem | Proof of Prop. |
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |
 | `«app:deployment/system-runs»` | theorem | "So if `P` is monotone across partitions, the outputs emitted by a separable family of runs of a partitioned history, as Deployment Availability permits, hav… |
-| `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`; confluence through commitment-sufficient output events of the deployment woul… |
+| `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`; confluence through output events that the deployment authorizes would additio… |
 | `«app:deployment/full-deployment-step»` | theorem | "With `\|P\| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Corollary `cor:complete-cap-S` stating t… |
 | `«app:registers/history»` | abbrev | "An input is a finite operation history `h`: |
 | `«app:registers/history-order»` | theorem | "We set `h ⊑ h'` when the operations of `h` form a causally closed subset of `h'` and `→` restricted to them is the order of `h`." |
@@ -830,7 +830,7 @@ File `Paper/AppG_TransactionBases.lean`; paper source `appendices/commitment-bas
 | `«app:cc-bases/bases»` | theorem | "The bases are `B_2PL = {order, TxCommit, abort, read}` and `B_MVTO = {stamp, TxCommit, abort, read}`, over all transactions, positions, and versions." |
 | `«app:cc-bases/bases-differ»` | theorem | "… and differ in how they order. |
 | `«app:cc-bases/run-states»` | theorem | "In every state that a run under either basis reaches, each row has a complete output extension in the table at its input, and any output between two rows of… |
-| `«app:cc-bases/read-emit»` | theorem | "So a read is reported by applying `read(A,k,v)` and then emitting the result, which is then a legal output." Precisely: |
+| `«app:cc-bases/read-emit»` | theorem | "So a read is reported by applying `read(A,k,v)` in a commitment event and then emitting the result, which is then a legal output." Precisely: |
 | `«app:cc-bases/fig-h»` | theorem | "If `A` holds that lock in a conflicting mode, `B` waits, and the scheduler applies `order(A,B)` in a commitment event, reporting nothing. |
 | `«app:cc-bases/order-at-ABC»` | theorem | "At the canonical state of `{A,B,C}` it removes `[B,A,C]` and keeps `[A,B,C]` and `[C,A,B]`, so it is a commitment, and it is not the commitment `x_o` of any… |
 | `«app:cc-bases/deadlock»` | theorem | "A deadlock between `A` and `B` arises when `B` waits for a lock that `A` holds and an operation of `A` then waits for a lock that `B` holds: |

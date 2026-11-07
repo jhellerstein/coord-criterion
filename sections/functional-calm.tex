@@ -85,8 +85,8 @@ way when an output can be emitted without \commitment.
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
   input and its future-output set.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
-  and (c) follow input events.  In (d) the registrar emits $\bot$ and also
-  closes the polls through a \commitment that $\mathsf{output}(\bot)$ alone does not require.}
+  and (c) follow input events.  In (d) the registrar closes the polls, a \commitment that emitting
+  $\bot$ does not require, and emits $\bot$.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -126,9 +126,8 @@ is \emph{determined}; in this case input alone resolved the outcome, without \co
 
 Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
-(Section~\ref{sec:systems}).  In this example, the system acts as a registrar, emitting $\bot$
-and closing the polls at
-$ab\cdot$ in the same output event.  Its irrevocable \emph{\commitment}
+(Section~\ref{sec:systems}).  In this example, the system acts as a registrar: when it emits
+$\bot$ at $ab\cdot$, it also closes the polls.  Its irrevocable \emph{\commitment}
 to close the polls removes the still-possible $aba$ and $abb$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no \commitment, since every output still possible \outrel it;
@@ -367,8 +366,8 @@ at a state. A \commitment removes rows that input alone would preserve; after
 the canonical \commitment above, their inputs are no longer legal.  Canonical
 \commitments of this form are the only \commitments this section uses.  Systems
 may issue more \commitments than an output requires, as the registrar does in
-Figure~\ref{fig:election-frames}(d), but extra \commitments only restrict
-behavior (Section~\ref{sec:systems}).
+Figure~\ref{fig:election-frames}(d), but such extra \commitments are a
+system's choice, not the spec's (Section~\ref{sec:systems}).
 
 \paragraph{Determination.}
 A state is \emph{determined} when its future-output set has one element: one result

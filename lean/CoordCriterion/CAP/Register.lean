@@ -357,7 +357,7 @@ def IsInv (H : RHist D n) (a : Nat) (op : Op) (p : Fin n) (k : Nat) : Prop :=
 /-- The `k`-th event of `p` is a response to `a = op`: an output event at the
 operation's replica whose map answers `a`. -/
 def IsResp (H : RHist D n) (a : Nat) (op : Op) (p : Fin n) (k : Nat) : Prop :=
-  p.val = op.rep ∧ ∃ γ ρ, (H p)[k]? = some (LEv.out γ ρ) ∧ ρ.f a ≠ none
+  p.val = op.rep ∧ ∃ ρ, (H p)[k]? = some (LEv.out ρ) ∧ ρ.f a ≠ none
 
 /-- `j` is the realized history `h_C` of the prefix `m` of `pos`. -/
 def Realized (H : RHist D n) (pos : Fin n → Nat → Nat) (m : Nat) (j : Hist) : Prop :=
@@ -573,8 +573,8 @@ theorem final_contra (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : F
     (hinj : ∀ p q, comp p = comp q → p = q)
     {A B : List (LEv regSpec D 2)} (hA : H 0 = LEv.inp h1 :: A) (hB : H 1 = LEv.inp h2 :: B)
     (hAi : ∀ j, LEv.inp j ∉ A) (hBi : ∀ j, LEv.inp j ∉ B)
-    {γ γ' : List (Commitment regSpec)} {o o' : RMap}
-    (ho : LEv.out γ o ∈ A) (hoQ : regQ 0 h1 o) (ho' : LEv.out γ' o' ∈ B)
+    {o o' : RMap}
+    (ho : LEv.out o ∈ A) (hoQ : regQ 0 h1 o) (ho' : LEv.out o' ∈ B)
     (ho'Q : regQ 1 h2 o') : False := by
   have hnr := norecv_of_inj hwf hpart hinj
   have inp0 : ∀ k h, (H 0)[k]? = some (LEv.inp h) → k = 0 ∧ h = h1 := by
@@ -628,7 +628,7 @@ theorem final_contra (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : F
         obtain ⟨k, hk⟩ := List.mem_iff_getElem?.1 ho
         have hkA := (List.getElem?_eq_some_iff.1 hk).1
         refine ⟨wOp, rOp, rfl, rfl, 0, k + 1,
-          ⟨rfl, γ, o, by rw [hA]; simpa using hk, hoQ.2 0 wOp rfl rfl⟩, ?_⟩
+          ⟨rfl, o, by rw [hA]; simpa using hk, hoQ.2 0 wOp rfl rfl⟩, ?_⟩
         rintro p' k' ⟨hrep, _⟩
         have : p' = 1 := Fin.ext hrep
         subst this
@@ -654,7 +654,7 @@ theorem final_contra (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : F
       cases hσ with
       | inp hs hr => rw [lrun_noinp hr hBi, (step_input_inv hs).2.1]; exact h2_le
   obtain ⟨u, hu, hall⟩ := hRPC 2 init H comp hwf hprod hpart (pos2 L0) il m _ pc hj hr hcur
-  have hle := hall 1 γ' o' (by rw [List.take_length, hB]; exact List.mem_cons_of_mem _ ho')
+  have hle := hall 1 o' (by rw [List.take_length, hB]; exact List.mem_cons_of_mem _ ho')
   exact hj_noread u hu (hle 1 _ (h2_answer ho'Q))
 
 /-! ## Corollary `cor:gilbert-lynch` -/
@@ -705,7 +705,7 @@ theorem gilbert_lynch (Sys : System regSpec D) :
   have hτ1 : LRun (canon regSpec (init 0)) ((H1 0).take (H1 0).length)
       (inpState (canon regSpec emptyH) h1 u1 hR1) := by
     rw [List.take_length, e10]; exact inp_lrun hR1
-  obtain ⟨⟨H2, ext2, hext2, wf2, prod2, part2, hloc2, hni2, γ, o, hQo, hmo⟩, _⟩ :=
+  obtain ⟨⟨H2, ext2, hext2, wf2, prod2, part2, hloc2, hni2, o, hQo, hmo⟩, _⟩ :=
     hRA 2 init H1 comp wf1 prod1 part1 _ (full_cut wf1) 0 _ hτ1
   have hQo : regQ 0 h1 o := hQo
   have e20 : H2 0 = LEv.inp h1 :: ext2 0 := by
@@ -727,7 +727,7 @@ theorem gilbert_lynch (Sys : System regSpec D) :
   have hτ2 : LRun (canon regSpec (init 1)) ((H3 1).take (H3 1).length)
       (inpState (canon regSpec emptyH) h2 u2 hR2) := by
     rw [List.take_length, e31]; exact inp_lrun hR2
-  obtain ⟨⟨H4, ext4, hext4, wf4, prod4, part4, hloc4, hni4, γ', o', hQo', hmo'⟩, _⟩ :=
+  obtain ⟨⟨H4, ext4, hext4, wf4, prod4, part4, hloc4, hni4, o', hQo', hmo'⟩, _⟩ :=
     hRA 2 init H3 comp wf3 prod3 part3 _ (full_cut wf3) 1 _ hτ2
   have hQo' : regQ 1 h2 o' := hQo'
   have e40 : H4 0 = LEv.inp h1 :: ext2 0 := by
@@ -838,7 +838,7 @@ theorem realized_not_expansion (Sys : System regSpec D) :
     · intro a b
       constructor
       · intro h; exact h.elim
-      · rintro ⟨_, _, _, _, p, k, ⟨_, γ, ρ, hk, _⟩, _⟩
+      · rintro ⟨_, _, _, _, p, k, ⟨_, ρ, hk, _⟩, _⟩
         rcases fin2 p with rfl | rfl
         · rw [e0] at hk
           cases k with

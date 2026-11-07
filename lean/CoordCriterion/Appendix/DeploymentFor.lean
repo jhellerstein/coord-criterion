@@ -39,7 +39,7 @@ def DeploymentAvailabilityEnd (Sys : System sp D) (Dp : Deployment sp n) : Prop 
       Partitioned (fun q => H q ++ ext q) comp ∧
       (∀ q, comp q ≠ comp p → ext q = []) ∧
       (∀ q j, LEv.inp j ∉ ext q) ∧
-      ∃ γ, LEv.out γ o ∈ ext p
+      LEv.out o ∈ ext p
 
 theorem deploymentAvailability_iff_end (Sys : System sp D) (Dp : Deployment sp n) :
     DeploymentAvailability Sys Dp ↔ DeploymentAvailabilityEnd Sys Dp := by
@@ -74,7 +74,7 @@ def AvailabilityForAt (A : Table I O) (Sys : System sp D) (n : Nat) : Prop :=
       Partitioned (fun q => H q ++ ext q) comp ∧
       (∀ q, comp q ≠ comp p → ext q = []) ∧
       (∀ q j, LEv.inp j ∉ ext q) ∧
-      ∃ γ, LEv.out γ o ∈ ext p
+      LEv.out o ∈ ext p
 
 theorem availabilityFor_iff_at (A : Table I O) (Sys : System sp D) :
     AvailabilityFor A Sys ↔ ∀ n, AvailabilityForAt A Sys n := Iff.rfl
@@ -112,33 +112,32 @@ theorem monoAcrossPartitions_uniform (A : Table I O) (hAS : ∀ i o, A i o → s
 /-! ## Single authority: row-removing commitments are not distributed coordination -/
 
 /-- The row-removal clause of `System.CoordinationFreeH`, for output events: no row
-removed by an output event is emitted, at the same input, by another
-participant of the same history. -/
+that an output event `output(o)` removes by its canonical commitment `x_o` is
+emitted, at the same input, by another participant of the same history. -/
 def RowRemovalsNotDistributed (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n), WF init H → Produced Sys n init H →
-    ∀ (p : Fin n) (a b : List (LEv sp D n)) (γ : List (Commitment sp)) (o : O)
-      (σ σc : State sp),
-      H p = a ++ LEv.out γ o :: b → LRun (canon sp (init p)) a σ → applySeq σ γ = some σc →
-      ∀ k x, σ.R k x → ¬ σc.R k x →
-        ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (γ' : List (Commitment sp)) (σ' : State sp),
-          q ≠ p ∧ H q = a' ++ LEv.out γ' x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
+    ∀ (p : Fin n) (a b : List (LEv sp D n)) (o : O) (σ : State sp),
+      H p = a ++ LEv.out o :: b → LRun (canon sp (init p)) a σ →
+      ∀ (ho : σ.R σ.cur o) k x, σ.R k x → ¬ (kcState σ o ho).R k x →
+        ¬ ∃ (q : Fin n) (a' b' : List (LEv sp D n)) (σ' : State sp),
+          q ≠ p ∧ H q = a' ++ LEv.out x :: b' ∧ LRun (canon sp (init q)) a' σ' ∧ σ'.cur = k
 
 /-- If only one participant (index `0`) may perform output events, no row-removing commitment
 is distributed coordination. -/
 theorem sole_emitter_rowRemovals (Sys : System sp D)
-    (hsole : ∀ n init (p : Fin n) pre γ o, Sys.strat n init p pre (LEv.out γ o) → p.val = 0) :
+    (hsole : ∀ n init (p : Fin n) pre o, Sys.strat n init p pre (LEv.out o) → p.val = 0) :
     RowRemovalsNotDistributed Sys := by
-  intro n init H _ hp p a b γ o σ σc hH _ _ k x _ _
-  rintro ⟨q, a', b', γ', σ', hqp, hq, _, _⟩
-  have h1 := hsole n init p a γ o (hp p a _ b hH).2
-  have h2 := hsole n init q a' γ' x (hp q a' _ b' hq).2
+  intro n init H _ hp p a b o σ hH _ _ k x _ _
+  rintro ⟨q, a', b', σ', hqp, hq, _, _⟩
+  have h1 := hsole n init p a o (hp p a _ b hH).2
+  have h2 := hsole n init q a' x (hp q a' _ b' hq).2
   exact hqp (Fin.ext (h2.trans h1.symm))
 
 /-- `System.CoordinationFreeH` includes the row-removal clause. -/
 theorem rowRemovalsNotDistributed_of_H {Sys : System sp D} (h : Sys.CoordinationFreeH) :
     RowRemovalsNotDistributed Sys :=
-  fun n init H hw hp p a b γ o σ σc hH hr ha k x hx hnx =>
-    (h.1 n init H hw hp p a b γ o σ σc hH hr ha).1 k x hx hnx
+  fun n init H hw hp p a b o σ hH hr ho k x hx hnx =>
+    (h.1 n init H hw hp p a b o σ hH hr ho).1 k x hx hnx
 
 end Deploy
 end CC

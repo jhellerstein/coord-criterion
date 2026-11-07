@@ -48,7 +48,7 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {n : Nat}
 
 /-- **Definition `def:deployment`** (Deployment, emitted rows, partition).
 "A *deployment* over a finite participant set `P` assigns to each `p ∈ P` an
-explicit relation `E_p ⊆ P`, the rows `p` may emit: `p` performs an output event `Out_γ(o)`
+explicit relation `E_p ⊆ P`, the rows `p` may emit: `p` performs an output event `output(o)`
 at current input `i` only if `(i,o) ∈ E_p`."
 
 Lean: `Deployment sp n` has a field `A : Fin n → Table I O` (the paper's
@@ -271,7 +271,7 @@ theorem «def:deployment-availability» {D : Type} (Sys : CAP.System sp D)
           CAP.Partitioned (fun q => H q ++ ext q) comp ∧
           (∀ q, comp q ≠ comp p → ext q = []) ∧
           (∀ q j, CAP.LEv.inp j ∉ ext q) ∧
-          ∃ γ, CAP.LEv.out γ o ∈ ext p) ∧
+          CAP.LEv.out o ∈ ext p) ∧
     (DeploymentAvailability Sys Dp ↔ DeploymentAvailabilityEnd Sys Dp) :=
   ⟨Iff.rfl, deploymentAvailability_iff_end Sys Dp⟩
 
@@ -323,10 +323,10 @@ theorem «app:deployment/single-authority» (hn : 2 ≤ n) (Dp : Deployment sp n
 
 /-- "The deployment can prevent the contrary choice from being placed at
 another participant."  Lean: if only participant `0` may perform output events,
-no row removed by an output event is emitted, at the same input, by another
-participant of the same history. -/
+no row that an output event removes by its canonical commitment is emitted, at
+the same input, by another participant of the same history. -/
 theorem «app:deployment/single-authority/not-distributed» {D : Type} (Sys : CAP.System sp D)
-    (hsole : ∀ n init (p : Fin n) pre γ o, Sys.strat n init p pre (CAP.LEv.out γ o) → p.val = 0) :
+    (hsole : ∀ n init (p : Fin n) pre o, Sys.strat n init p pre (CAP.LEv.out o) → p.val = 0) :
     RowRemovalsNotDistributed Sys :=
   sole_emitter_rowRemovals Sys hsole
 
@@ -410,7 +410,7 @@ theorem «app:deployment/system-runs» {D : Type} {m : Nat} (Dp : Deployment sp 
 end Deployment3
 
 /-- "It does not follow that the deployment authorizes any participant to emit
-`u`; confluence through commitment-sufficient output events of the deployment would
+`u`; confluence through output events that the deployment authorizes would
 additionally require that authority, a condition we do not impose."
 
 Lean witness: one input, fiber `{a, b, top}` with `a, b < top` (`CAP.triSpec`),

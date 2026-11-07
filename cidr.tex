@@ -382,8 +382,8 @@ when an output can be emitted without \commitment.
   whose input \inrel $a\cdot\cdot$.  Bold: current input; shaded: the current
   input and its future-output set.  Gray: lost after an input event; struck
   through if removed by a \commitment.  Panels (b)
-  and (c) follow input events.  In (d) the registrar emits $\bot$ and also
-  applies a \commitment that $\mathsf{output}(\bot)$ alone does not require.}
+  and (c) follow input events.  In (d) the registrar closes the polls, a \commitment that emitting
+  $\bot$ does not require, and emits $\bot$.}
   \label{fig:election-frames}
 \end{figure*}
 
@@ -425,9 +425,8 @@ is \emph{determined}; in this case input alone resolved the outcome, without \co
 
 Panel~(d), by contrast, involves the \emph{system}: the implementation that
 receives the ballots and announces the result
-(\S\ref{sec:systems}).  In this example, the system acts as a registrar, emitting $\bot$
-and closing the polls at
-$ab\cdot$ in the same output event.  Its irrevocable \emph{\commitment}
+(\S\ref{sec:systems}).  In this example, the system acts as a registrar: when it emits
+$\bot$ at $ab\cdot$, it also closes the polls.  Its irrevocable \emph{\commitment}
 to close the polls removes the still-possible $aba$ and $abb$ rows but leaves the current input
 unchanged, and so makes $\bot$ the final result.  Emitting $\bot$ by itself
 would need no \commitment, since every output still possible \outrel it;
@@ -609,7 +608,8 @@ Thus $o$ is legal exactly when $\mathsf{output}(o)$ applies no \commitment.  A
 \commitment removes rows that input alone would preserve; afterward, their
 inputs are no longer legal.  Systems may issue more \commitments than an output
 requires, as the registrar does in Figure~\ref{fig:election-frames}(d), but
-extra \commitments only restrict behavior (\S\ref{sec:systems}).
+such extra \commitments are a system's choice, not the spec's
+(\S\ref{sec:systems}).
 
 An event from a determined state always leads to another determined state.
 
@@ -1140,10 +1140,11 @@ Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
 canonical \commitment $x_o$ that an output requires.  Systems may commit
 earlier or remove more: the registrar may close the polls before announcing a
 result, and a lock manager may fix an order before emitting it.  We therefore
-let systems apply their own \commitments, either within an output event or in
-a third kind of event alongside $\mathsf{input}(j)$ and $\mathsf{output}(o)$:
-a \emph{\commitment event} $\mathsf{apply}(\gamma)$, which applies a sequence
-$\gamma$ of \commitments and emits nothing.
+let systems apply their own \commitments, but only in a third kind of event
+alongside $\mathsf{input}(j)$ and $\mathsf{output}(o)$: a \emph{\commitment event}
+$\mathsf{apply}(\gamma)$, which applies a sequence $\gamma$ of \commitments
+and emits nothing.  A \commitment event may precede an output event, which then
+has less to remove.
 % As before, at any input, removing rows rules out their outputs;
 % removing every row at that input rules out the input as well.  
 

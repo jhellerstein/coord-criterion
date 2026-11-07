@@ -147,7 +147,7 @@ Appendix D treatment of the test: it cannot emit under the empty basis below
 `10`, and the pipeline is proper (`Guard.Proper`). -/
 theorem «sec:composite-calm/filtering» :
     ¬ Joint.thr.LiftedMono ∧
-      (∀ m, m ≤ 9 → ∀ γ o τ, ¬ SysStep (fun _ => False) (canon Joint.thr m) (.output γ o) τ) ∧
+      (∀ m, m ≤ 9 → ∀ o τ, ¬ SysStep (fun _ => False) (canon Joint.thr m) (.output o) τ) ∧
       (Comp.seq Joint.up Joint.thr).LiftedMono ∧ Guard.Proper Joint.up Joint.thr :=
   Joint.threshold
 
@@ -211,8 +211,8 @@ canonical state.  The appendix treatment is `«app:composition/reach»`. -/
 theorem «sec:composite-calm/reach» :
     (∀ _inst : PO Joint.Mid, (Comp.seq (graph Joint.fz) (graph Joint.gz)).LiftedMono) ∧
       (∀ _inst : PO Joint.Mid, ¬ (graph Joint.fz).LiftedMono) ∧
-      ∀ _inst : PO Joint.Mid, ∃ i, ∀ γ o τ,
-        ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output γ o) τ :=
+      ∀ _inst : PO Joint.Mid, ∃ i, ∀ o τ,
+        ¬ SysStep (fun _ => False) (canon (graph Joint.fz) i) (.output o) τ :=
   Joint.no_order_counterexample
 
 /-! ## Proper Coordination (`sec:proper-coordination`) -/
@@ -301,7 +301,7 @@ theorem «thm:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
     (Guard.Proper sp sk → ¬ (Comp.seq sp sk).LiftedMono →
       ∃ i m o, sp.P i m ∧ sk.P m o ∧ ¬ Exposable (canon (Comp.seq sp sk) i) o ∧
         (∀ m', sp.P i m' → sk.P m' o → ¬ Exposable (canon sp i) m') ∧
-        ∀ γ m' τ, SysStep (fun _ => False) (canon sp i) (.output γ m') τ → ¬ sk.P m' o) :=
+        ∀ m' τ, SysStep (fun _ => False) (canon sp i) (.output m') τ → ¬ sk.P m' o) :=
   ⟨Guard.proper_iff, Guard.proper_iff_consistent,
     fun hP _ _ _ _ _ _ hx he => Guard.proper_follows hP hx he,
     fun hP _ _ _ _ _ _ _ _ _ _ hx he hps hK htr => Guard.proper_run hP hx he hps hK htr,
@@ -354,7 +354,8 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
       let p := Components.Pipeline.offered (sk := sk) C1
         (Components.Component.ofCommitmentBasis (Components.emptyCommitmentBasis _))
       p.ImplementationProper ∧ ∃ w : Components.FeedWitness p.upstream p.downstream,
-        w.upRun.input = r.input ∧ w.upRun.output.1 = r.output ∧ CoordFree w.downRun.events) :=
+        w.upRun.input = r.input ∧ w.upRun.output.1 = r.output ∧
+          CoordFree (canon (Guard.rest sp sk) w.downRun.input) w.downRun.events) :=
   ⟨fun p _ h => p.sound h, Components.contractProper_iff_guardProper,
     fun hP C1 _ h => Components.offered_available hP C1 h⟩
 

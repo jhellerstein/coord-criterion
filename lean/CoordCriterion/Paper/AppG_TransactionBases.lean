@@ -263,8 +263,8 @@ theorem «app:cc-bases/run-states» {T K : Type} {af : Bool} {i : Inp T K}
   let hg : Good τ := h.elim good_run.1 good_run.2
   ⟨hg.2, hg.1⟩
 
-/-- "So a read is reported by applying `read(A,k,v)` and then emitting the
-result, which is then a legal output."  Precisely: after `read(A,k,v)`, adding the
+/-- "So a read is reported by applying `read(A,k,v)` in a commitment event and
+then emitting the result, which is then a legal output."  Precisely: after `read(A,k,v)`, adding the
 result to a row that every remaining row extends gives a row, and emitting it is
 a legal output.  (At any state with the two properties above.) -/
 theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v : Option T}
@@ -442,14 +442,14 @@ of `x`, with further transactions free to arrive.  The scheduler applies
 `stamp(A)` and `stamp(B)` in commitment events and reports that `B` read the
 initial version of `x`.  Reporting the read is not a legal output on its own, since
 at an input in which `A` writes `x` the row that commits `A` and then `B`
-cannot be completed with it; the output event that applies `read` and then
-reports the read is legal under `B_MVTO`.  After `A`'s write arrives, two
+cannot be completed with it; after the scheduler applies `read` in a
+commitment event, reporting the read is a legal output.  After `A`'s write arrives, two
 completions remain at the input in which both then request commit: `B`
 committed with `A` aborted, and `A` committed with `B` aborted.  Emitting
 `A`'s abort is not a legal output, and `abort(A)` and `abort(B)` are both defined
-and keep different completions.  MVTO's write rule aborts `A` at once, with the
-output event that applies `abort(A)` and reports the abort, which is legal
-under `B_MVTO`.  That abort is the scheduler's choice between two outcomes the
+and keep different completions.  MVTO's write rule aborts `A` at once: the
+scheduler applies `abort(A)` in a commitment event, after which reporting the
+abort is a legal output.  That abort is the scheduler's choice between two outcomes the
 spec still permits.  If instead the scheduler waits until `B`'s commit
 request arrives and applies `TxCommit(B)`, `A`'s abort becomes a legal output."
 
@@ -466,7 +466,8 @@ theorem «app:cc-bases/abort-is-commitment» {T K : Type} {A B C : T} (h : Disti
       SysStep basisMVTO σ2 (.commitment [stamp B (· = A)]) σ3 ∧
       σ3.R (Ex.j2 h x) (Ex.rAB A B) ∧ ¬ Exposable σ3 (Ex.u B) ∧
       (read B 0 none).app σ3 = some σ3r ∧ ¬ σ3r.R (Ex.j2 h x) (Ex.rAB A B) ∧
-      SysStep basisMVTO σ3 (.output [read B 0 none] (Ex.u B)) σ4 ∧
+      SysStep basisMVTO σ3 (.commitment [read B 0 none]) σ3r ∧ Exposable σ3r (Ex.u B) ∧
+      SysStep basisMVTO σ3r (.output (Ex.u B)) σ4 ∧
       SysStep basisMVTO σ4 (.input (Ex.i3 h x)) σ5 ∧
       σ5.R (Ex.j2 h x) (Ex.r1 A B) ∧ σ5.R (Ex.j2 h x) (Ex.r2 A B) ∧
       ¬ Exposable σ5 (addAbort (Ex.u B) A) ∧
@@ -474,11 +475,13 @@ theorem «app:cc-bases/abort-is-commitment» {T K : Type} {A B C : T} (h : Disti
         τA.R (Ex.j2 h x) (Ex.r1 A B) ∧ ¬ τA.R (Ex.j2 h x) (Ex.r2 A B)) ∧
       (∃ τB, (abort B).app σ5 = some τB ∧
         τB.R (Ex.j2 h x) (Ex.r2 A B) ∧ ¬ τB.R (Ex.j2 h x) (Ex.r1 A B)) ∧
-      (∃ τe, SysStep basisMVTO σ5 (.output [abort A] (addAbort (Ex.u B) A)) τe) ∧
+      (∃ τA τe, SysStep basisMVTO σ5 (.commitment [abort A]) τA ∧
+        Exposable τA (addAbort (Ex.u B) A) ∧
+        SysStep basisMVTO τA (.output (addAbort (Ex.u B) A)) τe) ∧
       SysStep basisMVTO σ5 (.input (Ex.i4 h x)) σ6 ∧
       SysStep basisMVTO σ6 (.commitment [commit B]) σ7 ∧
       Exposable σ7 (addAbort (Ex.u B) A) ∧
-      SysStep basisMVTO σ7 (.output [] (addAbort (Ex.u B) A)) σ8 :=
+      SysStep basisMVTO σ7 (.output (addAbort (Ex.u B) A)) σ8 :=
   Ex.mvto_run h x
 
 /-! ## Comparison -/
@@ -491,17 +494,19 @@ commits."  The first part is `«app:cc-bases/read-commits»`; the second is
 `«app:cc-bases/abort-entailed»` together with the run of
 `«app:cc-bases/abort-is-commitment»`, restated here: after the write arrives,
 `A`'s abort is not a legal output while `B` is undecided, the write rule's
-`Out_[abort(A)]` is legal, and once `TxCommit(B)` has been applied the abort is
-a legal output. -/
+commitment event `apply(abort(A))` makes it one, and once `TxCommit(B)` has
+been applied the abort is a legal output. -/
 theorem «app:cc-bases/comparison» {T K : Type} {A B C : T} (h : Distinct3 A B C) (x : K) :
     ∃ σ5 σ7 : State (spec (T := T) (K := K) false),
       ¬ Exposable σ5 (addAbort (Ex.u B) A) ∧
-      (∃ τe, SysStep basisMVTO σ5 (.output [abort A] (addAbort (Ex.u B) A)) τe) ∧
+      (∃ τA τe, SysStep basisMVTO σ5 (.commitment [abort A]) τA ∧
+        Exposable τA (addAbort (Ex.u B) A) ∧
+        SysStep basisMVTO τA (.output (addAbort (Ex.u B) A)) τe) ∧
       (∃ σ6, SysStep basisMVTO σ5 (.input (Ex.i4 h x)) σ6 ∧
         SysStep basisMVTO σ6 (.commitment [commit B]) σ7) ∧
       Exposable σ7 (addAbort (Ex.u B) A) :=
-  let ⟨_, _, _, _, _, σ5, σ6, σ7, _, _, _, _, _, _, _, _, _, _, _, _, hne, _, _, he, h6, h7,
-    hex, _⟩ := Ex.mvto_run (K := K) h x
+  let ⟨_, _, _, _, _, σ5, σ6, σ7, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hne, _, _, he, h6,
+    h7, hex, _⟩ := Ex.mvto_run (K := K) h x
   ⟨σ5, σ7, hne, he, ⟨σ6, h6, h7⟩, hex⟩
 
 end Paper

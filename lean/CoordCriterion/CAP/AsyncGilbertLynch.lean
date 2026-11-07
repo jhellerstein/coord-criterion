@@ -51,13 +51,13 @@ corollary forbids (`gilbert_lynch_client`).
    two-participant history runs node `p`.  An invocation becomes the input
    event whose input is the node's *view* (its invoked operations, with no
    precedence edges); a response becomes an output event emitting the node's
-   *response map* (first response to each operation), with the canonical
-   commitment `κ_u` when the map is not exposable; a send is a send.  The
+   *response map* `u` (first response to each operation), which applies the
+   canonical commitment `x_u` when `u` is not legal; a send is a send.  The
    participant may also re-emit its current map, since Answering requires an
    output event even when nothing is pending.  `atomic_view`: an atomic
    algorithm's response map in the execution where the node is alone lies in
    the fiber at its view; since the node's behaviour depends only on its own
-   run, every translated output event is legal (`emit_legal`).
+   run, every translated output event can be taken (`emit_legal`).
 2. *Availability is Answering* (`sys_answering`): availability is applied in
    the execution where the node is alone, once per unanswered operation of its
    view (`answer_all`), then the final map is emitted; it answers every
@@ -506,22 +506,20 @@ inductive Corr (p : Nat) : List (Nat × Act N M) → PL N M n → Prop where
       Corr p t L → firstInv (acts t) a = none →
       (∀ b, firstInv (acts t) b ≠ none → firstResp (acts t) b ≠ none) →
       Corr p (t ++ [(L.length, .inv a k)]) (L ++ [.inp (viewOf p (acts t ++ [.inv a k]))])
-  | resp {t : List (Nat × Act N M)} {L : PL N M n} {a : Nat} {r : Resp}
-      {γ : List (Commitment regSpec)} :
-      Corr p t L → (γ = [] ∨ γ = [kc (rmap (acts t ++ [.resp a r]))]) →
-      Corr p (t ++ [(L.length, .resp a r)]) (L ++ [.out γ (rmap (acts t ++ [.resp a r]))])
+  | resp {t : List (Nat × Act N M)} {L : PL N M n} {a : Nat} {r : Resp} :
+      Corr p t L →
+      Corr p (t ++ [(L.length, .resp a r)]) (L ++ [.out (rmap (acts t ++ [.resp a r]))])
   | send {t : List (Nat × Act N M)} {L : PL N M n} {d : Fin N} {m : M} :
       Corr p t L → Corr p (t ++ [(L.length, .send d m)]) (L ++ [.send none (d, m)])
-  | stut {t : List (Nat × Act N M)} {L : PL N M n} {γ : List (Commitment regSpec)} :
-      Corr p t L → (γ = [] ∨ γ = [kc (rmap (acts t))]) →
-      Corr p t (L ++ [.out γ (rmap (acts t))])
+  | stut {t : List (Nat × Act N M)} {L : PL N M n} :
+      Corr p t L → Corr p t (L ++ [.out (rmap (acts t))])
 
 /-- A correspondence never produces a commitment event. -/
 theorem corr_no_cmt {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Corr p t L) :
     ∀ γ, LEv.commitment γ ∉ L := by
   induction h with
   | nil => intro γ hm; cases hm
-  | inv _ _ _ ih | resp _ _ ih | send _ ih | stut _ _ ih =>
+  | inv _ _ _ ih | resp _ ih | send _ ih | stut _ ih =>
     intro γ hm
     rcases List.mem_append.1 hm with hm | hm
     · exact ih γ hm
@@ -537,7 +535,7 @@ theorem corr_times {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Cor
     (∀ x ∈ t, x.1 < L.length) ∧ t.Pairwise (fun x y => x.1 < y.1) := by
   induction h with
   | nil => simp
-  | inv _ _ _ ih | resp _ _ ih | send _ ih =>
+  | inv _ _ _ ih | resp _ ih | send _ ih =>
     obtain ⟨h1, h2⟩ := ih
     refine ⟨fun x hx => ?_, ?_⟩
     · rcases List.mem_append.1 hx with hx | hx
@@ -546,7 +544,7 @@ theorem corr_times {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Cor
     · rw [List.pairwise_append]
       refine ⟨h2, by simp, fun x hx y hy => ?_⟩
       simp at hy; subst hy; exact h1 x hx
-  | stut _ _ ih =>
+  | stut _ ih =>
     obtain ⟨h1, h2⟩ := ih
     exact ⟨fun x hx => by have := h1 x hx; simp; omega, h2⟩
 
@@ -566,31 +564,31 @@ theorem corr_fresh {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Cor
     · simp at hx; subst hx; simp at hxa; obtain ⟨rfl, _⟩ := hxa
       exact absurd hya (hnot y hy k')
     · simp at hx hy; rw [hx, hy]
-  | resp _ _ ih | send _ ih =>
+  | resp _ ih | send _ ih =>
     intro x hx y hy a k k' hxa hya
     rcases List.mem_append.1 hx with hx | hx <;> rcases List.mem_append.1 hy with hy | hy
     · exact ih x hx y hy a k k' hxa hya
     all_goals first
       | (simp at hy; subst hy; simp at hya)
       | (simp at hx; subst hx; simp at hxa)
-  | stut _ _ ih => exact ih
+  | stut _ ih => exact ih
 
 theorem corr_norecv {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Corr p t L) :
     ∀ x ∈ t, ∀ s m, x.2 ≠ Act.recv s m := by
   induction h with
   | nil => simp
-  | inv _ _ _ ih | resp _ _ ih | send _ ih =>
+  | inv _ _ _ ih | resp _ ih | send _ ih =>
     intro x hx s m
     rcases List.mem_append.1 hx with hx | hx
     · exact ih x hx s m
     · simp at hx; subst hx; simp
-  | stut _ _ ih => exact ih
+  | stut _ ih => exact ih
 
 theorem corr_norecvL {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Corr p t L) :
     ∀ q k j d, LEv.recv q k j d ∉ L := by
   induction h with
   | nil => simp
-  | inv _ _ _ ih | resp _ _ ih | send _ ih | stut _ _ ih =>
+  | inv _ _ _ ih | resp _ ih | send _ ih | stut _ ih =>
     intro q k j d hm
     rcases List.mem_append.1 hm with hm | hm
     · exact ih q k j d hm
@@ -609,11 +607,11 @@ theorem corr_lastInp {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : C
   induction h with
   | nil => exact (viewOf_nil p).symm
   | inv _ _ _ _ => rw [lastInp_snoc, acts_snoc]
-  | resp _ _ ih =>
+  | resp _ ih =>
     rw [lastInp_snoc, acts_snoc, viewOf_append_noinv p (noinv_single_resp _ _)]; exact ih
   | send _ ih =>
     rw [lastInp_snoc, acts_snoc, viewOf_append_noinv p (noinv_single_send _ _)]; exact ih
-  | stut _ _ ih => rw [lastInp_snoc]; exact ih
+  | stut _ ih => rw [lastInp_snoc]; exact ih
 
 theorem getElem?_snoc_lt {α : Type} {L : List α} {e : α} {k : Nat} (hk : k < L.length) :
     (L ++ [e])[k]? = L[k]? := List.getElem?_append_left hk
@@ -649,14 +647,14 @@ theorem corr_inv_ev {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Co
       simp only [firstInv, List.findSome?_append]
       have : (acts t).findSome? (invOf a) = none := hf
       simp [this, invOf]
-  | resp hc _ ih | send hc ih =>
+  | resp hc ih | send hc ih =>
     intro k a kd hm
     rcases List.mem_append.1 hm with hm | hm
     · obtain ⟨j, hj, hja⟩ := ih k a kd hm
       have := (corr_times hc).1 _ hm
       exact ⟨j, by rw [getElem?_snoc_lt this]; exact hj, hja⟩
     · simp at hm
-  | stut hc _ ih =>
+  | stut hc ih =>
     intro k a kd hm
     obtain ⟨j, hj, hja⟩ := ih k a kd hm
     have := (corr_times hc).1 _ hm
@@ -687,7 +685,7 @@ theorem corr_inp_ev {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Co
         have := (corr_times (Corr.inv (k := k0) hc hf halt)).1 _ hT
         simp at this
         exact ⟨T, by omega, hT⟩
-  | resp hc _ ih | send hc ih | stut hc _ ih =>
+  | resp hc ih | send hc ih | stut hc ih =>
     intro k j a op hk ha
     rcases lt_of_getElem?_snoc hk with ⟨hlt, hk⟩ | ⟨rfl, he⟩
     · obtain ⟨h1, k', hk', hm⟩ := ih k j a op hk ha
@@ -698,33 +696,33 @@ theorem corr_inp_ev {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Co
 
 /-- A response recorded by an output event of `L` was given at `p` by then. -/
 theorem corr_out_ev {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Corr p t L) :
-    ∀ k γ o a r, L[k]? = some (LEv.out γ o) → o.f a = some r →
+    ∀ k o a r, L[k]? = some (LEv.out o) → o.f a = some r →
       ∃ k', k' ≤ k ∧ (k', Act.resp a r) ∈ t := by
   induction h with
   | nil => simp
   | inv hc _ _ ih | send hc ih =>
-    intro k γ o a r hk ha
+    intro k o a r hk ha
     rcases lt_of_getElem?_snoc hk with ⟨hlt, hk⟩ | ⟨rfl, he⟩
-    · obtain ⟨k', hk', hm⟩ := ih k γ o a r hk ha
+    · obtain ⟨k', hk', hm⟩ := ih k o a r hk ha
       exact ⟨k', hk', List.mem_append_left _ hm⟩
     · cases he
-  | @resp t L a0 r0 γ0 hc hγ ih =>
-    intro k γ o a r hk ha
+  | @resp t L a0 r0 hc ih =>
+    intro k o a r hk ha
     rcases lt_of_getElem?_snoc hk with ⟨hlt, hk⟩ | ⟨rfl, he⟩
-    · obtain ⟨k', hk', hm⟩ := ih k γ o a r hk ha
+    · obtain ⟨k', hk', hm⟩ := ih k o a r hk ha
       exact ⟨k', hk', List.mem_append_left _ hm⟩
     · cases he
       have hm := firstResp_some ha
       have hm' : Act.resp a r ∈ acts (t ++ [(L.length, Act.resp a0 r0)]) := by
         rw [acts_snoc]; exact hm
       obtain ⟨T, hT⟩ := mem_acts.1 hm'
-      have := (corr_times (Corr.resp (a := a0) (r := r0) hc hγ)).1 _ hT
+      have := (corr_times (Corr.resp (a := a0) (r := r0) hc)).1 _ hT
       simp at this
       exact ⟨T, by omega, hT⟩
-  | stut hc _ ih =>
-    intro k γ o a r hk ha
+  | stut hc ih =>
+    intro k o a r hk ha
     rcases lt_of_getElem?_snoc hk with ⟨hlt, hk⟩ | ⟨rfl, he⟩
-    · exact ih k γ o a r hk ha
+    · exact ih k o a r hk ha
     · cases he
       obtain ⟨T, hT⟩ := mem_acts.1 (firstResp_some ha)
       have := (corr_times hc).1 _ hT
@@ -754,7 +752,7 @@ theorem corr_alt {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Corr 
       obtain ⟨T'', hT''⟩ := mem_acts.1 (firstResp_some hr')
       exact ⟨T'', r, ht _ hT'', List.mem_append_left _ hT''⟩
     · simp at h1 h2; omega
-  | resp _ _ ih | send _ ih =>
+  | resp _ ih | send _ ih =>
     intro T a k T' b k' h1 h2 hlt
     rcases List.mem_append.1 h1 with h1 | h1
     · rcases List.mem_append.1 h2 with h2 | h2
@@ -762,15 +760,15 @@ theorem corr_alt {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Corr 
         exact ⟨T'', r, h3, List.mem_append_left _ h4⟩
       · simp at h2
     · simp at h1
-  | stut _ _ ih => exact ih
+  | stut _ ih => exact ih
 
 /-! ## The translated system -/
 
 def emitted {D : Type} (L : List (LEv regSpec D n)) : List RMap :=
-  L.filterMap (fun e => match e with | .out _ o => some o | _ => none)
+  L.filterMap (fun e => match e with | .out o => some o | _ => none)
 
 theorem emitted_snoc {D : Type} (L : List (LEv regSpec D n)) (e : LEv regSpec D n) :
-    emitted (L ++ [e]) = emitted L ++ (match e with | .out _ o => [o] | _ => []) := by
+    emitted (L ++ [e]) = emitted L ++ (match e with | .out o => [o] | _ => []) := by
   cases e <;> simp [emitted]
 
 /-- Along a corresponding history, the participant's state has current input
@@ -795,14 +793,13 @@ theorem corr_state {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Cor
       refine ⟨by rw [(step_input_inv hs).2.1, acts_snoc], ?_, ?_⟩
       · have := residual_step hres hs; simpa [emitted_snoc, outs] using this
       · rw [hR, emitted_snoc]; simpa using hle
-  | @resp t L a r γ _ hγ ih =>
+  | @resp t L a r _ ih =>
     intro σ hσ
     obtain ⟨σ1, h1, h2⟩ := lrun_append.1 hσ
     obtain ⟨hc, hres, hle⟩ := ih σ1 h1
     cases h2 with
-    | out ha hs _ hr =>
+    | out hst hr =>
       cases hr
-      have hst := kc_effect hγ ha hs
       refine ⟨?_, ?_, ?_⟩
       · rw [(step_output_inv hst).2.1, hc, acts_snoc,
           viewOf_append_noinv p (noinv_single_resp _ _)]
@@ -824,14 +821,13 @@ theorem corr_state {p : Nat} {t : List (Nat × Act N M)} {L : PL N M n} (h : Cor
       refine ⟨by rw [hc, acts_snoc, viewOf_append_noinv p (noinv_single_send _ _)], ?_, ?_⟩
       · simpa [emitted_snoc] using hres
       · rw [hR, emitted_snoc]; simpa using hle
-  | @stut t L γ _ hγ ih =>
+  | @stut t L _ ih =>
     intro σ hσ
     obtain ⟨σ1, h1, h2⟩ := lrun_append.1 hσ
     obtain ⟨hc, hres, hle⟩ := ih σ1 h1
     cases h2 with
-    | out ha hs _ hr =>
+    | out hst hr =>
       cases hr
-      have hst := kc_effect hγ ha hs
       refine ⟨by rw [(step_output_inv hst).2.1, hc], ?_, ?_⟩
       · have := residual_step hres hst; simpa [emitted_snoc, outs] using this
       · rw [emitted_snoc]
@@ -855,12 +851,12 @@ and each input event adds one fresh operation invoked at the participant. -/
 def ClientLocal {D : Type} (p : Nat) (L : List (LEv regSpec D n)) : Prop :=
   ∀ a e b, L = a ++ e :: b → ∀ j, e = .inp j →
     (∃ x op, op.rep = p ∧ (lastInp a).ops x = none ∧ j = addOp (lastInp a) x op) ∧
-    ∀ y op, (lastInp a).ops y = some op → ∃ γ o, LEv.out γ o ∈ a ∧ o.f y ≠ none
+    ∀ y op, (lastInp a).ops y = some op → ∃ o, LEv.out o ∈ a ∧ o.f y ≠ none
 
 theorem clientLocal_snoc {D : Type} {p : Nat} {L : List (LEv regSpec D n)} {e : LEv regSpec D n}
     (h : ClientLocal p (L ++ [e])) : ClientLocal p L ∧ ∀ j, e = .inp j →
       (∃ x op, op.rep = p ∧ (lastInp L).ops x = none ∧ j = addOp (lastInp L) x op) ∧
-      ∀ y op, (lastInp L).ops y = some op → ∃ γ o, LEv.out γ o ∈ L ∧ o.f y ≠ none :=
+      ∀ y op, (lastInp L).ops y = some op → ∃ o, LEv.out o ∈ L ∧ o.f y ≠ none :=
   ⟨fun a e' b hab => h a e' (b ++ [e]) (by rw [hab]; simp), h L e [] rfl⟩
 
 theorem compliant_snoc {E : Type} {A : List E → E → Prop} {l : List E} {e : E}
@@ -888,13 +884,13 @@ theorem corr_of_produced (A : Alg N M) {init : Fin n → Hist} {p : Fin n} (hp :
           cases h : firstInv (acts t) b with
           | none => exact absurd h hb
           | some kk => exact ⟨kk, rfl⟩
-        obtain ⟨γ, o, hm, ho⟩ := hans b ⟨p.val, kk⟩ (by simp [viewOf, hkk])
+        obtain ⟨o, hm, ho⟩ := hans b ⟨p.val, kk⟩ (by simp [viewOf, hkk])
         obtain ⟨k, hk⟩ := List.mem_iff_getElem?.1 hm
         obtain ⟨r, hr⟩ : ∃ r, o.f b = some r := by
           cases h : o.f b with
           | none => exact absurd h ho
           | some r => exact ⟨r, rfl⟩
-        obtain ⟨k', _, hm'⟩ := corr_out_ev hct k γ o b r hk hr
+        obtain ⟨k', _, hm'⟩ := corr_out_ev hct k o b r hk hr
         obtain ⟨r', hr'⟩ := firstResp_of_mem (mem_acts.2 ⟨k', hm'⟩)
         rw [hr']; simp
       have hf : firstInv (acts t) x = none := by
@@ -908,7 +904,7 @@ theorem corr_of_produced (A : Alg N M) {init : Fin n → Hist} {p : Fin n} (hp :
       · have := Corr.inv (k := op.kind) hct hf halt
         rwa [viewOf_snoc_inv _ _ _ _ hf, ← hop] at this
       · rw [acts_snoc]; exact nrun_append.2 ⟨s, hs, .cons hs' (.nil _)⟩
-    | out γ o => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
+    | out o => dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, h2⟩ := hA; exact ⟨t, h1, h2⟩
     | commitment γ =>
       dsimp only [Allowed, sysOf] at hA; obtain ⟨_, _, t, h1, _⟩ := hA
       exact absurd (List.mem_append_right _ (List.mem_singleton_self _)) (corr_no_cmt h1 γ)
@@ -1031,25 +1027,24 @@ theorem nrun_prefix {A : Alg N M} {i : Fin N} {s : A.St} {l1 l2 : List (Act N M)
   obtain ⟨s1, h1, _⟩ := nrun_append.1 h
   exact ⟨s1, h1⟩
 
-/-- The output event emitting the current response map is legal. -/
+/-- The output event `output(o)` emitting the current response map `o` can be
+taken: `o` is in the current fiber of the participant's state. -/
 theorem emit_legal {A : Alg N M} (hat : Atomic A) {p : Nat} (hp : p < N)
     {t : List (Nat × Act N M)} {L : PL N M n} (hc : Corr p t L)
     (_hrun : ∃ s, NRun A ⟨p, hp⟩ (A.start ⟨p, hp⟩) (acts t) s)
     {σ : State regSpec} (hσ : LRun (canon regSpec emptyH) L σ) (t' : List (Nat × Act N M))
     (L' : PL N M n) (hc' : Corr p t' L') (hrun' : ∃ s, NRun A ⟨p, hp⟩ (A.start ⟨p, hp⟩) (acts t') s)
     (hv : viewOf p (acts t') = viewOf p (acts t)) (hle : rmap (acts t) ≼ rmap (acts t')) :
-    ∃ γ τ, (γ = [] ∨ γ = [kc (rmap (acts t'))]) ∧
-      LRun (D := Fin N × M) (n := n) σ [LEv.out γ (rmap (acts t'))] τ := by
+    ∃ τ, LRun (D := Fin N × M) (n := n) σ [LEv.out (rmap (acts t'))] τ := by
   obtain ⟨hcur, hres, hem⟩ := corr_state hc σ hσ
   have hS := corr_regS hat hp hc' hrun'
   have hR : σ.R σ.cur (rmap (acts t')) := by
     refine (hres _ _).2 ⟨?_, PO.refl _, fun e he => PO.trans (hem e he) hle⟩
     rw [hcur, ← hv]; exact hS
-  obtain ⟨γ, σc, hγ, ha, hcu, hexp⟩ := kc_legal hR
   let τ : State regSpec :=
-    { cur := σc.cur, R := outputTable σc (rmap (acts t')), sub := fun k x h => σc.sub k x h.1,
-      hasCur := ⟨_, hcu, PO.refl _⟩, above := fun k x h => σc.above k x h.1 }
-  exact ⟨γ, τ, hγ, .out ha (Step.output σc τ _ hcu rfl rfl) hexp (.nil τ)⟩
+    { cur := σ.cur, R := outputTable σ (rmap (acts t')), sub := fun k x h => σ.sub k x h.1,
+      hasCur := ⟨_, hR, PO.refl _⟩, above := fun k x h => σ.above k x h.1 }
+  exact ⟨τ, .out (Step.output σ τ _ hR rfl rfl) (.nil τ)⟩
 
 /-- Run the node's locally controlled actions `bs` (no invocation, nothing
 received) on top of a corresponding history: the translated events are legal
@@ -1076,27 +1071,22 @@ theorem extend_corr (A : Alg N M) (hat : Atomic A) {init : Fin n → Hist} {p : 
     | resp a r =>
       let t1 := t ++ [(L.length, Act.resp a r)]
       have ha1 : acts t1 = acts t ++ [Act.resp a r] := acts_snoc _ _
-      have hc0 : Corr (n := n) p.val t1 (L ++ [.out [] (rmap (acts t ++ [.resp a r]))]) :=
-        Corr.resp hc (Or.inl rfl)
+      have hc1 : Corr (n := n) p.val t1 (L ++ [.out (rmap (acts t ++ [.resp a r]))]) :=
+        Corr.resp hc
       have hrun1' : ∃ s, NRun A ⟨p.val, hp⟩ (A.start ⟨p.val, hp⟩) (acts t1) s := by
         rw [ha1]; exact hrun1
-      obtain ⟨γ, τ, hγ, hτ⟩ := emit_legal hat hp hc (nrun_prefix (l2 := [Act.resp a r]) hrun1) hσ t1 _
-        hc0 hrun1' (by rw [ha1, viewOf_append_noinv _ (noinv_single_resp _ _)])
+      obtain ⟨τ, hτ⟩ := emit_legal hat hp hc (nrun_prefix (l2 := [Act.resp a r]) hrun1) hσ t1 _
+        hc1 hrun1' (by rw [ha1, viewOf_append_noinv _ (noinv_single_resp _ _)])
         (by rw [ha1]; exact rmap_mono _ _)
-      rw [ha1] at hγ hτ
-      have hc1 : Corr (n := n) p.val t1 (L ++ [.out γ (rmap (acts t ++ [.resp a r]))]) :=
-        Corr.resp hc hγ
+      rw [ha1] at hτ
       have hcomp1 : Compliant (Allowed (sysOf A) n init p)
-          (L ++ [.out γ (rmap (acts t ++ [.resp a r]))]) := by
+          (L ++ [.out (rmap (acts t ++ [.resp a r]))]) := by
         apply compliant_append hcomp
         intro a' e b hab
         cases a' with
         | nil =>
           simp at hab; obtain ⟨rfl, _⟩ := hab
-          refine ⟨fun c hc' => ?_, hp, t1, by simpa using hc1, hrun1'⟩
-          rcases hγ with rfl | rfl
-          · cases hc'
-          · simp at hc'; exact ⟨_, hc'⟩
+          exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, hp, t1, by simpa using hc1, hrun1'⟩
         | cons _ _ => simp at hab
       obtain ⟨t', ext, σ', hc', hacts, hrun', hcomp', hni2, hnr2⟩ :=
         extend_corr A hat hp bs t1 _ τ hc1 (lrun_append.2 ⟨σ, hσ, hτ⟩) hcomp1
@@ -1104,7 +1094,7 @@ theorem extend_corr (A : Alg N M) (hat : Atomic A) {init : Fin n → Hist} {p : 
       refine ⟨t', _ :: ext, σ', by simpa using hc', by rw [hacts, ha1]; simp, ?_, by simpa using hcomp',
         ?_, ?_⟩
       · cases hτ with
-        | out h1 h2 h3 h4 => cases h4; exact .out h1 h2 h3 hrun'
+        | out h1 h4 => cases h4; exact .out h1 hrun'
       · intro j hj; rcases List.mem_cons.1 hj with h | h
         · cases h
         · exact hni2 j h
@@ -1240,7 +1230,7 @@ def AnsweringC {D : Type} (Sys : System regSpec D) : Prop :=
       ∃ (H' : RHist D 2) (ext : Fin 2 → List (LEv regSpec D 2)),
         Extends H c H' ext ∧ WF init0 H' ∧ Produced Sys 2 init0 H' ∧ Partitioned H' comp ∧
         (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
-        ∃ γ o, regQ p.val σ.cur o ∧ LEv.out γ o ∈ ext p
+        ∃ o, regQ p.val σ.cur o ∧ LEv.out o ∈ ext p
 
 /-- Response Partition Consistency at realized histories
 (`CC.GL.RealizedRPC`) for client histories of two participants. -/
@@ -1276,13 +1266,13 @@ theorem sys_answering (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) (hav : Avail
       refine List.mem_range.2 (Nat.lt_of_not_le fun hle => ha ?_)
       simp [viewOf, hB a hle])
   have hl1' : LRun (canon regSpec emptyH) (L ++ ext1) σ1 := lrun_append.2 ⟨σ, hσ', hl1⟩
-  obtain ⟨γ, τ, hγ, hτ⟩ := emit_legal hat hp hc1 hrun1 hl1' t1 _
-    (Corr.stut (n := 2) hc1 (Or.inl rfl)) hrun1 rfl (PO.refl _)
+  obtain ⟨τ, hτ⟩ := emit_legal hat hp hc1 hrun1 hl1' t1 _
+    (Corr.stut (n := 2) hc1) hrun1 rfl (PO.refl _)
   let o := rmap (acts t1)
-  have hc2 : Corr p.val t1 ((L ++ ext1) ++ [LEv.out γ o]) := Corr.stut hc1 hγ
+  have hc2 : Corr p.val t1 ((L ++ ext1) ++ [LEv.out o]) := Corr.stut hc1
   let ext : Fin 2 → List (LEv regSpec (Fin N × M) 2) :=
-    fun q => if q = p then ext1 ++ [LEv.out γ o] else []
-  have hep : ext p = ext1 ++ [LEv.out γ o] := by simp [ext]
+    fun q => if q = p then ext1 ++ [LEv.out o] else []
+  have hep : ext p = ext1 ++ [LEv.out o] := by simp [ext]
   have heq : ∀ q, q ≠ p → ext q = [] := fun q h => by simp [ext, h]
   have hnr' : ∀ p' q k j d, LEv.recv q k j d ∉ ext p' := by
     intro p' q k j d hm
@@ -1296,7 +1286,7 @@ theorem sys_answering (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) (hav : Avail
   obtain ⟨hcur, _, _⟩ := corr_state hc σ hσ'
   refine ⟨_, ext, hext, ⟨?_, recvMatched_extend hwf.2 hcut hext hnr'⟩, ?_,
     partitioned_extend hpart hext hnr', fun q hq => heq q (fun h => hq (h ▸ rfl)), ?_,
-    γ, o, ⟨?_, ?_⟩, by rw [hep]; simp⟩
+    o, ⟨?_, ?_⟩, by rw [hep]; simp⟩
   · intro q
     by_cases hqp : q = p
     · subst hqp
@@ -1319,10 +1309,7 @@ theorem sys_answering (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) (hav : Avail
       cases a with
       | nil =>
         simp at hab; obtain ⟨rfl, _⟩ := hab
-        refine ⟨fun c' hc' => ?_, hp, t1, by simpa using hc2, hrun1⟩
-        rcases hγ with rfl | rfl
-        · cases hc'
-        · simp at hc'; exact ⟨_, hc'⟩
+        exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, hp, t1, by simpa using hc2, hrun1⟩
       | cons _ _ => simp at hab
     · show Compliant _ ((H q).take (c q) ++ ext q)
       rw [heq q hqp, List.append_nil]; exact compliant_take (hprod q) (c q)
@@ -1470,7 +1457,7 @@ theorem sys_rpc (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) : RealizedRPCC (sy
       obtain ⟨_, k', _, hm⟩ := corr_inp_ev (hT p).1 k h' a op hk hh'
       exact ⟨nd p, _, memE' p _ hm⟩
     · intro a b hab
-      obtain ⟨opa, opb, _, hjb, p, k, ⟨_, γ, ρ, hk, hρ⟩, hall⟩ := (hreal.2 a b).1 hab
+      obtain ⟨opa, opb, _, hjb, p, k, ⟨_, ρ, hk, hρ⟩, hall⟩ := (hreal.2 a b).1 hab
       obtain ⟨p', k', hpk', hinv'⟩ := (hreal.1 b opb).1 hjb
       have hlt := hall p' k' hinv'
       have hkl := hklen p k _ hk
@@ -1480,7 +1467,7 @@ theorem sys_rpc (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) : RealizedRPCC (sy
         cases h : ρ.f a with
         | none => exact absurd h hρ
         | some r => exact ⟨r, rfl⟩
-      obtain ⟨k1, hk1, hm1⟩ := corr_out_ev (hT p).1 k γ ρ a r hk hr
+      obtain ⟨k1, hk1, hm1⟩ := corr_out_ev (hT p).1 k ρ a r hk hr
       obtain ⟨hrep', h', hk', hh'⟩ := hinv'
       have hkl' := hklen p' k' _ hk'
       have hkc' := (hcut p' k' hkl').2 hpk'
@@ -1494,9 +1481,9 @@ theorem sys_rpc (hN : 2 ≤ N) (A : Alg N M) (hat : Atomic A) : RealizedRPCC (sy
       refine ⟨nd p, _, r, nd p', _, opb.kind, memE' p _ hm1, memE' p' _ hm2, ?_⟩
       show pos p k1 < pos p' k2
       exact Nat.lt_of_le_of_lt (hpos_le p k1 k hk1 hkl) hlt2
-  · intro p γ o ho a r hoa
+  · intro p o ho a r hoa
     obtain ⟨k, hk⟩ := List.mem_iff_getElem?.1 ho
-    obtain ⟨k1, _, hm1⟩ := corr_out_ev (hT p).1 k γ o a r hk hoa
+    obtain ⟨k1, _, hm1⟩ := corr_out_ev (hT p).1 k o a r hk hoa
     have hmem := memE' p _ hm1
     have hex' : ∃ r, ∃ i Tm, (Tm, Act.resp a r) ∈ E.tr i := ⟨r, nd p, _, hmem⟩
     show (if h : ∃ r, ∃ i Tm, (Tm, Act.resp a r) ∈ E.tr i then
@@ -1539,8 +1526,8 @@ theorem final_contra_c {D : Type} (Sys : System regSpec D) (hRPC : RealizedRPCC 
     (hinj : ∀ p q, comp p = comp q → p = q)
     {A B : List (LEv regSpec D 2)} (hA : H 0 = LEv.inp h1 :: A) (hB : H 1 = LEv.inp h2 :: B)
     (hAi : ∀ j, LEv.inp j ∉ A) (hBi : ∀ j, LEv.inp j ∉ B)
-    {γ γ' : List (Commitment regSpec)} {o o' : RMap}
-    (ho : LEv.out γ o ∈ A) (hoQ : regQ 0 h1 o) (ho' : LEv.out γ' o' ∈ B)
+    {o o' : RMap}
+    (ho : LEv.out o ∈ A) (hoQ : regQ 0 h1 o) (ho' : LEv.out o' ∈ B)
     (ho'Q : regQ 1 h2 o') : False := by
   have hnr := norecv_of_inj hwf hpart hinj
   have inp0 : ∀ k h, (H 0)[k]? = some (LEv.inp h) → k = 0 ∧ h = h1 := by
@@ -1594,7 +1581,7 @@ theorem final_contra_c {D : Type} (Sys : System regSpec D) (hRPC : RealizedRPCC 
         obtain ⟨k, hk⟩ := List.mem_iff_getElem?.1 ho
         have hkA := (List.getElem?_eq_some_iff.1 hk).1
         refine ⟨wOp, rOp, rfl, rfl, 0, k + 1,
-          ⟨rfl, γ, o, by rw [hA]; simpa using hk, hoQ.2 0 wOp rfl rfl⟩, ?_⟩
+          ⟨rfl, o, by rw [hA]; simpa using hk, hoQ.2 0 wOp rfl rfl⟩, ?_⟩
         rintro p' k' ⟨hrep, _⟩
         have : p' = 1 := Fin.ext hrep
         subst this
@@ -1620,7 +1607,7 @@ theorem final_contra_c {D : Type} (Sys : System regSpec D) (hRPC : RealizedRPCC 
       cases hσ with
       | inp hs hr => rw [lrun_noinp hr hBi, (step_input_inv hs).2.1]; exact h2_le
   obtain ⟨u, hu, hall⟩ := hRPC H comp hwf hprod hpart hcl (pos2 L0) il m _ pc hj hr hcur
-  have hle := hall 1 γ' o' (by rw [List.take_length, hB]; exact List.mem_cons_of_mem _ ho')
+  have hle := hall 1 o' (by rw [List.take_length, hB]; exact List.mem_cons_of_mem _ ho')
   exact hj_noread u hu (hle 1 _ (h2_answer ho'Q))
 
 /-- **Corollary `cor:gilbert-lynch`, client form.**  No system for the
@@ -1660,7 +1647,7 @@ theorem gilbert_lynch_client {D : Type} (Sys : System regSpec D) :
     intro p; rcases fin2 p with rfl | rfl
     · rw [e10]; exact clientLocal_one (x := 0) (op := wOp) rfl (by simp)
     · rw [e11]; exact clientLocal_nil
-  obtain ⟨H2, ext2, hext2, wf2, prod2, part2, hloc2, hni2, γ, o, hQo, hmo⟩ :=
+  obtain ⟨H2, ext2, hext2, wf2, prod2, part2, hloc2, hni2, o, hQo, hmo⟩ :=
     hRA H1 comp wf1 prod1 part1 cl1 _ (full_cut wf1) 0 _ hτ1
   have hQo : regQ 0 h1 o := hQo
   have e20 : H2 0 = LEv.inp h1 :: ext2 0 := by
@@ -1686,7 +1673,7 @@ theorem gilbert_lynch_client {D : Type} (Sys : System regSpec D) :
     intro p; rcases fin2 p with rfl | rfl
     · rw [e30]; exact clientLocal_one (x := 0) (op := wOp) rfl hni2
     · rw [e31]; exact clientLocal_one (x := 1) (op := rOp) rfl (by simp)
-  obtain ⟨H4, ext4, hext4, wf4, prod4, part4, hloc4, hni4, γ', o', hQo', hmo'⟩ :=
+  obtain ⟨H4, ext4, hext4, wf4, prod4, part4, hloc4, hni4, o', hQo', hmo'⟩ :=
     hRA H3 comp wf3 prod3 part3 cl3 _ (full_cut wf3) 1 _ hτ2
   have hQo' : regQ 1 h2 o' := hQo'
   have e40 : H4 0 = LEv.inp h1 :: ext2 0 := by

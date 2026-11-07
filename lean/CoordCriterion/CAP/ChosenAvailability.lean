@@ -42,7 +42,7 @@ def ResponseAvailabilityEnd (Sys : System sp D) (Q : (n : Nat) → Fin n → Tab
         WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
         Partitioned (fun q => H q ++ ext q) comp ∧
         (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
-        ∃ γ o, Q n p σ.cur o ∧ LEv.out γ o ∈ ext p) ∧
+        ∃ o, Q n p σ.cur o ∧ LEv.out o ∈ ext p) ∧
       (∀ j, σ.cur ≼ j → ∃ ext : Fin n → List (LEv sp D n),
         WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
         Partitioned (fun q => H q ++ ext q) comp ∧
@@ -57,7 +57,7 @@ def AnsweringEnd (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) : P
         WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
         Partitioned (fun q => H q ++ ext q) comp ∧
         (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
-        ∃ γ o, Q n p σ.cur o ∧ LEv.out γ o ∈ ext p
+        ∃ o, Q n p σ.cur o ∧ LEv.out o ∈ ext p
 
 theorem lrun_full {init : I} {L : List (LEv sp D n)} {σ : State sp} :
     LRun (canon sp init) (L.take L.length) σ ↔ LRun (canon sp init) L σ := by
@@ -112,11 +112,11 @@ theorem responsePC_iff_commonRefinement (Sys : System sp D) :
   · intro h n init H comp hw hp hpt j hj
     obtain ⟨u, hu, hall⟩ := h n init H comp hw hp hpt _ (isCut_full hw) j
       (fun p σ hσ => hj p σ (lrun_full.1 hσ))
-    exact ⟨u, hu, fun p γ o hm => hall p γ o (by rw [List.take_length]; exact hm)⟩
+    exact ⟨u, hu, fun p o hm => hall p o (by rw [List.take_length]; exact hm)⟩
   · intro h n init H comp hw hp hpt c hc j hj
     obtain ⟨u, hu, hall⟩ := h n init (cutHist H c) comp (wf_cutHist hw hc)
       (produced_cutHist hp c) (partitioned_cutHist hpt c) j hj
-    exact ⟨u, hu, fun p γ o hm => hall p γ o hm⟩
+    exact ⟨u, hu, fun p o hm => hall p o hm⟩
 
 /-- Theorem `thm:complete-cap` with Response Partition Consistency in place of
 Partition Consistency. -/
@@ -157,8 +157,8 @@ theorem answeringEnd_of_availabilityFor {T : Table I O} {Q : Table I O}
     AnsweringEnd Sys (fun _ _ => Q) := by
   intro n init H comp hw hp hpt p σ hσ
   obtain ⟨o, hR, hT⟩ := hmeet n init H hw hp p σ hσ
-  obtain ⟨ext, hw', hp', hpt', hloc, hni, γ, hγ⟩ := hA n init H comp hw hp hpt p σ hσ o hR hT
-  exact ⟨ext, hw', hp', hpt', hloc, fun j => hni p j, γ, o, hTQ _ _ hT, hγ⟩
+  obtain ⟨ext, hw', hp', hpt', hloc, hni, hγ⟩ := hA n init H comp hw hp hpt p σ hσ o hR hT
+  exact ⟨ext, hw', hp', hpt', hloc, fun j => hni p j, o, hTQ _ _ hT, hγ⟩
 
 /-- For a response interface `T`, the system of the proof of Theorem
 `thm:complete-cap` for `A = T` has Answering: totality and self-continuation
@@ -189,20 +189,13 @@ theorem respSystem_RA (Q : Obligation sp) (T : Table I O) (hT : ResponseInterfac
   · obtain ⟨u, hu, hge⟩ := havail σ.cur (PO.refl _)
     have hRu : σ.R σ.cur u :=
       (h2 _ _).2 ⟨Q.sub _ _ (hTQ _ _ hu), PO.refl _, hge⟩
-    obtain ⟨γ, σc, hγ, ha, hcu, hexp⟩ := kc_legal hRu
-    let τ : State sp :=
-      { cur := σc.cur, R := outputTable σc u, sub := fun k x h => σc.sub k x h.1,
-        hasCur := ⟨u, hcu, PO.refl u⟩, above := fun k x h => σc.above k x h.1 }
-    have hstep : Step σc (.output u) τ := Step.output σc τ u hcu rfl rfl
+    have hstep := step_output_outState hRu
     obtain ⟨H', ext, hext, hwf', hprod', hpart', hp, hq⟩ :=
-      extend_single (respSystem T) hwf hprod hpart hcut hσ (e := .out γ u)
-        (by intro q k j d h; cases h) (.out ha hstep hexp (.nil τ))
-        ⟨by intro c' hc'; rcases hγ with rfl | rfl
-            · cases hc'
-            · simp at hc'; exact ⟨u, hc'⟩,
-         hγ, by rw [← h1]; exact hu, hge⟩
+      extend_single (respSystem T) hwf hprod hpart hcut hσ (e := .out u)
+        (by intro q k j d h; cases h) (.out hstep (.nil _))
+        ⟨fun _ _ => Or.inr ⟨u, rfl⟩, by rw [← h1]; exact hu, hge⟩
     refine ⟨H', ext, hext, hwf', hprod', hpart', fun q hq' => hq q (fun h => hq' (h ▸ rfl)),
-      by rw [hp]; simp, γ, u, hTQ _ _ hu, by rw [hp]; simp⟩
+      by rw [hp]; simp, u, hTQ _ _ hu, by rw [hp]; simp⟩
   · intro j hj
     obtain ⟨w, hw, hge⟩ := havail j hj
     have hRw : σ.R j w := (h2 _ _).2 ⟨Q.sub _ _ (hTQ _ _ hw), hj, hge⟩
@@ -271,14 +264,14 @@ theorem forced_answer_end (Sys : System sp D) (Q : (n : Nat) → Fin n → Table
       Partitioned (fun p => H p ++ ext p) comp ∧
       (∀ p, p ≠ q → ext p = []) ∧ (∀ p j, LEv.inp j ∉ ext p) ∧
       (∀ p σ, LRun (canon sp (init p)) (H p ++ ext p) σ → σ.cur ≼ j) ∧
-      ¬ ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ H p ++ ext p → o ≼ u := by
+      ¬ ∃ u, sp.P j u ∧ ∀ p o, LEv.out o ∈ H p ++ ext p → o ≼ u := by
   obtain ⟨H', ext, hext, hwf', hprod', hpart', hoth, hni, _, hj', hno'⟩ :=
     forced_answer Sys Q ((answering_iff_end Sys Q).2 hAns) hwf hprod hpart (isCut_full hwf)
       halone (lrun_full.2 hσq) (fun p σ h => hj p σ (lrun_full.1 h)) hno
   have := hist_of_extends hext; subst this
   refine ⟨ext, hwf', hprod', hpart', hoth, hni, fun p σ h => hj' p σ (lrun_full.2 h), ?_⟩
   rintro ⟨u, hu, hall⟩
-  exact hno' ⟨u, hu, fun p γ o hm => hall p γ o (by rw [List.take_length] at hm; exact hm)⟩
+  exact hno' ⟨u, hu, fun p o hm => hall p o (by rw [List.take_length] at hm; exact hm)⟩
 
 end CAP
 
@@ -298,7 +291,7 @@ def AnsweringCEnd {D : Type} (Sys : System regSpec D) : Prop :=
         WF init0 (fun q => H q ++ ext q) ∧ Produced Sys 2 init0 (fun q => H q ++ ext q) ∧
         Partitioned (fun q => H q ++ ext q) comp ∧
         (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
-        ∃ γ o, regQ p.val σ.cur o ∧ LEv.out γ o ∈ ext p
+        ∃ o, regQ p.val σ.cur o ∧ LEv.out o ∈ ext p
 
 /-- A cut of a client history is a client history, so Answering at the end of
 client histories gives it at their cuts. -/

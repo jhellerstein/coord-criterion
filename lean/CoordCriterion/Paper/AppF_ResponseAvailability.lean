@@ -116,7 +116,7 @@ theorem «def:response-availability/unfolded» (Sys : System sp D)
             WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
             Partitioned (fun q => H q ++ ext q) comp ∧
             (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
-            ∃ γ o, Q n p σ.cur o ∧ LEv.out γ o ∈ ext p) ∧
+            ∃ o, Q n p σ.cur o ∧ LEv.out o ∈ ext p) ∧
           (∀ j, σ.cur ≼ j → ∃ ext : Fin n → List (LEv sp D n),
             WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
             Partitioned (fun q => H q ++ ext q) comp ∧
@@ -142,7 +142,7 @@ theorem «def:response-availability(1)» (Sys : System sp D) (Q : (n : Nat) → 
             WF init (fun q => H q ++ ext q) ∧ Produced Sys n init (fun q => H q ++ ext q) ∧
             Partitioned (fun q => H q ++ ext q) comp ∧
             (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
-            ∃ γ o, Q n p σ.cur o ∧ LEv.out γ o ∈ ext p) ∧
+            ∃ o, Q n p σ.cur o ∧ LEv.out o ∈ ext p) ∧
     (ResponseAvailabilityEnd Sys Q → AnsweringEnd Sys Q) ∧
     (Answering Sys Q ↔ AnsweringEnd Sys Q) :=
   ⟨Iff.rfl, fun h n init H comp hw hp hpt p σ hσ => (h n init H comp hw hp hpt p σ hσ).1,
@@ -191,7 +191,7 @@ theorem «def:response-partition-consistency» (Sys : System sp D) :
       ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
         WF init H → Produced Sys n init H → Partitioned H comp →
         ∀ j : I, (∀ p σ, LRun (canon sp (init p)) (H p) σ → σ.cur ≼ j) →
-        ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ H p → o ≼ u) ∧
+        ∃ u, sp.P j u ∧ ∀ p o, LEv.out o ∈ H p → o ≼ u) ∧
     (ResponsePC Sys ↔ CommonRefinementAtEnd Sys) :=
   ⟨Iff.rfl, responsePC_iff_commonRefinement Sys⟩
 
@@ -489,8 +489,8 @@ theorem «app:cap-response/subspec-weaker» :
 `d₂` empties the fiber at `k₂` or `k₁`."  Lean: after any run emitting `d₁` no row at `k₂`
 remains, and symmetrically. -/
 theorem «app:cap-response/subspec-empties-fibers» {D : Type} {n : Nat} {σ τ : State sp5}
-    {l : List (LEv sp5 D n)} (h : LRun σ l τ) {γ : List (Commitment sp5)} :
-    (LEv.out γ .d1 ∈ l → ∀ u, ¬ τ.R .k2 u) ∧ (LEv.out γ .d2 ∈ l → ∀ u, ¬ τ.R .k1 u) :=
+    {l : List (LEv sp5 D n)} (h : LRun σ l τ) :
+    (LEv.out .d1 ∈ l → ∀ u, ¬ τ.R .k2 u) ∧ (LEv.out .d2 ∈ l → ∀ u, ¬ τ.R .k1 u) :=
   ⟨fun hm u => emit_d1_empties_k2 h hm u, fun hm u => emit_d2_empties_k1 h hm u⟩
 
 /-! ## Gilbert–Lynch with real-time precedence
@@ -526,7 +526,7 @@ theorem «lem:forced-answer» (Sys : System sp D) (Q : (n : Nat) → Fin n → T
       Partitioned (fun p => H p ++ ext p) comp ∧
       (∀ p, p ≠ q → ext p = []) ∧ (∀ p j, LEv.inp j ∉ ext p) ∧
       (∀ p σ, LRun (canon sp (init p)) (H p ++ ext p) σ → σ.cur ≼ j) ∧
-      ¬ ∃ u, sp.P j u ∧ ∀ p γ o, LEv.out γ o ∈ H p ++ ext p → o ≼ u :=
+      ¬ ∃ u, sp.P j u ∧ ∀ p o, LEv.out o ∈ H p ++ ext p → o ≼ u :=
   forced_answer_end Sys Q hAns hwf hprod hpart halone hσq hj hno
 
 /-! ### Paragraph "The register"
@@ -651,7 +651,7 @@ theorem «cor:gilbert-lynch/hypotheses» (Sys : System CC.GL.regSpec D) :
             WF CC.AsyncGL.init0 (fun q => H q ++ ext q) ∧
             Produced Sys 2 CC.AsyncGL.init0 (fun q => H q ++ ext q) ∧
             Partitioned (fun q => H q ++ ext q) comp ∧ (∀ q, comp q ≠ comp p → ext q = []) ∧
-            (∀ j, LEv.inp j ∉ ext p) ∧ ∃ γ o, CC.GL.regQ p.val σ.cur o ∧ LEv.out γ o ∈ ext p) ∧
+            (∀ j, LEv.inp j ∉ ext p) ∧ ∃ o, CC.GL.regQ p.val σ.cur o ∧ LEv.out o ∈ ext p) ∧
     (CC.AsyncGL.AnsweringC Sys ↔ CC.AsyncGL.AnsweringCEnd Sys) ∧
     (CC.AsyncGL.RealizedRPCC Sys ↔
       ∀ (H : CC.GL.RHist D 2) (comp : Fin 2 → Nat), WF CC.AsyncGL.init0 H →

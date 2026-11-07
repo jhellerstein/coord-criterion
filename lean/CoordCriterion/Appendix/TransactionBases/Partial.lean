@@ -322,8 +322,8 @@ theorem good_sysStep {B : CommitmentBasis (spec (T := T) (K := K) af)} (hB : ∀
     Good τ := by
   cases h with
   | input h => exact good_input h hg
-  | output hγ happ _ _ _ hR =>
-      exact good_outputTable hR (good_applySeq (fun c hc => hB c (hγ c hc)) happ hg)
+  | output hs _ =>
+      exact good_outputTable (step_output_iff.1 hs).2.2 hg
   | commitment hγ _ happ =>
     exact good_applySeq (fun c hc => hB c (hγ c hc)) happ hg
 

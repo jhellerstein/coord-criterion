@@ -23,7 +23,7 @@ voted yes, and `undecided` otherwise.
 * `voteSpec_exposable`: every decision at every state reachable without
   commitment is exposable (no output event of the decision needs a
   commitment);
-* `voteSpec_coordinationFree`: the system that emits decisions by canonical
+* `voteSpec_coordinationFree`: the system that emits decisions by
   output events (`respSystem S`) is coordination-free, so in particular
   needs no distributed coordination.
 
@@ -159,7 +159,7 @@ theorem voteSpec_exposable (n : Nat) :
     ∀ τ : State (voteSpec n), ReachableCF τ → ∀ d, τ.R τ.cur d → Exposable τ d :=
   (functional_exposure_boundary (voteSpec_functional n)).1 (voteSpec_monotone n)
 
-/-- The system that emits decisions by canonical output events is
+/-- The system that emits decisions by output events is
 coordination-free, and so needs no distributed coordination. -/
 theorem voteSpec_coordinationFree (n : Nat) (D : Type) :
     (respSystem (sp := voteSpec n) (D := D) (voteSpec n).P).CoordinationFree ∧

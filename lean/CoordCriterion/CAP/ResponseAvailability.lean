@@ -70,8 +70,9 @@ theorem full_cut' {init : Fin n → I} {H : History sp D n} (hwf : WF init H) :
 /-! ## Partition Consistency with commitment-free continuations -/
 
 /-- Def. `def:partition-consistency`, strong reading: the confluence
-continuation adds only commitment-free output events and no receives (so it is
-a history of Section `sec:histories`). -/
+continuation is commitment-free (no commitment event, and every output event
+emits a legal output) and has no receives (so it is a history of Section
+`sec:histories`). -/
 def PartitionConsistencyCF (Sys : System sp D) : Prop :=
   ∀ (n : Nat) (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat),
     WF init H → Produced Sys n init H → Partitioned H comp →
@@ -80,28 +81,59 @@ def PartitionConsistencyCF (Sys : System sp D) : Prop :=
     ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)) (τ : State sp),
       Extends H c H' ext ∧ WF init H' ∧ τ.cur = j ∧
       (∀ p, LRun (canon sp (init p)) (H' p) τ) ∧
-      (∀ p γ o, LEv.out γ o ∈ ext p → γ = []) ∧
+      (∀ p γ, LEv.commitment γ ∉ ext p) ∧
+      (∀ p a o b, ext p = a ++ LEv.out o :: b →
+        ∀ σ, LRun (canon sp (init p)) ((H p).take (c p) ++ a) σ → Exposable σ o) ∧
       (∀ p q k j d, LEv.recv q k j d ∉ ext p)
 
 theorem partitionConsistency_of_CF {Sys : System sp D} (h : PartitionConsistencyCF Sys) :
     PartitionConsistency Sys := by
   intro n init H comp hwf hprod hpart c hc j hj
-  obtain ⟨H', ext, τ, hext, hwf', hτ, hrun, _, _⟩ := h n init H comp hwf hprod hpart c hc j hj
+  obtain ⟨H', ext, τ, hext, hwf', hτ, hrun, _, _, _⟩ := h n init H comp hwf hprod hpart c hc j hj
   exact ⟨H', ext, τ, hext, hwf', hτ, hrun⟩
 
-theorem toL_out : ∀ (es : List (Event I O)) (γ : List (Commitment sp)) (o : O),
-    LEv.out γ o ∈ toL (sp := sp) (D := D) (n := n) es → γ = []
-  | [], _, _, h => by simp [toL] at h
-  | .input _ :: es, γ, o, h => by
-      simp only [toL, List.mem_cons] at h
-      rcases h with h | h
-      · cases h
-      · exact toL_out es γ o h
-  | .output _ :: es, γ, o, h => by
-      simp only [toL, List.mem_cons] at h
-      rcases h with h | h
-      · cases h; rfl
-      · exact toL_out es γ o h
+theorem toL_nocmt : ∀ (es : List (Event I O)) (γ : List (Commitment sp)),
+    LEv.commitment γ ∉ toL (sp := sp) (D := D) (n := n) es
+  | [], _ => by simp [toL]
+  | .input _ :: es, γ => by simp [toL]; exact toL_nocmt es γ
+  | .output _ :: es, γ => by simp [toL]; exact toL_nocmt es γ
+
+/-- Under the common-extension condition every output event of the event list
+of a canonical execution from a residual state emits a legal output. -/
+theorem toL_legal (hce : sp.CommonExpansion) {σ τ : State sp} {es : List (Event I O)}
+    (hx : Exec σ es τ) {E : List O} (hσ : Residual σ E) :
+    ∀ a o b, toL (sp := sp) (D := D) (n := n) es = a ++ LEv.out o :: b →
+      ∀ σ', LRun σ a σ' → Exposable σ' o := by
+  induction hx generalizing E with
+  | nil => intro a o b h; cases a <;> simp [toL] at h
+  | @cons σ τ' ρ e es hs _ ih =>
+    intro a o b h σ' hσ'
+    have hres := residual_step hσ hs
+    cases a with
+    | nil =>
+      cases e with
+      | input j => simp [toL] at h
+      | output o' =>
+        simp only [toL, List.nil_append, List.cons.injEq, LEv.out.injEq] at h
+        obtain ⟨rfl, -⟩ := h
+        cases hσ'
+        exact ce_exposable hce hσ (step_output_inv hs).1
+    | cons x a' =>
+      cases e with
+      | input j =>
+        simp only [toL, List.cons_append, List.cons.injEq] at h
+        obtain ⟨rfl, h⟩ := h
+        cases hσ' with
+        | inp hs' hr' =>
+          have := step_det hs hs'; subst this
+          exact ih hres a' o b h σ' hr'
+      | output o' =>
+        simp only [toL, List.cons_append, List.cons.injEq] at h
+        obtain ⟨rfl, h⟩ := h
+        cases hσ' with
+        | out hs' hr' =>
+          have := step_det hs hs'; subst this
+          exact ih hres a' o b h σ' hr'
 
 /-- (2)⇒(1) of Theorem `thm:complete-cap`, Partition Consistency part, with
 commitment-free confluence continuations. -/
@@ -116,8 +148,7 @@ theorem cf_partitionConsistencyCF (hlm : sp.LiftedMono) :
     intro p
     obtain ⟨τp, hp⟩ := hwf.1 p
     obtain ⟨σ, hσ⟩ := lrun_take hp (c p)
-    obtain ⟨es, hx⟩ := lrun_cf hσ (compliant_cf_out (compliant_take (hprod p) (c p)))
-      (compliant_cf_cmt (compliant_take (hprod p) (c p)))
+    obtain ⟨es, hx⟩ := lrun_cf hσ (compliant_cf_cmt (compliant_take (hprod p) (c p)))
     obtain ⟨rows, hm, hr⟩ := exec_rows hx
     refine ⟨(σ, rows), hσ, ?_, hr⟩
     show Residual σ (rows.map Prod.snd)
@@ -146,9 +177,12 @@ theorem cf_partitionConsistencyCF (hlm : sp.LiftedMono) :
   have hrun : ∀ p, LRun (canon sp (init p)) ((H p).take (c p) ++ ext p) (meetState sp j u hju) :=
     fun p => lrun_append.2 ⟨(X p).1, (hXs p).1,
       exec_to_lrun hce (Classical.choose_spec (hE p)) (hXs p).2.1⟩
-  exact ⟨_, ext, meetState sp j u hju, hext,
+  refine ⟨_, ext, meetState sp j u hju, hext,
     ⟨fun p => ⟨_, hrun p⟩, recvMatched_extend hwf.2 hcut hext hnr⟩, rfl, hrun,
-    fun p γ o h => toL_out _ γ o h, hnr⟩
+    fun p γ => toL_nocmt _ γ, fun p a o b h σ' hσ' => ?_, hnr⟩
+  obtain ⟨σ1, h1, h2⟩ := lrun_append.1 hσ'
+  rw [lrun_det h1 (hXs p).1] at h2
+  exact toL_legal hce (Classical.choose_spec (hE p)) (hXs p).2.1 a o b h σ' h2
 
 /-- Theorem `thm:complete-cap` with the strong reading of Partition
 Consistency in direction (2)⇒(1) (and the weak reading as the hypothesis of
@@ -169,106 +203,67 @@ theorem rpc_of_confluent {init : Fin n → I} {H : History sp D n} {c : Fin n �
   obtain ⟨H', ext, τ, hext, _, hτj, hτ⟩ := h
   obtain ⟨u, hu⟩ := τ.hasCur
   rw [hτj] at hu
-  refine ⟨u, τ.sub _ _ hu, fun p γ o hm => ?_⟩
+  refine ⟨u, τ.sub _ _ hu, fun p o hm => ?_⟩
   have h1 := hτ p
   rw [hext p] at h1
   obtain ⟨σ, h2, h3⟩ := lrun_append.1 h1
   exact lrun_out_mem h2 hm j u ((lrun_mono h3).2 j u hu)
 
-/-- Every output event of `l` is a canonical event `Out κ_o o` (`κ_o = kc o`)
-or `Out ε o`, and `l` has no commitment event. -/
+/-- `l` has no commitment event, so every commitment it applies is the
+canonical commitment `x_o` of an output event `output(o)`. -/
 def CanonOut (l : List (LEv sp D n)) : Prop :=
-  (∀ γ o, LEv.out γ o ∈ l → γ = [] ∨ γ = [kc o]) ∧ ∀ γ, LEv.commitment γ ∉ l
+  ∀ γ, LEv.commitment γ ∉ l
 
-/-- Def. `def:canonical-system`: every output event a strategy allows is a
-canonical event, and strategies allow no commitment event. -/
+/-- Def. `def:canonical-system`: strategies allow no commitment event, so every
+event they allow besides sends and receives is a canonical output event
+`output(o)`. -/
 def CanonicalSystem (Sys : System sp D) : Prop :=
-  (∀ n init p pre γ o, Sys.strat n init p pre (LEv.out γ o) → γ = [] ∨ γ = [kc o]) ∧
   ∀ n init p pre γ, ¬ Sys.strat n init p pre (LEv.commitment γ)
 
 theorem lrun_canon_exec {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
-    (hc : CanonOut l) : ∃ es, Exec σ es τ ∧ ∀ o ∈ outs es, ∃ γ, LEv.out γ o ∈ l := by
+    (hc : CanonOut l) : ∃ es, Exec σ es τ ∧ ∀ o ∈ outs es, LEv.out o ∈ l := by
   induction h with
   | nil σ => exact ⟨[], .nil σ, by simp [outs]⟩
   | @inp σ τ' ρ j es hs _ ih =>
-    obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
-      fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
+    obtain ⟨es', hx, hm⟩ := ih (fun γ h => hc γ (List.mem_cons_of_mem _ h))
     refine ⟨_, .cons hs hx, fun o ho => ?_⟩
     simp only [outs] at ho
-    obtain ⟨γ, h⟩ := hm o ho
-    exact ⟨γ, List.mem_cons_of_mem _ h⟩
-  | @out σ σc τ' ρ γ o es ha hs _ _ ih =>
-    obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
-      fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
-    have hst := kc_effect (hc.1 γ o (List.mem_cons_self ..)) ha hs
-    refine ⟨_, .cons hst hx, fun o' ho => ?_⟩
+    exact List.mem_cons_of_mem _ (hm o ho)
+  | @out σ τ' ρ o es hs _ ih =>
+    obtain ⟨es', hx, hm⟩ := ih (fun γ h => hc γ (List.mem_cons_of_mem _ h))
+    refine ⟨_, .cons hs hx, fun o' ho => ?_⟩
     simp only [outs, List.mem_cons] at ho
     rcases ho with rfl | ho
-    · exact ⟨γ, List.mem_cons_self ..⟩
-    · obtain ⟨γ', h⟩ := hm o' ho; exact ⟨γ', List.mem_cons_of_mem _ h⟩
-  | commitment _ _ _ _ => exact absurd (List.mem_cons_self ..) (hc.2 _)
+    · exact List.mem_cons_self ..
+    · exact List.mem_cons_of_mem _ (hm o' ho)
+  | commitment _ _ _ _ => exact absurd (List.mem_cons_self ..) (hc _)
   | @send σ ρ j d es _ ih =>
-    obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
-      fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
-    exact ⟨es', hx, fun o ho => by
-      obtain ⟨γ, h⟩ := hm o ho; exact ⟨γ, List.mem_cons_of_mem _ h⟩⟩
+    obtain ⟨es', hx, hm⟩ := ih (fun γ h => hc γ (List.mem_cons_of_mem _ h))
+    exact ⟨es', hx, fun o ho => List.mem_cons_of_mem _ (hm o ho)⟩
   | @recv σ ρ q k j d es _ ih =>
-    obtain ⟨es', hx, hm⟩ := ih ⟨fun γ o h => hc.1 γ o (List.mem_cons_of_mem _ h),
-      fun γ h => hc.2 γ (List.mem_cons_of_mem _ h)⟩
-    exact ⟨es', hx, fun o ho => by
-      obtain ⟨γ, h⟩ := hm o ho; exact ⟨γ, List.mem_cons_of_mem _ h⟩⟩
+    obtain ⟨es', hx, hm⟩ := ih (fun γ h => hc γ (List.mem_cons_of_mem _ h))
+    exact ⟨es', hx, fun o ho => List.mem_cons_of_mem _ (hm o ho)⟩
 
-/-- A canonical output step is realized by a canonical system event. -/
+/-- A canonical output step is the system's output event `output(o)`. -/
 theorem step_out_lrun {σ τ : State sp} {o : O} (hs : Step σ (.output o) τ) :
-    ∃ γ, (γ = [] ∨ γ = [kc o]) ∧ LRun (D := D) (n := n) σ [LEv.out γ o] τ := by
-  obtain ⟨ho, hcur, hR⟩ := step_output_inv hs
-  obtain ⟨γ, σc, hγ, ha, hco, hexp⟩ := kc_legal ho
-  have hcc := (applySeq_spec γ σ σc ha).1
-  have hs' : Step σc (.output o) τ := by
-    refine Step.output σc τ o hco (hcur.trans hcc.symm) ?_
-    rw [hR]
-    rcases hγ with rfl | rfl
-    · simp [applySeq] at ha; subst ha; rfl
-    · obtain ⟨hu, rfl⟩ := kc_apply_some ha
-      funext k x; apply propext
-      simp only [outputTable, kcState]
-      exact ⟨fun h => ⟨⟨h.1, not_rm_of_le h.1 h.2⟩, h.2⟩, fun h => ⟨h.1.1, h.2⟩⟩
-  exact ⟨γ, hγ, .out ha hs' hexp (.nil τ)⟩
+    LRun (D := D) (n := n) σ [LEv.out o] τ :=
+  .out hs (.nil τ)
+
+/-- A canonical execution is a participant run of its output and input events. -/
+theorem exec_lrun_toL {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es τ) :
+    LRun (D := D) (n := n) σ (toL es) τ := by
+  induction hx with
+  | nil σ => exact .nil σ
+  | @cons σ τ' ρ e es hs _ ih =>
+    cases e with
+    | input j => exact .inp hs ih
+    | output o => exact .out hs ih
 
 /-- A canonical execution is realized by canonical system events, with no
 receive. -/
 theorem exec_lrun_canon {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es τ) :
-    ∃ l : List (LEv sp D n), LRun σ l τ ∧ CanonOut l ∧ (∀ q k j d, LEv.recv q k j d ∉ l) := by
-  induction hx with
-  | nil σ => exact ⟨[], .nil σ, ⟨fun _ _ h => (by cases h), fun _ h => (by cases h)⟩,
-      fun _ _ _ _ h => (by cases h)⟩
-  | @cons σ τ' ρ e es hs _ ih =>
-    obtain ⟨l, hl, hc, hnr⟩ := ih
-    cases e with
-    | input j =>
-      refine ⟨.inp j :: l, .inp hs hl, ⟨fun γ o h => ?_, fun γ h => ?_⟩, fun q k j' d h => ?_⟩
-      · rcases List.mem_cons.1 h with h | h
-        · cases h
-        · exact hc.1 γ o h
-      · rcases List.mem_cons.1 h with h | h
-        · cases h
-        · exact hc.2 γ h
-      · rcases List.mem_cons.1 h with h | h
-        · cases h
-        · exact hnr q k j' d h
-    | output o =>
-      obtain ⟨γ, hγ, h1⟩ := step_out_lrun (D := D) (n := n) hs
-      refine ⟨.out γ o :: l, lrun_append.2 ⟨τ', h1, hl⟩, ⟨fun γ' o' h => ?_, fun γ' h => ?_⟩,
-        fun q k j' d h => ?_⟩
-      · rcases List.mem_cons.1 h with h | h
-        · cases h; exact hγ
-        · exact hc.1 γ' o' h
-      · rcases List.mem_cons.1 h with h | h
-        · cases h
-        · exact hc.2 γ' h
-      · rcases List.mem_cons.1 h with h | h
-        · cases h
-        · exact hnr q k j' d h
+    ∃ l : List (LEv sp D n), LRun σ l τ ∧ CanonOut l ∧ (∀ q k j d, LEv.recv q k j d ∉ l) :=
+  ⟨toL es, exec_lrun_toL hx, toL_nocmt es, toL_norecv es⟩
 
 /-- For histories whose output events (up to the cut) are canonical,
 Response Partition Consistency at `j` implies confluence at `j`, with a
@@ -288,8 +283,7 @@ theorem confluent_of_rpc_canonical {init : Fin n → I} {H : History sp D n} {c 
     obtain ⟨es, hx, hm⟩ := lrun_canon_exec hσ (hcan p)
     have hres : Residual σ (outs es) := run_residual hx
     refine ⟨(σ, outs es), hσ, hres, (hres j u).2 ⟨hju, hj p σ hσ, fun o ho => ?_⟩⟩
-    obtain ⟨γ, hγ⟩ := hm o ho
-    exact hu p γ o hγ
+    exact hu p o (hm o ho)
   let X := fun p => Classical.choose (hX p)
   have hXs : ∀ p, _ := fun p => Classical.choose_spec (hX p)
   have hE : ∀ p, ∃ l : List (LEv sp D n), LRun (X p).1 l (meetState sp j u hju) ∧
@@ -310,11 +304,9 @@ theorem confluent_of_rpc_canonical {init : Fin n → I} {H : History sp D n} {c 
 theorem canonOut_of_produced {Sys : System sp D} (hS : CanonicalSystem Sys) {init : Fin n → I}
     {H : History sp D n} (hp : Produced Sys n init H) (p : Fin n) (c : Nat) :
     CanonOut ((H p).take c) := by
-  refine ⟨fun γ o hm => ?_, fun γ hm => ?_⟩
-  · obtain ⟨a, b, hab⟩ := List.append_of_mem (List.mem_of_mem_take hm)
-    exact hS.1 _ _ _ _ _ _ (hp p a _ b hab).2
-  · obtain ⟨a, b, hab⟩ := List.append_of_mem (List.mem_of_mem_take hm)
-    exact hS.2 _ _ _ _ _ (hp p a _ b hab).2
+  intro γ hm
+  obtain ⟨a, b, hab⟩ := List.append_of_mem (List.mem_of_mem_take hm)
+  exact hS _ _ _ _ _ (hp p a _ b hab).2
 
 /-- Remark after Def. `def:response-partition-consistency`: for a canonical
 system, at a common input extension `j` of the current inputs, Response Partition
@@ -330,7 +322,7 @@ theorem canonical_rpc_iff_confluent {Sys : System sp D} (hS : CanonicalSystem Sy
 /-- The replicated system of Theorem `thm:complete-cap-response` (2)⇒(1) is
 canonical. -/
 theorem respSystem_canonical (T : Table I O) : CanonicalSystem (respSystem (sp := sp) (D := D) T) :=
-  ⟨fun _ _ _ _ _ _ h => h.1, fun _ _ _ _ _ h => h⟩
+  fun _ _ _ _ _ h => h
 
 /-! ## Input acceptance, Answering, forced answers -/
 
@@ -377,7 +369,7 @@ def Answering (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) : Prop
       ∃ (H' : History sp D n) (ext : Fin n → List (LEv sp D n)),
         Extends H c H' ext ∧ WF init H' ∧ Produced Sys n init H' ∧ Partitioned H' comp ∧
         (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ j, LEv.inp j ∉ ext p) ∧
-        ∃ γ o, Q n p σ.cur o ∧ LEv.out γ o ∈ ext p
+        ∃ o, Q n p σ.cur o ∧ LEv.out o ∈ ext p
 
 theorem answering_of_ra {Sys : System sp D} {Q : (n : Nat) → Fin n → Table I O}
     (h : ResponseAvailability Sys Q) : Answering Sys Q :=
@@ -401,7 +393,7 @@ theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O
       IsCut H' (fun p => (H' p).length) ∧
       (∀ p σ, LRun (canon sp (init p)) ((H' p).take (H' p).length) σ → σ.cur ≼ j) ∧
       ¬ RPCAt H' (fun p => (H' p).length) j := by
-  obtain ⟨H', ext, hext, hwf', hprod', hpart', hloc, hnoinp, γ, o, hQ, hm⟩ :=
+  obtain ⟨H', ext, hext, hwf', hprod', hpart', hloc, hnoinp, o, hQ, hm⟩ :=
     hAns n init H comp hwf hprod hpart c hc q σq hσq
   have hoth : ∀ p, p ≠ q → ext p = [] := fun p hpq => hloc p (fun h => hpq (halone p h))
   refine ⟨H', ext, hext, hwf', hprod', hpart', hoth, ?_, full_cut' hwf', ?_, ?_⟩
@@ -417,7 +409,7 @@ theorem forced_answer (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O
       rw [lrun_noinp h2 hnoinp]; exact hj p σ1 h1
     · rw [hoth p hpq] at h2; cases h2; exact hj p _ h1
   · rintro ⟨u, hu, hall⟩
-    apply hno o hQ ⟨u, hu, hall q γ o ?_⟩
+    apply hno o hQ ⟨u, hu, hall q o ?_⟩
     rw [List.take_length, hext q]; exact List.mem_append_right _ hm
 
 /-- "Input acceptance … excludes specifications whose answers require such a
@@ -437,7 +429,7 @@ theorem ra_excludes_unavailable_expansion (Sys : System sp D) (Q : (n : Nat) →
     ⟨⟨0, 1, by simp [comp]⟩, by intro p a q k j d b h; simp [H0] at h⟩
   have hcut0 : IsCut H0 (fun _ => 0) :=
     ⟨fun _ => Nat.zero_le _, by intro p a q k j d b h; simp at h⟩
-  obtain ⟨⟨H', ext, hext, hwf', hprod', hpart', _, hnoinp, γ, o, hQ, hm⟩, _⟩ :=
+  obtain ⟨⟨H', ext, hext, hwf', hprod', hpart', _, hnoinp, o, hQ, hm⟩, _⟩ :=
     hRA 2 init H0 comp hwf0 hprod0 hpart0 (fun _ => 0) hcut0 0 (canon sp i) (.nil _)
   have hH' : H' 0 = ext 0 := by rw [hext 0]; simp [H0]
   obtain ⟨τ, hτ⟩ := hwf'.1 0
@@ -529,7 +521,7 @@ theorem exec_emRows {σ τ : State sp} {es : List (Event I O)} (hx : Exec σ es 
         have := exec_cur_le hr; rw [hcur] at this; exact this
       · exact ih.2 r hm
 
-/-- The state after emitting `o` from `σ` by the canonical event. -/
+/-- The state after emitting `o` from `σ` by the output event `output(o)`. -/
 def outSt (σ : State sp) (o : O) (ho : σ.R σ.cur o) : State sp where
   cur := σ.cur
   R := outputTable σ o
@@ -663,10 +655,11 @@ section NonRep
 variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
 theorem allowed_congr {S1 S2 : System sp D} (hb : S1.basis = S2.basis) {n : Nat}
-    {init init' : Fin n → I} {p : Fin n} (hs : S1.strat n init p = S2.strat n init' p) :
+    {init init' : Fin n → I} {p : Fin n} (hi : init p = init' p)
+    (hs : S1.strat n init p = S2.strat n init' p) :
     Allowed S1 n init p = Allowed S2 n init' p := by
   funext pre e
-  cases e <;> simp only [Allowed, hb, hs]
+  cases e <;> simp only [Allowed, hb, hs, hi]
 
 theorem produced_congr {S1 S2 : System sp D} (hb : S1.basis = S2.basis) {n : Nat}
     {init : Fin n → I} (hs : S1.strat n init = S2.strat n init) :
@@ -674,7 +667,7 @@ theorem produced_congr {S1 S2 : System sp D} (hb : S1.basis = S2.basis) {n : Nat
   funext H
   unfold Produced
   have : ∀ p, Allowed S1 n init p = Allowed S2 n init p :=
-    fun p => allowed_congr hb (congrFun hs p)
+    fun p => allowed_congr hb rfl (congrFun hs p)
   simp only [this]
 
 /-- Response Availability is a per-configuration property: it holds as soon as,
@@ -704,8 +697,8 @@ theorem rpc_pointwise {Sys : System sp D}
 participant set `Fin n`. -/
 def IsoEmitAt (Sys : System sp D) (n : Nat) (p : Fin n) (i : I) (o : O) : Prop :=
   ∃ (init : Fin n → I) (H : History sp D n) (comp : Fin n → Nat) (a b : List (LEv sp D n))
-    (γ : List (Commitment sp)) (σ : State sp),
-    WF init H ∧ Produced Sys n init H ∧ Partitioned H comp ∧ H p = a ++ .out γ o :: b ∧
+    (σ : State sp),
+    WF init H ∧ Produced Sys n init H ∧ Partitioned H comp ∧ H p = a ++ .out o :: b ∧
     (∀ q k j d, LEv.recv q k j d ∉ a) ∧ LRun (canon sp (init p)) a σ ∧ σ.cur = i
 
 /-- The remark's `T_p`: rows of `Q_p` emitted by `p` in isolated emissions. -/
@@ -716,21 +709,20 @@ def Tp (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) (n : Nat) (p 
 structure LocAt (Sys : System sp D) (n : Nat) (p : Fin n) (i : I) (o : O) where
   init : Fin n → I
   a : List (LEv sp D n)
-  γ : List (Commitment sp)
-  comp : Compliant (Allowed Sys n init p) (a ++ [LEv.out γ o])
+  comp : Compliant (Allowed Sys n init p) (a ++ [LEv.out o])
   norecv : ∀ q k j d, LEv.recv q k j d ∉ a
-  run : ∃ τ, LRun (canon sp (init p)) (a ++ [LEv.out γ o]) τ
+  run : ∃ τ, LRun (canon sp (init p)) (a ++ [LEv.out o]) τ
   cur : ∀ σ, LRun (canon sp (init p)) a σ → σ.cur = i
 
 theorem IsoEmitAt.loc {Sys : System sp D} {n : Nat} {p : Fin n} {i : I} {o : O}
     (h : IsoEmitAt Sys n p i o) : Nonempty (LocAt Sys n p i o) := by
-  obtain ⟨init, H, _, a, b, γ, σ, hwf, hprod, _, hH, hnr, hσ, hcur⟩ := h
-  have hH' : H p = (a ++ [LEv.out γ o]) ++ b := by simp [hH]
+  obtain ⟨init, H, _, a, b, σ, hwf, hprod, _, hH, hnr, hσ, hcur⟩ := h
+  have hH' : H p = (a ++ [LEv.out o]) ++ b := by simp [hH]
   obtain ⟨τ, hτ⟩ := hwf.1 p
   rw [hH'] at hτ
   obtain ⟨τ1, h1, _⟩ := lrun_append.1 hτ
   have hc := hprod p; rw [hH'] at hc
-  exact ⟨⟨init, a, γ, compliant_prefix hc, hnr, ⟨τ1, h1⟩,
+  exact ⟨⟨init, a, compliant_prefix hc, hnr, ⟨τ1, h1⟩,
     fun σ' h => by rw [lrun_det h hσ]; exact hcur⟩⟩
 
 theorem two_labels {n : Nat} (h2 : 2 ≤ n) :
@@ -742,12 +734,12 @@ block, the others idle. -/
 theorem LocAt.replay {Sys : System sp D} {n : Nat} (h2 : 2 ≤ n) {p : Fin n} {i : I} {o : O}
     (w : LocAt Sys n p i o) (init' : Fin n → I) (hi : init' p = w.init p)
     (hA : Allowed Sys n init' p = Allowed Sys n w.init p) :
-    let L : History sp D n := fun q => if q = p then w.a ++ [LEv.out w.γ o] else []
+    let L : History sp D n := fun q => if q = p then w.a ++ [LEv.out o] else []
     WF init' L ∧ Produced Sys n init' L ∧ Partitioned L (fun q => q.val) ∧
       IsCut L (fun q => (L q).length) ∧
       ∀ σ, LRun (canon sp (init' p)) ((L p).take (L p).length) σ → σ.cur = i := by
   intro L
-  have hLp : L p = w.a ++ [LEv.out w.γ o] := by simp [L]
+  have hLp : L p = w.a ++ [LEv.out o] := by simp [L]
   have hLq : ∀ q, q ≠ p → L q = [] := fun q h => by simp [L, h]
   obtain ⟨g1, g2, g3, g4⟩ := locality_glue Sys (init := init') L _ (two_labels h2)
     (fun q => by
@@ -779,11 +771,11 @@ theorem answer_iso_at {Sys : System sp D} {Q : (n : Nat) → Fin n → Table I O
     (hpart : Partitioned H (fun p => p.val)) {c : Fin N → Nat} (hcut : IsCut H c)
     {p : Fin N} {σ : State sp} (hσ : LRun (canon sp (init p)) ((H p).take (c p)) σ) :
     ∃ u, Q N p σ.cur u ∧ IsoEmitAt Sys N p σ.cur u ∧
-      ∀ γ0 o, LEv.out γ0 o ∈ (H p).take (c p) → o ≼ u := by
-  obtain ⟨⟨H', ext, hext, hwf', hprod', hpart', _, hnoinp, γ, u, hQ, hm⟩, _⟩ :=
+      ∀ o, LEv.out o ∈ (H p).take (c p) → o ≼ u := by
+  obtain ⟨⟨H', ext, hext, hwf', hprod', hpart', _, hnoinp, u, hQ, hm⟩, _⟩ :=
     hRA N init H _ hwf hprod hpart c hcut p σ hσ
   obtain ⟨a, b, hab⟩ := List.append_of_mem hm
-  have hH' : H' p = ((H p).take (c p) ++ a) ++ LEv.out γ u :: b := by rw [hext p, hab]; simp
+  have hH' : H' p = ((H p).take (c p) ++ a) ++ LEv.out u :: b := by rw [hext p, hab]; simp
   have hnr := norecv_singletons hwf' hpart'
   obtain ⟨τ, hτ⟩ := hwf'.1 p
   have hτ' := hτ; rw [hH'] at hτ'
@@ -791,12 +783,12 @@ theorem answer_iso_at {Sys : System sp D} {Q : (n : Nat) → Fin n → Table I O
   obtain ⟨σ1, h1, h2⟩ := lrun_append.1 hσa
   have hcur : σa.cur = σ.cur := by
     rw [lrun_noinp h2 (fun j hj => hnoinp j (by rw [hab]; simp [hj])), lrun_det h1 hσ]
-  refine ⟨u, hQ, ⟨init, H', _, _, b, γ, σa, hwf', hprod', hpart', hH', ?_, hσa, hcur⟩, ?_⟩
+  refine ⟨u, hQ, ⟨init, H', _, _, b, σa, hwf', hprod', hpart', hH', ?_, hσa, hcur⟩, ?_⟩
   · intro q k j d hm'
     exact hnr p q k j d (by rw [hH']; exact List.mem_append_left _ hm')
-  · intro γ0 o ho
+  · intro o ho
     obtain ⟨l1, l2, hl⟩ := List.append_of_mem ho
-    have : LRun (canon sp (init p)) (l1 ++ LEv.out γ0 o :: (l2 ++ ext p)) τ := by
+    have : LRun (canon sp (init p)) (l1 ++ LEv.out o :: (l2 ++ ext p)) τ := by
       rw [hext p, hl] at hτ; simpa using hτ
     exact lrun_later_le this (List.mem_append_right _ hm)
 
@@ -818,8 +810,8 @@ theorem without_replication_interface (Sys : System sp D) (Q : (n : Nat) → Fin
   · intro i o j hT hij
     let w := Classical.choice hT.2.loc
     obtain ⟨h1, h2', h3, h4, hcur⟩ := w.replay h2 w.init rfl rfl
-    let L : History sp D n := fun q => if q = p then w.a ++ [LEv.out w.γ o] else []
-    have hLp : L p = w.a ++ [LEv.out w.γ o] := by simp [L]
+    let L : History sp D n := fun q => if q = p then w.a ++ [LEv.out o] else []
+    have hLp : L p = w.a ++ [LEv.out o] := by simp [L]
     obtain ⟨τ1, hτ1⟩ := h1.1 p
     have hτ1' : LRun (canon sp (w.init p)) ((L p).take (L p).length) τ1 := by
       rw [List.take_length]; exact hτ1
@@ -847,7 +839,7 @@ theorem without_replication_interface (Sys : System sp D) (Q : (n : Nat) → Fin
       | inp hs hr => cases hr; exact (step_input_inv hs).2.1
     obtain ⟨u, hQ, hiso, hge⟩ := answer_iso_at hRA hwf2 hprod2 hpart2 hc2 hσ2
     rw [hj2] at hQ hiso
-    refine ⟨u, ⟨hQ, hiso⟩, hge w.γ o ?_⟩
+    refine ⟨u, ⟨hQ, hiso⟩, hge o ?_⟩
     rw [htake, hLp]
     simp
 
@@ -871,14 +863,14 @@ theorem without_replication (Sys : System sp D) (Q : (n : Nat) → Fin n → Tab
   let W : ∀ p, A p → LocAt Sys n p (r p).1 (r p).2 := fun p h => Classical.choice (hr p h).2.loc
   let init : Fin n → I := fun p => if h : A p then (W p h).init p else j
   let L : History sp D n := fun p =>
-    if h : A p then (W p h).a ++ [LEv.out (W p h).γ (r p).2] else []
+    if h : A p then (W p h).a ++ [LEv.out (r p).2] else []
   have hinit : ∀ p (h : A p), init p = (W p h).init p := fun p h => by simp only [init, h, ↓reduceDIte]
   have hinitn : ∀ p, ¬ A p → init p = j := fun p h => by simp only [init, h, ↓reduceDIte]
-  have hLp : ∀ p (h : A p), L p = (W p h).a ++ [LEv.out (W p h).γ (r p).2] :=
+  have hLp : ∀ p (h : A p), L p = (W p h).a ++ [LEv.out (r p).2] :=
     fun p h => by simp only [L, h, ↓reduceDIte]
   have hLn : ∀ p, ¬ A p → L p = [] := fun p h => by simp only [L, h, ↓reduceDIte]
   have hAl : ∀ p (h : A p), Allowed Sys n init p = Allowed Sys n (W p h).init p :=
-    fun p h => allowed_congr rfl (hloc n init (W p h).init p (hinit p h))
+    fun p h => allowed_congr rfl (hinit p h) (hloc n init (W p h).init p (hinit p h))
   obtain ⟨g1, g2, g3, g4⟩ := locality_glue Sys (init := init) L _ (two_labels h2)
     (fun p => by
       by_cases h : A p
@@ -908,7 +900,7 @@ theorem without_replication (Sys : System sp D) (Q : (n : Nat) → Fin n → Tab
       rw [hinitn p h]; exact PO.refl j
   obtain ⟨u, hu, hall⟩ := hRPC n init L _ g1 g2 g3 _ g4 j hcurs
   refine ⟨u, hu, fun p h => ?_⟩
-  apply hall p (W p h).γ
+  apply hall p
   rw [List.take_length, hLp p h]
   simp
 
@@ -1154,7 +1146,7 @@ theorem subspec_counterexample :
 /-- "A participant that emits `d₁` or `d₂` empties the fiber at `k₂` or `k₁`" (under any
 basis). -/
 theorem emit_d1_empties_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
-    (h : LRun σ l τ) {γ : List (Commitment sp5)} (hm : LEv.out γ .d1 ∈ l) (u : O8) :
+    (h : LRun σ l τ) (hm : LEv.out .d1 ∈ l) (u : O8) :
     ¬ τ.R .k2 u := by
   intro hu
   have h1 := lrun_out_mem h hm .k2 u hu
@@ -1162,7 +1154,7 @@ theorem emit_d1_empties_k2 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (L
   cases u <;> revert h1 h2 <;> decide
 
 theorem emit_d2_empties_k1 {D : Type} {n : Nat} {σ τ : State sp5} {l : List (LEv sp5 D n)}
-    (h : LRun σ l τ) {γ : List (Commitment sp5)} (hm : LEv.out γ .d2 ∈ l) (u : O8) :
+    (h : LRun σ l τ) (hm : LEv.out .d2 ∈ l) (u : O8) :
     ¬ τ.R .k1 u := by
   intro hu
   have h1 := lrun_out_mem h hm .k1 u hu
@@ -1215,19 +1207,22 @@ theorem removeHi_apply :
 noncomputable def rnSys : System uSpec Unit := ⟨fun c => c = removeHi, fun _ _ _ _ _ => True⟩
 
 noncomputable def rnH : History uSpec Unit 2 :=
-  fun p => if p.val = 0 then [LEv.out [removeHi] ()] else []
+  fun p => if p.val = 0 then [LEv.commitment [removeHi], LEv.out ()] else []
 
-theorem rnH_run : ∃ τ, LRun (canon uSpec .lo) [LEv.out (D := Unit) (n := 2) [removeHi] ()] τ := by
+/-- Every output of `uSpec` is legal at every state. -/
+theorem uSpec_exposable (σ : State uSpec) : Exposable σ () := by
+  intro k x _ hn; exact absurd trivial hn
+
+theorem rnH_run : ∃ τ, LRun (canon uSpec .lo)
+    [LEv.commitment (D := Unit) (n := 2) [removeHi], LEv.out ()] τ := by
   let σc := removeHiState (canon uSpec .lo) rfl
   have hc : σc.R σc.cur () := ⟨⟨trivial, rfl⟩, rfl⟩
-  have hexp : Exposable σc () := by
-    intro k x _ hn; exact absurd trivial hn
-  exact ⟨outSt σc () hc, .out removeHi_apply (Step.output σc (outSt σc () hc) () hc rfl rfl) hexp
-    (.nil _)⟩
+  exact ⟨outSt σc () hc, .commitment (by simp) removeHi_apply
+    (.out (Step.output σc (outSt σc () hc) () hc rfl rfl) (.nil _))⟩
 
 /-- Remark after Def. `def:response-partition-consistency`, last sentence:
-with other commitments the converse can fail.  Participant `0` emits `()` at
-`lo` while emptying the fiber at `hi`; the emitted outputs have a common output extension at `hi`,
+with other commitments the converse can fail.  Participant `0` empties the
+fiber at `hi` by a commitment event at `lo` and then emits `()`; the emitted outputs have a common output extension at `hi`,
 but the cut is not confluent at `hi`. -/
 theorem rpc_not_confluent :
     WF (fun _ => In2.lo) rnH ∧ Produced rnSys 2 (fun _ => In2.lo) rnH ∧
@@ -1236,7 +1231,7 @@ theorem rpc_not_confluent :
         σ.cur ≼ In2.hi) ∧
       RPCAt rnH (fun p => (rnH p).length) .hi ∧
       ¬ ConfluentCut (fun _ => In2.lo) rnH (fun p => (rnH p).length) .hi := by
-  have h0 : rnH 0 = [LEv.out [removeHi] ()] := rfl
+  have h0 : rnH 0 = [LEv.commitment [removeHi], LEv.out ()] := rfl
   have h1 : rnH 1 = [] := rfl
   have hp : ∀ p : Fin 2, p = 0 ∨ p = 1 := by decide
   obtain ⟨g1, g2, g3, g4⟩ := locality_glue rnSys (init := fun _ => In2.lo) rnH _ (two_labels (by omega))
@@ -1244,32 +1239,36 @@ theorem rpc_not_confluent :
     (fun p => by
       rcases hp p with rfl | rfl
       · rw [h0]; intro a e b h
-        cases a with
-        | nil =>
+        match a, h with
+        | [], h =>
           simp at h; obtain ⟨rfl, _⟩ := h
           exact ⟨fun c hc => by simp at hc; exact hc, trivial⟩
-        | cons _ _ => simp at h
+        | [_], h =>
+          simp at h; obtain ⟨rfl, rfl, _⟩ := h
+          exact ⟨fun σ _ => Or.inl (uSpec_exposable σ), trivial⟩
+        | _ :: _ :: _, h => simp at h
       · rw [h1]; intro a e b h; simp at h)
     (fun p => by
       rcases hp p with rfl | rfl
       · rw [h0]; exact rnH_run
       · rw [h1]; exact ⟨_, .nil _⟩)
-  refine ⟨g1, g2, g3, g4, ?_, ⟨(), trivial, fun _ _ _ _ => trivial⟩, ?_⟩
+  refine ⟨g1, g2, g3, g4, ?_, ⟨(), trivial, fun _ _ _ => trivial⟩, ?_⟩
   · intro p σ _
     show In2.leB σ.cur .hi = true
     generalize σ.cur = x; cases x <;> rfl
   · rintro ⟨H', ext, τ, hext, _, hτj, hτ⟩
     have hr := hτ 0
     rw [hext 0] at hr
-    have ht : (rnH 0).take (rnH 0).length = [LEv.out [removeHi] ()] := by rw [h0]; rfl
-    rw [ht, List.singleton_append] at hr
+    have ht : (rnH 0).take (rnH 0).length = [LEv.commitment [removeHi], LEv.out ()] := by
+      rw [h0]; rfl
+    rw [ht, List.cons_append] at hr
     cases hr with
-    | out ha hs _ hr' =>
+    | commitment _ ha hr' =>
       have he := Option.some.inj (ha.symm.trans removeHi_apply)
       subst he
       obtain ⟨u, hu⟩ := τ.hasCur
       rw [hτj] at hu
-      have := step_sub hs _ _ ((lrun_mono hr').2 _ _ hu)
+      have := (lrun_mono hr').2 _ _ hu
       cases this.2
 
 /-! ### The election under the equality order -/
@@ -1459,15 +1458,14 @@ theorem mixSys_rpc : ResponsePC mixSys :=
 theorem single_emit {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} (Sys : System sp D)
     {n : Nat} (h2 : 2 ≤ n) (init : Fin n → I) (p : Fin n) {o : O}
     (ho : (canon sp (init p)).R (init p) o)
-    (hA : ∀ γ, (γ = [] ∨ γ = [kc o]) → Allowed Sys n init p [] (.out γ o)) :
+    (hA : Allowed Sys n init p [] (.out o)) :
     IsoEmitAt Sys n p (init p) o := by
   classical
-  obtain ⟨γ, σc, hγ, ha, hco, hexp⟩ := kc_legal ho
-  have hcc : σc.cur = init p := (applySeq_spec γ _ σc ha).1
-  have hrun : LRun (D := D) (n := n) (canon sp (init p)) [LEv.out γ o] (outSt σc o hco) :=
-    .out ha (Step.output σc (outSt σc o hco) o hco rfl rfl) hexp (.nil _)
-  let L : History sp D n := fun q => if q = p then [LEv.out γ o] else []
-  have hLp : L p = [LEv.out γ o] := by simp [L]
+  have hrun : LRun (D := D) (n := n) (canon sp (init p)) [LEv.out o]
+      (outSt (canon sp (init p)) o ho) :=
+    .out (Step.output _ (outSt (canon sp (init p)) o ho) o ho rfl rfl) (.nil _)
+  let L : History sp D n := fun q => if q = p then [LEv.out o] else []
+  have hLp : L p = [LEv.out o] := by simp [L]
   have hLq : ∀ q, q ≠ p → L q = [] := fun q h => by simp [L, h]
   obtain ⟨g1, g2, g3, _⟩ := locality_glue Sys (init := init) L _ (two_labels h2)
     (fun q => by
@@ -1478,14 +1476,14 @@ theorem single_emit {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} (Sys :
       by_cases hq : q = p
       · rw [hq, hLp]; intro a e b h
         cases a with
-        | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact hA γ hγ
+        | nil => simp at h; obtain ⟨rfl, _⟩ := h; exact hA
         | cons _ _ => simp at h
       · rw [hLq q hq]; intro a e b h; simp at h)
     (fun q => by
       by_cases hq : q = p
       · rw [hq, hLp]; exact ⟨_, hrun⟩
       · rw [hLq q hq]; exact ⟨_, .nil _⟩)
-  exact ⟨init, L, _, [], [], γ, canon sp (init p), g1, g2, g3, hLp,
+  exact ⟨init, L, _, [], [], canon sp (init p), g1, g2, g3, hLp,
     fun _ _ _ _ h => (by cases h), .nil _, rfl⟩
 
 /-- **Counterexample to Remark "Without replication" as stated.**  A
@@ -1501,21 +1499,11 @@ theorem without_replication_counterexample :
   refine ⟨mixSys_ra, mixSys_rpc, ⟨rfl, ?_⟩, ⟨rfl, ?_⟩, ?_⟩
   · have := single_emit mixSys (n := 2) (by omega) (fun q => if q.val = 0 then .lo else .hi) 0
       (o := .b) ⟨rfl, rfl⟩ (by
-        intro γ hγ
-        refine ⟨?_, ?_⟩
-        · intro c hc; rcases hγ with rfl | rfl
-          · cases hc
-          · simp at hc; exact ⟨_, hc⟩
-        · exact ⟨hγ, rfl, by simp [emittedOf]⟩)
+        exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, rfl, by simp [emittedOf]⟩)
     exact this
   · have := single_emit mixSys (n := 2) (by omega) (fun _ => .lo) 1
       (o := .a) ⟨rfl, rfl⟩ (by
-        intro γ hγ
-        refine ⟨?_, ?_⟩
-        · intro c hc; rcases hγ with rfl | rfl
-          · cases hc
-          · simp at hc; exact ⟨_, hc⟩
-        · exact ⟨hγ, rfl, by simp [emittedOf]⟩)
+        exact ⟨fun _ _ => Or.inr ⟨_, rfl⟩, rfl, by simp [emittedOf]⟩)
     exact this
   · intro j u hu h; cases j <;> cases u <;> revert hu h <;> decide
 
@@ -1548,8 +1536,8 @@ theorem final_rpc (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : Fin 
     (hinj : ∀ p q, comp p = comp q → p = q)
     {A B : List (LEv regSpec D 2)} (hA : H 0 = LEv.inp h1 :: A) (hB : H 1 = LEv.inp h2 :: B)
     (hAi : ∀ j, LEv.inp j ∉ A) (hBi : ∀ j, LEv.inp j ∉ B)
-    {γ : List (Commitment regSpec)} {o : RMap}
-    (ho : LEv.out γ o ∈ A) (hoQ : regQ 0 h1 o) :
+    {o : RMap}
+    (ho : LEv.out o ∈ A) (hoQ : regQ 0 h1 o) :
     RPCAt H (fun p => (H p).length) hj := by
   have hnr := norecv_of_inj hwf hpart hinj
   have inp0 : ∀ k h, (H 0)[k]? = some (LEv.inp h) → k = 0 ∧ h = h1 := by
@@ -1603,7 +1591,7 @@ theorem final_rpc (Sys : System regSpec D) (hRPC : RealizedRPC Sys) {init : Fin 
         obtain ⟨k, hk⟩ := List.mem_iff_getElem?.1 ho
         have hkA := (List.getElem?_eq_some_iff.1 hk).1
         refine ⟨wOp, rOp, rfl, rfl, 0, k + 1,
-          ⟨rfl, γ, o, by rw [hA]; simpa using hk, hoQ.2 0 wOp rfl rfl⟩, ?_⟩
+          ⟨rfl, o, by rw [hA]; simpa using hk, hoQ.2 0 wOp rfl rfl⟩, ?_⟩
         rintro p' k' ⟨hrep, _⟩
         have : p' = 1 := Fin.ext hrep
         subst this
@@ -1662,7 +1650,7 @@ theorem gilbert_lynch_answering (Sys : System regSpec D) :
   have hτ1 : LRun (canon regSpec (init 0)) ((H1 0).take (H1 0).length)
       (inpState (canon regSpec emptyH) h1 u1 hR1) := by
     rw [List.take_length, e10]; exact inp_lrun hR1
-  obtain ⟨H2, ext2, hext2, wf2, prod2, part2, hloc2, hni2, γ, o, hQo, hmo⟩ :=
+  obtain ⟨H2, ext2, hext2, wf2, prod2, part2, hloc2, hni2, o, hQo, hmo⟩ :=
     hAns 2 init H1 comp wf1 prod1 part1 _ (full_cut wf1) 0 _ hτ1
   have hQo : regQ 0 h1 o := hQo
   have e20 : H2 0 = LEv.inp h1 :: ext2 0 := by

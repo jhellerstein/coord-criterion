@@ -187,9 +187,9 @@ $\{(*,x),(*,y)\}$ with $x,y$ incomparable, and let $\mathcal S_2$ be the
 functional spec induced by a function $f$ that maps
 both to one value.  The composite has one row, so it satisfies Lifted
 Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
-a legal output, and under the empty basis an output event is commitment-sufficient only for a
-legal output (Lemma~\ref{lem:canonical-commitment-normal-form}), and no
-\commitment event is possible, since its sequence is nonempty.  Input
+a legal output, and under the empty basis an output event emits only a legal
+output (Lemma~\ref{lem:output-containment}), and no \commitment event is
+possible, since its sequence is nonempty.  Input
 events only remove rows at other inputs, and there are none, so every run of
 $\mathcal S_1$ under the empty basis stays at the canonical state and emits
 nothing.  Then $\mathcal S_2$ receives nothing.  Renaming $x,y$ to
@@ -240,8 +240,9 @@ Proposition~\ref{prop:exposure-boundary}, $\Spec_2|_{\Spec_1}$ needs no
 inputs among the outputs of $\Spec_1$, and so do its \indescs.  So this is
 Lifted Monotonicity of $\Spec_2$ on the outputs of $\Spec_1$.
 
-(2) After $\Out{\gamma}{m}$ every row of $\Spec_1$ \outrel $m$
-(Lemma~\ref{lem:canonical-commitment-normal-form}), so the outputs
+(2) After $\mathsf{output}(m)$ every row of $\Spec_1$ \outrel $m$
+(Lemma~\ref{lem:output-containment}), and later events only remove rows, so
+the outputs
 $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$ form a chain.
 $\Spec_2|_{\Spec_1}$ starts at $\sigma(m_1)$, which it reaches without
 \commitment.  By the first two facts it can receive each $m_{r+1}$ and answer
@@ -258,9 +259,11 @@ current input of $\Spec_2|_{\Spec_1}$.  Both hold at the start, where the
 image of $\sigma_{\Spec_1}(i)$ is $\sigma_{P_2\circ P_1}(i)$.  For
 $\mathsf{input}(j)$ of $\Spec_1$, a row $(j,m)$ of $R_\sigma$ and, by the first
 fact, a row $(m,x)$ of $T$ give $(j,x)\in R_\rho$, so the input is legal, and
-both events keep the rows at \indescs of $j$.  For a commitment-sufficient $\Out{\gamma}{m}$
-at input $i$, containment gives $(i,m)\in R_\sigma$ and a resulting table
-inside $R_\sigma[\mathrm{out}\succeq_M m]$.  $\Spec_2|_{\Spec_1}$ receives $m$
+both events keep the rows at \indescs of $j$.  A \commitment event of
+$\Spec_1$ keeps the current input and only removes rows of $R_\sigma$, so both
+invariants survive it.  For $\mathsf{output}(m)$ at input $i$, output
+containment gives $(i,m)\in R_\sigma$ and the resulting table
+$R_\sigma[\mathrm{out}\succeq_M m]$.  $\Spec_2|_{\Spec_1}$ receives $m$
 and keeps $T[\mathrm{in}\succeq_M m]$.  Each answer $o$ has $(m,o)\in T$, so
 $(i,o)\in R_\rho$.  The composite's $\mathsf{output}(o)$ keeps
 $R_\rho[\mathrm{out}\OutputGe o]$, and $\Spec_2|_{\Spec_1}$ keeps
@@ -290,8 +293,7 @@ $\Spec_2$ negation, the composite is negation, which violates Lifted
 Monotonicity, yet $\Spec_1$ needs no \commitment.
 
 The \emph{\commitment-erased replacement} of a system has the empty basis and
-the same strategy, with each $\Out{\delta}{x}$ replaced by
-$\Out{\varepsilon}{x}$ and its \commitment events dropped.
+the same strategy, with its \commitment events dropped.
 
 \begin{corollary}[Empty store]
 \label{cor:empty-store}
@@ -306,13 +308,14 @@ Let $\tau$ be a state of the original and $\tau'$ a state of the replacement
 reached without \commitment, with the same current input and $R_\tau\subseteq
 R_{\tau'}$.  If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
 $j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
-the rows at \indescs of $j$.  If $\Out{\delta}{x}$ is commitment-sufficient at $\tau$, then $x$
-is at the current input of $\tau$ and so of $\tau'$, where it is a legal output by
-the second fact.  Containment (Lemma~\ref{lem:canonical-commitment-normal-form})
-puts the original's resulting table inside $R_\tau[\mathrm{out}\OutputGe x]$,
-which is inside $R_{\tau'}[\mathrm{out}\OutputGe x]$, where
-$\Out{\varepsilon}{x}$ ends.  Both start at $\sigma(m_1)$, so the containment
-holds after each event.  The replacement's strategy allows each erased event,
+the rows at \indescs of $j$.  A \commitment event of the original keeps the
+current input and only removes rows, so the replacement skips it.  If the
+original emits $x$ at $\tau$, then $x$ is at the current input of $\tau$ and so
+of $\tau'$, where it is a legal output by the second fact.  Output containment
+(Lemma~\ref{lem:output-containment}) puts the original's resulting table
+$R_\tau[\mathrm{out}\OutputGe x]$ inside $R_{\tau'}[\mathrm{out}\OutputGe x]$,
+where the replacement's $\mathsf{output}(x)$ ends.  Both start at
+$\sigma(m_1)$, so the containment holds after each event.  The replacement's strategy allows each erased event,
 since the original's allowed it before erasure.
 \end{proof}
 
@@ -332,8 +335,8 @@ By Corollary~\ref{cor:empty-store}, every run of the pipeline has one with the
 same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis.
 Theorem~\ref{thm:proper-coordination}(2), applied to it and a prefix of the
 run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs, and the
-canonical event for each output
-(Lemma~\ref{lem:canonical-commitment-normal-form}) makes it a run under the
+canonical basis supplies the canonical \commitment of each output event that
+needs one (Lemma~\ref{lem:output-containment}), so it is a run under the
 canonical basis.  By induction the same holds along a pipeline
 $\Spec_n\circ\cdots\circ\Spec_1$ in which each prefix properly guards the next
 stage.  Composition is associative, so the bracketing does not matter.
@@ -365,17 +368,18 @@ $f(\sigma)$ for the image of a state $\sigma$ of $\Spec_1$.
 
 \begin{proposition}[Invisible coordination]
 \label{prop:invisible-coordination}
-Let $f$ be monotone, and let $\Spec_1$ emit $m$ at $\sigma$ by
-$\Out{\gamma}{m}$.  If every row that $\gamma$ removes has a row with the same
+Let $f$ be monotone, and let $\Spec_1$ apply $\gamma$ at $\sigma$ in a
+\commitment event and then emit $m$ by $\mathsf{output}(m)$, a legal output
+after $\gamma$.  If every row that $\gamma$ removes has a row with the same
 input and the same image that $\gamma$ keeps, then $f(m)$ is a legal output at
 $f(\sigma)$.
 \end{proposition}
 
 The proof covers the composite's \commitments by those of $\Spec_1$.  For a
 table $R$ of $\Spec_1$ write $f(R)=\{(k,f(m)):(k,m)\in R\}$.  Let
-$\Out{\gamma}{m}$ be commitment-sufficient at $\sigma$, let $\gamma$ leave $\sigma_c$, and let
+$\gamma$ take $\sigma$ to $\sigma_c$, at which $m$ is a legal output, and let
 $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$.  No row
-$(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is not in $\Excluded_{f(m)}$ at
+$(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Excluded_{f(m)}$ at
 $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
 Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
 $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ subsumes $(k,f(m'))$.  So every row
@@ -555,12 +559,12 @@ their own, and they may issue \commitments of their own.
 (1) The two runs of a feed certify $(i,m)\in P_1$ and $(m,o)\in P_2$.
 
 (2) A run that applies no \commitment has no \commitment event, and each of its
-output events is $\Out{\varepsilon}{o}$, which is commitment-sufficient exactly when $o$ is
-a legal output.
+output events $\mathsf{output}(o)$ applies no \commitment, which holds exactly
+when $o$ is a legal output (Lemma~\ref{lem:output-containment}).
 
 (3) The early-lock store above, fed by a log, is contract-proper, since the
 store's table satisfies Lifted Monotonicity on logs.  From the empty log it
-admits a run whose output event takes the lock, a \commitment.
+admits a run whose \commitment event takes the lock.
 
 (4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
 the test of whether the count is below $10$.  The pipeline is
@@ -574,7 +578,7 @@ once the count reaches $10$, only no remains.  So no feed exists.
 Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies
 Lifted Monotonicity, so every $o\in P_2(m)$ is a legal output at $\sigma(m)$
 (Proposition~\ref{prop:exposure-boundary}).  The one-event run
-$\Out{\varepsilon}{o}$ from $\sigma(m)$ is then an admitted run of $C_2$.
+$\mathsf{output}(o)$ from $\sigma(m)$ is then an admitted run of $C_2$.
 Under the empty basis no run applies a \commitment.
 \end{proof}
 

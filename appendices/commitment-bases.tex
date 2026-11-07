@@ -101,16 +101,16 @@ of $\mathcal B_{\mathrm{MVTO}}$ has the effect of $\mathsf{order}(A,B)$, and no
 \commitment of $\mathcal B_{\mathrm{2PL}}$ has the effect of $\mathsf{stamp}(B)$
 with $Z=\varnothing$.
 
-A scheduler applies \commitments within the sequence $\gamma$ of an output
-event $\Out{\gamma}{o}$ (Definition~\ref{def:system-output-event}) or of a
-\commitment event $\mathsf{apply}(\gamma)$
-(Definition~\ref{def:commitment-event}).  Each protocol step below responds to
+A scheduler applies its \commitments in \commitment events
+$\mathsf{apply}(\gamma)$ (Definition~\ref{def:commitment-event}) and reports
+results by output events $\mathsf{output}(o)$
+(Definition~\ref{def:system-output-event}).  Each protocol step below responds to
 the arrival of an operation, that is, to an input event, and says which
 \commitments it applies.  In every state that a run under either basis reaches,
 each row has a complete \outnoun in the table at its input, and any output
 between two rows of the table at one input is itself a row of the table.  So a
-read is reported by applying $\mathsf{read}(A,k,v)$ and then emitting the
-result, which is then a legal output.
+read is reported by applying $\mathsf{read}(A,k,v)$ in a \commitment event and
+then emitting the result, which is then a legal output.
 
 \paragraph{2PL.}
 When an operation of $B$ arrives, 2PL requests a lock on its key, shared for a
@@ -188,15 +188,14 @@ transactions free to arrive.  The scheduler applies $\mathsf{stamp}(A)$ and
 $\mathsf{stamp}(B)$ in \commitment events and reports that $B$ read the initial
 version of $x$.  Reporting the read is not a legal output on its own, since at an
 input in which $A$ writes $x$ the row that commits $A$ and then $B$ cannot be
-completed with it; the output event that applies $\mathsf{read}$ and then
-reports the read is commitment-sufficient under $\mathcal B_{\mathrm{MVTO}}$.  After $A$'s
+completed with it; after the scheduler applies $\mathsf{read}$ in a
+\commitment event, reporting the read is a legal output.  After $A$'s
 write arrives, two completions remain at the input in which both then request
 commit: $B$ committed with $A$ aborted, and $A$ committed with $B$ aborted.
 Emitting $A$'s abort is not a legal output, and $\mathsf{abort}(A)$ and
 $\mathsf{abort}(B)$ are both defined and keep different completions.  MVTO's
-write rule aborts $A$ at once, with the output event that applies
-$\mathsf{abort}(A)$ and reports the abort, which is commitment-sufficient under
-$\mathcal B_{\mathrm{MVTO}}$.  That abort is the scheduler's choice between two
+write rule aborts $A$ at once: the scheduler applies $\mathsf{abort}(A)$ in a
+\commitment event, after which reporting the abort is a legal output.  That abort is the scheduler's choice between two
 outcomes the spec still permits.  If instead the scheduler waits until
 $B$'s commit request arrives and applies $\mathsf{TxCommit}(B)$, $A$'s abort
 becomes a legal output.
