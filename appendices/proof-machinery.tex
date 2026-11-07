@@ -164,13 +164,15 @@ The confluence of a cut therefore depends on which outputs were emitted,
 not on who has heard about them.
 
 \begin{proof}[Proof of Proposition~\ref{prop:commitment-conflict}]
-If the contradicting run accepts $k$, the \commitment emptied its fiber at
-$k$.  Events never add rows, so the first run cannot continue to any state
-whose current input is $k$.  Otherwise, the contradicting run emits an output
-$x$ at $k$ whose row the \commitment removed.  After that emission, every
-remaining output at $k$ \outrel $x$.  The \commitment leaves no such row at
-$k$ (Equation~\ref{eq:commitment-unsubsumed}).  Because later events only
-remove rows, no state at input $k$ can be reachable from both runs.
+Events only remove rows, so $(k,x)$ is present at $\sigma_P(i)$.  Thus $k$
+\inrel $i$ and $x\in\fiber{k}$, so $\mathsf{input}(k)$ and then
+$\mathsf{output}(x)$ are enabled from $\sigma_P(i)$, and the second run
+exists.  After $\mathsf{output}(x)$, every row at $k$ \outrel $x$.  The
+\commitment leaves no such row at $k$
+(Equation~\ref{eq:commitment-unsubsumed}); if it removed every row at $k$,
+there is none at all.  Later events only remove rows, so no row at $k$
+survives in both runs, and by Proposition~\ref{prop:confluence} the runs are
+not confluent at $k$.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-cap}]

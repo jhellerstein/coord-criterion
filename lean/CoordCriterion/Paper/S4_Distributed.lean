@@ -734,31 +734,48 @@ theorem «sec:systems/closing-after-voting» (i : CALM.Ballots)
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
   Figures.Elec.close_after_voting i hfull
 
-/-- **Definition `def:contradicting-run`** (Contradicting run).  "Let a
-commitment take `σ` to `σ_c` in a run from `σ_P(i)`.  Another run
-*contradicts* the commitment at input `k` if it emits at `k` an output `x` with
-`(k,x) ∈ σ ∖ σ_c`, or, when the commitment removed every row of `σ` at `k`, it
-accepts `k`."
+/-- **Proposition `prop:commitment-conflict`** (Commitment conflict).  "Let a
+run from `σ_P(i)` apply a commitment that removes the row `(k,x)`, and let
+another run from `σ_P(i)` issue the canonical events `input(k)` followed by
+`output(x)`.  These two runs *conflict*: they are not confluent at `k`."
 
-Lean: `emits` and `accepts` record the other run's output and input events;
-`CAP.Contradicts emits accepts σ σc` is the disjunction of the two clauses. -/
-abbrev «def:contradicting-run» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
-    (σ σc : State sp) : Prop :=
-  CAP.Contradicts emits accepts σ σc
+Lean: the first run is a run under any basis `B` reaching `σ`, where the
+commitment `c` takes `σ` to `σc` and removes `(k,x)`.  The first run's final
+state `σ'` may be any state whose rows lie within `σc`'s (for instance, after
+the rest of an output event or later events).  The second run exists, and the
+two final states are not `ConfluentAt k`. -/
+theorem «prop:commitment-conflict» {sp : Spec I O} {B : CommitmentBasis sp}
+    {i k : I} {x : O} {es : List (SEvent sp)} {σ σc σ' : State sp} {c : Commitment sp}
+    (hrun : SysExec B (canon sp i) es σ) (happ : c.app σ = some σc)
+    (hx : σ.R k x) (hnx : ¬ σc.R k x) (hsub : ∀ k w, σ'.R k w → σc.R k w) :
+    ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k ∧
+      ¬ ConfluentAt [σ', τ] k := by
+  have hik : i ≼ k := (hrun.sub k x hx).2
+  obtain ⟨τ, hex, hcur⟩ := CAP.canonical_run_contradicts hik (σ.sub k x hx)
+  have href : ∀ w, τ.R k w → x ≼ w := by
+    intro w hw
+    cases hex with
+    | cons _ h2 =>
+      cases h2 with
+      | cons s2 h3 =>
+        cases h3 with
+        | nil =>
+          cases s2 with
+          | output _ _ _ _ hR =>
+            rw [hR] at hw
+            exact hw.2
+  refine ⟨τ, hex, hcur, ?_⟩
+  rintro ⟨ρ, hρ, hall⟩
+  obtain ⟨w, hw⟩ := ρ.hasCur
+  rw [hρ] at hw
+  have h1 := reach_sub (hall σ' (by simp)) k w hw
+  have h2 := reach_sub (hall τ (by simp)) k w hw
+  exact (c.unsubsumed σ σc happ k x w hx hnx (hsub k w h1)) (href w h2)
 
-/-- **Proposition `prop:canonical-commitment-witness`** (Canonical commitment
-witness).  Every commitment applied in a run from a canonical state `σ_P(i)`
-removes some row `(k,x)` that a canonical run from `σ_P(i)` can still select.
-
-"Every commitment applied in a run from a canonical state `σ_P(i)` has a
-canonical witness: a canonical run from `σ_P(i)` that contradicts it."  The
-witness `r'` has an input event for `k` followed by an output event emitting
-`x`, for a row `(k,x)` the commitment removes.
-
-Lean states the witness directly: the canonical run accepts `k` and emits `x`;
-`prop:canonical-commitment-witness/contradicts` shows that this run satisfies
-`def:contradicting-run` through its output clause. -/
-theorem «prop:canonical-commitment-witness» {sp : Spec I O} {B : CommitmentBasis sp}
+/-- Supporting form of Prop. `prop:commitment-conflict`: the second run exists.
+Every commitment applied in a run from `σ_P(i)` removes some row `(k,x)`, and
+the canonical run `input(k) output(x)` from `σ_P(i)` reaches current input `k`. -/
+theorem «prop:commitment-conflict/second-run» {sp : Spec I O} {B : CommitmentBasis sp}
     {i : I} {es : List (SEvent sp)} {σ τ : State sp} {c : Commitment sp}
     (hrun : SysExec B (canon sp i) es σ) (happ : c.app σ = some τ) :
     ∃ k x ρ, σ.R k x ∧ ¬ τ.R k x ∧
@@ -768,33 +785,20 @@ theorem «prop:canonical-commitment-witness» {sp : Spec I O} {B : CommitmentBas
   obtain ⟨ρ, he, hc⟩ := CAP.canonical_run_contradicts hik (σ.sub k x hx)
   exact ⟨k, x, ρ, hx, hnx, he, hc⟩
 
-/-- Supporting form of Proposition `prop:canonical-commitment-witness`: the
-run that accepts `k` and emits `x` contradicts the commitment in the sense of
-Definition `def:contradicting-run`. -/
-theorem «prop:canonical-commitment-witness/contradicts» {sp : Spec I O}
-    {σ τ : State sp} {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ τ.R k x) :
-    «def:contradicting-run» (fun k' x' => k' = k ∧ x' = x) (fun k' => k' = k) σ τ :=
-  Or.inl ⟨k, x, hx, hnx, rfl, rfl⟩
-
-  /-- Supporting form: from `σ_P(i)` with `i ≼ k`, the canonical run
-  `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at current input
-  `k`. -/
-theorem «prop:canonical-commitment-witness/canonical-run» {sp : Spec I O} {i k : I} {x : O}
+/-- Supporting form: from `σ_P(i)` with `i ≼ k`, the canonical run
+`input(k) output(x)` reaches current input `k` for any `x ∈ P(k)`. -/
+theorem «prop:commitment-conflict/canonical-run» {sp : Spec I O} {i k : I} {x : O}
     (hik : i ≼ k) (hx : sp.P k x) :
     ∃ τ : State sp, Exec (canon sp i) [.input k, .output x] τ ∧ τ.cur = k :=
   CAP.canonical_run_contradicts hik hx
 
-/-- **Prop. contradicting runs cannot reconcile at the conflict input**
-  (`prop:commitment-conflict`).  "Let a commitment take `σ` to `σ_c`, and
-  let a run that contradicts it at input `k` reach a state `τ` with current
-  input `k`.  Then `σ_c` and `τ` have no common continuation to a state
-  `(k,R')`."
-
-  Lean: `CommitmentContradictsAt σ σc τ k` covers both proof cases.  Its first
-  clause is an emitted output `x` whose row the commitment removed; its second
-  is an accepted input whose fiber the commitment emptied.  The conclusion
-  permits arbitrary, independent bases for the two continuations. -/
-theorem «prop:commitment-conflict» {sp : Spec I O}
+/-- General form of Prop. `prop:commitment-conflict`.  Let a commitment take
+`σ` to `σc`, and let `τ` either have only rows at `k` extending a removed
+output `x`, or have current input `k` when the commitment emptied the fiber at
+`k` (`CommitmentContradictsAt σ σc τ k`).  Then no state with current input `k`
+is reachable from both, even when the two continuations use arbitrary,
+independent bases. -/
+theorem «prop:commitment-conflict/general» {sp : Spec I O}
       {B1 B2 : CommitmentBasis sp} {c : Commitment sp} {σ σc τ : State sp} {k : I}
       (happ : c.app σ = some σc) (hcontra : Dist.CommitmentContradictsAt σ σc τ k) :
       ¬ ∃ ρ : State sp, ρ.cur = k ∧
@@ -967,7 +971,7 @@ theorem «sec:systems/2pc-timeout-abort-local» :
     have happ : c.app (canon (CAP.voteSpec 3) CAP.Timeout.yyN) =
         some (Figures.closeState (canon (CAP.voteSpec 3) CAP.Timeout.yyN)) := happ0
     refine ⟨_, happ, ?_⟩
-    exact «prop:canonical-commitment-witness» (B := fun _ => True) (es := [])
+    exact «prop:commitment-conflict/second-run» (B := fun _ => True) (es := [])
       (σ := canon (CAP.voteSpec 3) CAP.Timeout.yyN) (τ := _) (c := c) (.nil _) happ
 
 end CC.Paper

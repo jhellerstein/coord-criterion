@@ -1190,47 +1190,29 @@ representation in a system's \commitment basis.  We can assess any system's
 \commitments against canonical runs, without parameterizing the analysis by
 that system's basis or strategy.
 
-\paragraph{What a \commitment rules out.}
-Starting from a canonical state $\sigma_P(i)$, consider a run $r$ that applies
-a \commitment $c$ at state $\sigma$, leaving $\sigma_c$, and suppose $c$
-removes the row $(k,x)$.  We can identify another run $r'$ starting from
-$\sigma_P(i)$ that \emph{contradicts} $c$: it has an input event for $k$
-followed by an output event emitting $x$.  We call $r'$ a \emph{witness} for
-$c$.  The construction works because events only remove rows, so $(k,x)$ is
-present at $\sigma_P(i)$.  A \commitment can also remove every row at $k$, and
-then a run contradicts it simply by accepting $k$.  For example, a run that
-emits $[B,A,C]$ contradicts 2PL's $\mathsf{order}(A,B)$, and a run that accepts
-the late vote $aba$ contradicts the registrar's closing of the polls.
-
-\begin{proposition}[Canonical alternatives witness commitments]
-\label{prop:canonical-commitment-witness}
-Every \commitment applied in a run from a canonical state $\sigma_P(i)$ has a
-canonical witness: a canonical run from $\sigma_P(i)$ that contradicts it.
-\end{proposition}
-
-\begin{proof}[Proof sketch]
-The witness $r'$ above is canonical: $\mathsf{input}(k)$ is enabled because
-$(k,x)$ is present at $\sigma_P(i)$, and $\mathsf{output}(x)$ then emits $x$
-at $k$.
-\end{proof}
+\paragraph{Commitments and conflict.}
+A \commitment removes rows that the spec permits, so another run can still
+emit one of them.  The two runs cannot then be reconciled.
 
 \begin{proposition}[Commitment conflict]
 \label{prop:commitment-conflict}
-Let a \commitment take $\sigma$ to $\sigma_c$, and let a run that contradicts
-it at input $k$ reach a state $\tau$ with current input $k$.  Then $\sigma_c$
-and $\tau$ have no common continuation to a state $(k,R')$.
+Let a run from $\sigma_P(i)$ apply a \commitment that removes the row
+$(k,x)$, and let another run from $\sigma_P(i)$ issue the canonical events
+$\mathsf{input}(k)$ followed by $\mathsf{output}(x)$.  These two runs
+\emph{conflict}: they are not confluent at $k$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-If the \commitment emptied the fiber at $k$, no continuation of $\sigma_c$ has
-current input $k$, since events never add rows.  Otherwise, no row of
-$\sigma_c$ at $k$ can \outrel $x$, while every row of $\tau$ at $k$ does.
-\fullproof
+Events only remove rows, so $(k,x)$ is present at $\sigma_P(i)$ and the
+second run exists.  By the Survivor test (Proposition~\ref{prop:confluence}),
+confluence at $k$ needs a row at $k$ that survives in both runs.  Every row
+that survives $\mathsf{output}(x)$ at $k$ \outrel $x$, but the \commitment left
+no row at $k$ that \outrel $x$.  \fullproof
 \end{proof}
 
-Output subsumption remains permitted.  These propositions say what a coordination
+Output subsumption remains permitted.  The proposition says what a coordination
 mechanism must accomplish: enforce the \commitment so that the conflicting
-behavior cannot occur independently.  Locks, agreement protocols, ownership,
+run cannot occur independently.  Locks, agreement protocols, ownership,
 and sequencers are familiar choices.  Using one need not apply a \commitment:
 closing the polls after every voter has voted, for example, removes nothing the
 spec still permits.

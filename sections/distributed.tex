@@ -253,57 +253,25 @@ earlier than the output required.  The \commitments required by a spec's outputs
 therefore do not depend on their timing or representation in a system's
 \commitment basis.
 
-\paragraph{What a \commitment rules out.}
-Starting from a canonical state $\sigma_P(i)$, consider a run $r$ that applies
-a \commitment $c$ at state $\sigma$, leaving $\sigma_c$, and suppose $c$
-removes the row $(k,x)$.  We can identify another run $r'$ starting from
-$\sigma_P(i)$ that \emph{contradicts} $c$: it has an input event for $k$
-followed by an output event emitting $x$.  We call $r'$ a \emph{witness} for
-$c$.  The construction works because events only remove rows, so $(k,x)$ is
-present at $\sigma_P(i)$.  A \commitment can also remove every row at $k$, and
-then a run contradicts it simply by accepting $k$.
-
-\begin{definition}[Contradicting run]
-\label{def:contradicting-run}
-Let a \commitment take $\sigma$ to $\sigma_c$ in a run from $\sigma_P(i)$.
-Another run \emph{contradicts} the \commitment at input $k$ if it emits at $k$
-an output $x$ with $(k,x)\in\sigma\setminus\sigma_c$, or, when the
-\commitment removed every row of $\sigma$ at $k$, it accepts $k$.
-\end{definition}
-
-The two clauses match the two effects of Section~\ref{sec:lifted-output-events}:
-a \commitment can rule out an output at $k$ or rule out $k$ itself.  In the
-election, closing the polls at $ab\cdot$ rules out the inputs $aba$ and $abb$; a
-run that accepts $aba$ contradicts it.  In Figure~\ref{fig:cc-commitments}(h),
-$\mathsf{order}(A,B)$ rules out the output $[B,A,C]$; a run that emits
-$[B,A,C]$ contradicts it.
-
-\begin{proposition}[Canonical alternatives witness commitments]
-\label{prop:canonical-commitment-witness}
-Every \commitment applied in a run from a canonical state $\sigma_P(i)$ has a
-canonical witness: a canonical run from $\sigma_P(i)$ that contradicts it.
-\end{proposition}
-
-\begin{proof}[Proof sketch]
-The witness $r'$ above is canonical.  Since $(k,x)$ is present at
-$\sigma_P(i)$, $k$ extends $i$, so $\mathsf{input}(k)$ is enabled; it keeps
-$(k,x)$, and $\mathsf{output}(x)$ then emits $x$ at $k$.
-\end{proof}
+\paragraph{Commitments and conflict.}
+A \commitment removes rows that the spec permits, so another run can still
+emit one of them.  The two runs cannot then be reconciled.
 
 \begin{proposition}[Commitment conflict]
 \label{prop:commitment-conflict}
-Let a \commitment take $\sigma$ to $\sigma_c$, and let a run that contradicts
-it at input $k$ reach a state $\tau$ with current input $k$.  Then $\sigma_c$ and $\tau$ have no
-common continuation to a state $(k,R')$.
+Let a run from $\sigma_P(i)$ apply a \commitment that removes the row
+$(k,x)$, and let another run from $\sigma_P(i)$ issue the canonical events
+$\mathsf{input}(k)$ followed by $\mathsf{output}(x)$.  These two runs
+\emph{conflict}: they are not confluent at $k$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-If the contradicting run accepts $k$, the \commitment emptied the fiber at
-$k$; since events never add rows, no continuation of $\sigma_c$ has current
-input $k$.  Otherwise, the contradicting run emitted an output $x$ at $k$ whose
-row the \commitment removed.  The \commitment leaves no row at $k$ that
-\outrel $x$, whereas every row at $k$ after the emission does, so no row there
-can be common to both runs.  Full proof in Appendix~\ref{app:proofs-sec4}.
+Events only remove rows, so $(k,x)$ is present at $\sigma_P(i)$ and the
+second run exists.  By the Survivor test (Proposition~\ref{prop:confluence}),
+confluence at $k$ needs a row at $k$ that survives in both runs.  Every row
+that survives $\mathsf{output}(x)$ at $k$ \outrel $x$, but the \commitment left
+no row at $k$ that \outrel $x$ (Definition~\ref{def:commitment}).  Full proof
+in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 The proposition rules out reconciliation at the conflict input, not forever.
@@ -313,9 +281,9 @@ emit $o$ and $x$ cannot be reconciled at $i$, although accepting $j$ reconciles
 them.  As explained after Definition~\ref{def:consistency}, consistency
 nevertheless counts the conflict at $i$ as a failure.
 
-Output subsumption remains permitted.  The propositions say what a coordination
+Output subsumption remains permitted.  The proposition says what a coordination
 mechanism must accomplish: enforce a \commitment so that the conflicting
-behavior cannot occur independently.  Mutexes, locks, atomic instructions,
+run cannot occur independently.  Mutexes, locks, atomic instructions,
 validation, agreement protocols, ownership, and sequencers are familiar
 choices.  Using one need not apply a \commitment: closing the polls after every
 voter has voted, for example, removes nothing the spec still permits.
@@ -380,7 +348,7 @@ partition must have a common \outnoun in the spec at every common
 \indesc of their inputs.  When $E=P$, this is Lifted Monotonicity itself.  A
 partition does not change which \commitments a spec needs; it removes
 the ability to make them jointly, since separated participants cannot jointly
-apply a \commitment that another participant could contradict.
+apply a \commitment that conflicts with another participant's run.
 
 \begin{definition}[Partitioned history]
 \label{def:partitioned-history}
