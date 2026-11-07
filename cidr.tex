@@ -1137,24 +1137,17 @@ outputs always remain those of a canonical run.
 \end{figure}
 
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} used only the
-canonical \commitment $x_o$ required by an output.  Systems may commit earlier
-or remove additional alternatives: the registrar may close the polls before
-announcing a result, and a lock manager may fix an order before emitting it.  We
-therefore allow bespoke system \commitments.  A \emph{\commitment} is a partial
-function on specification states that removes a nonempty set of rows, none
-subsumed by a row that remains at the same input, while leaving the current
-input unchanged.  
+canonical \commitment $x_o$ that an output requires.  Systems may commit
+earlier or remove more: the registrar may close the polls before announcing a
+result, and a lock manager may fix an order before emitting it.  We therefore
+let systems apply their own \commitments.
 % As before, at any input, removing rows rules out their outputs;
 % removing every row at that input rules out the input as well.  
-An output event
-$\Out{\gamma}{o}$ applies a sequence $\gamma$ of \commitments, subsumes rows,
-and emits $o$.  It is \emph{commitment-sufficient} when the sequence applies and
-leaves $o$ as a legal output. We require output events to be
-commitment-sufficient so that every fateful row removal is represented
-explicitly as a commitment, rather than hidden in the act of emission. A
-\emph{\commitment event} $\mathsf{apply}(\gamma)$ applies such a sequence and
-emits nothing, as when 2PL orders $A$ before $B$ while $B$ waits for $A$'s lock.
-Commitment events are a third kind of specification event.  
+An output event $\Out{\gamma}{o}$
+applies a sequence $\gamma$ of \commitments and then emits $o$.  The
+\commitments in $\gamma$ make $o$ legal by removing the rows in $\Excluded_o$.
+A \emph{\commitment event} $\mathsf{apply}(\gamma)$ applies such a sequence and
+emits nothing.
 
 A \emph{system} consists of an I/O spec, a \emph{\commitment basis} $\mathcal B$ and a
 nondeterministic \emph{strategy} per participant that picks its next output,
