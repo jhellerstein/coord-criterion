@@ -608,7 +608,7 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) 
   RunUnder B es τ
 
 /-- *Observable equivalence.*  "Dropping the commitment events from a run
-under any commitment basis yields a canonical run that is observably
+under any commitment basis yields its canonical run, which is observably
 equivalent to it: it accepts the same inputs and emits the same outputs, and
 after each event it keeps at least the original's rows."  Proof sketch:
 "Commitment events only remove rows, so dropping them can only keep more.  An
@@ -632,8 +632,8 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : CommitmentBasi
 transactions `A`, `B`, `C` that have each issued their operations and requested
 commit, where `B` waits for a lock that `A` holds.  When `B` begins to wait,
 2PL applies `order(A,B)` in a commitment event, before any output, keeping only
-rows that can be completed without placing `B` before `A`.  The canonical run
-skips that event, so it keeps every row, including the one completed by
+rows that can be completed without placing `B` before `A`.  Its canonical run
+drops that event, so it keeps every row, including the one completed by
 `[B,A,C]`.  Suppose 2PL later commits all three transactions and orders `A`
 before `C` before `B` in a commitment event, and then emits `[A,C,B]`.  Every
 row whose output extends `[A,C,B]` satisfies 2PL's commitments, so 2PL removed

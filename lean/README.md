@@ -313,7 +313,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments: |
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
-| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Dropping the commitment events from a run under any commitment basis yields a canonical run that is observably equivalent to it: |
+| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Dropping the commitment events from a run under any commitment basis yields its canonical run, which is observably equivalent to it: |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |
 | `«prop:commitment-conflict/second-run»` | theorem | Supporting form of Prop. |
@@ -605,9 +605,9 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«app:bases/canonical-commitment-is-commitment»` | theorem | The canonical commitment is defined precisely when the output is in the current fiber and `Excluded_o` is nonempty. |
 | `«lem:output-containment»` | theorem | **Lemma `lem:output-containment`** (Output containment). |
 | `«app:bases/output-event-effect»` | theorem | Supporting facts for Def. |
-| `«def:canonical-system»` | abbrev | **Def. |
-| `«def:canonical-system/histories»` | theorem | Def. |
-| `«def:canonical-system/no-commitment-event»` | theorem | Def. |
+| `«app:bases/canonical-system»` | abbrev | Supporting notion for the appendix on `app:bases` and Appendix `app:cap-response`: |
+| `«app:bases/canonical-system/histories»` | theorem | Supporting fact: |
+| `«app:bases/canonical-system/no-commitment-event»` | theorem | Supporting fact: |
 | `«lem:compound-commitment»` | abbrev | **Lemma compound commitments are commitments** (`lem:compound-commitment`). |
 | `«lem:compound-commitment/defined»` | theorem | Lemma `lem:compound-commitment`: |
 | `«app:bases/compound-functional»` | theorem | "In a functional spec the composite removes every row at each input it touches, so it empties." |
@@ -757,7 +757,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«def:response-partition-consistency»` | theorem | **Def. |
 | `«def:response-partition-consistency/converse-part»` | theorem | "This is the part of Partition Consistency that the converse of Theorem `thm:complete-cap` uses, so that theorem also holds with Response Partition Consisten… |
 | `«def:response-partition-consistency/of-confluent»` | theorem | "Confluence at `j` implies a common output extension at `j` (Corollary `cor:reconciliation-any-basis`)." Lean, at any cut, in particular the final one. |
-| `«def:response-partition-consistency/canonical»` | theorem | "for a canonical system (Definition `def:canonical-system`) the two coincide by Lemma `lem:reconciliation`, applied to the participant runs." Lean, at any cu… |
+| `«def:response-partition-consistency/canonical»` | theorem | "for a system with basis `B_P` and no commitment events, whose participant runs are therefore canonical runs, the two coincide by Lemma `lem:reconciliation`,… |
 | `«def:response-partition-consistency/converse-fails»` | theorem | "With other commitments the converse can fail: |
 | `«app:cap-response/replicated»` | theorem | "A system is *replicated* (SPMD: |
 | `«lem:locality»` | theorem | **Lemma `lem:locality` (Locality).** "For each of some participants `p`, let `ℓ_p` be a local history that `p`'s strategy can produce from initial input `i_p… |

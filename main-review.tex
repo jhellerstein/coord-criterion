@@ -1142,9 +1142,8 @@ Proposition~\ref{prop:functional-exposure-boundary}.}
 
 \textcolor{reviewed}{This section gives Functional CALM and Complete CALM a distributed reading,
 including a convergence guarantee for functional specs
-(Corollary~\ref{cor:convergence}).} \textcolor{reviewed}{We then define systems, relate their runs to
-canonical runs, and show how coordination mechanisms enforce \commitments;
-Complete CAP follows.}
+(Corollary~\ref{cor:convergence}).} We then define systems, relate their runs to
+canonical runs, and show where \commitments conflict; Complete CAP follows.
 
 
 \subsection{Distributed histories}
@@ -1376,9 +1375,8 @@ which cuts are confluent (Appendix~\ref{app:exchanging-outputs}).
 \label{sec:systems}
 
 \textcolor{reviewed}{A spec describes which behaviors are permitted, but not how a system chooses
-among them.} We now model those choices. We also show that we can assess their
-\commitments against canonical runs, regardless of system implementation
-choices.
+among them.} \textcolor{reviewed}{We now model those choices, and show that a system's inputs and
+outputs always remain those of a canonical run.}
 
 For example, serializability can be enforced by any of a number of concurrency
 control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
@@ -1549,7 +1547,7 @@ runs to a common canonical model.
 \begin{lemma}[Observable Equivalence]
 \label{lem:canonical-equivalent}
 \textcolor{reviewed}{Dropping the \commitment events from a run under any \commitment basis
-yields a canonical run that is \emph{observably equivalent} to it: it accepts
+yields \emph{its canonical run}, which is \emph{observably equivalent} to it: it accepts
 the same inputs and emits the same outputs, and after each event it keeps at
 least the original's rows.}
 \end{lemma}
@@ -1566,8 +1564,8 @@ To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
 where $B$ waits for a lock that $A$ holds. When $B$ begins to wait, 2PL applies
 $\mathsf{order}(A,B)$ in a \commitment event, before any output, keeping only
-rows that can be completed without placing $B$ before $A$. The canonical run
-skips that event, so it keeps every row, including the one completed by
+rows that can be completed without placing $B$ before $A$. Its canonical run
+drops that event, so it keeps every row, including the one completed by
 $[B,A,C]$. Suppose 2PL later commits all three transactions and orders $A$
 before $C$ before $B$ in a \commitment event, and then emits $[A,C,B]$. Every
 row whose output \outrel $[A,C,B]$ satisfies 2PL's \commitments, so 2PL
@@ -1577,11 +1575,11 @@ therefore do not depend on their timing or representation in a system's
 \commitment basis.}
 
 \textcolor{reviewed}{Observable equivalence is one-way, and it concerns inputs and outputs, not
-tables.} \textcolor{reviewed}{A system run's \commitments may remove rows that its observably
-equivalent canonical run keeps, and the system may then lose confluence that
-canonical runs have.} \textcolor{reviewed}{The registrar is an example.} \textcolor{reviewed}{After closing the polls at
-$ab\cdot$, it cannot accept the late ballot $aba$, although the canonical run
-that only emits $\bot$ can.} \textcolor{reviewed}{The CALM and CAP criteria are about specs and
+tables.} \textcolor{reviewed}{A system run's \commitments may remove rows that its canonical run
+keeps, and the system may then lose confluence that canonical runs have.} \textcolor{reviewed}{The
+registrar is an example.} \textcolor{reviewed}{After closing the polls at $ab\cdot$, it cannot
+accept the late ballot $aba$, although its canonical run, which only emits
+$\bot$, can.} \textcolor{reviewed}{The CALM and CAP criteria are about specs and
 their canonical runs.} \textcolor{reviewed}{Showing that a particular system inherits their
 confluence takes a separate argument about that system.}
 
@@ -3049,13 +3047,6 @@ We have $o\in R(i)\subseteq\widehat R(i)$, and every row of $R$ whose output
 \outrelbase $o$ is a row of $\widehat R$ whose output \outrelbase $o$.
 \end{proof}
 
-\begin{definition}[Canonical system]
-\label{def:canonical-system}
-A system (Definition~\ref{def:system}) is \emph{canonical} when its basis is
-$\mathcal B_P$ and it performs no \commitment event; its histories are then
-exactly those of Section~\ref{sec:histories}.
-\end{definition}
-
 \begin{lemma}[Compound \commitments are \commitments]
 \label{lem:compound-commitment}
 The composite of a nonempty sequence of \commitments, defined wherever the
@@ -4161,8 +4152,8 @@ This is the part of Partition Consistency that the converse of
 Theorem~\ref{thm:complete-cap} uses, so that theorem also holds with Response
 Partition Consistency in place of Partition Consistency. Confluence at $j$
 implies a common \outnoun at $j$ (Corollary~\ref{cor:reconciliation-any-basis}),
-and for a canonical system (Definition~\ref{def:canonical-system}) the two
-coincide by Lemma~\ref{lem:reconciliation}, applied to the participant runs
+and for a system with basis $\mathcal B_P$ and no \commitment events, whose
+participant runs are therefore canonical runs, the two coincide by Lemma~\ref{lem:reconciliation}, applied to the participant runs
 (\S\ref{sec:distributed-consistency}). With other \commitments the
 converse can fail: participants may prune their states so that they cannot
 be reconciled while their emitted outputs still have a common \outnoun.

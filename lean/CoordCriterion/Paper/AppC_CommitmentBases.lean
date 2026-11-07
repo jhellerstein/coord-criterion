@@ -161,27 +161,28 @@ theorem «app:bases/output-event-effect» {sp : Spec I O} :
 
 /-! ## Canonical system -/
 
-/-- **Def. canonical system** (`def:canonical-system`).  "A system is canonical
-when its basis is `ℬ_P` and it performs no commitment event."
+/-- Supporting notion for the appendix on `app:bases` and Appendix
+`app:cap-response`: a system with basis `ℬ_P` and no commitment events, whose
+participant runs are therefore canonical runs.
 
 Lean: stated on histories, as the property that each participant's
 input/output events, read as system events, form a canonical run
 (`CanonExec`) from `σ_P(i_p)`.  A canonical step is never a commitment event
 (`CanonStep`, second conjunct), so a canonical run has none
-(`«def:canonical-system/no-commitment-event»`).  There is no separate `CAP.System` instance
+(`«app:bases/canonical-system/no-commitment-event»`).  There is no separate `CAP.System` instance
 named "canonical system" in the library. -/
-abbrev «def:canonical-system» {D : Type} {n : Nat} (sp : Spec I O)
+abbrev «app:bases/canonical-system» {D : Type} {n : Nat} (sp : Spec I O)
     (H : Dist.History I O D n) : Prop :=
   Dist.CanonLegal sp H
 
-/-- Def. `def:canonical-system`: "its histories are then exactly those of
-Section histories."
+/-- Supporting fact: the histories of a system with basis `ℬ_P` and no
+commitment events are exactly those of Section histories.
 
 Lean: (a) a history admits a canonical annotation iff it satisfies item 3 of
 Def. distributed-history; (b) the annotation is unique (canonical runs are
 determined by their erasure); (c) a canonical annotation is legal under
 `ℬ_P`. -/
-theorem «def:canonical-system/histories» {D : Type} {n : Nat} {sp : Spec I O} :
+theorem «app:bases/canonical-system/histories» {D : Type} {n : Nat} {sp : Spec I O} :
     (∀ H : Dist.History I O D n, Dist.CanonLegal sp H ↔
       ∀ p, ∃ τ : State sp, Exec (canon sp (H.init p)) (Dist.ioOf (H.ev p)) τ) ∧
     (∀ {σ ρ ρ' : State sp} {es es' : List (SEvent sp)}, CanonExec σ es ρ → CanonExec σ es' ρ' →
@@ -189,9 +190,9 @@ theorem «def:canonical-system/histories» {D : Type} {n : Nat} {sp : Spec I O} 
     (∀ H : Dist.History I O D n, Dist.CanonLegal sp H → Dist.SysLegal (canonCommitmentBasis sp) H) :=
   ⟨Dist.canonLegal_iff, Dist.canonExec_unique, fun _ h => Dist.canonLegal_sysLegal h⟩
 
-/-- Def. `def:canonical-system`: "… and it performs no commitment event."
+/-- Supporting fact: a canonical run performs no commitment event.
 A canonical run (`CanonExec`) contains no commitment event. -/
-theorem «def:canonical-system/no-commitment-event» {sp : Spec I O} {σ τ : State sp}
+theorem «app:bases/canonical-system/no-commitment-event» {sp : Spec I O} {σ τ : State sp}
     {es : List (SEvent sp)} (h : CanonExec σ es τ) : ∀ γ, SEvent.commitment γ ∉ es :=
   canonExec_noCommit h
 
@@ -285,8 +286,8 @@ abbrev «app:bases/observably-equivalent» {sp : Spec I O} (es es' : List (SEven
   es.filterMap SEvent.erase = es'.filterMap SEvent.erase
 
 /-- **Lemma Observable Equivalence** (`lem:canonical-equivalent`).  "Dropping
-the commitment events from a run under any commitment basis yields a canonical
-run that is observably equivalent to it: it accepts the same inputs and emits
+the commitment events from a run under any commitment basis yields its
+canonical run, which is observably equivalent to it: it accepts the same inputs and emits
 the same outputs, and after each event it keeps at least the original's rows."
 
 Lean: from a run under `B` from `σ_P(i)`, a canonical run from the same

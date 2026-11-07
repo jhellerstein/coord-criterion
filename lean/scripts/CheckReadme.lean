@@ -384,9 +384,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:bases/canonical-commitment-is-commitment»
 #check @CC.Paper.«lem:output-containment»
 #check @CC.Paper.«app:bases/output-event-effect»
-#check @CC.Paper.«def:canonical-system»
-#check @CC.Paper.«def:canonical-system/histories»
-#check @CC.Paper.«def:canonical-system/no-commitment-event»
+#check @CC.Paper.«app:bases/canonical-system»
+#check @CC.Paper.«app:bases/canonical-system/histories»
+#check @CC.Paper.«app:bases/canonical-system/no-commitment-event»
 #check @CC.Paper.«lem:compound-commitment»
 #check @CC.Paper.«lem:compound-commitment/defined»
 #check @CC.Paper.«app:bases/compound-functional»

@@ -214,8 +214,8 @@ theorem «def:response-partition-consistency/of-confluent» {init : Fin n → I}
     RPCAt H c j :=
   rpc_of_confluent h
 
-/-- "for a canonical system (Definition `def:canonical-system`) the two
-coincide by Lemma `lem:reconciliation`, applied to the participant runs."
+/-- "for a system with basis `B_P` and no commitment events, whose
+participant runs are therefore canonical runs, the two coincide by Lemma `lem:reconciliation`, applied to the participant runs."
 Lean, at any cut, in particular the final one. -/
 theorem «def:response-partition-consistency/canonical» {Sys : System sp D}
     (hS : CanonicalSystem Sys) {init : Fin n → I} {H : History sp D n} (hwf : WF init H)

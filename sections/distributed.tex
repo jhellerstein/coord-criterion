@@ -4,8 +4,7 @@
 This section gives Functional CALM and Complete CALM a distributed reading,
 including a convergence guarantee for functional specs
 (Corollary~\ref{cor:convergence}).  We then define systems, relate their runs to
-canonical runs, and show how coordination mechanisms enforce \commitments;
-Complete CAP follows.
+canonical runs, and show where \commitments conflict; Complete CAP follows.
 
 \input{sections/distributed-histories.tex}
 
@@ -13,9 +12,8 @@ Complete CAP follows.
 \label{sec:systems}
 
 A spec describes which behaviors are permitted, but not how a system chooses
-among them.  We now model those choices.  We also show that we can assess their
-\commitments against canonical runs, regardless of system implementation
-choices.
+among them.  We now model those choices, and show that a system's inputs and
+outputs always remain those of a canonical run.
 
 For example, serializability can be enforced by any of a number of concurrency
 control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
@@ -189,7 +187,7 @@ runs to a common canonical model.
 \begin{lemma}[Observable Equivalence]
 \label{lem:canonical-equivalent}
 Dropping the \commitment events from a run under any \commitment basis
-yields a canonical run that is \emph{observably equivalent} to it: it accepts
+yields \emph{its canonical run}, which is \emph{observably equivalent} to it: it accepts
 the same inputs and emits the same outputs, and after each event it keeps at
 least the original's rows.
 \end{lemma}
@@ -206,8 +204,8 @@ To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
 where $B$ waits for a lock that $A$ holds.  When $B$ begins to wait, 2PL applies
 $\mathsf{order}(A,B)$ in a \commitment event, before any output, keeping only
-rows that can be completed without placing $B$ before $A$.  The canonical run
-skips that event, so it keeps every row, including the one completed by
+rows that can be completed without placing $B$ before $A$.  Its canonical run
+drops that event, so it keeps every row, including the one completed by
 $[B,A,C]$.  Suppose 2PL later commits all three transactions and orders $A$
 before $C$ before $B$ in a \commitment event, and then emits $[A,C,B]$.  Every
 row whose output \outrel $[A,C,B]$ satisfies 2PL's \commitments, so 2PL
@@ -218,11 +216,11 @@ therefore do not depend on their timing or representation in a system's
 \commitment basis.
 
 Observable equivalence is one-way, and it concerns inputs and outputs, not
-tables.  A system run's \commitments may remove rows that its observably
-equivalent canonical run keeps, and the system may then lose confluence that
-canonical runs have.  The registrar is an example.  After closing the polls at
-$ab\cdot$, it cannot accept the late ballot $aba$, although the canonical run
-that only emits $\bot$ can.  The CALM and CAP criteria are about specs and
+tables.  A system run's \commitments may remove rows that its canonical run
+keeps, and the system may then lose confluence that canonical runs have.  The
+registrar is an example.  After closing the polls at $ab\cdot$, it cannot
+accept the late ballot $aba$, although its canonical run, which only emits
+$\bot$, can.  The CALM and CAP criteria are about specs and
 their canonical runs.  Showing that a particular system inherits their
 confluence takes a separate argument about that system.
 

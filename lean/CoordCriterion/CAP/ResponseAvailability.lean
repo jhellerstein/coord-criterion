@@ -214,7 +214,7 @@ canonical commitment `x_o` of an output event `output(o)`. -/
 def CanonOut (l : List (LEv sp D n)) : Prop :=
   ∀ γ, LEv.commitment γ ∉ l
 
-/-- Def. `def:canonical-system`: strategies allow no commitment event, so every
+/-- A system with basis `B_P` and no commitment events: strategies allow no commitment event, so every
 event they allow besides sends and receives is a canonical output event
 `output(o)`. -/
 def CanonicalSystem (Sys : System sp D) : Prop :=

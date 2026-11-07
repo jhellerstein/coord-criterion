@@ -25,7 +25,7 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
 * `functional_commitment_unsubsumed`, `functional_commitmentState_eq`
                                 — the one-row-per-input claims.
 * `canonLegal_iff`, `canonExec_unique`
-                                — Def. `def:canonical-system`: canonical
+                                — a system with basis B_P and no commitment events: canonical
                                   histories are exactly those of Sec. histories.
 * `CommitmentContradictsAt`, `commitment_contradiction_sysExec`,
   `commitment_contradiction_reach`
@@ -282,7 +282,7 @@ theorem functional_commitmentState_eq (hf : sp.Functional) (σ : State sp) (o : 
 
 end functional
 
-/-! ### Def. `def:canonical-system`: canonical histories are those of Sec. histories -/
+/-! ### Systems with basis B_P and no commitment events: histories are those of Sec. histories -/
 
 section canonical_system
 variable {sp : Spec I O} {D : Type} {n : Nat}
