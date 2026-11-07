@@ -74,9 +74,7 @@ common output extension in the spec at every common input extension of their
 inputs.  When `E = P`, this is Lifted Monotonicity
 itself."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
-`«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`).  The
-closing sentences ("A partition does not change which commitments a
-spec needs; …") are intuition for those results. -/
+`«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`). -/
 theorem «sec:complete-cap/intro» (sp : Spec I O) (D : Type) (E : Table I O)
     (hES : ∀ i o, E i o → sp.P i o) :
     ((∃ Sys : System sp D, AvailabilityFor E Sys ∧ PartitionConsistencyAtEnd Sys) ↔
