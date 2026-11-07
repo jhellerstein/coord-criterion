@@ -1202,8 +1202,8 @@ proved it as an impossibility result for a linearizable register~\cite{gilbert20
 Complete CAP asks and answers a broader question: which specifications are subject to the CAP
 conjecture, and which are not?
 
-To model this properly, note that the outputs that each participant emits---and
-needs to keep available---are not sufficient to evaluate the question. The spec
+To pose the question properly, note that the outputs that each participant emits---and
+needs to keep available---are not enough to judge consistency. The spec
 must also model what an observer (e.g., a client) can eventually conclude by collecting
 outputs from multiple participants.
 
@@ -1212,7 +1212,7 @@ participants. The register is initialized to $v_0$. Participant $p$ receives
 write $w(v)$ and emits its acknowledgment; concurrently, participant $q$
 receives the read $r$ and returns $v_0$.  A client may later collect both the
 write acknowledgment and read answer $v_0$.  A linearizable register spec has a
-row that allows this situation: that pair of requests form an input, and the
+row that allows this situation: that pair of requests forms an input, and the
 combined responses are an output. That row reflects that a linearization may put the
 concurrent read before the write.  However, no participant emits this combined
 output, nor is the combined output needed for availability. Nonetheless, it \outrel
@@ -1220,8 +1220,7 @@ both local outputs, provides a proof of their consistency, and must be in the sp
 
 We therefore pair a spec with an explicit relation $E\subseteq P$: the
 rows whose outputs participants must keep locally available.  Outputs in
-$P\setminus E$ remain permitted, for example as combined outputs, but no
-participant need emit them.  Complete CAP says that participants can keep the
+$P\setminus E$, such as combined outputs, need only remain permitted.  Complete CAP says that participants can keep the
 outputs of $E$ available and remain consistent through partitions exactly when
 the spec satisfies Lifted Monotonicity for $E$: outputs of $E$ emitted on
 different sides of a partition must have a common \outnoun in the spec at
