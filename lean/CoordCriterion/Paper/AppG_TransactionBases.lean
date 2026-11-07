@@ -277,9 +277,11 @@ theorem «app:cc-bases/read-emit» {T K : Type} {af : Bool} {A : T} {n : Nat} {v
 /-! ## 2PL -/
 
 /-- "If `A` holds that lock in a conflicting mode, `B` waits, and the scheduler
-applies `order(A,B)` in a commitment event, reporting nothing.  On complete rows
-without aborts, `order(A,B)` keeps exactly those with `A` before `B` (Figure
-`fig:cc-commitments`(h))." -/
+applies `order(A,B)` in a commitment event, reporting nothing. … On complete
+rows without aborts, `order(A,B)` keeps exactly those with `A` before `B`
+(Figure `fig:cc-commitments`(h))."  The omitted sentences, on when
+`order(A,B)` would remove nothing and is therefore not applied, describe a
+protocol step and are argued in prose. -/
 theorem «app:cc-bases/fig-h» {T K : Type} {A B : T}
     {σ τ : State (spec (T := T) (K := K) false)} (h : (order A B).app σ = some τ)
     {k : Inp T K} {c : Partial.ROut T K} (hp : Decides false k c.o) (hX : ∀ t, ¬ c.o.X t)

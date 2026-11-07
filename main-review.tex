@@ -4636,7 +4636,12 @@ result, which is then a legal output.
 When an operation of $B$ arrives, 2PL requests a lock on its key, shared for a
 read and exclusive for a write. If $A$ holds that lock in a conflicting mode,
 $B$ waits, and the scheduler applies $\mathsf{order}(A,B)$ in a \commitment
-event, reporting nothing. On complete rows without aborts,
+event, reporting nothing. When every remaining complete row that commits
+both already places $A$ before $B$, $\mathsf{order}(A,B)$ would remove
+nothing, so it is undefined and the scheduler applies nothing. This happens when an earlier wait has applied
+$\mathsf{order}(A,B)$, or when a reported read result fixes the order, as when
+$A$ has read the initial version of the key that $B$ writes. On complete
+rows without aborts,
 $\mathsf{order}(A,B)$ keeps exactly those with $A$ before $B$
 (Figure~\ref{fig:cc-commitments}(h)). At the canonical state of $\{A,B,C\}$ it
 removes $[B,A,C]$ and keeps $[A,B,C]$ and $[C,A,B]$, so it is a \commitment, and it
