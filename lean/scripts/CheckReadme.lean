@@ -149,7 +149,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/neither-is-canonical-commitment»
 #check @CC.Paper.«sec:systems/run-under-basis»
 #check @CC.Paper.«sec:systems/canonical-equivalent»
-#check @CC.Paper.«cor:free-eager-output»
 #check @CC.Paper.«sec:systems/canonical-example»
 #check @CC.Paper.«prop:commitment-conflict»
 #check @CC.Paper.«prop:commitment-conflict/second-run»
@@ -381,10 +380,10 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:safe-exposure»
 #check @CC.Paper.«def:canonical-commitment-basis»
 #check @CC.Paper.«eq:canonical-commitment-basis-relational»
-#check @CC.Paper.«def:canonical-event»
 #check @CC.Paper.«app:bases/canonical-event-effect»
 #check @CC.Paper.«app:bases/canonical-commitment-is-commitment»
 #check @CC.Paper.«lem:output-containment»
+#check @CC.Paper.«app:bases/output-event-effect»
 #check @CC.Paper.«def:canonical-system»
 #check @CC.Paper.«def:canonical-system/histories»
 #check @CC.Paper.«def:canonical-system/no-commitment-event»

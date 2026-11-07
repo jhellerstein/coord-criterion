@@ -518,7 +518,7 @@ theorem «sec:systems/commitment-then-output» {sp : Spec I O} {B : CommitmentBa
   ⟨fun hB hγ ho hleg hcur hR => split_output hB hγ ho hleg hcur hR,
    fun h => (containment h).2.2.2⟩
 
-/-- Every output event of a system is the canonical event: the canonical
+/-- Every output event of a system is the output event of §§2–3: the
 steps `CanonStep` (under `B_P`, no commitment events) are exactly the steps
 of §§2–3. -/
 theorem «sec:systems/output-is-canonical-event» {sp : Spec I O} :
@@ -628,26 +628,6 @@ theorem «sec:systems/canonical-equivalent» {sp : Spec I O} {B : CommitmentBasi
       ρ'.cur = ρ.cur ∧ (∀ k u, ρ.R k u → ρ'.R k u) :=
     canonical_equivalent h
 
-/-- **Corollary `cor:free-eager-output`** (Eager output is incidental).
-"The canonical event for a legal output applies no commitment: every row it
-removes is subsumed by a row that survives.  Likewise, deferring the output
-avoids no commitment."
-
-Lean: for any commitment basis, the output event of a legal output is
-available (it applies no commitment, so it needs nothing from the basis);
-every row that event removes is in `Subsumed_o`.  Observable
-Equivalence (`«sec:systems/canonical-equivalent»`) lifts the canonical account
-to arbitrary runs under a basis. -/
-theorem «cor:free-eager-output» {sp : Spec I O} (B : CommitmentBasis sp)
-    (σ : State sp) (o : O) (ho : σ.R σ.cur o) (hlegal : Exposable σ o) :
-    SysStep B σ (.output o) (outState σ o ho) ∧
-      ∀ k x, σ.R k x → ¬ outputTable σ o k x → Subsumed σ o k x := by
-  refine ⟨legal_output_step (step_output_outState ho) hlegal, ?_⟩
-  intro k x hx hn
-  have hox : ¬ o ≼ x := fun h => hn ⟨hx, h⟩
-  obtain ⟨u, hu, hou, hxu⟩ := hlegal k x hx hox
-  exact ⟨hx, hox, u, hu, hou, hxu⟩
-
 /-- *Canonical runs suffice*, example.  "Consider 2PL on an input of three
 transactions `A`, `B`, `C` that have each issued their operations and requested
 commit, where `B` waits for a lock that `A` holds.  When `B` begins to wait,
@@ -655,14 +635,11 @@ commit, where `B` waits for a lock that `A` holds.  When `B` begins to wait,
 rows that can be completed without placing `B` before `A`.  The canonical run
 skips that event, so it keeps every row, including the one completed by
 `[B,A,C]`.  Suppose 2PL later commits all three transactions and orders `A`
-before `C` before `B` in a commitment event, and then emits `[A,C,B]`.  The
-canonical run
-can emit the same output because that row was present all along.  Every row
-retained afterward extends `[A,C,B]`, so it satisfies all of 2PL's decisions,
-including the earlier order of `A` before `B`.  Thus the canonical final table
-is contained in 2PL's, while Observable Equivalence gives the reverse
-  containment.  The tables are equal: the lock made the `A`-before-`B` decision
-  earlier than the output required.  The commitments required by a spec's
+before `C` before `B` in a commitment event, and then emits `[A,C,B]`.  Every
+row whose output extends `[A,C,B]` satisfies 2PL's commitments, so 2PL removed
+none of them, and after the output both runs keep exactly these rows.  The
+tables are equal: the lock made the `A`-before-`B` decision
+earlier than the output required.  The commitments required by a spec's
   outputs therefore do not depend on their timing or representation in a
   system's commitment basis."
 
@@ -716,8 +693,7 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
 
 /-- **Proposition `prop:commitment-conflict`** (Commitment conflict).  "Let a
 run from `σ_P(i)` apply a commitment that removes the row `(k,x)`, and let
-another run from `σ_P(i)` issue the canonical events `input(k)` followed by
-`output(x)`.  These two runs *conflict*: they are not confluent at `k`."
+another run from `σ_P(i)` issue `input(k)` followed by `output(x)`.  These two runs *conflict*: they are not confluent at `k`."
 
 Lean: the first run is a run under any basis `B` reaching `σ`, where the
 commitment `c` takes `σ` to `σc` and removes `(k,x)`.  The first run's final

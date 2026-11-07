@@ -406,14 +406,13 @@ theorem «cor:empty-store» {I M O : Type} [PO I] [PO M] [PO O] {sp : Spec I M} 
           (esK.filterMap Guard.eraseC) ρ' ∧ IsRun ρ' ∧ ∀ k u, ρK.R k u → ρ'.R k u :=
   fun _ _ _ h => Guard.proper_erase hP h
 
-/-- Proof of Corollary `cor:empty-store`: "Let `τ` be a state of the original
-and `τ'` a state of the replacement reached without commitment, with the same
-current input and `R_τ ⊆ R_τ'`. … A commitment event of the original keeps
-the current input and only removes rows, so the replacement skips it.  If the
-original emits `x` at `τ`, then `x` is at the current input of `τ` and so of
-`τ'`, where it is a legal output by the second fact. … Both start at `σ(m₁)`, so the containment holds after each event.  The
-replacement's strategy allows each erased event, since the original's allowed
-it before erasure."  Lean: `Guard.erase_lockstep` (for any downstream with the
+/-- Proof of Corollary `cor:empty-store`: "The replacement's run drops the
+original's commitment events.  As in the proof of Lemma
+`lem:canonical-equivalent`, it then has the same inputs and outputs, and after
+each event its table contains the original's.  Each output the original emits
+is a legal output for the replacement by the second fact, so the empty basis
+suffices, and the replacement's strategy allows each event, since the
+original's did."  Lean: `Guard.erase_lockstep` (for any downstream with the
 common-extension condition) and `Guard.compliant_eraseSys`. -/
 theorem «app:composition/empty-store» {M O : Type} [PO M] [PO O] {sk : Spec M O}
     (hC : sk.CommonExpansion) {BK : CommitmentBasis sk} {σ ρ : State sk}
@@ -445,7 +444,7 @@ run of the pipeline has one with the same outputs in which `𝒮₂|_{𝒮₁}` 
 under the empty basis.  Theorem `thm:proper-coordination`(2), applied to it
 and a prefix of the run of `𝒮₁`, gives a run of `P₂ ∘ P₁` with these outputs,
 and the canonical basis supplies the canonical commitment of each output event
-that needs one (Lemma `lem:output-containment`), so it is a run under the
+that needs one (Definition `def:system-output-event`), so it is a run under the
 canonical basis."  Lean: inside `Guard.proper_pipeline_step`, via `Guard.erase_simulates`,
 `Guard.emitted_prefix`, `Guard.proper_run`, `exec_canonExec` and
 `canonExec_sysExec`; the same step for a Lifted-Monotone downstream and any
@@ -520,7 +519,7 @@ theorem «prop:invisible-coordination» {I M O : Type} [PO I] [PO M] [PO O] {sp 
 those of `𝒮₁`. … Let `γ` take `σ` to `σ_c`, at which `m` is a legal output,
 and let `ρ` be a composite state with `f(R_σ) ⊆ R_ρ`.  No row `(k,f(m'))`
 with `(k,m') ∈ R_{σ_c}` is in `Excluded_{f(m)}` at `ρ`. … So every row that
-the composite's canonical event for `f(m)` removes by commitment has had every
+the composite's `output(f(m))` removes by commitment has had every
 preimage in `R_σ` removed by `γ`."  Lean: `Guard.coverage` (stated for any
 `σ_c` at which `m` is a legal output and any `ρ` containing `f(R_{σ_c})`), and
 its consequence for a sequence `γ` from `σ`, proved here. -/

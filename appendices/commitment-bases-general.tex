@@ -100,19 +100,6 @@ Definition~\ref{def:canonical-commitment},
 where $x_o$ is defined at the states with $o\in R(i)$ and $\Excluded_o\neq\varnothing$.
 \end{definition}
 
-\begin{definition}[Canonical event]
-\label{def:canonical-event}
-The \emph{canonical event} for $o$ at $(i,R)$ is the output event
-$\mathsf{output}(o)$ of Definition~\ref{def:lifted-output-event}, which
-applies $x_o$ when $\Excluded_o\neq\varnothing$ and no \commitment otherwise;
-with one row per input it is the output event of
-Definition~\ref{def:output-event}.
-\end{definition}
-
-Every output event of a system (Definition~\ref{def:system-output-event}) is
-therefore canonical.  A system's own \commitments appear only in its
-\commitment events.
-
 \paragraph{The canonical \commitment is a \commitment.}
 Suppose a removed row $(k,x)\in\Excluded_o$ were \outrelpast by a row $(k,y)$
 that $x_o$ leaves.  Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
@@ -121,24 +108,14 @@ that $x_o$ leaves.  Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
 
 \begin{lemma}[Output containment]
 \label{lem:output-containment}
-Let $(i,R)$ be a state and $o\in R(i)$.
-\begin{enumerate}
-  \item The output event $\mathsf{output}(o)$ takes $(i,R)$ to
-        $(i,R[\mathrm{out}\OutputGe o])$.  It applies a \commitment, $x_o$,
-        exactly when $\Excluded_o\neq\varnothing$, that is, when $o$ is not
-        a legal output at $(i,R)$.
-  \item If $(i,\widehat R)$ is a state with $R\subseteq\widehat R$, then
-        $o\in\widehat R(i)$, and $\mathsf{output}(o)$ takes $(i,\widehat R)$
-        to $(i,\widehat R[\mathrm{out}\OutputGe o])$, which contains
-        $R[\mathrm{out}\OutputGe o]$.
-\end{enumerate}
+Let $(i,R)$ and $(i,\widehat R)$ be states with $R\subseteq\widehat R$, and let
+$o\in R(i)$.  Then $o\in\widehat R(i)$, and $\mathsf{output}(o)$ takes
+$(i,\widehat R)$ to $(i,\widehat R[\mathrm{out}\OutputGe o])$, which contains
+$R[\mathrm{out}\OutputGe o]$.
 \end{lemma}
 
 \begin{proof}
-(1) The event keeps exactly the rows whose outputs \outrelbase $o$
-(Definition~\ref{def:lifted-output-event}), and it applies $x_o$ exactly when
-$\Excluded_o\neq\varnothing$, that is, when $o$ is not legal.  (2) We have
-$o\in R(i)\subseteq\widehat R(i)$, and every row of $R$ whose output
+We have $o\in R(i)\subseteq\widehat R(i)$, and every row of $R$ whose output
 \outrelbase $o$ is a row of $\widehat R$ whose output \outrelbase $o$.
 \end{proof}
 
@@ -185,33 +162,23 @@ $\mathcal B_P$ of Definition~\ref{def:canonical-commitment-basis} with no
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 \end{definition}
 
-To make the claim of Lemma~\ref{lem:canonical-equivalent} precise, call two
-runs \emph{observably equivalent} when they start at the same canonical state
-and agree once \commitment events are dropped: wherever one has
-$\mathsf{input}(j)$ the other does, and wherever one has $\mathsf{output}(o)$
-the other does.  They accept the same inputs and emit the same outputs, in the
-same order, which is all the environment observes.  Observably equivalent runs
-may differ in the \commitments their events apply, and hence in their
-remainder tables.
+Two runs are \emph{observably equivalent} when they start at the same canonical
+state and agree once \commitment events are dropped.  They then accept the same
+inputs and emit the same outputs, in the same order, which is all the
+environment observes, although their remainder tables may differ.
 
 \begin{proof}[Proof of Lemma~\ref{lem:canonical-equivalent}]
-By induction on the events.  Both runs start at the same canonical state, so
-their remainder tables are initially equal.  Suppose that before some event the
-original run's table $R$ and the canonical run's table $\widehat R$ satisfy
-$R\subseteq\widehat R$; we show that the inclusion holds afterward.  An input
-event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$.
-It causes the table to lose every row whose input does not \inrelbase $j$, keeping
-$R[\mathrm{in}\InputGe j]$ in the original run and
-$\widehat R[\mathrm{in}\InputGe j]$ in the canonical run.  Since
-$R\subseteq\widehat R$, the first remains contained in the second.  An output
-event $\mathsf{output}(o)$ with $o\in R(i)$ takes $R$ to
-$R[\mathrm{out}\OutputGe o]$.  By output containment
-(Lemma~\ref{lem:output-containment}), the canonical run can issue the same
-event at $\widehat R$, which takes $\widehat R$ to
-$\widehat R[\mathrm{out}\OutputGe o]\supseteq R[\mathrm{out}\OutputGe o]$;
-the canonical basis supplies $x_o$ if the event needs it.  A \commitment event
-keeps the current input and only removes rows, so the canonical run skips it
-and the inclusion still holds.
+Drop the \commitment events from a run under $\mathcal B$.  By induction on
+the events, the result is a canonical run whose table $\widehat R$ contains
+the original's table $R$ after each event; both start at the same canonical
+state.  A \commitment event keeps the current input and only removes rows, so
+dropping it preserves $R\subseteq\widehat R$.  An input event
+$\mathsf{input}(j)$ legal at $R$ is legal at $\widehat R$, and keeps
+$R[\mathrm{in}\InputGe j]\subseteq\widehat R[\mathrm{in}\InputGe j]$.  An
+output event $\mathsf{output}(o)$ at $R$ can be issued at $\widehat R$, with
+$x_o$ from the canonical basis if it applies one, and keeps
+$R[\mathrm{out}\OutputGe o]\subseteq\widehat R[\mathrm{out}\OutputGe o]$
+(Lemma~\ref{lem:output-containment}).
 \end{proof}
 
 \begin{corollary}[Reconciliation under any basis]

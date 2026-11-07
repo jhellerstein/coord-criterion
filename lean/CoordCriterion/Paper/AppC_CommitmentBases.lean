@@ -106,22 +106,13 @@ theorem «eq:canonical-commitment-basis-relational» {sp : Spec I O} (c : Commit
       ∃ σ τ : State sp, (canonicalCommitment o).app σ = some τ :=
   Iff.rfl
 
-/-- **Def. `def:canonical-event`**.  "The canonical event for `o` at `(i,R)`
-is the output event `output(o)` of Definition lifted-output-event, which
-applies `x_o` when `Excluded_o ≠ ∅` and no commitment otherwise; with one row
-per input it is the output event of Definition output-event."  Every system
-output event is therefore canonical: `SEvent.output o` carries no commitment
-sequence (`app:bases/canonical-event-effect`). -/
-noncomputable abbrev «def:canonical-event» {sp : Spec I O}
-    (_σ : State sp) (o : O) : SEvent sp :=
-  SEvent.output o
-
-/-- Def. `def:canonical-event`: the canonical event is available under `ℬ_P`
-at every `o ∈ R(i)` and ends at `(i, R[out ⪰ o])`; it applies `x_o` exactly
-when `Excluded_o ≠ ∅`, in which case `x_o` is defined there. -/
+/-- Supporting fact for Def. `def:system-output-event`: the output event
+`output(o)` is available under `ℬ_P` at every `o ∈ R(i)` and ends at
+`(i, R[out ⪰ o])`; it applies `x_o` exactly when `Excluded_o ≠ ∅`, in which case
+`x_o` is defined there. -/
 theorem «app:bases/canonical-event-effect» {sp : Spec I O} (σ : State sp) (o : O)
     (ho : σ.R σ.cur o) :
-    SysStep (canonCommitmentBasis sp) σ («def:canonical-event» σ o) (outState σ o ho) ∧
+    SysStep (canonCommitmentBasis sp) σ (.output o) (outState σ o ho) ∧
     (¬ Exposable σ o ↔ ∃ k x, Excluded σ o k x) ∧
     (¬ Exposable σ o →
       (canonicalCommitment o).app σ = some (commitmentState σ o ho)) :=
@@ -138,19 +129,26 @@ theorem «app:bases/canonical-commitment-is-commitment» {sp : Spec I O}
       ∃ h : σ.R σ.cur o, (∃ k x, Excluded σ o k x) ∧ commitmentState σ o h = τ :=
   commitmentApp_eq
 
-/-- **Lemma `lem:output-containment`** (Output containment).  "(1) The output
-event `output(o)` takes `(i,R)` to `(i,R[out ⪰ o])`.  It applies a commitment,
-`x_o`, exactly when `Excluded_o ≠ ∅`, that is, when `o` is not a legal output at
-`(i,R)`.  (2) If `(i,R̂)` is a state with
-`R ⊆ R̂`, then `o ∈ R̂(i)`, and `output(o)` takes `(i,R̂)` to
-`(i,R̂[out ⪰ o])`, which contains `R[out ⪰ o]`."
+/-- **Lemma `lem:output-containment`** (Output containment).  "Let `(i,R)` and
+`(i,R̂)` be states with `R ⊆ R̂`, and let `o ∈ R(i)`.  Then `o ∈ R̂(i)`, and
+`output(o)` takes `(i,R̂)` to `(i,R̂[out ⪰ o])`, which contains `R[out ⪰ o]`."
 
-Lean: (1) every system output event (under any basis) keeps the current input,
-needs `o ∈ R(i)`, and ends at `R[out ⪰ o]`; it applies `x_o` exactly when
-`Excluded_o ≠ ∅`, i.e. when `o` is not exposable; under the empty basis it is
-available exactly for a legal `o`.  (2) monotonicity of `R ↦ R[out ⪰ o]`, and
-the canonical event at `R̂` under `ℬ_P`. -/
-theorem «lem:output-containment» {sp : Spec I O} :
+Lean: monotonicity of `R ↦ R[out ⪰ o]`, with the output event at `R̂`
+available under `ℬ_P`. -/
+theorem «lem:output-containment» {sp : Spec I O}
+    {σ σ' : State sp} {o : O} (hc : σ'.cur = σ.cur) (hsub : ∀ k u, σ.R k u → σ'.R k u)
+    (ho : σ.R σ.cur o) : ∃ ho' : σ'.R σ'.cur o,
+      SysStep (canonCommitmentBasis sp) σ' (.output o) (outState σ' o ho') ∧
+      ∀ k u, outputTable σ o k u → outputTable σ' o k u :=
+  ⟨hc ▸ hsub _ _ ho, canonical_support _ _ _, outputTable_mono hsub _⟩
+
+/-- Supporting facts for Def. `def:system-output-event` and Def.
+`def:lifted-output-event`, cited where the paper uses what an output event does:
+every system output event (under any basis) keeps the current input, needs
+`o ∈ R(i)`, and ends at `R[out ⪰ o]`; it applies `x_o` exactly when
+`Excluded_o ≠ ∅`, i.e. when `o` is not legal; under the empty basis it is
+available exactly for a legal `o`. -/
+theorem «app:bases/output-event-effect» {sp : Spec I O} :
     (∀ {B : CommitmentBasis sp} {σ τ : State sp} {o : O},
       SysStep B σ (.output o) τ →
       τ.cur = σ.cur ∧ σ.R σ.cur o ∧
@@ -158,14 +156,8 @@ theorem «lem:output-containment» {sp : Spec I O} :
     (∀ (σ : State sp) (o : O), Exposable σ o ↔ ¬ ∃ k x, Excluded σ o k x) ∧
     (∀ {σ τ : State sp} {o : O},
       SysStep (fun _ => False) σ (.output o) τ ↔
-        σ.R σ.cur o ∧ Exposable σ o ∧ τ.cur = σ.cur ∧ τ.R = outputTable σ o) ∧
-    (∀ {σ σ' : State sp} {o : O}, σ'.cur = σ.cur → (∀ k u, σ.R k u → σ'.R k u) →
-      σ.R σ.cur o → ∃ ho' : σ'.R σ'.cur o,
-        SysStep (canonCommitmentBasis sp) σ' (.output o) (outState σ' o ho') ∧
-        ∀ k u, outputTable σ o k u → outputTable σ' o k u) :=
-  ⟨fun h => containment h, exposable_iff_empty, eps_step_iff,
-   fun hc hsub ho => ⟨hc ▸ hsub _ _ ho, canonical_support _ _ _,
-     outputTable_mono hsub _⟩⟩
+        σ.R σ.cur o ∧ Exposable σ o ∧ τ.cur = σ.cur ∧ τ.R = outputTable σ o) :=
+  ⟨fun h => containment h, exposable_iff_empty, eps_step_iff⟩
 
 /-! ## Canonical system -/
 

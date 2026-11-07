@@ -188,7 +188,7 @@ functional spec induced by a function $f$ that maps
 both to one value.  The composite has one row, so it satisfies Lifted
 Monotonicity.  At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
 a legal output, and under the empty basis an output event emits only a legal
-output (Lemma~\ref{lem:output-containment}), and no \commitment event is
+output (Definition~\ref{def:system-output-event}), and no \commitment event is
 possible, since its sequence is nonempty.  Input
 events only remove rows at other inputs, and there are none, so every run of
 $\mathcal S_1$ under the empty basis stays at the canonical state and emits
@@ -241,7 +241,7 @@ inputs among the outputs of $\Spec_1$, and so do its \indescs.  So this is
 Lifted Monotonicity of $\Spec_2$ on the outputs of $\Spec_1$.
 
 (2) After $\mathsf{output}(m)$ every row of $\Spec_1$ \outrel $m$
-(Lemma~\ref{lem:output-containment}), and later events only remove rows, so
+(Definition~\ref{def:lifted-output-event}), and later events only remove rows, so
 the outputs
 $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$ form a chain.
 $\Spec_2|_{\Spec_1}$ starts at $\sigma(m_1)$, which it reaches without
@@ -304,19 +304,12 @@ replacement's table contains the original's.
 \end{corollary}
 
 \begin{proof}
-Let $\tau$ be a state of the original and $\tau'$ a state of the replacement
-reached without \commitment, with the same current input and $R_\tau\subseteq
-R_{\tau'}$.  If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
-$j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
-the rows at \indescs of $j$.  A \commitment event of the original keeps the
-current input and only removes rows, so the replacement skips it.  If the
-original emits $x$ at $\tau$, then $x$ is at the current input of $\tau$ and so
-of $\tau'$, where it is a legal output by the second fact.  Output containment
-(Lemma~\ref{lem:output-containment}) puts the original's resulting table
-$R_\tau[\mathrm{out}\OutputGe x]$ inside $R_{\tau'}[\mathrm{out}\OutputGe x]$,
-where the replacement's $\mathsf{output}(x)$ ends.  Both start at
-$\sigma(m_1)$, so the containment holds after each event.  The replacement's strategy allows each erased event,
-since the original's allowed it before erasure.
+The replacement's run drops the original's \commitment events.  As in the
+proof of Lemma~\ref{lem:canonical-equivalent}, it then has the same inputs and
+outputs, and after each event its table contains the original's.  Each output
+the original emits is a legal output for the replacement by the second fact,
+so the empty basis suffices, and the replacement's strategy allows each event,
+since the original's did.
 \end{proof}
 
 The converse fails: the early lock below loses a run that its replacement has.
@@ -336,7 +329,7 @@ same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis.
 Theorem~\ref{thm:proper-coordination}(2), applied to it and a prefix of the
 run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs, and the
 canonical basis supplies the canonical \commitment of each output event that
-needs one (Lemma~\ref{lem:output-containment}), so it is a run under the
+needs one (Definition~\ref{def:system-output-event}), so it is a run under the
 canonical basis.  By induction the same holds along a pipeline
 $\Spec_n\circ\cdots\circ\Spec_1$ in which each prefix properly guards the next
 stage.  Composition is associative, so the bracketing does not matter.
@@ -383,7 +376,7 @@ $(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Excluded_{f(m)}$ at
 $\rho$.  If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$.
 Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
 $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ subsumes $(k,f(m'))$.  So every row
-that the composite's canonical event for $f(m)$ removes by \commitment has had
+that the composite's $\mathsf{output}(f(m))$ removes by \commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
@@ -560,7 +553,7 @@ their own, and they may issue \commitments of their own.
 
 (2) A run that applies no \commitment has no \commitment event, and each of its
 output events $\mathsf{output}(o)$ applies no \commitment, which holds exactly
-when $o$ is a legal output (Lemma~\ref{lem:output-containment}).
+when $o$ is a legal output.
 
 (3) The early-lock store above, fed by a log, is contract-proper, since the
 store's table satisfies Lifted Monotonicity on logs.  From the empty log it

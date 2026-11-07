@@ -381,7 +381,7 @@ theorem lrun_mono {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ) 
   | recv _ ih => exact ih
 
 /-- After a run that emits `o`, every remaining row's output extends `o`
-(Lemma `lem:output-containment`). -/
+(Definition `def:lifted-output-event`). -/
 theorem lrun_out_mem {σ τ : State sp} {l : List (LEv sp D n)} (h : LRun σ l τ)
     {o : O} (hm : LEv.out o ∈ l) :
     ∀ k x, τ.R k x → o ≼ x := by

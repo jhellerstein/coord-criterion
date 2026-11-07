@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-616 entries.
+615 entries.
 
 ### §2 Functional CALM
 
@@ -306,7 +306,7 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«def:commitment-event»` | abbrev | **Def. |
 | `«sec:systems/commitment-event-unobserved»` | theorem | After Def. |
 | `«sec:systems/commitment-then-output»` | theorem | After Def. |
-| `«sec:systems/output-is-canonical-event»` | theorem | Every output event of a system is the canonical event: |
+| `«sec:systems/output-is-canonical-event»` | theorem | Every output event of a system is the output event of §§2–3: |
 | `«sec:systems/system-histories»` | theorem | Def. |
 | `«sec:systems/bases-differ»` | theorem | Opener of §4.2: |
 | `«fig:cc-commitments»` | theorem | Fig. |
@@ -314,7 +314,6 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
 | `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* "Dropping the commitment events from a run under any commitment basis yields a canonical run that is observably equivalent to it: |
-| `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |
 | `«prop:commitment-conflict/second-run»` | theorem | Supporting form of Prop. |
@@ -602,10 +601,10 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«eq:safe-exposure»` | abbrev | **Eq. |
 | `«def:canonical-commitment-basis»` | abbrev | **Def. |
 | `«eq:canonical-commitment-basis-relational»` | theorem | **Eq. |
-| `«def:canonical-event»` | abbrev | **Def. |
-| `«app:bases/canonical-event-effect»` | theorem | Def. |
+| `«app:bases/canonical-event-effect»` | theorem | Supporting fact for Def. |
 | `«app:bases/canonical-commitment-is-commitment»` | theorem | The canonical commitment is defined precisely when the output is in the current fiber and `Excluded_o` is nonempty. |
 | `«lem:output-containment»` | theorem | **Lemma `lem:output-containment`** (Output containment). |
+| `«app:bases/output-event-effect»` | theorem | Supporting facts for Def. |
 | `«def:canonical-system»` | abbrev | **Def. |
 | `«def:canonical-system/histories»` | theorem | Def. |
 | `«def:canonical-system/no-commitment-event»` | theorem | Def. |

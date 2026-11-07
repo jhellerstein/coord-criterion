@@ -1562,20 +1562,6 @@ perform it because the original's rows are among its own. Full proof in
 Appendix~\ref{app:bases}.
 \end{proof}
 
-\begin{corollary}[Eager output is incidental]
-\label{cor:free-eager-output}
-The canonical event for a legal output applies no \commitment: every row it
-removes is subsumed by a row that survives. Likewise, deferring the output
-avoids no \commitment.
-\end{corollary}
-
-\begin{proof}[Proof sketch]
-By output legality, every row the canonical output event removes is subsumed
-by a surviving output extension (Proposition~\ref{prop:exposability}), proving both
-claims. Observable Equivalence says that canonical runs suffice for judging
-the outputs of runs under any \commitment basis.
-\end{proof}
-
 To illustrate the lemma, consider 2PL on an input of three transactions
 $A$, $B$, $C$ that have each issued their operations and requested commit,
 where $B$ waits for a lock that $A$ holds. When $B$ begins to wait, 2PL applies
@@ -1583,13 +1569,9 @@ $\mathsf{order}(A,B)$ in a \commitment event, before any output, keeping only
 rows that can be completed without placing $B$ before $A$. The canonical run
 skips that event, so it keeps every row, including the one completed by
 $[B,A,C]$. Suppose 2PL later commits all three transactions and orders $A$
-before $C$ before $B$ in a \commitment event, and then emits $[A,C,B]$. The
-canonical run
-can emit the same output because that row was present all along. Every row
-retained afterward extends $[A,C,B]$, so it satisfies all of 2PL's decisions,
-including the earlier order of $A$ before $B$. Thus the canonical final table
-is contained in 2PL's, while Observable Equivalence gives the reverse
-containment. The tables are equal: the lock made the $A$-before-$B$ decision
+before $C$ before $B$ in a \commitment event, and then emits $[A,C,B]$. Every
+row whose output \outrel $[A,C,B]$ satisfies 2PL's \commitments, so 2PL
+removed none of them, and after the output both runs keep exactly these rows. The tables are equal: the lock made the $A$-before-$B$ decision
 earlier than the output required. \textcolor{reviewed}{The \commitments required by a spec's outputs
 therefore do not depend on their timing or representation in a system's
 \commitment basis.}
@@ -1612,7 +1594,7 @@ state at that input.
 \begin{proposition}[Commitment conflict]
 \label{prop:commitment-conflict}
 Let a run from $\sigma_P(i)$ apply a \commitment that removes the row
-$(k,x)$, and let another run from $\sigma_P(i)$ issue the canonical events
+$(k,x)$, and let another run from $\sigma_P(i)$ issue
 $\mathsf{input}(k)$ followed by $\mathsf{output}(x)$. These two runs
 \emph{conflict}: they are not confluent at $k$.
 \end{proposition}
@@ -2844,7 +2826,7 @@ not confluent at $k$.
 \textcolor{reviewed}{Suppose $\Spec$ satisfies Lifted Monotonicity for $E$.} Take the system whose strategies emit,
 by the canonical output event $\mathsf{output}(o)$ of
 Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber. That event applies whatever \commitment $o$ requires, $x_o$ from the
-canonical basis (Lemma~\ref{lem:output-containment}), so the system has
+canonical basis (Definition~\ref{def:system-output-event}), so the system has
 Availability for $E$. Every output it emits is a row of $E$ at an input below
 the current one, so at a common \indesc $j$ of the current inputs the emitted
 outputs have a common \outnoun in $\fiber{j}$. For a system that emits only
@@ -2861,7 +2843,7 @@ they then reach one state $(j,R)$, which has some row $(j,u)$
 (Definition~\ref{def:residual-state}); this $u$ is the one we seek. Rows are
 never added, so $(j,u)$ was already in each $p_r$'s table just after it
 emitted $o_r$. Emitting an output keeps only rows whose output \outrel it
-(Lemma~\ref{lem:output-containment}), so $u$ \outrel every
+(Definition~\ref{def:lifted-output-event}), so $u$ \outrel every
 $o_r$.
 \end{proof}
 
@@ -3048,19 +3030,6 @@ Definition~\ref{def:canonical-commitment},
 where $x_o$ is defined at the states with $o\in R(i)$ and $\Excluded_o\neq\varnothing$.
 \end{definition}
 
-\begin{definition}[Canonical event]
-\label{def:canonical-event}
-The \emph{canonical event} for $o$ at $(i,R)$ is the output event
-$\mathsf{output}(o)$ of Definition~\ref{def:lifted-output-event}, which
-applies $x_o$ when $\Excluded_o\neq\varnothing$ and no \commitment otherwise;
-with one row per input it is the output event of
-Definition~\ref{def:output-event}.
-\end{definition}
-
-Every output event of a system (Definition~\ref{def:system-output-event}) is
-therefore canonical. A system's own \commitments appear only in its
-\commitment events.
-
 \paragraph{The canonical \commitment is a \commitment.}
 Suppose a removed row $(k,x)\in\Excluded_o$ were \outrelpast by a row $(k,y)$
 that $x_o$ leaves. Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
@@ -3069,26 +3038,14 @@ that $x_o$ leaves. Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
 
 \begin{lemma}[Output containment]
 \label{lem:output-containment}
-Let $(i,R)$ be a state and $o\in R(i)$.
-\begin{enumerate}
-\item
-The output event $\mathsf{output}(o)$ takes $(i,R)$ to
-        $(i,R[\mathrm{out}\OutputGe o])$. It applies a \commitment, $x_o$,
-        exactly when $\Excluded_o\neq\varnothing$, that is, when $o$ is not
-        a legal output at $(i,R)$.
-\item
-If $(i,\widehat R)$ is a state with $R\subseteq\widehat R$, then
-        $o\in\widehat R(i)$, and $\mathsf{output}(o)$ takes $(i,\widehat R)$
-        to $(i,\widehat R[\mathrm{out}\OutputGe o])$, which contains
-        $R[\mathrm{out}\OutputGe o]$.
-\end{enumerate}
+Let $(i,R)$ and $(i,\widehat R)$ be states with $R\subseteq\widehat R$, and let
+$o\in R(i)$. Then $o\in\widehat R(i)$, and $\mathsf{output}(o)$ takes
+$(i,\widehat R)$ to $(i,\widehat R[\mathrm{out}\OutputGe o])$, which contains
+$R[\mathrm{out}\OutputGe o]$.
 \end{lemma}
 
 \begin{proof}
-(1) The event keeps exactly the rows whose outputs \outrelbase $o$
-(Definition~\ref{def:lifted-output-event}), and it applies $x_o$ exactly when
-$\Excluded_o\neq\varnothing$, that is, when $o$ is not legal. (2) We have
-$o\in R(i)\subseteq\widehat R(i)$, and every row of $R$ whose output
+We have $o\in R(i)\subseteq\widehat R(i)$, and every row of $R$ whose output
 \outrelbase $o$ is a row of $\widehat R$ whose output \outrelbase $o$.
 \end{proof}
 
@@ -3135,32 +3092,23 @@ $\mathcal B_P$ of Definition~\ref{def:canonical-commitment-basis} with no
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}.
 \end{definition}
 
-To make the claim of Lemma~\ref{lem:canonical-equivalent} precise, call two
-runs \emph{observably equivalent} when they start at the same canonical state
-and agree once \commitment events are dropped: wherever one has
-$\mathsf{input}(j)$ the other does, and wherever one has $\mathsf{output}(o)$
-the other does. They accept the same inputs and emit the same outputs, in the
-same order, which is all the environment observes. Observably equivalent runs
-may differ in the \commitments their events apply, and hence in their
-remainder tables.
+Two runs are \emph{observably equivalent} when they start at the same canonical
+state and agree once \commitment events are dropped. They then accept the same
+inputs and emit the same outputs, in the same order, which is all the
+environment observes, although their remainder tables may differ.
 
 \begin{proof}[Proof of Lemma~\ref{lem:canonical-equivalent}]
-By induction on the events. Both runs start at the same canonical state, so
-their remainder tables are initially equal. Suppose that before some event the
-original run's table $R$ and the canonical run's table $\widehat R$ satisfy
-$R\subseteq\widehat R$; we show that the inclusion holds afterward. An input
-event $\mathsf{input}(j)$ that is legal at $R$ is also legal at $\widehat R$. It causes the table to lose every row whose input does not \inrelbase $j$, keeping
-$R[\mathrm{in}\InputGe j]$ in the original run and
-$\widehat R[\mathrm{in}\InputGe j]$ in the canonical run. Since
-$R\subseteq\widehat R$, the first remains contained in the second. An output
-event $\mathsf{output}(o)$ with $o\in R(i)$ takes $R$ to
-$R[\mathrm{out}\OutputGe o]$. By output containment
-(Lemma~\ref{lem:output-containment}), the canonical run can issue the same
-event at $\widehat R$, which takes $\widehat R$ to
-$\widehat R[\mathrm{out}\OutputGe o]\supseteq R[\mathrm{out}\OutputGe o]$;
-the canonical basis supplies $x_o$ if the event needs it. A \commitment event
-keeps the current input and only removes rows, so the canonical run skips it
-and the inclusion still holds.
+Drop the \commitment events from a run under $\mathcal B$. By induction on
+the events, the result is a canonical run whose table $\widehat R$ contains
+the original's table $R$ after each event; both start at the same canonical
+state. A \commitment event keeps the current input and only removes rows, so
+dropping it preserves $R\subseteq\widehat R$. An input event
+$\mathsf{input}(j)$ legal at $R$ is legal at $\widehat R$, and keeps
+$R[\mathrm{in}\InputGe j]\subseteq\widehat R[\mathrm{in}\InputGe j]$. An
+output event $\mathsf{output}(o)$ at $R$ can be issued at $\widehat R$, with
+$x_o$ from the canonical basis if it applies one, and keeps
+$R[\mathrm{out}\OutputGe o]\subseteq\widehat R[\mathrm{out}\OutputGe o]$
+(Lemma~\ref{lem:output-containment}).
 \end{proof}
 
 \begin{corollary}[Reconciliation under any basis]
@@ -3385,7 +3333,7 @@ functional spec induced by a function $f$ that maps
 both to one value. The composite has one row, so it satisfies Lifted
 Monotonicity. At the canonical state of $\mathcal S_1$ neither $x$ nor $y$ is
 a legal output, and under the empty basis an output event emits only a legal
-output (Lemma~\ref{lem:output-containment}), and no \commitment event is
+output (Definition~\ref{def:system-output-event}), and no \commitment event is
 possible, since its sequence is nonempty. Input
 events only remove rows at other inputs, and there are none, so every run of
 $\mathcal S_1$ under the empty basis stays at the canonical state and emits
@@ -3437,7 +3385,7 @@ inputs among the outputs of $\Spec_1$, and so do its \indescs. So this is
 Lifted Monotonicity of $\Spec_2$ on the outputs of $\Spec_1$.
 
 (2) After $\mathsf{output}(m)$ every row of $\Spec_1$ \outrel $m$
-(Lemma~\ref{lem:output-containment}), and later events only remove rows, so
+(Definition~\ref{def:lifted-output-event}), and later events only remove rows, so
 the outputs
 $m_1\preceq_M m_2\preceq_M\cdots$ of a run of $\Spec_1$ form a chain. $\Spec_2|_{\Spec_1}$ starts at $\sigma(m_1)$, which it reaches without
 \commitment. By the first two facts it can receive each $m_{r+1}$ and answer
@@ -3498,19 +3446,12 @@ replacement's table contains the original's.
 \end{corollary}
 
 \begin{proof}
-Let $\tau$ be a state of the original and $\tau'$ a state of the replacement
-reached without \commitment, with the same current input and $R_\tau\subseteq
-R_{\tau'}$. If $\mathsf{input}(j)$ is legal at $\tau$, a row of $R_\tau$ at
-$j$ is in $R_{\tau'}$, so the input is legal at $\tau'$, and both events keep
-the rows at \indescs of $j$. A \commitment event of the original keeps the
-current input and only removes rows, so the replacement skips it. If the
-original emits $x$ at $\tau$, then $x$ is at the current input of $\tau$ and so
-of $\tau'$, where it is a legal output by the second fact. Output containment
-(Lemma~\ref{lem:output-containment}) puts the original's resulting table
-$R_\tau[\mathrm{out}\OutputGe x]$ inside $R_{\tau'}[\mathrm{out}\OutputGe x]$,
-where the replacement's $\mathsf{output}(x)$ ends. Both start at
-$\sigma(m_1)$, so the containment holds after each event. The replacement's strategy allows each erased event,
-since the original's allowed it before erasure.
+The replacement's run drops the original's \commitment events. As in the
+proof of Lemma~\ref{lem:canonical-equivalent}, it then has the same inputs and
+outputs, and after each event its table contains the original's. Each output
+the original emits is a legal output for the replacement by the second fact,
+so the empty basis suffices, and the replacement's strategy allows each event,
+since the original's did.
 \end{proof}
 
 The converse fails: the early lock below loses a run that its replacement has.
@@ -3529,7 +3470,7 @@ By Corollary~\ref{cor:empty-store}, every run of the pipeline has one with the
 same outputs in which $\Spec_2|_{\Spec_1}$ runs under the empty basis. Theorem~\ref{thm:proper-coordination}(2), applied to it and a prefix of the
 run of $\Spec_1$, gives a run of $P_2\circ P_1$ with these outputs, and the
 canonical basis supplies the canonical \commitment of each output event that
-needs one (Lemma~\ref{lem:output-containment}), so it is a run under the
+needs one (Definition~\ref{def:system-output-event}), so it is a run under the
 canonical basis. By induction the same holds along a pipeline
 $\Spec_n\circ\cdots\circ\Spec_1$ in which each prefix properly guards the next
 stage. Composition is associative, so the bracketing does not matter.
@@ -3575,7 +3516,7 @@ $\rho$ be a composite state with $f(R_\sigma)\subseteq R_\rho$. No row
 $(k,f(m'))$ with $(k,m')\in R_{\sigma_c}$ is in $\Excluded_{f(m)}$ at
 $\rho$. If $m\preceq_M m'$ then $f(m)\OutputOrd f(m')$. Otherwise legality gives $(k,u)\in R_{\sigma_c}$ with $m\preceq_M u$ and
 $m'\preceq_M u$, and $(k,f(u))\in R_\rho$ subsumes $(k,f(m'))$. So every row
-that the composite's canonical event for $f(m)$ removes by \commitment has had
+that the composite's $\mathsf{output}(f(m))$ removes by \commitment has had
 every preimage in $R_\sigma$ removed by $\gamma$.
 
 \begin{proof}[Proof of Proposition~\ref{prop:invisible-coordination}]
@@ -3753,7 +3694,7 @@ If, in a contract-proper pipeline, the downstream is instead the
 
 (2) A run that applies no \commitment has no \commitment event, and each of its
 output events $\mathsf{output}(o)$ applies no \commitment, which holds exactly
-when $o$ is a legal output (Lemma~\ref{lem:output-containment}).
+when $o$ is a legal output.
 
 (3) The early-lock store above, fed by a log, is contract-proper, since the
 store's table satisfies Lifted Monotonicity on logs. From the empty log it
@@ -4472,8 +4413,8 @@ view: the operations invoked at $p$, with no precedence. A response becomes an
 output event emitting $p$'s response map, and $p$ may also re-emit its current
 map. With every message lost, $p$'s history is node $p$'s run in the
 execution where it is alone, and atomicity of that execution puts the map in
-the fiber at the view, so the output events are canonical events available
-under the canonical basis. Availability, applied
+the fiber at the view, so its output events are available under the canonical
+basis. Availability, applied
 to each unanswered operation of the view, gives Answering. An interleaving of
 a client history is an execution of the algorithm whose real-time order is the
 precedence of $h_C$, so atomicity gives a common \outnoun in $\fiber{h_C}$. The corollary excludes the algorithm.
