@@ -382,7 +382,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«eq:canonical-commitment-basis-relational»
 #check @CC.Paper.«app:bases/canonical-event-effect»
 #check @CC.Paper.«app:bases/canonical-commitment-is-commitment»
-#check @CC.Paper.«lem:output-containment»
+#check @CC.Paper.«lem:canonical-equivalent/output-case»
 #check @CC.Paper.«app:bases/output-event-effect»
 #check @CC.Paper.«app:bases/canonical-system»
 #check @CC.Paper.«app:bases/canonical-system/histories»

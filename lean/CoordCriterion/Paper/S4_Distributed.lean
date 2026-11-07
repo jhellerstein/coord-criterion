@@ -612,8 +612,8 @@ under any commitment basis yields its canonical run, which is observably
 equivalent to it: it accepts the same inputs and emits the same outputs, and
 after each event it keeps at least the original's rows."  Proof sketch:
 "Commitment events only remove rows, so dropping them can only keep more.  An
-input or output event applied to a larger table keeps a larger table (Lemma
-output-containment for outputs), and the canonical run can perform it because
+input or output event applied to a larger table keeps a larger table, and the
+canonical run can perform it because
 the original's rows are among its own."
 
 Lean: `«lem:canonical-equivalent»`; `Lockstep` records the per-event

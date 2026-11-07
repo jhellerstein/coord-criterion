@@ -129,13 +129,13 @@ theorem «app:bases/canonical-commitment-is-commitment» {sp : Spec I O}
       ∃ h : σ.R σ.cur o, (∃ k x, Excluded σ o k x) ∧ commitmentState σ o h = τ :=
   commitmentApp_eq
 
-/-- **Lemma `lem:output-containment`** (Output containment).  "Let `(i,R)` and
-`(i,R̂)` be states with `R ⊆ R̂`, and let `o ∈ R(i)`.  Then `o ∈ R̂(i)`, and
-`output(o)` takes `(i,R̂)` to `(i,R̂[out ⪰ o])`, which contains `R[out ⪰ o]`."
-
-Lean: monotonicity of `R ↦ R[out ⪰ o]`, with the output event at `R̂`
-available under `ℬ_P`. -/
-theorem «lem:output-containment» {sp : Spec I O}
+/-- Supporting fact for the output case of the proof of Lemma
+`lem:canonical-equivalent`: "An output event `output(o)` at `R` can be issued
+at `R̂`, since `o ∈ R(i) ⊆ R̂(i)`, with `x_o` from the canonical basis if it
+applies one, and keeps `R[out ⪰ o] ⊆ R̂[out ⪰ o]`."  Lean: monotonicity of
+`R ↦ R[out ⪰ o]` (`outputTable_mono`), with the output event at `R̂` available
+under `ℬ_P` (`canonical_support`). -/
+theorem «lem:canonical-equivalent/output-case» {sp : Spec I O}
     {σ σ' : State sp} {o : O} (hc : σ'.cur = σ.cur) (hsub : ∀ k u, σ.R k u → σ'.R k u)
     (ho : σ.R σ.cur o) : ∃ ho' : σ'.R σ'.cur o,
       SysStep (canonCommitmentBasis sp) σ' (.output o) (outState σ' o ho') ∧

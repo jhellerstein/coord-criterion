@@ -603,7 +603,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«eq:canonical-commitment-basis-relational»` | theorem | **Eq. |
 | `«app:bases/canonical-event-effect»` | theorem | Supporting fact for Def. |
 | `«app:bases/canonical-commitment-is-commitment»` | theorem | The canonical commitment is defined precisely when the output is in the current fiber and `Excluded_o` is nonempty. |
-| `«lem:output-containment»` | theorem | **Lemma `lem:output-containment`** (Output containment). |
+| `«lem:canonical-equivalent/output-case»` | theorem | Supporting fact for the output case of the proof of Lemma `lem:canonical-equivalent`: |
 | `«app:bases/output-event-effect»` | theorem | Supporting facts for Def. |
 | `«app:bases/canonical-system»` | abbrev | Supporting notion for the appendix on `app:bases` and Appendix `app:cap-response`: |
 | `«app:bases/canonical-system/histories»` | theorem | Supporting fact: |

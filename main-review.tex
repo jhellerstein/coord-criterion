@@ -1554,8 +1554,8 @@ least the original's rows.}
 
 \begin{proof}[Proof sketch]
 \Commitment events only remove rows, so dropping them can only keep more. An
-input or output event applied to a larger table keeps a larger table
-(Lemma~\ref{lem:output-containment} for outputs), and the canonical run can
+input or output event applied to a larger table keeps a larger table, and the
+canonical run can
 perform it because the original's rows are among its own. Full proof in
 Appendix~\ref{app:bases}.
 \end{proof}
@@ -3034,19 +3034,6 @@ that $x_o$ leaves. Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
 \outrelpast by a row \outrelpart $o$. By transitivity, $x$ is then
 \outrelpast by a row \outrelpart $o$, so $x\in\Subsumed_o$, a contradiction.
 
-\begin{lemma}[Output containment]
-\label{lem:output-containment}
-Let $(i,R)$ and $(i,\widehat R)$ be states with $R\subseteq\widehat R$, and let
-$o\in R(i)$. Then $o\in\widehat R(i)$, and $\mathsf{output}(o)$ takes
-$(i,\widehat R)$ to $(i,\widehat R[\mathrm{out}\OutputGe o])$, which contains
-$R[\mathrm{out}\OutputGe o]$.
-\end{lemma}
-
-\begin{proof}
-We have $o\in R(i)\subseteq\widehat R(i)$, and every row of $R$ whose output
-\outrelbase $o$ is a row of $\widehat R$ whose output \outrelbase $o$.
-\end{proof}
-
 \begin{lemma}[Compound \commitments are \commitments]
 \label{lem:compound-commitment}
 The composite of a nonempty sequence of \commitments, defined wherever the
@@ -3096,10 +3083,10 @@ state. A \commitment event keeps the current input and only removes rows, so
 dropping it preserves $R\subseteq\widehat R$. An input event
 $\mathsf{input}(j)$ legal at $R$ is legal at $\widehat R$, and keeps
 $R[\mathrm{in}\InputGe j]\subseteq\widehat R[\mathrm{in}\InputGe j]$. An
-output event $\mathsf{output}(o)$ at $R$ can be issued at $\widehat R$, with
-$x_o$ from the canonical basis if it applies one, and keeps
-$R[\mathrm{out}\OutputGe o]\subseteq\widehat R[\mathrm{out}\OutputGe o]$
-(Lemma~\ref{lem:output-containment}).
+output event $\mathsf{output}(o)$ at $R$ can be issued at $\widehat R$, since
+$o\in R(i)\subseteq\widehat R(i)$, with $x_o$ from the canonical basis if it
+applies one, and keeps
+$R[\mathrm{out}\OutputGe o]\subseteq\widehat R[\mathrm{out}\OutputGe o]$.
 \end{proof}
 
 \begin{corollary}[Reconciliation under any basis]
