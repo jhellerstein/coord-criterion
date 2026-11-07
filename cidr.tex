@@ -1148,17 +1148,18 @@ has less to remove.
 % removing every row at that input rules out the input as well.  
 
 A \emph{system} consists of an I/O spec, a \emph{\commitment basis} $\mathcal B$ and a
-nondeterministic \emph{strategy} per participant that picks its next output,
-\commitment, send, or receive event from its local history, applying only
-\commitments from $\mathcal B$.  The full paper gives these definitions formally
-and shows that every canonical \commitment of Section~\ref{sec:complete-calm} is
-a \commitment in this sense.  Coordination mechanisms live in the system: its
+possibly nondeterministic \emph{strategy} per participant that picks its next output,
+\commitment, send, or receive event, applying only
+\commitments from $\mathcal B$.  The full paper gives these definitions formally.
+Coordination mechanisms live in the system: its
 strategies describe how participants use them, and its basis records the
 \commitments they can enforce.
 
-Two-phase locking (2PL) and multiversion timestamp
-ordering (MVTO)~\cite{bernstein1981concurrency} have different bases: 2PL's
-$\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
+Two familiar concurrency control examples make this concrete. Two-phase locking (2PL) and multiversion timestamp
+ordering (MVTO)~\cite{bernstein1981concurrency} have different bases. 2PL's basis captures
+pairwise transaction ordering via lock requests:
+$\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else. By contrast, MVTO's basis captures
+total transaction orders via timestamp assignment: 
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped
 (Figure~\ref{fig:cc-commitments}).  Both are \commitments, but each leaves different possibilities afterward.
 
@@ -1177,15 +1178,20 @@ least the original's rows (\extended).
 Hence the commitments a spec's outputs require do not depend on their timing or
 representation in a system's \commitment basis.
 
-Observable equivalence is one-way, and it concerns inputs and outputs, not
-tables.  A system run's \commitments may remove rows that its canonical run
-keeps, and the system may then lose confluence that canonical runs have.  The
-registrar is an example.  After closing the polls at $ab\cdot$, it cannot
-accept the late ballot $aba$, although its canonical run, which only emits
-$\bot$, can.
-The CALM and CAP criteria are about specs and their canonical runs.  Showing
-that a particular system inherits their confluence takes a separate argument
-about that system.
+Observable equivalence is one-way only: all system runs have observably
+equivalent canonical runs, but not necessarily vice versa. Note also that
+observable equivalence is a guarantee only on inputs and outputs, not on
+remainder tables.  A system run's \commitments may be more aggressive, removing
+rows that its canonical run keeps. As a result, a spec can be confluent under
+canonical runs, but a system with that spec may not be confluent, e.g., if it
+removes a necessary common extension.  The registrar is an example.  After
+closing the polls at $ab\cdot$, it cannot accept the late ballot $aba$, although
+its canonical run, which only emits $\bot$, can. The CALM and CAP criteria are
+about specs and their canonical runs. A system with no \commitment events
+inherits their confluence directly, since its runs are canonical runs. For a
+system with \commitments of its own, showing that it inherits that confluence
+requires an argument about that system, which is outside the scope of this
+paper.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
