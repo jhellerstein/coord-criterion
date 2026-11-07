@@ -140,7 +140,8 @@ theorem «app:bases/canonical-commitment-is-commitment» {sp : Spec I O}
 
 /-- **Lemma `lem:output-containment`** (Output containment).  "(1) The output
 event `output(o)` takes `(i,R)` to `(i,R[out ⪰ o])`.  It applies a commitment,
-`x_o`, exactly when `o` is not a legal output.  (2) If `(i,R̂)` is a state with
+`x_o`, exactly when `Excluded_o ≠ ∅`, that is, when `o` is not a legal output at
+`(i,R)`.  (2) If `(i,R̂)` is a state with
 `R ⊆ R̂`, then `o ∈ R̂(i)`, and `output(o)` takes `(i,R̂)` to
 `(i,R̂[out ⪰ o])`, which contains `R[out ⪰ o]`."
 
