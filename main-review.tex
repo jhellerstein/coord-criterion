@@ -1657,14 +1657,16 @@ compares the participants' outputs at a common \indesc of their inputs, and
 their common \outnoun may be such a combined output: it need not be emitted by
 any participant.}
 
-\textcolor{reviewed}{Consider a register initialized to $v_0$.} \textcolor{reviewed}{During a partition, participant
-$p$ receives a write $w(v)$ and emits its acknowledgment, while participant
-$q$ receives a concurrent read $r$ and returns $v_0$.} \textcolor{reviewed}{A client that later
-collects both observes the write acknowledgment together with the read answer
-$v_0$.} \textcolor{reviewed}{The register spec permits this combined output at the input
-containing both operations: a linearization may put the concurrent read before
-the write.} \textcolor{reviewed}{The combined output \outrel both local outputs and provides a proof
-of their consistency, although no participant need ever emit it.}
+\textcolor{reviewed}{To see this distinction, consider a racing read and write that go to different
+participants.} \textcolor{reviewed}{The register is initialized to $v_0$.} \textcolor{reviewed}{Participant $p$ receives
+write $w(v)$ and emits its acknowledgment; concurrently, participant $q$
+receives the read $r$ and returns $v_0$.} \textcolor{reviewed}{A client may later collect both the
+write acknowledgment and read answer $v_0$.} \textcolor{reviewed}{A linearizable register spec has a
+row that captures this scenario, pairing an input containing both operations
+with the combined output; this reflects that a linearization may put the
+concurrent read before the write.} \textcolor{reviewed}{However, no participant emits this combined
+output.} \textcolor{reviewed}{Nonetheless, it \outrel both local outputs and provides a proof of their
+consistency.}
 
 \textcolor{reviewed}{We therefore encode a guarantee as an \spectype together with an
 explicit relation $E\subseteq P$: the rows whose outputs must remain locally

@@ -55,15 +55,16 @@ Consistency compares the participants' outputs at a common input extension of
 their inputs, and their common output extension may be such a combined
 output: it need not be emitted by any participant.
 
-Consider a register initialized to `v₀`.  During a partition, participant
-`p` receives a write `w(v)` and emits its acknowledgment, while participant
-`q` receives a concurrent read `r` and returns `v₀`.  A client that later
-collects both observes the write acknowledgment together with the read answer
-`v₀`.  The register spec permits this combined output at the input
-containing both operations: a linearization may put the concurrent read
-before the write.  The combined output extends both local outputs and
-provides a proof of their consistency, although no participant need ever
-emit it.
+To see this distinction, consider a racing read and write that go to different
+participants.  The register is initialized to `v₀`.
+Participant `p` receives write `w(v)` and emits its acknowledgment;
+concurrently, participant `q` receives the read `r` and returns `v₀`.  A client
+may later collect both the write acknowledgment and read answer `v₀`.  A
+linearizable register spec has a row that captures this scenario, pairing an
+input containing both operations with the combined output; this reflects that
+a linearization may put the concurrent read before the write.  However, no
+participant emits this combined output.  Nonetheless, it extends both local
+outputs and provides a proof of their consistency.
 
 We therefore encode a guarantee as an I/O specification together with an
 explicit relation `E ⊆ P`: the rows whose outputs must remain locally

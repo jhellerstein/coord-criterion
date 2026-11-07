@@ -1159,7 +1159,7 @@ strategies describe how participants use them, and its basis records the
 
 \textcolor{newblue}{Two familiar concurrency control examples make this concrete.} Two-phase locking
 (2PL) orders transactions pairwise through lock requests: when $B$ waits for a
-lock $A$ holds, $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else. \textcolor{newblue}{Multiversion timestamp ordering (MVTO) orders transactions totally through timestamp
+lock $A$ holds, $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else. \textcolor{newblue}{Multiversion timestamp ordering (MVTO)~\cite{bernstein1981concurrency} orders transactions totally through timestamp
 assignment: $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet
 stamped.} \removednote{\textbf{unclassified}, 48 words, rank 33; \textit{The two narrow the spec differently.}} \textcolor{newblue}{Both are \commitments, but each leaves different possibilities
 afterward (Figure~\ref{fig:cc-commitments}).}
@@ -1211,14 +1211,16 @@ compares the participants' outputs at a common \indesc of their inputs, and
 their common \outnoun may be such a combined output: it need not be emitted by
 any participant.
 
-Consider a register initialized to $v_0$. During a partition, participant
-$p$ receives a write $w(v)$ and emits its acknowledgment, while participant
-$q$ receives a concurrent read $r$ and returns $v_0$. A client that later
-collects both observes the write acknowledgment together with the read answer
-$v_0$. The register spec permits this combined output at the input
-containing both operations: a linearization may put the concurrent read before
-the write. The combined output \outrel both local outputs and provides a proof
-of their consistency, although no participant need ever emit it.
+To see this distinction, consider a racing read and write that go to different
+participants. The register is initialized to $v_0$. Participant $p$ receives
+write $w(v)$ and emits its acknowledgment; concurrently, participant $q$
+receives the read $r$ and returns $v_0$. A client may later collect both the
+write acknowledgment and read answer $v_0$. A linearizable register spec has a
+row that captures this scenario, pairing an input containing both operations
+with the combined output; this reflects that a linearization may put the
+concurrent read before the write. However, no participant emits this combined
+output. Nonetheless, it \outrel both local outputs and provides a proof of their
+consistency.
 
 We therefore encode a guarantee as an \spectype together with an
 explicit relation $E\subseteq P$: the rows whose outputs must remain locally
