@@ -1614,33 +1614,53 @@ earlier than the output required. \textcolor{reviewed}{The \commitments required
 therefore do not depend on their timing or representation in a system's
 \commitment basis.}
 
-\textcolor{reviewed}{A canonical run \emph{contradicts} a \commitment at input $k$ if it accepts $k$
-after the \commitment emptied its fiber, or emits at $k$ an output whose row the
-\commitment removed.}
+\paragraph{What a \commitment rules out.}
+\textcolor{reviewed}{Canonical runs also give a baseline for judging a single \commitment.} \textcolor{reviewed}{Every
+run starts from a canonical state $\sigma_P(i)$, in which no \commitment has
+yet been applied: it holds every row of $P$ above $i$.} \textcolor{reviewed}{Suppose a run under
+some basis reaches a state $\sigma$ and there applies a \commitment, leaving
+$\sigma_c$.} \textcolor{reviewed}{Since events only remove rows, every row the \commitment removes
+is still present at the baseline $\sigma_P(i)$.} \textcolor{reviewed}{A canonical run from
+$\sigma_P(i)$ never applies that \commitment, so it may still make a choice the
+\commitment ruled out.}
+
+\begin{definition}[Contradicting run]
+\label{def:contradicting-run}
+Let a \commitment take $\sigma$ to $\sigma_c$ in a run from $\sigma_P(i)$. \textcolor{reviewed}{Another run \emph{contradicts} the \commitment at input $k$ if it emits at $k$
+an output $x$ with $(k,x)\in\sigma\setminus\sigma_c$, or, when the
+\commitment removed every row of $\sigma$ at $k$, it accepts $k$.}
+\end{definition}
+
+The two clauses match the two effects of Section~\ref{sec:lifted-output-events}:
+a \commitment can rule out an output at $k$ or rule out $k$ itself. In the
+election, closing the polls at $ab\cdot$ rules out the inputs $aba$ and $abb$; a
+run that accepts $aba$ contradicts it. In Figure~\ref{fig:cc-commitments}(h),
+$\mathsf{order}(A,B)$ rules out the output $[B,A,C]$; a run that emits
+$[B,A,C]$ contradicts it.
 
 \begin{proposition}[Canonical alternatives witness commitments]
 \label{prop:canonical-commitment-witness}
-Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
-contradicted by a canonical run from $\sigma_P(i)$.
+\textcolor{reviewed}{Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
+contradicted by a canonical run from $\sigma_P(i)$.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Choose a row $(k,x)$ that the \commitment removes. If the \commitment empties
-the fiber at $k$, the canonical run that accepts $k$ contradicts it. Otherwise,
-the canonical run that accepts $k$ and emits $x$ contradicts it.
+\textcolor{reviewed}{Choose a row $(k,x)$ that the \commitment removes.} \textcolor{reviewed}{The row is present at
+$\sigma_P(i)$, so the canonical run from $\sigma_P(i)$ that accepts $k$ and
+emits $x$ contradicts the \commitment.}
 \end{proof}
 
 \begin{proposition}[Commitment conflict]
 \label{prop:commitment-conflict}
-Consider a run that applies a \commitment and another run that contradicts it
-at input $k$. Their resulting states have no common continuation to a state
-$(k,R')$.
+\textcolor{reviewed}{Let a \commitment take $\sigma$ to $\sigma_c$, and let a run that contradicts
+it at input $k$ reach a state $\tau$ with current input $k$.} \textcolor{reviewed}{Then $\sigma_c$ and $\tau$ have no
+common continuation to a state $(k,R')$.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-If the contradicting run accepts $k$, the \commitment emptied its fiber; since
-events never add rows, the first run cannot reach a state with current input
-$k$. Otherwise, the contradicting run emitted some output $x$ at $k$ whose
+If the contradicting run accepts $k$, the \commitment emptied the fiber at
+$k$; since events never add rows, no continuation of $\sigma_c$ has current
+input $k$. Otherwise, the contradicting run emitted an output $x$ at $k$ whose
 row the \commitment removed. The \commitment leaves no row at $k$ that
 \outrel $x$, whereas every row at $k$ after the emission does, so no row there
 can be common to both runs. Full proof in Appendix~\ref{app:proofs-sec4}.
@@ -2673,7 +2693,7 @@ rows at $k$.
   \commitment event $\mathsf{apply}(\gamma)$ & applies a nonempty sequence $\gamma$ of \commitments, emits nothing & Def.~\ref{def:commitment-event}\\
   run under a basis; canonical run & specification events whose \commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitments and \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
-  contradicting canonical run & accepts an input that a \commitment ruled out, or emits an output whose row the \commitment removed & Prop.~\ref{prop:canonical-commitment-witness}\\
+  contradicting run & emits an output whose row a \commitment removed, or accepts an input whose fiber the \commitment emptied & Def.~\ref{def:contradicting-run}\\
   canonical \commitment witness & every applied \commitment is contradicted by a canonical run from the same canonical state & Prop.~\ref{prop:canonical-commitment-witness}\\
   partitioned history; block; explicit relation $E$ & participants divided into two or more blocks, no message crosses blocks; $E\subseteq P$, the rows whose outputs are placed at a participant or covered by an availability condition & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
   Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable locally; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\

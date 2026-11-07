@@ -1190,30 +1190,45 @@ representation in a system's \commitment basis.  We can assess any system's
 \commitments against canonical runs, without parameterizing the analysis by
 that system's basis or strategy.
 
-A canonical run \emph{contradicts} a \commitment at input $k$ if it accepts $k$
-after the \commitment emptied its fiber, or emits at $k$ an output whose row the
-\commitment removed.
+\paragraph{What a \commitment rules out.}
+Canonical runs also give a baseline for judging a single \commitment.  Every
+run starts from a canonical state $\sigma_P(i)$, in which no \commitment has
+yet been applied: it holds every row of $P$ above $i$.  Suppose a run reaches
+a state $\sigma$ and there applies a \commitment, leaving $\sigma_c$.  Since
+events only remove rows, every row the \commitment removes is still present at
+the baseline $\sigma_P(i)$.  A canonical run from $\sigma_P(i)$ never applies
+that \commitment, so it may still make a choice the \commitment ruled out.
+Such a run \emph{contradicts} the \commitment at input $k$ if it emits at $k$
+an output $x$ with $(k,x)\in\sigma\setminus\sigma_c$, or, when the
+\commitment removed every row of $\sigma$ at $k$, it accepts $k$.  For
+example, a run that emits $[B,A,C]$ contradicts 2PL's $\mathsf{order}(A,B)$,
+and a run that accepts the late vote $aba$ contradicts the registrar's closing
+of the polls.
 
 \begin{proposition}[Canonical alternatives witness commitments]
 \label{prop:canonical-commitment-witness}
-Every \commitment applied in a run is contradicted by a canonical run.
+Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
+contradicted by a canonical run from $\sigma_P(i)$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Choose a row $(k,x)$ removed by the \commitment.  A canonical run can accept $k$
-and emit $x$.
+Choose a row $(k,x)$ that the \commitment removes.  The row is present at
+$\sigma_P(i)$, so the canonical run from $\sigma_P(i)$ that accepts $k$ and
+emits $x$ contradicts the \commitment.
 \end{proof}
 
 \begin{proposition}[Commitment conflict]
 \label{prop:commitment-conflict}
-At the conflict input, the states resulting from a \commitment and a
-contradicting run have no common continuation.
+Let a \commitment take $\sigma$ to $\sigma_c$, and let a run that contradicts
+it at input $k$ reach a state $\tau$ with current input $k$.  Then $\sigma_c$
+and $\tau$ have no common continuation to a state $(k,R')$.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-If the \commitment emptied the fiber at $k$, its run cannot return there.
-Otherwise, no row it leaves at $k$ can \outrel $x$, while every row left after
-emitting $x$ does.  Hence the two states cannot reconcile at $k$.  \fullproof
+If the \commitment emptied the fiber at $k$, no continuation of $\sigma_c$ has
+current input $k$, since events never add rows.  Otherwise, no row of
+$\sigma_c$ at $k$ can \outrel $x$, while every row of $\tau$ at $k$ does.
+\fullproof
 \end{proof}
 
 Output subsumption remains permitted.  These propositions say what a coordination

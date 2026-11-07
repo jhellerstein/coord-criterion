@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-618 entries.
+620 entries.
 
 ### §2 Functional CALM
 
@@ -318,7 +318,9 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
 | `«sec:systems/closing-after-voting»` | theorem | Commitment witnesses and mechanisms: |
+| `«def:contradicting-run»` | abbrev | **Definition `def:contradicting-run`** (Contradicting run). |
 | `«prop:canonical-commitment-witness»` | theorem | **Proposition `prop:canonical-commitment-witness`** (Canonical commitment witness). |
+| `«prop:canonical-commitment-witness/contradicts»` | theorem | Supporting form of Proposition `prop:canonical-commitment-witness`: |
 | `«prop:canonical-commitment-witness/canonical-run»` | theorem | Supporting form: |
 | `«prop:commitment-conflict»` | theorem | **Prop. |
 | `«prop:commitment-conflict/reach-general»` | theorem | Prop. |

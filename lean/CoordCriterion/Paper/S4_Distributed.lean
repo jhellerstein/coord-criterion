@@ -734,10 +734,15 @@ theorem «sec:systems/closing-after-voting» (i : CALM.Ballots)
     (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
   Figures.Elec.close_after_voting i hfull
 
-/-- Supporting predicate for Proposition `prop:canonical-commitment-witness`.
-`CAP.Contradicts emits accepts σ σc` says a run emits a removed row or accepts
-an input whose remaining fiber was emptied. -/
-abbrev commitmentContradictedBy {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
+/-- **Definition `def:contradicting-run`** (Contradicting run).  "Let a
+commitment take `σ` to `σ_c` in a run from `σ_P(i)`.  Another run
+*contradicts* the commitment at input `k` if it emits at `k` an output `x` with
+`(k,x) ∈ σ ∖ σ_c`, or, when the commitment removed every row of `σ` at `k`, it
+accepts `k`."
+
+Lean: `emits` and `accepts` record the other run's output and input events;
+`CAP.Contradicts emits accepts σ σc` is the disjunction of the two clauses. -/
+abbrev «def:contradicting-run» {sp : Spec I O} (emits : I → O → Prop) (accepts : I → Prop)
     (σ σc : State sp) : Prop :=
   CAP.Contradicts emits accepts σ σc
 
@@ -745,8 +750,12 @@ abbrev commitmentContradictedBy {sp : Spec I O} (emits : I → O → Prop) (acce
 witness).  Every commitment applied in a run from a canonical state `σ_P(i)`
 removes some row `(k,x)` that a canonical run from `σ_P(i)` can still select.
 
-Lean states the witness directly: the canonical run accepts `k` and emits `x`.
-This also witnesses `CAP.Contradicts` through its output clause. -/
+"Every commitment applied in a run from a canonical state `σ_P(i)` is
+contradicted by a canonical run from `σ_P(i)`."
+
+Lean states the witness directly: the canonical run accepts `k` and emits `x`;
+`prop:canonical-commitment-witness/contradicts` shows that this run satisfies
+`def:contradicting-run` through its output clause. -/
 theorem «prop:canonical-commitment-witness» {sp : Spec I O} {B : CommitmentBasis sp}
     {i : I} {es : List (SEvent sp)} {σ τ : State sp} {c : Commitment sp}
     (hrun : SysExec B (canon sp i) es σ) (happ : c.app σ = some τ) :
@@ -757,6 +766,14 @@ theorem «prop:canonical-commitment-witness» {sp : Spec I O} {B : CommitmentBas
   obtain ⟨ρ, he, hc⟩ := CAP.canonical_run_contradicts hik (σ.sub k x hx)
   exact ⟨k, x, ρ, hx, hnx, he, hc⟩
 
+/-- Supporting form of Proposition `prop:canonical-commitment-witness`: the
+run that accepts `k` and emits `x` contradicts the commitment in the sense of
+Definition `def:contradicting-run`. -/
+theorem «prop:canonical-commitment-witness/contradicts» {sp : Spec I O}
+    {σ τ : State sp} {k : I} {x : O} (hx : σ.R k x) (hnx : ¬ τ.R k x) :
+    «def:contradicting-run» (fun k' x' => k' = k ∧ x' = x) (fun k' => k' = k) σ τ :=
+  Or.inl ⟨k, x, hx, hnx, rfl, rfl⟩
+
   /-- Supporting form: from `σ_P(i)` with `i ≼ k`, the canonical run
   `input(k) output(x)` accepts `k` and emits any `x ∈ P(k)` at current input
   `k`. -/
@@ -766,9 +783,10 @@ theorem «prop:canonical-commitment-witness/canonical-run» {sp : Spec I O} {i k
   CAP.canonical_run_contradicts hik hx
 
 /-- **Prop. contradicting runs cannot reconcile at the conflict input**
-  (`prop:commitment-conflict`).  "Consider a run that applies a
-  commitment and another run that contradicts it at input `k`.  Their resulting
-  states have no common continuation to a state `(k,R')`."
+  (`prop:commitment-conflict`).  "Let a commitment take `σ` to `σ_c`, and
+  let a run that contradicts it at input `k` reach a state `τ` with current
+  input `k`.  Then `σ_c` and `τ` have no common continuation to a state
+  `(k,R')`."
 
   Lean: `CommitmentContradictsAt σ σc τ k` covers both proof cases.  Its first
   clause is an emitted output `x` whose row the commitment removed; its second

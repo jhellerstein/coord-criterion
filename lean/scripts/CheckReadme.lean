@@ -153,7 +153,9 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«cor:free-eager-output»
 #check @CC.Paper.«sec:systems/canonical-example»
 #check @CC.Paper.«sec:systems/closing-after-voting»
+#check @CC.Paper.«def:contradicting-run»
 #check @CC.Paper.«prop:canonical-commitment-witness»
+#check @CC.Paper.«prop:canonical-commitment-witness/contradicts»
 #check @CC.Paper.«prop:canonical-commitment-witness/canonical-run»
 #check @CC.Paper.«prop:commitment-conflict»
 #check @CC.Paper.«prop:commitment-conflict/reach-general»
