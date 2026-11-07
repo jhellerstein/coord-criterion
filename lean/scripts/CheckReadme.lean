@@ -152,7 +152,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:systems/canonical-equivalent»
 #check @CC.Paper.«cor:free-eager-output»
 #check @CC.Paper.«sec:systems/canonical-example»
-#check @CC.Paper.«sec:systems/closing-after-voting»
 #check @CC.Paper.«prop:commitment-conflict»
 #check @CC.Paper.«prop:commitment-conflict/second-run»
 #check @CC.Paper.«prop:commitment-conflict/canonical-run»
@@ -161,8 +160,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«prop:commitment-conflict/any-bases»
 #check @CC.Paper.«prop:commitment-conflict/reach»
 #check @CC.Paper.«prop:commitment-conflict/any-event»
-#check @CC.Paper.«prop:commitment-conflict/confined-to-current-input»
-#check @CC.Paper.«sec:systems/shared-nothing-single-key»
 #check @CC.Paper.«sec:systems/two-phase-commit»
 #check @CC.Paper.«sec:systems/two-phase-commit-detects»
 #check @CC.Paper.«sec:systems/2pc-timeout-abort»

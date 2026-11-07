@@ -94,7 +94,7 @@ first and supporting claims and examples follow.
 | `CompleteCALM/Cofinal.lean` | `CC` | §6.5 | Cofinality (used by Prop. declared-specification): a declared spec whose rows are rows of `T` and dominate every row of `T` (same inputs, or along an order embedding) is Lifted Monotone / consistent iff `T` is |
 | `CALM/Lemmas.lean` | `CC.CALM` | §2–§3, App. B | Event facts, functional remarks, Lemma reconciliation, paper proof routes, pairs suffice |
 | `CALM/Examples.lean` | `CC.CALM` | §2–§3, App. B | `k`-set agreement (pairs), rows at `j`, relational state-by-input, election, directed fiber |
-| `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §4.3 | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
+| `CALM/TransientConflict.lean` | `CC.CALM.Transient` | §2 (after Def. consistency) | A conflict confined to the current input: no meeting at `i`, confluent at `j`, not consistent |
 | `Figures.lean` | `CC.Figures` | §2–§3, §7 | Figure tables: election frames, ambiguity frames; decisive ballot vs. closing the polls |
 | `Distributed/Histories.lean` | `CC.Dist` | §4.1–4.2 | Histories, cuts, Prop. distributed consistency, Cor. convergence, exchanging outputs |
 | `Distributed/Exclusions.lean` | `CC` | §4.3–4.4, App. C | Exclusions, the canonical exclusion for an output, system output events `Out_γ(o)` and exclusion events `Exclude(γ)` (a nonempty sequence of basis exclusions applied without emitting; erased to nothing), normal form, coordination (an output event with `γ ≠ ε` or an exclusion event), canonical-equivalent (the canonical run skips exclusion events), conflicting outputs |
@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-619 entries.
+616 entries.
 
 ### §2 Functional CALM
 
@@ -314,10 +314,9 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«sec:systems/two-systems-two-commitments»` | theorem | "Both are commitments: |
 | `«sec:systems/neither-is-canonical-commitment»` | theorem | "… and neither is the commitment `x_o` of Definition lifted-output-event." At the canonical state of an input whose transactions `A`, `B`, `C` have each requ… |
 | `«sec:systems/run-under-basis»` | abbrev | "We call the runs of Sections functional-calm–complete-calm canonical runs, and a run under a basis `ℬ` is one whose output and commitment events apply only… |
-| `«sec:systems/canonical-equivalent»` | theorem | *Canonical runs suffice.* "Commitment bases and strategies preserve meaningful differences among systems. |
+| `«sec:systems/canonical-equivalent»` | theorem | *Observable equivalence.* Every output event of any system removes at least the rows that the canonical event for its output removes (Lemma canonical-commitm… |
 | `«cor:free-eager-output»` | theorem | **Corollary `cor:free-eager-output`** (Eager output is incidental). |
 | `«sec:systems/canonical-example»` | theorem | *Canonical runs suffice*, example. |
-| `«sec:systems/closing-after-voting»` | theorem | Commitment witnesses and mechanisms: |
 | `«prop:commitment-conflict»` | theorem | **Proposition `prop:commitment-conflict`** (Commitment conflict). |
 | `«prop:commitment-conflict/second-run»` | theorem | Supporting form of Prop. |
 | `«prop:commitment-conflict/canonical-run»` | theorem | Supporting form: |
@@ -326,8 +325,6 @@ File `Paper/S4_Distributed.lean`; paper source `sections/distributed-histories.t
 | `«prop:commitment-conflict/any-bases»` | theorem | Supporting output-only form of Prop. |
 | `«prop:commitment-conflict/reach»` | theorem | Prop. |
 | `«prop:commitment-conflict/any-event»` | theorem | Prop. |
-| `«prop:commitment-conflict/confined-to-current-input»` | theorem | "The proposition rules out reconciliation at `i`, not forever. |
-| `«sec:systems/shared-nothing-single-key»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:systems/two-phase-commit»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:systems/two-phase-commit-detects»` | theorem | Paragraph "Locks in a shared-nothing database": |
 | `«sec:systems/2pc-timeout-abort»` | theorem | Paragraph "Locks in a shared-nothing database": |

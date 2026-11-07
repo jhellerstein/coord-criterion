@@ -620,9 +620,7 @@ abbrev «sec:systems/run-under-basis» {sp : Spec I O} (B : CommitmentBasis sp) 
     (τ : State sp) : Prop :=
   RunUnder B es τ
 
-/-- *Canonical runs suffice.*  "Commitment bases and strategies preserve
-meaningful differences among systems.  The next result shows that our analysis
-need not be parameterized by those differences."  Every output event
+/-- *Observable equivalence.*  Every output event
 of any system removes at least the rows that the canonical event for its output
 removes (Lemma canonical-commitment-normal-form), and every run under any basis
 has an observably equivalent canonical run: one that accepts the same inputs,
@@ -722,17 +720,6 @@ theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Part
         σ0 [.output (kappa σ0 o2) o2] τ2' :=
   Txn.Partial.CommitEx.example_commitment_event_ABC h
 
-/-! ## Commitment witnesses and mechanisms (§4.3, `sec:systems`) -/
-
-/-- Commitment witnesses and mechanisms: after separating a system's
-observable behavior from how it makes commitments, the paper explains that
-coordination mechanisms enforce these semantic effects.  At the canonical state
-of any full ballot, the poll-closing commitment `closePolls` is undefined because
-it would remove no row. -/
-theorem «sec:systems/closing-after-voting» (i : CALM.Ballots)
-    (hfull : i.b1.isSome ∧ i.b2.isSome ∧ i.b3.isSome) :
-    (Figures.closePolls (sp := CALM.elec)).app (canon CALM.elec i) = none :=
-  Figures.Elec.close_after_voting i hfull
 
 /-- **Proposition `prop:commitment-conflict`** (Commitment conflict).  "Let a
 run from `σ_P(i)` apply a commitment that removes the row `(k,x)`, and let
@@ -851,49 +838,6 @@ theorem «prop:commitment-conflict/any-event» {sp : Spec I O}
     ¬ ∃ ρ : State sp, ρ.cur = σ.cur ∧ Reach σ' ρ ∧ Reach t ρ :=
   let h := Dist.conflicting_events (B1 := B1) (B2 := B2) h1 hno h2
   ⟨h.1, h.2.1, h.2.2, Dist.conflicting_events_reach h1 hno h2⟩
-
-/-- "The proposition rules out reconciliation at `i`, not forever.  For
-example, suppose `i ≺ j`, `P(i) = {o,x}` with `o` and `x` incomparable, and
-`P(j) = {u}` with `u` extending both.  The states that emit `o` and `x` cannot
-be reconciled at `i`, although accepting `j` reconciles them.  As explained
-after Definition `def:consistency`, consistency nevertheless counts the
-conflict at `i` as a failure."
-
-Lean: the example of `CALM/TransientConflict.lean`: inputs `i ≺ j`, outputs
-`o`, `x` incomparable below `u`, `P(i) = {o,x}`, `P(j) = {u}`.  From
-`σ_P(i)`, the canonical events `output(o)` and `output(x)` are legal; after
-`output(o)` no output at `i` extends `x`, so the two states have no common
-state with current input `i`; both reach `σ_P(j)` by `input(j)`, so they are
-confluent at `j`; and the specification is neither consistent nor directed at
-`i` (so not Lifted Monotone). -/
-theorem «prop:commitment-conflict/confined-to-current-input» :
-    open CALM.Transient in
-    Step σi (.output .o) tO ∧ Step σi (.output .x) tX ∧
-    (∀ y, tO.R .i y → ¬ (Out.x ≼ y)) ∧
-    (¬ ∃ ρ : State spec, ρ.cur = .i ∧ Reach tO ρ ∧ Reach tX ρ) ∧
-    Step tO (.input .j) (canon spec .j) ∧ Step tX (.input .j) (canon spec .j) ∧
-    ConfluentAt [tO, tX] .j ∧
-    ¬ spec.Consistent ∧ ¬ spec.DirectedOutputs ∧ ¬ spec.LiftedMono :=
-  open CALM.Transient in
-  ⟨step_o, step_x, tO_no_refine_x, not_meet_at_i, step_j_o, step_j_x, confluent_at_j,
-    not_consistent, not_directedOutputs, not_liftedMono⟩
-  /-- Paragraph "Locks in a shared-nothing database": ordering two transactions
-  chooses between the specification-permitted orders.  The canonical event for
-  `ab` therefore applies a nonempty commitment.  Locks and ownership are
-  operational mechanisms that can enforce this choice. -/
-theorem «sec:systems/shared-nothing-single-key» :
-      ¬ Exposable (canon CAP.ordSpec ()) .ab ∧
-        ∃ τ, SysStep (canonCommitmentBasis CAP.ordSpec) (canon CAP.ordSpec ())
-          (.output (kappa (canon CAP.ordSpec ()) .ab) .ab) τ ∧
-          kappa (canon CAP.ordSpec ()) .ab ≠ [] := by
-    have hn := CAP.ordSpec_ab_not_exposable
-    have ho : (canon CAP.ordSpec ()).R (canon CAP.ordSpec ()).cur .ab := CAP.canon_ord_R _ _
-    refine ⟨hn, outState _ _ ho, canonical_support _ _ ho, ?_⟩
-    intro he
-    have hs : SysStep (canonCommitmentBasis CAP.ordSpec) (canon CAP.ordSpec ())
-        (.output [] .ab) (outState (canon CAP.ordSpec ()) .ab ho) := by
-      simpa [he] using canonical_support _ _ ho
-    exact hn (eps_step_iff.1 hs).2.1
 
 /-- Paragraph "Locks in a shared-nothing database": two-phase commit combines
 local prepares with the coordinator's monotone decision whether all owners
