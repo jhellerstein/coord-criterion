@@ -351,7 +351,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-consistency/unfolded»` | theorem | Def. |
 | `«def:partition-consistency/at-cuts»` | theorem | Def. |
 | `«def:lm-for-A»` | abbrev | **Def. |
-| `«sec:complete-cap/lm-for-S»` | theorem | "With `E = P`, Lifted Monotonicity for `E` is the common-extension condition." |
+| `«sec:complete-cap/lm-for-S»` | theorem | "Complete CAP says that participants can keep the outputs of `E` available and remain consistent through partitions exactly when the spec satisfies Lifted Mo… |
 | `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an I/O specification `P` and an explicit relation `E ⊆ P`, the following are equivalent: |
 | `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `P` satisfies Lifted Monotonicity." |
 | `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |

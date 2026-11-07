@@ -66,13 +66,10 @@ consistency, and must be in the spec.
 
 We therefore pair a spec with an explicit relation `E ⊆ P`: the rows whose
 outputs participants must keep locally available.  Outputs in `P ∖ E`, such as
-combined outputs, need only remain permitted.  Complete CAP says that
-participants can keep the outputs of `E` available and remain consistent
-through partitions exactly when the spec satisfies Lifted Monotonicity for
-`E`: outputs of `E` emitted on different sides of a partition must have a
-common output extension in the spec at every common input extension of their
-inputs.  When `E = P`, this is Lifted Monotonicity
-itself."  Lean: Theorem `thm:complete-cap` and
+combined outputs, need only remain permitted.
+
+Both availability and consistency are judged on histories in which a
+partition separates the participants."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
 `«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`). -/
 theorem «sec:complete-cap/intro» (sp : Spec I O) (D : Type) (E : Table I O)
@@ -247,8 +244,14 @@ input extension `j` has a common output extension in `P(j)`."  Lean: `Consistent
 (the library name predates the paper's term); finite sets are lists. -/
 abbrev «def:lm-for-A» (sp : Spec I O) (E : Table I O) : Prop := ConsistentOn sp E
 
-/-- "With `E = P`, Lifted Monotonicity for `E` is the common-extension
-condition." -/
+/-- "Complete CAP says that participants can keep the outputs of `E` available
+and remain consistent through partitions exactly when the spec satisfies
+Lifted Monotonicity for `E`: outputs of `E` emitted on different sides of a
+partition must have a common output extension in the spec at every common
+input extension of their inputs.  When `E = P`, this is Lifted Monotonicity
+itself, the common-extension condition."  The equivalences are
+`«sec:complete-cap/intro»` and Theorem `thm:complete-cap`; this entry checks
+the case `E = P`. -/
 theorem «sec:complete-cap/lm-for-S» (sp : Spec I O) :
     «def:lm-for-A» sp sp.P ↔ sp.CommonExpansion :=
   consistentOn_S
