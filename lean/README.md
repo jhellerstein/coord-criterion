@@ -481,7 +481,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/lifted-monotonicity»` | abbrev | *Lifted Monotonicity* — `i ≼ j ⇒ P(i) ⊑ P(j)` (Def. |
 | `«app:notation/common-expansion-condition»` | abbrev | *common-extension condition* — rows with a common input extension `j` have a common output extension in `P(j)` (Def. |
 | `«app:notation/ruled-out»` | abbrev | *ruled out by `o`* — a row whose output does not extend `o` (Sec. |
-| `«app:notation/Subsumed»` | abbrev | *`Subsumed_o`* — ruled-out rows extended by a kept row at the same input (Eq. |
+| `«app:notation/Subsumed»` | abbrev | *`Subsumed_o`* — removed rows `(k,x)` for which some output at `k` extends both `x` and `o` (Eq. |
 | `«app:notation/Excluded»` | abbrev | *`Excluded_o`* — every ruled-out row not in `Subsumed_o`. |
 | `«app:notation/canonical-commitment»` | abbrev | *canonical commitment* — remove `Excluded_o`. |
 | `«app:notation/output-subsumption»` | abbrev | *output subsumption* — remove `Subsumed_o`, not a commitment (Def. |

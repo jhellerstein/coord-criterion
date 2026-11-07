@@ -937,16 +937,15 @@ common \outnoun there.} \removednote{\textbf{signposting}, 4 words, rank 86; \te
 \label{sec:lifted-output-events}
 
 \textcolor{newblue}{Lifted Monotonicity is a property of the possibility relation and its orders.} \textcolor{newblue}{We now return to execution.} For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
-again keeps exactly the rows whose outputs \outrelbase $o$, ending at
-$(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
-emits $o$. Its removed rows fall into two classes. A row is in
-$\Subsumed_o$ when a kept row at the same input \outrel it; its removal is an
-\emph{output subsumption}. Every other removed row is in $\Excluded_o$ and is
-removed by the canonical \commitment $x_o$. At an input $k$, $x_o$ removes
-only the rows in $\Excluded_o(k)$. If those are all the rows at $k$, it rules
-out $k$; otherwise it rules out only those outputs. Rows in $\Subsumed_o(k)$
-are removed separately by output subsumption and have a kept \outnoun at $k$,
-so they cannot cause the event to rule out $k$. \textcolor{newblue}{In the functional
+again emits $o$ and keeps exactly the rows whose outputs \outrelbase $o$,
+ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}. Every later output must \outrelbase $o$, so the event removes the rows whose
+outputs do not. Each removed row $(k,x)$ falls into one of two classes:
+subsumed or excluded. A row $(k,x)$ is placed in $\Subsumed_o$ if some
+$u\in R(k)$ \outrel both $x$ and $o$. Then a later output $u$ reports
+everything $x$ would have, and the removal, an output subsumption, loses
+nothing. Otherwise $(k,x)$ is placed in $\Excluded_o$, and the canonical
+\commitment $x_o$ removes it. If $x_o$ removes every row at $k$, it rules out
+$k$; otherwise it rules out only those outputs. \textcolor{newblue}{In the functional
 case, $\Subsumed_o$ is empty.} \textcolor{newblue}{Formal definitions are in \extended.}
 
 \textcolor{newblue}{Returning to Figure~\ref{fig:nonmonotone-frame},

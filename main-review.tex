@@ -1066,16 +1066,15 @@ fibers, those outputs have a common \outnoun there. Full proof in Appendix~\ref{
 \label{sec:lifted-output-events}
 
 \textcolor{reviewed}{For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
-again keeps exactly the rows whose outputs \outrelbase $o$, ending at
-$(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}, and
-emits $o$.} \textcolor{reviewed}{Its removed rows fall into two classes.} \textcolor{reviewed}{A row is in
-$\Subsumed_o$ when a kept row at the same input \outrel it; its removal is an
-\emph{output subsumption}.} \textcolor{reviewed}{Every other removed row is in $\Excluded_o$ and is
-removed by the canonical \commitment $x_o$.} \textcolor{reviewed}{At an input $k$, $x_o$ removes
-only the rows in $\Excluded_o(k)$.} \textcolor{reviewed}{If those are all the rows at $k$, it rules
-out $k$; otherwise it rules out only those outputs.} \textcolor{reviewed}{Rows in $\Subsumed_o(k)$
-are removed separately by output subsumption and have a kept \outnoun at $k$,
-so they cannot cause the event to rule out $k$.}
+again emits $o$ and keeps exactly the rows whose outputs \outrelbase $o$,
+ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}.} \textcolor{reviewed}{Every later output must \outrelbase $o$, so the event removes the rows whose
+outputs do not.} \textcolor{reviewed}{Each removed row $(k,x)$ falls into one of two classes:
+subsumed or excluded.} \textcolor{reviewed}{A row $(k,x)$ is placed in $\Subsumed_o$ if some
+$u\in R(k)$ \outrel both $x$ and $o$.} \textcolor{reviewed}{Then a later output $u$ reports
+everything $x$ would have, and the removal, an output subsumption, loses
+nothing.} \textcolor{reviewed}{Otherwise $(k,x)$ is placed in $\Excluded_o$, and the canonical
+\commitment $x_o$ removes it.} \textcolor{reviewed}{If $x_o$ removes every row at $k$, it rules out
+$k$; otherwise it rules out only those outputs.}
 
 \textcolor{reviewed}{These are the cases of Section~\ref{sec:ambiguity-story}: emitting $\bot$ under
 the equality order of Figure~\ref{fig:nonmonotone-frame} puts the rows for
@@ -2636,7 +2635,7 @@ rows at $k$.
   Lifted Monotonicity & $i\InputOrd j\Rightarrow\fiber{i}\LiftedOrd\fiber{j}$ & Def.~\ref{def:lifted-monotonicity}\\
   common-extension condition & rows with a common \indesc $j$ have a common \outnoun in $\fiber{j}$ & Def.~\ref{def:common-expansion-condition}\\
   ruled out by $o$ & a row whose output does not \outrelbase $o$ & App.~\ref{app:lifted-output-events}\\
-  $\Subsumed_o$; $\Excluded_o$ & ruled-out rows \outrelpast by a kept row at the same input; all other ruled-out rows & Eq.~\ref{eq:output-subsumptions}--\ref{eq:commitment-removals}\\
+  $\Subsumed_o$; $\Excluded_o$ & removed rows $(k,x)$ for which some output at $k$ \outrel both $x$ and $o$; all other removed rows & Eq.~\ref{eq:output-subsumptions}--\ref{eq:commitment-removals}\\
   output subsumption; canonical \commitment $x_o$ & remove $\Subsumed_o$, not a \commitment; remove $\Excluded_o$ & Defs.~\ref{def:lifted-output-event}, \ref{def:canonical-commitment}\\
   \bottomrule
 \end{tabular}
@@ -2998,9 +2997,9 @@ disjoint sets:
 Let $(i,R)$ be a state and $o\in R(i)$. The \emph{output event}
 $\mathsf{output}(o)$ keeps exactly the rows whose outputs \outrelbase $o$ and
 emits $o$, atomically, ending at $(i,R[\mathrm{out}\OutputGe o])$ as in
-Equation~\ref{eq:output-action}. It removes the rows in $\Subsumed_o$, each
-\outrelpast by a kept row at the same input, by \emph{output subsumption},
-which is not a \commitment.
+Equation~\ref{eq:output-action}. It removes each row $(k,x)$ in
+$\Subsumed_o$, for which some $u\in R(k)$ \outrel both $x$ and $o$, by
+\emph{output subsumption}, which is not a \commitment.
 \end{definition}
 
 \begin{definition}[Canonical \commitment]

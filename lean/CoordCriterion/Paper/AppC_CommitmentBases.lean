@@ -20,8 +20,8 @@ section LiftedOutputEvents
 
 open CC.CALM
 
-/-- **Eq. `eq:output-subsumptions`**: ruled-out rows extended by a kept row at the
-same input. -/
+/-- **Eq. `eq:output-subsumptions`**: removed rows `(k,x)` for which some
+`u ∈ R(k)` extends both `x` and `o`. -/
 abbrev «eq:output-subsumptions» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   Subsumed σ o
 

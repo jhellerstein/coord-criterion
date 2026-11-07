@@ -206,8 +206,8 @@ abbrev «app:notation/common-expansion-condition» (sp : Spec I O) : Prop := sp.
 abbrev «app:notation/ruled-out» {sp : Spec I O} (σ : State sp) (o : O) : Table I O :=
   fun k x => σ.R k x ∧ ¬ o ≼ x
 
-/-- *`Subsumed_o`* — ruled-out rows extended by a kept row at the same input
-(Eq. `eq:output-subsumptions`).  Lean: `Subsumed σ o`. -/
+/-- *`Subsumed_o`* — removed rows `(k,x)` for which some output at `k` extends
+both `x` and `o` (Eq. `eq:output-subsumptions`).  Lean: `Subsumed σ o`. -/
 abbrev «app:notation/Subsumed» {sp : Spec I O} (σ : State sp) (o : O) : Table I O := Subsumed σ o
 
 /-- *`Excluded_o`* — every ruled-out row not in `Subsumed_o`. -/
