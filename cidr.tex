@@ -259,8 +259,7 @@ Monotonicity (\S\ref{sec:complete-calm-theorem}).
 
 What of coordination?  Locks, agreement protocols, and other coordination
 mechanisms enforce \commitments.  Our criterion identifies the \commitments a
-spec's outputs require, independently of the mechanism used.  Placement
-determines whether conflicting choices can arise at different participants.
+spec's outputs require, independently of the mechanism used.
 Distributed histories are captured under the same consistency criteria as centralized ones
 (\S\ref{sec:distributed-execution}). Complete CAP (\S\ref{sec:complete-cap}) says
 Lifted Monotonicity exactly characterizes specs that can keep every
@@ -1076,7 +1075,7 @@ placed at participants that exchange no messages.  \fullproof
 \end{proof}
 
 The converse uses unrestricted placement; the placement-sensitive variant is
-sketched in Section~\ref{sec:systems} and formalized in \extended.
+formalized in \extended.
 
 The forward direction has a concrete witness.  For participant runs with common
 \indesc $j$, the survivor test supplies a $u\in\fiber{j}$ that survives in every
@@ -1099,9 +1098,8 @@ spec.
 \label{sec:systems}
 
 A spec describes which behaviors are permitted, but not how a system chooses
-among them.  We now model those choices.  We also show that we can assess their
-\commitments against canonical runs, regardless of system implementation
-choices.
+among them.  We now model those choices, and show that a system's inputs and
+outputs always remain those of a canonical run.
 
 \begin{figure}[t]
   \centering
@@ -1171,14 +1169,11 @@ $\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else, while MVTO's
 $\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped
 (Figure~\ref{fig:cc-commitments}).  Both are \commitments, but each leaves different possibilities afterward.
 
-Commitment bases and strategies capture these meaningful differences among
-systems.  Those differences matter for describing which \commitments a system
-makes and when.  Nonetheless, our analysis can ignore these distinctions.  We
-call the runs of
+We call the runs of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} \emph{canonical
-runs}.  The next lemma justifies using them as a common comparison model.
+runs}.  The next lemma relates every system run to one of them.
 
-\begin{lemma}[Canonical Run Universality]
+\begin{lemma}[Observable Equivalence]
 \label{lem:canonical-equivalent}
 Every run under any \commitment basis is \emph{observably equivalent} to a
 canonical run: one that accepts the same inputs, emits the same outputs,
@@ -1186,56 +1181,17 @@ and keeps at least the original's rows after each event (\extended).
 \end{lemma}
 
 Hence the commitments a spec's outputs require do not depend on their timing or
-representation in a system's \commitment basis.  We can assess any system's
-\commitments against canonical runs, without parameterizing the analysis by
-that system's basis or strategy.
+representation in a system's \commitment basis.
 
-\paragraph{Commitments and conflict.}
-A \commitment removes rows that the spec permits, so another run can still
-emit one of them.  The two runs cannot then be reconciled.
-
-\begin{proposition}[Commitment conflict]
-\label{prop:commitment-conflict}
-Let a run from $\sigma_P(i)$ apply a \commitment that removes the row
-$(k,x)$, and let another run from $\sigma_P(i)$ issue the canonical events
-$\mathsf{input}(k)$ followed by $\mathsf{output}(x)$.  These two runs
-\emph{conflict}: they are not confluent at $k$.
-\end{proposition}
-
-\begin{proof}[Proof sketch]
-Events only remove rows, so $(k,x)$ is present at $\sigma_P(i)$ and the
-second run exists.  By the Survivor test (Proposition~\ref{prop:confluence}),
-confluence at $k$ needs a row at $k$ that survives in both runs.  Every row
-that survives $\mathsf{output}(x)$ at $k$ \outrel $x$, but the \commitment left
-no row at $k$ that \outrel $x$.  \fullproof
-\end{proof}
-
-Output subsumption remains permitted.  The proposition says what a coordination
-mechanism must accomplish: enforce the \commitment so that the conflicting
-run cannot occur independently.  Locks, agreement protocols, ownership,
-and sequencers are familiar choices.  Using one need not apply a \commitment:
-closing the polls after every voter has voted, for example, removes nothing the
-spec still permits.
-
-\paragraph{Placement.}
-Whether a coordination mechanism must span participants depends on who can
-make each choice.  A deployment records which outputs each participant may
-produce.  With unrestricted placement, conflicting choices can arise at
-different participants; ownership can keep them at one.  Deployments and their
-criterion, monotonicity across partitions, are formalized in \extended.
-
-Consider a shared-nothing database in which each key is owned and locked by
-one participant~\cite{stonebraker1986sharednothing}.  Ordering two transactions
-on one key makes a \commitment, but ownership keeps both choices at that owner.
-A transaction spanning two keys is different: the choices reside at different
-owners, so they must agree on one order.
-
-Two-phase commit adds no further \commitment.  Each owner's prepare reports the
-\commitment it has already made; the coordinator's monotone decision only
-detects whether those \commitments agree, aborting when they do not.  A timeout
-abort before the last vote applies another \commitment, like closing the polls.
-One coordinator can make that choice locally.  Replicated coordinators instead
-use distributed agreement, as in Paxos Commit~\cite{gray2006consensus}.
+Observable equivalence is one-way, and it concerns inputs and outputs, not
+tables.  A system run's \commitments may remove rows that its observably
+equivalent canonical run keeps, and the system may then lose confluence that
+canonical runs have.  The registrar is an example.  After closing the polls at
+$ab\cdot$, it cannot accept the late ballot $aba$, although the canonical run
+that only emits $\bot$ can.
+The CALM and CAP criteria are about specs and their canonical runs.  Showing
+that a particular system inherits their confluence takes a separate argument
+about that system.
 
 \subsection{The Complete CAP Theorem}
 \label{sec:complete-cap}
@@ -1715,7 +1671,7 @@ invariants~\cite{sivaramakrishnan2015quelea,kaki2018alone}.  Their tools pick,
 for each operation or transaction, the weakest consistency or isolation level
 that the store offers and that still satisfies the declared properties.  We
 ask what the spec itself requires, independent of any menu of
-levels.  By Canonical Run Universality (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.  Our
+levels.  By Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.  Our
 composition results need no program logic, and the criteria are exact on
 specs, not conservative.
 

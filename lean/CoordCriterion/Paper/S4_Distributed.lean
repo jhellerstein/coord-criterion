@@ -650,8 +650,8 @@ removes is subsumed by a row that survives.  Likewise, deferring the output
 avoids no commitment."
 
 Lean: for any commitment basis, a legal output has a legal empty-commitment
-output event; every row that event removes is in `Subsumed_o`.  Canonical Run
-Universality (`«sec:systems/canonical-equivalent»`) lifts the canonical account
+output event; every row that event removes is in `Subsumed_o`.  Observable
+Equivalence (`«sec:systems/canonical-equivalent»`) lifts the canonical account
 to arbitrary runs under a basis. -/
 theorem «cor:free-eager-output» {sp : Spec I O} (B : CommitmentBasis sp)
     (σ : State sp) (o : O) (ho : σ.R σ.cur o) (hlegal : Exposable σ o) :
@@ -674,7 +674,7 @@ three transactions and orders `A` before `C` before `B`.  The canonical run
 can emit the same output because that row was present all along.  Every row
 retained afterward extends `[A,C,B]`, so it satisfies all of 2PL's decisions,
 including the earlier order of `A` before `B`.  Thus the canonical final table
-is contained in 2PL's, while Canonical Run Universality gives the reverse
+is contained in 2PL's, while Observable Equivalence gives the reverse
   containment.  The tables are equal: the lock made the `A`-before-`B` decision
   earlier than the output required.  The commitments required by a spec's
   outputs therefore do not depend on their timing or representation in a
@@ -693,8 +693,8 @@ or `B` counts), so it keeps `[A,B,C]` and removes `[B,A,C]`;
 is a legal `B_2PL` step from `σ₁`; the canonical run can emit `[A,C,B]`
 because that row was present at `σ₀`.  Every row it retains afterward extends
 `[A,C,B]`, hence satisfies those five commitments and the earlier `order(A,B)`;
-(d) the canonical final table is therefore contained in 2PL's, while Canonical
-Run Universality gives the reverse containment.  The two runs end at the same
+(d) the canonical final table is therefore contained in 2PL's, while Observable
+Equivalence gives the reverse containment.  The two runs end at the same
 state and form a `Lockstep` pair whose commitment event is matched by no
 canonical event. -/
 theorem «sec:systems/canonical-example» {T K : Type} {A B C : T} {k : Txn.Partial.Inp T K}

@@ -621,7 +621,7 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«def:run-under-basis/canonical-run»` | abbrev | Legacy sub-label pointing at `«def:canonical-run»`. |
 | `«def:run-under-basis/canonical-runs-are-runs»` | theorem | Def. |
 | `«app:bases/observably-equivalent»` | abbrev | "Call two runs observably equivalent when they start at the same canonical state and agree once commitment sequences are erased and commitment events dropped: |
-| `«lem:canonical-equivalent»` | theorem | **Lemma canonical equivalents** (`lem:canonical-equivalent`). |
+| `«lem:canonical-equivalent»` | theorem | **Lemma Observable Equivalence** (`lem:canonical-equivalent`). |
 | `«cor:reconciliation-any-basis»` | theorem | **Cor. |
 | `«app:bases/converse-fails»` | theorem | "The converse of Lemma canonical-equivalent fails: |
 | `«app:bases/basis-2PL»` | abbrev | *Application-specific commitments.* "Locks and timestamps are commitments of this kind: |

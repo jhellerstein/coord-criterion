@@ -167,8 +167,8 @@ aborts or reads.
     the same output because that row was present at `σ₀`.  Every row it retains
     afterward extends `[A,C,B]`, hence satisfies all five commitments in the
     output event and the earlier `order(A,B)`.
-(d) The canonical final table is therefore contained in 2PL's; Canonical Run
-    Universality gives the reverse containment.  The two runs end at the same
+(d) The canonical final table is therefore contained in 2PL's; Observable
+    Equivalence gives the reverse containment.  The two runs end at the same
     state, and form a `Lockstep` pair in which the commitment event is matched
     by no canonical event. -/
 theorem example_commitment_event_ABC {k : Inp T K} (h : Tri k A B C) :
