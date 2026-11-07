@@ -17,11 +17,12 @@ outputs always remain those of a canonical run.
 
 For example, serializability can be enforced by any of a number of concurrency
 control protocols (Figure~\ref{fig:ambiguity-frames}(f), formalized in
-Appendix~\ref{app:cc-bases}).  Two-phase locking (2PL) uses locks on
-operations: when $B$ waits for a lock $A$ holds, $\mathsf{order}(A,B)$
-fixes $A$ before $B$.  Multiversion timestamp ordering
-(MVTO)~\cite{bernstein1981concurrency} uses timestamps:
-$\mathsf{stamp}(B)$ fixes $B$ before any transaction not yet stamped.  The
+Appendix~\ref{app:cc-bases}).  Two-phase locking (2PL) orders transactions
+pairwise through lock requests: when $B$ waits for a lock $A$ holds,
+$\mathsf{order}(A,B)$ fixes $A$ before $B$ and nothing else.  Multiversion
+timestamp ordering (MVTO)~\cite{bernstein1981concurrency} orders them totally
+through timestamp assignment: $\mathsf{stamp}(B)$ fixes $B$ before any
+transaction not yet stamped.  The
 two narrow the spec differently.
 
 We saw a similar example with elections.  When the registrar of
@@ -216,14 +217,20 @@ earlier than the output required.  The \commitments required by a spec's outputs
 therefore do not depend on their timing or representation in a system's
 \commitment basis.
 
-Observable equivalence is one-way, and it concerns inputs and outputs, not
-tables.  A system run's \commitments may remove rows that its canonical run
-keeps, and the system may then lose confluence that canonical runs have.  The
-registrar is an example.  After closing the polls at $ab\cdot$, it cannot
-accept the late ballot $aba$, although its canonical run, which only emits
-$\bot$, can.  The CALM and CAP criteria are about specs and
-their canonical runs.  Showing that a particular system inherits their
-confluence takes a separate argument about that system.
+Observable equivalence is one-way only: all system runs have observably
+equivalent canonical runs, but not necessarily vice versa
+(Appendix~\ref{app:bases}).  Note also that observable equivalence is a
+guarantee only on inputs and outputs, not on remainder tables.  A system run's
+\commitments may be more aggressive, removing rows that its canonical run keeps.
+As a result, a spec can be confluent under canonical runs, but a system with
+that spec may not be confluent, e.g., if it removes a necessary common
+extension.  The registrar is an example.  After closing the polls at
+$ab\cdot$, it cannot accept the late ballot $aba$, although its canonical run,
+which only emits $\bot$, can.  The CALM and CAP criteria are about specs and
+their canonical runs.  A system with no \commitment events inherits their
+confluence directly, since its runs are canonical runs.  For a system with
+\commitments of its own, showing that it inherits that confluence requires an
+argument about that system, which is outside the scope of this paper.
 
 \paragraph{Commitments and conflict.}
 The registrar's failure is one case of a general fact.  Suppose one run
