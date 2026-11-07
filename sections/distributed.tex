@@ -254,14 +254,14 @@ therefore do not depend on their timing or representation in a system's
 \commitment basis.
 
 \paragraph{What a \commitment rules out.}
-Canonical runs also give a baseline for judging a single \commitment.  Every
-run starts from a canonical state $\sigma_P(i)$, in which no \commitment has
-yet been applied: it holds every row of $P$ above $i$.  Suppose a run under
-some basis reaches a state $\sigma$ and there applies a \commitment, leaving
-$\sigma_c$.  Since events only remove rows, every row the \commitment removes
-is still present at the baseline $\sigma_P(i)$.  A canonical run from
-$\sigma_P(i)$ never applies that \commitment, so it may still make a choice the
-\commitment ruled out.
+Starting from a canonical state $\sigma_P(i)$, consider a run $r$ that applies
+a \commitment $c$ at state $\sigma$, leaving $\sigma_c$, and suppose $c$
+removes the row $(k,x)$.  We can identify another run $r'$ starting from
+$\sigma_P(i)$ that \emph{contradicts} $c$: it has an input event for $k$
+followed by an output event emitting $x$.  We call $r'$ a \emph{witness} for
+$c$.  The construction works because events only remove rows, so $(k,x)$ is
+present at $\sigma_P(i)$.  A \commitment can also remove every row at $k$, and
+then a run contradicts it simply by accepting $k$.
 
 \begin{definition}[Contradicting run]
 \label{def:contradicting-run}
@@ -280,14 +280,14 @@ $[B,A,C]$ contradicts it.
 
 \begin{proposition}[Canonical alternatives witness commitments]
 \label{prop:canonical-commitment-witness}
-Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
-contradicted by a canonical run from $\sigma_P(i)$.
+Every \commitment applied in a run from a canonical state $\sigma_P(i)$ has a
+canonical witness: a canonical run from $\sigma_P(i)$ that contradicts it.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-Choose a row $(k,x)$ that the \commitment removes.  The row is present at
-$\sigma_P(i)$, so the canonical run from $\sigma_P(i)$ that accepts $k$ and
-emits $x$ contradicts the \commitment.
+The witness $r'$ above is canonical.  Since $(k,x)$ is present at
+$\sigma_P(i)$, $k$ extends $i$, so $\mathsf{input}(k)$ is enabled; it keeps
+$(k,x)$, and $\mathsf{output}(x)$ then emits $x$ at $k$.
 \end{proof}
 
 \begin{proposition}[Commitment conflict]

@@ -750,8 +750,10 @@ abbrev «def:contradicting-run» {sp : Spec I O} (emits : I → O → Prop) (acc
 witness).  Every commitment applied in a run from a canonical state `σ_P(i)`
 removes some row `(k,x)` that a canonical run from `σ_P(i)` can still select.
 
-"Every commitment applied in a run from a canonical state `σ_P(i)` is
-contradicted by a canonical run from `σ_P(i)`."
+"Every commitment applied in a run from a canonical state `σ_P(i)` has a
+canonical witness: a canonical run from `σ_P(i)` that contradicts it."  The
+witness `r'` has an input event for `k` followed by an output event emitting
+`x`, for a row `(k,x)` the commitment removes.
 
 Lean states the witness directly: the canonical run accepts `k` and emits `x`;
 `prop:canonical-commitment-witness/contradicts` shows that this run satisfies

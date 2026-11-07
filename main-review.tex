@@ -1615,20 +1615,20 @@ therefore do not depend on their timing or representation in a system's
 \commitment basis.}
 
 \paragraph{What a \commitment rules out.}
-\textcolor{reviewed}{Canonical runs also give a baseline for judging a single \commitment.} \textcolor{reviewed}{Every
-run starts from a canonical state $\sigma_P(i)$, in which no \commitment has
-yet been applied: it holds every row of $P$ above $i$.} \textcolor{reviewed}{Suppose a run under
-some basis reaches a state $\sigma$ and there applies a \commitment, leaving
-$\sigma_c$.} \textcolor{reviewed}{Since events only remove rows, every row the \commitment removes
-is still present at the baseline $\sigma_P(i)$.} \textcolor{reviewed}{A canonical run from
-$\sigma_P(i)$ never applies that \commitment, so it may still make a choice the
-\commitment ruled out.}
+\textcolor{reviewed}{Starting from a canonical state $\sigma_P(i)$, consider a run $r$ that applies
+a \commitment $c$ at state $\sigma$, leaving $\sigma_c$, and suppose $c$
+removes the row $(k,x)$.} \textcolor{reviewed}{We can identify another run $r'$ starting from
+$\sigma_P(i)$ that \emph{contradicts} $c$: it has an input event for $k$
+followed by an output event emitting $x$.} \textcolor{reviewed}{We call $r'$ a \emph{witness} for
+$c$.} \textcolor{reviewed}{The construction works because events only remove rows, so $(k,x)$ is
+present at $\sigma_P(i)$.} \textcolor{reviewed}{A \commitment can also remove every row at $k$, and
+then a run contradicts it simply by accepting $k$.}
 
 \begin{definition}[Contradicting run]
 \label{def:contradicting-run}
-Let a \commitment take $\sigma$ to $\sigma_c$ in a run from $\sigma_P(i)$. \textcolor{reviewed}{Another run \emph{contradicts} the \commitment at input $k$ if it emits at $k$
+Let a \commitment take $\sigma$ to $\sigma_c$ in a run from $\sigma_P(i)$. Another run \emph{contradicts} the \commitment at input $k$ if it emits at $k$
 an output $x$ with $(k,x)\in\sigma\setminus\sigma_c$, or, when the
-\commitment removed every row of $\sigma$ at $k$, it accepts $k$.}
+\commitment removed every row of $\sigma$ at $k$, it accepts $k$.
 \end{definition}
 
 The two clauses match the two effects of Section~\ref{sec:lifted-output-events}:
@@ -1640,14 +1640,14 @@ $[B,A,C]$ contradicts it.
 
 \begin{proposition}[Canonical alternatives witness commitments]
 \label{prop:canonical-commitment-witness}
-\textcolor{reviewed}{Every \commitment applied in a run from a canonical state $\sigma_P(i)$ is
-contradicted by a canonical run from $\sigma_P(i)$.}
+\textcolor{reviewed}{Every \commitment applied in a run from a canonical state $\sigma_P(i)$ has a
+canonical witness: a canonical run from $\sigma_P(i)$ that contradicts it.}
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-\textcolor{reviewed}{Choose a row $(k,x)$ that the \commitment removes.} \textcolor{reviewed}{The row is present at
-$\sigma_P(i)$, so the canonical run from $\sigma_P(i)$ that accepts $k$ and
-emits $x$ contradicts the \commitment.}
+The witness $r'$ above is canonical. Since $(k,x)$ is present at
+$\sigma_P(i)$, $k$ extends $i$, so $\mathsf{input}(k)$ is enabled; it keeps
+$(k,x)$, and $\mathsf{output}(x)$ then emits $x$ at $k$.
 \end{proof}
 
 \begin{proposition}[Commitment conflict]
