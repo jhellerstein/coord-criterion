@@ -441,7 +441,9 @@ theorem «def:system/restrict» {sp : Spec I O} {D : Type} (Sys : CAP.System sp 
       ∀ n init p pre e, CAP.Allowed Sys.restrict n init p pre e ↔ CAP.Allowed Sys n init p pre e :=
   ⟨Sys.restrict_basisRespecting, Sys.restrict_allowed⟩
 
-/-- After Def. `def:system`: "A system's strategies select the events of an
+/-- After Def. `def:system`: "Coordination mechanisms live in the system: its
+strategies describe how participants use them, and its basis records the
+commitments they can enforce.  A system's strategies select the events of an
 actual execution; they need not realize every run the spec permits.  A
 deployment can separately restrict which participants may emit which rows."
 Lean: `CAP.System sp D` carries one specification `sp` and one basis; its
