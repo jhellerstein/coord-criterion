@@ -479,11 +479,14 @@ abbrev «def:system-output-event» {sp : Spec I O} (B : CommitmentBasis sp) (σ 
 
   /-- **Def. commitment event** (`def:commitment-event`).  "A commitment event
   `apply(γ)` applies a nonempty sequence `γ = c₁⋯cₙ` of commitments, each
-defined at the state its predecessors leave, and emits nothing."
+defined at the state its predecessors leave, and emits nothing.  Since later
+commitments only remove rows, the sequence as a whole is itself a commitment."
 
 Lean: `SysStep B σ (.commitment γ) τ` (constructor `SysStep.commitment`: every
 `c ∈ γ` is in `B`, `γ ≠ []`, and `ApplySeq γ σ τ`).  In the `CC.CAP` history
-model the local event is `CAP.LEv.commitment γ`. -/
+model the local event is `CAP.LEv.commitment γ`.  That the sequence as a whole
+is a commitment is `«app:bases/composite-commitment»` (the composite is a
+`Commitment`) and `«app:bases/composite-commitment-defined»`. -/
 abbrev «def:commitment-event» {sp : Spec I O} (B : CommitmentBasis sp) (σ : State sp)
     (γ : List (Commitment sp)) (τ : State sp) : Prop :=
   SysStep B σ (.commitment γ) τ

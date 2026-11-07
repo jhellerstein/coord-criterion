@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-615 entries.
+613 entries.
 
 ### §2 Functional CALM
 
@@ -608,10 +608,8 @@ File `Paper/AppC_CommitmentBases.lean`; paper source `appendices/commitment-base
 | `«app:bases/canonical-system»` | abbrev | Supporting notion for the appendix on `app:bases` and Appendix `app:cap-response`: |
 | `«app:bases/canonical-system/histories»` | theorem | Supporting fact: |
 | `«app:bases/canonical-system/no-commitment-event»` | theorem | Supporting fact: |
-| `«lem:compound-commitment»` | abbrev | **Lemma compound commitments are commitments** (`lem:compound-commitment`). |
-| `«lem:compound-commitment/defined»` | theorem | Lemma `lem:compound-commitment`: |
-| `«app:bases/compound-functional»` | theorem | "In a functional spec the composite removes every row at each input it touches, so it empties." |
-| `«app:bases/compound-commitment-event»` | theorem | "A compound commitment event therefore has the same effect as one that applies the composite commitment alone." Lean: |
+| `«app:bases/composite-commitment»` | abbrev | Supporting form of Def. |
+| `«app:bases/composite-commitment-defined»` | theorem | Supporting form of Def. |
 | `«def:run-under-basis»` | abbrev | **Def. |
 | `«def:canonical-run»` | abbrev | **Def. |
 | `«def:run-under-basis/canonical-run»` | abbrev | Legacy sub-label pointing at `«def:canonical-run»`. |

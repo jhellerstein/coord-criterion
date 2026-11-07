@@ -196,45 +196,23 @@ theorem «app:bases/canonical-system/no-commitment-event» {sp : Spec I O} {σ �
     {es : List (SEvent sp)} (h : CanonExec σ es τ) : ∀ γ, SEvent.commitment γ ∉ es :=
   canonExec_noCommit h
 
-/-! ## Compound commitments -/
+/-! ## Composite commitments (Def. `def:commitment-event`) -/
 
-/-- **Lemma compound commitments are commitments** (`lem:compound-commitment`).
-"The composite of a nonempty sequence of commitments, defined wherever the
-sequence is, is a commitment."
-
-Lean: the composite of `c :: cs` is a `Commitment sp` (the type is the claim);
-see `…/defined` for "defined wherever the sequence is". -/
-noncomputable abbrev «lem:compound-commitment» {sp : Spec I O} (c : Commitment sp)
+/-- Supporting form of Def. `def:commitment-event`: "Since later commitments
+only remove rows, the sequence as a whole is itself a commitment."  Lean: the
+composite of `c :: cs` is a `Commitment sp` (the type is the claim). -/
+noncomputable abbrev «app:bases/composite-commitment» {sp : Spec I O} (c : Commitment sp)
     (cs : List (Commitment sp)) : Commitment sp :=
   composite c cs
 
-/-- Lemma `lem:compound-commitment`: the composite is defined exactly where the
-sequence is, with the same result; equivalently, applying `c :: cs` is applying
-the one-element sequence `[composite c cs]`. -/
-theorem «lem:compound-commitment/defined» {sp : Spec I O} (c : Commitment sp)
+/-- Supporting form of Def. `def:commitment-event`: the composite is defined
+exactly where the sequence is, with the same result; equivalently, applying
+`c :: cs` is applying the one-element sequence `[composite c cs]`. -/
+theorem «app:bases/composite-commitment-defined» {sp : Spec I O} (c : Commitment sp)
     (cs : List (Commitment sp)) (σ ρ : State sp) :
     ((composite c cs).app σ = some ρ ↔ ApplySeq (c :: cs) σ ρ) ∧
     (ApplySeq (c :: cs) σ ρ ↔ ApplySeq [composite c cs] σ ρ) :=
   ⟨compApp_iff, applySeq_composite c cs σ ρ⟩
-
-/-- "In a functional spec the composite removes every row at each input it
-touches, so it empties." -/
-theorem «app:bases/compound-functional» {sp : Spec I O} :
-    sp.Functional → ∀ (c : Commitment sp) (cs : List (Commitment sp)) {σ τ : State sp},
-        (composite c cs).app σ = some τ →
-        ∀ k, (∃ u, σ.R k u ∧ ¬ τ.R k u) → ∀ w, ¬ τ.R k w :=
-  fun hf c cs _ _ h k hk => Dist.composite_functional_empties hf c cs h k hk
-
-/-- "A compound commitment event therefore has the same effect as one that
-applies the composite commitment alone."
-
-Lean: `commit(c::cs)` under `B` is `commit([composite])` under any basis `B'`
-containing the composite, and back. -/
-theorem «app:bases/compound-commitment-event» {sp : Spec I O} {B B' : CommitmentBasis sp}
-    {σ τ : State sp} {c : Commitment sp} {cs : List (Commitment sp)}
-    (hB : ∀ c' ∈ c :: cs, B c') (hB' : B' (composite c cs)) :
-    SysStep B σ (.commitment (c :: cs)) τ ↔ SysStep B' σ (.commitment [composite c cs]) τ :=
-  Dist.sysStep_commitment_composite_iff hB hB'
 
 /-! ## Runs under a basis -/
 

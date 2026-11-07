@@ -387,10 +387,8 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«app:bases/canonical-system»
 #check @CC.Paper.«app:bases/canonical-system/histories»
 #check @CC.Paper.«app:bases/canonical-system/no-commitment-event»
-#check @CC.Paper.«lem:compound-commitment»
-#check @CC.Paper.«lem:compound-commitment/defined»
-#check @CC.Paper.«app:bases/compound-functional»
-#check @CC.Paper.«app:bases/compound-commitment-event»
+#check @CC.Paper.«app:bases/composite-commitment»
+#check @CC.Paper.«app:bases/composite-commitment-defined»
 #check @CC.Paper.«def:run-under-basis»
 #check @CC.Paper.«def:canonical-run»
 #check @CC.Paper.«def:run-under-basis/canonical-run»

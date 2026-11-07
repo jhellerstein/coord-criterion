@@ -34,7 +34,7 @@ and `Distributed/Commitments.lean`, stated in the paper's form (namespace
 * `conflicting_outputs2`, `conflict_removes_output`
                                 — supporting output-only forms.
 * `sysStep_commitment_composite_iff`, `composite_functional_empties`
-                                — the remark after Lemma `lem:compound-commitment`.
+                                — composite commitments (Def. `def:commitment-event`).
 * `reconciliation_any_basis`    — Cor. `cor:reconciliation-any-basis`.
 * `converse_fails`, `system_runs_hide_nonmonotonicity`
                                 — "the converse of Lemma canonical-equivalent fails".
@@ -530,7 +530,7 @@ theorem conflict_is_commitment_event {B : CommitmentBasis sp} {σ σ' : State sp
 
 end conflict
 
-/-! ### Remark after Lemma `lem:compound-commitment` -/
+/-! ### Composite commitment events (Def. `def:commitment-event`) -/
 
 section compound
 variable {sp : Spec I O}

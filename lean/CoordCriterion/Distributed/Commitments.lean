@@ -20,7 +20,7 @@ Namespace `CC`.  Further claims of these sections are in
 * `canonical_support`, `eps_step_iff`  — the canonical event under `B_P`; outputs
                                          under the empty basis are legal outputs
 * `split_output`                       — commitments followed by a legal output
-* `composite`, `applySeq_composite`    — Lemma compound-commitment
+* `composite`, `applySeq_composite`    — composite commitments (Def. commitment-event)
 * `commitment_effect`                  — the two effects of a commitment
 * `CoordFree`, `coordFree_execCF`, `execCF_coordFree` — coordination-free runs
                                          (executions under the empty basis)
@@ -387,7 +387,7 @@ theorem split_output {B : CommitmentBasis sp} {σ σc τ : State sp} {γ : List 
   · simp only [hne, ite_false]
     exact .cons (.commitment hB hne hγ) (.cons hout (.nil _))
 
-/-! ### Lemma compound-commitment -/
+/-! ### Composite commitments (Def. commitment-event) -/
 
 /-- Apply a sequence as one partial function. -/
 noncomputable def compApp : List (Commitment sp) → State sp → Option (State sp)
@@ -424,7 +424,7 @@ theorem applySeq_unsubsumed {cs : List (Commitment sp)} {σ ρ : State sp}
     · exact ih k u w hτ hnu hw
     · exact c.unsubsumed σ τ hc k u w hu hτ (hrest.sub k w hw)
 
-/-- **Lemma compound-commitment.**  The composite of a nonempty sequence of
+/-- Composite commitments (Def. commitment-event).  The composite of a nonempty sequence of
 commitments is a commitment. -/
 noncomputable def composite (c : Commitment sp) (cs : List (Commitment sp)) :
     Commitment sp where

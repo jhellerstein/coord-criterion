@@ -1433,7 +1433,8 @@ the system's basis.
 \label{def:commitment-event}
 A \emph{\commitment event} $\mathsf{apply}(\gamma)$ applies a nonempty
 sequence $\gamma=e_1\cdots e_n$ of \commitments, each defined at the state
-its predecessors leave, and emits nothing.
+its predecessors leave, and emits nothing. Since later \commitments only
+remove rows, the sequence as a whole is itself a \commitment.
 \end{definition}
 
 A system applies its own \commitments only in \commitment events. \textcolor{reviewed}{A \commitment event may precede an output event, which then
@@ -2935,7 +2936,7 @@ Section~\ref{sec:lifted-output-events}. It then supplies the details behind
 Section~\ref{sec:systems}: the canonical \commitments of
 Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm}
 are \commitments (Definition~\ref{def:commitment}) and form a canonical basis,
-compound \commitments behave like single ones, and every run under any basis
+and every run under any basis
 has an observably equivalent canonical run that retains at least as many rows
 after each event. \Commitments are partial functions, so a basis may make an
 \commitment available only at states satisfying a precondition of its own.
@@ -3013,7 +3014,7 @@ test with $u=x$, so this is exactly the stated test.
 This test marks the \commitment boundary: if it fails, emitting $o$ requires an
 \commitment.
 
-\subsection{\Commitment bases and compound \commitments}
+\subsection{\Commitment bases}
 \label{app:commitment-bases}
 
 \begin{definition}[Canonical basis]
@@ -3033,25 +3034,6 @@ Suppose a removed row $(k,x)\in\Excluded_o$ were \outrelpast by a row $(k,y)$
 that $x_o$ leaves. Either $y$ \outrel $o$, or $y\in\Subsumed_o$ and is
 \outrelpast by a row \outrelpart $o$. By transitivity, $x$ is then
 \outrelpast by a row \outrelpart $o$, so $x\in\Subsumed_o$, a contradiction.
-
-\begin{lemma}[Compound \commitments are \commitments]
-\label{lem:compound-commitment}
-The composite of a nonempty sequence of \commitments, defined wherever the
-sequence is, is a \commitment.
-\end{lemma}
-
-\begin{proof}
-Each step leaves the current input unchanged and maps a state to a state, so the
-composite does too, and it removes a nonempty set of rows because the first
-step does. Suppose step $m$ removes $(k,u)$, and let $R_m$ be the table that
-step $m$ leaves. By Equation~\ref{eq:commitment-unsubsumed} for that step, no
-row of $R_m$ at $k$ \outrel $u$; the final table is contained in $R_m$, so no
-remaining row at $k$ \outrel $u$ either.
-\end{proof}
-
-A compound \commitment event therefore has the same effect as one that applies
-the composite \commitment alone. In a functional spec the composite removes
-every row at each input it touches, so it empties.
 
 \begin{definition}[Run under a basis]
 \label{def:run-under-basis}
