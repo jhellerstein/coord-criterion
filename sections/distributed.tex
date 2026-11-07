@@ -311,14 +311,15 @@ concurrent read before the write.  However, no participant emits this combined
 output. Nonetheless, it \outrel both local outputs and provides a proof of their
 consistency.
 
-We therefore encode a guarantee as an \spectype together with an
-explicit relation $E\subseteq P$: the rows whose outputs must remain locally
-available.  Outputs in $P\setminus E$ need only remain permitted as possible
-common \outnouns.  Complete CAP says that such a guarantee can stay available
-and consistent through partitions exactly when the spec satisfies
-Lifted Monotonicity for $E$: outputs selected by $E$ on different sides of a
-partition must have a common \outnoun in the spec at every common
-\indesc of their inputs.  When $E=P$, this is Lifted Monotonicity itself.  A
+We therefore pair a spec with an explicit relation $E\subseteq P$: the
+rows whose outputs participants must keep locally available.  Outputs in
+$P\setminus E$ remain permitted, for example as combined outputs, but no
+participant need emit them.  Complete CAP says that participants can keep the
+outputs of $E$ available and remain consistent through partitions exactly when
+the spec satisfies Lifted Monotonicity for $E$: outputs of $E$ emitted on
+different sides of a partition must have a common \outnoun in the spec at
+every common \indesc of their inputs.  When $E=P$, this is Lifted Monotonicity
+itself.  A
 partition does not change which \commitments a spec needs; it removes
 the ability to make them jointly, since separated participants cannot jointly
 apply a \commitment that conflicts with another participant's run.

@@ -66,14 +66,14 @@ a linearization may put the concurrent read before the write.  However, no
 participant emits this combined output.  Nonetheless, it extends both local
 outputs and provides a proof of their consistency.
 
-We therefore encode a guarantee as an I/O specification together with an
-explicit relation `E ⊆ P`: the rows whose outputs must remain locally
-available.  Outputs in `P ∖ E` need only remain permitted as possible common
-output extensions.  Complete CAP says that such a guarantee can stay available and
-consistent through partitions exactly when the spec satisfies
-Lifted Monotonicity for `E`: outputs selected by `E` on different sides of a
-partition must have a common output extension in the spec at every common
-input extension of their inputs.  When `E = P`, this is Lifted Monotonicity
+We therefore pair a spec with an explicit relation `E ⊆ P`: the rows whose
+outputs participants must keep locally available.  Outputs in `P ∖ E` remain
+permitted, for example as combined outputs, but no participant need emit them.
+Complete CAP says that participants can keep the outputs of `E` available and
+remain consistent through partitions exactly when the spec satisfies Lifted
+Monotonicity for `E`: outputs of `E` emitted on different sides of a partition
+must have a common output extension in the spec at every common input
+extension of their inputs.  When `E = P`, this is Lifted Monotonicity
 itself."  Lean: Theorem `thm:complete-cap` and
 Corollary `cor:complete-cap-S` below (the latter via
 `«sec:complete-cap/lm-for-S»` and `«prop:common-expansion-form»`).  The
