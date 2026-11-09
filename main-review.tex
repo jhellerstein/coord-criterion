@@ -1828,21 +1828,19 @@ the theorem in Gilbert and Lynch's asynchronous model.
 \section{Composition and Proper Coordination}
 \label{sec:composition}
 
-\textcolor{reviewed}{A replicated key-value store poses a puzzle.} Its key-value store with mutable keys is
-non-monotone~\cite{alvaro2011bloom}, and the coordination mechanism that orders
-its commands is non-monotone too. State-machine
-replication~\cite{schneider1990smr} wraps it in a log. Clients send requests,
-the log puts the requested commands in one order, and the key-value store
-executes the log and answers each request. \textcolor{reviewed}{The log's spec is also not
-monotone: when two commands arrive concurrently, either may be appended next,
-and the two alternative orders have no common \outnoun.} Yet replicated stores are consistent, coordinating only in the log. Multi-Paxos agrees on each
-log entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
-with no further agreement.
+\textcolor{reviewed}{A replicated key-value store poses a puzzle.} \textcolor{reviewed}{With mutable values, it is
+non-monotone and inconsistent~\cite{alvaro2011bloom}.} \textcolor{reviewed}{The pragmatic solution is
+to impose a consensus-driven log upstream of the replicas, \`a la
+Multi-Paxos~\cite{lamport2001paxos}, so all replicas execute the same commands
+in the same order.} \textcolor{reviewed}{But consensus is itself non-monotone: when two commands
+arrive concurrently, either may be appended next, and the two alternative orders
+have no common \outnoun.} \textcolor{reviewed}{In essence, the standard solution to non-monotonicity
+is more non-monotonicity!} \textcolor{reviewed}{Why does it work?}
 
-\textcolor{reviewed}{That puzzle is explained by our framework.} Specs are
-tables, so they compose by equijoin, and composition preserves Lifted
-Monotonicity. Because \commitments are explicit, we
-can also ask which component makes a composition's \commitments. \textcolor{reviewed}{When the
+\textcolor{reviewed}{That puzzle is explained by our framework.} \textcolor{reviewed}{As we'll see, two specs compose by equijoin,
+and the composition of two monotone specs is also monotone.} \textcolor{reviewed}{Moreover, for non-monotone specs,
+as in our puzzle, we
+can reason about which component actually makes \commitments under composition.} \textcolor{reviewed}{When the
 upstream component makes every \commitment the composition needs, and the
 downstream needs none on the inputs the upstream offers, we say the pipeline's
 coordination is \emph{proper}
@@ -1851,12 +1849,10 @@ Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
 
 \textcolor{reviewed}{Intuitively, sequential composition feeds the output of one spec to
-the input of the next.} The composite is again a table: it pairs an input of
-the first spec with every output that the second permits for some
-intermediate value that the first permits. Formally, let
+the input of the next via equijoin.} \textcolor{reviewed}{Formally, consider two \spectype[s]
 $\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
-$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be \spectype[s]
-sharing the ordered domain $(M,\preceq_M)$. \textcolor{reviewed}{Their \emph{sequential
+$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$
+sharing the intermediate ordered domain $(M,\preceq_M)$.} \textcolor{reviewed}{Their \emph{sequential
 composition} has table}
 \begin{equation}
   P_2\circ P_1
