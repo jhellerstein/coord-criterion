@@ -1071,14 +1071,14 @@ fibers, those outputs have a common \outnoun there. Full proof in Appendix~\ref{
 \subsection{Lifted output events}
 \label{sec:lifted-output-events}
 
-\textcolor{reviewed}{For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
+For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
 again emits $o$ and keeps exactly the rows whose outputs \outrelbase $o$,
-ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}.} \textcolor{reviewed}{Every later output must \outrelbase $o$, so the event removes the rows whose
-outputs do not.} \textcolor{reviewed}{Each removed row $(k,x)$ falls into one of two classes:
-subsumed or excluded.} \textcolor{reviewed}{A row $(k,x)$ is placed in $\Subsumed_o$ if some
-$u\in R(k)$ \outrel both $x$ and $o$.} \textcolor{reviewed}{Then a later output $u$ reports
+ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}. Every later output must \outrelbase $o$, so the event removes the rows whose
+outputs do not. Each removed row $(k,x)$ falls into one of two classes:
+subsumed or excluded. A row $(k,x)$ is placed in $\Subsumed_o$ if some
+$u\in R(k)$ \outrel both $x$ and $o$. Then a later output $u$ reports
 everything $x$ would have, and the removal, an output subsumption, loses
-nothing.} \textcolor{reviewed}{Otherwise $(k,x)$ is placed in $\Excluded_o$, and the canonical
+nothing. \textcolor{reviewed}{Otherwise $(k,x)$ is placed in $\Excluded_o$, and the canonical
 \commitment $x_o$ removes it.} \textcolor{reviewed}{If $x_o$ removes every row at $k$, it rules out
 $k$; otherwise it rules out only those outputs.}
 
@@ -1181,10 +1181,10 @@ is happens-before.}
 \begin{definition}[Distributed history, history event]
 \label{def:distributed-history}
 Fix an \spectype, participants $P$, and an initial input $i_p$
-for each. A \emph{distributed history} $H$ is a finite set of
+for each. \textcolor{reviewed}{A \emph{distributed history} $H$ is a finite set of
 \emph{history events}, each an occurrence at one participant of a
 specification event (Definition~\ref{def:run}), $\mathsf{send}(m)$, or
-$\mathsf{receive}(m)$, with:
+$\mathsf{receive}(m)$, with:}
 \begin{enumerate}
 \item
 a total local order on each participant's history events;
@@ -1206,9 +1206,9 @@ distributed history and of each send preceding its matching receive.
 
 \begin{definition}[Consistent cut]
 \label{def:consistent-cut}
-\textcolor{reviewed}{A \emph{consistent cut} $C$ is a subset of history events closed under
+A \emph{consistent cut} $C$ is a subset of history events closed under
 happens-before~\cite{lamport1978time,chandy1985distributed}; the standard term
-is unrelated to our notion of consistency.}
+is unrelated to our notion of consistency.
 \end{definition}
 
 A consistent cut contains a prefix of each participant's history events, so by
@@ -1969,41 +1969,46 @@ $\Spec_2|_{\Spec_1}$ does neither.
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-\textcolor{reviewed}{Proper coordination answers our opening puzzle by capturing how a pipeline's
-\commitment obligations can be discharged by an upstream component.} \textcolor{reviewed}{We now turn
-to a simpler puzzle.} \textcolor{reviewed}{Consider the spec for an incrementing counter that is
-capped at $9$.} \textcolor{reviewed}{Now compose it with a downstream spec for a double-digit
-threshold test: that spec outputs \textsf{false} for values up through $9$, and
-\textsf{true} as the input grows further.} \textcolor{reviewed}{In the
-literature~\cite{kuper2013lvars}, the output order is the usual boolean lattice,
-so \textsf{false} is a lower bound; only \textsf{true} is a guarantee.} \textcolor{reviewed}{Suppose we want the downstream spec to always give a final answer; then the
-output order is equality, and the test cannot emit \textsf{false} without making
-a \commitment.} \textcolor{reviewed}{Nonetheless, when guarded by the capped counter the composition becomes
-\commitment-free.} \textcolor{reviewed}{Can we capture that in our framework?} \textcolor{reviewed}{When do composed specs
-erase the need for \commitment entirely?}
+\textcolor{reviewed}{Proper coordination answers our opening puzzle by showing how an upstream
+component can discharge a pipeline's \commitment obligations.} \textcolor{reviewed}{\emph{Composite CALM} asks a stronger question: when does a pipeline need no
+\commitment at any stage?} \textcolor{reviewed}{If every stage is monotone, the answer is immediate:
+by Lemma~\ref{lem:composition} the composite is monotone too, and no stage needs
+a \commitment.} \textcolor{reviewed}{The interesting case has a non-monotone stage, and it raises a
+simpler puzzle than our opening one.}
+
+\textcolor{reviewed}{Consider the spec for an incrementing counter that is capped at $9$, and
+compose it with a downstream spec for a double-digit threshold test, which
+outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.} \textcolor{reviewed}{Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
+is only a lower bound, and the test is monotone.} \textcolor{reviewed}{Suppose instead that every
+answer must be final.} \textcolor{reviewed}{Then the output order is equality, and the test cannot
+emit \textsf{false} without a \commitment, since a later count of $10$ would
+contradict it.} \textcolor{reviewed}{Yet when composed after the capped counter, the pair of
+components needs no \commitment.} \textcolor{reviewed}{When do composed specs erase the need for
+\commitment entirely?}
 
 The composite is itself an \spectype. By Complete CALM, spec $P_2\circ P_1$ is consistent exactly when it
 satisfies Lifted Monotonicity, and then no output needs a \commitment
-(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}). \textcolor{reviewed}{A composite can be jointly monotone, with no stage needing a
-\commitment, in three ways.} The orders on $I$ and $O$ are part of the composite's contract
+(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}). A composite can be jointly monotone, with no stage needing a
+\commitment, in three ways. The orders on $I$ and $O$ are part of the composite's contract
 with its environment. The order on $M$ is not: the composite's table never
 mentions it, and some order on $M$ may make both stages monotone.
 
-First, every stage is monotone. By Lemma~\ref{lem:composition} the pipeline
-is monotone, and no stage need make a \commitment (Corollary~\ref{cor:pipelines}). The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+First, every stage is monotone, as noted above
+(Corollary~\ref{cor:pipelines}). The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
 client query $q$ over the replica state $s$ is the composition $q\circ s$, and
 compositions of monotone functions are monotone
 (Corollary~\ref{cor:functional-composition}), so
 monotonicity of $q$ on all of the state domain suffices.
 
 Second, the upstream can filter out the inputs on which the downstream is not
-monotone. In the capped counter, with counts ordered numerically and the
-test's outputs ordered by equality, the test is not monotone: it answers
-\textsf{false} at $0$ through $9$ and \textsf{true} at $10$. But the counter
-never produces $10$ or higher. The downstream need only be monotone on the
-values the upstream can produce. Here the guarded test answers \textsf{false}
-throughout, so it is consistent under any output order, including equality. \textcolor{reviewed}{This is proper coordination in which the upstream itself needs no
-\commitment.}
+monotone. \textcolor{reviewed}{In the example above, the test fails monotonicity only when the
+count passes from single to double digits, and the capped counter never does
+so.} \textcolor{reviewed}{Restricted to the counts it does produce, the test always answers
+\textsf{false}; it is constant, and so monotone under any output order,
+including equality.} \textcolor{reviewed}{By Theorem~\ref{thm:proper-coordination}(1), the pipeline
+is proper, and since the capped counter is itself monotone, neither stage needs
+a \commitment (Proposition~\ref{prop:joint-monotone}(2)).} This is proper
+coordination in which the upstream itself needs no \commitment.
 
 Third, considering a different order on $M$ can make two
 non-monotone stages both monotone. Order the booleans with false below
@@ -2054,16 +2059,16 @@ applying either CALM theorem.}
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-\textcolor{reviewed}{As previously discussed (\S\ref{sec:functional-calm}),
+As previously discussed (\S\ref{sec:functional-calm}),
 the CALM Theorem of Ameloot et al.\ proves an operational result for
 relational languages on transducer networks: coordination-free evaluation is possible
 iff a program is monotone,
-under its data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.} \textcolor{reviewed}{Functional CALM does not replace the details of that theorem.} \textcolor{reviewed}{It abstracts
+under its data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}. Functional CALM does not replace the details of that theorem. It abstracts
 the result to a property that can be compared with specs outside
-Datalog.}
+Datalog.
 
-\textcolor{reviewed}{Subsequent extensions to the original CALM Theorem become changes to the input
-domain and its order, or to the notion of coordination.} Zinn et al.\ gave transducers partial knowledge of how data is
+Subsequent extensions to the original CALM Theorem become changes to the input
+domain and its order, or to the notion of coordination. Zinn et al.\ gave transducers partial knowledge of how data is
 placed, and more queries became coordination-free, among them the
 non-monotone win-move query~\cite{zinn2012winmove}. Ameloot et al.\
 characterized the new classes by weaker forms of
@@ -2076,8 +2081,8 @@ CALM under a different input order. Under policy-aware placement, a node can
 learn which facts over its known values are absent, so the input it cannot
 yet rule out is a domain-distinct $J$. Under domain-guided placement it is a
 domain-disjoint $J$. When the order lets $I\cup J$ \inrelbase $I$ only for
-such $J$, each condition is functional monotonicity. \textcolor{reviewed}{Functional CALM takes
-the order as given.}
+such $J$, each condition is functional monotonicity. Functional CALM takes
+the order as given.
 
 Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
 permitted located outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}. Under
@@ -2145,8 +2150,8 @@ with the highest-timestamped committed write of the item that it has received.
 replica; commits, each with its client timestamp and write set; and deliveries
 of committed writes to replicas.} The history preserves
 each client's program order and each replica's arrival order, and a
-transaction's reads precede its commit, which precedes its deliveries. Inputs are ordered by downward-closed extension. An output is a set of read
-answers, ordered by inclusion. For an isolation level $L$, let $\Spec_L$ be
+transaction's reads precede its commit, which precedes its deliveries. Inputs are ordered by downward-closed extension. \textcolor{reviewed}{An output is a set of read
+answers, ordered by inclusion.} For an isolation level $L$, let $\Spec_L$ be
 the specification whose table $P_L$ permits an output at an input when it
 extends to a history that answers every read,
 orders versions by timestamp, and exhibits none of the phenomena that $L$

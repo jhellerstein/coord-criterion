@@ -233,6 +233,23 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
 
 /-! ## Composite CALM (`sec:composite-calm`) -/
 
+/-- "Composite CALM asks a stronger question: when does a pipeline need no
+commitment at any stage?  If every stage is monotone, the answer is immediate:
+by Lemma `lem:composition` the composite is monotone too, and no stage needs a
+commitment."  And, from the first case: "First, every stage is monotone, as
+noted above (Corollary `cor:pipelines`)."
+Lean:
+`Guard.pipeline_coordination_free` (the base case of the pipeline induction):
+the composite is Lifted-Monotone, and the pipeline of an empty-basis upstream
+and any system for the downstream emits only what the composite emits under
+the empty basis, so it is again an empty-basis guard. -/
+theorem «sec:composite-calm/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
+    {sp : Spec I M} {sk : Spec M O} (hP : sp.LiftedMono) (hK : sk.LiftedMono) (K : Guard.Sys sk) :
+    (Comp.seq sp sk).LiftedMono ∧
+      ∀ l', Guard.GEmits (Guard.Sys.free (fun _ : Commitment sp => False)).emits K l' →
+        (Guard.Sys.free (fun _ : Commitment (Comp.seq sp sk) => False)).emits l' :=
+  ⟨Comp.seq_liftedMono hP hK, fun _ h => (Guard.pipeline_coordination_free hP hK h).2⟩
+
 /-- "The composite is itself an I/O specification.  By Complete CALM,
 spec `P₂ ∘ P₁` is consistent exactly when it satisfies Lifted
 Monotonicity, and then no output needs a commitment (Theorem
@@ -258,20 +275,6 @@ theorem «sec:composite-calm/middle-order» {I M O : Type} [PO I] [instM : PO M]
       Comp.seq sp1 sp2 :=
   Joint.seq_under inst sp1 sp2
 
-/-- "First, every stage is monotone.  By Lemma `lem:composition` the pipeline
-is monotone, and no stage need make a commitment (Corollary `cor:pipelines`)."
-Lean:
-`Guard.pipeline_coordination_free` (the base case of the pipeline induction):
-the composite is Lifted-Monotone, and the pipeline of an empty-basis upstream
-and any system for the downstream emits only what the composite emits under
-the empty basis, so it is again an empty-basis guard. -/
-theorem «sec:composite-calm/all-monotone» {I M O : Type} [PO I] [PO M] [PO O]
-    {sp : Spec I M} {sk : Spec M O} (hP : sp.LiftedMono) (hK : sk.LiftedMono) (K : Guard.Sys sk) :
-    (Comp.seq sp sk).LiftedMono ∧
-      ∀ l', Guard.GEmits (Guard.Sys.free (fun _ : Commitment sp => False)).emits K l' →
-        (Guard.Sys.free (fun _ : Commitment (Comp.seq sp sk) => False)).emits l' :=
-  ⟨Comp.seq_liftedMono hP hK, fun _ h => (Guard.pipeline_coordination_free hP hK h).2⟩
-
 /-- "The CRDT observations of Section `sec:crdt-instance` have this shape: a
 client query `q` over the replica state `s` is the composition `q ∘ s`, and
 compositions of monotone functions are monotone (Corollary
@@ -284,20 +287,21 @@ theorem «sec:composite-calm/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y
   Comp.functional_composition (Inst.st_mono s0) hq
 
 /-- "Second, the upstream can filter out the inputs on which the downstream is
-not monotone.  In the capped counter, with counts ordered numerically and the
-test's outputs ordered by equality, the test is not monotone: it answers
-`false` at `0` through `9` and `true` at `10`.  But the counter never produces
-`10` or higher.  The downstream need only be monotone on the values the
-upstream can produce.  Here the guarded test answers `false` throughout, so it
-is consistent under any output order, including equality.  This is proper
-coordination in which the upstream itself needs no commitment."  And, from the
-subsection opening: "Consider the spec for an incrementing counter that is
-capped at `9`.  Now compose it with a downstream spec for a double-digit
-threshold test: that spec outputs `false` for values up through `9`, and
-`true` as the input grows further. … Suppose we want the downstream spec to
-always give a final answer; then the output order is equality, and the test
-cannot emit `false` without making a commitment.  Nonetheless, when guarded by
-the capped counter the composition becomes commitment-free."
+not monotone.  In the example above, the test fails monotonicity only when the
+count passes from single to double digits, and the capped counter never does
+so.  Restricted to the counts it does produce, the test always answers `false`;
+it is constant, and so monotone under any output order, including equality.  By
+Theorem `thm:proper-coordination`(1), the pipeline is proper, and since the
+capped counter is itself monotone, neither stage needs a commitment
+(Proposition `prop:joint-monotone`(2)).  This is proper coordination in which
+the upstream itself needs no commitment."  And, from the subsection's puzzle:
+"Consider the spec for an incrementing counter that is capped at `9`, and
+compose it with a downstream spec for a double-digit threshold test, which
+outputs `false` for values up through `9` and `true` from `10` on. … Suppose
+instead that every answer must be final.  Then the output order is equality,
+and the test cannot emit `false` without a commitment, since a later count of
+`10` would contradict it.  Yet when composed after the capped counter, the pair
+of components needs no commitment."
 Lean: `Joint.threshold`
 (the test is not Lifted-Monotone, the composite is).  Lean also proves the
 Appendix D treatment of the test: it cannot emit under the empty basis below
@@ -308,10 +312,10 @@ theorem «sec:composite-calm/filtering» :
       (Comp.seq Joint.up Joint.thr).LiftedMono ∧ Guard.Proper Joint.up Joint.thr :=
   Joint.threshold
 
-/-- "In the literature [LVars], the output order is the usual boolean lattice,
-so `false` is a lower bound; only `true` is a guarantee."  And, from the
-second case: the guarded test "is consistent under any output order, including
-equality."  Lean: `Joint.twoDigit_orders`.  Under the lattice order
+/-- "Under the usual boolean order, as in LVars, `false` is only a lower bound,
+and the test is monotone."  And, from the second case: "Restricted to the
+counts it does produce, the test always answers `false`; it is constant, and so
+monotone under any output order, including equality."  Lean: `Joint.twoDigit_orders`.  Under the lattice order
 (`Joint.boolPO`, `false` below `true`) the test `n ↦ [10 ≤ n]` is
 Lifted-Monotone, so it needs no commitment; under every partial order on the
 booleans it is Lifted-Monotone on the counts `≤ 9` the capped counter offers

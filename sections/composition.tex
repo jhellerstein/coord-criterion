@@ -134,19 +134,24 @@ $\Spec_2|_{\Spec_1}$ does neither.
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-Proper coordination answers our opening puzzle by capturing how a pipeline's
-\commitment obligations can be discharged by an upstream component.  We now turn
-to a simpler puzzle. Consider the spec for an incrementing counter that is
-capped at $9$. Now compose it with a downstream spec for a double-digit
-threshold test: that spec outputs \textsf{false} for values up through $9$, and
-\textsf{true} as the input grows further. In the
-literature~\cite{kuper2013lvars}, the output order is the usual boolean lattice,
-so \textsf{false} is a lower bound; only \textsf{true} is a guarantee.
-Suppose we want the downstream spec to always give a final answer; then the
-output order is equality, and the test cannot emit \textsf{false} without making
-a \commitment. Nonetheless, when guarded by the capped counter the composition becomes
-\commitment-free. Can we capture that in our framework? When do composed specs
-erase the need for \commitment entirely?
+Proper coordination answers our opening puzzle by showing how an upstream
+component can discharge a pipeline's \commitment obligations.
+\emph{Composite CALM} asks a stronger question: when does a pipeline need no
+\commitment at any stage?  If every stage is monotone, the answer is immediate:
+by Lemma~\ref{lem:composition} the composite is monotone too, and no stage needs
+a \commitment.  The interesting case has a non-monotone stage, and it raises a
+simpler puzzle than our opening one.
+
+Consider the spec for an incrementing counter that is capped at $9$, and
+compose it with a downstream spec for a double-digit threshold test, which
+outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.
+Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
+is only a lower bound, and the test is monotone.  Suppose instead that every
+answer must be final.  Then the output order is equality, and the test cannot
+emit \textsf{false} without a \commitment, since a later count of $10$ would
+contradict it.  Yet when composed after the capped counter, the pair of
+components needs no \commitment.  When do composed specs erase the need for
+\commitment entirely?
 
 The composite is itself an \spectype.  By Complete CALM, spec $P_2\circ P_1$ is consistent exactly when it
 satisfies Lifted Monotonicity, and then no output needs a \commitment
@@ -156,22 +161,22 @@ A composite can be jointly monotone, with no stage needing a
 with its environment.  The order on $M$ is not: the composite's table never
 mentions it, and some order on $M$ may make both stages monotone.
 
-First, every stage is monotone.  By Lemma~\ref{lem:composition} the pipeline
-is monotone, and no stage need make a \commitment (Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+First, every stage is monotone, as noted above
+(Corollary~\ref{cor:pipelines}).  The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
 client query $q$ over the replica state $s$ is the composition $q\circ s$, and
 compositions of monotone functions are monotone
 (Corollary~\ref{cor:functional-composition}), so
 monotonicity of $q$ on all of the state domain suffices.
 
 Second, the upstream can filter out the inputs on which the downstream is not
-monotone.  In the capped counter, with counts ordered numerically and the
-test's outputs ordered by equality, the test is not monotone: it answers
-\textsf{false} at $0$ through $9$ and \textsf{true} at $10$.  But the counter
-never produces $10$ or higher.  The downstream need only be monotone on the
-values the upstream can produce.  Here the guarded test answers \textsf{false}
-throughout, so it is consistent under any output order, including equality.
-This is proper coordination in which the upstream itself needs no
-\commitment.
+monotone.  In the example above, the test fails monotonicity only when the
+count passes from single to double digits, and the capped counter never does
+so.  Restricted to the counts it does produce, the test always answers
+\textsf{false}; it is constant, and so monotone under any output order,
+including equality.  By Theorem~\ref{thm:proper-coordination}(1), the pipeline
+is proper, and since the capped counter is itself monotone, neither stage needs
+a \commitment (Proposition~\ref{prop:joint-monotone}(2)).  This is proper
+coordination in which the upstream itself needs no \commitment.
 
 Third, considering a different order on $M$ can make two
 non-monotone stages both monotone.  Order the booleans with false below

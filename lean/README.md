@@ -390,12 +390,12 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
 | `«sec:proper-coordination/locks-overhead»` | theorem | "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |
 | `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, viewed through a chosen set of sound boundary observations, a component. |
+| `«sec:composite-calm/all-monotone»` | theorem | "Composite CALM asks a stronger question: |
 | `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |
-| `«sec:composite-calm/all-monotone»` | theorem | "First, every stage is monotone. |
 | `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
 | `«sec:composite-calm/filtering»` | theorem | "Second, the upstream can filter out the inputs on which the downstream is not monotone. |
-| `«sec:composite-calm/output-orders»` | theorem | "In the literature [LVars], the output order is the usual boolean lattice, so `false` is a lower bound; only `true` is a guarantee." And, from the second case: |
+| `«sec:composite-calm/output-orders»` | theorem | "Under the usual boolean order, as in LVars, `false` is only a lower bound, and the test is monotone." And, from the second case: |
 | `«sec:composite-calm/cancellation»` | theorem | "Third, considering a different order on `M` can make two non-monotone stages both monotone. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
 | `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |
