@@ -1229,8 +1229,9 @@ We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
 participants actually emit.  Outputs in
 $P\setminus E$, are not emitted by participants;
-they remain permitted in $P$ to capture combinations of emitted outputs that could be
-constructed by external observers or clients making sense of emitted outputs.
+they remain permitted in $P$ to capture implicit combinations of emitted outputs---e.g.,
+as could be constructed by external observers or clients making sense of explicit outputs
+across participants.
 
 Both availability and consistency are judged on histories in which a partition
 separates the participants.
@@ -1250,7 +1251,7 @@ $i$.  Rows of $P$ outside $E$, such as those for combined outputs, need only
 remain permitted.
 \end{definition}
 
-We fix a system, with a strategy for each participant that depends only on its
+We consider a system, with a strategy for each participant that depends only on its
 local history, and an environment that may send any legal input to any
 participant.
 
@@ -1260,8 +1261,8 @@ A \emph{same-side} continuation of a participant $p$ is one the system can
 produce using only events on the side of the partition containing $p$, with no
 new input and no message from another side.  The system has
 \emph{Availability for $E$} when, in every partitioned history it produces,
-each participant $p$ in state $(i,R)$ can emit each output in $R(i)\cap E(i)$
-in some same-side continuation of $p$.  \emph{Availability} is Availability
+each participant $p$ in state $(i,R)$ has, for each output $o\in R(i)\cap E(i)$, some same-side continuation in which $p$ emits $o$.
+\emph{Availability} is shorthand for Availability
 for $P$.
 \end{definition}
 
@@ -1275,12 +1276,6 @@ participants' current inputs.
 The \emph{canonical system for $E$} is the system whose participants follow
 canonical runs and emit only outputs of $E$.
 
-\begin{definition}[Lifted Monotonicity for $E$]
-\label{def:lm-for-A}
-$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
-a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
-\end{definition}
-
 \begin{definition}[Escaping CAP]
 \label{def:escapes-cap}
 A spec \emph{escapes CAP} for $E$ when its canonical system for $E$ has
@@ -1292,6 +1287,12 @@ $E$ that its state allows, so it always has Availability for $E$.  The
 question is whether their answers stay consistent across sides.  Complete CAP
 says they do exactly when outputs of $E$ emitted on different sides have a
 common \outnoun in the spec at every common \indesc of their inputs.
+
+\begin{definition}[Lifted Monotonicity for $E$]
+\label{def:lm-for-A}
+$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
+a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
+\end{definition}
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
