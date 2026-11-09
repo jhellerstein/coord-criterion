@@ -292,7 +292,7 @@ This is proper coordination in which the upstream itself needs no commitment."
 And, from the subsection opening: "Consider the spec for an incrementing
 counter that is capped at `9`; compose it with a downstream spec for a
 single-digit threshold test: it outputs `true` up through `9`, and `false` as
-the input grows further.  In isolation it cannot output `true` without making
+the input grows further.  In isolation the test cannot output `true` without making
 a commitment.  But, guarded by the capped counter, the composition becomes
 commitment-free."
 Lean: `Joint.threshold`
