@@ -15,7 +15,8 @@ commitment?  Three mechanisms, and the limit of the third.
    * `seq_liftedMono_on` — if `𝒮₁` is Lifted-Monotone with outputs in `D`
      and `𝒮₂` is Lifted-Monotone on `D`, the composite is Lifted-Monotone.
      No closure condition on `D` is needed.
-   * Instance `threshold`: `𝒮₁ = n ↦ min n 9`, `𝒮₂ = n ↦ [n < 10]`.  The
+   * Instance `threshold`: `𝒮₁ = n ↦ min n 9`, `𝒮₂ = n ↦ [10 ≤ n]` (outputs
+     ordered by equality; other orders: `twoDigit_orders`).  The
      store is not Lifted-Monotone, its empty-basis system cannot emit at all,
      the composite is Lifted-Monotone, and the pipeline is proper
      (`Guard.Proper`).
@@ -141,14 +142,15 @@ open Dist (B2)
 /-- The upstream: a counter capped at `9`. -/
 def cap (n : Nat) : Nat := min n 9
 
-/-- The store: "is the count below `10`?", outputs ordered discretely. -/
-def below (n : Nat) : B2 := decide (n < 10)
+/-- The store: the double-digit threshold test "is the count at least `10`?",
+outputs ordered by equality. -/
+def twoDigit (n : Nat) : B2 := decide (10 ≤ n)
 
 /-- Inputs the store would have to exclude. -/
 def Big (n : Nat) : Prop := 10 ≤ n
 
 def up : Spec Nat Nat := graph cap
-def thr : Spec Nat B2 := graph below
+def thr : Spec Nat B2 := graph twoDigit
 
 theorem cap_monotone : Monotone cap := by
   intro x y h
@@ -156,10 +158,10 @@ theorem cap_monotone : Monotone cap := by
   show min x 9 ≤ min y 9
   omega
 
-theorem below_eq {a b : Nat} (ha : a ≤ 9) (hb : b ≤ 9) : below a = below b := by
-  have ha' : a < 10 := by omega
-  have hb' : b < 10 := by omega
-  show decide (a < 10) = decide (b < 10)
+theorem below_eq {a b : Nat} (ha : a ≤ 9) (hb : b ≤ 9) : twoDigit a = twoDigit b := by
+  have ha' : ¬ 10 ≤ a := by omega
+  have hb' : ¬ 10 ≤ b := by omega
+  show decide (10 ≤ a) = decide (10 ≤ b)
   simp [ha', hb']
 
 theorem up_img {i m : Nat} (h : up.P i m) : ¬ Big m := by
@@ -171,14 +173,14 @@ theorem thr_ceOn : CEOn thr fun m => ¬ Big m :=
     unfold Big at ha hb
     exact below_eq (by omega) (by omega)
 
-theorem below_9_10 : ¬ (below 9 ≼ below 10) := by
+theorem below_9_10 : ¬ (twoDigit 9 ≼ twoDigit 10) := by
   intro h
-  have h' : below 9 = below 10 := h
-  simp [below] at h'
+  have h' : twoDigit 9 = twoDigit 10 := h
+  simp [twoDigit] at h'
 
 /-- **Threshold store behind a capped counter.**  (1) The store is not
 Lifted-Monotone; (2) under the empty basis it cannot emit at any canonical
-state below `10`; (3) the composite is Lifted-Monotone; (4) the pipeline is
+state twoDigit `10`; (3) the composite is Lifted-Monotone; (4) the pipeline is
 proper: the store restricted to the counter's outputs needs no commitment. -/
 theorem threshold :
     ¬ thr.LiftedMono ∧
@@ -187,12 +189,12 @@ theorem threshold :
     Proper up thr := by
   refine ⟨?_, ?_, ?_, ?_⟩
   · intro h
-    exact below_9_10 ((graph_liftedMono_iff below).1 h 9 10 (show 9 ≤ 10 by omega))
+    exact below_9_10 ((graph_liftedMono_iff twoDigit).1 h 9 10 (show 9 ≤ 10 by omega))
   · intro m hm o τ hs
     obtain ⟨ho, he⟩ := empty_step hs
-    have e : o = below m := ho.1
+    have e : o = twoDigit m := ho.1
     subst e
-    have := (graph_canon_exposable_iff below m).1 he 10 (show m ≤ 10 by omega)
+    have := (graph_canon_exposable_iff twoDigit m).1 he 10 (show m ≤ 10 by omega)
     rw [below_eq hm (show 9 ≤ 9 by omega)] at this
     exact below_9_10 this
   · exact seq_liftedMono_on ((graph_liftedMono_iff _).2 cap_monotone)
@@ -445,6 +447,27 @@ theorem bool_toggle :
     intro a b h
     cases a with | mk a => cases b with | mk b =>
       cases a <;> cases b <;> simp_all [Function.comp, PO.le]
+
+/-- **The threshold test under other output orders.**  Under the boolean
+lattice order (`boolPO`, `false` below `true`) the double-digit threshold
+test `n ↦ [10 ≤ n]` is Lifted-Monotone (its `false` is only a lower bound).
+Under every partial order on the booleans, the test restricted to the counts
+`≤ 9` that the capped counter offers is Lifted-Monotone, since it answers
+`false` throughout. -/
+theorem twoDigit_orders :
+    (graph (fun n : Nat => decide (10 ≤ n))).LiftedMono ∧
+    ∀ inst : PO Bool, letI := inst;
+      CEOn (graph (fun n : Nat => decide (10 ≤ n))) (fun m => ¬ Big m) := by
+  refine ⟨(graph_liftedMono_iff _).2 fun x y h hx => ?_, fun inst => ?_⟩
+  · have h' : x ≤ y := h
+    have hx' : 10 ≤ x := by simpa using hx
+    simpa using (show 10 ≤ y by omega)
+  · letI := inst
+    exact graph_ceOn fun a b ha hb _ => by
+      unfold Big at ha hb
+      have e : decide (10 ≤ a) = decide (10 ≤ b) := by
+        simp only [decide_eq_decide]; omega
+      rw [e]; exact PO.refl _
 
 /-- Without properness, (3) fails: with `𝒮₁` the identity on `Bool` (which
 needs no commitment) and `𝒮₂` negation, the composite is negation, which

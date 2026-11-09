@@ -216,6 +216,7 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:composite-calm/all-monotone»
 #check @CC.Paper.«sec:composite-calm/crdt-query»
 #check @CC.Paper.«sec:composite-calm/filtering»
+#check @CC.Paper.«sec:composite-calm/output-orders»
 #check @CC.Paper.«sec:composite-calm/cancellation»
 #check @CC.Paper.«prop:joint-monotone»
 #check @CC.Paper.«sec:composite-calm/reach»

@@ -398,11 +398,12 @@ end EarlyLock
 section Threshold
 open Dist (B2)
 
-/-- Along an empty-basis execution of the threshold store, `(10, no)` stays
-while the current count is at most `9`, and the answer yes is never emitted. -/
-theorem thr_never_yes {σ τ : State thr} {es : List (SEvent thr)}
+/-- Along an empty-basis execution of the threshold store, `(10, true)` stays
+while the current count is at most `9`, and the answer `false` is never
+emitted. -/
+theorem thr_never_false {σ τ : State thr} {es : List (SEvent thr)}
     (h : SysExec (emptyCommitmentBasis thr) σ es τ) :
-    (σ.cur ≤ 9 → σ.R 10 false) → (SEvent.output (true : B2) : SEvent thr) ∉ es := by
+    (σ.cur ≤ 9 → σ.R 10 true) → (SEvent.output (false : B2) : SEvent thr) ∉ es := by
   induction h with
   | nil => intro _ h; cases h
   | @cons σ τ ρ e es hs _ ih =>
@@ -425,20 +426,20 @@ theorem thr_never_yes {σ τ : State thr} {es : List (SEvent thr)}
         exact ⟨hinv (by omega), show j ≤ 10 by omega⟩
     | output o =>
       obtain ⟨ho, hexp, hcur, _⟩ := eps_step_iff.1 hs
-      have hoe : o = below σ.cur := σ.sub _ _ ho
+      have hoe : o = twoDigit σ.cur := σ.sub _ _ ho
       by_cases hc : σ.cur ≤ 9
-      · have hyes : o = true := by
-          rw [hoe]; show decide (σ.cur < 10) = true
-          exact decide_eq_true (by omega)
+      · have hyes : o = false := by
+          rw [hoe]; show decide (10 ≤ σ.cur) = false
+          exact decide_eq_false (by omega)
         subst hyes
-        obtain ⟨u, _, h1, h2⟩ := hexp 10 false (hinv hc)
-          (fun h => Bool.noConfusion (h : (true : Bool) = false))
-        exact Bool.noConfusion ((h1 : (true : Bool) = u).trans (h2 : (false : Bool) = u).symm)
+        obtain ⟨u, _, h1, h2⟩ := hexp 10 true (hinv hc)
+          (fun h => Bool.noConfusion (h : (false : Bool) = true))
+        exact Bool.noConfusion ((h1 : (false : Bool) = u).trans (h2 : (true : Bool) = u).symm)
       · rcases List.mem_cons.1 hm with he | hm
         · cases he
-          have hf : below σ.cur = false := by
-            show decide (σ.cur < 10) = false
-            exact decide_eq_false (by omega)
+          have hf : twoDigit σ.cur = true := by
+            show decide (10 ≤ σ.cur) = true
+            exact decide_eq_true (by omega)
           rw [hf] at hoe
           exact nomatch hoe
         · exact ih (fun hj => absurd (by rw [← hcur]; exact hj) hc) hm
@@ -460,12 +461,12 @@ theorem threshold_component :
     have hm : r.input ≤ 9 := by
       have e : r.input = min i 9 := hi
       omega
-    have hyes : r.output = true := by
-      have e : r.output = below r.input := hr.contract
-      rw [e]; show decide (r.input < 10) = true; simp; omega
+    have hyes : r.output = false := by
+      have e : r.output = twoDigit r.input := hr.contract
+      rw [e]; show decide (10 ≤ r.input) = false; simp; omega
     have hγ := hr.emits
     rw [hyes] at hγ
-    exact thr_never_yes hr.legal (fun _ => ⟨rfl, show r.input ≤ 10 by omega⟩) hγ
+    exact thr_never_false hr.legal (fun _ => ⟨rfl, show r.input ≤ 10 by omega⟩) hγ
   refine ⟨(threshold.2.2.2 : Guard.Proper up thr) |> proper_iff.1, fun i => ?_, hdown, ?_⟩
   · have ho : (canon up i).R i (cap i) := ⟨rfl, PO.refl _⟩
     have hex : Exposable (canon up i) (cap i) :=

@@ -284,17 +284,20 @@ theorem «sec:composite-calm/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y
   Comp.functional_composition (Inst.st_mono s0) hq
 
 /-- "Second, the upstream can filter out the inputs on which the downstream is
-not monotone.  In the capped counter, with counts ordered numerically and
-`true` and `false` incomparable, the test is not monotone: it answers `true`
-at `0` through `9` and `false` at `10`.  But the counter never produces `10` or higher.  The
-downstream need only be monotone on the values the upstream can produce.
-This is proper coordination in which the upstream itself needs no commitment."
-And, from the subsection opening: "Consider the spec for an incrementing
-counter that is capped at `9`; compose it with a downstream spec for a
-single-digit threshold test: it outputs `true` up through `9`, and `false` as
-the input grows further.  In isolation the test cannot output `true` without making
-a commitment.  But, guarded by the capped counter, the composition becomes
-commitment-free."
+not monotone.  In the capped counter, with counts ordered numerically and the
+test's outputs ordered by equality, the test is not monotone: it answers
+`false` at `0` through `9` and `true` at `10`.  But the counter never produces
+`10` or higher.  The downstream need only be monotone on the values the
+upstream can produce.  Here the guarded test answers `false` throughout, so it
+is consistent under any output order, including equality.  This is proper
+coordination in which the upstream itself needs no commitment."  And, from the
+subsection opening: "Consider the spec for an incrementing counter that is
+capped at `9`.  Now compose it with a downstream spec for a double-digit
+threshold test: that spec outputs `false` for values up through `9`, and
+`true` as the input grows further. … Suppose we want the downstream spec to
+always give a final answer; then the output order is equality, and the test
+cannot emit `false` without making a commitment.  Nonetheless, when guarded by
+the capped counter the composition becomes commitment-free."
 Lean: `Joint.threshold`
 (the test is not Lifted-Monotone, the composite is).  Lean also proves the
 Appendix D treatment of the test: it cannot emit under the empty basis below
@@ -304,6 +307,21 @@ theorem «sec:composite-calm/filtering» :
       (∀ m, m ≤ 9 → ∀ o τ, ¬ SysStep (fun _ => False) (canon Joint.thr m) (.output o) τ) ∧
       (Comp.seq Joint.up Joint.thr).LiftedMono ∧ Guard.Proper Joint.up Joint.thr :=
   Joint.threshold
+
+/-- "In the literature [LVars], the output order is the usual boolean lattice,
+so `false` is only a lower bound; only `true` is a guarantee."  And, from the
+second case: the guarded test "is consistent under any output order, including
+equality."  Lean: `Joint.twoDigit_orders`.  Under the lattice order
+(`Joint.boolPO`, `false` below `true`) the test `n ↦ [10 ≤ n]` is
+Lifted-Monotone, so it needs no commitment; under every partial order on the
+booleans it is Lifted-Monotone on the counts `≤ 9` the capped counter offers
+(`Joint.CEOn`), so by Theorem `thm:proper-coordination`(1) the pipeline is
+proper whatever the output order. -/
+theorem «sec:composite-calm/output-orders» :
+    (Comp.graph (fun n : Nat => decide (10 ≤ n))).LiftedMono ∧
+    ∀ inst : PO Bool, letI := inst;
+      Joint.CEOn (Comp.graph (fun n : Nat => decide (10 ≤ n))) (fun m => ¬ Joint.Big m) :=
+  Joint.twoDigit_orders
 
 /-- "Third, considering a different order on `M` can make two non-monotone
 stages both monotone.  Order the booleans with false below true for `I`, `O`

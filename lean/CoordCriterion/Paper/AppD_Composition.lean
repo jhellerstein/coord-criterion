@@ -209,10 +209,11 @@ theorem «app:composition/reach» {I M O : Type} [PO I] [PO O] :
 
 /-- "For the capped counter of Section `sec:composite-calm`, let `𝒮₁` be the
 table of the function `c(n) = min(n,9)` on `(ℕ, ≤)` and `𝒮₂` the table of the
-test `t(n) = [n < 10]`, whose two outputs are incomparable.  `𝒮₂` violates
-Lifted Monotonicity, since `[9 < 10]` and `[10 < 10]` differ, but it satisfies
-it on `{n ≤ 9}`, so the composite is Lifted-Monotone by case (2).  At
-`σ_{𝒮₂}(m)` with `m ≤ 9`, emitting `[m < 10]` must commitment the row `(10, false)`,
+test `t(n) = [10 ≤ n]`, whose two outputs are ordered by equality.  `𝒮₂`
+violates Lifted Monotonicity, since `[10 ≤ 9]` and `[10 ≤ 10]` differ, but it
+satisfies it on `{n ≤ 9}`, so the composite is Lifted-Monotone by case (2).  At
+`σ_{𝒮₂}(m)` with `m ≤ 9`, emitting `[10 ≤ m]` must remove the row by commitment
+`(10, true)`,
 so `𝒮₂` cannot emit under the empty basis.  The outputs of `𝒮₁` lie in
 `{n ≤ 9}`, so the pipeline is proper (Theorem `thm:proper-coordination`(1)).
 Under the empty basis, `𝒮₂|_{𝒮₁}` answers every count that `𝒮₁` emits."

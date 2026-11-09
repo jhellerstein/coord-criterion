@@ -162,13 +162,12 @@ $p$ and $q$ into one intermediate value.
 
 For the capped counter of Section~\ref{sec:composite-calm}, let $\mathcal S_1$
 be the functional spec induced by $c(n)=\min(n,9)$ on
-$(\mathbb N,\le)$, and $\mathcal S_2$ that induced by the test $t(n)=[n<10]$,
-whose two outputs are
-incomparable.  $\mathcal S_2$
-violates Lifted Monotonicity, since $[9<10]$ and $[10<10]$ differ, but it
+$(\mathbb N,\le)$, and $\mathcal S_2$ that induced by the test $t(n)=[10\le n]$,
+whose two outputs are ordered by equality.  $\mathcal S_2$
+violates Lifted Monotonicity, since $[10\le 9]$ and $[10\le 10]$ differ, but it
 satisfies it on $\{n\le 9\}$, so the composite is Lifted-Monotone by case (2).  At
-$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must remove the row by \commitment
-$(10,\mathit{false})$, so $\mathcal S_2$ cannot emit under the empty basis.
+$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[10\le m]$ must remove the row by \commitment
+$(10,\mathit{true})$, so $\mathcal S_2$ cannot emit under the empty basis.
 The outputs of $\mathcal S_1$ lie in $\{n\le 9\}$, so the pipeline is proper
 (Theorem~\ref{thm:proper-coordination}(1)).  Under the empty basis,
 $\mathcal S_2|_{\mathcal S_1}$ answers every count that $\mathcal S_1$ emits.
@@ -560,12 +559,12 @@ store's table satisfies Lifted Monotonicity on logs.  From the empty log it
 admits a run whose \commitment event takes the lock.
 
 (4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
-the test of whether the count is below $10$.  The pipeline is
+the double-digit threshold test.  The pipeline is
 contract-proper, since the test satisfies Lifted Monotonicity on the counts
 the counter offers.  An admitted run of the test from an offered count
-$m\le 9$ must emit yes, its answer at $m$.  While its current count is below
-$10$, its table keeps the row $(10,\mathit{no})$, so yes is not a legal output;
-once the count reaches $10$, only no remains.  So no feed exists.
+$m\le 9$ must emit $\mathit{false}$, its answer at $m$.  While its current count is below
+$10$, its table keeps the row $(10,\mathit{true})$, so $\mathit{false}$ is not a legal output;
+once the count reaches $10$, only $\mathit{true}$ remains.  So no feed exists.
 
 (5) Let $m$ be the output of an admitted run of $C_1$.  By
 Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies

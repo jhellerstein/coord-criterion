@@ -137,10 +137,14 @@ $\Spec_2|_{\Spec_1}$ does neither.
 Proper coordination answers our opening puzzle by capturing how a pipeline's
 \commitment obligations can be discharged by an upstream component.  We now turn
 to a simpler puzzle. Consider the spec for an incrementing counter that is
-capped at $9$; compose it with a downstream spec for a single-digit threshold
-test: it outputs \textsf{true} up through $9$, and \textsf{false} as the input
-grows further. In isolation the test cannot output \textsf{true} without making a
-\commitment. But, guarded by the capped counter, the composition becomes
+capped at $9$. Now compose it with a downstream spec for a double-digit
+threshold test: that spec outputs \textsf{false} for values up through $9$, and
+\textsf{true} as the input grows further. In the
+literature~\cite{kuper2013lvars}, the output order is the usual boolean lattice,
+so \textsf{false} is only a lower bound; only \textsf{true} is a guarantee.
+Suppose we want the downstream spec to always give a final answer; then the
+output order is equality, and the test cannot emit \textsf{false} without making
+a \commitment. Nonetheless, when guarded by the capped counter the composition becomes
 \commitment-free. Can we capture that in our framework? When do composed specs
 erase the need for \commitment entirely?
 
@@ -160,10 +164,12 @@ compositions of monotone functions are monotone
 monotonicity of $q$ on all of the state domain suffices.
 
 Second, the upstream can filter out the inputs on which the downstream is not
-monotone.  In the capped counter, with counts ordered numerically and
-\textsf{true} and \textsf{false} incomparable, the test is not monotone: it
-answers \textsf{true} at $0$ through $9$ and \textsf{false} at $10$.  But the counter never produces $10$ or higher.  The
-downstream need only be monotone on the values the upstream can produce.
+monotone.  In the capped counter, with counts ordered numerically and the
+test's outputs ordered by equality, the test is not monotone: it answers
+\textsf{false} at $0$ through $9$ and \textsf{true} at $10$.  But the counter
+never produces $10$ or higher.  The downstream need only be monotone on the
+values the upstream can produce.  Here the guarded test answers \textsf{false}
+throughout, so it is consistent under any output order, including equality.
 This is proper coordination in which the upstream itself needs no
 \commitment.
 

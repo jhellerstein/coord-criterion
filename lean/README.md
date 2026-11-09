@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-620 entries.
+621 entries.
 
 ### §2 Functional CALM
 
@@ -395,6 +395,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composite-calm/all-monotone»` | theorem | "First, every stage is monotone. |
 | `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
 | `«sec:composite-calm/filtering»` | theorem | "Second, the upstream can filter out the inputs on which the downstream is not monotone. |
+| `«sec:composite-calm/output-orders»` | theorem | "In the literature [LVars], the output order is the usual boolean lattice, so `false` is only a lower bound; only `true` is a guarantee." And, from the secon… |
 | `«sec:composite-calm/cancellation»` | theorem | "Third, considering a different order on `M` can make two non-monotone stages both monotone. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
 | `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |

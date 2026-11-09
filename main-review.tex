@@ -1965,10 +1965,13 @@ $\Spec_2|_{\Spec_1}$ does neither.
 \textcolor{reviewed}{Proper coordination answers our opening puzzle by capturing how a pipeline's
 \commitment obligations can be discharged by an upstream component.} \textcolor{reviewed}{We now turn
 to a simpler puzzle.} \textcolor{reviewed}{Consider the spec for an incrementing counter that is
-capped at $9$; compose it with a downstream spec for a single-digit threshold
-test: it outputs \textsf{true} up through $9$, and \textsf{false} as the input
-grows further.} \textcolor{reviewed}{In isolation the test cannot output \textsf{true} without making a
-\commitment.} \textcolor{reviewed}{But, guarded by the capped counter, the composition becomes
+capped at $9$.} \textcolor{reviewed}{Now compose it with a downstream spec for a double-digit
+threshold test: that spec outputs \textsf{false} for values up through $9$, and
+\textsf{true} as the input grows further.} \textcolor{reviewed}{In the
+literature~\cite{kuper2013lvars}, the output order is the usual boolean lattice,
+so \textsf{false} is only a lower bound; only \textsf{true} is a guarantee.} \textcolor{reviewed}{Suppose we want the downstream spec to always give a final answer; then the
+output order is equality, and the test cannot emit \textsf{false} without making
+a \commitment.} \textcolor{reviewed}{Nonetheless, when guarded by the capped counter the composition becomes
 \commitment-free.} \textcolor{reviewed}{Can we capture that in our framework?} \textcolor{reviewed}{When do composed specs
 erase the need for \commitment entirely?}
 
@@ -1987,10 +1990,12 @@ compositions of monotone functions are monotone
 monotonicity of $q$ on all of the state domain suffices.
 
 Second, the upstream can filter out the inputs on which the downstream is not
-monotone. In the capped counter, with counts ordered numerically and
-\textsf{true} and \textsf{false} incomparable, the test is not monotone: it
-answers \textsf{true} at $0$ through $9$ and \textsf{false} at $10$. But the counter never produces $10$ or higher. The
-downstream need only be monotone on the values the upstream can produce. \textcolor{reviewed}{This is proper coordination in which the upstream itself needs no
+monotone. In the capped counter, with counts ordered numerically and the
+test's outputs ordered by equality, the test is not monotone: it answers
+\textsf{false} at $0$ through $9$ and \textsf{true} at $10$. But the counter
+never produces $10$ or higher. The downstream need only be monotone on the
+values the upstream can produce. Here the guarded test answers \textsf{false}
+throughout, so it is consistent under any output order, including equality. \textcolor{reviewed}{This is proper coordination in which the upstream itself needs no
 \commitment.}
 
 Third, considering a different order on $M$ can make two
@@ -3301,13 +3306,12 @@ $p$ and $q$ into one intermediate value.
 
 For the capped counter of Section~\ref{sec:composite-calm}, let $\mathcal S_1$
 be the functional spec induced by $c(n)=\min(n,9)$ on
-$(\mathbb N,\le)$, and $\mathcal S_2$ that induced by the test $t(n)=[n<10]$,
-whose two outputs are
-incomparable. $\mathcal S_2$
-violates Lifted Monotonicity, since $[9<10]$ and $[10<10]$ differ, but it
+$(\mathbb N,\le)$, and $\mathcal S_2$ that induced by the test $t(n)=[10\le n]$,
+whose two outputs are ordered by equality. $\mathcal S_2$
+violates Lifted Monotonicity, since $[10\le 9]$ and $[10\le 10]$ differ, but it
 satisfies it on $\{n\le 9\}$, so the composite is Lifted-Monotone by case (2). At
-$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[m<10]$ must remove the row by \commitment
-$(10,\mathit{false})$, so $\mathcal S_2$ cannot emit under the empty basis. The outputs of $\mathcal S_1$ lie in $\{n\le 9\}$, so the pipeline is proper
+$\sigma_{\mathcal S_2}(m)$ with $m\le 9$, emitting $[10\le m]$ must remove the row by \commitment
+$(10,\mathit{true})$, so $\mathcal S_2$ cannot emit under the empty basis. The outputs of $\mathcal S_1$ lie in $\{n\le 9\}$, so the pipeline is proper
 (Theorem~\ref{thm:proper-coordination}(1)). Under the empty basis,
 $\mathcal S_2|_{\mathcal S_1}$ answers every count that $\mathcal S_1$ emits.
 
@@ -3694,12 +3698,12 @@ store's table satisfies Lifted Monotonicity on logs. From the empty log it
 admits a run whose \commitment event takes the lock.
 
 (4) Consider the capped counter of Section~\ref{sec:composite-calm} feeding
-the test of whether the count is below $10$. The pipeline is
+the double-digit threshold test. The pipeline is
 contract-proper, since the test satisfies Lifted Monotonicity on the counts
 the counter offers. An admitted run of the test from an offered count
-$m\le 9$ must emit yes, its answer at $m$. While its current count is below
-$10$, its table keeps the row $(10,\mathit{no})$, so yes is not a legal output;
-once the count reaches $10$, only no remains. So no feed exists.
+$m\le 9$ must emit $\mathit{false}$, its answer at $m$. While its current count is below
+$10$, its table keeps the row $(10,\mathit{true})$, so $\mathit{false}$ is not a legal output;
+once the count reaches $10$, only $\mathit{true}$ remains. So no feed exists.
 
 (5) Let $m$ be the output of an admitted run of $C_1$. By
 Theorem~\ref{thm:proper-coordination}(1), $\Spec_2|_{\Spec_1}$ satisfies
