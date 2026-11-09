@@ -1476,34 +1476,36 @@ logs needs no \commitment.
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-Proper coordination answers our opening puzzle by capturing how a pipeline's
-\commitment obligations can be discharged by an upstream component.  We now turn
-to a simpler puzzle. Consider the spec for an incrementing counter that is
-capped at $9$. Now compose it with a downstream spec for a double-digit
-threshold test: that spec outputs \textsf{false} for values up through $9$, and
-\textsf{true} as the input grows further. In the
-literature~\cite{kuper2013lvars}, the output order is the usual boolean lattice,
-so \textsf{false} is a lower bound; only \textsf{true} is a guarantee.
-Suppose we want the downstream spec to always give a final answer; then the
-output order is equality, and the test cannot emit \textsf{false} without making
-a \commitment. Nonetheless, when guarded by the capped counter the composition becomes
-\commitment-free. Can we capture that in our framework? When do composed specs
-erase the need for \commitment entirely?
+Proper coordination answers our opening puzzle by showing how an upstream
+component can discharge a pipeline's \commitment obligations.
+\emph{Composite CALM} asks a stronger question: when does a pipeline need no
+\commitment at any stage?  If every stage is monotone, the answer is immediate:
+by Lemma~\ref{lem:composition} the composite is monotone too, and no stage needs
+a \commitment.  The interesting case has a non-monotone stage, and it raises a
+simpler puzzle than our opening one.
 
-By Complete CALM, $P_2\circ P_1$ is consistent exactly when it
-satisfies Lifted Monotonicity, and then no output needs a \commitment.
-A composite can be jointly monotone, with no stage needing a
-\commitment, in two ways.  First, if every stage is monotone,
-as when a monotone client query observes CRDT state
-(\S\ref{sec:crdt-instance}), then Lemma~\ref{lem:composition} applies.
-Second, the upstream can filter out the inputs on which the downstream is not
-monotone: the counter capped at $9$ only produces downstream inputs that match
-with \textsf{false} as an output, so the guarded downstream spec is consistent---under any output order,
-including equality.
-This is proper coordination in which the upstream itself
-needs no \commitment.
-There are additional scenarios resulting in monotone composition beyond these cases
-(see \extended).
+Consider the spec for an incrementing counter that is capped at $9$, and
+compose it with a downstream spec for a double-digit threshold test, which
+outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.
+Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
+is only a lower bound, and the test is monotone.  Suppose instead that every
+answer must be final.  Then the output order is equality, and the test cannot
+emit \textsf{false} without a \commitment, since a later count of $10$ would
+contradict it.  Yet when composed after the capped counter, the pair of
+components needs no \commitment.  When do composed specs erase the need for
+\commitment entirely?
+
+The answer lies in what the upstream offers.  The test fails monotonicity only
+when the count passes from single to double digits, and the capped counter
+never does so.  Restricted to the counts it does produce, the test always
+answers \textsf{false}; it is constant, and so monotone under any output order,
+including equality.  By Theorem~\ref{thm:proper-coordination}(1), the pipeline
+is proper, and since the capped counter is itself monotone, neither stage needs
+a \commitment.  In general, an upstream stage can erase a downstream stage's
+need for \commitment by filtering out the inputs on which the downstream is not
+monotone; when the upstream is also monotone, the whole pipeline is
+\commitment-free.  Some \commitment-free composites arise in other ways (see
+\extended).
 
 The full paper extends these results to more complex
 compositions than sequential stages, including

@@ -1525,57 +1525,59 @@ logs needs no \commitment.\cxbar{144}{0.4 0.4 1}{e}
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-\color{orange!90!black}\cxtag{145}{O/L}\cxbar{145}{0.9 0.45 0}{s}Proper coordination answers our opening puzzle by capturing how a pipeline's
-\commitment obligations can be discharged by an upstream component.  We now turn
-to a simpler puzzle. Consider the spec for an incrementing counter that is
-capped at $9$. Now compose it with a downstream spec for a double-digit
-threshold test: that spec outputs \textsf{false} for values up through $9$, and
-\textsf{true} as the input grows further. In the
-literature~\cite{kuper2013lvars}, the output order is the usual boolean lattice,
-so \textsf{false} is a lower bound; only \textsf{true} is a guarantee.
-Suppose we want the downstream spec to always give a final answer; then the
-output order is equality, and the test cannot emit \textsf{false} without making
-a \commitment. Nonetheless, when guarded by the capped counter the composition becomes
-\commitment-free. Can we capture that in our framework? When do composed specs
-erase the need for \commitment entirely?\cxbar{145}{0.9 0.45 0}{e}
+\color{black}\cxtag{145}{N/M}\cxbar{145}{0.4 0.4 1}{s}Proper coordination answers our opening puzzle by showing how an upstream
+component can discharge a pipeline's \commitment obligations.
+\emph{Composite CALM} asks a stronger question: when does a pipeline need no
+\commitment at any stage?  If every stage is monotone, the answer is immediate:
+by Lemma~\ref{lem:composition} the composite is monotone too, and no stage needs
+a \commitment.  The interesting case has a non-monotone stage, and it raises a
+simpler puzzle than our opening one.\cxbar{145}{0.4 0.4 1}{e}
 
-\color{orange!90!black}\cxtag{146}{O/L}\cxbar{146}{0.9 0.45 0}{s}By Complete CALM, $P_2\circ P_1$ is consistent exactly when it
-satisfies Lifted Monotonicity, and then no output needs a \commitment.
-A composite can be jointly monotone, with no stage needing a
-\commitment, in two ways.  First, if every stage is monotone,
-as when a monotone client query observes CRDT state
-(\S\ref{sec:crdt-instance}), then Lemma~\ref{lem:composition} applies.
-Second, the upstream can filter out the inputs on which the downstream is not
-monotone: the counter capped at $9$ only produces downstream inputs that match
-with \textsf{false} as an output, so the guarded downstream spec is consistent---under any output order,
-including equality.
-This is proper coordination in which the upstream itself
-needs no \commitment.
-There are additional scenarios resulting in monotone composition beyond these cases
-(see \extended).\cxbar{146}{0.9 0.45 0}{e}
+\color{black}\cxtag{146}{N/M}\cxbar{146}{0.4 0.4 1}{s}Consider the spec for an incrementing counter that is capped at $9$, and
+compose it with a downstream spec for a double-digit threshold test, which
+outputs \textsf{false} for values up through $9$ and \textsf{true} from $10$ on.
+Under the usual boolean order, as in LVars~\cite{kuper2013lvars}, \textsf{false}
+is only a lower bound, and the test is monotone.  Suppose instead that every
+answer must be final.  Then the output order is equality, and the test cannot
+emit \textsf{false} without a \commitment, since a later count of $10$ would
+contradict it.  Yet when composed after the capped counter, the pair of
+components needs no \commitment.  When do composed specs erase the need for
+\commitment entirely?\cxbar{146}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{147}{N/M}\cxbar{147}{0.4 0.4 1}{s}The full paper extends these results to more complex
+\color{black}\cxtag{147}{N/M}\cxbar{147}{0.4 0.4 1}{s}The answer lies in what the upstream offers.  The test fails monotonicity only
+when the count passes from single to double digits, and the capped counter
+never does so.  Restricted to the counts it does produce, the test always
+answers \textsf{false}; it is constant, and so monotone under any output order,
+including equality.  By Theorem~\ref{thm:proper-coordination}(1), the pipeline
+is proper, and since the capped counter is itself monotone, neither stage needs
+a \commitment.  In general, an upstream stage can erase a downstream stage's
+need for \commitment by filtering out the inputs on which the downstream is not
+monotone; when the upstream is also monotone, the whole pipeline is
+\commitment-free.  Some \commitment-free composites arise in other ways (see
+\extended).\cxbar{147}{0.4 0.4 1}{e}
+
+\color{black}\cxtag{148}{N/M}\cxbar{148}{0.4 0.4 1}{s}The full paper extends these results to more complex
 compositions than sequential stages, including
 stages with inputs of their own and arbitrary acyclic graphs of stages, checked node
-by node much as types are~\cite{hellerstein2026completecalmfull}.\cxbar{147}{0.4 0.4 1}{e}
+by node much as types are~\cite{hellerstein2026completecalmfull}.\cxbar{148}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Related Work and Mappings}
 \label{sec:instances}
 \label{sec:related}
 
-\color{blue!75!black}\cxtag{148}{B/M}\cxbar{148}{0.4 0.4 1}{s}Complete CALM provides a unified lens for many results across literatures.
+\color{blue!75!black}\cxtag{149}{B/M}\cxbar{149}{0.4 0.4 1}{s}Complete CALM provides a unified lens for many results across literatures.
 For the key related ideas, we provide mappings here to our specification model.
 Each setting declares an input, an output, and their orders before
 applying either CALM theorem.  The full paper~\cite{hellerstein2026completecalmfull}
 gives each mapping in detail, with deployments, response
 obligations, and \commitment bases for the transaction protocols 2PL and MVTO,
-and applications to distributed-systems protocols such as registers, $k$-set agreement, renaming, and snapshots.\cxbar{148}{0.4 0.4 1}{e}
+and applications to distributed-systems protocols such as registers, $k$-set agreement, renaming, and snapshots.\cxbar{149}{0.4 0.4 1}{e}
 
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-\color{black}\cxtag{149}{N/M}\cxbar{149}{0.4 0.4 1}{s}The CALM Theorem of Ameloot et al.\ is an operational result: a query can be
+\color{black}\cxtag{150}{N/M}\cxbar{150}{0.4 0.4 1}{s}The CALM Theorem of Ameloot et al.\ is an operational result: a query can be
 evaluated on a network of relational transducers without coordination exactly
 when it is monotone, under that model's assumptions about data placement and
 execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM
@@ -1587,19 +1589,19 @@ characterized these classes by domain-distinct and domain-disjoint
 monotonicity~\cite{ameloot2015weaker,zinn2012weak,zinn2012winmove}.  Each is
 Functional CALM under a sparser input order: a node's input $I$ is extended by
 new facts $J$ only when the placement policy leaves the node unable to rule out
-$J$.\cxbar{149}{0.4 0.4 1}{e}
+$J$.\cxbar{150}{0.4 0.4 1}{e}
 
-\color{blue!75!black}\cxtag{150}{B/L}\cxbar{150}{0.9 0.45 0}{s}Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
+\color{blue!75!black}\cxtag{151}{B/L}\cxbar{151}{0.9 0.45 0}{s}Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
 permitted located outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}; under
 inclusion, a behavior is an \spectype.  Their characterization,
 \emph{node monotonicity}, is the common-extension condition for two rows at
 disjoint networks, and Complete CAP extends it to overlapping networks
-(see \extended).\cxbar{150}{0.9 0.45 0}{e}
+(see \extended).\cxbar{151}{0.9 0.45 0}{e}
 
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
 
-\color{blue!75!black}\cxtag{151}{B/L}\cxbar{151}{0.9 0.45 0}{s}A CRDT guarantees that replicas receiving the same updates converge to
+\color{blue!75!black}\cxtag{152}{B/L}\cxbar{152}{0.9 0.45 0}{s}A CRDT guarantees that replicas receiving the same updates converge to
 equivalent states, but the Strong Eventual Consistency property it offers
 provides no guarantee on what the environment may observe.  Laddad et al.\
 proposed monotonicity as the right test for safe observation from CRDT
@@ -1614,20 +1616,20 @@ of $q$ on all of $D$ suffices, but $q$ need only be monotone between reachable
 states.  The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set
 fails the test: a deleted item grows $U$ and shrinks the answer.  CRDT states
 form a join-semilattice, but $q$ needs less: Complete CALM requires
-only \emph{some} common \outnoun of query outputs, not a least one.\cxbar{151}{0.9 0.45 0}{e}
+only \emph{some} common \outnoun of query outputs, not a least one.\cxbar{152}{0.9 0.45 0}{e}
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
 
-\color{black}\cxtag{152}{N/M}\cxbar{152}{0.4 0.4 1}{s}We take the assumptions of Bailis et al.\ as given~\cite{bailis2013hat}:
+\color{black}\cxtag{153}{N/M}\cxbar{153}{0.4 0.4 1}{s}We take the assumptions of Bailis et al.\ as given~\cite{bailis2013hat}:
 items are partially replicated; a client sends each operation to some replica
 of its item; a transaction's writes carry a unique client timestamp, last
 writer wins; the system never aborts on its own; and a replica answers a read
-with the highest-timestamped committed write of the item it has received.\cxbar{152}{0.4 0.4 1}{e}
+with the highest-timestamped committed write of the item it has received.\cxbar{153}{0.4 0.4 1}{e}
 
 \color{black}\begin{definition}[HAT specification]
 \label{def:hat-spec}
-\cxtag{153}{N/L}\cxbar{153}{0.9 0.45 0}{s}An input is a history, ordered by happens-before, of three kinds of events:
+\cxtag{154}{N/L}\cxbar{154}{0.9 0.45 0}{s}An input is a history, ordered by happens-before, of three kinds of events:
 reads, each tagged with its replica; commits, each with its timestamp and write
 set; and deliveries of committed writes to replicas.  One input \inrel another
 when it adds events, none of which happens before an event already present.  An
@@ -1636,35 +1638,35 @@ $L$, defined by the phenomena it proscribes~\cite{adya1999weakconsistency}, the
 table $P_L$ of $\Spec_L$ permits a set of answers at an input when the input
 extends to a history that answers every read, orders versions by timestamp, and
 exhibits none of those phenomena.  The explicit relation $E$ holds, at each
-input, the answers that the read rule above gives.\cxbar{153}{0.9 0.45 0}{e}
+input, the answers that the read rule above gives.\cxbar{154}{0.9 0.45 0}{e}
 \end{definition}
 
 \color{black}\begin{theorem}[HAT levels]
 \label{thm:hat-levels}
-\cxtag{154}{N/L}\cxbar{154}{0.9 0.45 0}{s}Suppose each transaction's timestamp exceeds that of every version it reads.
+\cxtag{155}{N/L}\cxbar{155}{0.9 0.45 0}{s}Suppose each transaction's timestamp exceeds that of every version it reads.
 For read uncommitted and read committed, $E\subseteq P_L$ and $\Spec_L$
 satisfies Lifted Monotonicity for $E$, so by Complete CAP these levels stay
 available and consistent through partitions.  For any level that proscribes
 Lost Update, including snapshot isolation, repeatable read, and
 serializability, no explicit relation that answers every read satisfies
-Lifted Monotonicity for it.\cxbar{154}{0.9 0.45 0}{e}
+Lifted Monotonicity for it.\cxbar{155}{0.9 0.45 0}{e}
 \end{theorem}
 \proofinfull
 
-\color{orange!90!black}\cxtag{155}{O/L}\cxbar{155}{0.9 0.45 0}{s}The condition is needed: with timestamps fixed at transaction
+\color{orange!90!black}\cxtag{156}{O/L}\cxbar{156}{0.9 0.45 0}{s}The condition is needed: with timestamps fixed at transaction
 begin, as in the pseudocode of~\cite{bailis2013hatextended}, a transaction
 that reads a higher-timestamped version and overwrites it forms a G1c
-cycle.\cxbar{155}{0.9 0.45 0}{e}
+cycle.\cxbar{156}{0.9 0.45 0}{e}
 
-\color{black}\cxtag{156}{N/M}\cxbar{156}{0.4 0.4 1}{s}Mahajan et al.\ showed that no consistency semantics stronger than real-time
+\color{black}\cxtag{157}{N/M}\cxbar{157}{0.4 0.4 1}{s}Mahajan et al.\ showed that no consistency semantics stronger than real-time
 causal consistency can be enforced in an always-available, one-way convergent
 system~\cite{mahajan2011consistency}.  With real-time precedence recorded in
-the input, both halves of their result follow from Complete CAP (\extended).\cxbar{156}{0.4 0.4 1}{e}
+the input, both halves of their result follow from Complete CAP (\extended).\cxbar{157}{0.4 0.4 1}{e}
 
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
 
-\color{black}\cxtag{157}{N/L}\cxbar{157}{0.9 0.45 0}{s}In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
+\color{black}\cxtag{158}{N/L}\cxbar{158}{0.9 0.45 0}{s}In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
 is a set of versions, and replicas merge states by union.  A set $T$ of
 transactions is \emph{invariant confluent} for an invariant $\mathcal I$ when
 the merge of any two reachable states satisfies $\mathcal I$.  We construct a
@@ -1678,24 +1680,24 @@ ordered by inclusion.  At a history $h$, a replica may choose not to expose
 some transactions, but whatever it does expose must satisfy $\mathcal I$.  So
 the permitted outputs are the states produced by any sub-history $g$ of $h$
 that contains everything its transactions saw and is \emph{valid} in the sense
-that every merge of what $g$ contains satisfies $\mathcal I$.\cxbar{157}{0.9 0.45 0}{e}
+that every merge of what $g$ contains satisfies $\mathcal I$.\cxbar{158}{0.9 0.45 0}{e}
 
 \color{black}\begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
-\cxtag{158}{N/S}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
+\cxtag{159}{N/S}$T$ is invariant confluent if and only if $\Spec_{\mathcal I}$ satisfies Lifted
 Monotonicity.
 \end{proposition}
 \proofinfull
 
-\color{orange!90!black}\cxtag{159}{O/L}\cxbar{159}{0.9 0.45 0}{s}In Bailis et al.'s payroll example, two
+\color{orange!90!black}\cxtag{160}{O/L}\cxbar{160}{0.9 0.45 0}{s}In Bailis et al.'s payroll example, two
 replicas each assign ID~7 to a new employee; the history in which neither
 creation saw the other \inrel both one-creation histories, but no state it
-permits \outrel both.\cxbar{159}{0.9 0.45 0}{e}
+permits \outrel both.\cxbar{160}{0.9 0.45 0}{e}
 
 \subsection{Operational models and scope}
 \label{sec:scope}
 
-\color{blue!75!black}\cxtag{160}{B/M}\cxbar{160}{0.4 0.4 1}{s}Automata are a traditional way to model operational behavior
+\color{blue!75!black}\cxtag{161}{B/M}\cxbar{161}{0.4 0.4 1}{s}Automata are a traditional way to model operational behavior
 abstractly~\cite{lynch1987io,lynch1996distributed}.  Our model keeps only the
 inputs and outputs of that behavior and drops the operational details.  The
 mapping is straightforward: for each input, record the outputs of the runs that
@@ -1713,30 +1715,30 @@ declared row is produced by some execution.  Such proofs are routinely
 mechanized~\cite{hawblitzel2015ironfleet}, and Lifted Monotonicity is then
 checked on the declared spec; \extended{} gives the details.  Work that
 models systems as state machines therefore maps naturally into our model, where
-Complete CALM assesses its consistency directly.\cxbar{160}{0.4 0.4 1}{e}
+Complete CALM assesses its consistency directly.\cxbar{161}{0.4 0.4 1}{e}
 
-  \color{black}\cxtag{161}{N/M}\cxbar{161}{0.4 0.4 1}{s}Our conditions are semantic.  Confluence guarantees that
+  \color{black}\cxtag{162}{N/M}\cxbar{162}{0.4 0.4 1}{s}Our conditions are semantic.  Confluence guarantees that
 a common \outnoun exists, not that a deployed system reaches it; protocols,
 liveness, and cost belong to the operational model in which a spec
 is realized.  Free termination likewise corresponds to a determined canonical
 state in our model, but Power et al.\ additionally study fairness and eventual
 response, liveness concerns whose semantic generalization remains future
-work~\cite{power2025freetermination}.\cxbar{161}{0.4 0.4 1}{e}
+work~\cite{power2025freetermination}.\cxbar{162}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Discussion}
 \label{sec:discussion}
 
-\color{black}\cxtag{162}{N/M}\cxbar{162}{0.4 0.4 1}{s}The computing literature is rich with coordination mechanisms for managing
+\color{black}\cxtag{163}{N/M}\cxbar{163}{0.4 0.4 1}{s}The computing literature is rich with coordination mechanisms for managing
 concurrency within and across machines. The CALM Conjecture asked a question
 still latent at the time: when are these mechanisms required, and why? It drew
 on declarative networking~\cite{loo2009declarative}, which, in Codd's tradition
 of separating specification from implementation~\cite{codd1970relational}, wrote
 the desired effects of protocols as queries to be analyzed and optimized into a
 variety of mechanisms. Could a signature property of declarative
-languages---monotonicity---be the criterion?\cxbar{162}{0.4 0.4 1}{e}
+languages---monotonicity---be the criterion?\cxbar{163}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{163}{N/M}\cxbar{163}{0.4 0.4 1}{s}The intuition was sharpened by a related friction in the literature on parallel
+\color{black}\cxtag{164}{N/M}\cxbar{164}{0.4 0.4 1}{s}The intuition was sharpened by a related friction in the literature on parallel
 query processing. The Google MapReduce
 paper~\cite{dean2004mapreduce} departed from prior work on parallel query
 processing~\cite{wilschut1991dataflow,graefe1990volcano}, conflating data
@@ -1744,15 +1746,15 @@ redistribution (shuffle) with barrier coordination required for a non-monotone
 reduce operator. This coupling of unrelated concerns required monotone operators
 like join to block in the MapReduce model unnecessarily.  Cost models that count
 rounds, from BSP supersteps to MapReduce rounds, carry the same
-conflation~\cite{valiant1990bsp,karloff2010mrc}.\cxbar{163}{0.4 0.4 1}{e}
+conflation~\cite{valiant1990bsp,karloff2010mrc}.\cxbar{164}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{164}{N/S}The CALM Conjecture hypothesized that the database community's more judicious
+\color{black}\cxtag{165}{N/S}The CALM Conjecture hypothesized that the database community's more judicious
 use of barriers could be generalized: coordination---of any kind---is required
 if and only if the program is non-monotone. Ameloot et al.\
 proved it, but only for relational languages, which to date have
 still not become mainstream beyond query processing (more on this below).
 
-\color{blue!75!black}\cxtag{165}{B/M}\cxbar{165}{0.4 0.4 1}{s}This paper moves the declarations one level higher, from queries to views: all
+\color{blue!75!black}\cxtag{166}{B/M}\cxbar{166}{0.4 0.4 1}{s}This paper moves the declarations one level higher, from queries to views: all
 that matters about a spec is the single view mapping a program's inputs
 to its output. Eliding the query logic frees the analysis from any particular
 language and broadens what can be specified. Prior work focused on implementing
@@ -1761,9 +1763,9 @@ declaratively~\cite{loo2005overlays,loo2009declarative,chu2007declarative,alvaro
 This was interesting ``declarative engineering'' with concrete benefits in
 analysis and optimization. But the higher-level model here also captures abstract
 families of guarantees, like CAP and isolation levels, which have no application or
-protocol in mind.\cxbar{165}{0.4 0.4 1}{e}
+protocol in mind.\cxbar{166}{0.4 0.4 1}{e}
 
-\color{blue!75!black}\cxtag{166}{B/M}\cxbar{166}{0.4 0.4 1}{s}Lifting the abstraction improves the power of analysis as well. Prior program
+\color{blue!75!black}\cxtag{167}{B/M}\cxbar{167}{0.4 0.4 1}{s}Lifting the abstraction improves the power of analysis as well. Prior program
 analyses became enmeshed in the details of implementations, however
 declarative. Bloom~\cite{alvaro2011bloom} flagged syntactic non-monotonicity in
 programs and conservatively injected coordination code in front of it.  Yet
@@ -1775,9 +1777,9 @@ that the store offers and that still satisfies the declared properties.  We
 ask what the spec itself requires, independent of any menu of
 levels.  By Observable Equivalence (Lemma~\ref{lem:canonical-equivalent}), the answer holds for every mechanism.  Our
 composition results need no program logic, and the criteria are exact on
-specs, not conservative.\cxbar{166}{0.4 0.4 1}{e}
+specs, not conservative.\cxbar{167}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{167}{N/M}\cxbar{167}{0.4 0.4 1}{s}A limitation of prior CALM work was that it was constructive on only one side of
+\color{black}\cxtag{168}{N/M}\cxbar{168}{0.4 0.4 1}{s}A limitation of prior CALM work was that it was constructive on only one side of
 its boundary.  Monotone programs need no coordination; for a non-monotone
 program, CALM said only that coordination was required somewhere, not what it
 had to accomplish or where it belonged.  Complete CALM says more.  A
@@ -1789,9 +1791,9 @@ participant.  That tells an implementation when it needs agreement rather than
 a local decision.  Proper coordination
 then places the \commitments in a composition: it identifies the stage that
 must make them, as the log does in state-machine replication, and certifies
-that the stages behind it need none of their own.\cxbar{167}{0.4 0.4 1}{e}
+that the stages behind it need none of their own.\cxbar{168}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{168}{N/M}\cxbar{168}{0.4 0.4 1}{s}Underlying these issues is a reassessment of
+\color{black}\cxtag{169}{N/M}\cxbar{169}{0.4 0.4 1}{s}Underlying these issues is a reassessment of
 tradition: what is a declarative specification, and how little does it require
 to be useful? The question is timely. Coding agents increasingly write
 imperative code, often rife with bugs, which has renewed interest in formal
@@ -1802,22 +1804,22 @@ computing~\cite{an2025neurosymbolic}. This is a renewed opportunity for logic,
 dataflow, and functional languages. Today these languages typically specify
 protocols and programs in detail, as in declarative networking; this paper
 points to specification at a higher level still, opening analyses like ours and
-potential program synthesis and optimization.\cxbar{168}{0.4 0.4 1}{e}
+potential program synthesis and optimization.\cxbar{169}{0.4 0.4 1}{e}
 
 % ======================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-\color{black}\cxtag{169}{N/M}\cxbar{169}{0.4 0.4 1}{s}A spec abstracts execution details away, and the results here reduce
+\color{black}\cxtag{170}{N/M}\cxbar{170}{0.4 0.4 1}{s}A spec abstracts execution details away, and the results here reduce
 to a single question: can a participant act on what it knows without being
 contradicted by what it learns later?  Mutexes, locks, atomic instructions, and
 agreement protocols prevent such contradictions by issuing \commitments.
 Functional CALM answers the question for functions: a functional spec
 stays confluent as input arrives exactly when it is monotone, and then no
 output needs a \commitment.  This generalizes the classic result from logical fact
-sets to arbitrary input and output orders.\cxbar{169}{0.4 0.4 1}{e}
+sets to arbitrary input and output orders.\cxbar{170}{0.4 0.4 1}{e}
 
-\color{orange!90!black}\cxtag{170}{O/L}\cxbar{170}{0.9 0.45 0}{s}Complete CALM extends the answer to specs that offer several outputs
+\color{orange!90!black}\cxtag{171}{O/L}\cxbar{171}{0.9 0.45 0}{s}Complete CALM extends the answer to specs that offer several outputs
 for one input.  The test is Lifted Monotonicity, which combines Relational
 Monotonicity with directed fibers.  When it fails, some reachable output
 requires a \commitment.  At each input it changes, a \commitment either empties
@@ -1827,15 +1829,15 @@ can also check where a composition coordinates
 key-value store are both non-monotone at their ordinary specs, yet
 when the log guards the store, the log's \commitments are all the composition
 needs and the store makes none.  Multi-Paxos is one way to distribute those
-\commitments.\cxbar{170}{0.9 0.45 0}{e}
+\commitments.\cxbar{171}{0.9 0.45 0}{e}
 
-\color{black}\cxtag{171}{N/M}\cxbar{171}{0.4 0.4 1}{s}Complete CAP is the partition form of the same equivalence.  A system can keep
+\color{black}\cxtag{172}{N/M}\cxbar{172}{0.4 0.4 1}{s}Complete CAP is the partition form of the same equivalence.  A system can keep
 the outputs selected by a spec's explicit relation available, and
 consistent, through partitions exactly when they have a common \outnoun at
 every common \indesc of their inputs; when the relation selects every output,
-this is Lifted Monotonicity.\cxbar{171}{0.4 0.4 1}{e}
+this is Lifted Monotonicity.\cxbar{172}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{172}{N/M}\cxbar{172}{0.4 0.4 1}{s}The generality of our specification model opens a range of new questions
+\color{black}\cxtag{173}{N/M}\cxbar{173}{0.4 0.4 1}{s}The generality of our specification model opens a range of new questions
 regarding the nondeterminism of specs and their \commitments. One direction
 extends the boolean criteria of this paper to metrics: a Determination
 Complexity theory that assesses \emph{how many} \commitments are intrinsically
@@ -1843,9 +1845,9 @@ needed to determine a spec. Another is Determination Provenance: a
 given output---or its absence---is determined not only by inputs, but also by
 the \commitments made in a run, which brings formal models of provenance to
 concurrent systems. A third direction is to provide general-purpose static
-analysis of CALM and proper coordination in a real programming framework.\cxbar{172}{0.4 0.4 1}{e}
+analysis of CALM and proper coordination in a real programming framework.\cxbar{173}{0.4 0.4 1}{e}
 
-\color{black}\cxtag{173}{N/S}\begin{acks}
+\color{black}\cxtag{174}{N/S}\begin{acks}
 Thanks to Conor Power, whose persistent questioning of the CALM canon prompted this work.
 Much gratitude to Peter Alvaro, Natacha Crooks, Chris Douglas, Tyler Hou, Martin
 Kleppmann, Paris Koutris, Edward Lee, Shulu Li, Vincent Liu, David Chu McElroy,
@@ -1853,7 +1855,7 @@ Sarah Morin, and Dan Suciu for helpful feedback. Thanks also to
 anonymous reviewers of this and previous submissions for frank feedback that pushed
 this work deeper.
 
-\color{black}\cxtag{174}{N/S}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
+\color{black}\cxtag{175}{N/S}Generative AI tools (Infinity, Kiro, Claude and ChatGPT) were used as interactive writing and
 reviewing assistants during the preparation of this work, including drafting
 and revising text, and checking mathematical arguments with Lean proofs.  All
 content was reviewed, validated, and approved by the author.
