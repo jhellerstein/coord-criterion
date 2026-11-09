@@ -1828,21 +1828,21 @@ the theorem in Gilbert and Lynch's asynchronous model.
 \section{Composition and Proper Coordination}
 \label{sec:composition}
 
-\textcolor{reviewed}{A replicated key-value store poses a puzzle.} \textcolor{reviewed}{Its key-value store with mutable keys is
+\textcolor{reviewed}{A replicated key-value store poses a puzzle.} Its key-value store with mutable keys is
 non-monotone~\cite{alvaro2011bloom}, and the coordination mechanism that orders
-its commands is non-monotone too.} \textcolor{reviewed}{State-machine
-replication~\cite{schneider1990smr} wraps it in a log.} \textcolor{reviewed}{Clients send requests,
+its commands is non-monotone too. State-machine
+replication~\cite{schneider1990smr} wraps it in a log. Clients send requests,
 the log puts the requested commands in one order, and the key-value store
-executes the log and answers each request.} \textcolor{reviewed}{The log's spec is also not
+executes the log and answers each request. \textcolor{reviewed}{The log's spec is also not
 monotone: when two commands arrive concurrently, either may be appended next,
-and the two alternative orders have no common \outnoun.} \textcolor{reviewed}{Yet replicated stores are consistent, coordinating only in the log.} \textcolor{reviewed}{Multi-Paxos agrees on each
+and the two alternative orders have no common \outnoun.} Yet replicated stores are consistent, coordinating only in the log. Multi-Paxos agrees on each
 log entry~\cite{lamport2001paxos}, and the replicas then execute the agreed log
-with no further agreement.}
+with no further agreement.
 
-\textcolor{reviewed}{That puzzle is explained by our framework.} \textcolor{reviewed}{Specs are
+\textcolor{reviewed}{That puzzle is explained by our framework.} Specs are
 tables, so they compose by equijoin, and composition preserves Lifted
-Monotonicity.} \textcolor{reviewed}{Because \commitments are explicit, we
-can also ask which component makes a composition's \commitments.} \textcolor{reviewed}{When the
+Monotonicity. Because \commitments are explicit, we
+can also ask which component makes a composition's \commitments. \textcolor{reviewed}{When the
 upstream component makes every \commitment the composition needs, and the
 downstream needs none on the inputs the upstream offers, we say the pipeline's
 coordination is \emph{proper}
@@ -1851,12 +1851,12 @@ Appendix~\ref{app:composition}.
 \label{sec:sequential-composition}
 
 \textcolor{reviewed}{Intuitively, sequential composition feeds the output of one spec to
-the input of the next.} \textcolor{reviewed}{The composite is again a table: it pairs an input of
+the input of the next.} The composite is again a table: it pairs an input of
 the first spec with every output that the second permits for some
-intermediate value that the first permits.} \textcolor{reviewed}{Formally, let
+intermediate value that the first permits. Formally, let
 $\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
 $\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$ be \spectype[s]
-sharing the ordered domain $(M,\preceq_M)$.} \textcolor{reviewed}{Their \emph{sequential
+sharing the ordered domain $(M,\preceq_M)$. \textcolor{reviewed}{Their \emph{sequential
 composition} has table}
 \begin{equation}
   P_2\circ P_1
@@ -1888,81 +1888,19 @@ in Appendix~\ref{app:composition}.
 its table $\{(i,f(i))\}$ satisfies Lifted Monotonicity exactly when $f$ is
 monotone (\S\ref{sec:lifted-monotonicity}).
 
-\subsection{Composite CALM}
-\label{sec:composite-calm}
-
-The composite is itself an \spectype. By Complete CALM, spec $P_2\circ P_1$ is consistent exactly when it
-satisfies Lifted Monotonicity, and then no output needs a \commitment
-(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}). \textcolor{reviewed}{That test treats the composite as a single spec.} \textcolor{reviewed}{Suppose instead that
-each stage runs on its own, with its runs taking as input the outputs of the
-stage before.} \textcolor{reviewed}{A stage may then need a \commitment even when the composite
-needs none.} \textcolor{reviewed}{A composite can be jointly monotone, with no stage needing a
-\commitment, in three ways.} The orders on $I$ and $O$ are part of the composite's contract
-with its environment. The order on $M$ is not: the composite's table never
-mentions it, and some order on $M$ may make both stages monotone.
-
-First, every stage is monotone. By Lemma~\ref{lem:composition} the pipeline
-is monotone, and no stage need make a \commitment (Corollary~\ref{cor:pipelines}). The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
-client query $q$ over the replica state $s$ is the composition $q\circ s$, and
-compositions of monotone functions are monotone
-(Corollary~\ref{cor:functional-composition}), so
-monotonicity of $q$ on all of the state domain suffices.
-
-Second, the upstream can filter out the inputs on which the downstream is not
-monotone. Consider a counter capped at $9$ that feeds a test of whether the
-count is below $10$. With counts ordered numerically and the answers yes and
-no incomparable, the test is not monotone: it answers yes at $0$ through $9$
-and no at $10$. But the counter never produces $10$ or higher. The
-downstream need only be monotone on the values the upstream can produce.
-
-Third, considering a different order on $M$ can make two
-non-monotone stages both monotone. Order the booleans with false below
-true for $I$, $O$ and $M$. Consider a double-toggle: two stages that
-each negate a boolean compose to the identity. Neither is monotone, but under the reversed order on
-$M$, both are (Appendix~\ref{app:composition}).
-
-We say that $P_2$ satisfies Lifted Monotonicity \emph{on} a set $D\subseteq M$
-when its restriction to inputs in $D$ does.
-
-\begin{proposition}[Jointly monotone composites]
-\label{prop:joint-monotone}
-The composite $P_2\circ P_1$ satisfies Lifted Monotonicity, and so is
-consistent and needs no \commitment, in each of the following cases.
-\begin{enumerate}
-\item
-$\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity.
-\item
-$\Spec_1$ satisfies Lifted Monotonicity; $\Spec_2$ satisfies it on
-        $\Spec_1$'s outputs.
-\item
-$\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity via a different order
-        on $M$.
-\end{enumerate}
-\end{proposition}
-
-\begin{proof}[Proof sketch]
-(1) is Lemma~\ref{lem:composition}. (2) The proof of the lemma uses only
-intermediate values in fibers of $\Spec_1$. (3) The composite joins the two
-tables on the intermediate value and never compares two of them, so its table
-is the same under a different order. Apply the lemma under that order. Full
-proof in Appendix~\ref{app:composition}.
-\end{proof}
-
-The three cases do not cover every monotone composite
-(Appendix~\ref{app:composition}). \textcolor{reviewed}{When no case applies, some stage may have to issue a \commitment even though the composite is monotone.}
-
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
 
-The replicated store of the opening extends the filtering case of
-Proposition~\ref{prop:joint-monotone}(2). \textcolor{reviewed}{The key-value store is not monotone
-on its own, but it is monotone on what the log offers: a log fixes the order
-of commands, and a longer log only extends the responses.} \textcolor{reviewed}{Unlike the
-filtering case, the upstream must issue a \commitment to offer only such inputs.}
+\textcolor{reviewed}{Return to the replicated store of the opening.} \textcolor{reviewed}{The key-value store is not
+monotone on its own, but it is monotone on what the log offers: a log fixes
+the order of commands, and a longer log only extends the responses.} \textcolor{reviewed}{The log
+must issue a \commitment to offer only such inputs, and the store then needs
+none.}
 
 \textcolor{reviewed}{Let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own.} \textcolor{reviewed}{Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
-$\Spec_1$.}
+$\Spec_1$.} We say that $P_2$ satisfies Lifted Monotonicity \emph{on} a set
+$D\subseteq M$ when its restriction to inputs in $D$ does.
 
 \begin{definition}[Proper Coordination]
 \label{def:proper-coordination}
@@ -2019,6 +1957,68 @@ runs admitted by the selected downstream component. A downstream
 implementation may still take locks, or admit too few runs to follow its
 upstream. The maximally permissive empty-basis component for
 $\Spec_2|_{\Spec_1}$ does neither.
+
+\subsection{Composite CALM}
+\label{sec:composite-calm}
+
+\textcolor{reviewed}{Proper coordination places a pipeline's \commitments upstream.} \textcolor{reviewed}{A simpler
+case is a composite in which no stage needs a \commitment at all.} The composite is itself an \spectype. By Complete CALM, spec $P_2\circ P_1$ is consistent exactly when it
+satisfies Lifted Monotonicity, and then no output needs a \commitment
+(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary}). \textcolor{reviewed}{That test treats the composite as a single spec.} \textcolor{reviewed}{Suppose instead that
+each stage runs on its own, with its runs taking as input the outputs of the
+stage before.} \textcolor{reviewed}{A stage may then need a \commitment even when the composite
+needs none.} \textcolor{reviewed}{A composite can be jointly monotone, with no stage needing a
+\commitment, in three ways.} The orders on $I$ and $O$ are part of the composite's contract
+with its environment. The order on $M$ is not: the composite's table never
+mentions it, and some order on $M$ may make both stages monotone.
+
+First, every stage is monotone. By Lemma~\ref{lem:composition} the pipeline
+is monotone, and no stage need make a \commitment (Corollary~\ref{cor:pipelines}). The CRDT observations of Section~\ref{sec:crdt-instance} have this shape: a
+client query $q$ over the replica state $s$ is the composition $q\circ s$, and
+compositions of monotone functions are monotone
+(Corollary~\ref{cor:functional-composition}), so
+monotonicity of $q$ on all of the state domain suffices.
+
+Second, the upstream can filter out the inputs on which the downstream is not
+monotone. Consider a counter capped at $9$ that feeds a test of whether the
+count is below $10$. With counts ordered numerically and the answers yes and
+no incomparable, the test is not monotone: it answers yes at $0$ through $9$
+and no at $10$. But the counter never produces $10$ or higher. The
+downstream need only be monotone on the values the upstream can produce. \textcolor{reviewed}{This is proper coordination in which the upstream itself needs no
+\commitment.}
+
+Third, considering a different order on $M$ can make two
+non-monotone stages both monotone. Order the booleans with false below
+true for $I$, $O$ and $M$. Consider a double-toggle: two stages that
+each negate a boolean compose to the identity. Neither is monotone, but under the reversed order on
+$M$, both are (Appendix~\ref{app:composition}).
+
+\begin{proposition}[Jointly monotone composites]
+\label{prop:joint-monotone}
+The composite $P_2\circ P_1$ satisfies Lifted Monotonicity, and so is
+consistent and needs no \commitment, in each of the following cases.
+\begin{enumerate}
+\item
+$\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity.
+\item
+$\Spec_1$ satisfies Lifted Monotonicity; $\Spec_2$ satisfies it on
+        $\Spec_1$'s outputs.
+\item
+$\Spec_1$ and $\Spec_2$ satisfy Lifted Monotonicity via a different order
+        on $M$.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+(1) is Lemma~\ref{lem:composition}. (2) The proof of the lemma uses only
+intermediate values in fibers of $\Spec_1$. (3) The composite joins the two
+tables on the intermediate value and never compares two of them, so its table
+is the same under a different order. Apply the lemma under that order. Full
+proof in Appendix~\ref{app:composition}.
+\end{proof}
+
+The three cases do not cover every monotone composite
+(Appendix~\ref{app:composition}). \textcolor{reviewed}{When no case applies, some stage may have to issue a \commitment even though the composite is monotone.}
 
 Sequential composition, products of independent stages, and glue stages that
 copy, merge, or route outputs build arbitrary acyclic graphs. A graph
@@ -2669,7 +2669,7 @@ rows at $k$.
   \midrule
   sequential composition $P_2\circ P_1$ & $\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\}$, for stages sharing $(M,\preceq_M)$ & Eq.~\ref{eq:spec-composition}\\
   $\Spec_1$ guards $\Spec_2$ & $\Spec_2$ takes the outputs of $\Spec_1$ as its inputs & Sec.~\ref{sec:sequential-composition}\\
-  Lifted Monotonicity on $D$ & the common-extension condition for rows with inputs in $D$, at \indescs in $D$ & Sec.~\ref{sec:composite-calm}\\
+  Lifted Monotonicity on $D$ & the common-extension condition for rows with inputs in $D$, at \indescs in $D$ & Sec.~\ref{sec:proper-coordination}\\
   restriction $\Spec_2|_{\Spec_1}$ & $\Spec_2$ restricted to the outputs of $\Spec_1$ & Sec.~\ref{sec:proper-coordination}\\
   proper & $\Spec_2|_{\Spec_1}$ needs no \commitment: every output at every state reached without \commitment is legal & Def.~\ref{def:proper-coordination}\\
   component; admitted run & a \commitment basis and admitted runs, each from $\sigma(i)$ emitting a named $o$ with $(i,o)\in P$ & Def.~\ref{def:component}\\

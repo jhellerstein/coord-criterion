@@ -1371,8 +1371,8 @@ the theorem in Gilbert and Lynch's asynchronous model~\cite{hellerstein2026compl
 
 A replicated key-value store poses a puzzle.  With mutable values, it is
 non-monotone and inconsistent~\cite{alvaro2011bloom}. The pragmatic solution is
-to impose a consensus-driven log upstream of the replicas, a la
-Multi-Paxos~\cite{lamport2001paxos}, so all replicas make the same \commitments
+to impose a consensus-driven log upstream of the replicas, \`a la
+Multi-Paxos~\cite{lamport2001paxos}, so all replicas execute the same commands
 in the same order. But consensus is itself non-monotone: when two commands
 arrive concurrently, either may be appended next, and the two alternative orders
 have no common \outnoun.  In essence, the standard solution to non-monotonicity
@@ -1390,7 +1390,7 @@ coordination is \emph{proper}
 
 Intuitively, sequential composition feeds the output of one spec to
 the input of the next via equijoin.
-Formally, consider two \spectype[s] 
+Formally, consider two \spectype[s]
 $\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
 $\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$
 sharing the intermediate ordered domain $(M,\preceq_M)$.  Their \emph{sequential
@@ -1422,32 +1422,14 @@ at which the condition for $\Spec_2$ supplies the common \outnoun.  \fullproof
 
 By associativity the lemma extends to finite pipelines.
 
-\subsection{Composite CALM}
-\label{sec:composite-calm}
-
-By Complete CALM, $P_2\circ P_1$ is consistent exactly when it
-satisfies Lifted Monotonicity, and then no output needs a \commitment.
-That test treats the composite as a single spec.  Suppose instead that
-each stage runs on its own, with its runs taking as input the outputs of the
-stage before.  A stage may then need a \commitment even when the composite
-needs none.  A composite can be jointly monotone, with no stage needing a
-\commitment, in two ways.  First, if every stage is monotone,
-as when a monotone client query observes CRDT state
-(\S\ref{sec:crdt-instance}), then Lemma~\ref{lem:composition} applies.
-Second, the upstream can filter out the inputs on which the downstream is not
-monotone: a counter capped at $9$ never produces the counts at which a test
-of whether the count is below $10$ answers no.  These cases do not cover every monotone composite
-(see \extended).  When none applies, some stage may have to issue a \commitment even though the
-composite is monotone.
-
 \subsection{Proper Coordination}
 \label{sec:proper-coordination}
 
-The replicated store of the opening extends the filtering case.  The
-key-value store is not monotone
-on its own, but it is monotone on what the log offers: a log fixes the order
-of commands, and a longer log only extends the responses.  Unlike the
-filtering case, the upstream must issue a \commitment to offer only such inputs.
+Return to the replicated store of the opening.  The key-value store is not
+monotone on its own, but it is monotone on what the log offers: a log fixes
+the order of commands, and a longer log only extends the responses.  The log
+must issue a \commitment to offer only such inputs, and the store then needs
+none.
 
 Let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
@@ -1488,7 +1470,30 @@ state of $\Spec_1$.  \fullproof
 The theorem holds whatever basis $\Spec_1$ uses, and a proper pipeline is
 itself a guard for a further stage.  Locks in
 the key-value store would be pure overhead: by (1), the store restricted to
-logs needs no \commitment.  The full paper extends these results to more complex
+logs needs no \commitment.
+
+\subsection{Composite CALM}
+\label{sec:composite-calm}
+
+Proper coordination places a pipeline's \commitments upstream.  A simpler
+case is a composite in which no stage needs a \commitment at all.
+By Complete CALM, $P_2\circ P_1$ is consistent exactly when it
+satisfies Lifted Monotonicity, and then no output needs a \commitment.
+That test treats the composite as a single spec.  Suppose instead that
+each stage runs on its own, with its runs taking as input the outputs of the
+stage before.  A stage may then need a \commitment even when the composite
+needs none.  A composite can be jointly monotone, with no stage needing a
+\commitment, in two ways.  First, if every stage is monotone,
+as when a monotone client query observes CRDT state
+(\S\ref{sec:crdt-instance}), then Lemma~\ref{lem:composition} applies.
+Second, the upstream can filter out the inputs on which the downstream is not
+monotone: a counter capped at $9$ never produces the counts at which a test
+of whether the count is below $10$ answers no.  This is proper coordination in which the upstream itself
+needs no \commitment.  These cases do not cover every monotone composite
+(see \extended).  When none applies, some stage may have to issue a \commitment even though the
+composite is monotone.
+
+The full paper extends these results to more complex
 compositions than sequential stages, including
 stages with inputs of their own and arbitrary acyclic graphs of stages, checked node
 by node much as types are~\cite{hellerstein2026completecalmfull}.

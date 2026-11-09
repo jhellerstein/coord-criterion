@@ -206,6 +206,11 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«lem:composition»
 #check @CC.Paper.«sec:composition/associativity»
 #check @CC.Paper.«sec:composition/function-tables»
+#check @CC.Paper.«sec:proper-coordination/kvs-on-logs»
+#check @CC.Paper.«def:proper-coordination»
+#check @CC.Paper.«thm:proper-coordination»
+#check @CC.Paper.«sec:proper-coordination/locks-overhead»
+#check @CC.Paper.«sec:proper-coordination/components»
 #check @CC.Paper.«sec:composite-calm/complete-calm»
 #check @CC.Paper.«sec:composite-calm/middle-order»
 #check @CC.Paper.«sec:composite-calm/all-monotone»
@@ -214,11 +219,6 @@ exists.  Run with `lake env lean scripts/CheckReadme.lean`. -/
 #check @CC.Paper.«sec:composite-calm/cancellation»
 #check @CC.Paper.«prop:joint-monotone»
 #check @CC.Paper.«sec:composite-calm/reach»
-#check @CC.Paper.«sec:proper-coordination/kvs-on-logs»
-#check @CC.Paper.«def:proper-coordination»
-#check @CC.Paper.«thm:proper-coordination»
-#check @CC.Paper.«sec:proper-coordination/locks-overhead»
-#check @CC.Paper.«sec:proper-coordination/components»
 #check @CC.Paper.«sec:query-instance/weaker-monotonicity»
 #check @CC.Paper.«sec:query-instance/one-fact-version»
 #check @CC.Paper.«sec:query-instance/node-monotonicity»

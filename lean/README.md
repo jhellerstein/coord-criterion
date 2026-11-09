@@ -385,7 +385,12 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«lem:composition»` | theorem | **Lemma `lem:composition`** (Composition): |
 | `«sec:composition/associativity»` | theorem | "By associativity the lemma extends to finite pipelines." |
 | `«sec:composition/function-tables»` | theorem | "For a function `f`, its table `{(i,f(i))}` satisfies Lifted Monotonicity exactly when `f` is monotone (Section `sec:lifted-monotonicity`)." Lean: |
-| `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
+| `«sec:proper-coordination/kvs-on-logs»` | theorem | "Return to the replicated store of the opening. |
+| `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
+| `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
+| `«sec:proper-coordination/locks-overhead»` | theorem | "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |
+| `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, viewed through a chosen set of sound boundary observations, a component. |
+| `«sec:composite-calm/complete-calm»` | theorem | "Proper coordination places a pipeline's commitments upstream. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |
 | `«sec:composite-calm/all-monotone»` | theorem | "First, every stage is monotone. |
 | `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |
@@ -393,11 +398,6 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«sec:composite-calm/cancellation»` | theorem | "Third, considering a different order on `M` can make two non-monotone stages both monotone. |
 | `«prop:joint-monotone»` | theorem | **Proposition `prop:joint-monotone`** (Jointly monotone composites): |
 | `«sec:composite-calm/reach»` | theorem | "The three cases do not cover every monotone composite (Appendix `app:composition`). |
-| `«sec:proper-coordination/kvs-on-logs»` | theorem | "The replicated store of the opening extends the filtering case of Proposition `prop:joint-monotone`(2). |
-| `«def:proper-coordination»` | theorem | **Definition `def:proper-coordination`** (Proper Coordination): |
-| `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
-| `«sec:proper-coordination/locks-overhead»` | theorem | "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |
-| `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, viewed through a chosen set of sound boundary observations, a component. |
 
 ### §6 Instances
 
