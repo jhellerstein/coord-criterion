@@ -65,10 +65,12 @@ but also general-purpose consistency definitions such as linearizability and
 causal consistency (Appendix~\ref{app:registers}), and transactional isolation
 levels (Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
 
-Coordination mechanisms constrain which concurrent outcomes can occur.  We call
-their relevant semantic effect a \emph{\commitment}: an irrevocable, fateful
-system decision.  It can remove a permitted output that no remaining output at
-the same input covers: for example, choosing between two competing candidates
+As a system runs, possibilities narrow: the spec's table loses rows.
+Newly-arrived input removes rows that cannot be reached by extending that input;
+the world has moved on.  Coordination mechanisms such as locks and consensus
+remove rows by decision.  We call their relevant semantic effect a
+\emph{\commitment}: an irrevocable, fateful system decision.  It can remove a permitted
+output that no remaining output at the same input covers: for example, choosing between two competing candidates
 in a leader election protocol removes the possibility of the loser winning that
 election.  Or it can rule out all rows with a given input; for example, closing
 the polls for an election rules out consideration of any future ballots.
