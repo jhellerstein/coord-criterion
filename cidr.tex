@@ -1049,18 +1049,17 @@ an edge from each send to its matching receive gives the standard model of a
 distributed history; the transitive closure of these edges and the local orders
 is happens-before.
 
-\begin{definition}[Distributed history, history event, happens-before, consistent cut]
+\begin{definition}[Distributed history, consistent cut]
 \label{def:distributed-history}
-A \emph{distributed history} $H$ is a finite set of
-\emph{history events}, each an occurrence at one participant of a
-specification event, $\mathsf{send}(m)$, or $\mathsf{receive}(m)$, with
-a total local order on each participant's events, a matching send at another
-participant for each receive, and, for each participant $p$, specification
-events that in local order form a defined transition sequence from
-$\sigma_P(i_p)$.  A \emph{consistent cut} $C$ is a
-subset of history events closed under
-happens-before~\cite{lamport1978time,chandy1985distributed} (a term
-unrelated to our consistency).
+A \emph{distributed history} $H$ is a finite set of \emph{history events}, each
+an occurrence at one participant of a specification event, $\mathsf{send}(m)$,
+or $\mathsf{receive}(m)$.  Each participant's events are totally ordered, every
+receive has a matching send at another participant, and each participant $p$'s
+specification events, in order, form a run from $\sigma_P(i_p)$.  A
+\emph{consistent cut} $C$ is a set of history events closed under
+happens-before: whenever $C$ contains an event, it contains every event that
+happens before it~\cite{lamport1978time,chandy1985distributed}.  (The term is
+unrelated to our consistency.)
 \end{definition}
 
 At a consistent cut $C$, the specification events of $C$ at participant $p$,
@@ -1527,23 +1526,19 @@ and applications to distributed-systems protocols such as registers, $k$-set agr
 \subsection{Query monotonicity}
 \label{sec:query-instance}
 
-As previously discussed (\S\ref{sec:functional-calm}),
-the CALM Theorem of Ameloot et al.\ proves an operational result for
-relational languages on transducer networks: coordination-free evaluation is possible
-iff a program is monotone,
-under its data-placement and execution assumptions~\cite{ameloot2013relational,ameloot2015weaker}.
-Functional CALM does not replace the details of that theorem.  It abstracts
-the result to a property that can be compared with specs outside
-Datalog. Subsequent extensions to the original CALM Theorem become changes to the input domain
-and its order.
-When transducers know
-how data is placed, more queries become coordination-free, among them the
-non-monotone win-move query~\cite{zinn2012winmove}, and Ameloot et al.\
-characterized the new classes by domain-distinct and domain-disjoint
-monotonicity~\cite{ameloot2015weaker,zinn2012weak}.  Each is Functional CALM
-under an input order in which $I\cup J$ \inrel $I$ only for the $J$ that the
-placement policy leaves a node unable to rule out.  Functional CALM takes the
-order as given.
+The CALM Theorem of Ameloot et al.\ is an operational result: a query can be
+evaluated on a network of relational transducers without coordination exactly
+when it is monotone, under that model's assumptions about data placement and
+execution~\cite{ameloot2013relational,ameloot2015weaker}.  Functional CALM
+restates the result as a property of a spec, so that it can be compared with
+specs outside Datalog; it does not replace the operational details.  Later
+refinements of the theorem change only the input order.  When transducers know
+how data is placed, more queries become coordination-free; Ameloot et al.\
+characterized these classes by domain-distinct and domain-disjoint
+monotonicity~\cite{ameloot2015weaker,zinn2012weak,zinn2012winmove}.  Each is
+Functional CALM under a sparser input order: a node's input $I$ is extended by
+new facts $J$ only when the placement policy leaves the node unable to rule out
+$J$.
 
 Baccaert and Ketsman's \emph{behaviors} map located input facts to sets of
 permitted located outputs~\cite{baccaert2023dcbq,baccaert2026spectrum}; under
@@ -1583,16 +1578,16 @@ with the highest-timestamped committed write of the item it has received.
 
 \begin{definition}[HAT specification]
 \label{def:hat-spec}
-An input is a history ordered by happens-before: reads tagged with their
-replica, commits with their timestamp and write set, and deliveries of
-committed writes to replicas.  Inputs are ordered by
-downward-closed extension, and outputs are sets of read answers, ordered by
-inclusion.  For an isolation level $L$, defined by the phenomena it
-proscribes~\cite{adya1999weakconsistency}, let $\Spec_L$ have table $P_L$,
-which permits an output when it
-extends to a history that answers every read, orders versions by timestamp,
-and exhibits none of them.  The explicit relation $E$ holds, at each
-input, the answers the read rule gives.
+An input is a history, ordered by happens-before, of three kinds of events:
+reads, each tagged with its replica; commits, each with its timestamp and write
+set; and deliveries of committed writes to replicas.  One input \inrel another
+when it adds events, none of which happens before an event already present.  An
+output is a set of read answers, ordered by inclusion.  For an isolation level
+$L$, defined by the phenomena it proscribes~\cite{adya1999weakconsistency}, the
+table $P_L$ of $\Spec_L$ permits a set of answers at an input when the input
+extends to a history that answers every read, orders versions by timestamp, and
+exhibits none of those phenomena.  The explicit relation $E$ holds, at each
+input, the answers that the read rule above gives.
 \end{definition}
 
 \begin{theorem}[HAT levels]
