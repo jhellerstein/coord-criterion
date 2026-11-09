@@ -1250,6 +1250,14 @@ outputs participants actually emit.  Write $E(i)$ for its outputs at input
 $i$.
 \end{definition}
 
+For example, consider two-phase commit (2PC).  We focus on the spec for the
+voters; the coordinator is an observer of that spec.  We're interested in the
+fiber at the input \textsf{prepare(tx)}: how each voter responds to that
+prepare message.  Each possible explicit response is a row of $E$.  The overall
+\emph{set} of responses the coordinator might observe across voters is in
+$P\setminus E$.  The spec includes these as implicit outputs, representing the
+possible combined outcomes that respect each voter's response.
+
 We consider a system, with a strategy for each participant that depends only on its
 local history, and an environment that may send any legal input to any
 participant.
@@ -1324,10 +1332,17 @@ more rows than its canonical run, so no participant has a row at $j$ that
 \outrel all of them.
 \end{proof}
 
-For $E=P$, the canonical system needs no \commitment.  For a smaller $E$,
-its output events may exclude rows in $P\setminus E$ and therefore apply
-\commitments under the declared spec; serving only $E$ does not remove those
-\commitments.  A partition does not change the intrinsic \commitments a spec needs; rather,
+For $E=P$, the canonical system needs no \commitment.
+
+Return to the voters' spec.  Each voter decides whether it can commit and emits
+its vote, yes or no.  That decision is a \commitment: a voter that votes yes
+rules out every set of votes in which it votes no.  But it is a single-voter
+\commitment involving no communication, so the voter can make it and produce
+output during a partition.  Each vote is cast by a different voter, so votes
+emitted on different sides of a partition never conflict (the full paper formalizes this placement as a deployment~\extended), and every
+set of votes an observer may collect is consistent.
+
+A partition does not change the intrinsic \commitments a spec needs; rather,
 it prevents separated participants from jointly enforcing those \commitments
 via coordination.  When Lifted Monotonicity
 for $E$ fails, some output of $E$ waits for another side, sacrificing

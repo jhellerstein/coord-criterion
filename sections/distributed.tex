@@ -287,9 +287,8 @@ agreement, as in Paxos Commit~\cite{gray2006consensus}.
 Brewer conjectured that a distributed system cannot be consistent, available,
 and partition tolerant at once~\cite{brewer2000towards}; Gilbert and Lynch
 proved it as an impossibility result for a linearizable register~\cite{gilbert2002cap}.
-A register is the simplest key-value store: it holds the value of a single key.
-For reasoning about one key, a register suffices.
-Complete CAP asks and answers a broader question: which specifications are subject to the CAP
+Complete CAP addresses the conjecture more broadly:
+which specifications are subject to the CAP
 conjecture, and which are not?
 
 To pose the question properly, note that the outputs that each participant emits---and
@@ -297,7 +296,10 @@ needs to keep available---are not enough to judge consistency. The spec
 must also model what an observer (e.g., a client) can eventually conclude by collecting
 outputs from multiple participants.
 
-To see why, consider a racing read and write that go to different
+Like Gilbert and Lynch, we can use a replicated register as an example.
+A register is a simplified key-value store that holds only the
+value of a single key, which suffices for reasoning about properties of a single object.
+Consider a racing read and write that go to different
 participants. The register is initialized to $v_0$. Participant $p$ receives
 write $w(v)$ and emits its acknowledgment; concurrently, participant $q$
 receives the read $r$ and returns $v_0$.  A client may later collect both the
@@ -312,8 +314,11 @@ case at the end of the section.
 
 We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
-participants emit themselves.  Outputs in
-$P\setminus E$, such as combined outputs, need only remain permitted.
+participants actually emit.  Outputs in
+$P\setminus E$ are not emitted by participants;
+they remain permitted in $P$ to capture implicit combinations of emitted outputs---e.g.,
+as could be constructed by external observers or clients making sense of explicit outputs
+across participants.
 
 Both availability and consistency are judged on histories in which a partition
 separates the participants.
@@ -328,12 +333,19 @@ side; participants still receive environment input and emit outputs.
 \begin{definition}[Explicit possibility relation]
 \label{def:explicit-relation}
 An \emph{explicit possibility relation} $E\subseteq P$ is a set of rows whose
-outputs participants emit themselves.  Write $E(i)$ for its outputs at input
-$i$.  Rows of $P$ outside $E$, such as those for combined outputs, need only
-remain permitted.
+outputs participants actually emit.  Write $E(i)$ for its outputs at input
+$i$.
 \end{definition}
 
-We fix a system, with a strategy for each participant that depends only on its
+For example, consider two-phase commit (2PC).  We focus on the spec for the
+voters; the coordinator is an observer of that spec.  We're interested in the
+fiber at the input \textsf{prepare(tx)}: how each voter responds to that
+prepare message.  Each possible explicit response is a row of $E$.  The overall
+\emph{set} of responses the coordinator might observe across voters is in
+$P\setminus E$.  The spec includes these as implicit outputs, representing the
+possible combined outcomes that respect each voter's response.
+
+We consider a system, with a strategy for each participant that depends only on its
 local history, and an environment that may send any legal input to any
 participant.
 
@@ -347,9 +359,9 @@ new input and no message from another side.
 \begin{definition}[Availability]
 \label{def:partition-notions}
 The system has \emph{Availability for $E$} when, in every partitioned history
-it produces, each participant $p$ in state $(i,R)$ can emit each output in
-$R(i)\cap E(i)$ in some same-side continuation of $p$.  \emph{Availability} is
-Availability for $P$.
+it produces, each participant $p$ in state $(i,R)$ has, for each output
+$o\in R(i)\cap E(i)$, some same-side continuation in which $p$ emits $o$.
+\emph{Availability} is shorthand for Availability for $P$.
 \end{definition}
 
 \begin{definition}[Partition Consistency]
@@ -362,12 +374,6 @@ participants' current inputs.
 The \emph{canonical system for $E$} is the system whose participants follow
 canonical runs and emit only outputs of $E$.
 
-\begin{definition}[Lifted Monotonicity for $E$]
-\label{def:lm-for-A}
-$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
-a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
-\end{definition}
-
 \begin{definition}[Escaping CAP]
 \label{def:escapes-cap}
 A spec \emph{escapes CAP} for $E$ when its canonical system for $E$ has
@@ -378,11 +384,13 @@ The canonical system's participants never wait: each can emit any output of
 $E$ that its state allows, so it always has Availability for $E$.  The
 question is whether their answers stay consistent across sides.  Complete CAP
 says they do exactly when outputs of $E$ emitted on different sides have a
-common \outnoun in the spec at every common \indesc of their inputs.  For a
-smaller $E$, an available system may use output events that apply
-\commitments requiring coordination under the full declared spec; the remark
-after Corollary~\ref{cor:complete-cap-any-system} explains why restricting
-service to $E$ does not erase that requirement.
+common \outnoun in the spec at every common \indesc of their inputs.
+
+\begin{definition}[Lifted Monotonicity for $E$]
+\label{def:lm-for-A}
+$\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of rows of $E$ with
+a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
+\end{definition}
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
@@ -420,10 +428,17 @@ A system might hope to keep more outputs available by issuing \commitments,
 coordinating within each side of a partition.  It cannot:
 Corollary~\ref{cor:complete-cap-any-system} holds for every system,
 \commitment-free or not.  For
-$E=P$, the canonical system needs no \commitment at all.  For a smaller $E$,
-its canonical output events may exclude rows in $P\setminus E$ and therefore
-apply \commitments under the declared spec; serving only $E$ does not remove
-those \commitments.  A partition does not change the intrinsic \commitments a spec needs; rather,
+$E=P$, the canonical system needs no \commitment at all.
+
+Return to the voters' spec.  Each voter decides whether it can commit and emits
+its vote, yes or no.  That decision is a \commitment: a voter that votes yes
+rules out every set of votes in which it votes no.  But it is a single-voter
+\commitment involving no communication, so the voter can make it and produce
+output during a partition.  Each vote is cast by a different voter, so votes
+emitted on different sides of a partition never conflict (Appendix~\ref{app:deployment} formalizes this placement as a deployment), and every
+set of votes an observer may collect is consistent.
+
+A partition does not change the intrinsic \commitments a spec needs; rather,
 it prevents separated participants from jointly enforcing those \commitments
 via coordination.  When Lifted
 Monotonicity for $E$ fails, some output of $E$ waits for another side,

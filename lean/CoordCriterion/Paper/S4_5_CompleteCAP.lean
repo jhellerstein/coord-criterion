@@ -44,17 +44,19 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type} {n : Nat}
 
 /-! ## §4.4 The Complete CAP Theorem -/
 
-/-- Section `sec:complete-cap`, opening: "Complete CAP asks and answers a
-broader question: which specifications are subject to the CAP conjecture, and
-which are not?
+/-- Section `sec:complete-cap`, opening: "Complete CAP addresses the
+conjecture more broadly: which specifications are subject to the CAP
+conjecture, and which are not?
 
 To pose the question properly, note that the outputs that each participant
 emits—and needs to keep available—are not enough to judge consistency.  The
 spec must also model what an observer (e.g., a client) can eventually conclude
 by collecting outputs from multiple participants.
 
-To see why, consider a racing read and write that go to different
-participants.  The register is initialized to `v₀`.  Participant `p` receives
+Like Gilbert and Lynch, we can use a replicated register as an example.  A
+register is a simplified key-value store that holds only the value of a single
+key, which suffices for reasoning about properties of a single object.
+Consider a racing read and write that go to different participants.  The register is initialized to `v₀`.  Participant `p` receives
 write `w(v)` and emits its acknowledgment; concurrently, participant `q`
 receives the read `r` and returns `v₀`.  A client may later collect both the
 write acknowledgment and read answer `v₀`.  A linearizable register spec has a
@@ -68,9 +70,11 @@ began, no such combined output would exist; we return to this case at the end
 of the section.
 
 We therefore pair a spec with an *explicit possibility relation* `E ⊆ P`, or
-explicit relation for short: the rows whose outputs participants emit
-themselves.  Outputs in `P ∖ E`, such as combined outputs, need only remain
-permitted.
+explicit relation for short: the rows whose outputs participants actually
+emit.  Outputs in `P ∖ E` are not emitted by participants; they remain
+permitted in `P` to capture implicit combinations of emitted outputs—e.g., as
+could be constructed by external observers or clients making sense of explicit
+outputs across participants.
 
 Both availability and consistency are judged on histories in which a
 partition separates the participants."  Lean: Theorem `thm:complete-cap`,
@@ -112,9 +116,9 @@ theorem «def:partitioned-history/unfolded» (H : History sp D n) (comp : Fin n 
 
 /-- **Def. `def:explicit-relation`** (Explicit possibility relation).  "An
 *explicit possibility relation* `E ⊆ P` is a set of rows whose outputs
-participants emit themselves.  Write `E(i)` for its outputs at input `i`.
-Rows of `P` outside `E`, such as those for combined outputs, need only remain
-permitted."
+participants actually emit.  Write `E(i)` for its outputs at input `i`."
+The paper follows the definition with the two-phase-commit example of the
+voters' spec (prose only).
 
 Lean: a table `E : Table I O` subset of `sp.P`; `E(i)` is `E i`. -/
 abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
@@ -122,7 +126,7 @@ abbrev «def:explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
 
 /-! ### The system and environment assumptions -/
 
-/-- Paragraph after Def. `def:explicit-relation`: "We fix a system, with a
+/-- Paragraph after Def. `def:explicit-relation`: "We consider a system, with a
 strategy for each participant that depends only on its local history, and an
 environment that may send any legal input to any participant."  This entry is
 the system half; the environment half is `«sec:complete-cap/environment»`.
@@ -134,7 +138,7 @@ is the definition of `Produced`: each event of `p` is checked against `p`'s
 own local prefix only. -/
 abbrev «sec:complete-cap/system» (sp : Spec I O) (D : Type) : Type := System sp D
 
-/-- "We fix a system …": a history is *produced* by the system
+/-- "We consider a system …": a history is *produced* by the system
 when each participant's events are allowed given its own local prefix. -/
 theorem «sec:complete-cap/system-produced» (Sys : System sp D) (init : Fin n → I)
     (H : History sp D n) :
@@ -168,8 +172,9 @@ abbrev «def:local-continuation» (Sys : System sp D) : Prop :=
 
 /-- **Def. `def:partition-notions`** (Availability).  "The system has
 *Availability for `E`* when, in every partitioned history it produces, each
-participant `p` in state `(i,R)` can emit each output in `R(i) ∩ E(i)` in
-some same-side continuation of `p`.  *Availability* is Availability for `P`."
+participant `p` in state `(i,R)` has, for each output `o ∈ R(i) ∩ E(i)`, some
+same-side continuation in which `p` emits `o`.  *Availability* is shorthand for
+Availability for `P`."
 
 Lean: `AvailabilityAtEnd Sys` (= `AvailabilityFor sp.P Sys`); for a general
 `E`, use `«def:partition-notions/for»`. -/
@@ -177,12 +182,13 @@ abbrev «def:partition-notions» (Sys : System sp D) : Prop := AvailabilityAtEnd
 
 /-- Def. `def:partition-notions`: "The system has Availability for `E` when,
 in every partitioned history it produces, each participant `p` in state
-`(i,R)` can emit each output in `R(i) ∩ E(i)` in some same-side continuation
-of `p`." -/
+`(i,R)` has, for each output `o ∈ R(i) ∩ E(i)`, some same-side continuation
+in which `p` emits `o`." -/
 abbrev «def:partition-notions/for» (E : Table I O) (Sys : System sp D) : Prop :=
   AvailabilityFor E Sys
 
-/-- Def. `def:partition-notions`: "Availability is Availability for `P`." -/
+/-- Def. `def:partition-notions`: "Availability is shorthand for Availability
+for `P`." -/
 theorem «def:partition-notions/for-S» (Sys : System sp D) :
     «def:partition-notions/for» sp.P Sys ↔ «def:partition-notions» Sys :=
   availabilityFor_S Sys
@@ -291,10 +297,7 @@ question is whether their answers stay consistent across sides.  Complete CAP
 says they do exactly when outputs of `E` emitted on different sides have a
 common output extension in the spec at every common input extension of their
 inputs."  This entry checks the first sentence, for every spec and every `E`;
-the last is Theorem `thm:complete-cap`.  The full paper adds: "For a smaller
-`E`, an available system may use output events that apply commitments
-requiring coordination under the full declared spec"; see
-`«sec:complete-cap/local-row-removal-necessary»`. -/
+the last is Theorem `thm:complete-cap`. -/
 theorem «sec:complete-cap/canonical-never-waits» (sp : Spec I O) (D : Type) (E : Table I O) :
     «def:partition-notions/for» E («sec:complete-cap/canonical-system» sp D E) :=
   availabilityFor_resp E
@@ -390,9 +393,9 @@ theorem «sec:complete-cap/A-eq-S-no-commitment» (Sys : System sp D)
     ¬ Sys.CoordinationFreeH :=
   availability_not_coordinationFreeH Sys hA hw hp hqp hH hnr hrun ho hx hnx hqk
 
-  /-- "For a smaller `E` row-removing commitments can be necessary: if `o ∈ E(i)` and
-  `x ∈ P(i) ∖ E(i)` have no common output extension at `i`, emitting `o` must choose
-  against `x`."  Lean: one input, `P = {o, x}` incomparable and `E = {o}`.
+  /-- Supporting example for the voters' remark after Corollary
+  `cor:complete-cap-any-system` (not quoted): for a smaller `E`, an output of `E`
+  can still apply a commitment under the declared spec.  Lean: one input, `P = {o, x}` incomparable and `E = {o}`.
   `P` satisfies Lifted Monotonicity for `E`, but `o` is not exposable.  Thus the
   output event for `o` is not available under the empty basis, while the
   canonical output event is available under `ℬ_P` and applies the commitment

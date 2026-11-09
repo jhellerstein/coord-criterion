@@ -339,7 +339,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partitioned-history/unfolded»` | theorem | Def. |
 | `«def:explicit-relation»` | abbrev | **Def. |
 | `«sec:complete-cap/system»` | abbrev | Paragraph after Def. |
-| `«sec:complete-cap/system-produced»` | theorem | "We fix a system …": |
+| `«sec:complete-cap/system-produced»` | theorem | "We consider a system …": |
 | `«sec:complete-cap/environment»` | theorem | "… and an environment that may send any legal input to any participant." Lean: |
 | `«def:local-continuation»` | abbrev | **Def. |
 | `«def:partition-notions»` | abbrev | **Def. |
@@ -362,7 +362,7 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/necessity-any-system»` | theorem | Full paper: |
 | `«sec:complete-cap/proof-system-commitment-free»` | theorem | "For `E = P`, the canonical system needs no commitment." Lean: |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | Supporting operational lemma for the full-availability case. |
-| `«sec:complete-cap/local-row-removal-necessary»` | theorem | "For a smaller `E` row-removing commitments can be necessary: |
+| `«sec:complete-cap/local-row-removal-necessary»` | theorem | Supporting example for the voters' remark after Corollary `cor:complete-cap-any-system` (not quoted): |
 | `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another side, sacrificing Availability, or is emitted anyway, sacrificing Partition Con… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "We return to the register example, but add the requirement of linearizability regarding real-time precedence: |
@@ -509,7 +509,7 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more sides, no message crosses sides (Def. |
 | `«app:notation/side»` | abbrev | *side* — one of the two or more classes into which a partitioned history divides the participants (Def. |
-| `«app:notation/explicit-relation»` | abbrev | *explicit possibility relation `E`* — `E ⊆ P`, the rows whose outputs participants emit themselves (Def. |
+| `«app:notation/explicit-relation»` | abbrev | *explicit possibility relation `E`* — `E ⊆ P`, the rows whose outputs participants actually emit (Def. |
 | `«app:notation/same-side-continuation»` | abbrev | *same-side continuation of `p`* — produced using only events on `p`'s side, with no new input and no message from another side (Def. |
 | `«app:notation/availability»` | abbrev | *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable in a same-side continuation (Def. |
 | `«app:notation/canonical-system»` | abbrev | *canonical system for `E`* — participants follow canonical runs and emit only outputs of `E` (Section `sec:complete-cap`). |

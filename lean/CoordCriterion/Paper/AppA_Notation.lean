@@ -375,7 +375,7 @@ abbrev «app:notation/side» {n : Nat} (comp : Fin n → Nat) (p : Fin n) : Fin 
   fun q => comp q = comp p
 
   /-- *explicit possibility relation `E`* — `E ⊆ P`, the rows whose outputs
-  participants emit themselves (Def. `def:explicit-relation`).  Lean: a table
+  participants actually emit (Def. `def:explicit-relation`).  Lean: a table
   `E : Table I O` with `∀ i o, E i o → sp.P i o`. -/
 abbrev «app:notation/explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.P i o
