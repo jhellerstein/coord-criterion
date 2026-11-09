@@ -309,7 +309,7 @@ theorem «sec:composite-calm/filtering» :
   Joint.threshold
 
 /-- "In the literature [LVars], the output order is the usual boolean lattice,
-so `false` is only a lower bound; only `true` is a guarantee."  And, from the
+so `false` is a lower bound; only `true` is a guarantee."  And, from the
 second case: the guarded test "is consistent under any output order, including
 equality."  Lean: `Joint.twoDigit_orders`.  Under the lattice order
 (`Joint.boolPO`, `false` below `true`) the test `n ↦ [10 ≤ n]` is
