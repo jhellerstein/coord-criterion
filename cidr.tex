@@ -1552,22 +1552,25 @@ disjoint networks, and Complete CAP extends it to overlapping networks
 \subsection{CRDTs: monotone queries over convergent state}
 \label{sec:crdt-instance}
 
-A CRDT guarantees that replicas receiving the same updates converge to
-equivalent states, but the Strong Eventual Consistency property it offers
-provides no guarantee on what the environment may observe.  Laddad et al.\
-proposed monotonicity as the right test for safe observation from CRDT
-state~\cite{laddad2022keep}.  We make the proposed test precise with
-Functional CALM.  Let $(D,\sqsubseteq,\sqcup)$ be the state join-semilattice.
-The input is the finite set $U$ of immutable payloads received so far, ordered
-by inclusion, and the replica's state is $s(U)=s_0\sqcup\bigsqcup U$.  A
-client observation $q:D\to(Y,\preceq_Y)$ gives the client-visible
-spec $q\circ s$.  By Functional CALM, $q\circ s$ is consistent
-exactly when $U\subseteq V$ implies $q(s(U))\preceq_Y q(s(V))$.  Monotonicity
-of $q$ on all of $D$ suffices, but $q$ need only be monotone between reachable
-states.  The query $\mathit{Add}\setminus\mathit{Del}$ over a two-phase set
-fails the test: a deleted item grows $U$ and shrinks the answer.  CRDT states
-form a join-semilattice, but $q$ needs less: Complete CALM requires
-only \emph{some} common \outnoun of query outputs, not a least one.
+A CRDT uses join semilattices to guarantee that replicas that have received
+the same updates converge to the same state.  That guarantee, Strong Eventual
+Consistency, says nothing about what a client observes when it queries a
+replica that has not yet received every update.  Laddad et al.\ proposed
+monotonicity as the right test for safe observation from CRDT
+state~\cite{laddad2022keep}.  Functional CALM makes the proposed test precise.
+
+Take as input the set of updates a replica has received, ordered by inclusion;
+the replica's state is their join in the semilattice.  The output is the answer
+to a client's query, so the client-visible spec is a function: query the state
+those updates produce.  By Functional CALM, it is consistent exactly when
+receiving more updates never yields an answer that fails to extend an earlier
+one.  The query needs this only on states replicas can actually reach, not on
+every state in the semilattice.  For example, a two-phase
+set~\cite{shapiro2011crdt} records additions and removals in separate add-only
+sets $A$ and $R$; the query for remaining elements, $Q=A\setminus R$, fails the
+test: a later removal grows $R$ and shrinks the answer.  The CRDT's join is one
+way to make states converge, but Complete CALM asks for less: answers need some
+common extension, not a least one.
 
 \subsection{Highly available transactions}
 \label{sec:hat-instance}
