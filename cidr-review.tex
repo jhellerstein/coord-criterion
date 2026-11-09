@@ -494,11 +494,13 @@ spec requires.
 \end{figure}
 
 \paragraph{Output and consistency.}
-In a functional table, an output is a \emph{legal output} when every item in
+In a functional table, an output is a \emph{legal output} when every output in
 the future-output set \outrel it. Hence $\bot$ is legal
-in panels~(a) and~(b), and $a$ in panel~(c). At the time of emission, an output must be legal. \textcolor{newblue}{The output event
-\(\mathsf{output}(o)\) therefore atomically empties any legal input whose
-output does \emph{not} extend \(o\), then emits \(o\).}
+in panels~(a) and~(b), and $a$ in panel~(c). The output event $\mathsf{output}(o)$ emits $o$ and keeps only the rows whose
+outputs extend $o$, since later outputs must not contradict it. When $o$ is
+legal, every remaining row qualifies and nothing is lost. When it is not, the
+event removes the rows that conflict with $o$, ruling out their inputs; that
+removal is a \commitment.
 
 Figure~\ref{fig:nonmonotone-frame} considers a variant of our example that
 changes only the output order: all outputs are incomparable, including $\bot$
