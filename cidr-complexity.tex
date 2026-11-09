@@ -1664,16 +1664,21 @@ the input, both halves of their result follow from Complete CAP (\extended).\cxb
 \subsection{Invariant confluence}
 \label{sec:iconfluence-instance}
 
-\color{blue!75!black}\cxtag{157}{B/XL}\cxbar{157}{0.8 0 0}{s}In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
-is a set of versions, replicas merge states by union, and a set $T$ of
+\color{black}\cxtag{157}{N/L}\cxbar{157}{0.9 0.45 0}{s}In the model of Bailis et al.~\cite{bailis2014coordination}, a database state
+is a set of versions, and replicas merge states by union.  A set $T$ of
 transactions is \emph{invariant confluent} for an invariant $\mathcal I$ when
 the merge of any two reachable states satisfies $\mathcal I$.  We construct a
-spec $\Spec_{\mathcal I}$ whose inputs are locally valid
-\emph{transaction histories}, partial orders of transactions in which one
-precedes another when the second's replica saw the first, ordered
-by extension.  Outputs are database states, ordered by inclusion;
-$P_{\mathcal I}$ permits at $h$ the state of any downward-closed
-sub-history of $h$ whose merges all satisfy $\mathcal I$.\cxbar{157}{0.8 0 0}{e}
+spec $\Spec_{\mathcal I}$.  An input is a \emph{transaction history}: the
+transactions executed so far, partially ordered by data dependency, so that one
+precedes another when the replica running the second saw the first.  One
+history \inrel another when it adds transactions without changing what the
+earlier ones saw.  The inputs include only histories in which each transaction
+preserves $\mathcal I$ on its replica's state.  An output is a database state,
+ordered by inclusion.  At a history $h$, a replica may choose not to expose
+some transactions, but whatever it does expose must satisfy $\mathcal I$.  So
+the permitted outputs are the states produced by any sub-history $g$ of $h$
+that contains everything its transactions saw and is \emph{valid} in the sense
+that every merge of what $g$ contains satisfies $\mathcal I$.\cxbar{157}{0.9 0.45 0}{e}
 
 \color{black}\begin{proposition}[Invariant confluence and Lifted Monotonicity]
 \label{prop:iconfluence-lm}
