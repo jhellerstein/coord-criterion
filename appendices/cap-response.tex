@@ -35,8 +35,8 @@ every spec is available.
 
 A continuation of a partitioned history is \emph{within $p$'s side} when
 the system produces it, it adds only history events of $p$'s side, and none of its
-receives takes a message sent from another side.  A continuation local to
-$p$ (Definition~\ref{def:partition-notions}) is one within $p$'s side
+receives takes a message sent from another side.  A same-side continuation
+of $p$ (Definition~\ref{def:local-continuation}) is one within $p$'s side
 that adds no input event.
 
 \begin{definition}[Response Availability]
@@ -67,7 +67,8 @@ history.
 \end{definition}
 
 This is the part of Partition Consistency that the converse of
-Theorem~\ref{thm:complete-cap} uses, so that theorem also holds with Response
+Theorem~\ref{thm:complete-cap} and Corollary~\ref{cor:complete-cap-any-system}
+use, so both also hold with Response
 Partition Consistency in place of Partition Consistency.  Confluence at $j$
 implies a common \outnoun at $j$ (Corollary~\ref{cor:reconciliation-any-basis}),
 and for a system with basis $\mathcal B_P$ and no \commitment events, whose
@@ -97,7 +98,7 @@ participant set.
 \begin{proof}
 Whether a history is produced is checked one history event at a time against each
 participant's own local prefix, as fixed before
-Definition~\ref{def:partition-notions},
+Definition~\ref{def:local-continuation},
 and there are no receives to match.
 Replication makes that check independent of the participant.
 \end{proof}
@@ -118,8 +119,8 @@ by Lemma~\ref{lem:reconciliation} it is confluence of the canonical runs whose
 emitted rows lie in $T$.
 
 A response interface is an explicit relation that a system can always
-serve.  Consider the system of the proof of Theorem~\ref{thm:complete-cap} for
-$E=T$, which emits by the canonical output event any output of $T$ in the
+serve.  Consider the canonical system for $T$ (Section~\ref{sec:complete-cap}),
+which emits by the canonical output event any output of $T$ in the
 current fiber.  Its emitted outputs form a chain
 $o_1\OutputOrd\cdots\OutputOrd o_m$, so by Lemma~\ref{lem:run-residual} its
 table is $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_m]$, or
@@ -143,10 +144,10 @@ the following are equivalent:
 \end{theorem}
 
 \begin{proof}
-(2$\Leftrightarrow$3) is Theorem~\ref{thm:complete-cap} with $E=T$.
+(2$\Leftrightarrow$3) is Theorem~\ref{thm:complete-cap} and
+Corollary~\ref{cor:complete-cap-any-system} with $E=T$.
 
-(2$\Rightarrow$1.)  Take the system of the proof of
-Theorem~\ref{thm:complete-cap} for $E=T$.  It is replicated, and by the
+(2$\Rightarrow$1.)  Take the canonical system for $T$.  It is replicated, and by the
 paragraph above it has Answering and Input acceptance.  The outputs emitted in
 a history are rows of $T$ at inputs that every common \indesc $j$ of the
 current inputs \inrel, so Lifted Monotonicity for $T$ gives Response Partition
@@ -228,8 +229,8 @@ $k_1$.
 
 \subsection{Gilbert--Lynch with real-time precedence}
 
-Section~\ref{sec:complete-cap} derives the Gilbert--Lynch theorem from the
-converse of Theorem~\ref{thm:complete-cap}, with real-time precedence supplied
+Section~\ref{sec:complete-cap} derives the Gilbert--Lynch theorem from
+Corollary~\ref{cor:complete-cap-any-system}, with real-time precedence supplied
 as input.  Here precedence comes from real time, and consistency is required
 only at the precedence an execution realizes.
 

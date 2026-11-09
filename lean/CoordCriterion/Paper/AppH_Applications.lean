@@ -188,7 +188,8 @@ theorem «app:additional-applications/renaming-each-extends» {P : Type} [Decida
 
 /-- "Directed fibers also fail at `{p,q}`: `{p↦1,q↦2}` and `{p↦2,q↦1}` have
 no common output extension.  The spec therefore fails Lifted Monotonicity,
-and by Theorem `thm:complete-cap` a partition separating `p` and `q` rules out
+and by Theorem `thm:complete-cap` with `E = P` and Corollary
+`cor:complete-cap-any-system` a partition separating `p` and `q` rules out
 Availability with Partition Consistency." -/
 theorem «app:additional-applications/renaming-not-monotone» {P : Type} [DecidableEq P]
     {p q : P} (h : p ≠ q) (D : Type) :

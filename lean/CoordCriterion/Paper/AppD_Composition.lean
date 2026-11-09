@@ -689,8 +689,8 @@ well-formed histories with `N n` participants, translated by
 `Components.toSEvs` and certified by `Components.lrun_sysExec`);
 `Component.process` takes `N n := n = 1`, `Component.cluster` requires
 `CAP.System.Replicated`; `Component.ofCommitmentBasis B` is the maximally permissive
-component.  The forms admit runs by the same rule; the empty-basis system of
-Theorem `thm:complete-cap` is replicated and commitment-free as a cluster. -/
+component.  The forms admit runs by the same rule; the empty-basis system `cfSystem`
+(`«sec:complete-cap/proof-system-commitment-free»`) is replicated and commitment-free as a cluster. -/
 theorem «app:components/system-is-component» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     {D : Type} (Sys : CAP.System sp D) :
     (Components.Component.process Sys).basis = (fun c => Sys.basis (Dist.toCAP c)) ∧

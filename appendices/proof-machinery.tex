@@ -176,19 +176,20 @@ not confluent at $k$.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-cap}]
-Suppose $\Spec$ satisfies Lifted Monotonicity for $E$.  Take the system whose strategies emit,
-by the canonical output event $\mathsf{output}(o)$ of
-Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber.
+The canonical system for $E$ has the canonical basis and no \commitment
+events; its strategies emit, by the canonical output event $\mathsf{output}(o)$
+of Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber.
 That event applies whatever \commitment $o$ requires, $x_o$ from the
 canonical basis (Definition~\ref{def:system-output-event}), so the system has
-Availability for $E$.  Every output it emits is a row of $E$ at an input below
+Availability for $E$ whatever the spec.  Suppose $\Spec$ satisfies Lifted
+Monotonicity for $E$.  Every output the canonical system emits is a row of $E$ at an input below
 the current one, so at a common \indesc $j$ of the current inputs the emitted
 outputs have a common \outnoun in $\fiber{j}$.  For a system that emits only
 canonical output events, that is confluence at $j$
 (Lemma~\ref{lem:reconciliation}), which gives Partition Consistency.
 
-Conversely, suppose some system has Availability for $E$ and Partition
-Consistency.  Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common
+Conversely, suppose some system, such as the canonical system for $E$, has
+Availability for $E$ and Partition Consistency.  Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common
 \indesc $j$; we find some $u\in\fiber{j}$ that \outrel every $o_r$.  If $k=0$,
 $\Spec$ is total, so $j$ appears in some row $(j,u)$.  Otherwise, take one
 participant $p_r$ per row, starting at input $i_r$, each on its own side,
@@ -202,14 +203,11 @@ emitted $o_r$.  Emitting an output keeps only rows whose output \outrel it
 $o_r$.
 \end{proof}
 
-\begin{proof}[Proof of Corollary~\ref{cor:complete-cap-S}]
-With $E=P$, Lifted Monotonicity for $E$ is the common-extension condition, which is
-Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}).  When
-Lifted Monotonicity holds, every output at every state reachable without
-\commitment is a legal output (Proposition~\ref{prop:exposure-boundary}).  The
-\commitment-free system never leaves such states, so it has Availability, and
-by Complete CALM and Proposition~\ref{prop:distributed-consistency} it has
-Partition Consistency.
+\begin{proof}[Proof of Corollary~\ref{cor:complete-cap-any-system}]
+The converse argument in the proof of Theorem~\ref{thm:complete-cap} applies
+to any system with Availability for $E$ and Partition Consistency, so $\Spec$
+satisfies Lifted Monotonicity for $E$.  By Theorem~\ref{thm:complete-cap},
+$\Spec$ escapes CAP for $E$.
 \end{proof}
 
 \subsection{Invariant confluence (\S\ref{sec:iconfluence-instance})}

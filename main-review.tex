@@ -1664,7 +1664,7 @@ both local outputs, provides a proof of their consistency, and must be in the sp
 
 \textcolor{reviewed}{We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
-participants emit themselves and must keep locally available.} \textcolor{reviewed}{Outputs in
+participants emit themselves.} \textcolor{reviewed}{Outputs in
 $P\setminus E$, such as combined outputs, need only remain permitted.}
 
 \textcolor{reviewed}{Both availability and consistency are judged on histories in which a partition
@@ -1677,40 +1677,42 @@ sides and contains no receive whose matching send lies on another
 side; participants still receive environment input and emit outputs.}
 \end{definition}
 
-\textcolor{reviewed}{We fix a system, with a strategy for each participant of every finite
-participant set and every choice of initial inputs, each depending only on its
-participant's local history, and an adversarial environment that may supply
-any legal input event to any participant.}
-
-\begin{definition}[Local continuation]
-\label{def:local-continuation}
-\textcolor{reviewed}{A continuation of a partitioned history is \emph{local to} a participant $p$
-when the system produces it, it adds only history events of $p$'s side and no
-input events, and none of its receives takes a message sent from another
-side.}
+\begin{definition}[Explicit possibility relation]
+\label{def:explicit-relation}
+\textcolor{reviewed}{An \emph{explicit possibility relation} $E\subseteq P$ is a set of rows whose
+outputs participants emit themselves.} \textcolor{reviewed}{Write $E(i)$ for its outputs at input
+$i$.} \textcolor{reviewed}{Rows of $P$ outside $E$, such as those for combined outputs, need only
+remain permitted.}
 \end{definition}
 
-\begin{definition}[Explicit (possibility) relation]
-\label{def:explicit-relation}
-\textcolor{reviewed}{An \emph{explicit relation} $E\subseteq P$ is a set of rows $(i,o)$ whose
-output $o$ must stay available at input $i$; write $E(i)$ for its fiber
-$\{o:(i,o)\in E\}$.}
+\textcolor{reviewed}{We fix a system, with a strategy for each participant that depends only on its
+local history, and an environment that may send any legal input to any
+participant.}
+
+\begin{definition}[Same-side continuation]
+\label{def:local-continuation}
+\textcolor{reviewed}{A \emph{same-side} continuation of a participant $p$ is one the system can
+produce using only events on the side of the partition containing $p$, with no
+new input and no message from another side.}
 \end{definition}
 
 \begin{definition}[Availability]
 \label{def:partition-notions}
-\textcolor{reviewed}{The system has \emph{Availability for $E$} when, in every partitioned history it
-produces, each participant $p$, ending in state $(i,R)$, can emit each
-output in $R(i)\cap E(i)$ in some continuation local to $p$.} \textcolor{reviewed}{\emph{Availability} is Availability for $P$.}
+\textcolor{reviewed}{The system has \emph{Availability for $E$} when, in every partitioned history
+it produces, each participant $p$ in state $(i,R)$ can emit each output in
+$R(i)\cap E(i)$ in some same-side continuation of $p$.} \textcolor{reviewed}{\emph{Availability} is
+Availability for $P$.}
 \end{definition}
 
 \begin{definition}[Partition Consistency]
 \label{def:partition-consistency}
 \textcolor{reviewed}{The system has \emph{Partition Consistency} when the final cut of every
 partitioned history it produces is confluent at every common \indesc of the
-participants' current inputs.} \textcolor{reviewed}{The continuation that confluence asks for need
-not stay partitioned and need not be produced by the system.}
+participants' current inputs.}
 \end{definition}
+
+\textcolor{reviewed}{The \emph{canonical system for $E$} is the system whose participants follow
+canonical runs and emit only outputs of $E$.}
 
 \begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
@@ -1718,57 +1720,59 @@ not stay partitioned and need not be produced by the system.}
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.}
 \end{definition}
 
-\textcolor{reviewed}{Complete CAP says that participants can keep the outputs of $E$ available and
-remain consistent through partitions exactly when the spec satisfies Lifted
-Monotonicity for $E$: outputs of $E$ emitted on different sides of a partition
-must have a common \outnoun in the spec at every common \indesc of their
-inputs.} \textcolor{reviewed}{When $E=P$, this is Lifted Monotonicity itself, the common-extension
-condition (Definition~\ref{def:common-expansion-condition}).} For a smaller $E$, an
-available system may use output events that apply \commitments requiring
-coordination under the full declared spec; the remark after
-Corollary~\ref{cor:complete-cap-S} explains why restricting service to $E$ does
-not erase that requirement.
+\begin{definition}[Escaping CAP]
+\label{def:escapes-cap}
+\textcolor{reviewed}{A spec \emph{escapes CAP} for $E$ when its canonical system for $E$ has
+Availability for $E$ and Partition Consistency.}
+\end{definition}
+
+\textcolor{reviewed}{The canonical system's participants never wait: each can emit any output of
+$E$ that its state allows, so it always has Availability for $E$.} \textcolor{reviewed}{The
+question is whether their answers stay consistent across sides.} \textcolor{reviewed}{Complete CAP
+says they do exactly when outputs of $E$ emitted on different sides have a
+common \outnoun in the spec at every common \indesc of their inputs.} For a
+smaller $E$, an available system may use output events that apply
+\commitments requiring coordination under the full declared spec; the remark
+after Corollary~\ref{cor:complete-cap-any-system} explains why restricting
+service to $E$ does not erase that requirement.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
-\textcolor{reviewed}{For an \spectype $\Spec$ and an explicit relation
-$E\subseteq P$, the following are equivalent:}
-\begin{enumerate}
-\item
-\textcolor{reviewed}{some system has Availability for $E$ and Partition Consistency;}
-\item
-\textcolor{reviewed}{$\Spec$ satisfies Lifted Monotonicity for $E$.}
-\end{enumerate}
+\textcolor{reviewed}{A spec escapes CAP for $E$ if and only if it satisfies Lifted Monotonicity for
+$E$.}
 \end{theorem}
 
+\textcolor{reviewed}{When $E=P$, we can say simply that a spec escapes CAP exactly when it
+satisfies Lifted Monotonicity.}
+
 \begin{proof}[Proof sketch]
-\textcolor{reviewed}{Consider the system whose strategies emit each output of
-$E$ by the canonical output event of Section~\ref{sec:complete-calm}.} \textcolor{reviewed}{It has
-Availability for $E$, and Lifted Monotonicity for $E$ gives the outputs it emits a
-common \outnoun at every common \indesc of their inputs.} \textcolor{reviewed}{Conversely, given one
-participant per row of $E$, each on its own side, Availability lets each
-emit its row's output, and Partition Consistency then supplies the common
-\outnoun.} Full proof in Appendix~\ref{app:proofs-sec4}.
+\textcolor{reviewed}{If Lifted Monotonicity for $E$ holds, the outputs emitted on all sides have a
+common \outnoun $u$ at each common \indesc $j$, and every participant still has
+the row $(j,u)$, so the participants can meet there.} \textcolor{reviewed}{Conversely, put one
+participant per row of $E$ on its own side.} \textcolor{reviewed}{Each emits its row's output, and
+Partition Consistency gives those outputs a common \outnoun.} Full proof in
+Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 \begin{corollary}
-\label{cor:complete-cap-S}
-\textcolor{reviewed}{Some system has Availability and Partition Consistency if and only if $\Spec$
-satisfies Lifted Monotonicity.} When it does, a \commitment-free system has
-both: one with the empty basis, whose strategies may emit any legal output
-$o$ by $\mathsf{output}(o)$, which applies no \commitment.
+\label{cor:complete-cap-any-system}
+\textcolor{reviewed}{No system does better than its spec: if some system has Availability for $E$
+and Partition Consistency, its spec escapes CAP for $E$.}
 \end{corollary}
 
 \begin{proof}[Proof sketch]
-With $E=P$, Lifted Monotonicity for $E$ is Lifted Monotonicity itself, and the
-exposure boundary makes every
-output of the \commitment-free system available. Full proof in Appendix~\ref{app:proofs-sec4}.
+\textcolor{reviewed}{If Lifted Monotonicity for $E$ fails, some outputs of $E$ have no common
+\outnoun at a common \indesc $j$.} \textcolor{reviewed}{A system with Availability for $E$ can emit
+them on separate sides.} \textcolor{reviewed}{By Observable Equivalence, each participant keeps no
+more rows than its canonical run, so no participant has a row at $j$ that
+\outrel all of them.} Full proof in Appendix~\ref{app:proofs-sec4}.
 \end{proof}
 
 A system might hope to keep more outputs available by issuing \commitments,
-coordinating within each side of a partition. \textcolor{reviewed}{It cannot: the impossibility
-direction of the proof holds for every system, \commitment-free or not.} \textcolor{reviewed}{For
-$E=P$, the system in the proof needs no \commitment at all.} \textcolor{reviewed}{For a smaller $E$,
+coordinating within each side of a partition. It cannot:
+Corollary~\ref{cor:complete-cap-any-system} holds for every system,
+\commitment-free or not. \textcolor{reviewed}{For
+$E=P$, the canonical system needs no \commitment at all.} \textcolor{reviewed}{For a smaller $E$,
 its canonical output events may exclude rows in $P\setminus E$ and therefore
 apply \commitments under the declared spec; serving only $E$ does not remove
 those \commitments.} \textcolor{reviewed}{A partition does not change the intrinsic \commitments a spec needs; rather,
@@ -1790,7 +1794,7 @@ precedes the read, every output in the fiber answers that same read with $v$.} \
 the answer $v_0$; it is not a later read observing a newer value.} \textcolor{reviewed}{So no output
 there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.}
 
-\textcolor{reviewed}{By Complete CAP, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem.} The proof needs less than the full hypotheses here, which
+\textcolor{reviewed}{By Corollary~\ref{cor:complete-cap-any-system}, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem.} The proof needs less than the full hypotheses here, which
 is why it yields Gilbert and Lynch's theorem exactly. Place $p$ and $q$ on
 separate sides. Availability is used only to make $p$ acknowledge the
 write and $q$ answer the read; each fiber holds a single output, so any
@@ -2630,9 +2634,12 @@ rows at $k$.
   run under a basis; canonical run & specification events whose \commitments come from the basis; a run of Sections~\ref{sec:functional-calm}--\ref{sec:complete-calm} & Def.~\ref{def:run-under-basis}\\
   observably equivalent & same input and output events, \commitment events erased; every run has a canonical one & Lem.~\ref{lem:canonical-equivalent}\\
   conflicting runs & a run applies a \commitment removing $(k,x)$; another issues $\mathsf{input}(k)$ then $\mathsf{output}(x)$; not confluent at $k$ & Prop.~\ref{prop:commitment-conflict}\\
-  partitioned history; side; explicit relation $E$ & participants divided into two or more sides, no message crosses sides; $E\subseteq P$, the rows whose outputs are placed at a participant or covered by an availability condition & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
-  Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable locally; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\
+  partitioned history; side; explicit possibility relation $E$ & participants divided into two or more sides, no message crosses sides; $E\subseteq P$, the rows whose outputs participants emit themselves & Defs.~\ref{def:partitioned-history}, \ref{def:explicit-relation}\\
+  same-side continuation of $p$ & produced using only events on $p$'s side, with no new input and no message from another side & Def.~\ref{def:local-continuation}\\
+  Availability for $E$; Partition Consistency & each output of $R(i)\cap E(i)$ emittable in a same-side continuation; final cuts of partitioned histories confluent & Defs.~\ref{def:partition-notions}, \ref{def:partition-consistency}\\
+  canonical system for $E$ & participants follow canonical runs and emit only outputs of $E$ & \S\ref{sec:complete-cap}\\
   Lifted Monotonicity for $E$ & every finite set of rows of $E$ with a common \indesc $j$ has a common \outnoun in $\fiber{j}$ & Def.~\ref{def:lm-for-A}\\
+  escapes CAP for $E$ & the canonical system for $E$ has Availability for $E$ and Partition Consistency & Def.~\ref{def:escapes-cap}\\
   deployment & one explicit relation $E_p$ per participant & Def.~\ref{def:deployment}\\
     response obligation; response interface & per participant, the outputs that count as answers, upward closed within fibers; a total, self-continuing explicit relation $T\subseteq Q$ & Defs.~\ref{def:response-obligation}, \ref{def:response-interface}\\
   \bottomrule
@@ -2828,18 +2835,19 @@ not confluent at $k$.
 \end{proof}
 
 \begin{proof}[Proof of Theorem~\ref{thm:complete-cap}]
-\textcolor{reviewed}{Suppose $\Spec$ satisfies Lifted Monotonicity for $E$.} Take the system whose strategies emit,
-by the canonical output event $\mathsf{output}(o)$ of
-Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber. That event applies whatever \commitment $o$ requires, $x_o$ from the
+The canonical system for $E$ has the canonical basis and no \commitment
+events; its strategies emit, by the canonical output event $\mathsf{output}(o)$
+of Section~\ref{sec:complete-calm}, any output $o$ of $E$ in the current fiber. That event applies whatever \commitment $o$ requires, $x_o$ from the
 canonical basis (Definition~\ref{def:system-output-event}), so the system has
-Availability for $E$. Every output it emits is a row of $E$ at an input below
+Availability for $E$ whatever the spec. Suppose $\Spec$ satisfies Lifted
+Monotonicity for $E$. Every output the canonical system emits is a row of $E$ at an input below
 the current one, so at a common \indesc $j$ of the current inputs the emitted
 outputs have a common \outnoun in $\fiber{j}$. For a system that emits only
 canonical output events, that is confluence at $j$
 (Lemma~\ref{lem:reconciliation}), which gives Partition Consistency.
 
-Conversely, suppose some system has Availability for $E$ and Partition
-Consistency. Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common
+Conversely, suppose some system, such as the canonical system for $E$, has
+Availability for $E$ and Partition Consistency. Let $(i_1,o_1),\ldots,(i_k,o_k)$ be rows of $E$ with a common
 \indesc $j$; we find some $u\in\fiber{j}$ that \outrel every $o_r$. If $k=0$,
 $\Spec$ is total, so $j$ appears in some row $(j,u)$. Otherwise, take one
 participant $p_r$ per row, starting at input $i_r$, each on its own side,
@@ -2852,14 +2860,11 @@ emitted $o_r$. Emitting an output keeps only rows whose output \outrel it
 $o_r$.
 \end{proof}
 
-\begin{proof}[Proof of Corollary~\ref{cor:complete-cap-S}]
-With $E=P$, Lifted Monotonicity for $E$ is the common-extension condition, which is
-Lifted Monotonicity (Proposition~\ref{prop:common-expansion-form}). When
-Lifted Monotonicity holds, every output at every state reachable without
-\commitment is a legal output (Proposition~\ref{prop:exposure-boundary}). The
-\commitment-free system never leaves such states, so it has Availability, and
-by Complete CALM and Proposition~\ref{prop:distributed-consistency} it has
-Partition Consistency.
+\begin{proof}[Proof of Corollary~\ref{cor:complete-cap-any-system}]
+The converse argument in the proof of Theorem~\ref{thm:complete-cap} applies
+to any system with Availability for $E$ and Partition Consistency, so $\Spec$
+satisfies Lifted Monotonicity for $E$. By Theorem~\ref{thm:complete-cap},
+$\Spec$ escapes CAP for $E$.
 \end{proof}
 
 \subsection{Invariant confluence (\S\ref{sec:iconfluence-instance})}
@@ -3818,8 +3823,8 @@ Lifted Monotonicity.
 \label{def:deployment-availability}
 Relative to a deployment, a system has \emph{Deployment Availability} when, in
 every partitioned history over $P$ it produces, each participant $p$, ending in
-state $(i,R)$, can emit each output in $R(i)\cap E_p(i)$ in some continuation
-local to $p$ (Definition~\ref{def:partition-notions}).
+state $(i,R)$, can emit each output in $R(i)\cap E_p(i)$ in some same-side
+continuation of $p$ (Definition~\ref{def:local-continuation}).
 \end{definition}
 
 This is Availability for $E_p$, one relation per participant. For the uniform
@@ -3875,7 +3880,7 @@ participant to emit $u$; confluence through output events that the deployment
 authorizes would additionally require that authority, a condition we do not
 impose. With $|P|\ge2$ and $E_p=P$ for every $p$, item~(2) is Lifted
 Monotonicity, and the proposition is the step behind
-Corollary~\ref{cor:complete-cap-S} stating that separable families are confluent
+Theorem~\ref{thm:complete-cap} with $E=P$ stating that separable families are confluent
 at every common \indesc exactly when Lifted Monotonicity holds.
 
 \subsection{Registers}
@@ -4089,10 +4094,10 @@ The obligation is part of the declared spec. Response availability
 is only as strong as $Q_p$: if an output permitted at every input answers,
 every spec is available.
 
-\textcolor{reviewed}{A continuation of a partitioned history is \emph{within $p$'s side} when
+A continuation of a partitioned history is \emph{within $p$'s side} when
 the system produces it, it adds only history events of $p$'s side, and none of its
-receives takes a message sent from another side.} A continuation local to
-$p$ (Definition~\ref{def:partition-notions}) is one within $p$'s side
+receives takes a message sent from another side. A same-side continuation
+of $p$ (Definition~\ref{def:local-continuation}) is one within $p$'s side
 that adds no input event.
 
 \begin{definition}[Response Availability]
@@ -4124,7 +4129,8 @@ history.
 \end{definition}
 
 This is the part of Partition Consistency that the converse of
-Theorem~\ref{thm:complete-cap} uses, so that theorem also holds with Response
+Theorem~\ref{thm:complete-cap} and Corollary~\ref{cor:complete-cap-any-system}
+use, so both also hold with Response
 Partition Consistency in place of Partition Consistency. Confluence at $j$
 implies a common \outnoun at $j$ (Corollary~\ref{cor:reconciliation-any-basis}),
 and for a system with basis $\mathcal B_P$ and no \commitment events, whose
@@ -4153,7 +4159,7 @@ participant set.
 \begin{proof}
 Whether a history is produced is checked one history event at a time against each
 participant's own local prefix, as fixed before
-Definition~\ref{def:partition-notions},
+Definition~\ref{def:local-continuation},
 and there are no receives to match. Replication makes that check independent of the participant.
 \end{proof}
 
@@ -4173,8 +4179,8 @@ by Lemma~\ref{lem:reconciliation} it is confluence of the canonical runs whose
 emitted rows lie in $T$.
 
 A response interface is an explicit relation that a system can always
-serve. Consider the system of the proof of Theorem~\ref{thm:complete-cap} for
-$E=T$, which emits by the canonical output event any output of $T$ in the
+serve. Consider the canonical system for $T$ (Section~\ref{sec:complete-cap}),
+which emits by the canonical output event any output of $T$ in the
 current fiber. Its emitted outputs form a chain
 $o_1\OutputOrd\cdots\OutputOrd o_m$, so by Lemma~\ref{lem:run-residual} its
 table is $P[\mathrm{in}\InputGe i,\ \mathrm{out}\OutputGe o_m]$, or
@@ -4200,10 +4206,10 @@ for some response interface $T\subseteq Q$, some system has
 \end{theorem}
 
 \begin{proof}
-(2$\Leftrightarrow$3) is Theorem~\ref{thm:complete-cap} with $E=T$.
+(2$\Leftrightarrow$3) is Theorem~\ref{thm:complete-cap} and
+Corollary~\ref{cor:complete-cap-any-system} with $E=T$.
 
-(2$\Rightarrow$1.)  Take the system of the proof of
-Theorem~\ref{thm:complete-cap} for $E=T$. It is replicated, and by the
+(2$\Rightarrow$1.)  Take the canonical system for $T$. It is replicated, and by the
 paragraph above it has Answering and Input acceptance. The outputs emitted in
 a history are rows of $T$ at inputs that every common \indesc $j$ of the
 current inputs \inrel, so Lifted Monotonicity for $T$ gives Response Partition
@@ -4280,8 +4286,8 @@ $k_1$.
 
 \subsection{Gilbert--Lynch with real-time precedence}
 
-Section~\ref{sec:complete-cap} derives the Gilbert--Lynch theorem from the
-converse of Theorem~\ref{thm:complete-cap}, with real-time precedence supplied
+Section~\ref{sec:complete-cap} derives the Gilbert--Lynch theorem from
+Corollary~\ref{cor:complete-cap-any-system}, with real-time precedence supplied
 as input. Here precedence comes from real time, and consistency is required
 only at the precedence an execution realizes.
 
@@ -4675,7 +4681,7 @@ here, but no injective map extends both. The spec also lacks directed
 fibers at
 $\{p,q\}$: $\{p\mapsto1,q\mapsto2\}$ and $\{p\mapsto2,q\mapsto1\}$ have no
 common \outnoun. The spec therefore fails Lifted Monotonicity, and
-by Corollary~\ref{cor:complete-cap-S} a partition separating $p$ and $q$ rules out
+by Theorem~\ref{thm:complete-cap} with $E=P$ and Corollary~\ref{cor:complete-cap-any-system} a partition separating $p$ and $q$ rules out
 Availability with Partition Consistency. The renaming hierarchy adds
 wait-free and topological
 conclusions~\cite{herlihy1991waitfree,herlihy1999topological}.

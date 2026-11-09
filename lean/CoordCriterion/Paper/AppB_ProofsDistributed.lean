@@ -11,7 +11,7 @@ Statement layer for the subsection *Proofs for Section 4* of Appendix
 `app:proofs`: the proofs of Prop. `prop:distributed-consistency`, the
 paragraph *Exchanging outputs* (`app:exchanging-outputs`), and the proofs of
 Prop. `prop:commitment-conflict`, Theorem `thm:complete-cap`, and
-Corollary `cor:complete-cap-S`.  The results themselves are stated in
+Corollary `cor:complete-cap-any-system`.  The results themselves are stated in
 `Paper/S4_Distributed.lean` and `Paper/S4_5_CompleteCAP.lean`.
 
 How to read this file: open the appendix next to it.  Entries follow the
@@ -106,39 +106,48 @@ variable {I O : Type} [PO I] [PO O] {sp : Spec I O} {D : Type}
 
 /-! ## Proof of Theorem `thm:complete-cap` -/
 
-/-- Proof of Theorem `thm:complete-cap`, (2)⇒(1): "Take the system whose
-strategies emit, by the canonical output event `output(o)` …, any output `o`
-of `E` in the current fiber. … so the system has Availability for `E`. …
-For a system that emits only canonical output events, that is confluence at
-`j`, which gives Partition Consistency."  Lean: `respSystem E`, a canonical
-system. -/
+/-- Proof of Theorem `thm:complete-cap`: "The canonical system for `E` has the
+canonical basis and no commitment events; its strategies emit, by the
+canonical output event `output(o)` …, any output `o` of `E` in the current
+fiber. … so the system has Availability for `E` whatever the spec.  Suppose
+`P` satisfies Lifted Monotonicity for `E`. … For a system that emits only
+canonical output events, that is confluence at `j`, which gives Partition
+Consistency."  Lean: `respSystem E`, a canonical system; Availability for `E`
+holds with no hypothesis on the spec. -/
 theorem «thm:complete-cap/proof-sufficiency» (E : Table I O) (h : ConsistentOn sp E) :
     AvailabilityFor E (respSystem (sp := sp) (D := D) E) ∧
     PartitionConsistencyAtEnd (respSystem (sp := sp) (D := D) E) ∧
     CanonicalSystem (respSystem (sp := sp) (D := D) E) :=
   ⟨availabilityFor_resp E, pc_resp E h, respSystem_canonical E⟩
 
-/-- Proof of Theorem `thm:complete-cap`, (1)⇒(2): "take one participant `p_r`
-per row, starting at input `i_r`, each on its own side … By
-Availability for `E`, each `p_r` can emit `o_r`.  By Partition Consistency,
-they then reach one state `(j,R)`, which has some row `(j,u)` … so `u`
-extends every `o_r`."  Lean: only a common output extension of the emitted outputs
-is used (implied by Partition Consistency). -/
+/-- Proof of Theorem `thm:complete-cap`, converse: "suppose some system, such
+as the canonical system for `E`, has Availability for `E` and Partition
+Consistency. … take one participant `p_r` per row, starting at input `i_r`,
+each on its own side … By Availability for `E`, each `p_r` can emit `o_r`.
+By Partition Consistency, they then reach one state `(j,R)`, which has some
+row `(j,u)` … so `u` extends every `o_r`."  Lean: only a common output
+extension of the emitted outputs is used (implied by Partition
+Consistency). -/
 theorem «thm:complete-cap/proof-necessity» (E : Table I O) (hES : ∀ i o, E i o → sp.P i o)
     (Sys : System sp D) (hA : AvailabilityFor E Sys) (hC : CommonRefinementAtEnd Sys) :
     ConsistentOn sp E :=
   consistentOn_of_availabilityFor E hES Sys hA hC
 
-/-! ## Proof of Corollary `cor:complete-cap-S` -/
+/-! ## Proof of Corollary `cor:complete-cap-any-system` -/
 
-/-- Proof of Corollary `cor:complete-cap-S`: "by Complete CALM and
-Proposition `prop:distributed-consistency` it has Partition Consistency."
-Strong reading: the confluence continuation itself can be chosen
-commitment-free and receive-free (`PartitionConsistencyCF`). -/
-theorem «cor:complete-cap-S/proof-cf-continuations» (sp : Spec I O) (D : Type) :
-    ((∃ Sys : System sp D, Availability Sys ∧ PartitionConsistency Sys) → sp.LiftedMono) ∧
-    (sp.LiftedMono → Availability (cfSystem sp D) ∧ PartitionConsistencyCF (cfSystem sp D)) :=
-  complete_cap_strong sp D
+/-- Proof of Corollary `cor:complete-cap-any-system`: "The converse argument
+in the proof of Theorem `thm:complete-cap` applies to any system with
+Availability for `E` and Partition Consistency, so `P` satisfies Lifted
+Monotonicity for `E`.  By Theorem `thm:complete-cap`, `P` escapes CAP for
+`E`."  Lean: the conclusion is stated with escaping CAP unfolded (the
+canonical system for `E` is `respSystem E`). -/
+theorem «cor:complete-cap-any-system/proof» (E : Table I O) (hES : ∀ i o, E i o → sp.P i o)
+    (Sys : System sp D) (hA : AvailabilityFor E Sys) (hP : PartitionConsistencyAtEnd Sys) :
+    ConsistentOn sp E ∧
+      (AvailabilityFor E (respSystem (sp := sp) (D := D) E) ∧
+        PartitionConsistencyAtEnd (respSystem (sp := sp) (D := D) E)) :=
+  have h := consistentOn_of_availabilityFor E hES Sys hA (commonRefinement_of_pc hP)
+  ⟨h, availabilityFor_resp E, pc_resp E h⟩
 
 end CAP
 

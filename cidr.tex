@@ -1221,7 +1221,7 @@ both local outputs, provides a proof of their consistency, and must be in the sp
 
 We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
-participants emit themselves and must keep locally available.  Outputs in
+participants emit themselves.  Outputs in
 $P\setminus E$, such as combined outputs, need only remain permitted.
 
 Both availability and consistency are judged on histories in which a partition
@@ -1234,31 +1234,38 @@ sides and contains no receive whose matching send lies on another
 side; participants still receive environment input and emit outputs.
 \end{definition}
 
-We fix a system, with a strategy for each participant of every finite
-participant set and every choice of initial inputs, each depending only on
-local history, and an adversarial environment that may supply
-any legal input event to any participant.
+\begin{definition}[Explicit possibility relation]
+\label{def:explicit-relation}
+An \emph{explicit possibility relation} $E\subseteq P$ is a set of rows whose
+outputs participants emit themselves.  Write $E(i)$ for its outputs at input
+$i$.  Rows of $P$ outside $E$, such as those for combined outputs, need only
+remain permitted.
+\end{definition}
 
-\begin{definition}[Explicit (possibility) relation, Availability]
+We fix a system, with a strategy for each participant that depends only on its
+local history, and an environment that may send any legal input to any
+participant.
+
+\begin{definition}[Availability]
 \label{def:partition-notions}
-A continuation of a partitioned history is \emph{local to} a participant $p$
-when the system produces it, it adds only history events of $p$'s side and no
-input events, and none of its receives takes a message sent from another
-side.  An \emph{explicit relation} $E\subseteq P$ is a set of rows
-$(i,o)$ whose output $o$ must stay available at input $i$; write $E(i)$ for
-its fiber $\{o:(i,o)\in E\}$.  The system has \emph{Availability for $E$}
-when, in every partitioned history it produces, each participant $p$, ending
-in state $(i,R)$, can emit each output in $R(i)\cap E(i)$ in some continuation
-local to $p$.  \emph{Availability} is Availability for $P$.
+A \emph{same-side} continuation of a participant $p$ is one the system can
+produce using only events on the side of the partition containing $p$, with no
+new input and no message from another side.  The system has
+\emph{Availability for $E$} when, in every partitioned history it produces,
+each participant $p$ in state $(i,R)$ can emit each output in $R(i)\cap E(i)$
+in some same-side continuation of $p$.  \emph{Availability} is Availability
+for $P$.
 \end{definition}
 
 \begin{definition}[Partition Consistency]
 \label{def:partition-consistency}
 The system has \emph{Partition Consistency} when the final cut of every
 partitioned history it produces is confluent at every common \indesc of the
-participants' current inputs.  The continuation that confluence asks for need
-not stay partitioned and need not be produced by the system.
+participants' current inputs.
 \end{definition}
+
+The \emph{canonical system for $E$} is the system whose participants follow
+canonical runs and emit only outputs of $E$.
 
 \begin{definition}[Lifted Monotonicity for $E$]
 \label{def:lm-for-A}
@@ -1266,44 +1273,50 @@ $\Spec$ satisfies \emph{Lifted Monotonicity for $E$} when every finite set of ro
 a common \indesc $j$ has a common \outnoun in $\fiber{j}$.
 \end{definition}
 
-Complete CAP says that participants can keep the outputs of $E$ available and
-remain consistent through partitions exactly when the spec satisfies Lifted
-Monotonicity for $E$: outputs of $E$ emitted on different sides of a partition
-must have a common \outnoun in the spec at every common \indesc of their
-inputs.  When $E=P$, this is Lifted Monotonicity itself, the common-extension
-condition (Definition~\ref{def:common-expansion-condition}).
+\begin{definition}[Escaping CAP]
+\label{def:escapes-cap}
+A spec \emph{escapes CAP} for $E$ when its canonical system for $E$ has
+Availability for $E$ and Partition Consistency.
+\end{definition}
+
+The canonical system's participants never wait: each can emit any output of
+$E$ that its state allows, so it always has Availability for $E$.  The
+question is whether their answers stay consistent across sides.  Complete CAP
+says they do exactly when outputs of $E$ emitted on different sides have a
+common \outnoun in the spec at every common \indesc of their inputs.
 
 \begin{theorem}[Complete CAP]
 \label{thm:complete-cap}
-For an \spectype $\Spec$ and an explicit relation
-$E\subseteq P$, the following are equivalent:
-\begin{enumerate}
-  \item some system has Availability for $E$ and Partition Consistency;
-  \item $\Spec$ satisfies Lifted Monotonicity for $E$.
-\end{enumerate}
+A spec escapes CAP for $E$ if and only if it satisfies Lifted Monotonicity for
+$E$.
 \end{theorem}
 
+When $E=P$, we can say simply that a spec escapes CAP exactly when it
+satisfies Lifted Monotonicity.
+
 \begin{proof}[Proof sketch]
-Consider the system whose strategies emit each output of
-$E$ by the canonical output event of Section~\ref{sec:complete-calm}.  It has
-Availability for $E$, and Lifted Monotonicity for $E$ gives the outputs it emits a
-common \outnoun at every common \indesc of their inputs.  Conversely, given one
-participant per row of $E$, each on its own side, Availability lets each
-emit its row's output, and Partition Consistency then supplies the common
-\outnoun.  \fullproof
+If Lifted Monotonicity for $E$ holds, the outputs emitted on all sides have a
+common \outnoun $u$ at each common \indesc $j$, and every participant still has
+the row $(j,u)$, so the participants can meet there.  Conversely, put one
+participant per row of $E$ on its own side.  Each emits its row's output, and
+Partition Consistency gives those outputs a common \outnoun.  \fullproof
 \end{proof}
 
 \begin{corollary}
-\label{cor:complete-cap-S}
-Some system has Availability and Partition Consistency if and only if $\Spec$
-satisfies Lifted Monotonicity.  When it does, a \commitment-free system has
-both: one whose strategies may emit any legal output with no
-\commitment.
+\label{cor:complete-cap-any-system}
+No system does better than its spec: if some system has Availability for $E$
+and Partition Consistency, its spec escapes CAP for $E$.
 \end{corollary}
-\proofinfull
 
-The impossibility direction holds for every system, \commitment-free or not.
-For $E=P$, the system in the proof needs no \commitment.  For a smaller $E$,
+\begin{proof}[Proof sketch]
+If Lifted Monotonicity for $E$ fails, some outputs of $E$ have no common
+\outnoun at a common \indesc $j$.  A system with Availability for $E$ can emit
+them on separate sides.  By Observable Equivalence, each participant keeps no
+more rows than its canonical run, so no participant has a row at $j$ that
+\outrel all of them.
+\end{proof}
+
+For $E=P$, the canonical system needs no \commitment.  For a smaller $E$,
 its output events may exclude rows in $P\setminus E$ and therefore apply
 \commitments under the declared spec; serving only $E$ does not remove those
 \commitments.  A partition does not change the intrinsic \commitments a spec needs; rather,
@@ -1322,7 +1335,7 @@ write's acknowledgment; the fiber at $q$'s input, which contains no write,
 holds only the answer $v_0$ to the read.  At the common \indesc where the write
 precedes the read, every output in the fiber answers that same read with $v$.  That contradicts
 the answer $v_0$; it is not a later read observing a newer value.  So no output
-there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.  By Complete CAP, then, no system keeps both outputs available and
+there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.  By Corollary~\ref{cor:complete-cap-any-system}, then, no system keeps both outputs available and
 consistent across a partition, which is Gilbert and Lynch's theorem.
 The full paper takes precedence from real time, extends
 Complete CAP to systems that choose their responses when responses are not

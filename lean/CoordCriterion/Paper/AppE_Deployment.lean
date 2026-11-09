@@ -254,8 +254,8 @@ theorem «app:deployment/full-deployment/pairs-suffice»
 /-- **Definition `def:deployment-availability`** (Deployment Availability).
 "Relative to a deployment, a system has *Deployment Availability* when, in
 every partitioned history over `P` it produces, each participant `p`, ending
-in state `(i,R)`, can emit each output in `R(i) ∩ E_p(i)` in some
-continuation local to `p`."
+in state `(i,R)`, can emit each output in `R(i) ∩ E_p(i)` in some same-side
+continuation of `p`."
 
 Lean: `DeploymentAvailabilityEnd`, unfolded below; it is equivalent to the cut
 form `DeploymentAvailability` used by the library. -/
@@ -425,8 +425,8 @@ theorem «app:deployment/unauthorized-refinement» :
   unauthorized_refinement
 
 /-- "With `|P| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted
-Monotonicity, and the proposition is the step behind Corollary
-`cor:complete-cap-S` stating that separable families are confluent at every
+Monotonicity, and the proposition is the step behind Theorem
+`thm:complete-cap` with `E = P` stating that separable families are confluent at every
 common input extension exactly when Lifted Monotonicity holds." -/
 theorem «app:deployment/full-deployment-step» {I O : Type} [PO I] [PO O] {sp : Spec I O}
     {n : Nat} (hn : 2 ≤ n) (Dp : Deployment sp n) (hA : ∀ p, Dp.A p = sp.P) :

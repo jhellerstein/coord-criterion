@@ -374,24 +374,50 @@ class of `p` under the labelling `comp : Fin n → Nat`. -/
 abbrev «app:notation/side» {n : Nat} (comp : Fin n → Nat) (p : Fin n) : Fin n → Prop :=
   fun q => comp q = comp p
 
-  /-- *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay
-  available (Def. `def:explicit-relation`).  Lean: a table `E : Table I O` with
-  `∀ i o, E i o → sp.P i o`. -/
+  /-- *explicit possibility relation `E`* — `E ⊆ P`, the rows whose outputs
+  participants emit themselves (Def. `def:explicit-relation`).  Lean: a table
+  `E : Table I O` with `∀ i o, E i o → sp.P i o`. -/
 abbrev «app:notation/explicit-relation» {sp : Spec I O} (E : Table I O) : Prop :=
   ∀ i o, E i o → sp.P i o
 
-/-- *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable locally
-(Def. `def:partition-notions`).  Lean: `CAP.AvailabilityFor E`; Availability
+/-- *same-side continuation of `p`* — produced using only events on `p`'s
+side, with no new input and no message from another side
+(Def. `def:local-continuation`).  Lean: a continuation `ext` of `H` with
+`Produced`, `Partitioned … comp`, `ext q = []` off `p`'s side, and no input
+event. -/
+abbrev «app:notation/same-side-continuation» {sp : Spec I O} {D : Type} {n : Nat}
+    (Sys : CAP.System sp D) (init : Fin n → I) (H : CAP.History sp D n)
+    (comp : Fin n → Nat) (p : Fin n) (ext : Fin n → List (CAP.LEv sp D n)) : Prop :=
+  CAP.WF init (fun q => H q ++ ext q) ∧ CAP.Produced Sys n init (fun q => H q ++ ext q) ∧
+    CAP.Partitioned (fun q => H q ++ ext q) comp ∧
+    (∀ q, comp q ≠ comp p → ext q = []) ∧ (∀ q j, CAP.LEv.inp j ∉ ext q)
+
+/-- *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable in a
+same-side continuation (Def. `def:partition-notions`).  Lean: `CAP.AvailabilityFor E`; Availability
 is `E = P` (`CAP.AvailabilityAtEnd`). -/
 abbrev «app:notation/availability» {sp : Spec I O} {D : Type} (E : Table I O)
     (Sys : CAP.System sp D) : Prop :=
   CAP.AvailabilityFor E Sys
+
+/-- *canonical system for `E`* — participants follow canonical runs and emit
+only outputs of `E` (Section `sec:complete-cap`).  Lean: `CAP.respSystem E`. -/
+noncomputable abbrev «app:notation/canonical-system» (sp : Spec I O) (D : Type)
+    (E : Table I O) : CAP.System sp D :=
+  CAP.respSystem E
 
 /-- *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a
 common input extension `j` has a common output extension in `P(j)` (Def. `def:lm-for-A`).
 Lean: `CAP.ConsistentOn`. -/
 abbrev «app:notation/lm-for-A» (sp : Spec I O) (E : Table I O) : Prop :=
   CAP.ConsistentOn sp E
+
+/-- *escapes CAP for `E`* — the canonical system for `E` has Availability for
+`E` and Partition Consistency (Def. `def:escapes-cap`).  Lean:
+`CAP.AvailabilityFor E (CAP.respSystem E) ∧
+CAP.PartitionConsistencyAtEnd (CAP.respSystem E)`. -/
+abbrev «app:notation/escapes-cap» (sp : Spec I O) (D : Type) (E : Table I O) : Prop :=
+  CAP.AvailabilityFor E (CAP.respSystem (sp := sp) (D := D) E) ∧
+    CAP.PartitionConsistencyAtEnd (CAP.respSystem (sp := sp) (D := D) E)
 
 /-- *deployment* — one explicit relation `E_p` per participant
 (Def. `def:deployment`).  Lean: `CC.Deploy.Deployment sp n`. -/

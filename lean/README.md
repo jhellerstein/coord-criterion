@@ -146,7 +146,7 @@ in terms of the deployment notions of `Appendix/Deployment.lean`.
 
 <!-- BEGIN PAPER INDEX -->
 
-613 entries.
+620 entries.
 
 ### §2 Functional CALM
 
@@ -337,11 +337,11 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«sec:complete-cap/intro»` | theorem | Section `sec:complete-cap`, opening: |
 | `«def:partitioned-history»` | abbrev | **Def. |
 | `«def:partitioned-history/unfolded»` | theorem | Def. |
+| `«def:explicit-relation»` | abbrev | **Def. |
 | `«sec:complete-cap/system»` | abbrev | Paragraph after Def. |
 | `«sec:complete-cap/system-produced»` | theorem | "We fix a system …": |
-| `«sec:complete-cap/environment»` | theorem | "… and an adversarial environment that may supply any legal input event to any participant." Lean: |
+| `«sec:complete-cap/environment»` | theorem | "… and an environment that may send any legal input to any participant." Lean: |
 | `«def:local-continuation»` | abbrev | **Def. |
-| `«def:explicit-relation»` | abbrev | **Def. |
 | `«def:partition-notions»` | abbrev | **Def. |
 | `«def:partition-notions/for»` | abbrev | Def. |
 | `«def:partition-notions/for-S»` | theorem | Def. |
@@ -350,19 +350,23 @@ File `Paper/S4_5_CompleteCAP.lean`; paper source `sections/distributed.tex`.
 | `«def:partition-consistency»` | abbrev | **Def. |
 | `«def:partition-consistency/unfolded»` | theorem | Def. |
 | `«def:partition-consistency/at-cuts»` | theorem | Def. |
+| `«sec:complete-cap/canonical-system»` | abbrev | "The *canonical system for `E`* is the system whose participants follow canonical runs and emit only outputs of `E`." Lean: |
+| `«sec:complete-cap/canonical-system-canonical»` | theorem | The canonical system for `E` "follow[s] canonical runs": |
 | `«def:lm-for-A»` | abbrev | **Def. |
-| `«sec:complete-cap/lm-for-S»` | theorem | "Complete CAP says that participants can keep the outputs of `E` available and remain consistent through partitions exactly when the spec satisfies Lifted Mo… |
-| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "For an I/O specification `P` and an explicit relation `E ⊆ P`, the following are equivalent: |
-| `«cor:complete-cap-S»` | theorem | **Corollary `cor:complete-cap-S`.** "Some system has Availability and Partition Consistency if and only if `P` satisfies Lifted Monotonicity." |
-| `«cor:complete-cap-S/commitment-free»` | theorem | Corollary `cor:complete-cap-S`: |
-| `«sec:complete-cap/necessity-any-system»` | theorem | "A system might hope to keep more outputs available by issuing commitments, coordinating within each side of a partition. |
-| `«sec:complete-cap/proof-system-commitment-free»` | theorem | "For `E = P` the proof system needs no commitment at all." The theorem gives the commitment-free system used for full Availability. |
+| `«def:escapes-cap»` | abbrev | **Def. |
+| `«sec:complete-cap/canonical-never-waits»` | theorem | "The canonical system's participants never wait: |
+| `«sec:complete-cap/lm-for-S»` | theorem | Supporting step for `«thm:complete-cap/E-eq-P»`: |
+| `«thm:complete-cap»` | theorem | **Theorem `thm:complete-cap` (Complete CAP).** "A spec escapes CAP for `E` if and only if it satisfies Lifted Monotonicity for `E`." Lean: |
+| `«thm:complete-cap/E-eq-P»` | theorem | "When `E = P`, we can say simply that a spec escapes CAP exactly when it satisfies Lifted Monotonicity." |
+| `«cor:complete-cap-any-system»` | theorem | **Corollary `cor:complete-cap-any-system`.** "No system does better than its spec: |
+| `«sec:complete-cap/necessity-any-system»` | theorem | Full paper: |
+| `«sec:complete-cap/proof-system-commitment-free»` | theorem | "For `E = P`, the canonical system needs no commitment." Lean: |
 | `«sec:complete-cap/A-eq-S-no-commitment»` | theorem | Supporting operational lemma for the full-availability case. |
 | `«sec:complete-cap/local-row-removal-necessary»` | theorem | "For a smaller `E` row-removing commitments can be necessary: |
 | `«sec:complete-cap/lm-for-A-fails»` | theorem | "When Lifted Monotonicity for `E` fails, some output of `E` waits for another side, sacrificing Availability, or is emitted anyway, sacrificing Partition Con… |
 | `«sec:complete-cap/deterministic-strategies»` | theorem | Precise reading (not a claim of the paper): |
 | `«sec:complete-cap/gl-register»` | theorem | "Consider a register spec whose inputs are sets of operations with their real-time precedence, and whose outputs answer every operation of the input as some… |
-| `«sec:complete-cap/gl-no-system»` | theorem | "By Complete CAP, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's theorem." Lean: |
+| `«sec:complete-cap/gl-no-system»` | theorem | "By Corollary `cor:complete-cap-any-system`, then, no system keeps both outputs available and consistent across a partition, which is Gilbert and Lynch's the… |
 | `«sec:complete-cap/gl-two-row-forced»` | theorem | "The proof needs less than the full hypotheses here, which is why it yields Gilbert and Lynch's theorem exactly. |
 | `«sec:complete-cap/gilbert-lynch»` | theorem | "Their theorem is a case of Complete CAP" … "No such output extension exists.": |
 | `«sec:complete-cap/gl-realized»` | theorem | "Appendix `app:cap-response` takes precedence from real time" — Corollary `cor:gilbert-lynch`, client form (both hypotheses required only of two-participant… |
@@ -505,9 +509,12 @@ File `Paper/AppA_Notation.lean`; paper source `appendices/notation.tex`.
 | `«app:notation/observably-equivalent»` | abbrev | *observably equivalent* — same input and output events, commitment events erased; every run has a canonical one (Lem. |
 | `«app:notation/partitioned-history»` | abbrev | *partitioned history* — participants divided into two or more sides, no message crosses sides (Def. |
 | `«app:notation/side»` | abbrev | *side* — one of the two or more classes into which a partitioned history divides the participants (Def. |
-| `«app:notation/explicit-relation»` | abbrev | *explicit relation `E`* — `E ⊆ P`, the rows whose outputs must stay available (Def. |
-| `«app:notation/availability»` | abbrev | *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable locally (Def. |
+| `«app:notation/explicit-relation»` | abbrev | *explicit possibility relation `E`* — `E ⊆ P`, the rows whose outputs participants emit themselves (Def. |
+| `«app:notation/same-side-continuation»` | abbrev | *same-side continuation of `p`* — produced using only events on `p`'s side, with no new input and no message from another side (Def. |
+| `«app:notation/availability»` | abbrev | *Availability for `E`* — each output of `R(i) ∩ E(i)` emittable in a same-side continuation (Def. |
+| `«app:notation/canonical-system»` | abbrev | *canonical system for `E`* — participants follow canonical runs and emit only outputs of `E` (Section `sec:complete-cap`). |
 | `«app:notation/lm-for-A»` | abbrev | *Lifted Monotonicity for `E`* — every finite set of rows of `E` with a common input extension `j` has a common output extension in `P(j)` (Def. |
+| `«app:notation/escapes-cap»` | abbrev | *escapes CAP for `E`* — the canonical system for `E` has Availability for `E` and Partition Consistency (Def. |
 | `«app:notation/deployment»` | abbrev | *deployment* — one explicit relation `E_p` per participant (Def. |
 | `«app:notation/partition-consistency»` | abbrev | *Partition Consistency* — final cuts of partitioned histories confluent (Def. |
 | `«app:notation/response-obligation»` | abbrev | *response obligation* — per participant, the outputs that count as answers; upward closed within fibers (Def. |
@@ -548,9 +555,9 @@ File `Paper/AppB_ProofsDistributed.lean`; paper source `appendices/proof-machine
 | `«app:exchanging-outputs/cut»` | theorem | *Exchanging outputs* (history level). |
 | `«app:exchanging-outputs/honored-table-not-state»` | theorem | *Exchanging outputs.* "This restriction is a table, not a specification state: |
 | `«proof:prop:commitment-conflict»` | theorem | Proof of Prop. |
-| `«thm:complete-cap/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap`, (2)⇒(1): |
-| `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, (1)⇒(2): |
-| `«cor:complete-cap-S/proof-cf-continuations»` | theorem | Proof of Corollary `cor:complete-cap-S`: |
+| `«thm:complete-cap/proof-sufficiency»` | theorem | Proof of Theorem `thm:complete-cap`: |
+| `«thm:complete-cap/proof-necessity»` | theorem | Proof of Theorem `thm:complete-cap`, converse: |
+| `«cor:complete-cap-any-system/proof»` | theorem | Proof of Corollary `cor:complete-cap-any-system`: |
 
 ### Appendix B: Invariant confluence
 
@@ -711,7 +718,7 @@ File `Paper/AppE_Deployment.lean`; paper source `appendices/deployment.tex`.
 | `«app:deployment/system-runs/canonical»` | theorem | "The proposition concerns canonical runs and does not use Deployment Availability. |
 | `«app:deployment/system-runs»` | theorem | "So if `P` is monotone across partitions, the outputs emitted by a separable family of runs of a partitioned history, as Deployment Availability permits, hav… |
 | `«app:deployment/unauthorized-refinement»` | theorem | "It does not follow that the deployment authorizes any participant to emit `u`; confluence through output events that the deployment authorizes would additio… |
-| `«app:deployment/full-deployment-step»` | theorem | "With `\|P\| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Corollary `cor:complete-cap-S` stating t… |
+| `«app:deployment/full-deployment-step»` | theorem | "With `\|P\| ≥ 2` and `E_p = P` for every `p`, item (2) is Lifted Monotonicity, and the proposition is the step behind Theorem `thm:complete-cap` with `E = P`… |
 | `«app:registers/history»` | abbrev | "An input is a finite operation history `h`: |
 | `«app:registers/history-order»` | theorem | "We set `h ⊑ h'` when the operations of `h` form a causally closed subset of `h'` and `→` restricted to them is the order of `h`." |
 | `«app:registers/no-new-past»` | theorem | "Thus an input extension never adds an operation to the causal past of an existing one." |
@@ -753,7 +760,7 @@ File `Paper/AppF_ResponseAvailability.lean`; paper source `appendices/cap-respon
 | `«def:response-availability/excludes-unavailable-expansion»` | theorem | "It excludes specs whose answers require such a fiber-emptying commitment": |
 | `«def:response-availability/election-equality-order»` | theorem | "… such as the election under the equality order (Figure `fig:nonmonotone-frame`)": |
 | `«def:response-partition-consistency»` | theorem | **Def. |
-| `«def:response-partition-consistency/converse-part»` | theorem | "This is the part of Partition Consistency that the converse of Theorem `thm:complete-cap` uses, so that theorem also holds with Response Partition Consisten… |
+| `«def:response-partition-consistency/converse-part»` | theorem | "This is the part of Partition Consistency that the converse of Theorem `thm:complete-cap` and Corollary `cor:complete-cap-any-system` use, so both also hold… |
 | `«def:response-partition-consistency/of-confluent»` | theorem | "Confluence at `j` implies a common output extension at `j` (Corollary `cor:reconciliation-any-basis`)." Lean, at any cut, in particular the final one. |
 | `«def:response-partition-consistency/canonical»` | theorem | "for a system with basis `B_P` and no commitment events, whose participant runs are therefore canonical runs, the two coincide by Lemma `lem:reconciliation`,… |
 | `«def:response-partition-consistency/converse-fails»` | theorem | "With other commitments the converse can fail: |

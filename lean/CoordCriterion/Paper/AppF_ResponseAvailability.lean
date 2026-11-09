@@ -98,8 +98,9 @@ emits some output in `Q_p(i)`.  (2) *Input acceptance.*  For every `j ⪰ i`,
 in some continuation within `p`'s side, `p` records `input(j)`."
 
 Lean: "within `p`'s side" is `Produced … ∧ Partitioned … comp ∧
-(∀ q, comp q ≠ comp p → ext q = [])`; a continuation local to `p` adds,
-besides, no input event. -/
+(∀ q, comp q ≠ comp p → ext q = [])`; a same-side continuation of `p`
+(Def. `def:local-continuation`) is one within `p`'s side that adds no input
+event. -/
 abbrev «def:response-availability» (Sys : System sp D) (Q : (n : Nat) → Fin n → Table I O) :
     Prop :=
   ResponseAvailabilityEnd Sys Q
@@ -196,9 +197,12 @@ theorem «def:response-partition-consistency» (Sys : System sp D) :
   ⟨Iff.rfl, responsePC_iff_commonRefinement Sys⟩
 
 /-- "This is the part of Partition Consistency that the converse of Theorem
-`thm:complete-cap` uses, so that theorem also holds with Response Partition
-Consistency in place of Partition Consistency."  Lean: Partition Consistency
-implies it, and Theorem `thm:complete-cap` holds with it. -/
+`thm:complete-cap` and Corollary `cor:complete-cap-any-system` use, so both
+also hold with Response Partition Consistency in place of Partition
+Consistency."  Lean: Partition Consistency implies it, and the existential
+form of Theorem `thm:complete-cap` with Corollary
+`cor:complete-cap-any-system` (some system has Availability for `A` and it
+iff Lifted Monotonicity for `A`) holds with it. -/
 theorem «def:response-partition-consistency/converse-part» (A : Table I O)
     (hAS : ∀ i o, A i o → sp.P i o) :
     (∀ Sys : System sp D, PartitionConsistencyAtEnd Sys → CommonRefinementAtEnd Sys) ∧
@@ -332,8 +336,7 @@ theorem «def:response-interface/confluence» (T : Table I O) (hTS : ∀ i o, T 
   consistentOn_iff_confluent T hTS
 
 /-- "A response interface is an explicit relation that a system can always
-serve.  Consider the system of the proof of Theorem `thm:complete-cap` for
-`E = T` … So every participant's fiber intersects `T`, and Availability for
+serve.  Consider the canonical system for `T` (Section `sec:complete-cap`) … So every participant's fiber intersects `T`, and Availability for
 `T` gives Answering.  The same argument at an input `k ⪰ i` leaves a row at `k`,
 which gives Input acceptance."  Lean: `respSystem T` has Availability for
 `T`; at the end of every history it produces, each participant's current
@@ -372,8 +375,8 @@ theorem «thm:complete-cap-response» (sp : Spec I O) (D : Type) (Q : Obligation
         ∃ Sys : System sp D, AvailabilityFor T Sys ∧ PartitionConsistencyAtEnd Sys) :=
   ⟨complete_cap_response_end sp D Q, response_form_iff_chosen sp D Q⟩
 
-/-- Proof of Theorem `thm:complete-cap-response`, (2⇒1): "Take the system of
-the proof of Theorem `thm:complete-cap` for `E = T`.  It is replicated, and
+/-- Proof of Theorem `thm:complete-cap-response`, (2⇒1): "Take the canonical
+system for `T`.  It is replicated, and
 … has Answering and Input acceptance. … Lifted Monotonicity for `T` gives Response
 Partition Consistency."  Lean: `respSystem T`. -/
 theorem «thm:complete-cap-response/proof-sufficiency» (Q : Obligation sp) (T : Table I O)
@@ -495,8 +498,8 @@ theorem «app:cap-response/subspec-empties-fibers» {D : Type} {n : Nat} {σ τ 
 
 /-! ## Gilbert–Lynch with real-time precedence
 
-"Section `sec:complete-cap` derives the Gilbert–Lynch theorem from the
-converse of Theorem `thm:complete-cap`, with real-time precedence supplied as
+"Section `sec:complete-cap` derives the Gilbert–Lynch theorem from
+Corollary `cor:complete-cap-any-system`, with real-time precedence supplied as
 input.  Here precedence comes from real time, and consistency is required
 only at the precedence an execution realizes."  (The §4.4 derivation is
 `«sec:complete-cap/gilbert-lynch»` in `Paper/S4_5_CompleteCAP.lean`.)
