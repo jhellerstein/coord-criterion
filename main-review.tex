@@ -198,24 +198,28 @@ alternative can cover.} \textcolor{reviewed}{When must a system make a fateful d
 for short, independent of any language, protocol, or placement.} \textcolor{reviewed}{The designer of
 a spec provides a \emph{possibility relation} $P\subseteq I\times O$: a virtual
 table that may be infinite, like a mathematical function.} \textcolor{reviewed}{Each row in this table
-is a possibility observable from the outside: it pairs a cumulative input to a
-permitted output.} \textcolor{reviewed}{The design includes the input domain $I$ and output domain $O$,
+is a possibility observable from the outside: it pairs the input received so far
+with a permitted output.} \textcolor{reviewed}{The design includes the input domain $I$ and output domain $O$,
 with partial orders that help capture the spec's semantics.} \textcolor{reviewed}{On inputs, the order
 is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment.} \textcolor{reviewed}{On outputs, the order is subsumption: $o\OutputOrd u$
 means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
 $o$.} \textcolor{reviewed}{These are both application-specific notions that must be captured well for
-a spec to be faithful.} \textcolor{reviewed}{Coordination mechanisms constrain which concurrent
-outcomes can occur.} \textcolor{reviewed}{We call their relevant semantic effect a
-\emph{\commitment}: an irrevocable, fateful system decision that removes one or
-more rows $(i,o)$ for which no remaining row $(i,u)$ has $o\OutputOrd u$.} \textcolor{reviewed}{The
-output $o$ is no longer covered by any $u$, and its possibility is gone.}
+a spec to be faithful.}
 
 \textcolor{reviewed}{State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (Section~\ref{sec:operational-models}).} Despite its simplicity, our model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability and
 causal consistency (Appendix~\ref{app:registers}), and transactional isolation
 levels (Section~\ref{sec:hat-instance}, Appendix~\ref{app:cc-bases}).
+
+\textcolor{reviewed}{Coordination mechanisms constrain which concurrent outcomes can occur.} \textcolor{reviewed}{We call
+their relevant semantic effect a \emph{\commitment}: an irrevocable, fateful
+system decision.} \textcolor{reviewed}{It can remove a permitted output that no remaining output at
+the same input covers: for example, choosing between two competing candidates
+in a leader election protocol removes the possibility of the loser winning that
+election.} \textcolor{reviewed}{Or it can rule out all rows with a given input; for example, closing
+the polls for an election rules out consideration of any future ballots.}
 
 \subsection{The Criterion: Lifted Monotonicity}
 \textcolor{reviewed}{With this model in hand, we are ready to define the key aspects of CALM:

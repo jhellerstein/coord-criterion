@@ -231,24 +231,28 @@ We ground the problem in a simple model of \emph{\spectype[s]}, or \emph{specs}
 for short, independent of any language, protocol, or placement. The designer of
 a spec provides a \emph{possibility relation} $P\subseteq I\times O$: a virtual
 table that may be infinite, like a mathematical function. Each row in this table
-is a possibility observable from the outside: it pairs a cumulative input to a
-permitted output. The design includes the input domain $I$ and output domain $O$,
+is a possibility observable from the outside: it pairs the input received so far
+with a permitted output. The design includes the input domain $I$ and output domain $O$,
 with partial orders that help capture the spec's semantics. On inputs, the order
 is accumulation: $i\InputOrd j$ means that $j$ \emph{\inrel} $i$ with more input
 from the environment. On outputs, the order is subsumption: $o\OutputOrd u$
 means that  $u$ \emph{\outrel} $o$ by subsuming all spec-relevant information in
 $o$. These are both application-specific notions that must be captured well for
-a spec to be faithful. Coordination mechanisms constrain which concurrent
-outcomes can occur. We call their relevant semantic effect a
-\emph{\commitment}: an irrevocable, fateful system decision that removes one or
-more rows $(i,o)$ for which no remaining row $(i,u)$ has $o\OutputOrd u$. The
-output $o$ is no longer covered by any $u$, and its possibility is gone.
+a spec to be faithful.
 
 \textcolor{newblue}{State-machine-style specs can be projected into this form, skipping
 operational details that are not externally observable (\S\ref{sec:scope}).} \textcolor{newblue}{Despite its simplicity, our model captures not only application invariants,
 but also general-purpose consistency definitions such as linearizability,
 causal consistency, and transactional isolation levels
 (\S\ref{sec:complete-cap}, \S\ref{sec:hat-instance}, and \extended).}
+
+Coordination mechanisms constrain which concurrent outcomes can occur. We call
+their relevant semantic effect a \emph{\commitment}: an irrevocable, fateful
+system decision. It can remove a permitted output that no remaining output at
+the same input covers: for example, choosing between two competing candidates
+in a leader election protocol removes the possibility of the loser winning that
+election. Or it can rule out all rows with a given input; for example, closing
+the polls for an election rules out consideration of any future ballots.
 
 \paragraph{The Criterion: Lifted Monotonicity.}
 With this model in hand, we are ready to define the key aspects of CALM:
@@ -1476,7 +1480,7 @@ capped at $9$. Now compose it with a downstream spec for a double-digit
 threshold test: that spec outputs \textsf{false} for values up through $9$, and
 \textsf{true} as the input grows further. In the
 literature~\cite{kuper2013lvars}, the output order is the usual boolean lattice,
-so \textsf{false} is only a lower bound; only \textsf{true} is a guarantee. Suppose we want the downstream spec to always give a final answer; then the
+so \textsf{false} is a lower bound; only \textsf{true} is a guarantee. Suppose we want the downstream spec to always give a final answer; then the
 output order is equality, and the test cannot emit \textsf{false} without making
 a \commitment. Nonetheless, when guarded by the capped counter the composition becomes
 \commitment-free. Can we capture that in our framework? When do composed specs
