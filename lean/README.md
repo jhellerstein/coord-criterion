@@ -390,7 +390,7 @@ File `Paper/S5_Composition.lean`; paper source `sections/composition.tex`.
 | `«thm:proper-coordination»` | theorem | **Theorem `thm:proper-coordination`** (Proper Coordination): |
 | `«sec:proper-coordination/locks-overhead»` | theorem | "The theorem holds whatever basis `𝒮₁` uses, and a proper pipeline is itself a guard for a further stage (Corollary `cor:pipelines`). |
 | `«sec:proper-coordination/components»` | theorem | "We call a system for one spec, viewed through a chosen set of sound boundary observations, a component. |
-| `«sec:composite-calm/complete-calm»` | theorem | "Proper coordination places a pipeline's commitments upstream. |
+| `«sec:composite-calm/complete-calm»` | theorem | "The composite is itself an I/O specification. |
 | `«sec:composite-calm/middle-order»` | theorem | "The orders on `I` and `O` are part of the composite's contract with its environment. |
 | `«sec:composite-calm/all-monotone»` | theorem | "First, every stage is monotone. |
 | `«sec:composite-calm/crdt-query»` | theorem | "The CRDT observations of Section `sec:crdt-instance` have this shape: |

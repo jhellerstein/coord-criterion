@@ -89,8 +89,8 @@ theorem «sec:composition/function-tables» {I M O : Type} [PO I] [PO M] [PO O] 
 /-- "Return to the replicated store of the opening.  The key-value store is
 not monotone on its own, but it is monotone on what the log offers: a log
 fixes the order of commands, and a longer log only extends the responses.  The
-log must issue a commitment to offer only such inputs, and the store then needs
-none."  Lean, for any
+log issues a commitment to offer only such inputs, freeing the store from
+making any commitments."  Lean, for any
 deterministic state machine `δ` and two distinct commands: the key-value store
 `𝒦 ∘ 𝒫` (`𝒫 = Inst.smrS1`, the log) is not Lifted-Monotone, execution
 `Inst.execF δ σ₀` is monotone on logs, and the log is not Lifted-Monotone. -/
@@ -123,9 +123,9 @@ theorem «def:proper-coordination» {I M O : Type} [PO I] [PO M] [PO O] (sp : Sp
 /-- **Theorem `thm:proper-coordination`** (Proper Coordination): "Fix any
 system for `𝒮₁`.  (1) The pipeline is proper exactly when `𝒮₂` satisfies
 Lifted Monotonicity on the outputs of `𝒮₁`.  (2) If it is proper, `𝒮₂|_{𝒮₁}`
-under the empty basis follows every run of `𝒮₁`.  The result is a run of
-`P₂ ∘ P₁`, and whenever runs of `𝒮₁` can be brought to a common state, the
-composite runs are confluent.  (3) If it is proper and `P₂ ∘ P₁` violates
+can take each output of a run of `𝒮₁` as its next input and answer it without
+commitment.  The result is a run of `P₂ ∘ P₁`, and composite runs are
+confluent whenever the underlying runs of `𝒮₁` are.  (3) If it is proper and `P₂ ∘ P₁` violates
 Lifted Monotonicity, `𝒮₁` cannot emit some output without a commitment."
 Lean: (1) `Guard.proper_iff` ("on the outputs" is `Joint.CEOn sk (Joint.Img sp)`),
 with `Guard.proper_iff_consistent` (Complete CALM on `𝒮₂|_{𝒮₁}`).  (2) For
@@ -233,9 +233,7 @@ theorem «sec:proper-coordination/components» {I M O : Type} [PO I] [PO M] [PO 
 
 /-! ## Composite CALM (`sec:composite-calm`) -/
 
-/-- "Proper coordination places a pipeline's commitments upstream.  A
-simpler case is a composite in which no stage needs a commitment at all.  The
-composite is itself an I/O specification.  By Complete CALM,
+/-- "The composite is itself an I/O specification.  By Complete CALM,
 spec `P₂ ∘ P₁` is consistent exactly when it satisfies Lifted
 Monotonicity, and then no output needs a commitment (Theorem
 `thm:complete-calm`, Proposition `prop:exposure-boundary`)." -/
@@ -286,12 +284,17 @@ theorem «sec:composite-calm/crdt-query» {D Y : Type} [PO D] [Inst.JSL D] [PO Y
   Comp.functional_composition (Inst.st_mono s0) hq
 
 /-- "Second, the upstream can filter out the inputs on which the downstream is
-not monotone.  Consider a counter capped at `9` that feeds a test of whether
-the count is below `10`.  With counts ordered numerically and the answers yes
-and no incomparable, the test is not monotone: it answers yes at `0` through
-`9` and no at `10`.  But the counter never produces `10` or higher.  The
+not monotone.  In the capped counter, with counts ordered numerically and
+`true` and `false` incomparable, the test is not monotone: it answers `true`
+at `0` through `9` and `false` at `10`.  But the counter never produces `10` or higher.  The
 downstream need only be monotone on the values the upstream can produce.
 This is proper coordination in which the upstream itself needs no commitment."
+And, from the subsection opening: "Consider the spec for an incrementing
+counter that is capped at `9`; compose it with a downstream spec for a
+single-digit threshold test: it outputs `true` up through `9`, and `false` as
+the input grows further.  In isolation it cannot output `true` without making
+a commitment.  But, guarded by the capped counter, the composition becomes
+commitment-free."
 Lean: `Joint.threshold`
 (the test is not Lifted-Monotone, the composite is).  Lean also proves the
 Appendix D treatment of the test: it cannot emit under the empty basis below
