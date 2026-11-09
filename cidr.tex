@@ -935,19 +935,20 @@ common \outnoun there.  \fullproof
 \subsection{Lifted output events}
 \label{sec:lifted-output-events}
 
-Lifted Monotonicity is a property of the possibility relation and its orders.  We now return to execution.
-For a state $(i,R)$ and $o\in R(i)$, the output event $\mathsf{output}(o)$
-again emits $o$ and keeps exactly the rows whose outputs \outrelbase $o$,
+To connect our expanded monotonicity definition to consistency, we return to
+runs, where nondeterminism raises a new question: when emitting one output
+removes others, is that removal a \commitment?  The output event itself is
+unchanged from the functional case: at a state $(i,R)$ with $o\in R(i)$,
+$\mathsf{output}(o)$ emits $o$ and keeps the rows whose outputs \outrelbase $o$,
 ending at $(i,R[\mathrm{out}\OutputGe o])$ as in Equation~\ref{eq:output-action}.
-Every later output must \outrelbase $o$, so the event removes the rows whose
-outputs do not.  Each removed row $(k,x)$ falls into one of two classes:
-subsumed or excluded.  A row $(k,x)$ is placed in $\Subsumed_o$ if some
-$u\in R(k)$ \outrel both $x$ and $o$.  Then a later output $u$ reports
-everything $x$ would have, and the removal, an output subsumption, loses
-nothing.  Otherwise $(k,x)$ is placed in $\Excluded_o$, and the canonical
+But removing a row $(k,x)$ does not always lose the information in its output.
+If some output $u\in R(k)$ \outrel both $x$ and $o$, then removing $(k,x)$ loses
+nothing: the row $(k,u)$ is kept, and a later output $u$ reports everything $x$
+would have.  We call this \emph{output subsumption} and put $(k,x)$ in
+$\Subsumed_o$.  Otherwise $(k,x)$ goes in $\Excluded_o$, and the canonical
 \commitment $x_o$ removes it.  If $x_o$ removes every row at $k$, it rules out
-$k$; otherwise it rules out only those outputs.  In the functional
-case, $\Subsumed_o$ is empty.  Formal definitions are in \extended.
+$k$; otherwise it rules out only those outputs.  In the functional case every
+removed row is excluded.  Formal definitions are in \extended.
 
 Returning to Figure~\ref{fig:nonmonotone-frame},
 emitting $\bot$ under the equality order
