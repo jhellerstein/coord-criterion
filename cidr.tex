@@ -1474,10 +1474,14 @@ logs needs no \commitment.
 Proper coordination answers our opening puzzle by capturing how a pipeline's
 \commitment obligations can be discharged by an upstream component.  We now turn
 to a simpler puzzle. Consider the spec for an incrementing counter that is
-capped at $9$; compose it with a downstream spec for a single-digit threshold
-test: it outputs \textsf{true} up through $9$, and \textsf{false} as the input
-grows further. In isolation the test cannot output \textsf{true} without making a
-\commitment. But, guarded by the capped counter, the composition becomes
+capped at $9$. Now compose it with a downstream spec for a double-digit
+threshold test: that spec outputs \textsf{false} for values up through $9$, and
+\textsf{true} as the input grows further. In the
+literature~\cite{kuper2013lvars}, the output order is the usual boolean lattice,
+so \textsf{false} is only a lower bound; only \textsf{true} is a guarantee.
+Suppose we want the downstream spec to always give a final answer; then the
+output order is equality, and the test cannot emit \textsf{false} without making
+a \commitment. Nonetheless, when guarded by the capped counter the composition becomes
 \commitment-free. Can we capture that in our framework? When do composed specs
 erase the need for \commitment entirely?
 
@@ -1489,7 +1493,8 @@ as when a monotone client query observes CRDT state
 (\S\ref{sec:crdt-instance}), then Lemma~\ref{lem:composition} applies.
 Second, the upstream can filter out the inputs on which the downstream is not
 monotone: the counter capped at $9$ only produces downstream inputs that match
-with \textsf{true} as an output, so the downstream spec is consistent---under any output order.
+with \textsf{false} as an output, so the guarded downstream spec is consistent---under any output order,
+including equality.
 This is proper coordination in which the upstream itself
 needs no \commitment.
 There are additional scenarios resulting in monotone composition beyond these cases
