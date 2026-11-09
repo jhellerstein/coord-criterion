@@ -1388,17 +1388,17 @@ coordination is \emph{proper}
 (\S\ref{sec:proper-coordination}).
 \label{sec:sequential-composition}
 
-Intuitively, sequential composition feeds the output of one spec to
-the input of the next via equijoin.
 Formally, consider two \spectype[s]
-$\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)$ and
-$\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)$
+${\Spec_1=(I,\InputOrd,M,\preceq_M,P_1)}$ and
+${\Spec_2=(M,\preceq_M,O,\OutputOrd,P_2)}$
 sharing the intermediate ordered domain $(M,\preceq_M)$.  Their \emph{sequential
 composition} has table
 \begin{equation}
+\begin{split}
   P_2\circ P_1
-  =\pi_{I,O}(P_1\Join_M P_2)
-  =\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\},
+  &=\pi_{I,O}(P_1\Join_M P_2)\\
+  &=\{(i,o):\exists m.\ (i,m)\in P_1\land(m,o)\in P_2\}
+\end{split}
   \label{eq:spec-composition}
 \end{equation}
 where $\pi$ and $\Join$ are relational projection and equijoin.  Since $P_1$
@@ -1428,10 +1428,10 @@ By associativity the lemma extends to finite pipelines.
 Return to the replicated store of the opening.  The key-value store is not
 monotone on its own, but it is monotone on what the log offers: a log fixes
 the order of commands, and a longer log only extends the responses.  The log
-must issue a \commitment to offer only such inputs, and the store then needs
-none.
+issues a \commitment to offer only such inputs, freeing the store from making any
+\commitments.
 
-Let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
+More generally, let $\Spec_1$, which guards $\Spec_2$, be run by a system with any basis, and
 let $\Spec_2$ run under a system of its own.  Write $\Spec_2|_{\Spec_1}$ for $\Spec_2$ restricted to the outputs of
 $\Spec_1$.
 
@@ -1448,23 +1448,19 @@ Fix any system for $\Spec_1$.
 \begin{enumerate}
   \item The pipeline is proper exactly when $\Spec_2|_{\Spec_1}$ satisfies
         Lifted Monotonicity.
-  \item If it is proper, $\Spec_2|_{\Spec_1}$ under the empty basis follows
-        every run of $\Spec_1$.  The result is a run of $P_2\circ P_1$, and
-        whenever runs of $\Spec_1$ can be brought to a common state, the
-        composite runs are confluent.
+  \item If it is proper, $\Spec_2|_{\Spec_1}$ can take each output of a run of
+  $\Spec_1$ as its next input and answer it without \commitment. The result is a
+  run of $P_2\circ P_1$, and composite runs are confluent whenever the
+  underlying runs of $\Spec_1$ are.
   \item If it is proper and $P_2\circ P_1$ violates Lifted Monotonicity,
         $\Spec_1$ cannot emit some output without a \commitment.
 \end{enumerate}
 \end{theorem}
 
-\begin{proof}[Proof sketch]
-(1) is Complete CALM and the output-legality boundary
-(Theorem~\ref{thm:complete-calm}, Proposition~\ref{prop:exposure-boundary})
-applied to $\Spec_2|_{\Spec_1}$.  (2) Each output event of $\Spec_1$ keeps
-only rows above its output, so each input $\Spec_2$ receives lies above the
-previous one, and by (1) every answer is legal.  (3) The output-legality boundary
-of the composite fails at a canonical state, which is the image of a canonical
-state of $\Spec_1$.  \fullproof
+\begin{proof}[Proof sketch] (1) is Complete CALM and the output-legality
+boundary (Theorem~\ref{thm:complete-calm},
+Proposition~\ref{prop:exposure-boundary}) applied to $\Spec_2|_{\Spec_1}$. The
+full proof of (1) and the proofs of (2) and (3) are in \extended.
 \end{proof}
 
 The theorem holds whatever basis $\Spec_1$ uses, and a proper pipeline is
@@ -1475,23 +1471,29 @@ logs needs no \commitment.
 \subsection{Composite CALM}
 \label{sec:composite-calm}
 
-Proper coordination places a pipeline's \commitments upstream.  A simpler
-case is a composite in which no stage needs a \commitment at all.
+Proper coordination answers our opening puzzle by capturing how a pipeline's
+\commitment obligations can be discharged by an upstream component.  We now turn
+to a simpler puzzle. Consider the spec for an incrementing counter that is
+capped at $9$; compose it with a downstream spec for a single-digit threshold
+test: it outputs \textsf{true} up through $9$, and \textsf{false} as the input
+grows further. In isolation it cannot output \textsf{true} without making a
+\commitment. But, guarded by the capped counter, the composition becomes
+\commitment-free. Can we capture that in our framework? When do composed specs
+erase the need for \commitment entirely?
+
 By Complete CALM, $P_2\circ P_1$ is consistent exactly when it
 satisfies Lifted Monotonicity, and then no output needs a \commitment.
-That test treats the composite as a single spec.  Suppose instead that
-each stage runs on its own, with its runs taking as input the outputs of the
-stage before.  A stage may then need a \commitment even when the composite
-needs none.  A composite can be jointly monotone, with no stage needing a
+A composite can be jointly monotone, with no stage needing a
 \commitment, in two ways.  First, if every stage is monotone,
 as when a monotone client query observes CRDT state
 (\S\ref{sec:crdt-instance}), then Lemma~\ref{lem:composition} applies.
 Second, the upstream can filter out the inputs on which the downstream is not
-monotone: a counter capped at $9$ never produces the counts at which a test
-of whether the count is below $10$ answers no.  This is proper coordination in which the upstream itself
-needs no \commitment.  These cases do not cover every monotone composite
-(see \extended).  When none applies, some stage may have to issue a \commitment even though the
-composite is monotone.
+monotone: anythe counter capped at $9$ only produces downstream inputs that match
+with \textsf{true} as an output, so the downstream spec is consistent---under any output order.
+This is proper coordination in which the upstream itself
+needs no \commitment.
+There are additional scenarios resulting in monotone composition beyond these cases
+(see \extended).
 
 The full paper extends these results to more complex
 compositions than sequential stages, including
