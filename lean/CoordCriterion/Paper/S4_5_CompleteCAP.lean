@@ -64,8 +64,9 @@ combined output, nor is the combined output needed for availability.
 Nonetheless, it extends both local outputs, provides a proof of their
 consistency, and must be in the spec.
 
-We therefore pair a spec with an explicit relation `E ⊆ P`: the rows whose
-outputs participants must keep locally available.  Outputs in `P ∖ E`, such as
+We therefore pair a spec with an *explicit possibility relation* `E ⊆ P`, or
+explicit relation for short: the rows whose outputs participants emit
+themselves and must keep locally available.  Outputs in `P ∖ E`, such as
 combined outputs, need only remain permitted.
 
 Both availability and consistency are judged on histories in which a
@@ -149,7 +150,7 @@ unfolded form of `«def:partition-notions/unfolded»`. -/
 abbrev «def:local-continuation» (Sys : System sp D) : Prop :=
   AvailabilityAtEnd Sys
 
-/-- **Def. `def:explicit-relation`** (Explicit relation).  "An *explicit
+/-- **Def. `def:explicit-relation`** (Explicit (possibility) relation).  "An *explicit
 relation* `E ⊆ P` is a set of rows `(i,o)` whose output `o` must stay
 available at input `i`; write `E(i)` for its fiber `{o : (i,o) ∈ E}`."
 
