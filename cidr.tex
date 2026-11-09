@@ -1217,7 +1217,9 @@ row that allows this situation: that pair of requests forms an input, and the
 combined responses are an output. That row reflects that a linearization may put the
 concurrent read before the write.  However, no participant emits this combined
 output, nor is the combined output needed for availability. Nonetheless, it \outrel
-both local outputs, provides a proof of their consistency, and must be in the spec.
+both local outputs, provides a proof of their consistency, and must be in the spec.  Had the write finished
+before the read began, no such combined output would exist; we return to this
+case at the end of the section.
 
 We therefore pair a spec with an \emph{explicit possibility relation}
 $E\subseteq P$, or explicit relation for short: the rows whose outputs
@@ -1326,17 +1328,17 @@ for $E$ fails, some output of $E$ waits for another side, sacrificing
 Availability, or is emitted anyway, sacrificing Partition Consistency.
 
 \paragraph{Gilbert and Lynch.}
-Their theorem is a case of Complete CAP.  Consider a register spec
-whose inputs are sets of operations with their real-time precedence, and whose
-outputs answer every operation of the input as some linearization
-does~\cite{herlihy1990linearizability}.  Let $p$'s input contain only a write
-of $v\neq v_0$, and $q$'s only a read.  The fiber at $p$'s input holds only the
-write's acknowledgment; the fiber at $q$'s input, which contains no write,
-holds only the answer $v_0$ to the read.  At the common \indesc where the write
-precedes the read, every output in the fiber answers that same read with $v$.  That contradicts
-the answer $v_0$; it is not a later read observing a newer value.  So no output
-there \outrel $v_0$, and $\Spec$ does not satisfy Lifted Monotonicity.  By Corollary~\ref{cor:complete-cap-any-system}, then, no system keeps both outputs available and
-consistent across a partition, which is Gilbert and Lynch's theorem.
+Their theorem is a case of Complete CAP.  We return to the register example, but
+add the requirement of linearizability regarding real-time precedence: if one
+operation finishes before another begins, every linearization must put the
+first before the second~\cite{herlihy1990linearizability}.  Now let the write
+finish before the read begins.  Every linearization must then put the write
+first, so the read must return $v$, and no output \outrel $q$'s answer $v_0$.
+Since Availability requires $p$ to acknowledge the write and $q$ to answer
+$v_0$, the spec does not satisfy Lifted Monotonicity for those outputs.  By
+Corollary~\ref{cor:complete-cap-any-system}, no system can keep both outputs
+available and stay consistent across a partition.  This is Gilbert and Lynch's
+theorem.
 The full paper takes precedence from real time, extends
 Complete CAP to systems that choose their responses when responses are not
 forced, and derives

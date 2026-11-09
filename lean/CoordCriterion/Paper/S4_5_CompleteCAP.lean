@@ -63,7 +63,9 @@ combined responses are an output.  That row reflects that a linearization may
 put the concurrent read before the write.  However, no participant emits this
 combined output, nor is the combined output needed for availability.
 Nonetheless, it extends both local outputs, provides a proof of their
-consistency, and must be in the spec.
+consistency, and must be in the spec.  Had the write finished before the read
+began, no such combined output would exist; we return to this case at the end
+of the section.
 
 We therefore pair a spec with an *explicit possibility relation* `E ⊆ P`, or
 explicit relation for short: the rows whose outputs participants emit
@@ -428,16 +430,14 @@ theorem «sec:complete-cap/deterministic-strategies» (D : Type) :
 
 /-! ### Paragraph "Gilbert and Lynch" -/
 
-/-- "Consider a register spec whose inputs are sets of operations
-with their real-time precedence, and whose outputs answer every operation of
-the input as some linearization does.  Let `p`'s input contain only a write of
-`v ≠ v_0`, and `q`'s only a read.  The fiber at `p`'s input holds only the
-write's acknowledgment; the fiber at `q`'s input, which contains no write,
-holds only the answer `v_0` to the read.  At the common input extension where the
-write precedes the read, every output in the fiber answers that same read with
-`v`.  That contradicts the answer `v_0`; it is not a later read observing a
-newer value.  So no output there extends `v_0`, and `P` does not satisfy
-Lifted Monotonicity."
+/-- "We return to the register example, but add the requirement of
+linearizability regarding real-time precedence: if one operation finishes
+before another begins, every linearization must put the first before the
+second.  Now let the write finish before the read begins.  Every
+linearization must then put the write first, so the read must return `v`, and
+no output extends `q`'s answer `v_0`.  Since Availability requires `p` to
+acknowledge the write and `q` to answer `v_0`, the spec does not satisfy
+Lifted Monotonicity for those outputs."
 
 Lean: the complete-response register `regFullSpec` (an output is a response
 map, operation id ↦ response, explained by some linearization and answering
@@ -489,8 +489,9 @@ theorem «sec:complete-cap/gl-two-row-forced» (Sys : System sp D)
     ∃ u, sp.P j u ∧ o₁ ≼ u ∧ o₂ ≼ u :=
   cap_two_step_forced Sys hA hC h₁ h₂ hj₁ hj₂
 
-/-- "Their theorem is a case of Complete CAP" … "No such output extension
-exists.":  no system for the register lets every request receive a response
+/-- "Their theorem is a case of Complete CAP" … "By Corollary
+`cor:complete-cap-any-system`, no system can keep both outputs available and
+stay consistent across a partition.  This is Gilbert and Lynch's theorem.":  no system for the register lets every request receive a response
 and keeps the emitted responses reconcilable (explained by one
 linearization). -/
 theorem «sec:complete-cap/gilbert-lynch» (Sys : System CC.GL.regFullSpec D) :
