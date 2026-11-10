@@ -149,15 +149,16 @@ as consensus logs in front of a replicated store.}
 \label{sec:intro}
 
 \textcolor{reviewed}{Concurrent systems rely on coordination mechanisms ranging from mutexes and
-atomic instructions to database locks and consensus protocols.} \textcolor{reviewed}{These mechanisms
-prevent concurrent actions from producing undesirable outcomes.} \textcolor{reviewed}{They also bring
-costs: overhead, latency, and availability in distributed settings.} \textcolor{reviewed}{Avoiding
-unnecessary coordination is therefore a central goal in distributed systems and
-databases.} \textcolor{reviewed}{But when is coordination avoidable, and when is it intrinsically
-required?} \textcolor{reviewed}{Various answers are scattered across the literature in incompatible
-forms.} \textcolor{reviewed}{We unify those results via a common formalism, and use it to address new
-questions: when do nondeterministic specifications require coordination, what does
-coordination achieve, and how do we know when it is properly applied?}
+atomic instructions to database locks and consensus protocols.} \textcolor{reviewed}{These
+mechanisms prevent concurrent actions from producing undesirable outcomes, but
+they must be used where they are needed, and only there.} \textcolor{reviewed}{Too little
+coordination produces heisenbugs: rare, timing-dependent anomalies that are hard
+to reproduce.} \textcolor{reviewed}{Too much adds overhead and latency, and in distributed settings
+sacrifices availability.} \textcolor{reviewed}{So when is coordination avoidable, and when is it
+intrinsically required?} \textcolor{reviewed}{The answers in the literature are partial and
+incompatible: the CALM Theorem covers monotone queries, the CAP theorem
+linearizable registers, and CRDTs semilattice-based data types.} \textcolor{reviewed}{This leaves
+developers guessing.}
 
 \textcolor{reviewed}{The CALM Conjecture proposed a crisp, bidirectional criterion:
 consistency can be achieved without coordination exactly when a specification
@@ -183,6 +184,16 @@ questions unclear, including whether CALM encompasses CAP, whether CRDT join
 laws are necessary, why only some transactional isolation levels remain
 available during partition, and whether invariant confluence differs from CALM
 (Section~\ref{sec:instances}).}
+
+\textcolor{reviewed}{We put these results on common ground, in a formalism that clarifies the
+literature and offers new results.} \textcolor{reviewed}{Prior CALM results stop at the monotone
+boundary: for a non-monotone program, they say only that coordination is needed
+somewhere, not what it must accomplish or where it belongs.} \textcolor{reviewed}{Few real systems
+are monotone throughout, so that is where developers most need help.} \textcolor{reviewed}{Our
+framework is constructive on both sides of the boundary.} \textcolor{reviewed}{It answers questions
+the literature leaves open: when nondeterministic specifications require
+coordination, what that coordination must achieve, and how to tell whether it is
+properly placed.}
 
 \subsection{The Model: \Spectype[s]}
 \textcolor{reviewed}{In systems, as in life, our possibilities narrow over time.} \textcolor{reviewed}{Sometimes the world
@@ -225,9 +236,9 @@ the polls for an election rules out consideration of any future ballots.}
 Consistency and Monotonicity.} \textcolor{reviewed}{A spec is \emph{consistent} when
 all its possible executions are \emph{confluent}: states reached along
 different paths can be brought to a common state.} \textcolor{reviewed}{We will see that this definition
-is general, accommodating narrower notions from prior literature.} \textcolor{reviewed}{Our monotonicity criterion requires more care: it must capture the full
-expressivity of our model.} \textcolor{reviewed}{It comes via two invariants.} \textcolor{reviewed}{The first is always
-required; the second addresses nondeterministic specs.}
+is general, accommodating narrower notions from prior literature.} \textcolor{reviewed}{Monotonicity takes more care, because specs may be nondeterministic.} \textcolor{reviewed}{Our
+criterion has two invariants: the first is always required; the second
+addresses nondeterministic specs.}
 
 \textcolor{reviewed}{\emph{Learn and refine.} As execution progresses, input grows: the system learns more from
 the environment.} \textcolor{reviewed}{For specs that permit only one output at each input, the possibility table is a function
@@ -249,17 +260,25 @@ choose different outputs for the same input, those choices
 must \outrelbase together---the outputs are \emph{directed}, in order theory terms.} \textcolor{reviewed}{Together, monotonicity under input growth and output choice make all output decisions incidental.} \textcolor{reviewed}{We call the pair of invariants \emph{Lifted Monotonicity}.} \textcolor{reviewed}{\emph{Complete CALM} proves that consistency is equivalent to Lifted
 Monotonicity (Section~\ref{sec:complete-calm-theorem}).}
 
-\textcolor{reviewed}{What of coordination?} \textcolor{reviewed}{Locks, agreement protocols, and other coordination
-mechanisms enforce \commitments.} \textcolor{reviewed}{Our criterion identifies the \commitments a
-spec's outputs require, independently of the mechanism used.} Placement
-determines whether conflicting choices can arise at different participants. \textcolor{reviewed}{Distributed histories are captured under the same consistency criteria as centralized ones
-(Section~\ref{sec:distributed-execution}).} \textcolor{reviewed}{Complete CAP (Section~\ref{sec:complete-cap}) says
-Lifted Monotonicity exactly characterizes specs that can keep every
-permitted output available and confluent during a partition.} \textcolor{reviewed}{The
-Gilbert--Lynch theorem follows directly.}
+\textcolor{reviewed}{What of coordination?} \textcolor{reviewed}{A \commitment isolates the contract a coordination
+mechanism achieves, apart from how it achieves it: locks, agreement protocols,
+and other mechanisms all enforce \commitments.} \textcolor{reviewed}{Our criterion identifies exactly
+the \commitments a spec's outputs require, independently of the mechanism used.} \textcolor{reviewed}{A system that omits a required \commitment can become inconsistent; one that
+makes more coordinates needlessly.} \textcolor{reviewed}{In a composition, \emph{Proper Coordination}
+identifies which stage must make the \commitments and certifies that later
+stages need none.} \textcolor{reviewed}{In state-machine replication, for example, the consensus log
+makes every \commitment and the replicated store makes none
+(Section~\ref{sec:composition}).}
+
+Placement determines whether conflicting choices can arise at different
+participants. \textcolor{reviewed}{Distributed histories are captured under the same consistency criteria as
+centralized ones (Section~\ref{sec:distributed-execution}).} \textcolor{reviewed}{Complete CAP
+(Section~\ref{sec:complete-cap}) says Lifted Monotonicity exactly characterizes specs
+that can keep every permitted output available and confluent during a
+partition.} \textcolor{reviewed}{The Gilbert--Lynch theorem follows directly.}
 
 \subsection{Contributions}
-\textcolor{reviewed}{We make contributions in three categories:}
+\textcolor{reviewed}{We make contributions in four categories:}
 
 \textcolor{reviewed}{\noindent
 \emph{1. A unified model.} A system's observable behavior is captured via
@@ -274,10 +293,16 @@ Gilbert--Lynch theorem follows directly.}
         the CAP tradeoff holds only under failure of Lifted Monotonicity.}
 
 \textcolor{reviewed}{\noindent
-\emph{3. \Commitments, Composition and Proper Coordination.} We define \commitments to capture how
-        systems exclude possibilities that are not covered by alternatives.} \textcolor{reviewed}{We then show how specs
-        compose by equijoin, so that, in composition, upstream
-        stages can free downstream stages from issuing \commitments.}
+\emph{3. Constructive results for coordination.} We define \commitments to
+        capture how systems exclude possibilities that no alternative covers,
+        and identify exactly the \commitments a non-monotone spec requires.} \textcolor{reviewed}{Specs compose by equijoin, and Proper Coordination identifies the stage
+        that must make the \commitments, certifying that later stages need
+        none.}
+
+\textcolor{reviewed}{\noindent
+\emph{4. A map of the literature.} Highly Available Transactions, Invariant
+        Confluence, CRDT observation, and later refinements of CALM all map
+        into the framework (Section~\ref{sec:instances}).}
 
 \vspace{0.5em}
 \noindent
